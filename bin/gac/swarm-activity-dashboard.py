@@ -260,12 +260,134 @@ def print_text(report: dict) -> None:
     print("=" * 68)
 
 
+def _rich_layout(report: dict) -> object:
+    """Build Rich Layout for TUI (Live refresh)."""
+    from rich.console import Group
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.text import Text
+
+    # ── Active runs panel ──
+    runs_table = Table(show_header=True, header_style="bold cyan",
+                       box=None, expand=True)
+    runs_table.add_column("Run ID", style="bold", no_wrap=True)
+    runs_table.add_column("Profile")
+    runs_table.add_column("Objective", overflow="fold")
+    runs = [r for r in report["active_runs"] if not r.get("error")]
+    for r in runs:
+        runs_table.add_row(
+            r.get("run_id", "")[:40],
+            r.get("profile", ""),
+            r.get("objective", "")[:80],
+        )
+    if not runs:
+        runs_table.add_row("(无 active run)", "", "(空闲)")
+    runs_panel = Panel(
+        runs_table, title=f"[bold green]▶ Active runs ({len(runs)})[/]",
+        border_style="green",
+    )
+
+    # ── Locks panel ──
+    locks_table = Table(show_header=True, header_style="bold yellow",
+                        box=None, expand=True)
+    locks_table.add_column("Run", style="bold")
+    locks_table.add_column("Scopes", no_wrap=True)
+    by_run: dict[str, list[str]] = {}
+    for lk in report["locks"]:
+        by_run.setdefault(lk["run_id"] or "?", []).append(lk["scope"])
+    for run_id, scopes in sorted(by_run.items()):
+        locks_table.add_row(run_id[:32], f"{len(scopes)}: {', '.join(scopes[:3])}")
+    if not by_run:
+        locks_table.add_row("(无锁)", "")
+    locks_panel = Panel(
+        locks_table, title=f"[bold yellow]🔒 Locks ({len(report['locks'])})[/]",
+        border_style="yellow",
+    )
+
+    # ── Submodule dirty + conflicts ──
+    dirty_rows = []
+    for d in report["submodule_dirty"]:
+        color = "red" if d["dirty_count"] >= 10 else "yellow"
+        dirty_rows.append(f"[{color}]{d['submodule']}[/] {d['dirty_count']}")
+    dirty_text = Text.from_markup(
+        ", ".join(dirty_rows) if dirty_rows else "(全部干净)"
+    )
+    conflicts = report["conflicts_24h"]
+    conf_text = Text.from_markup(
+        f"[red]🚨 {len(conflicts)} conflicts (24h)[/]"
+        if conflicts else "[green]✅ 无冲突 (24h)[/]"
+    )
+    for c in conflicts[:3]:
+        conf_text.append(
+            f"\n  {c['ts'][:19]} [{c['kind']}] {c.get('branch','')}"
+        )
+    status_panel = Panel(
+        Group(dirty_text, conf_text),
+        title=f"[bold]📦 子模块 dirty ({len(report['submodule_dirty'])}) · "
+              f"事件(1h)={report['events_1h']}[/]",
+        border_style="magenta",
+    )
+
+    # ── Worktrees ──
+    wt_lines = []
+    for wt in report["worktrees"]:
+        branch = wt.get("branch", "")
+        marker = " ← 主" if wt["path"] == str(WORKSPACE) else ""
+        wt_lines.append(f"{wt['path'].replace(str(WORKSPACE.parent), '~')} [{branch}]{marker}")
+    wt_panel = Panel(
+        "\n".join(wt_lines) if wt_lines else "(无 worktree)",
+        title=f"[bold blue]📁 Worktrees ({len(report['worktrees'])})[/]",
+        border_style="blue",
+    )
+
+    header = Text(f"🤖 Swarm Activity — 生成 {report['generated_at'][:19]} "
+                  f"| runs={len(runs)} | locks={len(report['locks'])} "
+                  f"| claims={len(report['branch_claims'])}"
+                  f"(+{len(report['adr_claims'])} adr) "
+                  f"| 按 Ctrl+C 退出")
+    return Group(header, runs_panel, locks_panel, status_panel, wt_panel)
+
+
+def run_tui(refresh_sec: int = 5) -> int:
+    """Rich Live TUI 模式: 定期刷新聚合视图. Rich 不可用时回退到 --watch."""
+    try:
+        from rich.console import Console
+        from rich.live import Live
+
+        console = Console()
+        with Live(console=console, refresh_per_second=1.0) as live:
+            while True:
+                report = build_report()
+                live.update(_rich_layout(report))
+                import time
+
+                time.sleep(refresh_sec)
+    except (KeyboardInterrupt, EOFError):
+        return 0
+    except ImportError:
+        # Rich 未装 → 回退到 --watch 文本模式
+        import time
+
+        while True:
+            os.system("clear")
+            print_text(build_report())
+            time.sleep(refresh_sec)
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     parser.add_argument("--watch", type=int, default=0,
                         help="每隔 N 秒刷新 (0=单次)")
+    parser.add_argument("--tui", action="store_true",
+                        help="Rich TUI 实时模式 (自动刷新, Rich 未装回退 --watch)")
+    parser.add_argument("--refresh", type=int, default=5,
+                        help="TUI/--watch 刷新间隔秒 (默认 5)")
     args = parser.parse_args()
+
+    if args.tui:
+        return run_tui(refresh_sec=args.refresh)
 
     if args.watch:
         import time
