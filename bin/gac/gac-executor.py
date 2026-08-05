@@ -54,6 +54,10 @@ EXECUTOR_PRESENCE: dict[str, list[str]] = {
     "gac_local_gate": ["bin/gac/gac-local-gate.py"],  # F-14 (2026-07-03): gac-local-gate 工具作为执行通道, 3 规则已声明 (CR-X2-GOVERNANCE-SEMANTIC-GATE / CR-L0-MATRIX-PORT-CONSISTENCY / CR-L0-MATRIX-LAUNCHD-COVERAGE)
     "foundry_cron": ["bin/gac/knowledge-foundry-cron.py"],  # 破自指 (ADR-0220): 独立 launchd daily, ghost executor 检测由它跑 (非 radar_cron=被检测对象自己)
     "hook_post": [],  # 声明占位, 无独立文件 (hook_post 是 PostToolUse 事件, 非文件)
+    # ADR-0373 C5: sweep_index.py 是 CR-SWEEP-INDEX-AUTO 的执行通道.
+    # 该 executor 名为 `sweep_index_cli` (与 `bin/sweep/sweep_index.py` 形成 1:1 映射);
+    # Python 与 .yml 5 源对齐后, `gac-drift.py` 与 `gac-executor.py` 都识别它.
+    "sweep_index_cli": ["bin/sweep/sweep_index.py"],
 }
 
 # 可调度 CLI executor (机制3深化 POC: GaC 驱动执行, --run 去重跑每种一次)
