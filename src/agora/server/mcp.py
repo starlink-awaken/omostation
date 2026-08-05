@@ -482,6 +482,13 @@ from agora.server.tools_registry_mcp import register_registry_mcp_tools
 
 register_registry_mcp_tools(mcp)  # Phase 46: Agent Registry 暴露为 MCP 工具
 
+# Phase 47: BOS capability lifecycle (B1→B2→B3) 暴露为 MCP 工具
+try:
+    from agora.mcp.tools.bos_capability_lifecycle import register as register_capability_lifecycle
+    register_capability_lifecycle()
+except Exception as _capability_lifecycle_exc:  # noqa: BLE001 — optional capability module
+    logger.warning("bos capability lifecycle registration skipped: %s", _capability_lifecycle_exc)
+
 
 async def _init_proxy():
     """Initialize the proxy manager and connect to all configured downstream services.
