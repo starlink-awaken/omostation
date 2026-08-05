@@ -134,21 +134,6 @@ KNOWN_BACKENDS: list[dict] = [
         "command": "bun",
         "args": ["run", "--cwd", "projects/gbrain", "src/cli.ts", "serve"],
     },
-    # ── 入口收敛新增 (2026-06-24) ──────────────────────────
-    {
-        "name": "cockpit-mcp",
-        "mcp_endpoint": "",
-        "command": "uv",
-        "args": [
-            "run",
-            "--package",
-            "cockpit",
-            "python",
-            "-m",
-            "cockpit.scripts.cockpit_mcp",
-        ],
-        "description": "cockpit MCP — L3 入口层 MCP 工具集 (27 tools)",
-    },
     {
         "name": "c2g",
         "mcp_endpoint": "",

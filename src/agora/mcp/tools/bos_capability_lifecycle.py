@@ -3,6 +3,7 @@
 Exposes capability discovery, admission, and retirement as governed MCP tools.
 Requires explicit profile authorization for write operations.
 """
+
 from __future__ import annotations
 
 import logging
@@ -19,7 +20,9 @@ _LOG = logging.getLogger(__name__)
 mcp = FastMCP("bos-capability-lifecycle")
 
 
-def _get_catalogs() -> tuple[CapabilityCatalog | None, ExternalConnectionCatalog | None]:
+def _get_catalogs() -> tuple[
+    CapabilityCatalog | None, ExternalConnectionCatalog | None
+]:
     capability_catalog = getattr(bos_router, "_capability_catalog", None)
     admission_catalog = getattr(bos_router, "_admission_catalog", None)
     if capability_catalog is None:
@@ -61,7 +64,9 @@ def bos_capability_list(uri_prefix: str = "") -> dict[str, Any]:
             {
                 "prefix": prefix,
                 "adapter": route.get("adapter"),
-                "capability_status": decl.get("status") if isinstance(decl, dict) else None,
+                "capability_status": decl.get("status")
+                if isinstance(decl, dict)
+                else None,
                 "lifecycle": lifecycle,
                 "admission_status": admission_status,
                 "use_metrics": decl.get("usage", {}) if isinstance(decl, dict) else {},
@@ -75,7 +80,9 @@ def bos_capability_list(uri_prefix: str = "") -> dict[str, Any]:
 
 
 @mcp.tool()
-def bos_capability_retire(uri: str, reason: str = "retired by governance") -> dict[str, Any]:
+def bos_capability_retire(
+    uri: str, reason: str = "retired by governance"
+) -> dict[str, Any]:
     """Retire a zombie BOS capability (requires governance profile).
 
     Args:

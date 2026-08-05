@@ -258,10 +258,6 @@ services:
   description: Cockpit MCP Server (HTTP proxy mode)
   domain: capability
   mcp_endpoint: http://localhost:8778/mcp
-  package: cockpit-mcp
-  status: active
-  transport: mcp_proxy
-  uri: bos://capability/cockpit/mcp-server
 - action: rest-api
   description: KOS REST API v1 (9 endpoints)
   domain: memory
@@ -1168,36 +1164,6 @@ services:
   status: active
   transport: mcp_stdio
   uri: bos://governance/omo/sync
-- action: mcp
-  command:
-  - uv
-  - run
-  - --package
-  - cockpit
-  - python
-  - -m
-  - cockpit.scripts.cockpit_mcp
-  description: Cockpit MCP Server — 20 工具
-  domain: governance
-  package: cockpit
-  status: active
-  transport: mcp_stdio
-  uri: bos://governance/cockpit/context
-- action: mcp
-  command:
-  - uv
-  - run
-  - --package
-  - cockpit
-  - python
-  - -m
-  - cockpit.scripts.cockpit_mcp
-  description: Cockpit MCP (短路径别名)
-  domain: governance
-  package: cockpit
-  status: active
-  transport: mcp_stdio
-  uri: bos://cockpit/context
 - action: mcp
   command:
   - uv

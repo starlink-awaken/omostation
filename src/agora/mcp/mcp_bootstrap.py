@@ -148,20 +148,6 @@ _KNOWN_FALLBACK: dict[str, dict[str, Any]] = {
         "description": "MetaOS — 编排/治理层，决策门控与系统协同",
         "source": "metaos",  # independent project at projects/metaos/
     },
-    "cockpit": {
-        "command": "uv",
-        "args": [
-            "run",
-            "--package",
-            "cockpit",
-            "python",
-            "-m",
-            "cockpit.scripts.cockpit_mcp",
-        ],
-        "description": "Cockpit MCP — 研究(12)、状态(3)、L4桥接(workspace_context/cards_status/cards_check/vault_search/domains_list) 共20工具",
-        "source": "kairon",
-    },
-    # ── L4 Domain Kernel MCP — 入口收敛 Phase 2 ─────────────
     "l4-kernel": {
         "command": "uv",
         "args": [
