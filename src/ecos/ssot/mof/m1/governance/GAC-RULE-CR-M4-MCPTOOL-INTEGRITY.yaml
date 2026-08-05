@@ -1,29 +1,32 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
 # DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
-id: GAC-RULE-CR-P76-8-4-INCREMENTAL-COMMIT
+id: GAC-RULE-CR-M4-MCPTOOL-INTEGRITY
 type: GacRule
-name: 增量提交防丢失
-description: '每 sub-task 完成立即 commit, 防 X-Plane clean worktree 丢失工作. 实现: bin/gac/check-incremental-commit.py
-  (gac-gate CI, advisory)'
+name: MCPTOOL 数据完整性守门
+description: MCPTOOL单工具yaml校验tool_name+server非空.集合yaml跳过(ADR-0145).
 status: active
 domain: meta
-layer: meta
-created: &id001 2026-07-08
+layer: L0
+created: '2026-07-06'
 version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
-  id: CR-P76-8-4-INCREMENTAL-COMMIT
+  id: CR-M4-MCPTOOL-INTEGRITY
   dimension: X4
-  layer: meta
-  check_type: hygiene_case
+  layer: L0
+  check_type: consistency_drift
   executor:
-  - hook_pre_edit
   - ci_gate
+  - gac_local_gate
   lifecycle: active
   version: 1.0.0
-  created_at: *id001
+  created_at: '2026-07-06'
+  target: projects/ecos/src/ecos/ssot/mof/m1/mcptool/
+  adr: ADR-0152
   source_type: native
+  source_ref: bin/gac/mcp-tool-data-complete.py
+  enforcement: required
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
@@ -32,5 +35,5 @@ model_driven_refs:
   derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
-  timestamp: '2026-07-08T00:00:00Z'
+  timestamp: '2026-07-06T00:00:00Z'
   reason: M1 实例由 gac-m1-sync.py 从 registry 派生
