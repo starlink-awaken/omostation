@@ -1,17 +1,17 @@
 # docs/generated/capability-registry.yaml — 全生态能力注册表 SSOT
 # 自动生成，请勿手动编辑
 # 生成器: bin/cockpit/gen-capability-registry.py
-# 生成时间: 2026-08-05T08:43:45Z
+# 生成时间: 1970-01-01T00:00:00Z
 
 version: 1.0.0
-generated_at: '2026-08-05T08:43:45Z'
+generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 28
   mcp_tools: 581
   bos_services: 202
   bos_domains: 16
-  cli_commands: 116
+  cli_commands: 117
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -1842,7 +1842,7 @@ cli_commands:
 - name: readiness
   description: 'P66: governance readiness dashboard 摘要 (4 卡片: summary/dimensions/alerts/history)'
 - name: recall
-  description: 意图路由召回
+  description: 意图路由召回（neo4j/temporal 支持 --as-of）
 - name: remember
   description: 手动存入偏好/事实
 - name: research
@@ -1873,6 +1873,8 @@ cli_commands:
   description: 系统健康
 - name: summary
   description: 债务摘要 (委派 omo debt)
+- name: swarm
+  description: 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突)
 - name: topics
   description: 列出已注册 topic
 - name: tui

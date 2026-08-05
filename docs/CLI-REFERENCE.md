@@ -1,9 +1,9 @@
 # Cockpit CLI 命令参考
 
-> 自动生成于 2026-08-05T08:43:45Z
+> 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **116** 个命令 (含子命令)。按场景分组如下。
+共 **117** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -153,7 +153,7 @@
 | `cockpit quickstart-check` | 快速检查新用户环境核验状态 |
 | `cockpit radar` | P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates |
 | `cockpit read` | 通过 BOS 网关统一读取指定 URI 资源 |
-| `cockpit recall` | 意图路由召回 |
+| `cockpit recall` | 意图路由召回（neo4j/temporal 支持 --as-of） |
 | `cockpit remember` | 手动存入偏好/事实 |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit route` | 为模型选择最优节点 |
@@ -162,6 +162,7 @@
 | `cockpit serve` | stdio JSON-RPC serve mode |
 | `cockpit stats` | 索引统计 |
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
+| `cockpit swarm` | 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
 | `cockpit topics` | 列出已注册 topic |
 | `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
 | `cockpit types` | 查看已注册的数据类型 |
@@ -188,4 +189,4 @@
 | `cockpit mesh` | `aetherforge` | 10 |
 | `cockpit compute` | `aetherforge` | 10 |
 
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-05T08:43:45Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*
