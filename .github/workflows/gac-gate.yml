@@ -79,6 +79,22 @@ jobs:
         # 外部 agent 接入必须注册 MCP 入口 + 审计链, 非阻塞 advisory
         continue-on-error: true
         run: python3 bin/gac/check-external-agent-audit.py
+      - name: CR-X4-SWEEP-TOOL-INTEGRITY — Sweep 工具完整性检查 (advisory)
+        # sweep 工具链必须有测试覆盖和 CI 集成, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-sweep-tool-integrity.py
+      - name: CR-X4-MESH-ROUTING-CONSISTENCY — Mesh 路由一致性检查 (advisory)
+        # mesh 路由必须遵循 BOS URI 标准, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-mesh-routing-consistency.py
+      - name: CR-X2-PROJECT-HEALTH-FRESHNESS — 项目健康分新鲜度检查 (advisory)
+        # 项目健康分必须定期更新, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-project-health-freshness.py
+      - name: CR-X3-DELIVERY-VALUE-GATE — 交付 X3 价值门禁检查 (advisory)
+        # 交付文件必须有 X3 价值标注, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-delivery-value-gate.py
       - name: PASW — 自动同步子模块指针
         # 如果 PR 分支指针不可达, 自动 fetch 或更新到最新 origin/main
         # --verbose: 显示完整错误信息到 CI log, 便于诊断
