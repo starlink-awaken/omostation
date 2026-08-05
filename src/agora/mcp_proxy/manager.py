@@ -235,8 +235,6 @@ class ProxyManager:
                     "metaos",
                     "ecos",
                     "agora",
-                    "cockpit",
-                    "cockpit-mcp",
                     "agent-runtime",
                     "kos",
                     "eidos",

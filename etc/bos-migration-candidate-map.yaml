@@ -61,9 +61,6 @@ mcp_proxy_candidates:
     - uri: bos://memory/kos/mcp-server
       package: kos-mcp
       reason: KOS 核心 MCP, 已有独立 server
-    - uri: bos://capability/cockpit/mcp-server
-      package: cockpit-mcp
-      reason: cockpit L3 入口, 高频调用
     - uri: bos://memory/forge/mcp-server
       package: forge-mcp
       reason: aetherforge 算力框架
