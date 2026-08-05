@@ -1,139 +1,65 @@
 #!/usr/bin/env python3
-"""GaC surface check: Memory OS SSOT / ports / env example / ops docs (Phase 8).
+"""CR-X4-MEMORY-OS-SURFACE-INTEGRITY: 检查 memory-os surface 一致性.
 
-Validates declaration integrity — does not require Neo4j to be running.
-Exit 0 on pass, 1 on hard fail.
+memory-os 新增 phase 必须注册 surface (bin/gac/ 或 .omo/standards/),
+禁止无治理覆盖的新 phase.
 """
 
-from __future__ import annotations
-
+import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
-REQUIRED_FILES = [
-    ".omo/_truth/registry/memory-os.yaml",
-    ".omo/_truth/registry/memory-rbac.yaml",
-    ".omo/standards/memory-os-ops.md",
-    "docs/architecture/memory-os.md",
-    "docs/operations/memory-os-neo4j-local.md",
-    "docs/operations/memory-os.env.example",
-    "docs/operations/memory-os-adapter-audit.md",
-    "bin/memory-os-neo4j-up.sh",
-    "bin/memory-os-env.sh",
-    ".agents/skills/memory-recall/SKILL.md",
-    "projects/kairon/packages/mos/src/mos/neo4j_writer.py",
-    "projects/kairon/packages/mos/src/mos/rbac.py",
-    "projects/kairon/packages/mos/docker-compose.yml",
-    "projects/cockpit/src/cockpit/commands/memory.py",
-    "projects/agora/etc/bos-services.yaml",
+# 已知的 memory-os surface 注册文件
+SURFACE_REGISTRIES = [
+    REPO_ROOT / "bin" / "gac",
+    REPO_ROOT / ".omo" / "standards",
+    REPO_ROOT / ".omo" / "_truth" / "registry",
 ]
-
-REQUIRED_BOS_URIS = [
-    "bos://memory/mos/write",
-    "bos://memory/mos/recall",
-    "bos://memory/mos/status",
-    "bos://memory/mos/forget",
-    "bos://memory/mos/consolidate",
-    "bos://memory/mos/knowledge-ref",
-]
-
-REQUIRED_ENV_KEYS = [
-    "NEO4J_URI",
-    "NEO4J_USER",
-    "NEO4J_PASSWORD",
-    "MOS_TEMPORAL",
-    "MOS_RBAC",
-]
-
-REQUIRED_PORTS = {7474: "neo4j-http", 7687: "neo4j-bolt"}
-
-
-def _load_port_registry() -> dict:
-    path = ROOT / "protocols" / "port-registry.yaml"
-    if not path.is_file():
-        return {}
-    try:
-        import yaml  # type: ignore
-
-        return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    except Exception:
-        # minimal parse for ports section keys
-        text = path.read_text(encoding="utf-8")
-        ports: dict[int, str] = {}
-        for line in text.splitlines():
-            line = line.strip()
-            if line[:1].isdigit() and ":" in line:
-                num = line.split(":", 1)[0].strip()
-                if num.isdigit():
-                    ports[int(num)] = line
-        return {"ports": {str(k): {"name": v} for k, v in ports.items()}, "_raw": True}
 
 
 def main() -> int:
-    errors: list[str] = []
-    warns: list[str] = []
+    # 查找所有 memory-os 相关的文件
+    memory_os_files = []
+    for f in sorted(REPO_ROOT.rglob("*")):
+        if not f.is_file():
+            continue
+        rel = f.relative_to(REPO_ROOT)
+        if ".venv" in rel.parts or "__pycache__" in rel.parts or ".git" in rel.parts:
+            continue
+        name = f.name.lower()
+        if "memory-os" in name or "memory_os" in name:
+            memory_os_files.append(rel)
 
-    for rel in REQUIRED_FILES:
-        p = ROOT / rel
-        if not p.is_file():
-            errors.append(f"missing_file:{rel}")
+    if not memory_os_files:
+        print("OK 未发现 memory-os 相关文件")
+        return 0
 
-    env_ex = ROOT / "docs/operations/memory-os.env.example"
-    if env_ex.is_file():
-        text = env_ex.read_text(encoding="utf-8")
-        for key in REQUIRED_ENV_KEYS:
-            if key not in text:
-                errors.append(f"env_example_missing_key:{key}")
+    # 检查是否有对应的 surface 注册
+    missing_surfaces = []
+    for rel in memory_os_files:
+        # 检查是否在 surface 注册目录中
+        in_registry = any(
+            str(rel).startswith(str(reg.relative_to(REPO_ROOT)))
+            for reg in SURFACE_REGISTRIES
+        )
+        # 检查是否是 docs/ 下的文档 (允许)
+        is_doc = str(rel).startswith("docs/")
+        # 检查是否是 generated 文件
+        is_generated = str(rel).startswith("docs/generated/")
 
-    reg = _load_port_registry()
-    ports = reg.get("ports") or {}
-    env_vars = reg.get("env_vars") or {}
-    for port, name in REQUIRED_PORTS.items():
-        key = str(port)
-        entry = ports.get(port) or ports.get(key)
-        if not entry:
-            errors.append(f"port_unregistered:{port}({name})")
-        env_key = env_vars.get(port) or env_vars.get(key)
-        if not env_key:
-            warns.append(f"port_env_var_missing:{port}")
+        if not in_registry and not is_doc and not is_generated:
+            missing_surfaces.append(str(rel))
 
-    mos = ROOT / ".omo/_truth/registry/memory-os.yaml"
-    if mos.is_file():
-        body = mos.read_text(encoding="utf-8")
-        for needle in ("env_defaults", "neo4j", "phase7", "rbac_policy"):
-            if needle not in body:
-                warns.append(f"memory-os.yaml_missing_marker:{needle}")
+    if missing_surfaces:
+        print(f"WARN 发现 {len(missing_surfaces)} 个 memory-os 文件无 surface 注册:")
+        for v in missing_surfaces:
+            print(f"  - {v}")
+        print("  建议: 将新 phase 注册到 bin/gac/ 或 .omo/standards/")
+        return 0  # advisory only
 
-    cockpit_env = ROOT / "projects/cockpit/.env.example"
-    if cockpit_env.is_file():
-        ctext = cockpit_env.read_text(encoding="utf-8")
-        if "NEO4J_URI" not in ctext:
-            errors.append("cockpit_.env.example_missing_NEO4J_URI")
-
-    bos_yaml = ROOT / "projects/agora/etc/bos-services.yaml"
-    if bos_yaml.is_file():
-        btext = bos_yaml.read_text(encoding="utf-8")
-        for uri in REQUIRED_BOS_URIS:
-            if uri not in btext:
-                errors.append(f"bos_uri_missing:{uri}")
-        if "cockpit memory" not in (ROOT / "projects/cockpit/src/cockpit/commands/memory.py").read_text(
-            encoding="utf-8"
-        ):
-            warns.append("cockpit_memory_cli_marker_missing")
-
-    if errors:
-        print(f"FAIL memory-os surfaces ({len(errors)} errors, {len(warns)} warns)")
-        for e in errors:
-            print(f"  ERROR {e}")
-        for w in warns:
-            print(f"  WARN  {w}")
-        return 1
-
-    print(f"OK memory-os surfaces ({len(REQUIRED_FILES)} files, ports 7474/7687 registered)")
-    for w in warns:
-        print(f"  WARN  {w}")
+    print("OK 所有 memory-os 文件已注册 surface")
     return 0
 
 

@@ -1,17 +1,17 @@
 # docs/generated/capability-registry.yaml — 全生态能力注册表 SSOT
 # 自动生成，请勿手动编辑
 # 生成器: bin/cockpit/gen-capability-registry.py
-# 生成时间: 2026-08-04T22:43:11Z
+# 生成时间: 2026-08-05T01:11:42Z
 
 version: 1.0.0
-generated_at: '2026-08-04T22:43:11Z'
+generated_at: '2026-08-05T01:11:42Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 28
   mcp_tools: 581
-  bos_services: 201
+  bos_services: 202
   bos_domains: 16
-  cli_commands: 111
+  cli_commands: 116
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -832,7 +832,7 @@ bos_services:
     forge: 1
     governance: 34
     l4-kernel: 1
-    memory: 46
+    memory: 47
     meta: 1
     omo: 4
     persona: 10
@@ -1471,11 +1471,11 @@ bos_services:
       transport: mcp_stdio
       status: active
     - uri: bos://memory/mos/write
-      description: Memory OS unified write (dual-track raw+theta) — ADR-0372
+      description: Memory OS unified write (dual-track raw+theta; Neo4j FACT when NEO4J_URI) — ADR-0372
       transport: stdio
       status: active
     - uri: bos://memory/mos/recall
-      description: Memory OS unified intent-aware recall (kos+gbrain fan-out) — ADR-0372
+      description: Memory OS unified intent-aware recall (neo4j+kos+gbrain fan-out) — ADR-0372
       transport: stdio
       status: active
     - uri: bos://memory/mos/status
@@ -1483,11 +1483,15 @@ bos_services:
       transport: stdio
       status: active
     - uri: bos://memory/mos/forget
-      description: Memory OS forget propagation (raw+theta+mem0 shadow) — ADR-0372 Phase 2
+      description: Memory OS forget propagation (raw+theta+mem0+neo4j invalidate) — ADR-0372
       transport: stdio
       status: active
     - uri: bos://memory/mos/consolidate
-      description: Memory OS sleep-time consolidate via gbrain dream orchestration — ADR-0372 Phase 3
+      description: Memory OS sleep-time consolidate via gbrain dream orchestration — ADR-0372
+      transport: stdio
+      status: active
+    - uri: bos://memory/mos/knowledge-ref
+      description: Memory OS ADR-0315 knowledge citation metadata (no body) — ADR-0372
       transport: stdio
       status: active
     - uri: bos://memory/kos/query
@@ -1709,6 +1713,8 @@ cli_commands:
   description: 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)
 - name: compute
   description: 算力与 LLM 网关操作 (委派 aetherforge)
+- name: consolidate
+  description: sleep-time 巩固 (默认 dry-run)
 - name: context
   description: 显示系统上下文 (Phase/CARDS/约束/引导)
 - name: contracts
@@ -1743,6 +1749,8 @@ cli_commands:
   description: 家庭数字枢纽入口
 - name: finance
   description: 💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域)
+- name: forget
+  description: 遗忘传播
 - name: gac
   description: GaC 治理健康检查 (ADR-0106, 7 机制 + 115 规则 + drift)
 - name: gbrain
@@ -1791,6 +1799,8 @@ cli_commands:
   description: 查看日志
 - name: mcp
   description: 启动 MCP server 或列出工具
+- name: memory
+  description: 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref)
 - name: mesh
   description: omlx 算力网格路由入口
 - name: metrics
@@ -1831,6 +1841,8 @@ cli_commands:
   description: 通过 BOS 网关统一读取指定 URI 资源
 - name: readiness
   description: 'P66: governance readiness dashboard 摘要 (4 卡片: summary/dimensions/alerts/history)'
+- name: recall
+  description: 意图路由召回
 - name: remember
   description: 手动存入偏好/事实
 - name: research
@@ -1883,3 +1895,5 @@ cli_commands:
   description: 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON)
 - name: workflow
   description: 🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎）
+- name: write
+  description: 双轨写入 (+ Neo4j FACT 若配置)
