@@ -49,11 +49,14 @@ L4  Vault / ADR                →  权威源（不搬家）
 |-----|------|------|
 | `bos://memory/mos/write` | P1 | 统一写入 |
 | `bos://memory/mos/recall` | P1 | 统一召回 |
-| `bos://memory/mos/consolidate` | P3 | 编排 gbrain dream 子集 |
-| `bos://memory/mos/forget` | P2 | 遗忘传播 |
 | `bos://memory/mos/status` | P1 | 健康与积压 |
+| `bos://memory/mos/forget` | P2 | 遗忘传播 |
+| `bos://memory/mos/consolidate` | P3 | 编排 gbrain dream 子集 |
+| `bos://memory/mos/knowledge-ref` | P4 | ADR-0315 引用元数据 |
 | `bos://memory/events/card_updated` | P1 迁移 | 替代 `bos://brain/events/*` |
 | `bos://memory/kos/*` 等 | 既有 | 后端直达，保留 |
+
+入口（与 registry `entry_points` 对齐）：`cockpit memory …` · `/api/memory/*` · Agora MCP via `bos://memory/mos/*`。
 
 路由表与 adapter 开关见 registry，勿在本文复制易漂移默认值。
 

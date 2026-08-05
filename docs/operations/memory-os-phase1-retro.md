@@ -36,6 +36,8 @@ related:
 - Graphiti / multi-agent ACL / cockpit UI 明确未做
 - eidos 未再包一层 Envelope（校验在 mos 内，避免循环依赖）
 
+> **后续 supersede（勿当现状）**: ACL/RBAC/Neo4j/UI/CLI/BOS 六 URI 已在 Phase 5–8 + #978 分批落地。本文件保留 Phase 1 当时边界；现状见 `docs/architecture/memory-os.md` 与 `.omo/_truth/registry/memory-os.yaml`。
+
 ## 经验
 
 - 控制面与 I/O 分离使 dual-track 可测且不依赖 Qdrant/Neo4j
