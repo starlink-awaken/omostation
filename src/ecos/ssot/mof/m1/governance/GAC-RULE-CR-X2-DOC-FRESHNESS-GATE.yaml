@@ -1,40 +1,29 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
 # DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
-id: GAC-RULE-CR-FOUNDRY-MONITOR
+id: GAC-RULE-CR-X2-DOC-FRESHNESS-GATE
 type: GacRule
-name: Knowledge Foundry cron 监控
-description: 'Knowledge Foundry 9-cron deck 每 6h 跑一次, run ledger 持久化 (runtime/omo/_delivery/foundry/).
-
-  threshold: 9 deck 中 ≥ 7/9 (80%) ok. 跨 deck fail 必须写 FAIL-<run-id>.yaml.
-
-  实施: bin/gac/knowledge-foundry-cron.py
-
-  '
+name: 文档新鲜度门禁
+description: '检查 docs/ 下 md 文件是否在 90 天内更新过. 平衡 X2 维度覆盖. 实现: bin/gac/check-doc-freshness-gate.py
+  (gac-gate CI, advisory)'
 status: active
 domain: meta
 layer: meta
-created: '2026-07-07'
+created: '2026-08-05'
 version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
-  id: CR-FOUNDRY-MONITOR
-  dimension: X1
+  id: CR-X2-DOC-FRESHNESS-GATE
+  dimension: X2
   layer: meta
-  check_type: drift_audit
+  check_type: freshness
   executor:
-  - radar_cron
-  - omo_audit
-  - gac_local_gate
   - ci_gate
   lifecycle: active
   version: 1.0.0
-  created_at: '2026-07-07'
-  target: bin/gac/knowledge-foundry-cron.py
-  adr: ADR-0160
+  created_at: '2026-08-05'
+  adr: ADR-0373
   source_type: native
-  source_ref: bin/gac/knowledge-foundry-cron.py::main
-  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
@@ -43,5 +32,5 @@ model_driven_refs:
   derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
-  timestamp: '2026-07-07T00:00:00Z'
+  timestamp: '2026-08-05T00:00:00Z'
   reason: M1 实例由 gac-m1-sync.py 从 registry 派生

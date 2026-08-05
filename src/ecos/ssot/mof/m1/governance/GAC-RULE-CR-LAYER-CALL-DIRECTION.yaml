@@ -21,6 +21,7 @@ properties:
   - omo_audit
   - radar_cron
   - gac_local_gate
+  - ci_gate
   lifecycle: active
   version: 0.1.0
   created_at: '2026-07-07'
