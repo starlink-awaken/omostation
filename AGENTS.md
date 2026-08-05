@@ -21,7 +21,7 @@ Project-specific instructions override this guide only within that project and o
 ## 1.6 RED LINE — Requirement iterations MUST use Agent Workflow (ADR-0203)
 
 > **适用全部 agent 运行时**（Claude Code / Cursor / OMC / 自建 / 脚本化 agent）。  
-> SSOT: `.omo/_truth/registry/agent-workflows.yaml::requirement_iteration_policy`  
+> SSOT: `.omo/_truth/registry/agent-workflows/::requirement_iteration_policy`  
 > 契约: `.omo/standards/agent-workflow-contract.md` §3.1  
 > ADR: `.omo/_knowledge/decisions/0203-requirement-iteration-workflow-mandatory.md`
 
@@ -71,7 +71,7 @@ operator-facing decision tree.
 
 SSOT:
 
-- `agent-workflows.yaml::silent_workflow_policy` (A1/A2 classification + per-workflow `run_frequency` per ADR-0211; `excluded_workflows` field removed in ADR-0211 §D1)
+- `agent-workflows/::silent_workflow_policy` (A1/A2 classification + per-workflow `run_frequency` per ADR-0211; `excluded_workflows` field removed in ADR-0211 §D1)
 - `governance-checks.yaml` (4 CR-P74-* rules: STATE-PROJECTION-GUARD, RUNTIME-STAMP-POLICY, WORKFLOW-SILENCE, WORKFLOW-SUGGEST)
 
 Tools (`bin/` + `projects/omo`):
@@ -122,9 +122,10 @@ Registry: `.omo/_truth/registry/swarm-coordination.yaml`
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Stable architecture contracts | Registry files for counts and runtime values |
 | [`LAYER-INDEX.md`](LAYER-INDEX.md) | Human-readable layer placement | `docs/project-registry.yaml` |
 | [`docs/project-registry.yaml`](docs/project-registry.yaml) | Project metadata facts | Actual project metadata |
-| [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) | Agent workflow facts | Executable workflow runner |
+| [`.omo/_truth/registry/agent-workflows/`](.omo/_truth/registry/agent-workflows/) | Agent workflow facts | Executable workflow runner |
 | [`.omo/_truth/registry/omo-governance-surfaces.yaml`](.omo/_truth/registry/omo-governance-surfaces.yaml) | OMO governance surfaces | Governance surface registry SSOT |
 | [`.omo/_truth/registry/runtime-projections.yaml`](.omo/_truth/registry/runtime-projections.yaml) | Runtime projection registry | `omo-state-projection-guard.py` (P74) |
+| [`.omo/_truth/registry/ci-surfaces.yaml`](.omo/_truth/registry/ci-surfaces.yaml) | CI 平面检查接线登记 (ADR-0379) | `check-ci-surfaces.py` (CR-CI-SURFACE-SSOT) |
 | [`.omo/_truth/x1-governance-policies.yaml`](.omo/_truth/x1-governance-policies.yaml) | X1 governance policies | Governance policy SSOT |
 | [`.omo/_truth/x2-freshness-rules.yaml`](.omo/_truth/x2-freshness-rules.yaml) | X2 freshness rules | Doc freshness SSOT |
 | [`.omo/_truth/x3-value-stack.yaml`](.omo/_truth/x3-value-stack.yaml) | X3 value stack | Value chain SSOT |
@@ -233,6 +234,8 @@ make evidence-smoke  # BOS declaration vs execution gap audit
 uv run --with "pyyaml" python "bin/mof/gen-project-registry.py"  # Registry drift detection (code→registry)
 make swarm-activity              # 多 agent 实时活动面板 (active runs/locks/worktree/claims/子模块 dirty/冲突)
 python3 bin/gac/swarm-activity-dashboard.py --watch 10  # 每 10s 刷新 (--json 供脚本消费)
+python3 bin/gac/check-ci-surfaces.py                    # CI 平面可观测性 (unregistered/orphan/overlap/double-trigger, ADR-0379)
+python3 bin/gac/ci-check-runner.py --workflow governance-check.yml  # registry-driven 检查执行 (ADR-0379 E-2)
 ```
 
 See [`bin/README.md`](bin/README.md) for the full tool catalog.
