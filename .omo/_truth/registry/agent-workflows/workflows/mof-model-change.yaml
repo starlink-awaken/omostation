@@ -1,0 +1,94 @@
+id: mof-model-change
+run_frequency: on_demand
+title: MOF model change
+purpose: Route M1/M2/M3 model edits through schema validation, state bridge audit,
+  drift checks, and MOF version evidence.
+agents:
+  roles:
+  - mof-agent
+  - governance-agent
+  observer_policy: recommended
+allowed_lanes:
+- governance_code
+- governance_state
+- docs
+lock_scopes:
+- mof-model
+- mof-capabilities
+- omo-state-bridge
+surfaces:
+  read:
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - .omo/_truth/mof-version.yaml
+  - projects/ecos/src/ecos/ssot/mof/**
+  - projects/ecos/src/ecos/ssot/tools/mof-*.py
+  write:
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - .omo/_truth/mof-version.yaml
+  - projects/ecos/src/ecos/ssot/mof/**
+phases:
+  preflight:
+  - id: status
+    mode: required
+    command:
+    - git
+    - status
+    - --short
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  - id: mof-schema-validate
+    mode: required
+    command:
+    - python3
+    - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+    - --json
+  execute:
+  - id: edit-mof-model
+    mode: manual
+    command:
+    - agent
+    - edit
+    - mof-m1-m2-m3
+  - id: mof-version-record
+    mode: manual
+    command:
+    - bin/mof-version
+    - record
+    - <description>
+  verification:
+  - id: mof-schema-validate
+    mode: required
+    command:
+    - python3
+    - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+    - --json
+  - id: mof-state-bridge
+    mode: required
+    command:
+    - python3
+    - projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py
+    - --json
+  - id: mof-drift
+    mode: required
+    command:
+    - bin/mof-drift
+  - id: gac-local-gate
+    mode: required
+    command:
+    - make
+    - gac-local-gate
+  closeout:
+  - id: diff-stat
+    mode: required
+    command:
+    - git
+    - diff
+    - --stat

@@ -1,0 +1,93 @@
+id: c2g-spec-ingress
+run_frequency: periodic
+title: C2G external spec ingress
+purpose: Convert BMAD/OpenSpec/Pitch inputs into governed OMO planned tasks.
+agents:
+  roles:
+  - strategy-agent
+  - c2g-agent
+  - governance-agent
+  observer_policy: optional
+allowed_lanes:
+- governance_state
+- docs
+lock_scopes:
+- c2g-ingress
+- .omo/tasks/planned
+surfaces:
+  read:
+  - runtime/sandbox/**
+  - .omo/pitches/**
+  - projects/c2g/**
+  - projects/omo/**
+  write:
+  - .omo/tasks/planned/**
+  - runtime/omo/_delivery/ingress/**
+phases:
+  preflight:
+  - id: adapter-doctor
+    mode: advisory
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - doctor
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  execute:
+  - id: import-spec
+    mode: manual
+    command:
+    - uv
+    - run
+    - --project
+    - projects/omo
+    - omo
+    - bridge
+    - --format
+    - '{format}'
+    - '{source_file}'
+  - id: pitch-bet
+    mode: manual
+    command:
+    - uv
+    - run
+    - --project
+    - projects/cockpit
+    - cockpit
+    - compass
+    - bet
+    - '{source_file}'
+  verification:
+  - id: ssot-guardian
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/ssot/ssot-guardian.py
+  - id: gac-local-gate
+    mode: required
+    command:
+    - make
+    - gac-local-gate
+  closeout:
+  - id: planned-task-review
+    mode: manual
+    command:
+    - agent
+    - inspect
+    - .omo/tasks/planned

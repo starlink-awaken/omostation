@@ -1,0 +1,75 @@
+id: governance-state-mutation
+run_frequency: on_demand
+title: Governed OMO or spaces mutation
+purpose: Force state-plane changes through OMO/C2G broker paths instead of ad-hoc
+  file writes.
+agents:
+  roles:
+  - governance-agent
+  - c2g-agent
+  observer_policy: recommended
+allowed_lanes:
+- governance_state
+- docs
+- runtime_snapshot
+lock_scopes:
+- .omo
+- spaces
+- omo-broker
+surfaces:
+  read:
+  - .omo/**
+  - spaces/**
+  - projects/omo/**
+  - projects/c2g/**
+  write:
+  - .omo/**
+  - spaces/**
+phases:
+  preflight:
+  - id: status
+    mode: required
+    command:
+    - git
+    - status
+    - --short
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  execute:
+  - id: broker-write
+    mode: manual
+    command:
+    - omo-or-c2g
+    - broker
+    - mutate-state
+  verification:
+  - id: ssot-guardian
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/ssot/ssot-guardian.py
+  - id: gac-local-gate
+    mode: required
+    command:
+    - make
+    - gac-local-gate
+  closeout:
+  - id: mutation-ledger
+    mode: manual
+    command:
+    - omo
+    - event
+    - emit
+    - agent_mutation_complete

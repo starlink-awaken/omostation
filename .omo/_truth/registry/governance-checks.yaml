@@ -548,7 +548,7 @@ gac:
     description: 'P74 §4.4 A2: workflow 30d 内 0 触发 → warn. 通过 agent-workflow compliance p74_solidification 段输出. 防 P71 类 C
       复发. 实现: bin/agent-workflow.py::p74_solidification_report'
     check_type: audit_chain
-    target: .omo/_truth/registry/agent-workflows.yaml::silent_workflow_policy + bin/agent-workflow.py
+    target: .omo/_truth/registry/agent-workflows::silent_workflow_policy + bin/agent-workflow.py
     executor:
     - ci_gate
     - evidence_smoke
@@ -562,7 +562,7 @@ gac:
     name: Workflow routing advisory suggest (P74, ADR-0130)
     description: 'P74 §3 错位路由纠正: 给出 changes 期望走的 workflow 建议. advisory only, 不强制. 实现: bin/agent-workflow.py suggest --from-diff'
     check_type: registry_integrity
-    target: .omo/_truth/registry/agent-workflows.yaml + bin/agent-workflow.py
+    target: .omo/_truth/registry/agent-workflows + bin/agent-workflow.py
     executor:
     - mcp_tool
     - ci_gate
