@@ -1,4 +1,4 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up worktree-prune worktree-guard worktree-cleanup worktree-audit
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up worktree-prune worktree-guard worktree-cleanup worktree-audit
 
 PY := uv run --with pyyaml python
 
@@ -471,6 +471,9 @@ m2-ssot-batch1:
 # ── GaC 门禁 ──────────────────────────────────────────────
 gac-healthcheck:  ## GaC 13-point 健康检查
 	$(PY) bin/gac/gac-healthcheck.py
+
+swarm-activity:  ## 多 agent 实时活动面板 (active runs/locks/worktree/claims/子模块 dirty/冲突)
+	python3 bin/gac/swarm-activity-dashboard.py
 
 gac-drift:  ## GaC 规则漂移检测
 	$(PY) bin/gac/gac-drift.py

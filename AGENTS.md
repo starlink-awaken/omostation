@@ -231,6 +231,8 @@ cd "projects/gbrain" && bun test             # gbrain (TypeScript)
 make gac-healthcheck
 make evidence-smoke  # BOS declaration vs execution gap audit
 uv run --with "pyyaml" python "bin/mof/gen-project-registry.py"  # Registry drift detection (code→registry)
+make swarm-activity              # 多 agent 实时活动面板 (active runs/locks/worktree/claims/子模块 dirty/冲突)
+python3 bin/gac/swarm-activity-dashboard.py --watch 10  # 每 10s 刷新 (--json 供脚本消费)
 ```
 
 See [`bin/README.md`](bin/README.md) for the full tool catalog.

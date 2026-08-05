@@ -155,6 +155,8 @@ def _conflicts(since_hours: int = 24) -> list[dict]:
     for line in CONFLICT_LOG.read_text(encoding="utf-8").splitlines():
         try:
             ev = json.loads(line)
+            if not isinstance(ev, dict):
+                continue
             ts = ev.get("ts", "")
             try:
                 dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
@@ -182,6 +184,8 @@ def _recent_events(hours: int = 1) -> int:
     for line in EVENTS_LOG.read_text(encoding="utf-8").splitlines():
         try:
             ev = json.loads(line)
+            if not isinstance(ev, dict):
+                continue
             dt = datetime.fromisoformat(ev.get("ts", "").replace("Z", "+00:00"))
             if dt >= cutoff:
                 count += 1
