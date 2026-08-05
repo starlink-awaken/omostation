@@ -111,6 +111,21 @@ COMMAND_CATALOG: dict[str, CommandMeta] = {
         category="👤 用户 (User)",
         summary="快速检查新用户环境核验状态",
     ),
+    "agent-onboard": CommandMeta(
+        name="agent-onboard",
+        category="🤖 Agent 协作",
+        summary="新 Agent 入职 checklist + 环境初始化",
+    ),
+    "swarm": CommandMeta(
+        name="swarm",
+        category="🤖 Agent 协作",
+        summary="多 agent 实时活动监控 (runs/locks/worktree/冲突)",
+    ),
+    "channels": CommandMeta(
+        name="channels",
+        category="🔌 总线接入 (ECCP)",
+        summary="External channels inventory (ECCP)",
+    ),
     "bos-inbox": CommandMeta(
         name="bos-inbox",
         category="🧠 知识引擎 (BOS)",

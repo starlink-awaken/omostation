@@ -29,12 +29,17 @@ from .commands.base import (
     _find_cli,
 )
 from .commands.bos import (
+    cmd_bos_backends,
     cmd_bos_capability,
     cmd_bos_discover,
+    cmd_bos_health,
     cmd_bos_list,
     cmd_bos_read,
+    cmd_bos_register,
+    cmd_bos_reload,
     cmd_bos_resolve,
     cmd_bos_status,
+    cmd_bos_workflow,
 )
 from .commands.brain import cmd_brain
 from .commands.brief import _cmd_brief
@@ -196,7 +201,14 @@ def main() -> int:
             sys.exit(2)
 
         def print_help(self, file=None):
-            """Rich 紧凑帮助，避免 70+ 命令挤成一行墙。完整地图见 cockpit help。"""
+            """Rich 紧凑帮助仅用于顶层; 子命令显示自身参数 (标准 argparse help).
+
+            此前无条件渲染紧凑地图导致所有子命令 --help 都显示全局地图而非自身
+            用法, 用户无法了解任何命令的参数/子命令。修复: 子 parser (prog 含
+            空格, 如 "cockpit mcp") 回落到 argparse 默认 help。
+            """
+            if " " in self.prog:
+                return super().print_help(file)
             from cockpit.commands.help_map import render_compact_help
 
             c = Console(file=file) if file is not None else console
@@ -630,6 +642,12 @@ def main() -> int:
     bos_read_p = bos_sub.add_parser("read", help="通过 BOS 网关统一读取指定 URI 资源")
     bos_read_p.add_argument("uri", help="BOS URI, e.g. bos://memory/inbox/status")
     bos_read_p.add_argument("--args", default="{}", help="JSON 格式查询参数字符串")
+    # 补充 bos 子命令 (实现已在 commands/bos.py, 此前 parser 未注册)
+    bos_sub.add_parser("health", help="BOS 服务健康检查")
+    bos_sub.add_parser("backends", help="列出 BOS 后端")
+    bos_sub.add_parser("reload", help="重载 BOS 配置/M1")
+    bos_sub.add_parser("register", help="注册 BOS 服务")
+    bos_sub.add_parser("workflow", help="BOS workflow 相关")
 
     # ECCP external-channels inventory
     channels_p = sub.add_parser(
@@ -1123,6 +1141,16 @@ def main() -> int:
             from cockpit.commands.bos_inbox import cmd_bos_inbox
 
             return cmd_bos_inbox(a)
+        elif sub == "health":
+            return cmd_bos_health(a)
+        elif sub == "backends":
+            return cmd_bos_backends(a)
+        elif sub == "reload":
+            return cmd_bos_reload(a)
+        elif sub == "register":
+            return cmd_bos_register(a)
+        elif sub == "workflow":
+            return cmd_bos_workflow(a)
         else:
             return cmd_bos_status(a)
 
