@@ -1,0 +1,1123 @@
+version: 1
+description: Project-level executable workflows for AI agents working in omostation.
+ssot:
+  governance_rules: .omo/_truth/registry/governance-checks.yaml
+  agent_protocol: .omo/standards/agent-mutation-protocol.md
+  omo_surfaces: .omo/standards/omo-governance-surfaces.md
+  doc_contract: .omo/standards/doc-ssot-contract.md
+internal_integrations:
+  gac:
+    status: integrated
+    authority: governance_gate
+    owner: governance-team
+    ssot_rule: Governance rules are canonical in .omo/_truth/registry/governance-checks.yaml;
+      Markdown may only point to generated summaries.
+    gate: make gac-local-gate
+    gate_binding: make gac-local-gate
+    runner_lint_binding: bin/gac/gac-local-gate.py::agent-workflow-lint
+    health_command:
+    - bin/gac/gac-validate.py
+    - --gate
+    health_required: true
+  omo:
+    status: integrated
+    authority: state_broker
+    owner: omo-team
+    ssot_rule: OMO owns governed state mutation; direct .omo writes are exceptional
+      and must be called out.
+    bridge_compat: uv run --project projects/omo omo bridge --format <format> <source-file>
+    state_broker: projects/omo
+    gate_binding: omo-bridge-help
+    health_command:
+    - uv
+    - run
+    - --project
+    - projects/omo
+    - omo
+    - bridge
+    - --help
+    health_required: true
+  c2g:
+    status: integrated
+    authority: strategy_ingress
+    owner: strategy-team
+    ssot_rule: Strategy and external specs enter governed work through C2G/OMO planned
+      task materialization.
+    pitch_bet: uv run --project projects/c2g c2g bet <pitch.md>
+    cockpit_entry: uv run --project projects/cockpit cockpit compass bet <pitch.md>
+    gate_binding: c2g-bet-help
+    health_command:
+    - uv
+    - run
+    - --project
+    - projects/c2g
+    - c2g
+    - bet
+    - --help
+    health_required: true
+  cockpit:
+    status: integrated
+    authority: entrypoint
+    owner: cockpit-team
+    ssot_rule: Cockpit is the L3 human entrypoint and delegates governance behavior
+      to registered lower-layer tools.
+    compass: uv run --project projects/cockpit cockpit compass --help
+    agent: uv run --project projects/cockpit cockpit agent
+    workflow: uv run --project projects/cockpit cockpit agent-workflow --help
+    gate_binding: cockpit-agent-workflow-list
+    health_command:
+    - uv
+    - run
+    - --project
+    - projects/cockpit
+    - cockpit
+    - agent-workflow
+    - list
+    health_required: true
+  mof:
+    status: integrated
+    authority: model_registry
+    owner: ecos-team
+    ssot_rule: MOF M1/M2/M3 model facts and capability tools are canonical under ecos/mof
+      registries.
+    capabilities: .omo/_truth/registry/mof-capabilities.yaml
+    schema_validate: python3 projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+      --json
+    state_bridge: python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --json
+    drift: bin/mof-drift
+    gate_binding: mof-schema-validate
+    health_command:
+    - python3
+    - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+    - --json
+    health_required: true
+runner:
+  entrypoint: bin/agent-workflow.py
+  generated_skill: .agents/skills/project-governance/SKILL.md
+  run_state_dir: .omo/_delivery/agent-workflows/runs
+  lock_state_dir: .omo/_delivery/agent-workflows/locks
+  ledger_path: .omo/_delivery/agent-workflows/events.jsonl
+  lock_ttl_hours: 24
+silent_workflow_policy:
+  description: 'Registry-level policy for workflows that have no recent agent_workflow_start
+    events (ADR-0130 / P74). P74 §4.4 distinguishes A1 (check-layer silent, addressed
+    via doctor_checks / diff_checks) from A2 (run-layer silent, intentionally not
+    force-triggered because gate coverage already exercises them). A workflow is considered
+    silently healthy when its path appears in at least one diff_checks or doctor_checks
+    rule. Workflows with neither coverage AND no recent run events trigger a [warn]
+    in agent-workflow compliance (p74_solidification).
+
+    '
+  warn_after_days: 30
+  warn_after_days_by_frequency:
+    on_demand: 30
+    periodic: 7
+    continuous: 1
+requirement_iteration_policy:
+  mode: required
+  adr: ADR-0203
+  enforcement: ADR-0204
+  description: 'All requirement iterations (feature, bugfix, ops landing, governance/SSOT/ADR
+    changes, submodule pointer closeout tied to delivery) MUST execute via bin/agent-workflow.py:
+    bootstrap → start → claim → verify → closeout. Prompt memory alone is non-compliant.
+    claim_policy tiers still enforce path claims; this policy is the agent-facing
+    mandatory rule for starting a run before edits. Executable gate (ADR-0204): staged
+    in-scope files without an active run → compliance halt. Unstaged dirty in-scope
+    files → warn only (multi-agent worktree safe). Bypass: AGCP_REQUIREMENT_ITERATION_GATE=0
+
+    '
+  required_lifecycle:
+  - bootstrap
+  - start
+  - claim
+  - verify
+  - closeout
+  in_scope:
+  - feature_or_bugfix_code_change
+  - governance_ssot_or_adr_change
+  - ops_landing_with_repo_diff
+  - delivery_closeout_with_product_or_governance_change
+  - submodule_pointer_closeout
+  in_scope_paths:
+  - projects/**
+  - .omo/_truth/**
+  - .omo/standards/**
+  - .omo/_knowledge/decisions/**
+  - .omo/_knowledge/patterns/**
+  - .agents/**
+  - bin/**
+  - docs/**
+  - tests/**
+  - AGENTS.md
+  - CLAUDE.md
+  - ARCHITECTURE.md
+  - README.md
+  exclude_paths:
+  - .omo/state/**
+  - .omo/_delivery/**
+  - .omo/_control/**
+  - runtime/**
+  - '**/__pycache__/**'
+  exempt_classes:
+  - pure_readonly_qa_or_explore
+  - observer_audit_readonly
+  - explicit_user_waiver_recorded_in_closeout
+  exempt_workflows:
+  - observer-audit
+  non_exempt_note: 'handoff-resume is recovery of an existing run, not a license to
+    edit without a run-id.
+
+    '
+claim_policy:
+  mode: advisory
+  required_paths:
+  - AGENTS.md
+  - CLAUDE.md
+  - README.md
+  - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+  - projects/AGENTS.md
+  tiers:
+  - id: core-governance-required
+    mode: required
+    paths:
+    - .agents/skills/**
+    - .omo/_truth/registry/**
+    - .omo/standards/**
+    - bin/agent-workflow.py
+    - bin/change-lane-check.py
+    - bin/gac/gac-local-gate.py
+    - bin/gac/governance-evolution.py
+    - bin/gac/omo-state-projection-guard.py
+    - bin/gac/omo-runtime-stamp-policy.py
+    - projects/agora/etc/bos-services.yaml
+    - projects/cockpit/src/cockpit/cli.py
+    - projects/cockpit/src/cockpit/commands/agent_workflow.py
+    - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
+    - projects/ecos/src/ecos/ssot/mof/**
+    - tests/test_agent_workflow.py
+  - id: runtime-projection-snapshot
+    mode: required
+    paths:
+    - .omo/_truth/registry/runtime-projections.yaml
+    - .omo/state/runtime/**
+    - .omo/_control/**
+    - BRIEF.md
+    note: 'Runtime projections refreshed by the omo state sync broker (ADR-0129, P74
+      §3.2). Derived artifacts; required so that omo state sync workflows must claim
+      them, keeping broker regeneration auditable.
+
+      '
+  - id: agent-entrypoint-advisory
+    mode: advisory
+    paths:
+    - AGENTS.md
+    - CLAUDE.md
+    - README.md
+    - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+    - projects/AGENTS.md
+evidence_schema:
+  version: 1
+  required_event_fields:
+  - ts
+  - event
+  - run_id
+  command_result_fields:
+  - id
+  - command
+  - returncode
+  - duration_s
+  - ok
+  closeout_required_events:
+  - agent_workflow_verify
+  - agent_workflow_closeout
+  - agent_workflow_close
+compliance_slo:
+  stale_locks: 0
+  closed_ok_without_evidence: 0
+  required_integration_health: 100%
+  doc_ssot_conflicts: 0
+  generated_digest_drift: 0
+commands:
+  lint:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - lint
+  doctor:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - doctor
+  observe:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - observe
+  adapters:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - adapters
+  integrations:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - integrations
+  bootstrap:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - bootstrap
+  status:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - status
+  claim:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - claim
+  verify_from_diff:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - verify
+  - --from-diff
+  closeout:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - closeout
+  compliance:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - compliance
+  governance_evolution:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/governance-evolution.py
+  - status
+doctor_checks:
+- id: root-agent-workflow-list
+  description: Root runner can list workflows.
+  required: true
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - list
+- id: root-agent-workflow-agents
+  description: Root runner can list registered agent profiles.
+  required: true
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - agents
+- id: root-agent-workflow-adapters
+  description: Root runner can list external adapter contracts.
+  required: true
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - adapters
+- id: root-agent-workflow-integrations
+  description: Root runner can list internal integration contracts.
+  required: true
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - integrations
+- id: root-agent-workflow-observe
+  description: Observer audit can inspect run, lock, and ledger consistency.
+  required: true
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - observe
+- id: root-agent-workflow-verify-plan
+  description: Root runner can select diff-aware verification checks.
+  required: true
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - verify
+  - --file
+  - bin/agent-workflow.py
+- id: root-agent-workflow-compliance
+  description: Root runner can audit run, lock, ledger, and evidence compliance.
+  required: true
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - compliance
+- id: root-agent-workflow-status
+  description: Root runner can summarize AGCP run, lock, claim, compliance, and lane
+    status.
+  required: true
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - status
+  - --json
+- id: root-governance-evolution-status
+  description: Root runner can summarize systemic governance evolution roadmap status.
+  required: true
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/governance-evolution.py
+  - status
+  - --json
+- id: cockpit-agent-workflow-list
+  description: Cockpit L3 entry can delegate to the root runner.
+  required: true
+  command:
+  - uv
+  - run
+  - --project
+  - projects/cockpit
+  - cockpit
+  - agent-workflow
+  - list
+- id: cockpit-agent-bootstrap
+  description: Cockpit L3 agent entry can show startup context.
+  required: true
+  command:
+  - uv
+  - run
+  - --project
+  - projects/cockpit
+  - cockpit
+  - agent
+  - bootstrap
+  - --skip-health
+- id: cockpit-agent-status
+  description: Cockpit L3 agent entry can show AGCP status.
+  required: true
+  command:
+  - uv
+  - run
+  - --project
+  - projects/cockpit
+  - cockpit
+  - agent
+  - status
+  - --json
+- id: cockpit-agent-workflow-agents
+  description: Cockpit L3 entry can expose registered agent profiles.
+  required: true
+  command:
+  - uv
+  - run
+  - --project
+  - projects/cockpit
+  - cockpit
+  - agent-workflow
+  - agents
+- id: cockpit-compass-help
+  description: Cockpit C2G compass entry is available.
+  required: true
+  command:
+  - uv
+  - run
+  - --project
+  - projects/cockpit
+  - cockpit
+  - compass
+  - --help
+- id: c2g-bet-help
+  description: C2G pitch-to-task ingress command is available.
+  required: true
+  command:
+  - uv
+  - run
+  - --project
+  - projects/c2g
+  - c2g
+  - bet
+  - --help
+- id: omo-bridge-help
+  description: OMO bridge compatibility path for BMAD/OpenSpec is available.
+  required: true
+  command:
+  - uv
+  - run
+  - --project
+  - projects/omo
+  - omo
+  - bridge
+  - --help
+- id: mof-capabilities-registry
+  description: MOF capability registry is present as the MOF SSOT.
+  required: true
+  command:
+  - test
+  - -f
+  - .omo/_truth/registry/mof-capabilities.yaml
+- id: mof-schema-validate
+  description: MOF M1/M2 schema validation is runnable.
+  required: true
+  command:
+  - python3
+  - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+  - --json
+- id: mof-state-bridge
+  description: MOF state bridge can report OMO task alignment.
+  required: true
+  command:
+  - python3
+  - projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py
+  - --json
+- id: mof-drift
+  description: MOF architecture drift detector is runnable.
+  required: true
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/mof-drift
+- id: mof-bootstrap
+  description: M4 5-check 自反校验器 (M4→GaC, ADR-0152/0153/0154)
+  required: false
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/mof-bootstrap.py
+  - all
+- id: m4-health-score
+  description: M4 Health Score 量化 (派生面引擎)
+  required: false
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/m4-health-score.py
+  - --emit
+- id: check-submodule-hygiene
+  description: 子模块卫生守门 (3类检查)
+  required: false
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/ssot/check-submodule-hygiene.py
+  - --strict
+- id: mcp-tool-data-complete
+  description: MCPTOOL 数据完整性守门
+  required: false
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/mcp-tool-data-complete.py
+diff_checks:
+- id: current-state-coherence
+  description: 'Read-only coherence projection for current phase, goals, task counts,
+    execution mode and Scene Card activation boundary. Waiting for a real scenario
+    is valid; contradictory state or stale counts are blocking.
+
+    '
+  required: true
+  paths:
+  - bin/ssot/current-state-coherence.py
+  - .omo/state/system.yaml
+  - .omo/goals/current.yaml
+  - .omo/tasks/**
+  - docs/scene-card-candidate-seeds.yaml
+  - docs/scene-cards/**
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/ssot/current-state-coherence.py
+  - --json
+- id: pyright-sweep-check
+  description: P91 pyright and ruff sweep tooling plus Python project type surfaces.
+  required: true
+  paths:
+  - bin/sweep/**
+  - tests/test_sweep_tools.py
+  - bin/gac/gac-worktree.sh
+  - bin/gac/gac-worktree-cleanup.sh
+  - tests/test_gac_worktree_lifecycle.py
+  - projects/*/src/**/*.py
+  - projects/*/tests/**/*.py
+  - projects/*/pyproject.toml
+  - projects/*/pyrightconfig.json
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - --with
+  - pytest
+  - python
+  - -m
+  - pytest
+  - tests/test_sweep_tools.py
+  - tests/test_gac_worktree_lifecycle.py
+  - -q
+- id: submodule-hygiene
+  description: Submodule pointer hygiene and shared-worktree isolation checks (P72/PASW/ADR-0220
+    D5).
+  required: true
+  paths:
+  - bin/ssot/check-submodule-hygiene.py
+  - .omo/_delivery/branch-claims/**
+  - .omo/_delivery/adr-claims/**
+  - .subtrees/**
+  - projects/*/
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/ssot/check-submodule-hygiene.py
+  - --strict
+- id: agent-workflow-lint
+  description: Workflow runner and registry contract validation.
+  required: true
+  paths:
+  - bin/agent-workflow.py
+  - .omo/_truth/registry/agent-workflows.yaml
+  - .agents/skills/project-governance/SKILL.md
+  - .omo/standards/agent-workflow-contract.md
+  - .omo/_delivery/agent-workflows/runs/**
+  - .omo/_delivery/agent-workflows/locks/**
+  - .omo/_delivery/agent-workflows/events.jsonl
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - lint
+- id: c2g-spec-consistency
+  description: c2g pitch→planned→active ingress surface consistency (ADR-0211 §D1
+    P74 覆盖 c2g-spec-ingress surfaces).
+  required: false
+  paths:
+  - .omo/pitches/**
+  - .omo/tasks/planned/**
+  - runtime/omo/_delivery/ingress/**
+  - projects/c2g/**
+  - projects/omo/**
+  - runtime/sandbox/**
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/gac-validate.py
+  - --gate
+- id: agent-workflow-tests
+  description: Focused tests for executable agent workflow control plane.
+  required: true
+  paths:
+  - bin/agent-workflow.py
+  - bin/change-lane-check.py
+  - bin/gac/gac-local-gate.py
+  - .omo/_truth/registry/agent-workflows.yaml
+  - tests/test_agent_workflow.py
+  command:
+  - uv
+  - run
+  - pytest
+  - tests/test_agent_workflow.py
+  - -q
+- id: governance-evolution-validate
+  description: Governance evolution roadmap structure and traceability validation.
+  required: true
+  paths:
+  - .omo/_truth/registry/governance-evolution-roadmap.yaml
+  - bin/gac/governance-evolution.py
+  - tests/test_governance_evolution.py
+  - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+  - README.md
+  - AGENTS.md
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/governance-evolution.py
+  - validate
+  - --json
+- id: governance-evolution-tests
+  description: Focused tests for governance evolution roadmap and CLI.
+  required: true
+  paths:
+  - .omo/_truth/registry/governance-evolution-roadmap.yaml
+  - bin/gac/governance-evolution.py
+  - tests/test_governance_evolution.py
+  command:
+  - uv
+  - run
+  - pytest
+  - tests/test_governance_evolution.py
+  - -q
+- id: mof-capabilities-drift
+  description: MOF 能力注册表 drift 守门 (CR-X4-MOF-CAPABILITIES-DRIFT, ADR-0238 P0-2) —
+    path/stats/mcptool_count 三类漂移.
+  required: false
+  paths:
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - bin/mof/check-mof-capabilities-drift.py
+  - projects/ecos/src/ecos/ssot/mof/m1/mcptool/MCPTOOL-MODEL-DRIVEN.yaml
+  - projects/model-driven/src/model_driven/mcp_server.py
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/check-mof-capabilities-drift.py
+- id: mof-capabilities-drift-tests
+  description: MOF 能力注册表 drift 检出测试 (注入漂移验证, ADR-0238 P0-2).
+  required: false
+  paths:
+  - bin/mof/check-mof-capabilities-drift.py
+  - tests/test_mof_capabilities_drift.py
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - --with
+  - pytest
+  - python
+  - -m
+  - pytest
+  - tests/test_mof_capabilities_drift.py
+  - -q
+- id: metaos-registry-drift
+  description: metaos registry drift 守门 (CR-X4-METAOS-REGISTRY-DRIFT, §J1) — projects-capabilities
+    死条目 + INTERFACE entrypoint 可达性 + submodule 目录. 扩展 check-mof-capabilities-drift
+    同一扇门, 不新建门禁框架.
+  required: false
+  paths:
+  - bin/mof/check-mof-capabilities-drift.py
+  - .omo/_truth/registry/projects-capabilities.yaml
+  - projects/metaos/INTERFACE.yaml
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/check-mof-capabilities-drift.py
+  - --scope
+  - metaos
+- id: metaos-registry-drift-tests
+  description: metaos registry drift 检出测试 (§J1 注入 + 现实 kairon.metaos 活体验收).
+  required: false
+  paths:
+  - bin/mof/check-mof-capabilities-drift.py
+  - tests/test_mof_capabilities_drift.py
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - --with
+  - pytest
+  - python
+  - -m
+  - pytest
+  - tests/test_mof_capabilities_drift.py
+  - -q
+- id: cockpit-agent-entry-tests
+  description: Cockpit L3 entry tests for agent workflow delegation.
+  required: true
+  paths:
+  - projects/cockpit/src/cockpit/cli.py
+  - projects/cockpit/src/cockpit/commands/agent_workflow.py
+  - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
+  command:
+  - uv
+  - run
+  - --project
+  - projects/cockpit
+  - pytest
+  - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
+  - -q
+- id: agora-bos-registry-tests
+  description: Agora BOS registry tests for agent workflow governance routes.
+  required: true
+  paths:
+  - projects/agora/etc/bos-services.yaml
+  - projects/agora/tests/unit/test_bos_registry.py
+  command:
+  - uv
+  - run
+  - --project
+  - projects/agora
+  - pytest
+  - projects/agora/tests/unit/test_bos_registry.py
+  - -q
+- id: mof-schema-validate
+  description: MOF M1/M2 schema validation for model edits.
+  required: true
+  paths:
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - .omo/_truth/mof-version.yaml
+  - projects/ecos/src/ecos/ssot/mof/**
+  - projects/ecos/src/ecos/ssot/tools/mof-*.py
+  command:
+  - python3
+  - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+  - --json
+- id: mof-state-bridge
+  description: MOF to OMO state bridge alignment report for model edits.
+  required: true
+  paths:
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - .omo/_truth/mof-version.yaml
+  - projects/ecos/src/ecos/ssot/mof/**
+  - projects/ecos/src/ecos/ssot/tools/mof-*.py
+  command:
+  - python3
+  - projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py
+  - --json
+- id: mof-drift
+  description: MOF architecture drift detector for model edits.
+  required: true
+  paths:
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - .omo/_truth/mof-version.yaml
+  - projects/ecos/src/ecos/ssot/mof/**
+  - projects/ecos/src/ecos/ssot/tools/mof-*.py
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/mof-drift
+- id: state-stale-consume
+  description: state_stale 事件消费端 (ADR-0227 原则4 闭环; ADR-0128 Phase 2).
+  required: false
+  paths:
+  - .omo/_knowledge/omo-events.jsonl
+  - bin/gac/state-stale-consume.py
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/state-stale-consume.py
+  - --within
+  - '300'
+  - --quiet
+- id: doc-ssot-lint
+  description: Documentation SSOT semantic contract.
+  required: true
+  paths:
+  - '*.md'
+  - docs/**/*.md
+  - docs/generated/**
+  - .omo/standards/**/*.md
+  - projects/*/AGENTS.md
+  - projects/*/CLAUDE.md
+  - projects/*/README.md
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/ssot/doc-ssot-lint.py
+  - --json
+- id: project-layer-index
+  description: Generated project layer digest freshness.
+  required: true
+  paths:
+  - docs/project-registry.yaml
+  - docs/generated/project-layer-index.md
+  - bin/mof/project-layer-index.py
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/project-layer-index.py
+  - --check
+- id: ssot-guardian
+  description: State-plane and generated artifact SSOT guard.
+  required: true
+  paths:
+  - .omo/**
+  - spaces/**
+  - AGENTS.md
+  - CLAUDE.md
+  - README.md
+  - ARCHITECTURE.md
+  - LAYER-INDEX.md
+  - docs/generated/**
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/ssot/ssot-guardian.py
+- id: gac-local-gate
+  description: Full local governance gate for broad contract changes.
+  required: true
+  allowed_lanes:
+  - code
+  - docs
+  - governance_code
+  - governance_state
+  - config
+  paths:
+  - Makefile
+  - bin/**
+  - .omo/_truth/registry/**
+  - .omo/standards/**
+  - docs/**
+  - AGENTS.md
+  - CLAUDE.md
+  - README.md
+  - ARCHITECTURE.md
+  - LAYER-INDEX.md
+  command:
+  - make
+  - gac-local-gate
+- id: gen-service-configs-validate
+  description: 'Validates gen-service-configs output is consistent with the services.yaml
+    registry and that all generated GitHub Actions workflows carry an executable `schedule_ref`
+    reference (P4 元递归全覆盖 复发拦截, P74 §3).
+
+    '
+  required: true
+  paths:
+  - bin/mof/gen-service-configs.py
+  - projects/agora/etc/services.yaml
+  - .github/workflows/**
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/gen-service-configs.py
+  - --validate
+- id: omo-state-projection-guard
+  description: 'Validates that .omo/state/runtime/* projections referenced from runtime-projections.yaml
+    are present, parse as YAML/JSON, and have a canonical-path entry (CR-P74-STATE-PROJECTION-GUARD;
+    prevents P71 class A "path drift" recurrence).
+
+    '
+  required: true
+  paths:
+  - .omo/_truth/registry/runtime-projections.yaml
+  - .omo/state/runtime/**
+  - .omo/_control/**
+  - BRIEF.md
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/omo-state-projection-guard.py
+- id: omo-runtime-stamp-policy
+  description: 'Confirms runtime stamp files (e.g. .watch-dispatch-stamps.json) are
+    either gitignored, tracked, or registered in the runtime surface registry, so
+    untracked runtime artifacts do not silently accumulate (CR-P74-RUNTIME-STAMP-POLICY;
+    prevents P71 class B recurrence).
+
+    '
+  required: true
+  paths:
+  - runtime/**
+  - .omo/_truth/registry/runtime-projections.yaml
+  - .gitignore
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/omo-runtime-stamp-policy.py
+- id: gac-consensus-inject
+  description: 'KOS RAG Epigenetic Memory Injection (eCOS v6 Phase A). Reads Consensus
+    entities from KOS SQLite, uses TF-IDF cosine similarity to select Top-2 most relevant
+    genes for the current task context, and injects them into CLAUDE.md. Saves ~66%
+    Context Window Tokens vs full-dump.
+
+    '
+  required: false
+  paths:
+  - bin/gac/gac-consensus-inject.py
+  - CLAUDE.md
+  command:
+  - python3
+  - bin/gac/gac-consensus-inject.py
+- id: gac-ingress-check
+  description: 'C2G Self-Correcting Ingress Pre-Checker (eCOS v6 Phase B). Detects
+    port conflicts, service name collisions, and runs mini-9b LLM semantic analysis
+    on Pitch documents before task materialization. Moves conflict detection from
+    commit-time to planning-time.
+
+    '
+  required: false
+  paths:
+  - bin/gac/gac-ingress-check.py
+  - protocols/port-registry.yaml
+  - docs/project-registry.yaml
+  command:
+  - python3
+  - bin/gac/gac-ingress-check.py
+- id: mof-capabilities-drift-check
+  description: MOF capabilities registry drift (declared entrypoint vs actual).
+  required: false
+  paths:
+  - .omo/capabilities/**
+  - bin/mof/**
+  - projects/*/src/**
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/check-mof-capabilities-drift.py
+- id: doc-claims-check
+  description: Document claims vs implementation consistency (CR-X4-DOC-CLAIMS).
+  required: false
+  paths:
+  - docs/**
+  - projects/*/CLAUDE.md
+  - projects/*/AGENTS.md
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/check-doc-claims.py
+- id: layer-call-direction-check
+  description: Cross-layer call direction (L0-L3 + X) violations. 存量 11 条 grace (检查器
+    exit=0 只报告); new-violation blocking 待加 baseline 机制.
+  required: false
+  paths:
+  - projects/*/src/**
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/ssot/check-layer-call-direction.py
+- id: project-code-and-submodule-coverage
+  description: P74 A1 check-layer coverage (ADR-0130 §3.3 / ADR-0214 §D1) — mirrors
+    surfaces.write of project-code-change (projects/{project}/**) and submodule-pointer-close
+    (projects/*) so these on_demand workflows register diff_checks coverage instead
+    of silent warn. projects/** also enables real gate trigger on project file/gilink
+    changes.
+  required: false
+  paths:
+  - projects/{project}/**
+  - projects/*
+  - projects/**
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - lint

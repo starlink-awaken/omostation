@@ -1,0 +1,65 @@
+id: submodule-pointer-close
+run_frequency: on_demand
+title: Submodule pointer closeout
+purpose: Close project submodule work without dangling root pointers or unreachable
+  SHAs.
+agents:
+  roles:
+  - release-agent
+  - governance-agent
+  observer_policy: recommended_for_multi_submodule_updates
+allowed_lanes:
+- submodule_pointer
+- config
+lock_scopes:
+- root-gitlinks
+- submodules
+surfaces:
+  read:
+  - .gitmodules
+  - projects/**
+  write:
+  - projects/*
+phases:
+  preflight:
+  - id: status
+    mode: required
+    command:
+    - git
+    - status
+    - --short
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  execute:
+  - id: pointer-transaction
+    mode: required
+    command:
+    - bash
+    - bin/ssot/submodule-pointer-transaction.sh
+    - --dry-run
+  verification:
+  - id: reachability
+    mode: required
+    command:
+    - make
+    - governance-release-gate
+  - id: gac-local-gate
+    mode: required
+    command:
+    - make
+    - gac-local-gate
+  closeout:
+  - id: diff-stat
+    mode: required
+    command:
+    - git
+    - diff
+    - --stat
