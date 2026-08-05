@@ -2090,6 +2090,127 @@ gac:
     adr: ADR-0373
     source_type: native
 
+
+  - id: CR-SEVERITY-REGISTRY
+    dimension: X2
+    layer: meta
+    name: 审慎性注册表一致性
+    description: '检查审慎性注册表一致性. 已运行于 gac-local-gate. 实现: bin/gac/check-severity-registry.py (gac-local-gate)'
+    check_type: registry_integrity
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+
+  - id: CR-WORK-LANDED
+    dimension: X2
+    layer: meta
+    name: 工作落地验证
+    description: '验证治理工作是否实际落地. 已运行于 gac-local-gate. 实现: bin/gac/check-work-landed.py (gac-local-gate)'
+    check_type: drift_audit
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+
+  - id: CR-GOVERNANCE-RATIO
+    dimension: X2
+    layer: meta
+    name: 治理比率监控
+    description: '监控治理资源投入产出比. 已运行于 gac-local-gate. 实现: bin/gac/check-governance-ratio.py (gac-local-gate)'
+    check_type: freshness
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+
+  - id: CR-REDLINE-COVERAGE
+    dimension: X2
+    layer: meta
+    name: 红线覆盖率
+    description: '检查红线规则对关键路径的覆盖程度. 已运行于 gac-local-gate. 实现: bin/gac/check-redline-coverage.py (gac-local-gate)'
+    check_type: hygiene_case
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+
+  - id: CR-WORKORDER-SCHEMA
+    dimension: X2
+    layer: meta
+    name: 工单模式校验
+    description: '校验工单格式一致性. 已运行于 gac-local-gate. 实现: bin/gac/check-workorder-schema.py (gac-local-gate)'
+    check_type: schema_integrity
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+
+  - id: CR-DUAL-TRACK-PURITY
+    dimension: X2
+    layer: meta
+    name: 双轨纯度
+    description: '确保治理变更和功能开发保持双轨隔离. 已运行于 gac-local-gate. 实现: bin/gac/check-dual-track-purity.py (gac-local-gate)'
+    check_type: hygiene_case
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+
+  - id: CR-SILENT-LOSS
+    dimension: X2
+    layer: meta
+    name: 静默丢失检测
+    description: '检测治理过程中静默丢失的变更或决策. 已运行于 gac-local-gate. 实现: bin/gac/check-silent-loss.py (gac-local-gate)'
+    check_type: drift_audit
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+
+  - id: CR-ADVERSARIAL-EFFECTIVENESS
+    dimension: X2
+    layer: meta
+    name: 对抗有效性
+    description: '评估治理规则的对抗有效性. 已运行于 gac-local-gate. 实现: bin/gac/check-adversarial-effectiveness.py (gac-local-gate)'
+    check_type: hygiene_case
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+
   drift:
     schedule: daily
     auto_heal: false
