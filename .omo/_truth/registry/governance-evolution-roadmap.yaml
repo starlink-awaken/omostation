@@ -9,7 +9,7 @@ version: 1
 description: Systemic governance evolution roadmap and traceability contract.
 ssot:
   architecture: ARCHITECTURE.md
-  agent_workflows: .omo/_truth/registry/agent-workflows.yaml
+  agent_workflows: .omo/_truth/registry/agent-workflows
   bos_routes: projects/agora/etc/bos-services.yaml
   capabilities: .omo/_truth/registry/projects-capabilities.yaml
   mof_capabilities: .omo/_truth/registry/mof-capabilities.yaml
@@ -110,11 +110,11 @@ initiatives:
     meadows_level: 5
     owner: governance-team
     layer: X1
-    ssot: .omo/_truth/registry/agent-workflows.yaml
+    ssot: .omo/_truth/registry/agent-workflows
     entrypoints:
       - uv run --with pyyaml python bin/agent-workflow.py status --json
     deliverables:
-      - .omo/_truth/registry/agent-workflows.yaml
+      - .omo/_truth/registry/agent-workflows
       - bin/agent-workflow.py
       - tests/test_agent_workflow.py
     verification:
@@ -289,7 +289,7 @@ initiatives:
       - tests/test_gac_worktree_lifecycle.py
       - tests/test_gac_worktree_lifecycle_integration.py
       - tests/test_adr_frontmatter_backfill.py
-      - .omo/_truth/registry/agent-workflows.yaml
+      - .omo/_truth/registry/agent-workflows
       - .omo/_knowledge/sweeps/INDEX.md
       - .github/workflows/pyright-sweep.yml
     verification:
@@ -314,7 +314,7 @@ capability_traces:
     capability: Agent governance control plane
     owner: governance-team
     entry: cockpit agent status --json
-    ssot: .omo/_truth/registry/agent-workflows.yaml
+    ssot: .omo/_truth/registry/agent-workflows
     verifier: uv run --with pyyaml python bin/agent-workflow.py compliance --json
   - id: trace.governance-evolution-roadmap
     capability: Governance evolution roadmap

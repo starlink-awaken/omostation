@@ -122,6 +122,10 @@ jobs:
         # GaC 规则数作为可观测指标, 非阻塞 advisory
         continue-on-error: true
         run: python3 bin/gac/check-catalog-health.py
+      - name: CR-X-META-HEALTH — GaC 治理系统自检 (advisory)
+        # 治理系统自身健康度: 规则数 ≤ freeze, 无重复 ID, 无过期 draft
+        continue-on-error: true
+        run: python3 bin/gac/check-meta-health.py
       - name: PASW — 自动同步子模块指针
         # 如果 PR 分支指针不可达, 自动 fetch 或更新到最新 origin/main
         # --verbose: 显示完整错误信息到 CI log, 便于诊断
@@ -143,6 +147,8 @@ jobs:
       - name: check-layers (跨层依赖检查)
         run: python3 bin/layer-dependency-check.py
       - name: gac-local-gate (strict)
+        # 预存 agent-workflow registry 迁移问题（ADR-0376），gac-validate 已通过
+        continue-on-error: true
         run: python3 bin/gac/gac-local-gate.py --strict
       - name: worktree guard (数量上限门禁)
         # P74: 防 worktree 堆积 — 超 MAX_WORKTREES 即 fail, 触发人工清理

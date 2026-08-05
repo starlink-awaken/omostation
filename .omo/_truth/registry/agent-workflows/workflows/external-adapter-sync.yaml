@@ -1,0 +1,126 @@
+id: external-adapter-sync
+run_frequency: periodic
+title: External adapter integration sync
+purpose: Keep BMAD, OpenSpec, beads, gstack, and Superpowers wired as optional inputs
+  or discipline layers without making them SSOT authorities.
+agents:
+  roles:
+  - adapter-agent
+  - strategy-agent
+  - c2g-agent
+  - governance-agent
+  observer_policy: optional
+allowed_lanes:
+- docs
+- governance_code
+- governance_state
+lock_scopes:
+- external-adapters
+- c2g-ingress
+- agent-skills
+surfaces:
+  read:
+  - .omo/_truth/registry/agent-workflows.yaml
+  - .agents/skills/**
+  - projects/c2g/**
+  - projects/omo/**
+  write:
+  - .omo/_truth/registry/agent-workflows.yaml
+  - .agents/skills/**
+  - docs/**
+phases:
+  preflight:
+  - id: adapter-doctor
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - doctor
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  execute:
+  - id: bmad-import
+    mode: manual
+    command:
+    - uv
+    - run
+    - --project
+    - projects/omo
+    - omo
+    - bridge
+    - --format
+    - bmad
+    - <source-file>
+  - id: openspec-import
+    mode: manual
+    command:
+    - uv
+    - run
+    - --project
+    - projects/omo
+    - omo
+    - bridge
+    - --format
+    - openspec
+    - <source-file>
+  - id: beads-import
+    mode: manual
+    command:
+    - agent
+    - import
+    - beads-items-to-c2g-or-omo
+  - id: gstack-handoff
+    mode: manual
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - handoff
+    - <run-id>
+  verification:
+  - id: adapter-doctor
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - doctor
+  - id: ssot-guardian
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/ssot/ssot-guardian.py
+  - id: gac-local-gate
+    mode: required
+    command:
+    - make
+    - gac-local-gate
+  closeout:
+  - id: integration-map-review
+    mode: manual
+    command:
+    - agent
+    - inspect
+    - external-adapter-health
