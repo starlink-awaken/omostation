@@ -637,3 +637,44 @@ def cmd_bos_capability(args) -> int:
 
     print("用法: cockpit bos capability {list|invoke <service_id>}")
     return 1
+
+
+def cmd_bos_mutate(args):
+    """通过 agora MCP (:7431) 统一 BOS URI 写协议 (mutate_resource) 修改资源."""
+    uri = getattr(args, "uri", "")
+    payload = getattr(args, "payload", "{}")
+    action = getattr(args, "action", "update")
+    import json
+    import urllib.request
+
+    body = json.dumps(
+        {
+            "name": "mutate_resource",
+            "arguments": {"uri": uri, "payload": payload, "action": action},
+        }
+    ).encode()
+    req = urllib.request.Request(
+        "http://127.0.0.1:7431/v1/tools/call",
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+    except Exception as exc:
+        print(
+            f"❌ 无法连接 agora MCP :7431 (需 agora-gateway 运行): {exc}"
+        )
+        print("  启动: cockpit agora mcp 或 uvicorn agora.server:app --port 7431")
+        return 1
+
+    print("═══ BOS Mutate ═══")
+    content = data.get("result", {}).get("content") or [data]
+    for item in content:
+        if isinstance(item, dict):
+            text = item.get("text", json.dumps(item, ensure_ascii=False))
+            print(f"  {text}")
+        else:
+            print(f"  {item}")
+    return 0

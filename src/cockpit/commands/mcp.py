@@ -18,7 +18,12 @@ def cmd_mcp(args: argparse.Namespace) -> int:
         return 1
 
     if args.list_tools:
-        return _list_tools(mcp)
+        rc = _list_tools(mcp)
+        if rc != 0:
+            return rc
+        if getattr(args, "agora", False):
+            return _list_agora_tools()
+        return 0
 
     transport = args.transport or "stdio"
 
@@ -116,4 +121,62 @@ def _list_tools(mcp: Any) -> int:
 
     console.print("\n[yellow]⚠️  cockpit stdio MCP 已 deprecated, 推荐:[/yellow]")
     console.print('[dim]  agora-mcp → resolve_bos_uri("bos://cockpit/context")[/dim]')
+    return 0
+
+
+def _list_agora_tools() -> int:
+    """列出 agora (:7431) 的 BOS 服务/工具 (与 cockpit MCP 工具对比)."""
+    console = _get_console()
+    try:
+        from agora.mcp.resolver.services import POC_SERVICES
+    except ImportError:
+        # 进程内 import 失败 → 退化为 HTTP /health 探测
+        try:
+            import urllib.request
+
+            with urllib.request.urlopen(
+                "http://127.0.0.1:7431/health", timeout=3
+            ) as resp:
+                import json
+
+                data = json.loads(resp.read())
+                proxy = data.get("proxy", {})
+                console.print(
+                    _panel(
+                        f"[bold magenta]🤖 Agora MCP (:7431)[/bold magenta]\n"
+                        f"services={data.get('services', {}).get('total')} "
+                        f"healthy={data.get('services', {}).get('healthy')} "
+                        f"proxy_tools={proxy.get('tool_count')}",
+                        "magenta",
+                    )
+                )
+                return 0
+        except Exception as exc:  # defensive
+            _get_err().print(f"[red]❌ 无法连接 agora :7431: {exc}[/red]")
+            return 1
+
+    console.print(
+        _panel(
+            f"[bold magenta]🤖 Agora BOS 服务 ({len(POC_SERVICES)} 个)[/bold magenta]",
+            "magenta",
+        )
+    )
+    from rich import box as rich_box
+    from rich.table import Table
+
+    table = Table(box=rich_box.ROUNDED, header_style="bold magenta")
+    table.add_column("BOS URI", style="bold green", no_wrap=True)
+    table.add_column("Transport", style="dim")
+    table.add_column("Domain", style="dim")
+    for svc in POC_SERVICES[:50]:
+        table.add_row(
+            getattr(svc, "uri", "?"),
+            getattr(svc, "transport", "?"),
+            getattr(svc, "domain", "?"),
+        )
+    console.print(table)
+    if len(POC_SERVICES) > 50:
+        console.print(
+            f"[dim]… 还有 {len(POC_SERVICES) - 50} 个服务 (cockpit bos list 可看全部)[/dim]"
+        )
     return 0

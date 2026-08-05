@@ -34,6 +34,7 @@ from .commands.bos import (
     cmd_bos_discover,
     cmd_bos_health,
     cmd_bos_list,
+    cmd_bos_mutate,
     cmd_bos_read,
     cmd_bos_register,
     cmd_bos_reload,
@@ -429,6 +430,11 @@ def main() -> int:
         "--port", type=int, default=int(os.environ.get("AGORA_MCP_SSE_PORT", "7431")), help="SSE 模式监听端口"
     )
     mcp_p.add_argument("--list-tools", action="store_true", help="列出已注册的工具，不启动 server")
+    mcp_p.add_argument(
+        "--agora",
+        action="store_true",
+        help="--list-tools 时同时列出 agora (:7431) 的 BOS 服务/工具",
+    )
 
     sub.add_parser("gongwen", help="📄 公文写作门户引导 (文种/规范/入口, 委派 @公文 域)")
     sub.add_parser("finance", help="💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域)")
@@ -648,6 +654,15 @@ def main() -> int:
     bos_sub.add_parser("reload", help="重载 BOS 配置/M1")
     bos_sub.add_parser("register", help="注册 BOS 服务")
     bos_sub.add_parser("workflow", help="BOS workflow 相关")
+    bos_mutate_p = bos_sub.add_parser(
+        "mutate", help="通过 agora 统一 BOS URI 写协议修改资源"
+    )
+    bos_mutate_p.add_argument("uri", help="BOS URI, e.g. bos://memory/inbox/archive")
+    bos_mutate_p.add_argument("--payload", default="{}", help="JSON 格式 payload")
+    bos_mutate_p.add_argument(
+        "--action", default="update", choices=["update", "create", "delete"],
+        help="写操作 (默认 update)",
+    )
 
     # ECCP external-channels inventory
     channels_p = sub.add_parser(
@@ -1151,6 +1166,8 @@ def main() -> int:
             return cmd_bos_register(a)
         elif sub == "workflow":
             return cmd_bos_workflow(a)
+        elif sub == "mutate":
+            return cmd_bos_mutate(a)
         else:
             return cmd_bos_status(a)
 
