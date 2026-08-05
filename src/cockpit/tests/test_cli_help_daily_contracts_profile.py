@@ -26,6 +26,10 @@ class TestCmdHelp:
         """help 命令→return 0 + 包含产品地图关键内容"""
         capture = Console(record=True, force_terminal=True, width=140)
         monkeypatch.setattr(cli, "console", capture)
+        # cmd_help 用 _get_console from status module
+        import cockpit.commands.status as status_mod
+
+        monkeypatch.setattr(status_mod, "_get_console", lambda: capture)
 
         code = cli.cmd_help(argparse.Namespace())
 
@@ -34,7 +38,7 @@ class TestCmdHelp:
         assert "产品地图" in output
         assert "demo" in output
         assert "research" in output
-        assert "contracts" in output
+        assert "memory" in output.lower()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

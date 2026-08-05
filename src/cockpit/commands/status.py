@@ -507,13 +507,18 @@ def _print_capability_summary(c) -> None:
     totals = reg.get("totals", {})
     c.print(
         Panel.fit(
-            "[bold cyan]🧭 Cockpit 能力全景[/bold cyan]\n\n"
-            f"[bold]CLI 命令[/]: {totals.get('cli_commands', '?')}  |  "
-            f"[bold]MCP 工具[/]: {totals.get('mcp_tools', '?')} ({totals.get('mcp_servers', '?')} servers)  |  "
-            f"[bold]BOS 服务[/]: {totals.get('bos_services', '?')} ({totals.get('bos_domains', '?')} domains)\n\n"
-            "[dim]新增: cockpit knowledge · cockpit kems · cockpit workflow mesh[/dim]\n"
-            "[dim]详情: cockpit <command> --help | Web: cockpit dashboard[/dim]",
+            "[bold bright_cyan]📊 能力注册表快照[/bold bright_cyan]\n\n"
+            f"  [bold]CLI[/]  {totals.get('cli_commands', '?')} cmds   "
+            f"[bold]MCP[/]  {totals.get('mcp_tools', '?')} tools "
+            f"([dim]{totals.get('mcp_servers', '?')} servers[/])   "
+            f"[bold]BOS[/]  {totals.get('bos_services', '?')} "
+            f"([dim]{totals.get('bos_domains', '?')} domains[/])\n\n"
+            "[dim]亮点: [cyan]memory[/] (Memory OS) · [cyan]knowledge[/] · [cyan]swarm[/] · "
+            "[cyan]agent[/] · [cyan]kems[/] · [cyan]compute[/][/dim]\n"
+            "[dim]详情: [cyan]cockpit help <词>[/] · [cyan]cockpit <cmd> --help[/] · "
+            "[cyan]cockpit dashboard[/][/dim]",
             border_style="bright_cyan",
+            title="[bold]能力全景[/]",
         )
     )
 
@@ -526,150 +531,101 @@ def _help_search(c, keyword: str) -> int:
         c.print("[red]❌ 需要 pyyaml[/red]")
         return 1
     from .base import _SCRIPT_DIR
+    from .help_map import GROUPS
 
-    registry_path = _SCRIPT_DIR.parent.parent.parent.parent.parent / "docs" / "generated" / "capability-registry.yaml"
-    if not registry_path.exists():
-        c.print("[yellow]⚠️  能力注册表未生成, 无法搜索。运行 make sync-capability-registry[/yellow]")
-        return 1
-
-    reg = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
     kw = keyword.lower()
     hits: list[tuple[str, str, str]] = []  # (type, name, detail)
 
-    # 搜 CLI 命令
-    for cmd in reg.get("cli_commands", []):
-        name = cmd.get("name", "")
-        desc = cmd.get("description", "")
-        if kw in name.lower() or kw in desc.lower():
-            hits.append(("CLI", f"cockpit {name}", desc))
+    # 1) 产品地图 catalog（即时、不全靠 registry）
+    for title, _style, rows in GROUPS:
+        for r in rows:
+            blob = f"{r.name} {r.blurb} {r.example} {title}".lower()
+            if kw in blob:
+                hits.append(("CLI", f"cockpit {r.name}", f"{r.blurb}  ·  {r.example or f'cockpit {r.name} --help'}"))
 
-    # 搜 MCP 工具
-    for srv in reg.get("mcp_servers", []):
-        for tool in srv.get("tools", []):
-            if kw in str(tool).lower():
-                hits.append(("MCP", f"{srv['id']}.{tool}", f"L{srv.get('layer', '?')} · {srv.get('name', '')}"))
-        if kw in srv.get("id", "").lower() or kw in srv.get("name", "").lower():
-            hits.append(("MCP-server", srv["id"], f"{srv.get('tool_count', 0)} tools · {srv.get('name', '')}"))
-
-    # 搜 BOS 服务
-    for domain, svcs in reg.get("bos_services", {}).get("domains", {}).items():
-        if domain == "_domain_counts":
-            continue
-        for svc in svcs:
-            uri = svc.get("uri", "")
-            if kw in uri.lower() or kw in svc.get("description", "").lower():
-                hits.append(("BOS", uri, svc.get("description", "")))
+    # 2) 能力注册表（MCP / BOS + 更全 CLI）
+    registry_path = _SCRIPT_DIR.parent.parent.parent.parent.parent / "docs" / "generated" / "capability-registry.yaml"
+    if registry_path.exists():
+        reg = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+        seen = {h[1] for h in hits}
+        for cmd in reg.get("cli_commands", []):
+            name = cmd.get("name", "")
+            desc = cmd.get("description", "")
+            label = f"cockpit {name}"
+            if label in seen:
+                continue
+            if kw in name.lower() or kw in desc.lower():
+                hits.append(("CLI", label, desc))
+                seen.add(label)
+        for srv in reg.get("mcp_servers", []):
+            for tool in srv.get("tools", []):
+                if kw in str(tool).lower():
+                    hits.append(
+                        ("MCP", f"{srv['id']}.{tool}", f"L{srv.get('layer', '?')} · {srv.get('name', '')}")
+                    )
+            if kw in srv.get("id", "").lower() or kw in srv.get("name", "").lower():
+                hits.append(
+                    ("MCP-server", srv["id"], f"{srv.get('tool_count', 0)} tools · {srv.get('name', '')}")
+                )
+        for domain, svcs in reg.get("bos_services", {}).get("domains", {}).items():
+            if domain == "_domain_counts":
+                continue
+            for svc in svcs:
+                uri = svc.get("uri", "")
+                if kw in uri.lower() or kw in svc.get("description", "").lower():
+                    hits.append(("BOS", uri, svc.get("description", "")))
+    elif not hits:
+        c.print("[yellow]⚠️  能力注册表未生成且产品地图无命中。运行 make sync-capability-registry[/yellow]")
+        return 1
 
     if not hits:
         c.print(f"[yellow]🔍 未找到与 '{keyword}' 相关的能力[/yellow]")
-        c.print("[dim]   提示: 试 cockpit search / cockpit bos list / cockpit mcp --list[/dim]")
+        c.print(
+            "[dim]   提示: [cyan]cockpit help[/] 看全图 · "
+            "[cyan]cockpit bos list[/] · [cyan]cockpit mcp --list[/] · [cyan]cockpit search[/][/dim]"
+        )
         return 0
 
-    from rich import box as rich_box
-    from rich.table import Table
+    # 类型优先排序: CLI → BOS → MCP
+    order = {"CLI": 0, "BOS": 1, "MCP": 2, "MCP-server": 3}
+    hits.sort(key=lambda h: (order.get(h[0], 9), h[1]))
 
-    c.print(f"[bold cyan]🔍 搜索 '{keyword}' · {len(hits)} 条匹配[/bold cyan]")
-    table = Table(box=rich_box.ROUNDED, header_style="bold cyan")
-    table.add_column("类型", style="magenta", width=12)
-    table.add_column("名称", style="bold green", no_wrap=False)
-    table.add_column("详情", style="dim", no_wrap=False)
-    for typ, name, detail in hits[:30]:
-        table.add_row(typ, name, str(detail)[:60])
+    c.print(
+        Panel.fit(
+            f"[bold white]🔍 搜索[/] [bold cyan]{keyword}[/]  ·  "
+            f"[bold]{len(hits)}[/] 条匹配\n"
+            f"[dim]优先 CLI → BOS → MCP · 最多展示 40 条[/dim]",
+            border_style="cyan",
+        )
+    )
+    table = Table(box=box.ROUNDED, header_style="bold cyan", expand=True, show_lines=False)
+    table.add_column("类型", style="magenta", width=10)
+    table.add_column("名称", style="bold green", no_wrap=False, ratio=2)
+    table.add_column("详情", style="dim", no_wrap=False, ratio=3)
+    for typ, name, detail in hits[:40]:
+        table.add_row(typ, name, str(detail)[:90])
     c.print(table)
-    if len(hits) > 30:
-        c.print(f"[dim]... 还有 {len(hits) - 30} 条, 用更精确的关键词缩小范围[/dim]")
+    if len(hits) > 40:
+        c.print(f"[dim]… 还有 {len(hits) - 40} 条，换更精确关键词缩小范围[/dim]")
+    # 快捷提示：若搜到 memory
+    if any("memory" in h[1].lower() or "mos" in h[1].lower() for h in hits[:10]):
+        c.print(
+            "\n[dim]Memory OS 速览: [cyan]cockpit memory[/] · "
+            "[cyan]cockpit memory status --json[/] · "
+            "[cyan]cockpit bos resolve bos://memory/mos/status[/][/dim]"
+        )
     return 0
 
 
 def cmd_help(args: argparse.Namespace) -> int:
     c = _get_console()
-    # 若带关键词 → 模糊搜命令/MCP 工具/BOS 服务
     keyword = getattr(args, "keyword", None)
     if keyword:
         return _help_search(c, keyword)
-    # ── 动态能力统计 (从 capability-registry.yaml 加载) ──
     _print_capability_summary(c)
-    c.print(
-        _panel(
-            "[bold cyan]🧭 Workspace 产品地图[/bold cyan]\n\n"
-            "[bold]📖 核心概念[/bold]\n"
-            "  workspace 是一个研究对象管理系统。你输入内容 → 形成研究对象 → "
-            "持续追问 → 发布为产物 → 复盘回顾。一切都有记忆，一切都可追溯。\n\n"
-            "[bold]🚀 快速开始[/bold]\n"
-            "  [cyan]cockpit demo[/]           — 5 分钟体验完整闭环\n"
-            "  [cyan]cockpit status[/]          — 打开工作台\n"
-            '  [cyan]cockpit research "主题"[/] — 发起你的第一个研究\n'
-            "  [cyan]cockpit quickstart[/]      — 环境检查与上手向导\n\n"
-            "[bold]🔍 按场景查找命令[/bold]\n\n"
-            "[bold green]📚 研究 (Research)[/]\n"
-            "  [cyan]research[/]     深度研究一个主题，产生可追溯的知识\n"
-            "  [cyan]ask <ID>[/]     对已有研究追问，深化理解\n"
-            "  [cyan]search[/]       跨源搜索（本地知识库 + BOS 知识引擎）\n"
-            "  [cyan]vault[/]        搜索本地知识库（笔记/精读，最快）\n"
-            "  [cyan]import[/]       导入网页/文档作为研究素材\n"
-            "  [cyan]publish[/]      将研究发布为文档（brief/memo/exec）\n"
-            "  [cyan]dossier[/]      查看研究关系网络\n"
-            "  [cyan]timeline[/]     查看研究时间线\n\n"
-            "[bold green]🛠️ 系统 (System)[/]\n"
-            "  [cyan]status[/]       工作台仪表板——所有活动研究的快照\n"
-            "  [cyan]health[/]       系统健康检查——端口、服务、资源\n"
-            "  [cyan]dashboard[/]    Web 控制台 (http://localhost:8090/bos)\n"
-            "  [cyan]daily[/]        每日研究简报与站会\n"
-            "  [cyan]demo[/]         5 分钟交互式产品演示\n"
-            "  [cyan]discover[/]     发现已安装的功能\n\n"
-            "[bold green]⚖️ 治理 (Governance)[/]\n"
-            "  [cyan]omo[/]          OMO 状态操作（sync/lint/schema）\n"
-            "  [cyan]governance[/]   治理操作（calibrate/audit/policy）\n"
-            "  [cyan]workflow[/]     工作流管理\n"
-            "  [cyan]audit[/]        审计追踪\n"
-            "  [cyan]bos[/]          BOS URI 路由管理\n"
-            "  [cyan]cards[/]        卡片系统状态\n"
-            "  [cyan]monitor[/]      系统监控\n\n"
-            "[bold green]⚙️ 配置 (Config)[/]\n"
-            "  [cyan]profile[/]      身份档案与配置\n"
-            "  [cyan]data[/]         数据管理（索引/GC/类型）\n"
-            "  [cyan]contracts[/]    合约管理（export/validate/list）\n"
-            "  [cyan]mcp[/]          MCP 服务器管理\n"
-            "  [cyan]code[/]         代码分析\n"
-            "  [cyan]events[/]       事件流控制台\n\n"
-            "[bold green]🚀 项目收敛入口 (Project CLI)[/]\n"
-            "  [cyan]agora[/]        BOS 服务网关（委派 agora CLI）\n"
-            "  [cyan]model-driven[/] 模型驱动生命周期（委派 model-driven CLI）\n"
-            "  [cyan]gbrain[/]       Postgres-native 知识库（委派 gbrain CLI）\n"
-            "  [cyan]kairon[/]       知识引擎 monorepo 聚合入口\n"
-            "  [cyan]bus[/]          Omni-Bus 三平面\n"
-            "  [cyan]observe[/]      Langfuse 可观测性栈\n"
-            "  [cyan]family-hub[/]   家庭数字枢纽\n"
-            "  [cyan]mesh[/]         算力网格路由\n"
-            "  [cyan]bos capability[/] Toolbox 外部能力\n\n"
-            "[bold green]🧠 战略 & Agent (Strategy)[/]\n"
-            "  [cyan]compass[/]      战略罗盘\n"
-            "  [cyan]iterate[/]      C2G 迭代\n"
-            "  [cyan]agent-workflow[/] Agent 工作流管理\n"
-            "  [cyan]brief[/]        会话简报\n"
-            "  [cyan]context[/]      上下文信息\n\n"
-            "[bold green]🌿 场景 (Life Scenarios)[/]\n"
-            "  [cyan]gongwen[/]      公文管理\n"
-            "  [cyan]scenario[/]     家庭/工作场景\n"
-            "  [cyan]health[/]       健康管理\n"
-            "  [cyan]finance[/]      财务管理\n\n"
-            "[bold]🔄 完整用户旅程[/bold]\n"
-            "  import → research → open → ask → publish → dossier → timeline → daily\n\n"
-            "[bold]💡 典型场景推荐[/bold]\n"
-            "  · [cyan]新用户首次使用[/]：cockpit quickstart → cockpit demo\n"
-            '  · [cyan]日常研究[/]：cockpit research "主题" → cockpit daily\n'
-            "  · [cyan]知识回顾[/]：cockpit status → cockpit research --open <ID>\n"
-            "  · [cyan]知识发布[/]：cockpit research --publish <ID> --style brief\n"
-            "  · [cyan]系统健康[/]：cockpit dashboard → 查看 BOS/Cron/治理面板\n"
-            "  · [cyan]治理审计[/]：cockpit governance calibrate → cockpit audit\n"
-            "  · [cyan]Web 控制台[/]：http://localhost:8090/bos 或 http://localhost:8090/overview\n\n"
-            "[bold]🔍 搜索怎么选? (v5 #V5-12)[/]\n"
-            '  [cyan]vault "关键词"[/] — 搜本地知识库 (笔记/精读, 最快)\n'
-            '  [cyan]search "关键词" --all[/] — 跨源搜 (本地+BOS 知识引擎)\n'
-            '  [cyan]research "主题"[/] — 发起新深度研究 (产生新知识)',
-            "cyan",
-        )
-    )
+    from .help_map import render_product_map
+
+    render_product_map(c)
     return 0
 
 

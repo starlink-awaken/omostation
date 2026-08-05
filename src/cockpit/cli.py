@@ -184,57 +184,52 @@ def main() -> int:
     class WorkspaceParser(argparse.ArgumentParser):
         def error(self, message):
             parser_console = Console()
-            parser_console.print(f"\n[red]Error: {message}[/]")
-            parser_console.print("[yellow]试试以下命令:[/]")
-            parser_console.print('  [cyan]cockpit research "你的主题"[/]')
-            parser_console.print("  [cyan]cockpit research --list[/]")
-            parser_console.print("  [cyan]cockpit status[/]")
-            parser_console.print("  [cyan]cockpit demo[/]")
+            parser_console.print(f"\n[bold red]✗[/] {message}")
+            parser_console.print("[yellow]试试:[/]")
+            parser_console.print("  [cyan]cockpit help[/]              — 产品地图（分组目录）")
+            parser_console.print("  [cyan]cockpit help memory[/]       — 搜命令/MCP/BOS")
+            parser_console.print("  [cyan]cockpit quickstart[/]        — 上手向导")
+            parser_console.print('  [cyan]cockpit research "主题"[/]   — 深度研究')
+            parser_console.print("  [cyan]cockpit memory[/]            — Memory OS")
+            parser_console.print("  [cyan]cockpit demo[/]              — 5 分钟演示")
             parser_console.print()
             sys.exit(2)
+
+        def print_help(self, file=None):
+            """Rich 紧凑帮助，避免 70+ 命令挤成一行墙。完整地图见 cockpit help。"""
+            from cockpit.commands.help_map import render_compact_help
+
+            c = Console(file=file) if file is not None else console
+            render_compact_help(c)
+            # 仍打印全局 flags（output 等）
+            c.print("[bold]全局选项[/]")
+            c.print("  [cyan]-h, --help[/]                 显示本帮助")
+            c.print("  [cyan]--output[/] {text,json,tui,markdown}  输出模式")
+            c.print()
+            c.print("[dim]完整分组目录: [cyan]cockpit help[/] · 搜能力: [cyan]cockpit help <关键词>[/][/dim]")
 
     parser = WorkspaceParser(
         prog="cockpit",
         description="Workspace — 产品级统一入口",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-旅程:
-  research    深度研究 & 知识管理
-  import      导入外部内容
-  status      系统健康 & 研究状态
-  memory      Memory OS 统一记忆控制面 (ADR-0372)
-  demo        快速演示闭环
-  daily       每日研究简报
-  display     查看所有 export 内容
-  dashboard   打开 Web Dashboard
+快速入口:
+  cockpit help              产品地图（推荐）
+  cockpit help <关键词>     搜 CLI / MCP / BOS
+  cockpit memory            Memory OS 控制面
+  cockpit research "主题"   深度研究
+  cockpit quickstart        上手向导
+  cockpit demo              5 分钟演示
 
 示例:
   cockpit research "attention mechanism"
-  cockpit research --list
-  cockpit research --search "keyword"
-  cockpit research --open 1
-  cockpit research --ask 1 "追问问题"
-  cockpit research --publish 1 --style brief
-  cockpit research --dossier 1
-  cockpit research --timeline 1
-  cockpit research --tag 1 --labels llm agents
-  cockpit research --rename 1 --new-title better title
-  cockpit research --archive 1
-  cockpit research --unarchive 1
-  cockpit research --compare 1 2
-  cockpit research --merge 1 2
-  cockpit research --digest 1 2
-  cockpit research --audit
-  cockpit research --quarantine 4 5
-  cockpit research --restore 4 5
-  cockpit import ~/Desktop/note.md
-  cockpit status
-  cockpit status --watch --interval 2
   cockpit memory status --json
   cockpit memory recall "query" --as-of 2024-01-01T00:00:00Z
-  cockpit contracts validate
-  cockpit contracts export-research 1
-  cockpit demo
+  cockpit bos resolve bos://memory/mos/status
+  cockpit status
+  cockpit gac
+  cockpit agent status
+  cockpit dashboard
   cockpit daily
   cockpit dashboard
         """,
@@ -992,7 +987,12 @@ def main() -> int:
     if not args.command:
         console.print(
             Panel.fit(
-                "[bold cyan]🛸 Cockpit · L3 统一入口[/bold cyan]\n\n"
+                "[bold bright_cyan]🛸 Cockpit · L3 统一入口[/bold bright_cyan]\n\n"
+                "[bold]先看这里[/]\n"
+                "  [cyan]cockpit help[/]               — 产品地图（分组全目录）\n"
+                "  [cyan]cockpit help <关键词>[/]      — 搜 CLI / MCP / BOS\n"
+                "  [cyan]cockpit quickstart[/]         — 上手向导\n"
+                "  [cyan]cockpit memory[/]             — Memory OS 记忆控制面\n\n"
                 "[bold]上下文[/]\n"
                 "  [cyan]cockpit context[/]          — 系统上下文 (Phase/P0/约束)\n"
                 "  [cyan]cockpit cards[/]            — CARDS 卡片列表\n"
