@@ -1,9 +1,9 @@
 # Cockpit CLI 命令参考
 
-> 自动生成于 2026-08-04T11:13:40Z
+> 自动生成于 2026-08-05T08:43:45Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **111** 个命令 (含子命令)。按场景分组如下。
+共 **116** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -122,11 +122,13 @@
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
+| `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
 | `cockpit down` | 停止观测栈 |
 | `cockpit event` | 导出事件封套 (EventEnvelope) |
 | `cockpit events-watch` | 实时监听 SSE 事件流简便入口 |
 | `cockpit export` | 导出契约封套 |
 | `cockpit export-research` | 将研究对象导出为 WorkspaceObject JSON |
+| `cockpit forget` | 遗忘传播 |
 | `cockpit gc` | 清理 data/tmp 过期文件 |
 | `cockpit get` | 查 1 个 card |
 | `cockpit graph` | 运行语义图谱分析 |
@@ -140,6 +142,7 @@
 | `cockpit knowledge` | 📚 KOS 知识检索 (search/status/stats) |
 | `cockpit list` | 列债务项 (委派 omo debt) |
 | `cockpit logs` | 查看日志 |
+| `cockpit memory` | 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref) |
 | `cockpit metrics` | 查看 bus metrics 快照 |
 | `cockpit nodes` | 列出 KOS 中注册的算力节点 |
 | `cockpit onboarding` | 为 AI 构建项目全貌上下文 |
@@ -150,6 +153,7 @@
 | `cockpit quickstart-check` | 快速检查新用户环境核验状态 |
 | `cockpit radar` | P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates |
 | `cockpit read` | 通过 BOS 网关统一读取指定 URI 资源 |
+| `cockpit recall` | 意图路由召回 |
 | `cockpit remember` | 手动存入偏好/事实 |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit route` | 为模型选择最优节点 |
@@ -165,6 +169,7 @@
 | `cockpit url` | 打印 Langfuse Web URL |
 | `cockpit validate` | 验证 Workspace 契约 |
 | `cockpit watch` | 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher) |
+| `cockpit write` | 双轨写入 (+ Neo4j FACT 若配置) |
 
 ---
 
@@ -183,4 +188,4 @@
 | `cockpit mesh` | `aetherforge` | 10 |
 | `cockpit compute` | `aetherforge` | 10 |
 
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-04T11:13:40Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-05T08:43:45Z 生成*

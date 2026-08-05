@@ -35,6 +35,19 @@ ALLOWED_ROOT_ONLY = [
     "Makefile",
     "docker-compose.yml",
     "pyproject.toml",
+    # ADR-0373: workspace-level governance paths intentionally root-only.
+    # ADRs/knowledge/sweeps/state are workspace-level, not per-project.
+    "_knowledge/decisions",
+    "_knowledge/patterns",
+    "_knowledge/sweeps",
+    "_knowledge/governance-history.jsonl",
+    "_truth/registry",
+    "_control",
+    "_delivery/agent-workflows",
+    "state/system.yaml",
+    "state/health.yaml",
+    "state/system_health.yaml",
+    "control/governance-data.json",
 ]
 
 

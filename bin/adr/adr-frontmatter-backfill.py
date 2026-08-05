@@ -7,7 +7,14 @@ Idempotent. Only touches the `id` line:
 Files without a YAML frontmatter (`---` first line) are skipped with a warning.
 
 Usage:
-  python3 bin/adr/adr-frontmatter-backfill.py [--dry-run] [--json]
+  python3 bin/adr/adr-frontmatter-backfill.py [--dry-run] [--json] [--strict]
+
+Modes:
+  (default)         : idempotent — only writes when id missing or mismatched
+  --strict          : exit 1 when any change would have been required (CI gate, D3 ADR-0373).
+                       Same idempotent semantics, but treated as a merge blocker.
+  --json            : emit machine-readable {changed, skipped, dry_run, strict}
+  --dry-run         : never write (advisory preview)
 """
 
 from __future__ import annotations
@@ -75,9 +82,10 @@ def backfill(path: Path, number: str, dry_run: bool) -> str | None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="C3: ADR frontmatter id backfill")
+    parser = argparse.ArgumentParser(description="D3 (ADR-0373): ADR frontmatter id backfill + strict CI gate")
     parser.add_argument("--decisions", default=DEFAULT_DIR, help="ADR 目录")
     parser.add_argument("--dry-run", action="store_true", help="只报告不改写")
+    parser.add_argument("--strict", action="store_true", help="CI 模式: 需要变更则 exit 1 (D3)")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()
 
@@ -92,15 +100,31 @@ def main() -> int:
         elif not path.read_text(encoding="utf-8").startswith("---"):
             skipped.append(path.name)
 
+    payload = {
+        "dry_run": args.dry_run,
+        "strict": args.strict,
+        "changed": len(changed),
+        "skipped_no_frontmatter": skipped,
+        "files": changed,
+    }
+
     if args.json:
-        print(json.dumps({"dry_run": args.dry_run, "changed": len(changed),
-                          "skipped": skipped, "files": changed}, indent=2, ensure_ascii=False))
-        return 0
-    for note in changed[:10]:
-        print(note)
-    if len(changed) > 10:
-        print(f"... 还有 {len(changed) - 10} 个")
-    print(f"changed={len(changed)} skipped_no_frontmatter={len(skipped)} dry_run={args.dry_run}")
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+    else:
+        for note in changed[:10]:
+            print(note)
+        if len(changed) > 10:
+            print(f"... 还有 {len(changed) - 10} 个")
+        print(
+            f"changed={len(changed)} skipped_no_frontmatter={len(skipped)} "
+            f"dry_run={args.dry_run} strict={args.strict}"
+        )
+
+    if args.strict and changed:
+        # D3 (ADR-0373): CI 入口必须 exit 1 — 等价于阻断 gate
+        if not args.json:
+            print(f"❌ --strict: {len(changed)} 个 ADR 缺 id, 请先跑 backfill", file=sys.stderr)
+        return 1
     return 0
 
 

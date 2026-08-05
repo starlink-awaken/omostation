@@ -168,6 +168,7 @@ gac:
     - gc_cron
     - gac_local_gate
     - foundry_cron
+    - sweep_index_cli
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
@@ -1962,6 +1963,26 @@ gac:
     activated_at: '2026-08-05'
     source_type: native
 
+  - id: CR-SWEEP-INDEX-AUTO
+    dimension: X4
+    layer: meta
+    name: Sweep 历史索引自动维护 (C5, ADR-0373)
+    description: |
+      检测 .omo/_knowledge/sweeps/INDEX.md 是否与同一目录下的 <date>.json 派生内容漂移.
+      bin/sweep/sweep_index.py --check 在 CI/closeout 同时被调用, drift → exit 1.
+      Excludes short-term local probes via AGENT_WORKFLOW_SWEEP_FAIL_HARD=0 (default).
+    check_type: consistency_drift
+    target: .omo/_knowledge/sweeps/**
+    source_ref: bin/sweep/sweep_index.py::--check
+    executor:
+    - sweep_index_cli
+    - ci_gate
+    - gac_local_gate
+    enforcement: required
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    adr: ADR-0373
   drift:
     schedule: daily
     auto_heal: false
