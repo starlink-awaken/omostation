@@ -509,3 +509,72 @@ print(json.dumps({{"status": status, "path": path, "package": module.classify_re
         "path": ".c2g_data/pitches/Idea-P46-mof-工.md",
         "package": "strategy-ingress-artifact",
     }
+
+
+def test_validate_done_initiative_requires_closure(monkeypatch) -> None:
+    """ADR-0378 G15: done initiative 无 closure 证据 → validate error (防回潮)."""
+    module = _load_governance_evolution()
+    registry = {
+        "version": 1,
+        "ssot": {},
+        "entrypoints": {},
+        "preferred_entrypoints": {},
+        "initiatives": [
+            {
+                "id": "demo-initiative",
+                "title": "Demo",
+                "recommendation": "none",
+                "status": "done",
+                "progress": 100,
+                "last_evaluated": "2026-08-05",
+                "meadows_level": 5,
+                "owner": "governance-team",
+                "layer": "X1-X4",
+                "ssot": "x",
+                "entrypoints": ["x"],
+                "deliverables": ["x"],
+                "verification": [{"command": ["true"]}],
+                "acceptance": ["x"],
+                "done_when": "x",
+                "blocked_by": [],
+            }
+        ],
+        "operating_rhythm": {"daily": ["true"]},
+    }
+    errors, _ = module.validate_roadmap(registry)
+    assert any("closure" in err for err in errors), f"expected closure error, got: {errors}"
+
+
+def test_validate_done_initiative_with_closure_passes(monkeypatch) -> None:
+    """ADR-0378 G15: done + closure 证据 → 无 closure error."""
+    module = _load_governance_evolution()
+    registry = {
+        "version": 1,
+        "ssot": {},
+        "entrypoints": {},
+        "preferred_entrypoints": {},
+        "initiatives": [
+            {
+                "id": "demo-initiative",
+                "title": "Demo",
+                "recommendation": "none",
+                "status": "done",
+                "closure": {"adr": "ADR-0378", "verified": "2026-08-05", "verifier": "governance-team"},
+                "progress": 100,
+                "last_evaluated": "2026-08-05",
+                "meadows_level": 5,
+                "owner": "governance-team",
+                "layer": "X1-X4",
+                "ssot": "x",
+                "entrypoints": ["x"],
+                "deliverables": ["x"],
+                "verification": [{"command": ["true"]}],
+                "acceptance": ["x"],
+                "done_when": "x",
+                "blocked_by": [],
+            }
+        ],
+        "operating_rhythm": {"daily": ["true"]},
+    }
+    errors, _ = module.validate_roadmap(registry)
+    assert not any("closure" in err for err in errors), f"unexpected closure error, got: {errors}"
