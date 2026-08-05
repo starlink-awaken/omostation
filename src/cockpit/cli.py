@@ -202,6 +202,7 @@ def main() -> int:
   research    深度研究 & 知识管理
   import      导入外部内容
   status      系统健康 & 研究状态
+  memory      Memory OS 统一记忆控制面 (ADR-0372)
   demo        快速演示闭环
   daily       每日研究简报
   display     查看所有 export 内容
@@ -229,6 +230,8 @@ def main() -> int:
   cockpit import ~/Desktop/note.md
   cockpit status
   cockpit status --watch --interval 2
+  cockpit memory status --json
+  cockpit memory recall "query" --as-of 2024-01-01T00:00:00Z
   cockpit contracts validate
   cockpit contracts export-research 1
   cockpit demo
@@ -885,22 +888,40 @@ def main() -> int:
     knowledge_sub.add_parser("status", help="KOS 服务健康")
     knowledge_sub.add_parser("stats", help="索引统计")
 
-    # memory — Memory OS 统一控制面 (ADR-0372) → bos://memory/mos/*
+    # memory — Memory OS 统一控制面 (ADR-0372 phase10) → bos://memory/mos/*
     memory_p = sub.add_parser(
         "memory",
         help="🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref)",
-        epilog="BOS: bos://memory/mos/{write,recall,status,forget,consolidate,knowledge-ref}",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "BOS: bos://memory/mos/{write,recall,status,forget,consolidate,knowledge-ref}\n"
+            "Examples:\n"
+            "  cockpit memory status --json\n"
+            "  cockpit memory recall 'Alice' --intent temporal_fact --as-of 2021-06-01T00:00:00Z\n"
+            "  cockpit memory write --type semantic --content '…' --subject A --predicate works_at --object B\n"
+            "  source bin/memory-os-env.sh && bash bin/memory-os-neo4j-up.sh\n"
+            "  # live (optional): MOS_LIVE_KOS=1 MOS_LIVE_GBRAIN=1\n"
+            "Docs: docs/architecture/memory-os.md · .omo/standards/memory-os-ops.md"
+        ),
     )
     memory_sub = memory_p.add_subparsers(dest="memory_command")
-    mem_status = memory_sub.add_parser("status", help="控制面健康 / neo4j / rbac")
+    mem_status = memory_sub.add_parser(
+        "status",
+        help="控制面健康 / neo4j / rbac / consolidate / adapters",
+    )
     mem_status.add_argument("--json", action="store_true")
     mem_status.add_argument("--role", default=None)
     mem_status.add_argument("--agent-profile", dest="agent_profile", default=None)
-    mem_recall = memory_sub.add_parser("recall", help="意图路由召回")
+    mem_recall = memory_sub.add_parser("recall", help="意图路由召回（neo4j/temporal 支持 --as-of）")
     mem_recall.add_argument("query", nargs="?", help="查询")
-    mem_recall.add_argument("--intent", default=None)
+    mem_recall.add_argument("--intent", default=None, help="file_note|temporal_fact|entity_relation|…")
     mem_recall.add_argument("--limit", type=int, default=10)
-    mem_recall.add_argument("--as-of", dest="as_of", default=None)
+    mem_recall.add_argument(
+        "--as-of",
+        dest="as_of",
+        default=None,
+        help="ISO-8601 bi-temporal as-of for neo4j/temporal (omit = current state)",
+    )
     mem_recall.add_argument("--principal-id", dest="principal_id", default=None)
     mem_recall.add_argument("--agent-profile", dest="agent_profile", default=None)
     mem_recall.add_argument("--scene-id", dest="scene_id", default=None)

@@ -217,23 +217,38 @@ def cmd_memory(args: argparse.Namespace) -> int:
         return dispatch[sub](args)
 
     console = _get_console()
-    console.print(_panel("[bold cyan]🧠 Memory OS (ADR-0372)[/bold cyan]", "cyan"))
+    console.print(_panel("[bold cyan]🧠 Memory OS (ADR-0372 · phase10)[/bold cyan]", "cyan"))
     apply_memory_os_env()
     st = _invoke_mos("status", {})
     if st.get("ok"):
+        ad = st.get("adapters") or {}
+        live = ad.get("kos_gbrain_live") or {}
         console.print(
             f"[green]status ok[/] version={st.get('version')} "
             f"neo4j={st.get('neo4j_configured')}/{st.get('neo4j_available')} "
-            f"rbac={st.get('rbac_enforced')}"
+            f"as_of={st.get('neo4j_as_of')} rbac={st.get('rbac_enforced')}"
+        )
+        console.print(
+            f"[dim]live kos={((live.get('kos') or {}).get('flag'))} "
+            f"gbrain={((live.get('gbrain') or {}).get('flag'))} · "
+            f"consolidate last={'yes' if st.get('last_consolidate') else 'none'}[/dim]"
         )
     else:
         console.print(f"[yellow]status degraded:[/] {st.get('error') or st}")
     console.print("\n[bold]子命令 / BOS URI:[/]")
-    console.print("  [cyan]cockpit memory status[/]                         bos://memory/mos/status")
-    console.print('  [cyan]cockpit memory recall "query" [--intent …][/]    bos://memory/mos/recall')
-    console.print("  [cyan]cockpit memory write --type semantic --content …[/] bos://memory/mos/write")
-    console.print("  [cyan]cockpit memory forget <id>[/]                    bos://memory/mos/forget")
-    console.print("  [cyan]cockpit memory consolidate [--live][/]           bos://memory/mos/consolidate")
-    console.print('  [cyan]cockpit memory knowledge-ref "query"[/]          bos://memory/mos/knowledge-ref')
-    console.print("\n[dim]环境: source bin/memory-os-env.sh · 图库: bash bin/memory-os-neo4j-up.sh[/dim]")
+    console.print("  [cyan]cockpit memory status [--json][/]                         bos://memory/mos/status")
+    console.print(
+        '  [cyan]cockpit memory recall "query" [--intent …] [--as-of ISO][/]  '
+        "bos://memory/mos/recall"
+    )
+    console.print("  [cyan]cockpit memory write --type semantic --content …[/]       bos://memory/mos/write")
+    console.print("  [cyan]cockpit memory forget <id>[/]                             bos://memory/mos/forget")
+    console.print("  [cyan]cockpit memory consolidate [--live][/]                    bos://memory/mos/consolidate")
+    console.print('  [cyan]cockpit memory knowledge-ref "query"[/]                   bos://memory/mos/knowledge-ref')
+    console.print("\n[bold]帮助:[/]")
+    console.print("  [cyan]cockpit memory recall --help[/]   · [cyan]cockpit bos resolve bos://memory/mos/status[/]")
+    console.print(
+        "\n[dim]环境: source bin/memory-os-env.sh · 图库: bash bin/memory-os-neo4j-up.sh · "
+        "live: MOS_LIVE_KOS / MOS_LIVE_GBRAIN · 文档: docs/architecture/memory-os.md[/dim]"
+    )
     return 0
