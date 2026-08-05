@@ -1905,6 +1905,63 @@ gac:
     activated_at: '2026-08-04'
     source_type: native
 
+  # ── 2026-08-05: P2/P3 治理缺口修复 (近两周提交分析续) ──
+  - id: CR-X4-SWEEP-TOOL-INTEGRITY
+    dimension: X4
+    layer: meta
+    name: Sweep 工具完整性
+    description: 'sweep 工具链 (bin/sweep/) 必须有测试覆盖和 CI 集成. 对应 ADR-0367. 实现: bin/gac/check-sweep-tool-integrity.py (gac-gate CI, advisory)'
+    check_type: hygiene_case
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    source_type: native
+
+  - id: CR-X4-MESH-ROUTING-CONSISTENCY
+    dimension: X4
+    layer: meta
+    name: Mesh 路由一致性
+    description: 'mesh 路由必须遵循 BOS URI 标准, 确保路由注册与声明一致. 实现: bin/gac/check-mesh-routing-consistency.py (gac-gate CI, advisory)'
+    check_type: mesh_routing
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    source_type: native
+
+  - id: CR-X2-PROJECT-HEALTH-FRESHNESS
+    dimension: X2
+    layer: meta
+    name: 项目健康分新鲜度
+    description: '项目健康分 (system.yaml health_score) 必须定期更新, 不超过 48h. 实现: bin/gac/check-project-health-freshness.py (gac-gate CI, advisory)'
+    check_type: freshness
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    source_type: native
+
+  - id: CR-X3-DELIVERY-VALUE-GATE
+    dimension: X3
+    layer: meta
+    name: 交付 X3 价值门禁
+    description: '交付文件必须有 X3 价值标注 (x3_tier/value/roi), 确保投入产出可量化. 平衡 X3 维度覆盖. 实现: bin/gac/check-delivery-value-gate.py (gac-gate CI, advisory)'
+    check_type: value_roi
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    source_type: native
+
   drift:
     schedule: daily
     auto_heal: false
