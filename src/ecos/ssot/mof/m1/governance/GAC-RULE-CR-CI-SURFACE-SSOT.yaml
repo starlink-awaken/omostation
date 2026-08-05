@@ -1,31 +1,32 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
 # DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
-id: GAC-RULE-CR-P74-WORKFLOW-SUGGEST
+id: GAC-RULE-CR-CI-SURFACE-SSOT
 type: GacRule
-name: Workflow routing advisory suggest (P74, ADR-0130)
-description: 'P74 §3 错位路由纠正: 给出 changes 期望走的 workflow 建议. advisory only, 不强制. 实现:
-  bin/agent-workflow.py suggest --from-diff'
+name: CI 平面检查登记 SSOT (ADR-0379 E-1)
+description: 'ci-surfaces.yaml 是 CI 平面检查接线登记 SSOT. 所有 workflow / sgf-policy 中执行的 check
+  类工具必须登记; bin/gac/check-ci-surfaces.py 检测 unregistered / gate-parity / orphan / overlap
+  / double-trigger (on: [push, pull_request] 双跑).'
 status: active
 domain: meta
 layer: meta
-created: '2026-07-03'
+created: '2026-08-05'
 version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
-  id: CR-P74-WORKFLOW-SUGGEST
-  dimension: X3
+  id: CR-CI-SURFACE-SSOT
+  dimension: X1
   layer: meta
-  check_type: registry_integrity
+  check_type: legacy_index
   executor:
-  - mcp_tool
   - ci_gate
+  - omo_audit
   lifecycle: active
   version: 1.0.0
-  created_at: '2026-07-03'
-  target: .omo/_truth/registry/agent-workflows + bin/agent-workflow.py
-  adr: ADR-0130
-  source_type: native
+  created_at: '2026-08-05'
+  adr: ADR-0379
+  source_type: indexed
+  source_ref: .omo/_truth/registry/ci-surfaces.yaml::surfaces
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
@@ -34,5 +35,5 @@ model_driven_refs:
   derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
-  timestamp: '2026-07-03T00:00:00Z'
+  timestamp: '2026-08-05T00:00:00Z'
   reason: M1 实例由 gac-m1-sync.py 从 registry 派生
