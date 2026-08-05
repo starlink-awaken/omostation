@@ -1635,13 +1635,15 @@ gac:
     dimension: X3
     layer: meta
     name: 治理轴 Foundry Deck
-    description: 每治理轴对应一个 foundry deck. 对应 P79-3 (foundry-deck-per-governance-axis)
+    description: '每治理轴对应一个 foundry deck. 对应 P79-3 (foundry-deck-per-governance-axis). 实现: bin/gac/check-foundry-deck-coverage.py (gac-local-gate)'
     check_type: audit_chain
     executor:
     - omo_audit
-    lifecycle: draft
-    version: 0.1.0
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
     created_at: 2026-07-08
+    activated_at: '2026-08-05'
     adr: ADR-0174
     source_type: native
   - id: CR-P79-4-CATALOG-HEALTH-METRIC
@@ -2202,6 +2204,36 @@ gac:
     name: 对抗有效性
     description: '评估治理规则的对抗有效性. 已运行于 gac-local-gate. 实现: bin/gac/check-adversarial-effectiveness.py (gac-local-gate)'
     check_type: hygiene_case
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+
+  - id: CR-X2-EVIDENCE-FRESHNESS
+    dimension: X2
+    layer: meta
+    name: 证据新鲜度检查
+    description: 'evidence-smoke 报告必须 7 天内生成, 分数不低于 90. 实现: bin/gac/check-evidence-freshness.py (gac-local-gate)'
+    check_type: freshness
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+
+  - id: CR-X2-GOVERNANCE-TREND
+    dimension: X2
+    layer: meta
+    name: 治理指标趋势检查
+    description: '治理指标在合理范围内: 规则数 ≤ freeze, ADR 100%, 无过期 draft. 实现: bin/gac/check-governance-trend.py (gac-local-gate)'
+    check_type: freshness
     executor:
     - gac_local_gate
     lifecycle: active
