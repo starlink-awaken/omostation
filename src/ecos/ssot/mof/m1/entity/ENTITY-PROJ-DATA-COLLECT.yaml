@@ -1,0 +1,33 @@
+# M1 Node: ENTITY-PROJ-DATA-COLLECT
+# Type: Entity | Subtype: Project
+# Generated: 2026-08-05
+
+id: ENTITY-PROJ-DATA-COLLECT
+type: Entity
+subtype: Project
+name: 诊疗数据归集平台
+description: 区级诊疗数据归集平台（DATA-COLLECT）——8 数据系统×107 字段归集，S1 立项申报阶段，300.06 万医改资金，知识图谱枢纽（6 度）
+status: active
+domain: work-weijian
+created: '2026-08-05'
+version: 1.0.0
+layer: L4
+properties:
+  entity_type: project
+  ontology_class: C3
+  kems_stage: S1
+  budget: 300.06
+  budget_unit: 万元
+  funding: 医改资金
+  vendor: 东软
+  owner: 孟帅/王璐/夏明星
+  graph_degree: 6
+  key_dates:
+    专家论证: '2026-08-20'
+    初设报送: '2026-08-31'
+
+model_driven_refs:
+  source_file: '@工作文档/卫健委/_entities/entities/projects-2026.md'
+
+state_history:
+  - state: active

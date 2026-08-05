@@ -1,0 +1,53 @@
+# M1 Node: MODEL-WEIJIAN-ONTOLOGY
+# Type: Model | Subtype: OntologyModel
+# Generated: 2026-08-05
+
+id: MODEL-WEIJIAN-ONTOLOGY
+type: Model
+subtype: OntologyModel
+name: KEMS 本体模型（卫健委数字化·信息化·智能化）
+description: 卫健委 KEMS 领域本体——9 类（C1-C9）×9 关系（R1-R9）×8 层（L0-L7）+ 32 约束 + 35 关联边，M2 元模型契约
+status: active
+domain: work-weijian
+created: '2026-08-05'
+version: 1.2
+layer: L4
+properties:
+  source: '@工作文档/卫健委/_entities/ontology/classes.yaml'
+  mapping:
+    classes: classes.yaml
+    relations: relations.yaml
+    layers: layers.yaml
+    constraints: constraints.yaml
+  formality: formal
+  ontology_type: domain_ontology
+  classes:
+  - C1
+  - C2
+  - C3
+  - C4
+  - C5
+  - C6
+  - C7
+  - C8
+  - C9
+  relations:
+  - R1
+  - R2
+  - R3
+  - R4
+  - R5
+  - R6
+  - R7
+  - R8
+  - R9
+  constraints: 32
+  aliases: 23
+  views: 34
+  ssot: '@工作文档/卫健委/_entities/ontology/*.yaml'
+
+model_driven_refs:
+  source_file: '@工作文档/卫健委/_entities/ontology/metamodel.yaml'
+
+state_history:
+  - state: active

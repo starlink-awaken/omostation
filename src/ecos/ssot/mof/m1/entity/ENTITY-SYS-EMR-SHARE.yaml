@@ -1,0 +1,29 @@
+# M1 Node: ENTITY-SYS-EMR-SHARE
+# Type: Entity | Subtype: System
+# Generated: 2026-08-05
+
+id: ENTITY-SYS-EMR-SHARE
+type: Entity
+subtype: System
+name: 电子病历共享应用平台
+description: 区级电子病历共享应用平台（三级等保）——9 家二三级机构直连市级平台，内网 132.83.19.74:8085
+status: active
+domain: work-weijian
+created: '2026-08-05'
+version: 1.0.0
+layer: L4
+properties:
+  entity_type: system
+  ontology_class: C4
+  security_level: 三级
+  internal_url: https://132.83.19.74:8085
+  deploys_on:
+  - inf-snw
+  - inf-room
+  graph_degree: 4
+
+model_driven_refs:
+  source_file: '@工作文档/卫健委/_entities/entities/等保系统清册.md'
+
+state_history:
+  - state: active

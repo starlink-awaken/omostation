@@ -1,0 +1,32 @@
+# M1 Node: DOMAIN-WEIJIAN
+# Type: Domain | Subtype: DocumentDomain
+# Generated: 2026-08-05
+
+id: DOMAIN-WEIJIAN
+type: Domain
+subtype: DocumentDomain
+name: 房山区卫健委信息中心
+description: 房山区卫健委信息中心知识域——KEMS 六平面知识管理（211 实例/244 事实/35 关联边/28 模型/9 类本体）
+status: active
+domain: work-weijian
+created: '2026-08-05'
+version: 1.0.0
+layer: L4
+properties:
+  bos_uri_pattern: bos://work-weijian/**
+  domain_type: document
+  governance_tier: 1
+  storage: /Users/xiamingxing/Documents/@工作文档/卫健委
+  kems_instances: 211
+  kems_facts: 244
+  kems_edges: 35
+  models: 28
+  ontology_classes: 9
+  ontology_relations: 9
+  constraints: 32
+
+model_driven_refs:
+  source_file: '@工作文档/卫健委/_entities/ontology/metamodel.yaml'
+
+state_history:
+  - state: active
