@@ -93,8 +93,8 @@ Agent / Skill
 | P0 | 本机 env 覆盖 example + dashboard 默认可连 | Phase 9 follow-up |
 | P1 | 事件 producer 规范 memory 域 + SOP 对齐 dual-accept | Phase 9 follow-up |
 | P1 | consolidate 指标跨进程可观测 | Phase 9 follow-up（FileStore 持久化） |
-| P2 | live KOS/gbrain 写路径 | backlog |
-| P2 | as_of bi-temporal | backlog |
+| P2 | live KOS/gbrain 写路径 | **Phase 10** — `MOS_LIVE_KOS` / `MOS_LIVE_GBRAIN` / `MOS_LIVE_GBRAIN_WRITE` |
+| P2 | as_of bi-temporal | **Phase 10** — Neo4j + temporal `as_of`；CLI `--as-of` |
 | P3 | Graphiti/Mem0 真接或正式 deprecate | backlog |
 
 ## 8. 冷启动

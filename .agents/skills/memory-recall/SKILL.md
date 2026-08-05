@@ -23,7 +23,7 @@ description: >
 ### Phase 1+（当前默认）
 
 ```text
-召回:  bos://memory/mos/recall   { query, scope?, intent? }
+召回:  bos://memory/mos/recall   { query, scope?, intent?, as_of? }
 写入:  bos://memory/mos/write    { type, content|content_ref, confidence? }
 状态:  bos://memory/mos/status
 遗忘:  bos://memory/mos/forget   { memory_id, reason? }
