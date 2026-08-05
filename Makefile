@@ -1,4 +1,4 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke worktree-prune worktree-guard worktree-cleanup worktree-audit
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit
 
 PY := uv run --with pyyaml python
 
@@ -92,6 +92,7 @@ help:
 	@echo "make memory-os-env       打印/加载 Memory OS 环境 (source bin/memory-os-env.sh)"
 	@echo "make memory-os-up        启动 Neo4j（docker→brew）；CLI: cockpit memory --help"
 	@echo "make memory-os-smoke     Memory OS 实路径冒烟 (status/write/recall/as_of)"
+	@echo "make memory-os-asof-seed as_of 双时态演示种子 + 对照 recall"
 	@echo "                       help: cockpit help · discover · cockpit status (含 Memory OS 行)"
 	@echo ""
 	@echo "=== 本地 CI ==="
@@ -526,7 +527,7 @@ ssot-guardian:  ## SSOT guardian (.omo 写入合规)
 agent-workflow-status:
 	$(PY) bin/agent-workflow.py status --json
 
-memory-os-check:  ## Memory OS surfaces (SSOT / ports / env example)
+memory-os-check:  ## Memory OS light gate (SSOT / ports / env / catalog; blocking)
 	python3 bin/gac/check-memory-os-surfaces.py
 
 memory-os-env:  ## Show / export Memory OS env (source: eval "$$(make -s memory-os-env-export)")
@@ -540,6 +541,9 @@ memory-os-up:  ## Start Neo4j for Memory OS
 
 memory-os-smoke:  ## Memory OS CLI smoke: status + write + recall + as_of
 	bash bin/memory-os-smoke.sh
+
+memory-os-asof-seed:  ## Seed bi-temporal AliceDemo facts + print as_of comparison
+	bash bin/memory-os-asof-seed.sh
 
 
 # ── PASW: Per-Agent Submodule Worktree (ADR-0349) ──────────
