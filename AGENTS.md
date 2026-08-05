@@ -63,14 +63,14 @@ uv run ruff check "src/"
 | 文件 | 职责 |
 |:-----|:-----|
 | `src/cockpit/web/api_knowledge.py` | `/api/knowledge/search` + `/api/knowledge/put` 路由，网络优先 BOS 解析 |
-| `src/cockpit/web/knowledge_indexer.py` | 事件消费者，订阅 `bos://brain/events/card_updated` 驱动增量索引 |
+| `src/cockpit/web/knowledge_indexer.py` | 事件消费者，dual-accept `bos://memory/events/card_updated` + legacy `bos://brain/events/card_updated` |
 | `src/cockpit/adapters/agora.py` | 进程内兼容适配器（仅供降级路径使用，不直接调用） |
 
 ### API 契约
 
 ```
 POST /api/knowledge/put   → 写入 data/cards/{slug}.md
-                          → 非阻塞发射 bos://brain/events/card_updated
+                          → 非阻塞发射 bos://memory/events/card_updated (canonical)
                           → KnowledgeIndexer 消费 → KOS/LanceDB upsert
 
 POST /api/knowledge/search → 网络解析 AGORA_HTTP_ENDPOINT/bos/resolve
@@ -90,4 +90,4 @@ POST /api/knowledge/search → 网络解析 AGORA_HTTP_ENDPOINT/bos/resolve
 - 操作手册: [`../../docs/operations/knowledge-foundry-sop.md`](../../docs/operations/knowledge-foundry-sop.md) §5
 - BOS 域越界登记: [`../../.omo/standards/bos-uri-domain-standard.md`](../../.omo/standards/bos-uri-domain-standard.md)
 
-> ⚠️ `bos://brain/events/card_updated` 为非标准域，计划 Phase 2 迁移至 `bos://memory/events/card_updated`。
+> ⚠️ Producer 已规范为 `bos://memory/events/card_updated`；Consumer dual-accept 遗留 `bos://brain/events/card_updated`（ADR-0372 D5 / ADR-0294）。

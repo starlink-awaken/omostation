@@ -697,12 +697,16 @@ async function doStatus() {
     const r = await fetch('/api/memory/status', {headers: headers()});
     const d = await r.json();
     const g = d.graphiti || {};
+    const c = d.consolidate || {};
+    const ad = d.adapters || {};
+    const nj = ad.neo4j || {};
     document.getElementById('status-grid').innerHTML = [
       {t:'Control plane', body:'<div class="stat"><span class="label">version</span><span class="val">'+(d.version||'?')+'</span></div><div class="stat"><span class="label">URI</span><span class="val">'+(d.control_plane||'')+'</span></div><div class="stat"><span class="label">raw/theta</span><span class="val">'+(d.raw_events||0)+' / '+(d.theta_docs||0)+'</span></div>'},
+      {t:'Consolidate', body:'<div class="stat"><span class="label">last</span><span class="val">'+badge(c.ok!=null?c.ok:false,c.ok?'ok':'none',c.ok===false?'fail':'none')+'</span></div><div class="stat"><span class="label">dry_run</span><span class="val">'+badge(!!c.dry_run)+'</span></div><div class="stat"><span class="label">degraded</span><span class="val">'+badge(!!c.degraded,'yes','no')+'</span></div><div class="stat"><span class="label">ms</span><span class="val">'+(c.duration_ms!=null?c.duration_ms:'—')+'</span></div>'},
       {t:'Temporal / Graphiti', body:'<div class="stat"><span class="label">temporal</span><span class="val">'+badge(d.temporal_enabled)+'</span></div><div class="stat"><span class="label">edges</span><span class="val">'+(d.temporal_edges||0)+'</span></div><div class="stat"><span class="label">graphiti flag</span><span class="val">'+badge(g.graphiti_flag)+'</span></div><div class="stat"><span class="label">importable</span><span class="val">'+badge(g.graphiti_importable)+'</span></div>'},
-      {t:'Neo4j production', body:'<div class="stat"><span class="label">NEO4J_URI</span><span class="val">'+badge(d.neo4j_configured,'set','unset')+'</span></div><div class="stat"><span class="label">driver</span><span class="val">'+badge(d.neo4j_available,'ready','n/a')+'</span></div><div class="stat"><span class="label">path</span><span class="val" style="font-size:10px">'+(g.production_path||'shadow')+'</span></div>'},
+      {t:'Neo4j production', body:'<div class="stat"><span class="label">NEO4J_URI</span><span class="val">'+badge(d.neo4j_configured,'set','unset')+'</span></div><div class="stat"><span class="label">driver</span><span class="val">'+badge(d.neo4j_available,'ready','n/a')+'</span></div><div class="stat"><span class="label">adapter</span><span class="val" style="font-size:10px">'+(nj.status||g.production_path||'shadow')+'</span></div>'},
       {t:'RBAC', body:'<div class="stat"><span class="label">enforced</span><span class="val">'+badge(d.rbac_enforced)+'</span></div><div class="stat"><span class="label">default role</span><span class="val">'+(d.rbac_default_role||'agent')+'</span></div><div class="stat"><span class="label">policy</span><span class="val">memory-rbac.yaml</span></div>'},
-    ].map(c => '<div class="card"><h2>'+c.t+'</h2>'+c.body+'</div>').join('');
+    ].map(card => '<div class="card"><h2>'+card.t+'</h2>'+card.body+'</div>').join('');
     return d;
   } catch(e) {
     document.getElementById('status-grid').innerHTML = '<div class="card err">status failed: '+e.message+'</div>';

@@ -27,6 +27,12 @@ _APPLIED = False
 
 
 def _candidate_files(root: Path) -> list[Path]:
+    """Later files override earlier (local secrets win over example defaults).
+
+    Process non-empty env still wins in apply_memory_os_env (ops contract).
+    Order matches .omo/standards/memory-os-ops.md inverted for merge-then-apply:
+    example → cockpit .env → config/memory-os.env.
+    """
     return [
         root / "docs" / "operations" / "memory-os.env.example",
         root / "projects" / "cockpit" / ".env",
