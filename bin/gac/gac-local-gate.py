@@ -102,6 +102,11 @@ DEFAULT_POLICY = {
         {"id": "check-dual-track-purity", "command": ["bin/gac/check-dual-track-purity.py"]},
         {"id": "check-silent-loss", "command": ["bin/gac/check-silent-loss.py"]},
         {"id": "check-adversarial-effectiveness", "command": ["bin/gac/check-adversarial-effectiveness.py"]},
+        {"id": "check-evidence-honest-closure", "command": ["bin/gac/check-evidence-honest-closure.py"]},
+        {"id": "check-gateway-status-doc", "command": ["bin/gac/check-gateway-status-doc.py"]},
+        {"id": "check-foundry-deck-coverage", "command": ["bin/gac/check-foundry-deck-coverage.py"]},
+        {"id": "check-evidence-freshness", "command": ["bin/gac/check-evidence-freshness.py"]},
+        {"id": "check-governance-trend", "command": ["bin/gac/check-governance-trend.py"]},
         # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
         # Catches the P71 class-A "declaration without execution" trap.
         {"id": "bus-usage-report", "command": ["bin/ssot/bus-usage-report.py"]},
