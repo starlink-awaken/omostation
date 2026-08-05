@@ -258,6 +258,7 @@ services:
   description: Cockpit MCP Server (HTTP proxy mode)
   domain: capability
   mcp_endpoint: http://localhost:8778/mcp
+  uri: bos://capability/cockpit/mcp-server
 - action: rest-api
   description: KOS REST API v1 (9 endpoints)
   domain: memory
