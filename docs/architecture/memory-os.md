@@ -120,8 +120,10 @@ MOS 增加：统一 agent 默认召回、对话记忆、巩固与遗忘；事件
 | 8 | 进程 env 注入 + 端口登记 + 运维契约 + surface check — **done** |
 | 9+ | 完整 graphiti-core 引擎、as_of 图侧 bi-temporal、Mem0 真集群 |
 
-实现入口：`projects/kairon/packages/mos` · CLI `python -m mos`  
+实现入口：`projects/kairon/packages/mos` · CLI `python -m mos` / `cockpit memory`  
 本机图：`bash bin/memory-os-neo4j-up.sh` · 环境：`source bin/memory-os-env.sh`  
+史诗复盘：`docs/operations/memory-os-epic-retro.md`  
+
 运维契约：`.omo/standards/memory-os-ops.md` · 检查：`make memory-os-check`
 
 ## 11. 相关入口
