@@ -231,6 +231,54 @@ def validate_command_list(command: Any, prefix: str) -> list[str]:
     return []
 
 
+
+
+def _collect_convergence_provenance_errors(seen_ids: set[str], initiatives: list) -> list[str]:
+    """ADR-0374 G4: extractable convergence_provenance symmetry check.
+
+    Returns the list of error messages (empty = bilateral links OK).
+    Exposed as a top-level helper so tests can target it without running
+    the full roadmap validator.
+    """
+    errors: list[str] = []
+    _sup_to_sub: dict[str, str] = {}
+    _sub_to_sup: dict[str, str] = {}
+    for initiative in initiatives:
+        if not isinstance(initiative, dict):
+            continue
+        cid = str(initiative.get("id") or "")
+        prov = initiative.get("convergence_provenance") or {}
+        if not isinstance(prov, dict):
+            # Treat bad shape as a soft error (not a hard error) to keep
+            # validate_roadmap's warnings/errors contract clean.
+            continue
+        sup = str(prov.get("supersedes") or "")
+        sub = str(prov.get("superseded_by") or "")
+        if sup:
+            _sup_to_sub[cid] = sup
+        if sub:
+            _sub_to_sup[cid] = sub
+    for child, parent in _sup_to_sub.items():
+        if not _sub_to_sup.get(parent):
+            errors.append(
+                f"{child}: convergence_provenance.supersedes={parent} "
+                f"but {parent} has no superseded_by pointing back"
+            )
+    for child, parent in _sub_to_sup.items():
+        if not _sup_to_sub.get(parent):
+            errors.append(
+                f"{child}: convergence_provenance.superseded_by={parent} "
+                f"but {parent} has no supersedes pointing back"
+            )
+    for child, parent in _sup_to_sub.items():
+        if parent not in seen_ids:
+            errors.append(f"{child}: supersedes={parent} not found among initiatives")
+    for child, parent in _sub_to_sup.items():
+        if parent not in seen_ids:
+            errors.append(f"{child}: superseded_by={parent} not found among initiatives")
+    return errors
+
+
 def validate_roadmap(registry: dict[str, Any]) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -284,42 +332,10 @@ def validate_roadmap(registry: dict[str, Any]) -> tuple[list[str], list[str]]:
                 continue
             errors.extend(validate_command_list(check.get("command"), f"{initiative_id}.verification[{check_index}]"))
 
-    # ADR-0373: convergence_provenance symmetry detection — bilateral link
+    # ADR-0373/0374: convergence_provenance symmetry detection — bilateral link
     # between parent (supercedes) and child (superseded_by) must exist.
-    _sup_to_sub: dict[str, str] = {}
-    _sub_to_sup: dict[str, str] = {}
-    for initiative in initiatives:
-        if not isinstance(initiative, dict):
-            continue
-        cid = str(initiative.get("id") or "")
-        prov = initiative.get("convergence_provenance") or {}
-        if not isinstance(prov, dict):
-            warnings.append(f"{cid}: convergence_provenance must be a mapping")
-            continue
-        sup = str(prov.get("supersedes") or "")
-        sub = str(prov.get("superseded_by") or "")
-        if sup:
-            _sup_to_sub[cid] = sup
-        if sub:
-            _sub_to_sup[cid] = sub
-    for child, parent in _sup_to_sub.items():
-        if not _sub_to_sup.get(parent):
-            errors.append(
-                f"{child}: convergence_provenance.supersedes={parent} "
-                f"but {parent} has no superseded_by pointing back"
-            )
-    for child, parent in _sub_to_sup.items():
-        if not _sup_to_sub.get(parent):
-            errors.append(
-                f"{child}: convergence_provenance.superseded_by={parent} "
-                f"but {parent} has no supersedes pointing back"
-            )
-    for child, parent in _sup_to_sub.items():
-        if parent not in seen_ids:
-            errors.append(f"{child}: supersedes={parent} not found among initiatives")
-    for child, parent in _sub_to_sup.items():
-        if parent not in seen_ids:
-            errors.append(f"{child}: superseded_by={parent} not found among initiatives")
+    # ADR-0374 G4: extracted to a top-level testable helper.
+    errors.extend(_collect_convergence_provenance_errors(seen_ids, initiatives))
 
     for section in ("capability_traces", "golden_paths"):
         rows = registry.get(section)
