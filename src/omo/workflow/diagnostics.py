@@ -215,6 +215,22 @@ def parse_utc_timestamp(value: str | None) -> datetime | None:
         return None
 
 
+# Active run 超过该时长无更新视为 stale (僵尸 run, 锁可能已被 TTL 清理)。
+STALE_RUN_HOURS = 6
+
+
+def _is_stale_run(payload: dict[str, Any]) -> bool:
+    """判断 active run 是否 stale (超过 STALE_RUN_HOURS 无 updated_at)."""
+    updated = payload.get("updated_at") or payload.get("created_at") or ""
+    if not updated:
+        return False
+    ts = parse_utc_timestamp(str(updated).replace("Z", "+00:00"))
+    if ts is None:
+        return False
+    age_hours = (datetime.now(UTC) - ts).total_seconds() / 3600
+    return age_hours > STALE_RUN_HOURS
+
+
 def build_observe_report(
     registry: dict[str, Any], run_id: str | None
 ) -> dict[str, Any]:
@@ -300,11 +316,19 @@ def build_observe_report(
                 expected_locks - lock_paths_by_run.get(current_run_id, set())
             )
             if missing_locks:
+                # Stale run downgrade: 若 active run 超过 STALE_RUN_HOURS 无更新,
+                # 视为僵尸 run (锁可能已被 TTL 清理但 run 状态未同步)。此时缺锁
+                # 降级为 warn 而非 halt, 防止僵尸 run 永久阻塞 observe/compliance。
+                # 活跃 run (近期更新) 缺锁仍 halt, 保留 fail-closed 保护。
+                stale = _is_stale_run(payload)
                 findings.append(
                     {
-                        "severity": "halt",
+                        "severity": "warn" if stale else "halt",
                         "kind": "active_run_missing_locks",
-                        "message": f"active run is missing lock files: {current_run_id}",
+                        "message": (
+                            f"active run is missing lock files: {current_run_id}"
+                            + (" (stale run, lock likely TTL-cleaned)" if stale else "")
+                        ),
                         "run_id": current_run_id,
                         "missing_locks": missing_locks,
                     }
