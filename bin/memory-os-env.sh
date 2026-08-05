@@ -6,7 +6,9 @@
 #   bin/memory-os-env.sh --check
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# BASH_SOURCE is required when script is `source`d ($0 is the parent shell then)
+_MOS_ENV_SRC="${BASH_SOURCE[0]:-$0}"
+ROOT="$(cd "$(dirname "$_MOS_ENV_SRC")/.." && pwd)"
 EXAMPLE="${ROOT}/docs/operations/memory-os.env.example"
 LOCAL="${ROOT}/config/memory-os.env"
 COCKPIT_ENV="${ROOT}/projects/cockpit/.env"
@@ -39,15 +41,23 @@ _load_file() {
   done <"$f"
 }
 
-# Snapshot which keys parent shell already set (non-empty) — never clobber those
+# Snapshot parent-shell non-empty values — process env always wins (ops contract).
 _PRESET_URI="${NEO4J_URI-}"
 _PRESET_USER="${NEO4J_USER-}"
 _PRESET_PASS="${NEO4J_PASSWORD-}"
+_PRESET_TEMPORAL="${MOS_TEMPORAL-}"
+_PRESET_RBAC="${MOS_RBAC-}"
+_PRESET_MEM0="${MOS_MEM0-}"
+_PRESET_GRAPHITI="${MOS_GRAPHITI-}"
+_PRESET_HTTP="${NEO4J_HTTP_PORT-}"
+_PRESET_BOLT="${NEO4J_BOLT_PORT-}"
 
-# File order: example → cockpit .env → local config (later fills empties only; local can set if empty)
+# File merge order (later overrides earlier for unset-at-start keys only):
+#   example defaults → cockpit .env → config/memory-os.env (local secrets win over example)
+# Process presets restored last so parent shell always wins.
 _load_file "$EXAMPLE" 0
-_load_file "$COCKPIT_ENV" 0
-_load_file "$LOCAL" 0
+_load_file "$COCKPIT_ENV" 1
+_load_file "$LOCAL" 1
 
 # Code defaults for anything still empty
 : "${NEO4J_URI:=bolt://localhost:7687}"
@@ -60,10 +70,16 @@ _load_file "$LOCAL" 0
 : "${NEO4J_HTTP_PORT:=7474}"
 : "${NEO4J_BOLT_PORT:=7687}"
 
-# Restore parent presets if they were non-empty
+# Restore parent presets if they were non-empty at entry
 [[ -n "$_PRESET_URI" ]] && NEO4J_URI="$_PRESET_URI"
 [[ -n "$_PRESET_USER" ]] && NEO4J_USER="$_PRESET_USER"
 [[ -n "$_PRESET_PASS" ]] && NEO4J_PASSWORD="$_PRESET_PASS"
+[[ -n "$_PRESET_TEMPORAL" ]] && MOS_TEMPORAL="$_PRESET_TEMPORAL"
+[[ -n "$_PRESET_RBAC" ]] && MOS_RBAC="$_PRESET_RBAC"
+[[ -n "$_PRESET_MEM0" ]] && MOS_MEM0="$_PRESET_MEM0"
+[[ -n "$_PRESET_GRAPHITI" ]] && MOS_GRAPHITI="$_PRESET_GRAPHITI"
+[[ -n "$_PRESET_HTTP" ]] && NEO4J_HTTP_PORT="$_PRESET_HTTP"
+[[ -n "$_PRESET_BOLT" ]] && NEO4J_BOLT_PORT="$_PRESET_BOLT"
 
 export NEO4J_URI NEO4J_USER NEO4J_PASSWORD
 export MOS_TEMPORAL MOS_RBAC MOS_MEM0 MOS_GRAPHITI

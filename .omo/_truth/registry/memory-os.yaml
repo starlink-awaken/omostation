@@ -3,10 +3,11 @@
 # Do not hardcode service counts or runtime health here.
 id: memory-os
 version: 1
-status: phase8
+status: phase9
 adr: 0372-memory-os-control-plane.md
 architecture_doc: docs/architecture/memory-os.md
 adapter_audit: docs/operations/memory-os-adapter-audit.md
+epic_retro: docs/operations/memory-os-epic-retro.md
 rbac_policy: .omo/_truth/registry/memory-rbac.yaml
 ops_contract: .omo/standards/memory-os-ops.md
 neo4j_ops: docs/operations/memory-os-neo4j-local.md
@@ -28,6 +29,13 @@ phase8:
   cockpit_memory_env: projects/cockpit/src/cockpit/web/memory_env.py
   ports: [7474, 7687]
   notes: "process env load + port registry + ops contract + surface check"
+phase9:
+  epic_retro: true
+  env_local_overrides_example: true
+  consolidate_persist: true
+  status_adapters_honesty: true
+  event_docs_aligned: true
+  notes: "follow-up from epic retro §7: env override fix, FileStore last_consolidate, status.adapters, SOP dual-accept"
 ---
 control_plane:
   package_planned: projects/kairon/packages/mos
@@ -85,6 +93,10 @@ bos_uris:
     compatibility: dual_subscribe_one_release
     phase: 1
     status: dual_accept_live
+    producer_canonical: true
+    producer_path: projects/cockpit/src/cockpit/web/api_knowledge.py
+    consumer_dual_accept: projects/cockpit/src/cockpit/web/knowledge_indexer.py
+    note: "Producer emits memory domain; consumer dual-accepts brain legacy until external emitters migrate"
   backend_keep:
     - "bos://memory/kos/*"
     - "bos://memory/gbrain/*"
@@ -255,3 +267,11 @@ phases:
       - env inject (memory_env + memory-os-env.sh)
       - port registry 7474/7687
       - ops contract + surface check
+  9:
+    status: done
+    deliverables:
+      - docs/operations/memory-os-epic-retro.md
+      - env local overrides example (shell + memory_env contract)
+      - FileStore last_consolidate persistence
+      - status.adapters + consolidate metrics for panel
+      - knowledge-foundry-sop dual-accept docs

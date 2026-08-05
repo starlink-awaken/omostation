@@ -69,14 +69,14 @@ runtime/omo/_delivery/foundry/
 ║  (network-first resolver) ║
 ╚═══════════╦═══════════════╝
             │  1. 写入 data/cards/{slug}.md
-            │  2. 非阻塞 POST /bos/emit → card_updated
+            │  2. 非阻塞 publish_event → card_updated
             ▼
-╔═══════════════════════════╗
-║  Agora EventBus           ║  ← I0 网关层
-║  bos://brain/events/      ║
-║  card_updated             ║
-╚═══════════╦═══════════════╝
-            │  推送/回调 (subscribe pattern)
+╔═══════════════════════════════════════╗
+║  Agora EventBus                       ║  ← I0 网关层
+║  bos://memory/events/card_updated     ║  ← 规范域 (ADR-0372 / api_knowledge)
+║  bos://brain/events/card_updated      ║  ← 遗留 dual-accept (ADR-0294)
+╚═══════════════════╦═══════════════════╝
+            │  推送/回调 (dual-subscribe)
             ▼
 ╔═══════════════════════════╗
 ║  KnowledgeIndexer         ║  ← L3 消费者（cockpit 内）
@@ -107,6 +107,6 @@ runtime/omo/_delivery/foundry/
 
 ### 5.4 接口契约摘要
 
-- **Producer**: `POST {AGORA_HTTP_ENDPOINT}/bos/emit` → `uri=bos://brain/events/card_updated`
-- **Consumer**: `KnowledgeIndexer.subscribe(pattern="bos://brain/events/card_updated")`
-- **完整契约**: 见 `.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`
+- **Producer (canonical)**: `publish_event` → `bos://memory/events/card_updated`（`api_knowledge` PUT）
+- **Consumer (dual-accept)**: `KnowledgeIndexer` 订阅 `memory` + `brain` 两 URI（ADR-0372 D5）
+- **完整契约**: ADR-0294 + ADR-0372 · registry `memory-os.yaml::event_migration`
