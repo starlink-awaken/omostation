@@ -1238,3 +1238,12 @@ agt_constraints:
       - projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml
       - .omo/_truth/x1-governance-policies.yaml
     violation: "AGT cross-layer call bypasses I0/Agora gateway"
+  - applies_to:
+    - L2
+    - L4
+    description: CI 平面 check 工具必须登记在 ci-surfaces.yaml SSOT (ADR-0379 E-1)
+    dimension: X1
+    id: CR-CI-01
+    rule: ci.check.registered == true
+    type: required
+    violation: 'E-L0-021: workflow/sgf-policy 执行未登记的 CI 检查 (CR-CI-SURFACE-SSOT 违反)'
