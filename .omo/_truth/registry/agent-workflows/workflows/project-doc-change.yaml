@@ -1,0 +1,106 @@
+id: project-doc-change
+run_frequency: on_demand
+title: Project documentation change
+purpose: Keep documentation changes executable, SSOT-safe, and verifiable.
+agents:
+  roles:
+  - docs-agent
+  - governance-agent
+  observer_policy: optional_for_broad_doc_rewrites
+allowed_lanes:
+- docs
+- governance_code
+- config
+lock_scopes:
+- docs
+- doc-ssot
+surfaces:
+  read:
+  - AGENTS.md
+  - ARCHITECTURE.md
+  - CLAUDE.md
+  - LAYER-INDEX.md
+  - README.md
+  - .omo/standards/**
+  - .agents/skills/project-governance/SKILL.md
+  - bin/ssot/doc-ssot-lint.py
+  - bin/gac/gac-export-agents.py
+  - bin/mof/project-layer-index.py
+  - docs/**
+  - docs/generated/**
+  - projects/*/AGENTS.md
+  - projects/*/CLAUDE.md
+  - projects/*/README.md
+  write:
+  - AGENTS.md
+  - ARCHITECTURE.md
+  - CLAUDE.md
+  - LAYER-INDEX.md
+  - README.md
+  - .omo/standards/**
+  - .agents/skills/project-governance/SKILL.md
+  - bin/ssot/doc-ssot-lint.py
+  - bin/gac/gac-export-agents.py
+  - bin/mof/project-layer-index.py
+  - docs/**
+  - docs/generated/**
+  - projects/*/AGENTS.md
+  - projects/*/CLAUDE.md
+  - projects/*/README.md
+phases:
+  preflight:
+  - id: status
+    mode: required
+    command:
+    - git
+    - status
+    - --short
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  execute:
+  - id: edit-docs
+    mode: manual
+    command:
+    - agent
+    - edit
+    - docs-with-ssot-pointers
+  verification:
+  - id: doc-ssot-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/ssot/doc-ssot-lint.py
+    - --json
+  - id: ssot-guardian
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/ssot/ssot-guardian.py
+  - id: gac-local-gate
+    mode: required
+    command:
+    - make
+    - gac-local-gate
+  closeout:
+  - id: diff-stat
+    mode: required
+    command:
+    - git
+    - diff
+    - --stat

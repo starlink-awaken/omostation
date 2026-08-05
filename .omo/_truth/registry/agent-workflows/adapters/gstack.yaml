@@ -1,0 +1,14 @@
+gstack:
+  status: optional_adapter
+  command: gstack
+  authority: memory_adapter
+  ssot_rule: GStack memory may enrich handoff evidence but agent-workflow run records
+    remain canonical.
+  ingress_workflow: handoff-resume
+  pattern: per-worktree memory, learnings, and handoff logs can feed workflow resume
+    evidence
+  health_command:
+  - gstack
+  - --help
+  health_required: false
+  degrade_to: bin/agent-workflow.py handoff <run-id>
