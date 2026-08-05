@@ -673,7 +673,19 @@ def consume_pending_workflow_requests(
     skipped: list[dict[str, Any]] = []
     failed: list[dict[str, Any]] = []
 
-    planned_runs = [s for s in store.snapshots() if s.get("state") == "planned"]
+    # producer map: 排除 agent-workflow 的 run (mesh_agent_events 可视化记录,
+    # 无 task_id/required_capabilities, 非 task request, 永不该被 consume).
+    producer_by_run = {
+        str(e.get("workflow_run_id")): e.get("producer", "")
+        for e in store.events()
+        if e.get("event_type") == "WorkflowRequested"
+    }
+    planned_runs = [
+        s
+        for s in store.snapshots()
+        if s.get("state") == "planned"
+        and producer_by_run.get(str(s.get("workflow_run_id"))) != "agent-workflow"
+    ]
     for snapshot in planned_runs[:max_per_tick]:
         run_id = str(snapshot["workflow_run_id"])
         try:
