@@ -335,7 +335,10 @@ def build_registry() -> dict:
 
     registry = {
         "version": "1.0.0",
-        "generated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        # ADR-0373: use a sentinel timestamp (CI runs) instead of `now()`,
+        # otherwise the drift check `git diff --exit-code` always shows
+        # the file as drifted even when the content is otherwise identical.
+        "generated_at": "1970-01-01T00:00:00Z",
         "generator": "bin/cockpit/gen-capability-registry.py",
         "totals": {
             "mcp_servers": len(servers),
