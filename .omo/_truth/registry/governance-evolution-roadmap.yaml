@@ -43,7 +43,12 @@ initiatives:
   - id: worktree-release-convergence
     title: Release and worktree convergence
     recommendation: Separate completed governance evolution changes from unrelated dirty submodule or runtime state.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 10
     last_evaluated: "2026-07-02"
     meadows_level: 6
@@ -76,7 +81,12 @@ initiatives:
   - id: cockpit-governance-status-plane
     title: Cockpit governance status plane
     recommendation: Surface AGCP and governance evolution status through Cockpit instead of making users assemble state from low-level commands.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 20
     last_evaluated: "2026-07-02"
     meadows_level: 6
@@ -104,7 +114,12 @@ initiatives:
   - id: claim-policy-tiering
     title: Claim policy tiering
     recommendation: Keep core governance paths on required claim tiers while broader docs and entrypoint paths stay advisory.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 30
     last_evaluated: "2026-07-02"
     meadows_level: 5
@@ -130,7 +145,12 @@ initiatives:
   - id: bos-governance-evolution-routes
     title: BOS governance evolution routes
     recommendation: Expose governance roadmap, validation, traces, golden paths, release packages, and loop status through BOS so MCP agents can discover them without prompt memory.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 40
     last_evaluated: "2026-07-02"
     meadows_level: 6
@@ -160,7 +180,12 @@ initiatives:
   - id: capability-traceability
     title: Capability to entrypoint to verifier traceability
     recommendation: Every strategic capability should map to owner, entrypoint, SSOT, and verification command.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 50
     last_evaluated: "2026-07-02"
     meadows_level: 6
@@ -185,7 +210,12 @@ initiatives:
   - id: governance-operating-rhythm
     title: OMO C2G MOF operating rhythm
     recommendation: Make state bridge, ingress, and drift checks part of a visible operating cadence instead of ad-hoc deep maintenance.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 80
     last_evaluated: "2026-07-05"
     meadows_level: 9
@@ -213,7 +243,12 @@ initiatives:
   - id: golden-path-e2e
     title: Golden path end-to-end checks
     recommendation: "Keep three canonical flows visible and verifiable: agent change, strategy ingress, and BOS invocation."
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 70
     last_evaluated: "2026-07-02"
     meadows_level: 5
@@ -237,7 +272,12 @@ initiatives:
   - id: entrypoint-convergence
     title: Entry point convergence
     recommendation: Keep human, agent, and gate entrypoints narrow while leaving lower-level commands as implementation details.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 80
     last_evaluated: "2026-07-02"
     meadows_level: 5
@@ -266,6 +306,11 @@ initiatives:
     title: Python quality sweep tooling scaling (ADR-0367)
     recommendation: Promote bin/sweep and pyright-sweep workflow from pilot to enforced surface; add sweep history, suppression-ratio gating, worktree lifecycle integration tests, and a published roadmap initiative.
     status: done
+    closure:
+      adr: ADR-0373
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: sweep-tooling convergence round delivered (ADR-0373, PR #989)
     progress: 100
     last_evaluated: "2026-08-04"
     meadows_level: 5
