@@ -644,6 +644,23 @@ def main() -> int:
         help="只跑生成器，不打印 human summary",
     )
 
+    # Swarm activity dashboard
+    swarm_p = sub.add_parser(
+        "swarm",
+        help="🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突)",
+    )
+    swarm_mode = swarm_p.add_mutually_exclusive_group()
+    swarm_mode.add_argument(
+        "--tui", action="store_true", help="Rich TUI 实时刷新模式 (默认单次)"
+    )
+    swarm_mode.add_argument("--json", action="store_true", help="JSON 输出")
+    swarm_mode.add_argument(
+        "--watch", type=int, default=0, metavar="SEC", help="每隔 N 秒文本刷新"
+    )
+    swarm_p.add_argument(
+        "--refresh", type=int, default=5, help="TUI 刷新间隔秒 (默认 5)"
+    )
+
     # BOS Inbox / Neural Mesh
     bos_inbox_p = bos_sub.add_parser("inbox", help="BOS Inbox 多源私有知识神经网查询与操作")
     bos_inbox_sub = bos_inbox_p.add_subparsers(dest="inbox_cmd")
@@ -1343,6 +1360,9 @@ def main() -> int:
         "channels": lambda a: __import__(
             "cockpit.commands.channels", fromlist=["cmd_channels"]
         ).cmd_channels(a),
+        "swarm": lambda a: __import__(
+            "cockpit.commands.swarm", fromlist=["cmd_swarm"]
+        ).cmd_swarm(a),
         "tui": lambda a: __import__("cockpit.tui", fromlist=["launch"]).launch(a),
         "bos-capability": lambda a: __import__(
             "cockpit.commands.bos", fromlist=["cmd_bos_capability"]
