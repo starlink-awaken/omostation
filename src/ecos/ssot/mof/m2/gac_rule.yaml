@@ -40,7 +40,7 @@ GacRule:
     executor:
       type: list
       item_type: enum
-      item_values: [hook_pre_edit, hook_post, ci_gate, gac_local_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron, foundry_cron]
+      item_values: [hook_pre_edit, hook_post, ci_gate, gac_local_gate, omo_audit, mcp_tool, mof_validate, mof_audit, evidence_smoke, radar_cron, gc_cron, foundry_cron, sweep_index_cli]  # ADR-0373: bin/sweep/sweep_index.py 5 源对齐
       min_items: 1
       description: 执行通道列表 (至少一个, 防 rule 声明不执行, 机制 3 前提)
     lifecycle:
