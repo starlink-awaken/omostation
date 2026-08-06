@@ -4,8 +4,10 @@ name: port-registry-enforce
 # 增量 enforce: --check-ports 自动读 protocols/port-hardcode-baseline.yaml,
 #   已知历史 (12 处子模块硬编码) 容忍, 新违规 fail.
 # 刷新 baseline: python3 scripts/check-vault-paths.py --baseline-init
-on: [push, pull_request]
-
+on:
+  push:
+    branches: [main]
+  pull_request:
 jobs:
   check:
     name: port hardcode check

@@ -1,6 +1,9 @@
 name: interfaces-enforce
 # P47+: 接口契约 + 端口冲突 enforce. 复用 scripts/check-interfaces.py.
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
 jobs:
   check:
     runs-on: ubuntu-latest
