@@ -446,6 +446,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0377: Drift-Noise Convergence — runtime-derived plane exclusion + release_ready semantics — **ACCEPTED** | 2026-08-05 | Drift noise convergence | 0377-drift-noise-convergence.md
 - ADR-0378: Roadmap Closure Round — verify and close all delivered governance initiatives — **ACCEPTED** | 2026-08-05 | Roadmap closure | 0378-roadmap-closure-round.md
 - ADR-0379: CI Plane Convergence — surface SSOT, observability, double-trigger dedup, registry-driven runner — **ACCEPTED** | 2026-08-05 | CI plane convergence | 0379-ci-plane-convergence.md
+- ADR-0380: CI Plane Completion — runner migration, orphan cleanup, concurrent-drift absorption — **ACCEPTED** | 2026-08-06 | CI plane completion | 0380-ci-plane-completion.md
 
 ---
 

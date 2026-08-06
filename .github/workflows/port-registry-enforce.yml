@@ -28,5 +28,5 @@ jobs:
           python-version: "3.13"
       - name: Install deps
         run: pip install pyyaml
-      - name: Run port hardcode check
-        run: python3 scripts/check-vault-paths.py --check-ports
+      - name: Run port hardcode check (registry-driven, ADR-0380 P1a)
+        run: python3 bin/gac/ci-check-runner.py --workflow port-registry-enforce.yml
