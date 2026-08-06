@@ -139,6 +139,7 @@ agent_profiles:
     allowed_workflows:
     - external-adapter-sync
     - agent-onboarding
+    - bet-execution
     can_write_lanes:
     - docs
     - governance_code
