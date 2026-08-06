@@ -190,6 +190,7 @@ gac:
     created_at: '2026-06-26'
     adr: ADR-0053
     enforcement: required
+    source_ref: bin/mof/m4-health-score.py
   - id: CR-M0-STAGE-GATE
     dimension: X4
     layer: M0
@@ -206,6 +207,7 @@ gac:
     created_at: '2026-06-26'
     adr: ADR-0156
     enforcement: required
+    source_ref: bin/mof/mof-bootstrap.py::all
   - id: CR-L0-BOS-RESOLVE
     dimension: X1
     layer: L0
@@ -222,6 +224,7 @@ gac:
     created_at: '2026-06-26'
     adr: ADR-0105
     enforcement: required
+    source_ref: projects/agora/etc/bos-services.yaml
   - id: CR-L2-TASK-DELIVERABLE
     dimension: X4
     layer: L2
@@ -237,6 +240,7 @@ gac:
     created_at: '2026-06-26'
     adr: ADR-0106
     enforcement: advisory
+    source_ref: .omo/_truth/tasks/
   - id: CR-X2-GAC-DRIFT
     dimension: X2
     layer: meta
@@ -252,6 +256,7 @@ gac:
     created_at: '2026-06-26'
     adr: ADR-0121
     enforcement: advisory
+    source_ref: bin/gac/gac-drift.py
   - id: CR-X1-AGENT-AUDIT
     dimension: X1
     layer: meta
@@ -269,6 +274,7 @@ gac:
     created_at: '2026-06-26'
     adr: ADR-0121
     enforcement: advisory
+    source_ref: bin/gac/check-external-agent-audit.py
   - id: CR-X3-DEBT-TIER
     dimension: X3
     layer: L2
@@ -284,6 +290,7 @@ gac:
     created_at: '2026-06-26'
     adr: ADR-0106
     enforcement: advisory
+    source_ref: .omo/debt/items/
   - id: CR-L1-RUNTIME-HEALTH
     dimension: X2
     layer: L1
@@ -299,6 +306,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0078
     enforcement: advisory
+    source_ref: projects/runtime/
   - id: CR-L3-COCKPIT-ENTRY
     dimension: X4
     layer: L3
@@ -314,6 +322,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0156
     enforcement: advisory
+    source_ref: projects/cockpit/
   - id: CR-L2-DIRECT-IO
     dimension: X1
     layer: L2
@@ -329,6 +338,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0155
     enforcement: advisory
+    source_ref: .omo/
   - id: CR-HYG-01
     dimension: X4
     layer: meta
@@ -343,6 +353,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0151
     enforcement: advisory
+    source_ref: bin/gac/gac-hygiene-check.py
   - id: CR-HYG-02
     dimension: X4
     layer: meta
@@ -357,6 +368,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0151
     enforcement: advisory
+    source_ref: bin/gac/gac-hygiene-check.py
   - id: CR-X4-DOC-SSOT
     dimension: X4
     layer: meta
@@ -377,6 +389,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0053
     enforcement: advisory
+    source_ref: .omo/standards/doc-ssot-contract.md
   - id: CR-L2-SURFACES-INTEGRITY
     dimension: X4
     layer: L2
@@ -393,6 +406,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0156
     enforcement: advisory
+    source_ref: .omo/_truth/registry/omo-governance-surfaces.yaml
   - id: CR-L2-MUTATION-BROKER
     dimension: X1
     layer: L2
@@ -410,6 +424,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0155
     enforcement: advisory
+    source_ref: bin/ssot/check-boundary.py
   - id: CR-L0-PROTOCOLS-SSOT
     dimension: X4
     layer: L0
@@ -429,6 +444,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0053
     enforcement: required
+    source_ref: protocols/
   - id: CR-X2-GAC-BOOTSTRAP
     dimension: X2
     layer: meta
@@ -445,6 +461,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0121
     enforcement: advisory
+    source_ref: bin/gac/gac-bootstrap.py
   - id: CR-X2-GAC-EXEC-DRIFT
     dimension: X2
     layer: meta
@@ -461,6 +478,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0121
     enforcement: advisory
+    source_ref: bin/gac/gac-executor.py
   - id: CR-X2-GOVERNANCE-SEMANTIC-GATE
     dimension: X2
     layer: meta
@@ -478,6 +496,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0121
     enforcement: advisory
+    source_ref: bin/gac/governance-semantic-gate.py
   - id: CR-X1-EVIDENCE-RUNNABLE
     dimension: X1
     layer: meta
@@ -498,6 +517,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0121
     enforcement: advisory
+    source_ref: .omo/standards/evidence-runnable.md
   - id: CR-L0-BOS-DOMAIN-NORM
     dimension: X4
     layer: L0
@@ -516,6 +536,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0107
     enforcement: required
+    source_ref: projects/agora/etc/bos-services.yaml
   - id: CR-META-BIN-NAMING
     dimension: X4
     layer: meta
@@ -533,6 +554,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0121
     enforcement: advisory
+    source_ref: .omo/standards/bin-naming-convention.md
   - id: CR-META-BIN-ORPHAN
     dimension: X2
     layer: meta
@@ -551,6 +573,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0123
     enforcement: advisory
+    source_ref: .omo/standards/bin-orphan-policy.md
   - id: CR-P74-STATE-PROJECTION-GUARD
     dimension: X4
     layer: meta
@@ -568,6 +591,7 @@ gac:
     created_at: '2026-07-03'
     adr: ADR-0130
     enforcement: advisory
+    source_ref: .omo/standards/p74-solidification-contract.md
   - id: CR-P74-RUNTIME-STAMP-POLICY
     dimension: X2
     layer: meta
@@ -585,6 +609,7 @@ gac:
     created_at: '2026-07-03'
     adr: ADR-0130
     enforcement: advisory
+    source_ref: .omo/standards/p74-solidification-contract.md
   - id: CR-P74-WORKFLOW-SILENCE
     dimension: X1
     layer: meta
@@ -601,6 +626,7 @@ gac:
     created_at: '2026-07-03'
     adr: ADR-0130
     enforcement: advisory
+    source_ref: .omo/standards/p74-solidification-contract.md
   - id: CR-P74-WORKFLOW-SUGGEST
     dimension: X3
     layer: meta
@@ -617,6 +643,7 @@ gac:
     created_at: '2026-07-03'
     adr: ADR-0130
     enforcement: advisory
+    source_ref: .omo/standards/p74-solidification-contract.md
   - id: CR-X1-GOD-MODULE-LIMIT
     dimension: X1
     layer: L2
@@ -635,6 +662,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0171
     enforcement: advisory
+    source_ref: bin/gac/check-god-module.py
   - id: CR-DOC-NO-LAST-UPDATED
     dimension: X4
     layer: meta
@@ -654,6 +682,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0053
     enforcement: advisory
+    source_ref: .omo/standards/doc-ssot-contract.md
   - id: CR-X1-FRESHNESS-SEMANTIC
     dimension: X1
     layer: meta
@@ -672,6 +701,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0120
     enforcement: advisory
+    source_ref: bin/gac/x2-freshness-check.py
   - id: CR-L0-MATRIX-PORT-CONSISTENCY
     dimension: X4
     layer: meta
@@ -689,6 +719,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0120
     enforcement: advisory
+    source_ref: protocols/port-registry.yaml
   - id: CR-L0-MATRIX-LAUNCHD-COVERAGE
     dimension: X4
     layer: meta
@@ -705,6 +736,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0120
     enforcement: advisory
+    source_ref: protocols/port-registry.yaml
   - id: CR-L0-SSOT-PATH-NORM
     dimension: X4
     layer: meta
@@ -722,6 +754,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0121
     enforcement: advisory
+    source_ref: .omo/standards/ssot-path-norm.md
   - id: CR-META-CI-SKIP-MATRIX
     dimension: X4
     layer: meta
@@ -739,6 +772,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0121
     enforcement: advisory
+    source_ref: .omo/_truth/registry/ci-skip-matrix.yaml
   - id: CR-X4-TEST-COVERAGE
     dimension: X3
     layer: L2
@@ -754,6 +788,7 @@ gac:
     created_at: '2026-06-28'
     adr: ADR-0171
     enforcement: advisory
+    source_ref: tests/
   - id: CR-X4-ADR-LINKS
     dimension: X3
     layer: L2
@@ -769,6 +804,7 @@ gac:
     created_at: '2026-06-28'
     adr: ADR-0053
     enforcement: advisory
+    source_ref: .omo/_knowledge/decisions/INDEX.md
   - id: CR-X3-L1-HEALTH-COST
     dimension: X3
     layer: L1
@@ -784,6 +820,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0157
     enforcement: advisory
+    source_ref: docs/plans/health-cost-analysis.md
   - id: CR-X3-L1-PORT-CONSOLIDATION
     dimension: X3
     layer: L1
@@ -799,6 +836,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0157
     enforcement: advisory
+    source_ref: docs/plans/port-consolidation.md
   - id: CR-X3-L3-COCKPIT-LATENCY
     dimension: X3
     layer: L3
@@ -814,6 +852,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0157
     enforcement: advisory
+    source_ref: docs/plans/cockpit-latency.md
   - id: CR-X3-L3-COCKPIT-COVERAGE
     dimension: X3
     layer: L3
@@ -829,6 +868,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0157
     enforcement: advisory
+    source_ref: docs/plans/cockpit-coverage.md
   - id: CR-X3-L2-TEST-ROI
     dimension: X3
     layer: L2
@@ -844,6 +884,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0171
     enforcement: advisory
+    source_ref: docs/plans/test-roi.md
   - id: CR-X3-L2-DEBT-VELOCITY
     dimension: X3
     layer: L2
@@ -859,6 +900,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0106
     enforcement: advisory
+    source_ref: docs/plans/debt-velocity.md
   - id: CR-X3-L2-MYPY-CLEAN
     dimension: X3
     layer: L2
@@ -874,6 +916,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0171
     enforcement: advisory
+    source_ref: docs/plans/mypy-clean.md
   - id: CR-X3-L2-LINT-CLEAN
     dimension: X3
     layer: L2
@@ -889,6 +932,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0171
     enforcement: advisory
+    source_ref: docs/plans/lint-clean.md
   - id: CR-X3-I0-AGORA-UPTIME
     dimension: X3
     layer: I0
@@ -904,6 +948,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0157
     enforcement: advisory
+    source_ref: docs/plans/agora-uptime.md
   - id: CR-X3-I0-MCP-COVERAGE
     dimension: X3
     layer: I0
@@ -919,6 +964,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0157
     enforcement: advisory
+    source_ref: docs/plans/mcp-coverage.md
   - id: CR-X3-L0-DOC-SSOT
     dimension: X3
     layer: L0
@@ -934,6 +980,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0053
     enforcement: advisory
+    source_ref: .omo/standards/doc-ssot-contract.md
   - id: CR-X3-L0-GAC-COVERAGE
     dimension: X3
     layer: L0
@@ -949,6 +996,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0121
     enforcement: advisory
+    source_ref: bin/gac/gac-drift.py
   - id: CR-X3-X-DEBT-SCORING
     dimension: X3
     layer: X
@@ -964,6 +1012,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0157
     enforcement: advisory
+    source_ref: docs/plans/debt-scoring.md
   - id: CR-X3-X-OBSERVABILITY
     dimension: X3
     layer: X
@@ -979,6 +1028,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0157
     enforcement: advisory
+    source_ref: docs/plans/observability.md
   - id: CR-X3-X-SUBMODULE-FRESH
     dimension: X3
     layer: X
@@ -994,6 +1044,7 @@ gac:
     created_at: '2026-06-29'
     adr: ADR-0151
     enforcement: advisory
+    source_ref: docs/plans/submodule-fresh.md
   - id: CR-L4-DOMAIN-REGISTRY-FRESHNESS
     dimension: X2
     layer: L4
@@ -1009,6 +1060,7 @@ gac:
     created_at: '2026-07-01'
     adr: ADR-0114
     enforcement: advisory
+    source_ref: protocols/port-registry.yaml
   - id: CR-X4-MOF-CAPABILITIES-DRIFT
     source_type: native
     source_ref: bin/mof/check-mof-capabilities-drift.py
@@ -1022,6 +1074,7 @@ gac:
     version: 1.0.0
     created_at: '2026-07-25'
     adr: ADR-0238
+    target: projects/*/src/**
   - id: CR-X4-METAOS-REGISTRY-DRIFT
     source_type: native
     source_ref: bin/mof/check-mof-capabilities-drift.py
@@ -1035,6 +1088,7 @@ gac:
     version: 1.0.0
     created_at: '2026-07-26'
     adr: ADR-0242
+    target: projects/*/src/**
   - id: CR-X4-DOC-CLAIMS
     source_type: native
     source_ref: bin/mof/check-doc-claims.py
@@ -1048,6 +1102,7 @@ gac:
     version: 1.0.0
     created_at: '2026-07-26'
     adr: ADR-0242
+    target: projects/*/src/**
   - id: CR-M4-BOOTSTRAP-REFLEX
     dimension: X1
     layer: meta
@@ -1216,6 +1271,7 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0158
+    source_ref: .omo/_truth/registry/governance-checks.yaml
   - id: CR-FOUNDRY-MONITOR
     dimension: X2
     layer: meta
@@ -1355,6 +1411,7 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0165
+    source_ref: bin/gac/check-pr-description.py
   - id: CR-CROSS-REPO-CHECK
     dimension: X4
     layer: meta
@@ -1538,6 +1595,7 @@ gac:
     adr: ADR-0123
     source_type: native
     enforcement: required
+    source_ref: bin/ssot/check-yaml-bypass.py
   - id: CR-SEC-SENSITIVE-WRITE
     dimension: X1
     layer: L2
@@ -1554,6 +1612,7 @@ gac:
     adr: ADR-0106
     source_type: native
     enforcement: required
+    source_ref: bin/ssot/check-sensitive-write.py
   - id: CR-X2-GOD-MODULE-EDIT
     dimension: X1
     layer: L2
@@ -1570,6 +1629,7 @@ gac:
     adr: ADR-0171
     source_type: native
     enforcement: required
+    source_ref: bin/gac/check-god-module.py
   - id: CR-SEC-EVAL-EXEC
     dimension: X1
     layer: L2
@@ -1586,6 +1646,7 @@ gac:
     adr: ADR-0106
     source_type: native
     enforcement: required
+    source_ref: bin/ssot/check-eval-exec.py
   - id: CR-PY-MUTABLE-DEFAULT
     dimension: X1
     layer: L2
@@ -1602,6 +1663,7 @@ gac:
     adr: ADR-0171
     source_type: native
     enforcement: required
+    source_ref: bin/ssot/check-mutable-default.py
   - id: CR-PR-DESCRIPTION-NON-EMPTY
     dimension: X1
     layer: meta
@@ -1619,6 +1681,8 @@ gac:
     adr: ADR-0165
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-pr-description.py
+    target: .omo/_truth/registry/**
   - id: CR-PRINCIPLE-ENFORCEMENT
     dimension: X1
     layer: meta
@@ -1637,6 +1701,8 @@ gac:
     adr: ADR-0165
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-principle-enforcement.py
+    target: .omo/_truth/registry/**
   - id: CR-P76-6-2-MONITORING-CADENCE
     dimension: X2
     layer: meta
@@ -1654,6 +1720,23 @@ gac:
     created_at: 2026-07-08
     adr: ADR-0158
     source_type: native
+  - id: CR-SUBMODULE-REWIND
+    dimension: X1
+    layer: meta
+    name: 子模块指针回退检测
+    description: '检测子模块指针是否被意外回退: 对比 index 当前指针与上一次 commit 的指针, 当前指针 NOT ancestor
+      of 上一次指针 → rewind. 防止 Phase 4 等变更被意外撤销. 实施: bin/gac/check-submodule-rewind.py'
+    check_type: audit_chain
+    target: projects/*/ (submodule gitlink pointer)
+    source_ref: bin/gac/check-submodule-rewind.py::main
+    executor:
+    - ci_gate
+    - gac_local_gate
+    enforcement: required
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-06'
+    adr: ADR-0380
   - id: CR-P76-6-5-LLM-DEFERRAL
     dimension: X1
     layer: meta
@@ -1721,6 +1804,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-uri-prefix-pattern.py
+    target: projects/*/src/**
   - id: CR-P77-6-2-TIER-FALLBACK-TEST
     dimension: X2
     layer: meta
@@ -1738,6 +1823,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-fallback-test-coverage.py
+    target: .omo/**/*.yaml
   - id: CR-P77-6-3-GATEWAY-STATUS-DOC
     dimension: X2
     layer: meta
@@ -1755,6 +1842,8 @@ gac:
     adr: ADR-0158
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-gateway-status-doc.py
+    target: .omo/**/*.yaml
   - id: CR-P79-3-FOUNDRY-DECK
     dimension: X1
     layer: meta
@@ -1773,6 +1862,8 @@ gac:
     adr: ADR-0174
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-foundry-deck-coverage.py
+    target: .omo/_truth/registry/**
   - id: CR-P79-4-CATALOG-HEALTH-METRIC
     dimension: X1
     layer: meta
@@ -1791,6 +1882,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-catalog-health.py
+    target: .omo/_truth/registry/**
   - id: CR-P76-7-1-LLM-ADVISORY-ONLY
     dimension: X4
     layer: meta
@@ -1808,6 +1901,8 @@ gac:
     adr: ADR-0158
     source_type: native
     enforcement: required
+    source_ref: bin/gac/check-llm-advisory-only.py
+    target: projects/*/**
   - id: CR-P76-7-2-TIER-GRACEFUL-FALLBACK
     dimension: X1
     layer: meta
@@ -1824,6 +1919,8 @@ gac:
     adr: ADR-0158
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-llm-tier-fallback.py
+    target: .omo/**/*.yaml
   - id: CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
     dimension: X1
     layer: meta
@@ -1842,6 +1939,8 @@ gac:
     adr: ADR-0158
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-evidence-honest-closure.py
+    target: .omo/_truth/registry/**
   - id: CR-P76-7-5-RESOLVE-NOT-STUB
     dimension: X1
     layer: meta
@@ -1859,6 +1958,8 @@ gac:
     adr: ADR-0158
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-resolve-not-stub.py
+    target: .omo/_truth/registry/**
   - id: CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
     dimension: X4
     layer: meta
@@ -1876,6 +1977,8 @@ gac:
     adr: ADR-0158
     source_type: native
     enforcement: required
+    source_ref: bin/gac/check-submodule-pr-independent.py
+    target: projects/*/**
   - id: CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
     dimension: X4
     layer: meta
@@ -1892,6 +1995,8 @@ gac:
     adr: ADR-0158
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-dead-path-tool-fallback.py
+    target: projects/*/src/**
   - id: CR-P76-8-4-INCREMENTAL-COMMIT
     dimension: X4
     layer: meta
@@ -1909,6 +2014,8 @@ gac:
     adr: ADR-0158
     source_type: native
     enforcement: required
+    source_ref: bin/gac/check-incremental-commit.py
+    target: projects/*/**
   - id: CR-P76-9A-4-HEURISTIC-DEFAULT
     dimension: X4
     layer: meta
@@ -1926,6 +2033,8 @@ gac:
     adr: ADR-0163
     source_type: native
     enforcement: required
+    source_ref: bin/gac/check-heuristic-default.py
+    target: projects/*/**
   - id: CR-RUFF-SCOPE-STABLE
     dimension: X4
     layer: X
@@ -1942,6 +2051,8 @@ gac:
     adr: ADR-0171
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-ruff-scope-stable.py
+    target: .omo/**/*.yaml
   - id: CR-WORKTREE-CLEAN-BEFORE-PR
     dimension: X4
     layer: meta
@@ -1958,6 +2069,8 @@ gac:
     adr: ADR-0204
     source_type: native
     enforcement: advisory
+    target: projects/*/**
+    source_ref: bin/gac/gac-worktree-guard.sh
   - id: CR-L0-CONSTRAINTS-SSOT
     source_type: indexed
     source_ref: projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml
@@ -1978,6 +2091,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0106
     enforcement: required
+    target: docs/**
   - id: CR-X1-POLICIES-SSOT
     source_type: indexed
     source_ref: .omo/_truth/x1-governance-policies.yaml::policies
@@ -1996,6 +2110,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0106
     enforcement: advisory
+    target: docs/**
   - id: CR-X2-FRESHNESS-SSOT
     source_type: indexed
     source_ref: .omo/_truth/x2-freshness-rules.yaml::rules
@@ -2015,6 +2130,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0106
     enforcement: advisory
+    target: docs/**
   - id: CR-X4-CONSISTENCY-SSOT
     source_type: indexed
     source_ref: .omo/_truth/x4-consistency-rules.yaml::rules
@@ -2034,6 +2150,7 @@ gac:
     created_at: '2026-06-27'
     adr: ADR-0106
     enforcement: required
+    target: docs/**
   - id: CR-X4-MCPTOOL-IMPL-DRIFT
     source_type: indexed
     source_ref: bin/ssot/check-mcptool-impl-drift.py
@@ -2048,6 +2165,7 @@ gac:
     version: 1.0.0
     created_at: '2026-07-06'
     adr: ADR-0106
+    target: projects/*/src/**
   - id: CR-X4-SUBMODULE-POINTER-INTEGRITY
     dimension: X4
     layer: meta
@@ -2065,6 +2183,8 @@ gac:
     adr: ADR-0367
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-submodule-pointer-integrity.py
+    target: projects/*/**
   - id: CR-X4-MESH-EXECUTOR-RELIABILITY
     dimension: X4
     layer: meta
@@ -2082,6 +2202,8 @@ gac:
     adr: ADR-0367
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-mesh-executor-reliability.py
+    target: projects/*/**
   - id: CR-X4-MEMORY-OS-SURFACE-INTEGRITY
     dimension: X4
     layer: meta
@@ -2099,6 +2221,8 @@ gac:
     adr: ADR-0367
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-memory-os-surfaces.py
+    target: projects/*/**
   - id: CR-X1-EXTERNAL-AGENT-AUDIT
     dimension: X1
     layer: meta
@@ -2117,6 +2241,8 @@ gac:
     adr: ADR-0367
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-external-agent-audit.py
+    target: .omo/_truth/registry/**
   - id: CR-X4-SWEEP-TOOL-INTEGRITY
     dimension: X4
     layer: meta
@@ -2133,6 +2259,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-sweep-tool-integrity.py
+    target: projects/*/**
   - id: CR-X4-MESH-ROUTING-CONSISTENCY
     dimension: X4
     layer: meta
@@ -2149,6 +2277,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-mesh-routing-consistency.py
+    target: projects/agora/etc/**
   - id: CR-X2-PROJECT-HEALTH-FRESHNESS
     dimension: X2
     layer: meta
@@ -2165,6 +2295,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-project-health-freshness.py
+    target: docs/**/*.md
   - id: CR-X3-DELIVERY-VALUE-GATE
     dimension: X3
     layer: meta
@@ -2181,6 +2313,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-delivery-value-gate.py
+    target: docs/plans/**
   - id: CR-SWEEP-INDEX-AUTO
     dimension: X4
     layer: meta
@@ -2220,6 +2354,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-delivery-cadence.py
+    target: docs/plans/**
   - id: CR-X-META-HEALTH
     dimension: X4
     layer: meta
@@ -2236,6 +2372,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-meta-health.py
+    target: projects/*/**
   - id: CR-X2-DOC-FRESHNESS-GATE
     dimension: X2
     layer: meta
@@ -2252,6 +2390,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-doc-freshness-gate.py
+    target: docs/**/*.md
   - id: CR-X2-METRIC-TREND
     dimension: X2
     layer: meta
@@ -2268,6 +2408,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-metric-trend.py
+    target: docs/**/*.md
   - id: CR-CI-SURFACE-SSOT
     source_type: indexed
     source_ref: .omo/_truth/registry/ci-surfaces.yaml::surfaces
@@ -2287,6 +2429,7 @@ gac:
     activated_at: '2026-08-05'
     adr: ADR-0379
     enforcement: advisory
+    target: docs/**
   - id: CR-SEVERITY-REGISTRY
     dimension: X2
     layer: meta
@@ -2303,6 +2446,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    target: .omo/_truth/registry/**
+    source_ref: bin/gac/check-severity-registry.py
   - id: CR-WORK-LANDED
     dimension: X2
     layer: meta
@@ -2319,6 +2464,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    target: .omo/_truth/registry/governance-checks.yaml
+    source_ref: bin/gac/check-work-landed.py
   - id: CR-GOVERNANCE-RATIO
     dimension: X2
     layer: meta
@@ -2335,6 +2482,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    target: docs/**/*.md
+    source_ref: bin/gac/check-governance-ratio.py
   - id: CR-REDLINE-COVERAGE
     dimension: X4
     layer: meta
@@ -2351,6 +2500,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    target: projects/*/**
+    source_ref: bin/gac/check-redline-coverage.py
   - id: CR-WORKORDER-SCHEMA
     dimension: X2
     layer: meta
@@ -2367,6 +2518,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    target: .omo/**/*.yaml
+    source_ref: bin/gac/check-workorder-schema.py
   - id: CR-DUAL-TRACK-PURITY
     dimension: X4
     layer: meta
@@ -2383,6 +2536,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    target: projects/*/**
+    source_ref: bin/gac/check-dual-track-purity.py
   - id: CR-SILENT-LOSS
     dimension: X2
     layer: meta
@@ -2399,6 +2554,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    target: .omo/_truth/registry/governance-checks.yaml
+    source_ref: bin/gac/check-silent-loss.py
   - id: CR-ADVERSARIAL-EFFECTIVENESS
     dimension: X4
     layer: meta
@@ -2415,6 +2572,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    target: projects/*/**
+    source_ref: bin/gac/check-adversarial-effectiveness.py
   - id: CR-X2-EVIDENCE-FRESHNESS
     dimension: X2
     layer: meta
@@ -2431,6 +2590,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
+    source_ref: bin/gac/check-evidence-freshness.py
+    target: docs/**/*.md
   - id: CR-X2-GOVERNANCE-TREND
     dimension: X2
     layer: meta
@@ -2447,7 +2608,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
-
+source_ref: bin/gac/check-governance-trend.py
+    target: docs/**/*.md
 
   - id: CR-LLM-GATEWAY-ONLY
     source_type: native
@@ -2466,7 +2628,6 @@ gac:
     created_at: '2026-08-06'
     activated_at: '2026-08-06'
     adr: ADR-0380
-
   drift:
     schedule: daily
     auto_heal: false
