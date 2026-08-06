@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **117** 个命令 (含子命令)。按场景分组如下。
+共 **121** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -81,7 +81,7 @@
 | `cockpit iterate` | ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行) |
 | `cockpit monitor` | 📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出) |
 | `cockpit wave2` | 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON) |
-| `cockpit workflow` | 🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎） |
+| `cockpit workflow` | BOS workflow 相关 |
 
 ## BOS 与 MCP
 
@@ -117,6 +117,7 @@
 | `cockpit archive` | 归档已处理完毕的 Inbox 待办文件 |
 | `cockpit ask` | 向大脑提问（知识检索 + LLM 回答） |
 | `cockpit assistant` | P5-F2 work-assistant: 1 真实工作 query → 结构化草稿 |
+| `cockpit backends` | 列出 BOS 后端 |
 | `cockpit bos-capability` | BOS capability / toolbox 外部能力 |
 | `cockpit bos-inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
@@ -144,6 +145,7 @@
 | `cockpit logs` | 查看日志 |
 | `cockpit memory` | 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref) |
 | `cockpit metrics` | 查看 bus metrics 快照 |
+| `cockpit mutate` | 通过 agora 统一 BOS URI 写协议修改资源 |
 | `cockpit nodes` | 列出 KOS 中注册的算力节点 |
 | `cockpit onboarding` | 为 AI 构建项目全貌上下文 |
 | `cockpit pack` | 将代码库打包为 LLM 友好格式 |
@@ -154,6 +156,8 @@
 | `cockpit radar` | P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates |
 | `cockpit read` | 通过 BOS 网关统一读取指定 URI 资源 |
 | `cockpit recall` | 意图路由召回（neo4j/temporal 支持 --as-of） |
+| `cockpit register` | 注册 BOS 服务 |
+| `cockpit reload` | 重载 BOS 配置/M1 |
 | `cockpit remember` | 手动存入偏好/事实 |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit route` | 为模型选择最优节点 |
@@ -180,7 +184,7 @@
 
 | CLI 命令 | MCP 服务器 | 工具数 |
 |----------|-----------|--------|
-| `cockpit omo` | `omo` | 19 |
+| `cockpit omo` | `omo` | 22 |
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
 | `cockpit model-driven` | `model-driven` | 28 |
