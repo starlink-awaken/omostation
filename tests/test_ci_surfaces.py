@@ -159,3 +159,31 @@ def test_trigger_drift_clean(cs, tmp_path) -> None:
     _write(tmp_path / "workflows" / "a.yml", "on: [push, pull_request]\n")
     report = cs.check_ci_surfaces()
     assert not any("trigger-drift" in w for w in report["warnings"]), report["warnings"]
+
+
+def test_trigger_paths_drift_detected(cs, tmp_path) -> None:
+    """E-5 full: workflow paths 与实际登记不符 → trigger-drift warn."""
+    _write(
+        tmp_path / "ci-surfaces.yaml",
+        "version: 1\nworkflow_triggers:\n  - workflow: a.yml\n    triggers: [push]\n    path_filtered: true\n    paths: [\".github/workflows/**\"]\n",
+    )
+    _write(
+        tmp_path / "workflows" / "a.yml",
+        "on:\n  push:\n    paths:\n      - 'docs/**'\n",
+    )
+    report = cs.check_ci_surfaces()
+    assert any("paths 实际" in w for w in report["warnings"]), report["warnings"]
+
+
+def test_trigger_paths_match_clean(cs, tmp_path) -> None:
+    """E-5 full: paths 登记与实际一致 → 无 warn."""
+    _write(
+        tmp_path / "ci-surfaces.yaml",
+        "version: 1\nworkflow_triggers:\n  - workflow: a.yml\n    triggers: [push]\n    path_filtered: true\n    paths: [\"docs/**\"]\n",
+    )
+    _write(
+        tmp_path / "workflows" / "a.yml",
+        "on:\n  push:\n    paths:\n      - 'docs/**'\n",
+    )
+    report = cs.check_ci_surfaces()
+    assert not any("paths 实际" in w for w in report["warnings"]), report["warnings"]
