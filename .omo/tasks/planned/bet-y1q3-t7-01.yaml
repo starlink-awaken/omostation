@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-06T12:28:20+00:00
 id: BET-Y1Q3-T7-01
 title: 知识场景召回被引用率上线
 status: candidate
@@ -46,7 +46,7 @@ pasw_required: true
 circuit_breaker: 无法自动关联 → 改为人工每周抽样 10 条
 retro_required: true
 retro_path: .omo/_knowledge/retros/BET-Y1Q3-T7-01.md
-agent_profile_hint: product-agent
+agent_profile_hint: docs-agent
 started_at: null
 completed_at: null
 blocked_by: null
