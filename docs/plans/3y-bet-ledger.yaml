@@ -413,6 +413,134 @@ bets:
   circuit_breaker: 超 4 天 → 先只做清单 + AGENTS.md 记录, 门禁留下一 bet
   retro: required
 
+- id: BET-Y1Q1-T1-05
+  track: T1-TRUTH
+  window: Y1Q1
+  title: 仓库拓扑改造 — 单实例多租户 → 多实例单写者
+  appetite: 2 weeks
+  priority: P0
+  status: candidate
+  goal: 把「N 个 agent 共用一个物理仓库」改成「每 agent 一个独立 clone,
+    主仓降级为集成点」, 从拓扑上消除并发写冲突, 而非继续加分区规则
+  non_goals:
+    - 改变远端 origin 与 PR 流程
+    - 迁移人类自己的工作习惯(主仓对人类仍可写)
+    - 引入新的编排/调度系统
+  analysis_doc: docs/reports/2026-08-06-multi-agent-git-topology.md
+  evidence:
+    E7_partition_vs_replication:
+      观察: 现有五层纪律(D1-D5)都是对共享可变资源做 opt-in 分区, 必然泄漏
+      实测: reflog 最近 200 条 — rebase 60 + checkout 49 + reset 22 = 131 次移动地基,
+        vs commit 41 + merge-commit 12 = 53 次产出, 比例 2.5:1
+      worktree 有效性: 8 个 worktree 中 7 个 prunable, 实际工作全部回落共享主树
+      技术根因: git worktree 只隔离主仓工作树, 不隔离 refs / reflog /
+        .git/modules/<sub>/HEAD; E6(共享分支 rebase 丢提交)正发生在 refs 共享上
+      方案: clone --reference 共享 object store(只增不改, 天然并发安全),
+        但 refs/HEAD/index/modules 完全独立; 4 个 agent 增量磁盘 < 2GB
+  done_when:
+    - "三条不变量成立: I1 主仓只读于 agent / I2 每 agent 一个独立 clone / I3 集成只经 ref"
+    - "~/agents/<agent-id>/ws 独立 clone 建立(--reference 共享对象库 + --recurse-submodules)"
+    - 主仓 pre-commit 在 AGENT_ID 非空时拒绝写入, 人类不受影响
+    - 全部 agent 迁移完成, reflog 中主仓 checkout/reset 归零
+    - "D3 减法: D2(分支占用锁)/D3(共享树 claim)/D5(PASW) 三条纪律退役并删除实现"
+    - 表面积净减(脚本/规则/文档行数), 记入复盘 Q4
+  verify:
+    - cmd: "git -C ~/Workspace reflog -100 | grep -cE 'checkout:|reset:'"
+      expect: "0  (主仓不再被切换)"
+    - cmd: "ls -d ~/agents/*/ws 2>/dev/null | wc -l"
+      expect: ">= 1  (至少一个 agent clone 就位)"
+    - cmd: "grep -c 'd2_branch_occupancy\\|d3_shared_worktree_claim\\|d5_pasw' .omo/_truth/registry/swarm-coordination.yaml"
+      expect: "0  (D3 阶段后三条纪律已退役)"
+    - cmd: "python3 bin/plan/bet-ledger.py surface"
+      expect: "净减(D2 记账)"
+  workflow: governance-state-mutation
+  write_surfaces:
+    - "bin/gac/**"
+    - ".githooks/**"
+    - ".omo/_truth/registry/swarm-coordination.yaml"
+    - "AGENTS.md"
+    - "docs/plans/AGENT-BRIEF.md"
+  pasw_required: false
+  depends_on: [BET-Y1Q1-T1-00]
+  risk_level: L3
+  human_gate: true
+  circuit_breaker: 超 3 周 → 停在 D2(全员迁 clone), D3 减法推迟到 Y1Q2;
+    但不得只做 D0/D1 就收工(拓扑没改完等于没做)
+  retro: required
+
+- id: BET-Y1Q1-T1-06
+  track: T1-TRUTH
+  window: Y1Q1
+  title: 子模块隔离 — PASW 覆盖 3→18, 拓扑改造后整体退役
+  appetite: 1 week
+  priority: P1
+  status: candidate
+  goal: 过渡期补齐 L2 层泄漏(15 个子模块跨 worktree 共享 HEAD),
+    并在拓扑改造完成后把 PASW 整体删除
+  non_goals: [子模块内部代码修改, 新增子模块]
+  evidence:
+    E8_pasw_coverage_gap:
+      观察: 所有 worktree 共用 .git/modules/projects/<sub>/, 含其 HEAD
+      实测: 18 个子模块, PASW(ADR-0371)只隔离 gbrain/cockpit/agora 三个
+      后果: 在 worktree A 切换子模块 commit, worktree B 的同一子模块跟着变;
+        与 E5(18 个 rewind)同源
+      设计意图: 本 bet 的终局是「删掉 PASW」而非「扩大 PASW」——
+        拓扑改造后每个 clone 有独立 .git/modules, L2 问题消失
+  done_when:
+    - 过渡期 PASW_ISOLATED_SUBS 覆盖全部 18 个子模块
+    - 18 个 rewind 存量清零(与 T1-02 联动)
+    - "拓扑改造完成后, 同一 PR 内删除 PASW 实现与 D5 纪律条目"
+  verify:
+    - cmd: "git submodule status | wc -l"
+      expect: "18"
+    - cmd: "grep -c 'PASW_ISOLATED_SUBS' bin/gac/gac-worktree.sh"
+      expect: "过渡期 >= 1; T1-05 完成后应为 0"
+  workflow: governance-state-mutation
+  write_surfaces: ["bin/gac/gac-worktree.sh", ".omo/_truth/registry/swarm-coordination.yaml"]
+  pasw_required: false
+  depends_on: [BET-Y1Q1-T1-02]
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 若 T1-05 已进入 D2 阶段 → 跳过扩容, 直接进退役分支
+  retro: required
+
+- id: BET-Y1Q1-T1-07
+  track: T1-TRUTH
+  window: Y1Q1
+  title: git 入口收口 — shim 强制走 swarm-git
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  goal: 把「记得用 wrapper」变成「只有 wrapper 可用」, 堵上 D4 自己记录的已知缺口
+  non_goals: [改变人类的 git 使用, 新增审计维度]
+  evidence:
+    E9_d4_known_gap:
+      观察: 缺口是设计者已知未修项, 非新发现
+      取证: swarm-coordination.yaml::gates.d4_escape_hatch.entry 原文写着
+        "Bare git --no-verify still skips hooks"
+      现状: bin/gac/swarm-git 会校验白名单并写 .omo/_delivery/swarm-escape/ 台账,
+        但 git 仍在 PATH 中, 绕过零成本
+      实测: 2026-08-06 提交 49d3ffed5 用 raw git --no-verify,
+        escape_id 不在白名单, 台账无记录
+  done_when:
+    - "agent 环境 PATH 前置 shim: ~/agents/<id>/bin/git → bin/gac/swarm-git"
+    - "swarm-git 拦截高危操作: clean -fd / reset --hard / stash -u / 共享分支 rebase"
+    - 每次逃生必写 .omo/_delivery/swarm-escape/ 台账, 无台账即视为违规
+    - AGENT-BRIEF.md 明确「逃生口只有 swarm-git 一个入口」
+  verify:
+    - cmd: "AGENT_ID=probe SWARM_ESCAPE_ID=bogus git commit --no-verify --allow-empty -m probe"
+      expect: "非 0 (raw git 被 shim 拦截)"
+    - cmd: "ls .omo/_delivery/swarm-escape/ | wc -l"
+      expect: "每次逃生 +1"
+  workflow: governance-state-mutation
+  write_surfaces: ["bin/gac/swarm-git", "bin/gac/**", "docs/plans/AGENT-BRIEF.md", "AGENTS.md"]
+  pasw_required: false
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: shim 影响人类正常使用 → 改为只在 AGENT_ID 非空时生效
+  retro: required
+
 - id: BET-Y1Q1-T2-01
   track: T2-PERCEPT
   window: Y1Q1
