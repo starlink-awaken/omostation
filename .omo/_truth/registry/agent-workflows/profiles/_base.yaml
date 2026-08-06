@@ -26,6 +26,7 @@ agent_profiles:
     purpose: Maintain Markdown and project docs without duplicating SSOT facts.
     allowed_workflows:
     - project-doc-change
+    - bet-execution
     can_write_lanes:
     - docs
     closeout_required:
@@ -38,6 +39,7 @@ agent_profiles:
     allowed_workflows:
     - project-code-change
     - pyright-sweep
+    - bet-execution
     can_write_lanes:
     - code
     - config
@@ -70,6 +72,7 @@ agent_profiles:
     - governance-audit
     - state-sync
     - agent-onboarding
+    - bet-execution
     can_write_lanes:
     - docs
     - governance_code
