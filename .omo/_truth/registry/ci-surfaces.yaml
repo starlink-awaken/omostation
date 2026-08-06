@@ -592,3 +592,10 @@ surfaces:
     triggers: []
     status: orphan
     note: PR #1021 声明 (CR-X2-METRIC-TREND) 但未接线到 workflow — 待接线或降级
+  - id: bin-gac-check-governance-trend-py
+    tool: bin/gac/check-governance-trend.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [per_pr, push]
+    status: active
+    note: PR #1029/1030 并发新增 (CR-GOV-TREND), rebase 后由 ci-surfaces-check 拦截补登记

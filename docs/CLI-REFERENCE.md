@@ -184,7 +184,7 @@
 
 | CLI 命令 | MCP 服务器 | 工具数 |
 |----------|-----------|--------|
-| `cockpit omo` | `omo` | 22 |
+| `cockpit omo` | `omo` | 19 |
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
 | `cockpit model-driven` | `model-driven` | 28 |
