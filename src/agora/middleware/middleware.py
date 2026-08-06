@@ -120,7 +120,9 @@ try:
                         os.environ.get(
                             "AGORA_CACHE_DIR",
                             os.path.join(
-                                os.environ.get("WORKSPACE_ROOT", os.path.expanduser("~/Workspace")),
+                                os.environ.get(
+                                    "WORKSPACE_ROOT", os.path.expanduser("~/Workspace")
+                                ),
                                 "LADS",
                                 "agora_cache",
                             ),

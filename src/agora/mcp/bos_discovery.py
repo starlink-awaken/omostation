@@ -16,6 +16,7 @@ AGENTS.md 声明格式 (在文件末尾添加):
 from __future__ import annotations
 
 import logging
+import os
 import re
 from pathlib import Path
 

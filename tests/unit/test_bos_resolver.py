@@ -680,3 +680,55 @@ class TestStdioAdapterProtocol:
         result = adapter.call(svc)
         assert result["status"] == "error"
         assert "init rejected" in str(result["error"])
+
+    def test_mcp_stdio_pool_reuses_process(self):
+        """P1: ProcessPool 复用同一 mcp_stdio 子进程 (PID 不变)."""
+        from agora.mcp.resolver.adapter import StdioAdapter
+        from agora.mcp.resolver.pool import ProcessPool
+
+        svc = BosService(
+            uri="bos://test/pkg/pool",
+            domain="test",
+            package="pkg",
+            action="pool",
+            transport="mcp_stdio",
+            command=[sys.executable, "-c", _MCP_MOCK_SERVER],
+        )
+        pool = ProcessPool()
+        adapter = StdioAdapter(timeout=5.0, pool=pool)
+        try:
+            r1 = adapter.call(svc, {"x": 1})
+            r2 = adapter.call(svc, {"x": 2})
+            assert r1["status"] == "ok"
+            assert r2["status"] == "ok"
+            # 同一 URI 复用同一进程
+            assert r1["pid"] == r2["pid"]
+            assert len(pool.processes) == 1
+        finally:
+            adapter.shutdown()
+
+    def test_mcp_stdio_pool_replaces_dead_process(self):
+        """P1: pool 中进程死亡后重新 spawn."""
+        from agora.mcp.resolver.adapter import StdioAdapter
+        from agora.mcp.resolver.pool import ProcessPool
+
+        svc = BosService(
+            uri="bos://test/pkg/pooldead",
+            domain="test",
+            package="pkg",
+            action="pooldead",
+            transport="mcp_stdio",
+            command=[sys.executable, "-c", _MCP_MOCK_SERVER],
+        )
+        pool = ProcessPool()
+        adapter = StdioAdapter(timeout=5.0, pool=pool)
+        try:
+            r1 = adapter.call(svc, {"x": 1})
+            assert r1["status"] == "ok"
+            # 手动杀掉进程, 下次调用应重新 spawn
+            pool.shutdown(svc.uri)
+            r2 = adapter.call(svc, {"x": 2})
+            assert r2["status"] == "ok"
+            assert r2["pid"] != r1["pid"]
+        finally:
+            adapter.shutdown()
