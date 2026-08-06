@@ -647,8 +647,28 @@ def cmd_bos_capability(args) -> int:
     return 1
 
 
+def _agora_mcp_port() -> int:
+    """从主仓 protocols/port-registry.yaml (SSOT) 读取 agora-mcp-sse 端口 (默认 7431).
+
+    避免硬编码端口漂移 (与 swarm 面板同一数据源)。
+    """
+    try:
+        import yaml
+
+        reg = _WORKSPACE / "protocols" / "port-registry.yaml"
+        data = yaml.safe_load(reg.read_text(encoding="utf-8"))
+        ports = data.get("ports", data) if isinstance(data, dict) else {}
+        if isinstance(ports, dict):
+            for p, meta in ports.items():
+                if isinstance(meta, dict) and meta.get("name") == "agora-mcp-sse":
+                    return int(p)
+    except (OSError, ValueError, TypeError):
+        pass
+    return 7431
+
+
 def cmd_bos_mutate(args):
-    """通过 agora MCP (HTTP :7422) 统一 BOS URI 写协议 (mutate_resource) 修改资源."""
+    """通过 agora MCP (SSE :7431, P0 后共用 /v1/tools/call) 统一 BOS URI 写协议 (mutate_resource) 修改资源."""
     uri = getattr(args, "uri", "")
     payload = getattr(args, "payload", "{}")
     action = getattr(args, "action", "update")
@@ -662,14 +682,16 @@ def cmd_bos_mutate(args):
             "arguments": {"uri": uri, "payload": payload, "action": action},
         }
     ).encode()
-    # /v1/tools/call 只在 agora HTTP 模式 (7422) 注册; sse 模式 (7431) 无此路由。
+    # /v1/tools/call 现于 SSE (7431) 与 HTTP 双模式注册 (P0 共用路由)。
+    # 端口从 port-registry SSOT 读取 (agora-mcp-sse=7431)。
     # 需 Authorization: Bearer AGORA_API_KEY (agora AuthMiddleware fail-closed)。
     api_key = os.environ.get("AGORA_API_KEY", "")
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
+    mcp_port = _agora_mcp_port()
     req = urllib.request.Request(
-        "http://127.0.0.1:7422/v1/tools/call",
+        f"http://127.0.0.1:{mcp_port}/v1/tools/call",
         data=body,
         headers=headers,
         method="POST",
@@ -678,8 +700,8 @@ def cmd_bos_mutate(args):
         with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
             data = json.loads(resp.read())
     except Exception as exc:
-        print(f"❌ 无法连接 agora MCP :7422 (需 agora-mcp --http 运行): {exc}")
-        print("  启动: uv run --directory projects/agora agora-mcp --http")
+        print(f"❌ 无法连接 agora MCP :{mcp_port} (需 agora-mcp --sse 或 --http 运行): {exc}")
+        print("  启动: uv run --directory projects/agora agora-mcp --sse")
         return 1
 
     print("═══ BOS Mutate ═══")
