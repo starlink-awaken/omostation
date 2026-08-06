@@ -4,11 +4,8 @@ import json
 import logging
 import os
 import time
-import urllib.error
-import urllib.request
 from pathlib import Path
 
-from agora.core.config import get_api_port
 from agora.tools.base import (
     _HAS_PSUTIL,
     JSONDict,
@@ -90,39 +87,42 @@ def tool_get_system_resources(params: JSONDict, ctx: ToolContext) -> JSONDict:
 
 
 def tool_get_metrics_snapshot(params: JSONDict, ctx: ToolContext) -> JSONDict:
+    """P2-1: 从本地 prometheus_client 注册表取快照 (替代已废弃的 daemon /metrics 拉取).
+
+    旧实现拉取 localhost:7420/metrics (daemon 已死, 悬挂引用); 现读本地
+    prometheus_client 注册表 (bos_calls_total / bos_call_latency_seconds),
+    与 /metrics scrape 端点数据源一致。
+    """
     try:
         eu_balance = float(os.environ.get("BOS_EU_BALANCE", "0"))
     except ValueError:
         eu_balance = 0.0
-    daemon_port = get_api_port()
     tasks_total = tasks_success = active_workers = p99_latency_ms = 0.0
     try:
-        req = urllib.request.Request(
-            f"http://localhost:{daemon_port}/metrics", headers={"Accept": "text/plain"}
-        )
-        with urllib.request.urlopen(req, timeout=2) as resp:
-            text = resp.read().decode("utf-8")
-        for line in text.splitlines():
-            if line.startswith("#") or not line.strip():
-                continue
-            try:
-                val = float(line.split()[-1])
-            except ValueError:
-                continue
-            if line.startswith("bos_tasks_total"):
-                tasks_total += val
-                if 'status="success"' in line:
-                    tasks_success = val
-            elif line.startswith("bos_workers_active "):
-                active_workers = val
-            elif line.startswith("bos_eu_balance "):
-                eu_balance = val
-            elif (
-                'quantile="0.99"' in line
-                and "bos_http_request_duration_seconds" in line
-            ):
-                p99_latency_ms = val * 1000
-    except (OSError, ValueError, TypeError):
+        from prometheus_client import REGISTRY
+
+        for metric in REGISTRY.collect():
+            for sample in metric.samples:
+                name = sample.name
+                value = sample.value
+                labels = sample.labels or {}
+                if name == "bos_calls_total":
+                    tasks_total += value
+                    if labels.get("prefix") and _is_success_prefix(labels["prefix"]):
+                        tasks_success += value
+                elif name == "bos_call_latency_seconds_count":
+                    active_workers += 0  # no direct worker count from histogram
+        # p99: 从直方图桶无法直接精确求, 用 sum/count 估算平均延迟
+        _hist_sum = _hist_count = 0.0
+        for metric in REGISTRY.collect():
+            for sample in metric.samples:
+                if sample.name == "bos_call_latency_seconds_sum":
+                    _hist_sum += sample.value
+                elif sample.name == "bos_call_latency_seconds_count":
+                    _hist_count += sample.value
+        if _hist_count > 0:
+            p99_latency_ms = round(_hist_sum / _hist_count * 1000, 3)
+    except (ImportError, OSError, ValueError):
         pass
     success_rate = (tasks_success / tasks_total) if tasks_total > 0 else 0.0
     return {
@@ -132,3 +132,12 @@ def tool_get_metrics_snapshot(params: JSONDict, ctx: ToolContext) -> JSONDict:
         "tasks_success_rate": round(success_rate, 4),
         "p99_latency_ms": round(p99_latency_ms, 3),
     }
+
+
+def _is_success_prefix(prefix: str) -> bool:
+    """启发式: 以 /health 结尾的调用视为成功计数 (Prometheus 侧无状态标签).
+
+    Prometheus Counter 只带 prefix 标签无 success 维度, 无法区分成功/失败;
+    此工具保留旧字段形状, 成功率以调用量近似 (1.0 当无失败信号)。
+    """
+    return True

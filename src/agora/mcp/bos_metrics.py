@@ -24,6 +24,32 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+# ── Prometheus 指标 (P2-1) ────────────────────────────────
+# prometheus-client 已声明依赖; 此处定义 scrape 端点数源。
+_prom_counter: Any | None = None
+_prom_latency: Any | None = None
+
+
+def _get_prom_metrics():
+    """懒加载 prometheus_client 指标 (避免 import 开销/可选依赖)."""
+    global _prom_counter, _prom_latency
+    if _prom_counter is not None:
+        return _prom_counter, _prom_latency
+    try:
+        from prometheus_client import Counter, Histogram
+
+        _prom_counter = Counter(
+            "bos_calls_total", "BOS calls by URI prefix", ["prefix"]
+        )
+        _prom_latency = Histogram(
+            "bos_call_latency_seconds", "BOS call latency by URI prefix", ["prefix"]
+        )
+    except ImportError:  # defensive fallback: prometheus-client 未装时跳过埋点
+        _prom_counter = None
+        _prom_latency = None
+    return _prom_counter, _prom_latency
+
+
 # ── SQLite 持久化 ─────────────────────────────────────────
 
 _DB_PATH = os.environ.get(
@@ -171,6 +197,11 @@ class BOSMetrics:
         else:
             s["failure"] += 1
         s["total_latency_ms"] += latency_ms
+        # Prometheus 埋点 (P2-1)
+        counter, latency = _get_prom_metrics()
+        if counter is not None and latency is not None:
+            counter.labels(prefix=prefix).inc()
+            latency.labels(prefix=prefix).observe(max(latency_ms, 0) / 1000.0)
         # 异步写入 SQLite
         self._store.insert(prefix, uri, success, latency_ms)
 
