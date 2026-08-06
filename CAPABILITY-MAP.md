@@ -10,7 +10,7 @@
 |------|------|
 | CLI 命令 (含子命令) | 121 |
 | MCP 工具 | 554 |
-| MCP 服务器 | 28 |
+| MCP 服务器 | 27 |
 | BOS 服务 | 202 |
 | BOS 域 | 16 |
 
@@ -45,7 +45,6 @@
 | `c2g` | X | 3 | stdio | `projects/c2g/src/c2g/mcp_server.py` |
 | `model-driven-fastmcp` | M0 | 2 | stdio | `projects/model-driven/src/model_driven/fastmcp_server.py` |
 | `agent-runtime` | L3 | 2 | stdio | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
-| `cockpit-mcp` | L3 | 0 | stdio | `projects/cockpit/src/cockpit/scripts/cockpit_mcp.py` ⚠️未找到 |
 
 ## BOS 服务域分布
 
