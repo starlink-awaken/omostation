@@ -686,6 +686,81 @@ def read_omo_standard(rule: str) -> str:
         return f"Error reading standard: {e!s}"
 
 
+# ── v10 δ.2: v10 新能力 MCP 工具 (journey/scene-card-lifecycle/agent_host) ──
+# WORKSPACE 根 (mcp_server → parents[4] = Workspace; WORKSPACE_ROOT 现有偏 projects 层)
+_V10_WORKSPACE = Path(__file__).resolve().parents[4]
+
+
+class JourneyRunDagRequest(BaseModel):
+    scene_path: str  # scene-card v2 YAML 路径
+
+
+class SceneCardStatusRequest(BaseModel):
+    scene_path: str  # scene-card v2 YAML 路径
+
+
+class AgentHostTickRequest(BaseModel):
+    pass  # 无参, 默认 host (HealthMonitor + KnowledgeCurator)
+
+
+@mcp.tool()
+async def journey_run_dag(req: JourneyRunDagRequest) -> str:
+    """v10 α.4/α.5: 跑 scene-card v2 journey DAG (条件边 + agent_decisions + 循环保护).
+
+    调 bin/ssot/journey-runner.py --run-dag. 返回 journey trace JSON.
+    """
+    import sys
+
+    journey_runner = _V10_WORKSPACE / "bin" / "ssot" / "journey-runner.py"
+    try:
+        result = subprocess.run(
+            [sys.executable, str(journey_runner), req.scene_path, "--run-dag"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"Error running journey DAG: {e.stderr}"
+    except Exception as e:
+        return f"Error: {e!s}"
+
+
+@mcp.tool()
+async def scene_card_status(req: SceneCardStatusRequest) -> str:
+    """v10 α.2: 查 scene-card lifecycle 状态 (设计态 + overlay 运行态)."""
+    import sys
+
+    lifecycle = _V10_WORKSPACE / "bin" / "ssot" / "scene-card-lifecycle.py"
+    try:
+        result = subprocess.run(
+            [sys.executable, str(lifecycle), "status", req.scene_path],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"Error reading scene-card status: {e.stderr}"
+    except Exception as e:
+        return f"Error: {e!s}"
+
+
+@mcp.tool()
+async def agent_host_tick(req: AgentHostTickRequest) -> str:
+    """v10 α.3: 跑 AgentHost tick (调度所有注册 Agent, 错误隔离 F14).
+
+    返回 {agent_count, ok_count, failed_count, results}.
+    """
+    try:
+        from .omo_agent_host import run_agent_tick  # type: ignore[import-not-found]
+
+        result = run_agent_tick()
+        return json.dumps(result, ensure_ascii=False)
+    except Exception as e:
+        return f"Error running agent host tick: {e!s}"
+
+
 def main():
     mcp.run()
 

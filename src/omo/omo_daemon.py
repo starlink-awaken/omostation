@@ -85,6 +85,7 @@ class TickResult:
     error: str | None = None
     mesh_watchdog: dict[str, Any] | None = None
     auto_consume: dict[str, Any] | None = None
+    agent_host: dict[str, Any] | None = None  # v10 α.3: Agent host tick 结果
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -161,6 +162,7 @@ def run_once(
     mesh_watchdog_apply: bool = False,
     mesh_watchdog_now: str | None = None,
     auto_consume: bool = False,
+    agent_host: bool = False,
 ) -> TickResult:
     """执行一次 tick: audit -> history append -> sync (dry-run).
 
@@ -242,6 +244,11 @@ def run_once(
     if auto_consume:
         auto_consume_result = _run_auto_consume()
 
+    # v10 α.3 续: Agent host tick (调度注册 Agent, 错误隔离 F14)
+    agent_host_result: dict[str, Any] | None = None
+    if agent_host:
+        agent_host_result = _run_agent_host_tick()
+
     result = TickResult(
         timestamp=timestamp,
         audit_score=audit_score,
@@ -251,6 +258,7 @@ def run_once(
         error=error,
         mesh_watchdog=mesh_watchdog_result,
         auto_consume=auto_consume_result,
+        agent_host=agent_host_result,
     )
     # Round 1: emit lifecycle event on bus-foundation. Best-effort, never raises.
     _publish_tick_event(result)
@@ -272,6 +280,21 @@ def _run_auto_consume() -> dict[str, Any] | None:
         )
     except Exception as exc:  # defensive: auto_consume 失败不炸 tick
         logging.getLogger("omo.daemon").error("auto_consume_failed: %s", exc)
+        return None
+
+
+def _run_agent_host_tick() -> dict[str, Any] | None:
+    """v10 α.3 续: Agent host tick (调度注册 Agent).
+
+    调 omo_agent_host.run_agent_tick (默认 HealthMonitorAgent + KnowledgeCuratorAgent).
+    失败不炸 tick (log + 返回 None).
+    """
+    try:
+        from omo.omo_agent_host import run_agent_tick
+
+        return run_agent_tick()
+    except Exception as exc:  # defensive: agent_host 失败不炸 tick
+        logging.getLogger("omo.daemon").error("agent_host_failed: %s", exc)
         return None
 
 
