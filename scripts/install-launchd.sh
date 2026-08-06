@@ -35,12 +35,7 @@ cat > "$LAUNCH_DIR/com.agora.sse.plist" <<'PLIST'
         <string>/Users/xiamingxing/Workspace</string>
     </dict>
     <key>KeepAlive</key>
-    <dict>
-        <key>SuccessfulExit</key>
-        <false/>
-        <key>Crashed</key>
-        <true/>
-    </dict>
+    <true/>
     <key>ThrottleInterval</key>
     <integer>5</integer>
     <key>RunAtLoad</key>
@@ -81,12 +76,7 @@ cat > "$LAUNCH_DIR/com.agora.gateway.plist" <<'PLIST'
         <string>/Users/xiamingxing/Workspace</string>
     </dict>
     <key>KeepAlive</key>
-    <dict>
-        <key>SuccessfulExit</key>
-        <false/>
-        <key>Crashed</key>
-        <true/>
-    </dict>
+    <true/>
     <key>ThrottleInterval</key>
     <integer>5</integer>
     <key>RunAtLoad</key>

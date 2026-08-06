@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import signal
+from pathlib import Path
 
 import structlog
 
@@ -238,7 +239,18 @@ async def start_all() -> dict[str, str]:
     if _gateway_manager is None:
         _gateway_manager = ProxyManager()
 
-    results = await _gateway_manager.start(KNOWN_BACKENDS)
+    # gateway 自身经 launchd `--directory __AGORA_DIR__` 启动, cwd=agora 项目。
+    # KNOWN_BACKENDS 用相对路径 (projects/gbrain, projects/c2g) 和 `--package`,
+    # 需 cwd=workspace 根才能解析。给每个 backend 补 workspace 根 cwd。
+    workspace_root = Path(__file__).resolve().parents[4]  # agora → projects → workspace
+    backends = []
+    for svc in KNOWN_BACKENDS:
+        if not svc.get("cwd"):
+            svc = dict(svc)
+            svc["cwd"] = str(workspace_root)
+        backends.append(svc)
+
+    results = await _gateway_manager.start(backends)
     ok_count = sum(1 for v in results.values() if v.startswith("ok"))
     logger.info(
         "mcp_gateway_started",
