@@ -124,6 +124,13 @@ warning_exceptions:
   generated: 2026-07-31
   policy: no-new-warnings
   entries:
+    - id: concurrent-plans-orphan-docs
+      rule: orphan_document
+      surface: docs-discoverable
+      max_findings: 2
+      expires: 2026-09-30
+      owner: governance-team
+      reason: 并发 agent 的 docs/plans 台账文档未入 SYSTEM-INDEX 索引 (ADR-0381 同步期间), 迁移期预算.
     - id: legacy-omo-knowledge-frontmatter
       rule: missing_frontmatter
       surface: omo-knowledge
