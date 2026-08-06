@@ -7,7 +7,7 @@ version: 1.0.0
 generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
-  mcp_servers: 28
+  mcp_servers: 27
   mcp_tools: 554
   bos_services: 202
   bos_domains: 16
@@ -555,14 +555,6 @@ mcp_servers:
   - runtime_protocol_get
   - runtime_protocol_list
   tool_count: 28
-- id: cockpit-mcp
-  name: Cockpit Workspace MCP
-  layer: L3
-  file: projects/cockpit/src/cockpit/scripts/cockpit_mcp.py
-  transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
 - id: iris
   name: Iris
   layer: L2
