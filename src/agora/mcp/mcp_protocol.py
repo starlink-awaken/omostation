@@ -68,6 +68,12 @@ _log = logging.getLogger(__name__)
 
 
 def _get_proxy_manager():
+    """P1 收口: 优先读 dependencies 共享单例, 回退到 mcp_gateway 单例."""
+    from agora.server.dependencies import get_proxy_manager
+
+    pm = get_proxy_manager()
+    if pm is not None:
+        return pm
     from agora.auth.mcp_gateway import _gateway_manager
 
     return _gateway_manager

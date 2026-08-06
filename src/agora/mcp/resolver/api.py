@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import threading
 from concurrent.futures import Future
 from pathlib import Path
@@ -13,7 +14,7 @@ from .services import BOS_URI_DOMAIN_PATTERN, POC_SERVICES, BosService
 
 _log = logging.getLogger(__name__)
 
-_WS = str(Path.home() / "Workspace")
+_WS = os.environ.get("WORKSPACE_ROOT") or str(Path.home() / "Workspace")
 
 
 def _run_sync_with_timeout(func: Any, timeout: float) -> Any:

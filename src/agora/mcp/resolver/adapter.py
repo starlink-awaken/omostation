@@ -129,14 +129,34 @@ class StdioAdapter:
 
     对 transport='stdio' 保持向后兼容的 {"args":..., "kwargs":...} 自定义 JSON;
     对 transport='mcp_stdio' 走完整 MCP initialize / initialized / tools/call session。
+
+    pool 提供后, mcp_stdio 调用复用常驻子进程 (按 URI), 避免每次 Popen 起新进程;
+    pool 为 None 时保持每次 Popen + 用完即关 (向后兼容)。
     """
 
     timeout: float = _STDIO_TIMEOUT_DEFAULT
+    pool: Any | None = None
     _id: int = field(default=0, init=False)
+    _sessions: dict[str, _McpStdioSession] = field(default_factory=dict, init=False)
+    _session_locks: dict[str, threading.Lock] = field(default_factory=dict, init=False)
+    _sessions_guard: threading.Lock = field(default_factory=threading.Lock, init=False)
 
     def _next_id(self) -> int:
         self._id += 1
         return self._id
+
+    def _lock_for(self, uri: str) -> threading.Lock:
+        with self._sessions_guard:
+            lock = self._session_locks.get(uri)
+            if lock is None:
+                lock = threading.Lock()
+                self._session_locks[uri] = lock
+            return lock
+
+    def _discard_session(self, uri: str) -> None:
+        """丢弃 URI 对应 session, 允许下次重建."""
+        with self._sessions_guard:
+            self._sessions.pop(uri, None)
 
     def _build_stdio_request(
         self, args: tuple[Any, ...], kwargs: dict[str, Any]
@@ -197,6 +217,17 @@ class StdioAdapter:
             }
 
     def _call_mcp_stdio(
+        self,
+        service: BosService,
+        cmd: list[str],
+        args: tuple[Any, ...],
+        kwargs: dict[str, Any],
+    ) -> dict[str, Any]:
+        if self.pool is not None:
+            return self._call_mcp_stdio_pooled(service, args, kwargs)
+        return self._call_mcp_stdio_spawn(service, cmd, args, kwargs)
+
+    def _call_mcp_stdio_spawn(
         self,
         service: BosService,
         cmd: list[str],
@@ -266,6 +297,78 @@ class StdioAdapter:
                 "pid": proc.pid if proc else None,
                 "alive_at_spawn": True,
             }
+
+    def _call_mcp_stdio_pooled(
+        self,
+        service: BosService,
+        args: tuple[Any, ...],
+        kwargs: dict[str, Any],
+    ) -> dict[str, Any]:
+        """mcp_stdio 经 ProcessPool 复用常驻子进程 (按 URI)."""
+        uri = service.uri
+        lock = self._lock_for(uri)
+        with lock:
+            try:
+                proc = self.pool.get_or_spawn(service)
+                pid = proc.pid
+                session = self._sessions.get(uri)
+                if session is None or session.proc is not proc:
+                    session = _McpStdioSession(proc, self.timeout)
+                    init_resp = session.initialize()
+                    if "error" in init_resp:
+                        self.pool.shutdown(uri)
+                        return {
+                            "status": "error",
+                            "error": init_resp["error"],
+                            "pid": pid,
+                            "alive_at_spawn": True,
+                        }
+                    session.initialized()
+                    with self._sessions_guard:
+                        self._sessions[uri] = session
+
+                tool_resp = session.call_tool(
+                    f"{service.package}/{service.action}",
+                    {"args": args, "kwargs": kwargs},
+                )
+                if "error" in tool_resp:
+                    return {
+                        "status": "error",
+                        "error": tool_resp["error"],
+                        "pid": pid,
+                        "alive_at_spawn": True,
+                    }
+                return {
+                    "status": "ok",
+                    "result": tool_resp.get("result"),
+                    "pid": pid,
+                    "alive_at_spawn": True,
+                }
+            except subprocess.TimeoutExpired:
+                self.pool.shutdown(uri)
+                self._discard_session(uri)
+                return {
+                    "status": "error",
+                    "error": "mcp_stdio_timeout",
+                    "pid": None,
+                    "alive_at_spawn": True,
+                }
+            except Exception as e:
+                self.pool.shutdown(uri)
+                self._discard_session(uri)
+                return {
+                    "status": "error",
+                    "error": str(e),
+                    "pid": None,
+                    "alive_at_spawn": True,
+                }
+
+    def shutdown(self) -> None:
+        """关闭并清理所有复用的子进程 (pool 模式)."""
+        if self.pool is not None:
+            with self._sessions_guard:
+                self._sessions.clear()
+            self.pool.shutdown()
 
     def call(self, service: BosService, *args: Any, **kwargs: Any) -> dict:
         """通过合适协议调用 BOS 服务并返回结果.
@@ -348,7 +451,14 @@ _adapter = StdioAdapter()
 
 
 def get_stdio_adapter(timeout: float = _STDIO_TIMEOUT_DEFAULT) -> StdioAdapter:
-    """返回 StdioAdapter 实例；非默认 timeout 时创建独立实例."""
+    """返回 StdioAdapter 实例；非默认 timeout 时创建独立实例.
+
+    默认实例绑定全局 ProcessPool, 使 mcp_stdio 调用复用常驻子进程。
+    """
     if timeout == _STDIO_TIMEOUT_DEFAULT:
+        if _adapter.pool is None:
+            from .pool import get_pool
+
+            _adapter.pool = get_pool()
         return _adapter
     return StdioAdapter(timeout=timeout)

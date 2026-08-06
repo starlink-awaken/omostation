@@ -16,6 +16,7 @@ from pathlib import Path
 import structlog
 from fastmcp import FastMCP
 
+from agora.mcp.mcp_bootstrap import get_data_dir as _get_data_dir
 from agora.server._response import FORMAT_VERSION, _error, _ok
 
 logger = structlog.get_logger(__name__)
@@ -230,7 +231,8 @@ async def entropy_cleanup() -> dict:
                 skipped.append(f"read_error: {f.name}")
 
     # 2. Clean expired cache files (> 24h)
-    cache_dir = Path.home() / "Workspace" / "LADS" / "agora_cache"
+    ws_root = Path(_resolve_workspace_root())
+    cache_dir = ws_root / "LADS" / "agora_cache"
     if cache_dir.exists():
         now = time.time()
         for f in cache_dir.glob("*.json"):
@@ -248,7 +250,7 @@ async def entropy_cleanup() -> dict:
         audit_db = Path(
             os.environ.get(
                 "AGORA_AUDIT_DB",
-                str(Path.home() / "Workspace" / ".agora" / "agora-audit.db"),
+                str(_get_data_dir() / "agora-audit.db"),
             )
         )
         if audit_db.exists():

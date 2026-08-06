@@ -229,6 +229,26 @@ _gateway_manager: ProxyManager | None = None
 _health_checker: BackendHealthChecker | None = None
 
 
+def _get_shared_manager() -> ProxyManager:
+    """返回并注册共享 ProxyManager 单例.
+
+    与 agora.server.dependencies 的全局单例对齐 (P1 收口):
+    复用 dependencies 中的 ProxyManager, 避免两套独立实例各自拉起
+    重叠的 backend 子进程。mcp_protocol 等消费方经 dependencies 读取。
+    """
+    global _gateway_manager
+    from agora.server.dependencies import get_proxy_manager, set_proxy_manager
+
+    shared = get_proxy_manager()
+    if shared is not None:
+        _gateway_manager = shared
+        return shared
+    if _gateway_manager is None:
+        _gateway_manager = ProxyManager()
+    set_proxy_manager(_gateway_manager)
+    return _gateway_manager
+
+
 async def start_all() -> dict[str, str]:
     """Start all known backends and register them with the proxy.
 
@@ -236,8 +256,8 @@ async def start_all() -> dict[str, str]:
     or "error: ..."). Each connection is attempted in parallel.
     """
     global _gateway_manager, _health_checker
-    if _gateway_manager is None:
-        _gateway_manager = ProxyManager()
+    manager = _get_shared_manager()
+    _gateway_manager = manager
 
     # gateway 自身经 launchd `--directory __AGORA_DIR__` 启动, cwd=agora 项目。
     # KNOWN_BACKENDS 用相对路径 (projects/gbrain, projects/c2g) 和 `--package`,
@@ -250,7 +270,7 @@ async def start_all() -> dict[str, str]:
             svc["cwd"] = str(workspace_root)
         backends.append(svc)
 
-    results = await _gateway_manager.start(backends)
+    results = await manager.start(backends)
     ok_count = sum(1 for v in results.values() if v.startswith("ok"))
     logger.info(
         "mcp_gateway_started",
@@ -261,7 +281,7 @@ async def start_all() -> dict[str, str]:
 
     # Start background health heartbeat
     if _health_checker is None:
-        _health_checker = BackendHealthChecker(_gateway_manager)
+        _health_checker = BackendHealthChecker(manager)
         await _health_checker.start()
         logger.info("mcp_gateway_health_checker_started")
 
@@ -280,6 +300,11 @@ async def stop_all() -> None:
         logger.info("mcp_gateway_health_checker_stopped")
     if _gateway_manager is not None:
         await _gateway_manager.shutdown()
+        # 共享单例已注册到 dependencies 时一并清理, 避免悬挂引用。
+        from agora.server.dependencies import get_proxy_manager, set_proxy_manager
+
+        if get_proxy_manager() is _gateway_manager:
+            set_proxy_manager(None)
         _gateway_manager = None
         logger.info("mcp_gateway_stopped")
 
