@@ -54,6 +54,8 @@ TOOL_REGISTRY: list[tuple[str, str, str, list[str]]] = [
     ("adr-drift-apply", "P94 ADR drift 应用 (touch SUBDIR_MISSING)", "bin/adr/adr-drift-apply.py", []),
     ("god-module-13-list", "P94 god-module 13 error 清单 (24252L excess)", "bin/ssot/god-module-13-error-list.py", []),
     ("venv-yaml-check", "P96 venv 依赖一致性检查 (pyyaml 等)", "bin/ssot/venv-yaml-check.py", []),
+    ("governance-summary", "GaC 治理摘要 (规则数/维度/ADR/CI)", "bin/gac/governance-summary.py", ["--json"]),
+    ("evidence-smoke", "BOS 声明/执行鸿沟 (证据驱动 smoke)", "bin/gac/evidence-smoke.py", ["--json"]),
 ]
 
 

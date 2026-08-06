@@ -1622,13 +1622,15 @@ gac:
     dimension: X2
     layer: meta
     name: Gateway 状态文档化
-    description: 外部 LLM gateway 不可达时, 必须文档化不可达状态. 对应 P77-6-3 (gateway-status-documentation)
+    description: '外部 LLM gateway 不可达时, 必须文档化不可达状态. 对应 P77-6-3 (gateway-status-documentation). 实现: bin/gac/check-gateway-status-doc.py (gac-local-gate)'
     check_type: schema_integrity
     executor:
     - omo_audit
-    lifecycle: draft
-    version: 0.1.0
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
     created_at: 2026-07-08
+    activated_at: '2026-08-06'
     adr: ADR-0158
     source_type: native
   - id: CR-P79-3-FOUNDRY-DECK
@@ -1695,13 +1697,15 @@ gac:
     dimension: X2
     layer: meta
     name: 任务关闭需真证据
-    description: task close 必须有真 evidence. 对应 P76-7-4 (evidence-honest-closure)
+    description: 'task close 必须有真 evidence. 对应 P76-7-4 (evidence-honest-closure). 实现: bin/gac/check-evidence-honest-closure.py (gac-local-gate)'
     check_type: audit_chain
     executor:
     - omo_audit
-    lifecycle: draft
-    version: 0.1.0
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
     created_at: 2026-07-08
+    activated_at: '2026-08-06'
     adr: ADR-0158
     source_type: native
   - id: CR-P76-7-5-RESOLVE-NOT-STUB
