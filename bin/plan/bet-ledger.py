@@ -366,6 +366,14 @@ def cmd_lint(data: dict, args) -> int:
         for d in b.get("depends_on") or []:
             if d not in ids:
                 errs.append(f"{b['id']}: 依赖不存在 {d}")
+        # 未加引号的冒号会让 YAML 把列表项解析成 dict，静默丢失语义
+        for key in ("done_when", "non_goals"):
+            for i, item in enumerate(b.get(key) or []):
+                if not isinstance(item, str):
+                    errs.append(
+                        f"{b['id']}.{key}[{i}]: 应为字符串却是 {type(item).__name__} "
+                        f"— 多半是未加引号的冒号，请写成 \"...: ...\""
+                    )
     if errs:
         for e in errs:
             print(f"ERROR {e}")
