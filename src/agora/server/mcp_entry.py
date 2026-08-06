@@ -88,35 +88,63 @@ def _register_common_routes() -> None:
             reset_http_request(token)
 
     async def register_backend_endpoint(request: Request):
-        """POST /v1/backends/register — dynamically register a new MCP backend."""
+        """POST /v1/backends/register — dynamically register a new MCP backend.
+
+        P0-SEC: 高风险端点 (接受任意 command/args 并 spawn 子进程)。
+        复用 require_agora_api_key 校验 Bearer token; AGORA_AUTH_MODE=permissive
+        时本地开发放行。拒绝未认证调用 (401)。
+        """
         from agora.mcp_proxy.manager import ProxyManager
         from agora.server.dependencies import get_proxy_manager, set_proxy_manager
+        from agora.server.request_context import reset_http_request, set_http_request
+        from agora.server.tools_auth import require_agora_api_key
 
+        # 注入 HTTP 上下文供鉴权中间件读取 (与 tool_call_endpoint 一致)
+        token = set_http_request(request)
         try:
-            payload = await request.json()
-        except Exception:  # defensive fallback
-            return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
-        name = payload.get("name", "")
-        if not name:
-            return JSONResponse({"error": "Missing 'name' field"}, status_code=400)
-        pm = get_proxy_manager()
-        if pm is None:
-            pm = ProxyManager()
-            set_proxy_manager(pm)
-        svc: dict = {"name": name}
-        if payload.get("command"):
-            svc["command"] = payload["command"]
-        if payload.get("args"):
-            svc["args"] = payload["args"]
-        if payload.get("mcp_endpoint"):
-            svc["mcp_endpoint"] = payload["mcp_endpoint"]
-        try:
-            result = await pm.add_service(svc)
-            logger.info("backend_registered_via_api", name=name, result=result)
-            return JSONResponse({"status": "ok", "name": name, "result": result})
-        except Exception:  # defensive fallback
-            logger.exception("backend_register_failed", name=name)
-            return JSONResponse({"error": "internal"}, status_code=500)
+            # 校验认证: permissive 放行; required+有 key 需 Bearer token 匹配
+            from fastmcp.server.auth.authorization import AuthContext
+
+            auth_ctx = AuthContext(token=None, component=None)
+            if not require_agora_api_key(auth_ctx):
+                return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+            try:
+                payload = await request.json()
+            except Exception:  # defensive fallback
+                return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+            name = payload.get("name", "")
+            if not name:
+                return JSONResponse({"error": "Missing 'name' field"}, status_code=400)
+            # P0-SEC: 拒绝明显危险的 command (shell 注入向量)
+            command = payload.get("command", "")
+            if isinstance(command, str) and any(
+                tok in command for tok in (";", "|", "&&", "`", "$(")
+            ):
+                return JSONResponse(
+                    {"error": "command contains shell metacharacters"},
+                    status_code=400,
+                )
+            pm = get_proxy_manager()
+            if pm is None:
+                pm = ProxyManager()
+                set_proxy_manager(pm)
+            svc: dict = {"name": name}
+            if command:
+                svc["command"] = command
+            if payload.get("args"):
+                svc["args"] = payload["args"]
+            if payload.get("mcp_endpoint"):
+                svc["mcp_endpoint"] = payload["mcp_endpoint"]
+            try:
+                result = await pm.add_service(svc)
+                logger.info("backend_registered_via_api", name=name, result=result)
+                return JSONResponse({"status": "ok", "name": name, "result": result})
+            except Exception:  # defensive fallback
+                logger.exception("backend_register_failed", name=name)
+                return JSONResponse({"error": "internal"}, status_code=500)
+        finally:
+            reset_http_request(token)
 
     async def metrics_endpoint(request: Request):
         """GET /metrics — Prometheus scrape endpoint.

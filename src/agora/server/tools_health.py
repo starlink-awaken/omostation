@@ -108,6 +108,9 @@ async def health_self_check() -> dict:
     # Backend health — P2-5: KNOWN_BACKENDS 全为 stdio, BackendHealthChecker 视
     # stdio 为 transient 跳过 heartbeat → _health_checker 恒报 0 (假绿根源)。
     # 改为统计 pm.registry._clients (实际已连接的 MCP client 数)。
+    # 复盘修正 (MED-2): registry.entries 是工具条目数 (含未连接), _clients 是
+    # 已连接服务数 — 量纲不同不能直接对比。backends.total 用已注册服务数
+    # (entries 中 name 去重), alive 用 clients 数, 保证同量纲。
     backend_health: dict = {}
     backends_alive = 0
     backends_total = 0
@@ -117,7 +120,13 @@ async def health_self_check() -> dict:
             clients = getattr(proxy_registry, "_clients", {}) or {}
             entries = getattr(proxy_registry, "entries", {}) or {}
             backends_alive = len(clients) if hasattr(clients, "__len__") else 0
-            backends_total = len(entries) if hasattr(entries, "__len__") else 0
+            # MED-2: entries 值可能含 name 字段, 去重得服务数; 否则退回工具数并标注
+            service_names = {
+                (v.get("name") if isinstance(v, dict) else k)
+                for k, v in entries.items()
+            }
+            service_names.discard(None)
+            backends_total = len(service_names) if service_names else len(entries)
         # 兼容: 有 _health_checker 时仍纳入其状态 (非 stdio backends)
         checker = getattr(pm, "_health_checker", None)
         if checker is not None and hasattr(checker, "get_all_status"):
@@ -145,6 +154,14 @@ async def health_self_check() -> dict:
         except (OSError, ValueError, KeyError):  # defensive fallback
             audit_stats = {"error": "stats_unavailable"}
 
+    # MED-3: audit hashchain 完整性校验 (P2-2 verify_chain 闭环)
+    audit_chain: dict = {"checked": False}
+    if auditor is not None and hasattr(auditor, "verify_chain"):
+        try:
+            audit_chain = auditor.verify_chain()
+        except Exception:  # defensive fallback
+            audit_chain = {"checked": True, "ok": False, "error": "verify_failed"}
+
     # Debt summary
     debt_summary = _scan_debt_items()
 
@@ -164,6 +181,9 @@ async def health_self_check() -> dict:
         )
     if dead_backends:
         issues.append(f"dead backends: {', '.join(dead_backends)}")
+    # MED-3: 链完整性失败视为问题
+    if audit_chain.get("checked") and not audit_chain.get("ok"):
+        issues.append("audit hashchain broken")
 
     overall = "healthy" if not issues else "degraded"
 
@@ -180,17 +200,12 @@ async def health_self_check() -> dict:
             "tool_count": proxy_tool_count,
         },
         "backends": {
-            "total": max(backends_total, len(backend_health)),
-            "alive": backends_alive
-            if backends_total > 0
-            else sum(
-                1
-                for v in backend_health.values()
-                if isinstance(v, dict) and v.get("alive", True)
-            ),
+            "total": backends_total,
+            "alive": backends_alive,
             "dead": dead_backends,
         },
         "audit_24h": audit_stats,
+        "audit_chain": audit_chain,
         "debt": debt_summary,
         "issues": issues,
     }
