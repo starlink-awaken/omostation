@@ -1,0 +1,47 @@
+---
+title: Agora BOS Gateway Scene Card
+status: active
+type: scene-card
+owner: platform-architecture
+last-reviewed: 2026-08-06
+related:
+  - ../../projects/agora/AGENTS.md
+  - ../I0-AGORA-CALLCHAIN.md
+  - ../ARCHITECTURE.md
+  - ../../protocols/port-registry.yaml
+---
+schema: scene-card/v1
+lifecycle: active
+activation: active
+approval_state: approved
+scene_id: agora-bos-gateway
+journey_id: intent-to-execution
+goal: AI agent 经 agora MCP 网关 (SSE :7431) 统一调用 BOS 能力 (bos:// 路由 + 准入 + 审计 + 可观测)
+trigger: agent 或 cockpit CLI 发起 bos:// URI 调用 (resolve/read/mutate)
+input_contract: 合法 bos:// URI + 参数 + 认证 (AGORA_API_KEY Bearer 或 permissive 本地模式)
+result_contract: 结构化调用结果 {status, result, transport, uri} + audit hashchain 落库 + /metrics 指标计数
+outcome_metric: bos_call_success_rate / backends_alive_ratio / audit_chain_ok
+consumer: all-layers-agents-and-cockpit-cli
+approver: platform-architecture
+owner: agora-gateway
+failure_cost: BOS 调用失败/认证绕过/审计链断裂导致跨层调用不可信
+data_classification: internal
+data_scope: bos-uri-call-metadata-audit-chain-and-aggregated-metrics
+operator: agora-mcp-sse-service
+permission_ref: permission://bos/capability-invoke
+rollback_plan: revert-bump-or-disable-agora-mcp-sse
+sample_refs:
+  - bos://capability/omo/task/create
+  - bos://memory/kos/search
+  - bos://governance/omo/audit
+demand_evidence_refs:
+  - evidence://agora/health
+  - evidence://agora/metrics
+  - evidence://agora/audit-chain
+opportunity_window: 持续网关服务窗口 (launchd com.agora.sse KeepAlive)
+external_resource_policy: admission_controlled
+activation_blockers:
+  - admission_provider_unavailable_in_production
+  - backends_connection_ratio_low
+  - audit_chain_broken
+  - unauthorized_register_endpoint
