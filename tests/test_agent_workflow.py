@@ -1321,7 +1321,7 @@ def test_load_registry_supports_split_directory(tmp_path, monkeypatch) -> None:
         "gstack:\n  status: optional_adapter\n", encoding="utf-8"
     )
 
-    registry = load_registry(registry_dir.with_suffix(".yaml"))
+    registry = load_registry(registry_dir)
     assert registry["claim_policy"]["mode"] == "advisory"
     assert [w["id"] for w in registry["workflows"]] == ["project-code-change"]
     assert "docs-agent" in registry["agent_profiles"]
@@ -1337,4 +1337,4 @@ def test_load_registry_split_directory_missing_workflows_raises(tmp_path) -> Non
     registry_dir.mkdir()
     (registry_dir / "_root.yaml").write_text("version: 1\n", encoding="utf-8")
     with pytest.raises(WorkflowError):
-        load_registry(registry_dir.with_suffix(".yaml"))
+        load_registry(registry_dir)
