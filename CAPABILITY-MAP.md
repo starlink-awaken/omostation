@@ -9,7 +9,7 @@
 | 通道 | 数量 |
 |------|------|
 | CLI 命令 (含子命令) | 121 |
-| MCP 工具 | 581 |
+| MCP 工具 | 554 |
 | MCP 服务器 | 28 |
 | BOS 服务 | 202 |
 | BOS 域 | 16 |
@@ -23,14 +23,13 @@
 | `l4-kernel` | L4 | 45 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `kos` | L2 | 44 | stdio | `projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `kos-stdio` | L2 | 44 | stdio | `projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
-| `cockpit-mcp` | L3 | 30 | stdio | `projects/cockpit/src/cockpit/scripts/cockpit_mcp.py` |
 | `ecos` | L0 | 28 | stdio | `projects/ecos/src/ecos/mcp_server.py` |
 | `model-driven` | M0 | 28 | stdio | `projects/model-driven/src/model_driven/mcp_server.py` |
 | `runtime` | L1 | 28 | stdio | `projects/runtime/src/runtime/mcp_server.py` |
 | `ecos-integration` | L0 | 26 | stdio | `projects/ecos/src/ecos/services/integration/mcp_server.py` |
 | `codeanalyze` | L2 | 25 | stdio | `projects/kairon/packages/codeanalyze/src/codeanalyze/mcp.py` |
 | `metaos` | L2 | 24 | stdio | `projects/metaos/src/metaos/mcp_server.py` |
-| `omo` | L2 | 19 | stdio | `projects/omo/src/omo/mcp_server.py` |
+| `omo` | L2 | 22 | stdio | `projects/omo/src/omo/mcp_server.py` |
 | `kronos` | L2 | 16 | stdio | `projects/kairon/packages/kronos/src/kronos/mcp_server.py` |
 | `aetherforge` | X | 10 | stdio | `projects/aetherforge/src/aetherforge/mcp_server.py` |
 | `ecos-ssot` | L0 | 9 | stdio | `projects/ecos/src/ecos/l0/ssot/mcp_server.py` |
@@ -46,6 +45,7 @@
 | `c2g` | X | 3 | stdio | `projects/c2g/src/c2g/mcp_server.py` |
 | `model-driven-fastmcp` | M0 | 2 | stdio | `projects/model-driven/src/model_driven/fastmcp_server.py` |
 | `agent-runtime` | L3 | 2 | stdio | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
+| `cockpit-mcp` | L3 | 0 | stdio | `projects/cockpit/src/cockpit/scripts/cockpit_mcp.py` ⚠️未找到 |
 
 ## BOS 服务域分布
 
