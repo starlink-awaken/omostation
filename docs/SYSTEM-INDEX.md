@@ -84,6 +84,7 @@
 
 - [`plans/3Y-BET-LEDGER.md`](plans/3Y-BET-LEDGER.md) — 三年规划执行台账（人类视图）。SSOT 为 `plans/3y-bet-ledger.yaml`，CLI `bin/plan/bet-ledger.py`
 - [`plans/AGENT-BRIEF.md`](plans/AGENT-BRIEF.md) — 多 agent 认领与执行指令（首次执行前通读）
+- [`plans/AGENT-TEMPLATES.md`](plans/AGENT-TEMPLATES.md) — 按轨道分工的 agent 指令模板（8 轨道 + 协调者 + 观察者）
 - [`plans/2026-08-06-agora-p2-deepening-plan.md`](plans/2026-08-06-agora-p2-deepening-plan.md) — agora P2 深化计划
 
 ---
