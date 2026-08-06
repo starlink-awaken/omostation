@@ -20,11 +20,13 @@ properties:
   executor:
   - omo_audit
   - gac_local_gate
+  - evidence_smoke
   lifecycle: active
   version: 1.0.0
   created_at: *id001
   adr: ADR-0158
   source_type: native
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

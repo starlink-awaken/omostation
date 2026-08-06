@@ -19,10 +19,13 @@ properties:
   check_type: audit_chain
   executor:
   - ci_gate
+  - evidence_smoke
   lifecycle: active
   version: 1.0.0
   created_at: *id001
+  adr: ADR-0165
   source_type: native
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

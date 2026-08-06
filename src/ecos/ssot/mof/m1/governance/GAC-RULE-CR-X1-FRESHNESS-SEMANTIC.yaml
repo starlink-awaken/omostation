@@ -1,11 +1,11 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
-# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
 id: GAC-RULE-CR-X1-FRESHNESS-SEMANTIC
 type: GacRule
 name: freshness_seconds producer/consumer 语义一致性
 description: '防 P71 Class D (语义错配): scheduler.py 产出的 freshness_seconds 语义为 uptime,
-  但 omo_state_schema.py 消费时当 staleness. 声明和执行都正确, 但语义错配导致系统性误报. 实现: bin/governance-convergence-lint.py
+  但 omo_state_schema.py 消费时当 staleness. 声明和执行都正确, 但语义错配导致系统性误报. 实现: bin/gac/governance-convergence-lint.py
   --rule freshness-semantic'
 status: active
 domain: meta
@@ -21,18 +21,20 @@ properties:
   executor:
   - ci_gate
   - radar_cron
+  - evidence_smoke
   lifecycle: active
   version: 1.0.0
   created_at: '2026-07-02'
   target: projects/runtime/src/runtime/scheduler.py + projects/omo/src/omo/omo_state_schema.py
   adr: ADR-0120
   source_type: native
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
   m3_type: GacRule
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
-  derived_by: bin/gac-m1-sync.py
+  derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
   timestamp: '2026-07-02T00:00:00Z'

@@ -20,12 +20,14 @@ properties:
   executor:
   - ci_gate
   - omo_audit
+  - evidence_smoke
   lifecycle: active
   version: 1.0.0
   created_at: '2026-06-27'
   target: .omo/_truth/registry/mutation-surfaces.yaml::surfaces
   adr: ADR-0155
   source_type: native
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

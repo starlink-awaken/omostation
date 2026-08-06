@@ -22,13 +22,15 @@ properties:
   executor:
   - foundry_cron
   - ci_gate
+  - evidence_smoke
   lifecycle: active
   version: 1.0.0
   created_at: '2026-07-02'
   target: 'executor_evidence_manifest: .omo/_delivery/evidence-smoke/<date>.json +
     .omo/_log/mof-validate.jsonl'
-  adr: ADR-0106
+  adr: ADR-0121
   source_type: native
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
