@@ -2608,8 +2608,26 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
-    source_ref: bin/gac/check-governance-trend.py
+source_ref: bin/gac/check-governance-trend.py
     target: docs/**/*.md
+
+  - id: CR-LLM-GATEWAY-ONLY
+    source_type: native
+    dimension: X2
+    layer: meta
+    name: LLM 推理统一接入层
+    description: '禁止业务代码直连 ollama (11434) / 裸 OpenAI 端点; 必须走 llm-router /
+      AetherForge 网关. 静态源码扫描, --warn 迁移期仅告警. 实现: bin/gac/check-llm-gateway-only.py'
+    check_type: drift_audit
+    target: projects/**
+    source_ref: bin/gac/check-llm-gateway-only.py::--warn
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-06'
+    activated_at: '2026-08-06'
+    adr: ADR-0380
   drift:
     schedule: daily
     auto_heal: false

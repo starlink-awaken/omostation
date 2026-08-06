@@ -20,5 +20,5 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install pyyaml
-      - name: Run cross-deps check
-        run: python3 scripts/check-cross-deps.py
+      - name: Run cross-deps check (registry-driven, ADR-0380 P1a)
+        run: python3 bin/gac/ci-check-runner.py --workflow cross-deps-enforce.yml
