@@ -103,6 +103,49 @@ def _is_check_tool(tool: str) -> bool:
     return tool.startswith(CHECK_PREFIX)
 
 
+
+def check_workflow_trigger_drift(registry: dict, workflow_dir: Path) -> list[str]:
+    """ADR-0381 E-5: workflow 实际触发/path-filter 与 ci-surfaces workflow_triggers 登记比对."""
+    warnings: list[str] = []
+    registered = {
+        str(w.get("workflow")): w
+        for w in (registry.get("workflow_triggers") or [])
+        if isinstance(w, dict) and w.get("workflow")
+    }
+    for wf in sorted(workflow_dir.glob("*.yml")):
+        text = wf.read_text(encoding="utf-8", errors="ignore")
+        name = wf.name
+        triggers = []
+        if "workflow_call" in text:
+            triggers.append("callable")
+        if re.search(r"^\s+schedule:\s*$", text, re.M) or "schedule:" in text:
+            triggers.append("scheduled")
+        if "workflow_dispatch" in text:
+            triggers.append("manual")
+        if "on: [push, pull_request]" in text or "on: [push,pull_request]" in text:
+            triggers += ["push", "per_pr"]
+        else:
+            if re.search(r"^\s+push:\s*$", text, re.M):
+                triggers.append("push")
+            if re.search(r"^\s+pull_request:\s*$", text, re.M):
+                triggers.append("per_pr")
+        path_filtered = bool(re.search(r"^\s+paths:\s*$", text, re.M))
+        entry = registered.get(name)
+        if entry is None:
+            warnings.append(f"trigger-drift: {name} 未登记在 ci-surfaces workflow_triggers")
+            continue
+        reg_trig = sorted(str(x) for x in (entry.get("triggers") or []))
+        if sorted(set(triggers)) != reg_trig:
+            warnings.append(
+                f"trigger-drift: {name} 实际触发 {sorted(set(triggers))} != 登记 {reg_trig} (重跑 ci-surfaces 生成器)"
+            )
+        if bool(entry.get("path_filtered")) != path_filtered:
+            warnings.append(
+                f"trigger-drift: {name} path_filtered 实际={path_filtered} 登记={entry.get('path_filtered')}"
+            )
+    return warnings
+
+
 def check_ci_surfaces() -> dict:
     """执行全部检测, 返回结构化报告."""
     errors: list[str] = []
@@ -132,6 +175,9 @@ def check_ci_surfaces() -> dict:
         else:
             errors.append(f"unregistered-check: workflow {','.join(meta['workflows'])} 执行了未登记的检查 {tool} (CR-CI-SURFACE-SSOT)")
 
+    # 2.5 E-5: workflow 触发/path-filter 登记 drift (workflow_triggers section)
+    warnings.extend(check_workflow_trigger_drift(registry, WORKFLOWS_DIR))
+
     # 3. orphan-script: 磁盘上 check-*.py 未接线且未登记为 orphan
     for script in sorted((WORKSPACE / "scripts").glob("check-*.py")):
         rel = f"scripts/{script.name}"
@@ -143,9 +189,12 @@ def check_ci_surfaces() -> dict:
             continue
         warnings.append(f"orphan-script: {rel} 未接线到任何 workflow/gate 且未在 ci-surfaces.yaml 登记 (接线或删除)")
 
-    # 4. overlap: 同一 tool 在 2+ workflow
+    # 4. overlap: 同一 tool 在 2+ workflow (runner 是多 workflow 执行引擎, 豁免)
+    OVERLAP_EXEMPT = {"bin/gac/ci-check-runner.py", "bin/gac/check-ci-surfaces.py"}
     for tool, meta in sorted(wiring.items()):
         if not _is_check_tool(tool):
+            continue
+        if tool in OVERLAP_EXEMPT:
             continue
         if len(meta["workflows"]) > 1:
             warnings.append(

@@ -136,3 +136,26 @@ def test_runner_selects_and_aggregates(monkeypatch, tmp_path) -> None:
     by_tool = {r["tool"]: r["ok"] for r in report["results"]}
     assert by_tool[str(ok_script)] is True
     assert by_tool[str(fail_script)] is False
+
+
+def test_trigger_drift_detected(cs, tmp_path) -> None:
+    """E-5: workflow 未登记 trigger/path_filter 差异 → trigger-drift warn."""
+    _write(
+        tmp_path / "ci-surfaces.yaml",
+        "version: 1\nworkflow_triggers:\n  - workflow: a.yml\n    triggers: [push]\n    path_filtered: false\n",
+    )
+    _write(tmp_path / "workflows" / "a.yml", "on: [push, pull_request]\n")
+    _write(tmp_path / "workflows" / "unregistered.yml", "on: push\n")
+    report = cs.check_ci_surfaces()
+    assert any("trigger-drift" in w for w in report["warnings"]), report["warnings"]
+
+
+def test_trigger_drift_clean(cs, tmp_path) -> None:
+    """E-5: 登记与实际情况一致 → 无 trigger-drift warn."""
+    _write(
+        tmp_path / "ci-surfaces.yaml",
+        "version: 1\nworkflow_triggers:\n  - workflow: a.yml\n    triggers: [push, per_pr]\n    path_filtered: false\n",
+    )
+    _write(tmp_path / "workflows" / "a.yml", "on: [push, pull_request]\n")
+    report = cs.check_ci_surfaces()
+    assert not any("trigger-drift" in w for w in report["warnings"]), report["warnings"]
