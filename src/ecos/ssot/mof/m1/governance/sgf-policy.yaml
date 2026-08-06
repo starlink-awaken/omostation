@@ -183,6 +183,15 @@ gates:
     command: ["bin/gac/check-silent-loss.py"]
   - id: "check-adversarial-effectiveness"
     command: ["bin/gac/check-adversarial-effectiveness.py"]
+<<<<<<< HEAD
+||||||| parent of f5a97e3 (feat(gates): 注册 CR-LLM-GATEWAY-ONLY gate (保留 ci-surfaces-check))
+=======
+  # LLM-ENGINE-ARCHITECTURE Wave 3: LLM 推理必须走统一接入层 (llm-router / AetherForge)
+  # 纯静态源码扫描 — CI (GitHub runner) 无本地 LLM 也能运行。
+  # --warn: 历史存量迁移期仅告警不失败; 全量违规归零后移除 --warn 提升为硬 gate。
+  - id: "check-llm-gateway-only"
+    command: ["bin/gac/check-llm-gateway-only.py", "--warn", "--json"]
+>>>>>>> f5a97e3 (feat(gates): 注册 CR-LLM-GATEWAY-ONLY gate (保留 ci-surfaces-check))
   # ADR-0379 E-3: CI 平面可观测性 — ci-surfaces SSOT 接线检测 (CR-CI-SURFACE-SSOT)
   - id: "ci-surfaces-check"
     command: ["bin/gac/check-ci-surfaces.py"]
