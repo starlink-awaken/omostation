@@ -444,10 +444,10 @@ surfaces:
     status: active
   - id: scripts-check-future-annotations-py
     tool: scripts/check-future-annotations.py
-    workflow: (none)
+    workflow: pyright-sweep.yml
     gate: false
-    triggers: []
-    status: orphan
+    triggers: [manual]
+    status: active
   - id: scripts-check-governance-doc-ssot-py
     tool: scripts/check-governance-doc-ssot.py
     workflow: governance-check.yml
@@ -474,10 +474,10 @@ surfaces:
     status: active
   - id: scripts-check-index-coverage-py
     tool: scripts/check-index-coverage.py
-    workflow: (none)
+    workflow: governance-check.yml
     gate: false
-    triggers: []
-    status: orphan
+    triggers: [per_pr, push, scheduled]
+    status: active
   - id: scripts-check-interfaces-py
     tool: scripts/check-interfaces.py
     workflow: interfaces-enforce.yml
@@ -559,8 +559,8 @@ surfaces:
     status: active
   - id: scripts-check-vault-paths-py
     tool: scripts/check-vault-paths.py
-    workflow: mof-update.yml
-    also_in: [port-registry-enforce.yml]
+    workflow: port-registry-enforce.yml
+    args: [--check-ports]
     gate: false
     triggers: [manual, per_pr, push, scheduled]
     status: active
@@ -580,18 +580,18 @@ surfaces:
     note: CI 平面检测器自身 (ADR-0379 E-3) — 经 sgf-policy gate ci-surfaces-check 执行
   - id: bin-gac-check-doc-freshness-gate-py
     tool: bin/gac/check-doc-freshness-gate.py
-    workflow: (none)
+    workflow: gac-gate.yml
     gate: false
-    triggers: []
-    status: orphan
-    note: PR #1021 声明 (CR-X2-DOC-FRESHNESS-GATE) 但未接线到 workflow — 待接线或降级
+    triggers: [per_pr, push]
+    status: active
+    note: PR #1021 声明 (CR-X2-DOC-FRESHNESS-GATE); ADR-0380 确认已在 gac-gate.yml 接线
   - id: bin-gac-check-metric-trend-py
     tool: bin/gac/check-metric-trend.py
-    workflow: (none)
+    workflow: gac-gate.yml
     gate: false
-    triggers: []
-    status: orphan
-    note: PR #1021 声明 (CR-X2-METRIC-TREND) 但未接线到 workflow — 待接线或降级
+    triggers: [per_pr, push]
+    status: active
+    note: PR #1021 声明 (CR-X2-METRIC-TREND); ADR-0380 确认已在 gac-gate.yml 接线
   - id: bin-gac-check-governance-trend-py
     tool: bin/gac/check-governance-trend.py
     workflow: gac-gate.yml
@@ -599,3 +599,10 @@ surfaces:
     triggers: [per_pr, push]
     status: active
     note: 并发 PR 新增 (CR-X2-GOVERNANCE-TREND), ci-surfaces-check 拦截后补登记
+  - id: bin-gac-check-llm-gateway-only-py
+    tool: bin/gac/check-llm-gateway-only.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: 并发 #1042 注册 (CR-LLM-GATEWAY-ONLY); 工具被 phase8 误归档, ADR-0380 移回 bin/gac + 登记
