@@ -33,6 +33,12 @@ cat > "$LAUNCH_DIR/com.agora.sse.plist" <<'PLIST'
         <string>/Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
         <key>WORKSPACE_HOME</key>
         <string>/Users/xiamingxing/Workspace</string>
+        <key>AGORA_ADMISSION_MODE</key>
+        <string>degraded</string>
+        <key>AGORA_DATA_DIR</key>
+        <string>__LOG_DIR__</string>
+        <key>AGORA_AUTH_MODE</key>
+        <string>permissive</string>
     </dict>
     <key>KeepAlive</key>
     <true/>
@@ -74,6 +80,10 @@ cat > "$LAUNCH_DIR/com.agora.gateway.plist" <<'PLIST'
         <string>/Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
         <key>WORKSPACE_HOME</key>
         <string>/Users/xiamingxing/Workspace</string>
+        <key>AGORA_ADMISSION_MODE</key>
+        <string>degraded</string>
+        <key>AGORA_DATA_DIR</key>
+        <string>__LOG_DIR__</string>
     </dict>
     <key>KeepAlive</key>
     <true/>
