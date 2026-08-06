@@ -13,7 +13,7 @@ version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-SEC-EVAL-EXEC
-  dimension: X4
+  dimension: X1
   layer: L2
   check_type: eval_exec
   executor:
@@ -23,6 +23,7 @@ properties:
   version: 1.0.0
   created_at: *id001
   target: Python eval/exec 调用 (声明面; 执行面 hook 内置 PR#196)
+  adr: ADR-0106
   source_type: native
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:

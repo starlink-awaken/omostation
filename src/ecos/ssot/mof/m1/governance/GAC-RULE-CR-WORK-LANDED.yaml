@@ -1,27 +1,28 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
 # DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
-id: GAC-RULE-CR-P77-2-2-CATALOG-SSOT
+id: GAC-RULE-CR-WORK-LANDED
 type: GacRule
-name: 原则 catalog SSOT
-description: 原则 catalog 是 SSOT, ADR 是 mirror. 对应 P77-2-2 (catalog-SSOT)
-status: superseded
+name: 工作落地验证
+description: '验证治理工作是否实际落地. 已运行于 gac-local-gate. 实现: bin/gac/check-work-landed.py
+  (gac-local-gate)'
+status: active
 domain: meta
 layer: meta
-created: &id001 2026-07-08
-version: 0.1.0
+created: '2026-08-05'
+version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
-  id: CR-P77-2-2-CATALOG-SSOT
-  dimension: X1
+  id: CR-WORK-LANDED
+  dimension: X2
   layer: meta
-  check_type: audit_chain
+  check_type: drift_audit
   executor:
-  - omo_audit
-  lifecycle: superseded
-  version: 0.1.0
-  created_at: *id001
-  adr: ADR-0165
+  - gac_local_gate
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-08-05'
+  adr: ADR-0373
   source_type: native
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
@@ -30,6 +31,6 @@ model_driven_refs:
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
   derived_by: bin/gac/gac-m1-sync.py
 state_history:
-- state: superseded
-  timestamp: '2026-07-08T00:00:00Z'
+- state: active
+  timestamp: '2026-08-05T00:00:00Z'
   reason: M1 实例由 gac-m1-sync.py 从 registry 派生
