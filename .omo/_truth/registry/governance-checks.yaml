@@ -231,7 +231,7 @@ gac:
     lifecycle: active
     version: 1.0.0
     created_at: '2026-06-26'
-    adr: ADR-0104
+    adr: ADR-0106
   - id: CR-X2-GAC-DRIFT
     dimension: X2
     layer: meta
@@ -272,7 +272,7 @@ gac:
     lifecycle: active
     version: 1.0.0
     created_at: '2026-06-26'
-    adr: ADR-0104
+    adr: ADR-0106
   - id: CR-L1-RUNTIME-HEALTH
     dimension: X2
     layer: L1
@@ -790,7 +790,7 @@ gac:
     lifecycle: active
     version: 1.0.0
     created_at: '2026-06-29'
-    adr: ADR-0104
+    adr: ADR-0106
   - id: CR-X3-L2-MYPY-CLEAN
     dimension: X3
     layer: L2
