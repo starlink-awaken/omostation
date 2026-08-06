@@ -606,3 +606,128 @@ surfaces:
     triggers: []
     status: active
     note: 并发 #1042 注册 (CR-LLM-GATEWAY-ONLY); 工具被 phase8 误归档, ADR-0380 移回 bin/gac + 登记
+
+workflow_triggers:
+  - workflow: agora-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: ai-pr-review.yml
+    triggers: [per_pr]
+    path_filtered: false
+  - workflow: audit-rollout-monthly.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: c2g-gc-weekly.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: c2g-radar-daily.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: ci-lint.yml
+    triggers: [per_pr, push, scheduled]
+    path_filtered: true
+  - workflow: ci-python-coverage.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: cockpit-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: cockpit-ui-ci.yml
+    triggers: [manual]
+    path_filtered: false
+  - workflow: config-check.yml
+    triggers: [push]
+    path_filtered: false
+  - workflow: constraint-validation.yml
+    triggers: [per_pr]
+    path_filtered: false
+  - workflow: cross-deps-enforce.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: debt-audit.yml
+    triggers: [per_pr, push, scheduled]
+    path_filtered: false
+  - workflow: ecos-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: evidence-smoke-gate.yml
+    triggers: [manual, per_pr, push]
+    path_filtered: false
+  - workflow: family-hub-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: gac-gate.yml
+    triggers: [manual, per_pr, push]
+    path_filtered: false
+  - workflow: gbrain-ci.yml
+    triggers: [manual]
+    path_filtered: false
+  - workflow: governance-check.yml
+    triggers: [per_pr, push, scheduled]
+    path_filtered: true
+  - workflow: integration.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: interfaces-enforce.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: kairon-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: meta-model-check.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+  - workflow: metaos-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: mof-update.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: observability-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: omo-autopilot.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: omostation-governance.yml
+    triggers: [manual, per_pr, push, scheduled]
+    path_filtered: true
+  - workflow: phase-gate-enforce.yml
+    triggers: [manual, per_pr]
+    path_filtered: false
+  - workflow: port-registry-enforce.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: publish-pypi.yml
+    triggers: [manual, push]
+    path_filtered: true
+  - workflow: pyright-sweep.yml
+    triggers: [manual]
+    path_filtered: false
+  - workflow: pytest.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: quality.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: ruff-check.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: runtime-ci.yml
+    triggers: [manual]
+    path_filtered: false
+  - workflow: state-goals-enforce.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: submodule-autobump.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: submodule-freshness-gatekeeper.yml
+    triggers: [manual, push, scheduled]
+    path_filtered: false
+  - workflow: task-schema-enforce.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: workspace.yml
+    triggers: [per_pr, push]
+    path_filtered: false

@@ -90,6 +90,7 @@ jobs:
             tests/test_omo_direct_io_gate.py \
             tests/test_omo_task_policy.py \
             tests/test_opc_p5_p7_runtime.py \
+            tests/test_agent_workflow.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
