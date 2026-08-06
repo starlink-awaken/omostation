@@ -18,12 +18,7 @@
     <true/>
 
     <key>KeepAlive</key>
-    <dict>
-        <key>SuccessfulExit</key>
-        <false/>
-        <key>AfterInitialDemand</key>
-        <true/>
-    </dict>
+    <true/>
 
     <key>ProcessType</key>
     <string>Background</string>
