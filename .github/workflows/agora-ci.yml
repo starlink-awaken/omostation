@@ -25,3 +25,69 @@ jobs:
         run: cd projects/agora && uv sync --no-extra kairon
       - name: Run tests
         run: cd projects/agora && uv run pytest tests/ --ignore=tests/e2e -q
+
+  # P2-4: 部署拓扑 smoke — 验证 agora SSE 网关核心路由可服务
+  # 用 AGORA_BOS_ONLY=1 模式 (不拉 KNOWN_BACKENDS 子进程, CI ubuntu 无 kairon workspace 结构)
+  # 断言: /health HTTP 路由 200 (BOS_ONLY 下保留), 不依赖 health_check 工具 (会被裁剪)
+  deploy-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+      - name: Install dependencies
+        run: cd projects/agora && uv sync --no-extra kairon
+      - name: Start SSE gateway (BOS_ONLY)
+        run: |
+          cd projects/agora
+          AGORA_AUTH_MODE=permissive \
+          AGORA_ADMISSION_MODE=degraded \
+          AGORA_BOS_ONLY=1 \
+            uv run agora-mcp --sse > /tmp/agora-sse.log 2>&1 &
+          echo "SSE_PID=$!"
+          # 等待服务就绪 (最多 60s)
+          for i in $(seq 1 30); do
+            if curl -sf --max-time 2 http://localhost:7431/health > /dev/null 2>&1; then
+              echo "SSE ready after ${i}x2s"
+              break
+            fi
+            sleep 2
+          done
+      - name: Smoke assertions
+        run: |
+          # 1) /health 200 + status 可解析
+          HEALTH=$(curl -sf --max-time 5 http://localhost:7431/health)
+          echo "health: $HEALTH"
+          echo "$HEALTH" | python3 -c "
+            import json, sys
+            d = json.load(sys.stdin)
+            assert d.get('status') in ('healthy', 'degraded'), f'status: {d}'
+            assert 'format_version' in d, f'format_version missing: {d}'
+            print('PASS: /health OK, format_version =', d['format_version'])
+          "
+          # 2) SSE transport 可达 (MCP initialize 握手)
+          curl -sf --max-time 5 -N http://localhost:7431/sse \
+            -H 'Accept: text/event-stream' > /tmp/sse-events.log 2>&1 &
+          SSE_CURL_PID=$!
+          sleep 3
+          kill $SSE_CURL_PID 2>/dev/null || true
+          if [ -s /tmp/sse-events.log ]; then
+            echo "PASS: SSE stream established"
+          else
+            echo "FAIL: SSE stream empty"
+            exit 1
+          fi
+          echo "--- agora-sse.log tail ---"
+          tail -20 /tmp/agora-sse.log
+      - name: Cleanup
+        if: always()
+        run: |
+          kill $SSE_PID 2>/dev/null || true
+          pkill -f "agora-mcp --sse" 2>/dev/null || true
