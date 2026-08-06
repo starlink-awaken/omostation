@@ -65,13 +65,7 @@ jobs:
           # 1) /health 200 + status 可解析
           HEALTH=$(curl -sf --max-time 5 http://localhost:7431/health)
           echo "health: $HEALTH"
-          echo "$HEALTH" | python3 -c "
-            import json, sys
-            d = json.load(sys.stdin)
-            assert d.get('status') in ('healthy', 'degraded'), f'status: {d}'
-            assert 'format_version' in d, f'format_version missing: {d}'
-            print('PASS: /health OK, format_version =', d['format_version'])
-          "
+          echo "$HEALTH" | python3 -c 'import json, sys; d=json.load(sys.stdin); assert d.get("status") in ("healthy","degraded"), f"status: {d}"; assert "format_version" in d, f"format_version missing: {d}"; print("PASS: /health OK, format_version =", d["format_version"])'
           # 2) SSE transport 可达 (MCP initialize 握手)
           curl -sf --max-time 5 -N http://localhost:7431/sse \
             -H 'Accept: text/event-stream' > /tmp/sse-events.log 2>&1 &
