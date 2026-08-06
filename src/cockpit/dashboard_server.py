@@ -25,7 +25,7 @@ try:
     from cockpit.web.memory_env import apply_memory_os_env
 
     apply_memory_os_env()
-except Exception as _mos_env_exc:  # noqa: BLE001
+except Exception as _mos_env_exc:
     print(f"Warning: memory_os env load skipped: {_mos_env_exc}", file=sys.stderr)
 
 from cockpit.dashboard.constants import (

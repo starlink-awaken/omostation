@@ -71,7 +71,7 @@ def cmd_channels(args: Any) -> int:
             print()
             print("  💡 SSOT: .omo/_truth/registry/external-channels.yaml")
             print("  💡 Attach: docs/operations/external-agent-attach-card.md")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             print(f"  (parse summary skipped: {exc})")
             print(f"  raw file: {out}")
     return 0

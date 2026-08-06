@@ -654,13 +654,13 @@ def main() -> int:
     bos_sub.add_parser("reload", help="重载 BOS 配置/M1")
     bos_sub.add_parser("register", help="注册 BOS 服务")
     bos_sub.add_parser("workflow", help="BOS workflow 相关")
-    bos_mutate_p = bos_sub.add_parser(
-        "mutate", help="通过 agora 统一 BOS URI 写协议修改资源"
-    )
+    bos_mutate_p = bos_sub.add_parser("mutate", help="通过 agora 统一 BOS URI 写协议修改资源")
     bos_mutate_p.add_argument("uri", help="BOS URI, e.g. bos://memory/inbox/archive")
     bos_mutate_p.add_argument("--payload", default="{}", help="JSON 格式 payload")
     bos_mutate_p.add_argument(
-        "--action", default="update", choices=["update", "create", "delete"],
+        "--action",
+        default="update",
+        choices=["update", "create", "delete"],
         help="写操作 (默认 update)",
     )
 
@@ -681,16 +681,10 @@ def main() -> int:
         help="🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突)",
     )
     swarm_mode = swarm_p.add_mutually_exclusive_group()
-    swarm_mode.add_argument(
-        "--tui", action="store_true", help="Rich TUI 实时刷新模式 (默认单次)"
-    )
+    swarm_mode.add_argument("--tui", action="store_true", help="Rich TUI 实时刷新模式 (默认单次)")
     swarm_mode.add_argument("--json", action="store_true", help="JSON 输出")
-    swarm_mode.add_argument(
-        "--watch", type=int, default=0, metavar="SEC", help="每隔 N 秒文本刷新"
-    )
-    swarm_p.add_argument(
-        "--refresh", type=int, default=5, help="TUI 刷新间隔秒 (默认 5)"
-    )
+    swarm_mode.add_argument("--watch", type=int, default=0, metavar="SEC", help="每隔 N 秒文本刷新")
+    swarm_p.add_argument("--refresh", type=int, default=5, help="TUI 刷新间隔秒 (默认 5)")
 
     # BOS Inbox / Neural Mesh
     bos_inbox_p = bos_sub.add_parser("inbox", help="BOS Inbox 多源私有知识神经网查询与操作")
@@ -1203,6 +1197,7 @@ def main() -> int:
         # 其他子命令 (list/summary/predict 等) 委派给 omo debt
         # 子命令名作为 omo debt 首参 (cockpit debt list → omo debt list)
         from cockpit.commands.omo import cmd_omo_debt
+
         a.omo_debt_args = [sub] + list(getattr(a, "omo_debt_args", []))
 
         return cmd_omo_debt(a)
@@ -1423,12 +1418,8 @@ def main() -> int:
         "memory": lambda a: __import__("cockpit.commands.memory", fromlist=["cmd_memory"]).cmd_memory(a),
         "kems": lambda a: __import__("cockpit.commands.kems", fromlist=["cmd_kems"]).cmd_kems(a),
         "c2g": lambda a: __import__("cockpit.commands.c2g", fromlist=["cmd_c2g"]).cmd_c2g(a),
-        "channels": lambda a: __import__(
-            "cockpit.commands.channels", fromlist=["cmd_channels"]
-        ).cmd_channels(a),
-        "swarm": lambda a: __import__(
-            "cockpit.commands.swarm", fromlist=["cmd_swarm"]
-        ).cmd_swarm(a),
+        "channels": lambda a: __import__("cockpit.commands.channels", fromlist=["cmd_channels"]).cmd_channels(a),
+        "swarm": lambda a: __import__("cockpit.commands.swarm", fromlist=["cmd_swarm"]).cmd_swarm(a),
         "tui": lambda a: __import__("cockpit.tui", fromlist=["launch"]).launch(a),
         "bos-capability": lambda a: __import__(
             "cockpit.commands.bos", fromlist=["cmd_bos_capability"]

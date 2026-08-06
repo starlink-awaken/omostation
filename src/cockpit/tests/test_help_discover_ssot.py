@@ -21,9 +21,7 @@ def test_catalog_commands_are_registered_in_cli():
     catalog = set(all_command_names())
     registered = top_level_cli_names_from_source()
     missing = sorted(catalog - registered)
-    assert not missing, (
-        f"help_map catalog lists commands not registered as sub.add_parser in cli.py: {missing}"
-    )
+    assert not missing, f"help_map catalog lists commands not registered as sub.add_parser in cli.py: {missing}"
     # Sanity: memory must be in both
     assert "memory" in catalog
     assert "memory" in registered
@@ -49,7 +47,7 @@ def test_discover_renders_shared_catalog_and_memory():
     assert "swarm" in text or "agent-onboard" in text or "knowledge" in text
     # Explicitly reject the outdated "39 个, 分 6 组" string if someone reverts discover
     out = StringIO()
-    c2 = Console(file=out, force_terminal=True, width=120)
+    _c2 = Console(file=out, force_terminal=True, width=120)
     # Full discover command path
     # Patch Console used inside _cmd_discover
     import cockpit.commands.discover as disc

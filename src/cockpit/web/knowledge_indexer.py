@@ -68,11 +68,11 @@ async def knowledge_indexer_callback(request: Request):
         payload = event.get("data", {})
 
         # Dual-accept memory (canonical) + brain (legacy) card_updated URIs
-        _CARD_UPDATED = {
+        card_updated = {
             "bos://memory/events/card_updated",
             "bos://brain/events/card_updated",
         }
-        if event_type not in _CARD_UPDATED:
+        if event_type not in card_updated:
             # 其他事件类型静默忽略（容错：订阅 pattern 可能宽泛）
             return JSONResponse({"status": "ok", "action": "ignored", "event_type": event_type})
 

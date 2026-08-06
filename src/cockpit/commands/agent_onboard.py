@@ -88,7 +88,10 @@ def cmd_agent_onboard(args) -> int:
     try:
         r = subprocess.run(
             ["uv", "run", "--with", "pyyaml", "python", str(WORKSPACE / "bin" / "agent-workflow.py"), "agents"],
-            capture_output=True, text=True, cwd=str(WORKSPACE), timeout=30,
+            capture_output=True,
+            text=True,
+            cwd=str(WORKSPACE),
+            timeout=30,
         )
         agents_ok = r.returncode == 0
         results["agents_listed"] = agents_ok
@@ -109,7 +112,10 @@ def cmd_agent_onboard(args) -> int:
     try:
         r = subprocess.run(
             ["uv", "run", "--with", "pyyaml", "python", str(WORKSPACE / "bin" / "agent-workflow.py"), "lint"],
-            capture_output=True, text=True, cwd=str(WORKSPACE), timeout=30,
+            capture_output=True,
+            text=True,
+            cwd=str(WORKSPACE),
+            timeout=30,
         )
         lint_ok = r.returncode == 0
         results["workflow_lint"] = lint_ok
@@ -122,7 +128,10 @@ def cmd_agent_onboard(args) -> int:
     try:
         r = subprocess.run(
             ["uv", "run", "--with", "pyyaml", "python", str(WORKSPACE / "bin" / "agent-workflow.py"), "list"],
-            capture_output=True, text=True, cwd=str(WORKSPACE), timeout=30,
+            capture_output=True,
+            text=True,
+            cwd=str(WORKSPACE),
+            timeout=30,
         )
         list_ok = r.returncode == 0 and "agent-onboarding" in r.stdout
         results["onboarding_workflow"] = list_ok

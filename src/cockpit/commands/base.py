@@ -352,8 +352,38 @@ def _strip_thinking(text: str) -> str:
 
 
 # 默认 Ollama 模型名，可通过环境变量 WKS_OLLAMA_MODEL 覆盖
-OLLAMA_MODEL = os.environ.get("WKS_OLLAMA_MODEL", "qwen3.5:4b")
-_OLLAMA_BASE = os.environ.get("OLLAMA_ENDPOINT", "http://localhost:11434/api/generate")
+_OLLAMA_BASE = os.environ.get("OLLAMA_ENDPOINT", "")
+_OLLAMA_TAGS_URL = os.environ.get("OLLAMA_TAGS_ENDPOINT", "")
+
+
+def _ollama_endpoints() -> tuple[str, str]:
+    from cockpit.llm_router import OLLAMA_API
+
+    base = _OLLAMA_BASE or f"{OLLAMA_API}/api/generate"
+    tags = _OLLAMA_TAGS_URL or f"{OLLAMA_API}/api/tags"
+    return base, tags
+
+
+def _discover_ollama_model(fallback: str = "gemma4:31b-mlx") -> str:
+    try:
+        import json as _json
+        from urllib import request as urlrequest
+
+        _base, _tags = _ollama_endpoints()
+        req = urlrequest.Request(_tags)  # noqa: S310
+        with urlrequest.urlopen(req, timeout=3) as resp:  # noqa: S310
+            data = _json.loads(resp.read())
+        models = data.get("models") or []
+        for m in models:
+            name = (m.get("name") or "").strip()
+            if name:
+                return name
+    except Exception:
+        pass
+    return fallback
+
+
+OLLAMA_MODEL = os.environ.get("WKS_OLLAMA_MODEL") or _discover_ollama_model()
 
 
 def _ollama_request(prompt: str, *, stream: bool, timeout: int) -> bytes:
@@ -367,7 +397,8 @@ def _ollama_request(prompt: str, *, stream: bool, timeout: int) -> bytes:
             "options": {"num_predict": 500, "temperature": 0.3},
         }
     ).encode()
-    req = urlrequest.Request(_OLLAMA_BASE, data=body, headers={"Content-Type": "application/json"})  # noqa: S310
+    _base, _tags = _ollama_endpoints()
+    req = urlrequest.Request(_base, data=body, headers={"Content-Type": "application/json"})  # noqa: S310
     with urlrequest.urlopen(req, timeout=timeout) as resp:  # noqa: S310
         return resp.read()
 

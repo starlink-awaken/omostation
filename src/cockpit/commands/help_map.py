@@ -160,7 +160,7 @@ GROUPS: list[tuple[str, str, list[CmdRow]]] = [
 SCENARIOS: list[tuple[str, str]] = [
     ("新用户", "cockpit quickstart → cockpit demo → cockpit help"),
     ("日常研究", 'cockpit research "主题" → cockpit daily'),
-    ("统一记忆", "source bin/memory-os-env.sh → cockpit memory status → cockpit memory recall \"…\""),
+    ("统一记忆", 'source bin/memory-os-env.sh → cockpit memory status → cockpit memory recall "…"'),
     ("知识检索", 'cockpit knowledge search "q" · cockpit vault "q" · cockpit search "q" --all'),
     ("治理巡检", "cockpit gac · cockpit omo state sync · cockpit audit"),
     ("Agent 协作", "cockpit agent-onboard · cockpit swarm · cockpit agent status"),
@@ -255,7 +255,7 @@ def render_compact_help(console: Console) -> None:
             "[bold]先看地图[/]  [cyan]cockpit help[/]\n"
             "[bold]搜能力[/]    [cyan]cockpit help memory[/] · [cyan]cockpit help bos[/]\n"
             "[bold]记忆[/]      [cyan]cockpit memory[/] · [cyan]cockpit memory status --json[/]\n"
-            "[bold]研究[/]      [cyan]cockpit research \"主题\"[/] · [cyan]cockpit demo[/]\n"
+            '[bold]研究[/]      [cyan]cockpit research "主题"[/] · [cyan]cockpit demo[/]\n'
             "[bold]治理[/]      [cyan]cockpit gac[/] · [cyan]cockpit agent status[/]\n"
             "[bold]BOS[/]       [cyan]cockpit bos resolve bos://memory/mos/status[/]\n"
             "[bold]上手[/]      [cyan]cockpit quickstart[/]\n\n"
@@ -274,9 +274,7 @@ def render_compact_help(console: Console) -> None:
             names += f" · …(+{len(rows) - 6})"
         t.add_row(title, names)
     console.print(t)
-    console.print(
-        "\n[dim]用法: cockpit [-h] [--output text|json|tui|markdown] <command> …[/]\n"
-    )
+    console.print("\n[dim]用法: cockpit [-h] [--output text|json|tui|markdown] <command> …[/]\n")
 
 
 def all_command_names() -> list[str]:

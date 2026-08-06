@@ -115,10 +115,7 @@ def cmd_bos_list(args):
                 for uri, st in services:
                     mark = "" if st == "active" else f"  [{st}]"
                     print(f"    {uri}{mark}")
-            print(
-                "\n  💡 默认路由表不含 unimplemented/deprecated。"
-                " 去掉 --all 仅看 routable。"
-            )
+            print("\n  💡 默认路由表不含 unimplemented/deprecated。 去掉 --all 仅看 routable。")
             return 0
 
         from cockpit.adapters.agora import POC_SERVICES
@@ -678,12 +675,10 @@ def cmd_bos_mutate(args):
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
             data = json.loads(resp.read())
     except Exception as exc:
-        print(
-            f"❌ 无法连接 agora MCP :7422 (需 agora-mcp --http 运行): {exc}"
-        )
+        print(f"❌ 无法连接 agora MCP :7422 (需 agora-mcp --http 运行): {exc}")
         print("  启动: uv run --directory projects/agora agora-mcp --http")
         return 1
 

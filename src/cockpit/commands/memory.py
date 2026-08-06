@@ -22,7 +22,9 @@ from cockpit.web.memory_env import apply_memory_os_env, mos_subprocess_env, mos_
 from .base import _get_console, _get_err, _panel
 
 
-def _invoke_mos(cmd: str, kwargs: dict[str, Any] | None = None, *, args_list: list[Any] | None = None) -> dict[str, Any]:
+def _invoke_mos(
+    cmd: str, kwargs: dict[str, Any] | None = None, *, args_list: list[Any] | None = None
+) -> dict[str, Any]:
     """Call mos via stdin JSON (same contract as Agora StdioAdapter / api_memory)."""
     apply_memory_os_env()
     kairon = Path(WORKSPACE_ROOT) / "projects" / "kairon"
@@ -94,7 +96,7 @@ def cmd_memory_status(args: argparse.Namespace) -> int:
 def cmd_memory_recall(args: argparse.Namespace) -> int:
     query = getattr(args, "query", None)
     if not query:
-        _get_err().print("[red]❌ 需要 query: cockpit memory recall \"…\"[/red]")
+        _get_err().print('[red]❌ 需要 query: cockpit memory recall "…"[/red]')
         return 2
     kw: dict[str, Any] = {
         "query": query,
@@ -186,7 +188,7 @@ def cmd_memory_consolidate(args: argparse.Namespace) -> int:
 def cmd_memory_knowledge_ref(args: argparse.Namespace) -> int:
     query = getattr(args, "query", None)
     if not query:
-        _get_err().print("[red]❌ 需要 query: cockpit memory knowledge-ref \"…\"[/red]")
+        _get_err().print('[red]❌ 需要 query: cockpit memory knowledge-ref "…"[/red]')
         return 2
     kw: dict[str, Any] = {
         "query": query,
@@ -237,10 +239,7 @@ def cmd_memory(args: argparse.Namespace) -> int:
         console.print(f"[yellow]status degraded:[/] {st.get('error') or st}")
     console.print("\n[bold]子命令 / BOS URI:[/]")
     console.print("  [cyan]cockpit memory status [--json][/]                         bos://memory/mos/status")
-    console.print(
-        '  [cyan]cockpit memory recall "query" [--intent …] [--as-of ISO][/]  '
-        "bos://memory/mos/recall"
-    )
+    console.print('  [cyan]cockpit memory recall "query" [--intent …] [--as-of ISO][/]  bos://memory/mos/recall')
     console.print("  [cyan]cockpit memory write --type semantic --content …[/]       bos://memory/mos/write")
     console.print("  [cyan]cockpit memory forget <id>[/]                             bos://memory/mos/forget")
     console.print("  [cyan]cockpit memory consolidate [--live][/]                    bos://memory/mos/consolidate")

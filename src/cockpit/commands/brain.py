@@ -197,52 +197,11 @@ def kos_context_sync(query: str) -> dict:
 
 
 def llm_complete(prompt: str, model: str = "deepseek-v4-flash") -> str:
-    """调用 LLM Gateway 生成回答。失败时返回空字符串。
+    """调用统一推理接入层 (llm-router) 生成回答。失败时返回空字符串。"""
+    from cockpit.llm_router import complete as llm_router_complete
 
-    优先走 aetherforge LLM Gateway (HTTP)，否则尝试本地 ollama。
-    """
-    # 尝试 aetherforge gateway
-    gateway_url = os.environ.get("LLM_GATEWAY_URL", "http://localhost:3000")
-    try:
-        import httpx
-
-        resp = httpx.post(
-            f"{gateway_url}/api/v1/chat/completions",
-            json={
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.7,
-                "max_tokens": 2048,
-            },
-            timeout=60.0,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        return data["choices"][0]["message"]["content"]
-    except Exception:
-        pass
-
-    # 尝试 ollama 本地
-    try:
-        import httpx
-
-        resp = httpx.post(
-            "http://localhost:11434/api/chat",
-            json={
-                "model": "qwen2.5:latest",
-                "messages": [{"role": "user", "content": prompt}],
-                "stream": False,
-            },
-            timeout=120.0,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        return data.get("message", {}).get("content", "")
-    except Exception:
-        return ""
-
-
-# ── Formatting ────────────────────────────────────────────────────
+    content, _source = llm_router_complete(prompt, model=model, temperature=0.7, max_tokens=2048)
+    return content or ""
 
 
 def _format_sources(results: list[dict]) -> str:

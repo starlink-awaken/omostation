@@ -747,4 +747,3 @@ doStatus();
 setInterval(doStatus, 20000);
 </script>
 </body></html>"""
-

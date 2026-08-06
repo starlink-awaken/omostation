@@ -586,13 +586,7 @@ async def get_external_resource_refresh_plan() -> dict[str, Any]:
             **boundary,
         }
     summary = projection.get("summary") or {}
-    status = (
-        "empty"
-        if not summary.get("resource_count")
-        else "attention"
-        if summary.get("due_count")
-        else "ready"
-    )
+    status = "empty" if not summary.get("resource_count") else "attention" if summary.get("due_count") else "ready"
     return {
         "ok": True,
         "status": status,

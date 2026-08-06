@@ -33,7 +33,7 @@ def _memory_os_workbench_line() -> str:
         from cockpit.commands.memory import _invoke_mos
 
         st = _invoke_mos("status", {})
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return f"\n[bold]Memory OS:[/bold] [red]probe failed[/] [dim]({exc})[/]"
     if not isinstance(st, dict):
         return "\n[bold]Memory OS:[/bold] [yellow]unexpected response[/]"
@@ -601,13 +601,9 @@ def _help_search(c, keyword: str) -> int:
         for srv in reg.get("mcp_servers", []):
             for tool in srv.get("tools", []):
                 if kw in str(tool).lower():
-                    hits.append(
-                        ("MCP", f"{srv['id']}.{tool}", f"L{srv.get('layer', '?')} · {srv.get('name', '')}")
-                    )
+                    hits.append(("MCP", f"{srv['id']}.{tool}", f"L{srv.get('layer', '?')} · {srv.get('name', '')}"))
             if kw in srv.get("id", "").lower() or kw in srv.get("name", "").lower():
-                hits.append(
-                    ("MCP-server", srv["id"], f"{srv.get('tool_count', 0)} tools · {srv.get('name', '')}")
-                )
+                hits.append(("MCP-server", srv["id"], f"{srv.get('tool_count', 0)} tools · {srv.get('name', '')}"))
         for domain, svcs in reg.get("bos_services", {}).get("domains", {}).items():
             if domain == "_domain_counts":
                 continue

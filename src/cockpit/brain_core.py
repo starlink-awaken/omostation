@@ -205,41 +205,13 @@ def kos_context(query: str) -> dict:
 
 def llm_complete(prompt: str, model: str = "deepseek-v4-flash") -> str:
     """调用 LLM Gateway. 失败返回空字符串."""
-    gateway_url = os.environ.get("LLM_GATEWAY_URL", "http://localhost:3000")
-    try:
-        import httpx
+    # 统一接入层: omlxc 网关 (智能路由) → ollama 本地 (模型存在性校验)
+    from cockpit.llm_router import complete as llm_router_complete
 
-        resp = httpx.post(
-            f"{gateway_url}/api/v1/chat/completions",
-            json={
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.7,
-                "max_tokens": 2048,
-            },
-            timeout=60.0,
-        )
-        resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]["content"]
-    except Exception:
-        pass
-    # 降级: ollama 本地
-    try:
-        import httpx
-
-        resp = httpx.post(
-            "http://localhost:11434/api/chat",
-            json={
-                "model": "qwen2.5:latest",
-                "messages": [{"role": "user", "content": prompt}],
-                "stream": False,
-            },
-            timeout=120.0,
-        )
-        resp.raise_for_status()
-        return resp.json().get("message", {}).get("content", "")
-    except Exception:
-        return ""
+    content, source = llm_router_complete(prompt, model=model, temperature=0.7, max_tokens=2048)
+    if content:
+        return content
+    return ""
 
 
 # ── Prompt 构建 (单一源头) ────────────────────────────────────────

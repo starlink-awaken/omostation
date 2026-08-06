@@ -6,8 +6,8 @@ Does not overwrite non-empty existing environment variables.
 from __future__ import annotations
 
 import os
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from cockpit.compat import WORKSPACE_ROOT
 

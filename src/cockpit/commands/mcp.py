@@ -134,9 +134,7 @@ def _list_agora_tools() -> int:
         try:
             import urllib.request
 
-            with urllib.request.urlopen(
-                "http://127.0.0.1:7431/health", timeout=3
-            ) as resp:
+            with urllib.request.urlopen("http://127.0.0.1:7431/health", timeout=3) as resp:
                 import json
 
                 data = json.loads(resp.read())
@@ -176,7 +174,5 @@ def _list_agora_tools() -> int:
         )
     console.print(table)
     if len(POC_SERVICES) > 50:
-        console.print(
-            f"[dim]… 还有 {len(POC_SERVICES) - 50} 个服务 (cockpit bos list 可看全部)[/dim]"
-        )
+        console.print(f"[dim]… 还有 {len(POC_SERVICES) - 50} 个服务 (cockpit bos list 可看全部)[/dim]")
     return 0
