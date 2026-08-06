@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q1-T2-02
 title: iris apple_mail 真实轮询打通
 status: candidate
@@ -41,7 +41,7 @@ evidence_required:
 - 断连时 health 变 unreachable 且 BRIEF 可见
 test_plan:
 - grep -c 'last_signal_at' .omo/_truth/registry/signal-sources.yaml
-workflow: external-adapter-sync
+workflow: bet-execution
 write_surfaces:
 - .omo/_truth/registry/signal-sources.yaml
 pasw_required: false

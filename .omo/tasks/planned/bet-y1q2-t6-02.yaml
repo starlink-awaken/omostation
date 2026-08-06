@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q2-T6-02
 title: ADR 有效集分层 344 → ≤200
 status: candidate
@@ -38,7 +38,7 @@ evidence_required:
 - adr-coverage.py 支持分层统计
 test_plan:
 - python3 bin/adr/adr-coverage.py --json
-workflow: governance-state-mutation
+workflow: bet-execution
 write_surfaces:
 - .omo/_knowledge/decisions/**
 - bin/adr/**

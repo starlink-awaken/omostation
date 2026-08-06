@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q1-T7-01
 title: scene-card 五档生命周期 schema
 status: candidate
@@ -39,7 +39,7 @@ evidence_required:
 - validator 检查五档合法性与 falsifier 存在
 test_plan:
 - python3 bin/ssot/scene-card-review.py --help
-workflow: project-doc-change
+workflow: bet-execution
 write_surfaces:
 - docs/scene-cards/**
 - bin/ssot/scene-card-review.py

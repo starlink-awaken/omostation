@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y2Q2-T8-01
 title: /inbox 每日习惯化改造
 status: candidate
@@ -40,7 +40,7 @@ evidence_required:
 - 零条目时显示有意义内容
 test_plan:
 - cd projects/cockpit-ui && npm run build
-workflow: project-code-change
+workflow: bet-execution
 write_surfaces:
 - projects/cockpit-ui/**
 pasw_required: true

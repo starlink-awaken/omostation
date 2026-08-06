@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y2Q2-T7-02
 title: 中试平台 / 政策申报场景 draft → shadow
 status: candidate
@@ -40,7 +40,7 @@ evidence_required:
 - DAG 不是 6 步线性克隆
 test_plan:
 - ls docs/scene-cards/v2/ | wc -l
-workflow: project-doc-change
+workflow: bet-execution
 write_surfaces:
 - docs/scene-cards/**
 - .agents/skills/**

@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q1-T1-03
 title: goals/current.yaml 复活
 status: candidate
@@ -39,7 +39,7 @@ evidence_required:
 test_plan:
 - python3 -c "import yaml;d=yaml.safe_load(open('.omo/goals/current.yaml'));print(sum(1
   for g in d['goals'] if g.get('status')!='done'))"
-workflow: governance-state-mutation
+workflow: bet-execution
 write_surfaces:
 - .omo/goals/current.yaml
 pasw_required: false

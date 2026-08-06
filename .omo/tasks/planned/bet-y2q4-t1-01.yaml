@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y2Q4-T1-01
 title: Y2 年度门 + 愿景证伪检查
 status: candidate
@@ -39,7 +39,7 @@ evidence_required:
 - 若修订率未降 >= 20% 则宣告愿景证伪并给出转向方案
 test_plan:
 - python3 bin/plan/bet-ledger.py gate Y2Q4
-workflow: governance-audit
+workflow: bet-execution
 write_surfaces:
 - .omo/_knowledge/retros/gates/**
 pasw_required: false

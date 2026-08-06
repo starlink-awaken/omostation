@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q1-T2-01
 title: signal-sources 注册表与感知面契约
 status: candidate
@@ -40,7 +40,7 @@ evidence_required:
 test_plan:
 - python3 bin/ssot/yaml-validate.py .omo/_truth/registry/signal-sources.yaml
 - grep -c 'bos://perception' projects/agora/etc/bos-services.yaml
-workflow: external-adapter-sync
+workflow: bet-execution
 write_surfaces:
 - .omo/_truth/registry/signal-sources.yaml
 - .omo/standards/**

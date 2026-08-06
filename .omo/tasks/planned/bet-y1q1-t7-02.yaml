@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q1-T7-02
 title: v10 失落产物重建并入库
 status: candidate
@@ -44,7 +44,7 @@ evidence_required:
 - 全部通过 D0 检查
 test_plan:
 - git ls-files --error-unmatch bin/ssot/journey-runner.py
-workflow: project-code-change
+workflow: bet-execution
 write_surfaces:
 - bin/ssot/journey-runner.py
 - bin/ssot/scene-card-lifecycle.py

@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q4-T6-01
 title: aetherforge 并入 runtime
 status: candidate
@@ -39,7 +39,7 @@ evidence_required:
 - 合并后行数 < 原和 70%
 test_plan:
 - git submodule status | grep -c aetherforge
-workflow: project-code-change
+workflow: bet-execution
 write_surfaces:
 - .gitmodules
 - docs/project-registry.yaml

@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q1-T1-02
 title: 子模块指针对齐 + 漂移 CI 门禁
 status: candidate
@@ -44,7 +44,7 @@ test_plan:
 - git status --short | grep -E '^ ?[Mm] projects/' | wc -l
 - python3 bin/submodule-gitlink-check.py
 - git commit --allow-empty -m probe && git reset --soft HEAD~1
-workflow: submodule-pointer-close
+workflow: bet-execution
 write_surfaces:
 - .gitmodules
 - .github/workflows/**

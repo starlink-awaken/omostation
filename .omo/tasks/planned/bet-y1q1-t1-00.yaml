@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q1-T1-00
 title: 并发写冲突止血 — 共享主树禁写 + PASW 全覆盖
 status: candidate
@@ -49,7 +49,7 @@ test_plan:
 - uv run --with pyyaml python bin/agent-workflow.py status --locks
 - ls .omo/_delivery/agent-workflows/locks/run_*.update.lock 2>/dev/null | wc -l
 - SWARM_ESCAPE_ID=bogus git commit --no-verify --allow-empty -m probe
-workflow: governance-state-mutation
+workflow: bet-execution
 write_surfaces:
 - AGENTS.md
 - bin/gac/**

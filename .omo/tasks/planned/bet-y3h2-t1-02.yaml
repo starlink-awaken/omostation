@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y3H2-T1-02
 title: 三年终局门
 status: candidate
@@ -41,7 +41,7 @@ evidence_required:
 - 若部分失败则给出收窄方案
 test_plan:
 - python3 bin/plan/bet-ledger.py gate Y3H2
-workflow: governance-audit
+workflow: bet-execution
 write_surfaces:
 - .omo/_knowledge/retros/gates/**
 pasw_required: false

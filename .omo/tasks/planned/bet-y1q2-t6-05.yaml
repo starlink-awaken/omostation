@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q2-T6-05
 title: 减法配额制门禁上线
 status: candidate
@@ -42,7 +42,7 @@ evidence_required:
 test_plan:
 - grep -c 'subtraction-quota' .omo/_truth/registry/governance-checks.yaml
 - python3 bin/gac/gac-validate.py --gate
-workflow: governance-state-mutation
+workflow: bet-execution
 write_surfaces:
 - .omo/_truth/registry/governance-checks.yaml
 - bin/gac/**
