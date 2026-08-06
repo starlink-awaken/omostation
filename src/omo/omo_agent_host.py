@@ -96,8 +96,9 @@ class AgentHost:
 class HealthMonitorAgent:
     """HealthMonitor (α.3 续: 读 system_health.yaml 快照 + 异常服务告警).
 
-    tick: 扫 system_health 服务快照, 检测非 healthy 服务, 写 omo-alerts.jsonl.
-    守 fabric 红线: 只读状态快照, 不伪造健康, 不直连凭据/webhook.
+    tick: 扫 system_health 服务快照, 检测非 healthy 服务, 返回 alert action.
+    守 fabric 红线: 只读状态快照, 不伪造健康, 不直连凭据/webhook, 不落盘
+    (持久化归上层 omo_daemon agent_host_result, 不污染 KEI omo-alerts.jsonl).
     守 F14: 单 tick 失败不炸 host (AgentHost try/except 兜底).
     """
 
@@ -105,7 +106,6 @@ class HealthMonitorAgent:
 
     _WORKSPACE = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
     _HEALTH_YAML = _WORKSPACE / ".omo" / "state" / "system_health.yaml"
-    _ALERT_LOG = _WORKSPACE / ".omo" / "_knowledge" / "omo-alerts.jsonl"
 
     def tick(self) -> dict[str, Any]:
         services = self._load_services()
@@ -122,7 +122,6 @@ class HealthMonitorAgent:
                 "details": {"healthy_count": len(services), "total": len(services)},
             }
 
-        self._record_alerts(unhealthy)
         return {
             "action": "alert",
             "details": {
@@ -164,32 +163,6 @@ class HealthMonitorAgent:
                     }
                 )
         return unhealthy
-
-    @classmethod
-    def _record_alerts(cls, unhealthy: list[dict[str, str]]) -> None:
-        """写 omo-alerts.jsonl (复用 omo_alert 同款 AppendOnlyLog, 落盘审计)."""
-        try:
-            from omo.omo_io import AppendOnlyLog
-
-            now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-            log = AppendOnlyLog(cls._ALERT_LOG)
-            for svc in unhealthy:
-                log.append(
-                    {
-                        "ts": now,
-                        "kind": "service_unhealthy",
-                        "severity": "high",
-                        "source": "health-monitor-agent",
-                        "message": f"服务 {svc['name']} 健康异常: {svc['health_check']}",
-                        "service": svc["name"],
-                        "health_check": svc["health_check"],
-                        "runtime_status": svc["status"],
-                    },
-                    sort_keys=True,
-                )
-        except Exception:
-            # 落盘失败不影响 tick 决策 (F14 错误隔离, AgentHost 兜底)
-            pass
 
 
 class KnowledgeCuratorAgent:

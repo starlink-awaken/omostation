@@ -2,7 +2,7 @@
 
 test_plan:
   - HealthMonitorAgent 全 healthy → noop
-  - 有 unhealthy → alert + 落 ALERT_LOG
+  - 有 unhealthy → alert (返回 details, 不落盘, 持久化归上层 omo_daemon)
   - 边界: "healthy (probe)" 不报 (startswith)
   - 边界: scheduled 不报
   - 边界: 空 health_check (未探活) 跳过
@@ -44,14 +44,13 @@ def test_all_healthy_returns_noop(tmp_path: Path, monkeypatch) -> None:
             },
         ),
     )
-    monkeypatch.setattr(HealthMonitorAgent, "_ALERT_LOG", tmp_path / "alerts.jsonl")
     r = HealthMonitorAgent().tick()
     assert r["action"] == "noop"
     assert r["details"]["healthy_count"] == 2
 
 
-def test_unhealthy_returns_alert_and_logs(tmp_path: Path, monkeypatch) -> None:
-    """有 unhealthy → action=alert + 落 ALERT_LOG 一行."""
+def test_unhealthy_returns_alert(tmp_path: Path, monkeypatch) -> None:
+    """有 unhealthy → action=alert + details 含异常服务清单 (不落盘)."""
     monkeypatch.setattr(
         HealthMonitorAgent,
         "_HEALTH_YAML",
@@ -63,19 +62,14 @@ def test_unhealthy_returns_alert_and_logs(tmp_path: Path, monkeypatch) -> None:
             },
         ),
     )
-    alert_log = tmp_path / "alerts.jsonl"
-    monkeypatch.setattr(HealthMonitorAgent, "_ALERT_LOG", alert_log)
     r = HealthMonitorAgent().tick()
     assert r["action"] == "alert"
     assert r["details"]["unhealthy_count"] == 1
-    assert r["details"]["services"][0]["name"] == "bad"
-    # ALERT_LOG 落盘 + 结构正确
-    assert alert_log.exists()
-    last_line = alert_log.read_text(encoding="utf-8").strip().splitlines()[-1]
-    entry = json.loads(last_line)
-    assert entry["kind"] == "service_unhealthy"
-    assert entry["service"] == "bad"
-    assert entry["severity"] == "high"
+    assert r["details"]["total"] == 2
+    svc = r["details"]["services"][0]
+    assert svc["name"] == "bad"
+    assert svc["health_check"] == "down"
+    assert svc["status"] == "stopped"
 
 
 def test_scheduled_not_flagged(tmp_path: Path, monkeypatch) -> None:
@@ -85,7 +79,6 @@ def test_scheduled_not_flagged(tmp_path: Path, monkeypatch) -> None:
         "_HEALTH_YAML",
         _write_health(tmp_path, {"cron": {"health_check": "scheduled"}}),
     )
-    monkeypatch.setattr(HealthMonitorAgent, "_ALERT_LOG", tmp_path / "alerts.jsonl")
     assert HealthMonitorAgent().tick()["action"] == "noop"
 
 
@@ -96,7 +89,6 @@ def test_empty_health_check_skipped(tmp_path: Path, monkeypatch) -> None:
         "_HEALTH_YAML",
         _write_health(tmp_path, {"gbrain": {"runtime": {"status": "unmanaged"}}}),
     )
-    monkeypatch.setattr(HealthMonitorAgent, "_ALERT_LOG", tmp_path / "alerts.jsonl")
     assert HealthMonitorAgent().tick()["action"] == "noop"
 
 
@@ -109,7 +101,6 @@ def test_non_dict_service_skipped(tmp_path: Path, monkeypatch) -> None:
             tmp_path, {"weird": "not-a-dict", "good": {"health_check": "healthy"}}
         ),
     )
-    monkeypatch.setattr(HealthMonitorAgent, "_ALERT_LOG", tmp_path / "alerts.jsonl")
     assert HealthMonitorAgent().tick()["action"] == "noop"
 
 
