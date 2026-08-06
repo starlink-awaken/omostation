@@ -1,0 +1,58 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q1-T7-03
+title: 公文场景砍到 3 node 并进 shadow
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T7-03
+window: Y1Q1
+track: T7-SCENE
+appetite: 1 week
+desc: 主战场第一版 — fetch → format_check → inbox, 最快拿到 calibration 数据
+non_goals:
+- 生成草案
+- 敏感判断
+- 任何分发动作
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T7-01
+- BET-Y1Q1-T2-02
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T7-01'
+- '依赖已 done: BET-Y1Q1-T2-02'
+evidence_required:
+- document-review 场景卡缩减为 3 node
+- escalate→dispatch 危险边修正为 escalate→human_hold
+- lifecycle=shadow, 连续 4 周每周 >= 3 条真实输入
+- bet/falsifier 字段填写完成
+test_plan:
+- grep -c 'human_hold' docs/scene-cards/v2/document-review.yaml
+workflow: project-doc-change
+write_surfaces:
+- docs/scene-cards/**
+pasw_required: false
+circuit_breaker: 4 周内真实输入 < 3/周 → 场景退回 draft, 排查感知面
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T7-03.md
+agent_profile_hint: product-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

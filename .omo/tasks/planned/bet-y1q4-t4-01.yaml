@@ -1,0 +1,56 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q4-T4-01
+title: 真实评测集 v1 (≥200 条)
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q4-T4-01
+window: Y1Q4
+track: T4-OUTCOME
+appetite: 1 week
+desc: 用 adjudication 数据构建第一份非合成评测集, 替代自出题自答
+non_goals:
+- 模型训练
+- 自动标注
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q2-T4-01
+- BET-Y1Q2-T7-01
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q2-T4-01'
+- '依赖已 done: BET-Y1Q2-T7-01'
+evidence_required:
+- 评测集 >= 200 条, 全部来自真实 adjudication
+- 含正例/负例/边界例三类
+- 明确标注"非合成"来源
+test_plan:
+- ls .omo/_delivery/evalsets/ | wc -l
+workflow: project-code-change
+write_surfaces:
+- .omo/_delivery/evalsets/**
+pasw_required: false
+circuit_breaker: 样本不足 200 → 推迟到样本积累够, 不得用合成样本补齐
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q4-T4-01.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

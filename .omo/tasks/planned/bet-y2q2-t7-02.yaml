@@ -1,0 +1,55 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y2Q2-T7-02
+title: 中试平台 / 政策申报场景 draft → shadow
+status: candidate
+task_type: bet
+priority: P1
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y2Q2-T7-02
+window: Y2Q2
+track: T7-SCENE
+appetite: 3 weeks
+desc: 把两个 skill 骨架实装为真实场景, 验证抽象对长流程业务成立
+non_goals:
+- assisted 及以上
+- 真实申报动作
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y2Q2-T7-01
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y2Q2-T7-01'
+evidence_required:
+- 两张场景卡建立含 bet/falsifier
+- lifecycle=shadow
+- DAG 不是 6 步线性克隆
+test_plan:
+- ls docs/scene-cards/v2/ | wc -l
+workflow: project-doc-change
+write_surfaces:
+- docs/scene-cards/**
+- .agents/skills/**
+pasw_required: false
+circuit_breaker: DAG 又成同构克隆 → 说明抽象有问题, 先修抽象
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y2Q2-T7-02.md
+agent_profile_hint: product-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

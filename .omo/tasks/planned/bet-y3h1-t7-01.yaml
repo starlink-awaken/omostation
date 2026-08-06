@@ -1,0 +1,56 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y3H1-T7-01
+title: 中试 / 政策申报升 assisted
+status: candidate
+task_type: bet
+priority: P1
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y3H1-T7-01
+window: Y3H1
+track: T7-SCENE
+appetite: 4 weeks
+desc: 把最有业务价值但流程最长的场景推进到受审执行
+non_goals:
+- 自动提交申报材料
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y2Q2-T7-02
+- BET-Y3H1-T3-01
+risk_level: L3
+allowed_operation_level: L3
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y2Q2-T7-02'
+- '依赖已 done: BET-Y3H1-T3-01'
+evidence_required:
+- calibration >= 0.6
+- lifecycle=assisted
+- 至少一次真实申报使用了系统产出
+test_plan:
+- ls docs/scene-cards/v2/ | wc -l
+workflow: project-doc-change
+write_surfaces:
+- docs/scene-cards/**
+- .agents/skills/**
+pasw_required: false
+circuit_breaker: 未达标 → 保持 shadow
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y3H1-T7-01.md
+agent_profile_hint: product-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

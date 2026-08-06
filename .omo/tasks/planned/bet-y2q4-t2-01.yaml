@@ -1,0 +1,53 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y2Q4-T2-01
+title: 感知面第三 / 四根管子
+status: candidate
+task_type: bet
+priority: P1
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y2Q4-T2-01
+window: Y2Q4
+track: T2-PERCEPT
+appetite: 2 weeks
+desc: 每周真实信号数达到 30 条以上
+non_goals:
+- 无差别接入所有可接源
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q3-T2-01
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y1Q3-T2-01'
+evidence_required:
+- 信号源 >= 4
+- 每周去重后信号 >= 30
+- 每个源都有明确的场景绑定
+test_plan:
+- python3 -c "import yaml;d=yaml.safe_load(open('.omo/_truth/registry/signal-sources.yaml'));print(len(d['signal_sources']))"
+workflow: external-adapter-sync
+write_surfaces:
+- .omo/_truth/registry/signal-sources.yaml
+pasw_required: false
+circuit_breaker: 无场景绑定的源 → 不接
+retro_required: false
+retro_path: .omo/_knowledge/retros/BET-Y2Q4-T2-01.md
+agent_profile_hint: adapter-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

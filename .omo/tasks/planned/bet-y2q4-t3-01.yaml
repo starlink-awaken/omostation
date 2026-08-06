@@ -1,0 +1,53 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y2Q4-T3-01
+title: 多模型路由按实测成本优化 (v10 Stage γ 解冻)
+status: candidate
+task_type: bet
+priority: P1
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y2Q4-T3-01
+window: Y2Q4
+track: T3-COGNI
+appetite: 3 weeks
+desc: 在有真实成本数据后才优化路由 — 供给侧扩容的解冻点
+non_goals:
+- mesh / swarm 扩展(仍冻结)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y2Q3-T3-02
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y2Q3-T3-02'
+evidence_required:
+- 路由决策基于实测 cost_estimate 而非预设权重
+- 单条建议平均成本较 Y2Q1 下降
+- 质量不下降(calibration 不跌)
+test_plan:
+- make evidence-smoke
+workflow: project-code-change
+write_surfaces:
+- .omo/_delivery/outcomes/**
+pasw_required: false
+circuit_breaker: 质量下降 → 回退到成本次优但质量稳定的路由
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y2Q4-T3-01.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

@@ -1,0 +1,56 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q2-T7-01
+title: 工程交付 dogfood 开 shadow
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T7-01
+window: Y1Q2
+track: T7-SCENE
+appetite: 1 week
+desc: 建立高频低风险的 decision_outcome 样本源, PR 评审意见即天然 human_verdict
+non_goals:
+- 计入 X3 价值指标
+- 自动合并 PR
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T7-01
+- BET-Y1Q1-T3-02
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T7-01'
+- '依赖已 done: BET-Y1Q1-T3-02'
+evidence_required:
+- engineering-delivery 场景 lifecycle=shadow
+- 每周产出 >= 20 条 decision_outcome
+- 明确标注"本场景产出永不计入价值指标"
+test_plan:
+- 'grep -c ''lifecycle: shadow'' docs/scene-cards/v2/engineering-delivery.yaml'
+workflow: project-doc-change
+write_surfaces:
+- docs/scene-cards/**
+pasw_required: false
+circuit_breaker: 样本 < 10/周 → 扩大到 commit 级评审
+retro_required: false
+retro_path: .omo/_knowledge/retros/BET-Y1Q2-T7-01.md
+agent_profile_hint: product-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

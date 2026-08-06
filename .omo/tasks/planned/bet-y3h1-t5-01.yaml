@@ -1,0 +1,54 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y3H1-T5-01
+title: 编排模板化
+status: candidate
+task_type: bet
+priority: P1
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y3H1-T5-01
+window: Y3H1
+track: T5-ORCH
+appetite: 3 weeks
+desc: 同一模板可服务多个输入源, 降低新场景编排成本
+non_goals:
+- 可视化编排画布
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q4-T5-01
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q4-T5-01'
+evidence_required:
+- journey 模板可参数化实例化
+- 至少 3 个场景共用 >= 1 个模板
+- 模板变更影响面可查
+test_plan:
+- bash tests/integration/run-all.sh
+workflow: project-code-change
+write_surfaces:
+- bin/ssot/journey-runner.py
+- docs/scene-cards/**
+pasw_required: false
+circuit_breaker: 模板抽象泄漏 → 退回每场景独立 DAG
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y3H1-T5-01.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

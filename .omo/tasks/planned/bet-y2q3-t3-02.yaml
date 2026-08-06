@@ -1,0 +1,53 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y2Q3-T3-02
+title: 漂移监控与自动降级
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y2Q3-T3-02
+window: Y2Q3
+track: T3-COGNI
+appetite: 2 weeks
+desc: 让放权后的能力退化能被自动发现并回收权限
+non_goals:
+- 自动重训模型
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q4-T3-01
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q4-T3-01'
+evidence_required:
+- calibration 滑动窗口监控
+- 跌破阈值自动降级并产生事件
+- 降级后需人工复核方可回升
+test_plan:
+- make evidence-smoke
+workflow: project-code-change
+write_surfaces:
+- .omo/_truth/registry/**
+pasw_required: false
+circuit_breaker: 误降级率 > 10% → 放宽窗口
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y2Q3-T3-02.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

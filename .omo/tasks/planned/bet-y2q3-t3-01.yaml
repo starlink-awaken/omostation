@@ -1,0 +1,55 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y2Q3-T3-01
+title: 跨场景校准迁移
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y2Q3-T3-01
+window: Y2Q3
+track: T3-COGNI
+appetite: 3 weeks
+desc: 验证"学习"是真的 — 一个场景的经验能改善另一个场景的判断
+non_goals:
+- 跨场景共享错误状态
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y2Q2-T7-01
+- BET-Y2Q1-T3-03
+risk_level: L3
+allowed_operation_level: L3
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y2Q2-T7-01'
+- '依赖已 done: BET-Y2Q1-T3-03'
+evidence_required:
+- 公文场景校准经验迁移到知识场景
+- 迁移后知识场景 calibration 提升可测量
+- 迁移不引入错误状态串扰
+test_plan:
+- make memory-os-check
+workflow: project-code-change
+write_surfaces:
+- .omo/_delivery/outcomes/**
+pasw_required: false
+circuit_breaker: 迁移后 calibration 下降 → 回滚, 判定为跨场景负迁移, 记 ADR
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y2Q3-T3-01.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

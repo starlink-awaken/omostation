@@ -1,0 +1,57 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q4-T7-01
+title: 公文场景 format_check 升 L2
+status: candidate
+task_type: bet
+priority: P0
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q4-T7-01
+window: Y1Q4
+track: T7-SCENE
+appetite: 1 week
+desc: 三年内第一次真实放权 — 系统可自动做格式修正, 人类事后可撤销
+non_goals:
+- 生成草案放权
+- 敏感判断放权
+- 分发放权
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q4-T3-01
+- BET-Y1Q1-T7-03
+risk_level: L3
+allowed_operation_level: L3
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y1Q4-T3-01'
+- '依赖已 done: BET-Y1Q1-T7-03'
+evidence_required:
+- calibration >= 0.6 且连续 30 次无 rejected 已达成
+- 回滚路径可用且测试过
+- 场景 lifecycle=assisted
+test_plan:
+- 'grep -c ''lifecycle: assisted'' docs/scene-cards/v2/document-review.yaml'
+workflow: project-doc-change
+write_surfaces:
+- docs/scene-cards/**
+pasw_required: false
+circuit_breaker: calibration 未达 0.6 → 保持 L1, 不得强行放权
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q4-T7-01.md
+agent_profile_hint: product-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

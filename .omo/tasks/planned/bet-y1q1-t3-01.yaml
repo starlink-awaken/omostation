@@ -1,0 +1,53 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q1-T3-01
+title: MOS agent_belief 三表 schema 与写入路径
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T3-01
+window: Y1Q1
+track: T3-COGNI
+appetite: 1 week
+desc: 给心智模型四件套建立持久化落点(世界/自我/因果三表)
+non_goals:
+- Agent 读取并据此决策(属 Y2Q1)
+- Neo4j 生产启用(属 Y1Q3)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on: []
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate: []
+evidence_required:
+- mos 包新增 agent_belief 命名空间, 含 world_snapshot / capability_calibration / decision_outcome
+  三表
+- 三表可经 bos://memory/mos/write 写入、bos://memory/mos/recall 读出
+- 进程重启后数据仍在
+test_plan:
+- make memory-os-check
+workflow: project-code-change
+write_surfaces:
+- .omo/_truth/registry/memory-os.yaml
+pasw_required: false
+circuit_breaker: 超 2 周 → 只落 decision_outcome 单表(枢纽表), 其余两表推迟
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T3-01.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0
