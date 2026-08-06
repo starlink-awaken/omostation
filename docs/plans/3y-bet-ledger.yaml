@@ -103,7 +103,7 @@ tracks:
     primary_write_surfaces: ["docs/scene-cards/**", "bin/ssot/scene-card-*.py"]
     pasw_required: false
     default_workflow: project-doc-change
-    agent_profile_hint: product-agent
+    agent_profile_hint: docs-agent
   T8-SURFACE:
     title: 人机界面
     scope: /inbox /outcomes /signals /journeys 面板
