@@ -38,7 +38,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import sys
 from collections import Counter
@@ -227,9 +226,9 @@ def make_report(v1_entries: list[dict], v2_entries: list[dict], errors: list[str
     sev_hist = Counter(e.get("severity") for e in v2_entries)
     lines: list[str] = []
     lines.append("# L0-constraints v1 → v2 Migration Report\n")
-    lines.append(f"**Date**: 2026-07-06\n")
-    lines.append(f"**ADR**: ADR-0132 P1-S2\n")
-    lines.append(f"**Schema**: `projects/ecos/src/ecos/ssot/mof/m2/constraint_l0.yaml`\n")
+    lines.append("**Date**: 2026-07-06\n")
+    lines.append("**ADR**: ADR-0132 P1-S2\n")
+    lines.append("**Schema**: `projects/ecos/src/ecos/ssot/mof/m2/constraint_l0.yaml`\n")
     lines.append("\n---\n\n")
     lines.append("## Summary\n\n")
     lines.append(f"- v1 条目数: **{len(v1_entries)}**\n")
@@ -241,7 +240,7 @@ def make_report(v1_entries: list[dict], v2_entries: list[dict], errors: list[str
     for t, c in sorted(type_hist.items()):
         sev = TYPE_TO_SEVERITY.get(t, "medium")
         lines.append(f"| `{t}` | `{sev}` | {c} |\n")
-    lines.append(f"\n**合计**:\n\n")
+    lines.append("\n**合计**:\n\n")
     for s, c in sorted(sev_hist.items()):
         lines.append(f"- `{s}`: {c} 条\n")
     if errors:
