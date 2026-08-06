@@ -49,10 +49,17 @@ def get_previous_pointer(path: str) -> str | None:
     return sha if sha else None
 
 
-def is_ancestor(child: str, parent: str) -> bool:
-    """Check if child is an ancestor of parent (i.e. parent contains child in its history)."""
+def is_descendant_or_equal(child: str, parent: str) -> bool:
+    """Check if child is a descendant of (or equal to) parent in git history.
+    
+    Returns True if parent is an ancestor of child, meaning child advanced forward
+    from parent or is the same commit. Returns False if child is unrelated to or
+    behind parent (rewind/history rewrite).
+    """
+    if child == parent:
+        return True
     result = subprocess.run(
-        ["git", "merge-base", "--is-ancestor", child, parent],
+        ["git", "merge-base", "--is-ancestor", parent, child],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -74,11 +81,12 @@ def main() -> int:
             # No change — skip
             continue
 
-        # Rewind detection: current is NOT an ancestor of previous
-        if not is_ancestor(current_sha, previous_sha):
+        # Direction check: current pointer must be a descendant of (or equal to) previous pointer.
+        # This ensures the submodule only moves forward in history, never rewinds.
+        if not is_descendant_or_equal(previous_sha, current_sha):
             violations.append(
-                f"  {path} — 子模块指针回退检测: "
-                f"当前 {current_sha[:12]} 不是上一次指针 {previous_sha[:12]} 的祖先 (rewind)"
+                f"  {path} — 子模块指针方向非法: "
+                f"当前 {current_sha[:12]} 不是上一次指针 {previous_sha[:12]} 的后代 (rewind/history rewrite)"
             )
 
     if violations:
