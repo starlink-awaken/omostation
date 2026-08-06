@@ -13,8 +13,10 @@ Agent 矩阵:
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, Protocol
 
 
@@ -92,19 +94,102 @@ class AgentHost:
 
 
 class HealthMonitorAgent:
-    """HealthMonitor stub (系统健康 + 主动告警, α.3 MVP).
+    """HealthMonitor (α.3 续: 读 system_health.yaml 快照 + 异常服务告警).
 
-    tick: stub 返回 noop (真实实现 α.3 续: 读 system.yaml health + alert).
-    骨架先就位, 真实健康检查接 omo_health + omo_alert 留续.
+    tick: 扫 system_health 服务快照, 检测非 healthy 服务, 写 omo-alerts.jsonl.
+    守 fabric 红线: 只读状态快照, 不伪造健康, 不直连凭据/webhook.
+    守 F14: 单 tick 失败不炸 host (AgentHost try/except 兜底).
     """
 
     agent_id = "health-monitor"
 
+    _WORKSPACE = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+    _HEALTH_YAML = _WORKSPACE / ".omo" / "state" / "system_health.yaml"
+    _ALERT_LOG = _WORKSPACE / ".omo" / "_knowledge" / "omo-alerts.jsonl"
+
     def tick(self) -> dict[str, Any]:
+        services = self._load_services()
+        if services is None:
+            return {
+                "action": "noop",
+                "details": {"note": "health snapshot unavailable"},
+            }
+
+        unhealthy = self._detect_unhealthy(services)
+        if not unhealthy:
+            return {
+                "action": "noop",
+                "details": {"healthy_count": len(services), "total": len(services)},
+            }
+
+        self._record_alerts(unhealthy)
         return {
-            "action": "noop",
-            "details": {"note": "HealthMonitor stub (α.3 MVP, 真实接 omo_health 留续)"},
+            "action": "alert",
+            "details": {
+                "unhealthy_count": len(unhealthy),
+                "total": len(services),
+                "services": unhealthy,
+            },
         }
+
+    @classmethod
+    def _load_services(cls) -> dict[str, Any] | None:
+        """读 system_health.yaml 服务快照 (缺失/损坏返回 None, 守 F14)."""
+        if not cls._HEALTH_YAML.exists():
+            return None
+        try:
+            import yaml
+
+            data = yaml.safe_load(cls._HEALTH_YAML.read_text(encoding="utf-8")) or {}
+            services = data.get("services")
+            return services if isinstance(services, dict) else None
+        except Exception:
+            return None
+
+    @classmethod
+    def _detect_unhealthy(cls, services: dict[str, Any]) -> list[dict[str, str]]:
+        """检测异常服务 (health_check 非空且不以 healthy 开头/非 scheduled)."""
+        unhealthy: list[dict[str, str]] = []
+        for name, info in services.items():
+            if not isinstance(info, dict):
+                continue
+            hc = str(info.get("health_check", "")).strip()
+            # 正常 = "healthy" / "healthy (probe)" / "scheduled"; 其余有值即异常
+            if hc and not (hc.startswith("healthy") or hc == "scheduled"):
+                unhealthy.append(
+                    {
+                        "name": str(name),
+                        "health_check": hc,
+                        "status": str(info.get("runtime", {}).get("status", "")),
+                    }
+                )
+        return unhealthy
+
+    @classmethod
+    def _record_alerts(cls, unhealthy: list[dict[str, str]]) -> None:
+        """写 omo-alerts.jsonl (复用 omo_alert 同款 AppendOnlyLog, 落盘审计)."""
+        try:
+            from omo.omo_io import AppendOnlyLog
+
+            now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+            log = AppendOnlyLog(cls._ALERT_LOG)
+            for svc in unhealthy:
+                log.append(
+                    {
+                        "ts": now,
+                        "kind": "service_unhealthy",
+                        "severity": "high",
+                        "source": "health-monitor-agent",
+                        "message": f"服务 {svc['name']} 健康异常: {svc['health_check']}",
+                        "service": svc["name"],
+                        "health_check": svc["health_check"],
+                        "runtime_status": svc["status"],
+                    },
+                    sort_keys=True,
+                )
+        except Exception:
+            # 落盘失败不影响 tick 决策 (F14 错误隔离, AgentHost 兜底)
+            pass
 
 
 class KnowledgeCuratorAgent:
