@@ -19,4 +19,5 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.13"}
       - run: pip install pyyaml
-      - run: python3 scripts/check-interfaces.py
+      - name: Run interfaces check (registry-driven, ADR-0380 P1a)
+        run: python3 bin/gac/ci-check-runner.py --workflow interfaces-enforce.yml
