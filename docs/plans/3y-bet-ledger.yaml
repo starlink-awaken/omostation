@@ -261,7 +261,8 @@ bets:
       expect: "0  (无残留 update 锁)"
     - cmd: "SWARM_ESCAPE_ID=bogus git commit --no-verify --allow-empty -m probe"
       expect: "非 0 (raw git 逃生被拦)"
-  workflow: governance-state-mutation
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces:
     - "AGENTS.md"
     - "bin/gac/**"
@@ -293,7 +294,8 @@ bets:
       expect: "0"
     - cmd: "python3 bin/mof/generate-brief.py && grep -A2 '工作交付' BRIEF.md"
       expect: "包含 未接入"
-  workflow: governance-state-mutation
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [bin/mof/generate-brief.py, .omo/_truth/registry/x3-delivery-soft-gate.yaml, BRIEF.md]
   pasw_required: false
   depends_on: []
@@ -337,7 +339,8 @@ bets:
       expect: exit 0
     - cmd: "git commit --allow-empty -m probe && git reset --soft HEAD~1"
       expect: "exit 0 (主干未被 rewind 门阻塞)"
-  workflow: submodule-pointer-close
+  workflow: bet-execution
+  underlying_workflow: submodule-pointer-close   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".gitmodules", ".github/workflows/**", "bin/submodule-gitlink-check.py"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T1-00]
@@ -362,7 +365,8 @@ bets:
   verify:
     - cmd: "python3 -c \"import yaml;d=yaml.safe_load(open('.omo/goals/current.yaml'));print(sum(1 for g in d['goals'] if g.get('status')!='done'))\""
       expect: ">= 3"
-  workflow: governance-state-mutation
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/goals/current.yaml"]
   pasw_required: false
   depends_on: []
@@ -404,7 +408,8 @@ bets:
       expect: ">= 1"
     - cmd: "python3 bin/change-lane-check.py --file docs/plans/3y-bet-ledger.yaml --json"
       expect: "lanes 不含 code"
-  workflow: governance-state-mutation
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".gitignore", "AGENTS.md", ".pre-commit-config.yaml", "bin/plan/**", "bin/change-lane-check.py"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T1-00]
@@ -453,7 +458,8 @@ bets:
       expect: "0  (D3 阶段后三条纪律已退役)"
     - cmd: "python3 bin/plan/bet-ledger.py surface"
       expect: "净减(D2 记账)"
-  workflow: governance-state-mutation
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces:
     - "bin/gac/**"
     - ".githooks/**"
@@ -495,7 +501,8 @@ bets:
       expect: "18"
     - cmd: "grep -c 'PASW_ISOLATED_SUBS' bin/gac/gac-worktree.sh"
       expect: "过渡期 >= 1; T1-05 完成后应为 0"
-  workflow: governance-state-mutation
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["bin/gac/gac-worktree.sh", ".omo/_truth/registry/swarm-coordination.yaml"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T1-02]
@@ -532,7 +539,8 @@ bets:
       expect: "非 0 (raw git 被 shim 拦截)"
     - cmd: "ls .omo/_delivery/swarm-escape/ | wc -l"
       expect: "每次逃生 +1"
-  workflow: governance-state-mutation
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["bin/gac/swarm-git", "bin/gac/**", "docs/plans/AGENT-BRIEF.md", "AGENTS.md"]
   pasw_required: false
   depends_on: []
@@ -560,7 +568,8 @@ bets:
       expect: exit 0
     - cmd: "grep -c 'bos://perception' projects/agora/etc/bos-services.yaml"
       expect: ">= 1"
-  workflow: external-adapter-sync
+  workflow: bet-execution
+  underlying_workflow: external-adapter-sync   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/signal-sources.yaml", ".omo/standards/**"]
   pasw_required: true
   depends_on: []
@@ -585,7 +594,8 @@ bets:
   verify:
     - cmd: "grep -c 'last_signal_at' .omo/_truth/registry/signal-sources.yaml"
       expect: ">= 1"
-  workflow: external-adapter-sync
+  workflow: bet-execution
+  underlying_workflow: external-adapter-sync   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/signal-sources.yaml"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T2-01]
@@ -610,7 +620,8 @@ bets:
   verify:
     - cmd: "make memory-os-check"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/memory-os.yaml"]
   pasw_required: false
   depends_on: []
@@ -635,7 +646,8 @@ bets:
   verify:
     - cmd: "python3 bin/ssot/doc-claim-lint.py projects/omo/src/omo/scenewatcher.py"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/memory-os.yaml"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T3-01]
@@ -660,7 +672,8 @@ bets:
   verify:
     - cmd: "make evidence-smoke"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_delivery/outcomes/**"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T3-01]
@@ -686,7 +699,8 @@ bets:
   verify:
     - cmd: "python3 bin/ssot/scene-card-review.py --help"
       expect: exit 0
-  workflow: project-doc-change
+  workflow: bet-execution
+  underlying_workflow: project-doc-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["docs/scene-cards/**", "bin/ssot/scene-card-review.py"]
   pasw_required: false
   depends_on: []
@@ -712,7 +726,8 @@ bets:
   verify:
     - cmd: "git ls-files --error-unmatch bin/ssot/journey-runner.py"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["bin/ssot/journey-runner.py", "bin/ssot/scene-card-lifecycle.py", "docs/scene-cards/**"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T1-04, BET-Y1Q1-T7-01]
@@ -738,7 +753,8 @@ bets:
   verify:
     - cmd: "grep -c 'human_hold' docs/scene-cards/v2/document-review.yaml"
       expect: ">= 1"
-  workflow: project-doc-change
+  workflow: bet-execution
+  underlying_workflow: project-doc-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["docs/scene-cards/**"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T7-01, BET-Y1Q1-T2-02]
@@ -764,7 +780,8 @@ bets:
   verify:
     - cmd: "cd projects/cockpit-ui && npm run build"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["projects/cockpit-ui/**"]
   pasw_required: true
   depends_on: [BET-Y1Q1-T4-01]
@@ -793,7 +810,8 @@ bets:
       expect: "<= 100"
     - cmd: "make gac-local-gate"
       expect: exit 0
-  workflow: governance-state-mutation
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/governance-checks.yaml", "bin/gac/**"]
   pasw_required: false
   depends_on: []
@@ -818,7 +836,8 @@ bets:
   verify:
     - cmd: "python3 bin/adr/adr-coverage.py --json"
       expect: "active_count <= 200"
-  workflow: governance-state-mutation
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_knowledge/decisions/**", "bin/adr/**"]
   pasw_required: false
   depends_on: []
@@ -845,7 +864,8 @@ bets:
       expect: "<= 240"
     - cmd: "make ci-local-fast"
       expect: exit 0
-  workflow: governance-state-mutation
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["bin/**", "Makefile"]
   pasw_required: false
   depends_on: [BET-Y1Q2-T6-01]
@@ -872,7 +892,8 @@ bets:
       expect: "<= 40"
     - cmd: "make collab-dualtrack"
       expect: "silent_loss: 0"
-  workflow: governance-state-mutation
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_delivery/collab-scenarios/**", ".omo/_archive/**"]
   pasw_required: false
   depends_on: []
@@ -899,7 +920,8 @@ bets:
       expect: ">= 1"
     - cmd: "python3 bin/gac/gac-validate.py --gate"
       expect: exit 0
-  workflow: governance-state-mutation
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/governance-checks.yaml", "bin/gac/**", ".github/workflows/**"]
   pasw_required: false
   depends_on: [BET-Y1Q2-T6-01, BET-Y1Q2-T6-02]
@@ -924,7 +946,8 @@ bets:
   verify:
     - cmd: "bash tests/integration/run-all.sh"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["tests/integration/**"]
   pasw_required: false
   depends_on: []
@@ -949,7 +972,8 @@ bets:
   verify:
     - cmd: "python3 bin/ssot/journey-runner.py docs/scene-cards/v2/document-review.yaml --json"
       expect: "包含 backedge_limit"
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["bin/ssot/journey-runner.py"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T7-02]
@@ -976,7 +1000,8 @@ bets:
       expect: "0"
     - cmd: "python3 bin/plan/bet-ledger.py surface"
       expect: "code_loc 下降"
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".gitmodules", "docs/project-registry.yaml"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T1-02]
@@ -1001,7 +1026,8 @@ bets:
   verify:
     - cmd: "ls .omo/_knowledge/decisions/ | grep -c model-driven"
       expect: ">= 1"
-  workflow: governance-audit
+  workflow: bet-execution
+  underlying_workflow: governance-audit   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_knowledge/decisions/**", "docs/project-registry.yaml"]
   pasw_required: false
   depends_on: []
@@ -1026,7 +1052,8 @@ bets:
   verify:
     - cmd: "grep -c 'lifecycle: shadow' docs/scene-cards/v2/engineering-delivery.yaml"
       expect: ">= 1"
-  workflow: project-doc-change
+  workflow: bet-execution
+  underlying_workflow: project-doc-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["docs/scene-cards/**"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T7-01, BET-Y1Q1-T3-02]
@@ -1051,7 +1078,8 @@ bets:
   verify:
     - cmd: "make memory-os-check"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_delivery/outcomes/**"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T4-01, BET-Y1Q1-T3-01]
@@ -1076,7 +1104,8 @@ bets:
   verify:
     - cmd: "cd projects/cockpit-ui && npm run build"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["projects/cockpit-ui/**"]
   pasw_required: true
   depends_on: [BET-Y1Q2-T4-01, BET-Y1Q1-T8-01]
@@ -1103,7 +1132,8 @@ bets:
   verify:
     - cmd: "make memory-os-smoke"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_knowledge/audits/**"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T3-01]
@@ -1130,7 +1160,8 @@ bets:
       expect: exit 0
     - cmd: "python3 bin/gac/check-memory-os-surfaces.py"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["protocols/port-registry.yaml", "config/**"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T3-01]
@@ -1155,7 +1186,8 @@ bets:
   verify:
     - cmd: "grep -c 'partial_simulation' .omo/_truth/registry/memory-os.yaml"
       expect: "0"
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/memory-os.yaml"]
   pasw_required: false
   depends_on: [BET-Y1Q3-T3-02]
@@ -1183,7 +1215,8 @@ bets:
       expect: exit 0
     - cmd: "git tag -l 'pre-knowledge-merge-*'"
       expect: ">= 1 tag"
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".gitmodules", "docs/project-registry.yaml"]
   pasw_required: true
   depends_on: [BET-Y1Q3-T3-01, BET-Y1Q3-T3-02]
@@ -1208,7 +1241,8 @@ bets:
   verify:
     - cmd: "make memory-os-check"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_delivery/outcomes/**"]
   pasw_required: true
   depends_on: [BET-Y1Q2-T8-01]
@@ -1233,7 +1267,8 @@ bets:
   verify:
     - cmd: "python3 -c \"import yaml;d=yaml.safe_load(open('.omo/_truth/registry/signal-sources.yaml'));print(len(d['signal_sources']))\""
       expect: ">= 2"
-  workflow: external-adapter-sync
+  workflow: bet-execution
+  underlying_workflow: external-adapter-sync   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/signal-sources.yaml"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T2-02]
@@ -1260,7 +1295,8 @@ bets:
   verify:
     - cmd: "make evidence-smoke"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/**"]
   pasw_required: false
   depends_on: [BET-Y1Q2-T4-01]
@@ -1285,7 +1321,8 @@ bets:
   verify:
     - cmd: "grep -c 'lifecycle: assisted' docs/scene-cards/v2/document-review.yaml"
       expect: ">= 1"
-  workflow: project-doc-change
+  workflow: bet-execution
+  underlying_workflow: project-doc-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["docs/scene-cards/**"]
   pasw_required: false
   depends_on: [BET-Y1Q4-T3-01, BET-Y1Q1-T7-03]
@@ -1310,7 +1347,8 @@ bets:
   verify:
     - cmd: "bash tests/integration/run-all.sh"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["bin/ssot/journey-runner.py", "tests/integration/**"]
   pasw_required: false
   depends_on: [BET-Y1Q2-T5-02]
@@ -1335,7 +1373,8 @@ bets:
   verify:
     - cmd: "git submodule status | grep -c aetherforge"
       expect: "0"
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".gitmodules", "docs/project-registry.yaml"]
   pasw_required: false
   depends_on: [BET-Y1Q2-T1-01]
@@ -1360,7 +1399,8 @@ bets:
   verify:
     - cmd: "ls .omo/_delivery/evalsets/ | wc -l"
       expect: ">= 1"
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_delivery/evalsets/**"]
   pasw_required: false
   depends_on: [BET-Y1Q2-T4-01, BET-Y1Q2-T7-01]
@@ -1385,7 +1425,8 @@ bets:
   verify:
     - cmd: "python3 bin/plan/bet-ledger.py surface"
       expect: exit 0
-  workflow: governance-audit
+  workflow: bet-execution
+  underlying_workflow: governance-audit   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_knowledge/retros/gates/**"]
   pasw_required: false
   depends_on: [BET-Y1Q4-T6-01, BET-Y1Q3-T6-01]
@@ -1409,7 +1450,8 @@ bets:
   verify:
     - cmd: "make memory-os-check"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/memory-os.yaml"]
   pasw_required: false
   depends_on: [BET-Y1Q4-T1-01]
@@ -1431,7 +1473,8 @@ bets:
   verify:
     - cmd: "make memory-os-check"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/memory-os.yaml"]
   pasw_required: false
   depends_on: [BET-Y2Q1-T3-01]
@@ -1453,7 +1496,8 @@ bets:
   verify:
     - cmd: "python3 bin/ssot/doc-claim-lint.py projects/omo/src/omo/scenewatcher.py"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/memory-os.yaml"]
   pasw_required: false
   depends_on: [BET-Y2Q1-T3-02]
@@ -1475,7 +1519,8 @@ bets:
   verify:
     - cmd: "grep -c 'lifecycle: assisted' docs/scene-cards/v2/knowledge-ingest.yaml"
       expect: ">= 1"
-  workflow: project-doc-change
+  workflow: bet-execution
+  underlying_workflow: project-doc-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["docs/scene-cards/**"]
   pasw_required: false
   depends_on: [BET-Y1Q4-T7-01]
@@ -1497,7 +1542,8 @@ bets:
   verify:
     - cmd: "ls docs/scene-cards/v2/ | wc -l"
       expect: ">= 5"
-  workflow: project-doc-change
+  workflow: bet-execution
+  underlying_workflow: project-doc-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["docs/scene-cards/**", ".agents/skills/**"]
   pasw_required: false
   depends_on: [BET-Y2Q2-T7-01]
@@ -1519,7 +1565,8 @@ bets:
   verify:
     - cmd: "cd projects/cockpit-ui && npm run build"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["projects/cockpit-ui/**"]
   pasw_required: true
   depends_on: [BET-Y1Q2-T8-01]
@@ -1541,7 +1588,8 @@ bets:
   verify:
     - cmd: "make memory-os-check"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_delivery/outcomes/**"]
   pasw_required: false
   depends_on: [BET-Y2Q2-T7-01, BET-Y2Q1-T3-03]
@@ -1563,7 +1611,8 @@ bets:
   verify:
     - cmd: "make evidence-smoke"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/**"]
   pasw_required: false
   depends_on: [BET-Y1Q4-T3-01]
@@ -1585,7 +1634,8 @@ bets:
   verify:
     - cmd: "python3 bin/plan/bet-ledger.py surface"
       expect: exit 0
-  workflow: governance-audit
+  workflow: bet-execution
+  underlying_workflow: governance-audit   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_knowledge/retros/**"]
   pasw_required: true
   depends_on: [BET-Y1Q4-T1-01]
@@ -1607,7 +1657,8 @@ bets:
   verify:
     - cmd: "make evidence-smoke"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_delivery/outcomes/**"]
   pasw_required: false
   depends_on: [BET-Y2Q3-T3-02]
@@ -1629,7 +1680,8 @@ bets:
   verify:
     - cmd: "python3 -c \"import yaml;d=yaml.safe_load(open('.omo/_truth/registry/signal-sources.yaml'));print(len(d['signal_sources']))\""
       expect: ">= 4"
-  workflow: external-adapter-sync
+  workflow: bet-execution
+  underlying_workflow: external-adapter-sync   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_truth/registry/signal-sources.yaml"]
   pasw_required: false
   depends_on: [BET-Y1Q3-T2-01]
@@ -1651,7 +1703,8 @@ bets:
   verify:
     - cmd: "python3 bin/plan/bet-ledger.py gate Y2Q4"
       expect: exit 0
-  workflow: governance-audit
+  workflow: bet-execution
+  underlying_workflow: governance-audit   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_knowledge/retros/gates/**"]
   pasw_required: false
   depends_on: [BET-Y2Q3-T3-01]
@@ -1675,7 +1728,8 @@ bets:
   verify:
     - cmd: "make memory-os-check"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["docs/scene-cards/**"]
   pasw_required: false
   depends_on: [BET-Y2Q4-T1-01]
@@ -1697,7 +1751,8 @@ bets:
   verify:
     - cmd: "ls docs/scene-cards/v2/ | wc -l"
       expect: ">= 5"
-  workflow: project-doc-change
+  workflow: bet-execution
+  underlying_workflow: project-doc-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["docs/scene-cards/**", ".agents/skills/**"]
   pasw_required: false
   depends_on: [BET-Y2Q2-T7-02, BET-Y3H1-T3-01]
@@ -1719,7 +1774,8 @@ bets:
   verify:
     - cmd: "bash tests/integration/run-all.sh"
       expect: exit 0
-  workflow: project-code-change
+  workflow: bet-execution
+  underlying_workflow: project-code-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["bin/ssot/journey-runner.py", "docs/scene-cards/**"]
   pasw_required: false
   depends_on: [BET-Y1Q4-T5-01]
@@ -1741,7 +1797,8 @@ bets:
   verify:
     - cmd: "python3 bin/plan/bet-ledger.py surface"
       expect: exit 0
-  workflow: governance-audit
+  workflow: bet-execution
+  underlying_workflow: governance-audit   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_knowledge/retros/**"]
   pasw_required: true
   depends_on: [BET-Y2Q3-T6-01]
@@ -1763,7 +1820,8 @@ bets:
   verify:
     - cmd: "grep -c 'lifecycle: routine' docs/scene-cards/v2/document-review.yaml"
       expect: ">= 1"
-  workflow: project-doc-change
+  workflow: bet-execution
+  underlying_workflow: project-doc-change   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["docs/scene-cards/**"]
   pasw_required: false
   depends_on: [BET-Y3H1-T7-01]
@@ -1785,7 +1843,8 @@ bets:
   verify:
     - cmd: "ls docs/reports/ | grep -c three-year"
       expect: ">= 1"
-  workflow: governance-audit
+  workflow: bet-execution
+  underlying_workflow: governance-audit   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["docs/reports/**", ".omo/_delivery/outcomes/**"]
   pasw_required: false
   depends_on: [BET-Y3H1-T7-01]
@@ -1807,7 +1866,8 @@ bets:
   verify:
     - cmd: "ls .omo/_knowledge/decisions/ | grep -c external-expansion"
       expect: ">= 1"
-  workflow: governance-audit
+  workflow: bet-execution
+  underlying_workflow: governance-audit   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_knowledge/decisions/**"]
   pasw_required: false
   depends_on: [BET-Y3H2-T4-01]
@@ -1829,7 +1889,8 @@ bets:
   verify:
     - cmd: "python3 bin/plan/bet-ledger.py gate Y3H2"
       expect: exit 0
-  workflow: governance-audit
+  workflow: bet-execution
+  underlying_workflow: governance-audit   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_knowledge/retros/gates/**"]
   pasw_required: false
   depends_on: [BET-Y3H2-T4-01, BET-Y3H1-T6-01]

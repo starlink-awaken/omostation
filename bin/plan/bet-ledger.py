@@ -211,10 +211,22 @@ def cmd_claim_check(data: dict, args) -> int:
             f"--profile {tr.get('agent_profile_hint','engineering-agent')} "
             f'--objective "{b["id"]} {b["title"]}"'
         )
+        globs = []
         for p in b.get("write_surfaces", []):
+            if "*" in p:
+                globs.append(p)
+                continue
             print(f"  uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path {p}")
+        if globs:
+            print("\n  # ⚠ claim 不做 glob 展开（lifecycle.py 只对锁目录 glob，--path 按字面量存）")
+            print("  #   下列写面必须逐个真实文件 claim，否则锁名是字面量、D3 匹配不上：")
+            for g in globs:
+                base = g.split("*")[0].rstrip("/")
+                print(f"  #   {g}  →  先看有哪些: git ls-files '{g}'  或  ls {base}/")
         if b.get("pasw_required"):
             print("  # ⚠ PASW: 子模块改动必须在 .subtrees/<sub>/ 内完成（ADR-0371）")
+        if b.get("underlying_workflow"):
+            print(f"  # 原挂载 workflow（phases/lock_scopes 可参考）: {b['underlying_workflow']}")
         print("\n收尾命令：")
         print("  git add <所有 deliverable>        # D0 铁律, 先于 verify")
         print("  uv run --with pyyaml python bin/agent-workflow.py verify <run-id> --from-diff --execute")
