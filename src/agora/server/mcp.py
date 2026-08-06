@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib as _hashlib
 import json
 import os
 import sys
@@ -303,8 +304,19 @@ class AuditSubscriber:
             source TEXT NOT NULL DEFAULT '', actor TEXT NOT NULL DEFAULT '',
             resource TEXT NOT NULL DEFAULT '', action TEXT NOT NULL DEFAULT '',
             trace_id TEXT NOT NULL DEFAULT '', payload TEXT NOT NULL DEFAULT '{}',
-            risk_level TEXT NOT NULL DEFAULT 'INFO', duration_ms REAL NOT NULL DEFAULT 0.0
+            risk_level TEXT NOT NULL DEFAULT 'INFO', duration_ms REAL NOT NULL DEFAULT 0.0,
+            prev_hash TEXT NOT NULL DEFAULT '', hash TEXT NOT NULL DEFAULT ''
         )""")
+        # 兼容旧库: 已存在表但缺 hash 列时 ALTER
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(audit_log)")}
+        if "prev_hash" not in cols:
+            conn.execute(
+                "ALTER TABLE audit_log ADD COLUMN prev_hash TEXT NOT NULL DEFAULT ''"
+            )
+        if "hash" not in cols:
+            conn.execute(
+                "ALTER TABLE audit_log ADD COLUMN hash TEXT NOT NULL DEFAULT ''"
+            )
         conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_ts ON audit_log(timestamp)")
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_audit_type ON audit_log(event_type)"
@@ -351,8 +363,20 @@ class AuditSubscriber:
         payload_str = json.dumps(payload, ensure_ascii=False, default=str)
         try:
             conn = _sqlite3.connect(str(self._db_path))
+            # P2-2: 计算哈希链 — 取链尾 hash, canonical 纳入全字段
+            row = conn.execute(
+                "SELECT hash FROM audit_log ORDER BY rowid DESC LIMIT 1"
+            ).fetchone()
+            prev_hash = row[0] if row and row[0] else "GENESIS"
+            canonical = (
+                f"{prev_hash}|{event_id}|{ts}|{event_type}|{source}|"
+                f"{classified['actor']}|{classified['resource']}|{classified['action']}|"
+                f"{trace_id}|{payload_str}|{classified['risk_level']}|"
+                f"{payload.get('_duration_ms', 0.0)}"
+            )
+            cur_hash = _hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             conn.execute(
-                "INSERT OR IGNORE INTO audit_log (id, timestamp, event_type, source, actor, resource, action, trace_id, payload, risk_level, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT OR IGNORE INTO audit_log (id, timestamp, event_type, source, actor, resource, action, trace_id, payload, risk_level, duration_ms, prev_hash, hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     f"{event_id}",
                     ts,
@@ -365,12 +389,75 @@ class AuditSubscriber:
                     payload_str,
                     classified["risk_level"],
                     payload.get("_duration_ms", 0.0),
+                    prev_hash,
+                    cur_hash,
                 ),
             )
             conn.commit()
             conn.close()
         except Exception as e:
             logger.error("audit_write_failed", event_id=event_id, error=str(e))
+
+    def verify_chain(self, limit: int = 0) -> dict:
+        """P2-2: 校验审计哈希链完整性.
+
+        prev_hash IN ('GENESIS','') 的行视为锚点 (兼容旧数据 + 清理边界), 跳过匹配。
+        Returns {"ok": bool, "total": int, "verified": int, "broken_at": str|None, "errors": list}
+        """
+        try:
+            conn = _sqlite3.connect(str(self._db_path))
+            conn.row_factory = _sqlite3.Row
+            if limit > 0:
+                rows = conn.execute(
+                    "SELECT * FROM audit_log ORDER BY rowid DESC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+                rows = list(reversed(rows))
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM audit_log ORDER BY rowid ASC"
+                ).fetchall()
+            conn.close()
+        except Exception as e:  # defensive fallback
+            return {"ok": False, "total": 0, "verified": 0, "broken_at": None, "errors": [str(e)]}
+
+        errors: list[str] = []
+        prev_expected = "GENESIS"
+        verified = 0
+        for r in rows:
+            stored_hash = r["hash"] or ""
+            stored_prev = r["prev_hash"] or ""
+            if stored_prev in ("GENESIS", ""):
+                # 锚点: 链起点或清理边界 — 跳过 prev 匹配, 但继续用本行 hash 作为下一行期望
+                if stored_hash:
+                    prev_expected = stored_hash
+                    verified += 1
+                continue
+            if stored_prev != prev_expected:
+                errors.append(
+                    f"chain break at id={r['id']}: prev={stored_prev[:12]} expected={prev_expected[:12]}"
+                )
+                break
+            canonical = (
+                f"{stored_prev}|{r['id']}|{r['timestamp']}|{r['event_type']}|{r['source']}|"
+                f"{r['actor']}|{r['resource']}|{r['action']}|"
+                f"{r['trace_id']}|{r['payload']}|{r['risk_level']}|{r['duration_ms']}"
+            )
+            recomputed = _hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            if recomputed != stored_hash:
+                errors.append(
+                    f"hash mismatch at id={r['id']}: stored={stored_hash[:12]} recomputed={recomputed[:12]}"
+                )
+                break
+            prev_expected = stored_hash
+            verified += 1
+        return {
+            "ok": not errors,
+            "total": len(rows),
+            "verified": verified,
+            "broken_at": errors[0] if errors else None,
+            "errors": errors,
+        }
 
     def query(self, actor="", resource="", event_type="", since="", limit=50):
         conditions: list[str] = []
