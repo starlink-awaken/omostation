@@ -62,7 +62,7 @@ Read the SSOT files reported by `bootstrap` for task-specific runtime facts — 
 ### Step B.1 · RED LINE — 需求迭代强制 Workflow（ADR-0203）
 
 **所有需求迭代（功能/缺陷/运维落地、治理/SSOT/ADR、交付 closeout）必须先 `start` 再改文件。**  
-SSOT: `agent-workflows.yaml::requirement_iteration_policy`（`mode: required`）。  
+SSOT: `agent-workflows/::requirement_iteration_policy`（`mode: required`）。  
 细节: [`AGENTS.md` §1.6](AGENTS.md) · [`.omo/standards/agent-workflow-contract.md` §3.1](.omo/standards/agent-workflow-contract.md) · [ADR-0203](.omo/_knowledge/decisions/0203-requirement-iteration-workflow-mandatory.md)。
 
 ```bash
@@ -91,10 +91,10 @@ Read `.p74_solidification.warn_count`:
   excluded per ADR-0211 §D1): treat as governance signal.
   Read `.omo/standards/p74-solidification-contract.md` §3 decision tree for actions.
   If workflow has neither `has_recent_run` nor `has_check_coverage`, register it via
-  `agent-workflows.yaml::diff_checks`. Extending `silent_workflow_policy.excluded_workflows`
+  `agent-workflows/::diff_checks`. Extending `silent_workflow_policy.excluded_workflows`
   is no longer supported (field removed in ADR-0211 §D1).
 
-The `silent_workflow_policy` field in `agent-workflows.yaml` is the SSOT for
+The `silent_workflow_policy` field in `agent-workflows/` is the SSOT for
 silent workflow classification. Per-workflow `run_frequency` field (on_demand /
 periodic / continuous) drives the warn_after threshold (30d / 7d / 1d).
 
@@ -212,7 +212,7 @@ Run a single test with each framework's native filter (see the target project's 
 | Agora callchain | [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) |
 | Vision & roadmap | [`docs/VISION-ROADMAP.md`](docs/VISION-ROADMAP.md) |
 | OMO governance kernel rules | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
-| Executable agent workflows | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Executable agent workflows | [`.omo/_truth/registry/agent-workflows/`](.omo/_truth/registry/agent-workflows/) |
 | AGCP status/scoped gate/claim policy | [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
 | Internal integration contracts | `make agent-workflow-integrations` |
 | MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
@@ -231,7 +231,7 @@ Run a single test with each framework's native filter (see the target project's 
 | Port assignment | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) (read-only for agents; register through it) |
 | Runtime state / health | [`.omo/state/system.yaml`](.omo/state/system.yaml) · refresh via `omo state sync` |
 | L0 / MOF constraint | [`projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml`](projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml) |
-| Add / change an agent workflow | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) · [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
+| Add / change an agent workflow | [`.omo/_truth/registry/agent-workflows/`](.omo/_truth/registry/agent-workflows/) · [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
 | Document SSOT contract | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) |
 | Write an ADR | [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) · [`.omo/standards/adr-process.md`](.omo/standards/adr-process.md) |
 | Project layer placement | [`docs/project-registry.yaml`](docs/project-registry.yaml) → [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md) |
