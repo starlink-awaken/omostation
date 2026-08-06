@@ -23,8 +23,10 @@ properties:
   lifecycle: active
   version: 1.0.0
   created_at: *id001
+  target: .omo/_truth/registry/**
   adr: ADR-0158
   source_type: native
+  source_ref: bin/gac/check-resolve-not-stub.py
   enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:

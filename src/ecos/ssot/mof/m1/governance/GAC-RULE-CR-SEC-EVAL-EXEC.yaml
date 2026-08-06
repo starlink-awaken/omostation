@@ -25,6 +25,8 @@ properties:
   target: Python eval/exec 调用 (声明面; 执行面 hook 内置 PR#196)
   adr: ADR-0106
   source_type: native
+  source_ref: bin/ssot/check-eval-exec.py
+  enforcement: required
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

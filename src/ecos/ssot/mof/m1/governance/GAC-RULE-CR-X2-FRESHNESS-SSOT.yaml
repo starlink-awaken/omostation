@@ -25,9 +25,11 @@ properties:
   lifecycle: active
   version: 1.0.0
   created_at: '2026-06-27'
+  target: docs/**
   adr: ADR-0106
   source_type: indexed
   source_ref: .omo/_truth/x2-freshness-rules.yaml::rules
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

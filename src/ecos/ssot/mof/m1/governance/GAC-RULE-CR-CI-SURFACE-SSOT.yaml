@@ -24,9 +24,11 @@ properties:
   lifecycle: active
   version: 1.0.0
   created_at: '2026-08-05'
+  target: docs/**
   adr: ADR-0379
   source_type: indexed
   source_ref: .omo/_truth/registry/ci-surfaces.yaml::surfaces
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

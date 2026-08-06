@@ -29,6 +29,8 @@ properties:
   - '**/*.py'
   adr: ADR-0053
   source_type: native
+  source_ref: protocols/
+  enforcement: required
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

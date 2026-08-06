@@ -25,6 +25,8 @@ properties:
   target: .omo/_knowledge/decisions/
   adr: ADR-0053
   source_type: native
+  source_ref: .omo/_knowledge/decisions/INDEX.md
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

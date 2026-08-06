@@ -33,6 +33,7 @@ properties:
   target: docs/project-registry.yaml (X 段) + projects/<x-name>/.promotion-state
   adr: ADR-0158
   source_type: native
+  source_ref: .omo/_truth/registry/governance-checks.yaml
   enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:

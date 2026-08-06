@@ -28,6 +28,8 @@ properties:
   target: 'bin/gac/gac-executor.py (扩展: 检查 bin/*.py 是否有 caller 引用)'
   adr: ADR-0123
   source_type: native
+  source_ref: .omo/standards/bin-orphan-policy.md
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

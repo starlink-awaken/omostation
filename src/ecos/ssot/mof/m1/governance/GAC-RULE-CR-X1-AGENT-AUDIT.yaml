@@ -27,6 +27,7 @@ properties:
   target: runtime/omo/_delivery/ingress/ingress-trail.jsonl
   adr: ADR-0121
   source_type: native
+  source_ref: bin/gac/check-external-agent-audit.py
   enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:

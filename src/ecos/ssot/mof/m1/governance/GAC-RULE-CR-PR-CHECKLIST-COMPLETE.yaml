@@ -29,6 +29,7 @@ properties:
   target: gh pr create --body
   adr: ADR-0165
   source_type: native
+  source_ref: bin/gac/check-pr-description.py
   enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:

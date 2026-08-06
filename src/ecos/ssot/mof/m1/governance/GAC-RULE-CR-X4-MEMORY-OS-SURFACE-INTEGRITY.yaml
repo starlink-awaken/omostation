@@ -4,8 +4,8 @@
 id: GAC-RULE-CR-X4-MEMORY-OS-SURFACE-INTEGRITY
 type: GacRule
 name: Memory-OS surface 一致性
-description: 'memory-os 新增 phase 必须注册 surface (bin/gac/ 或 .omo/standards/), 禁止无治理覆盖的新
-  phase. 实现: bin/gac/check-memory-os-surfaces.py (gac-gate CI, advisory)'
+description: 'Memory OS light gate: SSOT/ports/env.example/help catalog/smoke surfaces
+  必须齐全. 实现: bin/gac/check-memory-os-surfaces.py (gac-gate CI blocking; make memory-os-check)'
 status: active
 domain: meta
 layer: meta
@@ -22,7 +22,11 @@ properties:
   lifecycle: active
   version: 1.0.0
   created_at: '2026-08-04'
+  target: projects/*/**
+  adr: ADR-0367
   source_type: native
+  source_ref: bin/gac/check-memory-os-surfaces.py
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

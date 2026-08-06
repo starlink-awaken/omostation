@@ -26,6 +26,8 @@ properties:
   target: .omo/_truth/registry/agent-workflows + bin/agent-workflow.py
   adr: ADR-0130
   source_type: native
+  source_ref: .omo/standards/p74-solidification-contract.md
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

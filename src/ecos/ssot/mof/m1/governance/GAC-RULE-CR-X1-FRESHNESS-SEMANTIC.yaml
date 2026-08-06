@@ -28,6 +28,7 @@ properties:
   target: projects/runtime/src/runtime/scheduler.py + projects/omo/src/omo/omo_state_schema.py
   adr: ADR-0120
   source_type: native
+  source_ref: bin/gac/x2-freshness-check.py
   enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:

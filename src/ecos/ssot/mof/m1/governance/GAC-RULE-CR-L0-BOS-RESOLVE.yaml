@@ -26,6 +26,8 @@ properties:
   target: projects/agora/etc/bos-services.yaml
   adr: ADR-0105
   source_type: native
+  source_ref: projects/agora/etc/bos-services.yaml
+  enforcement: required
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

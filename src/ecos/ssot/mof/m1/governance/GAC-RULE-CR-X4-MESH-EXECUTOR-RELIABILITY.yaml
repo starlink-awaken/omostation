@@ -23,7 +23,11 @@ properties:
   lifecycle: active
   version: 1.0.0
   created_at: '2026-08-04'
+  target: projects/*/**
+  adr: ADR-0367
   source_type: native
+  source_ref: bin/gac/check-mesh-executor-reliability.py
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

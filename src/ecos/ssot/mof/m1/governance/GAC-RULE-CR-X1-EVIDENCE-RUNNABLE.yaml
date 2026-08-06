@@ -30,6 +30,7 @@ properties:
     .omo/_log/mof-validate.jsonl'
   adr: ADR-0121
   source_type: native
+  source_ref: .omo/standards/evidence-runnable.md
   enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:

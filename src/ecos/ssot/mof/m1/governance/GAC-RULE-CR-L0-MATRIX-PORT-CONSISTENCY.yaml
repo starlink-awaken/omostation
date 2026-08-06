@@ -1,11 +1,11 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
-# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
 id: GAC-RULE-CR-L0-MATRIX-PORT-CONSISTENCY
 type: GacRule
 name: matrix.yaml port 与 port-registry.yaml 一致性
 description: '防 SSOT 漂移: matrix.yaml 中配了 port 的服务, port 必须在 port-registry.yaml 注册;
-  stdio/scheduled 类型不应配 port (除非有 health_url). 实现: bin/matrix-consistency-lint.py
+  stdio/scheduled 类型不应配 port (除非有 health_url). 实现: bin/ssot/matrix-consistency-lint.py
   R2/R3'
 status: active
 domain: meta
@@ -27,12 +27,14 @@ properties:
   target: ~/runtime/matrix.yaml + protocols/port-registry.yaml
   adr: ADR-0120
   source_type: native
+  source_ref: protocols/port-registry.yaml
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
   m3_type: GacRule
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
-  derived_by: bin/gac-m1-sync.py
+  derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
   timestamp: '2026-07-02T00:00:00Z'

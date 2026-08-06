@@ -25,6 +25,8 @@ properties:
   target: governance-checks.yaml::gac.rules vs executor 实际注册
   adr: ADR-0121
   source_type: native
+  source_ref: bin/gac/gac-drift.py
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

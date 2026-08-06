@@ -27,6 +27,8 @@ properties:
   target: bin/gac/governance-semantic-gate.py (统一消费治理工具 JSON 语义)
   adr: ADR-0121
   source_type: native
+  source_ref: bin/gac/governance-semantic-gate.py
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

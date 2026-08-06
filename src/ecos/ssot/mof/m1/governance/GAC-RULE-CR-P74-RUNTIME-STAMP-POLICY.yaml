@@ -27,6 +27,8 @@ properties:
     + projects/omo/src/omo/omo_lint_stamp.py
   adr: ADR-0130
   source_type: native
+  source_ref: .omo/standards/p74-solidification-contract.md
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

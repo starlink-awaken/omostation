@@ -27,6 +27,7 @@ properties:
   target: .omo/_truth/registry/mutation-surfaces.yaml::surfaces
   adr: ADR-0155
   source_type: native
+  source_ref: bin/ssot/check-boundary.py
   enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
