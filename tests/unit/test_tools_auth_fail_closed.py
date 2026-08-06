@@ -71,6 +71,51 @@ def test_require_api_key_invalid_token(monkeypatch):
     assert tools_auth.require_agora_api_key(ctx) is False
 
 
+# ── P2-6: 进程内直接调用 (无 HTTP 上下文) 视为本地受信任调用 ──────────────
+
+
+def test_require_api_key_local_call_bypasses_without_http_context(monkeypatch):
+    """配置了 key + 无 HTTP 上下文 (进程内直接调用) → 放行 (本地受信任)。
+
+    P2-6: 能 import agora.server.mcp 并 call_tool 的代码本已持有 AGORA_API_KEY,
+    不扩大攻击面; HTTP 传输层仍严格鉴权。
+    """
+    monkeypatch.setattr("agora.server.request_context.get_http_request", lambda: None)
+    from agora.server import tools_auth
+
+    monkeypatch.setattr(tools_auth, "_AGORA_API_KEY", "secret-key")
+    ctx = _mk_ctx()
+    ctx.token = None
+    assert tools_auth.require_agora_api_key(ctx) is True
+    assert tools_auth.agora_role_ctx.get() == "local"
+
+
+def test_require_api_key_http_wrong_token_rejected(monkeypatch):
+    """配置了 key + HTTP 上下文 + 错误 Bearer token → 仍拒绝 (传输层严格鉴权)。"""
+    from agora.server import tools_auth
+
+    monkeypatch.setattr(tools_auth, "_AGORA_API_KEY", "secret-key")
+    req = MagicMock()
+    req.headers.get.return_value = "Bearer wrong-token"
+    monkeypatch.setattr("agora.server.request_context.get_http_request", lambda: req)
+    ctx = _mk_ctx()
+    ctx.token = None
+    assert tools_auth.require_agora_api_key(ctx) is False
+
+
+def test_require_api_key_http_correct_token_accepted(monkeypatch):
+    """配置了 key + HTTP 上下文 + 正确 Bearer token → 通过。"""
+    from agora.server import tools_auth
+
+    monkeypatch.setattr(tools_auth, "_AGORA_API_KEY", "secret-key")
+    req = MagicMock()
+    req.headers.get.return_value = "Bearer secret-key"
+    monkeypatch.setattr("agora.server.request_context.get_http_request", lambda: req)
+    ctx = _mk_ctx()
+    ctx.token = None
+    assert tools_auth.require_agora_api_key(ctx) is True
+
+
 def test_bos_domain_authorized_fail_closed_without_key(monkeypatch):
     """AGORA_API_KEY 未配置 + 默认 required → _bos_domain_authorized 拒绝。"""
     monkeypatch.delenv("AGORA_AUTH_MODE", raising=False)
