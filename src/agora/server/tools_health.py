@@ -259,6 +259,15 @@ async def entropy_cleanup() -> dict:
                 "DELETE FROM audit_log WHERE timestamp < datetime('now', '-30 days')"
             )
             deleted = cursor.rowcount
+            if deleted > 0:
+                # P2-2 hashchain: 删除破链后, 将剩余链首行 prev_hash 重置为 GENESIS (新锚点)
+                try:
+                    conn.execute(
+                        "UPDATE audit_log SET prev_hash = 'GENESIS' "
+                        "WHERE rowid = (SELECT rowid FROM audit_log ORDER BY rowid ASC LIMIT 1)"
+                    )
+                except sqlite3.OperationalError:
+                    pass  # 旧表无 prev_hash 列时忽略
             conn.commit()
             conn.close()
             if deleted > 0:
