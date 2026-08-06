@@ -331,6 +331,23 @@ def healthcheck() -> dict:
         "stale": len(m1_diff.get("stale", [])),
     }
 
+    # 14. CI 平面可观测性 (ADR-0379 E-3): ci-surfaces SSOT vs 实际接线
+    # unregistered/gate-parity/double-trigger = error; orphan/overlap = warn.
+    ci_code, ci_out = run_tool("bin/gac/check-ci-surfaces.py", ["--json"])
+    try:
+        ci_json = json.loads(ci_out) if ci_out else {}
+    except json.JSONDecodeError:
+        ci_json = {}
+    report["ci_plane"] = {
+        "ok": ci_code == 0,
+        "surfaces": ci_json.get("surfaces", 0),
+        "wired_tools": ci_json.get("wired_tools", 0),
+        "error_count": ci_json.get("error_count", 0),
+        "warn_count": ci_json.get("warn_count", 0),
+        "errors": ci_json.get("errors", []),
+        "warnings": ci_json.get("warnings", []),
+    }
+
     # 总体健康 (含 executor drift + M1 instance drift: 声明的 executor 必须实际存在)
     report["healthy"] = (
         not missing
@@ -349,6 +366,7 @@ def healthcheck() -> dict:
         and report["bootstrap"]["ok"]
         and report["executor_drift"]["ok"]
         and report["m1_instance_drift"]["ok"]
+        and report["ci_plane"]["ok"]
     )
     return report
 
@@ -465,6 +483,17 @@ def print_report(report: dict) -> None:
     print(
         f"▶ M1实例drift (机制7): {m1_status} registry={m1['registry_rules']} M1={m1['m1_instances']} 缺={m1['missing_in_m1']} 多余={m1['orphan_in_m1']} 过期={m1['stale']}"
     )
+
+    # CI 平面可观测性 (ADR-0379 E-3: ci-surfaces SSOT vs 实际接线)
+    ci = report["ci_plane"]
+    ci_status = "✅" if ci["ok"] else "❌"
+    print(
+        f"▶ CI平面 (ADR-0379): {ci_status} surfaces={ci['surfaces']} wired={ci['wired_tools']} errors={ci['error_count']} warns={ci['warn_count']}"
+    )
+    for e in ci["errors"][:5]:
+        print(f"    ❌ {e}")
+    for w in ci["warnings"][:5]:
+        print(f"    ⚠️  {w}")
 
     print()
     overall = "✅ 全绿 (GaC 体系闭环生效)" if report["healthy"] else "❌ 有红 (见上)"

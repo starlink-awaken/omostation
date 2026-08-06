@@ -59,6 +59,7 @@ def _extract_registered_cr_ids() -> set[str]:
 # 合并/归档规则 ID 白名单 (已合并到 CR-L0-CONSTRAINTS-SSOT 等组规则)
 # 这些规则曾经是独立的 indexed 条目, 被合并到组规则后仍被 ADR 引用.
 LEGACY_CR_IDS = {
+    "CR-CI-01",
     "CR-ADMISSION-01",
     "CR-AGT-ASI-01",
     "CR-AGT-ASI-10",
