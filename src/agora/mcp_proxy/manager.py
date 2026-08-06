@@ -266,9 +266,7 @@ class ProxyManager:
                 # 只要命令/参数指向 workspace 下项目即视为本地受信任服务。
                 _is_local_workspace = (
                     f"{_workspace_root}/projects/" in _cmd
-                    or _cmd.startswith(
-                        (f"{_workspace_root}/", "projects/")
-                    )
+                    or _cmd.startswith((f"{_workspace_root}/", "projects/"))
                     or "projects/" in _cmd
                 )
                 if (
