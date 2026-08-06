@@ -1,6 +1,6 @@
 # Cockpit 能力地图
 
-> 自动生成于 2026-08-04T11:13:40Z | 版本 1.0.0
+> 自动生成于 1970-01-01T00:00:00Z | 版本 1.0.0
 > 源: `docs/generated/capability-registry.yaml` | 请勿手动编辑
 > 生成器: `bin/cockpit/gen-help-docs.py`
 
@@ -8,10 +8,10 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 111 |
+| CLI 命令 (含子命令) | 121 |
 | MCP 工具 | 581 |
 | MCP 服务器 | 28 |
-| BOS 服务 | 196 |
+| BOS 服务 | 202 |
 | BOS 域 | 16 |
 
 ## MCP 服务器清单
@@ -60,7 +60,7 @@
 | `forge` | 1 |
 | `governance` | 34 |
 | `l4-kernel` | 1 |
-| `memory` | 41 |
+| `memory` | 47 |
 | `meta` | 1 |
 | `omo` | 4 |
 | `persona` | 10 |
@@ -85,6 +85,7 @@
 | `cockpit ask` | 向大脑提问（知识检索 + LLM 回答） |
 | `cockpit assistant` | P5-F2 work-assistant: 1 真实工作 query → 结构化草稿 |
 | `cockpit audit` | 🔍 6 维度全方位审计 (调 bin/workspace-audit) |
+| `cockpit backends` | 列出 BOS 后端 |
 | `cockpit bos` | BOS URI 查询与管理 |
 | `cockpit bos-capability` | BOS capability / toolbox 外部能力 |
 | `cockpit bos-inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
@@ -98,6 +99,7 @@
 | `cockpit code` | 代码库分析与审查 (基于 codeanalyze) |
 | `cockpit compass` | 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理) |
 | `cockpit compute` | 算力与 LLM 网关操作 (委派 aetherforge) |
+| `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
 | `cockpit context` | 显示系统上下文 (Phase/CARDS/约束/引导) |
 | `cockpit contracts` | 契约验证 |
 | `cockpit daily` | 每日研究简报 |
@@ -115,6 +117,7 @@
 | `cockpit export-research` | 将研究对象导出为 WorkspaceObject JSON |
 | `cockpit family-hub` | 家庭数字枢纽入口 |
 | `cockpit finance` | 💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域) |
+| `cockpit forget` | 遗忘传播 |
 | `cockpit gac` | GaC 治理健康检查 (ADR-0106, 7 机制 + 115 规则 + drift) |
 | `cockpit gbrain` | Postgres-native 知识库入口 (委派 gbrain CLI) |
 | `cockpit gc` | 清理 data/tmp 过期文件 |
@@ -139,11 +142,13 @@
 | `cockpit list` | 列债务项 (委派 omo debt) |
 | `cockpit logs` | 查看日志 |
 | `cockpit mcp` | 启动 MCP server 或列出工具 |
+| `cockpit memory` | 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref) |
 | `cockpit mesh` | omlx 算力网格路由入口 |
 | `cockpit metrics` | 查看 bus metrics 快照 |
 | `cockpit model-driven` | 模型驱动生命周期入口 (委派 model-driven CLI) |
 | `cockpit mof` | MOF 元模型操作 (委派 mof CLI) |
 | `cockpit monitor` | 📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出) |
+| `cockpit mutate` | 通过 agora 统一 BOS URI 写协议修改资源 |
 | `cockpit nodes` | 列出 KOS 中注册的算力节点 |
 | `cockpit observe` | 可观测性栈（Langfuse）入口 |
 | `cockpit omo` | OMO CLI 委派 (debt/state/governance/lint/...) |
@@ -159,6 +164,9 @@
 | `cockpit radar` | P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates |
 | `cockpit read` | 通过 BOS 网关统一读取指定 URI 资源 |
 | `cockpit readiness` | P66: governance readiness dashboard 摘要 (4 卡片: summary/dimensions/alerts/history) |
+| `cockpit recall` | 意图路由召回（neo4j/temporal 支持 --as-of） |
+| `cockpit register` | 注册 BOS 服务 |
+| `cockpit reload` | 重载 BOS 配置/M1 |
 | `cockpit remember` | 手动存入偏好/事实 |
 | `cockpit research` | 深度研究 |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
@@ -174,6 +182,7 @@
 | `cockpit stats` | 索引统计 |
 | `cockpit status` | 系统健康 |
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
+| `cockpit swarm` | 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
 | `cockpit topics` | 列出已注册 topic |
 | `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
 | `cockpit types` | 查看已注册的数据类型 |
@@ -184,7 +193,8 @@
 | `cockpit version` | 版本信息 |
 | `cockpit watch` | 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher) |
 | `cockpit wave2` | 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON) |
-| `cockpit workflow` | 🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎） |
+| `cockpit workflow` | BOS workflow 相关 |
+| `cockpit write` | 双轨写入 (+ Neo4j FACT 若配置) |
 
 ---
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-04T11:13:40Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*
