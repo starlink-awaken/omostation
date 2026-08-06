@@ -14,7 +14,7 @@ version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-P76-7-1-LLM-ADVISORY-ONLY
-  dimension: X1
+  dimension: X4
   layer: meta
   check_type: hygiene_case
   executor:
@@ -23,6 +23,7 @@ properties:
   lifecycle: active
   version: 1.0.0
   created_at: *id001
+  adr: ADR-0158
   source_type: native
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:

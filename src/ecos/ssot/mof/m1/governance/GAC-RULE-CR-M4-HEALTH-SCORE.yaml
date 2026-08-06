@@ -17,6 +17,7 @@ properties:
   layer: meta
   check_type: freshness
   executor:
+  - ci_gate
   - radar_cron
   - omo_audit
   lifecycle: active

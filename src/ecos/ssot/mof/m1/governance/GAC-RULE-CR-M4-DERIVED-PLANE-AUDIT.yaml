@@ -17,6 +17,7 @@ properties:
   layer: meta
   check_type: ssot_pointer
   executor:
+  - ci_gate
   - omo_audit
   - radar_cron
   lifecycle: active

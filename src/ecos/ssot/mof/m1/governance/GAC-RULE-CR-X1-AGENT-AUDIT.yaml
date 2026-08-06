@@ -17,13 +17,14 @@ properties:
   layer: meta
   check_type: audit_chain
   executor:
+  - ci_gate
   - mcp_tool
   - omo_audit
   lifecycle: active
   version: 1.0.0
   created_at: '2026-06-26'
   target: runtime/omo/_delivery/ingress/ingress-trail.jsonl
-  adr: ADR-0106
+  adr: ADR-0121
   source_type: native
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:

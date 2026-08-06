@@ -19,7 +19,7 @@ version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-FOUNDRY-MONITOR
-  dimension: X1
+  dimension: X2
   layer: meta
   check_type: drift_audit
   executor:

@@ -10,7 +10,7 @@ status: active
 domain: meta
 layer: meta
 created: '2026-07-07'
-version: 0.1.0
+version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-LAYER-CALL-DIRECTION
@@ -23,7 +23,7 @@ properties:
   - gac_local_gate
   - ci_gate
   lifecycle: active
-  version: 0.1.0
+  version: 1.0.0
   created_at: '2026-07-07'
   target: projects/*/src/**
   adr: ADR-0156

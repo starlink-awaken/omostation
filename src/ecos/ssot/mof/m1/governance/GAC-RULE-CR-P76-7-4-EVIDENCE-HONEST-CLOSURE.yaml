@@ -14,7 +14,7 @@ version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
-  dimension: X2
+  dimension: X1
   layer: meta
   check_type: audit_chain
   executor:
