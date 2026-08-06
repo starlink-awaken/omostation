@@ -2608,8 +2608,8 @@ gac:
     adr: ADR-0373
     source_type: native
     enforcement: advisory
-source_ref: bin/gac/check-governance-trend.py
-    target: docs/**/*.md
+    source_ref: bin/gac/check-governance-trend.py
+    target: 'docs/**/*.md'
 
   - id: CR-LLM-GATEWAY-ONLY
     source_type: native
