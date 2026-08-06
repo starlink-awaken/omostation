@@ -2456,7 +2456,7 @@ gac:
     name: LLM 推理统一接入层
     description: '禁止业务代码直连 ollama (11434) / 裸 OpenAI 端点; 必须走 llm-router /
       AetherForge 网关. 静态源码扫描, --warn 迁移期仅告警. 实现: bin/gac/check-llm-gateway-only.py'
-    check_type: static_scan
+    check_type: drift_audit
     target: projects/**
     source_ref: bin/gac/check-llm-gateway-only.py::--warn
     executor:
