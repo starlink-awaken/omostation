@@ -16,7 +16,7 @@ properties:
   id: CR-LLM-GATEWAY-ONLY
   dimension: X2
   layer: meta
-  check_type: static_scan
+  check_type: drift_audit
   executor:
   - ci_gate
   lifecycle: active
