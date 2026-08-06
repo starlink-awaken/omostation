@@ -108,6 +108,23 @@ def load_registry(path: Path = REGISTRY_PATH) -> dict[str, Any]:
             is_workflow_file = "workflows" in yaml_file.parts
             if "workflows" in doc:
                 workflows_list.extend(doc["workflows"])
+                # ADR-0381 P0b: 单文件格式 (旧 monolithic / 测试 fixture) 中
+                # runner/claim_policy/diff_checks 等与 workflows 同 doc — 必须一并合并,
+                # 否则 runner 配置 (lock_state_dir 等) 丢失 → 锁落到默认目录 (v10 回归).
+                for key, value in doc.items():
+                    if key == "workflows":
+                        continue
+                    if key == "external_patterns" and isinstance(value, dict):
+                        external_patterns.update(value)
+                        continue
+                    if (
+                        key in merged
+                        and isinstance(merged[key], dict)
+                        and isinstance(value, dict)
+                    ):
+                        merged[key] = _deep_merge(merged[key], value)
+                    else:
+                        merged[key] = value
                 continue
             if is_workflow_file and "id" in doc and "run_frequency" in doc:
                 workflows_list.append(doc)
