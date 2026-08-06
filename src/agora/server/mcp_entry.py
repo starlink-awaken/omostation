@@ -22,7 +22,7 @@ import os
 import sys
 
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from agora.server.mcp import logger, mcp
@@ -117,6 +117,22 @@ def _register_common_routes() -> None:
             logger.exception("backend_register_failed", name=name)
             return JSONResponse({"error": "internal"}, status_code=500)
 
+    async def metrics_endpoint(request: Request):
+        """GET /metrics — Prometheus scrape endpoint.
+
+        P2-1: 暴露进程内指标 (prometheus_client), 供外部 Prometheus/Grafana 接入。
+        与 /health 一致, 不走 AuthMiddleware (仅暴露聚合指标, 无敏感数据)。
+        """
+        try:
+            from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
+            return Response(
+                content=generate_latest(), media_type=CONTENT_TYPE_LATEST
+            )
+        except Exception:  # defensive fallback
+            logger.exception("metrics_scrape_failed")
+            return JSONResponse({"error": "metrics_unavailable"}, status_code=500)
+
     mcp._additional_http_routes.append(Route("/health", endpoint=health_endpoint))
     mcp._additional_http_routes.append(
         Route("/v1/tools/call", endpoint=tool_call_endpoint, methods=["POST"])
@@ -127,6 +143,9 @@ def _register_common_routes() -> None:
             endpoint=register_backend_endpoint,
             methods=["POST"],
         )
+    )
+    mcp._additional_http_routes.append(
+        Route("/metrics", endpoint=metrics_endpoint)
     )
 
 
