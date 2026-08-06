@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """CR-X2-METRIC-TREND — 治理指标趋势检查."""
 
-import json, subprocess, sys
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]

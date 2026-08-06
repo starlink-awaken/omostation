@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """CR-X2-DOC-FRESHNESS-GATE — 文档新鲜度检查. 检查 docs/ 下 md 文件是否在 90 天内更新过."""
 
-import subprocess, sys
+import subprocess
+import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
