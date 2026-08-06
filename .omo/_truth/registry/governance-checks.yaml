@@ -240,6 +240,7 @@ gac:
     check_type: drift_audit
     target: governance-checks.yaml::gac.rules vs executor 实际注册
     executor:
+    - ci_gate
     - radar_cron
     lifecycle: active
     version: 1.0.0
@@ -253,6 +254,7 @@ gac:
     check_type: audit_chain
     target: runtime/omo/_delivery/ingress/ingress-trail.jsonl
     executor:
+    - ci_gate
     - mcp_tool
     - omo_audit
     lifecycle: active
@@ -382,6 +384,7 @@ gac:
     check_type: audit_chain
     target: .omo/_truth/registry/mutation-surfaces.yaml::surfaces
     executor:
+    - ci_gate
     - omo_audit
     lifecycle: active
     version: 1.0.0
@@ -497,7 +500,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0121
   - id: CR-META-BIN-ORPHAN
-    dimension: X1
+    dimension: X2
     layer: meta
     name: bin 工具未接 caller drift (工具存在但 0 caller)
     description: '防元治理盲区 2.0: bin/*.py 工具应至少有一个 caller (Makefile / .github/workflows/ / pre-commit / gac-local-gate.py::CHECKS
@@ -527,7 +530,7 @@ gac:
     created_at: '2026-07-03'
     adr: ADR-0130
   - id: CR-P74-RUNTIME-STAMP-POLICY
-    dimension: X1
+    dimension: X2
     layer: meta
     name: Runtime stamp policy guard (P74, ADR-0130)
     description: 'P74 §2: 治 runtime 孤儿文件累积. runtime/ 下文件必须 gitignored 或 tracked 或在 ALLOW_PATHS 列表. 实现: omo lint stamp-policy
@@ -996,6 +999,7 @@ gac:
     target: projects/ecos/.omo/_derived/m4-health.json
     source_ref: bin/mof/m4-health-score.py::emit
     executor:
+    - ci_gate
     - radar_cron
     - omo_audit
     enforcement: advisory
@@ -1045,6 +1049,7 @@ gac:
     target: projects/ecos/.omo/_derived/
     source_ref: bin/gac/omo-state-cleanup.py::audit
     executor:
+    - ci_gate
     - omo_audit
     - radar_cron
     enforcement: advisory
@@ -1072,7 +1077,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0156
   - id: CR-META-METRIC-DEBT-FEATURE
-    dimension: X3
+    dimension: X2
     layer: meta
     name: debt-closed-per-feature 指标
     description: '每交付 1 feature 必须关闭 ≥ 0.5 debt (issued). 治理 score 才能真与开发节奏挂钩. 公式: resolved_count_30d / feat_count_30d. threshold=0.5.'
@@ -1080,6 +1085,7 @@ gac:
     target: bin/gac/debt-closed-per-feature.py
     source_ref: bin/gac/debt-closed-per-feature.py::main
     executor:
+    - ci_gate
     - radar_cron
     - omo_audit
     enforcement: advisory
@@ -1088,7 +1094,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0157
   - id: CR-SUBMODULE-BUMP-AUTO
-    dimension: X1
+    dimension: X2
     layer: meta
     name: Submodule pointer 落后检测 (主仓-子仓对称修复)
     description: '当主仓主分支 .gitmodules 路径下 submodule 实际 HEAD ≠ 主仓 pin SHA,
@@ -1111,7 +1117,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0158
   - id: CR-X-PROMOTION-LIFECYCLE
-    dimension: X3
+    dimension: X2
     layer: X
     name: X 扩展晋升 4 阶段守门
     description: 'X 扩展必经 4 阶段 (idea / 0.1.x / 1.0.x / 2.0.x). 跳级 = 治本变更.
@@ -1124,6 +1130,7 @@ gac:
     check_type: drift_audit
     target: docs/project-registry.yaml (X 段) + projects/<x-name>/.promotion-state
     executor:
+    - ci_gate
     - omo_audit
     - radar_cron
     enforcement: advisory
@@ -1132,7 +1139,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0158
   - id: CR-FOUNDRY-MONITOR
-    dimension: X1
+    dimension: X2
     layer: meta
     name: Knowledge Foundry cron 监控
     description: 'Knowledge Foundry 9-cron deck 每 6h 跑一次, run ledger 持久化 (runtime/omo/_delivery/foundry/).
@@ -1156,7 +1163,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0160
   - id: CR-COMMIT-LLM-ASSIST
-    dimension: X3
+    dimension: X2
     layer: meta
     name: LLM-assisted commit (advisory 硬门)
     description: 'LLM 永远不能 auto-commit. 必须通过 bin/gac/commit-assist.py, 必须 write .commit-suggestion (侧车)
@@ -1230,7 +1237,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0165
   - id: CR-EVIDENCE-DECLARED
-    dimension: X4
+    dimension: X2
     layer: meta
     name: ADR closeout 引用 ≥1 evidence path
     description: 'ADR closeout 必须有真 evidence path. 防 ophist 反模式 (修真修真原则 P76-7-4).
@@ -1250,7 +1257,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0165
   - id: CR-PR-CHECKLIST-COMPLETE
-    dimension: X1
+    dimension: X2
     layer: meta
     name: PR body 必含 WHY/WHAT
     description: 'gh pr create 的 --body 必 ≥1 行非空 + 含 ''## Summary'' 或 ''## WHY'' 段.
@@ -1652,7 +1659,7 @@ gac:
     adr: ADR-0158
     source_type: native
   - id: CR-P79-3-FOUNDRY-DECK
-    dimension: X3
+    dimension: X1
     layer: meta
     name: 治理轴 Foundry Deck
     description: '每治理轴对应一个 foundry deck. 对应 P79-3 (foundry-deck-per-governance-axis). 实现: bin/gac/check-foundry-deck-coverage.py (gac-local-gate)'
@@ -1667,7 +1674,7 @@ gac:
     adr: ADR-0174
     source_type: native
   - id: CR-P79-4-CATALOG-HEALTH-METRIC
-    dimension: X3
+    dimension: X1
     layer: meta
     name: Catalog 健康指标
     description: '原则数和 GaC 规则数作为可观测指标写入 foundry. 对应 P79-4 (catalog-health-metric). 实现: bin/gac/check-catalog-health.py (gac-gate CI, advisory)'
@@ -1682,7 +1689,7 @@ gac:
     adr: ADR-0373
     source_type: native
   - id: CR-P76-7-1-LLM-ADVISORY-ONLY
-    dimension: X1
+    dimension: X4
     layer: meta
     name: LLM 建议不自动
     description: 'LLM 只 generate suggestion, 永不 auto-apply. 实现: bin/gac/check-llm-advisory-only.py (gac-gate CI)'
@@ -1712,7 +1719,7 @@ gac:
     adr: ADR-0158
     source_type: native
   - id: CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
-    dimension: X2
+    dimension: X1
     layer: meta
     name: 任务关闭需真证据
     description: 'task close 必须有真 evidence. 对应 P76-7-4 (evidence-honest-closure). 实现: bin/gac/check-evidence-honest-closure.py (gac-local-gate)'
@@ -1727,7 +1734,7 @@ gac:
     adr: ADR-0158
     source_type: native
   - id: CR-P76-7-5-RESOLVE-NOT-STUB
-    dimension: X2
+    dimension: X1
     layer: meta
     name: 物理实现不占位
     description: '物理未实现的 placeholder, 必须决议. 实现: bin/gac/check-resolve-not-stub.py (gac-gate CI, advisory)'
@@ -1787,7 +1794,7 @@ gac:
     adr: ADR-0158
     source_type: native
   - id: CR-P76-9A-4-HEURISTIC-DEFAULT
-    dimension: X1
+    dimension: X4
     layer: meta
     name: 本地启发式默认
     description: '本地调 --no-llm 不依赖外部服务可用. 实现: bin/gac/check-heuristic-default.py (gac-gate CI)'
@@ -1843,6 +1850,7 @@ gac:
     executor:
     - omo_audit
     - ci_gate
+    - mof_validate
     lifecycle: active
     version: 1.0.0
     created_at: '2026-06-27'
@@ -2069,7 +2077,7 @@ gac:
     source_type: native
 
   - id: CR-X-META-HEALTH
-    dimension: X1
+    dimension: X4
     layer: meta
     name: GaC 治理系统自检
     description: '检查治理系统自身健康度: 规则数 ≤ freeze, 无重复 ID, 无过期 draft. 治理系统自省能力. 实现: bin/gac/check-meta-health.py (gac-gate CI, advisory)'
@@ -2161,7 +2169,7 @@ gac:
     source_type: native
 
   - id: CR-REDLINE-COVERAGE
-    dimension: X2
+    dimension: X4
     layer: meta
     name: 红线覆盖率
     description: '检查红线规则对关键路径的覆盖程度. 已运行于 gac-local-gate. 实现: bin/gac/check-redline-coverage.py (gac-local-gate)'
@@ -2191,7 +2199,7 @@ gac:
     source_type: native
 
   - id: CR-DUAL-TRACK-PURITY
-    dimension: X2
+    dimension: X4
     layer: meta
     name: 双轨纯度
     description: '确保治理变更和功能开发保持双轨隔离. 已运行于 gac-local-gate. 实现: bin/gac/check-dual-track-purity.py (gac-local-gate)'
@@ -2221,7 +2229,7 @@ gac:
     source_type: native
 
   - id: CR-ADVERSARIAL-EFFECTIVENESS
-    dimension: X2
+    dimension: X4
     layer: meta
     name: 对抗有效性
     description: '评估治理规则的对抗有效性. 已运行于 gac-local-gate. 实现: bin/gac/check-adversarial-effectiveness.py (gac-local-gate)'
