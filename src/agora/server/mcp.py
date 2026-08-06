@@ -491,7 +491,12 @@ def _get_task_manager() -> TaskManager:
 _PROXY_CONFIG_PATH = mcp_bootstrap.get_data_dir() / "agora-proxy-services.json"
 
 # Forge asset registry path — the single source of truth for service port configs
-_FORGE_REGISTRY_PATH = Path.home() / "Workspace" / "Forge" / "assets" / "registry.json"
+_FORGE_REGISTRY_PATH = _Path(
+    os.environ.get(
+        "AGORA_FORGE_REGISTRY",
+        str(_Path.home() / "Workspace" / "Forge" / "assets" / "registry.json"),
+    )
+)
 
 # ── Wire in proxy/registry/diagnostics/governance tools ─────────────
 _set_proxy_constants(_PROXY_CONFIG_PATH, _FORGE_REGISTRY_PATH)

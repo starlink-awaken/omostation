@@ -116,7 +116,16 @@ try:
                     import uuid
 
                     cache_id = str(uuid.uuid4())
-                    cache_dir = os.path.expanduser("~/Workspace/LADS/agora_cache")
+                    cache_dir = os.path.expanduser(
+                        os.environ.get(
+                            "AGORA_CACHE_DIR",
+                            os.path.join(
+                                os.environ.get("WORKSPACE_ROOT", os.path.expanduser("~/Workspace")),
+                                "LADS",
+                                "agora_cache",
+                            ),
+                        )
+                    )
                     os.makedirs(cache_dir, exist_ok=True)
 
                     # Probabilistic TTL cleanup (5% chance to run)

@@ -565,7 +565,12 @@ def register_proxy_tools(mcp: FastMCP) -> None:
 
         from agora.server._response import _ok
 
-        gov_log = Path.home() / ".hermes/architecture/governance_log/governance.jsonl"
+        gov_log = Path(
+            os.environ.get(
+                "HERMES_GOVERNANCE_LOG",
+                str(Path.home() / ".hermes/architecture/governance_log/governance.jsonl"),
+            )
+        )
         if not gov_log.exists():
             return _ok({"format_version": FORMAT_VERSION, "status": "no_log_found"})
 
@@ -623,7 +628,8 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         from pathlib import Path
 
         # runtime.arch_health (workspace 级聚合, 从 cockpit 提取到 L1 共享, 破跨层 I0→L3)
-        runtime_src = Path.home() / "Workspace/projects/runtime/src"
+        ws_root = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+        runtime_src = ws_root / "projects/runtime/src"
         if str(runtime_src) not in sys.path:
             sys.path.insert(0, str(runtime_src))
 

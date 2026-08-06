@@ -56,7 +56,8 @@ def discover_from_workspace(workspace_root: str = "") -> int:
     ws = (
         Path(workspace_root)
         if workspace_root
-        else Path.home() / "Workspace" / "projects"
+        else Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+        / "projects"
     )
     if not ws.exists():
         _log.warning("Workspace 目录不存在: %s", ws)

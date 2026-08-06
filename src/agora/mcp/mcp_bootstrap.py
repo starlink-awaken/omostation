@@ -354,8 +354,9 @@ def _find_workspace_root() -> Path | None:
             pass
 
     # 5. Try common known locations (for global tool install)
+    ws_root = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
     for candidate_path in [
-        Path.home() / "Workspace" / "projects" / "kairon",
+        ws_root / "projects" / "kairon",
         Path.home() / "kairon",
     ]:
         if candidate_path.is_dir() and (candidate_path / "packages").is_dir():
