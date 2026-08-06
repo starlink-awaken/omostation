@@ -22,7 +22,7 @@ version: 0.2.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-CROSS-REPO-CONSISTENT
-  dimension: X3
+  dimension: X4
   layer: meta
   check_type: consistency_drift
   executor:
