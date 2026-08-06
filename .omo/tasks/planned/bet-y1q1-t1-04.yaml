@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q1-T1-04
 title: 未入库产物普查 + D0 铁律门禁
 status: candidate
@@ -44,7 +44,7 @@ test_plan:
 - git status --porcelain --untracked-files=all | grep '^??' | wc -l
 - grep -c 'D0' AGENTS.md
 - python3 bin/change-lane-check.py --file docs/plans/3y-bet-ledger.yaml --json
-workflow: governance-state-mutation
+workflow: bet-execution
 write_surfaces:
 - .gitignore
 - AGENTS.md

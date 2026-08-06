@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q3-T3-03
 title: 退役 mem0 / memtheta 仿真适配器
 status: candidate
@@ -39,7 +39,7 @@ evidence_required:
 - 适配器审计文档更新
 test_plan:
 - grep -c 'partial_simulation' .omo/_truth/registry/memory-os.yaml
-workflow: project-code-change
+workflow: bet-execution
 write_surfaces:
 - .omo/_truth/registry/memory-os.yaml
 pasw_required: false

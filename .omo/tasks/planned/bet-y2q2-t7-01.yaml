@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y2Q2-T7-01
 title: 知识入库场景升 assisted
 status: candidate
@@ -39,7 +39,7 @@ evidence_required:
 - 召回被引用率 >= 25%
 test_plan:
 - 'grep -c ''lifecycle: assisted'' docs/scene-cards/v2/knowledge-ingest.yaml'
-workflow: project-doc-change
+workflow: bet-execution
 write_surfaces:
 - docs/scene-cards/**
 pasw_required: false

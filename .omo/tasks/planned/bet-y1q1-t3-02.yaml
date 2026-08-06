@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q1-T3-02
 title: SceneWatcher 决策日志真写 MOS
 status: candidate
@@ -40,7 +40,7 @@ evidence_required:
 - docstring 与实现一致(无未兑现声称)
 test_plan:
 - python3 bin/ssot/doc-claim-lint.py projects/omo/src/omo/scenewatcher.py
-workflow: project-code-change
+workflow: bet-execution
 write_surfaces:
 - .omo/_truth/registry/memory-os.yaml
 pasw_required: false

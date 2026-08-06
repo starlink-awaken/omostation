@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q4-T4-01
 title: 真实评测集 v1 (≥200 条)
 status: candidate
@@ -42,7 +42,7 @@ evidence_required:
 - 明确标注"非合成"来源
 test_plan:
 - ls .omo/_delivery/evalsets/ | wc -l
-workflow: project-code-change
+workflow: bet-execution
 write_surfaces:
 - .omo/_delivery/evalsets/**
 pasw_required: false

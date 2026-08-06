@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q1-T1-05
 title: 仓库拓扑改造 — 单实例多租户 → 多实例单写者
 status: candidate
@@ -47,7 +47,7 @@ test_plan:
 - ls -d ~/agents/*/ws 2>/dev/null | wc -l
 - grep -c 'd2_branch_occupancy\|d3_shared_worktree_claim\|d5_pasw' .omo/_truth/registry/swarm-coordination.yaml
 - python3 bin/plan/bet-ledger.py surface
-workflow: governance-state-mutation
+workflow: bet-execution
 write_surfaces:
 - bin/gac/**
 - .githooks/**

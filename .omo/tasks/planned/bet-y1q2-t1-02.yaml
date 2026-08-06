@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q2-T1-02
 title: model-driven 去留判定
 status: candidate
@@ -37,7 +37,7 @@ evidence_required:
 - 若判定为降库, 排入 Y1Q4 执行 bet
 test_plan:
 - ls .omo/_knowledge/decisions/ | grep -c model-driven
-workflow: governance-audit
+workflow: bet-execution
 write_surfaces:
 - .omo/_knowledge/decisions/**
 - docs/project-registry.yaml

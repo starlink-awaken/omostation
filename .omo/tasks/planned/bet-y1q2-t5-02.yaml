@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y1Q2-T5-02
 title: 回退边执行语义 + 次数上限 + 升级路径
 status: candidate
@@ -40,7 +40,7 @@ evidence_required:
 - 超限自动升级为 human_hold 并产生 OMO 事件
 test_plan:
 - python3 bin/ssot/journey-runner.py docs/scene-cards/v2/document-review.yaml --json
-workflow: project-code-change
+workflow: bet-execution
 write_surfaces:
 - bin/ssot/journey-runner.py
 pasw_required: false

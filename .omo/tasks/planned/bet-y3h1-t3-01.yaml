@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:15:49+00:00
+# generated_at: 2026-08-06T12:21:14+00:00
 id: BET-Y3H1-T3-01
 title: 新场景冷启动 < 2 周
 status: candidate
@@ -39,7 +39,7 @@ evidence_required:
 - 复用来源可解释
 test_plan:
 - make memory-os-check
-workflow: project-code-change
+workflow: bet-execution
 write_surfaces:
 - docs/scene-cards/**
 pasw_required: false
