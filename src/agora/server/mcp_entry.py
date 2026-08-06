@@ -51,10 +51,11 @@ def _register_common_routes() -> None:
             )
 
     async def tool_call_endpoint(request: Request):
-        from fastmcp.server.dependencies import _current_http_request  # type: ignore[reportPrivateImportUsage]
+        from agora.server.request_context import reset_http_request, set_http_request
 
-        # FastMCP dependency injection looks at _current_http_request to find the HTTP request
-        token = _current_http_request.set(request)
+        # FastMCP dependency injection looks at the HTTP request to find the request.
+        # P2-6: 统一经 request_context 注入, 不直接依赖 fastmcp 私有 API。
+        token = set_http_request(request)
         try:
             payload = await request.json()
             tool_name = payload.get("name")
@@ -84,7 +85,7 @@ def _register_common_routes() -> None:
             logger.exception("REST tool call failed")
             return JSONResponse({"error": "internal"}, status_code=500)
         finally:
-            _current_http_request.reset(token)
+            reset_http_request(token)
 
     async def register_backend_endpoint(request: Request):
         """POST /v1/backends/register — dynamically register a new MCP backend."""

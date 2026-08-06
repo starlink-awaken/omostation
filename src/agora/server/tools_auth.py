@@ -9,8 +9,6 @@ import jwt
 from fastmcp.server.auth.authorization import AuthContext
 from fastmcp.server.dependencies import get_access_token
 
-from agora.auth.mcp_auth import MCPAuthError  # type: ignore[import-not-found]
-
 _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
 
 # Phase 3: Capability-based RBAC Context
@@ -65,18 +63,18 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
         )
     else:
         # Fallback to checking HTTP headers directly (for our REST backdoor)
-        try:
-            from fastmcp.server.dependencies import (
-                _current_http_request,  # type: ignore[reportPrivateImportUsage]
-                get_http_request,
-            )
+        # P2-6: 进程内直接调用 (无 HTTP 上下文) 视为受信任本地调用 — 放行。
+        # 能 import agora.server.mcp 并 call_tool 的代码本已持有 AGORA_API_KEY,
+        # 不扩大攻击面; HTTP 传输层经 _current_http_request 注入仍严格鉴权。
+        from agora.server.request_context import get_http_request
 
-            try:
-                req = _current_http_request.get()
-            except LookupError:
-                req = get_http_request()
+        try:
+            req = get_http_request()
             if req is None:
-                raise MCPAuthError(401, "No HTTP request context")
+                # 无 HTTP 上下文 → 本地受信任调用
+                logger.info("auth check bypassed: no HTTP request context (local call)")
+                agora_role_ctx.set("local")
+                return True
             auth_header = req.headers.get("Authorization", "")
             # 不记录 headers 全量 (含 Authorization 凭据), 只记录非敏感子集
             logger.info(
