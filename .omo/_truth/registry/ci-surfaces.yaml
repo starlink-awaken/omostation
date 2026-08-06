@@ -566,11 +566,11 @@ surfaces:
     status: active
   - id: bin-gac-ci-check-runner-py
     tool: bin/gac/ci-check-runner.py
-    workflow: governance-check.yml
+    workflow: (none)
     gate: false
-    triggers: [per_pr, push, scheduled]
+    triggers: []
     status: active
-    note: registry-driven runner (ADR-0379 E-2) — 本身不执行检查, 是执行引擎
+    note: registry-driven runner (ADR-0379 E-2) — 执行引擎, 由 workflow bash 直接调用, 不作为 surface 执行
   - id: bin-gac-check-ci-surfaces-py
     tool: bin/gac/check-ci-surfaces.py
     workflow: (none)
