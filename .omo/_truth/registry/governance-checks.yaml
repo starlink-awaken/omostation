@@ -1053,7 +1053,7 @@ gac:
     created_at: '2026-07-06'
     adr: ADR-0152
   - id: CR-LAYER-CALL-DIRECTION
-    dimension: X3
+    dimension: X4
     layer: meta
     name: 分层调用方向契约
     description: '防止 L2 引擎小环形成.允许方向: L3->{I0,L1,L2,M0,L4}; I0->{L0,M0}; L4->{L0}; L2->{L0,I0,L2}; L1->{L0}; X->{ANY}.禁止: L0/M0->project;
@@ -1181,7 +1181,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0161
   - id: CR-CROSS-REPO-CONSISTENT
-    dimension: X3
+    dimension: X4
     layer: meta
     name: 跨仓 BOS URI / port-registry 一致性 (hard, P77 Phase 3 治本后)
     description: '对比 projects/agora/etc/bos-services.yaml (BOS URI SSOT) 与 projects/*/src/ 中
@@ -1269,7 +1269,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0165
   - id: CR-CROSS-REPO-CHECK
-    dimension: X3
+    dimension: X4
     layer: meta
     name: 跨仓 unregistered 阈值守门 (hard, P77 Phase 3 治本后 threshold=0)
     description: 'bin/ssot/check-cross-repo-consistency.py unregistered ≤ threshold (默认 0, Phase 3 治本后).
@@ -1319,7 +1319,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0165
   - id: CR-HARDCODED-PORT
-    dimension: X3
+    dimension: X4
     layer: meta
     name: 跨仓端口硬编码扫描 (P77-5 port-registration-mandatory + P77-7 env-var-SSOT)
     description: '扫 projects/*/src/ 真**代码** (非 test, 非 docstring) 中 port-context 硬编码.
@@ -1389,7 +1389,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0169
   - id: CR-ENV-VAR-PORT
-    dimension: X3
+    dimension: X4
     layer: meta
     name: 端口 env var 引用守护 (P77-7 env-var-SSOT)
     description: '扫 bin/ .githooks/ 和 projects/*/src/ 中 env-only 类型端口
@@ -1413,7 +1413,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0170
   - id: CR-DEPRECATED-PORT
-    dimension: X3
+    dimension: X4
     layer: meta
     name: deprecated 端口使用检测 (P78-1 dead-port-cleanup)
     description: '扫 projects/*/src/ 中 status: deprecated 端口 (8765, 9090) 的代码引用.
