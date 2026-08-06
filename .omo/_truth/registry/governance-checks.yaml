@@ -2609,15 +2609,14 @@ gac:
     source_type: native
     enforcement: advisory
     source_ref: bin/gac/check-governance-trend.py
-    target: 'docs/**/*.md'
-
+    target: docs/**/*.md
   - id: CR-LLM-GATEWAY-ONLY
     source_type: native
     dimension: X2
     layer: meta
     name: LLM 推理统一接入层
-    description: '禁止业务代码直连 ollama (11434) / 裸 OpenAI 端点; 必须走 llm-router /
-      AetherForge 网关. 静态源码扫描, --warn 迁移期仅告警. 实现: bin/gac/check-llm-gateway-only.py'
+    description: '禁止业务代码直连 ollama (11434) / 裸 OpenAI 端点; 必须走 llm-router / AetherForge
+      网关. 静态源码扫描, --warn 迁移期仅告警. 实现: bin/gac/check-llm-gateway-only.py'
     check_type: drift_audit
     target: projects/**
     source_ref: bin/gac/check-llm-gateway-only.py::--warn
@@ -2628,6 +2627,56 @@ gac:
     created_at: '2026-08-06'
     activated_at: '2026-08-06'
     adr: ADR-0380
+    enforcement: advisory
+  - id: CR-X3-L2-DELIVERY-VALUE
+    dimension: X3
+    layer: L2
+    name: 交付价值跟踪
+    description: 每个交付项必须有明确的 X3 价值标注，无价值标注的交付不可进入 closeout
+    check_type: value_roi
+    target: docs/plans/**
+    source_ref: docs/plans/delivery-value.md
+    enforcement: advisory
+    executor:
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-06'
+    adr: ADR-0106
+  - id: CR-X3-X-SLA-ACHIEVEMENT
+    dimension: X3
+    layer: X
+    name: SLA 达成率监控
+    description: 跨层 SLA 达成率必须 ≥ 95%，低于阈值触发治理告警
+    check_type: value_roi
+    target: docs/plans/**
+    source_ref: docs/plans/sla-achievement.md
+    enforcement: advisory
+    executor:
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-06'
+    adr: ADR-0106
+  - id: CR-X3-M4-HEALTH-TREND
+    dimension: X3
+    layer: meta
+    name: M4 健康分趋势
+    description: M4 健康分必须呈上升或持平趋势，连续下降 3 周期触发治理干预
+    check_type: value_roi
+    target: docs/plans/**
+    source_ref: bin/mof/m4-health-score.py
+    enforcement: advisory
+    executor:
+    - omo_audit
+    - radar_cron
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-06'
+    adr: ADR-0106
   drift:
     schedule: daily
     auto_heal: false

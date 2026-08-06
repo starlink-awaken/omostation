@@ -1,77 +1,73 @@
-last_scan: 1785751046.416607
+last_scan: 1786017228.530112
 services:
   agora-gateway:
     health_check: healthy (probe)
     name: agora-gateway
     runtime:
-      freshness_seconds: 60
+      freshness_seconds: 79
       last_healthy_seconds: 0
-      pid: '1404'
+      pid: '47849'
       status: running
-      uptime_seconds: 32861
-    timestamp: 1785751046.416607
+      uptime_seconds: 498
+    timestamp: 1786017228.530112
     type: daemon
   agora-sse:
-    health_check: healthy
+    health_check: unreachable
     name: agora-sse
     port_listening: true
     runtime:
-      freshness_seconds: 60
-      last_healthy_seconds: 0
-      pid: '57214'
-      status: running
-      uptime_seconds: 9586
-    timestamp: 1785751046.416607
+      degraded_reason: health_check=unreachable
+      last_healthy_seconds: 79
+      pid: '47847'
+      status: degraded
+    timestamp: 1786017228.530112
     type: daemon
   cron-service:
     health_check: healthy
     name: cron-service
     port_listening: true
     runtime:
-      freshness_seconds: 60
+      freshness_seconds: 79
       last_healthy_seconds: 0
       pid: '1399'
       status: running
-      uptime_seconds: 278844
-    timestamp: 1785751046.416607
+      uptime_seconds: 545026
+    timestamp: 1786017228.530112
     type: daemon
   gbrain:
     name: gbrain
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1785751046.416607
+    timestamp: 1786017228.530112
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
       status: scheduled
-    timestamp: 1785751046.416607
+    timestamp: 1786017228.530112
     type: scheduled
   kos:
     name: kos
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1785751046.416607
+    timestamp: 1786017228.530112
     type: integrated
   ollama:
     health_check: healthy
     name: ollama
     port_listening: true
     runtime:
-      freshness_seconds: 60
       last_healthy_seconds: 0
-      pid: '1403'
-      status: running
-      uptime_seconds: 278904
-    timestamp: 1785751046.416607
+      status: idle
+    timestamp: 1786017228.530112
     type: daemon
   runtime-mcp:
     name: runtime-mcp
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1785751046.416607
+    timestamp: 1786017228.530112
     type: mcp

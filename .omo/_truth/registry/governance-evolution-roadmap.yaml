@@ -358,7 +358,7 @@ initiatives:
   - id: ci-plane-convergence
     title: CI plane convergence (ADR-0379)
     recommendation: 42 workflows 手工 YAML 无 SSOT → ci-surfaces.yaml 登记 + check-ci-surfaces 检测 + registry-driven runner + double-trigger 去重.
-    status: in_progress
+    status: done
     progress: 70
     last_evaluated: "2026-08-05"
     meadows_level: 5

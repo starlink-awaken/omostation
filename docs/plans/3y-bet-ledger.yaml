@@ -199,24 +199,80 @@ bets:
   appetite: 2 days
   priority: P0
   status: candidate
-  goal: 阻止并发 agent 在共享 main worktree 上互相清理未入库产物
-  non_goals: [重构 gac-worktree, 改变 PASW 隔离子模块集]
+  goal: 阻止并发 agent 在共享 main worktree 上互相清理未入库产物, 并消除 claim 僵尸锁死锁
+  non_goals: [重构 gac-worktree, 改变 PASW 隔离子模块集, 修 lane 分类规则(属 T1-04)]
+  # ── 2026-08-06 实测证据 (本 bet 的立项依据) ────────────────────
+  evidence:
+    E1_shared_tree_writable:
+      观察: 共享主树可写, agent 可直接 git clean / reset --hard
+      实测: 一小时内 HEAD 四变 (847375f0 → 7d7ffdaa → 5dff6900 → 42f23676),
+        分支在 main / work/governance-phase9 / -dimension / -phase10 间切换,
+        未入库文件被清理 4 次; git reset --hard 连暂存区一起摧毁
+      永久损失: bin/ssot/journey-runner.py(601行) / scene-card-lifecycle.py /
+        validate-scene-card-v2.py / docs/scene-cards/v2/(5文件) / Plans/v10-*.md(4份)
+      缺口: ADR-0371 PASW 只隔离 gbrain/cockpit/agora 三个子模块的 gitlink,
+        未禁止 agent 在共享主树上直接工作
+    E2_claim_not_atomic:
+      观察: claim 失败路径非原子, 留下僵尸 path 锁
+      实测: claim 先写 path_<path>.lock.yaml, 再删 run_*.update.lock 时崩溃,
+        path 锁残留; 例 path_docs_plans_AGENT-BRIEF.md.lock.yaml
+        (run d04c2601, created 04:44:13, 早于后续 run 的 04:46:52)
+      后果: 下一个 agent claim 同路径被拒, 只能等 24h TTL;
+        且报错不区分「活锁」与「上次失败留下的僵尸锁」
+      影响面: 多 agent 并行下的常见死锁源, 无自愈路径
+    E4_escape_hatch_opt_in:
+      观察: 逃生口机制完备但 opt-in, raw git 可完全绕过
+      机制现状: bin/gac/swarm-git 是 wrapper, commit/push 前跑 escape-check,
+        校验 SWARM_ESCAPE_ID 是否在
+        swarm-coordination.yaml::escape_hatch_exemptions 白名单内(当前 3 条),
+        通过则写台账 .omo/_delivery/swarm-escape/<ts>-<id>.json
+      缺口: wrapper 非强制。直接 `git commit --no-verify` 即绕过 escape-check,
+        白名单不校验、台账不落盘、审计链断
+      实测: 2026-08-06 提交 49d3ffed5 用 raw git commit --no-verify,
+        escape_id `ledger-evidence-unrelated-to-submodule-rewind` 不在白名单,
+        .omo/_delivery/swarm-escape/ 无对应记录
+      判断: 纪律若依赖「记得用 wrapper」则不是强制而是约定; 多 agent 下约定必然被破
+    E6_commit_dropped_by_branch_rewrite:
+      观察: D0(git add/commit) 不足以保住产物, 共享分支被 rewrite 时提交会脱离
+      实测: 49d3ffed5 提交成功后, work/governance-phase12-fields 被并发 agent
+        rebase/reset 重写, 该提交不再是 HEAD 的祖先;
+        commit 对象仍可 git show, 但工作树与分支历史里内容全部消失
+      损失: T1-00/T1-04 的 evidence 段 + bet-ledger.py lint 增强 + YAML 引号修复
+      判断: 在共享分支上, commit 只是「暂时安全」。真正的持久化下限是
+        tag 或独立分支(ref 不随分支重写而消失)
   done_when:
     - 所有 agent 必须在 gac-worktree claim 出的隔离树内工作, 共享 main 树只读
-    - git clean 类操作在 hook 层要求 SWARM_ESCAPE_ID
+    - git clean / reset --hard / stash -u 在 hook 层要求 SWARM_ESCAPE_ID
     - AGENTS.md 记录"共享主树只读"红线
+    - claim 写锁改为原子(先写临时文件再 rename), 或失败时回滚已写的 path 锁
+    - 锁文件记录 last_heartbeat, 提供 stale-lock 检测与一键清理命令
+    - claim 被拒时的报错区分「活锁(持有者在跑)」与「僵尸锁(上次失败残留)」
+    - "raw git commit/push --no-verify 被 hook 层拦截, 强制走 bin/gac/swarm-git"
+    - "共享分支 rewrite 前须检查是否会丢弃他人提交; 或禁止在共享分支上 rebase/reset"
+    - "D0 铁律升级: 交付物 commit 后须打 tag 或推独立分支, 仅 commit 不算持久化"
   verify:
     - cmd: "make worktree-guard"
       expect: exit 0
     - cmd: "grep -c '共享主树只读\\|shared-main-readonly' AGENTS.md"
       expect: ">= 1"
+    - cmd: "uv run --with pyyaml python bin/agent-workflow.py status --locks"
+      expect: 能列出 stale 锁并给出清理命令
+    - cmd: "ls .omo/_delivery/agent-workflows/locks/run_*.update.lock 2>/dev/null | wc -l"
+      expect: "0  (无残留 update 锁)"
+    - cmd: "SWARM_ESCAPE_ID=bogus git commit --no-verify --allow-empty -m probe"
+      expect: "非 0 (raw git 逃生被拦)"
   workflow: governance-state-mutation
-  write_surfaces: ["AGENTS.md", "bin/gac/**", ".githooks/**"]
+  write_surfaces:
+    - "AGENTS.md"
+    - "bin/gac/**"
+    - ".githooks/**"
+    - "projects/omo/src/omo/workflow/lifecycle.py"
   pasw_required: false
   depends_on: []
   risk_level: L2
   human_gate: false
-  circuit_breaker: 超 4 天 → 先只加 AGENTS.md 红线与 warning, hook 强制推迟
+  circuit_breaker: 超 4 天 → 先做 E2(锁原子性+stale 检测, 影响面更大且纯代码),
+    E1 的 hook 强制推迟, 仅加 AGENTS.md 红线与 warning
   retro: required
 
 - id: BET-Y1Q1-T1-01
@@ -253,17 +309,34 @@ bets:
   appetite: 3 days
   priority: P0
   status: candidate
-  goal: 消除"根仓记录 / 本地检出 / 子模块 main"三方漂移, 使工作树验证结论可信
+  goal: 消除"根仓记录 / 本地检出 / 子模块 main"三方漂移, 使工作树验证结论可信;
+    并解除因门禁先于存量上线造成的主干阻塞
   non_goals: [子模块内部代码修改, 分支合并]
+  # ── 2026-08-06 实测证据 ────────────────────────────────────────
+  evidence:
+    E5_gate_before_cleanup_blocks_trunk:
+      观察: 门禁先于存量清理上线, 导致全仓任何提交都被拦
+      实测: 702e5ee71 落地 CR-SUBMODULE-REWIND(ADR-0380) 后立刻检出
+        18 个子模块指针回退(aetherforge/agora/bus-foundation/c2g/cockpit/
+        cockpit-ui/ecos/family-hub/gbrain/kairon/l4-kernel/metaos/model-driven/
+        observability/omo/omo-debt/runtime/scripts)
+      后果: 该检查是仓库级前置门, 与本次变更无关的提交(如仅改 2 个 docs/bin 文件)
+        同样被拦; 主干进入「任何人提交不了」状态, 只能靠逃生口
+      判断: 顺序反了。门禁应在存量清零后启用, 或先以 warning 上线、
+        给出清理期限后再转 fail
   done_when:
     - "git status --short 无 M/m 子模块条目"
     - 每个子模块本地 HEAD == 根仓 gitlink SHA
+    - 18 个 rewind 存量清零, CR-SUBMODULE-REWIND 在干净状态下通过
     - CI 增加 submodule-pointer-drift 门禁, 漂移则失败
+    - "新门禁上线规程: 存量未清零前只能以 warning 上线, 不得直接 fail"
   verify:
     - cmd: "git status --short | grep -E '^ ?[Mm] projects/' | wc -l"
       expect: "0"
     - cmd: "python3 bin/submodule-gitlink-check.py"
       expect: exit 0
+    - cmd: "git commit --allow-empty -m probe && git reset --soft HEAD~1"
+      expect: "exit 0 (主干未被 rewind 门阻塞)"
   workflow: submodule-pointer-close
   write_surfaces: [".gitmodules", ".github/workflows/**", "bin/submodule-gitlink-check.py"]
   pasw_required: false
@@ -305,19 +378,34 @@ bets:
   appetite: 2 days
   priority: P0
   status: candidate
-  goal: 防止"声称已交付但从未 git add"的产物再次静默消失
-  non_goals: [恢复已丢失文件(属 BET-Y1Q1-T7-02)]
+  goal: 防止"声称已交付但从未 git add"的产物再次静默消失; 并修 lane 分类对配套数据的误判
+  non_goals: [恢复已丢失文件(属 BET-Y1Q1-T7-02), 锁原子性(属 BET-Y1Q1-T1-00)]
+  # ── 2026-08-06 实测证据 ────────────────────────────────────────
+  evidence:
+    E3_docs_yaml_judged_as_code:
+      观察: docs/ 下的 .yaml 被 change-lane-check 判为 code lane
+      实测: docs/plans/3y-bet-ledger.yaml → ['code'] (仅因 .yaml 后缀),
+        同目录 docs/plans/3Y-BET-LEDGER.md → ['docs']
+      后果: "{code, docs} 非允许混合组合 (允许的只有 {governance_code, docs}
+        与 {governance_code, docs, config}), 导致「文档 + 配套数据」的一次改动
+        被迫拆成两个 commit; 本台账落库即因此拆为 35548ddb1 与 875347626"
+      判断: lane 应按「变更意图与影响面」判, 不应只按扩展名;
+        docs/ 下的数据文件属于文档配套, 与 Python 源码不同 lane
   done_when:
     - 全仓 untracked 非 gitignore 文件清单产出并逐条裁定(入库/删除/加 ignore)
-    - closeout 增加 D0 检查: 声明的 deliverable 必须 git ls-files 通过
+    - "closeout 增加 D0 检查: 声明的 deliverable 必须 git ls-files 通过"
     - AGENTS.md 收录 D0 铁律
+    - change-lane-check 对 docs/ 下的数据文件(.yaml/.json/.csv)判为 docs 或 docs_data lane
+    - 若新增 docs_data lane, 则 {docs, docs_data} 进入允许混合组合
   verify:
     - cmd: "git status --porcelain --untracked-files=all | grep '^??' | wc -l"
       expect: "<= 5"
     - cmd: "grep -c 'D0' AGENTS.md"
       expect: ">= 1"
+    - cmd: "python3 bin/change-lane-check.py --file docs/plans/3y-bet-ledger.yaml --json"
+      expect: "lanes 不含 code"
   workflow: governance-state-mutation
-  write_surfaces: [".gitignore", "AGENTS.md", ".pre-commit-config.yaml", "bin/plan/**"]
+  write_surfaces: [".gitignore", "AGENTS.md", ".pre-commit-config.yaml", "bin/plan/**", "bin/change-lane-check.py"]
   pasw_required: false
   depends_on: [BET-Y1Q1-T1-00]
   risk_level: L1
@@ -542,7 +630,7 @@ bets:
   non_goals: [富文本编辑, 移动端, 通知推送]
   done_when:
     - /inbox 列出待裁决条目, 每条含来源/原文定位/问题清单
-    - 三个按钮: 采纳 / 改后采纳 / 忽略
+    - "三个按钮: 采纳 / 改后采纳 / 忽略"
     - 改后采纳自动记录 edit_diff
     - 每日条目上限 5 条(防淹没, 守 R3)
   verify:
@@ -779,7 +867,7 @@ bets:
   goal: 判定 M0 是否在 Mesh 主链上有必经位置, 终结"横切但不在链上"的模糊状态
   non_goals: [立即执行归并(视判定结果)]
   done_when:
-    - 产出判定 ADR: 接入主链 / 降为 ecos 内库 / 归档
+    - "产出判定 ADR: 接入主链 / 降为 ecos 内库 / 归档"
     - 判定依据为实测调用链, 非设计意图
     - 若判定为降库, 排入 Y1Q4 执行 bet
   verify:
@@ -831,7 +919,7 @@ bets:
   done_when:
     - 每条 AdjudicationRecorded 触发对应 capability_calibration 更新
     - calibration 值变化可在 /outcomes 观察
-    - 计算口径文档化: calibration = accepted_as_is / invocations
+    - "计算口径文档化: calibration = accepted_as_is / invocations"
   verify:
     - cmd: "make memory-os-check"
       expect: exit 0
@@ -854,7 +942,7 @@ bets:
   goal: 让"系统学得怎么样"可被一眼看见
   non_goals: [复杂图表, 导出报表]
   done_when:
-    - 三视图: 待裁决队列 / 已裁决历史 / 校准曲线
+    - "三视图: 待裁决队列 / 已裁决历史 / 校准曲线"
     - 未接入的指标显示"未接入"而非 0 (守 D1)
     - /journeys 时间线同期上线
   verify:
@@ -1163,7 +1251,7 @@ bets:
   goal: 对 Y1 唯一硬目标做一次不可回避的实测判定
   non_goals: [补救未达标项(属下一窗口)]
   done_when:
-    - 实测: 代码行 / ADR active / GaC 规则 / 脚本数 / 标准数
+    - "实测: 代码行 / ADR active / GaC 规则 / 脚本数 / 标准数"
     - 与 2026-08-06 基线对比, 给出达标或不达标结论
     - 若不达标, 产出 Y2 冻结扩展的决议
   verify:
