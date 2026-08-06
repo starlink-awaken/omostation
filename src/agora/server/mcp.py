@@ -661,6 +661,20 @@ async def _init_proxy():
             await pm.start(services)
     # else: scan_and_launch already connected services via _build_enabled_services + proxy_manager.start
 
+    # ── Phase 1.5 (P2-5): SSE 进程作唯一 backend owner, 主动拉起 KNOWN_BACKENDS ──
+    # 之前 SSE 进程仅 lazy sync (scan_and_launch lazy=True) → backends 连接 0,
+    # /health 假绿。此处复用 mcp_gateway.start_all (P1 已收口到 dependencies 共享单例),
+    # 使 SSE 进程实际连接 KNOWN_BACKENDS。由 AGORA_GATEWAY_OWNER=1 显式启用
+    # (launchd SSE plist 设置), 避免双进程 (gateway + SSE) 重复拉起。
+    if os.environ.get("AGORA_GATEWAY_OWNER", "").lower() in ("1", "true", "yes"):
+        try:
+            from agora.auth.mcp_gateway import start_all as _gateway_start_all
+
+            await _gateway_start_all()
+            logger.info("proxy_known_backends_started_via_gateway_owner")
+        except Exception:  # defensive: backend 拉起失败不阻塞 boot
+            logger.exception("proxy_known_backends_start_failed")
+
     # ── Phase 2: Register HTTP services from ServiceRegistry ──
     from agora.server.tools_proxy import (
         _load_proxy_services,  # type: ignore[import-not-found]

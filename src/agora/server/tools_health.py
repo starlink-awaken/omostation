@@ -105,12 +105,26 @@ async def health_self_check() -> dict:
         registry.list_healthy() if hasattr(registry, "list_healthy") else []
     )
 
-    # Backend health from heartbeat checker
+    # Backend health — P2-5: KNOWN_BACKENDS 全为 stdio, BackendHealthChecker 视
+    # stdio 为 transient 跳过 heartbeat → _health_checker 恒报 0 (假绿根源)。
+    # 改为统计 pm.registry._clients (实际已连接的 MCP client 数)。
     backend_health: dict = {}
+    backends_alive = 0
+    backends_total = 0
     if pm is not None:
+        proxy_registry = getattr(pm, "registry", None)
+        if proxy_registry is not None:
+            clients = getattr(proxy_registry, "_clients", {}) or {}
+            entries = getattr(proxy_registry, "entries", {}) or {}
+            backends_alive = len(clients) if hasattr(clients, "__len__") else 0
+            backends_total = len(entries) if hasattr(entries, "__len__") else 0
+        # 兼容: 有 _health_checker 时仍纳入其状态 (非 stdio backends)
         checker = getattr(pm, "_health_checker", None)
         if checker is not None and hasattr(checker, "get_all_status"):
-            backend_health = checker.get_all_status()
+            try:
+                backend_health = checker.get_all_status()
+            except Exception:  # defensive fallback
+                backend_health = {}
 
     # Proxy manager status
     proxy_status = "not_initialized"
@@ -143,6 +157,11 @@ async def health_self_check() -> dict:
         for name, info in backend_health.items()
         if isinstance(info, dict) and not info.get("alive", True)
     ]
+    # P2-5: 以 registry 已连接 client 数作为真实 backends 口径
+    if backends_total > 0 and backends_alive < backends_total:
+        issues.append(
+            f"backends partial: {backends_alive}/{backends_total} alive"
+        )
     if dead_backends:
         issues.append(f"dead backends: {', '.join(dead_backends)}")
 
@@ -161,8 +180,10 @@ async def health_self_check() -> dict:
             "tool_count": proxy_tool_count,
         },
         "backends": {
-            "total": len(backend_health),
-            "alive": sum(
+            "total": max(backends_total, len(backend_health)),
+            "alive": backends_alive
+            if backends_total > 0
+            else sum(
                 1
                 for v in backend_health.values()
                 if isinstance(v, dict) and v.get("alive", True)
