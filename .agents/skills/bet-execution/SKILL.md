@@ -131,6 +131,28 @@ bash bin/gac/gac-worktree.sh submit <bet-id 小写>
 | **D3** | 先 claim 后写，未 claim 的写面视为越权 | `bet-ledger.py claim-check` |
 | **D4** | 走 ADR-0203 workflow，先 start 再改文件 | `agent-workflow.py start` |
 | **D5** | 无 retro 不得置 done | `bet-ledger.py retro-due` |
+| **D6** | 指标设立前先问「最便宜的达标路径是什么」，有害则指标不成立 | 已知有害路径写进 non_goals |
+
+---
+
+## 4.5 做减法时（T6 轨道尤其注意）
+
+**2026-08-06 复盘：自设的三个减法指标全部可被有害优化，已全部改判据。**
+
+| 类型 | 存在成本 | 删除收益 | 该不该删 |
+|---|---|---|---|
+| 测试代码（占全仓 33%） | 低 | **负** | ❌ 保护量，下降即违规 |
+| advisory 规则（105/136） | ≈0（不阻断） | 零 | ❌ 删了没收益 |
+| required 但无违规历史的规则 | 有误伤成本 | 高 | ✅ |
+| 休眠项目 / 无消费者模块 | 认知与维护成本 | 高 | ✅ |
+| 重复的知识栈（gbrain × kairon） | 维护成本 | 高 | ✅ 但只删去重部分 |
+| 历史 ADR | 检索噪音 | 中 | ⚠️ 分层即可，不必删 |
+
+**规则：减法必须逐项指名道姓，不接受百分比目标。** 每个数量目标都要配一个保护量。
+
+```bash
+python3 bin/plan/bet-ledger.py surface   # test_loc 下降会直接 rc=1
+```
 
 ---
 

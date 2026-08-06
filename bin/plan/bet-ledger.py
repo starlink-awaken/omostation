@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -36,19 +37,39 @@ WS = Path(__file__).resolve().parents[2]
 LEDGER = WS / "docs" / "plans" / "3y-bet-ledger.yaml"
 RETRO_DIR = WS / ".omo" / "_knowledge" / "retros"
 
-# 2026-08-06 实测基线（表面积对比锚点）
+# 2026-08-06 实测基线 — git tracked 口径（含子模块）
+#
+# ⚠ 口径变更历史（重要，别再用旧数）：
+#   v1 (作废): 文件系统扫描 projects/*/, 得 982,000 行。两个缺陷——
+#     ① 不区分 src / test：测试占 33%，删测试是达标最便宜路径 → 指标可被有害优化
+#     ② 含 gitignore 掉的 PASW 残留：projects/Workspace/.subtrees/{cockpit,ecos,kairon}
+#        三份重复检出共 32.2 万行，占旧基线 33%。建/删 worktree 就能让指标大幅波动
+#   v2 (当前): git ls-files --recurse-submodules，只测受版本控制的真实代码，src/test 分列
 BASELINE = {
-    "code_loc": 982_000,
-    "src_files": 4_537,
+    "src_loc": 726_412,
+    "test_loc": 350_854,
+    "src_files": 3_204,
+    "test_files": 1_827,
     "adr_total": 344,
-    "gac_rules": 134,
-    "bin_scripts": 309,
+    "gac_rules": 136,        # 实测 gac.rules；其中 advisory 105 / required 24 / error 2
+    "gac_required": 26,      # required + error —— 会拦人的那部分，才是真成本
+    "bin_scripts": 310,
     "standards": 53,
     "collab_scenarios": 221,
 }
 
 # Y1 收口目标
-Y1_TARGET = {"code_loc": 690_000, "adr_total": 120, "gac_rules": 80, "bin_scripts": 180}
+#
+# 设计原则（2026-08-06 复盘修正）：不设总量百分比，改设「已识别冗余清零」。
+#   理由：百分比目标不指向具体冗余，会诱导执行者找最便宜的达标路径（删测试）。
+#   src_loc 只作观察量记账；test_loc 是【保护量】，下降即判定为有害减法。
+Y1_TARGET = {
+    "src_loc": None,          # 不设百分比目标，由具体归并 bet 的去重量累计
+    "test_loc": "不得下降",    # 保护量：低于基线即 D2 违规
+    "gac_required": 0,        # required 规则中「无违规历史」的清零（不是总数降到 80）
+    "bin_scripts": "零调用归档",  # 实测低引用候选约 43 个，含 lib/pytest 假阳性，不设数量
+    "adr_total": "只分层不裁剪",  # active/historical 分层即可降低检索面，无需删除
+}
 
 
 # ── 载入 ──────────────────────────────────────────────────────
@@ -88,26 +109,80 @@ def _int(s) -> int:
         return 0
 
 
+# 测试文件判据：目录名 tests?/__tests__/spec，或 test_ 前缀，或 .test./.spec. 后缀
+TEST_PAT = re.compile(
+    r"(^|/)(tests?|__tests__|spec)/|(^|/)test_[^/]*$|\.(test|spec)\.(ts|tsx|py)$"
+)
+VENDOR_PAT = re.compile(r"node_modules|\.venv|site-packages|/dist/|/build/")
+
+
+def _loc(paths: list[str]) -> int:
+    """批量 wc -l 求和。注意 xargs 分批会产生多个 total 行，必须全加。"""
+    total = 0
+    for i in range(0, len(paths), 400):
+        batch = [p for p in paths[i : i + 400] if (WS / p).exists()]
+        if not batch:
+            continue
+        r = subprocess.run(
+            ["wc", "-l"] + batch, cwd=WS, capture_output=True, text=True
+        )
+        lines = r.stdout.splitlines()
+        if len(batch) == 1:
+            try:
+                total += int(lines[0].split()[0])
+            except Exception:
+                pass
+        else:
+            for line in lines:
+                p = line.split()
+                if len(p) >= 2 and p[1] == "total":
+                    total += _int(p[0])
+    return total
+
+
 def measure_surface() -> dict:
-    exclude = r"node_modules|\.venv|site-packages|/dist/|/build/|__pycache__"
-    find = (
-        rf'find projects/*/ \( -name "*.py" -o -name "*.ts" -o -name "*.tsx" \) '
-        rf'| grep -vE "{exclude}"'
+    """只测 git tracked 文件（含子模块）。
+
+    为什么不扫文件系统：会把 gitignore 掉的 PASW worktree
+    （projects/Workspace/.subtrees/*，32.2 万行重复检出）算进来，
+    建/删 worktree 就能让指标大幅波动 —— 这是可被无意义优化的指标。
+    """
+    r = subprocess.run(
+        ["git", "ls-files", "--recurse-submodules"],
+        cwd=WS, capture_output=True, text=True,
     )
-    # 注意: xargs 分批调用 wc 会产生多个 "total" 行, 必须全部求和 (不能 tail -1)
-    raw = _sh(f"{find} | xargs wc -l 2>/dev/null | grep -w total")
-    loc = 0
-    for line in raw.splitlines():
-        parts = line.split()
-        if len(parts) >= 2 and parts[1] == "total":
-            loc += _int(parts[0])
+    files = [
+        f for f in r.stdout.split("\n")
+        if f.endswith((".py", ".ts", ".tsx")) and not VENDOR_PAT.search(f)
+    ]
+    src = [f for f in files if not TEST_PAT.search(f)]
+    test = [f for f in files if TEST_PAT.search(f)]
+
+    # GaC：区分 advisory（不阻断，成本≈0）与 required/error（会拦人，才是真成本）
+    gac_total = gac_required = 0
+    gac_path = WS / ".omo/_truth/registry/governance-checks.yaml"
+    if gac_path.exists():
+        try:
+            for doc in yaml.safe_load_all(gac_path.read_text(encoding="utf-8")):
+                if isinstance(doc, dict) and isinstance(doc.get("gac"), dict):
+                    rules = doc["gac"].get("rules") or []
+                    gac_total = len(rules)
+                    gac_required = sum(
+                        1 for x in rules
+                        if isinstance(x, dict)
+                        and str(x.get("enforcement")) in ("required", "error")
+                    )
+        except Exception:
+            pass
+
     return {
-        "code_loc": loc,
-        "src_files": _int(_sh(f"{find} | wc -l")),
+        "src_loc": _loc(src),
+        "test_loc": _loc(test),
+        "src_files": len(src),
+        "test_files": len(test),
         "adr_total": _int(_sh("ls .omo/_knowledge/decisions/*.md 2>/dev/null | wc -l")),
-        "gac_rules": _int(
-            _sh(r"""grep -c '^  - id:\|^- id:' .omo/_truth/registry/governance-checks.yaml 2>/dev/null""")
-        ),
+        "gac_rules": gac_total,
+        "gac_required": gac_required,
         "bin_scripts": _int(
             _sh(r'find bin -type f \( -name "*.py" -o -name "*.sh" \) | wc -l')
         ),
@@ -325,19 +400,36 @@ def cmd_retro_due(data: dict, args) -> int:
 
 def cmd_surface(data: dict, args) -> int:
     cur = measure_surface()
-    print("=== 表面积实测 ===")
-    print(f"{'指标':<20}{'当前':>10}{'基线(2026-08)':>16}{'变化':>18}{'Y1目标':>10}")
-    print("-" * 76)
+    print("=== 表面积实测（git tracked 口径，含子模块）===")
+    print(f"{'指标':<18}{'当前':>10}{'基线(2026-08)':>16}{'变化':>16}   Y1 判据")
+    print("-" * 88)
     for k, base in BASELINE.items():
         c = cur.get(k, 0)
         delta = c - base
         pct = (delta / base * 100) if base else 0
         tgt = Y1_TARGET.get(k, "—")
-        print(f"{k:<20}{c:>10,}{base:>16,}{delta:>+11,}({pct:+.0f}%){str(tgt):>10}")
-    ratio = cur["code_loc"] / BASELINE["code_loc"] if BASELINE["code_loc"] else 0
-    print(f"\n代码表面积占基线: {ratio:.0%}   (Y1 目标 ≤ 70%)")
-    print(f"判定: {'达标' if ratio <= 0.70 else '未达标'}")
-    return 0 if ratio <= 0.70 else 1
+        tgt = "—" if tgt is None else str(tgt)
+        print(f"{k:<18}{c:>10,}{base:>16,}{delta:>+10,}({pct:+.0f}%)   {tgt}")
+
+    rc = 0
+    print()
+    # 保护量：测试行数下降 = 有害减法
+    dt = cur.get("test_loc", 0) - BASELINE["test_loc"]
+    if dt < 0:
+        print(f"🔴 test_loc 下降 {-dt:,} 行 —— 有害减法。")
+        print("   测试是保护量不是削减对象。删测试能让任何总量指标好看，但直接损害可维护性。")
+        rc = 1
+    else:
+        print(f"✅ test_loc 未下降（{dt:+,}）")
+
+    ds = cur.get("src_loc", 0) - BASELINE["src_loc"]
+    print(f"   src_loc 变化 {ds:+,} 行  ← 观察量，由具体归并 bet 的去重量累计，不设百分比目标")
+
+    dq = cur.get("gac_required", 0) - BASELINE["gac_required"]
+    print(f"   gac_required 变化 {dq:+,}  ← 会拦人的规则才是真成本；advisory 删了没收益")
+
+    print("\nD2 记账：把上面这几行贴进复盘 Q4。")
+    return rc
 
 
 def cmd_gate(data: dict, args) -> int:

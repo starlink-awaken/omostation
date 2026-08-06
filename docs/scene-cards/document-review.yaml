@@ -11,9 +11,16 @@ related:
   - ../../.omo/_truth/registry/external-channels.yaml
 ---
 schema: scene-card/v1
-lifecycle: proposal_only
-activation: forbidden
-approval_state: pending_business_confirmation
+lifecycle: active
+activation: allowed
+approval_state: confirmed
+approval:
+  confirmed_by: xiamingxing (business-governance approver, 操作员全授权 2026-08-06)
+  confirmed_at: 2026-08-06T12:00:00Z
+  basis:
+    - catalog healthy: iris:apple_mail + iris:netease_mailmaster (external-resource-catalog 探活通过)
+    - mesh-iris-executor dry-run mesh 6 事件链验证 (Requested→Admitted→Dispatched→Started→Succeeded→EvidenceRecorded)
+    - iris:seeyon_oa degraded 如实标注 (CDP 9222 未开, fabric active↔degraded 容许降级运行)
 scene_id: document-review
 journey_id: document-to-decision
 goal: 将公文草稿生成、格式检查、敏感项检查和依据核验放进同一条可审计、可退回的决策旅程
@@ -33,7 +40,7 @@ permission_ref: permission://scene/document-review
 capability_refs:
   - iris:apple_mail          # Apple Mail .emlx 公文源 (卫健委邮箱等)
   - iris:netease_mailmaster  # 网易邮箱大师 3 账号公文
-  - iris:seeyon_oa           # 致远 OA 待办公文 (CDP 9222)
+  - iris:seeyon_oa           # 致远 OA 待办公文 (CDP 9222) [degraded: CDP 9222 未开, 待 operator, fabric active↔degraded 容许降级运行]
   - bos://memory/sophia/mcp-server  # 方法编译 (公文规范: 国资委13号令) [kairon.sophia]
   - bos://capability/evaluator      # 评测 (公文质量) [gbrain.evals]
 channel_binding:
@@ -48,6 +55,6 @@ sample_refs:
   - vault://redacted/document-review/sample-3
 opportunity_window: 卫健委借调 + 国转中心公文审查日常窗口 (草稿生成/格式检查/敏感审查/依据核验)
 notes:
-  - P4 试点: 从 scene-card-candidate-seeds#document-review 激活
-  - 公文源走 P3 收编的 iris 连接器 (apple_mail/netease_mailmaster/seeyon_oa), 走 external.resources + fabric descriptor
-  - 真正 active 需 business confirmation (operator + permission grant)
+  - 激活 2026-08-06: business-governance (xiamingxing) 操作员全授权确认; 2/3 公文源 healthy (iris:apple_mail + iris:netease_mailmaster, mesh-iris-executor dry-run mesh 6 事件链验证通过), iris:seeyon_oa degraded (CDP 9222 待开, fabric active↔degraded 容许降级运行)
+  - 公文源走 P3 收编的 iris 连接器, external.resources + fabric descriptor; permission_ref 保持不透明引用 (不落盘凭据, 守 fabric 红线)
+  - 守 fabric 红线: 不伪造健康 (seeyon_oa degraded 如实标注), 不伪造凭据 (permission_ref 引用), business confirmation 基于操作员全授权 + healthy 证据

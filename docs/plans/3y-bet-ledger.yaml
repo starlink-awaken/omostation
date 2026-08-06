@@ -46,6 +46,19 @@ disciplines:
     rule: 走 ADR-0203 需求迭代 workflow, 先 start 再改文件
     check: "uv run --with pyyaml python bin/agent-workflow.py start <workflow> --profile <p> --objective <bet-id>"
     severity: red
+  D6_metric_not_harmfully_optimizable:
+    rule: 任何指标在设立前必须回答「最便宜的达标路径是什么」, 若那条路径有害则指标不成立
+    check: 设指标时人工反问; 已知有害路径写进 non_goals
+    origin: >
+      2026-08-06 复盘发现自设的三个减法指标全部可被有害优化 ——
+      ① 「代码 ≤69万行」不分 src/test, 删测试(占33%)是最便宜路径;
+      ② 表面积扫文件系统, 建/删 PASW worktree(占旧基线33%)就能大幅波动;
+      ③ 「GaC ≤80 条」不分 advisory/required, 删最无害的 105 条 advisory 最容易,
+         而真正有成本的 26 条 required 反而留下。
+      三者与本项目最初批评的 X3 mtime 指标是同一个病 —— 用代理量冒充真实量。
+    corollary: 每个数量目标都要配一个「保护量」, 例如 src 可减但 test 不得降
+    severity: red
+
   D5_retro_before_done:
     rule: 无 retro 不得置 done
     check: "python3 bin/plan/bet-ledger.py retro-due"
@@ -492,9 +505,19 @@ bets:
         与 E5(18 个 rewind)同源
       设计意图: 本 bet 的终局是「删掉 PASW」而非「扩大 PASW」——
         拓扑改造后每个 clone 有独立 .git/modules, L2 问题消失
+    E15_pasw_stray_worktree:
+      观察: PASW worktree 被建到了错误路径, 且污染表面积测量
+      实测: projects/Workspace/.subtrees/{cockpit,ecos,kairon} 三份重复检出,
+        共 32.2 万行, 创建于 2026-08-06 11:25
+      性质: 被 .gitignore:209 (.subtrees/) 忽略, git status 看不见,
+        但文件系统扫描看得见 —— 旧版 bet-ledger surface 把它算进了表面积
+      双重影响: ① 路径 bug（应在 <worktree>/.subtrees/ 而非 projects/Workspace/）
+        ② 让「表面积」这个指标可被无意义地优化（建/删 worktree 即大幅波动）
   done_when:
     - 过渡期 PASW_ISOLATED_SUBS 覆盖全部 18 个子模块
     - 18 个 rewind 存量清零(与 T1-02 联动)
+    - "修 gac-worktree.sh 路径 bug: PASW worktree 建到了 projects/Workspace/.subtrees/"
+    - "清理现存 PASW 残留（三份重复检出, 共 32.2 万行）"
     - "拓扑改造完成后, 同一 PR 内删除 PASW 实现与 D5 纪律条目"
   verify:
     - cmd: "git submodule status | wc -l"
@@ -795,19 +818,33 @@ bets:
 - id: BET-Y1Q2-T6-01
   track: T6-SUBTRACT
   window: Y1Q2
-  title: GaC 规则减法第一轮 134 → ≤100
+  title: GaC 规则减法 — 清理会拦人却无违规历史的 required 规则
   appetite: 1 week
   priority: P0
   status: candidate
-  goal: 删除无违规历史或无执行器的规则, 降低治理面熵产出
-  non_goals: [新增规则, 修改规则语义]
+  goal: 降低治理面的「误伤成本」, 而非降低规则总数
+  non_goals:
+    - 新增规则
+    - 修改规则语义
+    - "删 advisory 规则（不阻断, 维护成本≈0, 删了没收益）"
+  evidence:
+    E10_rule_cost_is_not_count:
+      观察: 规则的成本不在数量, 在它会不会拦人
+      实测: gac.rules 共 136 条 — advisory 105 / required 24 / error 2 / 其他 5;
+        lifecycle active 132 / superseded 4
+      判断: 105 条 advisory 只提示不阻断, 不误伤不锁主干, 维护成本接近零;
+        真正有成本的是 26 条 required+error —— ADR-0380 当天锁死主干的正是这一类
+      原目标缺陷: 「134 → ≤100」把两类规则等同, 会诱导删最容易删的 advisory,
+        而把真正有成本的 required 留下 —— 减了数量, 没减成本
   done_when:
-    - 每条被删规则有删除理由记录
-    - GaC 规则数 <= 100
+    - 逐条审查 26 条 required/error 规则, 统计各自的历史违规次数
+    - "无违规历史且无执行器的 required 规则: 降级为 advisory 或删除, 逐条记理由"
+    - 4 条 superseded 规则归档
+    - advisory 规则不动
     - make gac-local-gate 仍全绿
   verify:
-    - cmd: "grep -c '^  - id:\\|^- id:' .omo/_truth/registry/governance-checks.yaml"
-      expect: "<= 100"
+    - cmd: "python3 bin/plan/bet-ledger.py surface"
+      expect: "gac_required 下降; gac_rules 总数变化不作判据"
     - cmd: "make gac-local-gate"
       expect: exit 0
   workflow: bet-execution
@@ -823,19 +860,34 @@ bets:
 - id: BET-Y1Q2-T6-02
   track: T6-SUBTRACT
   window: Y1Q2
-  title: ADR 有效集分层 344 → ≤200
+  title: ADR 分层 — 只分层不裁剪
   appetite: 1 week
   priority: P0
   status: candidate
-  goal: 把历史 ADR 降为 historical 不参与检索, 让有效集回到可通读范围
-  non_goals: [删除 ADR 文件, 修改历史决策内容]
+  goal: 把历史 ADR 移出检索面, 让有效集回到可通读范围。不删任何一份
+  non_goals:
+    - 删除 ADR 文件
+    - 修改历史决策内容
+    - "设定 active 数量硬指标（分层本身就够, 数字是拍的）"
+  evidence:
+    E11_layering_beats_trimming:
+      观察: 真正的成本是「检索面」与「通读时间」, 不是文件数
+      实测: 344 份 ADR, 按每份 5 分钟计全量通读需 29 小时;
+        2026-08 前 6 天新增 85 份（约 14 份/天）, 日增量已超人类阅读速度
+      判断: active/historical 分层后 historical 不进 RAG 与 onboarding,
+        检索面立刻降下来, 一份都不用删 —— 删除只增加风险不增加收益
+      原目标缺陷: 「≤200」这个数字无依据, 且诱导删 ADR。ADR 是决策记录,
+        删了就失去「为什么当初这么做」的追溯能力
   done_when:
     - ADR 分 active / historical 两层, historical 不进 RAG 与 onboarding
-    - active <= 200
+    - "分层判据明确且可复核（如: 已被 superseded / 所述系统已退役 / 超过 N 个 phase 未被引用）"
     - adr-coverage.py 支持分层统计
+    - "ADR 文件总数不减少（删除即视为违规）"
   verify:
     - cmd: "python3 bin/adr/adr-coverage.py --json"
-      expect: "active_count <= 200"
+      expect: "含 active/historical 分层字段"
+    - cmd: "python3 bin/plan/bet-ledger.py surface"
+      expect: "adr_total 不下降"
   workflow: bet-execution
   underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_knowledge/decisions/**", "bin/adr/**"]
@@ -849,21 +901,33 @@ bets:
 - id: BET-Y1Q2-T6-03
   track: T6-SUBTRACT
   window: Y1Q2
-  title: bin 脚本清理 309 → ≤240
+  title: bin 脚本清理 — 归档零调用脚本, 不设数量目标
   appetite: 1 week
   priority: P1
   status: candidate
-  goal: 归档无调用方、被 make 目标覆盖或功能重复的脚本
-  non_goals: [重写脚本, 改变 make 目标语义]
+  goal: 归档确实无调用方的脚本, 数量由实际孤儿数决定
+  non_goals:
+    - 重写脚本
+    - 改变 make 目标语义
+    - "设定数量目标（原「≤240」比可删候选还多）"
+  evidence:
+    E12_orphan_count_below_target:
+      观察: 原目标要删 69 个, 但实际孤儿远少于此
+      实测: 310 个脚本, 在 Makefile / registry / hooks / CI / 根文档中
+        引用次数 <= 1 的候选仅 43 个
+      假阳性: 候选里混有 _lib.py（被 import 不被命名调用）与
+        test_*.py（pytest 自动发现）, 真实孤儿更少
+      判断: 目标数字比可删候选还多 26 个 —— 强行达标只能去删有用的脚本
   done_when:
+    - 产出零调用脚本清单, 排除 lib/pytest 类假阳性
     - 每个被归档脚本记录最后调用点分析
-    - bin 下脚本 <= 240
+    - 确认零调用的全部归档到 bin/_archive/
     - make ci-local-fast 全绿
   verify:
-    - cmd: "find bin -type f \\( -name '*.py' -o -name '*.sh' \\) | wc -l"
-      expect: "<= 240"
     - cmd: "make ci-local-fast"
       expect: exit 0
+    - cmd: "python3 bin/plan/bet-ledger.py surface"
+      expect: "bin_scripts 下降数 == 清单中确认的孤儿数"
   workflow: bet-execution
   underlying_workflow: governance-state-mutation   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: ["bin/**", "Makefile"]
@@ -993,7 +1057,8 @@ bets:
   non_goals: [重写业务逻辑, 改变 CLI 入口名]
   done_when:
     - omo-debt / c2g 作为 omo 内包存在, 子模块条目移除
-    - 合并后行数 < 原三者之和的 70%
+    - "产出去重清单, src 下降量与清单一致（不设百分比）"
+    - "test_loc 不得下降（同 E13）"
     - 原 CLI 入口保持兼容或有明确迁移说明
   verify:
     - cmd: "git submodule status | grep -cE 'omo-debt|c2g'"
@@ -1203,14 +1268,28 @@ bets:
   appetite: 6 weeks
   priority: P0
   status: candidate
-  goal: 三年规划中最大一处减法 — 消除知识层双头, 50 万行降至 35 万行
-  non_goals: [新增检索能力, 改变 BOS URI 对外契约]
+  goal: 三年规划中最大一处减法 — 消除知识层双头。以「去重的 src 行数」计量, 测试不动
+  non_goals:
+    - 新增检索能力
+    - 改变 BOS URI 对外契约
+    - "删测试换指标（test_loc 是保护量, 下降即判有害）"
+  evidence:
+    E13_merge_target_must_exclude_tests:
+      观察: 原目标「50万 → 35万行」未区分 src/test, 是可被有害优化的指标
+      实测: gbrain src 559 文件 / test 740 文件（测试文件数多于源文件）;
+        kairon src 774 / test 311; 全仓测试占 33%
+      风险: 删 15 万行最便宜的路径就是删 gbrain 的测试 —— 指标漂亮, 可维护性崩
+      修正: 计量口径改为「去重掉的 src 行数」, 且 test_loc 不得低于基线
   done_when:
     - 单一 knowledge 项目, gbrain / kairon 子模块条目移除
-    - 合并后行数 < 50 万 (原 gbrain 32.3万 + kairon 17.7万 = 50万)
+    - "产出去重清单: 哪些模块功能重复、合并后删了哪些, 逐项可复核"
+    - "src_loc 下降量 == 去重清单的合计（不是凑一个百分比）"
+    - "test_loc 不低于基线 350,854（下降即回滚）"
     - 回滚 tag 已打且验证可回滚
     - 全量测试通过
   verify:
+    - cmd: "python3 bin/plan/bet-ledger.py surface"
+      expect: "test_loc 未下降; src_loc 下降量与去重清单一致"
     - cmd: "bash tests/integration/run-all.sh"
       expect: exit 0
     - cmd: "git tag -l 'pre-knowledge-merge-*'"
@@ -1369,7 +1448,8 @@ bets:
   done_when:
     - aetherforge 子模块条目移除, 作为 runtime 内包
     - 无调用方的 mesh/swarm 代码删除前先归档
-    - 合并后行数 < 原和 70%
+    - "产出无消费者清单（哪些模块零调用）, src 下降量与清单一致"
+    - "test_loc 不得下降（同 E13）"
   verify:
     - cmd: "git submodule status | grep -c aetherforge"
       expect: "0"
@@ -1416,15 +1496,31 @@ bets:
   appetite: 3 days
   priority: P0
   status: candidate
-  goal: 对 Y1 唯一硬目标做一次不可回避的实测判定
-  non_goals: [补救未达标项(属下一窗口)]
+  goal: 对 Y1 的可持有性目标做一次不可回避的实测判定
+  non_goals:
+    - 补救未达标项(属下一窗口)
+    - "用总量百分比作判据（2026-08-06 复盘已废除该口径）"
+  evidence:
+    E14_target_redesign:
+      原设计: "代码 ≤69万 / ADR ≤120 / GaC ≤80 —— 三个数字均为拍定, 无依据"
+      废除理由: 百分比与数量目标不指向具体冗余, 会诱导执行者找最便宜的达标路径;
+        实测两处可被有害优化 —— 删测试(占33%)、建删 PASW worktree(占旧基线33%)
+      新口径: 逐项「已识别冗余是否清零」+ 保护量是否守住, 而非总量是否达标
   done_when:
-    - "实测: 代码行 / ADR active / GaC 规则 / 脚本数 / 标准数"
-    - 与 2026-08-06 基线对比, 给出达标或不达标结论
-    - 若不达标, 产出 Y2 冻结扩展的决议
+    - "实测并记录: src_loc / test_loc / gac_required / bin_scripts / adr 分层状态"
+    - "① 知识层归并的去重清单是否全部执行"
+    - "② aetherforge 无消费者模块是否清零"
+    - "③ required 规则中无违规历史的是否清零"
+    - "④ 零调用脚本是否全部归档"
+    - "⑤ 休眠项目(family-hub/observability)是否退役"
+    - "⑥ D2/D3/D5 三条纪律与 PASW 是否随拓扑改造退役"
+    - "保护量守住: test_loc 不低于基线, ADR 文件总数不减少"
+    - 若多数项未完成, 产出 Y2 冻结扩展的决议
   verify:
     - cmd: "python3 bin/plan/bet-ledger.py surface"
-      expect: exit 0
+      expect: "test_loc 未下降 (rc=0)"
+    - cmd: "python3 bin/plan/bet-ledger.py list --track T6-SUBTRACT --status done"
+      expect: "六项逐条核对"
   workflow: bet-execution
   underlying_workflow: governance-audit   # 原挂载点, 供 phases/lock_scopes 参考
   write_surfaces: [".omo/_knowledge/retros/gates/**"]
