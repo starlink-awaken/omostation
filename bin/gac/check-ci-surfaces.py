@@ -143,6 +143,19 @@ def check_workflow_trigger_drift(registry: dict, workflow_dir: Path) -> list[str
             warnings.append(
                 f"trigger-drift: {name} path_filtered 实际={path_filtered} 登记={entry.get('path_filtered')}"
             )
+        if path_filtered:
+            actual_paths = set()
+            paths_re = re.compile(r"^\s+paths:\s*$((?:\n\s+- [^\n]+)*)", re.M)
+            for m in paths_re.finditer(text):
+                for line in m.group(1).split("\n"):
+                    pm = re.match(r"\s+- (.*)$", line)
+                    if pm:
+                        actual_paths.add(pm.group(1).strip().strip("'\""))
+            reg_paths = {str(x) for x in (entry.get("paths") or [])}
+            if actual_paths != reg_paths:
+                warnings.append(
+                    f"trigger-drift: {name} paths 实际={len(actual_paths)} 条 != 登记 {len(reg_paths)} 条 (重跑生成器)"
+                )
     return warnings
 
 

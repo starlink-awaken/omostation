@@ -626,6 +626,21 @@ workflow_triggers:
   - workflow: ci-lint.yml
     triggers: [per_pr, push, scheduled]
     path_filtered: true
+    paths:
+    - .github/workflows/**
+    - scripts/**
+    - .pre-commit-config.yaml
+    - bin/cockpit/**
+    - docs/generated/capability-registry.yaml
+    - projects/agora/etc/bos-services.yaml
+    - projects/cockpit/src/cockpit/cli.py
+    - .github/workflows/**
+    - scripts/**
+    - .pre-commit-config.yaml
+    - bin/cockpit/**
+    - docs/generated/capability-registry.yaml
+    - projects/agora/etc/bos-services.yaml
+    - projects/cockpit/src/cockpit/cli.py
   - workflow: ci-python-coverage.yml
     triggers: [per_pr, push]
     path_filtered: false
@@ -665,6 +680,41 @@ workflow_triggers:
   - workflow: governance-check.yml
     triggers: [per_pr, push, scheduled]
     path_filtered: true
+    paths:
+    - .github/workflows/governance-check.yml
+    - .pre-commit-config.yaml
+    - .omo/**
+    - docs/OPC-*.md
+    - docs/**
+    - bin/ssot/doc-governance-check.py
+    - .omo/_truth/registry/document-governance.yaml
+    - .omo/standards/document-governance-standard.md
+    - projects/*/pyproject.toml
+    - projects/*/src/**
+    - projects/omo/tests/**
+    - projects/ecos/scripts/contract_gatekeeper.py
+    - scripts/check-*.py
+    - scripts/opc_*.py
+    - bin/ssot/workspace-audit
+    - CLAUDE.md
+    - LAYER-INDEX.md
+    - .github/workflows/governance-check.yml
+    - .pre-commit-config.yaml
+    - .omo/**
+    - docs/OPC-*.md
+    - docs/**
+    - bin/ssot/doc-governance-check.py
+    - .omo/_truth/registry/document-governance.yaml
+    - .omo/standards/document-governance-standard.md
+    - projects/*/pyproject.toml
+    - projects/*/src/**
+    - projects/omo/tests/**
+    - projects/ecos/scripts/contract_gatekeeper.py
+    - scripts/check-*.py
+    - scripts/opc_*.py
+    - bin/ssot/workspace-audit
+    - CLAUDE.md
+    - LAYER-INDEX.md
   - workflow: integration.yml
     triggers: [per_pr, push]
     path_filtered: false
@@ -677,6 +727,11 @@ workflow_triggers:
   - workflow: meta-model-check.yml
     triggers: [per_pr, push]
     path_filtered: true
+    paths:
+    - projects/runtime/protocols/*.yaml
+    - projects/runtime/protocols/*.md
+    - projects/runtime/protocols/*.yaml
+    - projects/runtime/protocols/*.md
   - workflow: metaos-ci.yml
     triggers: [per_pr, push]
     path_filtered: false
@@ -692,6 +747,11 @@ workflow_triggers:
   - workflow: omostation-governance.yml
     triggers: [manual, per_pr, push, scheduled]
     path_filtered: true
+    paths:
+    - .omo/tasks/planned/**
+    - projects/**/pyproject.toml
+    - projects/omo/src/omo/omo_*.py
+    - .omo/tasks/planned/**
   - workflow: phase-gate-enforce.yml
     triggers: [manual, per_pr]
     path_filtered: false
@@ -701,6 +761,8 @@ workflow_triggers:
   - workflow: publish-pypi.yml
     triggers: [manual, push]
     path_filtered: true
+    paths:
+    - projects/kairon/packages/*/pyproject.toml
   - workflow: pyright-sweep.yml
     triggers: [manual]
     path_filtered: false
