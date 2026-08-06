@@ -1062,6 +1062,7 @@ gac:
     enforcement: advisory
     source_ref: protocols/port-registry.yaml
   - id: CR-X4-MOF-CAPABILITIES-DRIFT
+    relates_to: ['CR-X4-METAOS-REGISTRY-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     source_type: native
     source_ref: bin/mof/check-mof-capabilities-drift.py
     dimension: X4
@@ -1076,6 +1077,7 @@ gac:
     adr: ADR-0238
     target: projects/*/src/**
   - id: CR-X4-METAOS-REGISTRY-DRIFT
+    relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     source_type: native
     source_ref: bin/mof/check-mof-capabilities-drift.py
     dimension: X4
@@ -1090,6 +1092,7 @@ gac:
     adr: ADR-0242
     target: projects/*/src/**
   - id: CR-X4-DOC-CLAIMS
+    relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-METAOS-REGISTRY-DRIFT', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     source_type: native
     source_ref: bin/mof/check-doc-claims.py
     dimension: X4
@@ -1188,6 +1191,7 @@ gac:
     created_at: '2026-07-06'
     adr: ADR-0152
   - id: CR-LAYER-CALL-DIRECTION
+    relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-METAOS-REGISTRY-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     dimension: X4
     layer: meta
     name: 分层调用方向契约
@@ -1665,6 +1669,7 @@ gac:
     enforcement: required
     source_ref: bin/ssot/check-mutable-default.py
   - id: CR-PR-DESCRIPTION-NON-EMPTY
+    relates_to: ['CR-PRINCIPLE-ENFORCEMENT', 'CR-P79-3-FOUNDRY-DECK', 'CR-P79-4-CATALOG-HEALTH-METRIC', 'CR-P76-7-4-EVIDENCE-HONEST-CLOSURE', 'CR-P76-7-5-RESOLVE-NOT-STUB', 'CR-X1-EXTERNAL-AGENT-AUDIT']
     dimension: X1
     layer: meta
     name: PR 描述非空
@@ -1684,6 +1689,7 @@ gac:
     source_ref: bin/gac/check-pr-description.py
     target: .omo/_truth/registry/**
   - id: CR-PRINCIPLE-ENFORCEMENT
+    relates_to: ['CR-PR-DESCRIPTION-NON-EMPTY', 'CR-P79-3-FOUNDRY-DECK', 'CR-P79-4-CATALOG-HEALTH-METRIC', 'CR-P76-7-4-EVIDENCE-HONEST-CLOSURE', 'CR-P76-7-5-RESOLVE-NOT-STUB', 'CR-X1-EXTERNAL-AGENT-AUDIT']
     dimension: X1
     layer: meta
     name: 原则执行化
@@ -1788,6 +1794,7 @@ gac:
     adr: ADR-0165
     source_type: native
   - id: CR-P77-3-2-PREFIX-PATTERN
+    relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-METAOS-REGISTRY-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     dimension: X4
     layer: X
     name: URI 前缀模式
@@ -1807,6 +1814,7 @@ gac:
     source_ref: bin/gac/check-uri-prefix-pattern.py
     target: projects/*/src/**
   - id: CR-P77-6-2-TIER-FALLBACK-TEST
+    relates_to: ['CR-P77-6-3-GATEWAY-STATUS-DOC', 'CR-WORKORDER-SCHEMA']
     dimension: X2
     layer: meta
     name: 层级 fallback 测试
@@ -1826,6 +1834,7 @@ gac:
     source_ref: bin/gac/check-fallback-test-coverage.py
     target: .omo/**/*.yaml
   - id: CR-P77-6-3-GATEWAY-STATUS-DOC
+    relates_to: ['CR-P77-6-2-TIER-FALLBACK-TEST', 'CR-WORKORDER-SCHEMA']
     dimension: X2
     layer: meta
     name: Gateway 状态文档化
@@ -1845,6 +1854,7 @@ gac:
     source_ref: bin/gac/check-gateway-status-doc.py
     target: .omo/**/*.yaml
   - id: CR-P79-3-FOUNDRY-DECK
+    relates_to: ['CR-PR-DESCRIPTION-NON-EMPTY', 'CR-PRINCIPLE-ENFORCEMENT', 'CR-P79-4-CATALOG-HEALTH-METRIC', 'CR-P76-7-4-EVIDENCE-HONEST-CLOSURE', 'CR-P76-7-5-RESOLVE-NOT-STUB', 'CR-X1-EXTERNAL-AGENT-AUDIT']
     dimension: X1
     layer: meta
     name: 治理轴 Foundry Deck
@@ -1865,6 +1875,7 @@ gac:
     source_ref: bin/gac/check-foundry-deck-coverage.py
     target: .omo/_truth/registry/**
   - id: CR-P79-4-CATALOG-HEALTH-METRIC
+    relates_to: ['CR-PR-DESCRIPTION-NON-EMPTY', 'CR-PRINCIPLE-ENFORCEMENT', 'CR-P79-3-FOUNDRY-DECK', 'CR-P76-7-4-EVIDENCE-HONEST-CLOSURE', 'CR-P76-7-5-RESOLVE-NOT-STUB', 'CR-X1-EXTERNAL-AGENT-AUDIT']
     dimension: X1
     layer: meta
     name: Catalog 健康指标
@@ -1885,6 +1896,7 @@ gac:
     source_ref: bin/gac/check-catalog-health.py
     target: .omo/_truth/registry/**
   - id: CR-P76-7-1-LLM-ADVISORY-ONLY
+    relates_to: ['CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: LLM 建议不自动
@@ -1922,6 +1934,7 @@ gac:
     source_ref: bin/gac/check-llm-tier-fallback.py
     target: .omo/**/*.yaml
   - id: CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
+    relates_to: ['CR-PR-DESCRIPTION-NON-EMPTY', 'CR-PRINCIPLE-ENFORCEMENT', 'CR-P79-3-FOUNDRY-DECK', 'CR-P79-4-CATALOG-HEALTH-METRIC', 'CR-P76-7-5-RESOLVE-NOT-STUB', 'CR-X1-EXTERNAL-AGENT-AUDIT']
     dimension: X1
     layer: meta
     name: 任务关闭需真证据
@@ -1942,6 +1955,7 @@ gac:
     source_ref: bin/gac/check-evidence-honest-closure.py
     target: .omo/_truth/registry/**
   - id: CR-P76-7-5-RESOLVE-NOT-STUB
+    relates_to: ['CR-PR-DESCRIPTION-NON-EMPTY', 'CR-PRINCIPLE-ENFORCEMENT', 'CR-P79-3-FOUNDRY-DECK', 'CR-P79-4-CATALOG-HEALTH-METRIC', 'CR-P76-7-4-EVIDENCE-HONEST-CLOSURE', 'CR-X1-EXTERNAL-AGENT-AUDIT']
     dimension: X1
     layer: meta
     name: 物理实现不占位
@@ -1961,6 +1975,7 @@ gac:
     source_ref: bin/gac/check-resolve-not-stub.py
     target: .omo/_truth/registry/**
   - id: CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: 子模块 PR 独立
@@ -1980,6 +1995,7 @@ gac:
     source_ref: bin/gac/check-submodule-pr-independent.py
     target: projects/*/**
   - id: CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
+    relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-METAOS-REGISTRY-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     dimension: X4
     layer: meta
     name: 工具双路 fallback
@@ -1998,6 +2014,7 @@ gac:
     source_ref: bin/gac/check-dead-path-tool-fallback.py
     target: projects/*/src/**
   - id: CR-P76-8-4-INCREMENTAL-COMMIT
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: 增量提交防丢失
@@ -2017,6 +2034,7 @@ gac:
     source_ref: bin/gac/check-incremental-commit.py
     target: projects/*/**
   - id: CR-P76-9A-4-HEURISTIC-DEFAULT
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: 本地启发式默认
@@ -2054,6 +2072,7 @@ gac:
     source_ref: bin/gac/check-ruff-scope-stable.py
     target: .omo/**/*.yaml
   - id: CR-WORKTREE-CLEAN-BEFORE-PR
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: Worktree 清理
@@ -2072,6 +2091,7 @@ gac:
     target: projects/*/**
     source_ref: bin/gac/gac-worktree-guard.sh
   - id: CR-L0-CONSTRAINTS-SSOT
+    relates_to: ['CR-X4-CONSISTENCY-SSOT']
     source_type: indexed
     source_ref: projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml
     dimension: X4
@@ -2093,6 +2113,7 @@ gac:
     enforcement: required
     target: docs/**
   - id: CR-X1-POLICIES-SSOT
+    relates_to: ['CR-CI-SURFACE-SSOT']
     source_type: indexed
     source_ref: .omo/_truth/x1-governance-policies.yaml::policies
     dimension: X1
@@ -2132,6 +2153,7 @@ gac:
     enforcement: advisory
     target: docs/**
   - id: CR-X4-CONSISTENCY-SSOT
+    relates_to: ['CR-L0-CONSTRAINTS-SSOT']
     source_type: indexed
     source_ref: .omo/_truth/x4-consistency-rules.yaml::rules
     dimension: X4
@@ -2152,6 +2174,7 @@ gac:
     enforcement: required
     target: docs/**
   - id: CR-X4-MCPTOOL-IMPL-DRIFT
+    relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-METAOS-REGISTRY-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK']
     source_type: indexed
     source_ref: bin/ssot/check-mcptool-impl-drift.py
     dimension: X4
@@ -2167,6 +2190,7 @@ gac:
     adr: ADR-0106
     target: projects/*/src/**
   - id: CR-X4-SUBMODULE-POINTER-INTEGRITY
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: 子模块指针完整性
@@ -2186,6 +2210,7 @@ gac:
     source_ref: bin/gac/check-submodule-pointer-integrity.py
     target: projects/*/**
   - id: CR-X4-MESH-EXECUTOR-RELIABILITY
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: Mesh executor 可靠性
@@ -2205,6 +2230,7 @@ gac:
     source_ref: bin/gac/check-mesh-executor-reliability.py
     target: projects/*/**
   - id: CR-X4-MEMORY-OS-SURFACE-INTEGRITY
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: Memory-OS surface 一致性
@@ -2224,6 +2250,7 @@ gac:
     source_ref: bin/gac/check-memory-os-surfaces.py
     target: projects/*/**
   - id: CR-X1-EXTERNAL-AGENT-AUDIT
+    relates_to: ['CR-PR-DESCRIPTION-NON-EMPTY', 'CR-PRINCIPLE-ENFORCEMENT', 'CR-P79-3-FOUNDRY-DECK', 'CR-P79-4-CATALOG-HEALTH-METRIC', 'CR-P76-7-4-EVIDENCE-HONEST-CLOSURE', 'CR-P76-7-5-RESOLVE-NOT-STUB']
     dimension: X1
     layer: meta
     name: 外部 agent 接入审计
@@ -2244,6 +2271,7 @@ gac:
     source_ref: bin/gac/check-external-agent-audit.py
     target: .omo/_truth/registry/**
   - id: CR-X4-SWEEP-TOOL-INTEGRITY
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: Sweep 工具完整性
@@ -2280,6 +2308,7 @@ gac:
     source_ref: bin/gac/check-mesh-routing-consistency.py
     target: projects/agora/etc/**
   - id: CR-X2-PROJECT-HEALTH-FRESHNESS
+    relates_to: ['CR-X2-DOC-FRESHNESS-GATE', 'CR-X2-METRIC-TREND', 'CR-GOVERNANCE-RATIO', 'CR-X2-EVIDENCE-FRESHNESS', 'CR-X2-GOVERNANCE-TREND']
     dimension: X2
     layer: meta
     name: 项目健康分新鲜度
@@ -2298,6 +2327,7 @@ gac:
     source_ref: bin/gac/check-project-health-freshness.py
     target: docs/**/*.md
   - id: CR-X3-DELIVERY-VALUE-GATE
+    relates_to: ['CR-X3-DELIVERY-CADENCE', 'CR-X3-L2-DELIVERY-VALUE', 'CR-X3-X-SLA-ACHIEVEMENT', 'CR-X3-M4-HEALTH-TREND']
     dimension: X3
     layer: meta
     name: 交付 X3 价值门禁
@@ -2339,6 +2369,7 @@ gac:
     created_at: '2026-08-05'
     adr: ADR-0373
   - id: CR-X3-DELIVERY-CADENCE
+    relates_to: ['CR-X3-DELIVERY-VALUE-GATE', 'CR-X3-L2-DELIVERY-VALUE', 'CR-X3-X-SLA-ACHIEVEMENT', 'CR-X3-M4-HEALTH-TREND']
     dimension: X3
     layer: meta
     name: PR 交付节奏
@@ -2357,6 +2388,7 @@ gac:
     source_ref: bin/gac/check-delivery-cadence.py
     target: docs/plans/**
   - id: CR-X-META-HEALTH
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: GaC 治理系统自检
@@ -2375,6 +2407,7 @@ gac:
     source_ref: bin/gac/check-meta-health.py
     target: projects/*/**
   - id: CR-X2-DOC-FRESHNESS-GATE
+    relates_to: ['CR-X2-PROJECT-HEALTH-FRESHNESS', 'CR-X2-METRIC-TREND', 'CR-GOVERNANCE-RATIO', 'CR-X2-EVIDENCE-FRESHNESS', 'CR-X2-GOVERNANCE-TREND']
     dimension: X2
     layer: meta
     name: 文档新鲜度门禁
@@ -2393,6 +2426,7 @@ gac:
     source_ref: bin/gac/check-doc-freshness-gate.py
     target: docs/**/*.md
   - id: CR-X2-METRIC-TREND
+    relates_to: ['CR-X2-PROJECT-HEALTH-FRESHNESS', 'CR-X2-DOC-FRESHNESS-GATE', 'CR-GOVERNANCE-RATIO', 'CR-X2-EVIDENCE-FRESHNESS', 'CR-X2-GOVERNANCE-TREND']
     dimension: X2
     layer: meta
     name: 治理指标趋势
@@ -2411,6 +2445,7 @@ gac:
     source_ref: bin/gac/check-metric-trend.py
     target: docs/**/*.md
   - id: CR-CI-SURFACE-SSOT
+    relates_to: ['CR-X1-POLICIES-SSOT']
     source_type: indexed
     source_ref: .omo/_truth/registry/ci-surfaces.yaml::surfaces
     dimension: X1
@@ -2449,6 +2484,7 @@ gac:
     target: .omo/_truth/registry/**
     source_ref: bin/gac/check-severity-registry.py
   - id: CR-WORK-LANDED
+    relates_to: ['CR-SILENT-LOSS']
     dimension: X2
     layer: meta
     name: 工作落地验证
@@ -2467,6 +2503,7 @@ gac:
     target: .omo/_truth/registry/governance-checks.yaml
     source_ref: bin/gac/check-work-landed.py
   - id: CR-GOVERNANCE-RATIO
+    relates_to: ['CR-X2-PROJECT-HEALTH-FRESHNESS', 'CR-X2-DOC-FRESHNESS-GATE', 'CR-X2-METRIC-TREND', 'CR-X2-EVIDENCE-FRESHNESS', 'CR-X2-GOVERNANCE-TREND']
     dimension: X2
     layer: meta
     name: 治理比率监控
@@ -2485,6 +2522,7 @@ gac:
     target: docs/**/*.md
     source_ref: bin/gac/check-governance-ratio.py
   - id: CR-REDLINE-COVERAGE
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: 红线覆盖率
@@ -2503,6 +2541,7 @@ gac:
     target: projects/*/**
     source_ref: bin/gac/check-redline-coverage.py
   - id: CR-WORKORDER-SCHEMA
+    relates_to: ['CR-P77-6-2-TIER-FALLBACK-TEST', 'CR-P77-6-3-GATEWAY-STATUS-DOC']
     dimension: X2
     layer: meta
     name: 工单模式校验
@@ -2521,6 +2560,7 @@ gac:
     target: .omo/**/*.yaml
     source_ref: bin/gac/check-workorder-schema.py
   - id: CR-DUAL-TRACK-PURITY
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: 双轨纯度
@@ -2539,6 +2579,7 @@ gac:
     target: projects/*/**
     source_ref: bin/gac/check-dual-track-purity.py
   - id: CR-SILENT-LOSS
+    relates_to: ['CR-WORK-LANDED']
     dimension: X2
     layer: meta
     name: 静默丢失检测
@@ -2557,6 +2598,7 @@ gac:
     target: .omo/_truth/registry/governance-checks.yaml
     source_ref: bin/gac/check-silent-loss.py
   - id: CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY']
     dimension: X4
     layer: meta
     name: 对抗有效性
@@ -2575,6 +2617,7 @@ gac:
     target: projects/*/**
     source_ref: bin/gac/check-adversarial-effectiveness.py
   - id: CR-X2-EVIDENCE-FRESHNESS
+    relates_to: ['CR-X2-PROJECT-HEALTH-FRESHNESS', 'CR-X2-DOC-FRESHNESS-GATE', 'CR-X2-METRIC-TREND', 'CR-GOVERNANCE-RATIO', 'CR-X2-GOVERNANCE-TREND']
     dimension: X2
     layer: meta
     name: 证据新鲜度检查
@@ -2593,6 +2636,7 @@ gac:
     source_ref: bin/gac/check-evidence-freshness.py
     target: docs/**/*.md
   - id: CR-X2-GOVERNANCE-TREND
+    relates_to: ['CR-X2-PROJECT-HEALTH-FRESHNESS', 'CR-X2-DOC-FRESHNESS-GATE', 'CR-X2-METRIC-TREND', 'CR-GOVERNANCE-RATIO', 'CR-X2-EVIDENCE-FRESHNESS']
     dimension: X2
     layer: meta
     name: 治理指标趋势检查
@@ -2629,6 +2673,7 @@ gac:
     adr: ADR-0380
     enforcement: advisory
   - id: CR-X3-L2-DELIVERY-VALUE
+    relates_to: ['CR-X3-DELIVERY-VALUE-GATE', 'CR-X3-DELIVERY-CADENCE', 'CR-X3-X-SLA-ACHIEVEMENT', 'CR-X3-M4-HEALTH-TREND']
     dimension: X3
     layer: L2
     name: 交付价值跟踪
@@ -2645,6 +2690,7 @@ gac:
     created_at: '2026-08-06'
     adr: ADR-0106
   - id: CR-X3-X-SLA-ACHIEVEMENT
+    relates_to: ['CR-X3-DELIVERY-VALUE-GATE', 'CR-X3-DELIVERY-CADENCE', 'CR-X3-L2-DELIVERY-VALUE', 'CR-X3-M4-HEALTH-TREND']
     dimension: X3
     layer: X
     name: SLA 达成率监控
@@ -2661,6 +2707,7 @@ gac:
     created_at: '2026-08-06'
     adr: ADR-0106
   - id: CR-X3-M4-HEALTH-TREND
+    relates_to: ['CR-X3-DELIVERY-VALUE-GATE', 'CR-X3-DELIVERY-CADENCE', 'CR-X3-L2-DELIVERY-VALUE', 'CR-X3-X-SLA-ACHIEVEMENT']
     dimension: X3
     layer: meta
     name: M4 健康分趋势
