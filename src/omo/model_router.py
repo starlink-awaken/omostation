@@ -8,6 +8,7 @@
 依赖: aetherforge/triage/router (未实现, v9 候选). 本文件只定义 interface.
 实现路径: StubModelRouter (规则, 当前) → AetherforgeTriageAdapter (HTTP 接入) → HybridRouter.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

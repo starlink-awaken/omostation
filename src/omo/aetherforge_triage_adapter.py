@@ -14,6 +14,7 @@ verdict → action 映射 (aetherforge 离散判定 → omo ModelDecision):
 
 confidence 映射: consensus agreement (一致率 0-1).
 """
+
 from __future__ import annotations
 
 import json
@@ -95,9 +96,7 @@ class AetherforgeTriageAdapter:
         self.cost_budget = CostBudget(max_budget=max_cost_budget)
         self.circuit_breaker = CircuitBreaker(max_failures=max_failures)
 
-    def route(
-        self, node: str, node_output: dict, *, scene_id: str
-    ) -> ModelDecision:
+    def route(self, node: str, node_output: dict, *, scene_id: str) -> ModelDecision:
         """ModelRouterProtocol 实现: 调 aetherforge consensus + 成本/断路器守约."""
         # 1. 断路器 OPEN → 直接降级 (F14, 不再调 server)
         if self.circuit_breaker.is_open:
@@ -167,9 +166,7 @@ class AetherforgeTriageAdapter:
         with urlopen(req, timeout=self.timeout) as resp:
             return json.loads(resp.read().decode("utf-8"))
 
-    def _map_consensus(
-        self, resp: dict, node: str, scene_id: str
-    ) -> ModelDecision:
+    def _map_consensus(self, resp: dict, node: str, scene_id: str) -> ModelDecision:
         """aetherforge consensus 响应 → omo ModelDecision."""
         verdict = str(resp.get("verdict", ""))
         agreement = float(resp.get("agreement", 0.0))

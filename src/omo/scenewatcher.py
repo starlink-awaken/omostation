@@ -13,6 +13,7 @@
 
 参见: docs/scene-cards/v2/scenewatcher-design.md
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -36,7 +37,9 @@ class DecisionResult:
     action: str  # pass | escalate | human_veto
     confidence: float
     reason: str
-    model_used: str = "local-triage"  # local-triage | api | hybrid | aetherforge-triage:*
+    model_used: str = (
+        "local-triage"  # local-triage | api | hybrid | aetherforge-triage:*
+    )
     cost_estimate: float = 0.0  # 守 F11: 决策成本 (aetherforge tracker 记账, 可审计)
 
 
@@ -70,9 +73,7 @@ class SceneWatcher:
         ]
         if dry_run:
             cmd.append("--dry-run")
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, check=False
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
         return {
             "returncode": result.returncode,
             "stdout": result.stdout.strip(),

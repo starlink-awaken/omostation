@@ -10,6 +10,7 @@ Agent 矩阵:
 - KnowledgeCuratorAgent (β.3): MOS 决策图谱 stub
 - SceneWatcher (α.3 续, 外部注入): scene trigger stub (tick 在 scenewatcher.py)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -118,7 +119,9 @@ class KnowledgeCuratorAgent:
     def tick(self) -> dict[str, Any]:
         return {
             "action": "noop",
-            "details": {"note": "KnowledgeCurator stub (β.3 MVP, 真实 MOS 决策图谱留续)"},
+            "details": {
+                "note": "KnowledgeCurator stub (β.3 MVP, 真实 MOS 决策图谱留续)"
+            },
         }
 
 
