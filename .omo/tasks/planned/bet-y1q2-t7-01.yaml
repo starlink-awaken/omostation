@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-06T12:28:20+00:00
 id: BET-Y1Q2-T7-01
 title: 工程交付 dogfood 开 shadow
 status: candidate
@@ -49,7 +49,7 @@ pasw_required: false
 circuit_breaker: 样本 < 10/周 → 扩大到 commit 级评审
 retro_required: false
 retro_path: .omo/_knowledge/retros/BET-Y1Q2-T7-01.md
-agent_profile_hint: product-agent
+agent_profile_hint: docs-agent
 started_at: null
 completed_at: null
 blocked_by: null

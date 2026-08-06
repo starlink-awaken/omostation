@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-06T12:28:20+00:00
 id: BET-Y1Q1-T7-02
 title: v10 失落产物重建并入库
 status: candidate
@@ -53,7 +53,7 @@ pasw_required: false
 circuit_breaker: 超 2 周 → 只重建 journey-runner(最核心), 其余记 debt
 retro_required: true
 retro_path: .omo/_knowledge/retros/BET-Y1Q1-T7-02.md
-agent_profile_hint: product-agent
+agent_profile_hint: docs-agent
 started_at: null
 completed_at: null
 blocked_by: null

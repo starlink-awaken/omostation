@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-06T12:28:20+00:00
 id: BET-Y1Q1-T7-03
 title: 公文场景砍到 3 node 并进 shadow
 status: candidate
@@ -51,7 +51,7 @@ pasw_required: false
 circuit_breaker: 4 周内真实输入 < 3/周 → 场景退回 draft, 排查感知面
 retro_required: true
 retro_path: .omo/_knowledge/retros/BET-Y1Q1-T7-03.md
-agent_profile_hint: product-agent
+agent_profile_hint: docs-agent
 started_at: null
 completed_at: null
 blocked_by: null
