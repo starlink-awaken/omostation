@@ -63,6 +63,7 @@
 → [工具索引](INDEX-TOOLS.md) — bin/ + scripts/ + .agents/skills 统一目录
 
 → [知识索引](INDEX-KNOWLEDGE.md) — ADR + 审计 + 模式 + 总结交叉索引
+→ [计划与决策台账](plans/) — 3Y-BET-LEDGER 等计划/台账文档
 
 → [Agent 能力索引](INDEX-AGENTS.md) — 当前 agent 配置 + 技能清单
 

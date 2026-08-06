@@ -1,5 +1,5 @@
 ---
-id: ADR-0380
+id: ADR-0382
 title: 子模块指针回退检测 (CR-SUBMODULE-REWIND)
 status: ACCEPTED
 lifecycle: ACTIVE

@@ -359,8 +359,13 @@ initiatives:
     title: CI plane convergence (ADR-0379)
     recommendation: 42 workflows 手工 YAML 无 SSOT → ci-surfaces.yaml 登记 + check-ci-surfaces 检测 + registry-driven runner + double-trigger 去重.
     status: done
-    progress: 70
+    progress: 100
     last_evaluated: "2026-08-05"
+    closure:
+      adr: ADR-0380
+      verified: '2026-08-06'
+      verifier: governance-team
+      note: ADR-0379/0380/0381 收敛轮次; 并发 phase13 重写丢失 closure, ADR-0381 恢复
     meadows_level: 5
     owner: governance-team
     layer: X1-X4
