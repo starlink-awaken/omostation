@@ -146,6 +146,14 @@ jobs:
       - name: CR-X2-GOVERNANCE-TREND — 治理指标趋势检查 (advisory)
         continue-on-error: true
         run: python3 bin/gac/check-governance-trend.py
+      - name: CR-X2-DOC-FRESHNESS-GATE — 文档新鲜度门禁检查 (advisory)
+        # 检查 docs/ 下 md 文件是否在 90 天内更新过, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-doc-freshness-gate.py
+      - name: CR-X2-METRIC-TREND — 治理指标趋势检查 (advisory)
+        # 检查 governance-evolution 指标趋势, 确认关键指标未恶化, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-metric-trend.py
       - name: PASW — 自动同步子模块指针
         # 如果 PR 分支指针不可达, 自动 fetch 或更新到最新 origin/main
         # --verbose: 显示完整错误信息到 CI log, 便于诊断
@@ -164,6 +172,15 @@ jobs:
         run: |
           python3 bin/mof/project-layer-index.py --write
           python3 bin/gac/gac-export-agents.py
+      - name: mof-check (L0 约束对齐验证, advisory)
+        # MOF 全量检查: gate + validate + audit + enforce
+        # 非阻塞: 周度 mof-update.yml 已覆盖, 这里作为日常快速探测
+        continue-on-error: true
+        env:
+          GAC_M1_SYNC_WRITE: "1"
+        working-directory: projects/ecos
+        run: |
+          uv run mof check 2>&1 | tail -20
       - name: check-layers (跨层依赖检查)
         run: python3 bin/layer-dependency-check.py
       - name: gac-local-gate (strict)
