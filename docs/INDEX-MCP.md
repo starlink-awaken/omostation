@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-全生态共 **27** 个 MCP 服务器, **554** 个工具。
+全生态共 **28** 个 MCP 服务器, **554** 个工具。
 
 | 服务器 | 层 | 工具数 | 传输 | 端口 | 源文件 |
 |--------|-----|--------|------|------|--------|
@@ -26,6 +26,7 @@
 | `ontoderive` | L2 | 7 | stdio | — | `projects/kairon/packages/ontoderive/src/ontoderive/mcp_server.py` |
 | `toolforge` | L2 | 5 | stdio | — | `projects/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py` |
 | `agent-runtime` | L3 | 2 | stdio | — | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
+| `cockpit-mcp` | L3 | 0 | stdio | — | `projects/cockpit/src/cockpit/scripts/cockpit_mcp.py` |
 | `l4-kernel` | L4 | 45 | stdio/http/sse | http:7455, sse:7456 | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `model-driven` | M0 | 28 | stdio | — | `projects/model-driven/src/model_driven/mcp_server.py` |
 | `model-driven-fastmcp` | M0 | 2 | stdio | — | `projects/model-driven/src/model_driven/fastmcp_server.py` |

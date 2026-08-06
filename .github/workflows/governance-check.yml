@@ -59,33 +59,11 @@ jobs:
         uses: astral-sh/setup-uv@v4
       - name: Run governance checks
         run: |
-          # P77 debug: set -x 打印每个 check 命令 + 退出码, 定位 interface-check silent fail
-          # (本地 check-*.py 全 pass, CI 某 check 静默 return 1; set -x 让 CI log 可见每个 check 执行)
-          set -x
+          # ADR-0379 E-2: registry-driven — 检查清单来自 ci-surfaces.yaml (workflow=governance-check.yml),
+          # 取代旧 21 行 FAILED=1 bash 循环 (P77 silent-fail 根因: 无 per-check 报告/无登记契约).
+          # 新增/移除 doc check 只改 .omo/_truth/registry/ci-surfaces.yaml (CR-CI-SURFACE-SSOT).
           FAILED=0
-          # Run each check independently — don't let one failure skip the rest
-          python3 scripts/check-interfaces.py || FAILED=1
-          python3 scripts/check-cross-deps.py || FAILED=1
-          python3 scripts/check-doc-ssot-snapshots.py || FAILED=1
-          python3 scripts/check-panorama-arch-links.py || FAILED=1
-          python3 scripts/check-ssot-reference-integrity.py || FAILED=1
-          python3 scripts/check-truth-m1-governance-mapping.py || FAILED=1
-          python3 scripts/check-governance-surface-paths.py || FAILED=1
-          python3 scripts/check-project-arch-doc-contract.py || FAILED=1
-          python3 scripts/check-project-arch-doc-ssot.py || FAILED=1
-          python3 scripts/check-project-registry-ssot.py || FAILED=1
-          python3 scripts/check-truth-inventory-routing.py || FAILED=1
-          python3 scripts/check-knowledge-index-ssot.py || FAILED=1
-          python3 scripts/check-design-history-ssot.py || FAILED=1
-          python3 scripts/check-design-body-ssot.py || FAILED=1
-          python3 scripts/check-design-risky-phrases.py || FAILED=1
-          python3 scripts/check-plans-readme-ssot.py || FAILED=1
-          python3 scripts/check-governance-doc-ssot.py || FAILED=1
-          python3 scripts/check-governance-mechanism-ssot.py || FAILED=1
-          python3 scripts/check-governance-guides-ssot.py || FAILED=1
-          python3 scripts/check-knowledge-history-ssot.py || FAILED=1
-          python3 scripts/check-phase-closeout-ssot.py || FAILED=1
-          python3 bin/ssot/doc-governance-check.py --no-new-warnings || FAILED=1
+          python3 bin/gac/ci-check-runner.py --workflow governance-check.yml || FAILED=1
           cd projects/omo
           uv sync --quiet   # 显式 sync (确保 pydantic 等依赖装好)
           uv run python -m omo.cli governance surfaces --workspace-root ../.. --json > /tmp/omo-governance-surfaces.json || { echo "=== governance surfaces FAIL, output: ==="; cat /tmp/omo-governance-surfaces.json 2>/dev/null; FAILED=1; }
@@ -143,7 +121,7 @@ jobs:
         run: pip install pyyaml
       - name: Check documentation freshness
         run: |
-          python3 scripts/check-interfaces.py
+          # ADR-0379 E-2: check-interfaces 已由独立 workflow interfaces-enforce.yml 覆盖, 移除冗余
           python3 bin/ssot/doc-governance-check.py --scope workspace --no-new-warnings --json
 
   governance-verify:

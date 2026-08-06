@@ -2,8 +2,10 @@ name: task-schema-enforce
 # P47 A2: 任务 schema enforce (声明/执行鸿沟收口).
 # 复用 omo governance audit (omo/cli.py:122 → omo_audit.governance_main).
 # 检查 .omo/tasks/ YAML 7 规则 (deliverables 文件路径等).
-on: [push, pull_request]
-
+on:
+  push:
+    branches: [main]
+  pull_request:
 jobs:
   audit:
     name: omo governance audit
