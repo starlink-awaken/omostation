@@ -1,0 +1,54 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q1-T3-02
+title: SceneWatcher 决策日志真写 MOS
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T3-02
+window: Y1Q1
+track: T3-COGNI
+appetite: 3 days
+desc: 消除 docstring 声称已做而代码未做的三处文实不符, 让 Agent 第一次拥有跨进程记忆
+non_goals:
+- 决策逻辑升级
+- ModelRouter 接真实模型
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T3-01
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T3-01'
+evidence_required:
+- scenewatcher.py 每次 evaluate_confidence 写一条 decision_outcome 到 MOS
+- 进程重启后可查询历史决策
+- docstring 与实现一致(无未兑现声称)
+test_plan:
+- python3 bin/ssot/doc-claim-lint.py projects/omo/src/omo/scenewatcher.py
+workflow: project-code-change
+write_surfaces:
+- .omo/_truth/registry/memory-os.yaml
+pasw_required: false
+circuit_breaker: 超 5 天 → 先落本地 JSONL, MOS 写入留下一 bet(但必须标 partial)
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T3-02.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

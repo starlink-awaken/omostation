@@ -1,0 +1,54 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q3-T3-01
+title: MOS 双栈一致性观察 8 周
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q3-T3-01
+window: Y1Q3
+track: T3-COGNI
+appetite: 6 weeks
+desc: 归并前的必经硬门 — 证明 MOS 已可替代 KOS/gbrain 双栈
+non_goals:
+- 执行归并(属 T6-01)
+- 新增检索能力
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T3-01
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T3-01'
+evidence_required:
+- 同一 query 经 MOS 与旧双栈返回结果一致性 >= 99%, 连续 8 周
+- MOS 成为唯一读写路径(旧路径只读兜底)
+- 一致性报告每周落盘
+test_plan:
+- make memory-os-smoke
+workflow: project-code-change
+write_surfaces:
+- .omo/_knowledge/audits/**
+pasw_required: false
+circuit_breaker: 一致性 < 99% → 归并推迟到 Y2, Y1Q3 改做其他减法
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q3-T3-01.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

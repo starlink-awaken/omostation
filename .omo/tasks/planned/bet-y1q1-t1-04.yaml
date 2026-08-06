@@ -1,0 +1,62 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q1-T1-04
+title: 未入库产物普查 + D0 铁律门禁
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-04
+window: Y1Q1
+track: T1-TRUTH
+appetite: 2 days
+desc: 防止"声称已交付但从未 git add"的产物再次静默消失; 并修 lane 分类对配套数据的误判
+non_goals:
+- 恢复已丢失文件(属 BET-Y1Q1-T7-02)
+- 锁原子性(属 BET-Y1Q1-T1-00)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T1-00
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T1-00'
+evidence_required:
+- 全仓 untracked 非 gitignore 文件清单产出并逐条裁定(入库/删除/加 ignore)
+- 'closeout 增加 D0 检查: 声明的 deliverable 必须 git ls-files 通过'
+- AGENTS.md 收录 D0 铁律
+- change-lane-check 对 docs/ 下的数据文件(.yaml/.json/.csv)判为 docs 或 docs_data lane
+- 若新增 docs_data lane, 则 {docs, docs_data} 进入允许混合组合
+test_plan:
+- git status --porcelain --untracked-files=all | grep '^??' | wc -l
+- grep -c 'D0' AGENTS.md
+- python3 bin/change-lane-check.py --file docs/plans/3y-bet-ledger.yaml --json
+workflow: governance-state-mutation
+write_surfaces:
+- .gitignore
+- AGENTS.md
+- .pre-commit-config.yaml
+- bin/plan/**
+- bin/change-lane-check.py
+pasw_required: false
+circuit_breaker: 超 4 天 → 先只做清单 + AGENTS.md 记录, 门禁留下一 bet
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T1-04.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

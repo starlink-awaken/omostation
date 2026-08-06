@@ -1,0 +1,53 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y3H2-T1-01
+title: 对外扩展决策 ADR (默认不做)
+status: candidate
+task_type: bet
+priority: P2
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y3H2-T1-01
+window: Y3H2
+track: T1-TRUTH
+appetite: 1 week
+desc: 在三年数据基础上, 对"是否服务他人"做一次明确决策
+non_goals:
+- 实施对外扩展
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y3H2-T4-01
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y3H2-T4-01'
+evidence_required:
+- ADR 产出含成本/风险/边界分析
+- 默认结论为不做
+- 若做则须给出新的证伪条件
+test_plan:
+- ls .omo/_knowledge/decisions/ | grep -c external-expansion
+workflow: governance-audit
+write_surfaces:
+- .omo/_knowledge/decisions/**
+pasw_required: false
+circuit_breaker: 不适用
+retro_required: false
+retro_path: .omo/_knowledge/retros/BET-Y3H2-T1-01.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

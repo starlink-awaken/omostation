@@ -1,0 +1,67 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q1-T1-00
+title: 并发写冲突止血 — 共享主树禁写 + PASW 全覆盖
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-00
+window: Y1Q1
+track: T1-TRUTH
+appetite: 2 days
+desc: 阻止并发 agent 在共享 main worktree 上互相清理未入库产物, 并消除 claim 僵尸锁死锁
+non_goals:
+- 重构 gac-worktree
+- 改变 PASW 隔离子模块集
+- 修 lane 分类规则(属 T1-04)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on: []
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate: []
+evidence_required:
+- 所有 agent 必须在 gac-worktree claim 出的隔离树内工作, 共享 main 树只读
+- git clean / reset --hard / stash -u 在 hook 层要求 SWARM_ESCAPE_ID
+- AGENTS.md 记录"共享主树只读"红线
+- claim 写锁改为原子(先写临时文件再 rename), 或失败时回滚已写的 path 锁
+- 锁文件记录 last_heartbeat, 提供 stale-lock 检测与一键清理命令
+- claim 被拒时的报错区分「活锁(持有者在跑)」与「僵尸锁(上次失败残留)」
+- raw git commit/push --no-verify 被 hook 层拦截, 强制走 bin/gac/swarm-git
+- 共享分支 rewrite 前须检查是否会丢弃他人提交; 或禁止在共享分支上 rebase/reset
+- 'D0 铁律升级: 交付物 commit 后须打 tag 或推独立分支, 仅 commit 不算持久化'
+test_plan:
+- make worktree-guard
+- grep -c '共享主树只读\|shared-main-readonly' AGENTS.md
+- uv run --with pyyaml python bin/agent-workflow.py status --locks
+- ls .omo/_delivery/agent-workflows/locks/run_*.update.lock 2>/dev/null | wc -l
+- SWARM_ESCAPE_ID=bogus git commit --no-verify --allow-empty -m probe
+workflow: governance-state-mutation
+write_surfaces:
+- AGENTS.md
+- bin/gac/**
+- .githooks/**
+- projects/omo/src/omo/workflow/lifecycle.py
+pasw_required: false
+circuit_breaker: 超 4 天 → 先做 E2(锁原子性+stale 检测, 影响面更大且纯代码), E1 的 hook 强制推迟, 仅加 AGENTS.md
+  红线与 warning
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T1-00.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

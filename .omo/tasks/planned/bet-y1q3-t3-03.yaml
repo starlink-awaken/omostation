@@ -1,0 +1,53 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q3-T3-03
+title: 退役 mem0 / memtheta 仿真适配器
+status: candidate
+task_type: bet
+priority: P1
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q3-T3-03
+window: Y1Q3
+track: T3-COGNI
+appetite: 1 week
+desc: 消除 partial_simulation / stub_optional 这类"看起来接了实际没接"的适配器
+non_goals:
+- 替换为其他第三方记忆库
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q3-T3-02
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q3-T3-02'
+evidence_required:
+- memory-os.yaml 中不再出现 partial_simulation 状态
+- mem0 / memtheta 代码归档或明确标记 experimental 且默认不加载
+- 适配器审计文档更新
+test_plan:
+- grep -c 'partial_simulation' .omo/_truth/registry/memory-os.yaml
+workflow: project-code-change
+write_surfaces:
+- .omo/_truth/registry/memory-os.yaml
+pasw_required: false
+circuit_breaker: 有真实调用方 → 保留但必须标真实状态
+retro_required: false
+retro_path: .omo/_knowledge/retros/BET-Y1Q3-T3-03.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

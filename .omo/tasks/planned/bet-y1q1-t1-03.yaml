@@ -1,0 +1,53 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q1-T1-03
+title: goals/current.yaml 复活
+status: candidate
+task_type: bet
+priority: P0
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-03
+window: Y1Q1
+track: T1-TRUTH
+appetite: 1 day
+desc: 让系统重新拥有"当前最重要的是什么"这一意图模型 SSOT
+non_goals:
+- 重构 goals schema
+- 迁移历史 bet
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: true
+entry_gate: []
+evidence_required:
+- goals/current.yaml 含 >= 3 条 status != done 的目标
+- last-reviewed 更新为当日
+- 三条目标分别指向本台账的 Y1Q1 bet 集合
+test_plan:
+- python3 -c "import yaml;d=yaml.safe_load(open('.omo/goals/current.yaml'));print(sum(1
+  for g in d['goals'] if g.get('status')!='done'))"
+workflow: governance-state-mutation
+write_surfaces:
+- .omo/goals/current.yaml
+pasw_required: false
+circuit_breaker: 超 2 天 → 人类口述 3 条, agent 只做格式化落盘
+retro_required: false
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T1-03.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

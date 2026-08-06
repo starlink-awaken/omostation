@@ -1,0 +1,60 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q1-T1-02
+title: 子模块指针对齐 + 漂移 CI 门禁
+status: candidate
+task_type: bet
+priority: P0
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-02
+window: Y1Q1
+track: T1-TRUTH
+appetite: 3 days
+desc: 消除"根仓记录 / 本地检出 / 子模块 main"三方漂移, 使工作树验证结论可信; 并解除因门禁先于存量上线造成的主干阻塞
+non_goals:
+- 子模块内部代码修改
+- 分支合并
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T1-00
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T1-00'
+evidence_required:
+- git status --short 无 M/m 子模块条目
+- 每个子模块本地 HEAD == 根仓 gitlink SHA
+- 18 个 rewind 存量清零, CR-SUBMODULE-REWIND 在干净状态下通过
+- CI 增加 submodule-pointer-drift 门禁, 漂移则失败
+- '新门禁上线规程: 存量未清零前只能以 warning 上线, 不得直接 fail'
+test_plan:
+- git status --short | grep -E '^ ?[Mm] projects/' | wc -l
+- python3 bin/submodule-gitlink-check.py
+- git commit --allow-empty -m probe && git reset --soft HEAD~1
+workflow: submodule-pointer-close
+write_surfaces:
+- .gitmodules
+- .github/workflows/**
+- bin/submodule-gitlink-check.py
+pasw_required: false
+circuit_breaker: 超 5 天 → 只对齐 omo/agora/cockpit 三个高冲突子模块, 其余记 debt
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T1-02.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

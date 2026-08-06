@@ -1,0 +1,55 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q1-T1-01
+title: 废除 X3 mtime 交付指标
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-01
+window: Y1Q1
+track: T1-TRUTH
+appetite: 1 day
+desc: 让 BRIEF 不再把治理配置文件的修改时间叙述为业务交付
+non_goals:
+- 重建真实交付指标(属 T4)
+- 调整软门禁阈值
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate: []
+evidence_required:
+- bin/mof/generate-brief.py 移除 count_deliveries_by_month 及其调用
+- BRIEF.md X3 工作交付行显示"未接入真实数据源"
+- x3-delivery-soft-gate.yaml 标记 deprecated 并指向本 bet
+test_plan:
+- grep -c count_deliveries_by_month bin/mof/generate-brief.py
+- python3 bin/mof/generate-brief.py && grep -A2 '工作交付' BRIEF.md
+workflow: governance-state-mutation
+write_surfaces:
+- bin/mof/generate-brief.py
+- .omo/_truth/registry/x3-delivery-soft-gate.yaml
+- BRIEF.md
+pasw_required: false
+circuit_breaker: 超 2 天 → 只做 BRIEF 显示层改造, 计算逻辑留 deprecated 注释
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T1-01.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

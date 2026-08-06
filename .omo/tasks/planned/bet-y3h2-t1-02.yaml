@@ -1,0 +1,55 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y3H2-T1-02
+title: 三年终局门
+status: candidate
+task_type: bet
+priority: P0
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y3H2-T1-02
+window: Y3H2
+track: T1-TRUTH
+appetite: 3 days
+desc: 对三年规划的三条验收标准做最终判定
+non_goals:
+- 启动第四年规划(应另起)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y3H2-T4-01
+- BET-Y3H1-T6-01
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y3H2-T4-01'
+- '依赖已 done: BET-Y3H1-T6-01'
+evidence_required:
+- 三条标准逐条实测
+- 给出成功/部分失败/失败结论
+- 若部分失败则给出收窄方案
+test_plan:
+- python3 bin/plan/bet-ledger.py gate Y3H2
+workflow: governance-audit
+write_surfaces:
+- .omo/_knowledge/retros/gates/**
+pasw_required: false
+circuit_breaker: 不适用(这是门本身)
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y3H2-T1-02.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

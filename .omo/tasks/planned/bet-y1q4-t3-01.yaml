@@ -1,0 +1,53 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q4-T3-01
+title: 自主性阶梯 L0-L3 判据实现
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q4-T3-01
+window: Y1Q4
+track: T3-COGNI
+appetite: 2 weeks
+desc: 把放权从"人拍脑袋"变成"数据触发", 同时实现自动降级
+non_goals:
+- 实际放权某个场景(属 T7-01)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q2-T4-01
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q2-T4-01'
+evidence_required:
+- 四级判据按硬门实现 (L1:20次观察 / L2:calibration>=0.6+30连 / L3:>=0.85+100连)
+- 升降级各产生一条 OMO 事件
+- 降级触发条件生效可测(注入 rejected 即降级)
+test_plan:
+- make evidence-smoke
+workflow: project-code-change
+write_surfaces:
+- .omo/_truth/registry/**
+pasw_required: false
+circuit_breaker: 超 3 周 → 只实现 L0→L1→L2 三级, L3 推迟到 Y2
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q4-T3-01.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

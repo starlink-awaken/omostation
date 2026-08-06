@@ -1,0 +1,54 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q2-T5-02
+title: 回退边执行语义 + 次数上限 + 升级路径
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T5-02
+window: Y1Q2
+track: T5-ORCH
+appetite: 1 week
+desc: 让 pass/fail/escalate 边有明确执行语义, 消除无限回退风险
+non_goals:
+- 新增边类型
+- 修改 scene-card schema
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T7-02
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T7-02'
+evidence_required:
+- journey-runner 支持非 always 边执行(非仅拓扑排序)
+- 回退次数上限可配置, 默认 3 次
+- 超限自动升级为 human_hold 并产生 OMO 事件
+test_plan:
+- python3 bin/ssot/journey-runner.py docs/scene-cards/v2/document-review.yaml --json
+workflow: project-code-change
+write_surfaces:
+- bin/ssot/journey-runner.py
+pasw_required: false
+circuit_breaker: 超 2 周 → 只做次数上限与升级, 完整边语义推迟
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q2-T5-02.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

@@ -1,0 +1,65 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y1Q1-T1-05
+title: 仓库拓扑改造 — 单实例多租户 → 多实例单写者
+status: candidate
+task_type: bet
+priority: P0
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-05
+window: Y1Q1
+track: T1-TRUTH
+appetite: 2 weeks
+desc: 把「N 个 agent 共用一个物理仓库」改成「每 agent 一个独立 clone, 主仓降级为集成点」, 从拓扑上消除并发写冲突, 而非继续加分区规则
+non_goals:
+- 改变远端 origin 与 PR 流程
+- 迁移人类自己的工作习惯(主仓对人类仍可写)
+- 引入新的编排/调度系统
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T1-00
+risk_level: L3
+allowed_operation_level: L3
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T1-00'
+evidence_required:
+- '三条不变量成立: I1 主仓只读于 agent / I2 每 agent 一个独立 clone / I3 集成只经 ref'
+- ~/agents/<agent-id>/ws 独立 clone 建立(--reference 共享对象库 + --recurse-submodules)
+- 主仓 pre-commit 在 AGENT_ID 非空时拒绝写入, 人类不受影响
+- 全部 agent 迁移完成, reflog 中主仓 checkout/reset 归零
+- 'D3 减法: D2(分支占用锁)/D3(共享树 claim)/D5(PASW) 三条纪律退役并删除实现'
+- 表面积净减(脚本/规则/文档行数), 记入复盘 Q4
+test_plan:
+- git -C ~/Workspace reflog -100 | grep -cE 'checkout:|reset:'
+- ls -d ~/agents/*/ws 2>/dev/null | wc -l
+- grep -c 'd2_branch_occupancy\|d3_shared_worktree_claim\|d5_pasw' .omo/_truth/registry/swarm-coordination.yaml
+- python3 bin/plan/bet-ledger.py surface
+workflow: governance-state-mutation
+write_surfaces:
+- bin/gac/**
+- .githooks/**
+- .omo/_truth/registry/swarm-coordination.yaml
+- AGENTS.md
+- docs/plans/AGENT-BRIEF.md
+pasw_required: false
+circuit_breaker: 超 3 周 → 停在 D2(全员迁 clone), D3 减法推迟到 Y1Q2; 但不得只做 D0/D1 就收工(拓扑没改完等于没做)
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T1-05.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

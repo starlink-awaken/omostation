@@ -1,0 +1,54 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:15:49+00:00
+id: BET-Y2Q1-T3-03
+title: Agent 据心智模型决策 (脱离纯阈值)
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y2Q1-T3-03
+window: Y2Q1
+track: T3-COGNI
+appetite: 2 weeks
+desc: SceneWatcher 从反射弧变为有状态心智 — 决策依赖历史与上下文
+non_goals:
+- 自主放权
+- 自主修改场景
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y2Q1-T3-02
+risk_level: L3
+allowed_operation_level: L3
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y2Q1-T3-02'
+evidence_required:
+- 决策输入含 world/self/intent 三模型
+- 同一 node_output 在不同历史下可给不同决策
+- 决策理由可解释
+test_plan:
+- python3 bin/ssot/doc-claim-lint.py projects/omo/src/omo/scenewatcher.py
+workflow: project-code-change
+write_surfaces:
+- .omo/_truth/registry/memory-os.yaml
+pasw_required: false
+circuit_breaker: 决策质量下降 → 回退纯阈值, 记 ADR
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y2Q1-T3-03.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0
