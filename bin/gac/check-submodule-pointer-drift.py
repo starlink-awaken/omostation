@@ -103,6 +103,15 @@ def check_drift(sub_path: str, from_head: bool = False) -> dict | None:
             "detail": "gitlink is ancestor of origin/main (stale but reachable)",
         }
 
+    if is_ancestor(origin_main, gitlink, sub_path):
+        return {
+            "submodule": sub_path,
+            "status": "ahead",
+            "gitlink": gitlink[:12],
+            "origin_main": origin_main[:12],
+            "detail": "gitlink is ahead of origin/main (local has unpushed commits, non-blocking)",
+        }
+
     return {
         "submodule": sub_path,
         "status": "DIVERGED",
@@ -179,7 +188,11 @@ def main() -> int:
         print()
         total = len(results)
         aligned = sum(1 for r in results if r["status"] == "aligned")
-        print(f"  Total: {total} submodules | {aligned} aligned | {len(behind)} behind | {len(diverged)} DIVERGED")
+        ahead_n = sum(1 for r in results if r["status"] == "ahead")
+        print(
+            f"  Total: {total} submodules | {aligned} aligned | {ahead_n} ahead | "
+            f"{len(behind)} behind | {len(diverged)} DIVERGED"
+        )
 
     if diverged:
         print(f"\n  {len(diverged)} DIVERGED - root pointer targets side branch, code may be invisible!")
