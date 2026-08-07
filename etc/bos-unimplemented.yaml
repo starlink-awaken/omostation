@@ -5,13 +5,29 @@
 # 校验: tests/unit/test_bos_registry.py::test_unimplemented_services_are_tracked
 
 unimplemented:
-  - uri: bos://analysis/iris/connect
-    reason: Iris connector 未落地 (开发中)
-  - uri: bos://analysis/iris/transform
-    reason: Iris connector 未落地 (开发中)
-  - uri: bos://analysis/iris/validate
-    reason: Iris connector 未落地 (开发中)
-  - uri: bos://perception/apple_mail/inbox
-    reason: BET-Y1Q1-T2-01 感知面信号采集未落地
-  - uri: bos://perception/signal_monitor/health
-    reason: BET-Y1Q1-T2-01 信号源健康探测未落地
+- uri: bos://analysis/iris/connect
+  reason: Iris connector 未落地 (开发中)
+- uri: bos://analysis/iris/transform
+  reason: Iris connector 未落地 (开发中)
+- uri: bos://analysis/iris/validate
+  reason: Iris connector 未落地 (开发中)
+- uri: bos://perception/apple_mail/inbox
+  reason: BET-Y1Q1-T2-01 感知面信号采集未落地
+- uri: bos://perception/signal_monitor/health
+  reason: BET-Y1Q1-T2-01 信号源健康探测未落地
+- uri: bos://governance/agt/policy
+  reason: AGT 策略引擎未落地
+- uri: bos://capability/agt/trust
+  reason: AGT 信任链未落地
+- uri: bos://capability/agt/sandbox
+  reason: AGT 沙箱未落地
+- uri: bos://capability/agt/sre
+  reason: AGT SRE 未落地
+- uri: bos://capability/agt/mcp-security
+  reason: AGT MCP 安全未落地
+- uri: bos://capability/agt/marketplace
+  reason: AGT 市场未落地
+- uri: bos://capability/agt/lightning
+  reason: AGT Lightning 未落地
+- uri: bos://governance/agt/hypervisor
+  reason: AGT 超管未落地
