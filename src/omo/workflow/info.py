@@ -142,7 +142,7 @@ def bootstrap_report(
         else adapter_rows(registry)
     )
     ok = not errors and (doctor_report is None or bool(doctor_report["ok"]))
-    return {
+    report = {
         "ok": ok,
         "registry": str(REGISTRY_PATH.relative_to(WORKSPACE)),
         "version": registry.get("version"),
@@ -179,6 +179,14 @@ def bootstrap_report(
             "scoped_gate": "uv run --with pyyaml python bin/gac/gac-local-gate.py --scope files --file <path> --json",
         },
     }
+    try:
+        from ..omo_paths import WORKSPACE_ROOT
+        from ..omo_belief import MOSBeliefManager
+        beliefs = MOSBeliefManager(root=WORKSPACE_ROOT).query_beliefs()
+    except Exception:
+        beliefs = []
+    report["agent_beliefs"] = beliefs
+    return report
 
 
 def print_bootstrap_report(report: dict[str, Any], as_json: bool) -> None:
@@ -210,6 +218,11 @@ def print_bootstrap_report(report: dict[str, Any], as_json: bool) -> None:
         print(
             f"  {row['name']:<14} {row['authority']:<16} {availability} command={command}"
         )
+    beliefs = report.get("agent_beliefs") or []
+    if beliefs:
+        print(f"\nMOS agent beliefs ({len(beliefs)} active):")
+        for b in beliefs[:5]:
+            print(f"  • [{b.get('topic')}] {b.get('belief')}")
     print("\nnext:")
     for command in report["next_commands"].values():
         print(f"  {command}")
