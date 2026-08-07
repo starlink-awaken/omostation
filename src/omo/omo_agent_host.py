@@ -190,8 +190,63 @@ def run_agent_tick(*, host: AgentHost | None = None) -> dict[str, Any]:
     SceneWatcher 适配 AgentProtocol (α.3 续, tick stub), 可外部注入 host.register(scene_watcher).
     """
     if host is None:
-        host = AgentHost(agents=[HealthMonitorAgent(), KnowledgeCuratorAgent()])
+        host = AgentHost(agents=[HealthMonitorAgent(), KnowledgeCuratorAgent(), JourneyRunnerAgent()])
     return host.tick_all()
+
+
+@dataclass
+class JourneyRunnerAgent:
+    """AgentProtocol: 扫描 pending journeys, 推进一步 (四面一脊 ③ daemon 集成).
+
+    tick: 扫 journey-states/ 找 awaiting_human 状态的 run,
+    若 context 含 human_approved=True 则调 journey-runner resume.
+    守 SRP: 只做检测+触发, 不执行 journey 逻辑 (journey-runner 的事).
+    """
+
+    @property
+    def agent_id(self) -> str:
+        return "journey-runner"
+
+    def tick(self) -> dict[str, Any]:
+        """Scan for resumable journey runs."""
+        import json as _json
+        from pathlib import Path as _Path
+
+        workspace = _Path(os.environ.get("WORKSPACE_ROOT", str(_Path.home() / "Workspace")))
+        states_dir = workspace / ".omo" / "_knowledge" / "workflow-mesh" / "journey-states"
+        if not states_dir.is_dir():
+            return {"action": "noop", "details": {"note": "no journey states dir"}}
+
+        resumable: list[dict[str, str]] = []
+        for journey_dir in states_dir.iterdir():
+            if not journey_dir.is_dir():
+                continue
+            for run_file in journey_dir.glob("*.jsonl"):
+                try:
+                    lines = run_file.read_text(encoding="utf-8").strip().split("\n")
+                    if not lines or not lines[-1].strip():
+                        continue
+                    last = _json.loads(lines[-1])
+                    if last.get("status") == "awaiting_human":
+                        ctx = last.get("context", {})
+                        if isinstance(ctx, dict) and ctx.get("human_approved"):
+                            resumable.append({
+                                "journey_id": last.get("journey_id", journey_dir.name),
+                                "run_id": run_file.stem,
+                                "state": last.get("state", "?"),
+                            })
+                except Exception:
+                    continue
+
+        if resumable:
+            return {
+                "action": "trigger",
+                "details": {
+                    "resumable_journeys": resumable,
+                    "note": f"{len(resumable)} journey run(s) ready to resume",
+                },
+            }
+        return {"action": "noop", "details": {"note": "no resumable journeys"}}
 
 
 __all__ = [
@@ -200,5 +255,6 @@ __all__ = [
     "AgentTickResult",
     "HealthMonitorAgent",
     "KnowledgeCuratorAgent",
+    "JourneyRunnerAgent",
     "run_agent_tick",
 ]
