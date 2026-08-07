@@ -106,24 +106,63 @@ def poll_once(root: Path | None = None) -> list[dict[str, Any]]:
     return triggers
 
 
+SIGNAL_TO_JOURNEY = {
+    "apple_mail_inbox": "inbox-to-decision",
+    "netease_mailmaster_inbox": "inbox-to-decision",
+    "seeyon_oa_pending": "inbox-to-decision",
+    "github_push": "meeting-to-delivery",
+}
+
+
+def _auto_trigger(triggers: list[dict[str, Any]], root: Path) -> list[str]:
+    """Auto-start journeys for detected signals."""
+    import subprocess
+
+    triggered: list[str] = []
+    for t in triggers:
+        source_id = t.get("source_id", "")
+        journey_id = SIGNAL_TO_JOURNEY.get(source_id)
+        if not journey_id:
+            continue
+        try:
+            subprocess.run(
+                ["python3", str(root / "bin/ssot/journey-runner.py"),
+                 "run", "--journey", journey_id, "--live"],
+                timeout=120, capture_output=True, text=True, check=False,
+            )
+            triggered.append(f"{source_id} → {journey_id}")
+        except Exception:
+            pass
+    return triggered
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--watch", action="store_true", help="continuous polling mode")
     parser.add_argument("--interval", type=int, default=300, help="poll interval in seconds (watch mode)")
+    parser.add_argument("--auto-trigger", action="store_true", help="auto-start journeys on signal detection")
     args = parser.parse_args(argv)
 
     if args.watch:
-        print(f"Watching signal sources (interval={args.interval}s)...", flush=True)
+        print(f"Watching signal sources (interval={args.interval}s, auto-trigger={args.auto_trigger})...", flush=True)
         while True:
             triggers = poll_once()
             for t in triggers:
                 print(json.dumps(t, ensure_ascii=False), flush=True)
+            if triggers and args.auto_trigger:
+                fired = _auto_trigger(triggers, ROOT)
+                for f in fired:
+                    print(f"🚀 Auto-triggered: {f}", flush=True)
             time.sleep(args.interval)
     else:
         triggers = poll_once()
         if triggers:
             for t in triggers:
                 print(json.dumps(t, ensure_ascii=False))
+            if args.auto_trigger:
+                fired = _auto_trigger(triggers, ROOT)
+                for f in fired:
+                    print(f"🚀 Auto-triggered: {f}")
         else:
             print(json.dumps({"status": "no_changes", "ts": datetime.now(UTC).isoformat()}, ensure_ascii=False))
 

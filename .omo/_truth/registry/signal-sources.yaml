@@ -22,6 +22,37 @@ sources:
     registered_at: "2026-08-07T00:00:00Z"
     bos_uri: "bos://perception/apple_mail/inbox"
 
+  - id: netease_mailmaster_inbox
+    description: 网易邮箱大师收件箱 — 工作邮件信号入口
+    transport: local_filesystem
+    path: "~/Library/Containers/com.netease.mailmaster/"
+    poll_interval: 300s
+    dedup_window: 24h
+    idempotency_key: message_id
+    failure_policy:
+      max_retries: 3
+      backoff: exponential
+      on_failure: emit_unreachable
+    health: unknown
+    last_signal_at: null
+    registered_at: "2026-08-07T00:00:00Z"
+    bos_uri: "bos://perception/netease/inbox"
+
+  - id: github_push
+    description: GitHub push event — 代码变更信号入口
+    transport: webhook
+    poll_interval: 60s
+    dedup_window: 1h
+    idempotency_key: commit_sha
+    failure_policy:
+      max_retries: 2
+      backoff: linear
+      on_failure: emit_unreachable
+    health: unknown
+    last_signal_at: null
+    registered_at: "2026-08-07T00:00:00Z"
+    bos_uri: "bos://perception/github/push"
+
 health_states:
   - healthy
   - degraded
