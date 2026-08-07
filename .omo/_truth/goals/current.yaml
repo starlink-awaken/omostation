@@ -337,6 +337,46 @@ goals:
   bet_ref: BET-Y1Q1-T1-01
   completed_at: '2026-08-07'
   tasks: []
+- id: G-Y1Q1-PASW
+  title: 并发写隔离 — PASW 全覆盖 + 共享主树禁写
+  desc: 每个 agent 独立 worktree，共享 main 只读，消灭并发写冲突根因
+  kpi: agora/cockpit/gbrain 三子模块 PASW 全覆盖 + pre-push 拦 direct write
+  progress: 0.0
+  status: pending
+  bet_ref: BET-Y1Q1-T1-00
+  tasks: []
+- id: G-Y1Q1-GITSHIM
+  title: git 入口收口 — shim 强制走 swarm-git
+  desc: agent 环境 git → swarm-git 强制路由，拦 --no-verify + 高危操作
+  kpi: bin/gac/git-shim PATH 优先 + AGENT_ID circuit_breaker + 高危操作拦截日志
+  progress: 50.0
+  status: in_progress
+  bet_ref: BET-Y1Q1-T1-07
+  tasks: []
+- id: G-Y1Q1-BELIEF
+  title: 认知基底 — agent_belief 三表 schema
+  desc: 建立 world_snapshot / capability_calibration / decision_outcome 三表，为认知四元组提供物理存储
+  kpi: schema 定义 + 写入路径 + 至少 1 个 workflow run 自动注入 belief
+  progress: 0.0
+  status: pending
+  bet_ref: BET-Y1Q1-T3-01
+  tasks: []
+- id: G-Y1Q2-SCENE-CONSOLIDATE
+  title: 场景面净化 — 合成场景 221→≤40
+  desc: 能力轨 221 构造场景膨胀，需归档/合并/去重到可管理规模
+  kpi: collab-scenarios 从 221 降到 ≤40，保留真实 backlog 对应场景
+  progress: 0.0
+  status: pending
+  bet_ref: BET-Y1Q2-T6-04
+  tasks: []
+- id: G-Y1Q2-SKILL-CRYSTAL
+  title: 技能结晶 — 踩坑经验自动重构为持久化 Skill
+  desc: agent 踩坑后自动生成 skill 草稿，经人类审核后结晶为 .agents/skills/
+  kpi: 结晶引擎原型 + 至少 3 个 auto-generated skill 进入审核队列
+  progress: 0.0
+  status: pending
+  bet_ref: BET-Y1Q2-T6-06
+  tasks: []
 health_targets:
   mcp_isolation_score: 100
   overall: 99
@@ -370,5 +410,5 @@ source_plan_refs:
 - .omo/_knowledge/management/5+3+1-full-audit-2026-06-06.md
 start_date: '2026-06-04'
 status: active
-theme: Phase 49 — 跑通端到端场景闭环 (感知→认知→执行→校准)
+theme: Phase 49 — 认知基底 + 场景面净化 (意图模型注入 + 四元组物理化)
 execution_mode: active
