@@ -627,6 +627,13 @@ surfaces:
     triggers: [per_pr, push, scheduled]
     status: active
     note: ADR-0379 era tool (submodule rewind detection), register for ci-surfaces parity
+  - id: bin-gac-worktree-hygiene-audit-py
+    tool: bin/gac/worktree-hygiene-audit.py
+    workflow: worktree-hygiene.yml
+    gate: false
+    triggers: [manual, per_pr, scheduled]
+    status: active
+    note: ADR-0388 era tool (worktree hygiene audit + auto-cleanup), register for ci-surfaces parity
 
 workflow_triggers:
   - workflow: agora-ci.yml
@@ -820,3 +827,10 @@ workflow_triggers:
   - workflow: workspace.yml
     triggers: [per_pr, push]
     path_filtered: false
+  - workflow: worktree-hygiene.yml
+    triggers: [manual, per_pr, scheduled]
+    path_filtered: true
+    paths:
+    - .github/workflows/worktree-hygiene.yml
+    - bin/gac/worktree-hygiene-audit.py
+    - tests/unit/gac/test_worktree_hygiene_audit.py

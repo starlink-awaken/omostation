@@ -1,0 +1,93 @@
+name: Worktree Hygiene
+
+# 周期性清理本地/self-hosted worktree 堆积。
+# 注意：GitHub-hosted runner 上通常没有持久 worktree，此 workflow 主要为
+# self-hosted runner / 持久化工作节点设计；在 GitHub-hosted runner 上运行时
+# 会快速通过（无 worktree 可清理），但仍会验证工具本身可用。
+on:
+  schedule:
+    # 每周一早上 8:07 UTC 运行（避峰）
+    - cron: '7 8 * * 1'
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/worktree-hygiene.yml"
+      - "bin/gac/worktree-hygiene-audit.py"
+      - "tests/unit/gac/test_worktree_hygiene_audit.py"
+
+permissions:
+  contents: read
+
+jobs:
+  worktree-hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 只需要根仓元数据；worktree 清理不依赖子模块内容
+          submodules: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Run worktree hygiene audit
+        id: audit
+        run: |
+          python3 bin/gac/worktree-hygiene-audit.py \
+            --json \
+            --auto-clean \
+            --execute \
+            --fail-on-unsafe \
+            --stale-days 2 \
+            > worktree-hygiene-report.json
+          echo "report<<EOF" >> "$GITHUB_OUTPUT"
+          cat worktree-hygiene-report.json >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Upload hygiene report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worktree-hygiene-report
+          path: worktree-hygiene-report.json
+          retention-days: 30
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('worktree-hygiene-report.json', 'utf8'));
+            const summary = report.summary || {};
+            const counts = summary.counts || {};
+            const wt = counts.worktrees || {};
+            const ud = counts.unregistered_dirs || {};
+            const unsafe = summary.unsafe_remaining ?? 0;
+
+            const body = `## 🧹 Worktree Hygiene Report
+
+            | 类别 | 数量 |
+            |------|------|
+            | 已注册 worktree | ${counts.total_worktrees ?? 0} |
+            | 未注册目录 | ${counts.total_unregistered_dirs ?? 0} |
+            | 剩余不安全项 | ${unsafe} |
+
+            <details>
+            <summary>详细摘要</summary>
+
+            \`\`\`json
+            ${JSON.stringify(summary, null, 2)}
+            \`\`\`
+
+            </details>`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
