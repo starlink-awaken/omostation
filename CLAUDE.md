@@ -75,6 +75,35 @@ uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <pat
 
 豁免仅限：纯只读、`observer-audit`、用户书面 waiver（模板 [`docs/operations/workflow-waiver-template.md`](docs/operations/workflow-waiver-template.md)）。跳过 workflow 直接交付 = 违规。
 
+### Step B.2 · 我该做什么 — 三年规划执行台账
+
+不确定当前该做哪件事时，读台账，不要自行拟定任务：
+
+```bash
+uv run --with pyyaml python bin/plan/bet-ledger.py status        # 当前可认领的 bet
+uv run --with pyyaml python bin/plan/bet-ledger.py claim-check <BET-ID>
+```
+
+| 内容 | 位置 |
+|------|------|
+| 台账 SSOT（机器可读） | [`docs/plans/3y-bet-ledger.yaml`](docs/plans/3y-bet-ledger.yaml) |
+| 台账人类视图 | [`docs/plans/3Y-BET-LEDGER.md`](docs/plans/3Y-BET-LEDGER.md) |
+| Agent 执行指令（首次执行前通读） | [`docs/plans/AGENT-BRIEF.md`](docs/plans/AGENT-BRIEF.md) |
+| 三年规划（战略依据） | [`docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md`](docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md) |
+| 现状审计（证据基础） | [`docs/reports/2026-08-06-deep-review-proactive-agent-and-scenario-orchestration.md`](docs/reports/2026-08-06-deep-review-proactive-agent-and-scenario-orchestration.md) |
+| 多 Agent Git 拓扑分析 | [`docs/reports/2026-08-06-multi-agent-git-topology.md`](docs/reports/2026-08-06-multi-agent-git-topology.md) |
+| 技能 | skill `bet-execution` · skill `git-discipline` |
+
+> bet 数量、窗口进度、可认领项均为运行时事实，从 CLI 读取，**不要抄进本文**（守 doc-ssot-contract）。
+
+### Step B.3 · RED LINE — 多 Agent 并行的 Git 纪律
+
+共享主树上并行的 agent 会互相删除产物。2026-08-06 实测当天丢失交付物 4 次。**详见 skill `git-discipline`**，最低限度守住三条：
+
+1. **不在 `~/Workspace` 主仓直接工作** — 先 `bash bin/gac/gac-worktree.sh claim <session>`，在隔离树里做。主仓禁用 `checkout` / `reset --hard` / `clean -fd` / `stash -u` / `rebase`。
+2. **交付三段式 `add` → `commit` → `tag`** — commit 只是暂时安全，共享分支被 rebase 时提交会脱离历史；tag 的 ref 不会。
+3. **逃生口只有 `bin/gac/swarm-git`** — raw `git --no-verify` 会绕过白名单校验与 `.omo/_delivery/swarm-escape/` 审计台账。
+
 ## 1.5 P74 Workflow Solidification Check (ADR-0130)
 
 After bootstrap, every agent MUST verify P74 health. P74 is the常态化 mechanism

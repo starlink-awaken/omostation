@@ -1,0 +1,55 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y1Q4-T5-01
+title: 并行会签 fork/join
+status: candidate
+task_type: bet
+priority: P1
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q4-T5-01
+window: Y1Q4
+track: T5-ORCH
+appetite: 2 weeks
+desc: 支持公文多方意见合并, 编排从 linear 走向真实业务形状
+non_goals:
+- 任意 DAG
+- 动态分支数
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q2-T5-02
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q2-T5-02'
+evidence_required:
+- journey.type 支持 parallel, 含 fork/join 节点
+- join 策略可配置(全部完成 / 多数 / 任一)
+- 集成测试覆盖三种策略
+test_plan:
+- bash tests/integration/run-all.sh
+workflow: bet-execution
+write_surfaces:
+- bin/ssot/journey-runner.py
+- tests/integration/**
+pasw_required: false
+circuit_breaker: 超 3 周 → 只支持"全部完成"策略
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q4-T5-01.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0
