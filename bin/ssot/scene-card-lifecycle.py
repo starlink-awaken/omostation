@@ -36,6 +36,44 @@ def _load_module(path: Path, name: str):
     return module
 
 
+VALID_LIFECYCLE_TIERS = ("draft", "shadow", "assisted", "supervised", "routine")
+
+LEGACY_LIFECYCLE_MAP = {
+    "proposal_only": "draft",
+    "active": "routine",
+    "forbidden": "draft",
+}
+
+
+def validate_scene_card_v2(card: dict[str, Any]) -> dict[str, Any]:
+    """Validate scene card against v2 schema: 5-tier lifecycle + bet/falsifier."""
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    lifecycle = card.get("lifecycle", "")
+    if lifecycle in LEGACY_LIFECYCLE_MAP:
+        warnings.append(
+            f"lifecycle '{lifecycle}' is legacy; map to '{LEGACY_LIFECYCLE_MAP[lifecycle]}'"
+        )
+    elif lifecycle and lifecycle not in VALID_LIFECYCLE_TIERS:
+        errors.append(
+            f"lifecycle '{lifecycle}' not in {VALID_LIFECYCLE_TIERS}"
+        )
+
+    if not card.get("bet"):
+        errors.append("required field 'bet' is missing")
+    if not card.get("falsifier"):
+        errors.append("required field 'falsifier' is missing")
+
+    return {
+        "valid": len(errors) == 0,
+        "errors": errors,
+        "warnings": warnings,
+        "lifecycle": lifecycle,
+        "tier": lifecycle if lifecycle in VALID_LIFECYCLE_TIERS else LEGACY_LIFECYCLE_MAP.get(lifecycle, "unknown"),
+    }
+
+
 def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
     """Check if a scene card is ready for activation (read-only, no side effects)."""
     card = _load_yaml_scene_card(scene_card_path)
@@ -89,14 +127,42 @@ def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
-    parser.add_argument("--scene-card", type=Path, required=True)
+    parser.add_argument("--scene-card", type=Path)
+    parser.add_argument("--all", action="store_true", help="validate all scene cards in docs/scene-cards/")
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("check", help="check readiness (read-only)")
+    sub.add_parser("validate", help="validate v2 schema (5-tier lifecycle + bet/falsifier)")
     activate_parser = sub.add_parser("activate", help="activate scene card (requires explicit command)")
     activate_parser.add_argument("--actor", required=True, help="operator name")
     args = parser.parse_args(argv)
 
     command = args.command or "check"
+
+    if command == "validate":
+        scene_dir = args.root / "docs" / "scene-cards"
+        cards = []
+        if args.all and scene_dir.is_dir():
+            cards = sorted(scene_dir.glob("*.yaml"))
+        elif args.scene_card:
+            cards = [args.scene_card]
+        else:
+            print("ERROR: --scene-card or --all required for validate", file=sys.stderr)
+            return 2
+
+        all_valid = True
+        for card_path in cards:
+            card = _load_yaml_scene_card(card_path)
+            result = validate_scene_card_v2(card)
+            scene_id = card.get("scene_id", card_path.stem)
+            status = "PASS" if result["valid"] else "FAIL"
+            if not result["valid"]:
+                all_valid = False
+            print(f"[{status}] {scene_id}: tier={result['tier']}")
+            for e in result["errors"]:
+                print(f"  ERROR: {e}")
+            for w in result["warnings"]:
+                print(f"  WARN: {w}")
+        return 0 if all_valid else 1
 
     if command == "check":
         result = check_readiness(args.root, args.scene_card)
