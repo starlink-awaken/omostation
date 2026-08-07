@@ -148,6 +148,138 @@ def _decision_inbox_create_journey(
         return {"ok": False, "error": str(exc)}
 
 
+# ── Intake pipeline ──
+
+def _intake_engine(workspace_root: Path | None = None) -> Any:
+    ws = workspace_root or _workspace_root()
+    engine_path = ws / "bin" / "ssot" / "scene-card-intake-pipeline.py"
+    spec = importlib.util.spec_from_file_location("scene_card_intake_pipeline_cli", str(engine_path))
+    if spec is None or spec.loader is None:
+        raise ImportError("scene-card-intake-pipeline.py is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _intake_preview(workspace_root: Path, content: str, source: str = "manual", filename: str = "") -> dict[str, Any]:
+    """Preview intake without persisting."""
+    try:
+        engine = _intake_engine(workspace_root)
+        enriched = engine.preview_intake(content, source=source, filename=filename)
+        return {
+            "ok": True,
+            "title": enriched.title,
+            "description": enriched.description[:200],
+            "category": enriched.category,
+            "priority": enriched.priority,
+            "deadline": enriched.deadline,
+            "tags": enriched.tags,
+            "confidence": enriched.confidence,
+        }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _intake_run(
+    workspace_root: Path,
+    scene_id: str,
+    content: str,
+    source: str = "manual",
+    filename: str = "",
+    journey_id: str | None = None,
+) -> dict[str, Any]:
+    """Run intake pipeline: extract → enrich → add to inbox."""
+    try:
+        engine = _intake_engine(workspace_root)
+        result = engine.intake(
+            workspace_root, source=source, raw_content=content,
+            scene_id=scene_id, journey_id=journey_id, filename=filename,
+        )
+        if not result.ok:
+            return {"ok": False, "error": result.error}
+        return {
+            "ok": True,
+            "intent_id": result.intent_id,
+            "scene_id": result.scene_id,
+            "journey_id": result.journey_id,
+            "priority": result.enriched.priority if result.enriched else "P3",
+        }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+# ── Task bridge ──
+
+def _task_bridge_engine(workspace_root: Path | None = None) -> Any:
+    ws = workspace_root or _workspace_root()
+    engine_path = ws / "bin" / "ssot" / "scene-card-task-bridge.py"
+    spec = importlib.util.spec_from_file_location("scene_card_task_bridge_cli", str(engine_path))
+    if spec is None or spec.loader is None:
+        raise ImportError("scene-card-task-bridge.py is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _task_approve(workspace_root: Path, intent_id: str, outcome_metric: str = "") -> dict[str, Any]:
+    """Approve an intent and create its OMO task binding."""
+    try:
+        engine = _task_bridge_engine(workspace_root)
+        result = engine.approve_intent_and_create_task(
+            workspace_root, intent_id=intent_id, outcome_metric=outcome_metric,
+        )
+        return result
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _task_binding_status(workspace_root: Path, intent_id: str) -> dict[str, Any]:
+    """Get binding status for an intent."""
+    try:
+        engine = _task_bridge_engine(workspace_root)
+        status = engine.get_binding_status(workspace_root, intent_id)
+        if status is None:
+            return {"ok": False, "error": f"No binding found for intent {intent_id}"}
+        return {"ok": True, **status}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _task_list_bindings(workspace_root: Path) -> dict[str, Any]:
+    """List all task bindings."""
+    try:
+        engine = _task_bridge_engine(workspace_root)
+        bindings = engine.list_bindings(workspace_root)
+        return {
+            "ok": True,
+            "bindings": [
+                {
+                    "binding_id": b.binding_id,
+                    "task_id": b.task_id,
+                    "scene_id": b.scene_id,
+                    "intent_id": b.intent_id,
+                    "status": b.status,
+                    "created_at": b.created_at,
+                }
+                for b in bindings
+            ],
+        }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _task_complete(workspace_root: Path, binding_id: str) -> dict[str, Any]:
+    """Mark a task binding as completed."""
+    try:
+        engine = _task_bridge_engine(workspace_root)
+        result = engine.complete_task(workspace_root, binding_id)
+        return result
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 def _workspace_root() -> Path:
     if os.environ.get("WORKSPACE"):
         return Path(os.environ["WORKSPACE"])
@@ -497,11 +629,11 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
 
 
 def cmd_scenario(args) -> int:
-    """cockpit scenario {radar|assistant|health|inbox}."""
+    """cockpit scenario {radar|assistant|health|inbox|intake|task}."""
     sub = getattr(args, "scenario_sub", None) or getattr(args, "scenario_action", None)
     if sub is None:
         console = sys.stderr
-        console.write("Usage: cockpit scenario {radar|assistant|health|inbox} [--query Q]\n")
+        console.write("Usage: cockpit scenario {radar|assistant|health|inbox|intake|task} [--query Q]\n")
         return 2
 
     if sub == "radar":
@@ -555,15 +687,63 @@ def cmd_scenario(args) -> int:
         else:
             sys.stderr.write(f"unknown inbox action: {inbox_action}\n")
             return 2
+    elif sub == "intake":
+        ws = _workspace_root()
+        intake_action = getattr(args, "intake_action", None)
+        if intake_action is None:
+            sys.stderr.write("Usage: cockpit scenario intake {preview|run}\n")
+            return 2
+        if intake_action == "preview":
+            result = _intake_preview(
+                ws,
+                content=getattr(args, "content", ""),
+                source=getattr(args, "source", "manual"),
+                filename=getattr(args, "filename", ""),
+            )
+        elif intake_action == "run":
+            result = _intake_run(
+                ws,
+                scene_id=getattr(args, "scene_id", ""),
+                content=getattr(args, "content", ""),
+                source=getattr(args, "source", "manual"),
+                filename=getattr(args, "filename", ""),
+                journey_id=getattr(args, "journey_id", None),
+            )
+        else:
+            sys.stderr.write(f"unknown intake action: {intake_action}\n")
+            return 2
+    elif sub == "task":
+        ws = _workspace_root()
+        task_action = getattr(args, "task_action", None)
+        if task_action is None:
+            sys.stderr.write("Usage: cockpit scenario task {approve|status|list|complete}\n")
+            return 2
+        if task_action == "approve":
+            result = _task_approve(
+                ws,
+                intent_id=getattr(args, "intent_id", ""),
+                outcome_metric=getattr(args, "outcome_metric", ""),
+            )
+        elif task_action == "status":
+            result = _task_binding_status(ws, intent_id=getattr(args, "intent_id", ""))
+        elif task_action == "list":
+            result = _task_list_bindings(ws)
+        elif task_action == "complete":
+            result = _task_complete(ws, binding_id=getattr(args, "binding_id", ""))
+        else:
+            sys.stderr.write(f"unknown task action: {task_action}\n")
+            return 2
+    else:
+        sys.stderr.write(f"unknown scenario sub: {sub}\n")
+        return 2
+
+    if sub in ("inbox", "intake", "task"):
         if getattr(args, "scenario_json", False):
             json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
             sys.stdout.write("\n")
         else:
             _render_scenario_human(result)
         return 0
-    else:
-        sys.stderr.write(f"unknown scenario sub: {sub}\n")
-        return 2
 
     result["archive_path"] = _archive_scenario_receipt(result)
     if getattr(args, "scenario_json", False):

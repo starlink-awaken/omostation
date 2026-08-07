@@ -719,7 +719,7 @@ def main() -> int:
     # OPC P5-F4: 统一 scenario 入口 — 用户无需理解仓边界
     scenario_p = sub.add_parser(
         "scenario",
-        help="P5 统一 scenario 入口 (radar/assistant/health/inbox)",
+        help="P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task)",
     )
     # 产品走查 v5 #V5-13: 默认人类可读面板, --json 输出机器可读原样 (脚本/管道消费)
     scenario_p.add_argument(
@@ -767,6 +767,38 @@ def main() -> int:
     inbox_create_journey = inbox_sub.add_parser("create-journey", help="创建新 Journey")
     inbox_create_journey.add_argument("--scene-id", dest="scene_id", required=True, help="场景 ID")
     inbox_create_journey.add_argument("--name", required=True, help="Journey 名称")
+
+    inbox_create_journey.add_argument("--name", required=True, help="Journey 名称")
+
+    # P5-F5: 摄入管线
+    scenario_intake = scenario_sub.add_parser(
+        "intake", help="P5-F5 intake: 邮件/文件/消息→结构化事项摄入管线"
+    )
+    intake_sub = scenario_intake.add_subparsers(dest="intake_action", parser_class=WorkspaceParser)
+    intake_preview = intake_sub.add_parser("preview", help="预览摄入结果 (不持久化)")
+    intake_preview.add_argument("--content", required=True, help="摄入内容")
+    intake_preview.add_argument("--source", default="manual", choices=["email", "file", "message", "manual", "oa", "sms"], help="来源类型")
+    intake_preview.add_argument("--filename", default="", help="文件名 (file 来源时)")
+    intake_run = intake_sub.add_parser("run", help="执行摄入管线 (提取→丰富→添加到收件箱)")
+    intake_run.add_argument("--scene-id", dest="scene_id", required=True, help="目标场景 ID")
+    intake_run.add_argument("--content", required=True, help="摄入内容")
+    intake_run.add_argument("--source", default="manual", choices=["email", "file", "message", "manual", "oa", "sms"], help="来源类型")
+    intake_run.add_argument("--filename", default="", help="文件名 (file 来源时)")
+    intake_run.add_argument("--journey-id", dest="journey_id", help="目标 Journey ID (默认第一个)")
+
+    # P5-F6: 任务桥接
+    scenario_task = scenario_sub.add_parser(
+        "task", help="P5-F6 task: 场景卡→OMO Task 桥接管理"
+    )
+    task_sub = scenario_task.add_subparsers(dest="task_action", parser_class=WorkspaceParser)
+    task_approve = task_sub.add_parser("approve", help="审批意图并创建 OMO Task 绑定")
+    task_approve.add_argument("--intent-id", dest="intent_id", required=True, help="意图 ID")
+    task_approve.add_argument("--outcome-metric", dest="outcome_metric", default="", help="结果指标")
+    task_status = task_sub.add_parser("status", help="查看意图绑定状态")
+    task_status.add_argument("--intent-id", dest="intent_id", required=True, help="意图 ID")
+    task_list = task_sub.add_parser("list", help="列出所有绑定")
+    task_complete = task_sub.add_parser("complete", help="标记绑定完成")
+    task_complete.add_argument("--binding-id", dest="binding_id", required=True, help="绑定 ID")
 
     # Gap #7: MetaOS 工作流编排入口
     wf_p = sub.add_parser(
