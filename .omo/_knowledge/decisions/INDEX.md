@@ -454,7 +454,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0389: M5 gate ROI 治理价值报告 — 量化 gate 价值的减法决策输入 — **ACCEPTED** | 2026-08-07 | Gate ROI report | 0389-gate-roi-report.md
 - ADR-0388: CI 平面减法收官 — workflow retire + 内联 paths 检测盲区修复 + SSOT 生成器 — **ACCEPTED** | 2026-08-07 | CI plane subtraction | 0388-ci-plane-subtraction.md
 - ADR-0387: Dual-Track Scene Admission — internal pipeline scene admission track (make targets + RBAC scope) — **ACCEPTED** | 2026-08-07 | Dual-track admission | 0387-dual-track-scene-admission.md
-- ADR-0388: 分层契约方向单源 — layer-contract.yaml 为权威, check-layer-call-direction.py 对齐 — **PROPOSED** | 2026-08-07 | Layer contract direction SSOT | 0388-layer-contract-direction-ssot.md
+- ADR-0391: 分层契约方向单源 — layer-contract.yaml 为权威, check-layer-call-direction.py 对齐 — **PROPOSED** | 2026-08-07 | Layer contract direction SSOT | 0391-layer-contract-direction-ssot.md
 - ADR-0386: CI Consolidation — ruff/pytest dedup + integration path filter + workflow health — **ACCEPTED** | 2026-08-07 | CI consolidation | 0386-ci-consolidation-decision.md
 - ADR-0385: CI Pruner + SSOT Usage — scheduled prune-ci-runs cron + SSOT freshness monitor — **ACCEPTED** | 2026-08-07 | CI pruner + SSOT usage | 0385-ci-pruner-ssot-usage.md
 - ADR-0384: Meta-Meta Governance — rebase-regen automation + gate-effectiveness + A1-A3/B1 roadmap — **ACCEPTED** | 2026-08-06 | Meta-meta governance | 0384-meta-meta-governance.md
