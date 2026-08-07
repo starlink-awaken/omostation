@@ -1,0 +1,43 @@
+version: 1
+ssot_ref: BET-Y1Q1-T2-01
+description: >
+  外部信号源注册表。每个信号源定义健康状态、失败策略和去重窗口。
+  不可达时 health=unreachable，禁止呈现为"本周 0 条信号"。
+  bos://perception/* 在 agora 注册。
+
+sources:
+  - id: apple_mail_inbox
+    description: Apple Mail 收件箱 — 个人邮件信号入口
+    transport: local_filesystem
+    path: "~/Library/Mail/"
+    poll_interval: 300s
+    dedup_window: 24h
+    idempotency_key: message_id
+    failure_policy:
+      max_retries: 3
+      backoff: exponential
+      on_failure: emit_unreachable
+    health: unknown
+    last_signal_at: null
+    registered_at: "2026-08-07T00:00:00Z"
+    bos_uri: "bos://perception/apple_mail/inbox"
+
+health_states:
+  - healthy
+  - degraded
+  - unreachable
+  - unknown
+
+schema_contract:
+  required_fields:
+    - id
+    - description
+    - transport
+    - dedup_window
+    - idempotency_key
+    - failure_policy
+    - health
+    - bos_uri
+  health_must_not:
+    - value: healthy
+      when: "last_signal_at is null or older than 2x poll_interval"
