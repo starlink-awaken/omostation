@@ -341,6 +341,27 @@ FINDING_TOPIC_CHECKS: dict[str, dict[str, str]] = {
     },
 }
 
+ADAPTIVE_CHECKS: set[str] = {
+    "check-submodule-rewind",
+}
+
+
+def _adaptive_threshold(metrics_file: Path, check: str, window: int = 50) -> int | None:
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(WORKSPACE / "bin" / "gac" / "adaptive-gate.py"), "--check", check, "--window", str(window), "--file", str(metrics_file)],
+            capture_output=True,
+            text=True,
+            cwd=WORKSPACE,
+            timeout=10,
+        )
+        if proc.returncode != 0:
+            return None
+        data = json.loads(proc.stdout)
+        return int(data.get("recommended_warn_threshold") or 0) or None
+    except Exception:
+        return None
+
 
 def run_check(name: str, command: list[str]) -> dict[str, object]:
     cmd = [sys.executable, *command]
@@ -443,15 +464,39 @@ def extract_finding_topics(results: list[dict[str, object]]) -> list[dict[str, o
     return topics
 
 
+def _apply_adaptive_thresholds(
+    checks: tuple[tuple[str, list[str]], ...],
+    metrics_file: Path,
+    window: int = 50,
+) -> tuple[tuple[str, list[str]], ...]:
+    result: list[tuple[str, list[str]]] = []
+    for name, command in checks:
+        if name not in ADAPTIVE_CHECKS:
+            result.append((name, command))
+            continue
+        threshold = _adaptive_threshold(metrics_file, name, window=window)
+        if threshold is None:
+            result.append((name, command))
+            continue
+        new_command = [*command, "--warn-threshold", str(threshold)]
+        result.append((name, new_command))
+    return tuple(result)
+
+
 def run_gate(
     scope: str = "staged",
     files: list[str] | None = None,
     run_id: str = "",
     strict: bool = False,
     agt_backend: bool = False,
+    adaptive: bool = False,
 ) -> dict[str, object]:
     change_lane_files = change_lane_files_for_scope(scope, files, run_id)
-    results = [run_check(name, command) for name, command in gate_checks(scope, files, run_id, strict)]
+    checks = gate_checks(scope, files, run_id, strict)
+    metrics_file = WORKSPACE / ".omo" / "state" / "metrics-store.jsonl"
+    if adaptive:
+        checks = _apply_adaptive_thresholds(checks, metrics_file)
+    results = [run_check(name, command) for name, command in checks]
     if agt_backend:
         agt_results = run_agt_policy_engine()
         results.extend(agt_results)
@@ -615,10 +660,11 @@ def main() -> int:
     parser.add_argument("--verbose", action="store_true", help="Print passing gate details under slim mode")
     parser.add_argument("--agt-backend", action="store_true", help="Use AGT Policy Engine as GaC rule execution backend")
     parser.add_argument("--metrics", action="store_true", help="Record check results to metrics-store.jsonl")
+    parser.add_argument("--adaptive", action="store_true", help="Enable adaptive threshold adjustment for supported checks")
     args = parser.parse_args()
 
     try:
-        report = run_gate(args.scope, args.file, args.run_id, args.strict, args.agt_backend)
+        report = run_gate(args.scope, args.file, args.run_id, args.strict, args.agt_backend, args.adaptive)
     except ValueError as exc:
         parser.error(str(exc))
 
