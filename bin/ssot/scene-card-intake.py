@@ -55,6 +55,20 @@ SAFE_SCENE_FIELDS = REQUIRED_SCENE_FIELDS + (
     "approval_state",
     "external_resource_policy",
     "opportunity_window",
+    # Scene Card 2.0 optional fields (L4 specification layer)
+    "scene_type",
+    "admission_track",
+    "approval",
+    "activation_blockers",
+    "blocker_resolution",
+    "notes",
+    "downstream_refs",
+    "permission_scope",
+    "input_schema",
+    "output_schema",
+    "reflection_contract",
+    "checkpoints",
+    "event_subscription",
 )
 
 
@@ -114,7 +128,14 @@ def _safe_scene_snapshot(scene_card: dict[str, Any]) -> dict[str, Any]:
     snapshot: dict[str, Any] = {}
     for field in SAFE_SCENE_FIELDS:
         value = scene_card.get(field)
-        if (isinstance(value, (str, int, float, bool)) or value is None) and value is not None and _text(value):
+        if value is None:
+            continue
+        if isinstance(value, (str, int, float, bool)):
+            if _text(value):
+                snapshot[field] = value
+        elif isinstance(value, (dict, list)):
+            # Complex fields (2.0 schema: input_schema, checkpoints, etc.)
+            # Raw content already checked by _find_raw_field recursion
             snapshot[field] = value
     for field in REF_FIELDS:
         snapshot[field] = _refs(scene_card.get(field, []), f"scene_card.{field}")

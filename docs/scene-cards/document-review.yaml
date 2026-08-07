@@ -58,3 +58,29 @@ notes:
   - 激活 2026-08-06: business-governance (xiamingxing) 操作员全授权确认; 2/3 公文源 healthy (iris:apple_mail + iris:netease_mailmaster, mesh-iris-executor dry-run mesh 6 事件链验证通过), iris:seeyon_oa degraded (CDP 9222 待开, fabric active↔degraded 容许降级运行)
   - 公文源走 P3 收编的 iris 连接器, external.resources + fabric descriptor; permission_ref 保持不透明引用 (不落盘凭据, 守 fabric 红线)
   - 守 fabric 红线: 不伪造健康 (seeyon_oa degraded 如实标注), 不伪造凭据 (permission_ref 引用), business confirmation 基于操作员全授权 + healthy 证据
+input_schema:
+  type: object
+  required: [document_ref]
+  properties:
+    document_ref: {type: string, pattern: "^(evidence|vault)://"}
+    review_type: {type: string, enum: [format_check, sensitive_check, basis_verify, full_review]}
+output_schema:
+  type: object
+  required: [status, review_result_ref]
+  properties:
+    status: {type: string, enum: [succeeded, failed, needs_revision, needs_human]}
+    review_result_ref: {type: string, pattern: "^(evidence|vault)://"}
+    issues_found: {type: array, description: "格式/敏感/依据问题列表"}
+reflection_contract:
+  enabled: true
+  trigger: on_completion
+  questions:
+    - "审查是否覆盖全部检查项 (格式/敏感/依据)?"
+    - "有无遗漏的敏感词或格式问题?"
+    - "审查效率下次可如何提升?"
+  feedforward: true
+checkpoints:
+  - name: pre_dispatch
+    require: human_approval
+    condition: "output.status == needs_revision"
+    timeout_hours: 24
