@@ -82,6 +82,7 @@ KNOWN_BACKENDS: list[dict] = [
     {
         "name": "cron-service",
         "mcp_endpoint": "",
+        "enabled": False,  # 本地不可用 (cron-service 命令缺失), 完整环境改回 True
         "command": "cron-service",
         "args": ["--mcp"],
     },
@@ -95,7 +96,7 @@ KNOWN_BACKENDS: list[dict] = [
         "name": "ecos-bos-mounter",
         "mcp_endpoint": "",
         "command": "uv",
-        "args": ["run", "--package", "ecos", "python", "-m", "ecos.mcp_vfs"],
+        "args": ["run", "--package", "ecos", "python", "-m", "ecos.mcp_server"],
     },
     {
         "name": "ecos-workflow",
@@ -113,6 +114,7 @@ KNOWN_BACKENDS: list[dict] = [
     {
         "name": "sot-bridge-persona",
         "mcp_endpoint": "",
+        "enabled": False,  # 本地不可用 (sot_bridge 包缺失), 完整环境改回 True
         "command": "uv",
         "args": [
             "run",
@@ -126,6 +128,7 @@ KNOWN_BACKENDS: list[dict] = [
     {
         "name": "forge",
         "mcp_endpoint": "",
+        "enabled": False,  # 本地不可用 (forge 项目缺失), 完整环境改回 True
         "command": "uv",
         "args": ["run", "--package", "forge", "python", "-m", "forge.mcp_server"],
     },
@@ -194,6 +197,7 @@ KNOWN_BACKENDS: list[dict] = [
     {
         "name": "aetherforge-gateway",
         "mcp_endpoint": "",
+        "enabled": False,  # 本地不可用 (依赖 llm_gateway 包缺失), 完整环境改回 True
         "command": "uv",
         "args": [
             "run",
@@ -262,13 +266,20 @@ async def start_all() -> dict[str, str]:
     # gateway 自身经 launchd `--directory __AGORA_DIR__` 启动, cwd=agora 项目。
     # KNOWN_BACKENDS 用相对路径 (projects/gbrain, projects/c2g) 和 `--package`,
     # 需 cwd=workspace 根才能解析。给每个 backend 补 workspace 根 cwd。
+    # enabled=False 的 backend (本地环境不可用: 包/项目缺失) 跳过, 避免每次报错。
     workspace_root = Path(__file__).resolve().parents[4]  # agora → projects → workspace
     backends = []
+    skipped = []
     for svc in KNOWN_BACKENDS:
+        if svc.get("enabled", True) is False:
+            skipped.append(svc["name"])
+            continue
         if not svc.get("cwd"):
             svc = dict(svc)
             svc["cwd"] = str(workspace_root)
         backends.append(svc)
+    if skipped:
+        logger.info("mcp_gateway_backends_skipped", names=skipped)
 
     results = await manager.start(backends)
     ok_count = sum(1 for v in results.values() if v.startswith("ok"))
