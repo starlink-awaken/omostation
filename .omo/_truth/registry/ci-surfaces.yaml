@@ -606,29 +606,20 @@ surfaces:
     triggers: []
     status: active
     note: 并发 #1042 注册 (CR-LLM-GATEWAY-ONLY); 工具被 phase8 误归档, ADR-0380 移回 bin/gac + 登记
-
   - id: bin-ssot-prune-ci-runs-cron-py
     tool: bin/ssot/prune-ci-runs-cron.py
     workflow: prune-ci-runs.yml
     gate: false
-    triggers: [scheduled, manual]
+    triggers: [manual, scheduled]
     status: active
-    note: ADR-0385 A2 cron wrapper
+    note: ADR-0385 A2 — CI runs 定期清理 (40000 cap)
   - id: bin-ssot-ssot-usage-py
     tool: bin/ssot/ssot-usage.py
     workflow: prune-ci-runs.yml
     gate: false
-    triggers: [scheduled, manual]
+    triggers: [manual, scheduled]
     status: active
-    note: ADR-0385 B2 SSOT freshness reporter
-  - id: bin-gac-check-submodule-rewind-py
-    tool: bin/gac/check-submodule-rewind.py
-    workflow: governance-check.yml
-    gate: false
-    triggers: [per_pr, push, scheduled]
-    status: active
-    note: ADR-0379 era tool (submodule rewind detection), register for ci-surfaces parity
-
+    note: ADR-0385 B2 — SSOT 文件新鲜度报告
   - id: bin-gac-check-submodule-rewind-py
     tool: bin/gac/check-submodule-rewind.py
     workflow: governance-check.yml
@@ -727,7 +718,19 @@ workflow_triggers:
     - CLAUDE.md
     - LAYER-INDEX.md
   - workflow: integration.yml
+<<<<<<< HEAD
     path_filtered: false
+||||||| parent of b0e0cea79 (feat(gac): CI 平面 SSOT 登记补齐 + check-ci-surfaces --fix 自愈模式)
+    triggers: [per_pr, push]
+    path_filtered: false
+=======
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - projects/omo/**
+    - projects/*/pyproject.toml
+    - bin/gac/**
+>>>>>>> b0e0cea79 (feat(gac): CI 平面 SSOT 登记补齐 + check-ci-surfaces --fix 自愈模式)
   - workflow: interfaces-enforce.yml
     path_filtered: false
   - workflow: kairon-ci.yml
@@ -757,6 +760,9 @@ workflow_triggers:
   - workflow: phase-gate-enforce.yml
     path_filtered: false
   - workflow: port-registry-enforce.yml
+    path_filtered: false
+  - workflow: prune-ci-runs.yml
+    triggers: [manual, scheduled]
     path_filtered: false
   - workflow: publish-pypi.yml
     path_filtered: true

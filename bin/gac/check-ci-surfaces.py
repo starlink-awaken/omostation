@@ -239,9 +239,104 @@ def check_ci_surfaces() -> dict:
     }
 
 
+def _tool_id(tool: str) -> str:
+    return tool.replace("/", "-").replace(".", "-").rstrip("-")
+
+
+def fix_ci_surfaces() -> dict:
+    """Auto-register missing surfaces and workflow_triggers. Return summary."""
+    import yaml
+
+    registry = _load_yaml(CI_SURFACES)
+    surfaces = list(registry.get("surfaces") or [])
+    wf_triggers = list(registry.get("workflow_triggers") or [])
+    registered_tools = {str(s.get("tool") or "") for s in surfaces if isinstance(s, dict) and s.get("tool")}
+    registered_wfs = {str(w.get("workflow") or "") for w in wf_triggers if isinstance(w, dict) and w.get("workflow")}
+
+    wiring = _discover_wiring()
+    added_surfaces = 0
+    added_wf_triggers = 0
+
+    for tool, meta in sorted(wiring.items()):
+        if not _is_check_tool(tool):
+            continue
+        if tool in registered_tools:
+            continue
+        surfaces.append({
+            "id": _tool_id(tool),
+            "tool": tool,
+            "workflow": meta["workflows"][0] if meta["workflows"] else "(none)",
+            "gate": meta["gate"],
+            "triggers": [],
+            "status": "active",
+            "note": "auto-registered by check-ci-surfaces.py --fix",
+        })
+        added_surfaces += 1
+
+    for wf in sorted(WORKFLOWS_DIR.glob("*.yml")):
+        name = wf.name
+        if name in registered_wfs:
+            continue
+        text = wf.read_text(encoding="utf-8", errors="ignore")
+        triggers = []
+        if "workflow_call" in text:
+            triggers.append("callable")
+        if "schedule:" in text:
+            triggers.append("scheduled")
+        if "workflow_dispatch" in text:
+            triggers.append("manual")
+        if re.search(r"^\s+push:\s*$", text, re.M):
+            triggers.append("push")
+        if re.search(r"^\s+pull_request:\s*$", text, re.M):
+            triggers.append("per_pr")
+        path_filtered = bool(re.search(r"^\s+paths:\s*$", text, re.M))
+        entry: dict = {"workflow": name, "triggers": triggers, "path_filtered": path_filtered}
+        if path_filtered:
+            paths_re = re.compile(r"^\s+paths:\s*$((?:\n\s+- [^\n]+)*)", re.M)
+            paths = []
+            for m in paths_re.finditer(text):
+                for line in m.group(1).split("\n"):
+                    pm = re.match(r"\s+- (.*)$", line)
+                    if pm:
+                        paths.append(pm.group(1).strip().strip("'\""))
+            if paths:
+                entry["paths"] = paths
+        wf_triggers.append(entry)
+        added_wf_triggers += 1
+
+    if added_surfaces or added_wf_triggers:
+        surfaces.sort(key=lambda s: str(s.get("tool", "")))
+        wf_triggers.sort(key=lambda w: str(w.get("workflow", "")))
+        registry["surfaces"] = surfaces
+        registry["workflow_triggers"] = wf_triggers
+        with open(CI_SURFACES, "w", encoding="utf-8") as f:
+            yaml.dump(registry, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+
+    return {"added_surfaces": added_surfaces, "added_wf_triggers": added_wf_triggers}
+
+
 def main() -> int:
     args = sys.argv[1:]
     json_mode = "--json" in args
+    fix_mode = "--fix" in args
+
+    if fix_mode:
+        result = fix_ci_surfaces()
+        if json_mode:
+            import json
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+        else:
+            print(f"fix: +{result['added_surfaces']} surfaces, +{result['added_wf_triggers']} workflow_triggers")
+        report = check_ci_surfaces()
+        if not json_mode:
+            for e in report["errors"]:
+                print(f"  ❌ {e}")
+            for w in report["warnings"]:
+                print(f"  ⚠️  {w}")
+            if not report["errors"] and not report["warnings"]:
+                print("✅ CI 平面干净")
+        return 1 if report["errors"] else 0
+
     report = check_ci_surfaces()
     if json_mode:
         import json
