@@ -96,3 +96,15 @@
 - **判定照范式**: 实测调用链 (resolve 可达 + func 解析 + 契约匹配), 非设计意图
 - **归档有先例**: hermes-console→cockpit-ui, compute-mesh/swarm-engine→aetherforge
 - **债务有台账**: DECL_EXEC_GAP critical 首修, 其余按严重度推进
+
+## 阶段 3 实测判定修正 (2026-08-07)
+
+经实测调用链 (BET-Y1Q2-T1-02 范式) 复核, 三个收敛项全部修正:
+
+| 项目 | 原判 | 实测 | 修正决策 |
+|------|------|------|---------|
+| cockpit-ui | 归档 | 已在 L3 架构 (cockpit 前端表现层, COCKPIT_UI_ROOT/DIST env 挂载), remote 名是历史 hermes-console | **保留** (架构内, 无需归档) |
+| model-driven | BET 判定中 | 活跃 (pyright sweep) + 被消费 (agora BOS 2 服务 + cockpit coverage 列生命周期/OKR) | **保留接主链** |
+| c2g | 并入 omo | 活跃 (ruff/pyright sweep) + X 层战略需求引擎 (V2P→C2G) 独立定位 | **保留独立** |
+
+**治理价值**: 避免误归档活跃项目 — 判定用实测调用链 (BOS 声明/被消费/维护活跃), 非设计意图或低引用假设。
