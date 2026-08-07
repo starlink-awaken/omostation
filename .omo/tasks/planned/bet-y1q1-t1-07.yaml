@@ -1,0 +1,57 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y1Q1-T1-07
+title: git 入口收口 — shim 强制走 swarm-git
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-07
+window: Y1Q1
+track: T1-TRUTH
+appetite: 3 days
+desc: 把「记得用 wrapper」变成「只有 wrapper 可用」, 堵上 D4 自己记录的已知缺口
+non_goals:
+- 改变人类的 git 使用
+- 新增审计维度
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on: []
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate: []
+evidence_required:
+- 'agent 环境 PATH 前置 shim: ~/agents/<id>/bin/git → bin/gac/swarm-git'
+- 'swarm-git 拦截高危操作: clean -fd / reset --hard / stash -u / 共享分支 rebase'
+- 每次逃生必写 .omo/_delivery/swarm-escape/ 台账, 无台账即视为违规
+- AGENT-BRIEF.md 明确「逃生口只有 swarm-git 一个入口」
+test_plan:
+- AGENT_ID=probe SWARM_ESCAPE_ID=bogus git commit --no-verify --allow-empty -m probe
+- ls .omo/_delivery/swarm-escape/ | wc -l
+workflow: bet-execution
+write_surfaces:
+- bin/gac/swarm-git
+- bin/gac/**
+- docs/plans/AGENT-BRIEF.md
+- AGENTS.md
+pasw_required: false
+circuit_breaker: shim 影响人类正常使用 → 改为只在 AGENT_ID 非空时生效
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T1-07.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0
