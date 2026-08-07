@@ -95,7 +95,9 @@ def bos_capability_retire(
     decl = capability_catalog.get(uri)
     if not isinstance(decl, dict):
         return {"status": "error", "error": f"capability not found: {uri}"}
-    decl["status"] = "deprecated"
+    # P3: 用 catalog.retire() 显式改状态 + 持久化 (修复直接改 decl 不落盘)
+    if not capability_catalog.retire(uri, reason=reason):
+        return {"status": "error", "error": f"retire failed to persist: {uri}"}
     if admission_catalog is not None:
         try:
             admission_catalog.register_capability(
@@ -106,7 +108,6 @@ def bos_capability_retire(
             )
         except Exception as exc:  # noqa: BLE001
             _LOG.warning("admission catalog update failed for %s: %s", uri, exc)
-    capability_catalog.save()
     return {
         "status": "ok",
         "uri": uri,
