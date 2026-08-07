@@ -157,6 +157,18 @@ if not any(gate.get("id") == "current-state-coherence" for gate in GATES_LIST):
         }
     )
 
+# Root-owned conflict-marker guard (2026-08-07): 拦截 git 合并冲突标记 (<<<<<<< / >>>>>>>)
+# 入库, 治本 ecos `0ff6ad3` 把冲突标记 commit 进 sgf-policy.yaml → test-gac-engine YAML 解析
+# FAIL → 全仓 push 被卡. 放 root-owned 段, 防 ecos 子模块 policy 移除. 详见 ADR 见 evidence
+# docs/operations/2026-08-07-pre-push-guard-regression-evidence.md (发现2).
+if not any(gate.get("id") == "check-conflict-markers" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "check-conflict-markers",
+            "command": ["bin/gac/check-conflict-markers.py"],
+        }
+    )
+
 # 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
 # ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,
 # origin/main gitlink 悬空). 移主仓强制 ci_only (non-strict pre-commit 跳, CI strict 兜底),
