@@ -3,6 +3,52 @@
 > This document owns stable architecture concepts: layers, dependency direction, routing contracts, and governance boundaries.
 > It does not own runtime facts, current phase, health score, test counts, tool counts, service counts, or ports.
 
+## 0. Workspace Tools Layer (L2) — 统一工具链
+
+> 2026-08-06 新增。将域级重复工具抽象为 workspace 级共享能力。
+
+### 0.1 目录结构
+
+```
+workspace/tools/
+├── __init__.py              # 统一导出
+├── base/                    # 抽象基类
+│   ├── __init__.py          # BaseController, BaseExtractor, BasePredictor
+│   ├── base_controller.py   # 统一控制器（信号扫描、状态聚合、健康检查）
+│   ├── base_extractor.py    # 统一提取器（实体识别、关系抽取、知识分类）
+│   └── base_predictor.py    # 统一预测器（趋势预测、风险预警、过期检测）
+├── kems/                    # KEMS 知识工程引擎
+│   ├── __init__.py
+│   └── kems_engine.py       # 知识提取 + 融合 + 图谱
+├── ocr/                     # OCR 流水线（预留）
+├── runtime/                 # 运行时脚本（预留）
+└── domain/                  # 域插件
+    ├── __init__.py          # DomainRegistry
+    ├── domain_registry.py   # 域注册中心
+    ├── health_commission.py # 卫健委域插件
+    └── contract_law.py      # 合同法规域插件
+```
+
+### 0.2 设计原则
+
+1. **基类抽象通用能力** — 三域控制器 80% 重复代码消除
+2. **域插件实现差异** — 每个域继承基类，仅实现域特有逻辑
+3. **BOS URI 注册** — 域服务可注册为 `bos://analysis/<domain>/<service>/`
+4. **CLI 统一入口** — `python omostation.py <command>` 操作全域
+
+### 0.3 调用链
+
+```
+CLI (omostation.py)
+  → DomainRegistry.discover() — 发现域
+  → BaseController.health_check() — 健康检查
+  → BaseExtractor.extract_from_ocr() — OCR 知识提取
+  → KEMEngine.run_full_pipeline() — 完整 KEMS 流水线
+  → DomainPlugin.domain_specific_scan() — 域特有扫描
+```
+
+---
+
 ## 1. Source-Of-Truth Map
 
 | Fact Type | Authoritative Source |
