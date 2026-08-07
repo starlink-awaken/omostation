@@ -132,6 +132,8 @@ D1–D5 管的是「并发写不打架」，D0 管的是「产物不消失」。
 
 **D0 铁律**：交付物必须走 `git add` → `commit` → **`tag`**（或推独立远端分支）。仅 commit 不算持久化。
 
+**共享主树只读 (T1-00)**：所有 agent 必须在 `gac-worktree claim` 出的隔离树 (`work/*` 分支) 内工作。共享 main worktree 对 agent **只读** — `git clean -fd` / `reset --hard` / `stash -u` / `rebase` 在 hook 层要求 `SWARM_ESCAPE_ID`。raw `git --no-verify` 被 `bin/gac/git-shim` 拦截，强制走 `bin/gac/swarm-git`。僵尸锁自动清理: `agent-workflow prune-locks`。
+
 ```bash
 git ls-files --error-unmatch <file>          # 入库检查
 git merge-base --is-ancestor <sha> HEAD      # 非 0 = 提交已脱离分支
