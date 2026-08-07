@@ -9,13 +9,15 @@ Scans both `git worktree list` (registered worktrees) and the filesystem
 - directories that look like former worktrees but are no longer registered
 - independent clones or directories with source files that need human review
 
-Output: exit 0 = audit completed (findings may still be present); exit 1 = error.
+Output: exit 0 = audit completed and no unsafe state remains (when --fail-on-unsafe);
+        exit 1 = error or unsafe state detected.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -30,6 +32,14 @@ STALE_DAYS = 2
 
 # Filenames that are safe to drop in an abandoned worktree dir.
 SAFE_LOG_PATTERNS = ("watch_stderr.log", "watch_stdout.log")
+
+UNSAFE_WORKTREE_CATEGORIES = frozenset(
+    {"merged_with_dirty", "stale_dirty", "stale_clean"}
+)
+UNSAFE_DIR_CATEGORIES = frozenset(
+    {"dirty_repo", "small_clean_repo", "needs_review"}
+)
+AUTO_DIR_CATEGORIES = frozenset({"empty_abandoned", "log_only_abandoned"})
 
 
 @dataclass
@@ -54,6 +64,14 @@ class UnregisteredDirInfo:
     dirty: int
     category: str
     reason: str
+
+
+@dataclass
+class RemovalResult:
+    path: str
+    removed: bool
+    dry_run: bool
+    error: str = ""
 
 
 def _run(cmd: list[str], cwd: Path | None = None, check: bool = False) -> subprocess.CompletedProcess[str]:
@@ -214,13 +232,101 @@ def _unregistered_dir_info(path: Path) -> UnregisteredDirInfo:
     )
 
 
+def _protected_paths() -> set[str]:
+    """Return paths that must never be removed (current workspace, cwd, repo root)."""
+    protected = {
+        str(WORKSPACE),
+        str(WORKSPACE.resolve()),
+        str(Path.cwd()),
+        str(Path.cwd().resolve()),
+    }
+    try:
+        repo_root = _run(["git", "rev-parse", "--show-toplevel"]).stdout.strip()
+        if repo_root:
+            protected.add(repo_root)
+            protected.add(str(Path(repo_root).resolve()))
+    except Exception:
+        pass
+    return protected
+
+
+def _remove_worktree(path: str, execute: bool, protected: set[str]) -> RemovalResult:
+    p = Path(path)
+    if str(p) in protected or str(p.resolve()) in protected:
+        return RemovalResult(path=path, removed=False, dry_run=False, error="protected path")
+
+    if not execute:
+        return RemovalResult(path=path, removed=False, dry_run=True, error="")
+
+    # Try the graceful git path first.
+    res = _run(["git", "worktree", "remove", "--force", path])
+    if res.returncode == 0:
+        _run(["git", "worktree", "prune"])
+        return RemovalResult(path=path, removed=True, dry_run=False, error="")
+
+    # Fallback: some worktrees contain submodules that git refuses to remove.
+    try:
+        shutil.rmtree(path, ignore_errors=False)
+        _run(["git", "worktree", "prune"])
+        return RemovalResult(path=path, removed=True, dry_run=False, error="")
+    except Exception as exc:
+        return RemovalResult(path=path, removed=False, dry_run=False, error=f"fallback rm failed: {exc}")
+
+
+def _remove_dir(path: str, execute: bool, protected: set[str]) -> RemovalResult:
+    p = Path(path)
+    if str(p) in protected or str(p.resolve()) in protected:
+        return RemovalResult(path=path, removed=False, dry_run=False, error="protected path")
+
+    if not execute:
+        return RemovalResult(path=path, removed=False, dry_run=True, error="")
+
+    try:
+        shutil.rmtree(path, ignore_errors=False)
+        return RemovalResult(path=path, removed=True, dry_run=False, error="")
+    except Exception as exc:
+        return RemovalResult(path=path, removed=False, dry_run=False, error=str(exc))
+
+
+def _summary_counts(
+    worktree_reports: list[WorktreeInfo],
+    unregistered_reports: list[UnregisteredDirInfo],
+) -> dict[str, dict[str, int] | int]:
+    worktree_counts: dict[str, int] = {}
+    for w in worktree_reports:
+        worktree_counts[w.category] = worktree_counts.get(w.category, 0) + 1
+    dir_counts: dict[str, int] = {}
+    for u in unregistered_reports:
+        dir_counts[u.category] = dir_counts.get(u.category, 0) + 1
+    return {
+        "worktrees": worktree_counts,
+        "unregistered_dirs": dir_counts,
+        "total_worktrees": len(worktree_reports),
+        "total_unregistered_dirs": len(unregistered_reports),
+    }
+
+
 def _main() -> int:
     global STALE_DAYS
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--json", action="store_true", help="Output JSON report")
     parser.add_argument("--stale-days", type=float, default=STALE_DAYS, help="Stale threshold in days")
-    parser.add_argument("--remove-empty", action="store_true", help="Remove empty/log-only abandoned dirs (dry-run by default)")
-    parser.add_argument("--execute", action="store_true", help="Actually perform removals with --remove-empty")
+    parser.add_argument(
+        "--remove-empty",
+        action="store_true",
+        help="Remove empty/log-only abandoned dirs (dry-run by default; use --execute)",
+    )
+    parser.add_argument(
+        "--auto-clean",
+        action="store_true",
+        help="Auto-clean safe worktrees and empty/log-only dirs (dry-run by default; use --execute)",
+    )
+    parser.add_argument("--execute", action="store_true", help="Actually perform removals")
+    parser.add_argument(
+        "--fail-on-unsafe",
+        action="store_true",
+        help="Exit with code 1 if any unsafe state remains after audit/cleanup",
+    )
     args = parser.parse_args()
 
     STALE_DAYS = args.stale_days
@@ -233,50 +339,95 @@ def _main() -> int:
     unregistered = [d for d in _candidate_dirs() if not _is_registered(d, registered_paths)]
     unregistered_reports = [_unregistered_dir_info(d) for d in unregistered]
 
-    removed_dirs: list[str] = []
+    protected = _protected_paths()
+    removal_results: list[RemovalResult] = []
+
+    # Legacy option: only empty/log-only dirs.
     if args.remove_empty:
         for info in unregistered_reports:
-            if info.category in ("empty_abandoned", "log_only_abandoned"):
-                if args.execute:
-                    try:
-                        import shutil
-                        shutil.rmtree(info.path)
-                        removed_dirs.append(info.path)
-                    except Exception as exc:
-                        removed_dirs.append(f"{info.path} (error: {exc})")
-                else:
-                    removed_dirs.append(f"{info.path} (dry-run)")
+            if info.category in AUTO_DIR_CATEGORIES:
+                removal_results.append(_remove_dir(info.path, args.execute, protected))
+
+    if args.auto_clean:
+        # Remove safe registered worktrees.
+        for info in worktree_reports:
+            if info.category == "safe_to_remove":
+                removal_results.append(_remove_worktree(info.path, args.execute, protected))
+        # Refresh registered list and reports after removals so summary is accurate.
+        if args.execute:
+            registered = _registered_worktrees()
+            registered_paths = {w["path"] for w in registered}
+            worktree_reports = [_categorize_worktree(w) for w in registered if w.get("path")]
+            unregistered = [d for d in _candidate_dirs() if not _is_registered(d, registered_paths)]
+            unregistered_reports = [_unregistered_dir_info(d) for d in unregistered]
+
+        # Remove empty/log-only unregistered dirs.
+        for info in unregistered_reports:
+            if info.category in AUTO_DIR_CATEGORIES:
+                removal_results.append(_remove_dir(info.path, args.execute, protected))
+
+        if args.execute:
+            unregistered = [d for d in _candidate_dirs() if not _is_registered(d, registered_paths)]
+            unregistered_reports = [_unregistered_dir_info(d) for d in unregistered]
+
+    counts = _summary_counts(worktree_reports, unregistered_reports)
+    unsafe_worktrees = [w for w in worktree_reports if w.category in UNSAFE_WORKTREE_CATEGORIES]
+    unsafe_dirs = [u for u in unregistered_reports if u.category in UNSAFE_DIR_CATEGORIES]
+    unsafe_count = len(unsafe_worktrees) + len(unsafe_dirs)
 
     if args.json:
         report = {
             "worktrees": [asdict(w) for w in worktree_reports],
             "unregistered_dirs": [asdict(u) for u in unregistered_reports],
-            "removed_dirs": removed_dirs,
+            "removal_results": [asdict(r) for r in removal_results],
+            "summary": {
+                "counts": counts,
+                "unsafe_remaining": unsafe_count,
+                "unsafe_worktrees": [asdict(w) for w in unsafe_worktrees],
+                "unsafe_dirs": [asdict(u) for u in unsafe_dirs],
+            },
         }
         print(json.dumps(report, indent=2, ensure_ascii=False))
+        if args.fail_on_unsafe and unsafe_count:
+            return 1
         return 0
 
     print("=== Registered Worktrees ===")
     for w in worktree_reports:
-        flag = "🔴" if w.category in ("safe_to_remove", "stale_clean", "stale_dirty") else "🟡" if w.category == "merged_with_dirty" else "🟢"
+        flag = "🔴" if w.category in UNSAFE_WORKTREE_CATEGORIES else "🟡" if w.category == "merged_with_dirty" else "🟢"
         print(f"{flag} {w.path}")
         print(f"   branch={w.branch} dirty={w.dirty} merged={w.merged_to_origin_main} mtime_days={w.mtime_days:.1f}")
         print(f"   category={w.category} | {w.reason}")
 
     print("\n=== Unregistered Dirs ===")
     for u in unregistered_reports:
-        flag = "🔴" if u.category in ("empty_abandoned", "log_only_abandoned") else "🟡" if u.category in ("small_clean_repo", "dirty_repo") else "🟢"
+        flag = "🔴" if u.category in UNSAFE_DIR_CATEGORIES else "🟡" if u.category == "merged_with_dirty" else "🟢"
         print(f"{flag} {u.path}")
         print(f"   files={u.file_count} git={u.is_git_repo} dirty={u.dirty} branch={u.branch}")
         print(f"   category={u.category} | {u.reason}")
 
-    if args.remove_empty:
+    if args.remove_empty or args.auto_clean:
         print("\n=== Removal Actions ===")
-        if not removed_dirs:
-            print("No empty/log-only dirs to remove.")
+        if not removal_results:
+            print("No items to remove.")
         else:
-            for r in removed_dirs:
-                print(f"{'removed' if args.execute else 'would remove'}: {r}")
+            for r in removal_results:
+                status = "removed" if r.removed else "would remove" if r.dry_run else "failed"
+                suffix = f" [{r.error}]" if r.error else ""
+                print(f"{status}: {r.path}{suffix}")
+
+    print("\n=== Summary ===")
+    print(f"worktrees: {counts['total_worktrees']}")
+    for cat, n in counts["worktrees"].items():
+        print(f"  {cat}: {n}")
+    print(f"unregistered_dirs: {counts['total_unregistered_dirs']}")
+    for cat, n in counts["unregistered_dirs"].items():
+        print(f"  {cat}: {n}")
+    print(f"unsafe_remaining: {unsafe_count}")
+
+    if args.fail_on_unsafe and unsafe_count:
+        print(f"\n❌ fail-on-unsafe: {unsafe_count} unsafe item(s) remain")
+        return 1
 
     return 0
 
