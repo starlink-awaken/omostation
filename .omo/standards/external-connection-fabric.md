@@ -315,7 +315,7 @@ WorkflowRun 状态迁移或知识持久化塞回适配器。这样外部知识�
 
 ## 7. 内部 Pipeline 场景 (Dual-Track Admission)
 
-场景声明 `scene_type: internal_pipeline` 时，走**内部准入轨道** (ADR-0385)：
+场景声明 `scene_type: internal_pipeline` 时，走**内部准入轨道** (ADR-0387)：
 
 | 维度 | 外部轨道 (本标准 §1-6) | 内部轨道 |
 |------|----------------------|---------|

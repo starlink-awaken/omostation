@@ -1,5 +1,5 @@
 ---
-id: ADR-0385
+id: ADR-0387
 title: 双轨场景准入 — 内部 pipeline 场景的独立准入轨道
 status: accepted
 type: decision
