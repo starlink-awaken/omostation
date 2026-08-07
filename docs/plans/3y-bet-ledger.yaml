@@ -253,6 +253,36 @@ bets:
       损失: T1-00/T1-04 的 evidence 段 + bet-ledger.py lint 增强 + YAML 引号修复
       判断: 在共享分支上, commit 只是「暂时安全」。真正的持久化下限是
         tag 或独立分支(ref 不随分支重写而消失)
+    E16_sandbox_can_create_but_not_delete:
+      观察: agent sandbox 对 .git/ 有写权限但无删除权限, git 的锁协议因此必然残留
+      实测: |
+        touch .git/_probe  → OK
+        rm -f .git/_probe  → Operation not permitted
+        git 的锁协议是「建 .lock → 干活 → unlink」, 第三步永远失败,
+        一次 git status 在 17 个子模块留 17 个僵尸 index.lock,
+        此后该仓库任何 git 写操作直接失败
+      误判过程: 2026-08-06 全天把由此产生的异常判断为「并发 agent 在删我的文件」,
+        据此写了 E1 的部分结论并设计了 D0 三段式。D0 本身仍成立(E6 独立支持),
+        但 E1 里「文件被清理 4 次」中至少 2 次实为本因, 归因错误
+      规避: 只读操作加 GIT_OPTIONAL_LOCKS=0; 写操作一律交人类终端执行
+      判断: |
+        工具自身的能力边界会伪装成环境问题。
+        agent 报告「环境有并发干扰」时, 先验证自己的工具链在该环境下的完整性,
+        再归因外部。这是 D1(声明 vs 事实)在「自我能力」维度上的投影, 原 D1 未覆盖
+    E17_ci_inline_script_blind_spot:
+      观察: CI 配置文件里的内联脚本, YAML 合法不代表脚本能跑, 常规校验查不出
+      实测: |
+        .github/workflows/agora-ci.yml 在 main 与 phase13 两侧都有 deploy-smoke job,
+        唯一差异是 Smoke assertions 里的内联 Python 写法:
+          main(b02d67899 20:45 starlink-awaken)  单行 python3 -c '...'      → 实测 PASS
+          phase13(47e48755d 20:57 xiamingxing)   多行缩进 python3 -c "..."  → IndentationError
+        两个版本都是合法 YAML, yamllint 全过; 只有真把那段 Python 喂给解释器才暴露
+      成因: phase13 在原版落地 12 分钟后做纯格式美化, 把可跑的改成跑不了的, 无人执行验证
+      影响面: 本仓 .github/workflows/ 下所有 run 块里的内联 python/node 都在此盲区内
+      判断: |
+        语法检查验的是「能不能解析」, 不是「能不能跑」。
+        同类还有 bash -n 查不出全角字符紧跟变量名(本轮实测命中 3 次)。
+        凡「解析得过、执行才炸」的构造, 必须有一条真正执行它的验证路径
   done_when:
     - 所有 agent 必须在 gac-worktree claim 出的隔离树内工作, 共享 main 树只读
     - git clean / reset --hard / stash -u 在 hook 层要求 SWARM_ESCAPE_ID
