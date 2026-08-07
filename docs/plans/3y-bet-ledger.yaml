@@ -259,6 +259,36 @@ bets:
   priority: P1
   status: candidate
   goal: 结合 bos://compute/aetherforge/infer，按 Task 复杂度自动升降级模型与算力
+- id: BET-Y1Q2-T6-10
+  track: T6-EVOLUTION
+  window: Y1Q2
+  title: god-module 大文件 SRP 拆分 (3 个 >1500L 债)
+  appetite: 1 week
+  priority: P2
+  status: candidate
+  goal: 把 agora/external_connections.py (1663L) + cockpit/api_system_map_catalog.py (1565L) + cockpit/cli.py (1533L) 各自拆分为 2-3 个职责清晰的文件, 让 omo lint god-module 回归全绿
+  non_goals:
+  - 修改 god-module 阈值 (L0 锁定)
+  - 加 allowlist (与减法方向矛盾)
+  evidence:
+    E1_interface_check_red:
+      description: origin/main interface-check 连续 fail, 唯一阻断点 = god-module 3 个 >1500L 文件
+      ci_url: actions/runs/31226197940
+    E2_submodule_boundary:
+      description: 3 个文件均在子模块仓 (agora/cockpit), 需子模块仓流程, 主仓不能跨界
+    E3_splitting_feasibility:
+      agora_external_connections:
+        structure: 11 个 class (ExternalResourceDescriptor, AdmissionDecision, RouteDecision 等) + 15 helper functions, 边界清晰
+        split_target: descriptors.py / decisions.py / catalog.py
+      cockpit_api_system_map_catalog:
+        structure: 1 个 1565L tuple (纯数据, 按 page group 划分)
+        split_target: pages.py / playbooks.py / coverage_dims.py
+      cockpit_cli:
+        structure: cli commands 集合, 按 command group 划分
+        split_target: cli/runtime.py / cli/governance.py / cli/system.py
+  refs:
+  - ADR-0393 (大文件治理计划, 待 commit)
+  - omo_srp_refactor skill (omo 提供)
 - id: BET-Y1Q1-T1-00
   track: T1-TRUTH
   window: Y1Q1
