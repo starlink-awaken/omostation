@@ -187,6 +187,43 @@ def dispatch_real_supervision(input_data: dict, token: dict) -> dict[str, Any]:
     }
 
 
+def dispatch_real_review(input_data: dict, token: dict) -> dict[str, Any]:
+    """Real dispatch: document review — outputs task for AI agent / human operator.
+
+    journey-runner generates review context, pauses for operator to use Claude/AI
+    to complete review, then resume with results.
+    """
+    document_ref = input_data.get("document_ref", "")
+    review_type = input_data.get("review_type", "full_review")
+    if not document_ref:
+        return {"status": "failed", "review": {"status": "failed"}, "issues_found": []}
+    # Output review task description for operator/AI agent
+    return {
+        "status": "needs_human",
+        "review": {"status": "succeeded"},  # optimistic default for dry-run compat
+        "issues_found": [],
+        "decision": {"action": "execute"},
+        "review_task": {
+            "document_ref": document_ref,
+            "review_type": review_type,
+            "instructions": "Use AI agent to review document for format/sensitive/basis issues",
+        },
+    }
+
+
+def dispatch_real_delivery(input_data: dict, token: dict) -> dict[str, Any]:
+    """Real dispatch: engineering delivery — mark needs_human, generate task description."""
+    task_ref = input_data.get("task_ref", "")
+    return {
+        "status": "needs_human",
+        "delivery": {"status": "succeeded"},  # optimistic default for dry-run compat
+        "delivery_task": {
+            "task_ref": task_ref,
+            "instructions": "Implement the engineering task, make PR, then resume journey",
+        },
+    }
+
+
 DISPATCHERS: dict[str, Any] = {
     "unified-inbox": dispatch_real_inbox,
     "knowledge-curation": dispatch_real_curate,
@@ -194,6 +231,8 @@ DISPATCHERS: dict[str, Any] = {
     "periodic-reporting": dispatch_real_reporting,
     "meeting-supervision": dispatch_real_meeting,
     "project-supervision": dispatch_real_supervision,
+    "document-review": dispatch_real_review,
+    "engineering-delivery": dispatch_real_delivery,
 }
 
 

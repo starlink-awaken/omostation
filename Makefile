@@ -191,6 +191,9 @@ scene-chain-check:  ## 验证场景链 downstream_refs (检测缺失目标 + 反
 journey-check:  ## 验证所有 journey spec (状态机 + 不可达/死锁检测)
 	@python3 bin/ssot/journey-validator.py
 
+tool-audit:  ## 审计 bin/ssot/ 工具使用情况 (标记 dormant)
+	@python3 bin/ssot/tool-usage-audit.py
+
 ci-local-fast: check-layers
 	@echo "════════════════════════════════════════════════════"
 	@echo "  ci-local-fast — 本地 CI 预检 (快速模式, ~5s)"
