@@ -4,7 +4,7 @@
 SSOT:
   - 任务源: .omo/tasks/planned/*.yaml
   - 交付事件: .omo/_delivery/agent-workflows/events.jsonl
-  - 计数规则: .omo/_truth/registry/x3-delivery-soft-gate.yaml
+  - 计数规则: .omo/_truth/registry/x3-delivery-soft-gate.yaml (deprecated BET-Y1Q1-T1-01)
 
 用法:
   uv run python "bin/delivery/x3-auto-distribute.py" --dry-run    # 仅预览
