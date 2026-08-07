@@ -126,7 +126,14 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         Args:
             uri: BOS URI (e.g. bos://memory/kos/search)
             arguments: JSON 参数字符串 or dict (e.g. '{"query": "什么是 eCOS?"}')
+
+        Returns:
+            成功/错误响应; 成功含 request_id (阶段4 全链路追踪).
         """
+        # 阶段4: 全链路 trace — 生成 request_id 贯穿审计/记账/响应
+        import uuid as _uuid
+
+        request_id = _uuid.uuid4().hex[:16]
         if not uri.startswith("bos://"):
             return _error(f"Invalid BOS URI: {uri}")
 
@@ -193,7 +200,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 get_quota_checker().record(
                     caller_id=caller_id,
                     service=uri,
-                    tool_name=uri.split("/")[-1],
+                    tool_name=f"{uri.split('/')[-1]}#{request_id}",  # 阶段4: trace 可追溯
                     input_tokens=input_tokens,
                     output_tokens=output_tokens,
                     cost_usd=cost_usd,
@@ -210,6 +217,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                     "format_version": FORMAT_VERSION,
                     "uri": uri,
                     "source": source,
+                    "request_id": request_id,  # 阶段4: 全链路 trace
                     # 阶段3: 大响应保护 (截断 + 标记, 避免客户端解析崩溃)
                     **_safe_result(result),
                 }
