@@ -22,6 +22,11 @@ last-reviewed: 2026-06-29
 | `gac-validate.py` | 规则结构校验 |
 | `gac-drift.py` | 声明 vs 实际 drift 检测 |
 | `gac-local-gate.py` | 本地 gate (CI 入口, 含多检查) |
+| `metrics-store.py` | Phase 1: append-only JSONL 时间序列 (metrics-store.jsonl) |
+| `adaptive-gate.py` | Phase 2: 基于历史数据的自适应阈值引擎 (mean + 2σ / EWMA) |
+| `risk-profile.py` | Phase 3: 基于 staged/files 路径的风险等级推断 (low/medium/high) |
+| `governance-summarizer.py` | Phase 4: gate report → Markdown 摘要 (可选 LLM 增强) |
+| `debt-predictor.py` | Phase 5: 治理债务时间序列趋势预测 (线性回归) |
 | `gac-healthcheck.py` | **体系健康** (元治理递归自检, doc_ssot 块) |
 | `gac-hygiene-check.py` | **工作区卫生** (CR-HYG 零字节/大小写, ≠ healthcheck) |
 | `gac-executor.py` | executor 注册 drift (CR-X2-GAC-EXEC-DRIFT) |

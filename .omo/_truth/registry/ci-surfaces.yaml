@@ -180,6 +180,36 @@ surfaces:
     gate: false
     triggers: [manual, per_pr, push, scheduled]
     status: active
+  - id: bin-gac-metrics-store-py
+    tool: bin/gac/metrics-store.py
+    workflow: (none)
+    gate: false
+    triggers: []
+    status: active
+  - id: bin-gac-adaptive-gate-py
+    tool: bin/gac/adaptive-gate.py
+    workflow: (none)
+    gate: false
+    triggers: []
+    status: active
+  - id: bin-gac-risk-profile-py
+    tool: bin/gac/risk-profile.py
+    workflow: (none)
+    gate: false
+    triggers: []
+    status: active
+  - id: bin-gac-governance-summarizer-py
+    tool: bin/gac/governance-summarizer.py
+    workflow: (none)
+    gate: false
+    triggers: []
+    status: active
+  - id: bin-gac-debt-predictor-py
+    tool: bin/gac/debt-predictor.py
+    workflow: (none)
+    gate: false
+    triggers: []
+    status: active
   - id: bin-gac-gac-mesh-router-py
     tool: bin/gac/gac-mesh-router.py
     workflow: (none)
@@ -718,19 +748,12 @@ workflow_triggers:
     - CLAUDE.md
     - LAYER-INDEX.md
   - workflow: integration.yml
-<<<<<<< HEAD
-    path_filtered: false
-||||||| parent of b0e0cea79 (feat(gac): CI 平面 SSOT 登记补齐 + check-ci-surfaces --fix 自愈模式)
-    triggers: [per_pr, push]
-    path_filtered: false
-=======
     triggers: [per_pr, push]
     path_filtered: true
     paths:
     - projects/omo/**
     - projects/*/pyproject.toml
     - bin/gac/**
->>>>>>> b0e0cea79 (feat(gac): CI 平面 SSOT 登记补齐 + check-ci-surfaces --fix 自愈模式)
   - workflow: interfaces-enforce.yml
     path_filtered: false
   - workflow: kairon-ci.yml
