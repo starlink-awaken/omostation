@@ -7,6 +7,8 @@
 Rewind 判定: 当前指针 NOT ancestor of 上一次指针 (即指针历史被改写/回退).
 """
 
+import argparse
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -60,24 +62,34 @@ def _git_in_submodule(*args: str, submodule_dir: Path) -> str:
     return result.stdout.strip()
 
 
-def is_descendant_or_equal(child: str, parent: str, submodule_path: str) -> bool:
-    """Check if child is a valid forward pointer from parent in the submodule.
+def is_descendant_or_equal(
+    descendant_candidate: str,
+    ancestor_candidate: str,
+    submodule_path: str,
+    verbose: bool = False,
+) -> tuple[bool, str]:
+    """Check if descendant_candidate is a valid forward pointer from ancestor_candidate.
 
-    Handles multiple cases:
-    1. Same commit — True
-    2. child is descendant of parent on the submodule's default branch — True
-    3. child is descendant of parent in any ref — True
-    4. child is the tip of any branch ref (detached-HEAD branch switch) — True
-    5. parent no longer reachable from any ref (force-push cleaned it up) — True
-    6. HEAD is on a non-default branch (feature-branch rebase) — True
-    7. Otherwise — False (rewind or unrelated history)
+    Returns (is_valid, reason) where reason explains which tolerance layer passed
+    or why the check failed.
+
+    Tolerance layers (evaluated in order):
+    1. Same commit
+    2. SHA missing in submodule (force-pushed away)
+    3. descendant is ancestor of candidate on default branch
+    4. descendant is ancestor of candidate in any ref
+    5. ancestor no longer reachable from any ref (force-push cleaned it up)
+    6. HEAD is on a non-default branch (feature-branch rebase)
+    7. descendant is the tip of any branch ref (detached-HEAD branch switch)
+    8. Otherwise — rewind or unrelated history
     """
-    if child == parent:
-        return True
+    if descendant_candidate == ancestor_candidate:
+        return True, "same-commit"
+
     submodule_dir = REPO_ROOT / submodule_path
 
     # Verify both SHAs exist in the submodule's object store.
-    for sha in (child, parent):
+    for sha in (descendant_candidate, ancestor_candidate):
         result = subprocess.run(
             ["git", "cat-file", "-t", sha],
             cwd=submodule_dir,
@@ -86,7 +98,7 @@ def is_descendant_or_equal(child: str, parent: str, submodule_path: str) -> bool
             check=False,
         )
         if result.returncode != 0 or result.stdout.strip() != "commit":
-            return True
+            return True, f"sha-missing:{sha[:12]}"
 
     # 1) Check on the default branch first (usually main/master).
     default_branch = _git_in_submodule(
@@ -99,90 +111,122 @@ def is_descendant_or_equal(child: str, parent: str, submodule_path: str) -> bool
 
     for ref in (default_branch, "HEAD"):
         result = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", parent, child],
+            ["git", "merge-base", "--is-ancestor", ancestor_candidate, descendant_candidate],
             cwd=submodule_dir,
             capture_output=True,
             text=True,
             check=False,
         )
         if result.returncode == 0:
-            return True
+            return True, f"default-branch:{ref}"
 
-    # 2) Fallback: parent is ancestor of child in any local ref (branch switch).
+    # 2) Fallback: ancestor is ancestor of descendant in any local ref (branch switch).
     all_commit_refs = _git_in_submodule(
         "for-each-ref", "--format=%(refname)", "refs/heads/", "refs/remotes/",
         submodule_dir=submodule_dir,
     )
     for ref in all_commit_refs.splitlines():
         result = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", parent, child],
+            ["git", "merge-base", "--is-ancestor", ancestor_candidate, descendant_candidate],
             cwd=submodule_dir,
             capture_output=True,
             text=True,
             check=False,
         )
         if result.returncode == 0:
-            return True
+            return True, f"any-ref:{ref}"
 
-    # 3) If parent is no longer reachable from any ref (force-push cleaned it up),
+    # 3) If ancestor is no longer reachable from any ref (force-push cleaned it up),
     #    treat as acceptable history rewrite rather than blocking rewind.
-    parent_reachable = subprocess.run(
-        ["git", "rev-parse", "--verify", "--quiet", parent],
+    ancestor_reachable = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", ancestor_candidate],
         cwd=submodule_dir,
         capture_output=True,
         text=True,
         check=False,
     )
-    if parent_reachable.returncode != 0:
-        return True
+    if ancestor_reachable.returncode != 0:
+        return True, "force-pushed-away"
 
-    # 4) Feature-branch rebase: parent was removed from branch history but the
-    #    submodule is now on a non-default branch at child. Allow it rather than
+    # 4) Feature-branch rebase: ancestor was removed from branch history but the
+    #    submodule is now on a non-default branch at descendant. Allow it rather than
     #    blocking every feature-branch rebase.
     head_ref = _git_in_submodule(
         "symbolic-ref", "--quiet", "HEAD", submodule_dir=submodule_dir
     )
     head_branch = head_ref.rsplit("/", 1)[-1] if head_ref else ""
     if head_branch and head_branch not in (default_branch, "main", "master"):
-        return True
+        return True, f"feature-branch:{head_branch}"
 
-    # 5) Detached-HEAD branch switch: if child is the tip of any branch ref,
-    #    treat as acceptable even if parent is not in that branch's history.
-    child_tip_of = _git_in_submodule(
+    # 5) Detached-HEAD branch switch: if descendant is the tip of any branch ref,
+    #    treat as acceptable even if ancestor is not in that branch's history.
+    descendant_tip_of = _git_in_submodule(
         "for-each-ref", "--format=%(objectname)", "refs/heads/", "refs/remotes/",
         submodule_dir=submodule_dir,
     )
-    if any(tip.startswith(child) for tip in child_tip_of.splitlines()):
-        return True
+    if any(tip.startswith(descendant_candidate) for tip in descendant_tip_of.splitlines()):
+        return True, "detached-head-tip"
 
-    return False
+    return False, "rewind-or-unrelated"
+
+
+def format_violation(path: str, current_sha: str, previous_sha: str, reason: str) -> str:
+    return (
+        f"  {path} — 子模块指针方向非法: "
+        f"当前 {current_sha[:12]} 不是上一次指针 {previous_sha[:12]} 的后代 "
+        f"({reason})"
+    )
 
 
 def main() -> int:
-    violations: list[str] = []
+    parser = argparse.ArgumentParser(description="CR-SUBMODULE-REWIND check")
+    parser.add_argument("--json", action="store_true", help="Output results as JSON")
+    parser.add_argument("--verbose", action="store_true", help="Show tolerance layer details")
+    args = parser.parse_args()
+
+    violations: list[dict] = []
+    details: list[dict] = []
     current_gitlinks = get_current_gitlinks()
 
     for path, current_sha in sorted(current_gitlinks.items()):
         previous_sha = get_previous_pointer(path)
         if previous_sha is None:
-            # No previous commit (e.g., newly added submodule) — skip
             continue
         if previous_sha == current_sha:
-            # No change — skip
             continue
 
-        # Direction check: current pointer must be a descendant of (or equal to) previous pointer.
-        # This ensures the submodule only moves forward in history, never rewinds.
-        if not is_descendant_or_equal(current_sha, previous_sha, path):
-            violations.append(
-                f"  {path} — 子模块指针方向非法: "
-                f"当前 {current_sha[:12]} 不是上一次指针 {previous_sha[:12]} 的后代 (rewind/history rewrite)"
-            )
+        is_valid, reason = is_descendant_or_equal(current_sha, previous_sha, path, verbose=args.verbose)
+        detail = {
+            "path": path,
+            "current_sha": current_sha,
+            "previous_sha": previous_sha,
+            "valid": is_valid,
+            "reason": reason,
+        }
+        details.append(detail)
+
+        if args.verbose:
+            print(f"[DEBUG] {path}: {reason}")
+
+        if not is_valid:
+            violations.append(detail)
+
+    if args.json:
+        output = {
+            "ok": len(violations) == 0,
+            "violations": [
+                format_violation(v["path"], v["current_sha"], v["previous_sha"], v["reason"])
+                for v in violations
+            ],
+            "details": details,
+        }
+        print(json.dumps(output, ensure_ascii=False, indent=2))
+        return 0 if output["ok"] else 1
 
     if violations:
         print(f"FAIL 发现 {len(violations)} 个子模块指针回退:")
         for v in violations:
-            print(v)
+            print(format_violation(v["path"], v["current_sha"], v["previous_sha"], v["reason"]))
         return 1
 
     print("OK 未检测到子模块指针回退")
