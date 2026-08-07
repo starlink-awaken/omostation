@@ -1,6 +1,6 @@
 ---
 name: git-discipline
-description: "多 agent 并行下的 git 纪律：隔离工作树、交付三段式（add/commit/tag）、逃生口、子模块、僵尸锁处置。当你要提交代码、切换分支、碰子模块、遇到门禁拦截或 claim 冲突、或发现自己的文件消失时使用。Triggers on: git commit, git checkout, 分支被切走, 文件消失, 提交丢了, claim 失败, 锁被占, no-verify, 门禁拦截, submodule, 子模块, worktree, PASW, swarm-git, escape。"
+description: "多 agent 并行下的 git 纪律：隔离工作树、交付三段式（add/commit/tag）、逃生口、子模块、僵尸锁、合并型交付补 claim、agent 自身 git 写能力自检。当你要提交代码、切换分支、碰子模块、做分支合并、遇到门禁拦截或 claim 冲突、或发现自己的文件消失 / git 行为诡异时使用。Triggers on: git commit, git merge, git checkout, 合并, 分支被切走, 文件消失, 提交丢了, claim 失败, 锁被占, index.lock, Operation not permitted, no-verify, 门禁拦截, D3, swarm-d3, submodule, 子模块, worktree, PASW, swarm-git, escape, unbound variable。"
 ---
 
 # Git Discipline — 多 Agent 并行纪律
@@ -155,6 +155,105 @@ python3 bin/change-lane-check.py --file <path> --json
 ### 分支被切走
 
 **停下，报告，不要自己 checkout 回去。** 你切回去会再次换掉别人的地基。
+
+### 合并型交付被 D3 拦下
+
+claim 的粒度是「**我打算改什么**」，merge 的作用域是「**这个分支携带了什么**」。两者不重合。
+
+2026-08-07 实测：合并 12 个提交进 main，D3 报 74 个路径里 5 个未 claim，
+其中两个（`bin/gac/check-llm-gateway-only.py`、`docs/plans/2026-08-06-agora-p2-deepening-plan.md`）
+是**别的 agent 在被合并分支上的产物**——起 run 时不可能预见。
+
+处置顺序：
+
+```bash
+# ① 先看清缺哪些（D3 报错的 violations 段就是清单）
+# ② 确认既有 run 还活着，能续用就别新起
+grep -m1 '^status:' .omo/_delivery/agent-workflows/runs/<run-id>.yaml
+# ③ 逐个补 claim
+uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <path>
+```
+
+**不要走逃生口。** 逃生口是给门禁误伤用的；claim 漏了不是误伤，绕过去只会在
+`.omo/_delivery/swarm-escape/` 留一条本不该有的记录，还丢掉这条发现。
+
+合并前预检（省一轮往返）：
+
+```bash
+git diff --name-only $(git merge-base HEAD <branch>) <branch>
+```
+
+---
+
+## 5b. Agent 自身工具链的能力边界（先查自己，再怪环境）
+
+**2026-08-06 教训：一整天的「git 行为异常」全部由 agent 自己造成，被误判为并发干扰。**
+
+```bash
+touch .git/_probe   # → OK
+rm -f .git/_probe   # → Operation not permitted
+```
+
+sandbox 对 `.git/` 能建不能删。git 的锁协议是「建 `.lock` → 干活 → unlink」，
+第三步永远失败：**一次 `git status` 在 17 个子模块留 17 个僵尸 `index.lock`**，
+此后该仓库任何 git 写操作直接失败。
+
+当时的归因是「并发 agent 在删我的文件」，并据此写了 T1-00 的部分结论。
+
+**开工自检（30 秒，省一整天）：**
+
+```bash
+touch .git/_probe && rm -f .git/_probe && echo "✅ git 写能力完整" \
+  || echo "❌ 本环境不能做 git 写操作 —— 只读分析，写操作交人类终端"
+```
+
+只读操作一律加：
+
+```bash
+export GIT_OPTIONAL_LOCKS=0    # git status/diff 不再抢锁，不留残留
+```
+
+清理残留：
+
+```bash
+find . -name index.lock -not -path "*/node_modules/*" -print -delete
+```
+
+> **推论**：agent 报告「环境有并发干扰」时，先验证自己工具链在该环境下的完整性，
+> 再归因外部。这是 D1（声明 vs 事实）在「自我能力」维度的投影，原 D1 未覆盖。
+> 台账证据 `BET-Y1Q1-T1-00::E16`。
+
+---
+
+## 5c. 语法检查 ≠ 能跑
+
+**凡「解析得过、执行才炸」的构造，必须有一条真正执行它的验证路径。**
+
+本轮实测命中两类：
+
+**① shell 里全角字符紧跟变量名** —— `bash -n` 查不出（语法完全合法）
+
+```bash
+echo "==> 合并 $BRANCH（$AHEAD 个提交）"
+#                    ↑ bash 把「（」当成变量名的一部分 → set -u 下 unbound
+```
+
+开工前扫一遍，中英混排的脚本必查：
+
+```bash
+grep -nP '^\s*[^#].*\$[A-Za-z_][A-Za-z0-9_]*[^\x00-\x7F]' <script>
+```
+
+> 这条规则在 2026-08-06 一晚命中同一个人写的脚本 **3 次**。命中率高于人工复查。
+> 修法：`${BRANCH}（`。
+
+**② CI 配置里的内联脚本** —— YAML 合法，脚本跑不了，`yamllint` 全过
+
+`.github/workflows/agora-ci.yml` 两侧同一个 job，差异只在内联 Python 写法：
+单行 `python3 -c '...'` 能跑，多行缩进 `python3 -c "..."` 直接 `IndentationError`
+（`-c` 的第一行带前导空格）。只有真把那段喂给解释器才暴露。
+
+改 CI 里的 `run:` 块后，把内联脚本单独执行一次再提交。台账证据 `BET-Y1Q1-T1-00::E17`。
 
 ---
 
