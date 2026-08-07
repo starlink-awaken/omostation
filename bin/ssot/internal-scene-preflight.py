@@ -84,7 +84,7 @@ def _verify_evidence_ref(root: Path, ref: str) -> dict[str, Any]:
         return {"ref": ref, "status": "error", "pr": pr_num, "detail": str(exc)[:100]}
 
 
-def _verify_internal_permission(scene_card: dict[str, Any]) -> dict[str, Any]:
+def _verify_internal_permission(scene_card: dict[str, Any], root: Path) -> dict[str, Any]:
     """Verify permission_ref uses internal RBAC format with scope."""
     perm_ref = _text(scene_card.get("permission_ref"))
     scope = scene_card.get("permission_scope", [])
@@ -94,7 +94,29 @@ def _verify_internal_permission(scene_card: dict[str, Any]) -> dict[str, Any]:
         return {"status": "invalid_format", "detail": f"expected {INTERNAL_PERMISSION_PREFIX} prefix"}
     if not isinstance(scope, list) or not scope:
         return {"status": "missing_scope", "detail": "permission_scope is empty or not a list"}
+    # Validate scope names against controlled vocabulary
+    vocab = _load_scope_vocabulary(root)
+    if vocab:
+        valid_names = {item["name"] for item in vocab}
+        unknown = [s for s in scope if s not in valid_names]
+        if unknown:
+            return {"status": "invalid_scope", "detail": f"unknown scope(s): {unknown}", "valid_names": sorted(valid_names)}
     return {"status": "valid", "scope": scope}
+
+
+def _load_scope_vocabulary(root: Path) -> list[dict[str, str]] | None:
+    """Load permission scope vocabulary (graceful fallback if missing)."""
+    vocab_path = root / ".omo" / "standards" / "permission-scope-vocabulary.yaml"
+    if not vocab_path.exists():
+        return None
+    try:
+        import yaml
+        data = yaml.safe_load(vocab_path.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            return data.get("internal_pipeline", [])
+    except Exception:
+        pass
+    return None
 
 
 def _scene_card_check(scene_card: dict[str, Any]) -> dict[str, Any]:
@@ -202,7 +224,7 @@ def build_preflight(
     activation_refs = scene_card.get("activation_evidence_refs", [])
     activation_evidence_checks = [_verify_evidence_ref(root, ref) for ref in activation_refs]
 
-    permission_check = _verify_internal_permission(scene_card)
+    permission_check = _verify_internal_permission(scene_card, root)
 
     # Aggregate missing
     missing = list(scene_check["missing_fields"])

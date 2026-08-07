@@ -169,6 +169,17 @@ ci-local: ci-local-fast
 		echo "✅ ci-local: 全部通过"; \
 	fi
 
+adr-number-check:  ## 检查 ADR 编号冲突
+	@python3 bin/ssot/adr-number-check.py
+
+scene-card-check:  ## 验证所有 scene card readiness (双轨自动路由)
+	@for f in docs/scene-cards/*.yaml; do \
+		echo "── $$(basename $$f) ──"; \
+		python3 bin/ssot/scene-card-lifecycle.py --scene-card $$f check 2>&1 \
+			| python3 -c "import json,sys; d=json.load(sys.stdin); print(f'  ready={d[\"ready\"]} type={d.get(\"scene_type\",\"?\")} blockers={len(d.get(\"activation_blockers\",[]))}')" 2>/dev/null \
+			|| echo "  (check failed)"; \
+	done
+
 ci-local-fast: check-layers
 	@echo "════════════════════════════════════════════════════"
 	@echo "  ci-local-fast — 本地 CI 预检 (快速模式, ~5s)"
