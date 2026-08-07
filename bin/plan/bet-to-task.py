@@ -91,6 +91,21 @@ def to_task(bet: dict, tracks: dict) -> dict:
         "human_approval_required": bool(bet.get("human_gate")),
         "entry_gate": [f"依赖已 done: {d}" for d in (bet.get("depends_on") or [])],
         "evidence_required": list(bet.get("done_when", [])),
+        # 立项依据【指针】——不复制内容，SSOT 仍在台账。
+        # 缺这一条时，从 .omo/tasks/planned/ 直接领活的 agent 看不到 bet 的实测依据，
+        # 只有走 skill bet-execution → bet-ledger.py show 那条路的才看得到。
+        # 两条领取路径给出的信息不等价 = 静默缺口（2026-08-07 实测发现）。
+        **(
+            {
+                "evidence_ref": (
+                    f"docs/plans/3y-bet-ledger.yaml::{bet['id']}.evidence "
+                    f"（{len(bet['evidence'])} 条，动手前必读："
+                    f"bin/plan/bet-ledger.py show {bet['id']}）"
+                )
+            }
+            if bet.get("evidence")
+            else {}
+        ),
         "test_plan": [v.get("cmd", "") for v in (bet.get("verify") or [])],
         "workflow": bet.get("workflow", "bet-execution"),
         "write_surfaces": bet.get("write_surfaces", []),
