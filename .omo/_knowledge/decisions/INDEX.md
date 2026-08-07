@@ -448,6 +448,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0379: CI Plane Convergence — surface SSOT, observability, double-trigger dedup, registry-driven runner — **ACCEPTED** | 2026-08-05 | CI plane convergence | 0379-ci-plane-convergence.md
 - ADR-0380: CI Plane Completion — runner migration, orphan cleanup, concurrent-drift absorption — **ACCEPTED** | 2026-08-06 | CI plane completion | 0380-ci-plane-completion.md
 - ADR-0382: 子模块指针回退检测 (CR-SUBMODULE-REWIND) — **ACCEPTED** | 2026-08-06 | Submodule rewind detection | 0382-submodule-rewind-detection.md
+- ADR-0393: god-module 大文件治理计划 — 3 个 >1500L 债的拆分路径 — **ACCEPTED** | 2026-08-08 | God-module debt plan | 0393-god-module-debt-plan.md
 - ADR-0392: CI 修复 + 主仓 dirty 提交 — drafts persistence_mode + runtime state 同步 — **ACCEPTED** | 2026-08-08 | CI fix + dirty commit | 0392-ci-fix-and-dirty-commit.md
 - ADR-0390: M5 数据黑障修复 — omo_daemon governance-history checks 丢失 — **ACCEPTED** | 2026-08-08 | Gate ROI data blackout fix | 0390-gate-roi-data-blackout-fix.md
 - ADR-0389: M5 gate ROI 治理价值报告 — 量化 gate 价值的减法决策输入 — **ACCEPTED** | 2026-08-07 | Gate ROI report | 0389-gate-roi-report.md
