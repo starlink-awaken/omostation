@@ -1,0 +1,127 @@
+# Scene Binding Contract (SSOT)
+# =============================
+# Defines the contract between Scene Cards and OMO Task lifecycle.
+# This is the bridge between scenario validation (Phase 1.5) and
+# task execution (Phase 2 decision inbox).
+#
+# SSOT:  ecos/src/ecos/ssot/registry/scene-binding-contract.yaml
+# Version: 1.0.0 | 2026-08-07
+
+version: "1.0.0"
+updated_at: "2026-08-07"
+
+# ── Contract schema ──
+contract:
+  description: >
+    A scene binding contract links a scene card intent to an OMO Task.
+    When an intent is approved, a task is created with the binding
+    contract embedded, enabling traceability from business scenario
+    to execution outcome.
+
+  fields:
+    - name: binding_id
+      type: string
+      pattern: "^bind-[a-z0-9-]+$"
+      required: true
+      description: "Unique binding identifier"
+
+    - name: scene_id
+      type: string
+      required: true
+      description: "Source scene card ID"
+
+    - name: journey_id
+      type: string
+      required: true
+      description: "Source journey card ID"
+
+    - name: intent_id
+      type: string
+      required: true
+      description: "Source intent card ID"
+
+    - name: task_id
+      type: string
+      required: true
+      description: "Target OMO Task ID"
+
+    - name: outcome_metric
+      type: string
+      required: false
+      description: "How to measure success (e.g. '5 intents/day processed')"
+
+    - name: created_at
+      type: timestamp
+      required: true
+      description: "Binding creation timestamp"
+
+    - name: status
+      type: enum
+      values: [active, completed, broken]
+      required: true
+      description: "Binding lifecycle status"
+
+# ── Binding lifecycle ──
+lifecycle:
+  description: "The lifecycle of a scene binding from creation to completion."
+
+  states:
+    - name: active
+      description: "Binding is active: the task is linked to the scene intent"
+      transitions:
+        - to: completed
+          trigger: "task completes with outcome_metric verified"
+          condition: "task status == done"
+        - to: broken
+          trigger: "task is cancelled or orphaned"
+          condition: "task status == cancelled"
+
+    - name: completed
+      description: "Binding completed: outcome metric verified"
+      transitions: []
+
+    - name: broken
+      description: "Binding broken: task no longer linked to scene"
+      transitions: []
+
+# ── Integration points ──
+integration:
+  description: "How the scene binding integrates with the OMO task system."
+
+  task_creation:
+    description: >
+      When an intent is approved, a binding is created and the task
+      creation is triggered via the OMO task lifecycle API.
+    source: "decision_inbox → intent.approved"
+    target: "omo_ingress_task_lifecycle → create_planned_task"
+    contract_field: "scene_binding"
+    contract_value_template:
+      binding_id: "{binding_id}"
+      scene_id: "{scene_id}"
+      journey_id: "{journey_id}"
+      intent_id: "{intent_id}"
+      intent_content: "{raw_content[:200]}"
+
+  evidence_trace:
+    description: >
+      Each status change in the binding lifecycle is recorded
+      in the intent's evidence chain.
+    source: "scene_card → intent.evidence[]"
+    fields:
+      - action: "binding_created"
+        result: "task_id={task_id}"
+      - action: "binding_completed"
+        result: "outcome_verified"
+      - action: "binding_broken"
+        result: "reason={reason}"
+
+# ── Example ──
+example:
+  binding_id: "bind-decision-inbox-001"
+  scene_id: "scene-decision-inbox"
+  journey_id: "journey-email-processing"
+  intent_id: "intent-email-request-001"
+  task_id: "task-omo-001"
+  outcome_metric: "5 intents/day processed"
+  created_at: "2026-08-07T00:00:00Z"
+  status: active
