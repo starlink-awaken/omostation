@@ -74,6 +74,93 @@ def validate_scene_card_v2(card: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+VALID_TRANSITIONS = {
+    ("draft", "shadow"),
+    ("shadow", "assisted"),
+    ("assisted", "supervised"),
+    ("supervised", "routine"),
+    ("shadow", "draft"),
+    ("assisted", "shadow"),
+    ("supervised", "assisted"),
+    ("routine", "supervised"),
+}
+
+LEGACY_TO_TIER = {
+    "proposal_only": "draft",
+    "active": "routine",
+    "forbidden": "draft",
+}
+
+TIER_ACTIVATION = {
+    "draft": "forbidden",
+    "shadow": "preview",
+    "assisted": "controlled",
+    "supervised": "monitored",
+    "routine": "allowed",
+}
+
+
+def _resolve_tier(lifecycle: str) -> str:
+    if lifecycle in VALID_LIFECYCLE_TIERS:
+        return lifecycle
+    return LEGACY_TO_TIER.get(lifecycle, lifecycle)
+
+
+def transition_scene_card(
+    scene_card_path: Path,
+    target_tier: str,
+    actor: str,
+    root: Path | None = None,
+) -> dict[str, Any]:
+    """Transition a scene card to a new lifecycle tier."""
+    import yaml
+
+    if target_tier not in VALID_LIFECYCLE_TIERS:
+        return {"ok": False, "error": f"invalid tier: {target_tier}"}
+
+    with open(scene_card_path, encoding="utf-8") as f:
+        docs = list(yaml.safe_load_all(f))
+    body_idx = len(docs) - 1 if len(docs) > 1 else 0
+    body = docs[body_idx]
+
+    current_tier = _resolve_tier(body.get("lifecycle", "draft"))
+    if (current_tier, target_tier) not in VALID_TRANSITIONS:
+        return {
+            "ok": False,
+            "error": f"transition {current_tier}→{target_tier} not allowed",
+            "valid_transitions": [f"{a}→{b}" for a, b in VALID_TRANSITIONS if a == current_tier],
+        }
+
+    if target_tier in ("assisted", "supervised", "routine"):
+        if root is None:
+            root = Path(__file__).resolve().parents[2]
+        readiness = check_readiness(root, scene_card_path)
+        if not readiness["ready"]:
+            return {
+                "ok": False,
+                "error": f"not ready for {target_tier}",
+                "preconditions": readiness["preconditions"],
+            }
+
+    body["lifecycle"] = target_tier
+    body["activation"] = TIER_ACTIVATION[target_tier]
+    if target_tier == "shadow":
+        body["activation_blockers"] = []
+        body["approval_state"] = body.get("approval_state", "confirmed")
+
+    if "notes" not in body:
+        body["notes"] = []
+    body["notes"].append(
+        f"Transitioned {current_tier}→{target_tier} at {datetime.now(UTC).isoformat()} by {actor}"
+    )
+
+    docs[body_idx] = body
+    with open(scene_card_path, "w", encoding="utf-8") as f:
+        yaml.dump_all(docs, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+
+    return {"ok": True, "scene_id": body.get("scene_id"), "from": current_tier, "to": target_tier}
+
+
 def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
     """Check if a scene card is ready for activation (read-only, no side effects)."""
     card = _load_yaml_scene_card(scene_card_path)
@@ -127,13 +214,19 @@ def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
-    parser.add_argument("--scene-card", type=Path)
-    parser.add_argument("--all", action="store_true", help="validate all scene cards in docs/scene-cards/")
     sub = parser.add_subparsers(dest="command")
-    sub.add_parser("check", help="check readiness (read-only)")
-    sub.add_parser("validate", help="validate v2 schema (5-tier lifecycle + bet/falsifier)")
+    check_parser = sub.add_parser("check", help="check readiness (read-only)")
+    check_parser.add_argument("--scene-card", type=Path, required=True)
+    validate_parser = sub.add_parser("validate", help="validate v2 schema (5-tier lifecycle + bet/falsifier)")
+    validate_parser.add_argument("--scene-card", type=Path)
+    validate_parser.add_argument("--all", action="store_true", help="validate all scene cards in docs/scene-cards/")
     activate_parser = sub.add_parser("activate", help="activate scene card (requires explicit command)")
+    activate_parser.add_argument("--scene-card", type=Path, required=True)
     activate_parser.add_argument("--actor", required=True, help="operator name")
+    transition_parser = sub.add_parser("transition", help="transition scene card to a new lifecycle tier")
+    transition_parser.add_argument("--scene-card", type=Path, required=True)
+    transition_parser.add_argument("--tier", required=True, choices=VALID_LIFECYCLE_TIERS, help="target tier")
+    transition_parser.add_argument("--actor", required=True, help="operator name")
     args = parser.parse_args(argv)
 
     command = args.command or "check"
@@ -202,6 +295,11 @@ def main(argv: list[str] | None = None) -> int:
 
         print(f"Activated: {body['scene_id']} by {args.actor}")
         return 0
+
+    if command == "transition":
+        result = transition_scene_card(args.scene_card, args.tier, args.actor, root=args.root)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result["ok"] else 1
 
     return 1
 

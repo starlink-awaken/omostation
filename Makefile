@@ -54,6 +54,11 @@ help:
 	@echo "make pasw-status         显示 PASW 子模块 worktree 状态"
 	@echo "make pasw-cleanup        TTL 回收过期子模块 worktree (默认 24h)"
 	@echo ""
+	@echo "=== 8维架构 / 运维 / 项目体检 ==="
+	@echo "make compass-trace GOAL_ID=<id>  8 维全景元架构追溯 (LifeOS->Goals->C2G->Agora->AetherForge)"
+	@echo "make project-inspect PROJ=<name> 17 项目全景 4D 体检与诊断"
+	@echo "make debt-synthesize             物理 CSES 债务升维与 C2G Bet 提取"
+	@echo ""
 	@echo "=== 债务 ==="
 	@echo "make debt-check          检查债务状态"
 	@echo "make debt-audit          定期债务审计"
@@ -572,6 +577,19 @@ pasw-status:  ## 显示 PASW 子模块 worktree 状态
 
 pasw-cleanup:  ## TTL 回收过期子模块 worktree (默认 24h, 可 PASW_TTL_HOURS=12)
 	@bash bin/gac/gac-worktree-cleanup.sh
+
+panorama:  ## 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)
+	PYTHONPATH=projects/omo/src $(PY) -m omo.cli panorama
+
+compass-trace:  ## 8 维全景元架构追溯 (LifeOS->Goals->C2G->Agora->AetherForge)
+	PYTHONPATH=projects/omo/src $(PY) -m omo.cli compass trace $(GOAL_ID)
+
+project-inspect:  ## 17 项目全景 4D 体检与诊断
+	PYTHONPATH=projects/omo/src $(PY) -m omo.cli project inspect $(PROJ)
+
+debt-synthesize:  ## 物理 CSES 债务升维与 C2G Bet 提取
+	PYTHONPATH=projects/omo/src:bin/gac $(PY) bin/gac/omo_debt_synthesizer.py
+
 
 pasw-cleanup-dryrun:  ## 预览回收 (不删除)
 	@bash bin/gac/gac-worktree-cleanup.sh --dry-run
