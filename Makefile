@@ -180,6 +180,9 @@ scene-card-check:  ## 验证所有 scene card readiness (双轨自动路由)
 			|| echo "  (check failed)"; \
 	done
 
+scene-chain-check:  ## 验证场景链 downstream_refs (检测缺失目标 + 反馈环)
+	@python3 bin/ssot/scene-chain-validator.py
+
 ci-local-fast: check-layers
 	@echo "════════════════════════════════════════════════════"
 	@echo "  ci-local-fast — 本地 CI 预检 (快速模式, ~5s)"
