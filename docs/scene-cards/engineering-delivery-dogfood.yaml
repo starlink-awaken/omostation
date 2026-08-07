@@ -75,3 +75,33 @@ notes:
   - "2026-08-07: external-scene-trial.py dry-run 执行 (proposal-only, 0 side effects). scene card schema 验证通过 (15 required fields all present, sample_refs 3/3, activation_evidence_refs 3, required_capabilities 2). preflight 报 blocked 因 catalog capability mismatch (内部 pipeline 能力 ≠ 外部资源 catalog). 守 fabric 红线: 如实标注 blocked, 不伪造激活."
   - "2026-08-07: Phase 1 解套 — scene_type=internal_pipeline, approval 签署 (architecture-governance 全授权), permission_scope 定义 (RBAC: ci-read/workflow-read/evidence-write). 剩余唯一 blocker: OMO_admission_evidence (Phase 2 internal track 建成后解)."
   - "守 fabric 红线: activation=forbidden, lifecycle=proposal_only. 不因 approval 签署或 permission 定义而改变激活状态."
+input_schema:
+  type: object
+  required: [task_ref]
+  properties:
+    task_ref: {type: string, pattern: "^(evidence|vault|ref)://"}
+    scope: {type: string, description: "工程任务范围"}
+output_schema:
+  type: object
+  required: [status, result_ref]
+  properties:
+    status: {type: string, enum: [succeeded, failed, degraded, needs_human]}
+    result_ref: {type: string, pattern: "^(evidence|vault)://"}
+    metrics: {type: object, description: "verified_delivery_lead_time 实测值"}
+reflection_contract:
+  enabled: true
+  trigger: on_completion
+  questions:
+    - "交付是否完全满足 input_contract 的验收标准?"
+    - "CI 是否全绿, 有无跳过的测试?"
+    - "下次交付可以优化什么 (lead time, 质量, 自动化)?"
+  feedforward: true
+checkpoints:
+  - name: pre_merge
+    require: human_approval
+    timeout_hours: 48
+    escalation: "notify:owner"
+  - name: low_confidence
+    require: human_review
+    condition: "output.metrics.confidence < 0.8"
+    timeout_hours: 24
