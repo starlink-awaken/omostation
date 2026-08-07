@@ -1,0 +1,46 @@
+schema: journey-spec/v1
+journey_id: research-to-insight
+description: "调研问题 → 信息收集 → 推导分析 → 知识沉淀 → 决策支持"
+
+states:
+  - name: question_posed
+    scene: research-pipeline
+    next: [collecting]
+  - name: collecting
+    scene: research-pipeline
+    next: [analyzed]
+  - name: analyzed
+    scene: research-pipeline
+    next: [knowledge_captured, needs_more_data]
+  - name: needs_more_data
+    scene: research-pipeline
+    next: [collecting]
+  - name: knowledge_captured
+    scene: knowledge-curation
+    next: [ready_for_reference]
+  - name: ready_for_reference
+    scene: knowledge-curation
+    next: [applied_to_review]
+  - name: applied_to_review
+    scene: document-review
+    next: []
+
+transitions:
+  - from: question_posed
+    to: collecting
+    condition: "research.scope != null"
+  - from: collecting
+    to: analyzed
+    condition: "sources.gathered >= 3"
+  - from: analyzed
+    to: knowledge_captured
+    condition: "analysis.confidence >= 0.7"
+  - from: analyzed
+    to: needs_more_data
+    condition: "analysis.confidence < 0.7"
+  - from: knowledge_captured
+    to: ready_for_reference
+    condition: "curation.indexed == true"
+  - from: ready_for_reference
+    to: applied_to_review
+    condition: "review.context.research_needed == true"
