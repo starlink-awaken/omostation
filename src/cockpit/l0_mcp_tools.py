@@ -221,12 +221,21 @@ def l4_tools_scan(domain: str = "") -> str:
         registry = DomainRegistry(path_overrides=overrides)
 
         if domain:
-            tools = registry.scan_tools(domain)
+            resolved_id = None
+            for d in _BUILTIN_DOMAINS:
+                if d.id == domain or d.name == domain:
+                    resolved_id = d.id
+                    break
+            if resolved_id is None:
+                available = [f"{d.id}({d.name})" for d in _BUILTIN_DOMAINS if d.path.is_dir()]
+                return f"域 '{domain}' 不存在. 可用域: {', '.join(available[:10])}"
+            tools = registry.scan_tools(resolved_id)
             if not tools:
-                return f"域 '{domain}' 无工具或不存在"
-            lines = [f"域 '{domain}' — {len(tools)} 工具:"]
+                return f"域 '{domain}' 无工具"
+            d = registry.get(resolved_id)
+            lines = [f"域 '{d.name}' ({resolved_id}) — {len(tools)} 工具:"]
             for t in tools:
-                rel_path = str(t.path).replace(str(registry.get(domain).path), "~")
+                rel_path = str(t.path).replace(str(d.path), "~")
                 lines.append(f"  {t.tool_type:12s} {t.name:40s} {rel_path}")
             return "\n".join(lines)
         else:
