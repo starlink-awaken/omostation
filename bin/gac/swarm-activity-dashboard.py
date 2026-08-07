@@ -244,6 +244,8 @@ def _agora_health() -> dict:
             body = json.loads(resp.read().decode())
         backends = body.get("backends", {})
         proxy = body.get("proxy", {})
+        # P8: BOS 注册表契约健康 (强化-2 /health bos_registry)
+        reg = body.get("bos_registry", {})
         return {
             "status": body.get("status", "unknown"),
             "port": sse_port,
@@ -253,6 +255,9 @@ def _agora_health() -> dict:
             "backends_total": backends.get("total"),
             "backends_alive": backends.get("alive"),
             "audit_24h": (body.get("audit_24h", {}) or {}).get("total"),
+            "bos_registry_pct": reg.get("func_resolvable_pct"),
+            "bos_registry_total": reg.get("internal_total"),
+            "bos_registry_broken": reg.get("broken_count", 0),
             "issues": body.get("issues", [])[:3],
             "error": None,
         }
@@ -321,6 +326,16 @@ def print_text(report: dict) -> None:
             f"backends={agora.get('backends_alive')}/{agora.get('backends_total')} "
             f"audit_24h={agora.get('audit_24h')}"
         )
+        # P8: BOS 注册表契约健康
+        reg_pct = agora.get("bos_registry_pct")
+        if reg_pct is not None:
+            reg_broken = agora.get("bos_registry_broken", 0)
+            reg_mark = "🟢" if reg_pct >= 80 else "🟡"
+            print(
+                f"     bos_registry {reg_mark} "
+                f"契约可解析={reg_pct}% "
+                f"(total={agora.get('bos_registry_total')} broken={reg_broken})"
+            )
         if agora.get("issues"):
             print(f"     issues: {', '.join(agora['issues'])}")
 
