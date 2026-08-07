@@ -182,13 +182,29 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 "ok",  # type: ignore[reportCallIssue]
                 int((_time.time() - _t0) * 1000),  # type: ignore[reportCallIssue]
             )
-            # 遗留-3: 记账 (成本估算 — 无 token 统计时按调用计 1 次, 成本 0 保留流水)
-            get_quota_checker().record(
-                caller_id=caller_id,
-                service=uri,
-                tool_name=uri.split("/")[-1],
-                cost_usd=0.0,
-            )
+            # 遗留-3 + 阶段2: 记账 — 估算 token 成本 (输入=arguments, 输出=result)
+            # 用 estimate_cost 按 token 计费; 无 token 时成本 0 保留流水
+            try:
+                from agora.accounting import estimate_cost
+
+                input_tokens = len(json.dumps(args)) // 4 if args else 0  # ~4 字符/token
+                output_tokens = len(json.dumps(result)) // 4 if result else 0
+                cost_usd = estimate_cost(input_tokens, output_tokens)
+                get_quota_checker().record(
+                    caller_id=caller_id,
+                    service=uri,
+                    tool_name=uri.split("/")[-1],
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    cost_usd=cost_usd,
+                )
+            except Exception:  # noqa: BLE001 — 记账失败不阻塞
+                get_quota_checker().record(
+                    caller_id=caller_id,
+                    service=uri,
+                    tool_name=uri.split("/")[-1],
+                    cost_usd=0.0,
+                )
             return _ok(
                 {
                     "format_version": FORMAT_VERSION,
