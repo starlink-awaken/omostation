@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
-# git-shim (BET-Y1Q1-T1-07) — agent PATH 前置 shim: git → swarm-git 强制收口
+# git-shim (BET-Y1Q1-T1-07 + T1-04 加固) — agent PATH 前置 shim: git → swarm-git 强制收口
 #
 # circuit_breaker: AGENT_ID 空 → 透传 real git (人类终端无此 env, 不受影响)
 #                  AGENT_ID 非空 → swarm-git (拦 --no-verify + 高危 clean/reset/stash/rebase)
+#
+# T1-04 加固: swarm-git 缺失时 fail-closed (不再透传), shim 自身执行关键拦截:
+#   - --no-verify: 直接阻断 (无 escape 通道, 需人工处理)
+#   - clean -fd / reset --hard / stash -u: 直接阻断
+#   - 共享分支 rebase: 直接阻断
+#   守 D0 铁律: 交付物不消失. 这些操作删 peer agent 未入库工作.
 #
 # 关键: 内部 git 调用用 REAL_GIT (非 shim 的 git), 否则 shim→swarm-git→git→shim→… 递归.
 #
@@ -38,6 +44,44 @@ if [ -x "$SWARM_GIT" ]; then
   exec "$SWARM_GIT" "$@"
 fi
 
-# swarm-git 缺失 (老 checkout / 子集 clone): 透传但警告 (勿静默绕过 D4)
-echo "[git-shim] ⚠️ $SWARM_GIT 缺失, 透传 real git (D4 escape 收口失效)" >&2
+# ── T1-04 fail-closed: swarm-git 缺失时 shim 自身执行关键拦截 ──
+
+_danger_block() {
+  cat >&2 <<EOF
+[git-shim] ❌ $1 (T1-04 fail-closed: swarm-git 缺失, shim 兜底拦截)
+   $2
+   修复: 确保 bin/gac/swarm-git 存在, 或用人类终端执行此操作.
+EOF
+  exit 1
+}
+
+# --no-verify 拦截
+if printf '%s\0' "$@" | grep -qz -- '--no-verify'; then
+  _danger_block \
+    "--no-verify blocked" \
+    "agent 环境禁止跳过 hooks. 如需 escape, 修复 swarm-git 或使用 SWARM_ESCAPE_ID."
+fi
+
+# clean -fd / reset --hard / stash -u 拦截
+if printf '%s\0' "$@" | grep -qzE '\bclean\b|\breset\b|\bstash\b'; then
+  _ARGS="$*"
+  if printf '%s' "$_ARGS" | grep -qE 'clean.*-f|clean.*-d|reset.*--hard|stash.*-u'; then
+    _danger_block \
+      "high-risk op blocked" \
+      "clean -fd / reset --hard / stash -u 删 peer agent 未入库工作 (守 D0 铁律)."
+  fi
+fi
+
+# 共享分支 rebase 拦截
+if printf '%s\0' "$@" | grep -qzE '\brebase\b'; then
+  BRANCH="$("$REAL_GIT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+  if [ -n "$BRANCH" ] && ! printf '%s' "$BRANCH" | grep -qE '^work/|^pr/'; then
+    _danger_block \
+      "rebase on shared branch '$BRANCH' blocked" \
+      "把工作挪到 work/* 或 pr/* 分支."
+  fi
+fi
+
+# 非危险操作 → 透传但警告 (swarm-git 缺失, D4 escape 收口降级)
+echo "[git-shim] ⚠️ swarm-git 缺失, 非危险操作透传 (T1-04 fail-closed: 危险操作已拦截)" >&2
 exec "$REAL_GIT" "$@"
