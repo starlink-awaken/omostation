@@ -1,6 +1,6 @@
 # agora 用量计费/配额方案 (遗留-3, 2026-08-07)
 
-> **状态: ✅ 已落地 (2026-08-07, agora 676df7b)** — 新增 `mcp/bos_quota.py` (QuotaConfig+QuotaChecker), agora-bos-rates.yaml `quotas:` 段, resolve_bos_uri 接入 check/record, 配置热加载, +7 测试。本文档保留为设计参考。
+> **状态: ✅ 已落地 (2026-08-07, agora 836431e)** — 配额检查器 + 配置 + resolve_bos_uri 接入 + 热加载 + 11 测试; **遗留-4 告警联动**: 超限/预警触发 EventBus 事件 + 可选 webhook + Prometheus 指标 (bos_quota_exceeded_total/bos_quota_usage_ratio), 防抖 300s。本文档保留为设计参考。
 
 > 网关 → 能力编排大脑 的关键一步: 从"仅 QPS 限流"升级到"按调用者配额计费"。
 
