@@ -263,13 +263,26 @@ def omo_debt_summary() -> dict:
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
 
 
+# ── 服务查找索引 (强化-3 性能: O(n) → O(1)) ──
+_service_index: dict[str, BosService] | None = None
+
+
+def _get_service_index() -> dict[str, BosService]:
+    """构建 uri → BosService 索引 (惰性, 一次构建)."""
+    global _service_index
+    if _service_index is None:
+        _service_index = {
+            normalize_bos_uri(s.uri): s
+            for s in POC_SERVICES
+            if s.uri
+        }
+    return _service_index
+
+
 def get_service(uri: str) -> BosService | None:
-    """通过 URI 查找 BOS 服务."""
+    """通过 URI 查找 BOS 服务 (索引化, O(1))."""
     norm = normalize_bos_uri(uri)
-    for s in POC_SERVICES:
-        if s.uri == norm:
-            return s
-    return None
+    return _get_service_index().get(norm)
 
 
 def list_domains() -> dict[str, list[str]]:
