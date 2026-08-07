@@ -100,14 +100,21 @@ def is_descendant_or_equal(
         if result.returncode != 0 or result.stdout.strip() != "commit":
             return True, f"sha-missing:{sha[:12]}"
 
-    # 1) Check on the default branch first (usually main/master).
-    default_branch = _git_in_submodule(
-        "symbolic-ref", "refs/remotes/origin/HEAD", submodule_dir=submodule_dir
+    # Cache default branch lookup (same for all submodules in a run).
+    default_branch = getattr(
+        is_descendant_or_equal,
+        "_default_branch_cache",
+        None,
     )
-    if default_branch:
-        default_branch = default_branch.rsplit("/", 1)[-1] or "main"
-    else:
-        default_branch = "main"
+    if default_branch is None:
+        default_branch = _git_in_submodule(
+            "symbolic-ref", "refs/remotes/origin/HEAD", submodule_dir=submodule_dir
+        )
+        if default_branch:
+            default_branch = default_branch.rsplit("/", 1)[-1] or "main"
+        else:
+            default_branch = "main"
+        is_descendant_or_equal._default_branch_cache = default_branch
 
     for ref in (default_branch, "HEAD"):
         result = subprocess.run(
@@ -120,11 +127,19 @@ def is_descendant_or_equal(
         if result.returncode == 0:
             return True, f"default-branch:{ref}"
 
-    # 2) Fallback: ancestor is ancestor of descendant in any local ref (branch switch).
-    all_commit_refs = _git_in_submodule(
-        "for-each-ref", "--format=%(refname)", "refs/heads/", "refs/remotes/",
-        submodule_dir=submodule_dir,
+    # Cache all refs lookup (same for all submodules in a run).
+    all_commit_refs = getattr(
+        is_descendant_or_equal,
+        "_all_commit_refs_cache",
+        None,
     )
+    if all_commit_refs is None:
+        all_commit_refs = _git_in_submodule(
+            "for-each-ref", "--format=%(refname)", "refs/heads/", "refs/remotes/",
+            submodule_dir=submodule_dir,
+        )
+        is_descendant_or_equal._all_commit_refs_cache = all_commit_refs
+
     for ref in all_commit_refs.splitlines():
         result = subprocess.run(
             ["git", "merge-base", "--is-ancestor", ancestor_candidate, descendant_candidate],
@@ -182,10 +197,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="CR-SUBMODULE-REWIND check")
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
     parser.add_argument("--verbose", action="store_true", help="Show tolerance layer details")
+    parser.add_argument("--warn-threshold", type=int, default=3, help="WARN if same tolerance layer triggers N+ times (default: 3)")
     args = parser.parse_args()
 
     violations: list[dict] = []
     details: list[dict] = []
+    tolerance_counts: dict[str, int] = {}
     current_gitlinks = get_current_gitlinks()
 
     for path, current_sha in sorted(current_gitlinks.items()):
@@ -208,8 +225,18 @@ def main() -> int:
         if args.verbose:
             print(f"[DEBUG] {path}: {reason}")
 
+        # Track tolerance layer frequency for WARN detection
+        if is_valid:
+            tolerance_counts[reason] = tolerance_counts.get(reason, 0) + 1
+
         if not is_valid:
             violations.append(detail)
+
+    # WARN if any tolerance layer is triggered more than threshold
+    warns = []
+    for reason, count in sorted(tolerance_counts.items()):
+        if count > args.warn_threshold:
+            warns.append(f"[WARN] 容忍层 '{reason}' 已触发 {count} 次 (阈值: {args.warn_threshold})")
 
     if args.json:
         output = {
@@ -219,9 +246,15 @@ def main() -> int:
                 for v in violations
             ],
             "details": details,
+            "warns": warns,
+            "tolerance_counts": tolerance_counts,
         }
         print(json.dumps(output, ensure_ascii=False, indent=2))
         return 0 if output["ok"] else 1
+
+    if warns:
+        for w in warns:
+            print(w)
 
     if violations:
         print(f"FAIL 发现 {len(violations)} 个子模块指针回退:")
