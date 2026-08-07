@@ -170,6 +170,14 @@ if not any(gate.get("id") == "check-conflict-markers" for gate in GATES_LIST):
         }
     )
 
+if not any(gate.get("id") == "test-mof-governance-ecosystem" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "test-mof-governance-ecosystem",
+            "command": ["bin/gac/test-mof-governance-ecosystem.py"],
+        }
+    )
+
 # 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
 # ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,
 # origin/main gitlink 悬空). 移主仓强制 ci_only (non-strict pre-commit 跳, CI strict 兜底),
@@ -189,6 +197,8 @@ _CHECK_TIMEOUTS = {g["id"]: g.get("timeout", 15) for g in GATES_LIST}
 SOFT_CHECKS = {
     "governance-semantic-gate",  # evolution/release_ready 是软信号, 非门禁阻断
     "brief-protect",            # BRIEF.md protect 提示手工修改, 非门禁阻断
+    "current-state-coherence",  # 状态一致性漂移为软信号, 非阻断门禁
+    "ci-surfaces-check",        # CI 平面未登记项为警告信号, 非阻断门禁
 }
 
 

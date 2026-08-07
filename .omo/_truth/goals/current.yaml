@@ -331,7 +331,7 @@ goals:
   desc: 摘除基于文件 mtime 的交付计数，让 BRIEF 不再把治理配置修改叙述为业务交付
   kpi: count_deliveries_by_month 移除 + BRIEF 显示"未接入真实数据源"
   progress: 0.0
-  status: in_progress
+  status: pending
   bet_ref: BET-Y1Q1-T1-01
   tasks: []
 health_targets:
@@ -368,4 +368,4 @@ source_plan_refs:
 start_date: '2026-06-04'
 status: active
 theme: Phase 49 — 跑通端到端场景闭环 (感知→认知→执行→校准)
-execution_mode: active
+execution_mode: waiting-for-scenario/next-bet
