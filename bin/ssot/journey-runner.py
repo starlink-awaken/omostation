@@ -81,7 +81,7 @@ def dispatch_real_inbox(input_data: dict, token: dict) -> dict[str, Any]:
     for connector in ("apple_mail", "netease_mailmaster"):
         try:
             result = subprocess.run(
-                ["iris", "list", connector, "--limit", "5", "--format", "json"],
+                ["iris", "--json", "list", connector, "--limit", "5"],
                 capture_output=True, text=True, timeout=30, check=False,
             )
             if result.returncode == 0 and result.stdout.strip():
@@ -103,7 +103,7 @@ def _iris_list(connector: str, limit: int = 5) -> list[dict]:
     """Call iris list <connector> and return parsed items."""
     try:
         result = subprocess.run(
-            ["iris", "list", connector, "--limit", str(limit), "--format", "json"],
+            ["iris", "--json", "list", connector, "--limit", str(limit)],
             capture_output=True, text=True, timeout=30, check=False,
         )
         if result.returncode == 0 and result.stdout.strip():

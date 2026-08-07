@@ -194,6 +194,15 @@ journey-check:  ## 验证所有 journey spec (状态机 + 不可达/死锁检测
 tool-audit:  ## 审计 bin/ssot/ 工具使用情况 (标记 dormant)
 	@python3 bin/ssot/tool-usage-audit.py
 
+scene-feedback:  ## 列出最近的 scene feedback
+	@python3 bin/ssot/scene-feedback-collector.py list --limit 10
+
+scene-outcome:  ## 列出最近的 scene outcome (人类裁决)
+	@python3 bin/ssot/scene-outcome-recorder.py list --limit 10
+
+signal-poll:  ## 手动执行一次感知面信号轮询
+	@python3 bin/ssot/signal-poller.py
+
 ci-local-fast: check-layers
 	@echo "════════════════════════════════════════════════════"
 	@echo "  ci-local-fast — 本地 CI 预检 (快速模式, ~5s)"
