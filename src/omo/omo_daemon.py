@@ -203,6 +203,15 @@ def run_once(
                 {
                     "total_score": audit_score,
                     "grade": audit_grade,
+                    "checks": [
+                        {
+                            "name": c.name,
+                            "category": c.category,
+                            "score": c.score,
+                            "severity": c.severity,
+                        }
+                        for c in report.checks  # type: ignore[reportPossiblyUnboundVariable]
+                    ],
                     "watchlist_count": len(report.watchlist),  # type: ignore[reportPossiblyUnboundVariable]
                     "source": "omo_daemon",
                 },
