@@ -164,6 +164,18 @@ if not quota_ok:
 - 超限返回 429 语义错误 + audit 记录; 成功后 `get_quota_checker().record(...)` 记账
 - 配置随 rates 热加载 (ConfigWatcher 5s)
 
+### Step 3.6 — 统一告警 (P4, 2026-08-07)
+
+- `mcp/agora_alerts.py` `send_alert()` — 统一 EventBus 事件 + 可选 webhook (`AGORA_ALERT_WEBHOOK`/`AGORA_QUOTA_WEBHOOK`, `is_safe_url` 校验) + Prometheus (`agora_alerts_total`)
+- 告警源: 配额超限 (`quota:blocked`/`warning`)、熔断打开 (`circuit:open`)、健康降级 (`health:degraded`), 恢复时发 `recovered`
+- 防抖: per-key 300s; blocked 状态翻转只发一次, 恢复后重置
+
+### Step 3.7 — 能力目录写闭环 (P3, 2026-08-07)
+
+- `mcp/capability_catalog.py` 补 `add()`/`retire()`/`save()` — 写回 `etc/bos-services.yaml` (保留原条目)
+- 修复 `bos_capability_admit`/`bos_capability_retire` 死代码 (此前调 `add`/`save` 不存在 → AttributeError)
+- 生命周期: admit (active) → 度量 (B1) → 语义路由 (B2) → retire (deprecated) 写回
+
 ### Step 4 — 熔断
 
 ```python
