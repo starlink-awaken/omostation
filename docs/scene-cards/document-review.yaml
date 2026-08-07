@@ -1,30 +1,30 @@
----
 title: Document Review Scene Card (公文起草与审查)
 status: active
 type: scene-card
 owner: product-architecture
 last-reviewed: 2026-08-04
 related:
-  - ./engineering-delivery-dogfood.yaml
-  - ../SCENE-CARD-REVIEW-RUNBOOK.md
-  - ../../.omo/standards/external-connection-fabric.md
-  - ../../.omo/_truth/registry/external-channels.yaml
+- ./engineering-delivery-dogfood.yaml
+- ../SCENE-CARD-REVIEW-RUNBOOK.md
+- ../../.omo/standards/external-connection-fabric.md
+- ../../.omo/_truth/registry/external-channels.yaml
 ---
-schema: scene-card/v1
-lifecycle: active
+schema: scene-card/v2
+lifecycle: routine
 activation: allowed
 approval_state: confirmed
 approval:
   confirmed_by: xiamingxing (business-governance approver, 操作员全授权 2026-08-06)
-  confirmed_at: 2026-08-06T12:00:00Z
+  confirmed_at: 2026-08-06 12:00:00+00:00
   basis:
-    - catalog healthy: iris:apple_mail + iris:netease_mailmaster (external-resource-catalog 探活通过)
-    - mesh-iris-executor dry-run mesh 6 事件链验证 (Requested→Admitted→Dispatched→Started→Succeeded→EvidenceRecorded)
-    - iris:seeyon_oa degraded 如实标注 (CDP 9222 未开, fabric active↔degraded 容许降级运行)
+  - catalog healthy: iris:apple_mail + iris:netease_mailmaster (external-resource-catalog
+      探活通过)
+  - mesh-iris-executor dry-run mesh 6 事件链验证 (Requested→Admitted→Dispatched→Started→Succeeded→EvidenceRecorded)
+  - iris:seeyon_oa degraded 如实标注 (CDP 9222 未开, fabric active↔degraded 容许降级运行)
 scene_id: document-review
 journey_id: document-to-decision
 goal: 将公文草稿生成、格式检查、敏感项检查和依据核验放进同一条可审计、可退回的决策旅程
-trigger: "公文起草/审查需求进入确认队列 (来源: 卫健委借调 / 国转中心 / 日常公文)"
+trigger: '公文起草/审查需求进入确认队列 (来源: 卫健委借调 / 国转中心 / 日常公文)'
 input_contract: 具备主题、时间、接收对象、核心内容四要素的公文任务引用 (evidence:// 或 vault://redacted/)
 result_contract: 包含草稿、格式检查、敏感项审查、依据核验、人工退回记录的 Workflow Mesh 证据
 outcome_metric: review_cycle_hours
@@ -36,51 +36,78 @@ data_classification: internal
 data_scope: redacted-document-references-and-governed-review-evidence
 operator: document-review-agent-under-human-review
 permission_ref: permission://scene/document-review
-# ECCP P4: 绑定 P3 收编的 iris 连接器 (公文源)
 capability_refs:
-  - iris:apple_mail          # Apple Mail .emlx 公文源 (卫健委邮箱等)
-  - iris:netease_mailmaster  # 网易邮箱大师 3 账号公文
-  - iris:seeyon_oa           # 致远 OA 待办公文 (CDP 9222) [degraded: CDP 9222 未开, 待 operator, fabric active↔degraded 容许降级运行]
-  - bos://memory/sophia/mcp-server  # 方法编译 (公文规范: 国资委13号令) [kairon.sophia]
-  - bos://capability/evaluator      # 评测 (公文质量) [gbrain.evals]
+- iris:apple_mail
+- iris:netease_mailmaster
+- iris:seeyon_oa
+- bos://memory/sophia/mcp-server
+- bos://capability/evaluator
 channel_binding:
   knowledge_source:
-    - iris:apple_mail
-    - iris:netease_mailmaster
-    - iris:seeyon_oa
+  - iris:apple_mail
+  - iris:netease_mailmaster
+  - iris:seeyon_oa
 rollback_plan: evidence://scene/document-review/rollback
 sample_refs:
-  - vault://redacted/document-review/sample-1
-  - vault://redacted/document-review/sample-2
-  - vault://redacted/document-review/sample-3
+- vault://redacted/document-review/sample-1
+- vault://redacted/document-review/sample-2
+- vault://redacted/document-review/sample-3
 opportunity_window: 卫健委借调 + 国转中心公文审查日常窗口 (草稿生成/格式检查/敏感审查/依据核验)
 notes:
-  - 激活 2026-08-06: business-governance (xiamingxing) 操作员全授权确认; 2/3 公文源 healthy (iris:apple_mail + iris:netease_mailmaster, mesh-iris-executor dry-run mesh 6 事件链验证通过), iris:seeyon_oa degraded (CDP 9222 待开, fabric active↔degraded 容许降级运行)
-  - 公文源走 P3 收编的 iris 连接器, external.resources + fabric descriptor; permission_ref 保持不透明引用 (不落盘凭据, 守 fabric 红线)
-  - 守 fabric 红线: 不伪造健康 (seeyon_oa degraded 如实标注), 不伪造凭据 (permission_ref 引用), business confirmation 基于操作员全授权 + healthy 证据
+- '2026-08-07: v2 schema 升级, 补 bet/falsifier'
+- 激活 2026-08-06: business-governance (xiamingxing) 操作员全授权确认; 2/3 公文源 healthy (iris:apple_mail
+    + iris:netease_mailmaster, mesh-iris-executor dry-run mesh 6 事件链验证通过), iris:seeyon_oa
+    degraded (CDP 9222 待开, fabric active↔degraded 容许降级运行)
+- 公文源走 P3 收编的 iris 连接器, external.resources + fabric descriptor; permission_ref 保持不透明引用
+  (不落盘凭据, 守 fabric 红线)
+- 守 fabric 红线: 不伪造健康 (seeyon_oa degraded 如实标注), 不伪造凭据 (permission_ref 引用), business
+    confirmation 基于操作员全授权 + healthy 证据
 input_schema:
   type: object
-  required: [document_ref]
+  required:
+  - document_ref
   properties:
-    document_ref: {type: string, pattern: "^(evidence|vault)://"}
-    review_type: {type: string, enum: [format_check, sensitive_check, basis_verify, full_review]}
+    document_ref:
+      type: string
+      pattern: ^(evidence|vault)://
+    review_type:
+      type: string
+      enum:
+      - format_check
+      - sensitive_check
+      - basis_verify
+      - full_review
 output_schema:
   type: object
-  required: [status, review_result_ref]
+  required:
+  - status
+  - review_result_ref
   properties:
-    status: {type: string, enum: [succeeded, failed, needs_revision, needs_human]}
-    review_result_ref: {type: string, pattern: "^(evidence|vault)://"}
-    issues_found: {type: array, description: "格式/敏感/依据问题列表"}
+    status:
+      type: string
+      enum:
+      - succeeded
+      - failed
+      - needs_revision
+      - needs_human
+    review_result_ref:
+      type: string
+      pattern: ^(evidence|vault)://
+    issues_found:
+      type: array
+      description: 格式/敏感/依据问题列表
 reflection_contract:
   enabled: true
   trigger: on_completion
   questions:
-    - "审查是否覆盖全部检查项 (格式/敏感/依据)?"
-    - "有无遗漏的敏感词或格式问题?"
-    - "审查效率下次可如何提升?"
+  - 审查是否覆盖全部检查项 (格式/敏感/依据)?
+  - 有无遗漏的敏感词或格式问题?
+  - 审查效率下次可如何提升?
   feedforward: true
 checkpoints:
-  - name: pre_dispatch
-    require: human_approval
-    condition: "output.status == needs_revision"
-    timeout_hours: 24
+- name: pre_dispatch
+  require: human_approval
+  condition: output.status == needs_revision
+  timeout_hours: 24
+bet: BET-Y1Q1-T7-01
+falsifier: 若 shadow 期间无文档被自动审查，则场景无价值

@@ -1,18 +1,17 @@
----
 title: Periodic Reporting Scene Card (周期报送与绩效证据包)
 status: active
 type: scene-card
 owner: product-architecture
 last-reviewed: 2026-08-07
 related:
-  - ./meeting-supervision.yaml
-  - ../STRATEGY-3YEAR-PANORAMA.md
+- ./meeting-supervision.yaml
+- ../STRATEGY-3YEAR-PANORAMA.md
 ---
-schema: scene-card/v1
+schema: scene-card/v2
 scene_type: internal_pipeline
 admission_track: internal_evidence_based
-lifecycle: proposal_only
-activation: forbidden
+lifecycle: shadow
+activation: preview
 approval_state: pending_business_confirmation
 scene_id: periodic-reporting
 journey_id: schedule-to-evidence
@@ -30,28 +29,33 @@ data_scope: reporting-metadata-and-delivery-evidence
 operator: reporting-agent-under-human-review
 permission_ref: permission://internal/periodic-reporting
 permission_scope:
-  - ci-read
-  - workflow-read
-  - evidence-write
-  - config-read
+- ci-read
+- workflow-read
+- evidence-write
+- config-read
 rollback_plan: revert-to-manual-report-compilation
 sample_refs:
-  - vault://redacted/periodic-reporting/sample-1
-  - vault://redacted/periodic-reporting/sample-2
-  - vault://redacted/periodic-reporting/sample-3
+- vault://redacted/periodic-reporting/sample-1
+- vault://redacted/periodic-reporting/sample-2
+- vault://redacted/periodic-reporting/sample-3
 demand_evidence_refs:
-  - evidence://strategy-panorama/W4
+- evidence://strategy-panorama/W4
 activation_evidence_refs:
-  - evidence://strategy-panorama/W4
+- evidence://strategy-panorama/W4
 required_capabilities:
-  - ref://capability/gac-local-gate
-  - ref://capability/agent-workflow-lifecycle
+- ref://capability/gac-local-gate
+- ref://capability/agent-workflow-lifecycle
 opportunity_window: 卫健委借调周报/月报 + 国转中心季度总结 + eCOS 项目周期复盘
 external_resource_policy: proposal_only
 downstream_refs:
-  - scene: project-supervision
-    handoff: "evidence://scene/periodic-reporting/output:performance-summary"
-    trigger: on_report_completed
+- scene: project-supervision
+  handoff: evidence://scene/periodic-reporting/output:performance-summary
+  trigger: on_report_completed
 notes:
-  - "W4 周期报送: 周期触发 → 汇聚产出 → 生成报告 → 绩效证据. 内部pipeline场景."
-  - "可复用 skill: weekly-report (已有). 绩效证据来自 engineering-delivery 的 PR/CI 产出."
+- '2026-08-07: proposal_only→shadow 批量转换. 无业务副作用, 仅观察. falsifier: 若 shadow 期间无自动报告产出，则场景无价值，回退
+  draft'
+- 'W4 周期报送: 周期触发 → 汇聚产出 → 生成报告 → 绩效证据. 内部pipeline场景.'
+- '可复用 skill: weekly-report (已有). 绩效证据来自 engineering-delivery 的 PR/CI 产出.'
+bet: BET-Y1Q2-T6-04
+falsifier: 若 shadow 期间无自动报告产出，则场景无价值，回退 draft
+activation_blockers: []
