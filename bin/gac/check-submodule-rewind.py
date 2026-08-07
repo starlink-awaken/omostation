@@ -49,18 +49,30 @@ def get_previous_pointer(path: str) -> str | None:
     return sha if sha else None
 
 
-def is_descendant_or_equal(child: str, parent: str) -> bool:
-    """Check if child is a descendant of (or equal to) parent in git history.
-    
-    Returns True if parent is an ancestor of child, meaning child advanced forward
-    from parent or is the same commit. Returns False if child is unrelated to or
-    behind parent (rewind/history rewrite).
+def is_descendant_or_equal(child: str, parent: str, submodule_path: str) -> bool:
+    """Check if child is a descendant of (or equal to) parent in the submodule's own history.
+
+    Runs the check inside the submodule directory so git history is the submodule's own,
+    not the main repo's (which has no ancestor relationship for submodule SHAs).
     """
     if child == parent:
         return True
+    submodule_dir = REPO_ROOT / submodule_path
+    # First verify both SHAs exist in the submodule's object store
+    for sha in (child, parent):
+        result = subprocess.run(
+            ["git", "cat-file", "-t", sha],
+            cwd=submodule_dir,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0 or result.stdout.strip() != "commit":
+            # SHA not found in submodule (force-pushed away) — cannot determine direction
+            return True
     result = subprocess.run(
         ["git", "merge-base", "--is-ancestor", parent, child],
-        cwd=REPO_ROOT,
+        cwd=submodule_dir,
         capture_output=True,
         text=True,
         check=False,
@@ -83,7 +95,7 @@ def main() -> int:
 
         # Direction check: current pointer must be a descendant of (or equal to) previous pointer.
         # This ensures the submodule only moves forward in history, never rewinds.
-        if not is_descendant_or_equal(previous_sha, current_sha):
+        if not is_descendant_or_equal(previous_sha, current_sha, path):
             violations.append(
                 f"  {path} — 子模块指针方向非法: "
                 f"当前 {current_sha[:12]} 不是上一次指针 {previous_sha[:12]} 的后代 (rewind/history rewrite)"
