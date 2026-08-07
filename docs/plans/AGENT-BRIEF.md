@@ -187,7 +187,8 @@ D0 入库: <已 git add 的文件清单>
 
 - ❌ 在共享主工作树上直接改文件（用 `gac-worktree.sh claim`）
 - ❌ `git commit` / `push` / `merge` 到 main（除非人类明确确认）
-- ❌ `git clean` / `git reset --hard` / `git stash -u`（会删别的 agent 的未入库文件）
+- ❌ `git clean` / `git reset --hard` / `git stash -u`（会删别的 agent 的未入库文件；agent 环境 PATH shim 已强制收口，T1-07）
+- ❌ raw `git --no-verify`（**逃生口只有 `bin/gac/swarm-git` 一个入口**，T1-07 PATH shim + swarm-git 强制拦截 `--no-verify` 与高危操作）
 - ❌ 修改 `.omo/goals/current.yaml`（仅人类可改）
 - ❌ 直接写 `.omo/` 或 `spaces/`（走 OMO CLI / MCP / 已注册 broker）
 - ❌ 新增顶级项目、新增顶级入口、新增治理维度
