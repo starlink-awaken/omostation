@@ -9,17 +9,143 @@ research 引擎, 输出结构化草稿 + source + timestamp + next-action。
 P5-F3 family-health: 走 privacy_class=confidential 路径 (只读
 documents_vault 内 "family" tag 的 vault item, 严格不调 provider)。
 
-所有 scenario 共享同一入口: `cockpit scenario {radar|assistant|health} [--query Q]`。
+P5-F4 decision-inbox: 决策收件箱 — 场景卡驱动的决策生命周期管理。
+  子命令: {list, summary, add, status, show, create-scene, create-journey}
+
+所有 scenario 共享同一入口: `cockpit scenario {radar|assistant|health|inbox} [--query Q]`。
 """
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+
+# ── Decision inbox engine ──
+
+def _decision_inbox_engine(workspace_root: Path | None = None) -> Any:
+    """Load the decision inbox engine module."""
+    ws = workspace_root or _workspace_root()
+    engine_path = ws / "bin" / "ssot" / "scene-card-decision-inbox.py"
+    spec = importlib.util.spec_from_file_location("scene_card_decision_inbox_cli", str(engine_path))
+    if spec is None or spec.loader is None:
+        raise ImportError("scene-card-decision-inbox.py is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _decision_inbox_list(workspace_root: Path) -> dict[str, Any]:
+    """List all scenes in the decision inbox."""
+    try:
+        engine = _decision_inbox_engine(workspace_root)
+        scenes = engine.list_scenes(workspace_root)
+        return {"ok": True, "scenes": [engine._dictify(s) for s in scenes]}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _decision_inbox_summary(workspace_root: Path) -> dict[str, Any]:
+    """Show summary of the decision inbox."""
+    try:
+        engine = _decision_inbox_engine(workspace_root)
+        summary = engine.get_inbox_summary(workspace_root)
+        return {"ok": True, "summary": summary}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _decision_inbox_add_intent(
+    workspace_root: Path,
+    scene_id: str,
+    source: str,
+    raw_content: str,
+    priority: str = "P3",
+    journey_id: str | None = None,
+) -> dict[str, Any]:
+    """Add an intent to the decision inbox."""
+    try:
+        engine = _decision_inbox_engine(workspace_root)
+        scene = engine.load_scene(workspace_root, scene_id)
+        if scene is None:
+            return {"ok": False, "error": f"Scene {scene_id} not found"}
+        if not scene.journeys:
+            return {"ok": False, "error": f"Scene {scene_id} has no journeys"}
+        jid = journey_id or scene.journeys[0].id
+        intent = engine.add_intent(
+            workspace_root, scene_id=scene_id, journey_id=jid,
+            source=source, raw_content=raw_content, priority=priority,
+        )
+        return {"ok": True, "intent": engine._dictify(intent)}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _decision_inbox_set_status(
+    workspace_root: Path,
+    intent_id: str,
+    status: str,
+    task_id: str | None = None,
+) -> dict[str, Any]:
+    """Update an intent's status."""
+    try:
+        engine = _decision_inbox_engine(workspace_root)
+        intent = engine.update_intent_status(
+            workspace_root, intent_id=intent_id,
+            new_status=status, task_id=task_id,
+        )
+        if intent is None:
+            return {"ok": False, "error": f"Intent {intent_id} not found"}
+        return {"ok": True, "intent": engine._dictify(intent)}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _decision_inbox_show_scene(workspace_root: Path, scene_id: str) -> dict[str, Any]:
+    """Show details of a scene."""
+    try:
+        engine = _decision_inbox_engine(workspace_root)
+        scene = engine.load_scene(workspace_root, scene_id)
+        if scene is None:
+            return {"ok": False, "error": f"Scene {scene_id} not found"}
+        return {"ok": True, "scene": engine._dictify(scene)}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _decision_inbox_create_scene(
+    workspace_root: Path,
+    name: str,
+    description: str,
+    priority: str = "P1",
+) -> dict[str, Any]:
+    """Create a new decision inbox scene."""
+    try:
+        engine = _decision_inbox_engine(workspace_root)
+        scene = engine.create_scene(workspace_root, name=name, description=description, priority=priority)
+        return {"ok": True, "scene": engine._dictify(scene)}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _decision_inbox_create_journey(
+    workspace_root: Path,
+    scene_id: str,
+    name: str,
+) -> dict[str, Any]:
+    """Create a new journey in a scene."""
+    try:
+        engine = _decision_inbox_engine(workspace_root)
+        journey = engine.create_journey(workspace_root, scene_id=scene_id, name=name)
+        return {"ok": True, "journey": engine._dictify(journey)}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
 
 
 def _workspace_root() -> Path:
@@ -371,11 +497,11 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
 
 
 def cmd_scenario(args) -> int:
-    """cockpit scenario {radar|assistant|health}."""
+    """cockpit scenario {radar|assistant|health|inbox}."""
     sub = getattr(args, "scenario_sub", None) or getattr(args, "scenario_action", None)
     if sub is None:
         console = sys.stderr
-        console.write("Usage: cockpit scenario {radar|assistant|health} [--query Q]\n")
+        console.write("Usage: cockpit scenario {radar|assistant|health|inbox} [--query Q]\n")
         return 2
 
     if sub == "radar":
@@ -386,6 +512,55 @@ def cmd_scenario(args) -> int:
     elif sub == "health":
         query = getattr(args, "query", None) or "日常家庭健康问询"
         result = _f3_family_health(query=query)
+    elif sub == "inbox":
+        ws = _workspace_root()
+        inbox_action = getattr(args, "inbox_action", None)
+        if inbox_action is None:
+            sys.stderr.write("Usage: cockpit scenario inbox {list|summary|add|status|show|create-scene|create-journey}\n")
+            return 2
+        if inbox_action == "list":
+            result = _decision_inbox_list(ws)
+        elif inbox_action == "summary":
+            result = _decision_inbox_summary(ws)
+        elif inbox_action == "add":
+            result = _decision_inbox_add_intent(
+                ws,
+                scene_id=getattr(args, "scene_id", ""),
+                source=getattr(args, "source", "manual"),
+                raw_content=getattr(args, "content", ""),
+                priority=getattr(args, "priority", "P3"),
+            )
+        elif inbox_action == "status":
+            result = _decision_inbox_set_status(
+                ws,
+                intent_id=getattr(args, "intent_id", ""),
+                status=getattr(args, "status", ""),
+                task_id=getattr(args, "task_id", None),
+            )
+        elif inbox_action == "show":
+            result = _decision_inbox_show_scene(ws, scene_id=getattr(args, "scene_id", ""))
+        elif inbox_action == "create-scene":
+            result = _decision_inbox_create_scene(
+                ws,
+                name=getattr(args, "name", "Untitled Scene"),
+                description=getattr(args, "description", ""),
+                priority=getattr(args, "priority", "P1"),
+            )
+        elif inbox_action == "create-journey":
+            result = _decision_inbox_create_journey(
+                ws,
+                scene_id=getattr(args, "scene_id", ""),
+                name=getattr(args, "name", "Untitled Journey"),
+            )
+        else:
+            sys.stderr.write(f"unknown inbox action: {inbox_action}\n")
+            return 2
+        if getattr(args, "scenario_json", False):
+            json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
+            sys.stdout.write("\n")
+        else:
+            _render_scenario_human(result)
+        return 0
     else:
         sys.stderr.write(f"unknown scenario sub: {sub}\n")
         return 2
@@ -484,6 +659,94 @@ def _render_scenario_human(result: dict[str, Any]) -> None:
                     str(s.get("summary", ""))[:54],
                 )
             console.print(table)
+        return
+
+    # ── Decision inbox rendering ──
+    if "scenes" in result:
+        scenes = result.get("scenes", [])
+        console.print(Panel(f"[bold blue]📋 决策收件箱 · {len(scenes)} 场景[/]", border_style="blue"))
+        table = Table(box=rich_box.ROUNDED, header_style="bold blue")
+        table.add_column("ID", style="dim", width=32)
+        table.add_column("名称", style="bold")
+        table.add_column("优先级", width=8)
+        table.add_column("Journeys", width=8)
+        for s in scenes:
+            j_count = len(s.get("journeys", []))
+            table.add_row(s.get("id", ""), s.get("name", ""), s.get("priority", ""), str(j_count))
+        console.print(table)
+        return
+
+    if "summary" in result:
+        summary = result.get("summary", {})
+        console.print(Panel(
+            f"[bold blue]📊 收件箱概览[/]\n"
+            f"场景数: {summary.get('scene_count', 0)}\n"
+            f"总意图: {summary.get('total_intents', 0)}\n"
+            f"待处理: [bold yellow]{summary.get('pending_intents', 0)}[/]\n"
+            f"来源分布: {summary.get('by_source', {})}\n"
+            f"优先级分布: {summary.get('by_priority', {})}",
+            border_style="blue",
+        ))
+        return
+
+    if "scene" in result:
+        scene = result.get("scene", {})
+        panel_lines = [
+            f"[bold]ID:[/] {scene.get('id', '')}",
+            f"[bold]名称:[/] {scene.get('name', '')}",
+            f"[bold]描述:[/] {scene.get('description', '')}",
+            f"[bold]状态:[/] {scene.get('status', '')}",
+            f"[bold]优先级:[/] {scene.get('priority', '')}",
+        ]
+        journeys = scene.get("journeys", [])
+        panel_lines.append(f"[bold]Journeys:[/] {len(journeys)}")
+        for j in journeys:
+            panel_lines.append(f"  ├─ {j.get('name', '')} ({j.get('status', '')}) — {len(j.get('intents', []))} intents")
+        console.print(Panel("\n".join(panel_lines), title="🏷 场景详情", border_style="blue"))
+        if journeys:
+            for j in journeys:
+                intents = j.get("intents", [])
+                if not intents:
+                    continue
+                console.print(f"\n[bold]Journey: {j.get('name', '')}[/]")
+                itable = Table(box=rich_box.ROUNDED, header_style="bold cyan")
+                itable.add_column("ID", style="dim", width=32)
+                itable.add_column("来源", width=10)
+                itable.add_column("内容", style="bold")
+                itable.add_column("状态", width=12)
+                itable.add_column("优先级", width=8)
+                for i in intents:
+                    itable.add_row(
+                        i.get("id", ""), i.get("source", ""),
+                        str(i.get("raw_content", ""))[:40],
+                        i.get("status", ""), i.get("priority", ""),
+                    )
+                console.print(itable)
+        return
+
+    if "intent" in result:
+        intent = result.get("intent", {})
+        console.print(Panel(
+            f"[bold]意图 ID:[/] {intent.get('id', '')}\n"
+            f"[bold]来源:[/] {intent.get('source', '')}\n"
+            f"[bold]内容:[/] {str(intent.get('raw_content', ''))[:100]}\n"
+            f"[bold]状态:[/] {intent.get('status', '')}\n"
+            f"[bold]优先级:[/] {intent.get('priority', '')}\n"
+            f"[bold]Task ID:[/] {intent.get('task_id', '—')}\n"
+            f"[bold]创建时间:[/] {intent.get('created_at', '')}",
+            title="💡 意图详情", border_style="cyan",
+        ))
+        return
+
+    if "journey" in result:
+        journey = result.get("journey", {})
+        console.print(Panel(
+            f"[bold]Journey ID:[/] {journey.get('id', '')}\n"
+            f"[bold]名称:[/] {journey.get('name', '')}\n"
+            f"[bold]状态:[/] {journey.get('status', '')}\n"
+            f"[bold]Intents:[/] {len(journey.get('intents', []))}",
+            title="🛤 Journey 详情", border_style="green",
+        ))
         return
 
     # 兜底: 未知 scenario 退回 JSON

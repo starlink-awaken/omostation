@@ -719,7 +719,7 @@ def main() -> int:
     # OPC P5-F4: 统一 scenario 入口 — 用户无需理解仓边界
     scenario_p = sub.add_parser(
         "scenario",
-        help="P5 统一 scenario 入口 (radar/assistant/health)",
+        help="P5 统一 scenario 入口 (radar/assistant/health/inbox)",
     )
     # 产品走查 v5 #V5-13: 默认人类可读面板, --json 输出机器可读原样 (脚本/管道消费)
     scenario_p.add_argument(
@@ -741,6 +741,32 @@ def main() -> int:
         "health", help="P5-F3 family-health: 1 真实家庭健康 query → 3 级 next-action (privacy=confidential)"
     )
     scenario_health.add_argument("--query", type=str, default="日常家庭健康问询", help="真实家庭健康 query")
+
+    # P5-F4: 决策收件箱
+    scenario_inbox = scenario_sub.add_parser(
+        "inbox", help="P5-F4 decision-inbox: 场景卡驱动的决策生命周期管理"
+    )
+    inbox_sub = scenario_inbox.add_subparsers(dest="inbox_action", parser_class=WorkspaceParser)
+    inbox_list = inbox_sub.add_parser("list", help="列出所有场景")
+    inbox_summary = inbox_sub.add_parser("summary", help="收件箱概览")
+    inbox_add = inbox_sub.add_parser("add", help="添加意图到场景")
+    inbox_add.add_argument("--scene-id", dest="scene_id", required=True, help="场景 ID")
+    inbox_add.add_argument("--source", default="manual", help="来源 (email/file/message/manual/oa/sms)")
+    inbox_add.add_argument("--content", required=True, help="意图内容")
+    inbox_add.add_argument("--priority", default="P3", choices=["P0", "P1", "P2", "P3"], help="优先级")
+    inbox_status = inbox_sub.add_parser("status", help="更新意图状态")
+    inbox_status.add_argument("--intent-id", dest="intent_id", required=True, help="意图 ID")
+    inbox_status.add_argument("--status", required=True, choices=["pending", "task_created", "approved", "rejected", "done"], help="新状态")
+    inbox_status.add_argument("--task-id", dest="task_id", help="关联的 OMO Task ID")
+    inbox_show = inbox_sub.add_parser("show", help="查看场景详情")
+    inbox_show.add_argument("--scene-id", dest="scene_id", required=True, help="场景 ID")
+    inbox_create_scene = inbox_sub.add_parser("create-scene", help="创建新场景")
+    inbox_create_scene.add_argument("--name", required=True, help="场景名称")
+    inbox_create_scene.add_argument("--description", default="", help="场景描述")
+    inbox_create_scene.add_argument("--priority", default="P1", choices=["P0", "P1", "P2"], help="优先级")
+    inbox_create_journey = inbox_sub.add_parser("create-journey", help="创建新 Journey")
+    inbox_create_journey.add_argument("--scene-id", dest="scene_id", required=True, help="场景 ID")
+    inbox_create_journey.add_argument("--name", required=True, help="Journey 名称")
 
     # Gap #7: MetaOS 工作流编排入口
     wf_p = sub.add_parser(
