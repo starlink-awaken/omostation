@@ -40,6 +40,11 @@ log "▶ Step 2/7: gen-capability-registry"
 uv run --with pyyaml python bin/cockpit/gen-capability-registry.py --quiet
 log "  gen-capability-registry ok"
 
+log "▶ Step 2b/7: gen-ci-surfaces-triggers (workflow_triggers 登记对齐)"
+uv run --with pyyaml python bin/ssot/gen-ci-surfaces-triggers.py --write > /tmp/rebase-regen-ci.log 2>&1 || \
+    log "  ci-surfaces triggers already aligned"
+log "  gen-ci-surfaces-triggers ok"
+
 log "▶ Step 3/7: sync-bos-registry"
 uv run --with pyyaml python bin/ssot/sync-bos-registry.py --write > /tmp/rebase-regen-bos.log 2>&1 || \
     log "  bos-registry drift unchanged"

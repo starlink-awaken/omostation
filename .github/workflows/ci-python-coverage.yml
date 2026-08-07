@@ -4,7 +4,27 @@ name: python-coverage-ci
 on:
   push:
     branches: [main]
+    paths:
+      - 'projects/omo/**'
+      - 'projects/omo-debt/**'
+      - 'projects/c2g/**'
+      - 'projects/model-driven/**'
+      - 'projects/l4-kernel/**'
+      - 'projects/aetherforge/**'
+      - 'projects/bus-foundation/**'
+      - 'projects/*/pyproject.toml'
+      - '.github/workflows/ci-python-coverage.yml'
   pull_request:
+    paths:
+      - 'projects/omo/**'
+      - 'projects/omo-debt/**'
+      - 'projects/c2g/**'
+      - 'projects/model-driven/**'
+      - 'projects/l4-kernel/**'
+      - 'projects/aetherforge/**'
+      - 'projects/bus-foundation/**'
+      - 'projects/*/pyproject.toml'
+      - '.github/workflows/ci-python-coverage.yml'
 jobs:
   test:
     name: ${{ matrix.pkg }}
