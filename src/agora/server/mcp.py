@@ -758,6 +758,10 @@ async def _init_proxy():
                 rates = yaml.safe_load(open(rates_path))
                 for route in rates.get("routes", []):
                     bos_rate_limiter.configure(route["prefix"], qps=route["qps"])
+                # 遗留-3: 配额配置随 rates 一并热加载
+                from agora.mcp.bos_quota import reload_quota_config
+
+                reload_quota_config()
                 logger.info(
                     "config_watcher: rates reloaded (%d routes)",
                     len(rates.get("routes", [])),
