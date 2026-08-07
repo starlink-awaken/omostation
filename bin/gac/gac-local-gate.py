@@ -743,12 +743,33 @@ def main() -> int:
     parser.add_argument("--metrics", action="store_true", help="Record check results to metrics-store.jsonl")
     parser.add_argument("--adaptive", action="store_true", help="Enable adaptive threshold adjustment for supported checks")
     parser.add_argument("--risk-profile", choices=["low", "medium", "high"], help="Risk-aware gate filtering")
+    parser.add_argument("--summarize", action="store_true", help="Generate Markdown summary of gate report")
     args = parser.parse_args()
 
     try:
         report = run_gate(args.scope, args.file, args.run_id, args.strict, args.agt_backend, args.adaptive, args.risk_profile)
     except ValueError as exc:
         parser.error(str(exc))
+
+    if args.summarize:
+        try:
+            import tempfile
+            import subprocess
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp:
+                json.dump(report, tmp, ensure_ascii=False, indent=2)
+                tmp_path = tmp.name
+            proc = subprocess.run(
+                [sys.executable, str(WORKSPACE / "bin" / "gac" / "governance-summarizer.py"), "--report", tmp_path],
+                capture_output=True,
+                text=True,
+                cwd=WORKSPACE,
+            )
+            if proc.returncode == 0:
+                print(proc.stdout)
+            else:
+                print(f"[WARN] summarizer failed: {proc.stderr}", file=sys.stderr)
+        except Exception as exc:
+            print(f"[WARN] summarize failed: {exc}", file=sys.stderr)
 
     if args.metrics:
         try:
