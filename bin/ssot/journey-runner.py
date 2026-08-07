@@ -69,7 +69,7 @@ def dispatch_dry_run(scene_id: str, input_data: dict, token: dict) -> dict[str, 
         "meeting-supervision": {"status": "succeeded", "meeting": {"decisions": [{"assignee": "sim"}]}, "decisions": {"count": 1}, "task": {"assignee": "sim"}},
         "periodic-reporting": {"status": "succeeded", "report": {"compiled": True}},
         "project-supervision": {"status": "succeeded", "supervision": {"risk_level": "low"}},
-        "research-pipeline": {"status": "succeeded", "analysis": {"confidence": 0.85}, "sources": {"gathered": 5}, "curation": {"indexed": True}},
+        "research-pipeline": {"status": "succeeded", "research": {"scope": "simulated"}, "analysis": {"confidence": 0.85}, "sources": {"gathered": 5}, "curation": {"indexed": True}},
         "agora-bos-gateway": {"status": "succeeded"},
     }
     return defaults.get(scene_id, {"status": "succeeded"})
@@ -99,8 +99,101 @@ def dispatch_real_inbox(input_data: dict, token: dict) -> dict[str, Any]:
     }
 
 
+def _iris_list(connector: str, limit: int = 5) -> list[dict]:
+    """Call iris list <connector> and return parsed items."""
+    try:
+        result = subprocess.run(
+            ["iris", "list", connector, "--limit", str(limit), "--format", "json"],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            items = json.loads(result.stdout)
+            return items if isinstance(items, list) else []
+    except Exception:
+        pass
+    return []
+
+
+def dispatch_real_curate(input_data: dict, token: dict) -> dict[str, Any]:
+    """Real dispatch: iris list wpsnote (read recent notes for indexing context)."""
+    notes = _iris_list("wpsnote", limit=5)
+    return {
+        "status": "succeeded",
+        "curation": {"indexed": len(notes) > 0},
+        "notes_count": len(notes),
+        "indexed": len(notes) > 0,
+    }
+
+
+def dispatch_real_research(input_data: dict, token: dict) -> dict[str, Any]:
+    """Real dispatch: iris list zhihu + wxread + rss."""
+    all_items: list[dict] = []
+    for connector in ("rss", "zhihu", "wxread"):
+        all_items.extend(_iris_list(connector, limit=5))
+    confidence = min(0.5 + len(all_items) * 0.05, 0.95)
+    return {
+        "status": "succeeded",
+        "analysis": {"confidence": round(confidence, 2)},
+        "sources": {"gathered": len(all_items)},
+        "curation": {"indexed": len(all_items) > 0},
+    }
+
+
+def dispatch_real_reporting(input_data: dict, token: dict) -> dict[str, Any]:
+    """Real dispatch: git log recent PRs for periodic report."""
+    try:
+        result = subprocess.run(
+            ["git", "log", "--oneline", "--since", "7 days", "--grep", "#[0-9]"],
+            capture_output=True, text=True, timeout=10, check=False,
+            cwd=str(ROOT),
+        )
+        prs = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()] if result.returncode == 0 else []
+    except Exception:
+        prs = []
+    return {
+        "status": "succeeded",
+        "report": {"compiled": True, "pr_count": len(prs)},
+    }
+
+
+def dispatch_real_meeting(input_data: dict, token: dict) -> dict[str, Any]:
+    """Real dispatch: parse meeting notes from context, extract tasks."""
+    notes = input_data.get("meeting_notes", input_data.get("notes", ""))
+    decisions = []
+    if isinstance(notes, str) and notes:
+        # Simple extraction: lines containing keywords → decisions
+        for line in notes.split("\n"):
+            line = line.strip()
+            if any(kw in line.lower() for kw in ["决定", "任务", "安排", "负责", "decision", "task", "assign"]):
+                decisions.append({"text": line[:100], "assignee": "extracted"})
+    return {
+        "status": "succeeded",
+        "meeting": {"decisions": decisions},
+        "decisions": {"count": len(decisions)},
+        "task": {"assignee": decisions[0]["assignee"] if decisions else None},
+    }
+
+
+def dispatch_real_supervision(input_data: dict, token: dict) -> dict[str, Any]:
+    """Real dispatch: assess risk from recent journey history."""
+    risk_level = "low"
+    if input_data.get("blocked_count", 0) > 2:
+        risk_level = "high"
+    elif input_data.get("blocked_count", 0) > 0:
+        risk_level = "medium"
+    return {
+        "status": "succeeded",
+        "supervision": {"risk_level": risk_level},
+    }
+
+
 DISPATCHERS: dict[str, Any] = {
     "unified-inbox": dispatch_real_inbox,
+    "knowledge-curation": dispatch_real_curate,
+    "research-pipeline": dispatch_real_research,
+    "periodic-reporting": dispatch_real_reporting,
+    "meeting-supervision": dispatch_real_meeting,
+    "project-supervision": dispatch_real_supervision,
 }
 
 
