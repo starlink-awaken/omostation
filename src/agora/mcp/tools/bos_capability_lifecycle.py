@@ -89,6 +89,12 @@ def bos_capability_retire(
         uri: Exact BOS URI prefix to retire.
         reason: Short reason for retirement.
     """
+    # P5: 写操作要求 governance 身份 (admin/local)
+    from agora.server.tools_auth import agora_role_ctx
+
+    role = agora_role_ctx.get()
+    if role not in ("admin", "local"):
+        return {"status": "error", "error": f"role '{role}' not authorized to retire capability"}
     capability_catalog, admission_catalog = _get_catalogs()
     if capability_catalog is None:
         return {"status": "error", "error": "capability_catalog_unavailable"}
@@ -125,6 +131,12 @@ def bos_capability_admit(uri: str, description: str = "") -> dict[str, Any]:
         uri: BOS URI prefix to admit.
         description: Human-readable description of the capability.
     """
+    # P5: 写操作要求 governance 身份 (admin/local)
+    from agora.server.tools_auth import agora_role_ctx
+
+    role = agora_role_ctx.get()
+    if role not in ("admin", "local"):
+        return {"status": "error", "error": f"role '{role}' not authorized to admit capability"}
     capability_catalog, admission_catalog = _get_catalogs()
     if capability_catalog is None:
         return {"status": "error", "error": "capability_catalog_unavailable"}
@@ -156,12 +168,23 @@ def bos_capability_admit(uri: str, description: str = "") -> dict[str, Any]:
 
 
 def register() -> None:
-    """Register capability lifecycle tools on the global Agora MCP instance."""
+    """Register capability lifecycle tools on the global Agora MCP instance.
+
+    P5 (能力管理网关化): 工具通过主 mcp.add_tool() 动态注册到主网关,
+    使 HTTP /v1/tools/call 可直接调用 admit/retire/list (此前挂独立实例调不到)。
+    同时保留独立实例 mcp (兼容旧引用)。
+    """
     try:
         from agora.server.tools_bos import register_bos_tools
         from agora.core.state import get_event_bus
+        from agora.server.mcp import mcp as main_mcp
 
         bus = get_event_bus()
+        # P5: 挂主网关 (add_tool 接受函数, 复用 @mcp.tool 装饰的函数)
+        main_mcp.add_tool(bos_capability_list)
+        main_mcp.add_tool(bos_capability_admit)
+        main_mcp.add_tool(bos_capability_retire)
         register_bos_tools(mcp, bus)
+        _LOG.info("bos capability lifecycle tools registered on main MCP (P5)")
     except Exception as exc:  # noqa: BLE001
         _LOG.warning("bos capability lifecycle registration skipped: %s", exc)
