@@ -31,7 +31,7 @@ from agora.mcp.bos_resolver import (  # type: ignore[import-not-found]
 from agora.mcp.bos_resolver import (  # type: ignore[import-not-found]
     resolve_bos_uri as _resolve_bos_uri,
 )
-from agora.server._response import FORMAT_VERSION, _error, _get_cache_ttl, _ok
+from agora.server._response import FORMAT_VERSION, _error, _get_cache_ttl, _ok, _safe_result
 
 from ._helpers import (
     _PROJECTS_DIR,
@@ -210,7 +210,8 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                     "format_version": FORMAT_VERSION,
                     "uri": uri,
                     "source": source,
-                    "result": result,
+                    # 阶段3: 大响应保护 (截断 + 标记, 避免客户端解析崩溃)
+                    **_safe_result(result),
                 }
             )
         except json.JSONDecodeError:
