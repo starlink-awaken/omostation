@@ -368,6 +368,9 @@ async def resolve_bos_uri(
             import inspect
             import sys
 
+            # P7: 内部函数调用 TTL 缓存
+            from agora.server._response import _get_cache_ttl
+
             if service.package and service.package != "agora":
                 pkg_path = str(Path(_WS) / "projects" / service.package / "src")
                 if pkg_path not in sys.path:
@@ -404,12 +407,31 @@ async def resolve_bos_uri(
                     return func(call_args_dict)
                 return func(*args, **call_args_dict)
 
+            # P7: internal 重计算服务结果缓存 (复用 bos_cache TTL 缓存)
+            cached = None
+            try:
+                from agora.mcp.bos_middleware import bos_cache
+
+                cached = bos_cache.get(uri, call_args_dict or None)
+            except Exception:  # noqa: BLE001 — 缓存不可用降级直接执行
+                cached = None
+            if cached is not None:
+                result = {"status": "ok", "result": cached, "cache": "hit"}
+                return result
+
             loop = _asyncio.get_running_loop()
             raw = await loop.run_in_executor(
                 None, lambda: _run_sync_with_timeout(_invoke, timeout=10.0)
             )
             if inspect.isawaitable(raw):
                 raw = await raw
+            # P7: 写缓存 (TTL 由 _get_cache_ttl 按服务配置)
+            try:
+                from agora.mcp.bos_middleware import bos_cache
+
+                bos_cache.set(uri, call_args_dict or None, raw, ttl=_get_cache_ttl(uri))
+            except Exception:  # noqa: BLE001 — 缓存写失败不影响返回
+                pass
             result = {"status": "ok", "result": raw}
         except TimeoutError:
             result = {
