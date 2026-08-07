@@ -1,18 +1,17 @@
----
 title: Knowledge Curation Scene Card (知识沉淀与检索)
 status: active
 type: scene-card
 owner: product-architecture
 last-reviewed: 2026-08-07
 related:
-  - ./engineering-delivery-dogfood.yaml
-  - ./document-review.yaml
-  - ../../.omo/_truth/scenarios/knowledge-capture-search.yaml
+- ./engineering-delivery-dogfood.yaml
+- ./document-review.yaml
+- ../../.omo/_truth/scenarios/knowledge-capture-search.yaml
 ---
-schema: scene-card/v1
+schema: scene-card/v2
 scene_type: external_resource
-lifecycle: proposal_only
-activation: forbidden
+lifecycle: shadow
+activation: preview
 approval_state: pending_business_confirmation
 scene_id: knowledge-curation
 journey_id: capture-to-retrieval
@@ -31,54 +30,78 @@ operator: knowledge-curation-agent-under-human-review
 permission_ref: permission://scene/knowledge-curation
 rollback_plan: revert-to-manual-note-taking
 sample_refs:
-  - vault://redacted/knowledge-curation/sample-1
-  - vault://redacted/knowledge-curation/sample-2
-  - vault://redacted/knowledge-curation/sample-3
+- vault://redacted/knowledge-curation/sample-1
+- vault://redacted/knowledge-curation/sample-2
+- vault://redacted/knowledge-curation/sample-3
 demand_evidence_refs:
-  - evidence://scenario/knowledge-capture-search
+- evidence://scenario/knowledge-capture-search
 activation_evidence_refs:
-  - evidence://scenario/knowledge-capture-search
+- evidence://scenario/knowledge-capture-search
 required_capabilities:
-  - iris:wpsnote
-  - iris:obsidian
+- iris:wpsnote
+- iris:obsidian
 opportunity_window: 持续知识管理窗口 (每项工作完成后均可触发沉淀)
 external_resource_policy: proposal_only
 downstream_refs:
-  - scene: document-review
-    handoff: "evidence://scene/knowledge-curation/output:relevant-knowledge"
-    trigger: on_review_requested
-  - scene: research-pipeline
-    handoff: "evidence://scene/knowledge-curation/output:research-feed"
-    trigger: on_knowledge_published
+- scene: document-review
+  handoff: evidence://scene/knowledge-curation/output:relevant-knowledge
+  trigger: on_review_requested
+- scene: research-pipeline
+  handoff: evidence://scene/knowledge-curation/output:research-feed
+  trigger: on_knowledge_published
 notes:
-  - "知识沉淀: 多场景产出 → 结构化 → 检索复用. 提升自 .omo/_truth/scenarios/knowledge-capture-search.yaml."
-  - "连接器: iris:wpsnote (WPS笔记, 17K实现) + iris:obsidian (本地知识库, 15.7K实现). 两者均已有完整connector代码."
-  - "关键: 本场景是知识循环的枢纽 — 接收所有场景的产出, 输出给所有需要知识的场景."
+- '2026-08-07: proposal_only→shadow 批量转换. 无业务副作用, 仅观察. falsifier: 若 shadow 期间无知识条目被自动索引，则场景无价值，回退
+  draft'
+- '知识沉淀: 多场景产出 → 结构化 → 检索复用. 提升自 .omo/_truth/scenarios/knowledge-capture-search.yaml.'
+- '连接器: iris:wpsnote (WPS笔记, 17K实现) + iris:obsidian (本地知识库, 15.7K实现). 两者均已有完整connector代码.'
+- '关键: 本场景是知识循环的枢纽 — 接收所有场景的产出, 输出给所有需要知识的场景.'
 input_schema:
   type: object
-  required: [knowledge_fragment_ref, source_scene]
+  required:
+  - knowledge_fragment_ref
+  - source_scene
   properties:
-    knowledge_fragment_ref: {type: string, pattern: "^(evidence|vault)://"}
-    source_scene: {type: string, description: "产出此知识片段的上游场景"}
-    context_tags: {type: array, description: "上下文标签"}
+    knowledge_fragment_ref:
+      type: string
+      pattern: ^(evidence|vault)://
+    source_scene:
+      type: string
+      description: 产出此知识片段的上游场景
+    context_tags:
+      type: array
+      description: 上下文标签
 output_schema:
   type: object
-  required: [status, knowledge_entry_ref]
+  required:
+  - status
+  - knowledge_entry_ref
   properties:
-    status: {type: string, enum: [succeeded, failed, needs_human]}
-    knowledge_entry_ref: {type: string, pattern: "^(evidence|vault)://"}
-    indexed: {type: boolean, description: "是否已建立检索索引"}
+    status:
+      type: string
+      enum:
+      - succeeded
+      - failed
+      - needs_human
+    knowledge_entry_ref:
+      type: string
+      pattern: ^(evidence|vault)://
+    indexed:
+      type: boolean
+      description: 是否已建立检索索引
 reflection_contract:
   enabled: true
   trigger: on_completion
   questions:
-    - "知识条目是否充分捕获了原始上下文?"
-    - "标签和分类是否准确?"
-    - "这条知识未来最可能在什么场景被检索?"
+  - 知识条目是否充分捕获了原始上下文?
+  - 标签和分类是否准确?
+  - 这条知识未来最可能在什么场景被检索?
   feedforward: true
 event_subscription:
   bus: omo-event-bus
   triggers:
-    - event: scene.completed
-      filter: "source_scene in ['engineering-delivery', 'document-review', 'research-pipeline']"
-      action: ingest_fragment
+  - event: scene.completed
+    filter: source_scene in ['engineering-delivery', 'document-review', 'research-pipeline']
+    action: ingest_fragment
+bet: BET-Y1Q1-T3-01
+falsifier: 若 shadow 期间无知识条目被自动索引，则场景无价值，回退 draft
+activation_blockers: []
