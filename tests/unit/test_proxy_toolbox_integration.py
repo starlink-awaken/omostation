@@ -18,7 +18,8 @@ def test_known_services_keeps_core_services():
     """核心服务不受影响。"""
     from agora.mcp.mcp_bootstrap import KNOWN_SERVICES
 
-    for name in ("kos", "codeanalyze", "metaos", "cockpit"):
+    # cockpit 的能力以 agent-runtime 名义登记 (l0_registry 的 agent-runtime → cockpit MCP)
+    for name in ("kos", "codeanalyze", "metaos", "agent-runtime"):
         assert name in KNOWN_SERVICES
 
 
