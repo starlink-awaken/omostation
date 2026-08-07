@@ -159,6 +159,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_start.add_argument("--actor", default=os.environ.get("USER", "agent"))
     p_start.add_argument("--profile", default="")
     p_start.add_argument("--objective", default="")
+    p_start.add_argument("--bet", default="", help="Bet ID from 3y-bet-ledger.yaml to resolve objective automatically")
     p_start.add_argument("--dry-run", action="store_true")
     p_start.add_argument("--force-lock", action="store_true")
     p_start.add_argument("--json", action="store_true")
@@ -306,11 +307,26 @@ def main(argv: list[str] | None = None) -> int:
             return run_stage(workflow, args.stage, context, args.execute, args.json)
         if args.command == "start":
             workflow = workflow_by_id(registry, args.workflow_id)
+            objective = args.objective
+            if getattr(args, "bet", None):
+                bet_id = args.bet
+                from ..omo_paths import WORKSPACE_ROOT
+                import yaml
+                ledger_file = WORKSPACE_ROOT / "docs/plans/3y-bet-ledger.yaml"
+                if ledger_file.exists():
+                    data = {}
+                    for d in yaml.safe_load_all(ledger_file.read_text(encoding="utf-8")):
+                        if isinstance(d, dict):
+                            data.update(d)
+                    for item in data.get("bets", []):
+                        if isinstance(item, dict) and item.get("id") == bet_id:
+                            objective = f"[{bet_id}] {item.get('title', '')} (Appetite: {item.get('appetite', '')})"
+                            break
             record = start_run(
                 registry,
                 workflow,
                 context_from_args(args),
-                args.objective,
+                objective,
                 args.dry_run,
                 args.force_lock,
             )

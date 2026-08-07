@@ -610,15 +610,37 @@ def closeout_run(
                 env_kos["PYTHONPATH"] = str(
                     WORKSPACE / "projects/kairon/packages/kos/src"
                 )
-                # 3.1 Incremental Ingest
                 subprocess.run(
-                    [sys.executable, str(kos_cli_path), "ingest", "--incremental"],
+                    [
+                        sys.executable,
+                        str(kos_cli_path),
+                        "ingress",
+                        "--snapshot",
+                        "latest",
+                        "--rebuild-ontology",
+                    ],
                     cwd=WORKSPACE,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                     env=env_kos,
                     check=False,
                 )
+            # 4. MOS Agent Belief Persistence (BET-Y1Q1-T3-01 Ecosystem Integration)
+            try:
+                from omo.omo_belief import MOSBeliefManager
+                belief_mgr = MOSBeliefManager(root=WORKSPACE)
+                obj_text = payload.get("objective") or "agent-workflow closeout"
+                wf_id = payload.get("workflow_id") or "general"
+                belief_mgr.record_belief(
+                    topic=f"workflow:{wf_id}",
+                    belief_text=f"Workflow run {run_id} achieved objective: {obj_text}",
+                    pitfall="Unverified workflow closeout",
+                    solution="Executed agent-workflow verify & observe pass",
+                    scope_path=payload.get("path") or "*",
+                    source_run_id=run_id,
+                )
+            except Exception:
+                pass
                 # 3.2 Ontology Rebuild
                 subprocess.run(
                     [sys.executable, str(kos_cli_path), "onto", "rebuild"],
