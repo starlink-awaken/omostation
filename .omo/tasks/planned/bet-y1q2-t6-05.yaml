@@ -1,0 +1,58 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y1Q2-T6-05
+title: 减法配额制门禁上线
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-05
+window: Y1Q2
+track: T6-SUBTRACT
+appetite: 3 days
+desc: 用机制而非意志维持表面积不反弹 — 增 1 删 1
+non_goals:
+- 限制代码行数增长(不同机制)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q2-T6-01
+- BET-Y1Q2-T6-02
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q2-T6-01'
+- '依赖已 done: BET-Y1Q2-T6-02'
+evidence_required:
+- 新增 GaC 规则的 PR 必须同时删除一条, 否则门禁失败
+- 新增 ADR 的 PR 必须同时归档一份
+- 例外须带 SWARM_ESCAPE_ID 并记录
+test_plan:
+- grep -c 'subtraction-quota' .omo/_truth/registry/governance-checks.yaml
+- python3 bin/gac/gac-validate.py --gate
+workflow: bet-execution
+write_surfaces:
+- .omo/_truth/registry/governance-checks.yaml
+- bin/gac/**
+- .github/workflows/**
+pasw_required: false
+circuit_breaker: 门禁误伤率 > 20% → 降为 warning, Y1Q4 再收紧
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q2-T6-05.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0
