@@ -20,11 +20,46 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import sys
 from pathlib import Path
 
-
 WORKFLOW_DIR = Path(__file__).resolve().parents[2] / ".github" / "workflows"
+
+
+# 内联 paths: [...] 数组形式 (agora/ecos/kairon 等子项目 CI 常用) 与多行块形式
+INLINE_PATHS_RE = re.compile(r"^\s+paths:\s*\[([^\]]*)\]", re.MULTILINE)
+BLOCK_PATHS_RE = re.compile(r"^\s+paths:\s*$((?:\n\s+- [^\n]+)*)", re.MULTILINE)
+
+# 已知 continue-on-error 为设计语义 (advisory/收集型, 或 checkout 子模块容错) 的 workflow
+COE_DESIGN_EXEMPT = {
+    "gac-gate.yml",
+    "ai-pr-review.yml",
+    "ci-python-coverage.yml",
+    "quality.yml",
+    "config-check.yml",
+    "family-hub-ci.yml",
+    "integration.yml",
+    "kairon-ci.yml",
+    "ci-lint.yml",
+}
+
+# 已知 manual-intent 的 workflow (仅 dispatch, 按需运行, 非 idle 死工作流)
+MANUAL_INTENT_EXEMPT = {"pyright-sweep.yml"}
+
+# gate/enforce 类 PR workflow 全量跑是设计语义 (低成本规则门禁, paths 过滤反而有漏跑风险)
+UNPATHED_DESIGN_EXEMPT = {
+    "ai-pr-review.yml",
+    "gac-gate.yml",
+    "constraint-validation.yml",
+    "cross-deps-enforce.yml",
+    "debt-audit.yml",
+    "evidence-smoke-gate.yml",
+    "interfaces-enforce.yml",
+    "phase-gate-enforce.yml",
+    "port-registry-enforce.yml",
+    "state-goals-enforce.yml",
+    "task-schema-enforce.yml",
+    "workspace.yml",
+}
 
 
 def scan_workflows() -> list[dict]:
@@ -36,13 +71,13 @@ def scan_workflows() -> list[dict]:
         triggers = set()
         if "workflow_call" in text:
             triggers.add("callable")
-        if re.search(r"^\s+schedule:\s*$", text, re.M) or "schedule:" in text:
+        if re.search(r"^\s+schedule:\s*$", text, re.MULTILINE) or "schedule:" in text:
             triggers.add("scheduled")
         if "workflow_dispatch" in text:
             triggers.add("manual")
         has_list = "on: [push, pull_request]" in text or "on: [push,pull_request]" in text
-        has_push = bool(re.search(r"^\s+push:\s*$", text, re.M))
-        has_pp = bool(re.search(r"^\s+pull_request:\s*$", text, re.M))
+        has_push = bool(re.search(r"^\s+push:\s*$", text, re.MULTILINE))
+        has_pp = bool(re.search(r"^\s+pull_request:\s*$", text, re.MULTILINE))
         if has_list:
             triggers.update(["push", "per_pr"])
         else:
@@ -50,18 +85,27 @@ def scan_workflows() -> list[dict]:
                 triggers.add("push")
             if has_pp:
                 triggers.add("per_pr")
-        path_filtered = bool(re.search(r"^\s+paths:\s*$", text, re.M))
+        path_filtered = bool(re.search(r"^\s+paths:\s*(\[|$)", text, re.MULTILINE))
         coe_count = text.count("continue-on-error: true")
         total_steps = text.count("run:")
 
         issues = []
         if has_list:
             issues.append("stale-regex: on: [push,pull_request] pattern should have been removed in E-4")
-        if "per_pr" in triggers and not path_filtered and "callable" not in triggers:
+        if (
+            name not in UNPATHED_DESIGN_EXEMPT
+            and "per_pr" in triggers
+            and not path_filtered
+            and "callable" not in triggers
+        ):
             issues.append("unpathed-pr: PR workflow without paths filter")
-        if total_steps > 0 and coe_count / total_steps > 0.5:
+        if (
+            name not in COE_DESIGN_EXEMPT
+            and total_steps > 0
+            and coe_count / total_steps > 0.5
+        ):
             issues.append(f"high-continue-on-error: {coe_count}/{total_steps} steps ({coe_count/total_steps:.0%})")
-        if triggers == {"manual"}:
+        if triggers == {"manual"} and name not in MANUAL_INTENT_EXEMPT:
             issues.append("idle-workflow: only workflow_dispatch, never auto-runs")
 
         results.append({

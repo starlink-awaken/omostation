@@ -28,10 +28,10 @@ WORKFLOWS_DIR = WORKSPACE / ".github" / "workflows"
 
 # 与 check-ci-surfaces.py 保持一致的触发解析
 TRIGGER_RE = {
-    "push": re.compile(r"^\s+push:\s*$", re.M),
-    "per_pr": re.compile(r"^\s+pull_request:\s*$", re.M),
+    "push": re.compile(r"^\s+push:\s*$", re.MULTILINE),
+    "per_pr": re.compile(r"^\s+pull_request:\s*$", re.MULTILINE),
 }
-PATHS_RE = re.compile(r"^\s+paths:\s*$((?:\n\s+- [^\n]+)*)", re.M)
+PATHS_RE = re.compile(r"^\s+paths:\s*$((?:\n\s+- [^\n]+)*)", re.MULTILINE)
 
 
 def parse_workflow_triggers(text: str) -> tuple[list[str], bool, set[str]]:
@@ -39,7 +39,7 @@ def parse_workflow_triggers(text: str) -> tuple[list[str], bool, set[str]]:
     triggers: list[str] = []
     if "workflow_call" in text:
         triggers.append("callable")
-    if re.search(r"^\s+schedule:\s*$", text, re.M) or "schedule:" in text:
+    if re.search(r"^\s+schedule:\s*$", text, re.MULTILINE) or "schedule:" in text:
         triggers.append("scheduled")
     if "workflow_dispatch" in text:
         triggers.append("manual")
@@ -50,9 +50,13 @@ def parse_workflow_triggers(text: str) -> tuple[list[str], bool, set[str]]:
             triggers.append("push")
         if TRIGGER_RE["per_pr"].search(text):
             triggers.append("per_pr")
-    path_filtered = bool(re.search(r"^\s+paths:\s*$", text, re.M))
+    # 内联 paths: [...] 数组形式 + 多行块形式 (与 check-ci-surfaces.py / workflow-health.py 同源)
+    path_filtered = bool(re.search(r"^\s+paths:\s*(\[|$)", text, re.MULTILINE))
     paths: set[str] = set()
     if path_filtered:
+        for m in re.finditer(r"^\s+paths:\s*\[([^\]]*)\]", text, re.MULTILINE):
+            for item in re.findall(r"'([^']*)'|\"([^\"]*)\"", m.group(1)):
+                paths.add(item[0] or item[1])
         for m in PATHS_RE.finditer(text):
             for line in m.group(1).split("\n"):
                 pm = re.match(r"\s+- (.*)$", line)
@@ -68,7 +72,7 @@ def render_triggers_entry(workflow: str, triggers: list[str], path_filtered: boo
     if path_filtered:
         lines.append("    path_filtered: true")
         for p in sorted(paths):
-            lines.append(f"    paths:")
+            lines.append("    paths:")
             break
         for p in sorted(paths):
             lines.append(f"    - {p}")
