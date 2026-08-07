@@ -127,10 +127,10 @@ warning_exceptions:
     - id: concurrent-plans-orphan-docs
       rule: orphan_document
       surface: docs-discoverable
-      max_findings: 2
+      max_findings: 6
       expires: 2026-09-30
       owner: governance-team
-      reason: 并发 agent 的 docs/plans 台账文档未入 SYSTEM-INDEX 索引 (ADR-0381 同步期间), 迁移期预算.
+      reason: ADR-0384 round 持续并发迁移 docs/plans, 同步期间放宽 (ADR-0381 设 2, 本轮升至 6 容纳 4 个). 收敛结束后回退. ADR-0384 B2 SSOT healthcheck 跟踪.
     - id: legacy-omo-knowledge-frontmatter
       rule: missing_frontmatter
       surface: omo-knowledge
