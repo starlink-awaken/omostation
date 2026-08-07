@@ -782,3 +782,10 @@ workflow_triggers:
     path_filtered: false
   - workflow: workspace.yml
     path_filtered: false
+  - id: bin-ssot-workflow-health-py
+    tool: bin/ssot/workflow-health.py
+    workflow: (none)
+    gate: false
+    triggers: []
+    status: active
+    note: ADR-0386 G19 CI workflow 结构健康监控 — 检测 stale-regex/unpathed-pr/high-coe/idle
