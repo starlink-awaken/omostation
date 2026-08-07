@@ -89,6 +89,8 @@ def main(argv: list[str] | None = None) -> int:
 
         return i0_main(args[1:])
 
+    if args and args[0] == "belief":
+        return _cmd_belief(args[1:])
     if args and args[0] == "observability":
         from omo.omo_observability import main as obs_main
 
@@ -686,6 +688,41 @@ def _cmd_cache(args: list[str]) -> int:
         cache.invalidate_on_change(parsed.pattern)  # type: ignore[attr-defined]
         print(f"✅ [State Cache] 已失效匹配 '{parsed.pattern}' 的缓存")
 
+    return 0
+
+
+def _cmd_belief(args: list[str]) -> int:
+    """MOS Agent Belief 经验可观测管理"""
+    import argparse
+    from omo.omo_belief import MOSBeliefManager
+    parser = argparse.ArgumentParser(prog="omo belief", description="MOS Agent Belief 经验可观测性管理")
+    subparsers = parser.add_subparsers(dest="sub", required=True)
+    
+    p_list = subparsers.add_parser("list", help="列出所有活跃的 Agent 信念与教训")
+    p_list.add_argument("--keyword", default="", help="关键词过滤")
+    p_list.add_argument("--json", action="store_true", help="JSON 输出")
+    
+    p_audit = subparsers.add_parser("audit", help="查看信念审计日志")
+    
+    parsed = parser.parse_args(args)
+    mgr = MOSBeliefManager()
+    
+    if parsed.sub == "list":
+        beliefs = mgr.query_beliefs(parsed.keyword)
+        if parsed.json:
+            import json
+            print(json.dumps(beliefs, ensure_ascii=False, indent=2))
+        else:
+            print(f"🧠 [MOS Belief Engine] 活跃信念 ({len(beliefs)} 项):")
+            for b in beliefs:
+                print(f"  • [{b.get('id')}] Topic: {b.get('topic')}")
+                print(f"    Belief: {b.get('belief')}")
+                print(f"    Run ID: {b.get('source_run_id') or 'N/A'}")
+    elif parsed.sub == "audit":
+        if mgr.audit_log_file.exists():
+            print(mgr.audit_log_file.read_text(encoding="utf-8"))
+        else:
+            print("暂无审计日志")
     return 0
 
 

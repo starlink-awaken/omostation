@@ -58,7 +58,14 @@ class MOSBeliefManager:
         )
         self.state_dir = self.root / ".omo" / "state" / "agent-beliefs"
         self.state_file = self.state_dir / "index.yaml"
+        self.audit_log_file = self.state_dir / "audit.log"
         self.state_dir.mkdir(parents=True, exist_ok=True)
+
+    def _append_audit_log(self, action: str, details: str) -> None:
+        """追加写入审计日志流"""
+        log_line = f"[{_utc_now()}] ACTION={action} DETAILS={details}\n"
+        with self.audit_log_file.open("a", encoding="utf-8") as f:
+            f.write(log_line)
 
     def _load_state(self) -> dict[str, list[dict[str, Any]]]:
         if not self.state_file.exists():
@@ -113,6 +120,7 @@ class MOSBeliefManager:
         # 原子落盘写入
         write_yaml_atomic(self.state_file, state)
         self._update_registry_summary(len(state["beliefs"]))
+        self._append_audit_log("RECORD_BELIEF", f"id={b_id} topic={topic} run_id={source_run_id}")
         return b_id
 
     def _update_registry_summary(self, total_beliefs: int) -> None:
