@@ -64,6 +64,8 @@ jobs:
           # 新增/移除 doc check 只改 .omo/_truth/registry/ci-surfaces.yaml (CR-CI-SURFACE-SSOT).
           FAILED=0
           python3 bin/gac/ci-check-runner.py --workflow governance-check.yml || FAILED=1
+          python3 bin/gac/check-submodule-rewind.py --json > /tmp/rewind-report.json || FAILED=1
+          python3 -c "import json,sys; d=json.load(open('/tmp/rewind-report.json')); v=d.get('violations',[]); w=d.get('warns',[]); print(f'rewind violations={len(v)}, warns={len(w)}'); sys.exit(1 if v else 0)" || FAILED=1
           cd projects/omo
           uv sync --quiet   # 显式 sync (确保 pydantic 等依赖装好)
           uv run python -m omo.cli governance surfaces --workspace-root ../.. --json > /tmp/omo-governance-surfaces.json || { echo "=== governance surfaces FAIL, output: ==="; cat /tmp/omo-governance-surfaces.json 2>/dev/null; FAILED=1; }
