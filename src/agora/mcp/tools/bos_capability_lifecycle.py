@@ -159,7 +159,7 @@ def register() -> None:
     """Register capability lifecycle tools on the global Agora MCP instance."""
     try:
         from agora.server.tools_bos import register_bos_tools
-        from agora.bus import get_event_bus
+        from agora.core.state import get_event_bus
 
         bus = get_event_bus()
         register_bos_tools(mcp, bus)
