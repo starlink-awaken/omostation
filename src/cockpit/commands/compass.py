@@ -57,27 +57,37 @@ def main() -> int:
     # radar
     sub.add_parser("radar", help="[AGC] 战略一致性审计")
 
+    # trace (8D 全景追溯)
+    p_trace = sub.add_parser("trace", help="8 维全景元架构立体重构追溯 (LifeOS->Goals->C2G->Agora->AetherForge)")
+    p_trace.add_argument("goal_id", nargs="?", default="", help="追溯 Goal ID (例如 G27.1)")
+
     # gc
     p_gc = sub.add_parser("gc", help="[AGC] 清理衰减的 Sandbox Pitch")
     p_gc.add_argument("--dry-run", action="store_true", help="预览 GC 不实际移动文件")
 
     args = parser.parse_args()
 
-    cmd: list[str] = [
-        "uv",
-        "run",
-        "--project",
-        _C2G_PROJECT,
-        "c2g",
-        "--adapter",
-        "ecos",
-        args.command,
-    ]
-    # 透传额外参数 (bet source_file, gc --dry-run)
-    if args.command == "bet":
-        cmd.append(args.source_file)
-    elif args.command == "gc" and getattr(args, "dry_run", False):
-        cmd.append("--dry-run")
+    if args.command == "trace":
+        omo_proj = str((_WORKSPACE_ROOT.parent / "omo").resolve())
+        cmd = ["uv", "run", "--project", omo_proj, "python", "-m", "omo.cli", "compass", "trace"]
+        if getattr(args, "goal_id", ""):
+            cmd.append(args.goal_id)
+    else:
+        cmd = [
+            "uv",
+            "run",
+            "--project",
+            _C2G_PROJECT,
+            "c2g",
+            "--adapter",
+            "ecos",
+            args.command,
+        ]
+        # 透传额外参数 (bet source_file, gc --dry-run)
+        if args.command == "bet":
+            cmd.append(args.source_file)
+        elif args.command == "gc" and getattr(args, "dry_run", False):
+            cmd.append("--dry-run")
 
     # 清 VIRTUAL_ENV/PYTHONHOME 避免 uv venv 冲突 (cockpit → c2g subprocess 继承父环境)
     env = {k: v for k, v in os.environ.items() if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"}

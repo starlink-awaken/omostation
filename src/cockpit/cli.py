@@ -867,6 +867,13 @@ def main() -> int:
         help="Extra args passed through (after --)",
     )
 
+    sub.add_parser("panorama", help="🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)")
+
+    proj_p = sub.add_parser("project", help="🔍 17 项目全景 4D 体检与诊断")
+    proj_p.add_argument("project_subcmd", nargs="?", default="inspect", help="inspect|list (default: inspect)")
+    proj_p.add_argument("project_name", nargs="?", default="", help="指定项目名称")
+    proj_p.add_argument("--json", action="store_true", help="JSON 输出")
+
     sub.add_parser("monitor", help="📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出)")
 
     code_p = sub.add_parser("code", help="代码库分析与审查 (基于 codeanalyze)")
@@ -1226,6 +1233,32 @@ def main() -> int:
         env = {k: v for k, v in os.environ.items() if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"}
         return subprocess.call(cmd, env=env)
 
+    def dispatch_panorama(a):
+        import os
+        import subprocess
+
+        omo_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "omo").resolve())
+        cmd = ["uv", "run", "--project", omo_project, "python", "-m", "omo.cli", "panorama"]
+        if getattr(a, "json", False):
+            cmd.append("--json")
+        env = {k: v for k, v in os.environ.items() if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"}
+        return subprocess.call(cmd, env=env)
+
+    def dispatch_project(a):
+        import os
+        import subprocess
+
+        omo_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "omo").resolve())
+        subcmd = getattr(a, "project_subcmd", "inspect")
+        pname = getattr(a, "project_name", "")
+        cmd = ["uv", "run", "--project", omo_project, "python", "-m", "omo.cli", "project", subcmd]
+        if pname:
+            cmd.append(pname)
+        if getattr(a, "json", False):
+            cmd.append("--json")
+        env = {k: v for k, v in os.environ.items() if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"}
+        return subprocess.call(cmd, env=env)
+
     def dispatch_wave2(a):
         from cockpit.commands.wave2 import cmd_wave2
 
@@ -1371,6 +1404,8 @@ def main() -> int:
         "scenario": dispatch_scenario,
         "iterate": dispatch_iterate,
         "compass": dispatch_compass,
+        "panorama": dispatch_panorama,
+        "project": dispatch_project,
         "wave2": dispatch_wave2,
         "workflow": dispatch_workflow,
         "agent-workflow": dispatch_agent_workflow,
