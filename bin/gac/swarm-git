@@ -46,4 +46,32 @@ EOF
   fi
 fi
 
+# T1-07 (BET-Y1Q1-T1-07): 高危 argv 拦截 — clean -fd/reset --hard/stash -u
+# 这些操作删 peer agent 未入库工作 (2026-08-06 实测 4 次). agent 禁做, 无 escape.
+DANGER_PY="$ROOT/bin/gac/swarm_discipline.py"
+if [ -f "$DANGER_PY" ]; then
+  DANGER="$(AGENT_BIN="$ROOT/bin/gac" python3 -c '
+import sys, os
+sys.path.insert(0, os.environ["AGENT_BIN"])
+from swarm_discipline import argv_has_dangerous
+print("DANGER" if argv_has_dangerous(sys.argv[1:]) else "OK")
+' "$@" 2>/dev/null)" || DANGER="ERR"
+  if [ "$DANGER" = "DANGER" ]; then
+    cat >&2 <<EOF
+[swarm-git] ❌ high-risk op blocked (T1-07): clean -fd / reset --hard / stash -u 禁在 agent 环境执行
+   这些操作删 peer agent 未入库工作. 用 worktree 隔离 + 三段式 add→commit→tag (git-discipline §1-2)
+EOF
+    exit 1
+  fi
+fi
+
+# T1-07: 共享分支 rebase 拦截 (rebase + 当前分支非 work/*|pr/*)
+if printf '%s\0' "$@" | grep -qzE '\brebase\b'; then
+  BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+  if [ -n "$BRANCH" ] && ! printf '%s' "$BRANCH" | grep -qE '^work/|^pr/'; then
+    echo "[swarm-git] ❌ rebase on shared branch '$BRANCH' blocked (T1-07): 把工作挪到 work/* 分支" >&2
+    exit 1
+  fi
+fi
+
 exec git "$@"
