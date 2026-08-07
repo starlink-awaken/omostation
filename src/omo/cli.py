@@ -93,6 +93,7 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_belief(args[1:])
     if args and args[0] == "compass":
         from omo.omo_compass import main as compass_main
+
         return compass_main(args[1:])
     if args and args[0] == "observability":
         from omo.omo_observability import main as obs_main
@@ -203,17 +204,24 @@ def main(argv: list[str] | None = None) -> int:
 
     if args and args[0] == "project":
         import argparse
-        p_parser = argparse.ArgumentParser(prog="omo project", description="17 项目全景 4D 体检与诊断")
+
+        p_parser = argparse.ArgumentParser(
+            prog="omo project", description="17 项目全景 4D 体检与诊断"
+        )
         p_sub = p_parser.add_subparsers(dest="subcmd")
         p_inspect = p_sub.add_parser("inspect", help="体检指定项目")
         p_inspect.add_argument("project_name", nargs="?", default="", help="项目名称")
         p_inspect.add_argument("--json", action="store_true", help="JSON 输出")
-        
+
         p_list = p_sub.add_parser("list", help="列出所有注册项目")
         p_list.add_argument("--json", action="store_true", help="JSON 输出")
 
         p_args = p_parser.parse_args(args[1:])
-        from omo.omo_project_inspector import OMOProjectInspector, format_project_inspection
+        from omo.omo_project_inspector import (
+            OMOProjectInspector,
+            format_project_inspection,
+        )
+
         inspector = OMOProjectInspector()
 
         if p_args.subcmd == "inspect":
@@ -222,9 +230,13 @@ def main(argv: list[str] | None = None) -> int:
                 if p_args.json:
                     print(json.dumps(data, indent=2, ensure_ascii=False))
                 else:
-                    print(f"═══ 17 项目全景体检概览 (平均健康度: {data['overall_avg_health']}/100) ═══")
+                    print(
+                        f"═══ 17 项目全景体检概览 (平均健康度: {data['overall_avg_health']}/100) ═══"
+                    )
                     for proj_k, proj_v in data["projects"].items():
-                        print(f"  • [{proj_v.get('layer', 'N/A')}] {proj_k:<18} 健康度: {proj_v.get('health_score', 0):>3}/100 | {proj_v.get('scale', {}).get('files', 0):>3} 文件 | {proj_v.get('scale', {}).get('loc', 0):>6} LOC")
+                        print(
+                            f"  • [{proj_v.get('layer', 'N/A')}] {proj_k:<18} 健康度: {proj_v.get('health_score', 0):>3}/100 | {proj_v.get('scale', {}).get('files', 0):>3} 文件 | {proj_v.get('scale', {}).get('loc', 0):>6} LOC"
+                        )
                 return 0
             else:
                 data = inspector.inspect_project(p_args.project_name)
@@ -246,10 +258,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if args and args[0] in ("panorama", "full-spectrum"):
         import argparse
-        pan_parser = argparse.ArgumentParser(prog="omo panorama", description="7 维全景终极可观测仪表盘")
+
+        pan_parser = argparse.ArgumentParser(
+            prog="omo panorama", description="7 维全景终极可观测仪表盘"
+        )
         pan_parser.add_argument("--json", action="store_true", help="JSON 输出")
         pan_args = pan_parser.parse_args(args[1:])
         from omo.omo_panorama import OMOPanoramaEngine, format_panorama_report
+
         engine = OMOPanoramaEngine()
         data = engine.get_full_panorama()
         if pan_args.json:
@@ -755,22 +771,26 @@ def _cmd_belief(args: list[str]) -> int:
     """MOS Agent Belief 经验可观测管理"""
     import argparse
     from omo.omo_belief import MOSBeliefManager
-    parser = argparse.ArgumentParser(prog="omo belief", description="MOS Agent Belief 经验可观测性管理")
+
+    parser = argparse.ArgumentParser(
+        prog="omo belief", description="MOS Agent Belief 经验可观测性管理"
+    )
     subparsers = parser.add_subparsers(dest="sub", required=True)
-    
+
     p_list = subparsers.add_parser("list", help="列出所有活跃的 Agent 信念与教训")
     p_list.add_argument("--keyword", default="", help="关键词过滤")
     p_list.add_argument("--json", action="store_true", help="JSON 输出")
-    
-    p_audit = subparsers.add_parser("audit", help="查看信念审计日志")
-    
+
+    subparsers.add_parser("audit", help="查看信念审计日志")
+
     parsed = parser.parse_args(args)
     mgr = MOSBeliefManager()
-    
+
     if parsed.sub == "list":
         beliefs = mgr.query_beliefs(parsed.keyword)
         if parsed.json:
             import json
+
             print(json.dumps(beliefs, ensure_ascii=False, indent=2))
         else:
             print(f"🧠 [MOS Belief Engine] 活跃信念 ({len(beliefs)} 项):")

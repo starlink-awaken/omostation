@@ -159,7 +159,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_start.add_argument("--actor", default=os.environ.get("USER", "agent"))
     p_start.add_argument("--profile", default="")
     p_start.add_argument("--objective", default="")
-    p_start.add_argument("--bet", default="", help="Bet ID from 3y-bet-ledger.yaml to resolve objective automatically")
+    p_start.add_argument(
+        "--bet",
+        default="",
+        help="Bet ID from 3y-bet-ledger.yaml to resolve objective automatically",
+    )
     p_start.add_argument("--dry-run", action="store_true")
     p_start.add_argument("--force-lock", action="store_true")
     p_start.add_argument("--json", action="store_true")
@@ -312,10 +316,13 @@ def main(argv: list[str] | None = None) -> int:
                 bet_id = args.bet
                 from ..omo_paths import WORKSPACE_ROOT
                 import yaml
+
                 ledger_file = WORKSPACE_ROOT / "docs/plans/3y-bet-ledger.yaml"
                 if ledger_file.exists():
                     data = {}
-                    for d in yaml.safe_load_all(ledger_file.read_text(encoding="utf-8")):
+                    for d in yaml.safe_load_all(
+                        ledger_file.read_text(encoding="utf-8")
+                    ):
                         if isinstance(d, dict):
                             data.update(d)
                     for item in data.get("bets", []):

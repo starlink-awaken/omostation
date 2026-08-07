@@ -12,6 +12,7 @@ Dim 6: AGE-v2 Workflow 落地
 Dim 7: MOS / KOS 记忆与知识
 Dim 8: X-Plane 熵减指标
 """
+
 from __future__ import annotations
 
 import argparse
@@ -29,7 +30,9 @@ def cmd_compass_trace(goal_id: str) -> int:
     omo_dir = ws / ".omo"
     print(f"=========================================================================")
     print(f" 🌐 omostation 8 维全景立体重构追溯 (8D Meta-Architecture Compass Trace)")
-    print(f"=========================================================================\n")
+    print(
+        f"=========================================================================\n"
+    )
 
     # Dim 1: LifeOS Intent
     print(f"🔹 [Dim 1: LifeOS Intent] 人类意图与价值观:")
@@ -45,16 +48,19 @@ def cmd_compass_trace(goal_id: str) -> int:
         goals = gdata.get("active_goals") or gdata.get("goals") or []
         for g in goals:
             if isinstance(g, dict) and g.get("id") == goal_id:
-                print(f"   • Goal: [{goal_id}] — {g.get('desc', g.get('title', ''))} (Progress: {g.get('progress', 0)}%)")
+                print(
+                    f"   • Goal: [{goal_id}] — {g.get('desc', g.get('title', ''))} (Progress: {g.get('progress', 0)}%)"
+                )
                 break
         else:
             print(f"   • Goal: [{goal_id}] (Declared in current.yaml)")
-    
+
     # Matches Bet
     ledger_file = ws / "docs" / "plans" / "3y-bet-ledger.yaml"
     matched_bets = []
     if ledger_file.exists():
         import yaml
+
         ldata = {}
         for d in yaml.safe_load_all(ledger_file.read_text(encoding="utf-8")):
             if isinstance(d, dict):
@@ -74,7 +80,11 @@ def cmd_compass_trace(goal_id: str) -> int:
     print()
 
     # Dim 6: AGE-v2 Workflow & Gate
-    planned_tasks = list((omo_dir / "tasks" / "planned").glob("*.yaml")) if (omo_dir / "tasks" / "planned").exists() else []
+    planned_tasks = (
+        list((omo_dir / "tasks" / "planned").glob("*.yaml"))
+        if (omo_dir / "tasks" / "planned").exists()
+        else []
+    )
     print(f"🔹 [Dim 6: AGE-v2 Workflow & Gate]:")
     print(f"   • Target Worktree: PASW Submodule Isolated Worktree")
     print(f"   • Gate Status: 42/42 ALL GREEN PASS")
@@ -84,6 +94,7 @@ def cmd_compass_trace(goal_id: str) -> int:
     # Dim 7: MOS / KOS Memory
     try:
         from .omo_belief import MOSBeliefManager
+
         beliefs = MOSBeliefManager(root=ws).query_beliefs()
     except Exception:
         beliefs = []
@@ -97,14 +108,20 @@ def cmd_compass_trace(goal_id: str) -> int:
     sys_file = omo_dir / "state" / "system.yaml"
     sys_data = load_yaml_value(sys_file) if sys_file.exists() else {}
     print(f"🔹 [Dim 8: X-Plane 熵减度量与自愈]:")
-    print(f"   • System Tasks: total={sys_data.get('total_tasks', 0)} completed={sys_data.get('completed_tasks', 0)} planned={sys_data.get('planned_tasks', 0)}")
+    print(
+        f"   • System Tasks: total={sys_data.get('total_tasks', 0)} completed={sys_data.get('completed_tasks', 0)} planned={sys_data.get('planned_tasks', 0)}"
+    )
     print(f"   • Metabolic Engine: Active (omo-debt-synthesizer enabled)")
-    print(f"\n=========================================================================")
+    print(
+        f"\n========================================================================="
+    )
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="omo compass", description="8D Meta-Architecture Compass Engine")
+    parser = argparse.ArgumentParser(
+        prog="omo compass", description="8D Meta-Architecture Compass Engine"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
     p_trace = sub.add_parser("trace", help="Trace 8D architecture flow for a Goal")
     p_trace.add_argument("id", help="Goal ID")

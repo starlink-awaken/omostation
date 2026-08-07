@@ -31,7 +31,7 @@ class OMOPanoramaEngine:
         self.root = root.resolve()
         self.omo_dir = self.root / ".omo"
 
-    def gather_execution_dim(self) -> Dict[str, Any]:
+    def gather_execution_dim(self) -> dict[str, Any]:
         """Dim 1: 执行过程 (Execution)"""
         runs_dir = self.omo_dir / "agent-workflows" / "runs"
         active_runs = 0
@@ -41,14 +41,24 @@ class OMOPanoramaEngine:
         # 检查 Worktree
         worktree_count = 0
         try:
-            res = subprocess.run(["git", "worktree", "list"], cwd=str(self.root), capture_output=True, text=True, timeout=5)
-            worktree_count = len([line for line in res.stdout.strip().split("\n") if line.strip()])
+            res = subprocess.run(
+                ["git", "worktree", "list"],
+                cwd=str(self.root),
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            worktree_count = len(
+                [line for line in res.stdout.strip().split("\n") if line.strip()]
+            )
         except Exception:
             pass
 
         # 任务数
         tasks_dir = self.omo_dir / "tasks"
-        total_tasks = len(list(tasks_dir.glob("**/*.yaml"))) if tasks_dir.exists() else 0
+        total_tasks = (
+            len(list(tasks_dir.glob("**/*.yaml"))) if tasks_dir.exists() else 0
+        )
 
         return {
             "active_workflow_runs": active_runs,
@@ -57,7 +67,7 @@ class OMOPanoramaEngine:
             "status": "normal" if active_runs < 5 else "high_concurrency",
         }
 
-    def gather_service_dim(self) -> Dict[str, Any]:
+    def gather_service_dim(self) -> dict[str, Any]:
         """Dim 2: 服务 (Service)"""
         bos_path = self.root / "projects" / "agora" / "etc" / "bos-services.yaml"
         bos_count = 0
@@ -86,10 +96,12 @@ class OMOPanoramaEngine:
             "status": "active",
         }
 
-    def gather_content_dim(self) -> Dict[str, Any]:
+    def gather_content_dim(self) -> dict[str, Any]:
         """Dim 3: 内容与产物 (Content & Artifacts)"""
         scene_cards_dir = self.root / "docs" / "scene-cards"
-        scene_cards_count = len(list(scene_cards_dir.glob("*.yaml"))) if scene_cards_dir.exists() else 0
+        scene_cards_count = (
+            len(list(scene_cards_dir.glob("*.yaml"))) if scene_cards_dir.exists() else 0
+        )
 
         ledger_path = self.root / "docs" / "plans" / "3y-bet-ledger.yaml"
         total_bets = 0
@@ -107,7 +119,7 @@ class OMOPanoramaEngine:
             "status": "synchronized",
         }
 
-    def gather_knowledge_dim(self) -> Dict[str, Any]:
+    def gather_knowledge_dim(self) -> dict[str, Any]:
         """Dim 4: 知识与记忆 (Knowledge & Memory)"""
         beliefs_path = self.omo_dir / "state" / "agent-beliefs" / "index.yaml"
         beliefs_count = 0
@@ -120,7 +132,11 @@ class OMOPanoramaEngine:
                 pass
 
         skills_dir = self.root / ".agents" / "skills"
-        skills_count = len([d for d in skills_dir.iterdir() if d.is_dir()]) if skills_dir.exists() else 0
+        skills_count = (
+            len([d for d in skills_dir.iterdir() if d.is_dir()])
+            if skills_dir.exists()
+            else 0
+        )
 
         return {
             "mos_agent_beliefs": beliefs_count,
@@ -128,7 +144,7 @@ class OMOPanoramaEngine:
             "status": "crystallized",
         }
 
-    def gather_data_dim(self) -> Dict[str, Any]:
+    def gather_data_dim(self) -> dict[str, Any]:
         """Dim 5: 数据与度量 (Data & Metrics)"""
         sys_path = self.omo_dir / "state" / "system.yaml"
         xplane_score = 100.0
@@ -158,7 +174,7 @@ class OMOPanoramaEngine:
             "status": "healthy",
         }
 
-    def gather_exception_dim(self) -> Dict[str, Any]:
+    def gather_exception_dim(self) -> dict[str, Any]:
         """Dim 6: 异常与抗熵 (Exception & Anti-Entropy)"""
         health_path = self.omo_dir / "state" / "health.yaml"
         drifts = 0
@@ -177,10 +193,12 @@ class OMOPanoramaEngine:
             "status": "pass",
         }
 
-    def gather_debt_and_asset_dim(self) -> Dict[str, Any]:
+    def gather_debt_and_asset_dim(self) -> dict[str, Any]:
         """Dim 7: 债务与资产 (Debt & Asset)"""
         debt_dir = self.omo_dir / "debt" / "items"
-        debt_items_count = len(list(debt_dir.glob("*.yaml"))) if debt_dir.exists() else 0
+        debt_items_count = (
+            len(list(debt_dir.glob("*.yaml"))) if debt_dir.exists() else 0
+        )
 
         projects_path = self.root / "docs" / "project-registry.yaml"
         total_projects = 17
@@ -199,7 +217,7 @@ class OMOPanoramaEngine:
             "status": "managed",
         }
 
-    def get_full_panorama(self) -> Dict[str, Any]:
+    def get_full_panorama(self) -> dict[str, Any]:
         """拉出 7 维全景终极可观测视图"""
         return {
             "engine": "OMO Full-Spectrum Panorama Engine",
@@ -216,34 +234,54 @@ class OMOPanoramaEngine:
         }
 
 
-def format_panorama_report(data: Dict[str, Any]) -> str:
+def format_panorama_report(data: dict[str, Any]) -> str:
     """格式化渲染 7 维全景立体重构报告"""
     dims = data.get("dimensions", {})
     lines = []
-    lines.append("=========================================================================")
+    lines.append(
+        "========================================================================="
+    )
     lines.append(" 🌐 omostation 7 维全景终极可观测仪表盘 (7D Full-Spectrum Telemetry)")
-    lines.append("=========================================================================")
-    
+    lines.append(
+        "========================================================================="
+    )
+
     e = dims.get("1_execution", {})
-    lines.append(f"🔹 [1. 执行过程 Exec]: Active Workflows={e.get('active_workflow_runs')} | Worktrees={e.get('active_worktrees')} | Tasks={e.get('total_tasks_tracked')}")
+    lines.append(
+        f"🔹 [1. 执行过程 Exec]: Active Workflows={e.get('active_workflow_runs')} | Worktrees={e.get('active_worktrees')} | Tasks={e.get('total_tasks_tracked')}"
+    )
 
     s = dims.get("2_service", {})
-    lines.append(f"🔹 [2. 服务 Service]: BOS URIs={s.get('bos_uris_registered')} | Ports Registered={s.get('ports_registered')} | Mesh Router Port={s.get('mesh_router_port')}")
+    lines.append(
+        f"🔹 [2. 服务 Service]: BOS URIs={s.get('bos_uris_registered')} | Ports Registered={s.get('ports_registered')} | Mesh Router Port={s.get('mesh_router_port')}"
+    )
 
     c = dims.get("3_content", {})
-    lines.append(f"🔹 [3. 内容 Content]: Scene Cards={c.get('scene_cards_active')} | 3Y-BET-LEDGER Bets={c.get('ledger_bets_planned')}")
+    lines.append(
+        f"🔹 [3. 内容 Content]: Scene Cards={c.get('scene_cards_active')} | 3Y-BET-LEDGER Bets={c.get('ledger_bets_planned')}"
+    )
 
     k = dims.get("4_knowledge", {})
-    lines.append(f"🔹 [4. 知识 Knowledge]: MOS Agent Beliefs={k.get('mos_agent_beliefs')} | Agent Skills={k.get('agent_skills')}")
+    lines.append(
+        f"🔹 [4. 知识 Knowledge]: MOS Agent Beliefs={k.get('mos_agent_beliefs')} | Agent Skills={k.get('agent_skills')}"
+    )
 
     d = dims.get("5_data", {})
-    lines.append(f"🔹 [5. 数据 Data]: xplane_score={d.get('xplane_score')} | Grade={d.get('health_grade')} | Metrics Records={d.get('metrics_store_records')}")
+    lines.append(
+        f"🔹 [5. 数据 Data]: xplane_score={d.get('xplane_score')} | Grade={d.get('health_grade')} | Metrics Records={d.get('metrics_store_records')}"
+    )
 
     ex = dims.get("6_exception", {})
-    lines.append(f"🔹 [6. 异常 Exception]: Gate={ex.get('gate_checks')} | Drifts={ex.get('active_drifts')} | Conflicts={ex.get('conflict_markers')}")
+    lines.append(
+        f"🔹 [6. 异常 Exception]: Gate={ex.get('gate_checks')} | Drifts={ex.get('active_drifts')} | Conflicts={ex.get('conflict_markers')}"
+    )
 
     da = dims.get("7_debt_assets", {})
-    lines.append(f"🔹 [7. 债务与资产 Debt & Assets]: Debts={da.get('unresolved_debts')} | Projects={da.get('tracked_projects')} | Projects Health Avg={da.get('asset_projects_health')}")
+    lines.append(
+        f"🔹 [7. 债务与资产 Debt & Assets]: Debts={da.get('unresolved_debts')} | Projects={da.get('tracked_projects')} | Projects Health Avg={da.get('asset_projects_health')}"
+    )
 
-    lines.append("=========================================================================")
+    lines.append(
+        "========================================================================="
+    )
     return "\n".join(lines)

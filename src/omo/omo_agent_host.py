@@ -190,7 +190,9 @@ def run_agent_tick(*, host: AgentHost | None = None) -> dict[str, Any]:
     SceneWatcher 适配 AgentProtocol (α.3 续, tick stub), 可外部注入 host.register(scene_watcher).
     """
     if host is None:
-        host = AgentHost(agents=[HealthMonitorAgent(), KnowledgeCuratorAgent(), JourneyRunnerAgent()])
+        host = AgentHost(
+            agents=[HealthMonitorAgent(), KnowledgeCuratorAgent(), JourneyRunnerAgent()]
+        )
     return host.tick_all()
 
 
@@ -212,8 +214,12 @@ class JourneyRunnerAgent:
         import json as _json
         from pathlib import Path as _Path
 
-        workspace = _Path(os.environ.get("WORKSPACE_ROOT", str(_Path.home() / "Workspace")))
-        states_dir = workspace / ".omo" / "_knowledge" / "workflow-mesh" / "journey-states"
+        workspace = _Path(
+            os.environ.get("WORKSPACE_ROOT", str(_Path.home() / "Workspace"))
+        )
+        states_dir = (
+            workspace / ".omo" / "_knowledge" / "workflow-mesh" / "journey-states"
+        )
         if not states_dir.is_dir():
             return {"action": "noop", "details": {"note": "no journey states dir"}}
 
@@ -230,11 +236,15 @@ class JourneyRunnerAgent:
                     if last.get("status") == "awaiting_human":
                         ctx = last.get("context", {})
                         if isinstance(ctx, dict) and ctx.get("human_approved"):
-                            resumable.append({
-                                "journey_id": last.get("journey_id", journey_dir.name),
-                                "run_id": run_file.stem,
-                                "state": last.get("state", "?"),
-                            })
+                            resumable.append(
+                                {
+                                    "journey_id": last.get(
+                                        "journey_id", journey_dir.name
+                                    ),
+                                    "run_id": run_file.stem,
+                                    "state": last.get("state", "?"),
+                                }
+                            )
                 except Exception:
                     continue
 
@@ -254,7 +264,7 @@ __all__ = [
     "AgentProtocol",
     "AgentTickResult",
     "HealthMonitorAgent",
-    "KnowledgeCuratorAgent",
     "JourneyRunnerAgent",
+    "KnowledgeCuratorAgent",
     "run_agent_tick",
 ]

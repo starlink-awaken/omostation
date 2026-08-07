@@ -182,6 +182,7 @@ def bootstrap_report(
     try:
         from ..omo_paths import WORKSPACE_ROOT
         from ..omo_belief import MOSBeliefManager
+
         beliefs = MOSBeliefManager(root=WORKSPACE_ROOT).query_beliefs()
     except Exception:
         beliefs = []

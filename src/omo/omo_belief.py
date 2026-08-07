@@ -5,7 +5,6 @@ projects/omo/src/omo/omo_belief.py — MOS Agent Belief 三表 Schema 与写入�
 
 from __future__ import annotations
 
-import json
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -48,6 +47,46 @@ class AgentContext:
     applicable_tags: list[str] = field(default_factory=list)
 
 
+@dataclass
+class WorldSnapshot:
+    """世界模型 — agent 对外部世界状态的观察快照"""
+
+    id: str
+    observed_at: str = field(default_factory=_utc_now)
+    source: str = ""
+    domain: str = ""
+    observations: dict[str, Any] = field(default_factory=dict)
+    confidence: float = 1.0
+    expires_at: str | None = None
+
+
+@dataclass
+class CapabilityCalibration:
+    """自我模型 — agent 对自身能力的实测校准"""
+
+    id: str
+    capability_ref: str = ""
+    measured_at: str = field(default_factory=_utc_now)
+    success_rate: float = 0.0
+    avg_latency_ms: float = 0.0
+    sample_size: int = 0
+    last_run_id: str | None = None
+
+
+@dataclass
+class DecisionOutcome:
+    """因果模型 — 决策→结果的因果追踪"""
+
+    id: str
+    decision_at: str = field(default_factory=_utc_now)
+    decision_type: str = ""
+    input_summary: str = ""
+    expected_outcome: str = ""
+    actual_outcome: str = ""
+    delta: str = ""
+    source_run_id: str | None = None
+
+
 class MOSBeliefManager:
     """MOS agent_belief 三表持久化与查询管理器"""
 
@@ -61,6 +100,11 @@ class MOSBeliefManager:
         self.audit_log_file = self.state_dir / "audit.log"
         self.state_dir.mkdir(parents=True, exist_ok=True)
 
+    def _load_registry(self) -> dict[str, Any]:
+        if not self.registry_file.exists():
+            return {}
+        return load_yaml_value(self.registry_file) or {}
+
     def _append_audit_log(self, action: str, details: str) -> None:
         """追加写入审计日志流"""
         log_line = f"[{_utc_now()}] ACTION={action} DETAILS={details}\n"
@@ -69,12 +113,22 @@ class MOSBeliefManager:
 
     def _load_state(self) -> dict[str, list[dict[str, Any]]]:
         if not self.state_file.exists():
-            return {"beliefs": [], "lessons": [], "contexts": []}
+            return {
+                "beliefs": [],
+                "lessons": [],
+                "contexts": [],
+                "world_snapshots": [],
+                "capability_calibrations": [],
+                "decision_outcomes": [],
+            }
         data = load_yaml_value(self.state_file) or {}
         return {
             "beliefs": data.get("beliefs", []),
             "lessons": data.get("lessons", []),
             "contexts": data.get("contexts", []),
+            "world_snapshots": data.get("world_snapshots", []),
+            "capability_calibrations": data.get("capability_calibrations", []),
+            "decision_outcomes": data.get("decision_outcomes", []),
         }
 
     def record_belief(
@@ -119,21 +173,38 @@ class MOSBeliefManager:
 
         # 原子落盘写入
         write_yaml_atomic(self.state_file, state)
-        self._update_registry_summary(len(state["beliefs"]))
-        self._append_audit_log("RECORD_BELIEF", f"id={b_id} topic={topic} run_id={source_run_id}")
+        self._update_registry_summary(len(state["beliefs"]), state)
+        self._append_audit_log(
+            "RECORD_BELIEF", f"id={b_id} topic={topic} run_id={source_run_id}"
+        )
         return b_id
 
-    def _update_registry_summary(self, total_beliefs: int) -> None:
+    def _update_registry_summary(
+        self, total_beliefs: int, state: dict | None = None
+    ) -> None:
         """同步更新注册表元数据汇总"""
-        registry_data = (
-            load_yaml_value(self.registry_file) or {}
-            if self.registry_file.exists()
-            else {}
-        )
+        registry_data = self._load_registry()
         registry_data["schema"] = "memory-os/v1"
         registry_data["as_of"] = _utc_now()
         registry_data["total_beliefs"] = total_beliefs
-        registry_data["tables"] = ["agent_belief", "agent_lesson", "agent_context"]
+        registry_data["tables"] = [
+            "agent_belief",
+            "agent_lesson",
+            "agent_context",
+            "world_snapshot",
+            "capability_calibration",
+            "decision_outcome",
+        ]
+        if state:
+            registry_data["total_world_snapshots"] = len(
+                state.get("world_snapshots", [])
+            )
+            registry_data["total_capability_calibrations"] = len(
+                state.get("capability_calibrations", [])
+            )
+            registry_data["total_decision_outcomes"] = len(
+                state.get("decision_outcomes", [])
+            )
         self.registry_file.parent.mkdir(parents=True, exist_ok=True)
         write_yaml_atomic(self.registry_file, registry_data)
 
@@ -149,3 +220,88 @@ class MOSBeliefManager:
             if kw in b["topic"].lower() or kw in b["belief"].lower():
                 matched.append(b)
         return matched
+
+    def record_world_snapshot(
+        self,
+        source: str,
+        domain: str,
+        observations: dict[str, Any],
+        confidence: float = 1.0,
+        expires_at: str | None = None,
+    ) -> str:
+        """记录世界模型快照 — agent 对外部状态的观察"""
+        state = self._load_state()
+        ws_id = f"ws-{len(state['world_snapshots']) + 1:04d}"
+        entry = WorldSnapshot(
+            id=ws_id,
+            source=source,
+            domain=domain,
+            observations=observations,
+            confidence=confidence,
+            expires_at=expires_at,
+        )
+        state["world_snapshots"].append(asdict(entry))
+        write_yaml_atomic(self.state_file, state)
+        self._update_registry_summary(len(state["beliefs"]), state)
+        self._append_audit_log(
+            "RECORD_WORLD_SNAPSHOT", f"id={ws_id} domain={domain} source={source}"
+        )
+        return ws_id
+
+    def record_capability_calibration(
+        self,
+        capability_ref: str,
+        success_rate: float,
+        avg_latency_ms: float = 0.0,
+        sample_size: int = 1,
+        last_run_id: str | None = None,
+    ) -> str:
+        """记录自我模型校准 — agent 对自身能力的实测"""
+        state = self._load_state()
+        cc_id = f"cc-{len(state['capability_calibrations']) + 1:04d}"
+        entry = CapabilityCalibration(
+            id=cc_id,
+            capability_ref=capability_ref,
+            success_rate=success_rate,
+            avg_latency_ms=avg_latency_ms,
+            sample_size=sample_size,
+            last_run_id=last_run_id,
+        )
+        state["capability_calibrations"].append(asdict(entry))
+        write_yaml_atomic(self.state_file, state)
+        self._update_registry_summary(len(state["beliefs"]), state)
+        self._append_audit_log(
+            "RECORD_CAPABILITY_CALIBRATION",
+            f"id={cc_id} ref={capability_ref} rate={success_rate}",
+        )
+        return cc_id
+
+    def record_decision_outcome(
+        self,
+        decision_type: str,
+        input_summary: str,
+        expected_outcome: str,
+        actual_outcome: str,
+        delta: str = "",
+        source_run_id: str | None = None,
+    ) -> str:
+        """记录因果模型 — 决策→结果的因果追踪"""
+        state = self._load_state()
+        do_id = f"do-{len(state['decision_outcomes']) + 1:04d}"
+        entry = DecisionOutcome(
+            id=do_id,
+            decision_type=decision_type,
+            input_summary=input_summary,
+            expected_outcome=expected_outcome,
+            actual_outcome=actual_outcome,
+            delta=delta,
+            source_run_id=source_run_id,
+        )
+        state["decision_outcomes"].append(asdict(entry))
+        write_yaml_atomic(self.state_file, state)
+        self._update_registry_summary(len(state["beliefs"]), state)
+        self._append_audit_log(
+            "RECORD_DECISION_OUTCOME",
+            f"id={do_id} type={decision_type} run={source_run_id}",
+        )
+        return do_id

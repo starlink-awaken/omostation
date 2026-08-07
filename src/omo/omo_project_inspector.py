@@ -28,9 +28,9 @@ class OMOProjectInspector:
         self.root = root.resolve()
         self.registry_path = self.root / "docs" / "project-registry.yaml"
         self.projects_dir = self.root / "projects"
-        self._registry_data: Optional[Dict[str, Any]] = None
+        self._registry_data: dict[str, Any] | None = None
 
-    def _load_registry(self) -> Dict[str, Any]:
+    def _load_registry(self) -> dict[str, Any]:
         if self._registry_data is None:
             if self.registry_path.exists():
                 try:
@@ -42,12 +42,12 @@ class OMOProjectInspector:
                 self._registry_data = {}
         return self._registry_data or {}
 
-    def get_registered_projects(self) -> List[str]:
+    def get_registered_projects(self) -> list[str]:
         data = self._load_registry()
         projects = data.get("projects", {})
-        return sorted(list(projects.keys()))
+        return sorted(projects.keys())
 
-    def _count_loc(self, proj_dir: Path) -> Dict[str, int]:
+    def _count_loc(self, proj_dir: Path) -> dict[str, int]:
         """统计项目内的代码行数与文件数"""
         file_count = 0
         total_loc = 0
@@ -55,24 +55,47 @@ class OMOProjectInspector:
             return {"files": 0, "loc": 0}
 
         for root_path, _, files in os.walk(proj_dir):
-            if any(part.startswith(".") or part == "node_modules" or part == "__pycache__" for part in Path(root_path).parts):
+            if any(
+                part.startswith(".") or part == "node_modules" or part == "__pycache__"
+                for part in Path(root_path).parts
+            ):
                 continue
             for f in files:
-                if f.endswith((".py", ".ts", ".js", ".json", ".yaml", ".yml", ".md", ".sh", ".rs", ".go")):
+                if f.endswith(
+                    (
+                        ".py",
+                        ".ts",
+                        ".js",
+                        ".json",
+                        ".yaml",
+                        ".yml",
+                        ".md",
+                        ".sh",
+                        ".rs",
+                        ".go",
+                    )
+                ):
                     file_count += 1
                     fp = Path(root_path) / f
                     try:
-                        with open(fp, "r", encoding="utf-8", errors="ignore") as file_obj:
+                        with open(
+                            fp, "r", encoding="utf-8", errors="ignore"
+                        ) as file_obj:
                             total_loc += sum(1 for _ in file_obj)
                     except Exception:
                         pass
         return {"files": file_count, "loc": total_loc}
 
-    def _check_git_pointer_drift(self, proj_name: str) -> Dict[str, Any]:
+    def _check_git_pointer_drift(self, proj_name: str) -> dict[str, Any]:
         """判定子模块 Git 指针是否存在离针或未提交修改"""
         proj_dir = self.projects_dir / proj_name
         if not proj_dir.exists():
-            return {"is_submodule": False, "is_dirty": False, "head_commit": "N/A", "drift": False}
+            return {
+                "is_submodule": False,
+                "is_dirty": False,
+                "head_commit": "N/A",
+                "drift": False,
+            }
 
         try:
             res = subprocess.run(
@@ -92,11 +115,21 @@ class OMOProjectInspector:
                 timeout=5,
             )
             head_commit = commit_res.stdout.strip() or "N/A"
-            return {"is_submodule": True, "is_dirty": is_dirty, "head_commit": head_commit, "drift": is_dirty}
+            return {
+                "is_submodule": True,
+                "is_dirty": is_dirty,
+                "head_commit": head_commit,
+                "drift": is_dirty,
+            }
         except Exception:
-            return {"is_submodule": False, "is_dirty": False, "head_commit": "N/A", "drift": False}
+            return {
+                "is_submodule": False,
+                "is_dirty": False,
+                "head_commit": "N/A",
+                "drift": False,
+            }
 
-    def inspect_project(self, project_name: str) -> Dict[str, Any]:
+    def inspect_project(self, project_name: str) -> dict[str, Any]:
         """对指定项目做 360 度体检并计算 0-100 健康度"""
         reg_data = self._load_registry()
         projects_meta = reg_data.get("projects", {})
@@ -147,7 +180,9 @@ class OMOProjectInspector:
             "stack": meta.get("stack", "N/A"),
             "version": meta.get("version", "0.0.0"),
             "port": meta.get("port"),
-            "physical_location": str(proj_dir.relative_to(self.root)) if exists else meta.get("physical_location", "N/A"),
+            "physical_location": str(proj_dir.relative_to(self.root))
+            if exists
+            else meta.get("physical_location", "N/A"),
             "bos_services": meta.get("bos_services", 0),
             "scale": loc_stats,
             "git": git_stats,
@@ -156,7 +191,7 @@ class OMOProjectInspector:
             "deductions": deductions,
         }
 
-    def inspect_all_projects(self) -> Dict[str, Any]:
+    def inspect_all_projects(self) -> dict[str, Any]:
         """批量对 17 个项目进行全景体检"""
         projects = self.get_registered_projects()
         results = {}
@@ -183,14 +218,16 @@ class OMOProjectInspector:
         }
 
 
-def format_project_inspection(data: Dict[str, Any]) -> str:
+def format_project_inspection(data: dict[str, Any]) -> str:
     """渲染人类友好的项目体检报告"""
     if not data.get("ok"):
         return f"❌ 错误: {data.get('error')}"
 
     lines = []
     lines.append(f"═══════════════════════════════════════════════════════════")
-    lines.append(f" 🔍 项目 360° 体检报告: {data['project_name']} (Layer: {data['layer']})")
+    lines.append(
+        f" 🔍 项目 360° 体检报告: {data['project_name']} (Layer: {data['layer']})"
+    )
     lines.append(f"═══════════════════════════════════════════════════════════")
     lines.append(f"  • 角色: {data['role']}")
     lines.append(f"  • 架构 Stack: {data['stack']} (v{data['version']})")
@@ -198,9 +235,15 @@ def format_project_inspection(data: Dict[str, Any]) -> str:
     if data.get("port"):
         lines.append(f"  • 绑定端口: {data['port']}")
     lines.append(f"  • BOS Services 暴露: {data['bos_services']} 个")
-    lines.append(f"  • 代码规模: {data['scale']['files']} 个文件 / {data['scale']['loc']} 行代码")
-    lines.append(f"  • Git 状态: Commit [{data['git']['head_commit']}] (Dirty: {data['git']['is_dirty']})")
-    lines.append(f"  • 测试覆盖: {'✅ 包含 tests/' if data['has_tests'] else '⚠️ 缺 tests/'}")
+    lines.append(
+        f"  • 代码规模: {data['scale']['files']} 个文件 / {data['scale']['loc']} 行代码"
+    )
+    lines.append(
+        f"  • Git 状态: Commit [{data['git']['head_commit']}] (Dirty: {data['git']['is_dirty']})"
+    )
+    lines.append(
+        f"  • 测试覆盖: {'✅ 包含 tests/' if data['has_tests'] else '⚠️ 缺 tests/'}"
+    )
     lines.append(f"───────────────────────────────────────────────────────────")
     lines.append(f" 📊 项目健康得分: {data['health_score']} / 100")
     if data.get("deductions"):
