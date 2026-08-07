@@ -449,6 +449,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0380: CI Plane Completion — runner migration, orphan cleanup, concurrent-drift absorption — **ACCEPTED** | 2026-08-06 | CI plane completion | 0380-ci-plane-completion.md
 - ADR-0382: 子模块指针回退检测 (CR-SUBMODULE-REWIND) — **ACCEPTED** | 2026-08-06 | Submodule rewind detection | 0382-submodule-rewind-detection.md
 - ADR-0387: Dual-Track Scene Admission — internal pipeline scene admission track (make targets + RBAC scope) — **ACCEPTED** | 2026-08-07 | Dual-track admission | 0387-dual-track-scene-admission.md
+- ADR-0388: 分层契约方向单源 — layer-contract.yaml 为权威, check-layer-call-direction.py 对齐 — **PROPOSED** | 2026-08-07 | Layer contract direction SSOT | 0388-layer-contract-direction-ssot.md
 - ADR-0386: CI Consolidation — ruff/pytest dedup + integration path filter + workflow health — **ACCEPTED** | 2026-08-07 | CI consolidation | 0386-ci-consolidation-decision.md
 - ADR-0385: CI Pruner + SSOT Usage — scheduled prune-ci-runs cron + SSOT freshness monitor — **ACCEPTED** | 2026-08-07 | CI pruner + SSOT usage | 0385-ci-pruner-ssot-usage.md
 - ADR-0384: Meta-Meta Governance — rebase-regen automation + gate-effectiveness + A1-A3/B1 roadmap — **ACCEPTED** | 2026-08-06 | Meta-meta governance | 0384-meta-meta-governance.md
