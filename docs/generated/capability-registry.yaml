@@ -11,7 +11,7 @@ totals:
   mcp_tools: 554
   bos_services: 200
   bos_domains: 16
-  cli_commands: 135
+  cli_commands: 119
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -1622,8 +1622,6 @@ bos_services:
       transport: inline
       status: active
 cli_commands:
-- name: add
-  description: 添加意图到场景
 - name: agent
   description: 🤖 Agent 治理控制入口 (bootstrap / status / start / claim / verify / closeout)
 - name: agent-onboard
@@ -1638,16 +1636,10 @@ cli_commands:
   description: 运行全部分析工具
 - name: api
   description: 启动 API server
-- name: approval
-  description: 'P5-F7 approval: HITL 审批流 + 证据面板'
-- name: approve
-  description: 审批意图并创建 OMO Task 绑定
 - name: archive
   description: 归档已处理完毕的 Inbox 待办文件
 - name: ask
   description: 向大脑提问（知识检索 + LLM 回答）
-- name: assistant
-  description: 'P5-F2 work-assistant: 1 真实工作 query → 结构化草稿'
 - name: audit
   description: 🔍 6 维度全方位审计 (调 bin/workspace-audit)
 - name: backends
@@ -1676,8 +1668,6 @@ cli_commands:
   description: 代码库分析与审查 (基于 codeanalyze)
 - name: compass
   description: 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)
-- name: complete
-  description: 标记绑定完成
 - name: compute
   description: 算力与 LLM 网关操作 (委派 aetherforge)
 - name: consolidate
@@ -1686,10 +1676,6 @@ cli_commands:
   description: 显示系统上下文 (Phase/CARDS/约束/引导)
 - name: contracts
   description: 契约验证
-- name: create-journey
-  description: 创建新 Journey
-- name: create-scene
-  description: 创建新场景
 - name: daily
   description: 每日研究简报
 - name: dashboard
@@ -1712,8 +1698,6 @@ cli_commands:
   description: 实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)
 - name: events-watch
   description: 实时监听 SSE 事件流简便入口
-- name: evidence
-  description: 查看意图证据详情
 - name: export
   description: 导出契约封套
 - name: export-research
@@ -1756,8 +1740,6 @@ cli_commands:
   description: 刷新 data/_index 元数据
 - name: init
   description: 🚀 初始化向导（同 quickstart）
-- name: intake
-  description: 'P5-F5 intake: 邮件/文件/消息→结构化事项摄入管线'
 - name: invoke
   description: 调用 capability 服务（执行 BOS YAML command）
 - name: iterate
@@ -1802,22 +1784,16 @@ cli_commands:
   description: 查看未决待办快照预览
 - name: pipeline
   description: pipeline 概览
-- name: preview
-  description: 预览摄入结果 (不持久化)
 - name: product-health
   description: 产品健康度检测
 - name: profile
   description: 查看/编辑身份档案 (L4 入口)
 - name: publish
   description: 发布事件
-- name: queue
-  description: 查看待审批队列
 - name: quickstart
   description: 🚀 新用户快速上手向导（环境核验 + 上手指引）
 - name: quickstart-check
   description: 快速检查新用户环境核验状态
-- name: radar
-  description: 'P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates'
 - name: read
   description: 通过 BOS 网关统一读取指定 URI 资源
 - name: readiness
@@ -1826,8 +1802,6 @@ cli_commands:
   description: 意图路由召回（neo4j/temporal 支持 --as-of）
 - name: register
   description: 注册 BOS 服务
-- name: reject
-  description: 拒绝意图
 - name: reload
   description: 重载 BOS 配置/M1
 - name: remember
@@ -1838,36 +1812,30 @@ cli_commands:
   description: 统一 BOS URI 路由解析与目标元数据提取
 - name: route
   description: 为模型选择最优节点
-- name: run
-  description: 执行摄入管线 (提取→丰富→添加到收件箱)
 - name: runtime
   description: runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱)
 - name: scan
   description: 平面扫描
 - name: scenario
-  description: P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval)
+  description: P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review)
 - name: score
   description: 评分债务项
 - name: search
   description: 全文搜 CARDS
 - name: serve
   description: stdio JSON-RPC serve mode
-- name: show
-  description: 查看场景详情
 - name: skill
   description: 运行 L4 定时技能
 - name: ssb
   description: SSB 签名链操作 (委派 ecos-ssb)
 - name: stats
-  description: 查看审批统计
+  description: 索引统计
 - name: status
   description: 系统健康
 - name: summary
   description: 债务摘要 (委派 omo debt)
 - name: swarm
   description: 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突)
-- name: task
-  description: 'P5-F6 task: 场景卡→OMO Task 桥接管理'
 - name: topics
   description: 列出已注册 topic
 - name: tui
