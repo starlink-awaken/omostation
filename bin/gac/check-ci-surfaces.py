@@ -70,9 +70,9 @@ def _workflow_triggers(text: str) -> list[str]:
     if "on: [push, pull_request]" in text or "on: [push,pull_request]" in text:
         triggers += ["push", "per_pr"]
     else:
-        if re.search(r"^\s+push:\s*$", text, re.M):
+        if re.search(r"^\s+push:\s*$", text, re.MULTILINE):
             triggers.append("push")
-        if re.search(r"^\s+pull_request:\s*$", text, re.M):
+        if re.search(r"^\s+pull_request:\s*$", text, re.MULTILINE):
             triggers.append("per_pr")
     return triggers
 
@@ -118,18 +118,19 @@ def check_workflow_trigger_drift(registry: dict, workflow_dir: Path) -> list[str
         triggers = []
         if "workflow_call" in text:
             triggers.append("callable")
-        if re.search(r"^\s+schedule:\s*$", text, re.M) or "schedule:" in text:
+        if re.search(r"^\s+schedule:\s*$", text, re.MULTILINE) or "schedule:" in text:
             triggers.append("scheduled")
         if "workflow_dispatch" in text:
             triggers.append("manual")
         if "on: [push, pull_request]" in text or "on: [push,pull_request]" in text:
             triggers += ["push", "per_pr"]
         else:
-            if re.search(r"^\s+push:\s*$", text, re.M):
+            if re.search(r"^\s+push:\s*$", text, re.MULTILINE):
                 triggers.append("push")
-            if re.search(r"^\s+pull_request:\s*$", text, re.M):
+            if re.search(r"^\s+pull_request:\s*$", text, re.MULTILINE):
                 triggers.append("per_pr")
-        path_filtered = bool(re.search(r"^\s+paths:\s*$", text, re.M))
+        # 内联 paths: [...] 数组形式 (agora/ecos/kairon 等子项目 CI 常用) + 多行块形式
+        path_filtered = bool(re.search(r"^\s+paths:\s*(\[|$)", text, re.MULTILINE))
         entry = registered.get(name)
         if entry is None:
             warnings.append(f"trigger-drift: {name} 未登记在 ci-surfaces workflow_triggers")
@@ -145,7 +146,11 @@ def check_workflow_trigger_drift(registry: dict, workflow_dir: Path) -> list[str
             )
         if path_filtered:
             actual_paths = set()
-            paths_re = re.compile(r"^\s+paths:\s*$((?:\n\s+- [^\n]+)*)", re.M)
+            # 内联数组: paths: ['a', 'b']
+            for m in re.finditer(r"^\s+paths:\s*\[([^\]]*)\]", text, re.MULTILINE):
+                for item in re.findall(r"'([^']*)'|\"([^\"]*)\"", m.group(1)):
+                    actual_paths.add(item[0] or item[1])
+            paths_re = re.compile(r"^\s+paths:\s*$((?:\n\s+- [^\n]+)*)", re.MULTILINE)
             for m in paths_re.finditer(text):
                 for line in m.group(1).split("\n"):
                     pm = re.match(r"\s+- (.*)$", line)
