@@ -137,6 +137,19 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         if not bos_rate_limiter.acquire(uri):
             return _error(f"Rate limit exceeded for: {uri}")
 
+        # 遗留-3: 配额检查 (per-caller 每日成本上限) — 限流之后、执行之前
+        from agora.mcp.bos_quota import get_quota_checker
+        from agora.server.tools_auth import agora_role_ctx
+
+        caller_id = agora_role_ctx.get() or "anonymous"
+        quota_ok, quota_info = get_quota_checker().check(caller_id, uri)
+        if not quota_ok:
+            _bos_post_audit(uri, 429, 0)
+            return _error(
+                f"Quota exceeded for caller '{caller_id}': "
+                f"today=${quota_info['today_cost']} limit=${quota_info['limit_usd']}"
+            )
+
         if bos_circuit_breaker.is_open(uri):
             return _error(f"Circuit breaker open for: {uri}")
 
@@ -168,6 +181,13 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 "resolve",
                 "ok",  # type: ignore[reportCallIssue]
                 int((_time.time() - _t0) * 1000),  # type: ignore[reportCallIssue]
+            )
+            # 遗留-3: 记账 (成本估算 — 无 token 统计时按调用计 1 次, 成本 0 保留流水)
+            get_quota_checker().record(
+                caller_id=caller_id,
+                service=uri,
+                tool_name=uri.split("/")[-1],
+                cost_usd=0.0,
             )
             return _ok(
                 {
