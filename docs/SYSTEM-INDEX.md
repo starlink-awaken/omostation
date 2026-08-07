@@ -65,6 +65,14 @@
 → [知识索引](INDEX-KNOWLEDGE.md) — ADR + 审计 + 模式 + 总结交叉索引
 → [计划与决策台账](docs/plans/) — 3Y-BET-LEDGER 等计划/台账文档
 
+### 场景执行架构 (四面一脊)
+
+→ [Scene Cards](scene-cards/) — 9 个场景卡 (external + internal_pipeline, 双轨准入)
+→ [Journey Specs](journey-specs/) — 3 个 journey 状态机 (inbox-to-decision, meeting-to-delivery, research-to-insight)
+→ [External Connection Fabric](.omo/standards/external-connection-fabric.md) — §7: dual-track admission standard
+→ [Permission Scope Vocabulary](.omo/standards/permission-scope-vocabulary.yaml) — RBAC scope 受控词表
+→ [Signal Sources](.omo/_truth/registry/signal-sources.yaml) — 感知面信号源注册表
+
 → [Agent 能力索引](INDEX-AGENTS.md) — 当前 agent 配置 + 技能清单
 
 → [Closeout 记录](closeout/) — 各轮关闭记录和复盘（详见 `docs/closeout/`）
@@ -156,6 +164,9 @@
 | SSOT 守护 | doc-ssot-lint, ssot-guardian | bin/ssot/ |
 | MOF 工具 | mof-enforce, mof-reason | bin/mof/ |
 | Agent 工作流 | agent-workflow.py | bin/ |
+| 场景执行 | journey-runner, signal-poller, scene-reflection, scene-outcome-recorder, capability-token | bin/ssot/ |
+| 场景准入 | internal/external-scene-trial, internal/external-activation-preflight, scene-card-lifecycle | bin/ssot/ |
+| 场景验证 | scene-chain-validator, journey-validator, adr-number-check | bin/ssot/ |
 
 详见 `INDEX-TOOLS.md` 获取完整工具目录。
 
