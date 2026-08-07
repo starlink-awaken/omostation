@@ -688,6 +688,28 @@ def argv_has_no_verify(argv: list[str]) -> bool:
     return "--no-verify" in argv
 
 
+def argv_has_dangerous(argv: list[str]) -> bool:
+    """T1-07 (BET-Y1Q1-T1-07): True if argv is a high-risk git op agents must not run.
+
+    clean -f[d|x], reset --hard, stash -u/--include-untracked — destroy peer agents'
+    uncommitted work in a shared tree (2026-08-06 实测 4 次产物丢失). No escape,
+    agents 禁做. rebase-on-shared-branch 由 swarm-git bash 层判 (需 git rev-parse).
+    """
+    sub = next((a for a in argv if a and not a.startswith("-")), "")
+    # clean -f[d|x]: force remove untracked. 短 flag 合并判 (fd/fdx/df/xdf 或 -f -d 组合)
+    if sub == "clean":
+        short = "".join(f.lstrip("-") for f in argv if f.startswith("-") and not f.startswith("--"))
+        if "f" in short and ("d" in short or "x" in short) and "n" not in short:
+            return True
+    # reset --hard
+    if sub == "reset" and "--hard" in argv:
+        return True
+    # stash -u / --include-untracked
+    if sub == "stash" and ("-u" in argv or "--include-untracked" in argv):
+        return True
+    return False
+
+
 def no_verify_flag_for_argv(argv: list[str]) -> str:
     """Map git subcommand to escape flag name."""
     # find first non-flag token after git
