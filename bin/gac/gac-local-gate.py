@@ -219,6 +219,7 @@ def gate_checks(
     files: list[str] | None = None,
     run_id: str = "",
     strict: bool = False,
+    risk_profile: str | None = None,
 ) -> tuple[tuple[str, list[str]], ...]:
     touch_aw = strict or staged_touches_agent_workflow()
     result: list[tuple[str, list[str]]] = []
@@ -231,6 +232,17 @@ def gate_checks(
             continue  # 本地运维 check (doctor), CI 无 .venv/CLI → 跳
         if name in BROKEN_CHECKS and not strict:
             continue  # 已知不可用 (broken: True), 仅 strict 模式下检查
+        if risk_profile == "low" and name not in {
+            "doc-governance",
+            "doc-link-check",
+            "check-conflict-markers",
+            "layer-call-direction-check",
+            "doc-claims-check",
+            "check-submodule-rewind",
+        }:
+            continue
+        if risk_profile == "medium" and name not in RISK_AWARE_CHECKS:
+            continue
         if name == "change-lane-check":
             result.append((name, scoped_change_lane_command(scope, files, run_id)))
         elif name == "doc-link-check":
@@ -343,6 +355,74 @@ FINDING_TOPIC_CHECKS: dict[str, dict[str, str]] = {
 
 ADAPTIVE_CHECKS: set[str] = {
     "check-submodule-rewind",
+}
+
+RISK_AWARE_CHECKS: set[str] = {
+    "doc-governance",
+    "doc-link-check",
+    "check-conflict-markers",
+    "layer-call-direction-check",
+    "doc-claims-check",
+    "mof-capabilities-drift-check",
+    "change-lane-check",
+    "check-submodule-rewind",
+    "check-work-landed",
+    "check-governance-ratio",
+    "check-redline-coverage",
+    "check-workorder-schema",
+    "check-dual-track-purity",
+    "check-silent-loss",
+    "check-adversarial-effectiveness",
+    "check-evidence-honest-closure",
+    "check-gateway-status-doc",
+    "check-foundry-deck-coverage",
+    "check-evidence-freshness",
+    "check-governance-trend",
+    "bus-usage-report",
+    "bos-tracking-gate",
+    "check-index-drift",
+    "gac-validate",
+    "gac-drift",
+    "write-owner-audit",
+    "test-mcp-kos",
+    "check-cockpit-ui-dist",
+    "agent-workflow-lint",
+    "agent-workflow-integrations",
+    "agent-workflow-adapters",
+    "agent-workflow-bootstrap",
+    "agent-workflow-observe",
+    "governance-evolution",
+    "mof-schema-validate",
+    "mof-state-bridge",
+    "mof-drift",
+    "m4-bootstrap-reflex",
+    "doc-ssot-lint",
+    "doc-ssot-snapshots",
+    "dependency-baseline-drift",
+    "matrix-consistency",
+    "governance-semantic-gate",
+    "adr-coverage",
+    "sweep-index-check",
+    "state-freshness-check",
+    "current-state-coherence",
+    "check-dashboard-registry-consistency",
+    "check-toolbox-ssot",
+    "check-domain-m1-alignment",
+    "test-gac-engine",
+    "service-config-validate",
+    "service-config-drift",
+    "gac-mesh-router-check",
+    "gac-consensus-inject-check",
+    "gac-compute-onboard-check",
+    "test-coverage-check",
+    "debt-integrity-check",
+    "omo-state-write-guard",
+    "brief-protect",
+    "check-severity-registry",
+    "check-work-landed",
+    "check-governance-ratio",
+    "check-redline-coverage",
+    "check-workorder-schema",
 }
 
 
@@ -490,9 +570,10 @@ def run_gate(
     strict: bool = False,
     agt_backend: bool = False,
     adaptive: bool = False,
+    risk_profile: str | None = None,
 ) -> dict[str, object]:
     change_lane_files = change_lane_files_for_scope(scope, files, run_id)
-    checks = gate_checks(scope, files, run_id, strict)
+    checks = gate_checks(scope, files, run_id, strict, risk_profile=risk_profile)
     metrics_file = WORKSPACE / ".omo" / "state" / "metrics-store.jsonl"
     if adaptive:
         checks = _apply_adaptive_thresholds(checks, metrics_file)
@@ -661,10 +742,11 @@ def main() -> int:
     parser.add_argument("--agt-backend", action="store_true", help="Use AGT Policy Engine as GaC rule execution backend")
     parser.add_argument("--metrics", action="store_true", help="Record check results to metrics-store.jsonl")
     parser.add_argument("--adaptive", action="store_true", help="Enable adaptive threshold adjustment for supported checks")
+    parser.add_argument("--risk-profile", choices=["low", "medium", "high"], help="Risk-aware gate filtering")
     args = parser.parse_args()
 
     try:
-        report = run_gate(args.scope, args.file, args.run_id, args.strict, args.agt_backend, args.adaptive)
+        report = run_gate(args.scope, args.file, args.run_id, args.strict, args.agt_backend, args.adaptive, args.risk_profile)
     except ValueError as exc:
         parser.error(str(exc))
 
