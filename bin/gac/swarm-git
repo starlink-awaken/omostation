@@ -109,4 +109,17 @@ if printf '%s\0' "$@" | grep -qzE '\brebase\b'; then
   fi
 fi
 
+# 隐式 Swarm Mesh 静默心跳与工作路径上报 (Implicit Auto-Heartbeat)
+if [ -n "${AGENT_ID:-}" ]; then
+  PYTHONPATH="$ROOT/projects/agora/src" python3 -c "
+import os, sys
+try:
+    from agora.swarm_mesh import SwarmMeshManager
+    sm = SwarmMeshManager(root=Path('$ROOT'))
+    sm.register_node(agent_id=os.environ.get('AGENT_ID', 'agent-cli'), role='Developer', working_paths=['.'])
+except Exception:
+    pass
+" 2>/dev/null || true
+fi
+
 exec "$REAL_GIT" "$@"
