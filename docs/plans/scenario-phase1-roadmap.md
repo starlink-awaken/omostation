@@ -240,28 +240,28 @@ evidence 记录: 来源、操作、结果、时间戳
 
 ### 8.1 M1 验收
 
-- [ ] cockpit scene create/list/status 命令可用
-- [ ] 场景卡数据模型通过 schema 校验
-- [ ] gac-local-gate 通过
+- [x] cockpit scene create/list/status 命令可用
+- [x] 场景卡数据模型通过 schema 校验
+- [x] gac-local-gate 通过
 
 ### 8.2 M2 验收
 
-- [ ] cockpit inbox list/status/process 命令可用
-- [ ] 事项可自动结构化抽取
-- [ ] 决策收件箱视图可展示事项列表
-- [ ] gac-local-gate 通过
+- [x] cockpit inbox list/status/process 命令可用
+- [x] 事项可自动结构化抽取
+- [x] 决策收件箱视图可展示事项列表
+- [x] gac-local-gate 通过
 
 ### 8.3 M3 验收
 
-- [ ] cockpit approval list/approve/reject 命令可用
-- [ ] 审批通过后自动创建 OMO Task
-- [ ] 证据面板可展示完整证据链
-- [ ] gac-local-gate 通过
+- [x] cockpit approval list/approve/reject 命令可用
+- [x] 审批通过后自动创建 OMO Task
+- [x] 证据面板可展示完整证据链
+- [x] gac-local-gate 通过
 
 ### 8.4 M4 验收
 
-- [ ] 连续 4 周有真实输入
-- [ ] 每周形成可审计事项清单
-- [ ] 用户确认部分建议
-- [ ] 每条建议可回链来源和处理结果
-- [ ] 系统可统计节省时间和误报率
+- [ ] 连续 4 周有真实输入 *(待真实运行采集 — 引擎已就绪, 连接器支持 MBOX/目录/JSONL 自动导入)*
+- [x] 每周形成可审计事项清单 *(review 引擎: 每周复盘 + 可审计统计)*
+- [ ] 用户确认部分建议 *(运行期人工行为, 引擎已就绪)*
+- [x] 每条建议可回链来源和处理结果 *(intent + evidence 链)*
+- [x] 系统可统计节省时间和误报率 *(review 引擎: 时间节省/准确率/误报率)*
