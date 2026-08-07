@@ -822,7 +822,9 @@ def _cmd_adjudication(args: list[str]) -> int:
     subparsers = parser.add_subparsers(dest="sub", required=True)
 
     p_record = subparsers.add_parser("record", help="记录一条裁决")
-    p_record.add_argument("--decision-id", required=True, help="关联 decision_outcome ID")
+    p_record.add_argument(
+        "--decision-id", required=True, help="关联 decision_outcome ID"
+    )
     p_record.add_argument(
         "--verdict", required=True, choices=["accepted", "modified", "rejected"]
     )
@@ -871,8 +873,10 @@ def _cmd_adjudication(args: list[str]) -> int:
                 )
     elif parsed.sub == "stats":
         s = store.stats()
-        print(f"裁决统计: 总 {s['total']} | "
-              f"accepted={s['accepted']} modified={s['modified']} rejected={s['rejected']}")
+        print(
+            f"裁决统计: 总 {s['total']} | "
+            f"accepted={s['accepted']} modified={s['modified']} rejected={s['rejected']}"
+        )
     return 0
 
 
@@ -897,9 +901,7 @@ def _cmd_feedback(args: list[str]) -> int:
         help="裁决结果",
     )
     parser.add_argument("--edit-diff", default="", help="修改 diff (modified 时建议填)")
-    parser.add_argument(
-        "--time-spent", type=float, default=0.0, help="审阅耗时(秒)"
-    )
+    parser.add_argument("--time-spent", type=float, default=0.0, help="审阅耗时(秒)")
     parser.add_argument("--adjudicator", default="", help="裁决人")
     parser.add_argument("--notes", default="", help="备注")
     parser.add_argument(
@@ -942,9 +944,7 @@ def _cmd_feedback(args: list[str]) -> int:
 
     outcome = mos.get_decision_outcome(parsed.decision_id)
     belief = (
-        mos.find_belief_by_topic(outcome.get("decision_type", ""))
-        if outcome
-        else None
+        mos.find_belief_by_topic(outcome.get("decision_type", "")) if outcome else None
     )
     delta = VERDICT_CONFIDENCE_DELTA[parsed.verdict]
 

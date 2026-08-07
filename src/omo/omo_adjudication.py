@@ -111,9 +111,7 @@ class AdjudicationStore:
         self._apply_belief_feedback(decision_id, verdict)
         return adj_id
 
-    def _apply_belief_feedback(
-        self, decision_id: str, verdict: str
-    ) -> None:
+    def _apply_belief_feedback(self, decision_id: str, verdict: str) -> None:
         """闭环: 裁决 → 信念置信度修正 (best-effort, 不抛异常)."""
         if self._mos_manager is None:
             return
