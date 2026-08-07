@@ -135,7 +135,7 @@ assets:
     ref: .omo/drafts/
     plane: state_plane
     asset_type: workspace_drafts
-    persistence_mode: working
+    persistence_mode: operational
     retention_mode: manual_archive
     truth_owner: governance
     write_via:
