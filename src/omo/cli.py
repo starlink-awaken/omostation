@@ -93,6 +93,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_belief(args[1:])
     if args and args[0] == "adjudication":
         return _cmd_adjudication(args[1:])
+    if args and args[0] == "feedback":
+        return _cmd_feedback(args[1:])
     if args and args[0] == "compass":
         from omo.omo_compass import main as compass_main
 
@@ -871,6 +873,93 @@ def _cmd_adjudication(args: list[str]) -> int:
         s = store.stats()
         print(f"裁决统计: 总 {s['total']} | "
               f"accepted={s['accepted']} modified={s['modified']} rejected={s['rejected']}")
+    return 0
+
+
+def _cmd_feedback(args: list[str]) -> int:
+    """MOS 闭环: 人类裁决 → 信念修正 (BET-Y1Q2-T1-03)."""
+    import argparse
+
+    from omo.omo_adjudication import AdjudicationStore, VERDICT_CONFIDENCE_DELTA
+    from omo.omo_belief import MOSBeliefManager
+
+    parser = argparse.ArgumentParser(
+        prog="omo feedback",
+        description="MOS 闭环: 提交裁决 → 自动修正信念置信度 (T1-03)",
+    )
+    parser.add_argument(
+        "--decision-id", required=True, help="关联 decision_outcome ID (do-NNNN)"
+    )
+    parser.add_argument(
+        "--verdict",
+        required=True,
+        choices=["accepted", "modified", "rejected"],
+        help="裁决结果",
+    )
+    parser.add_argument("--edit-diff", default="", help="修改 diff (modified 时建议填)")
+    parser.add_argument(
+        "--time-spent", type=float, default=0.0, help="审阅耗时(秒)"
+    )
+    parser.add_argument("--adjudicator", default="", help="裁决人")
+    parser.add_argument("--notes", default="", help="备注")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="只预览信念影响, 不写入",
+    )
+
+    parsed = parser.parse_args(args)
+    mos = MOSBeliefManager()
+
+    if parsed.dry_run:
+        outcome = mos.get_decision_outcome(parsed.decision_id)
+        if outcome is None:
+            print(f"decision_outcome not found: {parsed.decision_id}")
+            return 1
+        delta = VERDICT_CONFIDENCE_DELTA[parsed.verdict]
+        belief = mos.find_belief_by_topic(outcome.get("decision_type", ""))
+        print(f"decision: {outcome.get('decision_type', 'N/A')}")
+        print(f"verdict: {parsed.verdict} (delta={delta:+.2f})")
+        if belief:
+            print(
+                f"belief: {belief['id']} ({belief['topic']}) "
+                f"confidence={belief.get('confidence', 1.0):.2f} "
+                f"→ {max(0.0, min(1.0, belief.get('confidence', 1.0) + delta)):.2f}"
+            )
+        else:
+            print("belief: (no matching belief found, no update)")
+        return 0
+
+    store = AdjudicationStore(mos_manager=mos)
+    adj_id = store.record(
+        decision_id=parsed.decision_id,
+        verdict=parsed.verdict,
+        edit_diff=parsed.edit_diff,
+        time_spent_seconds=parsed.time_spent,
+        adjudicator=parsed.adjudicator,
+        notes=parsed.notes,
+    )
+
+    outcome = mos.get_decision_outcome(parsed.decision_id)
+    belief = (
+        mos.find_belief_by_topic(outcome.get("decision_type", ""))
+        if outcome
+        else None
+    )
+    delta = VERDICT_CONFIDENCE_DELTA[parsed.verdict]
+
+    print(f"Recorded: {adj_id}")
+    if belief:
+        state = mos._load_state()
+        for b in state["beliefs"]:
+            if b["id"] == belief["id"]:
+                print(
+                    f"Belief updated: {b['id']} confidence={b.get('confidence', 1.0):.2f} "
+                    f"(delta={delta:+.2f})"
+                )
+                break
+    else:
+        print("(no matching belief — confidence unchanged)")
     return 0
 
 

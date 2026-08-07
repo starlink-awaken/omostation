@@ -164,4 +164,35 @@ class SceneWatcher:
         }
 
 
-__all__ = ["CONFIDENCE_THRESHOLD", "DecisionResult", "SceneWatcher"]
+__all__ = [
+    "CONFIDENCE_THRESHOLD",
+    "DecisionResult",
+    "SceneWatcher",
+    "create_watcher",
+]
+
+
+def create_watcher(
+    scene_id: str,
+    scene_path: Path,
+    *,
+    operator: str = "",
+    model_router: ModelRouterProtocol | None = None,
+    root: Path | None = None,
+) -> SceneWatcher:
+    """SceneWatcher 工厂 — 自动注入 MOSBeliefManager (闭环入口).
+
+    生产代码应使用此工厂而非直接构造 SceneWatcher,
+    确保 decision_outcome 持久化到 MOS (ADR-0372).
+    """
+    mos = MOSBeliefManager(root=root)
+    kwargs: dict[str, Any] = {
+        "scene_id": scene_id,
+        "scene_path": scene_path,
+        "mos_manager": mos,
+    }
+    if operator:
+        kwargs["operator"] = operator
+    if model_router is not None:
+        kwargs["model_router"] = model_router
+    return SceneWatcher(**kwargs)

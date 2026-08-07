@@ -305,3 +305,51 @@ class MOSBeliefManager:
             f"id={do_id} type={decision_type} run={source_run_id}",
         )
         return do_id
+
+    def get_decision_outcome(self, do_id: str) -> dict[str, Any] | None:
+        """按 ID 查找 decision_outcome 记录 (闭环: adjudication → belief)."""
+        state = self._load_state()
+        for do in state["decision_outcomes"]:
+            if do["id"] == do_id:
+                return do
+        return None
+
+    def update_belief_confidence(
+        self,
+        belief_id: str,
+        delta: float,
+        *,
+        reason: str = "",
+    ) -> float:
+        """调整信念置信度 (闭环: 裁决反馈 → 信念修正).
+
+        Args:
+            belief_id: 目标信念 ID (belief-NNNN).
+            delta: 置信度变化量 (正=增强, 负=削弱).
+            reason: 调整原因 (审计用).
+
+        Returns:
+            调整后的置信度.
+        """
+        state = self._load_state()
+        for b in state["beliefs"]:
+            if b["id"] == belief_id:
+                old = b.get("confidence", 1.0)
+                new = max(0.0, min(1.0, old + delta))
+                b["confidence"] = new
+                write_yaml_atomic(self.state_file, state)
+                self._append_audit_log(
+                    "UPDATE_BELIEF_CONFIDENCE",
+                    f"id={belief_id} {old:.2f}→{new:.2f} delta={delta:+.2f} reason={reason}",
+                )
+                return new
+        raise KeyError(f"belief not found: {belief_id}")
+
+    def find_belief_by_topic(self, topic: str) -> dict[str, Any] | None:
+        """按 topic 查找信念 (闭环: decision_type → belief topic 映射)."""
+        state = self._load_state()
+        topic_lower = topic.lower()
+        for b in state["beliefs"]:
+            if topic_lower in b["topic"].lower():
+                return b
+        return None

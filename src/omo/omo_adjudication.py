@@ -17,6 +17,12 @@ from typing import Any
 from .omo_io import AppendOnlyLog, fcntl_lock
 from .omo_paths import DELIVERY_DIR
 
+VERDICT_CONFIDENCE_DELTA: dict[str, float] = {
+    "accepted": +0.05,
+    "modified": -0.05,
+    "rejected": -0.20,
+}
+
 OUTCOMES_DIR = DELIVERY_DIR / "outcomes"
 ADJUDICATIONS_LOG = OUTCOMES_DIR / "adjudications.jsonl"
 ADJUDICATION_SCHEMA = "adjudication/v1"
@@ -51,10 +57,15 @@ class AdjudicationRecord:
 
 
 class AdjudicationStore:
-    """裁决存储 — append-only JSONL + 查询."""
+    """裁决存储 — append-only JSONL + 查询 + 闭环信念修正."""
 
-    def __init__(self, log: AppendOnlyLog | None = None) -> None:
+    def __init__(
+        self,
+        log: AppendOnlyLog | None = None,
+        mos_manager: Any | None = None,
+    ) -> None:
         self._log = log or _log()
+        self._mos_manager = mos_manager
         self._counter: int | None = None
 
     def _next_id(self) -> str:
@@ -97,7 +108,32 @@ class AdjudicationStore:
             notes=notes,
         )
         self._log.append(asdict(record), sort_keys=True)
+        self._apply_belief_feedback(decision_id, verdict)
         return adj_id
+
+    def _apply_belief_feedback(
+        self, decision_id: str, verdict: str
+    ) -> None:
+        """闭环: 裁决 → 信念置信度修正 (best-effort, 不抛异常)."""
+        if self._mos_manager is None:
+            return
+        try:
+            outcome = self._mos_manager.get_decision_outcome(decision_id)
+            if outcome is None:
+                return
+            topic = outcome.get("decision_type", "")
+            belief = self._mos_manager.find_belief_by_topic(topic)
+            if belief is None:
+                return
+            delta = VERDICT_CONFIDENCE_DELTA.get(verdict, 0.0)
+            if delta != 0.0:
+                self._mos_manager.update_belief_confidence(
+                    belief["id"],
+                    delta,
+                    reason=f"adjudication:{verdict} decision={decision_id}",
+                )
+        except Exception:
+            pass
 
     def query(
         self,
@@ -130,4 +166,5 @@ __all__ = [
     "AdjudicationStore",
     "OUTCOMES_DIR",
     "VALID_VERDICTS",
+    "VERDICT_CONFIDENCE_DELTA",
 ]

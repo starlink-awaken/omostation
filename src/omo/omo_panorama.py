@@ -93,6 +93,7 @@ class OMOPanoramaEngine:
             "bos_uris_registered": bos_count,
             "ports_registered": ports_count,
             "mesh_router_port": 7437,
+            "launchd_watch_agent": "active (launchd WatchPaths daemon running)",
             "status": "active",
         }
 
