@@ -35,6 +35,7 @@ metadata-migrated-at: 2026-07-31
 | `resolve_bos_uri` MCP tool | `server/tools_bos/registration.py:121` | 统一入口，编排限流/熔断/缓存/路由 |
 | `_bos_domain_authorized` | `server/tools_bos/_helpers.py:37` | 域级鉴权（CR-RBAC-01 / CR-DOMAIN-AUTH-01） |
 | `bos_rate_limiter` | `server/mcp/bos_middleware.py` | 20 QPS/域 令牌桶限流 |
+| `QuotaChecker` | `mcp/bos_quota.py` | per-caller 每日成本配额 (遗留-3) |
 | `bos_circuit_breaker` | `server/mcp/bos_middleware.py` | 熔断器状态检查与记录 |
 | `bos_cache` | `server/mcp/bos_middleware.py` | TTL 缓存 |
 | `BOSRouter` / `bos_router` | `mcp/bos_router.py:27` | Trie 前缀索引，O(k) 最长前缀匹配 |
@@ -146,6 +147,22 @@ if not bos_rate_limiter.acquire(uri):
 
 - 默认 **20 QPS/域**；
 - 基于令牌桶实现，超出阈值直接拒绝，避免下游被压垮。
+
+### Step 3.5 — 配额 (遗留-3, 2026-08-07)
+
+```python
+# projects/agora/src/agora/server/tools_bos/registration.py:145
+from agora.mcp.bos_quota import get_quota_checker
+caller_id = agora_role_ctx.get() or "anonymous"
+quota_ok, quota_info = get_quota_checker().check(caller_id, uri)
+if not quota_ok:
+    return _error(f"Quota exceeded for caller '{caller_id}': ...")
+```
+
+- **per-caller 每日成本上限** (USD), 配置在 `agora-bos-rates.yaml` `quotas:` 段
+- caller_id 来自 `agora_role_ctx` (auth 已设), 匿名默认 2/天, agent-* 50/天
+- 超限返回 429 语义错误 + audit 记录; 成功后 `get_quota_checker().record(...)` 记账
+- 配置随 rates 热加载 (ConfigWatcher 5s)
 
 ### Step 4 — 熔断
 
