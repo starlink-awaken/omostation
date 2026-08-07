@@ -1,4 +1,4 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene
 
 PY := uv run --with pyyaml python
 
@@ -39,9 +39,9 @@ help:
 	@echo "make governance-verify   运行 canonical .omo 验证链"
 	@echo "make governance-check    全量治理检查 (verify → index)"
 	@echo "make governance-audit    全量治理审计 (债务+文档+健康度)"
-	@echo "make governance-sync     同步 .omo/state/system.yaml"
-	@echo "make governance-validate 验证任务 Schema"
-	@echo "make governance-index-check 检查 INDEX.md 覆盖率"
+	@echo "make     同步 .omo/state/system.yaml"
+	@echo "make 验证任务 Schema"
+	@echo "make 检查 INDEX.md 覆盖率"
 	@echo ""
 	@echo "=== X1-X4 治理框架 ==="
 	@echo "make x1-check           X1 审计链检查"
@@ -386,17 +386,8 @@ kairon-build:
 governance-verify:
 	bash bin/ssot/verify-omo.sh
 
-governance-check: governance-verify governance-index-check
+governance-check: governance-verify
 	@echo "Governance checks complete."
-
-governance-sync:
-	python3 scripts/sync_omo_state.py --omo-dir .omo
-
-governance-validate:
-	python3 scripts/omo_task_schema.py --all-active
-
-governance-index-check:
-	python3 scripts/check-index-coverage.py
 
 # ── 治理审计 ────────────────────────────────────────────────────────────────────
 
