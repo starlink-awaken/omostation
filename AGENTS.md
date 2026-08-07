@@ -139,8 +139,8 @@ git show <sha>:<path> > <path>               # 从游离提交取回
 ```
 
 **逃生口只有一个入口**：`SWARM_ESCAPE_ID=<白名单id> bin/gac/swarm-git ...`。
-raw `git --no-verify` 会绕过白名单校验与 `.omo/_delivery/swarm-escape/` 台账
-（缺口见 `swarm-coordination.yaml::gates.d4_escape_hatch.entry` 原文，`BET-Y1Q1-T1-07` 处理）。
+raw `git --no-verify` 会绕过白名单校验与 `.omo/_delivery/swarm-escape/` 台账。
+T1-07 已落地 PATH shim（`bin/gac/git-shim` + `AGENT_ID` circuit_breaker）：agent 环境 `git` → `swarm-git` 强制收口，拦 `--no-verify` + 高危操作（`clean -fd` / `reset --hard` / `stash -u` / 共享分支 `rebase`）；人类终端（`AGENT_ID` 空）透传不受影响。
 
 **新门禁上线三段式**：`shadow`（只记录，1 周）→ `warning`（给清理期限）→ `fail`（存量清零后）。
 跳过前两段直接 fail 会锁死主干——ADR-0380 上线当天检出 18 个 rewind，所有无关提交被拦。
