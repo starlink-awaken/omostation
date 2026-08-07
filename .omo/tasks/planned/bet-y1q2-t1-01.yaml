@@ -1,0 +1,57 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-07T01:36:11+00:00
+id: BET-Y1Q2-T1-01
+title: omo-debt + c2g 并入 omo
+status: candidate
+task_type: bet
+priority: P1
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T1-01
+window: Y1Q2
+track: T1-TRUTH
+appetite: 2 weeks
+desc: 减少子模块数量与指针漂移面, 归并同属治理面的三个仓
+non_goals:
+- 重写业务逻辑
+- 改变 CLI 入口名
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T1-02
+risk_level: L3
+allowed_operation_level: L3
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T1-02'
+evidence_required:
+- omo-debt / c2g 作为 omo 内包存在, 子模块条目移除
+- 产出去重清单, src 下降量与清单一致（不设百分比）
+- test_loc 不得下降（同 E13）
+- 原 CLI 入口保持兼容或有明确迁移说明
+test_plan:
+- git submodule status | grep -cE 'omo-debt|c2g'
+- python3 bin/plan/bet-ledger.py surface
+workflow: bet-execution
+write_surfaces:
+- .gitmodules
+- docs/project-registry.yaml
+pasw_required: false
+circuit_breaker: 行数未降 → 判定为拼接非归并, 回滚重做
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q2-T1-01.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

@@ -330,6 +330,20 @@ except Exception:
       fi )
     cd "$wt"
     git update-index --cacheinfo 160000,"$new_sha","$sub"
+    # ── A (2026-08-06): agora bump → auto-sync bos-registry mirror (防 drift 复发, #1051/#1055 根因) ──
+    # agora 改 etc/bos-services.yaml 后, Workspace 根 bos-registry.json 镜像必须跟着 sync,
+    # 否则 evidence-gate 报 drift (live vs file) 阻塞 PR. bump-pointer 是精准触发点.
+    if [ "$sub" = "projects/agora" ] && [ -f "$wt/bin/ssot/sync-bos-registry.py" ]; then
+      if ( cd "$wt" && uv run --with pyyaml python bin/ssot/sync-bos-registry.py --write ) >/dev/null 2>&1; then
+        if git -C "$wt" add .omo/_knowledge/bos-registry.json 2>/dev/null; then
+          echo "   ✅ bos-registry mirror auto-synced + staged (防 drift, evidence-gate 友好)"
+        else
+          echo "   ⚠️ bos-registry sync 完成但 stage 失败, 请手动: git add .omo/_knowledge/bos-registry.json"
+        fi
+      else
+        echo "   ⚠️ bos-registry auto-sync 跳过 (sync 失败或 agora 未 init), 记得手动: make sync-bos-registry"
+      fi
+    fi
     echo "✅ 指针已更新: $sub → $new_sha"
     echo "   下一步: git commit -m 'bump $sub' && gac-worktree.sh submit $session"
     ;;

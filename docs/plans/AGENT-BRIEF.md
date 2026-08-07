@@ -134,6 +134,7 @@ bash bin/gac/gac-worktree.sh submit <bet-id 小写>
 | **D3** | 先 claim 后写，未 claim 的写面视为越权 | `bet-ledger.py claim-check` |
 | **D4** | 走 ADR-0203 workflow，先 start 再改文件 | `agent-workflow.py start` |
 | **D5** | 无 retro 不得置 done | `bet-ledger.py retro-due` |
+| **D6** | 指标设立前必须回答「最便宜的达标路径是什么」，若那条路径有害则指标不成立 | 设指标时人工反问；已知有害路径写进 non_goals |
 
 ---
 
@@ -186,7 +187,8 @@ D0 入库: <已 git add 的文件清单>
 
 - ❌ 在共享主工作树上直接改文件（用 `gac-worktree.sh claim`）
 - ❌ `git commit` / `push` / `merge` 到 main（除非人类明确确认）
-- ❌ `git clean` / `git reset --hard` / `git stash -u`（会删别的 agent 的未入库文件）
+- ❌ `git clean` / `git reset --hard` / `git stash -u`（会删别的 agent 的未入库文件；agent 环境 PATH shim 已强制收口，T1-07）
+- ❌ raw `git --no-verify`（**逃生口只有 `bin/gac/swarm-git` 一个入口**，T1-07 PATH shim + swarm-git 强制拦截 `--no-verify` 与高危操作）
 - ❌ 修改 `.omo/goals/current.yaml`（仅人类可改）
 - ❌ 直接写 `.omo/` 或 `spaces/`（走 OMO CLI / MCP / 已注册 broker）
 - ❌ 新增顶级项目、新增顶级入口、新增治理维度

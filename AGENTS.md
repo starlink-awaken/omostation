@@ -112,6 +112,56 @@ M1 rejudge (T+72, honest):
 
 Registry: `.omo/_truth/registry/swarm-coordination.yaml`
 
+### 1.6.1 D5 PASW submodule isolation (ADR-0371)
+
+| Gate | Command |
+|------|---------|
+| D5 PASW | `bash bin/gac/gac-worktree.sh claim <s>` 自动为高冲突子模块建 `.subtrees/<sub>/` |
+
+覆盖范围仅 `gbrain` / `cockpit` / `agora`。**其余子模块跨 worktree 共用 `.git/modules/<sub>/HEAD`** — 非必要不碰指针。补齐与退役计划见 `BET-Y1Q1-T1-06`。
+
+### 1.6.2 D0 交付持久化下限（2026-08-06 实测升级）
+
+D1–D5 管的是「并发写不打架」，D0 管的是「产物不消失」。三层假设当天全部被推翻：
+
+| 假设 | 被什么推翻 | 实测 |
+|---|---|---|
+| 写了就有 | `git clean -fd` 删未入库文件 | 当天 4 次，`bin/ssot/journey-runner.py`(601行) 等 v10 产物永久丢失 |
+| add 了就安全 | `git reset --hard` 连暂存区一起摧毁 | 分支 `fix/submodule-rewind-*` 期间 |
+| **commit 了就安全** | 共享分支被 rebase，提交脱离历史 | `49d3ffed5` 提交成功后被挤出分支，内容从工作树消失 |
+
+**D0 铁律**：交付物必须走 `git add` → `commit` → **`tag`**（或推独立远端分支）。仅 commit 不算持久化。
+
+```bash
+git ls-files --error-unmatch <file>          # 入库检查
+git merge-base --is-ancestor <sha> HEAD      # 非 0 = 提交已脱离分支
+git show <sha>:<path> > <path>               # 从游离提交取回
+```
+
+**逃生口只有一个入口**：`SWARM_ESCAPE_ID=<白名单id> bin/gac/swarm-git ...`。
+raw `git --no-verify` 会绕过白名单校验与 `.omo/_delivery/swarm-escape/` 台账。
+T1-07 已落地 PATH shim（`bin/gac/git-shim` + `AGENT_ID` circuit_breaker）：agent 环境 `git` → `swarm-git` 强制收口，拦 `--no-verify` + 高危操作（`clean -fd` / `reset --hard` / `stash -u` / 共享分支 `rebase`）；人类终端（`AGENT_ID` 空）透传不受影响。
+
+**新门禁上线三段式**：`shadow`（只记录，1 周）→ `warning`（给清理期限）→ `fail`（存量清零后）。
+跳过前两段直接 fail 会锁死主干——ADR-0380 上线当天检出 18 个 rewind，所有无关提交被拦。
+
+拓扑层根治方案（每 agent 独立 clone，主仓降级为集成点，D2/D3/D5 随之退役）见
+[`docs/reports/2026-08-06-multi-agent-git-topology.md`](docs/reports/2026-08-06-multi-agent-git-topology.md) 与 `BET-Y1Q1-T1-05`。
+
+### 1.7 我该做什么 — 三年规划执行台账
+
+不要自行拟定任务。读台账：
+
+```bash
+uv run --with pyyaml python bin/plan/bet-ledger.py status
+uv run --with pyyaml python bin/plan/bet-ledger.py claim-check <BET-ID>
+```
+
+SSOT `docs/plans/3y-bet-ledger.yaml` · 视图 `docs/plans/3Y-BET-LEDGER.md` ·
+执行指令 `docs/plans/AGENT-BRIEF.md` · 技能 skill `bet-execution`。
+
+台账铁律 D0–D5 与复盘五问见 AGENT-BRIEF；bet 数量与进度为运行时事实，从 CLI 读。
+
 ## 2. Documentation SSOT Contract
 
 | Document | Owns | Must Reference |

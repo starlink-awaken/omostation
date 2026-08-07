@@ -1,0 +1,55 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y1Q1-T2-01
+title: signal-sources 注册表与感知面契约
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T2-01
+window: Y1Q1
+track: T2-PERCEPT
+appetite: 3 days
+desc: 让"外部信号源"成为显式可注册、可观察健康、失败可见降级的架构对象
+non_goals:
+- 真实轮询实现(属 T2-02)
+- 信号到意图的映射(属 T3)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate: []
+evidence_required:
+- .omo/_truth/registry/signal-sources.yaml 建立, 含 apple_mail_inbox 一条
+- schema 含 idempotency_key / dedup_window / failure_policy / health / last_signal_at
+- 不可达时 health=unreachable, 禁止呈现为"本周 0 条信号"
+- bos://perception/* 在 agora 注册
+test_plan:
+- python3 bin/ssot/yaml-validate.py .omo/_truth/registry/signal-sources.yaml
+- grep -c 'bos://perception' projects/agora/etc/bos-services.yaml
+workflow: bet-execution
+write_surfaces:
+- .omo/_truth/registry/signal-sources.yaml
+- .omo/standards/**
+pasw_required: true
+circuit_breaker: 超 5 天 → 只落 registry + schema, agora 注册留下一 bet
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T2-01.md
+agent_profile_hint: adapter-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0
