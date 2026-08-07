@@ -1,0 +1,58 @@
+---
+title: Meeting Supervision Scene Card (会议到任务派发与督办)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-07
+related:
+  - ./engineering-delivery-dogfood.yaml
+  - ../STRATEGY-3YEAR-PANORAMA.md
+---
+schema: scene-card/v1
+scene_type: internal_pipeline
+admission_track: internal_evidence_based
+lifecycle: proposal_only
+activation: forbidden
+approval_state: pending_business_confirmation
+scene_id: meeting-supervision
+journey_id: meeting-to-delivery
+goal: 将会议决议收敛为可确认的任务、责任人、时限和升级链，确保闭环跟踪
+trigger: "会议结束产生决议/纪要 (来源: 手动录入或会议系统导出)"
+input_contract: 会议纪要引用 (evidence:// 或 vault://redacted/), 含决议项和责任人
+result_contract: 任务列表 (title/owner/deadline/priority/status) + 督办记录 + 逾期告警
+outcome_metric: overdue_task_rate / task_completion_rate
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 会议决议遗漏/任务丢失/逾期未督办导致工作失序
+data_classification: internal
+data_scope: meeting-metadata-and-task-references
+operator: meeting-supervision-agent-under-human-review
+permission_ref: permission://internal/meeting-supervision
+permission_scope:
+  - workflow-read
+  - evidence-write
+rollback_plan: revert-to-manual-task-tracking
+sample_refs:
+  - vault://redacted/meeting-supervision/sample-1
+  - vault://redacted/meeting-supervision/sample-2
+  - vault://redacted/meeting-supervision/sample-3
+demand_evidence_refs:
+  - evidence://strategy-panorama/W3
+activation_evidence_refs:
+  - evidence://strategy-panorama/W3
+required_capabilities:
+  - ref://capability/agent-workflow-lifecycle
+  - ref://capability/gac-local-gate
+opportunity_window: 卫健委借调 + 国转中心会议密集期 (周例会/专题会/协调会)
+external_resource_policy: proposal_only
+downstream_refs:
+  - scene: engineering-delivery
+    handoff: "evidence://scene/meeting-supervision/output:engineering-task"
+    trigger: on_task_assigned
+  - scene: periodic-reporting
+    handoff: "evidence://scene/meeting-supervision/output:reporting-item"
+    trigger: on_status_change
+notes:
+  - "W3 会议督办: 会议决议 → 任务派发 → 督办跟踪 → 闭环. 内部pipeline场景 (make targets验证能力)."
+  - "Candidate seed 已存在于 scene-card-candidate-seeds.yaml, 本 card 为正式提升."

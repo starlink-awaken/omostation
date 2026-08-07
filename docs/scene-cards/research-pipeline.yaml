@@ -1,0 +1,56 @@
+---
+title: Research Pipeline Scene Card (调研管线)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-07
+related:
+  - ./knowledge-curation.yaml
+  - ../../.omo/_truth/scenarios/research-pipeline.yaml
+---
+schema: scene-card/v1
+scene_type: external_resource
+lifecycle: proposal_only
+activation: forbidden
+approval_state: pending_business_confirmation
+scene_id: research-pipeline
+journey_id: question-to-insight
+goal: 将调研问题转化为结构化的收集、推导、检索和记忆流程，产出可引用的洞察报告
+trigger: "提出调研问题 (来源: 会议需求/公文要求/技术选型/政策研究)"
+input_contract: 调研问题 + 范围约束 + 预期深度 (evidence:// 或 vault://redacted/)
+result_contract: 调研报告 (发现/结论/引用/建议) + 知识条目 (自动沉淀到 knowledge-curation)
+outcome_metric: research_cycle_hours / insight_citation_rate
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 调研遗漏/结论不准/引用缺失导致决策依据薄弱
+data_classification: internal
+data_scope: redacted-research-references-and-pipeline-metadata
+operator: research-agent-under-human-review
+permission_ref: permission://scene/research-pipeline
+rollback_plan: revert-to-manual-research
+sample_refs:
+  - vault://redacted/research-pipeline/sample-1
+  - vault://redacted/research-pipeline/sample-2
+  - vault://redacted/research-pipeline/sample-3
+demand_evidence_refs:
+  - evidence://scenario/research-pipeline
+activation_evidence_refs:
+  - evidence://scenario/research-pipeline
+required_capabilities:
+  - iris:rss
+  - iris:zhihu
+  - iris:wxread
+opportunity_window: 政策研究窗口 (卫健委/国转中心政策调研) + 技术选型窗口 (eCOS架构演进)
+external_resource_policy: proposal_only
+downstream_refs:
+  - scene: knowledge-curation
+    handoff: "evidence://scene/research-pipeline/output:research-findings"
+    trigger: on_research_completed
+  - scene: document-review
+    handoff: "evidence://scene/research-pipeline/output:policy-reference"
+    trigger: on_policy_research_completed
+notes:
+  - "调研管线: 问题 → 收集 (rss/zhihu/wxread) → 推导 → 检索 → 报告. 提升自 research-pipeline scenario."
+  - "场景绑定: kairon.kronos(收集) + kairon.ontoderive(推导) + kairon.minerva(检索) + gbrain(记忆)."
+  - "连接器: iris:rss (14.1K, 信息源订阅) + iris:zhihu (7K, 专业讨论) + iris:wxread (7.8K, 深度阅读)."
