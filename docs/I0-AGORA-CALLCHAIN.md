@@ -32,8 +32,8 @@ metadata-migrated-at: 2026-07-31
 
 | 组件 | 源码位置 | 职责 |
 |:--|:--|:--|
-| `resolve_bos_uri` MCP tool | `server/tools_bos/` (shim: `tools_bos.py:255`) | 统一入口，编排限流/熔断/缓存/路由 |
-| `_bos_domain_authorized` | `server/tools_bos/` | 域级鉴权（CR-RBAC-01 / CR-DOMAIN-AUTH-01） |
+| `resolve_bos_uri` MCP tool | `server/tools_bos/registration.py:121` | 统一入口，编排限流/熔断/缓存/路由 |
+| `_bos_domain_authorized` | `server/tools_bos/_helpers.py:37` | 域级鉴权（CR-RBAC-01 / CR-DOMAIN-AUTH-01） |
 | `bos_rate_limiter` | `server/mcp/bos_middleware.py` | 20 QPS/域 令牌桶限流 |
 | `bos_circuit_breaker` | `server/mcp/bos_middleware.py` | 熔断器状态检查与记录 |
 | `bos_cache` | `server/mcp/bos_middleware.py` | TTL 缓存 |
@@ -53,7 +53,7 @@ metadata-migrated-at: 2026-07-31
 ```mermaid
 sequenceDiagram
     participant C as MCP Client
-    participant T as resolve_bos_uri<br/>server/tools_bos.py
+    participant T as resolve_bos_uri<br/>tools_bos/registration.py
     participant A as _bos_domain_authorized
     participant R as bos_rate_limiter
     participant CB as bos_circuit_breaker
@@ -115,7 +115,7 @@ sequenceDiagram
 ### Step 1 — MCP 入口
 
 ```python
-# projects/agora/src/agora/server/tools_bos.py:255
+# projects/agora/src/agora/server/tools_bos/registration.py:121
 @mcp.tool()
 @bos_metrics.track("bos://")
 async def resolve_bos_uri(uri: str, arguments: dict | str = "{}") -> dict:
@@ -128,7 +128,7 @@ async def resolve_bos_uri(uri: str, arguments: dict | str = "{}") -> dict:
 ### Step 2 — 域鉴权
 
 ```python
-# projects/agora/src/agora/server/tools_bos.py:62
+# projects/agora/src/agora/server/tools_bos/_helpers.py:37
 _bos_domain_authorized(uri, operation="read")
 ```
 
@@ -139,7 +139,7 @@ _bos_domain_authorized(uri, operation="read")
 ### Step 3 — 限流
 
 ```python
-# projects/agora/src/agora/server/tools_bos.py:272
+# projects/agora/src/agora/server/tools_bos/registration.py:272
 if not bos_rate_limiter.acquire(uri):
     return _error(f"Rate limit exceeded for: {uri}")
 ```
@@ -150,7 +150,7 @@ if not bos_rate_limiter.acquire(uri):
 ### Step 4 — 熔断
 
 ```python
-# projects/agora/src/agora/server/tools_bos.py:275
+# projects/agora/src/agora/server/tools_bos/registration.py:275
 if bos_circuit_breaker.is_open(uri):
     return _error(f"Circuit breaker open for: {uri}")
 ```
@@ -161,7 +161,7 @@ if bos_circuit_breaker.is_open(uri):
 ### Step 5 — 缓存
 
 ```python
-# projects/agora/src/agora/server/tools_bos.py:282
+# projects/agora/src/agora/server/tools_bos/registration.py:282
 cached = bos_cache.get(uri, args)
 if cached:
     bos_circuit_breaker.record_success(uri)
@@ -228,7 +228,7 @@ else:
 ### Step 9 — L0 审计与事件
 
 ```python
-# projects/agora/src/agora/server/tools_bos.py:299
+# projects/agora/src/agora/server/tools_bos/_helpers.py:85
 _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
 _publish_bos_event(bus, uri, "resolve", "ok", duration_ms)
 ```
@@ -244,16 +244,16 @@ _publish_bos_event(bus, uri, "resolve", "ok", duration_ms)
 | 故障场景 | 处理策略 | 代码位置 |
 |:--|:--|:--|
 | 下游 timeout / EOF | `StdioAdapter` 内自动重试 1 次 | `mcp/resolver/adapter.py` |
-| JSON 解析失败 | 返回结构化错误，熔断器记失败 | `server/tools_bos.py:311` |
+| JSON 解析失败 | 返回结构化错误，熔断器记失败 | `server/tools_bos/registration.py:311` |
 | 连续失败 | 熔断器打开，后续请求快速失败 | `bos_circuit_breaker` |
-| 缓存失效 | 回源调用，成功后重新写入 | `server/tools_bos.py:297` |
-| 限流命中 | 立即返回 `429` 语义错误 | `server/tools_bos.py:273` |
-| 域未注册 | 鉴权层返回 `Access denied` | `server/tools_bos.py:88` |
+| 缓存失效 | 回源调用，成功后重新写入 | `server/tools_bos/registration.py:297` |
+| 限流命中 | 立即返回 `429` 语义错误 | `server/tools_bos/registration.py:273` |
+| 域未注册 | 鉴权层返回 `Access denied` | `server/tools_bos/_helpers.py:88` |
 
 ---
 
 ## 5. 相关工具
 
 - `bos_list()` — 列出所有注册服务（`mcp/tools/bos_resolve.py:53`）
-- `list_bos_resources()` — 合并 BOSRouter + POC + ProxyManager 全量资源（`server/tools_bos.py:435`）
+- `list_bos_resources()` — 合并 BOSRouter + POC + ProxyManager 全量资源（`server/tools_bos/registration.py:435`）
 - `protocol_self_check()` — 自检服务定义完整性（`mcp/resolver/api.py:84`）
