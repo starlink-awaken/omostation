@@ -244,6 +244,20 @@ def main(argv: list[str] | None = None) -> int:
             p_parser.print_help()
             return 0
 
+    if args and args[0] in ("panorama", "full-spectrum"):
+        import argparse
+        pan_parser = argparse.ArgumentParser(prog="omo panorama", description="7 维全景终极可观测仪表盘")
+        pan_parser.add_argument("--json", action="store_true", help="JSON 输出")
+        pan_args = pan_parser.parse_args(args[1:])
+        from omo.omo_panorama import OMOPanoramaEngine, format_panorama_report
+        engine = OMOPanoramaEngine()
+        data = engine.get_full_panorama()
+        if pan_args.json:
+            print(json.dumps(data, indent=2, ensure_ascii=False))
+        else:
+            print(format_panorama_report(data))
+        return 0
+
     if args and args[0] == "inspect":
         import argparse
 
