@@ -128,6 +128,7 @@ def cmd_research(args: argparse.Namespace) -> int:
     if not output:
         use_stream = getattr(args, "stream", False)
         ollama_timeout = _ollama_timeout(120)
+        ollama_out = None
         _get_console().print(f"[yellow]⏳ llm-router 推理中 ({_short(topic, 30)})...[/]")
         routed, router_source = llm_router_complete(
             f"请对以下主题进行简要研究分析，用中文输出:\n\n{topic}",

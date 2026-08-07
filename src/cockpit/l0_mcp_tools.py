@@ -187,13 +187,65 @@ def md_validate() -> str:
                         data = yaml.safe_load(open(f))
                         if data and "type" in data:
                             nodes.append(data)
-                    except Exception:  # defensive fallback
+                    except Exception:
                         pass
 
         result = tool_validate(models=nodes)
         return f"model-driven 自反验证: passed={result['passed']}, errors={result['error_count']}, warnings={result['warning_count']}, nodes={len(nodes)}"
     except ImportError:
         return "model-driven 不可用 (安装: cd ~/Workspace/projects/model-driven && uv sync)"
+
+
+def l4_tools_scan(domain: str = "") -> str:
+    """扫描 L4 Registry 域工具 — 发现并注册全域 Python/Shell 工具"""
+    import os
+    import sys
+    from pathlib import Path
+
+    l4_src = Path.home() / "workspace" / "projects" / "l4-kernel" / "src"
+    if l4_src.exists():
+        sys.path.insert(0, str(l4_src))
+
+    try:
+        from l4_kernel.registry import DomainRegistry, _BUILTIN_DOMAINS
+
+        overrides = {}
+        for d in _BUILTIN_DOMAINS:
+            env_key = f"L4_DOMAIN_PATH_{d.id.upper()}"
+            env_val = os.environ.get(env_key)
+            if env_val:
+                overrides[d.id] = Path(env_val)
+            else:
+                overrides[d.id] = d.path
+
+        registry = DomainRegistry(path_overrides=overrides)
+
+        if domain:
+            tools = registry.scan_tools(domain)
+            if not tools:
+                return f"域 '{domain}' 无工具或不存在"
+            lines = [f"域 '{domain}' — {len(tools)} 工具:"]
+            for t in tools:
+                rel_path = str(t.path).replace(str(registry.get(domain).path), "~")
+                lines.append(f"  {t.tool_type:12s} {t.name:40s} {rel_path}")
+            return "\n".join(lines)
+        else:
+            all_tools = registry.scan_all_tools()
+            if not all_tools:
+                return "无工具注册"
+            total = sum(len(t) for t in all_tools.values())
+            lines = [f"L4 Registry — {len(all_tools)} 域, {total} 工具:"]
+            for did, tools in sorted(all_tools.items()):
+                d = registry.get(did)
+                d_name = d.name if d else did
+                lines.append(f"  {d_name}: {len(tools)} 工具")
+                for t in tools:
+                    lines.append(f"    {t.tool_type:12s} {t.name}")
+            return "\n".join(lines)
+    except ImportError as e:
+        return f"L4 Registry 不可用 (ImportError: {e})"
+    except Exception as e:
+        return f"扫描失败: {e}"
 
 
 # ── MCP Tool Registry ──
@@ -239,6 +291,11 @@ MCP_TOOLS = {
         "description": "model-driven 自反验证 — 用 model-driven 工具校验 L0 MOF M1 节点",
         "parameters": {},
     },
+    "l4_tools_scan": {
+        "function": l4_tools_scan,
+        "description": "L4 Registry 工具扫描 — 发现并注册全域域工具 (domain=域ID 可选)",
+        "parameters": {"domain": "域 ID (可选, 省略则扫描全部)"},
+    },
 }
 
 
@@ -265,5 +322,8 @@ if __name__ == "__main__":
         print(l0_adr_list())
     elif tool == "entity" and len(sys.argv) > 2:
         print(l0_entity_resolve(sys.argv[2]))
+    elif tool == "l4_tools":
+        domain = sys.argv[2] if len(sys.argv) > 2 else ""
+        print(l4_tools_scan(domain))
     else:
         print(f"未知工具: {tool}")
