@@ -16,7 +16,7 @@ jobs:
         with:
           # P41-W1 fix: scope ruff to tracked Python source only (omo, agora, ecos, cockpit, scripts).
           # Also ignore F401/F821/E402/E722 (historic violations, separately tracked).
-          src: "projects/omo/src scripts"
+          src: "projects/omo/src"
           # ruff 0.16 收紧撞上既有 valid 模式/风格偏好, 逐个改风险>收益 (async 重构/类型签名变更/风格):
           # 兜底类 BLE001/S110/S112=catch Exception 容错(valid), EXE001=shebang;
           # 风格/模式类 PLW1510(open encoding 场景OK)/ASYNC221,230(async 模式)/SIM102,115(风格)/TRY004/PYI036(类型签名)/

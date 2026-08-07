@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **121** 个命令 (含子命令)。按场景分组如下。
+共 **135** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -105,15 +105,18 @@
 | `cockpit finance` | 💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域) |
 | `cockpit gongwen` | 📄 公文写作门户引导 (文种/规范/入口, 委派 @公文 域) |
 | `cockpit profile` | 查看/编辑身份档案 (L4 入口) |
-| `cockpit scenario` | P5 统一 scenario 入口 (radar/assistant/health) |
+| `cockpit scenario` | P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval) |
 
 ## 其他
 
 | 命令 | 描述 |
 |------|------|
+| `cockpit add` | 添加意图到场景 |
 | `cockpit agent-onboard` | 🤖 Agent 入职引导 checklist (profile + MCP + BOS + skills) |
 | `cockpit analyze` | 运行全部分析工具 |
 | `cockpit api` | 启动 API server |
+| `cockpit approval` | P5-F7 approval: HITL 审批流 + 证据面板 |
+| `cockpit approve` | 审批意图并创建 OMO Task 绑定 |
 | `cockpit archive` | 归档已处理完毕的 Inbox 待办文件 |
 | `cockpit ask` | 向大脑提问（知识检索 + LLM 回答） |
 | `cockpit assistant` | P5-F2 work-assistant: 1 真实工作 query → 结构化草稿 |
@@ -123,10 +126,14 @@
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
+| `cockpit complete` | 标记绑定完成 |
 | `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
+| `cockpit create-journey` | 创建新 Journey |
+| `cockpit create-scene` | 创建新场景 |
 | `cockpit down` | 停止观测栈 |
 | `cockpit event` | 导出事件封套 (EventEnvelope) |
 | `cockpit events-watch` | 实时监听 SSE 事件流简便入口 |
+| `cockpit evidence` | 查看意图证据详情 |
 | `cockpit export` | 导出契约封套 |
 | `cockpit export-research` | 将研究对象导出为 WorkspaceObject JSON |
 | `cockpit forget` | 遗忘传播 |
@@ -138,6 +145,7 @@
 | `cockpit impact` | 分析符号的变更影响面 |
 | `cockpit inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
 | `cockpit index` | 刷新 data/_index 元数据 |
+| `cockpit intake` | P5-F5 intake: 邮件/文件/消息→结构化事项摄入管线 |
 | `cockpit invoke` | 调用 capability 服务（执行 BOS YAML command） |
 | `cockpit kems` | 🧬 KEMS 域治理 (domains/status/scan) |
 | `cockpit knowledge` | 📚 KOS 知识检索 (search/status/stats) |
@@ -151,22 +159,28 @@
 | `cockpit pack` | 将代码库打包为 LLM 友好格式 |
 | `cockpit pending` | 查看未决待办快照预览 |
 | `cockpit pipeline` | pipeline 概览 |
+| `cockpit preview` | 预览摄入结果 (不持久化) |
 | `cockpit publish` | 发布事件 |
+| `cockpit queue` | 查看待审批队列 |
 | `cockpit quickstart-check` | 快速检查新用户环境核验状态 |
 | `cockpit radar` | P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates |
 | `cockpit read` | 通过 BOS 网关统一读取指定 URI 资源 |
 | `cockpit recall` | 意图路由召回（neo4j/temporal 支持 --as-of） |
 | `cockpit register` | 注册 BOS 服务 |
+| `cockpit reject` | 拒绝意图 |
 | `cockpit reload` | 重载 BOS 配置/M1 |
 | `cockpit remember` | 手动存入偏好/事实 |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit route` | 为模型选择最优节点 |
+| `cockpit run` | 执行摄入管线 (提取→丰富→添加到收件箱) |
 | `cockpit scan` | 平面扫描 |
 | `cockpit score` | 评分债务项 |
 | `cockpit serve` | stdio JSON-RPC serve mode |
-| `cockpit stats` | 索引统计 |
+| `cockpit show` | 查看场景详情 |
+| `cockpit stats` | 查看审批统计 |
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
 | `cockpit swarm` | 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
+| `cockpit task` | P5-F6 task: 场景卡→OMO Task 桥接管理 |
 | `cockpit topics` | 列出已注册 topic |
 | `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
 | `cockpit types` | 查看已注册的数据类型 |
