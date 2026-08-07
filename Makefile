@@ -54,10 +54,14 @@ help:
 	@echo "make pasw-status         显示 PASW 子模块 worktree 状态"
 	@echo "make pasw-cleanup        TTL 回收过期子模块 worktree (默认 24h)"
 	@echo ""
-	@echo "=== 8维架构 / 运维 / 项目体检 ==="
+	@echo "=== 8维架构 / 7D全景 / 项目体检 / 场景与预测 ==="
+	@echo "make panorama                    7 维全景终极可观测仪表盘 (Exec/Service/Content/Knowledge/Data/Exception/Debt)"
 	@echo "make compass-trace GOAL_ID=<id>  8 维全景元架构追溯 (LifeOS->Goals->C2G->Agora->AetherForge)"
 	@echo "make project-inspect PROJ=<name> 17 项目全景 4D 体检与诊断"
 	@echo "make debt-synthesize             物理 CSES 债务升维与 C2G Bet 提取"
+	@echo "make debt-predict                Phase 5 动态代码债务蔓延预测引擎"
+	@echo "make journey-validate            Journey State Graph 状态图表达验证器"
+	@echo "make scene-card-check            Scene Card 2.0 活性与 Schema 检验"
 	@echo ""
 	@echo "=== 债务 ==="
 	@echo "make debt-check          检查债务状态"
@@ -604,6 +608,12 @@ project-inspect:  ## 17 项目全景 4D 体检与诊断
 
 debt-synthesize:  ## 物理 CSES 债务升维与 C2G Bet 提取
 	PYTHONPATH=projects/omo/src:bin/gac $(PY) bin/gac/omo_debt_synthesizer.py
+
+debt-predict:  ## Phase 5 动态代码债务蔓延预测引擎
+	$(PY) bin/gac/debt-predictor.py
+
+journey-validate:  ## Journey State Graph 状态图表达验证器
+	$(PY) bin/ssot/journey-runner.py --help
 
 
 pasw-cleanup-dryrun:  ## 预览回收 (不删除)

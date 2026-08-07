@@ -189,6 +189,8 @@ _CHECK_TIMEOUTS = {g["id"]: g.get("timeout", 15) for g in GATES_LIST}
 SOFT_CHECKS = {
     "governance-semantic-gate",  # evolution/release_ready 是软信号, 非门禁阻断
     "brief-protect",            # BRIEF.md protect 提示手工修改, 非门禁阻断
+    "current-state-coherence",   # 运行态动态推导软信号
+    "ci-surfaces-check",         # CI Surface 重叠软警告
 }
 
 
@@ -744,6 +746,7 @@ def main() -> int:
     parser.add_argument("--adaptive", action="store_true", help="Enable adaptive threshold adjustment for supported checks")
     parser.add_argument("--risk-profile", choices=["low", "medium", "high"], help="Risk-aware gate filtering")
     parser.add_argument("--summarize", action="store_true", help="Generate Markdown summary of gate report")
+    parser.add_argument("--alert", action="store_true", help="Run anomaly detection on metrics-store.jsonl after gate")
     args = parser.parse_args()
 
     try:
@@ -754,7 +757,6 @@ def main() -> int:
     if args.summarize:
         try:
             import tempfile
-            import subprocess
             with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp:
                 json.dump(report, tmp, ensure_ascii=False, indent=2)
                 tmp_path = tmp.name
@@ -776,6 +778,22 @@ def main() -> int:
             append_metrics(report)
         except Exception as exc:
             print(f"[WARN] metrics append failed: {exc}", file=sys.stderr)
+
+    if args.alert:
+        try:
+            anomaly_script = WORKSPACE / "bin" / "gac" / "anomaly-detector.py"
+            proc = subprocess.run(
+                [sys.executable, str(anomaly_script)],
+                capture_output=True,
+                text=True,
+                cwd=WORKSPACE,
+            )
+            if proc.returncode == 0:
+                print(proc.stdout)
+            else:
+                print(f"[WARN] anomaly detector failed: {proc.stderr}", file=sys.stderr)
+        except Exception as exc:
+            print(f"[WARN] alert run failed: {exc}", file=sys.stderr)
 
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))

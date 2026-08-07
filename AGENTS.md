@@ -160,7 +160,16 @@ uv run --with pyyaml python bin/plan/bet-ledger.py claim-check <BET-ID>
 SSOT `docs/plans/3y-bet-ledger.yaml` · 视图 `docs/plans/3Y-BET-LEDGER.md` ·
 执行指令 `docs/plans/AGENT-BRIEF.md` · 技能 skill `bet-execution`。
 
-台账铁律 D0–D5 与复盘五问见 AGENT-BRIEF；bet 数量与进度为运行时事实，从 CLI 读。
+### 1.8 8D 全景元架构与全仓四大入口契约 (8D Meta-Architecture & Channels)
+
+系统由 **LifeOS 意图 ➔ C2G 策略 ➔ Goals 目标 ➔ Agora 蜂群 ➔ AetherForge 算力 ➔ AGE-v2 落地 ➔ MOS/KOS 记忆 ➔ X-Plane 熵减** 8 维空间组成。
+全仓核心命令与全景视图暴露如下：
+
+1. **7D 终极可观测**：`cockpit panorama` / `make panorama` (执行/服务/内容/知识/数据/异常/债务资产)。
+2. **8D 全景追溯**：`cockpit compass trace <GOAL-ID>` / `make compass-trace` / `bos://governance/omo/compass-trace`。
+3. **17 项目 4D 体检**：`cockpit project inspect <PROJ>` / `make project-inspect` / `bos://governance/omo/project-inspect`。
+4. **场景卡与 Journey 校验**：`cockpit journey` / `make journey-validate` / `make scene-card-check`。
+5. **常态化守护**：必须维持 `make gac-local-gate` 42 Checks ALL GREEN PASS 绿线。
 
 ## 2. Documentation SSOT Contract
 
