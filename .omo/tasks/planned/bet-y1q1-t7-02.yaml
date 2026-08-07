@@ -1,0 +1,60 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:28:20+00:00
+id: BET-Y1Q1-T7-02
+title: v10 失落产物重建并入库
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T7-02
+window: Y1Q1
+track: T7-SCENE
+appetite: 1 week
+desc: 把 2026-08-06 丢失的 journey-runner / scene-card-lifecycle / validator / scene-card
+  v2 重建并 git add
+non_goals:
+- 功能增强
+- DAG 语义修复(属 T5)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T1-04
+- BET-Y1Q1-T7-01
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T1-04'
+- '依赖已 done: BET-Y1Q1-T7-01'
+evidence_required:
+- bin/ssot/journey-runner.py 重建且 git tracked
+- bin/ssot/scene-card-lifecycle.py 重建且 git tracked
+- scene-card v2 schema 与三张卡重建且 git tracked
+- 全部通过 D0 检查
+test_plan:
+- git ls-files --error-unmatch bin/ssot/journey-runner.py
+workflow: bet-execution
+write_surfaces:
+- bin/ssot/journey-runner.py
+- bin/ssot/scene-card-lifecycle.py
+- docs/scene-cards/**
+pasw_required: false
+circuit_breaker: 超 2 周 → 只重建 journey-runner(最核心), 其余记 debt
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T7-02.md
+agent_profile_hint: docs-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

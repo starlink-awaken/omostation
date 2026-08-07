@@ -134,6 +134,7 @@ bash bin/gac/gac-worktree.sh submit <bet-id 小写>
 | **D3** | 先 claim 后写，未 claim 的写面视为越权 | `bet-ledger.py claim-check` |
 | **D4** | 走 ADR-0203 workflow，先 start 再改文件 | `agent-workflow.py start` |
 | **D5** | 无 retro 不得置 done | `bet-ledger.py retro-due` |
+| **D6** | 指标设立前必须回答「最便宜的达标路径是什么」，若那条路径有害则指标不成立 | 设指标时人工反问；已知有害路径写进 non_goals |
 
 ---
 

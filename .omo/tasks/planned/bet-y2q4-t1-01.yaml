@@ -1,0 +1,53 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y2Q4-T1-01
+title: Y2 年度门 + 愿景证伪检查
+status: candidate
+task_type: bet
+priority: P0
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y2Q4-T1-01
+window: Y2Q4
+track: T1-TRUTH
+appetite: 3 days
+desc: 对愿景做一次不可回避的证伪判定
+non_goals:
+- 补救(属 Y3)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y2Q3-T3-01
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y2Q3-T3-01'
+evidence_required:
+- 实测每周采纳数/采纳率/修订率下降幅度
+- 与 Y1 基线对比
+- 若修订率未降 >= 20% 则宣告愿景证伪并给出转向方案
+test_plan:
+- python3 bin/plan/bet-ledger.py gate Y2Q4
+workflow: bet-execution
+write_surfaces:
+- .omo/_knowledge/retros/gates/**
+pasw_required: false
+circuit_breaker: 不适用(这是门本身)
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y2Q4-T1-01.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0
