@@ -31,3 +31,35 @@ unimplemented:
   reason: AGT Lightning 未落地
 - uri: bos://governance/agt/hypervisor
   reason: AGT 超管未落地
+- uri: bos://capability/agent-runtime/execute
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/agent-runtime/list-tools
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/agent-runtime/status
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/forge/agent-list
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/forge/agent-install
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/forge/registry
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/forge/publish
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/forge/lint
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/forge/discover
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/forge/exec-tool
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/forge/list-tools
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/forge/register-tool
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/agent-runtime/chat
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/agent-runtime/run-task
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/agent-runtime/task-status
+  reason: 包不存在 (环境性悬空声明)
+- uri: bos://capability/agent-runtime/agent-list
+  reason: 包不存在 (环境性悬空声明)

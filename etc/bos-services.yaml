@@ -259,6 +259,7 @@ services:
   domain: capability
   mcp_endpoint: http://localhost:8778/mcp
   uri: bos://capability/cockpit/mcp-server
+  transport: stdio
 - action: rest-api
   description: KOS REST API v1 (9 endpoints)
   domain: memory
@@ -417,6 +418,40 @@ services:
   status: active
   transport: stdio
   uri: bos://governance/omo/state
+- action: compass-trace
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/omo
+  - python
+  - -m
+  - omo.cli
+  - compass
+  - trace
+  description: 8 维全景元架构立体重构追溯
+  domain: governance
+  package: omo
+  status: active
+  transport: stdio
+  uri: bos://governance/omo/compass-trace
+- action: project-inspect
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/omo
+  - python
+  - -m
+  - omo.cli
+  - project
+  - inspect
+  description: 17 项目全景 4D 体检与诊断
+  domain: governance
+  package: omo
+  status: active
+  transport: stdio
+  uri: bos://governance/omo/project-inspect
 - action: debt
   command:
   - uv
@@ -970,7 +1005,7 @@ services:
   description: Agent Runtime 执行入口
   domain: capability
   package: agent-runtime
-  status: active
+  status: unimplemented
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/execute
 - action: list-tools
@@ -985,7 +1020,7 @@ services:
   description: Agent Runtime 工具列表
   domain: capability
   package: agent-runtime
-  status: active
+  status: unimplemented
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/list-tools
 - action: status
@@ -1000,7 +1035,7 @@ services:
   description: Agent Runtime 状态
   domain: capability
   package: agent-runtime
-  status: active
+  status: unimplemented
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/status
 - action: agent-list
@@ -1016,7 +1051,7 @@ services:
   description: Forge 集市 Agent 列表
   domain: capability
   package: forge
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://capability/forge/agent-list
 - action: agent-install
@@ -1032,7 +1067,7 @@ services:
   description: Forge 集市 Agent 安装
   domain: capability
   package: forge
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://capability/forge/agent-install
 - action: registry
@@ -1048,7 +1083,7 @@ services:
   description: Forge 注册表查询
   domain: capability
   package: forge
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://capability/forge/registry
 - action: publish
@@ -1064,7 +1099,7 @@ services:
   description: Forge 发布入口
   domain: capability
   package: forge
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://capability/forge/publish
 - action: lint
@@ -1080,7 +1115,7 @@ services:
   description: Forge Lint 检查
   domain: capability
   package: forge
-  status: active
+  status: unimplemented
   transport: stdio
   uri: bos://capability/forge/lint
 - action: run
@@ -1420,7 +1455,7 @@ services:
   description: '[POC] Forge 工具发现 (POC stdio)'
   domain: capability
   package: forge
-  status: active
+  status: unimplemented
   transport: mcp_stdio
   uri: bos://capability/forge/discover
 - action: exec-tool
@@ -1438,7 +1473,7 @@ services:
   description: '[POC] Forge 工具执行 (POC stdio)'
   domain: capability
   package: forge
-  status: active
+  status: unimplemented
   transport: mcp_stdio
   uri: bos://capability/forge/exec-tool
 - action: list-tools
@@ -1456,7 +1491,7 @@ services:
   description: '[POC] Forge 工具列表 (POC stdio)'
   domain: capability
   package: forge
-  status: active
+  status: unimplemented
   transport: mcp_stdio
   uri: bos://capability/forge/list-tools
 - action: register-tool
@@ -1474,7 +1509,7 @@ services:
   description: '[POC] Forge 工具注册 (POC stdio)'
   domain: capability
   package: forge
-  status: active
+  status: unimplemented
   transport: mcp_stdio
   uri: bos://capability/forge/register-tool
 - action: query
@@ -1626,7 +1661,8 @@ services:
   - -m
   - mos
   - write
-  description: Memory OS unified write (dual-track raw+theta; Neo4j FACT when NEO4J_URI) — ADR-0372
+  description: Memory OS unified write (dual-track raw+theta; Neo4j FACT when 
+    NEO4J_URI) — ADR-0372
   domain: memory
   package: mos
   status: active
@@ -1647,7 +1683,8 @@ services:
   - -m
   - mos
   - recall
-  description: Memory OS unified intent-aware recall (neo4j+kos+gbrain fan-out) — ADR-0372
+  description: Memory OS unified intent-aware recall (neo4j+kos+gbrain fan-out) 
+    — ADR-0372
   domain: memory
   package: mos
   status: active
@@ -1689,7 +1726,8 @@ services:
   - -m
   - mos
   - forget
-  description: Memory OS forget propagation (raw+theta+mem0+neo4j invalidate) — ADR-0372
+  description: Memory OS forget propagation (raw+theta+mem0+neo4j invalidate) — 
+    ADR-0372
   domain: memory
   package: mos
   status: active
@@ -1710,7 +1748,8 @@ services:
   - -m
   - mos
   - consolidate
-  description: Memory OS sleep-time consolidate via gbrain dream orchestration — ADR-0372
+  description: Memory OS sleep-time consolidate via gbrain dream orchestration —
+    ADR-0372
   domain: memory
   package: mos
   status: active
@@ -1731,7 +1770,8 @@ services:
   - -m
   - mos
   - knowledge-ref
-  description: Memory OS ADR-0315 knowledge citation metadata (no body) — ADR-0372
+  description: Memory OS ADR-0315 knowledge citation metadata (no body) — 
+    ADR-0372
   domain: memory
   package: mos
   status: active
@@ -1777,7 +1817,7 @@ services:
   description: Agent 交互式对话接口
   domain: capability
   package: agent-runtime
-  status: active
+  status: unimplemented
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/chat
 - action: run-task
@@ -1792,7 +1832,7 @@ services:
   description: Agent 任务执行接口
   domain: capability
   package: agent-runtime
-  status: active
+  status: unimplemented
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/run-task
 - action: task-status
@@ -1807,7 +1847,7 @@ services:
   description: Agent 任务状态查询
   domain: capability
   package: agent-runtime
-  status: active
+  status: unimplemented
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/task-status
 - action: agent-list
@@ -1822,7 +1862,7 @@ services:
   description: 列出所有可用 Agent 实例
   domain: capability
   package: agent-runtime
-  status: active
+  status: unimplemented
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/agent-list
 - action: validate
@@ -2088,8 +2128,8 @@ services:
     domain: capability
     realized_by: agora.register
     upstream: /Users/xiamingxing/ToolBox/mcp/wps-office-mcp/.git
-  description: WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents
-    业务文件读写
+  description: WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A 
+    Documents 业务文件读写
   domain: capability
   i0_route: pending
   package: toolbox/wps-office-mcp
@@ -2105,7 +2145,8 @@ services:
     domain: capability
     realized_by: agora.register
     upstream: /Users/xiamingxing/ToolBox/skills/wps-skills/.git
-  description: WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 内置触发
+  description: WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 
+    内置触发
   domain: capability
   i0_route: pending
   package: toolbox/wps-skills
@@ -2134,9 +2175,9 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/headroom" && if [ -x .venv/bin/python ]; then
-    PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run python -m headroom;
-    else PY=python3; fi && "$PY" -m headroom --help
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/headroom" && if [ -x .venv/bin/python
+    ]; then PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run
+    python -m headroom; else PY=python3; fi && "$PY" -m headroom --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2152,9 +2193,10 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/code-review-graph" && if [ -x .venv/bin/python
-    ]; then PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run python -m
-    code_review_graph; else PY=python3; fi && "$PY" -m code_review_graph --help
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/code-review-graph" && if [ -x 
+    .venv/bin/python ]; then PY=.venv/bin/python; elif command -v uv >/dev/null;
+    then exec uv run python -m code_review_graph; else PY=python3; fi && "$PY" 
+    -m code_review_graph --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2170,8 +2212,8 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/claude-skills" && test -d skills && echo
-    ok:claude-skills
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/claude-skills" && test -d skills 
+    && echo ok:claude-skills
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2187,8 +2229,8 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill" && test -f skills/last30days/SKILL.md
-    && echo ok:last30days-skill
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill" && test -f 
+    skills/last30days/SKILL.md && echo ok:last30days-skill
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2204,8 +2246,9 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/media-crawler" && if [ -x .venv/bin/python
-    ]; then PY=.venv/bin/python; else PY=python3; fi && "$PY" main.py --help
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/media-crawler" && if [ -x 
+    .venv/bin/python ]; then PY=.venv/bin/python; else PY=python3; fi && "$PY" 
+    main.py --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2221,8 +2264,8 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/open-montage" && test -d . && ls
-    README.md >/dev/null && echo ok:open-montage
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/open-montage" && test -d . && 
+    ls README.md >/dev/null && echo ok:open-montage
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2238,8 +2281,8 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/skills-for-fabric" && test -d skills && echo
-    ok:skills-for-fabric
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/skills-for-fabric" && test -d 
+    skills && echo ok:skills-for-fabric
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2255,9 +2298,10 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/deer-flow" && if [ -x .venv/bin/python ];
-    then PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run python -m
-    deer_flow; else PY=python3; fi && "$PY" -m deer_flow --help
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/deer-flow" && if [ -x 
+    .venv/bin/python ]; then PY=.venv/bin/python; elif command -v uv >/dev/null;
+    then exec uv run python -m deer_flow; else PY=python3; fi && "$PY" -m 
+    deer_flow --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2273,9 +2317,10 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/datafoundry" && if [ -x .venv/bin/python ];
-    then PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run python -m
-    datafoundry; else PY=python3; fi && "$PY" -m datafoundry --help
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/datafoundry" && if [ -x 
+    .venv/bin/python ]; then PY=.venv/bin/python; elif command -v uv >/dev/null;
+    then exec uv run python -m datafoundry; else PY=python3; fi && "$PY" -m 
+    datafoundry --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2291,8 +2336,8 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/knowledge-work-plugins" && test -d skills
-    && echo ok:knowledge-work-plugins
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/knowledge-work-plugins" && test -d
+    skills && echo ok:knowledge-work-plugins
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2457,7 +2502,8 @@ services:
   transport: inline
   uri: bos://governance/governance/tasks
 - action: governance/circuit_breaker
-  description: governance cockpit circuit_breaker 端点 (cockpit api_omos metrics source)
+  description: governance cockpit circuit_breaker 端点 (cockpit api_omos metrics 
+    source)
   domain: governance
   i0_route: pending
   package: cockpit
@@ -2465,7 +2511,8 @@ services:
   transport: inline
   uri: bos://governance/governance/circuit_breaker
 - action: governance/daily_budget
-  description: governance cockpit daily_budget 端点 (cockpit api_omos metrics source)
+  description: governance cockpit daily_budget 端点 (cockpit api_omos metrics 
+    source)
   domain: governance
   i0_route: pending
   package: cockpit
@@ -2481,8 +2528,8 @@ services:
   transport: inline
   uri: bos://governance/governance/quests
 - action: governance/omo_worker_dispatch
-  description: governance omo worker dispatch 端点 (omo bus_demo_omo_producer metrics
-    source)
+  description: governance omo worker dispatch 端点 (omo bus_demo_omo_producer 
+    metrics source)
   domain: governance
   i0_route: pending
   package: omo
@@ -2708,7 +2755,7 @@ services:
 
 - action: policy
   command:
-    - agent-governance-toolkit
+  - agent-governance-toolkit
   description: AGT 策略评估与合规检查引擎 (Agent Governance Toolkit)
   domain: governance
   package: agt
@@ -2717,7 +2764,7 @@ services:
   uri: bos://governance/agt/policy
 - action: trust
   command:
-    - agent-governance-toolkit
+  - agent-governance-toolkit
   description: AGT 信任评分与身份验证服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
@@ -2726,7 +2773,7 @@ services:
   uri: bos://capability/agt/trust
 - action: sandbox
   command:
-    - agent-governance-toolkit
+  - agent-governance-toolkit
   description: AGT 沙箱隔离与权限控制服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
@@ -2735,7 +2782,7 @@ services:
   uri: bos://capability/agt/sandbox
 - action: sre
   command:
-    - agent-governance-toolkit
+  - agent-governance-toolkit
   description: AGT SRE 监控与健康检查服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
@@ -2744,7 +2791,7 @@ services:
   uri: bos://capability/agt/sre
 - action: mcp-security
   command:
-    - agent-governance-toolkit
+  - agent-governance-toolkit
   description: AGT MCP 安全审计与权限检查服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
@@ -2753,7 +2800,7 @@ services:
   uri: bos://capability/agt/mcp-security
 - action: marketplace
   command:
-    - agent-governance-toolkit
+  - agent-governance-toolkit
   description: AGT 能力市场与发现服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
@@ -2762,7 +2809,7 @@ services:
   uri: bos://capability/agt/marketplace
 - action: lightning
   command:
-    - agent-governance-toolkit
+  - agent-governance-toolkit
   description: AGT Lightning 快速通道与缓存服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
@@ -2771,7 +2818,7 @@ services:
   uri: bos://capability/agt/lightning
 - action: hypervisor
   command:
-    - agent-governance-toolkit
+  - agent-governance-toolkit
   description: AGT Hypervisor 审计哈希链与完整性验证服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
