@@ -631,7 +631,10 @@ surfaces:
 workflow_triggers:
   - workflow: agora-ci.yml
     triggers: [per_pr, push]
-    path_filtered: false
+    path_filtered: true
+    paths:
+    - .github/workflows/agora-ci.yml
+    - projects/agora/**
   - workflow: ai-pr-review.yml
     triggers: [per_pr]
     path_filtered: false
@@ -657,16 +660,29 @@ workflow_triggers:
     - scripts/**
   - workflow: ci-python-coverage.yml
     triggers: [per_pr, push]
-    path_filtered: false
+    path_filtered: true
+    paths:
+    - .github/workflows/ci-python-coverage.yml
+    - projects/*/pyproject.toml
+    - projects/aetherforge/**
+    - projects/bus-foundation/**
+    - projects/c2g/**
+    - projects/l4-kernel/**
+    - projects/model-driven/**
+    - projects/omo-debt/**
+    - projects/omo/**
   - workflow: cockpit-ci.yml
     triggers: [per_pr, push]
-    path_filtered: false
-  - workflow: cockpit-ui-ci.yml
-    triggers: [manual]
-    path_filtered: false
+    path_filtered: true
+    paths:
+    - .github/workflows/cockpit-ci.yml
+    - projects/cockpit/**
   - workflow: config-check.yml
     triggers: [push]
-    path_filtered: false
+    path_filtered: true
+    paths:
+    - projects/agora/src/agora-services.json
+    - projects/kairon/packages/agora/agora-services.json
   - workflow: constraint-validation.yml
     triggers: [per_pr]
     path_filtered: false
@@ -678,18 +694,21 @@ workflow_triggers:
     path_filtered: false
   - workflow: ecos-ci.yml
     triggers: [per_pr, push]
-    path_filtered: false
+    path_filtered: true
+    paths:
+    - .github/workflows/ecos-ci.yml
+    - projects/ecos/**
   - workflow: evidence-smoke-gate.yml
     triggers: [manual, per_pr, push]
     path_filtered: false
   - workflow: family-hub-ci.yml
     triggers: [per_pr, push]
-    path_filtered: false
+    path_filtered: true
+    paths:
+    - .github/workflows/family-hub-ci.yml
+    - projects/family-hub/**
   - workflow: gac-gate.yml
     triggers: [manual, per_pr, push]
-    path_filtered: false
-  - workflow: gbrain-ci.yml
-    triggers: [manual]
     path_filtered: false
   - workflow: governance-check.yml
     triggers: [per_pr, push, scheduled]
@@ -724,7 +743,10 @@ workflow_triggers:
     path_filtered: false
   - workflow: kairon-ci.yml
     triggers: [per_pr, push]
-    path_filtered: false
+    path_filtered: true
+    paths:
+    - .github/workflows/kairon-ci.yml
+    - projects/kairon/**
   - workflow: meta-model-check.yml
     triggers: [per_pr, push]
     path_filtered: true
@@ -733,13 +755,19 @@ workflow_triggers:
     - projects/runtime/protocols/*.yaml
   - workflow: metaos-ci.yml
     triggers: [per_pr, push]
-    path_filtered: false
+    path_filtered: true
+    paths:
+    - .github/workflows/metaos-ci.yml
+    - projects/metaos/**
   - workflow: mof-update.yml
     triggers: [manual, scheduled]
     path_filtered: false
   - workflow: observability-ci.yml
     triggers: [per_pr, push]
-    path_filtered: false
+    path_filtered: true
+    paths:
+    - .github/workflows/observability-ci.yml
+    - projects/observability/**
   - workflow: omo-autopilot.yml
     triggers: [manual, scheduled]
     path_filtered: false
@@ -769,13 +797,14 @@ workflow_triggers:
     path_filtered: false
   - workflow: quality.yml
     triggers: [per_pr, push]
-    path_filtered: false
-  - workflow: ruff-check.yml
-    triggers: [per_pr, push]
-    path_filtered: false
-  - workflow: runtime-ci.yml
-    triggers: [manual]
-    path_filtered: false
+    path_filtered: true
+    paths:
+    - .github/workflows/quality.yml
+    - .pre-commit-config.yaml
+    - projects/agora/src/**
+    - projects/cockpit/src/**
+    - projects/ecos/src/**
+    - projects/omo/src/**
   - workflow: state-goals-enforce.yml
     triggers: [per_pr, push]
     path_filtered: false

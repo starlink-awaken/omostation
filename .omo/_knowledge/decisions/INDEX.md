@@ -448,6 +448,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0379: CI Plane Convergence — surface SSOT, observability, double-trigger dedup, registry-driven runner — **ACCEPTED** | 2026-08-05 | CI plane convergence | 0379-ci-plane-convergence.md
 - ADR-0380: CI Plane Completion — runner migration, orphan cleanup, concurrent-drift absorption — **ACCEPTED** | 2026-08-06 | CI plane completion | 0380-ci-plane-completion.md
 - ADR-0382: 子模块指针回退检测 (CR-SUBMODULE-REWIND) — **ACCEPTED** | 2026-08-06 | Submodule rewind detection | 0382-submodule-rewind-detection.md
+- ADR-0388: CI 平面减法收官 — workflow retire + 内联 paths 检测盲区修复 + SSOT 生成器 — **ACCEPTED** | 2026-08-07 | CI plane subtraction | 0388-ci-plane-subtraction.md
 - ADR-0387: Dual-Track Scene Admission — internal pipeline scene admission track (make targets + RBAC scope) — **ACCEPTED** | 2026-08-07 | Dual-track admission | 0387-dual-track-scene-admission.md
 - ADR-0386: CI Consolidation — ruff/pytest dedup + integration path filter + workflow health — **ACCEPTED** | 2026-08-07 | CI consolidation | 0386-ci-consolidation-decision.md
 - ADR-0385: CI Pruner + SSOT Usage — scheduled prune-ci-runs cron + SSOT freshness monitor — **ACCEPTED** | 2026-08-07 | CI pruner + SSOT usage | 0385-ci-pruner-ssot-usage.md
