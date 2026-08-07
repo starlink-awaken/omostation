@@ -2778,3 +2778,17 @@ services:
   status: unimplemented
   transport: stdio
   uri: bos://governance/agt/hypervisor
+- action: inbox
+  description: Apple Mail 收件箱信号采集 (BET-Y1Q1-T2-01 感知面)
+  domain: perception
+  package: apple_mail
+  status: unimplemented
+  transport: stdio
+  uri: bos://perception/apple_mail/inbox
+- action: signal_health
+  description: 信号源健康探测与降级报告
+  domain: perception
+  package: signal_monitor
+  status: unimplemented
+  transport: stdio
+  uri: bos://perception/signal_monitor/health

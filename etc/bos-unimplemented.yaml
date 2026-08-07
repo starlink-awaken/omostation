@@ -11,3 +11,7 @@ unimplemented:
     reason: Iris connector 未落地 (开发中)
   - uri: bos://analysis/iris/validate
     reason: Iris connector 未落地 (开发中)
+  - uri: bos://perception/apple_mail/inbox
+    reason: BET-Y1Q1-T2-01 感知面信号采集未落地
+  - uri: bos://perception/signal_monitor/health
+    reason: BET-Y1Q1-T2-01 信号源健康探测未落地
