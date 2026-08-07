@@ -1,36 +1,40 @@
 #!/usr/bin/env bash
-# swarm-git — agent-facing git wrapper (G-CONV.7 / ADR-0220 D4)
+# swarm-git — agent-facing git wrapper (G-CONV.7 / ADR-0220 D4 + T1-07 高危拦截)
 #
 # Fail-closed for --no-verify: only allowlisted SWARM_ESCAPE_ID may pass.
 # Bare `git commit --no-verify` / `git push --no-verify` still skip hooks by
-# design of git; agents MUST use this wrapper (or set PATH) for fail-closed D4.
+# design of git; agents MUST use this wrapper (or PATH shim) for fail-closed D4.
 #
-# Usage:
-#   bin/gac/swarm-git commit -m "..."
-#   bin/gac/swarm-git push origin HEAD
-#   SWARM_ESCAPE_ID=write-owner-repair-draft bin/gac/swarm-git commit --no-verify -m "..."
-#
-# Install (optional): alias git='bin/gac/swarm-git' in agent profiles.
+# T1-07: 也拦高危 (clean -fd/reset --hard/stash -u/共享分支 rebase).
+# 关键: 内部 git 调用用 REAL_GIT (PATH 中非 shim 的 git 绝对路径), 否则
+# shim→swarm-git→exec git→PATH(shim)→shim→… 无限递归.
 
 set -euo pipefail
 
-ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+# REAL_GIT = PATH 中第一个非 shim 的 git (防递归)
+_shim_dir="${HOME:-}/agents/shim/bin"
+REAL_GIT=""
+IFS=':' read -ra _dirs <<< "${PATH:-}"
+for _d in "${_dirs[@]}"; do
+  [ "$_d" = "$_shim_dir" ] && continue
+  if [ -x "$_d/git" ]; then REAL_GIT="$_d/git"; break; fi
+done
+REAL_GIT="${REAL_GIT:-/usr/bin/git}"
+
+ROOT="$("$REAL_GIT" rev-parse --show-toplevel 2>/dev/null || true)"
 if [ -z "${ROOT:-}" ]; then
-  exec git "$@"
+  exec "$REAL_GIT" "$@"
 fi
 
-# Always evaluate --no-verify before delegating to real git
+# D4: --no-verify fail-closed (ADR-0220)
 if printf '%s\0' "$@" | grep -qz -- '--no-verify'; then
   CLI="$ROOT/bin/gac/swarm-discipline-cli.py"
   if [ ! -f "$CLI" ]; then
     echo "[swarm-git] ❌ missing swarm-discipline-cli.py; refusing --no-verify" >&2
     exit 1
   fi
-  # Infer flag from argv
   FLAG="no_verify_push"
-  for a in "$@"; do
-    if [ "$a" = "commit" ]; then FLAG="no_verify_commit"; break; fi
-  done
+  for a in "$@"; do [ "$a" = "commit" ] && { FLAG="no_verify_commit"; break; }; done
   OUT="$(python3 "$CLI" escape-check --flag "$FLAG" 2>&1)" || RC=$?
   RC="${RC:-0}"
   printf '%s\n' "$OUT" | sed 's/^/[swarm-git] /' >&2
@@ -39,39 +43,39 @@ if printf '%s\0' "$@" | grep -qz -- '--no-verify'; then
 [swarm-git] ❌ --no-verify blocked (G-CONV.7 D4 / ADR-0220)
    Set SWARM_ESCAPE_ID to an allowlisted id in
    .omo/_truth/registry/swarm-coordination.yaml::escape_hatch_exemptions
-   Example:
-     SWARM_ESCAPE_ID=submodule-reachability-partial-worktree bin/gac/swarm-git push --no-verify ...
 EOF
     exit 1
   fi
 fi
 
-# T1-07 (BET-Y1Q1-T1-07): 高危 argv 拦截 — clean -fd/reset --hard/stash -u
-# 这些操作删 peer agent 未入库工作 (2026-08-06 实测 4 次). agent 禁做, 无 escape.
-DANGER_PY="$ROOT/bin/gac/swarm_discipline.py"
-if [ -f "$DANGER_PY" ]; then
-  DANGER="$(AGENT_BIN="$ROOT/bin/gac" python3 -c '
+# T1-07: 高危 argv 拦截 — clean -fd/reset --hard/stash -u (agent 禁做, 无 escape)
+# bash 预筛: 只在 argv 含 clean/reset/stash 时 spawn python3 (避免每次 git 调用 import)
+if printf '%s\0' "$@" | grep -qzE '\bclean\b|\breset\b|\bstash\b'; then
+  DANGER_PY="$ROOT/bin/gac/swarm_discipline.py"
+  if [ -f "$DANGER_PY" ]; then
+    DANGER="$(AGENT_BIN="$ROOT/bin/gac" python3 -c '
 import sys, os
 sys.path.insert(0, os.environ["AGENT_BIN"])
 from swarm_discipline import argv_has_dangerous
 print("DANGER" if argv_has_dangerous(sys.argv[1:]) else "OK")
 ' "$@" 2>/dev/null)" || DANGER="ERR"
-  if [ "$DANGER" = "DANGER" ]; then
-    cat >&2 <<EOF
-[swarm-git] ❌ high-risk op blocked (T1-07): clean -fd / reset --hard / stash -u 禁在 agent 环境执行
+    if [ "$DANGER" = "DANGER" ]; then
+      cat >&2 <<EOF
+[swarm-git] ❌ high-risk op blocked (T1-07): clean -fd / reset --hard / stash -u 禁在 agent 环境
    这些操作删 peer agent 未入库工作. 用 worktree 隔离 + 三段式 add→commit→tag (git-discipline §1-2)
 EOF
-    exit 1
+      exit 1
+    fi
   fi
 fi
 
 # T1-07: 共享分支 rebase 拦截 (rebase + 当前分支非 work/*|pr/*)
 if printf '%s\0' "$@" | grep -qzE '\brebase\b'; then
-  BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+  BRANCH="$("$REAL_GIT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
   if [ -n "$BRANCH" ] && ! printf '%s' "$BRANCH" | grep -qE '^work/|^pr/'; then
     echo "[swarm-git] ❌ rebase on shared branch '$BRANCH' blocked (T1-07): 把工作挪到 work/* 分支" >&2
     exit 1
   fi
 fi
 
-exec git "$@"
+exec "$REAL_GIT" "$@"
