@@ -148,6 +148,14 @@ T1-07 已落地 PATH shim（`bin/gac/git-shim` + `AGENT_ID` circuit_breaker）�
 拓扑层根治方案（每 agent 独立 clone，主仓降级为集成点，D2/D3/D5 随之退役）见
 [`docs/reports/2026-08-06-multi-agent-git-topology.md`](docs/reports/2026-08-06-multi-agent-git-topology.md) 与 `BET-Y1Q1-T1-05`。
 
+### 1.6.3 多 Agent 蜂群感知与硬规约契约 (Swarm Perception & Hard Constraints)
+
+| 视角 | 机制 | 物理暴露与硬规约 |
+|---|---|---|
+| **怎么感知？** | 软/动/硬三层感知 | 启动/思考时自动注入在线节点大盘；通过 `swarm_who_is_working_on` 查冲突；`git-shim` 终端弹警告。 |
+| **怎么知道？** | 总线广播 + 冲突点名 | 任何 `claim/commit` 自动写入 `.omo/state/swarm/broadcast-bus.jsonl`；发生重叠触发 `SWARM_COLLISION_ALERT`。 |
+| **怎么物理约束？** | PASW + 物理锁 + 熔断阻断 | 强制走 `work/<session>` 分支隔离；未 `claim` 或冲突修改他人路径时门禁直接 **Exit 1** 阻断；拦截高危命令。 |
+
 ### 1.7 我该做什么 — 三年规划执行台账
 
 不要自行拟定任务。读台账：

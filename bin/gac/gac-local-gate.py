@@ -170,6 +170,14 @@ if not any(gate.get("id") == "check-conflict-markers" for gate in GATES_LIST):
         }
     )
 
+if not any(gate.get("id") == "check-swarm-collision" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "check-swarm-collision",
+            "command": ["bin/gac/check-swarm-collision.py"],
+        }
+    )
+
 # 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
 # ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,
 # origin/main gitlink 悬空). 移主仓强制 ci_only (non-strict pre-commit 跳, CI strict 兜底),
