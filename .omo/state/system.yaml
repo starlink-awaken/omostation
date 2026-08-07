@@ -19,8 +19,8 @@ idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 completed_tasks: 225
-total_tasks: 288
-active_tasks: 0
+total_tasks: 289
+active_tasks: 1
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
 phase2_core_complete: true
@@ -33,9 +33,9 @@ phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
 phase36_status: completed
 phase36_completed_at: '2026-06-11T00:00:00Z'
 next_active_tasks:
-- (No active tasks)
-last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff
-  may proceed)
+- kos-q-growth-rolling (KOS 季度扩量持续监测)
+last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 
+  kickoff may proceed)
 phase2_status: completed
 phase2_completed_at: '2026-05-30T15:36:00Z'
 phase4_worker_collab_status: wave2_completed
@@ -244,8 +244,8 @@ next_planned_tasks:
 - bet-y3h2-t1-02 (三年终局门)
 - bet-y3h2-t4-01 (复利收益归因报告)
 - bet-y3h2-t7-01 (公文场景 routine (限格式类))
-- needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
-  物理 KPI 解锁）)
+- needs-human-batch2-physical-recovery-checklist 
+  (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
 phase27_status: completed
 phase27_completed_at: '2026-06-10T00:00:00Z'
