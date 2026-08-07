@@ -343,6 +343,22 @@ def print_text(report: dict) -> None:
     print(f"\n🚨 Swarm conflicts (24h): {len(conf)}")
     for c in conf[:5]:
         print(f"  {c['ts'][:19]} [{c['kind']}] {c.get('branch','')}: {', '.join(c['paths'][:2])}")
+
+    # 读取 Swarm Mesh 实时广播
+    try:
+        sys.path.insert(0, str(WORKSPACE / "projects" / "agora" / "src"))
+        from agora.swarm_mesh import SwarmMeshManager
+        sm = SwarmMeshManager(root=WORKSPACE)
+        msgs = sm.read_channel(channel="all", limit=5)
+        nodes = sm._load_nodes()
+        print(f"\n📡 Swarm Mesh 蜂群心跳与事件流 ({len(nodes)} 个在线节点, 最新 {len(msgs)} 条广播):")
+        for n in nodes[:5]:
+            paths_str = ", ".join(n.get("working_paths", [])) or "无"
+            print(f"  🤖 [{n.get('agent_id')}] Role: {n.get('role')} | 工作路径: {paths_str}")
+        for m in msgs:
+            print(f"  💬 [{m.get('timestamp')[:19]}] {m.get('sender_id')} ➔ {m.get('channel')}: {m.get('content')}")
+    except Exception as e:
+        pass
     print("=" * 68)
 
 

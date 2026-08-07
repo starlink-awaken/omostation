@@ -490,7 +490,9 @@ bets:
   title: 未入库产物普查 + D0 铁律门禁
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  completed_at: '2026-08-07'
+  evidence_pr: 'untracked=0 + D0 in AGENTS.md + change-lane-check docs_data lane'
   goal: 防止"声称已交付但从未 git add"的产物再次静默消失; 并修 lane 分类对配套数据的误判
   non_goals:
   - 恢复已丢失文件(属 BET-Y1Q1-T7-02)
@@ -639,7 +641,9 @@ bets:
   title: git 入口收口 — shim 强制走 swarm-git
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  completed_at: '2026-08-07'
+  evidence_pr: 'git-shim + swarm-git 高危拦截 + PATH symlink 安装 + verify 通过'
   goal: 把「记得用 wrapper」变成「只有 wrapper 可用」, 堵上 D4 自己记录的已知缺口
   non_goals:
   - 改变人类的 git 使用
@@ -777,7 +781,9 @@ bets:
   title: SceneWatcher 决策日志真写 MOS
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  completed_at: '2026-08-07'
+  evidence_pr: 'omo#17'
   goal: 消除 docstring 声称已做而代码未做的三处文实不符, 让 Agent 第一次拥有跨进程记忆
   non_goals:
   - 决策逻辑升级
@@ -806,7 +812,9 @@ bets:
   title: AdjudicationRecorded 事件与裁决存储
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  completed_at: '2026-08-07'
+  evidence_pr: 'omo#18 (omo_adjudication.py + CLI + 9 tests)'
   goal: 建立结果面 — 系统第一次能记录"人类接受了什么、改了什么"
   non_goals:
   - UI(属 T8)
@@ -867,7 +875,9 @@ bets:
   title: v10 失落产物重建并入库
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  completed_at: '2026-08-07'
+  evidence_pr: 'journey-runner + scene-card-lifecycle + 9 cards v2 validate all PASS'
   goal: 把 2026-08-06 丢失的 journey-runner / scene-card-lifecycle / validator / scene-card
     v2 重建并 git add
   non_goals:
@@ -901,7 +911,9 @@ bets:
   title: 公文场景砍到 3 node 并进 shadow
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  completed_at: '2026-08-07'
+  evidence_pr: '3-node journey (fetch→format_check→inbox) + human_hold edge + lifecycle=shadow'
   goal: 主战场第一版 — fetch → format_check → inbox, 最快拿到 calibration 数据
   non_goals:
   - 生成草案

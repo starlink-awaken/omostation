@@ -12,8 +12,8 @@ related:
 schema: scene-card/v2
 scene_type: internal_pipeline
 admission_track: internal_evidence_based
-lifecycle: shadow
-activation: preview
+lifecycle: active
+activation: active
 approval_state: confirmed
 bet: BET-Y1Q1-T7-01
 falsifier: "若 shadow 期间无一次 delivery evidence 产出，则场景无实际价值，应回退 draft"

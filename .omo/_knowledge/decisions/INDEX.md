@@ -479,4 +479,6 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-28 · Owner: governance-team · ADR-0253 P84 collab routing A; GaC rules 见 registry*
+*最近更新: 2026-08-08 · Owner: governance-team · ADR-0391 M5 数据黑障修复验证*
+
+- ADR-0391: M5 数据黑障修复验证 — ADR-0390 cherry-pick 到 omo main 路径 — **ACCEPTED** | 2026-08-08 | M5 fix verification | 0391-adr-0390-verification.md

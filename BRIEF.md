@@ -1,12 +1,9 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-08-07T01:05:15.286835Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `70/100`
+> **Generated**: `2026-08-07T13:02:01.911647Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `70/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/closed/decision-checklist-13-items.md`.
-
-### ⚠️ 软门禁预警 (Soft Gate Warnings · 不阻断)
-- **[X3-SOFT-GATE/soft]** 工作交付月度软门禁: 2026-08 交付 4 < 阈值 8（环比 0 → 4, Δ+4） → [`.omo/_truth/registry/x3-delivery-soft-gate.yaml`](file:///Users/xiamingxing/Workspace/.omo/_truth/registry/x3-delivery-soft-gate.yaml)
 
 ### ⏳ 待处理卡片与债务 (Needs Human Decisions)
 - **[OMO-DEBT]** planned 卡 status 归一: deferred/backlog → pending|candidate → [`.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml)
@@ -18,7 +15,7 @@
 | 维度 | 度量指标 | 状态 | 物理数据源 |
 |------|----------|------|------------|
 | **创意创作** | 新增发布数: `674` | 正常 | `@创意创作/_outputs` |
-| **工作交付** | 本月 `2026-08`: `4` / 上月 `2026-07`: `0` (累计 `4`, 软阈 `8`) | 预警 | `spaces/` + `.omo/_truth/registry/x3-delivery-soft-gate.yaml` |
+| **工作交付** | 未接入真实数据源 (BET-Y1Q1-T1-01 废除 mtime 伪指标) | 待接入 | — |
 | **知识复用** | KOS 索引篇: `5193` | 正常 | `kos/` 篇目 |
 | **角色·engineering** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·governance** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |

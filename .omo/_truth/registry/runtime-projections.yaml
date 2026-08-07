@@ -42,6 +42,41 @@ projections:
     generator: omo state sync
     lane: runtime_snapshot
 
+  metrics_store:
+    description: Append-only governance metrics time series (JSONL) for adaptive threshold and trend analysis
+    canonical: .omo/state/runtime/metrics-store.jsonl
+    legacy: .omo/state/metrics-store.jsonl
+    generator: gac-local-gate --metrics / metrics-store.py
+    lane: runtime_snapshot
+
+  anomaly_events:
+    description: Anomaly events JSONL emitted by anomaly-detector from metrics-store.jsonl
+    canonical: .omo/state/runtime/anomaly-events.jsonl
+    legacy: .omo/state/anomaly-events.jsonl
+    generator: anomaly-detector.py
+    lane: runtime_snapshot
+
+  governance_dashboard:
+    description: Governance metrics dashboard data (JSON) generated from metrics-store.jsonl
+    canonical: .omo/state/runtime/governance-dashboard.json
+    legacy: .omo/state/runtime/governance-dashboard.json
+    generator: governance-dashboard.py --metrics-dashboard
+    lane: runtime_snapshot
+
+  cross_domain_trend:
+    description: Cross-domain trend fusion analysis output (JSON)
+    canonical: .omo/state/runtime/cross-domain-trend.json
+    legacy: .omo/state/runtime/cross-domain-trend.json
+    generator: cross-domain-trend.py
+    lane: runtime_snapshot
+
+  predictive_governance:
+    description: Predictive governance output with recommendations (JSON)
+    canonical: .omo/state/runtime/predictive-governance.json
+    legacy: .omo/state/runtime/predictive-governance.json
+    generator: predictive-governance.py
+    lane: runtime_snapshot
+
   # Future: move system.yaml projection fields here.
   # system_projection:
   #   description: Recomputable fields extracted from system.yaml
