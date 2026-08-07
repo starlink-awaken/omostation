@@ -4,7 +4,7 @@ title: 子模块指针回退检测 (CR-SUBMODULE-REWIND)
 status: ACCEPTED
 lifecycle: ACTIVE
 owner: governance-team
-last-reviewed: 2026-08-06
+last-reviewed: 2026-08-07
 ---
 
 # ADR-0380: 子模块指针回退检测
@@ -66,6 +66,23 @@ if not git merge-base --is-ancestor <current_sha> <previous_sha>:
 | `current IS ancestor of previous` | 指针前进 (正常) |
 | `current NOT ancestor of previous` | 指针回退或历史改写 (REWIND → FAIL) |
 
+### 容忍条件 (Tolerance Layers)
+
+以下场景不报 rewind, 视为合法指针变更:
+
+| # | 场景 | 判定条件 | 原因 |
+|:---|:---|:---|
+| 1 | 相同提交 | `current == previous` | 无变更 |
+| 2 | SHA 缺失 | `git cat-file -t` 返回非 commit | force-push 清理旧提交, 无法判定方向 |
+| 3 | 默认分支前向 | `merge-base --is-ancestor` 在 default branch 通过 | 正常前进 |
+| 4 | 任意 ref 前向 | `merge-base --is-ancestor` 在任意 ref 通过 | 分支切换 |
+| 5 | 旧指针不可达 | `git rev-parse --verify` 失败 | force-push 已清理旧指针 |
+| 6 | 特性分支 rebase | HEAD 在非默认分支 | 合法的 feature-branch rebase |
+| 7 | detached-HEAD 分支 tip | 新指针是某分支 tip | 分支切换后的合法状态 |
+
+> **实现**: `bin/gac/check-submodule-rewind.py::is_descendant_or_equal`
+> **调试**: 运行 `python3 bin/gac/check-submodule-rewind.py --verbose` 可查看每层容忍的通过原因
+
 ### 与现有检查的协同
 
 | 检查 | 职责 | 与 CR-SUBMODULE-REWIND 关系 |
@@ -87,6 +104,13 @@ if not git merge-base --is-ancestor <current_sha> <previous_sha>:
 - **Force-push 误报**: 子模块正常 force-push (如 rebase) 也会触发 rewind 检测。Mitigation: 子模块 force-push 需同步更新主仓指针并附带 ADR 说明
 - **新子模块跳过**: 首次添加的子模块无 previous commit, 自动跳过 (不误报)
 
+### Improvements (2026-08-07)
+
+- **参数顺序修复**: 修复 `is_descendant_or_equal` 调用时参数顺序颠倒导致的误报
+- **分支切换容忍**: 支持 feature-branch rebase 和 detached-HEAD branch switch 场景
+- **可观测性增强**: 新增 `--verbose` 模式输出容忍层通过原因, `--json` 模式供 CI 解析
+- **测试覆盖**: 新增 4 项 pytest 测试, 覆盖基本功能和输出格式
+
 ### Compatibility
 
 - 向后兼容: 当前 main 分支无 rewind, 检查通过
@@ -95,6 +119,7 @@ if not git merge-base --is-ancestor <current_sha> <previous_sha>:
 ## Implementation
 
 - **Check script**: `bin/gac/check-submodule-rewind.py`
+- **Tests**: `tests/unit/gac/test_check_submodule_rewind.py`
 - **GaC registry**: `.omo/_truth/registry/governance-checks.yaml::CR-SUBMODULE-REWIND`
 - **Gate wiring**: `bin/gac/gac-local-gate.py` (DEFAULT_POLICY gates)
 - **ADR**: `.omo/_knowledge/decisions/0380-submodule-rewind-detection.md`
@@ -104,6 +129,9 @@ if not git merge-base --is-ancestor <current_sha> <previous_sha>:
 | Check | Result |
 |:---|:---|
 | `python3 bin/gac/check-submodule-rewind.py` (current main) | **PASS** (0 rewinds) |
+| `python3 bin/gac/check-submodule-rewind.py --json` | **PASS** (valid JSON schema) |
+| `python3 bin/gac/check-submodule-rewind.py --verbose` | **PASS** (tolerance layers logged) |
+| `pytest tests/unit/gac/test_check_submodule_rewind.py` | **4/4 PASS** |
 | gac-local-gate | 40/40 checks registered |
 | CR-SUBMODULE-REWIND 逻辑验证 | `git merge-base --is-ancestor` 语义正确 |
 
