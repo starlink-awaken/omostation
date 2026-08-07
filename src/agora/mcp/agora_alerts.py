@@ -20,6 +20,7 @@ import logging
 import os
 import threading
 import time as _time
+from pathlib import Path
 from typing import Any
 
 _log = logging.getLogger(__name__)
@@ -112,6 +113,9 @@ def send_alert(
     if counter is not None:
         counter.labels(level=level, event=event).inc()
 
+    # 阶段4: 告警日志持久化 (JSONL, 供面板/消费端读取)
+    _append_alert_log(level, event, payload)
+
     # EventBus 事件
     try:
         from agora.core.state import get_event_bus
@@ -152,3 +156,70 @@ def send_alert(
                 _log.warning("agora_alerts: unsafe webhook blocked event=%s", event)
         except Exception:  # defensive
             pass
+
+
+# ── 阶段4: 告警日志持久化 ─────────────────────────────────────
+_ALERT_LOG_PATH = os.environ.get(
+    "AGORA_ALERT_LOG", str(Path.home() / ".agora" / "alerts.jsonl")
+)
+_ALERT_LOG_LOCK = threading.Lock()
+_ALERT_LOG_MAX_LINES = 500  # 轮转阈值
+
+
+def _append_alert_log(level: str, event: str, payload: dict) -> None:
+    """追加告警到 JSONL 日志 (供面板/消费端读取, 完成告警→通知闭环)."""
+    try:
+        import json as _json
+        from pathlib import Path as _Path
+
+        path = _Path(_ALERT_LOG_PATH)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "ts": _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime()),
+            "level": level,
+            "event": event,
+            "payload": payload,
+        }
+        with _ALERT_LOG_LOCK:
+            # 轮转: 超过阈值只保留最近 N 条
+            if path.exists() and sum(1 for _ in path.open()) >= _ALERT_LOG_MAX_LINES:
+                lines = path.read_text().splitlines()
+                path.write_text("\n".join(lines[-_ALERT_LOG_MAX_LINES // 2:]) + "\n")
+            with path.open("a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:  # defensive: 日志写入失败不影响告警主流程
+        pass
+
+
+def list_recent_alerts(limit: int = 20, level: str = "") -> list[dict]:
+    """读取最近告警日志 (供面板/MCP 工具消费, 阶段4).
+
+    Args:
+        limit: 返回条数 (默认 20)
+        level: 按级别过滤 (warning/blocked/degraded/recovered/info, 空=全部)
+
+    Returns:
+        告警条目列表 (时间倒序, 最新在前)
+    """
+    try:
+        import json as _json
+        from pathlib import Path as _Path
+
+        path = _Path(_ALERT_LOG_PATH)
+        if not path.exists():
+            return []
+        entries = []
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                e = _json.loads(line)
+                if level and e.get("level") != level:
+                    continue
+                entries.append(e)
+            except Exception:  # noqa: BLE001 — 单条损坏跳过
+                continue
+        return entries[-limit:][::-1]  # 最新在前
+    except Exception:  # defensive
+        return []
