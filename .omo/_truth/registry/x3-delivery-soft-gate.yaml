@@ -1,31 +1,23 @@
 ---
-status: active
+status: deprecated
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-07-24
+last-reviewed: 2026-08-07
+deprecated: true
+superseded_by: BET-Y1Q1-T1-01
+deprecation_reason: >
+  mtime-based delivery counting measured governance config file edits, not real
+  business delivery. BET-Y1Q1-T1-01 removed the metric from generate-brief.py.
+  BRIEF.md now shows "未接入真实数据源" for the delivery row.
 related:
   - ../x3-value-stack.yaml
   - ../../../plans/strat-p80-agent-execution-brief.md
 ---
-# X3 工作交付月度软门禁（T4.1）
+# X3 工作交付月度软门禁 — DEPRECATED (BET-Y1Q1-T1-01)
 #
-# 仅 warning 进 Decision Inbox，不阻断 workflow / CI。
-# 阈值配置化：修改 monthly_min_deliveries，勿改 generate-brief 硬编码。
+# 此配置已废弃。mtime-based 交付计数已证明度量的是治理配置文件编辑时间，
+# 而非真实业务交付。generate-brief.py 已移除相关函数。
+# 后续真实交付指标接入见 3y-bet-ledger T4 轨道。
 
 x3_delivery_soft_gate:
-  enabled: true
-  # 建议默认 8/月（STRAT-P80 brief）；人类可改此字段
-  monthly_min_deliveries: 8
-  # 环比窗口：本自然月 vs 上一自然月
-  compare_previous_month: true
-  warning_class: soft
-  inbox_tag: needs-human
-  source_scan:
-    - spaces/**/*.yaml
-  match_keywords:
-    - delivery
-    - deliverable
-  notes: >
-    Soft gate only. Under-threshold emits Decision Inbox warning card text
-    in BRIEF.md; does not fail generate-brief exit code.
-    2026-08: 交付 4/8, 环比 0→4, Δ+4. 持续追赶中。
+  enabled: false
