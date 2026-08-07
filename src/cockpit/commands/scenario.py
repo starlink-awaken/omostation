@@ -58,9 +58,7 @@ def build_scenario_parser(scenario_p: Any, parser_class: type) -> None:
     scenario_health.add_argument("--query", type=str, default="日常家庭健康问询", help="真实家庭健康 query")
 
     # P5-F4: 决策收件箱
-    scenario_inbox = scenario_sub.add_parser(
-        "inbox", help="P5-F4 decision-inbox: 场景卡驱动的决策生命周期管理"
-    )
+    scenario_inbox = scenario_sub.add_parser("inbox", help="P5-F4 decision-inbox: 场景卡驱动的决策生命周期管理")
     inbox_sub = scenario_inbox.add_subparsers(dest="inbox_action", parser_class=parser_class)
     inbox_sub.add_parser("list", help="列出所有场景")
     inbox_sub.add_parser("summary", help="收件箱概览")
@@ -71,7 +69,9 @@ def build_scenario_parser(scenario_p: Any, parser_class: type) -> None:
     inbox_add.add_argument("--priority", default="P3", choices=["P0", "P1", "P2", "P3"], help="优先级")
     inbox_status = inbox_sub.add_parser("status", help="更新意图状态")
     inbox_status.add_argument("--intent-id", dest="intent_id", required=True, help="意图 ID")
-    inbox_status.add_argument("--status", required=True, choices=["pending", "task_created", "approved", "rejected", "done"], help="新状态")
+    inbox_status.add_argument(
+        "--status", required=True, choices=["pending", "task_created", "approved", "rejected", "done"], help="新状态"
+    )
     inbox_status.add_argument("--task-id", dest="task_id", help="关联的 OMO Task ID")
     inbox_show = inbox_sub.add_parser("show", help="查看场景详情")
     inbox_show.add_argument("--scene-id", dest="scene_id", required=True, help="场景 ID")
@@ -84,38 +84,38 @@ def build_scenario_parser(scenario_p: Any, parser_class: type) -> None:
     inbox_create_journey.add_argument("--name", required=True, help="Journey 名称")
 
     # P5-F5: 摄入管线
-    scenario_intake = scenario_sub.add_parser(
-        "intake", help="P5-F5 intake: 邮件/文件/消息→结构化事项摄入管线"
-    )
+    scenario_intake = scenario_sub.add_parser("intake", help="P5-F5 intake: 邮件/文件/消息→结构化事项摄入管线")
     intake_sub = scenario_intake.add_subparsers(dest="intake_action", parser_class=parser_class)
     intake_preview = intake_sub.add_parser("preview", help="预览摄入结果 (不持久化)")
     intake_preview.add_argument("--content", required=True, help="摄入内容")
-    intake_preview.add_argument("--source", default="manual", choices=["email", "file", "message", "manual", "oa", "sms"], help="来源类型")
+    intake_preview.add_argument(
+        "--source", default="manual", choices=["email", "file", "message", "manual", "oa", "sms"], help="来源类型"
+    )
     intake_preview.add_argument("--filename", default="", help="文件名 (file 来源时)")
     intake_run = intake_sub.add_parser("run", help="执行摄入管线 (提取→丰富→添加到收件箱)")
     intake_run.add_argument("--scene-id", dest="scene_id", required=True, help="目标场景 ID")
     intake_run.add_argument("--content", required=True, help="摄入内容")
-    intake_run.add_argument("--source", default="manual", choices=["email", "file", "message", "manual", "oa", "sms"], help="来源类型")
+    intake_run.add_argument(
+        "--source", default="manual", choices=["email", "file", "message", "manual", "oa", "sms"], help="来源类型"
+    )
     intake_run.add_argument("--filename", default="", help="文件名 (file 来源时)")
     intake_run.add_argument("--journey-id", dest="journey_id", help="目标 Journey ID (默认第一个)")
 
     # P5-F6: 任务桥接
-    scenario_task = scenario_sub.add_parser(
-        "task", help="P5-F6 task: 场景卡→OMO Task 桥接管理"
-    )
+    scenario_task = scenario_sub.add_parser("task", help="P5-F6 task: 场景卡→OMO Task 桥接管理")
     task_sub = scenario_task.add_subparsers(dest="task_action", parser_class=parser_class)
     task_approve = task_sub.add_parser("approve", help="审批意图并创建 OMO Task 绑定")
     task_approve.add_argument("--intent-id", dest="intent_id", required=True, help="意图 ID")
     task_approve.add_argument("--outcome-metric", dest="outcome_metric", default="", help="结果指标")
-    task_sub.add_parser("status", help="查看意图绑定状态").add_argument("--intent-id", dest="intent_id", required=True, help="意图 ID")
+    task_sub.add_parser("status", help="查看意图绑定状态").add_argument(
+        "--intent-id", dest="intent_id", required=True, help="意图 ID"
+    )
     task_sub.add_parser("list", help="列出所有绑定")
     task_complete = task_sub.add_parser("complete", help="标记绑定完成")
     task_complete.add_argument("--binding-id", dest="binding_id", required=True, help="绑定 ID")
 
     # P5-F7: HITL 审批流 + 证据面板
-    scenario_approval = scenario_sub.add_parser(
-        "approval", help="P5-F7 approval: HITL 审批流 + 证据面板"
-    )
+    scenario_approval = scenario_sub.add_parser("approval", help="P5-F7 approval: HITL 审批流 + 证据面板")
     approval_sub = scenario_approval.add_subparsers(dest="approval_action", parser_class=parser_class)
     approval_sub.add_parser("queue", help="查看待审批队列")
     approval_evidence = approval_sub.add_parser("evidence", help="查看意图证据详情")
@@ -145,9 +145,7 @@ def build_scenario_parser(scenario_p: Any, parser_class: type) -> None:
     connector_sub.add_parser("stats", help="查看连接器统计")
 
     # P5-F9: 复盘
-    scenario_review = scenario_sub.add_parser(
-        "review", help="P5-F9 review: 每周复盘 + 试点报告"
-    )
+    scenario_review = scenario_sub.add_parser("review", help="P5-F9 review: 每周复盘 + 试点报告")
     review_sub = scenario_review.add_subparsers(dest="review_action", parser_class=parser_class)
     review_weekly = review_sub.add_parser("weekly", help="生成每周复盘报告")
     review_weekly.add_argument("--weeks", type=int, default=1, help="回顾周数 (默认1周)")
@@ -155,6 +153,7 @@ def build_scenario_parser(scenario_p: Any, parser_class: type) -> None:
 
 
 # ── Decision inbox engine ──
+
 
 def _decision_inbox_engine(workspace_root: Path | None = None) -> Any:
     """Load the decision inbox engine module."""
@@ -207,8 +206,12 @@ def _decision_inbox_add_intent(
             return {"ok": False, "error": f"Scene {scene_id} has no journeys"}
         jid = journey_id or scene.journeys[0].id
         intent = engine.add_intent(
-            workspace_root, scene_id=scene_id, journey_id=jid,
-            source=source, raw_content=raw_content, priority=priority,
+            workspace_root,
+            scene_id=scene_id,
+            journey_id=jid,
+            source=source,
+            raw_content=raw_content,
+            priority=priority,
         )
         return {"ok": True, "intent": engine._dictify(intent)}
     except Exception as exc:
@@ -225,8 +228,10 @@ def _decision_inbox_set_status(
     try:
         engine = _decision_inbox_engine(workspace_root)
         intent = engine.update_intent_status(
-            workspace_root, intent_id=intent_id,
-            new_status=status, task_id=task_id,
+            workspace_root,
+            intent_id=intent_id,
+            new_status=status,
+            task_id=task_id,
         )
         if intent is None:
             return {"ok": False, "error": f"Intent {intent_id} not found"}
@@ -278,6 +283,7 @@ def _decision_inbox_create_journey(
 
 # ── Intake pipeline ──
 
+
 def _intake_engine(workspace_root: Path | None = None) -> Any:
     ws = workspace_root or _workspace_root()
     engine_path = ws / "bin" / "ssot" / "scene-card-intake-pipeline.py"
@@ -321,8 +327,12 @@ def _intake_run(
     try:
         engine = _intake_engine(workspace_root)
         result = engine.intake(
-            workspace_root, source=source, raw_content=content,
-            scene_id=scene_id, journey_id=journey_id, filename=filename,
+            workspace_root,
+            source=source,
+            raw_content=content,
+            scene_id=scene_id,
+            journey_id=journey_id,
+            filename=filename,
         )
         if not result.ok:
             return {"ok": False, "error": result.error}
@@ -338,6 +348,7 @@ def _intake_run(
 
 
 # ── Task bridge ──
+
 
 def _task_bridge_engine(workspace_root: Path | None = None) -> Any:
     ws = workspace_root or _workspace_root()
@@ -356,7 +367,9 @@ def _task_approve(workspace_root: Path, intent_id: str, outcome_metric: str = ""
     try:
         engine = _task_bridge_engine(workspace_root)
         result = engine.approve_intent_and_create_task(
-            workspace_root, intent_id=intent_id, outcome_metric=outcome_metric,
+            workspace_root,
+            intent_id=intent_id,
+            outcome_metric=outcome_metric,
         )
         return result
     except Exception as exc:
@@ -410,6 +423,7 @@ def _task_complete(workspace_root: Path, binding_id: str) -> dict[str, Any]:
 
 # ── Approval flow ──
 
+
 def _approval_engine(workspace_root: Path | None = None) -> Any:
     ws = workspace_root or _workspace_root()
     engine_path = ws / "bin" / "ssot" / "scene-card-approval-flow.py"
@@ -445,15 +459,21 @@ def _approval_evidence(workspace_root: Path, intent_id: str) -> dict[str, Any]:
 
 
 def _approval_approve(
-    workspace_root: Path, intent_id: str, reviewer: str = "human",
-    note: str = "", outcome_metric: str = "",
+    workspace_root: Path,
+    intent_id: str,
+    reviewer: str = "human",
+    note: str = "",
+    outcome_metric: str = "",
 ) -> dict[str, Any]:
     """Approve an intent."""
     try:
         engine = _approval_engine(workspace_root)
         result = engine.approve_intent(
-            workspace_root, intent_id=intent_id,
-            reviewer=reviewer, note=note, outcome_metric=outcome_metric,
+            workspace_root,
+            intent_id=intent_id,
+            reviewer=reviewer,
+            note=note,
+            outcome_metric=outcome_metric,
         )
         return result
     except Exception as exc:
@@ -461,13 +481,19 @@ def _approval_approve(
 
 
 def _approval_reject(
-    workspace_root: Path, intent_id: str, reviewer: str = "human", note: str = "",
+    workspace_root: Path,
+    intent_id: str,
+    reviewer: str = "human",
+    note: str = "",
 ) -> dict[str, Any]:
     """Reject an intent."""
     try:
         engine = _approval_engine(workspace_root)
         result = engine.reject_intent(
-            workspace_root, intent_id=intent_id, reviewer=reviewer, note=note,
+            workspace_root,
+            intent_id=intent_id,
+            reviewer=reviewer,
+            note=note,
         )
         return result
     except Exception as exc:
@@ -495,6 +521,7 @@ def _approval_stats(workspace_root: Path) -> dict[str, Any]:
 
 
 # ── Connector ──
+
 
 def _connector_engine(workspace_root: Path | None = None) -> Any:
     ws = workspace_root or _workspace_root()
@@ -536,6 +563,7 @@ def _connector_stats(workspace_root: Path) -> dict[str, Any]:
 
 
 # ── Review ──
+
 
 def _review_engine(workspace_root: Path | None = None) -> Any:
     ws = workspace_root or _workspace_root()
@@ -935,7 +963,9 @@ def cmd_scenario(args) -> int:
         ws = _workspace_root()
         inbox_action = getattr(args, "inbox_action", None)
         if inbox_action is None:
-            sys.stderr.write("Usage: cockpit scenario inbox {list|summary|add|status|show|create-scene|create-journey}\n")
+            sys.stderr.write(
+                "Usage: cockpit scenario inbox {list|summary|add|status|show|create-scene|create-journey}\n"
+            )
             return 2
         if inbox_action == "list":
             result = _decision_inbox_list(ws)
@@ -1032,14 +1062,16 @@ def cmd_scenario(args) -> int:
             result = _approval_evidence(ws, intent_id=getattr(args, "intent_id", ""))
         elif approval_action == "approve":
             result = _approval_approve(
-                ws, intent_id=getattr(args, "intent_id", ""),
+                ws,
+                intent_id=getattr(args, "intent_id", ""),
                 reviewer=getattr(args, "reviewer", "human"),
                 note=getattr(args, "note", ""),
                 outcome_metric=getattr(args, "outcome_metric", ""),
             )
         elif approval_action == "reject":
             result = _approval_reject(
-                ws, intent_id=getattr(args, "intent_id", ""),
+                ws,
+                intent_id=getattr(args, "intent_id", ""),
                 reviewer=getattr(args, "reviewer", "human"),
                 note=getattr(args, "note", ""),
             )
@@ -1058,7 +1090,8 @@ def cmd_scenario(args) -> int:
             return 2
         if conn_action == "run":
             result = _connector_run(
-                ws, source=getattr(args, "source", "manual"),
+                ws,
+                source=getattr(args, "source", "manual"),
                 scene_id=getattr(args, "scene_id", ""),
                 source_path=getattr(args, "source_path", ""),
             )
@@ -1205,15 +1238,17 @@ def _render_scenario_human(result: dict[str, Any]) -> None:
 
     if "summary" in result:
         summary = result.get("summary", {})
-        console.print(Panel(
-            f"[bold blue]📊 收件箱概览[/]\n"
-            f"场景数: {summary.get('scene_count', 0)}\n"
-            f"总意图: {summary.get('total_intents', 0)}\n"
-            f"待处理: [bold yellow]{summary.get('pending_intents', 0)}[/]\n"
-            f"来源分布: {summary.get('by_source', {})}\n"
-            f"优先级分布: {summary.get('by_priority', {})}",
-            border_style="blue",
-        ))
+        console.print(
+            Panel(
+                f"[bold blue]📊 收件箱概览[/]\n"
+                f"场景数: {summary.get('scene_count', 0)}\n"
+                f"总意图: {summary.get('total_intents', 0)}\n"
+                f"待处理: [bold yellow]{summary.get('pending_intents', 0)}[/]\n"
+                f"来源分布: {summary.get('by_source', {})}\n"
+                f"优先级分布: {summary.get('by_priority', {})}",
+                border_style="blue",
+            )
+        )
         return
 
     if "scene" in result:
@@ -1228,7 +1263,9 @@ def _render_scenario_human(result: dict[str, Any]) -> None:
         journeys = scene.get("journeys", [])
         panel_lines.append(f"[bold]Journeys:[/] {len(journeys)}")
         for j in journeys:
-            panel_lines.append(f"  ├─ {j.get('name', '')} ({j.get('status', '')}) — {len(j.get('intents', []))} intents")
+            panel_lines.append(
+                f"  ├─ {j.get('name', '')} ({j.get('status', '')}) — {len(j.get('intents', []))} intents"
+            )
         console.print(Panel("\n".join(panel_lines), title="🏷 场景详情", border_style="blue"))
         if journeys:
             for j in journeys:
@@ -1244,36 +1281,44 @@ def _render_scenario_human(result: dict[str, Any]) -> None:
                 itable.add_column("优先级", width=8)
                 for i in intents:
                     itable.add_row(
-                        i.get("id", ""), i.get("source", ""),
+                        i.get("id", ""),
+                        i.get("source", ""),
                         str(i.get("raw_content", ""))[:40],
-                        i.get("status", ""), i.get("priority", ""),
+                        i.get("status", ""),
+                        i.get("priority", ""),
                     )
                 console.print(itable)
         return
 
     if "intent" in result:
         intent = result.get("intent", {})
-        console.print(Panel(
-            f"[bold]意图 ID:[/] {intent.get('id', '')}\n"
-            f"[bold]来源:[/] {intent.get('source', '')}\n"
-            f"[bold]内容:[/] {str(intent.get('raw_content', ''))[:100]}\n"
-            f"[bold]状态:[/] {intent.get('status', '')}\n"
-            f"[bold]优先级:[/] {intent.get('priority', '')}\n"
-            f"[bold]Task ID:[/] {intent.get('task_id', '—')}\n"
-            f"[bold]创建时间:[/] {intent.get('created_at', '')}",
-            title="💡 意图详情", border_style="cyan",
-        ))
+        console.print(
+            Panel(
+                f"[bold]意图 ID:[/] {intent.get('id', '')}\n"
+                f"[bold]来源:[/] {intent.get('source', '')}\n"
+                f"[bold]内容:[/] {str(intent.get('raw_content', ''))[:100]}\n"
+                f"[bold]状态:[/] {intent.get('status', '')}\n"
+                f"[bold]优先级:[/] {intent.get('priority', '')}\n"
+                f"[bold]Task ID:[/] {intent.get('task_id', '—')}\n"
+                f"[bold]创建时间:[/] {intent.get('created_at', '')}",
+                title="💡 意图详情",
+                border_style="cyan",
+            )
+        )
         return
 
     if "journey" in result:
         journey = result.get("journey", {})
-        console.print(Panel(
-            f"[bold]Journey ID:[/] {journey.get('id', '')}\n"
-            f"[bold]名称:[/] {journey.get('name', '')}\n"
-            f"[bold]状态:[/] {journey.get('status', '')}\n"
-            f"[bold]Intents:[/] {len(journey.get('intents', []))}",
-            title="🛤 Journey 详情", border_style="green",
-        ))
+        console.print(
+            Panel(
+                f"[bold]Journey ID:[/] {journey.get('id', '')}\n"
+                f"[bold]名称:[/] {journey.get('name', '')}\n"
+                f"[bold]状态:[/] {journey.get('status', '')}\n"
+                f"[bold]Intents:[/] {len(journey.get('intents', []))}",
+                title="🛤 Journey 详情",
+                border_style="green",
+            )
+        )
         return
 
     # ── Approval rendering ──
@@ -1302,16 +1347,18 @@ def _render_scenario_human(result: dict[str, Any]) -> None:
 
     if "stats" in result:
         stats = result.get("stats", {})
-        console.print(Panel(
-            f"[bold blue]📊 审批统计[/]\n"
-            f"总意图: {stats.get('total_intents', 0)}\n"
-            f"待审批: [bold yellow]{stats.get('pending_review', 0)}[/]\n"
-            f"已通过: [bold green]{stats.get('approved', 0)}[/]\n"
-            f"已拒绝: [bold red]{stats.get('rejected', 0)}[/]\n"
-            f"通过率: [bold]{stats.get('approval_rate', 0)*100:.1f}%[/]\n"
-            f"审批记录: {stats.get('receipts_count', 0)}",
-            border_style="blue",
-        ))
+        console.print(
+            Panel(
+                f"[bold blue]📊 审批统计[/]\n"
+                f"总意图: {stats.get('total_intents', 0)}\n"
+                f"待审批: [bold yellow]{stats.get('pending_review', 0)}[/]\n"
+                f"已通过: [bold green]{stats.get('approved', 0)}[/]\n"
+                f"已拒绝: [bold red]{stats.get('rejected', 0)}[/]\n"
+                f"通过率: [bold]{stats.get('approval_rate', 0) * 100:.1f}%[/]\n"
+                f"审批记录: {stats.get('receipts_count', 0)}",
+                border_style="blue",
+            )
+        )
         return
 
     if "history" in result:
@@ -1343,7 +1390,9 @@ def _render_scenario_human(result: dict[str, Any]) -> None:
         for r in receipts[:10]:
             decision = r.get("decision", "")
             style = "green" if decision == "approved" else "red"
-            console.print(f"  [{style}]{decision}[/] {r.get('intent_id', '')} — {r.get('reviewer', '')} — {str(r.get('created_at', ''))[:19]}")
+            console.print(
+                f"  [{style}]{decision}[/] {r.get('intent_id', '')} — {r.get('reviewer', '')} — {str(r.get('created_at', ''))[:19]}"
+            )
         return
 
     if "receipt_id" in result:
@@ -1409,7 +1458,7 @@ def _render_scenario_human(result: dict[str, Any]) -> None:
                 f"[bold]待审批:[/] [yellow]{summary.get('pending', 0)}[/]",
                 f"[bold]已通过:[/] [green]{summary.get('approved', 0)}[/]",
                 f"[bold]已拒绝:[/] [red]{summary.get('rejected', 0)}[/]",
-                f"[bold]准确率:[/] {summary.get('accuracy', 0)*100:.1f}%",
+                f"[bold]准确率:[/] {summary.get('accuracy', 0) * 100:.1f}%",
                 f"[bold]节省时间:[/] [green]{summary.get('time_saved_hours', 0)}[/] 小时",
             ]
             dist = report.get("distribution", {})

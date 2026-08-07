@@ -200,11 +200,13 @@ def bos_register(uri: str, handler: str, description: str = "") -> str:
     """注册 BOS URI — 将域服务注册到 bos:// 命名空间"""
     import sys
     from pathlib import Path
+
     l4_src = Path.home() / "workspace" / "projects" / "domain-kems" / "src"
     if l4_src.exists():
         sys.path.insert(0, str(l4_src))
     try:
         from domain_kems.bos_gateway import bos_register as _reg
+
         return _reg(uri, handler, description)
     except ImportError as e:
         return f"BOS Gateway 不可用 (ImportError: {e})"
@@ -214,11 +216,13 @@ def bos_list(prefix: str = "bos://") -> str:
     """列出已注册 BOS URI"""
     import sys
     from pathlib import Path
+
     l4_src = Path.home() / "workspace" / "projects" / "domain-kems" / "src"
     if l4_src.exists():
         sys.path.insert(0, str(l4_src))
     try:
         from domain_kems.bos_gateway import bos_list as _lst
+
         return _lst(prefix)
     except ImportError as e:
         return f"BOS Gateway 不可用 (ImportError: {e})"

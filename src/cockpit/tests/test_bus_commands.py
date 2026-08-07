@@ -154,9 +154,7 @@ class TestFullCliRegistration:
             ["workspace", "bus", "control", "nack", "--task-id", "task-1", "--error", "boom"],
         ],
     )
-    def test_bus_subcommands_dispatch(
-        self, monkeypatch: pytest.MonkeyPatch, argv: list[str]
-    ) -> None:
+    def test_bus_subcommands_dispatch(self, monkeypatch: pytest.MonkeyPatch, argv: list[str]) -> None:
         """cli.main() parses the new subcommands and routes them to cmd_bus."""
         import sys
         from unittest.mock import MagicMock

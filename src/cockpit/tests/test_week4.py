@@ -156,8 +156,12 @@ def test_review_weekly_returns_summary(tmp_path):
 
     ib, scene, journey = _setup_scene(tmp_path)
 
-    ib.add_intent(tmp_path, scene_id=scene.id, journey_id=journey.id, source="email", raw_content="测试1", priority="P0")
-    ib.add_intent(tmp_path, scene_id=scene.id, journey_id=journey.id, source="manual", raw_content="测试2", priority="P2")
+    ib.add_intent(
+        tmp_path, scene_id=scene.id, journey_id=journey.id, source="email", raw_content="测试1", priority="P0"
+    )
+    ib.add_intent(
+        tmp_path, scene_id=scene.id, journey_id=journey.id, source="manual", raw_content="测试2", priority="P2"
+    )
 
     report = rev.generate_weekly_review(tmp_path, weeks=1)
     assert "summary" in report
@@ -190,7 +194,9 @@ def test_review_time_saved_estimation(tmp_path):
     _link_bin(tmp_path)
 
     ib, scene, journey = _setup_scene(tmp_path)
-    intent = ib.add_intent(tmp_path, scene_id=scene.id, journey_id=journey.id, source="email", raw_content="紧急", priority="P0")
+    intent = ib.add_intent(
+        tmp_path, scene_id=scene.id, journey_id=journey.id, source="email", raw_content="紧急", priority="P0"
+    )
 
     # Use approval flow to approve the intent
     approval = _load("w4_approval", "bin/ssot/scene-card-approval-flow.py")

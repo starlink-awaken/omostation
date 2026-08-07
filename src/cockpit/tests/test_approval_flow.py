@@ -67,12 +67,18 @@ def _setup_scene(tmp_path, name="审批场景"):
     journey = ib.create_journey(tmp_path, scene_id=scene.id, name="审批流程")
     scene = ib.load_scene(tmp_path, scene.id)
     intent = ib.add_intent(
-        tmp_path, scene_id=scene.id, journey_id=journey.id,
-        source="email", raw_content="Subject: 紧急审批\n需要审批的内容",
+        tmp_path,
+        scene_id=scene.id,
+        journey_id=journey.id,
+        source="email",
+        raw_content="Subject: 紧急审批\n需要审批的内容",
     )
     ib.add_intent(
-        tmp_path, scene_id=scene.id, journey_id=journey.id,
-        source="manual", raw_content="另一个待审批事项",
+        tmp_path,
+        scene_id=scene.id,
+        journey_id=journey.id,
+        source="manual",
+        raw_content="另一个待审批事项",
     )
     return ib, scene, intent
 
@@ -99,8 +105,12 @@ def test_approval_queue_prioritizes_p0(tmp_path):
     scene = ib.load_scene(tmp_path, scene.id)
 
     # Add a P3 and a P0 intent
-    ib.add_intent(tmp_path, scene_id=scene.id, journey_id=journey.id, source="manual", raw_content="普通事项", priority="P3")
-    ib.add_intent(tmp_path, scene_id=scene.id, journey_id=journey.id, source="email", raw_content="紧急事项", priority="P0")
+    ib.add_intent(
+        tmp_path, scene_id=scene.id, journey_id=journey.id, source="manual", raw_content="普通事项", priority="P3"
+    )
+    ib.add_intent(
+        tmp_path, scene_id=scene.id, journey_id=journey.id, source="email", raw_content="紧急事项", priority="P0"
+    )
 
     queue = eng.get_review_queue(tmp_path)
     assert queue[0]["priority"] == "P0"
@@ -115,7 +125,9 @@ def test_approval_evidence_returns_detail(tmp_path):
     scene = ib.create_scene(tmp_path, name="证据测试", description="")
     journey = ib.create_journey(tmp_path, scene_id=scene.id, name="证据流程")
     scene = ib.load_scene(tmp_path, scene.id)
-    intent = ib.add_intent(tmp_path, scene_id=scene.id, journey_id=journey.id, source="manual", raw_content="证据测试内容")
+    intent = ib.add_intent(
+        tmp_path, scene_id=scene.id, journey_id=journey.id, source="manual", raw_content="证据测试内容"
+    )
 
     detail = eng.get_evidence_detail(tmp_path, intent.id)
     assert detail is not None
@@ -133,7 +145,9 @@ def test_approve_intent_creates_receipt_and_binding(tmp_path):
     scene = ib.create_scene(tmp_path, name="审批测试", description="")
     journey = ib.create_journey(tmp_path, scene_id=scene.id, name="审批流程")
     scene = ib.load_scene(tmp_path, scene.id)
-    intent = ib.add_intent(tmp_path, scene_id=scene.id, journey_id=journey.id, source="manual", raw_content="审批测试内容")
+    intent = ib.add_intent(
+        tmp_path, scene_id=scene.id, journey_id=journey.id, source="manual", raw_content="审批测试内容"
+    )
 
     result = eng.approve_intent(tmp_path, intent_id=intent.id, reviewer="测试员", note="已确认")
     assert result["ok"] is True
@@ -156,7 +170,9 @@ def test_reject_intent_creates_receipt(tmp_path):
     scene = ib.create_scene(tmp_path, name="拒绝测试", description="")
     journey = ib.create_journey(tmp_path, scene_id=scene.id, name="拒绝流程")
     scene = ib.load_scene(tmp_path, scene.id)
-    intent = ib.add_intent(tmp_path, scene_id=scene.id, journey_id=journey.id, source="manual", raw_content="拒绝测试内容")
+    intent = ib.add_intent(
+        tmp_path, scene_id=scene.id, journey_id=journey.id, source="manual", raw_content="拒绝测试内容"
+    )
 
     result = eng.reject_intent(tmp_path, intent_id=intent.id, reviewer="测试员", note="不需要")
     assert result["ok"] is True

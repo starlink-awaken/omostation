@@ -35,11 +35,14 @@ def test_decision_inbox_create_and_list_scene(monkeypatch, tmp_path):
     client = TestClient(_app())
 
     # Create scene
-    response = client.post("/api/decision-inbox/scenes", json={
-        "name": "测试场景",
-        "description": "一个测试场景",
-        "priority": "P1",
-    })
+    response = client.post(
+        "/api/decision-inbox/scenes",
+        json={
+            "name": "测试场景",
+            "description": "一个测试场景",
+            "priority": "P1",
+        },
+    )
     assert response.status_code == 200
     create_data = response.json()
     assert create_data["ok"] is True
@@ -72,11 +75,14 @@ def test_decision_inbox_scene_create_journey_and_add_intent(monkeypatch, tmp_pat
     resp.json()["journey"]["id"]
 
     # Add intent
-    resp = client.post(f"/api/decision-inbox/scenes/{scene_id}/intents", json={
-        "source": "email",
-        "raw_content": "需要处理客户反馈的紧急问题",
-        "priority": "P0",
-    })
+    resp = client.post(
+        f"/api/decision-inbox/scenes/{scene_id}/intents",
+        json={
+            "source": "email",
+            "raw_content": "需要处理客户反馈的紧急问题",
+            "priority": "P0",
+        },
+    )
     assert resp.status_code == 200
     intent_data = resp.json()
     assert intent_data["ok"] is True
@@ -91,9 +97,12 @@ def test_decision_inbox_scene_create_journey_and_add_intent(monkeypatch, tmp_pat
     assert intents[0]["status"] == "pending"
 
     # Update intent status
-    resp = client.patch(f"/api/decision-inbox/intents/{intent_id}", json={
-        "status": "approved",
-    })
+    resp = client.patch(
+        f"/api/decision-inbox/intents/{intent_id}",
+        json={
+            "status": "approved",
+        },
+    )
     assert resp.status_code == 200
     updated = resp.json()["intent"]
     assert updated["status"] == "approved"
@@ -117,9 +126,13 @@ def test_decision_inbox_get_scene_detail(monkeypatch, tmp_path):
 
     # Create journey + intent
     client.post(f"/api/decision-inbox/scenes/{scene_id}/journeys", json={"name": "测试流程"})
-    client.post(f"/api/decision-inbox/scenes/{scene_id}/intents", json={
-        "source": "manual", "raw_content": "测试意图内容",
-    })
+    client.post(
+        f"/api/decision-inbox/scenes/{scene_id}/intents",
+        json={
+            "source": "manual",
+            "raw_content": "测试意图内容",
+        },
+    )
 
     # Get scene detail
     resp = client.get(f"/api/decision-inbox/scenes/{scene_id}")

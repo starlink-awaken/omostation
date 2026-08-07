@@ -112,7 +112,9 @@ def test_intake_full_pipeline_creates_intent(tmp_path):
 
     # Run intake
     result = eng.intake(
-        tmp_path, source="email", raw_content="Subject: 测试邮件\n这是测试内容",
+        tmp_path,
+        source="email",
+        raw_content="Subject: 测试邮件\n这是测试内容",
         scene_id=scene.id,
     )
     assert result.ok is True, f"Intake failed: {result.error}"
@@ -171,8 +173,7 @@ def _setup_scene(tmp_path, name="测试场景"):
     # Re-load scene to get updated journeys list
     scene = ib.load_scene(tmp_path, scene.id)
     intent = ib.add_intent(
-        tmp_path, scene_id=scene.id, journey_id=journey.id,
-        source="manual", raw_content="测试任务内容"
+        tmp_path, scene_id=scene.id, journey_id=journey.id, source="manual", raw_content="测试任务内容"
     )
     return ib, scene, intent
 
@@ -213,7 +214,9 @@ def test_task_bridge_list_bindings(tmp_path):
     """List bindings should return all created bindings."""
     br = _get_bridge()
     ib, scene, intent1 = _setup_scene(tmp_path)
-    intent2 = ib.add_intent(tmp_path, scene_id=scene.id, journey_id=scene.journeys[0].id, source="manual", raw_content="任务2")
+    intent2 = ib.add_intent(
+        tmp_path, scene_id=scene.id, journey_id=scene.journeys[0].id, source="manual", raw_content="任务2"
+    )
 
     br.approve_intent_and_create_task(tmp_path, intent_id=intent1.id)
     br.approve_intent_and_create_task(tmp_path, intent_id=intent2.id)
