@@ -315,6 +315,9 @@ gac-local-gate:
 dir-hygiene:  ## 检查根目录卫生 (未追踪未忽略的目录)
 	$(PY) bin/ssot/dir-hygiene-check.py
 
+rebase-regen:  ## ADR-0384 D1: 并发 rebase 后一键全量再生成 (M1 + docs + ruff + mof stat)
+	bash bin/ssot/rebase-regen.sh
+
 governance-release-gate:
 	$(PY) bin/ssot/submodule-reachability-gate.py --source head --fetch
 
