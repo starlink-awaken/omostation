@@ -79,6 +79,12 @@ CLI (omostation.py)
 | 外部连接织层 | [`.omo/_truth/registry/external-connection-fabric.yaml`](.omo/_truth/registry/external-connection-fabric.yaml) · [standard](.omo/standards/external-connection-fabric.md) |
 | 外部连接织层运行时边界 (ADR-0298) | [`.omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md`](.omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md) |
 | Workflow Mesh worker 租约与接管 (ADR-0299) | [`.omo/_knowledge/decisions/0299-workflow-mesh-worker-lease-and-reclaim.md`](.omo/_knowledge/decisions/0299-workflow-mesh-worker-lease-and-reclaim.md) |
+| Scene cards (9 cards, dual-track admission) | [`docs/scene-cards/`](docs/scene-cards/) · validate: `make scene-card-check` |
+| Journey specs (state machines) | [`docs/journey-specs/`](docs/journey-specs/) · validate: `make journey-check` |
+| Dual-track scene admission (ADR-0387) | [`.omo/_knowledge/decisions/0387-dual-track-scene-admission.md`](.omo/_knowledge/decisions/0387-dual-track-scene-admission.md) |
+| Scene execution engine | `bin/ssot/journey-runner.py` (rebuild) · `signal-poller.py` (感知面) · `scene-outcome-recorder.py` (结果面) |
+| Permission scope vocabulary | [`.omo/standards/permission-scope-vocabulary.yaml`](.omo/standards/permission-scope-vocabulary.yaml) |
+| Signal sources registry | [`.omo/_truth/registry/signal-sources.yaml`](.omo/_truth/registry/signal-sources.yaml) |
 
 ## 2. Layer Model
 
@@ -222,6 +228,9 @@ external resource -> descriptor -> scene-bound admission -> capability route -> 
 | [`docs/ARCHITECTURE-DETAILED-MAP.md`](docs/ARCHITECTURE-DETAILED-MAP.md) | Architecture deep-dive (modules, data flow, control flow) |
 | [`docs/FUNCTIONAL-CAPABILITY-MAP.md`](docs/FUNCTIONAL-CAPABILITY-MAP.md) | Functional capability map (8 domains, 32 capabilities) |
 | [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) | Agora BOS URI callchain white-box |
-| [`.omo/standards/external-connection-fabric.md`](.omo/standards/external-connection-fabric.md) | External resource, method, tool and channel contract |
+| [`.omo/standards/external-connection-fabric.md`](.omo/standards/external-connection-fabric.md) | External resource, method, tool and channel contract (§7: dual-track admission) |
+| [`docs/scene-cards/`](docs/scene-cards/) | Scene cards (9 cards: external + internal pipeline) |
+| [`docs/journey-specs/`](docs/journey-specs/) | Journey state machine specs (3 journeys) |
+| [`.omo/standards/permission-scope-vocabulary.yaml`](.omo/standards/permission-scope-vocabulary.yaml) | RBAC scope controlled vocabulary for internal pipeline scenes |
 | [`docs/VISION-ROADMAP.md`](docs/VISION-ROADMAP.md) | Vision and roadmap |
 | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) | Documentation ownership contract |
