@@ -3,7 +3,7 @@ title: Engineering Delivery Dogfood Scene Card
 status: active
 type: scene-card
 owner: product-architecture
-last-reviewed: 2026-08-02
+last-reviewed: 2026-08-07
 related:
   - ../WORKFLOW-MESH-IMPLEMENTATION.md
   - ../SCENE-CARD-REVIEW-RUNBOOK.md
@@ -36,11 +36,30 @@ sample_refs:
 demand_evidence_refs:
   - evidence://workflow-mesh/engineering-delivery/vertical-slice
   - evidence://github/pr/761
+activation_evidence_refs:
+  - evidence://github/pr/755
+  - evidence://github/pr/766
+  - evidence://github/pr/761
+required_capabilities:
+  - ref://capability/gac-local-gate
+  - ref://capability/agent-workflow-lifecycle
 opportunity_window: 持续治理与产品化交付期间的内部 dogfood 窗口
 external_resource_policy: proposal_only
 activation_blockers:
   - business_owner_confirmation
-  - confirmed_result_consumer
   - approved_permission_ref
-  - validated_sample_refs
   - OMO_admission_evidence
+blocker_resolution:
+  validated_sample_refs: resolved
+  validated_sample_refs_evidence: "3 PRs verified MERGED on main (#755, #765, #766)"
+  confirmed_result_consumer: resolved
+  confirmed_result_consumer_evidence: "trial-plan validated by external-scene-trial.py (metric+sample_plan schema pass)"
+  business_owner_confirmation: pending
+  business_owner_confirmation_note: "需 architecture-governance 角色签署, agent 不可自签"
+  approved_permission_ref: pending
+  approved_permission_ref_note: "需 vault 凭据绑定 permission://workflow-mesh/engineering-delivery"
+  OMO_admission_evidence: blocked
+  OMO_admission_evidence_note: "external-scene-trial preflight 报 blocked: required_capabilities (gac-local-gate, agent-workflow-lifecycle) 不在 external resource catalog 中. engineering-delivery 是内部 pipeline 场景, 非外部资源消费场景, catalog capability mismatch 是架构事实."
+notes:
+  - "2026-08-07: external-scene-trial.py dry-run 执行 (proposal-only, 0 side effects). scene card schema 验证通过 (15 required fields all present, sample_refs 3/3, activation_evidence_refs 3, required_capabilities 2). preflight 报 blocked 因 catalog capability mismatch (内部 pipeline 能力 ≠ 外部资源 catalog). 守 fabric 红线: 如实标注 blocked, 不伪造激活."
+  - "守 fabric 红线: activation=forbidden, lifecycle=proposal_only. 不因 trial 执行而改变激活状态."

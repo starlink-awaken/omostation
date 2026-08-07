@@ -1,0 +1,56 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y1Q1-T8-01
+title: /inbox 决策收件箱最小版
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T8-01
+window: Y1Q1
+track: T8-SURFACE
+appetite: 2 weeks
+desc: 交付三年内最重要的一个界面 — 没有它其余全部无法验证
+non_goals:
+- 富文本编辑
+- 移动端
+- 通知推送
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T4-01
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T4-01'
+evidence_required:
+- /inbox 列出待裁决条目, 每条含来源/原文定位/问题清单
+- '三个按钮: 采纳 / 改后采纳 / 忽略'
+- 改后采纳自动记录 edit_diff
+- 每日条目上限 5 条(防淹没, 守 R3)
+test_plan:
+- cd projects/cockpit-ui && npm run build
+workflow: bet-execution
+write_surfaces:
+- projects/cockpit-ui/**
+pasw_required: true
+circuit_breaker: 超 3 周 → 降级为 CLI(cockpit inbox), Web 面板推迟到 Y1Q2
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T8-01.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

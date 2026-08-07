@@ -348,6 +348,18 @@ def healthcheck() -> dict:
         "warnings": ci_json.get("warnings", []),
     }
 
+    # 14. SSOT 使用率 (ADR-0385 B2): 检查 _truth/registry/ 下 SSOT 文件新鲜度
+    ssot_code, ssot_out = run_tool("bin/ssot/ssot-usage.py", ["--json"])
+    try:
+        ssot_json = json.loads(ssot_out) if ssot_out else {}
+    except json.JSONDecodeError:
+        ssot_json = {}
+    report["ssot_usage"] = {
+        "ok": ssot_code == 0,
+        "stale_count": ssot_json.get("stale_count", 0),
+        "files_count": len(ssot_json.get("files", [])),
+    }
+
     # 总体健康 (含 executor drift + M1 instance drift: 声明的 executor 必须实际存在)
     report["healthy"] = (
         not missing
@@ -367,6 +379,7 @@ def healthcheck() -> dict:
         and report["executor_drift"]["ok"]
         and report["m1_instance_drift"]["ok"]
         and report["ci_plane"]["ok"]
+        and report["ssot_usage"]["ok"]
     )
     return report
 
@@ -494,6 +507,11 @@ def print_report(report: dict) -> None:
         print(f"    ❌ {e}")
     for w in ci["warnings"][:5]:
         print(f"    ⚠️  {w}")
+
+    # SSOT 使用率 (ADR-0385 B2)
+    su = report["ssot_usage"]
+    su_status = "✅" if su["ok"] else "❌"
+    print(f"▶ SSOT使用率 (ADR-0385): {su_status} files={su['files_count']} stale={su['stale_count']}")
 
     print()
     overall = "✅ 全绿 (GaC 体系闭环生效)" if report["healthy"] else "❌ 有红 (见上)"

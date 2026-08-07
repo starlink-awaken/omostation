@@ -187,3 +187,47 @@ def test_trigger_paths_match_clean(cs, tmp_path) -> None:
     )
     report = cs.check_ci_surfaces()
     assert not any("paths 实际" in w for w in report["warnings"]), report["warnings"]
+
+
+def test_gate_effectiveness_module_loads():
+    """ADR-0384 B1: gate-effectiveness 工具可导入并产出 JSON."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "gate_effectiveness_test", ROOT / "bin/gac/gate-effectiveness.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    # 已知数据集: 7 checks (governance-history.jsonl ≥ 500 events)
+    stats = module.build_check_stats(
+        [
+            {
+                "timestamp": "2026-08-01T00:00:00Z",
+                "checks": [
+                    {"category": "lint", "name": "ruff", "score": 90, "severity": "ok"},
+                    {"category": "lint", "name": "ruff", "score": 70, "severity": "warn"},
+                ],
+            }
+        ]
+    )
+    assert len(stats) == 1
+    assert stats[0]["name"] == "ruff"
+    assert stats[0]["fires"] == 1
+    assert stats[0]["total"] == 2
+    assert stats[0]["verdict"] in ("WEAK", "MODERATE", "ACTIVE", "NEW")
+
+
+def test_ssot_usage_module_loads():
+    """ADR-0385 B2: ssot-usage 模块可导入并产出结果."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "ssot_usage_test", ROOT / "bin/ssot/ssot-usage.py"
+    )
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    findings = mod.check_sots(max_age_days=36500)  # 100 年 → 0 stale
+    assert len(findings) > 0, "应检测到至少 1 个 SSOT"
+    assert all(not f["stale"] for f in findings)

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# git-shim (BET-Y1Q1-T1-07) — agent PATH 前置 shim: git → swarm-git 强制收口
+#
+# circuit_breaker: AGENT_ID 空 → 透传 real git (人类终端无此 env, 不受影响)
+#                  AGENT_ID 非空 → swarm-git (拦 --no-verify + 高危 clean/reset/stash/rebase)
+#
+# 关键: 内部 git 调用用 REAL_GIT (非 shim 的 git), 否则 shim→swarm-git→git→shim→… 递归.
+#
+# 安装 (T1-07): ~/agents/shim/bin/git → symlink 本文件; ~/.claude/settings.json::env
+#   前置 PATH + 注入 AGENT_ID. 详见 docs/plans/AGENT-BRIEF.md §3 + AGENTS.md §1.6.
+
+set -euo pipefail
+
+# REAL_GIT = PATH 中第一个非 shim 的 git (防递归)
+_shim_dir="${HOME:-}/agents/shim/bin"
+REAL_GIT=""
+IFS=':' read -ra _dirs <<< "${PATH:-}"
+for _d in "${_dirs[@]}"; do
+  [ "$_d" = "$_shim_dir" ] && continue
+  if [ -x "$_d/git" ]; then REAL_GIT="$_d/git"; break; fi
+done
+REAL_GIT="${REAL_GIT:-/usr/bin/git}"
+
+# circuit_breaker: 人类透传
+if [ -z "${AGENT_ID:-}" ]; then
+  exec "$REAL_GIT" "$@"
+fi
+
+# 非 git 仓 → 透传
+ROOT="$("$REAL_GIT" rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "${ROOT:-}" ]; then
+  exec "$REAL_GIT" "$@"
+fi
+
+# agent 通道 → swarm-git
+SWARM_GIT="$ROOT/bin/gac/swarm-git"
+if [ -x "$SWARM_GIT" ]; then
+  exec "$SWARM_GIT" "$@"
+fi
+
+# swarm-git 缺失 (老 checkout / 子集 clone): 透传但警告 (勿静默绕过 D4)
+echo "[git-shim] ⚠️ $SWARM_GIT 缺失, 透传 real git (D4 escape 收口失效)" >&2
+exec "$REAL_GIT" "$@"

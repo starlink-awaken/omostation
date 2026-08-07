@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -154,6 +155,18 @@ if not any(gate.get("id") == "current-state-coherence" for gate in GATES_LIST):
         {
             "id": "current-state-coherence",
             "command": ["bin/ssot/current-state-coherence.py", "--json"],
+        }
+    )
+
+# Root-owned conflict-marker guard (2026-08-07): 拦截 git 合并冲突标记 (<<<<<<< / >>>>>>>)
+# 入库, 治本 ecos `0ff6ad3` 把冲突标记 commit 进 sgf-policy.yaml → test-gac-engine YAML 解析
+# FAIL → 全仓 push 被卡. 放 root-owned 段, 防 ecos 子模块 policy 移除. 详见 ADR 见 evidence
+# docs/operations/2026-08-07-pre-push-guard-regression-evidence.md (发现2).
+if not any(gate.get("id") == "check-conflict-markers" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "check-conflict-markers",
+            "command": ["bin/gac/check-conflict-markers.py"],
         }
     )
 
@@ -328,10 +341,32 @@ FINDING_TOPIC_CHECKS: dict[str, dict[str, str]] = {
     },
 }
 
+ADAPTIVE_CHECKS: set[str] = {
+    "check-submodule-rewind",
+}
+
+
+def _adaptive_threshold(metrics_file: Path, check: str, window: int = 50) -> int | None:
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(WORKSPACE / "bin" / "gac" / "adaptive-gate.py"), "--check", check, "--window", str(window), "--file", str(metrics_file)],
+            capture_output=True,
+            text=True,
+            cwd=WORKSPACE,
+            timeout=10,
+        )
+        if proc.returncode != 0:
+            return None
+        data = json.loads(proc.stdout)
+        return int(data.get("recommended_warn_threshold") or 0) or None
+    except Exception:
+        return None
+
 
 def run_check(name: str, command: list[str]) -> dict[str, object]:
     cmd = [sys.executable, *command]
     timeout = _CHECK_TIMEOUTS.get(name, 15)
+    started_ns = time.time_ns()
     try:
         result = subprocess.run(
             cmd,
@@ -341,6 +376,7 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
             check=False,
             timeout=timeout,
         )
+        duration_ms = int((time.time_ns() - started_ns) / 1_000_000)
         return {
             "name": name,
             "command": " ".join(command),
@@ -348,8 +384,10 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
             "returncode": result.returncode,
             "stdout": result.stdout.strip(),
             "stderr": result.stderr.strip(),
+            "duration_ms": duration_ms,
         }
     except subprocess.TimeoutExpired:
+        duration_ms = int((time.time_ns() - started_ns) / 1_000_000)
         return {
             "name": name,
             "command": " ".join(command),
@@ -357,6 +395,7 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
             "returncode": -1,
             "stdout": "",
             "stderr": f"TIMEOUT after {timeout}s",
+            "duration_ms": duration_ms,
         }
 
 
@@ -425,15 +464,39 @@ def extract_finding_topics(results: list[dict[str, object]]) -> list[dict[str, o
     return topics
 
 
+def _apply_adaptive_thresholds(
+    checks: tuple[tuple[str, list[str]], ...],
+    metrics_file: Path,
+    window: int = 50,
+) -> tuple[tuple[str, list[str]], ...]:
+    result: list[tuple[str, list[str]]] = []
+    for name, command in checks:
+        if name not in ADAPTIVE_CHECKS:
+            result.append((name, command))
+            continue
+        threshold = _adaptive_threshold(metrics_file, name, window=window)
+        if threshold is None:
+            result.append((name, command))
+            continue
+        new_command = [*command, "--warn-threshold", str(threshold)]
+        result.append((name, new_command))
+    return tuple(result)
+
+
 def run_gate(
     scope: str = "staged",
     files: list[str] | None = None,
     run_id: str = "",
     strict: bool = False,
     agt_backend: bool = False,
+    adaptive: bool = False,
 ) -> dict[str, object]:
     change_lane_files = change_lane_files_for_scope(scope, files, run_id)
-    results = [run_check(name, command) for name, command in gate_checks(scope, files, run_id, strict)]
+    checks = gate_checks(scope, files, run_id, strict)
+    metrics_file = WORKSPACE / ".omo" / "state" / "metrics-store.jsonl"
+    if adaptive:
+        checks = _apply_adaptive_thresholds(checks, metrics_file)
+    results = [run_check(name, command) for name, command in checks]
     if agt_backend:
         agt_results = run_agt_policy_engine()
         results.extend(agt_results)
@@ -563,6 +626,30 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
     print("GaC local gate: " + " | ".join(parts))
 
 
+def append_metrics(report: dict[str, object]) -> None:
+    metrics_file = WORKSPACE / ".omo" / "state" / "metrics-store.jsonl"
+    try:
+        import yaml
+    except Exception:
+        yaml = None  # type: ignore[assignment]
+    for item in report.get("checks", []):
+        if not isinstance(item, dict):
+            continue
+        entry = {
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "check": item.get("name", ""),
+            "ok": bool(item.get("ok")),
+            "duration_ms": int(item.get("duration_ms") or 0),
+        }
+        if item.get("stderr"):
+            entry["reason"] = item["stderr"][:200]
+        elif item.get("stdout"):
+            entry["reason"] = item["stdout"][:200]
+        metrics_file.parent.mkdir(parents=True, exist_ok=True)
+        with metrics_file.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the shared local GaC gate")
     parser.add_argument("--scope", choices=["staged", "files", "run"], default="staged")
@@ -572,13 +659,21 @@ def main() -> int:
     parser.add_argument("--strict", action="store_true", help="跑全套 (CI 用)")
     parser.add_argument("--verbose", action="store_true", help="Print passing gate details under slim mode")
     parser.add_argument("--agt-backend", action="store_true", help="Use AGT Policy Engine as GaC rule execution backend")
+    parser.add_argument("--metrics", action="store_true", help="Record check results to metrics-store.jsonl")
+    parser.add_argument("--adaptive", action="store_true", help="Enable adaptive threshold adjustment for supported checks")
     args = parser.parse_args()
 
     try:
-        report = run_gate(args.scope, args.file, args.run_id, args.strict, args.agt_backend)
+        report = run_gate(args.scope, args.file, args.run_id, args.strict, args.agt_backend, args.adaptive)
     except ValueError as exc:
         parser.error(str(exc))
-    
+
+    if args.metrics:
+        try:
+            append_metrics(report)
+        except Exception as exc:
+            print(f"[WARN] metrics append failed: {exc}", file=sys.stderr)
+
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
