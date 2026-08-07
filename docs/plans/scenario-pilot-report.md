@@ -1,3 +1,10 @@
+---
+status: draft
+lifecycle: plan
+owner: system-owner
+last-reviewed: 2026-08-07
+---
+
 # Scenario Phase 1 试点报告
 
 > 阶段: Phase 1.5 (M1-M4) | 状态: draft | 创建: 2026-08-07

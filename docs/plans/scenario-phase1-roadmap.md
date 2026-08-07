@@ -1,3 +1,10 @@
+---
+status: draft
+lifecycle: plan
+owner: system-owner
+last-reviewed: 2026-08-07
+---
+
 # Scenario Phase 1: 场景验证期方案与实施路线图
 
 > 创建: 2026-08-07 | 状态: draft | 所有者: 系统所有者
