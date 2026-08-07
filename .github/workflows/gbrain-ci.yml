@@ -1,8 +1,0 @@
-name: gBrain CI (no-op — CI lives in gbrain repo)
-on:
-  workflow_dispatch: {}
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "projects/gbrain is .gitignore'd — its CI lives in the gbrain repo."

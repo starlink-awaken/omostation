@@ -630,168 +630,193 @@ surfaces:
 
 workflow_triggers:
   - workflow: agora-ci.yml
-    path_filtered: false
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/agora-ci.yml
+    - projects/agora/**
   - workflow: ai-pr-review.yml
+    triggers: [per_pr]
     path_filtered: false
   - workflow: audit-rollout-monthly.yml
+    triggers: [manual, scheduled]
     path_filtered: false
   - workflow: c2g-gc-weekly.yml
+    triggers: [manual, scheduled]
     path_filtered: false
   - workflow: c2g-radar-daily.yml
+    triggers: [manual, scheduled]
     path_filtered: false
   - workflow: ci-lint.yml
+    triggers: [per_pr, push, scheduled]
     path_filtered: true
     paths:
     - .github/workflows/**
-    - scripts/**
     - .pre-commit-config.yaml
     - bin/cockpit/**
     - docs/generated/capability-registry.yaml
     - projects/agora/etc/bos-services.yaml
     - projects/cockpit/src/cockpit/cli.py
-    - .github/workflows/**
     - scripts/**
-    - .pre-commit-config.yaml
-    - bin/cockpit/**
-    - docs/generated/capability-registry.yaml
-    - projects/agora/etc/bos-services.yaml
-    - projects/cockpit/src/cockpit/cli.py
   - workflow: ci-python-coverage.yml
-    path_filtered: false
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/ci-python-coverage.yml
+    - projects/*/pyproject.toml
+    - projects/aetherforge/**
+    - projects/bus-foundation/**
+    - projects/c2g/**
+    - projects/l4-kernel/**
+    - projects/model-driven/**
+    - projects/omo-debt/**
+    - projects/omo/**
   - workflow: cockpit-ci.yml
-    path_filtered: false
-  - workflow: cockpit-ui-ci.yml
-    path_filtered: false
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/cockpit-ci.yml
+    - projects/cockpit/**
   - workflow: config-check.yml
-    path_filtered: false
+    triggers: [push]
+    path_filtered: true
+    paths:
+    - projects/agora/src/agora-services.json
+    - projects/kairon/packages/agora/agora-services.json
   - workflow: constraint-validation.yml
+    triggers: [per_pr]
     path_filtered: false
   - workflow: cross-deps-enforce.yml
+    triggers: [per_pr, push]
     path_filtered: false
   - workflow: debt-audit.yml
+    triggers: [per_pr, push, scheduled]
     path_filtered: false
   - workflow: ecos-ci.yml
-    path_filtered: false
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/ecos-ci.yml
+    - projects/ecos/**
   - workflow: evidence-smoke-gate.yml
+    triggers: [manual, per_pr, push]
     path_filtered: false
   - workflow: family-hub-ci.yml
-    path_filtered: false
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/family-hub-ci.yml
+    - projects/family-hub/**
   - workflow: gac-gate.yml
-    path_filtered: false
-  - workflow: gbrain-ci.yml
+    triggers: [manual, per_pr, push]
     path_filtered: false
   - workflow: governance-check.yml
+    triggers: [per_pr, push, scheduled]
     path_filtered: true
     paths:
     - .github/workflows/governance-check.yml
-    - .pre-commit-config.yaml
     - .omo/**
-    - docs/OPC-*.md
-    - docs/**
-    - bin/ssot/doc-governance-check.py
     - .omo/_truth/registry/document-governance.yaml
     - .omo/standards/document-governance-standard.md
-    - projects/*/pyproject.toml
-    - projects/*/src/**
-    - projects/omo/tests/**
-    - projects/ecos/scripts/contract_gatekeeper.py
-    - scripts/check-*.py
-    - scripts/opc_*.py
-    - bin/ssot/workspace-audit
-    - CLAUDE.md
-    - LAYER-INDEX.md
-    - .github/workflows/governance-check.yml
     - .pre-commit-config.yaml
-    - .omo/**
-    - docs/OPC-*.md
-    - docs/**
-    - bin/ssot/doc-governance-check.py
-    - .omo/_truth/registry/document-governance.yaml
-    - .omo/standards/document-governance-standard.md
-    - projects/*/pyproject.toml
-    - projects/*/src/**
-    - projects/omo/tests/**
-    - projects/ecos/scripts/contract_gatekeeper.py
-    - scripts/check-*.py
-    - scripts/opc_*.py
-    - bin/ssot/workspace-audit
     - CLAUDE.md
     - LAYER-INDEX.md
+    - bin/ssot/doc-governance-check.py
+    - bin/ssot/workspace-audit
+    - docs/**
+    - docs/OPC-*.md
+    - projects/*/pyproject.toml
+    - projects/*/src/**
+    - projects/ecos/scripts/contract_gatekeeper.py
+    - projects/omo/tests/**
+    - scripts/check-*.py
+    - scripts/opc_*.py
   - workflow: integration.yml
-<<<<<<< HEAD
-    path_filtered: false
-||||||| parent of b0e0cea79 (feat(gac): CI 平面 SSOT 登记补齐 + check-ci-surfaces --fix 自愈模式)
-    triggers: [per_pr, push]
-    path_filtered: false
-=======
     triggers: [per_pr, push]
     path_filtered: true
     paths:
-    - projects/omo/**
-    - projects/*/pyproject.toml
     - bin/gac/**
->>>>>>> b0e0cea79 (feat(gac): CI 平面 SSOT 登记补齐 + check-ci-surfaces --fix 自愈模式)
+    - projects/*/pyproject.toml
+    - projects/omo/**
   - workflow: interfaces-enforce.yml
+    triggers: [per_pr, push]
     path_filtered: false
   - workflow: kairon-ci.yml
-    path_filtered: false
-  - workflow: meta-model-check.yml
+    triggers: [per_pr, push]
     path_filtered: true
     paths:
-    - projects/runtime/protocols/*.yaml
+    - .github/workflows/kairon-ci.yml
+    - projects/kairon/**
+  - workflow: meta-model-check.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
     - projects/runtime/protocols/*.md
     - projects/runtime/protocols/*.yaml
-    - projects/runtime/protocols/*.md
   - workflow: metaos-ci.yml
-    path_filtered: false
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/metaos-ci.yml
+    - projects/metaos/**
   - workflow: mof-update.yml
+    triggers: [manual, scheduled]
     path_filtered: false
   - workflow: observability-ci.yml
-    path_filtered: false
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/observability-ci.yml
+    - projects/observability/**
   - workflow: omo-autopilot.yml
+    triggers: [manual, scheduled]
     path_filtered: false
   - workflow: omostation-governance.yml
+    triggers: [manual, per_pr, push, scheduled]
     path_filtered: true
     paths:
     - .omo/tasks/planned/**
     - projects/**/pyproject.toml
     - projects/omo/src/omo/omo_*.py
-    - .omo/tasks/planned/**
   - workflow: phase-gate-enforce.yml
+    triggers: [manual, per_pr]
     path_filtered: false
   - workflow: port-registry-enforce.yml
+    triggers: [per_pr, push]
     path_filtered: false
   - workflow: prune-ci-runs.yml
     triggers: [manual, scheduled]
     path_filtered: false
   - workflow: publish-pypi.yml
+    triggers: [manual, push]
     path_filtered: true
     paths:
     - projects/kairon/packages/*/pyproject.toml
   - workflow: pyright-sweep.yml
-    path_filtered: false
-  - workflow: pytest.yml
+    triggers: [manual]
     path_filtered: false
   - workflow: quality.yml
-    path_filtered: false
-  - workflow: ruff-check.yml
-    path_filtered: false
-  - workflow: runtime-ci.yml
-    path_filtered: false
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/quality.yml
+    - .pre-commit-config.yaml
+    - projects/agora/src/**
+    - projects/cockpit/src/**
+    - projects/ecos/src/**
+    - projects/omo/src/**
   - workflow: state-goals-enforce.yml
+    triggers: [per_pr, push]
     path_filtered: false
   - workflow: submodule-autobump.yml
+    triggers: [manual, scheduled]
     path_filtered: false
   - workflow: submodule-freshness-gatekeeper.yml
+    triggers: [manual, push, scheduled]
     path_filtered: false
   - workflow: task-schema-enforce.yml
+    triggers: [per_pr, push]
     path_filtered: false
   - workflow: workspace.yml
+    triggers: [per_pr, push]
     path_filtered: false
-  - id: bin-ssot-workflow-health-py
-    tool: bin/ssot/workflow-health.py
-    workflow: (none)
-    gate: false
-    triggers: []
-    status: active
-    note: ADR-0386 G19 CI workflow 结构健康监控 — 检测 stale-regex/unpathed-pr/high-coe/idle
