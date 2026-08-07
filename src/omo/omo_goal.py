@@ -157,26 +157,93 @@ def cmd_goal_reconcile(
     return 0
 
 
+def cmd_goal_trace(omo_dir: Path, goal_id: str) -> int:
+    """从顶层 Vision/Goal 逐层向下追溯到 Bet, Tasks, Workflows 与 MOS Beliefs"""
+    ws_root = omo_dir.parent
+    goal_file = omo_dir / "goals" / "current.yaml"
+    print(f"═══ 全景追溯 (Vision-to-Execution Trace): Goal [{goal_id}] ═══\n")
+    
+    # 1. Goal 信息
+    if goal_file.exists():
+        data = load_yaml_required(goal_file)
+        goals = data.get("active_goals") or data.get("goals") or []
+        target_g = None
+        for g in goals:
+            if isinstance(g, dict) and g.get("id") == goal_id:
+                target_g = g
+                break
+        if target_g:
+            print(f"[Layer 1: Goal] {target_g.get('id')} — {target_g.get('desc', target_g.get('title', ''))}")
+            print(f"  Status: {target_g.get('status', 'active')} | Progress: {target_g.get('progress', 0)}%")
+        else:
+            print(f"[Layer 1: Goal] {goal_id} (Declared in current.yaml)")
+    print()
+
+    # 2. 关联 Bet
+    ledger_file = ws_root / "docs" / "plans" / "3y-bet-ledger.yaml"
+    matched_bets = []
+    if ledger_file.exists():
+        import yaml
+        ldata = {}
+        for d in yaml.safe_load_all(ledger_file.read_text(encoding="utf-8")):
+            if isinstance(d, dict):
+                ldata.update(d)
+        for b in ldata.get("bets", []):
+            if isinstance(b, dict) and b.get("goal_id") == goal_id:
+                matched_bets.append(b)
+    print(f"[Layer 2: C2G Bets] (找到 {len(matched_bets)} 个关联 Bet):")
+    for b in matched_bets:
+        print(f"  • [{b.get('id')}] {b.get('title')} ({b.get('status')})")
+    print()
+
+    # 3. 关联 Tasks
+    planned_dir = omo_dir / "tasks" / "planned"
+    matched_tasks = []
+    if planned_dir.exists():
+        from omo.omo_shared import load_yaml_value
+        for tf in planned_dir.glob("*.yaml"):
+            tval = load_yaml_value(tf)
+            if isinstance(tval, dict) and tval.get("goal_id") == goal_id:
+                matched_tasks.append(tval)
+    print(f"[Layer 3: OMO Tasks] (找到 {len(matched_tasks)} 个计划任务):")
+    for t in matched_tasks:
+        print(f"  • [{t.get('id')}] {t.get('title')}")
+    print()
+
+    # 4. MOS 关联信念
+    try:
+        from omo.omo_belief import MOSBeliefManager
+        beliefs = MOSBeliefManager(root=ws_root).query_beliefs()
+    except Exception:
+        beliefs = []
+    print(f"[Layer 5: MOS Agent Beliefs] (积累 {len(beliefs)} 项感知):")
+    for b in beliefs[:3]:
+        print(f"  • [{b.get('topic')}] {b.get('belief')}")
+
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        prog="omo goal", description="OMO Phase goal management"
-    )
-    sub = parser.add_subparsers(dest="command")
-    sub.add_parser("list", help="List all Phase goals")
-    sub.add_parser("status", help="Show goal completion (JSON)")
-    gc = sub.add_parser("create", help="Create a new goal")
-    gc.add_argument("--id", required=True, help="Goal ID (e.g. G29.1)")
-    gc.add_argument("--desc", required=True, help="Goal description")
-    gc.add_argument(
-        "--source-ref", default="", help="Stable source ref for ingress registry"
-    )
-    gp = sub.add_parser("progress", help="Update goal progress")
-    gp.add_argument("--id", required=True, help="Goal ID")
-    gp.add_argument(
-        "--pct", type=float, required=True, help="Progress percentage (0-100)"
-    )
-    gr = sub.add_parser("reconcile", help="Reconcile governed phase and goal state")
-    gr.add_argument("--phase", type=int, required=True, help="Current phase")
+    """CLI entrypoint."""
+    parser = argparse.ArgumentParser(prog="omo goal", description="Manage Phase goals")
+    sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("list", help="List Phase goals")
+    sub.add_parser("status", help="Show completion status as JSON")
+
+    p_trace = sub.add_parser("trace", help="Trace goal down to bets, tasks and beliefs")
+    p_trace.add_argument("id", help="Goal ID")
+
+    p_create = sub.add_parser("create", help="Create a new goal")
+    p_create.add_argument("id", help="Goal ID")
+    p_create.add_argument("desc", help="Goal description")
+    p_create.add_argument("--source-ref", default="", help="Stable mutation source reference")
+
+    p_prog = sub.add_parser("progress", help="Update goal progress")
+    p_prog.add_argument("id", help="Goal ID")
+    p_prog.add_argument("pct", type=int, help="Percentage (0-100)")
+
+    gr = sub.add_parser("reconcile", help="Reconcile current goals file for wave/phase")
+    gr.add_argument("--phase", required=True, help="Current phase number")
     gr.add_argument("--wave", dest="current_wave", required=True, help="Current wave")
     gr.add_argument(
         "--execution-mode",
@@ -196,6 +263,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_goal_list(omo_dir)
     elif args.command == "status":
         return cmd_goal_status(omo_dir)
+    elif args.command == "trace":
+        return cmd_goal_trace(omo_dir, args.id)
     elif args.command == "create":
         return cmd_goal_create(omo_dir, args.id, args.desc, args.source_ref)
     elif args.command == "progress":
