@@ -162,6 +162,15 @@ SSOT `docs/plans/3y-bet-ledger.yaml` · 视图 `docs/plans/3Y-BET-LEDGER.md` ·
 
 台账铁律 D0–D5 与复盘五问见 AGENT-BRIEF；bet 数量与进度为运行时事实，从 CLI 读。
 
+### 1.8 8D 全景元架构与全感知契约 (8D Meta-Architecture)
+
+系统由 **LifeOS 意图 ➔ C2G 策略 ➔ Goals 目标 ➔ Agora 蜂群 ➔ AetherForge 算力 ➔ AGE-v2 落地 ➔ MOS/KOS 记忆 ➔ X-Plane 熵减** 8 维空间组成。
+所有 Agent 在执行任何架构决策前，必须遵守：
+
+1. **全景追溯**：使用 `omo compass trace <GOAL-ID>` 获取 8 维全景依赖与追溯。
+2. **常态化守护**：必须维持 `make gac-local-gate` 43/43 ALL GREEN PASS 绿线。
+3. **真实物理落盘**：严禁 Mock / 假数据，所有状态与 MOS 踩坑信念自动追加至 `.omo/state/agent-beliefs/audit.log`。
+
 ## 2. Documentation SSOT Contract
 
 | Document | Owns | Must Reference |
@@ -229,6 +238,25 @@ make gac-drift
 ```
 
 `make gac-local-gate` runs the default (non-strict) GaC gate — GaC validate/drift, agent-workflow lint/integrations/adapters/bootstrap/observe, MOF schema/state-bridge/drift, documentation SSOT, doc link/snapshot, and staged change-lane checks. Two skip rules apply in default mode, both isolating concurrent-agent dirty in a shared worktree: `verify-plan`/`compliance`/`doctor` run only when staged touches agent-workflow (`896e60ba`); `project-layer-index` (generated layer digest) is CI-only — pre-commit/`make` skip it, `--strict`/CI runs it (`d33af25c`). For run/file-scoped AGCP verification use `bin/gac/gac-local-gate.py --scope ...`. Authoritative check list + skip rules live in `bin/gac/gac-local-gate.py` (`CHECKS`, `AGENT_WORKFLOW_GATE_CHECKS`, `CI_ONLY_CHECKS`) — do not duplicate here.
+
+#### 治理智能 Phase 1-5 flags
+
+```bash
+bin/gac/gac-local-gate.py --metrics                    # Phase 1: 记录 check 结果到 metrics-store.jsonl
+bin/gac/gac-local-gate.py --adaptive                   # Phase 2: 基于历史数据动态调整 --warn-threshold
+bin/gac/gac-local-gate.py --risk-profile low|medium|high  # Phase 3: 按风险等级过滤检查
+bin/gac/gac-local-gate.py --summarize                  # Phase 4: 生成 Markdown 治理摘要
+bin/gac/debt-predictor.py --threshold <N> --window <N> # Phase 5: 治理债务趋势预测
+```
+
+Phase 1-5 能力说明：
+- **Phase 1 Metrics Store**: `bin/gac/metrics-store.py` 提供 append-only JSONL 时间序列，支持 `append/query/stats/tail` 子命令
+- **Phase 2 Adaptive Gate**: `bin/gac/adaptive-gate.py` 基于 metrics 历史动态计算阈值（mean + 2σ）和 EWMA 异常检测
+- **Phase 3 Risk Profile**: `bin/gac/risk-profile.py` 基于 staged/files 路径推断风险等级（low/medium/high）
+- **Phase 4 Summarizer**: `bin/gac/governance-summarizer.py` 将 gate report 转为 Markdown 摘要，支持可选 LLM 增强
+- **Phase 5 Debt Predictor**: `bin/gac/debt-predictor.py` 基于线性回归预测治理债务趋势突破时间
+
+所有新 flags 均为 opt-in，默认关闭，向后兼容。
 
 ### SSOT 变更追踪
 

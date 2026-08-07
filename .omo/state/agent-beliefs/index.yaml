@@ -1,0 +1,395 @@
+beliefs:
+- id: belief-0001
+  topic: workspace_rule
+  belief: Agent 必须遵循 D0 铁律与物理隔离，禁止在共享主工作区直接提交代码
+  created_at: '2026-08-07T12:19:58Z'
+  confidence: 1.0
+  source_run_id: null
+- id: belief-0002
+  topic: gac_gate
+  belief: make gac-local-gate 必须维持 42/42 ALL GREEN 绿线
+  created_at: '2026-08-07T12:23:28Z'
+  confidence: 1.0
+  source_run_id: run-audit-test-01
+- id: belief-0003
+  topic: test_ecosystem_73669
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:35:44Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0004
+  topic: test_ecosystem_74843
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:36:14Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0005
+  topic: test_ecosystem_78547
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:36:46Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0006
+  topic: test_ecosystem_79451
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:36:55Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0007
+  topic: test_ecosystem_80335
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:37:04Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0008
+  topic: test_ecosystem_80936
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:37:11Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0009
+  topic: test_ecosystem_82376
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:37:24Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0010
+  topic: test_ecosystem_83029
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:37:34Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0011
+  topic: test_ecosystem_83169
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:37:42Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0012
+  topic: test_ecosystem_85172
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:38:11Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0013
+  topic: test_ecosystem_87058
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:38:50Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0014
+  topic: test_ecosystem_88495
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:39:08Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0015
+  topic: test_ecosystem_91055
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:39:33Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0016
+  topic: test_ecosystem_93170
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:40:01Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0017
+  topic: test_ecosystem_95652
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:40:42Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0018
+  topic: test_ecosystem_99038
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:41:54Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0019
+  topic: test_ecosystem_873
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:42:32Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0020
+  topic: test_ecosystem_2020
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:42:56Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0021
+  topic: test_ecosystem_3441
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:43:35Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+- id: belief-0022
+  topic: 8d_meta_architecture
+  belief: 系统由 LifeOS->Goals->C2G->Agora->AetherForge->AGE-v2->MOS/KOS->X-Plane 8 维空间组成，通过
+    omo compass trace 全景追溯，且由 test-mof-governance-ecosystem 43项门禁常态化守护
+  created_at: '2026-08-07T12:45:46Z'
+  confidence: 1.0
+  source_run_id: run-8d-meta-architecture-land
+- id: belief-0023
+  topic: test_ecosystem_17093
+  belief: Ecosystem integration test belief assertion
+  created_at: '2026-08-07T12:46:13Z'
+  confidence: 1.0
+  source_run_id: test-run-ecosystem
+lessons:
+- id: lesson-0001
+  belief_id: belief-0001
+  pitfall: 在 main 裸奔修改被覆盖
+  solution: 使用 AGE-v2 自动派生 Worktree
+  severity: warning
+  created_at: '2026-08-07T12:19:58Z'
+- id: lesson-0002
+  belief_id: belief-0002
+  pitfall: 硬阻断误伤开发
+  solution: 使用 SOFT_CHECKS 区分 Advisory 规则
+  severity: warning
+  created_at: '2026-08-07T12:23:28Z'
+- id: lesson-0003
+  belief_id: belief-0003
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:35:44Z'
+- id: lesson-0004
+  belief_id: belief-0004
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:36:14Z'
+- id: lesson-0005
+  belief_id: belief-0005
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:36:46Z'
+- id: lesson-0006
+  belief_id: belief-0006
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:36:55Z'
+- id: lesson-0007
+  belief_id: belief-0007
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:37:04Z'
+- id: lesson-0008
+  belief_id: belief-0008
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:37:11Z'
+- id: lesson-0009
+  belief_id: belief-0009
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:37:24Z'
+- id: lesson-0010
+  belief_id: belief-0010
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:37:34Z'
+- id: lesson-0011
+  belief_id: belief-0011
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:37:42Z'
+- id: lesson-0012
+  belief_id: belief-0012
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:38:11Z'
+- id: lesson-0013
+  belief_id: belief-0013
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:38:50Z'
+- id: lesson-0014
+  belief_id: belief-0014
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:39:08Z'
+- id: lesson-0015
+  belief_id: belief-0015
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:39:33Z'
+- id: lesson-0016
+  belief_id: belief-0016
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:40:01Z'
+- id: lesson-0017
+  belief_id: belief-0017
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:40:42Z'
+- id: lesson-0018
+  belief_id: belief-0018
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:41:54Z'
+- id: lesson-0019
+  belief_id: belief-0019
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:42:32Z'
+- id: lesson-0020
+  belief_id: belief-0020
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:42:56Z'
+- id: lesson-0021
+  belief_id: belief-0021
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:43:35Z'
+- id: lesson-0022
+  belief_id: belief-0022
+  pitfall: 单维度 Task 视角导致架构与意图断链
+  solution: 使用 omo compass trace <GOAL-ID> 查看全景 8 维链路
+  severity: warning
+  created_at: '2026-08-07T12:45:46Z'
+- id: lesson-0023
+  belief_id: belief-0023
+  pitfall: Fragmented governance
+  solution: Integrated 8D Meta-Architecture
+  severity: warning
+  created_at: '2026-08-07T12:46:13Z'
+contexts:
+- id: ctx-0001
+  belief_id: belief-0001
+  scope_path: bin/gac/*
+  applicable_tags:
+  - workspace_rule
+- id: ctx-0002
+  belief_id: belief-0002
+  scope_path: bin/gac/*
+  applicable_tags:
+  - gac_gate
+- id: ctx-0003
+  belief_id: belief-0003
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_73669
+- id: ctx-0004
+  belief_id: belief-0004
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_74843
+- id: ctx-0005
+  belief_id: belief-0005
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_78547
+- id: ctx-0006
+  belief_id: belief-0006
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_79451
+- id: ctx-0007
+  belief_id: belief-0007
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_80335
+- id: ctx-0008
+  belief_id: belief-0008
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_80936
+- id: ctx-0009
+  belief_id: belief-0009
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_82376
+- id: ctx-0010
+  belief_id: belief-0010
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_83029
+- id: ctx-0011
+  belief_id: belief-0011
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_83169
+- id: ctx-0012
+  belief_id: belief-0012
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_85172
+- id: ctx-0013
+  belief_id: belief-0013
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_87058
+- id: ctx-0014
+  belief_id: belief-0014
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_88495
+- id: ctx-0015
+  belief_id: belief-0015
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_91055
+- id: ctx-0016
+  belief_id: belief-0016
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_93170
+- id: ctx-0017
+  belief_id: belief-0017
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_95652
+- id: ctx-0018
+  belief_id: belief-0018
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_99038
+- id: ctx-0019
+  belief_id: belief-0019
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_873
+- id: ctx-0020
+  belief_id: belief-0020
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_2020
+- id: ctx-0021
+  belief_id: belief-0021
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_3441
+- id: ctx-0022
+  belief_id: belief-0022
+  scope_path: projects/omo/*
+  applicable_tags:
+  - 8d_meta_architecture
+- id: ctx-0023
+  belief_id: belief-0023
+  scope_path: bin/gac/*
+  applicable_tags:
+  - test_ecosystem_17093

@@ -953,7 +953,7 @@ diff_checks:
   - python
   - bin/ssot/ssot-guardian.py
 - id: gac-local-gate
-  description: Full local governance gate for broad contract changes.
+  description: "Full local governance gate for broad contract changes. Supports Phase 1-5 governance intelligence flags: --metrics (JSONL time series), --adaptive (dynamic thresholds), --risk-profile low|medium|high, --summarize (Markdown report)."
   required: true
   allowed_lanes:
   - code
