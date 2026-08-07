@@ -187,6 +187,28 @@ async def health_self_check() -> dict:
 
     overall = "healthy" if not issues else "degraded"
 
+    # P4: 健康降级 → 统一告警事件 (防抖 per-status, 恢复时发 recovered)
+    try:
+        from agora.mcp.agora_alerts import send_alert
+
+        if overall == "degraded":
+            send_alert(
+                level="degraded",
+                event="health:degraded",
+                payload={"issues": issues, "backends": f"{backends_alive}/{backends_total}"},
+                caller_key="health:degraded",
+            )
+        elif overall == "healthy":
+            send_alert(
+                level="recovered",
+                event="health:recovered",
+                payload={"issues": []},
+                caller_key="health:degraded",  # 与 degraded 同 key, 恢复时绕过防抖
+                force=True,
+            )
+    except Exception:  # defensive: 告警失败不影响 health 返回
+        pass
+
     return {
         "format_version": FORMAT_VERSION,
         "status": overall,
