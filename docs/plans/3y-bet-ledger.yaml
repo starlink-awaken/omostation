@@ -777,7 +777,9 @@ bets:
   title: SceneWatcher 决策日志真写 MOS
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  completed_at: '2026-08-07'
+  evidence_pr: 'omo#17'
   goal: 消除 docstring 声称已做而代码未做的三处文实不符, 让 Agent 第一次拥有跨进程记忆
   non_goals:
   - 决策逻辑升级
