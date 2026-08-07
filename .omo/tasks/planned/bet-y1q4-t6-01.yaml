@@ -1,0 +1,54 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y1Q4-T6-01
+title: aetherforge 并入 runtime
+status: candidate
+task_type: bet
+priority: P1
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q4-T6-01
+window: Y1Q4
+track: T6-SUBTRACT
+appetite: 2 weeks
+desc: 合并执行与算力调度, 删除无消费者的 mesh/swarm 代码
+non_goals:
+- 删除 gateway(模型网关是刚需)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q2-T1-01
+risk_level: L3
+allowed_operation_level: L3
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y1Q2-T1-01'
+evidence_required:
+- aetherforge 子模块条目移除, 作为 runtime 内包
+- 无调用方的 mesh/swarm 代码删除前先归档
+- 合并后行数 < 原和 70%
+test_plan:
+- git submodule status | grep -c aetherforge
+workflow: bet-execution
+write_surfaces:
+- .gitmodules
+- docs/project-registry.yaml
+pasw_required: false
+circuit_breaker: 行数未降 → 判定为拼接, 回滚重做
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q4-T6-01.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

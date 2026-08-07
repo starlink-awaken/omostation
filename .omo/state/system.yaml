@@ -57,7 +57,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-08-06T19:54:46.877959+08:00'
+updated_at: '2026-08-06T20:56:58.843406+08:00'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -194,11 +194,11 @@ governance:
   code_freeze: false
   code_freeze_note: 已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截
 runtime_health_summary:
-  online_services: 4
+  online_services: 3
   total_services: 4
-  ratio: 1.0
-  health_score: 100
-  last_scan: '1786017228.530112'
+  ratio: 0.75
+  health_score: 75
+  last_scan: '1786021015.73215'
   service_count: 8
   degraded: []
   source: runtime_daemon_de_false_positive
@@ -216,10 +216,10 @@ debt_items_total: 7
 debt_items_resolved: 7
 debt_adjusted_note: all 7 debt items resolved
 governance_anomaly_score: 85
-service_online_ratio: 1.0
+service_online_ratio: 0.75
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-08-06T19:54:46.877959+08:00'
+governance_feedback_last_run: '2026-08-06T20:56:58.843406+08:00'
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
 health_score_evidence_generated_at: '2026-08-04T11:19:16.699218+00:00'

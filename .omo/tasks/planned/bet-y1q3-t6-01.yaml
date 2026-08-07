@@ -1,0 +1,59 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y1Q3-T6-01
+title: gbrain + kairon 归并为 knowledge (不可逆点)
+status: candidate
+task_type: bet
+priority: P0
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q3-T6-01
+window: Y1Q3
+track: T6-SUBTRACT
+appetite: 6 weeks
+desc: 三年规划中最大一处减法 — 消除知识层双头, 50 万行降至 35 万行
+non_goals:
+- 新增检索能力
+- 改变 BOS URI 对外契约
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q3-T3-01
+- BET-Y1Q3-T3-02
+risk_level: L3
+allowed_operation_level: L3
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y1Q3-T3-01'
+- '依赖已 done: BET-Y1Q3-T3-02'
+evidence_required:
+- 单一 knowledge 项目, gbrain / kairon 子模块条目移除
+- 合并后行数 < 50 万 (原 gbrain 32.3万 + kairon 17.7万 = 50万)
+- 回滚 tag 已打且验证可回滚
+- 全量测试通过
+test_plan:
+- bash tests/integration/run-all.sh
+- git tag -l 'pre-knowledge-merge-*'
+workflow: bet-execution
+write_surfaces:
+- .gitmodules
+- docs/project-registry.yaml
+pasw_required: true
+circuit_breaker: 超 8 周或行数未降 → 立即回滚到 tag, Y2 重试, Y1 其余目标不受影响
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q3-T6-01.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

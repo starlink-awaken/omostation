@@ -1,0 +1,56 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y1Q3-T3-02
+title: Neo4j 生产启用
+status: candidate
+task_type: bet
+priority: P0
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q3-T3-02
+window: Y1Q3
+track: T3-COGNI
+appetite: 1 week
+desc: 让 temporal_fact / entity_relation 走真实图路径, 结束 off_until_NEO4J_URI 状态
+non_goals:
+- graphiti 全量接入
+- 图算法
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T3-01
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T3-01'
+evidence_required:
+- NEO4J_URI 配置生效, 7474/7687 在 port-registry 注册
+- temporal_fact 与 entity_relation 召回走 Neo4j
+- 服务不可达时降级可见, 不静默回退
+test_plan:
+- make memory-os-check
+- python3 bin/gac/check-memory-os-surfaces.py
+workflow: bet-execution
+write_surfaces:
+- protocols/port-registry.yaml
+- config/**
+pasw_required: false
+circuit_breaker: 超 2 周 → 保持 TemporalShadow, 但 registry 必须标 degraded 非 ready
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q3-T3-02.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0
