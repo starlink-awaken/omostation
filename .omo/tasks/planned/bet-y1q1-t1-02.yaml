@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q1-T1-02
 title: 子模块指针对齐 + 漂移 CI 门禁
 status: candidate
@@ -40,6 +40,8 @@ evidence_required:
 - 18 个 rewind 存量清零, CR-SUBMODULE-REWIND 在干净状态下通过
 - CI 增加 submodule-pointer-drift 门禁, 漂移则失败
 - '新门禁上线规程: 存量未清零前只能以 warning 上线, 不得直接 fail'
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-02.evidence （1 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q1-T1-02）
 test_plan:
 - git status --short | grep -E '^ ?[Mm] projects/' | wc -l
 - python3 bin/submodule-gitlink-check.py

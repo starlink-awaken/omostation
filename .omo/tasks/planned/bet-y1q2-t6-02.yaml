@@ -1,8 +1,8 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q2-T6-02
-title: ADR 有效集分层 344 → ≤200
+title: ADR 分层 — 只分层不裁剪
 status: candidate
 task_type: bet
 priority: P0
@@ -12,10 +12,11 @@ source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-02
 window: Y1Q2
 track: T6-SUBTRACT
 appetite: 1 week
-desc: 把历史 ADR 降为 historical 不参与检索, 让有效集回到可通读范围
+desc: 把历史 ADR 移出检索面, 让有效集回到可通读范围。不删任何一份
 non_goals:
 - 删除 ADR 文件
 - 修改历史决策内容
+- 设定 active 数量硬指标（分层本身就够, 数字是拍的）
 assigned_to: null
 dispatch_id: null
 run_ref: null
@@ -34,10 +35,14 @@ human_approval_required: false
 entry_gate: []
 evidence_required:
 - ADR 分 active / historical 两层, historical 不进 RAG 与 onboarding
-- active <= 200
+- '分层判据明确且可复核（如: 已被 superseded / 所述系统已退役 / 超过 N 个 phase 未被引用）'
 - adr-coverage.py 支持分层统计
+- ADR 文件总数不减少（删除即视为违规）
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-02.evidence （1 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q2-T6-02）
 test_plan:
 - python3 bin/adr/adr-coverage.py --json
+- python3 bin/plan/bet-ledger.py surface
 workflow: bet-execution
 write_surfaces:
 - .omo/_knowledge/decisions/**

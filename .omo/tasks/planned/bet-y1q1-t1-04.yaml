@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q1-T1-04
 title: 未入库产物普查 + D0 铁律门禁
 status: candidate
@@ -40,6 +40,8 @@ evidence_required:
 - AGENTS.md 收录 D0 铁律
 - change-lane-check 对 docs/ 下的数据文件(.yaml/.json/.csv)判为 docs 或 docs_data lane
 - 若新增 docs_data lane, 则 {docs, docs_data} 进入允许混合组合
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-04.evidence （1 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q1-T1-04）
 test_plan:
 - git status --porcelain --untracked-files=all | grep '^??' | wc -l
 - grep -c 'D0' AGENTS.md

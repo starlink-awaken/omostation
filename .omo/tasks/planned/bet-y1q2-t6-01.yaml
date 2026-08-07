@@ -1,8 +1,8 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q2-T6-01
-title: GaC 规则减法第一轮 134 → ≤100
+title: GaC 规则减法 — 清理会拦人却无违规历史的 required 规则
 status: candidate
 task_type: bet
 priority: P0
@@ -12,10 +12,11 @@ source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-01
 window: Y1Q2
 track: T6-SUBTRACT
 appetite: 1 week
-desc: 删除无违规历史或无执行器的规则, 降低治理面熵产出
+desc: 降低治理面的「误伤成本」, 而非降低规则总数
 non_goals:
 - 新增规则
 - 修改规则语义
+- 删 advisory 规则（不阻断, 维护成本≈0, 删了没收益）
 assigned_to: null
 dispatch_id: null
 run_ref: null
@@ -33,11 +34,15 @@ allowed_operation_level: L2
 human_approval_required: false
 entry_gate: []
 evidence_required:
-- 每条被删规则有删除理由记录
-- GaC 规则数 <= 100
+- 逐条审查 26 条 required/error 规则, 统计各自的历史违规次数
+- '无违规历史且无执行器的 required 规则: 降级为 advisory 或删除, 逐条记理由'
+- 4 条 superseded 规则归档
+- advisory 规则不动
 - make gac-local-gate 仍全绿
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-01.evidence （1 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q2-T6-01）
 test_plan:
-- grep -c '^  - id:\|^- id:' .omo/_truth/registry/governance-checks.yaml
+- python3 bin/plan/bet-ledger.py surface
 - make gac-local-gate
 workflow: bet-execution
 write_surfaces:

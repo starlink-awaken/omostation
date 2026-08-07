@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q3-T6-01
 title: gbrain + kairon 归并为 knowledge (不可逆点)
 status: candidate
@@ -12,10 +12,11 @@ source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q3-T6-01
 window: Y1Q3
 track: T6-SUBTRACT
 appetite: 6 weeks
-desc: 三年规划中最大一处减法 — 消除知识层双头, 50 万行降至 35 万行
+desc: 三年规划中最大一处减法 — 消除知识层双头。以「去重的 src 行数」计量, 测试不动
 non_goals:
 - 新增检索能力
 - 改变 BOS URI 对外契约
+- 删测试换指标（test_loc 是保护量, 下降即判有害）
 assigned_to: null
 dispatch_id: null
 run_ref: null
@@ -38,10 +39,15 @@ entry_gate:
 - '依赖已 done: BET-Y1Q3-T3-02'
 evidence_required:
 - 单一 knowledge 项目, gbrain / kairon 子模块条目移除
-- 合并后行数 < 50 万 (原 gbrain 32.3万 + kairon 17.7万 = 50万)
+- '产出去重清单: 哪些模块功能重复、合并后删了哪些, 逐项可复核'
+- src_loc 下降量 == 去重清单的合计（不是凑一个百分比）
+- test_loc 不低于基线 350,854（下降即回滚）
 - 回滚 tag 已打且验证可回滚
 - 全量测试通过
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q3-T6-01.evidence （1 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q3-T6-01）
 test_plan:
+- python3 bin/plan/bet-ledger.py surface
 - bash tests/integration/run-all.sh
 - git tag -l 'pre-knowledge-merge-*'
 workflow: bet-execution
