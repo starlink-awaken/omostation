@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -344,6 +345,7 @@ FINDING_TOPIC_CHECKS: dict[str, dict[str, str]] = {
 def run_check(name: str, command: list[str]) -> dict[str, object]:
     cmd = [sys.executable, *command]
     timeout = _CHECK_TIMEOUTS.get(name, 15)
+    started_ns = time.time_ns()
     try:
         result = subprocess.run(
             cmd,
@@ -353,6 +355,7 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
             check=False,
             timeout=timeout,
         )
+        duration_ms = int((time.time_ns() - started_ns) / 1_000_000)
         return {
             "name": name,
             "command": " ".join(command),
@@ -360,8 +363,10 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
             "returncode": result.returncode,
             "stdout": result.stdout.strip(),
             "stderr": result.stderr.strip(),
+            "duration_ms": duration_ms,
         }
     except subprocess.TimeoutExpired:
+        duration_ms = int((time.time_ns() - started_ns) / 1_000_000)
         return {
             "name": name,
             "command": " ".join(command),
@@ -369,6 +374,7 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
             "returncode": -1,
             "stdout": "",
             "stderr": f"TIMEOUT after {timeout}s",
+            "duration_ms": duration_ms,
         }
 
 
@@ -575,6 +581,30 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
     print("GaC local gate: " + " | ".join(parts))
 
 
+def append_metrics(report: dict[str, object]) -> None:
+    metrics_file = WORKSPACE / ".omo" / "state" / "metrics-store.jsonl"
+    try:
+        import yaml
+    except Exception:
+        yaml = None  # type: ignore[assignment]
+    for item in report.get("checks", []):
+        if not isinstance(item, dict):
+            continue
+        entry = {
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "check": item.get("name", ""),
+            "ok": bool(item.get("ok")),
+            "duration_ms": int(item.get("duration_ms") or 0),
+        }
+        if item.get("stderr"):
+            entry["reason"] = item["stderr"][:200]
+        elif item.get("stdout"):
+            entry["reason"] = item["stdout"][:200]
+        metrics_file.parent.mkdir(parents=True, exist_ok=True)
+        with metrics_file.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the shared local GaC gate")
     parser.add_argument("--scope", choices=["staged", "files", "run"], default="staged")
@@ -584,13 +614,20 @@ def main() -> int:
     parser.add_argument("--strict", action="store_true", help="跑全套 (CI 用)")
     parser.add_argument("--verbose", action="store_true", help="Print passing gate details under slim mode")
     parser.add_argument("--agt-backend", action="store_true", help="Use AGT Policy Engine as GaC rule execution backend")
+    parser.add_argument("--metrics", action="store_true", help="Record check results to metrics-store.jsonl")
     args = parser.parse_args()
 
     try:
         report = run_gate(args.scope, args.file, args.run_id, args.strict, args.agt_backend)
     except ValueError as exc:
         parser.error(str(exc))
-    
+
+    if args.metrics:
+        try:
+            append_metrics(report)
+        except Exception as exc:
+            print(f"[WARN] metrics append failed: {exc}", file=sys.stderr)
+
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
