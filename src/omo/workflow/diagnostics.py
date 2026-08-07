@@ -30,8 +30,10 @@ from .lifecycle import (
     ledger_mentions_run,
     load_lock_records,
     load_run_records,
+    prune_stale_locks,
     read_run,
     recommended_next,
+    scan_locks,
     staged_lane_report,
 )
 from .lint import agcp_drift_check, diff_check_rows
@@ -889,13 +891,11 @@ def build_status_report(
     compliance = compliance_report(registry, None)
     events = ledger_events(registry)
     staged_lane = staged_lane_report()
-    stale_locks = len(
-        [
-            finding
-            for finding in observe_report["findings"]
-            if finding.get("kind") == "expired_lock"
-        ]
+    lock_scan = scan_locks(registry)
+    stale_locks = sum(
+        1 for entry in lock_scan if entry["kind"] in ("zombie_expired", "zombie_stale_heartbeat")
     )
+    live_locks = sum(1 for entry in lock_scan if entry["kind"] == "live")
     current_run_id = active_runs[0] if len(active_runs) == 1 else None
     changed_files = changed_files_from_git(include_untracked=False)
     policy = claim_policy(registry)
@@ -930,6 +930,8 @@ def build_status_report(
         "run_count": len(runs),
         "lock_count": observe_report["lock_count"],
         "stale_locks": stale_locks,
+        "live_locks": live_locks,
+        "lock_details": lock_scan,
         "current_run_id": current_run_id,
         "last_verify": last_ledger_event(events, {"agent_workflow_verify"}),
         "last_closeout": last_ledger_event(

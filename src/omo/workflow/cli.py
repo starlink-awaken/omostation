@@ -41,8 +41,10 @@ from .lifecycle import (
     close_run,
     closeout_run,
     print_plan,
+    prune_stale_locks,
     read_run,
     run_stage,
+    scan_locks,
     start_run,
     workflow_plan,
 )
@@ -217,6 +219,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_suggest.add_argument("--profile", default="")
     p_suggest.add_argument("--json", action="store_true")
 
+    p_prune = sub.add_parser(
+        "prune-locks",
+        help="Remove zombie locks (expired or stale heartbeat). T1-00 AC5/AC6.",
+    )
+    p_prune.add_argument("--json", action="store_true")
+    p_prune.add_argument(
+        "--scan-only", action="store_true",
+        help="Only scan and report locks, do not prune",
+    )
+
     return parser
 
 
@@ -239,6 +251,26 @@ def main(argv: list[str] | None = None) -> int:
             report = build_status_report(registry, args.health, include_agcp_drift)
             print_status_report(report, args.json)
             return 0 if report["ok"] else 1
+        if args.command == "prune-locks":
+            if args.scan_only:
+                locks = scan_locks(registry)
+            else:
+                locks = prune_stale_locks(registry)
+            if args.json:
+                print(json.dumps(locks, ensure_ascii=False, indent=2))
+            else:
+                if args.scan_only:
+                    live = [e for e in locks if e["kind"] == "live"]
+                    zombie = [e for e in locks if e["kind"] != "live"]
+                    print(f"locks: {len(locks)} total, {len(live)} live, {len(zombie)} zombie")
+                    for entry in locks:
+                        tag = "LIVE" if entry["kind"] == "live" else "ZOMBIE"
+                        print(f"  [{tag}] {entry['path']} — {entry['detail']}")
+                else:
+                    print(f"pruned {len(locks)} zombie lock(s)")
+                    for entry in locks:
+                        print(f"  - {entry['path']} ({entry['kind']})")
+            return 0
         if args.command == "claim":
             claim = claim_run(
                 registry,

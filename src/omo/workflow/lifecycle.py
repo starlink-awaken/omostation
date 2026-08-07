@@ -262,6 +262,56 @@ def heal_ledger_for_run(
     return True
 
 
+_HEARTBEAT_STALE_SECONDS = 3600
+
+
+def _classify_existing_lock(lock_path: Path) -> dict[str, Any]:
+    """Classify an existing lock as live, zombie_expired, or zombie_stale_heartbeat."""
+    try:
+        payload = yaml.safe_load(lock_path.read_text(encoding="utf-8")) or {}
+    except (yaml.YAMLError, OSError):
+        return {"kind": "zombie_stale_heartbeat", "detail": "unreadable lock file"}
+    expires = payload.get("expires_at", "")
+    if expires:
+        try:
+            exp_dt = datetime.fromisoformat(expires.replace("Z", "+00:00"))
+            if datetime.now(UTC) > exp_dt:
+                return {
+                    "kind": "zombie_expired",
+                    "detail": f"expired at {expires}",
+                    "payload": payload,
+                }
+        except ValueError:
+            pass
+    heartbeat = payload.get("last_heartbeat", "")
+    if heartbeat:
+        try:
+            hb_dt = datetime.fromisoformat(heartbeat.replace("Z", "+00:00"))
+            age = (datetime.now(UTC) - hb_dt).total_seconds()
+            if age > _HEARTBEAT_STALE_SECONDS:
+                return {
+                    "kind": "zombie_stale_heartbeat",
+                    "detail": f"heartbeat {age:.0f}s ago (> {_HEARTBEAT_STALE_SECONDS}s)",
+                    "payload": payload,
+                }
+        except ValueError:
+            pass
+    return {"kind": "live", "detail": "holder active", "payload": payload}
+
+
+def heartbeat_lock(lock_path: Path) -> None:
+    """Update last_heartbeat on a lock file to signal liveness."""
+    try:
+        payload = yaml.safe_load(lock_path.read_text(encoding="utf-8")) or {}
+        payload["last_heartbeat"] = utc_now()
+        lock_path.write_text(
+            yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+    except OSError:
+        pass
+
+
 def acquire_locks(
     registry: dict[str, Any],
     scopes: list[str],
@@ -278,22 +328,31 @@ def acquire_locks(
     try:
         for scope in scopes:
             lock_path = lock_dir / f"{sanitize_lock_name(scope)}.lock.yaml"
+            now_ts = utc_now()
             payload = {
                 "run_id": run_id,
                 "actor": actor,
                 "scope": scope,
-                "created_at": utc_now(),
+                "created_at": now_ts,
+                "last_heartbeat": now_ts,
                 "expires_at": expires_at.isoformat().replace("+00:00", "Z"),
             }
             if lock_path.exists() and not force:
+                classification = _classify_existing_lock(lock_path)
                 existing = lock_path.read_text(encoding="utf-8").strip()
-                raise WorkflowError(
-                    f"lock already held for {scope}: {lock_path}\n{existing}"
-                )
+                if classification["kind"] == "live":
+                    raise WorkflowError(
+                        f"lock HELD (live) for {scope}: {lock_path}\n"
+                        f"  holder is active — {classification['detail']}\n"
+                        f"{existing}"
+                    )
+                lock_path.unlink(missing_ok=True)
             with lock_path.open("w" if force else "x", encoding="utf-8") as handle:
                 yaml.safe_dump(payload, handle, allow_unicode=True, sort_keys=False)
             acquired_paths.append(lock_path)
             acquired.append(display_path(lock_path))
+    except WorkflowError:
+        raise
     except Exception:
         for path in acquired_paths:
             path.unlink(missing_ok=True)
@@ -315,6 +374,44 @@ def release_locks(registry: dict[str, Any], run_id: str) -> list[str]:
             lock_path.unlink()
             released.append(display_path(lock_path))
     return released
+
+
+def scan_locks(registry: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return a report of all path locks with live/zombie classification."""
+    lock_dir = lock_state_dir(registry)
+    results: list[dict[str, Any]] = []
+    if not lock_dir.exists():
+        return results
+    for lock_path in sorted(lock_dir.glob("*.lock.yaml")):
+        classification = _classify_existing_lock(lock_path)
+        entry: dict[str, Any] = {
+            "path": display_path(lock_path),
+            "kind": classification["kind"],
+            "detail": classification["detail"],
+        }
+        payload = classification.get("payload") or {}
+        if payload:
+            entry["run_id"] = payload.get("run_id", "")
+            entry["actor"] = payload.get("actor", "")
+            entry["scope"] = payload.get("scope", "")
+            entry["created_at"] = payload.get("created_at", "")
+            entry["last_heartbeat"] = payload.get("last_heartbeat", "")
+            entry["expires_at"] = payload.get("expires_at", "")
+        results.append(entry)
+    return results
+
+
+def prune_stale_locks(registry: dict[str, Any]) -> list[dict[str, Any]]:
+    """Remove zombie locks (expired or stale heartbeat). Return pruned entries."""
+    pruned: list[dict[str, Any]] = []
+    for entry in scan_locks(registry):
+        if entry["kind"] in ("zombie_expired", "zombie_stale_heartbeat"):
+            lock_file = Path(entry["path"])
+            if not lock_file.is_absolute():
+                lock_file = WORKSPACE / lock_file
+            lock_file.unlink(missing_ok=True)
+            pruned.append(entry)
+    return pruned
 
 
 def run_file_for(registry: dict[str, Any], run_id: str) -> Path:
