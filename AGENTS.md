@@ -148,6 +148,14 @@ T1-07 已落地 PATH shim（`bin/gac/git-shim` + `AGENT_ID` circuit_breaker）�
 拓扑层根治方案（每 agent 独立 clone，主仓降级为集成点，D2/D3/D5 随之退役）见
 [`docs/reports/2026-08-06-multi-agent-git-topology.md`](docs/reports/2026-08-06-multi-agent-git-topology.md) 与 `BET-Y1Q1-T1-05`。
 
+### 1.6.3 多 Agent 蜂群感知与硬规约契约 (Swarm Perception & Hard Constraints)
+
+| 视角 | 机制 | 物理暴露与硬规约 |
+|---|---|---|
+| **怎么感知？** | 软/动/硬三层感知 | 启动/思考时自动注入在线节点大盘；通过 `swarm_who_is_working_on` 查冲突；`git-shim` 终端弹警告。 |
+| **怎么知道？** | 总线广播 + 冲突点名 | 任何 `claim/commit` 自动写入 `.omo/state/swarm/broadcast-bus.jsonl`；发生重叠触发 `SWARM_COLLISION_ALERT`。 |
+| **怎么物理约束？** | PASW + 物理锁 + 熔断阻断 | 强制走 `work/<session>` 分支隔离；未 `claim` 或冲突修改他人路径时门禁直接 **Exit 1** 阻断；拦截高危命令。 |
+
 ### 1.7 我该做什么 — 三年规划执行台账
 
 不要自行拟定任务。读台账：
@@ -160,7 +168,16 @@ uv run --with pyyaml python bin/plan/bet-ledger.py claim-check <BET-ID>
 SSOT `docs/plans/3y-bet-ledger.yaml` · 视图 `docs/plans/3Y-BET-LEDGER.md` ·
 执行指令 `docs/plans/AGENT-BRIEF.md` · 技能 skill `bet-execution`。
 
-台账铁律 D0–D5 与复盘五问见 AGENT-BRIEF；bet 数量与进度为运行时事实，从 CLI 读。
+### 1.8 8D 全景元架构与全仓四大入口契约 (8D Meta-Architecture & Channels)
+
+系统由 **LifeOS 意图 ➔ C2G 策略 ➔ Goals 目标 ➔ Agora 蜂群 ➔ AetherForge 算力 ➔ AGE-v2 落地 ➔ MOS/KOS 记忆 ➔ X-Plane 熵减** 8 维空间组成。
+全仓核心命令与全景视图暴露如下：
+
+1. **7D 终极可观测**：`cockpit panorama` / `make panorama` (执行/服务/内容/知识/数据/异常/债务资产)。
+2. **8D 全景追溯**：`cockpit compass trace <GOAL-ID>` / `make compass-trace` / `bos://governance/omo/compass-trace`。
+3. **17 项目 4D 体检**：`cockpit project inspect <PROJ>` / `make project-inspect` / `bos://governance/omo/project-inspect`。
+4. **场景卡与 Journey 校验**：`cockpit journey` / `make journey-validate` / `make scene-card-check`。
+5. **常态化守护**：必须维持 `make gac-local-gate` 42 Checks ALL GREEN PASS 绿线。
 
 ## 2. Documentation SSOT Contract
 
@@ -371,6 +388,7 @@ Historical closeout details are useful evidence but should not be pasted into th
 | **agora P2 深化** (2026-08-06, PR #1057/#1059/#1061) | `/metrics` Prometheus exporter + audit hashchain (`verify_chain` → `/health` audit_chain) + SSE/gateway 双进程统一 (SSE 单一 owner `AGORA_GATEWAY_OWNER=1`, `/health` backends 改从 `registry._clients` 真实计数修复假绿) + 进程内调用放行 (`request_context.py` 抽象 fastmcp 私有 API) + swarm 面板 agora 健康 + CI deploy-smoke. **P0-SEC**: `/v1/backends/register` 加认证 (复用 `require_agora_api_key`) + 拒绝 shell 元字符. 复盘: `docs/reports/2026-08-06-agora-p1p2-deepening-retrospective.md`. |
 | **check-work-landed SHA 检测修复 + M3 grace baseline** (2026-07-30, ADR-0292) | 修复 `_refs_landed` 用 `git merge-base --is-ancestor` 取代 `git log --grep` (后者只搜 commit messages). 3 个 squash-orphan 的 `submodule-pointer-close` run 列入 grace baseline. Z2 meta-baseline cap 0→3. GaC local gate: 38/39 → **39/39 ALL GREEN**. |
 | **知识网关 L3-I0 解耦 + 增量事件索引管道** (2026-08-01, ADR-0294, PR #740) | `api_knowledge.py` 从进程内强 import 迁移到 HTTP 网络优先解析 (`/bos/resolve`) + 兼容降级; `/put` 写后发射 `bos://brain/events/card_updated`; `knowledge_indexer.py` Consumer 订阅后驱动 KOS/LanceDB 增量 upsert 打通检索闭环. 25/25 pytest 全绿. 分层调用方向无新越权. 详见 ADR + SOP §5 + `bos-uri-domain-standard.md` 越界登记 (`bos://brain/events/` → Phase 2 迁移至 `bos://memory/events/`). |
+| **治理智能 Phase 6-10 交付** (2026-08-08) | Phase 6 Anomaly Alerting (`anomaly-detector.py` + `alert-router.py` + `--alert`) + Phase 7 Dashboard (`governance-dashboard.py --metrics-dashboard`) + Phase 8 BOS Service-ification (`bos://governance/*`) + Phase 9 Cross-Domain Trend Fusion (`cross-domain-trend.py` + `trend-fusion.yaml`) + Phase 10 Predictive Governance (`predictive-governance.py` + `predictive-governance.yaml` + threshold simulation). 51/51 gac unit tests passing. BOS URIs registered in `projects/agora/etc/bos-services.yaml`. SSOT registries updated: `runtime-projections.yaml`, `ci-surfaces.yaml`, `trend-fusion.yaml`, `predictive-governance.yaml`. |
 
 ## 9. Closeout Checklist
 

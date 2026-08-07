@@ -76,11 +76,13 @@ last-reviewed: 2026-06-29
 | `evidence-smoke.py` | BOS 声明/执行鸿沟量化 + 反馈回路维度 (综合 smoke) |
 | `feedback-loop-guard.py` | 自反馈回路存活监控 + escalation (专精, cron 友好) |
 
-### 6. 治理仪表盘 / 趋势 / 告警 (15) — 可视化 + history + alert
+### 6. 治理仪表盘 / 趋势 / 告警 (17) — 可视化 + history + alert + trend fusion + prediction
 | 脚本 | 功能 |
 |:-----|:-----|
 | `swarm-activity-dashboard.py` | 多 agent 实时活动面板 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
 | `governance-dashboard.py` | P86 R4 dashboard wrapper |
+| `cross-domain-trend.py` | Phase 9 跨域趋势融合 (governance/code_quality/test_health/knowledge) |
+| `predictive-governance.py` | Phase 10 预测性治理 + 处方建议 (linear prediction + threshold simulation) |
 | `governance-readiness.py` | P60 治理就绪度 (5 维度) |
 | `governance-readiness-trend.py` | 就绪度趋势 |
 | `governance-history-insight.py` | history 洞察 |

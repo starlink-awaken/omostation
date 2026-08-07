@@ -7,6 +7,7 @@ lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-08-07
 current_wave: W5
+execution_mode: waiting-for-scenario/next-bet
 entry_gate: phase41_completed
 goals:
 - desc: Wave 1 — Agora MCP 隔离
@@ -351,8 +352,8 @@ goals:
   title: git 入口收口 — shim 强制走 swarm-git
   desc: agent 环境 git → swarm-git 强制路由，拦 --no-verify + 高危操作
   kpi: bin/gac/git-shim PATH 优先 + AGENT_ID circuit_breaker + 高危操作拦截日志
-  progress: 50.0
-  status: in_progress
+  progress: 100.0
+  status: done
   bet_ref: BET-Y1Q1-T1-07
   tasks: []
 - id: G-Y1Q1-BELIEF

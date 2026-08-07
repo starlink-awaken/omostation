@@ -11,18 +11,25 @@
 
 set -euo pipefail
 
-# T1-07 defense-in-depth: 递归深度自检 (防 REAL_GIT 失效/新 wrapper 导致 fork bomb)
-# 正常调用链 shim→swarm-git→REAL_GIT git 深度=1; 递归时累加, >3 中止 (2026-08-07 实证).
-if [ "${SWARM_GIT_DEPTH:-0}" -gt 3 ]; then
-  echo "[swarm-git] ❌ 递归深度 ${SWARM_GIT_DEPTH} 超限, 中止 (防 fork bomb, T1-07)" >&2
+# 🛡️ 防护 1: 严格递归深度计数器 — 允许最大深度 1, 大于 1 直接 exit 1 物理熔断 (防 Fork Bomb)
+if [ "${SWARM_GIT_DEPTH:-0}" -ge 1 ]; then
+  echo "[swarm-git] ❌ 递归深度 ${SWARM_GIT_DEPTH} 超限, 触发物理熔断阻断 (防 Fork Bomb 绝杀)" >&2
   exit 1
 fi
 export SWARM_GIT_DEPTH=$((${SWARM_GIT_DEPTH:-0} + 1))
 
-# REAL_GIT = PATH 中第一个非 shim 的 git (防递归)
+# 🛡️ 防护 2: PATH 绝对净化 — 在全脚本所有子进程中物理剥离 shim 目录 (防 Python 内部二次调 git 递归)
 _shim_dir="${HOME:-}/agents/shim/bin"
-REAL_GIT=""
+CLEANED_PATH=""
 IFS=':' read -ra _dirs <<< "${PATH:-}"
+for _d in "${_dirs[@]}"; do
+  [ "$_d" = "$_shim_dir" ] && continue
+  CLEANED_PATH="${CLEANED_PATH:+$CLEANED_PATH:}$_d"
+done
+export PATH="$CLEANED_PATH"
+
+# 查找真实系统 git 路径
+REAL_GIT=""
 for _d in "${_dirs[@]}"; do
   [ "$_d" = "$_shim_dir" ] && continue
   if [ -x "$_d/git" ]; then REAL_GIT="$_d/git"; break; fi
@@ -32,6 +39,23 @@ REAL_GIT="${REAL_GIT:-/usr/bin/git}"
 ROOT="$("$REAL_GIT" rev-parse --show-toplevel 2>/dev/null || true)"
 if [ -z "${ROOT:-}" ]; then
   exec "$REAL_GIT" "$@"
+fi
+
+# 🛡️ 防护 3: 后台异步脱离心跳上报 — 完全脱离主父进程, 零延迟, 零死循环风险
+if [ -n "${AGENT_ID:-}" ]; then
+  (
+    PYTHONPATH="$ROOT/projects/agora/src" "$REAL_GIT" --version >/dev/null 2>&1
+    python3 -c "
+import os, sys
+from pathlib import Path
+try:
+    from agora.swarm_mesh import SwarmMeshManager
+    sm = SwarmMeshManager(root=Path('$ROOT'))
+    sm.register_node(agent_id=os.environ.get('AGENT_ID', 'agent-cli'), role='Developer', working_paths=['.'])
+except Exception:
+    pass
+" 2>/dev/null || true
+  ) >/dev/null 2>&1 &
 fi
 
 # D4: --no-verify fail-closed (ADR-0220)
@@ -57,7 +81,6 @@ EOF
 fi
 
 # T1-07: 高危 argv 拦截 — clean -fd/reset --hard/stash -u (agent 禁做, 无 escape)
-# bash 预筛: 只在 argv 含 clean/reset/stash 时 spawn python3 (避免每次 git 调用 import)
 if printf '%s\0' "$@" | grep -qzE '\bclean\b|\breset\b|\bstash\b'; then
   DANGER_PY="$ROOT/bin/gac/swarm_discipline.py"
   if [ -f "$DANGER_PY" ]; then

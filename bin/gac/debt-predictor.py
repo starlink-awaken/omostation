@@ -25,6 +25,7 @@ except ImportError:
 WORKSPACE = Path(__file__).resolve().parents[2]
 DEBT_DIR = WORKSPACE / ".omo" / "debt" / "items"
 METRICS_FILE = WORKSPACE / ".omo" / "state" / "metrics-store.jsonl"
+PREDICTIONS_FILE = WORKSPACE / ".omo" / "state" / "governance-predictions.yaml"
 
 
 def _parse_datetime(value: str | None) -> datetime | None:
