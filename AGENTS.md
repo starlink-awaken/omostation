@@ -81,7 +81,7 @@ POST /api/knowledge/search → 网络解析 AGORA_HTTP_ENDPOINT/bos/resolve
 
 | 变量 | 默认值 | 说明 |
 |:-----|:-------|:-----|
-| `AGORA_HTTP_ENDPOINT` | `http://127.0.0.1:7422` | Agora 网关（BOS 解析 + 事件总线） |
+| `AGORA_HTTP_ENDPOINT` | port-registry SSOT (agora-mcp-sse=7431) | Agora 网关（BOS 解析 + 事件总线; 由 `web/_agora_ports.py` 读取） |
 | `KOS_HTTP_ENDPOINT` | `http://127.0.0.1:7428` | KOS 向量索引服务 |
 
 ### SSOT 决策

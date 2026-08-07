@@ -272,7 +272,8 @@ class TestKnowledgeIndexer:
         patterns = []
         for call in mock_client.post.call_args_list:
             call_args, call_kwargs = call
-            assert call_args[0] == "http://127.0.0.1:7422/v1/tools/call"
+            # 端口从 port-registry SSOT 读取 (不再硬编码 7422)
+            assert call_args[0].endswith("/v1/tools/call"), call_args[0]
             body = call_kwargs["json"]
             assert body["tool"] == "subscribe_event"
             patterns.append(body["arguments"]["pattern"])

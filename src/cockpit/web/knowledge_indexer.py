@@ -37,7 +37,9 @@ from fastapi.responses import JSONResponse
 
 logger = logging.getLogger("cockpit.web.knowledge_indexer")
 
-_AGORA_HTTP = os.environ.get("AGORA_HTTP_ENDPOINT", "http://127.0.0.1:7422")
+from cockpit.web._agora_ports import agora_http_endpoint
+
+_AGORA_HTTP = agora_http_endpoint()
 _COCKPIT_PORT = int(os.environ.get("COCKPIT_DASHBOARD_PORT", "8090"))
 _COCKPIT_HOST = os.environ.get("COCKPIT_HOST", "127.0.0.1")
 _KOS_HTTP = os.environ.get("KOS_HTTP_ENDPOINT", "http://127.0.0.1:7430")

@@ -2,7 +2,6 @@
 
 import json
 import logging
-import os
 import re
 from inspect import isawaitable
 from pathlib import Path
@@ -18,7 +17,9 @@ router = APIRouter()
 
 _CARDS_DIR = WORKSPACE_ROOT / "data" / "cards"
 _SLUG_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$")
-_AGORA_HTTP_ENDPOINT = os.environ.get("AGORA_HTTP_ENDPOINT", "http://127.0.0.1:7422")
+from cockpit.web._agora_ports import agora_http_endpoint
+
+_AGORA_HTTP_ENDPOINT = agora_http_endpoint()
 
 
 async def _resolve_bos_uri_network_or_compat(uri: str, payload: dict) -> dict:

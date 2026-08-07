@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import datetime
 import logging
-import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -57,7 +56,9 @@ else:
 
 
 router = APIRouter(prefix="/api/workflow-mesh", tags=["workflow-mesh"]) if APIRouter else None
-_AGORA_HTTP_ENDPOINT = os.environ.get("AGORA_HTTP_ENDPOINT", "http://127.0.0.1:7422")
+from cockpit.web._agora_ports import agora_http_endpoint
+
+_AGORA_HTTP_ENDPOINT = agora_http_endpoint()
 _logger = logging.getLogger(__name__)
 
 
