@@ -1,0 +1,54 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y3H2-T4-01
+title: 复利收益归因报告
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y3H2-T4-01
+window: Y3H2
+track: T4-OUTCOME
+appetite: 2 weeks
+desc: 用数据回答"这三年到底省了多少时间"
+non_goals:
+- 估算未来收益
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y3H1-T7-01
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y3H1-T7-01'
+evidence_required:
+- 按场景/按季度给出实测节省时间
+- 归因方法可复核
+- 与 Y1 基线可比
+test_plan:
+- ls docs/reports/ | grep -c three-year
+workflow: bet-execution
+write_surfaces:
+- docs/reports/**
+- .omo/_delivery/outcomes/**
+pasw_required: false
+circuit_breaker: 数据不足以归因 → 如实报告"无法归因", 禁止估算填充(守 D1)
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y3H2-T4-01.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

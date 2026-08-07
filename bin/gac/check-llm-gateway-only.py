@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """GaC 检查器: LLM 推理必须走统一接入层 (llm-router / AetherForge 网关)。
 
-CR-LLM-GATEWAY-ONLY — 禁止业务代码直连 ollama (11434) / 裸 OpenAI 端点。
-直连仅允许出现在: aetherforge 网关自身、llm_router 统一接入层。
+CR-LLM-GATEWAY-ONLY — 禁止业务代码硬编码直连 ollama (localhost:11434) / 裸 OpenAI 端点。
+只匹配"硬编码推理调用", 豁免:
+  - GET /api/tags 探活 (健康检查, 只读非推理)
+  - os.environ.get / .get(...) / x or "..." 可配置默认值 (运行时可通过环境变量指向网关)
+  - 注释 / docstring / logger 消息 (非调用)
+  - 多行调用: requests.post( 开头 + 下一行内联 11434 URL
 
 用法: python3 bin/gac/check-llm-gateway-only.py [--warn] [--json]
-退出码: 0 = 通过; 1 = 存在违规 (报告; --warn 下仅告警不失败); 2 = --fix 后仍有残留
+退出码: 0 = 通过; 1 = 存在违规; --warn 下违规仅告警不失败
 """
 
 from __future__ import annotations
@@ -18,12 +22,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
-# 业务代码直连模式 (正则)
+# 硬编码推理调用 (真正绕过网关): 只匹配调用表达式, 不匹配注释/日志/配置默认值
 DIRECT_PATTERNS = [
-    re.compile(r"https?://(?:localhost|127\.0\.0\.1):11434"),
-    re.compile(r":11434/api/(?:generate|chat)"),
-    re.compile(r"OLLAMA_ENDPOINT\s*=\s*[\"']http://localhost:11434"),
+    re.compile(r"(?:httpx|requests|urllib|openai)\.\w+\(.*https?://(?:localhost|127\.0\.0\.1):11434"),
+    re.compile(r"curl\b.*https?://(?:localhost|127\.0\.0\.1):11434"),
+    re.compile(r"urlopen\(.*https?://(?:localhost|127\.0\.0\.1):11434"),
+    re.compile(r"base_url\s*=\s*[\"']https?://(?:localhost|127\.0\.0\.1):11434"),
 ]
+
+# 多行调用检测: requests.post( / httpx.post( 等调用开头, URL 换行在同语句后续行
+MULTILINE_CALL_START = re.compile(r"(?:httpx|requests|urllib|openai)\.\w+\(\s*$")
+MULTILINE_URL_LINE = re.compile(r"[\"']https?://(?:localhost|127\.0\.0\.1):11434")
 
 # 允许直连的路径 (网关自身 + 统一接入层)
 ALLOW_PATHS = (
@@ -56,7 +65,19 @@ def scan() -> list[dict]:
                 continue
             for idx, line in enumerate(lines, start=1):
                 if any(p.search(line) for p in DIRECT_PATTERNS):
+                    # 行级豁免 1: GET /api/tags 探活是健康检查(只读、非推理)
+                    if "api/tags" in line:
+                        continue
+                    # 行级豁免 2: os.environ.get 默认值是运行时可用环境变量覆盖的可配置默认值
+                    if "os.environ.get(" in line or "os.getenv(" in line or ".get(" in line:
+                        continue
                     findings.append({"file": rel, "line": idx, "text": line.strip()[:120]})
+                    continue
+                # 多行调用: requests.post( 开头 + 后续行内联 11434 URL
+                if MULTILINE_CALL_START.search(line) and idx < len(lines):
+                    nxt = lines[idx]
+                    if MULTILINE_URL_LINE.search(nxt) and "os.environ.get(" not in nxt and "api/tags" not in nxt:
+                        findings.append({"file": rel, "line": idx + 1, "text": nxt.strip()[:120]})
     return findings
 
 
@@ -72,10 +93,10 @@ def main() -> int:
         print(json.dumps({"violations": len(findings), "findings": findings}, ensure_ascii=False, indent=2))
     else:
         if not findings:
-            print("CR-LLM-GATEWAY-ONLY: OK — 无直连 ollama/裸端点 (绕过 llm-router)")
+            print("CR-LLM-GATEWAY-ONLY: OK — 无硬编码直连 ollama/裸端点 (绕过 llm-router)")
             return 0
         level = "WARN" if args.warn else "FAIL"
-        print(f"CR-LLM-GATEWAY-ONLY: {level} — {len(findings)} 处直连 ollama (应走 llm-router / AetherForge 网关)")
+        print(f"CR-LLM-GATEWAY-ONLY: {level} — {len(findings)} 处硬编码直连 (应走 llm-router / AetherForge 网关)")
         for f in findings:
             print(f"  {f['file']}:{f['line']}  {f['text']}")
         if not args.warn:

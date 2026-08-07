@@ -81,6 +81,14 @@
 
 → [战略体检报告](reports/) — c2g.strategy 周期产出的战略/治理健康周报（详见 `docs/reports/`）
 
+→ [执行计划](plans/) — 三年规划执行台账与 agent 执行指令（详见 `docs/plans/`）
+
+- [`plans/3Y-BET-LEDGER.md`](plans/3Y-BET-LEDGER.md) — 三年规划执行台账（人类视图）。SSOT 为 `plans/3y-bet-ledger.yaml`，CLI `bin/plan/bet-ledger.py`
+- [`plans/AGENT-BRIEF.md`](plans/AGENT-BRIEF.md) — 多 agent 认领与执行指令（首次执行前通读）
+- [`plans/AGENT-TEMPLATES.md`](plans/AGENT-TEMPLATES.md) — 按轨道分工的 agent 指令模板（8 轨道 + 协调者 + 观察者）
+- [`plans/AGENT-GOALS-4X.md`](plans/AGENT-GOALS-4X.md) — goal 模式：4 agent 并行持续推进的零冲突组合与 LOOP 协议
+- [`plans/2026-08-06-agora-p2-deepening-plan.md`](plans/2026-08-06-agora-p2-deepening-plan.md) — agora P2 深化计划
+
 ---
 
 ## 文档维护生命周期
