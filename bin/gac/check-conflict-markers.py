@@ -104,8 +104,11 @@ def main() -> int:
 
     if args.file:
         files = args.file
-        read = lambda f: (_staged_blob(f) if not args.all else None) or _disk_content(f)
-        contents = {f: read(f) for f in files}
+
+        def _read(f):
+            return (_staged_blob(f) if not args.all else None) or _disk_content(f)
+
+        contents = {f: _read(f) for f in files}
     elif args.all or args.include_untracked:
         files = _tracked_files()
         contents = {f: _disk_content(f) for f in files}
