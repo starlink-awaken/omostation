@@ -1,0 +1,64 @@
+schema: journey-spec/v1
+journey_id: inbox-to-decision
+description: "统一收件箱 → 公文审查 → 决策执行 → 知识沉淀"
+
+states:
+  - name: messages_collected
+    scene: unified-inbox
+    next: [triaged]
+  - name: triaged
+    scene: unified-inbox
+    next: [under_review, archived]
+  - name: under_review
+    scene: document-review
+    next: [decision_made, returned_for_revision]
+    checkpoint:
+      require: human_review
+      timeout_hours: 48
+  - name: decision_made
+    scene: document-review
+    next: [task_created, knowledge_captured]
+  - name: task_created
+    scene: engineering-delivery
+    next: [delivered]
+  - name: delivered
+    scene: engineering-delivery
+    next: [knowledge_captured]
+  - name: knowledge_captured
+    scene: knowledge-curation
+    next: []
+  - name: archived
+    scene: unified-inbox
+    next: []
+  - name: returned_for_revision
+    scene: document-review
+    next: [under_review]
+
+transitions:
+  - from: messages_collected
+    to: triaged
+    condition: "messages.count > 0"
+  - from: triaged
+    to: under_review
+    condition: "triage.needs_review == true"
+  - from: triaged
+    to: archived
+    condition: "triage.needs_review == false"
+  - from: under_review
+    to: decision_made
+    condition: "review.status == succeeded"
+  - from: under_review
+    to: returned_for_revision
+    condition: "review.status == needs_revision"
+  - from: decision_made
+    to: task_created
+    condition: "decision.action == execute"
+  - from: decision_made
+    to: knowledge_captured
+    condition: "decision.action == archive"
+  - from: task_created
+    to: delivered
+    condition: "delivery.status == succeeded"
+  - from: delivered
+    to: knowledge_captured
+    condition: "always"
