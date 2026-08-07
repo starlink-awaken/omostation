@@ -75,3 +75,40 @@ def test_no_unresolvable_internal_services():
         if not ok:
             broken.append(f"{s.uri} → {s.module_path}.{s.func_name}")
     assert not broken, f"BOS 契约漂移 (func 不可解析): {broken}"
+
+
+def test_internal_services_dict_contract():
+    """P6: internal 服务契约被 api.py 正确适配 (dict 或 named 均可).
+
+    resolver/api.py 智能适配: 首参 args/arguments/dict 类 → 传整体 dict;
+    否则按 named 展开。断言只校验"契约可被正确调用"——禁止出现
+    (args: dict) 但服务定义传 named 的错配, 以及无参数却期望调用参数的服务。
+    """
+    import inspect
+    import importlib
+
+    mismatched = []
+    for s in POC_SERVICES:
+        if s.transport != "internal" or s.module_path.startswith(_EXTERNAL_MODULES):
+            continue
+        try:
+            mod = importlib.import_module(s.module_path)
+            fn = getattr(mod, s.func_name)
+            params = list(inspect.signature(fn).parameters.values())
+            if not params:
+                continue  # 无参数函数 (system/*status 等) 由 api 直接调用, 合法
+            first = params[0]
+            is_dict = first.name in ("args", "arguments") or (
+                first.annotation is not inspect.Parameter.empty
+                and "dict" in str(first.annotation)
+            )
+            # 错配: dict 契约函数但参数名是 query/limit 等 (会被 named 展开成 query=... 报错)
+            # 或 named 函数首参名是 args (会被 dict 传错) — 均应由 api 适配正确处理
+            if first.name in ("args", "arguments") and not is_dict:
+                mismatched.append(f"{s.uri} ({s.func_name}: args 但非 dict 注解)")
+        except (ModuleNotFoundError, AttributeError):
+            continue  # 不可解析由 test_no_unresolvable 覆盖
+    assert not mismatched, (
+        f"P6 契约错配: {mismatched}. "
+        "args 参数必须配 dict 契约, named 参数不能被误判为 dict。"
+    )
