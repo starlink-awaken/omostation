@@ -1348,7 +1348,6 @@ def _render_scenario_human(result: dict[str, Any]) -> None:
 
     if "receipt_id" in result:
         decision = result.get("decision", result.get("status", ""))
-        status = result.get("status", "")
         style = "green" if decision in ("approved", "task_created") else "red"
         icon = "✅" if decision in ("approved", "task_created") else "❌"
         lines = [

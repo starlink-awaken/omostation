@@ -196,6 +196,34 @@ def md_validate() -> str:
         return "model-driven 不可用 (安装: cd ~/Workspace/projects/model-driven && uv sync)"
 
 
+def bos_register(uri: str, handler: str, description: str = "") -> str:
+    """注册 BOS URI — 将域服务注册到 bos:// 命名空间"""
+    import sys
+    from pathlib import Path
+    l4_src = Path.home() / "workspace" / "projects" / "domain-kems" / "src"
+    if l4_src.exists():
+        sys.path.insert(0, str(l4_src))
+    try:
+        from domain_kems.bos_gateway import bos_register as _reg
+        return _reg(uri, handler, description)
+    except ImportError as e:
+        return f"BOS Gateway 不可用 (ImportError: {e})"
+
+
+def bos_list(prefix: str = "bos://") -> str:
+    """列出已注册 BOS URI"""
+    import sys
+    from pathlib import Path
+    l4_src = Path.home() / "workspace" / "projects" / "domain-kems" / "src"
+    if l4_src.exists():
+        sys.path.insert(0, str(l4_src))
+    try:
+        from domain_kems.bos_gateway import bos_list as _lst
+        return _lst(prefix)
+    except ImportError as e:
+        return f"BOS Gateway 不可用 (ImportError: {e})"
+
+
 def l4_tools_scan(domain: str = "") -> str:
     """扫描 L4 Registry 域工具 — 发现并注册全域 Python/Shell 工具"""
     import os
@@ -207,7 +235,7 @@ def l4_tools_scan(domain: str = "") -> str:
         sys.path.insert(0, str(l4_src))
 
     try:
-        from l4_kernel.registry import DomainRegistry, _BUILTIN_DOMAINS
+        from l4_kernel.registry import _BUILTIN_DOMAINS, DomainRegistry
 
         overrides = {}
         for d in _BUILTIN_DOMAINS:
@@ -304,6 +332,16 @@ MCP_TOOLS = {
         "function": l4_tools_scan,
         "description": "L4 Registry 工具扫描 — 发现并注册全域域工具 (domain=域ID 可选)",
         "parameters": {"domain": "域 ID (可选, 省略则扫描全部)"},
+    },
+    "bos_register": {
+        "function": bos_register,
+        "description": "BOS URI 注册 — 注册域服务到 bos:// 命名空间",
+        "parameters": {"uri": "BOS URI", "handler": "处理函数路径", "description": "功能描述"},
+    },
+    "bos_list": {
+        "function": bos_list,
+        "description": "BOS URI 列表 — 列出已注册的域服务",
+        "parameters": {"prefix": "URI 前缀过滤 (可选)"},
     },
 }
 

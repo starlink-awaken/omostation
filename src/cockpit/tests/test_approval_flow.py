@@ -192,7 +192,7 @@ def test_approval_history_returns_recent(tmp_path):
 
 def test_approval_stats_returns_counts(tmp_path):
     """Approval stats should return correct counts."""
-    ib = _get_inbox()
+    _get_inbox()
     eng = _get_engine()
     _link_bin(tmp_path)
 

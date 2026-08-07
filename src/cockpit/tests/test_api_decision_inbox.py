@@ -69,7 +69,7 @@ def test_decision_inbox_scene_create_journey_and_add_intent(monkeypatch, tmp_pat
     # Create journey
     resp = client.post(f"/api/decision-inbox/scenes/{scene_id}/journeys", json={"name": "邮件处理"})
     assert resp.status_code == 200
-    journey_id = resp.json()["journey"]["id"]
+    resp.json()["journey"]["id"]
 
     # Add intent
     resp = client.post(f"/api/decision-inbox/scenes/{scene_id}/intents", json={
