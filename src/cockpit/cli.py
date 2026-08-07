@@ -719,7 +719,7 @@ def main() -> int:
     # OPC P5-F4: 统一 scenario 入口 — 用户无需理解仓边界
     scenario_p = sub.add_parser(
         "scenario",
-        help="P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval)",
+        help="P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review)",
     )
     # 产品走查 v5 #V5-13: 默认人类可读面板, --json 输出机器可读原样 (脚本/管道消费)
     scenario_p.add_argument(
@@ -820,6 +820,26 @@ def main() -> int:
     approval_history = approval_sub.add_parser("history", help="查看审批历史")
     approval_history.add_argument("--limit", type=int, default=20, help="最多返回条数")
     approval_stats = approval_sub.add_parser("stats", help="查看审批统计")
+
+    # P5-F8: 真实输入接入
+    scenario_connector = scenario_sub.add_parser(
+        "connector", help="P5-F8 connector: 真实输入接入 (邮件/文件/JSONL 自动导入)"
+    )
+    connector_sub = scenario_connector.add_subparsers(dest="connector_action", parser_class=WorkspaceParser)
+    connector_run = connector_sub.add_parser("run", help="运行连接器")
+    connector_run.add_argument("--source", required=True, choices=["email", "file", "jsonl", "manual"], help="来源类型")
+    connector_run.add_argument("--scene-id", dest="scene_id", required=True, help="目标场景 ID")
+    connector_run.add_argument("--source-path", dest="source_path", default="", help="源路径 (mbox文件/目录/jsonl文件)")
+    connector_stats = connector_sub.add_parser("stats", help="查看连接器统计")
+
+    # P5-F9: 复盘
+    scenario_review = scenario_sub.add_parser(
+        "review", help="P5-F9 review: 每周复盘 + 试点报告"
+    )
+    review_sub = scenario_review.add_subparsers(dest="review_action", parser_class=WorkspaceParser)
+    review_weekly = review_sub.add_parser("weekly", help="生成每周复盘报告")
+    review_weekly.add_argument("--weeks", type=int, default=1, help="回顾周数 (默认1周)")
+    review_pilot = review_sub.add_parser("pilot", help="生成4周试点总结报告")
 
     # Gap #7: MetaOS 工作流编排入口
     wf_p = sub.add_parser(

@@ -32,6 +32,7 @@ ROUTER_MODULES = (
     "cockpit.web.api_decision_inbox",
     "cockpit.web.api_intake_pipeline",
     "cockpit.web.api_approval_flow",
+    "cockpit.web.api_week4",
     "cockpit.web.api_swarm",
 )
 

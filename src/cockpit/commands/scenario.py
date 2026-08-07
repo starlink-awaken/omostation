@@ -366,6 +366,79 @@ def _approval_stats(workspace_root: Path) -> dict[str, Any]:
         return {"ok": False, "error": str(exc)}
 
 
+# ── Connector ──
+
+def _connector_engine(workspace_root: Path | None = None) -> Any:
+    ws = workspace_root or _workspace_root()
+    engine_path = ws / "bin" / "ssot" / "scene-card-connector.py"
+    spec = importlib.util.spec_from_file_location("scene_card_connector_cli", str(engine_path))
+    if spec is None or spec.loader is None:
+        raise ImportError("scene-card-connector.py is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _connector_run(workspace_root: Path, source: str, scene_id: str, source_path: str = "") -> dict[str, Any]:
+    try:
+        eng = _connector_engine(workspace_root)
+        result = eng.run_connector(workspace_root, source=source, scene_id=scene_id, source_path=source_path)
+        return {
+            "ok": True,
+            "run_id": result.run_id,
+            "source": result.source,
+            "items_found": result.items_found,
+            "items_imported": result.items_imported,
+            "errors": result.errors,
+            "started_at": result.started_at,
+            "completed_at": result.completed_at,
+        }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _connector_stats(workspace_root: Path) -> dict[str, Any]:
+    try:
+        eng = _connector_engine(workspace_root)
+        stats = eng.get_connector_stats(workspace_root)
+        return {"ok": True, "stats": stats}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+# ── Review ──
+
+def _review_engine(workspace_root: Path | None = None) -> Any:
+    ws = workspace_root or _workspace_root()
+    engine_path = ws / "bin" / "ssot" / "scene-card-review.py"
+    spec = importlib.util.spec_from_file_location("scene_card_review_cli", str(engine_path))
+    if spec is None or spec.loader is None:
+        raise ImportError("scene-card-review.py is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _review_weekly(workspace_root: Path, weeks: int = 1) -> dict[str, Any]:
+    try:
+        eng = _review_engine(workspace_root)
+        report = eng.generate_weekly_review(workspace_root, weeks=weeks)
+        return {"ok": True, "report": report}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _review_pilot(workspace_root: Path) -> dict[str, Any]:
+    try:
+        eng = _review_engine(workspace_root)
+        report = eng.generate_pilot_report(workspace_root)
+        return {"ok": True, "report": report}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 def _workspace_root() -> Path:
     if os.environ.get("WORKSPACE"):
         return Path(os.environ["WORKSPACE"])
@@ -849,11 +922,41 @@ def cmd_scenario(args) -> int:
         else:
             sys.stderr.write(f"unknown approval action: {approval_action}\n")
             return 2
+    elif sub == "connector":
+        ws = _workspace_root()
+        conn_action = getattr(args, "connector_action", None)
+        if conn_action is None:
+            sys.stderr.write("Usage: cockpit scenario connector {run|stats}\n")
+            return 2
+        if conn_action == "run":
+            result = _connector_run(
+                ws, source=getattr(args, "source", "manual"),
+                scene_id=getattr(args, "scene_id", ""),
+                source_path=getattr(args, "source_path", ""),
+            )
+        elif conn_action == "stats":
+            result = _connector_stats(ws)
+        else:
+            sys.stderr.write(f"unknown connector action: {conn_action}\n")
+            return 2
+    elif sub == "review":
+        ws = _workspace_root()
+        review_action = getattr(args, "review_action", None)
+        if review_action is None:
+            sys.stderr.write("Usage: cockpit scenario review {weekly|pilot}\n")
+            return 2
+        if review_action == "weekly":
+            result = _review_weekly(ws, weeks=getattr(args, "weeks", 1) or 1)
+        elif review_action == "pilot":
+            result = _review_pilot(ws)
+        else:
+            sys.stderr.write(f"unknown review action: {review_action}\n")
+            return 2
     else:
         sys.stderr.write(f"unknown scenario sub: {sub}\n")
         return 2
 
-    if sub in ("inbox", "intake", "task", "approval"):
+    if sub in ("inbox", "intake", "task", "approval", "connector", "review"):
         if getattr(args, "scenario_json", False):
             json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
             sys.stdout.write("\n")
@@ -1131,6 +1234,84 @@ def _render_scenario_human(result: dict[str, Any]) -> None:
             lines.append(f"[bold]Task ID:[/] {result.get('task_id')}")
         console.print(Panel("\n".join(lines), title="💡 审批结果", border_style=style))
         return
+
+    # ── Connector rendering ──
+    if "run_id" in result and "items_found" in result:
+        source = result.get("source", "")
+        found = result.get("items_found", 0)
+        imported = result.get("items_imported", 0)
+        errors = result.get("errors", [])
+        style = "red" if errors else "green"
+        lines = [
+            f"[bold]运行 ID:[/] {result.get('run_id', '')}",
+            f"[bold]来源:[/] {source}",
+            f"[bold]发现:[/] {found} 项",
+            f"[bold]导入:[/] [green]{imported}[/] 项",
+        ]
+        if errors:
+            lines.append(f"[bold red]错误:[/] {len(errors)} 项")
+            for e in errors[:3]:
+                lines.append(f"  [red]•[/] {e}")
+        console.print(Panel("\n".join(lines), title=f"🔌 连接器运行 ({source})", border_style=style))
+        return
+
+    if "stats" in result and "total_runs" in result.get("stats", {}):
+        stats = result["stats"]
+        lines = [
+            f"[bold]总运行:[/] {stats.get('total_runs', 0)}",
+            f"[bold]发现:[/] {stats.get('total_found', 0)} 项",
+            f"[bold]导入:[/] [green]{stats.get('total_imported', 0)}[/] 项",
+            f"[bold]错误:[/] {stats.get('total_errors', 0)}",
+        ]
+        by_source = stats.get("by_source", {})
+        if by_source:
+            lines.append("")
+            lines.append("[bold]按来源:[/]")
+            for src, s in by_source.items():
+                lines.append(f"  {src}: {s.get('imported', 0)}/{s.get('found', 0)} 项")
+        console.print(Panel("\n".join(lines), title="📊 连接器统计", border_style="blue"))
+        return
+
+    # ── Review rendering ──
+    if "report" in result:
+        report = result.get("report", {})
+        if "summary" in report:
+            summary = report["summary"]
+            lines = [
+                f"[bold]总意图:[/] {summary.get('total_intents', 0)}",
+                f"[bold]待审批:[/] [yellow]{summary.get('pending', 0)}[/]",
+                f"[bold]已通过:[/] [green]{summary.get('approved', 0)}[/]",
+                f"[bold]已拒绝:[/] [red]{summary.get('rejected', 0)}[/]",
+                f"[bold]准确率:[/] {summary.get('accuracy', 0)*100:.1f}%",
+                f"[bold]节省时间:[/] [green]{summary.get('time_saved_hours', 0)}[/] 小时",
+            ]
+            dist = report.get("distribution", {})
+            if dist.get("by_source"):
+                lines.append("")
+                lines.append("[bold]来源分布:[/]")
+                for src, cnt in dist["by_source"].items():
+                    lines.append(f"  {src}: {cnt}")
+            if dist.get("by_priority"):
+                lines.append("")
+                lines.append("[bold]优先级分布:[/]")
+                for pri, cnt in dist["by_priority"].items():
+                    lines.append(f"  {pri}: {cnt}")
+            console.print(Panel("\n".join(lines), title="📊 复盘报告", border_style="green"))
+            return
+
+        if "pilot_name" in report:
+            scenes = report.get("scenes", [])
+            total = report.get("total_intents", 0)
+            lines = [
+                f"[bold]试点:[/] {report.get('pilot_name', '')}",
+                f"[bold]周期:[/] {report.get('pilot_duration', '')}",
+                f"[bold]场景数:[/] {len(scenes)}",
+                f"[bold]总意图:[/] {total}",
+            ]
+            for s in scenes:
+                lines.append(f"  • {s.get('name', '')}: {s.get('intent_count', 0)} 意图")
+            console.print(Panel("\n".join(lines), title="🚀 试点总结报告", border_style="blue"))
+            return
 
     # 兜底: 未知 scenario 退回 JSON
     json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
