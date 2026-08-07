@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q4-T6-01
 title: aetherforge 并入 runtime
 status: candidate
@@ -36,7 +36,8 @@ entry_gate:
 evidence_required:
 - aetherforge 子模块条目移除, 作为 runtime 内包
 - 无调用方的 mesh/swarm 代码删除前先归档
-- 合并后行数 < 原和 70%
+- 产出无消费者清单（哪些模块零调用）, src 下降量与清单一致
+- test_loc 不得下降（同 E13）
 test_plan:
 - git submodule status | grep -c aetherforge
 workflow: bet-execution

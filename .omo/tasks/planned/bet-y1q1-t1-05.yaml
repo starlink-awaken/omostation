@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q1-T1-05
 title: 仓库拓扑改造 — 单实例多租户 → 多实例单写者
 status: candidate
@@ -42,6 +42,8 @@ evidence_required:
 - 全部 agent 迁移完成, reflog 中主仓 checkout/reset 归零
 - 'D3 减法: D2(分支占用锁)/D3(共享树 claim)/D5(PASW) 三条纪律退役并删除实现'
 - 表面积净减(脚本/规则/文档行数), 记入复盘 Q4
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-05.evidence （1 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q1-T1-05）
 test_plan:
 - git -C ~/Workspace reflog -100 | grep -cE 'checkout:|reset:'
 - ls -d ~/agents/*/ws 2>/dev/null | wc -l

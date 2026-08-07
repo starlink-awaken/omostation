@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q4-T1-01
 title: Y1 表面积盘点与年度门
 status: candidate
@@ -12,9 +12,10 @@ source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q4-T1-01
 window: Y1Q4
 track: T1-TRUTH
 appetite: 3 days
-desc: 对 Y1 唯一硬目标做一次不可回避的实测判定
+desc: 对 Y1 的可持有性目标做一次不可回避的实测判定
 non_goals:
 - 补救未达标项(属下一窗口)
+- 用总量百分比作判据（2026-08-06 复盘已废除该口径）
 assigned_to: null
 dispatch_id: null
 run_ref: null
@@ -36,11 +37,20 @@ entry_gate:
 - '依赖已 done: BET-Y1Q4-T6-01'
 - '依赖已 done: BET-Y1Q3-T6-01'
 evidence_required:
-- '实测: 代码行 / ADR active / GaC 规则 / 脚本数 / 标准数'
-- 与 2026-08-06 基线对比, 给出达标或不达标结论
-- 若不达标, 产出 Y2 冻结扩展的决议
+- '实测并记录: src_loc / test_loc / gac_required / bin_scripts / adr 分层状态'
+- ① 知识层归并的去重清单是否全部执行
+- ② aetherforge 无消费者模块是否清零
+- ③ required 规则中无违规历史的是否清零
+- ④ 零调用脚本是否全部归档
+- ⑤ 休眠项目(family-hub/observability)是否退役
+- ⑥ D2/D3/D5 三条纪律与 PASW 是否随拓扑改造退役
+- '保护量守住: test_loc 不低于基线, ADR 文件总数不减少'
+- 若多数项未完成, 产出 Y2 冻结扩展的决议
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q4-T1-01.evidence （1 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q4-T1-01）
 test_plan:
 - python3 bin/plan/bet-ledger.py surface
+- python3 bin/plan/bet-ledger.py list --track T6-SUBTRACT --status done
 workflow: bet-execution
 write_surfaces:
 - .omo/_knowledge/retros/gates/**

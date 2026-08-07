@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q1-T1-00
 title: 并发写冲突止血 — 共享主树禁写 + PASW 全覆盖
 status: candidate
@@ -43,6 +43,8 @@ evidence_required:
 - raw git commit/push --no-verify 被 hook 层拦截, 强制走 bin/gac/swarm-git
 - 共享分支 rewrite 前须检查是否会丢弃他人提交; 或禁止在共享分支上 rebase/reset
 - 'D0 铁律升级: 交付物 commit 后须打 tag 或推独立分支, 仅 commit 不算持久化'
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-00.evidence （6 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q1-T1-00）
 test_plan:
 - make worktree-guard
 - grep -c '共享主树只读\|shared-main-readonly' AGENTS.md

@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q1-T1-07
 title: git 入口收口 — shim 强制走 swarm-git
 status: candidate
@@ -37,6 +37,8 @@ evidence_required:
 - 'swarm-git 拦截高危操作: clean -fd / reset --hard / stash -u / 共享分支 rebase'
 - 每次逃生必写 .omo/_delivery/swarm-escape/ 台账, 无台账即视为违规
 - AGENT-BRIEF.md 明确「逃生口只有 swarm-git 一个入口」
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-07.evidence （1 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q1-T1-07）
 test_plan:
 - AGENT_ID=probe SWARM_ESCAPE_ID=bogus git commit --no-verify --allow-empty -m probe
 - ls .omo/_delivery/swarm-escape/ | wc -l

@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q2-T1-01
 title: omo-debt + c2g 并入 omo
 status: candidate
@@ -36,7 +36,8 @@ entry_gate:
 - '依赖已 done: BET-Y1Q1-T1-02'
 evidence_required:
 - omo-debt / c2g 作为 omo 内包存在, 子模块条目移除
-- 合并后行数 < 原三者之和的 70%
+- 产出去重清单, src 下降量与清单一致（不设百分比）
+- test_loc 不得下降（同 E13）
 - 原 CLI 入口保持兼容或有明确迁移说明
 test_plan:
 - git submodule status | grep -cE 'omo-debt|c2g'

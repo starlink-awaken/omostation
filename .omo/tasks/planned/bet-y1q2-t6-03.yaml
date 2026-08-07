@@ -1,8 +1,8 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q2-T6-03
-title: bin 脚本清理 309 → ≤240
+title: bin 脚本清理 — 归档零调用脚本, 不设数量目标
 status: candidate
 task_type: bet
 priority: P1
@@ -12,10 +12,11 @@ source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-03
 window: Y1Q2
 track: T6-SUBTRACT
 appetite: 1 week
-desc: 归档无调用方、被 make 目标覆盖或功能重复的脚本
+desc: 归档确实无调用方的脚本, 数量由实际孤儿数决定
 non_goals:
 - 重写脚本
 - 改变 make 目标语义
+- 设定数量目标（原「≤240」比可删候选还多）
 assigned_to: null
 dispatch_id: null
 run_ref: null
@@ -35,12 +36,15 @@ human_approval_required: false
 entry_gate:
 - '依赖已 done: BET-Y1Q2-T6-01'
 evidence_required:
+- 产出零调用脚本清单, 排除 lib/pytest 类假阳性
 - 每个被归档脚本记录最后调用点分析
-- bin 下脚本 <= 240
+- 确认零调用的全部归档到 bin/_archive/
 - make ci-local-fast 全绿
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-03.evidence （1 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q2-T6-03）
 test_plan:
-- find bin -type f \( -name '*.py' -o -name '*.sh' \) | wc -l
 - make ci-local-fast
+- python3 bin/plan/bet-ledger.py surface
 workflow: bet-execution
 write_surfaces:
 - bin/**

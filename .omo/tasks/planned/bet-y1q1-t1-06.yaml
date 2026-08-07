@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q1-T1-06
 title: 子模块隔离 — PASW 覆盖 3→18, 拓扑改造后整体退役
 status: candidate
@@ -37,7 +37,11 @@ entry_gate:
 evidence_required:
 - 过渡期 PASW_ISOLATED_SUBS 覆盖全部 18 个子模块
 - 18 个 rewind 存量清零(与 T1-02 联动)
+- '修 gac-worktree.sh 路径 bug: PASW worktree 建到了 projects/Workspace/.subtrees/'
+- 清理现存 PASW 残留（三份重复检出, 共 32.2 万行）
 - 拓扑改造完成后, 同一 PR 内删除 PASW 实现与 D5 纪律条目
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T1-06.evidence （2 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q1-T1-06）
 test_plan:
 - git submodule status | wc -l
 - grep -c 'PASW_ISOLATED_SUBS' bin/gac/gac-worktree.sh
