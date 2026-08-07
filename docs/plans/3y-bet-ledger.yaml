@@ -639,7 +639,9 @@ bets:
   title: git 入口收口 — shim 强制走 swarm-git
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  completed_at: '2026-08-07'
+  evidence_pr: 'git-shim + swarm-git 高危拦截 + PATH symlink 安装 + verify 通过'
   goal: 把「记得用 wrapper」变成「只有 wrapper 可用」, 堵上 D4 自己记录的已知缺口
   non_goals:
   - 改变人类的 git 使用
@@ -808,7 +810,9 @@ bets:
   title: AdjudicationRecorded 事件与裁决存储
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  completed_at: '2026-08-07'
+  evidence_pr: 'omo#18 (omo_adjudication.py + CLI + 9 tests)'
   goal: 建立结果面 — 系统第一次能记录"人类接受了什么、改了什么"
   non_goals:
   - UI(属 T8)
