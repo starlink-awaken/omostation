@@ -123,4 +123,23 @@ EOF
   fi
 fi
 
+# ── 子模块指针漂移检测 (BET-Y1Q2-T1-05) ─────────────────────────
+# 比对根仓 gitlink vs 子模块 origin/main HEAD, DIVERGED 时 blocking.
+# 跳过: 全删除 push / CI_LOCAL_SKIP=1
+if [ "${CI_LOCAL_SKIP:-}" != "1" ] && [ "$ALL_DELETIONS" != "true" ]; then
+  if [ -f "$ROOT/bin/gac/check-submodule-pointer-drift.py" ]; then
+    _drift_out="$(python3 "$ROOT/bin/gac/check-submodule-pointer-drift.py" 2>&1)" || _drift_rc=$?
+    _drift_rc="${_drift_rc:-0}"
+    if [ "$_drift_rc" -ne 0 ]; then
+      printf '%s\n' "$_drift_out" | sed 's/^/[pointer-drift] /' >&2
+      cat >&2 <<EOF
+[pointer-drift] ❌ 子模块指针 DIVERGED — 根仓指向 side branch, 代码不可见!
+   修复: python3 bin/gac/check-submodule-pointer-drift.py --fix --apply
+   或手动: git update-index --cacheinfo 160000,<origin/main SHA>,<submodule path>
+EOF
+      exit 1
+    fi
+  fi
+fi
+
 exit 0
