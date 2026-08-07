@@ -7,7 +7,7 @@ schema_version: 1
 ---
 meta:
   horizon: 2026H2-2029
-  total_bets: 57
+  total_bets: 70
   windows:
   - Y1Q1
   - Y1Q2
@@ -290,8 +290,8 @@ bets:
       机制现状: bin/gac/swarm-git 是 wrapper, commit/push 前跑 escape-check, 校验 SWARM_ESCAPE_ID
         是否在 swarm-coordination.yaml::escape_hatch_exemptions 白名单内(当前 3 条), 通过则写台账
         .omo/_delivery/swarm-escape/<ts>-<id>.json
-      缺口: wrapper 非强制。直接 `git commit --no-verify` 即绕过 escape-check, 白名单不校验、台账不落盘、审计链断
-      实测: 2026-08-06 提交 49d3ffed5 用 raw git commit --no-verify, escape_id `ledger-evidence-unrelated-to-submodule-rewind`
+      缺口: wrapper 非强制。直接 'git commit --no-verify' 即绕过 escape-check, 白名单不校验、台账不落盘、审计链断
+      实测: 2026-08-06 提交 49d3ffed5 用 raw git commit --no-verify, escape_id 'ledger-evidence-unrelated-to-submodule-rewind'
         不在白名单, .omo/_delivery/swarm-escape/ 无对应记录
       判断: 纪律若依赖「记得用 wrapper」则不是强制而是约定; 多 agent 下约定必然被破
     E6_commit_dropped_by_branch_rewrite:
@@ -1365,6 +1365,175 @@ bets:
   human_gate: false
   circuit_breaker: 超 3 周 → 先出待裁决队列, 校准曲线推迟
   retro: required
+- id: BET-Y1Q2-T1-03
+  track: T1-TRUTH
+  window: Y1Q2
+  title: MOS 闭环引擎 — 裁决→信念→行为 全链路打通
+  appetite: 1 week
+  priority: P0
+  status: candidate
+  goal: 把 MOS 6 张信念表中 5 张死代码变成活的 — 人类裁决真正驱动 agent 行为变化
+  non_goals:
+  - 复杂 UI (属 T8-01)
+  - 自动模型训练
+  done_when:
+  - omo_adjudication.py 恢复到根仓可达指针 (修 omo 指针错位)
+  - record_decision_outcome() 被 SceneWatcher 真调用 (非 dead code)
+  - record_outcome_feedback() 被 CLI omo feedback 真调用
+  - 裁决 verdict=rejected 时, 对应 belief 置信度下调 >=10%
+  - daemon 每 tick 处理未消费裁决事件, 写入 belief delta
+  verify:
+  - cmd: uv run --with pyyaml python -m pytest projects/omo/tests/test_omo_adjudication.py -q
+    expect: exit 0
+  - cmd: git -C projects/omo merge-base --is-ancestor $(git ls-tree HEAD -- projects/omo | awk '{print $3}') $(git -C projects/omo rev-parse origin/main)
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/omo_adjudication.py
+  - projects/omo/src/omo/omo_belief.py
+  - projects/omo/src/omo/scenewatcher.py
+  - projects/omo/src/omo/cli.py
+  pasw_required: true
+  depends_on: []
+  risk_level: L3
+  human_gate: false
+  circuit_breaker: 超 1 周 → 先修指针 + 接通 decision_outcome, 信念更新推迟
+  retro: required
+  context: "Y1Q1 复盘发现: omo 指针错位导致 T4-01 代码消失, 且 MOS 5/6 信念表零调用者"
+- id: BET-Y1Q2-T1-04
+  track: T1-TRUTH
+  window: Y1Q2
+  title: git-shim 可靠性加固 — fail-closed + 拦截面扩展
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  goal: 消除 git-shim 故障开放风险, 补齐高危操作拦截盲区
+  non_goals:
+  - 替代 T1-05 拓扑改造
+  - 实现分布式锁
+  done_when:
+  - swarm-git 缺失时 shim exit 1 (fail-closed, 非透传)
+  - 拦截 push --force 到共享远程分支 (非仅 rebase)
+  - 拦截 checkout/switch 到 work/* 分支 (他人 worktree)
+  - 拦截 worktree remove --force (他人 worktree)
+  - write-time 冲突预警: stage 路径与活跃 agent claim 路径重叠时 stderr 告警
+  - 所有拦截记录写入 .omo/_delivery/swarm-escape/ 台账
+  verify:
+  - cmd: AGENT_ID=test-agent bash bin/gac/git-shim push --force origin main 2>&1
+    expect: blocked
+  - cmd: unset AGENT_ID && bash bin/gac/git-shim status 2>&1
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/git-shim
+  - bin/gac/swarm-git
+  pasw_required: false
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: fail-closed 导致人类终端受阻 → 立即回退 advisory 模式
+  retro: required
+  context: "Y1Q1 复盘发现: shim 在 swarm-git 缺失时透传, push --force / checkout 不在拦截范围"
+- id: BET-Y1Q2-T6-10
+  track: T6-SUBTRACT
+  window: Y1Q2
+  title: CI 治理门禁收口 — strict mode + shadow checks 上线
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 让 CI_ONLY_CHECKS 真正在 CI 跑, 把高价值 shadow checks 接入 CI 平面
+  non_goals:
+  - 新增治理检查规则
+  - 改 gac-local-gate 架构
+  done_when:
+  - governance-check.yml 调用 gac-local-gate.py 传 --strict
+  - 6 个 CI_ONLY 检查 (governance-evolution, doc-ssot-lint, project-layer-index, dependency-baseline-drift, bus-e2e-harness, check-index-drift) 全部在 CI 执行
+  - 10 个 shadow checks 注册到 ci-surfaces.yaml 并有 workflow 触发
+  - 无新增 CI 红 (先 shadow 1 周, 再 upgrade to blocking)
+  verify:
+  - cmd: grep -c 'strict' .github/workflows/governance-check.yml
+    expect: '[1-9]'
+  - cmd: python3 bin/gac/check-ci-surfaces.py
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - .github/workflows/governance-check.yml
+  - .omo/_truth/registry/ci-surfaces.yaml
+  pasw_required: false
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: CI 红 > 3 天 → 回退 non-blocking, 逐个排查
+  retro: required
+  context: "Y1Q1 复盘发现: 6 个 CI_ONLY 检查定义但从未执行, ~40 治理表面无 CI 集成"
+- id: BET-Y1Q2-T4-02
+  track: T4-OUTCOME
+  window: Y1Q2
+  title: Agent 信誉画像 — 从人类裁决中学习
+  appetite: 1 week
+  priority: P1
+  status: candidate
+  goal: 基于裁决数据构建 agent 维度信誉 — 哪些 agent 的哪类输出被接受/修改/拒绝
+  non_goals:
+  - 自动降级/封禁 agent
+  - 实时信誉计算 (>7 天滑动窗口即可)
+  done_when:
+  - omo reputation stats CLI 可用 (支持 --agent / --track 过滤)
+  - 信誉维度: acceptance_rate / modification_rate / rejection_rate / avg_edit_diff_size
+  - 按 track (T1-T8) 和 lane (code/docs/governance) 分桶统计
+  - 数据源: adjudications.jsonl (T4-01)
+  - 至少 1 个消费方: swarm-activity-dashboard 显示 agent 信誉摘要
+  verify:
+  - cmd: uv run --with pyyaml python -m pytest projects/omo/tests/test_omo_reputation.py -q
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/omo_reputation.py
+  - projects/omo/src/omo/cli.py
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q2-T1-03
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 裁决数据不足 50 条 → 只做 schema + CLI, 不接消费方
+  retro: required
+- id: BET-Y1Q2-T1-05
+  track: T1-TRUTH
+  window: Y1Q2
+  title: 子模块指针自愈 — 自动检测与修正错位
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  goal: 根仓指针与子模块 main HEAD 错位时自动检测并告警, 杜绝 T4-01 代码消失重演
+  non_goals:
+  - 替代 T1-05 拓扑改造 (每 agent 独立 clone)
+  - 自动 push 子模块 (属 sync-submodules-push.sh)
+  done_when:
+  - check-submodule-pointer-drift.py 脚本: 比对根仓 gitlink vs 子模块 origin/main HEAD
+  - 集成到 pre-push hook: 错位时 blocking (非 advisory)
+  - 集成到 CI: governance-check.yml 新增 pointer-drift 检查
+  - 自愈模式: --fix 自动将 gitlink 对齐子模块 origin/main HEAD (dry-run 默认)
+  - 覆盖所有 18 子模块 (非仅 PASW 覆盖的 3 个)
+  verify:
+  - cmd: python3 bin/gac/check-submodule-pointer-drift.py
+    expect: ALL ALIGNED
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/check-submodule-pointer-drift.py
+  - .githooks/pre-push
+  - .github/workflows/governance-check.yml
+  pasw_required: false
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 误报率 > 0 → 回退 advisory, 排查根因
+  retro: required
+  context: "Y1Q1 复盘发现: omo 指针 4acece91b 指向 side branch, 导致 T4-01 437 行代码从根仓消失"
 - id: BET-Y1Q3-T3-01
   track: T3-COGNI
   window: Y1Q3
