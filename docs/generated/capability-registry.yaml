@@ -9,7 +9,7 @@ generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 554
-  bos_services: 202
+  bos_services: 200
   bos_domains: 16
   cli_commands: 121
 mcp_servers:
@@ -791,11 +791,11 @@ bos_services:
     agora: 3
     analysis: 28
     capability: 44
-    cockpit: 3
+    cockpit: 2
     compute: 3
     ecos: 10
     forge: 1
-    governance: 34
+    governance: 33
     l4-kernel: 1
     memory: 47
     meta: 1
@@ -934,7 +934,7 @@ bos_services:
     capability:
     - uri: bos://capability/cockpit/mcp-server
       description: Cockpit MCP Server (HTTP proxy mode)
-      transport: mcp_proxy
+      transport: ''
       status: active
     - uri: bos://capability/agent-runtime/execute
       description: Agent Runtime 执行入口
@@ -1109,10 +1109,6 @@ bos_services:
       transport: stdio
       status: unimplemented
     cockpit:
-    - uri: bos://cockpit/context
-      description: Cockpit MCP (短路径别名)
-      transport: mcp_stdio
-      status: active
     - uri: bos://cockpit/tools/cards_status
       description: cockpit cards_status 工具 — mof_agora_hook 路由表入口
       transport: inline
@@ -1255,10 +1251,6 @@ bos_services:
       status: active
     - uri: bos://governance/omo/sync
       description: OMO 状态同步 (mcp_stdio transport 跨进程)
-      transport: mcp_stdio
-      status: active
-    - uri: bos://governance/cockpit/context
-      description: Cockpit MCP Server — 20 工具
       transport: mcp_stdio
       status: active
     - uri: bos://governance/l4-kernel/domains
