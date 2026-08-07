@@ -11,19 +11,3 @@ unimplemented:
     reason: Iris connector 未落地 (开发中)
   - uri: bos://analysis/iris/validate
     reason: Iris connector 未落地 (开发中)
-  - uri: bos://capability/agt/lightning
-    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
-  - uri: bos://capability/agt/marketplace
-    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
-  - uri: bos://capability/agt/mcp-security
-    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
-  - uri: bos://capability/agt/sandbox
-    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
-  - uri: bos://capability/agt/sre
-    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
-  - uri: bos://capability/agt/trust
-    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
-  - uri: bos://governance/agt/hypervisor
-    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
-  - uri: bos://governance/agt/policy
-    reason: AGT 外部工具未安装 (proposal_only, agent-governance-toolkit)
