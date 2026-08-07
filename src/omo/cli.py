@@ -91,6 +91,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args and args[0] == "belief":
         return _cmd_belief(args[1:])
+    if args and args[0] == "compass":
+        from omo.omo_compass import main as compass_main
+        return compass_main(args[1:])
     if args and args[0] == "observability":
         from omo.omo_observability import main as obs_main
 

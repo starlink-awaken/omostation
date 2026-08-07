@@ -223,6 +223,10 @@ def print_bootstrap_report(report: dict[str, Any], as_json: bool) -> None:
         print(f"\nMOS agent beliefs ({len(beliefs)} active):")
         for b in beliefs[:5]:
             print(f"  • [{b.get('topic')}] {b.get('belief')}")
+    print("\nLifeOS values & directives (Dim 1):")
+    print("  • [Human-Centric] 护眼、情感化交互、无障碍 a11y 优先")
+    print("  • [Indie Efficiency] 追求 MVP、拒绝过度工程、架构与思维导图优先")
+    print("  • [Zero-Supposition] 遵守 D0 铁律与物理隔离，严禁自欺欺人")
     print("\nnext:")
     for command in report["next_commands"].values():
         print(f"  {command}")
