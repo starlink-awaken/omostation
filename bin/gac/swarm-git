@@ -11,6 +11,14 @@
 
 set -euo pipefail
 
+# T1-07 defense-in-depth: 递归深度自检 (防 REAL_GIT 失效/新 wrapper 导致 fork bomb)
+# 正常调用链 shim→swarm-git→REAL_GIT git 深度=1; 递归时累加, >3 中止 (2026-08-07 实证).
+if [ "${SWARM_GIT_DEPTH:-0}" -gt 3 ]; then
+  echo "[swarm-git] ❌ 递归深度 ${SWARM_GIT_DEPTH} 超限, 中止 (防 fork bomb, T1-07)" >&2
+  exit 1
+fi
+export SWARM_GIT_DEPTH=$((${SWARM_GIT_DEPTH:-0} + 1))
+
 # REAL_GIT = PATH 中第一个非 shim 的 git (防递归)
 _shim_dir="${HOME:-}/agents/shim/bin"
 REAL_GIT=""
