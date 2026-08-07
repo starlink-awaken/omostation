@@ -17,8 +17,8 @@ sources:
       max_retries: 3
       backoff: exponential
       on_failure: emit_unreachable
-    health: unknown
-    last_signal_at: null
+    health: healthy
+    last_signal_at: "2026-08-07T23:45:22Z"
     registered_at: "2026-08-07T00:00:00Z"
     bos_uri: "bos://perception/apple_mail/inbox"
 
