@@ -357,9 +357,10 @@ goals:
   title: 认知基底 — agent_belief 三表 schema
   desc: 建立 world_snapshot / capability_calibration / decision_outcome 三表，为认知四元组提供物理存储
   kpi: schema 定义 + 写入路径 + 至少 1 个 workflow run 自动注入 belief
-  progress: 0.0
-  status: pending
+  progress: 100.0
+  status: done
   bet_ref: BET-Y1Q1-T3-01
+  completed_at: '2026-08-07'
   tasks: []
 - id: G-Y1Q2-SCENE-CONSOLIDATE
   title: 场景面净化 — 合成场景 221→≤40

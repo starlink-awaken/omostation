@@ -746,7 +746,7 @@ bets:
   title: MOS agent_belief 三表 schema 与写入路径
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
   goal: 给心智模型四件套建立持久化落点(世界/自我/因果三表)
   non_goals:
   - Agent 读取并据此决策(属 Y2Q1)
@@ -769,6 +769,8 @@ bets:
   human_gate: false
   circuit_breaker: 超 2 周 → 只落 decision_outcome 单表(枢纽表), 其余两表推迟
   retro: required
+  completed_at: '2026-08-07'
+  evidence_pr: 'omo#16, #1122'
 - id: BET-Y1Q1-T3-02
   track: T3-COGNI
   window: Y1Q1
