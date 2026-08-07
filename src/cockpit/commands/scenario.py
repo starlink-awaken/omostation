@@ -280,6 +280,92 @@ def _task_complete(workspace_root: Path, binding_id: str) -> dict[str, Any]:
         return {"ok": False, "error": str(exc)}
 
 
+# ── Approval flow ──
+
+def _approval_engine(workspace_root: Path | None = None) -> Any:
+    ws = workspace_root or _workspace_root()
+    engine_path = ws / "bin" / "ssot" / "scene-card-approval-flow.py"
+    spec = importlib.util.spec_from_file_location("scene_card_approval_flow_cli", str(engine_path))
+    if spec is None or spec.loader is None:
+        raise ImportError("scene-card-approval-flow.py is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _approval_queue(workspace_root: Path) -> dict[str, Any]:
+    """Get the review queue."""
+    try:
+        engine = _approval_engine(workspace_root)
+        queue = engine.get_review_queue(workspace_root)
+        return {"ok": True, "queue": queue, "total": len(queue)}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _approval_evidence(workspace_root: Path, intent_id: str) -> dict[str, Any]:
+    """Get evidence detail for an intent."""
+    try:
+        engine = _approval_engine(workspace_root)
+        detail = engine.get_evidence_detail(workspace_root, intent_id)
+        if detail is None:
+            return {"ok": False, "error": f"Intent {intent_id} not found"}
+        return {"ok": True, **detail}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _approval_approve(
+    workspace_root: Path, intent_id: str, reviewer: str = "human",
+    note: str = "", outcome_metric: str = "",
+) -> dict[str, Any]:
+    """Approve an intent."""
+    try:
+        engine = _approval_engine(workspace_root)
+        result = engine.approve_intent(
+            workspace_root, intent_id=intent_id,
+            reviewer=reviewer, note=note, outcome_metric=outcome_metric,
+        )
+        return result
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _approval_reject(
+    workspace_root: Path, intent_id: str, reviewer: str = "human", note: str = "",
+) -> dict[str, Any]:
+    """Reject an intent."""
+    try:
+        engine = _approval_engine(workspace_root)
+        result = engine.reject_intent(
+            workspace_root, intent_id=intent_id, reviewer=reviewer, note=note,
+        )
+        return result
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _approval_history(workspace_root: Path, limit: int = 20) -> dict[str, Any]:
+    """Get approval history."""
+    try:
+        engine = _approval_engine(workspace_root)
+        history = engine.get_approval_history(workspace_root, limit=limit)
+        return {"ok": True, "history": history, "total": len(history)}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _approval_stats(workspace_root: Path) -> dict[str, Any]:
+    """Get approval statistics."""
+    try:
+        engine = _approval_engine(workspace_root)
+        stats = engine.get_approval_stats(workspace_root)
+        return {"ok": True, "stats": stats}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 def _workspace_root() -> Path:
     if os.environ.get("WORKSPACE"):
         return Path(os.environ["WORKSPACE"])
@@ -733,11 +819,41 @@ def cmd_scenario(args) -> int:
         else:
             sys.stderr.write(f"unknown task action: {task_action}\n")
             return 2
+    elif sub == "approval":
+        ws = _workspace_root()
+        approval_action = getattr(args, "approval_action", None)
+        if approval_action is None:
+            sys.stderr.write("Usage: cockpit scenario approval {queue|evidence|approve|reject|history|stats}\n")
+            return 2
+        if approval_action == "queue":
+            result = _approval_queue(ws)
+        elif approval_action == "evidence":
+            result = _approval_evidence(ws, intent_id=getattr(args, "intent_id", ""))
+        elif approval_action == "approve":
+            result = _approval_approve(
+                ws, intent_id=getattr(args, "intent_id", ""),
+                reviewer=getattr(args, "reviewer", "human"),
+                note=getattr(args, "note", ""),
+                outcome_metric=getattr(args, "outcome_metric", ""),
+            )
+        elif approval_action == "reject":
+            result = _approval_reject(
+                ws, intent_id=getattr(args, "intent_id", ""),
+                reviewer=getattr(args, "reviewer", "human"),
+                note=getattr(args, "note", ""),
+            )
+        elif approval_action == "history":
+            result = _approval_history(ws, limit=getattr(args, "limit", 20) or 20)
+        elif approval_action == "stats":
+            result = _approval_stats(ws)
+        else:
+            sys.stderr.write(f"unknown approval action: {approval_action}\n")
+            return 2
     else:
         sys.stderr.write(f"unknown scenario sub: {sub}\n")
         return 2
 
-    if sub in ("inbox", "intake", "task"):
+    if sub in ("inbox", "intake", "task", "approval"):
         if getattr(args, "scenario_json", False):
             json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
             sys.stdout.write("\n")
@@ -927,6 +1043,93 @@ def _render_scenario_human(result: dict[str, Any]) -> None:
             f"[bold]Intents:[/] {len(journey.get('intents', []))}",
             title="🛤 Journey 详情", border_style="green",
         ))
+        return
+
+    # ── Approval rendering ──
+    if "queue" in result:
+        queue = result.get("queue", [])
+        console.print(Panel(f"[bold yellow]📋 待审批队列 · {len(queue)} 项[/]", border_style="yellow"))
+        if queue:
+            table = Table(box=rich_box.ROUNDED, header_style="bold yellow")
+            table.add_column("ID", style="dim", width=32)
+            table.add_column("场景", style="bold")
+            table.add_column("来源", width=10)
+            table.add_column("内容", style="bold")
+            table.add_column("优先级", width=8)
+            table.add_column("证据", width=6)
+            for item in queue:
+                table.add_row(
+                    item.get("intent_id", ""),
+                    item.get("scene_name", ""),
+                    item.get("source", ""),
+                    str(item.get("raw_content", ""))[:36],
+                    item.get("priority", ""),
+                    str(item.get("evidence_count", 0)),
+                )
+            console.print(table)
+        return
+
+    if "stats" in result:
+        stats = result.get("stats", {})
+        console.print(Panel(
+            f"[bold blue]📊 审批统计[/]\n"
+            f"总意图: {stats.get('total_intents', 0)}\n"
+            f"待审批: [bold yellow]{stats.get('pending_review', 0)}[/]\n"
+            f"已通过: [bold green]{stats.get('approved', 0)}[/]\n"
+            f"已拒绝: [bold red]{stats.get('rejected', 0)}[/]\n"
+            f"通过率: [bold]{stats.get('approval_rate', 0)*100:.1f}%[/]\n"
+            f"审批记录: {stats.get('receipts_count', 0)}",
+            border_style="blue",
+        ))
+        return
+
+    if "history" in result:
+        history = result.get("history", [])
+        console.print(Panel(f"[bold]📜 审批历史 · {len(history)} 条[/]", border_style="blue"))
+        if history:
+            table = Table(box=rich_box.ROUNDED, header_style="bold blue")
+            table.add_column("时间", style="dim", width=20)
+            table.add_column("意图", style="bold", width=32)
+            table.add_column("决定", width=10)
+            table.add_column("审批人", width=10)
+            table.add_column("备注", style="bold")
+            for item in history:
+                decision = item.get("decision", "")
+                style = "green" if decision == "approved" else "red"
+                table.add_row(
+                    str(item.get("created_at", ""))[:19],
+                    item.get("intent_id", ""),
+                    f"[{style}]{decision}[/]",
+                    item.get("reviewer", ""),
+                    str(item.get("note", ""))[:32],
+                )
+            console.print(table)
+        return
+
+    if "receipts" in result:
+        receipts = result.get("receipts", [])
+        console.print(Panel(f"[bold]📜 审批凭证 · {len(receipts)} 条[/]", border_style="green"))
+        for r in receipts[:10]:
+            decision = r.get("decision", "")
+            style = "green" if decision == "approved" else "red"
+            console.print(f"  [{style}]{decision}[/] {r.get('intent_id', '')} — {r.get('reviewer', '')} — {str(r.get('created_at', ''))[:19]}")
+        return
+
+    if "receipt_id" in result:
+        decision = result.get("decision", result.get("status", ""))
+        status = result.get("status", "")
+        style = "green" if decision in ("approved", "task_created") else "red"
+        icon = "✅" if decision in ("approved", "task_created") else "❌"
+        lines = [
+            f"[bold]决定:[/] [{style}]{icon} {decision}[/]",
+            f"[bold]凭证 ID:[/] {result.get('receipt_id', '')}",
+            f"[bold]审批人:[/] {result.get('reviewer', '')}",
+        ]
+        if result.get("binding_id"):
+            lines.append(f"[bold]绑定 ID:[/] {result.get('binding_id')}")
+        if result.get("task_id"):
+            lines.append(f"[bold]Task ID:[/] {result.get('task_id')}")
+        console.print(Panel("\n".join(lines), title="💡 审批结果", border_style=style))
         return
 
     # 兜底: 未知 scenario 退回 JSON

@@ -719,7 +719,7 @@ def main() -> int:
     # OPC P5-F4: 统一 scenario 入口 — 用户无需理解仓边界
     scenario_p = sub.add_parser(
         "scenario",
-        help="P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task)",
+        help="P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval)",
     )
     # 产品走查 v5 #V5-13: 默认人类可读面板, --json 输出机器可读原样 (脚本/管道消费)
     scenario_p.add_argument(
@@ -799,6 +799,27 @@ def main() -> int:
     task_list = task_sub.add_parser("list", help="列出所有绑定")
     task_complete = task_sub.add_parser("complete", help="标记绑定完成")
     task_complete.add_argument("--binding-id", dest="binding_id", required=True, help="绑定 ID")
+
+    # P5-F7: HITL 审批流 + 证据面板
+    scenario_approval = scenario_sub.add_parser(
+        "approval", help="P5-F7 approval: HITL 审批流 + 证据面板"
+    )
+    approval_sub = scenario_approval.add_subparsers(dest="approval_action", parser_class=WorkspaceParser)
+    approval_queue = approval_sub.add_parser("queue", help="查看待审批队列")
+    approval_evidence = approval_sub.add_parser("evidence", help="查看意图证据详情")
+    approval_evidence.add_argument("--intent-id", dest="intent_id", required=True, help="意图 ID")
+    approval_approve = approval_sub.add_parser("approve", help="审批通过意图")
+    approval_approve.add_argument("--intent-id", dest="intent_id", required=True, help="意图 ID")
+    approval_approve.add_argument("--reviewer", default="human", help="审批人")
+    approval_approve.add_argument("--note", default="", help="审批备注")
+    approval_approve.add_argument("--outcome-metric", dest="outcome_metric", default="", help="结果指标")
+    approval_reject = approval_sub.add_parser("reject", help="拒绝意图")
+    approval_reject.add_argument("--intent-id", dest="intent_id", required=True, help="意图 ID")
+    approval_reject.add_argument("--reviewer", default="human", help="审批人")
+    approval_reject.add_argument("--note", default="", help="拒绝原因")
+    approval_history = approval_sub.add_parser("history", help="查看审批历史")
+    approval_history.add_argument("--limit", type=int, default=20, help="最多返回条数")
+    approval_stats = approval_sub.add_parser("stats", help="查看审批统计")
 
     # Gap #7: MetaOS 工作流编排入口
     wf_p = sub.add_parser(
