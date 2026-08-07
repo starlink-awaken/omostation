@@ -95,6 +95,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_adjudication(args[1:])
     if args and args[0] == "feedback":
         return _cmd_feedback(args[1:])
+    if args and args[0] == "reputation":
+        return _cmd_reputation(args[1:])
     if args and args[0] == "compass":
         from omo.omo_compass import main as compass_main
 
@@ -960,6 +962,46 @@ def _cmd_feedback(args: list[str]) -> int:
                 break
     else:
         print("(no matching belief — confidence unchanged)")
+    return 0
+
+
+def _cmd_reputation(args: list[str]) -> int:
+    """Agent 信誉画像 (BET-Y1Q2-T4-02)."""
+    import argparse
+
+    from omo.omo_adjudication import AdjudicationStore
+    from omo.omo_belief import MOSBeliefManager
+    from omo.omo_reputation import compute_reputation
+
+    parser = argparse.ArgumentParser(
+        prog="omo reputation",
+        description="Agent 信誉画像 — 从决策+裁决推导 (T4-02)",
+    )
+    parser.add_argument("--agent-id", default="", help="过滤特定 agent (空=全局)")
+    parser.add_argument("--json", action="store_true", help="JSON 输出")
+
+    parsed = parser.parse_args(args)
+    mos = MOSBeliefManager()
+    store = AdjudicationStore(mos_manager=mos)
+    profile = compute_reputation(mos, store, agent_id=parsed.agent_id)
+
+    if parsed.json:
+        import json
+
+        print(json.dumps(profile.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        d = profile.to_dict()
+        print(f"Agent 信誉画像: {d['agent_id']}")
+        print(f"  决策总数: {d['total_decisions']}")
+        print(f"  已裁决: {d['total_adjudicated']}")
+        print(
+            f"  accepted={d['accepted']} modified={d['modified']} "
+            f"rejected={d['rejected']}"
+        )
+        print(f"  可靠性: {d['reliability']:.1%}")
+        print(f"  准确率: {d['accuracy']:.1%}")
+        print(f"  拒绝率: {d['rejection_rate']:.1%}")
+        print(f"  平均置信度: {d['avg_confidence']:.3f}")
     return 0
 
 
