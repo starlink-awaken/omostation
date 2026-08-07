@@ -553,3 +553,13 @@ def get_swarm(
     if _swarm is None:
         _swarm = SwarmOrchestrator(role=role, port=port)
     return _swarm
+
+
+def get_swarm_status() -> dict:
+    """返回 swarm 编排器状态 (BOS internal 服务契约).
+
+    `bos://swarm/orchestrator/status` 的 func_name 修复 — 此前引用不存在
+    的模块级函数导致 AttributeError (契约漂移)。复用 get_swarm().status()。
+    """
+    swarm = get_swarm()
+    return swarm.status()
