@@ -867,6 +867,11 @@ def main() -> int:
         help="Extra args passed through (after --)",
     )
 
+    bdsk_p = sub.add_parser("bdsk", help="🧠 B.D.S.K. 虚拟董事会 (4角对抗辩论与架构决策)")
+    bdsk_p.add_argument("bdsk_subcmd", nargs="?", default="debate", help="debate (default: debate)")
+    bdsk_p.add_argument("topic", nargs="?", default="架构决策与技术选型", help="辩论主题或决策方案")
+
+    sub.add_parser("journey", help="🗺️ Journey State Graph 状态表达校验器")
     sub.add_parser("panorama", help="🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)")
 
     proj_p = sub.add_parser("project", help="🔍 17 项目全景 4D 体检与诊断")
@@ -1233,6 +1238,37 @@ def main() -> int:
         env = {k: v for k, v in os.environ.items() if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"}
         return subprocess.call(cmd, env=env)
 
+    def dispatch_bdsk(a):
+        from cockpit.commands.bdsk_engine import DynamicBDSKAdjudicator
+
+        topic = getattr(a, "topic", "架构决策与技术选型")
+        res = DynamicBDSKAdjudicator.adjudicate(topic)
+
+        source_tag = "⚡️ AetherForge + omlxc (Local LLM Active)" if res.get("engine_source") == "aetherforge_local_llm" else "ℹ️ [AetherForge] 网关未在线 ➔ 平滑降级至领域推理引擎"
+
+        print("=========================================================================")
+        print(f" 🧠 B.D.S.K. 虚拟董事会 (4 角动态对抗模式) ➔ {source_tag}")
+        print(f" 🔬 领域分类: {res['domain_label']} | 🎯 议题: {res['topic']}")
+        print("=========================================================================")
+        print("🧑‍💻 Builder (建造者/技术合伙人):")
+        print(f"  • {res['builder']}")
+        print("⚡️ Devil (批判者/风控官):")
+        print(f"  • {res['devil']}")
+        print("🧠 Sage (贤者/战略家):")
+        print(f"  • {res['sage']}")
+        print("👁️ Keeper (守夜人/观察者):")
+        print(f"  • {res['keeper']}")
+        print("=========================================================================")
+        print(f"💡 4 角共识裁决结论: {res['conclusion']}")
+        print("=========================================================================")
+        return 0
+
+    def dispatch_journey(a):
+        import subprocess
+        ws_root = (_SCRIPT_DIR.parent.parent.parent.parent.parent).resolve()
+        runner = str(ws_root / "bin" / "ssot" / "journey-runner.py")
+        return subprocess.call(["python3", runner, "--help"])
+
     def dispatch_panorama(a):
         import os
         import subprocess
@@ -1404,6 +1440,8 @@ def main() -> int:
         "scenario": dispatch_scenario,
         "iterate": dispatch_iterate,
         "compass": dispatch_compass,
+        "bdsk": dispatch_bdsk,
+        "journey": dispatch_journey,
         "panorama": dispatch_panorama,
         "project": dispatch_project,
         "wave2": dispatch_wave2,
