@@ -91,6 +91,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args and args[0] == "belief":
         return _cmd_belief(args[1:])
+    if args and args[0] == "adjudication":
+        return _cmd_adjudication(args[1:])
     if args and args[0] == "compass":
         from omo.omo_compass import main as compass_main
 
@@ -803,6 +805,72 @@ def _cmd_belief(args: list[str]) -> int:
             print(mgr.audit_log_file.read_text(encoding="utf-8"))
         else:
             print("暂无审计日志")
+    return 0
+
+
+def _cmd_adjudication(args: list[str]) -> int:
+    """AdjudicationRecorded 裁决管理 (BET-Y1Q1-T4-01)"""
+    import argparse
+
+    from omo.omo_adjudication import AdjudicationStore
+
+    parser = argparse.ArgumentParser(
+        prog="omo adjudication", description="裁决记录管理 (AdjudicationRecorded)"
+    )
+    subparsers = parser.add_subparsers(dest="sub", required=True)
+
+    p_record = subparsers.add_parser("record", help="记录一条裁决")
+    p_record.add_argument("--decision-id", required=True, help="关联 decision_outcome ID")
+    p_record.add_argument(
+        "--verdict", required=True, choices=["accepted", "modified", "rejected"]
+    )
+    p_record.add_argument("--edit-diff", default="", help="修改 diff")
+    p_record.add_argument("--time-spent", type=float, default=0.0, help="审阅耗时(秒)")
+    p_record.add_argument("--adjudicator", default="", help="裁决人")
+    p_record.add_argument("--notes", default="", help="备注")
+
+    p_query = subparsers.add_parser("query", help="查询裁决")
+    p_query.add_argument("--decision-id", default=None, help="按 decision_id 过滤")
+    p_query.add_argument("--verdict", default=None, help="按 verdict 过滤")
+    p_query.add_argument("--limit", type=int, default=50, help="返回条数上限")
+    p_query.add_argument("--json", action="store_true", help="JSON 输出")
+
+    subparsers.add_parser("stats", help="裁决统计")
+
+    parsed = parser.parse_args(args)
+    store = AdjudicationStore()
+
+    if parsed.sub == "record":
+        adj_id = store.record(
+            decision_id=parsed.decision_id,
+            verdict=parsed.verdict,
+            edit_diff=parsed.edit_diff,
+            time_spent_seconds=parsed.time_spent,
+            adjudicator=parsed.adjudicator,
+            notes=parsed.notes,
+        )
+        print(f"Recorded: {adj_id}")
+    elif parsed.sub == "query":
+        results = store.query(
+            decision_id=parsed.decision_id,
+            verdict=parsed.verdict,
+            limit=parsed.limit,
+        )
+        if parsed.json:
+            import json
+
+            print(json.dumps(results, ensure_ascii=False, indent=2))
+        else:
+            print(f"裁决记录 ({len(results)} 条):")
+            for r in results:
+                print(
+                    f"  [{r['id']}] {r['verdict']} <- {r['decision_id']} "
+                    f"({r.get('adjudicator', 'N/A')})"
+                )
+    elif parsed.sub == "stats":
+        s = store.stats()
+        print(f"裁决统计: 总 {s['total']} | "
+              f"accepted={s['accepted']} modified={s['modified']} rejected={s['rejected']}")
     return 0
 
 
