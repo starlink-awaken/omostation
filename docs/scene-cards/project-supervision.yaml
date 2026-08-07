@@ -1,0 +1,61 @@
+---
+title: Project Supervision Scene Card (项目监督与决策支持)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-07
+related:
+  - ./periodic-reporting.yaml
+  - ./meeting-supervision.yaml
+  - ../STRATEGY-3YEAR-PANORAMA.md
+---
+schema: scene-card/v1
+scene_type: internal_pipeline
+admission_track: internal_evidence_based
+lifecycle: proposal_only
+activation: forbidden
+approval_state: pending_business_confirmation
+scene_id: project-supervision
+journey_id: oversight-to-decision
+goal: 对在管项目进行多维度监督 (进度/风险/质量/资源), 输出决策建议和干预方案
+trigger: 项目里程碑到达 / 风险告警 / 定期监督审查 / 管理层信息请求
+input_contract: 项目状态引用 (周期报送产出 + 会议督办记录 + 工程交付指标, evidence:// 格式)
+result_contract: 监督报告 (红黄绿灯/风险项/决策建议) + 干预方案 (调整/升级/暂停)
+outcome_metric: decision_response_latency / risk_forecast_accuracy
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 项目风险未及时发现/决策延误导致项目失控
+data_classification: internal
+data_scope: project-metadata-and-supervision-evidence
+operator: supervision-agent-under-human-review
+permission_ref: permission://internal/project-supervision
+permission_scope:
+  - ci-read
+  - workflow-read
+  - evidence-write
+  - state-read
+rollback_plan: revert-to-manual-project-tracking
+sample_refs:
+  - vault://redacted/project-supervision/sample-1
+  - vault://redacted/project-supervision/sample-2
+  - vault://redacted/project-supervision/sample-3
+demand_evidence_refs:
+  - evidence://strategy-panorama/W5
+activation_evidence_refs:
+  - evidence://strategy-panorama/W5
+required_capabilities:
+  - ref://capability/gac-local-gate
+  - ref://capability/agent-workflow-lifecycle
+opportunity_window: eCOS 项目治理 + 国转中心项目管理 + 卫健委借调重点项目跟踪
+external_resource_policy: proposal_only
+downstream_refs:
+  - scene: meeting-supervision
+    handoff: "evidence://scene/project-supervision/output:intervention-items"
+    trigger: on_intervention_required
+  - scene: knowledge-curation
+    handoff: "evidence://scene/project-supervision/output:lessons-learned"
+    trigger: on_milestone_completed
+notes:
+  - "W5 项目监督: 多源汇聚 → 风险评估 → 决策建议 → 干预触发. 内部pipeline场景."
+  - "上游: periodic-reporting (绩效数据) + meeting-supervision (任务状态). 下游: meeting (干预讨论) + knowledge (经验沉淀)."

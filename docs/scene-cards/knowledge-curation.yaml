@@ -1,0 +1,56 @@
+---
+title: Knowledge Curation Scene Card (知识沉淀与检索)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-07
+related:
+  - ./engineering-delivery-dogfood.yaml
+  - ./document-review.yaml
+  - ../../.omo/_truth/scenarios/knowledge-capture-search.yaml
+---
+schema: scene-card/v1
+scene_type: external_resource
+lifecycle: proposal_only
+activation: forbidden
+approval_state: pending_business_confirmation
+scene_id: knowledge-curation
+journey_id: capture-to-retrieval
+goal: 将工作中产生的知识 (公文经验/工程实践/会议洞察/调研发现) 沉淀为可检索、可复用的结构化知识资产
+trigger: 工作完成产生可沉淀知识 (PR merge后/公文审查后/会议结束后/调研完成后)
+input_contract: 知识片段引用 (evidence:// 或 vault://redacted/), 含上下文标签和来源场景
+result_contract: 结构化知识条目 (标题/标签/摘要/全文引用/关联项) + 检索索引更新
+outcome_metric: knowledge_reuse_rate / retrieval_precision
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 知识流失/重复劳动/经验无法复用导致效率下降
+data_classification: internal
+data_scope: redacted-knowledge-references-and-curation-metadata
+operator: knowledge-curation-agent-under-human-review
+permission_ref: permission://scene/knowledge-curation
+rollback_plan: revert-to-manual-note-taking
+sample_refs:
+  - vault://redacted/knowledge-curation/sample-1
+  - vault://redacted/knowledge-curation/sample-2
+  - vault://redacted/knowledge-curation/sample-3
+demand_evidence_refs:
+  - evidence://scenario/knowledge-capture-search
+activation_evidence_refs:
+  - evidence://scenario/knowledge-capture-search
+required_capabilities:
+  - iris:wpsnote
+  - iris:obsidian
+opportunity_window: 持续知识管理窗口 (每项工作完成后均可触发沉淀)
+external_resource_policy: proposal_only
+downstream_refs:
+  - scene: document-review
+    handoff: "evidence://scene/knowledge-curation/output:relevant-knowledge"
+    trigger: on_review_requested
+  - scene: research-pipeline
+    handoff: "evidence://scene/knowledge-curation/output:research-feed"
+    trigger: on_knowledge_published
+notes:
+  - "知识沉淀: 多场景产出 → 结构化 → 检索复用. 提升自 .omo/_truth/scenarios/knowledge-capture-search.yaml."
+  - "连接器: iris:wpsnote (WPS笔记, 17K实现) + iris:obsidian (本地知识库, 15.7K实现). 两者均已有完整connector代码."
+  - "关键: 本场景是知识循环的枢纽 — 接收所有场景的产出, 输出给所有需要知识的场景."
