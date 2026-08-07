@@ -35,9 +35,9 @@
 | bet-y1q2-t4-01 | capability_calibration 自动更新 | candidate |
 | bet-y1q2-t5-01 | durable timer — waiting_approval 跨进程存活 ≥7 天 | candidate |
 | bet-y1q2-t5-02 | 回退边执行语义 + 次数上限 + 升级路径 | candidate |
-| bet-y1q2-t6-01 | GaC 规则减法第一轮 134 → ≤100 | candidate |
-| bet-y1q2-t6-02 | ADR 有效集分层 344 → ≤200 | candidate |
-| bet-y1q2-t6-03 | bin 脚本清理 309 → ≤240 | candidate |
+| bet-y1q2-t6-01 | GaC 规则减法 — 清理会拦人却无违规历史的 required 规则 | candidate |
+| bet-y1q2-t6-02 | ADR 分层 — 只分层不裁剪 | candidate |
+| bet-y1q2-t6-03 | bin 脚本清理 — 归档零调用脚本, 不设数量目标 | candidate |
 | bet-y1q2-t6-04 | 合成协作场景归档 221 → ≤40 | candidate |
 | bet-y1q2-t6-05 | 减法配额制门禁上线 | candidate |
 | bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | candidate |

@@ -634,6 +634,41 @@ surfaces:
     triggers: [manual, per_pr, scheduled]
     status: active
     note: ADR-0388 era tool (worktree hygiene audit + auto-cleanup), register for ci-surfaces parity
+  - id: bin-gac-anomaly-detector-py
+    tool: bin/gac/anomaly-detector.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: Phase 6 anomaly detection from metrics-store.jsonl
+  - id: bin-gac-alert-router-py
+    tool: bin/gac/alert-router.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: Phase 6 alert routing for anomaly events
+  - id: bin-gac-governance-dashboard-py
+    tool: bin/gac/governance-dashboard.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: Phase 7 governance metrics dashboard (--metrics-dashboard)
+  - id: bin-gac-cross-domain-trend-py
+    tool: bin/gac/cross-domain-trend.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: Phase 9 cross-domain trend fusion analysis
+  - id: bin-gac-predictive-governance-py
+    tool: bin/gac/predictive-governance.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: Phase 10 predictive governance with prescriptive recommendations
 
 workflow_triggers:
   - workflow: agora-ci.yml

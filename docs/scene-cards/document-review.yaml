@@ -10,7 +10,7 @@ related:
 - ../../.omo/_truth/registry/external-channels.yaml
 ---
 schema: scene-card/v2
-lifecycle: routine
+lifecycle: shadow
 activation: allowed
 approval_state: confirmed
 approval:
@@ -111,3 +111,23 @@ checkpoints:
   timeout_hours: 24
 bet: BET-Y1Q1-T7-01
 falsifier: 若 shadow 期间无文档被自动审查，则场景无价值
+journey:
+  nodes:
+  - id: fetch
+    type: action
+    description: 获取公文草稿 (从 iris 连接器)
+  - id: format_check
+    type: action
+    description: 格式合规检查
+  - id: inbox
+    type: action
+    description: 结果入决策收件箱
+  edges:
+  - from: fetch
+    to: format_check
+  - from: format_check
+    to: inbox
+  - from: format_check
+    to: human_hold
+    condition: check_failed
+    description: 格式检查失败时交人工处理

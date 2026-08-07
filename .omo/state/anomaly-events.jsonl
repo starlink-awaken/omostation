@@ -1,0 +1,9 @@
+{"timestamp": "2026-08-07T13:32:36.923576+00:00", "type": "anomaly", "check": "check-x", "duration_ms": 1000.0, "z": 3.0, "ewma_z": 0.667, "reason": "slow", "ok": true}
+{"timestamp": "2026-08-07T13:32:56.027124+00:00", "type": "anomaly", "check": "check-x", "duration_ms": 1000.0, "z": 3.0, "ewma_z": 0.667, "reason": "slow", "ok": true}
+{"timestamp": "2026-08-07T13:33:08.765190+00:00", "type": "anomaly", "check": "check-x", "duration_ms": 1000.0, "z": 3.0, "ewma_z": 0.667, "reason": "slow", "ok": true}
+{"timestamp": "2026-08-07T13:33:58.443040+00:00", "type": "anomaly", "check": "check-x", "duration_ms": 9999.0, "z": 3.162, "ewma_z": 0.727, "reason": "spike", "ok": true}
+{"timestamp": "2026-08-07T13:36:53.986997+00:00", "type": "anomaly", "check": "gac-drift", "duration_ms": 1448.0, "z": 2.851, "ewma_z": 0.696, "reason": "=== GaC drift 检测 (.omo/_truth/registry/governance-checks.yaml) ===\n规则数: 136\n✅ GaC drift 检测通过 (0 drift)", "ok": true}
+{"timestamp": "2026-08-07T13:36:53.987157+00:00", "type": "anomaly", "check": "governance-semantic-gate", "duration_ms": 2591.0, "z": 5.501, "ewma_z": 1.48, "reason": "{\n  \"ok\": true,\n  \"release\": false,\n  \"blocking_failures\": 0,\n  \"warnings\": 2,\n  \"checks\": [\n    {\n      \"id\": \"gac-bootstrap\",\n      \"ok\": true,\n      \"severity\": \"error\",\n      \"blocking\": false,\n  ", "ok": true}
+{"timestamp": "2026-08-07T22:21:06.162404+00:00", "type": "anomaly", "check": "check-x", "duration_ms": 1000.0, "z": 3.0, "ewma_z": 0.667, "reason": "slow", "ok": true}
+{"timestamp": "2026-08-07T22:23:44.993938+00:00", "type": "anomaly", "check": "check-x", "duration_ms": 1000.0, "z": 3.0, "ewma_z": 0.667, "reason": "slow", "ok": true}
+{"timestamp": "2026-08-07T22:32:18.676107+00:00", "type": "anomaly", "check": "check-x", "duration_ms": 1000.0, "z": 3.0, "ewma_z": 0.667, "reason": "slow", "ok": true}
