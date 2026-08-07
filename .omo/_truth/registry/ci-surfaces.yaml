@@ -718,19 +718,12 @@ workflow_triggers:
     - CLAUDE.md
     - LAYER-INDEX.md
   - workflow: integration.yml
-<<<<<<< HEAD
-    path_filtered: false
-||||||| parent of b0e0cea79 (feat(gac): CI 平面 SSOT 登记补齐 + check-ci-surfaces --fix 自愈模式)
-    triggers: [per_pr, push]
-    path_filtered: false
-=======
     triggers: [per_pr, push]
     path_filtered: true
     paths:
     - projects/omo/**
     - projects/*/pyproject.toml
     - bin/gac/**
->>>>>>> b0e0cea79 (feat(gac): CI 平面 SSOT 登记补齐 + check-ci-surfaces --fix 自愈模式)
   - workflow: interfaces-enforce.yml
     path_filtered: false
   - workflow: kairon-ci.yml
