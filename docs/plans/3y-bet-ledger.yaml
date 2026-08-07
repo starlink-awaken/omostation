@@ -295,8 +295,12 @@ bets:
   title: 并发写冲突止血 — 共享主树禁写 + PASW 全覆盖
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
   goal: 阻止并发 agent 在共享 main worktree 上互相清理未入库产物, 并消除 claim 僵尸锁死锁
+  done_at: 2026-08-07
+  done_evidence: >
+    git-shim fail-closed (T1-04) 拦截 agent 危险操作; 锁心跳+僵尸锁检测+prune-locks (lifecycle.py);
+    AGENTS.md 共享主树只读红线; 9 个新测试全通过
   non_goals:
   - 重构 gac-worktree
   - 改变 PASW 隔离子模块集
