@@ -201,6 +201,49 @@ def main(argv: list[str] | None = None) -> int:
 
         return xplane_main(args[1:])
 
+    if args and args[0] == "project":
+        import argparse
+        p_parser = argparse.ArgumentParser(prog="omo project", description="17 项目全景 4D 体检与诊断")
+        p_sub = p_parser.add_subparsers(dest="subcmd")
+        p_inspect = p_sub.add_parser("inspect", help="体检指定项目")
+        p_inspect.add_argument("project_name", nargs="?", default="", help="项目名称")
+        p_inspect.add_argument("--json", action="store_true", help="JSON 输出")
+        
+        p_list = p_sub.add_parser("list", help="列出所有注册项目")
+        p_list.add_argument("--json", action="store_true", help="JSON 输出")
+
+        p_args = p_parser.parse_args(args[1:])
+        from omo.omo_project_inspector import OMOProjectInspector, format_project_inspection
+        inspector = OMOProjectInspector()
+
+        if p_args.subcmd == "inspect":
+            if not p_args.project_name:
+                data = inspector.inspect_all_projects()
+                if p_args.json:
+                    print(json.dumps(data, indent=2, ensure_ascii=False))
+                else:
+                    print(f"═══ 17 项目全景体检概览 (平均健康度: {data['overall_avg_health']}/100) ═══")
+                    for proj_k, proj_v in data["projects"].items():
+                        print(f"  • [{proj_v.get('layer', 'N/A')}] {proj_k:<18} 健康度: {proj_v.get('health_score', 0):>3}/100 | {proj_v.get('scale', {}).get('files', 0):>3} 文件 | {proj_v.get('scale', {}).get('loc', 0):>6} LOC")
+                return 0
+            else:
+                data = inspector.inspect_project(p_args.project_name)
+                if p_args.json:
+                    print(json.dumps(data, indent=2, ensure_ascii=False))
+                else:
+                    print(format_project_inspection(data))
+                return 0 if data.get("ok") else 1
+        elif p_args.subcmd == "list":
+            projs = inspector.get_registered_projects()
+            if p_args.json:
+                print(json.dumps(projs, indent=2))
+            else:
+                print("📋 注册项目列表:", ", ".join(projs))
+            return 0
+        else:
+            p_parser.print_help()
+            return 0
+
     if args and args[0] == "inspect":
         import argparse
 
