@@ -717,9 +717,13 @@ def main() -> int:
     )
 
     # OPC P5-F4: 统一 scenario 入口 — parser 定义抽到 commands/scenario.py (god-module 拆分)
+    scenario_p = sub.add_parser(
+        "scenario",
+        help="P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review)",
+    )
     from cockpit.commands.scenario import build_scenario_parser
 
-    build_scenario_parser(sub, WorkspaceParser)
+    build_scenario_parser(scenario_p, WorkspaceParser)
 
     # Gap #7: MetaOS 工作流编排入口
     wf_p = sub.add_parser(

@@ -27,18 +27,15 @@ from pathlib import Path
 from typing import Any
 
 
-def build_scenario_parser(sub: Any, parser_class: type) -> None:
+def build_scenario_parser(scenario_p: Any, parser_class: type) -> None:
     """Build the `cockpit scenario` argument subparsers (P5-F1..F9).
 
     Extracted from cli.py so that cli.py stays under the god-module >1500L
-    hard rule. `sub` is the root `parser.add_subparsers(...)` object and
-    `parser_class` is the WorkspaceParser subclass defined in cli.py.
+    hard rule. `scenario_p` is the top-level `sub.add_parser("scenario", ...)`
+    created in cli.py and `parser_class` is the WorkspaceParser subclass
+    defined there. Keeping `sub.add_parser("scenario")` in cli.py preserves
+    the help_map static registration check (test_help_discover_ssot).
     """
-    # OPC P5-F4: 统一 scenario 入口 — 用户无需理解仓边界
-    scenario_p = sub.add_parser(
-        "scenario",
-        help="P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review)",
-    )
     # 产品走查 v5 #V5-13: 默认人类可读面板, --json 输出机器可读原样 (脚本/管道消费)
     scenario_p.add_argument(
         "--json",
