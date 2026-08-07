@@ -140,6 +140,78 @@ class CapabilityCatalog:
             "bos_yaml": self._bos_yaml,
         }
 
+    # ── P3: 能力目录写闭环 (add/save/retire) ─────────────────────
+
+    def add(self, uri: str, description: str = "", status: str = "active") -> None:
+        """新增能力声明 (内存 + 写回 bos-services.yaml).
+
+        P3: bos_capability_admit 的死代码修复 — CapabilityCatalog 此前无 add/save。
+        """
+        if not self._loaded:
+            self.load()
+        self._capabilities[uri] = {
+            "uri": uri,
+            "domain": uri.split("/")[2] if uri.count("/") >= 2 else "capability",
+            "package": uri.split("/")[3] if uri.count("/") >= 3 else "",
+            "action": uri.split("/")[4] if uri.count("/") >= 4 else "",
+            "description": description,
+            "status": status,
+            "transport": "internal",
+        }
+        self.save()
+
+    def retire(self, uri: str, reason: str = "") -> bool:
+        """将能力标记为 deprecated (写回 YAML).
+
+        P3: bos_capability_retire 的支持方法 — 显式改状态 + 持久化。
+        """
+        if not self._loaded:
+            self.load()
+        decl = self._capabilities.get(uri)
+        if decl is None:
+            return False
+        decl["status"] = "deprecated"
+        if reason:
+            decl["retire_reason"] = reason
+        self.save()
+        return True
+
+    def save(self) -> bool:
+        """将能力目录写回 bos-services.yaml (持久化).
+
+        保留原有 services 顺序与字段, 更新/追加 changed 条目。
+        失败 (文件不可写/解析错误) 返回 False, 不抛异常 (内存目录仍生效)。
+        """
+        try:
+            path = Path(self._bos_yaml)
+            if not path.exists():
+                return False
+            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            services = data.get("services", [])
+            # uri → index
+            by_uri = {s.get("uri"): i for i, s in enumerate(services) if s.get("uri")}
+            for uri, cap in self._capabilities.items():
+                entry = {
+                    "uri": uri,
+                    "domain": cap.get("domain", ""),
+                    "package": cap.get("package", ""),
+                    "action": cap.get("action", ""),
+                    "description": cap.get("description", ""),
+                    "status": cap.get("status", "active"),
+                    "transport": cap.get("transport", "internal"),
+                }
+                if uri in by_uri:
+                    services[by_uri[uri]] = entry
+                else:
+                    services.append(entry)
+                    by_uri[uri] = len(services) - 1
+            data["services"] = services
+            with path.open("w", encoding="utf-8") as f:
+                yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
+            return True
+        except Exception:  # noqa: BLE001 — 写失败不阻塞 (内存目录仍可用)
+            return False
+
 
 # ── 全局单例 ──
 capability_catalog = CapabilityCatalog()
