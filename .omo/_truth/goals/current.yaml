@@ -2,11 +2,11 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-24
+last-reviewed: 2026-08-07
 ---
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-24
+last-reviewed: 2026-08-07
 current_wave: W5
 entry_gate: phase41_completed
 goals:
@@ -310,6 +310,30 @@ goals:
   bet_status: active
   created_at: '2026-07-18T08:00:00Z'
   remeasure_audit: .omo/_knowledge/audits/2026-07-24-batch1-kos-remeasure.md
+- id: G-Y1Q1-PERCEIVE
+  title: 感知面闭合 — signal-sources 注册表
+  desc: 建立 signal-sources.yaml 注册表，apple_mail_inbox 作为首个信号源接入，不可达时 health=unreachable 而非静默归零
+  kpi: signal-sources.yaml 建立 + bos://perception 在 agora 注册
+  progress: 0.0
+  status: pending
+  bet_ref: BET-Y1Q1-T2-01
+  tasks: []
+- id: G-Y1Q1-SCENE
+  title: 场景面解锁 — scene-card 五档生命周期
+  desc: 打破 proposal_only→active 断崖，引入 shadow 档实现无副作用场景上线
+  kpi: schema 支持 draft/shadow/assisted/supervised/routine 五档 + falsifier 必填
+  progress: 0.0
+  status: pending
+  bet_ref: BET-Y1Q1-T7-01
+  tasks: []
+- id: G-Y1Q1-MEASURE
+  title: 度量面净化 — 废除 X3 mtime 伪交付指标
+  desc: 摘除基于文件 mtime 的交付计数，让 BRIEF 不再把治理配置修改叙述为业务交付
+  kpi: count_deliveries_by_month 移除 + BRIEF 显示"未接入真实数据源"
+  progress: 0.0
+  status: in_progress
+  bet_ref: BET-Y1Q1-T1-01
+  tasks: []
 health_targets:
   mcp_isolation_score: 100
   overall: 99
@@ -343,5 +367,5 @@ source_plan_refs:
 - .omo/_knowledge/management/5+3+1-full-audit-2026-06-06.md
 start_date: '2026-06-04'
 status: active
-theme: Phase 49 — 知识流动与用户价值兑现
-execution_mode: waiting-for-scenario/next-bet
+theme: Phase 49 — 跑通端到端场景闭环 (感知→认知→执行→校准)
+execution_mode: active
