@@ -1,0 +1,21 @@
+id: autonomy-assessment
+display_name: "自主度评估Agent"
+description: "5维度持续评估系统自主程度, 产出0-100评分"
+schema: digital_agent/v2
+identity:
+  role: assessor
+  capabilities: [calculate_autonomy_score, assess_5_dimensions, emit_alert_on_low_score]
+mental_model:
+  type: rule_based
+  rules: ["score >= 70 → high", "score >= 40 → medium", "score < 40 → low+alert"]
+knowledge_sources: [mos://world_snapshots, mos://capability_calibrations, mos://beliefs, mos://agent_skills]
+constraints:
+  action_tier: whitelist
+  governance_bindings: []
+  redline_bindings: []
+  relationships: {supervised_by: [governor], reports_to: [governor, human]}
+  resource_limits: {max_tick_duration_ms: 3000}
+runtime:
+  executor_class: omo.omo_agent_host.AutonomyAssessmentAgent
+  tick_frequency: on_demand
+  trust_ref: system:autonomy-assessment

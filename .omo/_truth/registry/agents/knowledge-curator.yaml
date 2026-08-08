@@ -1,0 +1,21 @@
+id: knowledge-curator
+display_name: "知识策展人"
+description: "读MOS decision_outcome→聚合per-scene结果→记录跨场景学习到beliefs"
+schema: digital_agent/v2
+identity:
+  role: curator
+  capabilities: [read_mos_outcomes, aggregate_cross_scene, record_beliefs, build_knowledge_graph]
+mental_model:
+  type: rule_based
+  rules: ["outcomes.count > 0 → aggregate + learn", "no outcomes → noop"]
+knowledge_sources: [mos://decision_outcomes, mos://world_snapshots, mos://beliefs]
+constraints:
+  action_tier: whitelist
+  governance_bindings: []
+  redline_bindings: []
+  relationships: {supervised_by: [governor], collaborates_with: [advisor], reports_to: [advisor]}
+  resource_limits: {max_tick_duration_ms: 5000}
+runtime:
+  executor_class: omo.omo_agent_host.KnowledgeCuratorAgent
+  tick_frequency: on_demand
+  trust_ref: system:knowledge-curation
