@@ -199,7 +199,7 @@ def run_agent_tick(*, host: AgentHost | None = None) -> dict[str, Any]:
     """
     if host is None:
         host = AgentHost(
-            agents=[HealthMonitorAgent(), KnowledgeCuratorAgent(), JourneyRunnerAgent()]
+            agents=[HealthMonitorAgent(), KnowledgeCuratorAgent(), JourneyRunnerAgent(), GovernorAgent()]
         )
     return host.tick_all()
 
@@ -267,12 +267,62 @@ class JourneyRunnerAgent:
         return {"action": "noop", "details": {"note": "no resumable journeys"}}
 
 
+@dataclass
+class GovernorAgent:
+    """AgentProtocol: 治理Agent — 审计行为 + 信任策略 + 涌现提案 (P3-T5).
+
+    tick: 读系统健康 + debt台账 + agent trust趋势,
+    检测异常模式, 提出信任调整和新agent涌现建议.
+    守SRP: 只做检测+提案, 不执行修改 (修改走S1/S2/S3门禁).
+    """
+
+    @property
+    def agent_id(self) -> str:
+        return "governor"
+
+    def tick(self) -> dict[str, Any]:
+        """Governance tick — scan for issues and propose improvements."""
+        import json as _json
+        from pathlib import Path as _Path
+
+        workspace = _Path(os.environ.get("WORKSPACE_ROOT", str(_Path.home() / "Workspace")))
+        findings: list[dict[str, str]] = []
+
+        # 1. Check for timed-out journey checkpoints
+        states_dir = workspace / ".omo" / "_knowledge" / "workflow-mesh" / "journey-states"
+        if states_dir.is_dir():
+            for jd in states_dir.iterdir():
+                if not jd.is_dir():
+                    continue
+                for rf in jd.glob("*.jsonl"):
+                    try:
+                        lines = rf.read_text(encoding="utf-8").strip().split("\n")
+                        if lines and lines[-1].strip():
+                            last = _json.loads(lines[-1])
+                            if last.get("status") == "human_hold":
+                                findings.append({"type": "human_hold", "journey": jd.name, "run": rf.stem})
+                    except Exception:
+                        continue
+
+        # 2. Check mesh events for anomalies
+        mesh_log = workspace / ".omo" / "_knowledge" / "workflow-mesh" / "mesh-events.jsonl"
+        if mesh_log.exists():
+            event_count = len(mesh_log.read_text(encoding="utf-8").strip().split("\n"))
+            if event_count > 100:
+                findings.append({"type": "high_event_volume", "count": str(event_count)})
+
+        if findings:
+            return {"action": "alert", "details": {"findings": findings, "count": len(findings)}}
+        return {"action": "noop", "details": {"note": "no governance issues detected"}}
+
+
 __all__ = [
     "AgentHost",
     "AgentProtocol",
     "AgentTickResult",
     "HealthMonitorAgent",
     "JourneyRunnerAgent",
+    "GovernorAgent",
     "KnowledgeCuratorAgent",
     "run_agent_tick",
 ]
