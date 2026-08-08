@@ -416,9 +416,20 @@ if router:
 
             # 2. 治理 OMO Card 卡片的 Quest (99910+)
             elif quest_id >= 99910 and quest_id < 100000:
-                from cockpit.scripts.cockpit_mcp import _scan_cards
+                # cockpit_mcp 已随 Phase 4 移除 (5de9b5c); 卡片扫描改用 commands.cards 实现
+                from cockpit.commands.cards import CARDS_ROOT, _iter_cards
 
-                cards = _scan_cards()
+                cards = [
+                    {
+                        "id": str(fm.get("id", "")),
+                        "type": str(fm.get("type", "")),
+                        "status": str(fm.get("status", "")),
+                        "title": str(fm.get("title", "")),
+                        "priority": str(fm.get("priority", "")),
+                    }
+                    for _cat, _path, fm, _body in _iter_cards(CARDS_ROOT)
+                    if fm.get("id") and fm.get("type")
+                ]
 
                 def card_id_to_int(card_id: str) -> int:
                     digits = "".join(ch for ch in card_id if ch.isdigit())
@@ -435,9 +446,7 @@ if router:
                 if not target_card:
                     return {"status": "error", "error": "对应的 OMO 卡片未找到或已关闭"}
 
-                from cockpit.scripts.cockpit_mcp import _CARDS_DIR
-
-                md_files = list(_CARDS_DIR.rglob("*.md"))
+                md_files = list(CARDS_ROOT.rglob("*.md"))
                 card_file_path = None
                 for f in md_files:
                     try:

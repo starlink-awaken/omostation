@@ -47,15 +47,6 @@ else:
     _CANDIDATE_IMPORT_ERROR = None
 
 try:
-    _review_module = _load_script("cockpit_scene_card_review", "scene-card-review.py")
-    create_review_receipt = _review_module.create_review_receipt
-except Exception as exc:
-    create_review_receipt = None  # type: ignore[assignment]
-    _REVIEW_IMPORT_ERROR: Exception | None = exc
-else:
-    _REVIEW_IMPORT_ERROR = None
-
-try:
     _intake_module = _load_script("cockpit_scene_card_intake", "scene-card-intake.py")
     build_intake = _intake_module.build_intake
 except Exception as exc:
@@ -462,50 +453,4 @@ async def create_scene_card_task(request: Request) -> dict[str, Any]:
         "persistence": "omo_planned_task",
         "external_side_effects": "disabled",
         "worker_launch": False,
-    }
-
-
-@router.post("/review")
-async def review_scene_card_candidate(request: Request) -> dict[str, Any]:
-    """Create a privacy-safe review receipt; never persist or activate."""
-    if collect_candidates is None or create_review_receipt is None:
-        return {
-            "ok": False,
-            "status": "unavailable",
-            "error": "scene_card_review_unavailable",
-            "message": "候选或评审契约不可用，未产生任何运行态变更。",
-        }
-    try:
-        payload = await request.json()
-        if not isinstance(payload, dict):
-            raise ValueError("review payload must be an object")
-        candidate_id = str(payload.get("candidate_id", "")).strip()
-        if not candidate_id:
-            raise ValueError("candidate_id is required")
-        decision = str(payload.get("decision", "pending") or "pending").strip()
-        reviewer_ref = str(payload.get("reviewer_ref", "") or "")
-        note = str(payload.get("note", "") or "")
-        projection = collect_candidates(_REPO_ROOT)
-        receipt = create_review_receipt(
-            projection,
-            candidate_id=candidate_id,
-            decision=decision,
-            reviewer_ref=reviewer_ref,
-            note=note,
-        )
-    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
-        return {
-            "ok": False,
-            "status": "invalid",
-            "error": "scene_card_review_invalid",
-            "message": str(exc),
-            "activation": "forbidden",
-        }
-    return {
-        "ok": True,
-        "status": "recorded",
-        "receipt": receipt,
-        "activation": "forbidden",
-        "activation_attempted": False,
-        "persistence": "none",
     }

@@ -22,7 +22,9 @@ from cockpit import compat
 router = APIRouter()
 
 SYSTEM_MAP_SOURCE = Path(__file__).resolve()
-CATALOG_SOURCE = SYSTEM_MAP_SOURCE.parent / "api_system_map_catalog.py"
+# api_system_map_catalog 已拆分为独立模块 (T6-10), 各集合的定义源文件:
+ROADMAP_SOURCE = SYSTEM_MAP_SOURCE.parent / "roadmap.py"
+PLAYBOOKS_SOURCE = SYSTEM_MAP_SOURCE.parent / "playbooks.py"
 
 from cockpit.web.api_system_map_catalog import (
     CAPABILITY_TO_PAGE,
@@ -923,7 +925,7 @@ def _build_roadmap(
     items = [
         {
             **item,
-            "source_refs": [_source_ref_for_id(CATALOG_SOURCE, item["id"], "路线图定义", "system_map_api")],
+            "source_refs": [_source_ref_for_id(ROADMAP_SOURCE, item["id"], "路线图定义", "system_map_api")],
         }
         for item in [*existing_items, *generated_page_contracts]
     ]
@@ -955,7 +957,7 @@ def _build_playbooks(page_lookup: dict[str, dict[str, Any]]) -> list[dict[str, A
             {
                 **playbook,
                 "steps": steps,
-                "source_refs": [_source_ref_for_id(CATALOG_SOURCE, playbook["id"], "操作清单定义", "system_map_api")],
+                "source_refs": [_source_ref_for_id(PLAYBOOKS_SOURCE, playbook["id"], "操作清单定义", "system_map_api")],
             }
         )
     return playbooks
@@ -966,7 +968,7 @@ def _build_usage_paths(page_lookup: dict[str, dict[str, Any]]) -> list[dict[str,
         {
             **path,
             "pages": [page_lookup[step] for step in path["steps"] if step in page_lookup],
-            "source_refs": [_source_ref_for_id(CATALOG_SOURCE, path["id"], "使用路径定义", "system_map_api")],
+            "source_refs": [_source_ref_for_id(PLAYBOOKS_SOURCE, path["id"], "使用路径定义", "system_map_api")],
         }
         for path in USAGE_PATHS
     ]

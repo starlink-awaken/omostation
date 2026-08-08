@@ -495,15 +495,21 @@ def main() -> int:
         subcmd = getattr(a, "bdsk_subcmd", "debate")
         if subcmd == "simulate":
             import subprocess
+
             ws_root = (_SCRIPT_DIR.parent.parent.parent.parent.parent).resolve()
             script_path = ws_root / "bin" / "gac" / "bdsk-shadow-sandbox.py"
             return subprocess.call([sys.executable, str(script_path)], cwd=str(ws_root))
 
         from cockpit.commands.bdsk_engine import DynamicBDSKAdjudicator
+
         topic = getattr(a, "topic", "架构决策与技术选型")
         res = DynamicBDSKAdjudicator.adjudicate(topic)
 
-        source_tag = "⚡️ AetherForge + omlxc (Local LLM Active)" if res.get("engine_source") == "aetherforge_local_llm" else "ℹ️ [AetherForge] 网关未在线 ➔ 平滑降级至领域推理引擎"
+        source_tag = (
+            "⚡️ AetherForge + omlxc (Local LLM Active)"
+            if res.get("engine_source") == "aetherforge_local_llm"
+            else "ℹ️ [AetherForge] 网关未在线 ➔ 平滑降级至领域推理引擎"
+        )
 
         print("=========================================================================")
         print(f" 🧠 B.D.S.K. 虚拟董事会 (4 角动态对抗模式) ➔ {source_tag}")
@@ -524,6 +530,7 @@ def main() -> int:
 
     def dispatch_journey(a):
         import subprocess
+
         ws_root = (_SCRIPT_DIR.parent.parent.parent.parent.parent).resolve()
         runner = str(ws_root / "bin" / "ssot" / "journey-runner.py")
         return subprocess.call(["python3", runner, "--help"])

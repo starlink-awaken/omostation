@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT / "projects" / "omo" / "src"))
 
-from omo.digital_brain.workplace_agent import WorkplaceAgent
 from omo.digital_brain.memory_bridge import DigitalBrainMemoryBridge
+from omo.digital_brain.workplace_agent import WorkplaceAgent
 
 
 def cmd_workplace(args: Any) -> int:
@@ -32,16 +33,16 @@ def cmd_workplace(args: Any) -> int:
     pack = agent.generate_distribution_pack(parsed)
     print("\n📝 [拟定下发公文与表格模版草稿]:")
     print("-------------------------------------------------------------------------")
-    print(pack['doc_draft'])
+    print(pack["doc_draft"])
     print("-------------------------------------------------------------------------")
-    print(f"🗣️ [领导汇报话术预演]:\n  \"{pack['briefing_speech']}\"")
+    print(f'🗣️ [领导汇报话术预演]:\n  "{pack["briefing_speech"]}"')
 
-    summary = agent.collect_and_summarize(parsed['task_id'])
+    summary = agent.collect_and_summarize(parsed["task_id"])
     print("\n📊 [下级数据自动催收与汇总报告]:")
     print("-------------------------------------------------------------------------")
-    print(summary['summary_report'])
+    print(summary["summary_report"])
     print("-------------------------------------------------------------------------")
-    print(f"🗣️ [领导批示与上报话术]:\n  \"{summary['leader_approval_talk']}\"")
+    print(f'🗣️ [领导批示与上报话术]:\n  "{summary["leader_approval_talk"]}"')
 
     mm = bridge.get_user_mental_model()
     print("=========================================================================")

@@ -250,7 +250,7 @@ def test_task_pause_uses_omo_ingress(monkeypatch):
         calls.append((args, kwargs))
         return {"id": "task-1"}
 
-    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.revert_task_to_planned", fake_revert)
+    monkeypatch.setattr("omo.omo_ingress_task_promotion.revert_task_to_planned", fake_revert)
 
     response = client.post("/api/tasks/task-1/pause")
 
@@ -1457,7 +1457,7 @@ def test_request_task_approval_uses_omo_brokers(monkeypatch):
         calls.append(kwargs)
         return {**payload, "approval_ref": kwargs["approval_ref"]}
 
-    monkeypatch.setattr("omo.omo_ingress_task_lifecycle.request_task_promotion_approval", fake_request)
+    monkeypatch.setattr("omo.omo_ingress_task_promotion.request_task_promotion_approval", fake_request)
 
     response = client.post("/api/tasks/approval-task/request-approval")
 

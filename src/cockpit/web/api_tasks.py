@@ -79,7 +79,7 @@ async def request_task_approval(task_id: str):
 
     now = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     from omo.omo_governance import propose_truth_mutation
-    from omo.omo_ingress_task_lifecycle import (
+    from omo.omo_ingress_task_promotion import (
         request_task_promotion_approval,  # type: ignore[reportAttributeAccessIssue]
     )
     from omo.omo_promotion_request import (

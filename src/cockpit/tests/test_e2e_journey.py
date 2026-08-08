@@ -30,7 +30,8 @@ class TestE2EJourney:
         """用户旅程 1: 查看帮助"""
         r = _cockpit("--help")
         assert r.returncode == 0
-        assert "workspace" in r.stdout or "usage:" in r.stdout
+        # 帮助面板含 workspace 标识或 usage/用法 行 (兼容中英文与大小写)
+        assert "workspace" in r.stdout.lower() or "usage:" in r.stdout or "用法" in r.stdout
 
     def test_profile_exists(self):
         """用户旅程 2: 查看身份档案"""

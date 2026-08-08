@@ -69,6 +69,7 @@ def test_cmd_research_does_not_save_when_minerva_missing(monkeypatch):
         {
             "_run_ollama": lambda prompt, **kw: None,
             "_find_cli": lambda name: None,
+            "llm_router_complete": lambda *a, **k: (None, "none"),
         },
     )
     save_spy = _SaveSpy()
@@ -124,6 +125,7 @@ def test_cmd_research_minerva_subprocess_exception(monkeypatch):
         {
             "_run_ollama": lambda prompt, **kw: None,
             "_find_cli": lambda name: "/usr/local/bin/minerva",
+            "llm_router_complete": lambda *a, **k: (None, "none"),
             "subprocess": type(
                 "_FakeSubprocess",
                 (),
@@ -166,6 +168,7 @@ def test_cmd_research_minerva_fails_ollama_succeeds(monkeypatch):
         {
             "_run_ollama": lambda prompt, **kw: "这是 ollama 生成的回答内容。",
             "_find_cli": lambda name: None,
+            "llm_router_complete": lambda *a, **k: (None, "none"),
         },
     )
     save_spy = _SaveSpy()
@@ -198,6 +201,7 @@ def test_cmd_research_saves_local_fallback_when_traceback_and_ollama_fail(monkey
         {
             "_run_ollama": lambda prompt, **kw: None,
             "_find_cli": lambda name: "/usr/local/bin/minerva",
+            "llm_router_complete": lambda *a, **k: (None, "none"),
             "subprocess": type(
                 "_FakeSubprocess",
                 (),

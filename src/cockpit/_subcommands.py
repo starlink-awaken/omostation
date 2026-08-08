@@ -14,9 +14,7 @@ import argparse
 import os
 
 
-def register_subcommands(
-    sub: argparse._SubParsersAction, workspace_parser: type[argparse.ArgumentParser]
-) -> None:
+def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type[argparse.ArgumentParser]) -> None:
     """Register all cockpit subcommands on the given sub-parser.
 
     Args:

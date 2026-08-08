@@ -1103,6 +1103,8 @@ def _transition_task(
     try:
         from omo.omo_ingress_task_lifecycle import (
             complete_task,
+        )
+        from omo.omo_ingress_task_promotion import (
             promote_task_to_active,  # pyright: ignore[reportPrivateImportUsage]  # type: ignore[reportAttributeAccessIssue]
             revert_task_to_planned,  # pyright: ignore[reportPrivateImportUsage]  # type: ignore[reportAttributeAccessIssue]
         )
