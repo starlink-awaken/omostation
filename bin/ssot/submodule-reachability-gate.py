@@ -98,12 +98,43 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
     return False, "not contained in fetched origin branches"
 
 
-def check(source: str, *, fetch: bool, skip_paths: set[str] | None = None) -> dict[str, object]:
+def changed_submodules(base_ref: str, source: str) -> set[str] | None:
+    """相对 base_ref 真正变了 gitlink 的子模块路径。
+
+    base_ref 不可解析(未 fetch / 新克隆 / 分支不存在)时返回 None,
+    调用方回退全量 —— 增量只用来提速, 绝不能因基线缺失而漏检。
+    """
+    if run(["git", "rev-parse", "--verify", "--quiet", f"{base_ref}^{{commit}}"]).returncode != 0:
+        return None
+    changed: set[str] = set()
+    for path in submodule_paths():
+        base = run(["git", "ls-tree", base_ref, "--", path])
+        base_sha = None
+        if base.returncode == 0 and base.stdout.strip():
+            meta, _sep, _name = base.stdout.partition("\t")
+            parts = meta.split()
+            if len(parts) >= 3 and parts[0] == "160000":
+                base_sha = parts[2]
+        if gitlink_sha(path, source) != base_sha:
+            changed.add(path)
+    return changed
+
+
+def check(
+    source: str,
+    *,
+    fetch: bool,
+    skip_paths: set[str] | None = None,
+    only_paths: set[str] | None = None,
+) -> dict[str, object]:
     findings: list[dict[str, object]] = []
     checked = 0
     skipped = 0
     for path in submodule_paths():
         if skip_paths and path in skip_paths:
+            skipped += 1
+            continue
+        if only_paths is not None and path not in only_paths:
             skipped += 1
             continue
         sha = gitlink_sha(path, source)
@@ -132,6 +163,11 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     parser.add_argument("--skip", nargs="*", default=[], help="Submodule paths to skip (known false positives)")
     parser.add_argument("--skip-file", type=str, help="File with submodule paths to skip (one per line)")
+    parser.add_argument(
+        "--changed-from",
+        metavar="REF",
+        help="增量模式: 只校验 gitlink 相对 REF 有变化的子模块 (基线不可解析时自动回退全量)",
+    )
     args = parser.parse_args()
 
     # 防御: WORKSPACE 不存在 (worktree 被 cleanup 误清等) → 友好退出, 不 traceback
@@ -152,12 +188,29 @@ def main() -> int:
                 if line.strip() and not line.strip().startswith("#")
             )
 
-    report = check(args.source, fetch=args.fetch, skip_paths=skip_paths)
+    only_paths: set[str] | None = None
+    mode = "full"
+    if args.changed_from:
+        only_paths = changed_submodules(args.changed_from, args.source)
+        if only_paths is None:
+            sys.stderr.write(
+                f"[reachability] 基线 {args.changed_from} 不可解析, 回退全量校验\n"
+            )
+            mode = "full (baseline unresolvable)"
+        else:
+            mode = f"changed-from {args.changed_from}"
+
+    report = check(args.source, fetch=args.fetch, skip_paths=skip_paths, only_paths=only_paths)
+    report["mode"] = mode
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     elif report["ok"]:
         skip_msg = f", skipped={report['skipped']}" if report["skipped"] else ""
-        print(f"submodule-reachability: PASS ({report['checked']} gitlinks, source={args.source}{skip_msg})")
+        mode_msg = f", mode={mode}" if mode != "full" else ""
+        print(
+            f"submodule-reachability: PASS ({report['checked']} gitlinks, "
+            f"source={args.source}{skip_msg}{mode_msg})"
+        )
     else:
         for item in report["failures"]:
             print(f"{item['path']}: {item['sha'] or '-'} unreachable: {item['reason']}")
