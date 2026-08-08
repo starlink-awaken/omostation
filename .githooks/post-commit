@@ -1,8 +1,9 @@
 #!/bin/bash
-# post-commit — 状态失效事件 (State-Stale Event)
+# post-commit — 状态失效事件 (State-Stale Event) + 派生同步检查
 #
-# 每次本地提交成功后只 emit state_stale，真实投影刷新由
-# `omo state sync` 单写者负责，避免多 agent commit 触发写风暴。
+# 每次本地提交成功后:
+# 1. emit state_stale (真实投影刷新由 `omo state sync` 单写者负责)
+# 2. 检测子模块指针变更 → 自动 sync-all-docs (agora 迭代后派生文档自动同步)
 
 set -e
 
@@ -14,6 +15,11 @@ if [ -f "$ROOT/bin/state-stale-emit.py" ]; then
     --trigger "post-commit" \
     --surface ".omo/state" \
     --quiet >/dev/null 2>&1 || true
+fi
+
+# 派生同步检查 (2026-08-08): 子模块指针变更 → sync-all-docs + 提示提交派生文档
+if [ -f "$ROOT/bin/ssot/post-commit-sync-check.py" ]; then
+  python3 "$ROOT/bin/ssot/post-commit-sync-check.py" || true
 fi
 
 exit 0
