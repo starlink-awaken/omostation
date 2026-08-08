@@ -89,6 +89,7 @@ def utc_now() -> str:
     within the same second share a timestamp); use append-order / seqno
     for ordering.
     """
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 # ── Verification helpers ─────────────────────────────────────────────

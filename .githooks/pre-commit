@@ -14,21 +14,6 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 
-# ── Hook SSOT sync advisory ───────────────────────────────────────
-# 比较 .githooks/pre-commit (SSOT) 与 .git/hooks/pre-commit (部署产物) 的 mtime.
-# 若 SSOT 更新而部署产物未同步, 输出 advisory 提醒运行 make install-hooks.
-# 不阻断 commit (|| true), 仅信息提示.
-if [ -f "$ROOT/.githooks/pre-commit" ] && [ -f "$ROOT/.git/hooks/pre-commit" ]; then
-  _githooks_mtime=$(stat -f "%m" "$ROOT/.githooks/pre-commit" 2>/dev/null || stat -c "%Y" "$ROOT/.githooks/pre-commit" 2>/dev/null || echo "0")
-  _githooks_mtime="${_githooks_mtime:-0}"
-  _installed_mtime=$(stat -f "%m" "$ROOT/.git/hooks/pre-commit" 2>/dev/null || stat -c "%Y" "$ROOT/.git/hooks/pre-commit" 2>/dev/null || echo "0")
-  _installed_mtime="${_installed_mtime:-0}"
-  if [ "$_githooks_mtime" -gt "$_installed_mtime" ]; then
-    echo "[hook-sync] ⚠️  .githooks/pre-commit 已更新但未同步到 .git/hooks/" >&2
-    echo "   请运行: make install-hooks" >&2
-  fi
-fi
-
 # ── G-CONV.7 / ADR-0220 D3: shared worktree claim-before-commit ──────
 # install-hooks path SSOT (.githooks/pre-commit → .git/hooks/pre-commit).
 # Fail-closed on shared main/detached: unclaimed staged writes are rejected.

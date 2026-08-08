@@ -9,9 +9,9 @@ generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 554
-  bos_services: 204
-  bos_domains: 17
-  cli_commands: 127
+  bos_services: 200
+  bos_domains: 16
+  cli_commands: 119
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -795,12 +795,11 @@ bos_services:
     compute: 3
     ecos: 10
     forge: 1
-    governance: 35
+    governance: 33
     l4-kernel: 1
     memory: 47
     meta: 1
     omo: 4
-    perception: 2
     persona: 10
     runtime: 1
     swarm: 1
@@ -935,40 +934,40 @@ bos_services:
     capability:
     - uri: bos://capability/cockpit/mcp-server
       description: Cockpit MCP Server (HTTP proxy mode)
-      transport: stdio
+      transport: ''
       status: active
     - uri: bos://capability/agent-runtime/execute
       description: Agent Runtime 执行入口
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/agent-runtime/list-tools
       description: Agent Runtime 工具列表
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/agent-runtime/status
       description: Agent Runtime 状态
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/forge/agent-list
       description: Forge 集市 Agent 列表
       transport: stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/forge/agent-install
       description: Forge 集市 Agent 安装
       transport: stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/forge/registry
       description: Forge 注册表查询
       transport: stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/forge/publish
       description: Forge 发布入口
       transport: stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/forge/lint
       description: Forge Lint 检查
       transport: stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/swarm/run
       description: AetherForge Swarm 多智能体任务工作流运行接口 (internal 进程内反射直调)
       transport: internal
@@ -988,19 +987,19 @@ bos_services:
     - uri: bos://capability/forge/discover
       description: '[POC] Forge 工具发现 (POC stdio)'
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/forge/exec-tool
       description: '[POC] Forge 工具执行 (POC stdio)'
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/forge/list-tools
       description: '[POC] Forge 工具列表 (POC stdio)'
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/forge/register-tool
       description: '[POC] Forge 工具注册 (POC stdio)'
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/bus/data
       description: Omni-Bus 数据面路由 (日志/遥测)
       transport: internal
@@ -1016,19 +1015,19 @@ bos_services:
     - uri: bos://capability/agent-runtime/chat
       description: Agent 交互式对话接口
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/agent-runtime/run-task
       description: Agent 任务执行接口
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/agent-runtime/task-status
       description: Agent 任务状态查询
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/agent-runtime/agent-list
       description: 列出所有可用 Agent 实例
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/wps-office-mcp/invoke
       description: WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents 业务文件读写
       transport: stdio
@@ -1192,14 +1191,6 @@ bos_services:
       status: active
     - uri: bos://governance/omo/state
       description: OMO 状态查询
-      transport: stdio
-      status: active
-    - uri: bos://governance/omo/compass-trace
-      description: 8 维全景元架构立体重构追溯
-      transport: stdio
-      status: active
-    - uri: bos://governance/omo/project-inspect
-      description: 17 项目全景 4D 体检与诊断
       transport: stdio
       status: active
     - uri: bos://governance/omo/debt
@@ -1534,15 +1525,6 @@ bos_services:
       description: OMO 任务控制台与活跃任务展示
       transport: inline
       status: active
-    perception:
-    - uri: bos://perception/apple_mail/inbox
-      description: Apple Mail 收件箱信号采集 (BET-Y1Q1-T2-01 感知面)
-      transport: stdio
-      status: unimplemented
-    - uri: bos://perception/signal_monitor/health
-      description: 信号源健康探测与降级报告
-      transport: stdio
-      status: unimplemented
     persona:
     - uri: bos://persona/core-models/schema
       description: Core Models Schema 查询
@@ -1640,8 +1622,6 @@ bos_services:
       transport: inline
       status: active
 cli_commands:
-- name: ack
-  description: 确认任务完成
 - name: agent
   description: 🤖 Agent 治理控制入口 (bootstrap / status / start / claim / verify / closeout)
 - name: agent-onboard
@@ -1664,8 +1644,6 @@ cli_commands:
   description: 🔍 6 维度全方位审计 (调 bin/workspace-audit)
 - name: backends
   description: 列出 BOS 后端
-- name: bdsk
-  description: 🧠 B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演)
 - name: bos
   description: BOS URI 查询与管理
 - name: bos-capability
@@ -1698,8 +1676,6 @@ cli_commands:
   description: 显示系统上下文 (Phase/CARDS/约束/引导)
 - name: contracts
   description: 契约验证
-- name: control
-  description: 控制平面：submit / ack / nack
 - name: daily
   description: 每日研究简报
 - name: dashboard
@@ -1768,8 +1744,6 @@ cli_commands:
   description: 调用 capability 服务（执行 BOS YAML command）
 - name: iterate
   description: ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行)
-- name: journey
-  description: 🗺️ Journey State Graph 状态表达校验器
 - name: kairon
   description: kairon 知识引擎 monorepo 聚合入口
 - name: kems
@@ -1796,8 +1770,6 @@ cli_commands:
   description: 📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出)
 - name: mutate
   description: 通过 agora 统一 BOS URI 写协议修改资源
-- name: nack
-  description: 否定确认任务
 - name: nodes
   description: 列出 KOS 中注册的算力节点
 - name: observe
@@ -1808,8 +1780,6 @@ cli_commands:
   description: 为 AI 构建项目全貌上下文
 - name: pack
   description: 将代码库打包为 LLM 友好格式
-- name: panorama
-  description: 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)
 - name: pending
   description: 查看未决待办快照预览
 - name: pipeline
@@ -1818,8 +1788,6 @@ cli_commands:
   description: 产品健康度检测
 - name: profile
   description: 查看/编辑身份档案 (L4 入口)
-- name: project
-  description: 🔍 17 项目全景 4D 体检与诊断
 - name: publish
   description: 发布事件
 - name: quickstart
@@ -1864,8 +1832,6 @@ cli_commands:
   description: 索引统计
 - name: status
   description: 系统健康
-- name: submit
-  description: 提交控制任务
 - name: summary
   description: 债务摘要 (委派 omo debt)
 - name: swarm

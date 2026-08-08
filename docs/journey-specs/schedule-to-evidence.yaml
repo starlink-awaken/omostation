@@ -1,0 +1,52 @@
+schema: journey-spec/v1
+journey_id: schedule-to-evidence
+description: "周期报送 → 汇聚交付证据 → 生成报告 → 绩效沉淀 → 项目监督输入"
+
+states:
+  - name: period_triggered
+    scene: periodic-reporting
+    next: [evidence_collected]
+  - name: evidence_collected
+    scene: periodic-reporting
+    next: [report_generated]
+  - name: report_generated
+    scene: periodic-reporting
+    next: [performance_bundled, needs_more_evidence]
+  - name: needs_more_evidence
+    scene: periodic-reporting
+    next: [evidence_collected]
+  - name: performance_bundled
+    scene: periodic-reporting
+    next: [supervised]
+  - name: supervised
+    scene: project-supervision
+    next: [knowledge_captured, escalated]
+  - name: escalated
+    scene: project-supervision
+    next: [supervised]
+  - name: knowledge_captured
+    scene: knowledge-curation
+    next: []
+
+transitions:
+  - from: period_triggered
+    to: evidence_collected
+    condition: "report.compiled == true"
+  - from: evidence_collected
+    to: report_generated
+    condition: "status == succeeded"
+  - from: report_generated
+    to: performance_bundled
+    condition: "report.compiled == true"
+  - from: report_generated
+    to: needs_more_evidence
+    condition: "report.compiled == false"
+  - from: performance_bundled
+    to: supervised
+    condition: "always"
+  - from: supervised
+    to: knowledge_captured
+    condition: "supervision.risk_level != high"
+  - from: supervised
+    to: escalated
+    condition: "supervision.risk_level == high"

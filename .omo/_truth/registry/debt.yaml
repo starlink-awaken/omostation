@@ -21,3 +21,34 @@ seed_items:
 - .omo/debt/items/HEALTH_SCORE_FORMULA.yaml
 - .omo/debt/items/TEST_COVERAGE.yaml
 - .omo/debt/items/DOC_CLAIMS_SCOPE.yaml
+# 能力缺口台账 (Phase B/C/D 收敛)
+gap_items_dir: .omo/debt/gap-items
+gap_registry: .omo/debt/gap-registry.yaml
+gap_seed_items:
+- .omo/debt/gap-items/META-01-OBSERVATION-MOS-BRIDGE.yaml
+- .omo/debt/gap-items/META-02-REFLECTION-SCHEDULER.yaml
+- .omo/debt/gap-items/META-03-EVOLUTION-ENGINE.yaml
+- .omo/debt/gap-items/META-04-AUTOPOIESIS.yaml
+- .omo/debt/gap-items/FACE-01-PERCEPTION-DAEMON.yaml
+- .omo/debt/gap-items/FACE-02-COGNITION-MOS-DATA.yaml
+- .omo/debt/gap-items/FACE-03-SPINE-LIVE.yaml
+- .omo/debt/gap-items/FACE-04-REFLECTION-OUTCOME.yaml
+- .omo/debt/gap-items/FACE-05-FABRIC-CONSUMER.yaml
+- .omo/debt/gap-items/EVO-01-AUTOLOOP-CONTROLLER.yaml
+- .omo/debt/gap-items/EVO-02-EXTERNAL-SCRAPE.yaml
+- .omo/debt/gap-items/EVO-03-VISION-UPDATE.yaml
+- .omo/debt/gap-items/EVO-04-KNOWLEDGE-CURATOR-STUB.yaml
+- .omo/debt/gap-items/EVO-05-GOVERNOR-STUB.yaml
+- .omo/debt/gap-items/OBS-01-REALTIME-DASHBOARD.yaml
+- .omo/debt/gap-items/OBS-02-PROACTIVE-ALERT.yaml
+- .omo/debt/gap-items/GOV-01-PREDICTIVE-ENGINE.yaml
+- .omo/debt/gap-items/GOV-02-ADAPTIVE-RULES.yaml
+- .omo/debt/gap-items/GOV-03-MODEL-DRIVEN-CONSTRAINT.yaml
+- .omo/debt/gap-items/SCENE-01-CARD-TO-JOURNEY.yaml
+- .omo/debt/gap-items/SCENE-02-DOMAIN-SCENARIOS.yaml
+- .omo/debt/gap-items/DATA-01-SIGNAL-TO-MOS.yaml
+- .omo/debt/gap-items/DATA-02-OUTCOME-TO-TRUST.yaml
+- .omo/debt/gap-items/DATA-03-REFLECTION-TO-EVOLUTION.yaml
+- .omo/debt/gap-items/THEORY-01-CONTROL-FEEDBACK.yaml
+- .omo/debt/gap-items/AGENT-01-AUTONOMOUS-TICK.yaml
+- .omo/debt/gap-items/MECH-01-TASK-VERIFY-GATE.yaml

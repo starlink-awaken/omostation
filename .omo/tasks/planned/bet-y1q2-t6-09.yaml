@@ -1,0 +1,45 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-08T04:17:10+00:00
+id: BET-Y1Q2-T6-09
+title: AetherForge 动态算力与模型自动配比
+status: candidate
+task_type: bet
+priority: P1
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-09
+window: Y1Q2
+track: T6-EVOLUTION
+appetite: 3 days
+desc: 结合 bos://compute/aetherforge/infer，按 Task 复杂度自动升降级模型与算力
+non_goals: []
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate: []
+evidence_required: []
+test_plan: []
+workflow: bet-execution
+write_surfaces: []
+pasw_required: false
+circuit_breaker: ''
+retro_required: false
+retro_path: .omo/_knowledge/retros/BET-Y1Q2-T6-09.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

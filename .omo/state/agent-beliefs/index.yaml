@@ -36,6 +36,34 @@ beliefs:
   created_at: '2026-08-08T01:43:53Z'
   confidence: 1.0
   source_run_id: 20260808T014350Z-mini-8e03c676
+- id: belief-0006
+  topic: workflow:mini
+  belief: 'Workflow run 20260808T051020Z-mini-e185b394 achieved objective: closeout
+    test'
+  created_at: '2026-08-08T05:10:23Z'
+  confidence: 1.0
+  source_run_id: 20260808T051020Z-mini-e185b394
+- id: belief-0007
+  topic: workflow:mini
+  belief: 'Workflow run 20260808T051108Z-mini-05856574 achieved objective: closeout
+    test'
+  created_at: '2026-08-08T05:11:10Z'
+  confidence: 1.0
+  source_run_id: 20260808T051108Z-mini-05856574
+- id: belief-0008
+  topic: workflow:mini
+  belief: 'Workflow run 20260808T051237Z-mini-676300ee achieved objective: closeout
+    test'
+  created_at: '2026-08-08T05:12:41Z'
+  confidence: 1.0
+  source_run_id: 20260808T051237Z-mini-676300ee
+- id: belief-0009
+  topic: cross-scene-outcome-trends
+  belief: '跨scene学习: 1 decision outcomes 记录, accept=1, 分布={''scene:knowledge-curation'':
+    1}'
+  created_at: '2026-08-08T05:35:42Z'
+  confidence: 1.0
+  source_run_id: null
 lessons:
 - id: lesson-0001
   belief_id: belief-0001
@@ -55,6 +83,30 @@ lessons:
   solution: Executed agent-workflow verify & observe pass
   severity: warning
   created_at: '2026-08-08T01:43:53Z'
+- id: lesson-0004
+  belief_id: belief-0006
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-08T05:10:23Z'
+- id: lesson-0005
+  belief_id: belief-0007
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-08T05:11:10Z'
+- id: lesson-0006
+  belief_id: belief-0008
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-08T05:12:41Z'
+- id: lesson-0007
+  belief_id: belief-0009
+  pitfall: outcomes accumulated without synthesis
+  solution: KnowledgeCurator tick 定期聚合 outcome 到跨场景学习
+  severity: warning
+  created_at: '2026-08-08T05:35:42Z'
 contexts:
 - id: ctx-0001
   belief_id: belief-0001
@@ -71,6 +123,495 @@ contexts:
   scope_path: /private/var/folders/2s/pr52f6ys76v__sm_q1fkv_n40000gn/T/pytest-of-xiamingxing/pytest-118/test_closeout_verifies_observe0/runs/20260808T014350Z-mini-8e03c676.yaml
   applicable_tags:
   - workflow:mini
-world_snapshots: []
+- id: ctx-0004
+  belief_id: belief-0006
+  scope_path: /private/var/folders/2s/pr52f6ys76v__sm_q1fkv_n40000gn/T/pytest-of-xiamingxing/pytest-148/test_closeout_verifies_observe0/runs/20260808T051020Z-mini-e185b394.yaml
+  applicable_tags:
+  - workflow:mini
+- id: ctx-0005
+  belief_id: belief-0007
+  scope_path: /private/var/folders/2s/pr52f6ys76v__sm_q1fkv_n40000gn/T/pytest-of-xiamingxing/pytest-151/test_closeout_verifies_observe0/runs/20260808T051108Z-mini-05856574.yaml
+  applicable_tags:
+  - workflow:mini
+- id: ctx-0006
+  belief_id: belief-0008
+  scope_path: /private/var/folders/2s/pr52f6ys76v__sm_q1fkv_n40000gn/T/pytest-of-xiamingxing/pytest-156/test_closeout_verifies_observe0/runs/20260808T051237Z-mini-676300ee.yaml
+  applicable_tags:
+  - workflow:mini
+- id: ctx-0007
+  belief_id: belief-0009
+  scope_path: '*'
+  applicable_tags:
+  - cross-scene-outcome-trends
+world_snapshots:
+- id: ws-0001
+  observed_at: '2026-08-08T05:33:25Z'
+  source: signal-poller:test
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: test
+    bos_uri: bos://perception/test
+  confidence: 0.8
+  expires_at: null
+- id: ws-0002
+  observed_at: '2026-08-08T05:33:49Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: abc123
+  confidence: 0.8
+  expires_at: null
+- id: ws-0003
+  observed_at: '2026-08-08T05:45:09Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0004
+  observed_at: '2026-08-08T05:46:23Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0005
+  observed_at: '2026-08-08T05:47:20Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0006
+  observed_at: '2026-08-08T05:50:29Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0007
+  observed_at: '2026-08-08T05:50:46Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0008
+  observed_at: '2026-08-08T05:51:22Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0009
+  observed_at: '2026-08-08T05:52:13Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0010
+  observed_at: '2026-08-08T05:55:22Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0011
+  observed_at: '2026-08-08T05:55:28Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0012
+  observed_at: '2026-08-08T05:56:18Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0013
+  observed_at: '2026-08-08T06:01:23Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0014
+  observed_at: '2026-08-08T06:04:31Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0015
+  observed_at: '2026-08-08T06:05:57Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0016
+  observed_at: '2026-08-08T06:06:41Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0017
+  observed_at: '2026-08-08T06:09:37Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0018
+  observed_at: '2026-08-08T06:13:43Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0019
+  observed_at: '2026-08-08T06:13:50Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0020
+  observed_at: '2026-08-08T06:14:23Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0021
+  observed_at: '2026-08-08T06:14:35Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0022
+  observed_at: '2026-08-08T06:14:52Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0023
+  observed_at: '2026-08-08T06:14:54Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0024
+  observed_at: '2026-08-08T06:18:48Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0025
+  observed_at: '2026-08-08T06:19:11Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0026
+  observed_at: '2026-08-08T06:19:24Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0027
+  observed_at: '2026-08-08T06:19:30Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0028
+  observed_at: '2026-08-08T06:19:34Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0029
+  observed_at: '2026-08-08T06:20:09Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0030
+  observed_at: '2026-08-08T06:20:17Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0031
+  observed_at: '2026-08-08T06:20:27Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0032
+  observed_at: '2026-08-08T06:22:44Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0033
+  observed_at: '2026-08-08T06:22:46Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0034
+  observed_at: '2026-08-08T06:23:53Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0035
+  observed_at: '2026-08-08T06:24:09Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0036
+  observed_at: '2026-08-08T06:24:16Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0037
+  observed_at: '2026-08-08T06:24:35Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0038
+  observed_at: '2026-08-08T06:25:03Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0039
+  observed_at: '2026-08-08T06:25:07Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0040
+  observed_at: '2026-08-08T06:25:32Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0041
+  observed_at: '2026-08-08T06:25:44Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
+- id: ws-0042
+  observed_at: '2026-08-08T06:26:13Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 69b396b99ef41a84
+  confidence: 0.8
+  expires_at: null
 capability_calibrations: []
-decision_outcomes: []
+decision_outcomes:
+- id: do-0001
+  decision_at: '2026-08-08T05:34:12Z'
+  decision_type: scene:knowledge-curation
+  input_summary: run_id=test-TB2
+  expected_outcome: scene execution to terminal
+  actual_outcome: adjudication=accepted
+  delta: TB2 test
+  source_run_id: test-TB2

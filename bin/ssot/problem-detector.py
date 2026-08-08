@@ -100,9 +100,24 @@ def scan_all() -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--once", action="store_true",
+                        help="write last-run state (launchd/cron 调度用)")
     args = parser.parse_args(argv)
 
     result = scan_all()
+
+    # META-02: 调度证据 — 每次运行落 last-run 状态文件
+    if args.once:
+        try:
+            state_path = ROOT / ".omo" / "state" / "problem-detector-last.json"
+            state_path.parent.mkdir(parents=True, exist_ok=True)
+            state_path.write_text(
+                json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True),
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
+
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     else:

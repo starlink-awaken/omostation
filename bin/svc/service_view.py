@@ -86,6 +86,9 @@ def collect_launchd() -> list[dict]:
             "keepalive": bool(pb("KeepAlive")),
             "program": os.path.basename(pb("ProgramArguments:0") or pb("Program") or ""),
             "resident": label in RESIDENT,
+            "watch_paths": [x.strip() for x in _sh(
+                f'/usr/libexec/PlistBuddy -c "Print :WatchPaths" "{f}" 2>/dev/null'
+            ).splitlines() if x.strip() and x.strip() not in ("Array {", "}")],
         })
     return out
 
@@ -243,3 +246,212 @@ def profile_action(profile: str, action: str) -> list[dict]:
         ok, msg = service_action(sid, action)
         out.append({"id": sid, "ok": ok, "msg": msg})
     return out
+
+
+# ── BOS ↔ 服务 ↔ 端口 ↔ 能力 四方一致性 ──────────────────────────────
+def sync_check() -> dict[str, Any]:
+    """校验 BOS 能力注册与现实是否同步。
+
+    检查项(均已排除误报,只报真问题):
+      B1 internal    module_path 指向的模块文件是否存在
+      B2 stdio/mcp_* command 里 --directory 的项目目录是否存在
+      B3 http/proxy  是否声明端点(http_url/mcp_endpoint),端点端口是否已登记
+      B4 kairon/gbrain 包是否在 projects-capabilities 登记(该表仅覆盖这两个项目)
+      B6 URI 是否重复注册(路由不确定)
+      S1 在跑的 launchd/docker 是否有 services.yaml 生命周期声明
+
+    注:status=deprecated 是保留惯例(同 port-registry),只计数不报错。
+    """
+    bos = read_bos()
+    caps = {c.get("id", "") for c in read_capabilities()}
+    cap_pkgs = {c.split(".")[-1] for c in caps} | {c.split(".")[0] for c in caps}
+    declared = {s.get("id") for s in read_services_registry()}
+    reg_ports = read_port_registry()
+    projects_dir = os.path.join(WORKSPACE, "projects")
+    project_names = [p for p in os.listdir(projects_dir)
+                     if os.path.isdir(os.path.join(projects_dir, p))] \
+        if os.path.isdir(projects_dir) else []
+
+    issues: list[dict] = []
+    deprecated_kept = 0
+
+    for s in bos:
+        uri = s.get("uri", "?")
+        tr = s.get("transport", "?")
+
+        if tr == "internal":
+            mp = s.get("module_path", "")
+            if mp:
+                rel = mp.replace(".", "/") + ".py"
+                found = False
+                for p in project_names:
+                    base = os.path.join(projects_dir, p)
+                    if os.path.isfile(os.path.join(base, "src", rel)):
+                        found = True
+                        break
+                    if glob.glob(os.path.join(base, "packages", "*", "src", rel)):
+                        found = True
+                        break
+                if not found:
+                    issues.append({"kind": "B1 internal 模块找不到", "uri": uri, "detail": mp})
+
+        elif tr in ("stdio", "mcp_stdio", "mcp_proxy"):
+            cmd = s.get("command") or []
+            if isinstance(cmd, list) and "--directory" in cmd:
+                i = cmd.index("--directory")
+                if i + 1 < len(cmd) and not os.path.isdir(os.path.join(WORKSPACE, cmd[i + 1])):
+                    issues.append({"kind": "B2 项目目录不存在", "uri": uri, "detail": cmd[i + 1]})
+
+        if tr in ("http", "mcp_proxy"):
+            ep = s.get("http_url") or s.get("mcp_endpoint") or s.get("endpoint") or ""
+            if not ep:
+                issues.append({"kind": "B3 未声明端点", "uri": uri,
+                               "detail": "无 http_url/mcp_endpoint"})
+            else:
+                m = re.search(r":(\d{2,5})", str(ep))
+                if m and int(m.group(1)) not in reg_ports:
+                    issues.append({"kind": "B3 端点端口未登记", "uri": uri,
+                                   "detail": f":{m.group(1)} 不在 port-registry"})
+
+        pkg = s.get("package") or ""
+        if any(pkg.startswith(x) for x in ("kairon", "gbrain")) \
+                and pkg not in cap_pkgs and pkg.split("-")[0] not in cap_pkgs:
+            issues.append({"kind": "B4 kairon/gbrain 包未登记", "uri": uri, "detail": pkg})
+
+        if str(s.get("status", "")).lower() in ("deprecated", "inactive", "disabled"):
+            deprecated_kept += 1
+
+    # B6 URI 重复
+    seen: dict[str, int] = {}
+    for s in bos:
+        u = s.get("uri", "")
+        seen[u] = seen.get(u, 0) + 1
+    for u, n in seen.items():
+        if n > 1:
+            issues.append({"kind": "B6 URI 重复注册", "uri": u, "detail": f"{n} 次"})
+
+    # S1 在跑但无生命周期声明
+    for s in collect_launchd() + collect_docker():
+        if s["running"] and not (s["id"] in declared or s.get("name") in declared):
+            issues.append({"kind": "S1 在跑但无生命周期声明", "uri": s["id"],
+                           "detail": f"{s['kind']} · 建议登记到 services.yaml"})
+
+    by_kind: dict[str, int] = {}
+    for i in issues:
+        by_kind[i["kind"]] = by_kind.get(i["kind"], 0) + 1
+
+    return {
+        "total_bos": len(bos),
+        "issues": issues,
+        "by_kind": by_kind,
+        "deprecated_kept": deprecated_kept,
+        "ok": not issues,
+    }
+
+
+# ── 可观测性:健康三态 / 资源 / 日志 ──────────────────────────────────
+def _launchd_detail(label: str) -> dict[str, Any]:
+    """从 launchctl print 取 PID / 上次退出码 / 重启次数(存在性之外的真信息)。"""
+    out = _sh(f"launchctl print gui/{os.getuid()}/{label} 2>/dev/null", 8)
+    d: dict[str, Any] = {"pid": None, "last_exit": None, "runs": None}
+    m = re.search(r"^\s*pid\s*=\s*(\d+)", out, re.MULTILINE)
+    if m:
+        d["pid"] = int(m.group(1))
+    m = re.search(r"last exit code\s*=\s*(-?\d+)", out)
+    if m:
+        d["last_exit"] = int(m.group(1))
+    m = re.search(r"runs\s*=\s*(\d+)", out)
+    if m:
+        d["runs"] = int(m.group(1))
+    return d
+
+
+def _proc_stats(pid: int | None) -> dict[str, Any]:
+    """PID → CPU% / 内存GB。"""
+    if not pid:
+        return {"cpu": None, "mem_gb": None}
+    out = _sh(f"ps -p {pid} -o %cpu=,rss= 2>/dev/null", 5).strip()
+    if not out:
+        return {"cpu": None, "mem_gb": None}
+    parts = out.split()
+    try:
+        return {"cpu": float(parts[0]), "mem_gb": round(int(parts[1]) / 1048576, 2)}
+    except (ValueError, IndexError):
+        return {"cpu": None, "mem_gb": None}
+
+
+def _log_paths(label: str) -> dict[str, str]:
+    """服务日志路径(plist 的 StandardOut/ErrorPath)。"""
+    p = os.path.join(HOME, "Library/LaunchAgents", f"{label}.plist")
+    if not os.path.isfile(p):
+        return {}
+    out = {}
+    for key, name in (("StandardOutPath", "stdout"), ("StandardErrorPath", "stderr")):
+        v = _sh(f'/usr/libexec/PlistBuddy -c "Print :{key}" "{p}" 2>/dev/null', 5).strip()
+        if v:
+            out[name] = v
+    return out
+
+
+def probe_health(svc: dict) -> dict[str, Any]:
+    """健康三态 —— 这是本轮核心:区分"进程在"与"服务可用"。
+
+    healthy   已加载/运行,且(若声明端口)端口可连
+    degraded  进程在但端口不通 / 上次异常退出 —— **看着在跑其实坏了**
+    down      没运行
+    """
+    if not svc.get("running"):
+        return {"health": "down", "reason": "未运行"}
+
+    ports = svc.get("ports") or []
+    if ports:
+        bad = [p for p in ports if not port_open(p)]
+        if bad:
+            return {"health": "degraded", "reason": f"端口不通 {bad}"}
+
+    if svc.get("kind") == "launchd":
+        d = svc.get("detail") or {}
+        exit_code = d.get("last_exit")
+        # 退出码语义: 0 正常; 1-127 应用错误; >=128 被信号杀(SIGTERM=143, 重启常见)
+        if isinstance(exit_code, int) and 0 < exit_code < 128:
+            return {"health": "degraded", "reason": f"上次异常退出 code={exit_code}"}
+        # watchpaths 型服务空闲时无进程是正常的, 不算病
+        if d.get("pid") is None and svc.get("keepalive") and not svc.get("watch_paths"):
+            return {"health": "degraded", "reason": "声明常驻但无进程"}
+        # 监视路径失效 → watch 永远不触发(真问题, 今天实际发现)
+        for wp in (svc.get("watch_paths") or []):
+            if not os.path.exists(wp):
+                return {"health": "degraded", "reason": f"监视路径不存在: {wp}"}
+
+    return {"health": "healthy", "reason": ""}
+
+
+def enrich(services: list[dict]) -> list[dict]:
+    """给服务补上健康/资源/日志(collect 之后调用)。"""
+    for s in services:
+        if s["kind"] == "launchd":
+            s["detail"] = _launchd_detail(s["id"])
+            s["logs"] = _log_paths(s["id"])
+            s.update(_proc_stats(s["detail"].get("pid")))
+        elif s["kind"] == "docker":
+            s["detail"] = {}
+            s["logs"] = {"docker": f"docker logs {s.get('name', '')}"}
+            s["cpu"] = None
+            s["mem_gb"] = None
+        s.update(probe_health(s))
+    return services
+
+
+def collect_full() -> dict[str, Any]:
+    """collect() + 可观测性增强(健康三态/资源/日志)。"""
+    v = collect()
+    v["services"] = enrich(v["services"])
+    hc: dict[str, int] = {}
+    for s in v["services"]:
+        hc[s["health"]] = hc.get(s["health"], 0) + 1
+    v["health_counts"] = hc
+    v["degraded"] = [
+        {"id": s["id"], "kind": s["kind"], "reason": s["reason"]}
+        for s in v["services"] if s["health"] == "degraded"
+    ]
+    return v

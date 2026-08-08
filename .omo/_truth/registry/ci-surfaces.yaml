@@ -676,20 +676,6 @@ surfaces:
     triggers: [per_pr, push]
     status: active
     note: BET-Y1Q2-T1-05 submodule pointer drift detection (DIVERGED blocking)
-  - id: bin-gac-debt-integrity-check-py
-    tool: bin/gac/debt-integrity-check.py
-    workflow: debt-audit.yml
-    gate: false
-    triggers: [per_pr, push, scheduled]
-    status: active
-    note: debt-audit.sh 归档后替代脚本 (P78 unregistered-check 消号)
-  - id: bin-ssot-current-state-coherence-py
-    tool: bin/ssot/current-state-coherence.py
-    workflow: state-goals-enforce.yml
-    gate: false
-    triggers: [per_pr, push]
-    status: active
-    note: P47+ state/goals 对齐 enforce (P78 unregistered-check 消号)
 
 workflow_triggers:
   - workflow: agora-ci.yml

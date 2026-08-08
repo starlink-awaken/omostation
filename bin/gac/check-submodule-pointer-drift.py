@@ -20,10 +20,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# PASW: Per-Agent Submodule Worktree (ADR-0371)
-PASW_SUBTREE_DIR = ".subtrees"
-PASW_ISOLATED_SUBS = ["projects/gbrain", "projects/cockpit", "projects/agora"]
-
 
 def _git(*args: str, cwd: Path | None = None) -> str:
     result = subprocess.run(
@@ -164,51 +160,6 @@ def fix_pointer(sub_path: str, apply: bool = False) -> str:
     return f"would fix -> {origin_main[:12]}"
 
 
-def check_pasw_drift(sub_name: str) -> dict | None:
-    """检查 PASW .subtrees/<sub> 的漂移状态.
-
-    检查:
-    1. .subtrees/<sub> worktree 是否存在
-    2. .subtrees/<sub> HEAD vs origin/<session>-<sub> (未推检测)
-    3. projects/<sub> gitlink vs .subtrees/<sub> HEAD (指针一致性)
-    """
-    sub_wt = REPO_ROOT / PASW_SUBTREE_DIR / sub_name
-    if not sub_wt.exists() or not (sub_wt / ".git").exists():
-        return {"submodule": f".subtrees/{sub_name}", "status": "skip", "reason": "no pasw worktree"}
-
-    wt_branch = _git("rev-parse", "--abbrev-ref", "HEAD", cwd=sub_wt)
-    if wt_branch == "HEAD":
-        return {"submodule": f".subtrees/{sub_name}", "status": "skip", "reason": "detached HEAD"}
-
-    # 检查 .subtrees/<sub> 是否有未推 commit
-    wt_upstream = _git("rev-parse", "--abbrev-ref", "@{u}", cwd=sub_wt) or f"origin/{wt_branch}"
-    wt_cnt = int(_git("log", "--oneline", f"{wt_upstream}..HEAD", cwd=sub_wt).count("\n") or 0)
-
-    # 检查 projects/<sub> gitlink vs .subtrees/<sub> HEAD
-    shared_sub = f"projects/{sub_name}"
-    gitlink = get_gitlink(shared_sub)
-    wt_head = _git("rev-parse", "HEAD", cwd=sub_wt)
-
-    if gitlink and wt_head and gitlink != wt_head:
-        return {
-            "submodule": f".subtrees/{sub_name}",
-            "status": "DIVERGED",
-            "gitlink": gitlink[:12],
-            "pasw_head": wt_head[:12],
-            "detail": "PASW worktree HEAD != shared gitlink (need bump-pointer)",
-        }
-
-    if wt_cnt > 0:
-        return {
-            "submodule": f".subtrees/{sub_name}",
-            "status": "ahead",
-            "pasw_head": wt_head[:12],
-            "detail": f"PASW worktree has {wt_cnt} unpushed commits",
-        }
-
-    return {"submodule": f".subtrees/{sub_name}", "status": "aligned", "pasw_head": wt_head[:12]}
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description="子模块指针漂移检测")
     parser.add_argument("--fix", action="store_true", help="显示修复建议")
@@ -233,56 +184,29 @@ def main() -> int:
         elif r["status"] == "behind":
             behind.append(r)
 
-    # PASW: 检查 .subtrees/ 隔离 worktree 状态
-    pasw_results = []
-    for sub in PASW_ISOLATED_SUBS:
-        sub_name = sub.split("/")[-1]
-        r = check_pasw_drift(sub_name)
-        if r and r.get("status") != "skip":
-            pasw_results.append(r)
-            results.append(r)
-            if r["status"] == "DIVERGED":
-                diverged.append(r)
-
     if args.fix or args.apply:
         for r in diverged + (behind if args.strict else []):
             fix_msg = fix_pointer(r["submodule"], apply=args.apply)
             r["fix"] = fix_msg
 
     if args.json:
-        print(json.dumps({
-            "results": results,
-            "diverged": len(diverged),
-            "behind": len(behind),
-            "pasw_checked": len(pasw_results),
-        }, indent=2))
+        print(json.dumps({"results": results, "diverged": len(diverged), "behind": len(behind)}, indent=2))
     else:
         for r in results:
             status = r["status"]
             sub = r["submodule"]
-            if sub.startswith(".subtrees/"):
-                if status == "aligned":
-                    print(f"  OK {sub}: {r.get('pasw_head', '?')}")
-                elif status == "ahead":
-                    print(f"  WARN {sub}: {r.get('pasw_head', '?')} ({r.get('detail', '')})")
-                elif status == "DIVERGED":
-                    print(f"  FAIL {sub}: gitlink={r.get('gitlink', '?')} != PASW head={r.get('pasw_head', '?')}")
-                    print(f"       -> 请运行: gac-worktree.sh bump-pointer <session> {sub.replace('.subtrees/', 'projects/')}")
-                elif status == "skip":
-                    print(f"  SKIP {sub}: {r.get('reason', 'skipped')}")
-            else:
-                if status == "aligned":
-                    print(f"  OK {sub}: {r['gitlink']}")
-                elif status == "behind":
-                    print(f"  WARN {sub}: {r['gitlink']} <- origin/main {r['origin_main']} ({r.get('detail', '')})")
-                elif status == "ahead":
-                    print(f"  OK {sub}: {r['gitlink']} (ahead of origin/main {r['origin_main']}, non-blocking)")
-                elif status == "unverifiable":
-                    print(f"  OK {sub}: {r['gitlink']} (shallow — ancestry unverifiable, non-blocking)")
-                elif status == "DIVERGED":
-                    print(f"  FAIL {sub}: {r['gitlink']} NOT on origin/main {r['origin_main']}")
-                elif status == "skip":
-                    print(f"  SKIP {sub}: {r.get('reason', 'skipped')}")
+            if status == "aligned":
+                print(f"  OK {sub}: {r['gitlink']}")
+            elif status == "behind":
+                print(f"  WARN {sub}: {r['gitlink']} <- origin/main {r['origin_main']} ({r.get('detail', '')})")
+            elif status == "ahead":
+                print(f"  OK {sub}: {r['gitlink']} (ahead of origin/main {r['origin_main']}, non-blocking)")
+            elif status == "unverifiable":
+                print(f"  OK {sub}: {r['gitlink']} (shallow — ancestry unverifiable, non-blocking)")
+            elif status == "DIVERGED":
+                print(f"  FAIL {sub}: {r['gitlink']} NOT on origin/main {r['origin_main']}")
+            elif status == "skip":
+                print(f"  SKIP {sub}: {r.get('reason', 'skipped')}")
             if "fix" in r:
                 print(f"       -> {r['fix']}")
 
@@ -291,27 +215,23 @@ def main() -> int:
         aligned = sum(1 for r in results if r["status"] == "aligned")
         ahead_n = sum(1 for r in results if r["status"] == "ahead")
         unverifiable_n = sum(1 for r in results if r["status"] == "unverifiable")
-        behind_n = sum(1 for r in results if r["status"] == "behind")
         print(
             f"  Total: {total} submodules | {aligned} aligned | {ahead_n} ahead | "
-            f"{unverifiable_n} unverifiable | {behind_n} behind | {len(diverged)} DIVERGED"
+            f"{unverifiable_n} unverifiable | {len(behind)} behind | {len(diverged)} DIVERGED"
         )
 
-        if diverged:
-            print(f"\n  {len(diverged)} DIVERGED - root pointer targets side branch, code may be invisible!")
-            if not args.fix and not args.apply:
-                print("  Run --fix for fix suggestions, --fix --apply to execute")
-            return 1
+    if diverged:
+        print(f"\n  {len(diverged)} DIVERGED - root pointer targets side branch, code may be invisible!")
+        if not args.fix and not args.apply:
+            print("  Run --fix for fix suggestions, --fix --apply to execute")
+        return 1
 
-        if behind and args.strict:
-            print(f"\n  {len(behind)} behind (strict mode)")
-            return 1
+    if behind and args.strict:
+        print(f"\n  {len(behind)} behind (strict mode)")
+        return 1
 
-        print("\n  ALL ALIGNED" if not behind else f"\n  No divergence ({len(behind)} behind, non-blocking)")
-        return 0
-
-    # JSON mode: no extra output
-    return 0 if not diverged else 1
+    print("\n  ALL ALIGNED" if not behind else f"\n  No divergence ({len(behind)} behind, non-blocking)")
+    return 0
 
 
 if __name__ == "__main__":

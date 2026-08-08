@@ -9,17 +9,11 @@
 #   bash bin/ssot/sync-submodule-pointers.sh --check-only  # 只检查不修复
 #   bash bin/ssot/sync-submodule-pointers.sh --dry-run    # 只显示将要做的修改
 #   bash bin/ssot/sync-submodule-pointers.sh --verbose    # 显示详细错误信息
-#   SYNC_ALL_SUBMODULES=1 bash bin/ssot/sync-submodule-pointers.sh  # 强制全部 fetch (CI 模式)
 #
 # 错误可见性:
 #   - 默认: 显示 ⚠️/❌ 前缀的错误摘要
 #   - --verbose: 显示完整 stderr、命令、退出码
 #   - 退出码: 0=全部成功, 1=有需要修复的(可能已自动修复), 2=有无法修复的错误
-#
-# CI 注意:
-#   - actions/checkout 使用 depth=1 浅克隆, 历史 commit 可能不可达
-#   - 本脚本更新 index 中的 gitlink SHA, reachability gate 检查 index
-#   - 需要 git add 让 gate 看到更新后的 index
 
 set -euo pipefail
 
