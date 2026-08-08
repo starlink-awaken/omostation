@@ -64,6 +64,14 @@ beliefs:
   created_at: '2026-08-08T05:35:42Z'
   confidence: 1.0
   source_run_id: null
+- id: belief-0010
+  topic: workflow:project-code-change
+  belief: 'Workflow run 20260808T112149Z-project-code-change-208cea15 achieved objective:
+    ADR-0404 Phase 3 eCOS submodule federated governance (global PASW, A2A path locks,
+    affected graph CI)'
+  created_at: '2026-08-08T11:32:07Z'
+  confidence: 1.0
+  source_run_id: 20260808T112149Z-project-code-change-208cea15
 lessons:
 - id: lesson-0001
   belief_id: belief-0001
@@ -107,6 +115,12 @@ lessons:
   solution: KnowledgeCurator tick 定期聚合 outcome 到跨场景学习
   severity: warning
   created_at: '2026-08-08T05:35:42Z'
+- id: lesson-0008
+  belief_id: belief-0010
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-08T11:32:07Z'
 contexts:
 - id: ctx-0001
   belief_id: belief-0001
@@ -143,6 +157,11 @@ contexts:
   scope_path: '*'
   applicable_tags:
   - cross-scene-outcome-trends
+- id: ctx-0008
+  belief_id: belief-0010
+  scope_path: .omo/_delivery/agent-workflows/runs/20260808T112149Z-project-code-change-208cea15.yaml
+  applicable_tags:
+  - workflow:project-code-change
 world_snapshots:
 - id: ws-0001
   observed_at: '2026-08-08T05:33:25Z'
