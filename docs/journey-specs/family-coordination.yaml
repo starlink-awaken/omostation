@@ -1,0 +1,26 @@
+schema: journey-spec/v1
+journey_id: family-coordination
+description: "家庭日程协调 — 多源汇聚 → 冲突检测 → 提醒通知"
+states:
+  - name: events_collected
+    scene: family-calendar
+    next: [conflicts_checked]
+  - name: conflicts_checked
+    scene: family-calendar
+    next: [reminders_sent, no_action]
+  - name: reminders_sent
+    scene: family-calendar
+    next: []
+  - name: no_action
+    scene: family-calendar
+    next: []
+transitions:
+  - from: events_collected
+    to: conflicts_checked
+    condition: "events.count > 0"
+  - from: conflicts_checked
+    to: reminders_sent
+    condition: "conflicts.count > 0"
+  - from: conflicts_checked
+    to: no_action
+    condition: "conflicts.count == 0"
