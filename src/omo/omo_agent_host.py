@@ -83,6 +83,14 @@ class AgentHost:
                         error=str(exc),
                     )
                 )
+        # P0-T3: Aetherforge wire — emit agent tick events for observability
+        try:
+            from aetherforge.bus_adapter import emit_event
+            for r in results:
+                emit_event("agent.tick", {"agent_id": r.agent_id, "ok": r.ok, "action": r.action})
+        except Exception:
+            pass  # Aetherforge not available
+
         ok_count = sum(1 for r in results if r.ok)
         return {
             "timestamp": datetime.now(UTC).replace(microsecond=0).isoformat(),
