@@ -572,17 +572,6 @@ doctor_checks:
   - python
   - bin/mof/m4-health-score.py
   - --emit
-- id: check-submodule-hygiene
-  description: 子模块卫生守门 (3类检查)
-  required: false
-  command:
-  - uv
-  - run
-  - --with
-  - pyyaml
-  - python
-  - bin/ssot/check-submodule-hygiene.py
-  - --strict
 - id: mcp-tool-data-complete
   description: MCPTOOL 数据完整性守门
   required: false

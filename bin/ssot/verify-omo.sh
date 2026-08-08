@@ -5,8 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
 echo "[1/5] Syncing .omo state"
-# CI 环境无全局 pyyaml, 必须用 uv run --with pyyaml 包裹 (scripts/lib/yaml_utils.py import yaml)
-uv run --project projects/omo --with pyyaml python3 scripts/sync_omo_state.py --omo-dir .omo
+# sync_omo_state.py 已随 scripts 子模块清理归档 (ADR-0394), 功能并入 omo CLI state sync
+uv run --project projects/omo python -m omo.cli state sync
 
 echo "[2/5] Running governance lint gates"
 pushd projects/omo >/dev/null
