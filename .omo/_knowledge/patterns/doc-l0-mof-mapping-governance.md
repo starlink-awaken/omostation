@@ -58,6 +58,30 @@ dimension: X1
 
 实测: `--json` → ok:true（77 约束），EXIT=0
 
+### 2.3 抽象族映射表（2026-08-08, 136 治理规则 → 16 族 → L0 约束）
+
+| 抽象族 | 治理规则前缀 | L0 维度 | L0 约束 | MOF 类目 |
+|--------|-------------|---------|---------|----------|
+| 分层边界 | CR-LAYER/CR-L0-L4/CR-BOUNDARY/CR-HARDCODED | X1 | X1-C01~C03 | omo_layer |
+| 跨仓契约 | CR-CROSS/CR-INTERFACE/CR-CONTRACT | X1 | **X1-C04** | protocol |
+| 提交纪律 | CR-COMMIT/CR-CHANGELANE/CR-PR/CR-REVIEW | X1 | **X1-C05** | process |
+| SSOT/漂移 | CR-SSOT/CR-DRIFT/CR-SYNC/CR-POINTER/CR-SUBMODULE | X4 | **X4-C14** | specification |
+| 元治理 | CR-META/CR-RULE/CR-EXECUTOR/CR-GATE/CR-BOOTSTRAP | X4 | **QG-C03** | constraint_mgmt |
+| 基线/证据 | CR-BASELINE/CR-EVIDENCE/CR-AUDIT/CR-CLAIM | X4 | X4-C05~C13 | evidence |
+| 流程/Agent | CR-P74/CR-P76/CR-P77/CR-P79/CR-WORKFLOW/CR-AGENT | X3 | X3-C01~C02 | process/agent |
+| 债务/交付 | CR-DEBT/CR-REDLINE/CR-CADENCE/CR-DELIVERY | X3 | **X3-C03** | governance |
+| 健康度/可观测 | CR-HEALTH/CR-SCORE/CR-METRIC/CR-UPTIME | X2 | **X2-C06** | predictive_governance |
+| 代码卫生 | CR-GOD/CR-ORPHAN/CR-DEAD/CR-MODULE | X2 | **X2-C07** | component |
+| 安全 | CR-SEC/CR-PERMISSION/CR-SECRET/CR-CREDENTIAL | QG | **QG-C04** | governance |
+| 文档/ADR | CR-DOC/CR-FRONTMATTER/CR-FRESHNESS/CR-ADR | X3 | QG-C01~C02 | artifact |
+| MCP工具 | CR-MCPTOOL | X1 | X1-C02 | mcptool |
+| 索引/注册表 | CR-INDEX/CR-REGISTRY/CR-INVENTORY | X2 | X2-C01~C05 | entity |
+| 环境/端口 | CR-PORT/CR-ENV-VAR | X1 | X5-C01 | protocol |
+| BOS 域 | CR-BOS/CR-URI | X5/X6/X7 | X5/X6/X7-C01 | bosroute |
+
+**加粗 = 2026-08-08 新增 8 条**（覆盖 16 族中 L0 原缺的 8 个语义族）。
+L0 v3: 28 → 36 约束；派生面重新生成 137 条。
+
 ## 3. 三轨路线图（按 老王 偏好: 立即解锁 + 正确架构 + 理想）
 
 ### 🟢 立即（已完成）— 契约 + 验证工具 + 生成器
