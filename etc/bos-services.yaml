@@ -1,7 +1,3 @@
-# NOTE (2026-08-08): 不要给能力写 `mcp_endpoint: http://localhost:87xx/mcp`
-# 除非真的有进程监听该端口。agora.mcp_proxy 只做 stdio 子进程托管, 从不 bind 端口。
-# 写了不可达的 HTTP 端点会让 mcp_registry.lifecycle 走 HTTP 分支而跳过可用的 stdio
-# command, 导致该能力静默不可用。lifecycle 现已加可达性探测回落, 但 SSOT 不应先撒谎。
 services:
 - action: search
   command:
@@ -1651,14 +1647,19 @@ services:
   - -m
   - mos
   - write
-  description: Memory OS unified write (dual-track raw+theta; Neo4j FACT when 
-    NEO4J_URI) — ADR-0372
+  description: Memory OS unified write (dual-track raw+theta; Neo4j FACT when NEO4J_URI)
+    — ADR-0372
   domain: memory
   package: mos
   status: active
   transport: stdio
   uri: bos://memory/mos/write
-  env_keys: [NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, MOS_RBAC, MOS_TEMPORAL]
+  env_keys:
+  - NEO4J_URI
+  - NEO4J_USER
+  - NEO4J_PASSWORD
+  - MOS_RBAC
+  - MOS_TEMPORAL
 - action: recall
   command:
   - uv
@@ -1673,14 +1674,19 @@ services:
   - -m
   - mos
   - recall
-  description: Memory OS unified intent-aware recall (neo4j+kos+gbrain fan-out) 
-    — ADR-0372
+  description: Memory OS unified intent-aware recall (neo4j+kos+gbrain fan-out) —
+    ADR-0372
   domain: memory
   package: mos
   status: active
   transport: stdio
   uri: bos://memory/mos/recall
-  env_keys: [NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, MOS_RBAC, MOS_TEMPORAL]
+  env_keys:
+  - NEO4J_URI
+  - NEO4J_USER
+  - NEO4J_PASSWORD
+  - MOS_RBAC
+  - MOS_TEMPORAL
 - action: status
   command:
   - uv
@@ -1701,7 +1707,12 @@ services:
   status: active
   transport: stdio
   uri: bos://memory/mos/status
-  env_keys: [NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, MOS_RBAC, MOS_TEMPORAL]
+  env_keys:
+  - NEO4J_URI
+  - NEO4J_USER
+  - NEO4J_PASSWORD
+  - MOS_RBAC
+  - MOS_TEMPORAL
 - action: forget
   command:
   - uv
@@ -1716,14 +1727,17 @@ services:
   - -m
   - mos
   - forget
-  description: Memory OS forget propagation (raw+theta+mem0+neo4j invalidate) — 
-    ADR-0372
+  description: Memory OS forget propagation (raw+theta+mem0+neo4j invalidate) — ADR-0372
   domain: memory
   package: mos
   status: active
   transport: stdio
   uri: bos://memory/mos/forget
-  env_keys: [NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, MOS_RBAC]
+  env_keys:
+  - NEO4J_URI
+  - NEO4J_USER
+  - NEO4J_PASSWORD
+  - MOS_RBAC
 - action: consolidate
   command:
   - uv
@@ -1738,14 +1752,15 @@ services:
   - -m
   - mos
   - consolidate
-  description: Memory OS sleep-time consolidate via gbrain dream orchestration —
-    ADR-0372
+  description: Memory OS sleep-time consolidate via gbrain dream orchestration — ADR-0372
   domain: memory
   package: mos
   status: active
   transport: stdio
   uri: bos://memory/mos/consolidate
-  env_keys: [MOS_RBAC, MOS_CONSOLIDATE_LIVE]
+  env_keys:
+  - MOS_RBAC
+  - MOS_CONSOLIDATE_LIVE
 - action: knowledge-ref
   command:
   - uv
@@ -1760,14 +1775,15 @@ services:
   - -m
   - mos
   - knowledge-ref
-  description: Memory OS ADR-0315 knowledge citation metadata (no body) — 
-    ADR-0372
+  description: Memory OS ADR-0315 knowledge citation metadata (no body) — ADR-0372
   domain: memory
   package: mos
   status: active
   transport: stdio
   uri: bos://memory/mos/knowledge-ref
-  env_keys: [MOS_RBAC, MOS_TEMPORAL]
+  env_keys:
+  - MOS_RBAC
+  - MOS_TEMPORAL
 - action: status
   description: 获取分布式蜂群实时拓扑与负载状态
   domain: swarm
@@ -2118,8 +2134,8 @@ services:
     domain: capability
     realized_by: agora.register
     upstream: /Users/xiamingxing/ToolBox/mcp/wps-office-mcp/.git
-  description: WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A 
-    Documents 业务文件读写
+  description: WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents
+    业务文件读写
   domain: capability
   i0_route: pending
   package: toolbox/wps-office-mcp
@@ -2135,8 +2151,7 @@ services:
     domain: capability
     realized_by: agora.register
     upstream: /Users/xiamingxing/ToolBox/skills/wps-skills/.git
-  description: WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 
-    内置触发
+  description: WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 内置触发
   domain: capability
   i0_route: pending
   package: toolbox/wps-skills
@@ -2165,9 +2180,9 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/headroom" && if [ -x .venv/bin/python
-    ]; then PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run
-    python -m headroom; else PY=python3; fi && "$PY" -m headroom --help
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/headroom" && if [ -x .venv/bin/python ];
+    then PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run python
+    -m headroom; else PY=python3; fi && "$PY" -m headroom --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2183,10 +2198,9 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/code-review-graph" && if [ -x 
-    .venv/bin/python ]; then PY=.venv/bin/python; elif command -v uv >/dev/null;
-    then exec uv run python -m code_review_graph; else PY=python3; fi && "$PY" 
-    -m code_review_graph --help
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/code-review-graph" && if [ -x .venv/bin/python
+    ]; then PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run python
+    -m code_review_graph; else PY=python3; fi && "$PY" -m code_review_graph --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2202,8 +2216,8 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/claude-skills" && test -d skills 
-    && echo ok:claude-skills
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/claude-skills" && test -d skills &&
+    echo ok:claude-skills
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2219,8 +2233,8 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill" && test -f 
-    skills/last30days/SKILL.md && echo ok:last30days-skill
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill" && test -f skills/last30days/SKILL.md
+    && echo ok:last30days-skill
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2236,9 +2250,8 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/media-crawler" && if [ -x 
-    .venv/bin/python ]; then PY=.venv/bin/python; else PY=python3; fi && "$PY" 
-    main.py --help
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/media-crawler" && if [ -x .venv/bin/python
+    ]; then PY=.venv/bin/python; else PY=python3; fi && "$PY" main.py --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2254,8 +2267,8 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/open-montage" && test -d . && 
-    ls README.md >/dev/null && echo ok:open-montage
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/pipelines/open-montage" && test -d . && ls
+    README.md >/dev/null && echo ok:open-montage
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2271,8 +2284,8 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/skills-for-fabric" && test -d 
-    skills && echo ok:skills-for-fabric
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/skills-for-fabric" && test -d skills
+    && echo ok:skills-for-fabric
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2288,10 +2301,9 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/deer-flow" && if [ -x 
-    .venv/bin/python ]; then PY=.venv/bin/python; elif command -v uv >/dev/null;
-    then exec uv run python -m deer_flow; else PY=python3; fi && "$PY" -m 
-    deer_flow --help
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/deer-flow" && if [ -x .venv/bin/python
+    ]; then PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run python
+    -m deer_flow; else PY=python3; fi && "$PY" -m deer_flow --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2307,10 +2319,9 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/datafoundry" && if [ -x 
-    .venv/bin/python ]; then PY=.venv/bin/python; elif command -v uv >/dev/null;
-    then exec uv run python -m datafoundry; else PY=python3; fi && "$PY" -m 
-    datafoundry --help
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/mcp/datafoundry" && if [ -x .venv/bin/python
+    ]; then PY=.venv/bin/python; elif command -v uv >/dev/null; then exec uv run python
+    -m datafoundry; else PY=python3; fi && "$PY" -m datafoundry --help
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2326,8 +2337,8 @@ services:
   command:
   - bash
   - -lc
-  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/knowledge-work-plugins" && test -d
-    skills && echo ok:knowledge-work-plugins
+  - cd "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/knowledge-work-plugins" && test -d skills
+    && echo ok:knowledge-work-plugins
   cross_references:
     domain: capability
     realized_by: agora.register
@@ -2492,8 +2503,7 @@ services:
   transport: inline
   uri: bos://governance/governance/tasks
 - action: governance/circuit_breaker
-  description: governance cockpit circuit_breaker 端点 (cockpit api_omos metrics 
-    source)
+  description: governance cockpit circuit_breaker 端点 (cockpit api_omos metrics source)
   domain: governance
   i0_route: pending
   package: cockpit
@@ -2501,8 +2511,7 @@ services:
   transport: inline
   uri: bos://governance/governance/circuit_breaker
 - action: governance/daily_budget
-  description: governance cockpit daily_budget 端点 (cockpit api_omos metrics 
-    source)
+  description: governance cockpit daily_budget 端点 (cockpit api_omos metrics source)
   domain: governance
   i0_route: pending
   package: cockpit
@@ -2518,8 +2527,8 @@ services:
   transport: inline
   uri: bos://governance/governance/quests
 - action: governance/omo_worker_dispatch
-  description: governance omo worker dispatch 端点 (omo bus_demo_omo_producer 
-    metrics source)
+  description: governance omo worker dispatch 端点 (omo bus_demo_omo_producer metrics
+    source)
   domain: governance
   i0_route: pending
   package: omo
@@ -2741,8 +2750,6 @@ services:
   status: active
   transport: http
   uri: bos://analysis/kems/forecast
-
-
 - action: policy
   command:
   - agent-governance-toolkit
@@ -2829,3 +2836,168 @@ services:
   status: unimplemented
   transport: stdio
   uri: bos://perception/signal_monitor/health
+- domain: mof
+  package: mof
+  action: io
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - io
+  description: 模型导入/导出 (JSON)
+- domain: mof
+  package: mof
+  action: version
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - version
+  description: 模型版本管理
+- domain: mof
+  package: mof
+  action: reason
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - reason
+  description: 三维推理引擎 (impact/state/value)
+- domain: mof
+  package: mof
+  action: decide
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - decide
+  description: 智能决策支持
+- domain: mof
+  package: mof
+  action: graph
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - graph
+  description: 跨项目依赖图生成
+- domain: mof
+  package: mof
+  action: autonomous
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - autonomous
+  description: 自主决策引擎 (异常检测→推理→建议)
+- domain: mof
+  package: mof
+  action: act
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - act
+  description: 自主行动引擎 (规划→验证→执行→验证→记录)
+- domain: mof
+  package: mof
+  action: analyze
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - analyze
+  description: 统一分析工具
+- domain: mof
+  package: mof
+  action: export
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - export
+  description: 文档生成工具
+- domain: mof
+  package: mof
+  action: drift
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - drift
+  description: 架构漂移检测
+- domain: mof
+  package: mof
+  action: scan
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - scan
+  description: 依赖安全扫描
+- domain: mof
+  package: mof
+  action: assign
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - assign
+  description: 团队任务分配
+- domain: mof
+  package: mof
+  action: evolution
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - evolution
+  description: 系统演化追踪
+- domain: mof
+  package: mof
+  action: enforce
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - enforce
+  description: Agent 约束强制
+- domain: mof
+  package: mof
+  action: manage
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/cockpit/src/cockpit/cli.py
+  - mof
+  - manage
+  description: MOF 能力注册表管理 (查看/验证/更新 mof-capabilities.yaml)

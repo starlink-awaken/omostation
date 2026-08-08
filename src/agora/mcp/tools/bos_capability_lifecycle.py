@@ -291,8 +291,13 @@ def bos_market_overview() -> dict[str, Any]:
                 {
                     "prefix": prefix,
                     "adapter": route.get("adapter"),
-                    "pricing": {"input_rate_per_m": in_rate, "output_rate_per_m": out_rate},
-                    "use_count": sum(use_metrics.values()) if isinstance(use_metrics, dict) else 0,
+                    "pricing": {
+                        "input_rate_per_m": in_rate,
+                        "output_rate_per_m": out_rate,
+                    },
+                    "use_count": sum(use_metrics.values())
+                    if isinstance(use_metrics, dict)
+                    else 0,
                 }
             )
         # Top 使用能力 (按 use_count)
@@ -310,7 +315,11 @@ def bos_market_overview() -> dict[str, Any]:
             "custom_pricing_count": custom_pricing,
             "default_pricing_count": len(capabilities) - custom_pricing,
             "top_used": [
-                {"prefix": c["prefix"], "use_count": c["use_count"], "pricing": c["pricing"]}
+                {
+                    "prefix": c["prefix"],
+                    "use_count": c["use_count"],
+                    "pricing": c["pricing"],
+                }
                 for c in top_used
             ],
             "monthly_cost": round(monthly_cost, 6),
