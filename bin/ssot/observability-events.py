@@ -20,6 +20,7 @@ import fcntl
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 from datetime import UTC, datetime
@@ -352,8 +353,36 @@ def main() -> int:
     adapters.add_argument("--channel")
     adapters.set_defaults(func=cmd_adapters)
 
+    notify = sub.add_parser("notify", help="告警到人 — 经 channel 连接器发送 (alert-connectors)")
+    notify.add_argument("--severity", default="warning",
+                        choices=["info", "warning", "degraded", "critical"])
+    notify.add_argument("--domain", default="governance")
+    notify.add_argument("--channel", help="指定 channel id (默认按 severity/domain 路由)")
+    notify.add_argument("--title", required=True)
+    notify.add_argument("--body", default="")
+    notify.set_defaults(func=cmd_notify)
+
     args = parser.parse_args()
     return args.func(args)
+
+
+def cmd_notify(args: argparse.Namespace) -> int:
+    """告警到人: 事件面 → channel 连接器 (alert-connectors.py send) → receipt 回写事件面."""
+    connectors = ROOT / "bin" / "ssot" / "alert-connectors.py"
+    if not connectors.exists():
+        print("❌ alert-connectors.py not found", file=sys.stderr)
+        return 1
+    cmd = ["python3", str(connectors), "send",
+           "--severity", args.severity, "--domain", args.domain,
+           "--title", args.title, "--body", args.body]
+    if args.channel:
+        cmd += ["--channel", args.channel]
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=30)
+    if result.stdout:
+        print(result.stdout, end="")
+    if result.stderr:
+        print(result.stderr, end="", file=sys.stderr)
+    return result.returncode
 
 
 if __name__ == "__main__":
