@@ -236,3 +236,79 @@ class TestBOSMetricsPrefix:
     def test_prefix_shallow(self):
         """只有 bos://domain 时原样返回。"""
         assert BOSMetrics._prefix("bos://domain") == "bos://domain"
+
+
+class FakeLabels:
+    """模拟 prometheus Counter/Histogram labels 链."""
+
+    def __init__(self):
+        self.inc_count = 0
+        self.observe_count = 0
+        self.values: list[tuple] = []
+
+    def labels(self, **kwargs):
+        return self
+
+    def inc(self, amount: float = 1) -> None:
+        self.inc_count += amount
+
+    def observe(self, value: float) -> None:
+        self.observe_count += 1
+        self.values.append(value)
+
+
+class FakePromMetrics:
+    """模拟 _get_prom_metrics() 三件套, 供 RED 埋点测试."""
+
+    def __init__(self):
+        self.counter = FakeLabels()
+        self.latency = FakeLabels()
+        self.errors = FakeLabels()
+
+    def call(self):
+        return self.counter, self.latency, self.errors
+
+
+class TestBOSMetricsREDPrometheus:
+    """RED 埋点 (P2-1): 调用量 / 延迟直方图 / 错误率计数器."""
+
+    def test_record_success_does_not_inc_errors(self, monkeypatch):
+        """成功调用只计 counter + latency, 不计 errors. (T9-02)"""
+        fake = FakePromMetrics()
+        monkeypatch.setattr(
+            "agora.mcp.bos_metrics._get_prom_metrics", fake.call
+        )
+        m = BOSMetrics()
+        m.record("bos://memory/kos/search", success=True, latency_ms=42)
+        assert fake.counter.inc_count == 1
+        assert fake.latency.observe_count == 1
+        assert fake.errors.inc_count == 0
+
+    def test_record_failure_incs_errors(self, monkeypatch):
+        """失败调用应递增 bos_errors_total 计数器. (T9-02)"""
+        fake = FakePromMetrics()
+        monkeypatch.setattr(
+            "agora.mcp.bos_metrics._get_prom_metrics", fake.call
+        )
+        m = BOSMetrics()
+        m.record("bos://memory/kos/search", success=False, latency_ms=100)
+        assert fake.counter.inc_count == 1
+        assert fake.latency.observe_count == 1
+        assert fake.errors.inc_count == 1
+
+    def test_mixed_calls_error_rate_signal(self, monkeypatch):
+        """混合调用: errors 只随失败增长, 供错误率 = errors/calls 计算. (T9-02)"""
+        fake = FakePromMetrics()
+        monkeypatch.setattr(
+            "agora.mcp.bos_metrics._get_prom_metrics", fake.call
+        )
+        m = BOSMetrics()
+        for _ in range(3):
+            m.record("bos://test/svc", success=True, latency_ms=10)
+        for _ in range(2):
+            m.record("bos://test/svc", success=False, latency_ms=50)
+        assert fake.counter.inc_count == 5
+        assert fake.errors.inc_count == 2
+        # 错误率信号: 2/5
+        rate = fake.errors.inc_count / fake.counter.inc_count
+        assert rate == 0.4
