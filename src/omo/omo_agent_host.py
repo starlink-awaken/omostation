@@ -178,19 +178,76 @@ class HealthMonitorAgent:
 
 
 class KnowledgeCuratorAgent:
-    """KnowledgeCurator stub (MOS 决策图谱, β.3 MVP).
+    """KnowledgeCurator (MOS 决策图谱 + 跨 scene 学习, T-B4).
 
-    tick: stub 返回 noop (真实实现 β.3 续: 决策入 bos://memory/mos/* + 图谱 + 跨 scene 泛化).
-    骨架先就位, 真实 MOS 决策图谱 + 跨 scene 学习留续.
+    tick: 读 MOS decision_outcome → 聚合 per-scene 结果 → 记录学习到 beliefs
+    (跨 scene 泛化: 同类场景的 outcome 趋势). 守 SRP: 只做知识沉淀, 不决策.
     """
 
     agent_id = "knowledge-curator"
 
     def tick(self) -> dict[str, Any]:
+        """Read decision_outcomes and build knowledge graph summary."""
+        from pathlib import Path as _Path
+
+        workspace = _Path(
+            os.environ.get("WORKSPACE_ROOT", str(_Path.home() / "Workspace"))
+        )
+        try:
+            omo_src = str(workspace / "projects/omo/src")
+            import sys
+
+            if omo_src not in sys.path:
+                sys.path.insert(0, omo_src)
+            from omo.omo_belief import MOSBeliefManager
+
+            manager = MOSBeliefManager(root=workspace)
+            state = manager._load_state()
+            outcomes = state.get("decision_outcomes", [])
+            snapshots = state.get("world_snapshots", [])
+        except Exception:
+            return {"action": "noop", "details": {"note": "MOS unavailable"}}
+
+        if not outcomes and not snapshots:
+            return {"action": "noop", "details": {"note": "no MOS data yet (cold)"}}
+
+        # Aggregate outcomes per scene type
+        from collections import Counter
+
+        scene_stats: Counter = Counter()
+        accept_count = 0
+        for o in outcomes:
+            d_type = str(o.get("decision_type", "unknown"))
+            scene_stats[d_type] += 1
+            if "accepted" in str(o.get("actual_outcome", "")):
+                accept_count += 1
+
+        lesson = (
+            f"跨scene学习: {len(outcomes)} decision outcomes 记录, "
+            f"accept={accept_count}, 分布={dict(scene_stats.most_common(3))}"
+        )
+        # Record lesson into MOS beliefs (write-once, dedup by topic)
+        try:
+            topic = "cross-scene-outcome-trends"
+            existing = manager.query_beliefs(keyword="cross-scene")
+            if not existing:
+                manager.record_belief(
+                    topic=topic,
+                    belief_text=lesson,
+                    pitfall="outcomes accumulated without synthesis",
+                    solution="KnowledgeCurator tick 定期聚合 outcome 到跨场景学习",
+                )
+        except Exception:
+            pass
+
         return {
-            "action": "noop",
+            "action": "learn",
             "details": {
-                "note": "KnowledgeCurator stub (β.3 MVP, 真实 MOS 决策图谱留续)"
+                "outcomes_processed": len(outcomes),
+                "snapshots_processed": len(snapshots),
+                "scene_distribution": dict(scene_stats.most_common(5)),
+                "accept_count": accept_count,
+                "lesson_recorded": lesson[:200],
             },
         }
 
@@ -363,7 +420,7 @@ class GovernorAgent:
 
         # 2. Check mesh events for anomalies
         mesh_log = (
-            workspace / ".omo" / "_knowledge" / "workflow-mesh" / "mesh-events.jsonl"
+            workspace / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
         )
         if mesh_log.exists():
             event_count = len(mesh_log.read_text(encoding="utf-8").strip().split("\n"))
@@ -371,6 +428,44 @@ class GovernorAgent:
                 findings.append(
                     {"type": "high_event_volume", "count": str(event_count)}
                 )
+
+        # 3. Check debt registry growth (T-B5: debt 台账趋势)
+        debt_items_dir = workspace / ".omo" / "debt" / "items"
+        if debt_items_dir.is_dir():
+            debt_count = len(list(debt_items_dir.glob("*.yaml")))
+            gap_count = len(list((workspace / ".omo" / "debt" / "gap-items").glob("*.yaml")))
+            if debt_count + gap_count > 30:
+                findings.append(
+                    {
+                        "type": "high_debt_volume",
+                        "debt_items": str(debt_count),
+                        "gap_items": str(gap_count),
+                    }
+                )
+
+        # 4. Check MOS trust/calibration trends (T-B5: agent trust 趋势)
+        try:
+            omo_src = str(workspace / "projects/omo/src")
+            import sys
+
+            if omo_src not in sys.path:
+                sys.path.insert(0, omo_src)
+            from omo.omo_belief import MOSBeliefManager
+
+            manager = MOSBeliefManager(root=workspace)
+            state = manager._load_state()
+            calib = state.get("capability_calibrations", [])
+            low_trust = [c for c in calib if float(c.get("success_rate", 1.0)) < 0.6]
+            if low_trust:
+                findings.append(
+                    {
+                        "type": "low_trust_capabilities",
+                        "count": str(len(low_trust)),
+                        "refs": ",".join(c.get("capability_ref", "?") for c in low_trust[:3]),
+                    }
+                )
+        except Exception:
+            pass  # MOS unavailable
 
         if findings:
             return {
