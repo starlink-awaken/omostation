@@ -178,6 +178,22 @@ def bos_capability_admit(uri: str, description: str = "") -> dict[str, Any]:
     existing = capability_catalog.get(uri)
     if isinstance(existing, dict) and existing.get("status") == "active":
         return {"status": "error", "error": f"capability already admitted: {uri}"}
+
+    # 深化: 采购授权门槛 — 展示定价 + 配额检查 (成本意识)
+    try:
+        from agora.mcp.bos_quota import get_quota_checker
+
+        pricing = _capability_pricing(uri)
+        quota_ok, quota_info = get_quota_checker().check(role, uri)
+        if not quota_ok:
+            return {
+                "status": "error",
+                "error": f"quota exceeded for {role}: {quota_info}",
+                "pricing": pricing,
+            }
+    except Exception:  # noqa: BLE001 — 配额检查失败不阻塞 admit (防御)
+        pricing = {"input_rate_per_m": 0.15, "output_rate_per_m": 0.60, "custom": False}
+
     capability_catalog.add(
         uri,
         description=description or f"Admitted capability: {uri}",
@@ -218,6 +234,7 @@ def bos_capability_admit(uri: str, description: str = "") -> dict[str, Any]:
         "capability_status": "active",
         "lifecycle": "admitted",
         "admitted_by": role,
+        "pricing": pricing,  # 深化: 采购定价展示
     }
 
 
