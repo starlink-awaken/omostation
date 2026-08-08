@@ -1382,7 +1382,8 @@ bets:
   title: capability_calibration 自动更新
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  completed_at: '2026-08-08'
   goal: 让每次人类裁决自动改变系统对自身能力的认知(自我模型闭环)
   non_goals:
   - 据 calibration 自动放权(属 Y1Q4)
