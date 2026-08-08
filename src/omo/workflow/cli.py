@@ -45,7 +45,9 @@ from .lifecycle import (
     read_run,
     run_stage,
     scan_locks,
+    spawn_run,
     start_run,
+    trace_attribution,
     workflow_plan,
 )
 from .lint import lint_registry, print_lint
@@ -168,7 +170,33 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_start.add_argument("--dry-run", action="store_true")
     p_start.add_argument("--force-lock", action="store_true")
+    p_start.add_argument(
+        "--parent-run",
+        default="",
+        help="Parent run ID for attribution chain tracking (T6-08)",
+    )
     p_start.add_argument("--json", action="store_true")
+
+    p_spawn = sub.add_parser(
+        "spawn", help="Create a child run linked to a parent (attribution chain)"
+    )
+    p_spawn.add_argument("parent_run_id")
+    p_spawn.add_argument("workflow_id")
+    p_spawn.add_argument("--project", default="")
+    p_spawn.add_argument("--format", default="openspec")
+    p_spawn.add_argument("--source-file", default="")
+    p_spawn.add_argument("--actor", default=os.environ.get("USER", "agent"))
+    p_spawn.add_argument("--profile", default="")
+    p_spawn.add_argument("--objective", default="")
+    p_spawn.add_argument("--dry-run", action="store_true")
+    p_spawn.add_argument("--force-lock", action="store_true")
+    p_spawn.add_argument("--json", action="store_true")
+
+    p_trace = sub.add_parser(
+        "trace", help="Trace the full attribution chain for a run"
+    )
+    p_trace.add_argument("run_id")
+    p_trace.add_argument("--json", action="store_true")
 
     p_resume = sub.add_parser("resume", help="Show a resumable run plan")
     p_resume.add_argument("run_id")
@@ -371,6 +399,7 @@ def main(argv: list[str] | None = None) -> int:
                 objective,
                 args.dry_run,
                 args.force_lock,
+                parent_run_id=getattr(args, "parent_run", "") or "",
             )
             if args.json:
                 print(json.dumps(record, ensure_ascii=False, indent=2))
@@ -378,6 +407,47 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"started {record['run_id']}")
                 if record.get("path"):
                     print(record["path"])
+            return 0
+        if args.command == "spawn":
+            workflow = workflow_by_id(registry, args.workflow_id)
+            record = spawn_run(
+                registry,
+                args.parent_run_id,
+                workflow,
+                context_from_args(args),
+                args.objective or f"spawned from {args.parent_run_id}",
+                args.dry_run,
+                args.force_lock,
+            )
+            if args.json:
+                print(json.dumps(record, ensure_ascii=False, indent=2))
+            else:
+                print(f"spawned {record['run_id']} from {args.parent_run_id}")
+                if record.get("path"):
+                    print(record["path"])
+            return 0
+        if args.command == "trace":
+            chain = trace_attribution(registry, args.run_id)
+            if args.json:
+                print(json.dumps(chain, ensure_ascii=False, indent=2))
+            else:
+                if not chain:
+                    print(f"no attribution chain found for {args.run_id}")
+                    return 1
+                print(f"attribution chain ({len(chain)} links):")
+                for i, link in enumerate(chain):
+                    prefix = "  root" if i == 0 else f"  [{i}]"
+                    status = link.get("status", "")
+                    actor = link.get("actor", "?")
+                    profile = link.get("agent_profile", "?")
+                    wid = link.get("workflow_id", "?")
+                    rid = link.get("run_id", "?")
+                    if status == "missing":
+                        print(f"{prefix} {rid} — MISSING")
+                    else:
+                        print(
+                            f"{prefix} {rid}  actor={actor}  profile={profile}  workflow={wid}  status={status}"
+                        )
             return 0
         if args.command in {"resume", "show-run"}:
             _, payload = read_run(registry, args.run_id)

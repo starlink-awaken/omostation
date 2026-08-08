@@ -436,6 +436,9 @@ def start_run(
     objective: str,
     dry_run: bool,
     force_lock: bool,
+    *,
+    parent_run_id: str = "",
+    parent_agent: str = "",
 ) -> dict[str, Any]:
     validate_agent_profile(registry, workflow, context.get("profile", ""), require=True)
     plan = workflow_plan(workflow, context)
@@ -443,7 +446,7 @@ def start_run(
     run_id = f"{stamp}-{plan['id']}-{uuid.uuid4().hex[:8]}"
     context = {**context, "run_id": run_id}
     plan = workflow_plan(workflow, context)
-    record = {
+    record: dict[str, Any] = {
         "run_id": run_id,
         "workflow_id": plan["id"],
         "status": "active",
@@ -457,6 +460,10 @@ def start_run(
         "plan": plan,
         "evidence": [],
     }
+    if parent_run_id:
+        record["parent_run_id"] = parent_run_id
+    if parent_agent:
+        record["parent_agent"] = parent_agent
     if dry_run:
         return record
     record["locks"] = acquire_locks(
@@ -469,19 +476,21 @@ def start_run(
         yaml.safe_dump(record, allow_unicode=True, sort_keys=False), encoding="utf-8"
     )  # audit-exempt: non-atomic-write — run state single-writer under run_update_lock
     record["path"] = display_path(run_path)
-    append_ledger_event(
-        registry,
-        {
-            "event": "agent_workflow_start",
-            "run_id": run_id,
-            "workflow_id": plan["id"],
-            "actor": context["actor"],
-            "agent_profile": context.get("profile", ""),
-            "objective": objective,
-            "path": record["path"],
-            "locks": record["locks"],
-        },
-    )
+    start_event: dict[str, Any] = {
+        "event": "agent_workflow_start",
+        "run_id": run_id,
+        "workflow_id": plan["id"],
+        "actor": context["actor"],
+        "agent_profile": context.get("profile", ""),
+        "objective": objective,
+        "path": record["path"],
+        "locks": record["locks"],
+    }
+    if parent_run_id:
+        start_event["parent_run_id"] = parent_run_id
+    if parent_agent:
+        start_event["parent_agent"] = parent_agent
+    append_ledger_event(registry, start_event)
     # Phase 1b/4: Bridge to Workflow Mesh with scene_binding
     _scene_binding = extract_scene_binding(context=context, workflow=workflow)
     emit_workflow_mesh_event(
@@ -496,6 +505,56 @@ def start_run(
         workspace=WORKSPACE,
     )
     return record
+
+
+def spawn_run(
+    registry: dict[str, Any],
+    parent_run_id: str,
+    workflow: dict[str, Any],
+    context: dict[str, str],
+    objective: str,
+    dry_run: bool = False,
+    force_lock: bool = False,
+) -> dict[str, Any]:
+    _, parent_payload = read_run(registry, parent_run_id)
+    parent_agent = parent_payload.get("agent_profile", "")
+    return start_run(
+        registry,
+        workflow,
+        context,
+        objective,
+        dry_run,
+        force_lock,
+        parent_run_id=parent_run_id,
+        parent_agent=parent_agent,
+    )
+
+
+def trace_attribution(
+    registry: dict[str, Any], run_id: str
+) -> list[dict[str, Any]]:
+    chain: list[dict[str, Any]] = []
+    visited: set[str] = set()
+    current_id: str | None = run_id
+    while current_id and current_id not in visited:
+        visited.add(current_id)
+        try:
+            _, payload = read_run(registry, current_id)
+        except (WorkflowError, FileNotFoundError):
+            chain.append({"run_id": current_id, "status": "missing"})
+            break
+        entry = {
+            "run_id": payload.get("run_id", current_id),
+            "actor": payload.get("actor", ""),
+            "agent_profile": payload.get("agent_profile", ""),
+            "workflow_id": payload.get("workflow_id", ""),
+            "status": payload.get("status", ""),
+            "objective": payload.get("objective", ""),
+        }
+        chain.append(entry)
+        current_id = payload.get("parent_run_id")
+    chain.reverse()
+    return chain
 
 
 def read_run(registry: dict[str, Any], run_id: str) -> tuple[Path, dict[str, Any]]:
