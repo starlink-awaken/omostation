@@ -93,7 +93,7 @@ services:
     trigger: keepalive
     label: com.omlx.gateway
     program:
-      interpreter: shell
+      interpreter: /bin/bash
       entrypoint: ~/.local/bin/omlx-gw-guard
       args: []
     resilience:
@@ -113,7 +113,7 @@ services:
     trigger: keepalive
     label: com.omlx.gateway-ui
     program:
-      interpreter: shell
+      interpreter: /bin/bash
       entrypoint: ~/.local/bin/omlx-gw-ui-guard
       args: []
     resilience:
@@ -152,7 +152,7 @@ services:
     trigger: boot
     label: com.omlx.autostart
     program:
-      interpreter: shell
+      interpreter: /bin/bash
       entrypoint: ~/omlx-orchestration/bin/omlx-autostart-boot.sh
       args: []
     resilience:
