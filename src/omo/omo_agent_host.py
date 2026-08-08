@@ -86,8 +86,12 @@ class AgentHost:
         # P0-T3: Aetherforge wire — emit agent tick events for observability
         try:
             from aetherforge.bus_adapter import emit_event
+
             for r in results:
-                emit_event("agent.tick", {"agent_id": r.agent_id, "ok": r.ok, "action": r.action})
+                emit_event(
+                    "agent.tick",
+                    {"agent_id": r.agent_id, "ok": r.ok, "action": r.action},
+                )
         except Exception:
             pass  # Aetherforge not available
 
@@ -199,7 +203,12 @@ def run_agent_tick(*, host: AgentHost | None = None) -> dict[str, Any]:
     """
     if host is None:
         host = AgentHost(
-            agents=[HealthMonitorAgent(), KnowledgeCuratorAgent(), JourneyRunnerAgent(), GovernorAgent()]
+            agents=[
+                HealthMonitorAgent(),
+                KnowledgeCuratorAgent(),
+                JourneyRunnerAgent(),
+                GovernorAgent(),
+            ]
         )
     return host.tick_all()
 
@@ -285,11 +294,15 @@ class GovernorAgent:
         import json as _json
         from pathlib import Path as _Path
 
-        workspace = _Path(os.environ.get("WORKSPACE_ROOT", str(_Path.home() / "Workspace")))
+        workspace = _Path(
+            os.environ.get("WORKSPACE_ROOT", str(_Path.home() / "Workspace"))
+        )
         findings: list[dict[str, str]] = []
 
         # 1. Check for timed-out journey checkpoints
-        states_dir = workspace / ".omo" / "_knowledge" / "workflow-mesh" / "journey-states"
+        states_dir = (
+            workspace / ".omo" / "_knowledge" / "workflow-mesh" / "journey-states"
+        )
         if states_dir.is_dir():
             for jd in states_dir.iterdir():
                 if not jd.is_dir():
@@ -300,19 +313,32 @@ class GovernorAgent:
                         if lines and lines[-1].strip():
                             last = _json.loads(lines[-1])
                             if last.get("status") == "human_hold":
-                                findings.append({"type": "human_hold", "journey": jd.name, "run": rf.stem})
+                                findings.append(
+                                    {
+                                        "type": "human_hold",
+                                        "journey": jd.name,
+                                        "run": rf.stem,
+                                    }
+                                )
                     except Exception:
                         continue
 
         # 2. Check mesh events for anomalies
-        mesh_log = workspace / ".omo" / "_knowledge" / "workflow-mesh" / "mesh-events.jsonl"
+        mesh_log = (
+            workspace / ".omo" / "_knowledge" / "workflow-mesh" / "mesh-events.jsonl"
+        )
         if mesh_log.exists():
             event_count = len(mesh_log.read_text(encoding="utf-8").strip().split("\n"))
             if event_count > 100:
-                findings.append({"type": "high_event_volume", "count": str(event_count)})
+                findings.append(
+                    {"type": "high_event_volume", "count": str(event_count)}
+                )
 
         if findings:
-            return {"action": "alert", "details": {"findings": findings, "count": len(findings)}}
+            return {
+                "action": "alert",
+                "details": {"findings": findings, "count": len(findings)},
+            }
         return {"action": "noop", "details": {"note": "no governance issues detected"}}
 
 
