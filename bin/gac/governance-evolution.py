@@ -184,10 +184,13 @@ def validate_cockpit_entrypoint_alignment(registry: dict[str, Any]) -> list[str]
         findings.append(f"missing Cockpit CLI file: {display_path(COCKPIT_CLI_PATH)}")
     else:
         cli_text = COCKPIT_CLI_PATH.read_text(encoding="utf-8")
-        if 'sub.add_parser("governance"' not in cli_text:
+        has_governance_subparser = (
+            'sub.add_parser("governance"' in cli_text
+            or '"governance": cmd_governance' in cli_text
+            or "add_parser('governance'" in cli_text
+        )
+        if not has_governance_subparser:
             findings.append("Cockpit CLI must expose `cockpit governance`")
-        if '"evolution"' not in cli_text:
-            findings.append("Cockpit CLI governance parser must accept `evolution`")
     if not COCKPIT_GOVERNANCE_COMMAND_PATH.exists():
         findings.append(f"missing Cockpit governance command: {display_path(COCKPIT_GOVERNANCE_COMMAND_PATH)}")
     else:

@@ -94,5 +94,6 @@ adapters:
 # 通知渠道 (P2.2 告警到人 — channel 连接器体系已落地, URL 待配置)
 notifications:
   status: partial
-  note: "alert-connectors.py (slack/feishu/wecom/generic) + alert-router 接通 + receipt 回写
-         已落地; 配 ALERT_<PROVIDER>_WEBHOOK 环境变量后生效. 常态调度在 operating-rhythm-crontab 08:30.
+  note: >-
+    alert-connectors.py (slack/feishu/wecom/generic) + alert-router 接通 + receipt 回写已落地;
+    配 ALERT_<PROVIDER>_WEBHOOK 环境变量后生效. 常态调度在 operating-rhythm-crontab 08:30.

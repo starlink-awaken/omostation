@@ -10,7 +10,7 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (70 个)
+## Planned Tasks (68 个)
 | ID | Title | Status |
 |----|-------|--------|
 | bet-y1q1-t1-00 | 并发写冲突止血 — 共享主树禁写 + PASW 全覆盖 | candidate |
@@ -32,7 +32,6 @@
 | bet-y1q1-t8-01 | /inbox 决策收件箱最小版 | candidate |
 | bet-y1q2-t1-01 | omo-debt + c2g 并入 omo | candidate |
 | bet-y1q2-t1-02 | model-driven 去留判定 | candidate |
-| bet-y1q2-t4-01 | capability_calibration 自动更新 | candidate |
 | bet-y1q2-t5-01 | durable timer — waiting_approval 跨进程存活 ≥7 天 | candidate |
 | bet-y1q2-t5-02 | 回退边执行语义 + 次数上限 + 升级路径 | candidate |
 | bet-y1q2-t6-01 | GaC 规则减法 — 清理会拦人却无违规历史的 required 规则 | candidate |
@@ -40,7 +39,6 @@
 | bet-y1q2-t6-03 | bin 脚本清理 — 归档零调用脚本, 不设数量目标 | candidate |
 | bet-y1q2-t6-04 | 合成协作场景归档 221 → ≤40 | candidate |
 | bet-y1q2-t6-05 | 减法配额制门禁上线 | candidate |
-| bet-y1q2-t6-06 | 技能自动结晶引擎 — 踩坑经验自动重构为持久化 Agent Skill | candidate |
 | bet-y1q2-t6-07 | B.D.S.K. 影子沙箱预演场 — 0-Touch 代码提交前对抗仿真 | candidate |
 | bet-y1q2-t6-08 | 100% 责任归因代理链 — Subagent 全流程继承树审计 | candidate |
 | bet-y1q2-t6-09 | AetherForge 动态算力与模型自动配比 | candidate |
@@ -86,9 +84,9 @@
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 
-## Completed Tasks (225 个)
+## Completed Tasks (229 个)
 
-> `tasks/done/` — 225 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
+> `tasks/done/` — 229 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
 
 近期关键完成里程碑（done/ 顶层）:
 - P42-W0-W1-COMBO / P42-W2-COMBO — P42 治理面 SSOT 同步
@@ -125,5 +123,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-08-08 (依据 `omo state sync-tasks` 与真实目录重算: done=225, planned=70, active=0, archived=6 顶层)*
+*Updated: 2026-08-08 (依据 `omo state sync-tasks` 与真实目录重算: done=229, planned=68, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
