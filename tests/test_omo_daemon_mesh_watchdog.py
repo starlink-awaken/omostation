@@ -10,7 +10,7 @@ def test_daemon_tick_passes_explicit_watchdog_mode(monkeypatch, tmp_path):
     monkeypatch.setattr(
         omo_daemon,
         "run_governance_audit",
-        lambda: SimpleNamespace(total_score=100.0, grade="A", watchlist=[]),
+        lambda: SimpleNamespace(total_score=100.0, grade="A", watchlist=[], checks=[]),
     )
     monkeypatch.setattr(
         omo_daemon,

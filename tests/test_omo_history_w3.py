@@ -95,9 +95,9 @@ def test_append_entry_overrides_user_date_timestamp(tmp_path):
     assert records[0]["date"] != "user-attempt-1900-01-01"
     assert records[0]["timestamp"] != "user-bad-ts"
     # 注入的 date 应是今天
-    from datetime import date
+    from datetime import UTC, datetime
 
-    assert records[0]["date"] == date.today().isoformat()
+    assert records[0]["date"] == datetime.now(UTC).date().isoformat()
 
 
 def test_append_entry_creates_parent_dir(tmp_path):
