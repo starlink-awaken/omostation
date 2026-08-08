@@ -11,6 +11,7 @@ routes:
   - prefix: "bos://memory/kos/"
     qps: 20
     cache_ttl: 60
+    pricing: {input_rate_per_m: 0.05, output_rate_per_m: 0.20}   # 能力市场: 便宜记忆服务
   - prefix: "bos://memory/kronos/"
     qps: 10
     cache_ttl: 30
@@ -19,6 +20,7 @@ routes:
   - prefix: "bos://analysis/minerva/"
     qps: 5
     cache_ttl: 120
+    pricing: {input_rate_per_m: 0.30, output_rate_per_m: 1.20}   # 能力市场: 昂贵研究服务
   - prefix: "bos://analysis/code/"
     qps: 10
     cache_ttl: 15

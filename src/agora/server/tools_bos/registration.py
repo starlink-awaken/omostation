@@ -192,11 +192,13 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             # 遗留-3 + 阶段2: 记账 — 估算 token 成本 (输入=arguments, 输出=result)
             # 用 estimate_cost 按 token 计费; 无 token 时成本 0 保留流水
             try:
-                from agora.accounting import estimate_cost
+                # P0 能力市场: 用 resolve_pricing 按 URI 定价覆盖 (混合三层)
+                from agora.accounting import estimate_cost, resolve_pricing
 
                 input_tokens = len(json.dumps(args)) // 4 if args else 0  # ~4 字符/token
                 output_tokens = len(json.dumps(result)) // 4 if result else 0
-                cost_usd = estimate_cost(input_tokens, output_tokens)
+                in_rate, out_rate = resolve_pricing(uri)
+                cost_usd = estimate_cost(input_tokens, output_tokens, in_rate, out_rate)
                 get_quota_checker().record(
                     caller_id=caller_id,
                     service=uri,
