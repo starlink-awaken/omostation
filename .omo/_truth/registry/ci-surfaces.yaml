@@ -417,153 +417,153 @@ surfaces:
     also_in: [governance-check.yml]
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-design-body-ssot-py
     tool: scripts/check-design-body-ssot.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-design-history-ssot-py
     tool: scripts/check-design-history-ssot.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-design-risky-phrases-py
     tool: scripts/check-design-risky-phrases.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-doc-ssot-snapshots-py
     tool: scripts/check-doc-ssot-snapshots.py
     workflow: governance-check.yml
     gate: true
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-future-annotations-py
     tool: scripts/check-future-annotations.py
     workflow: pyright-sweep.yml
     gate: false
     triggers: [manual]
-    status: active
+    status: orphan
   - id: scripts-check-governance-doc-ssot-py
     tool: scripts/check-governance-doc-ssot.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-governance-guides-ssot-py
     tool: scripts/check-governance-guides-ssot.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-governance-mechanism-ssot-py
     tool: scripts/check-governance-mechanism-ssot.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-governance-surface-paths-py
     tool: scripts/check-governance-surface-paths.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-index-coverage-py
     tool: scripts/check-index-coverage.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-interfaces-py
     tool: scripts/check-interfaces.py
     workflow: interfaces-enforce.yml
     also_in: [interfaces-enforce.yml]
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-knowledge-history-ssot-py
     tool: scripts/check-knowledge-history-ssot.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-knowledge-index-ssot-py
     tool: scripts/check-knowledge-index-ssot.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-panorama-arch-links-py
     tool: scripts/check-panorama-arch-links.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-phase-closeout-ssot-py
     tool: scripts/check-phase-closeout-ssot.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-plans-readme-ssot-py
     tool: scripts/check-plans-readme-ssot.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-project-arch-doc-contract-py
     tool: scripts/check-project-arch-doc-contract.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-project-arch-doc-ssot-py
     tool: scripts/check-project-arch-doc-ssot.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-project-registry-ssot-py
     tool: scripts/check-project-registry-ssot.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-ssot-reference-integrity-py
     tool: scripts/check-ssot-reference-integrity.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-state-goals-alignment-py
     tool: scripts/check-state-goals-alignment.py
     workflow: state-goals-enforce.yml
     gate: false
     triggers: [per_pr, push]
-    status: active
+    status: orphan
   - id: scripts-check-truth-inventory-routing-py
     tool: scripts/check-truth-inventory-routing.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-truth-m1-governance-mapping-py
     tool: scripts/check-truth-m1-governance-mapping.py
     workflow: governance-check.yml
     gate: false
     triggers: [per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: scripts-check-vault-paths-py
     tool: scripts/check-vault-paths.py
     workflow: port-registry-enforce.yml
     args: [--check-ports]
     gate: false
     triggers: [manual, per_pr, push, scheduled]
-    status: active
+    status: orphan
   - id: bin-gac-ci-check-runner-py
     tool: bin/gac/ci-check-runner.py
     workflow: (none)
@@ -669,6 +669,13 @@ surfaces:
     triggers: []
     status: active
     note: Phase 10 predictive governance with prescriptive recommendations
+  - id: bin-gac-check-submodule-pointer-drift-py
+    tool: bin/gac/check-submodule-pointer-drift.py
+    workflow: governance-check.yml
+    gate: true
+    triggers: [per_pr, push]
+    status: active
+    note: BET-Y1Q2-T1-05 submodule pointer drift detection (DIVERGED blocking)
 
 workflow_triggers:
   - workflow: agora-ci.yml

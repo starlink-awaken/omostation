@@ -34,8 +34,8 @@ phase36_status: completed
 phase36_completed_at: '2026-06-11T00:00:00Z'
 next_active_tasks:
 - kos-q-growth-rolling (KOS 季度扩量持续监测)
-last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 
-  kickoff may proceed)
+last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff
+  may proceed)
 phase2_status: completed
 phase2_completed_at: '2026-05-30T15:36:00Z'
 phase4_worker_collab_status: wave2_completed
@@ -244,8 +244,8 @@ next_planned_tasks:
 - bet-y3h2-t1-02 (三年终局门)
 - bet-y3h2-t4-01 (复利收益归因报告)
 - bet-y3h2-t7-01 (公文场景 routine (限格式类))
-- needs-human-batch2-physical-recovery-checklist 
-  (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁）)
+- needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
+  物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
 phase27_status: completed
 phase27_completed_at: '2026-06-10T00:00:00Z'
@@ -283,7 +283,7 @@ divergence_triage_summary: {}
 governance_feedback_last_run: '2026-08-07T09:57:18.563454+08:00'
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-07T01:34:53.275787+00:00'
+health_score_evidence_generated_at: '2026-08-07T23:17:52.832537+00:00'
 workflow_mesh_health:
   status: healthy
   event_count: 828

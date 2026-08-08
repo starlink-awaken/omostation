@@ -14,8 +14,6 @@ on:
       - "projects/*/src/**"
       - "projects/omo/tests/**"
       - "projects/ecos/scripts/contract_gatekeeper.py"
-      - "scripts/check-*.py"
-      - "scripts/opc_*.py"
       - "bin/ssot/workspace-audit"
       - "CLAUDE.md"
       - "LAYER-INDEX.md"
@@ -33,8 +31,6 @@ on:
       - "projects/*/src/**"
       - "projects/omo/tests/**"
       - "projects/ecos/scripts/contract_gatekeeper.py"
-      - "scripts/check-*.py"
-      - "scripts/opc_*.py"
       - "bin/ssot/workspace-audit"
       - "CLAUDE.md"
       - "LAYER-INDEX.md"
@@ -145,7 +141,13 @@ jobs:
       - name: Run full governance verification
         run: make governance-verify
       - name: GaC local gate
-        run: python3 bin/gac/gac-local-gate.py
+        run: python3 bin/gac/gac-local-gate.py --strict
+      - name: Submodule pointer drift check
+        run: |
+          python3 bin/gac/check-submodule-pointer-drift.py --strict || {
+            echo "❌ submodule pointer drift detected"
+            exit 1
+          }
       - name: Document governance
         run: python3 bin/ssot/doc-governance-check.py --no-new-warnings
       - name: Emit failure signal on break
