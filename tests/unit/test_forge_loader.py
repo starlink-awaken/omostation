@@ -10,26 +10,24 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import pytest
 
-# 确保可导入 agora + forge
-_KAIRON_SRC = Path("/Users/xiamingxing/Workspace/projects/kairon/packages/forge/src")
-_AGORA_SRC = Path("/Users/xiamingxing/Workspace/projects/agora/src")
-for p in (str(_AGORA_SRC), str(_KAIRON_SRC)):
-    if p not in sys.path:
-        sys.path.insert(0, p)
+# forge 是环境性外部包 (来自 kairon 独立仓库): CI 中不可用 → 跳过本模块。
+# 与 test_bos_registry_contract.py 的 broken 白名单模式对齐 — 本地缺失不视为代码缺陷。
+forge_market = pytest.importorskip(
+    "forge.market", reason="forge 不可用 (kairon 独立仓库, 非 agora 依赖)"
+)
 
-from agora.mcp.bos_resolver import POC_SERVICES, parse_bos_uri  # noqa: E402
-from agora.mcp.forge_loader import (  # noqa: E402
+from agora.mcp.bos_resolver import POC_SERVICES, parse_bos_uri
+from agora.mcp.forge_loader import (
     ForgeLoader,
     install_local_tool,
     list_market_tools,
     remove_tool,
 )
-from forge.market import (  # type: ignore[reportMissingImports]  # noqa: E402
+from forge.market import (
     validate_bos_uri,
     validate_tool_name,
 )
