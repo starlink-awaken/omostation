@@ -13,6 +13,7 @@ Agent 矩阵:
 
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -103,6 +104,74 @@ class AgentHost:
             "failed_count": len(results) - ok_count,
             "results": [r.__dict__ for r in results],
         }
+
+
+def _llm_deep_eval(
+    agent_id: str, question: str, context: dict[str, Any]
+) -> dict[str, Any] | None:
+    """Call local LLM for deep evaluation when rule-based confidence is insufficient.
+
+    Pattern: rules first → if confidence < threshold → LLM deep eval.
+    Tries ollama (local, no auth) first, then falls back to None.
+    If LLM unavailable → return None (caller falls back to rule verdict).
+    """
+    import shutil
+    import subprocess as _sp
+
+    prompt = (
+        f"You are {agent_id} agent in a self-governing digital organism.\n"
+        f"Question: {question}\n"
+        f"Context: {json.dumps(context, ensure_ascii=False)[:800]}\n\n"
+        f"Respond with JSON only, no markdown:\n"
+        f'{{"verdict": "approve|reject|needs_human", "confidence": 0.0-1.0, "reasoning": "...", "recommendation": "..."}}'
+    )
+
+    # Backend 1: ollama (local, no auth needed — best for daemon)
+    if shutil.which("ollama"):
+        import re
+
+        try:
+            models_out = _sp.run(
+                ["ollama", "list"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if models_out.returncode == 0 and models_out.stdout:
+                lines = models_out.stdout.strip().split("\n")
+                for line in lines[1:]:
+                    if line.strip():
+                        model_name = line.split()[0]
+                        result = _sp.run(
+                            ["ollama", "run", model_name, prompt],
+                            capture_output=True,
+                            text=True,
+                            timeout=90,
+                            check=False,
+                        )
+                        if result.returncode == 0 and result.stdout:
+                            # Strip ANSI escape codes + control chars
+                            clean = re.sub(
+                                r"\x1b\[[0-9;]*[a-zA-Z]|\x1b\[\?[0-9]+[a-zA-Z]",
+                                "",
+                                result.stdout,
+                            )
+                            clean = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", clean)
+                            # Find JSON object in output
+                            json_match = re.search(r'\{[^{}]*"verdict"[^{}]*\}', clean)
+                            if json_match:
+                                try:
+                                    parsed = json.loads(json_match.group())
+                                    parsed["llm_backend"] = f"ollama:{model_name}"
+                                    return parsed
+                                except Exception:
+                                    pass
+                        break
+        except Exception:
+            pass
+
+    return None
 
 
 def _check_a2a_inbox(agent_id: str, workspace: Path) -> list[dict[str, Any]]:
@@ -596,12 +665,26 @@ class GovernorAgent:
         if findings:
             # P6-T1: Governor dispatch — 向相关agent发送任务消息
             dispatched = self._dispatch_findings(findings, workspace)
+
+            # LLM deep eval: findings优先级判断 (模型驱动)
+            deep_eval = _llm_deep_eval(
+                "governor",
+                f"Governance scan found {len(findings)} issues. "
+                f"Top priorities and recommended actions? "
+                f"Findings: {json.dumps(findings[:5], ensure_ascii=False)[:500]}",
+                {"finding_count": len(findings), "findings": findings[:5]},
+            )
+
             return {
                 "action": "alert",
                 "details": {
                     "findings": findings,
                     "count": len(findings),
                     "dispatched_to": dispatched,
+                    "llm_deep_eval": deep_eval is not None,
+                    "llm_priority": deep_eval.get("recommendation")
+                    if deep_eval
+                    else None,
                 },
             }
         return {"action": "noop", "details": {"note": "no governance issues detected"}}
@@ -715,24 +798,56 @@ class AdvisorAgent:
             )
             accept_rate = accepted / len(outcomes)
 
-        # TELOS alignment heuristic
+        # TELOS alignment heuristic (rule-based first pass)
         alignment = (
             "aligned" if avg_success >= 0.7 and accept_rate >= 0.5 else "misaligned"
         )
         confidence = round(min(avg_success, accept_rate), 2)
 
+        # LLM deep eval: confidence不足时调PI做深判 (模型驱动)
+        deep_eval = None
+        if confidence < 0.8 or alignment == "misaligned":
+            deep_eval = _llm_deep_eval(
+                "advisor",
+                f"System TELOS alignment: {alignment} (confidence={confidence}). "
+                f"Avg success rate={avg_success:.2f}, Accept rate={accept_rate:.2f}. "
+                f"Should we maintain current direction or adjust?",
+                {
+                    "alignment": alignment,
+                    "confidence": confidence,
+                    "calibrations": len(calibrations),
+                    "beliefs": len(beliefs),
+                    "a2a_findings": a2a_processed,
+                },
+            )
+
         return {
             "action": "evaluate",
             "details": {
-                "telos_alignment": alignment,
-                "confidence": confidence,
+                "telos_alignment": deep_eval.get("verdict", alignment)
+                if deep_eval
+                else alignment,
+                "confidence": deep_eval.get("confidence", confidence)
+                if deep_eval
+                else confidence,
                 "avg_success_rate": round(avg_success, 2),
                 "outcome_accept_rate": round(accept_rate, 2),
                 "calibrations_evaluated": len(calibrations),
                 "beliefs_count": len(beliefs),
-                "recommendation": "maintain"
-                if alignment == "aligned"
-                else "review capability trust trends",
+                "recommendation": deep_eval.get(
+                    "recommendation",
+                    "maintain"
+                    if alignment == "aligned"
+                    else "review capability trust trends",
+                )
+                if deep_eval
+                else (
+                    "maintain"
+                    if alignment == "aligned"
+                    else "review capability trust trends"
+                ),
+                "llm_deep_eval": deep_eval is not None,
+                "llm_reasoning": deep_eval.get("reasoning") if deep_eval else None,
                 "a2a_tasks_processed": a2a_processed,
             },
         }

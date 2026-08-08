@@ -684,19 +684,23 @@ def project_workflow_run(
                 }
             elif event_type == "ApprovalGranted":
                 existing = snapshot["approvals"].get(approval_id, {})
-                existing.update({
-                    "approval_id": approval_id,
-                    "state": "granted",
-                    "event_id": event["event_id"],
-                })
+                existing.update(
+                    {
+                        "approval_id": approval_id,
+                        "state": "granted",
+                        "event_id": event["event_id"],
+                    }
+                )
                 snapshot["approvals"][approval_id] = existing
             else:
                 existing = snapshot["approvals"].get(approval_id, {})
-                existing.update({
-                    "approval_id": approval_id,
-                    "state": "timed_out",
-                    "event_id": event["event_id"],
-                })
+                existing.update(
+                    {
+                        "approval_id": approval_id,
+                        "state": "timed_out",
+                        "event_id": event["event_id"],
+                    }
+                )
                 snapshot["approvals"][approval_id] = existing
     return snapshot
 

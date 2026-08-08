@@ -48,6 +48,7 @@ def _waiting_approval_run(tmp_path, run_id: str = "run-runner") -> None:
         )
     )
     from omo.worker_lifecycle import record_step_dispatch
+
     record_step_dispatch(
         tmp_path,
         workflow_run_id=run_id,

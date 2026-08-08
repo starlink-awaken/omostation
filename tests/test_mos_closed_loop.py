@@ -249,15 +249,21 @@ def test_calibration_formula_accepted_over_total(tmp_path: Path):
     """BET-Y1Q2-T4-01: calibration = accepted_as_is / invocations."""
     mos = MOSBeliefManager(root=tmp_path)
     do1 = mos.record_decision_outcome(
-        decision_type="review", input_summary="a", expected_outcome="ok",
+        decision_type="review",
+        input_summary="a",
+        expected_outcome="ok",
         actual_outcome="ok",
     )
     do2 = mos.record_decision_outcome(
-        decision_type="review", input_summary="b", expected_outcome="ok",
+        decision_type="review",
+        input_summary="b",
+        expected_outcome="ok",
         actual_outcome="ok",
     )
     do3 = mos.record_decision_outcome(
-        decision_type="review", input_summary="c", expected_outcome="ok",
+        decision_type="review",
+        input_summary="c",
+        expected_outcome="ok",
         actual_outcome="ok",
     )
 
@@ -274,8 +280,7 @@ def test_calibration_formula_accepted_over_total(tmp_path: Path):
 
     state = mos._load_state()
     calibrations = [
-        c for c in state["capability_calibrations"]
-        if c["capability_ref"] == "review"
+        c for c in state["capability_calibrations"] if c["capability_ref"] == "review"
     ]
     assert len(calibrations) >= 1
     last = calibrations[-1]

@@ -48,6 +48,7 @@ def _running_run(tmp_path, run_id: str = "run-approval") -> None:
         )
     )
     from omo.worker_lifecycle import record_step_dispatch
+
     record_step_dispatch(
         tmp_path,
         workflow_run_id=run_id,
@@ -125,7 +126,9 @@ class TestRequestApproval:
 
     def test_request_rejects_zero_timeout(self, tmp_path):
         _running_run(tmp_path)
-        with pytest.raises(ApprovalLifecycleError, match="timeout_seconds must be positive"):
+        with pytest.raises(
+            ApprovalLifecycleError, match="timeout_seconds must be positive"
+        ):
             request_approval(
                 tmp_path,
                 workflow_run_id="run-approval",
@@ -226,9 +229,7 @@ class TestScanApprovalTimeouts:
             now="2026-08-01T00:00:00Z",
         )
         before = len(WorkflowMeshStore(tmp_path).events())
-        result = scan_approval_timeouts(
-            tmp_path, now="2026-08-03T00:00:00Z"
-        )
+        result = scan_approval_timeouts(tmp_path, now="2026-08-03T00:00:00Z")
         after = len(WorkflowMeshStore(tmp_path).events())
         assert before == after
         assert result["due_count"] == 1
@@ -260,9 +261,7 @@ class TestScanApprovalTimeouts:
             trace_id="run-7day",
             now="2026-08-01T00:00:00Z",
         )
-        result_before = scan_approval_timeouts(
-            tmp_path, now="2026-08-07T23:59:59Z"
-        )
+        result_before = scan_approval_timeouts(tmp_path, now="2026-08-07T23:59:59Z")
         assert result_before["due_count"] == 0
 
         result_after = scan_approval_timeouts(
