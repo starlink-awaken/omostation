@@ -2419,8 +2419,10 @@ bets:
   goal: 统一事件面落地后补最后一公里 — 告警通知到人 + 轮转/适配器常态化
   workflow: bet-execution
   verify:
-  - python3 bin/ssot/observability-events.py adapters status
-  - make log-rotate --dry-run
+  - cmd: python3 bin/ssot/observability-events.py adapters status
+    expect: exit 0
+  - cmd: make log-rotate --dry-run
+    expect: exit 0
   write_surfaces:
   - bin/gac/alert-router.py
   - .omo/_truth/registry/governance-alerts.yaml
@@ -2438,11 +2440,13 @@ bets:
   title: 可观测性增强 — Langfuse trace + RED 指标 + cockpit 聚合
   appetite: 1 week
   priority: P2
-  status: candidate
+  status: done
+  note: "Langfuse 修复 (v2.95.11 healthy) + agora RED 错误率 (bos_errors_total) + bus-foundation trace→事件面导出 + cockpit /api/observability 统一查询面; 复盘 .omo/_knowledge/retros/BET-Y1Q2-T9-02.md"
   goal: trace/指标/展示三维补齐, 可观测四维全覆盖
   workflow: bet-execution
   verify:
-  - python3 bin/ssot/observability-events.py search --limit 1
+  - cmd: python3 bin/ssot/observability-events.py search --limit 1
+    expect: exit 0
   write_surfaces:
   - projects/agora/src/agora/**
   - projects/bus-foundation/src/bus_foundation/**
