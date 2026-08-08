@@ -8,6 +8,7 @@ severity: "high"
 weight: 0.15
 entropy_class: "high"
 lifecycle_state: "resolved"
+resolution_evidence: "P43-ARCH-ANALYSIS-002: 任务所有权已由 bet-ledger + task schema 强制 (owner/phase 必填字段校验)"
 owner: "governance-team"
 affected_roots: []
 evidence_refs: []
