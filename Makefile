@@ -218,8 +218,30 @@ ci-local-fast: check-layers
 	echo "── dir-hygiene ──────────────────────────────────────"; \
 	$(PY) bin/ssot/dir-hygiene-check.py 2>&1 | sed 's/^/[hygiene] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
-	echo "── ruff check (omo + scripts) ──────────────────────"; \
-	_ruff_files=$$(git diff --name-only --diff-filter=AM $$(git merge-base HEAD omostation-root/main 2>/dev/null) HEAD -- projects/omo scripts 2>/dev/null | grep '\.py$$' || true); if [ -n "$$_ruff_files" ]; then echo "[ruff] changed .py (changed-only):" $$(_ruff_files); echo "$$_ruff_files" | xargs ruff check --ignore F401,F821,E402,E722 2>&1 | sed 's/^/[ruff] /' || CI_LOCAL_FAIL=1; else echo "[ruff] no changed .py in projects/omo/scripts — skip pre-existing (changed-only, T6-06 治本: 全仓 951 pre-existing 不卡 PR)"; fi; \
+	echo "── ruff check (all projects, changed-only) ──────────"; \
+	_ruff_base=$$(git merge-base HEAD omostation-root/main 2>/dev/null || echo ""); \
+	_ruff_files=""; \
+	if [ -n "$$_ruff_base" ]; then \
+		_ruff_files=$$(git diff --name-only --diff-filter=AM "$$_ruff_base" HEAD -- projects/ scripts 2>/dev/null | grep '\.py$$' || true); \
+	fi; \
+	if [ -n "$$_ruff_files" ]; then \
+		echo "[ruff] changed .py (changed-only):" $$(echo "$$_ruff_files" | wc -l) "files"; \
+		echo "$$_ruff_files" | xargs ruff check --ignore F401,F821,E402,E722 2>&1 | sed 's/^/[ruff] /' || CI_LOCAL_FAIL=1; \
+	else \
+		echo "[ruff] no changed .py — skip (changed-only)"; \
+	fi; \
+	echo ""; \
+ 	echo "── pyright (type check, changed-only trigger) ──────"; \
+	_pyright_trigger=""; \
+	if [ -n "$$_ruff_base" ]; then \
+		_pyright_trigger=$$(git diff --name-only --diff-filter=AM "$$_ruff_base" HEAD -- projects/ scripts 2>/dev/null | grep '\.py$$' || true); \
+	fi; \
+	if [ -n "$$_pyright_trigger" ]; then \
+		echo "[pyright] changed .py detected, running type check..."; \
+		pyright --outputjson 2>&1 | python3 -c "import sys,json; d=json.load(sys.stdin); errs=[g for g in d.get('generalDiagnostics',[]) if g.get('severity')!='information']; print(f'pyright errors={len(errs)}'); sys.exit(1 if errs else 0)" 2>&1 | sed 's/^/[pyright] /' || CI_LOCAL_FAIL=1; \
+	else \
+		echo "[pyright] no changed .py — skip (changed-only)"; \
+	fi; \
 	echo ""; \
  	echo "── HTML entity 编码检查 (Python/YAML) ──────────────"; \
  	if grep -rn '&[gl]t;' projects/ --include='*.py' --include='*.yaml' --include='*.yml' 2>/dev/null \
