@@ -228,7 +228,13 @@ async def health_self_check() -> dict:
         "backends": {
             "total": backends_total,
             "alive": backends_alive,
+            # P1 健康分级: standby = 注册但未连接 (环境性/未启动, 非故障)
+            # alive + standby + dead = total; dead 仅真实故障
+            "standby": max(backends_total - backends_alive - len(dead_backends), 0),
             "dead": dead_backends,
+            "alive_ratio": round(
+                backends_alive / backends_total, 3
+            ) if backends_total else 0.0,
         },
         "bos_registry": bos_registry,
         "audit_24h": audit_stats,
