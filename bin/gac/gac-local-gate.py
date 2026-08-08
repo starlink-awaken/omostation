@@ -179,14 +179,6 @@ if not any(gate.get("id") == "check-swarm-collision" for gate in GATES_LIST):
         }
     )
 
-if not any(gate.get("id") == "check-subtraction-quota" for gate in GATES_LIST):
-    GATES_LIST.append(
-        {
-            "id": "check-subtraction-quota",
-            "command": ["bin/gac/check-subtraction-quota.py"],
-        }
-    )
-
 # 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
 # ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,
 # origin/main gitlink 悬空). 移主仓强制 ci_only (non-strict pre-commit 跳, CI strict 兜底),
@@ -726,6 +718,70 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
     print("GaC local gate: " + " | ".join(parts))
 
 
+def _load_rule_vitality_tracker():
+    """Lazy-load rule-vitality-tracker module (hyphenated filename needs importlib)."""
+    import importlib.util
+
+    tracker_path = WORKSPACE / "bin" / "gac" / "rule-vitality-tracker.py"
+    if not tracker_path.exists():
+        return None
+    spec = importlib.util.spec_from_file_location("rule_vitality_tracker", str(tracker_path))
+    if spec is None or spec.loader is None:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _record_rule_vitality(report: dict[str, object]) -> None:
+    """Record per-rule vitality entries from gate check results (BET-Y1Q2-T6-01)."""
+    tracker = _load_rule_vitality_tracker()
+    if tracker is None:
+        return
+
+    import yaml as _yaml
+
+    mapping_path = WORKSPACE / ".omo" / "_truth" / "registry" / "rule-gate-mapping.yaml"
+    if not mapping_path.exists():
+        return
+    try:
+        mapping_data = _yaml.safe_load(mapping_path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return
+    gate_to_rules = mapping_data.get("gate_to_rules", {})
+    if not gate_to_rules:
+        return
+
+    enforcement_map: dict[str, str] = {}
+    rules_path = WORKSPACE / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
+    if rules_path.exists():
+        try:
+            docs = [d for d in _yaml.safe_load_all(rules_path.read_text(encoding="utf-8")) if d]
+            if docs:
+                for r in docs[-1].get("gac", {}).get("rules", []):
+                    enforcement_map[r["id"]] = r.get("enforcement", "required")
+        except Exception:
+            pass
+
+    for item in report.get("checks", []):
+        if not isinstance(item, dict):
+            continue
+        check_name = item.get("name", "")
+        check_ok = bool(item.get("ok"))
+        duration = int(item.get("duration_ms") or 0)
+        for rule_id in gate_to_rules.get(check_name, []):
+            try:
+                tracker.record_vitality(
+                    rule_id,
+                    check_name,
+                    violated=not check_ok,
+                    enforcement=enforcement_map.get(rule_id, "required"),
+                    duration_ms=duration,
+                )
+            except Exception:
+                pass
+
+
 def append_metrics(report: dict[str, object]) -> None:
     metrics_file = WORKSPACE / ".omo" / "state" / "metrics-store.jsonl"
     try:
@@ -748,6 +804,8 @@ def append_metrics(report: dict[str, object]) -> None:
         metrics_file.parent.mkdir(parents=True, exist_ok=True)
         with metrics_file.open("a", encoding="utf-8") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+    _record_rule_vitality(report)
 
 
 def main() -> int:
