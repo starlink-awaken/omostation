@@ -356,7 +356,11 @@ def run_lint(fix: bool = False, single_file: str | None = None, as_json: bool = 
             "files_scanned": len(files),
             "findings": [
                 {
-                    "file": str(fp.relative_to(WORKSPACE_ROOT)),
+                    "file": (
+                        str(fp.relative_to(WORKSPACE_ROOT))
+                        if fp.is_absolute() and WORKSPACE_ROOT in fp.parents
+                        else str(fp)
+                    ),
                     "line": line_num,
                     "label": label,
                     "reason": reason,

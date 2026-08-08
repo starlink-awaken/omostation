@@ -16,6 +16,7 @@ jobs:
         with:
           fetch-depth: 50
           submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
 
       - name: Bulk deletion guard (root)
         run: |
