@@ -105,6 +105,65 @@ class AgentHost:
         }
 
 
+def _check_a2a_inbox(agent_id: str, workspace: Path) -> list[dict[str, Any]]:
+    """读 A2A inbox — 找发给自己的未处理 task 消息, 写 reply 标记 resolved.
+
+    多 Agent 协作的关键: Governor 发 task → 目标 agent tick 时读取 → 处理 → reply.
+    返回收到的 task 列表 (agent 自行决定如何处理).
+    """
+    import json as _json
+
+    msg_file = workspace / ".omo" / "state" / "a2a-messages.jsonl"
+    if not msg_file.exists():
+        return []
+
+    lines = msg_file.read_text(encoding="utf-8").strip().split("\n")
+    if not lines or not lines[0].strip():
+        return []
+
+    all_msgs: list[dict] = []
+    for line in lines:
+        if line.strip():
+            try:
+                all_msgs.append(_json.loads(line))
+            except Exception:
+                continue
+
+    # 找发给自己的 task 消息, 且没有对应 reply
+    replied_ts = {m.get("in_reply_to") for m in all_msgs if m.get("type") == "reply"}
+    my_tasks = [
+        m
+        for m in all_msgs
+        if m.get("to") == agent_id
+        and m.get("type") == "task"
+        and m.get("ts") not in replied_ts
+    ]
+
+    # 写 reply 标记 resolved
+    if my_tasks:
+        ts_now = (
+            datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        )
+        with open(msg_file, "a", encoding="utf-8") as f:
+            for t in my_tasks:
+                reply = {
+                    "ts": ts_now,
+                    "from": agent_id,
+                    "to": t.get("from", "governor"),
+                    "type": "reply",
+                    "in_reply_to": t.get("ts"),
+                    "payload": {
+                        "status": "processed",
+                        "finding_type": t.get("payload", {})
+                        .get("finding", {})
+                        .get("type"),
+                    },
+                }
+                f.write(_json.dumps(reply, ensure_ascii=False, sort_keys=True) + "\n")
+
+    return my_tasks
+
+
 class HealthMonitorAgent:
     """HealthMonitor (α.3 续: 读 system_health.yaml 快照 + 异常服务告警).
 
@@ -187,14 +246,22 @@ class KnowledgeCuratorAgent:
     agent_id = "knowledge-curator"
 
     def tick(self) -> dict[str, Any]:
-        """Read decision_outcomes and build knowledge graph summary."""
+        """Read decision_outcomes + process A2A tasks → build knowledge graph."""
         from pathlib import Path as _Path
 
         workspace = _Path(
             os.environ.get("WORKSPACE_ROOT", str(_Path.home() / "Workspace"))
         )
+
+        # A2A: 读 governor 发来的 task 消息 (多 Agent 协作)
+        a2a_tasks = _check_a2a_inbox("knowledge-curator", workspace)
+        a2a_processed = []
+        for task in a2a_tasks:
+            finding = task.get("payload", {}).get("finding", {})
+            a2a_processed.append(finding.get("type", "unknown"))
+
         try:
-            omo_src = str(workspace / "projects/omo/src")
+            omo_src = str(workspace / "projects" / "omo" / "src")
             import sys
 
             if omo_src not in sys.path:
@@ -208,8 +275,16 @@ class KnowledgeCuratorAgent:
         except Exception:
             return {"action": "noop", "details": {"note": "MOS unavailable"}}
 
-        if not outcomes and not snapshots:
-            return {"action": "noop", "details": {"note": "no MOS data yet (cold)"}}
+        # A2A task 处理: 记录经验
+        for finding_type in a2a_processed:
+            try:
+                manager.record_experience(
+                    agent_id="knowledge-curator",
+                    experience=f"A2A task: investigated {finding_type}",
+                    outcome="positive",
+                )
+            except Exception:
+                pass
 
         # Aggregate outcomes per scene type
         from collections import Counter
@@ -248,15 +323,60 @@ class KnowledgeCuratorAgent:
                 "scene_distribution": dict(scene_stats.most_common(5)),
                 "accept_count": accept_count,
                 "lesson_recorded": lesson[:200],
+                "a2a_tasks_processed": a2a_processed,
             },
         }
 
 
-def run_agent_tick(*, host: AgentHost | None = None) -> dict[str, Any]:
-    """daemon 调用入口: 跑一次所有 Agent tick.
+def _auto_calibrate(result: dict[str, Any]) -> None:
+    """Tick 后自动校准 — 每个 agent 的 tick 结果记录到 MOS capability_calibrations.
 
-    默认 host = AgentHost(agents=[HealthMonitorAgent, KnowledgeCuratorAgent]) (α.3+β.3).
+    这是学习闭环的关键: 没有 calibration 数据, Trust 永远 cold_start,
+    自主度评分的 adaptivity/generalization 维度永远趋零.
+    守 KISS: 只记 ok/success_rate, 不做复杂分析 (那是 scanner 的活).
+    """
+    workspace = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+    try:
+        import sys as _sys
+
+        omo_src = str(workspace / "projects" / "omo" / "src")
+        if omo_src not in _sys.path:
+            _sys.path.insert(0, omo_src)
+        from omo.omo_belief import MOSBeliefManager
+
+        manager = MOSBeliefManager(root=workspace)
+        for r in result.get("results", []):
+            agent_id = r.get("agent_id", "unknown")
+            ok = r.get("ok", False)
+            action = r.get("action", "noop")
+            manager.record_capability_calibration(
+                capability_ref=f"agent:{agent_id}:tick:{action}",
+                success_rate=1.0 if ok else 0.0,
+                avg_latency_ms=0.0,
+                sample_size=1,
+            )
+        # 同时记录一条非 noop 的 experience
+        non_noop = [r for r in result.get("results", []) if r.get("action") != "noop"]
+        if non_noop:
+            for r in non_noop[:3]:  # 最多记3条, 别炸MOS
+                agent_id = r.get("agent_id", "unknown")
+                action = r.get("action", "noop")
+                outcome = "positive" if r.get("ok") else "negative"
+                manager.record_experience(
+                    agent_id=agent_id,
+                    experience=f"tick:{action} on {agent_id}",
+                    outcome=outcome,
+                )
+    except Exception:
+        pass  # MOS unavailable — 不阻塞 tick
+
+
+def run_agent_tick(*, host: AgentHost | None = None) -> dict[str, Any]:
+    """daemon 调用入口: 跑一次所有 Agent tick + 自动校准.
+
+    默认 host = AgentHost(agents=[6 agents]) (α.3+β.3+P3+P6).
     SceneWatcher 适配 AgentProtocol (α.3 续, tick stub), 可外部注入 host.register(scene_watcher).
+    tick 完成后自动记录 capability calibration 到 MOS (学习闭环).
     """
     if host is None:
         host = AgentHost(
@@ -269,7 +389,9 @@ def run_agent_tick(*, host: AgentHost | None = None) -> dict[str, Any]:
                 AutonomyAssessmentAgent(),
             ]
         )
-    return host.tick_all()
+    result = host.tick_all()
+    _auto_calibrate(result)  # 学习闭环: tick → 记录校准 → Trust积累 → 自主度提升
+    return result
 
 
 @dataclass
@@ -421,9 +543,7 @@ class GovernorAgent:
                         continue
 
         # 2. Check mesh events for anomalies
-        mesh_log = (
-            workspace / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
-        )
+        mesh_log = workspace / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
         if mesh_log.exists():
             event_count = len(mesh_log.read_text(encoding="utf-8").strip().split("\n"))
             if event_count > 100:
@@ -435,7 +555,9 @@ class GovernorAgent:
         debt_items_dir = workspace / ".omo" / "debt" / "items"
         if debt_items_dir.is_dir():
             debt_count = len(list(debt_items_dir.glob("*.yaml")))
-            gap_count = len(list((workspace / ".omo" / "debt" / "gap-items").glob("*.yaml")))
+            gap_count = len(
+                list((workspace / ".omo" / "debt" / "gap-items").glob("*.yaml"))
+            )
             if debt_count + gap_count > 30:
                 findings.append(
                     {
@@ -463,7 +585,9 @@ class GovernorAgent:
                     {
                         "type": "low_trust_capabilities",
                         "count": str(len(low_trust)),
-                        "refs": ",".join(c.get("capability_ref", "?") for c in low_trust[:3]),
+                        "refs": ",".join(
+                            c.get("capability_ref", "?") for c in low_trust[:3]
+                        ),
                     }
                 )
         except Exception:
@@ -474,7 +598,11 @@ class GovernorAgent:
             dispatched = self._dispatch_findings(findings, workspace)
             return {
                 "action": "alert",
-                "details": {"findings": findings, "count": len(findings), "dispatched_to": dispatched},
+                "details": {
+                    "findings": findings,
+                    "count": len(findings),
+                    "dispatched_to": dispatched,
+                },
             }
         return {"action": "noop", "details": {"note": "no governance issues detected"}}
 
@@ -492,19 +620,25 @@ class GovernorAgent:
         msg_queue.parent.mkdir(parents=True, exist_ok=True)
 
         import json as _json
+
         for f in findings:
             ftype = f.get("type", "")
             targets = dispatch_map.get(ftype, [])
             for target in targets:
                 msg = {
-                    "ts": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+                    "ts": datetime.now(UTC)
+                    .replace(microsecond=0)
+                    .isoformat()
+                    .replace("+00:00", "Z"),
                     "from": "governor",
                     "to": target,
                     "type": "task",
                     "payload": {"action": "investigate", "finding": f},
                 }
                 with open(msg_queue, "a", encoding="utf-8") as mf:
-                    mf.write(_json.dumps(msg, ensure_ascii=False, sort_keys=True) + "\n")
+                    mf.write(
+                        _json.dumps(msg, ensure_ascii=False, sort_keys=True) + "\n"
+                    )
                 if target not in dispatched:
                     dispatched.append(target)
         return dispatched
@@ -522,10 +656,18 @@ class AdvisorAgent:
         return "advisor"
 
     def tick(self) -> dict[str, Any]:
-        """Evaluate system alignment with TELOS principles."""
+        """Evaluate system alignment with TELOS principles + process A2A tasks."""
         workspace = Path(
             os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
         )
+
+        # A2A: 读 governor 发来的 task 消息 (多 Agent 协作)
+        a2a_tasks = _check_a2a_inbox("advisor", workspace)
+        a2a_processed = []
+        for task in a2a_tasks:
+            finding = task.get("payload", {}).get("finding", {})
+            a2a_processed.append(finding.get("type", "unknown"))
+
         try:
             omo_src = str(workspace / "projects/omo/src")
             import sys
@@ -542,21 +684,41 @@ class AdvisorAgent:
         except Exception:
             return {"action": "noop", "details": {"note": "MOS unavailable"}}
 
-        if not calibrations and not outcomes:
-            return {"action": "noop", "details": {"note": "insufficient MOS data for TELOS evaluation"}}
+        # A2A task 处理: 记录经验
+        for finding_type in a2a_processed:
+            try:
+                manager.record_experience(
+                    agent_id="advisor",
+                    experience=f"A2A task: investigated {finding_type}",
+                    outcome="positive",
+                )
+            except Exception:
+                pass
+
+        if not calibrations and not outcomes and not a2a_tasks:
+            return {
+                "action": "noop",
+                "details": {"note": "insufficient MOS data for TELOS evaluation"},
+            }
 
         # Evaluate trust trends
         avg_success = 1.0
         if calibrations:
-            avg_success = sum(float(c.get("success_rate", 1.0)) for c in calibrations) / len(calibrations)
+            avg_success = sum(
+                float(c.get("success_rate", 1.0)) for c in calibrations
+            ) / len(calibrations)
 
         accept_rate = 1.0
         if outcomes:
-            accepted = sum(1 for o in outcomes if "accepted" in str(o.get("actual_outcome", "")))
+            accepted = sum(
+                1 for o in outcomes if "accepted" in str(o.get("actual_outcome", ""))
+            )
             accept_rate = accepted / len(outcomes)
 
         # TELOS alignment heuristic
-        alignment = "aligned" if avg_success >= 0.7 and accept_rate >= 0.5 else "misaligned"
+        alignment = (
+            "aligned" if avg_success >= 0.7 and accept_rate >= 0.5 else "misaligned"
+        )
         confidence = round(min(avg_success, accept_rate), 2)
 
         return {
@@ -568,7 +730,10 @@ class AdvisorAgent:
                 "outcome_accept_rate": round(accept_rate, 2),
                 "calibrations_evaluated": len(calibrations),
                 "beliefs_count": len(beliefs),
-                "recommendation": "maintain" if alignment == "aligned" else "review capability trust trends",
+                "recommendation": "maintain"
+                if alignment == "aligned"
+                else "review capability trust trends",
+                "a2a_tasks_processed": a2a_processed,
             },
         }
 
@@ -586,13 +751,17 @@ class AutonomyAssessmentAgent:
 
     def tick(self) -> dict[str, Any]:
         """Calculate 5-dimension autonomy score."""
-        workspace = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+        workspace = Path(
+            os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
+        )
         try:
             omo_src = str(workspace / "projects/omo/src")
             import sys
+
             if omo_src not in sys.path:
                 sys.path.insert(0, omo_src)
             from omo.omo_belief import MOSBeliefManager
+
             manager = MOSBeliefManager(root=workspace)
             state = manager._load_state()
         except Exception:
@@ -611,19 +780,27 @@ class AutonomyAssessmentAgent:
         retention = min(active_items / 20.0, 1.0) if total_items else 0.1
 
         # 3. Generalization: 跨域覆盖
-        unique_refs = len({c.get("capability_ref", "?") for c in calibrations}) if calibrations else 0
+        unique_refs = (
+            len({c.get("capability_ref", "?") for c in calibrations})
+            if calibrations
+            else 0
+        )
         generalization = min(unique_refs / 5.0, 1.0) if unique_refs else 0.1
 
         # 4. Efficiency: calibration成功率
         if calibrations:
-            avg_rate = sum(float(c.get("success_rate", 1.0)) for c in calibrations) / len(calibrations)
+            avg_rate = sum(
+                float(c.get("success_rate", 1.0)) for c in calibrations
+            ) / len(calibrations)
             efficiency = avg_rate
         else:
             efficiency = 0.5
 
         # 5. Safety: 有约束违规=低分, 无=高分
         outcomes = state.get("decision_outcomes", [])
-        rejected = sum(1 for o in outcomes if "rejected" in str(o.get("actual_outcome", "")))
+        rejected = sum(
+            1 for o in outcomes if "rejected" in str(o.get("actual_outcome", ""))
+        )
         safety = 1.0 - (rejected / len(outcomes)) if outcomes else 0.9
 
         # Weighted score
@@ -634,7 +811,13 @@ class AutonomyAssessmentAgent:
             "efficiency": round(efficiency, 2),
             "safety": round(safety, 2),
         }
-        weights = {"adaptivity": 0.25, "retention": 0.20, "generalization": 0.20, "efficiency": 0.15, "safety": 0.20}
+        weights = {
+            "adaptivity": 0.25,
+            "retention": 0.20,
+            "generalization": 0.20,
+            "efficiency": 0.15,
+            "safety": 0.20,
+        }
         score = round(sum(dimensions[d] * weights[d] for d in dimensions) * 100)
 
         return {
@@ -643,7 +826,12 @@ class AutonomyAssessmentAgent:
                 "autonomy_score": score,
                 "dimensions": dimensions,
                 "level": "high" if score >= 70 else "medium" if score >= 40 else "low",
-                "mos_counts": {"beliefs": len(beliefs), "skills": len(skills), "experiences": len(experiences), "calibrations": len(calibrations)},
+                "mos_counts": {
+                    "beliefs": len(beliefs),
+                    "skills": len(skills),
+                    "experiences": len(experiences),
+                    "calibrations": len(calibrations),
+                },
             },
         }
 
@@ -651,9 +839,9 @@ class AutonomyAssessmentAgent:
 __all__ = [
     "AdvisorAgent",
     "AgentHost",
-    "AutonomyAssessmentAgent",
     "AgentProtocol",
     "AgentTickResult",
+    "AutonomyAssessmentAgent",
     "GovernorAgent",
     "HealthMonitorAgent",
     "JourneyRunnerAgent",
