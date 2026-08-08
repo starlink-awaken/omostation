@@ -1,8 +1,2 @@
 {"channels": ["log", "webhook"], "detail": "6 recent check failures", "dimension": "X1", "name": "审计链检查失败", "rule_id": "x1-audit-fail", "severity": "critical", "ts": "2026-08-08T06:11:34.709458+00:00"}
 {"channels": ["log"], "detail": "warning threshold exceeded (6 failures)", "dimension": "X1", "name": "审计链检查警告", "rule_id": "x1-audit-warn", "severity": "high", "ts": "2026-08-08T06:11:34.739431+00:00"}
-{"channels": ["log", "webhook"], "detail": "5 recent check failures", "dimension": "X1", "name": "审计链检查失败", "rule_id": "x1-audit-fail", "severity": "critical", "ts": "2026-08-08T07:21:24Z"}
-{"channels": ["log"], "detail": "warning threshold exceeded (5 failures)", "dimension": "X1", "name": "审计链检查警告", "rule_id": "x1-audit-warn", "severity": "high", "ts": "2026-08-08T07:21:24Z"}
-{"channels": ["log", "webhook"], "detail": "5 recent check failures", "dimension": "X1", "name": "审计链检查失败", "rule_id": "x1-audit-fail", "severity": "critical", "ts": "2026-08-08T07:32:11Z"}
-{"channels": ["log"], "detail": "warning threshold exceeded (5 failures)", "dimension": "X1", "name": "审计链检查警告", "rule_id": "x1-audit-warn", "severity": "high", "ts": "2026-08-08T07:32:11Z"}
-{"channels": ["log", "webhook"], "detail": "5 recent check failures", "dimension": "X1", "name": "审计链检查失败", "rule_id": "x1-audit-fail", "severity": "critical", "ts": "2026-08-08T09:55:54Z"}
-{"channels": ["log"], "detail": "warning threshold exceeded (5 failures)", "dimension": "X1", "name": "审计链检查警告", "rule_id": "x1-audit-warn", "severity": "high", "ts": "2026-08-08T09:55:54Z"}

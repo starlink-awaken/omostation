@@ -629,3 +629,7 @@ task-verify:  ## Task 完成验证门禁 (防止虚假完成)
 
 pasw-cleanup-dryrun:  ## 预览回收 (不删除)
 	@bash bin/gac/gac-worktree-cleanup.sh --dry-run
+
+.PHONY: machine-config-lint
+machine-config-lint:  ## 检查写机器级配置的脚本集合有无未审阅新成员
+	python3 bin/ssot/machine-config-write-lint.py

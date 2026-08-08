@@ -8,6 +8,7 @@ severity: "high"
 weight: 0.15
 entropy_class: "high"
 lifecycle_state: "resolved"
+resolution_evidence: "P43-ARCH-ANALYSIS-003: L1 运行时健康探针已落地 (runtime health_scan + agora /health + system_health.yaml)"
 owner: "agent-runtime"
 affected_roots: []
 evidence_refs: []

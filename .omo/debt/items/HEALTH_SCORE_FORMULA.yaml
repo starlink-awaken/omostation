@@ -8,6 +8,7 @@ severity: "high"
 weight: 0.10
 entropy_class: "low"
 lifecycle_state: "resolved"
+resolution_evidence: "ISC-2 已修复 (ADR-0195): 健康分公式从声明面主导改为执行面主导 (governance 0.3 + runtime 0.5 + freshness 0.2)"
 owner: "architecture-team"
 affected_roots: []
 evidence_refs: []

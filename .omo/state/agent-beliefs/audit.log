@@ -52,13 +52,3 @@
 [2026-08-08T06:25:33Z] ACTION=RECORD_WORLD_SNAPSHOT DETAILS=id=ws-0040 domain=perception source=signal-poller:apple_mail_inbox
 [2026-08-08T06:25:45Z] ACTION=RECORD_WORLD_SNAPSHOT DETAILS=id=ws-0041 domain=perception source=signal-poller:apple_mail_inbox
 [2026-08-08T06:26:14Z] ACTION=RECORD_WORLD_SNAPSHOT DETAILS=id=ws-0042 domain=perception source=signal-poller:apple_mail_inbox
-[2026-08-08T07:27:32Z] ACTION=RECORD_DECISION_OUTCOME DETAILS=id=do-0002 type=scene:knowledge-curation run=test-trust-calibration
-[2026-08-08T07:27:32Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-0001 ref=scene:knowledge-curation rate=1.0
-[2026-08-08T07:30:56Z] ACTION=RECORD_WORLD_SNAPSHOT DETAILS=id=ws-0043 domain=perception source=signal-poller:test_scenario
-[2026-08-08T07:33:03Z] ACTION=RECORD_DECISION_OUTCOME DETAILS=id=do-0003 type=scene:research-pipeline run=e2e-test-1786174383
-[2026-08-08T07:33:03Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-0002 ref=scene:research-pipeline rate=1.0
-[2026-08-08T10:16:28Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-0003 ref=autoloop:rule_downgrade rate=1.0
-[2026-08-08T10:25:45Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-0004 ref=autoloop:adr_draft rate=1.0
-[2026-08-08T10:55:29Z] ACTION=RECORD_SKILL DETAILS=id=skill-0001 agent=advisor skill=telos_alignment_check
-[2026-08-08T10:55:29Z] ACTION=RECORD_EXPERIENCE DETAILS=id=exp-0001 agent=governor outcome=positive
-[2026-08-08T10:55:29Z] ACTION=FORGET_EXPIRED DETAILS=max_age=9999d archived={'world_snapshots': 0, 'experiences': 0}
