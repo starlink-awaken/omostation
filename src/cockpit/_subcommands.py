@@ -360,7 +360,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     # ── SSB / MOF / Agora / model-driven ──────────────────────
     ssb_p = sub.add_parser(
         "ssb",
-        help="SSB 签名链操作 (委派 ecos-ssb)",
+        help="[DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用",
         epilog="子命令 (源自 ecos-ssb): publish / query / state / recover / events / stats\n示例: cockpit ssb stats",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -388,7 +388,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
 
     model_driven_p = sub.add_parser(
         "model-driven",
-        help="模型驱动生命周期入口 (委派 model-driven CLI)",
+        help="[DEPRECATED] 模型驱动生命周期入口 (ADR-0240 D1) — 拒绝执行",
         epilog="子命令: lifecycle / spec / adr / okr / tool / mcp\n示例: cockpit model-driven lifecycle dashboard",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

@@ -167,7 +167,8 @@ def _c_skill(a):
 def _c_events(a):
     from cockpit.commands.events import run_events_dashboard
 
-    run_events_dashboard(a.url)
+    url = getattr(a, "url", "http://127.0.0.1:7431/v1/events")
+    run_events_dashboard(url)
     return 0
 
 

@@ -212,6 +212,21 @@ COMMAND_CATALOG: dict[str, CommandMeta] = {
         category="🛠️ 系统 (System)",
         summary="极客终端交互控制台 (Textual 全屏 TUI · Vim 键盘流)",
     ),
+    "journey": CommandMeta(
+        name="journey",
+        category="🛠️ 系统 (System)",
+        summary="Journey State Graph 状态表达校验器",
+    ),
+    "panorama": CommandMeta(
+        name="panorama",
+        category="🛠️ 系统 (System)",
+        summary="7 维全景终极可观测仪表盘 (执行/服务/内容/知识/数据/异常/债务)",
+    ),
+    "project": CommandMeta(
+        name="project",
+        category="🛠️ 系统 (System)",
+        summary="17 项目全景 4D 体检与诊断",
+    ),
     # ── 数据与导入 (Data / Import) ───────────────────────────────────────────
     "import": CommandMeta(
         name="import",
@@ -285,6 +300,11 @@ COMMAND_CATALOG: dict[str, CommandMeta] = {
         category="🏛️ 治理 (Governance)",
         summary="显示系统上下文 (Phase / CARDS / 约束 / 引导)",
     ),
+    "bdsk": CommandMeta(
+        name="bdsk",
+        category="🏛️ 治理 (Governance)",
+        summary="B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演)",
+    ),
     # ── 通讯与事件 (Messaging / Events) ─────────────────────────────────────
     "events": CommandMeta(
         name="events",
@@ -304,7 +324,7 @@ COMMAND_CATALOG: dict[str, CommandMeta] = {
     "ssb": CommandMeta(
         name="ssb",
         category="📡 通讯 (Messaging)",
-        summary="SSB 签名链操作 (委派 ecos-ssb)",
+        summary="[DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用，请使用 cockpit 替代",
     ),
     # ── 基础设施 (Infrastructure) ────────────────────────────────────────────
     "dashboard": CommandMeta(
@@ -330,7 +350,7 @@ COMMAND_CATALOG: dict[str, CommandMeta] = {
     "model-driven": CommandMeta(
         name="model-driven",
         category="🖥️ 基础设施 (Infra)",
-        summary="模型驱动生命周期入口 (lifecycle / spec / adr / okr)",
+        summary="[DEPRECATED] 模型驱动生命周期入口 (ADR-0240 D1) — 拒绝执行",
     ),
     # ── 专项工具 (Domain Tools) ──────────────────────────────────────────────
     "gongwen": CommandMeta(

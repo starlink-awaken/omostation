@@ -185,9 +185,19 @@ if router:
 
             # ─── 动态注入 2：扫描并注入 OMO Cards 卡片作为 Dev Quests ───
             try:
-                from cockpit.scripts.cockpit_mcp import _scan_cards
+                from cockpit.commands.cards import CARDS_ROOT, _iter_cards
 
-                cards = _scan_cards()
+                cards = [
+                    {
+                        "id": str(fm.get("id", "")),
+                        "type": str(fm.get("type", "")),
+                        "status": str(fm.get("status", "")),
+                        "title": str(fm.get("title", "")),
+                        "priority": str(fm.get("priority", "")),
+                    }
+                    for _cat, _path, fm, _body in _iter_cards(CARDS_ROOT)
+                    if fm.get("id") and fm.get("type")
+                ]
                 active_cards = [c for c in cards if c.get("status") not in ("closed", "done")]
 
                 def card_id_to_int(card_id: str) -> int:

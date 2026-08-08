@@ -96,6 +96,26 @@ async def api_knowledge_search(request: Request):
         )
         if isinstance(res, dict) and isawaitable(res.get("result")):
             res = {**res, "result": await res["result"]}
+
+        try:
+            from omo.knowledge_action import record_knowledge_action
+
+            refs = []
+            results = res if isinstance(res, list) else (res.get("result", []) if isinstance(res, dict) else [])
+            if isinstance(results, list):
+                for i, item in enumerate(results[:20]):
+                    if isinstance(item, dict):
+                        ref_id = str(item.get("id") or item.get("path") or item.get("slug") or f"search-{i}")
+                        refs.append({"ref": ref_id, "title": str(item.get("title", ""))[:240], "rank": i + 1})
+            if refs:
+                record_knowledge_action(
+                    WORKSPACE_ROOT / ".omo",
+                    {"action_kind": "retrieved", "query": query.strip(), "knowledge_refs": refs},
+                    actor="cockpit.api",
+                )
+        except Exception:
+            pass
+
         return JSONResponse({"status": "ok", "result": res})
     except Exception as e:  # defensive fallback
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)

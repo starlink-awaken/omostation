@@ -82,6 +82,31 @@ def _read_beliefs_outcomes(root: Path) -> list[dict[str, Any]]:
         return []
 
 
+def _read_knowledge_funnel(root: Path) -> dict[str, Any]:
+    """Read the knowledge-to-action funnel from the OMO knowledge action log."""
+    try:
+        import sys
+
+        omo_src = root / "projects" / "omo" / "src"
+        if str(omo_src) not in sys.path:
+            sys.path.insert(0, str(omo_src))
+        from omo.knowledge_action import build_knowledge_action_snapshot
+
+        snapshot = build_knowledge_action_snapshot(root / ".omo")
+        funnel = snapshot.get("funnel", {})
+        retrieved = funnel.get("retrieved", 0)
+        cited = funnel.get("cited", 0)
+        return {
+            "retrieved": retrieved,
+            "cited": cited,
+            "citation_rate": round(cited / retrieved, 3) if retrieved > 0 else None,
+            "task_created": funnel.get("task_created", 0),
+            "status": snapshot.get("status", "unknown"),
+        }
+    except Exception:
+        return {"retrieved": 0, "cited": 0, "citation_rate": None, "task_created": 0, "status": "unavailable"}
+
+
 if router:
 
     @router.get("")
@@ -93,11 +118,15 @@ if router:
         pending = [r for r in outcomes if r.get("adjudication") == "pending"]
         history = [r for r in outcomes if r.get("adjudication") != "pending"]
         calibration = _read_calibration_summary(root)
+
+        knowledge_funnel = _read_knowledge_funnel(root)
+
         return {
             "ok": True,
             "pending_count": len(pending),
             "history_count": len(history),
             "calibration_scenes": len(calibration),
+            "knowledge_funnel": knowledge_funnel,
         }
 
     @router.get("/pending")
@@ -177,3 +206,10 @@ if router:
             )
 
         return {"ok": True, "scenes": scenes, "capabilities": caps}
+
+    @router.get("/knowledge-funnel")
+    async def get_knowledge_funnel() -> dict[str, Any]:
+        """Knowledge-to-action funnel: recall → citation → task creation metrics."""
+        root = _workspace_root()
+        funnel = _read_knowledge_funnel(root)
+        return {"ok": True, **funnel}

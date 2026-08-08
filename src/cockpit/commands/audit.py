@@ -30,7 +30,7 @@ WORKSPACE_ROOT = Path(
         str(_CLI_DIR.parent.parent.parent.parent),  # .../Workspace
     )
 )
-WORKSPACE_AUDIT = WORKSPACE_ROOT / "bin" / "workspace-audit"
+WORKSPACE_AUDIT = WORKSPACE_ROOT / "bin" / "ssot" / "workspace-audit"
 
 DIMENSIONS_HELP = """可选维度:
   governance  治理巡检 6 项 (lint / test / debt / adr / task / agora)
@@ -50,7 +50,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
     """
     if not WORKSPACE_AUDIT.exists():
         print(f"[Error] 找不到 {WORKSPACE_AUDIT}", file=sys.stderr)
-        print("尝试: cd ~/Workspace && ls bin/workspace-audit", file=sys.stderr)
+        print("尝试: cd ~/Workspace && ls bin/ssot/workspace-audit", file=sys.stderr)
         return 1
 
     # 修真 v3: 用 python3.13 (kairon/c2g 需要 3.13+, 不用 sys.executable 因为 venv 可能是 3.9)
