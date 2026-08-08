@@ -82,6 +82,16 @@ def is_ancestor(commit: str, ancestor: str, sub_path: str) -> bool:
     return result.returncode == 0
 
 
+def _is_shallow(sub_path: str) -> bool:
+    sub_dir = REPO_ROOT / sub_path
+    if (sub_dir / ".git").is_file():
+        git_dir = (sub_dir / ".git").read_text().split("gitdir: ")[-1].strip()
+        shallow = Path(sub_dir) / git_dir / "shallow"
+    else:
+        shallow = sub_dir / ".git" / "shallow"
+    return shallow.exists()
+
+
 def check_drift(sub_path: str, from_head: bool = False) -> dict | None:
     gitlink = get_gitlink(sub_path, from_head=from_head)
     if not gitlink:
@@ -110,6 +120,17 @@ def check_drift(sub_path: str, from_head: bool = False) -> dict | None:
             "gitlink": gitlink[:12],
             "origin_main": origin_main[:12],
             "detail": "gitlink is ahead of origin/main (local has unpushed commits, non-blocking)",
+        }
+
+    # shallow clone (CI fetch-depth:1) 无法判断祖先关系 → 两者 is_ancestor 均 False.
+    # gitlink 是 checkout 出来的有效 commit (一定存在于本地), 非 bug → 视为 OK (不可判断).
+    if _is_shallow(sub_path):
+        return {
+            "submodule": sub_path,
+            "status": "unverifiable",
+            "gitlink": gitlink[:12],
+            "origin_main": origin_main[:12],
+            "detail": "shallow clone (CI fetch-depth:1) — ancestry cannot be verified, non-blocking",
         }
 
     return {
@@ -178,6 +199,10 @@ def main() -> int:
                 print(f"  OK {sub}: {r['gitlink']}")
             elif status == "behind":
                 print(f"  WARN {sub}: {r['gitlink']} <- origin/main {r['origin_main']} ({r.get('detail', '')})")
+            elif status == "ahead":
+                print(f"  OK {sub}: {r['gitlink']} (ahead of origin/main {r['origin_main']}, non-blocking)")
+            elif status == "unverifiable":
+                print(f"  OK {sub}: {r['gitlink']} (shallow — ancestry unverifiable, non-blocking)")
             elif status == "DIVERGED":
                 print(f"  FAIL {sub}: {r['gitlink']} NOT on origin/main {r['origin_main']}")
             elif status == "skip":
@@ -189,9 +214,10 @@ def main() -> int:
         total = len(results)
         aligned = sum(1 for r in results if r["status"] == "aligned")
         ahead_n = sum(1 for r in results if r["status"] == "ahead")
+        unverifiable_n = sum(1 for r in results if r["status"] == "unverifiable")
         print(
             f"  Total: {total} submodules | {aligned} aligned | {ahead_n} ahead | "
-            f"{len(behind)} behind | {len(diverged)} DIVERGED"
+            f"{unverifiable_n} unverifiable | {len(behind)} behind | {len(diverged)} DIVERGED"
         )
 
     if diverged:
