@@ -247,6 +247,61 @@ def bos_billing_statement(
         return {"status": "error", "error": str(exc)}
 
 
+@mcp.tool()
+def bos_market_overview() -> dict[str, Any]:
+    """市场总览: 可采购能力统计 + 定价分布 + 调用热度 + 月度成本 (深化迭代).
+
+    Returns:
+        市场运营视角: total_capabilities / custom_pricing_count /
+                      top_used / monthly_cost
+    """
+    try:
+        from agora.mcp.bos_router import bos_router
+        from agora.accounting import ResourceAccountDB, resolve_pricing
+
+        routes = bos_router.list_all()
+        capabilities = []
+        custom_pricing = 0
+        for route in routes:
+            prefix = route.get("prefix", "")
+            in_rate, out_rate = resolve_pricing(prefix)
+            from agora.accounting import DEFAULT_INPUT_RATE_PER_M
+
+            if in_rate != DEFAULT_INPUT_RATE_PER_M:
+                custom_pricing += 1
+            use_metrics = route.get("use_metrics") or {}
+            capabilities.append(
+                {
+                    "prefix": prefix,
+                    "adapter": route.get("adapter"),
+                    "pricing": {"input_rate_per_m": in_rate, "output_rate_per_m": out_rate},
+                    "use_count": sum(use_metrics.values()) if isinstance(use_metrics, dict) else 0,
+                }
+            )
+        # Top 使用能力 (按 use_count)
+        top_used = sorted(capabilities, key=lambda c: c["use_count"], reverse=True)[:5]
+        # 月度成本
+        try:
+            db = ResourceAccountDB()
+            report = db.get_report(period="month")
+            monthly_cost = report.get("total_cost", 0.0)
+        except Exception:  # noqa: BLE001
+            monthly_cost = 0.0
+        return {
+            "status": "ok",
+            "total_capabilities": len(capabilities),
+            "custom_pricing_count": custom_pricing,
+            "default_pricing_count": len(capabilities) - custom_pricing,
+            "top_used": [
+                {"prefix": c["prefix"], "use_count": c["use_count"], "pricing": c["pricing"]}
+                for c in top_used
+            ],
+            "monthly_cost": round(monthly_cost, 6),
+        }
+    except Exception as exc:  # noqa: BLE001 — defensive
+        return {"status": "error", "error": str(exc)}
+
+
 def register() -> None:
     """Register capability lifecycle tools on the global Agora MCP instance.
 
@@ -265,6 +320,7 @@ def register() -> None:
         main_mcp.add_tool(bos_capability_admit)
         main_mcp.add_tool(bos_capability_retire)
         main_mcp.add_tool(bos_billing_statement)  # P2 采购账单
+        main_mcp.add_tool(bos_market_overview)  # 深化: 市场总览
         register_bos_tools(mcp, bus)
         _LOG.info("bos capability lifecycle tools registered on main MCP (P5)")
     except Exception as exc:  # noqa: BLE001
