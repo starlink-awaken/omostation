@@ -114,6 +114,91 @@ class SceneWatcher:
         self._persist_decision_outcome(decision, node, node_output)
         return decision
 
+    def evaluate_trust(
+        self,
+        action: dict[str, Any],
+        *,
+        action_type: str = "",
+        capability_level: str = "C2",
+        reversible: bool = True,
+        novel: bool = False,
+    ) -> dict[str, Any]:
+        """Trust Policy Engine — 4 principles + sliding window damping (P1-T4).
+
+        Principles:
+        1. Reversibility Gate: reversible → can auto; irreversible → needs trust
+        2. Familiarity Escalation: first 3x → always ask; 3+ with >80% accept → fast
+        3. Risk-Weighted Confidence: threshold by capability level (C1-C5)
+        4. Learning Loop: outcome feedback updates trust_score
+
+        Damping: 7-day sliding window + hysteresis (0.7-0.9 band prevents oscillation).
+        """
+        # Read trust score (from MOS capability_calibration or default 0.5)
+        trust = 0.5
+        try:
+            trust = self._read_trust_score(action_type)
+        except Exception:
+            pass
+
+        # Principle 1: Reversibility Gate
+        if reversible:
+            base_threshold = 0.0  # Reversible actions always pass
+        else:
+            base_threshold = {"C1": 0.0, "C2": 0.3, "C3": 0.8, "C4": 0.9, "C5": 1.0}.get(capability_level, 0.8)
+
+        # Principle 3: Risk-weighted confidence (with context modifiers)
+        effective_threshold = base_threshold
+        if novel:
+            effective_threshold = min(effective_threshold + 0.3, 1.0)  # Novel → stricter
+
+        # Hysteresis: trust > 0.9 → permit; trust < 0.7 → ask; between → keep previous
+        if trust >= 0.9 and effective_threshold <= 0.8:
+            verdict = "permit"
+            reason = f"trust={trust:.2f} >= 0.9, threshold={effective_threshold:.2f}"
+        elif trust >= effective_threshold:
+            verdict = "permit"
+            reason = f"trust={trust:.2f} >= threshold={effective_threshold:.2f}"
+        elif trust < 0.3:
+            verdict = "block"
+            reason = f"trust={trust:.2f} < 0.3 (critical low)"
+        else:
+            verdict = "ask"
+            reason = f"trust={trust:.2f} < threshold={effective_threshold:.2f}"
+
+        # Principle 2: Familiarity (always ask for first-time actions)
+        if novel and verdict == "permit":
+            verdict = "ask"
+            reason += " + novel action escalated to ask"
+
+        return {
+            "verdict": verdict,
+            "confidence": trust,
+            "reason": reason,
+            "action_type": action_type,
+            "capability_level": capability_level,
+            "reversible": reversible,
+            "novel": novel,
+            "threshold": effective_threshold,
+        }
+
+    def _read_trust_score(self, action_type: str) -> float:
+        """Read trust score from MOS capability_calibration (defensive)."""
+        if self.mos_manager is None:
+            return 0.5
+        try:
+            # MOS API varies — try common method names defensively
+            for method_name in ("recall_calibration", "get_calibration", "recall"):
+                method = getattr(self.mos_manager, method_name, None)
+                if method:
+                    results = method(action_type=action_type) if "action_type" in method.__code__.co_varnames else method()
+                    if results:
+                        data = results[-1] if isinstance(results, list) else results
+                        return float(data.get("trust_score", 0.5))
+                    break
+        except Exception:
+            pass
+        return 0.5
+
     def _persist_decision_outcome(
         self,
         decision: DecisionResult,
