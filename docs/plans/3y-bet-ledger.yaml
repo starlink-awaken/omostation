@@ -285,8 +285,19 @@ bets:
   title: AetherForge 动态算力与模型自动配比
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-08
   goal: 结合 bos://compute/aetherforge/infer，按 Task 复杂度自动升降级模型与算力
+  done_evidence: 'PR #13 merged (aetherforge): feat(gateway) T6-09 动态算力路由.
+    Deliverables: (1) TaskComplexityScorer 三维信号融合 (length*0.5 + task*0.35 + caps*0.15)
+    → simple/medium/complex 分级; (2) ComplexityFilter + ComplexityScore RouterPipeline 插件
+    (simple→cost-first 0.6/0.3/0.1, complex→capability-first 0.1/0.2/0.7);
+    (3) ModelGateway.generate() 按 complexity.level 选 fallback chain
+    (simple→mythos-fast/coding-fast, complex→reasoning/coding);
+    (4) ModelRequest.complexity_hint 字段透传.
+    26 tests passing (15 complexity + 11 policies).
+    Production fix: 加 triage/rpc→simple, mcp/embed→medium 关键词, 加权评分防全落 medium.
+    附带: bulk-deletion-guard CI + 15 子模块分支保护 (三层防删除).'
 - id: BET-Y1Q2-T6-10
   track: T6-EVOLUTION
   window: Y1Q2
@@ -2428,7 +2439,8 @@ bets:
   title: 可观测性收官 — 告警到人 + 事件面常态化调度
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-08
   note: "连接器体系 + cron 调度已落地 (PR #1217/#1218); 待配真实 webhook URL 后转 done"
   goal: 统一事件面落地后补最后一公里 — 告警通知到人 + 轮转/适配器常态化
   workflow: bet-execution
