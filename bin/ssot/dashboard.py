@@ -153,15 +153,42 @@ li {{ padding: 4px 0; }}
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", default="digital-organism-dashboard.html")
+    parser.add_argument("--watch", action="store_true", help="regenerate periodically (T-C7 实时)")
+    parser.add_argument("--interval", type=int, default=30, help="refresh interval (watch mode)")
+    parser.add_argument("--auto-reload", action="store_true", help="add HTML meta refresh")
     args = parser.parse_args(argv)
 
+    output_path = ROOT / args.output
+
+    if args.watch:
+        import time
+
+        print(f"Dashboard watch mode (interval={args.interval}s). Ctrl+C to stop.", flush=True)
+        try:
+            while True:
+                _render_dashboard(args, output_path)
+                time.sleep(args.interval)
+        except KeyboardInterrupt:
+            print("\nWatch stopped.")
+            return 0
+
+    _render_dashboard(args, output_path)
+    return 0
+
+
+def _render_dashboard(args, output_path: Path) -> None:
+    """Render dashboard HTML (once or watch iteration)."""
     status = gather_status()
     html = generate_html(status)
-    output_path = ROOT / args.output
+    if getattr(args, "auto_reload", False):
+        # Inject meta refresh into generated HTML (实时可观测)
+        html = html.replace(
+            "<head>",
+            '<head><meta http-equiv="refresh" content="30">',
+            1,
+        )
     output_path.write_text(html, encoding="utf-8")
-    print(f"Dashboard generated: {output_path} ({len(html)} bytes)")
-    print(f"Open with: open '{output_path}'")
-    return 0
+    print(f"Dashboard generated: {output_path} ({len(html)} bytes)", flush=True)
 
 
 if __name__ == "__main__":

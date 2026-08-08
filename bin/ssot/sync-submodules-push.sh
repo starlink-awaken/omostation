@@ -15,7 +15,6 @@
 # 用法:
 #   bin/sync-submodules-push.sh --dry-run   # 只看清单, 不 push
 #   bin/sync-submodules-push.sh             # 真同步
-#   bin/sync-submodules-push.sh --pull      # pull stale + push unpushed (治本 E)
 set -uo pipefail
 
 # 治本 followup C (2026-07-03): pre-push hook 跑时 git 设 GIT_DIR/GIT_WORK_TREE 指向主仓 worktree,
@@ -26,21 +25,9 @@ unset GIT_DIR GIT_WORK_TREE 2>/dev/null || true
 cd "$(git rev-parse --show-toplevel)" || { echo "❌ 不在 git 仓"; exit 1; }
 
 dry=0
-pull=0
 [ "${1:-}" = "--dry-run" ] && dry=1
-[ "${1:-}" = "--pull" ] && pull=1
-[ "${2:-}" = "--pull" ] && pull=1
 
-pushed=0; pulled=0; pending=0; noupstream=0; missing=0; failed=0
-
-# PASW 高冲突子模块 (ADR-0371): 由 bump-pointer 管理，不自动 pull
-PASW_SUBS="projects/gbrain projects/cockpit projects/agora"
-is_pasw() {
-  for p in $PASW_SUBS; do
-    [ "$1" = "$p" ] && return 0
-  done
-  return 1
-}
+pushed=0; pending=0; noupstream=0; missing=0; failed=0
 
 while IFS= read -r sm; do
   [ -z "$sm" ] && continue
@@ -96,29 +83,10 @@ while IFS= read -r sm; do
       fi
     fi
   fi
-
-  # 治本 E (2026-08-08): --pull 模式下检测 stale 子模块并自动 pull
-  if [ "$pull" = "1" ]; then
-    if is_pasw "$sm"; then
-      echo "⏭ $sm: PASW 子模块, 跳过 auto-pull (由 bump-pointer 管理)"
-    else
-      behind_cnt=$(git -C "$sm" log --oneline "HEAD..${upstream}" 2>/dev/null | wc -l | tr -d ' ')
-      if [ "$behind_cnt" -gt 0 ]; then
-        echo "⬇ $sm: $behind_cnt 个过期 ← $upstream"
-        if [ "$dry" = "0" ]; then
-          if git -C "$sm" checkout main >/dev/null 2>&1 && git -C "$sm" pull --quiet origin main >/dev/null 2>&1; then
-            pulled=$(( pulled + 1 )) || true; echo "  ✅ pulled"
-          else
-            failed=$(( failed + 1 )) || true; echo "  ❌ pull 失败 (冲突?)"
-          fi
-        fi
-      fi
-    fi
-  fi
 done < <(git config --file .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
 
 echo "---"
-echo "统计: 待push=$pending 已push=$pushed 已pull=$pulled 失败=$failed 无上游=$noupstream 缺失=$missing (dry-run=$dry)"
+echo "统计: 待push=$pending 成功=$pushed 失败=$failed 无上游=$noupstream 缺失=$missing (dry-run=$dry)"
 
 # ── PASW: 检测 .subtrees/ 隔离 worktree 内的未推 commit ────────────────
 # PASW 隔离子模块的实际 commit 在 .subtrees/<sub>/ 内, 共享 projects/<sub>/ 保持原状.

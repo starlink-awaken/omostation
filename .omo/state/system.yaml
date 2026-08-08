@@ -11,16 +11,16 @@ phase_status: active
 current_wave: W5
 next_milestone: Phase 49 W1 — 知识流动·用户价值兑现 (T1-T6 全面落地)
 health_score_ref: .omo/state/health.yaml
-health_score: 74
+health_score: 70
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-08-08T03:41:11Z'
+health_score_generated_at: '2026-08-08T05:12:40Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 completed_tasks: 225
-total_tasks: 290
-active_tasks: 0
+total_tasks: 295
+active_tasks: 1
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
 phase2_core_complete: true
@@ -33,7 +33,7 @@ phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
 phase36_status: completed
 phase36_completed_at: '2026-06-11T00:00:00Z'
 next_active_tasks:
-- (No active tasks)
+- kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
 last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff
   may proceed)
 phase2_status: completed
@@ -57,7 +57,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-08-08T03:41:12Z'
+updated_at: '2026-08-08T05:12:41Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -180,7 +180,7 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 65
+planned_tasks: 69
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
 - bet-y1q1-t1-00 (并发写冲突止血 — 共享主树禁写 + PASW 全覆盖)
@@ -210,6 +210,11 @@ next_planned_tasks:
 - bet-y1q2-t6-03 (bin 脚本清理 — 归档零调用脚本, 不设数量目标)
 - bet-y1q2-t6-04 (合成协作场景归档 221 → ≤40)
 - bet-y1q2-t6-05 (减法配额制门禁上线)
+- bet-y1q2-t6-06 (技能自动结晶引擎 — 踩坑经验自动重构为持久化 Agent Skill)
+- bet-y1q2-t6-07 (B.D.S.K. 影子沙箱预演场 — 0-Touch 代码提交前对抗仿真)
+- bet-y1q2-t6-08 (100% 责任归因代理链 — Subagent 全流程继承树审计)
+- bet-y1q2-t6-09 (AetherForge 动态算力与模型自动配比)
+- bet-y1q2-t6-10 (god-module 大文件 SRP 拆分 (3 个 >1500L 债))
 - bet-y1q2-t7-01 (工程交付 dogfood 开 shadow)
 - bet-y1q2-t8-01 (/outcomes 结果与校准面板)
 - bet-y1q3-t2-01 (感知面第二根管子 (文件夹 / 日历))
@@ -245,7 +250,6 @@ next_planned_tasks:
 - bet-y3h2-t4-01 (复利收益归因报告)
 - bet-y3h2-t7-01 (公文场景 routine (限格式类))
 - cockpit-debt-debt-1 (治理技术债务：债务)
-- kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
@@ -260,8 +264,8 @@ runtime_health_summary:
   online_services: 4
   total_services: 4
   ratio: 1.0
-  health_score: 74
-  last_scan: '2026-08-08T03:41:11Z'
+  health_score: 70
+  last_scan: '2026-08-08T05:12:40Z'
   source: compass_radar_isc3_daemon_ratio
   degraded: []
 phase42_status: completed
@@ -277,18 +281,18 @@ debt_adjusted_health_score: 61.6
 debt_items_total: 7
 debt_items_resolved: 7
 debt_adjusted_note: all 7 debt items resolved
-governance_anomaly_score: 15
+governance_anomaly_score: 0
 service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-08-08T03:41:11Z'
-health_score_evidence: 100.0
+governance_feedback_last_run: '2026-08-08T05:12:39Z'
+health_score_evidence: 86.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-08T03:41:12.451514+00:00'
+health_score_evidence_generated_at: '2026-08-08T05:12:41.090014+00:00'
 workflow_mesh_health:
   status: healthy
-  event_count: 61
-  events_last_hour: 61
-  last_event_age_seconds: 75.1
+  event_count: 1091
+  events_last_hour: 109
+  last_event_age_seconds: 3.3
   bridges_active:
   - agent-workflow

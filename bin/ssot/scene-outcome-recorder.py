@@ -19,18 +19,16 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from _shared import ROOT, append_jsonl, load_yaml, read_jsonl, utc_now
+
 OUTCOME_SCHEMA = "scene-outcome/v1"
-ROOT = Path(__file__).resolve().parents[2]
 OUTCOME_LOG = ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "scene-outcomes.jsonl"
 VALID_ADJUDICATIONS = {"accepted", "rejected", "revised"}
 
 
 def _load_scene_card(path: Path) -> dict[str, Any]:
-    import yaml
-
-    docs = list(yaml.safe_load_all(path.read_text(encoding="utf-8")))
-    body = docs[-1] if docs else {}
-    if not isinstance(body, dict):
+    body = load_yaml(path)
+    if not body:
         raise ValueError(f"scene card must be an object: {path}")
     return body
 
@@ -50,7 +48,7 @@ def record_outcome(
 
     card = _load_scene_card(scene_card_path)
     scene_id = card.get("scene_id", "unknown")
-    ts = datetime.now(UTC).isoformat()
+    ts = utc_now()
 
     entry = {
         "ts": ts,
@@ -64,52 +62,46 @@ def record_outcome(
         "digest": f"sha256:{hashlib.sha256(f'{scene_id}:{run_id}:{adjudication}:{ts}'.encode()).hexdigest()[:16]}",
     }
 
-    OUTCOME_LOG.parent.mkdir(parents=True, exist_ok=True)
+    append_jsonl(OUTCOME_LOG, entry)
 
-    import fcntl
-
-    with open(OUTCOME_LOG, "a", encoding="utf-8") as f:
-        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-        try:
-            f.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
-            f.flush()
-        finally:
-            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+    # T-B2: outcome → MOS decision_outcome bridge (控制论反馈闭环).
+    # 结果写入 MOS 因果模型, Trust Policy 读取后可校准能力评估.
+    mos_outcome_id = _write_mos_decision_outcome(entry)
+    entry["mos_outcome_id"] = mos_outcome_id
 
     entry["status"] = "recorded"
-
-    # P0-T4: MOS Bridge — outcome → decision_outcome table
-    try:
-        import sys as _sys
-        _mos_src = str(ROOT / "projects" / "kairon" / "packages" / "mos" / "src")
-        if _mos_src not in _sys.path:
-            _sys.path.insert(0, _mos_src)
-        from mos.agent_belief import write_decision_outcome, DecisionOutcome
-        write_decision_outcome(DecisionOutcome(
-            scene_id=scene_id, run_id=run_id,
-            action=f"{adjudication} by {actor}",
-            adjudication=adjudication, actor=actor, notes=notes[:200],
-        ))
-    except Exception:
-        pass  # MOS not configured — JSONL is sufficient
-
     return entry
+
+
+def _write_mos_decision_outcome(entry: dict[str, Any]) -> str | None:
+    """Write outcome to MOS decision_outcome (复用 omo_belief.MOSBeliefManager)."""
+    try:
+        import sys
+
+        omo_src = str(ROOT / "projects" / "omo" / "src")
+        if omo_src not in sys.path:
+            sys.path.insert(0, omo_src)
+        from omo.omo_belief import MOSBeliefManager
+
+        manager = MOSBeliefManager(root=ROOT)
+        do_id = manager.record_decision_outcome(
+            decision_type=f"scene:{entry.get('scene_id', 'unknown')}",
+            input_summary=f"run_id={entry.get('run_id', '')}",
+            expected_outcome="scene execution to terminal",
+            actual_outcome=f"adjudication={entry.get('adjudication', '')}",
+            delta=entry.get("notes", "")[:200],
+            source_run_id=entry.get("run_id", ""),
+        )
+        return do_id
+    except Exception:
+        return None  # MOS not configured, non-blocking
 
 
 def list_outcomes(scene_id: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
     """List recent outcomes, optionally filtered by scene_id."""
-    if not OUTCOME_LOG.exists():
-        return []
-    entries: list[dict[str, Any]] = []
-    for line in OUTCOME_LOG.read_text(encoding="utf-8").strip().split("\n"):
-        if not line:
-            continue
-        try:
-            entry = json.loads(line)
-            if scene_id is None or entry.get("scene_id") == scene_id:
-                entries.append(entry)
-        except json.JSONDecodeError:
-            continue
+    entries = read_jsonl(OUTCOME_LOG)
+    if scene_id is not None:
+        entries = [e for e in entries if e.get("scene_id") == scene_id]
     return entries[-limit:]
 
 
