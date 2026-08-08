@@ -189,6 +189,11 @@ for item in d.get('results', []):
         exit 1
       fi
     fi
+
+    # Auto-seed drift issues into .omo/debt/items/SUBMODULE_DRIFT.yaml (non-blocking)
+    if [ -f "$ROOT/bin/gac/debt-auto-seed-drift.py" ]; then
+      python3 "$ROOT/bin/gac/debt-auto-seed-drift.py" --apply 2>&1 | sed 's/^/[debt-seed] /' >&2 || true
+    fi
   fi
 fi
 
