@@ -5,10 +5,10 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
 echo "[1/5] Syncing .omo state"
-# omo pyproject 已含 pyyaml (依赖列表), 无需 --with pyyaml — 避免新版 uv
-# 因根仓 pyproject 无 [project] 表在 --with 临时环境 workspace 解析时报错
-# (CI setup-uv@v4 拉最新 uv 会触发).
-uv run --project projects/omo python3 scripts/sync_omo_state.py --omo-dir .omo
+# 用 omo broker (omo state sync) — 不依赖 scripts 子模块的 sync_omo_state.py
+# (该脚本未合入 scripts origin/main). 同时避免新版 uv 对根仓无 [project]
+# pyproject 的 --with 临时 env workspace 解析报错.
+uv run --project projects/omo omo state sync --json
 
 echo "[2/5] Running governance lint gates"
 pushd projects/omo >/dev/null
