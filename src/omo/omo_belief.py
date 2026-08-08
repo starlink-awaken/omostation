@@ -385,43 +385,83 @@ class MOSBeliefManager:
 
     # ── P2: 记忆扩展 (技能库+经验库+遗忘+Mem0模式) ──────────────
 
-    def record_skill(self, agent_id: str, skill_name: str, code_or_pattern: str, learned_from: str, *, reusable: bool = True) -> str:
+    def record_skill(
+        self,
+        agent_id: str,
+        skill_name: str,
+        code_or_pattern: str,
+        learned_from: str,
+        *,
+        reusable: bool = True,
+    ) -> str:
         """P2-T1: 记录agent积累的可复用技能."""
         state = self._load_state()
         sk_id = f"skill-{len(state['agent_skills']) + 1:04d}"
-        state["agent_skills"].append({"id": sk_id, "agent_id": agent_id, "skill_name": skill_name, "code_or_pattern": code_or_pattern[:500], "learned_from": learned_from, "reusable": reusable, "recorded_at": _utc_now()})
+        state["agent_skills"].append(
+            {
+                "id": sk_id,
+                "agent_id": agent_id,
+                "skill_name": skill_name,
+                "code_or_pattern": code_or_pattern[:500],
+                "learned_from": learned_from,
+                "reusable": reusable,
+                "recorded_at": _utc_now(),
+            }
+        )
         write_yaml_atomic(self.state_file, state)
-        self._append_audit_log("RECORD_SKILL", f"id={sk_id} agent={agent_id} skill={skill_name}")
+        self._append_audit_log(
+            "RECORD_SKILL", f"id={sk_id} agent={agent_id} skill={skill_name}"
+        )
         return sk_id
 
-    def record_experience(self, agent_id: str, experience: str, outcome: str, *, context: str = "") -> str:
+    def record_experience(
+        self, agent_id: str, experience: str, outcome: str, *, context: str = ""
+    ) -> str:
         """P2-T2: 记录agent的正/反面经验教训."""
         state = self._load_state()
         ex_id = f"exp-{len(state['agent_experiences']) + 1:04d}"
-        state["agent_experiences"].append({"id": ex_id, "agent_id": agent_id, "experience": experience[:500], "outcome": outcome, "context": context[:200], "recorded_at": _utc_now()})
+        state["agent_experiences"].append(
+            {
+                "id": ex_id,
+                "agent_id": agent_id,
+                "experience": experience[:500],
+                "outcome": outcome,
+                "context": context[:200],
+                "recorded_at": _utc_now(),
+            }
+        )
         write_yaml_atomic(self.state_file, state)
-        self._append_audit_log("RECORD_EXPERIENCE", f"id={ex_id} agent={agent_id} outcome={outcome}")
+        self._append_audit_log(
+            "RECORD_EXPERIENCE", f"id={ex_id} agent={agent_id} outcome={outcome}"
+        )
         return ex_id
 
     def forget_expired(self, *, max_age_days: int = 90) -> dict[str, int]:
         """P2-T3: TTL-based遗忘 — 标记超过max_age天的记忆为archived (参考SAGE Ebbinghaus)."""
         from datetime import datetime, timedelta, timezone
+
         state = self._load_state()
         cutoff = (datetime.now(timezone.utc) - timedelta(days=max_age_days)).isoformat()
         archived = {"world_snapshots": 0, "experiences": 0}
         for ws in state["world_snapshots"]:
             ts = str(ws.get("expires_at", ws.get("ts", "")))
             if ts and ts < cutoff and ws.get("status") != "archived":
-                ws["status"] = "archived"; archived["world_snapshots"] += 1
+                ws["status"] = "archived"
+                archived["world_snapshots"] += 1
         for exp in state["agent_experiences"]:
             ts = str(exp.get("recorded_at", ""))
             if ts and ts < cutoff and exp.get("status") != "archived":
-                exp["status"] = "archived"; archived["experiences"] += 1
+                exp["status"] = "archived"
+                archived["experiences"] += 1
         write_yaml_atomic(self.state_file, state)
-        self._append_audit_log("FORGET_EXPIRED", f"max_age={max_age_days}d archived={archived}")
+        self._append_audit_log(
+            "FORGET_EXPIRED", f"max_age={max_age_days}d archived={archived}"
+        )
         return archived
 
-    def update_memory(self, table: str, key: str, operation: str, value: Any = None) -> bool:
+    def update_memory(
+        self, table: str, key: str, operation: str, value: Any = None
+    ) -> bool:
         """P2-T4: Mem0模式记忆操作 — ADD/MERGE/UPDATE/DELETE."""
         state = self._load_state()
         if table not in state:
@@ -430,16 +470,26 @@ class MOSBeliefManager:
         found_idx = None
         for i, item in enumerate(items):
             if item.get("id") == key or key in str(item.get("topic", "")):
-                found_idx = i; break
+                found_idx = i
+                break
         if operation == "ADD" and found_idx is None and isinstance(value, dict):
-            items.append(value); write_yaml_atomic(self.state_file, state); return True
+            items.append(value)
+            write_yaml_atomic(self.state_file, state)
+            return True
         elif operation == "DELETE" and found_idx is not None:
-            items.pop(found_idx); write_yaml_atomic(self.state_file, state); return True
-        elif operation == "UPDATE" and found_idx is not None and isinstance(value, dict):
-            items[found_idx].update(value); write_yaml_atomic(self.state_file, state); return True
+            items.pop(found_idx)
+            write_yaml_atomic(self.state_file, state)
+            return True
+        elif (
+            operation == "UPDATE" and found_idx is not None and isinstance(value, dict)
+        ):
+            items[found_idx].update(value)
+            write_yaml_atomic(self.state_file, state)
+            return True
         elif operation == "MERGE" and found_idx is not None and isinstance(value, dict):
             for k, v in value.items():
                 if k not in items[found_idx]:
                     items[found_idx][k] = v
-            write_yaml_atomic(self.state_file, state); return True
+            write_yaml_atomic(self.state_file, state)
+            return True
         return False
