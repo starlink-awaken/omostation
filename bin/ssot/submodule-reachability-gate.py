@@ -39,9 +39,17 @@ def changed_submodule_paths(base: str) -> set[str]:
     实际变更的 gitlink; CI full checkout 仍是全量最终守门员.
     .gitmodules 自身变化视为结构变更 → 回退全量检查 (防御).
     """
+    # 基线不可解析 (拼错 / ref 未 fetch / 新克隆还没有 origin/main) 时必须回退全量。
+    # 原实现返回 set(), 而空集会命中 check() 的 incremental-empty 快速路径
+    # → 直接 ok=True, 报 "PASS (0 gitlinks)" 且 rc=0 —— 守门员一个都没查却宣称通过。
+    # pre-push hook 传的正是 origin/main, 新克隆里它可能尚不存在。
+    if run(["git", "rev-parse", "--verify", "--quiet", f"{base}^{{commit}}"]).returncode != 0:
+        sys.stderr.write(f"[reachability] 基线 {base} 不可解析, 回退全量检查\n")
+        return set(submodule_paths())
     result = run(["git", "diff", "--name-only", base, "HEAD", "--", ".gitmodules", "projects/*"])
     if result.returncode != 0:
-        return set()
+        sys.stderr.write(f"[reachability] git diff 相对 {base} 失败, 回退全量检查\n")
+        return set(submodule_paths())
     changed = {line.strip() for line in result.stdout.splitlines() if line.strip()}
     if not changed:
         return set()

@@ -138,7 +138,11 @@ case "$cmd" in
     ROOT_REMOTE=$(resolve_root_remote) || exit 1
     # 提交未提交改动 (如有). PASW: 只 commit root 已 staged 的改动
     if ! git diff --quiet || ! git diff --cached --quiet; then
-      git add -- ':!.subtrees' .
+      # .gitignore 含 .subtrees/ → git add 撞上被忽略路径会返回 1
+      # (实测 ':!.subtrees' / ':!.subtrees/' / ':(exclude).subtrees/*' 都是 1),
+      # 但非忽略文件其实已暂存成功。set -euo pipefail 下必须吞掉这个返回码,
+      # 否则 submit 在此静默中断 —— 后面的 push / 开 PR / CI 校验一个都不执行。
+      git add -- ':!.subtrees' . || true
       git commit -m "wip: $session worktree 提交" 2>&1 | tail -2
     fi
     # 防 CI 死锁: 检查 dependency-baseline drift (submodule bump 可能引入新依赖)
