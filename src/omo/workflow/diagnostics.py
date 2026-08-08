@@ -893,7 +893,9 @@ def build_status_report(
     staged_lane = staged_lane_report()
     lock_scan = scan_locks(registry)
     stale_locks = sum(
-        1 for entry in lock_scan if entry["kind"] in ("zombie_expired", "zombie_stale_heartbeat")
+        1
+        for entry in lock_scan
+        if entry["kind"] in ("zombie_expired", "zombie_stale_heartbeat")
     )
     live_locks = sum(1 for entry in lock_scan if entry["kind"] == "live")
     current_run_id = active_runs[0] if len(active_runs) == 1 else None

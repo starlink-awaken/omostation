@@ -225,7 +225,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_prune.add_argument("--json", action="store_true")
     p_prune.add_argument(
-        "--scan-only", action="store_true",
+        "--scan-only",
+        action="store_true",
         help="Only scan and report locks, do not prune",
     )
 
@@ -262,7 +263,9 @@ def main(argv: list[str] | None = None) -> int:
                 if args.scan_only:
                     live = [e for e in locks if e["kind"] == "live"]
                     zombie = [e for e in locks if e["kind"] != "live"]
-                    print(f"locks: {len(locks)} total, {len(live)} live, {len(zombie)} zombie")
+                    print(
+                        f"locks: {len(locks)} total, {len(live)} live, {len(zombie)} zombie"
+                    )
                     for entry in locks:
                         tag = "LIVE" if entry["kind"] == "live" else "ZOMBIE"
                         print(f"  [{tag}] {entry['path']} — {entry['detail']}")
