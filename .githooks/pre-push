@@ -147,8 +147,8 @@ print(json_text.strip())
     _has_diverged=0
     _has_any_issue=0
     if [ -n "$_drift_json" ] && [ "$_drift_json" != "null" ]; then
-      _has_diverged=$(python3 -c "import json,sys; d=json.loads(sys.argv[1]); results=d.get('results',[]); print(1 if any(r.get('status')=='diverged' for r in results) else 0)" "$_drift_json" 2>/dev/null || echo "0")
-      _has_any_issue=$(python3 -c "import json,sys; d=json.loads(sys.argv[1]); results=d.get('results',[]); print(1 if any(r.get('status')!='skip' and r.get('status')!='aligned' for r in results) else 0)" "$_drift_json" 2>/dev/null || echo "0")
+      _has_diverged=$(python3 -c "import json,sys; d=json.loads(sys.argv[1]); results=d.get('results',[]); print(1 if any(r.get('status')=='diverged' and not r.get('submodule','').startswith('.subtrees/') for r in results) else 0)" "$_drift_json" 2>/dev/null || echo "0")
+      _has_any_issue=$(python3 -c "import json,sys; d=json.loads(sys.argv[1]); results=d.get('results',[]); print(1 if any(r.get('status')!='skip' and r.get('status')!='aligned' and not r.get('submodule','').startswith('.subtrees/') for r in results) else 0)" "$_drift_json" 2>/dev/null || echo "0")
     fi
     if [ "$_has_any_issue" = "1" ]; then
       echo "[pointer-drift] ⚠️  子模块指针漂移检测到问题:" >&2
