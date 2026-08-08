@@ -1,13 +1,18 @@
-# ADR-0400: Definition of Done — 任务完成验证门禁 (防虚假完成)
+---
+id: ADR-0400
+title: Definition of Done — 任务完成验证门禁 (防虚假完成)
+status: ACCEPTED
+lifecycle: ACTIVE
+owner: governance-team
+last-reviewed: 2026-08-08
+supersedes: []
+related:
+  - .omo/debt/gap-items
+  - bin/ssot/gap-verify.py
+  - bin/ssot/task-verify.py
+---
 
-- status: accepted
-- date: 2026-08-08
-- owner: governance-team
-- supersedes: 无 (新机制)
-- related:
-  - `.omo/debt/gap-items/` (能力缺口台账)
-  - `bin/ssot/gap-verify.py` (清零率验证)
-  - `bin/ssot/task-verify.py` (完成验证门禁)
+# ADR-0400: Definition of Done — 任务完成验证门禁 (防虚假完成)
 
 ---
 
