@@ -577,7 +577,10 @@ def claim_run(
     paths: list[str],
     surfaces: list[str],
     force_lock: bool,
+    affected_hash: str | None = None,
 ) -> dict[str, Any]:
+    if not affected_hash:
+        raise WorkflowError("Missing or invalid affected-hash. You must run affected-graph.py first.")
     if not paths and not surfaces:
         raise WorkflowError("claim requires at least one --path or --surface")
     with run_update_lock(registry, run_id):
@@ -972,6 +975,7 @@ def claim_policy(registry: dict[str, Any]) -> dict[str, Any]:
         "required_paths": normalized_required_paths,
         "tiers": tiers,
     }
+
 
 
 def claimed_paths(payload: dict[str, Any]) -> list[str]:
