@@ -354,6 +354,21 @@ def run_journey(
                 scene_id=scene_id, status="awaiting_human",
                 context=context, checkpoint=checkpoint,
             )
+            # P3-T6: Workflow Mesh integration — emit ApprovalRequested event
+            try:
+                _mesh_log = ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "mesh-events.jsonl"
+                _mesh_log.parent.mkdir(parents=True, exist_ok=True)
+                _event = json.dumps({
+                    "event_type": "ApprovalRequested",
+                    "journey_id": journey_id,
+                    "run_id": run_id,
+                    "state": current_state_name,
+                    "checkpoint": checkpoint,
+                }, ensure_ascii=False, sort_keys=True) + "\n"
+                with open(_mesh_log, "a", encoding="utf-8") as _f:
+                    _f.write(_event)
+            except Exception:
+                pass
             print(f"  ⏸️  Checkpoint: {checkpoint.get('require', 'human_review')}")
             print(f"     Resume: python3 bin/ssot/journey-runner.py resume --journey-id {journey_id} --run-id {run_id}")
             print()
