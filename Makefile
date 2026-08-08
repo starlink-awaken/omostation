@@ -111,6 +111,12 @@ help:
 	@echo "make help                显示本消息"
 
 install-hooks:  ## 装 git pre-push + pre-commit + post-commit + prepare-commit-msg 钩子. 新 clone 必跑.
+	@# 写保护: 校验 .githooks/pre-push 是完整版 (含 direct-main 守卫 + remote-hygiene),
+	@# 防并发 agent 把源文件覆盖为简化版导致 gate 失效 (2026-08-08 实测发现)
+	@if ! grep -q "remote-hygiene" .githooks/pre-push 2>/dev/null; then \
+		echo "❌ .githooks/pre-push 缺 remote-hygiene gate (被简化覆盖?) — 先 git checkout .githooks/pre-push 恢复" >&2; \
+		exit 1; \
+	fi
 	install -m 755 .githooks/pre-push .git/hooks/pre-push
 	install -m 755 .githooks/pre-commit .git/hooks/pre-commit
 	install -m 755 .githooks/post-commit .git/hooks/post-commit
