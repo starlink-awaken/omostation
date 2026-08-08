@@ -81,6 +81,25 @@ def generate_reflection(
             fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
     entry["status"] = "recorded"
+
+    # P0-T5: MOS Bridge — reflection → world_snapshot table
+    try:
+        import sys as _sys
+        _mos_src = str(root / "projects" / "kairon" / "packages" / "mos" / "src")
+        if _mos_src not in _sys.path:
+            _sys.path.insert(0, _mos_src)
+        from mos.agent_belief import write_world_snapshot, WorldSnapshot
+        for q in questions:
+            write_world_snapshot(WorldSnapshot(
+                domain="meta",
+                key=f"reflection:{scene_id}:{q[:60]}",
+                value=output_summary[:200],
+                source=f"reflection:{run_id}",
+                confidence=0.5,
+            ))
+    except Exception:
+        pass  # MOS not configured — JSONL is sufficient
+
     return entry
 
 
