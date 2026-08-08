@@ -1062,8 +1062,6 @@ gac:
     enforcement: advisory
     source_ref: protocols/port-registry.yaml
   - id: CR-X4-MOF-CAPABILITIES-DRIFT
-    name: MOF 能力注册漂移
-    description: 'MOF capabilities 注册表与 projects/*/src 实现一致性漂移检测. 实现: bin/mof/check-mof-capabilities-drift.py'
     relates_to: ['CR-X4-METAOS-REGISTRY-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     source_type: native
     source_ref: bin/mof/check-mof-capabilities-drift.py
@@ -1072,15 +1070,13 @@ gac:
     check_type: consistency_drift
     executor:
     - ci_gate
-    enforcement: advisory
+    enforcement: required
     lifecycle: active
     version: 1.0.0
     created_at: '2026-07-25'
     adr: ADR-0238
     target: projects/*/src/**
   - id: CR-X4-METAOS-REGISTRY-DRIFT
-    name: MetaOS 注册表漂移
-    description: 'MetaOS 注册表与 projects/*/src 实现一致性漂移检测. 实现: bin/mof/check-mof-capabilities-drift.py (--scope metaos)'
     relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     source_type: native
     source_ref: bin/mof/check-mof-capabilities-drift.py
@@ -1089,15 +1085,13 @@ gac:
     check_type: consistency_drift
     executor:
     - ci_gate
-    enforcement: advisory
+    enforcement: required
     lifecycle: active
     version: 1.0.0
     created_at: '2026-07-26'
     adr: ADR-0242
     target: projects/*/src/**
   - id: CR-X4-DOC-CLAIMS
-    name: 文档声明一致性
-    description: '文档中的声明 (端口/BOS URI/服务名) 与 SSOT 注册表一致. 实现: bin/mof/check-doc-claims.py'
     relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-METAOS-REGISTRY-DRIFT', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     source_type: native
     source_ref: bin/mof/check-doc-claims.py
@@ -1723,7 +1717,7 @@ gac:
     check_type: hygiene_case
     executor:
     - omo_audit
-    lifecycle: superseded
+    lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-FOUNDRY-MONITOR
     superseded_reason: 被 CR-FOUNDRY-MONITOR (active, ADR-0160) 取代, 实现 Knowledge Foundry
@@ -1757,7 +1751,7 @@ gac:
     check_type: hygiene_case
     executor:
     - omo_audit
-    lifecycle: superseded
+    lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-P76-7-1-LLM-ADVISORY-ONLY,CR-P76-7-2-TIER-GRACEFUL-FALLBACK,CR-COMMIT-LLM-ASSIST
     superseded_reason: 被 3 条 active LLM 护栏规则取代, LLM 辅助 commit 已落地
@@ -1773,7 +1767,7 @@ gac:
     check_type: audit_chain
     executor:
     - omo_audit
-    lifecycle: superseded
+    lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-PRINCIPLE-FOLLOWED,CR-PRINCIPLE-ENFORCEMENT
     superseded_reason: 被 CR-PRINCIPLE-FOLLOWED 和 CR-PRINCIPLE-ENFORCEMENT (active)
@@ -1790,7 +1784,7 @@ gac:
     check_type: audit_chain
     executor:
     - omo_audit
-    lifecycle: superseded
+    lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-PRINCIPLE-FOLLOWED
     superseded_reason: 被 CR-PRINCIPLE-FOLLOWED (active) 取代, 原则 catalog 已通过 .omo/standards/p76-principles.md
@@ -2180,8 +2174,6 @@ gac:
     enforcement: required
     target: docs/**
   - id: CR-X4-MCPTOOL-IMPL-DRIFT
-    name: MCPTOOL 声明/实现漂移
-    description: 'MCPTOOL 声明的工具与实际实现一致性漂移检测. 实现: bin/ssot/check-mcptool-impl-drift.py'
     relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-METAOS-REGISTRY-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK']
     source_type: indexed
     source_ref: bin/ssot/check-mcptool-impl-drift.py
@@ -2191,7 +2183,7 @@ gac:
     executor:
     - mof_validate
     - ci_gate
-    enforcement: advisory
+    enforcement: required
     lifecycle: active
     version: 1.0.0
     created_at: '2026-07-06'

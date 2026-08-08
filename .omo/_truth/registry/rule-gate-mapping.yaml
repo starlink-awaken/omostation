@@ -1,0 +1,102 @@
+gate_to_rules:
+  check-adversarial-effectiveness:
+  - CR-ADVERSARIAL-EFFECTIVENESS
+  check-dual-track-purity:
+  - CR-DUAL-TRACK-PURITY
+  check-evidence-freshness:
+  - CR-X2-EVIDENCE-FRESHNESS
+  check-evidence-honest-closure:
+  - CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
+  check-foundry-deck-coverage:
+  - CR-P79-3-FOUNDRY-DECK
+  check-gateway-status-doc:
+  - CR-P77-6-3-GATEWAY-STATUS-DOC
+  check-governance-ratio:
+  - CR-GOVERNANCE-RATIO
+  check-governance-trend:
+  - CR-X2-GOVERNANCE-TREND
+  check-redline-coverage:
+  - CR-REDLINE-COVERAGE
+  check-severity-registry:
+  - CR-SEVERITY-REGISTRY
+  check-silent-loss:
+  - CR-SILENT-LOSS
+  check-submodule-rewind:
+  - CR-SUBMODULE-REWIND
+  check-work-landed:
+  - CR-WORK-LANDED
+  check-workorder-schema:
+  - CR-WORKORDER-SCHEMA
+  doc-claims-check:
+  - CR-X4-DOC-CLAIMS
+  gac-drift:
+  - CR-X2-GAC-DRIFT
+  - CR-X3-L0-GAC-COVERAGE
+  governance-semantic-gate:
+  - CR-X2-GOVERNANCE-SEMANTIC-GATE
+  layer-call-direction-check:
+  - CR-LAYER-CALL-DIRECTION
+  m4-bootstrap-reflex:
+  - CR-M0-STAGE-GATE
+  - CR-M4-BOOTSTRAP-REFLEX
+  mof-capabilities-drift-check:
+  - CR-X4-METAOS-REGISTRY-DRIFT
+  - CR-X4-MOF-CAPABILITIES-DRIFT
+  sweep-index-check:
+  - CR-SWEEP-INDEX-AUTO
+rule_to_gates:
+  CR-ADVERSARIAL-EFFECTIVENESS:
+  - check-adversarial-effectiveness
+  CR-DUAL-TRACK-PURITY:
+  - check-dual-track-purity
+  CR-GOVERNANCE-RATIO:
+  - check-governance-ratio
+  CR-LAYER-CALL-DIRECTION:
+  - layer-call-direction-check
+  CR-M0-STAGE-GATE:
+  - m4-bootstrap-reflex
+  CR-M4-BOOTSTRAP-REFLEX:
+  - m4-bootstrap-reflex
+  CR-P76-7-4-EVIDENCE-HONEST-CLOSURE:
+  - check-evidence-honest-closure
+  CR-P77-6-3-GATEWAY-STATUS-DOC:
+  - check-gateway-status-doc
+  CR-P79-3-FOUNDRY-DECK:
+  - check-foundry-deck-coverage
+  CR-REDLINE-COVERAGE:
+  - check-redline-coverage
+  CR-SEVERITY-REGISTRY:
+  - check-severity-registry
+  CR-SILENT-LOSS:
+  - check-silent-loss
+  CR-SUBMODULE-REWIND:
+  - check-submodule-rewind
+  CR-SWEEP-INDEX-AUTO:
+  - sweep-index-check
+  CR-WORK-LANDED:
+  - check-work-landed
+  CR-WORKORDER-SCHEMA:
+  - check-workorder-schema
+  CR-X2-EVIDENCE-FRESHNESS:
+  - check-evidence-freshness
+  CR-X2-GAC-DRIFT:
+  - gac-drift
+  CR-X2-GOVERNANCE-SEMANTIC-GATE:
+  - governance-semantic-gate
+  CR-X2-GOVERNANCE-TREND:
+  - check-governance-trend
+  CR-X3-L0-GAC-COVERAGE:
+  - gac-drift
+  CR-X4-DOC-CLAIMS:
+  - doc-claims-check
+  CR-X4-METAOS-REGISTRY-DRIFT:
+  - mof-capabilities-drift-check
+  CR-X4-MOF-CAPABILITIES-DRIFT:
+  - mof-capabilities-drift-check
+stats:
+  active_required_unmapped: 19
+  gates_with_rules: 21
+  mapped_rules: 24
+  total_gates: 65
+  total_rules: 136
+  unmapped_rules: 112

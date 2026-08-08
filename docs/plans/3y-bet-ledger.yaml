@@ -1039,7 +1039,7 @@ bets:
   appetite: 1 week
   priority: P0
   status: done
-  completed_at: 2026-08-08
+  completed_at: '2026-08-08'
   goal: 降低治理面的「误伤成本」, 而非降低规则总数
   non_goals:
   - 新增规则
@@ -1082,8 +1082,7 @@ bets:
   title: ADR 分层 — 只分层不裁剪
   appetite: 1 week
   priority: P0
-  status: done
-  completed_at: '2026-08-08'
+  status: candidate
   goal: 把历史 ADR 移出检索面, 让有效集回到可通读范围。不删任何一份
   non_goals:
   - 删除 ADR 文件
@@ -1123,8 +1122,7 @@ bets:
   title: bin 脚本清理 — 归档零调用脚本, 不设数量目标
   appetite: 1 week
   priority: P1
-  status: done
-  completed_at: '2026-08-08'
+  status: candidate
   goal: 归档确实无调用方的脚本, 数量由实际孤儿数决定
   non_goals:
   - 重写脚本
@@ -1203,8 +1201,7 @@ bets:
   title: 减法配额制门禁上线
   appetite: 3 days
   priority: P0
-  status: done
-  completed_at: '2026-08-08'
+  status: candidate
   goal: 用机制而非意志维持表面积不反弹 — 增 1 删 1
   non_goals:
   - 限制代码行数增长(不同机制)
@@ -1386,7 +1383,8 @@ bets:
   title: capability_calibration 自动更新
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  completed_at: '2026-08-08'
   goal: 让每次人类裁决自动改变系统对自身能力的认知(自我模型闭环)
   non_goals:
   - 据 calibration 自动放权(属 Y1Q4)
