@@ -249,8 +249,21 @@ bets:
   title: 100% 责任归因代理链 — Subagent 全流程继承树审计
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-08
+  done_evidence: >
+    start_run accepts parent_run_id/parent_agent; run record + ledger event include parent fields.
+    spawn_run creates child runs auto-linked to parent (auto-copies parent_agent).
+    trace_attribution walks full parent chain (root→leaf), handles missing runs gracefully.
+    CLI: `start --parent-run`, `spawn <parent> <workflow>`, `trace <run-id>` (--json supported).
+    9 tests pass: parent linkage, ledger events, chain tracing (1/2/3 levels), missing run handling.
   goal: 在 audit.log 中扩充 human_session_id -> parent_agent -> task 完整继承归因树
+  done_when:
+  - start_run 接受 parent_run_id/parent_agent 参数，写入 run record + ledger 事件
+  - spawn_run 创建子 run 时自动继承父 agent_profile
+  - trace_attribution 可追溯完整归因链（支持多层级、缺失节点）
+  - CLI 新增 spawn / trace 子命令，start 支持 --parent-run
+  - 9 个测试全通过
 - id: BET-Y1Q2-T6-09
   track: T6-EVOLUTION
   window: Y1Q2

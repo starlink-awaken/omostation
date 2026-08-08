@@ -64,6 +64,8 @@ from omo.workflow import (
     scan_locks,
     run_file_for,
     start_run,
+    spawn_run,
+    trace_attribution,
     read_run,
     write_run,
     claim_run,
