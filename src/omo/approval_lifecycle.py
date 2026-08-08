@@ -92,6 +92,10 @@ def request_approval(
     if timeout_seconds <= 0:
         raise ApprovalLifecycleError("timeout_seconds must be positive")
     store = _store(omo_dir)
+    event_key = f"{workflow_run_id}:approval-requested:{approval_id}"
+    prior = _existing(store, event_key)
+    if prior is not None:
+        return prior
     snapshot = store.snapshot(workflow_run_id)
     if snapshot.get("state") not in {"running"}:
         raise ApprovalLifecycleError(
@@ -101,10 +105,6 @@ def request_approval(
     timeout_at = _stamp(
         (_utc(requested_at) + timedelta(seconds=timeout_seconds)).isoformat()
     )
-    event_key = f"{workflow_run_id}:approval-requested:{approval_id}"
-    prior = _existing(store, event_key)
-    if prior is not None:
-        return prior
     payload = {
         "approval_id": approval_id,
         "requested_at": requested_at,

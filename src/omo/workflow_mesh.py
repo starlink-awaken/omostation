@@ -40,6 +40,7 @@ EVENT_STATE = {
     "EvidenceRecorded": "succeeded",
     "ApprovalRequested": "waiting_approval",
     "ApprovalGranted": "running",
+    "ApprovalTimeout": "failed",
     "CompensationStarted": "compensating",
     "StepFailed": "failed",
     "BackendUnavailable": "unavailable",
@@ -136,6 +137,7 @@ _ALLOWED_EVENTS = {
     },
     "waiting_approval": {
         "ApprovalGranted",
+        "ApprovalTimeout",
         "StepFailed",
         "BackendUnavailable",
         "WorkflowCancelled",
@@ -670,15 +672,32 @@ def project_workflow_run(
                 if key in event["payload"]:
                     evidence[key] = event["payload"][key]
             snapshot["evidence"][evidence_id] = evidence
-        if event_type in {"ApprovalRequested", "ApprovalGranted"}:
+        if event_type in {"ApprovalRequested", "ApprovalGranted", "ApprovalTimeout"}:
             approval_id = event["payload"].get("approval_id") or "workflow"
-            snapshot["approvals"][approval_id] = {
-                "approval_id": approval_id,
-                "state": "requested"
-                if event_type == "ApprovalRequested"
-                else "granted",
-                "event_id": event["event_id"],
-            }
+            if event_type == "ApprovalRequested":
+                snapshot["approvals"][approval_id] = {
+                    "approval_id": approval_id,
+                    "state": "requested",
+                    "requested_at": event["payload"].get("requested_at"),
+                    "timeout_at": event["payload"].get("timeout_at"),
+                    "event_id": event["event_id"],
+                }
+            elif event_type == "ApprovalGranted":
+                existing = snapshot["approvals"].get(approval_id, {})
+                existing.update({
+                    "approval_id": approval_id,
+                    "state": "granted",
+                    "event_id": event["event_id"],
+                })
+                snapshot["approvals"][approval_id] = existing
+            else:
+                existing = snapshot["approvals"].get(approval_id, {})
+                existing.update({
+                    "approval_id": approval_id,
+                    "state": "timed_out",
+                    "event_id": event["event_id"],
+                })
+                snapshot["approvals"][approval_id] = existing
     return snapshot
 
 
