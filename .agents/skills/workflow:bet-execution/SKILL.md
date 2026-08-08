@@ -1,25 +1,44 @@
 ---
 name: workflow:bet-execution
-description: SEMA 自动结晶技能包 — 基于 2 条 MOS 物理踩坑信念反向萃取
+description: SEMA 自动结晶技能包 — 基于 3 条 MOS 踩坑信念反向萃取
 category: SEMA-Crystallized-Skill
 ---
 
-# 🛡️ 技能包: workflow:bet-execution
+# Skill: workflow:bet-execution
 
-> 本 Skill 由 SEMA (Self-Evolving Multi-Agent) 自动结晶引擎基于 Agent 踩坑经验生成。
+> Auto-crystallized by SEMA engine from agent pitfall experience.
+> Source: .omo/state/agent-beliefs/index.yaml
 
-## 1. 💡 历史踩坑与避坑指南 (Lessons & Pitfalls)
+## Pitfalls & Solutions
 
-### 踩坑纪录 #1: belief-0001
-* **信念陈述**: N/A
-* **常见坑点**: N/A
-* **推荐解法**: N/A
+### #1 [warning]
+- **Pitfall**: Unverified workflow closeout
+- **Solution**: Executed agent-workflow verify & observe pass
 
-### 踩坑纪录 #2: belief-0002
-* **信念陈述**: N/A
-* **常见坑点**: Direct edit without agent-workflow claim triggers compliance gate halt
-* **推荐解法**: Always run agent-workflow start and claim before editing requirement files
+### #2 [warning]
+- **Pitfall**: Unverified workflow closeout
+- **Solution**: Executed agent-workflow verify & observe pass
 
-## 2. ⚡️ 标准执行流程 (Standard Workflow)
-1. 遵循 `make gac-local-gate` 42 Checks 100% ALL GREEN PASS 门禁。
-2. 针对 `workflow:bet-execution` 相关变更，强制走物理隔离工作区。
+## Beliefs
+
+### #1 belief-0001
+- **Belief**: Workflow run 20260807T063711Z-bet-execution-66b7ef2c achieved objective: BET-Y1Q1-T1-07 git 入口收口
+
+### #2 belief-0002
+- **Belief**: Requirement iteration edits must claim path and start agent-workflow run first
+- **Pitfall**: Direct edit without agent-workflow claim triggers compliance gate halt
+- **Solution**: Always run agent-workflow start and claim before editing requirement files
+
+### #3 belief-0003
+- **Belief**: Workflow run 20260807T130548Z-bet-execution-be3544c4 achieved objective: 全域 scene card v2 升级
+
+## Applicable Scope
+
+- `.omo/_delivery/agent-workflows/runs/20260807T063711Z-bet-execution-66b7ef2c.yaml`
+- `.omo/_delivery/agent-workflows/runs/20260807T130548Z-bet-execution-be3544c4.yaml`
+
+## Standard Workflow
+
+1. Run `make gac-local-gate` — all checks must pass.
+2. For `workflow:bet-execution` changes, use isolated worktree.
+3. Verify with targeted tests before expanding scope.
