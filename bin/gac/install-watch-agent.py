@@ -13,7 +13,14 @@ import sys
 import subprocess
 from pathlib import Path
 
-WORKSPACE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import canonical_root  # noqa: E402
+
+# 本脚本装的是**机器级**配置(~/Library/LaunchAgents + launchctl load), 必须锚定
+# 规范检出。原实现用 parents[2], 从 worktree 跑就会执行那个 worktree 里的
+# gen-service-configs.py —— 旧 worktree 里往往是未加固的版本, 于是把
+# com.l4.governance.watch 装成 worktree 路径。2026-08-08 实际发生过。
+WORKSPACE = canonical_root()
 PLIST_LABEL = "com.l4.governance.watch"
 PLIST_FILE = Path(os.path.expanduser(f"~/Library/LaunchAgents/{PLIST_LABEL}.plist"))
 LOGS_DIR = WORKSPACE / "runtime" / "logs"
