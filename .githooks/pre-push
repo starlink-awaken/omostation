@@ -149,5 +149,24 @@ if [ -f "$GATE" ] && git rev-parse --verify --quiet origin/main >/dev/null 2>&1;
   python3 "$GATE" --range origin/main HEAD --submodules || exit 1
 fi
 
+# --- remote-hygiene gate (2026-08-08) ---
+# 共享 checkout origin 被误设成 agora/kairon 会污染 fetch/push (本会话踩 3 次),
+# 推送前校验 origin 指向 omostation, 主仓与高冲突子模块一并检查.
+ROOT="$(git rev-parse --show-toplevel)"
+for remote_ref in \
+  "$ROOT:https://github.com/starlink-awaken/omostation.git" \
+  "$ROOT/projects/gbrain:https://github.com/starlink-awaken/omostation-gbrain.git" \
+  "$ROOT/projects/cockpit:https://github.com/starlink-awaken/omostation-cockpit.git" \
+  "$ROOT/projects/agora:https://github.com/starlink-awaken/omostation-agora.git"; do
+  repo_path="${remote_ref%%:*}"
+  expected="${remote_ref##*:}"
+  actual="$(git -C "$repo_path" remote get-url origin 2>/dev/null || true)"
+  if [ -n "$actual" ] && [ "$actual" != "$expected" ] && [ "$actual" != "${expected/https:\/\//git@github.com:}" ]; then
+    echo "[remote-hygiene] ❌ $repo_path origin 指向异常: $actual (应为 $expected)" >&2
+    echo "[remote-hygiene] 修复: git -C $repo_path remote set-url origin $expected" >&2
+    exit 1
+  fi
+done
+
 exit 0
 
