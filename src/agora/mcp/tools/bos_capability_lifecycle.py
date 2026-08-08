@@ -1,0 +1,247 @@
+"""BOS capability lifecycle MCP tools (B1→B2→B3).
+
+Exposes capability discovery, admission, and retirement as governed MCP tools.
+Requires explicit profile authorization for write operations.
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from fastmcp import FastMCP
+
+from agora.mcp.bos_router import bos_router
+from agora.mcp.capability_catalog import CapabilityCatalog
+from agora.external_connections import ExternalConnectionCatalog
+
+_LOG = logging.getLogger(__name__)
+
+mcp = FastMCP("bos-capability-lifecycle")
+
+
+def _capability_pricing(prefix: str) -> dict[str, float]:
+    """解析能力的定价 (P1 能力市场: 混合三层, 记账价=市场价)."""
+    try:
+        from agora.accounting import (
+            DEFAULT_INPUT_RATE_PER_M,
+            DEFAULT_OUTPUT_RATE_PER_M,
+            resolve_pricing,
+        )
+
+        in_rate, out_rate = resolve_pricing(prefix)
+        is_default = (
+            in_rate == DEFAULT_INPUT_RATE_PER_M
+            and out_rate == DEFAULT_OUTPUT_RATE_PER_M
+        )
+        return {
+            "input_rate_per_m": in_rate,
+            "output_rate_per_m": out_rate,
+            "custom": not is_default,  # True = rates.yaml 覆盖定价
+        }
+    except Exception:  # defensive: 定价解析失败回退默认
+        return {
+            "input_rate_per_m": 0.15,
+            "output_rate_per_m": 0.60,
+            "custom": False,
+        }
+
+
+def _get_catalogs() -> tuple[
+    CapabilityCatalog | None, ExternalConnectionCatalog | None
+]:
+    capability_catalog = getattr(bos_router, "_capability_catalog", None)
+    admission_catalog = getattr(bos_router, "_admission_catalog", None)
+    if capability_catalog is None:
+        try:
+            capability_catalog = CapabilityCatalog()
+        except Exception as exc:  # noqa: BLE001
+            _LOG.debug("capability catalog unavailable: %s", exc)
+    if admission_catalog is None:
+        try:
+            admission_catalog = ExternalConnectionCatalog()
+        except Exception as exc:  # noqa: BLE001
+            _LOG.warning("admission catalog unavailable: %s", exc)
+    return capability_catalog, admission_catalog
+
+
+@mcp.tool()
+def bos_capability_list(uri_prefix: str = "") -> dict[str, Any]:
+    """List registered BOS capabilities with lifecycle status.
+
+    Args:
+        uri_prefix: Optional prefix filter (e.g. ``bos://memory/``).
+    """
+    capability_catalog, admission_catalog = _get_catalogs()
+    routes = bos_router.list_all(prefix_filter=uri_prefix)
+    capabilities: list[dict[str, Any]] = []
+    for route in routes:
+        prefix = route.get("prefix", "")
+        decl = None
+        lifecycle = None
+        admission_status = None
+        if capability_catalog is not None:
+            decl = capability_catalog.get(prefix)
+        if admission_catalog is not None:
+            resource = admission_catalog.get(prefix)
+            if resource is not None:
+                lifecycle = getattr(resource, "lifecycle", None)
+                admission_status = getattr(resource, "status", None)
+        capabilities.append(
+            {
+                "prefix": prefix,
+                "adapter": route.get("adapter"),
+                "capability_status": decl.get("status")
+                if isinstance(decl, dict)
+                else None,
+                "lifecycle": lifecycle,
+                "admission_status": admission_status,
+                "use_metrics": decl.get("usage", {}) if isinstance(decl, dict) else {},
+                # P1 能力市场: 定价 (resolve_pricing 混合三层, 记账价=市场价)
+                "pricing": _capability_pricing(prefix),
+            }
+        )
+    return {
+        "count": len(capabilities),
+        "capabilities": capabilities,
+        "source": "bos_router",
+    }
+
+
+@mcp.tool()
+def bos_capability_retire(
+    uri: str, reason: str = "retired by governance"
+) -> dict[str, Any]:
+    """Retire a zombie BOS capability (requires governance profile).
+
+    Args:
+        uri: Exact BOS URI prefix to retire.
+        reason: Short reason for retirement.
+    """
+    # P5: 写操作要求 governance 身份 (admin/local)
+    from agora.server.tools_auth import agora_role_ctx
+
+    role = agora_role_ctx.get()
+    if role not in ("admin", "local"):
+        return {
+            "status": "error",
+            "error": f"role '{role}' not authorized to retire capability",
+        }
+    capability_catalog, admission_catalog = _get_catalogs()
+    if capability_catalog is None:
+        return {"status": "error", "error": "capability_catalog_unavailable"}
+    decl = capability_catalog.get(uri)
+    if not isinstance(decl, dict):
+        return {"status": "error", "error": f"capability not found: {uri}"}
+    # P3: 用 catalog.retire() 显式改状态 + 持久化 (修复直接改 decl 不落盘)
+    if not capability_catalog.retire(uri, reason=reason):
+        return {"status": "error", "error": f"retire failed to persist: {uri}"}
+    if admission_catalog is not None:
+        try:
+            admission_catalog.register_capability(
+                uri,
+                description=decl.get("description", ""),
+                lifecycle="retired",
+                use_metrics=decl.get("usage", {}),
+            )
+        except Exception as exc:  # noqa: BLE001
+            _LOG.warning("admission catalog update failed for %s: %s", uri, exc)
+    return {
+        "status": "ok",
+        "uri": uri,
+        "capability_status": "deprecated",
+        "lifecycle": "retired",
+        "reason": reason,
+    }
+
+
+@mcp.tool()
+def bos_capability_admit(uri: str, description: str = "") -> dict[str, Any]:
+    """Manually admit a new BOS capability.
+
+    Args:
+        uri: BOS URI prefix to admit.
+        description: Human-readable description of the capability.
+    """
+    # P5: 写操作要求 governance 身份 (admin/local)
+    from agora.server.tools_auth import agora_role_ctx
+
+    role = agora_role_ctx.get()
+    if role not in ("admin", "local"):
+        return {
+            "status": "error",
+            "error": f"role '{role}' not authorized to admit capability",
+        }
+    capability_catalog, admission_catalog = _get_catalogs()
+    if capability_catalog is None:
+        return {"status": "error", "error": "capability_catalog_unavailable"}
+    existing = capability_catalog.get(uri)
+    if isinstance(existing, dict) and existing.get("status") == "active":
+        return {"status": "error", "error": f"capability already admitted: {uri}"}
+    capability_catalog.add(
+        uri,
+        description=description or f"Admitted capability: {uri}",
+        status="active",
+    )
+    if admission_catalog is not None:
+        try:
+            admission_catalog.register_capability(
+                uri,
+                description=description,
+                lifecycle="admitted",
+                use_metrics={},
+            )
+        except Exception as exc:  # noqa: BLE001
+            _LOG.warning("admission catalog update failed for %s: %s", uri, exc)
+    capability_catalog.save()
+    return {
+        "status": "ok",
+        "uri": uri,
+        "capability_status": "active",
+        "lifecycle": "admitted",
+    }
+
+
+@mcp.tool()
+def bos_billing_statement(caller_id: str, service: str = "", period: str = "month") -> dict[str, Any]:
+    """采购账单: 查询指定 caller 的月度调用成本明细 (能力市场 P2).
+
+    Args:
+        caller_id: 调用者 ID (如 agent-xxx / local / admin)
+        service: 可选服务前缀过滤 (如 bos://analysis/minerva/)
+        period: 'day', 'week', 'month', or 'all' (默认 month)
+
+    Returns:
+        账单: total_calls / total_cost / by_service 明细
+    """
+    try:
+        from agora.accounting import ResourceAccountDB
+
+        db = ResourceAccountDB()
+        return {"status": "ok", "statement": db.get_calls(caller_id, service or None, period)}
+    except Exception as exc:  # noqa: BLE001 — defensive
+        return {"status": "error", "error": str(exc)}
+
+
+def register() -> None:
+    """Register capability lifecycle tools on the global Agora MCP instance.
+
+    P5 (能力管理网关化): 工具通过主 mcp.add_tool() 动态注册到主网关,
+    使 HTTP /v1/tools/call 可直接调用 admit/retire/list (此前挂独立实例调不到)。
+    同时保留独立实例 mcp (兼容旧引用)。
+    """
+    try:
+        from agora.server.tools_bos import register_bos_tools
+        from agora.core.state import get_event_bus
+        from agora.server.mcp import mcp as main_mcp
+
+        bus = get_event_bus()
+        # P5: 挂主网关 (add_tool 接受函数, 复用 @mcp.tool 装饰的函数)
+        main_mcp.add_tool(bos_capability_list)
+        main_mcp.add_tool(bos_capability_admit)
+        main_mcp.add_tool(bos_capability_retire)
+        main_mcp.add_tool(bos_billing_statement)  # P2 采购账单
+        register_bos_tools(mcp, bus)
+        _LOG.info("bos capability lifecycle tools registered on main MCP (P5)")
+    except Exception as exc:  # noqa: BLE001
+        _LOG.warning("bos capability lifecycle registration skipped: %s", exc)
