@@ -90,7 +90,7 @@ class DynamicBDSKAdjudicator:
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=1.5) as resp:
+            with urllib.request.urlopen(req, timeout=1.5) as resp:  # noqa: S310
                 if resp.status == 200:
                     data = json.loads(resp.read().decode("utf-8"))
                     text = data.get("response", "")

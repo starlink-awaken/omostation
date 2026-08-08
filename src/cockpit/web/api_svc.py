@@ -57,7 +57,7 @@ class ActionRequest(BaseModel):
 
 class ProfileRequest(BaseModel):
     profile: str  # minimal | dev | data
-    action: str   # up | down
+    action: str  # up | down
 
 
 @router.get("/api/svc/overview")
@@ -101,8 +101,7 @@ async def svc_action(req: ActionRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="action 必须是 up 或 down")
     try:
         ok, msg = _engine().service_action(req.id, req.action)
-        return {"status": "success" if ok else "failed",
-                "id": req.id, "action": req.action, "output": msg}
+        return {"status": "success" if ok else "failed", "id": req.id, "action": req.action, "output": msg}
     except HTTPException:
         raise
     except Exception as e:
@@ -116,10 +115,64 @@ async def svc_profile(req: ProfileRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="action 必须是 up 或 down")
     try:
         results = _engine().profile_action(req.profile, req.action)
-        return {"status": "success", "profile": req.profile,
-                "action": req.action, "results": results,
-                "ok_count": sum(1 for r in results if r.get("ok"))}
+        return {
+            "status": "success",
+            "profile": req.profile,
+            "action": req.action,
+            "results": results,
+            "ok_count": sum(1 for r in results if r.get("ok")),
+        }
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"profile {req.action} 失败: {e}") from e
+
+
+@router.get("/api/svc/sync")
+async def svc_sync() -> dict[str, Any]:
+    """BOS 能力注册 ↔ 服务 ↔ 端口 ↔ 能力表 四方一致性校验。"""
+    try:
+        return {"status": "success", **_engine().sync_check()}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"同步校验失败: {e}") from e
+
+
+@router.get("/api/svc/health")
+async def svc_health() -> dict[str, Any]:
+    """服务健康三态 + 资源 —— 区分"进程在"与"服务可用"。
+
+    healthy   运行且端口可连
+    degraded  **看着在跑其实坏了**(端口不通/异常退出/监视路径失效)
+    down      未运行
+    """
+    try:
+        v = _engine().collect_full()
+        return {
+            "status": "success",
+            "health_counts": v.get("health_counts", {}),
+            "degraded": v.get("degraded", []),
+            "services": [
+                {
+                    k: s.get(k)
+                    for k in (
+                        "id",
+                        "kind",
+                        "health",
+                        "reason",
+                        "cpu",
+                        "mem_gb",
+                        "ports",
+                        "resident",
+                        "profiles",
+                        "logs",
+                    )
+                }
+                for s in v["services"]
+            ],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"健康采集失败: {e}") from e

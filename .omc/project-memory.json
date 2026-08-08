@@ -144,6 +144,12 @@
       "accessCount": 1,
       "lastAccessed": 1785665638039,
       "type": "file"
+    },
+    {
+      "path": "src/cockpit/commands/bdsk_engine.py",
+      "accessCount": 1,
+      "lastAccessed": 1786172178369,
+      "type": "file"
     }
   ],
   "userDirectives": []
