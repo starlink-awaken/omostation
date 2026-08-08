@@ -66,13 +66,13 @@ last-reviewed: 2026-06-29
 
 | 文档 frontmatter 字段 | L0 约束字段 | MOF 元模型字段 | 说明 |
 |----------------------|------------|---------------|------|
-| `dimension` (X1-X4) | `dimension` | `m3_parent: ConstraintL0` | 文档治理维度 ↔ L0 约束维度 |
+| `dimension` (X1-X7) | `dimension` | `m3_parent: ConstraintL0` | 文档治理维度 ↔ L0 约束维度 |
 | `surface` (I0/L0-L4/meta) | `applies_to` | `m2_type: ConstraintL0` | 文档层级 ↔ 约束适用层级 |
 | `owner` | `references` | — | 文档负责面 ↔ 约束引用 |
 | `status` (active/...) | `state` | — | 文档生命周期 ↔ 约束状态 |
 
 验证规则:
-1. 文档 frontmatter 的 `dimension` 必须在 L0 派生约束 `dimension` 值域内 (X1-X4)
+1. 文档 frontmatter 的 `dimension` 必须在 L0 派生约束 `dimension` 值域内 (X1-X7)
 2. 文档 frontmatter 的 `surface` 必须在 `applies_to` 值域内 (I0/L0/L1/L2/L3/L4/meta)
 3. 每条 L0 约束必须有 `m3_parent: ConstraintL0` (MOF 映射完整性)
 4. `l0-constraints.v2.yaml` 必须可从 `projects/ecos/src/ecos/l0/` 源重新生成 (自动更新闭环)
