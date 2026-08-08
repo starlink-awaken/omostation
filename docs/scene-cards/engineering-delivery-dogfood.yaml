@@ -12,10 +12,10 @@ related:
 schema: scene-card/v2
 scene_type: internal_pipeline
 admission_track: internal_evidence_based
-lifecycle: active
+lifecycle: shadow
 activation: active
 approval_state: confirmed
-bet: BET-Y1Q1-T7-01
+bet: BET-Y1Q2-T7-01
 falsifier: "若 shadow 期间无一次 delivery evidence 产出，则场景无实际价值，应回退 draft"
 approval:
   confirmed_by: xiamingxing (architecture-governance, 操作员全授权 2026-08-07)
@@ -73,6 +73,7 @@ blocker_resolution:
   OMO_admission_evidence: blocked
   OMO_admission_evidence_note: "待 Phase 2 internal-scene-trial.py 建成后 --record 持久化. 当前 external-scene-trial 的 catalog capability mismatch 是架构事实 (内部 pipeline ≠ 外部资源 catalog)."
 notes:
+  - "2026-08-08: BET-Y1Q2-T7-01 开 shadow — lifecycle=active→shadow. 本场景产出永不计入 X3 价值指标 (non-goal). 目标: 每周 >= 20 条 decision_outcome, 建立高频低风险样本源."
   - "2026-08-07: draft→shadow transition (BET-Y1Q1-T7-01 五档生命周期). 首个 shadow 场景 — 无业务副作用, 仅观察 delivery evidence 产出. falsifier: 若持续无产出则回退 draft."
   - "2026-08-07: external-scene-trial.py dry-run 执行 (proposal-only, 0 side effects). scene card schema 验证通过 (15 required fields all present, sample_refs 3/3, activation_evidence_refs 3, required_capabilities 2). preflight 报 blocked 因 catalog capability mismatch (内部 pipeline 能力 ≠ 外部资源 catalog). 守 fabric 红线: 如实标注 blocked, 不伪造激活."
   - "2026-08-07: Phase 1 解套 — scene_type=internal_pipeline, approval 签署 (architecture-governance 全授权), permission_scope 定义 (RBAC: ci-read/workflow-read/evidence-write). 剩余唯一 blocker: OMO_admission_evidence (Phase 2 internal track 建成后解)."
