@@ -3,7 +3,8 @@
 # generated_at: 2026-08-07T01:36:11+00:00
 id: BET-Y1Q2-T6-01
 title: GaC 规则减法 — 清理会拦人却无违规历史的 required 规则
-status: candidate
+status: done
+completed_at: '2026-08-08'
 task_type: bet
 priority: P0
 owner: agent
