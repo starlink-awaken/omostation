@@ -274,6 +274,135 @@ constraints:
     created: '2026-06-07'
     phase: P45
 
+  # ── 抽象族覆盖约束 (2026-08-08, 16 族抽象提炼) ──
+  - id: X1-C04
+    name: cross-repo-contract-registered
+    description: "跨仓 HTTP/异步调用契约必须在接口注册表登记，禁止未登记的跨仓调用"
+    level: L0
+    category: contract
+    enforcement: enforce
+    type: required
+    dimension: X1
+    applies_to: [L1, L2, L3]
+    violation: "E-L0-017: 未登记的跨仓契约调用"
+    rule: "cross_repo.contract_registered == true"
+    violation_severity: major
+    auto_remediate: false
+    created: '2026-08-08'
+    phase: P57
+
+  - id: X1-C05
+    name: commit-lane-discipline
+    description: "提交必须遵循单变更车道纪律（governance_code/code/tests 分车道），禁止混车道提交"
+    level: L0
+    category: process
+    enforcement: enforce
+    type: required
+    dimension: X1
+    applies_to: [L1, L2, L3]
+    violation: "E-L0-018: 混合变更车道提交"
+    rule: "commit.single_lane == true"
+    violation_severity: major
+    auto_remediate: false
+    created: '2026-08-08'
+    phase: P57
+
+  - id: X2-C06
+    name: health-score-gate
+    description: "治理健康度分数不得回退（m4-health-score delta >= 0），回退须有 ADR 豁免"
+    level: L0
+    category: governance
+    enforcement: enforce
+    type: required
+    dimension: X2
+    applies_to: [L0, L1, L2, L3]
+    violation: "E-L0-019: 健康度回退无豁免"
+    rule: "health_score.delta >= 0 OR exempted_by_adr == true"
+    violation_severity: major
+    auto_remediate: false
+    created: '2026-08-08'
+    phase: P57
+
+  - id: X2-C07
+    name: code-hygiene-god-module
+    description: "禁止 god-module（单一文件 > 800 行纯逻辑），超标须拆解或豁免"
+    level: L0
+    category: hygiene
+    enforcement: enforce
+    type: required
+    dimension: X2
+    applies_to: [L1, L2, L3]
+    violation: "E-L0-020: god-module 超限"
+    rule: "module.lines <= 800 OR exempted == true"
+    violation_severity: minor
+    auto_remediate: false
+    created: '2026-08-08'
+    phase: P57
+
+  - id: X3-C03
+    name: debt-redline
+    description: "治理债务与交付比例不得越过红线（REDLINE 门禁），越过须暂停新增"
+    level: L0
+    category: debt
+    enforcement: enforce
+    type: required
+    dimension: X3
+    applies_to: [L1, L2, L3]
+    violation: "E-L0-021: 债务红线越界"
+    rule: "debt_ratio <= redline"
+    violation_severity: critical
+    auto_remediate: false
+    created: '2026-08-08'
+    phase: P57
+
+  - id: X4-C14
+    name: ssot-pointer-drift
+    description: "子模块/SSOT 指针不得漂移（reachability + freshness），漂移须立即修复"
+    level: L0
+    category: ssot
+    enforcement: enforce
+    type: required
+    dimension: X4
+    applies_to: [L1, L2, L3]
+    violation: "E-L0-022: SSOT/子模块指针漂移"
+    rule: "pointer.drift == 0"
+    violation_severity: critical
+    auto_remediate: true
+    created: '2026-08-08'
+    phase: P57
+
+  - id: QG-C03
+    name: meta-governance-rule-ssot
+    description: "治理规则（GaC checks）必须以 governance-checks.yaml 为唯一源，禁止散落硬编码"
+    level: L0
+    category: meta
+    enforcement: enforce
+    type: required
+    dimension: QG
+    applies_to: [L0, L1, L2, L3]
+    violation: "E-L0-023: 治理规则非 SSOT"
+    rule: "governance_rule.ssot == true"
+    violation_severity: major
+    auto_remediate: false
+    created: '2026-08-08'
+    phase: P57
+
+  - id: QG-C04
+    name: security-baseline
+    description: "敏感面（secret/权限/凭证）必须满足安全基线，违规即阻断交付"
+    level: L0
+    category: security
+    enforcement: enforce
+    type: required
+    dimension: QG
+    applies_to: [L1, L2, L3]
+    violation: "E-L0-024: 安全基线违规"
+    rule: "security.baseline_passed == true"
+    violation_severity: critical
+    auto_remediate: false
+    created: '2026-08-08'
+    phase: P57
+
 # ── 域注册表 (L4 Domain Registry) ──
 # v1.2 | 2026-06-07 | @域前缀·KEMS六面对齐
 domain_registry:
