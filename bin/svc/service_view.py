@@ -40,6 +40,17 @@ PROFILES: dict[str, list[str]] = {
 RESIDENT = ["com.omlx.gateway", "com.omlx.autostart", "com.omlx.autopilot"]
 
 
+# 个人域服务 —— 跑在这台机器上, 但不归 Workspace 管, 不要求登记 services.yaml。
+# (判断依据: ProgramArguments 指向 Workspace 之外, 如 ~/Documents/@学习进化)
+NON_WORKSPACE_SERVICES = {
+    "com.learningevolution.concept-weave.monthly",
+    "com.lifeos.pulse",
+    "com.macpaw.CleanMyMac5.Updater",
+    "com.user.cron-service",
+    "homebrew.mxcl.neo4j",
+    "homebrew.mxcl.postgresql@18",
+}
+
 def _sh(cmd: str, timeout: int = 20) -> str:
     try:
         return subprocess.run(cmd, shell=True, capture_output=True,
@@ -265,7 +276,14 @@ def sync_check() -> dict[str, Any]:
     bos = read_bos()
     caps = {c.get("id", "") for c in read_capabilities()}
     cap_pkgs = {c.split(".")[-1] for c in caps} | {c.split(".")[0] for c in caps}
-    declared = {s.get("id") for s in read_services_registry()}
+    # id 与 label 都要收: services.yaml 用 id 命名(governance.watch),
+    # 而 launchctl / plist 用 label(com.l4.governance.watch)。只比 id 会把
+    # 已登记的服务误报成"无生命周期声明"。
+    declared = set()
+    for s in read_services_registry():
+        for k in ("id", "label"):
+            if s.get(k):
+                declared.add(s[k])
     reg_ports = read_port_registry()
     projects_dir = os.path.join(WORKSPACE, "projects")
     project_names = [p for p in os.listdir(projects_dir)
@@ -331,7 +349,13 @@ def sync_check() -> dict[str, Any]:
             issues.append({"kind": "B6 URI 重复注册", "uri": u, "detail": f"{n} 次"})
 
     # S1 在跑但无生命周期声明
+    #
+    # 只管 Workspace 自己的服务面。个人域的 LaunchAgent(程序在 ~/Documents 等
+    # Workspace 之外)不该被要求登记进 Workspace 的 SSOT —— 否则这条检查会
+    # 永远挂着几条改不掉的"问题", 久了就没人看了。
     for s in collect_launchd() + collect_docker():
+        if s["id"] in NON_WORKSPACE_SERVICES:
+            continue
         if s["running"] and not (s["id"] in declared or s.get("name") in declared):
             issues.append({"kind": "S1 在跑但无生命周期声明", "uri": s["id"],
                            "detail": f"{s['kind']} · 建议登记到 services.yaml"})
