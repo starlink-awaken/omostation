@@ -1,3 +1,7 @@
+# NOTE (2026-08-08): 不要给能力写 `mcp_endpoint: http://localhost:87xx/mcp`
+# 除非真的有进程监听该端口。agora.mcp_proxy 只做 stdio 子进程托管, 从不 bind 端口。
+# 写了不可达的 HTTP 端点会让 mcp_registry.lifecycle 走 HTTP 分支而跳过可用的 stdio
+# command, 导致该能力静默不可用。lifecycle 现已加可达性探测回落, 但 SSOT 不应先撒谎。
 services:
 - action: search
   command:
@@ -23,7 +27,6 @@ services:
   command: *id001
   description: KOS MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8765/mcp
   package: kos-mcp
   status: active
   transport: mcp_proxy
@@ -41,7 +44,6 @@ services:
   command: *id002
   description: Eidos MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8766/mcp
   package: eidos-mcp
   status: active
   transport: mcp_proxy
@@ -59,7 +61,6 @@ services:
   command: *id003
   description: Ontoderive MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8767/mcp
   package: ontoderive-mcp
   status: active
   transport: mcp_proxy
@@ -77,7 +78,6 @@ services:
   command: *id004
   description: Minerva MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8768/mcp
   package: minerva-mcp
   status: active
   transport: mcp_proxy
@@ -95,7 +95,6 @@ services:
   command: *id005
   description: Kronos MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8769/mcp
   package: kronos-mcp
   status: active
   transport: mcp_proxy
@@ -113,7 +112,6 @@ services:
   command: *id006
   description: Iris MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8770/mcp
   package: iris-mcp
   status: active
   transport: mcp_proxy
@@ -131,7 +129,6 @@ services:
   command: *id007
   description: Sophia MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8771/mcp
   package: sophia-mcp
   status: active
   transport: mcp_proxy
@@ -149,7 +146,6 @@ services:
   command: *id008
   description: Forge MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8772/mcp
   package: forge-mcp
   status: active
   transport: mcp_proxy
@@ -167,7 +163,6 @@ services:
   command: *id009
   description: MetaOS MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8773/mcp
   package: metaos-mcp
   status: deprecated
   transport: mcp_proxy
@@ -185,7 +180,6 @@ services:
   command: *id010
   description: ECOS MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8774/mcp
   package: ecos-mcp
   status: active
   transport: mcp_proxy
@@ -203,7 +197,6 @@ services:
   command: *id011
   description: OMO MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8775/mcp
   package: omo-mcp
   status: active
   transport: mcp_proxy
@@ -221,7 +214,6 @@ services:
   command: *id012
   description: AetherForge MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8776/mcp
   package: aetherforge-mcp
   status: active
   transport: mcp_proxy
@@ -239,7 +231,6 @@ services:
   command: *id013
   description: C2G MCP Server (HTTP proxy mode)
   domain: memory
-  mcp_endpoint: http://localhost:8777/mcp
   package: c2g-mcp
   status: active
   transport: mcp_proxy
@@ -257,7 +248,6 @@ services:
   command: *id014
   description: Cockpit MCP Server (HTTP proxy mode)
   domain: capability
-  mcp_endpoint: http://localhost:8778/mcp
   uri: bos://capability/cockpit/mcp-server
   transport: stdio
 - action: rest-api

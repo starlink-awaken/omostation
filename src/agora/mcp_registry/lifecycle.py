@@ -11,6 +11,31 @@ from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not
 logger = structlog.get_logger(__name__)
 
 
+def _http_endpoint_alive(endpoint: str, timeout: float = 0.3) -> bool:
+    """端点是否真的有人监听。
+
+    只做 TCP connect, 不发 HTTP 请求 —— 足够区分"虚构端口"与"真服务",
+    且不会因为 MCP 握手语义差异误判。解析失败一律当作不可达, 交给 stdio 回落。
+    """
+    import socket
+    from urllib.parse import urlparse
+
+    try:
+        u = urlparse(endpoint)
+        host = u.hostname or "127.0.0.1"
+        port = u.port or (443 if u.scheme == "https" else 80)
+    except Exception:  # noqa: BLE001 — 解析失败即视为不可达
+        return False
+    sock = socket.socket()
+    sock.settimeout(timeout)
+    try:
+        return sock.connect_ex((host, port)) == 0
+    except OSError:
+        return False
+    finally:
+        sock.close()
+
+
 class LifecycleManager:
     """Manages tool load/unload lifecycle with real proxy integration and idle timeout.
 
@@ -360,7 +385,8 @@ class LifecycleManager:
         ``mcp_endpoint`` fields, or ``None`` if no usable config can be built.
 
         Priority order:
-        1. ``mcp_endpoint`` HTTP URL → HTTP transport (no command/args needed)
+        1. ``mcp_endpoint`` HTTP URL **that is actually reachable** → HTTP transport
+           (unreachable endpoints fall through to stdio — see ``_http_endpoint_alive``)
         2. ``metadata.command`` → stdio with explicit command
         3. ``entry`` → stdio with uv/python module
         4. ``install_path`` → stdio with explicit path
@@ -389,11 +415,24 @@ class LifecycleManager:
                 "declared_values": ["human-centric", "objective", "transparent"],
             }
 
-        # Priority 1: HTTP endpoint — use HTTP transport
+        # Priority 1: HTTP endpoint — only if something is actually listening.
+        #
+        # 2026-08-08: 14 个 memory/* 能力在 bos-services.yaml 里声明了
+        # ``http://localhost:876x/mcp``, 但 agora.mcp_proxy 从不 bind 这些端口
+        # (包内无任何 listen/serve) —— 端口是虚构的。原实现在这里无条件 return,
+        # 于是这些能力被路由到死端口, 明明可用的 stdio command 永远不会被采用,
+        # 整个 memory 域在 agora 里静默不可用。
+        # 现在只有端点真的可连才走 HTTP, 否则落到 Priority 2+ 的 stdio。
         mcp_endpoint = tool.get("mcp_endpoint", metadata.get("mcp_endpoint", ""))
         if mcp_endpoint and mcp_endpoint.startswith("http"):
-            config["mcp_endpoint"] = mcp_endpoint
-            return config
+            if _http_endpoint_alive(mcp_endpoint):
+                config["mcp_endpoint"] = mcp_endpoint
+                return config
+            logger.warning(
+                "mcp_endpoint_unreachable_falling_back_to_stdio",
+                name=name,
+                mcp_endpoint=mcp_endpoint,
+            )
 
         # Priority 2: explicit metadata command
         if command:
