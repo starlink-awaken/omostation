@@ -68,3 +68,8 @@
 - **② 采购记录**: 双写 (send_alert + metadata), 轻量补全市场闭环
 - **③ BET 推进**: 台账实际 23 done (治理主线已推进), 选 T6-05/T1-02/T7-01 三连恢复节奏
 - 两者可并行 (② 是 agora 改动, ③ 是主仓治理)
+
+## 落地状态 (2026-08-08 标注)
+
+- **② 采购记录**: ✅ admit 发 capability:admitted 事件 + admitted_by
+- **③ T6-05 减法门禁**: ✅ subtraction_quota (增 1 删 1)
