@@ -245,8 +245,9 @@ bets:
   title: 技能自动结晶引擎 — 踩坑经验自动重构为持久化 Agent Skill
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: done
   goal: 当 MOS 信念记录触发 2 次以上时，联动 workflow_skill_creator 自动萃取为可复用 Skill 包
+  completed_at: "2026-08-08"
 - id: BET-Y1Q2-T6-07
   track: T6-EVOLUTION
   window: Y1Q2
