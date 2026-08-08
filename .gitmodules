@@ -1,3 +1,0 @@
-[submodule "projects/l4-kernel"]
-	path = projects/l4-kernel
-	url = https://github.com/starlink-awaken/omostation-l4-kernel.git

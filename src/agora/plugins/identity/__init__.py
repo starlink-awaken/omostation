@@ -1,1 +1,0 @@
-"""Identity plugin for Agora."""
