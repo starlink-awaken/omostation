@@ -306,9 +306,21 @@ def render_discover_map(console: Console) -> None:
 
 
 def top_level_cli_names_from_source(cli_path: Path | None = None) -> set[str]:
-    """Parse cli.py for `sub.add_parser("name"` top-level registrations."""
+    """Parse cli.py for `sub.add_parser("name"` top-level registrations.
+
+    Parser 注册已抽至 `_subcommands.py` (T6-10 god-module split), 故同时
+    扫描该模块; 显式传入 cli_path 时仅解析指定文件 (保持参数语义)。
+    """
     import re
 
-    path = cli_path or Path(__file__).resolve().parent.parent / "cli.py"
-    text = path.read_text(encoding="utf-8")
-    return set(re.findall(r'\bsub\.add_parser\(\s*"([^"]+)"', text))
+    root = Path(__file__).resolve().parent.parent
+    paths = [cli_path or root / "cli.py"]
+    if cli_path is None:
+        subcmd_path = root / "_subcommands.py"
+        if subcmd_path.exists():
+            paths.append(subcmd_path)
+    names: set[str] = set()
+    for p in paths:
+        text = p.read_text(encoding="utf-8")
+        names.update(re.findall(r'\bsub\.add_parser\(\s*"([^"]+)"', text))
+    return names

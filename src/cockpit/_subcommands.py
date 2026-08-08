@@ -4,7 +4,7 @@ This module contains all argparse subcommand registration logic (~750 lines),
 keeping cli.py under the 1500L error threshold.
 
 Usage:
-    from cockpit.cli._subcommands import register_subcommands
+    from cockpit._subcommands import register_subcommands
     register_subcommands(sub_parser, workspace_parser)
 """
 
