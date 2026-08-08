@@ -1278,8 +1278,17 @@ bets:
   title: durable timer — waiting_approval 跨进程存活 ≥7 天
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-08
   goal: 支持真实业务里"人工审批挂三天"这件天天发生的事
+  done_evidence: 'ApprovalTimeout 事件落地: (1) workflow_mesh.py 状态机扩展 — ApprovalTimeout
+    → failed, waiting_approval 允许 ApprovalTimeout 转换, projection 追踪 requested_at/timeout_at;
+    (2) approval_lifecycle.py — request_approval (默认 7 天超时), grant_approval,
+    expire_approval_timeout, scan_approval_timeouts (镜像 worker_lifecycle.py);
+    (3) approval_timeout_runner.py — governed runner (POSIX 锁 + 摘要持久化, 镜像 mesh_watchdog_runner.py);
+    (4) 20 tests passing (15 lifecycle + 5 runner), 含 7 天场景 + 进程重启存活测试.
+    done_when 全部满足: 状态 event-sourced 重启不丢 / 超时策略可配置 (timeout_seconds) /
+    到期产生 ApprovalTimeout 事件 / 时间可注入测试.'
   non_goals:
   - 并行会签(属 Y1Q4)
   - 超时自动执行
@@ -2488,3 +2497,173 @@ bets:
   - agora /metrics 补 RED 指标 (QPS/延迟直方图/错误率)
   - bus-foundation trace_id → 事件面导出 (OTel 可选)
   - cockpit 可观测页聚合统一事件面 (替代分散 /api/logs /api/alerts)
+- id: BET-Y1Q3-T6-02
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: cockpit Phase 4 清理债务 — cockpit_mcp.py 残留 import + 子模块指针漂移
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  goal: 完成 cockpit Phase 4 清理：清理 cockpit_mcp.py 残留 import，同步 audit worktree 子模块指针，修复 L4 bridge 全系列失效
+  non_goals:
+  - 新增 cockpit_mcp.py shim（除非 Agora BOS 路径短期不可用）
+  - 修改 cockpit_mcp.py 原有功能（该文件已删除）
+  - 扩大清理范围到其他 Phase 4 债务（属其他 bet）
+  evidence:
+    E1_cockpit_mcp_removed:
+      description: commit 5de9b5c 删除了 src/cockpit/scripts/cockpit_mcp.py (1197行)
+      ci_url: 'https://github.com/starlink-awaken/omostation/commit/5de9b5c'
+    E2_residual_imports:
+      description: 8+ 文件仍残留 cockpit.scripts.cockpit_mcp import，导致 context/cards/vault/domains/health/mcp/brief/kems 失效
+      files:
+        - src/cockpit/commands/l4bridge.py
+        - src/cockpit/commands/mcp.py
+        - src/cockpit/commands/health.py
+        - src/cockpit/commands/brief.py
+        - src/cockpit/commands/kems.py
+        - src/cockpit/web/api_omos.py
+        - src/cockpit/web/dashboard/routes.py
+    E3_submodule_drift:
+      description: audit worktree 子模块指针漂移至空提交 (c2g=44270d6, bus-foundation=23f4aba)，导致 6+ 命令因依赖缺失崩溃
+      main_worktree: "c2g=350c567, bus-foundation=900ca5f"
+      audit_worktree: "c2g=44270d6 (empty), bus-foundation=23f4aba (empty)"
+  done_when:
+  - 所有 cockpit.scripts.cockpit_mcp 残留 import 已清理或替换为 Agora BOS 调用
+  - l4bridge.py 的 try/except 降级逻辑已移除（恢复为正常调用路径）
+  - audit worktree 子模块指针已同步到主 worktree 状态（c2g + bus-foundation）
+  - cockpit context/cards/vault/domains/health/mcp 无参运行返回正常（exit 0 或有意义输出）
+  verify:
+  - cmd: cockpit context
+    expect: exit 0 或 明确错误（非 ❌ L4 bridge 不可用）
+  - cmd: cockpit cards --check
+    expect: exit 0 或 明确错误（非 ❌ L4 bridge 不可用）
+  - cmd: cockpit mcp --list-tools
+    expect: exit 0 或 明确错误（非 ❌ 无法加载 MCP server）
+  - cmd: git submodule status | grep -E "c2g|bus-foundation"
+    expect: 无空提交标记
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/commands/l4bridge.py
+  - projects/cockpit/src/cockpit/commands/mcp.py
+  - projects/cockpit/src/cockpit/commands/health.py
+  - projects/cockpit/src/cockpit/commands/brief.py
+  - projects/cockpit/src/cockpit/commands/kems.py
+  - projects/cockpit/src/cockpit/web/api_omos.py
+  - projects/cockpit/src/cockpit/web/dashboard/routes.py
+  - docs/cockpit-cmd-audit-comprehensive.md
+  pasw_required: true
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 清理范围超出 3 天 appetite → 先完成 Agora BOS 迁移路径，剩余残留下个 bet
+  retro: required
+- id: BET-Y1Q3-T8-02
+  track: T8-SURFACE
+  window: Y1Q3
+  title: cockpit CLI 缺陷修复 — events-watch AttributeError + audit 脚本路径硬编码错误
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  goal: 修复 2 个 P0  cockpit CLI 代码缺陷，恢复 events-watch 和 audit 命令正常运行
+  non_goals:
+  - 重构 events-watch 为 events 子命令（属体验优化，非缺陷修复）
+  - 修改 bin/ssot/workspace-audit 脚本内容
+  evidence:
+    E1_events_watch_traceback:
+      description: "cockpit events-watch 无参运行报 AttributeError: 'Namespace' object has no attribute 'url'"
+      stacktrace: |
+        File "src/cockpit/cli.py", line 761, in (lambda)
+          "events-watch": lambda a: _c_events(
+        File "src/cockpit/cli.py", line 170, in _c_events
+          run_events_dashboard(a.url)
+      source: docs/cockpit-cmd-audit-comprehensive.md
+    E2_audit_path_error:
+      description: cockpit audit 无参运行报 [Error] 找不到 /Users/xiamingxing/Workspace/bin/workspace-audit
+      actual_path: bin/ssot/workspace-audit
+      hardcoded_path: bin/workspace-audit
+      source: docs/cockpit-cmd-audit-comprehensive.md
+  done_when:
+  - cockpit events-watch 无参运行不再报 AttributeError
+  - cockpit audit 无参运行不再报路径错误
+  - 两个修复均有单元测试或集成测试覆盖
+  verify:
+  - cmd: cockpit events-watch --help
+    expect: exit 0
+  - cmd: cockpit audit --help
+    expect: exit 0
+  - cmd: cockpit events-watch
+    expect: exit 0 或 明确错误（非 AttributeError）
+  - cmd: cockpit audit
+    expect: exit 0 或 明确错误（非 [Error] 找不到 ...）
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - src/cockpit/cli.py
+  - src/cockpit/commands/audit.py
+  pasw_required: false
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 1 天内未修复 → 回滚到上一个稳定版本，标记为 P1 延期
+  retro: required
+- id: BET-Y1Q3-T1-01
+  track: T1-TRUTH
+  window: Y1Q3
+  title: cockpit SSOT 漂移治理 — COMMAND_CATALOG + help_map 同步 + 弃用 CLI 清理
+  appetite: 2 days
+  priority: P2
+  status: candidate
+  goal: 修复 cockpit 命令注册表 SSOT 漂移：补充缺失命令到 registry/help_map，清理已弃用但仍注册的 CLI 入口
+  non_goals:
+  - 新增命令（仅同步现有注册）
+  - 修改 cockpit 命令实现逻辑
+  - 清理 events-watch / audit 等缺陷（属 BET-Y1Q3-T8-02）
+  evidence:
+    E1_registry_drift:
+      description: _subcommands.py 注册 73 个命令，但 COMMAND_CATALOG 仅 69 个，缺失 bdsk/journey/panorama/project
+      missing_from_registry:
+        - bdsk
+        - journey
+        - panorama
+        - project
+      source: docs/cockpit-cmd-audit-comprehensive.md
+    E2_help_map_drift:
+      description: help_map.py GROUPS 仅 68 个命令，缺失 bdsk/journey/panorama/project/quickstart-check
+      missing_from_help_map:
+        - bdsk
+        - journey
+        - panorama
+        - project
+        - quickstart-check
+      source: docs/cockpit-cmd-audit-comprehensive.md
+    E3_deprecated_cli:
+      description: ssb 和 model-driven 已弃用但仍注册在 _subcommands.py，执行时拒绝工作
+      deprecated_commands:
+        - ssb: "ECOS SSB 独立 CLI 已弃用，请使用 cockpit 替代"
+        - model-driven: "Model-Driven 独立 CLI 已弃用 (ADR-0240 D1)，拒绝执行"
+      source: docs/cockpit-cmd-audit-comprehensive.md
+  done_when:
+  - COMMAND_CATALOG 补充 bdsk/journey/panorama/project 四个缺失命令
+  - help_map.py GROUPS 补充 bdsk/journey/panorama/project/quickstart-check 五个缺失命令
+  - 已弃用的 ssb 和 model-driven 从 _subcommands.py 移除注册（或明确标注 [DEPRECATED]）
+  - cockpit help 输出包含所有 73 个注册命令
+  verify:
+  - cmd: cockpit help | grep -E "bdsk|journey|panorama|project|quickstart-check"
+    expect: 所有缺失命令均出现在 help 输出中
+  - cmd: cockpit ssb --help
+    expect: 明确标注 [DEPRECATED] 或命令不存在
+  - cmd: cockpit model-driven --help
+    expect: 明确标注 [DEPRECATED] 或命令不存在
+  workflow: bet-execution
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - src/cockpit/commands/registry.py
+  - src/cockpit/commands/help_map.py
+  - src/cockpit/_subcommands.py
+  pasw_required: false
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: SSOT 漂移范围扩大 → 只修复 registry/help_map，弃用 CLI 清理下个 bet
+  retro: required
