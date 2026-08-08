@@ -303,7 +303,6 @@ def main() -> int:
         for r in results:
             status = r["status"]
             sub = r["submodule"]
-<<<<<<< HEAD
             if sub.startswith(".subtrees/"):
                 if status == "aligned":
                     print(f"  OK {sub}: {r.get('pasw_head', '?')}")
@@ -323,39 +322,12 @@ def main() -> int:
                     print(f"  OK {sub}: {r['gitlink']} (ahead of origin/main {r['origin_main']}, non-blocking)")
                 elif status == "unverifiable":
                     print(f"  OK {sub}: {r['gitlink']} (shallow — ancestry unverifiable, non-blocking)")
+                elif status == "exempted":
+                    print(f"  OK {sub}: {r['gitlink']} (registered side-branch pointer, non-blocking)")
                 elif status == "DIVERGED":
                     print(f"  FAIL {sub}: {r['gitlink']} NOT on origin/main {r['origin_main']}")
                 elif status == "skip":
                     print(f"  SKIP {sub}: {r.get('reason', 'skipped')}")
-||||||| parent of e846ba033 (fix(drift): side-branch 指针显式登记豁免 — DIVERGED 不再一刀切)
-            if status == "aligned":
-                print(f"  OK {sub}: {r['gitlink']}")
-            elif status == "behind":
-                print(f"  WARN {sub}: {r['gitlink']} <- origin/main {r['origin_main']} ({r.get('detail', '')})")
-            elif status == "ahead":
-                print(f"  OK {sub}: {r['gitlink']} (ahead of origin/main {r['origin_main']}, non-blocking)")
-            elif status == "unverifiable":
-                print(f"  OK {sub}: {r['gitlink']} (shallow — ancestry unverifiable, non-blocking)")
-            elif status == "DIVERGED":
-                print(f"  FAIL {sub}: {r['gitlink']} NOT on origin/main {r['origin_main']}")
-            elif status == "skip":
-                print(f"  SKIP {sub}: {r.get('reason', 'skipped')}")
-=======
-            if status == "aligned":
-                print(f"  OK {sub}: {r['gitlink']}")
-            elif status == "behind":
-                print(f"  WARN {sub}: {r['gitlink']} <- origin/main {r['origin_main']} ({r.get('detail', '')})")
-            elif status == "ahead":
-                print(f"  OK {sub}: {r['gitlink']} (ahead of origin/main {r['origin_main']}, non-blocking)")
-            elif status == "unverifiable":
-                print(f"  OK {sub}: {r['gitlink']} (shallow — ancestry unverifiable, non-blocking)")
-            elif status == "exempted":
-                print(f"  OK {sub}: {r['gitlink']} (registered side-branch pointer, non-blocking)")
-            elif status == "DIVERGED":
-                print(f"  FAIL {sub}: {r['gitlink']} NOT on origin/main {r['origin_main']}")
-            elif status == "skip":
-                print(f"  SKIP {sub}: {r.get('reason', 'skipped')}")
->>>>>>> e846ba033 (fix(drift): side-branch 指针显式登记豁免 — DIVERGED 不再一刀切)
             if "fix" in r:
                 print(f"       -> {r['fix']}")
 
@@ -364,22 +336,12 @@ def main() -> int:
         aligned = sum(1 for r in results if r["status"] == "aligned")
         ahead_n = sum(1 for r in results if r["status"] == "ahead")
         unverifiable_n = sum(1 for r in results if r["status"] == "unverifiable")
-<<<<<<< HEAD
         behind_n = sum(1 for r in results if r["status"] == "behind")
-||||||| parent of e846ba033 (fix(drift): side-branch 指针显式登记豁免 — DIVERGED 不再一刀切)
-=======
         exempted_n = sum(1 for r in results if r["status"] == "exempted")
->>>>>>> e846ba033 (fix(drift): side-branch 指针显式登记豁免 — DIVERGED 不再一刀切)
         print(
             f"  Total: {total} submodules | {aligned} aligned | {ahead_n} ahead | "
-<<<<<<< HEAD
-            f"{unverifiable_n} unverifiable | {behind_n} behind | {len(diverged)} DIVERGED"
-||||||| parent of e846ba033 (fix(drift): side-branch 指针显式登记豁免 — DIVERGED 不再一刀切)
-            f"{unverifiable_n} unverifiable | {len(behind)} behind | {len(diverged)} DIVERGED"
-=======
             f"{unverifiable_n} unverifiable | {exempted_n} exempted | "
-            f"{len(behind)} behind | {len(diverged)} DIVERGED"
->>>>>>> e846ba033 (fix(drift): side-branch 指针显式登记豁免 — DIVERGED 不再一刀切)
+            f"{behind_n} behind | {len(diverged)} DIVERGED"
         )
 
         if diverged:
