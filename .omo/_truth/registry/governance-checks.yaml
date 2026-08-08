@@ -169,6 +169,10 @@ gac:
     - gac_local_gate
     - foundry_cron
     - sweep_index_cli
+  # T6-05 减法配额制 (BET-Y1Q2-T6-05): 增 1 删 1 — 用机制维持表面积不反弹
+  subtraction_quota:
+    rule_baseline: 136    # 规则数基线 (增 1 必须删 1, 超基线 gac-validate fail)
+    adr_baseline: 361     # ADR 基线 (新增 ADR 须归档一份)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
