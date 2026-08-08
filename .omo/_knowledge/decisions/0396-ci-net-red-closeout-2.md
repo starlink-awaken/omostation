@@ -75,3 +75,16 @@ governance-verify [3/5] task validate 红.
 - `omo_worker task validate --all-active/--all-planned` → exit 0
 - `bash bin/ssot/verify-omo.sh` → [1/5]-[5/5] 全过, exit 0
 - `tests/test_agent_workflow.py` → 36/36 pass (agcp_drift 经 omo pointer aa31c5cc 已修)
+
+## 五、追加 (governance-verify GaC local gate 存量债)
+
+CI 绿后 GaC local gate 暴露 3 个存量债 (非本 PR 引入), 一并清零:
+
+1. **adr-coverage**: #1132 重编号 0388→0391 留残留副本 + 撞号 —
+   删 `0388-layer-contract-direction-ssot.md`, layer-contract 重编号 0391→0397
+   (duplicate_numbers=[388,391] + files_not_in_index 清零)
+2. **mof-capabilities-drift**: m1_nodes 声明 1386 vs 实际 1391 → `--bump-stats`
+3. **CR-CI-SURFACE-SSOT unregistered-check**: debt-audit.yml/state-goals-enforce.yml
+   执行未登记检查 → ci-surfaces.yaml 登记 debt-integrity-check + current-state-coherence
+
+验证: `make gac-local-gate` → 44 checks ALL GREEN PASS
