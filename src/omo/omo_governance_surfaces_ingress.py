@@ -56,6 +56,13 @@ def _resolve_ingress_task_carrier(omo_dir: Path, item_id: str) -> Path | None:
         if path.exists():
             return path
 
+    # ingress 写面: runtime/omo/_delivery/ingress/tasks/{item_id}.yaml
+    # (ingress task 落 runtime 写面而非 .omo/tasks, carrier 需在此查找)
+    delivery_root = omo_dir.parent / "runtime" / "omo" / "_delivery" / "ingress"
+    ingress_task = delivery_root / "tasks" / f"{item_id}.yaml"
+    if ingress_task.exists():
+        return ingress_task
+
     task_root = omo_dir / "tasks"
     if not task_root.exists():
         return None

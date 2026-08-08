@@ -104,8 +104,14 @@ def agcp_drift_findings(registry: dict[str, Any]) -> list[str]:
     if not cli_path.exists():
         findings.append(f"missing Cockpit CLI file: {display_path(cli_path)}")
     else:
+        # T6-10 拆分后 agent parser 可能在 cli.py 或 _subcommands.py (god-module 拆分)
         cli_text = cli_path.read_text(encoding="utf-8")
-        if not re.search(r"sub\.add_parser\(\s*[\"']agent[\"']", cli_text):
+        sub_text = ""
+        sub_path = WORKSPACE / "projects/cockpit/src/cockpit/_subcommands.py"
+        if sub_path.exists():
+            sub_text = sub_path.read_text(encoding="utf-8")
+        combined_text = cli_text + "\n" + sub_text
+        if not re.search(r"sub\.add_parser\(\s*[\"']agent[\"']", combined_text):
             findings.append("Cockpit CLI must expose `cockpit agent`")
     if not command_path.exists():
         findings.append(
