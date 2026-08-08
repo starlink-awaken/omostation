@@ -157,6 +157,33 @@ def check_lifecycle_timeliness(rules: list[dict], draft_days: int = 7) -> list[s
     return warnings
 
 
+def _check_subtraction_quota(path: Path, current_rules: int) -> list[str]:
+    """T6-05 减法配额制: 规则数超基线则 fail (增 1 必须删 1).
+
+    基线存 governance-checks.yaml 的 gac.subtraction_quota.rule_baseline.
+    """
+    try:
+        import yaml
+
+        docs = [d for d in yaml.safe_load_all(path.read_text(encoding="utf-8")) if d]
+        if not docs:
+            return []
+        main = docs[-1]  # 正文 (同 load_gac_rules)
+        gac = main.get("gac", {}) if isinstance(main, dict) else {}
+        quota = gac.get("subtraction_quota", {}) if isinstance(gac, dict) else {}
+        baseline = int(quota.get("rule_baseline", 0) or 0)
+        if baseline <= 0:
+            return []
+        if current_rules > baseline:
+            return [
+                f"subtraction-quota: 规则数 {current_rules} 超基线 {baseline} "
+                f"(增 1 必须删 1, BET-Y1Q2-T6-05)"
+            ]
+    except Exception:  # defensive: quota 检查失败不阻塞
+        return []
+    return []
+
+
 def validate(path: Path = REGISTRY) -> tuple[int, list[str], list[str]]:
     """主校验. 返回 (exit_code, errors, warnings)."""
     errors: list[str] = []
@@ -237,6 +264,14 @@ def main() -> int:
 
     print(f"dimension 覆盖: {dict(dims)}")
     print(f"layer 覆盖: {dict(layers)}")
+
+    # T6-05 减法配额制: 增 1 删 1 (超基线 fail)
+    quota_errors = _check_subtraction_quota(REGISTRY, len(rules))
+    if quota_errors:
+        errors = list(errors) + quota_errors
+        print(f"\n❌ 减法配额违规 ({len(quota_errors)}):")
+        for e in quota_errors:
+            print(f"  - {e}")
 
     if errors:
         print(f"\n❌ {len(errors)} 错误:")
