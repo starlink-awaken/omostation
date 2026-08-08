@@ -1,1 +1,0 @@
-"""Market plugin for Agora."""
