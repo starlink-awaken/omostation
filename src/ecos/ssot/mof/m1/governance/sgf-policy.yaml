@@ -88,7 +88,8 @@ gates:
     command: ["bin/mof/project-layer-index.py", "--check"]
     ci_only: true  # 默认 strict/CI 跑，本地 skip 防止冲突
   - id: "doc-ssot-snapshots"
-    command: ["scripts/check-doc-ssot-snapshots.py"]
+    command: ["bin/ssot/doc-governance-check.py"]
+    note: 原 scripts/check-doc-ssot-snapshots.py 已被取代; scripts/ 是镜像子模块. 见 ADR-0394.
   - id: "doc-link-check"
     command: ["bin/ssot/doc-link-check.py"]
   - id: "change-lane-check"
