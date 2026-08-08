@@ -7,7 +7,7 @@ base_url: "http://100.96.126.35:4000/v1"
 supported_protocols: ["openai"]
 cost_multiplier: 0.0001
 status: active
-description: "omlx 统一网关(LiteLLM) · 三机集群统一入口 · 精选别名(coder/reasoner/vision/mythos/mythos-fast/embed/mini-9b/fast/mid…)+ 每节点通配透传(macmini/*, macmini-ollama/*, y7000p/*)· 仅 tailnet 可达"
+description: "omlx 统一网关(LiteLLM) · 三机集群统一入口 · 27 别名(coder/reasoner/vision/mythos/embed/general 智能路由…)+ 通配透传(macmini/*, y7000p/*, lms/* LM Link 全池)· 仅 tailnet 可达 · 模型清单见 MODEL-BREW-OMLX-LOCAL(omlxc ssot-sync 生成)"
 
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m1/
