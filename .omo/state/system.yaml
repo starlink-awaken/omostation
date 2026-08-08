@@ -19,7 +19,7 @@ idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 completed_tasks: 225
-total_tasks: 295
+total_tasks: 296
 active_tasks: 1
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -57,7 +57,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-08-08T05:12:41Z'
+updated_at: '2026-08-08T09:37:18Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -180,7 +180,7 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 69
+planned_tasks: 70
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
 - bet-y1q1-t1-00 (并发写冲突止血 — 共享主树禁写 + PASW 全覆盖)
@@ -250,6 +250,7 @@ next_planned_tasks:
 - bet-y3h2-t4-01 (复利收益归因报告)
 - bet-y3h2-t7-01 (公文场景 routine (限格式类))
 - cockpit-debt-debt-1 (治理技术债务：债务)
+- kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'

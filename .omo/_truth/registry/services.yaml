@@ -81,3 +81,160 @@ services:
       interpreter: stable-python3
       entrypoint: bin/mof/gen-service-configs.py
     note: "从本注册生 launchd plist (scheduler=launchd 项). manual/on-registry-change. 引导扇区 (生成本身, 不自生)."
+  # ── 计算面 (omlx) ──────────────────────────────────────────
+  # 2026-08-08: 这些一直在跑但没有生命周期声明, wsvc 的 S1 检查会持续告警。
+  # 字段照 ~/Library/LaunchAgents/*.plist 的真实配置登记, 未臆造。
+  - id: omlx.gateway
+    enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: ~/omlx-orchestration/launchd/com.omlx.gateway.plist
+    scheduler: launchd
+    trigger: keepalive
+    label: com.omlx.gateway
+    program:
+      interpreter: shell
+      entrypoint: ~/.local/bin/omlx-gw-guard
+      args: []
+    resilience:
+      keepalive: always
+    run_at_load: true
+    outputs:
+      stdout: ~/Library/Logs/omlx-gateway.log
+      stderr: ~/Library/Logs/omlx-gateway.log
+    notes: LiteLLM 网关 :4000 (tailnet + localhost), 常驻集成员
+
+  - id: omlx.gateway-ui
+    enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: ~/omlx-orchestration/launchd/com.omlx.gateway-ui.plist
+    scheduler: launchd
+    trigger: keepalive
+    label: com.omlx.gateway-ui
+    program:
+      interpreter: shell
+      entrypoint: ~/.local/bin/omlx-gw-ui-guard
+      args: []
+    resilience:
+      keepalive: always
+    run_at_load: true
+    outputs:
+      stdout: ~/Library/Logs/omlx-gateway-ui.log
+      stderr: ~/Library/Logs/omlx-gateway-ui.log
+    notes: 网关 UI
+
+  - id: omlx.autopilot
+    enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: ~/omlx-orchestration/launchd/com.omlx.autopilot.plist
+    scheduler: launchd
+    trigger: interval
+    interval_sec: 300
+    label: com.omlx.autopilot
+    program:
+      interpreter: stable-python3
+      entrypoint: ~/omlx-orchestration/bin/omlx-autopilot
+      args: []
+    run_at_load: true
+    outputs:
+      stdout: ~/omlx-orchestration/logs/autopilot.out.log
+      stderr: ~/omlx-orchestration/logs/autopilot.err.log
+    notes: 常驻预热 / 空闲卸载 / 内存压力触发 / LaunchAgent 自愈 / SSOT 自动同步
+
+  - id: omlx.autostart
+    enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: ~/omlx-orchestration/launchd/com.omlx.autostart.plist
+    scheduler: launchd
+    trigger: boot
+    label: com.omlx.autostart
+    program:
+      interpreter: shell
+      entrypoint: ~/omlx-orchestration/bin/omlx-autostart-boot.sh
+      args: []
+    resilience:
+      keepalive: crashed
+    run_at_load: true
+    outputs:
+      stdout: ~/omlx-orchestration/logs/autostart-agent.out.log
+      stderr: ~/omlx-orchestration/logs/autostart-agent.err.log
+    notes: 开机拉起本地模型
+
+  # ── 服务面 (Workspace) ─────────────────────────────────────
+  - id: agora.sse
+    enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: 手写 plist (~/Library/LaunchAgents/com.agora.sse.plist)
+    scheduler: launchd
+    trigger: keepalive
+    label: com.agora.sse
+    program:
+      interpreter: uv
+      entrypoint: projects/agora
+      args: ["agora-mcp", "--sse"]
+    resilience:
+      keepalive: always
+    run_at_load: true
+    ports: [7431]
+    outputs:
+      stdout: ~/.agora/logs/sse-stdout.log
+      stderr: ~/.agora/logs/sse-stderr.log
+    notes: Agora MCP (SSE 模式, :7431)。BOS 的 mcp_proxy 能力由本进程按需 spawn
+      stdio 子进程承载 —— 它们不监听独立端口, 不要在 bos-services 里给它们写
+      http endpoint (见 omostation-agora#19)。
+
+  - id: cockpit.dashboard
+    enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: 手写 plist (~/Library/LaunchAgents/com.cockpit.dashboard.plist)
+    scheduler: launchd
+    trigger: keepalive
+    label: com.cockpit.dashboard
+    program:
+      interpreter: uv
+      entrypoint: projects/cockpit
+      args: ["python", "-m", "cockpit.dashboard_server", "--host", "127.0.0.1", "--port", "8090"]
+    resilience:
+      keepalive: crashed
+    run_at_load: true
+    ports: [8090]
+    outputs:
+      stdout: .omo/_delivery/cockpit-dashboard-stdout.log
+      stderr: .omo/_delivery/cockpit-dashboard-stderr.log
+    notes: Cockpit Web 面板 :8090 (含 /api/svc/* 服务控制面)。
+      注意 8090 会自增占用 809x, 本地模型端口已避让到 818x/819x 段。
+
+  # ── 数据面 (docker) ────────────────────────────────────────
+  - id: docker.observability-db
+    enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: docker compose (projects/observability)
+    scheduler: docker
+    trigger: compose
+    label: "docker:observability-db-1"
+    program:
+      interpreter: docker
+      entrypoint: projects/observability
+      args: ["compose", "up", "-d"]
+    notes: 可观测性数据库
+
+  - id: docker.searxng
+    enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: docker compose
+    scheduler: docker
+    trigger: compose
+    label: "docker:searxng"
+    program:
+      interpreter: docker
+      entrypoint: searxng
+      args: ["compose", "up", "-d"]
+    ports: [8080]
+    notes: 本地搜索。占用 8080 —— 本地模型端口曾与它冲突, 已避让。

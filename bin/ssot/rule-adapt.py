@@ -92,13 +92,90 @@ def audit_rules(root: Path | None = None) -> dict[str, Any]:
     return result
 
 
+def _apply_suggestions(suggestions: list[dict], root: Path, *, dry_run: bool) -> dict:
+    """Apply downgrade suggestions to governance-checks.yaml (T4).
+
+    守安全: 备份→修改→验证. dry_run 只预览不写.
+    """
+    import shutil
+
+    checks_path = root / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
+    if not checks_path.exists():
+        return {"status": "error", "reason": "governance-checks.yaml not found"}
+
+    downgrade_ids = {s["rule_id"] for s in suggestions if s["suggestion"] == "downgrade_to_warn"}
+    if not downgrade_ids:
+        return {"status": "noop", "reason": "no downgrade suggestions to apply"}
+
+    original = checks_path.read_text(encoding="utf-8")
+    modified = original
+    applied: list[str] = []
+
+    # Per-rule enforcement downgrade (required → advisory)
+    for rid in sorted(downgrade_ids):
+        # Match patterns like: enforcement: required (within a rule block containing this id)
+        # Simple approach: find id line, then find nearest enforcement: required after it
+        lines = modified.split("\n")
+        for i, line in enumerate(lines):
+            if f'id: {rid}' in line or f'id: "{rid}"' in line:
+                # Search forward for enforcement: required within next 10 lines
+                for j in range(i + 1, min(i + 15, len(lines))):
+                    if "enforcement: required" in lines[j]:
+                        lines[j] = lines[j].replace("enforcement: required", "enforcement: advisory")
+                        applied.append(rid)
+                        break
+                break
+        modified = "\n".join(lines)
+
+    if dry_run:
+        return {
+            "status": "dry_run",
+            "would_downgrade": applied,
+            "count": len(applied),
+            "note": "use --confirm to actually apply",
+        }
+
+    # Backup + apply
+    backup = checks_path.with_suffix(".yaml.bak")
+    shutil.copy2(checks_path, backup)
+    checks_path.write_text(modified, encoding="utf-8")
+
+    return {
+        "status": "applied",
+        "downgraded": applied,
+        "count": len(applied),
+        "backup": str(backup.relative_to(root)),
+        "note": "run 'python3 bin/ssot/verify.py --mode task' to verify",
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--root", type=Path, default=ROOT)
+    parser.add_argument("--apply", action="store_true", help="apply downgrade suggestions (T4)")
+    parser.add_argument("--confirm", action="store_true", help="confirm apply (required with --apply for write)")
     args = parser.parse_args(argv)
 
     result = audit_rules(args.root)
+
+    if args.apply:
+        apply_result = _apply_suggestions(
+            result["suggestions"], args.root, dry_run=not args.confirm,
+        )
+        if args.json:
+            print(json.dumps(apply_result, ensure_ascii=False, indent=2, sort_keys=True))
+        else:
+            print(f"Rule Apply ({'CONFIRM' if args.confirm else 'DRY-RUN'}):")
+            print(f"  status: {apply_result['status']}")
+            if "would_downgrade" in apply_result:
+                print(f"  would downgrade: {apply_result.get('would_downgrade', [])}")
+            elif "downgraded" in apply_result:
+                print(f"  downgraded: {apply_result.get('downgraded', [])}")
+                print(f"  backup: {apply_result.get('backup', '')}")
+            print(f"  count: {apply_result.get('count', 0)}")
+        return 0
+
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     else:

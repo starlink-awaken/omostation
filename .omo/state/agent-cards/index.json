@@ -1,0 +1,100 @@
+{
+  "agents": [
+    {
+      "@type": "AgentCard",
+      "id": "advisor",
+      "name": "TELOS对齐顾问",
+      "description": "读MOS beliefs+calibration→评估系统行为与TELOS的对齐度→产出建议",
+      "role": "advisor",
+      "capabilities": [
+        "evaluate_alignment",
+        "read_mos",
+        "read_telos",
+        "propose_adjustments"
+      ],
+      "bos_uri": "bos://a2a/agent/advisor",
+      "knowledge_sources": [
+        "mos://world_snapshots",
+        "mos://capability_calibrations",
+        "mos://beliefs",
+        "telos://goals",
+        "telos://beliefs"
+      ]
+    },
+    {
+      "@type": "AgentCard",
+      "id": "governor",
+      "name": "治理总督",
+      "description": "扫描journey human_hold + debt台账 + MOS trust趋势→产出治理发现",
+      "role": "governor",
+      "capabilities": [
+        "scan_journey_timeouts",
+        "scan_debt_volume",
+        "scan_mesh_events",
+        "scan_trust_trends",
+        "emit_findings"
+      ],
+      "bos_uri": "bos://a2a/agent/governor",
+      "knowledge_sources": [
+        "bos://governance/omo/debt",
+        "mos://capability_calibrations",
+        "bos://governance/workflow-mesh/events"
+      ]
+    },
+    {
+      "@type": "AgentCard",
+      "id": "health-monitor",
+      "name": "系统健康监控",
+      "description": "扫描system_health服务快照, 检测非healthy服务, 返回alert action",
+      "role": "monitor",
+      "capabilities": [
+        "read_health_snapshot",
+        "detect_unhealthy_services",
+        "emit_alert"
+      ],
+      "bos_uri": "bos://a2a/agent/health-monitor",
+      "knowledge_sources": [
+        "mos://world_snapshots",
+        "bos://governance/omo/state"
+      ]
+    },
+    {
+      "@type": "AgentCard",
+      "id": "journey-runner",
+      "name": "旅程执行器",
+      "description": "扫描journey-states找awaiting_human的run, 若human_approved则自动resume",
+      "role": "runner",
+      "capabilities": [
+        "scan_journey_states",
+        "detect_resumable",
+        "auto_resume_via_subprocess"
+      ],
+      "bos_uri": "bos://a2a/agent/journey-runner",
+      "knowledge_sources": [
+        "bos://governance/omo/journey-states",
+        "mos://decision_outcomes"
+      ]
+    },
+    {
+      "@type": "AgentCard",
+      "id": "knowledge-curator",
+      "name": "知识策展人",
+      "description": "读MOS decision_outcome→聚合per-scene结果→记录跨场景学习到beliefs",
+      "role": "curator",
+      "capabilities": [
+        "read_mos_outcomes",
+        "aggregate_cross_scene",
+        "record_beliefs",
+        "build_knowledge_graph"
+      ],
+      "bos_uri": "bos://a2a/agent/knowledge-curator",
+      "knowledge_sources": [
+        "mos://decision_outcomes",
+        "mos://world_snapshots",
+        "mos://beliefs"
+      ]
+    }
+  ],
+  "count": 5,
+  "updated": "2026-08-08T10:59:39Z"
+}

@@ -1,0 +1,20 @@
+{
+  "@type": "AgentCard",
+  "bos_uri": "bos://a2a/agent/governor",
+  "capabilities": [
+    "scan_journey_timeouts",
+    "scan_debt_volume",
+    "scan_mesh_events",
+    "scan_trust_trends",
+    "emit_findings"
+  ],
+  "description": "扫描journey human_hold + debt台账 + MOS trust趋势→产出治理发现",
+  "id": "governor",
+  "knowledge_sources": [
+    "bos://governance/omo/debt",
+    "mos://capability_calibrations",
+    "bos://governance/workflow-mesh/events"
+  ],
+  "name": "治理总督",
+  "role": "governor"
+}

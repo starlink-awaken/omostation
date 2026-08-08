@@ -1,0 +1,47 @@
+id: governor
+display_name: "治理总督"
+description: "扫描journey human_hold + debt台账 + MOS trust趋势→产出治理发现"
+schema: digital_agent/v2
+
+identity:
+  role: governor
+  capabilities:
+    - scan_journey_timeouts
+    - scan_debt_volume
+    - scan_mesh_events
+    - scan_trust_trends
+    - emit_findings
+
+mental_model:
+  type: rule_based
+  rules:
+    - "journey human_hold count > 0 → finding"
+    - "debt + gap items > 30 → finding(high_debt_volume)"
+    - "mesh events > 100 → finding(high_event_volume)"
+    - "calibration success_rate < 0.6 → finding(low_trust)"
+    - "no findings → noop"
+
+knowledge_sources:
+  - bos://governance/omo/debt
+  - mos://capability_calibrations
+  - bos://governance/workflow-mesh/events
+
+constraints:
+  action_tier: whitelist
+  governance_bindings:
+    - check_id: CR-X1-AGENT-AUDIT
+      enforcement: advisory
+    - check_id: CR-X2-GAC-DRIFT
+      enforcement: advisory
+  redline_bindings: []
+  relationships:
+    supervised_by: []  # governor是最顶层, 只向人报告
+    supervises: [health-monitor, knowledge-curator, journey-runner, advisor]
+    reports_to: [human]
+  resource_limits:
+    max_tick_duration_ms: 5000
+
+runtime:
+  executor_class: omo.omo_agent_host.GovernorAgent
+  tick_frequency: on_demand
+  trust_ref: system:governor

@@ -7,8 +7,8 @@ last-reviewed: "2026-07-28"
 
 # GAC Check Performance Budget Standard
 
-> Status: MANDATORY | Applied: N1 (2026-07-28)
-> Authority: `projects/ecos/.../sgf-policy.yaml` gate.`perf_budget_s` + `bin/gac/check-perf-budget.py`
+> Status: MANDATORY | Applied: N1 (2026-07-28) | ⚠️ 2026-08-08: gate 工具已退役（bin/_archive/check-perf-budget.py，ecos/sgf-policy 零引用）— 本文档为历史决策，执行面以 gate runner 实测层为准
+> Authority: `projects/ecos/.../sgf-policy.yaml` gate.`perf_budget_s` + `bin/_archive/check-perf-budget.py`（已退役）
 > 照搬 baseline 模式: 标准化 > 逐个打补丁 (第三次"门超时"后立的规矩)
 
 ## 1. 核心目的
@@ -76,7 +76,7 @@ last-reviewed: "2026-07-28"
 
 | 层 | 工具 | 场景 | 状态 |
 |----|------|------|------|
-| 声明层 (静态) | `bin/gac/check-perf-budget.py` | pre-commit | ✅ N1 交付 |
+| 声明层 (静态) | `bin/_archive/check-perf-budget.py`（已退役） | pre-commit | ✅ N1 交付 |
 | 实测层 (回归) | gate runner timing | CI | ⬜ Q4 gate runner overhaul (见 redlines `gate-cost-budget` gap) |
 
 声明层只验"gate 声明了 perf_budget_s 且非 ci_only 的 ≤2"。实测层验"实际
