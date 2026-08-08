@@ -44,13 +44,23 @@ while IFS= read -r branch; do
   [ "$branch" = "$MAIN_BRANCH" ] && continue
   [[ "$branch" != work/* ]] && continue
 
-  # 检查是否已合并到 main
+  # 检查是否已合并到 main (跳过当前有 worktree 的活跃分支 — 防误删进行中会话)
+  if git worktree list --porcelain | grep -q "^branch refs/heads/$branch$"; then
+    echo "   跳过 (活跃 worktree): $branch"
+    continue
+  fi
   if git merge-base --is-ancestor "$branch" "$MAIN_BRANCH" 2>/dev/null; then
     echo "   已合并: $branch"
     if [ "$DRY_RUN" = false ]; then
-      git branch -d "$branch" 2>/dev/null || git branch -D "$branch" 2>/dev/null || true
+      # 仅安全删除 (-d); 失败即分支可能被 checkout/未合并, 不强制 -D
+      if ! git branch -d "$branch" 2>/dev/null; then
+        echo "   ⚠️  跳过 $branch (无法安全删除)"
+      else
+        merged=$((merged + 1))
+      fi
+    else
+      merged=$((merged + 1))
     fi
-    merged=$((merged + 1))
   fi
 done < <(git branch --format='%(refname:short)')
 
@@ -65,6 +75,11 @@ while IFS= read -r branch; do
   [ -z "$branch" ] && continue
   [ "$branch" = "$MAIN_BRANCH" ] && continue
   [[ "$branch" != work/* ]] && continue
+
+  # 跳过当前有 worktree 的活跃分支 (防误删进行中会话)
+  if git worktree list --porcelain | grep -q "^branch refs/heads/$branch$"; then
+    continue
+  fi
 
   # 检查是否有 open PR
   if command -v gh >/dev/null 2>&1; then
