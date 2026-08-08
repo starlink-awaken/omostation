@@ -136,9 +136,7 @@ class AdjudicationStore:
         except Exception:
             pass
 
-    def _update_capability_calibration(
-        self, decision_id: str, verdict: str
-    ) -> None:
+    def _update_capability_calibration(self, decision_id: str, verdict: str) -> None:
         """闭环: 裁决 → capability_calibration 自动更新 (BET-Y1Q2-T4-01).
 
         公式: calibration = accepted_as_is / invocations (per capability).
