@@ -31,7 +31,13 @@ from agora.mcp.bos_resolver import (  # type: ignore[import-not-found]
 from agora.mcp.bos_resolver import (  # type: ignore[import-not-found]
     resolve_bos_uri as _resolve_bos_uri,
 )
-from agora.server._response import FORMAT_VERSION, _error, _get_cache_ttl, _ok, _safe_result
+from agora.server._response import (
+    FORMAT_VERSION,
+    _error,
+    _get_cache_ttl,
+    _ok,
+    _safe_result,
+)
 
 from ._helpers import (
     _PROJECTS_DIR,
@@ -195,7 +201,9 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 # P0 能力市场: 用 resolve_pricing 按 URI 定价覆盖 (混合三层)
                 from agora.accounting import estimate_cost, resolve_pricing
 
-                input_tokens = len(json.dumps(args)) // 4 if args else 0  # ~4 字符/token
+                input_tokens = (
+                    len(json.dumps(args)) // 4 if args else 0
+                )  # ~4 字符/token
                 output_tokens = len(json.dumps(result)) // 4 if result else 0
                 in_rate, out_rate = resolve_pricing(uri)
                 cost_usd = estimate_cost(input_tokens, output_tokens, in_rate, out_rate)

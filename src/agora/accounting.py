@@ -142,8 +142,16 @@ def resolve_pricing(uri: str) -> tuple[float, float]:
                     if pricing:
                         prefix = route.get("prefix", "")
                         _PRICING_CACHE[prefix] = (
-                            float(pricing.get("input_rate_per_m", DEFAULT_INPUT_RATE_PER_M)),
-                            float(pricing.get("output_rate_per_m", DEFAULT_OUTPUT_RATE_PER_M)),
+                            float(
+                                pricing.get(
+                                    "input_rate_per_m", DEFAULT_INPUT_RATE_PER_M
+                                )
+                            ),
+                            float(
+                                pricing.get(
+                                    "output_rate_per_m", DEFAULT_OUTPUT_RATE_PER_M
+                                )
+                            ),
                         )
         except Exception:  # defensive: 定价加载失败回退全局默认
             _PRICING_CACHE = {}
