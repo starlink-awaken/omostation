@@ -1,6 +1,7 @@
 ---
 title: External Connection Fabric Standard
 status: active
+lifecycle: contract
 type: standard
 owner: architecture-governance
 last-reviewed: 2026-08-03

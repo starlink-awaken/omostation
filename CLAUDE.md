@@ -157,7 +157,7 @@ The authoritative SSOT map (all fact types and sources) lives in [`ARCHITECTURE.
 | Permission scopes | Internal pipeline scenes use RBAC scopes from controlled vocabulary | [`.omo/standards/permission-scope-vocabulary.yaml`](.omo/standards/permission-scope-vocabulary.yaml) |
 | Signal sources | External signal registration in `signal-sources.yaml`; polled by `signal-poller.py` | [`.omo/_truth/registry/signal-sources.yaml`](.omo/_truth/registry/signal-sources.yaml) |
 | MOS agent_belief (心智模型三表) | `mos.agent_belief` module: world_snapshot + capability_calibration + decision_outcome; scene-outcome-recorder + scene-reflection auto-bridge to MOS | [`ADR-0396`](.omo/_knowledge/decisions/0396-digital-organism-architecture.md) · [`DIGITAL-ORGANISM-ARCHITECTURE.md`](docs/DIGITAL-ORGANISM-ARCHITECTURE.md) |
-| Digital organism architecture | Phase 0 (接血管) in progress: MOS Keystone ✅, Bridges ✅; see implementation plan | [`.omc/plans/digital-organism-implementation.md`](.omc/plans/digital-organism-implementation.md) |
+| Digital organism architecture | Phase 0 (接血管) in progress: MOS Keystone ✅, Bridges ✅; see implementation plan | [`docs/DIGITAL-ORGANISM-ARCHITECTURE.md`](docs/DIGITAL-ORGANISM-ARCHITECTURE.md) |
 
 ## 4. Working Discipline
 

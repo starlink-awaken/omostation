@@ -1,3 +1,11 @@
+---
+title: Swarm Protocol — 多twin协作标准
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-08
+---
+
 # Swarm Protocol — 多twin协作标准
 
 > 标准编号: SP-001 | 状态: active | 创建: 2026-08-08
