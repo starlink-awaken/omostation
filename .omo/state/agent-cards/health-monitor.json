@@ -1,0 +1,17 @@
+{
+  "@type": "AgentCard",
+  "bos_uri": "bos://a2a/agent/health-monitor",
+  "capabilities": [
+    "read_health_snapshot",
+    "detect_unhealthy_services",
+    "emit_alert"
+  ],
+  "description": "扫描system_health服务快照, 检测非healthy服务, 返回alert action",
+  "id": "health-monitor",
+  "knowledge_sources": [
+    "mos://world_snapshots",
+    "bos://governance/omo/state"
+  ],
+  "name": "系统健康监控",
+  "role": "monitor"
+}

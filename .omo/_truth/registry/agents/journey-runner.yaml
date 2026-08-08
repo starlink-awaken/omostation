@@ -1,0 +1,39 @@
+id: journey-runner
+display_name: "旅程执行器"
+description: "扫描journey-states找awaiting_human的run, 若human_approved则自动resume"
+schema: digital_agent/v2
+
+identity:
+  role: runner
+  capabilities:
+    - scan_journey_states
+    - detect_resumable
+    - auto_resume_via_subprocess
+
+mental_model:
+  type: rule_based
+  rules:
+    - "status == awaiting_human and human_approved == True → resume"
+    - "no resumable → noop"
+
+knowledge_sources:
+  - bos://governance/omo/journey-states
+  - mos://decision_outcomes
+
+constraints:
+  action_tier: whitelist
+  governance_bindings:
+    - check_id: CR-L2-SURFACES-INTEGRITY
+      enforcement: advisory
+  redline_bindings: []
+  relationships:
+    supervised_by: [governor]
+    collaborates_with: [knowledge-curator]
+    reports_to: [governor]
+  resource_limits:
+    max_tick_duration_ms: 120000  # resume可能跑journey
+
+runtime:
+  executor_class: omo.omo_agent_host.JourneyRunnerAgent
+  tick_frequency: on_demand
+  trust_ref: system:journey-runner

@@ -7,7 +7,7 @@ last-reviewed: "2026-07-29"
 # 协作冲突协议边界 (P86 B 波 · SSOT)
 
 > Status: MANDATORY | 上位: B1' · R2 · Q1/§STOP · P3 红线  
-> 可执行门: `bin/gac/check-scenario-growth.py`  
+> 可执行门: `bin/collab/scenario_lib.py`（旧 check-scenario-growth 已归档 bin/_archive/）  
 > 审计: `.omo/_knowledge/audits/2026-07-29-p86-r2-adv25-59-boundary-declaration.md`
 
 ## 1. 已设计类别 (计入消解成功率分母)

@@ -62,7 +62,7 @@ Agora MCP 启动时也会 best-effort `_load_memory_os_env()`（不覆盖已有�
 
 ## 跨进程状态
 
-- FileStore（默认 `runtime/mos/store.json` 或 `~/.mos/store.json`）持久化 theta/raw **与** `last_consolidate`
+- FileStore（默认 `runtime/omo/_delivery/foundry/mos-consolidate-*.json` 或 `~/.mos/store.json`）持久化 theta/raw **与** `last_consolidate`
 - `cockpit memory status` / `/api/memory/status` 暴露 `consolidate` + `adapters` 诚实字段
 
 ## Phase 10 能力加深

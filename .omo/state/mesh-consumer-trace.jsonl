@@ -2194,3 +2194,15 @@
 {"action": "noop", "event_id": "4b5c78ed", "event_type": "WorkflowSucceeded"}
 {"action": "noop", "event_id": "57967b72", "event_type": "WorkflowClosed"}
 {"action": "tracked", "event_id": "319d578f", "event_type": "WorkflowRequested", "objective": "BET-Y1Q2-T6-03 bin 脚本清理 309 → ≤240"}
+{"action": "tracked", "event_id": "69effe4a", "event_type": "WorkflowRequested", "objective": "P0 fix: remove orphan 0388-layer-contract-direction-ssot.md + renumber 0391-laye"}
+{"action": "noop", "event_id": "ed0ced13", "event_type": "WorkflowAdmitted"}
+{"action": "noop", "event_id": "9f7dc1df", "event_type": "StepDispatched"}
+{"action": "noop", "event_id": "d28aa950", "event_type": "StepStarted"}
+{"action": "noop", "event_id": "d8c05bff", "event_type": "StepFailed"}
+{"action": "noop", "event_id": "d0ede65f", "event_type": "WorkflowClosed"}
+{"action": "tracked", "event_id": "e0d9578e", "event_type": "WorkflowRequested", "objective": "P1 fix: repair 5 broken doc refs (archived tools: check-scenario-growth→scenario"}
+{"action": "noop", "event_id": "52fbbef0", "event_type": "WorkflowAdmitted"}
+{"action": "noop", "event_id": "866a01c5", "event_type": "StepDispatched"}
+{"action": "noop", "event_id": "830d69fd", "event_type": "StepStarted"}
+{"action": "noop", "event_id": "d4eec045", "event_type": "StepFailed"}
+{"action": "noop", "event_id": "ce3d9ae7", "event_type": "WorkflowClosed"}

@@ -124,6 +124,12 @@ phases:
     command:
     - make
     - ssot-guardian
+  - id: sync-check
+    mode: required
+    command:
+    - python3
+    - bin/ssot/post-commit-sync-check.py
+    note: 迭代后派生文档同步检查 (子模块指针变更 → sync-all-docs + 提示提交)
   closeout:
   - id: retro-written
     mode: required
@@ -156,6 +162,18 @@ phases:
     - bin/gac/gac-worktree.sh
     - submit
     - '{bet_id}'
+  - id: bet-complete
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/plan/bet-ledger.py
+    - complete
+    - '{bet_id}'
+    note: 'P1: 台账回写 — retro 通过后置 done (防 done 状态滞后)'
 diff_checks:
 - path_glob: docs/plans/3y-bet-ledger.yaml
   check: bet-ledger-lint

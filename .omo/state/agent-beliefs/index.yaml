@@ -605,7 +605,46 @@ world_snapshots:
     hash: 69b396b99ef41a84
   confidence: 0.8
   expires_at: null
-capability_calibrations: []
+- id: ws-0043
+  observed_at: '2026-08-08T07:30:56Z'
+  source: signal-poller:test_scenario
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: test_scenario
+    bos_uri: bos://perception/test
+    hash: abc123
+  confidence: 0.8
+  expires_at: null
+capability_calibrations:
+- id: cc-0001
+  capability_ref: scene:knowledge-curation
+  measured_at: '2026-08-08T07:27:32Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: test-trust-calibration
+- id: cc-0002
+  capability_ref: scene:research-pipeline
+  measured_at: '2026-08-08T07:33:03Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: e2e-test-1786174383
+- id: cc-0003
+  capability_ref: autoloop:rule_downgrade
+  measured_at: '2026-08-08T10:16:28Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: pr-999
+- id: cc-0004
+  capability_ref: autoloop:adr_draft
+  measured_at: '2026-08-08T10:25:45Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: pr-1226
 decision_outcomes:
 - id: do-0001
   decision_at: '2026-08-08T05:34:12Z'
@@ -615,3 +654,34 @@ decision_outcomes:
   actual_outcome: adjudication=accepted
   delta: TB2 test
   source_run_id: test-TB2
+- id: do-0002
+  decision_at: '2026-08-08T07:27:32Z'
+  decision_type: scene:knowledge-curation
+  input_summary: run_id=test-trust-calibration
+  expected_outcome: scene execution to terminal
+  actual_outcome: adjudication=accepted
+  delta: Trust calibration test
+  source_run_id: test-trust-calibration
+- id: do-0003
+  decision_at: '2026-08-08T07:33:03Z'
+  decision_type: scene:research-pipeline
+  input_summary: run_id=e2e-test-1786174383
+  expected_outcome: scene execution to terminal
+  actual_outcome: adjudication=accepted
+  delta: 'E2E闭环测试: research-pipeline执行成功'
+  source_run_id: e2e-test-1786174383
+agent_skills:
+- id: skill-0001
+  agent_id: advisor
+  skill_name: telos_alignment_check
+  code_or_pattern: 'if avg_rate >= 0.7: aligned'
+  learned_from: test-run
+  reusable: true
+  recorded_at: '2026-08-08T10:55:29Z'
+agent_experiences:
+- id: exp-0001
+  agent_id: governor
+  experience: debt_volume > 30 triggers alert
+  outcome: positive
+  context: ''
+  recorded_at: '2026-08-08T10:55:29Z'

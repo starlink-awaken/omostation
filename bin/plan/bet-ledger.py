@@ -487,6 +487,72 @@ def cmd_lint(data: dict, args) -> int:
     return 0
 
 
+def cmd_complete(data: dict, args) -> int:
+    """台账完成: 校验 verify D0 入库 + retro 后置 status=done.
+
+    P1 (方案 4): closeout 后自动回写台账, 防 done 状态滞后
+    (记忆/台账脱节, 实际 done 远超记忆). 带 guard:
+    - bet 存在且非 done
+    - verify D0 检查通过 (write_surfaces 入库)
+    - 可选 --force 跳过 guard (人工确认)
+    """
+    b = bet_by_id(data, args.bet_id)
+    if b.get("status") == "done":
+        print(f"[complete] {b['id']} 已是 done, 无需操作")
+        return 0
+
+    if not args.force:
+        # D0 guard: write_surfaces 入库检查
+        rc = 0
+        for p in b.get("write_surfaces", []):
+            if "*" in p:
+                continue
+            r = subprocess.run(
+                ["git", "ls-files", "--error-unmatch", p],
+                cwd=WS, capture_output=True, check=False,
+            )
+            if r.returncode != 0:
+                print(f"[complete] ❌ 未入库: {p} (D0 铁律)")
+                rc = 1
+        if rc:
+            print("[complete] 请先完成 D0 (write_surfaces 全部入库) 或 --force")
+            return 1
+
+    # 置 done (写 3y-bet-ledger.yaml, 非 .omo 状态)
+    try:
+        import datetime
+        path = LEDGER
+        text = path.read_text(encoding="utf-8")
+        marker = f"id: {args.bet_id}"
+        idx = text.find(marker)
+        if idx < 0:
+            print(f"[complete] ❌ 未找到 {args.bet_id}")
+            return 1
+        # 在该 bet 块内找 status: X → status: done
+        block_end = text.find("\n- id:", idx + len(marker))
+        if block_end < 0:
+            block_end = len(text)
+        block = text[idx:block_end]
+        if "status: done" not in block:
+            block_new = block.replace("status: ", "status: done\n  done_at: ",
+                                      1) if "status:" in block else block
+            # 用更精确替换: status: <old> → status: done (保留 done_at)
+            import re
+            block_new = re.sub(r"status: (\w+)", "status: done", block, count=1)
+            block_new = block_new.replace(
+                "status: done",
+                f"status: done\n  done_at: {datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d')}",
+                1,
+            )
+            text = text[:idx] + block_new + text[block_end:]
+            path.write_text(text, encoding="utf-8")
+        print(f"[complete] ✅ {b['id']} → done")
+        return 0
+    except Exception as exc:  # noqa: BLE001
+        print(f"[complete] ❌ 写台账失败: {exc}")
+        return 1
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="三年规划执行台账")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -510,6 +576,9 @@ def main() -> int:
     sub.add_parser("surface")
     sub.add_parser("gate").add_argument("window")
     sub.add_parser("lint")
+    pc = sub.add_parser("complete")
+    pc.add_argument("bet_id")
+    pc.add_argument("--force", action="store_true")
 
     args = p.parse_args()
     data = load()
@@ -523,6 +592,7 @@ def main() -> int:
         "surface": cmd_surface,
         "gate": cmd_gate,
         "lint": cmd_lint,
+        "complete": cmd_complete,
     }[args.cmd](data, args)
 
 

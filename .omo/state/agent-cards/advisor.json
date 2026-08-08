@@ -1,0 +1,21 @@
+{
+  "@type": "AgentCard",
+  "bos_uri": "bos://a2a/agent/advisor",
+  "capabilities": [
+    "evaluate_alignment",
+    "read_mos",
+    "read_telos",
+    "propose_adjustments"
+  ],
+  "description": "读MOS beliefs+calibration→评估系统行为与TELOS的对齐度→产出建议",
+  "id": "advisor",
+  "knowledge_sources": [
+    "mos://world_snapshots",
+    "mos://capability_calibrations",
+    "mos://beliefs",
+    "telos://goals",
+    "telos://beliefs"
+  ],
+  "name": "TELOS对齐顾问",
+  "role": "advisor"
+}

@@ -1,0 +1,19 @@
+{
+  "@type": "AgentCard",
+  "bos_uri": "bos://a2a/agent/knowledge-curator",
+  "capabilities": [
+    "read_mos_outcomes",
+    "aggregate_cross_scene",
+    "record_beliefs",
+    "build_knowledge_graph"
+  ],
+  "description": "读MOS decision_outcome→聚合per-scene结果→记录跨场景学习到beliefs",
+  "id": "knowledge-curator",
+  "knowledge_sources": [
+    "mos://decision_outcomes",
+    "mos://world_snapshots",
+    "mos://beliefs"
+  ],
+  "name": "知识策展人",
+  "role": "curator"
+}
