@@ -10,6 +10,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import structlog
 
@@ -324,6 +325,60 @@ class ResourceAccountDB:
             if total["total_calls"] > 0
             else 0.0
         )
+        return total
+
+    def get_calls(
+        self, caller_id: str, service: str | None = None, period: str = "month"
+    ) -> dict:
+        """采购账单: 按 caller (可选 service 过滤) 聚合月度调用明细.
+
+        Args:
+            caller_id: 调用者 ID
+            service: 可选服务过滤 (service_name 前缀匹配, 如 bos://analysis/minerva/)
+            period: 'day', 'week', 'month', or 'all' (默认 month)
+
+        Returns:
+            Dict with: total_calls, total_cost, period,
+                       by_service (list: service_name/call_count/total_cost/tokens)
+        """
+        cutoff = _parse_period(period)
+        conn = self._get_conn()
+        params: list[Any] = [caller_id, cutoff.isoformat()]
+        service_filter = ""
+        if service:
+            service_filter = "AND service_name LIKE ?"
+            params.append(f"{service}%")
+
+        total_row = conn.execute(
+            f"""
+            SELECT COUNT(*) AS total_calls,
+                   COALESCE(SUM(cost_usd), 0.0) AS total_cost
+            FROM calls
+            WHERE caller_id = ? AND timestamp >= ? {service_filter}
+            """,
+            params,
+        ).fetchone()
+
+        by_service = conn.execute(
+            f"""
+            SELECT service_name,
+                   COUNT(*) AS call_count,
+                   COALESCE(SUM(cost_usd), 0.0) AS total_cost,
+                   COALESCE(SUM(input_tokens), 0) AS total_input_tokens,
+                   COALESCE(SUM(output_tokens), 0) AS total_output_tokens
+            FROM calls
+            WHERE caller_id = ? AND timestamp >= ? {service_filter}
+            GROUP BY service_name
+            ORDER BY total_cost DESC
+            """,
+            params,
+        ).fetchall()
+
+        total = dict(total_row)
+        total["by_service"] = [dict(r) for r in by_service]
+        total["period"] = period
+        total["caller_id"] = caller_id
+        total["service_filter"] = service
         return total
 
     def get_quota(self, caller_id: str) -> dict:
