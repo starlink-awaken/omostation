@@ -90,6 +90,74 @@ def estimate_cost(
     )
 
 
+# ── 能力市场 P0: 定价解析 (混合三层: 全局默认 + rates.yaml 覆盖) ──────
+_PRICING_RATES_PATH: Path | None = None
+_PRICING_CACHE: dict[str, tuple[float, float]] | None = None
+
+
+def _set_pricing_rates_path(path: str | Path) -> None:
+    """测试注入: 指定 agora-bos-rates.yaml 路径 (默认自动发现)."""
+    global _PRICING_RATES_PATH, _PRICING_CACHE
+    _PRICING_RATES_PATH = Path(path)
+    _PRICING_CACHE = None
+
+
+def _find_rates_path() -> Path:
+    """定位 agora-bos-rates.yaml (项目默认, 供测试/运行时)."""
+    if _PRICING_RATES_PATH is not None:
+        return _PRICING_RATES_PATH
+    # 自动发现: src/agora/agora-bos-rates.yaml
+    here = Path(__file__).resolve().parent
+    for cand in (
+        here / "agora-bos-rates.yaml",
+        here.parent.parent / "etc" / "agora-bos-rates.yaml",
+    ):
+        if cand.exists():
+            return cand
+    return here / "agora-bos-rates.yaml"
+
+
+def resolve_pricing(uri: str) -> tuple[float, float]:
+    """解析 URI 的定价 (input_rate_per_m, output_rate_per_m).
+
+    混合三层 (Q5 决策):
+    1. 全局默认: deepseek 费率 (DEFAULT_INPUT_RATE_PER_M/DEFAULT_OUTPUT_RATE_PER_M)
+    2. rates.yaml routes 的 pricing 覆盖 (最长 prefix 匹配)
+    3. (未来) 服务级覆盖
+
+    Returns:
+        (input_rate_per_m, output_rate_per_m)
+    """
+    global _PRICING_CACHE
+    if _PRICING_CACHE is None:
+        _PRICING_CACHE = {}
+        try:
+            import yaml
+
+            path = _find_rates_path()
+            if path.exists():
+                data = yaml.safe_load(path.read_text(encoding="utf-8"))
+                for route in data.get("routes", []):
+                    pricing = route.get("pricing")
+                    if pricing:
+                        prefix = route.get("prefix", "")
+                        _PRICING_CACHE[prefix] = (
+                            float(pricing.get("input_rate_per_m", DEFAULT_INPUT_RATE_PER_M)),
+                            float(pricing.get("output_rate_per_m", DEFAULT_OUTPUT_RATE_PER_M)),
+                        )
+        except Exception:  # defensive: 定价加载失败回退全局默认
+            _PRICING_CACHE = {}
+    # 最长 prefix 匹配
+    best_len = -1
+    for prefix, (in_rate, out_rate) in _PRICING_CACHE.items():
+        if uri.startswith(prefix) and len(prefix) > best_len:
+            best_len = len(prefix)
+            best = (in_rate, out_rate)
+    if best_len >= 0:
+        return best
+    return (DEFAULT_INPUT_RATE_PER_M, DEFAULT_OUTPUT_RATE_PER_M)
+
+
 def _parse_period(period: str) -> datetime:
     """Parse a period string ('day', 'week', 'month') into a cutoff datetime."""
     now = datetime.now(UTC)
