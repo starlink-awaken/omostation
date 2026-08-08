@@ -1,0 +1,16 @@
+# M2: CapabilityProvider — external tool registry (Claude Code/Codex/Crush/etc.)
+m2_type: CapabilityProvider
+version: 1.0.0
+CapabilityProvider:
+  m3_parent: StructuralElement.Service
+  description: 外部执行者 — Claude Code/Codex/Crush/Kilo/Droid/OpenCode 统一能力提供者
+  requiredProperties:
+    provider_id: {type: string}
+    capabilities: {type: list, items: string}
+    launch: {type: string, description: "启动命令"}
+  optionalProperties:
+    model: {type: string}
+    cost: {type: enum, values: [free, low, medium, high]}
+    governance: {type: enum, values: [full, sandboxed]}
+    performance: {type: object}
+  selectionCriteria: [capability_match, cost, availability, performance_history]
