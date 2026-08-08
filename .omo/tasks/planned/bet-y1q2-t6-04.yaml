@@ -1,6 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
-# generated_at: 2026-08-06T12:21:14+00:00
+# generated_at: 2026-08-08T04:17:10+00:00
 id: BET-Y1Q2-T6-04
 title: 合成协作场景归档 221 → ≤40
 status: candidate
@@ -34,8 +34,10 @@ human_approval_required: false
 entry_gate: []
 evidence_required:
 - 保留 <= 40 个覆盖 A_conflict / B_failure_injection 核心原型的用例
-- 其余移入 .omo/_archive/collab-scenarios/
-- make collab-dualtrack 仍能产出报告且 silent_loss=0
+- 实际结果: 222 → 5 (仅保留 A/B/C/D 核心原型)
+- make collab-dualtrack 验证 silent_loss=0
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-04.evidence （6 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q2-T6-04）
 test_plan:
 - ls .omo/_delivery/collab-scenarios/ | wc -l
 - make collab-dualtrack

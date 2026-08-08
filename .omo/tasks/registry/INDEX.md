@@ -10,7 +10,7 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (64 个)
+## Planned Tasks (69 个)
 | ID | Title | Status |
 |----|-------|--------|
 | bet-y1q1-t1-00 | 并发写冲突止血 — 共享主树禁写 + PASW 全覆盖 | candidate |
@@ -40,6 +40,11 @@
 | bet-y1q2-t6-03 | bin 脚本清理 — 归档零调用脚本, 不设数量目标 | candidate |
 | bet-y1q2-t6-04 | 合成协作场景归档 221 → ≤40 | candidate |
 | bet-y1q2-t6-05 | 减法配额制门禁上线 | candidate |
+| bet-y1q2-t6-06 | 技能自动结晶引擎 — 踩坑经验自动重构为持久化 Agent Skill | candidate |
+| bet-y1q2-t6-07 | B.D.S.K. 影子沙箱预演场 — 0-Touch 代码提交前对抗仿真 | candidate |
+| bet-y1q2-t6-08 | 100% 责任归因代理链 — Subagent 全流程继承树审计 | candidate |
+| bet-y1q2-t6-09 | AetherForge 动态算力与模型自动配比 | candidate |
+| bet-y1q2-t6-10 | god-module 大文件 SRP 拆分 (3 个 >1500L 债 | candidate |
 | bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | candidate |
 | bet-y1q2-t8-01 | /outcomes 结果与校准面板 | candidate |
 | bet-y1q3-t2-01 | 感知面第二根管子 (文件夹 / 日历 | candidate |
@@ -119,5 +124,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-08-08 (依据 `omo state sync-tasks` 与真实目录重算: done=225, planned=64, active=0, archived=6 顶层)*
+*Updated: 2026-08-08 (依据 `omo state sync-tasks` 与真实目录重算: done=225, planned=69, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*

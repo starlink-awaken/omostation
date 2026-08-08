@@ -15,15 +15,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from _shared import append_jsonl, load_yaml, read_jsonl, utc_now
+
 REFLECTION_SCHEMA = "scene-reflection/v1"
 
 
 def _load_scene_card(path: Path) -> dict[str, Any]:
-    import yaml
-
-    docs = list(yaml.safe_load_all(path.read_text(encoding="utf-8")))
-    body = docs[-1] if docs else {}
-    if not isinstance(body, dict):
+    body = load_yaml(path)
+    if not body:
         raise ValueError(f"scene card must be an object: {path}")
     return body
 
@@ -50,7 +49,7 @@ def generate_reflection(
         return {"schema": REFLECTION_SCHEMA, "status": "skipped", "detail": "no questions defined"}
 
     # Build reflection entry
-    ts = datetime.now(UTC).isoformat()
+    ts = utc_now()
     digest_input = f"{scene_id}:{run_id}:{ts}:{execution_status}"
     entry = {
         "ts": ts,
@@ -68,39 +67,53 @@ def generate_reflection(
 
     # Persist to reflection log
     log_path = root / ".omo" / "_knowledge" / "workflow-mesh" / "scene-reflections.jsonl"
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-
-    import fcntl
-
-    with open(log_path, "a", encoding="utf-8") as f:
-        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-        try:
-            f.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
-            f.flush()
-        finally:
-            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+    append_jsonl(log_path, entry)
 
     entry["status"] = "recorded"
 
-    # P0-T5: MOS Bridge — reflection → world_snapshot table
-    try:
-        import sys as _sys
-        _mos_src = str(root / "projects" / "kairon" / "packages" / "mos" / "src")
-        if _mos_src not in _sys.path:
-            _sys.path.insert(0, _mos_src)
-        from mos.agent_belief import write_world_snapshot, WorldSnapshot
-        for q in questions:
-            write_world_snapshot(WorldSnapshot(
-                domain="meta",
-                key=f"reflection:{scene_id}:{q[:60]}",
-                value=output_summary[:200],
-                source=f"reflection:{run_id}",
-                confidence=0.5,
-            ))
-    except Exception:
-        pass  # MOS not configured — JSONL is sufficient
+    # T-B3: reflection → evolution trigger.
+    # 执行异常时触发 evolution-agent 扫描, 让反思进入进化提案.
+    if execution_status not in ("succeeded", "skipped"):
+        triggered = _trigger_evolution(root, scene_id, execution_status)
+        entry["evolution_triggered"] = triggered
 
     return entry
+
+
+def _trigger_evolution(root: Path, scene_id: str, execution_status: str) -> bool:
+    """Trigger evolution-agent scan when execution shows anomalies."""
+    import subprocess
+
+    try:
+        proc = subprocess.run(
+            ["python3", str(root / "bin/ssot/evolution-agent.py"), "--json"],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        if proc.returncode == 0 and proc.stdout:
+            import json as _json
+
+            data = _json.loads(proc.stdout)
+            n = int(data.get("total_proposals", 0))
+            # Record trigger trace
+            trace_path = root / ".omo" / "_knowledge" / "workflow-mesh" / "evolution-triggers.jsonl"
+            trace_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(trace_path, "a", encoding="utf-8") as f:
+                f.write(
+                    _json.dumps(
+                        {
+                            "ts": datetime.now(UTC).isoformat(),
+                            "scene_id": scene_id,
+                            "execution_status": execution_status,
+                            "proposals_generated": n,
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
+            return True
+    except Exception:
+        pass
+    return False
 
 
 def list_reflections(root: Path, scene_id: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
@@ -109,16 +122,9 @@ def list_reflections(root: Path, scene_id: str | None = None, limit: int = 20) -
     if not log_path.exists():
         return []
 
-    entries: list[dict[str, Any]] = []
-    for line in log_path.read_text(encoding="utf-8").strip().split("\n"):
-        if not line:
-            continue
-        try:
-            entry = json.loads(line)
-            if scene_id is None or entry.get("scene_id") == scene_id:
-                entries.append(entry)
-        except json.JSONDecodeError:
-            continue
+    entries = read_jsonl(log_path)
+    if scene_id is not None:
+        entries = [e for e in entries if e.get("scene_id") == scene_id]
     return entries[-limit:]
 
 

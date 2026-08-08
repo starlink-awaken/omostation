@@ -50,7 +50,6 @@
 | 项 | 状态 | 落地 |
 |----|------|------|
 | Q5 能力市场 P0 | ✅ 完成 | resolve_pricing 混合三层 (minerva 0.3/1.2, kos 0.05/0.2), 记账价=市场价 |
-| Q5 能力市场 P1 发现 API | ✅ 完成 | bos_capability_list 返回 pricing (resolve_pricing + custom 标记) |
 | Q7 backend 分级 P1 | ✅ 完成 | /health backends 加 standby + alive_ratio (127/7/120/0, ratio 0.055) |
 | T6-10b cockpit 拆分 | ✅ 完成 | cli.py 1533→790L (并发 agent) + 命名冲突修复 (_subcommands 上移) |
 

@@ -608,34 +608,6 @@ assets:
     notes: "append-only SSOT audit trail; often gitignored runtime file"
     status: active
     runtime: true
-  - id: OMO-NOTEPADS
-    ref: .omo/notepads/
-    plane: state_plane
-    asset_type: agent_notepads
-    persistence_mode: durable
-    retention_mode: until_replaced
-    truth_owner: agents
-    write_via:
-      - agents
-    consumed_by:
-      - agents
-      - governance
-    notes: "P84 注册消 interface-check unregistered patterns: agent 决策/教训 notepads (delegation-guardrails 等)"
-    status: active
-  - id: OMO-START-WORK
-    ref: .omo/start-work/
-    plane: state_plane
-    asset_type: start_work_ledger
-    persistence_mode: append_only
-    retention_mode: rolling_window
-    truth_owner: agents
-    write_via:
-      - agents
-    consumed_by:
-      - agents
-      - governance
-    notes: "start-work 技能工作区版本化副本的 ledger 载体 (delegation-guardrails 来源)"
-    status: active
 policies:
   top_level_asset_registration_required: true
   nested_omo_forbidden_for_new_writes: true

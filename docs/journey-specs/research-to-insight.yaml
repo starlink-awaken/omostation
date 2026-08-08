@@ -31,7 +31,7 @@ transitions:
     condition: "research.scope != null"
   - from: collecting
     to: analyzed
-    condition: "sources.gathered >= 3"
+    condition: "sources.gathered >= 1"
   - from: analyzed
     to: knowledge_captured
     condition: "analysis.confidence >= 0.7"

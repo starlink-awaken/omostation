@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **127** 个命令 (含子命令)。按场景分组如下。
+共 **119** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -111,21 +111,18 @@
 
 | 命令 | 描述 |
 |------|------|
-| `cockpit ack` | 确认任务完成 |
 | `cockpit agent-onboard` | 🤖 Agent 入职引导 checklist (profile + MCP + BOS + skills) |
 | `cockpit analyze` | 运行全部分析工具 |
 | `cockpit api` | 启动 API server |
 | `cockpit archive` | 归档已处理完毕的 Inbox 待办文件 |
 | `cockpit ask` | 向大脑提问（知识检索 + LLM 回答） |
 | `cockpit backends` | 列出 BOS 后端 |
-| `cockpit bdsk` | 🧠 B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演) |
 | `cockpit bos-capability` | BOS capability / toolbox 外部能力 |
 | `cockpit bos-inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
-| `cockpit control` | 控制平面：submit / ack / nack |
 | `cockpit down` | 停止观测栈 |
 | `cockpit event` | 导出事件封套 (EventEnvelope) |
 | `cockpit events-watch` | 实时监听 SSE 事件流简便入口 |
@@ -141,7 +138,6 @@
 | `cockpit inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
 | `cockpit index` | 刷新 data/_index 元数据 |
 | `cockpit invoke` | 调用 capability 服务（执行 BOS YAML command） |
-| `cockpit journey` | 🗺️ Journey State Graph 状态表达校验器 |
 | `cockpit kems` | 🧬 KEMS 域治理 (domains/status/scan) |
 | `cockpit knowledge` | 📚 KOS 知识检索 (search/status/stats) |
 | `cockpit list` | 列债务项 (委派 omo debt) |
@@ -149,14 +145,11 @@
 | `cockpit memory` | 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref) |
 | `cockpit metrics` | 查看 bus metrics 快照 |
 | `cockpit mutate` | 通过 agora 统一 BOS URI 写协议修改资源 |
-| `cockpit nack` | 否定确认任务 |
 | `cockpit nodes` | 列出 KOS 中注册的算力节点 |
 | `cockpit onboarding` | 为 AI 构建项目全貌上下文 |
 | `cockpit pack` | 将代码库打包为 LLM 友好格式 |
-| `cockpit panorama` | 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产) |
 | `cockpit pending` | 查看未决待办快照预览 |
 | `cockpit pipeline` | pipeline 概览 |
-| `cockpit project` | 🔍 17 项目全景 4D 体检与诊断 |
 | `cockpit publish` | 发布事件 |
 | `cockpit quickstart-check` | 快速检查新用户环境核验状态 |
 | `cockpit read` | 通过 BOS 网关统一读取指定 URI 资源 |
@@ -170,7 +163,6 @@
 | `cockpit score` | 评分债务项 |
 | `cockpit serve` | stdio JSON-RPC serve mode |
 | `cockpit stats` | 索引统计 |
-| `cockpit submit` | 提交控制任务 |
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
 | `cockpit swarm` | 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
 | `cockpit topics` | 列出已注册 topic |

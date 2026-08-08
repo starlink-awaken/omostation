@@ -1,0 +1,12 @@
+{
+  "by_severity": {
+    "high": 0,
+    "low": 0,
+    "medium": 0
+  },
+  "problems": [],
+  "scanned_at": "2026-08-08T06:29:23.243651+00:00",
+  "schema": "problem-detection/v1",
+  "status": "ok",
+  "total_problems": 0
+}
