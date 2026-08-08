@@ -8,6 +8,7 @@
 #   bash bin/sync-submodules.sh              # 推送所有有未推送 commit 的子模块
 #   bash bin/sync-submodules.sh --dry-run    # 只检查，不推送
 #   bash bin/sync-submodules.sh --status     # 只显示状态，不推送
+#   bash bin/sync-submodules.sh --pull       # pull stale + push unpushed (治本 E)
 #
 # 集成到 gac-worktree.sh submit 流程：
 #   在 git push 根仓库之前，先跑此脚本，确保子模块 commit 已推送。
@@ -18,11 +19,13 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DRY_RUN=false
 STATUS_ONLY=false
+PULL=false
 
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=true ;;
     --status) STATUS_ONLY=true ;;
+    --pull) PULL=true ;;
   esac
 done
 
@@ -38,8 +41,9 @@ fi
 
 HAS_UNPUSHED=false
 PUSHED_COUNT=0
+PULLED_COUNT=0
 
-echo "── 检查子模块未推送的 commit ──────────────────────────"
+echo "── 检查子模块同步状态 ─────────────────────────────────"
 
 for submodule in $SUBMODULES; do
   if [ ! -d "$submodule" ] || [ ! -d "$submodule/.git" ] && [ ! -f "$submodule/.git" ]; then
@@ -65,6 +69,12 @@ for submodule in $SUBMODULES; do
     UNPUSHED_COUNT=$(echo "$UNPUSHED" | grep -c . || true)
   fi
 
+  # 治本 E: 检查是否落后于 origin/main
+  BEHIND_COUNT=0
+  if [ "$PULL" = true ]; then
+    BEHIND_COUNT=$(git log --oneline "HEAD..origin/main" 2>/dev/null | grep -c . || true)
+  fi
+
   if [ "$UNPUSHED_COUNT" -gt 0 ]; then
     HAS_UNPUSHED=true
     echo "  ⚠️  $submodule: $UNPUSHED_COUNT 个未推送的 commit"
@@ -82,6 +92,13 @@ for submodule in $SUBMODULES; do
       git push origin HEAD:main --no-verify 2>&1 || echo "  ⚠️  推送失败（可能是非 fast-forward），尝试 force push 被拒绝，请手动处理"
       PUSHED_COUNT=$((PUSHED_COUNT + 1))
     fi
+  elif [ "$BEHIND_COUNT" -gt 0 ] && [ "$PULL" = true ]; then
+    echo "  ⬇  $submodule: $BEHIND_COUNT 个过期 ← origin/main"
+    if [ "$DRY_RUN" = false ]; then
+      echo "  → 拉取 $submodule ..."
+      git checkout main >/dev/null 2>&1 && git pull --quiet origin main >/dev/null 2>&1 && echo "  ✅ pulled" || echo "  ⚠️  pull 失败"
+      PULLED_COUNT=$((PULLED_COUNT + 1))
+    fi
   else
     echo "  ✅  $submodule: 已同步"
   fi
@@ -90,8 +107,8 @@ for submodule in $SUBMODULES; do
 done
 
 echo ""
-if [ "$HAS_UNPUSHED" = false ]; then
-  echo "✅ 所有子模块已同步，无需推送"
+if [ "$HAS_UNPUSHED" = false ] && [ "$PULLED_COUNT" -eq 0 ]; then
+  echo "✅ 所有子模块已同步，无需推送或拉取"
   exit 0
 fi
 
@@ -101,7 +118,7 @@ if [ "$STATUS_ONLY" = true ]; then
 fi
 
 if [ "$DRY_RUN" = false ]; then
-  echo "✅ 已推送 $PUSHED_COUNT 个子模块的 commit"
+  echo "✅ 已推送 $PUSHED_COUNT 个子模块的 commit，拉取 $PULLED_COUNT 个子模块"
   echo ""
   echo "  下一步: 如果根仓库的子模块指针已更新，请提交根仓库变更:"
   echo "    git add projects/<submodule>"
