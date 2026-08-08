@@ -108,6 +108,17 @@ def _locks() -> list[dict]:
         })
     return locks
 
+def _lock_graph() -> dict:
+    """Parse lock-graph.json snapshot."""
+    graph_file = WORKSPACE / ".omo/state/lock-graph.json"
+    if not graph_file.is_file():
+        return {}
+    try:
+        import json
+        return json.loads(graph_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+
 
 def _worktrees() -> list[dict]:
     out = subprocess.run(
@@ -199,6 +210,7 @@ def build_report() -> dict:
         "generated_at": datetime.now(UTC).isoformat(),
         "active_runs": _active_runs(),
         "locks": _locks(),
+        "lock_graph": _lock_graph(),
         "worktrees": _worktrees(),
         "branch_claims": _claims(BRANCH_CLAIMS),
         "adr_claims": _claims(ADR_CLAIMS),
@@ -388,6 +400,17 @@ def _rich_layout(report: dict) -> object:
         runs_table, title=f"[bold green]▶ Active runs ({len(runs)})[/]",
         border_style="green",
     )
+    
+    # ── Lock Graph panel ──
+    lg = report.get("lock_graph", {}).get("active_runs", {})
+    if lg:
+        from rich.tree import Tree
+        tree = Tree("Lock Graph (SSOT)")
+        for rid, payload in lg.items():
+            run_node = tree.add(f"[bold blue]{rid}[/]")
+            for p in payload.get("paths", []):
+                run_node.add(f"[cyan]path:[/] {p}")
+        runs_panel = Group(runs_panel, Panel(tree, title="[bold blue]🌳 Global Lock Graph[/]", border_style="blue"))
 
     # ── Locks panel ──
     locks_table = Table(show_header=True, header_style="bold yellow",
