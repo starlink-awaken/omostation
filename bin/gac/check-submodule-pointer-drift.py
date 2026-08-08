@@ -18,11 +18,44 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    import yaml  # pyyaml (workspace dep)
+except ImportError:  # pragma: no cover
+    yaml = None  # type: ignore[assignment]
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # PASW: Per-Agent Submodule Worktree (ADR-0371)
 PASW_SUBTREE_DIR = ".subtrees"
 PASW_ISOLATED_SUBS = ["projects/gbrain", "projects/cockpit", "projects/agora"]
+
+EXEMPTIONS_PATH = REPO_ROOT / ".omo" / "_truth" / "registry" / "swarm-coordination.yaml"
+_exemptions_cache: dict[str, str] | None = None
+
+
+def load_pointer_exemptions() -> dict[str, str]:
+    """submodule -> allowed gitlink (intentional side-branch pointers).
+
+    登记在 swarm-coordination.yaml::submodule_pointer_exemptions —
+    root 指针有意指向子模块 side branch (如 ruff sweep 分支待合并) 时,
+    DIVERGED 不阻断; 未登记的 side-branch 指针仍 fail.
+    """
+    global _exemptions_cache
+    if _exemptions_cache is not None:
+        return _exemptions_cache
+    out: dict[str, str] = {}
+    if yaml is not None and EXEMPTIONS_PATH.exists():
+        try:
+            data = yaml.safe_load(EXEMPTIONS_PATH.read_text(encoding="utf-8"))
+            for item in (data or {}).get("submodule_pointer_exemptions") or []:
+                sub = (item or {}).get("submodule")
+                gitlink = (item or {}).get("gitlink", "")
+                if sub and gitlink:
+                    out[sub] = gitlink
+        except (OSError, yaml.YAMLError):
+            pass
+    _exemptions_cache = out
+    return out
 
 
 def _git(*args: str, cwd: Path | None = None) -> str:
@@ -135,6 +168,16 @@ def check_drift(sub_path: str, from_head: bool = False) -> dict | None:
             "gitlink": gitlink[:12],
             "origin_main": origin_main[:12],
             "detail": "shallow clone (CI fetch-depth:1) — ancestry cannot be verified, non-blocking",
+        }
+
+    # 显式登记的有意 side-branch 指针 (ruff sweep 等分支待合并) — 不阻断
+    if load_pointer_exemptions().get(sub_path) == gitlink:
+        return {
+            "submodule": sub_path,
+            "status": "exempted",
+            "gitlink": gitlink[:12],
+            "origin_main": origin_main[:12],
+            "detail": "registered side-branch pointer (swarm-coordination.yaml submodule_pointer_exemptions)",
         }
 
     return {
@@ -279,6 +322,8 @@ def main() -> int:
                     print(f"  OK {sub}: {r['gitlink']} (ahead of origin/main {r['origin_main']}, non-blocking)")
                 elif status == "unverifiable":
                     print(f"  OK {sub}: {r['gitlink']} (shallow — ancestry unverifiable, non-blocking)")
+                elif status == "exempted":
+                    print(f"  OK {sub}: {r['gitlink']} (registered side-branch pointer, non-blocking)")
                 elif status == "DIVERGED":
                     print(f"  FAIL {sub}: {r['gitlink']} NOT on origin/main {r['origin_main']}")
                 elif status == "skip":
@@ -292,9 +337,11 @@ def main() -> int:
         ahead_n = sum(1 for r in results if r["status"] == "ahead")
         unverifiable_n = sum(1 for r in results if r["status"] == "unverifiable")
         behind_n = sum(1 for r in results if r["status"] == "behind")
+        exempted_n = sum(1 for r in results if r["status"] == "exempted")
         print(
             f"  Total: {total} submodules | {aligned} aligned | {ahead_n} ahead | "
-            f"{unverifiable_n} unverifiable | {behind_n} behind | {len(diverged)} DIVERGED"
+            f"{unverifiable_n} unverifiable | {exempted_n} exempted | "
+            f"{behind_n} behind | {len(diverged)} DIVERGED"
         )
 
         if diverged:

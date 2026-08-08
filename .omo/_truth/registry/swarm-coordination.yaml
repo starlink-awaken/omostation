@@ -93,6 +93,15 @@ escape_hatch_exemptions:
     active: true
     requires_human: true
 
+# 有意指向子模块 side branch 的 root 指针 (BET-Y1Q2-T1-05 drift 门禁豁免).
+# 登记后 check-submodule-pointer-drift DIVERGED 不阻断; 未登记的 side-branch 仍 fail.
+submodule_pointer_exemptions:
+  - submodule: scripts
+    gitlink: 04ded29fa490e57694f88c84fe239a496bc69d72
+    reason: "T6-06 ruff sweep 分支 (agent/t6-06-skill-scripts) 待合并进 scripts main"
+    owner: t6-06-agent
+    active: true
+
 conflict_event_kinds:
   - adr_renumber_race
   - branch_hijack
