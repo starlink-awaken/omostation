@@ -1,16 +1,18 @@
+from __future__ import annotations
+
 """agora.swarm_mesh — 多 Agent 蜂群实时全感知、通信与碰撞预警引擎.
 
 管理 .omo/state/swarm/ 目录下的 active-nodes.yaml (节点注册表)
 与 broadcast-bus.jsonl (蜂群事件总线).
 """
 
-from __future__ import annotations
 
 import json
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+
+from typing import Any
 
 import yaml
 
@@ -30,7 +32,7 @@ class SwarmMeshManager:
         self.bus_path = self.swarm_dir / "broadcast-bus.jsonl"
         self.swarm_dir.mkdir(parents=True, exist_ok=True)
 
-    def _load_nodes(self) -> List[Dict[str, Any]]:
+    def _load_nodes(self) -> list[dict[str, Any]]:
         if not self.nodes_path.exists():
             return []
         try:
@@ -40,20 +42,24 @@ class SwarmMeshManager:
         except Exception:
             return []
 
-    def _save_nodes(self, nodes: List[Dict[str, Any]]) -> None:
+    def _save_nodes(self, nodes: list[dict[str, Any]]) -> None:
         with open(self.nodes_path, "w", encoding="utf-8") as f:
-            yaml.safe_dump({"nodes": nodes, "updated_at": datetime.now(timezone.utc).isoformat()}, f, allow_unicode=True)
+            yaml.safe_dump(
+                {"nodes": nodes, "updated_at": datetime.now(UTC).isoformat()},
+                f,
+                allow_unicode=True,
+            )
 
     def register_node(
         self,
         agent_id: str,
         role: str = "Developer",
-        working_paths: Optional[List[str]] = None,
+        working_paths: list[str] | None = None,
         active_run_id: str = "",
         status: str = "active",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         nodes = self._load_nodes()
-        now_str = datetime.now(timezone.utc).isoformat()
+        now_str = datetime.now(UTC).isoformat()
         paths = working_paths or []
 
         found = False
@@ -68,19 +74,21 @@ class SwarmMeshManager:
                 break
 
         if not found:
-            nodes.append({
-                "agent_id": agent_id,
-                "role": role,
-                "working_paths": paths,
-                "active_run_id": active_run_id,
-                "status": status,
-                "last_heartbeat": now_str,
-            })
+            nodes.append(
+                {
+                    "agent_id": agent_id,
+                    "role": role,
+                    "working_paths": paths,
+                    "active_run_id": active_run_id,
+                    "status": status,
+                    "last_heartbeat": now_str,
+                }
+            )
 
         self._save_nodes(nodes)
         return {"status": "success", "agent_id": agent_id, "registered_at": now_str}
 
-    def who_is_working_on(self, path: str) -> List[Dict[str, Any]]:
+    def who_is_working_on(self, path: str) -> list[dict[str, Any]]:
         nodes = self._load_nodes()
         matches = []
         clean_path = path.strip("/")
@@ -101,9 +109,9 @@ class SwarmMeshManager:
         channel: str = "all",
         event_type: str = "notice",
         target_agent_id: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         msg_id = f"msg-{int(time.time() * 1000)}"
-        now_str = datetime.now(timezone.utc).isoformat()
+        now_str = datetime.now(UTC).isoformat()
 
         record = {
             "msg_id": msg_id,
@@ -120,7 +128,9 @@ class SwarmMeshManager:
 
         return {"status": "sent", "msg_id": msg_id, "timestamp": now_str}
 
-    def read_channel(self, channel: str = "all", limit: int = 20) -> List[Dict[str, Any]]:
+    def read_channel(
+        self, channel: str = "all", limit: int = 20
+    ) -> list[dict[str, Any]]:
         if not self.bus_path.exists():
             return []
 

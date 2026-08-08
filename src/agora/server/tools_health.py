@@ -177,9 +177,7 @@ async def health_self_check() -> dict:
     ]
     # P2-5: 以 registry 已连接 client 数作为真实 backends 口径
     if backends_total > 0 and backends_alive < backends_total:
-        issues.append(
-            f"backends partial: {backends_alive}/{backends_total} alive"
-        )
+        issues.append(f"backends partial: {backends_alive}/{backends_total} alive")
     if dead_backends:
         issues.append(f"dead backends: {', '.join(dead_backends)}")
     # MED-3: 链完整性失败视为问题
@@ -196,7 +194,10 @@ async def health_self_check() -> dict:
             send_alert(
                 level="degraded",
                 event="health:degraded",
-                payload={"issues": issues, "backends": f"{backends_alive}/{backends_total}"},
+                payload={
+                    "issues": issues,
+                    "backends": f"{backends_alive}/{backends_total}",
+                },
                 caller_key="health:degraded",
             )
         elif overall == "healthy":
@@ -232,9 +233,9 @@ async def health_self_check() -> dict:
             # alive + standby + dead = total; dead 仅真实故障
             "standby": max(backends_total - backends_alive - len(dead_backends), 0),
             "dead": dead_backends,
-            "alive_ratio": round(
-                backends_alive / backends_total, 3
-            ) if backends_total else 0.0,
+            "alive_ratio": round(backends_alive / backends_total, 3)
+            if backends_total
+            else 0.0,
         },
         "bos_registry": bos_registry,
         "audit_24h": audit_stats,
@@ -284,7 +285,9 @@ def _bos_registry_health() -> dict:
         return {
             "internal_total": len(internal),
             "func_resolvable": resolvable,
-            "func_resolvable_pct": round(resolvable / len(internal) * 100, 1) if internal else 0.0,
+            "func_resolvable_pct": round(resolvable / len(internal) * 100, 1)
+            if internal
+            else 0.0,
             "broken": broken,
             "broken_count": len(broken),
             "by_domain": by_domain,
