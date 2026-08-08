@@ -1,4 +1,5 @@
 ---
+id: ADR-0304
 title: Runtime effect outcome 与 Workflow Mesh receipt 边界
 status: accepted
 type: decision

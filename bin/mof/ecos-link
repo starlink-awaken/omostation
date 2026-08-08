@@ -20,7 +20,7 @@ WS="${HOME}/Workspace"
 # ── 工具注册: 格式 "name:project_dir" ────────────────────────────────
 TOOL_LIST=(
   "agora:agora"           "agora-mcp:agora"        "agora-mcp-gateway:agora"
-  "agora-watchdog:agora"  "cockpit:cockpit"        "cockpit-mcp:cockpit"
+  "agora-watchdog:agora"  "cockpit:cockpit"        "cockpit-dashboard:cockpit" "workspace:cockpit"   "agent-runtime:cockpit"
   "cockpit-dashboard:cockpit" "workspace:cockpit"   "agent-runtime:cockpit"
   "runtime:runtime"       "ecos-matrix-scheduler:runtime"
   "ecos-bus-consumer:runtime"

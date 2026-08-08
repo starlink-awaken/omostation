@@ -1,4 +1,5 @@
 ---
+id: ADR-0347
 title: External Resource Connection Plan Cockpit Surface
 status: accepted
 type: adr

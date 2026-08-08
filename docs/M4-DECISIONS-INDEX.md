@@ -28,7 +28,7 @@ metadata-migrated-at: 2026-07-31
 | [0139](./../.omo/_knowledge/decisions/0139-model-driven-8stage-revival-rejected.md) | model-driven 8 阶段复活评估 — 拒回 (R2c) | R2c | (决策保留, 0 实施) | T39, T40 |
 | [0140](./../.omo/_knowledge/decisions/0140-m4-health-score.md) | M4 Health Score 量化与派生面落地 (R3b) | R3b | `bin/mof/m4-health-score.py` + `.omo/_derived/m4-health.json` | T41, T42 |
 | [0141](./../.omo/_knowledge/decisions/0141-m2-base-schema.md) | M2BaseSchema 抽象基类 + check_5 (R3a) | R3a | m2_base_schema.yaml + check_5 | T43, T44 |
-| [**0142**](./../.omo/_knowledge/decisions/0142-this-doc.md) | (本文档) | R4b | docs/M4-DECISIONS-INDEX.md | — |
+| [**0142**](./../.omo/_knowledge/decisions/0142-decisions-quick-ref.md) | M4 Decisions Quick Ref | R4b | docs/M4-DECISIONS-INDEX.md | — |
 | [0146](./../.omo/_knowledge/decisions/0146-8stage-stability-declaration.md) | 8 阶段反向 ADR 稳定性声明 (R5a) | R5a | (决策文件本身) | T52 |
 | [0147](./../.omo/_knowledge/decisions/0147-mcptool-adder-guide.md) | MCPTOOL M1 Adder Guide (R5b) | R5b | docs/MCPTOOL-ADDER-GUIDE.md | T53 |
 

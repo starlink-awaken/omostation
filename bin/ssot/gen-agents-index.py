@@ -30,13 +30,42 @@ TEMPLATE_HEADER = """# INDEX-AGENTS.md — Agent 能力索引
 
 """
 
+def _skill_frontmatter(skill_md: Path) -> dict:
+    """Parse YAML frontmatter from SKILL.md (name/description)."""
+    try:
+        text = skill_md.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return {}
+    if not text.startswith("---"):
+        return {}
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return {}
+    try:
+        import yaml
+        meta = yaml.safe_load(parts[1]) or {}
+        return meta if isinstance(meta, dict) else {}
+    except Exception:
+        return {}
+
+
 def scan_skills():
+    """Return list of dicts: id, name, description (from frontmatter when present)."""
     skills_dir = WORKSPACE_ROOT / ".agents" / "skills"
     skills = []
     if skills_dir.exists():
         for d in sorted(skills_dir.iterdir()):
-            if d.is_dir() and (d / "SKILL.md").exists():
-                skills.append(d.name)
+            skill_md = d / "SKILL.md"
+            if d.is_dir() and skill_md.exists():
+                meta = _skill_frontmatter(skill_md)
+                desc = (meta.get("description") or "").strip().replace("\n", " ")
+                if len(desc) > 120:
+                    desc = desc[:117] + "..."
+                skills.append({
+                    "id": d.name,
+                    "name": meta.get("name") or d.name,
+                    "description": desc or d.name.replace("-", " "),
+                })
     return skills
 
 def generate_cli_section():
@@ -73,7 +102,21 @@ def generate_skills_section(skills):
 |-------|------|---------|
 """
         for skill in skills:
-            section += f"| {skill} | {skill.replace('-', ' ')} | 相关操作 |\n"
+            if isinstance(skill, dict):
+                sid = skill.get("id") or skill.get("name") or "?"
+                desc = skill.get("description") or sid
+                trigger = desc.split("。")[0].split(".")[0][:80]
+                section += f"| `{sid}` | {desc} | {trigger} |\n"
+            else:
+                section += f"| {skill} | {skill.replace('-', ' ')} | 相关操作 |\n"
+
+    section += """
+### 外部 Agent 推荐包
+
+见 [`docs/operations/external-agent-attach-card.md`](operations/external-agent-attach-card.md)：
+`external-agent-attach` · `agent-onboarding` · `bos-service-discovery` · `project-governance` · `a2a-coordination`。
+
+"""
     
     return section
 

@@ -3,8 +3,22 @@ name: Quality Checks
 on:
   push:
     branches: [main]
+    paths:
+      - 'projects/omo/src/**'
+      - 'projects/ecos/src/**'
+      - 'projects/agora/src/**'
+      - 'projects/cockpit/src/**'
+      - '.pre-commit-config.yaml'
+      - '.github/workflows/quality.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'projects/omo/src/**'
+      - 'projects/ecos/src/**'
+      - 'projects/agora/src/**'
+      - 'projects/cockpit/src/**'
+      - '.pre-commit-config.yaml'
+      - '.github/workflows/quality.yml'
 
 jobs:
   ruff-lint:

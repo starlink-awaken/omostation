@@ -1,4 +1,5 @@
 ---
+id: ADR-0294
 title: 知识网关解耦与增量事件索引管道
 status: ACCEPTED
 lifecycle: decision

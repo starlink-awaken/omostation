@@ -1,9 +1,9 @@
 # MCP 服务器索引
 
-> 自动生成于 2026-08-03T09:49:40Z
+> 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-全生态共 **28** 个 MCP 服务器, **581** 个工具。
+全生态共 **27** 个 MCP 服务器, **554** 个工具。
 
 | 服务器 | 层 | 工具数 | 传输 | 端口 | 源文件 |
 |--------|-----|--------|------|------|--------|
@@ -17,7 +17,7 @@
 | `kos-stdio` | L2 | 44 | stdio | — | `projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `codeanalyze` | L2 | 25 | stdio | — | `projects/kairon/packages/codeanalyze/src/codeanalyze/mcp.py` |
 | `metaos` | L2 | 24 | stdio | — | `projects/metaos/src/metaos/mcp_server.py` |
-| `omo` | L2 | 19 | stdio | — | `projects/omo/src/omo/mcp_server.py` |
+| `omo` | L2 | 22 | stdio | — | `projects/omo/src/omo/mcp_server.py` |
 | `kronos` | L2 | 16 | stdio | — | `projects/kairon/packages/kronos/src/kronos/mcp_server.py` |
 | `iris` | L2 | 8 | stdio | — | `projects/kairon/packages/iris/src/iris/mcp_server.py` |
 | `sophia` | L2 | 8 | stdio | — | `projects/kairon/packages/sophia/src/sophia/server/mcp_server.py` |
@@ -25,7 +25,6 @@
 | `forge` | L2 | 7 | stdio | — | `projects/kairon/packages/forge/src/mcp_server.py` |
 | `ontoderive` | L2 | 7 | stdio | — | `projects/kairon/packages/ontoderive/src/ontoderive/mcp_server.py` |
 | `toolforge` | L2 | 5 | stdio | — | `projects/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py` |
-| `cockpit-mcp` | L3 | 30 | stdio | — | `projects/cockpit/src/cockpit/scripts/cockpit_mcp.py` |
 | `agent-runtime` | L3 | 2 | stdio | — | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
 | `l4-kernel` | L4 | 45 | stdio/http/sse | http:7455, sse:7456 | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `model-driven` | M0 | 28 | stdio | — | `projects/model-driven/src/model_driven/mcp_server.py` |
@@ -58,10 +57,6 @@
 
 `build_context`, `check_subscription`, `collab.add_artifact`, `collab.claim_subtask`, `collab.create_task`, `collab.get_task`, `collab.list_tasks`, `collab.update_task`, `consensus.create`, `consensus.get`, `consensus.list_expired`, `consensus.renew`, `consensus.trace`, `cross_domain_sync`, `db_vacuum`, `entity_explore`, `fact_check`, `full_sync`, `get_entity`, `get_entity_timeline`, `get_knowledge`, `get_stats`, `get_system_status`, `graph_search`, `knowledge_ask`, `list_domains`, `mcp_market_discover`, `memory_stats`, `ontology_graph`, `ontology_rebuild`, `research_now`, `research_pipeline`, `run_indexer`, `search_entity`, `search_knowledge`, `self.get_current_role`, `self.get_profile`, `self.get_vision_summary`, `semantic_scholar`, `semantic_search`, `subscribe_topic`, `sync_gbrain`, `verify_claim`, `viz_render`
 
-### cockpit-mcp (30 tools)
-
-`cards_check`, `cards_status`, `daily_summary`, `domains_list`, `github_pr_review`, `governance_check`, `governance_dashboard`, `governance_history`, `governance_leaderboard`, `governance_sla`, `governance_status`, `research_agent_list`, `research_archive`, `research_ask`, `research_create`, `research_dossier`, `research_half_life`, `research_list`, `research_open`, `research_rename`, `research_restore`, `research_search`, `research_tag`, `shared_context_list`, `shared_context_read`, `shared_context_write`, `status_json`, `status_summary`, `vault_search`, `workspace_context`
-
 ### ecos (28 tools)
 
 `domain_list`, `domain_read`, `domain_resolve`, `domain_search`, `domain_stats`, `domain_tree`, `domain_validate`, `ecos_brief`, `ecos_health`, `ssot_check`, `ssot_compile`, `ssot_derive`, `ssot_evolve`, `ssot_extract`, `ssot_stats`, `ssot_sync`, `workflow_actions`, `workflow_backends`, `workflow_cache_invalidate`, `workflow_cache_status`, `workflow_circuit_breaker_reset`, `workflow_circuit_breaker_status`, `workflow_list`, `workflow_logs`, `workflow_run`, `workflow_show`, `workflow_test`, `workflow_validate`
@@ -86,9 +81,9 @@
 
 `handle_day`, `handle_device_orchestrator`, `handle_evening`, `handle_family_brief`, `handle_gate`, `handle_health`, `handle_morning`, `handle_request`, `handle_review`, `handle_ssot`, `handle_status`, `handle_trace`, `metaos-engine`, `metaos_day`, `metaos_device_orchestrator`, `metaos_evening`, `metaos_family_brief`, `metaos_gate`, `metaos_health`, `metaos_morning`, `metaos_review`, `metaos_ssot`, `metaos_status`, `metaos_trace`
 
-### omo (19 tools)
+### omo (22 tools)
 
-`acquire_lock`, `cards_check`, `cards_create`, `cards_search`, `cards_status`, `cards_update`, `check_gac_rule`, `check_lock`, `list_locks`, `omo_bridge`, `omo_debt_list`, `omo_debt_summary`, `omo_gc`, `omo_metacognition`, `omo_worker_dispatch`, `omo_worker_reclaim`, `omo_yield_task`, `release_lock`, `validate_task`
+`acquire_lock`, `agent_host_tick`, `cards_check`, `cards_create`, `cards_search`, `cards_status`, `cards_update`, `check_gac_rule`, `check_lock`, `journey_run_dag`, `list_locks`, `omo_bridge`, `omo_debt_list`, `omo_debt_summary`, `omo_gc`, `omo_metacognition`, `omo_worker_dispatch`, `omo_worker_reclaim`, `omo_yield_task`, `release_lock`, `scene_card_status`, `validate_task`
 
 ### kronos (16 tools)
 
@@ -150,4 +145,4 @@
 
 `chat`, `run_task`
 
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-03T09:49:40Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*

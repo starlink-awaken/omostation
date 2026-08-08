@@ -1,8 +1,30 @@
 name: python-coverage-ci
 # P47 E: 给 7 个无 CI 的 Python 项目补回归保护 (matrix, 1 文件最 DRY).
 # 首次跑可能暴露历史 test fail / 跨项目依赖问题 (如 omo→runtime) — 诚实暴露非回归.
-on: [push, pull_request]
-
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'projects/omo/**'
+      - 'projects/omo-debt/**'
+      - 'projects/c2g/**'
+      - 'projects/model-driven/**'
+      - 'projects/l4-kernel/**'
+      - 'projects/aetherforge/**'
+      - 'projects/bus-foundation/**'
+      - 'projects/*/pyproject.toml'
+      - '.github/workflows/ci-python-coverage.yml'
+  pull_request:
+    paths:
+      - 'projects/omo/**'
+      - 'projects/omo-debt/**'
+      - 'projects/c2g/**'
+      - 'projects/model-driven/**'
+      - 'projects/l4-kernel/**'
+      - 'projects/aetherforge/**'
+      - 'projects/bus-foundation/**'
+      - 'projects/*/pyproject.toml'
+      - '.github/workflows/ci-python-coverage.yml'
 jobs:
   test:
     name: ${{ matrix.pkg }}

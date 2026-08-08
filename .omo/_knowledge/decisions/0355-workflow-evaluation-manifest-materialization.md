@@ -1,4 +1,5 @@
 ---
+id: ADR-0355
 title: Workflow Mesh explicit adjudication materialized into KEMS evaluation manifest
 status: accepted
 type: adr

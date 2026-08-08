@@ -26,6 +26,19 @@ metadata-migrated-at: 2026-07-31
 扩展域 (`meta` / `omo` / `swarm` / `system` / `toolbox`) 走 `kind: bridge | facet` 标签,
 不与 5 主域混淆.
 
+### 扩展域登记: compute (本地/边缘 LLM 推理)
+
+`bos://compute/` 为扩展域 (走 `kind: bridge`), 不与 5 主域混淆:
+
+| 字段 | 值 |
+|------|-----|
+| Domain | `bos://compute/` |
+| Purpose | 本地/边缘 LLM 推理路由 (AetherForge + omlxc) |
+| Canonical service path | `bos://compute/aetherforge/infer` |
+| Governance | AGENTS.md §1: 所有本地/边缘 LLM 推理 MUST 经 **AetherForge + omlxc (`bos://compute/aetherforge/infer`)** 路由 |
+| Status | registered |
+| kind | `bridge` (跨域/单点入口, 扩展域内) |
+
 ## kind 标签 (schema v2 引入, 2026-07-02)
 
 每个 service 必须带 `kind` 字段:

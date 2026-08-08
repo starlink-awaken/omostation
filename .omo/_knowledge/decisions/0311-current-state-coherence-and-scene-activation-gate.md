@@ -1,4 +1,5 @@
 ---
+id: ADR-0311
 title: 当前状态一致性与场景激活门
 status: ACCEPTED
 type: decision

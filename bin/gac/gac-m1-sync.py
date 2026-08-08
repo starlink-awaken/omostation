@@ -79,11 +79,66 @@ def validate_m3_gacrule() -> list[str]:
     return findings
 
 
-def load_m1_nodes() -> dict[str, dict]:
-    """读已有 M1 GAC-RULE-*.yaml 节点 (排除 METAMODEL)."""
+def _tracked_m1_files() -> list[pathlib.Path]:
+    """ADR-0376 G8: 列出 root pointer (git HEAD) 中 tracked 的 GAC-RULE-*.yaml.
+
+    并发 agent 在 projects/ecos 工作树里临时生成 untracked M1 / 切分支时,
+    working tree 与 root pointer 会分离. M1 一致性检查应基于 **已合并的提交态**
+    (git ls-tree HEAD) 而非 working tree 内容, 否则每次并发工作都误报 drift.
+    """
+    import subprocess
+
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(WORKSPACE / "projects/ecos"), "ls-tree", "-r", "--name-only", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return []
+    if proc.returncode != 0:
+        return []
+    m1_rel = M1_DIR.relative_to(WORKSPACE / "projects/ecos")
+    files = []
+    for line in proc.stdout.splitlines():
+        if line.startswith(str(m1_rel) + "/") and line.endswith(".yaml"):
+            name = Path(line).name
+            if name == "GAC-RULE-METAMODEL.yaml":
+                continue
+            files.append(M1_DIR / name)
+    return sorted(files)
+
+
+def load_m1_nodes(tracked: bool = False) -> dict[str, dict]:
+    """读已有 M1 GAC-RULE-*.yaml 节点 (排除 METAMODEL).
+
+    tracked=True (ADR-0376 G8): 基于 git ls-tree HEAD 的提交态, 忽略
+    working tree 中的 untracked/分支切换噪声.
+    """
+    import subprocess
     import yaml
 
     nodes = {}
+    if tracked:
+        candidates = _tracked_m1_files()
+        for f in candidates:
+            proc = subprocess.run(
+                ["git", "-C", str(WORKSPACE / "projects/ecos"), "show", f"HEAD:{f.relative_to(WORKSPACE / 'projects/ecos')}"],
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=30,
+            )
+            if proc.returncode != 0:
+                continue
+            data = yaml.safe_load(proc.stdout)
+            if data and data.get("type") == "GacRule":
+                rid = data.get("properties", {}).get("id") or data.get("id", "")
+                nodes[rid] = {"data": data, "path": f}
+        return nodes
+
     if not M1_DIR.exists():
         return nodes
     for f in sorted(M1_DIR.glob("GAC-RULE-*.yaml")):
@@ -323,6 +378,7 @@ def main() -> int:
     args = sys.argv[1:]
     sync_mode = "--sync" in args
     json_mode = "--json" in args
+    tracked_mode = "--tracked" in args  # ADR-0376 G8
 
     if not REGISTRY.exists():
         print(f"❌ 注册表不存在: {REGISTRY}")
@@ -340,7 +396,7 @@ def main() -> int:
         return 1
 
     rules = load_rules()
-    m1_nodes = load_m1_nodes()
+    m1_nodes = load_m1_nodes(tracked=tracked_mode)
     diff = compute_diff(rules, m1_nodes)
 
     if json_mode:
@@ -402,7 +458,7 @@ def main() -> int:
         print(f"  创建: {len(actions['created'])}")
         print(f"  更新: {len(actions['updated'])}")
         print(f"  删除: {len(actions['deleted'])}")
-        m1_nodes_after = load_m1_nodes()
+        m1_nodes_after = load_m1_nodes(tracked=tracked_mode)
         print(f"  M1 实例数: {len(m1_nodes_after)}")
 
     return 1 if total_drift else 0

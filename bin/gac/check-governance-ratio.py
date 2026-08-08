@@ -74,10 +74,21 @@ GOVERNANCE_WORKFLOWS = {
 # Workflows that are product-delivery surfaces even when run by a governance
 # profile agent. The governance ratio measures governance *effort*, not the
 # actor's title; a governance-agent doing project-code-change is delivering
-# product value, not doing governance overhead.
+# product value, not doing governance overhead. FLEX_OVERRIDE wins over both
+# GOVERNANCE_PROFILES and GOVERNANCE_WORKFLOWS (see _classify order).
+#
+# submodule-pointer-close: closing a submodule pointer is a release/build
+# delivery step (advances main = ship), not governance overhead, even when
+# a governance profile drives it. Conversely governance-state-mutation,
+# mof-model-change, governance-audit, governance-evolution, mof-state-bridge
+# audit remain governance effort because they rewrite the rules themselves.
 FLEX_OVERRIDE_WORKFLOWS = {
     "project-code-change",
     "project-doc-change",
+    "submodule-pointer-close",
+    # pyright-sweep: Python 类型/风格质量扫描 (engineering-agent), 非治理重写规则。
+    # 虽可能锁 .omo/_truth/registry 等路径 (扫描参考), 但属工程交付而非治理开销。
+    "pyright-sweep",
 }
 
 

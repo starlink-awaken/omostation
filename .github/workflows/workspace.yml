@@ -14,7 +14,11 @@ jobs:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         # PASW: 子模块 checkout 失败必须 fail fast — 指针不可达说明 bump-pointer 前未 push 子模块
       - name: PASW — 自动同步子模块指针
-        run: bash bin/ssot/sync-submodule-pointers.sh 2>&1 || true
+        run: |
+          bash bin/ssot/sync-submodule-pointers.sh --verbose 2>&1 || sync_rc=$?
+          echo "sync 退出码: ${sync_rc:-0}"
+          git add .
+          git diff --cached --stat -- projects/ scripts 2>/dev/null || true
       - name: PASW — 子模块指针可达性前置检查
         # source=index: 检查同步后的 index
         run: python3 bin/ssot/submodule-reachability-gate.py --source index --fetch 2>&1

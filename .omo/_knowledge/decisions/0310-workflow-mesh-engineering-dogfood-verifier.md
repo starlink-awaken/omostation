@@ -1,4 +1,5 @@
 ---
+id: ADR-0310
 title: Workflow Mesh 工程 dogfood 端到端验收与场景绑定传递
 status: ACCEPTED
 lifecycle: decision

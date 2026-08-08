@@ -102,12 +102,15 @@ For other agents, adapt to their MCP config format. The key tools the agent need
 
 ### 2.3 Verify MCP Connection
 
+> Do **not** use `agora tools` — that subcommand does not exist.
+
 ```bash
 # Via cockpit
-uv run --project projects/cockpit cockpit mcp --list
+uv run --project projects/cockpit cockpit mcp --list-tools
 
 # Via agora directly
-uv run --project projects/agora agora tools --json | python3 -m json.tool | head -40
+uv run --project projects/cockpit cockpit mcp --list-tools
+python3 bin/ssot/mcp-attach-smoke.py
 ```
 
 ## Phase 3: BOS URI Discovery
@@ -222,7 +225,7 @@ make agent-workflow-compliance
 
 ## Related
 
-- Skills: `bos-service-discovery`, `a2a-coordination`, `project-governance`
+- Skills: `bos-service-discovery`, `a2a-coordination`, `project-governance`, `external-agent-attach`
 - Registry: `.omo/_truth/registry/agent-workflows.yaml`
 - Contract: `.omo/standards/agent-workflow-contract.md`
 - ADR-0203: Mandatory requirement iteration workflow

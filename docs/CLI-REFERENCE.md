@@ -1,9 +1,9 @@
 # Cockpit CLI 命令参考
 
-> 自动生成于 2026-08-03T09:49:40Z
+> 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **108** 个命令 (含子命令)。按场景分组如下。
+共 **119** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -81,7 +81,7 @@
 | `cockpit iterate` | ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行) |
 | `cockpit monitor` | 📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出) |
 | `cockpit wave2` | 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON) |
-| `cockpit workflow` | 🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎） |
+| `cockpit workflow` | BOS workflow 相关 |
 
 ## BOS 与 MCP
 
@@ -105,26 +105,30 @@
 | `cockpit finance` | 💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域) |
 | `cockpit gongwen` | 📄 公文写作门户引导 (文种/规范/入口, 委派 @公文 域) |
 | `cockpit profile` | 查看/编辑身份档案 (L4 入口) |
-| `cockpit scenario` | P5 统一 scenario 入口 (radar/assistant/health) |
+| `cockpit scenario` | P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review) |
 
 ## 其他
 
 | 命令 | 描述 |
 |------|------|
+| `cockpit agent-onboard` | 🤖 Agent 入职引导 checklist (profile + MCP + BOS + skills) |
 | `cockpit analyze` | 运行全部分析工具 |
 | `cockpit api` | 启动 API server |
 | `cockpit archive` | 归档已处理完毕的 Inbox 待办文件 |
 | `cockpit ask` | 向大脑提问（知识检索 + LLM 回答） |
-| `cockpit assistant` | P5-F2 work-assistant: 1 真实工作 query → 结构化草稿 |
+| `cockpit backends` | 列出 BOS 后端 |
 | `cockpit bos-capability` | BOS capability / toolbox 外部能力 |
 | `cockpit bos-inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
+| `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
+| `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
 | `cockpit down` | 停止观测栈 |
 | `cockpit event` | 导出事件封套 (EventEnvelope) |
 | `cockpit events-watch` | 实时监听 SSE 事件流简便入口 |
 | `cockpit export` | 导出契约封套 |
 | `cockpit export-research` | 将研究对象导出为 WorkspaceObject JSON |
+| `cockpit forget` | 遗忘传播 |
 | `cockpit gc` | 清理 data/tmp 过期文件 |
 | `cockpit get` | 查 1 个 card |
 | `cockpit graph` | 运行语义图谱分析 |
@@ -136,9 +140,11 @@
 | `cockpit invoke` | 调用 capability 服务（执行 BOS YAML command） |
 | `cockpit kems` | 🧬 KEMS 域治理 (domains/status/scan) |
 | `cockpit knowledge` | 📚 KOS 知识检索 (search/status/stats) |
-| `cockpit list` | 列出所有已注册的 Schema |
+| `cockpit list` | 列债务项 (委派 omo debt) |
 | `cockpit logs` | 查看日志 |
+| `cockpit memory` | 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref) |
 | `cockpit metrics` | 查看 bus metrics 快照 |
+| `cockpit mutate` | 通过 agora 统一 BOS URI 写协议修改资源 |
 | `cockpit nodes` | 列出 KOS 中注册的算力节点 |
 | `cockpit onboarding` | 为 AI 构建项目全貌上下文 |
 | `cockpit pack` | 将代码库打包为 LLM 友好格式 |
@@ -146,8 +152,10 @@
 | `cockpit pipeline` | pipeline 概览 |
 | `cockpit publish` | 发布事件 |
 | `cockpit quickstart-check` | 快速检查新用户环境核验状态 |
-| `cockpit radar` | P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates |
 | `cockpit read` | 通过 BOS 网关统一读取指定 URI 资源 |
+| `cockpit recall` | 意图路由召回（neo4j/temporal 支持 --as-of） |
+| `cockpit register` | 注册 BOS 服务 |
+| `cockpit reload` | 重载 BOS 配置/M1 |
 | `cockpit remember` | 手动存入偏好/事实 |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit route` | 为模型选择最优节点 |
@@ -155,6 +163,8 @@
 | `cockpit score` | 评分债务项 |
 | `cockpit serve` | stdio JSON-RPC serve mode |
 | `cockpit stats` | 索引统计 |
+| `cockpit summary` | 债务摘要 (委派 omo debt) |
+| `cockpit swarm` | 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
 | `cockpit topics` | 列出已注册 topic |
 | `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
 | `cockpit types` | 查看已注册的数据类型 |
@@ -162,6 +172,7 @@
 | `cockpit url` | 打印 Langfuse Web URL |
 | `cockpit validate` | 验证 Workspace 契约 |
 | `cockpit watch` | 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher) |
+| `cockpit write` | 双轨写入 (+ Neo4j FACT 若配置) |
 
 ---
 
@@ -171,7 +182,7 @@
 
 | CLI 命令 | MCP 服务器 | 工具数 |
 |----------|-----------|--------|
-| `cockpit omo` | `omo` | 19 |
+| `cockpit omo` | `omo` | 22 |
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
 | `cockpit model-driven` | `model-driven` | 28 |
@@ -180,4 +191,4 @@
 | `cockpit mesh` | `aetherforge` | 10 |
 | `cockpit compute` | `aetherforge` | 10 |
 
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-03T09:49:40Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*

@@ -66,7 +66,6 @@ _KNOWN_MCP_SERVERS: list[dict] = [
     {"id": "family-hub", "name": "Family Hub", "layer": "X", "file": "projects/family-hub/mcp_server.py", "transport": "stdio"},
     {"id": "agent-runtime", "name": "Cockpit Agent Runtime", "layer": "L3", "file": "projects/cockpit/src/cockpit/agent_runtime_mcp_server.py", "transport": "stdio"},
     {"id": "runtime", "name": "eCOS Runtime Services", "layer": "L1", "file": "projects/runtime/src/runtime/mcp_server.py", "transport": "stdio", "note": "L1 运行时 MCP, health/failover/push 入口"},
-    {"id": "cockpit-mcp", "name": "Cockpit Workspace MCP", "layer": "L3", "file": "projects/cockpit/src/cockpit/scripts/cockpit_mcp.py", "transport": "stdio", "note": "工具经 _tool() 别名注册, 含 workspace_context/cards_check 等"},
     {"id": "iris", "name": "Iris", "layer": "L2", "file": "projects/kairon/packages/iris/src/iris/mcp_server.py", "transport": "stdio"},
     {"id": "sophia", "name": "Sophia Research Paradigm", "layer": "L2", "file": "projects/kairon/packages/sophia/src/sophia/server/mcp_server.py", "transport": "stdio"},
     {"id": "kronos", "name": "Kronos", "layer": "L2", "file": "projects/kairon/packages/kronos/src/kronos/mcp_server.py", "transport": "stdio"},
@@ -161,7 +160,7 @@ def _extract_tools_from_python(file_path: Path) -> list[str]:
             if name and name not in seen:
                 seen.add(name)
                 tools.append(name)
-        # 单独处理 @_tool() 模式 (cockpit_mcp 别名)
+        # 单独处理 @_tool() 模式
         for m in re.finditer(
             r'@_tool\s*\(\s*\)\s*\n\s*(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)',
             content,
@@ -171,7 +170,7 @@ def _extract_tools_from_python(file_path: Path) -> list[str]:
                 seen.add(name)
                 tools.append(name)
 
-    # 策略 5b: cockpit_mcp 风格 _tool("name", ...) 别名调用
+    # 策略: _tool("name", ...) 别名调用
     for m in re.finditer(r'(?:^|\s)_tool\s*\(\s*["\']([a-zA-Z0-9_.\-]+)["\']', content):
         name = m.group(1)
         if name not in seen:
@@ -335,7 +334,10 @@ def build_registry() -> dict:
 
     registry = {
         "version": "1.0.0",
-        "generated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        # ADR-0373: use a sentinel timestamp (CI runs) instead of `now()`,
+        # otherwise the drift check `git diff --exit-code` always shows
+        # the file as drifted even when the content is otherwise identical.
+        "generated_at": "1970-01-01T00:00:00Z",
         "generator": "bin/cockpit/gen-capability-registry.py",
         "totals": {
             "mcp_servers": len(servers),
@@ -388,31 +390,6 @@ def verify_runtime(registry: dict) -> int:
     import asyncio
 
     runtime_checks: list[dict] = []
-
-    # cockpit MCP — 可 in-process 内省
-    try:
-        sys.path.insert(0, str(WORKSPACE / "projects" / "cockpit" / "src"))
-        from cockpit.scripts.cockpit_mcp import mcp  # type: ignore[import-not-found]
-
-        async def _list() -> list[str]:
-            tools = await mcp.list_tools()
-            return [getattr(t, "name", str(t)) for t in (tools or [])]
-
-        runtime_tools = set(asyncio.run(_list()))
-        # 注册表中 cockpit-mcp 的工具 (cockpit_mcp.py 的入口)
-        static_entry = next((s for s in registry["mcp_servers"] if s["id"] == "cockpit-mcp"), {})
-        static_tools = set(static_entry.get("tools", []))
-        match = runtime_tools == static_tools
-        runtime_checks.append({
-            "server": "cockpit-mcp (in-process)",
-            "runtime": len(runtime_tools),
-            "static": len(static_tools),
-            "match": match,
-            "missing": sorted(static_tools - runtime_tools)[:5],
-            "extra": sorted(runtime_tools - static_tools)[:5],
-        })
-    except Exception as exc:
-        runtime_checks.append({"server": "cockpit-mcp", "error": str(exc)[:80]})
 
     print("🔍 运行时内省校验 (in-process MCP servers):")
     print("=" * 60)

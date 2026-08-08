@@ -353,3 +353,123 @@ WorkflowRequested(scene-bound) -> admitted -> succeeded
 消费者是幂等的，重复消费不增加证据或反馈记录；输入不完整、场景不匹配、WorkflowRun 未成功或已进入后续状态但缺少既有
 receipt 时 fail-closed。该消费者只证明“真实工程交付元数据可以回到证据链并被人消费”，不证明业务价值，也不解除 M2/M6 门槛。
 下一轮应在此接口上接入真实责任人的人工 `reviewed/adopted` 反馈，再将同一批真实 run 纳入双人标注和 adjudicated manifest。
+
+### 12.3 Phase 65 工程交付人工复核与运营队列
+
+Phase 65 将机器摄取与人工消费拆开：`consume-engineering-delivery` 的唯一初始反馈状态为 `submitted`，不得通过参数伪造
+`reviewed` 或 `adopted`。责任人必须使用 `review-engineering-delivery`，提供稳定 actor、复核时间、决策和复核证据引用；反馈仍复用
+`outcome-feedback/v1`，因此能够沿同一 `workflow_run_id/outcome_id` 追加并保持幂等。
+
+`engineering-delivery-review-queue` 是只读运营投影，输出待复核数量、最新决策、WorkflowRun 状态、receipt、交付时长和证据数量，
+后续正式 UI 直接消费该投影。它不改变 Workflow Mesh 状态、不执行 OMO 派发、不调用 provider；只有真实责任人的连续反馈完成后，
+才可把样本送入双人标注、adjudication 和脱敏评测 manifest。
+
+操作顺序固定为：
+
+```text
+omo external-resources consume-engineering-delivery --workflow-run-id <id> --stdin
+  -> omo external-resources engineering-delivery-review-queue --json
+  -> omo external-resources review-engineering-delivery --workflow-run-id <id> --actor <human-ref> --stdin
+```
+
+摄取输入只允许交付 ID、仓库引用、PR、merge SHA、时间和证据引用；人工复核输入只允许交付 ID、决策、复核时间和复核证据引用。
+原文、prompt、模型输出、凭据和任意外部 provider 数据均不得进入这两个入口。
+
+### 12.4 Phase 66 Cockpit 工程交付复核工作台
+
+Phase 66 将人工复核能力放入 Cockpit 的既有 Workflow Mesh 入口，形成可供后续 UI 表单直接消费的 L3 契约：
+
+```text
+GET  /api/workflow-mesh/engineering-delivery/review-queue
+POST /api/workflow-mesh/engineering-delivery/review
+```
+
+队列接口只投影 OMO 的真实 receipt、WorkflowRun 状态、反馈阶段、最新决策、交付时长和证据数量，支持按
+`workflow_run_id` 限定范围；复核接口只接收有限 envelope，并将 `actor_ref` 从业务载荷中分离后交给 OMO broker。
+Cockpit 不直接写 `.omo`，也不持有人工状态真相。两个接口均返回无 provider、无 WorkflowRun 变更、无自动晋升的控制面，
+OMO 不可用或 envelope 不合法时 fail-closed 地返回结构化错误。
+
+这一步完成“可操作的人类入口”，但不等于真实业务场景已经验证。下一步仍需由责任人连续提交真实低风险工程交付反馈，
+再将通过复核的样本送入双人标注、adjudication、脱敏 manifest 和 shadow evaluation。
+
+### 12.5 Phase 67 Cockpit UI 工程交付复核工作台
+
+Phase 67 在 Cockpit 中新增独立的工程交付复核页面，承接 Phase 66 的两个 L3 API，不重新实现 OMO 状态机。页面提供：
+
+1. 队列摘要：交付总数、待复核、已复核及决策分布。
+2. 收件箱列表：交付 ID、WorkflowRun、Workflow 状态、场景绑定、交付时长和证据计数。
+3. 详情和表单：责任人引用、`reviewed/adopted/rejected` 决策、复核时间和证据引用。
+4. 控制面提示：只读队列、WorkflowRun 不变更、provider 不调用、自动晋升关闭。
+
+页面只提交以下窄 envelope：
+
+```json
+{
+  "workflow_run_id": "run-...",
+  "actor_ref": "operator://...",
+  "delivery_id": "delivery-...",
+  "decision": "reviewed|adopted|rejected",
+  "reviewed_at": "2026-08-04T00:00:00Z",
+  "evidence_refs": ["evidence://..."]
+}
+```
+
+UI 不读取 `.omo` 原始日志、不保存自由文本、不直接改状态，也不把“已采纳”展示为模型或业务自动放行。它只证明工程交付元数据具备可操作的人机复核链路；
+真实业务试点仍需满足 G1～G4，并补齐真实样本、双人标注、裁决、恢复证据和人工上线评审。
+
+### 12.6 Phase 68 工程交付真实样本与双人标注入口
+
+Phase 68 选择工程交付作为当前唯一低风险 dogfood 数据源：不是读取业务私有原文，而是消费 OMO 已形成的、经过人工复核的
+工程交付元数据投影。Kairon 新增 `kems_sync_engineering_delivery_queue.py`，在输入边界检查
+`engineering-delivery-review-queue/v1`、固定场景绑定、只读控制面和稳定交付字段，仅将 `review_status=reviewed` 的行转换为
+`kems.adjudication-queue.v1` 的 pending 样本。
+
+该转换不把 `adopted` 当成标签真值。样本只带确定性的 sample ID、source SHA-256、脱敏 `vault://redacted/` 引用、场景和 split；
+真正的 `delivery_quality`、`evidence_sufficiency`、`workflow_alignment` 和 `requires_follow_up` 必须由两名独立标注员分别提交，
+再由第三名独立裁决者确认。没有两份独立标注和明确裁决，不得生成 `kems.evaluation-manifest.v1`。
+
+当前 M2 放行状态仍是“真实样本入口已落地，真实标注与裁决待执行”；这一步不代表已经获得业务准确率，也不开放模型训练、预测晋升或 OMO 自动派发。
+
+### 12.7 Phase 69 KEMS 持久化健康与恢复闭环
+
+Phase 69 为 KEMS 的 OCR、标注、评测、运行检查点和 shadow 预测 SQLite 存储补齐统一的只读运行态检查与恢复入口。健康报告只输出数据库路径、完整性结果、外键违规数、表名、行数和文件权限，不读取或导出任何正文、OCR、prompt、模型自由文本或私有载荷。
+
+```bash
+PYTHONPATH="$KAIRON_ROOT/packages/kos/src" \
+  uv run --project "$KAIRON_ROOT" python \
+  "$KAIRON_ROOT/scripts/kems_health_check.py" \
+  --database adjudication="$HOME/.kems/adjudication.sqlite" \
+  --database ocr="$HOME/.kems/ocr.sqlite" \
+  --database model_acceptance="$HOME/.kems/model-acceptance.sqlite"
+```
+
+备份和恢复使用 SQLite 原生 backup API，写入临时文件、设置 0600 权限、原子替换，并在落盘后再次执行完整性检查。已存在的目标默认拒绝覆盖，恢复必须显式提供 `--force`。恢复后的数据库仍需通过健康检查，未通过则不得继续生成 manifest 或执行 shadow 评测。
+
+该阶段只完成“可检查、可备份、可恢复、可重放”的生产基础，不改变 `shadow`、`blocked_until_omo_approval` 和 `provider_invocation=false` 等放行边界；下一步才是把健康摘要接入 Cockpit/外部资源目录，并建立真实 OCR 质量样本与预测 shadow 运行的连续指标。
+
+### 12.8 Phase 71 重复 Shadow 评测与模型晋级门禁
+
+Phase 71 在已有单次 `kems.model-acceptance.v1` 之上增加 `kems.model-promotion-gate.v1`。它接收多次、脱敏、同一
+`dataset_id`、`dataset_version` 和 `evaluation_manifest_sha256` 绑定的 shadow 报告，重新计算加权 MAE 和相对提升，并同时检查：
+
+- 最低 shadow 运行次数和最低观测量；
+- 每次运行都必须是 `shadow_pass`，且提升不低于门槛；
+- 报告中的相对提升必须与 `model_mae`/`baseline_mae` 一致；
+- 报告不能重复，不能跨 manifest 混用，不能携带原文、prompt 或模型自由输出。
+
+根仓 Kairon 提供 `scripts/kems_model_promotion_gate.py`，结果只有 `blocked` 或 `eligible_for_human_approval`。后者只是进入人工/OMO
+审批的资格投影，仍固定 `promotion=blocked_until_omo_approval`、`automatic_promotion=false`，不会写模型注册表、改变路由、创建 WorkflowRun
+或触发外部 provider。
+
+运行链路收敛为：
+
+`redacted manifest -> repeated shadow reports -> weighted metrics/reproducibility gate -> human/OMO approval -> canary -> rollback`
+
+真实业务准确率仍需真实低风险消费者持续产生样本后才能声明；fixture 通过只证明门禁逻辑正确。
+
+### 12.9 Phase 72 场景化生产策略
+
+KEMS 的后续生产化不以继续增加模型或抽取能力为目标，而以一个真实、低风险、每周重复的业务旅程为目标。建议先从资料/邮件/待办到决策收件箱开始：KEMS 负责结构化和候选建议，OMO 负责任务与审批，Workflow Mesh 负责执行和证据，Cockpit 负责人工复核，结果再回流为真实标注和评测样本。
+
+在没有持续真实消费者、真实标注裁决、脱敏 manifest 和人工/OMO 批准前，KEMS 继续保持 shadow 和 proposal-only。跨模块边界与 36 个月落地路线见
+[`docs/ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md`](ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md)。

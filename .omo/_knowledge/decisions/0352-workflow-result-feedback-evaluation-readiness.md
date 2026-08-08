@@ -1,4 +1,5 @@
 ---
+id: ADR-0352
 title: Workflow Mesh result receipt and evaluation readiness projection
 status: accepted
 type: adr

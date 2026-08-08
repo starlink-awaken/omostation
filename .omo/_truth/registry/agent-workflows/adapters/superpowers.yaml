@@ -1,0 +1,14 @@
+superpowers:
+  status: integrated
+  skill: using-superpowers
+  authority: discipline_layer
+  ssot_rule: Delegates project-specific truth to this registry, GAC, OMO/C2G, and
+    MOF registries.
+  ingress_workflow: project-governance-skill
+  pattern: skill-first execution with explicit checklist and verification before closeout
+  adapter: project-governance skill points back to this registry and runner
+  health_command:
+  - test
+  - -f
+  - .agents/skills/project-governance/SKILL.md
+  health_required: true

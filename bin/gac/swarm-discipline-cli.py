@@ -72,8 +72,19 @@ def cmd_branch_check(args: argparse.Namespace) -> int:
 
 def cmd_branch_release(args: argparse.Namespace) -> int:
     root = root_from_cwd()
-    done = sd.release_branch_lock(root, args.session)
+    done = sd.release_branch_lock(
+        root, args.session, purge_orphans=not args.no_purge_orphans
+    )
     print(json.dumps({"released": done, "session": args.session}, indent=2))
+    return 0
+
+
+def cmd_claim_gc(args: argparse.Namespace) -> int:
+    root = root_from_cwd()
+    result = sd.claim_gc(
+        root, ttl_hours=args.ttl_hours, dry_run=args.dry_run
+    )
+    print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -209,7 +220,22 @@ def main(argv: list[str] | None = None) -> int:
 
     s = sub.add_parser("branch-release")
     s.add_argument("--session", required=True)
+    s.add_argument(
+        "--purge-orphans", action="store_true", default=True,
+        help="B3 (ADR-0367): 顺带删除分支已不存在的孤儿 claim (默认开)",
+    )
+    s.add_argument("--no-purge-orphans", action="store_true", help="关闭孤儿清理")
     s.set_defaults(func=cmd_branch_release)
+
+    s = sub.add_parser(
+        "claim-gc", help="GC 过期 claim (branch/agent/adr, D1)"
+    )
+    s.add_argument(
+        "--ttl-hours", type=int, default=168,
+        help="TTL 小时 (默认 168=7天, claim 是长期占位)",
+    )
+    s.add_argument("--dry-run", action="store_true")
+    s.set_defaults(func=cmd_claim_gc)
 
     s = sub.add_parser("claim-check")
     s.add_argument("--staged", action="store_true")

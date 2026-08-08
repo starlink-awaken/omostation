@@ -101,6 +101,7 @@ def _bootstrap_agora_venv() -> bool:
 _inject_agora_venv_site()
 
 OUTPUT_DIR = WORKSPACE / ".omo" / "_delivery" / "evidence-smoke"
+SYSTEM_YAML = WORKSPACE / ".omo" / "state" / "system.yaml"
 GOV_LOG = WORKSPACE / ".omo" / "_knowledge" / "governance-history.jsonl"
 EVENTS_LOG = WORKSPACE / ".omo" / "_knowledge" / "omo-events.jsonl"  # 轻事件流 (state-stale-emit 写); 重跑批断时作回路活信号 (多源 OR)
 
@@ -193,6 +194,31 @@ def _utc_now() -> str:
 
 def _today() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def _write_health_score_evidence(score: float) -> tuple[bool, str]:
+    """Write evidence_health_score into system.yaml::health_score_evidence (R-GOV-2).
+
+    R-GOV-2 (governance-convergence-lint) requires `health_score_evidence` in
+    system.yaml so it can compare against `health_score` (compass_radar composite)
+    and detect divergence > 5. Best-effort: failure must not break the smoke run.
+    """
+    try:
+        import yaml
+
+        if not SYSTEM_YAML.is_file():
+            return False, f"system.yaml missing: {SYSTEM_YAML}"
+        data = yaml.safe_load(SYSTEM_YAML.read_text(encoding="utf-8")) or {}
+        data["health_score_evidence"] = round(float(score), 2)
+        data["health_score_evidence_source"] = "bin/gac/evidence-smoke.py"
+        data["health_score_evidence_generated_at"] = datetime.now(
+            timezone.utc
+        ).isoformat()
+        with open(SYSTEM_YAML, "w", encoding="utf-8") as fh:
+            yaml.safe_dump(data, fh, allow_unicode=True, sort_keys=False)
+        return True, f"health_score_evidence={data['health_score_evidence']} written"
+    except Exception as exc:  # defensive: 写失败不阻断 smoke
+        return False, f"write failed: {exc}"
 
 
 # ── L2: 声明真实性检查 (文件系统, 快) ────────────────────────────
@@ -829,6 +855,13 @@ def main() -> int:
         return 1
 
     if args.json:
+        # R-GOV-2: 成功报告时把 evidence_health_score 写回 system.yaml (best-effort)
+        if not report.get("partial") and "error" not in report:
+            score = report.get("evidence_health_score")
+            if score is not None:
+                ok, msg = _write_health_score_evidence(score)
+                if not ok:
+                    print(f"⚠️  {msg}", file=sys.stderr)
         print(json.dumps(report, ensure_ascii=False, indent=2))
         # partial import failure → exit 0 for consumers; gate mode still fails below if --gate set
         if report.get("partial") and args.gate is None:

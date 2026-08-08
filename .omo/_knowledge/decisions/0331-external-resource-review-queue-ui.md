@@ -1,4 +1,5 @@
 ---
+id: ADR-0331
 title: Cockpit UI 外部资源只读人工复核队列消费面
 status: accepted
 type: decision
