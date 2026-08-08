@@ -27,3 +27,7 @@ PATH=/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin
 0 10 * * 1 cd "$HOME/Workspace" && python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --json >> runtime/cron/operating-rhythm-weekly.log 2>&1
 5 10 * * 1 cd "$HOME/Workspace" && bin/mof-drift >> runtime/cron/operating-rhythm-weekly.log 2>&1
 15 10 * * 1 cd "$HOME/Workspace" && uv run --with pyyaml python bin/check-submodule-hygiene.py --strict >> runtime/cron/operating-rhythm-weekly.log 2>&1
+
+# ── daily 08:30 (统一事件面常态化, T9-OBSERV) — 事件适配器增量同步 + 日志轮转 ──
+30 8 * * * cd "$HOME/Workspace" && python3 bin/ssot/observability-events.py adapters run >> runtime/cron/observability-daily.log 2>&1
+35 8 * * * cd "$HOME/Workspace" && python3 bin/ssot/log-rotate.py >> runtime/cron/observability-daily.log 2>&1
