@@ -1,0 +1,37 @@
+schema: capability-providers/v1
+description: External AI tool providers for Capability Router (ADR-0396)
+providers:
+  - id: claude-code
+    capabilities: [code_edit, document_draft, shell, mcp, web_search, file_system, email_compose]
+    launch: "claude --print"
+    strengths: [complex_reasoning, mcp_access, multi_domain]
+    cost: high
+    governance: full
+
+  - id: codex
+    capabilities: [code_edit, shell, file_system]
+    launch: "codex exec"
+    strengths: [implementation, debugging, structured_output]
+    cost: medium
+    governance: sandboxed
+
+  - id: crush
+    capabilities: [code_edit, shell]
+    launch: "crush"
+    strengths: [speed, lightweight]
+    cost: low
+    governance: sandboxed
+
+  - id: opencode
+    capabilities: [code_edit, shell]
+    launch: "opencode"
+    strengths: [open_source, local_model]
+    cost: free
+    governance: sandboxed
+
+  - id: iris_builtin
+    capabilities: [email_read, email_write, note_read, note_write, file_read]
+    launch: "iris"
+    strengths: [connector_access, low_latency]
+    cost: free
+    governance: full
