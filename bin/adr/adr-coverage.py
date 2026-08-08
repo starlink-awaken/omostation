@@ -102,8 +102,11 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
     # frontmatter 健康度
     fm_issues = []
     id_mismatches = []
+    status_counts: dict[str, int] = {}  # T6-02 ADR 分层: 按 status 统计
     for n, f in adrs:
         fm = parse_frontmatter(f)
+        status = str(fm.get("status", "unknown")).strip().lower() or "unknown"
+        status_counts[status] = status_counts.get(status, 0) + 1
         missing = [k for k in REQUIRED_FRONTMATTER if k not in fm]
         if missing:
             fm_issues.append({
@@ -137,6 +140,7 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
         "files_not_in_index": files_not_in_index,
         "index_refs_not_in_files": refs_not_in_files,
         "index_present": index_path.exists(),
+        "by_status": status_counts,  # T6-02 ADR 分层统计
     }
 
 
@@ -177,6 +181,15 @@ def main() -> int:
     print("=" * 60)
     print(f"📋 ADR 总数: {result['total_adrs']}")
     print(f"🔢 编号范围: {result['min_number']:04d} ~ {result['max_number']:04d}")
+    # T6-02 ADR 分层统计 (active 进 RAG/onboarding, historical 不进)
+    bs = result.get("by_status", {})
+    active_count = bs.get("active", 0) + bs.get("accepted", 0)
+    historical_count = bs.get("archived", 0) + bs.get("superseded", 0) + bs.get("done", 0)
+    print(
+        f"📑 分层: active {active_count} (accepted+active) | "
+        f"historical {historical_count} (archived+superseded+done) | "
+        f"待裁定 {bs.get('proposed', 0)} (proposed)"
+    )
     print()
     if result["missing_numbers"]:
         print(f"❌ 缺失编号: {result['missing_numbers']}")
