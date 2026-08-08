@@ -138,7 +138,7 @@ class TestCrossLayerIntegration:
         ce.complete_task("t1", {"result": "done"})
 
         status = ce.get_task_status("t1")
-        assert status["stage"] == "done"
+        assert status["stage"] == "done"  # type: ignore[reportOptionalSubscript]
 
     def test_l0_to_l2_swarm(self):
         """L0→L2 蜂群引擎集成"""
@@ -245,9 +245,9 @@ class TestAsyncTCP:
         queue.enqueue(high)
         queue.enqueue(normal)
 
-        assert queue.dequeue().priority == MessagePriority.HIGH
-        assert queue.dequeue().priority == MessagePriority.NORMAL
-        assert queue.dequeue().priority == MessagePriority.LOW
+        assert queue.dequeue().priority == MessagePriority.HIGH  # type: ignore[reportOptionalMemberAccess]
+        assert queue.dequeue().priority == MessagePriority.NORMAL  # type: ignore[reportOptionalMemberAccess]
+        assert queue.dequeue().priority == MessagePriority.LOW  # type: ignore[reportOptionalMemberAccess]
 
     def test_message_ttl(self):
         """消息 TTL"""

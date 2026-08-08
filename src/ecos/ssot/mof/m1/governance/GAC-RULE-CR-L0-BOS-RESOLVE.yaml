@@ -1,6 +1,6 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
-# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
 id: GAC-RULE-CR-L0-BOS-RESOLVE
 type: GacRule
 name: BOS 声明/执行一致
@@ -17,20 +17,23 @@ properties:
   layer: L0
   check_type: bos_resolve
   executor:
+  - mof_validate
   - evidence_smoke
   - ci_gate
   lifecycle: active
   version: 1.0.0
   created_at: '2026-06-26'
   target: projects/agora/etc/bos-services.yaml
-  adr: ADR-0106
+  adr: ADR-0105
   source_type: native
+  source_ref: projects/agora/etc/bos-services.yaml
+  enforcement: required
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
   m3_type: GacRule
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
-  derived_by: bin/gac-m1-sync.py
+  derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
   timestamp: '2026-06-26T00:00:00Z'

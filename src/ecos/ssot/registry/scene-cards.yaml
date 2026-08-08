@@ -1,0 +1,250 @@
+# eCOS v6 Scene Card Registry (SSOT)
+# ====================================
+# Defines the scene card data model for the Scenario Validation phase.
+# A scene card represents a real business scenario that goes through the
+# five-stage closed loop: input → judgment → execution → delivery → reuse.
+#
+# Enforced by ecos-architecture-validator at CI/CD time.
+# SSOT: ecos/src/ecos/ssot/registry/scene-cards.yaml
+# Version: 1.0.0 | 2026-08-07
+
+version: "1.0.0"
+updated_at: "2026-08-07"
+
+# Scene card data model
+scene_card:
+  description: >
+    A scene card represents a real business scenario with a complete
+    five-stage closed loop. Each scene has one or more journeys,
+    and each journey has one or more intents.
+  
+  fields:
+    - name: id
+      type: string
+      pattern: "^scene-[a-z0-9-]+$"
+      required: true
+      description: "Unique scene identifier"
+    
+    - name: name
+      type: string
+      required: true
+      description: "Human-readable scene name"
+    
+    - name: description
+      type: string
+      required: true
+      description: "Scene description and purpose"
+    
+    - name: status
+      type: enum
+      values: [active, paused, archived]
+      required: true
+      description: "Scene lifecycle status"
+    
+    - name: priority
+      type: enum
+      values: [P0, P1, P2]
+      required: true
+      description: "Scene priority (P0=critical, P1=important, P2=optional)"
+    
+    - name: created_at
+      type: timestamp
+      required: true
+      description: "Scene creation timestamp"
+    
+    - name: journeys
+      type: array
+      of: journey_card
+      required: false
+      description: "Journeys belonging to this scene"
+
+  example:
+    id: "scene-decision-inbox"
+    name: "决策收件箱"
+    description: "邮件/文件/待办事项到结构化决策清单"
+    status: active
+    priority: P0
+    created_at: "2026-08-07T00:00:00Z"
+    journeys: []
+
+# Journey card data model
+journey_card:
+  description: >
+    A journey represents a specific execution path within a scene.
+    It tracks the progress from intent to delivery.
+  
+  fields:
+    - name: id
+      type: string
+      pattern: "^journey-[a-z0-9-]+$"
+      required: true
+      description: "Unique journey identifier"
+    
+    - name: scene_id
+      type: string
+      required: true
+      description: "Reference to parent scene"
+    
+    - name: name
+      type: string
+      required: true
+      description: "Human-readable journey name"
+    
+    - name: status
+      type: enum
+      values: [proposed, running, waiting_approval, completed, failed, closed]
+      required: true
+      description: "Journey lifecycle status"
+    
+    - name: created_at
+      type: timestamp
+      required: true
+      description: "Journey creation timestamp"
+    
+    - name: completed_at
+      type: timestamp
+      required: false
+      description: "Journey completion timestamp"
+    
+    - name: intents
+      type: array
+      of: intent_card
+      required: false
+      description: "Intents in this journey"
+
+# Intent card data model
+intent_card:
+  description: >
+    An intent represents a single actionable item within a journey.
+    It is the atomic unit of the decision inbox.
+  
+  fields:
+    - name: id
+      type: string
+      pattern: "^intent-[a-z0-9-]+$"
+      required: true
+      description: "Unique intent identifier"
+    
+    - name: journey_id
+      type: string
+      required: true
+      description: "Reference to parent journey"
+    
+    - name: source
+      type: enum
+      values: [email, file, message, manual, oa, sms]
+      required: true
+      description: "Source of the intent"
+    
+    - name: raw_content
+      type: string
+      required: true
+      description: "Original input content"
+    
+    - name: structured
+      type: structured_content
+      required: false
+      description: "Structured/extracted content"
+    
+    - name: status
+      type: enum
+      values: [pending, task_created, approved, rejected, done]
+      required: true
+      description: "Intent lifecycle status"
+    
+    - name: priority
+      type: enum
+      values: [P0, P1, P2, P3]
+      required: false
+      description: "Intent priority"
+    
+    - name: task_id
+      type: string
+      required: false
+      description: "Associated OMO Task ID"
+    
+    - name: created_at
+      type: timestamp
+      required: true
+      description: "Intent creation timestamp"
+    
+    - name: processed_at
+      type: timestamp
+      required: false
+      description: "Intent processing timestamp"
+    
+    - name: evidence
+      type: array
+      of: evidence_record
+      required: false
+      description: "Evidence chain for this intent"
+
+# Structured content data model
+structured_content:
+  description: >
+    Structured content extracted from raw input by the ingestion pipeline.
+  
+  fields:
+    - name: title
+      type: string
+      required: false
+      description: "Extracted title"
+    
+    - name: description
+      type: string
+      required: false
+      description: "Extracted description"
+    
+    - name: category
+      type: string
+      required: false
+      description: "Extracted category"
+    
+    - name: deadline
+      type: timestamp
+      required: false
+      description: "Extracted deadline"
+    
+    - name: related_knowledge
+      type: array
+      of: string
+      required: false
+      description: "References to related knowledge"
+    
+    - name: confidence
+      type: float
+      min: 0.0
+      max: 1.0
+      required: false
+      description: "Extraction confidence score"
+
+# Evidence record data model
+evidence_record:
+  description: >
+    An evidence record captures the provenance of a processing step.
+  
+  fields:
+    - name: source
+      type: string
+      required: true
+      description: "Source of the evidence"
+    
+    - name: action
+      type: string
+      required: true
+      description: "Action performed"
+    
+    - name: result
+      type: string
+      required: true
+      description: "Result of the action"
+    
+    - name: timestamp
+      type: timestamp
+      required: true
+      description: "When the action occurred"
+    
+    - name: actor
+      type: string
+      required: false
+      description: "Who/what performed the action"

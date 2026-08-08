@@ -1,0 +1,16 @@
+id: COMP-EXT-AGT-lightning
+type: Component
+m3_parent: StructuralElement.Component
+name: agt-lightning
+description: AGT Lightning — RL training governance and policy enforcement for reinforcement learning workloads
+project: ecos
+parent: COMP-WS-ecos
+layer: X
+runtime: active
+status: active
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/component/
+state_history:
+  - state: proposal_only
+    timestamp: '2026-08-04T00:00:00Z'
+    reason: agt_external_adapter_proposal

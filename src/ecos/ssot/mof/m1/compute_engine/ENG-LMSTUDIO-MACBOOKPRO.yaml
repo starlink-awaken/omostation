@@ -6,6 +6,7 @@ base_url: "http://localhost:1234/v1"
 supported_protocols: ["openai"]
 cost_multiplier: 0.0001
 status: active
+lm_link_pool: "LM-Link-Mesh"   # 三机经 LM Studio LM Link 互联为同一模型池(43模型), 各端点等价; 计算在线数时勿重复计
 description: "MacBook Pro M5 Max 上的 LM Studio (本机)"
 
 model_driven_refs:

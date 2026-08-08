@@ -359,8 +359,8 @@ class PerformanceRegressionDetector:
         # 性能得分检测
         score_metric = self._detect_metric_regression(
             "性能得分",
-            baseline_result.metrics.performance_score,
-            current_result.metrics.performance_score,
+            baseline_result.metrics.performance_score,  # type: ignore[reportAttributeAccessIssue]
+            current_result.metrics.performance_score,  # type: ignore[reportAttributeAccessIssue]
             self.thresholds["performance_score"],
             higher_is_worse=False,
         )

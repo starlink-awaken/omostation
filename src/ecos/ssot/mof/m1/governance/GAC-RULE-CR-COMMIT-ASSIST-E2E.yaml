@@ -21,7 +21,7 @@ status: active
 domain: meta
 layer: meta
 created: '2026-07-07'
-version: 0.1.0
+version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-COMMIT-ASSIST-E2E
@@ -32,7 +32,7 @@ properties:
   - ci_gate
   - gac_local_gate
   lifecycle: active
-  version: 0.1.0
+  version: 1.0.0
   created_at: '2026-07-07'
   target: tests/test_commit_assist_e2e.py
   adr: ADR-0169

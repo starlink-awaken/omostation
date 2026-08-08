@@ -23,7 +23,10 @@ properties:
   version: 1.0.0
   created_at: *id001
   target: Python 文件行数 (声明面; 执行面 hook 内置 PR#193)
+  adr: ADR-0171
   source_type: native
+  source_ref: bin/gac/check-god-module.py
+  enforcement: required
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

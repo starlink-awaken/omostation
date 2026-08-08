@@ -17,10 +17,12 @@ properties:
   layer: meta
   check_type: consistency_drift
   executor:
+  - mof_validate
   - ci_gate
   lifecycle: active
   version: 1.0.0
   created_at: '2026-07-06'
+  target: projects/*/src/**
   adr: ADR-0106
   source_type: indexed
   source_ref: bin/ssot/check-mcptool-impl-drift.py

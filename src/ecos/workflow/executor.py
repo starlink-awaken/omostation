@@ -25,6 +25,7 @@ from ecos.workflow.mesh_contract import (
 from ecos.workflow.default_mesh_sink import (
     get_default_mesh_sink,
 )
+from ecos.workflow.mesh_gate import mesh_gate_check
 from ecos.workflow.preflight import inject_preflight
 from ecos.workflow.validator import (
     X2BudgetDeducer,
@@ -44,6 +45,7 @@ try:
         validate_operation,
     )
 except ImportError:
+
     def validate_operation(*a, **kw):
         return None
 
@@ -122,6 +124,22 @@ def execute_m1_workflow(
         except Exception as exc:  # event persistence must not hide execution outcome
             results.setdefault("event_sink_errors", []).append(str(exc))
 
+    # Phase 4: Extract scene_binding from workflow metadata or params
+    _scene_binding = None
+    wf_meta = wf.get("metadata", {})
+    if isinstance(wf_meta, dict) and isinstance(wf_meta.get("scene_binding"), dict):
+        sb = wf_meta["scene_binding"]
+        if all(sb.get(k) for k in ("scene_id", "journey_id", "outcome_metric")):
+            _scene_binding = {
+                k: str(sb[k]) for k in ("scene_id", "journey_id", "outcome_metric")
+            }
+    elif params.get("scene_binding") and isinstance(params["scene_binding"], dict):
+        sb = params["scene_binding"]
+        if all(sb.get(k) for k in ("scene_id", "journey_id", "outcome_metric")):
+            _scene_binding = {
+                k: str(sb[k]) for k in ("scene_id", "journey_id", "outcome_metric")
+            }
+
     emit_event(
         "WorkflowRequested",
         {
@@ -129,6 +147,7 @@ def execute_m1_workflow(
             "workflow_definition_id": name,
             "backend": backend_name,
             "execution_mode": metadata["execution_mode"],
+            **({"scene_binding": _scene_binding} if _scene_binding else {}),
         },
         idempotency_key=f"{metadata['workflow_run_id']}:requested",
     )
@@ -197,6 +216,27 @@ def execute_m1_workflow(
             logger.info(
                 "Workflow validation: %d warnings (non-blocking)", len(violations)
             )
+
+        # ── Mesh Gate: 验证 Workflow Mesh 连接 (Phase 3) ──
+        mesh_violations = mesh_gate_check()
+        if mesh_violations:
+            results.setdefault("violations", []).extend(mesh_violations)
+            if any(v.get("severity") == "error" for v in mesh_violations):
+                logger.warning("Workflow blocked by Mesh gate (strict mode)")
+                results["error"] = (
+                    "Mesh gate: Workflow Mesh not connected (strict mode)"
+                )
+                results["failed"] = 1
+                results["error_code"] = "MESH_GATE_BLOCKED"
+                results["run_metadata"]["state"] = WorkflowRunState.FAILED.value
+                emit_event(
+                    "WorkflowFailed",
+                    {"error_code": "MESH_GATE_BLOCKED", "violations": mesh_violations},
+                    idempotency_key=f"{metadata['workflow_run_id']}:failed",
+                )
+                results["finished"] = datetime.now().isoformat()
+                return results
+            logger.info("Mesh gate: non-blocking warning (Mesh not connected)")
 
         # ── 缓存检查：如果工作流配置了 cache_ttl，优先返回缓存 ──
         if cache_ttl > 0 and not dry_run:
@@ -311,9 +351,10 @@ def execute_m1_workflow(
             results["steps"] = backend_result["steps"]
             results["passed"] = backend_result.get("passed", 0)
             results["failed"] = backend_result.get("failed", 0)
-            if backend_result.get("mode") == "unavailable" or backend_result.get(
-                "error_code"
-            ) == "BACKEND_UNAVAILABLE":
+            if (
+                backend_result.get("mode") == "unavailable"
+                or backend_result.get("error_code") == "BACKEND_UNAVAILABLE"
+            ):
                 results["error_code"] = "BACKEND_UNAVAILABLE"
                 results["error"] = backend_result.get("error", "Backend unavailable")
                 results["run_metadata"]["state"] = WorkflowRunState.UNAVAILABLE.value
@@ -331,9 +372,10 @@ def execute_m1_workflow(
                 results["passed"] += 1
             else:
                 results["failed"] += 1
-            if backend_result.get("mode") == "unavailable" or backend_result.get(
-                "error_code"
-            ) == "BACKEND_UNAVAILABLE":
+            if (
+                backend_result.get("mode") == "unavailable"
+                or backend_result.get("error_code") == "BACKEND_UNAVAILABLE"
+            ):
                 results["error_code"] = "BACKEND_UNAVAILABLE"
                 results["error"] = backend_result.get("error", "Backend unavailable")
                 results["run_metadata"]["state"] = WorkflowRunState.UNAVAILABLE.value

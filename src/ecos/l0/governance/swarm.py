@@ -339,7 +339,7 @@ class SwarmManager(SwarmPrimitive):
                 oscillations.append(agent_id)
 
         if oscillations:
-            confidence = min(0.5 + sign_changes * 0.05, 0.9)
+            confidence = min(0.5 + sign_changes * 0.05, 0.9)  # type: ignore[reportPossiblyUnboundVariable]
             level = (
                 EmergenceLevel.CRITICAL
                 if len(oscillations) > len(state.agents) * 0.5

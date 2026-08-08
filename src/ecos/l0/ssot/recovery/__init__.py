@@ -11,9 +11,9 @@ SSOT Kernel — Recovery Module
 5. 自动化恢复和半自动恢复
 """
 
-from .decision_tree import RecoveryDecisionTree
+from .decision_tree import RecoveryDecisionTree  # type: ignore[reportMissingImports]
 from .history import RecoveryHistoryManager
-from .recovery_framework import (
+from .recovery_framework import (  # type: ignore[reportMissingImports]
     IntelligentRecoverySystem,
     RecoveryConfig,
     RecoveryResult,

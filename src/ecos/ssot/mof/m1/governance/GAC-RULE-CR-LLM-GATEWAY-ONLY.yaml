@@ -1,0 +1,38 @@
+# M1 GacRule instance — DERIVED by gac-m1-sync.py
+# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
+id: GAC-RULE-CR-LLM-GATEWAY-ONLY
+type: GacRule
+name: LLM 推理统一接入层
+description: '禁止业务代码直连 ollama (11434) / 裸 OpenAI 端点; 必须走 llm-router / AetherForge
+  网关. 静态源码扫描, --warn 迁移期仅告警. 实现: bin/gac/check-llm-gateway-only.py'
+status: active
+domain: meta
+layer: meta
+created: '2026-08-06'
+version: 1.0.0
+properties:
+  m3_parent: GovernanceElement.GacRule
+  id: CR-LLM-GATEWAY-ONLY
+  dimension: X2
+  layer: meta
+  check_type: drift_audit
+  executor:
+  - ci_gate
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-08-06'
+  target: projects/**
+  adr: ADR-0380
+  source_type: native
+  source_ref: bin/gac/check-llm-gateway-only.py::--warn
+source: .omo/_truth/registry/governance-checks.yaml
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
+  m3_type: GacRule
+  registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
+  derived_by: bin/gac/gac-m1-sync.py
+state_history:
+- state: active
+  timestamp: '2026-08-06T00:00:00Z'
+  reason: M1 实例由 gac-m1-sync.py 从 registry 派生

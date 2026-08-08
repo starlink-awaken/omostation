@@ -1,7 +1,20 @@
 # SGF-v1: Starlit Self-Governance Framework Unified Policy (M1 Model Instance)
 # SSOT Source for all GAC checks configuration, replacing hardcoded checks in gac-local-gate.py.
 
+id: "sgf-policy"
+type: GovernancePolicy
+name: "SGF 统一治理策略 — GAC 门禁配置数据化 SSOT"
+description: "SGF-v1: 大仓 31 个 Gate 门禁项规则数据化注册表 + SGF 运行设置"
+status: active
+domain: "meta"
+layer: "X"
+created: "2026-08-03"
 version: "1.0.0"
+properties:
+  policy_id: "sgf-policy"
+  dimension: "all"
+  thresholds:
+    gates: 32
 
 settings:
   attention:
@@ -75,7 +88,8 @@ gates:
     command: ["bin/mof/project-layer-index.py", "--check"]
     ci_only: true  # 默认 strict/CI 跑，本地 skip 防止冲突
   - id: "doc-ssot-snapshots"
-    command: ["scripts/check-doc-ssot-snapshots.py"]
+    command: ["bin/ssot/doc-governance-check.py"]
+    note: 原 scripts/check-doc-ssot-snapshots.py 已被取代; scripts/ 是镜像子模块. 见 ADR-0394.
   - id: "doc-link-check"
     command: ["bin/ssot/doc-link-check.py"]
   - id: "change-lane-check"
@@ -90,6 +104,9 @@ gates:
     command: ["bin/gac/governance-convergence-lint.py"]
   - id: "governance-semantic-gate"
     command: ["bin/gac/governance-semantic-gate.py", "--json"]
+  - id: "adr-coverage"
+    command: ["bin/adr/adr-coverage.py", "--json"]
+    description: "ADR-0367 C4: ADR 编号/前端/INDEX 覆盖检查, 阻断性"
   - id: "state-freshness-check"
     command: ["bin/gac/state-freshness-check.py", "--json"]
     ci_only: true
@@ -150,6 +167,7 @@ gates:
     command: ["bin/gac/check-severity-registry.py"]
   - id: "check-work-landed"
     command: ["bin/gac/check-work-landed.py"]
+    timeout: 45
   - id: "check-governance-ratio"
     command: ["bin/gac/check-governance-ratio.py"]
   - id: "check-redline-coverage"
@@ -166,3 +184,11 @@ gates:
     command: ["bin/gac/check-silent-loss.py"]
   - id: "check-adversarial-effectiveness"
     command: ["bin/gac/check-adversarial-effectiveness.py"]
+  # LLM-ENGINE-ARCHITECTURE Wave 3: LLM 推理必须走统一接入层 (llm-router / AetherForge)
+  # 纯静态源码扫描 — CI (GitHub runner) 无本地 LLM 也能运行。
+  # --warn: 历史存量迁移期仅告警不失败; 全量违规归零后移除 --warn 提升为硬 gate。
+  - id: "check-llm-gateway-only"
+    command: ["bin/gac/check-llm-gateway-only.py", "--warn", "--json"]
+  # ADR-0379 E-3: CI 平面可观测性 — ci-surfaces SSOT 接线检测 (CR-CI-SURFACE-SSOT)
+  - id: "ci-surfaces-check"
+    command: ["bin/gac/check-ci-surfaces.py"]

@@ -35,7 +35,7 @@ import yaml
 
 # L0 audit integration
 try:
-    from l0_audit import get_audit_log, validate_operation
+    from l0_audit import get_audit_log, validate_operation  # type: ignore[reportMissingImports]
 
     L0_AUDIT = True
 except ImportError:
@@ -50,7 +50,7 @@ except ImportError:
 
 # Unified audit integration
 try:
-    from audit_unified import log_event, print_audit_report, query_events
+    from audit_unified import log_event, print_audit_report, query_events  # type: ignore[reportMissingImports]
 
     HAS_AUDIT_UNIFIED = True
 except ImportError:

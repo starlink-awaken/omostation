@@ -86,7 +86,7 @@ class TaskScheduler:
     def _load_state(self):
         """从持久化加载状态"""
         try:
-            saved = self._persistence.load("task_scheduler")
+            saved = self._persistence.load("task_scheduler")  # type: ignore[reportOptionalMemberAccess]
             if saved and "tasks" in saved:
                 for task_id, task_data in saved["tasks"].items():
                     task = TaskInfo(

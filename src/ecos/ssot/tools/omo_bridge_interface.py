@@ -39,7 +39,7 @@ _omo_io_mod = None
 def _load_omo_ingress():
     global _omo_ingress_mod
     if _omo_ingress_mod is None:
-        from omo import omo_ingress as om
+        from omo import omo_ingress as om  # type: ignore[reportMissingImports]
 
         _omo_ingress_mod = om
     return _omo_ingress_mod
@@ -48,7 +48,7 @@ def _load_omo_ingress():
 def _load_omo_io():
     global _omo_io_mod
     if _omo_io_mod is None:
-        from omo import omo_io as oi
+        from omo import omo_io as oi  # type: ignore[reportMissingImports]
 
         _omo_io_mod = oi
     return _omo_io_mod

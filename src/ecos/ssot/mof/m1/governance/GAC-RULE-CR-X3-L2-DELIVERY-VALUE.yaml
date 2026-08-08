@@ -1,0 +1,39 @@
+# M1 GacRule instance — DERIVED by gac-m1-sync.py
+# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
+id: GAC-RULE-CR-X3-L2-DELIVERY-VALUE
+type: GacRule
+name: 交付价值跟踪
+description: 每个交付项必须有明确的 X3 价值标注，无价值标注的交付不可进入 closeout
+status: active
+domain: meta
+layer: L2
+created: '2026-08-06'
+version: 1.0.0
+properties:
+  m3_parent: GovernanceElement.GacRule
+  id: CR-X3-L2-DELIVERY-VALUE
+  dimension: X3
+  layer: L2
+  check_type: value_roi
+  executor:
+  - omo_audit
+  - ci_gate
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-08-06'
+  target: docs/plans/**
+  adr: ADR-0106
+  source_type: native
+  source_ref: docs/plans/delivery-value.md
+  enforcement: advisory
+source: .omo/_truth/registry/governance-checks.yaml
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
+  m3_type: GacRule
+  registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
+  derived_by: bin/gac/gac-m1-sync.py
+state_history:
+- state: active
+  timestamp: '2026-08-06T00:00:00Z'
+  reason: M1 实例由 gac-m1-sync.py 从 registry 派生

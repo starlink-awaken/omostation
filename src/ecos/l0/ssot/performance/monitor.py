@@ -142,7 +142,7 @@ class ResourceMonitor:
 
             # 获取IO计数器
             io_counters = (
-                self.process.io_counters()
+                self.process.io_counters()  # type: ignore[reportAttributeAccessIssue]
                 if hasattr(self.process, "io_counters")
                 else None
             )

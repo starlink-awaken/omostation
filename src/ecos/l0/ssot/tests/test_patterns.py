@@ -4,8 +4,8 @@ Covers: CheckResult, DerivationReport, BasePattern abstractness, DependencyValid
 """
 
 import pytest
-from sot_bridge.ssot_kernel.meta_model import DomainConfig, Rule
-from sot_bridge.ssot_kernel.patterns.base import (
+from sot_bridge.ssot_kernel.meta_model import DomainConfig, Rule  # type: ignore[reportMissingImports]
+from sot_bridge.ssot_kernel.patterns.base import (  # type: ignore[reportMissingImports]
     BaseChecker,
     BasePattern,
     CheckResult,

@@ -19,13 +19,14 @@ version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-FOUNDRY-MONITOR
-  dimension: X1
+  dimension: X2
   layer: meta
   check_type: drift_audit
   executor:
   - radar_cron
   - omo_audit
   - gac_local_gate
+  - ci_gate
   lifecycle: active
   version: 1.0.0
   created_at: '2026-07-07'

@@ -19,7 +19,7 @@ ECOS_HOME = Path(__file__).resolve().parent
 class TestSsbAuth:
     def test_compute_signature_deterministic(self):
         """相同输入产生相同签名"""
-        from ecos.protocol.ssb.ssb_auth import compute_signature
+        from ecos.protocol.ssb.ssb_auth import compute_signature  # type: ignore[reportAttributeAccessIssue]
 
         s1 = compute_signature(1, "test-id", "agent", '{"key":"val"}')
         s2 = compute_signature(1, "test-id", "agent", '{"key":"val"}')
@@ -28,7 +28,7 @@ class TestSsbAuth:
 
     def test_compute_signature_different_seq(self):
         """不同 seq 产生不同签名"""
-        from ecos.protocol.ssb.ssb_auth import compute_signature
+        from ecos.protocol.ssb.ssb_auth import compute_signature  # type: ignore[reportAttributeAccessIssue]
 
         s1 = compute_signature(1, "test-id", "agent", "{}")
         s2 = compute_signature(2, "test-id", "agent", "{}")
@@ -36,7 +36,7 @@ class TestSsbAuth:
 
     def test_compute_signature_length(self):
         """签名长度为 16 字符 (64bits)"""
-        from ecos.protocol.ssb.ssb_auth import compute_signature
+        from ecos.protocol.ssb.ssb_auth import compute_signature  # type: ignore[reportAttributeAccessIssue]
 
         sig = compute_signature(1, "id", "agent", "")
         assert sig is None or len(sig) == 16
@@ -148,7 +148,7 @@ class TestModelBalancer:
 class TestPlanner:
     def test_available_wf(self):
         """列出可用 Workflow"""
-        from ecos.services.planner import list_available_wfs
+        from ecos.services.planner import list_available_wfs  # type: ignore[reportAttributeAccessIssue]
 
         wfs = list_available_wfs()
         assert len(wfs) >= 8  # 至少 8 个 WF
@@ -156,7 +156,7 @@ class TestPlanner:
 
     def test_analyze_goal(self):
         """目标分析返回步骤"""
-        from ecos.services.planner import analyze_goal
+        from ecos.services.planner import analyze_goal  # type: ignore[reportAttributeAccessIssue]
 
         result = analyze_goal("修复审计发现的问题")
         assert "steps" in result

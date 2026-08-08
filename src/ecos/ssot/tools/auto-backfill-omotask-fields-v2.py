@@ -30,7 +30,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:
-    from ruamel.yaml import YAML
+    from ruamel.yaml import YAML  # type: ignore[reportMissingImports]
 
     _YAML = YAML()
     _YAML.preserve_quotes = True

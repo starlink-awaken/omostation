@@ -1,0 +1,39 @@
+# M1 GacRule instance — DERIVED by gac-m1-sync.py
+# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
+id: GAC-RULE-CR-X3-X-SLA-ACHIEVEMENT
+type: GacRule
+name: SLA 达成率监控
+description: 跨层 SLA 达成率必须 ≥ 95%，低于阈值触发治理告警
+status: active
+domain: meta
+layer: X
+created: '2026-08-06'
+version: 1.0.0
+properties:
+  m3_parent: GovernanceElement.GacRule
+  id: CR-X3-X-SLA-ACHIEVEMENT
+  dimension: X3
+  layer: X
+  check_type: value_roi
+  executor:
+  - omo_audit
+  - ci_gate
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-08-06'
+  target: docs/plans/**
+  adr: ADR-0106
+  source_type: native
+  source_ref: docs/plans/sla-achievement.md
+  enforcement: advisory
+source: .omo/_truth/registry/governance-checks.yaml
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
+  m3_type: GacRule
+  registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
+  derived_by: bin/gac/gac-m1-sync.py
+state_history:
+- state: active
+  timestamp: '2026-08-06T00:00:00Z'
+  reason: M1 实例由 gac-m1-sync.py 从 registry 派生

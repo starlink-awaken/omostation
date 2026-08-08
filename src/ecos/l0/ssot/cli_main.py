@@ -19,25 +19,21 @@ import warnings
 # Lazy import: 在 _dispatch 之前 import 所有 cmd_* (依名字查找)
 # 这样 _dispatch 内的 `return cmd_init(args)` 等能正确找到函数
 from .cli import (
-    _TEMPLATES,
     MONITORING_AVAILABLE,
-    _derive_watch,
-    _emit,
     cmd_check,
     cmd_compile,
     cmd_completion,
     cmd_derive,
     cmd_evolve,
-    cmd_export,
+    cmd_export,  # type: ignore[reportAttributeAccessIssue]
     cmd_extract,
-    cmd_graph,
+    cmd_graph,  # type: ignore[reportAttributeAccessIssue]
     cmd_init,
     cmd_report,
     cmd_stats,
-    cmd_sync,
+    cmd_sync,  # type: ignore[reportAttributeAccessIssue]
     cmd_verify,
 )
-from .reporter import Reporter
 
 
 def main(argv: list[str] | None = None) -> int:

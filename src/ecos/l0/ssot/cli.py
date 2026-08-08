@@ -30,19 +30,19 @@ from .reporter import Reporter
 
 # 导入监控系统模块（可选）
 try:
-    from .monitoring.alerting import IntelligentAlertingSystem
-    from .monitoring.architecture import (
+    from .monitoring.alerting import IntelligentAlertingSystem  # noqa: F401  (availability probe)
+    from .monitoring.architecture import (  # noqa: F401  (availability probe)
         MonitoringArchitecture,
         get_monitoring_architecture,
     )
-    from .monitoring.cli import MonitoringCLI
-    from .monitoring.collectors import EnhancedMetricsCollector
-    from .monitoring.dashboard import MonitoringDashboard
-    from .monitoring.environment import (
+    from .monitoring.cli import MonitoringCLI  # noqa: F401  (availability probe)
+    from .monitoring.collectors import EnhancedMetricsCollector  # noqa: F401  (availability probe)
+    from .monitoring.dashboard import MonitoringDashboard  # noqa: F401  (availability probe)
+    from .monitoring.environment import (  # noqa: F401  (availability probe)
         EnvironmentAwareMonitor,
         get_environment_manager,
     )
-    from .monitoring.storage import InMemoryStorage, JSONStorage
+    from .monitoring.storage import InMemoryStorage, JSONStorage  # noqa: F401  (availability probe)
 
     MONITORING_AVAILABLE = True
 except ImportError:
@@ -248,8 +248,8 @@ def cmd_compile(args):
 
 def _derive_watch(args):
     """监听 YAML 文件变更自动重跑推导"""
-    from watchdog.events import FileSystemEventHandler
-    from watchdog.observers import Observer
+    from watchdog.events import FileSystemEventHandler  # type: ignore[reportMissingImports]
+    from watchdog.observers import Observer  # type: ignore[reportMissingImports]
 
     domain_path = Path(args.dir).resolve()
 
@@ -715,8 +715,6 @@ def cmd_stats(args):
 # P110 拆分: main() + _dispatch() → cli_main.py. 此处重导出保调用方不变.
 # P110 拆分: cmd_export / cmd_graph 提取 → cli_export.py / cli_graph.py
 # 此处 re-export 保 `from .cli import cmd_export, cmd_graph` 仍可用
-from .cli_export import cmd_export
-from .cli_graph import cmd_graph
 from .cli_main import main
 
 if __name__ == "__main__":

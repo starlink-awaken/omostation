@@ -55,7 +55,7 @@ def publish(
     return evt
 
 
-def tail(n: int = 10, event_type: str = None, mcp: bool = False):
+def tail(n: int = 10, event_type: str = None, mcp: bool = False):  # type: ignore[reportArgumentType]
     log = MCP_LOG if mcp else EVENT_LOG
     if not log.exists():
         return []

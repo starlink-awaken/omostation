@@ -36,7 +36,7 @@ def _import_meta_model():
         here = Path(__file__).resolve().parent
         if str(here) not in sys.path:
             sys.path.insert(0, str(here))
-        import meta_model
+        import meta_model  # type: ignore[reportMissingImports]
 
         return {
             "MetaType": meta_model.MetaType,

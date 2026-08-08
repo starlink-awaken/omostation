@@ -21,6 +21,7 @@ properties:
   lifecycle: active
   version: 1.0.0
   created_at: '2026-07-25'
+  target: projects/*/src/**
   adr: ADR-0238
   source_type: native
   source_ref: bin/mof/check-mof-capabilities-drift.py

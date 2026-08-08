@@ -116,7 +116,7 @@ class TestCheckDrift:
         assert len(alerts) > 0
 
     def test_db_unavailable_returns_critical(self):
-        alerts = check_drift(None, {})
+        alerts = check_drift(None, {})  # type: ignore[reportArgumentType]
         assert any(a["message"] == "DB_UNAVAILABLE" for a in alerts)
 
     def test_borderline_warning_not_critical(self):

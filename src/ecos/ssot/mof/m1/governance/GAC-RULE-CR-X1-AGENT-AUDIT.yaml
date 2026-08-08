@@ -17,14 +17,18 @@ properties:
   layer: meta
   check_type: audit_chain
   executor:
+  - ci_gate
   - mcp_tool
   - omo_audit
+  - evidence_smoke
   lifecycle: active
   version: 1.0.0
   created_at: '2026-06-26'
   target: runtime/omo/_delivery/ingress/ingress-trail.jsonl
-  adr: ADR-0106
+  adr: ADR-0121
   source_type: native
+  source_ref: bin/gac/check-external-agent-audit.py
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

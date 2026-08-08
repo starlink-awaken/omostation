@@ -86,7 +86,7 @@ class TestLoadWorkflow:
     def test_load_from_m1_first(self, mock_m1):
         mock_m1.return_value = {"name": "from-m1", "id": "workflow-test"}
         result = load_workflow("test")
-        assert result["name"] == "from-m1"
+        assert result["name"] == "from-m1"  # type: ignore[reportOptionalSubscript]
         mock_m1.assert_called_once_with("test")
 
     @patch("ecos.workflow.loader._load_from_m1")
@@ -850,8 +850,8 @@ class TestSymphonyBackend:
             captured["path"]
             == Path.home() / ".omo" / "state" / "llm_quota_ledger.jsonl"
         )
-        assert captured["entry"]["event"] == "cost_record"
-        assert captured["entry"]["workflow_id"] == "wf-symphony"
+        assert captured["entry"]["event"] == "cost_record"  # type: ignore[reportIndexIssue]
+        assert captured["entry"]["workflow_id"] == "wf-symphony"  # type: ignore[reportIndexIssue]
 
 
 class TestAgoraBackend:
@@ -1133,7 +1133,7 @@ class TestSubWorkflow:
         from ecos.workflow.actions import resolve_action
 
         handler = resolve_action("workflow_run")
-        result = handler({})
+        result = handler({})  # type: ignore[reportOptionalCall]
         assert result["passed"] is False
         assert "未指定" in result.get("summary", "")
 
@@ -1430,13 +1430,17 @@ class TestDefaultMeshSink:
         )
 
         # 关键：不传 event_sink；non-dry_run 模式会 emit WorkflowRequested
-        result = execute_m1_workflow("test-mesh-auto-connect")
+        assert execute_m1_workflow("test-mesh-auto-connect") is not None
 
         # 应该 emit WorkflowRequested 事件
         assert len(sink_calls) >= 1, "应自动 emit Mesh 事件，无需显式传入 event_sink"
-        assert any(c.get("event_type") == "WorkflowRequested" for c in sink_calls), "应包含 WorkflowRequested 事件"
+        assert any(c.get("event_type") == "WorkflowRequested" for c in sink_calls), (
+            "应包含 WorkflowRequested 事件"
+        )
 
-    def test_default_mesh_sink_graceful_degradation_when_omo_not_found(self, tmp_path, monkeypatch):
+    def test_default_mesh_sink_graceful_degradation_when_omo_not_found(
+        self, tmp_path, monkeypatch
+    ):
         """找不到 OMO 时静默降级，不阻断 workflow 执行"""
         from ecos.workflow.executor import execute_m1_workflow
         import ecos.workflow.default_mesh_sink as dms
@@ -1458,3 +1462,341 @@ class TestDefaultMeshSink:
             assert result is not None  # 不崩溃
         finally:
             dms._find_omo_root = original
+
+
+class TestMeshGate:
+    """Mesh connection gate tests - Phase 3 governance gate"""
+
+    def test_mesh_gate_warning_when_omo_not_found(self, tmp_path, monkeypatch):
+        """Mesh gate should produce warning (not error) when OMO not found."""
+        import ecos.workflow.default_mesh_sink as dms
+        from ecos.workflow.mesh_gate import mesh_gate_check
+
+        original = dms._find_omo_root
+        dms._find_omo_root = lambda *a, **kw: None
+        dms._store_instance = None
+        try:
+            violations = mesh_gate_check()
+            assert len(violations) == 1
+            assert violations[0]["severity"] == "warning"
+            assert violations[0]["id"] == "MESH-GATE-01"
+        finally:
+            dms._find_omo_root = original
+            dms._store_instance = None
+
+    def test_mesh_gate_error_in_strict_mode(self, tmp_path, monkeypatch):
+        """Mesh gate should produce error in strict mode when OMO not found."""
+        import ecos.workflow.default_mesh_sink as dms
+        from ecos.workflow.mesh_gate import mesh_gate_check
+
+        monkeypatch.setenv("ECOS_MESH_GATE_STRICT", "1")
+        original = dms._find_omo_root
+        dms._find_omo_root = lambda *a, **kw: None
+        dms._store_instance = None
+        try:
+            violations = mesh_gate_check()
+            assert len(violations) == 1
+            assert violations[0]["severity"] == "error"
+        finally:
+            dms._find_omo_root = original
+            dms._store_instance = None
+            monkeypatch.delenv("ECOS_MESH_GATE_STRICT", raising=False)
+
+    def test_mesh_gate_passes_when_store_available(self, tmp_path, monkeypatch):
+        """Mesh gate should pass (no violations) when store is available."""
+        from ecos.workflow.mesh_gate import mesh_gate_check
+
+        class MockStore:
+            def __init__(self):
+                self.omo_dir = tmp_path
+
+            def events(self):
+                return []
+
+        monkeypatch.setattr(
+            "ecos.workflow.mesh_gate._get_workflow_mesh_store"
+            if hasattr(
+                __import__(
+                    "ecos.workflow.mesh_gate", fromlist=["_get_workflow_mesh_store"]
+                ),
+                "_get_workflow_mesh_store",
+            )
+            else "ecos.workflow.default_mesh_sink._get_workflow_mesh_store",
+            lambda: MockStore(),
+        )
+
+        violations = mesh_gate_check()
+        assert len(violations) == 0
+
+    def test_executor_blocks_in_strict_mode(self, tmp_path, monkeypatch):
+        """Executor should block execution when Mesh gate is in strict mode."""
+        import ecos.workflow.default_mesh_sink as dms
+
+        monkeypatch.setenv("ECOS_MESH_GATE_STRICT", "1")
+        original = dms._find_omo_root
+        dms._find_omo_root = lambda *a, **kw: None
+        dms._store_instance = None
+        try:
+            monkeypatch.setattr(
+                "ecos.workflow.executor.load_workflow",
+                lambda name: {
+                    "name": "test-strict-block",
+                    "steps": [{"name": "noop"}],
+                    "execution": {"backend": "default", "mode": "workflow"},
+                },
+            )
+            result = execute_m1_workflow("test-strict-block")
+            assert result["failed"] == 1
+            assert result.get("error_code") == "MESH_GATE_BLOCKED"
+        finally:
+            dms._find_omo_root = original
+            dms._store_instance = None
+            monkeypatch.delenv("ECOS_MESH_GATE_STRICT", raising=False)
+
+    def test_executor_warns_in_default_mode(self, tmp_path, monkeypatch):
+        """Executor should continue with warning in default (non-strict) mode."""
+        import ecos.workflow.default_mesh_sink as dms
+
+        original = dms._find_omo_root
+        dms._find_omo_root = lambda *a, **kw: None
+        dms._store_instance = None
+        try:
+            monkeypatch.setattr(
+                "ecos.workflow.executor.load_workflow",
+                lambda name: {
+                    "name": "test-warn-continue",
+                    "steps": [{"name": "noop", "action": "echo", "command": "echo ok"}],
+                    "execution": {"backend": "default", "mode": "workflow"},
+                },
+            )
+            result = execute_m1_workflow("test-warn-continue")
+            assert result.get("error_code") != "MESH_GATE_BLOCKED"
+            assert any(
+                v.get("id") == "MESH-GATE-01" for v in result.get("violations", [])
+            )
+        finally:
+            dms._find_omo_root = original
+            dms._store_instance = None
+
+
+class TestSceneBindingBridge:
+    """Phase 4: Scene binding bridge tests"""
+
+    def test_executor_emits_scene_binding_from_workflow_metadata(
+        self, tmp_path, monkeypatch
+    ):
+        """Executor should include scene_binding in WorkflowRequested when defined in workflow metadata."""
+        sink_calls = []
+
+        def spy_sink(event):
+            sink_calls.append(event)
+
+        monkeypatch.setattr(
+            "ecos.workflow.executor.load_workflow",
+            lambda name: {
+                "name": "test-scene",
+                "steps": [{"name": "noop", "action": "echo", "command": "echo ok"}],
+                "execution": {"backend": "default", "mode": "workflow"},
+                "metadata": {
+                    "scene_binding": {
+                        "scene_id": "scene-1",
+                        "journey_id": "journey-1",
+                        "outcome_metric": "success_rate",
+                    }
+                },
+            },
+        )
+        monkeypatch.setattr(
+            "ecos.workflow.executor.get_default_mesh_sink",
+            lambda: spy_sink,
+        )
+
+        execute_m1_workflow("test-scene")
+
+        requested = [
+            c for c in sink_calls if c.get("event_type") == "WorkflowRequested"
+        ]
+        assert len(requested) >= 1
+        assert requested[0]["payload"]["scene_binding"]["scene_id"] == "scene-1"
+        assert requested[0]["payload"]["scene_binding"]["journey_id"] == "journey-1"
+
+    def test_executor_emits_scene_binding_from_params(self, tmp_path, monkeypatch):
+        """Executor should include scene_binding from params when not in workflow metadata."""
+        sink_calls = []
+
+        def spy_sink(event):
+            sink_calls.append(event)
+
+        monkeypatch.setattr(
+            "ecos.workflow.executor.load_workflow",
+            lambda name: {
+                "name": "test-scene-params",
+                "steps": [{"name": "noop", "action": "echo", "command": "echo ok"}],
+                "execution": {"backend": "default", "mode": "workflow"},
+            },
+        )
+        monkeypatch.setattr(
+            "ecos.workflow.executor.get_default_mesh_sink",
+            lambda: spy_sink,
+        )
+
+        execute_m1_workflow(
+            "test-scene-params",
+            params={
+                "scene_binding": {
+                    "scene_id": "param-scene",
+                    "journey_id": "param-journey",
+                    "outcome_metric": "param-metric",
+                }
+            },
+        )
+
+        requested = [
+            c for c in sink_calls if c.get("event_type") == "WorkflowRequested"
+        ]
+        assert len(requested) >= 1
+        assert requested[0]["payload"]["scene_binding"]["scene_id"] == "param-scene"
+
+    def test_executor_omits_scene_binding_when_absent(self, tmp_path, monkeypatch):
+        """Executor should not include scene_binding when not available."""
+        sink_calls = []
+
+        def spy_sink(event):
+            sink_calls.append(event)
+
+        monkeypatch.setattr(
+            "ecos.workflow.executor.load_workflow",
+            lambda name: {
+                "name": "test-no-scene",
+                "steps": [{"name": "noop", "action": "echo", "command": "echo ok"}],
+                "execution": {"backend": "default", "mode": "workflow"},
+            },
+        )
+        monkeypatch.setattr(
+            "ecos.workflow.executor.get_default_mesh_sink",
+            lambda: spy_sink,
+        )
+
+        execute_m1_workflow("test-no-scene")
+
+        requested = [
+            c for c in sink_calls if c.get("event_type") == "WorkflowRequested"
+        ]
+        assert len(requested) >= 1
+        assert "scene_binding" not in requested[0]["payload"]
+
+
+class TestMeshHealth:
+    """Mesh health monitor tests"""
+
+    def test_health_unavailable_when_no_store(self, monkeypatch):
+        """Health should report unavailable when Mesh store not found."""
+        import ecos.workflow.default_mesh_sink as dms
+        from ecos.workflow.mesh_health import mesh_health_snapshot
+
+        original = dms._find_omo_root
+        dms._find_omo_root = lambda *a, **kw: None
+        dms._store_instance = None
+        try:
+            health = mesh_health_snapshot()
+            assert health["status"] == "unavailable"
+            assert health["connected"] is False
+            assert health["event_count"] == 0
+        finally:
+            dms._find_omo_root = original
+            dms._store_instance = None
+
+    def test_health_degraded_when_store_empty(self, monkeypatch):
+        """Health should report degraded when store has no events."""
+        from ecos.workflow.mesh_health import mesh_health_snapshot
+
+        class MockEmptyStore:
+            def events(self):
+                return []
+
+        monkeypatch.setattr(
+            "ecos.workflow.default_mesh_sink._get_workflow_mesh_store",
+            lambda: MockEmptyStore(),
+        )
+
+        health = mesh_health_snapshot()
+        assert health["status"] == "degraded"
+        assert health["connected"] is True
+        assert health["event_count"] == 0
+
+    def test_health_healthy_with_recent_events(self, monkeypatch):
+        """Health should report healthy when store has recent events."""
+        from datetime import UTC, datetime
+        from ecos.workflow.mesh_health import mesh_health_snapshot
+
+        now = datetime.now(UTC).isoformat()
+
+        class MockActiveStore:
+            def events(self):
+                return [
+                    {
+                        "event_type": "WorkflowRequested",
+                        "occurred_at": now,
+                        "producer": "agent-workflow",
+                    },
+                    {
+                        "event_type": "StepDispatched",
+                        "occurred_at": now,
+                        "producer": "omo.omo_worker_dispatch",
+                    },
+                ]
+
+        monkeypatch.setattr(
+            "ecos.workflow.default_mesh_sink._get_workflow_mesh_store",
+            lambda: MockActiveStore(),
+        )
+
+        health = mesh_health_snapshot()
+        assert health["status"] == "healthy"
+        assert health["event_count"] == 2
+        assert health["events_last_hour"] >= 2
+        assert "agent-workflow" in health["bridges_active"]
+        assert "omo.omo_worker_dispatch" in health["bridges_active"]
+
+    def test_health_check_returns_violations(self, monkeypatch):
+        """mesh_health_check should return violations when degraded."""
+        from ecos.workflow.mesh_health import mesh_health_check
+
+        class MockEmptyStore:
+            def events(self):
+                return []
+
+        monkeypatch.setattr(
+            "ecos.workflow.default_mesh_sink._get_workflow_mesh_store",
+            lambda: MockEmptyStore(),
+        )
+
+        violations = mesh_health_check()
+        assert len(violations) == 1
+        assert violations[0]["severity"] == "warning"
+        assert "MESH-HEALTH" in violations[0]["id"]
+
+    def test_health_check_empty_when_healthy(self, monkeypatch):
+        """mesh_health_check should return empty list when healthy."""
+        from datetime import UTC, datetime
+        from ecos.workflow.mesh_health import mesh_health_check
+
+        now = datetime.now(UTC).isoformat()
+
+        class MockStore:
+            def events(self):
+                return [
+                    {
+                        "event_type": "WorkflowRequested",
+                        "occurred_at": now,
+                        "producer": "test",
+                    }
+                ]
+
+        monkeypatch.setattr(
+            "ecos.workflow.default_mesh_sink._get_workflow_mesh_store",
+            lambda: MockStore(),
+        )
+
+        violations = mesh_health_check()
+        assert len(violations) == 0

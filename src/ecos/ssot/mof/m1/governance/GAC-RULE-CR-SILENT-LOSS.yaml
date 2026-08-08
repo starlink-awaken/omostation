@@ -1,0 +1,39 @@
+# M1 GacRule instance — DERIVED by gac-m1-sync.py
+# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
+id: GAC-RULE-CR-SILENT-LOSS
+type: GacRule
+name: 静默丢失检测
+description: '检测治理过程中静默丢失的变更或决策. 已运行于 gac-local-gate. 实现: bin/gac/check-silent-loss.py
+  (gac-local-gate)'
+status: active
+domain: meta
+layer: meta
+created: '2026-08-05'
+version: 1.0.0
+properties:
+  m3_parent: GovernanceElement.GacRule
+  id: CR-SILENT-LOSS
+  dimension: X2
+  layer: meta
+  check_type: drift_audit
+  executor:
+  - gac_local_gate
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-08-05'
+  target: .omo/_truth/registry/governance-checks.yaml
+  adr: ADR-0373
+  source_type: native
+  source_ref: bin/gac/check-silent-loss.py
+  enforcement: advisory
+source: .omo/_truth/registry/governance-checks.yaml
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
+  m3_type: GacRule
+  registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
+  derived_by: bin/gac/gac-m1-sync.py
+state_history:
+- state: active
+  timestamp: '2026-08-05T00:00:00Z'
+  reason: M1 实例由 gac-m1-sync.py 从 registry 派生

@@ -21,6 +21,7 @@ properties:
   lifecycle: active
   version: 1.0.0
   created_at: '2026-07-26'
+  target: projects/*/src/**
   adr: ADR-0242
   source_type: native
   source_ref: bin/mof/check-doc-claims.py

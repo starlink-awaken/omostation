@@ -72,15 +72,17 @@ class TestSSBAuth:
 
         tmp_path / "test_key"
         # 直接测试 _load_key 返回 None 当文件不存在
-        assert auth._load_key() is not None  # 真实密钥存在
+        assert (
+            auth._load_key() is not None  # type: ignore[reportAttributeAccessIssue]
+        )  # 真实密钥存在  # type: ignore[reportAttributeAccessIssue]
 
     def test_compute_signature(self, temp_env):
         """测试签名计算"""
         from ecos import ssb_auth as auth
 
-        sig1 = auth.compute_signature(1000, "e1", "SSB_CLIENT", '{"test":"event_0"}')
-        sig2 = auth.compute_signature(1000, "e1", "SSB_CLIENT", '{"test":"event_0"}')
-        sig3 = auth.compute_signature(1001, "e2", "SSB_CLIENT", '{"test":"event_1"}')
+        sig1 = auth.compute_signature(1000, "e1", "SSB_CLIENT", '{"test":"event_0"}')  # type: ignore[reportAttributeAccessIssue]
+        sig2 = auth.compute_signature(1000, "e1", "SSB_CLIENT", '{"test":"event_0"}')  # type: ignore[reportAttributeAccessIssue]
+        sig3 = auth.compute_signature(1001, "e2", "SSB_CLIENT", '{"test":"event_1"}')  # type: ignore[reportAttributeAccessIssue]
 
         assert sig1 is not None, "签名不应为None（密钥存在）"
         assert sig1 == sig2, "相同输入应产生相同签名"
@@ -91,7 +93,7 @@ class TestSSBAuth:
         """测试verify: 所有事件无签名"""
         from ecos import ssb_auth as auth
 
-        stats = auth.verify(limit=10)
+        stats = auth.verify(limit=10)  # type: ignore[reportAttributeAccessIssue]
         assert stats["total"] > 0
         # 初始无签名的5个事件
         assert stats["unsigned"] == 5
@@ -101,11 +103,11 @@ class TestSSBAuth:
         """测试sign-new: 补充签名"""
         from ecos import ssb_auth as auth
 
-        signed = auth.sign_new_events(limit=10)
+        signed = auth.sign_new_events(limit=10)  # type: ignore[reportAttributeAccessIssue]
         assert signed == 5, "应为5个事件签名"
 
         # 验证签名后
-        stats = auth.verify(limit=10)
+        stats = auth.verify(limit=10)  # type: ignore[reportAttributeAccessIssue]
         assert stats["verified"] == 5
         assert stats["unsigned"] == 0
 
@@ -114,7 +116,7 @@ class TestSSBAuth:
         from ecos import ssb_auth as auth
 
         # 先签名
-        auth.sign_new_events(limit=10)
+        auth.sign_new_events(limit=10)  # type: ignore[reportAttributeAccessIssue]
 
         # 篡改数据库中的 payload
         db = sqlite3.connect(str(temp_env["db"]))
@@ -126,7 +128,7 @@ class TestSSBAuth:
         db.close()
 
         # verify 应检测到不匹配
-        stats = auth.verify(limit=10)
+        stats = auth.verify(limit=10)  # type: ignore[reportAttributeAccessIssue]
         assert stats["mismatch"] >= 1, "篡改事件应被检测到"
 
 

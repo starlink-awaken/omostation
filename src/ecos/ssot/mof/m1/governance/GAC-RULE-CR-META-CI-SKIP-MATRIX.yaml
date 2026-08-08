@@ -26,6 +26,8 @@ properties:
   target: bin/gac/gac-local-gate.py CI_SKIP_CHECKS + CI_ONLY_CHECKS
   adr: ADR-0121
   source_type: native
+  source_ref: .omo/_truth/registry/ci-skip-matrix.yaml
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

@@ -15,9 +15,6 @@ from __future__ import annotations
 import io
 from pathlib import Path
 
-from .cli import (
-    cmd_graph as _cmd_graph_compat,
-)
 from .config_loader import load_domain
 
 

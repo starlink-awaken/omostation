@@ -6,13 +6,13 @@ sync_yaml_to_markdown function, SyncReport.
 
 from pathlib import Path
 
-from sot_bridge.ssot_kernel.meta_model import (
+from sot_bridge.ssot_kernel.meta_model import (  # type: ignore[reportMissingImports]
     Entity,
     Fact,
     Inference,
     MetaType,
 )
-from sot_bridge.ssot_kernel.sync import (
+from sot_bridge.ssot_kernel.sync import (  # type: ignore[reportMissingImports]
     SyncReport,
     _entity_to_md,
     _fact_to_md,

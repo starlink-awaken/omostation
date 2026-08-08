@@ -4,12 +4,13 @@
 id: GAC-RULE-CR-PRINCIPLE-ENFORCEMENT
 type: GacRule
 name: 原则执行化
-description: governance audit 每月 dry-run, 验证工程原则是否被工具/流程执行.
-status: draft
+description: 'governance audit 每月 dry-run, 验证工程原则是否被工具/流程执行. 实现: bin/gac/check-principle-enforcement.py
+  (gac-gate CI advisory)'
+status: active
 domain: meta
 layer: meta
 created: &id001 2026-07-08
-version: 0.1.0
+version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-PRINCIPLE-ENFORCEMENT
@@ -18,10 +19,16 @@ properties:
   check_type: audit_chain
   executor:
   - omo_audit
-  lifecycle: draft
-  version: 0.1.0
+  - ci_gate
+  - evidence_smoke
+  lifecycle: active
+  version: 1.0.0
   created_at: *id001
+  target: .omo/_truth/registry/**
+  adr: ADR-0165
   source_type: native
+  source_ref: bin/gac/check-principle-enforcement.py
+  enforcement: advisory
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
@@ -29,6 +36,6 @@ model_driven_refs:
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
   derived_by: bin/gac/gac-m1-sync.py
 state_history:
-- state: draft
+- state: active
   timestamp: '2026-07-08T00:00:00Z'
   reason: M1 实例由 gac-m1-sync.py 从 registry 派生

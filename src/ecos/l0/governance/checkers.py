@@ -225,7 +225,7 @@ class X4ConsistencyChecker(GovernanceCheck):
             issues.append(f"缺少 .githooks/: {', '.join(missing_githooks)}")
 
         metadata = {
-            "ci_count": ci_count if ci_dir.exists() else 0,
+            "ci_count": ci_count if ci_dir.exists() else 0,  # type: ignore[reportPossiblyUnboundVariable]
             "missing_githooks": missing_githooks,
         }
 

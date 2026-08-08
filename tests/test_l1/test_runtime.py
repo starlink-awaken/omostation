@@ -100,7 +100,7 @@ class TestMessageQueue:
         queue.enqueue(low)
         queue.enqueue(high)
         first = queue.dequeue()
-        assert first.priority == MessagePriority.HIGH
+        assert first.priority == MessagePriority.HIGH  # type: ignore[reportOptionalMemberAccess]
 
 
 class TestStateSyncService:

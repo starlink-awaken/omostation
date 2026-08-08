@@ -558,7 +558,7 @@ class TestDistributedPrimitive:
         old_version = node.version
 
         assert manager.update_heartbeat("node-1") is True
-        assert manager.get_node("node-1").version == old_version + 1
+        assert manager.get_node("node-1").version == old_version + 1  # type: ignore[reportOptionalMemberAccess]
 
         healthy = manager.get_healthy_nodes()
         assert [n.node_id for n in healthy] == ["node-1"]
@@ -1048,7 +1048,7 @@ class TestRolePrimitiveExtended:
 
         # 验证切换
         retrieved = manager.get_role("agent-1")
-        assert retrieved.role_id == "specialist"
+        assert retrieved.role_id == "specialist"  # type: ignore[reportOptionalMemberAccess]
 
     def test_role_assign_nonexistent(self):
         from ecos.l0.governance import RoleManager, RoleDefinition, RoleType
@@ -2192,7 +2192,7 @@ class TestPhase2Acceptance:
         scheduler.submit_task("mid", "中优先级", priority=5)
 
         next_task = scheduler.get_next_task()
-        assert next_task.task_id == "high"
+        assert next_task.task_id == "high"  # type: ignore[reportOptionalMemberAccess]
 
 
 class TestPhase3Acceptance:

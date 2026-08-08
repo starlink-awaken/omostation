@@ -43,7 +43,7 @@ SEMANTIC_MAP = {
 def _load_lifecycle() -> dict:
     """读取 URI 生命周期文件"""
     # 惰性 import (避免 lifecycle 模块顶层 import 触发循环)
-    from .domain_manager import URI_LIFECYCLE_FILE
+    from .domain_manager import URI_LIFECYCLE_FILE  # type: ignore[reportAttributeAccessIssue]
 
     try:
         if URI_LIFECYCLE_FILE.exists():
@@ -55,7 +55,7 @@ def _load_lifecycle() -> dict:
 
 def _save_lifecycle(data: dict) -> None:
     """写入 URI 生命周期文件"""
-    from .domain_manager import URI_LIFECYCLE_FILE
+    from .domain_manager import URI_LIFECYCLE_FILE  # type: ignore[reportAttributeAccessIssue]
 
     URI_LIFECYCLE_FILE.parent.mkdir(parents=True, exist_ok=True)
     data["_updated"] = datetime.now().isoformat()
@@ -68,7 +68,7 @@ def _transition_valid(from_state: str, to_state: str) -> bool:
     return to_state in allowed
 
 
-def _get_uri_state(uri: str, lifecycle: dict = None) -> dict | None:
+def _get_uri_state(uri: str, lifecycle: dict = None) -> dict | None:  # type: ignore[reportArgumentType]
     """查询 URI 生命周期状态"""
     if lifecycle is None:
         lifecycle = _load_lifecycle()
@@ -128,7 +128,7 @@ def resolve_semantic(domain: dict, shortcut: str) -> str:
     from .domain_manager import resolve_path
 
     if shortcut not in SEMANTIC_MAP:
-        return None
+        return None  # type: ignore[reportReturnType]
     candidates = SEMANTIC_MAP[shortcut]
     if candidates is None:
         return shortcut  # 特殊处理
@@ -143,7 +143,7 @@ def resolve_semantic(domain: dict, shortcut: str) -> str:
 def parse_bos_uri(uri: str, registry: list):
     """bos://{domain}[/{path}] → (domain, subpath)  v2格式"""
     # 惰性 import (避免 domain_manager 顶层 re-export 时的循环)
-    from .domain_manager import SEMANTIC_MAP, resolve_path
+    from .domain_manager import SEMANTIC_MAP, resolve_path  # type: ignore[reportAttributeAccessIssue]
 
     if not uri.startswith("bos://"):
         return None, None

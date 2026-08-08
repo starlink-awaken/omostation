@@ -50,7 +50,7 @@ def retry(max_attempts: int = 3, delay: float = 1.0):
                         raise
                     if delay:
                         time.sleep(delay)
-            raise last_error
+            raise last_error  # type: ignore[reportGeneralTypeIssues]
 
         return wrapper
 

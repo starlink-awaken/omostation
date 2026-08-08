@@ -51,7 +51,7 @@ class BaseAdapter:
 class WeChatAdapter(BaseAdapter):
     """微信入口适配器 — 消息→意图→标准化请求"""
 
-    type = "wechat"
+    type = "wechat"  # type: ignore[reportAssignmentType]
     protocol = "WeChat Official API"
     auth = "OAuth2 + Token"
 
@@ -70,7 +70,7 @@ class WeChatAdapter(BaseAdapter):
 class WebDashboardAdapter(BaseAdapter):
     """Web Dashboard 入口适配器 — 可视化操作"""
 
-    type = "web"
+    type = "web"  # type: ignore[reportAssignmentType]
     protocol = "HTTP REST"
     auth = "Session + JWT"
 
@@ -87,7 +87,7 @@ class WebDashboardAdapter(BaseAdapter):
 class APIGatewayAdapter(BaseAdapter):
     """API Gateway 入口适配器 — 编程调用"""
 
-    type = "api"
+    type = "api"  # type: ignore[reportAssignmentType]
     protocol = "HTTP/gRPC"
     auth = "API Key"
 
@@ -104,7 +104,7 @@ class APIGatewayAdapter(BaseAdapter):
 class EventBusAdapter(BaseAdapter):
     """Event Bus 入口适配器 — 异步消息处理"""
 
-    type = "event"
+    type = "event"  # type: ignore[reportAssignmentType]
     protocol = "Pub/Sub"
     auth = "Event Token"
 

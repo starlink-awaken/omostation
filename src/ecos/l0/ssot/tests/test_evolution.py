@@ -5,15 +5,15 @@ Covers: Evolver, RuleMiner, CheckpointManager, EvolutionReport.
 
 from pathlib import Path
 
-from sot_bridge.ssot_kernel.engine import RuleEngine
-from sot_bridge.ssot_kernel.evolution.checkpoint import CheckpointManager
-from sot_bridge.ssot_kernel.evolution.evolver import Evolver
-from sot_bridge.ssot_kernel.evolution.rule_miner import (
+from sot_bridge.ssot_kernel.engine import RuleEngine  # type: ignore[reportMissingImports]
+from sot_bridge.ssot_kernel.evolution.checkpoint import CheckpointManager  # type: ignore[reportMissingImports]
+from sot_bridge.ssot_kernel.evolution.evolver import Evolver  # type: ignore[reportMissingImports]
+from sot_bridge.ssot_kernel.evolution.rule_miner import (  # type: ignore[reportMissingImports]
     EvolutionReport,
     RuleMiner,
     RuleSuggestion,
 )
-from sot_bridge.ssot_kernel.meta_model import (
+from sot_bridge.ssot_kernel.meta_model import (  # type: ignore[reportMissingImports]
     DomainConfig,
 )
 

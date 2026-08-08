@@ -37,7 +37,7 @@ DOCS = Path.home() / "Documents"
 CARDS_DB = Path.home() / "Workspace" / "data" / "cards" / "cards.db"
 
 
-def run_script(name: str, args: list[str] = None, timeout: int = 30) -> tuple[str, int]:
+def run_script(name: str, args: list[str] = None, timeout: int = 30) -> tuple[str, int]:  # type: ignore[reportArgumentType]
     """运行脚本并返回 (输出, 退出码)"""
     script = SCRIPTS / name
     if not script.exists():
@@ -193,7 +193,7 @@ def format_brief(
     health_pass: bool,
     health_output: str,
     event_count: int,
-    claude_guards: dict = None,
+    claude_guards: dict = None,  # type: ignore[reportArgumentType]
 ) -> str:
     """生成 Markdown 简报"""
     now = datetime.now()

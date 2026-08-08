@@ -195,7 +195,7 @@ class DynamicPlanner:
         if not self.llm_model:
             return None
         try:
-            from openai import OpenAI
+            from openai import OpenAI  # type: ignore[reportMissingImports]
 
             return OpenAI(
                 api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),

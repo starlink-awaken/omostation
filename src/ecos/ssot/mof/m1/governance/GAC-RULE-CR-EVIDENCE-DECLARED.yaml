@@ -1,6 +1,6 @@
 # M1 GacRule instance — DERIVED by gac-m1-sync.py
 # SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
-# DO NOT edit manually — re-run: python3 bin/gac-m1-sync.py --sync
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
 id: GAC-RULE-CR-EVIDENCE-DECLARED
 type: GacRule
 name: ADR closeout 引用 ≥1 evidence path
@@ -17,7 +17,7 @@ version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-EVIDENCE-DECLARED
-  dimension: X4
+  dimension: X2
   layer: meta
   check_type: drift_audit
   executor:
@@ -36,7 +36,7 @@ model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
   m3_type: GacRule
   registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
-  derived_by: bin/gac-m1-sync.py
+  derived_by: bin/gac/gac-m1-sync.py
 state_history:
 - state: active
   timestamp: '2026-07-07T00:00:00Z'

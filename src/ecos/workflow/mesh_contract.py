@@ -75,7 +75,8 @@ def new_workflow_event(
         "occurred_at": _now(),
         "producer": producer,
         "schema_version": "workflow-mesh/v1",
-        "idempotency_key": idempotency_key or f"{workflow_run_id}:{event_type}:{event_payload.get('step_run_id', 'workflow')}",
+        "idempotency_key": idempotency_key
+        or f"{workflow_run_id}:{event_type}:{event_payload.get('step_run_id', 'workflow')}",
         "payload": event_payload,
     }
 

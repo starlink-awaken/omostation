@@ -62,7 +62,7 @@ def get_conn(db_path=None):
     return conn
 
 
-def ensure_ssb_table(conn: sqlite3.Connection = None):
+def ensure_ssb_table(conn: sqlite3.Connection = None):  # type: ignore[reportArgumentType]
     """确保 SSB 表存在"""
     close_after = conn is None
     if conn is None:

@@ -506,7 +506,7 @@ class TestSwarmDecisionSimulation:
             "技术选型",
             ["python", "go", "rust"],
             DecisionMethod.WEIGHTED_VOTE,
-            agent_weights=weights,
+            agent_weights=weights,  # type: ignore[reportArgumentType]
         )
 
         cd.vote("p1", "boss", "python")

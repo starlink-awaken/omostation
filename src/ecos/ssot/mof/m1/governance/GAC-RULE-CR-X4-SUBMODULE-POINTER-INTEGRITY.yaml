@@ -1,0 +1,39 @@
+# M1 GacRule instance — DERIVED by gac-m1-sync.py
+# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
+id: GAC-RULE-CR-X4-SUBMODULE-POINTER-INTEGRITY
+type: GacRule
+name: 子模块指针完整性
+description: '子模块指针必须与远程同步: 禁止超前指针 (未推送的 submodule commit), 禁止指针漂移 (submodule commit
+  被 rebase/drop). 实现: bin/gac/check-submodule-pointer-integrity.py (gac-gate CI)'
+status: active
+domain: meta
+layer: meta
+created: '2026-08-04'
+version: 1.0.0
+properties:
+  m3_parent: GovernanceElement.GacRule
+  id: CR-X4-SUBMODULE-POINTER-INTEGRITY
+  dimension: X4
+  layer: meta
+  check_type: hygiene_case
+  executor:
+  - ci_gate
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-08-04'
+  target: projects/*/**
+  adr: ADR-0367
+  source_type: native
+  source_ref: bin/gac/check-submodule-pointer-integrity.py
+  enforcement: advisory
+source: .omo/_truth/registry/governance-checks.yaml
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
+  m3_type: GacRule
+  registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
+  derived_by: bin/gac/gac-m1-sync.py
+state_history:
+- state: active
+  timestamp: '2026-08-04T00:00:00Z'
+  reason: M1 实例由 gac-m1-sync.py 从 registry 派生

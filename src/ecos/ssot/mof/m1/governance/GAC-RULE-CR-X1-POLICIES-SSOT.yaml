@@ -1,0 +1,41 @@
+# M1 GacRule instance — DERIVED by gac-m1-sync.py
+# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
+id: GAC-RULE-CR-X1-POLICIES-SSOT
+type: GacRule
+name: X1 治理策略 SSOT (GaC 索引)
+description: 'x1-governance-policies.yaml 中所有策略的 GaC 索引. 源文件包含: omni_bus_routing,
+  governance_surfaces, direct_mutation_gate, arch_merge_llmgateway, debt_evidence_closure,
+  cross_project_lint_enforce, aud_commit_loop 等策略.'
+status: active
+domain: meta
+layer: meta
+created: '2026-06-27'
+version: 1.0.0
+properties:
+  m3_parent: GovernanceElement.GacRule
+  id: CR-X1-POLICIES-SSOT
+  dimension: X1
+  layer: meta
+  check_type: legacy_index
+  executor:
+  - omo_audit
+  - ci_gate
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-06-27'
+  target: docs/**
+  adr: ADR-0106
+  source_type: indexed
+  source_ref: .omo/_truth/x1-governance-policies.yaml::policies
+  enforcement: advisory
+source: .omo/_truth/registry/governance-checks.yaml
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
+  m3_type: GacRule
+  registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
+  derived_by: bin/gac/gac-m1-sync.py
+state_history:
+- state: active
+  timestamp: '2026-06-27T00:00:00Z'
+  reason: M1 实例由 gac-m1-sync.py 从 registry 派生

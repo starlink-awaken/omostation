@@ -208,7 +208,7 @@ def write_ssb_alert(metric_name, metric_label, baseline, current, deviation, sev
         )
 
         # 计算并写入 HMAC 签名
-        from ecos.protocol.ssb.ssb_auth import compute_signature
+        from ecos.protocol.ssb.ssb_auth import compute_signature  # type: ignore[reportAttributeAccessIssue]
 
         sig = compute_signature(new_seq, event_id, "EMERGENCE_WATCH", "{}")
         if sig:

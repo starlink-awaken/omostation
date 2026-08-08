@@ -13,7 +13,7 @@ version: 1.0.0
 properties:
   m3_parent: GovernanceElement.GacRule
   id: CR-SEC-SENSITIVE-WRITE
-  dimension: X4
+  dimension: X1
   layer: L2
   check_type: sensitive_write
   executor:
@@ -23,7 +23,10 @@ properties:
   version: 1.0.0
   created_at: *id001
   target: Python 源码硬编码密钥 (声明面; 执行面 hook 内置 PR#190)
+  adr: ADR-0106
   source_type: native
+  source_ref: bin/ssot/check-sensitive-write.py
+  enforcement: required
 source: .omo/_truth/registry/governance-checks.yaml
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml

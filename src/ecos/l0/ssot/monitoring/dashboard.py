@@ -11,7 +11,7 @@ from typing import Any
 
 # 导入analysis模块，确保它是可用的
 try:
-    from .analysis import PerformanceTrendAnalyzer
+    from .analysis import PerformanceTrendAnalyzer  # type: ignore[reportAssignmentType]
 except ImportError:
     # 创建一个简化版本
     class PerformanceTrendAnalyzer:
@@ -132,11 +132,11 @@ class MonitoringDashboard:
 
         # 更新指标数据
         self.data_cache["metrics_snapshot"] = (
-            self.metrics_collector.get_realtime_snapshot()
+            self.metrics_collector.get_realtime_snapshot()  # type: ignore[reportOptionalMemberAccess]
         )
 
         # 更新告警数据
-        self.data_cache["alert_summary"] = self.alerting_system.get_alert_summary()
+        self.data_cache["alert_summary"] = self.alerting_system.get_alert_summary()  # type: ignore[reportOptionalMemberAccess]
 
         # 更新趋势数据
         self._update_trend_data()

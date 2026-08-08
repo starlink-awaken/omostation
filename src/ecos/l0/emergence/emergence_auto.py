@@ -286,7 +286,7 @@ def analyze():
     print("\n▶ 步骤1: 采集当前度量")
     try:
         sys.path.insert(0, str(SCRIPTS))
-        from snapshot_emergence import (
+        from snapshot_emergence import (  # type: ignore[reportMissingImports]
             collect_metrics,
             load_latest_snapshot,
             save_checkpoint,

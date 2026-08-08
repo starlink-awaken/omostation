@@ -1066,3 +1066,184 @@ governance_closure_constraints:
       - bin/gac-kos-sync.py
       - kos/kos-index.sqlite (compute_nodes)
     violation: "未注册的计算节点活动在算力网格中"
+
+# AGT OWASP ASI 2026 Conformance — mapped to existing GaC rules
+agt_constraints:
+  - id: CR-AGT-ASI-01
+    applies_to: [L0, L1, I0]
+    description: >-
+      AGT OWASP ASI 2026 ASI-01: Agent identity must be verified via Ed25519/SPIFFE
+      before any governance decision. Maps to X1 audit chain requirement.
+    dimension: X1
+    rule: agent.identity.verified == true
+    type: required
+    severity: high
+    enforcement: block-write
+    introduced: '2026-08-04'
+    value_tier: 1
+    references:
+      - projects/ecos/src/ecos/ssot/mof/m1/component/COMP-EXT-AGT-mesh.yaml
+      - bos://capability/agt/trust
+    violation: "AGT agent identity not verified — Ed25519/SPIFFE missing"
+
+  - id: CR-AGT-ASI-02
+    applies_to: [L0, L1, I0]
+    description: >-
+      AGT OWASP ASI 2026 ASI-02: Policy evaluation must be deterministic and
+      reproducible. Maps to GaC rule CR-GOV-VALIDATE-01.
+    dimension: X1
+    rule: policy.evaluation.deterministic == true
+    type: required
+    severity: high
+    enforcement: block-write
+    introduced: '2026-08-04'
+    value_tier: 1
+    references:
+      - projects/ecos/src/ecos/ssot/mof/m1/component/COMP-EXT-AGT-kernel.yaml
+      - bos://governance/agt/policy
+    violation: "AGT policy evaluation is non-deterministic"
+
+  - id: CR-AGT-ASI-03
+    applies_to: [L1]
+    description: >-
+      AGT OWASP ASI 2026 ASI-03: Execution sandbox must isolate agent workloads
+      in 4 rings. Maps to CR-RUNTIME-SANDBOX-01.
+    dimension: X1
+    rule: sandbox.isolation.ring_count >= 4
+    type: required
+    severity: high
+    enforcement: block-write
+    introduced: '2026-08-04'
+    value_tier: 1
+    references:
+      - projects/ecos/src/ecos/ssot/mof/m1/component/COMP-EXT-AGT-runtime.yaml
+      - bos://capability/agt/sandbox
+    violation: "AGT sandbox isolation ring count below 4"
+
+  - id: CR-AGT-ASI-04
+    applies_to: [X2]
+    description: >-
+      AGT OWASP ASI 2026 ASI-04: SLO monitoring must track error budget burn
+      rate. Maps to CR-OBSERVABILITY-SLO-01.
+    dimension: X2
+    rule: slo.error_budget_tracking == true
+    type: required
+    severity: medium
+    enforcement: advisory
+    introduced: '2026-08-04'
+    value_tier: 2
+    references:
+      - projects/ecos/src/ecos/ssot/mof/m1/component/COMP-EXT-AGT-sre.yaml
+      - bos://capability/agt/sre
+    violation: "AGT SLO error budget tracking not configured"
+
+  - id: CR-AGT-ASI-05
+    applies_to: [I0]
+    description: >-
+      AGT OWASP ASI 2026 ASI-05: MCP tool calls must pass security gateway
+      inspection. Maps to CR-MCP-SECURITY-01.
+    dimension: X1
+    rule: mcp.call.inspected == true
+    type: required
+    severity: high
+    enforcement: block-write
+    introduced: '2026-08-04'
+    value_tier: 1
+    references:
+      - projects/ecos/src/ecos/ssot/mof/m1/component/COMP-EXT-AGT-gateway.yaml
+      - bos://capability/agt/mcp-security
+    violation: "AGT MCP call not inspected by security gateway"
+
+  - id: CR-AGT-ASI-06
+    applies_to: [X]
+    description: >-
+      AGT OWASP ASI 2026 ASI-06: Agent marketplace plugins must be signed and
+      verified before installation. Maps to CR-PLUGIN-SIGNATURE-01.
+    dimension: X3
+    rule: plugin.signature.verified == true
+    type: required
+    severity: medium
+    enforcement: advisory
+    introduced: '2026-08-04'
+    value_tier: 2
+    references:
+      - projects/ecos/src/ecos/ssot/mof/m1/component/COMP-EXT-AGT-marketplace.yaml
+      - bos://capability/agt/marketplace
+    violation: "AGT plugin signature not verified"
+
+  - id: CR-AGT-ASI-07
+    applies_to: [X]
+    description: >-
+      AGT OWASP ASI 2026 ASI-07: RL training governance must enforce policy
+      constraints on reward functions and training data. Maps to CR-RL-GOVERNANCE-01.
+    dimension: X3
+    rule: rl.training.governed == true
+    type: required
+    severity: medium
+    enforcement: advisory
+    introduced: '2026-08-04'
+    value_tier: 2
+    references:
+      - projects/ecos/src/ecos/ssot/mof/m1/component/COMP-EXT-AGT-lightning.yaml
+      - bos://capability/agt/lightning
+    violation: "AGT RL training not governed by policy"
+
+  - id: CR-AGT-ASI-08
+    applies_to: [L1, X1]
+    description: >-
+      AGT OWASP ASI 2026 ASI-08: Execution audit trail must be tamper-evident
+      via Merkle hash chain. Maps to CR-AUDIT-CHAIN-01.
+    dimension: X1
+    rule: audit.trail.merkle_verified == true
+    type: required
+    severity: high
+    enforcement: block-write
+    introduced: '2026-08-04'
+    value_tier: 1
+    references:
+      - projects/ecos/src/ecos/ssot/mof/m1/component/COMP-EXT-AGT-hypervisor.yaml
+      - bos://governance/agt/hypervisor
+    violation: "AGT audit trail Merkle verification failed"
+
+  - id: CR-AGT-ASI-09
+    applies_to: [L1]
+    description: >-
+      AGT OWASP ASI 2026 ASI-09: Circuit breaker must trigger on error rate
+      exceeding threshold. Maps to CR-CIRCUIT-BREAKER-01.
+    dimension: X2
+    rule: circuit.breaker.enabled == true
+    type: required
+    severity: medium
+    enforcement: advisory
+    introduced: '2026-08-04'
+    value_tier: 2
+    references:
+      - projects/ecos/src/ecos/ssot/mof/m1/component/COMP-EXT-AGT-sre.yaml
+      - bos://capability/agt/sre
+    violation: "AGT circuit breaker not enabled"
+
+  - id: CR-AGT-ASI-10
+    applies_to: [L0, I0]
+    description: >-
+      AGT OWASP ASI 2026 ASI-10: Cross-layer calls must route through I0/Agora
+      gateway. Maps to X1-C02.
+    dimension: X1
+    rule: layer.cross_call.route == 'I0/Agora'
+    type: required
+    severity: high
+    enforcement: block-write
+    introduced: '2026-08-04'
+    value_tier: 1
+    references:
+      - projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml
+      - .omo/_truth/x1-governance-policies.yaml
+    violation: "AGT cross-layer call bypasses I0/Agora gateway"
+  - applies_to:
+    - L2
+    - L4
+    description: CI 平面 check 工具必须登记在 ci-surfaces.yaml SSOT (ADR-0379 E-1)
+    dimension: X1
+    id: CR-CI-01
+    rule: ci.check.registered == true
+    type: required
+    violation: 'E-L0-021: workflow/sgf-policy 执行未登记的 CI 检查 (CR-CI-SURFACE-SSOT 违反)'

@@ -18,9 +18,9 @@ class WorkflowAdmissionError(ValueError):
 
 
 def _canonical(value: dict[str, Any]) -> bytes:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
-        "utf-8"
-    )
+    return json.dumps(
+        value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
 
 
 def admission_proof(grant: dict[str, Any]) -> str:
@@ -86,9 +86,7 @@ def validate_admission_grant(
     if grant["workflow_run_id"] != workflow_run_id:
         raise WorkflowAdmissionError("Admission grant workflow_run_id mismatch")
     if step_run_id is not None and step_run_id not in grant["step_run_ids"]:
-        raise WorkflowAdmissionError(
-            f"StepRun is not admitted: {step_run_id}"
-        )
+        raise WorkflowAdmissionError(f"StepRun is not admitted: {step_run_id}")
     if grant["proof"] != admission_proof(grant):
         raise WorkflowAdmissionError("Admission grant proof mismatch")
     try:

@@ -83,7 +83,7 @@ class MessageProtocol(asyncio.Protocol):
         self._buffer = bytearray()
         self._transport: Optional[asyncio.Transport] = None
 
-    def connection_made(self, transport: asyncio.Transport) -> None:
+    def connection_made(self, transport: asyncio.Transport) -> None:  # type: ignore[reportIncompatibleMethodOverride]
         self._transport = transport
 
     def data_received(self, data: bytes) -> None:
@@ -123,7 +123,7 @@ class TCPNode:
 
     async def start(self) -> int:
         self._server = await asyncio.start_server(
-            self._create_server_protocol,
+            self._create_server_protocol,  # type: ignore[reportArgumentType]
             self.host,
             self.port,
         )

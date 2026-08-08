@@ -1,0 +1,40 @@
+# M1 GacRule instance — DERIVED by gac-m1-sync.py
+# SSOT: .omo/_truth/registry/governance-checks.yaml::gac.rules
+# DO NOT edit manually — re-run: python3 bin/gac/gac-m1-sync.py --sync
+id: GAC-RULE-CR-P77-3-2-PREFIX-PATTERN
+type: GacRule
+name: URI 前缀模式
+description: 'URI 末尾 / 表 routing prefix, 不需具体服务注册. 对应 P77-3-2 (prefix-pattern-allowed).
+  实现: bin/gac/check-uri-prefix-pattern.py (gac-gate CI, advisory)'
+status: active
+domain: meta
+layer: X
+created: '2026-08-05'
+version: 1.0.0
+properties:
+  m3_parent: GovernanceElement.GacRule
+  id: CR-P77-3-2-PREFIX-PATTERN
+  dimension: X4
+  layer: X
+  check_type: consistency_drift
+  executor:
+  - ci_gate
+  - omo_audit
+  lifecycle: active
+  version: 1.0.0
+  created_at: '2026-08-05'
+  target: projects/*/src/**
+  adr: ADR-0373
+  source_type: native
+  source_ref: bin/gac/check-uri-prefix-pattern.py
+  enforcement: advisory
+source: .omo/_truth/registry/governance-checks.yaml
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml
+  m3_type: GacRule
+  registry_ssot: .omo/_truth/registry/governance-checks.yaml::gac.rules
+  derived_by: bin/gac/gac-m1-sync.py
+state_history:
+- state: active
+  timestamp: '2026-08-05T00:00:00Z'
+  reason: M1 实例由 gac-m1-sync.py 从 registry 派生

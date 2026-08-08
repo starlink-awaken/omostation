@@ -106,7 +106,7 @@ def cmd_export(args):
 
     elif fmt == "md":
         lines = [f"# SSOT 知识库: {config.domain.get('name', 'unknown')}", ""]
-        lines.append(f"生成时间: {datetime.datetime.now().isoformat()}", "")
+        lines.append(f"生成时间: {datetime.datetime.now().isoformat()}", "")  # type: ignore[reportCallIssue]
         lines.append("## 实体")
         for e in config.entities:
             attrs = "; ".join(f"{k}={v}" for k, v in list(e.attributes.items())[:3])

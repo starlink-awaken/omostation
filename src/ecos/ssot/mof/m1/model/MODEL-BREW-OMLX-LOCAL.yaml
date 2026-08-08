@@ -1,0 +1,241 @@
+type: ModelDefinition
+status: active
+engine_ref: ENG-OMLX-LOCAL
+model_driven_refs:
+  source: omlxc ssot-sync (gateway aliases + models.json)
+  synced_at: '2026-08-08T02:20:01Z'
+governance:
+  owner: omlx
+  steward: omlxc-ssot-sync
+  freshness_policy: on-change (跑 `omlxc ssot-sync`)
+models:
+- model_id: triage
+  display_name: triage (multi:MBP-LMStudio+mac-mini)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - chat
+  runs_on: multi:MBP-LMStudio+mac-mini
+- model_id: mid-local
+  display_name: mid-local (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  runs_on: MBP-local
+- model_id: mini-9b
+  display_name: mini-9b (mac-mini)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - chat
+  runs_on: mac-mini
+- model_id: coder-fast
+  display_name: coder-fast (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  - reasoning
+  - tools
+  runs_on: MBP-local
+- model_id: coder
+  display_name: coder (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  - reasoning
+  - tools
+  runs_on: MBP-local
+- model_id: reasoner
+  display_name: reasoner (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 4096
+  capabilities:
+  - chat
+  - reasoning
+  runs_on: MBP-local
+- model_id: vision
+  display_name: vision (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  - vision
+  runs_on: MBP-local
+- model_id: mythos
+  display_name: mythos (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  - vision
+  runs_on: MBP-local
+- model_id: mythos-fast
+  display_name: mythos-fast (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  runs_on: MBP-local
+- model_id: deepseek-v4-flash
+  display_name: deepseek-v4-flash (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  runs_on: MBP-local
+- model_id: deepseek-v4-pro
+  display_name: deepseek-v4-pro (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  runs_on: MBP-local
+- model_id: mistral-medium-128b
+  display_name: mistral-medium-128b (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  runs_on: MBP-local
+- model_id: nemotron-omni
+  display_name: nemotron-omni (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  - reasoning
+  runs_on: MBP-local
+- model_id: ornith-9b
+  display_name: ornith-9b (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  - vision
+  runs_on: MBP-local
+- model_id: ornith-35b
+  display_name: ornith-35b (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  - vision
+  runs_on: MBP-local
+- model_id: embed
+  display_name: embed (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - embedding
+  runs_on: MBP-local
+- model_id: embed-bge-m3
+  display_name: embed-bge-m3 (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - embedding
+  runs_on: MBP-local
+- model_id: fast-local
+  display_name: fast-local (MBP-LMStudio)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - chat
+  runs_on: MBP-LMStudio
+- model_id: coder-precise
+  display_name: coder-precise (MBP-local)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 4096
+  capabilities:
+  - chat
+  - tools
+  runs_on: MBP-local
+- model_id: mini-chat
+  display_name: mini-chat (mac-mini)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - chat
+  runs_on: mac-mini
+- model_id: rerank
+  display_name: rerank (mac-mini)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - rerank
+  runs_on: mac-mini
+- model_id: embed-bge
+  display_name: embed-bge (mac-mini)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - embedding
+  runs_on: mac-mini
+- model_id: ocr
+  display_name: ocr (mac-mini)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - chat
+  - vision
+  - ocr
+  runs_on: mac-mini
+- model_id: vision-lite
+  display_name: vision-lite (mac-mini)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - chat
+  - vision
+  runs_on: mac-mini
+- model_id: fast
+  display_name: fast (Y7000P)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - chat
+  runs_on: Y7000P
+- model_id: mid
+  display_name: mid (Y7000P)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - chat
+  runs_on: Y7000P
+- model_id: general
+  display_name: general (multi:Y7000P+mac-mini)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - chat
+  runs_on: multi:Y7000P+mac-mini

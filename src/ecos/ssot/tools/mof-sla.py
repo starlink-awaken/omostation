@@ -109,13 +109,13 @@ def generate_m0_snapshot() -> dict:
         cycles = cycles_row[0] if cycles_row else 0
         last_exit = cycles_row[1] if cycles_row else None
         conn.close()
-        snap["daemon"] = {
+        snap["daemon"] = {  # type: ignore[reportArgumentType]
             "cycles": cycles,
             "healthy": last_exit == 0 if last_exit is not None else False,
             "last_exit": last_exit,
         }
     else:
-        snap["daemon"] = {"status": "unknown"}
+        snap["daemon"] = {"status": "unknown"}  # type: ignore[reportArgumentType]
 
     # Protocol decay
     if CONSTRAINTS.exists():
@@ -142,11 +142,11 @@ def generate_m0_snapshot() -> dict:
                 if decay >= 1.0
                 else ("aging" if decay >= 0.5 else "fresh"),
             }
-        snap["protocols"] = protocols
+        snap["protocols"] = protocols  # type: ignore[reportArgumentType]
 
     # M1 node count
     if L0_NODES.exists():
-        snap["m1_node_count"] = len(list(L0_NODES.glob("*.yaml")))
+        snap["m1_node_count"] = len(list(L0_NODES.glob("*.yaml")))  # type: ignore[reportArgumentType]
 
     return snap
 

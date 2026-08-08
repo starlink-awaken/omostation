@@ -139,7 +139,7 @@ class CollaborationEngine:
         dependencies: list[str] | None = None,
     ) -> OrchestrationTask:
         try:
-            self._scheduler.submit_task(task_id, name, required_capabilities, priority)
+            self._scheduler.submit_task(task_id, name, required_capabilities, priority)  # type: ignore[reportArgumentType]
             self._task_stages[task_id] = TaskStage.PENDING
 
             if dependencies:
@@ -462,7 +462,7 @@ class PersonalEngine:
         ]
 
     def get_related_knowledge(self, key: str) -> list[str]:
-        return self._km.get_related(key, depth=1)
+        return self._km.get_related(key, depth=1)  # type: ignore[reportReturnType]
 
     def add_edge(self, source: str, target: str, relation: str = "related_to") -> None:
         self._graph.add_edge(source, target, relation)
@@ -482,7 +482,7 @@ class PersonalEngine:
 
     def get_recommendations(self, user_id: str, limit: int = 5) -> list[dict[str, Any]]:
         self._ensure_rec_engine()
-        recs = self._rec_engine.recommend(user_id, limit=limit)
+        recs = self._rec_engine.recommend(user_id, limit=limit)  # type: ignore[reportOptionalMemberAccess]
         return [{"key": r.node_id, "score": r.score, "reason": r.reason} for r in recs]
 
     def record_access(self, key: str, user_id: str = "") -> None:

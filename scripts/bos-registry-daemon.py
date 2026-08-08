@@ -111,7 +111,7 @@ def update_routes() -> bool:
     if registry is None and HAS_YAML:
         try:
             with open(L0_PATH) as f:
-                data = yaml.safe_load(f)
+                data = yaml.safe_load(f)  # type: ignore[reportPossiblyUnboundVariable]
             registry = data.get("domain_registry", [])
             log(f"✅ Loaded registry via YAML fallback ({len(registry)} domains)")
         except Exception as e:
