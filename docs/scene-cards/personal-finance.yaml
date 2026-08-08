@@ -1,0 +1,47 @@
+---
+title: Personal Finance Scene Card (个人财务管理)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-08
+---
+schema: scene-card/v1
+scene_type: external_resource
+lifecycle: proposal_only
+activation: forbidden
+approval_state: pending_business_confirmation
+scene_id: personal-finance
+journey_id: track-to-optimize
+goal: 追踪收支/投资/税务, 提供财务分析和优化建议
+trigger: "财务事件 (来源: 账单/收入/投资变动/税务提醒)"
+input_contract: 财务数据引用 (evidence:// 或 vault://redacted/, 不含账号密码)
+result_contract: 财务月报 + 支出趋势 + 投资表现 + 税务提醒
+outcome_metric: savings_rate / budget_adherence_rate
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 财务异常未发现/错过税务时限/投资决策延误
+data_classification: confidential
+data_scope: redacted-financial-metrics-and-trends
+operator: finance-tracking-agent-under-human-review
+permission_ref: permission://scene/personal-finance
+rollback_plan: revert-to-manual-finance-tracking
+sample_refs:
+  - vault://redacted/personal-finance/sample-1
+  - vault://redacted/personal-finance/sample-2
+  - vault://redacted/personal-finance/sample-3
+demand_evidence_refs:
+  - evidence://strategy-panorama/finance-domain
+activation_evidence_refs:
+  - evidence://strategy-panorama/finance-domain
+required_capabilities: []
+opportunity_window: 月度/季度/年度财务周期
+external_resource_policy: proposal_only
+checkpoints:
+  - name: pre_report
+    require: human_review
+    condition: "output.contains_investment_advice"
+    timeout_hours: 48
+notes:
+  - "个人财务: 收支追踪→趋势分析→投资表现→税务提醒. 所有C5级操作走Risk Gate."
+  - "连接器待建: 银行API/支付宝/投资平台. 当前手动录入或邮件账单解析."
