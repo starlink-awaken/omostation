@@ -89,7 +89,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_claim.add_argument("--path", action="append", default=[])
     p_claim.add_argument("--surface", action="append", default=[])
     p_claim.add_argument("--actor", default=os.environ.get("USER", "agent"))
-    p_claim.add_argument("--affected-hash", default=None, help="Hash from affected-graph.py")
+    p_claim.add_argument(
+        "--affected-hash", default=None, help="Hash from affected-graph.py"
+    )
     p_claim.add_argument("--force-lock", action="store_true")
     p_claim.add_argument("--json", action="store_true")
 

@@ -580,7 +580,9 @@ def claim_run(
     affected_hash: str | None = None,
 ) -> dict[str, Any]:
     if not affected_hash:
-        raise WorkflowError("Missing or invalid affected-hash. You must run affected-graph.py first.")
+        raise WorkflowError(
+            "Missing or invalid affected-hash. You must run affected-graph.py first."
+        )
     if not paths and not surfaces:
         raise WorkflowError("claim requires at least one --path or --surface")
     with run_update_lock(registry, run_id):
@@ -591,7 +593,7 @@ def claim_run(
         normalized_surfaces = sorted(
             {item.strip() for item in surfaces if item.strip()}
         )
-        
+
         # Phase 3 A2A Path Locks (Logical Isolation)
         # Check for path hierarchy overlap with other active runs
         run_dir = run_state_dir(registry)
@@ -600,25 +602,33 @@ def claim_run(
                 if other_run_file.name == f"{run_id}.yaml":
                     continue
                 try:
-                    other_payload = yaml.safe_load(other_run_file.read_text(encoding="utf-8")) or {}
+                    other_payload = (
+                        yaml.safe_load(other_run_file.read_text(encoding="utf-8")) or {}
+                    )
                 except Exception:
                     continue
                 if not isinstance(other_payload, dict):
                     continue
                 if other_payload.get("status") != "active":
                     continue
-                
+
                 other_paths = []
                 for claim_item in other_payload.get("claims", []):
                     if isinstance(claim_item, dict):
                         other_paths.extend(claim_item.get("paths", []))
-                        
+
                 for p in normalized_paths:
                     for op in other_paths:
                         p_norm = p.rstrip("/")
                         op_norm = op.rstrip("/")
-                        if p_norm == op_norm or p_norm.startswith(op_norm + "/") or op_norm.startswith(p_norm + "/"):
-                            raise WorkflowError(f"A2A Path Lock Collision: path '{p}' overlaps with active claim '{op}' in run {other_payload.get('run_id', 'unknown')}")
+                        if (
+                            p_norm == op_norm
+                            or p_norm.startswith(op_norm + "/")
+                            or op_norm.startswith(p_norm + "/")
+                        ):
+                            raise WorkflowError(
+                                f"A2A Path Lock Collision: path '{p}' overlaps with active claim '{op}' in run {other_payload.get('run_id', 'unknown')}"
+                            )
 
         scopes = [f"path:{item}" for item in normalized_paths] + [
             f"surface:{item}" for item in normalized_surfaces
@@ -975,7 +985,6 @@ def claim_policy(registry: dict[str, Any]) -> dict[str, Any]:
         "required_paths": normalized_required_paths,
         "tiers": tiers,
     }
-
 
 
 def claimed_paths(payload: dict[str, Any]) -> list[str]:
