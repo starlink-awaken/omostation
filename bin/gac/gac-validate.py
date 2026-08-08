@@ -215,6 +215,40 @@ def validate(path: Path = REGISTRY) -> tuple[int, list[str], list[str]]:
     return (1 if errors else 0, errors, warnings)
 
 
+def _record_rule_violations(errors: list[str]) -> None:
+    """P1: 规则级违规记录到 rule-violations.jsonl (减法数据驱动).
+
+    每次 gac-validate 运行把规则级错误 (含规则 id) 追加写入
+    `.omo/_knowledge/rule-violations.jsonl`. 供 gate-roi/减法决策
+    聚合"哪些规则常违规, 哪些无违规可减".
+
+    只记录含规则 id 的错误 (形如 CR-XXX: ...), 框架级错误 (重复 id 等) 跳过.
+    """
+    import datetime
+
+    rule_errors = [e for e in errors if e.split(":", 1)[0].strip().startswith("CR-")]
+    if not rule_errors:
+        return
+    import datetime
+    import json
+
+    path = WORKSPACE / ".omo" / "_knowledge" / "rule-violations.jsonl"
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as f:
+            for e in rule_errors:
+                rid = e.split(":", 1)[0].strip()
+                rec = {
+                    "ts": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "rule_id": rid,
+                    "error": e,
+                    "source": "gac-validate",
+                }
+                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    except Exception:  # noqa: BLE001 — 记录失败不影响主流程
+        pass
+
+
 def main() -> int:
     args = sys.argv[1:]
     gate_mode = "--gate" in args
@@ -222,6 +256,9 @@ def main() -> int:
     json_mode = "--json" in args
 
     exit_code, errors, warnings = validate()
+
+    # P1 (方案 3): 规则级违规记录 → rule-violations.jsonl (减法数据驱动)
+    _record_rule_violations(errors)
 
     rules = load_gac_rules(REGISTRY) if REGISTRY.exists() else []
     lc = Counter(r.get("lifecycle", "?") for r in rules)

@@ -179,6 +179,24 @@ data/cards/
 .omo/state/runtime/*
 !.omo/state/runtime/README.md
 
+# ADR-0404: 运行时状态文件不进git (避免session/branch间永久冲突)
+# 根因: signal-poller/alert-handler/agent-tick等进程持续写这些文件
+# 两个session同时操作时必然冲突 → git pull永久ABORT
+.omo/state/*.jsonl
+.omo/state/*.json
+.omo/state/agent-beliefs/
+.omo/state/agent-cards/
+.omo/state/swarm/
+.omo/state/system.yaml.bak-*
+# 保留tracked的配置/快照类文件
+!.omo/state/system.yaml
+!.omo/state/system_health.yaml
+!.omo/state/health.yaml
+!.omo/state/collab-dualtrack.yaml
+!.omo/state/provider-plane.yaml
+!.omo/state/bos-stdio-migrate-candidates.yaml
+!.omo/state/m2-ssot-batch-1.yaml
+
 # ADR-0137 (M4 派生面范式强化): 派生面应跟随 SSOT 源所在子模块,
 # 不再在主仓根 .omo/_derived/ 写派生. example:
 # projects/ecos/.omo/_derived/ (gitignored in projects/ecos/.gitignore)

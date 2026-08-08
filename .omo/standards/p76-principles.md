@@ -344,7 +344,7 @@ last-reviewed: 2026-07-15
 
 ### P76-8-3: dead-path-tool-fallback
 **含义**: 跨仓路径不在根, 工具检查应该 first-level + projects/*/first-level 双路 fallback
-**实施**: `bin/ssot/check-dead-path-refs.py` 接受 `.omo/{path}` OR `projects/ecos/.omo/{path}`
+**实施**: `bin/gac/check-dead-path-tool-fallback.py`（旧 check-dead-path-refs 已归档 bin/_archive/）接受 `.omo/{path}` OR `projects/ecos/.omo/{path}`
 
 ### P76-8-4: incremental-commit-anti-clean
 **含义**: 每 sub-task 完成立即 commit, 防 X-Plane 反复 clean worktree 丢失工作

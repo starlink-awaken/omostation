@@ -1,13 +1,24 @@
 # Phase 0-4 复盘 — Gap 清零闭环实施
 
-> 创建: 2026-08-08 | 覆盖: Phase 0(机制) → B(数据流) → C(自主运行) → D(自主进化) → E(复盘)
-> 结果: **清零率 89% (24/27)** · 验证率 100% (24/24) · 6 journey 全通
+> 创建: 2026-08-08 | 更新: 2026-08-08 (autoloop bug修复 + Trust校准链补全)
+> 覆盖: Phase 0(机制) → B(数据流) → C(自主运行) → D(自主进化) → E(复盘) → F(闭环修复)
+> 结果: **清零率 89% (24/27)** · 验证率 100% (24/24) · 6 journey 全通 · 自闭环全通
 
 ---
 
 ## 1. 本轮成果
 
 ### 清零率: 0% → 89%
+
+### Phase F 追加修复 (2026-08-08)
+
+| 修复 | 根因 | 证据 |
+|------|------|------|
+| autoloop YAML crash | SUBMODULE_DRIFT.yaml 有未解决merge conflict标记 | `autoloop-controller --dry-run` 处理9项不crash |
+| Trust校准链断裂 | outcome→decision_outcome后未调record_capability_calibration | capability_calibrations从0→1条 (rate=1.0) |
+
+**自闭环状态**: 10步链路中8步通、1步半通(iris环境)、1步通(autoloop修复后)。
+综合实现度: 72% → **~80%** (autoloop闭环 + Trust校准闭合)。
 
 | 阶段 | 任务 | 状态 | 关键证据 |
 |------|------|------|---------|

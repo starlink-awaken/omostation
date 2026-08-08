@@ -86,3 +86,9 @@ caller = agora_role_ctx.get()  # 或 identity_from_auth_token()
 - caller_id 解析: anonymous 调用无身份 → 用默认配额 (安全默认)
 - 缓存命中不记账: 缓存路径 (L147-157) 应跳过配额 (不产生实际成本)
 - 与 omo budget_policy 的衔接: 后续 (P3) 将 agora quota 接入 omo 治理
+
+## 落地状态 (2026-08-08 标注)
+
+- **配额计费**: ✅ QuotaConfig + QuotaChecker + resolve 接入
+- **配额告警**: ✅ warning/blocked 事件 + webhook + Prometheus
+- **真实计费**: ✅ token 估算 + estimate_cost (成本非 0)

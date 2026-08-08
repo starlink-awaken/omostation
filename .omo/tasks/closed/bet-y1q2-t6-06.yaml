@@ -1,0 +1,45 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-08T05:05:57+00:00
+id: BET-Y1Q2-T6-06
+title: 技能自动结晶引擎 — 踩坑经验自动重构为持久化 Agent Skill
+status: done
+task_type: bet
+priority: P1
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-06
+window: Y1Q2
+track: T6-EVOLUTION
+appetite: 3 days
+desc: 当 MOS 信念记录触发 2 次以上时，联动 workflow_skill_creator 自动萃取为可复用 Skill 包
+non_goals: []
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate: []
+evidence_required: []
+test_plan: []
+workflow: bet-execution
+write_surfaces: []
+pasw_required: false
+circuit_breaker: ''
+retro_required: false
+retro_path: .omo/_knowledge/retros/BET-Y1Q2-T6-06.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: "2026-08-08"
+blocked_by: null
+retry_count: 0

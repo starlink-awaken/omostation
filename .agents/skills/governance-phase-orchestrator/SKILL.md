@@ -22,7 +22,7 @@ description: Use when the user requests a governance-related task, P-phase closu
 
 ## 核心铁律 (5 条)
 
-1. **强制闭环**: `bin/mof-version record` 必须与 `git commit` 在同一会话内完成
+1. **强制闭环**: 治理改动必须与 `git commit` 在同一会话内完成（改前先 claim 路径）
 2. **frontmatter 4 字段**: `status + lifecycle + owner + last-reviewed` 必备
 3. **软分层优先**: 不动路径 + frontmatter 化, 真迁移只在归档面已存在时
 4. **维度饱和律**: linter ≥ 15 维度时, 新能力用独立 bin 工具
@@ -35,9 +35,9 @@ description: Use when the user requests a governance-related task, P-phase closu
 ```bash
 # 必跑 4 步
 git status --short | wc -l              # 工作树累积
-bin/mof-drift 2>&1 | tail -5            # drift LOW 维度
-omo governance 2>&1 | tail -5           # governance score
-omo lint doc-lifecycle 2>&1 | tail -15  # frontmatter 覆盖率
+python3 bin/ssot/check-cross-refs.py 2>&1 | tail -5    # 交叉引用/坏链接
+python3 bin/ssot/current-state-coherence.py --json 2>&1 | tail -5  # 状态一致性
+python3 bin/ssot/doc-governance-check.py --json 2>&1 | tail -15  # frontmatter 覆盖率
 ```
 
 输出: `governance-snapshot.yaml` (内部临时文件, R 步结束时写)
@@ -47,9 +47,9 @@ omo lint doc-lifecycle 2>&1 | tail -15  # frontmatter 覆盖率
 ```bash
 # 异常项分析
 ls .omo/_knowledge/decisions/ | tail -10  # 最新 ADR 历史
-cat .omo/_truth/mof-version.yaml | tail -20  # 最近 mof-version
-bin/check-cross-refs.py 2>&1 | tail -10  # 历史漂移断链 (如有)
-python3 bin/status-distribution.py 2>&1 | tail -15  # status 分布
+python3 bin/ssot/check-index-drift.py 2>&1 | tail -10  # index 漂移检查
+python3 bin/ssot/check-cross-refs.py 2>&1 | tail -10  # 交叉引用断链
+python3 bin/ssot/dir-hygiene-check.py 2>&1 | tail -15  # 目录卫生
 ```
 
 输出: 异常项列表 + 优先级排序
@@ -80,14 +80,14 @@ python3 bin/status-distribution.py 2>&1 | tail -15  # status 分布
 1. 批量处理 (sed/heredoc)
 2. 写 README 标注职责
 3. 更新 ADR INDEX (如涉及)
-4. bin/mof-version record
+4. python3 bin/ssot/check-cross-refs.py (验证 0 坏链接)
 5. git add . && git commit -m "..."
 ```
 
 ### C (Closeout) — 收口 (5 min)
 
 ```bash
-omo governance 2>&1 | tail -5  # 验证 100 A+
+python3 bin/ssot/current-state-coherence.py --json 2>&1 | tail -5  # 状态一致性验证
 git status --short | wc -l      # 验证闭环
 git log --oneline -3            # 验证 commit 落地
 ```
@@ -105,7 +105,7 @@ linter 维度阈值:
 ```
 
 **禁止**: 当 linter ≥ 15 时新增子命令。
-**替代**: `bin/<tool-name>.py` (P58 check-cross-refs + status-distribution 范本)。
+**替代**: `bin/ssot/<tool-name>.py` (P58 check-cross-refs + doc-governance-check 范本)。
 
 ## 治理债务识别 (3 类)
 
@@ -182,10 +182,10 @@ git commit -m "chore(governance): <phase-name> 收口"
 ## 验证清单
 
 RISE 循环结束时必答:
-- [ ] `bin/mof-version record` 已执行
+- [ ] `python3 bin/ssot/check-cross-refs.py` 已执行 (0 坏链接)
 - [ ] `git commit` 已落地
 - [ ] 收口报告已写到 `.omo/_knowledge/audits/`
-- [ ] `omo governance` = 100 A+
+- [ ] `python3 bin/ssot/current-state-coherence.py --json` 通过
 - [ ] 工作树累积 ≤ 50 文件
 - [ ] ADR INDEX 更新 (如涉及)
 - [ ] L4 capability 注册 (如涉及)

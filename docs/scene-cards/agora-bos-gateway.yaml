@@ -49,3 +49,11 @@ bet: BET-ARCH-CONVERGENCE
 falsifier: 若 BOS gateway 离线超 1h 无告警，则场景无价值
 notes:
 - '2026-08-07: v2 schema 升级, 补 bet/falsifier'
+
+reflection_contract:
+  enabled: true
+  trigger: on_completion
+  questions:
+    - "执行过程是否按预期流转？"
+    - "产出质量是否达标？"
+    - "是否有可复用的经验沉淀？"
