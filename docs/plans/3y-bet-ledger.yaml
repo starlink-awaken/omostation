@@ -1150,13 +1150,21 @@ bets:
   title: 合成协作场景归档 221 → ≤40
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-08
   goal: 保留内核回归所需最小集, 归档与业务无关的 Web3 对抗夹具
   non_goals:
   - 删除协调内核实现
   - 降低 silent_loss 硬红线
   done_when:
   - 保留 <= 40 个覆盖 A_conflict / B_failure_injection 核心原型的用例
+  - 实际结果: 222 → 5 (仅保留 A/B/C/D 核心原型)
+  - make collab-dualtrack 验证 silent_loss=0
+  evidence:
+  - commit: "feat(T6-04): 合成协作场景归档 222→5 — 保留 A/B/C/D 核心原型"
+  - archived: .omo/_archive/collab-scenarios/ (217 files: ADV01-ADV185 + GEN*)
+  - retained: .omo/_delivery/collab-scenarios/ (5 files: A01/B01/C01/D01 + README.md)
+  - verification: silent_loss=0, no parsing failures
   - 其余移入 .omo/_archive/collab-scenarios/
   - make collab-dualtrack 仍能产出报告且 silent_loss=0
   verify:
