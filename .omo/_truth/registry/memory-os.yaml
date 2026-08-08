@@ -180,18 +180,25 @@ adapters:
     module: projects/kairon/packages/kos/src/kos/adapters/mem0_adapter.py
     target_module: projects/kairon/packages/mos/adapters/mem0.py
     production_ready: false
+    deprecated_at: 2026-08-08
+    deprecated_by_bet: T3-03
     notes:
-    - Silent disable when mem0ai missing
+    - Silent disable when mem0ai missing (mem0ai moved to optional dep in T3-03)
     - Default config assumes Qdrant localhost — not CI-safe
+    - Superseded by MOS Mem0ShadowAdapter (feature-flagged MOS_MEM0)
   memtheta:
-    status: partial_simulation
-    default: legacy
+    status: legacy_simulation
+    default: false
     module: projects/kairon/packages/kos/src/kos/adapters/memtheta_adapter.py
     production_ready: false
+    deprecated_at: 2026-08-08
+    deprecated_by_bet: T3-03
     notes:
-    - Raw track emits omo event via subprocess CLI
-    - Theta track is logger-only simulation
-    - Absorb into DualTrackWriter in Phase 1-2; do not mark complete
+    - Raw track emits omo event via subprocess CLI (still functional)
+    - Theta track is logger-only simulation — superseded by MOS DualTrackWriter
+    - memory_card.save_card still calls update(); raw emit preserved for backward
+      compat
+    - New writes MUST route through MOS (packages/mos), not this adapter
   neo4j:
     status: production_path_gated
     default: off_until_NEO4J_URI
@@ -304,8 +311,8 @@ phases:
     - LiveGbrainSearchBackend + optional gbrain put write
     - mos/cockpit recall --as-of
 schema: memory-os/v1
-as_of: '2026-08-08T10:25:45Z'
-total_beliefs: 9
+as_of: '2026-08-08T23:39:09Z'
+total_beliefs: 10
 tables:
 - agent_belief
 - agent_lesson
@@ -314,5 +321,5 @@ tables:
 - capability_calibration
 - decision_outcome
 total_world_snapshots: 43
-total_capability_calibrations: 4
-total_decision_outcomes: 3
+total_capability_calibrations: 0
+total_decision_outcomes: 1

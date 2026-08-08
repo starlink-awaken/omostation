@@ -623,6 +623,17 @@ world_snapshots:
     hash: 69b396b99ef41a84
   confidence: 0.8
   expires_at: null
+- id: ws-0043
+  observed_at: '2026-08-08T23:39:09Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 0ae1a238669fccc8
+  confidence: 0.8
+  expires_at: null
 capability_calibrations: []
 decision_outcomes:
 - id: do-0001
@@ -633,3 +644,11 @@ decision_outcomes:
   actual_outcome: adjudication=accepted
   delta: TB2 test
   source_run_id: test-TB2
+agent_skills: []
+agent_experiences:
+- id: exp-0001
+  agent_id: knowledge-curator
+  experience: 'A2A task: investigated high_event_volume'
+  outcome: positive
+  context: ''
+  recorded_at: '2026-08-08T23:42:31Z'

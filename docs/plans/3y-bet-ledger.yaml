@@ -1558,7 +1558,9 @@ bets:
   title: 退役 mem0 / memtheta 仿真适配器
   appetite: 1 week
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-08
+  done_evidence: "memory-os.yaml: memtheta status partial_simulation→legacy_simulation, default→false. Both adapters: DeprecationWarning added. mem0ai moved to optional dep in kos/pyproject.toml. Adapter audit doc updated with §11 T3-03 closeout. grep partial_simulation = 0."
   goal: 消除 partial_simulation / stub_optional 这类"看起来接了实际没接"的适配器
   non_goals:
   - 替换为其他第三方记忆库

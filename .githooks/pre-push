@@ -29,9 +29,14 @@ ROOT="$(git rev-parse --show-toplevel)"
 # stdin 格式每行: <local-ref> <local-sha> <remote-ref> <remote-sha>
 PUSH_REFS=""
 ALL_DELETIONS="true"
+PUSH_REMOTE_SHA=""
 while read -r _lref _lsha _rref _rsha; do
   PUSH_REFS="${PUSH_REFS}${_rref}
 "
+  # 捕获首个 push 目标的 remote_sha (push 前远程真实状态) → 增量 reachability base
+  if [ -z "$PUSH_REMOTE_SHA" ] && [ "$_rsha" != "0000000000000000000000000000000000000000" ]; then
+    PUSH_REMOTE_SHA="$_rsha"
+  fi
   # local-sha 为全 0 表示删除远端 ref
   if [ "$_lsha" != "0000000000000000000000000000000000000000" ]; then
     ALL_DELETIONS="false"
@@ -83,7 +88,23 @@ if [ ! -f "$SYNC_SCRIPT" ]; then
   exit 1
 fi
 "$SYNC_SCRIPT" 2>&1 | sed 's/^/[pre-push] /' >&2
-python3 $REACH_SCRIPT --source head --fetch $REACH_ARGS 2>&1 | sed 's/^/[reachability] /' >&2
+# 增量 reachability (2026-08-08): 只验本次 push 实际变化的 submodule.
+# 全仓检查会让任一并行 agent 的本地子模块 commit 未推送时冻结所有人的 push;
+# 本地 pre-push 应增量, CI full checkout (evidence-smoke-gate) 仍是全量守门员.
+# 基线优先级: PUSH_REMOTE_SHA (stdin 远程真实状态, 最准) > REACH_CHANGED_FROM
+#   (显式覆盖) > origin/main (回退) > 全量. 基线不可解析时 gate 脚本自身
+#   回退全量 (main 已修), 增量不因基线缺失漏检.
+REACH_CHANGED_FROM="${REACH_CHANGED_FROM:-}"
+if [ -n "$PUSH_REMOTE_SHA" ] && git cat-file -e "${PUSH_REMOTE_SHA}^{commit}" >/dev/null 2>&1; then
+  REACH_CHANGED_FROM="$PUSH_REMOTE_SHA"
+elif [ -z "$REACH_CHANGED_FROM" ] && git rev-parse --verify --quiet origin/main >/dev/null 2>&1; then
+  REACH_CHANGED_FROM="origin/main"
+fi
+if [ -n "$REACH_CHANGED_FROM" ]; then
+  python3 $REACH_SCRIPT --source head --fetch $REACH_ARGS --changed-from "$REACH_CHANGED_FROM" 2>&1 | sed 's/^/[reachability] /' >&2
+else
+  python3 $REACH_SCRIPT --source head --fetch $REACH_ARGS 2>&1 | sed 's/^/[reachability] /' >&2
+fi
 
 # ── G-CONV.7 / ADR-0220 D4: escape-hatch allowlist for CI_LOCAL_SKIP ─
 # CI_LOCAL_SKIP=1 requires SWARM_ESCAPE_ID matching registry allowlist.

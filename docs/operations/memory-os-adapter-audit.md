@@ -19,7 +19,7 @@ related:
 | 组件 | 路径 | 行量级 | 生产判定 | 调用方 |
 |------|------|--------|----------|--------|
 | Mem0Adapter | `projects/kairon/packages/kos/src/kos/adapters/mem0_adapter.py` | ~85 | **stub_optional** | `kos/ingest/__init__.py` dual-write try/except |
-| MemThetaAdapter | `.../kos/adapters/memtheta_adapter.py` | ~146 | **partial_simulation** | `kos/memory_card.py::save_card` |
+| MemThetaAdapter | `.../kos/adapters/memtheta_adapter.py` | ~146 | **legacy_simulation** (deprecated T3-03) | `kos/memory_card.py::save_card` |
 | graphiti-core | minerva optional extra | n/a | **optional_tier2** | minerva config `graphiti:`（研究路径） |
 | gbrain dream/cycle | `projects/gbrain/src/commands/dream.ts` + `core/cycle.ts` | 大型 | **production_engine** | CLI/cron/autopilot |
 | card events | cockpit `api_knowledge` + `knowledge_indexer` | n/a | **live 但越域** | emit/subscribe `bos://brain/events/card_updated` |
@@ -143,3 +143,29 @@ rg -n 'bos://memory/events/card_updated' projects/cockpit --glob '*.py' # expect
 | Card emit | **memory** 域 canonical；indexer dual-accept |
 | Mem0 / MemTheta 旧壳 | 仍非生产；新写入走 `packages/mos` |
 | Live OMO/gbrain I/O | 仍 deferred（P2） |
+
+## 11. T3-03 Closeout（2026-08-08）
+
+**Bet**: BET-Y1Q3-T3-03 — 退役 mem0 / memtheta 仿真适配器
+
+### 变更
+
+| 项 | Before | After |
+|----|--------|-------|
+| memtheta status | `partial_simulation` | `legacy_simulation` |
+| memtheta default | `legacy` | `false` |
+| mem0 status | `stub_optional`（无废弃标记） | `stub_optional` + `deprecated_at: 2026-08-08` |
+| mem0ai 依赖 | 必需 (`dependencies`) | 可选 (`[project.optional-dependencies].mem0`) |
+| mem0_adapter.py | 无废弃警告 | `DeprecationWarning` at import |
+| memtheta_adapter.py | 无废弃警告 | `DeprecationWarning` at import |
+
+### 保留的调用方（circuit breaker: 有真实调用方 → 标真实状态）
+
+- `kos/memory_card.py::save_card` → `memtheta_adapter.update()` — raw track OMO event emit 保留
+- `kos/ingest/__init__.py` → `Mem0Adapter()` — try/except 包裹，mem0ai 未装则 no-op
+
+### 验证
+
+```bash
+grep -c 'partial_simulation' .omo/_truth/registry/memory-os.yaml  # expect: 0
+```
