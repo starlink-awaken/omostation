@@ -194,11 +194,30 @@ def bos_capability_admit(uri: str, description: str = "") -> dict[str, Any]:
         except Exception as exc:  # noqa: BLE001
             _LOG.warning("admission catalog update failed for %s: %s", uri, exc)
     capability_catalog.save()
+
+    # ② 采购授权记录: admit 成功发采购事件 (force 绕过防抖, 持久化 JSONL)
+    try:
+        from agora.mcp.agora_alerts import send_alert
+
+        send_alert(
+            level="info",
+            event="capability:admitted",
+            payload={
+                "uri": uri,
+                "admitted_by": role,
+                "description": description or f"Admitted capability: {uri}",
+            },
+            caller_key=f"capability:admitted:{uri}",
+            force=True,
+        )
+    except Exception as exc:  # noqa: BLE001 — 采购事件失败不影响 admit 主流程
+        _LOG.warning("capability:admitted event failed for %s: %s", uri, exc)
     return {
         "status": "ok",
         "uri": uri,
         "capability_status": "active",
         "lifecycle": "admitted",
+        "admitted_by": role,
     }
 
 
