@@ -1,0 +1,59 @@
+title: Unified Inbox Scene Card (统一工作收件箱)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-07
+related:
+- ./document-review.yaml
+- ../STRATEGY-3YEAR-PANORAMA.md
+- ../../.omo/standards/external-connection-fabric.md
+---
+schema: scene-card/v2
+scene_type: external_resource
+lifecycle: shadow
+activation: preview
+approval_state: pending_business_confirmation
+scene_id: unified-inbox
+journey_id: inbox-to-triage
+goal: 将多渠道 (邮件/IM/OA) 的工作信息汇聚为统一、可分诊、可追踪的待办流
+trigger: '新邮件/消息/OA待办到达 (来源: 卫健委邮箱, 网易邮箱大师, 致远OA, 钉钉/飞书)'
+input_contract: 多渠道消息引用 (evidence:// 或 vault://redacted/), 不含原文
+result_contract: '统一待办列表 (分诊结果: 需要审查/需要回复/需要执行/可归档), 每项带来源渠道+优先级+截止时间'
+outcome_metric: inbox_triage_accuracy / triage_to_action_latency
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 重要消息遗漏/误分类导致工作延误或决策缺失
+data_classification: internal
+data_scope: channel-metadata-and-redacted-message-references
+operator: inbox-triage-agent-under-human-review
+permission_ref: permission://scene/unified-inbox
+rollback_plan: revert-to-manual-inbox-checking
+sample_refs:
+- vault://redacted/unified-inbox/sample-1
+- vault://redacted/unified-inbox/sample-2
+- vault://redacted/unified-inbox/sample-3
+demand_evidence_refs:
+- evidence://strategy-panorama/W1
+activation_evidence_refs:
+- evidence://strategy-panorama/W1
+required_capabilities:
+- iris:apple_mail
+- iris:netease_mailmaster
+- iris:seeyon_oa
+opportunity_window: 卫健委借调 + 国转中心日常多渠道消息处理窗口
+external_resource_policy: proposal_only
+downstream_refs:
+- scene: document-review
+  handoff: evidence://scene/unified-inbox/output:needs-review
+  trigger: on_triage_flagged_review
+- scene: engineering-delivery
+  handoff: evidence://scene/unified-inbox/output:needs-execution
+  trigger: on_triage_flagged_execute
+notes:
+- '2026-08-07: proposal_only→shadow 批量转换. 无业务副作用, 仅观察. falsifier: 若 shadow 期间无信号被归一化入
+  inbox，则场景无价值，回退 draft'
+- 'W1 统一收件箱: 多渠道汇聚 → 分诊 → 路由到下游场景. 连接器复用 document-review 的 3 个公文源.'
+bet: BET-Y1Q1-T2-01
+falsifier: 若 shadow 期间无信号被归一化入 inbox，则场景无价值，回退 draft
+activation_blockers: []

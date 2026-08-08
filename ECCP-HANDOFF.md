@@ -1,11 +1,13 @@
 # ECCP N1-N10 收尾 Handoff
 
-> 创建: 2026-08-05 | 上个 session 接力 | **9 PR MERGED + 3 零代码**
+> 创建: 2026-08-05 | 最后更新: 2026-08-05 (P0 完整闭环交付) | **14 PR MERGED + 3 零代码**
 > 用法: 新 session 第一句「读 `/Users/xiamingxing/Workspace/ECCP-HANDOFF.md` 继续」→ 秒接 ECCP 剩余
 
 ---
 
-## 1. 已交付 (9 PR MERGED + 3 零代码)
+## 1. 已交付 (14 PR MERGED + 3 零代码)
+
+### 1.1 N1-N10 主线 (9 PR + 3 零代码)
 
 | N | 内容 | PR |
 |---|------|-----|
@@ -22,65 +24,82 @@
 | N10 | rss 退役 (entry_points 移除) | #60 (kairon) |
 | — | 子模块指针 (#58 + #59) | #956 |
 
-**核心交付**: `bin/ssot/mesh-iris-executor.py` (#969) — mesh worker 执行 iris connector 自动化，固化 mesh 状态机 6 事件链 (Requested→Admitted→Dispatched→Started→Succeeded→EvidenceRecorded) + iris receipt。
+### 1.2 P0 完整闭环 (5 PR, 本轮交付)
+
+| 块 | 内容 | PR |
+|----|------|-----|
+| 第一块 | `dispatch_admitted_workflow` iris 快速路径 (`_dispatch_iris_via_executor`) | #973 |
+| 第二块 | packet 复用 (`workflow_run_id` + admission 一致性) | #977 |
+| N9 工具 | `mesh-stale-analyze.py` (planned run 分析, 只读) | #981 |
+| 第三块 | `consume_pending_workflow_requests` (mesh step → admit → dispatch 闭环) | #991 |
+| 根因修复 | consume 排除 `agent-workflow` producer (268 stale run 根因) | #1003 |
+
+**核心闭环**: `request_workflow_from_task` (声明 caps) → mesh store (planned) → `consume_pending_workflow_requests` (daemon auto-consume) → `preview/admit` → `_dispatch_iris_via_executor` (iris 快速路径) → mesh 6 事件链 + iris receipt. 全自动, 无需 launch agent.
 
 ---
 
-## 2. 这轮诊断 (2026-08-05)
+## 2. P0 完整闭环架构 (本轮交付)
 
-### 2.1 N9 全覆盖矩阵 (mesh-iris-executor 兼容性)
+### 2.1 闭环数据流
 
-**静态契约**: 21 connector (rss 退役后 20) **全兼容 mesh-iris-executor** ✅
-- `BaseConnector(ABC)` 无 `__init__` (base.py:37) → `ep.load()()` 无参构造 OK
-- `list_items(limit, cursor, tag, folder, subdir, chat_id)` 全可选 (base.py:56) → `inst.list_items(limit=N)` 兼容
-- `KnowledgeArtifact.id/.title` 就位
+```
+代理 (task + required_capabilities)
+  │ request_workflow_from_task (workflow_promotion.py:129)
+  ▼
+WorkflowRequested (mesh store, planned state, payload 带 caps)
+  │ consume_pending_workflow_requests (workflow_dispatch.py, daemon tick)
+  ▼
+preview_requested_workflow → admit_workflow (gate: capability_health)
+  │
+  ▼
+WorkflowAdmitted
+  │ _dispatch_iris_via_executor (iris 快速路径) / dispatch_task (worker)
+  ▼
+StepDispatched → AgentWorkflowStarted → WorkflowSucceeded → EvidenceRecorded
+```
 
-**动态可用性** (`iris --json status`): **10/20 可用**
+### 2.2 关键组件
 
-| 状态 | 连接器 |
-|------|--------|
-| ✅ 可用 (10) | apple_mail, applenotes, cua_browser, github, local_files, netease_mailmaster, universal_private, wechat, wpsnote, zhihu |
-| ❌ 不可用 (10) | dingtalk, feishu, notebooklm, obsidian, openhuman, pocket, polar, **seeyon_oa**, telegram, wxread |
+| 组件 | 文件 | 角色 |
+|------|------|------|
+| `request_workflow_from_task` | `workflow_promotion.py:129` | 代理仅创建 WorkflowRequested (声明 caps, 不 admit) |
+| `consume_pending_workflow_requests` | `workflow_dispatch.py` | 扫 planned → preview → admit → dispatch (daemon tick) |
+| `_dispatch_iris_via_executor` | `workflow_dispatch.py:540` | iris 快速路径, subprocess 调 `mesh-iris-executor` |
+| `_run_auto_consume` | `omo_daemon.py` | daemon `run_once` 集成 (30min tick) |
+| `_collect_iris_capability_health` | `omo_daemon.py` | iris entry_points → capability_health (subprocess) |
+| `mesh-stale-analyze.py` | `bin/ssot/` | 只读分析 planned run (stale vs fresh 分类) |
 
-⚠️ **seeyon_oa 不可用** (需 CDP 9222) — N1 activation 的公文源之一。
+### 2.3 根因修复 (PR #1003)
 
-### 2.2 P0 完整评估 (dispatch_task 集成点)
-
-`dispatch_task` 是**通用 task→worker model** (`projects/omo/src/omo/omo_worker_dispatch.py:151`):
-- 创建 dispatch/envelope/prompt 文件 + 发 mesh 事件 (`_bridge_dispatch_to_mesh:30`)
-- `launch=True` 时 `subprocess.run(_build_launch_argv)` 跑 **worker process** (`workers.yaml` 注册的 CLI/agent)
-- worker process 跑 **task prompt**, **不直接执行 iris connector**
-
-**P0 完整** = mesh workflow step 自动触发 iris 执行. 两个切入点:
-1. **注册 `iris-executor` worker** (`workers.yaml`), command 调 `mesh-iris-executor`
-2. **`dispatch_task` 加 iris 快速路径** (`capability_refs` 含 `iris:` → 直接调 executor, 不 launch agent)
-
-⚠️ **omo submodule 深度改动** (改 omo 代码 + 子模块指针 + 用户授权 + closeout)
+- **问题**: 268 个 planned run 永远不被 consume (无 `required_capabilities`)
+- **根因**: `mesh_agent_events.py:177` 将 `AgentWorkflowStarted` → `WorkflowRequested` (producer=`agent-workflow`), 用于 agent 生命周期可视化 (阶段 1b/4/5 设计), 无 `task_id`/caps
+- **修复**: `consume_pending_workflow_requests` 加 producer 过滤 (排除 `agent-workflow`), 不破坏阶段 1b/4/5 状态机链
+- **验证**: `total_planned` 268 → 0 (mesh-stale-analyze 确认)
 
 ---
 
-## 3. 剩余三块接力棒
+## 3. 剩余接力棒
 
-### 3.1 P0 完整 (mesh worker 自动执行 iris) — 第一块已落地 ✅
-- **基础**: `mesh-iris-executor` (#969 MERGED) + `dispatch_admitted_workflow` iris 快速路径 (本 session)
-- **第一块 (本 session 落地)**: `projects/omo/src/omo/workflow_dispatch.py` 加 `_dispatch_iris_via_executor` + `dispatch_admitted_workflow` iris 分支. `capability_refs` 含 `iris:xxx` → subprocess 调 `mesh-iris-executor` (不 launch agent). **功能验证通过**: apple_mail 5 items + mesh 6 事件链 + WorkflowSucceeded + EvidenceRecorded.
-- **缺口 (下一步)**:
-  1. mesh workflow step 自动触发 `dispatch_admitted_workflow` (candidate→proposal→active 触发链)
-  2. packet 复用 (方案 B): 当前 executor 自 seed 新 run_id, 应复用 packet 的 workflow_run_id + admission (mesh 状态机一致性)
-  3. omo submodule commit + 子模块指针 bump (待用户授权)
-- **Pyright**: 2 个 diagnostic (Line 40/242) 是 pre-existing (`_parse_health` / `preview_requested_workflow`), 非本改动引入
+### 3.1 P0 完整 — ✅ 全交付
+
+第一块 (#973) + 第二块 (#977) + 第三块 (#991) + 根因修复 (#1003) 全 MERGED. 闭环跑通.
+
+**剩余运维 (可选)**:
+- 生产启用 `omo daemon start --auto-consume` (运维门, 非开发)
 
 ### 3.2 N1 activation (document-review lifecycle→active) — 业务门
+
 - **当前**: `lifecycle: proposal_only`, `activation: forbidden` (`docs/scene-cards/document-review.yaml`)
 - **业务门**: 需 operator grant + `permission_ref` + business confirmation (**fabric 红线, 不伪造**)
 - **CDP 9222**: seeyon_oa 不可用 (需开 CDP), apple_mail/netease_mailmaster 可用 ✅
 - **fabric 红线**: `lifecycle→active` 必须 succeeded/degraded evidence + operator grant
 
-### 3.3 N9 全覆盖 (所有 iris connector 走 mesh receipt) — P0 完整后顺势
-- **基础**: `mesh-iris-executor` (#969) 支持任意 connector
-- **静态契约**: ✅ 全兼容 (2.1)
-- **动态**: 10 可用 connector 可立即走 mesh receipt, 10 不可用需 credentials/CDP
-- **顺势**: P0 完整后, mesh workflow 自动触发 → 全覆盖
+### 3.3 N9 全覆盖 (所有 iris connector 走 mesh receipt) — ✅ 工具就位
+
+- **工具**: `mesh-stale-analyze.py` (#981) + `mesh-iris-executor.py` (#969) 支持任意 connector
+- **静态契约**: ✅ 全兼容 (20 connector, rss 退役后)
+- **动态**: 10 可用 connector 可走 mesh receipt, 10 不可用需 credentials/CDP
+- **闭环验证**: P0 完整后, daemon auto-consume 自动触发 → 全覆盖
 
 ---
 
@@ -90,40 +109,45 @@
 # 1. 读本 handoff
 cat /Users/xiamingxing/Workspace/ECCP-HANDOFF.md
 
-# 2. P0 完整评估切入点
-rg "def dispatch_task|def _bridge_dispatch_to_mesh" projects/omo/src/omo/omo_worker_dispatch.py
-rg "iris-executor|capability_refs" projects/omo/src/omo/
-cat projects/omo/.omo/_truth/registry/workers.yaml 2>/dev/null || find projects/omo -name "workers.yaml"
+# 2. P0 闭环验证 (可选, 生产启用前)
+python3 bin/ssot/mesh-stale-analyze.py  # planned run 分析 (应 0 stale)
+cd projects/omo && uv run --with pyyaml --with pytest python -m pytest tests/test_workflow_dispatch.py -k consume -v
 
-# 3. N9 全覆盖验证
-cd projects/kairon && uv run --package iris iris --json status
-cd /Users/xiamingxing/Workspace && python3 bin/ssot/mesh-iris-executor.py --connector apple_mail --dry-run
-
-# 4. N1 activation 业务门
+# 3. N1 activation 业务门
 cat docs/scene-cards/document-review.yaml  # lifecycle/activation 字段
+
+# 4. 生产启用 daemon auto-consume (运维门)
+cd projects/omo && uv run python -m omo.omo_daemon once --auto-consume  # dry run 验证
 ```
 
 ---
 
 ## 5. ECCP 顶层判断
 
-- **技术交付完整**: 9 PR + 3 零代码 + P0 第一块 + 完整第一块 (`mesh-iris-executor`)
-- **剩余**: P0 完整 (omo 深度, 独立 session) + N1 activation (业务门) + N9 全覆盖 (P0 完整后顺势)
-- **建议**: 开新 session 啃 P0 完整 (worker 自动), 解锁 N9 全覆盖; N1 activation 等业务输入 (operator/permission + CDP 9222)
+- **技术交付完整**: 14 PR + 3 零代码 + P0 完整闭环 (5 PR) + 根因修复
+- **P0 完整**: ✅ 全交付 (request → consume → admit → iris dispatch → receipt)
+- **剩余**: N1 activation (业务门, 等 operator/CDP) + 可选 daemon 生产启用 (运维门)
+- **建议**: ECCP 技术交付收尾. N1 等业务输入 (operator/permission + CDP 9222). 生产启用 daemon auto-consume 是运维决策, 非开发任务.
 
 ---
 
 ## 6. 关键文件路径
 
 ```
-bin/ssot/mesh-iris-executor.py                          # N9 P0 核心 (手动跑就位)
-bin/ssot/external-resource-catalog.py                   # N1 catalog (跨项目扫 iris)
-bin/ssot/gen-scene-card-lineage.py                      # N8 scene-card lineage
-docs/scene-cards/document-review.yaml                   # N1 scene (lifecycle: proposal_only)
-projects/kairon/packages/iris/src/iris/base.py          # BaseConnector 契约
-projects/kairon/packages/iris/src/iris/connectors/      # 20 connector (rss 退役)
-projects/omo/src/omo/omo_worker_dispatch.py             # P0 完整集成点 (dispatch_task:151)
-projects/omo/src/omo/workflow_mesh.py                   # mesh 状态机
-projects/omo/src/omo/omo_external_receipt.py            # record_external_receipt (:142)
-.omo/standards/external-connection-fabric.md            # fabric 标准 (红线)
+# P0 完整闭环 (本轮)
+bin/ssot/mesh-iris-executor.py                      # iris connector 执行器 (#969)
+bin/ssot/mesh-stale-analyze.py                      # planned run 分析 (只读, #981)
+projects/omo/src/omo/workflow_promotion.py          # request_workflow_from_task (声明 caps)
+projects/omo/src/omo/workflow_dispatch.py           # consume + iris 快速路径 + admit
+projects/omo/src/omo/omo_daemon.py                  # daemon auto-consume 集成
+projects/omo/src/omo/workflow/mesh_agent_events.py  # AgentWorkflowStarted→WorkflowRequested (根因)
+projects/omo/tests/test_workflow_dispatch.py        # consume 单测 (iris fast path + skip non-planned)
+
+# N1-N10 主线
+bin/ssot/external-resource-catalog.py               # N1 catalog (跨项目扫 iris)
+bin/ssot/gen-scene-card-lineage.py                  # N8 scene-card lineage
+docs/scene-cards/document-review.yaml               # N1 scene (lifecycle: proposal_only)
+projects/kairon/packages/iris/src/iris/base.py      # BaseConnector 契约
+projects/kairon/packages/iris/src/iris/connectors/  # 20 connector (rss 退役)
+.omo/standards/external-connection-fabric.md        # fabric 标准 (红线)
 ```

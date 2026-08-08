@@ -442,6 +442,26 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0373: Sweep-tooling Convergence Round — A4/C5/D3/B2/E2 + GaC iterations — **ACCEPTED** | 2026-08-05 | Sweep tooling convergence round | 0373-sweep-tooling-convergence-round.md
 - ADR-0374: GaC Registry Convergence — indexed-drift fix, m1 orphan purge, stat auto-bump, symmetry tests — **ACCEPTED** | 2026-08-05 | GaC registry convergence | 0374-gac-registry-convergence.md
 - ADR-0375: Legacy Rule Plane Convergence — container-semantics drift fix + project-registry sync — **ACCEPTED** | 2026-08-05 | Legacy rule plane convergence | 0375-legacy-rule-plane-convergence.md
+- ADR-0376: M1 Tracked-Truth Convergence — health checks read git HEAD, not working tree — **ACCEPTED** | 2026-08-05 | M1 tracked truth | 0376-m1-tracked-truth-convergence.md
+- ADR-0377: Drift-Noise Convergence — runtime-derived plane exclusion + release_ready semantics — **ACCEPTED** | 2026-08-05 | Drift noise convergence | 0377-drift-noise-convergence.md
+- ADR-0378: Roadmap Closure Round — verify and close all delivered governance initiatives — **ACCEPTED** | 2026-08-05 | Roadmap closure | 0378-roadmap-closure-round.md
+- ADR-0379: CI Plane Convergence — surface SSOT, observability, double-trigger dedup, registry-driven runner — **ACCEPTED** | 2026-08-05 | CI plane convergence | 0379-ci-plane-convergence.md
+- ADR-0380: CI Plane Completion — runner migration, orphan cleanup, concurrent-drift absorption — **ACCEPTED** | 2026-08-06 | CI plane completion | 0380-ci-plane-completion.md
+- ADR-0382: 子模块指针回退检测 (CR-SUBMODULE-REWIND) — **ACCEPTED** | 2026-08-06 | Submodule rewind detection | 0382-submodule-rewind-detection.md
+- ADR-0395: CI 平面净红收官 — scripts/check-* orphan 化 + drift ahead 容忍 — **ACCEPTED** | 2026-08-08 | CI plane net-red closeout | 0395-ci-plane-net-red-closeout.md
+- ADR-0394: scripts/ 子模块镜像债治理 — 删 dead capability + Makefile target — **ACCEPTED** | 2026-08-08 | Scripts submodule mirror debt | 0394-scripts-submodule-mirror-debt.md
+- ADR-0393: god-module 大文件治理计划 — 3 个 >1500L 债的拆分路径 — **ACCEPTED** | 2026-08-08 | God-module debt plan | 0393-god-module-debt-plan.md
+- ADR-0392: CI 修复 + 主仓 dirty 提交 — drafts persistence_mode + runtime state 同步 — **ACCEPTED** | 2026-08-08 | CI fix + dirty commit | 0392-ci-fix-and-dirty-commit.md
+- ADR-0390: M5 数据黑障修复 — omo_daemon governance-history checks 丢失 — **ACCEPTED** | 2026-08-08 | Gate ROI data blackout fix | 0390-gate-roi-data-blackout-fix.md
+- ADR-0389: M5 gate ROI 治理价值报告 — 量化 gate 价值的减法决策输入 — **ACCEPTED** | 2026-08-07 | Gate ROI report | 0389-gate-roi-report.md
+- ADR-0388: CI 平面减法收官 — workflow retire + 内联 paths 检测盲区修复 + SSOT 生成器 — **ACCEPTED** | 2026-08-07 | CI plane subtraction | 0388-ci-plane-subtraction.md
+- ADR-0387: Dual-Track Scene Admission — internal pipeline scene admission track (make targets + RBAC scope) — **ACCEPTED** | 2026-08-07 | Dual-track admission | 0387-dual-track-scene-admission.md
+- ADR-0391: 分层契约方向单源 — layer-contract.yaml 为权威, check-layer-call-direction.py 对齐 — **PROPOSED** | 2026-08-07 | Layer contract direction SSOT | 0391-layer-contract-direction-ssot.md
+- ADR-0386: CI Consolidation — ruff/pytest dedup + integration path filter + workflow health — **ACCEPTED** | 2026-08-07 | CI consolidation | 0386-ci-consolidation-decision.md
+- ADR-0385: CI Pruner + SSOT Usage — scheduled prune-ci-runs cron + SSOT freshness monitor — **ACCEPTED** | 2026-08-07 | CI pruner + SSOT usage | 0385-ci-pruner-ssot-usage.md
+- ADR-0384: Meta-Meta Governance — rebase-regen automation + gate-effectiveness + A1-A3/B1 roadmap — **ACCEPTED** | 2026-08-06 | Meta-meta governance | 0384-meta-meta-governance.md
+- ADR-0383: CI Runs Cap Governance + E-5 path-filter SSOT completion — **ACCEPTED** | 2026-08-06 | CI runs cap governance | 0383-ci-runs-cap-governance.md
+- ADR-0381: Agent-Workflow Test Restoration — v10 load_registry regression fix + CI coverage + E-5 trigger SSOT — **ACCEPTED** | 2026-08-06 | Agent-workflow test restoration | 0381-agent-workflow-test-restoration.md
 
 ---
 
@@ -463,4 +483,6 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 ---
 
-*最近更新: 2026-07-28 · Owner: governance-team · ADR-0253 P84 collab routing A; GaC rules 见 registry*
+*最近更新: 2026-08-08 · Owner: governance-team · ADR-0391 M5 数据黑障修复验证*
+
+- ADR-0391: M5 数据黑障修复验证 — ADR-0390 cherry-pick 到 omo main 路径 — **ACCEPTED** | 2026-08-08 | M5 fix verification | 0391-adr-0390-verification.md

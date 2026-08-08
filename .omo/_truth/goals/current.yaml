@@ -1,12 +1,11 @@
----
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-24
+last-reviewed: 2026-08-07
 ---
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-24
+last-reviewed: 2026-08-07
 current_wave: W5
 entry_gate: phase41_completed
 goals:
@@ -124,7 +123,8 @@ goals:
   vector: V2
   appetite: 1 week
   bet_status: archived
-  archive_reason: full broker 过度工程化; 实际 duplication 仅 AppendOnlyLog, 可接受; 文档化持久化模式即可
+  archive_reason: full broker 过度工程化; 实际 duplication 仅 AppendOnlyLog, 可接受; 
+    文档化持久化模式即可
 - id: BET-38c6
   title: 16-p0-task-triage
   desc: 'Bet: 16-p0-task-triage (Appetite: 1 day)'
@@ -291,7 +291,8 @@ goals:
   desc: G-CONV.6 后续持续加码：按季度提升 kos-index documents，服务跃迁期个人大脑
   progress: 100.0
   status: active
-  kpi: 2026Q3 documents≥1500; 2026Q4≥3000; 2027Q1≥5000 (measured from kos/kos-index.sqlite)
+  kpi: 2026Q3 documents≥1500; 2026Q4≥3000; 2027Q1≥5000 (measured from 
+    kos/kos-index.sqlite)
   measured_documents: 5193
   measured_at: '2026-07-24T02:29:04.787388+00:00'
   q4_floor_met: true
@@ -310,6 +311,75 @@ goals:
   bet_status: active
   created_at: '2026-07-18T08:00:00Z'
   remeasure_audit: .omo/_knowledge/audits/2026-07-24-batch1-kos-remeasure.md
+- id: G-Y1Q1-PERCEIVE
+  title: 感知面闭合 — signal-sources 注册表
+  desc: 建立 signal-sources.yaml 注册表，apple_mail_inbox 作为首个信号源接入，不可达时 
+    health=unreachable 而非静默归零
+  kpi: signal-sources.yaml 建立 + bos://perception 在 agora 注册
+  progress: 100.0
+  status: done
+  bet_ref: BET-Y1Q1-T2-01
+  completed_at: '2026-08-07'
+  tasks: []
+- id: G-Y1Q1-SCENE
+  title: 场景面解锁 — scene-card 五档生命周期
+  desc: 打破 proposal_only→active 断崖，引入 shadow 档实现无副作用场景上线
+  kpi: schema 支持 draft/shadow/assisted/supervised/routine 五档 + falsifier 必填
+  progress: 100.0
+  status: done
+  bet_ref: BET-Y1Q1-T7-01
+  completed_at: '2026-08-07'
+  tasks: []
+- id: G-Y1Q1-MEASURE
+  title: 度量面净化 — 废除 X3 mtime 伪交付指标
+  desc: 摘除基于文件 mtime 的交付计数，让 BRIEF 不再把治理配置修改叙述为业务交付
+  kpi: count_deliveries_by_month 移除 + BRIEF 显示"未接入真实数据源"
+  progress: 100.0
+  status: done
+  bet_ref: BET-Y1Q1-T1-01
+  completed_at: '2026-08-07'
+  tasks: []
+- id: G-Y1Q1-PASW
+  title: 并发写隔离 — PASW 全覆盖 + 共享主树禁写
+  desc: 每个 agent 独立 worktree，共享 main 只读，消灭并发写冲突根因
+  kpi: agora/cockpit/gbrain 三子模块 PASW 全覆盖 + pre-push 拦 direct write
+  progress: 0.0
+  status: pending
+  bet_ref: BET-Y1Q1-T1-00
+  tasks: []
+- id: G-Y1Q1-GITSHIM
+  title: git 入口收口 — shim 强制走 swarm-git
+  desc: agent 环境 git → swarm-git 强制路由，拦 --no-verify + 高危操作
+  kpi: bin/gac/git-shim PATH 优先 + AGENT_ID circuit_breaker + 高危操作拦截日志
+  progress: 50.0
+  status: in_progress
+  bet_ref: BET-Y1Q1-T1-07
+  tasks: []
+- id: G-Y1Q1-BELIEF
+  title: 认知基底 — agent_belief 三表 schema
+  desc: 建立 world_snapshot / capability_calibration / decision_outcome 三表，为认知四元组提供物理存储
+  kpi: schema 定义 + 写入路径 + 至少 1 个 workflow run 自动注入 belief
+  progress: 100.0
+  status: done
+  bet_ref: BET-Y1Q1-T3-01
+  completed_at: '2026-08-07'
+  tasks: []
+- id: G-Y1Q2-SCENE-CONSOLIDATE
+  title: 场景面净化 — 合成场景 221→≤40
+  desc: 能力轨 221 构造场景膨胀，需归档/合并/去重到可管理规模
+  kpi: collab-scenarios 从 221 降到 ≤40，保留真实 backlog 对应场景
+  progress: 0.0
+  status: pending
+  bet_ref: BET-Y1Q2-T6-04
+  tasks: []
+- id: G-Y1Q2-SKILL-CRYSTAL
+  title: 技能结晶 — 踩坑经验自动重构为持久化 Skill
+  desc: agent 踩坑后自动生成 skill 草稿，经人类审核后结晶为 .agents/skills/
+  kpi: 结晶引擎原型 + 至少 3 个 auto-generated skill 进入审核队列
+  progress: 0.0
+  status: pending
+  bet_ref: BET-Y1Q2-T6-06
+  tasks: []
 health_targets:
   mcp_isolation_score: 100
   overall: 99
@@ -343,5 +413,5 @@ source_plan_refs:
 - .omo/_knowledge/management/5+3+1-full-audit-2026-06-06.md
 start_date: '2026-06-04'
 status: active
-theme: Phase 49 — 知识流动与用户价值兑现
-execution_mode: waiting-for-scenario/next-bet
+theme: Phase 49 — 认知基底 + 场景面净化 (意图模型注入 + 四元组物理化)
+execution_mode: active

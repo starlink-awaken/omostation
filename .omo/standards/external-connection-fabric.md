@@ -313,6 +313,25 @@ shadow/proposal-only，不推进 provider 激活。
 WorkflowRun 状态迁移或知识持久化塞回适配器。这样外部知识、方法、工具、模型和渠道可以动态
 扩展，但能力边界仍收敛在 ECOS 合同、OMO 准入、Agora 路由和 Workflow Mesh 回执四个位置。
 
+## 7. 内部 Pipeline 场景 (Dual-Track Admission)
+
+场景声明 `scene_type: internal_pipeline` 时，走**内部准入轨道** (ADR-0387)：
+
+| 维度 | 外部轨道 (本标准 §1-6) | 内部轨道 |
+|------|----------------------|---------|
+| 能力验证 | external resource catalog | make targets + project-registry.yaml |
+| 权限模型 | vault 凭据引用 (`vault://redacted/`) | RBAC scope (`permission://internal/...`) |
+| 证据格式 | catalog observation + health probe | git PR evidence + CI output |
+| 持久化 | `external-scene-trials.jsonl` | `internal-scene-trials.jsonl` |
+| 工具链 | `external-activation-preflight.py` + `external-scene-trial.py` | `internal-scene-preflight.py` + `internal-scene-trial.py` |
+
+两条轨道共享 Scene Card 格式 (`scene-card/v1`)、intake 验证、trial contract schema 和 fabric 红线
+(`activation=forbidden` until admitted, 不伪造激活)。Scene card 通过 `scene_type` 字段路由到对应轨道。
+
+内部轨道的 `required_capabilities` 使用 `ref://capability/<make-target>` 格式，preflight 通过
+Makefile target 匹配 (精确匹配优先, prefix 匹配兜底) 验证能力可用性。`permission_scope` 声明
+RBAC scope 列表 (如 `ci-read`, `workflow-read`, `evidence-write`)。
+
 ## 6. 受控进化
 
 连接优化、方法改写、路由调整和模型切换只能生成提案。提案按

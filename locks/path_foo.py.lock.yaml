@@ -1,0 +1,6 @@
+run_id: run-1
+actor: agent-a
+scope: path:foo.py
+created_at: '2026-08-07T23:43:35Z'
+last_heartbeat: '2026-08-07T23:43:35Z'
+expires_at: '2026-08-08T23:43:35Z'

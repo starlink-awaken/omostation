@@ -1,0 +1,55 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y1Q1-T2-02
+title: iris apple_mail 真实轮询打通
+status: candidate
+task_type: bet
+priority: P0
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T2-02
+window: Y1Q1
+track: T2-PERCEPT
+appetite: 1 week
+desc: 感知面从 0 到 1 — 让系统第一次看到仓库以外的东西
+non_goals:
+- 多信号源
+- 信号分类
+- 自动动作
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T2-01
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T2-01'
+evidence_required:
+- CDP 9222 可达且 operator grant 完成
+- 连续 7 天每天有去重后 signal 落盘
+- 断连时 health 变 unreachable 且 BRIEF 可见
+test_plan:
+- grep -c 'last_signal_at' .omo/_truth/registry/signal-sources.yaml
+workflow: bet-execution
+write_surfaces:
+- .omo/_truth/registry/signal-sources.yaml
+pasw_required: false
+circuit_breaker: 超 2 周仍不通 → 启用 R2 备选(文件夹监听/日历导出/手动投递), 但必须标 degraded
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T2-02.md
+agent_profile_hint: adapter-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

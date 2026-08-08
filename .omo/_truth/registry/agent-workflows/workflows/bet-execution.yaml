@@ -1,0 +1,170 @@
+id: bet-execution
+run_frequency: periodic
+title: 3Y bet execution
+purpose: >
+  执行三年规划台账(docs/plans/3y-bet-ledger.yaml)里的单个 bet。
+  把 claim / 执行 / 验收 / 表面积记账 / 复盘 / 钉死 六段固化为可复核的 phases,
+  避免每个 agent 各自记流程, 也避免继续错位挂在通用 project-code-change 上(P74)。
+agents:
+  roles:
+  - engineering-agent
+  - governance-agent
+  observer_policy: optional
+allowed_lanes:
+- docs
+- code
+- governance_code
+- governance_state
+- config
+lock_scopes:
+- bet:{bet_id}
+- root-gate
+surfaces:
+  read:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/plans/3Y-BET-LEDGER.md
+  - docs/plans/AGENT-BRIEF.md
+  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+  - docs/reports/2026-08-06-deep-review-proactive-agent-and-scenario-orchestration.md
+  - docs/reports/2026-08-06-multi-agent-git-topology.md
+  - .agents/skills/bet-execution/SKILL.md
+  - .agents/skills/git-discipline/SKILL.md
+  - AGENTS.md
+  - CLAUDE.md
+  write:
+  # 实际写面由 bet 的 write_surfaces 字段限定, 逐条 claim; 此处只列台账自身
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/**
+phases:
+  preflight:
+  - id: status
+    mode: required
+    command:
+    - git
+    - status
+    - --short
+  - id: ledger-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/plan/bet-ledger.py
+    - lint
+  - id: claim-check
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/plan/bet-ledger.py
+    - claim-check
+    - '{bet_id}'
+  - id: worktree-claim
+    mode: required
+    command:
+    - bash
+    - bin/gac/gac-worktree.sh
+    - claim
+    - '{bet_id}'
+  execute:
+  - id: read-bet
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/plan/bet-ledger.py
+    - show
+    - '{bet_id}'
+  - id: implement
+    mode: manual
+    command:
+    - agent
+    - edit
+    - bet-write-surfaces-only
+    note: 只改 bet.write_surfaces 列出的路径; non_goals 是硬边界; 每写完一个文件立刻 git add (D0)
+  verification:
+  - id: bet-verify
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/plan/bet-ledger.py
+    - verify
+    - '{bet_id}'
+    - --execute
+  - id: surface-accounting
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/plan/bet-ledger.py
+    - surface
+    note: D2 — 必须把净增减写进复盘 Q4
+  - id: gac-local-gate
+    mode: required
+    command:
+    - make
+    - gac-local-gate
+  - id: ssot-guardian
+    mode: required
+    command:
+    - make
+    - ssot-guardian
+  closeout:
+  - id: retro-written
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/plan/bet-ledger.py
+    - retro-due
+    note: D5 — 本 bet 的 .omo/_knowledge/retros/{bet_id}.md 必须存在且五问齐全
+  - id: pin-tag
+    mode: required
+    command:
+    - agent
+    - run
+    - 'git tag -a bet/{bet_id}-$(date -u +%Y%m%dT%H%M%SZ) -m "{bet_id} deliverable"'
+    note: D0 — commit 只是暂时安全, 共享分支 rebase 会挤掉提交; tag ref 不会
+  - id: diff-stat
+    mode: required
+    command:
+    - git
+    - diff
+    - --stat
+  - id: worktree-submit
+    mode: manual
+    command:
+    - bash
+    - bin/gac/gac-worktree.sh
+    - submit
+    - '{bet_id}'
+diff_checks:
+- path_glob: docs/plans/3y-bet-ledger.yaml
+  check: bet-ledger-lint
+  required: true
+- path_glob: .omo/_knowledge/retros/**
+  check: retro-five-questions
+  required: false
+notes:
+- 本 workflow 存在的理由(P74): 执行 bet 是高频重复动作, 挂通用 project-code-change 属于错位。
+- 单个 bet 的实际写面由 bet.write_surfaces 限定, 必须逐条 agent-workflow claim。
+- 跨 lane 的 bet(既改 .md 又改 .yaml/.py)需拆成两次提交, 见 skill git-discipline §5。
+- 六条铁律 D0-D5 见 docs/plans/AGENT-BRIEF.md, closeout 逐条必检。

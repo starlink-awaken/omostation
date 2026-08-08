@@ -21,7 +21,7 @@ Project-specific instructions override this guide only within that project and o
 ## 1.6 RED LINE — Requirement iterations MUST use Agent Workflow (ADR-0203)
 
 > **适用全部 agent 运行时**（Claude Code / Cursor / OMC / 自建 / 脚本化 agent）。  
-> SSOT: `.omo/_truth/registry/agent-workflows.yaml::requirement_iteration_policy`  
+> SSOT: `.omo/_truth/registry/agent-workflows/::requirement_iteration_policy`  
 > 契约: `.omo/standards/agent-workflow-contract.md` §3.1  
 > ADR: `.omo/_knowledge/decisions/0203-requirement-iteration-workflow-mandatory.md`
 
@@ -71,7 +71,7 @@ operator-facing decision tree.
 
 SSOT:
 
-- `agent-workflows.yaml::silent_workflow_policy` (A1/A2 classification + per-workflow `run_frequency` per ADR-0211; `excluded_workflows` field removed in ADR-0211 §D1)
+- `agent-workflows/::silent_workflow_policy` (A1/A2 classification + per-workflow `run_frequency` per ADR-0211; `excluded_workflows` field removed in ADR-0211 §D1)
 - `governance-checks.yaml` (4 CR-P74-* rules: STATE-PROJECTION-GUARD, RUNTIME-STAMP-POLICY, WORKFLOW-SILENCE, WORKFLOW-SUGGEST)
 
 Tools (`bin/` + `projects/omo`):
@@ -112,6 +112,75 @@ M1 rejudge (T+72, honest):
 
 Registry: `.omo/_truth/registry/swarm-coordination.yaml`
 
+### 1.6.1 D5 PASW submodule isolation (ADR-0371)
+
+| Gate | Command |
+|------|---------|
+| D5 PASW | `bash bin/gac/gac-worktree.sh claim <s>` 自动为高冲突子模块建 `.subtrees/<sub>/` |
+
+覆盖范围仅 `gbrain` / `cockpit` / `agora`。**其余子模块跨 worktree 共用 `.git/modules/<sub>/HEAD`** — 非必要不碰指针。补齐与退役计划见 `BET-Y1Q1-T1-06`。
+
+### 1.6.2 D0 交付持久化下限（2026-08-06 实测升级）
+
+D1–D5 管的是「并发写不打架」，D0 管的是「产物不消失」。三层假设当天全部被推翻：
+
+| 假设 | 被什么推翻 | 实测 |
+|---|---|---|
+| 写了就有 | `git clean -fd` 删未入库文件 | 当天 4 次，`bin/ssot/journey-runner.py`(601行) 等 v10 产物永久丢失 |
+| add 了就安全 | `git reset --hard` 连暂存区一起摧毁 | 分支 `fix/submodule-rewind-*` 期间 |
+| **commit 了就安全** | 共享分支被 rebase，提交脱离历史 | `49d3ffed5` 提交成功后被挤出分支，内容从工作树消失 |
+
+**D0 铁律**：交付物必须走 `git add` → `commit` → **`tag`**（或推独立远端分支）。仅 commit 不算持久化。
+
+**共享主树只读 (T1-00)**：所有 agent 必须在 `gac-worktree claim` 出的隔离树 (`work/*` 分支) 内工作。共享 main worktree 对 agent **只读** — `git clean -fd` / `reset --hard` / `stash -u` / `rebase` 在 hook 层要求 `SWARM_ESCAPE_ID`。raw `git --no-verify` 被 `bin/gac/git-shim` 拦截，强制走 `bin/gac/swarm-git`。僵尸锁自动清理: `agent-workflow prune-locks`。
+
+```bash
+git ls-files --error-unmatch <file>          # 入库检查
+git merge-base --is-ancestor <sha> HEAD      # 非 0 = 提交已脱离分支
+git show <sha>:<path> > <path>               # 从游离提交取回
+```
+
+**逃生口只有一个入口**：`SWARM_ESCAPE_ID=<白名单id> bin/gac/swarm-git ...`。
+raw `git --no-verify` 会绕过白名单校验与 `.omo/_delivery/swarm-escape/` 台账。
+T1-07 已落地 PATH shim（`bin/gac/git-shim` + `AGENT_ID` circuit_breaker）：agent 环境 `git` → `swarm-git` 强制收口，拦 `--no-verify` + 高危操作（`clean -fd` / `reset --hard` / `stash -u` / 共享分支 `rebase`）；人类终端（`AGENT_ID` 空）透传不受影响。
+
+**新门禁上线三段式**：`shadow`（只记录，1 周）→ `warning`（给清理期限）→ `fail`（存量清零后）。
+跳过前两段直接 fail 会锁死主干——ADR-0380 上线当天检出 18 个 rewind，所有无关提交被拦。
+
+拓扑层根治方案（每 agent 独立 clone，主仓降级为集成点，D2/D3/D5 随之退役）见
+[`docs/reports/2026-08-06-multi-agent-git-topology.md`](docs/reports/2026-08-06-multi-agent-git-topology.md) 与 `BET-Y1Q1-T1-05`。
+
+### 1.6.3 多 Agent 蜂群感知与硬规约契约 (Swarm Perception & Hard Constraints)
+
+| 视角 | 机制 | 物理暴露与硬规约 |
+|---|---|---|
+| **怎么感知？** | 软/动/硬三层感知 | 启动/思考时自动注入在线节点大盘；通过 `swarm_who_is_working_on` 查冲突；`git-shim` 终端弹警告。 |
+| **怎么知道？** | 总线广播 + 冲突点名 | 任何 `claim/commit` 自动写入 `.omo/state/swarm/broadcast-bus.jsonl`；发生重叠触发 `SWARM_COLLISION_ALERT`。 |
+| **怎么物理约束？** | PASW + 物理锁 + 熔断阻断 | 强制走 `work/<session>` 分支隔离；未 `claim` 或冲突修改他人路径时门禁直接 **Exit 1** 阻断；拦截高危命令。 |
+
+### 1.7 我该做什么 — 三年规划执行台账
+
+不要自行拟定任务。读台账：
+
+```bash
+uv run --with pyyaml python bin/plan/bet-ledger.py status
+uv run --with pyyaml python bin/plan/bet-ledger.py claim-check <BET-ID>
+```
+
+SSOT `docs/plans/3y-bet-ledger.yaml` · 视图 `docs/plans/3Y-BET-LEDGER.md` ·
+执行指令 `docs/plans/AGENT-BRIEF.md` · 技能 skill `bet-execution`。
+
+### 1.8 8D 全景元架构与全仓四大入口契约 (8D Meta-Architecture & Channels)
+
+系统由 **LifeOS 意图 ➔ C2G 策略 ➔ Goals 目标 ➔ Agora 蜂群 ➔ AetherForge 算力 ➔ AGE-v2 落地 ➔ MOS/KOS 记忆 ➔ X-Plane 熵减** 8 维空间组成。
+全仓核心命令与全景视图暴露如下：
+
+1. **7D 终极可观测**：`cockpit panorama` / `make panorama` (执行/服务/内容/知识/数据/异常/债务资产)。
+2. **8D 全景追溯**：`cockpit compass trace <GOAL-ID>` / `make compass-trace` / `bos://governance/omo/compass-trace`。
+3. **17 项目 4D 体检**：`cockpit project inspect <PROJ>` / `make project-inspect` / `bos://governance/omo/project-inspect`。
+4. **场景卡与 Journey 校验**：`cockpit journey` / `make journey-validate` / `make scene-card-check`。
+5. **常态化守护**：必须维持 `make gac-local-gate` 42 Checks ALL GREEN PASS 绿线。
+
 ## 2. Documentation SSOT Contract
 
 | Document | Owns | Must Reference |
@@ -122,9 +191,10 @@ Registry: `.omo/_truth/registry/swarm-coordination.yaml`
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Stable architecture contracts | Registry files for counts and runtime values |
 | [`LAYER-INDEX.md`](LAYER-INDEX.md) | Human-readable layer placement | `docs/project-registry.yaml` |
 | [`docs/project-registry.yaml`](docs/project-registry.yaml) | Project metadata facts | Actual project metadata |
-| [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) | Agent workflow facts | Executable workflow runner |
+| [`.omo/_truth/registry/agent-workflows/`](.omo/_truth/registry/agent-workflows/) | Agent workflow facts | Executable workflow runner |
 | [`.omo/_truth/registry/omo-governance-surfaces.yaml`](.omo/_truth/registry/omo-governance-surfaces.yaml) | OMO governance surfaces | Governance surface registry SSOT |
 | [`.omo/_truth/registry/runtime-projections.yaml`](.omo/_truth/registry/runtime-projections.yaml) | Runtime projection registry | `omo-state-projection-guard.py` (P74) |
+| [`.omo/_truth/registry/ci-surfaces.yaml`](.omo/_truth/registry/ci-surfaces.yaml) | CI 平面检查接线登记 (ADR-0379) | `check-ci-surfaces.py` (CR-CI-SURFACE-SSOT) |
 | [`.omo/_truth/x1-governance-policies.yaml`](.omo/_truth/x1-governance-policies.yaml) | X1 governance policies | Governance policy SSOT |
 | [`.omo/_truth/x2-freshness-rules.yaml`](.omo/_truth/x2-freshness-rules.yaml) | X2 freshness rules | Doc freshness SSOT |
 | [`.omo/_truth/x3-value-stack.yaml`](.omo/_truth/x3-value-stack.yaml) | X3 value stack | Value chain SSOT |
@@ -233,6 +303,8 @@ make evidence-smoke  # BOS declaration vs execution gap audit
 uv run --with "pyyaml" python "bin/mof/gen-project-registry.py"  # Registry drift detection (code→registry)
 make swarm-activity              # 多 agent 实时活动面板 (active runs/locks/worktree/claims/子模块 dirty/冲突)
 python3 bin/gac/swarm-activity-dashboard.py --watch 10  # 每 10s 刷新 (--json 供脚本消费)
+python3 bin/gac/check-ci-surfaces.py                    # CI 平面可观测性 (unregistered/orphan/overlap/double-trigger, ADR-0379)
+python3 bin/gac/ci-check-runner.py --workflow governance-check.yml  # registry-driven 检查执行 (ADR-0379 E-2)
 ```
 
 See [`bin/README.md`](bin/README.md) for the full tool catalog.
@@ -314,8 +386,11 @@ Historical closeout details are useful evidence but should not be pasted into th
 | **3 类声明/执行鸿沟 (P71 §1)** | 路径错位 (类 A, PR#4 baseline 漂移) / 工具未接 (类 B, 9 check-* 0 caller) / CI 永红 (类 C, doctor + project-layer-index). 修复见 P71 5 阶段流程. 防复发见 4 GaC 规则 (CR-X1-EVIDENCE-RUNNABLE / CR-L0-BOS-DOMAIN-NORM / CR-META-BIN-NAMING / CR-META-BIN-ORPHAN) |
 | **P78 triple-axis diagnostic pattern** (2026-07-17, 静态/运行时/决策三维查证, 深化 P73) | [P78](.omo/_knowledge/patterns/p78-triple-axis-diagnostic-pattern.md) + [audit](.omo/_knowledge/audits/2026-07-17-static-vs-runtime-diagnostic-audit.md) — 报系统问题前过 4 问: 反证 / 运行时实证 / ADR / 覆盖度 |
 | **Phase 45 治理可观测性** (2026-07-29, 健康自检 + 熵清理 + 债务自动种子) | [agora `tools_health.py`](projects/agora/src/agora/server/tools_health.py) — 3 个 MCP 工具 (`health_check` / `entropy_cleanup_tool` / `debt_auto_seed_tool`) + 增强 `/health` HTTP 端点. 8/8 单元测试通过, 184/184 全量通过. |
+| **agora P1 深化** (2026-08-06, PR #1047/#1052) | ProcessPool 接入 (`mcp/resolver/adapter.py` mcp_stdio 复用常驻进程) + ProxyManager 双单例收口 (`auth/mcp_gateway.py` → `server/dependencies.py`) + 硬编码路径 env 化 (`AGORA_FORGE_REGISTRY`/`HERMES_GOVERNANCE_LOG`/`WORKSPACE_ROOT`/`AGORA_CACHE_DIR`) + deploy 配置 (`AGORA_ADMISSION_MODE=degraded`/`AGORA_AUTH_MODE=permissive` 修 backends 全灭 + tools/call internal). |
+| **agora P2 深化** (2026-08-06, PR #1057/#1059/#1061) | `/metrics` Prometheus exporter + audit hashchain (`verify_chain` → `/health` audit_chain) + SSE/gateway 双进程统一 (SSE 单一 owner `AGORA_GATEWAY_OWNER=1`, `/health` backends 改从 `registry._clients` 真实计数修复假绿) + 进程内调用放行 (`request_context.py` 抽象 fastmcp 私有 API) + swarm 面板 agora 健康 + CI deploy-smoke. **P0-SEC**: `/v1/backends/register` 加认证 (复用 `require_agora_api_key`) + 拒绝 shell 元字符. 复盘: `docs/reports/2026-08-06-agora-p1p2-deepening-retrospective.md`. |
 | **check-work-landed SHA 检测修复 + M3 grace baseline** (2026-07-30, ADR-0292) | 修复 `_refs_landed` 用 `git merge-base --is-ancestor` 取代 `git log --grep` (后者只搜 commit messages). 3 个 squash-orphan 的 `submodule-pointer-close` run 列入 grace baseline. Z2 meta-baseline cap 0→3. GaC local gate: 38/39 → **39/39 ALL GREEN**. |
 | **知识网关 L3-I0 解耦 + 增量事件索引管道** (2026-08-01, ADR-0294, PR #740) | `api_knowledge.py` 从进程内强 import 迁移到 HTTP 网络优先解析 (`/bos/resolve`) + 兼容降级; `/put` 写后发射 `bos://brain/events/card_updated`; `knowledge_indexer.py` Consumer 订阅后驱动 KOS/LanceDB 增量 upsert 打通检索闭环. 25/25 pytest 全绿. 分层调用方向无新越权. 详见 ADR + SOP §5 + `bos-uri-domain-standard.md` 越界登记 (`bos://brain/events/` → Phase 2 迁移至 `bos://memory/events/`). |
+| **治理智能 Phase 6-10 交付** (2026-08-08) | Phase 6 Anomaly Alerting (`anomaly-detector.py` + `alert-router.py` + `--alert`) + Phase 7 Dashboard (`governance-dashboard.py --metrics-dashboard`) + Phase 8 BOS Service-ification (`bos://governance/*`) + Phase 9 Cross-Domain Trend Fusion (`cross-domain-trend.py` + `trend-fusion.yaml`) + Phase 10 Predictive Governance (`predictive-governance.py` + `predictive-governance.yaml` + threshold simulation). 51/51 gac unit tests passing. BOS URIs registered in `projects/agora/etc/bos-services.yaml`. SSOT registries updated: `runtime-projections.yaml`, `ci-surfaces.yaml`, `trend-fusion.yaml`, `predictive-governance.yaml`. |
 
 ## 9. Closeout Checklist
 

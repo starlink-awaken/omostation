@@ -49,7 +49,7 @@ projects:
     build_backend: "hatchling"
     version: "3.0.0"
     role: "MCP Hub · BOS URI 路由"
-    bos_services: 196  # live yaml total; routable≈184
+    bos_services: 200  # live yaml total (active 188/unimplemented 11/deprecated 1)
     src_dir: "src/agora/"
 
   kairon:

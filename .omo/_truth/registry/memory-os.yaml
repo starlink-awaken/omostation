@@ -1,6 +1,3 @@
----
-# Memory OS registry SSOT — ADR-0372
-# Do not hardcode service counts or runtime health here.
 id: memory-os
 version: 1
 status: phase10
@@ -16,184 +13,201 @@ env_example: docs/operations/memory-os.env.example
 skill: .agents/skills/memory-recall/SKILL.md
 package_readme: projects/kairon/packages/mos/README.md
 surface_check: bin/gac/check-memory-os-surfaces.py
-last_reviewed: "2026-08-05"
-
+last_reviewed: '2026-08-05'
 phase10:
   neo4j_as_of: true
-  live_kos: "MOS_LIVE_KOS=1 → HTTP KOS_API_URL"
-  live_gbrain: "MOS_LIVE_GBRAIN=1 → gbrain search/query subprocess"
-  live_gbrain_write: "MOS_LIVE_GBRAIN_WRITE=1 → best-effort gbrain put on write"
-  notes: "capability deepen; defaults remain fixture-safe"
+  live_kos: MOS_LIVE_KOS=1 → HTTP KOS_API_URL
+  live_gbrain: MOS_LIVE_GBRAIN=1 → gbrain search/query subprocess
+  live_gbrain_write: MOS_LIVE_GBRAIN_WRITE=1 → best-effort gbrain put on write
+  notes: capability deepen; defaults remain fixture-safe
 phase6:
   neo4j_writer: projects/kairon/packages/mos/src/mos/neo4j_writer.py
   cockpit_panel: /memory
-  notes: "NEO4J_URI-gated production writes; policy-table RBAC; no false ready claims without URI"
+  notes: NEO4J_URI-gated production writes; policy-table RBAC; no false ready claims
+    without URI
 phase7:
   neo4j_recall: true
   startup: bin/memory-os-neo4j-up.sh
   compose: projects/kairon/packages/mos/docker-compose.yml
-  notes: "temporal_fact/entity_relation prefer neo4j search; Docker preferred brew fallback"
+  notes: temporal_fact/entity_relation prefer neo4j search; Docker preferred brew
+    fallback
 phase8:
   env_inject: true
   cockpit_memory_env: projects/cockpit/src/cockpit/web/memory_env.py
-  ports: [7474, 7687]
-  notes: "process env load + port registry + ops contract + surface check"
+  ports:
+  - 7474
+  - 7687
+  notes: process env load + port registry + ops contract + surface check
 phase9:
   epic_retro: true
   env_local_overrides_example: true
   consolidate_persist: true
   status_adapters_honesty: true
   event_docs_aligned: true
-  notes: "follow-up from epic retro §7: env override fix, FileStore last_consolidate, status.adapters, SOP dual-accept"
----
+  notes: 'follow-up from epic retro §7: env override fix, FileStore last_consolidate,
+    status.adapters, SOP dual-accept'
 control_plane:
   package_planned: projects/kairon/packages/mos
   envelope_owner: projects/kairon/packages/eidos
   layer: L2
-  entry_bos_prefix: "bos://memory/mos/"
-
+  entry_bos_prefix: bos://memory/mos/
 env_defaults:
-  # Process defaults when unset — not secrets SSOT; override via config/memory-os.env
-  NEO4J_URI: "bolt://localhost:7687"
-  NEO4J_USER: "neo4j"
-  NEO4J_PASSWORD: "changeme"
-  MOS_TEMPORAL: "1"
-  MOS_RBAC: "1"
-  MOS_MEM0: "0"
-  MOS_GRAPHITI: "0"
+  NEO4J_URI: bolt://localhost:7687
+  NEO4J_USER: neo4j
+  NEO4J_PASSWORD: changeme
+  MOS_TEMPORAL: '1'
+  MOS_RBAC: '1'
+  MOS_MEM0: '0'
+  MOS_GRAPHITI: '0'
   load_order:
-    - process_env
-    - config/memory-os.env
-    - projects/cockpit/.env
-    - docs/operations/memory-os.env.example
+  - process_env
+  - config/memory-os.env
+  - projects/cockpit/.env
+  - docs/operations/memory-os.env.example
   inject:
-    - bin/memory-os-env.sh
-    - cockpit.web.memory_env.apply_memory_os_env
-
+  - bin/memory-os-env.sh
+  - cockpit.web.memory_env.apply_memory_os_env
 bos_uris:
   active:
-    - uri: "bos://memory/mos/write"
-      phase: 1
-      role: unified_write
-    - uri: "bos://memory/mos/recall"
-      phase: 1
-      role: unified_recall
-    - uri: "bos://memory/mos/status"
-      phase: 1
-      role: health_and_backlog
+  - uri: bos://memory/mos/write
+    phase: 1
+    role: unified_write
+  - uri: bos://memory/mos/recall
+    phase: 1
+    role: unified_recall
+  - uri: bos://memory/mos/status
+    phase: 1
+    role: health_and_backlog
   active_extra:
-    - uri: "bos://memory/mos/forget"
-      phase: 2
-      role: forget_propagation
-    - uri: "bos://memory/mos/consolidate"
-      phase: 3
-      role: sleep_time_orchestration
-    - uri: "bos://memory/mos/knowledge-ref"
-      phase: 4
-      role: adr0315_citation_metadata
+  - uri: bos://memory/mos/forget
+    phase: 2
+    role: forget_propagation
+  - uri: bos://memory/mos/consolidate
+    phase: 3
+    role: sleep_time_orchestration
+  - uri: bos://memory/mos/knowledge-ref
+    phase: 4
+    role: adr0315_citation_metadata
   entry_points:
-    cockpit_cli: "cockpit memory {status,recall,write,forget,consolidate,knowledge-ref}"
-    cockpit_http: "/api/memory/*"
-    cockpit_panel: "/memory"
-    agora_mcp: "BOS resolve/invoke bos://memory/mos/* (stdio; env loaded at MCP lifespan)"
+    cockpit_cli: cockpit memory {status,recall,write,forget,consolidate,knowledge-ref}
+    cockpit_http: /api/memory/*
+    cockpit_panel: /memory
+    agora_mcp: BOS resolve/invoke bos://memory/mos/* (stdio; env loaded at MCP lifespan)
   event_migration:
-    from: "bos://brain/events/card_updated"
-    to: "bos://memory/events/card_updated"
+    from: bos://brain/events/card_updated
+    to: bos://memory/events/card_updated
     compatibility: dual_subscribe_one_release
     phase: 1
     status: dual_accept_live
     producer_canonical: true
     producer_path: projects/cockpit/src/cockpit/web/api_knowledge.py
     consumer_dual_accept: projects/cockpit/src/cockpit/web/knowledge_indexer.py
-    note: "Producer emits memory domain; consumer dual-accepts brain legacy until external emitters migrate"
+    note: Producer emits memory domain; consumer dual-accepts brain legacy until external
+      emitters migrate
   backend_keep:
-    - "bos://memory/kos/*"
-    - "bos://memory/gbrain/*"
-    - "bos://memory/kems/*"
-    - "bos://memory/inbox/*"
-    - "bos://memory/local/*"
-    - "bos://memory/vault/*"
-
+  - bos://memory/kos/*
+  - bos://memory/gbrain/*
+  - bos://memory/kems/*
+  - bos://memory/inbox/*
+  - bos://memory/local/*
+  - bos://memory/vault/*
 memory_types:
-  - id: working
-    description: Current context window / run buffer
-  - id: episodic
-    description: Events and conversation turns
-  - id: semantic
-    description: Stable facts and preferences
-  - id: procedural
-    description: Skills and how-to patterns
-  - id: institutional
-    description: Vault docs and engineering knowledge sources
-  - id: governance_ref
-    description: Auditable citations without full body text
-
+- id: working
+  description: Current context window / run buffer
+- id: episodic
+  description: Events and conversation turns
+- id: semantic
+  description: Stable facts and preferences
+- id: procedural
+  description: Skills and how-to patterns
+- id: institutional
+  description: Vault docs and engineering knowledge sources
+- id: governance_ref
+  description: Auditable citations without full body text
 intent_routes:
-  # Weights are relative; implementers normalize. Do not treat as runtime SLOs.
-  - intent: file_note
-    primary: [kos]
-    secondary: [vault_search]
-  - intent: preference_self
-    primary: [gbrain_facts, mem0]
-    secondary: [kos]
-  - intent: entity_relation
-    primary: [neo4j, gbrain_graph]
-    secondary: [kos_entities, temporal]
-  - intent: temporal_fact
-    primary: [neo4j, temporal]
-    secondary: [gbrain]
-    requires_adapter: neo4j_or_temporal
-    notes: "neo4j when NEO4J_URI set; else TemporalShadow"
-  - intent: code_structure
-    primary: [codebase_memory]
-    secondary: []
-    note: Never RRF-merge with institutional note backends
-  - intent: task_debt
-    primary: [governance_omo]
-    secondary: []
-    note: Not a memory search path
-  - intent: card_ops
-    primary: [cards_vector, kos]
-    secondary: [gbrain]
-  - intent: general
-    primary: [kos, gbrain]
-    secondary: [mem0]
-
+- intent: file_note
+  primary:
+  - kos
+  secondary:
+  - vault_search
+- intent: preference_self
+  primary:
+  - gbrain_facts
+  - mem0
+  secondary:
+  - kos
+- intent: entity_relation
+  primary:
+  - neo4j
+  - gbrain_graph
+  secondary:
+  - kos_entities
+  - temporal
+- intent: temporal_fact
+  primary:
+  - neo4j
+  - temporal
+  secondary:
+  - gbrain
+  requires_adapter: neo4j_or_temporal
+  notes: neo4j when NEO4J_URI set; else TemporalShadow
+- intent: code_structure
+  primary:
+  - codebase_memory
+  secondary: []
+  note: Never RRF-merge with institutional note backends
+- intent: task_debt
+  primary:
+  - governance_omo
+  secondary: []
+  note: Not a memory search path
+- intent: card_ops
+  primary:
+  - cards_vector
+  - kos
+  secondary:
+  - gbrain
+- intent: general
+  primary:
+  - kos
+  - gbrain
+  secondary:
+  - mem0
 adapters:
   mem0:
     status: stub_optional
-    default: off
+    default: false
     module: projects/kairon/packages/kos/src/kos/adapters/mem0_adapter.py
     target_module: projects/kairon/packages/mos/adapters/mem0.py
     production_ready: false
     notes:
-      - "Silent disable when mem0ai missing"
-      - "Default config assumes Qdrant localhost — not CI-safe"
+    - Silent disable when mem0ai missing
+    - Default config assumes Qdrant localhost — not CI-safe
   memtheta:
     status: partial_simulation
     default: legacy
     module: projects/kairon/packages/kos/src/kos/adapters/memtheta_adapter.py
     production_ready: false
     notes:
-      - "Raw track emits omo event via subprocess CLI"
-      - "Theta track is logger-only simulation"
-      - "Absorb into DualTrackWriter in Phase 1-2; do not mark complete"
+    - Raw track emits omo event via subprocess CLI
+    - Theta track is logger-only simulation
+    - Absorb into DualTrackWriter in Phase 1-2; do not mark complete
   neo4j:
     status: production_path_gated
     default: off_until_NEO4J_URI
     module: projects/kairon/packages/mos/src/mos/neo4j_writer.py
     production_ready: true
     notes:
-      - "FACT write+recall when NEO4J_URI set"
-      - "ports 7474/7687 registered in protocols/port-registry.yaml"
+    - FACT write+recall when NEO4J_URI set
+    - ports 7474/7687 registered in protocols/port-registry.yaml
   graphiti:
     status: optional_tier2
-    default: off
+    default: false
     module_hint: projects/kairon/packages/minerva (optional extra)
     production_ready: false
     notes:
-      - "Scene-only; no global graph truth"
-      - "Production graph path is Neo4j Cypher FACT, not full graphiti-core"
+    - Scene-only; no global graph truth
+    - Production graph path is Neo4j Cypher FACT, not full graphiti-core
   gbrain_dream:
     status: production_engine
     default: orchestration_only
@@ -201,93 +215,104 @@ adapters:
     cycle: projects/gbrain/src/core/cycle.ts
     production_ready: true
     notes:
-      - "MOS consolidate must orchestrate, not reimplement"
-
+    - MOS consolidate must orchestrate, not reimplement
 dual_track:
   confidence_threshold_default: 0.6
   raw:
     store: omo_events
     forbid_high_pii_body: true
   theta:
-    stores: [gbrain_facts, kos_index_jobs]
+    stores:
+    - gbrain_facts
+    - kos_index_jobs
     on_failure: keep_raw_and_queue_retry
-
 policy:
   recall_budget_ms_default: 2500
   closeout_write: opt_in
   mem0_required_for_core: false
   single_current_state_exit: true
-
 phases:
   0:
     status: done
     deliverables:
-      - ADR-0372
-      - docs/architecture/memory-os.md
-      - .omo/_truth/registry/memory-os.yaml
-      - docs/operations/memory-os-adapter-audit.md
-      - .agents/skills/memory-recall/SKILL.md
+    - ADR-0372
+    - docs/architecture/memory-os.md
+    - .omo/_truth/registry/memory-os.yaml
+    - docs/operations/memory-os-adapter-audit.md
+    - .agents/skills/memory-recall/SKILL.md
   1:
     status: done
     deliverables:
-      - packages/mos MVP (write/recall/status + dual-track + tests)
-      - MemoryEnvelope validation in mos.envelope
-      - BOS registration bos://memory/mos/*
-      - event dual-subscribe migration (memory + brain)
-
+    - packages/mos MVP (write/recall/status + dual-track + tests)
+    - MemoryEnvelope validation in mos.envelope
+    - BOS registration bos://memory/mos/*
+    - event dual-subscribe migration (memory + brain)
   2:
     status: done
     deliverables:
-      - Mem0 shadow adapter (MOS_MEM0 flag, no Qdrant)
-      - forget bus (raw+theta+mem0)
-      - eval harness v0 (15 cases)
-      - BOS mos/forget
+    - Mem0 shadow adapter (MOS_MEM0 flag, no Qdrant)
+    - forget bus (raw+theta+mem0)
+    - eval harness v0 (15 cases)
+    - BOS mos/forget
   3:
     status: done
     deliverables:
-      - mos.consolidate (gbrain dream orchestration)
-      - Foundry memory-os-consolidate deck
-      - BOS mos/consolidate
+    - mos.consolidate (gbrain dream orchestration)
+    - Foundry memory-os-consolidate deck
+    - BOS mos/consolidate
   4:
     status: done
     deliverables:
-      - temporal shadow (bi-temporal, no Neo4j)
-      - scope ACL principal_id
-      - knowledge_ref (ADR-0315)
+    - temporal shadow (bi-temporal, no Neo4j)
+    - scope ACL principal_id
+    - knowledge_ref (ADR-0315)
   5:
     status: done
     deliverables:
-      - fine ACL (principal/agent_profile/scene)
-      - graphiti bridge flag (no Neo4j hard dep)
-      - cockpit /api/memory HTTP gateway
+    - fine ACL (principal/agent_profile/scene)
+    - graphiti bridge flag (no Neo4j hard dep)
+    - cockpit /api/memory HTTP gateway
   6:
     status: done
     deliverables:
-      - Neo4jFactWriter + memory-rbac
-      - cockpit /memory panel
+    - Neo4jFactWriter + memory-rbac
+    - cockpit /memory panel
   7:
     status: done
     deliverables:
-      - Neo4jSearchBackend recall loop
-      - bin/memory-os-neo4j-up.sh
+    - Neo4jSearchBackend recall loop
+    - bin/memory-os-neo4j-up.sh
   8:
     status: done
     deliverables:
-      - env inject (memory_env + memory-os-env.sh)
-      - port registry 7474/7687
-      - ops contract + surface check
+    - env inject (memory_env + memory-os-env.sh)
+    - port registry 7474/7687
+    - ops contract + surface check
   9:
     status: done
     deliverables:
-      - docs/operations/memory-os-epic-retro.md
-      - env local overrides example (shell + memory_env contract)
-      - FileStore last_consolidate persistence
-      - status.adapters + consolidate metrics for panel
-      - knowledge-foundry-sop dual-accept docs
+    - docs/operations/memory-os-epic-retro.md
+    - env local overrides example (shell + memory_env contract)
+    - FileStore last_consolidate persistence
+    - status.adapters + consolidate metrics for panel
+    - knowledge-foundry-sop dual-accept docs
   10:
     status: done
     deliverables:
-      - Neo4j SEARCH as_of bi-temporal filter
-      - LiveKosSearchBackend (MOS_LIVE_KOS)
-      - LiveGbrainSearchBackend + optional gbrain put write
-      - mos/cockpit recall --as-of
+    - Neo4j SEARCH as_of bi-temporal filter
+    - LiveKosSearchBackend (MOS_LIVE_KOS)
+    - LiveGbrainSearchBackend + optional gbrain put write
+    - mos/cockpit recall --as-of
+schema: memory-os/v1
+as_of: '2026-08-07T22:52:50Z'
+total_beliefs: 3
+tables:
+- agent_belief
+- agent_lesson
+- agent_context
+- world_snapshot
+- capability_calibration
+- decision_outcome
+total_world_snapshots: 0
+total_capability_calibrations: 0
+total_decision_outcomes: 0

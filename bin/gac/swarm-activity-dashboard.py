@@ -205,8 +205,68 @@ def build_report() -> dict:
         "submodule_dirty": _submodule_dirty(),
         "conflicts_24h": _conflicts(24),
         "events_1h": _recent_events(1),
+        "agora_health": _agora_health(),
     }
     return report
+
+
+def _agora_health() -> dict:
+    """P2-3: 探测 agora MCP 网关健康 (7431 SSE, port-registry SSOT).
+
+    只读探测, 2s 超时, 失败标记 down 不阻塞面板渲染。
+    """
+    import urllib.error
+    import urllib.request
+
+    # 端口从 port-registry.yaml 读取 (SSOT, 避免硬编码漂移)
+    try:
+        import yaml
+
+        port_data = yaml.safe_load(
+            (WORKSPACE / "protocols/port-registry.yaml").read_text()
+        )
+        ports = port_data.get("ports", port_data) if isinstance(port_data, dict) else {}
+        sse_port = None
+        if isinstance(ports, dict):
+            for p, meta in ports.items():
+                if isinstance(meta, dict) and meta.get("name") == "agora-mcp-sse":
+                    sse_port = p
+                    break
+        if sse_port is None:
+            sse_port = 7431  # fallback: SSOT 缺失时默认 (注册表约定)
+    except (OSError, ValueError, TypeError):
+        sse_port = 7431
+
+    url = f"http://localhost:{sse_port}/health"
+    try:
+        req = urllib.request.Request(url, headers={"Accept": "application/json"})
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            body = json.loads(resp.read().decode())
+        backends = body.get("backends", {})
+        proxy = body.get("proxy", {})
+        # P8: BOS 注册表契约健康 (强化-2 /health bos_registry)
+        reg = body.get("bos_registry", {})
+        return {
+            "status": body.get("status", "unknown"),
+            "port": sse_port,
+            "services_total": (body.get("services", {}) or {}).get("total"),
+            "services_healthy": (body.get("services", {}) or {}).get("healthy"),
+            "proxy_tools": proxy.get("tool_count"),
+            "backends_total": backends.get("total"),
+            "backends_alive": backends.get("alive"),
+            "audit_24h": (body.get("audit_24h", {}) or {}).get("total"),
+            "bos_registry_pct": reg.get("func_resolvable_pct"),
+            "bos_registry_total": reg.get("internal_total"),
+            "bos_registry_broken": reg.get("broken_count", 0),
+            "issues": body.get("issues", [])[:3],
+            "error": None,
+        }
+    except (urllib.error.URLError, OSError, ValueError, json.JSONDecodeError) as e:
+        return {
+            "status": "down",
+            "port": sse_port,
+            "error": f"{type(e).__name__}: {e}",
+        }
 
 
 def print_text(report: dict) -> None:
@@ -253,10 +313,52 @@ def print_text(report: dict) -> None:
     else:
         print("   (全部干净)")
 
+    agora = report["agora_health"]
+    print(f"\n🩺 Agora health ({agora.get('port')}):")
+    if agora.get("error"):
+        print(f"  🔴 down: {agora['error']}")
+    else:
+        print(
+            f"  {'🟢' if agora.get('status')=='healthy' else '🟡'} "
+            f"status={agora.get('status')} "
+            f"services={agora.get('services_healthy')}/{agora.get('services_total')} "
+            f"proxy_tools={agora.get('proxy_tools')} "
+            f"backends={agora.get('backends_alive')}/{agora.get('backends_total')} "
+            f"audit_24h={agora.get('audit_24h')}"
+        )
+        # P8: BOS 注册表契约健康
+        reg_pct = agora.get("bos_registry_pct")
+        if reg_pct is not None:
+            reg_broken = agora.get("bos_registry_broken", 0)
+            reg_mark = "🟢" if reg_pct >= 80 else "🟡"
+            print(
+                f"     bos_registry {reg_mark} "
+                f"契约可解析={reg_pct}% "
+                f"(total={agora.get('bos_registry_total')} broken={reg_broken})"
+            )
+        if agora.get("issues"):
+            print(f"     issues: {', '.join(agora['issues'])}")
+
     conf = report["conflicts_24h"]
     print(f"\n🚨 Swarm conflicts (24h): {len(conf)}")
     for c in conf[:5]:
         print(f"  {c['ts'][:19]} [{c['kind']}] {c.get('branch','')}: {', '.join(c['paths'][:2])}")
+
+    # 读取 Swarm Mesh 实时广播
+    try:
+        sys.path.insert(0, str(WORKSPACE / "projects" / "agora" / "src"))
+        from agora.swarm_mesh import SwarmMeshManager
+        sm = SwarmMeshManager(root=WORKSPACE)
+        msgs = sm.read_channel(channel="all", limit=5)
+        nodes = sm._load_nodes()
+        print(f"\n📡 Swarm Mesh 蜂群心跳与事件流 ({len(nodes)} 个在线节点, 最新 {len(msgs)} 条广播):")
+        for n in nodes[:5]:
+            paths_str = ", ".join(n.get("working_paths", [])) or "无"
+            print(f"  🤖 [{n.get('agent_id')}] Role: {n.get('role')} | 工作路径: {paths_str}")
+        for m in msgs:
+            print(f"  💬 [{m.get('timestamp')[:19]}] {m.get('sender_id')} ➔ {m.get('channel')}: {m.get('content')}")
+    except Exception as e:
+        pass
     print("=" * 68)
 
 
@@ -304,7 +406,7 @@ def _rich_layout(report: dict) -> object:
         border_style="yellow",
     )
 
-    # ── Submodule dirty + conflicts ──
+    # ── Submodule dirty + conflicts + agora health ──
     dirty_rows = []
     for d in report["submodule_dirty"]:
         color = "red" if d["dirty_count"] >= 10 else "yellow"
@@ -312,6 +414,18 @@ def _rich_layout(report: dict) -> object:
     dirty_text = Text.from_markup(
         ", ".join(dirty_rows) if dirty_rows else "(全部干净)"
     )
+    agora = report["agora_health"]
+    if agora.get("error"):
+        agora_text = Text.from_markup(
+            f"[red]🩺 agora 🔴 down ({agora.get('port')}): {agora['error']}[/]"
+        )
+    else:
+        agora_color = "green" if agora.get("status") == "healthy" else "yellow"
+        agora_text = Text.from_markup(
+            f"[{agora_color}]🩺 agora {agora.get('status')} "
+            f"svc={agora.get('services_healthy')}/{agora.get('services_total')} "
+            f"backends={agora.get('backends_alive')}/{agora.get('backends_total')}[/]"
+        )
     conflicts = report["conflicts_24h"]
     conf_text = Text.from_markup(
         f"[red]🚨 {len(conflicts)} conflicts (24h)[/]"
@@ -322,7 +436,7 @@ def _rich_layout(report: dict) -> object:
             f"\n  {c['ts'][:19]} [{c['kind']}] {c.get('branch','')}"
         )
     status_panel = Panel(
-        Group(dirty_text, conf_text),
+        Group(dirty_text, agora_text, conf_text),
         title=f"[bold]📦 子模块 dirty ({len(report['submodule_dirty'])}) · "
               f"事件(1h)={report['events_1h']}[/]",
         border_style="magenta",
