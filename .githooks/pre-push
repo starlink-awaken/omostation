@@ -98,6 +98,9 @@ REACH_CHANGED_FROM="${REACH_CHANGED_FROM:-}"
 if [ -n "$PUSH_REMOTE_SHA" ] && git cat-file -e "${PUSH_REMOTE_SHA}^{commit}" >/dev/null 2>&1; then
   REACH_CHANGED_FROM="$PUSH_REMOTE_SHA"
 elif [ -z "$REACH_CHANGED_FROM" ] && git rev-parse --verify --quiet origin/main >/dev/null 2>&1; then
+  # 先 fetch 使 base 新鲜 (origin/main ref 可能陈旧 — 见 2026-08-08 会话),
+  # 避免 git diff 陈旧 base..HEAD 产生伪 submodule 差异.
+  git fetch --quiet origin main >/dev/null 2>&1
   REACH_CHANGED_FROM="origin/main"
 fi
 if [ -n "$REACH_CHANGED_FROM" ]; then

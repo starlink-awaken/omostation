@@ -18,7 +18,7 @@ related:
 
 | 组件 | 路径 | 行量级 | 生产判定 | 调用方 |
 |------|------|--------|----------|--------|
-| Mem0Adapter | `projects/kairon/packages/kos/src/kos/adapters/mem0_adapter.py` | ~85 | **stub_optional** | `kos/ingest/__init__.py` dual-write try/except |
+| Mem0Adapter | `projects/kairon/packages/kos/src/kos/adapters/mem0_adapter.py` | ~85 | **stub_optional** (deprecated T3-03) | `kos/ingest/__init__.py` dual-write try/except |
 | MemThetaAdapter | `.../kos/adapters/memtheta_adapter.py` | ~146 | **legacy_simulation** (deprecated T3-03) | `kos/memory_card.py::save_card` |
 | graphiti-core | minerva optional extra | n/a | **optional_tier2** | minerva config `graphiti:`（研究路径） |
 | gbrain dream/cycle | `projects/gbrain/src/commands/dream.ts` + `core/cycle.ts` | 大型 | **production_engine** | CLI/cron/autopilot |
