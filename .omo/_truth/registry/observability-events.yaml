@@ -1,0 +1,97 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-08-08
+---
+
+# 统一事件面注册表 (Unified Event Surface Registry)
+
+# 设计: docs/observability-unified-architecture.md
+# 物理落点: .omo/_delivery/observability/events.jsonl (AppendOnlyLog, fcntl 锁)
+# 时序索引: metrics-store.jsonl 追加行
+# 可订阅投影: Agora EventBus (bos://observability/events/*)
+
+version: 1
+status: active
+updated_at: "2026-08-08T00:00:00Z"
+owner: governance-team
+
+schema:
+  version: 1
+  fields:
+    - name: id
+      type: string
+      description: "全局唯一 evt_<epoch>_<hex6>"
+    - name: ts
+      type: string
+      description: "ISO-8601 事件时间"
+    - name: domain
+      type: enum
+      values: [runtime, governance, swarm, perception, scene, knowledge, debt]
+    - name: type
+      type: string
+      description: "<domain>:<action> 如 governance:gate_failed"
+    - name: severity
+      type: enum
+      values: [info, warning, degraded, critical, recovered]
+    - name: source
+      type: string
+      description: "产生者 (服务/脚本/agent)"
+    - name: trace_id
+      type: string
+      nullable: true
+      description: "贯穿 ID (bus-foundation W3C)"
+    - name: payload
+      type: object
+      description: "领域数据"
+    - name: schema_version
+      type: int
+
+# 通道适配器注册 (L1 归一化层)
+adapters:
+  - id: swarm_broadcast
+    channel: swarm
+    source_path: .omo/state/swarm/broadcast-bus.jsonl
+    enabled: true
+    note: "蜂群 agent 事件 → 事件面"
+  - id: gate_result
+    channel: governance
+    source_path: .omo/state/metrics-store.jsonl
+    enabled: true
+    note: "门禁/检测结果 (ok=false 时发 governance:gate_failed)"
+  - id: debt_ledger
+    channel: debt
+    source_path: .omo/debt/items/
+    enabled: true
+    note: "债务生命周期 (新增/关闭)"
+  - id: health_score
+    channel: governance
+    source_path: .omo/state/health.yaml
+    enabled: true
+    note: "健康分复合快照"
+  - id: signal_poller
+    channel: perception
+    source_path: .omo/state/signal-poller-state.json
+    enabled: true
+    note: "信号感知触发"
+  - id: scene_outcome
+    channel: scene
+    source_path: .omo/_knowledge/workflow-mesh/scene-outcomes.jsonl
+    enabled: true
+    note: "场景执行裁决结果"
+  - id: metaos_trace
+    channel: runtime
+    source_path: projects/metaos/var/metaos.db
+    enabled: false
+    note: "metaos SQLite trace_log (需 metaos 运行, 默认关闭)"
+  - id: transition_log
+    channel: runtime
+    source_path: ""  # agora 内存态, 经 /health 或 API 轮询
+    enabled: false
+    note: "agora 服务状态机转换 (内存, 待 API 暴露)"
+
+# 通知渠道 (TODO: P2.2 告警到人 — 登记不实现)
+notifications:
+  status: todo
+  note: "alert-router 接微信/飞书 webhook + 常态调度 — 设计 §P2.2, 待实现"
