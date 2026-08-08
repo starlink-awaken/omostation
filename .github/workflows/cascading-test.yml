@@ -46,7 +46,13 @@ jobs:
         id: graph
         if: steps.changed-files.outputs.projects != ''
         run: |
-          AFFECTED=$(python3 bin/gac/affected-graph.py --changed-projects ${{ steps.changed-files.outputs.projects }} --json)
+          PROJS="${{ steps.changed-files.outputs.projects }}"
+          if [ -z "$PROJS" ]; then
+            echo "No projects changed; skipping affected graph"
+            echo "affected=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          AFFECTED=$(python3 bin/gac/affected-graph.py --changed-projects $PROJS --json)
           echo "Affected projects: $AFFECTED"
           echo "affected=$AFFECTED" >> $GITHUB_OUTPUT
 
