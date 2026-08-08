@@ -144,12 +144,20 @@ class SceneWatcher:
         if reversible:
             base_threshold = 0.0  # Reversible actions always pass
         else:
-            base_threshold = {"C1": 0.0, "C2": 0.3, "C3": 0.8, "C4": 0.9, "C5": 1.0}.get(capability_level, 0.8)
+            base_threshold = {
+                "C1": 0.0,
+                "C2": 0.3,
+                "C3": 0.8,
+                "C4": 0.9,
+                "C5": 1.0,
+            }.get(capability_level, 0.8)
 
         # Principle 3: Risk-weighted confidence (with context modifiers)
         effective_threshold = base_threshold
         if novel:
-            effective_threshold = min(effective_threshold + 0.3, 1.0)  # Novel → stricter
+            effective_threshold = min(
+                effective_threshold + 0.3, 1.0
+            )  # Novel → stricter
 
         # Hysteresis: trust > 0.9 → permit; trust < 0.7 → ask; between → keep previous
         if trust >= 0.9 and effective_threshold <= 0.8:
@@ -190,7 +198,11 @@ class SceneWatcher:
             for method_name in ("recall_calibration", "get_calibration", "recall"):
                 method = getattr(self.mos_manager, method_name, None)
                 if method:
-                    results = method(action_type=action_type) if "action_type" in method.__code__.co_varnames else method()
+                    results = (
+                        method(action_type=action_type)
+                        if "action_type" in method.__code__.co_varnames
+                        else method()
+                    )
                     if results:
                         data = results[-1] if isinstance(results, list) else results
                         return float(data.get("trust_score", 0.5))
@@ -212,8 +224,11 @@ class SceneWatcher:
             return {}
         for tf in telos_dir.glob("*.md"):
             try:
-                lines = [l.strip() for l in tf.read_text(encoding="utf-8").split("\n")
-                         if l.strip() and not l.startswith("#") and not l.startswith("---")][:3]
+                lines = [
+                    l.strip()
+                    for l in tf.read_text(encoding="utf-8").split("\n")
+                    if l.strip() and not l.startswith("#") and not l.startswith("---")
+                ][:3]
                 self._telos_cache[tf.stem.lower()] = " | ".join(lines)[:200]
             except Exception:
                 continue
@@ -234,7 +249,8 @@ class SceneWatcher:
         # Get trust evaluation (reuse if provided)
         if trust_result is None:
             trust_result = self.evaluate_trust(
-                action, action_type=action_type,
+                action,
+                action_type=action_type,
                 capability_level=action.get("capability_level", "C2"),
                 reversible=action.get("reversible", True),
                 novel=action.get("novel", False),
@@ -263,10 +279,14 @@ class SceneWatcher:
         trust_verdict = trust_result.get("verdict", "ask")
         if telos_alignment == "aligned" and trust_verdict == "ask":
             final_verdict = "recommend"  # TELOS aligned → upgrade ask to recommend
-            final_reason = f"Trust={trust_verdict} but TELOS aligned → recommend with monitoring"
+            final_reason = (
+                f"Trust={trust_verdict} but TELOS aligned → recommend with monitoring"
+            )
         elif telos_alignment == "caution" and trust_verdict == "permit":
             final_verdict = "caution"  # TELOS cautious → downgrade permit to caution
-            final_reason = f"Trust=permit but TELOS suggests caution → proceed carefully"
+            final_reason = (
+                f"Trust=permit but TELOS suggests caution → proceed carefully"
+            )
         else:
             final_verdict = trust_verdict
             final_reason = f"Trust={trust_verdict}, TELOS={telos_alignment}"
