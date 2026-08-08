@@ -1,4 +1,4 @@
-# ADR-0403: Only 9 scene cards — consider adding more domain coverage
+# ADR-0405: Only 9 scene cards — consider adding more domain coverage
 
 - status: draft
 - date: 2026-08-08

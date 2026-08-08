@@ -36,7 +36,9 @@ evidence_required:
 - trace_attribution 可追溯完整归因链（支持多层级、缺失节点）
 - CLI 新增 spawn / trace 子命令，start 支持 --parent-run
 - 9 个测试全通过
-test_plan: []
+test_plan:
+- "audit.log 含 human_session_id -> parent_agent -> task 继承归因链"
+
 workflow: bet-execution
 write_surfaces: []
 pasw_required: false

@@ -449,6 +449,14 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0380: CI Plane Completion — runner migration, orphan cleanup, concurrent-drift absorption — **ACCEPTED** | 2026-08-06 | CI plane completion | 0380-ci-plane-completion.md
 - ADR-0382: 子模块指针回退检测 (CR-SUBMODULE-REWIND) — **ACCEPTED** | 2026-08-06 | Submodule rewind detection | 0382-submodule-rewind-detection.md
 - ADR-0395: CI 平面净红收官 — scripts/check-* orphan 化 + drift ahead 容忍 — **ACCEPTED** | 2026-08-08 | CI plane net-red closeout | 0395-ci-plane-net-red-closeout.md
+- ADR-0404: 运行时状态文件不进 git — 运行时投影面由生成器负责, 不入版本库 — **ACCEPTED** | 2026-08-08 | Runtime state not tracked | 0404-runtime-state-not-tracked.md
+- ADR-0403: Agent 本体与模型驱动约束架构 — MOF M2 模型 + 门禁后移 — **ACCEPTED** | 2026-08-08 | Agent ontology | 0403-agent-ontology-model-driven-architecture.md
+- ADR-0402: 门禁后移与自主审查架构 — DoD 联动 + 自主 review 分级 — **ACCEPTED** | 2026-08-08 | Gate shift autonomous review | 0402-gate-shift-autonomous-review.md
+- ADR-0401: Only 9 scene cards — 场景卡覆盖度评估 (draft) — **DRAFT** | 2026-08-08 | Scene card coverage | 0401-insufficient-cards.md
+- ADR-0400: Definition of Done — 任务完成验证门禁 (防虚假完成) — **ACCEPTED** | 2026-08-08 | DoD gate | 0400-definition-of-done-task-verify.md
+- ADR-0399: 治本 E — 子模块 stale 自动 pull + PASW 漂移检测增强 — **PROPOSED** | 2026-08-08 | Submodule stale auto-pull | 0399-submodule-stale-auto-pull.md
+- ADR-0391: 分层契约方向单源 — layer-contract.yaml 为权威, check-layer-call-direction.py 对齐 — **PROPOSED** | 2026-08-07 | Layer contract direction SSOT | 0391-layer-contract-direction-ssot.md
+- ADR-0405: Only 9 scene cards — 场景卡覆盖度评估 (draft, 重编号避撞) — **DRAFT** | 2026-08-08 | Scene card coverage | 0405-insufficient-cards.md
 - ADR-0394: scripts/ 子模块镜像债治理 — 删 dead capability + Makefile target — **ACCEPTED** | 2026-08-08 | Scripts submodule mirror debt | 0394-scripts-submodule-mirror-debt.md
 - ADR-0393: god-module 大文件治理计划 — 3 个 >1500L 债的拆分路径 — **ACCEPTED** | 2026-08-08 | God-module debt plan | 0393-god-module-debt-plan.md
 - ADR-0392: CI 修复 + 主仓 dirty 提交 — drafts persistence_mode + runtime state 同步 — **ACCEPTED** | 2026-08-08 | CI fix + dirty commit | 0392-ci-fix-and-dirty-commit.md
