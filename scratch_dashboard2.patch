@@ -1,0 +1,10 @@
+--- bin/gac/swarm-activity-dashboard.py
++++ bin/gac/swarm-activity-dashboard.py
+@@ -200,6 +200,7 @@
+         "generated_at": datetime.now(UTC).isoformat(),
+         "active_runs": _active_runs(),
+         "locks": _locks(),
++        "lock_graph": _lock_graph(),
+         "worktrees": _worktrees(),
+         "branch_claims": _claims(BRANCH_CLAIMS),
+         "adr_claims": _claims(ADR_CLAIMS),
