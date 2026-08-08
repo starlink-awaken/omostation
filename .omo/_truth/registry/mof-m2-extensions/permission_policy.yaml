@@ -1,0 +1,22 @@
+# M2: PermissionPolicy — 7-layer access control (ADR-0396)
+m2_type: PermissionPolicy
+version: 1.0.0
+PermissionPolicy:
+  m3_parent: StructuralElement.Component
+  description: 权限策略 — 7层过滤器 + 动态授权 + 学习型权限
+  filterLayers:
+    L1_identity: {description: "身份认证", check: namespace_auth}
+    L2_relationship: {description: "关系层级", check: relationship_baseline}
+    L3_sensitivity: {description: "资源敏感度", check: data_classification}
+    L4_purpose: {description: "用途验证", check: need_to_know}
+    L5_temporal: {description: "时间/上下文", check: context_policy}
+    L6_action: {description: "操作粒度", check: action_scope}
+    L7_delegation: {description: "委托链", check: delegation_depth}
+  dynamicGrants:
+    properties: [granter, grantee, resource, scope, duration, purpose]
+    auto_expire: true
+    revocable: true
+  learnedGrants:
+    description: "从历史模式自动推导recurring grants"
+    trigger: "3+ accepted同类请求"
+    review: monthly
