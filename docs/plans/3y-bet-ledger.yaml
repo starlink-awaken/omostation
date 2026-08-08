@@ -145,6 +145,18 @@ tracks:
     pasw_required: true
     default_workflow: project-code-change
     agent_profile_hint: engineering-agent
+  T9-OBSERV:
+    title: 可观测性收官
+    scope: 统一事件面常态化 / 告警到人 / Langfuse trace / RED 指标 / cockpit 聚合
+    primary_write_surfaces:
+    - bin/ssot/observability-events.py
+    - bin/ssot/log-rotate.py
+    - bin/gac/alert-router.py
+    - projects/agora/src/agora/**
+    - projects/cockpit/src/cockpit/web/**
+    pasw_required: false
+    default_workflow: governance-state-mutation
+    agent_profile_hint: governance-agent
 concurrency:
   max_parallel_bets: 4
   exclusive_tracks:
@@ -2396,3 +2408,47 @@ bets:
   human_gate: true
   circuit_breaker: 不适用(这是门本身)
   retro: required
+- id: BET-Y1Q2-T9-01
+  track: T9-OBSERV
+  window: Y1Q2
+  title: 可观测性收官 — 告警到人 + 事件面常态化调度
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 统一事件面落地后补最后一公里 — 告警通知到人 + 轮转/适配器常态化
+  workflow: bet-execution
+  verify:
+  - python3 bin/ssot/observability-events.py adapters status
+  - make log-rotate --dry-run
+  write_surfaces:
+  - bin/gac/alert-router.py
+  - .omo/_truth/registry/governance-alerts.yaml
+  - .omo/_truth/registry/observability-events.yaml
+  - bin/ssot/observability-events.py
+  - bin/ssot/log-rotate.py
+  done_when:
+  - alert-router 接微信/飞书 webhook, governance-alerts.yaml channels.webhook enabled
+  - log-rotate + observability-adapters 挂 cron/launchd 常态化调度
+  - P0/P1 告警 5 分钟内可达 (P2.2 成功度量)
+  - "observability-events.yaml notifications.status: todo 转为 done"
+- id: BET-Y1Q2-T9-02
+  track: T9-OBSERV
+  window: Y1Q2
+  title: 可观测性增强 — Langfuse trace + RED 指标 + cockpit 聚合
+  appetite: 1 week
+  priority: P2
+  status: candidate
+  goal: trace/指标/展示三维补齐, 可观测四维全覆盖
+  workflow: bet-execution
+  verify:
+  - python3 bin/ssot/observability-events.py search --limit 1
+  write_surfaces:
+  - projects/agora/src/agora/**
+  - projects/bus-foundation/src/bus_foundation/**
+  - projects/cockpit/src/cockpit/web/**
+  - projects/observability/**
+  done_when:
+  - "observability 栈决策: 修复 Langfuse (.env + up) 或正式退役并移除文档引用"
+  - agora /metrics 补 RED 指标 (QPS/延迟直方图/错误率)
+  - bus-foundation trace_id → 事件面导出 (OTel 可选)
+  - cockpit 可观测页聚合统一事件面 (替代分散 /api/logs /api/alerts)
