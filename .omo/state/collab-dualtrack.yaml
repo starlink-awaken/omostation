@@ -1,43 +1,43 @@
-generated_at: '2026-07-29T08:13:00.220602Z'
+generated_at: '2026-08-08T00:40:07.495020Z'
 schema: p84-dualtrack-v1
 capability_track:
   data_source: 构造场景 (.omo/_delivery/collab-scenarios/, 可批量注入加速)
-  scenario_total: 221
-  scenario_passed: 218
-  pass_rate: 0.986
+  scenario_total: 4
+  scenario_passed: 4
+  pass_rate: 1.0
   category_coverage:
     A_conflict:
-      total: 128
-      passed: 128
-    C_decomposition:
-      total: 15
-      passed: 15
+      total: 1
+      passed: 1
     B_failure_injection:
-      total: 65
-      passed: 62
+      total: 1
+      passed: 1
+    C_decomposition:
+      total: 1
+      passed: 1
     D_reuse_pair:
-      total: 13
-      passed: 13
-  adversarial_total: 117
-  adversarial_failed: 3
-  adversarial_fail_rate: 0.026
+      total: 1
+      passed: 1
+  adversarial_total: 0
+  adversarial_failed: 0
+  adversarial_fail_rate: 0
   conflict_resolution_success_rate: 1.0
-  avg_resolution_rounds: 0.71
+  avg_resolution_rounds: 0.25
 throughput_track:
   data_source: 真实 backlog (.omo/tasks/done+planned/, 不可造), Z4 去污后 (剔自产)
-  real_task_total: 32
-  done: 30
-  planned: 2
-  planned_active: 2
+  real_task_total: 63
+  done: 0
+  planned: 63
+  planned_active: 63
   planned_inactive: 0
-  completion_rate: 0.938
+  completion_rate: 0.0
   w3_done_target: 15
-  gap_to_target: 0
+  gap_to_target: 15
   human_direct_count: 0
-  human_direct_ratio: 0.0
-  agent_done_count: 30
+  human_direct_ratio: 0
+  agent_done_count: 0
   silent_loss: 0
-  selfprod_excluded: 89
-  raw_done_total: 119
+  selfprod_excluded: 0
+  raw_done_total: 0
   decontamination_note: 'Z4/T1: 自产 (W波/能力轨) 不计产能轨, P84 §0'
 redline_note: 两轨数据源独立, 禁止合并; 构造场景计产能轨=最高级违规 (P84 §0)
