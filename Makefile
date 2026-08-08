@@ -633,3 +633,7 @@ pasw-cleanup-dryrun:  ## 预览回收 (不删除)
 .PHONY: machine-config-lint
 machine-config-lint:  ## 检查写机器级配置的脚本集合有无未审阅新成员
 	python3 bin/ssot/machine-config-write-lint.py
+
+.PHONY: swarm-prune
+swarm-prune:
+	python3 bin/gac/swarm-prune-zombies.py --apply
