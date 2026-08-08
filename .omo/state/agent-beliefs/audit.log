@@ -52,3 +52,4 @@
 [2026-08-08T06:25:33Z] ACTION=RECORD_WORLD_SNAPSHOT DETAILS=id=ws-0040 domain=perception source=signal-poller:apple_mail_inbox
 [2026-08-08T06:25:45Z] ACTION=RECORD_WORLD_SNAPSHOT DETAILS=id=ws-0041 domain=perception source=signal-poller:apple_mail_inbox
 [2026-08-08T06:26:14Z] ACTION=RECORD_WORLD_SNAPSHOT DETAILS=id=ws-0042 domain=perception source=signal-poller:apple_mail_inbox
+[2026-08-08T11:08:18Z] ACTION=RECORD_BELIEF DETAILS=id=belief-0010 topic=workflow:bet-execution run_id=20260808T104413Z-bet-execution-aace7ca1

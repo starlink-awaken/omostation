@@ -9,7 +9,8 @@
 |---|---|
 | observability 栈决策: 修复 Langfuse (.env + up) 或退役 | ✅ 修复路径: 生成 .env (gitignored, 含随机 secret), `docker compose up`, langfuse 健康 (HTTP 200, v2.95.11), webhook-bridge 拉起 |
 | agora /metrics 补 RED 指标 (QPS/延迟直方图/错误率) | ✅ 补 `bos_errors_total` Counter (按 prefix), record() 失败时递增; QPS=counter rate, 延迟=既有 histogram, 错误率=errors/calls |
-| bus-foundation trace_id → 事件面导出 | ✅ 新增 `export_trace_span` + `BUS_FOUNDATION_EVENT_PLANE` env; E2E 实测 `observability-events.py trace <tid>` 命中 |
+| bus-foundation trace_id → 事件面导出 | ⚠️ 已交付+E2E 实测命中, 但合并前被 T6-01 (bus-foundation 全量退役 #1233) 取代 — 模块在 main 上已清空, 导出代码保留在子模块分支 agent/bet-y1q2-t9-02-bus-foundation; 建议后续把该能力直接并入事件面 (trace_id 字段已支持) |
+
 | cockpit 可观测页聚合统一事件面 | ✅ 后端 `/api/observability/events` + `/api/observability/stats` 读事件面; 实测对真实事件面返回 (含 bus_trace 贯穿记录) |
 
 未过: 无。前端 (cockpit-ui) 切换页面数据源在 write_surfaces 之外，作为后续项记录。

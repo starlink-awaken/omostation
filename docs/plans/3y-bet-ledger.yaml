@@ -2455,7 +2455,7 @@ bets:
   appetite: 1 week
   priority: P2
   status: done
-  note: "Langfuse 修复 (v2.95.11 healthy) + agora RED 错误率 (bos_errors_total) + bus-foundation trace→事件面导出 + cockpit /api/observability 统一查询面; 复盘 .omo/_knowledge/retros/BET-Y1Q2-T9-02.md"
+  note: "Langfuse 修复 (v2.95.11 healthy) + agora RED 错误率 (bos_errors_total) + bus-foundation trace→事件面(被T6-01退役取代, 代码保留) + cockpit /api/observability 统一查询面; 复盘 .omo/_knowledge/retros/BET-Y1Q2-T9-02.md"
   goal: trace/指标/展示三维补齐, 可观测四维全覆盖
   workflow: bet-execution
   verify:
