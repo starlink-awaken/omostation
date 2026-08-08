@@ -223,6 +223,43 @@ def check_indexed_drift(rule: dict) -> list[str]:
     return drifts
 
 
+def _record_drift_vitality(
+    rule_drift_results: dict[str, bool],
+    rules: list[dict],
+) -> None:
+    """Record per-rule vitality entries after drift scan (BET-Y1Q2-T6-01)."""
+    import importlib.util
+
+    tracker_path = WORKSPACE / "bin" / "gac" / "rule-vitality-tracker.py"
+    if not tracker_path.exists():
+        return
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "rule_vitality_tracker", str(tracker_path)
+        )
+        if spec is None or spec.loader is None:
+            return
+        tracker = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(tracker)
+    except Exception:
+        return
+
+    enforcement_map: dict[str, str] = {}
+    for r in rules:
+        enforcement_map[r["id"]] = r.get("enforcement", "required")
+
+    for rule_id, has_drift in rule_drift_results.items():
+        try:
+            tracker.record_vitality(
+                rule_id,
+                "gac-drift",
+                violated=has_drift,
+                enforcement=enforcement_map.get(rule_id, "required"),
+            )
+        except Exception:
+            pass
+
+
 def main() -> int:
     args = sys.argv[1:]
     gate_mode = "--gate" in args
@@ -238,6 +275,7 @@ def main() -> int:
     all_drifts: list[str] = []
     red_drifts: list[str] = []  # 宪法 Wave 2 (ADR-0171): red rule drift 优先修
     gray_drifts: list[str] = []
+    rule_drift_results: dict[str, bool] = {}
     for rule in rules:
         sev = derive_severity(rule)
         rule_drifts = []
@@ -245,10 +283,13 @@ def main() -> int:
         rule_drifts.extend(check_executor_valid(rule))
         rule_drifts.extend(check_ssot_drift(rule))
         rule_drifts.extend(check_indexed_drift(rule))
+        rule_drift_results[rule["id"]] = len(rule_drifts) > 0
         for d in rule_drifts:
             tagged = f"[{sev.upper()}] {d}"
             all_drifts.append(tagged)
             (red_drifts if sev == "red" else gray_drifts).append(tagged)
+
+    _record_drift_vitality(rule_drift_results, rules)
 
     # JSON 模式 (阶段 4 仪表盘/cron 数据源): 输出 JSON, 跳过人读 print
     if json_mode:

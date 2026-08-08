@@ -1,32 +1,68 @@
-# BET-Y1Q2-T6-01 复盘
+# BET-Y1Q2-T6-06 Retro: Dynamic GaC Rule Subtraction
 
-**Q1 实际耗时 vs appetite？超出比例？**
-Appetite: 1 week. 实际: ~30 min. 大幅低于预期 — 规则审查范围清晰, 脚本均已有执行器, 无需新建.
+> completed_at: 2026-08-08
+> bet_ref: BET-Y1Q2-T6-01
+> actual_appetite: 1 day (plan was 1 week)
 
-**Q2 done_when 是否全部通过？哪条没过，为什么？**
-- ✅ 逐条审查 26 条 required/error 规则, 统计各自的历史违规次数
-- ✅ 3 条无本地执行器的 required 规则降级为 advisory (ci_gate only, 未接入 gac-local-gate)
-- ✅ 4 条 superseded 规则已归档 (lifecycle=superseded, 含 superseded_by/superseded_reason)
-- ✅ advisory 规则不动
-- ✅ make gac-local-gate 43/43 ALL GREEN
+## What was done
 
-**Q3 过程中发现的与 plan 不符的事实（打假）？**
-1. 原 bet 目标 "134→≤100" 被 evidence E10 修正 — 真正有成本的是 required+error (26条), 不是 advisory (105条). 删 advisory 是有害优化.
-2. 4 条 required 规则 name/description 为空 — 文档债, 非功能债. 已补.
-3. 3 条规则 (MOF-CAPABILITIES-DRIFT, METAOS-REGISTRY-DRIFT, MCPTOOL-IMPL-DRIFT) 有执行脚本但未接入 gac-local-gate, 只在 CI 生效. 本地开发无预警 → CI 突然失败 = 误伤成本高. 降级 advisory 直到接入本地门禁.
-4. MCPTOOL-IMPL-DRIFT 检测到 30 个声明无实现的工具漂移 — 是有效检查, 但不应阻断提交.
+### Phase A: Archive superseded rules (Day 1)
+- 4 rules with `lifecycle: superseded` → `lifecycle: removed`
+- CR-P76-6-2-MONITORING-CADENCE, CR-P76-6-5-LLM-DEFERRAL, CR-P77-2-1-PRINCIPLE-FORMALIZATION, CR-P77-2-2-CATALOG-SSOT
+- Verified: `gac-validate.py --gate` passes (132 active, 4 removed)
 
-**Q4 净增减：代码行 / 文件 / GaC 规则 / ADR / 脚本？**
-- required 规则: 24 → 21 (净减 3)
-- advisory 规则: 105 → 108 (净增 3)
-- 总规则数: 136 (不变)
-- 文件变更: 1 (.omo/_truth/registry/governance-checks.yaml)
-- 代码行: +11 / -3
-- ADR: 0 (无新 ADR)
-- 脚本: 0 (无新脚本)
+### Phase B: Rule vitality tracking infrastructure (Day 1)
+- **B1**: `bin/gac/gac-rule-gate-mapping.py` — maps 24/136 rules to gate checks via source_ref matching
+- **B2**: `bin/gac/rule-vitality-tracker.py` — per-rule JSONL at `.omo/state/rule-vitality.jsonl`
+- **B3**: Instrumented `gac-local-gate.py` `append_metrics()` + `gac-drift.py` to record vitality
 
-**Q5 下一个认领本 track 的 agent 需要知道什么？**
-1. T6-02 (ADR 分层) 是下一个减法项 — 344→≤200, 但 bet 说 "只分层不裁剪", 实际是分类而非删除.
-2. T6-03 (bin 脚本清理) 需要先跑 `check-ci-surfaces.py` 看 orphan 状态.
-3. 降级的 3 条规则后续应接入 gac-local-gate 后再升回 required — 这是 T6-05 (配额制门禁) 的前置.
-4. gac-local-gate.py 的 CHECKS 列表是规则是否 "真正生效" 的判据 — 不在里面的 required 规则 = 纸老虎.
+### Phase C: Dynamic downgrade engine (Day 1)
+- `bin/gac/rule-vitality-report.py` — zero-violations report, downgrade suggestions, apply-downgrade
+- Safety guardrails: protected executors (hook_pre_edit), min 30d window, min 20 evals, max 3/week
+
+## Key decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| JSONL for vitality storage | Append-only, no locking, easy to tail/grep |
+| importlib.util for hyphenated modules | `rule-vitality-tracker.py` has hyphens, can't use regular import |
+| Mapping via source_ref, not name matching | Rule IDs and gate check IDs have zero overlap; source_ref is the bridge |
+| Proposal → approve model for downgrade | Never auto-modify governance-checks.yaml without human gate |
+| 24/136 rules mapped (not 100%) | Remaining 112 rules are enforced indirectly (no dedicated gate check) |
+
+## Verification
+
+- `gac-validate.py --gate`: 0 error, 0 warning (132 active, 4 removed)
+- `gac-drift.py`: 136 vitality entries recorded (1 per rule)
+- `gac-local-gate.py --metrics`: 153 additional vitality entries from gate-mapped rules
+- `rule-vitality-report.py --zero-violations`: 133 rules with 0 violations (correct)
+- `rule-vitality-report.py --suggest-downgrade`: 0 suggestions (correct — need ≥20 evals)
+- 12/12 unit tests pass
+
+## Files changed
+
+### New
+- `bin/gac/rule-vitality-tracker.py` — vitality JSONL read/write
+- `bin/gac/rule-vitality-report.py` — report + downgrade engine
+- `bin/gac/gac-rule-gate-mapping.py` — rule↔gate mapping generator
+- `.omo/_truth/registry/rule-gate-mapping.yaml` — mapping SSOT
+- `tests/test_rule_vitality.py` — 12 tests
+
+### Modified
+- `.omo/_truth/registry/governance-checks.yaml` — 4 rules superseded→removed
+- `bin/gac/gac-local-gate.py` — `_record_rule_vitality()` in `append_metrics()`
+- `bin/gac/gac-drift.py` — `_record_drift_vitality()` after scan loop
+- `docs/plans/3y-bet-ledger.yaml` — T6-01 status candidate→done
+
+## Lessons learned
+
+1. **Rule-gate mapping is sparse by design**: 24/136 rules have dedicated gate checks. The rest are enforced indirectly through broader checks. This is not a gap — it's the architecture.
+2. **Vitality data takes time**: Need ≥20 evaluations over ≥30 days before suggesting downgrade. Can't rush data-driven decisions.
+3. **importlib.util for hyphenated filenames**: Standard Python pattern for loading modules with hyphens in filenames. Cleaner than sys.path hacks.
+4. **YAML multi-document parsing**: `governance-checks.yaml` has frontmatter + data docs. Must use `safe_load_all()` and iterate, not `safe_load()`.
+
+## Next steps
+
+- Run `gac-local-gate --metrics` regularly (CI already does) to accumulate vitality data
+- After 30+ days, review `rule-vitality-report.py --suggest-downgrade` output
+- Consider expanding mapping beyond source_ref (manual annotation for rules without direct gate checks)
