@@ -35,6 +35,7 @@ EXEMPT_PATH_PATTERNS = (
     r"/(tests|test)/",
     r"conftest\.py$",
     r"/scripts/omo/",
+    r"/scripts/projects/",  # scripts 镜像子模块 (scripts/projects/<name>/ 是各仓参考副本, 非工作区源码; 原码在各仓内受管)
     r"/scripts/contract_gatekeeper\.py$",
     r"__init__\.py$",
     r"src/omo/",  # omo core modules are the authorized brokers for .omo/
