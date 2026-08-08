@@ -124,6 +124,12 @@ phases:
     command:
     - make
     - ssot-guardian
+  - id: sync-check
+    mode: required
+    command:
+    - python3
+    - bin/ssot/post-commit-sync-check.py
+    note: 迭代后派生文档同步检查 (子模块指针变更 → sync-all-docs + 提示提交)
   closeout:
   - id: retro-written
     mode: required
