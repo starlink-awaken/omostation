@@ -45,7 +45,15 @@
 - **T6-10 god-module 拆分** (已完成 PR): external_connections.py 1663→1151L, 数据类→models.py, interface-check error 消除
 - T6-01 GaC 规则减法 / T6-02 ADR 分层 / T6-04 场景归档: 后续轮次
 
-## 六、后续路线
+## 六、落地进展 (P0/P1/T6-10b 已完成)
+
+| 项 | 状态 | 落地 |
+|----|------|------|
+| Q5 能力市场 P0 | ✅ 完成 | resolve_pricing 混合三层 (minerva 0.3/1.2, kos 0.05/0.2), 记账价=市场价 |
+| Q7 backend 分级 P1 | ✅ 完成 | /health backends 加 standby + alive_ratio (127/7/120/0, ratio 0.055) |
+| T6-10b cockpit 拆分 | ✅ 完成 | cli.py 1533→790L (并发 agent) + 命名冲突修复 (_subcommands 上移) |
+
+## 七、后续路线
 
 | 项 | 状态 | 下一步 |
 |----|------|--------|
