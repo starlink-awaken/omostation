@@ -25,24 +25,36 @@ def _c(s: str, col: str) -> str:
     return f"\033[{codes.get(col, 0)}m{s}\033[0m"
 
 
+_HEALTH_MARK = {"healthy": ("●", "g"), "degraded": ("◐", "y"), "down": ("○", "d")}
+
+
 def cmd_ls(args) -> int:
-    v = sv.collect()
+    v = sv.collect_full()
     c = v["counts"]
-    print(_c("● 全服务视图", "b"))
+    print(_c("● 全服务视图  (● 健康 / ◐ 假活着 / ○ 未运行)", "b"))
     for s in v["services"]:
         if args.profile and args.profile not in s.get("profiles", []):
             continue
-        mark = _c("●", "g") if s["running"] else _c("○", "d")
+        if args.degraded and s.get("health") != "degraded":
+            continue
+        sym, col = _HEALTH_MARK.get(s.get("health", "down"), ("○", "d"))
+        mark = _c(sym, col)
         tags = []
         if s.get("resident"):
             tags.append(_c("常驻", "y"))
         if s.get("profiles"):
             tags.append(_c(",".join(s["profiles"]), "c"))
-        if s.get("interval"):
-            tags.append(_c(f"每{s['interval']}s", "d"))
-        extra = f" ports={s['ports']}" if s.get("ports") else ""
-        print(f"  {mark} {s['id']:<44} {s['kind']:<8} {' '.join(tags)}{_c(extra,'d')}")
+        res = ""
+        if s.get("mem_gb"):
+            res = _c(f" {s['mem_gb']}GB", "d")
+            if s.get("cpu"):
+                res += _c(f" cpu{s['cpu']}%", "d")
+        why = _c(f"  ← {s['reason']}", "y") if s.get("reason") else ""
+        print(f"  {mark} {s['id']:<42} {s['kind']:<8} {' '.join(tags)}{res}{why}")
     print()
+    hc = v.get("health_counts", {})
+    print(_c(f"● 健康: {hc.get('healthy',0)} 健康 · "
+             f"{hc.get('degraded',0)} 假活着 · {hc.get('down',0)} 未运行", "b"))
     print(_c("● 统计", "b"))
     print(f"  launchd {c['launchd_running']}/{c['launchd']} 在跑 · "
           f"docker {c['docker_running']}/{c['docker']} 在跑")
@@ -91,13 +103,15 @@ def cmd_profile(args) -> int:
 
 
 def cmd_doctor(args) -> int:
-    v = sv.collect()
+    v = sv.collect_full()
     issues = []
     byid = {s["id"]: s for s in v["services"]}
     for rid in v["resident"]:
         s = byid.get(rid)
         if not s or not s["running"]:
             issues.append(("常驻服务未运行", rid))
+    for d in v.get("degraded", []):
+        issues.append(("服务假活着(degraded)", f"{d['id']} — {d['reason']}"))
     for x in v["ports"]["conflicts"]:
         issues.append(("端口冲突", f":{x['port']} 登记={x['registered']} 实际={x['actual']}"))
     n_undoc = len(v["ports"]["undocumented"])
@@ -152,12 +166,59 @@ def cmd_adopt(args) -> int:
     print(_c(f"✅ 已登记 {len(cand)} 个端口", "g"))
     return 0
 
+
+def cmd_sync(args) -> int:
+    """BOS 能力注册 ↔ 服务 ↔ 端口 ↔ 能力表 四方一致性。"""
+    r = sv.sync_check()
+    print(_c(f"● BOS 同步校验({r['total_bos']} 条能力)", "b"))
+    if r["ok"]:
+        print(_c("  ✅ 全绿", "g"))
+        return 0
+    for kind, n in sorted(r["by_kind"].items()):
+        print(f"  {_c('⚠️','y')} {kind}: {n}")
+    print(_c(f"  (deprecated 保留 {r.get('deprecated_kept', 0)} 条 — 属保留惯例,非问题)", "d"))
+    if args.detail:
+        print()
+        for i in r["issues"]:
+            print(f"    {i['kind']:<26} {i['uri'][:44]:<46} {str(i['detail'])[:40]}")
+    else:
+        print(_c("  明细: wsvc sync --detail", "d"))
+    return 1
+
+
+def cmd_logs(args) -> int:
+    """直达服务日志(不用自己找路径)。"""
+    v = sv.collect_full()
+    s = next((x for x in v["services"] if x["id"] == args.id or
+              x.get("name") == args.id), None)
+    if not s:
+        die_msg = f"找不到服务: {args.id}(wsvc ls 看可用)"
+        print(_c(die_msg, "r"))
+        return 1
+    logs = s.get("logs") or {}
+    if not logs:
+        print(_c(f"{args.id} 未配置日志输出", "y"))
+        return 1
+    if "docker" in logs:
+        print(_c(f"● {logs['docker']}", "d"))
+        os.system(f"{logs['docker']} --tail {args.lines} 2>&1 | tail -{args.lines}")
+        return 0
+    for name, path in logs.items():
+        print(_c(f"● {name}: {path}", "b"))
+        if os.path.isfile(path):
+            os.system(f'tail -{args.lines} "{path}"')
+        else:
+            print(_c("  (文件不存在)", "d"))
+        print()
+    return 0
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         prog="wsvc", description="workspace 服务控制面(与 cockpit /api/svc/* 同源)")
     sub = ap.add_subparsers(dest="cmd")
-    p = sub.add_parser("ls", help="全服务视图")
+    p = sub.add_parser("ls", help="全服务视图(健康+资源)")
     p.add_argument("--profile", help="只看某场景")
+    p.add_argument("--degraded", action="store_true", help="只看假活着的")
     sub.add_parser("ports", help="端口体检")
     for act in ("up", "down"):
         p = sub.add_parser(act, help=f"{act} 单个服务")
@@ -167,11 +228,16 @@ def main() -> int:
     p.add_argument("name")
     p.add_argument("action", choices=["up", "down"])
     sub.add_parser("doctor", help="巡检")
+    p = sub.add_parser("logs", help="查看服务日志")
+    p.add_argument("id")
+    p.add_argument("-n", "--lines", type=int, default=40)
+    p = sub.add_parser("sync", help="BOS↔服务↔端口 一致性校验")
+    p.add_argument("--detail", action="store_true")
     p=sub.add_parser("adopt", help="把在跑但未登记的 workspace 端口登记进 registry"); p.add_argument("--apply",action="store_true")
     args = ap.parse_args()
 
     fn = {"ls": cmd_ls, "ports": cmd_ports, "up": cmd_action, "down": cmd_action,
-          "profile": cmd_profile, "doctor": cmd_doctor, "adopt": cmd_adopt}.get(args.cmd)
+          "profile": cmd_profile, "doctor": cmd_doctor, "adopt": cmd_adopt, "sync": cmd_sync, "logs": cmd_logs}.get(args.cmd)
     if not fn:
         ap.print_help()
         return 0
