@@ -28,13 +28,14 @@ from typing import Any
 # prometheus-client 已声明依赖; 此处定义 scrape 端点数源。
 _prom_counter: Any | None = None
 _prom_latency: Any | None = None
+_prom_errors: Any | None = None
 
 
 def _get_prom_metrics():
     """懒加载 prometheus_client 指标 (避免 import 开销/可选依赖)."""
-    global _prom_counter, _prom_latency
+    global _prom_counter, _prom_latency, _prom_errors
     if _prom_counter is not None:
-        return _prom_counter, _prom_latency
+        return _prom_counter, _prom_latency, _prom_errors
     try:
         from prometheus_client import Counter, Histogram
 
@@ -44,10 +45,14 @@ def _get_prom_metrics():
         _prom_latency = Histogram(
             "bos_call_latency_seconds", "BOS call latency by URI prefix", ["prefix"]
         )
+        _prom_errors = Counter(
+            "bos_errors_total", "BOS call failures by URI prefix", ["prefix"]
+        )
     except ImportError:  # defensive fallback: prometheus-client 未装时跳过埋点
         _prom_counter = None
         _prom_latency = None
-    return _prom_counter, _prom_latency
+        _prom_errors = None
+    return _prom_counter, _prom_latency, _prom_errors
 
 
 # ── SQLite 持久化 ─────────────────────────────────────────
@@ -198,10 +203,12 @@ class BOSMetrics:
             s["failure"] += 1
         s["total_latency_ms"] += latency_ms
         # Prometheus 埋点 (P2-1)
-        counter, latency = _get_prom_metrics()
-        if counter is not None and latency is not None:
+        counter, latency, errors = _get_prom_metrics()
+        if counter is not None and latency is not None and errors is not None:
             counter.labels(prefix=prefix).inc()
             latency.labels(prefix=prefix).observe(max(latency_ms, 0) / 1000.0)
+            if not success:
+                errors.labels(prefix=prefix).inc()
         # 异步写入 SQLite
         self._store.insert(prefix, uri, success, latency_ms)
 
