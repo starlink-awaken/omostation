@@ -202,6 +202,27 @@ def bos_capability_admit(uri: str, description: str = "") -> dict[str, Any]:
     }
 
 
+@mcp.tool()
+def bos_billing_statement(caller_id: str, service: str = "", period: str = "month") -> dict[str, Any]:
+    """采购账单: 查询指定 caller 的月度调用成本明细 (能力市场 P2).
+
+    Args:
+        caller_id: 调用者 ID (如 agent-xxx / local / admin)
+        service: 可选服务前缀过滤 (如 bos://analysis/minerva/)
+        period: 'day', 'week', 'month', or 'all' (默认 month)
+
+    Returns:
+        账单: total_calls / total_cost / by_service 明细
+    """
+    try:
+        from agora.accounting import ResourceAccountDB
+
+        db = ResourceAccountDB()
+        return {"status": "ok", "statement": db.get_calls(caller_id, service or None, period)}
+    except Exception as exc:  # noqa: BLE001 — defensive
+        return {"status": "error", "error": str(exc)}
+
+
 def register() -> None:
     """Register capability lifecycle tools on the global Agora MCP instance.
 
@@ -219,6 +240,7 @@ def register() -> None:
         main_mcp.add_tool(bos_capability_list)
         main_mcp.add_tool(bos_capability_admit)
         main_mcp.add_tool(bos_capability_retire)
+        main_mcp.add_tool(bos_billing_statement)  # P2 采购账单
         register_bos_tools(mcp, bus)
         _LOG.info("bos capability lifecycle tools registered on main MCP (P5)")
     except Exception as exc:  # noqa: BLE001
