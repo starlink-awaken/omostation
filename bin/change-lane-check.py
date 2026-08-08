@@ -16,6 +16,8 @@ ALLOWED_COMBOS = [
     {"governance_code", "config"},
     {"governance_code", "docs", "config"},
     {"submodule_pointer", "config"},
+    {"docs", "docs_data"},
+    {"governance_code", "docs", "docs_data"},
 ]
 
 
@@ -140,6 +142,8 @@ def classify(path: str, submodules: set[str]) -> str:
         return "governance_code"
     if path in {".gitmodules", "Makefile"} or path.startswith(".github/workflows/"):
         return "config"
+    if path.startswith("docs/") and path.endswith((".yaml", ".yml", ".json", ".csv")):
+        return "docs_data"
     if path.endswith((".py", ".ts", ".js", ".sh", ".json", ".yaml", ".yml")):
         return "code"
     return "other"

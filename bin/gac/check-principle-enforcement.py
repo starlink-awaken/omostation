@@ -103,10 +103,10 @@ ENFORCED_MAP = {
     # P76-6-4: observability-first (already mapped above)
     # "observability-first": "CR-P74-RUNTIME-STAMP-POLICY",
     # 2026-08-04: 新增 17 条 draft 规则 (P76/P77/P79 原则对应)
-    "6h-by-9-deck": "CR-P76-6-2-MONITORING-CADENCE",
-    "vit-via-llm-deferral": "CR-P76-6-5-LLM-DEFERRAL",
-    "principle-formalization-with-context": "CR-P77-2-1-PRINCIPLE-FORMALIZATION",
-    "catalog-ssot": "CR-P77-2-2-CATALOG-SSOT",
+    "6h-by-9-deck": "CR-FOUNDRY-MONITOR",
+    "vit-via-llm-deferral": "CR-P76-7-1-LLM-ADVISORY-ONLY",
+    "principle-formalization-with-context": "CR-PRINCIPLE-FOLLOWED",
+    "catalog-ssot": "CR-PRINCIPLE-FOLLOWED",
     "prefix-pattern-allowed": "CR-P77-3-2-PREFIX-PATTERN",
     "tier-test-for-fallback": "CR-P77-6-2-TIER-FALLBACK-TEST",
     "gateway-status-documentation": "CR-P77-6-3-GATEWAY-STATUS-DOC",

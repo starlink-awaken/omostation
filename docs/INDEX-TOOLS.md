@@ -193,6 +193,29 @@
 | gen-external-channels-inventory.py | ECCP 外通道 inventory | `python3 bin/ssot/gen-external-channels-inventory.py` |
 | check-index-drift.py | 索引漂移检测 | `python3 bin/ssot/check-index-drift.py` |
 
+### 3.1 场景卡工具族 (bin/ssot/scene-*)
+
+> 场景卡 (Scene Card) 全生命周期工具。卡片定义 SSOT: `docs/scene-cards/*.yaml`。
+> 分工: 卡片定义/候选/生命周期 (只读无副作用) vs 决策收件箱/审批/连接/复盘 (写 `.omo`)。
+
+| 工具 | 功能 | 调用方式 |
+|:-----|:-----|:---------|
+| scene-card-candidates.py | 场景卡候选生成 (proposal_only) | `python3 bin/ssot/scene-card-candidates.py` |
+| scene-card-intake.py | 场景卡摄入 (proposal_only) | `python3 bin/ssot/scene-card-intake.py` |
+| scene-card-lifecycle.py | 场景卡生命周期管理 (激活/就绪检查) | `python3 bin/ssot/scene-card-lifecycle.py` |
+| scene-chain-validator.py | 场景链校验 (journey chain 闭环) | `python3 bin/ssot/scene-chain-validator.py` |
+| scene-feedback-collector.py | 场景反馈收集 (feedback loop) | `python3 bin/ssot/scene-feedback-collector.py` |
+| scene-card-decision-inbox.py | 决策收件箱核心引擎 (写 .omo/_inbox) | `python3 bin/ssot/scene-card-decision-inbox.py` |
+| scene-card-intake-pipeline.py | 摄入流水线 (写 .omo/_inbox) | `python3 bin/ssot/scene-card-intake-pipeline.py` |
+| scene-card-approval-flow.py | 审批流 (pending→approved/rejected) | `python3 bin/ssot/scene-card-approval-flow.py` |
+| scene-card-connector.py | 场景卡连接器 (能力接线) | `python3 bin/ssot/scene-card-connector.py` |
+| scene-card-task-bridge.py | 任务桥接 (写 .omo/_bindings) | `python3 bin/ssot/scene-card-task-bridge.py` |
+| scene-card-review.py | 每周复盘统计引擎 | `python3 bin/ssot/scene-card-review.py` |
+| gen-scene-card-lineage.py | 场景卡谱系生成 (N8) | `python3 bin/ssot/gen-scene-card-lineage.py` |
+| external-scene-trial.py | 外部场景试运行 | `python3 bin/ssot/external-scene-trial.py` |
+| internal-scene-preflight.py | 内部场景前置检查 | `python3 bin/ssot/internal-scene-preflight.py` |
+| internal-scene-trial.py | 内部场景试运行 | `python3 bin/ssot/internal-scene-trial.py` |
+
 ### 4. MOF 工具 (bin/mof/)
 
 | 工具 | 功能 | 调用方式 |

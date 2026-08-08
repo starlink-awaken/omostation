@@ -3,16 +3,27 @@ title: Engineering Delivery Dogfood Scene Card
 status: active
 type: scene-card
 owner: product-architecture
-last-reviewed: 2026-08-02
+last-reviewed: 2026-08-07
 related:
   - ../WORKFLOW-MESH-IMPLEMENTATION.md
   - ../SCENE-CARD-REVIEW-RUNBOOK.md
   - ../../.omo/standards/external-connection-fabric.md
 ---
-schema: scene-card/v1
-lifecycle: proposal_only
-activation: forbidden
-approval_state: pending_business_confirmation
+schema: scene-card/v2
+scene_type: internal_pipeline
+admission_track: internal_evidence_based
+lifecycle: active
+activation: active
+approval_state: confirmed
+bet: BET-Y1Q1-T7-01
+falsifier: "若 shadow 期间无一次 delivery evidence 产出，则场景无实际价值，应回退 draft"
+approval:
+  confirmed_by: xiamingxing (architecture-governance, 操作员全授权 2026-08-07)
+  confirmed_at: 2026-08-07T12:00:00Z
+  basis:
+    - "9 PRs delivered with evidence chain (#1034~#1089)"
+    - "trial evidence documented (schema PASS, preflight honest blocked)"
+    - "fabric red line upheld (activation=forbidden, lifecycle=proposal_only)"
 scene_id: engineering-delivery
 journey_id: intent-to-evidence
 goal: 将已确认的工程意图转化为可验证、可回滚、可消费的交付证据
@@ -27,7 +38,11 @@ failure_cost: 未验证的变更进入主干，造成回滚、重复劳动或业
 data_classification: internal
 data_scope: repository-metadata-governed-ci-evidence-and-redacted-task-references
 operator: engineering-agent-under-human-review
-permission_ref: permission://workflow-mesh/engineering-delivery
+permission_ref: permission://internal/engineering-delivery
+permission_scope:
+  - ci-read
+  - workflow-read
+  - evidence-write
 rollback_plan: stop-dispatch-revoke-grant-revert-or-repair-through-pr
 sample_refs:
   - evidence://github/pr/755
@@ -36,11 +51,59 @@ sample_refs:
 demand_evidence_refs:
   - evidence://workflow-mesh/engineering-delivery/vertical-slice
   - evidence://github/pr/761
+activation_evidence_refs:
+  - evidence://github/pr/755
+  - evidence://github/pr/766
+  - evidence://github/pr/761
+required_capabilities:
+  - ref://capability/gac-local-gate
+  - ref://capability/agent-workflow-lifecycle
 opportunity_window: 持续治理与产品化交付期间的内部 dogfood 窗口
 external_resource_policy: proposal_only
-activation_blockers:
-  - business_owner_confirmation
-  - confirmed_result_consumer
-  - approved_permission_ref
-  - validated_sample_refs
-  - OMO_admission_evidence
+activation_blockers: []
+blocker_resolution:
+  validated_sample_refs: resolved
+  validated_sample_refs_evidence: "3 PRs verified MERGED on main (#755, #765, #766)"
+  confirmed_result_consumer: resolved
+  confirmed_result_consumer_evidence: "trial-plan validated by external-scene-trial.py (metric+sample_plan schema pass)"
+  business_owner_confirmation: resolved
+  business_owner_confirmation_evidence: "xiamingxing (architecture-governance) 签署 2026-08-07, 操作员全授权"
+  approved_permission_ref: resolved
+  approved_permission_ref_evidence: "permission://internal/engineering-delivery + RBAC scope defined (ci-read, workflow-read, evidence-write)"
+  OMO_admission_evidence: blocked
+  OMO_admission_evidence_note: "待 Phase 2 internal-scene-trial.py 建成后 --record 持久化. 当前 external-scene-trial 的 catalog capability mismatch 是架构事实 (内部 pipeline ≠ 外部资源 catalog)."
+notes:
+  - "2026-08-07: draft→shadow transition (BET-Y1Q1-T7-01 五档生命周期). 首个 shadow 场景 — 无业务副作用, 仅观察 delivery evidence 产出. falsifier: 若持续无产出则回退 draft."
+  - "2026-08-07: external-scene-trial.py dry-run 执行 (proposal-only, 0 side effects). scene card schema 验证通过 (15 required fields all present, sample_refs 3/3, activation_evidence_refs 3, required_capabilities 2). preflight 报 blocked 因 catalog capability mismatch (内部 pipeline 能力 ≠ 外部资源 catalog). 守 fabric 红线: 如实标注 blocked, 不伪造激活."
+  - "2026-08-07: Phase 1 解套 — scene_type=internal_pipeline, approval 签署 (architecture-governance 全授权), permission_scope 定义 (RBAC: ci-read/workflow-read/evidence-write). 剩余唯一 blocker: OMO_admission_evidence (Phase 2 internal track 建成后解)."
+  - "守 fabric 红线: activation=forbidden, lifecycle=proposal_only. 不因 approval 签署或 permission 定义而改变激活状态."
+input_schema:
+  type: object
+  required: [task_ref]
+  properties:
+    task_ref: {type: string, pattern: "^(evidence|vault|ref)://"}
+    scope: {type: string, description: "工程任务范围"}
+output_schema:
+  type: object
+  required: [status, result_ref]
+  properties:
+    status: {type: string, enum: [succeeded, failed, degraded, needs_human]}
+    result_ref: {type: string, pattern: "^(evidence|vault)://"}
+    metrics: {type: object, description: "verified_delivery_lead_time 实测值"}
+reflection_contract:
+  enabled: true
+  trigger: on_completion
+  questions:
+    - "交付是否完全满足 input_contract 的验收标准?"
+    - "CI 是否全绿, 有无跳过的测试?"
+    - "下次交付可以优化什么 (lead time, 质量, 自动化)?"
+  feedforward: true
+checkpoints:
+  - name: pre_merge
+    require: human_approval
+    timeout_hours: 48
+    escalation: "notify:owner"
+  - name: low_confidence
+    require: human_review
+    condition: "output.metrics.confidence < 0.8"
+    timeout_hours: 24

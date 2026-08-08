@@ -78,6 +78,9 @@ def check_target_exists(rule: dict) -> list[str]:
     if any(c in path_part for c in "*?["):
         return drifts
     fpath = WORKSPACE / path_part
+    # 运行时派生面 (gitignored _derived 等) 存在性取决于本地生成, 静态检查不适用
+    if _is_excluded(fpath):
+        return drifts
     if not fpath.exists():
         drifts.append(f"{rule['id']}: target 文件不存在 {path_part}")
     return drifts
@@ -94,7 +97,7 @@ def check_executor_valid(rule: dict) -> list[str]:
     return drifts
 
 
-# drift 扫描排除目录 (依赖/历史面/缓存; 这些 hardcode 合法, 非活文档)
+# drift 扫描排除目录 (依赖/历史面/缓存/运行时派生面; 这些 hardcode 合法, 非活文档)
 EXCLUDE_DIRS = {
     ".venv",
     "node_modules",
@@ -105,6 +108,7 @@ EXCLUDE_DIRS = {
     "_knowledge",
     "_delivery",
     "_log",  # 历史面/交付面 (记录当时值合法)
+    "_derived",  # 运行时派生面 (ADR-0377 G11): m4-health.json 等本地生成产物, fresh checkout 必然缺失
 }
 
 

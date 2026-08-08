@@ -9,7 +9,7 @@ version: 1
 description: Systemic governance evolution roadmap and traceability contract.
 ssot:
   architecture: ARCHITECTURE.md
-  agent_workflows: .omo/_truth/registry/agent-workflows.yaml
+  agent_workflows: .omo/_truth/registry/agent-workflows
   bos_routes: projects/agora/etc/bos-services.yaml
   capabilities: .omo/_truth/registry/projects-capabilities.yaml
   mof_capabilities: .omo/_truth/registry/mof-capabilities.yaml
@@ -43,7 +43,12 @@ initiatives:
   - id: worktree-release-convergence
     title: Release and worktree convergence
     recommendation: Separate completed governance evolution changes from unrelated dirty submodule or runtime state.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 10
     last_evaluated: "2026-07-02"
     meadows_level: 6
@@ -76,7 +81,12 @@ initiatives:
   - id: cockpit-governance-status-plane
     title: Cockpit governance status plane
     recommendation: Surface AGCP and governance evolution status through Cockpit instead of making users assemble state from low-level commands.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 20
     last_evaluated: "2026-07-02"
     meadows_level: 6
@@ -104,17 +114,22 @@ initiatives:
   - id: claim-policy-tiering
     title: Claim policy tiering
     recommendation: Keep core governance paths on required claim tiers while broader docs and entrypoint paths stay advisory.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 30
     last_evaluated: "2026-07-02"
     meadows_level: 5
     owner: governance-team
     layer: X1
-    ssot: .omo/_truth/registry/agent-workflows.yaml
+    ssot: .omo/_truth/registry/agent-workflows
     entrypoints:
       - uv run --with pyyaml python bin/agent-workflow.py status --json
     deliverables:
-      - .omo/_truth/registry/agent-workflows.yaml
+      - .omo/_truth/registry/agent-workflows
       - bin/agent-workflow.py
       - tests/test_agent_workflow.py
     verification:
@@ -130,7 +145,12 @@ initiatives:
   - id: bos-governance-evolution-routes
     title: BOS governance evolution routes
     recommendation: Expose governance roadmap, validation, traces, golden paths, release packages, and loop status through BOS so MCP agents can discover them without prompt memory.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 40
     last_evaluated: "2026-07-02"
     meadows_level: 6
@@ -160,7 +180,12 @@ initiatives:
   - id: capability-traceability
     title: Capability to entrypoint to verifier traceability
     recommendation: Every strategic capability should map to owner, entrypoint, SSOT, and verification command.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 50
     last_evaluated: "2026-07-02"
     meadows_level: 6
@@ -185,7 +210,12 @@ initiatives:
   - id: governance-operating-rhythm
     title: OMO C2G MOF operating rhythm
     recommendation: Make state bridge, ingress, and drift checks part of a visible operating cadence instead of ad-hoc deep maintenance.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 80
     last_evaluated: "2026-07-05"
     meadows_level: 9
@@ -213,7 +243,12 @@ initiatives:
   - id: golden-path-e2e
     title: Golden path end-to-end checks
     recommendation: "Keep three canonical flows visible and verifiable: agent change, strategy ingress, and BOS invocation."
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 70
     last_evaluated: "2026-07-02"
     meadows_level: 5
@@ -237,7 +272,12 @@ initiatives:
   - id: entrypoint-convergence
     title: Entry point convergence
     recommendation: Keep human, agent, and gate entrypoints narrow while leaving lower-level commands as implementation details.
-    status: active
+    status: done
+    closure:
+      adr: ADR-0378
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: acceptance verifiers 8/8 PASS; roadmap closure round (ADR-0378 R-archive)
     progress: 80
     last_evaluated: "2026-07-02"
     meadows_level: 5
@@ -266,6 +306,11 @@ initiatives:
     title: Python quality sweep tooling scaling (ADR-0367)
     recommendation: Promote bin/sweep and pyright-sweep workflow from pilot to enforced surface; add sweep history, suppression-ratio gating, worktree lifecycle integration tests, and a published roadmap initiative.
     status: done
+    closure:
+      adr: ADR-0373
+      verified: '2026-08-05'
+      verifier: governance-team
+      note: sweep-tooling convergence round delivered (ADR-0373, PR #989)
     progress: 100
     last_evaluated: "2026-08-04"
     meadows_level: 5
@@ -289,7 +334,7 @@ initiatives:
       - tests/test_gac_worktree_lifecycle.py
       - tests/test_gac_worktree_lifecycle_integration.py
       - tests/test_adr_frontmatter_backfill.py
-      - .omo/_truth/registry/agent-workflows.yaml
+      - .omo/_truth/registry/agent-workflows
       - .omo/_knowledge/sweeps/INDEX.md
       - .github/workflows/pyright-sweep.yml
     verification:
@@ -309,12 +354,49 @@ initiatives:
       Phase 1 (A1+C1+D1+B1) 集中 1-2 天做阻断类修复 (README, ADR 重复清理, runtime test ADR, 集成测试).
       Phase 2 (~1 周) 推 A2/A3/A4/C2-C4/D2/B2-B3, 让 pyright-sweep-check 真正 required.
       Phase 3 (持续) 维护 sweep 历史归档、CI 自举、commit 拆分.
+
+  - id: ci-plane-convergence
+    title: CI plane convergence (ADR-0379)
+    recommendation: 42 workflows 手工 YAML 无 SSOT → ci-surfaces.yaml 登记 + check-ci-surfaces 检测 + registry-driven runner + double-trigger 去重.
+    status: done
+    progress: 100
+    last_evaluated: "2026-08-05"
+    closure:
+      adr: ADR-0380
+      verified: '2026-08-06'
+      verifier: governance-team
+      note: ADR-0379/0380/0381 收敛轮次; 并发 phase13 重写丢失 closure, ADR-0381 恢复
+    meadows_level: 5
+    owner: governance-team
+    layer: X1-X4
+    ssot: .omo/_truth/registry/ci-surfaces.yaml
+    entrypoints:
+    - python3 bin/gac/check-ci-surfaces.py --json
+    - python3 bin/gac/ci-check-runner.py --workflow governance-check.yml
+    deliverables:
+    - .omo/_truth/registry/ci-surfaces.yaml
+    - bin/gac/check-ci-surfaces.py
+    - bin/gac/ci-check-runner.py
+    - .github/workflows/governance-check.yml
+    verification:
+    - command:
+      - python3
+      - bin/gac/check-ci-surfaces.py
+      - --json
+    acceptance:
+    - CI 平面检查工具全部登记在 ci-surfaces.yaml (0 unregistered / 0 gate-parity).
+    - '无 on: [push, pull_request] 双跑 workflow (0 double-trigger).'
+    - governance-check 内嵌脚本由 registry-driven runner 执行.
+    - gac-healthcheck 含 CI平面 section 且绿色.
+    done_when: CI 平面与 GaC 规则面同级的 SSOT 化 + 可观测 + 无双跑.
+    blocked_by: []
+    next_step: 迁移剩余 standalone workflow (cross-deps/interfaces/port) 到 runner; 接线或删除 2 个 orphan 脚本.
 capability_traces:
   - id: trace.agent-governance-control-plane
     capability: Agent governance control plane
     owner: governance-team
     entry: cockpit agent status --json
-    ssot: .omo/_truth/registry/agent-workflows.yaml
+    ssot: .omo/_truth/registry/agent-workflows
     verifier: uv run --with pyyaml python bin/agent-workflow.py compliance --json
   - id: trace.governance-evolution-roadmap
     capability: Governance evolution roadmap

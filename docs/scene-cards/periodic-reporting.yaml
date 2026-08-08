@@ -1,0 +1,61 @@
+title: Periodic Reporting Scene Card (周期报送与绩效证据包)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-07
+related:
+- ./meeting-supervision.yaml
+- ../STRATEGY-3YEAR-PANORAMA.md
+---
+schema: scene-card/v2
+scene_type: internal_pipeline
+admission_track: internal_evidence_based
+lifecycle: shadow
+activation: preview
+approval_state: pending_business_confirmation
+scene_id: periodic-reporting
+journey_id: schedule-to-evidence
+goal: 按周期 (周/月/季) 自动汇聚工作产出, 生成结构化报送材料和绩效证据包
+trigger: 到达报送周期节点 (周报/月报/季报) 或临时报送要求
+input_contract: 周期内交付物引用 (PR/文档/任务完成记录, evidence:// 格式)
+result_contract: 报送文档 (含完成项/进行中/阻塞项/下周计划) + 绩效证据包 (PR清单/测试覆盖/交付指标)
+outcome_metric: report_compilation_hours / evidence_completeness_rate
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 报送遗漏/数据不准/绩效证据缺失影响考核
+data_classification: internal
+data_scope: reporting-metadata-and-delivery-evidence
+operator: reporting-agent-under-human-review
+permission_ref: permission://internal/periodic-reporting
+permission_scope:
+- ci-read
+- workflow-read
+- evidence-write
+- config-read
+rollback_plan: revert-to-manual-report-compilation
+sample_refs:
+- vault://redacted/periodic-reporting/sample-1
+- vault://redacted/periodic-reporting/sample-2
+- vault://redacted/periodic-reporting/sample-3
+demand_evidence_refs:
+- evidence://strategy-panorama/W4
+activation_evidence_refs:
+- evidence://strategy-panorama/W4
+required_capabilities:
+- ref://capability/gac-local-gate
+- ref://capability/agent-workflow-lifecycle
+opportunity_window: 卫健委借调周报/月报 + 国转中心季度总结 + eCOS 项目周期复盘
+external_resource_policy: proposal_only
+downstream_refs:
+- scene: project-supervision
+  handoff: evidence://scene/periodic-reporting/output:performance-summary
+  trigger: on_report_completed
+notes:
+- '2026-08-07: proposal_only→shadow 批量转换. 无业务副作用, 仅观察. falsifier: 若 shadow 期间无自动报告产出，则场景无价值，回退
+  draft'
+- 'W4 周期报送: 周期触发 → 汇聚产出 → 生成报告 → 绩效证据. 内部pipeline场景.'
+- '可复用 skill: weekly-report (已有). 绩效证据来自 engineering-delivery 的 PR/CI 产出.'
+bet: BET-Y1Q2-T6-04
+falsifier: 若 shadow 期间无自动报告产出，则场景无价值，回退 draft
+activation_blockers: []

@@ -312,6 +312,11 @@ def validate_roadmap(registry: dict[str, Any]) -> tuple[list[str], list[str]]:
         status = str(initiative.get("status") or "")
         if status not in VALID_INITIATIVE_STATUS:
             errors.append(f"{initiative_id or prefix}: status must be one of {sorted(VALID_INITIATIVE_STATUS)}")
+        # ADR-0378 G15: done 必须带 closure 证据 (防"已交付但仍标 active/无记录"回潮)
+        if status == "done" and not initiative.get("closure"):
+            errors.append(
+                f"{initiative_id or prefix}: status done 必须带 closure (adr/verified/verifier) 证据"
+            )
         level = initiative.get("meadows_level")
         if not isinstance(level, int) or level < 1 or level > 12:
             errors.append(f"{initiative_id or prefix}: meadows_level must be an integer from 1 to 12")
@@ -827,7 +832,11 @@ def build_package_report(
             write_decisions_template,
             decision_default,
         )
-    release_ready = not review_findings or decision_summary["ready"]
+    # ADR-0377 G12: invalid 决策记录 = 决策数据不可信 → release 不可 ready.
+    # 旧逻辑 `not review_findings or ...` 在无 findings 时短路 True, 吞掉 invalid.
+    release_ready = decision_summary["invalid"] == 0 and (
+        not review_findings or decision_summary["ready"]
+    )
     release_gate = {
         "required": require_ready,
         "ok": release_ready,

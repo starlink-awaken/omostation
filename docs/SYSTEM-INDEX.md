@@ -63,6 +63,15 @@
 → [工具索引](INDEX-TOOLS.md) — bin/ + scripts/ + .agents/skills 统一目录
 
 → [知识索引](INDEX-KNOWLEDGE.md) — ADR + 审计 + 模式 + 总结交叉索引
+→ [计划与决策台账](docs/plans/) — 3Y-BET-LEDGER 等计划/台账文档
+
+### 场景执行架构 (四面一脊)
+
+→ [Scene Cards](scene-cards/) — 9 个场景卡 (external + internal_pipeline, 双轨准入)
+→ [Journey Specs](journey-specs/) — 3 个 journey 状态机 (inbox-to-decision, meeting-to-delivery, research-to-insight)
+→ [External Connection Fabric](.omo/standards/external-connection-fabric.md) — §7: dual-track admission standard
+→ [Permission Scope Vocabulary](.omo/standards/permission-scope-vocabulary.yaml) — RBAC scope 受控词表
+→ [Signal Sources](.omo/_truth/registry/signal-sources.yaml) — 感知面信号源注册表
 
 → [Agent 能力索引](INDEX-AGENTS.md) — 当前 agent 配置 + 技能清单
 
@@ -79,6 +88,14 @@
 → [本地计算集群](local-compute/) — omlx 集群架构（详见 `docs/local-compute/`）
 
 → [战略体检报告](reports/) — c2g.strategy 周期产出的战略/治理健康周报（详见 `docs/reports/`）
+
+→ [执行计划](plans/) — 三年规划执行台账与 agent 执行指令（详见 `docs/plans/`）
+
+- [`plans/3Y-BET-LEDGER.md`](plans/3Y-BET-LEDGER.md) — 三年规划执行台账（人类视图）。SSOT 为 `plans/3y-bet-ledger.yaml`，CLI `bin/plan/bet-ledger.py`
+- [`plans/AGENT-BRIEF.md`](plans/AGENT-BRIEF.md) — 多 agent 认领与执行指令（首次执行前通读）
+- [`plans/AGENT-TEMPLATES.md`](plans/AGENT-TEMPLATES.md) — 按轨道分工的 agent 指令模板（8 轨道 + 协调者 + 观察者）
+- [`plans/AGENT-GOALS-4X.md`](plans/AGENT-GOALS-4X.md) — goal 模式：4 agent 并行持续推进的零冲突组合与 LOOP 协议
+- [`plans/2026-08-06-agora-p2-deepening-plan.md`](plans/2026-08-06-agora-p2-deepening-plan.md) — agora P2 深化计划
 
 ---
 
@@ -147,6 +164,9 @@
 | SSOT 守护 | doc-ssot-lint, ssot-guardian | bin/ssot/ |
 | MOF 工具 | mof-enforce, mof-reason | bin/mof/ |
 | Agent 工作流 | agent-workflow.py | bin/ |
+| 场景执行 | journey-runner, signal-poller, scene-reflection, scene-outcome-recorder, capability-token | bin/ssot/ |
+| 场景准入 | internal/external-scene-trial, internal/external-activation-preflight, scene-card-lifecycle | bin/ssot/ |
+| 场景验证 | scene-chain-validator, journey-validator, adr-number-check | bin/ssot/ |
 
 详见 `INDEX-TOOLS.md` 获取完整工具目录。
 
