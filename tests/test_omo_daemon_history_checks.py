@@ -34,6 +34,7 @@ def test_run_once_appends_checks_to_history(tmp_path, monkeypatch):
     #    但若 history_appended=True, 则 record 必须有 checks
     if not result.history_appended:
         import pytest
+
         pytest.skip("audit 未产出 report, 跳过 daemon append 验证")
 
     # 4) 读回最后一条 record, 验证 checks 字段存在且完整

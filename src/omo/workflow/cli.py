@@ -192,9 +192,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_spawn.add_argument("--force-lock", action="store_true")
     p_spawn.add_argument("--json", action="store_true")
 
-    p_trace = sub.add_parser(
-        "trace", help="Trace the full attribution chain for a run"
-    )
+    p_trace = sub.add_parser("trace", help="Trace the full attribution chain for a run")
     p_trace.add_argument("run_id")
     p_trace.add_argument("--json", action="store_true")
 

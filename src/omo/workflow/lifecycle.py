@@ -530,9 +530,7 @@ def spawn_run(
     )
 
 
-def trace_attribution(
-    registry: dict[str, Any], run_id: str
-) -> list[dict[str, Any]]:
+def trace_attribution(registry: dict[str, Any], run_id: str) -> list[dict[str, Any]]:
     chain: list[dict[str, Any]] = []
     visited: set[str] = set()
     current_id: str | None = run_id

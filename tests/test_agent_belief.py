@@ -1,6 +1,7 @@
 """
 Unit tests for projects/omo/src/omo/omo_belief.py (BET-Y1Q1-T3-01)
 """
+
 import pytest
 from pathlib import Path
 from omo.omo_belief import (
@@ -37,8 +38,12 @@ def test_load_state_returns_all_six_tables(tmp_path: Path):
     mgr = MOSBeliefManager(root=tmp_path)
     state = mgr._load_state()
     expected_keys = {
-        "beliefs", "lessons", "contexts",
-        "world_snapshots", "capability_calibrations", "decision_outcomes",
+        "beliefs",
+        "lessons",
+        "contexts",
+        "world_snapshots",
+        "capability_calibrations",
+        "decision_outcomes",
     }
     assert set(state.keys()) == expected_keys
     for v in state.values():
@@ -128,18 +133,45 @@ def test_registry_tables_list_includes_all_six(tmp_path: Path):
     mgr.record_belief(topic="t", belief_text="b")
     registry = mgr._load_registry()
     assert set(registry["tables"]) == {
-        "agent_belief", "agent_lesson", "agent_context",
-        "world_snapshot", "capability_calibration", "decision_outcome",
+        "agent_belief",
+        "agent_lesson",
+        "agent_context",
+        "world_snapshot",
+        "capability_calibration",
+        "decision_outcome",
     }
 
 
 def test_multiple_records_increment_ids(tmp_path: Path):
     mgr = MOSBeliefManager(root=tmp_path)
-    assert mgr.record_world_snapshot(source="a", domain="d", observations={}) == "ws-0001"
-    assert mgr.record_world_snapshot(source="b", domain="d", observations={}) == "ws-0002"
-    assert mgr.record_capability_calibration(capability_ref="ref://x", success_rate=0.5) == "cc-0001"
-    assert mgr.record_decision_outcome(decision_type="t", input_summary="i", expected_outcome="e", actual_outcome="a") == "do-0001"
-    assert mgr.record_decision_outcome(decision_type="t2", input_summary="i2", expected_outcome="e2", actual_outcome="a2") == "do-0002"
+    assert (
+        mgr.record_world_snapshot(source="a", domain="d", observations={}) == "ws-0001"
+    )
+    assert (
+        mgr.record_world_snapshot(source="b", domain="d", observations={}) == "ws-0002"
+    )
+    assert (
+        mgr.record_capability_calibration(capability_ref="ref://x", success_rate=0.5)
+        == "cc-0001"
+    )
+    assert (
+        mgr.record_decision_outcome(
+            decision_type="t",
+            input_summary="i",
+            expected_outcome="e",
+            actual_outcome="a",
+        )
+        == "do-0001"
+    )
+    assert (
+        mgr.record_decision_outcome(
+            decision_type="t2",
+            input_summary="i2",
+            expected_outcome="e2",
+            actual_outcome="a2",
+        )
+        == "do-0002"
+    )
 
     state = mgr._load_state()
     assert len(state["world_snapshots"]) == 2
@@ -151,7 +183,9 @@ def test_audit_log_records_new_table_actions(tmp_path: Path):
     mgr = MOSBeliefManager(root=tmp_path)
     mgr.record_world_snapshot(source="s", domain="d", observations={})
     mgr.record_capability_calibration(capability_ref="ref://c", success_rate=0.8)
-    mgr.record_decision_outcome(decision_type="t", input_summary="i", expected_outcome="e", actual_outcome="a")
+    mgr.record_decision_outcome(
+        decision_type="t", input_summary="i", expected_outcome="e", actual_outcome="a"
+    )
 
     log_text = mgr.audit_log_file.read_text()
     assert "RECORD_WORLD_SNAPSHOT" in log_text
