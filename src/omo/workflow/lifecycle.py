@@ -633,6 +633,25 @@ def claim_run(
         scopes = [f"path:{item}" for item in normalized_paths] + [
             f"surface:{item}" for item in normalized_surfaces
         ]
+        
+        # Phase L0 MOF Enforce: Trigger pre-check for any projects being claimed
+        mof_enforce_script = WORKSPACE / "bin/mof/mof-enforce"
+        if mof_enforce_script.exists():
+            for p in normalized_paths:
+                if p.startswith("projects/"):
+                    parts = p.split("/")
+                    if len(parts) >= 2:
+                        node_id = parts[1]
+                        try:
+                            subprocess.run(
+                                ["bash", str(mof_enforce_script), "pre-check", node_id],
+                                cwd=str(WORKSPACE),
+                                capture_output=True,
+                                check=False
+                            )
+                        except Exception:
+                            pass
+
         lock_paths = acquire_locks(registry, scopes, run_id, actor, force_lock)
         try:
             payload.setdefault("locks", [])
