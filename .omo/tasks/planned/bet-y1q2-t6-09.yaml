@@ -30,8 +30,10 @@ risk_level: L1
 allowed_operation_level: L1
 human_approval_required: false
 entry_gate: []
-evidence_required: []
-test_plan: []
+evidence_required:
+- 按 Task 复杂度自动选择模型/算力 (bos://compute/aetherforge/infer 可解析)
+test_plan:
+- uv run --project projects/agora python -m omo.cli bos resolve bos://compute/aetherforge/infer
 workflow: bet-execution
 write_surfaces: []
 pasw_required: false

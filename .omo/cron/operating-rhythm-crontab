@@ -31,3 +31,6 @@ PATH=/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin
 # ── daily 08:30 (统一事件面常态化, T9-OBSERV) — 事件适配器增量同步 + 日志轮转 ──
 30 8 * * * cd "$HOME/Workspace" && python3 bin/ssot/observability-events.py adapters run >> runtime/cron/observability-daily.log 2>&1
 35 8 * * * cd "$HOME/Workspace" && python3 bin/ssot/log-rotate.py >> runtime/cron/observability-daily.log 2>&1
+
+# ── daily 08:45 (告警到人, T9-OBSERV) — 检测 metrics 异常 → 路由 → channel 通知 ──
+45 8 * * * cd "$HOME/Workspace" && python3 bin/gac/anomaly-detector.py --json >> runtime/cron/observability-daily.log 2>&1 && python3 bin/gac/alert-router.py --window 20 >> runtime/cron/observability-daily.log 2>&1
