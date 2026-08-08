@@ -17,6 +17,8 @@ from typing import Any
 from .omo_io import AppendOnlyLog, fcntl_lock
 from .omo_paths import DELIVERY_DIR
 
+import yaml
+
 VERDICT_CONFIDENCE_DELTA: dict[str, float] = {
     "accepted": +0.05,
     "modified": -0.05,
@@ -109,6 +111,7 @@ class AdjudicationStore:
         )
         self._log.append(asdict(record), sort_keys=True)
         self._apply_belief_feedback(decision_id, verdict)
+        self._update_capability_calibration(decision_id, verdict)
         return adj_id
 
     def _apply_belief_feedback(self, decision_id: str, verdict: str) -> None:
@@ -130,6 +133,61 @@ class AdjudicationStore:
                     delta,
                     reason=f"adjudication:{verdict} decision={decision_id}",
                 )
+        except Exception:
+            pass
+
+    def _update_capability_calibration(
+        self, decision_id: str, verdict: str
+    ) -> None:
+        """闭环: 裁决 → capability_calibration 自动更新 (BET-Y1Q2-T4-01).
+
+        公式: calibration = accepted_as_is / invocations (per capability).
+        """
+        if self._mos_manager is None:
+            return
+        try:
+            outcome = self._mos_manager.get_decision_outcome(decision_id)
+            if outcome is None:
+                return
+            capability = outcome.get("decision_type", "unknown")
+
+            records = self._log.read_all()
+            total = 0
+            accepted = 0
+            for r in records:
+                rid = r.get("decision_id", "")
+                if not rid:
+                    continue
+                rel = self._mos_manager.get_decision_outcome(rid)
+                if rel and rel.get("decision_type") == capability:
+                    total += 1
+                    if r.get("verdict") == "accepted":
+                        accepted += 1
+
+            if total == 0:
+                return
+            calibration = accepted / total
+            self._mos_manager.record_capability_calibration(
+                capability_ref=capability,
+                success_rate=round(calibration, 4),
+                sample_size=total,
+                last_run_id=decision_id,
+            )
+
+            OUTCOMES_DIR.mkdir(parents=True, exist_ok=True)
+            summary_file = OUTCOMES_DIR / "capability_calibration_summary.yaml"
+            existing: dict = {}
+            if summary_file.exists():
+                with open(summary_file, encoding="utf-8") as f:
+                    existing = yaml.safe_load(f) or {}
+            existing[capability] = {
+                "calibration": round(calibration, 4),
+                "accepted": accepted,
+                "total": total,
+                "updated_at": _utc_now(),
+            }
+            with open(summary_file, "w", encoding="utf-8") as f:
+                yaml.dump(existing, f, default_flow_style=False, allow_unicode=True)
         except Exception:
             pass
 

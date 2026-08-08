@@ -216,3 +216,108 @@ def test_verdict_confidence_delta_values():
     assert abs(VERDICT_CONFIDENCE_DELTA["rejected"]) > abs(
         VERDICT_CONFIDENCE_DELTA["modified"]
     )
+
+
+def test_adjudication_triggers_capability_calibration(tmp_path: Path):
+    """BET-Y1Q2-T4-01: 每条裁决自动更新 capability_calibration."""
+    mos = MOSBeliefManager(root=tmp_path)
+    do_id = mos.record_decision_outcome(
+        decision_type="scene_watcher:test",
+        input_summary="node=n1",
+        expected_outcome="pass",
+        actual_outcome="pass",
+    )
+
+    log_path = tmp_path / "adj.jsonl"
+    lock_path = tmp_path / "adj.lock"
+    from omo.omo_io import AppendOnlyLog, fcntl_lock
+
+    log = AppendOnlyLog(path=log_path, lock=fcntl_lock(lock_path))
+    store = AdjudicationStore(log=log, mos_manager=mos)
+    store.record(decision_id=do_id, verdict="accepted")
+
+    state = mos._load_state()
+    calibrations = state["capability_calibrations"]
+    assert len(calibrations) >= 1
+    cal = calibrations[-1]
+    assert cal["capability_ref"] == "scene_watcher:test"
+    assert cal["success_rate"] == 1.0
+    assert cal["sample_size"] == 1
+
+
+def test_calibration_formula_accepted_over_total(tmp_path: Path):
+    """BET-Y1Q2-T4-01: calibration = accepted_as_is / invocations."""
+    mos = MOSBeliefManager(root=tmp_path)
+    do1 = mos.record_decision_outcome(
+        decision_type="review", input_summary="a", expected_outcome="ok",
+        actual_outcome="ok",
+    )
+    do2 = mos.record_decision_outcome(
+        decision_type="review", input_summary="b", expected_outcome="ok",
+        actual_outcome="ok",
+    )
+    do3 = mos.record_decision_outcome(
+        decision_type="review", input_summary="c", expected_outcome="ok",
+        actual_outcome="ok",
+    )
+
+    log_path = tmp_path / "adj.jsonl"
+    lock_path = tmp_path / "adj.lock"
+    from omo.omo_io import AppendOnlyLog, fcntl_lock
+
+    log = AppendOnlyLog(path=log_path, lock=fcntl_lock(lock_path))
+    store = AdjudicationStore(log=log, mos_manager=mos)
+
+    store.record(decision_id=do1, verdict="accepted")
+    store.record(decision_id=do2, verdict="rejected")
+    store.record(decision_id=do3, verdict="accepted")
+
+    state = mos._load_state()
+    calibrations = [
+        c for c in state["capability_calibrations"]
+        if c["capability_ref"] == "review"
+    ]
+    assert len(calibrations) >= 1
+    last = calibrations[-1]
+    assert last["sample_size"] == 3
+    assert abs(last["success_rate"] - 2 / 3) < 1e-3
+
+
+def test_calibration_summary_yaml_written(tmp_path: Path):
+    """BET-Y1Q2-T4-01: calibration 值变化可在 /outcomes 观察."""
+    import yaml
+
+    mos = MOSBeliefManager(root=tmp_path)
+    do_id = mos.record_decision_outcome(
+        decision_type="deploy-check",
+        input_summary="x",
+        expected_outcome="pass",
+        actual_outcome="pass",
+    )
+
+    outcomes_dir = tmp_path / "outcomes"
+    outcomes_dir.mkdir(parents=True, exist_ok=True)
+
+    from omo.omo_io import AppendOnlyLog, fcntl_lock
+    from omo import omo_adjudication as adj_mod
+
+    original_outcomes = adj_mod.OUTCOMES_DIR
+    adj_mod.OUTCOMES_DIR = outcomes_dir
+
+    try:
+        log_path = tmp_path / "adj.jsonl"
+        lock_path = tmp_path / "adj.lock"
+        log = AppendOnlyLog(path=log_path, lock=fcntl_lock(lock_path))
+        store = AdjudicationStore(log=log, mos_manager=mos)
+        store.record(decision_id=do_id, verdict="accepted")
+
+        summary_file = outcomes_dir / "capability_calibration_summary.yaml"
+        assert summary_file.exists()
+        with open(summary_file, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        assert "deploy-check" in data
+        assert data["deploy-check"]["calibration"] == 1.0
+        assert data["deploy-check"]["accepted"] == 1
+        assert data["deploy-check"]["total"] == 1
+    finally:
+        adj_mod.OUTCOMES_DIR = original_outcomes
