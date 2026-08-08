@@ -1,0 +1,45 @@
+id: KOS-Q-GROWTH-ROLLING
+title: "KOS 季度扩量持续监测 (rolling goal 关联 task)"
+status: pending
+task_type: goal-support
+priority: P3
+owner: agent
+source: KOS-Q-GROWTH goal
+source_ref: docs/KOS-QUARTERLY-GROWTH.md
+goal_ref: KOS-Q-GROWTH
+window: Q3-2026
+track: KOS-TRACK
+appetite: ongoing
+desc: "持续追踪 KOS 扩量: 当前 measured_documents=5193 (Q3≥1500 已达标), Q4≥3000/Q1-2027≥5000 floor 持续监测 (source: kos/kos-index.sqlite)"
+non_goals:
+- 一次性扩量 (rolling, 无终点)
+- 修改 kos-index 数据源
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/KOS-QUARTERLY-GROWTH.md
+- .omo/goals/current.yaml
+risk_level: L3
+allowed_operation_level: L3
+human_approval_required: false
+entry_gate: []
+evidence_required:
+- "measured_documents ≥ 当前季度 floor"
+evidence_ref: .omo/_knowledge/audits/2026-07-24-batch1-kos-remeasure.md
+test_plan:
+- 比对 .omo/goals/current.yaml KOS-Q-GROWTH kpi 季度 floor
+- 核对 kos/kos-index.sqlite measured_documents 计数与 kpi 一致性
+- 检查 .omo/_knowledge/audits/ 下最近一次 KOS remeasure 审计存在
+workflow: bet-execution
+write_surfaces: []
+pasw_required: false
+retro_required: false
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0
