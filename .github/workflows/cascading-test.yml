@@ -1,0 +1,57 @@
+name: Cascading Topological Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  cascading_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 2
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Determine changed files
+        id: changed-files
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            git fetch origin ${{ github.base_ref }}
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
+          else
+            CHANGED=$(git diff --name-only HEAD^ HEAD)
+          fi
+          
+          # Extract project names
+          PROJECTS=""
+          for file in $CHANGED; do
+            if [[ $file == projects/* ]]; then
+              proj=$(echo $file | cut -d'/' -f2)
+              PROJECTS="$PROJECTS $proj"
+            fi
+          done
+          
+          PROJECTS=$(echo $PROJECTS | tr ' ' '\n' | sort -u | tr '\n' ' ')
+          echo "Changed projects: $PROJECTS"
+          echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
+
+      - name: Run Topological Affected Graph
+        id: graph
+        if: steps.changed-files.outputs.projects != ''
+        run: |
+          AFFECTED=$(python3 bin/gac/affected-graph.py --changed-projects ${{ steps.changed-files.outputs.projects }} --json)
+          echo "Affected projects: $AFFECTED"
+          echo "affected=$AFFECTED" >> $GITHUB_OUTPUT
+
+      - name: Trigger downstream tests
+        if: steps.graph.outputs.affected != ''
+        run: |
+          echo "Cascading Testing triggered for: ${{ steps.graph.outputs.affected }}"
+          # Here we would invoke matrix testing or downstream test scripts
+          # for each affected project.
+          # e.g., make test-projects PROJECTS="${{ steps.graph.outputs.affected }}"
