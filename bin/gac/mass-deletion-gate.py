@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 import argparse
+import glob
 import os
 import subprocess
 import sys
@@ -65,14 +66,46 @@ def gitlink(ref: str, path: str, cwd: str | None) -> str | None:
     return meta[2] if len(meta) >= 3 and meta[0] == "160000" else None
 
 
-def tree_size(sub_dir: str, sha: str) -> int | None:
-    """子模块某 commit 的文件数; 对象不在本地则 None(不误判)。"""
-    if not subprocess.run(
-        ["git", "cat-file", "-e", f"{sha}^{{commit}}"], cwd=sub_dir,
-        capture_output=True,
-    ).returncode == 0:
-        return None
-    return len(run(["git", "ls-tree", "-r", sha, "--name-only"], sub_dir).splitlines())
+def _sub_repos(root: str, path: str) -> list[str]:
+    """能读到该子模块对象的候选仓库目录, 按可靠性排序。
+
+    未初始化的 worktree 里 ``<root>/<path>`` 不是有效 repo, 但对象通常仍在
+    ``.git/modules/<path>`` 或 ``.git/worktrees/<wt>/modules/<path>``。
+    不覆盖这些候选, 闸门就会在"未初始化 worktree"这个事故高发场景里静默失效
+    —— 实测 PR #1206 就是这样从第一版闸门下漏过去的。
+    """
+    cands = [f"{root}/{path}"]
+    for flag in ("--git-common-dir", "--git-dir"):
+        d = run(["git", "rev-parse", flag], root).strip()
+        if not d:
+            continue
+        if not os.path.isabs(d):
+            d = os.path.join(root, d)
+        cands.append(os.path.join(d, "modules", path))
+        # 兄弟 worktree 的 module 目录。git 对象是内容寻址的, 从任一持有该
+        # commit 的仓读都等价 —— 这是未初始化 worktree 下唯一能拿到对象的途径。
+        cands += sorted(glob.glob(os.path.join(d, "worktrees", "*", "modules", path)))
+        # 主检出常常是普通 repo 而非 modules/ 布局
+        cands.append(os.path.join(os.path.dirname(d), path))
+    seen, out = set(), []
+    for c in cands:
+        c = os.path.normpath(c)
+        if c not in seen and os.path.exists(c):
+            seen.add(c)
+            out.append(c)
+    return out
+
+
+def tree_size(root: str, path: str, sha: str) -> int | None:
+    """子模块某 commit 的文件数; 所有候选仓库都读不到则 None(不误判)。"""
+    for repo in _sub_repos(root, path):
+        ok = subprocess.run(
+            ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+            cwd=repo, capture_output=True,
+        ).returncode == 0
+        if ok:
+            return len(run(["git", "ls-tree", "-r", sha, "--name-only"], repo).splitlines())
+    return None
 
 
 def check_submodule_bumps(base: str, head: str, cwd: str | None, ratio: float) -> list[str]:
@@ -87,8 +120,7 @@ def check_submodule_bumps(base: str, head: str, cwd: str | None, ratio: float) -
         old, new = gitlink(base, p, cwd), gitlink(head, p, cwd)
         if not old or not new or old == new:
             continue
-        sub = f"{root}/{p}"
-        o, n = tree_size(sub, old), tree_size(sub, new)
+        o, n = tree_size(root, p, old), tree_size(root, p, new)
         if o is None or n is None or o == 0:
             continue
         if n == 0:
