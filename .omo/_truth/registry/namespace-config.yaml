@@ -1,0 +1,46 @@
+# Namespace Configuration Schema — Multi-twin isolation (P4-T3)
+# ADR-0396: 共享基建 + 独立namespace + 家庭共享区
+schema: namespace-config/v1
+
+default_namespace: xiamingxing
+
+namespaces:
+  - id: xiamingxing
+    role: primary_user
+    shared_with:
+      - namespace: spouse
+        domains: [family_calendar, family_finance, child_education, shopping_list]
+        access: read_write
+      - namespace: child
+        domains: [child_education]
+        access: read_only
+    private: [personal_telos, work_email, personal_finance, health_detail]
+
+  - id: spouse
+    role: family_member
+    shared_with:
+      - namespace: xiamingxing
+        domains: [family_calendar, family_finance, child_education]
+        access: read_write
+    private: [personal_telos, personal_communications]
+
+  - id: child
+    role: family_member
+    shared_with:
+      - namespace: xiamingxing
+        domains: [education_progress]
+        access: read_only
+    private: [all_default]
+
+shared_resources:
+  - family_calendar
+  - family_finance
+  - child_education_records
+  - home_devices
+  - shopping_lists
+
+permission_model:
+  default: deny
+  explicit_grant_required: true
+  dynamic_grants: enabled
+  learning_based: enabled
