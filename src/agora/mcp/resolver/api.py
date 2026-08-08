@@ -271,11 +271,7 @@ def _get_service_index() -> dict[str, BosService]:
     """构建 uri → BosService 索引 (惰性, 一次构建)."""
     global _service_index
     if _service_index is None:
-        _service_index = {
-            normalize_bos_uri(s.uri): s
-            for s in POC_SERVICES
-            if s.uri
-        }
+        _service_index = {normalize_bos_uri(s.uri): s for s in POC_SERVICES if s.uri}
     return _service_index
 
 

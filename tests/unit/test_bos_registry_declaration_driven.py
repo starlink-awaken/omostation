@@ -4,6 +4,7 @@
 校验 func 可解析 + 参数契约 (dict 或 named 被 api 智能适配). 防"声明但不可执行"回归.
 外部包 (aetherforge/omo/bus_foundation/kairon) 环境性跳过.
 """
+
 from __future__ import annotations
 
 import importlib
@@ -47,8 +48,7 @@ def test_declared_internal_contract_compatible(uri, module_path, func_name):
     first = params[0]
     # 合法契约: 首参 args/arguments (dict) 或 named 参数 (api 按 kwargs 展开)
     assert first.name not in ("args", "arguments") or (
-        first.annotation is inspect.Parameter.empty
-        or "dict" in str(first.annotation)
+        first.annotation is inspect.Parameter.empty or "dict" in str(first.annotation)
     ), f"{uri} args 参数但非 dict 注解"
 
 

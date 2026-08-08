@@ -49,15 +49,21 @@ class QuotaConfig:
                 data = {}
         if not isinstance(data, dict):
             data = {}
-        self._default_daily_usd = float(data.get("default_daily_usd", _DEFAULT_DAILY_USD))
+        self._default_daily_usd = float(
+            data.get("default_daily_usd", _DEFAULT_DAILY_USD)
+        )
         self._callers = {}
         for c in data.get("callers", []) or []:
             if isinstance(c, dict) and c.get("id"):
-                self._callers[str(c["id"])] = float(c.get("daily_usd", _DEFAULT_DAILY_USD))
+                self._callers[str(c["id"])] = float(
+                    c.get("daily_usd", _DEFAULT_DAILY_USD)
+                )
         self._services = []
         for s in data.get("services", []) or []:
             if isinstance(s, dict) and s.get("prefix"):
-                self._services.append((str(s["prefix"]), float(s.get("daily_usd", _DEFAULT_DAILY_USD))))
+                self._services.append(
+                    (str(s["prefix"]), float(s.get("daily_usd", _DEFAULT_DAILY_USD)))
+                )
 
     def daily_limit_for(self, caller_id: str, service: str = "") -> float:
         """返回 caller 对某服务的每日配额上限 (USD)."""
@@ -97,7 +103,11 @@ class QuotaChecker:
     # 预警阈值: 用量 ≥ 80% 触发 warning
     _WARN_RATIO = 0.8
 
-    def __init__(self, config: QuotaConfig | None = None, account_db: ResourceAccountDB | None = None):
+    def __init__(
+        self,
+        config: QuotaConfig | None = None,
+        account_db: ResourceAccountDB | None = None,
+    ):
         self._config = config or QuotaConfig()
         self._db = account_db or ResourceAccountDB()
         self._lock = threading.Lock()
@@ -132,7 +142,9 @@ class QuotaChecker:
         if counter is not None and gauge is not None:
             if level == "blocked":
                 counter.labels(caller_id=caller_id).inc()
-            gauge.labels(caller_id=caller_id).set(min(info.get("usage_ratio", 0.0), 1.0))
+            gauge.labels(caller_id=caller_id).set(
+                min(info.get("usage_ratio", 0.0), 1.0)
+            )
 
         # 事件总线 (统一告警入口)
         try:
@@ -154,7 +166,9 @@ class QuotaChecker:
                 }
             )
         except Exception:  # defensive: 告警发布失败不阻塞调用
-            _log.warning("quota_alert_publish_failed caller=%s level=%s", caller_id, level)
+            _log.warning(
+                "quota_alert_publish_failed caller=%s level=%s", caller_id, level
+            )
 
         # 可选 webhook (复用 is_safe_url 校验)
         try:

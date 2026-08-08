@@ -64,9 +64,8 @@ def _get_prom_alerts():
 
 def _resolve_webhook(event: str) -> str:
     """选择 webhook URL: 统一 env 优先, 兼容 quota 专用 env."""
-    return (
-        os.environ.get(_ALERT_WEBHOOK_ENV, "")
-        or os.environ.get(_QUOTA_WEBHOOK_ENV, "")
+    return os.environ.get(_ALERT_WEBHOOK_ENV, "") or os.environ.get(
+        _QUOTA_WEBHOOK_ENV, ""
     )
 
 
@@ -100,7 +99,9 @@ def send_alert(
         throttle_seconds: 防抖窗口; force=True 时忽略防抖
     """
     payload = dict(payload or {})
-    payload.setdefault("emitted_at", _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime()))
+    payload.setdefault(
+        "emitted_at", _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime())
+    )
 
     # 防抖 (除非 force)
     if not force:
@@ -184,7 +185,7 @@ def _append_alert_log(level: str, event: str, payload: dict) -> None:
             # 轮转: 超过阈值只保留最近 N 条
             if path.exists() and sum(1 for _ in path.open()) >= _ALERT_LOG_MAX_LINES:
                 lines = path.read_text().splitlines()
-                path.write_text("\n".join(lines[-_ALERT_LOG_MAX_LINES // 2:]) + "\n")
+                path.write_text("\n".join(lines[-_ALERT_LOG_MAX_LINES // 2 :]) + "\n")
             with path.open("a", encoding="utf-8") as f:
                 f.write(_json.dumps(entry, ensure_ascii=False) + "\n")
     except Exception:  # defensive: 日志写入失败不影响告警主流程

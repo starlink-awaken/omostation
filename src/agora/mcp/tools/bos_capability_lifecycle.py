@@ -94,7 +94,10 @@ def bos_capability_retire(
 
     role = agora_role_ctx.get()
     if role not in ("admin", "local"):
-        return {"status": "error", "error": f"role '{role}' not authorized to retire capability"}
+        return {
+            "status": "error",
+            "error": f"role '{role}' not authorized to retire capability",
+        }
     capability_catalog, admission_catalog = _get_catalogs()
     if capability_catalog is None:
         return {"status": "error", "error": "capability_catalog_unavailable"}
@@ -136,7 +139,10 @@ def bos_capability_admit(uri: str, description: str = "") -> dict[str, Any]:
 
     role = agora_role_ctx.get()
     if role not in ("admin", "local"):
-        return {"status": "error", "error": f"role '{role}' not authorized to admit capability"}
+        return {
+            "status": "error",
+            "error": f"role '{role}' not authorized to admit capability",
+        }
     capability_catalog, admission_catalog = _get_catalogs()
     if capability_catalog is None:
         return {"status": "error", "error": "capability_catalog_unavailable"}
