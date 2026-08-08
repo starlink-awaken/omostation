@@ -383,7 +383,8 @@ def main() -> int:
             from cockpit.commands.code import cmd_code_base
 
             return cmd_code_base(a)
-        code_p.print_help()
+        # Fallback: print help via parser (code_p not available after SRP split)
+        console.print("[yellow]试试:[/] [cyan]cockpit code analyze[/] 或 [cyan]cockpit code workflow impact[/]")
         return 1
 
     def dispatch_cards(a):
@@ -482,7 +483,6 @@ def main() -> int:
         return agent_runtime_cli.run_agent_runtime(argv)
 
     def dispatch_compass(a):
-        import os
         import subprocess
 
         c2g_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "c2g").resolve())
@@ -529,7 +529,6 @@ def main() -> int:
         return subprocess.call(["python3", runner, "--help"])
 
     def dispatch_panorama(a):
-        import os
         import subprocess
 
         omo_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "omo").resolve())
@@ -540,7 +539,6 @@ def main() -> int:
         return subprocess.call(cmd, env=env)
 
     def dispatch_project(a):
-        import os
         import subprocess
 
         omo_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "omo").resolve())
