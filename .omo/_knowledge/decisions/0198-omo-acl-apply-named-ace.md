@@ -1,4 +1,5 @@
 ---
+id: ADR-0198
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team

@@ -1,0 +1,39 @@
+---
+# Memory OS RBAC policy table — ADR-0372 Phase 6
+id: memory-rbac
+version: 1
+status: active
+last_reviewed: "2026-08-04"
+---
+# Role → allowed actions. Default deny for unknown roles.
+# Actions: write | recall | forget | consolidate | knowledge_ref | status | admin
+
+default_role: agent
+
+roles:
+  admin:
+    description: Full memory control plane access
+    allow: [write, recall, forget, consolidate, knowledge_ref, status, admin]
+  agent:
+    description: Standard agent (default) — may forget own writes
+    allow: [write, recall, forget, knowledge_ref, status]
+  readonly:
+    description: Read-only observers
+    allow: [recall, knowledge_ref, status]
+  guest:
+    description: Minimal anonymous
+    allow: [status]
+  governance-agent:
+    description: Governance / closeout agents
+    allow: [write, recall, forget, knowledge_ref, status, consolidate]
+
+# Optional scene overrides (scene_id → extra deny)
+scene_denies: {}
+
+# Map agent_profile → role when role not explicit
+profile_role_map:
+  governance-agent: governance-agent
+  claude: agent
+  codex: agent
+  external-claude: agent
+  external-readonly: readonly

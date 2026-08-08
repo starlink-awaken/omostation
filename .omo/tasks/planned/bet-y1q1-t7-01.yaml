@@ -1,0 +1,54 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:28:20+00:00
+id: BET-Y1Q1-T7-01
+title: scene-card 五档生命周期 schema
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q1-T7-01
+window: Y1Q1
+track: T7-SCENE
+appetite: 3 days
+desc: 打破 proposal_only→active 的断崖, 用 shadow 档解锁场景而无需业务拍板
+non_goals:
+- 场景内容修改
+- 激活真实业务动作
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate: []
+evidence_required:
+- schema 支持 draft/shadow/assisted/supervised/routine 五档
+- shadow 档定义为"无业务副作用, 不需要业务确认"
+- 新增必填字段 bet + falsifier
+- validator 检查五档合法性与 falsifier 存在
+test_plan:
+- python3 bin/ssot/scene-card-review.py --help
+workflow: bet-execution
+write_surfaces:
+- docs/scene-cards/**
+- bin/ssot/scene-card-review.py
+pasw_required: false
+circuit_breaker: 超 5 天 → 只加 shadow 一档 + falsifier 字段
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q1-T7-01.md
+agent_profile_hint: docs-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

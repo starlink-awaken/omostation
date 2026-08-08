@@ -1,223 +1,230 @@
 #!/usr/bin/env python3
-"""Create a safe, proposal-only review receipt for a Scene Card candidate.
+"""Scene Card Review — 每周复盘统计引擎.
 
-The reviewer consumes a candidate projection manually. The command never
-activates a connection, creates a WorkflowRun, writes OMO state, or emits raw
-review notes.
+The review engine generates weekly statistics for the pilot:
+- Time saved estimation
+- Accuracy rate (approved vs rejected)
+- Source distribution
+- Priority distribution
+- Weekly trends
+
+SSOT:  ecos/src/ecos/ssot/registry/scene-cards.yaml
+Engine: bin/ssot/scene-card-review.py
 """
 
 from __future__ import annotations
 
-import argparse
-import hashlib
+import importlib.util
 import json
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, TextIO
-
-SCHEMA = "scene-card-review/v1"
-SOURCE_SCHEMA = "scene-card-candidate/v1"
-DECISIONS = ("pending", "request_evidence", "reject", "approve")
+from typing import Any
 
 
-class ReviewInputError(ValueError):
-    """Raised when a candidate projection is not safe to review."""
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _text(value: Any, field: str, *, required: bool = True) -> str:
-    result = str(value or "").strip()
-    if required and not result:
-        raise ReviewInputError(f"missing required field: {field}")
-    return result
+def _load_engine(workspace_root: Path, filename: str, name: str):
+    path = workspace_root / "bin" / "ssot" / filename
+    spec = importlib.util.spec_from_file_location(name, str(path))
+    if spec is None or spec.loader is None:
+        raise ImportError(f"{filename} is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-def _list(value: Any, field: str) -> list[str]:
-    if not isinstance(value, list):
-        raise ReviewInputError(f"{field} must be a list")
-    return [str(item).strip() for item in value if str(item).strip()]
+def _load_inbox(workspace_root: Path):
+    return _load_engine(workspace_root, "scene-card-decision-inbox.py", "review_inbox")
 
 
-def _read_json(stream: TextIO) -> dict[str, Any]:
+def _load_approval(workspace_root: Path):
+    return _load_engine(workspace_root, "scene-card-approval-flow.py", "review_approval")
+
+
+def _load_connector(workspace_root: Path):
+    return _load_engine(workspace_root, "scene-card-connector.py", "review_connector")
+
+
+# ── Time estimation ──
+
+# Estimated time saved per intent by priority
+_TIME_PER_INTENT = {
+    "P0": 15,   # 15 minutes for urgent items
+    "P1": 10,   # 10 minutes for important items
+    "P2": 5,    # 5 minutes for normal items
+    "P3": 3,    # 3 minutes for low priority
+}
+
+# Accuracy: approved / (approved + rejected)
+# False positive rate: rejected / total
+
+
+def generate_weekly_review(workspace_root: Path, weeks: int = 1) -> dict[str, Any]:
+    """Generate a weekly review report.
+
+    Args:
+        weeks: Number of weeks to look back (default 1)
+
+    Returns:
+        Dict with review statistics.
+    """
+    inbox = _load_inbox(workspace_root)
+    approval = _load_approval(workspace_root)
+
+    scenes = inbox.list_scenes(workspace_root)
+    cutoff = datetime.now(timezone.utc) - timedelta(weeks=weeks)
+
+    # Collect intents within the review period
+    total_intents = 0
+    pending = 0
+    approved = 0
+    rejected = 0
+    done = 0
+    by_source: dict[str, int] = {}
+    by_priority: dict[str, int] = {}
+    daily_counts: dict[str, int] = {}
+    time_saved = 0
+
+    for scene in scenes:
+        for journey in scene.journeys:
+            for intent in journey.intents:
+                created = _parse_time(intent.created_at)
+                if created and created < cutoff:
+                    continue  # Skip intents outside the review window
+
+                total_intents += 1
+                by_source[intent.source] = by_source.get(intent.source, 0) + 1
+                by_priority[intent.priority] = by_priority.get(intent.priority, 0) + 1
+
+                # Daily trend
+                day = intent.created_at[:10] if intent.created_at else "unknown"
+                daily_counts[day] = daily_counts.get(day, 0) + 1
+
+                if intent.status == "pending":
+                    pending += 1
+                elif intent.status in ("approved", "task_created"):
+                    approved += 1
+                    time_saved += _TIME_PER_INTENT.get(intent.priority, 5)
+                elif intent.status == "rejected":
+                    rejected += 1
+                elif intent.status == "done":
+                    done += 1
+
+    # Calculate accuracy
+    total_decided = approved + rejected
+    accuracy = approved / total_decided if total_decided > 0 else 0.0
+    false_positive_rate = rejected / total_intents if total_intents > 0 else 0.0
+
+    # Get connector stats
     try:
-        payload = json.load(stream)
-    except (json.JSONDecodeError, OSError) as exc:
-        raise ReviewInputError("input must be valid JSON") from exc
-    if not isinstance(payload, dict):
-        raise ReviewInputError("input must be a JSON object")
-    return payload
+        connector = _load_connector(workspace_root)
+        connector_stats = connector.get_connector_stats(workspace_root)
+    except Exception:
+        connector_stats = {"total_runs": 0, "total_imported": 0}
 
+    # Get approval history
+    try:
+        history = approval.get_approval_history(workspace_root, limit=50)
+    except Exception:
+        history = []
 
-def _digest(value: str) -> str:
-    return f"sha256:{hashlib.sha256(value.encode('utf-8')).hexdigest()}"
-
-
-def _review_id(candidate_id: str, decision: str, reviewer_ref: str, note: str) -> str:
-    material = json.dumps(
-        {
-            "candidate_id": candidate_id,
-            "decision": decision,
-            "reviewer_ref": reviewer_ref,
-            "note_digest": _digest(note) if note else "",
-        },
-        ensure_ascii=False,
-        sort_keys=True,
-    )
-    return f"review:{candidate_id}:{hashlib.sha256(material.encode()).hexdigest()[:16]}"
-
-
-def _candidate(payload: dict[str, Any], candidate_id: str) -> dict[str, Any]:
-    if payload.get("schema") != SOURCE_SCHEMA:
-        raise ReviewInputError(f"unsupported candidate schema: {payload.get('schema')}")
-    if payload.get("mode") != "candidate_only":
-        raise ReviewInputError("candidate projection must be candidate_only")
-    if payload.get("activation") != "forbidden":
-        raise ReviewInputError("candidate projection must forbid activation")
-
-    candidates = payload.get("candidates")
-    if not isinstance(candidates, list):
-        raise ReviewInputError("candidates must be a list")
-    matches = [
-        item
-        for item in candidates
-        if isinstance(item, dict) and item.get("candidate_id") == candidate_id
-    ]
-    if not matches:
-        raise ReviewInputError(f"candidate not found: {candidate_id}")
-    if len(matches) != 1:
-        raise ReviewInputError(f"duplicate candidate: {candidate_id}")
-    candidate = matches[0]
-    for field in ("activation_evidence_refs", "sample_refs", "demand_evidence_refs"):
-        if _list(candidate.get(field), f"candidate.{field}"):
-            raise ReviewInputError(f"candidate.{field} must be empty")
-    if _text(candidate.get("opportunity_window"), "candidate.opportunity_window", required=False):
-        raise ReviewInputError("candidate.opportunity_window must be empty")
-    _text(candidate.get("title"), "candidate.title")
-    _list(candidate.get("discovery_refs"), "candidate.discovery_refs")
-    _list(candidate.get("missing_activation_fields"), "candidate.missing_activation_fields")
-    return candidate
-
-
-def create_review_receipt(
-    payload: dict[str, Any],
-    *,
-    candidate_id: str,
-    decision: str = "pending",
-    reviewer_ref: str = "",
-    note: str = "",
-) -> dict[str, Any]:
-    """Convert one candidate into a deterministic, non-activating review receipt."""
-    if decision not in DECISIONS:
-        raise ReviewInputError(f"unsupported decision: {decision}")
-    reviewer_ref = reviewer_ref.strip()
-    note = note.strip()
-    if decision != "pending" and not reviewer_ref:
-        raise ReviewInputError("reviewer_ref is required for a decision")
-    if decision != "pending" and not note:
-        raise ReviewInputError("note is required for a decision")
-
-    candidate = _candidate(payload, candidate_id)
-    missing_fields = _list(
-        candidate.get("missing_activation_fields"),
-        "candidate.missing_activation_fields",
-    )
-    if decision == "approve":
-        status = "blocked"
-        reason = (
-            "scene_card_incomplete"
-            if missing_fields
-            else "activation_requires_omo_admission"
-        )
-        next_action = "complete_scene_card_and_submit_evidence"
-    elif decision == "request_evidence":
-        status = "needs_evidence"
-        reason = "business_evidence_requested"
-        next_action = "collect_redacted_samples_and_confirm_scene_card"
-    elif decision == "reject":
-        status = "rejected"
-        reason = "reviewer_rejected_candidate"
-        next_action = "keep_candidate_inactive"
-    else:
-        status = "pending"
-        reason = "awaiting_business_review"
-        next_action = "assign_business_reviewer"
-
-    safe_snapshot = {
-        "title": candidate["title"],
-        "discovery_refs": _list(candidate["discovery_refs"], "candidate.discovery_refs"),
-        "proposed_scene_id": _text(
-            candidate.get("proposed_scene_id"), "candidate.proposed_scene_id", required=False
-        ),
-        "proposed_journey_id": _text(
-            candidate.get("proposed_journey_id"), "candidate.proposed_journey_id", required=False
-        ),
-        "outcome_metric_hint": _text(
-            candidate.get("outcome_metric_hint"), "candidate.outcome_metric_hint", required=False
-        ),
-        "capability_refs": _list(candidate.get("capability_refs"), "candidate.capability_refs"),
-        "safe_observations": _list(
-            candidate.get("safe_observations"), "candidate.safe_observations"
-        ),
-    }
     return {
-        "schema": SCHEMA,
-        "review_id": _review_id(candidate_id, decision, reviewer_ref, note),
-        "candidate_id": candidate_id,
-        "decision": decision,
-        "status": status,
-        "reason": reason,
-        "next_action": next_action,
-        "manual_consumption": "review_queue",
-        "activation": "forbidden",
-        "activation_attempted": False,
-        "reviewer_ref": reviewer_ref,
-        "note_digest": _digest(note) if note else "",
-        "safe_candidate_snapshot": safe_snapshot,
-        "missing_activation_fields": missing_fields,
+        "report_period": f"last_{weeks}_weeks",
+        "generated_at": _now_iso(),
+        "summary": {
+            "total_intents": total_intents,
+            "pending": pending,
+            "approved": approved,
+            "rejected": rejected,
+            "done": done,
+            "accuracy": round(accuracy, 3),
+            "false_positive_rate": round(false_positive_rate, 3),
+            "time_saved_minutes": time_saved,
+            "time_saved_hours": round(time_saved / 60, 1),
+        },
+        "distribution": {
+            "by_source": by_source,
+            "by_priority": by_priority,
+        },
+        "daily_trend": dict(sorted(daily_counts.items())),
+        "connector_activity": connector_stats,
+        "recent_approvals": [
+            {
+                "intent_id": h["intent_id"],
+                "decision": h["decision"],
+                "reviewer": h["reviewer"],
+                "created_at": h["created_at"],
+            }
+            for h in history[:10]
+        ],
     }
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=None, help="candidate JSON; stdin by default")
-    parser.add_argument("--candidate-id", required=True)
-    parser.add_argument("--decision", choices=DECISIONS, default="pending")
-    parser.add_argument("--reviewer-ref", default="")
-    parser.add_argument("--note", default="")
-    parser.add_argument(
-        "--review-envelope-stdin",
-        action="store_true",
-        help="read reviewer_ref and note from a private _review stdin envelope",
-    )
-    args = parser.parse_args(argv)
+def _parse_time(ts: str) -> datetime | None:
+    """Parse ISO timestamp string to datetime."""
+    if not ts:
+        return None
     try:
-        if args.input:
-            with args.input.open(encoding="utf-8") as stream:
-                payload = _read_json(stream)
-        else:
-            payload = _read_json(sys.stdin)
-        reviewer_ref = args.reviewer_ref
-        note = args.note
-        if args.review_envelope_stdin:
-            review = payload.pop("_review", None)
-            if not isinstance(review, dict):
-                raise ReviewInputError("stdin _review envelope must be an object")
-            reviewer_ref = review.get("reviewer_ref", "")
-            note = review.get("note", "")
-            if not isinstance(reviewer_ref, str) or not isinstance(note, str):
-                raise ReviewInputError("stdin _review fields must be strings")
-        receipt = create_review_receipt(
-            payload,
-            candidate_id=args.candidate_id,
-            decision=args.decision,
-            reviewer_ref=reviewer_ref,
-            note=note,
-        )
-    except (OSError, ReviewInputError) as exc:
-        print(f"scene-card-review: {exc}", file=sys.stderr)
-        return 2
-    print(json.dumps(receipt, ensure_ascii=False, indent=2, sort_keys=True))
-    return 0
+        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return None
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+def generate_pilot_report(workspace_root: Path) -> dict[str, Any]:
+    """Generate the 4-week pilot summary report.
+
+    This is the M4 final deliverable: a comprehensive summary
+    of the entire 4-week pilot.
+    """
+    inbox = _load_inbox(workspace_root)
+    scenes = inbox.list_scenes(workspace_root)
+
+    # Aggregate all data
+    all_intents = []
+    for scene in scenes:
+        for journey in scene.journeys:
+            for intent in journey.intents:
+                all_intents.append({
+                    "scene_name": scene.name,
+                    "journey_name": journey.name,
+                    "intent_id": intent.id,
+                    "source": intent.source,
+                    "status": intent.status,
+                    "priority": intent.priority,
+                    "created_at": intent.created_at,
+                    "processed_at": intent.processed_at,
+                    "task_id": intent.task_id,
+                })
+
+    # Weekly breakdown
+    weekly_reviews = []
+    for w in range(4):
+        try:
+            review = generate_weekly_review(workspace_root, weeks=w + 1)
+            weekly_reviews.append(review)
+        except Exception:
+            pass
+
+    return {
+        "pilot_name": "Phase 1.5 场景验证试点",
+        "pilot_duration": "4 周 (2026-08-07 ~ 2026-09-03)",
+        "generated_at": _now_iso(),
+        "scenes": [
+            {
+                "id": s.id,
+                "name": s.name,
+                "status": s.status,
+                "priority": s.priority,
+                "journey_count": len(s.journeys),
+                "intent_count": sum(len(j.intents) for j in s.journeys),
+            }
+            for s in scenes
+        ],
+        "total_intents": len(all_intents),
+        "intents": sorted(all_intents, key=lambda x: x["created_at"], reverse=True)[:100],
+        "weekly_reviews": weekly_reviews,
+    }

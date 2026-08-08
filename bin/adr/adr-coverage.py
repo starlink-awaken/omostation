@@ -101,6 +101,7 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
 
     # frontmatter 健康度
     fm_issues = []
+    id_mismatches = []
     for n, f in adrs:
         fm = parse_frontmatter(f)
         missing = [k for k in REQUIRED_FRONTMATTER if k not in fm]
@@ -108,6 +109,15 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
             fm_issues.append({
                 "file": f.name,
                 "missing": missing,
+            })
+        # C2 (ADR-0367): frontmatter id 必须与文件名 ADR-NNNN 一致 (缺失也算违规)
+        file_id = f.name.split("-", 1)[0]  # e.g. "0233" from "0233-xxx.md"
+        fm_id = str(fm.get("id", "")).strip()
+        if not fm_id or fm_id.upper() != f"ADR-{file_id}":
+            id_mismatches.append({
+                "file": f.name,
+                "id": fm_id or "<missing>",
+                "expected": f"ADR-{file_id}",
             })
 
     # INDEX 引用 vs 实际文件
@@ -123,6 +133,7 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
         "missing_numbers": missing_nums,
         "duplicate_numbers": duplicates,
         "frontmatter_issues": fm_issues,
+        "id_mismatches": id_mismatches,
         "files_not_in_index": files_not_in_index,
         "index_refs_not_in_files": refs_not_in_files,
         "index_present": index_path.exists(),
@@ -181,6 +192,12 @@ def main() -> int:
             print(f"   ... 还有 {len(result['frontmatter_issues']) - 5} 个")
     else:
         print("✅ 所有 frontmatter 完整")
+    if result["id_mismatches"]:
+        print(f"\n❌ Frontmatter id 与文件名不符 ({len(result['id_mismatches'])}):")
+        for im in result["id_mismatches"]:
+            print(f"   {im['file']}: id={im['id']!r} (期望 {im['expected']})")
+    else:
+        print("✅ 所有 frontmatter id 与文件名一致")
     if result["files_not_in_index"]:
         print(f"\n⚠️  ADR 文件未在 INDEX 引用 ({len(result['files_not_in_index'])}):")
         for f in result["files_not_in_index"][:5]:
@@ -198,6 +215,7 @@ def main() -> int:
         len(result["missing_numbers"])
         + len(result["duplicate_numbers"])
         + len(result["frontmatter_issues"])
+        + len(result["id_mismatches"])
         + len(result["files_not_in_index"])
         + len(result["index_refs_not_in_files"])
     )
@@ -206,7 +224,7 @@ def main() -> int:
     else:
         print(f"\n⚠️  {issues_count} 个问题需处理")
 
-    return 1 if (result["missing_numbers"] or result["duplicate_numbers"] or result["frontmatter_issues"] or result["files_not_in_index"] or result["index_refs_not_in_files"]) else 0
+    return 1 if (result["missing_numbers"] or result["duplicate_numbers"] or result["frontmatter_issues"] or result["id_mismatches"] or result["files_not_in_index"] or result["index_refs_not_in_files"]) else 0
 
 
 if __name__ == "__main__":

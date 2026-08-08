@@ -189,6 +189,24 @@ policies:
     references:
       - "L0-constraints.yaml:CR-GOV-CLOSED-LOOP-01"
       - ".omo/_knowledge/audits/2026-06-23-p59-git-commit-closure-closeout.md"
+  - policy_id: X1-AGT-AUDIT-HASHCHAIN-202608
+    title: AGT 审计哈希链补充策略
+    type: audit_supplement
+    status: active
+    created: '2026-08-04'
+    description: >
+      AGT (Agent Governance Toolkit) 审计哈希链作为 eCOS 审计日志的补充。
+      eCOS 审计日志必须可从 AGT Merkle 审计链复现，确保篡改可检测。
+    scope:
+      - .omo/_log/
+      - .omo/_truth/
+      - bin/gac/gac-local-gate.py
+    owner: governance-team
+    references:
+      - "L0-constraints.yaml:CR-AGT-AUDIT-HASHCHAIN-01"
+      - "projects/ecos/src/ecos/ssot/mof/m1/component/COMP-EXT-AGT-hypervisor.yaml"
+    enforcement: block-write
+
     notes: >
       P43-P58 期间多次出现 mof-version bump 但 git commit 失同步, P59 一次修复 571 文件落地。
       此后强制闭环纪律是 L0 级别 error, 不可降级。

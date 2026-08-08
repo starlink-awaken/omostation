@@ -40,7 +40,7 @@ It is organized as a **5+4+1+1 layered architecture**:
 |----------|-------|-----------------|
 | Human CLI/Web | `cockpit` | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
 | AI Agent | `agora` MCP with `bos://` URIs | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
-| Agent workflow | `bin/agent-workflow.py` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Agent workflow | `bin/agent-workflow.py` | [`.omo/_truth/registry/agent-workflows/`](.omo/_truth/registry/agent-workflows/) |
 | Runtime state | `omo state sync` | [`.omo/state/system.yaml`](.omo/state/system.yaml) |
 | Governance | `omo` CLI/MCP | [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml) |
 
@@ -128,7 +128,7 @@ MIT © [starlink-awaken](https://github.com/starlink-awaken)
 |------|------|----------|
 | 人类 CLI/Web | `cockpit` | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) |
 | AI Agent | `agora` MCP + `bos://` URI | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
-| Agent 工作流 | `bin/agent-workflow.py` | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Agent 工作流 | `bin/agent-workflow.py` | [`.omo/_truth/registry/agent-workflows/`](.omo/_truth/registry/agent-workflows/) |
 | 运行态状态 | `omo state sync` | [`.omo/state/system.yaml`](.omo/state/system.yaml) |
 | 治理操作 | `omo` CLI/MCP | [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml) |
 

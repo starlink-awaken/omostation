@@ -1,16 +1,23 @@
 name: interfaces-enforce
 # P47+: 接口契约 + 端口冲突 enforce. 复用 scripts/check-interfaces.py.
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
+          # 显式 init scripts, 不 recursive (避免撞 private 子模块)
+          submodules: false
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
+      - name: Init scripts submodule
+        run: git submodule update --init scripts
       - uses: actions/setup-python@v5
         with: {python-version: "3.13"}
       - run: pip install pyyaml
-      - run: python3 scripts/check-interfaces.py
+      - name: Run interfaces check (registry-driven, ADR-0380 P1a)
+        run: python3 bin/gac/ci-check-runner.py --workflow interfaces-enforce.yml

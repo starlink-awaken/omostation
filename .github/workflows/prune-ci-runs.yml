@@ -1,0 +1,28 @@
+name: Scheduled CI Runs Pruner
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'  # Monday 05:00 UTC — weekly
+  workflow_dispatch: {}
+
+concurrency:
+  group: ci-runs-pruner
+  cancel-in-progress: true
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: astral-sh/setup-uv@v4
+      - name: Prune old CI runs (40000 cap maintenance)
+        run: uv run python bin/ssot/prune-ci-runs-cron.py --apply
+        continue-on-error: true  # 脚本自身错误不应阻断其他 workflow
+      - name: Report
+        if: always()
+        run: |
+          uv run python bin/ssot/ssot-usage.py --json 2>/dev/null | \
+            python3 -c "import json,sys; d=json.load(sys.stdin); print(f'SSOT stale={d[\"stale_count\"]}')" || true

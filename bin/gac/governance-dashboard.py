@@ -54,6 +54,8 @@ TOOL_REGISTRY: list[tuple[str, str, str, list[str]]] = [
     ("adr-drift-apply", "P94 ADR drift 应用 (touch SUBDIR_MISSING)", "bin/adr/adr-drift-apply.py", []),
     ("god-module-13-list", "P94 god-module 13 error 清单 (24252L excess)", "bin/ssot/god-module-13-error-list.py", []),
     ("venv-yaml-check", "P96 venv 依赖一致性检查 (pyyaml 等)", "bin/ssot/venv-yaml-check.py", []),
+    ("governance-summary", "GaC 治理摘要 (规则数/维度/ADR/CI)", "bin/gac/governance-summary.py", ["--json"]),
+    ("evidence-smoke", "BOS 声明/执行鸿沟 (证据驱动 smoke)", "bin/gac/evidence-smoke.py", ["--json"]),
 ]
 
 
@@ -577,6 +579,170 @@ def _cmd_gac_html(workspace: Path, output_html: str | None, open_browser: bool, 
     return 0 if healthy else 1
 
 
+def _load_metrics(metrics_file: Path, window: int = 100) -> list[dict]:
+    if not metrics_file.is_file():
+        return []
+    lines = metrics_file.read_text(encoding="utf-8").splitlines()
+    entries = [json.loads(line) for line in lines if line.strip()]
+    if window > 0:
+        entries = entries[-window:]
+    return entries
+
+
+def _aggregate_metrics(entries: list[dict]) -> dict:
+    by_check: dict[str, list[dict]] = {}
+    for e in entries:
+        check = str(e.get("check", "unknown"))
+        by_check.setdefault(check, []).append(e)
+
+    checks = []
+    for check, items in by_check.items():
+        ok_count = sum(1 for i in items if i.get("ok") is True)
+        fail_count = sum(1 for i in items if i.get("ok") is False)
+        durations = [float(i.get("duration_ms") or 0) for i in items if isinstance(i.get("duration_ms"), (int, float))]
+        avg_duration = sum(durations) / len(durations) if durations else 0.0
+        checks.append({
+            "check": check,
+            "count": len(items),
+            "ok_count": ok_count,
+            "fail_count": fail_count,
+            "pass_rate": round(ok_count / len(items), 3) if items else 0.0,
+            "avg_duration_ms": round(avg_duration, 1),
+        })
+
+    total = len(entries)
+    ok_total = sum(1 for e in entries if e.get("ok") is True)
+    return {
+        "total_entries": total,
+        "overall_pass_rate": round(ok_total / total, 3) if total else 0.0,
+        "checks": sorted(checks, key=lambda x: x["check"]),
+    }
+
+
+def _time_series(entries: list[dict]) -> dict:
+    by_day: dict[str, dict] = {}
+    for e in entries:
+        ts = str(e.get("timestamp", ""))
+        day = ts[:10] if len(ts) >= 10 else "unknown"
+        if day not in by_day:
+            by_day[day] = {"count": 0, "ok_count": 0, "fail_count": 0}
+        by_day[day]["count"] += 1
+        if e.get("ok") is True:
+            by_day[day]["ok_count"] += 1
+        elif e.get("ok") is False:
+            by_day[day]["fail_count"] += 1
+    return {
+        day: {
+            "count": v["count"],
+            "pass_rate": round(v["ok_count"] / v["count"], 3) if v["count"] else 0.0,
+        }
+        for day, v in sorted(by_day.items())
+    }
+
+
+def _render_metrics_html(data: dict) -> str:
+    checks = data.get("checks", [])
+    ts = data.get("time_series", {})
+    rows = ""
+    for c in checks:
+        pct = c.get("pass_rate", 0) * 100
+        bar_color = "#10b981" if pct >= 95 else "#f59e0b" if pct >= 80 else "#ef4444"
+        rows += f"""
+        <tr>
+            <td><strong>{c.get('check', '?')}</strong></td>
+            <td>{c.get('count', 0)}</td>
+            <td>{c.get('ok_count', 0)}/{c.get('fail_count', 0)}</td>
+            <td>{pct:.1f}%</td>
+            <td>{c.get('avg_duration_ms', 0):.1f} ms</td>
+            <td><div class="bar"><div class="bar-fill" style="width:{pct}%;background:{bar_color}"></div></div></td>
+        </tr>"""
+
+    history_rows = ""
+    for day, v in ts.items():
+        history_rows += f"<tr><td>{day}</td><td>{v.get('count', 0)}</td><td>{v.get('pass_rate', 0) * 100:.1f}%</td></tr>"
+
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Governance Metrics Dashboard</title>
+<style>
+  body {{ font-family: -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 24px; }}
+  h1 {{ font-size: 32px; margin: 0; }}
+  .container {{ max-width: 1200px; margin: 0 auto; }}
+  .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 24px; }}
+  .card {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px; }}
+  .card h2 {{ margin-top: 0; color: #94a3b8; font-size: 14px; text-transform: uppercase; }}
+  .big {{ font-size: 48px; font-weight: bold; color: #3b82f6; }}
+  table {{ width: 100%; border-collapse: collapse; }}
+  th, td {{ padding: 8px; text-align: left; border-bottom: 1px solid #334155; }}
+  th {{ color: #94a3b8; font-size: 12px; }}
+  .bar {{ height: 6px; background: #334155; border-radius: 3px; overflow: hidden; }}
+  .bar-fill {{ height: 100%; }}
+  .meta {{ color: #64748b; font-size: 12px; margin-top: 16px; }}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📊 Governance Metrics</h1>
+  <p class="meta">Generated at {data.get('generated_at', '?')} | Entries: {data.get('total_entries', 0)} | Pass rate: {data.get('overall_pass_rate', 0) * 100:.1f}%</p>
+  <div class="grid">
+    <div class="card">
+      <h2>Overall</h2>
+      <div class="big">{data.get('overall_pass_rate', 0) * 100:.1f}%</div>
+      <p>Pass rate across {data.get('total_entries', 0)} entries</p>
+    </div>
+    <div class="card">
+      <h2>Per-Check</h2>
+      <table>{rows}</table>
+    </div>
+    <div class="card">
+      <h2>History</h2>
+      <table>{history_rows}</table>
+    </div>
+  </div>
+</div>
+</body>
+</html>"""
+
+
+def _cmd_metrics_dashboard(workspace: Path, metrics_file: Path, output: str | None = None, fmt: str = "json") -> int:
+    entries = _load_metrics(metrics_file)
+    data = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "total_entries": len(entries),
+        "overall_pass_rate": 0.0,
+        "checks": [],
+        "time_series": {},
+    }
+    if entries:
+        data["overall_pass_rate"] = round(sum(1 for e in entries if e.get("ok") is True) / len(entries), 3)
+        data["checks"] = _aggregate_metrics(entries).get("checks", [])
+        data["time_series"] = _time_series(entries)
+
+    if fmt == "html" or (output and output.endswith(".html")):
+        html = _render_metrics_html(data)
+        target = Path(output) if output else (workspace / ".omo/state/runtime/governance-dashboard.html")
+        if not target.is_absolute():
+            target = workspace / target
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(html, encoding="utf-8")
+        print(f"✅ Metrics dashboard written to {target}")
+        return 0
+
+    if output:
+        target = Path(output)
+        if not target.is_absolute():
+            target = workspace / target
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(f"✅ Metrics dashboard written to {target}")
+        return 0
+
+    print(json.dumps(data, indent=2, ensure_ascii=False))
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="P86: governance dashboard")
     parser.root_default = "."
@@ -598,6 +764,10 @@ def main() -> int:
                         help="合并 gac-dashboard 功能, 输出到 HTML 文件 (配合 --output / stdout)")
     parser.add_argument("--gac-open", action="store_true",
                         help="合并 gac-dashboard 功能, 生成 + 浏览器打开")
+    parser.add_argument("--metrics-dashboard", action="store_true",
+                        help="Phase 7: 从 metrics-store.jsonl 生成指标仪表盘")
+    parser.add_argument("--metrics-file", default="",
+                        help="Metrics JSONL 路径 (Phase 7)")
     args = parser.parse_args()
 
     workspace = Path(args.root).resolve()
@@ -617,6 +787,12 @@ def main() -> int:
     if args.gac_html or args.gac_open:
         # 如果有 --json 则输出 json
         return _cmd_gac_html(workspace, output_html=args.output, open_browser=args.gac_open, output_json=args.json)
+
+    # Phase 7: 指标仪表盘
+    if args.metrics_dashboard:
+        fmt = "html" if args.output and args.output.endswith(".html") else "json"
+        metrics_path = Path(args.metrics_file) if args.metrics_file else workspace / ".omo" / "state" / "metrics-store.jsonl"
+        return _cmd_metrics_dashboard(workspace, metrics_path, output=args.output, fmt=fmt)
 
     # 默认: 原 P86 仪表盘 (调用 19 个治理工具)
 

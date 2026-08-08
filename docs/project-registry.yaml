@@ -49,7 +49,7 @@ projects:
     build_backend: "hatchling"
     version: "3.0.0"
     role: "MCP Hub · BOS URI 路由"
-    bos_services: 114             # grep -c 'uri: "bos://' projects/agora/etc/bos-services.yaml
+    bos_services: 200  # live yaml total (active 188/unimplemented 11/deprecated 1)
     src_dir: "src/agora/"
 
   kairon:
@@ -150,7 +150,7 @@ projects:
     stack: "Python (uv, pytest)"
     python: ">=3.13"
     build_backend: "hatchling"
-    version: "0.4.0"
+    version: "0.5.0"
     role: "统一入口 (CLI + MCP + Web)"
     src_dir: "src/"
     cli_entry: "cockpit"
@@ -326,7 +326,7 @@ projects:
 
 # ── Cross-project facts ──
 bos:
-  service_count: 114            # grep -c 'uri: "bos://' projects/agora/etc/bos-services.yaml
+  service_count: 196  # live bos-services.yaml; active=184 routable=184
   domains:
     primary: ["memory", "governance", "analysis", "persona", "capability"]
     extended: ["meta", "omo", "swarm", "system", "toolbox"]

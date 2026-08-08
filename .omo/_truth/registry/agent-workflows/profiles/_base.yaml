@@ -1,0 +1,182 @@
+agent_profiles:
+  external-readonly-agent:
+    purpose: External MCP host with read-only oversight (no requirement writes)
+    allowed_workflows:
+    - observer-audit
+    - handoff-resume
+    - mof-state-bridge-audit
+    can_write_lanes: []
+    closeout_required: []
+    notes: Prefer for Cursor/Codex sessions that only inspect health/BOS/audit.
+  external-contributor-agent:
+    purpose: External MCP host allowed to deliver docs/code under claim
+    allowed_workflows:
+    - project-doc-change
+    - project-code-change
+    - handoff-resume
+    - observer-audit
+    can_write_lanes:
+    - docs
+    - code
+    - config
+    closeout_required:
+    - verify
+    notes: Must start+claim before edits (ADR-0203). No direct .omo governance_state.
+  docs-agent:
+    purpose: Maintain Markdown and project docs without duplicating SSOT facts.
+    allowed_workflows:
+    - project-doc-change
+    - bet-execution
+    can_write_lanes:
+    - docs
+    closeout_required:
+    - doc-ssot-lint
+    - ssot-guardian
+    - gac-local-gate
+  engineering-agent:
+    purpose: Implement project-local code changes with project tests and workspace
+      gates.
+    allowed_workflows:
+    - project-code-change
+    - pyright-sweep
+    - bet-execution
+    can_write_lanes:
+    - code
+    - config
+    closeout_required:
+    - project-tests
+    - gac-local-gate
+  qa-agent:
+    purpose: Verify code behavior and report failures without owning broad implementation
+      changes.
+    allowed_workflows:
+    - project-code-change
+    - pyright-sweep
+    can_write_lanes:
+    - code
+    closeout_required:
+    - project-tests
+  governance-agent:
+    purpose: Route governance-sensitive edits through GAC, OMO, C2G, and SSOT checks.
+    allowed_workflows:
+    - project-doc-change
+    - project-code-change
+    - pyright-sweep
+    - governance-state-mutation
+    - c2g-spec-ingress
+    - mof-model-change
+    - mof-state-bridge-audit
+    - external-adapter-sync
+    - submodule-pointer-close
+    - observer-audit
+    - governance-audit
+    - state-sync
+    - agent-onboarding
+    - bet-execution
+    can_write_lanes:
+    - docs
+    - governance_code
+    - governance_state
+    - config
+    - submodule_pointer
+    closeout_required:
+    - agent-workflow-lint
+    - agent-workflow-observe
+    - gac-local-gate
+  state-sync-agent:
+    purpose: Refresh high-churn runtime projections through the OMO state-sync broker.
+    allowed_workflows:
+    - state-sync
+    can_write_lanes:
+    - governance_state
+    - runtime_snapshot
+    closeout_required:
+    - state-sync
+    - state-sync-dry-run
+    - agent-workflow-observe
+  mof-agent:
+    purpose: Maintain MOF M1/M2/M3 model changes, schema validation, state bridge
+      alignment, and MOF version evidence.
+    allowed_workflows:
+    - mof-model-change
+    - mof-state-bridge-audit
+    can_write_lanes:
+    - governance_code
+    - governance_state
+    - docs
+    closeout_required:
+    - mof-schema-validate
+    - mof-state-bridge
+    - mof-drift
+    - gac-local-gate
+  c2g-agent:
+    purpose: Convert strategy inputs, pitches, BMAD, or OpenSpec material into governed
+      planned tasks.
+    allowed_workflows:
+    - governance-state-mutation
+    - c2g-spec-ingress
+    - external-adapter-sync
+    can_write_lanes:
+    - governance_state
+    - docs
+    closeout_required:
+    - ssot-guardian
+    - gac-local-gate
+  strategy-agent:
+    purpose: Shape upstream intent before it is materialized into C2G or OMO task
+      state.
+    allowed_workflows:
+    - c2g-spec-ingress
+    - external-adapter-sync
+    can_write_lanes:
+    - docs
+    - governance_state
+    closeout_required:
+    - planned-task-review
+  adapter-agent:
+    purpose: Inspect and synchronize optional external tools without making them new
+      governance authorities.
+    allowed_workflows:
+    - external-adapter-sync
+    - agent-onboarding
+    - bet-execution
+    can_write_lanes:
+    - docs
+    - governance_code
+    - governance_state
+    closeout_required:
+    - adapter-doctor
+    - integration-map-review
+  release-agent:
+    purpose: Close submodule pointer and release-gate work without dangling SHAs.
+    allowed_workflows:
+    - submodule-pointer-close
+    can_write_lanes:
+    - submodule_pointer
+    - config
+    closeout_required:
+    - reachability
+    - gac-local-gate
+  observer-agent:
+    purpose: Run read-only oversight for locks, run records, ledger events, and handoff
+      evidence.
+    allowed_workflows:
+    - observer-audit
+    - mof-state-bridge-audit
+    can_write_lanes: []
+    closeout_required:
+    - observe-json
+    - doctor
+  any-agent:
+    purpose: Resume or hand off a compressed session through persisted run state.
+    allowed_workflows:
+    - handoff-resume
+    can_write_lanes:
+    - docs
+    - code
+    - governance_code
+    - governance_state
+    - config
+    - submodule_pointer
+    closeout_required:
+    - run-record

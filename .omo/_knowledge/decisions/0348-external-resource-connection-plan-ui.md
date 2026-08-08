@@ -1,4 +1,5 @@
 ---
+id: ADR-0348
 title: External Resource Connection Plan UI
 status: accepted
 type: adr

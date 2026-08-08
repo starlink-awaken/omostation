@@ -1,4 +1,5 @@
 ---
+id: ADR-0333
 title: Scene Card 输入到只读 activation preflight 的产品闭环
 status: accepted
 type: decision

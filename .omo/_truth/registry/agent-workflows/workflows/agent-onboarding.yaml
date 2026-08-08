@@ -1,0 +1,103 @@
+id: agent-onboarding
+run_frequency: on_demand
+title: Agent Onboarding
+purpose: Register a new AI agent in the workspace, including profile registration,
+  MCP connection setup, BOS URI discovery, and first workflow lifecycle run.
+agents:
+  roles:
+  - governance-agent
+  - adapter-agent
+  observer_policy: optional
+allowed_lanes:
+- docs
+- governance_code
+- governance_state
+lock_scopes:
+- agent-onboarding
+surfaces:
+  read:
+  - AGENTS.md
+  - CLAUDE.md
+  - ARCHITECTURE.md
+  - docs/SYSTEM-INDEX.md
+  - docs/INDEX-AGENTS.md
+  - .omo/_truth/registry/agent-workflows.yaml
+  - projects/agora/etc/bos-services.yaml
+  - projects/cockpit/README.md
+  write:
+  - .omo/_truth/registry/agent-workflows.yaml
+  - .agents/skills/**
+phases:
+  preflight:
+  - id: status
+    mode: required
+    command:
+    - git
+    - status
+    - --short
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  execute:
+  - id: register-profile
+    mode: manual
+    command:
+    - agent
+    - edit
+    - agent-workflows.yaml::agent_profiles
+  - id: create-skill
+    mode: manual
+    command:
+    - agent
+    - create
+    - .agents/skills/<skill>/SKILL.md
+  verification:
+  - id: workflow-lint-verify
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  - id: agents-list-verify
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - agents
+  - id: gac-local-gate
+    mode: required
+    command:
+    - make
+    - gac-local-gate
+  closeout:
+  - id: observe
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - observe
+  - id: diff-stat
+    mode: required
+    command:
+    - git
+    - diff
+    - --stat

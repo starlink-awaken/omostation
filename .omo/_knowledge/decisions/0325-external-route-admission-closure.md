@@ -1,4 +1,5 @@
 ---
+id: ADR-0325
 title: 外部动态路由注册的统一准入闭环
 status: accepted
 type: decision

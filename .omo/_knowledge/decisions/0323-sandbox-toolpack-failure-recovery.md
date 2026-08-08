@@ -1,4 +1,5 @@
 ---
+id: ADR-0323
 title: Workflow Mesh Sandbox ToolPack 失败、不可用与恢复契约
 status: accepted
 type: decision

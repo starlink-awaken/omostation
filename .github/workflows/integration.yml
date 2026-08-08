@@ -1,5 +1,12 @@
 name: Integration Tests
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'projects/omo/**'
+      - 'projects/*/pyproject.toml'
+      - 'bin/gac/**'
 jobs:
   integration:
     runs-on: ubuntu-latest

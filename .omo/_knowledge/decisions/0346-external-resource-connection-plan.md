@@ -1,4 +1,5 @@
 ---
+id: ADR-0346
 title: External Resource Connection Plan
 status: accepted
 type: adr

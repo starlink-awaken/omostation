@@ -2,7 +2,7 @@
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-08-06
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---
@@ -11,12 +11,20 @@ metadata-migrated-at: 2026-07-31
 > 本文档白盒梳理 `agora` 作为 I0 织层时，一条 `bos://` URI 从 MCP 入口到后端服务执行的完整路径。
 >
 > 相关源码：
-> - `projects/agora/src/agora/server/tools_bos.py`
+> - `projects/agora/src/agora/server/tools_bos/` (tools_bos.py 已拆分为子包, shim 保留 `server/tools_bos.py`)
 > - `projects/agora/src/agora/mcp/bos_router.py`
 > - `projects/agora/src/agora/mcp/resolver/api.py`
 > - `projects/agora/src/agora/mcp/resolver/services.py`
 > - `projects/agora/src/agora/mcp/resolver/adapter.py`
 > - `projects/agora/src/agora/mcp/tools/bos_resolve.py`
+> - `projects/agora/src/agora/server/mcp_entry.py` (P2-5 双进程统一, SSE 单一 owner)
+>
+> **2026-08-06 更新**: P1/P2 深化后调用链新增:
+> - **进程模型**: SSE 进程作唯一 backend owner (`AGORA_GATEWAY_OWNER=1` → `_init_proxy` Phase 1.5 调 `mcp_gateway.start_all`), gateway 独立进程已废弃
+> - **可观测**: `/health` (backends 从 registry._clients 真实计数) + `/metrics` (Prometheus)
+> - **审计**: `AuditSubscriber` hashchain (prev_hash + SHA256) + `verify_chain` → `/health` audit_chain
+> - **安全**: `/v1/backends/register` 复用 `require_agora_api_key` 认证 (P0-SEC)
+> - **进程内调用**: `request_context.py` 抽象 fastmcp 私有 API, 无 HTTP 上下文放行 (本地受信任)
 
 ---
 
@@ -24,16 +32,19 @@ metadata-migrated-at: 2026-07-31
 
 | 组件 | 源码位置 | 职责 |
 |:--|:--|:--|
-| `resolve_bos_uri` MCP tool | `server/tools_bos.py:255` | 统一入口，编排限流/熔断/缓存/路由 |
-| `_bos_domain_authorized` | `server/tools_bos.py:62` | 域级鉴权（CR-RBAC-01 / CR-DOMAIN-AUTH-01） |
+| `resolve_bos_uri` MCP tool | `server/tools_bos/registration.py:121` | 统一入口，编排限流/熔断/缓存/路由 |
+| `_bos_domain_authorized` | `server/tools_bos/_helpers.py:37` | 域级鉴权（CR-RBAC-01 / CR-DOMAIN-AUTH-01） |
 | `bos_rate_limiter` | `server/mcp/bos_middleware.py` | 20 QPS/域 令牌桶限流 |
+| `QuotaChecker` | `mcp/bos_quota.py` | per-caller 每日成本配额 (遗留-3) |
 | `bos_circuit_breaker` | `server/mcp/bos_middleware.py` | 熔断器状态检查与记录 |
 | `bos_cache` | `server/mcp/bos_middleware.py` | TTL 缓存 |
 | `BOSRouter` / `bos_router` | `mcp/bos_router.py:27` | Trie 前缀索引，O(k) 最长前缀匹配 |
-| `ProxyManager` | `server/mcp.py` | MCP 下游代理管理 |
+| `ProxyManager` | `server/mcp.py` + `auth/mcp_gateway.py` | MCP 下游代理管理 (P2-5: SSE 单一 owner) |
 | `POC_SERVICES` | `mcp/resolver/services.py:51` | BOS 服务注册表 (见 project-registry.yaml: bos) |
 | `resolve_bos_uri` (resolver API) | `mcp/resolver/api.py:96` | 异步解析，处理 internal/stdio transport |
-| `StdioAdapter` | `mcp/resolver/adapter.py` | stdio 子进程调用封装 |
+| `StdioAdapter` | `mcp/resolver/adapter.py` | stdio 子进程调用封装 (P1: ProcessPool 复用) |
+| `AuditSubscriber` | `server/mcp.py:289` | 审计事件订阅 (P2-2: hashchain) |
+| `request_context` | `server/request_context.py` | fastmcp 私有 HTTP context 抽象 (P2-6) |
 | `mof_agora_hook` | `projects/ecos/src/ecos/ssot/tools/mof_agora_hook.py` | L0 审计钩子 |
 
 ---
@@ -43,7 +54,7 @@ metadata-migrated-at: 2026-07-31
 ```mermaid
 sequenceDiagram
     participant C as MCP Client
-    participant T as resolve_bos_uri<br/>server/tools_bos.py
+    participant T as resolve_bos_uri<br/>tools_bos/registration.py
     participant A as _bos_domain_authorized
     participant R as bos_rate_limiter
     participant CB as bos_circuit_breaker
@@ -105,7 +116,7 @@ sequenceDiagram
 ### Step 1 — MCP 入口
 
 ```python
-# projects/agora/src/agora/server/tools_bos.py:255
+# projects/agora/src/agora/server/tools_bos/registration.py:121
 @mcp.tool()
 @bos_metrics.track("bos://")
 async def resolve_bos_uri(uri: str, arguments: dict | str = "{}") -> dict:
@@ -118,7 +129,7 @@ async def resolve_bos_uri(uri: str, arguments: dict | str = "{}") -> dict:
 ### Step 2 — 域鉴权
 
 ```python
-# projects/agora/src/agora/server/tools_bos.py:62
+# projects/agora/src/agora/server/tools_bos/_helpers.py:37
 _bos_domain_authorized(uri, operation="read")
 ```
 
@@ -129,7 +140,7 @@ _bos_domain_authorized(uri, operation="read")
 ### Step 3 — 限流
 
 ```python
-# projects/agora/src/agora/server/tools_bos.py:272
+# projects/agora/src/agora/server/tools_bos/registration.py:272
 if not bos_rate_limiter.acquire(uri):
     return _error(f"Rate limit exceeded for: {uri}")
 ```
@@ -137,10 +148,38 @@ if not bos_rate_limiter.acquire(uri):
 - 默认 **20 QPS/域**；
 - 基于令牌桶实现，超出阈值直接拒绝，避免下游被压垮。
 
+### Step 3.5 — 配额 (遗留-3, 2026-08-07)
+
+```python
+# projects/agora/src/agora/server/tools_bos/registration.py:145
+from agora.mcp.bos_quota import get_quota_checker
+caller_id = agora_role_ctx.get() or "anonymous"
+quota_ok, quota_info = get_quota_checker().check(caller_id, uri)
+if not quota_ok:
+    return _error(f"Quota exceeded for caller '{caller_id}': ...")
+```
+
+- **per-caller 每日成本上限** (USD), 配置在 `agora-bos-rates.yaml` `quotas:` 段
+- caller_id 来自 `agora_role_ctx` (auth 已设), 匿名默认 2/天, agent-* 50/天
+- 超限返回 429 语义错误 + audit 记录; 成功后 `get_quota_checker().record(...)` 记账
+- 配置随 rates 热加载 (ConfigWatcher 5s)
+
+### Step 3.6 — 统一告警 (P4, 2026-08-07)
+
+- `mcp/agora_alerts.py` `send_alert()` — 统一 EventBus 事件 + 可选 webhook (`AGORA_ALERT_WEBHOOK`/`AGORA_QUOTA_WEBHOOK`, `is_safe_url` 校验) + Prometheus (`agora_alerts_total`)
+- 告警源: 配额超限 (`quota:blocked`/`warning`)、熔断打开 (`circuit:open`)、健康降级 (`health:degraded`), 恢复时发 `recovered`
+- 防抖: per-key 300s; blocked 状态翻转只发一次, 恢复后重置
+
+### Step 3.7 — 能力目录写闭环 (P3, 2026-08-07)
+
+- `mcp/capability_catalog.py` 补 `add()`/`retire()`/`save()` — 写回 `etc/bos-services.yaml` (保留原条目)
+- 修复 `bos_capability_admit`/`bos_capability_retire` 死代码 (此前调 `add`/`save` 不存在 → AttributeError)
+- 生命周期: admit (active) → 度量 (B1) → 语义路由 (B2) → retire (deprecated) 写回
+
 ### Step 4 — 熔断
 
 ```python
-# projects/agora/src/agora/server/tools_bos.py:275
+# projects/agora/src/agora/server/tools_bos/registration.py:275
 if bos_circuit_breaker.is_open(uri):
     return _error(f"Circuit breaker open for: {uri}")
 ```
@@ -151,7 +190,7 @@ if bos_circuit_breaker.is_open(uri):
 ### Step 5 — 缓存
 
 ```python
-# projects/agora/src/agora/server/tools_bos.py:282
+# projects/agora/src/agora/server/tools_bos/registration.py:282
 cached = bos_cache.get(uri, args)
 if cached:
     bos_circuit_breaker.record_success(uri)
@@ -213,10 +252,12 @@ else:
 
 `invoke_stdio` 最终调用 `StdioAdapter.call(service, ...)`，启动子进程并通过 stdin/stdout 进行 MCP JSON-RPC 通信。
 
+**P1 优化 (ProcessPool)**: `mcp_stdio` transport 的调用经 `get_stdio_adapter()` 默认绑定全局 `ProcessPool`（`resolver/pool.py`），按 URI 复用常驻子进程，避免每次调用 Popen；进程死亡自动 respawn。`_call_mcp_stdio_pooled`（`adapter.py`）在 URI 锁保护下复用 session。
+
 ### Step 9 — L0 审计与事件
 
 ```python
-# projects/agora/src/agora/server/tools_bos.py:299
+# projects/agora/src/agora/server/tools_bos/_helpers.py:85
 _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
 _publish_bos_event(bus, uri, "resolve", "ok", duration_ms)
 ```
@@ -232,16 +273,16 @@ _publish_bos_event(bus, uri, "resolve", "ok", duration_ms)
 | 故障场景 | 处理策略 | 代码位置 |
 |:--|:--|:--|
 | 下游 timeout / EOF | `StdioAdapter` 内自动重试 1 次 | `mcp/resolver/adapter.py` |
-| JSON 解析失败 | 返回结构化错误，熔断器记失败 | `server/tools_bos.py:311` |
+| JSON 解析失败 | 返回结构化错误，熔断器记失败 | `server/tools_bos/registration.py:311` |
 | 连续失败 | 熔断器打开，后续请求快速失败 | `bos_circuit_breaker` |
-| 缓存失效 | 回源调用，成功后重新写入 | `server/tools_bos.py:297` |
-| 限流命中 | 立即返回 `429` 语义错误 | `server/tools_bos.py:273` |
-| 域未注册 | 鉴权层返回 `Access denied` | `server/tools_bos.py:88` |
+| 缓存失效 | 回源调用，成功后重新写入 | `server/tools_bos/registration.py:297` |
+| 限流命中 | 立即返回 `429` 语义错误 | `server/tools_bos/registration.py:273` |
+| 域未注册 | 鉴权层返回 `Access denied` | `server/tools_bos/_helpers.py:88` |
 
 ---
 
 ## 5. 相关工具
 
 - `bos_list()` — 列出所有注册服务（`mcp/tools/bos_resolve.py:53`）
-- `list_bos_resources()` — 合并 BOSRouter + POC + ProxyManager 全量资源（`server/tools_bos.py:435`）
+- `list_bos_resources()` — 合并 BOSRouter + POC + ProxyManager 全量资源（`server/tools_bos/registration.py:435`）
 - `protocol_self_check()` — 自检服务定义完整性（`mcp/resolver/api.py:84`）

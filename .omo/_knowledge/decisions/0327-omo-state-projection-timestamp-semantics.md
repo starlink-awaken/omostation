@@ -1,4 +1,5 @@
 ---
+id: ADR-0327
 title: OMO 状态投影的时间戳语义与业务变更判定
 status: accepted
 type: decision

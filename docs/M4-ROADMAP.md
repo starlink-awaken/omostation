@@ -49,7 +49,7 @@ W1   W2   W3   W4   W5   W6   W7   W8   W9   W10  W11  W12  W13  W14
 | P0-2 | mof-validate 基线 | ✅ | 1366 节点 / 1315 通过 / 70 错误 |
 | P0-3 | mof-m2-coverage 基线 | ✅ | 49 schema |
 | P0-4 | P74 compliance | ✅ | continue (run=56,event=454) |
-| P0-5 | baseline snapshot | ✅ | `.omo/debt/m4-baseline-snapshot.md` |
+| P0-5 | baseline snapshot | ✅ | `.omo/_knowledge/audits/2026-07-02-p0-baseline-recovery-closeout.md` |
 
 ---
 
@@ -355,7 +355,6 @@ score = loader.compute_meta_confidence(
 - [ADR-0128] (state generation concurrency)
 - [ADR-0129] (state projection plane)
 - [ADR-0130] (P74 workflow solidification)
-- [`.omo/debt/m4-baseline-snapshot.md`](../.omo/debt/m4-baseline-snapshot.md)
 
 ---
 

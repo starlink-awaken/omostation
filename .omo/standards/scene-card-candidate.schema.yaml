@@ -9,8 +9,45 @@ related:
   - ../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
   - ./external-connection-fabric.md
 ---
-schema: scene-card-candidate/v1
+schema: scene-card-candidate/v2
 purpose: Discover and review possible business scenes without activating runtime capability.
+lifecycle_tiers:
+  description: >
+    五档生命周期，打破 proposal_only→active 断崖。
+    shadow 档定义为"无业务副作用，不需要业务确认"，可自由上线验证。
+  tiers:
+    - id: draft
+      description: 草稿，仅作者可见，无运行时影响
+      requires_business_confirmation: false
+      side_effects: none
+    - id: shadow
+      description: 影子模式，无业务副作用，不需要业务确认，可自由上线
+      requires_business_confirmation: false
+      side_effects: none
+    - id: assisted
+      description: 辅助模式，agent 执行但人类逐步确认每一步
+      requires_business_confirmation: true
+      side_effects: controlled
+    - id: supervised
+      description: 监督模式，agent 自主执行但人类事后审查
+      requires_business_confirmation: true
+      side_effects: monitored
+    - id: routine
+      description: 常规模式，agent 全自主执行，仅异常上报
+      requires_business_confirmation: true
+      side_effects: autonomous
+  valid_transitions:
+    - [draft, shadow]
+    - [shadow, assisted]
+    - [assisted, supervised]
+    - [supervised, routine]
+    - [shadow, draft]
+    - [assisted, shadow]
+    - [supervised, assisted]
+    - [routine, supervised]
+required_fields_v2:
+  - bet
+  - falsifier
 input_sources:
   - governed scenario contracts under .omo/_truth/scenarios
   - explicitly curated strategy seed catalog

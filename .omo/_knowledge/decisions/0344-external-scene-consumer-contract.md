@@ -1,4 +1,5 @@
 ---
+id: ADR-0344
 title: External scene consumer contract
 status: accepted
 type: adr

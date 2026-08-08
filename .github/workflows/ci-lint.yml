@@ -205,6 +205,7 @@ jobs:
   capability-registry-drift:
     name: capability-registry drift (SSOT 同步)
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:

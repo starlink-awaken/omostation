@@ -28,9 +28,14 @@ ROOT="$(git rev-parse --show-toplevel)"
 # ── 读 pre-push stdin (push ref 列表), 供 advisory 守卫 ──────────
 # stdin 格式每行: <local-ref> <local-sha> <remote-ref> <remote-sha>
 PUSH_REFS=""
+ALL_DELETIONS="true"
 while read -r _lref _lsha _rref _rsha; do
   PUSH_REFS="${PUSH_REFS}${_rref}
 "
+  # local-sha 为全 0 表示删除远端 ref
+  if [ "$_lsha" != "0000000000000000000000000000000000000000" ]; then
+    ALL_DELETIONS="false"
+  fi
 done
 
 # ── direct-push-to-main 守卫 (Phase 2c: blocking) ───────────────────────────
@@ -67,12 +72,18 @@ REACH_SCRIPT="$ROOT/bin/ssot/submodule-reachability-gate.py"
 if [ ! -f "$REACH_SCRIPT" ]; then
   REACH_SCRIPT="$ROOT/bin/submodule-reachability-gate.py"
 fi
+REACH_BASELINE="$ROOT/.omo/_truth/registry/submodule-reachability-baseline.txt"
+if [ -f "$REACH_BASELINE" ]; then
+  REACH_ARGS="--skip-file $REACH_BASELINE"
+else
+  REACH_ARGS=""
+fi
 if [ ! -f "$SYNC_SCRIPT" ]; then
   echo "[pre-push] ❌ missing sync-submodules-push.sh (expected bin/ssot/ or bin/)" >&2
   exit 1
 fi
 "$SYNC_SCRIPT" 2>&1 | sed 's/^/[pre-push] /' >&2
-python3 "$REACH_SCRIPT" --source head --fetch 2>&1 | sed 's/^/[reachability] /' >&2
+python3 $REACH_SCRIPT --source head --fetch $REACH_ARGS 2>&1 | sed 's/^/[reachability] /' >&2
 
 # ── G-CONV.7 / ADR-0220 D4: escape-hatch allowlist for CI_LOCAL_SKIP ─
 # CI_LOCAL_SKIP=1 requires SWARM_ESCAPE_ID matching registry allowlist.
@@ -96,9 +107,10 @@ fi
 
 # ── ci-local-fast: 本地 CI 预检 (~5s) ────────────────────────────
 # GaC gate + ruff + YAML 语法. 拦 90% CI 失败, 省等 CI 时间.
+# 删除远端分支时不跑内容检查：没有新代码推向远端，ci-local 的检查目标不存在。
 # 绕过: git push --no-verify (跳整个 hook, 自担风险 — D4 观测)
 #       CI_LOCAL_SKIP=1 + SWARM_ESCAPE_ID=...  (登记豁免后跳预检)
-if [ "${CI_LOCAL_SKIP:-}" != "1" ]; then
+if [ "${CI_LOCAL_SKIP:-}" != "1" ] && [ "$ALL_DELETIONS" != "true" ]; then
   if [ -f "$ROOT/Makefile" ]; then
     make -C "$ROOT" ci-local-fast 2>&1 | sed 's/^/[ci-local] /' >&2 || {
       cat >&2 <<EOF
@@ -108,6 +120,25 @@ if [ "${CI_LOCAL_SKIP:-}" != "1" ]; then
 EOF
       exit 1
     }
+  fi
+fi
+
+# ── 子模块指针漂移检测 (BET-Y1Q2-T1-05) ─────────────────────────
+# 比对根仓 gitlink vs 子模块 origin/main HEAD, DIVERGED 时 blocking.
+# 跳过: 全删除 push / CI_LOCAL_SKIP=1
+if [ "${CI_LOCAL_SKIP:-}" != "1" ] && [ "$ALL_DELETIONS" != "true" ]; then
+  if [ -f "$ROOT/bin/gac/check-submodule-pointer-drift.py" ]; then
+    _drift_out="$(python3 "$ROOT/bin/gac/check-submodule-pointer-drift.py" 2>&1)" || _drift_rc=$?
+    _drift_rc="${_drift_rc:-0}"
+    if [ "$_drift_rc" -ne 0 ]; then
+      printf '%s\n' "$_drift_out" | sed 's/^/[pointer-drift] /' >&2
+      cat >&2 <<EOF
+[pointer-drift] ❌ 子模块指针 DIVERGED — 根仓指向 side branch, 代码不可见!
+   修复: python3 bin/gac/check-submodule-pointer-drift.py --fix --apply
+   或手动: git update-index --cacheinfo 160000,<origin/main SHA>,<submodule path>
+EOF
+      exit 1
+    fi
   fi
 fi
 

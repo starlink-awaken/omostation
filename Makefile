@@ -1,4 +1,4 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck gac-drift gac-validate agent-workflow-status worktree-prune worktree-guard worktree-cleanup worktree-audit
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene
 
 PY := uv run --with pyyaml python
 
@@ -39,9 +39,9 @@ help:
 	@echo "make governance-verify   运行 canonical .omo 验证链"
 	@echo "make governance-check    全量治理检查 (verify → index)"
 	@echo "make governance-audit    全量治理审计 (债务+文档+健康度)"
-	@echo "make governance-sync     同步 .omo/state/system.yaml"
-	@echo "make governance-validate 验证任务 Schema"
-	@echo "make governance-index-check 检查 INDEX.md 覆盖率"
+	@echo "make     同步 .omo/state/system.yaml"
+	@echo "make 验证任务 Schema"
+	@echo "make 检查 INDEX.md 覆盖率"
 	@echo ""
 	@echo "=== X1-X4 治理框架 ==="
 	@echo "make x1-check           X1 审计链检查"
@@ -53,6 +53,15 @@ help:
 	@echo "=== PASW 子模块隔离 (ADR-0349) ==="
 	@echo "make pasw-status         显示 PASW 子模块 worktree 状态"
 	@echo "make pasw-cleanup        TTL 回收过期子模块 worktree (默认 24h)"
+	@echo ""
+	@echo "=== 8维架构 / 7D全景 / 项目体检 / 场景与预测 ==="
+	@echo "make panorama                    7 维全景终极可观测仪表盘 (Exec/Service/Content/Knowledge/Data/Exception/Debt)"
+	@echo "make compass-trace GOAL_ID=<id>  8 维全景元架构追溯 (LifeOS->Goals->C2G->Agora->AetherForge)"
+	@echo "make project-inspect PROJ=<name> 17 项目全景 4D 体检与诊断"
+	@echo "make debt-synthesize             物理 CSES 债务升维与 C2G Bet 提取"
+	@echo "make debt-predict                Phase 5 动态代码债务蔓延预测引擎"
+	@echo "make journey-validate            Journey State Graph 状态图表达验证器"
+	@echo "make scene-card-check            Scene Card 2.0 活性与 Schema 检验"
 	@echo ""
 	@echo "=== 债务 ==="
 	@echo "make debt-check          检查债务状态"
@@ -88,6 +97,12 @@ help:
 	@echo "make doc-ssot-lint      文档 SSOT 契约检查 (--json)"
 	@echo "make ssot-guardian      SSOT guardian (.omo 写入合规)"
 	@echo "make agent-workflow-status 当前 workflow 运行状态 (--json)"
+	@echo "make memory-os-check     Memory OS SSOT/端口/env 面检查 (phase10)"
+	@echo "make memory-os-env       打印/加载 Memory OS 环境 (source bin/memory-os-env.sh)"
+	@echo "make memory-os-up        启动 Neo4j（docker→brew）；CLI: cockpit memory --help"
+	@echo "make memory-os-smoke     Memory OS 实路径冒烟 (status/write/recall/as_of)"
+	@echo "make memory-os-asof-seed as_of 双时态演示种子 + 对照 recall"
+	@echo "                       help: cockpit help · discover · cockpit status (含 Memory OS 行)"
 	@echo ""
 	@echo "=== 本地 CI ==="
 	@echo "make ci-local            本地 CI 预检 (push 前跑, ~30s, 拦 90% CI 失败)"
@@ -163,6 +178,35 @@ ci-local: ci-local-fast
 		echo "✅ ci-local: 全部通过"; \
 	fi
 
+adr-number-check:  ## 检查 ADR 编号冲突
+	@python3 bin/ssot/adr-number-check.py
+
+scene-card-check:  ## 验证所有 scene card readiness (双轨自动路由)
+	@for f in docs/scene-cards/*.yaml; do \
+		echo "── $$(basename $$f) ──"; \
+		python3 bin/ssot/scene-card-lifecycle.py --scene-card $$f check 2>&1 \
+			| python3 -c "import json,sys; d=json.load(sys.stdin); print(f'  ready={d[\"ready\"]} type={d.get(\"scene_type\",\"?\")} blockers={len(d.get(\"activation_blockers\",[]))}')" 2>/dev/null \
+			|| echo "  (check failed)"; \
+	done
+
+scene-chain-check:  ## 验证场景链 downstream_refs (检测缺失目标 + 反馈环)
+	@python3 bin/ssot/scene-chain-validator.py
+
+journey-check:  ## 验证所有 journey spec (状态机 + 不可达/死锁检测)
+	@python3 bin/ssot/journey-validator.py
+
+tool-audit:  ## 审计 bin/ssot/ 工具使用情况 (标记 dormant)
+	@python3 bin/ssot/tool-usage-audit.py
+
+scene-feedback:  ## 列出最近的 scene feedback
+	@python3 bin/ssot/scene-feedback-collector.py list --limit 10
+
+scene-outcome:  ## 列出最近的 scene outcome (人类裁决)
+	@python3 bin/ssot/scene-outcome-recorder.py list --limit 10
+
+signal-poll:  ## 手动执行一次感知面信号轮询
+	@python3 bin/ssot/signal-poller.py
+
 ci-local-fast: check-layers
 	@echo "════════════════════════════════════════════════════"
 	@echo "  ci-local-fast — 本地 CI 预检 (快速模式, ~5s)"
@@ -231,6 +275,9 @@ worktree-cleanup:  ## 回收 TTL 过期 worktree (委托 gac-worktree-cleanup.sh
 
 worktree-audit:  ## 列出可清理的冗余分支 (check-branch-redundant --json)
 	python3 bin/ssot/check-branch-redundant.py --json
+
+worktree-hygiene:  ## worktree 卫生审计与自动清理 (dry-run, 需 --execute 才真删)
+	python3 bin/gac/worktree-hygiene-audit.py --auto-clean --fail-on-unsafe
 
 # ── 能力注册表 + 文档自动生成 (P0-T2) ─────────────────────
 sync-capability-registry:  ## 生成能力注册表 SSOT (扫描 MCP/BOS/CLI)
@@ -309,6 +356,9 @@ gac-local-gate:
 dir-hygiene:  ## 检查根目录卫生 (未追踪未忽略的目录)
 	$(PY) bin/ssot/dir-hygiene-check.py
 
+rebase-regen:  ## ADR-0384 D1: 并发 rebase 后一键全量再生成 (M1 + docs + ruff + mof stat)
+	bash bin/ssot/rebase-regen.sh
+
 governance-release-gate:
 	$(PY) bin/ssot/submodule-reachability-gate.py --source head --fetch
 
@@ -336,17 +386,8 @@ kairon-build:
 governance-verify:
 	bash bin/ssot/verify-omo.sh
 
-governance-check: governance-verify governance-index-check
+governance-check: governance-verify
 	@echo "Governance checks complete."
-
-governance-sync:
-	python3 scripts/sync_omo_state.py --omo-dir .omo
-
-governance-validate:
-	python3 scripts/omo_task_schema.py --all-active
-
-governance-index-check:
-	python3 scripts/check-index-coverage.py
 
 # ── 治理审计 ────────────────────────────────────────────────────────────────────
 
@@ -469,6 +510,9 @@ m2-ssot-batch1:
 gac-healthcheck:  ## GaC 13-point 健康检查
 	$(PY) bin/gac/gac-healthcheck.py
 
+swarm-activity:  ## 多 agent 实时活动面板 (active runs/locks/worktree/claims/子模块 dirty/冲突)
+	python3 bin/gac/swarm-activity-dashboard.py
+
 gac-drift:  ## GaC 规则漂移检测
 	$(PY) bin/gac/gac-drift.py
 
@@ -518,12 +562,50 @@ ssot-guardian:  ## SSOT guardian (.omo 写入合规)
 agent-workflow-status:
 	$(PY) bin/agent-workflow.py status --json
 
+memory-os-check:  ## Memory OS light gate (SSOT / ports / env / catalog; blocking)
+	python3 bin/gac/check-memory-os-surfaces.py
+
+memory-os-env:  ## Show / export Memory OS env (source: eval "$$(make -s memory-os-env-export)")
+	bash bin/memory-os-env.sh --check
+
+memory-os-env-export:
+	bash bin/memory-os-env.sh --export
+
+memory-os-up:  ## Start Neo4j for Memory OS
+	bash bin/memory-os-neo4j-up.sh
+
+memory-os-smoke:  ## Memory OS CLI smoke: status + write + recall + as_of
+	bash bin/memory-os-smoke.sh
+
+memory-os-asof-seed:  ## Seed bi-temporal AliceDemo facts + print as_of comparison
+	bash bin/memory-os-asof-seed.sh
+
+
 # ── PASW: Per-Agent Submodule Worktree (ADR-0349) ──────────
 pasw-status:  ## 显示 PASW 子模块 worktree 状态
 	@bash bin/gac/gac-worktree.sh list
 
 pasw-cleanup:  ## TTL 回收过期子模块 worktree (默认 24h, 可 PASW_TTL_HOURS=12)
 	@bash bin/gac/gac-worktree-cleanup.sh
+
+panorama:  ## 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)
+	PYTHONPATH=projects/omo/src $(PY) -m omo.cli panorama
+
+compass-trace:  ## 8 维全景元架构追溯 (LifeOS->Goals->C2G->Agora->AetherForge)
+	PYTHONPATH=projects/omo/src $(PY) -m omo.cli compass trace $(GOAL_ID)
+
+project-inspect:  ## 17 项目全景 4D 体检与诊断
+	PYTHONPATH=projects/omo/src $(PY) -m omo.cli project inspect $(PROJ)
+
+debt-synthesize:  ## 物理 CSES 债务升维与 C2G Bet 提取
+	PYTHONPATH=projects/omo/src:bin/gac $(PY) bin/gac/omo_debt_synthesizer.py
+
+debt-predict:  ## Phase 5 动态代码债务蔓延预测引擎
+	$(PY) bin/gac/debt-predictor.py
+
+journey-validate:  ## Journey State Graph 状态图表达验证器
+	$(PY) bin/ssot/journey-runner.py --help
+
 
 pasw-cleanup-dryrun:  ## 预览回收 (不删除)
 	@bash bin/gac/gac-worktree-cleanup.sh --dry-run

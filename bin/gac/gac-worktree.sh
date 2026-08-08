@@ -22,12 +22,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/resolve-root-remote.sh"
 
-WS_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+# WS_ROOT/WS_PARENT 可注入 (测试隔离用); 默认从 cwd 解析
+WS_ROOT="${WS_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 if [ -z "$WS_ROOT" ]; then
   echo "❌ 不在 git 仓库" >&2
   exit 1
 fi
-WS_PARENT="$(dirname "$WS_ROOT")"
+WS_PARENT="${WS_PARENT:-$(dirname "$WS_ROOT")}"
 
 cmd="${1:-list}"
 session="${2:-}"
@@ -41,97 +42,10 @@ validate_session() {
   fi
 }
 
-# PASW: Per-Agent Submodule Worktree (ADR-0355) — 高冲突子模块 per-agent 独立 worktree
-# 设计文档: .omo/_knowledge/decisions/0355-pasw-submodule-isolation.md
-# 需要独立 worktree 隔离的高冲突子模块 (按冲突频率排序)
-ISOLATED_SUBS="projects/gbrain projects/cockpit projects/agora"
-# PASW: 子模块 worktree 存放路径 (root worktree 内)
-PASW_SUBTREE_DIR=".subtrees"
-# PASW: 过期 TTL (小时)
-PASW_TTL_HOURS="${PASW_TTL_HOURS:-24}"
-
-pasw_create() {
-  local wt="$1" session="$2"
-  local created=0
-  for sub in $ISOLATED_SUBS; do
-    local sub_name
-    sub_name=$(basename "$sub")
-    local sub_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
-    local sub_branch="agent/${session}-${sub_name}"
-    if [ ! -e "$wt/$sub/.git" ]; then
-      echo "   📥 init $sub (PASW 需要)..."
-      (cd "$wt" && git submodule update --init "$sub" 2>&1) || { echo "   ⚠️  $sub init 失败, 跳过"; continue; }
-    fi
-    [ -d "$sub_wt" ] && { echo "   ⏭  $sub worktree 已存在"; continue; }
-    ( cd "$wt/$sub" && local current_sha && current_sha=$(git rev-parse HEAD) && git branch -f "$sub_branch" "$current_sha" 2>/dev/null || true && mkdir -p "$(dirname "$sub_wt")" && git worktree add "$sub_wt" "$sub_branch" 2>&1 ) && {
-      echo "   🔧 PASW: $sub → $PASW_SUBTREE_DIR/$sub_name (branch: $sub_branch)"
-      created=$((created + 1))
-    } || echo "   ⚠️  $sub worktree 创建失败, 跳过"
-  done
-  [ "$created" -gt 0 ] && echo "   ✅ PASW: $created 个子模块 worktree 已隔离"
-}
-
-# PASW: Agent 冲突检测 — claim 文件追踪
-CLAIMS_DIR=".omo/_delivery/agent-claims"
-
-pasw_claim_record() {
-  local session="$1" wt="$2"
-  mkdir -p "$WS_ROOT/$CLAIMS_DIR"
-  local claim_file="$WS_ROOT/$CLAIMS_DIR/${session}.yaml"
-  cat > "$claim_file" << EOF
-session: $session
-branch: work/$session
-worktree: $wt
-created_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
-files: []
-EOF
-  echo "   📝 已记录 claim → $CLAIMS_DIR/${session}.yaml"
-}
-
-pasw_claim_check() {
-  local session="$1"
-  [ ! -d "$WS_ROOT/$CLAIMS_DIR" ] && return 0
-  local conflicts=0
-  for claim_file in "$WS_ROOT/$CLAIMS_DIR"/*.yaml; do
-    [ -f "$claim_file" ] || continue
-    local other_session
-    other_session=$(python3 -c "import yaml; print(yaml.safe_load(open('$claim_file')).get('session',''))" 2>/dev/null)
-    [ -z "$other_session" ] && continue
-    [ "$other_session" = "$session" ] && continue
-    # 检查 worktree 是否仍然存在 (过期 claim 跳过)
-    local other_wt
-    other_wt=$(python3 -c "import yaml; print(yaml.safe_load(open('$claim_file')).get('worktree',''))" 2>/dev/null)
-    [ -d "$other_wt" ] || continue
-    conflicts=$((conflicts + 1))
-    echo "   ⚠️  活跃 session: $other_session (worktree: $other_wt)"
-  done
-  [ "$conflicts" -gt 0 ] && echo "   ℹ️  共 $conflicts 个活跃 session, 注意文件冲突风险"
-}
-
-pasw_claim_clean() {
-  local session="$1"
-  rm -f "$WS_ROOT/$CLAIMS_DIR/${session}.yaml" 2>/dev/null || true
-}
-
-pasw_cleanup() {
-  local wt="$1"
-  local cleaned=0
-  for sub in $ISOLATED_SUBS; do
-    local sub_name
-    sub_name=$(basename "$sub")
-    local sub_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
-    local sub_branch
-    if [ -d "$sub_wt" ]; then
-      sub_branch=$(git -C "$sub_wt" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-      ( cd "$wt/$sub" && git worktree remove "$sub_wt" 2>/dev/null && [ -n "$sub_branch" ] && [ "$sub_branch" != "HEAD" ] && git branch -d "$sub_branch" 2>/dev/null || true ) && {
-        echo "   🧹 PASW: 已清理 $sub worktree"
-        cleaned=$((cleaned + 1))
-      } || { echo "   ⚠️  $sub 清理失败, 强制移除"; rm -rf "$sub_wt" 2>/dev/null || true; }
-    fi
-  done
-  rmdir "$wt/$PASW_SUBTREE_DIR" 2>/dev/null || true
-  [ "$cleaned" -gt 0 ] && echo "   ✅ PASW: $cleaned 个子模块 worktree 已清理"
-}
+# PASW: Per-Agent Submodule Worktree (ADR-0371) — 高冲突子模块 per-agent 独立 worktree
+# 设计文档: .omo/_knowledge/decisions/0371-pasw-submodule-isolation.md
+# 核心函数在根 lib/pasw-core.sh (脚本在 bin/gac/, 需 ../../lib/ 到仓库根)
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/pasw-core.sh"
 
 case "$cmd" in
   claim)
@@ -140,6 +54,11 @@ case "$cmd" in
     ROOT_REMOTE=$(resolve_root_remote) || exit 1
     wt="$WS_PARENT/ws-$session"
     branch="work/$session"
+    claim_in_progress="$WS_PARENT/.ws-$session.claiming"
+    cleanup_claim_marker() {
+      rm -f "$claim_in_progress"
+    }
+    trap cleanup_claim_marker EXIT INT TERM
     # ── G-CONV.7 / ADR-0220 D2: branch occupancy lock ─────────────────
     # Register before creating worktree so concurrent claim of same slug fails closed.
     if [ -f "$WS_ROOT/bin/gac/swarm-discipline-cli.py" ]; then
@@ -161,24 +80,17 @@ case "$cmd" in
     if [ -d "$wt" ]; then
       echo "⚠️  worktree 已存在: $wt (cd 过去继续工作)"
     else
+      : > "$claim_in_progress"
       git fetch "$ROOT_REMOTE" main 2>&1 | sed '/FETCH_HEAD/d' >&2
       git worktree add "$wt" -b "$branch" "$ROOT_REMOTE/main" 2>&1
       echo "✅ worktree 创建: $wt"
       echo "   分支: $branch (base: $ROOT_REMOTE/main, repo: $CANONICAL_ROOT_REPO)"
-      # PASW: 记录 claim 并检查冲突
-      pasw_claim_record "$session" "$wt"
-      pasw_claim_check "$session"
-      # PASW: 默认不 init 全部子模块 (避免大仓库/网络慢 clone 卡死 claim → worktree 半损坏;
-      # 2026-08-03 实测 runtime 网络慢致 claim 超时 600s + 子模块 .git 指针坏).
-      # pasw_create 会单独 init 隔离子模块 (gbrain/cockpit/agora, PASW 核心);
-      # 其他子模块按需 init (cd $wt && git submodule update --init <sub>).
-      # 需要完整环境: PASW_SUBMODULE_INIT=1 (原默认行为, 含卡死风险).
-      if [ "${PASW_SUBMODULE_INIT:-0}" != "1" ]; then
-        echo "   ⏭ 默认跳过全部子模块 init (防 clone 卡死 claim; PASW_SUBMODULE_INIT=1 开启完整 init)"
-        echo "   隔离子模块 (gbrain/cockpit/agora) 由 pasw_create 单独 init; 其他按需:"
-        echo "     cd $wt && git submodule update --init <sub>"
+      # PASW: 默认 init 全部子模块 (disk 便宜, 完整环境避免按需 init 的摩擦).
+      # SKIP_SUBMODULE_INIT=1 跳过 (CI/fast-claim 场景).
+      if [ "${SKIP_SUBMODULE_INIT:-}" = "1" ]; then
+        echo "   ⏭ SKIP_SUBMODULE_INIT=1 — 子模块未 init (按需: cd $wt && git submodule update --init <sub>)"
       else
-        echo "   PASW_SUBMODULE_INIT=1 — init 全部子模块 (大仓库/网络慢可能卡死)..."
+        echo "   init 全部子模块 (完整环境, 慢 ~60s; SKIP_SUBMODULE_INIT=1 跳过)..."
         t0=$(date +%s)
         init_out=$(cd "$wt" && git submodule update --init 2>&1)
         init_rc=$?
@@ -209,6 +121,8 @@ case "$cmd" in
       echo "     # 更新指针:    gac-worktree.sh bump-pointer $session projects/<sub_name>"
       echo "     gac-worktree.sh submit $session"
     fi
+    cleanup_claim_marker
+    trap - EXIT INT TERM
     ;;
 
   submit)
@@ -416,6 +330,20 @@ except Exception:
       fi )
     cd "$wt"
     git update-index --cacheinfo 160000,"$new_sha","$sub"
+    # ── A (2026-08-06): agora bump → auto-sync bos-registry mirror (防 drift 复发, #1051/#1055 根因) ──
+    # agora 改 etc/bos-services.yaml 后, Workspace 根 bos-registry.json 镜像必须跟着 sync,
+    # 否则 evidence-gate 报 drift (live vs file) 阻塞 PR. bump-pointer 是精准触发点.
+    if [ "$sub" = "projects/agora" ] && [ -f "$wt/bin/ssot/sync-bos-registry.py" ]; then
+      if ( cd "$wt" && uv run --with pyyaml python bin/ssot/sync-bos-registry.py --write ) >/dev/null 2>&1; then
+        if git -C "$wt" add .omo/_knowledge/bos-registry.json 2>/dev/null; then
+          echo "   ✅ bos-registry mirror auto-synced + staged (防 drift, evidence-gate 友好)"
+        else
+          echo "   ⚠️ bos-registry sync 完成但 stage 失败, 请手动: git add .omo/_knowledge/bos-registry.json"
+        fi
+      else
+        echo "   ⚠️ bos-registry auto-sync 跳过 (sync 失败或 agora 未 init), 记得手动: make sync-bos-registry"
+      fi
+    fi
     echo "✅ 指针已更新: $sub → $new_sha"
     echo "   下一步: git commit -m 'bump $sub' && gac-worktree.sh submit $session"
     ;;
@@ -429,7 +357,7 @@ except Exception:
       [ -d "$wt_path" ] || continue
       wt_name=$(basename "$wt_path")
       sub_list=""
-      for sub in $ISOLATED_SUBS; do
+      for sub in $PASW_ISOLATED_SUBS; do
         sub_name=$(basename "$sub")
         [ -d "$wt_path/$PASW_SUBTREE_DIR/$sub_name" ] && sub_list="$sub_list $sub_name"
       done
@@ -438,20 +366,35 @@ except Exception:
     ;;
 
   agents)
-    # Agent 活动看板: 显示所有活跃 worktree 及其状态
+    # Agent 活动看板: 显示所有活跃 worktree 及其状态 + 文件冲突检测
     echo "=== Agent 活动看板 $(date -u +%Y-%m-%dT%H:%M:%Z) ==="
     echo ""
-    printf "%-30s %-12s %-10s %-8s %s\n" "SESSION" "BRANCH" "LAST_COMMIT" "PR" "PASW"
-    printf "%-30s %-12s %-10s %-8s %s\n" "------" "------" "----------" "--" "----"
+
+    # 用临时文件存储每个 session 的文件列表 (兼容 bash 3.2)
+    TMP_DIR=$(mktemp -d)
+    # 清理临时目录 (脚本退出时)
+    trap "rm -rf $TMP_DIR" EXIT
+
+    # 第一遍: 收集所有 agent 的修改文件
+    for wt_path in "$WS_PARENT"/ws-*/; do
+      [ -d "$wt_path" ] || continue
+      wt_name=$(basename "$wt_path")
+      session="${wt_name#ws-}"
+      git -C "$wt_path" diff --name-only HEAD 2>/dev/null > "$TMP_DIR/$session.files" || true
+    done
+
+    # 第二遍: 显示状态 + 冲突检测
+    printf "%-28s %-22s %-10s %-8s %-12s %s\n" "SESSION" "BRANCH" "LAST" "PR" "PASW" "CONFLICT"
+    printf "%-28s %-22s %-10s %-8s %-12s %s\n" "------" "------" "----" "--" "----" "--------"
     now=$(date +%s)
     for wt_path in "$WS_PARENT"/ws-*/; do
       [ -d "$wt_path" ] || continue
       wt_name=$(basename "$wt_path")
-      # 去掉 ws- 前缀得到 session 名
       session="${wt_name#ws-}"
 
       # 分支
       branch=$(git -C "$wt_path" branch --show-current 2>/dev/null || echo "detached")
+      [ ${#branch} -gt 20 ] && branch="${branch:0:17}..."
 
       # 最后 commit 时间
       last_commit=$(git -C "$wt_path" log -1 --format=%ct 2>/dev/null || echo 0)
@@ -473,7 +416,6 @@ except Exception:
       if command -v gh >/dev/null 2>&1 && [ "$branch" != "detached" ]; then
         pr_num=$(gh pr list --head "$branch" --state open --json number 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
         [ -n "$pr_num" ] && pr_status="#${pr_num}"
-        # 检查是否已合并
         if [ -z "$pr_num" ]; then
           merged=$(gh pr list --head "$branch" --state merged --json number 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
           [ -n "$merged" ] && pr_status="merged"
@@ -489,43 +431,103 @@ except Exception:
       pasw=$(echo "$pasw" | xargs)
       [ -z "$pasw" ] && pasw="-"
 
-      printf "%-30s %-12s %-10s %-8s %s\n" "$session" "$branch" "$age" "$pr_status" "$pasw"
+      # 冲突检测: 检查与其他 agent 修改的文件是否重叠
+      conflict=""
+      if [ -f "$TMP_DIR/$session.files" ]; then
+        for other_file in "$TMP_DIR"/*.files; do
+          [ -f "$other_file" ] || continue
+          other_session=$(basename "$other_file" .files)
+          [ "$other_session" = "$session" ] && continue
+          # 找交集 (comm 需要排序, 用 sort + uniq -d 替代)
+          if sort "$TMP_DIR/$session.files" "$other_file" | uniq -d | grep -q .; then
+            conflict="$other_session"
+            break
+          fi
+        done
+      fi
+      [ -z "$conflict" ] && conflict="-"
+
+      printf "%-28s %-22s %-10s %-8s %-12s %s\n" "$session" "$branch" "$age" "$pr_status" "$pasw" "$conflict"
     done
     echo ""
     echo "总计: $(ls -d "$WS_PARENT"/ws-*/ 2>/dev/null | wc -l | tr -d ' ') 个活跃 worktree"
     ;;
 
   onboard)
-    # 新 Agent 入职引导: claim + 环境初始化 + 引导信息
-    [ -z "$session" ] && echo "用法: onboard <session>" >&2 && exit 1
+    # 新 Agent 入职引导: 选择类型 + claim + 环境 + 引导
+    [ -z "$session" ] && echo "用法: onboard <session> [--type <type>]" >&2 && exit 1
     validate_session "$session"
+
+    # 解析 --type 参数
+    agent_type=""
+    if [ "${3:-}" = "--type" ] && [ -n "${4:-}" ]; then
+      agent_type="$4"
+    fi
+
     echo "🚀 Agent 入职引导: $session"
     echo ""
 
-    # 1. Claim worktree (自动 PASW 隔离 + 冲突检测)
-    echo "── 1. 创建隔离 worktree ──"
+    # 1. 选择 agent 类型
+    AGENT_TYPES_CONFIG="$WS_ROOT/.omo/_config/agent-types.yaml"
+    if [ -z "$agent_type" ] && [ -f "$AGENT_TYPES_CONFIG" ] && command -v python3 >/dev/null 2>&1; then
+      echo "── 1. 选择 Agent 类型 ──"
+      echo ""
+      # 用 python 解析 yaml 并显示菜单
+      python3 -c "
+import yaml, sys
+cfg = yaml.safe_load(open('$AGENT_TYPES_CONFIG'))
+types = cfg.get('types', {})
+for i, (key, info) in enumerate(types.items(), 1):
+    print(f'  {i}. {info[\"name\"]}')
+    print(f'     {info[\"description\"]}')
+    print()
+" 2>/dev/null
+      echo -n "选择类型 (1-5, 默认 custom): "
+      read -r choice </dev/tty 2>/dev/null || choice=""
+      case "$choice" in
+        1) agent_type="engineer" ;;
+        2) agent_type="architect" ;;
+        3) agent_type="researcher" ;;
+        4) agent_type="governance" ;;
+        5) agent_type="data" ;;
+        *) agent_type="custom" ;;
+      esac
+      echo "  已选择: $agent_type"
+      echo ""
+    fi
+
+    # 2. Claim worktree (自动 PASW 隔离 + 冲突检测)
+    echo "── 2. 创建隔离 worktree ──"
     bash "$0" claim "$session" || exit 1
     wt="$WS_PARENT/ws-$session"
 
-    # 2. 显示项目引导
+    # 3. 显示项目引导 + 类型特定提示
     echo ""
-    echo "── 2. 项目引导 ──"
+    echo "── 3. 项目引导 ──"
     if [ -f "$wt/AGENTS.md" ]; then
-      echo "📄 项目 AGENTS.md 前 30 行:"
-      head -30 "$wt/AGENTS.md"
+      echo "📄 项目 AGENTS.md 前 20 行:"
+      head -20 "$wt/AGENTS.md"
       echo "..."
+      echo ""
+    fi
+    # 显示类型特定提示
+    if [ -n "$agent_type" ] && [ -f "$AGENT_TYPES_CONFIG" ] && command -v python3 >/dev/null 2>&1; then
+      python3 -c "
+import yaml
+cfg = yaml.safe_load(open('$AGENT_TYPES_CONFIG'))
+t = cfg.get('types', {}).get('$agent_type', {})
+if t:
+    print(f'📌 {t.get(\"name\", \"\")} 提示:')
+    for tip in t.get('tips', []):
+        print(f'   • {tip}')
+    wfs = t.get('recommended_workflows', [])
+    if wfs:
+        print(f'   推荐 workflow: {\", \".join(wfs)}')
+" 2>/dev/null
+      echo ""
     fi
 
-    # 3. 推荐 workflow
-    echo ""
-    echo "── 3. 推荐工作流 ──"
-    echo "  启动 agent-workflow:"
-    echo "    cd $wt"
-    echo "    uv run --with pyyaml python bin/agent-workflow.py bootstrap"
-    echo "    uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> --profile <agent> --objective '<summary>'"
-
-    # 4. 下一步
-    echo ""
+    # 4. 快速开始
     echo "── 4. 快速开始 ──"
     echo "   编辑文件: cd $wt"
     echo "   提交改动: git add . && git commit -m '...'"

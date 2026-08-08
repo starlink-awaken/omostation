@@ -1,4 +1,5 @@
 ---
+id: ADR-0007
 status: archived
 lifecycle: history
 owner: governance-team
