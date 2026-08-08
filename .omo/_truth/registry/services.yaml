@@ -86,6 +86,9 @@ services:
   # 字段照 ~/Library/LaunchAgents/*.plist 的真实配置登记, 未臆造。
   - id: omlx.gateway
     enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: ~/omlx-orchestration/launchd/com.omlx.gateway.plist
     scheduler: launchd
     trigger: keepalive
     label: com.omlx.gateway
@@ -103,6 +106,9 @@ services:
 
   - id: omlx.gateway-ui
     enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: ~/omlx-orchestration/launchd/com.omlx.gateway-ui.plist
     scheduler: launchd
     trigger: keepalive
     label: com.omlx.gateway-ui
@@ -120,6 +126,9 @@ services:
 
   - id: omlx.autopilot
     enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: ~/omlx-orchestration/launchd/com.omlx.autopilot.plist
     scheduler: launchd
     trigger: interval
     interval_sec: 300
@@ -136,6 +145,9 @@ services:
 
   - id: omlx.autostart
     enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: ~/omlx-orchestration/launchd/com.omlx.autostart.plist
     scheduler: launchd
     trigger: boot
     label: com.omlx.autostart
@@ -154,6 +166,9 @@ services:
   # ── 服务面 (Workspace) ─────────────────────────────────────
   - id: agora.sse
     enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: 手写 plist (~/Library/LaunchAgents/com.agora.sse.plist)
     scheduler: launchd
     trigger: keepalive
     label: com.agora.sse
@@ -174,6 +189,9 @@ services:
 
   - id: cockpit.dashboard
     enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: 手写 plist (~/Library/LaunchAgents/com.cockpit.dashboard.plist)
     scheduler: launchd
     trigger: keepalive
     label: com.cockpit.dashboard
@@ -194,6 +212,9 @@ services:
   # ── 数据面 (docker) ────────────────────────────────────────
   - id: docker.observability-db
     enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: docker compose (projects/observability)
     scheduler: docker
     trigger: compose
     label: "docker:observability-db-1"
@@ -205,6 +226,9 @@ services:
 
   - id: docker.searxng
     enabled: true
+    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
+    generate: false
+    config_source: docker compose
     scheduler: docker
     trigger: compose
     label: "docker:searxng"
