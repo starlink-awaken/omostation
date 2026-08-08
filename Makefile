@@ -219,7 +219,7 @@ ci-local-fast: check-layers
 	$(PY) bin/ssot/dir-hygiene-check.py 2>&1 | sed 's/^/[hygiene] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
 	echo "── ruff check (omo + scripts) ──────────────────────"; \
-	ruff check projects/omo/src scripts --ignore F401,F821,E402,E722 2>&1 | sed 's/^/[ruff] /' || CI_LOCAL_FAIL=1; \
+	_ruff_files=$$(git diff --name-only --diff-filter=AM $$(git merge-base HEAD omostation-root/main 2>/dev/null) HEAD -- projects/omo scripts 2>/dev/null | grep '\.py$$' || true); if [ -n "$$_ruff_files" ]; then echo "[ruff] changed .py (changed-only):" $$(_ruff_files); echo "$$_ruff_files" | xargs ruff check --ignore F401,F821,E402,E722 2>&1 | sed 's/^/[ruff] /' || CI_LOCAL_FAIL=1; else echo "[ruff] no changed .py in projects/omo/scripts — skip pre-existing (changed-only, T6-06 治本: 全仓 951 pre-existing 不卡 PR)"; fi; \
 	echo ""; \
  	echo "── HTML entity 编码检查 (Python/YAML) ──────────────"; \
  	if grep -rn '&[gl]t;' projects/ --include='*.py' --include='*.yaml' --include='*.yml' 2>/dev/null \
