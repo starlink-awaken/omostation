@@ -306,6 +306,10 @@ def scan_cli_commands() -> list[dict]:
     if not cli_path.exists():
         return []
     content = cli_path.read_text(encoding="utf-8")
+    # T6-10 拆分后子命令 add_parser 移到 _subcommands.py (god-module 拆分)
+    sub_path = WORKSPACE / "projects" / "cockpit" / "src" / "cockpit" / "_subcommands.py"
+    if sub_path.exists():
+        content += "\n" + sub_path.read_text(encoding="utf-8")
     seen: set[str] = set()
     commands: list[dict] = []
     for m in _RE_ADD_PARSER.finditer(content):
