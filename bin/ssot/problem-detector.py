@@ -100,9 +100,14 @@ def scan_all() -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--no-debt", action="store_true", help="只检测不发事件/不建 debt")
     args = parser.parse_args(argv)
 
     result = scan_all()
+    if not args.no_debt:
+        for p in result["problems"]:
+            _emit_anomaly(p)
+            _record_debt(p)
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     else:
@@ -113,6 +118,73 @@ def main(argv: list[str] | None = None) -> int:
             print("  ✅ No problems detected.")
 
     return 0 if not result["problems"] else 1
+
+
+# ── 统一事件面 + 债务自动闭环 (observability-unified-architecture 设计) ──
+EVENTS_SCRIPT = ROOT / "bin" / "ssot" / "observability-events.py"
+DEBT_ITEMS_DIR = ROOT / ".omo" / "debt" / "items"
+SEEN_FILE = ROOT / ".omo" / "state" / "problem-detector-seen.json"
+
+_SEVERITY_MAP = {"high": "critical", "medium": "warning", "low": "info"}
+
+
+def _emit_anomaly(problem: dict[str, Any]) -> None:
+    """检测到的异常 → 统一事件面 (governance:anomaly). 非阻断."""
+    if not EVENTS_SCRIPT.exists():
+        return
+    try:
+        payload = json.dumps(
+            {k: v for k, v in problem.items() if k != "severity"},
+            ensure_ascii=False, default=str,
+        )
+        subprocess.run(
+            ["python3", str(EVENTS_SCRIPT), "emit",
+             "--domain", "governance", "--type", "governance:anomaly",
+             "--severity", _SEVERITY_MAP.get(str(problem.get("severity", "low")), "info"),
+             "--source", "problem-detector", "--payload", payload],
+            capture_output=True, check=False, timeout=30,
+        )
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _record_debt(problem: dict[str, Any]) -> None:
+    """high/medium 异常 → 自动创建 debt item (幂等: 同 type 不重复建)."""
+    if problem.get("severity") not in {"high", "medium"}:
+        return
+    seen: dict[str, str] = {}
+    if SEEN_FILE.exists():
+        try:
+            seen = json.loads(SEEN_FILE.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            seen = {}
+    ptype = str(problem.get("type", "unknown"))
+    if ptype in seen:
+        return  # 已处理过
+    try:
+        DEBT_ITEMS_DIR.mkdir(parents=True, exist_ok=True)
+        ts = datetime.now(UTC).strftime("%Y%m%d%H%M%S")
+        debt_id = f"DEBT-OBS-{ts}"
+        item = {
+            "id": debt_id,
+            "title": f"[observability] {ptype}",
+            "description": str(problem.get("detail", "")),
+            "severity": problem.get("severity", "medium"),
+            "source": "problem-detector",
+            "status": "registered",
+            "registered_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S") + "Z",
+        }
+        path = DEBT_ITEMS_DIR / f"{debt_id}.yaml"
+        path.write_text(
+            "".join(f"{k}: {json.dumps(v, ensure_ascii=False) if isinstance(v, str) else v}\n"
+                    for k, v in item.items()),
+            encoding="utf-8",
+        )
+        seen[ptype] = debt_id
+        SEEN_FILE.write_text(json.dumps(seen, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"  ➕ debt created: {debt_id} ({ptype})")
+    except OSError:
+        pass
 
 
 if __name__ == "__main__":

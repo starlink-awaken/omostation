@@ -675,6 +675,7 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
         print(f"GaC local gate: PASS ({checks_count} checks executed, ALL GREEN)")
         if BROKEN_CHECKS:
             print(f"  ⚠️  {len(BROKEN_CHECKS)} broken/known-unavailable checks skipped (use --strict to include)")
+        _emit_gate_events(is_ok, report.get("hard_fails"), report.get("soft_warns"))
         return
 
     print("═══ GaC local gate ═══")
@@ -716,6 +717,42 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
     if soft_count:
         parts.append(f"{soft_count} SOFT WARN")
     print("GaC local gate: " + " | ".join(parts))
+    _emit_gate_events(is_ok, hard_raw, soft_raw)
+
+
+def _emit_gate_events(is_ok: bool, hard_raw: Any, soft_raw: Any) -> None:
+    """门禁结果 → 统一事件面 (governance:gate_failed / governance:gate_passed).
+
+    非阻断: emit 失败不影响 gate 退出码. 事件面由 observability-events.py 提供.
+    """
+    if os.environ.get("OBSERVABILITY_EVENTS") == "0":
+        return
+    events_script = WORKSPACE / "bin" / "ssot" / "observability-events.py"
+    if not events_script.exists():
+        return
+    import json as _json
+    try:
+        if not is_ok and isinstance(hard_raw, list):
+            for r in hard_raw[:5]:
+                name = r.get("name") if isinstance(r, dict) else str(r)
+                payload = _json.dumps({"check": name, "gate": "gac-local-gate"}, ensure_ascii=False)
+                subprocess.run(
+                    [sys.executable, str(events_script), "emit",
+                     "--domain", "governance", "--type", "governance:gate_failed",
+                     "--severity", "critical", "--source", "gac-local-gate",
+                     "--payload", payload],
+                    capture_output=True, check=False, timeout=30,
+                )
+        else:
+            subprocess.run(
+                [sys.executable, str(events_script), "emit",
+                 "--domain", "governance", "--type", "governance:gate_passed",
+                 "--severity", "info", "--source", "gac-local-gate",
+                 "--payload", '{"gate": "gac-local-gate"}'],
+                capture_output=True, check=False, timeout=30,
+            )
+    except Exception:  # noqa: BLE001  # 非阻断
+        pass
 
 
 def _load_rule_vitality_tracker():

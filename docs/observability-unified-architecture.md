@@ -208,22 +208,22 @@ compass_radar → health.yaml (已有)
 ## 7. 实施路线
 
 ### Phase 1 — 地基（止血 + 枢纽落地）
-- [ ] P1.1 统一事件面 schema + `.omo/_delivery/observability/events.jsonl`（AppendOnlyLog）+ `omo observability event` 写命令
-- [ ] P1.2 日志轮转（launchd 守护加 logrotate / RotatingFileHandler）——P0 止血
-- [ ] P1.3 observability 栈决策：配 `.env` 修复 Langfuse 或正式退役
-- [ ] P1.4 agora /metrics 补 RED 指标（QPS/延迟直方图/错误率）
+- [x] P1.1 统一事件面 schema（`observability-events.yaml`）+ `bin/ssot/observability-events.py`（emit/search/trace/adapters）+ events.jsonl（AppendOnlyLog+fcntl）— **2026-08-08 落地**
+- [x] P1.2 日志轮转 `bin/ssot/log-rotate.py` + `make log-rotate`（实测 agora sse-stdout 已达 243MB）— **2026-08-08 落地**
+- [ ] P1.3 observability 栈决策：配 `.env` 修复 Langfuse 或正式退役 — **TODO**
+- [ ] P1.4 agora /metrics 补 RED 指标（QPS/延迟直方图/错误率）— **TODO**
 
 ### Phase 2 — 联动闭环
-- [ ] P2.1 8 通道适配器（swarm/signal/scene/transition/metaos/gate/debt/health）→ 统一事件面 + 增量指针
-- [ ] P2.2 告警到人：alert-router 接微信/飞书 webhook + cron/launchd 常态调度
-- [ ] P2.3 门禁失败 → 事件 → 告警闭环（5.1 全链）
-- [ ] P2.4 `omo observability trace <trace_id>` 跨链查询
+- [x] P2.1 适配器框架 + 4 通道落地（swarm/gate/debt/health）+ 增量指针（`.omo/state/observability-adapters/*.offset`）；signal/scene 已注册待接线，metaos/transition 默认关闭 — **2026-08-08 落地**
+- [ ] P2.2 告警到人：alert-router 接微信/飞书 webhook + cron/launchd 常态调度 — **TODO（用户指示暂登记）**
+- [x] P2.3 门禁失败 → 事件（gac-local-gate 失败发 governance:gate_failed，PASS 发 gate_passed）— **2026-08-08 落地**
+- [x] P2.4 `observability-events.py trace <trace_id>` 跨链查询 — **2026-08-08 落地**
 
 ### Phase 3 — 治理深度联动
-- [ ] P3.1 异常 → 债务自动闭环（5.2）
-- [ ] P3.2 健康分复合（observability 信号并入，5.3）
-- [ ] P3.3 OTel span → Langfuse（若 P1.3 选择修复）
-- [ ] P3.4 cockpit 可观测页聚合统一事件面（替代分散 /api/logs /api/alerts）
+- [x] P3.1 异常 → 债务自动闭环（problem-detector 升级：检测→事件面 governance:anomaly→debt item 自动创建，幂等）— **2026-08-08 落地**
+- [x] P3.2 健康分复合（compass_radar 并入统一事件面近 24h critical/degraded 事件到 anomaly_count）— **2026-08-08 落地**
+- [ ] P3.3 OTel span → Langfuse（若 P1.3 选择修复）— **TODO**
+- [ ] P3.4 cockpit 可观测页聚合统一事件面（替代分散 /api/logs /api/alerts）— **TODO**
 
 ---
 
