@@ -81,6 +81,27 @@ def _has_doc_drift() -> bool:
         return False
 
 
+def _validate_generation() -> bool:
+    """校验派生文档生成完整性 (防残缺生成被提交).
+
+    本地子模块不全时生成器产出残缺 (mcp_tools=0/bos_services=0),
+    提交会污染 main 致 CI check-docs-drift/能力注册表 fail.
+    校验 capability-registry totals 3 键全 > 0.
+    """
+    try:
+        import yaml
+
+        reg_path = ROOT / "docs" / "generated" / "capability-registry.yaml"
+        if not reg_path.exists():
+            return False
+        data = yaml.safe_load(reg_path.read_text(encoding="utf-8"))
+        totals = data.get("totals", {}) if isinstance(data, dict) else {}
+        keys = ("mcp_servers", "mcp_tools", "bos_services")
+        return all(int(totals.get(k, 0)) > 0 for k in keys)
+    except Exception:  # noqa: BLE001 — 校验失败保守返回 False
+        return False
+
+
 def main() -> int:
     changed = _changed_gitlinks()
     if not changed:
@@ -92,6 +113,12 @@ def main() -> int:
     if not ok:
         print(f"[sync-check] ⚠️ sync-all-docs 执行失败 (可能子模块不全):\n{out}")
         return 0  # 失败不阻塞 commit
+
+    # 完整性校验 (防残缺生成污染 main)
+    if not _validate_generation():
+        print("[sync-check] ⚠️ 派生文档生成不完整 (本地子模块不全?) — 跳过提交提示")
+        print("[sync-check] 请勿提交残缺派生文档 (CI 完整环境会重新生成)")
+        return 0
 
     if _has_doc_drift():
         print("[sync-check] ⚠️ 派生文档已更新 (capability-registry/CLI-REFERENCE/INDEX-MCP)")
