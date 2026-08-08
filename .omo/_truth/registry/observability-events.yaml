@@ -91,7 +91,8 @@ adapters:
     enabled: false
     note: "agora 服务状态机转换 (内存, 待 API 暴露)"
 
-# 通知渠道 (TODO: P2.2 告警到人 — 登记不实现)
+# 通知渠道 (P2.2 告警到人 — channel 连接器体系已落地, URL 待配置)
 notifications:
-  status: todo
-  note: "alert-router 接微信/飞书 webhook + 常态调度 — 设计 §P2.2, 待实现"
+  status: partial
+  note: "alert-connectors.py (slack/feishu/wecom/generic) + alert-router 接通 + receipt 回写
+         已落地; 配 ALERT_<PROVIDER>_WEBHOOK 环境变量后生效. 常态调度在 operating-rhythm-crontab 08:30.

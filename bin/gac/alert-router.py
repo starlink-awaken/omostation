@@ -7,6 +7,7 @@ Usage:
 """
 
 import argparse
+import os
 import json
 import sys
 from datetime import datetime, timezone
@@ -98,6 +99,36 @@ def route_alert(alert: dict, config: dict) -> None:
     _route_log(alert, config)
     _route_webhook(alert, config)
     _route_email(alert, config)
+    _route_notify(alert)
+
+
+def _route_notify(alert: dict) -> None:
+    """告警到人: 经 channel 连接器 (observability-events notify → alert-connectors).
+
+    非阻断: 连接器未配置 URL 时静默 (health 检查会提示). 复用统一事件面
+    notify 命令做路由 + receipt 回写 (observability-unified-architecture §5.1).
+    """
+    if os.environ.get("OBSERVABILITY_EVENTS") == "0":
+        return
+    events_script = WORKSPACE / "bin" / "ssot" / "observability-events.py"
+    if not events_script.exists():
+        return
+    severity = str(alert.get("severity") or alert.get("level") or "warning")
+    if severity not in {"critical", "degraded", "warning"}:
+        return
+    try:
+        import subprocess
+        title = str(alert.get("check") or alert.get("event") or alert.get("type") or "governance-alert")
+        body = json.dumps({k: v for k, v in alert.items() if k not in {"severity", "level"}},
+                          ensure_ascii=False)[:300]
+        subprocess.run(
+            ["python3", str(events_script), "notify",
+             "--severity", severity, "--domain", "governance",
+             "--title", f"[alert-router] {title}", "--body", body],
+            capture_output=True, check=False, timeout=30,
+        )
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def main() -> int:

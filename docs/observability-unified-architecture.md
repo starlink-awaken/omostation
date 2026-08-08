@@ -215,7 +215,7 @@ compass_radar → health.yaml (已有)
 
 ### Phase 2 — 联动闭环
 - [x] P2.1 适配器框架 + 4 通道落地（swarm/gate/debt/health）+ 增量指针（`.omo/state/observability-adapters/*.offset`）；signal/scene 已注册待接线，metaos/transition 默认关闭 — **2026-08-08 落地**
-- [ ] P2.2 告警到人：alert-router 接微信/飞书 webhook + cron/launchd 常态调度 — **TODO（用户指示暂登记）**
+- [x] P2.2 告警到人：channel 连接器体系（alert-connectors.py: slack/feishu/wecom/generic + deliver/receipt + 事件面回写）+ alert-router 接通 + cron 08:30 调度 — **2026-08-08 落地（URL 待配 env）**
 - [x] P2.3 门禁失败 → 事件（gac-local-gate 失败发 governance:gate_failed，PASS 发 gate_passed）— **2026-08-08 落地**
 - [x] P2.4 `observability-events.py trace <trace_id>` 跨链查询 — **2026-08-08 落地**
 
