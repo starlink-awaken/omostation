@@ -1,13 +1,13 @@
 # MCP 服务器索引
 
-> 自动生成于 2026-08-03T01:04:00Z
+> 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-全生态共 **28** 个 MCP 服务器, **580** 个工具。
+全生态共 **27** 个 MCP 服务器, **554** 个工具。
 
 | 服务器 | 层 | 工具数 | 传输 | 端口 | 源文件 |
 |--------|-----|--------|------|------|--------|
-| `agora` | I0 | 64 | stdio/sse | — | `projects/agora/src/agora/server/mcp.py` |
+| `agora` | I0 | 65 | stdio/sse | — | `projects/agora/src/agora/server/mcp.py` |
 | `ecos` | L0 | 28 | stdio | — | `projects/ecos/src/ecos/mcp_server.py` |
 | `ecos-integration` | L0 | 26 | stdio | — | `projects/ecos/src/ecos/services/integration/mcp_server.py` |
 | `ecos-ssot` | L0 | 9 | stdio | — | `projects/ecos/src/ecos/l0/ssot/mcp_server.py` |
@@ -17,7 +17,7 @@
 | `kos-stdio` | L2 | 44 | stdio | — | `projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `codeanalyze` | L2 | 25 | stdio | — | `projects/kairon/packages/codeanalyze/src/codeanalyze/mcp.py` |
 | `metaos` | L2 | 24 | stdio | — | `projects/metaos/src/metaos/mcp_server.py` |
-| `omo` | L2 | 19 | stdio | — | `projects/omo/src/omo/mcp_server.py` |
+| `omo` | L2 | 22 | stdio | — | `projects/omo/src/omo/mcp_server.py` |
 | `kronos` | L2 | 16 | stdio | — | `projects/kairon/packages/kronos/src/kronos/mcp_server.py` |
 | `iris` | L2 | 8 | stdio | — | `projects/kairon/packages/iris/src/iris/mcp_server.py` |
 | `sophia` | L2 | 8 | stdio | — | `projects/kairon/packages/sophia/src/sophia/server/mcp_server.py` |
@@ -25,7 +25,6 @@
 | `forge` | L2 | 7 | stdio | — | `projects/kairon/packages/forge/src/mcp_server.py` |
 | `ontoderive` | L2 | 7 | stdio | — | `projects/kairon/packages/ontoderive/src/ontoderive/mcp_server.py` |
 | `toolforge` | L2 | 5 | stdio | — | `projects/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py` |
-| `cockpit-mcp` | L3 | 30 | stdio | — | `projects/cockpit/src/cockpit/scripts/cockpit_mcp.py` |
 | `agent-runtime` | L3 | 2 | stdio | — | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
 | `l4-kernel` | L4 | 45 | stdio/http/sse | http:7455, sse:7456 | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `model-driven` | M0 | 28 | stdio | — | `projects/model-driven/src/model_driven/mcp_server.py` |
@@ -42,9 +41,9 @@
 
 `add_link`, `add_tag`, `add_timeline_entry`, `cancel_job`, `code_blast`, `code_callees`, `code_callers`, `code_def`, `code_flow`, `code_refs`, `code_traversal_cache_clear`, `delete_page`, `extract_facts`, `file_list`, `file_upload`, `file_url`, `find_anomalies`, `find_contradictions`, `find_experts`, `find_orphans`, `find_trajectory`, `forget_fact`, `get_backlinks`, `get_brain_identity`, `get_calibration_profile`, `get_chunks`, `get_health`, `get_ingest_log`, `get_job`, `get_job_progress`, `get_links`, `get_page`, `get_raw_data`, `get_recent_salience`, `get_recent_transcripts`, `get_stats`, `get_tags`, `get_timeline`, `get_versions`, `list_jobs`, `list_pages`, `log_ingest`, `memory_tree`, `pause_job`, `purge_deleted_pages`, `put_page`, `put_raw_data`, `query`, `recall`, `remove_link`, `remove_tag`, `replay_job`, `resolve_slugs`, `restore_page`, `resume_job`, `retry_job`, `revert_version`, `run_doctor`, `search`, `search_by_image`, `send_job_message`, `sources_add`, `sources_list`, `sources_remove`, `sources_status`, `submit_agent`, `submit_job`, `sync_brain`, `takes_calibration`, `takes_list`, `takes_scorecard`, `takes_search`, `think`, `traverse_graph`, `whoami`
 
-### agora (64 tools)
+### agora (65 tools)
 
-`a2a_cancel_task`, `a2a_get_task`, `a2a_list_tasks`, `a2a_send_task`, `add_route`, `agora_execute`, `audit_query`, `audit_stats`, `bos_reload_routes`, `create_api_key`, `debt_auto_seed_tool`, `entropy_cleanup_tool`, `get_agent_card`, `get_event_log`, `get_state_transitions`, `health_check`, `lifecycle_load_all`, `lifecycle_start_watch`, `lifecycle_status`, `lifecycle_stop_watch`, `lifecycle_unload_all`, `list_agent_cards`, `list_api_keys`, `list_routes`, `list_services`, `proxy_add_service`, `proxy_arch_health`, `proxy_backend_health`, `proxy_connect`, `proxy_governance_status`, `proxy_list_tools`, `proxy_omo_debt`, `publish_event`, `python`, `register_push_notification`, `register_service`, `registry_find_agent_tool`, `registry_health_tool`, `registry_heartbeat_tool`, `registry_list_agents_tool`, `registry_list_tasks_tool`, `registry_register_agent_tool`, `registry_submit_task_tool`, `repo_discover`, `repo_install`, `repo_load`, `repo_pipeline`, `repo_search`, `repo_status`, `repo_unload`, `revoke_api_key`, `route_call`, `subscribe_event`, `swarm_nodes`, `swarm_resolve`, `swarm_status`, `workflow_capability_health`, `workspace_audit_gitlink`, `workspace_audit_governance`, `workspace_audit_lint`, `workspace_audit_ops`, `workspace_audit_radar`, `workspace_audit_run`, `workspace_audit_ssot`
+`a2a_cancel_task`, `a2a_get_task`, `a2a_list_tasks`, `a2a_send_task`, `add_route`, `agora_capability_discover`, `agora_execute`, `audit_query`, `audit_stats`, `bos_reload_routes`, `create_api_key`, `debt_auto_seed_tool`, `entropy_cleanup_tool`, `get_agent_card`, `get_event_log`, `get_state_transitions`, `health_check`, `lifecycle_load_all`, `lifecycle_start_watch`, `lifecycle_status`, `lifecycle_stop_watch`, `lifecycle_unload_all`, `list_agent_cards`, `list_api_keys`, `list_routes`, `list_services`, `proxy_add_service`, `proxy_arch_health`, `proxy_backend_health`, `proxy_connect`, `proxy_governance_status`, `proxy_list_tools`, `proxy_omo_debt`, `publish_event`, `python`, `register_push_notification`, `register_service`, `registry_find_agent_tool`, `registry_health_tool`, `registry_heartbeat_tool`, `registry_list_agents_tool`, `registry_list_tasks_tool`, `registry_register_agent_tool`, `registry_submit_task_tool`, `repo_discover`, `repo_install`, `repo_load`, `repo_pipeline`, `repo_search`, `repo_status`, `repo_unload`, `revoke_api_key`, `route_call`, `subscribe_event`, `swarm_nodes`, `swarm_resolve`, `swarm_status`, `workflow_capability_health`, `workspace_audit_gitlink`, `workspace_audit_governance`, `workspace_audit_lint`, `workspace_audit_ops`, `workspace_audit_radar`, `workspace_audit_run`, `workspace_audit_ssot`
 
 ### l4-kernel (45 tools)
 
@@ -57,10 +56,6 @@
 ### kos-stdio (44 tools)
 
 `build_context`, `check_subscription`, `collab.add_artifact`, `collab.claim_subtask`, `collab.create_task`, `collab.get_task`, `collab.list_tasks`, `collab.update_task`, `consensus.create`, `consensus.get`, `consensus.list_expired`, `consensus.renew`, `consensus.trace`, `cross_domain_sync`, `db_vacuum`, `entity_explore`, `fact_check`, `full_sync`, `get_entity`, `get_entity_timeline`, `get_knowledge`, `get_stats`, `get_system_status`, `graph_search`, `knowledge_ask`, `list_domains`, `mcp_market_discover`, `memory_stats`, `ontology_graph`, `ontology_rebuild`, `research_now`, `research_pipeline`, `run_indexer`, `search_entity`, `search_knowledge`, `self.get_current_role`, `self.get_profile`, `self.get_vision_summary`, `semantic_scholar`, `semantic_search`, `subscribe_topic`, `sync_gbrain`, `verify_claim`, `viz_render`
-
-### cockpit-mcp (30 tools)
-
-`cards_check`, `cards_status`, `daily_summary`, `domains_list`, `github_pr_review`, `governance_check`, `governance_dashboard`, `governance_history`, `governance_leaderboard`, `governance_sla`, `governance_status`, `research_agent_list`, `research_archive`, `research_ask`, `research_create`, `research_dossier`, `research_half_life`, `research_list`, `research_open`, `research_rename`, `research_restore`, `research_search`, `research_tag`, `shared_context_list`, `shared_context_read`, `shared_context_write`, `status_json`, `status_summary`, `vault_search`, `workspace_context`
 
 ### ecos (28 tools)
 
@@ -86,9 +81,9 @@
 
 `handle_day`, `handle_device_orchestrator`, `handle_evening`, `handle_family_brief`, `handle_gate`, `handle_health`, `handle_morning`, `handle_request`, `handle_review`, `handle_ssot`, `handle_status`, `handle_trace`, `metaos-engine`, `metaos_day`, `metaos_device_orchestrator`, `metaos_evening`, `metaos_family_brief`, `metaos_gate`, `metaos_health`, `metaos_morning`, `metaos_review`, `metaos_ssot`, `metaos_status`, `metaos_trace`
 
-### omo (19 tools)
+### omo (22 tools)
 
-`acquire_lock`, `cards_check`, `cards_create`, `cards_search`, `cards_status`, `cards_update`, `check_gac_rule`, `check_lock`, `list_locks`, `omo_bridge`, `omo_debt_list`, `omo_debt_summary`, `omo_gc`, `omo_metacognition`, `omo_worker_dispatch`, `omo_worker_reclaim`, `omo_yield_task`, `release_lock`, `validate_task`
+`acquire_lock`, `agent_host_tick`, `cards_check`, `cards_create`, `cards_search`, `cards_status`, `cards_update`, `check_gac_rule`, `check_lock`, `journey_run_dag`, `list_locks`, `omo_bridge`, `omo_debt_list`, `omo_debt_summary`, `omo_gc`, `omo_metacognition`, `omo_worker_dispatch`, `omo_worker_reclaim`, `omo_yield_task`, `release_lock`, `scene_card_status`, `validate_task`
 
 ### kronos (16 tools)
 
@@ -150,4 +145,4 @@
 
 `chat`, `run_task`
 
-*由 `bin/cockpit/gen-help-docs.py` 于 2026-08-03T01:04:00Z 生成*
+*由 `bin/cockpit/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*

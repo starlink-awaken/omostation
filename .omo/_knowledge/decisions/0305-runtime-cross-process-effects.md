@@ -1,4 +1,5 @@
 ---
+id: ADR-0305
 title: Runtime 跨进程 effect journal 与显式补偿边界
 status: accepted
 type: decision

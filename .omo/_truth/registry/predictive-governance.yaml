@@ -1,0 +1,77 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-08-08
+---
+
+# Predictive Governance Registry
+# Configures ML/model settings, feature engineering, and action recommendation mappings
+# for the predictive governance engine.
+
+version: 1
+description: Predictive governance configuration
+
+model:
+  method: linear_regression
+  fallback: moving_average
+  min_history: 5
+  confidence_threshold: 0.7
+
+features:
+  - name: gate_pass_rate
+    source: metrics-store.jsonl
+    aggregation: daily_mean
+    window: 7
+
+  - name: check_duration_trend
+    source: metrics-store.jsonl
+    aggregation: daily_mean
+    window: 7
+
+  - name: debt_volume
+    source: .omo/debt/items
+    aggregation: daily_count
+    window: 7
+
+  - name: anomaly_count
+    source: anomaly-events.jsonl
+    aggregation: daily_count
+    window: 7
+
+recommendations:
+  - trigger: gate_pass_rate_declining
+    action: review_recent_changes
+    priority: P1
+    template: "gate pass rate declining ({value}%/day). Review recent commits for regression."
+
+  - trigger: check_duration_increasing
+    action: optimize_slow_checks
+    priority: P2
+    template: "check duration increasing ({value}ms/day). Consider optimizing slow checks."
+
+  - trigger: debt_volume_increasing
+    action: allocate_cleanup_time
+    priority: P1
+    template: "debt volume increasing ({value}/day). Allocate time for debt reduction."
+
+  - trigger: anomaly_spike
+    action: investigate_anomalies
+    priority: P0
+    template: "anomaly spike detected ({value} anomalies). Investigate root cause."
+
+  - trigger: stable_healthy
+    action: maintain_current_practices
+    priority: P3
+    template: "governance metrics stable and healthy. Maintain current practices."
+
+simulation:
+  threshold_adjustments:
+    - check: check-submodule-rewind
+      current: 3
+      simulated_values: [2, 3, 4, 5]
+  window_days: 7
+
+output:
+  format: json
+  path: .omo/state/runtime/predictive-governance.json

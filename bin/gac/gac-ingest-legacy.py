@@ -119,24 +119,54 @@ def load_legacy_rules() -> list[dict]:
 
 
 def check_drift() -> dict:
-    """动态收敛核心: 检测源规则 vs GaC indexed 差异.
+    """动态收敛核心 (ADR-0375 G5): 容器语义 — 源文件 vs GaC indexed 容器规则.
 
-    missing = 源有 GaC 没 (需 ingest 纳管)
-    ghost   = GaC 有 源没 (源已删除, 需清理 indexed)
-    ok      = 源与 GaC indexed 同步 (动态闭环达成)
+    P79 consolidation 后, legacy 源文件 (X1/X2/X4 policies + L0 constraints)
+    不再逐条 ingest 进 governance-checks.yaml; 每个源文件由一条
+    `CR-*-SSOT` indexed 容器规则代表 (source_ref 指向该文件). 因此:
+
+      missing = legacy 源文件没有对应 indexed 容器规则 (源未被纳管)
+      ghost   = indexed 容器规则的 source_ref 指向不存在的 legacy 源文件
+                (源已删除, 容器规则悬空)
+      ok      = 每个 legacy 源都有容器规则, 且无悬空容器 (闭环达成)
+
+    旧实现用 "源具体规则 id" vs "容器规则 id" 做集合差, 在容器语义下
+    必然产生 104 missing + 4 ghost 永久误报 (索引名 ≠ 源内规则名).
     """
-    legacy = load_legacy_rules()
-    legacy_ids = {r["id"] for r in legacy}
     gac_data = load_yaml_last_doc(REGISTRY)
     gac_rules = gac_data.get("gac", {}).get("rules", [])
-    indexed_ids = {r["id"] for r in gac_rules if r.get("source_type") == "indexed"}
-    missing = sorted(legacy_ids - indexed_ids)
-    ghost = sorted(indexed_ids - legacy_ids)
+    indexed_rules = [r for r in gac_rules if r.get("source_type") == "indexed"]
+
+    # 1. 每个 legacy 源文件必须被 ≥1 条 indexed 规则覆盖 (source_ref 指向该文件)
+    covered_files: set[str] = set()
+    for rule in indexed_rules:
+        ref = str(rule.get("source_ref") or "")
+        path_part = ref.split("::")[0]
+        for src in LEGACY_SOURCES:
+            if path_part == src["file"] or path_part.startswith(src["file"] + "::"):
+                covered_files.add(src["file"])
+    missing = [src["file"] for src in LEGACY_SOURCES if src["file"] not in covered_files]
+
+    # 2. 悬空容器: indexed 规则 source_ref 指向的 legacy 文件已删除
+    ghost = []
+    for rule in indexed_rules:
+        ref = str(rule.get("source_ref") or "")
+        path_part = ref.split("::")[0]
+        # 只检查指向 legacy 源目录树 (_truth/ 或 projects/ecos/.../L0-constraints) 的规则
+        is_legacy_tree = (
+            path_part.startswith(".omo/_truth/x")
+            or path_part.startswith("projects/ecos/src/ecos/ssot/registry/")
+        )
+        if is_legacy_tree and not (WORKSPACE / path_part).exists():
+            ghost.append(rule.get("id", path_part))
+
     return {
-        "legacy_count": len(legacy_ids),
-        "indexed_count": len(indexed_ids),
-        "missing": missing,
-        "ghost": ghost,
+        "legacy_count": len(load_legacy_rules()),
+        "source_count": len(LEGACY_SOURCES),
+        "indexed_count": len(indexed_rules),
+        "covered_files": sorted(covered_files),
+        "missing": sorted(missing),
+        "ghost": sorted(ghost),
         "ok": not missing and not ghost,
     }
 

@@ -1,0 +1,87 @@
+name: pyright-sweep
+# ADR-0367 Phase 3 + ADR-0373 A4/C5/D3/E2:
+#   - 全仓 pyright 扫描 + 指标归档 (Phase 3, manual dispatch)
+#   - ADR backfill strict gate (D3: 阻断新 ADR 缺 id 的 PR)
+#   - sweep-index drift gate (C5: CI 阻断 INDEX.md 与 <date>.json 漂移)
+#   - per-package strict suppression gate (A4: 任一项目 file_suppressions>0 → exit 1)
+# 产出: .omo/_knowledge/sweeps/<date>.json + INDEX.md 自动维护
+on:
+  workflow_dispatch:
+    inputs:
+      projects:
+        description: "Projects (space-separated, default: all with pyproject.toml)"
+        required: false
+        default: ""
+      strict:
+        description: "Exit 1 when any per-package file_suppressions > 0 (A4 strict)"
+        type: boolean
+        default: false
+      diff_mode:
+        description: "A4 --diff-mode: only scan projects touched in origin/main..HEAD"
+        type: boolean
+        default: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v4
+      # D3 (ADR-0373): 新 ADR 缺 `id:` 必须立即阻断, 不留到 adr-coverage 周报
+      - name: ADR backfill strict gate
+        run: |
+          python3 bin/adr/adr-frontmatter-backfill.py --strict --json
+      # C5 (ADR-0373): INDEX.md 漂移立即阻断
+      - name: Sweep index drift gate
+        run: |
+          python3 bin/sweep/sweep_index.py --check
+      - name: Run pyright sweep scan
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.projects }}" ]; then
+            ARGS="--projects ${{ github.event.inputs.projects }}"
+          fi
+          if [ "${{ github.event.inputs.diff_mode }}" = "true" ]; then
+            ARGS="$ARGS --diff-mode"
+          fi
+          if [ "${{ github.event.inputs.strict }}" = "true" ]; then
+            ARGS="$ARGS --strict"
+          fi
+          python3 bin/sweep/scan.py $ARGS --date "$(date -u +%Y-%m-%d)"
+      - name: Upload sweep report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sweep-report
+          path: .omo/_knowledge/sweeps/*.json
+      - name: Suppression gate (optional strict)
+        if: ${{ github.event.inputs.strict == 'true' }}
+        run: |
+          REPORT=".omo/_knowledge/sweeps/$(date -u +%Y-%m-%d).json"
+          python3 - "$REPORT" <<'PY'
+          import json, sys
+          report = json.load(open(sys.argv[1]))
+          ratio = report["suppression_ratio"]
+          files = report["file_suppressions"]
+          per_pkg = report.get("strict_violations") or {}
+          print(f"total_errors={report['total_errors']} ratio={ratio:.3f} file_suppressions={files} per_pkg_strict={per_pkg}")
+          if files >= 3 or ratio > 0.6 or per_pkg:
+              print("❌ suppression gate: 需要修复而非禁言 (A3 旧口径 + A4 新口径 strict_violations)")
+              sys.exit(1)
+          PY
+      # E2 (ADR-0373): sweep-closeout hook 必须在 closeout = ok 后立即跑一次 --check,
+      # 不靠本地手敲. 用 AGENT_WORKFLOW_SWEEP_FAIL_HARD=1 让 drift 阻断 merge.
+      - name: Sweep closeout smoke (E2 hook hardened)
+        if: ${{ github.event.inputs.strict == 'true' }}
+        run: |
+          AGENT_WORKFLOW_SWEEP_FAIL_HARD=1 python3 bin/sweep/sweep_index.py --check
+      - name: Upload INDEX.md
+        uses: actions/upload-artifact@v4
+        with:
+          name: sweep-index
+          path: .omo/_knowledge/sweeps/INDEX.md

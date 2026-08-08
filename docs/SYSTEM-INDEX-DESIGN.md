@@ -193,10 +193,10 @@ AGENTS.md → CLAUDE.md → ARCHITECTURE.md → project-registry.yaml → ...
 ```
 SYSTEM-INDEX.md                    ← 统一入口（根）
     │
-    ├── docs/INDEX-PROJECTS.md     ← 项目索引（按层/按栈/按状态）
-    ├── docs/INDEX-TOOLS.md        ← 工具索引（bin/ + scripts/ + skills/）
-    ├── docs/INDEX-KNOWLEDGE.md    ← 知识索引（ADR + 审计 + 模式 + MEMORY）
-    └── docs/INDEX-AGENTS.md       ← Agent 能力索引（配置 + 技能 + 权限）
+    ├── ./INDEX-PROJECTS.md     ← 项目索引（按层/按栈/按状态）
+    ├── ./INDEX-TOOLS.md        ← 工具索引（bin/ + scripts/ + skills/）
+    ├── ./INDEX-KNOWLEDGE.md    ← 知识索引（ADR + 审计 + 模式 + MEMORY）
+    └── ./INDEX-AGENTS.md       ← Agent 能力索引（配置 + 技能 + 权限）
 ```
 
 ### 4.2 文件职责定义
@@ -204,10 +204,10 @@ SYSTEM-INDEX.md                    ← 统一入口（根）
 | 文件 | 维度 | Owner | 更新频率 | 生成方式 |
 |------|------|-------|---------|---------|
 | `SYSTEM-INDEX.md` | 入口层 | governance-team | 月度/重大变更 | 人工维护框架 + 脚本填充数据 |
-| `docs/INDEX-PROJECTS.md` | 入口层 | governance-team | 项目增减时 | 脚本生成（扫描 project-registry.yaml） |
-| `docs/INDEX-TOOLS.md` | 入口层 | governance-team | 工具增减时 | 脚本生成（扫描 bin/ + scripts/ + skills/） |
-| `docs/INDEX-KNOWLEDGE.md` | 入口层 | governance-team | 季度 | 脚本生成（扫描 .omo/_knowledge/） |
-| `docs/INDEX-AGENTS.md` | 入口层 | governance-team | Agent 配置变更时 | 脚本生成（扫描配置文件） |
+| `./INDEX-PROJECTS.md` | 入口层 | governance-team | 项目增减时 | 脚本生成（扫描 project-registry.yaml） |
+| `./INDEX-TOOLS.md` | 入口层 | governance-team | 工具增减时 | 脚本生成（扫描 bin/ + scripts/ + skills/） |
+| `./INDEX-KNOWLEDGE.md` | 入口层 | governance-team | 季度 | 脚本生成（扫描 .omo/_knowledge/） |
+| `./INDEX-AGENTS.md` | 入口层 | governance-team | Agent 配置变更时 | 脚本生成（扫描配置文件） |
 
 ### 4.3 与现有 SSOT 的关系
 
@@ -274,17 +274,17 @@ SYSTEM-INDEX.md                    ← 统一入口（根）
 
 ## 分类索引
 
-- → [项目索引](docs/INDEX-PROJECTS.md) — 17 项目按层/栈/状态分类
-- → [工具索引](docs/INDEX-TOOLS.md) — 105 bin/ + 68 scripts/ + 9 skills/ 统一目录
-- → [知识索引](docs/INDEX-KNOWLEDGE.md) — 89 ADR + 84 审计 + 4 模式交叉索引
-- → [Agent 能力索引](docs/INDEX-AGENTS.md) — 当前 agent 配置 + 技能清单
+- → [项目索引](./INDEX-PROJECTS.md) — 17 项目按层/栈/状态分类
+- → [工具索引](./INDEX-TOOLS.md) — 105 bin/ + 68 scripts/ + 9 skills/ 统一目录
+- → [知识索引](./INDEX-KNOWLEDGE.md) — 89 ADR + 84 审计 + 4 模式交叉索引
+- → [Agent 能力索引](./INDEX-AGENTS.md) — 当前 agent 配置 + 技能清单
 
 ## 文档维护生命周期
 
 见下方 §维护管理。
 ```
 
-### 5.2 `docs/INDEX-PROJECTS.md`（项目索引）
+### 5.2 `./INDEX-PROJECTS.md`（项目索引）
 
 ```markdown
 # INDEX-PROJECTS.md — 项目索引
@@ -326,7 +326,7 @@ SYSTEM-INDEX.md                    ← 统一入口（根）
 > 数据来源: 扫描 `projects/*/` 目录。脚本自动生成，不手写。
 ```
 
-### 5.3 `docs/INDEX-TOOLS.md`（工具索引）
+### 5.3 `./INDEX-TOOLS.md`（工具索引）
 
 ```markdown
 # INDEX-TOOLS.md — 治理工具统一目录
@@ -397,7 +397,7 @@ SYSTEM-INDEX.md                    ← 统一入口（根）
 | workspace-health.md | Git 仓库健康扫描 |
 ```
 
-### 5.4 `docs/INDEX-KNOWLEDGE.md`（知识索引）
+### 5.4 `./INDEX-KNOWLEDGE.md`（知识索引）
 
 ```markdown
 # INDEX-KNOWLEDGE.md — 知识资产统一索引
@@ -450,7 +450,7 @@ SYSTEM-INDEX.md                    ← 统一入口（根）
 | Gotchas | 15+ | 2026-06-25 |
 ```
 
-### 5.5 `docs/INDEX-AGENTS.md`（Agent 能力索引）
+### 5.5 `./INDEX-AGENTS.md`（Agent 能力索引）
 
 ```markdown
 # INDEX-AGENTS.md — Agent 配置能力清单
@@ -826,7 +826,7 @@ GaC 北极星的 5 个不变量，索引体系全部满足：
 | 事实类型 | 唯一读源 | 禁止出现在 |
 |---------|---------|-----------|
 | ... 现有条目 ... | ... | ... |
-| 系统索引 (导航层) | `docs/INDEX-*.md` (生成型) | 不持有数据，只做指针 |
+| 系统索引 (导航层) | `./INDEX-*.md` (生成型) | 不持有数据，只做指针 |
 | 索引漂移状态 | `bin/ssot/check-index-drift.py --json` | 所有 markdown |
 ```
 

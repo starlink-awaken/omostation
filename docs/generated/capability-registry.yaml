@@ -1,17 +1,17 @@
 # docs/generated/capability-registry.yaml — 全生态能力注册表 SSOT
 # 自动生成，请勿手动编辑
 # 生成器: bin/cockpit/gen-capability-registry.py
-# 生成时间: 2026-08-03T01:04:00Z
+# 生成时间: 1970-01-01T00:00:00Z
 
 version: 1.0.0
-generated_at: '2026-08-03T01:04:00Z'
+generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
-  mcp_servers: 28
-  mcp_tools: 580
-  bos_services: 188
+  mcp_servers: 27
+  mcp_tools: 554
+  bos_services: 200
   bos_domains: 16
-  cli_commands: 108
+  cli_commands: 119
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -21,6 +21,7 @@ mcp_servers:
   exists: true
   tools:
   - acquire_lock
+  - agent_host_tick
   - cards_check
   - cards_create
   - cards_search
@@ -28,6 +29,7 @@ mcp_servers:
   - cards_update
   - check_gac_rule
   - check_lock
+  - journey_run_dag
   - list_locks
   - omo_bridge
   - omo_debt_list
@@ -38,8 +40,9 @@ mcp_servers:
   - omo_worker_reclaim
   - omo_yield_task
   - release_lock
+  - scene_card_status
   - validate_task
-  tool_count: 19
+  tool_count: 22
 - id: kos
   name: KOS Knowledge Retrieval
   layer: L2
@@ -212,6 +215,7 @@ mcp_servers:
   - a2a_list_tasks
   - a2a_send_task
   - add_route
+  - agora_capability_discover
   - agora_execute
   - audit_query
   - audit_stats
@@ -271,7 +275,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 64
+  tool_count: 65
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -551,44 +555,6 @@ mcp_servers:
   - runtime_protocol_get
   - runtime_protocol_list
   tool_count: 28
-- id: cockpit-mcp
-  name: Cockpit Workspace MCP
-  layer: L3
-  file: projects/cockpit/src/cockpit/scripts/cockpit_mcp.py
-  transport: stdio
-  exists: true
-  tools:
-  - cards_check
-  - cards_status
-  - daily_summary
-  - domains_list
-  - github_pr_review
-  - governance_check
-  - governance_dashboard
-  - governance_history
-  - governance_leaderboard
-  - governance_sla
-  - governance_status
-  - research_agent_list
-  - research_archive
-  - research_ask
-  - research_create
-  - research_dossier
-  - research_half_life
-  - research_list
-  - research_open
-  - research_rename
-  - research_restore
-  - research_search
-  - research_tag
-  - shared_context_list
-  - shared_context_read
-  - shared_context_write
-  - status_json
-  - status_summary
-  - vault_search
-  - workspace_context
-  tool_count: 30
 - id: iris
   name: Iris
   layer: L2
@@ -824,14 +790,14 @@ bos_services:
   _domain_counts:
     agora: 3
     analysis: 28
-    capability: 38
-    cockpit: 3
+    capability: 44
+    cockpit: 2
     compute: 3
     ecos: 10
     forge: 1
-    governance: 32
+    governance: 33
     l4-kernel: 1
-    memory: 41
+    memory: 47
     meta: 1
     omo: 4
     persona: 10
@@ -968,7 +934,7 @@ bos_services:
     capability:
     - uri: bos://capability/cockpit/mcp-server
       description: Cockpit MCP Server (HTTP proxy mode)
-      transport: mcp_proxy
+      transport: ''
       status: active
     - uri: bos://capability/agent-runtime/execute
       description: Agent Runtime 执行入口
@@ -1118,11 +1084,31 @@ bos_services:
       description: evaluator 域 (CR-RBAC-01 强制权限, role='evaluator' or 'admin')
       transport: inline
       status: active
+    - uri: bos://capability/agt/trust
+      description: AGT 信任评分与身份验证服务 (Agent Governance Toolkit)
+      transport: stdio
+      status: unimplemented
+    - uri: bos://capability/agt/sandbox
+      description: AGT 沙箱隔离与权限控制服务 (Agent Governance Toolkit)
+      transport: stdio
+      status: unimplemented
+    - uri: bos://capability/agt/sre
+      description: AGT SRE 监控与健康检查服务 (Agent Governance Toolkit)
+      transport: stdio
+      status: unimplemented
+    - uri: bos://capability/agt/mcp-security
+      description: AGT MCP 安全审计与权限检查服务 (Agent Governance Toolkit)
+      transport: stdio
+      status: unimplemented
+    - uri: bos://capability/agt/marketplace
+      description: AGT 能力市场与发现服务 (Agent Governance Toolkit)
+      transport: stdio
+      status: unimplemented
+    - uri: bos://capability/agt/lightning
+      description: AGT Lightning 快速通道与缓存服务 (Agent Governance Toolkit)
+      transport: stdio
+      status: unimplemented
     cockpit:
-    - uri: bos://cockpit/context
-      description: Cockpit MCP (短路径别名)
-      transport: mcp_stdio
-      status: active
     - uri: bos://cockpit/tools/cards_status
       description: cockpit cards_status 工具 — mof_agora_hook 路由表入口
       transport: inline
@@ -1267,10 +1253,6 @@ bos_services:
       description: OMO 状态同步 (mcp_stdio transport 跨进程)
       transport: mcp_stdio
       status: active
-    - uri: bos://governance/cockpit/context
-      description: Cockpit MCP Server — 20 工具
-      transport: mcp_stdio
-      status: active
     - uri: bos://governance/l4-kernel/domains
       description: L4 Domain Kernel MCP — 24域管理
       transport: mcp_stdio
@@ -1319,6 +1301,14 @@ bos_services:
       description: B.D.S.K. Virtual Board consensus engine & Mode-A/B execution
       transport: inline
       status: active
+    - uri: bos://governance/agt/policy
+      description: AGT 策略评估与合规检查引擎 (Agent Governance Toolkit)
+      transport: stdio
+      status: unimplemented
+    - uri: bos://governance/agt/hypervisor
+      description: AGT Hypervisor 审计哈希链与完整性验证服务 (Agent Governance Toolkit)
+      transport: stdio
+      status: unimplemented
     l4-kernel:
     - uri: bos://l4-kernel/domains
       description: L4 Kernel MCP (短路径别名)
@@ -1436,6 +1426,30 @@ bos_services:
     - uri: bos://memory/gbrain/sync
       description: gbrain 知识库增量同步
       transport: mcp_stdio
+      status: active
+    - uri: bos://memory/mos/write
+      description: Memory OS unified write (dual-track raw+theta; Neo4j FACT when NEO4J_URI) — ADR-0372
+      transport: stdio
+      status: active
+    - uri: bos://memory/mos/recall
+      description: Memory OS unified intent-aware recall (neo4j+kos+gbrain fan-out) — ADR-0372
+      transport: stdio
+      status: active
+    - uri: bos://memory/mos/status
+      description: Memory OS control plane health and backlog — ADR-0372
+      transport: stdio
+      status: active
+    - uri: bos://memory/mos/forget
+      description: Memory OS forget propagation (raw+theta+mem0+neo4j invalidate) — ADR-0372
+      transport: stdio
+      status: active
+    - uri: bos://memory/mos/consolidate
+      description: Memory OS sleep-time consolidate via gbrain dream orchestration — ADR-0372
+      transport: stdio
+      status: active
+    - uri: bos://memory/mos/knowledge-ref
+      description: Memory OS ADR-0315 knowledge citation metadata (no body) — ADR-0372
+      transport: stdio
       status: active
     - uri: bos://memory/kos/query
       description: KOS 知识查询
@@ -1610,6 +1624,8 @@ bos_services:
 cli_commands:
 - name: agent
   description: 🤖 Agent 治理控制入口 (bootstrap / status / start / claim / verify / closeout)
+- name: agent-onboard
+  description: 🤖 Agent 入职引导 checklist (profile + MCP + BOS + skills)
 - name: agent-runtime
   description: 🤖 Agent Runtime 任务执行 / HTTP server (替代独立 agent-runtime 命令)
 - name: agent-workflow
@@ -1624,10 +1640,10 @@ cli_commands:
   description: 归档已处理完毕的 Inbox 待办文件
 - name: ask
   description: 向大脑提问（知识检索 + LLM 回答）
-- name: assistant
-  description: 'P5-F2 work-assistant: 1 真实工作 query → 结构化草稿'
 - name: audit
   description: 🔍 6 维度全方位审计 (调 bin/workspace-audit)
+- name: backends
+  description: 列出 BOS 后端
 - name: bos
   description: BOS URI 查询与管理
 - name: bos-capability
@@ -1646,12 +1662,16 @@ cli_commands:
   description: BOS capability 域 / toolbox 外部能力
 - name: cards
   description: 显示 CARDS 卡片状态
+- name: channels
+  description: 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml
 - name: code
   description: 代码库分析与审查 (基于 codeanalyze)
 - name: compass
   description: 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)
 - name: compute
   description: 算力与 LLM 网关操作 (委派 aetherforge)
+- name: consolidate
+  description: sleep-time 巩固 (默认 dry-run)
 - name: context
   description: 显示系统上下文 (Phase/CARDS/约束/引导)
 - name: contracts
@@ -1686,6 +1706,8 @@ cli_commands:
   description: 家庭数字枢纽入口
 - name: finance
   description: 💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域)
+- name: forget
+  description: 遗忘传播
 - name: gac
   description: GaC 治理健康检查 (ADR-0106, 7 机制 + 115 规则 + drift)
 - name: gbrain
@@ -1729,11 +1751,13 @@ cli_commands:
 - name: knowledge
   description: 📚 KOS 知识检索 (search/status/stats)
 - name: list
-  description: 列出所有已注册的 Schema
+  description: 列债务项 (委派 omo debt)
 - name: logs
   description: 查看日志
 - name: mcp
   description: 启动 MCP server 或列出工具
+- name: memory
+  description: 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref)
 - name: mesh
   description: omlx 算力网格路由入口
 - name: metrics
@@ -1744,6 +1768,8 @@ cli_commands:
   description: MOF 元模型操作 (委派 mof CLI)
 - name: monitor
   description: 📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出)
+- name: mutate
+  description: 通过 agora 统一 BOS URI 写协议修改资源
 - name: nodes
   description: 列出 KOS 中注册的算力节点
 - name: observe
@@ -1768,12 +1794,16 @@ cli_commands:
   description: 🚀 新用户快速上手向导（环境核验 + 上手指引）
 - name: quickstart-check
   description: 快速检查新用户环境核验状态
-- name: radar
-  description: 'P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates'
 - name: read
   description: 通过 BOS 网关统一读取指定 URI 资源
 - name: readiness
   description: 'P66: governance readiness dashboard 摘要 (4 卡片: summary/dimensions/alerts/history)'
+- name: recall
+  description: 意图路由召回（neo4j/temporal 支持 --as-of）
+- name: register
+  description: 注册 BOS 服务
+- name: reload
+  description: 重载 BOS 配置/M1
 - name: remember
   description: 手动存入偏好/事实
 - name: research
@@ -1787,7 +1817,7 @@ cli_commands:
 - name: scan
   description: 平面扫描
 - name: scenario
-  description: P5 统一 scenario 入口 (radar/assistant/health)
+  description: P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review)
 - name: score
   description: 评分债务项
 - name: search
@@ -1802,6 +1832,10 @@ cli_commands:
   description: 索引统计
 - name: status
   description: 系统健康
+- name: summary
+  description: 债务摘要 (委派 omo debt)
+- name: swarm
+  description: 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突)
 - name: topics
   description: 列出已注册 topic
 - name: tui
@@ -1823,4 +1857,6 @@ cli_commands:
 - name: wave2
   description: 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON)
 - name: workflow
-  description: 🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎）
+  description: BOS workflow 相关
+- name: write
+  description: 双轨写入 (+ Neo4j FACT 若配置)

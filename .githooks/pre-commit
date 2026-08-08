@@ -65,6 +65,13 @@ fi
 # 高冲突子模块 (gbrain/cockpit/agora) 必须通过 .subtrees/ worktree 修改,
 # 不允许在 root 直接 git add projects/<sub> (gitlink 变更).
 # 合法流程: cd .subtrees/<sub> && git add . && git commit → bump-pointer
+# G3 (P79, 2026-08-04): merge commit 豁免 — merge main 带入的 gitlink 变更不拦
+# (PASW guard 对 merge 不友好, #907 实证: merge main 引入多子模块 gitlink →
+#  要求每个 .subtrees/<sub> 对齐 → 死循环). merge 的 gitlink 是 base 端合法 commit,
+#  CI reachability gate (full checkout) 兜底验证可达.
+if git rev-parse -q --verify MERGE_HEAD >/dev/null 2>&1; then
+  echo "[submodule-guard] ℹ️ merge commit (MERGE_HEAD), 跳过 PASW gitlink 变更检查 (G3/P79, CI 兜底)" >&2
+else
 PASW_ISOLATED="projects/gbrain projects/cockpit projects/agora"
 for sub in $PASW_ISOLATED; do
   # 检查是否尝试在 root 直接 stage 子模块 gitlink 变更
@@ -82,7 +89,10 @@ for sub in $PASW_ISOLATED; do
 
     # 验证 staged SHA 与 worktree HEAD 一致 (确保改动来自隔离 worktree)
     staged_sha=$(git ls-files --stage -- "$sub" | awk '$1 == "160000" {print $2}')
-    wt_sha=$(git -C "$sub_wt" rev-parse HEAD 2>/dev/null || echo "")
+    # env -u GIT_DIR/GIT_WORK_TREE: git hook 执行时 GIT_DIR 指向主仓, `git -C` 改 cwd
+    # 但 GIT_DIR 优先, 读主仓 ref 而非子模块 HEAD (幽灵 SHA, 拦截所有 PASW bump-pointer).
+    # 清除环境变量让 git -C .subtrees/<sub> 正确读子模块 worktree HEAD.
+    wt_sha=$(env -u GIT_DIR -u GIT_WORK_TREE git -C "$sub_wt" rev-parse HEAD 2>/dev/null || echo "")
     if [ "$staged_sha" != "$wt_sha" ]; then
       echo "[submodule-guard] ❌ $sub 指针变更被拒绝: 与子模块 worktree HEAD 不匹配" >&2
       echo "   staged SHA: ${staged_sha:-none}" >&2
@@ -93,6 +103,7 @@ for sub in $PASW_ISOLATED; do
     fi
   fi
 done
+fi
 # 禁止将 .subtrees/ 目录 commit 到 root
 if git diff --cached --name-only | grep -q '^\.subtrees/'; then
   echo "[submodule-guard] ❌ 不允许将 .subtrees/ 提交到 root 仓库" >&2

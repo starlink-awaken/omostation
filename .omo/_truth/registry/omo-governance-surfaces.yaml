@@ -131,6 +131,19 @@ assets:
       - projects/ecos
     status: active
     runtime: true
+  - id: OMO-DRAFTS
+    ref: .omo/drafts/
+    plane: state_plane
+    asset_type: workspace_drafts
+    persistence_mode: operational
+    retention_mode: manual_archive
+    truth_owner: governance
+    write_via:
+      - agents
+      - humans
+    consumed_by:
+      - cockpit
+    status: active
   - id: OMO-ARCHIVE
     ref: .omo/_archive/
     plane: state_plane

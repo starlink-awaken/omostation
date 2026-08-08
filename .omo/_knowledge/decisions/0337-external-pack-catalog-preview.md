@@ -1,4 +1,5 @@
 ---
+id: ADR-0337
 title: External Resource Pack Catalog Preview Semantics
 status: accepted
 type: decision

@@ -1,4 +1,5 @@
 ---
+id: ADR-0312
 title: Cockpit Delivery Journey truthful state projection
 status: ACCEPTED
 date: 2026-08-02

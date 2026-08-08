@@ -429,3 +429,47 @@ Phase 68 选择工程交付作为当前唯一低风险 dogfood 数据源：不�
 再由第三名独立裁决者确认。没有两份独立标注和明确裁决，不得生成 `kems.evaluation-manifest.v1`。
 
 当前 M2 放行状态仍是“真实样本入口已落地，真实标注与裁决待执行”；这一步不代表已经获得业务准确率，也不开放模型训练、预测晋升或 OMO 自动派发。
+
+### 12.7 Phase 69 KEMS 持久化健康与恢复闭环
+
+Phase 69 为 KEMS 的 OCR、标注、评测、运行检查点和 shadow 预测 SQLite 存储补齐统一的只读运行态检查与恢复入口。健康报告只输出数据库路径、完整性结果、外键违规数、表名、行数和文件权限，不读取或导出任何正文、OCR、prompt、模型自由文本或私有载荷。
+
+```bash
+PYTHONPATH="$KAIRON_ROOT/packages/kos/src" \
+  uv run --project "$KAIRON_ROOT" python \
+  "$KAIRON_ROOT/scripts/kems_health_check.py" \
+  --database adjudication="$HOME/.kems/adjudication.sqlite" \
+  --database ocr="$HOME/.kems/ocr.sqlite" \
+  --database model_acceptance="$HOME/.kems/model-acceptance.sqlite"
+```
+
+备份和恢复使用 SQLite 原生 backup API，写入临时文件、设置 0600 权限、原子替换，并在落盘后再次执行完整性检查。已存在的目标默认拒绝覆盖，恢复必须显式提供 `--force`。恢复后的数据库仍需通过健康检查，未通过则不得继续生成 manifest 或执行 shadow 评测。
+
+该阶段只完成“可检查、可备份、可恢复、可重放”的生产基础，不改变 `shadow`、`blocked_until_omo_approval` 和 `provider_invocation=false` 等放行边界；下一步才是把健康摘要接入 Cockpit/外部资源目录，并建立真实 OCR 质量样本与预测 shadow 运行的连续指标。
+
+### 12.8 Phase 71 重复 Shadow 评测与模型晋级门禁
+
+Phase 71 在已有单次 `kems.model-acceptance.v1` 之上增加 `kems.model-promotion-gate.v1`。它接收多次、脱敏、同一
+`dataset_id`、`dataset_version` 和 `evaluation_manifest_sha256` 绑定的 shadow 报告，重新计算加权 MAE 和相对提升，并同时检查：
+
+- 最低 shadow 运行次数和最低观测量；
+- 每次运行都必须是 `shadow_pass`，且提升不低于门槛；
+- 报告中的相对提升必须与 `model_mae`/`baseline_mae` 一致；
+- 报告不能重复，不能跨 manifest 混用，不能携带原文、prompt 或模型自由输出。
+
+根仓 Kairon 提供 `scripts/kems_model_promotion_gate.py`，结果只有 `blocked` 或 `eligible_for_human_approval`。后者只是进入人工/OMO
+审批的资格投影，仍固定 `promotion=blocked_until_omo_approval`、`automatic_promotion=false`，不会写模型注册表、改变路由、创建 WorkflowRun
+或触发外部 provider。
+
+运行链路收敛为：
+
+`redacted manifest -> repeated shadow reports -> weighted metrics/reproducibility gate -> human/OMO approval -> canary -> rollback`
+
+真实业务准确率仍需真实低风险消费者持续产生样本后才能声明；fixture 通过只证明门禁逻辑正确。
+
+### 12.9 Phase 72 场景化生产策略
+
+KEMS 的后续生产化不以继续增加模型或抽取能力为目标，而以一个真实、低风险、每周重复的业务旅程为目标。建议先从资料/邮件/待办到决策收件箱开始：KEMS 负责结构化和候选建议，OMO 负责任务与审批，Workflow Mesh 负责执行和证据，Cockpit 负责人工复核，结果再回流为真实标注和评测样本。
+
+在没有持续真实消费者、真实标注裁决、脱敏 manifest 和人工/OMO 批准前，KEMS 继续保持 shadow 和 proposal-only。跨模块边界与 36 个月落地路线见
+[`docs/ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md`](ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md)。

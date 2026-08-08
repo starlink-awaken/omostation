@@ -1,4 +1,5 @@
 ---
+id: ADR-0316
 title: 知识行动任务到 Workflow Mesh 请求的晋升边界
 status: accepted
 type: decision

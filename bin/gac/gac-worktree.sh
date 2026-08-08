@@ -22,12 +22,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/resolve-root-remote.sh"
 
-WS_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+# WS_ROOT/WS_PARENT 可注入 (测试隔离用); 默认从 cwd 解析
+WS_ROOT="${WS_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 if [ -z "$WS_ROOT" ]; then
   echo "❌ 不在 git 仓库" >&2
   exit 1
 fi
-WS_PARENT="$(dirname "$WS_ROOT")"
+WS_PARENT="${WS_PARENT:-$(dirname "$WS_ROOT")}"
 
 cmd="${1:-list}"
 session="${2:-}"
@@ -41,55 +42,10 @@ validate_session() {
   fi
 }
 
-# PASW: Per-Agent Submodule Worktree (ADR-0355) — 高冲突子模块 per-agent 独立 worktree
-# 设计文档: .omo/_knowledge/decisions/0355-pasw-submodule-isolation.md
-# 需要独立 worktree 隔离的高冲突子模块 (按冲突频率排序)
-ISOLATED_SUBS="projects/gbrain projects/cockpit projects/agora"
-# PASW: 子模块 worktree 存放路径 (root worktree 内)
-PASW_SUBTREE_DIR=".subtrees"
-# PASW: 过期 TTL (小时)
-PASW_TTL_HOURS="${PASW_TTL_HOURS:-24}"
-
-pasw_create() {
-  local wt="$1" session="$2"
-  local created=0
-  for sub in $ISOLATED_SUBS; do
-    local sub_name
-    sub_name=$(basename "$sub")
-    local sub_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
-    local sub_branch="agent/${session}-${sub_name}"
-    if [ ! -e "$wt/$sub/.git" ]; then
-      echo "   📥 init $sub (PASW 需要)..."
-      (cd "$wt" && git submodule update --init "$sub" 2>&1) || { echo "   ⚠️  $sub init 失败, 跳过"; continue; }
-    fi
-    [ -d "$sub_wt" ] && { echo "   ⏭  $sub worktree 已存在"; continue; }
-    ( cd "$wt/$sub" && local current_sha && current_sha=$(git rev-parse HEAD) && git branch -f "$sub_branch" "$current_sha" 2>/dev/null || true && mkdir -p "$(dirname "$sub_wt")" && git worktree add "$sub_wt" "$sub_branch" 2>&1 ) && {
-      echo "   🔧 PASW: $sub → $PASW_SUBTREE_DIR/$sub_name (branch: $sub_branch)"
-      created=$((created + 1))
-    } || echo "   ⚠️  $sub worktree 创建失败, 跳过"
-  done
-  [ "$created" -gt 0 ] && echo "   ✅ PASW: $created 个子模块 worktree 已隔离"
-}
-
-pasw_cleanup() {
-  local wt="$1"
-  local cleaned=0
-  for sub in $ISOLATED_SUBS; do
-    local sub_name
-    sub_name=$(basename "$sub")
-    local sub_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
-    local sub_branch
-    if [ -d "$sub_wt" ]; then
-      sub_branch=$(git -C "$sub_wt" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-      ( cd "$wt/$sub" && git worktree remove "$sub_wt" 2>/dev/null && [ -n "$sub_branch" ] && [ "$sub_branch" != "HEAD" ] && git branch -d "$sub_branch" 2>/dev/null || true ) && {
-        echo "   🧹 PASW: 已清理 $sub worktree"
-        cleaned=$((cleaned + 1))
-      } || { echo "   ⚠️  $sub 清理失败, 强制移除"; rm -rf "$sub_wt" 2>/dev/null || true; }
-    fi
-  done
-  rmdir "$wt/$PASW_SUBTREE_DIR" 2>/dev/null || true
-  [ "$cleaned" -gt 0 ] && echo "   ✅ PASW: $cleaned 个子模块 worktree 已清理"
-}
+# PASW: Per-Agent Submodule Worktree (ADR-0371) — 高冲突子模块 per-agent 独立 worktree
+# 设计文档: .omo/_knowledge/decisions/0371-pasw-submodule-isolation.md
+# 核心函数在根 lib/pasw-core.sh (脚本在 bin/gac/, 需 ../../lib/ 到仓库根)
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/pasw-core.sh"
 
 case "$cmd" in
   claim)
@@ -98,6 +54,11 @@ case "$cmd" in
     ROOT_REMOTE=$(resolve_root_remote) || exit 1
     wt="$WS_PARENT/ws-$session"
     branch="work/$session"
+    claim_in_progress="$WS_PARENT/.ws-$session.claiming"
+    cleanup_claim_marker() {
+      rm -f "$claim_in_progress"
+    }
+    trap cleanup_claim_marker EXIT INT TERM
     # ── G-CONV.7 / ADR-0220 D2: branch occupancy lock ─────────────────
     # Register before creating worktree so concurrent claim of same slug fails closed.
     if [ -f "$WS_ROOT/bin/gac/swarm-discipline-cli.py" ]; then
@@ -119,6 +80,7 @@ case "$cmd" in
     if [ -d "$wt" ]; then
       echo "⚠️  worktree 已存在: $wt (cd 过去继续工作)"
     else
+      : > "$claim_in_progress"
       git fetch "$ROOT_REMOTE" main 2>&1 | sed '/FETCH_HEAD/d' >&2
       git worktree add "$wt" -b "$branch" "$ROOT_REMOTE/main" 2>&1
       echo "✅ worktree 创建: $wt"
@@ -159,6 +121,8 @@ case "$cmd" in
       echo "     # 更新指针:    gac-worktree.sh bump-pointer $session projects/<sub_name>"
       echo "     gac-worktree.sh submit $session"
     fi
+    cleanup_claim_marker
+    trap - EXIT INT TERM
     ;;
 
   submit)
@@ -366,6 +330,20 @@ except Exception:
       fi )
     cd "$wt"
     git update-index --cacheinfo 160000,"$new_sha","$sub"
+    # ── A (2026-08-06): agora bump → auto-sync bos-registry mirror (防 drift 复发, #1051/#1055 根因) ──
+    # agora 改 etc/bos-services.yaml 后, Workspace 根 bos-registry.json 镜像必须跟着 sync,
+    # 否则 evidence-gate 报 drift (live vs file) 阻塞 PR. bump-pointer 是精准触发点.
+    if [ "$sub" = "projects/agora" ] && [ -f "$wt/bin/ssot/sync-bos-registry.py" ]; then
+      if ( cd "$wt" && uv run --with pyyaml python bin/ssot/sync-bos-registry.py --write ) >/dev/null 2>&1; then
+        if git -C "$wt" add .omo/_knowledge/bos-registry.json 2>/dev/null; then
+          echo "   ✅ bos-registry mirror auto-synced + staged (防 drift, evidence-gate 友好)"
+        else
+          echo "   ⚠️ bos-registry sync 完成但 stage 失败, 请手动: git add .omo/_knowledge/bos-registry.json"
+        fi
+      else
+        echo "   ⚠️ bos-registry auto-sync 跳过 (sync 失败或 agora 未 init), 记得手动: make sync-bos-registry"
+      fi
+    fi
     echo "✅ 指针已更新: $sub → $new_sha"
     echo "   下一步: git commit -m 'bump $sub' && gac-worktree.sh submit $session"
     ;;
@@ -379,7 +357,7 @@ except Exception:
       [ -d "$wt_path" ] || continue
       wt_name=$(basename "$wt_path")
       sub_list=""
-      for sub in $ISOLATED_SUBS; do
+      for sub in $PASW_ISOLATED_SUBS; do
         sub_name=$(basename "$sub")
         [ -d "$wt_path/$PASW_SUBTREE_DIR/$sub_name" ] && sub_list="$sub_list $sub_name"
       done

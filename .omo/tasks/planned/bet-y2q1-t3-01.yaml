@@ -1,0 +1,53 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y2Q1-T3-01
+title: 世界模型 world_snapshot 全量 + delta
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y2Q1-T3-01
+window: Y2Q1
+track: T3-COGNI
+appetite: 2 weeks
+desc: 让 Agent 能回答"和上次比变了什么"
+non_goals:
+- 预测未来状态
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q4-T1-01
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q4-T1-01'
+evidence_required:
+- 每个信号源产生 snapshot
+- delta_from_previous 可查
+- snapshot 保留 90 天
+test_plan:
+- make memory-os-check
+workflow: bet-execution
+write_surfaces:
+- .omo/_truth/registry/memory-os.yaml
+pasw_required: false
+circuit_breaker: 超 3 周 → 只做单场景 snapshot
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y2Q1-T3-01.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

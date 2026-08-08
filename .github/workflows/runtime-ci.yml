@@ -1,8 +1,0 @@
-name: Runtime CI (no-op — CI lives in runtime repo)
-on:
-  workflow_dispatch: {}
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "projects/runtime is .gitignore'd — its CI lives in the runtime repo."

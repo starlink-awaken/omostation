@@ -1,4 +1,5 @@
 ---
+id: ADR-0334
 title: External Resource Pack Conformance Before Dynamic Discovery
 status: accepted
 type: decision

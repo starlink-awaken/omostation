@@ -1,4 +1,5 @@
 ---
+id: ADR-0308
 title: Cockpit 首页运行态真值与分源降级契约
 status: accepted
 type: decision

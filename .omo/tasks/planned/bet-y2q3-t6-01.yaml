@@ -1,0 +1,53 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y2Q3-T6-01
+title: 减法第二轮维持
+status: candidate
+task_type: bet
+priority: P0
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y2Q3-T6-01
+window: Y2Q3
+track: T6-SUBTRACT
+appetite: 2 weeks
+desc: 防止 Y2 加法阶段表面积反弹
+non_goals:
+- 达成新的更低目标
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q4-T1-01
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- '依赖已 done: BET-Y1Q4-T1-01'
+evidence_required:
+- 表面积不高于 Y1Q4 收口值
+- 减法配额制违规次数为 0
+- 新增资产全部有明确消费方
+test_plan:
+- python3 bin/plan/bet-ledger.py surface
+workflow: bet-execution
+write_surfaces:
+- .omo/_knowledge/retros/**
+pasw_required: true
+circuit_breaker: 反弹 > 5% → 冻结全部新增 bet 一个季度
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y2Q3-T6-01.md
+agent_profile_hint: governance-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

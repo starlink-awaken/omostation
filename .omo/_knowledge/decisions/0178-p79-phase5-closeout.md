@@ -1,4 +1,5 @@
 ---
+id: ADR-0178
 status: ACCEPTED
 lifecycle: historical-strategy
 owner: governance-team

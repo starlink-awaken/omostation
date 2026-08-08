@@ -1,0 +1,53 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-06T12:21:14+00:00
+id: BET-Y1Q3-T2-01
+title: 感知面第二根管子 (文件夹 / 日历)
+status: candidate
+task_type: bet
+priority: P1
+owner: human
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q3-T2-01
+window: Y1Q3
+track: T2-PERCEPT
+appetite: 1 week
+desc: 降低单一信号源风险, 验证 signal-sources 抽象对第二类源成立
+non_goals:
+- 第三/四根管子(属 Y2Q4)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on:
+- BET-Y1Q1-T2-02
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: true
+entry_gate:
+- '依赖已 done: BET-Y1Q1-T2-02'
+evidence_required:
+- 第二个信号源注册且有真实信号
+- 抽象未因第二类源被破坏(无 if-else 特判)
+- 每周信号数 >= 10
+test_plan:
+- python3 -c "import yaml;d=yaml.safe_load(open('.omo/_truth/registry/signal-sources.yaml'));print(len(d['signal_sources']))"
+workflow: bet-execution
+write_surfaces:
+- .omo/_truth/registry/signal-sources.yaml
+pasw_required: false
+circuit_breaker: 抽象被破坏 → 先重构抽象再接第二源
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y1Q3-T2-01.md
+agent_profile_hint: adapter-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

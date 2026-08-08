@@ -278,6 +278,60 @@ def detect_all_drift() -> dict:
     }
 
 
+def _bump_model_stats() -> bool:
+    """ADR-0374 G2: auto-bump m1_nodes / m2_schemas declared count to actual.
+
+    Writes the new value back to .omo/_truth/registry/mof-capabilities.yaml
+    (only if a delta exists) so the next drift run is clean. Returns
+    True if a bump happened, False if the file was already in sync.
+    """
+    import datetime as _dt
+    import yaml as _yaml
+
+    if not REGISTRY.exists():
+        return False
+    text = REGISTRY.read_text(encoding="utf-8")
+    docs = list(_yaml.safe_load_all(text))
+    if not docs:
+        return False
+    data = docs[-1]
+    stats = data.get("model_stats") or {}
+    actual_m1 = count_yaml(M1_DIR)
+    actual_m2 = count_yaml(M2_DIR)
+    expected = {
+        "m1_nodes": actual_m1,
+        "m2_schemas": actual_m2,
+    }
+    bumps: dict[str, tuple[int, int]] = {}
+    for key, new_val in expected.items():
+        old_val = stats.get(key)
+        if old_val is not None and old_val != new_val:
+            bumps[key] = (int(old_val), new_val)
+    if not bumps:
+        return False
+    for key, (old, new) in bumps.items():
+        pattern = re.compile(rf"^(\s*){re.escape(key)}:\s*{re.escape(str(old))}\s*$", re.M)
+        text, n = pattern.subn(rf"\1{key}: {new}", text, count=1)
+        if n == 0:
+            print(
+                f"::warning::bump-stats: could not find {key}: {old} line in "
+                f"{REGISTRY.relative_to(REPO)}",
+                file=sys.stderr,
+            )
+    today = _dt.datetime.now(tz=_dt.timezone.utc).date().isoformat()
+    text = re.sub(
+        r"^(\s*)stats_as_of:\s*\"[^\"]*\"\s*$",
+        rf'\1stats_as_of: "{today}"',
+        text,
+        count=1,
+        flags=re.M,
+    )
+    REGISTRY.write_text(text, encoding="utf-8")
+    for key, (old, new) in bumps.items():
+        print(f"::notice::bumped {key}: {old} → {new} in mof-capabilities.yaml")
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="注册表 drift 检测 (MOF ADR-0238 + metaos §J1 扩展)"
@@ -289,6 +343,14 @@ def main() -> int:
         default="all",
         help="检测面: mof (ADR-0238) / metaos (§J1) / all (默认, 聚合两面)",
     )
+    parser.add_argument(
+        "--bump-stats",
+        action="store_true",
+        help=(
+            "ADR-0374 G2: auto-update m1_nodes / m2_schemas declared count "
+            "in mof-capabilities.yaml to match actual, then re-run drift check"
+        ),
+    )
     args = parser.parse_args()
 
     if args.scope == "mof":
@@ -297,6 +359,23 @@ def main() -> int:
         result = detect_metaos_registry_drift()
     else:
         result = detect_all_drift()
+
+    # ADR-0374 G2: --bump-stats auto-fixes model_stats declared→actual when drift
+    # is purely a count mismatch (the most common concurrent-work artifact).
+    if args.bump_stats:
+        try:
+            bumped = _bump_model_stats()
+        except Exception as exc:  # noqa: BLE001 — keep drift path robust
+            print(f"::warning::bump-stats failed: {exc}", file=sys.stderr)
+            bumped = False
+        if bumped:
+            # Re-run after bump so the user sees the post-fix state.
+            if args.scope == "mof":
+                result = detect_drift()
+            elif args.scope == "metaos":
+                result = detect_metaos_registry_drift()
+            else:
+                result = detect_all_drift()
 
     scope_label = {
         "mof": RULE_ID,
