@@ -1,4 +1,5 @@
 ---
+id: ADR-0142
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
@@ -14,7 +15,7 @@ related:
   - 0139-model-driven-8stage-revival-rejected.md
   - 0140-m4-health-score.md
   - 0141-m2-base-schema.md
-  - ../../../../docs/M4-DECISIONS-INDEX.md
+  - ../../../docs/M4-DECISIONS-INDEX.md
 supersedes: []
 ---
 
@@ -80,9 +81,9 @@ ROADMAP 是 narrative 格式, 适合规划阶段。
 ## 3. 关联
 
 - [ADR-0132](./0132-l0-mof-m4-metamodel.md) (M4 主决策)
-- [.omo/_knowledge/decisions/INDEX.md](./../../../../.omo/_knowledge/decisions/INDEX.md) (SSOT)
-- [docs/M4-ROADMAP.md](./../../../../docs/M4-ROADMAP.md) (timeline)
-- [docs/M4-DECISIONS-INDEX.md](./../../../../docs/M4-DECISIONS-INDEX.md) (本文档产出)
+- [.omo/_knowledge/decisions/INDEX.md](./../../../.omo/_knowledge/decisions/INDEX.md) (SSOT)
+- [docs/M4-ROADMAP.md](./../../../docs/M4-ROADMAP.md) (timeline)
+- [docs/M4-DECISIONS-INDEX.md](./../../../docs/M4-DECISIONS-INDEX.md) (本文档产出)
 
 ---
 

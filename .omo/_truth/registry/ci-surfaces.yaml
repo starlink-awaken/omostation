@@ -1,0 +1,878 @@
+# CI 平面可观测性 SSOT (ADR-0379 E-1)
+# 每个可执行检查的接线登记: tool -> workflow/gate -> triggers.
+# 检测器: bin/gac/check-ci-surfaces.py (unregistered/orphan/overlap/double-trigger/gate-parity).
+# 维护: 新增 CI 检查必须先在此登记 (CR-CI-SURFACE-SSOT).
+version: 1
+ssot_ref: CR-CI-SURFACE-SSOT
+surfaces:
+  - id: bin-adr-adr-coverage-py
+    tool: bin/adr/adr-coverage.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-adr-adr-frontmatter-backfill-py
+    tool: bin/adr/adr-frontmatter-backfill.py
+    workflow: pyright-sweep.yml
+    gate: false
+    triggers: [manual]
+    status: active
+  - id: bin-gac-check-adversarial-effectiveness-py
+    tool: bin/gac/check-adversarial-effectiveness.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-check-dead-path-tool-fallback-py
+    tool: bin/gac/check-dead-path-tool-fallback.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-dual-track-purity-py
+    tool: bin/gac/check-dual-track-purity.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-check-governance-ratio-py
+    tool: bin/gac/check-governance-ratio.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-check-heuristic-default-py
+    tool: bin/gac/check-heuristic-default.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-incremental-commit-py
+    tool: bin/gac/check-incremental-commit.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-llm-advisory-only-py
+    tool: bin/gac/check-llm-advisory-only.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-llm-tier-fallback-py
+    tool: bin/gac/check-llm-tier-fallback.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-memory-os-surfaces-py
+    tool: bin/gac/check-memory-os-surfaces.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-mesh-executor-reliability-py
+    tool: bin/gac/check-mesh-executor-reliability.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-meta-health-py
+    tool: bin/gac/check-meta-health.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-pr-description-py
+    tool: bin/gac/check-pr-description.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-principle-enforcement-py
+    tool: bin/gac/check-principle-enforcement.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-redline-coverage-py
+    tool: bin/gac/check-redline-coverage.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-check-resolve-not-stub-py
+    tool: bin/gac/check-resolve-not-stub.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-ruff-scope-stable-py
+    tool: bin/gac/check-ruff-scope-stable.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-severity-registry-py
+    tool: bin/gac/check-severity-registry.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-check-silent-loss-py
+    tool: bin/gac/check-silent-loss.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-check-submodule-pointer-integrity-py
+    tool: bin/gac/check-submodule-pointer-integrity.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-submodule-pr-independent-py
+    tool: bin/gac/check-submodule-pr-independent.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-check-work-landed-py
+    tool: bin/gac/check-work-landed.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-check-workorder-schema-py
+    tool: bin/gac/check-workorder-schema.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-gac-compute-onboard-py
+    tool: bin/gac/gac-compute-onboard.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-gac-consensus-inject-py
+    tool: bin/gac/gac-consensus-inject.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-gac-drift-py
+    tool: bin/gac/gac-drift.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-gac-export-agents-py
+    tool: bin/gac/gac-export-agents.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-gac-local-gate-py
+    tool: bin/gac/gac-local-gate.py
+    workflow: gac-gate.yml
+    also_in: [governance-check.yml]
+    gate: false
+    triggers: [manual, per_pr, push, scheduled]
+    status: active
+  - id: bin-gac-gac-mesh-router-py
+    tool: bin/gac/gac-mesh-router.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-gac-validate-py
+    tool: bin/gac/gac-validate.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-gac-worktree-guard-sh
+    tool: bin/gac/gac-worktree-guard.sh
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-gac-governance-convergence-lint-py
+    tool: bin/gac/governance-convergence-lint.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-governance-evolution-py
+    tool: bin/gac/governance-evolution.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-governance-semantic-gate-py
+    tool: bin/gac/governance-semantic-gate.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-install-watch-agent-py
+    tool: bin/gac/install-watch-agent.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-mcp-tool-data-complete-py
+    tool: bin/gac/mcp-tool-data-complete.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-omo-state-write-guard-py
+    tool: bin/gac/omo-state-write-guard.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-gac-phase-gate-check-py
+    tool: bin/gac/phase-gate-check.py
+    workflow: phase-gate-enforce.yml
+    gate: false
+    triggers: [manual, per_pr]
+    status: active
+  - id: bin-gac-state-freshness-check-py
+    tool: bin/gac/state-freshness-check.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-mof-check-doc-claims-py
+    tool: bin/mof/check-doc-claims.py
+    workflow: metaos-ci.yml
+    gate: true
+    triggers: [per_pr, push]
+    status: active
+  - id: bin-mof-check-mof-capabilities-drift-py
+    tool: bin/mof/check-mof-capabilities-drift.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-mof-gen-dependency-baseline-py
+    tool: bin/mof/gen-dependency-baseline.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-mof-gen-service-configs-py
+    tool: bin/mof/gen-service-configs.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-mof-generate-brief-py
+    tool: bin/mof/generate-brief.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-mof-mof-bootstrap-py
+    tool: bin/mof/mof-bootstrap.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-mof-project-layer-index-py
+    tool: bin/mof/project-layer-index.py
+    workflow: gac-gate.yml
+    gate: true
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-ssot-bus-e2e-harness-py
+    tool: bin/ssot/bus-e2e-harness.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-ssot-bus-usage-report-py
+    tool: bin/ssot/bus-usage-report.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-ssot-check-cockpit-ui-dist-py
+    tool: bin/ssot/check-cockpit-ui-dist.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-ssot-check-dashboard-registry-consistency-py
+    tool: bin/ssot/check-dashboard-registry-consistency.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-ssot-check-domain-m1-alignment-py
+    tool: bin/ssot/check-domain-m1-alignment.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-ssot-check-layer-call-direction-py
+    tool: bin/ssot/check-layer-call-direction.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-ssot-check-toolbox-ssot-py
+    tool: bin/ssot/check-toolbox-ssot.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-ssot-doc-governance-check-py
+    tool: bin/ssot/doc-governance-check.py
+    workflow: governance-check.yml
+    args: [--no-new-warnings]
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: active
+  - id: bin-ssot-doc-link-check-py
+    tool: bin/ssot/doc-link-check.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-ssot-doc-ssot-lint-py
+    tool: bin/ssot/doc-ssot-lint.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-ssot-matrix-consistency-lint-py
+    tool: bin/ssot/matrix-consistency-lint.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-ssot-submodule-autobump-sh
+    tool: bin/ssot/submodule-autobump.sh
+    workflow: submodule-autobump.yml
+    gate: false
+    triggers: [manual, scheduled]
+    status: active
+  - id: bin-ssot-submodule-reachability-gate-py
+    tool: bin/ssot/submodule-reachability-gate.py
+    workflow: gac-gate.yml
+    also_in: [submodule-freshness-gatekeeper.yml, workspace.yml]
+    gate: false
+    triggers: [manual, per_pr, push, scheduled]
+    status: active
+  - id: bin-ssot-sync-bos-registry-py
+    tool: bin/ssot/sync-bos-registry.py
+    workflow: evidence-smoke-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-ssot-sync-submodule-pointers-sh
+    tool: bin/ssot/sync-submodule-pointers.sh
+    workflow: gac-gate.yml
+    also_in: [workspace.yml]
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+  - id: bin-ssot-test-gac-engine-py
+    tool: bin/ssot/test-gac-engine.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-ssot-test-mcp-kos-py
+    tool: bin/ssot/test-mcp-kos.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-ssot-write-owner-audit-py
+    tool: bin/ssot/write-owner-audit.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+  - id: bin-sweep-scan-py
+    tool: bin/sweep/scan.py
+    workflow: pyright-sweep.yml
+    gate: false
+    triggers: [manual]
+    status: active
+  - id: bin-sweep-sweep_index-py
+    tool: bin/sweep/sweep_index.py
+    workflow: pyright-sweep.yml
+    gate: false
+    triggers: [manual]
+    status: active
+  - id: scripts-check-cross-deps-py
+    tool: scripts/check-cross-deps.py
+    workflow: cross-deps-enforce.yml
+    also_in: [governance-check.yml]
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-design-body-ssot-py
+    tool: scripts/check-design-body-ssot.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-design-history-ssot-py
+    tool: scripts/check-design-history-ssot.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-design-risky-phrases-py
+    tool: scripts/check-design-risky-phrases.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-doc-ssot-snapshots-py
+    tool: scripts/check-doc-ssot-snapshots.py
+    workflow: governance-check.yml
+    gate: true
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-future-annotations-py
+    tool: scripts/check-future-annotations.py
+    workflow: pyright-sweep.yml
+    gate: false
+    triggers: [manual]
+    status: orphan
+  - id: scripts-check-governance-doc-ssot-py
+    tool: scripts/check-governance-doc-ssot.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-governance-guides-ssot-py
+    tool: scripts/check-governance-guides-ssot.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-governance-mechanism-ssot-py
+    tool: scripts/check-governance-mechanism-ssot.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-governance-surface-paths-py
+    tool: scripts/check-governance-surface-paths.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-index-coverage-py
+    tool: scripts/check-index-coverage.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-interfaces-py
+    tool: scripts/check-interfaces.py
+    workflow: interfaces-enforce.yml
+    also_in: [interfaces-enforce.yml]
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-knowledge-history-ssot-py
+    tool: scripts/check-knowledge-history-ssot.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-knowledge-index-ssot-py
+    tool: scripts/check-knowledge-index-ssot.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-panorama-arch-links-py
+    tool: scripts/check-panorama-arch-links.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-phase-closeout-ssot-py
+    tool: scripts/check-phase-closeout-ssot.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-plans-readme-ssot-py
+    tool: scripts/check-plans-readme-ssot.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-project-arch-doc-contract-py
+    tool: scripts/check-project-arch-doc-contract.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-project-arch-doc-ssot-py
+    tool: scripts/check-project-arch-doc-ssot.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-project-registry-ssot-py
+    tool: scripts/check-project-registry-ssot.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-ssot-reference-integrity-py
+    tool: scripts/check-ssot-reference-integrity.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-state-goals-alignment-py
+    tool: scripts/check-state-goals-alignment.py
+    workflow: state-goals-enforce.yml
+    gate: false
+    triggers: [per_pr, push]
+    status: orphan
+  - id: scripts-check-truth-inventory-routing-py
+    tool: scripts/check-truth-inventory-routing.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-truth-m1-governance-mapping-py
+    tool: scripts/check-truth-m1-governance-mapping.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: orphan
+  - id: scripts-check-vault-paths-py
+    tool: scripts/check-vault-paths.py
+    workflow: port-registry-enforce.yml
+    args: [--check-ports]
+    gate: false
+    triggers: [manual, per_pr, push, scheduled]
+    status: orphan
+  - id: bin-gac-ci-check-runner-py
+    tool: bin/gac/ci-check-runner.py
+    workflow: (none)
+    gate: false
+    triggers: []
+    status: active
+    note: registry-driven runner (ADR-0379 E-2) — 执行引擎, 由 workflow bash 直接调用, 不作为 surface 执行
+  - id: bin-gac-check-ci-surfaces-py
+    tool: bin/gac/check-ci-surfaces.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: CI 平面检测器自身 (ADR-0379 E-3) — 经 sgf-policy gate ci-surfaces-check 执行
+  - id: bin-gac-check-doc-freshness-gate-py
+    tool: bin/gac/check-doc-freshness-gate.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [per_pr, push]
+    status: active
+    note: PR #1021 声明 (CR-X2-DOC-FRESHNESS-GATE); ADR-0380 确认已在 gac-gate.yml 接线
+  - id: bin-gac-check-metric-trend-py
+    tool: bin/gac/check-metric-trend.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [per_pr, push]
+    status: active
+    note: PR #1021 声明 (CR-X2-METRIC-TREND); ADR-0380 确认已在 gac-gate.yml 接线
+  - id: bin-gac-check-governance-trend-py
+    tool: bin/gac/check-governance-trend.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [per_pr, push]
+    status: active
+    note: 并发 PR 新增 (CR-X2-GOVERNANCE-TREND), ci-surfaces-check 拦截后补登记
+  - id: bin-gac-check-llm-gateway-only-py
+    tool: bin/gac/check-llm-gateway-only.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: 并发 #1042 注册 (CR-LLM-GATEWAY-ONLY); 工具被 phase8 误归档, ADR-0380 移回 bin/gac + 登记
+  - id: bin-ssot-prune-ci-runs-cron-py
+    tool: bin/ssot/prune-ci-runs-cron.py
+    workflow: prune-ci-runs.yml
+    gate: false
+    triggers: [manual, scheduled]
+    status: active
+    note: ADR-0385 A2 — CI runs 定期清理 (40000 cap)
+  - id: bin-ssot-ssot-usage-py
+    tool: bin/ssot/ssot-usage.py
+    workflow: prune-ci-runs.yml
+    gate: false
+    triggers: [manual, scheduled]
+    status: active
+    note: ADR-0385 B2 — SSOT 文件新鲜度报告
+  - id: bin-gac-check-submodule-rewind-py
+    tool: bin/gac/check-submodule-rewind.py
+    workflow: governance-check.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: active
+    note: ADR-0379 era tool (submodule rewind detection), register for ci-surfaces parity
+  - id: bin-gac-worktree-hygiene-audit-py
+    tool: bin/gac/worktree-hygiene-audit.py
+    workflow: worktree-hygiene.yml
+    gate: false
+    triggers: [manual, per_pr, scheduled]
+    status: active
+    note: ADR-0388 era tool (worktree hygiene audit + auto-cleanup), register for ci-surfaces parity
+  - id: bin-gac-anomaly-detector-py
+    tool: bin/gac/anomaly-detector.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: Phase 6 anomaly detection from metrics-store.jsonl
+  - id: bin-gac-alert-router-py
+    tool: bin/gac/alert-router.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: Phase 6 alert routing for anomaly events
+  - id: bin-gac-governance-dashboard-py
+    tool: bin/gac/governance-dashboard.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: Phase 7 governance metrics dashboard (--metrics-dashboard)
+  - id: bin-gac-cross-domain-trend-py
+    tool: bin/gac/cross-domain-trend.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: Phase 9 cross-domain trend fusion analysis
+  - id: bin-gac-predictive-governance-py
+    tool: bin/gac/predictive-governance.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: Phase 10 predictive governance with prescriptive recommendations
+  - id: bin-gac-check-submodule-pointer-drift-py
+    tool: bin/gac/check-submodule-pointer-drift.py
+    workflow: governance-check.yml
+    gate: true
+    triggers: [per_pr, push]
+    status: active
+    note: BET-Y1Q2-T1-05 submodule pointer drift detection (DIVERGED blocking)
+
+workflow_triggers:
+  - workflow: agora-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/agora-ci.yml
+    - projects/agora/**
+  - workflow: ai-pr-review.yml
+    triggers: [per_pr]
+    path_filtered: false
+  - workflow: audit-rollout-monthly.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: c2g-gc-weekly.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: c2g-radar-daily.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: ci-lint.yml
+    triggers: [per_pr, push, scheduled]
+    path_filtered: true
+    paths:
+    - .github/workflows/**
+    - .pre-commit-config.yaml
+    - bin/cockpit/**
+    - docs/generated/capability-registry.yaml
+    - projects/agora/etc/bos-services.yaml
+    - projects/cockpit/src/cockpit/cli.py
+    - scripts/**
+  - workflow: ci-python-coverage.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/ci-python-coverage.yml
+    - projects/*/pyproject.toml
+    - projects/aetherforge/**
+    - projects/bus-foundation/**
+    - projects/c2g/**
+    - projects/l4-kernel/**
+    - projects/model-driven/**
+    - projects/omo-debt/**
+    - projects/omo/**
+  - workflow: cockpit-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/cockpit-ci.yml
+    - projects/cockpit/**
+  - workflow: config-check.yml
+    triggers: [push]
+    path_filtered: true
+    paths:
+    - projects/agora/src/agora-services.json
+    - projects/kairon/packages/agora/agora-services.json
+  - workflow: constraint-validation.yml
+    triggers: [per_pr]
+    path_filtered: false
+  - workflow: cross-deps-enforce.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: debt-audit.yml
+    triggers: [per_pr, push, scheduled]
+    path_filtered: false
+  - workflow: ecos-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/ecos-ci.yml
+    - projects/ecos/**
+  - workflow: evidence-smoke-gate.yml
+    triggers: [manual, per_pr, push]
+    path_filtered: false
+  - workflow: family-hub-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/family-hub-ci.yml
+    - projects/family-hub/**
+  - workflow: gac-gate.yml
+    triggers: [manual, per_pr, push]
+    path_filtered: false
+  - workflow: governance-check.yml
+    triggers: [per_pr, push, scheduled]
+    path_filtered: true
+    paths:
+    - .github/workflows/governance-check.yml
+    - .omo/**
+    - .omo/_truth/registry/document-governance.yaml
+    - .omo/standards/document-governance-standard.md
+    - .pre-commit-config.yaml
+    - CLAUDE.md
+    - LAYER-INDEX.md
+    - bin/ssot/doc-governance-check.py
+    - bin/ssot/workspace-audit
+    - docs/**
+    - docs/OPC-*.md
+    - projects/*/pyproject.toml
+    - projects/*/src/**
+    - projects/ecos/scripts/contract_gatekeeper.py
+    - projects/omo/tests/**
+    - scripts/check-*.py
+    - scripts/opc_*.py
+  - workflow: integration.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - bin/gac/**
+    - projects/*/pyproject.toml
+    - projects/omo/**
+  - workflow: interfaces-enforce.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: kairon-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/kairon-ci.yml
+    - projects/kairon/**
+  - workflow: meta-model-check.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - projects/runtime/protocols/*.md
+    - projects/runtime/protocols/*.yaml
+  - workflow: metaos-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/metaos-ci.yml
+    - projects/metaos/**
+  - workflow: mof-update.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: observability-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/observability-ci.yml
+    - projects/observability/**
+  - workflow: omo-autopilot.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: omostation-governance.yml
+    triggers: [manual, per_pr, push, scheduled]
+    path_filtered: true
+    paths:
+    - .omo/tasks/planned/**
+    - projects/**/pyproject.toml
+    - projects/omo/src/omo/omo_*.py
+  - workflow: phase-gate-enforce.yml
+    triggers: [manual, per_pr]
+    path_filtered: false
+  - workflow: port-registry-enforce.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: prune-ci-runs.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: publish-pypi.yml
+    triggers: [manual, push]
+    path_filtered: true
+    paths:
+    - projects/kairon/packages/*/pyproject.toml
+  - workflow: pyright-sweep.yml
+    triggers: [manual]
+    path_filtered: false
+  - workflow: quality.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/quality.yml
+    - .pre-commit-config.yaml
+    - projects/agora/src/**
+    - projects/cockpit/src/**
+    - projects/ecos/src/**
+    - projects/omo/src/**
+  - workflow: state-goals-enforce.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: submodule-autobump.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+  - workflow: submodule-freshness-gatekeeper.yml
+    triggers: [manual, push, scheduled]
+    path_filtered: false
+  - workflow: task-schema-enforce.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: workspace.yml
+    triggers: [per_pr, push]
+    path_filtered: false
+  - workflow: worktree-hygiene.yml
+    triggers: [manual, per_pr, scheduled]
+    path_filtered: true
+    paths:
+    - .github/workflows/worktree-hygiene.yml
+    - bin/gac/worktree-hygiene-audit.py
+    - tests/unit/gac/test_worktree_hygiene_audit.py

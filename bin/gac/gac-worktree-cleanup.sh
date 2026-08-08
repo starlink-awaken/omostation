@@ -29,7 +29,8 @@ DRY_RUN=false
 [ "${1:-}" = "--dry-run" ] && DRY_RUN=true
 
 PASW_TTL_HOURS="${PASW_TTL_HOURS:-24}"
-WS_PARENT="$(dirname "$WS_ROOT")"
+# WS_PARENT 可注入 (测试隔离用); 默认 = workspace 同级目录
+WS_PARENT="${WS_PARENT:-$(dirname "$WS_ROOT")}"
 # CANONICAL_ROOT_REPO: 从 origin url 推导 owner/repo (gh pr list 需要)
 CANONICAL_ROOT_REPO=$(git -C "$WS_ROOT" config --get remote.origin.url 2>/dev/null \
   | sed 's#.*github.com[:/]##; s#\.git$##' || echo "starlink-awaken/omostation")
@@ -42,15 +43,33 @@ skipped=0
 for wt_path in "$WS_PARENT"/ws-*/; do
   [ -d "$wt_path" ] || continue
   wt_name=$(basename "$wt_path")
+  session=${wt_name#ws-}
+  claim_in_progress="$WS_PARENT/.ws-$session.claiming"
+
+  if [ -f "$claim_in_progress" ]; then
+    echo "⏭️  $wt_name: claim 初始化进行中, 跳过"
+    skipped=$((skipped + 1))
+    continue
+  fi
 
   # open PR 检查: 有 PR = 活跃, 跳过 (防误清正在用的 worktree)
-  branch=$(git -C "$wt_path" branch --show-current 2>/dev/null)
+  # 非 git 目录时 git 返回 128, 需 || true 防止 set -e 中断整个清理
+  branch=$(git -C "$wt_path" branch --show-current 2>/dev/null || true)
   if [ -n "$branch" ] && command -v gh >/dev/null 2>&1; then
     if gh pr list --repo "$CANONICAL_ROOT_REPO" --head "$branch" --state open 2>/dev/null | grep -q .; then
       echo "⏭️  $wt_name: 分支 $branch 有 open PR, 跳过 (活跃)"
       skipped=$((skipped + 1))
       continue
     fi
+  fi
+
+  # G5 (P79, 2026-08-04): active claim 检查 — branch 在 branch-claims/ 有 active 记录 → 跳过
+  # (防 cleanup 误清 active agent 的 worktree, #907 陷阱 F4: 6h TTL 误清跨 compact 长任务)
+  if [ -n "$branch" ] && [ -d "$WS_ROOT/.omo/_delivery/branch-claims" ] \
+    && grep -rl "\"branch\": \"$branch\"" "$WS_ROOT/.omo/_delivery/branch-claims/" >/dev/null 2>&1; then
+    echo "⏭️  $wt_name: 分支 $branch 有 active claim, 跳过 (G5)"
+    skipped=$((skipped + 1))
+    continue
   fi
 
   # 用最近 commit 时间判断过期 (比 mtime/atime 可靠: 反映真实工作)
@@ -86,5 +105,13 @@ for wt_path in "$WS_PARENT"/ws-*/; do
     echo "   ✅ 已回收 $wt_name"
   fi
 done
+
+# ── D1: GC 过期 claim (branch/agent/adr, TTL 长于 worktree 因 claim 是长期占位) ──
+echo "── GC 过期 claim (TTL: ${CLAIM_TTL_HOURS:-168}h) ──"
+if command -v python3 >/dev/null 2>&1; then
+  python3 "$WS_ROOT/bin/gac/swarm-discipline-cli.py" claim-gc \
+    --ttl-hours "${CLAIM_TTL_HOURS:-168}" \
+    $([ "$DRY_RUN" = true ] && echo --dry-run) 2>&1 | tail -8 || true
+fi
 
 echo "=== PASW Cleanup 完成: 回收 $reclaimed, 跳过 $skipped ==="

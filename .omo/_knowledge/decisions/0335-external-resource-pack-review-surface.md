@@ -1,4 +1,5 @@
 ---
+id: ADR-0335
 title: Cockpit External Resource Pack Review Surface
 status: accepted
 type: decision

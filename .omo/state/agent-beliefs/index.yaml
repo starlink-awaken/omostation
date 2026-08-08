@@ -1,0 +1,56 @@
+beliefs:
+- id: belief-0001
+  topic: workflow:bet-execution
+  belief: 'Workflow run 20260807T063711Z-bet-execution-66b7ef2c achieved objective:
+    BET-Y1Q1-T1-07 git 入口收口'
+  created_at: '2026-08-07T13:02:02Z'
+  confidence: 1.0
+  source_run_id: 20260807T063711Z-bet-execution-66b7ef2c
+- id: belief-0002
+  topic: workflow:bet-execution
+  belief: Requirement iteration edits must claim path and start agent-workflow run
+    first
+  pitfall: Direct edit without agent-workflow claim triggers compliance gate halt
+  solution: Always run agent-workflow start and claim before editing requirement files
+  created_at: '2026-08-08T06:30:00Z'
+  confidence: 1.0
+- id: belief-0003
+  topic: workflow:bet-execution
+  belief: 'Workflow run 20260807T130548Z-bet-execution-be3544c4 achieved objective: 全域 scene card v2 升级'
+  created_at: '2026-08-07T22:52:50Z'
+  confidence: 1.0
+  source_run_id: 20260807T130548Z-bet-execution-be3544c4
+- id: belief-0023
+  topic: git-discipline
+  belief: 'PATH shim 包装脚本内严禁在未净化 PATH 的情况下隐式内调 git 命令，否则会导致 Fork Bomb 死循环卡死 Bash'
+  pitfall: 'Wrapper 内 Bash/Python 调用子命令 git 继承了前置 PATH (~/.agents/shim/bin) 触发无限递归子进程'
+  solution: '必须实施 PATH 绝对净化 (剥离 shim 目录) + SWARM_GIT_DEPTH <= 1 硬熔断阻断 + (nohup ... &) 后台脱离异步上报'
+  created_at: '2026-08-08T06:55:00Z'
+  confidence: 1.0
+lessons:
+- id: lesson-0001
+  belief_id: belief-0001
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-07T13:02:02Z'
+- id: lesson-0002
+  belief_id: belief-0003
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-07T22:52:50Z'
+contexts:
+- id: ctx-0001
+  belief_id: belief-0001
+  scope_path: .omo/_delivery/agent-workflows/runs/20260807T063711Z-bet-execution-66b7ef2c.yaml
+  applicable_tags:
+  - workflow:bet-execution
+- id: ctx-0002
+  belief_id: belief-0003
+  scope_path: .omo/_delivery/agent-workflows/runs/20260807T130548Z-bet-execution-be3544c4.yaml
+  applicable_tags:
+  - workflow:bet-execution
+world_snapshots: []
+capability_calibrations: []
+decision_outcomes: []

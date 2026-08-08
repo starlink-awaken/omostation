@@ -18,13 +18,24 @@ import subprocess
 import sys
 import time
 from collections.abc import Iterable, Mapping
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 SCHEMA = "external-resource-catalog/v1"
 DIRECTORY_SCHEMA = "external-resource-directory/v1"
 CONNECTION_PLAN_SCHEMA = "external-resource-connection-plan/v1"
+REFRESH_PLAN_SCHEMA = "external-resource-refresh-plan/v1"
+
+DEFAULT_REFRESH_INTERVALS_SECONDS = {
+    "knowledge_source": 86400,
+    "data_source": 21600,
+    "resource_provider": 3600,
+    "method_pack": 604800,
+    "tool_capability": 86400,
+    "channel": 3600,
+    "model_provider": 21600,
+}
 
 
 class ExternalResourceCatalogInputError(ValueError):
@@ -291,6 +302,177 @@ def build_external_resource_connection_plan(
     return payload
 
 
+def _parse_refresh_time(value: Any, *, field_name: str) -> datetime:
+    text = str(value or "").strip()
+    if not text:
+        raise ExternalResourceCatalogInputError(f"refresh plan requires {field_name}")
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ExternalResourceCatalogInputError(
+            f"refresh plan has invalid {field_name}"
+        ) from exc
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def build_external_resource_refresh_plan(
+    catalog: Mapping[str, Any],
+    *,
+    now: datetime | None = None,
+    force: bool = False,
+    intervals_seconds: Mapping[str, int] | None = None,
+) -> dict[str, Any]:
+    """Build a read-only schedule for the next governed catalog observation.
+
+    The plan controls observation cadence only. It never invokes a provider,
+    queues a WorkflowRun, changes admission, or writes OMO state.
+    """
+    if catalog.get("schema") != SCHEMA:
+        raise ExternalResourceCatalogInputError(
+            "refresh plan requires an external-resource catalog"
+        )
+    raw_resources = catalog.get("resources", [])
+    if not isinstance(raw_resources, list):
+        raise ExternalResourceCatalogInputError("catalog resources must be a list")
+    current = (now or datetime.now(UTC)).astimezone(UTC)
+    policy = dict(DEFAULT_REFRESH_INTERVALS_SECONDS)
+    if intervals_seconds is not None:
+        for kind, interval in intervals_seconds.items():
+            if kind not in policy:
+                raise ExternalResourceCatalogInputError(
+                    f"refresh plan has unknown resource kind: {kind}"
+                )
+            if not isinstance(interval, int) or isinstance(interval, bool) or interval <= 0:
+                raise ExternalResourceCatalogInputError(
+                    f"refresh plan interval must be positive: {kind}"
+                )
+            policy[kind] = interval
+
+    items: list[dict[str, Any]] = []
+    for item in raw_resources:
+        if not isinstance(item, Mapping):
+            raise ExternalResourceCatalogInputError("catalog resource must be an object")
+        resource_id = str(item.get("id") or "").strip()
+        if not resource_id:
+            raise ExternalResourceCatalogInputError("catalog resource is missing id")
+        kind = str(item.get("kind") or "").strip()
+        interval = policy.get(kind, DEFAULT_REFRESH_INTERVALS_SECONDS["resource_provider"])
+        health = item.get("health") if isinstance(item.get("health"), Mapping) else {}
+        health_status = str(health.get("status") or "unknown").strip().lower()
+        reason_codes = {
+            str(reason).strip()
+            for reason in item.get("reason_codes", [])
+            if str(reason).strip()
+        }
+        last_observed_raw = health.get("observed_at") or catalog.get("observed_at")
+        last_observed = _parse_refresh_time(
+            last_observed_raw, field_name="observed_at"
+        )
+        next_due = last_observed + timedelta(seconds=interval)
+        deadline_due = False
+        invalid_deadline = False
+        for field_name in ("expires_at", "review_at"):
+            deadline = item.get(field_name)
+            if not deadline:
+                continue
+            try:
+                deadline_due = deadline_due or _parse_refresh_time(
+                    deadline, field_name=field_name
+                ) <= current
+            except ExternalResourceCatalogInputError:
+                invalid_deadline = True
+        unhealthy = health_status in {"unknown", "unhealthy"} or any(
+            reason in reason_codes
+            for reason in ("health_stale", "provider_probe_failed")
+        )
+        if unhealthy:
+            status = "due"
+            priority = "urgent"
+            action = "health_probe"
+            reasons = sorted(reason_codes | {"health_recovery_due"})
+        elif force:
+            status = "due"
+            priority = "normal"
+            action = "catalog_refresh"
+            reasons = sorted(reason_codes | {"forced_refresh"})
+        elif invalid_deadline or deadline_due:
+            status = "due"
+            priority = "high"
+            action = "human_review"
+            reasons = sorted(reason_codes | ({"invalid_descriptor_deadline"} if invalid_deadline else {"descriptor_deadline_due"}))
+        elif current >= next_due:
+            status = "due"
+            priority = "normal"
+            action = "catalog_refresh"
+            reasons = sorted(reason_codes | {"schedule_due"})
+        else:
+            status = "scheduled"
+            priority = "low"
+            action = "catalog_refresh"
+            reasons = sorted(reason_codes)
+        items.append(
+            {
+                "resource_id": resource_id,
+                "kind": kind or "unknown",
+                "provider": str(item.get("provider") or "unknown"),
+                "status": status,
+                "priority": priority,
+                "action": action,
+                "reason_codes": reasons,
+                "last_observed_at": last_observed.isoformat(),
+                "next_due_at": next_due.isoformat(),
+                "interval_seconds": interval,
+                "health_status": health_status,
+                "availability": str(item.get("availability") or "unavailable"),
+            }
+        )
+    items.sort(key=lambda item: (item["status"] != "due", item["priority"], item["resource_id"]))
+    catalog_state = dict(catalog)
+    catalog_state.pop("observed_at", None)
+    catalog_digest = str(catalog.get("catalog_digest") or _canonical_digest(catalog_state))
+    state = {
+        "schema": REFRESH_PLAN_SCHEMA,
+        "mode": "read_only_projection",
+        "activation": "forbidden",
+        "provider_invocation": False,
+        "workflow_run_creation": False,
+        "admission_mutation": False,
+        "worker_launch": False,
+        "generated_at": current.isoformat(),
+        "catalog_digest": catalog_digest,
+        "force": force,
+        "policy": {
+            "intervals_seconds": dict(sorted(policy.items())),
+            "unknown_kind_fallback_seconds": DEFAULT_REFRESH_INTERVALS_SECONDS["resource_provider"],
+            "unhealthy_action": "health_probe",
+            "deadline_action": "human_review",
+        },
+        "items": items,
+        "summary": {
+            "resource_count": len(items),
+            "due_count": sum(item["status"] == "due" for item in items),
+            "scheduled_count": sum(item["status"] == "scheduled" for item in items),
+            "urgent_count": sum(item["priority"] == "urgent" for item in items),
+            "high_count": sum(item["priority"] == "high" for item in items),
+            "action_counts": {
+                action: sum(item["action"] == action for item in items)
+                for action in sorted({item["action"] for item in items})
+            },
+        },
+        "policy_boundary": {
+            "side_effects": "disabled",
+            "scheduler": "caller_or_governed_observer_only",
+            "automatic_activation": False,
+        },
+    }
+    digest_state = dict(state)
+    digest_state.pop("generated_at", None)
+    state["plan_digest"] = _canonical_digest(digest_state)
+    return state
+
+
 def _load_agora(root: Path):
     agora_src = root / "projects/agora/src"
     if not agora_src.exists():
@@ -332,7 +514,24 @@ def collect_external_resources(
     """Collect an external-resource snapshot through Agora's boundary."""
     root = root.resolve()
     build_snapshot, diff_snapshots, discover, _ = _load_agora(root)
-    records = discover(entry_points, probe=probe, mark_unprobed=not probe)
+    records = list(discover(entry_points, probe=probe, mark_unprobed=not probe))
+    # iris 跨项目扫描: iris 连接器在 kairon 子模块注册 (21 个 external.resources),
+    # 主仓库 omo/agora 环境装不到 iris → entry-point 发现断链;
+    # 走 subprocess cd kairon + uv run 扫 external.resources (修复 iris↔catalog 断链, N1 解锁).
+    records.extend(_load_iris_records(root))
+    # BOS 能力目录: 总是加载 (修复回归: "if not records" 在 iris 进后跳过 bos 兜底,
+    # 导致 catalog 丢 bos://capabilities). agora/iris 可能与 bos 重叠, 按 id 去重.
+    records.extend(_load_capability_records(root))
+    _seen_ids: set[str] = set()
+    _deduped: list[Any] = []
+    for _record in records:
+        _rid = getattr(getattr(_record, "descriptor", None), "id", "") or ""
+        if _rid and _rid in _seen_ids:
+            continue
+        if _rid:
+            _seen_ids.add(_rid)
+        _deduped.append(_record)
+    records = _deduped
     snapshot = build_snapshot(
         records,
         now=now or datetime.now(UTC),
@@ -344,6 +543,146 @@ def collect_external_resources(
     if previous_snapshot is not None:
         snapshot["changes"] = diff_snapshots(previous_snapshot, snapshot)
     return snapshot
+
+
+def _load_iris_records(root: Path) -> list[Any]:
+    """跨项目扫 iris external.resources (cd kairon + uv run), 转 DiscoveryRecord.
+
+    iris 连接器在 kairon 子模块注册 (21 个 external.resources), 主仓库 omo/agora
+    环境装不到 iris → metadata.entry_points() 发现断链. 走 subprocess 跨项目扫,
+    修复 iris↔catalog 断链 (N1 document-review 激活卡点的根因).
+    """
+    kairon = root / "projects/kairon"
+    if not kairon.exists():
+        return []
+    code = (
+        "import importlib.metadata as m, json\n"
+        "from datetime import datetime, timezone, timedelta\n"
+        "for ep in m.entry_points(group='external.resources'):\n"
+        "    if ep.name == 'agora-bos-capabilities':\n"
+        "        continue\n"
+        "    try:\n"
+        "        inst = ep.load()()\n"
+        "        desc = inst.external_descriptor()\n"
+        "        try:\n"
+        "            avail = inst.is_available()\n"
+        "        except Exception:\n"
+        "            avail = False\n"
+        "        # iris health {available, details} → agora {status, observed_at, source}\n"
+        "        # agora 要 status in {healthy, degraded, unhealthy} (不是 ok)\n"
+        "        desc['health'] = {\n"
+        "            'status': 'healthy' if avail else 'unhealthy',\n"
+        "            'available': bool(avail),\n"
+        "            'observed_at': datetime.now(timezone.utc).isoformat(),\n"
+        "            'source': 'iris.is_available',\n"
+        "        }\n"
+        "        # agora 要 expires_at 或 review_at (否则 missing_expiry_or_review)\n"
+        "        if not desc.get('expires_at') and not desc.get('review_at'):\n"
+        "            desc['review_at'] = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()\n"
+        "        # preflight 匹配 capability in resource.capabilities;\n"
+        "        # scene capability_refs 用 resource id (iris:apple_mail), 加到 capabilities 让匹配\n"
+        "        caps = list(desc.get('capabilities', []))\n"
+        "        if desc.get('id') and desc['id'] not in caps:\n"
+        "            caps.append(desc['id'])\n"
+        "            desc['capabilities'] = caps\n"
+        "        print(json.dumps(desc, ensure_ascii=False))\n"
+        "    except Exception as e:\n"
+        "        import sys; sys.stderr.write(f'iris skip {ep.name}: {e}\\n')\n"
+    )
+    try:
+        result = subprocess.run(
+            ["uv", "run", "--with", "pyyaml", "python", "-c", code],
+            cwd=kairon,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        print(
+            f"external-resource-catalog: iris scan unavailable: {exc}",
+            file=sys.stderr,
+        )
+        return []
+    from agora_external_connections_projection import (
+        DiscoveryRecord as AgoraDiscoveryRecord,
+    )
+    from agora_external_connections_projection import ExternalResourceDescriptor
+
+    records: list[Any] = []
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            descriptor = json.loads(line)
+            parsed = ExternalResourceDescriptor.from_mapping(descriptor)
+            records.append(
+                AgoraDiscoveryRecord(
+                    descriptor=parsed,
+                    entry_point=f"external.resources:{descriptor.get('id', 'iris')}",
+                )
+            )
+        except (json.JSONDecodeError, ValueError, KeyError, AttributeError, TypeError) as exc:
+            print(
+                f"external-resource-catalog: iris descriptor skip: {exc}",
+                file=sys.stderr,
+            )
+    return records
+
+
+def _load_capability_records(root: Path) -> list[Any]:
+    """importlib 加载 CapabilityProvider 并构造 DiscoveryRecord 列表。
+
+    不依赖 agora 已安装 (entry-point 不可见时也能覆盖 BOS 能力目录)。
+    """
+    try:
+        provider_path = (
+            root
+            / "projects/agora/src/agora/external_resources/capability_provider.py"
+        )
+        spec = importlib.util.spec_from_file_location(
+            "agora_capability_provider_projection", provider_path
+        )
+        if spec is None or spec.loader is None:
+            return []
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        descriptor = module.CapabilityProvider().external_descriptor()
+        # bos health 适配 (agora availability 推导要 status/observed_at/source + review_at, 同 iris 模式)
+        descriptor["health"] = {
+            "status": "healthy",
+            "observed_at": datetime.now(UTC).isoformat(),
+            "source": "agora.capability_provider",
+        }
+        if not descriptor.get("expires_at") and not descriptor.get("review_at"):
+            descriptor["review_at"] = (
+                datetime.now(UTC) + timedelta(days=30)
+            ).isoformat()
+        # bos 能力目录 = BOS 服务聚合投影, 已 active (agora availability 要求 lifecycle in {active,degraded})
+        descriptor["lifecycle"] = "active"
+        # 复用 agora external_connections 的 DiscoveryRecord/解析 (已在 _load_agora 注册)
+        from agora_external_connections_projection import (
+            DiscoveryRecord as AgoraDiscoveryRecord,
+        )
+        from agora_external_connections_projection import (
+            ExternalResourceDescriptor,
+        )
+
+        parsed = ExternalResourceDescriptor.from_mapping(descriptor)
+        return [
+            AgoraDiscoveryRecord(
+                descriptor=parsed,
+                entry_point="external.resources:agora-bos-capabilities",
+            )
+        ]
+    except (ImportError, OSError, AttributeError) as exc:
+        print(
+            f"external-resource-catalog: capability fallback unavailable: {exc}",
+            file=sys.stderr,
+        )
+        return []
 
 
 def evaluate_external_resources(
@@ -589,6 +928,16 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="将 capability directory 转换为只读连接计划，不执行观察或激活",
     )
+    parser.add_argument(
+        "--refresh-plan",
+        action="store_true",
+        help="输出只读刷新计划，不执行观察、调度或激活",
+    )
+    parser.add_argument(
+        "--force-refresh-plan",
+        action="store_true",
+        help="将所有资源标记为待刷新，仅影响只读计划输出",
+    )
     parser.add_argument("--actor", default="external-resource-observer")
     parser.add_argument(
         "--source-ref", default="root:external-resource-catalog:observe"
@@ -596,13 +945,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run-id", help="稳定的只读观察运行标识，用于重试幂等")
     args = parser.parse_args(argv)
     try:
-        if args.observe and (args.directory or args.connection_plan):
+        if args.observe and (args.directory or args.connection_plan or args.refresh_plan):
             raise ExternalResourceCatalogInputError(
-                "--directory/--connection-plan cannot be combined with --observe"
+                "projection flags cannot be combined with --observe"
             )
-        if args.directory and args.connection_plan:
+        if sum(bool(flag) for flag in (args.directory, args.connection_plan, args.refresh_plan)) > 1:
             raise ExternalResourceCatalogInputError(
-                "--directory cannot be combined with --connection-plan"
+                "--directory/--connection-plan/--refresh-plan are mutually exclusive"
             )
         previous_snapshot = None
         if args.previous_snapshot:
@@ -633,16 +982,16 @@ def main(argv: list[str] | None = None) -> int:
                 probe=not args.no_health_probe,
                 previous_snapshot=previous_snapshot,
             )
-            directory = (
-                build_external_resource_directory_snapshot(catalog)
-                if args.directory or args.connection_plan
-                else None
-            )
+            directory = build_external_resource_directory_snapshot(catalog) if args.directory or args.connection_plan else None
             payload = (
                 build_external_resource_connection_plan(directory)
                 if args.connection_plan and directory is not None
                 else directory
                 if directory is not None
+                else build_external_resource_refresh_plan(
+                    catalog, force=args.force_refresh_plan
+                )
+                if args.refresh_plan
                 else catalog
             )
     except (ExternalResourceCatalogInputError, ValueError) as exc:

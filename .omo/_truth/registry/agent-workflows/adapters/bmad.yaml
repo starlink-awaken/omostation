@@ -1,0 +1,13 @@
+bmad:
+  status: optional_adapter
+  command: bmad
+  authority: input_adapter
+  ssot_rule: BMAD specs may seed governed work but OMO/C2G planned tasks remain canonical.
+  ingress_workflow: c2g-spec-ingress
+  bridge: uv run --project projects/omo omo bridge --format bmad <source-file>
+  pattern: structured product/agent specs become governed OMO planned tasks through
+    the OMO bridge compatibility path
+  health_command:
+  - bmad
+  - status
+  health_required: false

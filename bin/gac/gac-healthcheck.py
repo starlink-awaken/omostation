@@ -309,7 +309,9 @@ def healthcheck() -> dict:
     }
 
     # 13. GaC M1 实例 drift (机制7深化: registry↔M1 双向校验, Phase 4B)
-    m1_code, m1_out = run_tool("bin/gac/gac-m1-sync.py", ["--json"])
+    # ADR-0376 G9: --tracked — 基于 git HEAD 提交态而非 working tree,
+    # 并发 agent 的 untracked M1 / 分支切换噪声不应误报 health red.
+    m1_code, m1_out = run_tool("bin/gac/gac-m1-sync.py", ["--tracked", "--json"])
     try:
         m1_json = json.loads(m1_out) if m1_out else {}
     except json.JSONDecodeError:
@@ -327,6 +329,35 @@ def healthcheck() -> dict:
         "missing_in_m1": len(m1_diff.get("missing_in_m1", [])),
         "orphan_in_m1": len(m1_diff.get("orphan_in_m1", [])),
         "stale": len(m1_diff.get("stale", [])),
+    }
+
+    # 14. CI 平面可观测性 (ADR-0379 E-3): ci-surfaces SSOT vs 实际接线
+    # unregistered/gate-parity/double-trigger = error; orphan/overlap = warn.
+    ci_code, ci_out = run_tool("bin/gac/check-ci-surfaces.py", ["--json"])
+    try:
+        ci_json = json.loads(ci_out) if ci_out else {}
+    except json.JSONDecodeError:
+        ci_json = {}
+    report["ci_plane"] = {
+        "ok": ci_code == 0,
+        "surfaces": ci_json.get("surfaces", 0),
+        "wired_tools": ci_json.get("wired_tools", 0),
+        "error_count": ci_json.get("error_count", 0),
+        "warn_count": ci_json.get("warn_count", 0),
+        "errors": ci_json.get("errors", []),
+        "warnings": ci_json.get("warnings", []),
+    }
+
+    # 14. SSOT 使用率 (ADR-0385 B2): 检查 _truth/registry/ 下 SSOT 文件新鲜度
+    ssot_code, ssot_out = run_tool("bin/ssot/ssot-usage.py", ["--json"])
+    try:
+        ssot_json = json.loads(ssot_out) if ssot_out else {}
+    except json.JSONDecodeError:
+        ssot_json = {}
+    report["ssot_usage"] = {
+        "ok": ssot_code == 0,
+        "stale_count": ssot_json.get("stale_count", 0),
+        "files_count": len(ssot_json.get("files", [])),
     }
 
     # 总体健康 (含 executor drift + M1 instance drift: 声明的 executor 必须实际存在)
@@ -347,6 +378,8 @@ def healthcheck() -> dict:
         and report["bootstrap"]["ok"]
         and report["executor_drift"]["ok"]
         and report["m1_instance_drift"]["ok"]
+        and report["ci_plane"]["ok"]
+        and report["ssot_usage"]["ok"]
     )
     return report
 
@@ -463,6 +496,22 @@ def print_report(report: dict) -> None:
     print(
         f"▶ M1实例drift (机制7): {m1_status} registry={m1['registry_rules']} M1={m1['m1_instances']} 缺={m1['missing_in_m1']} 多余={m1['orphan_in_m1']} 过期={m1['stale']}"
     )
+
+    # CI 平面可观测性 (ADR-0379 E-3: ci-surfaces SSOT vs 实际接线)
+    ci = report["ci_plane"]
+    ci_status = "✅" if ci["ok"] else "❌"
+    print(
+        f"▶ CI平面 (ADR-0379): {ci_status} surfaces={ci['surfaces']} wired={ci['wired_tools']} errors={ci['error_count']} warns={ci['warn_count']}"
+    )
+    for e in ci["errors"][:5]:
+        print(f"    ❌ {e}")
+    for w in ci["warnings"][:5]:
+        print(f"    ⚠️  {w}")
+
+    # SSOT 使用率 (ADR-0385 B2)
+    su = report["ssot_usage"]
+    su_status = "✅" if su["ok"] else "❌"
+    print(f"▶ SSOT使用率 (ADR-0385): {su_status} files={su['files_count']} stale={su['stale_count']}")
 
     print()
     overall = "✅ 全绿 (GaC 体系闭环生效)" if report["healthy"] else "❌ 有红 (见上)"

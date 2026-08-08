@@ -1,4 +1,5 @@
 ---
+id: ADR-0320
 title: External Resource 评估与可解释选择边界
 status: accepted
 type: decision

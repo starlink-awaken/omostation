@@ -1,5 +1,5 @@
 ---
-id: 0234-bet-c87a-closeout
+id: ADR-0234
 title: "BET-c87a http-mcp-convergence 收尾正式立项"
 status: DONE
 lifecycle: accepted

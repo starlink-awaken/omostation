@@ -1,4 +1,5 @@
 ---
+id: ADR-0297
 title: 收敛产品真相与外部连接织层
 status: ACCEPTED
 type: decision

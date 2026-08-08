@@ -1,4 +1,5 @@
 ---
+id: ADR-0221
 status: ACCEPTED
 lifecycle: decision
 owner: 架构师

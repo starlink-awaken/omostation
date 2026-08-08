@@ -1119,6 +1119,66 @@ Phase 68 将已经完成人工复核的 `engineering-delivery-review-queue/v1` �
 
 Phase 68 只打通“真实工程元数据进入标注队列”的可复现入口，不生成金标准、不创建 manifest、不训练模型、不改变 Workflow Mesh 或 OMO 策略。
 
+### 7.3.36 Phase 69 KEMS 持久化健康与恢复闭环
+
+Phase 69 在 Kairon/KOS 增加统一的 `kems.health` 运行态能力，面向已有 SQLite 存储执行只读 `integrity_check`、`foreign_key_check`、表存在性、行数和文件权限检查。它只生成运营元数据，不打开业务正文；数据库缺失、损坏、外键不一致或权限不私有时返回 `degraded`，不把异常状态伪装成“无数据”。
+
+新增 `kems_health_check.py` 作为机器可消费入口，新增 `kems_backup.py` 作为备份和恢复入口。二者都 fail-closed：备份源必须健康，目标默认不可覆盖，写入采用临时文件和原子替换，恢复后再次检查完整性。备份不是评测证据，也不改变 WorkflowRun、OMO 任务或 provider 路由。
+
+运行链路为：
+
+`SQLite stores -> read-only health projection -> verified backup/restore -> manifest/shadow preflight`
+
+该能力把持久化故障从“静默丢失或人工猜测”变为可观测的运行态事实，但不扩大模型或 OMO 权限边界。
+
+### 7.3.37 Phase 70 外部资源动态刷新计划与受控触达
+
+Phase 70 为已有 External Connection Fabric 增加 `external-resource-refresh-plan/v1`。目录发现解决“系统有什么”，
+受治理刷新解决“系统最近看到什么”，刷新计划进一步解决“下一次为什么刷新、刷新哪一类证据、是否需要人工介入”。
+`build_external_resource_refresh_plan()` 从安全 catalog projection 计算每个资源的上次观察时间、资源类型周期、下一次到期时间、
+健康恢复优先级和动作类型，支持知识源、数据源、资源提供方、方法包、工具、渠道和模型提供方的差异化节奏。
+
+计划的动作只有三类：
+
+- `health_probe`: 健康未知、过期或探活失败的资源优先恢复观察；
+- `human_review`: descriptor 的 expiry/review deadline 到期或不合法时，先人工复核；
+- `catalog_refresh`: 正常资源按类型周期进入下一次只读观察。
+
+根仓 `bin/ssot/external-resource-catalog.py --refresh-plan` 和 Cockpit
+`GET /api/external-resources/refresh-plan` 都只返回 projection，不执行调度，不调用 provider 业务方法，不创建 WorkflowRun，
+不改变 OMO admission。真正的刷新仍由调用方或受治理 observer 显式触发 `--observe`，这样动态扩展具备节奏与成本边界，
+又不会因为“可发现”误变成“自动可执行”。
+
+运行链路收敛为：
+
+`resource descriptor -> catalog observation -> refresh plan -> governed refresh -> diff/review -> scene evaluation -> admission`
+
+该阶段完成外部知识、数据、资料、方法、理论、工具、模型和渠道的动态触达控制面；外部资源的真实业务启用仍必须满足 Scene Card、
+权限、责任人、回滚、真实消费者和结果指标等既有激活门槛。
+
+### 7.3.38 Phase 71 重复 Shadow 评测与晋级资格门禁
+
+已有单次 shadow acceptance 只能说明某一次 manifest 评测满足阈值，不能证明候选模型在重复运行、同一评测材料和累计观测量下稳定优于基线。
+Phase 71 增加 `kems.model-promotion-gate.v1`，由 Kairon/KOS 对多份脱敏 `kems.model-acceptance.v1` 做安全比较：必须绑定同一 manifest，
+达到最低运行次数和观测量，每次都是 `shadow_pass`，每次提升不低于门槛，且报告声明的提升值能由 MAE 重算一致得到。
+
+结果区分 `blocked` 与 `eligible_for_human_approval`。资格投影保留 manifest SHA、数据集身份、报告摘要 SHA、聚合 MAE 和阻断原因，
+不保留原文、prompt、模型自由输出或 provider 载荷。它固定 `automatic_promotion=false`、`promotion=blocked_until_omo_approval`，不写入模型注册表，
+不改变 Agora 路由，不创建 WorkflowRun，不触发外部调用。
+
+因此 Workflow Mesh 的智能化晋级边界是：
+
+`shadow candidate -> repeated gate -> human/OMO approval -> canary admission -> outcome feedback -> rollback`
+
+模型可以帮助判断候选质量，但不能取代 OMO 的审批和 Mesh 的状态机。
+
+### 7.3.39 Phase 72 场景优先架构收敛与长期路线
+
+Phase 72 将 Workflow Mesh 的定位从“工程执行协议”进一步收敛为织星所有受治理业务旅程的唯一执行脊柱。后续新功能必须先绑定 `scene_id`、`journey_id` 和 `outcome_metric`，再进入任务、准入、派发、证据、验证和交付链；没有真实场景和结果指标的能力只进入 proposal、sandbox 或 shadow。
+
+跨项目的长期功能版图、首个低风险真实试点、外部知识/数据/方法/工具/渠道的动态扩展流水线，以及 0 至 36 个月里程碑见
+[`docs/ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md`](ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md)。该文档不创建新的状态真相，只固化现有 OMO、ECOS、Runtime、AetherForge、Agora、Kairon/KOS、Cockpit 和 External Connection Fabric 的协作边界。
+
 ## 8. 明确延期和边界
 
 当前不引入第二套工作流引擎、不把 Cockpit 做成状态写入端、不直接把 gbrain/KOS 当运行时数据库，也不在缺少真实业务场景时提前建设大规模 OCR、知识图谱或预测模型生产链。外部连接同样必须先绑定真实业务旅程，再扩大覆盖面。

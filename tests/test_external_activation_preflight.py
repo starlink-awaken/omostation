@@ -50,9 +50,11 @@ def _scene(**overrides):
 def _catalog(
     *,
     summarize_availability="available",
-    observed_at="2026-08-03T00:00:00Z",
+    observed_at=None,
     catalog_ttl_seconds=3600,
 ):
+    if observed_at is None:
+        observed_at = datetime.now(UTC).isoformat()
     return {
         "schema": "external-resource-catalog/v1",
         "mode": "read_only_projection",

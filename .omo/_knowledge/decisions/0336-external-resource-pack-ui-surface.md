@@ -1,4 +1,5 @@
 ---
+id: ADR-0336
 title: Cockpit UI External Resource Pack Preflight Surface
 status: accepted
 type: decision

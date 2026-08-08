@@ -1,4 +1,5 @@
 ---
+id: ADR-0341
 title: External scene trial review feedback boundary
 status: accepted
 type: adr

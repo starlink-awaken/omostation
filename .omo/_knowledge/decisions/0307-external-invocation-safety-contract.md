@@ -1,4 +1,5 @@
 ---
+id: ADR-0307
 title: Workflow Mesh 外部调用安全契约
 status: accepted
 type: decision

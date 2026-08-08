@@ -3,6 +3,52 @@
 > This document owns stable architecture concepts: layers, dependency direction, routing contracts, and governance boundaries.
 > It does not own runtime facts, current phase, health score, test counts, tool counts, service counts, or ports.
 
+## 0. Workspace Tools Layer (L2) — 统一工具链
+
+> 2026-08-06 新增。将域级重复工具抽象为 workspace 级共享能力。
+
+### 0.1 目录结构
+
+```
+workspace/tools/
+├── __init__.py              # 统一导出
+├── base/                    # 抽象基类
+│   ├── __init__.py          # BaseController, BaseExtractor, BasePredictor
+│   ├── base_controller.py   # 统一控制器（信号扫描、状态聚合、健康检查）
+│   ├── base_extractor.py    # 统一提取器（实体识别、关系抽取、知识分类）
+│   └── base_predictor.py    # 统一预测器（趋势预测、风险预警、过期检测）
+├── kems/                    # KEMS 知识工程引擎
+│   ├── __init__.py
+│   └── kems_engine.py       # 知识提取 + 融合 + 图谱
+├── ocr/                     # OCR 流水线（预留）
+├── runtime/                 # 运行时脚本（预留）
+└── domain/                  # 域插件
+    ├── __init__.py          # DomainRegistry
+    ├── domain_registry.py   # 域注册中心
+    ├── health_commission.py # 卫健委域插件
+    └── contract_law.py      # 合同法规域插件
+```
+
+### 0.2 设计原则
+
+1. **基类抽象通用能力** — 三域控制器 80% 重复代码消除
+2. **域插件实现差异** — 每个域继承基类，仅实现域特有逻辑
+3. **BOS URI 注册** — 域服务可注册为 `bos://analysis/<domain>/<service>/`
+4. **CLI 统一入口** — `python omostation.py <command>` 操作全域
+
+### 0.3 调用链
+
+```
+CLI (omostation.py)
+  → DomainRegistry.discover() — 发现域
+  → BaseController.health_check() — 健康检查
+  → BaseExtractor.extract_from_ocr() — OCR 知识提取
+  → KEMEngine.run_full_pipeline() — 完整 KEMS 流水线
+  → DomainPlugin.domain_specific_scan() — 域特有扫描
+```
+
+---
+
 ## 1. Source-Of-Truth Map
 
 | Fact Type | Authoritative Source |
@@ -17,7 +63,7 @@
 | Governance surfaces | [`.omo/standards/omo-governance-surfaces.md`](.omo/standards/omo-governance-surfaces.md) |
 | L0 constraints | [`projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml`](projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml) |
 | GaC rules (X1-X4) | [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml) |
-| Agent workflows | [`.omo/_truth/registry/agent-workflows.yaml`](.omo/_truth/registry/agent-workflows.yaml) |
+| Agent workflows | [`.omo/_truth/registry/agent-workflows/`](.omo/_truth/registry/agent-workflows/) |
 | Runtime projection registry | [`.omo/_truth/registry/runtime-projections.yaml`](.omo/_truth/registry/runtime-projections.yaml) |
 | Debt registry | [`.omo/_truth/registry/debt.yaml`](.omo/_truth/registry/debt.yaml) |
 | Task lifecycle | [`.omo/tasks/README.md`](.omo/tasks/README.md) |
@@ -29,9 +75,16 @@
 | MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
 | P74 workflow solidification (ADR-0130) | [`.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`](.omo/_knowledge/decisions/0130-p74-workflow-solidification.md) |
 | 知识网关 L3-I0 解耦 + 事件索引管道 (ADR-0294) | [`.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`](.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md) |
+| Memory OS 控制面 (ADR-0372) | [`.omo/_knowledge/decisions/0372-memory-os-control-plane.md`](.omo/_knowledge/decisions/0372-memory-os-control-plane.md) · [architecture](docs/architecture/memory-os.md) · [registry](.omo/_truth/registry/memory-os.yaml) |
 | 外部连接织层 | [`.omo/_truth/registry/external-connection-fabric.yaml`](.omo/_truth/registry/external-connection-fabric.yaml) · [standard](.omo/standards/external-connection-fabric.md) |
 | 外部连接织层运行时边界 (ADR-0298) | [`.omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md`](.omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md) |
 | Workflow Mesh worker 租约与接管 (ADR-0299) | [`.omo/_knowledge/decisions/0299-workflow-mesh-worker-lease-and-reclaim.md`](.omo/_knowledge/decisions/0299-workflow-mesh-worker-lease-and-reclaim.md) |
+| Scene cards (9 cards, dual-track admission) | [`docs/scene-cards/`](docs/scene-cards/) · validate: `make scene-card-check` |
+| Journey specs (state machines) | [`docs/journey-specs/`](docs/journey-specs/) · validate: `make journey-check` |
+| Dual-track scene admission (ADR-0387) | [`.omo/_knowledge/decisions/0387-dual-track-scene-admission.md`](.omo/_knowledge/decisions/0387-dual-track-scene-admission.md) |
+| Scene execution engine | `bin/ssot/journey-runner.py` (rebuild) · `signal-poller.py` (感知面) · `scene-outcome-recorder.py` (结果面) |
+| Permission scope vocabulary | [`.omo/standards/permission-scope-vocabulary.yaml`](.omo/standards/permission-scope-vocabulary.yaml) |
+| Signal sources registry | [`.omo/_truth/registry/signal-sources.yaml`](.omo/_truth/registry/signal-sources.yaml) |
 
 ## 2. Layer Model
 
@@ -70,6 +123,7 @@ not advance WorkflowRun state without the corresponding OMO event.
 | Governance automation | `omo` CLI/MCP broker | Governed state mutations are audited |
 | Web/API consumers | cockpit-mounted HTTP surfaces | Public web entry remains converged at L3 |
 | Knowledge write (card PUT) | `cockpit /api/knowledge/put` → EventBus → `KnowledgeIndexer` | L3 网络优先解析 + 写后事件广播 (ADR-0294) |
+| Memory recall / write (agent default) | `bos://memory/mos/*` (Phase 1+) · skill `memory-recall` | Memory OS 控制面 (ADR-0372)；P0 见 skill 回退路由 |
 
 Do not introduce a new top-level human or agent entry without updating the relevant registry, boundary documentation, and governance checks.
 
@@ -77,7 +131,7 @@ Do not introduce a new top-level human or agent entry without updating the relev
 
 | Domain | URI Prefix | Role |
 |--------|------------|------|
-| Memory | `bos://memory/` | Knowledge, facts, search, storage |
+| Memory | `bos://memory/` | Knowledge, facts, search, storage; control plane `bos://memory/mos/*` (ADR-0372) |
 | Governance | `bos://governance/` | OMO, policy, task/debt/audit flows |
 | Analysis | `bos://analysis/` | Research, ontology derivation, code analysis |
 | Persona | `bos://persona/` | Persona and personal knowledge bridges |
@@ -147,10 +201,25 @@ service definition -> runtime scheduler/matrix/sandbox -> health observation -> 
 external resource -> descriptor -> scene-bound admission -> capability route -> receipt/evidence -> derived memory
 ```
 
+## 8. Recent Architecture Decisions
+
+| ADR | Decision | Date |
+|-----|----------|------|
+| [ADR-0371](.omo/_knowledge/decisions/0371-pasw-submodule-isolation.md) | PASW — Per-Agent Submodule Worktree 隔离 | 2026-08-04 |
+| [ADR-0370](.omo/_knowledge/decisions/0370-agt-ecos-integration.md) | AGT × eCOS v6 Integration via BOS URI External Adapter Pattern | 2026-08-04 |
+| [ADR-0368](.omo/_knowledge/decisions/0368-runtime-taskfallback-test-contract.md) | Runtime Registry 测试契约与 TaskFallback 响应对齐 | 2026-08-04 |
+| [ADR-0367](.omo/_knowledge/decisions/0367-sweep-tooling-scaling-roadmap.md) | Python 质量扫描基础设施规模化路线图 | 2026-08-04 |
+| [ADR-0366](.omo/_knowledge/decisions/0366-pyright-sweep-algorithm.md) | Pyright 与 Ruff 扫描修复算法固化 | 2026-08-04 |
+| [ADR-0365](.omo/_knowledge/decisions/0365-architecture-strategy-closeout.md) | Scenario-first architecture strategy and Workflow Mesh execution spine | 2026-08-04 |
+| [ADR-0364](.omo/_knowledge/decisions/0364-kems-repeated-shadow-promotion-gate.md) | KEMS Repeated Shadow Promotion Gate | 2026-08-04 |
+| [ADR-0363](.omo/_knowledge/decisions/0363-external-resource-refresh-plan.md) | External Resource Refresh Plan and Controlled Reachability | 2026-08-04 |
+| [ADR-0362](.omo/_knowledge/decisions/0362-kems-runtime-health-and-recovery.md) | KEMS runtime health and verified SQLite recovery | 2026-08-04 |
+
 ## 9. Related Documents
 
 | Document | Role |
 |----------|------|
+| [`docs/ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md`](docs/ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md) | 场景优先的长周期架构战略、子项目边界与 Workflow Mesh 路线基线 |
 | [`README.md`](README.md) | Front door and quick orientation |
 | [`AGENTS.md`](AGENTS.md) | Agent/developer operating guide |
 | [`CLAUDE.md`](CLAUDE.md) | AI session context loader |
@@ -159,6 +228,9 @@ external resource -> descriptor -> scene-bound admission -> capability route -> 
 | [`docs/ARCHITECTURE-DETAILED-MAP.md`](docs/ARCHITECTURE-DETAILED-MAP.md) | Architecture deep-dive (modules, data flow, control flow) |
 | [`docs/FUNCTIONAL-CAPABILITY-MAP.md`](docs/FUNCTIONAL-CAPABILITY-MAP.md) | Functional capability map (8 domains, 32 capabilities) |
 | [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) | Agora BOS URI callchain white-box |
-| [`.omo/standards/external-connection-fabric.md`](.omo/standards/external-connection-fabric.md) | External resource, method, tool and channel contract |
+| [`.omo/standards/external-connection-fabric.md`](.omo/standards/external-connection-fabric.md) | External resource, method, tool and channel contract (§7: dual-track admission) |
+| [`docs/scene-cards/`](docs/scene-cards/) | Scene cards (9 cards: external + internal pipeline) |
+| [`docs/journey-specs/`](docs/journey-specs/) | Journey state machine specs (3 journeys) |
+| [`.omo/standards/permission-scope-vocabulary.yaml`](.omo/standards/permission-scope-vocabulary.yaml) | RBAC scope controlled vocabulary for internal pipeline scenes |
 | [`docs/VISION-ROADMAP.md`](docs/VISION-ROADMAP.md) | Vision and roadmap |
 | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) | Documentation ownership contract |
