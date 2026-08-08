@@ -266,11 +266,36 @@ class JourneyRunnerAgent:
                     continue
 
         if resumable:
+            # Auto-resume: 实际调用 journey-runner subprocess (C3 修复)
+            import subprocess as _sp
+            resumed: list[dict[str, Any]] = []
+            for r in resumable:
+                runner = workspace / "bin" / "ssot" / "journey-runner.py"
+                if not runner.exists():
+                    continue
+                try:
+                    proc = _sp.run(
+                        ["python3", str(runner), "resume",
+                         "--journey-id", r["journey_id"],
+                         "--run-id", r["run_id"]],
+                        capture_output=True, text=True, timeout=120,
+                    )
+                    resumed.append({
+                        "journey_id": r["journey_id"],
+                        "run_id": r["run_id"],
+                        "returncode": proc.returncode,
+                    })
+                except Exception as exc:
+                    resumed.append({
+                        "journey_id": r["journey_id"],
+                        "run_id": r["run_id"],
+                        "error": str(exc),
+                    })
             return {
-                "action": "trigger",
+                "action": "auto_resumed",
                 "details": {
-                    "resumable_journeys": resumable,
-                    "note": f"{len(resumable)} journey run(s) ready to resume",
+                    "resumed_count": len(resumed),
+                    "resumed": resumed,
                 },
             }
         return {"action": "noop", "details": {"note": "no resumable journeys"}}

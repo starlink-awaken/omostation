@@ -177,7 +177,32 @@ class MOSBeliefManager:
         self._append_audit_log(
             "RECORD_BELIEF", f"id={b_id} topic={topic} run_id={source_run_id}"
         )
+        self._try_auto_crystallize(topic, state)
         return b_id
+
+    def _try_auto_crystallize(
+        self, topic: str, state: dict[str, list[dict[str, Any]]]
+    ) -> None:
+        """Best-effort: 当 topic 信念数 >= 2 时自动结晶为 Skill (BET-Y1Q2-T6-06)."""
+        try:
+            from .omo_crystallizer import CRYSTALLIZATION_THRESHOLD, SkillCrystallizer
+
+            topic_beliefs = [b for b in state["beliefs"] if b.get("topic") == topic]
+            if len(topic_beliefs) < CRYSTALLIZATION_THRESHOLD:
+                return
+            crystallizer = SkillCrystallizer()
+            crystallizer.check_and_crystallize(
+                beliefs=state["beliefs"],
+                lessons=state.get("lessons", []),
+                contexts=state.get("contexts", []),
+                topic=topic,
+            )
+            self._append_audit_log(
+                "AUTO_CRYSTALLIZE",
+                f"topic={topic} count={len(topic_beliefs)}",
+            )
+        except Exception:
+            pass
 
     def _update_registry_summary(
         self, total_beliefs: int, state: dict | None = None
