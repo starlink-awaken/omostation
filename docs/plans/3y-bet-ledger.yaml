@@ -979,7 +979,11 @@ bets:
   title: /inbox 决策收件箱最小版
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-08
+  done_evidence: >
+    commit 4274d18fb merged to main: /inbox route + approve-with-edit + ignore buttons + daily cap 5.
+    All 4 done_when criteria covered by implementation.
   goal: 交付三年内最重要的一个界面 — 没有它其余全部无法验证
   non_goals:
   - 富文本编辑
