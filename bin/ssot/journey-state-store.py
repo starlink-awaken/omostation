@@ -10,6 +10,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from _shared import append_jsonl, read_jsonl, utc_now
+
 
 def _state_dir(root: Path, journey_id: str) -> Path:
     return root / ".omo" / "_knowledge" / "workflow-mesh" / "journey-states" / journey_id
@@ -31,10 +33,17 @@ def save_state(
     status: str = "entered",
     context: dict[str, Any] | None = None,
     checkpoint: dict[str, Any] | None = None,
+    dry_run: bool | None = None,
+    data_integrity: str = "",
 ) -> dict[str, Any]:
-    """Append one state transition record."""
+    """Append one state transition record.
+
+    data_integrity: "degraded" when live dispatch produced no real data (env down).
+    Empty string = nominal.  First-class field so downstream consumers (mesh-consumer,
+    signal-poller, alert-handler) can react without guessing which context key to inspect.
+    """
     entry = {
-        "ts": datetime.now(UTC).isoformat(),
+        "ts": utc_now(),
         "journey_id": journey_id,
         "run_id": run_id,
         "state": state_name,
@@ -42,22 +51,15 @@ def save_state(
         "status": status,
         "context": context or {},
     }
+    if dry_run is not None:
+        entry["dry_run"] = dry_run
     if checkpoint:
         entry["checkpoint"] = checkpoint
+    if data_integrity:
+        entry["data_integrity"] = data_integrity
 
-    log_dir = _state_dir(root, journey_id)
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_path = log_dir / f"{run_id}.jsonl"
-
-    import fcntl
-
-    with open(log_path, "a", encoding="utf-8") as f:
-        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-        try:
-            f.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
-            f.flush()
-        finally:
-            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+    log_path = _state_dir(root, journey_id) / f"{run_id}.jsonl"
+    append_jsonl(log_path, entry)
 
     return entry
 
@@ -65,16 +67,7 @@ def save_state(
 def load_run(root: Path, journey_id: str, run_id: str) -> list[dict[str, Any]]:
     """Load all state records for a run (for resume)."""
     log_path = _state_dir(root, journey_id) / f"{run_id}.jsonl"
-    if not log_path.exists():
-        return []
-    entries: list[dict[str, Any]] = []
-    for line in log_path.read_text(encoding="utf-8").strip().split("\n"):
-        if line:
-            try:
-                entries.append(json.loads(line))
-            except json.JSONDecodeError:
-                continue
-    return entries
+    return read_jsonl(log_path)
 
 
 def current_state(root: Path, journey_id: str, run_id: str) -> dict[str, Any] | None:

@@ -18,7 +18,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[2]
+from _shared import ROOT, load_yaml
+
 DEFAULT_BACKEDGE_LIMIT = 3
 
 
@@ -72,15 +73,8 @@ def _emit_escalation_event(journey_id: str, run_id: str, state: str, limit: int)
              })],
             capture_output=True, text=True, timeout=10, check=False, cwd=str(ROOT),
         )
-    except Exception:
-        pass
-
-
-def _load_yaml(path: Path) -> dict[str, Any]:
-    import yaml
-
-    docs = list(yaml.safe_load_all(path.read_text(encoding="utf-8")))
-    return docs[-1] if docs else {}
+    except Exception as exc:
+        print(f"[journey-runner] emit failed: {exc}", file=sys.stderr)
 
 
 def _load_module(path: Path, name: str):
@@ -103,7 +97,7 @@ def _find_scene_card(scene_id: str) -> Path | None:
     cards_dir = ROOT / "docs" / "scene-cards"
     for p in cards_dir.glob("*.yaml"):
         try:
-            body = _load_yaml(p)
+            body = load_yaml(p)
             if body.get("scene_id") == scene_id:
                 return p
         except Exception:
@@ -112,6 +106,30 @@ def _find_scene_card(scene_id: str) -> Path | None:
 
 
 # ── Scene Dispatchers ──────────────────────────────────────────────
+
+def _has_real_data(output: dict[str, Any]) -> bool:
+    """Detect whether a live dispatch produced real (non-simulated) data.
+
+    Heuristics per scene output shape:
+      - research-pipeline: sources.gathered >= 3 (iris list across 3 connectors)
+      - unified-inbox: messages non-empty
+      - knowledge-curation: notes_count > 0
+      - periodic-reporting: pr_count > 0 or report.items
+    Returns False when output is empty/simulated → caller sets data_integrity on state entry.
+    """
+    gathered = (output.get("sources") or {}).get("gathered", 0)
+    if isinstance(gathered, int) and gathered > 0:
+        return True
+    if output.get("messages"):
+        return True
+    if output.get("notes_count", 0) > 0:
+        return True
+    if output.get("pr_count", 0) > 0:
+        return True
+    if output.get("items"):
+        return True
+    return False
+
 
 def dispatch_dry_run(scene_id: str, input_data: dict, token: dict) -> dict[str, Any]:
     """Simulate scene execution without side effects. Outputs match journey spec condition paths."""
@@ -154,7 +172,12 @@ def dispatch_real_inbox(input_data: dict, token: dict) -> dict[str, Any]:
 
 
 def _iris_list(connector: str, limit: int = 5) -> list[dict]:
-    """Call iris list <connector> and return parsed items."""
+    """Call iris list <connector> and return parsed items.
+
+    过滤连接器不可用/需配置的状态对象 (available: False, setup 提示),
+    只保留真实内容项 — 否则 wxread 未配置 API Key 时返回的
+    {'available': False, 'note': '需要设置...'} 会被误判为真实数据.
+    """
     try:
         result = subprocess.run(
             ["iris", "--json", "list", connector, "--limit", str(limit)],
@@ -162,10 +185,22 @@ def _iris_list(connector: str, limit: int = 5) -> list[dict]:
         )
         if result.returncode == 0 and result.stdout.strip():
             items = json.loads(result.stdout)
-            return items if isinstance(items, list) else []
+            if isinstance(items, list):
+                return [it for it in items if _is_real_item(it)]
     except Exception:
         pass
     return []
+
+
+def _is_real_item(item: dict) -> bool:
+    """Item 是否真实内容 (排除连接器状态提示/不可用占位)."""
+    if not isinstance(item, dict):
+        return True
+    if item.get("available") is False:
+        return False
+    if item.get("setup") or item.get("note", "").startswith("需要"):
+        return False
+    return True
 
 
 def dispatch_real_curate(input_data: dict, token: dict) -> dict[str, Any]:
@@ -187,6 +222,7 @@ def dispatch_real_research(input_data: dict, token: dict) -> dict[str, Any]:
     confidence = min(0.5 + len(all_items) * 0.05, 0.95)
     return {
         "status": "succeeded",
+        "research": {"scope": "live", "connectors": ["rss", "zhihu", "wxread"]},
         "analysis": {"confidence": round(confidence, 2)},
         "sources": {"gathered": len(all_items)},
         "curation": {"indexed": len(all_items) > 0},
@@ -313,11 +349,15 @@ def evaluate_condition(condition: str, context: dict) -> bool:
         return True
 
     # Pattern: "path.to.value == value" or "path != value" or "path > value"
-    for op_str, op_func in [("==", lambda a, b: a == b), ("!=", lambda a, b: a != b),
-                             (">=", lambda a, b: a is not None and b is not None and float(a) >= float(b)),
-                             ("<=", lambda a, b: a is not None and b is not None and float(a) <= float(b)),
-                             (">", lambda a, b: a is not None and b is not None and float(a) > float(b)),
-                             ("<", lambda a, b: a is not None and b is not None and float(a) < float(b))]:
+    ops = [
+        ("==", lambda a, b: a == b),
+        ("!=", lambda a, b: a != b),
+        (">=", lambda a, b: a is not None and b is not None and float(a) >= float(b)),
+        ("<=", lambda a, b: a is not None and b is not None and float(a) <= float(b)),
+        (">", lambda a, b: a is not None and b is not None and float(a) > float(b)),
+        ("<", lambda a, b: a is not None and b is not None and float(a) < float(b)),
+    ]
+    for op_str, op_func in ops:
         if op_str in condition:
             parts = condition.split(op_str, 1)
             left = parts[0].strip()
@@ -351,7 +391,7 @@ def run_journey(
 ) -> dict[str, Any]:
     """Execute a journey spec: walk state machine, dispatch scenes, collect evidence."""
     spec_path = _find_journey_spec(journey_id)
-    spec = _load_yaml(spec_path)
+    spec = load_yaml(spec_path)
 
     state_store = _load_module(ROOT / "bin/ssot/journey-state-store.py", "journey_state_store")
     cap_module = _load_module(ROOT / "bin/ssot/capability-token.py", "capability_token")
@@ -402,6 +442,7 @@ def run_journey(
         state_store.save_state(
             ROOT, journey_id, run_id, current_state_name,
             scene_id=scene_id, status="entered", context=context,
+            dry_run=dry_run,
         )
 
         # Check checkpoint
@@ -410,7 +451,7 @@ def run_journey(
             state_store.save_state(
                 ROOT, journey_id, run_id, current_state_name,
                 scene_id=scene_id, status="awaiting_human",
-                context=context, checkpoint=checkpoint,
+                context=context, checkpoint=checkpoint, dry_run=dry_run,
             )
             print(f"  ⏸️  Checkpoint: {checkpoint.get('require', 'human_review')}")
             print(f"     Resume: python3 bin/ssot/journey-runner.py resume --journey-id {journey_id} --run-id {run_id}")
@@ -447,10 +488,21 @@ def run_journey(
         # Merge output into context
         context.update(output)
 
+        # LIVE mode data-integrity guard: real dispatchers that yield no real
+        # data (environment unavailable) must be marked degraded, not silently
+        # treated as a successful live run (防 FACE-03 伪造 live 证据).
+        data_integrity_flag = ""
+        if not dry_run:
+            real_signal = _has_real_data(output)
+            if not real_signal:
+                data_integrity_flag = "degraded"
+                print("     ⚠️  LIVE but no real data detected (iris env down?) → data_integrity=degraded")
+
         # Record state completion
         state_store.save_state(
             ROOT, journey_id, run_id, current_state_name,
             scene_id=scene_id, status="completed", context=context,
+            dry_run=dry_run, data_integrity=data_integrity_flag,
         )
 
         # Check if terminal (no next states)
@@ -478,6 +530,7 @@ def run_journey(
                             ROOT, journey_id, run_id, current_state_name,
                             scene_id=scene_id, status="human_hold",
                             context=context, checkpoint={"require": "human_intervention", "reason": "backedge_limit_exceeded"},
+                            dry_run=dry_run,
                         )
                         _emit_escalation_event(journey_id, run_id, current_state_name, effective_limit)
                         print(f"  ⛔ Backedge limit ({effective_limit}) exceeded for {to}. Holding for human intervention.")
@@ -510,8 +563,8 @@ def run_journey(
                 output_summary=f"Journey {journey_id} completed in {step_count} steps",
             )
             print(f"\n🪞 Reflection generated for {scene_id}")
-        except Exception:
-            pass  # reflection is optional
+        except Exception as exc:
+            print(f"[journey-runner] reflection trigger failed: {exc}", file=sys.stderr)  # reflection is optional
 
     result = {
         "status": "completed",

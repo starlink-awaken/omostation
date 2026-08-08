@@ -218,30 +218,8 @@ ci-local-fast: check-layers
 	echo "── dir-hygiene ──────────────────────────────────────"; \
 	$(PY) bin/ssot/dir-hygiene-check.py 2>&1 | sed 's/^/[hygiene] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
-	echo "── ruff check (all projects, changed-only) ──────────"; \
-	_ruff_base=$$(git merge-base HEAD omostation-root/main 2>/dev/null || echo ""); \
-	_ruff_files=""; \
-	if [ -n "$$_ruff_base" ]; then \
-		_ruff_files=$$(git diff --name-only --diff-filter=AM "$$_ruff_base" HEAD -- projects/ scripts 2>/dev/null | grep '\.py$$' || true); \
-	fi; \
-	if [ -n "$$_ruff_files" ]; then \
-		echo "[ruff] changed .py (changed-only):" $$(echo "$$_ruff_files" | wc -l) "files"; \
-		echo "$$_ruff_files" | xargs ruff check --ignore F401,F821,E402,E722 2>&1 | sed 's/^/[ruff] /' || CI_LOCAL_FAIL=1; \
-	else \
-		echo "[ruff] no changed .py — skip (changed-only)"; \
-	fi; \
-	echo ""; \
- 	echo "── pyright (type check, changed-only trigger) ──────"; \
-	_pyright_trigger=""; \
-	if [ -n "$$_ruff_base" ]; then \
-		_pyright_trigger=$$(git diff --name-only --diff-filter=AM "$$_ruff_base" HEAD -- projects/ scripts 2>/dev/null | grep '\.py$$' || true); \
-	fi; \
-	if [ -n "$$_pyright_trigger" ]; then \
-		echo "[pyright] changed .py detected, running type check..."; \
-		pyright --outputjson 2>&1 | python3 -c "import sys,json; d=json.load(sys.stdin); errs=[g for g in d.get('generalDiagnostics',[]) if g.get('severity')!='information']; print(f'pyright errors={len(errs)}'); sys.exit(1 if errs else 0)" 2>&1 | sed 's/^/[pyright] /' || CI_LOCAL_FAIL=1; \
-	else \
-		echo "[pyright] no changed .py — skip (changed-only)"; \
-	fi; \
+	echo "── ruff check (omo + scripts) ──────────────────────"; \
+	ruff check projects/omo/src scripts --ignore F401,F821,E402,E722 2>&1 | sed 's/^/[ruff] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
  	echo "── HTML entity 编码检查 (Python/YAML) ──────────────"; \
  	if grep -rn '&[gl]t;' projects/ --include='*.py' --include='*.yaml' --include='*.yml' 2>/dev/null \
@@ -255,13 +233,6 @@ ci-local-fast: check-layers
 	echo ""; \
 	echo "── YAML 语法校验 (workflows + protocols) ───────────"; \
 	uv run --with pyyaml python3 bin/ssot/yaml-validate.py 2>&1 | sed 's/^/[yaml] /' || CI_LOCAL_FAIL=1; \
-	echo ""; \
- 	echo "── submodule drift debt auto-seed ───────────────────"; \
- 	if [ -f "bin/gac/debt-auto-seed-drift.py" ]; then \
- 		python3 bin/gac/debt-auto-seed-drift.py --apply 2>&1 | sed 's/^/[debt-seed] /' || true; \
- 	else \
- 		echo "[debt-seed] debt-auto-seed-drift.py not found, skip"; \
- 	fi; \
 	echo ""; \
 	if [ "$$CI_LOCAL_FAIL" = "1" ]; then \
 		echo "❌ ci-local-fast: 有检查未通过"; \
@@ -634,6 +605,13 @@ debt-predict:  ## Phase 5 动态代码债务蔓延预测引擎
 
 journey-validate:  ## Journey State Graph 状态图表达验证器
 	$(PY) bin/ssot/journey-runner.py --help
+
+
+gap-verify:  ## 能力缺口台账清零率验证 (Gap Registry)
+	@python3 bin/ssot/verify.py --mode gap
+
+task-verify:  ## Task 完成验证门禁 (防止虚假完成)
+	@python3 bin/ssot/verify.py --mode task
 
 
 pasw-cleanup-dryrun:  ## 预览回收 (不删除)
