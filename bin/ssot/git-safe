@@ -1,0 +1,53 @@
+#!/bin/bash
+# git-safe — safe wrapper for destructive git operations.
+# Detects uncommitted changes before running reset/stash/rebase/checkout.
+set -euo pipefail
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Commands that can destroy uncommitted work
+DANGEROUS_CMDS=("reset" "stash" "rebase" "checkout" "clean")
+
+is_dangerous() {
+    local cmd="$1"
+    for d in "${DANGEROUS_CMDS[@]}"; do
+        [ "$cmd" = "$d" ] && return 0
+    done
+    return 1
+}
+
+has_uncommitted() {
+    [ -n "$(git status --porcelain 2>/dev/null)" ]
+}
+
+if [ $# -eq 0 ]; then
+    echo "Usage: git safe <command> [args...]"
+    echo "Protected commands: ${DANGEROUS_CMDS[*]}"
+    exit 1
+fi
+
+CMD="$1"
+shift
+
+if is_dangerous "$CMD"; then
+    if has_uncommitted; then
+        echo -e "${RED}⚠️  WARNING: Uncommitted changes detected!${NC}"
+        echo -e "${YELLOW}"
+        git status --short
+        echo -e "${NC}"
+        echo ""
+        echo -n "Running 'git $CMD' may LOSE these changes. Continue? [y/N] "
+        read -r CONFIRM
+        if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+            echo "Aborted. Commit your changes first: git add + git commit"
+            echo "Or use: omo state show (to review current state)"
+            exit 1
+        fi
+        echo ""
+    fi
+fi
+
+# Execute the real git command
+git "$CMD" "$@"
