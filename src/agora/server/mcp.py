@@ -419,7 +419,13 @@ class AuditSubscriber:
                 ).fetchall()
             conn.close()
         except Exception as e:  # defensive fallback
-            return {"ok": False, "total": 0, "verified": 0, "broken_at": None, "errors": [str(e)]}
+            return {
+                "ok": False,
+                "total": 0,
+                "verified": 0,
+                "broken_at": None,
+                "errors": [str(e)],
+            }
 
         errors: list[str] = []
         prev_expected = "GENESIS"

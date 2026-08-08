@@ -155,9 +155,7 @@ def _register_common_routes() -> None:
         try:
             from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
-            return Response(
-                content=generate_latest(), media_type=CONTENT_TYPE_LATEST
-            )
+            return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
         except Exception:  # defensive fallback
             logger.exception("metrics_scrape_failed")
             return JSONResponse({"error": "metrics_unavailable"}, status_code=500)
@@ -173,9 +171,7 @@ def _register_common_routes() -> None:
             methods=["POST"],
         )
     )
-    mcp._additional_http_routes.append(
-        Route("/metrics", endpoint=metrics_endpoint)
-    )
+    mcp._additional_http_routes.append(Route("/metrics", endpoint=metrics_endpoint))
 
 
 def http_main() -> None:

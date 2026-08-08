@@ -28,8 +28,11 @@ def test_send_alert_publishes_event():
     with patch("agora.core.state.get_event_bus", return_value=fake_bus):
         aa._throttle_ts.clear()
         aa.send_alert(
-            "warning", "quota:blocked", {"caller_id": "a", "today_cost": 2.0},
-            caller_key="quota:a", force=True,
+            "warning",
+            "quota:blocked",
+            {"caller_id": "a", "today_cost": 2.0},
+            caller_key="quota:a",
+            force=True,
         )
     assert any("quota:blocked" in p.get("type", "") for p in published)
 
@@ -41,8 +44,18 @@ def test_throttle_blocks_repeat():
     published, fake_bus = _mk_bus_published()
     with patch("agora.core.state.get_event_bus", return_value=fake_bus):
         aa._throttle_ts.clear()
-        aa.send_alert("warning", "health:degraded", {"issues": ["x"]}, caller_key="health:degraded")
-        aa.send_alert("warning", "health:degraded", {"issues": ["x"]}, caller_key="health:degraded")
+        aa.send_alert(
+            "warning",
+            "health:degraded",
+            {"issues": ["x"]},
+            caller_key="health:degraded",
+        )
+        aa.send_alert(
+            "warning",
+            "health:degraded",
+            {"issues": ["x"]},
+            caller_key="health:degraded",
+        )
     assert sum(1 for p in published if p.get("type") == "health:degraded") == 1
 
 
