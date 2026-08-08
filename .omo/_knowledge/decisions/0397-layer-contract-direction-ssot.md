@@ -1,5 +1,5 @@
 ---
-id: ADR-0388
+id: ADR-0397
 title: 分层契约方向单源 — layer-contract.yaml 为权威, check-layer-call-direction.py 对齐
 status: proposed
 type: decision

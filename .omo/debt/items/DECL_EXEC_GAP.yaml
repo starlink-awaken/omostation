@@ -8,6 +8,7 @@ severity: "critical"
 weight: 0.20
 entropy_class: "high"
 lifecycle_state: "resolved"
+resolution_evidence: "P43-ARCH-ANALYSIS-001: 声明/执行鸿沟已由 gac-drift + P71 baseline recovery 闭环治理 (PR #6-#8)"
 owner: "architecture-team"
 affected_roots:
   - ".omo/state/health.yaml"

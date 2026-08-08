@@ -8,6 +8,7 @@ severity: "high"
 weight: 0.10
 entropy_class: "medium"
 lifecycle_state: "resolved"
+resolution_evidence: "P43-ARCH-ANALYSIS-004: 多 Agent 协调已由 swarm-coordination + D1-D5 门禁强制执行 (ADR-0220 G-CONV.7)"
 owner: "architecture-team"
 affected_roots: []
 evidence_refs: []
