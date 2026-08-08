@@ -1723,7 +1723,7 @@ gac:
     check_type: hygiene_case
     executor:
     - omo_audit
-    lifecycle: superseded
+    lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-FOUNDRY-MONITOR
     superseded_reason: 被 CR-FOUNDRY-MONITOR (active, ADR-0160) 取代, 实现 Knowledge Foundry
@@ -1757,7 +1757,7 @@ gac:
     check_type: hygiene_case
     executor:
     - omo_audit
-    lifecycle: superseded
+    lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-P76-7-1-LLM-ADVISORY-ONLY,CR-P76-7-2-TIER-GRACEFUL-FALLBACK,CR-COMMIT-LLM-ASSIST
     superseded_reason: 被 3 条 active LLM 护栏规则取代, LLM 辅助 commit 已落地
@@ -1773,7 +1773,7 @@ gac:
     check_type: audit_chain
     executor:
     - omo_audit
-    lifecycle: superseded
+    lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-PRINCIPLE-FOLLOWED,CR-PRINCIPLE-ENFORCEMENT
     superseded_reason: 被 CR-PRINCIPLE-FOLLOWED 和 CR-PRINCIPLE-ENFORCEMENT (active)
@@ -1790,7 +1790,7 @@ gac:
     check_type: audit_chain
     executor:
     - omo_audit
-    lifecycle: superseded
+    lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-PRINCIPLE-FOLLOWED
     superseded_reason: 被 CR-PRINCIPLE-FOLLOWED (active) 取代, 原则 catalog 已通过 .omo/standards/p76-principles.md
