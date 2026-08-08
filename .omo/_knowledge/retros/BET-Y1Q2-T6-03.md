@@ -1,38 +1,25 @@
-# BET-Y1Q2-T6-03 Closeout: bin/ 孤儿脚本扫描与归档
+# BET-Y1Q2-T6-03 Retro: bin 脚本清理
 
-**BET ID**: BET-Y1Q2-T6-03
-**Track**: T6-SUBTRACT
-**Window**: Y1Q2
-**Status**: done
-**Completed at**: 2026-08-08
+## 完成日期
+2026-08-08
 
-## Objective
-扫描 bin/ 目录下零引用孤儿脚本，归档以减少治理面。
+## 交付物
+- `bin/gac/bin-orphan-scan.py`: 零引用脚本扫描 + 归档工具
+- 77 个零引用脚本归档到 `bin/_archive/`
+- 脚本数: 360 → 283 (活跃)
 
-## Analysis Method
-对 bin/gac/, bin/delivery/, bin/collab/, bin/adr/, bin/ssot/ 下 50+ 脚本逐一检查 7 层引用面：
-1. Makefile 直接调用
-2. .githooks/ hook 引用
-3. .github/workflows/ CI 引用
-4. tests/ 测试引用
-5. .omo/_truth/registry/ 注册引用
-6. projects/ecos/.../GAC-RULE-*.yaml 规则引用
-7. 跨脚本引用
+## 扫描方法
+1. 递归扫描 bin/ 下所有 .py/.sh
+2. 排除 _lib.py, test_*.py, __init__.py, _archive/
+3. 检查引用: Makefile, .githooks/, .github/workflows/, AGENTS.md, CLAUDE.md, README.md, 其他 bin/ 脚本
+4. 零引用 → 归档
 
-## Confirmed Orphans (6 files, 0 references each)
-| File | Directory | Notes |
-|------|-----------|-------|
-| backfill_bos_status.py | bin/gac/ | BOS status backfill, 一次性工具 |
-| gac-execution-gap.py | bin/gac/ | 执行差距分析, 无 caller |
-| x3-auto-distribute.py | bin/delivery/ | X3 自动分配, 无 caller |
-| gac-branch-prune.sh | bin/gac/ | 分支清理, 被 gac-worktree.sh 取代 |
-| state_sync.py | bin/delivery/ | 状态同步, 被 broker 路径取代 |
-| m1-adversarial-probe.py | bin/gac/ | M1 探测, 一次性诊断工具 |
+## 教训
+- 扫描工具本身也被归档了 (自引用问题), 需手动恢复
+- 两个 gate 引用的脚本 (check-llm-gateway-only.py, mcp-tool-data-complete.py) 被误归档, 因 gate 通过字符串拼接引用, 静态扫描检测不到
+- 未来应在 gate CHECKS_LIST 中显式声明依赖, 而非动态构造路径
 
-## Action
-归档至 bin/_archive/t603-orphans/ (git mv, 保留历史可追溯)。
-
-## Verification
-- 6 个文件均通过 7 层引用检查确认为零引用
-- 归档使用 git mv 保留 git history
-- 不影响 make gac-local-gate 门禁 (无注册引用)
+## 验证
+- `bin-orphan-scan.py --json` 输出扫描结果
+- gate 引用的脚本已恢复
+- 归档不影响 CI (gate 全绿)

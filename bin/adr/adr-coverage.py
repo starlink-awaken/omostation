@@ -26,6 +26,19 @@ import yaml
 from _lib import duplicate_adr_numbers, list_adrs
 
 REQUIRED_FRONTMATTER = ["status", "lifecycle", "owner", "last-reviewed"]
+HISTORICAL_STATUSES = {"superseded", "archived", "done", "deprecated", "withdrawn"}
+
+
+def classify_layer(frontmatter: dict) -> str:
+    """Classify an ADR into 'active' or 'historical' layer (BET-Y1Q2-T6-02).
+
+    Historical: status in HISTORICAL_STATUSES (superseded/archived/done/etc).
+    Active: everything else (accepted/active/proposed/candidate/partial/draft).
+    """
+    status = str(frontmatter.get("status", "")).strip().lower()
+    if status in HISTORICAL_STATUSES:
+        return "historical"
+    return "active"
 
 
 def parse_frontmatter(path: Path) -> dict:
@@ -102,8 +115,11 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
     # frontmatter 健康度
     fm_issues = []
     id_mismatches = []
+    status_counts: dict[str, int] = {}  # T6-02 ADR 分层: 按 status 统计
     for n, f in adrs:
         fm = parse_frontmatter(f)
+        status = str(fm.get("status", "unknown")).strip().lower() or "unknown"
+        status_counts[status] = status_counts.get(status, 0) + 1
         missing = [k for k in REQUIRED_FRONTMATTER if k not in fm]
         if missing:
             fm_issues.append({
@@ -126,6 +142,17 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
     files_not_in_index = sorted(files - index_refs)
     refs_not_in_files = sorted(index_refs - files)
 
+    # T6-02: active / historical 分层
+    active_files: list[str] = []
+    historical_files: list[str] = []
+    for n, f in adrs:
+        fm = parse_frontmatter(f)
+        layer = classify_layer(fm)
+        if layer == "historical":
+            historical_files.append(f.name)
+        else:
+            active_files.append(f.name)
+
     return {
         "total_adrs": len(adrs),
         "min_number": min_n,
@@ -137,6 +164,13 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
         "files_not_in_index": files_not_in_index,
         "index_refs_not_in_files": refs_not_in_files,
         "index_present": index_path.exists(),
+        "by_status": status_counts,
+        "layer": {
+            "active": sorted(active_files),
+            "historical": sorted(historical_files),
+            "active_count": len(active_files),
+            "historical_count": len(historical_files),
+        },
     }
 
 
@@ -154,6 +188,10 @@ def main() -> int:
     )
     parser.add_argument("--strict", action="store_true", help="warn 也算 error")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
+    parser.add_argument(
+        "--layer", action="store_true",
+        help="输出 active/historical 分层 JSON (供 RAG/onboarding 消费)",
+    )
     args = parser.parse_args()
 
     decisions_dir = Path(args.decisions)
@@ -168,6 +206,11 @@ def main() -> int:
         print(f"❌ {result['error']}")
         return 1
 
+    if args.layer:
+        layer = result.get("layer", {})
+        print(json.dumps(layer, indent=2, ensure_ascii=False))
+        return 0
+
     if args.json:
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
@@ -177,6 +220,15 @@ def main() -> int:
     print("=" * 60)
     print(f"📋 ADR 总数: {result['total_adrs']}")
     print(f"🔢 编号范围: {result['min_number']:04d} ~ {result['max_number']:04d}")
+    # T6-02 ADR 分层统计 (active 进 RAG/onboarding, historical 不进)
+    layer = result.get("layer", {})
+    print(
+        f"📑 分层: active {layer.get('active_count', 0)} | "
+        f"historical {layer.get('historical_count', 0)}"
+    )
+    if layer.get("historical"):
+        hist = layer["historical"]
+        print(f"   historical: {', '.join(hist[:10])}" + (" ..." if len(hist) > 10 else ""))
     print()
     if result["missing_numbers"]:
         print(f"❌ 缺失编号: {result['missing_numbers']}")

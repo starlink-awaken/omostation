@@ -63,11 +63,21 @@ def seed_from_telos(*, dry_run: bool = False) -> dict[str, Any]:
 
         if not dry_run:
             try:
-                mos_src = str(ROOT / "projects" / "kairon" / "packages" / "mos" / "src")
-                if mos_src not in sys.path:
-                    sys.path.insert(0, mos_src)
-                from mos.agent_belief import write_world_snapshot
-                write_world_snapshot(snapshot)
+                omo_src = str(ROOT / "projects" / "omo" / "src")
+                if omo_src not in sys.path:
+                    sys.path.insert(0, omo_src)
+                from omo.omo_belief import MOSBeliefManager
+
+                manager = MOSBeliefManager(root=ROOT)
+                manager.record_world_snapshot(
+                    source=f"telos:{tf.name}",
+                    domain="identity",
+                    observations={
+                        "category": category,
+                        "summary": summary,
+                    },
+                    confidence=0.9,
+                )
             except Exception:
                 pass  # MOS not configured, just log
 
