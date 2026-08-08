@@ -450,7 +450,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0382: 子模块指针回退检测 (CR-SUBMODULE-REWIND) — **ACCEPTED** | 2026-08-06 | Submodule rewind detection | 0382-submodule-rewind-detection.md
 - ADR-0396: 数字生命体架构 — 四论框架 × 四面一脊 × 五阶段演进 — **ACCEPTED** | 2026-08-08 | Digital organism architecture | 0396-digital-organism-architecture.md
 - ADR-0395: CI 平面净红收官 — scripts/check-* orphan 化 + drift ahead 容忍 — **ACCEPTED** | 2026-08-08 | CI plane net-red closeout | 0395-ci-plane-net-red-closeout.md
-- ADR-0396: CI 净红收官 — surfaces 注册 + state sync 修复 + task schema 合规 — **ACCEPTED** | 2026-08-08 | CI net-red closeout 2 | 0396-ci-net-red-closeout-2.md
+- ADR-0398: CI 净红收官 — surfaces 注册 + state sync 修复 + task schema 合规 — **ACCEPTED** | 2026-08-08 | CI net-red closeout 2 | 0398-ci-net-red-closeout-2.md
 - ADR-0394: scripts/ 子模块镜像债治理 — 删 dead capability + Makefile target — **ACCEPTED** | 2026-08-08 | Scripts submodule mirror debt | 0394-scripts-submodule-mirror-debt.md
 - ADR-0393: god-module 大文件治理计划 — 3 个 >1500L 债的拆分路径 — **ACCEPTED** | 2026-08-08 | God-module debt plan | 0393-god-module-debt-plan.md
 - ADR-0392: CI 修复 + 主仓 dirty 提交 — drafts persistence_mode + runtime state 同步 — **ACCEPTED** | 2026-08-08 | CI fix + dirty commit | 0392-ci-fix-and-dirty-commit.md
