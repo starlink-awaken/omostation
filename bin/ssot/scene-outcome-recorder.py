@@ -77,6 +77,22 @@ def record_outcome(
             fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
     entry["status"] = "recorded"
+
+    # P0-T4: MOS Bridge — outcome → decision_outcome table
+    try:
+        import sys as _sys
+        _mos_src = str(ROOT / "projects" / "kairon" / "packages" / "mos" / "src")
+        if _mos_src not in _sys.path:
+            _sys.path.insert(0, _mos_src)
+        from mos.agent_belief import write_decision_outcome, DecisionOutcome
+        write_decision_outcome(DecisionOutcome(
+            scene_id=scene_id, run_id=run_id,
+            action=f"{adjudication} by {actor}",
+            adjudication=adjudication, actor=actor, notes=notes[:200],
+        ))
+    except Exception:
+        pass  # MOS not configured — JSONL is sufficient
+
     return entry
 
 
