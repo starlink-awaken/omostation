@@ -634,6 +634,20 @@ surfaces:
     triggers: [manual, scheduled]
     status: active
     note: ADR-0385 B2 — SSOT 文件新鲜度报告
+  - id: bin-gac-debt-integrity-check-py
+    tool: bin/gac/debt-integrity-check.py
+    workflow: debt-audit.yml
+    gate: false
+    triggers: [per_pr, push, scheduled]
+    status: active
+    note: debt-audit.sh 归档后由 bin/gac/debt-integrity-check.py 替代 (ADR-0379 登记)
+  - id: bin-ssot-current-state-coherence-py
+    tool: bin/ssot/current-state-coherence.py
+    workflow: state-goals-enforce.yml
+    gate: false
+    triggers: [per_pr, push]
+    status: active
+    note: P47+ state/goals 对齐 enforce — current-state-coherence.py (ADR-0379 登记)
   - id: bin-gac-check-submodule-rewind-py
     tool: bin/gac/check-submodule-rewind.py
     workflow: governance-check.yml
