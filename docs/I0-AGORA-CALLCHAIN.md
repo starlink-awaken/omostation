@@ -286,3 +286,18 @@ _publish_bos_event(bus, uri, "resolve", "ok", duration_ms)
 - `bos_list()` — 列出所有注册服务（`mcp/tools/bos_resolve.py:53`）
 - `list_bos_resources()` — 合并 BOSRouter + POC + ProxyManager 全量资源（`server/tools_bos/registration.py:435`）
 - `protocol_self_check()` — 自检服务定义完整性（`mcp/resolver/api.py:84`）
+
+### 5.1 能力市场工具链 (2026-08-08, agora 2bb13858)
+
+> P0-P5 能力市场深化后, `bos_capability_lifecycle.py` 挂主 MCP 的能力治理工具:
+
+| 工具 | 作用 | 定价/采购 |
+|:--|:--|:--|
+| `bos_capability_list(uri_prefix)` | 列出能力 + 生命周期 + **pricing** (P1 发现) | `resolve_pricing` 混合三层 |
+| `bos_capability_admit(uri, desc)` | 采购: 身份校验 + **配额检查** + 采购事件 | `get_quota_checker().check` + `capability:admitted` 事件 |
+| `bos_capability_retire(uri, reason)` | 退役能力 | lifecycle → retired |
+| `bos_billing_statement(caller_id, period)` | 采购账单 (P2) | `ResourceAccountDB.get_calls` |
+| `bos_market_overview()` | 市场总览 (P4): 能力数/定价分布/热度/成本 | `resolve_pricing` 聚合 |
+
+> 调用链: HTTP `/v1/tools/call` → `mcp_entry.py:165` → `mcp.call_tool` → `bos_capability_*` → `bos_router` / `ResourceAccountDB` / `agora_alerts`。
+
