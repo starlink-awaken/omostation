@@ -680,8 +680,13 @@ bets:
   title: 子模块隔离 — PASW 覆盖 3→18, 拓扑改造后整体退役
   appetite: 1 week
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-08
   goal: 过渡期补齐 L2 层泄漏(15 个子模块跨 worktree 共享 HEAD), 并在拓扑改造完成后把 PASW 整体删除
+  done_evidence: 'PASW 已动态覆盖全部 18 个子模块 (lib/pasw-core.sh:8 从 .gitmodules 动态提取).
+    清理 stray worktrees: projects/Workspace/.subtrees/ (26M) + .subtrees/ (30M) 共 7 个错误路径 worktree 已移除.
+    验证测试: tests/bin/test_pasw_coverage.sh — 18/18 submodules covered.
+    终局: 拓扑改造 (T1-05) 完成后 PASW 整体删除 (每个 clone 有独立 .git/modules).'
   non_goals:
   - 子模块内部代码修改
   - 新增子模块
