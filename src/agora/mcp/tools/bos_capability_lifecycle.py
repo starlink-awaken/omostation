@@ -203,7 +203,9 @@ def bos_capability_admit(uri: str, description: str = "") -> dict[str, Any]:
 
 
 @mcp.tool()
-def bos_billing_statement(caller_id: str, service: str = "", period: str = "month") -> dict[str, Any]:
+def bos_billing_statement(
+    caller_id: str, service: str = "", period: str = "month"
+) -> dict[str, Any]:
     """采购账单: 查询指定 caller 的月度调用成本明细 (能力市场 P2).
 
     Args:
@@ -218,7 +220,10 @@ def bos_billing_statement(caller_id: str, service: str = "", period: str = "mont
         from agora.accounting import ResourceAccountDB
 
         db = ResourceAccountDB()
-        return {"status": "ok", "statement": db.get_calls(caller_id, service or None, period)}
+        return {
+            "status": "ok",
+            "statement": db.get_calls(caller_id, service or None, period),
+        }
     except Exception as exc:  # noqa: BLE001 — defensive
         return {"status": "error", "error": str(exc)}
 
