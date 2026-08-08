@@ -54,11 +54,28 @@ last-reviewed: 2026-06-29
 | BOS 服务数 / 域数 | `projects/agora/etc/bos-services.yaml` | 所有 markdown |
 | 端口号 | `protocols/port-registry.yaml` | 所有 markdown |
 | MOF M1/M2 节点数 | `projects/ecos/src/ecos/ssot/mof/` | 所有 markdown |
-| L0 约束规则 | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` | 所有 markdown |
+| L0 约束规则 | `projects/ecos/.omo/_derived/l0-constraints.v2.yaml` ← `projects/ecos/src/ecos/l0/` | 所有 markdown |
 | X1-X4 治理规则 | `.omo/_truth/x1-*.yaml` ~ `x4-*.yaml` | 所有 markdown |
 | GaC 规则 | `.omo/_truth/registry/governance-checks.yaml` | 所有 markdown |
 | Agent-facing GaC digest | `docs/generated/agent-gac-rules.md` ← `governance-checks.yaml` | `AGENTS.md` pointer only |
 | 测试通过率 | 各项目本地 CI / pytest / bun test | 所有 markdown |
+
+### L0/MOF 映射关联
+
+文档与 L0 约束 / MOF 元模型的映射（验证工具: `python3 bin/ssot/check-doc-l0-mapping.py`）：
+
+| 文档 frontmatter 字段 | L0 约束字段 | MOF 元模型字段 | 说明 |
+|----------------------|------------|---------------|------|
+| `dimension` (X1-X4) | `dimension` | `m3_parent: ConstraintL0` | 文档治理维度 ↔ L0 约束维度 |
+| `surface` (I0/L0-L4/meta) | `applies_to` | `m2_type: ConstraintL0` | 文档层级 ↔ 约束适用层级 |
+| `owner` | `references` | — | 文档负责面 ↔ 约束引用 |
+| `status` (active/...) | `state` | — | 文档生命周期 ↔ 约束状态 |
+
+验证规则:
+1. 文档 frontmatter 的 `dimension` 必须在 L0 派生约束 `dimension` 值域内 (X1-X4)
+2. 文档 frontmatter 的 `surface` 必须在 `applies_to` 值域内 (I0/L0/L1/L2/L3/L4/meta)
+3. 每条 L0 约束必须有 `m3_parent: ConstraintL0` (MOF 映射完整性)
+4. `l0-constraints.v2.yaml` 必须可从 `projects/ecos/src/ecos/l0/` 源重新生成 (自动更新闭环)
 
 ## CI 门禁
 
