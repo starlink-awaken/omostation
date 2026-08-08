@@ -278,8 +278,14 @@ bets:
   title: god-module 大文件 SRP 拆分 (3 个 >1500L 债)
   appetite: 1 week
   priority: P2
-  status: candidate
+  status: done
+  done_at: 2026-08-08
   goal: 把 agora/external_connections.py (1663L) + cockpit/api_system_map_catalog.py (1565L) + cockpit/cli.py (1533L) 各自拆分为 2-3 个职责清晰的文件, 让 omo lint god-module 回归全绿
+  done_evidence: >
+    commit 185b443 in cockpit main: feat(T6-10): god-module SRP split — cli.py 1540L→792L + api_system_map_catalog.py 1565L→59L.
+    Verification: `omo lint god-module` GATE PASS (0 files >1500L).
+    Split strategy: cli/_subcommands.py (863L, argparse registration), web/pages.py (757L), web/coverage_dims.py (107L), web/playbooks.py (496L), web/roadmap.py (229L).
+    Backward compat maintained via re-export pattern in api_system_map_catalog.py shim.
   non_goals:
   - 修改 god-module 阈值 (L0 锁定)
   - 加 allowlist (与减法方向矛盾)
@@ -767,7 +773,12 @@ bets:
   title: iris apple_mail 真实轮询打通
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-08
+  done_evidence: >
+    PR #1142 merged: verified iris apple_mail connector via mesh-iris-executor (5 items),
+    updated signal-sources.yaml (health: healthy, last_signal_at: 2026-08-07T23:45:22Z).
+    Note: CDP 9222 is seeyon_oa dependency, not applicable to Apple Mail (ECCP-HANDOFF.md).
   goal: 感知面从 0 到 1 — 让系统第一次看到仓库以外的东西
   non_goals:
   - 多信号源
@@ -1162,9 +1173,9 @@ bets:
   - make collab-dualtrack 验证 silent_loss=0
   evidence:
   - commit: "feat(T6-04): 合成协作场景归档 222→5 — 保留 A/B/C/D 核心原型"
-  - archived: .omo/_archive/collab-scenarios/ (217 files: ADV01-ADV185 + GEN*)
-  - retained: .omo/_delivery/collab-scenarios/ (5 files: A01/B01/C01/D01 + README.md)
-  - verification: silent_loss=0, no parsing failures
+  - archived: ".omo/_archive/collab-scenarios/ (217 files: ADV01-ADV185 + GEN*)"
+  - retained: ".omo/_delivery/collab-scenarios/ (5 files: A01/B01/C01/D01 + README.md)"
+  - verification: "silent_loss=0, no parsing failures"
   - 其余移入 .omo/_archive/collab-scenarios/
   - make collab-dualtrack 仍能产出报告且 silent_loss=0
   verify:
