@@ -129,5 +129,12 @@ if [ -f "$GATE" ]; then
   python3 "$GATE" --staged || exit 1
 fi
 
+# --- conflict-marker gate (2026-08-08) ---
+# 未解决 git 冲突标记 (<<<<<<<) 被提交会污染 main 致 check-yaml/派生 CI 失败.
+CONFLICT_CHECK="$(git rev-parse --show-toplevel)/bin/ssot/conflict-marker-check.py"
+if [ -f "$CONFLICT_CHECK" ]; then
+  python3 "$CONFLICT_CHECK" || exit 1
+fi
+
 exit 0
 
