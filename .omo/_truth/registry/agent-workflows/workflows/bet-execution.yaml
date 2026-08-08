@@ -162,6 +162,18 @@ phases:
     - bin/gac/gac-worktree.sh
     - submit
     - '{bet_id}'
+  - id: bet-complete
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/plan/bet-ledger.py
+    - complete
+    - '{bet_id}'
+    note: 'P1: 台账回写 — retro 通过后置 done (防 done 状态滞后)'
 diff_checks:
 - path_glob: docs/plans/3y-bet-ledger.yaml
   check: bet-ledger-lint
