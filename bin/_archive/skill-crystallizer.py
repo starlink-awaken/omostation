@@ -24,11 +24,10 @@ SKILLS_DIR = WORKSPACE_ROOT / ".agents" / "skills"
 class SkillCrystallizer:
     """SEMA 技能自动结晶与经验反向传播引擎"""
 
-    def __init__(self, root: Path | None = None) -> None:
-        # T6-06: root 生效 (修原 bug: beliefs_path/skills_dir 用全局常量, 测试无法隔离)
-        self.root = root or WORKSPACE_ROOT
-        self.beliefs_path = self.root / ".omo" / "state" / "agent-beliefs" / "index.yaml"
-        self.skills_dir = self.root / ".agents" / "skills"
+    def __init__(self, root: Path = WORKSPACE_ROOT) -> None:
+        self.root = root
+        self.beliefs_path = BELIEFS_PATH
+        self.skills_dir = SKILLS_DIR
 
     def _load_beliefs(self) -> List[Dict[str, Any]]:
         if not self.beliefs_path.exists():

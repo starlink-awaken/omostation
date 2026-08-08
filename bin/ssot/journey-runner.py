@@ -19,7 +19,61 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
-MAX_RETRIES = 3
+DEFAULT_BACKEDGE_LIMIT = 3
+
+
+def _detect_backedges(spec: dict) -> set[tuple[str, str]]:
+    """Detect backedges in the journey transition graph via DFS (BET-Y1Q2-T5-02).
+
+    A backedge is a transition from→to where 'to' is an ancestor of 'from'
+    in the DFS traversal — i.e., it forms a cycle.
+    Returns set of (from_state, to_state) tuples.
+    """
+    transitions = spec.get("transitions", [])
+    adj: dict[str, list[str]] = {}
+    for t in transitions:
+        src = t.get("from", "")
+        dst = t.get("to", "")
+        if src and dst:
+            adj.setdefault(src, []).append(dst)
+
+    backedges: set[tuple[str, str]] = set()
+    visited: set[str] = set()
+    on_stack: set[str] = set()
+
+    def dfs(node: str) -> None:
+        visited.add(node)
+        on_stack.add(node)
+        for nxt in adj.get(node, []):
+            if nxt in on_stack:
+                backedges.add((node, nxt))
+            elif nxt not in visited:
+                dfs(nxt)
+        on_stack.discard(node)
+
+    for state in spec.get("states", []):
+        name = state.get("name", "")
+        if name and name not in visited:
+            dfs(name)
+
+    return backedges
+
+
+def _emit_escalation_event(journey_id: str, run_id: str, state: str, limit: int) -> None:
+    """Emit OMO event when backedge limit exceeded (BET-Y1Q2-T5-02)."""
+    try:
+        subprocess.run(
+            ["python3", str(ROOT / "projects/omo/src/omo/cli.py"), "event", "emit",
+             "--type", "journey_backedge_escalated",
+             "--source", "journey-runner",
+             "--payload", json.dumps({
+                 "journey_id": journey_id, "run_id": run_id,
+                 "state": state, "backedge_limit": limit,
+             })],
+            capture_output=True, text=True, timeout=10, check=False, cwd=str(ROOT),
+        )
+    except Exception:
+        pass
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -293,6 +347,7 @@ def run_journey(
     dry_run: bool = True,
     run_id: str | None = None,
     resume: bool = False,
+    backedge_limit: int | None = None,
 ) -> dict[str, Any]:
     """Execute a journey spec: walk state machine, dispatch scenes, collect evidence."""
     spec_path = _find_journey_spec(journey_id)
@@ -300,6 +355,9 @@ def run_journey(
 
     state_store = _load_module(ROOT / "bin/ssot/journey-state-store.py", "journey_state_store")
     cap_module = _load_module(ROOT / "bin/ssot/capability-token.py", "capability_token")
+
+    effective_limit = backedge_limit or spec.get("backedge_limit", DEFAULT_BACKEDGE_LIMIT)
+    backedges = _detect_backedges(spec)
 
     # Initialize or resume run
     if resume and run_id:
@@ -354,21 +412,6 @@ def run_journey(
                 scene_id=scene_id, status="awaiting_human",
                 context=context, checkpoint=checkpoint,
             )
-            # P3-T6: Workflow Mesh integration — emit ApprovalRequested event
-            try:
-                _mesh_log = ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "mesh-events.jsonl"
-                _mesh_log.parent.mkdir(parents=True, exist_ok=True)
-                _event = json.dumps({
-                    "event_type": "ApprovalRequested",
-                    "journey_id": journey_id,
-                    "run_id": run_id,
-                    "state": current_state_name,
-                    "checkpoint": checkpoint,
-                }, ensure_ascii=False, sort_keys=True) + "\n"
-                with open(_mesh_log, "a", encoding="utf-8") as _f:
-                    _f.write(_event)
-            except Exception:
-                pass
             print(f"  ⏸️  Checkpoint: {checkpoint.get('require', 'human_review')}")
             print(f"     Resume: python3 bin/ssot/journey-runner.py resume --journey-id {journey_id} --run-id {run_id}")
             print()
@@ -427,18 +470,18 @@ def run_journey(
                 next_state = to
                 print(f"     → transition: {current_state_name} → {to} (condition: {condition})")
 
-                # Retry tracking for loop-back transitions
-                if to in [s.get("name") for s in spec.get("states", []) if current_state_name in (s.get("next") or [])]:
-                    # This might be a loop-back
+                # Backedge tracking (BET-Y1Q2-T5-02): use pre-computed DFS backedges
+                if (current_state_name, to) in backedges:
                     retry_counts[to] = retry_counts.get(to, 0) + 1
-                    if retry_counts[to] > MAX_RETRIES:
+                    if retry_counts[to] > effective_limit:
                         state_store.save_state(
                             ROOT, journey_id, run_id, current_state_name,
                             scene_id=scene_id, status="human_hold",
-                            context=context, checkpoint={"require": "human_intervention", "reason": "max_retries_exceeded"},
+                            context=context, checkpoint={"require": "human_intervention", "reason": "backedge_limit_exceeded"},
                         )
-                        print(f"  ⛔ Max retries ({MAX_RETRIES}) exceeded for {to}. Holding for human intervention.")
-                        return {"status": "human_hold", "journey_id": journey_id, "run_id": run_id, "state": current_state_name}
+                        _emit_escalation_event(journey_id, run_id, current_state_name, effective_limit)
+                        print(f"  ⛔ Backedge limit ({effective_limit}) exceeded for {to}. Holding for human intervention.")
+                        return {"status": "human_hold", "journey_id": journey_id, "run_id": run_id, "state": current_state_name, "backedge_limit": effective_limit}
                 break
 
         if not next_state:
@@ -506,6 +549,10 @@ def main(argv: list[str] | None = None) -> int:
     run_parser.add_argument("--dry-run", action="store_true", default=True)
     run_parser.add_argument("--live", action="store_true", help="disable dry-run (real dispatch)")
     run_parser.add_argument("--input", default="{}", help="JSON input data")
+    run_parser.add_argument(
+        "--backedge-limit", type=int, default=None,
+        help=f"max backedge traversals before escalation (default: {DEFAULT_BACKEDGE_LIMIT})",
+    )
 
     resume_parser = sub.add_parser("resume", help="resume from checkpoint")
     resume_parser.add_argument("--journey-id", required=True)
@@ -517,7 +564,10 @@ def main(argv: list[str] | None = None) -> int:
     if command == "run":
         dry_run = not args.live
         input_data = json.loads(args.input) if args.input else {}
-        result = run_journey(args.journey, input_data=input_data, dry_run=dry_run)
+        result = run_journey(
+            args.journey, input_data=input_data, dry_run=dry_run,
+            backedge_limit=args.backedge_limit,
+        )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
 
