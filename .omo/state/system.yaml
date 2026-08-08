@@ -11,16 +11,16 @@ phase_status: active
 current_wave: W5
 next_milestone: Phase 49 W1 — 知识流动·用户价值兑现 (T1-T6 全面落地)
 health_score_ref: .omo/state/health.yaml
-health_score: 70
+health_score: 74
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-08-07T01:05:13Z'
+health_score_generated_at: '2026-08-08T03:41:11Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 completed_tasks: 225
 total_tasks: 290
-active_tasks: 1
+active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
 phase2_core_complete: true
@@ -33,9 +33,9 @@ phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
 phase36_status: completed
 phase36_completed_at: '2026-06-11T00:00:00Z'
 next_active_tasks:
-- kos-q-growth-rolling (KOS 季度扩量持续监测)
-last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 
-  kickoff may proceed)
+- (No active tasks)
+last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff
+  may proceed)
 phase2_status: completed
 phase2_completed_at: '2026-05-30T15:36:00Z'
 phase4_worker_collab_status: wave2_completed
@@ -57,7 +57,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-08-07T09:57:18.563454+08:00'
+updated_at: '2026-08-08T03:41:12Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -180,7 +180,7 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 64
+planned_tasks: 65
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
 - bet-y1q1-t1-00 (并发写冲突止血 — 共享主树禁写 + PASW 全覆盖)
@@ -205,9 +205,9 @@ next_planned_tasks:
 - bet-y1q2-t4-01 (capability_calibration 自动更新)
 - bet-y1q2-t5-01 (durable timer — waiting_approval 跨进程存活 ≥7 天)
 - bet-y1q2-t5-02 (回退边执行语义 + 次数上限 + 升级路径)
-- bet-y1q2-t6-01 (GaC 规则减法第一轮 134 → ≤100)
-- bet-y1q2-t6-02 (ADR 有效集分层 344 → ≤200)
-- bet-y1q2-t6-03 (bin 脚本清理 309 → ≤240)
+- bet-y1q2-t6-01 (GaC 规则减法 — 清理会拦人却无违规历史的 required 规则)
+- bet-y1q2-t6-02 (ADR 分层 — 只分层不裁剪)
+- bet-y1q2-t6-03 (bin 脚本清理 — 归档零调用脚本, 不设数量目标)
 - bet-y1q2-t6-04 (合成协作场景归档 221 → ≤40)
 - bet-y1q2-t6-05 (减法配额制门禁上线)
 - bet-y1q2-t7-01 (工程交付 dogfood 开 shadow)
@@ -244,8 +244,10 @@ next_planned_tasks:
 - bet-y3h2-t1-02 (三年终局门)
 - bet-y3h2-t4-01 (复利收益归因报告)
 - bet-y3h2-t7-01 (公文场景 routine (限格式类))
-- needs-human-batch2-physical-recovery-checklist 
-  (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁）)
+- cockpit-debt-debt-1 (治理技术债务：债务)
+- kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
+- needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
+  物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
 phase27_status: completed
 phase27_completed_at: '2026-06-10T00:00:00Z'
@@ -255,14 +257,13 @@ governance:
   code_freeze: false
   code_freeze_note: 已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截
 runtime_health_summary:
-  online_services: 3
+  online_services: 4
   total_services: 4
-  ratio: 0.75
-  health_score: 75
-  last_scan: '1786067836.647767'
-  service_count: 8
+  ratio: 1.0
+  health_score: 74
+  last_scan: '2026-08-08T03:41:11Z'
+  source: compass_radar_isc3_daemon_ratio
   degraded: []
-  source: runtime_daemon_de_false_positive
 phase42_status: completed
 phase42_completed_at: '2026-07-14T20:59:00Z'
 phase43_status: completed
@@ -276,18 +277,18 @@ debt_adjusted_health_score: 61.6
 debt_items_total: 7
 debt_items_resolved: 7
 debt_adjusted_note: all 7 debt items resolved
-governance_anomaly_score: 0
-service_online_ratio: 0.75
+governance_anomaly_score: 15
+service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-08-07T09:57:18.563454+08:00'
+governance_feedback_last_run: '2026-08-08T03:41:11Z'
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-07T23:17:52.832537+00:00'
+health_score_evidence_generated_at: '2026-08-08T03:41:12.451514+00:00'
 workflow_mesh_health:
   status: healthy
-  event_count: 828
-  events_last_hour: 0
-  last_event_age_seconds: 43616.3
+  event_count: 61
+  events_last_hour: 61
+  last_event_age_seconds: 75.1
   bridges_active:
   - agent-workflow
