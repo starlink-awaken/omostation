@@ -74,7 +74,11 @@ def sync_artifacts() -> bool:
                         "action": action,
                         "transport": "stdio",
                         "status": "active",
-                        "command": ["python3", "projects/cockpit/src/cockpit/cli.py", "mof", action],
+                        "command": [
+                            "sh", "-c",
+                            f"PYTHONPATH=projects/cockpit/src python3 -m cockpit.cli mof {action} \"$@\"",
+                            "--"
+                        ],
                         "description": tool_info.get("description", f"MOF Tool: {tool_key}")
                     }
                     services.append(new_service)
