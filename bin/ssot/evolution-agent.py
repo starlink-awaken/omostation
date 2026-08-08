@@ -85,27 +85,95 @@ def scan_internal() -> list[dict[str, Any]]:
     return proposals
 
 
+def _fetch_rss(url: str, limit: int = 5) -> list[dict[str, str]]:
+    """Fetch and parse an RSS feed, returning recent item titles (T-C2).
+
+    真实外部抓取. 网络不可用/解析失败 → 返回空 (调用方优雅降级).
+    """
+    import html
+    import urllib.request
+    import xml.etree.ElementTree as ET
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "ecos-evolution-agent/1.0"})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            raw = resp.read(200000)  # cap 200KB
+        root = ET.fromstring(raw)
+        items: list[dict[str, str]] = []
+        for item in root.iter("item"):
+            title = ""
+            link = ""
+            for child in item:
+                if child.tag.endswith("title"):
+                    title = html.unescape((child.text or "").strip())
+                elif child.tag.endswith("link"):
+                    link = (child.text or "").strip()
+            if title:
+                items.append({"title": title, "url": link})
+            if len(items) >= limit:
+                break
+        return items
+    except Exception:
+        return []
+
+
 def scan_external(*, deep: bool = False) -> list[dict[str, Any]]:
-    """Scan external world for improvement opportunities (lightweight)."""
+    """Scan external world for improvement opportunities (T-C2 真实抓取).
+
+    抓取固定技术源 RSS (Anthropic/OpenAI/HN 等) → 产出基于真实外部信号的进化建议.
+    网络不可用 → 降级为内置推荐 (不全失败).
+    """
     proposals: list[dict[str, Any]] = []
-    # In deep mode, would do web research. For now, return static recommendations.
-    if deep:
-        proposals.append({
-            "source": "external_research",
-            "type": "framework_evaluation",
-            "severity": "low",
-            "proposal": "Evaluate A2A protocol maturity for swarm implementation",
-            "action": "research_task",
-            "level": "S3",
-        })
-        proposals.append({
-            "source": "external_research",
-            "type": "tool_evaluation",
-            "severity": "low",
-            "proposal": "Evaluate Apple Health API for health-tracking connector",
-            "action": "research_task",
-            "level": "S2",
-        })
+    feeds = {
+        "anthropic_news": "https://www.anthropic.com/rss.xml",
+        "hacker_news": "https://hnrss.org/frontpage",
+        "a16z_ai": "https://a16z.com/feed/",
+    }
+    fetched: list[dict[str, str]] = []
+    for name, url in feeds.items():
+        items = _fetch_rss(url, limit=3)
+        for it in items:
+            fetched.append({"source": name, **it})
+        if items:
+            proposals.append({
+                "source": "external_rss",
+                "feed": name,
+                "type": "trend_signal",
+                "severity": "low",
+                "proposal": f"[{name}] {items[0]['title'][:80]}",
+                "action": "research_task",
+                "level": "S3",
+            })
+            if len(items) > 1:
+                proposals.append({
+                    "source": "external_rss",
+                    "feed": name,
+                    "type": "trend_signal",
+                    "severity": "low",
+                    "proposal": f"[{name}] {items[1]['title'][:80]}",
+                    "action": "research_task",
+                    "level": "S2",
+                })
+
+    # 网络不可用降级: 保留内置推荐
+    if not fetched:
+        if deep:
+            proposals.append({
+                "source": "external_research",
+                "type": "framework_evaluation",
+                "severity": "low",
+                "proposal": "Evaluate A2A protocol maturity for swarm implementation",
+                "action": "research_task",
+                "level": "S3",
+            })
+            proposals.append({
+                "source": "external_research",
+                "type": "tool_evaluation",
+                "severity": "low",
+                "proposal": "Evaluate Apple Health API for health-tracking connector",
+                "action": "research_task",
+                "level": "S2",
+            })
     return proposals
 
 
@@ -132,6 +200,22 @@ def generate_proposals(*, deep: bool = False) -> dict[str, Any]:
     }
 
 
+def _persist_proposals(result: dict[str, Any]) -> str | None:
+    """T-C2/META-03: 落地进化提案到文件 (证据留存)."""
+    proposals = result.get("proposals", [])
+    if not proposals:
+        return None
+    try:
+        out_dir = ROOT / ".omo" / "_knowledge" / "evolution-proposals"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        ts = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
+        path = out_dir / f"proposal-{ts}.json"
+        path.write_text(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+        return str(path.relative_to(ROOT))
+    except Exception:
+        return None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--deep", action="store_true", help="include external research scan")
@@ -139,6 +223,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     result = generate_proposals(deep=args.deep)
+    persisted = _persist_proposals(result)
+    if persisted:
+        result["persisted_to"] = persisted
 
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
@@ -146,6 +233,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Evolution Agent: {result['total_proposals']} proposals ({result['by_level']})")
         for p in result["proposals"]:
             print(f"  [{p.get('level', '?'):3s}] [{p.get('severity', '?'):6s}] {p['proposal']}")
+        if persisted:
+            print(f"  📄 persisted: {persisted}")
         if not result["proposals"]:
             print("  ✅ No improvement opportunities detected.")
 

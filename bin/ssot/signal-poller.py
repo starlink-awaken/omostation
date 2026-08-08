@@ -14,25 +14,20 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 import time
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[2]
+from _shared import ROOT, load_yaml, utc_now
+
 SIGNAL_SOURCES = ROOT / ".omo" / "_truth" / "registry" / "signal-sources.yaml"
 STATE_FILE = ROOT / ".omo" / "state" / "signal-poller-state.json"
 
 
 def _load_signal_sources() -> list[dict[str, Any]]:
     """Load registered signal sources."""
-    import yaml
-
-    if not SIGNAL_SOURCES.exists():
-        return []
-    data = yaml.safe_load(SIGNAL_SOURCES.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        return []
+    data = load_yaml(SIGNAL_SOURCES)
     return data.get("sources", [])
 
 
@@ -52,23 +47,27 @@ def _save_state(state: dict[str, str]) -> None:
 
 
 def _hash_path(path: str) -> str:
-    """Compute a lightweight hash of a filesystem path (mtime + file count)."""
+    """Compute a lightweight hash of a filesystem path.
+
+    Uses mtime + child count (no recursion); directory mtime
+    """
     import os
 
     p = os.path.expanduser(path)
     if not os.path.exists(p):
         return "unreachable"
-    total_mtime = 0
-    file_count = 0
     try:
-        for root_dir, _dirs, files in os.walk(p):
-            for f in files[:100]:  # sample first 100 files
-                fp = os.path.join(root_dir, f)
-                total_mtime += int(os.path.getmtime(fp))
-                file_count += 1
+        st = os.stat(p)
+        dir_mtime = int(st.st_mtime)
+        # Count direct children only — directory mtime changes on add/remove
+        try:
+            children = sum(1 for _ in os.scandir(p))
+        except OSError:
+            children = 0
+        key = f"{dir_mtime}:{children}"
+        return hashlib.sha256(key.encode()).hexdigest()[:16]
     except OSError:
         return "error"
-    return hashlib.sha256(f"{total_mtime}:{file_count}".encode()).hexdigest()[:16]
 
 
 def poll_once(root: Path | None = None) -> list[dict[str, Any]]:
@@ -88,9 +87,12 @@ def poll_once(root: Path | None = None) -> list[dict[str, Any]]:
             current_hash = _hash_path(path)
             last_hash = state.get(source_id)
 
-            if current_hash != last_hash and current_hash not in ("unreachable", "error"):
+            if (
+                current_hash != last_hash
+                and current_hash not in ("unreachable", "error")
+            ):
                 trigger = {
-                    "ts": datetime.now(UTC).isoformat(),
+                    "ts": utc_now(),
                     "source_id": source_id,
                     "bos_uri": bos_uri,
                     "transport": transport,
@@ -101,7 +103,9 @@ def poll_once(root: Path | None = None) -> list[dict[str, Any]]:
 
             new_state[source_id] = current_hash
 
-        _save_state(new_state)
+    # Write state once after all sources processed
+    # (was inside loop — N writes per poll)
+    _save_state(new_state)
 
     return triggers
 
@@ -114,12 +118,53 @@ SIGNAL_TO_JOURNEY = {
 }
 
 
+def _write_mos_snapshot(trigger: dict[str, Any], root: Path) -> dict[str, Any]:
+    """T-B1: 信号 → MOS world_snapshot bridge.
+
+    Reuse omo.omo_belief.MOSBeliefManager (MOS 三表真实实现, mesh-iris-executor 同款).
+    信号变化写入系统认知, Advisor 可读取. 失败静默 (不阻塞 poll).
+    """
+    try:
+        import sys
+
+        omo_src = str(root / "projects/omo/src")
+        if omo_src not in sys.path:
+            sys.path.insert(0, omo_src)
+        from omo.omo_belief import MOSBeliefManager
+
+        manager = MOSBeliefManager(root=root)
+        ws_id = manager.record_world_snapshot(
+            source=f"signal-poller:{trigger.get('source_id', 'unknown')}",
+            domain="perception",
+            observations={
+                "signal": trigger.get("signal", ""),
+                "source_id": trigger.get("source_id", ""),
+                "bos_uri": trigger.get("bos_uri", ""),
+                "hash": trigger.get("hash", ""),
+            },
+            confidence=0.8,
+        )
+        return {"ok": True, "ws_id": ws_id}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 def _auto_trigger(triggers: list[dict[str, Any]], root: Path) -> list[str]:
     """Auto-start journeys for detected signals."""
     import subprocess
 
     triggered: list[str] = []
     for t in triggers:
+        # MOS bridge: 信号 → 系统认知 (T-B1)
+        mos_result = _write_mos_snapshot(t, root)
+        if mos_result.get("ok"):
+            triggered.append(f"MOS: {t.get('source_id')} → world_snapshot")
+        else:
+            triggered.append(
+                f"MOS: {t.get('source_id')} "
+                f"(skipped: {mos_result.get('error', '')[:40]})"
+            )
+
         source_id = t.get("source_id", "")
         journey_id = SIGNAL_TO_JOURNEY.get(source_id)
         if not journey_id:
@@ -131,24 +176,38 @@ def _auto_trigger(triggers: list[dict[str, Any]], root: Path) -> list[str]:
                 timeout=120, capture_output=True, text=True, check=False,
             )
             triggered.append(f"{source_id} → {journey_id}")
-        except Exception:
-            pass
+        except Exception as exc:
+            print(f"[signal-poller] {source_id}: {exc}", file=sys.stderr)
     return triggered
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--watch", action="store_true", help="continuous polling mode")
-    parser.add_argument("--interval", type=int, default=300, help="poll interval in seconds (watch mode)")
-    parser.add_argument("--auto-trigger", action="store_true", help="auto-start journeys on signal detection")
+    parser.add_argument(
+        "--watch", action="store_true", help="continuous polling mode"
+    )
+    parser.add_argument(
+        "--interval", type=int, default=300,
+        help="poll interval in seconds (watch mode)",
+    )
+    parser.add_argument(
+        "--auto-trigger", action="store_true",
+        help="auto-start journeys on signal detection",
+    )
     args = parser.parse_args(argv)
 
     if args.watch:
-        print(f"Watching signal sources (interval={args.interval}s, auto-trigger={args.auto_trigger})...", flush=True)
+        auto_info = (
+            f"interval={args.interval}s, "
+            f"auto-trigger={args.auto_trigger}"
+        )
+        print(f"Watching signal sources ({auto_info})...", flush=True)
         while True:
             triggers = poll_once()
             for t in triggers:
-                print(json.dumps(t, ensure_ascii=False), flush=True)
+                print(
+                    json.dumps(t, ensure_ascii=False), flush=True
+                )
             if triggers and args.auto_trigger:
                 fired = _auto_trigger(triggers, ROOT)
                 for f in fired:
@@ -164,7 +223,11 @@ def main(argv: list[str] | None = None) -> int:
                 for f in fired:
                     print(f"🚀 Auto-triggered: {f}")
         else:
-            print(json.dumps({"status": "no_changes", "ts": datetime.now(UTC).isoformat()}, ensure_ascii=False))
+            no_change_msg = {
+                "status": "no_changes",
+                "ts": utc_now(),
+            }
+            print(json.dumps(no_change_msg, ensure_ascii=False))
 
     return 0
 

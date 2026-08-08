@@ -183,16 +183,10 @@ def validate_cockpit_entrypoint_alignment(registry: dict[str, Any]) -> list[str]
     if not COCKPIT_CLI_PATH.exists():
         findings.append(f"missing Cockpit CLI file: {display_path(COCKPIT_CLI_PATH)}")
     else:
-        # T6-10 拆分后 parser 可能在 _subcommands.py (god-module 拆分)
         cli_text = COCKPIT_CLI_PATH.read_text(encoding="utf-8")
-        sub_text = ""
-        sub_path = WORKSPACE / "projects/cockpit/src/cockpit/_subcommands.py"
-        if sub_path.exists():
-            sub_text = sub_path.read_text(encoding="utf-8")
-        combined_text = cli_text + "\n" + sub_text
-        if 'sub.add_parser("governance"' not in combined_text:
+        if 'sub.add_parser("governance"' not in cli_text:
             findings.append("Cockpit CLI must expose `cockpit governance`")
-        if '"evolution"' not in combined_text:
+        if '"evolution"' not in cli_text:
             findings.append("Cockpit CLI governance parser must accept `evolution`")
     if not COCKPIT_GOVERNANCE_COMMAND_PATH.exists():
         findings.append(f"missing Cockpit governance command: {display_path(COCKPIT_GOVERNANCE_COMMAND_PATH)}")

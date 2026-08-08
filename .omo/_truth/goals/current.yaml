@@ -351,11 +351,10 @@ goals:
   title: git 入口收口 — shim 强制走 swarm-git
   desc: agent 环境 git → swarm-git 强制路由，拦 --no-verify + 高危操作
   kpi: bin/gac/git-shim PATH 优先 + AGENT_ID circuit_breaker + 高危操作拦截日志
-  progress: 100.0
-  status: done
+  progress: 50.0
+  status: in_progress
   bet_ref: BET-Y1Q1-T1-07
   tasks: []
-  completed_at: '2026-08-07'
 - id: G-Y1Q1-BELIEF
   title: 认知基底 — agent_belief 三表 schema
   desc: 建立 world_snapshot / capability_calibration / decision_outcome 三表，为认知四元组提供物理存储
@@ -415,4 +414,4 @@ source_plan_refs:
 start_date: '2026-06-04'
 status: active
 theme: Phase 49 — 认知基底 + 场景面净化 (意图模型注入 + 四元组物理化)
-execution_mode: waiting-for-scenario/next-bet
+execution_mode: active
