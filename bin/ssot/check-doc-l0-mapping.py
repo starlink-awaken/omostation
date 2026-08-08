@@ -108,19 +108,33 @@ def main():
 
     # ---- L0 派生面加载 ----
     l0 = parse_l0(L0_DERIVED)
+    v1_fallback = False
     if l0 is None:
-        errors.append(f"L0 派生约束缺失: {L0_DERIVED}")
-        _emit({"ok": False, "errors": errors, "warnings": warnings}, args)
-        return 1
+        # v2 派生文件为 gitignored 本地生成物 (ADR-0129 投影面, 生成器已归档),
+        # CI 全新检出无此文件 → 回退 v1 源做规则 1/2 值域校验; 规则 3/4 (v2 专属) 跳过.
+        v1_path = os.path.join(
+            ROOT, "projects", "ecos", "src", "ecos", "ssot", "registry", "L0-constraints.yaml"
+        )
+        l0 = parse_l0(v1_path)
+        if l0 is None:
+            errors.append(f"L0 约束源缺失: {L0_DERIVED} / {v1_path}")
+            _emit({"ok": False, "errors": errors, "warnings": warnings}, args)
+            return 1
+        warnings.append(
+            f"L0 派生约束缺失 ({os.path.relpath(L0_DERIVED, ROOT)}, 本地生成物), "
+            "已回退 v1 源校验规则 1/2; 规则 3/4 跳过"
+        )
+        v1_fallback = True
 
     l0_dims = l0["dimensions"]
     l0_surfaces = l0["surfaces"]
 
-    # ---- 规则 3: m3_parent 完整性 ----
+    # ---- 规则 3: m3_parent 完整性 (仅 v2 派生面可验) ----
     missing_m3 = []
-    for c in l0.get("constraints", []):
-        if c.get("m3_parent") != "ConstraintL0":
-            missing_m3.append(c.get("id", "?"))
+    if not v1_fallback:
+        for c in l0.get("constraints", []):
+            if c.get("m3_parent") != "ConstraintL0":
+                missing_m3.append(c.get("id", "?"))
     if missing_m3:
         errors.append(f"规则3: {len(missing_m3)} 条 L0 约束缺 m3_parent: ConstraintL0 → {missing_m3[:5]}")
 
