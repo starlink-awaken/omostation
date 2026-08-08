@@ -24,7 +24,24 @@ import socket
 import subprocess
 from typing import Any
 
-WORKSPACE = os.path.expanduser("~/Workspace")
+def _repo_root() -> str:
+    """本脚本所属的检出根目录 —— 仓库级 SSOT 从这里读。
+
+    原实现硬编码 ~/Workspace, 于是在任意 worktree 里跑都读主树的 SSOT:
+    改了 worktree 的 services.yaml 却验不出来, 看到的"通过"是主树的结论。
+    机器级探活(launchctl / docker / TCP)与检出无关, 仍用绝对路径。
+    """
+    p = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        if os.path.isfile(os.path.join(p, "docs", "project-registry.yaml")):
+            return p
+        parent = os.path.dirname(p)
+        if parent == p:
+            return os.path.expanduser("~/Workspace")   # 兜底
+        p = parent
+
+
+WORKSPACE = _repo_root()
 HOME = os.path.expanduser("~")
 
 # ── 场景 profile:解决“每次启动找不全” ────────────────────────────────
@@ -275,6 +292,16 @@ def sync_check() -> dict[str, Any]:
     """
     bos = read_bos()
     caps = {c.get("id", "") for c in read_capabilities()}
+
+    # 数据缺失 ≠ 检查通过。子模块未 init 的 worktree 里 bos-services.yaml
+    # 根本不存在, B 系列一条都跑不了却返回 issues=[] —— 假绿, 比漏报更危险
+    # (今天已经有三处"守门员静默通过"的 bug 了)。这里显式标注不可判定。
+    undetermined: list[str] = []
+    if not bos:
+        undetermined.append(
+            f"BOS 能力表读不到 ({os.path.join(WORKSPACE, 'projects/agora/etc/bos-services.yaml')}) "
+            "— 子模块未 init? B 系列检查未执行"
+        )
     cap_pkgs = {c.split(".")[-1] for c in caps} | {c.split(".")[0] for c in caps}
     # id 与 label 都要收: services.yaml 用 id 命名(governance.watch),
     # 而 launchctl / plist 用 label(com.l4.governance.watch)。只比 id 会把
@@ -322,10 +349,15 @@ def sync_check() -> dict[str, Any]:
 
         if tr in ("http", "mcp_proxy"):
             ep = s.get("http_url") or s.get("mcp_endpoint") or s.get("endpoint") or ""
-            if not ep:
+            # mcp_proxy 的能力由 agora-mcp 按需 spawn stdio 子进程承载, 不监听
+            # 独立端口 —— 有 command 就是完整的, 不该要求它声明 endpoint。
+            # (omostation-agora#19 移除 14 个虚构 endpoint 后, 无差别要求会凭空
+            #  产生 15 条误报; 而那些虚构 endpoint 正是当初被"必须有端点"逼出来的。)
+            stdio_backed = tr == "mcp_proxy" and bool(s.get("command"))
+            if not ep and not stdio_backed:
                 issues.append({"kind": "B3 未声明端点", "uri": uri,
                                "detail": "无 http_url/mcp_endpoint"})
-            else:
+            elif ep:
                 m = re.search(r":(\d{2,5})", str(ep))
                 if m and int(m.group(1)) not in reg_ports:
                     issues.append({"kind": "B3 端点端口未登记", "uri": uri,
@@ -365,11 +397,12 @@ def sync_check() -> dict[str, Any]:
         by_kind[i["kind"]] = by_kind.get(i["kind"], 0) + 1
 
     return {
+        "undetermined": undetermined,
         "total_bos": len(bos),
         "issues": issues,
         "by_kind": by_kind,
         "deprecated_kept": deprecated_kept,
-        "ok": not issues,
+        "ok": (not issues) and (not undetermined),
     }
 
 
