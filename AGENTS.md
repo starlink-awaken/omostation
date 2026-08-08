@@ -112,13 +112,14 @@ M1 rejudge (T+72, honest):
 
 Registry: `.omo/_truth/registry/swarm-coordination.yaml`
 
-### 1.6.1 D5 PASW submodule isolation (ADR-0371)
+### 1.6.1 D5 PASW submodule isolation (ADR-0371 & ADR-0404)
 
 | Gate | Command |
 |------|---------|
-| D5 PASW | `bash bin/gac/gac-worktree.sh claim <s>` 自动为高冲突子模块建 `.subtrees/<sub>/` |
+| D5 PASW | `bash bin/gac/gac-worktree.sh claim <s>` 自动提取仓库内所有子模块并构建隔离树 (Global PASW) |
+| D5 A2A Locks | `agent-workflow.py claim` 进行层级前缀检测（Hierarchical Collision Detection），杜绝子孙路径被静默覆盖 |
 
-覆盖范围仅 `gbrain` / `cockpit` / `agora`。**其余子模块跨 worktree 共用 `.git/modules/<sub>/HEAD`** — 非必要不碰指针。补齐与退役计划见 `BET-Y1Q1-T1-06`。
+覆盖范围扩展为**所有子模块** (ADR-0404)。**跨 worktree 完全隔离**. 补齐与退役计划见 `BET-Y1Q1-T1-06`。
 
 ### 1.6.2 D0 交付持久化下限（2026-08-06 实测升级）
 
