@@ -84,14 +84,33 @@ def emit_conflict_event(
 # ── D1 ADR atomic claim ──────────────────────────────────────────────
 
 
-def list_existing_adr_numbers(decisions_dir: Path) -> set[int]:
+def list_existing_adr_numbers(
+    decisions_dir: Path, *, include_remote: bool = True
+) -> set[int]:
+    """ADRs on disk (+ optionally origin/main tree) so stale bases still see
+    concurrently-merged ADRs and cannot double-allocate a number."""
     nums: set[int] = set()
-    if not decisions_dir.is_dir():
-        return nums
-    for path in decisions_dir.iterdir():
-        m = re.match(r"^(\d{4})-", path.name)
-        if m:
-            nums.add(int(m.group(1)))
+    if decisions_dir.is_dir():
+        for path in decisions_dir.iterdir():
+            m = re.match(r"^(\d{4})-", path.name)
+            if m:
+                nums.add(int(m.group(1)))
+    if include_remote:
+        # 并发 main 可能已合并新 ADR — 本地 base 陈旧时仍防撞号 (0396 撞号教训)
+        try:
+            out = subprocess.run(
+                ["git", "ls-tree", "--name-only", "origin/main", str(decisions_dir)],
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=15,
+            )
+            for line in out.stdout.splitlines():
+                m = re.match(r"^(\d{4})-", Path(line).name)
+                if m:
+                    nums.add(int(m.group(1)))
+        except (OSError, subprocess.SubprocessError):
+            pass
     return nums
 
 
