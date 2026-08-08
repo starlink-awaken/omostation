@@ -265,6 +265,8 @@ def run_agent_tick(*, host: AgentHost | None = None) -> dict[str, Any]:
                 KnowledgeCuratorAgent(),
                 JourneyRunnerAgent(),
                 GovernorAgent(),
+                AdvisorAgent(),
+                AutonomyAssessmentAgent(),
             ]
         )
     return host.tick_all()
@@ -468,15 +470,188 @@ class GovernorAgent:
             pass  # MOS unavailable
 
         if findings:
+            # P6-T1: Governor dispatch — 向相关agent发送任务消息
+            dispatched = self._dispatch_findings(findings, workspace)
             return {
                 "action": "alert",
-                "details": {"findings": findings, "count": len(findings)},
+                "details": {"findings": findings, "count": len(findings), "dispatched_to": dispatched},
             }
         return {"action": "noop", "details": {"note": "no governance issues detected"}}
 
+    def _dispatch_findings(self, findings: list, workspace: Path) -> list[str]:
+        """P6: Governor向其他agent分发findings通过A2A消息队列."""
+        # 匹配finding类型→目标agent
+        dispatch_map = {
+            "high_debt_volume": ["advisor"],
+            "low_trust_capabilities": ["advisor"],
+            "high_event_volume": ["knowledge-curator"],
+            "human_hold": ["journey-runner"],
+        }
+        dispatched: list[str] = []
+        msg_queue = workspace / ".omo" / "state" / "a2a-messages.jsonl"
+        msg_queue.parent.mkdir(parents=True, exist_ok=True)
+
+        import json as _json
+        for f in findings:
+            ftype = f.get("type", "")
+            targets = dispatch_map.get(ftype, [])
+            for target in targets:
+                msg = {
+                    "ts": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+                    "from": "governor",
+                    "to": target,
+                    "type": "task",
+                    "payload": {"action": "investigate", "finding": f},
+                }
+                with open(msg_queue, "a", encoding="utf-8") as mf:
+                    mf.write(_json.dumps(msg, ensure_ascii=False, sort_keys=True) + "\n")
+                if target not in dispatched:
+                    dispatched.append(target)
+        return dispatched
+
+
+class AdvisorAgent:
+    """AgentProtocol: TELOS对齐顾问 — 读MOS beliefs+calibration, 评估系统行为与TELOS的对齐度.
+
+    tick: 读MOS三表 → 评估capability trust趋势 → 产出TELOS对齐评估.
+    守SRP: 只做评估+建议, 不执行修改.
+    """
+
+    @property
+    def agent_id(self) -> str:
+        return "advisor"
+
+    def tick(self) -> dict[str, Any]:
+        """Evaluate system alignment with TELOS principles."""
+        workspace = Path(
+            os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
+        )
+        try:
+            omo_src = str(workspace / "projects/omo/src")
+            import sys
+
+            if omo_src not in sys.path:
+                sys.path.insert(0, omo_src)
+            from omo.omo_belief import MOSBeliefManager
+
+            manager = MOSBeliefManager(root=workspace)
+            state = manager._load_state()
+            calibrations = state.get("capability_calibrations", [])
+            outcomes = state.get("decision_outcomes", [])
+            beliefs = state.get("beliefs", [])
+        except Exception:
+            return {"action": "noop", "details": {"note": "MOS unavailable"}}
+
+        if not calibrations and not outcomes:
+            return {"action": "noop", "details": {"note": "insufficient MOS data for TELOS evaluation"}}
+
+        # Evaluate trust trends
+        avg_success = 1.0
+        if calibrations:
+            avg_success = sum(float(c.get("success_rate", 1.0)) for c in calibrations) / len(calibrations)
+
+        accept_rate = 1.0
+        if outcomes:
+            accepted = sum(1 for o in outcomes if "accepted" in str(o.get("actual_outcome", "")))
+            accept_rate = accepted / len(outcomes)
+
+        # TELOS alignment heuristic
+        alignment = "aligned" if avg_success >= 0.7 and accept_rate >= 0.5 else "misaligned"
+        confidence = round(min(avg_success, accept_rate), 2)
+
+        return {
+            "action": "evaluate",
+            "details": {
+                "telos_alignment": alignment,
+                "confidence": confidence,
+                "avg_success_rate": round(avg_success, 2),
+                "outcome_accept_rate": round(accept_rate, 2),
+                "calibrations_evaluated": len(calibrations),
+                "beliefs_count": len(beliefs),
+                "recommendation": "maintain" if alignment == "aligned" else "review capability trust trends",
+            },
+        }
+
+
+class AutonomyAssessmentAgent:
+    """AgentProtocol: 自主度评估Agent — 5维度持续评估系统自主程度 (ADR-0403 P3).
+
+    tick: 读MOS+verify+constraint-gate数据 → 计算5维度评分 → 产出0-100自主度.
+    参考arXiv survey 2507.21046 §7的5维度框架.
+    """
+
+    @property
+    def agent_id(self) -> str:
+        return "autonomy-assessment"
+
+    def tick(self) -> dict[str, Any]:
+        """Calculate 5-dimension autonomy score."""
+        workspace = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+        try:
+            omo_src = str(workspace / "projects/omo/src")
+            import sys
+            if omo_src not in sys.path:
+                sys.path.insert(0, omo_src)
+            from omo.omo_belief import MOSBeliefManager
+            manager = MOSBeliefManager(root=workspace)
+            state = manager._load_state()
+        except Exception:
+            return {"action": "noop", "details": {"note": "MOS unavailable"}}
+
+        # 1. Adaptivity: 非noop agent比例 (有行为agent / 总agent)
+        calibrations = state.get("capability_calibrations", [])
+        beliefs = state.get("beliefs", [])
+        skills = state.get("agent_skills", [])
+        experiences = state.get("agent_experiences", [])
+        adaptivity = min(len(calibrations) / 5.0, 1.0) if calibrations else 0.1
+
+        # 2. Retention: 活跃记忆比例
+        total_items = len(beliefs) + len(skills) + len(experiences)
+        active_items = total_items  # simplified: all non-archived
+        retention = min(active_items / 20.0, 1.0) if total_items else 0.1
+
+        # 3. Generalization: 跨域覆盖
+        unique_refs = len({c.get("capability_ref", "?") for c in calibrations}) if calibrations else 0
+        generalization = min(unique_refs / 5.0, 1.0) if unique_refs else 0.1
+
+        # 4. Efficiency: calibration成功率
+        if calibrations:
+            avg_rate = sum(float(c.get("success_rate", 1.0)) for c in calibrations) / len(calibrations)
+            efficiency = avg_rate
+        else:
+            efficiency = 0.5
+
+        # 5. Safety: 有约束违规=低分, 无=高分
+        outcomes = state.get("decision_outcomes", [])
+        rejected = sum(1 for o in outcomes if "rejected" in str(o.get("actual_outcome", "")))
+        safety = 1.0 - (rejected / len(outcomes)) if outcomes else 0.9
+
+        # Weighted score
+        dimensions = {
+            "adaptivity": round(adaptivity, 2),
+            "retention": round(retention, 2),
+            "generalization": round(generalization, 2),
+            "efficiency": round(efficiency, 2),
+            "safety": round(safety, 2),
+        }
+        weights = {"adaptivity": 0.25, "retention": 0.20, "generalization": 0.20, "efficiency": 0.15, "safety": 0.20}
+        score = round(sum(dimensions[d] * weights[d] for d in dimensions) * 100)
+
+        return {
+            "action": "evaluate",
+            "details": {
+                "autonomy_score": score,
+                "dimensions": dimensions,
+                "level": "high" if score >= 70 else "medium" if score >= 40 else "low",
+                "mos_counts": {"beliefs": len(beliefs), "skills": len(skills), "experiences": len(experiences), "calibrations": len(calibrations)},
+            },
+        }
+
 
 __all__ = [
+    "AdvisorAgent",
     "AgentHost",
+    "AutonomyAssessmentAgent",
     "AgentProtocol",
     "AgentTickResult",
     "GovernorAgent",
