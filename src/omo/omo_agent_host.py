@@ -320,9 +320,9 @@ __all__ = [
     "AgentHost",
     "AgentProtocol",
     "AgentTickResult",
+    "GovernorAgent",
     "HealthMonitorAgent",
     "JourneyRunnerAgent",
-    "GovernorAgent",
     "KnowledgeCuratorAgent",
     "run_agent_tick",
 ]
