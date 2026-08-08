@@ -135,4 +135,14 @@ if git status --short -- ".omo/debt/" | grep -q "^.D"; then
   exit 1
 fi
 
+
+# --- mass-deletion gate (2026-08-08 agora 整仓被清空事故) ---
+# 工作树被 rm -rf / 子模块未 init 时, git add -A 会把"文件消失"记成删除,
+# commit+push 后远端整仓归零。这里在提交前拦一次量级异常。
+GATE="$(git rev-parse --show-toplevel)/bin/gac/mass-deletion-gate.py"
+if [ -f "$GATE" ]; then
+  python3 "$GATE" --staged || exit 1
+fi
+
 exit 0
+
