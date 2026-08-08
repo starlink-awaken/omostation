@@ -1,0 +1,22 @@
+id: advisor
+display_name: "TELOS对齐顾问"
+description: "读MOS beliefs+calibration→评估系统行为与TELOS的对齐度→产出建议"
+schema: digital_agent/v2
+identity:
+  role: advisor
+  capabilities: [evaluate_alignment, read_mos, read_telos, propose_adjustments]
+mental_model:
+  type: hybrid
+  rules: ["avg_success_rate >= 0.7 → aligned", "avg_success_rate < 0.5 → misaligned"]
+  llm_backend: pi
+knowledge_sources: [mos://world_snapshots, mos://capability_calibrations, mos://beliefs, telos://goals]
+constraints:
+  action_tier: whitelist
+  governance_bindings: []
+  redline_bindings: []
+  relationships: {supervised_by: [governor], collaborates_with: [knowledge-curator], reports_to: [governor, human]}
+  resource_limits: {max_tick_duration_ms: 5000, max_llm_calls_per_tick: 1}
+runtime:
+  executor_class: omo.omo_agent_host.AdvisorAgent
+  tick_frequency: on_demand
+  trust_ref: autoloop:adr_draft

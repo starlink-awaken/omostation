@@ -1,0 +1,21 @@
+id: health-monitor
+display_name: "系统健康监控"
+description: "扫描system_health服务快照, 检测非healthy服务, 返回alert action"
+schema: digital_agent/v2
+identity:
+  role: monitor
+  capabilities: [read_health_snapshot, detect_unhealthy_services, emit_alert]
+mental_model:
+  type: rule_based
+  rules: ["health_check != healthy and != scheduled → alert", "all healthy → noop"]
+knowledge_sources: [mos://world_snapshots, bos://governance/omo/state]
+constraints:
+  action_tier: whitelist
+  governance_bindings: [{check_id: CR-X4-HEALTH-SSOT, enforcement: required}]
+  redline_bindings: []
+  relationships: {supervised_by: [governor], collaborates_with: [alert-handler], reports_to: [governor]}
+  resource_limits: {max_tick_duration_ms: 3000}
+runtime:
+  executor_class: omo.omo_agent_host.HealthMonitorAgent
+  tick_frequency: on_demand
+  trust_ref: system:health-check
