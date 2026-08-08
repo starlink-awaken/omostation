@@ -5,6 +5,7 @@ from __future__ import annotations
 ROUTER_MODULES = (
     "cockpit.web.governance.api",
     "cockpit.web.api_compute",
+    "cockpit.web.api_svc",
     "cockpit.web.api_domain_apps",
     "cockpit.web.api_system_map",
     "cockpit.web.api_omos",
