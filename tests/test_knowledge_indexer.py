@@ -133,9 +133,7 @@ async def test_notify_knowledge_event_uses_v1_tools_call():
             {"slug": "my-card", "title": "My Card", "path": "/data/cards/my-card.md", "action": "upsert"},
         )
 
-    assert "/v1/tools/call" in captured.get("url", ""), (
-        f"Expected /v1/tools/call but got: {captured.get('url')}"
-    )
+    assert "/v1/tools/call" in captured.get("url", ""), f"Expected /v1/tools/call but got: {captured.get('url')}"
     assert captured.get("body", {}).get("tool") == "publish_event"
     assert captured.get("body", {}).get("arguments", {}).get("event_type") == "bos://brain/events/card_updated"
 

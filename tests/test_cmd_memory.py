@@ -66,7 +66,13 @@ def test_cmd_memory_overview(monkeypatch):
     monkeypatch.setattr(
         mem_cmd,
         "_invoke_mos",
-        lambda *a, **k: {"ok": True, "version": "0.7.0", "neo4j_configured": False, "neo4j_available": False, "rbac_enforced": True},
+        lambda *a, **k: {
+            "ok": True,
+            "version": "0.7.0",
+            "neo4j_configured": False,
+            "neo4j_available": False,
+            "rbac_enforced": True,
+        },
     )
     rc = mem_cmd.cmd_memory(argparse.Namespace(memory_command=None))
     assert rc == 0
