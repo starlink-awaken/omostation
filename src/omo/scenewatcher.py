@@ -199,6 +199,89 @@ class SceneWatcher:
             pass
         return 0.5
 
+    # ── P1-T5: Advisor Agent — evaluate against TELOS ────────────
+
+    _telos_cache: dict[str, str] = field(default_factory=dict)
+
+    def _load_telos(self) -> dict[str, str]:
+        """Load TELOS summary from LifeOS (defensive, cached)."""
+        if self._telos_cache:
+            return self._telos_cache
+        telos_dir = Path.home() / ".claude" / "LIFEOS" / "USER" / "TELOS"
+        if not telos_dir.is_dir():
+            return {}
+        for tf in telos_dir.glob("*.md"):
+            try:
+                lines = [l.strip() for l in tf.read_text(encoding="utf-8").split("\n")
+                         if l.strip() and not l.startswith("#") and not l.startswith("---")][:3]
+                self._telos_cache[tf.stem.lower()] = " | ".join(lines)[:200]
+            except Exception:
+                continue
+        return self._telos_cache
+
+    def evaluate_against_telos(
+        self,
+        action: dict[str, Any],
+        *,
+        action_type: str = "",
+        trust_result: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Advisor evaluation — check action against TELOS principles (P1-T5).
+
+        Combines Trust Policy verdict + TELOS alignment assessment.
+        Returns: {verdict, confidence, reasoning, telos_alignment}
+        """
+        # Get trust evaluation (reuse if provided)
+        if trust_result is None:
+            trust_result = self.evaluate_trust(
+                action, action_type=action_type,
+                capability_level=action.get("capability_level", "C2"),
+                reversible=action.get("reversible", True),
+                novel=action.get("novel", False),
+            )
+
+        # Load TELOS context
+        telos = self._load_telos()
+
+        # TELOS alignment check (heuristic)
+        telos_alignment = "neutral"
+        telos_reason = ""
+        if telos:
+            goals = telos.get("goals", "").lower()
+            beliefs = telos.get("beliefs", "").lower()
+            action_desc = str(action.get("description", action_type)).lower()
+
+            # Simple heuristic: if action keywords appear in goals → aligned
+            if any(kw in goals for kw in action_desc.split()[:3] if len(kw) > 2):
+                telos_alignment = "aligned"
+                telos_reason = "Action keywords match TELOS goals"
+            elif "risk" in action_desc and "cautious" in beliefs:
+                telos_alignment = "caution"
+                telos_reason = "Action involves risk, TELOS suggests caution"
+
+        # Combine trust + TELOS
+        trust_verdict = trust_result.get("verdict", "ask")
+        if telos_alignment == "aligned" and trust_verdict == "ask":
+            final_verdict = "recommend"  # TELOS aligned → upgrade ask to recommend
+            final_reason = f"Trust={trust_verdict} but TELOS aligned → recommend with monitoring"
+        elif telos_alignment == "caution" and trust_verdict == "permit":
+            final_verdict = "caution"  # TELOS cautious → downgrade permit to caution
+            final_reason = f"Trust=permit but TELOS suggests caution → proceed carefully"
+        else:
+            final_verdict = trust_verdict
+            final_reason = f"Trust={trust_verdict}, TELOS={telos_alignment}"
+
+        return {
+            "verdict": final_verdict,
+            "confidence": trust_result.get("confidence", 0.5),
+            "reason": final_reason,
+            "trust_verdict": trust_verdict,
+            "telos_alignment": telos_alignment,
+            "telos_reason": telos_reason,
+            "action_type": action_type,
+            "telos_loaded": bool(telos),
+        }
+
     def _persist_decision_outcome(
         self,
         decision: DecisionResult,
