@@ -60,10 +60,10 @@ EOF
   fi
 }
 
-# ── 治本 D: sync 子模块, 防 gitlink 悬空 ─────────────────────────
+# ── 治本 D+E: sync 子模块, 防 gitlink 悬空 + 自动 pull stale ──────────
 # SSOT paths live under bin/ssot/ (bin rationalization). Prefer ssot/,
 # fall back to bin/ wrappers for older checkouts.
-# sync 子模块, 结果显示到 stderr; 失败即阻断 push.
+# 治本 E (2026-08-08): --pull 模式下自动 pull stale 子模块 (非 PASW) + push 未推 commit.
 SYNC_SCRIPT="$ROOT/bin/ssot/sync-submodules-push.sh"
 if [ ! -f "$SYNC_SCRIPT" ]; then
   SYNC_SCRIPT="$ROOT/bin/sync-submodules-push.sh"
@@ -82,7 +82,7 @@ if [ ! -f "$SYNC_SCRIPT" ]; then
   echo "[pre-push] ❌ missing sync-submodules-push.sh (expected bin/ssot/ or bin/)" >&2
   exit 1
 fi
-"$SYNC_SCRIPT" 2>&1 | sed 's/^/[pre-push] /' >&2
+"$SYNC_SCRIPT" --pull 2>&1 | sed 's/^/[pre-push] /' >&2
 python3 $REACH_SCRIPT --source head --fetch $REACH_ARGS 2>&1 | sed 's/^/[reachability] /' >&2
 
 # ── G-CONV.7 / ADR-0220 D4: escape-hatch allowlist for CI_LOCAL_SKIP ─
