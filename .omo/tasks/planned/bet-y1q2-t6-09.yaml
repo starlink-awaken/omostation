@@ -30,8 +30,10 @@ risk_level: L1
 allowed_operation_level: L1
 human_approval_required: false
 entry_gate: []
-evidence_required: []
-test_plan: []
+evidence_required:
+- "bos://compute/aetherforge/infer 可按 Task 复杂度自动升降级模型与算力"
+test_plan:
+- "python3 bin/ssot/observability-events.py search --domain runtime --limit 1"
 workflow: bet-execution
 write_surfaces: []
 pasw_required: false

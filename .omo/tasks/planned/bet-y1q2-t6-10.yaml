@@ -33,10 +33,12 @@ risk_level: L1
 allowed_operation_level: L1
 human_approval_required: false
 entry_gate: []
-evidence_required: []
+evidence_required:
+- "omo lint god-module GATE PASS (0 files >1500L)"
 evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-10.evidence （3 条，动手前必读：bin/plan/bet-ledger.py
   show BET-Y1Q2-T6-10）
-test_plan: []
+test_plan:
+- "omo lint god-module --workspace-root ../.."
 workflow: bet-execution
 write_surfaces: []
 pasw_required: false

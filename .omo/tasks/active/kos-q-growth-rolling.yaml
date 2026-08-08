@@ -1,6 +1,6 @@
 id: KOS-Q-GROWTH-ROLLING
 title: "KOS 季度扩量持续监测 (rolling goal 关联 task)"
-status: active
+status: pending
 task_type: goal-support
 priority: P3
 owner: agent
@@ -16,12 +16,24 @@ non_goals:
 - 修改 kos-index 数据源
 assigned_to: null
 dispatch_id: null
+run_ref: null
+approval_ref: "BET-Y1Q2 gap-clearance #1233 (goal KOS-Q-GROWTH)"
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/KOS-QUARTERLY-GROWTH.md
+- kos/kos-index.sqlite
 risk_level: L3
 allowed_operation_level: L3
 human_approval_required: false
+entry_gate:
+- "KOS-Q-GROWTH goal 已登记 (docs/KOS-QUARTERLY-GROWTH.md)"
 evidence_required:
 - "measured_documents ≥ 当前季度 floor"
 evidence_ref: .omo/_knowledge/audits/2026-07-24-batch1-kos-remeasure.md
+test_plan:
+- "omo state show --key measured_documents ≥ 季度 floor"
 workflow: bet-execution
 write_surfaces: []
 pasw_required: false
