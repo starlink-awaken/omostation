@@ -35,7 +35,7 @@ description: Use when the user requests a governance-related task, P-phase closu
 ```bash
 # 必跑 4 步
 git status --short | wc -l              # 工作树累积
-python3 bin/ssot/check-cross-refs.py 2>&1 | tail -5    # 交叉引用/坏链接
+python3 bin/mof/mof-drift 2>&1 | tail -5    # MOF/L0 漂移检测
 python3 bin/ssot/current-state-coherence.py --json 2>&1 | tail -5  # 状态一致性
 python3 bin/ssot/doc-governance-check.py --json 2>&1 | tail -15  # frontmatter 覆盖率
 ```
