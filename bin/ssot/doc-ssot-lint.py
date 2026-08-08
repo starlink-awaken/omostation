@@ -26,6 +26,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -259,6 +260,37 @@ def check_orphan_docs() -> list[tuple[Path, int, str, str]]:
     return findings
 
 
+def check_l0_mapping() -> list[tuple[Path, int, str, str]]:
+    """Invoke check-doc-l0-mapping.py (doc↔L0↔MOF 4-rule validator) and fold results into lint findings.
+
+    Rules (doc-ssot-contract §L0/MOF 映射关联):
+      1. doc dimension ∈ L0 dimension 值域 (X1-X4)
+      2. doc surface ∈ applies_to 值域 (I0/L0-L4/meta)
+      3. 每条 L0 约束带 m3_parent: ConstraintL0
+      4. L0 源目录存在 (自动更新闭环)
+    """
+    mapper = WORKSPACE_ROOT / "bin" / "ssot" / "check-doc-l0-mapping.py"
+    if not mapper.exists():
+        return [(Path("<l0-mapping>"), 1, "missing tool", "check-doc-l0-mapping.py 不存在, 无法验证 L0/MOF 映射")]
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(mapper), "--json"],
+            capture_output=True, text=True, timeout=60,
+        )
+    except subprocess.TimeoutExpired:
+        return [(Path("<l0-mapping>"), 1, "timeout", "check-doc-l0-mapping.py 超时 (60s)")]
+    if proc.returncode == 0:
+        return []
+    try:
+        payload = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return [(Path("<l0-mapping>"), 1, "parse error", proc.stderr[-200:] or "无法解析 check-doc-l0-mapping JSON 输出")]
+    findings = []
+    for err in payload.get("errors", []):
+        findings.append((Path("<l0-mapping>"), 1, "L0/MOF 映射", err))
+    return findings
+
+
 def run_lint(fix: bool = False, single_file: str | None = None, as_json: bool = False) -> int:
     """Run the lint check. Returns 0 (pass) or 1 (fail).
 
@@ -294,6 +326,7 @@ def run_lint(fix: bool = False, single_file: str | None = None, as_json: bool = 
     if single_file is None:
         all_findings.extend(check_required_generated_artifacts())
         all_findings.extend(check_orphan_docs())
+        all_findings.extend(check_l0_mapping())
 
     # Apply fixes
     if all_fixes:
