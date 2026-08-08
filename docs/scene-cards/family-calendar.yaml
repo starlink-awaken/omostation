@@ -1,0 +1,49 @@
+---
+title: Family Calendar Scene Card (家庭日历协调)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-08
+related:
+  - ./unified-inbox.yaml
+---
+schema: scene-card/v1
+scene_type: external_resource
+lifecycle: proposal_only
+activation: forbidden
+approval_state: pending_business_confirmation
+scene_id: family-calendar
+journey_id: schedule-to-coordinate
+goal: 协调家庭成员日程, 避免冲突, 确保重要事件不遗漏
+trigger: "家庭成员有新日程安排或变更 (来源: 日历/学校通知/活动安排)"
+input_contract: 家庭成员日程引用 (evidence:// 或 vault://redacted/)
+result_contract: 统一日历视图 + 冲突检测 + 提醒建议
+outcome_metric: schedule_conflict_rate / missed_event_count
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 日程冲突/重要事件遗漏/家庭成员不便
+data_classification: internal
+data_scope: redacted-family-schedule-references
+operator: family-coordination-agent-under-human-review
+permission_ref: permission://scene/family-calendar
+rollback_plan: revert-to-manual-calendar-checking
+sample_refs:
+  - vault://redacted/family-calendar/sample-1
+  - vault://redacted/family-calendar/sample-2
+  - vault://redacted/family-calendar/sample-3
+demand_evidence_refs:
+  - evidence://strategy-panorama/family-domain
+activation_evidence_refs:
+  - evidence://strategy-panorama/family-domain
+required_capabilities:
+  - iris:apple_mail
+  - iris:netease_mailmaster
+opportunity_window: 日常家庭日程协调窗口
+external_resource_policy: proposal_only
+downstream_refs:
+  - scene: unified-inbox
+    handoff: "evidence://scene/family-calendar/output:schedule-conflict"
+    trigger: on_conflict_detected
+notes:
+  - "家庭日历: 多源日程汇聚 → 冲突检测 → 提醒. 复用inbox的邮件连接器接收学校/机构通知."
