@@ -47,6 +47,7 @@ jobs:
         if: steps.changed-files.outputs.projects != ''
         run: |
           PROJS="${{ steps.changed-files.outputs.projects }}"
+          PROJS=$(echo "$PROJS" | tr -d '[:space:]')
           if [ -z "$PROJS" ]; then
             echo "No projects changed; skipping affected graph"
             echo "affected=" >> $GITHUB_OUTPUT
