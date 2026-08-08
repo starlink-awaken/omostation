@@ -1,0 +1,19 @@
+agent_id: health-monitor
+schema: digital-agent/v1
+tier: resident
+status: active
+version: 1.0.0
+created_at: '2026-08-08T03:22:52.723829+00:00'
+identity:
+  role: 系统健康监控
+  description: ''
+capabilities:
+- ci-read
+- state-read
+performance:
+  total_executions: 0
+  acceptance_rate: 0.0
+  trust_score: 0.5
+governance:
+  self_modification_level: S2
+  can_auto_implement: S1_only
