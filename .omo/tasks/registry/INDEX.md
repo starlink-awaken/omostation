@@ -10,7 +10,7 @@
 
 当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
 
-## Planned Tasks (63 个)
+## Planned Tasks (64 个)
 | ID | Title | Status |
 |----|-------|--------|
 | bet-y1q1-t1-00 | 并发写冲突止血 — 共享主树禁写 + PASW 全覆盖 | candidate |
@@ -74,6 +74,7 @@
 | bet-y3h2-t1-02 | 三年终局门 | candidate |
 | bet-y3h2-t4-01 | 复利收益归因报告 | candidate |
 | bet-y3h2-t7-01 | 公文场景 routine (限格式类 | candidate |
+| cockpit-debt-debt-1 | 治理技术债务：债务 | candidate |
 | needs-human-batch2-physical-recovery-checklist | 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） | candidate |
 | needs-human-p80-physical-hosts | P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat | candidate |
 
@@ -118,5 +119,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-08-07 (依据 `omo state sync-tasks` 与真实目录重算: done=225, planned=63, active=0, archived=6 顶层)*
+*Updated: 2026-08-08 (依据 `omo state sync-tasks` 与真实目录重算: done=225, planned=64, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
