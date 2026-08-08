@@ -12,6 +12,7 @@ import os
 import time
 from datetime import UTC
 from pathlib import Path
+from typing import Any
 
 import structlog
 from fastmcp import FastMCP
@@ -185,6 +186,34 @@ async def health_self_check() -> dict:
 
     overall = "healthy" if not issues else "degraded"
 
+    # P4: 健康降级 → 统一告警事件 (防抖 per-status, 恢复时发 recovered)
+    try:
+        from agora.mcp.agora_alerts import send_alert
+
+        if overall == "degraded":
+            send_alert(
+                level="degraded",
+                event="health:degraded",
+                payload={
+                    "issues": issues,
+                    "backends": f"{backends_alive}/{backends_total}",
+                },
+                caller_key="health:degraded",
+            )
+        elif overall == "healthy":
+            send_alert(
+                level="recovered",
+                event="health:recovered",
+                payload={"issues": []},
+                caller_key="health:degraded",  # 与 degraded 同 key, 恢复时绕过防抖
+                force=True,
+            )
+    except Exception:  # defensive: 告警失败不影响 health 返回
+        pass
+
+    # 强化-2: BOS internal 注册表契约健康 (func 可解析率 + 域分布)
+    bos_registry = _bos_registry_health()
+
     return {
         "format_version": FORMAT_VERSION,
         "status": overall,
@@ -200,13 +229,98 @@ async def health_self_check() -> dict:
         "backends": {
             "total": backends_total,
             "alive": backends_alive,
+            # P1 健康分级: standby = 注册但未连接 (环境性/未启动, 非故障)
+            # alive + standby + dead = total; dead 仅真实故障
+            "standby": max(backends_total - backends_alive - len(dead_backends), 0),
             "dead": dead_backends,
+            "alive_ratio": round(backends_alive / backends_total, 3)
+            if backends_total
+            else 0.0,
         },
+        "bos_registry": bos_registry,
         "audit_24h": audit_stats,
         "audit_chain": audit_chain,
         "debt": debt_summary,
         "issues": issues,
     }
+
+
+def _bos_registry_health() -> dict:
+    """BOS internal 服务注册表契约健康 (强化-2 可观测性).
+
+    统计 internal transport 服务的 func 可解析率 + 域分布,
+    供 /health 与面板判断能力声明 vs 实现的一致性。
+    """
+    try:
+        import importlib
+        import inspect
+
+        from agora.mcp.resolver.services import POC_SERVICES
+
+        internal = [s for s in POC_SERVICES if s.transport == "internal"]
+        resolvable = 0
+        broken: list[str] = []
+        by_domain: dict[str, int] = {}
+        for s in internal:
+            dom = s.uri.split("/")[2] if s.uri.count("/") >= 2 else "?"
+            by_domain[dom] = by_domain.get(dom, 0) + 1
+            try:
+                mod = importlib.import_module(s.module_path)
+                fn = getattr(mod, s.func_name)
+                inspect.signature(fn)
+                resolvable += 1
+            except (ModuleNotFoundError, AttributeError):
+                # 外部包 (aetherforge/omo/bus_foundation) 环境性缺失 → 不算 broken
+                if not (
+                    s.module_path.startswith("aetherforge.")
+                    or s.module_path.startswith("omo.")
+                    or s.module_path.startswith("bus_foundation.")
+                ):
+                    broken.append(f"{s.uri} ({s.module_path}.{s.func_name})")
+        # 更新 Prometheus 指标
+        g_resolvable, g_total = _get_registry_prom()
+        if g_resolvable is not None and g_total is not None:
+            g_resolvable.set(resolvable)
+            g_total.set(len(internal))
+        return {
+            "internal_total": len(internal),
+            "func_resolvable": resolvable,
+            "func_resolvable_pct": round(resolvable / len(internal) * 100, 1)
+            if internal
+            else 0.0,
+            "broken": broken,
+            "broken_count": len(broken),
+            "by_domain": by_domain,
+        }
+    except Exception:  # defensive: 注册表健康计算失败不影响主流程
+        return {"internal_total": 0, "func_resolvable": 0, "broken": []}
+
+
+# ── 强化-2: BOS 注册表健康 Prometheus 指标 (模块级单例) ──────────
+_prom_registry_resolvable: Any | None = None
+_prom_registry_total: Any | None = None
+
+
+def _get_registry_prom():
+    """懒加载注册表健康指标 (全局共享, 避免重复注册)."""
+    global _prom_registry_resolvable, _prom_registry_total
+    if _prom_registry_resolvable is not None:
+        return _prom_registry_resolvable, _prom_registry_total
+    try:
+        from prometheus_client import Gauge
+
+        _prom_registry_resolvable = Gauge(
+            "bos_registry_func_resolvable",
+            "BOS internal services with resolvable func",
+        )
+        _prom_registry_total = Gauge(
+            "bos_registry_internal_total",
+            "BOS internal services total",
+        )
+    except ImportError:  # defensive: prometheus-client 未装
+        _prom_registry_resolvable = None
+        _prom_registry_total = None
+    return _prom_registry_resolvable, _prom_registry_total
 
 
 def _scan_debt_items() -> dict:

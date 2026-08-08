@@ -85,13 +85,24 @@ def _bos_uri_to_event_type(uri: str) -> str:
 def _publish_bos_event(
     bus: Any,
     uri: str,
-    status: str = "called",
-    **extra: Any,
+    action: str = "called",
+    status: str = "ok",
+    duration_ms: int = 0,
 ) -> None:
-    """发布 BOS 事件到事件总线。"""
+    """发布 BOS 事件到事件总线.
+
+    兼容调用方 5 参形式: (bus, uri, action, status, duration_ms)。
+    (god-module split 曾将签名改窄为 (bus, uri, status, **extra), 导致
+    调用方 5 位置参数 TypeError — 此处按调用约定恢复。)
+    """
     try:
         event_type = _bos_uri_to_event_type(uri)
-        payload = {"uri": uri, "status": status, **extra}
+        payload = {
+            "uri": uri,
+            "action": action,
+            "status": status,
+            "duration_ms": int(duration_ms or 0),
+        }
         bus.publish(event_type, payload)
     except Exception as exc:  # noqa: BLE001 — 事件发布失败不影响主流程
         logger.warning("bos_event_publish_failed", uri=uri, error=str(exc))

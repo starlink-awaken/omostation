@@ -45,7 +45,12 @@ def _lint(services: list[dict]) -> list[str]:
         for key in ("uri", "domain", "action", "transport", "description"):
             if not s.get(key):
                 errors.append(f"#{idx} missing '{key}': uri={uri!r}")
-        if transport not in non_command_transports and not s.get("command"):
+        if (
+            transport not in non_command_transports
+            and not s.get("command")
+            and s.get("status")
+            != "unimplemented"  # unimplemented 声明不执行, 无需 command
+        ):
             errors.append(
                 f"#{idx} missing 'command' for transport {transport!r}: uri={uri!r}"
             )

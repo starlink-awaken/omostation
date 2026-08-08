@@ -19,3 +19,4 @@ etc/graphify-out/
 cache/
 *.tmp
 .DS_Store
+.subtrees/

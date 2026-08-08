@@ -263,13 +263,22 @@ def omo_debt_summary() -> dict:
         return {"status": "error", "error": f"{type(e).__name__}: {e}"}
 
 
+# ── 服务查找索引 (强化-3 性能: O(n) → O(1)) ──
+_service_index: dict[str, BosService] | None = None
+
+
+def _get_service_index() -> dict[str, BosService]:
+    """构建 uri → BosService 索引 (惰性, 一次构建)."""
+    global _service_index
+    if _service_index is None:
+        _service_index = {normalize_bos_uri(s.uri): s for s in POC_SERVICES if s.uri}
+    return _service_index
+
+
 def get_service(uri: str) -> BosService | None:
-    """通过 URI 查找 BOS 服务."""
+    """通过 URI 查找 BOS 服务 (索引化, O(1))."""
     norm = normalize_bos_uri(uri)
-    for s in POC_SERVICES:
-        if s.uri == norm:
-            return s
-    return None
+    return _get_service_index().get(norm)
 
 
 def list_domains() -> dict[str, list[str]]:
@@ -355,6 +364,9 @@ async def resolve_bos_uri(
             import inspect
             import sys
 
+            # P7: 内部函数调用 TTL 缓存
+            from agora.server._response import _get_cache_ttl
+
             if service.package and service.package != "agora":
                 pkg_path = str(Path(_WS) / "projects" / service.package / "src")
                 if pkg_path not in sys.path:
@@ -362,15 +374,46 @@ async def resolve_bos_uri(
 
             mod = importlib.import_module(service.module_path)
             func = getattr(mod, service.func_name)
-
-            # 尝试传递 proxy_manager (Phase 3)
+            # 参数契约智能适配 (BOS 契约修复):
+            # - 函数签名含 `args: dict` (如 _memory_all_search(args)) → 传整体 dict
+            # - 否则按 kwargs 展开 (如 audit_knowledge_quality(text, query))
+            # - proxy_manager 支持 (Phase 3)
             sig = inspect.signature(func)
             has_pm = "proxy_manager" in sig.parameters
+            # args 契约: 首个参数名为 args/arguments 且为 dict 类 → 整体传
+            params = list(sig.parameters.values())
+            use_dict_contract = bool(params) and params[0].name in ("args", "arguments")
+
+            # 构造调用参数: kwargs 里可能的 `arguments` 键 (tools/call 风格) 或直接 kwargs
+            call_args_dict = kwargs.get("arguments", kwargs)
+            if isinstance(call_args_dict, str):
+                import json as _json
+
+                try:
+                    call_args_dict = _json.loads(call_args_dict)
+                except Exception:  # noqa: BLE001
+                    call_args_dict = {}
 
             def _invoke() -> Any:
                 if has_pm:
-                    return func(*args, proxy_manager=proxy_manager, **kwargs)
-                return func(*args, **kwargs)
+                    if use_dict_contract:
+                        return func(call_args_dict, proxy_manager=proxy_manager)
+                    return func(*args, proxy_manager=proxy_manager, **call_args_dict)
+                if use_dict_contract:
+                    return func(call_args_dict)
+                return func(*args, **call_args_dict)
+
+            # P7: internal 重计算服务结果缓存 (复用 bos_cache TTL 缓存)
+            cached = None
+            try:
+                from agora.mcp.bos_middleware import bos_cache
+
+                cached = bos_cache.get(uri, call_args_dict or None)
+            except Exception:  # noqa: BLE001 — 缓存不可用降级直接执行
+                cached = None
+            if cached is not None:
+                result = {"status": "ok", "result": cached, "cache": "hit"}
+                return result
 
             loop = _asyncio.get_running_loop()
             raw = await loop.run_in_executor(
@@ -378,11 +421,34 @@ async def resolve_bos_uri(
             )
             if inspect.isawaitable(raw):
                 raw = await raw
+            # P7: 写缓存 (TTL 由 _get_cache_ttl 按服务配置)
+            try:
+                from agora.mcp.bos_middleware import bos_cache
+
+                bos_cache.set(uri, call_args_dict or None, raw, ttl=_get_cache_ttl(uri))
+            except Exception:  # noqa: BLE001 — 缓存写失败不影响返回
+                pass
             result = {"status": "ok", "result": raw}
         except TimeoutError:
             result = {
                 "status": "error",
                 "error": f"internal_bos_service_timeout: {uri}",
+            }
+        except ModuleNotFoundError as e:
+            # 契约漂移防护: 模块不可 import (外部包缺失/重构) → 结构化错误 + executable 标记
+            result = {
+                "status": "error",
+                "error": f"internal_bos_module_unavailable: {uri} ({e})",
+                "executable": False,
+                "reason": "module_not_found",
+            }
+        except AttributeError as e:
+            # 契约漂移防护: func_name 不存在于模块 → 结构化错误 (可被 registry lint 捕获)
+            result = {
+                "status": "error",
+                "error": f"internal_bos_func_missing: {uri} ({e})",
+                "executable": False,
+                "reason": "func_name_missing",
             }
         except Exception as e:  # defensive fallback
             result = {"status": "error", "error": str(e)}

@@ -31,7 +31,13 @@ from agora.mcp.bos_resolver import (  # type: ignore[import-not-found]
 from agora.mcp.bos_resolver import (  # type: ignore[import-not-found]
     resolve_bos_uri as _resolve_bos_uri,
 )
-from agora.server._response import FORMAT_VERSION, _error, _get_cache_ttl, _ok
+from agora.server._response import (
+    FORMAT_VERSION,
+    _error,
+    _get_cache_ttl,
+    _ok,
+    _safe_result,
+)
 
 from ._helpers import (
     _PROJECTS_DIR,
@@ -126,7 +132,14 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         Args:
             uri: BOS URI (e.g. bos://memory/kos/search)
             arguments: JSON 参数字符串 or dict (e.g. '{"query": "什么是 eCOS?"}')
+
+        Returns:
+            成功/错误响应; 成功含 request_id (阶段4 全链路追踪).
         """
+        # 阶段4: 全链路 trace — 生成 request_id 贯穿审计/记账/响应
+        import uuid as _uuid
+
+        request_id = _uuid.uuid4().hex[:16]
         if not uri.startswith("bos://"):
             return _error(f"Invalid BOS URI: {uri}")
 
@@ -136,6 +149,19 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
 
         if not bos_rate_limiter.acquire(uri):
             return _error(f"Rate limit exceeded for: {uri}")
+
+        # 遗留-3: 配额检查 (per-caller 每日成本上限) — 限流之后、执行之前
+        from agora.mcp.bos_quota import get_quota_checker
+        from agora.server.tools_auth import agora_role_ctx
+
+        caller_id = agora_role_ctx.get() or "anonymous"
+        quota_ok, quota_info = get_quota_checker().check(caller_id, uri)
+        if not quota_ok:
+            _bos_post_audit(uri, 429, 0)
+            return _error(
+                f"Quota exceeded for caller '{caller_id}': "
+                f"today=${quota_info['today_cost']} limit=${quota_info['limit_usd']}"
+            )
 
         if bos_circuit_breaker.is_open(uri):
             return _error(f"Circuit breaker open for: {uri}")
@@ -169,12 +195,41 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 "ok",  # type: ignore[reportCallIssue]
                 int((_time.time() - _t0) * 1000),  # type: ignore[reportCallIssue]
             )
+            # 遗留-3 + 阶段2: 记账 — 估算 token 成本 (输入=arguments, 输出=result)
+            # 用 estimate_cost 按 token 计费; 无 token 时成本 0 保留流水
+            try:
+                # P0 能力市场: 用 resolve_pricing 按 URI 定价覆盖 (混合三层)
+                from agora.accounting import estimate_cost, resolve_pricing
+
+                input_tokens = (
+                    len(json.dumps(args)) // 4 if args else 0
+                )  # ~4 字符/token
+                output_tokens = len(json.dumps(result)) // 4 if result else 0
+                in_rate, out_rate = resolve_pricing(uri)
+                cost_usd = estimate_cost(input_tokens, output_tokens, in_rate, out_rate)
+                get_quota_checker().record(
+                    caller_id=caller_id,
+                    service=uri,
+                    tool_name=f"{uri.split('/')[-1]}#{request_id}",  # 阶段4: trace 可追溯
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    cost_usd=cost_usd,
+                )
+            except Exception:  # noqa: BLE001 — 记账失败不阻塞
+                get_quota_checker().record(
+                    caller_id=caller_id,
+                    service=uri,
+                    tool_name=uri.split("/")[-1],
+                    cost_usd=0.0,
+                )
             return _ok(
                 {
                     "format_version": FORMAT_VERSION,
                     "uri": uri,
                     "source": source,
-                    "result": result,
+                    "request_id": request_id,  # 阶段4: 全链路 trace
+                    # 阶段3: 大响应保护 (截断 + 标记, 避免客户端解析崩溃)
+                    **_safe_result(result),
                 }
             )
         except json.JSONDecodeError:

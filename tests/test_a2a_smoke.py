@@ -7,6 +7,7 @@ and return expected response shapes.
 These are unit-level smoke tests that mock the underlying service layer,
 not full network integration tests.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -26,6 +27,7 @@ def mcp_app():
     """Create a FastMCP instance with governance tools registered."""
     mcp = FastMCP("test-a2a")
     from agora.server.tools_governance import register_governance_tools
+
     register_governance_tools(mcp)
     return mcp
 
@@ -35,6 +37,7 @@ def mcp_app_with_swarm():
     """Create a FastMCP instance with swarm tools registered."""
     mcp = FastMCP("test-swarm")
     from agora.server.tools_swarm import register_swarm_tools
+
     register_swarm_tools(mcp)
     return mcp
 
@@ -89,6 +92,7 @@ class TestBOSToolsRegistered:
     def test_resolve_bos_uri_registered(self):
         mcp = FastMCP("test-bos")
         from agora.server.tools_bos.registration import register_bos_tools
+
         register_bos_tools(mcp, MagicMock())
         names = asyncio.run(_tool_names(mcp))
         assert "resolve_bos_uri" in names
@@ -96,6 +100,7 @@ class TestBOSToolsRegistered:
     def test_list_bos_resources_registered(self):
         mcp = FastMCP("test-bos")
         from agora.server.tools_bos.registration import register_bos_tools
+
         register_bos_tools(mcp, MagicMock())
         names = asyncio.run(_tool_names(mcp))
         assert "list_bos_resources" in names
@@ -103,6 +108,7 @@ class TestBOSToolsRegistered:
     def test_list_bos_domains_registered(self):
         mcp = FastMCP("test-bos")
         from agora.server.tools_bos.registration import register_bos_tools
+
         register_bos_tools(mcp, MagicMock())
         names = asyncio.run(_tool_names(mcp))
         assert "list_bos_domains" in names
