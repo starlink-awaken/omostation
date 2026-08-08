@@ -20,6 +20,33 @@ _LOG = logging.getLogger(__name__)
 mcp = FastMCP("bos-capability-lifecycle")
 
 
+def _capability_pricing(prefix: str) -> dict[str, float]:
+    """解析能力的定价 (P1 能力市场: 混合三层, 记账价=市场价)."""
+    try:
+        from agora.accounting import (
+            DEFAULT_INPUT_RATE_PER_M,
+            DEFAULT_OUTPUT_RATE_PER_M,
+            resolve_pricing,
+        )
+
+        in_rate, out_rate = resolve_pricing(prefix)
+        is_default = (
+            in_rate == DEFAULT_INPUT_RATE_PER_M
+            and out_rate == DEFAULT_OUTPUT_RATE_PER_M
+        )
+        return {
+            "input_rate_per_m": in_rate,
+            "output_rate_per_m": out_rate,
+            "custom": not is_default,  # True = rates.yaml 覆盖定价
+        }
+    except Exception:  # defensive: 定价解析失败回退默认
+        return {
+            "input_rate_per_m": 0.15,
+            "output_rate_per_m": 0.60,
+            "custom": False,
+        }
+
+
 def _get_catalogs() -> tuple[
     CapabilityCatalog | None, ExternalConnectionCatalog | None
 ]:
@@ -70,6 +97,8 @@ def bos_capability_list(uri_prefix: str = "") -> dict[str, Any]:
                 "lifecycle": lifecycle,
                 "admission_status": admission_status,
                 "use_metrics": decl.get("usage", {}) if isinstance(decl, dict) else {},
+                # P1 能力市场: 定价 (resolve_pricing 混合三层, 记账价=市场价)
+                "pricing": _capability_pricing(prefix),
             }
         )
     return {
