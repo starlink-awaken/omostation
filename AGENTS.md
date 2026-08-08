@@ -332,7 +332,7 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR + release + �
 ```
 
 - **当前状态(2026-07-05)**: ✅ **blocking + branch protection 已启用** — `make install-hooks` 装 blocking pre-push + `bash bin/gac/gac-branch-protection.sh` 启用 main 保护。direct push main 被本地 + 平台双重拒绝(ISC-3b/4/5 达成)。所有 main 变更必须走 worktree+PR。
-- **子模块**: 保持 direct push(子模块 main 不保护,复用 `sync-submodules-push.sh`);仅主仓 main 走 PR。详见 [`docs/SUBMODULE-PR-STRATEGY.md`](docs/SUBMODULE-PR-STRATEGY.md)。
+- **子模块**: 已启用分支保护 (禁止 force push / 删除 / 非线性历史, enforce_admins), 但仍允许 direct push。CI `bulk-deletion-guard` 门禁拦截空树提交。**TODO**: 后续切换为强制 PR review (`required_pull_request_reviews`), 届时子模块也需走 worktree+PR 流程, 同步更新 `sync-submodules-push.sh` 为 PR-based 工作流。详见 [`docs/SUBMODULE-PR-STRATEGY.md`](docs/SUBMODULE-PR-STRATEGY.md)。
 - **L0 萃取不破坏**: `post-commit` 是 commit 级触发(worktree 共享 `.git/hooks`),worktree 内 commit 照样萃取,派生文件进 PR。
 - **完整计划**: [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) §4 Phase 2-3 (已落地)。
 

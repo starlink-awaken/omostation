@@ -1,0 +1,58 @@
+name: bulk-deletion-guard
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+          submodules: recursive
+
+      - name: Bulk deletion guard (root)
+        run: |
+          python3 bin/gac/mass-deletion-gate.py --range HEAD~1 HEAD 2>&1 || {
+            echo "::error::Root workspace bulk deletion detected"
+            exit 1
+          }
+
+      - name: Bulk deletion guard (submodules)
+        run: |
+          FAIL=0
+          for sub in projects/*/; do
+            [ -d "$sub/.git" ] || [ -f "$sub/.git" ] || continue
+            name=$(basename "$sub")
+            # check if latest commit has empty or near-empty tree
+            tree_count=$(git -C "$sub" ls-tree -r HEAD 2>/dev/null | wc -l)
+            parent_count=$(git -C "$sub" ls-tree -r HEAD~1 2>/dev/null | wc -l)
+            if [ "$parent_count" -gt 30 ] && [ "$tree_count" -eq 0 ]; then
+              echo "::error::$name: tree is empty but parent had $parent_count files"
+              FAIL=1
+            elif [ "$parent_count" -gt 30 ] && [ "$tree_count" -lt "$((parent_count / 2))" ]; then
+              echo "::error::$name: tree shrunk from $parent_count to $tree_count files (>50% deletion)"
+              FAIL=1
+            fi
+          done
+          exit $FAIL
+
+      - name: Empty-tree commit detector
+        run: |
+          FAIL=0
+          for sub in projects/*/; do
+            [ -d "$sub/.git" ] || [ -f "$sub/.git" ] || continue
+            name=$(basename "$sub")
+            tree_count=$(git -C "$sub" ls-tree -r HEAD 2>/dev/null | wc -l)
+            if [ "$tree_count" -eq 0 ]; then
+              echo "::error::$name: HEAD commit has empty tree (0 files)"
+              FAIL=1
+            fi
+          done
+          exit $FAIL
