@@ -93,3 +93,10 @@ swarm-activity-dashboard 的 agora_health 只显示 backends/tools, 无契约健
 | P6 服务定义大改 | registry lint 全量校验防回归 |
 | P7 缓存过期数据 | TTL 按服务类型配置 |
 | P8 面板读 /metrics 新增开销 | 缓存指标读取 (30s) |
+
+## 落地状态 (2026-08-08 标注)
+
+- **P5 能力网关化**: ✅ bos_capability_* 挂主 mcp + HTTP 可操作
+- **P6 契约统一**: ✅ registry lint 签名断言
+- **P7 冷启动**: ✅ internal 缓存 + 预热 (8.5s→0ms)
+- **P8 面板增强**: ✅ bos_registry 契约健康上屏
