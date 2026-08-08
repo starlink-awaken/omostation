@@ -1,0 +1,20 @@
+--- bin/gac/swarm-activity-dashboard.py
++++ bin/gac/swarm-activity-dashboard.py
+@@ -107,6 +107,17 @@
+         })
+     return locks
+ 
++def _lock_graph() -> dict:
++    """Parse lock-graph.json snapshot."""
++    graph_file = WORKSPACE / ".omo/state/lock-graph.json"
++    if not graph_file.is_file():
++        return {}
++    try:
++        import json
++        return json.loads(graph_file.read_text(encoding="utf-8"))
++    except (json.JSONDecodeError, OSError):
++        return {}
++
+ 
+ def _worktrees() -> list[dict]:
+     out = subprocess.run(

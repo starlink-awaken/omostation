@@ -400,17 +400,6 @@ def _rich_layout(report: dict) -> object:
         runs_table, title=f"[bold green]▶ Active runs ({len(runs)})[/]",
         border_style="green",
     )
-    
-    # ── Lock Graph panel ──
-    lg = report.get("lock_graph", {}).get("active_runs", {})
-    if lg:
-        from rich.tree import Tree
-        tree = Tree("Lock Graph (SSOT)")
-        for rid, payload in lg.items():
-            run_node = tree.add(f"[bold blue]{rid}[/]")
-            for p in payload.get("paths", []):
-                run_node.add(f"[cyan]path:[/] {p}")
-        runs_panel = Group(runs_panel, Panel(tree, title="[bold blue]🌳 Global Lock Graph[/]", border_style="blue"))
 
     # ── Locks panel ──
     locks_table = Table(show_header=True, header_style="bold yellow",
