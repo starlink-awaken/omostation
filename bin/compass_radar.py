@@ -686,6 +686,41 @@ def _write_text_if_changed(path: Path, payload: str, *, normalize=None) -> bool:
     return True
 
 
+def _observability_event_anomalies(ws_root: Path) -> tuple[int, dict[str, Any]]:
+    """统一事件面近 24h 异常统计 (design: docs/observability-unified-architecture.md).
+
+    读 .omo/_delivery/observability/events.jsonl, 统计 severity ∈ {critical, degraded}
+    且 ts 在 24h 内的事件数. 缺失/损坏 → (0, {}) 不惩罚.
+    """
+    events_file = ws_root / ".omo" / "_delivery" / "observability" / "events.jsonl"
+    if not events_file.exists():
+        return (0, {})
+    try:
+        from datetime import timedelta
+        cutoff = (datetime.now(UTC) - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%S")
+        count = 0
+        by_type: dict[str, int] = {}
+        with open(events_file, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    import json
+                    e = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if e.get("ts", "") < cutoff:
+                    continue
+                if e.get("severity") in {"critical", "degraded"}:
+                    count += 1
+                    t = str(e.get("type", "unknown"))
+                    by_type[t] = by_type.get(t, 0) + 1
+        return (count, {"window_24h": count, "by_type": by_type})
+    except Exception:  # noqa: BLE001  # 非阻断
+        return (0, {})
+
+
 def build_health_projection(
     omo_dir: Path, output: Path
 ) -> tuple[dict[str, Any], dict[str, Any], str]:
@@ -695,6 +730,13 @@ def build_health_projection(
     now_iso = _utc_now()
     report["generated_at"] = now_iso
     report["source"] = "c2g.strategy (real audit, no mock)"
+
+    # 统一事件面 observability 因子 (design: docs/observability-unified-architecture.md):
+    # 近 24h critical/degraded 事件并入 anomaly_count, 让运行时异常影响健康分.
+    obs_count, obs_detail = _observability_event_anomalies(ws_root)
+    if obs_count:
+        report["anomaly_count"] = int(report["anomaly_count"]) + obs_count
+        report["observability_events"] = obs_detail
 
     anomaly_base = _health_score_from_anomalies(report["anomaly_count"])
     # G-CONV.3: governance sub-score = anomaly base − execution-surface penalties

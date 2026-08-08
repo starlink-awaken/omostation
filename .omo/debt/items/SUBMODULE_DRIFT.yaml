@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 id: "SUBMODULE_DRIFT"
 title: "Submodule gitlink 漂移 — 3/17 曾漂移, 巡检已落地"
 dimension: "governance"
@@ -17,3 +18,154 @@ last_reviewed_at: "2026-07-14"
 gate_level: "P2"
 x1_policy_ref: "PR#351 + P43-drift-fix"
 x3_tier: "Tool"
+||||||| 2f71eb08a
+id: SUBMODULE_DRIFT
+title: Submodule gitlink 漂移 — 3/17 曾漂移, 巡检已落地
+dimension: governance
+subdimension: consistency
+domain: system
+scope: workspace
+severity: medium
+weight: 0.1
+entropy_class: low
+lifecycle_state: open
+owner: governance-team
+affected_roots:
+- projects/agora
+- projects/omo
+- projects/agora
+- projects/omo
+evidence_refs:
+- check-submodule-pointer-drift.py --json (2026-08-08)
+- check-submodule-pointer-drift.py --json (2026-08-08)
+mitigation_refs:
+- cd projects/agora && git checkout main && git pull && cd ../.. && git add projects/agora
+- cd projects/omo && git checkout main && git pull && cd ../.. && git add projects/omo
+opened_at: '2026-07-14'
+last_reviewed_at: '2026-08-08'
+gate_level: P2
+x1_policy_ref: PR#351 + P43-drift-fix
+x3_tier: Tool
+description: "Submodule gitlink drift detected: 2 issue(s).\n\n- projects/agora: behind\
+  \ (gitlink=f14f58684c02, origin=4c775439d897)\n  Fix: cd projects/agora && git checkout\
+  \ main && git pull && cd ../.. && git add projects/agora\n- projects/omo: behind\
+  \ (gitlink=6afc64ab59b5, origin=5291eaf07f96)\n  Fix: cd projects/omo && git checkout\
+  \ main && git pull && cd ../.. && git add projects/omo"
+=======
+id: SUBMODULE_DRIFT
+title: Submodule gitlink 漂移 — 3/17 曾漂移, 巡检已落地
+dimension: governance
+subdimension: consistency
+domain: system
+scope: workspace
+severity: medium
+weight: 0.1
+entropy_class: low
+lifecycle_state: open
+owner: governance-team
+affected_roots:
+- projects/agora
+- projects/omo
+- projects/agora
+- projects/omo
+- projects/aetherforge
+- projects/agora
+- projects/bus-foundation
+- projects/c2g
+- projects/cockpit
+- projects/cockpit-ui
+- projects/ecos
+- projects/family-hub
+- projects/gbrain
+- projects/kairon
+- projects/l4-kernel
+- projects/metaos
+- projects/model-driven
+- projects/observability
+- projects/omo
+- projects/omo-debt
+- projects/runtime
+- scripts
+- .subtrees/gbrain
+- .subtrees/cockpit
+- .subtrees/agora
+evidence_refs:
+- check-submodule-pointer-drift.py --json (2026-08-08)
+- check-submodule-pointer-drift.py --json (2026-08-08)
+- check-submodule-pointer-drift.py --json (2026-08-08)
+mitigation_refs:
+- cd projects/agora && git checkout main && git pull && cd ../.. && git add projects/agora
+- cd projects/omo && git checkout main && git pull && cd ../.. && git add projects/omo
+- cd projects/aetherforge && git checkout main && git pull && cd ../.. && git add
+  projects/aetherforge
+- cd projects/bus-foundation && git checkout main && git pull && cd ../.. && git add
+  projects/bus-foundation
+- cd projects/c2g && git checkout main && git pull && cd ../.. && git add projects/c2g
+- cd projects/cockpit && git checkout main && git pull && cd ../.. && git add projects/cockpit
+- cd projects/cockpit-ui && git checkout main && git pull && cd ../.. && git add projects/cockpit-ui
+- cd projects/ecos && git checkout main && git pull && cd ../.. && git add projects/ecos
+- cd projects/family-hub && git checkout main && git pull && cd ../.. && git add projects/family-hub
+- cd projects/gbrain && git checkout main && git pull && cd ../.. && git add projects/gbrain
+- cd projects/kairon && git checkout main && git pull && cd ../.. && git add projects/kairon
+- cd projects/l4-kernel && git checkout main && git pull && cd ../.. && git add projects/l4-kernel
+- cd projects/metaos && git checkout main && git pull && cd ../.. && git add projects/metaos
+- cd projects/model-driven && git checkout main && git pull && cd ../.. && git add
+  projects/model-driven
+- cd projects/observability && git checkout main && git pull && cd ../.. && git add
+  projects/observability
+- cd projects/omo-debt && git checkout main && git pull && cd ../.. && git add projects/omo-debt
+- cd projects/runtime && git checkout main && git pull && cd ../.. && git add projects/runtime
+- cd scripts && git checkout main && git pull && cd ../.. && git add scripts
+- cd .subtrees/gbrain && git checkout main && git pull && cd ../.. && git add .subtrees/gbrain
+- cd .subtrees/cockpit && git checkout main && git pull && cd ../.. && git add .subtrees/cockpit
+- cd .subtrees/agora && git checkout main && git pull && cd ../.. && git add .subtrees/agora
+opened_at: '2026-07-14'
+last_reviewed_at: '2026-08-08'
+gate_level: P2
+x1_policy_ref: PR#351 + P43-drift-fix
+x3_tier: Tool
+description: "Submodule gitlink drift detected: 21 issue(s).\n\n- projects/aetherforge:\
+  \ DIVERGED (gitlink=aefd52c21078, origin=334aa933791f)\n  Fix: cd projects/aetherforge\
+  \ && git checkout main && git pull && cd ../.. && git add projects/aetherforge\n\
+  - projects/agora: DIVERGED (gitlink=4c775439d897, origin=334aa933791f)\n  Fix: cd\
+  \ projects/agora && git checkout main && git pull && cd ../.. && git add projects/agora\n\
+  - projects/bus-foundation: DIVERGED (gitlink=900ca5f43c7c, origin=334aa933791f)\n\
+  \  Fix: cd projects/bus-foundation && git checkout main && git pull && cd ../..\
+  \ && git add projects/bus-foundation\n- projects/c2g: DIVERGED (gitlink=350c567307e3,\
+  \ origin=334aa933791f)\n  Fix: cd projects/c2g && git checkout main && git pull\
+  \ && cd ../.. && git add projects/c2g\n- projects/cockpit: DIVERGED (gitlink=fe39351caabe,\
+  \ origin=334aa933791f)\n  Fix: cd projects/cockpit && git checkout main && git pull\
+  \ && cd ../.. && git add projects/cockpit\n- projects/cockpit-ui: DIVERGED (gitlink=bc58741ccf04,\
+  \ origin=334aa933791f)\n  Fix: cd projects/cockpit-ui && git checkout main && git\
+  \ pull && cd ../.. && git add projects/cockpit-ui\n- projects/ecos: DIVERGED (gitlink=74e048be7bda,\
+  \ origin=334aa933791f)\n  Fix: cd projects/ecos && git checkout main && git pull\
+  \ && cd ../.. && git add projects/ecos\n- projects/family-hub: DIVERGED (gitlink=7f33335f25b5,\
+  \ origin=334aa933791f)\n  Fix: cd projects/family-hub && git checkout main && git\
+  \ pull && cd ../.. && git add projects/family-hub\n- projects/gbrain: DIVERGED (gitlink=5f855c5ce8f7,\
+  \ origin=334aa933791f)\n  Fix: cd projects/gbrain && git checkout main && git pull\
+  \ && cd ../.. && git add projects/gbrain\n- projects/kairon: DIVERGED (gitlink=e9adff15e4db,\
+  \ origin=334aa933791f)\n  Fix: cd projects/kairon && git checkout main && git pull\
+  \ && cd ../.. && git add projects/kairon\n- projects/l4-kernel: DIVERGED (gitlink=cdab5c6c40ef,\
+  \ origin=334aa933791f)\n  Fix: cd projects/l4-kernel && git checkout main && git\
+  \ pull && cd ../.. && git add projects/l4-kernel\n- projects/metaos: DIVERGED (gitlink=bac6fc9e139c,\
+  \ origin=334aa933791f)\n  Fix: cd projects/metaos && git checkout main && git pull\
+  \ && cd ../.. && git add projects/metaos\n- projects/model-driven: DIVERGED (gitlink=b18948288667,\
+  \ origin=334aa933791f)\n  Fix: cd projects/model-driven && git checkout main &&\
+  \ git pull && cd ../.. && git add projects/model-driven\n- projects/observability:\
+  \ DIVERGED (gitlink=7b8114a6e2e9, origin=334aa933791f)\n  Fix: cd projects/observability\
+  \ && git checkout main && git pull && cd ../.. && git add projects/observability\n\
+  - projects/omo: DIVERGED (gitlink=5291eaf07f96, origin=334aa933791f)\n  Fix: cd\
+  \ projects/omo && git checkout main && git pull && cd ../.. && git add projects/omo\n\
+  - projects/omo-debt: DIVERGED (gitlink=43f770e587b7, origin=334aa933791f)\n  Fix:\
+  \ cd projects/omo-debt && git checkout main && git pull && cd ../.. && git add projects/omo-debt\n\
+  - projects/runtime: DIVERGED (gitlink=1206c68abb7a, origin=334aa933791f)\n  Fix:\
+  \ cd projects/runtime && git checkout main && git pull && cd ../.. && git add projects/runtime\n\
+  - scripts: exempted (gitlink=04ded29fa490, origin=334aa933791f)\n  Fix: cd scripts\
+  \ && git checkout main && git pull && cd ../.. && git add scripts\n- .subtrees/gbrain:\
+  \ DIVERGED (gitlink=5f855c5ce8f7, origin=?)\n  Fix: cd .subtrees/gbrain && git checkout\
+  \ main && git pull && cd ../.. && git add .subtrees/gbrain\n- .subtrees/cockpit:\
+  \ DIVERGED (gitlink=fe39351caabe, origin=?)\n  Fix: cd .subtrees/cockpit && git\
+  \ checkout main && git pull && cd ../.. && git add .subtrees/cockpit\n- .subtrees/agora:\
+  \ DIVERGED (gitlink=4c775439d897, origin=?)\n  Fix: cd .subtrees/agora && git checkout\
+  \ main && git pull && cd ../.. && git add .subtrees/agora"
+>>>>>>> 4f6376ecb6402f14657daf6a01b0833fbe4e2dec

@@ -337,6 +337,20 @@ surfaces:
     gate: false
     triggers: [per_pr, push, scheduled]
     status: active
+  - id: bin-ssot-observability-events-py
+    tool: bin/ssot/observability-events.py
+    workflow: (none)
+    gate: false
+    triggers: [manual, scheduled]
+    status: active
+    note: "统一事件面 emit/search/trace + 8 通道适配器 (observability-unified-architecture)"
+  - id: bin-ssot-log-rotate-py
+    tool: bin/ssot/log-rotate.py
+    workflow: (none)
+    gate: false
+    triggers: [manual, scheduled]
+    status: active
+    note: "launchd 守护日志轮转 (P1.2)"
   - id: bin-ssot-doc-link-check-py
     tool: bin/ssot/doc-link-check.py
     workflow: (none)

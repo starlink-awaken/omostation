@@ -600,6 +600,19 @@ project-inspect:  ## 17 项目全景 4D 体检与诊断
 debt-synthesize:  ## 物理 CSES 债务升维与 C2G Bet 提取
 	PYTHONPATH=projects/omo/src:bin/gac $(PY) bin/gac/omo_debt_synthesizer.py
 
+# ── 统一事件面 (observability-unified-architecture) ─────────────────
+observability-events:  ## 统一事件面: emit/search/trace (可观测×事件×治理联动)
+	$(PY) bin/ssot/observability-events.py $(OBS_CMD)
+
+observability-adapters:  ## 事件面适配器: 8 通道增量同步 (swarm/gate/debt/health/...)
+	$(PY) bin/ssot/observability-events.py adapters run
+
+observability-trace:  ## 按 trace_id 跨链查询 (运行时→事件→治理)
+	$(PY) bin/ssot/observability-events.py trace $(TRACE_ID)
+
+log-rotate:  ## 日志轮转 (launchd 守护日志, 默认 5MB 阈值)
+	$(PY) bin/ssot/log-rotate.py $(LOG_ROTATE_ARGS)
+
 debt-predict:  ## Phase 5 动态代码债务蔓延预测引擎
 	$(PY) bin/gac/debt-predictor.py
 

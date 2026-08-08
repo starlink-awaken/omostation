@@ -31,6 +31,25 @@ def submodule_paths() -> list[str]:
     return [line.split(maxsplit=1)[1] for line in result.stdout.splitlines() if line.strip()]
 
 
+def changed_submodule_paths(base: str) -> set[str]:
+    """增量模式: 提取 git diff <base>..HEAD 中发生 gitlink 变化的 submodule 路径.
+
+    治理整合 (2026-08-08): 全仓 reachability gate 会让任一并行 agent 的本地
+    子模块 commit 未推送时冻结所有人的 push. 本地 pre-push 应只检查本次
+    实际变更的 gitlink; CI full checkout 仍是全量最终守门员.
+    .gitmodules 自身变化视为结构变更 → 回退全量检查 (防御).
+    """
+    result = run(["git", "diff", "--name-only", base, "HEAD", "--", ".gitmodules", "projects/*"])
+    if result.returncode != 0:
+        return set()
+    changed = {line.strip() for line in result.stdout.splitlines() if line.strip()}
+    if not changed:
+        return set()
+    if ".gitmodules" in changed:
+        return set(submodule_paths())
+    return {p for p in changed if p != ".gitmodules"}
+
+
 def gitlink_sha(path: str, source: str) -> str | None:
     if source == "worktree":
         result = run(["git", "-C", path, "rev-parse", "HEAD"])
@@ -98,11 +117,28 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
     return False, "not contained in fetched origin branches"
 
 
-def check(source: str, *, fetch: bool, skip_paths: set[str] | None = None) -> dict[str, object]:
+def check(
+    source: str, *, fetch: bool, skip_paths: set[str] | None = None, only_paths: set[str] | None = None
+) -> dict[str, object]:
     findings: list[dict[str, object]] = []
     checked = 0
     skipped = 0
-    for path in submodule_paths():
+    paths = submodule_paths()
+    if only_paths is not None:
+        # 增量模式: 只检查本次 diff 实际变化的 submodule
+        paths = [p for p in paths if p in only_paths]
+        if not paths:
+            return {
+                "ok": True,
+                "source": source,
+                "fetch": fetch,
+                "checked": 0,
+                "skipped": 0,
+                "mode": "incremental-empty",
+                "failures": [],
+                "findings": [],
+            }
+    for path in paths:
         if skip_paths and path in skip_paths:
             skipped += 1
             continue
@@ -132,6 +168,14 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     parser.add_argument("--skip", nargs="*", default=[], help="Submodule paths to skip (known false positives)")
     parser.add_argument("--skip-file", type=str, help="File with submodule paths to skip (one per line)")
+    parser.add_argument(
+        "--changed-from",
+        type=str,
+        default=None,
+        help="Incremental mode: only check submodules whose gitlink changed between <base>..HEAD "
+        "(e.g. origin/main). Unchanged submodules are skipped — parallel-agent mid-flight state "
+        "no longer blocks local pushes. CI full checkout (no flag) remains the full-coverage gate.",
+    )
     args = parser.parse_args()
 
     # 防御: WORKSPACE 不存在 (worktree 被 cleanup 误清等) → 友好退出, 不 traceback
@@ -152,7 +196,11 @@ def main() -> int:
                 if line.strip() and not line.strip().startswith("#")
             )
 
-    report = check(args.source, fetch=args.fetch, skip_paths=skip_paths)
+    only_paths: set[str] | None = None
+    if args.changed_from:
+        only_paths = changed_submodule_paths(args.changed_from)
+
+    report = check(args.source, fetch=args.fetch, skip_paths=skip_paths, only_paths=only_paths)
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     elif report["ok"]:

@@ -142,4 +142,12 @@ EOF
   fi
 fi
 
+
+# --- mass-deletion gate: 拦住把 gitlink 指向被清空子模块的推送 ---
+GATE="$(git rev-parse --show-toplevel)/bin/gac/mass-deletion-gate.py"
+if [ -f "$GATE" ] && git rev-parse --verify --quiet origin/main >/dev/null 2>&1; then
+  python3 "$GATE" --range origin/main HEAD --submodules || exit 1
+fi
+
 exit 0
+
