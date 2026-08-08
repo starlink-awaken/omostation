@@ -157,9 +157,10 @@ case "$cmd" in
       fi
     fi
     # 推送子模块 commit 到远程 (防 CI "not our ref" 错误)
-    echo "⚡ 检查子模块未推送的 commit..."
+    # 治本 E (2026-08-08): 使用 --pull 模式同时 pull stale 子模块
+    echo "⚡ 检查子模块同步状态..."
     bash "$(dirname "$0")/../sync-submodules.sh" --dry-run 2>&1 | tail -5
-    bash "$(dirname "$0")/../sync-submodules.sh" 2>&1 | tail -5
+    bash "$(dirname "$0")/../sync-submodules.sh" --pull 2>&1 | tail -5
     # push 分支
     ROOT_REMOTE=$(resolve_root_remote) || exit 1
     echo "   remote: $ROOT_REMOTE ($(git remote get-url "$ROOT_REMOTE")); repo: $CANONICAL_ROOT_REPO"
