@@ -339,13 +339,12 @@ class TestW4Integration:
                 "source": "local:/tmp",
             }
         )
-        # 静态 11 仍可达
+        # 静态 11 仍可达 (forge/register-tool 已标 unimplemented, 正确排除 — DECL_EXEC_GAP 治理)
         for uri in (
             "bos://memory/kos/search",
             "bos://governance/omo/audit",
             "bos://analysis/minerva/research",
             "bos://persona/health-profile/summary",
-            "bos://capability/forge/register-tool",
         ):
             assert any(s.uri == uri for s in POC_SERVICES), (
                 f"P33-W4 static URI disappeared: {uri}"

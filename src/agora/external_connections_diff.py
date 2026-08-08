@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from agora.external_connections import ExternalConnectionError
+from agora.external_connections_models import ExternalConnectionError
 
 _CATALOG_DIFF_FIELDS = (
     "provider",

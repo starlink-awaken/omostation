@@ -32,6 +32,7 @@ BOS_URI_DOMAINS = (
     "swarm",
     "system",
     "toolbox",
+    "perception",
 )
 BOS_URI_DOMAIN_PATTERN = "|".join(BOS_URI_DOMAINS)
 

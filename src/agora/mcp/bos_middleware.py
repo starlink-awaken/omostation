@@ -177,6 +177,18 @@ class CircuitBreaker:
                 _log.warning(
                     "circuit_breaker_open for %s (failures=%d)", key, s["failures"]
                 )
+                # P4: 熔断打开 → 统一告警入口
+                try:
+                    from agora.mcp.agora_alerts import send_alert
+
+                    send_alert(
+                        level="warning",
+                        event="circuit:open",
+                        payload={"uri": uri, "failures": s["failures"]},
+                        caller_key=f"circuit:{key}",
+                    )
+                except Exception:  # defensive: 告警失败不阻塞熔断
+                    pass
 
     def status(self, uri: str = "") -> dict:
         """查询熔断状态。"""

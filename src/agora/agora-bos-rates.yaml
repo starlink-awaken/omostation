@@ -11,6 +11,7 @@ routes:
   - prefix: "bos://memory/kos/"
     qps: 20
     cache_ttl: 60
+    pricing: {input_rate_per_m: 0.05, output_rate_per_m: 0.20}   # 能力市场: 便宜记忆服务
   - prefix: "bos://memory/kronos/"
     qps: 10
     cache_ttl: 30
@@ -19,6 +20,7 @@ routes:
   - prefix: "bos://analysis/minerva/"
     qps: 5
     cache_ttl: 120
+    pricing: {input_rate_per_m: 0.30, output_rate_per_m: 1.20}   # 能力市场: 昂贵研究服务
   - prefix: "bos://analysis/code/"
     qps: 10
     cache_ttl: 15
@@ -48,3 +50,20 @@ routes:
   - prefix: "bos://ecos/"
     qps: 5
     cache_ttl: 10
+
+# ── 配额 (遗留-3: per-caller 每日成本上限, USD) ────────────────
+# 由 mcp/bos_quota.py QuotaChecker 读取, 与 routes 一并热加载。
+quotas:
+  default_daily_usd: 10.0        # 未配置 caller 的默认每日上限 (安全默认)
+  callers:
+    - id: "anonymous"            # 无身份调用 (本地/未认证)
+      daily_usd: 2.0
+    - id: "local"                # 进程内本地调用 (P2-6 放行)
+      daily_usd: 5.0
+    - id: "agent-*"              # agent 身份 (通配)
+      daily_usd: 50.0
+    - id: "admin"
+      daily_usd: 100.0
+  services:
+    - prefix: "bos://analysis/minerva/"   # 昂贵研究服务, 收紧
+      daily_usd: 5.0
