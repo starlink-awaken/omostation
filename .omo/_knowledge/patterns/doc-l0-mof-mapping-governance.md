@@ -12,7 +12,7 @@ dimension: X1
 
 > SSOT 关联: 文档治理契约 = `.omo/standards/doc-ssot-contract.md` §L0/MOF 映射关联
 > 验证工具: `bin/ssot/check-doc-l0-mapping.py`（PR #1246 落地）
-> 状态: **已落地第一阶段（契约 + 验证工具），m3 元模型层待补齐**
+> 状态: **已落地第一阶段（契约 + 验证工具 + lint 接线 + L0 生成器复活）; m3 元模型层经核实已存在（三元链完整）; 剩余: CI 门禁接线**
 
 ## 1. 现状（2026-08-08 实测）
 
@@ -34,8 +34,8 @@ dimension: X1
 ### 1.3 MOF 工具链
 - ✅ `mof-drift`（实测可跑，MOF/L0 漂移检测）
 - ✅ `m2-ssot-inventory.py` / `m4-health-score.py` / `check-mof-capabilities-drift.py` / `check-doc-claims.py`
-- ❌ **m3.yaml / meta_model 层缺失**（ecos 只有 m0/snapshot.yaml）
-- ❌ **L0 派生生成器已归档**（`bin/_archive/l0-constraints-migrate.py`）
+- ✅ **m3 元模型层存在**: `projects/ecos/src/ecos/ssot/mof/m3.yaml`（668 行, Element/Relation 类目, L187 Constraint）+ `m3-meta.yaml`; M2 层 `m2/constraint_l0.yaml` 定义 ConstraintL0 → m3_parent: Constraint（**三元链完整: L0 派生 m3_parent:ConstraintL0 → m2 ConstraintL0 → m3 Constraint**）
+- ❌ **L0 派生生成器此前已归档**（`bin/_archive/l0-constraints-migrate.py`）— PR #1249 已复活为 `projects/ecos/bin/gen-l0-constraints.py`（双源合并 130 条）
 
 ## 2. 已落地（第一阶段, PR #1246）
 
@@ -60,19 +60,17 @@ dimension: X1
 
 ## 3. 三轨路线图（按 老王 偏好: 立即解锁 + 正确架构 + 理想）
 
-### 🟢 立即（已完成）— 契约 + 验证工具
+### 🟢 立即（已完成）— 契约 + 验证工具 + 生成器
 - [x] 契约映射小节（PR #1246）
-- [x] `check-doc-l0-mapping.py`（PR #1246）
-- [ ] 挂 doc-ssot-lint 或独立 workflow（一行接线）
+- [x] `check-doc-l0-mapping.py`（PR #1246）+ doc-ssot-lint 接线（PR #1248）
+- [x] L0 派生生成器复活 `projects/ecos/bin/gen-l0-constraints.py`（PR #1249, 双源合并 130 条）
+- [x] dimension 值域对齐 X1-X7（PR #1249）
 
-### 🟡 长期（正确架构）— 补齐断链
-1. **m3 元模型层落地**: 在 `projects/ecos/src/ecos/ssot/mof/` 建 `m3/` 层
-   - 定义 `ConstraintL0` 元模型节点（m3_parent 指向）
-   - `mof-drift` 消费 m3 层做完整漂移检测
-2. **L0 派生生成器复活**: `bin/_archive/l0-constraints-migrate.py` → `projects/ecos/bin/gen-l0-constraints.py`（正式工具）
-   - 自动从 `src/ecos/l0/` 源重新生成 `_derived/l0-constraints.v2.yaml`
-   - 闭环: 源变更 → 生成派生 → `mof-drift` 验证 → 提交
-3. **doc-ssot-lint 接线**: `check-doc-l0-mapping.py` 挂进现有 lint 链（rules 追加）
+### 🟡 长期（正确架构）— 断链已补, 待接线
+1. **m3 元模型层**: ✅ **已存在**（m3.yaml 668 行 + m2/constraint_l0.yaml, 三元链完整）— 无需新建
+2. **L0 派生生成器**: ✅ **已复活**（PR #1249）— 自动从双源生成 130 条派生面
+3. **doc-ssot-lint 接线**: ✅ 已完成（PR #1248）
+4. **CI 门禁**: 将 `check-doc-l0-mapping` + `mof-drift` 纳入 phase-gate（待办）
 
 ### 🔵 理想（演进）— 全自动治理闭环
 1. **文档 frontmatter 自动标注**: `doc-governance-migrate.py` 扩展, 按文档所在层级自动补 `dimension`/`surface`
