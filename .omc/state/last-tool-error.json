@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /Users/xiamingxing/Workspace/projects/agora 2>/dev/null\\nfor loc in \\\"auth/oauth2_server.py 142\\\" \\\"cli/__init__.py 274\\\" \\\"cli/output.py 27\\\" \\\"mcp_proxy/registry.py 269\\\"; do\\n  set -...",
+  "error": "Exit code 1\n=== auth/oauth2_server.py 142: ===\nsed: illegal option -- 1\nusage: sed script [-EHalnru] [-i extension] [file ...]\n\tsed [-EHalnu] [-i extension] [-e script] ... [-f script_file] ... [file ...]\n=== cli/__init__.py 274: ===\nsed: illegal option -- 1\nusage: sed script [-EHalnru] [-i extension] [file ...]\n\tsed [-EHalnu] [-i extension] [-e script] ... [-f script_file] ... [file ...]\n=== cli/output.py 27: ===\nsed: illegal option -- 1\nusage: sed script [-EHalnru] [-i extension] [file ...]\n\ts...",
+  "timestamp": "2026-07-11T11:45:54.647Z",
+  "retry_count": 1
+}

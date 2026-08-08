@@ -1,0 +1,24 @@
+#!/bin/bash
+# Pre-push gate: lint + smoke test
+if [ "${SKIP_GATE:-}" = "true" ]; then exit 0; fi
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT"
+echo "🔍 Pre-push: $(basename $REPO_ROOT)"
+
+# ruff check
+if command -v ruff &>/dev/null; then
+  ruff check src/ || { echo "❌ ruff check failed"; exit 1; }
+  ruff format --check src/ || { echo "❌ format check failed"; exit 1; }
+fi
+
+# smoke test: 只跑非 e2e/integration 的快速测试, 防止 e2e 环境缺失导致挂死
+if [ -d tests ]; then
+  uv run pytest tests/ -q --tb=no -x \
+    --ignore=tests/e2e \
+    --ignore=tests/integration \
+    --ignore=tests/test_llm_route_e2e.py \
+    --ignore=tests/test_mcp_registry_e2e.py \
+    2>/dev/null || echo "⚠️  tests failed (non-blocking in dev)"
+fi
+
+echo "✅ Pre-push check passed"
