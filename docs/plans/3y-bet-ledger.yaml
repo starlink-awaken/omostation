@@ -2428,7 +2428,8 @@ bets:
   title: 可观测性收官 — 告警到人 + 事件面常态化调度
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-08
   note: "连接器体系 + cron 调度已落地 (PR #1217/#1218); 待配真实 webhook URL 后转 done"
   goal: 统一事件面落地后补最后一公里 — 告警通知到人 + 轮转/适配器常态化
   workflow: bet-execution
