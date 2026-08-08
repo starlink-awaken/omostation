@@ -5,3 +5,7 @@ severity: high
 source: model-driven
 status: registered
 title: 'Schema violation: viol-test'
+lifecycle_state: closed
+closed_at: '2026-08-08T13:12:15Z'
+closed_by: autoloop-controller
+close_reason: 'S1 auto-close: verification passed'

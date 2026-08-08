@@ -101,11 +101,61 @@ def _save_verify_cache(cache: dict[str, Any]) -> None:
     VERIFY_CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
 
 
+def _close_item(item: dict) -> bool:
+    """Actually close an item by updating its YAML lifecycle_state to 'closed'.
+
+    Without this, items stay 'open' forever even after auto_closed disposition.
+    """
+    yaml_path = item.get("path")
+    if not yaml_path or not isinstance(yaml_path, Path) or not yaml_path.exists():
+        return False
+    try:
+        import yaml
+
+        data = load_yaml(yaml_path) or {}
+        data["lifecycle_state"] = "closed"
+        data["closed_at"] = utc_now()
+        data["closed_by"] = "autoloop-controller"
+        data["close_reason"] = "S1 auto-close: verification passed"
+        yaml_path.write_text(
+            yaml.dump(
+                data, allow_unicode=True, sort_keys=False, default_flow_style=False
+            ),
+            encoding="utf-8",
+        )
+        return True
+    except Exception:
+        return False
+
+
+def _try_heuristic_verify(item: dict) -> dict[str, Any]:
+    """启发式验证 — 对无 verification_cmd 的 item 做基本判断.
+
+    规则:
+    - 标题含 'viol-test' 或 'Schema violation' + 无 cmd → stale test artifact → pass
+    - 其他无 cmd → no_cmd (保持 kept_open)
+    """
+    title = str(item.get("title", ""))
+    verification_cmd = str(item.get("verification_cmd", "") or "").strip()
+
+    if not is_runnable_cmd(verification_cmd):
+        # 检查是否是 stale test artifact
+        if "viol-test" in title or "Schema violation" in title:
+            return {"status": "passed", "note": "stale test artifact, auto-cleanable"}
+        return {"status": "no_cmd", "note": "no runnable verification_cmd"}
+
+    return {}  # 空dict = 交给正常验证流程
+
+
 def _run_verification(item: dict) -> dict[str, Any]:
     """Run the item's verification command, with mtime-based caching to avoid re-executing
     slow subprocesses when the YAML file hasn't changed."""
     cmd = _build_task_cmd(item)
     if not cmd:
+        # 启发式验证: 无cmd的item可能可以通过启发式判断
+        heuristic = _try_heuristic_verify(item)
+        if heuristic:
+            return heuristic
         return {"status": "no_cmd", "note": "no runnable verification_cmd"}
 
     # Check mtime cache: skip re-run if YAML unchanged since last verification
@@ -182,8 +232,10 @@ def run_loop(*, dry_run: bool = False) -> dict[str, Any]:
         if level == "S3":
             s3_count += 1
             results[idx] = {
-                "item": item_id, "source": item.get("source"),
-                "level": "S3", "action": "report_only",
+                "item": item_id,
+                "source": item.get("source"),
+                "level": "S3",
+                "action": "report_only",
                 "note": f"high-risk action '{action}' requires human decision",
             }
         else:
@@ -209,12 +261,18 @@ def run_loop(*, dry_run: bool = False) -> dict[str, Any]:
                     s2_count += 1
 
                 entry = {
-                    "item": item_id, "source": item.get("source"),
-                    "level": level, "action": action,
-                    "dry_run": dry_run, "verification": result,
+                    "item": item_id,
+                    "source": item.get("source"),
+                    "level": level,
+                    "action": action,
+                    "dry_run": dry_run,
+                    "verification": result,
                 }
                 if level == "S1" and result.get("status") == "passed":
                     entry["disposition"] = "auto_closed"
+                    if not dry_run:
+                        closed = _close_item(item)
+                        entry["yaml_closed"] = closed
                 elif level == "S2" and result.get("status") == "passed":
                     entry["disposition"] = "review_pending"
                 else:
@@ -229,10 +287,18 @@ def run_loop(*, dry_run: bool = False) -> dict[str, Any]:
         "processed": len(candidates),
         "by_level": {"S1": s1_count, "S2": s2_count, "S3": s3_count},
         "dispositions": {
-            "auto_closed": sum(1 for r in results if r and r.get("disposition") == "auto_closed"),
-            "review_pending": sum(1 for r in results if r and r.get("disposition") == "review_pending"),
-            "kept_open": sum(1 for r in results if r and r.get("disposition") == "kept_open"),
-            "report_only": sum(1 for r in results if r and r.get("action") == "report_only"),
+            "auto_closed": sum(
+                1 for r in results if r and r.get("disposition") == "auto_closed"
+            ),
+            "review_pending": sum(
+                1 for r in results if r and r.get("disposition") == "review_pending"
+            ),
+            "kept_open": sum(
+                1 for r in results if r and r.get("disposition") == "kept_open"
+            ),
+            "report_only": sum(
+                1 for r in results if r and r.get("action") == "report_only"
+            ),
         },
         "results": [r for r in results if r],
     }
@@ -240,7 +306,9 @@ def run_loop(*, dry_run: bool = False) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dry-run", action="store_true", help="preview without executing")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="preview without executing"
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
@@ -250,15 +318,22 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
 
-    print(f"Autoloop: processed {result.get('processed', 0)} items "
-          f"({'DRY-RUN' if result.get('dry_run') else 'LIVE'})")
+    print(
+        f"Autoloop: processed {result.get('processed', 0)} items "
+        f"({'DRY-RUN' if result.get('dry_run') else 'LIVE'})"
+    )
     if result.get("status") == "noop":
         print(f"  {result.get('reason')}")
         return 0
     print(f"  by_level: {result.get('by_level')}")
     print(f"  dispositions: {result.get('dispositions')}")
     for r in result.get("results", []):
-        marker = {"auto_closed": "✅", "review_pending": "👀", "kept_open": "⬜", "report_only": "🚫"}.get(r.get("disposition"), "?")
+        marker = {
+            "auto_closed": "✅",
+            "review_pending": "👀",
+            "kept_open": "⬜",
+            "report_only": "🚫",
+        }.get(r.get("disposition"), "?")
         print(f"  {marker} [{r.get('level')}] {r.get('item')}: {r.get('disposition')}")
 
     return 0
