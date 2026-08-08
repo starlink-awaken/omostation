@@ -207,3 +207,10 @@ artifacts-*.html
 #    gac-worktree.sh claim 时创建, release/merge 时清理.
 # ---------------------------------------------------------------------------
 .subtrees/
+
+# ---------------------------------------------------------------------------
+# 12. 统一事件面运行时状态 (observability-unified-architecture)
+#    事件面 JSONL + 适配器增量指针是运行时产物 (SSOT 在 registry/observability-events.yaml)
+# ---------------------------------------------------------------------------
+.omo/_delivery/observability/
+.omo/state/observability-adapters/
