@@ -4,8 +4,11 @@
 # 被 gac-worktree.sh source 使用.
 # 提供: pasw_create, pasw_cleanup, pasw_claim_*
 
-# 需要独立 worktree 隔离的高冲突子模块 (按冲突频率排序)
-export PASW_ISOLATED_SUBS="projects/gbrain projects/cockpit projects/agora"
+# 需要独立 worktree 隔离的子模块 (Phase 3: Global PASW, 动态提取全部子模块)
+export PASW_ISOLATED_SUBS="$(git config --file .gitmodules --get-regexp path 2>/dev/null | awk '{ print $2 }' | tr '\n' ' ')"
+if [ -z "$PASW_ISOLATED_SUBS" ]; then
+  export PASW_ISOLATED_SUBS="projects/gbrain projects/cockpit projects/agora"
+fi
 # 子模块 worktree 存放路径 (root worktree 内)
 export PASW_SUBTREE_DIR=".subtrees"
 # 过期 TTL (小时)
