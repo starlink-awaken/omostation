@@ -256,6 +256,13 @@ ci-local-fast: check-layers
 	echo "── YAML 语法校验 (workflows + protocols) ───────────"; \
 	uv run --with pyyaml python3 bin/ssot/yaml-validate.py 2>&1 | sed 's/^/[yaml] /' || CI_LOCAL_FAIL=1; \
 	echo ""; \
+ 	echo "── submodule drift debt auto-seed ───────────────────"; \
+ 	if [ -f "bin/gac/debt-auto-seed-drift.py" ]; then \
+ 		python3 bin/gac/debt-auto-seed-drift.py --apply 2>&1 | sed 's/^/[debt-seed] /' || true; \
+ 	else \
+ 		echo "[debt-seed] debt-auto-seed-drift.py not found, skip"; \
+ 	fi; \
+	echo ""; \
 	if [ "$$CI_LOCAL_FAIL" = "1" ]; then \
 		echo "❌ ci-local-fast: 有检查未通过"; \
 		exit 1; \
