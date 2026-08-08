@@ -92,6 +92,15 @@ def _write_mos_decision_outcome(entry: dict[str, Any]) -> str | None:
             delta=entry.get("notes", "")[:200],
             source_run_id=entry.get("run_id", ""),
         )
+        # Trust 校准链: outcome → capability_calibration (控制论反馈闭环)
+        adjudication = entry.get("adjudication", "")
+        success_rate = 1.0 if adjudication == "accepted" else 0.0 if adjudication == "rejected" else 0.5
+        manager.record_capability_calibration(
+            capability_ref=f"scene:{entry.get('scene_id', 'unknown')}",
+            success_rate=success_rate,
+            sample_size=1,
+            last_run_id=entry.get("run_id", ""),
+        )
         return do_id
     except Exception:
         return None  # MOS not configured, non-blocking

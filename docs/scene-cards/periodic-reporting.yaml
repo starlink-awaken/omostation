@@ -59,3 +59,11 @@ notes:
 bet: BET-Y1Q2-T6-04
 falsifier: 若 shadow 期间无自动报告产出，则场景无价值，回退 draft
 activation_blockers: []
+
+reflection_contract:
+  enabled: true
+  trigger: on_completion
+  questions:
+    - "执行过程是否按预期流转？"
+    - "产出质量是否达标？"
+    - "是否有可复用的经验沉淀？"

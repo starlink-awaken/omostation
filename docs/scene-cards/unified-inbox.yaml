@@ -57,3 +57,11 @@ notes:
 bet: BET-Y1Q1-T2-01
 falsifier: 若 shadow 期间无信号被归一化入 inbox，则场景无价值，回退 draft
 activation_blockers: []
+
+reflection_contract:
+  enabled: true
+  trigger: on_completion
+  questions:
+    - "执行过程是否按预期流转？"
+    - "产出质量是否达标？"
+    - "是否有可复用的经验沉淀？"
