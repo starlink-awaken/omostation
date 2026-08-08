@@ -128,16 +128,66 @@ fi
 # 跳过: 全删除 push / CI_LOCAL_SKIP=1
 if [ "${CI_LOCAL_SKIP:-}" != "1" ] && [ "$ALL_DELETIONS" != "true" ]; then
   if [ -f "$ROOT/bin/gac/check-submodule-pointer-drift.py" ]; then
-    _drift_out="$(python3 "$ROOT/bin/gac/check-submodule-pointer-drift.py" 2>&1)" || _drift_rc=$?
-    _drift_rc="${_drift_rc:-0}"
-    if [ "$_drift_rc" -ne 0 ]; then
-      printf '%s\n' "$_drift_out" | sed 's/^/[pointer-drift] /' >&2
-      cat >&2 <<EOF
-[pointer-drift] ❌ 子模块指针 DIVERGED — 根仓指向 side branch, 代码不可见!
-   修复: python3 bin/gac/check-submodule-pointer-drift.py --fix --apply
-   或手动: git update-index --cacheinfo 160000,<origin/main SHA>,<submodule path>
-EOF
-      exit 1
+    # 捕获 JSON 部分 (脚本 --json 模式会在 JSON 后打印非 JSON 总结行)
+    _drift_raw="$(python3 "$ROOT/bin/gac/check-submodule-pointer-drift.py" --json 2>/dev/null || echo '')"
+    _drift_json="$(printf '%s' "$_drift_raw" | python3 -c "
+import sys, json
+lines = sys.stdin.read().splitlines()
+json_text = ''
+for line in lines:
+    json_text += line + '\n'
+    try:
+        json.loads(json_text)
+        break
+    except Exception:
+        continue
+print(json_text.strip())
+" 2>/dev/null || echo '{\"results\":[]}')"
+    _drift_json="${_drift_json:-{\"results\":[]}}"
+    _has_diverged=0
+    _has_any_issue=0
+    if [ -n "$_drift_json" ] && [ "$_drift_json" != "null" ]; then
+      _has_diverged=$(python3 -c "import json,sys; d=json.loads(sys.argv[1]); results=d.get('results',[]); print(1 if any(r.get('status')=='diverged' for r in results) else 0)" "$_drift_json" 2>/dev/null || echo "0")
+      _has_any_issue=$(python3 -c "import json,sys; d=json.loads(sys.argv[1]); results=d.get('results',[]); print(1 if any(r.get('status')!='skip' and r.get('status')!='aligned' for r in results) else 0)" "$_drift_json" 2>/dev/null || echo "0")
+    fi
+    if [ "$_has_any_issue" = "1" ]; then
+      echo "[pointer-drift] ⚠️  子模块指针漂移检测到问题:" >&2
+      python3 -c "
+import json, sys
+d = json.loads(sys.argv[1])
+for item in d.get('results', []):
+    status = item.get('status', 'unknown')
+    if status == 'skip':
+        continue
+    path = item.get('submodule', '?')
+    gitlink = item.get('gitlink', '?')[:12]
+    origin = item.get('origin_main', '?')[:12] if item.get('origin_main') else '?'
+    icon = '✅' if status == 'aligned' else '❌' if status == 'diverged' else '⚠️'
+    print(f'  {icon} {path}: {gitlink} <- {origin} ({status})')
+" "$_drift_json" 2>&1 | sed 's/^/[pointer-drift] /' >&2 || true
+      python3 -c "
+import json, sys
+d = json.loads(sys.argv[1])
+for item in d.get('results', []):
+    status = item.get('status', 'unknown')
+    if status == 'skip' or status == 'aligned':
+        continue
+    path = item.get('submodule', '?')
+    if status == 'diverged':
+        print(f'[pointer-drift] ❌ {path}: DIVERGED — 根仓指向 side branch, 代码不可见!')
+        print(f'   修复: python3 bin/gac/check-submodule-pointer-drift.py --fix --apply')
+        print(f'   或手动: cd {path} && git checkout main && git pull && cd ../.. && git add {path}')
+    elif status == 'stale':
+        print(f'[pointer-drift] ⚠️  {path}: stale — 根仓指针落后于 origin/main')
+        print(f'   修复: cd {path} && git checkout main && git pull && cd ../.. && git add {path}')
+    elif status == 'ahead':
+        print(f'[pointer-drift] ⚠️  {path}: ahead — 根仓指针领先于 origin/main (非阻塞)')
+    else:
+        print(f'[pointer-drift] ⚠️  {path}: {status}')
+" "$_drift_json" 2>&1 | sed 's/^/[pointer-drift] /' >&2 || true
+      if [ "$_has_diverged" = "1" ]; then
+        exit 1
+      fi
     fi
   fi
 fi
