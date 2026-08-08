@@ -1,5 +1,5 @@
 ---
-id: ADR-0397
+id: ADR-0396
 title: 分层契约方向单源 — layer-contract.yaml 为权威, check-layer-call-direction.py 对齐
 status: proposed
 type: decision
@@ -12,7 +12,7 @@ related:
   - 0217-workflow-hygiene-layer-check-and-evidence.md
 ---
 
-# ADR-0388: 分层契约方向单源 — layer-contract.yaml 为权威
+# ADR-0396: 分层契约方向单源 — layer-contract.yaml 为权威
 
 ## Status
 
