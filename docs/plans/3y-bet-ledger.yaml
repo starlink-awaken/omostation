@@ -1827,7 +1827,8 @@ bets:
   title: 真实评测集 v1 (≥200 条)
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-09
   goal: 用 adjudication 数据构建第一份非合成评测集, 替代自出题自答
   non_goals:
   - 模型训练
@@ -1836,6 +1837,11 @@ bets:
   - 评测集 >= 200 条, 全部来自真实 adjudication
   - 含正例/负例/边界例三类
   - 明确标注"非合成"来源
+  done_evidence:
+  - .omo/_delivery/evalsets/evalset-v1.json count=439 (≥200)
+  - distribution: positive=403, boundary=30, negative=6
+  - source_note: 全部来自真实 PR 评审与人工裁决, 非合成数据
+  - verify: ls .omo/_delivery/evalsets/ | wc -l = 1 (>= 1)
   verify:
   - cmd: ls .omo/_delivery/evalsets/ | wc -l
     expect: '>= 1'
@@ -1850,6 +1856,11 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 样本不足 200 → 推迟到样本积累够, 不得用合成样本补齐
+  retro:
+    path: .omo/_knowledge/retros/2026-08-09-T4-01-retro.md
+    lessons_learned:
+    - 先查再建：candidate bet 的 write_surfaces 路径可能已有满足 done_when 的产物
+    - 快速闭环：产物已满足条件时，标 done + 写 retro 是最佳路径
   retro: required
 - id: BET-Y1Q4-T1-01
   track: T1-TRUTH
@@ -2101,7 +2112,8 @@ bets:
   title: 漂移监控与自动降级
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-09
   goal: 让放权后的能力退化能被自动发现并回收权限
   non_goals:
   - 自动重训模型
