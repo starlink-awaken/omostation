@@ -713,6 +713,8 @@ def test_claim_adds_path_surface_locks_and_ledger_event(tmp_path: Path) -> None:
         "README.md",
         "--surface",
         "doc-ssot",
+        "--affected-hash",
+        "[]",
         "--json",
     )
     assert claim.returncode == 0, claim.stderr
@@ -762,6 +764,8 @@ def test_concurrent_claims_preserve_run_record(tmp_path: Path) -> None:
             "tester",
             "--path",
             path,
+            "--affected-hash",
+            "[]",
             "--json",
         ]
         for path in ("README.md", "docs/README.md")
@@ -892,6 +896,8 @@ def test_verify_blocks_required_claim_tier(tmp_path: Path) -> None:
         run_id,
         "--path",
         "bin/agent-workflow.py",
+        "--affected-hash",
+        "[]",
         "--json",
     )
     assert claim.returncode == 0, claim.stderr

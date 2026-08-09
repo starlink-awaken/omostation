@@ -1,0 +1,63 @@
+name: repo-health-daily
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_run:
+    workflows:
+      - phase-gate
+      - evidence-gate
+      - gac-gate
+      - agora-ci
+      - kairon-ci
+      - ecos-ci
+    types:
+      - completed
+permissions:
+  contents: read
+  issues: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 运行审计
+        id: audit
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/repo-health
+          bin/ssot/audit-repo-health.sh --json --limit 5 > /tmp/repo-health/report.json
+          echo "json_size=$(wc -c < /tmp/repo-health/report.json)" >> "$GITHUB_OUTPUT"
+      - name: 检查高风险仓库并开 issue
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+        run: |
+          python3 - <<'PYEOF'
+import json, os
+d = json.load(open('/tmp/repo-health/report.json'))
+high = [r for r in d.get('repos', []) if r.get('risk_score', 0) >= 50]
+if not high:
+    print("✅ 无高风险仓库")
+    raise SystemExit(0)
+lines = [f"- **{r['repo']}** 风险分 {r.get('risk_score',0)}" for r in high]
+body = "## 高风险仓库告警\n\n" + "\n".join(lines) + "\n\n> 由 repo-health-daily 自动生成 (audit-repo-health.sh)"
+print("⚠️ 高风险:\n" + "\n".join(lines))
+open('/tmp/repo-health/high-repos.md', 'w').write(body)
+PYEOF
+          if [ -f /tmp/repo-health/high-repos.md ]; then
+            EXISTING=$(gh issue list --repo "${GITHUB_REPOSITORY}" --label repo-health-alert --state open --json number -q '.[0].number' 2>/dev/null || echo "")
+            if [ -n "$EXISTING" ]; then
+              gh issue edit "$EXISTING" --repo "${GITHUB_REPOSITORY}" --body-file /tmp/repo-health/high-repos.md
+              echo "已更新 issue #$EXISTING"
+            else
+              gh issue create --repo "${GITHUB_REPOSITORY}" --title "repo-health: 高风险仓库告警" --label repo-health-alert --body-file /tmp/repo-health/high-repos.md
+            fi
+          fi

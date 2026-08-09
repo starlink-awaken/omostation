@@ -224,7 +224,7 @@ def _write_health_score_evidence(score: float) -> tuple[bool, str]:
 # ── L2: 声明真实性检查 (文件系统, 快) ────────────────────────────
 
 
-def _check_stdio(command: list[str]) -> tuple[bool, str]:
+def _check_stdio(command: list[str], svc_package: str = "") -> tuple[bool, str]:
     """stdio/mcp_stdio: 检查 --directory 存在 + -m module 可定位.
 
     command 形如 ['uv','run','--directory','projects/kairon','python','-m','kos.cli','search']
@@ -269,6 +269,9 @@ def _check_stdio(command: list[str]) -> tuple[bool, str]:
 
     # 路径 2: --package (workspace 根跑, uv workspace 运行时解析)
     # e.g. uv run --package cockpit python -m cockpit.scripts.cockpit_mcp
+    # svc_package 兜底: BOS 服务声明里的 package 字段 (command 缺 --package 时用)
+    if not package and svc_package:
+        package = svc_package
     if package and not directory:
         pkg_underscore = package.replace("-", "_")
         for proj in (
@@ -276,7 +279,8 @@ def _check_stdio(command: list[str]) -> tuple[bool, str]:
             WORKSPACE / "projects" / pkg_underscore,
         ):
             for cand in (proj / "src" / package, proj / "src" / pkg_underscore):
-                if cand.exists():
+                # 接受文件或包目录 (package 目录内含 .py 即视为可达)
+                if cand.exists() and (cand.is_file() or any(cand.rglob("*.py"))):
                     return True, "ok (--package)"
         # package 可能在 monorepo workspace (kairon), L2 不深查 uv 运行时解析
         return True, "ok (--package workspace)"
@@ -326,13 +330,18 @@ def _check_internal(module_path: str, func_name: str) -> tuple[bool, str]:
     """internal: 检查 module_path 文件存在."""
     if not module_path:
         return False, "no module_path"
-    # module_path 可能是 "package.module" 或文件路径
-    # 老王务实: 找全 workspace 下匹配的 .py
-    target = module_path.replace(".", "/") + ".py"
+    # module_path 可能是 "package.module" (包/子包) 或文件路径
+    # 老王务实: 找全 workspace 下匹配的 .py 文件或包含 .py 的包目录
+    target_file = module_path.replace(".", "/") + ".py"
+    target_pkg = module_path.replace(".", "/")
     for proj in (WORKSPACE / "projects").iterdir():
+        if not proj.is_dir():
+            continue
         for sub in ("src", ""):
-            candidate = proj / sub / target if sub else proj / target
-            if candidate.exists():
+            base = proj / sub if sub else proj
+            file_candidate = base / target_file
+            pkg_candidate = base / target_pkg
+            if file_candidate.exists() or (pkg_candidate.is_dir() and any(pkg_candidate.rglob("*.py"))):
                 if not func_name:
                     return True, "ok (module found, no func check)"
                 return True, "ok"

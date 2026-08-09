@@ -93,6 +93,58 @@ def _find_journey_spec(journey_id: str) -> Path:
     return path
 
 
+# ── Journey template support (BET-Y3H1-T5-01) ────────────────────────────────
+
+def _render_template(spec: dict) -> dict:
+    """If a journey spec references a template, merge it with the spec.
+
+    A spec may declare ``template: <id>`` plus ``params: {key: value}``. The
+    template file under ``docs/journey-templates/`` provides the shared
+    states/transitions skeleton with ``{{param}}`` placeholders. The spec's own
+    fields override the rendered template (deep-merged by section).
+    """
+    template_id = spec.get("template")
+    if not template_id:
+        return spec
+    template_path = ROOT / "docs" / "journey-templates" / f"{template_id}.yaml"
+    if not template_path.exists():
+        raise FileNotFoundError(f"journey template not found: {template_path}")
+
+    template = load_yaml(template_path)
+    params = spec.get("params", {}) or {}
+
+    def substitute(value):
+        if isinstance(value, str):
+            for key, val in params.items():
+                value = value.replace("{{" + str(key) + "}}", str(val))
+            return value
+        if isinstance(value, list):
+            return [substitute(v) for v in value]
+        if isinstance(value, dict):
+            return {k: substitute(v) for k, v in value.items()}
+        return value
+
+    rendered_states = substitute(template.get("states", []))
+    rendered_transitions = substitute(template.get("transitions", []))
+
+    merged = dict(template)
+    merged["schema"] = spec.get("schema", merged.get("schema"))
+    merged["journey_id"] = spec.get("journey_id", merged.get("journey_id"))
+    merged["description"] = spec.get("description", merged.get("description"))
+    merged["states"] = rendered_states
+    merged["transitions"] = rendered_transitions
+
+    # Spec-level overrides (section merge).
+    for section in ("states", "transitions"):
+        if spec.get(section):
+            merged[section] = spec[section]
+    # Extra spec fields (checkpoint, backedge_limit, etc.) pass through.
+    for key, val in spec.items():
+        if key not in ("template", "params", "states", "transitions", "schema", "journey_id", "description"):
+            merged[key] = val
+    return merged
+
+
 def _find_scene_card(scene_id: str) -> Path | None:
     cards_dir = ROOT / "docs" / "scene-cards"
     for p in cards_dir.glob("*.yaml"):
@@ -391,7 +443,7 @@ def run_journey(
 ) -> dict[str, Any]:
     """Execute a journey spec: walk state machine, dispatch scenes, collect evidence."""
     spec_path = _find_journey_spec(journey_id)
-    spec = load_yaml(spec_path)
+    spec = _render_template(load_yaml(spec_path))
 
     state_store = _load_module(ROOT / "bin/ssot/journey-state-store.py", "journey_state_store")
     cap_module = _load_module(ROOT / "bin/ssot/capability-token.py", "capability_token")
@@ -428,15 +480,46 @@ def run_journey(
     print(f"   Entry: {current_state_name}")
     print()
 
-    while current_state_name and step_count < max_steps:
+    # Parallel support (BET-Y1Q4-T5-01): track a set of active states. A fork
+    # fans out into branches; a join collects completed branch states and only
+    # proceeds when the configured strategy is satisfied.
+    active_states: list[str] = [current_state_name]
+    completed_states: set[str] = set()
+
+    while active_states and step_count < max_steps:
+        current_state_name = active_states[0]
         step_count += 1
         state = states.get(current_state_name)
         if not state:
             print(f"❌ Unknown state: {current_state_name}")
-            break
+            active_states = active_states[1:]
+            continue
 
         scene_id = state.get("scene", "")
         print(f"  [{step_count}] State: {current_state_name} (scene: {scene_id})")
+
+        # Fork: fan out into parallel branches instead of executing the state.
+        if _is_fork_state(state):
+            branches = _fork_branches(state)
+            print(f"     → FORK into branches: {branches}")
+            active_states = active_states[1:] + [b for b in branches if b in states]
+            continue
+
+        # Join: wait for source branches to complete per strategy.
+        if _is_join_state(state):
+            sources = _join_sources(state)
+            strategy = _join_strategy(state)
+            done = sum(1 for s in sources if s in completed_states or s == current_state_name)
+            if not _join_satisfied(strategy, done, len(sources)):
+                print(f"     → JOIN pending: {done}/{len(sources)} sources ({strategy}), waiting…")
+                # Move this join to the end of the queue so other branches run first.
+                active_states = active_states[1:] + [current_state_name]
+                continue
+            print(f"     → JOIN satisfied ({done}/{len(sources)}, {strategy})")
+            # Join runs exactly once: drop duplicate join_point copies from the
+            # queue left behind by each completed source branch.
+            active_states = [s for s in active_states if s != current_state_name]
+            completed_states.add(current_state_name)
 
         # Record state entry
         state_store.save_state(
@@ -509,7 +592,11 @@ def run_journey(
         next_states = state.get("next", [])
         if not next_states:
             print(f"  ✅ Terminal state reached: {current_state_name}")
-            break
+            completed_states.add(current_state_name)
+            active_states = active_states[1:]
+            if not active_states:
+                break
+            continue
 
         # Evaluate transitions to find next state
         next_state = None
@@ -550,7 +637,13 @@ def run_journey(
             print(f"  ⚠️  No matching transition from {current_state_name}. Ending.")
             break
 
-        current_state_name = next_state
+        # Record this state as completed (needed for join source counting).
+        completed_states.add(current_state_name)
+        # Queue the next state (parallel: append, linear: shift).
+        if _is_fork_state(state) or active_states:
+            active_states = active_states[1:] + [next_state]
+        else:
+            active_states = [next_state]
         print()
 
     # Journey complete — trigger reflection if scene card has reflection_contract
@@ -591,6 +684,75 @@ def _find_entry_state(spec: dict) -> str | None:
     return states[0]["name"] if states else None
 
 
+def scan_template_usage() -> dict[str, Any]:
+    """Map which journey specs reference which templates (BET-Y3H1-T5-01).
+
+    Lets an operator see the blast radius before changing a template.
+    """
+    specs_dir = ROOT / "docs" / "journey-specs"
+    templates_dir = ROOT / "docs" / "journey-templates"
+    usage: dict[str, list[str]] = {}
+    for tp in sorted(templates_dir.glob("*.yaml")):
+        usage[tp.stem] = []
+    for sp in sorted(specs_dir.glob("*.yaml")):
+        try:
+            body = load_yaml(sp)
+        except (OSError, ValueError):
+            continue
+        tid = body.get("template")
+        if tid:
+            usage.setdefault(tid, []).append(sp.stem)
+    return {
+        "schema": "journey-template-usage/v1",
+        "templates": sorted(usage.keys()),
+        "usage": {k: sorted(v) for k, v in usage.items()},
+        "total_template_refs": sum(len(v) for v in usage.values()),
+    }
+
+
+# ── Parallel fork/join helpers (BET-Y1Q4-T5-01) ──────────────────────────────
+
+def _is_fork_state(state: dict) -> bool:
+    return bool(state.get("parallel"))
+
+
+def _fork_branches(state: dict) -> list[str]:
+    """Branches a fork state fans out to."""
+    parallel = state.get("parallel", {})
+    return list(parallel.get("branches", []) or [])
+
+
+def _is_join_state(state: dict) -> bool:
+    return bool(state.get("join"))
+
+
+def _join_sources(state: dict) -> list[str]:
+    join = state.get("join", {})
+    return list(join.get("sources", []) or [])
+
+
+def _join_strategy(state: dict) -> str:
+    return str(state.get("join", {}).get("strategy", "all"))
+
+
+def _join_satisfied(strategy: str, completed: int, total: int) -> bool:
+    """Decide whether a join can proceed based on the configured strategy.
+
+    all     → every source branch must complete
+    majority → more than half must complete
+    any     → at least one must complete
+    """
+    if total <= 0:
+        return True  # no sources → degenerate join passes
+    if strategy == "all":
+        return completed >= total
+    if strategy == "majority":
+        return completed > total / 2
+    if strategy == "any":
+        return completed >= 1
+    return completed >= total  # unknown strategy → safest: all
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=ROOT)
@@ -611,6 +773,8 @@ def main(argv: list[str] | None = None) -> int:
     resume_parser.add_argument("--journey-id", required=True)
     resume_parser.add_argument("--run-id", required=True)
 
+    sub.add_parser("templates", help="show journey template usage / blast radius")
+
     args = parser.parse_args(argv)
     command = args.command
 
@@ -627,6 +791,11 @@ def main(argv: list[str] | None = None) -> int:
     if command == "resume":
         result = run_journey(args.journey_id, resume=True, run_id=args.run_id)
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+
+    if command == "templates":
+        usage = scan_template_usage()
+        print(json.dumps(usage, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
 
     # Default: if journey_id given without subcommand, run it
