@@ -1468,7 +1468,8 @@ bets:
   title: /outcomes 结果与校准面板
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-09
   goal: 让"系统学得怎么样"可被一眼看见
   non_goals:
   - 复杂图表
@@ -1528,7 +1529,8 @@ bets:
   title: Neo4j 生产启用
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-09
   goal: 让 temporal_fact / entity_relation 走真实图路径, 结束 off_until_NEO4J_URI 状态
   non_goals:
   - graphiti 全量接入
@@ -1537,6 +1539,11 @@ bets:
   - NEO4J_URI 配置生效, 7474/7687 在 port-registry 注册
   - temporal_fact 与 entity_relation 召回走 Neo4j
   - 服务不可达时降级可见, 不静默回退
+  done_evidence:
+  - mos-neo4j-up.sh 启动 docker mos-neo4j healthy
+  - NEO4J_URI=bolt://localhost:7687 注入环境
+  - memory-os-smoke.sh PASS (neo4j backend=ok)
+  - memory-os.yaml neo4j.status=active default=neo4j
   verify:
   - cmd: make memory-os-check
     expect: exit 0
@@ -1546,7 +1553,7 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - protocols/port-registry.yaml
-  - config/**
+  - .omo/_truth/registry/memory-os.yaml
   pasw_required: false
   depends_on:
   - BET-Y1Q1-T3-01
