@@ -586,6 +586,12 @@ memory-os-smoke:  ## Memory OS CLI smoke: status + write + recall + as_of
 memory-os-asof-seed:  ## Seed bi-temporal AliceDemo facts + print as_of comparison
 	bash bin/memory-os-asof-seed.sh
 
+memory-os-consistency:  ## MOS 双栈一致性观察 (BET-Y1Q3-T3-01): 同一 query MOS vs KOS 结果一致性
+	python3 bin/ssot/mos-dual-stack-consistency.py
+
+memory-os-consistency-weekly:  ## MOS 双栈一致性 8 周滚动周报
+	python3 bin/ssot/mos-dual-stack-consistency.py --weekly
+
 
 # ── PASW: Per-Agent Submodule Worktree (ADR-0349) ──────────
 pasw-status:  ## 显示 PASW 子模块 worktree 状态
