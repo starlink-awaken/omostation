@@ -123,6 +123,7 @@ KNOWN_GAP_PREFIXES: dict[str, str] = {
     #   治本: ToolBox maintainer 跑 build; 临时不计鸿沟, 30 天复查. 见 evidence-smoke #P0-④.)
     "bos://capability/wps-office-mcp/": "ToolBox wps-office-mcp dist/index.js 未 build (external ~/ToolBox; re-audited 2026-07-14, extend to 2026-08-25)",
     "bos://capability/wps-skills/": "ToolBox wps-skills dist/index.js 未 build (external ~/ToolBox; re-audited 2026-07-14, extend to 2026-08-25)",
+    "bos://governance/protocols-layer/": "kairon protocols_layer 包已删 (2026-06-26, kairon CLAUDE.md 明确为历史别名非 live package); BOS 声明遗留未删, 等下一次清理波",
 }
 KNOWN_GAP_EXPIRES = "2026-08-25"  # re-audit after ToolBox build (was 2026-07-25)
 
@@ -224,7 +225,7 @@ def _write_health_score_evidence(score: float) -> tuple[bool, str]:
 # ── L2: 声明真实性检查 (文件系统, 快) ────────────────────────────
 
 
-def _check_stdio(command: list[str]) -> tuple[bool, str]:
+def _check_stdio(command: list[str], svc_package: str = "") -> tuple[bool, str]:
     """stdio/mcp_stdio: 检查 --directory 存在 + -m module 可定位.
 
     command 形如 ['uv','run','--directory','projects/kairon','python','-m','kos.cli','search']
@@ -269,6 +270,9 @@ def _check_stdio(command: list[str]) -> tuple[bool, str]:
 
     # 路径 2: --package (workspace 根跑, uv workspace 运行时解析)
     # e.g. uv run --package cockpit python -m cockpit.scripts.cockpit_mcp
+    # svc_package 兜底: BOS 服务声明里的 package 字段 (command 缺 --package 时用)
+    if not package and svc_package:
+        package = svc_package
     if package and not directory:
         pkg_underscore = package.replace("-", "_")
         for proj in (
@@ -276,7 +280,8 @@ def _check_stdio(command: list[str]) -> tuple[bool, str]:
             WORKSPACE / "projects" / pkg_underscore,
         ):
             for cand in (proj / "src" / package, proj / "src" / pkg_underscore):
-                if cand.exists():
+                # 接受文件或包目录 (package 目录内含 .py 即视为可达)
+                if cand.exists() and (cand.is_file() or any(cand.rglob("*.py"))):
                     return True, "ok (--package)"
         # package 可能在 monorepo workspace (kairon), L2 不深查 uv 运行时解析
         return True, "ok (--package workspace)"
@@ -326,13 +331,18 @@ def _check_internal(module_path: str, func_name: str) -> tuple[bool, str]:
     """internal: 检查 module_path 文件存在."""
     if not module_path:
         return False, "no module_path"
-    # module_path 可能是 "package.module" 或文件路径
-    # 老王务实: 找全 workspace 下匹配的 .py
-    target = module_path.replace(".", "/") + ".py"
+    # module_path 可能是 "package.module" (包/子包) 或文件路径
+    # 老王务实: 找全 workspace 下匹配的 .py 文件或包含 .py 的包目录
+    target_file = module_path.replace(".", "/") + ".py"
+    target_pkg = module_path.replace(".", "/")
     for proj in (WORKSPACE / "projects").iterdir():
+        if not proj.is_dir():
+            continue
         for sub in ("src", ""):
-            candidate = proj / sub / target if sub else proj / target
-            if candidate.exists():
+            base = proj / sub if sub else proj
+            file_candidate = base / target_file
+            pkg_candidate = base / target_pkg
+            if file_candidate.exists() or (pkg_candidate.is_dir() and any(pkg_candidate.rglob("*.py"))):
                 if not func_name:
                     return True, "ok (module found, no func check)"
                 return True, "ok"
@@ -354,7 +364,7 @@ def check_service(svc) -> dict:
     ok, reason = False, "unknown transport"
 
     if transport in ("stdio", "mcp_stdio"):
-        ok, reason = _check_stdio(list(svc.command or []))
+        ok, reason = _check_stdio(list(svc.command or []), svc_package=getattr(svc, "package", "") or "")
         # toolbox/* 外挂能力 (headroom/deer-flow/…) 声明在 monorepo, 执行在 ToolBox。
         # L2 无 ToolBox 安装时不算真实鸿沟 (与 host_cli bash 同类).
         if not ok and str(getattr(svc, "package", "") or "").startswith("toolbox/"):
