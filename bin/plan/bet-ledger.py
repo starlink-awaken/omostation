@@ -386,6 +386,14 @@ def cmd_retro_due(data: dict, args) -> int:
         and b.get("retro") in ("required", "light")
         and not (RETRO_DIR / f"{b['id']}.md").exists()
     ]
+    if getattr(args, "json", False):
+        report = {
+            "ok": not due,
+            "count": len(due),
+            "due": [{"id": b["id"], "title": b.get("title", "")} for b in due],
+        }
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0 if report["ok"] else 1
     if not due:
         print("无待补复盘。")
         return 0
@@ -572,7 +580,8 @@ def main() -> int:
     pv.add_argument("--execute", action="store_true")
 
     sub.add_parser("status")
-    sub.add_parser("retro-due")
+    pr = sub.add_parser("retro-due")
+    pr.add_argument("--json", action="store_true")
     sub.add_parser("surface")
     sub.add_parser("gate").add_argument("window")
     sub.add_parser("lint")
