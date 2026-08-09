@@ -33,6 +33,7 @@ jobs:
 
       - name: Apply bump and create PR
         if: steps.check.outputs.has_changes == 'true'
+        id: create-pr
         run: |
           # runner 无 git identity → push 报 fatal: empty ident name (2026-08-08 修复)
           git config user.name "Submodule Autobump Bot"
@@ -46,5 +47,18 @@ jobs:
             --body "Auto-generated: bumped submodule pointers to latest origin/main." \
             --base main \
             --head "$BRANCH"
+        env:
+          GITHUB_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+
+      - name: Enable auto-merge (phase-gate pass 后自动合并)
+        if: steps.create-pr.outcome == 'success'
+        run: |
+          # 获取最新 PR 号 (刚创建的)
+          PR_NUMBER=$(gh pr list --repo "${GITHUB_REPOSITORY}" --head "$BRANCH" --json number -q '.[0].number')
+          if [ -n "$PR_NUMBER" ]; then
+            # 启用 auto-merge: 等待 phase-gate 通过后自动合并
+            gh pr merge "$PR_NUMBER" --auto --merge
+            echo "✅ 已启用 auto-merge for PR #$PR_NUMBER (phase-gate pass 后自动合并)"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
