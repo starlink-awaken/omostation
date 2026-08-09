@@ -14,7 +14,7 @@ properties:
   policy_id: "sgf-policy"
   dimension: "all"
   thresholds:
-    gates: 32
+    gates: 33
 
 settings:
   attention:
@@ -192,3 +192,6 @@ gates:
   # ADR-0379 E-3: CI 平面可观测性 — ci-surfaces SSOT 接线检测 (CR-CI-SURFACE-SSOT)
   - id: "ci-surfaces-check"
     command: ["bin/gac/check-ci-surfaces.py"]
+  # D5 retro 强制: done bet 缺复盘 → gate 红 (bet-ledger retro-due)
+  - id: "bet-retro-due-check"
+    command: ["bin/plan/bet_ledger.py", "retro-due", "--json"]
