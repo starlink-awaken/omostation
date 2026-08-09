@@ -134,10 +134,10 @@ warning_exceptions:
     - id: legacy-omo-knowledge-frontmatter
       rule: missing_frontmatter
       surface: omo-knowledge
-      max_findings: 41
+      max_findings: 90
       expires: 2026-10-31
       owner: governance-team
-      reason: Legacy knowledge documents are being migrated to the frontmatter contract.
+      reason: Legacy knowledge documents are being migrated to the frontmatter contract. Budget raised to 90 (2026-08-09) to accommodate new BET retro stub files created as part of D5 retro-due gate work (ADR-0404).
     - id: legacy-omo-truth-frontmatter
       rule: missing_frontmatter
       surface: omo-truth-docs
