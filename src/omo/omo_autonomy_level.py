@@ -294,6 +294,29 @@ class AutonomyLadder:
         reason = f"drift detected: windowed_cal={windowed_cal:.3f} < threshold={threshold} (was {cap.level})"
         return self._apply_change(cap, cap.level, new_level, reason)
 
+    def check_mof_drift(self) -> dict[str, Any] | None:
+        """Run MOF drift check. If drifting, record a rejected adjudication for 'system.mof_sync'."""
+        try:
+            import subprocess
+
+            workspace_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+            res = subprocess.run(
+                ["uv", "run", "python3", "bin/mof/gen-mof-artifacts.py", "--json"],
+                capture_output=True,
+                text=True,
+                timeout=15,
+                cwd=str(workspace_root),
+            )
+            data = json.loads(res.stdout)
+            if data.get("drifts", 0) > 0:
+                logger.warning(f"MOF drift detected: {data.get('findings')}")
+                return self.record_adjudication("system.mof_sync", "rejected")
+            else:
+                return self.record_adjudication("system.mof_sync", "accepted")
+        except Exception as e:
+            logger.error(f"MOF drift check failed: {e}")
+            return None
+
     def clear_human_review(self, capability: str) -> dict[str, Any]:
         """Clear the requires_human_review flag after human review (BET-Y2Q3-T3-02).
 
