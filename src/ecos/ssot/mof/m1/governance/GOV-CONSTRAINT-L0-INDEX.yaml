@@ -1,0 +1,46 @@
+---
+id: GOV-CONSTRAINT-L0-INDEX
+type: ConstraintL0
+name: L0 约束索引实例
+description: L0 派生约束在 M1 层的实例化索引 (136 治理规则抽象 → 137 派生约束映射)
+status: scored_active
+domain: governance
+layer: L0
+created: '2026-08-08'
+version: 1.0.0
+properties:
+  m3_parent: Constraint
+  constraint_count: 137
+  dimension_breakdown:
+    X1: 88
+    X2: 13
+    X3: 6
+    X4: 25
+    X5: 1
+    X6: 1
+    X7: 1
+    QG: 2
+  source_derived: projects/ecos/.omo/_derived/l0-constraints.v2.yaml
+  generator: projects/ecos/bin/gen-l0-constraints.py
+  abstract_families: 16
+dimension: QG
+severity: high
+applies_to: [L0, L1, L2, L3]
+rule_expr:
+  kind: aggregate
+  args:
+    - constraint_count == 137
+    - all(constraint.m3_parent == 'ConstraintL0' for constraint in derived)
+violation_code: E-L0-INDEX-001
+relation_constraints: []
+source:
+  ssot_ref: projects/ecos/src/ecos/l0/constraints.yaml
+  generator: gen-l0-constraints.py
+model_driven_refs:
+  - 'M2:ConstraintL0'
+  - 'M3:Constraint'
+  - 'GAC-RULE-*'
+state_history:
+  - state: active
+    timestamp: '2026-08-08'
+    reason: L0 抽象族映射落地 (16 族 → 137 派生约束)

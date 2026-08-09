@@ -96,7 +96,7 @@ def migrate_constraint(v1: dict) -> dict:
     v2 = {
         "id": v1.get("id"),
         "description": v1.get("description", ""),
-        "applies_to": v1.get("applies_to", []),
+        "applies_to": v1.get("applies_to") or ["L0"],
         "dimension": v1.get("dimension", "X1"),
         "severity": TYPE_TO_SEVERITY.get(v1.get("type", "required"), "medium"),
         "rule_expr": rule_expr,
@@ -120,7 +120,6 @@ def validate_v2_entry(v2: dict, schema: dict | None) -> list[str]:
     for key in (
         "id",
         "description",
-        "applies_to",
         "dimension",
         "severity",
         "violation_code",
@@ -128,10 +127,13 @@ def validate_v2_entry(v2: dict, schema: dict | None) -> list[str]:
     ):
         if not v2.get(key):
             errs.append(f"缺 {key}")
-    if v2.get("dimension") and v2["dimension"] not in ("X1", "X2", "X3", "X4"):
-        errs.append(f"dimension={v2['dimension']} 不在 X1-X4")
+    valid_dims = ("X1", "X2", "X3", "X4", "X5", "X6", "X7", "QG")
+    if v2.get("dimension") and v2["dimension"] not in valid_dims:
+        errs.append(f"dimension={v2['dimension']} 不在 {valid_dims}")
     if v2.get("m3_parent") != "ConstraintL0":
         errs.append(f"m3_parent={v2.get('m3_parent')} != ConstraintL0")
+    if not v2.get("applies_to"):
+        errs.append("缺 applies_to")
     return errs
 
 
