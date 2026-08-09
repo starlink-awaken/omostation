@@ -75,3 +75,27 @@ subs=[{'path': f.get('path','?'), 'gitlink': f.get('gitlink','?'), 'drift': f.ge
 print(json.dumps({'repo': repo, 'submodules': subs}))
 "
 }
+
+audit_hook() {
+  local repo="$1"
+  local canonical actual
+  canonical="$(git rev-parse --show-toplevel)/.githooks"
+  actual="$(git rev-parse --git-path hooks)"
+  local diverged="["
+  local first=1
+  if [ -d "$canonical" ] && [ -d "$actual" ]; then
+    for h in "$canonical"/*; do
+      [ -f "$h" ] || continue
+      local name
+      name=$(basename "$h")
+      if [ ! -f "$actual/$name" ] || ! cmp -s "$h" "$actual/$name"; then
+        [ "$first" = "1" ] && first=0 || diverged="$diverged, "
+        diverged="$diverged\"$name\""
+      fi
+    done
+  fi
+  diverged="$diverged]"
+  local consistent="true"
+  [ "$diverged" != "[]" ] && consistent="false"
+  echo "{\"repo\": \"$repo\", \"hooks\": {\"canonical_path\": \"$canonical\", \"actual_path\": \"$actual\", \"consistent\": $consistent, \"diverged\": $diverged}}"
+}

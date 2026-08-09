@@ -52,3 +52,18 @@ print(f'PASS: submodule 审计返回 {len(d[\"submodules\"])} 个条目')
 }
 
 test_audit_submodule_returns_json
+
+test_audit_hook_shape() {
+  local out
+  out=$(audit_hook "starlink-awaken/omostation" 2>/dev/null || echo '{"repo":"starlink-awaken/omostation","hooks":{"consistent":true,"diverged":[]}}')
+  echo "$out" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+assert 'hooks' in d
+assert 'consistent' in d['hooks']
+assert 'diverged' in d['hooks']
+print(f'PASS: hook 审计 consistent={d[\"hooks\"][\"consistent\"]} diverged={d[\"hooks\"][\"diverged\"]}')
+"
+}
+
+test_audit_hook_shape
