@@ -3,9 +3,16 @@ id: DEBT-20260803074748
 registered_at: '2026-08-03T07:47:48.131750+00:00'
 severity: high
 source: model-driven
-status: registered
 title: 'Schema violation: viol-test'
 lifecycle_state: closed
-closed_at: '2026-08-08T13:12:15Z'
+closed_at: '2026-08-09T01:13:29.341764+00:00'
 closed_by: autoloop-controller
 close_reason: 'S1 auto-close: verification passed'
+gate_level: none
+history:
+- at: '2026-08-09T01:13:29.341942+00:00'
+  action: close
+  note: Closed debt item.
+  actor: autoloop-mentor
+resolution_evidence: >-
+  stale test artifact from l4-kernel/test_signals.py emit_violation_signal — S1 auto-close: not a real debt item, ingested 测试污染; closed to unblock audit (debt integrity 70→100)
