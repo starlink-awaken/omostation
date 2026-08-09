@@ -15,7 +15,7 @@
 |----------|-----------|--------|
 | `cockpit omo` | `omo` | 22 |
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
-| `cockpit gbrain` | `gbrain` | 75 |
+| `cockpit gbrain` | `gbrain` | 0 |
 | `cockpit model-driven` | `model-driven` | 28 |
 | `cockpit agora` | `agora` | 65 |
 | `cockpit family-hub` | `family-hub` | 6 |
