@@ -86,6 +86,28 @@ def _send(req: dict) -> dict:
     return resp
 
 
+GOVERNANCE_EVENT_HANDLERS = {
+    "constraint.changed": ["python3", "bin/ssot/consumer_index.py"],
+    "derived.regenerated": ["python3", "projects/ecos/bin/gen-l0-constraints.py", "--validate"],
+    "m0.drift_detected": ["python3", "bin/ssot/m0_feedback.py"],
+}
+
+
+def daemon_handle_event(event_type: str, payload: dict) -> str:
+    handler = GOVERNANCE_EVENT_HANDLERS.get(event_type)
+    if not handler:
+        return "unknown"
+    try:
+        import subprocess
+
+        proc = subprocess.run(handler, capture_output=True, text=True, timeout=60)
+        if proc.returncode == 0:
+            return "verified" if event_type == "derived.regenerated" else "regenerated"
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return "alerted"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="GaC 物理沙箱 P3 POC (omo daemon)")
     parser.add_argument("--start", action="store_true", help="启动 daemon (前台阻塞)")
