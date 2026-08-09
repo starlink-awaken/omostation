@@ -1,0 +1,77 @@
+capabilities:
+  deploy-check:
+    calibration: 1.0
+    consecutive_accepted: 2
+    last_adjudication: accepted
+    level: L0
+    observations: 2
+    total_accepted: 2
+    updated_at: '2026-08-08T23:51:34Z'
+  review:
+    calibration: 0.6667
+    consecutive_accepted: 1
+    last_adjudication: accepted
+    level: L0
+    observations: 6
+    total_accepted: 4
+    updated_at: '2026-08-08T23:51:34Z'
+  scene_watcher:review:
+    calibration: 0.0
+    consecutive_accepted: 0
+    last_adjudication: rejected
+    level: L0
+    observations: 2
+    total_accepted: 0
+    updated_at: '2026-08-08T23:51:34Z'
+  scene_watcher:test:
+    calibration: 0.75
+    consecutive_accepted: 0
+    last_adjudication: rejected
+    level: L0
+    observations: 8
+    total_accepted: 6
+    updated_at: '2026-08-08T23:51:49Z'
+  scene_watcher:test-scene:
+    calibration: 0.0
+    consecutive_accepted: 0
+    last_adjudication: rejected
+    level: L0
+    observations: 2
+    total_accepted: 0
+    updated_at: '2026-08-08T23:51:34Z'
+  t:
+    calibration: 1.0
+    consecutive_accepted: 4
+    last_adjudication: accepted
+    level: L0
+    observations: 4
+    total_accepted: 4
+    updated_at: '2026-08-08T23:51:49Z'
+  test:
+    calibration: 0.5
+    consecutive_accepted: 0
+    last_adjudication: rejected
+    level: L0
+    observations: 4
+    total_accepted: 2
+    updated_at: '2026-08-08T23:51:49Z'
+  test-scene:
+    calibration: 1.0
+    consecutive_accepted: 2
+    last_adjudication: accepted
+    level: L0
+    observations: 2
+    total_accepted: 2
+    updated_at: '2026-08-08T23:51:34Z'
+criteria:
+  L0:
+    min_observations: 20
+  L1:
+    min_calibration: 0.6
+    min_consecutive_accepted: 30
+  L2:
+    min_calibration: 0.85
+    min_consecutive_accepted: 100
+demotion:
+  target: L0
+  trigger: any_rejected

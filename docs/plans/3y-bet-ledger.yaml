@@ -1407,7 +1407,9 @@ bets:
   title: 工程交付 dogfood 开 shadow
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-08
+  done_evidence: "engineering-delivery-dogfood.yaml: lifecycle→shadow, value_metric_policy=never_count_toward_value. pr-review-harvester.py created. Initial harvest: 152 outcomes/14d. Log: .omo/_delivery/outcomes/pr-harvest.jsonl."
   goal: 建立高频低风险的 decision_outcome 样本源, PR 评审意见即天然 human_verdict
   non_goals:
   - 计入 X3 价值指标
@@ -1690,7 +1692,9 @@ bets:
   title: 自主性阶梯 L0-L3 判据实现
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-08
+  done_evidence: "omo_autonomy_level.py: L0→L3 hard gates. L0→L1: 20 obs, L1→L2: cal≥0.6+30连, L2→L3: cal≥0.85+100连. Demotion: rejected→L0. OMO events on change. Registry: autonomy-levels.yaml. 14/14 tests."
   goal: 把放权从"人拍脑袋"变成"数据触发", 同时实现自动降级
   non_goals:
   - 实际放权某个场景(属 T7-01)
