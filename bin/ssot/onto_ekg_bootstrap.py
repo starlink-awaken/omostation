@@ -78,11 +78,17 @@ def build_bootstrap_report(concepts: list[dict]) -> str:
 def llm_enhance(concepts: list[dict], llm_fn=None) -> list[dict]:
     """LLM 增强层：对候选概念做语义分类/合并建议。
 
-    llm_fn 可注入（如 aetherforge 调用）；缺省时返回原样（规则式基线）。
-    增强输出追加字段: semantic_note（LLM 给出的分类或合并建议）。
+    llm_fn 可注入；缺省时用 llm_provider.llm_classify（auto 后端，
+    aetherforge 优先 + omlxc 回退，服务不可用时降级为规则式基线）。
+    增强输出追加字段: semantic_note。
     """
     if not llm_fn:
-        return concepts
+        try:
+            from llm_provider import llm_classify
+
+            llm_fn = llm_classify
+        except ImportError:
+            return concepts
     enhanced = []
     for c in concepts:
         note = llm_fn(c)
