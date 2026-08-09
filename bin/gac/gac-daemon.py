@@ -75,7 +75,30 @@ def daemon_loop() -> None:
 
 
 def _send(req: dict) -> dict:
-    """客户端: 连 daemon socket 发请求."""
+    return req
+
+
+GOVERNANCE_EVENT_HANDLERS = {
+    "constraint.changed": ["python3", "bin/ssot/consumer_index.py"],
+    "derived.regenerated": ["python3", "bin/ssot/gen-l0-constraints.py", "--validate"],
+    "m0.drift_detected": ["python3", "bin/ssot/m0_feedback.py"],
+}
+
+
+def daemon_handle_event(event_type: str, payload: dict) -> str:
+    handler = GOVERNANCE_EVENT_HANDLERS.get(event_type)
+    if not handler:
+        return "unknown"
+    try:
+        import subprocess
+
+        proc = subprocess.run(handler, capture_output=True, text=True, timeout=60)
+        if proc.returncode == 0:
+            return "verified" if event_type == "derived.regenerated" else "regenerated"
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return "alerted"
+"""客户端: 连 daemon socket 发请求."""
     if not os.path.exists(SOCKET_PATH):
         return {"ok": False, "error": f"daemon 未启动 ({SOCKET_PATH})"}
     cli = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
