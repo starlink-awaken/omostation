@@ -182,10 +182,16 @@ for remote_ref in \
   "$ROOT/projects/gbrain:https://github.com/starlink-awaken/omostation-gbrain.git" \
   "$ROOT/projects/cockpit:https://github.com/starlink-awaken/omostation-cockpit.git" \
   "$ROOT/projects/agora:https://github.com/starlink-awaken/omostation-agora.git"; do
+  # repo_path is everything before the first ':'; expected URL is everything after.
+  # The expected URL itself contains 'https://...', so we must use the shortest
+  # prefix removal to avoid stripping the scheme.
   repo_path="${remote_ref%%:*}"
-  expected="${remote_ref##*:}"
-  actual="$(git -C "$repo_path" remote get-url origin 2>/dev/null || true)"
-  if [ -n "$actual" ] && [ "$actual" != "$expected" ] && [ "$actual" != "${expected/https:\/\//git@github.com:}" ]; then
+  expected="${remote_ref#*:}"
+  # Unset GIT_DIR/GIT_WORK_TREE so git -C <submodule> reads the submodule's
+  # own config rather than inheriting the outer (possibly worktree) repo.
+  actual="$(env -u GIT_DIR -u GIT_WORK_TREE git -C "$repo_path" remote get-url origin 2>/dev/null || true)"
+  ssh_expected="${expected/https:\/\//git@github.com:}"
+  if [ -n "$actual" ] && [ "$actual" != "$expected" ] && [ "$actual" != "$ssh_expected" ]; then
     echo "[remote-hygiene] ❌ $repo_path origin 指向异常: $actual (应为 $expected)" >&2
     echo "[remote-hygiene] 修复: git -C $repo_path remote set-url origin $expected" >&2
     exit 1

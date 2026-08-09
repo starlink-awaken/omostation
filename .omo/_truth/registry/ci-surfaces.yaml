@@ -704,20 +704,6 @@ surfaces:
     triggers: [per_pr, push]
     status: active
     note: BET-Y1Q2-T1-05 submodule pointer drift detection (DIVERGED blocking)
-  - id: bin-gac-affected-graph-py
-    tool: bin/gac/affected-graph.py
-    workflow: cascading-test.yml
-    gate: false
-    triggers: [per_pr, push]
-    status: active
-    note: 级联拓扑影响图 (T1-02 + cascading-test) — 由 cascading-test.yml 调起, 解析 git diff 算出受影响的 downstream projects
-  - id: bin-gac-mass-deletion-gate-py
-    tool: bin/gac/mass-deletion-gate.py
-    workflow: bulk-deletion-guard.yml
-    gate: true
-    triggers: [per_pr, push]
-    status: active
-    note: bulk-deletion-guard 守门 — 主仓批量删除检测 (>=N 行/文件阈值 fail)
 
 workflow_triggers:
   - workflow: agora-ci.yml
@@ -732,17 +718,11 @@ workflow_triggers:
   - workflow: audit-rollout-monthly.yml
     triggers: [manual, scheduled]
     path_filtered: false
-  - workflow: bulk-deletion-guard.yml
-    triggers: [per_pr, push]
-    path_filtered: false
   - workflow: c2g-gc-weekly.yml
     triggers: [manual, scheduled]
     path_filtered: false
   - workflow: c2g-radar-daily.yml
     triggers: [manual, scheduled]
-    path_filtered: false
-  - workflow: cascading-test.yml
-    triggers: [per_pr, push]
     path_filtered: false
   - workflow: ci-lint.yml
     triggers: [per_pr, push, scheduled]

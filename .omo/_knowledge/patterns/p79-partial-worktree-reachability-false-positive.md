@@ -1,9 +1,3 @@
----
-status: active
-lifecycle: history
-owner: governance-team
-last-reviewed: 2026-08-09
----
 # P79 — Partial Worktree Reachability False-Positive Pattern
 
 > **eCOS 多环境 push 治理纪律** · 2026-08-04 沉淀 · 来源: #907 35+ iteration 实证

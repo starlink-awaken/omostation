@@ -38,13 +38,7 @@ def changed_submodule_paths(base: str) -> set[str]:
     子模块 commit 未推送时冻结所有人的 push. 本地 pre-push 应只检查本次
     实际变更的 gitlink; CI full checkout 仍是全量最终守门员.
     .gitmodules 自身变化视为结构变更 → 回退全量检查 (防御).
-
-    迭代优化 (2026-08-09): auto-fetch 保鲜 — base (origin/main) 陈旧时
-    git diff 产生伪 submodule 差异 → 误检无关子模块. 先 fetch 再 diff.
     """
-    # auto-fetch 保鲜: 确保 base 引用新鲜 (避免陈旧 ref 产生伪差异)
-    if base.startswith("origin/") or base == "origin/main":
-        run(["git", "fetch", "--quiet", "origin", "main"])
     # 基线不可解析 (拼错 / ref 未 fetch / 新克隆还没有 origin/main) 时必须回退全量。
     # 原实现返回 set(), 而空集会命中 check() 的 incremental-empty 快速路径
     # → 直接 ok=True, 报 "PASS (0 gitlinks)" 且 rc=0 —— 守门员一个都没查却宣称通过。

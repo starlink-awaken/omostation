@@ -1379,8 +1379,7 @@ bets:
   title: model-driven 去留判定
   appetite: 1 week
   priority: P1
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 判定 M0 是否在 Mesh 主链上有必经位置, 终结"横切但不在链上"的模糊状态
   non_goals:
   - 立即执行归并(视判定结果)
@@ -1388,7 +1387,6 @@ bets:
   - '产出判定 ADR: 接入主链 / 降为 ecos 内库 / 归档'
   - 判定依据为实测调用链, 非设计意图
   - 若判定为降库, 排入 Y1Q4 执行 bet
-  done_evidence: "ADR-0406 (PROPOSED): 维持子模块, 修订 M0 文档语义 (横切工具/非主链). 实证: 3 个真实消费者 (l4-kernel bridge+try/except, cockpit 反腐层, ecos 3 CLI 工具), 0 主链强制依赖, 23 个 import 全在降级或显式失败路径. project-registry M0 标签重命名 + consumers 字段. Y2Q1 复审."
   verify:
   - cmd: ls .omo/_knowledge/decisions/ | grep -c model-driven
     expect: '>= 1'
@@ -1409,8 +1407,7 @@ bets:
   title: 工程交付 dogfood 开 shadow
   appetite: 1 week
   priority: P0
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 建立高频低风险的 decision_outcome 样本源, PR 评审意见即天然 human_verdict
   non_goals:
   - 计入 X3 价值指标
@@ -1470,8 +1467,7 @@ bets:
   title: /outcomes 结果与校准面板
   appetite: 2 weeks
   priority: P0
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 让"系统学得怎么样"可被一眼看见
   non_goals:
   - 复杂图表
@@ -1501,8 +1497,7 @@ bets:
   title: MOS 双栈一致性观察 8 周
   appetite: 6 weeks
   priority: P0
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 归并前的必经硬门 — 证明 MOS 已可替代 KOS/gbrain 双栈
   non_goals:
   - 执行归并(属 T6-01)
@@ -1531,8 +1526,7 @@ bets:
   title: Neo4j 生产启用
   appetite: 1 week
   priority: P0
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 让 temporal_fact / entity_relation 走真实图路径, 结束 off_until_NEO4J_URI 状态
   non_goals:
   - graphiti 全量接入
@@ -1541,11 +1535,6 @@ bets:
   - NEO4J_URI 配置生效, 7474/7687 在 port-registry 注册
   - temporal_fact 与 entity_relation 召回走 Neo4j
   - 服务不可达时降级可见, 不静默回退
-  done_evidence:
-  - mos-neo4j-up.sh 启动 docker mos-neo4j healthy
-  - NEO4J_URI=bolt://localhost:7687 注入环境
-  - memory-os-smoke.sh PASS (neo4j backend=ok)
-  - memory-os.yaml neo4j.status=active default=neo4j
   verify:
   - cmd: make memory-os-check
     expect: exit 0
@@ -1555,7 +1544,7 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - protocols/port-registry.yaml
-  - .omo/_truth/registry/memory-os.yaml
+  - config/**
   pasw_required: false
   depends_on:
   - BET-Y1Q1-T3-01
@@ -1569,13 +1558,7 @@ bets:
   title: 退役 mem0 / memtheta 仿真适配器
   appetite: 1 week
   priority: P1
-  status: done
-  done_at: 2026-08-09
-  done_when:
-    - memory-os.yaml: memtheta status partial_simulation→legacy_simulation, default→false
-    - "memory-os.yaml: mem0/memtheta deprecated_at: 2026-08-08, deprecated_by_bet: T3-03"
-    - kairon: deprecation warnings added, mem0ai moved to optional deps
-    - docs/operations/memory-os-adapter-audit.md: §11 T3-03 closeout section
+  status: candidate
   goal: 消除 partial_simulation / stub_optional 这类"看起来接了实际没接"的适配器
   non_goals:
   - 替换为其他第三方记忆库
@@ -1649,8 +1632,7 @@ bets:
   title: 知识场景召回被引用率上线
   appetite: 1 week
   priority: P0
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 用一条指标暴露世界模型的真实检索质量
   non_goals:
   - 提升检索质量本身
@@ -1706,8 +1688,7 @@ bets:
   title: 自主性阶梯 L0-L3 判据实现
   appetite: 2 weeks
   priority: P0
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 把放权从"人拍脑袋"变成"数据触发", 同时实现自动降级
   non_goals:
   - 实际放权某个场景(属 T7-01)
@@ -1766,8 +1747,7 @@ bets:
   title: 并行会签 fork/join
   appetite: 2 weeks
   priority: P1
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 支持公文多方意见合并, 编排从 linear 走向真实业务形状
   non_goals:
   - 任意 DAG
@@ -1827,8 +1807,7 @@ bets:
   title: 真实评测集 v1 (≥200 条)
   appetite: 1 week
   priority: P0
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 用 adjudication 数据构建第一份非合成评测集, 替代自出题自答
   non_goals:
   - 模型训练
@@ -1837,11 +1816,6 @@ bets:
   - 评测集 >= 200 条, 全部来自真实 adjudication
   - 含正例/负例/边界例三类
   - 明确标注"非合成"来源
-  done_evidence:
-  - .omo/_delivery/evalsets/evalset-v1.json count=439 (≥200)
-  - distribution: positive=403, boundary=30, negative=6
-  - source_note: 全部来自真实 PR 评审与人工裁决, 非合成数据
-  - verify: ls .omo/_delivery/evalsets/ | wc -l = 1 (>= 1)
   verify:
   - cmd: ls .omo/_delivery/evalsets/ | wc -l
     expect: '>= 1'
@@ -1856,11 +1830,6 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 样本不足 200 → 推迟到样本积累够, 不得用合成样本补齐
-  retro:
-    path: .omo/_knowledge/retros/2026-08-09-T4-01-retro.md
-    lessons_learned:
-    - 先查再建：candidate bet 的 write_surfaces 路径可能已有满足 done_when 的产物
-    - 快速闭环：产物已满足条件时，标 done + 写 retro 是最佳路径
   retro: required
 - id: BET-Y1Q4-T1-01
   track: T1-TRUTH
@@ -2054,8 +2023,7 @@ bets:
   title: /inbox 每日习惯化改造
   appetite: 2 weeks
   priority: P0
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 让 /inbox 成为每日必开界面 — 这是产品成败的唯一判定
   non_goals:
   - 推送通知
@@ -2113,8 +2081,7 @@ bets:
   title: 漂移监控与自动降级
   appetite: 2 weeks
   priority: P0
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 让放权后的能力退化能被自动发现并回收权限
   non_goals:
   - 自动重训模型
@@ -2313,8 +2280,7 @@ bets:
   title: 编排模板化
   appetite: 3 weeks
   priority: P1
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 同一模板可服务多个输入源, 降低新场景编排成本
   non_goals:
   - 可视化编排画布
@@ -2538,8 +2504,7 @@ bets:
   title: cockpit Phase 4 清理债务 — cockpit_mcp.py 残留 import + 子模块指针漂移
   appetite: 3 days
   priority: P0
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 完成 cockpit Phase 4 清理：清理 cockpit_mcp.py 残留 import，同步 audit worktree 子模块指针，修复 L4 bridge 全系列失效
   non_goals:
   - 新增 cockpit_mcp.py shim（除非 Agora BOS 路径短期不可用）
@@ -2650,8 +2615,7 @@ bets:
   title: cockpit SSOT 漂移治理 — COMMAND_CATALOG + help_map 同步 + 弃用 CLI 清理
   appetite: 2 days
   priority: P2
-  status: done
-  done_at: 2026-08-08
+  status: candidate
   goal: 修复 cockpit 命令注册表 SSOT 漂移：补充缺失命令到 registry/help_map，清理已弃用但仍注册的 CLI 入口
   non_goals:
   - 新增命令（仅同步现有注册）

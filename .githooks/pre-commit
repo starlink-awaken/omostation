@@ -89,10 +89,12 @@ for sub in $PASW_ISOLATED; do
 
     # 验证 staged SHA 与 worktree HEAD 一致 (确保改动来自隔离 worktree)
     staged_sha=$(git ls-files --stage -- "$sub" | awk '$1 == "160000" {print $2}')
-    # env -u GIT_DIR/GIT_WORK_TREE: git hook 执行时 GIT_DIR 指向主仓, `git -C` 改 cwd
-    # 但 GIT_DIR 优先, 读主仓 ref 而非子模块 HEAD (幽灵 SHA, 拦截所有 PASW bump-pointer).
-    # 清除环境变量让 git -C .subtrees/<sub> 正确读子模块 worktree HEAD.
-    wt_sha=$(env -u GIT_DIR -u GIT_WORK_TREE git -C "$sub_wt" rev-parse HEAD 2>/dev/null || echo "")
+    # git hook 执行时 GIT_DIR/GIT_WORK_TREE/GIT_INDEX_FILE 等指向主仓/当前 worktree;
+    # 嵌套进入子模块 worktree 前必须清除这些变量, 否则 git 会读取外层仓库的 ref
+    # (幽灵 SHA, 导致 PASW bump-pointer 被误拦).
+    wt_sha=$(env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_COMMON_DIR \
+             -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
+             git -C "$sub_wt" rev-parse HEAD 2>/dev/null || echo "")
     if [ "$staged_sha" != "$wt_sha" ]; then
       echo "[submodule-guard] ❌ $sub 指针变更被拒绝: 与子模块 worktree HEAD 不匹配" >&2
       echo "   staged SHA: ${staged_sha:-none}" >&2

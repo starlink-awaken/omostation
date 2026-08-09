@@ -123,7 +123,6 @@ KNOWN_GAP_PREFIXES: dict[str, str] = {
     #   治本: ToolBox maintainer 跑 build; 临时不计鸿沟, 30 天复查. 见 evidence-smoke #P0-④.)
     "bos://capability/wps-office-mcp/": "ToolBox wps-office-mcp dist/index.js 未 build (external ~/ToolBox; re-audited 2026-07-14, extend to 2026-08-25)",
     "bos://capability/wps-skills/": "ToolBox wps-skills dist/index.js 未 build (external ~/ToolBox; re-audited 2026-07-14, extend to 2026-08-25)",
-    "bos://governance/protocols-layer/": "kairon protocols_layer 包已删 (2026-06-26, kairon CLAUDE.md 明确为历史别名非 live package); BOS 声明遗留未删, 等下一次清理波",
 }
 KNOWN_GAP_EXPIRES = "2026-08-25"  # re-audit after ToolBox build (was 2026-07-25)
 
@@ -364,7 +363,7 @@ def check_service(svc) -> dict:
     ok, reason = False, "unknown transport"
 
     if transport in ("stdio", "mcp_stdio"):
-        ok, reason = _check_stdio(list(svc.command or []), svc_package=getattr(svc, "package", "") or "")
+        ok, reason = _check_stdio(list(svc.command or []))
         # toolbox/* 外挂能力 (headroom/deer-flow/…) 声明在 monorepo, 执行在 ToolBox。
         # L2 无 ToolBox 安装时不算真实鸿沟 (与 host_cli bash 同类).
         if not ok and str(getattr(svc, "package", "") or "").startswith("toolbox/"):

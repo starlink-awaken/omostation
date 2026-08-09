@@ -1,9 +1,3 @@
----
-status: active
-lifecycle: history
-owner: governance-team
-last-reviewed: 2026-08-09
----
 # Phase 0-4 复盘 — Gap 清零闭环实施
 
 > 创建: 2026-08-08 | 更新: 2026-08-08 (autoloop bug修复 + Trust校准链补全)

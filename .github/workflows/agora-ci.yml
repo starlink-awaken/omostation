@@ -60,22 +60,6 @@ jobs:
           python-version: "3.13"
       - name: Set up uv
         uses: astral-sh/setup-uv@v4
-      - name: Dependency reachability precheck
-        run: |
-          MISSING=""
-          for d in bus-foundation ecos metaos; do
-            [ -d "projects/$d" ] || MISSING="$MISSING $d"
-          done
-          for d in kos eidos minerva core-models; do
-            [ -d "projects/kairon/packages/$d" ] || MISSING="$MISSING kairon/packages/$d"
-          done
-          if [ -n "$MISSING" ]; then
-            echo "❌ 缺失 sibling 依赖目录:$MISSING"
-            echo "   agora 是 omostation monorepo 子模块, 依赖 ../ 相对路径 sibling 包"
-            echo "   CI 需 submodule 完整 checkout (actions/checkout submodules: recursive)"
-            exit 1
-          fi
-          echo "✅ 依赖可达性预检通过"
       - name: Install dependencies
         run: cd projects/agora && uv sync --no-extra kairon
       - name: Start SSE gateway (BOS_ONLY)

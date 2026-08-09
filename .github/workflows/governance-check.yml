@@ -51,14 +51,6 @@ jobs:
           python-version: "3.13"
       - name: Install pyyaml
         run: pip install pyyaml
-      - name: Regen derived docs (project-layer-index + capability-registry)
-        # 防 stale-digest 误判 gac-gate: registry 改动 (model-driven consumers 字段等)
-        # 触发的 regen lag 是过去 2 次 main red 的根因之一 (PR #1277 修复路径)
-        # 注: sync-all-docs 只写盘, 不 git commit, 留给实际有改的 PR 自行 commit
-        # `|| true` 容错: 任意 regen 失败不阻塞后续 gac-gate (gac-gate 仍能报真实 stale)
-        run: |
-          uv run --with pyyaml python bin/mof/project-layer-index.py --write || true
-          uv run --with pyyaml python bin/cockpit/gen-capability-registry.py || true
       - name: Install uv
         uses: astral-sh/setup-uv@v4
       - name: Run governance checks
