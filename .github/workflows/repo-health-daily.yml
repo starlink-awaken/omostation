@@ -53,6 +53,8 @@ jobs:
           open('/tmp/repo-health/high-repos.md', 'w').write(body)
           PYEOF
           if [ -f /tmp/repo-health/high-repos.md ]; then
+            # 确保 label 存在 (幂等), 否则 gh issue create --label 报 'label not found'
+            gh label create repo-health-alert --repo "${GITHUB_REPOSITORY}" --force --color "d93f0b" --description "repo-health 高风险仓库告警" >/dev/null 2>&1 || true
             EXISTING=$(gh issue list --repo "${GITHUB_REPOSITORY}" --label repo-health-alert --state open --json number -q '.[0].number' 2>/dev/null || echo "")
             if [ -n "$EXISTING" ]; then
               gh issue edit "$EXISTING" --repo "${GITHUB_REPOSITORY}" --body-file /tmp/repo-health/high-repos.md
