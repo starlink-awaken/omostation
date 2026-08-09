@@ -379,22 +379,59 @@ def cmd_status(data: dict, args) -> int:
 
 
 def cmd_retro_due(data: dict, args) -> int:
-    due = [
-        b
-        for b in data["bets"]
-        if b.get("status") == "done"
-        and b.get("retro") in ("required", "light")
-        and not (RETRO_DIR / f"{b['id']}.md").exists()
-    ]
+    due = []
+    if getattr(args, "all", False):
+        runs_dir = getattr(args, "runs_dir", None) or (WS / ".omo/_delivery/agent-workflows/runs")
+        if runs_dir.exists():
+            for run_file in runs_dir.glob("*.yaml"):
+                try:
+                    run_data = yaml.safe_load(run_file.read_text(encoding="utf-8"))
+                except Exception:
+                    continue
+                if run_data.get("status") == "closed":
+                    run_id = run_data.get("run_id", run_file.stem)
+                    if not (RETRO_DIR / f"{run_id}.md").exists():
+                        due.append(
+                            {
+                                "id": run_id,
+                                "title": f"workflow:{run_data.get('workflow_id', 'unknown')}",
+                            }
+                        )
+    else:
+        due = [
+            b
+            for b in data["bets"]
+            if b.get("status") == "done"
+            and b.get("retro") in ("required", "light")
+            and not (RETRO_DIR / f"{b['id']}.md").exists()
+        ]
+
+    if getattr(args, "json", False):
+        report = {
+            "ok": not due,
+            "count": len(due),
+            "due": [{"id": item["id"], "title": item.get("title", "")} for item in due],
+        }
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0 if report["ok"] else 1
+
     if not due:
-        print("无待补复盘。")
+        scope = "全 workflow" if getattr(args, "all", False) else "bet"
+        print(f"无待补复盘（{scope}）。")
         return 0
-    print("以下 bet 已 done 但缺复盘（违反 D5）：")
-    for b in due:
-        print(f"  {b['id']:24} {b['title']}")
-    print(f"\n模板路径：{RETRO_DIR.relative_to(WS)}/<bet-id>.md")
-    for q in data["retro"]["bet_level"]["questions"]:
-        print(f"  - {q}")
+
+    scope = "以下 workflow 已 closeout 但缺复盘" if getattr(args, "all", False) else "以下 bet 已 done 但缺复盘（违反 D5）"
+    print(scope + "：")
+    for item in due:
+        print(f"  {item['id']:24} {item.get('title', '')}")
+
+    if getattr(args, "all", False):
+        print(f"\n模板路径：{RETRO_DIR.relative_to(WS)}/<run_id>.md")
+        print("运行：bin/ssot/retro.py create <run_id> --workflow <workflow_id>")
+    else:
+        print(f"\n模板路径：{RETRO_DIR.relative_to(WS)}/<bet-id>.md")
+        for q in data["retro"]["bet_level"]["questions"]:
+            print(f"  - {q}")
     return 1
 
 
@@ -572,7 +609,9 @@ def main() -> int:
     pv.add_argument("--execute", action="store_true")
 
     sub.add_parser("status")
-    sub.add_parser("retro-due")
+    pr = sub.add_parser("retro-due")
+    pr.add_argument("--json", action="store_true")
+    pr.add_argument("--all", action="store_true", help="扫描全 workflow（不只是 bet）")
     sub.add_parser("surface")
     sub.add_parser("gate").add_argument("window")
     sub.add_parser("lint")
