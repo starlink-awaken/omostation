@@ -428,15 +428,46 @@ def run_journey(
     print(f"   Entry: {current_state_name}")
     print()
 
-    while current_state_name and step_count < max_steps:
+    # Parallel support (BET-Y1Q4-T5-01): track a set of active states. A fork
+    # fans out into branches; a join collects completed branch states and only
+    # proceeds when the configured strategy is satisfied.
+    active_states: list[str] = [current_state_name]
+    completed_states: set[str] = set()
+
+    while active_states and step_count < max_steps:
+        current_state_name = active_states[0]
         step_count += 1
         state = states.get(current_state_name)
         if not state:
             print(f"❌ Unknown state: {current_state_name}")
-            break
+            active_states = active_states[1:]
+            continue
 
         scene_id = state.get("scene", "")
         print(f"  [{step_count}] State: {current_state_name} (scene: {scene_id})")
+
+        # Fork: fan out into parallel branches instead of executing the state.
+        if _is_fork_state(state):
+            branches = _fork_branches(state)
+            print(f"     → FORK into branches: {branches}")
+            active_states = active_states[1:] + [b for b in branches if b in states]
+            continue
+
+        # Join: wait for source branches to complete per strategy.
+        if _is_join_state(state):
+            sources = _join_sources(state)
+            strategy = _join_strategy(state)
+            done = sum(1 for s in sources if s in completed_states or s == current_state_name)
+            if not _join_satisfied(strategy, done, len(sources)):
+                print(f"     → JOIN pending: {done}/{len(sources)} sources ({strategy}), waiting…")
+                # Move this join to the end of the queue so other branches run first.
+                active_states = active_states[1:] + [current_state_name]
+                continue
+            print(f"     → JOIN satisfied ({done}/{len(sources)}, {strategy})")
+            # Join runs exactly once: drop duplicate join_point copies from the
+            # queue left behind by each completed source branch.
+            active_states = [s for s in active_states if s != current_state_name]
+            completed_states.add(current_state_name)
 
         # Record state entry
         state_store.save_state(
@@ -509,7 +540,11 @@ def run_journey(
         next_states = state.get("next", [])
         if not next_states:
             print(f"  ✅ Terminal state reached: {current_state_name}")
-            break
+            completed_states.add(current_state_name)
+            active_states = active_states[1:]
+            if not active_states:
+                break
+            continue
 
         # Evaluate transitions to find next state
         next_state = None
@@ -550,7 +585,13 @@ def run_journey(
             print(f"  ⚠️  No matching transition from {current_state_name}. Ending.")
             break
 
-        current_state_name = next_state
+        # Record this state as completed (needed for join source counting).
+        completed_states.add(current_state_name)
+        # Queue the next state (parallel: append, linear: shift).
+        if _is_fork_state(state) or active_states:
+            active_states = active_states[1:] + [next_state]
+        else:
+            active_states = [next_state]
         print()
 
     # Journey complete — trigger reflection if scene card has reflection_contract
@@ -589,6 +630,49 @@ def _find_entry_state(spec: dict) -> str | None:
             return name
     # Fallback: first state
     return states[0]["name"] if states else None
+
+
+# ── Parallel fork/join helpers (BET-Y1Q4-T5-01) ──────────────────────────────
+
+def _is_fork_state(state: dict) -> bool:
+    return bool(state.get("parallel"))
+
+
+def _fork_branches(state: dict) -> list[str]:
+    """Branches a fork state fans out to."""
+    parallel = state.get("parallel", {})
+    return list(parallel.get("branches", []) or [])
+
+
+def _is_join_state(state: dict) -> bool:
+    return bool(state.get("join"))
+
+
+def _join_sources(state: dict) -> list[str]:
+    join = state.get("join", {})
+    return list(join.get("sources", []) or [])
+
+
+def _join_strategy(state: dict) -> str:
+    return str(state.get("join", {}).get("strategy", "all"))
+
+
+def _join_satisfied(strategy: str, completed: int, total: int) -> bool:
+    """Decide whether a join can proceed based on the configured strategy.
+
+    all     → every source branch must complete
+    majority → more than half must complete
+    any     → at least one must complete
+    """
+    if total <= 0:
+        return True  # no sources → degenerate join passes
+    if strategy == "all":
+        return completed >= total
+    if strategy == "majority":
+        return completed > total / 2
+    if strategy == "any":
+        return completed >= 1
+    return completed >= total  # unknown strategy → safest: all
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -1766,7 +1766,8 @@ bets:
   title: 并行会签 fork/join
   appetite: 2 weeks
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-09
   goal: 支持公文多方意见合并, 编排从 linear 走向真实业务形状
   non_goals:
   - 任意 DAG
