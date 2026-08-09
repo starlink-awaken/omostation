@@ -75,12 +75,20 @@ def daemon_loop() -> None:
 
 
 def _send(req: dict) -> dict:
-    return req
+    """客户端: 连 daemon socket 发请求."""
+    if not os.path.exists(SOCKET_PATH):
+        return {"ok": False, "error": f"daemon 未启动 ({SOCKET_PATH})"}
+    cli = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    cli.connect(SOCKET_PATH)
+    cli.sendall(json.dumps(req).encode())
+    resp = json.loads(cli.recv(BUFFER).decode("utf-8"))
+    cli.close()
+    return resp
 
 
 GOVERNANCE_EVENT_HANDLERS = {
     "constraint.changed": ["python3", "bin/ssot/consumer_index.py"],
-    "derived.regenerated": ["python3", "bin/ssot/gen-l0-constraints.py", "--validate"],
+    "derived.regenerated": ["python3", "projects/ecos/bin/gen-l0-constraints.py", "--validate"],
     "m0.drift_detected": ["python3", "bin/ssot/m0_feedback.py"],
 }
 
@@ -98,15 +106,6 @@ def daemon_handle_event(event_type: str, payload: dict) -> str:
     except (OSError, subprocess.SubprocessError):
         pass
     return "alerted"
-"""客户端: 连 daemon socket 发请求."""
-    if not os.path.exists(SOCKET_PATH):
-        return {"ok": False, "error": f"daemon 未启动 ({SOCKET_PATH})"}
-    cli = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    cli.connect(SOCKET_PATH)
-    cli.sendall(json.dumps(req).encode())
-    resp = json.loads(cli.recv(BUFFER).decode("utf-8"))
-    cli.close()
-    return resp
 
 
 def main() -> int:
