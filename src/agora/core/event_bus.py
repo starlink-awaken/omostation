@@ -25,6 +25,14 @@ if TYPE_CHECKING:
     from agora.core.registry import ServiceRegistry  # type: ignore[import-not-found]
 
 
+GOVERNANCE_EVENTS = (
+    "constraint.changed",
+    "derived.regenerated",
+    "m0.drift_detected",
+    "approval.decided",
+)
+
+
 @dataclass
 class Subscription:
     id: str
