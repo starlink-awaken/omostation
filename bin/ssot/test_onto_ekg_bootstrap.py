@@ -2,7 +2,11 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from onto_ekg_bootstrap import extract_candidate_concepts, build_bootstrap_report
+from onto_ekg_bootstrap import (
+    extract_candidate_concepts,
+    build_bootstrap_report,
+    llm_enhance,
+)
 
 
 def test_extract_from_frontmatter():
@@ -30,3 +34,14 @@ def test_build_report():
     report = build_bootstrap_report(concepts)
     assert "layer-contract" in report
     assert "5" in report
+
+
+def test_llm_enhance_without_fn():
+    concepts = [{"name": "adr", "count": 2, "source": "a.md", "dimension": "X3", "surface": "L3"}]
+    assert llm_enhance(concepts) == concepts
+
+
+def test_llm_enhance_with_fn():
+    concepts = [{"name": "adr", "count": 2, "source": "a.md", "dimension": "X3", "surface": "L3"}]
+    enhanced = llm_enhance(concepts, llm_fn=lambda c: "ADR 属文档/知识管理域")
+    assert enhanced[0]["semantic_note"] == "ADR 属文档/知识管理域"

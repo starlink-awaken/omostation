@@ -75,6 +75,24 @@ def build_bootstrap_report(concepts: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def llm_enhance(concepts: list[dict], llm_fn=None) -> list[dict]:
+    """LLM 增强层：对候选概念做语义分类/合并建议。
+
+    llm_fn 可注入（如 aetherforge 调用）；缺省时返回原样（规则式基线）。
+    增强输出追加字段: semantic_note（LLM 给出的分类或合并建议）。
+    """
+    if not llm_fn:
+        return concepts
+    enhanced = []
+    for c in concepts:
+        note = llm_fn(c)
+        if isinstance(note, str) and note:
+            c = dict(c)
+            c["semantic_note"] = note
+        enhanced.append(c)
+    return enhanced
+
+
 def scan_docs() -> list[dict]:
     """扫描 DOC_GLOBS 返回文档列表。"""
     docs = []
