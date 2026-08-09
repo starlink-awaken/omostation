@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-09
+---
 # Scene Card 变体合并评估
 
 > 创建: 2026-08-08 | 工具: tool-usage-audit + 人工代码审查

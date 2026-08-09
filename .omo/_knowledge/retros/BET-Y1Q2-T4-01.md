@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-09
+---
 # BET-Y1Q2-T4-01 Retrospective — capability_calibration 自动更新
 
 > 完成日期: 2026-08-08  

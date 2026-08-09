@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-09
+---
 # BET-Y1Q2-T5-01 复盘
 
 ## Q1 实际耗时 vs appetite？超出比例？

@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-09
+---
 # Phase 0-4 深度复盘 — 数字生命体全面实施
 
 > 创建: 2026-08-08 | 覆盖: Phase 0(接血管) → Phase 1(建大脑) → Phase 2(补领域) → Phase 3(建进化) → Phase 4(开放)
