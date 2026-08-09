@@ -174,29 +174,49 @@ def scan_external(*, deep: bool = False) -> list[dict[str, Any]]:
                     }
                 )
 
+    # LLM 分析: 对有价值的 RSS 文章做深度判断 (非关键词匹配)
+    if fetched:
+        try:
+            sys.path.insert(0, str(ROOT / "bin" / "ssot"))
+            from _llm_helper import llm_ask
+
+            top_items = fetched[:3]
+            for item in top_items:
+                analysis = llm_ask(
+                    f"Article: {item['title']}. "
+                    f"Is this relevant to a self-governing AI agent system "
+                    f"(autonomous agents, LLM orchestration, governance)? "
+                    f"If yes, suggest ONE concrete improvement in 1 sentence. "
+                    f"If no, say SKIP."
+                )
+                if analysis and "SKIP" not in analysis.upper()[:10]:
+                    proposals.append(
+                        {
+                            "source": "llm_rss",
+                            "feed": item.get("source", "unknown"),
+                            "type": "llm_analyzed_trend",
+                            "severity": "medium",
+                            "proposal": analysis[:200],
+                            "url": item.get("url", ""),
+                            "action": "research_task",
+                            "level": "S2",
+                        }
+                    )
+        except Exception:
+            pass
+
     # 网络不可用降级: 保留内置推荐
-    if not fetched:
-        if deep:
-            proposals.append(
-                {
-                    "source": "external_research",
-                    "type": "framework_evaluation",
-                    "severity": "low",
-                    "proposal": "Evaluate A2A protocol maturity for swarm implementation",
-                    "action": "research_task",
-                    "level": "S3",
-                }
-            )
-            proposals.append(
-                {
-                    "source": "external_research",
-                    "type": "tool_evaluation",
-                    "severity": "low",
-                    "proposal": "Evaluate Apple Health API for health-tracking connector",
-                    "action": "research_task",
-                    "level": "S2",
-                }
-            )
+    if not fetched and deep:
+        proposals.append(
+            {
+                "source": "external_research",
+                "type": "framework_evaluation",
+                "severity": "low",
+                "proposal": "Evaluate A2A protocol maturity for swarm implementation",
+                "action": "research_task",
+                "level": "S3",
+            }
+        )
     return proposals
 
 
@@ -224,19 +244,62 @@ def generate_proposals(*, deep: bool = False) -> dict[str, Any]:
 
 
 def _persist_proposals(result: dict[str, Any]) -> str | None:
-    """T-C2/META-03: 落地进化提案到文件 (证据留存)."""
+    """T-C2/META-03: 落地进化提案到文件 (证据留存).
+
+    去重: 按 proposal 文本的 hash 跳过已存在的相同提案.
+    清理: 每次写入后只保留最新 20 个提案文件.
+    """
+    import hashlib
+
     proposals = result.get("proposals", [])
     if not proposals:
         return None
     try:
         out_dir = ROOT / ".omo" / "_knowledge" / "evolution-proposals"
         out_dir.mkdir(parents=True, exist_ok=True)
+
+        existing_hashes: set[str] = set()
+        for f in out_dir.glob("*.json"):
+            try:
+                old = json.loads(f.read_text(encoding="utf-8"))
+                for p in old.get("proposals", []):
+                    h = hashlib.md5(
+                        p.get("proposal", "").encode(), usedforsecurity=False
+                    ).hexdigest()
+                    existing_hashes.add(h)
+            except Exception:
+                continue
+
+        new_proposals = []
+        for p in proposals:
+            h = hashlib.md5(
+                p.get("proposal", "").encode(), usedforsecurity=False
+            ).hexdigest()
+            if h not in existing_hashes:
+                p["status"] = "pending_review"
+                new_proposals.append(p)
+                existing_hashes.add(h)
+
+        if not new_proposals:
+            return None
+
+        result["proposals"] = new_proposals
+        result["new_proposals"] = len(new_proposals)
+        result["deduped"] = len(proposals) - len(new_proposals)
+
         ts = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
         path = out_dir / f"proposal-{ts}.json"
         path.write_text(
             json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True),
             encoding="utf-8",
         )
+
+        all_files = sorted(
+            out_dir.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True
+        )
+        for f in all_files[20:]:
+            f.unlink()
+
         return str(path.relative_to(ROOT))
     except Exception:
         return None

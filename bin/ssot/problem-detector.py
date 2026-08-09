@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -75,6 +76,25 @@ def _detect_scene_card_issues() -> list[dict[str, Any]]:
     return problems
 
 
+def _llm_analyze(problems: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """LLM 分析问题列表, 补充根因建议."""
+    if not problems:
+        return problems
+    try:
+        sys.path.insert(0, str(ROOT / "bin" / "ssot"))
+        from _llm_helper import llm_ask
+
+        response = llm_ask(
+            f"System problems detected: {json.dumps(problems[:3], ensure_ascii=False)}. "
+            f"What is the likely root cause and recommended fix? Be concise."
+        )
+        if response:
+            problems[0]["llm_analysis"] = response[:300]
+    except Exception:
+        pass
+    return problems
+
+
 def scan_all() -> dict[str, Any]:
     """Run all problem detection checks."""
     ts = datetime.now(UTC).isoformat()
@@ -82,6 +102,9 @@ def scan_all() -> dict[str, Any]:
     all_problems.extend(_detect_health_anomalies())
     all_problems.extend(_detect_dormant_tools())
     all_problems.extend(_detect_scene_card_issues())
+
+    # LLM 根因分析 (AetherForge 算力驱动)
+    all_problems = _llm_analyze(all_problems)
 
     return {
         "schema": "problem-detection/v1",
