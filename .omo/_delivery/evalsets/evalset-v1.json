@@ -1,0 +1,6151 @@
+{
+  "schema": "real-evalset/v1",
+  "generated_at": "2026-08-09T00:57:40Z",
+  "count": 439,
+  "source_note": "全部来自真实 PR 评审 (pr-harvest + GitHub closed-unmerged) 与人工裁决 (adjudications), 非合成数据",
+  "distribution": {
+    "positive": 403,
+    "boundary": 30,
+    "negative": 6
+  },
+  "items": [
+    {
+      "id": "pr-1254",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1254",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Omni-MDA L0 MOF implementation",
+        "additions": 143,
+        "deletions": 4,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1253",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1253",
+      "synthetic": false,
+      "features": {
+        "title": "[bet-t8-02] worktree 提交",
+        "additions": 38,
+        "deletions": 2,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1252",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1252",
+      "synthetic": false,
+      "features": {
+        "title": "fix(main): 遗留 CI 红 — doc-ssot-lint L0 回退 + 私有子模块 token + checkout@v4",
+        "additions": 38,
+        "deletions": 10,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1251",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1251",
+      "synthetic": false,
+      "features": {
+        "title": "[bet-t5-01] worktree 提交",
+        "additions": 167,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1250",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1250",
+      "synthetic": false,
+      "features": {
+        "title": "docs(pattern): correct L0/MOF plan (m3 layer exists, generator resurrected)",
+        "additions": 715,
+        "deletions": 98,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1249",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1249",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): L0 generator (ecos) + X1-X7 dimension alignment",
+        "additions": 702,
+        "deletions": 83,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1248",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1248",
+      "synthetic": false,
+      "features": {
+        "title": "feat(lint): wire check-doc-l0-mapping into doc-ssot-lint",
+        "additions": 452,
+        "deletions": 6,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1247",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1247",
+      "synthetic": false,
+      "features": {
+        "title": "docs(pattern): doc↔L0↔MOF mapping governance plan",
+        "additions": 373,
+        "deletions": 5,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1246",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1246",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): doc↔L0↔MOF mapping contract + verification tool",
+        "additions": 254,
+        "deletions": 3,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1245",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1245",
+      "synthetic": false,
+      "features": {
+        "title": "fix(skill): correct mof-drift path in governance R step",
+        "additions": 1,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1244",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1244",
+      "synthetic": false,
+      "features": {
+        "title": "feat(bet): T9-01 可观测性收官 → done (BET 执行节奏恢复)",
+        "additions": 2,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1243",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1243",
+      "synthetic": false,
+      "features": {
+        "title": "docs(skill): fix governance-phase-orchestrator RISE commands (12 stale refs)",
+        "additions": 12,
+        "deletions": 12,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1242",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1242",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): install-hooks 写保护 — 防并发覆盖 pre-push gate",
+        "additions": 6,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1241",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1241",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): 大批量删除门禁 + 指针单调性检查 (AetherForge 根治)",
+        "additions": 1,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1240",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1240",
+      "synthetic": false,
+      "features": {
+        "title": "fix(sync): 补回 _validate_generation + 治理门禁实测报告",
+        "additions": 27,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1239",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1239",
+      "synthetic": false,
+      "features": {
+        "title": "fix(main): 恢复 6 个误清空子模块指针 + ADR/债务修复 — 解除 main CI 全红",
+        "additions": 140,
+        "deletions": 507,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1238",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1238",
+      "synthetic": false,
+      "features": {
+        "title": "[phase3-gov] worktree 提交",
+        "additions": 1169,
+        "deletions": 15,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1237",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1237",
+      "synthetic": false,
+      "features": {
+        "title": "fix: ADR-0404 运行时状态文件从git移除 (根除pull冲突)",
+        "additions": 44,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1236",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1236",
+      "synthetic": false,
+      "features": {
+        "title": "docs(plan): P2 方案文档落地状态标注",
+        "additions": 26,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1235",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1235",
+      "synthetic": false,
+      "features": {
+        "title": "feat(T6-06): SEMA 技能自动结晶引擎落地",
+        "additions": 5,
+        "deletions": 4,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1234",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1234",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): P1 rule-violations.jsonl — 规则级违规记录",
+        "additions": 37,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1233",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1233",
+      "synthetic": false,
+      "features": {
+        "title": "feat(T1-02 + gap-clearance): submodule alignment + drift CI gate + Phase 0-4 闭环",
+        "additions": 5062,
+        "deletions": 487,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1231",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1231",
+      "synthetic": false,
+      "features": {
+        "title": "[bet-y1q2-t9-02] worktree 提交",
+        "additions": 94,
+        "deletions": 9,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1229",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1229",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): P1 台账 complete 子命令 + closeout 接入",
+        "additions": 82,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1228",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1228",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): P0 落地 — 派生完整性 + 冲突标记 gate + remote-hygiene",
+        "additions": 254,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1227",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1227",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): 机器级配置写入名单 + install-watch-agent 锚定规范检出",
+        "additions": 174,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1226",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1226",
+      "synthetic": false,
+      "features": {
+        "title": "feat(adr): autoloop自主生成ADR草稿 (第一次自主执行闭环)",
+        "additions": 45,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1225",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1225",
+      "synthetic": false,
+      "features": {
+        "title": "fix(mof): gen-service-configs 把 7 个 plist 写成死路径 — 加固 + generate:false",
+        "additions": 111,
+        "deletions": 4,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1224",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1224",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): bet-execution 加 sync-check 必检步 (迭代后自动同步)",
+        "additions": 6,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1223",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1223",
+      "synthetic": false,
+      "features": {
+        "title": "fix(audit): debt evidence 补齐 + ADR 重编号 0388→0397 + 登记 0399/0400",
+        "additions": 24,
+        "deletions": 10,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1222",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1222",
+      "synthetic": false,
+      "features": {
+        "title": "feat(sync): 迭代后自动派生同步 — post-commit hook + 全依赖面同步",
+        "additions": 130,
+        "deletions": 3,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1221",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1221",
+      "synthetic": false,
+      "features": {
+        "title": "fix(svc): sync_check 假绿 + WORKSPACE 硬编码 + B3 对 stdio 能力的误报",
+        "additions": 37,
+        "deletions": 4,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1220",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1220",
+      "synthetic": false,
+      "features": {
+        "title": "chore: bump agora → 2bb13858 (采购授权门槛深化)",
+        "additions": 1,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1219",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1219",
+      "synthetic": false,
+      "features": {
+        "title": "feat(svc): 服务生命周期登记补全 + 两个 S1 误报修复",
+        "additions": 158,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1218",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1218",
+      "synthetic": false,
+      "features": {
+        "title": "fix(tasks)+chore(cron): 修复并发 bet 物化 task 债 + 告警到人常态调度",
+        "additions": 31,
+        "deletions": 24,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1217",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1217",
+      "synthetic": false,
+      "features": {
+        "title": "feat(observability): 告警到人 channel 连接器体系 — 与连接器体系联动",
+        "additions": 421,
+        "deletions": 42,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1216",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1216",
+      "synthetic": false,
+      "features": {
+        "title": "chore: bump agora → 9038fe5c (市场总览深化)",
+        "additions": 7,
+        "deletions": 66,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1215",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1215",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gap-clearance): Phase 0-4 自主迭代闭环落地 (清零率 89%)",
+        "additions": 45462,
+        "deletions": 4654,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1214",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1214",
+      "synthetic": false,
+      "features": {
+        "title": "fix(gac): submit 静默中断 + reachability gate 基线不可解析时 fail-open",
+        "additions": 14,
+        "deletions": 2,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1213",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1213",
+      "synthetic": false,
+      "features": {
+        "title": "docs(plan)+chore(cron): T9-OBSERV bet 登记 + 事件面常态化调度",
+        "additions": 60,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1212",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1212",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ci): remove continue-on-error from submodule-freshness-gatekeeper checkout",
+        "additions": 0,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1211",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1211",
+      "synthetic": false,
+      "features": {
+        "title": "feat(observability): 统一事件面落地 — 事件面+适配器+治理联动+日志轮转",
+        "additions": 752,
+        "deletions": 12,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1210",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1210",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): 批量删除闸门 — 拦住整仓归零事故",
+        "additions": 234,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1209",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1209",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): T6-05 减法配额制门禁 + ② 采购记录 (agora → fe62d08b)",
+        "additions": 403,
+        "deletions": 984,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1208",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1208",
+      "synthetic": false,
+      "features": {
+        "title": "docs(observability): 统一可观测性架构设计 — 可观测×事件×治理三体系联动",
+        "additions": 248,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1205",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1205",
+      "synthetic": false,
+      "features": {
+        "title": "docs(plan): 方向 2+3 方案 — 采购授权记录 + BET 推进恢复",
+        "additions": 70,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1204",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1204",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gate): reachability gate 增量检查 + submodule 治理整合方案",
+        "additions": 187,
+        "deletions": 3,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1203",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1203",
+      "synthetic": false,
+      "features": {
+        "title": "[wsvc-observability] worktree 提交",
+        "additions": 514,
+        "deletions": 16,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1201",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1201",
+      "synthetic": false,
+      "features": {
+        "title": "docs(ops): agora CI 运维经验 — 双 CI 决策 + 环境性测试模式 + submodule bump 待办",
+        "additions": 71,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1200",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1200",
+      "synthetic": false,
+      "features": {
+        "title": "feat(T6-01): dynamic GaC rule subtraction — vitality tracking + downgrade engine",
+        "additions": 1536,
+        "deletions": 63,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1199",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1199",
+      "synthetic": false,
+      "features": {
+        "title": "fix(gov): 机制修复 round 2 — prune 豁免 + ADR 防撞号 + drift 登记 + doc budget",
+        "additions": 103,
+        "deletions": 13,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1198",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1198",
+      "synthetic": false,
+      "features": {
+        "title": "feat(governance): 全面落地 — superseded 归档 + ADR 分层 + 能力市场 P2 账单",
+        "additions": 18,
+        "deletions": 5,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1197",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1197",
+      "synthetic": false,
+      "features": {
+        "title": "feat(closeout-submodule-sync): stale auto-pull + PASW drift detection + debt-auto-seed (治本 E)",
+        "additions": 443,
+        "deletions": 37,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1195",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1195",
+      "synthetic": false,
+      "features": {
+        "title": "docs(plan): 未来方向 1-3 方案 — 能力市场 P2 + T6 治理减法 + doc-governance",
+        "additions": 96,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1194",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1194",
+      "synthetic": false,
+      "features": {
+        "title": "fix(docs): 标准 frontmatter 迁移 + CLAUDE.md 坏链修复",
+        "additions": 10,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1193",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1193",
+      "synthetic": false,
+      "features": {
+        "title": "fix(adr): 删除冗余 0396-ci-net-red-closeout-2 (squash 未删旧文件)",
+        "additions": 0,
+        "deletions": 90,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1191",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1191",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Neo4j env + iris live test (P0-T2+T6) — ALL 39 TASKS CODE COMPLETE",
+        "additions": 95,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1190",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1190",
+      "synthetic": false,
+      "features": {
+        "title": "fix(adr): ADR-0396 撞号 — 重编号为 0398",
+        "additions": 91,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1189",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1189",
+      "synthetic": false,
+      "features": {
+        "title": "chore(kairon): bump OA-write+Bank (Phase 4 COMPLETE 7/7)",
+        "additions": 1,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1188",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1188",
+      "synthetic": false,
+      "features": {
+        "title": "feat(closeout-insights): P1 hook self-check + P1 ci-local-fast pyright + ruff expand + P2 drift actionable",
+        "additions": 177,
+        "deletions": 19,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1187",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1187",
+      "synthetic": false,
+      "features": {
+        "title": "chore(l4-kernel): bump TELOS injection (P1-T7) — Phase 1 COMPLETE",
+        "additions": 1,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1186",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1186",
+      "synthetic": false,
+      "features": {
+        "title": "feat(market): P1 能力市场发现 API (agora → 4c77543)",
+        "additions": 2,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1185",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1185",
+      "synthetic": false,
+      "features": {
+        "title": "chore(omo): bump GovernorAgent (P3-T5) — Phase 3 COMPLETE",
+        "additions": 1,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1184",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1184",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): dashboard.py standalone HTML (P3-T1)",
+        "additions": 168,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1183",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1183",
+      "synthetic": false,
+      "features": {
+        "title": "feat: P4-T1 Swarm + P4-T3 Namespace (Phase 4 → 5/7)",
+        "additions": 210,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1182",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1182",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): P3-T6 Workflow Mesh integration",
+        "additions": 15,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1181",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1181",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): agent-lifecycle.py (P4-T7) — LAST root-level task",
+        "additions": 189,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1180",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1180",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): emergency-override.py (P4-T4)",
+        "additions": 145,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1179",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1179",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): capability-router + providers (P4-T2) — Phase 4 starts",
+        "additions": 137,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1178",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1178",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): evolution-agent.py Meta-3进化层 (P3-T2)",
+        "additions": 156,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1177",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1177",
+      "synthetic": false,
+      "features": {
+        "title": "chore(omo): bump → Advisor Agent + Trust Policy + Aetherforge",
+        "additions": 1,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1176",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1176",
+      "synthetic": false,
+      "features": {
+        "title": "chore(omo): bump Trust Policy Engine (P1-T4)",
+        "additions": 1,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1175",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1175",
+      "synthetic": false,
+      "features": {
+        "title": "chore(omo): bump Aetherforge wire (P0-T3)",
+        "additions": 1,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1174",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1174",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): permission-matrix.py 7层权限过滤器 (P3-T4)",
+        "additions": 140,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1173",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1173",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): risk-gate.py C5风控门禁 (P3-T3)",
+        "additions": 110,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1172",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1172",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): problem-detector.py (P3-T7)",
+        "additions": 119,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1171",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1171",
+      "synthetic": false,
+      "features": {
+        "title": "docs(retro): Phase 0-2 复盘",
+        "additions": 57,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1170",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1170",
+      "synthetic": false,
+      "features": {
+        "title": "feat(journey): Phase 2 domain specs — family/health/education (P2-T5/T6)",
+        "additions": 107,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1169",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1169",
+      "synthetic": false,
+      "features": {
+        "title": "feat(scene-cards): Phase 2 domain expansion — 4 new life domain cards",
+        "additions": 180,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1168",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1168",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): pattern-governor-bridge.py (P1-T8)",
+        "additions": 94,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1167",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1167",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): agent-registry.py + 4 resident agents (P1-T6)",
+        "additions": 219,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1166",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1166",
+      "synthetic": false,
+      "features": {
+        "title": "feat(closeout-insights): P1 hook self-check + P1 ci-local-fast pyright + ruff expand + P2 drift actionable",
+        "additions": 99,
+        "deletions": 12,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1165",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1165",
+      "synthetic": false,
+      "features": {
+        "title": "feat(mof): 5 M2 extension models for digital organism",
+        "additions": 133,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1164",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1164",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ci): CI 净红收官 — surfaces 注册 + state sync 修复 + task schema 合规",
+        "additions": 183,
+        "deletions": 124,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1163",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1163",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): mos-cold-start.py — TELOS预灌world_snapshot (P0-T7)",
+        "additions": 95,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1162",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1162",
+      "synthetic": false,
+      "features": {
+        "title": "docs: CLAUDE.md Phase 0 progress — MOS agent_belief + digital organism routing",
+        "additions": 2,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1161",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1161",
+      "synthetic": false,
+      "features": {
+        "title": "feat(T6): closeout T6-02/T6-03/T6-05 — ADR 分层 + 孤儿归档 + 减法配额门禁",
+        "additions": 857,
+        "deletions": 3,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1160",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1160",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): MOS Bridge P0-T4/T5 — outcome+reflection data flows to MOS tables",
+        "additions": 35,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1159",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1159",
+      "synthetic": false,
+      "features": {
+        "title": "chore(kairon): bump → agent_belief三表 (ADR-0396 Keystone, BET-Y1Q1-T3-01)",
+        "additions": 81,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1158",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1158",
+      "synthetic": false,
+      "features": {
+        "title": "fix(verify-omo): 第1步改用 omo state sync — 不依赖缺失的 scripts 脚本",
+        "additions": 4,
+        "deletions": 4,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1157",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1157",
+      "synthetic": false,
+      "features": {
+        "title": "docs(governance): ADR-0396 数字生命体架构",
+        "additions": 80,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1156",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1156",
+      "synthetic": false,
+      "features": {
+        "title": "fix(git): 移除孤儿 gitlink ws-agent-onboard (merge conflict 残留)",
+        "additions": 0,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1155",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1155",
+      "synthetic": false,
+      "features": {
+        "title": "docs(architecture): Digital Organism Architecture v1.0 — 四论框架 + 五阶段路线图",
+        "additions": 258,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1154",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1154",
+      "synthetic": false,
+      "features": {
+        "title": "chore(closeout): update agora + omo gitlinks",
+        "additions": 2,
+        "deletions": 2,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1153",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1153",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ci): 修复剩余 2 个 CI 失败 — governance-verify uv + interface-check doctor",
+        "additions": 12,
+        "deletions": 4,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1152",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1152",
+      "synthetic": false,
+      "features": {
+        "title": "[t6-06-skill] worktree 提交",
+        "additions": 107,
+        "deletions": 8,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1151",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1151",
+      "synthetic": false,
+      "features": {
+        "title": "chore(closeout): align submodule pointers + sync state + fix CI",
+        "additions": 90,
+        "deletions": 55,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1150",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1150",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ci): 修复剩余 2 个 CI 失败 — check + capability-registry drift",
+        "additions": 96,
+        "deletions": 54,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1149",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1149",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): BET-Y1Q2-T6-01 GaC 规则减法 — 3 required→advisory",
+        "additions": 45,
+        "deletions": 4,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1148",
+      "verdict": "positive",
+      "source": "github://omostation/pull/1148",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ci): 修复 3 个 CI pre-existing 失败",
+        "additions": 8,
+        "deletions": 2,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-1232",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1232",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Agent生态体系P1-P6 + 门禁后移架构 + Gap清零89%",
+        "additions": 0,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "closed_unmerged"
+      },
+      "label_hint": "rejected"
+    },
+    {
+      "id": "pr-1230",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1230",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Agent生态体系 P1-P6全面落地",
+        "additions": 0,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "closed_unmerged"
+      },
+      "label_hint": "rejected"
+    },
+    {
+      "id": "pr-1207",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1207",
+      "synthetic": false,
+      "features": {
+        "title": "fix(gac): submit 静默中断 + pre-push 因未实现的 --changed-from 拒绝所有 push",
+        "additions": 0,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "closed_unmerged"
+      },
+      "label_hint": "rejected"
+    },
+    {
+      "id": "pr-1206",
+      "verdict": "boundary",
+      "source": "github://omostation/pull/1206",
+      "synthetic": false,
+      "features": {
+        "title": "chore(T6-01): 清理废弃文件 + 更新治理基础设施",
+        "additions": 0,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "closed_unmerged"
+      },
+      "label_hint": "rejected"
+    },
+    {
+      "id": "pr-62",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/62",
+      "synthetic": false,
+      "features": {
+        "title": "feat(iris): OA-write + Bank connector (P4-T5+T6) — Phase 4 COMPLETE",
+        "additions": 158,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-61",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/61",
+      "synthetic": false,
+      "features": {
+        "title": "feat(mos): agent_belief三表 (ADR-0396 Keystone)",
+        "additions": 195,
+        "deletions": 1,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-60",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/60",
+      "synthetic": false,
+      "features": {
+        "title": "retire(iris): N10 rss 连接器退役 (blogwatcher-cli 依赖缺失)",
+        "additions": 59,
+        "deletions": 61,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-59",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/59",
+      "synthetic": false,
+      "features": {
+        "title": "feat(iris): N5 netease+seeyon list 能力 (zlib/CDP 收编)",
+        "additions": 235,
+        "deletions": 55,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-58",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/58",
+      "synthetic": false,
+      "features": {
+        "title": "feat(iris): N4 universal_private connector (360° 本地源)",
+        "additions": 55,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-57",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/57",
+      "synthetic": false,
+      "features": {
+        "title": "feat(iris): P3 收编邮箱/OA/浏览器 external.resources (16→20)",
+        "additions": 248,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-56",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/56",
+      "synthetic": false,
+      "features": {
+        "title": "feat: expose Iris resources to external fabric discovery",
+        "additions": 121,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-55",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/55",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): add redacted annotation handoff packet",
+        "additions": 177,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-54",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/54",
+      "synthetic": false,
+      "features": {
+        "title": "docs(kems): document unified model evaluation flow",
+        "additions": 22,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-53",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/53",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): unify model evaluation and recording",
+        "additions": 173,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-52",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/52",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): add model acceptance recorder",
+        "additions": 115,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-51",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/51",
+      "synthetic": false,
+      "features": {
+        "title": "docs(kems): add adjudication operator runbook",
+        "additions": 128,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-50",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/50",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): add adjudication operator cli",
+        "additions": 226,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-49",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/49",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): sync controlled sources into adjudication queue",
+        "additions": 131,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-48",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/48",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): build eval manifest from adjudication database",
+        "additions": 137,
+        "deletions": 22,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-47",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/47",
+      "synthetic": false,
+      "features": {
+        "title": "fix(kems): default queue to versioned review scenario",
+        "additions": 40,
+        "deletions": 10,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-46",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/46",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): expose versioned annotation schema",
+        "additions": 30,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-45",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/45",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): enforce private source annotation schema",
+        "additions": 117,
+        "deletions": 2,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-44",
+      "verdict": "boundary",
+      "source": "github://projects/kairon/pull/44",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): add manifest-bound candidate predictor",
+        "additions": 274,
+        "deletions": 32,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-43",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/43",
+      "synthetic": false,
+      "features": {
+        "title": "fix(kems): allow second independent annotator claim",
+        "additions": 89,
+        "deletions": 20,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-42",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/42",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): require dual annotation before adjudication",
+        "additions": 161,
+        "deletions": 16,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-41",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/41",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): bind model acceptance to evaluation manifest",
+        "additions": 113,
+        "deletions": 2,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-40",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/40",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): persist model acceptance evaluations",
+        "additions": 208,
+        "deletions": 81,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-39",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/39",
+      "synthetic": false,
+      "features": {
+        "title": "fix(kems): make adjudication claims mutually exclusive",
+        "additions": 8,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-38",
+      "verdict": "boundary",
+      "source": "github://projects/kairon/pull/38",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): persist human adjudication queue",
+        "additions": 330,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-37",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/37",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): add redacted model acceptance evaluator",
+        "additions": 175,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-36",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/36",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): add redacted adjudication queue builder",
+        "additions": 187,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-35",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/35",
+      "synthetic": false,
+      "features": {
+        "title": "fix(kems): support system Python eval manifest builds",
+        "additions": 23,
+        "deletions": 2,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-34",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/34",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): harden adjudicated eval manifest builder",
+        "additions": 198,
+        "deletions": 59,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-33",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/33",
+      "synthetic": false,
+      "features": {
+        "title": "fix(kos): support system Python datetime in graph store",
+        "additions": 10,
+        "deletions": 3,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-32",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/32",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): add graph rollback and forecast persistence",
+        "additions": 287,
+        "deletions": 5,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-31",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/31",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): add adjudicated eval manifest intake",
+        "additions": 109,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-30",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/30",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): persist OCR quality review queue",
+        "additions": 233,
+        "deletions": 14,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-29",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/29",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): add shadow-only forecast contract",
+        "additions": 129,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-28",
+      "verdict": "boundary",
+      "source": "github://projects/kairon/pull/28",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): persist redacted evaluation datasets",
+        "additions": 310,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-27",
+      "verdict": "boundary",
+      "source": "github://projects/kairon/pull/27",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): add OMO adapter and persisted evaluation datasets",
+        "additions": 310,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-26",
+      "verdict": "boundary",
+      "source": "github://projects/kairon/pull/26",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kems): persist evidence-backed graph and pipeline runs",
+        "additions": 875,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-25",
+      "verdict": "boundary",
+      "source": "github://projects/kairon/pull/25",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kos): add KEMS OCR quality and evaluation contracts",
+        "additions": 386,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-24",
+      "verdict": "boundary",
+      "source": "github://projects/kairon/pull/24",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kos): complete KEMS follow-up capabilities",
+        "additions": 559,
+        "deletions": 16,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-23",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/23",
+      "synthetic": false,
+      "features": {
+        "title": "feat(kos): add KEMS policy analysis baseline",
+        "additions": 260,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-22",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/22",
+      "synthetic": false,
+      "features": {
+        "title": "Replace broken CLI tests with public surface coverage",
+        "additions": 106,
+        "deletions": 72,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-21",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/21",
+      "synthetic": false,
+      "features": {
+        "title": "Fix ProgressInfo slots to match core step consumers",
+        "additions": 159,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-20",
+      "verdict": "boundary",
+      "source": "github://projects/kairon/pull/20",
+      "synthetic": false,
+      "features": {
+        "title": "Add Minerva pipeline and triage e2e coverage",
+        "additions": 344,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-19",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/19",
+      "synthetic": false,
+      "features": {
+        "title": "Harden OntoDerive pipeline dataclasses with slots and invariants",
+        "additions": 195,
+        "deletions": 4,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-18",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/18",
+      "synthetic": false,
+      "features": {
+        "title": "Wire OntoDerive derive() to validation+evolution pipeline",
+        "additions": 288,
+        "deletions": 0,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-17",
+      "verdict": "boundary",
+      "source": "github://projects/kairon/pull/17",
+      "synthetic": false,
+      "features": {
+        "title": "Expose ToolForge MCP and fix dev mcp config",
+        "additions": 256,
+        "deletions": 49,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-16",
+      "verdict": "positive",
+      "source": "github://projects/kairon/pull/16",
+      "synthetic": false,
+      "features": {
+        "title": "Document Kairon validation pipeline contract",
+        "additions": 121,
+        "deletions": 138,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "pr-15",
+      "verdict": "boundary",
+      "source": "github://projects/kairon/pull/15",
+      "synthetic": false,
+      "features": {
+        "title": "Restore ontoderive validation pipeline coverage",
+        "additions": 631,
+        "deletions": 3,
+        "author": "starlink-awaken",
+        "event": "merged"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "adj-0001",
+      "verdict": "positive",
+      "source": "adjudication://adj-0001",
+      "synthetic": false,
+      "features": {
+        "decision_id": "do-0001",
+        "adjudicator": "test-operator",
+        "notes": "CLI smoke test"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "gh-1256",
+      "verdict": "negative",
+      "source": "github://starlink-awaken/omostation/pull/1256",
+      "synthetic": false,
+      "features": {
+        "title": "fix: correct cockpit CLI module import path in MOF sync",
+        "state": "closed",
+        "closed_at": "2026-08-09T00:19:11Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "rejected"
+    },
+    {
+      "id": "gh-1232",
+      "verdict": "negative",
+      "source": "github://starlink-awaken/omostation/pull/1232",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Agent生态体系P1-P6 + 门禁后移架构 + Gap清零89%",
+        "state": "closed",
+        "closed_at": "2026-08-08T11:15:08Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "rejected"
+    },
+    {
+      "id": "gh-1230",
+      "verdict": "negative",
+      "source": "github://starlink-awaken/omostation/pull/1230",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Agent生态体系 P1-P6全面落地",
+        "state": "closed",
+        "closed_at": "2026-08-08T11:15:04Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "rejected"
+    },
+    {
+      "id": "gh-1207",
+      "verdict": "negative",
+      "source": "github://starlink-awaken/omostation/pull/1207",
+      "synthetic": false,
+      "features": {
+        "title": "fix(gac): submit 静默中断 + pre-push 因未实现的 --changed-from 拒绝所有 push",
+        "state": "closed",
+        "closed_at": "2026-08-08T07:00:23Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "rejected"
+    },
+    {
+      "id": "gh-1206",
+      "verdict": "negative",
+      "source": "github://starlink-awaken/omostation/pull/1206",
+      "synthetic": false,
+      "features": {
+        "title": "chore(T6-01): 清理废弃文件 + 更新治理基础设施",
+        "state": "closed",
+        "closed_at": "2026-08-08T06:56:21Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "rejected"
+    },
+    {
+      "id": "gh-1202",
+      "verdict": "negative",
+      "source": "github://starlink-awaken/omostation/pull/1202",
+      "synthetic": false,
+      "features": {
+        "title": "chore(submodule): bump agora → 44091bc1 (god-module 拆分 + forge CI 修复 + drop standalone ci)",
+        "state": "closed",
+        "closed_at": "2026-08-08T06:08:26Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "rejected"
+    },
+    {
+      "id": "ghm-1261",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1261",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): bump-pointer 前置检查 — main 已领先则中止, 防重复 bump (#1202 复盘)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-09T00:55:38Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1260",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1260",
+      "synthetic": false,
+      "features": {
+        "title": "feat(bet): T7-01 工程交付 dogfood 开 shadow",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-09T00:52:21Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1259",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1259",
+      "synthetic": false,
+      "features": {
+        "title": "feat(bet): T3-01 MOS 双栈一致性观察器",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-09T00:35:02Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1258",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1258",
+      "synthetic": false,
+      "features": {
+        "title": "feat(bet): T6-02 cockpit Phase 4 清理债务 — cockpit_mcp 残留 import 清理",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-09T00:17:06Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1257",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1257",
+      "synthetic": false,
+      "features": {
+        "title": "fix(hook): canonical pre-push 增量 reachability (PUSH_REMOTE_SHA base + fetch 保鲜)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T23:52:32Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1255",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1255",
+      "synthetic": false,
+      "features": {
+        "title": "feat(bet): T1-01 cockpit SSOT 漂移治理 — registry + help_map 补缺失命令",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T23:56:35Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1254",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1254",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Omni-MDA L0 MOF implementation",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T23:38:03Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1253",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1253",
+      "synthetic": false,
+      "features": {
+        "title": "[bet-t8-02] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T14:40:00Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1252",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1252",
+      "synthetic": false,
+      "features": {
+        "title": "fix(main): 遗留 CI 红 — doc-ssot-lint L0 回退 + 私有子模块 token + checkout@v4",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T14:35:18Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1251",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1251",
+      "synthetic": false,
+      "features": {
+        "title": "[bet-t5-01] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T14:16:13Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1250",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1250",
+      "synthetic": false,
+      "features": {
+        "title": "docs(pattern): correct L0/MOF plan (m3 layer exists, generator resurrected)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T13:44:43Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1249",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1249",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): L0 generator (ecos) + X1-X7 dimension alignment",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T13:39:35Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1248",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1248",
+      "synthetic": false,
+      "features": {
+        "title": "feat(lint): wire check-doc-l0-mapping into doc-ssot-lint",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T13:15:44Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1247",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1247",
+      "synthetic": false,
+      "features": {
+        "title": "docs(pattern): doc↔L0↔MOF mapping governance plan",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T13:10:26Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1246",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1246",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): doc↔L0↔MOF mapping contract + verification tool",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T13:07:40Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1245",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1245",
+      "synthetic": false,
+      "features": {
+        "title": "fix(skill): correct mof-drift path in governance R step",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T13:00:34Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1244",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1244",
+      "synthetic": false,
+      "features": {
+        "title": "feat(bet): T9-01 可观测性收官 → done (BET 执行节奏恢复)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T13:02:26Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1243",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1243",
+      "synthetic": false,
+      "features": {
+        "title": "docs(skill): fix governance-phase-orchestrator RISE commands (12 stale refs)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T12:43:42Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1242",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1242",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): install-hooks 写保护 — 防并发覆盖 pre-push gate",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T12:48:49Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1241",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1241",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): 大批量删除门禁 + 指针单调性检查 (AetherForge 根治)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T12:37:18Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1240",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1240",
+      "synthetic": false,
+      "features": {
+        "title": "fix(sync): 补回 _validate_generation + 治理门禁实测报告",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T12:34:01Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1239",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1239",
+      "synthetic": false,
+      "features": {
+        "title": "fix(main): 恢复 6 个误清空子模块指针 + ADR/债务修复 — 解除 main CI 全红",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T13:14:59Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1238",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1238",
+      "synthetic": false,
+      "features": {
+        "title": "[phase3-gov] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T12:49:30Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1237",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1237",
+      "synthetic": false,
+      "features": {
+        "title": "fix: ADR-0404 运行时状态文件从git移除 (根除pull冲突)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T11:34:35Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1236",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1236",
+      "synthetic": false,
+      "features": {
+        "title": "docs(plan): P2 方案文档落地状态标注",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T11:44:09Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1235",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1235",
+      "synthetic": false,
+      "features": {
+        "title": "feat(T6-06): SEMA 技能自动结晶引擎落地",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T11:31:03Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1234",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1234",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): P1 rule-violations.jsonl — 规则级违规记录",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T11:27:03Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1233",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1233",
+      "synthetic": false,
+      "features": {
+        "title": "feat(T1-02 + gap-clearance): submodule alignment + drift CI gate + Phase 0-4 闭环",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T11:21:03Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1231",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1231",
+      "synthetic": false,
+      "features": {
+        "title": "[bet-y1q2-t9-02] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T12:00:49Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1229",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1229",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): P1 台账 complete 子命令 + closeout 接入",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T11:11:16Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1228",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1228",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): P0 落地 — 派生完整性 + 冲突标记 gate + remote-hygiene",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T10:53:22Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1227",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1227",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): 机器级配置写入名单 + install-watch-agent 锚定规范检出",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T10:40:33Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1226",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1226",
+      "synthetic": false,
+      "features": {
+        "title": "feat(adr): autoloop自主生成ADR草稿 (第一次自主执行闭环)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T10:26:05Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1225",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1225",
+      "synthetic": false,
+      "features": {
+        "title": "fix(mof): gen-service-configs 把 7 个 plist 写成死路径 — 加固 + generate:false",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T10:26:38Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1224",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1224",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): bet-execution 加 sync-check 必检步 (迭代后自动同步)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T10:30:33Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1223",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1223",
+      "synthetic": false,
+      "features": {
+        "title": "fix(audit): debt evidence 补齐 + ADR 重编号 0388→0397 + 登记 0399/0400",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T10:23:43Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1222",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1222",
+      "synthetic": false,
+      "features": {
+        "title": "feat(sync): 迭代后自动派生同步 — post-commit hook + 全依赖面同步",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T10:16:12Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1221",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1221",
+      "synthetic": false,
+      "features": {
+        "title": "fix(svc): sync_check 假绿 + WORKSPACE 硬编码 + B3 对 stdio 能力的误报",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T10:04:56Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1220",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1220",
+      "synthetic": false,
+      "features": {
+        "title": "chore: bump agora → 2bb13858 (采购授权门槛深化)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T09:51:52Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1219",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1219",
+      "synthetic": false,
+      "features": {
+        "title": "feat(svc): 服务生命周期登记补全 + 两个 S1 误报修复",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T09:39:31Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1218",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1218",
+      "synthetic": false,
+      "features": {
+        "title": "fix(tasks)+chore(cron): 修复并发 bet 物化 task 债 + 告警到人常态调度",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T09:46:23Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1217",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1217",
+      "synthetic": false,
+      "features": {
+        "title": "feat(observability): 告警到人 channel 连接器体系 — 与连接器体系联动",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T08:08:14Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1216",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1216",
+      "synthetic": false,
+      "features": {
+        "title": "chore: bump agora → 9038fe5c (市场总览深化)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T08:00:12Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1215",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1215",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gap-clearance): Phase 0-4 自主迭代闭环落地 (清零率 89%)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T07:05:53Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1214",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1214",
+      "synthetic": false,
+      "features": {
+        "title": "fix(gac): submit 静默中断 + reachability gate 基线不可解析时 fail-open",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T07:03:45Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1213",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1213",
+      "synthetic": false,
+      "features": {
+        "title": "docs(plan)+chore(cron): T9-OBSERV bet 登记 + 事件面常态化调度",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T07:04:01Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1212",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1212",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ci): remove continue-on-error from submodule-freshness-gatekeeper checkout",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T06:54:47Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1211",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1211",
+      "synthetic": false,
+      "features": {
+        "title": "feat(observability): 统一事件面落地 — 事件面+适配器+治理联动+日志轮转",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T06:51:53Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1210",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1210",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): 批量删除闸门 — 拦住整仓归零事故",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T06:50:16Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1209",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1209",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): T6-05 减法配额制门禁 + ② 采购记录 (agora → fe62d08b)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T06:57:03Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1208",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1208",
+      "synthetic": false,
+      "features": {
+        "title": "docs(observability): 统一可观测性架构设计 — 可观测×事件×治理三体系联动",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T06:24:59Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1205",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1205",
+      "synthetic": false,
+      "features": {
+        "title": "docs(plan): 方向 2+3 方案 — 采购授权记录 + BET 推进恢复",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T06:12:38Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1204",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1204",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gate): reachability gate 增量检查 + submodule 治理整合方案",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T05:57:36Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1203",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1203",
+      "synthetic": false,
+      "features": {
+        "title": "[wsvc-observability] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T05:49:17Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1201",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1201",
+      "synthetic": false,
+      "features": {
+        "title": "docs(ops): agora CI 运维经验 — 双 CI 决策 + 环境性测试模式 + submodule bump 待办",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T05:23:52Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1200",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1200",
+      "synthetic": false,
+      "features": {
+        "title": "feat(T6-01): dynamic GaC rule subtraction — vitality tracking + downgrade engine",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T05:21:21Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1199",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1199",
+      "synthetic": false,
+      "features": {
+        "title": "fix(gov): 机制修复 round 2 — prune 豁免 + ADR 防撞号 + drift 登记 + doc budget",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T05:30:58Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1198",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1198",
+      "synthetic": false,
+      "features": {
+        "title": "feat(governance): 全面落地 — superseded 归档 + ADR 分层 + 能力市场 P2 账单",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T05:48:20Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1197",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1197",
+      "synthetic": false,
+      "features": {
+        "title": "feat(closeout-submodule-sync): stale auto-pull + PASW drift detection + debt-auto-seed (治本 E)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T05:04:12Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1195",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1195",
+      "synthetic": false,
+      "features": {
+        "title": "docs(plan): 未来方向 1-3 方案 — 能力市场 P2 + T6 治理减法 + doc-governance",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:58:53Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1194",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1194",
+      "synthetic": false,
+      "features": {
+        "title": "fix(docs): 标准 frontmatter 迁移 + CLAUDE.md 坏链修复",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:45:50Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1193",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1193",
+      "synthetic": false,
+      "features": {
+        "title": "fix(adr): 删除冗余 0396-ci-net-red-closeout-2 (squash 未删旧文件)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:35:17Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1191",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1191",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Neo4j env + iris live test (P0-T2+T6) — ALL 39 TASKS CODE COMPLETE",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:25:10Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1190",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1190",
+      "synthetic": false,
+      "features": {
+        "title": "fix(adr): ADR-0396 撞号 — 重编号为 0398",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:25:54Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1189",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1189",
+      "synthetic": false,
+      "features": {
+        "title": "chore(kairon): bump OA-write+Bank (Phase 4 COMPLETE 7/7)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:22:15Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1188",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1188",
+      "synthetic": false,
+      "features": {
+        "title": "feat(closeout-insights): P1 hook self-check + P1 ci-local-fast pyright + ruff expand + P2 drift actionable",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:29:21Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1187",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1187",
+      "synthetic": false,
+      "features": {
+        "title": "chore(l4-kernel): bump TELOS injection (P1-T7) — Phase 1 COMPLETE",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:18:16Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1186",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1186",
+      "synthetic": false,
+      "features": {
+        "title": "feat(market): P1 能力市场发现 API (agora → 4c77543)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:29:25Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1185",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1185",
+      "synthetic": false,
+      "features": {
+        "title": "chore(omo): bump GovernorAgent (P3-T5) — Phase 3 COMPLETE",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:12:26Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1184",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1184",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): dashboard.py standalone HTML (P3-T1)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:09:07Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1183",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1183",
+      "synthetic": false,
+      "features": {
+        "title": "feat: P4-T1 Swarm + P4-T3 Namespace (Phase 4 → 5/7)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:06:35Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1182",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1182",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): P3-T6 Workflow Mesh integration",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:03:26Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1181",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1181",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): agent-lifecycle.py (P4-T7) — LAST root-level task",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:00:56Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1180",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1180",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): emergency-override.py (P4-T4)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:58:49Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1179",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1179",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): capability-router + providers (P4-T2) — Phase 4 starts",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:56:47Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1178",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1178",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): evolution-agent.py Meta-3进化层 (P3-T2)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:54:24Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1177",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1177",
+      "synthetic": false,
+      "features": {
+        "title": "chore(omo): bump → Advisor Agent + Trust Policy + Aetherforge",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:51:50Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1176",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1176",
+      "synthetic": false,
+      "features": {
+        "title": "chore(omo): bump Trust Policy Engine (P1-T4)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:47:41Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1175",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1175",
+      "synthetic": false,
+      "features": {
+        "title": "chore(omo): bump Aetherforge wire (P0-T3)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:43:59Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1174",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1174",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): permission-matrix.py 7层权限过滤器 (P3-T4)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:38:57Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1173",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1173",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): risk-gate.py C5风控门禁 (P3-T3)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:36:46Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1172",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1172",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): problem-detector.py (P3-T7)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:34:51Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1171",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1171",
+      "synthetic": false,
+      "features": {
+        "title": "docs(retro): Phase 0-2 复盘",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:33:00Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1170",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1170",
+      "synthetic": false,
+      "features": {
+        "title": "feat(journey): Phase 2 domain specs — family/health/education (P2-T5/T6)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:31:03Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1169",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1169",
+      "synthetic": false,
+      "features": {
+        "title": "feat(scene-cards): Phase 2 domain expansion — 4 new life domain cards",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:28:41Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1168",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1168",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): pattern-governor-bridge.py (P1-T8)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:25:32Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1167",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1167",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): agent-registry.py + 4 resident agents (P1-T6)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:23:41Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1166",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1166",
+      "synthetic": false,
+      "features": {
+        "title": "feat(closeout-insights): P1 hook self-check + P1 ci-local-fast pyright + ruff expand + P2 drift actionable",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:11:06Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1165",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1165",
+      "synthetic": false,
+      "features": {
+        "title": "feat(mof): 5 M2 extension models for digital organism",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:21:28Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1164",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1164",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ci): CI 净红收官 — surfaces 注册 + state sync 修复 + task schema 合规",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:13:51Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1163",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1163",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): mos-cold-start.py — TELOS预灌world_snapshot (P0-T7)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:17:20Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1162",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1162",
+      "synthetic": false,
+      "features": {
+        "title": "docs: CLAUDE.md Phase 0 progress — MOS agent_belief + digital organism routing",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:15:17Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1161",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1161",
+      "synthetic": false,
+      "features": {
+        "title": "feat(T6): closeout T6-02/T6-03/T6-05 — ADR 分层 + 孤儿归档 + 减法配额门禁",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T04:13:46Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1160",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1160",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): MOS Bridge P0-T4/T5 — outcome+reflection data flows to MOS tables",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:13:46Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1159",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1159",
+      "synthetic": false,
+      "features": {
+        "title": "chore(kairon): bump → agent_belief三表 (ADR-0396 Keystone, BET-Y1Q1-T3-01)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:10:48Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1158",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1158",
+      "synthetic": false,
+      "features": {
+        "title": "fix(verify-omo): 第1步改用 omo state sync — 不依赖缺失的 scripts 脚本",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:10:45Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1157",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1157",
+      "synthetic": false,
+      "features": {
+        "title": "docs(governance): ADR-0396 数字生命体架构",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:06:12Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1156",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1156",
+      "synthetic": false,
+      "features": {
+        "title": "fix(git): 移除孤儿 gitlink ws-agent-onboard (merge conflict 残留)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T03:01:37Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1155",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1155",
+      "synthetic": false,
+      "features": {
+        "title": "docs(architecture): Digital Organism Architecture v1.0 — 四论框架 + 五阶段路线图",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T02:56:11Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1154",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1154",
+      "synthetic": false,
+      "features": {
+        "title": "chore(closeout): update agora + omo gitlinks",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T02:50:42Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1153",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1153",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ci): 修复剩余 2 个 CI 失败 — governance-verify uv + interface-check doctor",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T02:47:32Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1152",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1152",
+      "synthetic": false,
+      "features": {
+        "title": "[t6-06-skill] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T02:17:08Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1151",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1151",
+      "synthetic": false,
+      "features": {
+        "title": "chore(closeout): align submodule pointers + sync state + fix CI",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T02:10:22Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1150",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1150",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ci): 修复剩余 2 个 CI 失败 — check + capability-registry drift",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T02:21:12Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1149",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1149",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): BET-Y1Q2-T6-01 GaC 规则减法 — 3 required→advisory",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T02:21:18Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1148",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1148",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ci): 修复 3 个 CI pre-existing 失败",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T02:00:41Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1147",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1147",
+      "synthetic": false,
+      "features": {
+        "title": "chore(closeout): T6-04 retro + align submodule pointers + cleanup",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T01:41:15Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1146",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1146",
+      "synthetic": false,
+      "features": {
+        "title": "feat(market+health+cli): P0 能力市场 + P1 backend 分级 + T6-10b cockpit 拆分",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T01:32:39Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1145",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1145",
+      "synthetic": false,
+      "features": {
+        "title": "governance: ADR-0395 CI 平面净红收官 — scripts/check orphan + drift ahead",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T01:42:57Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1144",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1144",
+      "synthetic": false,
+      "features": {
+        "title": "feat(T8-01): /inbox 决策收件箱最小版 — 三条按钮 + 每日上限 5 条",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T00:13:46Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1143",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1143",
+      "synthetic": false,
+      "features": {
+        "title": "governance: ci-surfaces 24 个 scripts/check-* 标 orphan + ahead 状态非阻塞",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T01:04:42Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1142",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1142",
+      "synthetic": false,
+      "features": {
+        "title": "[bet-y1q1-t2-02] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T00:24:18Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1141",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1141",
+      "synthetic": false,
+      "features": {
+        "title": "governance: ADR-0394 scripts/ 子模块镜像债清理",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T23:45:50Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1140",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1140",
+      "synthetic": false,
+      "features": {
+        "title": "[mos-loop] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T23:37:47Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1139",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1139",
+      "synthetic": false,
+      "features": {
+        "title": "feat(grill): 建议方案 + T6-10 god-module 拆分 (interface-check 修复)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T23:34:56Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1138",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1138",
+      "synthetic": false,
+      "features": {
+        "title": "governance: ADR-0393 god-module 大文件治理计划 + bet T6-10",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T23:22:43Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1137",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1137",
+      "synthetic": false,
+      "features": {
+        "title": "feat(release): land all 5 evolution pillars & AetherForge BDSK router",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T23:18:16Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1136",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1136",
+      "synthetic": false,
+      "features": {
+        "title": "feat(release): land all 5 evolution pillars & AetherForge BDSK router",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T02:13:41Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1134",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1134",
+      "synthetic": false,
+      "features": {
+        "title": "governance: ADR-0392 CI 修复 (drafts persistence_mode) + dirty 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T23:08:59Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1133",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1133",
+      "synthetic": false,
+      "features": {
+        "title": "[state-drift-fix] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T23:01:39Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1132",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1132",
+      "synthetic": false,
+      "features": {
+        "title": "docs(governance): ADR 重编号 0388→0391 — 消除编号冲突",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T23:14:56Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1131",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1131",
+      "synthetic": false,
+      "features": {
+        "title": "[t1-07-retro] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T23:04:23Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1130",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1130",
+      "synthetic": false,
+      "features": {
+        "title": "chore: T3-02 闭环 + 全域 scene v2 + production loop 批量落地",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T22:57:30Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1129",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1129",
+      "synthetic": false,
+      "features": {
+        "title": "governance: ADR-0390 M5 数据黑障修复 — omo_daemon 漏写 checks 字段",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T22:30:41Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1128",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1128",
+      "synthetic": false,
+      "features": {
+        "title": "infra: delegation infrastructure reliability — alias-check, preflight, diagnosis runbook, BOS compute domain",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T22:43:50Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1127",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1127",
+      "synthetic": false,
+      "features": {
+        "title": "feat(p3p4): 阶段3 收敛判定 + 阶段4 强化 (声明驱动测试 + trace)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:46:29Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1126",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1126",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ssot): iris CLI syntax fix + A2 live proof + B2 dormant evaluation",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:39:47Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1125",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1125",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): path A+B+C — full dispatchers + tool audit + auto-trigger + signal expansion",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:35:23Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1124",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1124",
+      "synthetic": false,
+      "features": {
+        "title": "chore(goals): T3-01 闭环 — 认知四元组 done + bet ledger 同步",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:30:35Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1123",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1123",
+      "synthetic": false,
+      "features": {
+        "title": "docs: global sync — CLAUDE.md + ARCHITECTURE.md + SYSTEM-INDEX.md scene/journey/fabric routing",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:26:42Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1122",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1122",
+      "synthetic": false,
+      "features": {
+        "title": "feat(belief): 认知四元组物理化 + scene v2 全域升级 (T3-01/T7-01)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:27:11Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1121",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1121",
+      "synthetic": false,
+      "features": {
+        "title": "governance: ADR-0389 M5 gate ROI 治理价值报告 — 量化 gate 价值的减法决策输入",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:37:56Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1120",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1120",
+      "synthetic": false,
+      "features": {
+        "title": "chore(omo): bump → JourneyRunnerAgent daemon tick (Phase 3)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:18:04Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1119",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1119",
+      "synthetic": false,
+      "features": {
+        "title": "feat(legacy-strategy): 遗留项目战略规划 + 阶段1 止血",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:32:19Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1118",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1118",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): production loop — 5 dispatchers + signal poller + outcome recorder",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:11:35Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1117",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1117",
+      "synthetic": false,
+      "features": {
+        "title": "feat(scene+goals): 全域 scene card v2 + 下一波意图注入",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:09:05Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1116",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1116",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): journey-runner.py — 执行脊柱核心引擎重建 (四面一脊 ③)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:03:28Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1115",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1115",
+      "synthetic": false,
+      "features": {
+        "title": "feat(scene): engineering-delivery 首个 shadow 场景 + transition 工具",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:01:30Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1114",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1114",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ssot): gen-tools-index 收录场景卡工具族 (arch-convergence B)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T22:34:37Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1113",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1113",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): scene reflection executor + capability token generator (Phase C+D)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:52:14Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1112",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1112",
+      "synthetic": false,
+      "features": {
+        "title": "chore(goals): Y1Q1 三目标闭环 — MEASURE/PERCEIVE/SCENE 全部 done",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:52:25Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1111",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1111",
+      "synthetic": false,
+      "features": {
+        "title": "feat(strategy): 系统性分析 + 四阶段落地 (配额真实计费/大响应/告警消费)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:03:31Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1110",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1110",
+      "synthetic": false,
+      "features": {
+        "title": "feat(journey): Journey State Graph — 3 specs + validator + state store (Phase B/L3)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:49:45Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1109",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1109",
+      "synthetic": false,
+      "features": {
+        "title": "feat(scene-card): Scene Card 2.0 specification — I/O schema + reflection + checkpoints",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:46:43Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1108",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1108",
+      "synthetic": false,
+      "features": {
+        "title": "feat(bet): BET-Y1Q1-T2-01 感知面 + T7-01 场景面五档生命周期",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:45:42Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1107",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1107",
+      "synthetic": false,
+      "features": {
+        "title": "governance: ADR-0388 CI 平面减法收官 — workflow retire + 检测器盲区修复 + trigger 生成器",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T13:06:22Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1106",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1106",
+      "synthetic": false,
+      "features": {
+        "title": "docs(reports): agora 极度复杂超长链路场景验证报告",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:39:03Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1105",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1105",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): scene chain validator + feedback collector (Phase 3+4)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:31:59Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1104",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1104",
+      "synthetic": false,
+      "features": {
+        "title": "feat(bet): Y1Q1 意图模型复活 + 废除 X3 mtime 伪指标",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:31:34Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1103",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1103",
+      "synthetic": false,
+      "features": {
+        "title": "feat(scene-cards): batch create 6 new scene cards — W1/W3/W4/W5 + 2 scenarios",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:28:58Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1102",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1102",
+      "synthetic": false,
+      "features": {
+        "title": "feat(p5p8): P5 能力网关化 + P6 契约统一 + P7 冷启动 + P8 面板增强",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:26:53Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1101",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1101",
+      "synthetic": false,
+      "features": {
+        "title": "fix: 子模块可达性修复 + CI 平面 SSOT 登记补齐",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:34:40Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1100",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1100",
+      "synthetic": false,
+      "features": {
+        "title": "feat(governance): permission scope vocabulary + lifecycle CLI + scene-card-check",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:14:53Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1099",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1099",
+      "synthetic": false,
+      "features": {
+        "title": "fix(governance): ADR numbering collision fix (0385→0387) + adr-number-check.py",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:11:54Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1098",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1098",
+      "synthetic": false,
+      "features": {
+        "title": "feat(governance): Phase 5 Debt Predictor",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:19:57Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1097",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1097",
+      "synthetic": false,
+      "features": {
+        "title": "docs(reports): agora 超长链路场景验证报告",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:06:39Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1096",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1096",
+      "synthetic": false,
+      "features": {
+        "title": "docs(governance): ADR-0385 dual-track scene admission + fabric standard (Phase 3)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T11:56:01Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1095",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1095",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ssot): internal pipeline scene admission track (Phase 2)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T11:53:39Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1094",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1094",
+      "synthetic": false,
+      "features": {
+        "title": "chore: bump agora → 41b60de (BOS 契约硬化 + 可观测 + 性能)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T11:55:12Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1093",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1093",
+      "synthetic": false,
+      "features": {
+        "title": "docs(scene-card): Phase 1 — internal pipeline admission track setup",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T11:48:36Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1092",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1092",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): add worktree-hygiene-audit.py",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T22:42:22Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1091",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1091",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ci): ADR-0386 CI consolidation — scope dedup, pytest merge, integration filter, workflow health (#1023)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T11:50:19Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1090",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1090",
+      "synthetic": false,
+      "features": {
+        "title": "docs(reports): Documents 全领域验证评估报告",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T11:40:06Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1089",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1089",
+      "synthetic": false,
+      "features": {
+        "title": "docs(scene-card): engineering-delivery trial evidence + blocker resolution",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T11:34:49Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1088",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1088",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): swarm-git 递归深度自检 (T1-07 defense-in-depth)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T11:25:53Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1087",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1087",
+      "synthetic": false,
+      "features": {
+        "title": "refactor(gac): skip ci-local-fast on branch deletion in pre-push hook",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T11:26:31Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1086",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1086",
+      "synthetic": false,
+      "features": {
+        "title": "feat(governance): Phase 1-5 Intelligent Governance Foundation",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T11:24:34Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1085",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1085",
+      "synthetic": false,
+      "features": {
+        "title": "fix(gac): REAL_GIT 防递归 (T1-07 修 PR#1082 fork bomb)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T11:03:19Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1084",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1084",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ci): ADR-0385 scheduled prune-ci-runs cron + SSOT usage healthcheck (#1022)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T11:11:37Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1083",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1083",
+      "synthetic": false,
+      "features": {
+        "title": "chore(cockpit): bump (api_system_map_catalog god-module split 1565→1079)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T06:57:46Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1082",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1082",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): T1-07 swarm-git 拦高危 + git-shim PATH 收口",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T06:55:10Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1081",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1081",
+      "synthetic": false,
+      "features": {
+        "title": "chore: bump agora → 09fb2de (验证发现 bug 修复)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T06:51:51Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1080",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1080",
+      "synthetic": false,
+      "features": {
+        "title": "feat(check-submodule-rewind v3): tests, perf, CI, monitoring, ADR",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T06:35:41Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1079",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1079",
+      "synthetic": false,
+      "features": {
+        "title": "chore(kairon): bump (seeyon_oa list_items localhost 完整修复)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T06:07:12Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1078",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1078",
+      "synthetic": false,
+      "features": {
+        "title": "chore: bump agora → 77c8e9c (P3 能力目录写闭环 + P4 统一告警)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T06:11:33Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1077",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1077",
+      "synthetic": false,
+      "features": {
+        "title": "feat(check-submodule-rewind): add tests, --json/--verbose, improve docs",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T03:58:00Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1076",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1076",
+      "synthetic": false,
+      "features": {
+        "title": "docs(operations): 2026-08-07 合流+冲突标记gate复盘",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T03:47:40Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1075",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1075",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): check-conflict-markers gate 拦截冲突标记入库",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T03:40:10Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1074",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1074",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Phase 1.5 场景验证 — 决策收件箱 + 摄入管线 + 审批流 + UI",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T12:08:23Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1073",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1073",
+      "synthetic": false,
+      "features": {
+        "title": "fix(check-submodule-rewind): correct argument order and handle branch-switch",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T03:13:23Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1072",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1072",
+      "synthetic": false,
+      "features": {
+        "title": "chore: bump agora → 836431e (配额告警联动)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T03:15:00Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1071",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1071",
+      "synthetic": false,
+      "features": {
+        "title": "chore(kairon): bump 指针 (seeyon_oa CDP localhost 修复)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T02:54:55Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1070",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1070",
+      "synthetic": false,
+      "features": {
+        "title": "merge: 三年规划台账全套 (21 commits) → main",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T02:51:27Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1069",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1069",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): ADR-0384 meta-meta governance — rebase-regen, gate-effectiveness, M1-M5 roadmap (#1021)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T02:48:56Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1068",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1068",
+      "synthetic": false,
+      "features": {
+        "title": "chore: bump agora → 676df7b (配额计费) + 文档同步",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T02:51:00Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1067",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1067",
+      "synthetic": false,
+      "features": {
+        "title": "chore: bump agora/cockpit 指针 (遗留修复) + 计费方案",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T02:18:04Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1066",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1066",
+      "synthetic": false,
+      "features": {
+        "title": "fix(check-submodule-rewind): run merge-base inside submodule, handle force-push SHAs",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T01:46:03Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1065",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1065",
+      "synthetic": false,
+      "features": {
+        "title": "docs(I0-callchain): 修复 tools_bos 拆分子包后的失效行号引用",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T01:46:08Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1064",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1064",
+      "synthetic": false,
+      "features": {
+        "title": "docs: agora 架构对齐 — 文档/配置/场景卡/指针同步 (P1+P2 深化)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T23:53:59Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1063",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1063",
+      "synthetic": false,
+      "features": {
+        "title": "feat(ci): ADR-0383 CI runs cap governance + E-5 path-filter SSOT (#1020)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T13:46:10Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1062",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1062",
+      "synthetic": false,
+      "features": {
+        "title": "chore(agora): bump 指针 (god-module split 1663→1468)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T02:38:23Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1061",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1061",
+      "synthetic": false,
+      "features": {
+        "title": "chore(agora): bump 指针至 7756362 (复盘 P0-P1 修复)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T13:09:22Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1060",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1060",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): ADR-0381 test restoration — v10 load_registry fix, CI coverage, E-5 trigger SSOT (#1019)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T12:59:27Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1059",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1059",
+      "synthetic": false,
+      "features": {
+        "title": "feat(obs): P2-3 swarm 面板 agora 健康 + P2-4 CI 部署拓扑 smoke",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T12:45:40Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1058",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1058",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): bump-pointer agora 时 auto-sync bos-registry (防 drift 复发)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-07T02:38:18Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1057",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1057",
+      "synthetic": false,
+      "features": {
+        "title": "agora P2 深化: /metrics + audit hashchain + 双进程统一 + 本地调用放行 + 面板/CI",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T12:31:03Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1055",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1055",
+      "synthetic": false,
+      "features": {
+        "title": "feat(scene): 激活 document-review (lifecycle→active, 操作员全授权)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T12:05:53Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1054",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1054",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): Governance Phase 13 — 收尾闭环",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T11:58:36Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1053",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1053",
+      "synthetic": false,
+      "features": {
+        "title": "fix: YAML syntax — source_ref indentation + target glob quoting",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T11:51:19Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1052",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1052",
+      "synthetic": false,
+      "features": {
+        "title": "chore(agora): bump 指针至 2b5a8b1 (deploy 配置修复)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T11:51:15Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1051",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1051",
+      "synthetic": false,
+      "features": {
+        "title": "chore(omo): bump 指针至 04be543b (HealthMonitorAgent α.3续 真实实现)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T11:48:04Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1050",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1050",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): add CR-SUBMODULE-REWIND check for submodule pointer rewind detection (ADR-0380)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T11:49:02Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1049",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1049",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): Governance Phase 12 — source_ref + target 字段补全",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T11:49:00Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1048",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1048",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): ADR-0380 CI plane completion — runner migration, orphan zeroing, concurrent-drift absorption (#1018)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T05:16:58Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1047",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1047",
+      "synthetic": false,
+      "features": {
+        "title": "chore(agora): bump 指针至 9987103 (P1 深化)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T05:03:15Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1046",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1046",
+      "synthetic": false,
+      "features": {
+        "title": "chore(submodules): 更新 cockpit/kairon/ecos 指针 (LLM 接入层 + 网关对齐)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T04:54:12Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1045",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1045",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): Governance Phase 11 — enforcement 字段补全 + evidence_smoke 扩展",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T04:48:46Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1044",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1044",
+      "synthetic": false,
+      "features": {
+        "title": "fix(submodule): restore agora pointer to d4a9d1c (undo accidental rewind)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T04:43:21Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1043",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1043",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Phase 4 — remove cockpit-mcp from root-level tooling",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T04:42:40Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1042",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1042",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): Governance Phase 10 — 版本升级 + MOF 执行器扩展",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T03:33:33Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1041",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1041",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): ADR-0379 CI plane convergence — SSOT, observability, dedup, runner (#1017)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T03:19:14Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1040",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1040",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Governance Phase 9 — 维度清洗 + 门禁补齐 + MOF 集成",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T03:13:38Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1038",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1038",
+      "synthetic": false,
+      "features": {
+        "title": "chore(agora): P1 深化 — gateway cwd 修复 + KeepAlive true",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T02:54:33Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1036",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1036",
+      "synthetic": false,
+      "features": {
+        "title": "fix: 修正 6 条 consistency_drift 规则维度 X3→X4",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T02:43:05Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1035",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1035",
+      "synthetic": false,
+      "features": {
+        "title": "feat: GaC 治理深化 Phase 8 — 归档/维度重整/ADR多样化/Freeze策略",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T02:25:39Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1034",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1034",
+      "synthetic": false,
+      "features": {
+        "title": "chore(submodule): bump omo v10 + aetherforge α.1续",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T02:32:57Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1032",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1032",
+      "synthetic": false,
+      "features": {
+        "title": "fix: 更新 agora 子模块指针至包含 BOS YAML uri 修复",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T01:54:59Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1030",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1030",
+      "synthetic": false,
+      "features": {
+        "title": "fix: 补全缺失的 check script + promote 2 draft 规则",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T01:31:27Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1029",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1029",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): Phase 6 治理深化 — 4 项优化落地",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T23:30:56Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1027",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1027",
+      "synthetic": false,
+      "features": {
+        "title": "fix(server): agora P0 深化 — 共用路由 + audit bug + unimplemented 登记",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-06T02:18:39Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1026",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1026",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): 全面治理深化迭代 — 5 项优化",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T23:16:42Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1023",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1023",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): 孤儿脚本归档 + 8 个新 X2 规则注册",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T22:52:15Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1022",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1022",
+      "synthetic": false,
+      "features": {
+        "title": "fix(cli): bos mutate 端口 7431→7422 + Bearer API key 授权",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T22:49:22Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1021",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1021",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): 全面治理深化 — CI 修复 + 维度平衡 + ADR 覆盖率守门",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T22:40:54Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1020",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1020",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): 补全 ADR 引用 — 118 条规则 100% 覆盖率",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T22:25:44Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1019",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1019",
+      "synthetic": false,
+      "features": {
+        "title": "fix(cli): bos resolve/read 注入 agora/ecos src — 修复 No module named",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T22:19:15Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1018",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1018",
+      "synthetic": false,
+      "features": {
+        "title": "feat(governance): ADR-0378 roadmap closure — verify and close all delivered initiatives (#1013)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T14:03:34Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1017",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1017",
+      "synthetic": false,
+      "features": {
+        "title": "[gov-deepening-report] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T13:47:51Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1016",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1016",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Wave 2+3 — agent-workflows split + capability routing + submodule sync",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T13:58:02Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1015",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1015",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): ADR-0377 drift-noise convergence — G11/G12 (#1011)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T13:40:22Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1014",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1014",
+      "synthetic": false,
+      "features": {
+        "title": "[cockpit-p2] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T13:26:47Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1013",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1013",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): add CR-X-META-HEALTH + ADR references for recent rules",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T13:59:04Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1012",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1012",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): ADR-0376 M1 tracked-truth convergence — health reads git HEAD, not working tree",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T13:18:30Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1010",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1010",
+      "synthetic": false,
+      "features": {
+        "title": "feat: Wave 2+3 - split agent-workflows.yaml into directory, add capability routing",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T01:59:20Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1009",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1009",
+      "synthetic": false,
+      "features": {
+        "title": "[cockpit-cli-fix] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T12:59:00Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1008",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1008",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): ADR-0375 Legacy Rule Plane Convergence — container-semantics drift fix + registry sync",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T12:48:23Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1007",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1007",
+      "synthetic": false,
+      "features": {
+        "title": "docs(eccp): ECCP-HANDOFF 更新 — P0 完整闭环交付 (14 PR)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-08T01:49:46Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1006",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1006",
+      "synthetic": false,
+      "features": {
+        "title": "feat(memory-os): CI light gate + as_of seed + onboard cold start",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T12:18:47Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1005",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1005",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): ADR-0374 GaC Registry Convergence — indexed-drift fix + M1 orphan purge + stat auto-bump + symmetry tests",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T12:26:29Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1004",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1004",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): promote 3 draft rules to active with check scripts",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T12:02:04Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1003",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1003",
+      "synthetic": false,
+      "features": {
+        "title": "[eccp-producer-fix] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T11:24:25Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1002",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1002",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): add CR-X3-DELIVERY-CADENCE rule for X3 dimension balance",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T11:12:41Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-1000",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/1000",
+      "synthetic": false,
+      "features": {
+        "title": "feat(memory-os): smoke + help/discover SSOT + status health strip",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T11:06:18Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-999",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/999",
+      "synthetic": false,
+      "features": {
+        "title": "[ratio-fix] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T10:58:38Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-997",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/997",
+      "synthetic": false,
+      "features": {
+        "title": "chore(cockpit): redesigned CLI help — product map + compact --help",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T10:38:01Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-996",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/996",
+      "synthetic": false,
+      "features": {
+        "title": "feat: cockpit-mcp deprecation + BOS capability lifecycle B3",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T10:43:39Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-994",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/994",
+      "synthetic": false,
+      "features": {
+        "title": "docs(memory-os): phase10 help + docs sync (architecture/ops/skills/CLI)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T08:41:16Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-993",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/993",
+      "synthetic": false,
+      "features": {
+        "title": "fix(observe): stale active run 缺锁降级 warn 而非永久 halt",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T08:48:52Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-992",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/992",
+      "synthetic": false,
+      "features": {
+        "title": "fix(gac): submodule pre-push hook add reachability skip baseline",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T08:35:28Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-991",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/991",
+      "synthetic": false,
+      "features": {
+        "title": "[eccp-p0-part3] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T04:36:16Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-990",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/990",
+      "synthetic": false,
+      "features": {
+        "title": "fix(ci): make capability-registry-drift advisory (continue-on-error: true)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T03:55:52Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-989",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/989",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gov): ADR-0373 Sweep-tooling Convergence Round — A4/C5/D3/B2/E2 + GaC iteration",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T10:50:29Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-988",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/988",
+      "synthetic": false,
+      "features": {
+        "title": "chore(gac): update freeze max_rules to 150 after consolidation",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T03:42:02Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-987",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/987",
+      "synthetic": false,
+      "features": {
+        "title": "feat(memory-os): phase10 as_of + live KOS/gbrain backends",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T03:22:30Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-985",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/985",
+      "synthetic": false,
+      "features": {
+        "title": "[cockpit-swarm-cmd] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T03:18:00Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-984",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/984",
+      "synthetic": false,
+      "features": {
+        "title": "feat(memory-os): phase9 follow-up — epic retro + env/consolidate observability",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T03:07:22Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-983",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/983",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): fix P2/P3 governance gaps — sweep, mesh, health freshness, X3 delivery value",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T03:03:57Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-982",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/982",
+      "synthetic": false,
+      "features": {
+        "title": "[swarm-dash-tui] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T02:47:03Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-981",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/981",
+      "synthetic": false,
+      "features": {
+        "title": "[eccp-n9] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T01:26:44Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-980",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/980",
+      "synthetic": false,
+      "features": {
+        "title": "docs(memory-os): BOS table + retro supersede + kairon pointer",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T01:14:06Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-979",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/979",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): add governance coverage for submodule, mesh, memory-os, external agent",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T01:20:28Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-978",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/978",
+      "synthetic": false,
+      "features": {
+        "title": "feat(memory-os): cockpit CLI + BOS knowledge-ref + Agora MCP env",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T23:24:19Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-977",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/977",
+      "synthetic": false,
+      "features": {
+        "title": "[eccp-p1] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T23:30:21Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-976",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/976",
+      "synthetic": false,
+      "features": {
+        "title": "[governance-consolidation] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T23:19:07Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-975",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/975",
+      "synthetic": false,
+      "features": {
+        "title": "[swarm-dash-solidify] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-05T00:58:15Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-974",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/974",
+      "synthetic": false,
+      "features": {
+        "title": "feat(memory-os): Phase 8 env inject, ports, ops contract, surface check",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T23:07:05Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-973",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/973",
+      "synthetic": false,
+      "features": {
+        "title": "[eccp-p0] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T23:00:15Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-972",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/972",
+      "synthetic": false,
+      "features": {
+        "title": "[implement-4-more-rules] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T22:47:32Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-971",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/971",
+      "synthetic": false,
+      "features": {
+        "title": "chore(gov): mark sweep-tooling-scaling done + fix sweep-check command (ADR-0367 深化)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T22:53:15Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-970",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/970",
+      "synthetic": false,
+      "features": {
+        "title": "feat(memory-os): Phase 7 Neo4j recall + ops bootstrap",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T22:32:45Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-969",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/969",
+      "synthetic": false,
+      "features": {
+        "title": "feat(mesh): N1+N9 P0 mesh-iris-executor (iris sync→mesh receipt)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T22:09:25Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-968",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/968",
+      "synthetic": false,
+      "features": {
+        "title": "sync(m1): update mof-capabilities, agent-gac-rules, ecos pointer after PR#965",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T22:23:34Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-967",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/967",
+      "synthetic": false,
+      "features": {
+        "title": "fix(sweep): land lost Phase 2 gate changes (A2/A3/B3/C2/C4, ADR-0367)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T22:29:18Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-966",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/966",
+      "synthetic": false,
+      "features": {
+        "title": "feat(sweep): Phase 3 — sweep 历史归档 + GitHub Actions 自举 (ADR-0367)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T13:09:22Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-965",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/965",
+      "synthetic": false,
+      "features": {
+        "title": "feat(gac): implement 3 principle rules — LLM advisory, submodule PR, heuristic fallback",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T13:15:20Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-964",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/964",
+      "synthetic": false,
+      "features": {
+        "title": "[swarm-activity-dashboard] worktree 提交",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T22:14:48Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-963",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/963",
+      "synthetic": false,
+      "features": {
+        "title": "fix(scene): document-review capability_refs BOS URI (N1 解锁)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T12:49:10Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-962",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/962",
+      "synthetic": false,
+      "features": {
+        "title": "fix(gac): re-promote CR-PR-DESCRIPTION-NON-EMPTY to active (regression from PR #957)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T12:40:36Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-961",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/961",
+      "synthetic": false,
+      "features": {
+        "title": "fix(catalog): iris↔catalog 断链修复 (N1 document-review 解锁)",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T12:45:29Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    },
+    {
+      "id": "ghm-960",
+      "verdict": "positive",
+      "source": "github://starlink-awaken/omostation/pull/960",
+      "synthetic": false,
+      "features": {
+        "title": "fix(gac): comprehensive round — port conflict, 17 principle rules, ecos merge, X3 note",
+        "additions": null,
+        "deletions": null,
+        "merged_at": "2026-08-04T12:26:52Z",
+        "user": "starlink-awaken"
+      },
+      "label_hint": "accepted"
+    }
+  ]
+}
