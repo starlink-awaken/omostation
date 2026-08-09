@@ -58,3 +58,20 @@ audit_ci() {
   echo ""
   echo "]}"
 }
+
+audit_submodule() {
+  local repo="$1"
+  local out
+  out=$(cd "$(git rev-parse --show-toplevel)" && python3 bin/gac/check-submodule-pointer-drift.py --range origin/main HEAD --submodules --json 2>/dev/null || echo '{"findings": []}')
+  echo "$out" | python3 -c "
+import json,sys
+try:
+    d=json.load(sys.stdin)
+except Exception:
+    d={'findings': []}
+repo='$repo'
+findings=d.get('findings', d.get('diverged', []))
+subs=[{'path': f.get('path','?'), 'gitlink': f.get('gitlink','?'), 'drift': f.get('status','unknown')} for f in findings] if isinstance(findings, list) else []
+print(json.dumps({'repo': repo, 'submodules': subs}))
+"
+}

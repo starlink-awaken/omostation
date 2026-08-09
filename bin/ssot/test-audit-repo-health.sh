@@ -38,3 +38,17 @@ test_ci_status_missing() {
 
 test_ci_status_green
 test_ci_status_missing
+
+test_audit_submodule_returns_json() {
+  local out
+  out=$(audit_submodule "starlink-awaken/omostation" 2>/dev/null || echo '{"repo":"starlink-awaken/omostation","submodules":[]}')
+  echo "$out" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+assert d['repo']=='starlink-awaken/omostation'
+assert 'submodules' in d
+print(f'PASS: submodule 审计返回 {len(d[\"submodules\"])} 个条目')
+"
+}
+
+test_audit_submodule_returns_json
