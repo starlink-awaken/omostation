@@ -186,6 +186,18 @@ class AdjudicationStore:
             }
             with open(summary_file, "w", encoding="utf-8") as f:
                 yaml.dump(existing, f, default_flow_style=False, allow_unicode=True)
+
+            self._check_autonomy_ladder(capability, verdict)
+        except Exception:
+            pass
+
+    def _check_autonomy_ladder(self, capability: str, verdict: str) -> None:
+        """闭环: 裁决 → 自主性阶梯升降级检查 (BET-Y1Q4-T3-01)."""
+        try:
+            from .omo_autonomy_level import AutonomyLadder
+
+            ladder = AutonomyLadder()
+            ladder.record_adjudication(capability, verdict)
         except Exception:
             pass
 

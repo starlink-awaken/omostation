@@ -44,6 +44,8 @@ def test_load_state_returns_all_six_tables(tmp_path: Path):
         "world_snapshots",
         "capability_calibrations",
         "decision_outcomes",
+        "agent_skills",
+        "agent_experiences",
     }
     assert set(state.keys()) == expected_keys
     for v in state.values():
