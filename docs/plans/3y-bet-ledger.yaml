@@ -2503,7 +2503,8 @@ bets:
   title: cockpit Phase 4 清理债务 — cockpit_mcp.py 残留 import + 子模块指针漂移
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-09
   goal: 完成 cockpit Phase 4 清理：清理 cockpit_mcp.py 残留 import，同步 audit worktree 子模块指针，修复 L4 bridge 全系列失效
   non_goals:
   - 新增 cockpit_mcp.py shim（除非 Agora BOS 路径短期不可用）
