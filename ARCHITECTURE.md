@@ -219,6 +219,9 @@ external resource -> descriptor -> scene-bound admission -> capability route -> 
 
 | Document | Role |
 |----------|------|
+| [`docs/architecture/digital-twin-blueprint-v1.md`](docs/architecture/digital-twin-blueprint-v1.md) | 第二数字分身目标架构、Decision Episode 主链、MOF Control Compiler 与 90 天收敛路线 |
+| [`docs/architecture/blueprint-multi-agent-execution-control-v1.md`](docs/architecture/blueprint-multi-agent-execution-control-v1.md) | 蓝图多 Agent 战略执行、Work Packet、九级 Gate、证据与职责分离契约 |
+| [`docs/operations/blueprint-agent-instruction-pack-v1.md`](docs/operations/blueprint-agent-instruction-pack-v1.md) | 可分发给 Executor、Verifier、Strategic Director 和各 Agent 平台的统一操作指令 |
 | [`docs/ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md`](docs/ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md) | 场景优先的长周期架构战略、子项目边界与 Workflow Mesh 路线基线 |
 | [`README.md`](README.md) | Front door and quick orientation |
 | [`AGENTS.md`](AGENTS.md) | Agent/developer operating guide |
