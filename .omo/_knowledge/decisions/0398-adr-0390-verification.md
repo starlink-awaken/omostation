@@ -1,10 +1,9 @@
 ---
-id: ADR-0391
-title: M5 数据黑障修复验证 — ADR-0390 cherry-pick 到 omo main 路径
-status: ACCEPTED
-lifecycle: ACTIVE
-owner: governance-team
-last-reviewed: 2026-08-08
+id: ADR-0398
+status: active
+lifecycle: proposed
+owner: '@Builder'
+last-reviewed: '2026-08-09'
 ---
 
 # ADR-0391 Decision: M5 数据黑障修复验证报告
