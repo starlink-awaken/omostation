@@ -41,6 +41,9 @@ def run_inference(derived: dict, ontology: dict) -> list[dict]:
 
 
 def main() -> int:
+    if not DERIVED.exists():
+        print("[WARN] 派生面未生成，先跑: cd projects/ecos && uv run python3 bin/gen-l0-constraints.py", file=sys.stderr)
+        return 1
     derived = yaml.safe_load(DERIVED.read_text(encoding="utf-8"))
     ontology = yaml.safe_load(ONTOLOGY.read_text(encoding="utf-8"))
     findings = run_inference(derived, ontology)
