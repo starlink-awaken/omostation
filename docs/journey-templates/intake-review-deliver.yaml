@@ -1,0 +1,43 @@
+schema: journey-template/v1
+template_id: intake-review-deliver
+description: "通用 intake → review → decide → deliver → capture 骨架 (BET-Y3H1-T5-01)"
+
+# 参数化占位符: {{entry_scene}} / {{review_scene}} / {{deliver_scene}} / {{capture_scene}}
+# 实例化时由 journey spec 的 params 提供
+
+states:
+  - name: intake
+    scene: "{{entry_scene}}"
+    next: [review]
+  - name: review
+    scene: "{{review_scene}}"
+    next: [decision]
+  - name: decision
+    scene: "{{review_scene}}"
+    next: [deliver, closed]
+  - name: deliver
+    scene: "{{deliver_scene}}"
+    next: [capture]
+  - name: capture
+    scene: "{{capture_scene}}"
+    next: []
+  - name: closed
+    scene: "{{entry_scene}}"
+    next: []
+
+transitions:
+  - from: intake
+    to: review
+    condition: always
+  - from: review
+    to: decision
+    condition: always
+  - from: decision
+    to: deliver
+    condition: "decision.approved == true"
+  - from: decision
+    to: closed
+    condition: "decision.approved != true"
+  - from: deliver
+    to: capture
+    condition: always

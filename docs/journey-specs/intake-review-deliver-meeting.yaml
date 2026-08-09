@@ -1,0 +1,9 @@
+schema: journey-spec/v1
+journey_id: intake-review-deliver-meeting
+description: "会议 → 评审 → 决策 → 交付 → 沉淀 (模板实例化)"
+template: intake-review-deliver
+params:
+  entry_scene: meeting-supervision
+  review_scene: document-review
+  deliver_scene: engineering-delivery
+  capture_scene: knowledge-curation
