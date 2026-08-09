@@ -40,17 +40,17 @@ trap 'rmdir "$lock"' EXIT
 
 echo "== submodule pointer transaction =="
 if [ "$dry" = "1" ]; then
-  bash "$ROOT/bin/sync-submodules-push.sh" --dry-run
-  python3 "$ROOT/bin/submodule-reachability-gate.py" --source worktree
+  bash "$ROOT/bin/ssot/sync-submodules-push.sh" --dry-run
+  python3 "$ROOT/bin/ssot/submodule-reachability-gate.py" --source worktree
   exit 0
 fi
 
-bash "$ROOT/bin/sync-submodules-push.sh"
-python3 "$ROOT/bin/submodule-reachability-gate.py" --source worktree --fetch
+bash "$ROOT/bin/ssot/sync-submodules-push.sh"
+python3 "$ROOT/bin/ssot/submodule-reachability-gate.py" --source worktree --fetch
 
 git config --file .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}' | xargs git add --
 python3 "$ROOT/bin/change-lane-check.py" --staged
-python3 "$ROOT/bin/ssot-guardian.py"
+python3 "$ROOT/bin/ssot/ssot-guardian.py"
 
 if git diff --cached --quiet; then
   echo "no root submodule pointer changes to commit"
