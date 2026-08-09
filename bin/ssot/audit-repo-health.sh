@@ -99,3 +99,37 @@ audit_hook() {
   [ "$diverged" != "[]" ] && consistent="false"
   echo "{\"repo\": \"$repo\", \"hooks\": {\"canonical_path\": \"$canonical\", \"actual_path\": \"$actual\", \"consistent\": $consistent, \"diverged\": $diverged}}"
 }
+
+audit_hygiene() {
+  local repo="$1" merged=0 stale=0
+  merged=$(git branch --merged origin/main 2>/dev/null | grep -cv "^\*\|main" || true)
+  stale=$(git worktree list --porcelain 2>/dev/null | grep -c "^worktree" || true)
+  echo "{\"repo\": \"$repo\", \"hygiene\": {\"merged_branches\": $merged, \"stale_worktrees\": $stale}}"
+}
+
+risk_score() {
+  local repo="$1" score=0 ci_json sub_json hook_json
+  ci_json=$(audit_ci "$repo" 2>/dev/null || echo '{"workflows":[]}')
+  local red_count
+  red_count=$(echo "$ci_json" | python3 -c "
+import json,sys
+try:
+    d=json.load(sys.stdin)
+    print(sum(1 for w in d.get('workflows',[]) if w.get('status')=='red'))
+except Exception: print(0)
+")
+  [ "${red_count:-0}" -gt 0 ] && score=$((score + 40))
+  sub_json=$(audit_submodule "$repo" 2>/dev/null || echo '{"submodules":[]}')
+  local drift_count
+  drift_count=$(echo "$sub_json" | python3 -c "
+import json,sys
+try:
+    d=json.load(sys.stdin)
+    print(sum(1 for s in d.get('submodules',[]) if s.get('drift') not in ('aligned','unknown')))
+except Exception: print(0)
+")
+  [ "${drift_count:-0}" -gt 0 ] && score=$((score + 30))
+  hook_json=$(audit_hook "$repo" 2>/dev/null || echo '{"hooks":{"consistent":true}}')
+  echo "$hook_json" | grep -q '"consistent": false' && score=$((score + 20))
+  echo "$score"
+}

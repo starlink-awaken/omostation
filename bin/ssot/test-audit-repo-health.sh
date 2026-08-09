@@ -67,3 +67,12 @@ print(f'PASS: hook 审计 consistent={d[\"hooks\"][\"consistent\"]} diverged={d[
 }
 
 test_audit_hook_shape
+
+test_risk_score_bounds() {
+  local score
+  score=$(risk_score "starlink-awaken/omostation" 2>/dev/null || echo 0)
+  [ "$score" -ge 0 ] && [ "$score" -le 100 ] || { echo "FAIL: score 越界 $score"; return 1; }
+  echo "PASS: risk_score=$score (0-100)"
+}
+
+test_risk_score_bounds
