@@ -1,21 +1,9 @@
 ---
 id: ADR-0406
-title: model-driven (M0) 维持子模块形态 — 判定依据: 实证调用链 + 横切作用域
-status: PROPOSED
-lifecycle: decision
-type: decision
-owner: governance-agent (T1-02 执行: 夏明星 签发)
-date: 2026-08-09
-last-reviewed: 2026-08-09
-related:
-  - BET-Y1Q2-T1-02 (去留判定, 1 week)
-  - docs/ARCHITECTURE-DETAILED-MAP.md (M0 定义)
-  - docs/ARCHITECTURE-EVOLUTION.md (X/M0 不持有治理状态)
-  - projects/l4-kernel/src/l4_kernel/lifecycle.py (主消费者)
-  - projects/cockpit/src/cockpit/adapters/model_driven.py (主消费者)
-  - projects/ecos/src/ecos/ssot/tools/mof-derive.py (mof M3 桥接)
-  - ADR-0403 (agent 本体 model-driven, 不同概念)
-supersedes: []
+status: active
+lifecycle: proposed
+owner: '@Builder'
+last-reviewed: '2026-08-09'
 ---
 
 # ADR-0406: model-driven (M0) 维持子模块形态

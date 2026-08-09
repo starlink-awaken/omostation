@@ -14,13 +14,14 @@
 """
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
-_MARKERS = ("<<<<<<<", ">>>>>>>", "=======")
+_MARKERS = ("<<<<<<< ", ">>>>>>> ", "=======")
 
 
 def _staged_files() -> list[str]:
@@ -42,13 +43,20 @@ def _staged_files() -> list[str]:
 def _has_conflict_marker(path: Path) -> bool:
     """检查文件是否含冲突标记 (仅文本文件)."""
     try:
-        # 跳过超大文件 (如 SQLite/node_modules)
         if path.stat().st_size > 5_000_000:
             return False
         text = path.read_text(encoding="utf-8", errors="ignore")
-        # 冲突标记必须出现在行首 (排除代码中的字面量)
         lines = text.splitlines()
-        return any(l.startswith(m) for l in lines for m in _MARKERS)
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if stripped == "=======":
+                prev = lines[i - 1].strip() if i > 0 else ""
+                next = lines[i + 1].strip() if i + 1 < len(lines) else ""
+                if re.match(r"^<<<<<<< [^ ]+", prev) or re.match(r"^>>>>>>> [^ ]+", next):
+                    return True
+            elif re.match(r"^(<<<<<<<|>>>>>>>) [A-Za-z0-9_./-]+$", stripped):
+                return True
+        return False
     except Exception:  # noqa: BLE001 — 读取失败跳过
         return False
 

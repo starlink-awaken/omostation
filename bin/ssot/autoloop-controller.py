@@ -139,10 +139,6 @@ def _try_heuristic_verify(item: dict) -> dict[str, Any]:
     verification_cmd = str(item.get("verification_cmd", "") or "").strip()
 
     if not is_runnable_cmd(verification_cmd):
-        # 已 resolved 的 item 直接关闭 (不需要再验证)
-        lifecycle = str(item.get("lifecycle_state", "")).strip()
-        if lifecycle == "resolved":
-            return {"status": "passed", "note": "lifecycle_state=resolved, auto-close"}
         # 检查是否是 stale test artifact
         if "viol-test" in title or "Schema violation" in title:
             return {"status": "passed", "note": "stale test artifact, auto-cleanable"}

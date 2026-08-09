@@ -252,66 +252,6 @@ def scan_journeys() -> dict[str, Any]:
     return {"journey_dirs": journey_count, "human_holds": human_holds}
 
 
-def scan_llm_analysis(results: dict) -> dict[str, Any]:
-    """LLM 分析扫描结果, 产出优先级建议 (AetherForge 算力驱动)."""
-    try:
-        from _llm_helper import llm_ask
-
-        summary = (
-            f"Debt:{results['debt']['total']} "
-            f"A2A:{results['a2a']['unresolved']}unr "
-            f"Autonomy:{results['autonomy'].get('score','?')} "
-            f"MOS:calib={results['mos'].get('calibrations','?')} "
-            f"Journeys:{results['journeys'].get('human_holds',0)}holds"
-        )
-        response = llm_ask(
-            f"Governance scan: {summary}. "
-            f"What are the top 3 priorities and recommended actions? Be concise."
-        )
-        return {"analysis": response, "analyzed_at": _ts()}
-    except Exception as exc:
-        return {"analysis": None, "error": str(exc)[:100]}
-
-
-def scan_vision_evolution() -> dict[str, Any]:
-    """比对 vision/goals 与系统现状, 检测差距并产出 S2 提案."""
-    goals_path = ROOT / ".omo" / "_truth" / "goals" / "current.yaml"
-    if not goals_path.exists():
-        return {"vision_gaps": 0, "note": "no goals file"}
-
-    try:
-        import yaml
-
-        goals_data = yaml.safe_load(goals_path.read_text(encoding="utf-8")) or {}
-    except Exception:
-        return {"vision_gaps": 0, "error": "goals parse failed"}
-
-    active_goals = [
-        g for g in goals_data.get("goals", []) if g.get("status") != "done"
-    ]
-    gaps = []
-    for g in active_goals:
-        gaps.append(
-            {"goal_id": g.get("id", "?"), "desc": g.get("desc", "")[:60],
-             "progress": g.get("progress", 0), "status": g.get("status", "?")}
-        )
-
-    # LLM 分析差距
-    analysis = None
-    if gaps:
-        try:
-            from _llm_helper import llm_ask
-
-            analysis = llm_ask(
-                f"Active goals with gaps: {json.dumps(gaps[:5], ensure_ascii=False)}. "
-                f"Which goals need vision updates or new debt items?"
-            )
-        except Exception:
-            pass
-
-    return {"vision_gaps": len(gaps), "active_goals": gaps[:5], "analysis": analysis}
-
-
 def run_scan() -> dict[str, Any]:
     """执行全面扫描, 返回汇总结果."""
     ts = _ts()
@@ -323,10 +263,7 @@ def run_scan() -> dict[str, Any]:
         "a2a": scan_a2a_backlog(),
         "autonomy": scan_autonomy(),
         "journeys": scan_journeys(),
-        "vision": scan_vision_evolution(),
     }
-    # LLM 分析放在最后 (依赖前面的 scan 结果)
-    results["llm_analysis"] = scan_llm_analysis(results)
     _emit_metric("scan.completed", 1, {"ts": ts})
     return results
 

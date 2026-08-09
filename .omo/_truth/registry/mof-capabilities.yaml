@@ -1,4 +1,3 @@
----
 status: active
 lifecycle: ssot
 owner: governance-team
@@ -20,19 +19,19 @@ layers:
     description: 记录系统是什么
     tools: [mof-io, mof-version]
     status: complete
-    
+
   knowledge_layer:
     name: 知识层
     description: 推理系统应该是什么
     tools: [mof-reason, mof-decide, mof-graph]
     status: complete
-    
+
   decision_layer:
     name: 决策层
     description: 建议系统怎么演化
     tools: [mof-autonomous]
     status: complete
-    
+
   action_layer:
     name: 行动层
     description: 自动执行系统演化
@@ -49,89 +48,108 @@ tools:
     description: 模型导入/导出 (JSON)
     commands: [export, import]
     usage: "bin/mof/mof-io export [file]"
-    
+    generatable: false
+    verifiable: true
   mof-version:
     path: bin/mof/mof-version
     description: 模型版本管理
     commands: [show, record, diff]
     usage: "bin/mof/mof-version record 'description'"
-    
+
   # --- 知识层 ---
+    generatable: false
+    verifiable: true
   mof-reason:
     path: projects/ecos/src/ecos/ssot/tools/mof-reason.py
     description: 三维推理引擎 (impact/state/value)
     commands: [impact, state, value]
     usage: "python3 mof-reason.py impact <node_id>"
-    
+    generatable: false
+    verifiable: true
   mof-decide:
     path: bin/mof/mof-decide
     description: 智能决策支持
     commands: [<node_id>]
     usage: "bin/mof/mof-decide COMP-WS-agora"
-    
+    generatable: false
+    verifiable: true
   mof-graph:
     path: bin/mof/mof-graph
     description: 跨项目依赖图生成
     commands: [<无参数>, cycles]
     usage: "bin/mof/mof-graph cycles"
-    
+
   # --- 决策层 ---
+    generatable: false
+    verifiable: true
   mof-autonomous:
     path: bin/mof/mof-autonomous
     description: 自主决策引擎 (异常检测→推理→建议)
     commands: [detect, decide]
     usage: "bin/mof/mof-autonomous decide"
-    
+
   # --- 行动层 ---
+    generatable: false
+    verifiable: true
   mof-act:
     path: bin/mof/mof-act
     description: 自主行动引擎 (规划→验证→执行→验证→记录)
     commands: [fix_test, reduce_drift, improve_coverage, reduce_debt]
     usage: "bin/mof/mof-act improve_coverage cockpit"
-    
+
   # --- 分析工具 ---
+    generatable: false
+    verifiable: true
   mof-analyze:
     path: bin/mof/mof-analyze
     description: 统一分析工具
     commands: [dashboard, testing, cost, quality]
     usage: "bin/mof/mof-analyze dashboard"
-    
+    generatable: false
+    verifiable: true
   mof-export:
     path: bin/mof/mof-export
     description: 文档生成工具
     commands: [readme, api, arch]
     usage: "bin/mof/mof-export readme cockpit"
-    
+    generatable: false
+    verifiable: true
   mof-drift:
     path: bin/mof/mof-drift
     description: 架构漂移检测
     commands: [<无参数>]
     usage: "bin/mof/mof-drift"
-    
+    generatable: false
+    verifiable: true
   mof-scan:
     path: bin/mof/mof-scan
     description: 依赖安全扫描
     commands: [<无参数>]
     usage: "bin/mof/mof-scan"
-    
+    generatable: false
+    verifiable: true
   mof-assign:
     path: bin/mof/mof-assign
     description: 团队任务分配
     commands: [<domain>]
     usage: "bin/mof/mof-assign cockpit"
-    
+    generatable: false
+    verifiable: true
   mof-evolution:
     path: bin/mof/mof-evolution
     description: 系统演化追踪
     commands: [<project>]
     usage: "bin/mof/mof-evolution kairon"
-    
+    generatable: false
+    verifiable: true
   mof-enforce:
     path: bin/mof/mof-enforce
     description: Agent 约束强制
     commands: [pre-check, post-check, impact, state, value, validate]
     usage: "bin/mof/mof-enforce pre-check COMP-WS-agora"
 
+    generatable: false
+    verifiable: true
   mof-manage:
     path: bin/mof/mof-manage
     description: MOF 能力注册表管理 (查看/验证/更新 mof-capabilities.yaml)
@@ -141,108 +159,110 @@ tools:
 # ═══════════════════════════════════════════════════════════
 # 约束注册表
 # ═══════════════════════════════════════════════════════════
+    generatable: false
+    verifiable: true
 constraints:
-  - id: AGENT-MOF-IMPACT-CHECK
-    description: 修改前必须查询影响
-    enforcement: pre_operation
-    severity: error
-    
-  - id: AGENT-MOF-STATE-VALID
-    description: 状态转换必须合法
-    enforcement: pre_operation
-    severity: error
-    
-  - id: AGENT-MOF-SCHEMA-VALID
-    description: 新增节点必须通过 schema 校验
-    enforcement: post_operation
-    severity: error
-    
-  - id: AGENT-MOF-STATE-HISTORY
-    description: 变更必须更新 state_history
-    enforcement: post_operation
-    severity: warning
-    
-  - id: AGENT-MOF-SSOT-COMPLETE
-    description: SSOT 必须完整 (model_driven_refs)
-    enforcement: pre_commit
-    severity: error
-    
-  - id: AGENT-MOF-DEPENDENCY-DECLARE
-    description: 跨层依赖必须声明
-    enforcement: pre_operation
-    severity: error
-    
-  - id: AGENT-MOF-NAMING-CONVENTION
-    description: 命名规范必须统一 (PascalCase)
-    enforcement: pre_commit
-    severity: error
-    
-  - id: AGENT-MOF-VALUE-EVALUATE
-    description: 高价值组件必须评估价值
-    enforcement: pre_operation
-    severity: warning
+- id: AGENT-MOF-IMPACT-CHECK
+  description: 修改前必须查询影响
+  enforcement: pre_operation
+  severity: error
+
+- id: AGENT-MOF-STATE-VALID
+  description: 状态转换必须合法
+  enforcement: pre_operation
+  severity: error
+
+- id: AGENT-MOF-SCHEMA-VALID
+  description: 新增节点必须通过 schema 校验
+  enforcement: post_operation
+  severity: error
+
+- id: AGENT-MOF-STATE-HISTORY
+  description: 变更必须更新 state_history
+  enforcement: post_operation
+  severity: warning
+
+- id: AGENT-MOF-SSOT-COMPLETE
+  description: SSOT 必须完整 (model_driven_refs)
+  enforcement: pre_commit
+  severity: error
+
+- id: AGENT-MOF-DEPENDENCY-DECLARE
+  description: 跨层依赖必须声明
+  enforcement: pre_operation
+  severity: error
+
+- id: AGENT-MOF-NAMING-CONVENTION
+  description: 命名规范必须统一 (PascalCase)
+  enforcement: pre_commit
+  severity: error
+
+- id: AGENT-MOF-VALUE-EVALUATE
+  description: 高价值组件必须评估价值
+  enforcement: pre_operation
+  severity: warning
 
 # ═══════════════════════════════════════════════════════════
 # 集成点注册表
 # ═══════════════════════════════════════════════════════════
 integrations:
   pre_commit:
-    - id: mof-schema-validate
-      description: M1↔M2 schema 校验
-      enabled: true
-      
-    - id: mof-drift-check
-      description: 架构漂移检测
-      enabled: true
-      
+  - id: mof-schema-validate
+    description: M1↔M2 schema 校验
+    enabled: true
+
+  - id: mof-drift-check
+    description: 架构漂移检测
+    enabled: true
+
   ci:
-    - id: mof-scan
-      description: 依赖安全扫描
-      workflow: governance-check.yml
-      enabled: true
-      
+  - id: mof-scan
+    description: 依赖安全扫描
+    workflow: governance-check.yml
+    enabled: true
+
   agent_workflow:
-    - id: pre-check
-      description: 修改前完整检查
-      tool: mof-enforce
-      enabled: true
-      
-    - id: post-check
-      description: 修改后完整检查
-      tool: mof-enforce
-      enabled: true
+  - id: pre-check
+    description: 修改前完整检查
+    tool: mof-enforce
+    enabled: true
+
+  - id: post-check
+    description: 修改后完整检查
+    tool: mof-enforce
+    enabled: true
 
 # ═══════════════════════════════════════════════════════════
 # 自主性成长机制
 # ═══════════════════════════════════════════════════════════
 autonomous_growth:
   feedback_loop:
-    - step: detect
-      description: 检测系统异常
-      tool: mof-autonomous
-      
-    - step: decide
-      description: 自主决策
-      tool: mof-autonomous
-      
-    - step: act
-      description: 自主行动
-      tool: mof-act
-      
-    - step: verify
-      description: 验证结果
-      tool: mof-enforce
-      
-    - step: learn
-      description: 记录经验
-      tool: mof-version
-      
+  - step: detect
+    description: 检测系统异常
+    tool: mof-autonomous
+
+  - step: decide
+    description: 自主决策
+    tool: mof-autonomous
+
+  - step: act
+    description: 自主行动
+    tool: mof-act
+
+  - step: verify
+    description: 验证结果
+    tool: mof-enforce
+
+  - step: learn
+    description: 记录经验
+    tool: mof-version
+
   evolution_tracking:
-    - tool: mof-evolution
-      description: 追踪系统演化路径
-      
-    - tool: mof-version
-      description: 记录模型版本变更
+  - tool: mof-evolution
+    description: 追踪系统演化路径
+
+  - tool: mof-version
+    description: 记录模型版本变更
 
 # ═══════════════════════════════════════════════════════════
 # M1/M2/M3 统计
@@ -272,6 +292,8 @@ omo_tools:
     commands: [status, health, tasks]
     usage: "uv run python -m omo.cli manage status"
 
+    generatable: false
+    verifiable: true
   omo-audit-cards:
     path: projects/omo/src/omo/omo_audit_cards.py
     cli: "omo audit cards"
@@ -279,6 +301,8 @@ omo_tools:
     commands: [--db, --json, --output]
     usage: "uv run python -m omo.cli audit cards --json"
 
+    generatable: false
+    verifiable: true
   omo-audit-vault:
     path: projects/omo/src/omo/omo_audit_vault.py
     cli: "omo audit vault"
@@ -286,6 +310,8 @@ omo_tools:
     commands: [--days, --root, --json, --output]
     usage: "uv run python -m omo.cli audit vault --days 90 --json"
 
+    generatable: false
+    verifiable: true
   omo-audit-freshness:
     path: projects/omo/src/omo/omo_audit_freshness.py
     cli: "omo audit freshness"
@@ -296,6 +322,8 @@ omo_tools:
 # ═══════════════════════════════════════════════════════════
 # P74 / ADR-0130 治理工具 — 常态化工作流沉默检测
 # ═══════════════════════════════════════════════════════════
+    generatable: false
+    verifiable: true
 p74_tools:
   omo-state-projection-guard:
     path: projects/omo/src/omo/omo_lint_projection.py
@@ -309,6 +337,8 @@ p74_tools:
     adr: ADR-0130
     m3_parent: GovernanceElement.GacRule
 
+    generatable: false
+    verifiable: true
   omo-runtime-stamp-policy:
     path: projects/omo/src/omo/omo_lint_stamp.py
     cli: "omo lint stamp-policy"
@@ -321,16 +351,21 @@ p74_tools:
     adr: ADR-0130
     m3_parent: GovernanceElement.GacRule
 
+    generatable: false
+    verifiable: true
   agent-workflow-suggest:
     path: bin/agent-workflow.py::suggest
     description: >
       P74 §3 错位路由纠正: 给出 changes 期望走的 workflow 建议.
       advisory only, 不强制. 实现 CR-P74-WORKFLOW-SUGGEST (X3 价值栈).
     commands: [--from-diff, --include-untracked, --profile, --json, --file]
-    usage: "uv run --with pyyaml python bin/agent-workflow.py suggest --from-diff --profile governance-agent"
+    usage: "uv run --with pyyaml python bin/agent-workflow.py suggest --from-diff
+      --profile governance-agent"
     adr: ADR-0130
     m3_parent: GovernanceElement.GacRule
 
+    generatable: false
+    verifiable: true
   agent-workflow-p74-solidification:
     path: bin/agent-workflow.py::p74_solidification_report
     description: >
@@ -338,6 +373,9 @@ p74_tools:
       输出 silent_health 状态. 内嵌 compliance. 实现 CR-P74-WORKFLOW-SILENCE
       (X1 审计链).
     commands: [<embedded in compliance>]
-    usage: "uv run --with pyyaml python bin/agent-workflow.py compliance --json | jq .p74_solidification"
+    usage: "uv run --with pyyaml python bin/agent-workflow.py compliance --json |
+      jq .p74_solidification"
     adr: ADR-0130
     m3_parent: GovernanceElement.GacRule
+    generatable: false
+    verifiable: true
