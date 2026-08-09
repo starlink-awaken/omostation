@@ -34,6 +34,9 @@ jobs:
       - name: Apply bump and create PR
         if: steps.check.outputs.has_changes == 'true'
         run: |
+          # runner 无 git identity → push 报 fatal: empty ident name (2026-08-08 修复)
+          git config user.name "Submodule Autobump Bot"
+          git config user.email "actions@github.com"
           bash bin/ssot/submodule-autobump.sh
           BRANCH="auto/submodule-bump-$(date +%Y%m%d%H%M)"
           git checkout -b "$BRANCH"
