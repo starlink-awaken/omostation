@@ -1,3 +1,6 @@
 [submodule "projects/l4-kernel"]
 	path = projects/l4-kernel
 	url = https://github.com/starlink-awaken/omostation-l4-kernel.git
+[submodule "projects/aetherforge"]
+	path = projects/aetherforge
+	url = https://github.com/starlink-awaken/omostation-aetherforge.git
