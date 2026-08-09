@@ -84,8 +84,18 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="JSON 输出")
     args = ap.parse_args()
     if not DERIVED.exists():
-        print(f"[FAIL] 派生面缺失: {DERIVED}", file=sys.stderr)
-        return 1
+        # 派生面缺失时自动生成 (gen-l0-constraints.py), 避免 CI fresh checkout 直接 FAIL.
+        gen = ROOT / "projects" / "ecos" / "bin" / "gen-l0-constraints.py"
+        if gen.exists():
+            print(f"[WARN] 派生面缺失, 自动生成: {gen}", file=sys.stderr)
+            rc = subprocess.run([sys.executable, str(gen)], cwd=str(ROOT / "projects" / "ecos"),
+                                capture_output=True, text=True, timeout=180)
+            if rc.returncode != 0 or not DERIVED.exists():
+                print(f"[FAIL] 派生面生成失败: {DERIVED}\n{rc.stdout[-500:]}\n{rc.stderr[-500:]}", file=sys.stderr)
+                return 1
+        else:
+            print(f"[FAIL] 派生面缺失且生成器不存在: {DERIVED}", file=sys.stderr)
+            return 1
     stages = run_closed_loop()
     if args.json:
         import json
