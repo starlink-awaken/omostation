@@ -1696,7 +1696,8 @@ bets:
   title: 自主性阶梯 L0-L3 判据实现
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-09
   goal: 把放权从"人拍脑袋"变成"数据触发", 同时实现自动降级
   non_goals:
   - 实际放权某个场景(属 T7-01)
@@ -1815,8 +1816,7 @@ bets:
   title: 真实评测集 v1 (≥200 条)
   appetite: 1 week
   priority: P0
-  status: done
-  done_at: 2026-08-09
+  status: candidate
   goal: 用 adjudication 数据构建第一份非合成评测集, 替代自出题自答
   non_goals:
   - 模型训练
