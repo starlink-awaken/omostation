@@ -81,7 +81,8 @@ jobs:
           uv run python -m omo.cli lint task-policy --all --workspace-root ../.. || FAILED=1
           uv run python -m omo.cli lint god-module --workspace-root ../.. || echo "⚠️ god-module warnings (non-blocking)"
           # 模型驱动治理闭环 (L0↔MOF, 2026-08-09): 真实数据端到端验证
-          python3 bin/ssot/governance_closed_loop.py || { echo "❌ 治理闭环验证失败 (governance_closed_loop)"; FAILED=1; }
+          # cwd 在 projects/omo (上方 cd), 用 ../.. 回到 workspace root 再跑.
+          python3 ../../bin/ssot/governance_closed_loop.py || { echo "❌ 治理闭环验证失败 (governance_closed_loop)"; FAILED=1; }
           uv run pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
