@@ -18,7 +18,7 @@ db_path = WORKSPACE / "kos/kos-index.sqlite"
 claude_md_path = WORKSPACE / "CLAUDE.md"
 
 # omlx 统一网关 (Tailscale MBP)
-OMLX_GATEWAY = "http://100.96.126.35:4000"
+OMLX_GATEWAY = "http://127.0.0.1:9000"
 EMBED_MODEL = "embed-bge"  # omlx embed-bge 模型 (MBP 本机)
 OMLX_API_KEY = "sk-omlx-admin"
 TOP_K = 2  # 每次只注入最相关的 Top-2 Consensus，极限节省 Token

@@ -4,7 +4,7 @@
 按 Conventional Commits 规范: type(scope): subject
 
 LLM provider 优先级:
-  1. aetherforge 网关 (100.96.126.35:4000, OpenAI compatible) — prefer
+  1. aetherforge 网关 (127.0.0.1:9000, OpenAI compatible) — prefer
   2. ollama 本地 (env OLLAMA_MODEL, fallback) — sub-zero latency
   3. heuristic (--no-llm 硬门) — last resort
 
@@ -49,7 +49,7 @@ CONVENTIONAL_TYPES = {
     "revert": "回退",
 }
 
-AETHERFORGE_GATEWAY = os.environ.get("AETHERFORGE_URL", "http://100.96.126.35:4000")
+AETHERFORGE_GATEWAY = os.environ.get("AETHERFORGE_URL", "http://127.0.0.1:9000")
 AETHERFORGE_MODEL = os.environ.get("AETHERFORGE_MODEL", "mid")  # 紧凑小模型, mini-9b 把 budget 耗光返空
 AETHERFORGE_TIMEOUT = int(os.environ.get("AETHERFORGE_TIMEOUT", "60"))  # 实测 ~32s 但留 buffer
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:31b-mlx")
@@ -100,27 +100,19 @@ def heuristic_subject(stat: str) -> tuple[str, str]:
 
 
 def query_aetherforge(model: str, prompt: str, timeout: int) -> str | None:
-    """aetherforge 网关 (OpenAI /v1/chat/completions compatible)."""
-    url = f"{AETHERFORGE_GATEWAY}/v1/chat/completions"
-    payload = json.dumps({
-        "model": model,
-        "messages": [
-            {"role": "system", "content": "你是 commit message 生成器. 输出必须是 Conventional Commits: <type>(<scope>): <subject> + 3-5 行 body. Chinese OK. 不要 preamble / markdown fence."},
-            {"role": "user", "content": prompt},
-        ],
-        "max_tokens": 600,  # 紧凑 — mid 在 500-1000 之间最稳
-        "temperature": 0.2,
-    }).encode()
-    req = urllib.request.Request(
-        url, data=payload,
-        headers={"Content-Type": "application/json"},
-    )
+    """AetherForge bridge — unified LLM entry (replaces hardcoded HTTP URL)."""
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            data = json.loads(resp.read())
-        return data["choices"][0]["message"]["content"].strip()
-    except (urllib.error.URLError, KeyError, json.JSONDecodeError, OSError) as e:
-        print(f"⚠️ aetherforge gateway unreachable: {type(e).__name__}: {str(e)[:120]}", file=sys.stderr)
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "projects" / "aetherforge" / "src"))
+        from aetherforge.bridge import llm_generate
+        result = llm_generate(
+            prompt,
+            system="你是 commit message 生成器. 输出必须是 Conventional Commits: <type>(<scope>): <subject> + 3-5 行 body. Chinese OK. 不要 preamble / markdown fence.",
+            model=model,
+            timeout=float(timeout),
+        )
+        return result.get("content", "").strip() if result.get("content") else None
+    except Exception as e:
+        print(f"⚠️ aetherforge bridge unreachable: {type(e).__name__}: {str(e)[:120]}", file=sys.stderr)
         return None
 
 

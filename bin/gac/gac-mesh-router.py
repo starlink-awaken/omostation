@@ -17,7 +17,7 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 db_path = WORKSPACE / "kos/kos-index.sqlite"
 
 # 默认网关配置与端口备案
-LOCAL_GATEWAY = "http://100.96.126.35:4000"
+LOCAL_GATEWAY = "http://127.0.0.1:9000"
 PORT = int(os.environ.get("OMLX_MESH_ROUTER_PORT", "7437"))
 
 # 全局线程安全的状态缓存
@@ -90,7 +90,7 @@ def get_compute_nodes_for_model(model_name: str) -> list[dict]:
 
 def probe_node_alive(ip: str) -> bool:
     """快速探测 IP 节点的 omlx 统一网关是否在线且可访问 (1.5s 探活超时)"""
-    url = f"http://{ip}:4000/v1/models"
+    url = f"http://{ip}:9000/v1/models"
     try:
         req = urllib.request.Request(
             url,
@@ -107,7 +107,7 @@ async def async_probe_node_port(ip: str) -> bool:
     """使用 asyncio 快速并发探测端口连通性 (1.5s 超时)"""
     try:
         reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(ip, 4000),
+            asyncio.open_connection(ip, 9000),
             timeout=1.5
         )
         writer.close()

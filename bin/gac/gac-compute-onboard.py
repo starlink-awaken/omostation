@@ -134,7 +134,7 @@ def onboard_models() -> dict:
 def onboard_litellm() -> dict:
     """连通并测试 LiteLLM / AetherForge completions 路由"""
     print("🚀 [4/5] litellm / AetherForge API 路由自检...")
-    gateway_url = "http://100.96.126.35:4000/v1/chat/completions"
+    gateway_url = "http://127.0.0.1:9000/v1/chat/completions"
     api_key = "sk-omlx-admin"
 
     # 发送一个极简 prompt
