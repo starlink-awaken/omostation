@@ -133,3 +133,61 @@ except Exception: print(0)
   echo "$hook_json" | grep -q '"consistent": false' && score=$((score + 20))
   echo "$score"
 }
+
+render_report() {
+  local format="${1:-markdown}" limit="${2:-}"
+  local repos
+  repos=$(enumerate_repos | sort -u)
+  if [ -n "$limit" ]; then repos=$(echo "$repos" | head -n "$limit"); fi
+  local tmp
+  tmp=$(mktemp)
+  echo "$repos" | while read -r repo; do
+    [ -n "$repo" ] || continue
+    local ci sub hook hyg score
+    ci=$(audit_ci "$repo" 2>/dev/null || echo '{"workflows":[]}')
+    sub=$(audit_submodule "$repo" 2>/dev/null || echo '{"submodules":[]}')
+    hook=$(audit_hook "$repo" 2>/dev/null || echo '{"hooks":{"consistent":true}}')
+    hyg=$(audit_hygiene "$repo" 2>/dev/null || echo '{"hygiene":{}}')
+    score=$(risk_score "$repo" 2>/dev/null || echo 0)
+    echo "{\"repo\":\"$repo\",\"ci\":$ci,\"submodules\":$sub,\"hooks\":$hook,\"hygiene\":$hyg,\"risk_score\":$score}" >> "$tmp"
+  done
+  if [ "$format" = "json" ]; then
+    local items
+    items=$(paste -sd, "$tmp" 2>/dev/null || cat "$tmp" | tr '\n' ',')
+    echo "{\"repos\":[${items}]}"
+  else
+    echo "# 多仓库治理健康度审计报告"
+    echo ""
+    echo "| repo | CI红 | drift | hook | score | 结论 |"
+    echo "|---|---|---|---|---|---|"
+    cat "$tmp" | python3 -c "
+import json,sys
+for line in sys.stdin:
+    line=line.strip().rstrip(',')
+    if not line: continue
+    try: d=json.loads(line)
+    except Exception: continue
+    ci=d.get('ci',{}).get('workflows',[])
+    red=sum(1 for w in ci if w.get('status')=='red')
+    drift=sum(1 for s in d.get('submodules',{}).get('submodules',[]) if s.get('drift') not in ('aligned','unknown'))
+    hook='✅' if d.get('hooks',{}).get('consistent',True) else '❌'
+    score=d.get('risk_score',0)
+    verdict='🔴 高风险' if score>=50 else ('🟡 中风险' if score>=20 else '🟢 健康')
+    print(f\"| {d.get('repo','')} | {red}红 | {drift}漂移 | {hook} | {score} | {verdict} |\")
+"
+  fi
+  rm -f "$tmp"
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  FORMAT="markdown" LIMIT=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --json) FORMAT="json" ;;
+      --markdown) FORMAT="markdown" ;;
+      --limit) LIMIT="$2"; shift ;;
+    esac
+    shift
+  done
+  render_report "$FORMAT" "$LIMIT"
+fi

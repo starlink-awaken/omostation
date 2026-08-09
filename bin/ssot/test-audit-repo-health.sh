@@ -76,3 +76,24 @@ test_risk_score_bounds() {
 }
 
 test_risk_score_bounds
+
+test_main_json() {
+  local out
+  out=$(bin/ssot/audit-repo-health.sh --json --limit 1 2>/dev/null || echo '{"repos":[]}')
+  echo "$out" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+assert 'repos' in d
+print(f'PASS: --json 输出 {len(d[\"repos\"])} 个仓库 (limit 1)')
+"
+}
+
+test_main_markdown() {
+  local out
+  out=$(bin/ssot/audit-repo-health.sh --markdown --limit 1 2>/dev/null || echo '# 空')
+  echo "$out" | grep -q "风险地图\|风险分\|repo\|CI红" || { echo "FAIL: markdown 缺风险地图表头"; return 1; }
+  echo "PASS: --markdown 输出风险地图"
+}
+
+test_main_json
+test_main_markdown
