@@ -1379,7 +1379,8 @@ bets:
   title: model-driven 去留判定
   appetite: 1 week
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-09
   goal: 判定 M0 是否在 Mesh 主链上有必经位置, 终结"横切但不在链上"的模糊状态
   non_goals:
   - 立即执行归并(视判定结果)
@@ -1387,6 +1388,7 @@ bets:
   - '产出判定 ADR: 接入主链 / 降为 ecos 内库 / 归档'
   - 判定依据为实测调用链, 非设计意图
   - 若判定为降库, 排入 Y1Q4 执行 bet
+  done_evidence: "ADR-0406 (PROPOSED): 维持子模块, 修订 M0 文档语义 (横切工具/非主链). 实证: 3 个真实消费者 (l4-kernel bridge+try/except, cockpit 反腐层, ecos 3 CLI 工具), 0 主链强制依赖, 23 个 import 全在降级或显式失败路径. project-registry M0 标签重命名 + consumers 字段. Y2Q1 复审."
   verify:
   - cmd: ls .omo/_knowledge/decisions/ | grep -c model-driven
     expect: '>= 1'
