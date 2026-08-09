@@ -109,3 +109,19 @@ test_render_debt_entries() {
 }
 
 test_render_debt_entries
+
+test_e2e_full() {
+  local out
+  out=$(bin/ssot/audit-repo-health.sh --json --limit 1 2>/dev/null || echo '{"repos":[]}')
+  echo "$out" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+repos=d.get('repos',[])
+assert len(repos) >= 1, f'期望 ≥1 仓库, 得 {len(repos)}'
+scores=[r.get('risk_score',0) for r in repos]
+assert all(0 <= s <= 100 for s in scores), 'score 越界'
+print(f'PASS: e2e 扫描 {len(repos)} 仓库, 最高风险 {max(scores)}, 最低 {min(scores)}')
+"
+}
+
+test_e2e_full
