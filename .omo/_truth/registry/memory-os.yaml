@@ -184,8 +184,8 @@ adapters:
     - Silent disable when mem0ai missing
     - Default config assumes Qdrant localhost — not CI-safe
   memtheta:
-    status: partial_simulation
-    default: legacy
+    status: legacy_simulation
+    default: false
     module: projects/kairon/packages/kos/src/kos/adapters/memtheta_adapter.py
     production_ready: false
     notes:
