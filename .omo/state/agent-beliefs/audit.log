@@ -53,3 +53,15 @@
 [2026-08-08T06:25:45Z] ACTION=RECORD_WORLD_SNAPSHOT DETAILS=id=ws-0041 domain=perception source=signal-poller:apple_mail_inbox
 [2026-08-08T06:26:14Z] ACTION=RECORD_WORLD_SNAPSHOT DETAILS=id=ws-0042 domain=perception source=signal-poller:apple_mail_inbox
 [2026-08-08T11:08:18Z] ACTION=RECORD_BELIEF DETAILS=id=belief-0010 topic=workflow:bet-execution run_id=20260808T104413Z-bet-execution-aace7ca1
+[2026-08-09T06:29:21Z] ACTION=RECORD_WORLD_SNAPSHOT DETAILS=id=ws-0043 domain=perception source=signal-poller:apple_mail_inbox
+[2026-08-09T06:29:38Z] ACTION=RECORD_EXPERIENCE DETAILS=id=exp-0001 agent=knowledge-curator outcome=positive
+[2026-08-09T06:29:39Z] ACTION=RECORD_EXPERIENCE DETAILS=id=exp-0002 agent=advisor outcome=positive
+[2026-08-09T06:29:39Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-0001 ref=agent:health-monitor:tick:noop rate=1.0
+[2026-08-09T06:29:39Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-0002 ref=agent:knowledge-curator:tick:learn rate=1.0
+[2026-08-09T06:29:39Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-0003 ref=agent:journey-runner:tick:noop rate=1.0
+[2026-08-09T06:29:39Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-0004 ref=agent:governor:tick:alert rate=1.0
+[2026-08-09T06:29:39Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-0005 ref=agent:advisor:tick:evaluate rate=1.0
+[2026-08-09T06:29:39Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-0006 ref=agent:autonomy-assessment:tick:evaluate rate=1.0
+[2026-08-09T06:29:39Z] ACTION=RECORD_EXPERIENCE DETAILS=id=exp-0003 agent=knowledge-curator outcome=positive
+[2026-08-09T06:29:39Z] ACTION=RECORD_EXPERIENCE DETAILS=id=exp-0004 agent=governor outcome=positive
+[2026-08-09T06:29:39Z] ACTION=RECORD_EXPERIENCE DETAILS=id=exp-0005 agent=advisor outcome=positive

@@ -1,3 +1,11 @@
+---
+id: ADR-0404
+status: active
+lifecycle: proposed
+owner: '@Builder'
+last-reviewed: '2026-08-09'
+---
+
 # ADR-0404 Phase 3 eCOS Submodule Federated Governance
 
 ## Context
