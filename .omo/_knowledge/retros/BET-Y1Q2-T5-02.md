@@ -1,3 +1,10 @@
+---
+status: archived
+lifecycle: history
+owner: xiamingxing
+last-reviewed: 2026-08-09
+---
+
 # BET-Y1Q2-T5-02 Retro: 回退边执行语义
 
 ## 完成日期

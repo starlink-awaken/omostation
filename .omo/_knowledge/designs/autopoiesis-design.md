@@ -1,3 +1,10 @@
+---
+status: archived
+lifecycle: history
+owner: xiamingxing
+last-reviewed: 2026-08-09
+---
+
 # Autopoiesis 设计 — 架构自创生机制 (META-04)
 
 > 创建: 2026-08-08 | 状态: 设计稿 (D-plan) | owner: architecture-team

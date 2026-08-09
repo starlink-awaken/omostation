@@ -1,3 +1,10 @@
+---
+status: archived
+lifecycle: history
+owner: xiamingxing
+last-reviewed: 2026-08-09
+---
+
 # BET-Y1Q2-T6-03 Retro: bin 脚本清理
 
 ## 完成日期

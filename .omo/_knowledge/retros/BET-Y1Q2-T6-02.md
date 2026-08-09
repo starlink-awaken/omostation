@@ -1,3 +1,10 @@
+---
+status: archived
+lifecycle: history
+owner: xiamingxing
+last-reviewed: 2026-08-09
+---
+
 # BET-Y1Q2-T6-02 Retro: ADR 分层
 
 ## 完成日期

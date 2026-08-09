@@ -1,3 +1,10 @@
+---
+status: archived
+lifecycle: history
+owner: xiamingxing
+last-reviewed: 2026-08-09
+---
+
 # Y1 冗余清单对账
 
 > 创建: 2026-08-08 | 来源: 3Y-BET-LEDGER §减法配额 + tool-usage-audit
