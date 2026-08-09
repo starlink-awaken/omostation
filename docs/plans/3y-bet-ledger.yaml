@@ -1660,7 +1660,8 @@ bets:
   title: 感知面第二根管子 (文件夹 / 日历)
   appetite: 1 week
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-09
   goal: 降低单一信号源风险, 验证 signal-sources 抽象对第二类源成立
   non_goals:
   - 第三/四根管子(属 Y2Q4)
