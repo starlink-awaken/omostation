@@ -363,7 +363,10 @@ def check_service(svc) -> dict:
     ok, reason = False, "unknown transport"
 
     if transport in ("stdio", "mcp_stdio"):
-        ok, reason = _check_stdio(list(svc.command or []))
+        ok, reason = _check_stdio(
+            list(svc.command or []),
+            str(getattr(svc, "package", "") or ""),
+        )
         # toolbox/* 外挂能力 (headroom/deer-flow/…) 声明在 monorepo, 执行在 ToolBox。
         # L2 无 ToolBox 安装时不算真实鸿沟 (与 host_cli bash 同类).
         if not ok and str(getattr(svc, "package", "") or "").startswith("toolbox/"):
