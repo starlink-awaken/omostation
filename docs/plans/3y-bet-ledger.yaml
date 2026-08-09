@@ -1647,7 +1647,8 @@ bets:
   title: 知识场景召回被引用率上线
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-09
   goal: 用一条指标暴露世界模型的真实检索质量
   non_goals:
   - 提升检索质量本身
