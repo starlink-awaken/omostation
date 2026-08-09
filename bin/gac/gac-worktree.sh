@@ -332,6 +332,19 @@ except Exception:
         echo "   请先 push 子模块分支: cd $sub_wt && git push origin HEAD" >&2
         exit 1
       fi )
+    # ── 前置检查 (2026-08-08 复盘 #1202): main 若已领先则中止, 防重复 bump ──
+    # 并行 agent 可能已把 submodule 推到更新版本 (gitlink 指向 new_sha 的后代)。
+    # 此时 bump 冗余 — 直接中止并提示, 避免白跑一轮 claim→bump→submit→merge。
+    if git -C "$wt" rev-parse --verify --quiet origin/main >/dev/null 2>&1; then
+      main_gitlink=$(git -C "$wt" ls-tree origin/main "$sub" 2>/dev/null | awk '{print $3}')
+      if [ -n "$main_gitlink" ] && [ "$main_gitlink" != "$new_sha" ] \
+         && git -C "$sub_wt" merge-base --is-ancestor "$new_sha" "$main_gitlink" 2>/dev/null; then
+        echo "   ⚠️ main 的 $sub gitlink 已领先: $main_gitlink (含 $new_sha 或其祖先)" >&2
+        echo "   ⚠️ 并行 agent 可能已 bump, 本次 bump 冗余 → 中止" >&2
+        echo "   如需强制 bump 到更新版本, 请先确认 worktree HEAD 已含目标 commit: cd $sub_wt && git log -1" >&2
+        exit 1
+      fi
+    fi
     cd "$wt"
     git update-index --cacheinfo 160000,"$new_sha","$sub"
     # ── A (2026-08-06): agora bump → auto-sync bos-registry mirror (防 drift 复发, #1051/#1055 根因) ──
