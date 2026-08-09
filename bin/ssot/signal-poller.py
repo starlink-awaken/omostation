@@ -115,6 +115,7 @@ SIGNAL_TO_JOURNEY = {
     "netease_mailmaster_inbox": "inbox-to-decision",
     "seeyon_oa_pending": "inbox-to-decision",
     "github_push": "meeting-to-delivery",
+    "inbox_folder": "inbox-to-decision",
 }
 
 
