@@ -141,13 +141,16 @@ render_report() {
   if [ -n "$limit" ]; then repos=$(echo "$repos" | head -n "$limit"); fi
   local tmp
   tmp=$(mktemp)
-  echo "$repos" | while read -r repo; do
+  # 修复: 用 mapfile 读取 repos 到数组, 避免 while read 的 pipe subshell 问题
+  local repo_list=()
+  mapfile -t repo_list <<< "$repos"
+  for repo in "${repo_list[@]}"; do
     [ -n "$repo" ] || continue
     local ci sub hook hyg score
-    ci=$(audit_ci "$repo" 2>/dev/null || echo '{"workflows":[]}')
-    sub=$(audit_submodule "$repo" 2>/dev/null || echo '{"submodules":[]}')
-    hook=$(audit_hook "$repo" 2>/dev/null || echo '{"hooks":{"consistent":true}}')
-    hyg=$(audit_hygiene "$repo" 2>/dev/null || echo '{"hygiene":{}}')
+    ci=$(audit_ci "$repo" 2>/dev/null | tr -d '\n' || echo '{"workflows":[]}')
+    sub=$(audit_submodule "$repo" 2>/dev/null | tr -d '\n' || echo '{"submodules":[]}')
+    hook=$(audit_hook "$repo" 2>/dev/null | tr -d '\n' || echo '{"hooks":{"consistent":true}}')
+    hyg=$(audit_hygiene "$repo" 2>/dev/null | tr -d '\n' || echo '{"hygiene":{}}')
     score=$(risk_score "$repo" 2>/dev/null || echo 0)
     echo "{\"repo\":\"$repo\",\"ci\":$ci,\"submodules\":$sub,\"hooks\":$hook,\"hygiene\":$hyg,\"risk_score\":$score}" >> "$tmp"
   done
