@@ -2170,7 +2170,8 @@ bets:
   title: 多模型路由按实测成本优化 (v10 Stage γ 解冻)
   appetite: 3 weeks
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-09
   goal: 在有真实成本数据后才优化路由 — 供给侧扩容的解冻点
   non_goals:
   - mesh / swarm 扩展(仍冻结)
