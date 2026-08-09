@@ -107,8 +107,19 @@ audit_hygiene() {
   echo "{\"repo\": \"$repo\", \"hygiene\": {\"merged_branches\": $merged, \"stale_worktrees\": $stale}}"
 }
 
+audit_mof() {
+  local repo="$1"
+  if [ "$repo" = "starlink-awaken/omostation" ]; then
+    local mof_res
+    mof_res=$(uv run python3 bin/mof/gen-mof-artifacts.py --json 2>/dev/null || echo '{"drifts": 1, "findings": []}')
+    echo "{\"repo\": \"$repo\", \"mof\": $mof_res}"
+  else
+    echo "{\"repo\": \"$repo\", \"mof\": {\"drifts\": 0, \"findings\": []}}"
+  fi
+}
+
 risk_score() {
-  local repo="$1" score=0 ci_json sub_json hook_json
+  local repo="$1" score=0 ci_json sub_json hook_json mof_json
   ci_json=$(audit_ci "$repo" 2>/dev/null || echo '{"workflows":[]}')
   local red_count
   red_count=$(echo "$ci_json" | python3 -c "
@@ -131,6 +142,12 @@ except Exception: print(0)
   [ "${drift_count:-0}" -gt 0 ] && score=$((score + 30))
   hook_json=$(audit_hook "$repo" 2>/dev/null || echo '{"hooks":{"consistent":true}}')
   echo "$hook_json" | grep -q '"consistent": false' && score=$((score + 20))
+  
+  mof_json=$(audit_mof "$repo" 2>/dev/null || echo '{"mof":{"drifts":0}}')
+  local mof_drift
+  mof_drift=$(echo "$mof_json" | python3 -c "import json,sys; print(json.load(sys.stdin).get('mof',{}).get('drifts',0))" 2>/dev/null || echo 0)
+  [ "${mof_drift:-0}" -gt 0 ] && score=$((score + 25))
+
   echo "$score"
 }
 
@@ -143,13 +160,16 @@ render_report() {
   tmp=$(mktemp)
   echo "$repos" | while read -r repo; do
     [ -n "$repo" ] || continue
-    local ci sub hook hyg score
+    local ci sub hook hyg score mof
     ci=$(audit_ci "$repo" 2>/dev/null || echo '{"workflows":[]}')
     sub=$(audit_submodule "$repo" 2>/dev/null || echo '{"submodules":[]}')
     hook=$(audit_hook "$repo" 2>/dev/null || echo '{"hooks":{"consistent":true}}')
     hyg=$(audit_hygiene "$repo" 2>/dev/null || echo '{"hygiene":{}}')
     score=$(risk_score "$repo" 2>/dev/null || echo 0)
-    echo "{\"repo\":\"$repo\",\"ci\":$ci,\"submodules\":$sub,\"hooks\":$hook,\"hygiene\":$hyg,\"risk_score\":$score}" >> "$tmp"
+    mof=$(audit_mof "$repo" 2>/dev/null || echo '{"mof":{"drifts":0}}')
+    local mof_obj
+    mof_obj=$(echo "$mof" | python3 -c "import json,sys; print(json.dumps(json.load(sys.stdin).get('mof',{})))" 2>/dev/null || echo '{"drifts":0}')
+    echo "{\"repo\":\"$repo\",\"ci\":$ci,\"submodules\":$sub,\"hooks\":$hook,\"hygiene\":$hyg,\"mof\":$mof_obj,\"risk_score\":$score}" >> "$tmp"
   done
   if [ "$format" = "json" ]; then
     local items
@@ -158,8 +178,8 @@ render_report() {
   else
     echo "# 多仓库治理健康度审计报告"
     echo ""
-    echo "| repo | CI红 | drift | hook | score | 结论 |"
-    echo "|---|---|---|---|---|---|"
+    echo "| repo | CI红 | drift | hook | MOF漂移 | score | 结论 |"
+    echo "|---|---|---|---|---|---|---|"
     cat "$tmp" | python3 -c "
 import json,sys
 for line in sys.stdin:
@@ -171,9 +191,10 @@ for line in sys.stdin:
     red=sum(1 for w in ci if w.get('status')=='red')
     drift=sum(1 for s in d.get('submodules',{}).get('submodules',[]) if s.get('drift') not in ('aligned','unknown'))
     hook='✅' if d.get('hooks',{}).get('consistent',True) else '❌'
+    mof=d.get('mof',{}).get('drifts',0)
     score=d.get('risk_score',0)
     verdict='🔴 高风险' if score>=50 else ('🟡 中风险' if score>=20 else '🟢 健康')
-    print(f\"| {d.get('repo','')} | {red}红 | {drift}漂移 | {hook} | {score} | {verdict} |\")
+    print(f\"| {d.get('repo','')} | {red}红 | {drift}漂移 | {hook} | {mof} | {score} | {verdict} |\")
 "
   fi
   rm -f "$tmp"
