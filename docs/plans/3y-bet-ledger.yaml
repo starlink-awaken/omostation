@@ -2311,7 +2311,8 @@ bets:
   title: 编排模板化
   appetite: 3 weeks
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-09
   goal: 同一模板可服务多个输入源, 降低新场景编排成本
   non_goals:
   - 可视化编排画布
