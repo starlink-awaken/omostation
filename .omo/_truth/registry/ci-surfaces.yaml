@@ -711,6 +711,13 @@ surfaces:
     triggers: [per_pr, push]
     status: active
     note: 级联拓扑影响图 (T1-02 + cascading-test) — 由 cascading-test.yml 调起, 解析 git diff 算出受影响的 downstream projects
+  - id: bin-plan-bet-ledger-py
+    tool: bin/plan/bet_ledger.py
+    workflow: (none)
+    gate: true
+    triggers: []
+    status: active
+    note: D5 retro 强制 — sgf-policy gate bet-retro-due-check 执行 retro-due --json; done bet 缺复盘 exit 1
   - id: bin-gac-mass-deletion-gate-py
     tool: bin/gac/mass-deletion-gate.py
     workflow: bulk-deletion-guard.yml
