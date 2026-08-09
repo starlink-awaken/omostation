@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-ECOS = Path(__file__).resolve().parents[2]
+ECOS = Path(__file__).resolve().parents[1]
 DERIVED = ECOS / ".omo" / "_derived" / "l0-constraints.v2.yaml"
 ONTOLOGY = ECOS / "src" / "ecos" / "ssot" / "mof" / "ontology.yaml"
 
