@@ -10,7 +10,7 @@ totals:
   mcp_servers: 27
   mcp_tools: 554
   bos_services: 219
-  bos_domains: 18
+  bos_domains: 17
   cli_commands: 0
 mcp_servers:
 - id: omo
@@ -795,11 +795,10 @@ bos_services:
     compute: 3
     ecos: 10
     forge: 1
-    governance: 35
+    governance: 50
     l4-kernel: 1
     memory: 47
     meta: 1
-    mof: 15
     omo: 4
     perception: 2
     persona: 10
@@ -1319,6 +1318,66 @@ bos_services:
       description: AGT Hypervisor 审计哈希链与完整性验证服务 (Agent Governance Toolkit)
       transport: stdio
       status: unimplemented
+    - uri: bos://governance/mof/io
+      description: 模型导入/导出 (JSON)
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/version
+      description: 模型版本管理
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/reason
+      description: 三维推理引擎 (impact/state/value)
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/decide
+      description: 智能决策支持
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/graph
+      description: 跨项目依赖图生成
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/autonomous
+      description: 自主决策引擎 (异常检测→推理→建议)
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/act
+      description: 自主行动引擎 (规划→验证→执行→验证→记录)
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/analyze
+      description: 统一分析工具
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/export
+      description: 文档生成工具
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/drift
+      description: 架构漂移检测
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/scan
+      description: 依赖安全扫描
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/assign
+      description: 团队任务分配
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/evolution
+      description: 系统演化追踪
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/enforce
+      description: Agent 约束强制
+      transport: stdio
+      status: active
+    - uri: bos://governance/mof/manage
+      description: MOF 能力注册表管理 (查看/验证/更新 mof-capabilities.yaml)
+      transport: stdio
+      status: active
     l4-kernel:
     - uri: bos://l4-kernel/domains
       description: L4 Kernel MCP (短路径别名)
@@ -1517,67 +1576,6 @@ bos_services:
     - uri: bos://meta/discover
       description: 发现所有可用 BOS 资源和入口
       transport: internal
-      status: active
-    mof:
-    - uri: ''
-      description: 模型导入/导出 (JSON)
-      transport: stdio
-      status: active
-    - uri: ''
-      description: 模型版本管理
-      transport: stdio
-      status: active
-    - uri: ''
-      description: 三维推理引擎 (impact/state/value)
-      transport: stdio
-      status: active
-    - uri: ''
-      description: 智能决策支持
-      transport: stdio
-      status: active
-    - uri: ''
-      description: 跨项目依赖图生成
-      transport: stdio
-      status: active
-    - uri: ''
-      description: 自主决策引擎 (异常检测→推理→建议)
-      transport: stdio
-      status: active
-    - uri: ''
-      description: 自主行动引擎 (规划→验证→执行→验证→记录)
-      transport: stdio
-      status: active
-    - uri: ''
-      description: 统一分析工具
-      transport: stdio
-      status: active
-    - uri: ''
-      description: 文档生成工具
-      transport: stdio
-      status: active
-    - uri: ''
-      description: 架构漂移检测
-      transport: stdio
-      status: active
-    - uri: ''
-      description: 依赖安全扫描
-      transport: stdio
-      status: active
-    - uri: ''
-      description: 团队任务分配
-      transport: stdio
-      status: active
-    - uri: ''
-      description: 系统演化追踪
-      transport: stdio
-      status: active
-    - uri: ''
-      description: Agent 约束强制
-      transport: stdio
-      status: active
-    - uri: ''
-      description: MOF 能力注册表管理 (查看/验证/更新 mof-capabilities.yaml)
-      transport: stdio
       status: active
     omo:
     - uri: bos://omo/eidos/pipeline
