@@ -23,7 +23,7 @@ layers:
   L3: "入口层 (cockpit 控制面; cockpit-ui 表现面, layer=L3)"
   L4: "自我层 (l4-kernel)"
   I0: "织层 (agora)"
-  M0: "横切框架 (model-driven)"
+  M0: "横切工具 (model-driven) — 非主链 (ADR-0406)"
   X:  "横切扩展 (aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub)"
 
 projects:
@@ -181,7 +181,9 @@ projects:
     python: ">=3.13"
     build_backend: "hatchling"
     version: "1.0.0"
-    role: "生命周期横切框架 · M3→M2→M1 桥接"
+    role: "横切工具 (非主链, ADR-0406) · 生命周期/M3→M2→M1 桥接"
+    consumers: ["l4-kernel", "cockpit", "ecos"]   # ADR-0406
+    main_chain_dep: false                         # ADR-0406
     src_dir: "src/"
 
   aetherforge:
