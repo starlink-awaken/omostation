@@ -161,7 +161,11 @@ print(r.get('status'), 'lifecycle_tracking' in r)
 
 ## Follow-ups
 
-- [ ] 1-2h: ecos `mof-derive.py` / `mof-bridge-sync.py` / `mof/m0/mof_driven.py` 加 try/except 降级 (T6-02 顺手)
+- [x] **COMPLETED (T1-02 follow-up #2)**: ecos 内部 CLI 工具已带降级或显式失败:
+  - `mof-derive.py`: `if not MODEL_DRIVEN_M3.exists(): return fallback` + `try/except` (7 stages + 4 gates + 3 phases 硬编码备份)
+  - `mof-bridge-sync.py`: 显式 `if not exists: sys.exit(2)` (B.3 工具, 缺 model-driven 应失败而非跑出错误推导)
+  - `mof/m0/mof_driven.py`: 显式 `if cand.exists(): import` else 早退
+  - 实证: `mof-derive --stages --json` 在 model-driven 缺失时仍正常返回 fallback
 - [ ] 1h: `docs/ARCHITECTURE-DETAILED-MAP.md` M0 行重命名为 "M0 横切工具 (非主链)"
 - [ ] 1h: `projects/model-driven/README.md` 加 "Consumers" 章节 (l4-kernel/cockpit/ecos 列表)
 - [ ] 30m: 2 季度后 (Y2Q1, 2026-10) 复审. 触发器: 新主链强制依赖出现 OR 0 新消费者达 6 个月
