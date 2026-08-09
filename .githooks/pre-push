@@ -189,6 +189,16 @@ for remote_ref in \
   expected="${remote_ref#*:}"
   # Unset GIT_DIR/GIT_WORK_TREE so git -C <submodule> reads the submodule's
   # own config rather than inheriting the outer (possibly worktree) repo.
+  # toplevel_check: 子模块未初始化时该目录不是独立 git 仓, `git -C` 会向上
+  # 落到父仓并返回父仓的 origin —— 把"未初始化"误判成"origin 配错",
+  # 且照它给的命令修会把根仓 origin 改成子模块 URL。2026-08-09 实际发生:
+  # 根仓 origin 被改成 omostation-gbrain, 随后 rebase origin/main 变成往
+  # gbrain 历史上 rebase(要重放 4939 个 commit)。
+  [ -d "$repo_path" ] || continue
+  repo_real="$(cd "$repo_path" 2>/dev/null && pwd -P)" || continue
+  repo_top="$(git -C "$repo_path" rev-parse --show-toplevel 2>/dev/null || true)"
+  [ -n "$repo_top" ] || continue
+  [ "$(cd "$repo_top" && pwd -P)" = "$repo_real" ] || continue   # 非自有仓 → 跳过
   actual="$(env -u GIT_DIR -u GIT_WORK_TREE git -C "$repo_path" remote get-url origin 2>/dev/null || true)"
   ssh_expected="${expected/https:\/\//git@github.com:}"
   if [ -n "$actual" ] && [ "$actual" != "$expected" ] && [ "$actual" != "$ssh_expected" ]; then
