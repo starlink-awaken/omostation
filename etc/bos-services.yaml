@@ -2839,6 +2839,7 @@ services:
 - domain: mof
   package: mof
   action: io
+  uri: bos://governance/mof/io
   transport: stdio
   status: active
   command:
@@ -2850,6 +2851,7 @@ services:
 - domain: mof
   package: mof
   action: version
+  uri: bos://governance/mof/version
   transport: stdio
   status: active
   command:
@@ -2861,6 +2863,7 @@ services:
 - domain: mof
   package: mof
   action: reason
+  uri: bos://governance/mof/reason
   transport: stdio
   status: active
   command:
@@ -2872,6 +2875,7 @@ services:
 - domain: mof
   package: mof
   action: decide
+  uri: bos://governance/mof/decide
   transport: stdio
   status: active
   command:
@@ -2883,6 +2887,7 @@ services:
 - domain: mof
   package: mof
   action: graph
+  uri: bos://governance/mof/graph
   transport: stdio
   status: active
   command:
@@ -2894,6 +2899,7 @@ services:
 - domain: mof
   package: mof
   action: autonomous
+  uri: bos://governance/mof/autonomous
   transport: stdio
   status: active
   command:
@@ -2905,6 +2911,7 @@ services:
 - domain: mof
   package: mof
   action: act
+  uri: bos://governance/mof/act
   transport: stdio
   status: active
   command:
@@ -2916,6 +2923,7 @@ services:
 - domain: mof
   package: mof
   action: analyze
+  uri: bos://governance/mof/analyze
   transport: stdio
   status: active
   command:
@@ -2927,6 +2935,7 @@ services:
 - domain: mof
   package: mof
   action: export
+  uri: bos://governance/mof/export
   transport: stdio
   status: active
   command:
@@ -2938,6 +2947,7 @@ services:
 - domain: mof
   package: mof
   action: drift
+  uri: bos://governance/mof/drift
   transport: stdio
   status: active
   command:
@@ -2949,6 +2959,7 @@ services:
 - domain: mof
   package: mof
   action: scan
+  uri: bos://governance/mof/scan
   transport: stdio
   status: active
   command:
@@ -2960,6 +2971,7 @@ services:
 - domain: mof
   package: mof
   action: assign
+  uri: bos://governance/mof/assign
   transport: stdio
   status: active
   command:
@@ -2971,6 +2983,7 @@ services:
 - domain: mof
   package: mof
   action: evolution
+  uri: bos://governance/mof/evolution
   transport: stdio
   status: active
   command:
@@ -2982,6 +2995,7 @@ services:
 - domain: mof
   package: mof
   action: enforce
+  uri: bos://governance/mof/enforce
   transport: stdio
   status: active
   command:
@@ -2993,6 +3007,7 @@ services:
 - domain: mof
   package: mof
   action: manage
+  uri: bos://governance/mof/manage
   transport: stdio
   status: active
   command:
