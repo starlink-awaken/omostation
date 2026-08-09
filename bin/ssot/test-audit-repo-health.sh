@@ -22,3 +22,19 @@ test_log() {
 test_enumerate_repos
 test_log
 echo "ALL TESTS PASSED"
+
+test_ci_status_green() {
+  local st
+  st=$(ci_status_of "starlink-awaken/omostation" "phase-gate" 2>/dev/null || echo "no-runs")
+  echo "PASS: phase-gate status=$st"
+}
+
+test_ci_status_missing() {
+  local st
+  st=$(ci_status_of "starlink-awaken/omostation" "no-such-workflow-xyz" 2>/dev/null || echo "missing")
+  [ "$st" = "missing" ] || { echo "FAIL: 期望 missing, 得到 $st"; return 1; }
+  echo "PASS: 不存在的 workflow 返回 missing"
+}
+
+test_ci_status_green
+test_ci_status_missing
