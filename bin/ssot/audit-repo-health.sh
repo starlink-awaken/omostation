@@ -191,3 +191,27 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   done
   render_report "$FORMAT" "$LIMIT"
 fi
+
+render_debt_entries() {
+  local json_file="$1"
+  python3 -c "
+import json,sys,os
+data=json.load(open('$json_file'))
+template=open('bin/ssot/debt-entry-template.yaml').read()
+repos=data.get('repos',[]) if isinstance(data,dict) else data
+for r in repos:
+    if r.get('risk_score',0) < 20: continue
+    ci=r.get('ci',{}).get('workflows',[])
+    red=sum(1 for w in ci if w.get('status')=='red')
+    drift=sum(1 for s in r.get('submodules',{}).get('submodules',[]) if s.get('drift') not in ('aligned','unknown'))
+    hook=not r.get('hooks',{}).get('consistent',True)
+    entry=template
+    entry=entry.replace('{repo}', r.get('repo','?').replace('/','-'))
+    entry=entry.replace('{score}', str(r.get('risk_score',0)))
+    entry=entry.replace('{red_count}', str(red))
+    entry=entry.replace('{drift_count}', str(drift))
+    entry=entry.replace('{hook_consistent}', str(not hook))
+    print('---')
+    print(entry)
+"
+}

@@ -97,3 +97,15 @@ test_main_markdown() {
 
 test_main_json
 test_main_markdown
+
+test_render_debt_entries() {
+  local sample
+  sample='{"repo":"starlink-awaken/omostation","risk_score":60,"ci":{"workflows":[{"name":"phase-gate","status":"red"}]},"hooks":{"consistent":false}}'
+  local out
+  out=$(render_debt_entries <(echo "$sample") 2>/dev/null || echo "id: audit-placeholder")
+  echo "$out" | grep -q "capability_gap" || { echo "FAIL: 缺 capability_gap 类型"; return 1; }
+  echo "$out" | grep -q "risk_score: 60" || { echo "FAIL: 缺 risk_score"; return 1; }
+  echo "PASS: debt 条目含类型与分数"
+}
+
+test_render_debt_entries
