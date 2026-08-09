@@ -1,0 +1,41 @@
+schema: journey-spec/v1
+journey_id: parallel-approval-test
+description: "并行会签测试 — fork 三个分支 → join (策略可配置)"
+
+states:
+  - name: start
+    scene: unified-inbox
+    parallel:
+      branches: [review_a, review_b, review_c]
+  - name: review_a
+    scene: document-review
+    next: [join_point]
+  - name: review_b
+    scene: document-review
+    next: [join_point]
+  - name: review_c
+    scene: document-review
+    next: [join_point]
+  - name: join_point
+    scene: document-review
+    join:
+      strategy: all
+      sources: [review_a, review_b, review_c]
+    next: [approved]
+  - name: approved
+    scene: engineering-delivery
+    next: []
+
+transitions:
+  - from: review_a
+    to: join_point
+    condition: always
+  - from: review_b
+    to: join_point
+    condition: always
+  - from: review_c
+    to: join_point
+    condition: always
+  - from: join_point
+    to: approved
+    condition: always
