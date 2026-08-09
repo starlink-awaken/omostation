@@ -1,0 +1,12 @@
+type: capability_gap
+id: repo-audit-2026-08-09/{repo}
+status: open
+owner: {repo}
+risk_score: {score}
+summary: |
+  {repo} 审计发现: CI {red_count} 红 / submodule {drift_count} 漂移 / hook 不一致={hook_consistent}
+verification: |
+  运行 bin/ssot/audit-repo-health.sh --json --repo {repo}, 确认:
+  - CI 无红 (risk_score 中 ci 部分 = 0)
+  - submodule drift = 0
+  - hook consistent = true
