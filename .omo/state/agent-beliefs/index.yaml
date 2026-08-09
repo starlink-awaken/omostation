@@ -623,7 +623,60 @@ world_snapshots:
     hash: 69b396b99ef41a84
   confidence: 0.8
   expires_at: null
-capability_calibrations: []
+- id: ws-0043
+  observed_at: '2026-08-09T06:29:21Z'
+  source: signal-poller:apple_mail_inbox
+  domain: perception
+  observations:
+    signal: content_changed
+    source_id: apple_mail_inbox
+    bos_uri: bos://perception/apple_mail/inbox
+    hash: 0ae1a238669fccc8
+  confidence: 0.8
+  expires_at: null
+capability_calibrations:
+- id: cc-0001
+  capability_ref: agent:health-monitor:tick:noop
+  measured_at: '2026-08-09T06:29:39Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: null
+- id: cc-0002
+  capability_ref: agent:knowledge-curator:tick:learn
+  measured_at: '2026-08-09T06:29:39Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: null
+- id: cc-0003
+  capability_ref: agent:journey-runner:tick:noop
+  measured_at: '2026-08-09T06:29:39Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: null
+- id: cc-0004
+  capability_ref: agent:governor:tick:alert
+  measured_at: '2026-08-09T06:29:39Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: null
+- id: cc-0005
+  capability_ref: agent:advisor:tick:evaluate
+  measured_at: '2026-08-09T06:29:39Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: null
+- id: cc-0006
+  capability_ref: agent:autonomy-assessment:tick:evaluate
+  measured_at: '2026-08-09T06:29:39Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: null
 decision_outcomes:
 - id: do-0001
   decision_at: '2026-08-08T05:34:12Z'
@@ -633,3 +686,35 @@ decision_outcomes:
   actual_outcome: adjudication=accepted
   delta: TB2 test
   source_run_id: test-TB2
+agent_skills: []
+agent_experiences:
+- id: exp-0001
+  agent_id: knowledge-curator
+  experience: 'A2A task: investigated high_event_volume'
+  outcome: positive
+  context: ''
+  recorded_at: '2026-08-09T06:29:38Z'
+- id: exp-0002
+  agent_id: advisor
+  experience: 'A2A task: investigated unknown'
+  outcome: positive
+  context: ''
+  recorded_at: '2026-08-09T06:29:39Z'
+- id: exp-0003
+  agent_id: knowledge-curator
+  experience: tick:learn on knowledge-curator
+  outcome: positive
+  context: ''
+  recorded_at: '2026-08-09T06:29:39Z'
+- id: exp-0004
+  agent_id: governor
+  experience: tick:alert on governor
+  outcome: positive
+  context: ''
+  recorded_at: '2026-08-09T06:29:39Z'
+- id: exp-0005
+  agent_id: advisor
+  experience: tick:evaluate on advisor
+  outcome: positive
+  context: ''
+  recorded_at: '2026-08-09T06:29:39Z'

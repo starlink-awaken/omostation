@@ -1,3 +1,11 @@
+---
+id: ADR-0397
+status: active
+lifecycle: proposed
+owner: '@Builder'
+last-reviewed: '2026-08-09'
+---
+
 # ADR-0404: 运行时状态文件不进git
 
 - status: accepted

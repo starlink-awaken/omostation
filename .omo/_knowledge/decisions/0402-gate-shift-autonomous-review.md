@@ -1,3 +1,11 @@
+---
+id: ADR-0402
+status: active
+lifecycle: proposed
+owner: '@Builder'
+last-reviewed: '2026-08-09'
+---
+
 # ADR-0402: 门禁后移与自主审查架构
 
 - status: accepted

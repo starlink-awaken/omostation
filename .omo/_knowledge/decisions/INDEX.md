@@ -449,7 +449,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0380: CI Plane Completion — runner migration, orphan cleanup, concurrent-drift absorption — **ACCEPTED** | 2026-08-06 | CI plane completion | 0380-ci-plane-completion.md
 - ADR-0382: 子模块指针回退检测 (CR-SUBMODULE-REWIND) — **ACCEPTED** | 2026-08-06 | Submodule rewind detection | 0382-submodule-rewind-detection.md
 - ADR-0395: CI 平面净红收官 — scripts/check-* orphan 化 + drift ahead 容忍 — **ACCEPTED** | 2026-08-08 | CI plane net-red closeout | 0395-ci-plane-net-red-closeout.md
-- ADR-0404: 运行时状态文件不进 git — 运行时投影面由生成器负责, 不入版本库 — **ACCEPTED** | 2026-08-08 | Runtime state not tracked | 0404-runtime-state-not-tracked.md
+- ADR-0404: 运行时状态文件不进 git — 运行时投影面由生成器负责, 不入版本库 — **ACCEPTED** | 2026-08-08 | Runtime state not tracked | 0397-runtime-state-not-tracked.md
 - ADR-0406: model-driven (M0) 维持子模块形态 — 实证调用链: 0 主链强制依赖, 3 个横切消费者 — **PROPOSED** | 2026-08-09 | M0 横切非主链 (T1-02 产出) | 0406-model-driven-submodule-decision.md
 - ADR-0403: Agent 本体与模型驱动约束架构 — MOF M2 模型 + 门禁后移 — **ACCEPTED** | 2026-08-08 | Agent ontology | 0403-agent-ontology-model-driven-architecture.md
 - ADR-0402: 门禁后移与自主审查架构 — DoD 联动 + 自主 review 分级 — **ACCEPTED** | 2026-08-08 | Gate shift autonomous review | 0402-gate-shift-autonomous-review.md
@@ -494,4 +494,5 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 *最近更新: 2026-08-08 · Owner: governance-team · ADR-0391 M5 数据黑障修复验证*
 
-- ADR-0391: M5 数据黑障修复验证 — ADR-0390 cherry-pick 到 omo main 路径 — **ACCEPTED** | 2026-08-08 | M5 fix verification | 0391-adr-0390-verification.md
+- ADR-0391: M5 数据黑障修复验证 — ADR-0390 cherry-pick 到 omo main 路径 — **ACCEPTED** | 2026-08-08 | M5 fix verification | 0398-adr-0390-verification.md
+- ADR-0404: Phase 3 Ecos Submodule Governance — **ACCEPTED** | 2026-08-08 | Phase 3 Ecos Submodule Governance | 0404-phase3-ecos-submodule-governance.md

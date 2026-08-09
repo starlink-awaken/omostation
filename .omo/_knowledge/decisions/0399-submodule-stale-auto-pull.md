@@ -1,15 +1,9 @@
 ---
 id: ADR-0399
-title: 治本 E — 子模块 stale 自动 pull + PASW 漂移检测增强
-status: PROPOSED
-lifecycle: decision
-owner: 夏明星
-last-reviewed: 2026-08-08
-related:
-  - 0371-pasw-submodule-isolation.md
-  - 0220-swarm-coordination-discipline-m1-gate.md
-  - 0382-submodule-rewind-detection.md
-supersedes: []
+status: active
+lifecycle: proposed
+owner: '@Builder'
+last-reviewed: '2026-08-09'
 ---
 
 # ADR-0399: 治本 E — 子模块 stale 自动 pull + PASW 漂移检测增强
