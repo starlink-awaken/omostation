@@ -608,6 +608,35 @@ assets:
     notes: "append-only SSOT audit trail; often gitignored runtime file"
     status: active
     runtime: true
+  - id: OMO-NOTEPADS
+    ref: .omo/notepads/
+    plane: state_plane
+    asset_type: team_knowledge
+    persistence_mode: operational
+    retention_mode: rolling_window
+    truth_owner: agents
+    write_via:
+      - agents
+    consumed_by:
+      - agents
+      - delegation
+    notes: "跨会话团队学习笔记 (delegation-guardrails / omni-bus-phased-program 等); #1137 引入, 补注册"
+    status: active
+  - id: OMO-START-WORK
+    ref: .omo/start-work/
+    plane: state_plane
+    asset_type: session_ledger
+    persistence_mode: operational
+    retention_mode: rolling_window
+    truth_owner: agents
+    write_via:
+      - agents
+      - skills
+    consumed_by:
+      - agents
+      - onboarding
+    notes: "会话启动台账 (ledger.jsonl 记录 plan-completed 事件); #1130 引入, 补注册"
+    status: active
 policies:
   top_level_asset_registration_required: true
   nested_omo_forbidden_for_new_writes: true
