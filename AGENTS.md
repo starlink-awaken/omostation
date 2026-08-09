@@ -306,6 +306,23 @@ make swarm-activity              # 多 agent 实时活动面板 (active runs/loc
 python3 bin/gac/swarm-activity-dashboard.py --watch 10  # 每 10s 刷新 (--json 供脚本消费)
 python3 bin/gac/check-ci-surfaces.py                    # CI 平面可观测性 (unregistered/orphan/overlap/double-trigger, ADR-0379)
 python3 bin/gac/ci-check-runner.py --workflow governance-check.yml  # registry-driven 检查执行 (ADR-0379 E-2)
+
+### 模型驱动治理闭环 (L0↔MOF, 2026-08-09)
+
+治理闭环工具链（工具目录: bin/README.md §5b, 模型: MOF m0-m3 + L0 约束 + ontology）:
+
+```bash
+python3 bin/ssot/consumer_index.py           # L0 约束 → 16 抽象族/规则反向索引
+python3 bin/ssot/m0_feedback.py              # M0 运行时快照 → 派生面漂移检测
+python3 bin/ssot/semantic_diff.py <old> <new> # 约束变更语义 diff (added/removed/changed)
+python3 bin/ssot/model_graph_query.py --constraint X1-C04  # 模型图查询 (GraphRAG)
+python3 bin/ssot/corrosion_learner.py --drifts <d.json>    # 漂移 → 修正建议
+python3 bin/ssot/onto_ekg_bootstrap.py --emit # OntoEKG 自举 (文档→候选概念)
+python3 bin/ssot/onto_reconcile.py           # 候选概念 vs ontology 缺口对比
+python3 bin/ssot/governance_closed_loop.py   # 闭环端到端验证 (真实数据)
+cd projects/ecos && uv run python3 bin/inference_engine.py  # DR-01~08 推理
+cd projects/ecos && uv run python3 bin/gen-l0-constraints.py # L0 派生面生成
+```
 ```
 
 See [`bin/README.md`](bin/README.md) for the full tool catalog.

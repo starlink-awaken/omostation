@@ -76,6 +76,20 @@ last-reviewed: 2026-06-29
 | `evidence-smoke.py` | BOS 声明/执行鸿沟量化 + 反馈回路维度 (综合 smoke) |
 | `feedback-loop-guard.py` | 自反馈回路存活监控 + escalation (专精, cron 友好) |
 
+### 5b. 模型驱动治理闭环 (10) — L0↔MOF 模型驱动 (2026-08-09)
+| 脚本 | 功能 |
+|:-----|:-----|
+| `consumer_index.py` | L0 约束 → 16 抽象族/规则反向索引（谁引用此约束） |
+| `m0_feedback.py` | M0 运行时快照 → 派生面漂移检测（反向闭环） |
+| `semantic_diff.py` | 约束变更语义 diff（added/removed/changed） |
+| `model_graph_query.py` | 模型图查询：约束→族/规则 / 族→约束 / 规则→约束 |
+| `corrosion_learner.py` | 漂移 → 高/中/低优先级 ontology 修正建议 |
+| `onto_ekg_bootstrap.py` | OntoEKG 自举：文档/规则 → 候选概念（LLM 增强可注入） |
+| `onto_reconcile.py` | 候选概念 vs ontology 缺口对比 + generalize 建议 |
+| `export_mof_framework.py` | MOF 四层 + L0 约束 → 可复用框架包（Wave 3 平台化） |
+| `owl_adapter.py` | L0 约束 → OWL-DL（HermiT/Pellet 标准化推理铺路） |
+| `governance_closed_loop.py` | 串联 5 阶段闭环端到端验证（真实数据） |
+
 ### 6. 治理仪表盘 / 趋势 / 告警 (17) — 可视化 + history + alert + trend fusion + prediction
 | 脚本 | 功能 |
 |:-----|:-----|
