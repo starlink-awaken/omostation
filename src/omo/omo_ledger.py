@@ -10,6 +10,14 @@ New subcommand mode::
     omo ledger read [--from 1] [--limit 10]
     omo ledger verify [--from 1]
     omo ledger status
+    omo ledger import-jsonl --file governance-history.jsonl [--quarantine q.jsonl]
+    omo ledger export-jsonl --output shadow.jsonl
+    omo ledger compare-jsonl --file governance-history.jsonl
+
+The ``import-jsonl`` / ``export-jsonl`` / ``compare-jsonl`` commands are the
+local JSONL shadow adapter (BET-Y1Q2-T1-03): they are local-only, do not
+support ``--agora``, and only ever write through ``LedgerBroker.append`` /
+the requested output file.
 
 Agora stdio mode (--agora)::
 
@@ -83,7 +91,17 @@ def _legacy_snapshot(omo_dir: Path, message: str) -> int:
     return 0
 
 
-SUBCMDS = frozenset({"append", "read", "verify", "status"})
+SUBCMDS = frozenset(
+    {
+        "append",
+        "read",
+        "verify",
+        "status",
+        "import-jsonl",
+        "export-jsonl",
+        "compare-jsonl",
+    }
+)
 
 # Allowed fields per subcommand (for Agora envelope validation).
 # "db" is always allowed as it's a common flag.
@@ -201,6 +219,41 @@ def _build_subcommand_parser() -> argparse.ArgumentParser:
     ps = sub.add_parser("status", help="Show ledger status")
     _add_common_flags(ps)
 
+    # Local-only JSONL shadow adapter commands (BET-Y1Q2-T1-03).
+    # Deliberately do NOT expose --agora: these are local commands.
+    pi = sub.add_parser(
+        "import-jsonl", help="Import a JSONL history file as shadow events"
+    )
+    pi.add_argument("--file", required=True, help="JSONL source file")
+    pi.add_argument(
+        "--quarantine",
+        default=None,
+        help="Optional JSONL file for quarantined lines (never written beside source)",
+    )
+    pi.add_argument(
+        "--source-id",
+        default=None,
+        help="Logical source identity (default: file basename)",
+    )
+    _add_local_flags(pi)
+
+    pe = sub.add_parser(
+        "export-jsonl", help="Export ledger shadow events as legal JSONL"
+    )
+    pe.add_argument("--output", required=True, help="JSONL output file")
+    _add_local_flags(pe)
+
+    pc = sub.add_parser(
+        "compare-jsonl", help="Compare a JSONL file against ledger shadow events"
+    )
+    pc.add_argument("--file", required=True, help="JSONL source file")
+    pc.add_argument(
+        "--source-id",
+        default=None,
+        help="Logical source identity (default: file basename)",
+    )
+    _add_local_flags(pc)
+
     return parser
 
 
@@ -211,6 +264,12 @@ def _add_common_flags(p: argparse.ArgumentParser) -> None:
         action="store_true",
         help="Read args from stdin JSON envelope, emit receipt",
     )
+    p.add_argument("--json", action="store_true", help="Emit JSON output")
+
+
+def _add_local_flags(p: argparse.ArgumentParser) -> None:
+    """Flags for local-only commands (no ``--agora`` envelope)."""
+    p.add_argument("--db", default=None, help="Explicit database path")
     p.add_argument("--json", action="store_true", help="Emit JSON output")
 
 
@@ -388,8 +447,8 @@ def _subcommand_main(argv: list[str]) -> int:
     parser = _build_subcommand_parser()
     parsed = parser.parse_args(argv)
 
-    is_agora = parsed.agora
-    is_json = parsed.json
+    is_agora = getattr(parsed, "agora", False)
+    is_json = getattr(parsed, "json", False)
 
     params = dict(vars(parsed))
     subcmd = params.pop("subcommand")
@@ -501,6 +560,12 @@ def _subcommand_main(argv: list[str]) -> int:
             return _cmd_verify(surface, params, is_json, is_agora)
         elif subcmd == "status":
             return _cmd_status(surface, is_json, is_agora)
+        elif subcmd == "import-jsonl":
+            return _cmd_import_jsonl(surface, params, is_json, is_agora)
+        elif subcmd == "export-jsonl":
+            return _cmd_export_jsonl(surface, params, is_json, is_agora)
+        elif subcmd == "compare-jsonl":
+            return _cmd_compare_jsonl(surface, params, is_json, is_agora)
         else:
             _emit_error(
                 {
@@ -605,6 +670,76 @@ def _cmd_status(surface: EventLedgerSurface, is_json: bool, is_agora: bool) -> i
         is_agora,
     )
     return 0
+
+
+def _cmd_import_jsonl(
+    surface: EventLedgerSurface, params: dict[str, Any], is_json: bool, is_agora: bool
+) -> int:
+    from omo.event_ledger.jsonl_shadow import import_jsonl
+
+    file_path = params.get("file")
+    if not file_path:
+        raise AgoraValidationError("missing_file", "import-jsonl requires --file")
+    # 在访问 surface.broker（会创建/连接 DB）之前确认源是存在的普通文件。
+    if not Path(file_path).is_file():
+        raise LedgerError(f"JSONL source is not an existing file: {file_path}")
+    try:
+        report = import_jsonl(
+            surface.broker,
+            file_path,
+            quarantine_path=params.get("quarantine"),
+            source_id=params.get("source_id"),
+        )
+    except OSError as exc:
+        raise LedgerError(f"cannot read JSONL source: {exc}") from exc
+    receipt = {k: v for k, v in report.items() if k != "quarantine_entries"}
+    _emit_receipt(
+        {"ok": True, **receipt, "db_path": str(surface.db_path)}, is_json, is_agora
+    )
+    return 0
+
+
+def _cmd_export_jsonl(
+    surface: EventLedgerSurface, params: dict[str, Any], is_json: bool, is_agora: bool
+) -> int:
+    from omo.event_ledger.jsonl_shadow import export_jsonl
+
+    output = params.get("output")
+    if not output:
+        raise AgoraValidationError("missing_output", "export-jsonl requires --output")
+    try:
+        report = export_jsonl(surface.broker, output)
+    except OSError as exc:
+        raise LedgerError(f"cannot write JSONL output: {exc}") from exc
+    _emit_receipt(
+        {"ok": True, **report, "db_path": str(surface.db_path)}, is_json, is_agora
+    )
+    return 0
+
+
+def _cmd_compare_jsonl(
+    surface: EventLedgerSurface, params: dict[str, Any], is_json: bool, is_agora: bool
+) -> int:
+    from omo.event_ledger.jsonl_shadow import compare_jsonl
+
+    file_path = params.get("file")
+    if not file_path:
+        raise AgoraValidationError("missing_file", "compare-jsonl requires --file")
+    # 在访问 surface.broker（会创建/连接 DB）之前确认源是存在的普通文件。
+    if not Path(file_path).is_file():
+        raise LedgerError(f"JSONL source is not an existing file: {file_path}")
+    try:
+        report = compare_jsonl(
+            surface.broker, file_path, source_id=params.get("source_id")
+        )
+    except OSError as exc:
+        raise LedgerError(f"cannot read JSONL source: {exc}") from exc
+    _emit_receipt(
+        {"ok": report["ok"], **report, "db_path": str(surface.db_path)},
+        is_json,
+        is_agora,
+    )
+    return 0 if report["ok"] else 1
 
 
 # ---------------------------------------------------------------------------
