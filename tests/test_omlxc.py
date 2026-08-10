@@ -347,7 +347,8 @@ def test_app_tuning_targets_are_memory_bounded_and_force_thinking_off():
     mythos = targets["models"]["mythos-fast"]
     assert mythos["enable_thinking"] is False
     assert mythos["thinking_budget_enabled"] is False
-    assert mythos["thinking_budget_tokens"] == 0
+    # oMLX 0.5.7 normalizes a disabled/zero budget to null.
+    assert mythos["thinking_budget_tokens"] is None
     assert mythos["chat_template_kwargs"] == {
         "custom_flag": "keep",
         "enable_thinking": False,

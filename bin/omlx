@@ -245,7 +245,9 @@ def _app_model_tuning_target(key, model, live):
         "ttl_seconds": ttl_seconds,
         "enable_thinking": False,
         "thinking_budget_enabled": False,
-        "thinking_budget_tokens": 0,
+        # oMLX 0.5.7 persists a disabled/zero budget as null. Target the
+        # canonical value so post-write verification and rollback converge.
+        "thinking_budget_tokens": None,
         "is_pinned": key == "mythos-fast",
     }
     target.update(_APP_SAMPLING_OVERRIDES.get(key, {}))
