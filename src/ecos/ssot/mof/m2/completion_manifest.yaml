@@ -1,0 +1,260 @@
+# M2: CompletionManifest
+# Agent self-declared completion artifact (blueprint §11.1).
+# Anchored to StructuralElement.Artifact — the manifest is a durable,
+# addressable artifact produced by the executor at submission time.
+
+m2_type: CompletionManifest
+version: 1.0.0
+created: '2026-08-09T22:20:54'
+updated: '2026-08-10'
+CompletionManifest:
+  m3_parent: StructuralElement.Artifact
+  description: |
+    完成申报单——Agent 执行 WorkPacket 后的自申报工件。
+    仅承载 candidate / blocked / failed / archived 四态；done 由 Gate G5 独立判定，Agent 无权自封。
+    来源：blueprint §11.1 + b1-blueprint-fields §3。
+
+  icon: 📋
+
+  stateMachine:
+    candidate:
+      description: 候选交付·待独立验证
+      transitions: [blocked, failed, archived]
+    blocked:
+      description: 阻塞·等待依赖或外部条件
+      transitions: [candidate, failed, archived]
+    failed:
+      description: 执行失败·不可晋升
+      transitions: [archived]
+    archived:
+      description: 归档
+      transitions: []
+
+  requiredProperties:
+    packet_id:
+      type: string
+      description: 对应的 WorkPacket ID (格式 WP-...)
+      pattern: '^WP-'
+    packet_hash:
+      type: string
+      description: WorkPacket 规范表示的 SHA-256 (sha256:...)
+      pattern: '^sha256:[a-f0-9]{64}$'
+    assignment_id:
+      type: string
+      description: 对应 Assignment ID (格式 ASG-...)
+      pattern: '^ASG-'
+    agent_id:
+      type: string
+      description: 执行 Agent ID (必须与 Assignment.agent_id 一致)
+    status:
+      type: enum
+      description: 交付状态 (Agent 自申报，不含 done)
+      values: [candidate, blocked, failed, archived]
+    changed_paths:
+      type: list
+      description: 实际变更的文件路径集合 (必须是 scope.write_surfaces 的子集)
+      items:
+        type: string
+    claims:
+      type: list
+      description: 验收声明列表 (每条 AC 对应一条)
+      items:
+        type: map
+        required: [acceptance_id, assertion, evidence_refs]
+        properties:
+          acceptance_id:
+            type: string
+            description: 对应 WorkPacket acceptance_id (如 AC1)
+          assertion:
+            type: string
+            description: Agent 对 AC 的复述/声明
+          evidence_refs:
+            type: list
+            description: 证据引用列表 (evidence://...)
+            items:
+              type: string
+    checks:
+      type: list
+      description: 验收命令回放记录
+      items:
+        type: map
+        required: [command, returncode, stdout_hash]
+        properties:
+          command:
+            type: list
+            description: 实际执行的 argv 列表
+            items:
+              type: string
+          returncode:
+            type: int
+            description: 命令退出码 (0=通过)
+          stdout_hash:
+            type: string
+            description: stdout 的 SHA-256 (sha256:...)
+            pattern: '^sha256:[a-f0-9]{64}$'
+    recommended_next:
+      type: enum
+      description: 建议路由 (candidate 必须为 verify)
+      values: [verify, revise, rollback]
+
+    surface_delta:
+      type: map
+      description: 表面预算消耗量 (Gate G4 必需)
+      required: [files, loc]
+      properties:
+        files:
+          type: int
+          description: 变更文件数 (必须 ≤ budgets.max_changed_files, non-negative)
+        loc:
+          type: int
+          description: 变更代码行数 (含增删，信息性指标, non-negative)
+
+  optionalProperties:
+    artifact_refs:
+      type: list
+      description: 持久化产物引用 (Git object / tag / PR / BOS URI)
+      items:
+        type: string
+    deviations:
+      type: list
+      description: 已声明的范围/命令/表面偏离 (undeclared deviation = rejected)
+      items:
+        type: string
+    unresolved:
+      type: list
+      description: 已知问题 (不阻塞提交，需 Strategist 认可)
+      items:
+        type: string
+    evidence:
+      type: list
+      description: 顶层证据映射 (claims[].evidence_refs 仍是首选引用路径)
+      items:
+        type: map
+        properties:
+          evidence_id:
+            type: string
+            description: 证据 ID (evidence://...)
+          level:
+            type: enum
+            description: 证据等级 (E0-E4)
+            values: [E0, E1, E2, E3, E4]
+          type:
+            type: enum
+            description: 证据类型
+            values: [agent_narrative, file_presence, static_schema, command_receipt, structured_report, test_result, diff_hash, integration, fault_injection, canary, rollback, real_outcome, human_adjudication]
+          source:
+            type: string
+            description: 证据来源 (Verifier 身份或确定性工具命令)
+          freshness:
+            type: string
+            format: date-time
+            description: 取证时间 (ISO-8601)
+          content_ref:
+            type: string
+            description: 证据内容引用 (路径 / URI / hash)
+    verification_receipt:
+      type: map
+      description: >-
+        Gate G5 独立验证回执；由只读、direct-measurement 的不同 model family
+        verifier 生成，不能将 verdict 写成 done。
+      required:
+        - packet_id
+        - candidate_packet_hash
+        - measured_packet_hash
+        - executor_model_family
+        - verifier_model_family
+        - verdict
+        - read_only
+        - direct_measurement
+        - checks
+        - receipt_hash
+      properties:
+        packet_id:
+          type: string
+          pattern: '^WP-'
+        candidate_packet_hash:
+          type: string
+          pattern: '^sha256:[a-f0-9]{64}$'
+        measured_packet_hash:
+          type: string
+          pattern: '^sha256:[a-f0-9]{64}$'
+        executor_model_family:
+          type: string
+        verifier_model_family:
+          type: string
+        verdict:
+          type: enum
+          values: [accept, revise, reject]
+        read_only:
+          type: bool
+        direct_measurement:
+          type: bool
+        allow_same_model:
+          type: bool
+        checks:
+          type: list
+          items:
+            type: map
+            required: [command, returncode, stdout_hash]
+            properties:
+              command:
+                type: list
+                items:
+                  type: string
+              returncode:
+                type: int
+              stdout_hash:
+                type: string
+                pattern: '^sha256:[a-f0-9]{64}$'
+        receipt_hash:
+          type: string
+          pattern: '^sha256:[a-f0-9]{64}$'
+    submitted_at:
+      type: string
+      format: date-time
+      description: 候选提交时间 (ISO-8601)
+    verified_at:
+      type: string
+      format: date-time
+      description: Gate G5 验证时间 (ISO-8601)
+    promotion_note:
+      type: string
+      description: Gate 晋升/拒绝备注
+
+  validationRules:
+    - rule: status in ['candidate', 'blocked', 'failed', 'archived']
+      level: error
+      message: CompletionManifest status 必须为 candidate/blocked/failed/archived，不含 done
+    - rule: "not (status == 'candidate' and recommended_next != 'verify')"
+      level: error
+      message: candidate 状态的 recommended_next 必须为 verify
+    - rule: len(claims) >= 1
+      level: error
+      message: 至少包含 1 条 claims
+    - rule: len(checks) >= 1
+      level: error
+      message: 至少包含 1 条 checks
+    - rule: "surface_delta is not None and surface_delta.get('files', -1) >= 0"
+      level: error
+      message: surface_delta.files 必须为非负整数
+    - rule: "surface_delta is not None and surface_delta.get('loc', -1) >= 0"
+      level: error
+      message: surface_delta.loc 必须为非负整数
+    - rule: "packet_hash is not None and assignment_id is not None and agent_id is not None"
+      level: error
+      message: hash/assignment/agent 绑定字段不能为空
+
+  relationConstraints:
+    can_be_source_of:
+      - EvidenceFor
+      - Realizes
+    can_be_target_of:
+      - References
+      - DependsOn
+
+  examples:
+    - id: COMPLETION-MANIFEST-EXAMPLE-001
+      name: 典型 candidate 交付
+      description: |
+        一个已执行 WorkPacket 的候选完成申报单，
+        包含 1 个 AC claim、2 条命令回放、2 个文件变更。

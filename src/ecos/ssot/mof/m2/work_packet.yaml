@@ -1,0 +1,283 @@
+# M2: WorkPacket
+# Executable multi-agent execution contract (blueprint §7.1).
+# Anchored to BehavioralElement.Process — a WorkPacket is a dispatchable
+# process contract carrying scope, budget, acceptance, authority, and
+# risk controls.
+
+m2_type: WorkPacket
+version: 1.0.0
+created: '2026-08-09T22:20:41+08:00'
+updated: '2026-08-10'
+WorkPacket:
+  m3_parent: BehavioralElement.Process
+  description: |
+    Candidate M2 schema for an ECOS WorkPacket: the dispatchable unit of
+    multi-agent work, carrying scope, budget, acceptance, authority, and
+    risk controls derived from the execution-control blueprint §7.1.
+
+  icon: 📦
+
+  stateMachine:
+    draft:
+      description: 草案
+      transitions: [active, archived]
+    active:
+      description: 激活/已派工
+      transitions: [deprecated, archived]
+    deprecated:
+      description: 弃用
+      transitions: [archived]
+    archived:
+      description: 归档
+      transitions: []
+
+  requiredProperties:
+    packet_id:
+      type: string
+      description: WorkPacket 唯一标识 (format WP-...)
+      pattern: '^WP-'
+    schema_version:
+      type: string
+      description: 必须等于 work-packet/v1
+      pattern: '^work-packet/v1$'
+    blueprint_ref:
+      type: string
+      description: 蓝图锚点引用 (blueprint://...)
+    wave:
+      type: string
+      description: 所属 Wave (需在 BET ledger 中 admitted)
+    bet_id:
+      type: string
+      description: 关联 BET ID (需在 3y-bet-ledger.yaml 中 admitted)
+    strategic_outcome:
+      type: string
+      description: 战略结果 (non-empty)
+    objective:
+      type: string
+      description: 可测量目标 (non-empty)
+    why_now:
+      type: string
+      description: 时效性/阻塞原因 (non-empty)
+    status:
+      type: string
+      description: 生命周期状态 (must match stateMachine key)
+    authority:
+      type: map
+      description: 授权与风险控制
+      required: [strategist, human_gate, risk_level]
+      properties:
+        strategist:
+          type: string
+          description: 授权 Strategist identity
+        human_gate:
+          type: bool
+          description: 是否需要 Human Principal 批准
+        risk_level:
+          type: enum
+          description: 风险等级
+          values: [R0, R1, R2, R3]
+        autonomy_level:
+          type: string
+          description: 自治级别 (枚举值由策略配置定义)
+    scope:
+      type: map
+      description: 读写边界与约束
+      required: [read_surfaces, write_surfaces, non_goals]
+      properties:
+        read_surfaces:
+          type: list
+          description: 只读路径 (R1+ 非空)
+          items:
+            type: string
+        write_surfaces:
+          type: list
+          description: 可写路径 (R0 为空; R1+ 显式)
+          items:
+            type: string
+        non_goals:
+          type: list
+          description: 非目标 (R1+ 至少一项)
+          items:
+            type: string
+    dependencies:
+      type: map
+      description: 前置依赖
+      properties:
+        required_packets:
+          type: list
+          description: 依赖的 WorkPacket IDs (须 outcome_accepted)
+          items:
+            type: string
+        required_services:
+          type: list
+          description: 依赖的服务 (须通过 health probe)
+          items:
+            type: string
+        required_decisions:
+          type: list
+          description: 依赖的决策 (须 admitted/active)
+          items:
+            type: string
+    acceptance:
+      type: map
+      description: 验收标准
+      required: [done_when, verify_commands]
+      properties:
+        done_when:
+          type: list
+          description: 完成条件列表
+          items:
+            type: map
+            required: [id, assertion, evidence_type]
+            properties:
+              id:
+                type: string
+                description: AC 标识符 (e.g. AC1)
+              assertion:
+                type: string
+                description: 可测试/可测量的确定性陈述
+              evidence_type:
+                type: enum
+                description: 证据类型
+                values: [agent_narrative, file_presence, static_schema, command_receipt, structured_report, test_result, diff_hash, integration, fault_injection, canary, rollback, real_outcome, human_adjudication]
+        verify_commands:
+          type: list
+          description: 可执行验证命令列表 (每个 entry 是 argv list)
+          items:
+            type: list
+            items:
+              type: string
+    budgets:
+      type: map
+      description: 预算与断路器阈值
+      required: [appetite_hours, max_elapsed_hours, max_changed_files, max_new_files, max_new_top_level_components]
+      properties:
+        appetite_hours:
+          type: number
+          description: 理想 effort 上限 (positive)
+        max_elapsed_hours:
+          type: number
+          description: 最大耗时 (positive)
+        max_changed_files:
+          type: int
+          description: 最大变更文件数 (non-negative)
+        max_new_files:
+          type: int
+          description: 最大新增文件数 (non-negative)
+        max_new_top_level_components:
+          type: int
+          description: 最大新增顶层组件数 (non-negative)
+    rollback:
+      type: map
+      description: 回滚策略
+      required: [strategy]
+      properties:
+        strategy:
+          type: string
+          description: 可执行回滚描述 (non-empty)
+        data_migration:
+          type: bool
+          description: 是否需要数据迁移 + backfill 计划
+    circuit_breaker:
+      type: map
+      description: 自动中断条件
+      properties:
+        when:
+          type: list
+          description: 确定性触发条件
+          items:
+            type: string
+        action:
+          type: enum
+          description: 触发后动作
+          values: [stop_and_escalate, interrupt, narrow_scope]
+    assignment:
+      type: map
+      description: 派工约束 (WorkPacket 级模板; Assignment 实例化时复制)
+      required: [executor_class, verifier_class, same_model_verification_allowed, expires_at]
+      properties:
+        executor_class:
+          type: string
+          description: 执行器类 (须 admitted)
+        verifier_class:
+          type: string
+          description: 验证器类 (须 admitted; R2/R3 不能与 executor 同 model_family)
+        same_model_verification_allowed:
+          type: bool
+          description: R2/R3 必须为 false
+        expires_at:
+          type: string
+          description: ISO-8601 datetime (dispatch 时须在未来)
+
+  optionalProperties:
+    description:
+      type: string
+      description: 详细描述
+    tags:
+      type: list
+      description: 分类标签
+      items:
+        type: string
+
+  validationRules:
+    - rule: packet_id is not None and packet_id != ''
+      level: error
+      message: packet_id 必须非空
+    - rule: schema_version == 'work-packet/v1'
+      level: error
+      message: schema_version 必须为 work-packet/v1
+    - rule: packet_id.startswith('WP-')
+      level: error
+      message: packet_id 必须以 WP- 开头
+    - rule: status is not None and status in ['draft', 'active', 'deprecated', 'archived']
+      level: error
+      message: status 必须是合法的 stateMachine 键
+    - rule: "authority is not None and authority.get('risk_level') in ['R0','R1','R2','R3']"
+      level: error
+      message: authority.risk_level 枚举不合法
+    - rule: "authority is not None and authority.get('human_gate') in [True, False]"
+      level: error
+      message: authority.human_gate 必须是布尔值
+    - rule: "not (authority is not None and scope is not None and authority.get('risk_level') == 'R0' and scope.get('write_surfaces') != [])"
+      level: error
+      message: R0 WorkPacket 不允许写入面
+    - rule: "budgets is not None and budgets.get('appetite_hours') is not None and budgets['appetite_hours'] > 0"
+      level: error
+      message: budgets.appetite_hours 必须为正数
+    - rule: "budgets is not None and budgets.get('max_elapsed_hours') is not None and budgets['max_elapsed_hours'] > 0"
+      level: error
+      message: budgets.max_elapsed_hours 必须为正数
+    - rule: "budgets is not None and budgets.get('max_changed_files') is not None and budgets['max_changed_files'] >= 0"
+      level: error
+      message: budgets.max_changed_files 必须为非负整数
+    - rule: "budgets is not None and budgets.get('max_new_files') is not None and budgets['max_new_files'] >= 0"
+      level: error
+      message: budgets.max_new_files 必须为非负整数
+    - rule: "budgets is not None and budgets.get('max_new_top_level_components') is not None and budgets['max_new_top_level_components'] >= 0"
+      level: error
+      message: budgets.max_new_top_level_components 必须为非负整数
+    - rule: "not (authority is not None and assignment is not None and authority.get('risk_level') in ['R2','R3'] and assignment.get('same_model_verification_allowed') == True)"
+      level: error
+      message: R2/R3 的 same_model_verification_allowed 必须为 false
+    - rule: "not (authority is not None and scope is not None and authority.get('risk_level') in ['R1','R2','R3'] and len(scope.get('read_surfaces', [])) == 0)"
+      level: error
+      message: R1+ 的 read_surfaces 必须非空
+    - rule: "not (authority is not None and scope is not None and authority.get('risk_level') in ['R1','R2','R3'] and len(scope.get('write_surfaces', [])) == 0)"
+      level: error
+      message: R1+ 的 write_surfaces 必须非空
+    - rule: "not (authority is not None and scope is not None and authority.get('risk_level') in ['R1','R2','R3'] and len(scope.get('non_goals', [])) < 1)"
+      level: error
+      message: R1+ 的 non_goals 至少一项
+
+  relationConstraints:
+    can_be_source_of:
+      - Assignment
+      - GateDecision
+    can_be_target_of:
+      - GateDecision
+
+  examples:
+    - id: WORKPACKET-EXAMPLE-001
+      name: 最小可派工包
+      description: |
+        R1 级别、单 executor 的最小 WorkPacket 实例。
