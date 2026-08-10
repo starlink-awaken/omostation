@@ -1,0 +1,44 @@
+# M2: L4HarnessProfile
+
+m2_type: L4HarnessProfile
+version: 1.0.0
+created: '2026-08-10T22:50:00+08:00'
+L4HarnessProfile:
+  m3_parent: GovernanceElement.Policy
+  description: L4 知识域 archetype 到确定性验证 Gate 的策略映射。
+  icon: 🧪
+  stateMachine:
+    draft:
+      description: 草案
+      transitions: [active, archived]
+    active:
+      description: 生效
+      transitions: [deprecated, archived]
+    deprecated:
+      description: 已弃用
+      transitions: [archived]
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    id: {type: string, pattern: '^harness://'}
+    archetype:
+      type: enum
+      values: [constitutional, private-core, operational, library, federation, projection]
+    required_gates: {type: list, items: {type: string}}
+  optionalProperties:
+    advisory_gates: {type: list, items: {type: string}}
+    disabled_gates: {type: list, items: {type: string}}
+  validationRules:
+    - rule: required_gates.size >= 1
+      level: error
+      message: required_gates 不得为空
+    - rule: required_gates, advisory_gates, disabled_gates are pairwise disjoint
+      level: error
+      message: Gate 分类不得重叠
+    - rule: all gates in [T0, T1, T2, T4, T7]
+      level: error
+      message: Phase 0 只允许 T0/T1/T2/T4/T7
+  relationConstraints:
+    can_be_source_of: [Validates, Governs]
+    can_be_target_of: [References]

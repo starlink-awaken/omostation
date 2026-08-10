@@ -54,7 +54,7 @@ def load_m2_schemas():
     同时支持 alias: m2_type 与 section key (snake_case) 双向都接受。
     """
     schemas = {}
-    for f in sorted(M2_DIR.glob("*.yaml")):
+    for f in sorted(M2_DIR.rglob("*.yaml")):
         data = yaml.safe_load(f.read_text(encoding="utf-8"))
         mt = data.get("m2_type")
         if not mt:
@@ -229,7 +229,7 @@ def _cleanup_orphaned_m2_schemas(m2_dir, skip_list=None):
     """
     skip_list = skip_list or []
     m2_types = set()
-    for f in m2_dir.glob("*.yaml"):
+    for f in m2_dir.rglob("*.yaml"):
         data = yaml.safe_load(f.read_text(encoding="utf-8"))
         mt = data.get("m2_type")
         if mt:

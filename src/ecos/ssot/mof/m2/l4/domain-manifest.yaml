@@ -1,0 +1,66 @@
+# M2: L4DomainManifest
+# Phase 0 knowledge-domain instance contract. Wire format uses apiVersion.
+
+m2_type: L4DomainManifest
+version: 1.0.0
+created: '2026-08-10T22:50:00+08:00'
+L4DomainManifest:
+  m3_parent: GovernanceElement.Specification
+  description: L4 知识域实例的严格契约；仅描述知识权威边界，不混入配置、工具、模型或存储域。
+  icon: 📜
+  wireAliases:
+    api_version: apiVersion
+  wireConstants:
+    apiVersion: l4/v1
+    kind: DomainManifest
+  stateMachine:
+    draft:
+      description: 草案
+      transitions: [active, archived]
+    active:
+      description: 生效
+      transitions: [suspended, archived]
+    suspended:
+      description: 暂停
+      transitions: [active, archived]
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    api_version: {type: string, pattern: '^l4/v1$'}
+    kind: {type: enum, values: [DomainManifest]}
+    id: {type: string, pattern: '^[a-z][a-z0-9-]*$'}
+    display_name: {type: string}
+    archetype:
+      type: enum
+      values: [constitutional, private-core, operational, library, federation, projection]
+    space_ref: {type: string, pattern: '^personal-space$'}
+    root: {type: string, description: DOMAIN.yaml 所在目录内的相对路径}
+    owners: {type: list, items: {type: string}}
+    principal_ref: {type: string}
+    default_sensitivity:
+      type: enum
+      values: [internal, private, confidential, restricted]
+    default_visibility: {type: enum, values: [private]}
+    sharing_policy: {type: enum, values: [deny, explicit_publish]}
+    retention: {type: enum, values: [permanent, policy_managed, rebuildable]}
+    authority_policy:
+      type: enum
+      values: [canonical_write, reference_library, federation_only, projection_only]
+    harness_profile_ref: {type: string, pattern: '^harness://'}
+    lifecycle: {type: enum, values: [draft, active, suspended, archived]}
+  optionalProperties:
+    policy_refs: {type: list, items: {type: string}}
+  validationRules:
+    - rule: owners.size >= 1 and principal_ref in owners
+      level: error
+      message: principal_ref 必须引用唯一 owners 集中的成员
+    - rule: root is relative and root does not escape manifest directory
+      level: error
+      message: root 必须受 DOMAIN.yaml 所在目录 containment 约束
+    - rule: archetype in [projection, federation] implies authority_policy != canonical_write
+      level: error
+      message: projection/federation 域不得声明 canonical write
+  relationConstraints:
+    can_be_source_of: [GovernedBy, Validates]
+    can_be_target_of: [Contains, References]

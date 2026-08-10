@@ -1,0 +1,37 @@
+# M2: L4DomainHealth
+
+m2_type: L4DomainHealth
+version: 1.0.0
+created: '2026-08-10T22:50:00+08:00'
+L4DomainHealth:
+  m3_parent: StructuralElement.Artifact
+  description: 一次确定性 L4 Harness 执行的结构化结果；它是派生证据，不是 canonical 内容。
+  icon: 🩺
+  stateMachine:
+    generated:
+      description: 已生成
+      transitions: [superseded, archived]
+    superseded:
+      description: 已被新结果替代
+      transitions: [archived]
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    domain_id: {type: string}
+    profile_id: {type: string}
+    checked_at: {type: string, format: date-time}
+    issues: {type: list, items: {type: map}}
+  validationRules:
+    - rule: domain_id is not None and profile_id is not None
+      level: error
+      message: DomainHealth 必须绑定域和 HarnessProfile
+    - rule: issues[*].severity in [error, warning, info]
+      level: error
+      message: issue severity 必须使用受控枚举
+    - rule: ok == not any(issue.severity == error)
+      level: error
+      message: ok 必须由 issues 派生，禁止手工声明假绿
+  relationConstraints:
+    can_be_source_of: [Validates, Supersedes]
+    can_be_target_of: [Produces]
