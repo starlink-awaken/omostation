@@ -12,6 +12,8 @@
   python3 bin/gac/check-submodule-pointer-drift.py --json      # JSON 输出
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import os
