@@ -14,17 +14,47 @@
 
 import argparse
 import json
+import os
 import subprocess
-import sys
+from functools import lru_cache
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+@lru_cache(maxsize=1)
+def _git_local_env_vars() -> frozenset[str]:
+    """Return Git variables that must not cross repository boundaries."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--local-env-vars"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return frozenset(result.stdout.split())
+
+
+def _git_env(cwd: Path | None) -> dict[str, str]:
+    """Clear superproject-local Git state before entering a submodule.
+
+    Git hooks export GIT_DIR/GIT_WORK_TREE for the superproject. Merely changing
+    ``cwd`` is therefore insufficient and makes every submodule command resolve
+    against the root worktree.
+    """
+    env = os.environ.copy()
+    if cwd is None or cwd.resolve() == REPO_ROOT.resolve():
+        return env
+    for name in _git_local_env_vars():
+        env.pop(name, None)
+    return env
 
 
 def _git(*args: str, cwd: Path | None = None) -> str:
     result = subprocess.run(
         ["git", *args],
         cwd=cwd or REPO_ROOT,
+        env=_git_env(cwd),
         capture_output=True,
         text=True,
         check=False,
@@ -61,12 +91,18 @@ def get_submodule_origin_main(sub_path: str) -> str | None:
     sub_dir = REPO_ROOT / sub_path
     if not (sub_dir / ".git").exists() and not (sub_dir / ".git").is_file():
         return None
-    subprocess.run(
-        ["git", "fetch", "origin", "--quiet"],
-        cwd=sub_dir,
-        capture_output=True,
-        check=False,
-    )
+    try:
+        subprocess.run(
+            ["git", "fetch", "origin", "--quiet"],
+            cwd=sub_dir,
+            env=_git_env(sub_dir),
+            capture_output=True,
+            check=False,
+            timeout=15,
+        )
+    except subprocess.TimeoutExpired:
+        # A stale remote probe must not wedge pre-push; use the last fetched ref.
+        pass
     sha = _git("rev-parse", "origin/main", cwd=sub_dir)
     return sha if sha else None
 
@@ -76,6 +112,7 @@ def is_ancestor(commit: str, ancestor: str, sub_path: str) -> bool:
     result = subprocess.run(
         ["git", "merge-base", "--is-ancestor", commit, ancestor],
         cwd=sub_dir,
+        env=_git_env(sub_dir),
         capture_output=True,
         check=False,
     )
@@ -153,6 +190,7 @@ def fix_pointer(sub_path: str, apply: bool = False) -> str:
         subprocess.run(
             ["git", "checkout", "--detach", origin_main],
             cwd=sub_dir,
+            env=_git_env(sub_dir),
             capture_output=True,
             check=False,
         )
@@ -221,16 +259,26 @@ def main() -> int:
         )
 
     if diverged:
-        print(f"\n  {len(diverged)} DIVERGED - root pointer targets side branch, code may be invisible!")
-        if not args.fix and not args.apply:
-            print("  Run --fix for fix suggestions, --fix --apply to execute")
+        if not args.json:
+            print(
+                f"\n  {len(diverged)} DIVERGED - root pointer targets side branch, "
+                "code may be invisible!"
+            )
+            if not args.fix and not args.apply:
+                print("  Run --fix for fix suggestions, --fix --apply to execute")
         return 1
 
     if behind and args.strict:
-        print(f"\n  {len(behind)} behind (strict mode)")
+        if not args.json:
+            print(f"\n  {len(behind)} behind (strict mode)")
         return 1
 
-    print("\n  ALL ALIGNED" if not behind else f"\n  No divergence ({len(behind)} behind, non-blocking)")
+    if not args.json:
+        print(
+            "\n  ALL ALIGNED"
+            if not behind
+            else f"\n  No divergence ({len(behind)} behind, non-blocking)"
+        )
     return 0
 
 
