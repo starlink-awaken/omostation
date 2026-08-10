@@ -238,3 +238,25 @@ services:
       args: ["compose", "up", "-d"]
     ports: [8080]
     notes: 本地搜索。占用 8080 —— 本地模型端口曾与它冲突, 已避让。
+  # ── LLM 入口 ───────────────────────────────────────────────
+  - id: aetherforge.gateway
+    enabled: true
+    scheduler: launchd
+    trigger: keepalive
+    label: com.aetherforge.gateway
+    program:
+      interpreter: /bin/bash
+      entrypoint: ~/.local/bin/aetherforge-gw-guard
+      args: []
+    resilience:
+      keepalive: always
+    run_at_load: true
+    ports: [9290]
+    outputs:
+      stdout: ~/Library/Logs/aetherforge-gateway.log
+      stderr: ~/Library/Logs/aetherforge-gateway.log
+    notes: >-
+      aetherforge OpenAI 兼容门面 — LiteLLM :4000 的继任者。
+      别名见 llm_gateway/aliases.yaml; SSOT 的 ENG-OMLX-LOCAL 已改指本端点。
+      硬约束: 启动路径不得有外部网络依赖(guard 直接用项目 venv 解释器,
+      不走 uv run), 且显式隔离系统代理 —— LiteLLM 曾栽在这两条上。
