@@ -44,6 +44,9 @@ omlxc bench mythos-fast --iterations 5
 # Preview the bounded App tuning profile (GET only, no settings changed)
 omlxc tune
 
+# Compare remote LM Studio/Ollama residency with remote_resident SSOT
+omlxc fleet-tune
+
 # Validate tools, model paths, and every configured fallback target
 omlxc doctor
 ```
@@ -77,6 +80,32 @@ omlxc tune --rollback ~/omlx/backups/app-tune-YYYYMMDD-HHMMSS.json --yes
 Global fields whose current value is `null` are intentionally not managed because
 oMLX App 0.5.7 cannot reliably restore those values through its global settings
 endpoint. Per-model `null` overrides are reversible and are included in backups.
+
+## Remote fallback tuning
+
+`omlxc fleet-tune` closes the gap between `autopilot.remote_resident` and the
+actual LM Studio/Ollama processes. Preview probes LM Studio with read-only
+`lms ps --json` over the configured SSH channel and probes Ollama over its HTTP
+API. It reports context, parallelism, and total TTL drift for LM Studio, plus
+finite/forever residency for Ollama.
+
+Applying reloads only drifting, controllable targets and writes a private state
+snapshot first. If any configured target is offline or lacks a working control
+channel, the default is to reject the entire mutation:
+
+```bash
+# All configured remote targets must be controllable
+omlxc fleet-tune --apply --yes
+
+# Explicitly tune reachable targets while leaving offline nodes unchanged
+omlxc fleet-tune --apply --yes --allow-partial
+```
+
+LM Studio is reloaded with the configured context length, parallel count, TTL,
+and stable instance identifier. Ollama receives an empty non-streaming generate
+request that only resets its `keep_alive`; it does not generate tokens. The
+preview and confirmation gate are deliberately separate because reloading an LM
+Studio instance briefly interrupts that fallback node.
 
 The measured fleet/model baseline and placement recommendations live in
 [`docs/model-audit-2026-08-10.md`](docs/model-audit-2026-08-10.md).

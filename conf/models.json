@@ -456,7 +456,8 @@
         "host": "100.99.210.78",
         "engine": "ollama",
         "port": 11434,
-        "model": "qwen3.5:9b"
+        "model": "qwen3.5:9b",
+        "keep_alive_sec": 3600
       },
       {
         "host": "100.99.210.78",

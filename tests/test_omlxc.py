@@ -50,6 +50,12 @@ def test_remote_lmstudio_policy_avoids_day_long_residency_and_gpu_oom():
     assert "-c 8192" in y7000p
     assert "--parallel 1" in y7000p
 
+    ollama = next(
+        entry for entry in remotes
+        if entry["host"] == "100.99.210.78" and entry["engine"] == "ollama"
+    )
+    assert ollama["keep_alive_sec"] == 3600
+
 
 def test_app_projection_is_flat_idempotent_and_only_cleans_managed_links(tmp_path, monkeypatch):
     cli = _load_cli()
@@ -557,3 +563,265 @@ def test_main_exposes_safe_tune_preview_command(monkeypatch):
     assert called[0].apply is False
     assert called[0].rollback is None
     assert called[0].json is True
+
+
+def test_fleet_tuning_targets_parse_lmstudio_and_ollama_policies():
+    cli = _load_cli()
+    conf = {
+        "autopilot": {
+            "remote_resident": [
+                {
+                    "host": "100.0.0.1",
+                    "port": 1234,
+                    "engine": "lmstudio",
+                    "model": "model-a",
+                    "ssh": True,
+                    "lms_args": "-c 16384 --parallel 1 --ttl 3600",
+                },
+                {
+                    "host": "100.0.0.2",
+                    "port": 11434,
+                    "engine": "ollama",
+                    "model": "model-b",
+                    "keep_alive_sec": 3600,
+                },
+            ]
+        }
+    }
+
+    targets = cli._fleet_tuning_targets(conf)
+
+    assert targets[0]["desired"] == {
+        "loaded": True,
+        "context_length": 16384,
+        "parallel": 1,
+        "ttl_seconds": 3600,
+    }
+    assert targets[1]["desired"] == {
+        "loaded": True,
+        "keep_alive_seconds": 3600,
+    }
+
+
+def test_fleet_tuning_changes_detect_long_lived_fallbacks_but_allow_countdown():
+    cli = _load_cli()
+    lm_target = {
+        "engine": "lmstudio",
+        "desired": {
+            "loaded": True,
+            "context_length": 16384,
+            "parallel": 1,
+            "ttl_seconds": 3600,
+        },
+    }
+    assert cli._fleet_tuning_changes(
+        lm_target,
+        {
+            "reachable": True,
+            "manageable": True,
+            "loaded": True,
+            "context_length": 16384,
+            "parallel": 1,
+            "ttl_seconds": 86400,
+        },
+    ) == [{"field": "ttl_seconds", "from": 86400, "to": 3600}]
+
+    ollama_target = {
+        "engine": "ollama",
+        "desired": {"loaded": True, "keep_alive_seconds": 3600},
+    }
+    assert cli._fleet_tuning_changes(
+        ollama_target,
+        {
+            "reachable": True,
+            "manageable": True,
+            "loaded": True,
+            "keep_alive_seconds": -1,
+        },
+    ) == [{"field": "keep_alive_seconds", "from": -1, "to": 3600}]
+    assert cli._fleet_tuning_changes(
+        ollama_target,
+        {
+            "reachable": True,
+            "manageable": True,
+            "loaded": True,
+            "keep_alive_seconds": 1700,
+        },
+    ) == []
+
+
+def test_fleet_tune_preview_never_applies(monkeypatch, capsys):
+    cli = _load_cli()
+    target = {
+        "id": "ollama@node/model",
+        "engine": "ollama",
+        "host": "node",
+        "port": 11434,
+        "model": "model",
+        "desired": {"loaded": True, "keep_alive_seconds": 3600},
+        "source": {},
+    }
+    current = {
+        "reachable": True,
+        "manageable": True,
+        "loaded": True,
+        "keep_alive_seconds": -1,
+    }
+    monkeypatch.setattr(cli, "_fleet_tuning_targets", lambda _conf: [target])
+    monkeypatch.setattr(cli, "_probe_fleet_target", lambda _target: current)
+    applied = []
+    monkeypatch.setattr(cli, "_apply_fleet_target", lambda *args: applied.append(args))
+
+    cli.cmd_fleet_tune(
+        {},
+        SimpleNamespace(apply=False, yes=False, allow_partial=False, json=True),
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert report["mode"] == "preview"
+    assert report["drift_count"] == 1
+    assert applied == []
+
+
+def test_fleet_tune_apply_requires_yes_before_probing(monkeypatch):
+    cli = _load_cli()
+    probed = []
+    monkeypatch.setattr(cli, "_probe_fleet_target", lambda target: probed.append(target))
+
+    with pytest.raises(SystemExit):
+        cli.cmd_fleet_tune(
+            {"autopilot": {"remote_resident": []}},
+            SimpleNamespace(apply=True, yes=False, allow_partial=False, json=True),
+        )
+
+    assert probed == []
+
+
+def test_fleet_tune_refuses_partial_apply_before_backup_or_mutation(monkeypatch):
+    cli = _load_cli()
+    target = {
+        "id": "lmstudio@offline/model",
+        "engine": "lmstudio",
+        "host": "offline",
+        "port": 1234,
+        "model": "model",
+        "desired": {
+            "loaded": True,
+            "context_length": 8192,
+            "parallel": 1,
+            "ttl_seconds": 3600,
+        },
+        "source": {},
+    }
+    monkeypatch.setattr(cli, "_fleet_tuning_targets", lambda _conf: [target])
+    monkeypatch.setattr(
+        cli,
+        "_probe_fleet_target",
+        lambda _target: {
+            "reachable": False,
+            "manageable": False,
+            "loaded": None,
+            "error": "offline",
+        },
+    )
+    writes = []
+    monkeypatch.setattr(cli, "_write_tuning_backup", lambda *args: writes.append(args))
+    monkeypatch.setattr(cli, "_apply_fleet_target", lambda *args: writes.append(args))
+
+    with pytest.raises(SystemExit):
+        cli.cmd_fleet_tune(
+            {},
+            SimpleNamespace(apply=True, yes=True, allow_partial=False, json=True),
+        )
+
+    assert writes == []
+
+
+def test_apply_fleet_target_sets_only_ollama_residency(monkeypatch):
+    cli = _load_cli()
+    calls = []
+    monkeypatch.setattr(
+        cli,
+        "_api",
+        lambda conf, port, endpoint, payload=None, timeout=None: calls.append(
+            (conf, port, endpoint, payload, timeout)
+        ) or {"done": True},
+    )
+    target = {
+        "engine": "ollama",
+        "host": "node",
+        "port": 11434,
+        "model": "qwen:9b",
+        "desired": {"loaded": True, "keep_alive_seconds": 3600},
+    }
+
+    cli._apply_fleet_target(target, {"loaded": True})
+
+    assert calls == [
+        (
+            {"host": "node"},
+            11434,
+            "/api/generate",
+            {"model": "qwen:9b", "keep_alive": 3600, "stream": False},
+            180,
+        )
+    ]
+
+
+def test_apply_fleet_target_reloads_lmstudio_with_stable_identifier(monkeypatch):
+    cli = _load_cli()
+    calls = []
+    monkeypatch.setattr(
+        cli,
+        "_remote_lms_command",
+        lambda target, arguments, **_kwargs: calls.append((target, arguments)) or "ok",
+    )
+    target = {
+        "engine": "lmstudio",
+        "host": "node",
+        "port": 1234,
+        "model": "gemma",
+        "desired": {
+            "loaded": True,
+            "context_length": 16384,
+            "parallel": 1,
+            "ttl_seconds": 3600,
+        },
+        "source": {"ssh": True},
+    }
+
+    cli._apply_fleet_target(target, {"loaded": True, "identifier": "old-instance"})
+
+    assert calls == [
+        (target, ["unload", "old-instance"]),
+        (
+            target,
+            [
+                "load",
+                "gemma",
+                "-c",
+                16384,
+                "--parallel",
+                1,
+                "--ttl",
+                3600,
+                "--identifier",
+                "gemma",
+                "-y",
+            ],
+        ),
+    ]
+
+
+def test_main_exposes_safe_fleet_tune_preview_command(monkeypatch):
+    cli = _load_cli()
+    called = []
+    monkeypatch.setattr(cli, "load_conf", lambda: {"autopilot": {}})
+    monkeypatch.setattr(cli, "cmd_fleet_tune", lambda _conf, args: called.append(args))
+    monkeypatch.setattr(cli.sys, "argv", ["omlxc", "fleet-tune", "--json"])
+
+    cli.main()
+
+    assert len(called) == 1
+    assert called[0].apply is False
+    assert called[0].allow_partial is False

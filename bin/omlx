@@ -15,7 +15,8 @@ omlx — 本地 MLX 模型统一命令行工具 (体系化管理 mlx_lm.server �
   omlxc models               列出磁盘上可用的 MLX 模型 (发现用)
   omlxc resolve <名> [--json] 这个名字会打到哪台机器的哪个引擎 (中枢解析点)
 """
-import os, sys, json, glob, time, socket, signal, subprocess, argparse, urllib.request, urllib.error, urllib.parse, re, shutil
+import os, sys, json, glob, time, socket, signal, subprocess, argparse, urllib.request, urllib.error, urllib.parse, re, shutil, shlex
+from datetime import datetime, timezone
 
 # 2026-08-10 迁出外置卷: launchd 服务受 macOS TCC 限制无法**执行**外置卷上的
 # 二进制(Operation not permitted), 导致 aetherforge 门面调不到 omlx。
@@ -1337,6 +1338,381 @@ def _lms_models(h, p):
         return [(m.get("id"), m.get("state", "?"), m.get("type", "")) for m in d.get("data", [])]
     except Exception: return []
 
+
+def _flag_int(tokens, *flags):
+    for index, token in enumerate(tokens[:-1]):
+        if token in flags:
+            try:
+                return int(tokens[index + 1])
+            except (TypeError, ValueError):
+                return None
+    return None
+
+
+def _fleet_tuning_targets(conf):
+    """Compile remote_resident SSOT into engine-specific desired state."""
+    targets = []
+    for entry in ((conf.get("autopilot") or {}).get("remote_resident") or []):
+        engine = str(entry.get("engine") or "").lower()
+        host = str(entry.get("host") or "")
+        port = int(entry.get("port") or (1234 if engine == "lmstudio" else 11434))
+        model = str(entry.get("model") or "")
+        if not host or not model or engine not in {"lmstudio", "ollama"}:
+            die("autopilot.remote_resident 含无效条目")
+        if engine == "lmstudio":
+            tokens = shlex.split(str(entry.get("lms_args") or ""))
+            context = _flag_int(tokens, "-c", "--context-length")
+            parallel = _flag_int(tokens, "--parallel")
+            ttl = _flag_int(tokens, "--ttl")
+            if not all(value and value > 0 for value in (context, parallel, ttl)):
+                die(f"{host} 的 lms_args 必须含正数 context/parallel/ttl")
+            desired = {
+                "loaded": True,
+                "context_length": context,
+                "parallel": parallel,
+                "ttl_seconds": ttl,
+            }
+        else:
+            keep_alive = int(entry.get("keep_alive_sec") or 0)
+            if keep_alive <= 0:
+                die(f"{host} 的 Ollama remote_resident 缺 keep_alive_sec")
+            desired = {"loaded": True, "keep_alive_seconds": keep_alive}
+        targets.append({
+            "id": f"{engine}@{host}:{port}/{model}",
+            "engine": engine,
+            "host": host,
+            "port": port,
+            "model": model,
+            "desired": desired,
+            "source": dict(entry),
+        })
+    return targets
+
+
+def _ssh_lms_ps(target):
+    source = target["source"]
+    if not source.get("ssh"):
+        return None, "未配置 SSH 控制通道"
+    destination = str(source.get("ssh_alias") or target["host"])
+    if not destination or destination.startswith("-"):
+        return None, "SSH 目标无效"
+    binary = _remote_lms_binary(source)
+    command = f"{binary} ps --json"
+    try:
+        result = subprocess.run(
+            [
+                "ssh",
+                "-o", "BatchMode=yes",
+                "-o", "ConnectTimeout=7",
+                "-o", "StrictHostKeyChecking=yes",
+                destination,
+                command,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            env=_EXENV,
+        )
+    except Exception as exc:
+        return None, f"SSH 探测失败: {type(exc).__name__}"
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "SSH 失败").strip().splitlines()[-1]
+        return None, detail[:200]
+    try:
+        payload = json.loads(result.stdout)
+    except Exception:
+        return None, "远端 lms ps --json 返回无效 JSON"
+    return payload if isinstance(payload, list) else [], None
+
+
+def _remote_lms_binary(source):
+    configured = source.get("lms_path")
+    if configured:
+        path = str(configured)
+        if "\n" in path or "\r" in path:
+            raise ValueError("lms_path 含非法换行")
+        return shlex.quote(path)
+    return "lms" if source.get("windows") else '"$HOME/.lmstudio/bin/lms"'
+
+
+def _parse_ollama_keep_alive(expires_at):
+    value = str(expires_at or "")
+    year_match = re.match(r"^(\d{4})-", value)
+    now = datetime.now(timezone.utc)
+    if year_match and int(year_match.group(1)) >= now.year + 10:
+        return -1
+    try:
+        # Ollama may emit nanoseconds; Python accepts microseconds.
+        normalized = re.sub(r"(\.\d{6})\d+", r"\1", value).replace("Z", "+00:00")
+        expires = datetime.fromisoformat(normalized)
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        return max(0, int((expires.astimezone(timezone.utc) - now).total_seconds()))
+    except Exception:
+        return None
+
+
+def _probe_fleet_target(target):
+    host, port, model = target["host"], target["port"], target["model"]
+    if not port_open(host, port, 1.5):
+        return {
+            "reachable": False,
+            "manageable": False,
+            "loaded": None,
+            "error": "服务端口不可达",
+        }
+    if target["engine"] == "ollama":
+        try:
+            payload = _api({"host": host}, port, "/api/ps", timeout=8)
+            item = next((row for row in payload.get("models", []) if row.get("name") == model), None)
+            return {
+                "reachable": True,
+                "manageable": True,
+                "loaded": item is not None,
+                "keep_alive_seconds": _parse_ollama_keep_alive(
+                    (item or {}).get("expires_at")
+                ) if item else None,
+            }
+        except Exception as exc:
+            return {
+                "reachable": True,
+                "manageable": False,
+                "loaded": None,
+                "error": f"Ollama API: {type(exc).__name__}",
+            }
+
+    lms_rows, ssh_error = _ssh_lms_ps(target)
+    if lms_rows is not None:
+        item = next((
+            row for row in lms_rows
+            if row.get("modelKey") == model or row.get("identifier") == model
+        ), None)
+        return {
+            "reachable": True,
+            "manageable": True,
+            "loaded": item is not None,
+            "identifier": (item or {}).get("identifier") or model,
+            "context_length": (item or {}).get("contextLength"),
+            "parallel": (item or {}).get("parallel"),
+            "ttl_seconds": (
+                int((item or {}).get("ttlMs") / 1000)
+                if isinstance((item or {}).get("ttlMs"), (int, float))
+                else None
+            ),
+        }
+
+    # HTTP still gives useful drift evidence when SSH control is unavailable.
+    try:
+        payload = _api({"host": host}, port, "/api/v1/models", timeout=8)
+        model_info = next((
+            row for row in payload.get("models", [])
+            if row.get("key") == model
+            or any(inst.get("id") == model for inst in row.get("loaded_instances", []))
+        ), None)
+        instance = ((model_info or {}).get("loaded_instances") or [None])[0]
+        config = (instance or {}).get("config") or {}
+        return {
+            "reachable": True,
+            "manageable": False,
+            "loaded": instance is not None,
+            "identifier": (instance or {}).get("id") or model,
+            "context_length": config.get("context_length"),
+            "parallel": config.get("parallel"),
+            "ttl_seconds": None,
+            "ttl_remaining_seconds": (instance or {}).get("remaining_ttl_seconds"),
+            "error": ssh_error or "SSH 控制通道不可用",
+        }
+    except Exception as exc:
+        return {
+            "reachable": True,
+            "manageable": False,
+            "loaded": None,
+            "error": f"LM Studio API: {type(exc).__name__}; {ssh_error or ''}".strip(),
+        }
+
+
+def _fleet_tuning_changes(target, current):
+    if not current.get("reachable"):
+        return []
+    desired = target["desired"]
+    changes = []
+    if current.get("loaded") is not True:
+        return [{"field": "loaded", "from": current.get("loaded"), "to": True}]
+    if target["engine"] == "lmstudio":
+        for field in ("context_length", "parallel", "ttl_seconds"):
+            actual, wanted = current.get(field), desired[field]
+            if actual != wanted:
+                changes.append({"field": field, "from": actual, "to": wanted})
+        return changes
+
+    actual = current.get("keep_alive_seconds")
+    wanted = desired["keep_alive_seconds"]
+    # A finite countdown at or below the configured TTL is already bounded.
+    if actual is None or actual < 0 or actual > wanted + 120:
+        changes.append({"field": "keep_alive_seconds", "from": actual, "to": wanted})
+    return changes
+
+
+def _remote_lms_command(target, arguments, timeout=300):
+    source = target["source"]
+    destination = str(source.get("ssh_alias") or target["host"])
+    binary = _remote_lms_binary(source)
+    command = binary + " " + " ".join(shlex.quote(str(arg)) for arg in arguments)
+    result = subprocess.run(
+        [
+            "ssh",
+            "-o", "BatchMode=yes",
+            "-o", "ConnectTimeout=7",
+            "-o", "StrictHostKeyChecking=yes",
+            destination,
+            command,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        env=_EXENV,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "远端 lms 失败").strip()
+        raise RuntimeError(detail[-500:])
+    return result.stdout.strip()
+
+
+def _apply_fleet_target(target, current):
+    desired = target["desired"]
+    if target["engine"] == "ollama":
+        return _api(
+            {"host": target["host"]},
+            target["port"],
+            "/api/generate",
+            payload={
+                "model": target["model"],
+                "keep_alive": desired["keep_alive_seconds"],
+                "stream": False,
+            },
+            timeout=180,
+        )
+    if current.get("loaded"):
+        _remote_lms_command(target, ["unload", current.get("identifier") or target["model"]])
+    return _remote_lms_command(target, [
+        "load",
+        target["model"],
+        "-c", desired["context_length"],
+        "--parallel", desired["parallel"],
+        "--ttl", desired["ttl_seconds"],
+        "--identifier", target["model"],
+        "-y",
+    ])
+
+
+def cmd_fleet_tune(conf, args):
+    """Preview or apply bounded residency for remote LM Studio/Ollama fallbacks."""
+    if args.apply and not args.yes:
+        die("fleet-tune 写入必须显式增加 --yes")
+    targets = _fleet_tuning_targets(conf)
+    rows = []
+    for target in targets:
+        current = _probe_fleet_target(target)
+        rows.append({
+            "id": target["id"],
+            "engine": target["engine"],
+            "host": target["host"],
+            "model": target["model"],
+            "desired": target["desired"],
+            "current": current,
+            "changes": _fleet_tuning_changes(target, current),
+            "_target": target,
+        })
+    unavailable = [
+        row for row in rows
+        if not row["current"].get("reachable") or not row["current"].get("manageable")
+    ]
+    drifting = [row for row in rows if row["changes"]]
+    report = {
+        "mode": "apply" if args.apply else "preview",
+        "status": "drift" if drifting else ("unavailable" if unavailable else "tuned"),
+        "drift_count": len(drifting),
+        "unavailable_count": len(unavailable),
+        "backup": None,
+        "targets": [{k: v for k, v in row.items() if k != "_target"} for row in rows],
+    }
+    if not args.apply:
+        if args.json:
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+        else:
+            print(yel(f"远端调优预览: 漂移 {len(drifting)} · 不可控 {len(unavailable)}"))
+            for row in rows:
+                state = red("unavailable") if row in unavailable else (
+                    yel(f"{len(row['changes'])} changes") if row["changes"] else green("tuned")
+                )
+                print(f"  {row['id']} · {state}")
+                if row["current"].get("error"):
+                    print(dim("    " + row["current"]["error"]))
+        return
+
+    if unavailable and not args.allow_partial:
+        die(
+            f"{len(unavailable)} 个远端目标不可控；拒绝半套落地。"
+            "确认仅处理在线节点时增加 --allow-partial"
+        )
+    actionable = [
+        row for row in drifting
+        if row["current"].get("reachable") and row["current"].get("manageable")
+    ]
+    if not actionable:
+        report["status"] = "partial" if unavailable else "tuned"
+        report["applied"] = []
+        report["verification"] = []
+        if args.json:
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+        else:
+            print(yel("没有可执行的远端漂移") if unavailable else green("远端驻留策略已对齐"))
+        return
+    backup = {
+        "schema_version": 1,
+        "kind": "fleet-tune",
+        "targets": [
+            {
+                "id": row["id"],
+                "engine": row["engine"],
+                "host": row["host"],
+                "model": row["model"],
+                "current": row["current"],
+            }
+            for row in rows
+        ],
+    }
+    report["backup"] = _write_tuning_backup(backup, "fleet-tune")
+    applied = []
+    for row in actionable:
+        _apply_fleet_target(row["_target"], row["current"])
+        applied.append(row["id"])
+    report["applied"] = applied
+
+    verification = []
+    for row in actionable:
+        current = _probe_fleet_target(row["_target"])
+        changes = _fleet_tuning_changes(row["_target"], current)
+        verification.append({"id": row["id"], "current": current, "changes": changes})
+    residual = [row for row in verification if row["changes"]]
+    report["verification"] = verification
+    report["status"] = (
+        "verification_failed"
+        if residual
+        else ("partial" if unavailable else "applied")
+    )
+    if args.json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    else:
+        print(green(f"远端调优已处理 {len(applied)} 个目标"))
+        print(dim(f"状态备份: {report['backup']}"))
+        if unavailable:
+            print(yel(f"跳过 {len(unavailable)} 个不可控目标"))
+        if residual:
+            print(red(f"验证失败: {len(residual)} 个目标仍有漂移"))
+    if residual:
+        raise SystemExit(1)
+
 def cmd_node(conf, args):
     action = args.action
     cl = conf.get("cluster") or die("models.json 缺 cluster 配置")
@@ -2027,7 +2403,7 @@ def main():
   看:   ls 全节点模型 · stats 用量/显存 · node ps 已加载 · cluster 健康大盘 · status 本地
   控:   app status|sync|load|unload · load/unload <模型> · serve/stop <key>(legacy 回滚) · warm <预设> · node 按节点
   网关: gw status|sync|start|stop|test
-  运维: up/down 整套 · autostart · dashboard · doctor · tune 安全调优/回滚 · bench 内存护栏压测 · portcheck 端口冲突 · health · test · models 磁盘发现(标已接) · link 一键接入新模型 · ssot-sync 同步到 aetherforge SSOT""")
+  运维: up/down 整套 · autostart · dashboard · doctor · tune App安全调优/回滚 · fleet-tune 远端驻留调优 · bench 内存护栏压测 · portcheck 端口冲突 · health · test · models 磁盘发现(标已接) · link 一键接入新模型 · ssot-sync 同步到 aetherforge SSOT""")
     sub=ap.add_subparsers(dest="cmd")
     sub.add_parser("list")
     s=sub.add_parser("serve"); s.add_argument("key"); s.add_argument("-f","--foreground",action="store_true"); s.add_argument("--host", help="绑定地址覆盖, 如 tailnet IP 或 0.0.0.0")
@@ -2037,6 +2413,7 @@ def main():
     s=sub.add_parser("test"); s.add_argument("key"); s.add_argument("-m","--message")
     s=sub.add_parser("bench"); s.add_argument("model"); s.add_argument("--iterations",type=int,default=5); s.add_argument("--max-tokens",type=int,default=256); s.add_argument("--max-growth-mb",type=int,default=512); s.add_argument("--min-free-percent",type=float,default=20); s.add_argument("--prompt"); s.add_argument("--json",action="store_true")
     s=sub.add_parser("tune"); g=s.add_mutually_exclusive_group(); g.add_argument("--apply",action="store_true"); g.add_argument("--rollback"); s.add_argument("--yes",action="store_true"); s.add_argument("--restart",action="store_true"); s.add_argument("--json",action="store_true")
+    s=sub.add_parser("fleet-tune"); s.add_argument("--apply",action="store_true"); s.add_argument("--yes",action="store_true"); s.add_argument("--allow-partial",action="store_true"); s.add_argument("--json",action="store_true")
     s=sub.add_parser("doctor"); s.add_argument("--fix",action="store_true")
     s=sub.add_parser("use"); s.add_argument("category"); s.add_argument("alias")
     sub.add_parser("models")
@@ -2059,7 +2436,7 @@ def main():
     s=sub.add_parser("unload"); s.add_argument("model")
     args=ap.parse_args()
     fn={"list":cmd_list,"serve":cmd_serve,"stop":cmd_stop,"status":cmd_status,
-        "health":cmd_health,"test":cmd_test,"bench":cmd_bench,"tune":cmd_tune,"doctor":cmd_doctor,"use":cmd_use,"models":cmd_models,"resolve":cmd_resolve,
+        "health":cmd_health,"test":cmd_test,"bench":cmd_bench,"tune":cmd_tune,"fleet-tune":cmd_fleet_tune,"doctor":cmd_doctor,"use":cmd_use,"models":cmd_models,"resolve":cmd_resolve,
         "cluster":cmd_cluster,"dashboard":cmd_dashboard,"autostart":cmd_autostart,
         "up":cmd_up,"down":cmd_down,"gw":cmd_gw,"app":cmd_app,"node":cmd_node,"ls":cmd_ls,"load":cmd_load,"unload":cmd_unload,"warm":cmd_warm,"stats":cmd_stats,"link":cmd_link,"portcheck":cmd_portcheck,"ssot-sync":cmd_ssot_sync}.get(args.cmd)
     if not fn: ap.print_help(); return
