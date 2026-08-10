@@ -4,6 +4,8 @@ node_ref: NODE-MACMINI
 engine_type: local_daemon
 base_url: "http://100.99.210.78:11434/v1"
 supported_protocols: ["openai"]
+request_defaults:
+  reasoning_effort: none
 cost_multiplier: 0.0001
 status: active
 description: "Mac Mini M4 上的 Ollama (gemma-4-12B) — via Tailscale"
@@ -15,3 +17,6 @@ state_history:
   - state: active
     timestamp: '2026-06-19T00:00:00Z'
     reason: initial_modeling
+  - state: active
+    timestamp: '2026-08-10T12:45:00Z'
+    reason: default_disable_thinking_for_fallback_latency_openai_compat

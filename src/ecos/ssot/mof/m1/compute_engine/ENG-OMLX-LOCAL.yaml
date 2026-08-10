@@ -3,11 +3,15 @@ type: ComputeEngine
 node_ref: NODE-LOCAL-MAC
 engine_type: local_inference
 network_zone: local
-base_url: "http://127.0.0.1:9290/v1"
+base_url: "http://127.0.0.1:8000/v1"
 supported_protocols: ["openai"]
+request_defaults:
+  chat_template_kwargs:
+    enable_thinking: false
+  thinking_budget: 0
 cost_multiplier: 0.0001
 status: active
-description: "omlx 本机推理 · 经 aetherforge OpenAI 门面 (llm-gateway :9290) 统一暴露 · 别名见 llm_gateway/aliases.yaml · 模型清单见 MODEL-BREW-OMLX-LOCAL(omlxc ssot-sync 生成) · 仅 loopback 可达"
+description: "MBP oMLX App 物理推理端点 · AetherForge 数据面从此端点调用逻辑模型 · 模型清单见 MODEL-BREW-OMLX-LOCAL(omlxc ssot-sync 生成) · 仅 loopback 可达"
 
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m1/
@@ -30,3 +34,8 @@ state_history:
       OpenAI 兼容门面承接。注意 gateway 对本机模型优先直连各模型端口
       (model_ports), 本 endpoint 是回退路径; gateway 侧已加自引用防护,
       避免回退时打回自己造成递归。
+  - state: active
+    timestamp: '2026-08-10T12:45:00Z'
+    reason: >-
+      repoint_to_physical_omlx_app_8000 — AetherForge 是逻辑数据面，ComputeEngine
+      必须登记物理 provider，不能再指回 AetherForge 自己；默认关闭 thinking。

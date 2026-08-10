@@ -3,38 +3,14 @@ status: active
 engine_ref: ENG-OMLX-LOCAL
 model_driven_refs:
   source: omlxc ssot-sync (gateway aliases + models.json)
-  synced_at: '2026-08-08T02:20:01Z'
+  synced_at: '2026-08-10T12:57:31Z'
 governance:
   owner: omlx
   steward: omlxc-ssot-sync
   freshness_policy: on-change (跑 `omlxc ssot-sync`)
 models:
-- model_id: triage
-  display_name: triage (multi:MBP-LMStudio+mac-mini)
-  cost_per_1k_input: 0.0
-  cost_per_1k_output: 0.0
-  context_window: 32768
-  capabilities:
-  - chat
-  runs_on: multi:MBP-LMStudio+mac-mini
-- model_id: mid-local
-  display_name: mid-local (MBP-local)
-  cost_per_1k_input: 0.0
-  cost_per_1k_output: 0.0
-  context_window: 2048
-  capabilities:
-  - chat
-  runs_on: MBP-local
-- model_id: mini-9b
-  display_name: mini-9b (mac-mini)
-  cost_per_1k_input: 0.0
-  cost_per_1k_output: 0.0
-  context_window: 32768
-  capabilities:
-  - chat
-  runs_on: mac-mini
-- model_id: coder-fast
-  display_name: coder-fast (MBP-local)
+- model_id: coding
+  display_name: coding (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 2048
@@ -42,9 +18,9 @@ models:
   - chat
   - reasoning
   - tools
-  runs_on: MBP-local
-- model_id: coder
-  display_name: coder (MBP-local)
+  runs_on: MBP-oMLX-App
+- model_id: coding-fast
+  display_name: coding-fast (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 2048
@@ -52,190 +28,185 @@ models:
   - chat
   - reasoning
   - tools
-  runs_on: MBP-local
-- model_id: reasoner
-  display_name: reasoner (MBP-local)
+  runs_on: MBP-oMLX-App
+- model_id: coding-next
+  display_name: coding-next (MBP-oMLX-App)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 4096
+  capabilities:
+  - chat
+  - tools
+  runs_on: MBP-oMLX-App
+- model_id: reasoning
+  display_name: reasoning (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 4096
   capabilities:
   - chat
   - reasoning
-  runs_on: MBP-local
+  runs_on: MBP-oMLX-App
+- model_id: reasoning-lite
+  display_name: reasoning-lite (MBP-oMLX-App)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 2048
+  capabilities:
+  - chat
+  - reasoning
+  runs_on: MBP-oMLX-App
+- model_id: embedding
+  display_name: embedding (MBP-oMLX-App)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 32768
+  capabilities:
+  - embedding
+  runs_on: MBP-oMLX-App
 - model_id: vision
-  display_name: vision (MBP-local)
+  display_name: vision (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 2048
   capabilities:
   - chat
   - vision
-  runs_on: MBP-local
+  runs_on: MBP-oMLX-App
+- model_id: vision-large
+  display_name: vision-large (MBP-oMLX-App)
+  cost_per_1k_input: 0.0
+  cost_per_1k_output: 0.0
+  context_window: 3072
+  capabilities:
+  - chat
+  - vision
+  runs_on: MBP-oMLX-App
 - model_id: mythos
-  display_name: mythos (MBP-local)
+  display_name: mythos (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 2048
   capabilities:
   - chat
   - vision
-  runs_on: MBP-local
+  runs_on: MBP-oMLX-App
 - model_id: mythos-fast
-  display_name: mythos-fast (MBP-local)
+  display_name: mythos-fast (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 2048
   capabilities:
   - chat
-  runs_on: MBP-local
+  runs_on: MBP-oMLX-App
 - model_id: deepseek-v4-flash
-  display_name: deepseek-v4-flash (MBP-local)
+  display_name: deepseek-v4-flash (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 2048
   capabilities:
   - chat
-  runs_on: MBP-local
+  runs_on: MBP-oMLX-App
 - model_id: deepseek-v4-pro
-  display_name: deepseek-v4-pro (MBP-local)
+  display_name: deepseek-v4-pro (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 2048
   capabilities:
   - chat
-  runs_on: MBP-local
+  runs_on: MBP-oMLX-App
 - model_id: mistral-medium-128b
-  display_name: mistral-medium-128b (MBP-local)
+  display_name: mistral-medium-128b (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 2048
   capabilities:
   - chat
-  runs_on: MBP-local
+  runs_on: MBP-oMLX-App
 - model_id: nemotron-omni
-  display_name: nemotron-omni (MBP-local)
+  display_name: nemotron-omni (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 2048
   capabilities:
   - chat
   - reasoning
-  runs_on: MBP-local
+  runs_on: MBP-oMLX-App
 - model_id: ornith-9b
-  display_name: ornith-9b (MBP-local)
+  display_name: ornith-9b (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 2048
   capabilities:
   - chat
   - vision
-  runs_on: MBP-local
+  runs_on: MBP-oMLX-App
 - model_id: ornith-35b
-  display_name: ornith-35b (MBP-local)
+  display_name: ornith-35b (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 2048
   capabilities:
   - chat
   - vision
-  runs_on: MBP-local
-- model_id: embed
-  display_name: embed (MBP-local)
-  cost_per_1k_input: 0.0
-  cost_per_1k_output: 0.0
-  context_window: 32768
-  capabilities:
-  - embedding
-  runs_on: MBP-local
+  runs_on: MBP-oMLX-App
 - model_id: embed-bge-m3
-  display_name: embed-bge-m3 (MBP-local)
+  display_name: embed-bge-m3 (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
   context_window: 2048
   capabilities:
   - embedding
-  runs_on: MBP-local
-- model_id: fast-local
-  display_name: fast-local (MBP-LMStudio)
+  runs_on: MBP-oMLX-App
+- model_id: baai-bge-reranker-v2-m3-mlx-fp16
+  display_name: baai-bge-reranker-v2-m3-mlx-fp16 (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
-  context_window: 32768
-  capabilities:
-  - chat
-  runs_on: MBP-LMStudio
-- model_id: coder-precise
-  display_name: coder-precise (MBP-local)
-  cost_per_1k_input: 0.0
-  cost_per_1k_output: 0.0
-  context_window: 4096
-  capabilities:
-  - chat
-  - tools
-  runs_on: MBP-local
-- model_id: mini-chat
-  display_name: mini-chat (mac-mini)
-  cost_per_1k_input: 0.0
-  cost_per_1k_output: 0.0
-  context_window: 32768
-  capabilities:
-  - chat
-  runs_on: mac-mini
-- model_id: rerank
-  display_name: rerank (mac-mini)
-  cost_per_1k_input: 0.0
-  cost_per_1k_output: 0.0
-  context_window: 32768
+  context_window: 2048
   capabilities:
   - rerank
-  runs_on: mac-mini
-- model_id: embed-bge
-  display_name: embed-bge (mac-mini)
+  runs_on: MBP-oMLX-App
+- model_id: gemma-4-26b-a4b-it-qat-mlx-4bit
+  display_name: gemma-4-26b-a4b-it-qat-mlx-4bit (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
-  context_window: 32768
-  capabilities:
-  - embedding
-  runs_on: mac-mini
-- model_id: ocr
-  display_name: ocr (mac-mini)
-  cost_per_1k_input: 0.0
-  cost_per_1k_output: 0.0
-  context_window: 32768
+  context_window: 2048
   capabilities:
   - chat
   - vision
-  - ocr
-  runs_on: mac-mini
-- model_id: vision-lite
-  display_name: vision-lite (mac-mini)
+  runs_on: MBP-oMLX-App
+- model_id: gemma-4-31b-it-mlx-8bit
+  display_name: gemma-4-31b-it-mlx-8bit (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
-  context_window: 32768
+  context_window: 2048
   capabilities:
   - chat
   - vision
-  runs_on: mac-mini
-- model_id: fast
-  display_name: fast (Y7000P)
+  runs_on: MBP-oMLX-App
+- model_id: gemma-4-e2b-it-mlx-8bit
+  display_name: gemma-4-e2b-it-mlx-8bit (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
-  context_window: 32768
+  context_window: 2048
   capabilities:
   - chat
-  runs_on: Y7000P
-- model_id: mid
-  display_name: mid (Y7000P)
+  - vision
+  runs_on: MBP-oMLX-App
+- model_id: mid-local
+  display_name: mid-local (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
-  context_window: 32768
+  context_window: 2048
   capabilities:
   - chat
-  runs_on: Y7000P
-- model_id: general
-  display_name: general (multi:Y7000P+mac-mini)
+  runs_on: MBP-oMLX-App
+- model_id: coder-precise
+  display_name: coder-precise (MBP-oMLX-App)
   cost_per_1k_input: 0.0
   cost_per_1k_output: 0.0
-  context_window: 32768
+  context_window: 4096
   capabilities:
   - chat
-  runs_on: multi:Y7000P+mac-mini
+  - tools
+  runs_on: MBP-oMLX-App
