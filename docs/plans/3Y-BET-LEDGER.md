@@ -16,7 +16,7 @@ note: >
 
 # 三年规划执行台账
 
-> **58 个 bet · 8 条轨道 · 10 个窗口 · 2026H2 → 2029**
+> bet 数由 CLI 实时给出：`python3 bin/plan/bet-ledger.py status` · 轨道与窗口同样以台账 SSOT 为准 · 2026H2 → 2029
 >
 > 全部状态：`python3 bin/plan/bet-ledger.py status`
 
@@ -223,7 +223,7 @@ Y1 → 2027-07 ｜ Y2 → 2027-12 ｜ Y3 → 2029-06。Y2Q4 是**愿景证伪点
 | BET-Y1Q1-T7-03 | T7 | 1 week | 公文场景砍到 3 node 并进 shadow | |
 | BET-Y1Q1-T8-01 | T8 | 2 weeks | **/inbox 决策收件箱最小版** | |
 
-#### Y1Q2 减法·编排硬化（12 bet）
+#### Y1Q2 减法·编排硬化
 
 | ID | 轨 | Appetite | 标题 | ★ |
 |---|---|---|---|:--:|
@@ -236,6 +236,7 @@ Y1 → 2027-07 ｜ Y2 → 2027-12 ｜ Y3 → 2029-06。Y2Q4 是**愿景证伪点
 | BET-Y1Q2-T5-02 | T5 | 1 week | 回退边执行语义 + 次数上限 + 升级路径 | |
 | BET-Y1Q2-T1-01 | T1 | 2 weeks | omo-debt + c2g 并入 omo | ★ |
 | BET-Y1Q2-T1-02 | T1 | 1 week | model-driven 去留判定 | ★ |
+| BET-Y1Q2-T1-03 | T1 | 1 day | Blueprint W1-05 JSONL shadow migration adapter | |
 | BET-Y1Q2-T7-01 | T7 | 1 week | 工程交付 dogfood 开 shadow | |
 | BET-Y1Q2-T4-01 | T4 | 1 week | capability_calibration 自动更新 | |
 | BET-Y1Q2-T8-01 | T8 | 2 weeks | /outcomes 结果与校准面板 | |
