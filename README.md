@@ -19,7 +19,8 @@ AetherForge request layer.
 
 Thinking/reasoning is disabled by default with backend-specific request fields:
 oMLX App uses `enable_thinking=false` and a zero thinking budget; LM Studio and
-Ollama use `reasoning_effort=none`. Explicit caller fields remain authoritative.
+Ollama use `reasoning_effort=none`. The tuned App profile also forces the chat
+template flag off so a stray client cannot silently re-enable long reasoning.
 
 ## Daily operations
 
@@ -40,6 +41,9 @@ omlxc gw test mythos-fast
 # Benchmark an already loaded model with memory/OOM and thinking guards
 omlxc bench mythos-fast --iterations 5
 
+# Preview the bounded App tuning profile (GET only, no settings changed)
+omlxc tune
+
 # Validate tools, model paths, and every configured fallback target
 omlxc doctor
 ```
@@ -49,6 +53,30 @@ oMLX process footprint and host memory pressure before every request, treats the
 first request as warm-up, fails on retained post-warm-up growth, and rejects any
 reasoning field or `<think>` output. Load one model at a time when comparing large
 models, then unload it before moving to the next candidate.
+
+## Safe App tuning
+
+`omlxc tune` is preview-only. It compares the live App settings with a bounded
+profile: balanced memory admission, two concurrent requests, embedding batch 16,
+64 GB SSD cache, a 32K global context default, per-model context/sampling profiles,
+30-60 minute idle TTLs, and thinking disabled. It never reads or backs up API
+keys, proxy settings, network listeners, or launch settings.
+
+Mutation requires an explicit acknowledgement and creates a mode-0600 backup
+before the first write:
+
+```bash
+# Apply persistent settings; add --restart only when an immediate App restart is wanted
+omlxc tune --apply --yes
+omlxc tune --apply --yes --restart
+
+# Restore exactly the fields owned by the earlier tune transaction
+omlxc tune --rollback ~/omlx/backups/app-tune-YYYYMMDD-HHMMSS.json --yes
+```
+
+Global fields whose current value is `null` are intentionally not managed because
+oMLX App 0.5.7 cannot reliably restore those values through its global settings
+endpoint. Per-model `null` overrides are reversible and are included in backups.
 
 The measured fleet/model baseline and placement recommendations live in
 [`docs/model-audit-2026-08-10.md`](docs/model-audit-2026-08-10.md).

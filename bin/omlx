@@ -15,7 +15,7 @@ omlx — 本地 MLX 模型统一命令行工具 (体系化管理 mlx_lm.server �
   omlxc models               列出磁盘上可用的 MLX 模型 (发现用)
   omlxc resolve <名> [--json] 这个名字会打到哪台机器的哪个引擎 (中枢解析点)
 """
-import os, sys, json, glob, time, socket, signal, subprocess, argparse, urllib.request, urllib.error, re, shutil
+import os, sys, json, glob, time, socket, signal, subprocess, argparse, urllib.request, urllib.error, urllib.parse, re, shutil
 
 # 2026-08-10 迁出外置卷: launchd 服务受 macOS TCC 限制无法**执行**外置卷上的
 # 二进制(Operation not permitted), 导致 aetherforge 门面调不到 omlx。
@@ -132,6 +132,385 @@ def _message_has_thinking(message):
     content = str((message or {}).get("content") or "")
     reasoning = str((message or {}).get("reasoning") or "")
     return bool(reasoning.strip() or re.search(r"<think(?:>|\s)|</think>", content, re.I))
+
+
+_APP_GLOBAL_TUNING_TARGETS = {
+    "memory_prefill_memory_guard": True,
+    "memory_guard_tier": "balanced",
+    "max_concurrent_requests": 2,
+    "embedding_batch_size": 16,
+    "chunked_prefill": False,
+    "prefill_priority": "context",
+    "cache_enabled": True,
+    "ssd_cache_max_size": "64GB",
+    "initial_cache_blocks": 256,
+    "sampling_max_context_window": 32768,
+    "sampling_max_tokens": 8192,
+    "sampling_temperature": 0.2,
+    "sampling_top_p": 0.9,
+}
+
+_APP_GLOBAL_READ_PATHS = {
+    "memory_prefill_memory_guard": ("memory", "prefill_memory_guard"),
+    "memory_guard_tier": ("memory", "memory_guard_tier"),
+    "max_concurrent_requests": ("scheduler", "max_concurrent_requests"),
+    "embedding_batch_size": ("scheduler", "embedding_batch_size"),
+    "chunked_prefill": ("scheduler", "chunked_prefill"),
+    "prefill_priority": ("scheduler", "prefill_priority"),
+    "cache_enabled": ("cache", "enabled"),
+    "ssd_cache_max_size": ("cache", "ssd_cache_max_size"),
+    "initial_cache_blocks": ("cache", "initial_cache_blocks"),
+    "sampling_max_context_window": ("sampling", "max_context_window"),
+    "sampling_max_tokens": ("sampling", "max_tokens"),
+    "sampling_temperature": ("sampling", "temperature"),
+    "sampling_top_p": ("sampling", "top_p"),
+}
+
+_APP_CONTEXT_OVERRIDES = {
+    "coding": 65536,
+    "coding-fast": 65536,
+    "coding-next": 131072,
+    "reasoning": 65536,
+    "mid-local": 65536,
+    "coder-precise": 65536,
+}
+
+_APP_SAMPLING_OVERRIDES = {
+    "coding": {"temperature": 0.15, "top_p": 0.9},
+    "coder-precise": {"temperature": 0.15, "top_p": 0.9},
+    "coding-next": {"temperature": 1.0, "top_p": 0.95, "top_k": 40},
+    "reasoning": {"temperature": 0.7, "top_p": 0.95},
+    "mid-local": {
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "top_k": 20,
+        "presence_penalty": 1.5,
+    },
+}
+
+_APP_MODEL_TUNING_FIELDS = {
+    "max_context_window",
+    "max_tokens",
+    "temperature",
+    "top_p",
+    "top_k",
+    "presence_penalty",
+    "chat_template_kwargs",
+    "forced_ct_kwargs",
+    "ttl_seconds",
+    "enable_thinking",
+    "thinking_budget_enabled",
+    "thinking_budget_tokens",
+    "is_pinned",
+}
+
+
+def _nested_value(data, path):
+    value = data
+    for key in path:
+        if not isinstance(value, dict):
+            return None
+        value = value.get(key)
+    return value
+
+
+def _app_model_tuning_target(key, model, live):
+    """Return only reversible per-model fields owned by ``omlxc tune``."""
+    category = str(model.get("category") or "")
+    role = str(model.get("role") or "chat")
+    size_gb = float(model.get("size_gb") or 0)
+    ttl_seconds = 1800 if category in {"retrieval", "vision"} or size_gb >= 20 else 3600
+    if category == "retrieval" or role == "embedding":
+        return {
+            "max_context_window": 8192,
+            "ttl_seconds": ttl_seconds,
+            "is_pinned": False,
+        }
+
+    settings = live.get("settings") if isinstance(live.get("settings"), dict) else {}
+    template_kwargs = dict(settings.get("chat_template_kwargs") or {})
+    template_kwargs["enable_thinking"] = False
+    forced_kwargs = list(settings.get("forced_ct_kwargs") or [])
+    if "enable_thinking" not in forced_kwargs:
+        forced_kwargs.append("enable_thinking")
+
+    params = model.get("params") if isinstance(model.get("params"), dict) else {}
+    target = {
+        "max_context_window": _APP_CONTEXT_OVERRIDES.get(key, 32768),
+        "max_tokens": 4096 if role == "vision" else 8192,
+        "temperature": float(params.get("temp", 0.2)),
+        "top_p": float(params.get("top_p", 0.9)),
+        "chat_template_kwargs": template_kwargs,
+        "forced_ct_kwargs": forced_kwargs,
+        "ttl_seconds": ttl_seconds,
+        "enable_thinking": False,
+        "thinking_budget_enabled": False,
+        "thinking_budget_tokens": 0,
+        "is_pinned": key == "mythos-fast",
+    }
+    target.update(_APP_SAMPLING_OVERRIDES.get(key, {}))
+    return target
+
+
+def _app_tuning_targets(conf, catalog):
+    live_by_id = {
+        item.get("id"): item
+        for item in (catalog.get("models") or [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    model_targets = {}
+    for key, model in (conf.get("models") or {}).items():
+        if key not in live_by_id:
+            continue
+        model_targets[key] = _app_model_tuning_target(key, model, live_by_id[key])
+    return {
+        "schema_version": 1,
+        "global": dict(_APP_GLOBAL_TUNING_TARGETS),
+        "models": model_targets,
+    }
+
+
+def _app_tuning_snapshot(global_settings, catalog, targets):
+    """Capture only controlled fields, deliberately excluding auth/network data."""
+    live_by_id = {
+        item.get("id"): item
+        for item in (catalog.get("models") or [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    global_snapshot = {
+        field: _nested_value(global_settings, _APP_GLOBAL_READ_PATHS[field])
+        for field in targets.get("global", {})
+    }
+    model_snapshot = {}
+    for model_id, wanted in (targets.get("models") or {}).items():
+        live = live_by_id.get(model_id) or {}
+        settings = live.get("settings") if isinstance(live.get("settings"), dict) else {}
+        values = {}
+        for field in wanted:
+            if field == "is_pinned":
+                values[field] = bool(live.get("pinned", False))
+            else:
+                values[field] = settings.get(field)
+        model_snapshot[model_id] = values
+    return {
+        "schema_version": 1,
+        "global": global_snapshot,
+        "models": model_snapshot,
+    }
+
+
+def _app_tuning_changes(current, target):
+    changes = []
+    for field, wanted in (target.get("global") or {}).items():
+        actual = (current.get("global") or {}).get(field)
+        if actual != wanted:
+            changes.append({
+                "scope": "global",
+                "field": field,
+                "from": actual,
+                "to": wanted,
+            })
+    for model_id, wanted_fields in (target.get("models") or {}).items():
+        actual_fields = (current.get("models") or {}).get(model_id) or {}
+        for field, wanted in wanted_fields.items():
+            actual = actual_fields.get(field)
+            if actual != wanted:
+                changes.append({
+                    "scope": "model",
+                    "model": model_id,
+                    "field": field,
+                    "from": actual,
+                    "to": wanted,
+                })
+    return changes
+
+
+def _app_tuning_state(conf):
+    app = _app_conf(conf)
+    global_settings = _http_json(
+        app["base_url"] + "/admin/api/global-settings",
+        timeout=app["timeout"],
+    )
+    catalog = _http_json(
+        app["base_url"] + "/admin/api/models",
+        timeout=app["timeout"],
+    )
+    return global_settings, catalog
+
+
+def _write_tuning_backup(snapshot, label="app-tune"):
+    backup_dir = os.path.join(OMLX_ROOT, "backups")
+    os.makedirs(backup_dir, mode=0o700, exist_ok=True)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    path = os.path.join(backup_dir, f"{label}-{stamp}.json")
+    document = dict(snapshot)
+    document["created_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        json.dump(document, handle, ensure_ascii=False, indent=2)
+        handle.write("\n")
+    return path
+
+
+def _read_tuning_backup(path):
+    with open(os.path.expanduser(path), encoding="utf-8") as handle:
+        document = json.load(handle)
+    if document.get("schema_version") != 1:
+        die("不支持的 tune 备份版本")
+    if not isinstance(document.get("global"), dict) or not isinstance(document.get("models"), dict):
+        die("tune 备份缺少 global/models")
+    target = {
+        "schema_version": 1,
+        "global": document["global"],
+        "models": document["models"],
+    }
+    invalid_global = sorted(set(target["global"]) - set(_APP_GLOBAL_TUNING_TARGETS))
+    invalid_models = []
+    for model_id, fields in target["models"].items():
+        if not isinstance(model_id, str) or not isinstance(fields, dict):
+            die("tune 备份 models 格式错误")
+        invalid = sorted(set(fields) - _APP_MODEL_TUNING_FIELDS)
+        if invalid:
+            invalid_models.append(f"{model_id}: {', '.join(invalid)}")
+    if invalid_global or invalid_models:
+        details = []
+        if invalid_global:
+            details.append("global=" + ", ".join(invalid_global))
+        details.extend(invalid_models)
+        die("tune 备份含非受管字段: " + "; ".join(details))
+    return target
+
+
+def _apply_app_tuning(conf, current, target):
+    app = _app_conf(conf)
+    changes = _app_tuning_changes(current, target)
+    global_payload = {
+        item["field"]: item["to"]
+        for item in changes
+        if item["scope"] == "global"
+    }
+    if global_payload:
+        _http_json(
+            app["base_url"] + "/admin/api/global-settings",
+            global_payload,
+            method="POST",
+            timeout=app["timeout"],
+        )
+
+    changed_models = {}
+    for item in changes:
+        if item["scope"] != "model":
+            continue
+        changed_models.setdefault(item["model"], {})[item["field"]] = item["to"]
+    for model_id, payload in changed_models.items():
+        encoded = urllib.parse.quote(model_id, safe="")
+        _http_json(
+            app["base_url"] + f"/admin/api/models/{encoded}/settings",
+            payload,
+            method="PUT",
+            timeout=app["timeout"],
+        )
+    return {
+        "global_fields": len(global_payload),
+        "models": len(changed_models),
+        "fields": len(changes),
+    }
+
+
+def _restart_app_and_wait(conf, timeout=45):
+    app = _app_conf(conf)
+    started = time.monotonic()
+    _http_json(
+        app["base_url"] + "/admin/api/server/restart",
+        {},
+        method="POST",
+        timeout=app["timeout"],
+    )
+    deadline = started + timeout
+    consecutive_ready = 0
+    while time.monotonic() < deadline:
+        time.sleep(1)
+        try:
+            _http_json(app["base_url"] + "/api/status", timeout=2)
+            consecutive_ready += 1
+            # The supervisor schedules the restart after returning 202. Waiting
+            # past that grace period avoids accepting the old process as healthy.
+            if time.monotonic() - started >= 7 and consecutive_ready >= 2:
+                return
+        except Exception:
+            consecutive_ready = 0
+    die(f"oMLX App 重启后 {timeout}s 内未恢复")
+
+
+def cmd_tune(conf, args):
+    """Preview or transactionally apply the bounded oMLX App tuning profile."""
+    mutating = bool(args.apply or args.rollback)
+    if mutating and not args.yes:
+        die("tune 写入/回滚必须显式增加 --yes")
+    if args.restart and not mutating:
+        die("--restart 只能与 --apply 或 --rollback 一起使用")
+
+    global_settings, catalog = _app_tuning_state(conf)
+    live_ids = {
+        item.get("id")
+        for item in (catalog.get("models") or [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    if args.rollback:
+        target = _read_tuning_backup(args.rollback)
+        mode = "rollback"
+    else:
+        target = _app_tuning_targets(conf, catalog)
+        mode = "apply" if args.apply else "preview"
+
+    missing = sorted(set(target.get("models") or {}) - live_ids)
+    if missing:
+        die("oMLX App 缺少备份/调优中的模型: " + ", ".join(missing))
+    current = _app_tuning_snapshot(global_settings, catalog, target)
+    changes = _app_tuning_changes(current, target)
+    report = {
+        "mode": mode,
+        "status": "changes" if changes else "already_tuned",
+        "changes": changes,
+        "backup": None,
+        "applied": None,
+        "restart": False,
+    }
+    if not mutating or not changes:
+        if args.json:
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+        else:
+            print(green("已是目标配置") if not changes else yel(f"预览: {len(changes)} 项变更"))
+            for item in changes:
+                prefix = item["scope"] if item["scope"] == "global" else item["model"]
+                print(f"  {prefix}.{item['field']}: {item['from']!r} -> {item['to']!r}")
+            if changes:
+                print(dim("仅预览，未写入。应用请使用: omlxc tune --apply --yes"))
+        return
+
+    report["backup"] = _write_tuning_backup(
+        current,
+        "pre-rollback" if args.rollback else "app-tune",
+    )
+    report["applied"] = _apply_app_tuning(conf, current, target)
+    if args.restart:
+        _restart_app_and_wait(conf)
+        report["restart"] = True
+
+    verified_global, verified_catalog = _app_tuning_state(conf)
+    verified = _app_tuning_snapshot(verified_global, verified_catalog, target)
+    residual = _app_tuning_changes(verified, target)
+    report["residual_changes"] = residual
+    report["status"] = "applied" if not residual else "verification_failed"
+    if args.json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    else:
+        print(green(f"完成: {report['applied']['fields']} 项设置"))
+        print(dim(f"回滚备份: {report['backup']}"))
+        if residual:
+            print(red(f"验证失败: 仍有 {len(residual)} 项不一致"))
+    if residual:
+        raise SystemExit(1)
 
 def _app_enabled(conf):
     mbp = ((conf.get("engine_policy") or {}).get("nodes") or {}).get("mbp") or {}
@@ -1646,7 +2025,7 @@ def main():
   看:   ls 全节点模型 · stats 用量/显存 · node ps 已加载 · cluster 健康大盘 · status 本地
   控:   app status|sync|load|unload · load/unload <模型> · serve/stop <key>(legacy 回滚) · warm <预设> · node 按节点
   网关: gw status|sync|start|stop|test
-  运维: up/down 整套 · autostart · dashboard · doctor · bench 内存护栏压测 · portcheck 端口冲突 · health · test · models 磁盘发现(标已接) · link 一键接入新模型 · ssot-sync 同步到 aetherforge SSOT""")
+  运维: up/down 整套 · autostart · dashboard · doctor · tune 安全调优/回滚 · bench 内存护栏压测 · portcheck 端口冲突 · health · test · models 磁盘发现(标已接) · link 一键接入新模型 · ssot-sync 同步到 aetherforge SSOT""")
     sub=ap.add_subparsers(dest="cmd")
     sub.add_parser("list")
     s=sub.add_parser("serve"); s.add_argument("key"); s.add_argument("-f","--foreground",action="store_true"); s.add_argument("--host", help="绑定地址覆盖, 如 tailnet IP 或 0.0.0.0")
@@ -1655,6 +2034,7 @@ def main():
     s=sub.add_parser("health"); s.add_argument("key",nargs="?")
     s=sub.add_parser("test"); s.add_argument("key"); s.add_argument("-m","--message")
     s=sub.add_parser("bench"); s.add_argument("model"); s.add_argument("--iterations",type=int,default=5); s.add_argument("--max-tokens",type=int,default=256); s.add_argument("--max-growth-mb",type=int,default=512); s.add_argument("--min-free-percent",type=float,default=20); s.add_argument("--prompt"); s.add_argument("--json",action="store_true")
+    s=sub.add_parser("tune"); g=s.add_mutually_exclusive_group(); g.add_argument("--apply",action="store_true"); g.add_argument("--rollback"); s.add_argument("--yes",action="store_true"); s.add_argument("--restart",action="store_true"); s.add_argument("--json",action="store_true")
     s=sub.add_parser("doctor"); s.add_argument("--fix",action="store_true")
     s=sub.add_parser("use"); s.add_argument("category"); s.add_argument("alias")
     sub.add_parser("models")
@@ -1677,7 +2057,7 @@ def main():
     s=sub.add_parser("unload"); s.add_argument("model")
     args=ap.parse_args()
     fn={"list":cmd_list,"serve":cmd_serve,"stop":cmd_stop,"status":cmd_status,
-        "health":cmd_health,"test":cmd_test,"bench":cmd_bench,"doctor":cmd_doctor,"use":cmd_use,"models":cmd_models,"resolve":cmd_resolve,
+        "health":cmd_health,"test":cmd_test,"bench":cmd_bench,"tune":cmd_tune,"doctor":cmd_doctor,"use":cmd_use,"models":cmd_models,"resolve":cmd_resolve,
         "cluster":cmd_cluster,"dashboard":cmd_dashboard,"autostart":cmd_autostart,
         "up":cmd_up,"down":cmd_down,"gw":cmd_gw,"app":cmd_app,"node":cmd_node,"ls":cmd_ls,"load":cmd_load,"unload":cmd_unload,"warm":cmd_warm,"stats":cmd_stats,"link":cmd_link,"portcheck":cmd_portcheck,"ssot-sync":cmd_ssot_sync}.get(args.cmd)
     if not fn: ap.print_help(); return
