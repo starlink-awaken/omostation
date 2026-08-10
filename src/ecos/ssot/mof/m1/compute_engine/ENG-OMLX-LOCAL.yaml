@@ -3,11 +3,11 @@ type: ComputeEngine
 node_ref: NODE-LOCAL-MAC
 engine_type: local_inference
 network_zone: local
-base_url: "http://100.96.126.35:4000/v1"
+base_url: "http://127.0.0.1:9290/v1"
 supported_protocols: ["openai"]
 cost_multiplier: 0.0001
 status: active
-description: "omlx 统一网关(LiteLLM) · 三机集群统一入口 · 27 别名(coder/reasoner/vision/mythos/embed/general 智能路由…)+ 通配透传(macmini/*, y7000p/*, lms/* LM Link 全池)· 仅 tailnet 可达 · 模型清单见 MODEL-BREW-OMLX-LOCAL(omlxc ssot-sync 生成)"
+description: "omlx 本机推理 · 经 aetherforge OpenAI 门面 (llm-gateway :9290) 统一暴露 · 别名见 llm_gateway/aliases.yaml · 模型清单见 MODEL-BREW-OMLX-LOCAL(omlxc ssot-sync 生成) · 仅 loopback 可达"
 
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m1/
@@ -22,3 +22,11 @@ state_history:
   - state: active
     timestamp: '2026-07-05T00:00:00Z'
     reason: converge_all_nodes_wildcard_passthrough_and_mythos_fast
+  - state: active
+    timestamp: '2026-08-10T00:00:00Z'
+    reason: >-
+      repoint_from_litellm_4000_to_aetherforge_facade_9290 —
+      LiteLLM 下线, 本机 omlx 模型的"单一 URL 多路复用"改由 aetherforge 的
+      OpenAI 兼容门面承接。注意 gateway 对本机模型优先直连各模型端口
+      (model_ports), 本 endpoint 是回退路径; gateway 侧已加自引用防护,
+      避免回退时打回自己造成递归。
