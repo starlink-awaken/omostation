@@ -188,12 +188,21 @@ adr-number-check:  ## 检查 ADR 编号冲突
 	@python3 bin/ssot/adr-number-check.py
 
 scene-card-check:  ## 验证所有 scene card readiness (双轨自动路由)
-	@for f in docs/scene-cards/*.yaml; do \
+	@failures=0; \
+	for f in docs/scene-cards/*.yaml; do \
 		echo "── $$(basename $$f) ──"; \
-		python3 bin/ssot/scene-card-lifecycle.py --scene-card $$f check 2>&1 \
-			| python3 -c "import json,sys; d=json.load(sys.stdin); print(f'  ready={d[\"ready\"]} type={d.get(\"scene_type\",\"?\")} blockers={len(d.get(\"activation_blockers\",[]))}')" 2>/dev/null \
-			|| echo "  (check failed)"; \
-	done
+		result=$$(python3 bin/ssot/scene-card-lifecycle.py check --scene-card "$$f" 2>&1); \
+		code=$$?; \
+		echo "$$result"; \
+		if [ $$code -ne 0 ]; then \
+			failures=$$((failures+1)); \
+		fi; \
+	done; \
+	if [ $$failures -gt 0 ]; then \
+		echo "FAIL: $$failures scene card(s) not ready"; \
+		exit 1; \
+	fi; \
+	echo "OK: all scene cards ready"
 
 scene-chain-check:  ## 验证场景链 downstream_refs (检测缺失目标 + 反馈环)
 	@python3 bin/ssot/scene-chain-validator.py
@@ -629,7 +638,7 @@ debt-predict:  ## Phase 5 动态代码债务蔓延预测引擎
 	$(PY) bin/gac/debt-predictor.py
 
 journey-validate:  ## Journey State Graph 状态图表达验证器
-	$(PY) bin/ssot/journey-runner.py --help
+	$(PY) bin/ssot/journey-validator.py
 
 
 gap-verify:  ## 能力缺口台账清零率验证 (Gap Registry)
