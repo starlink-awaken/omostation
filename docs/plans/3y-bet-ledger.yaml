@@ -1467,7 +1467,8 @@ bets:
   title: Blueprint W2-01 thin OMO sovereignty kernel
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-10
   goal: 落地瘦主权内核 — Principal/Role/Responsibility/RoleAssignment 版本化、查询与确定性重放，全部经 LedgerBroker 写、无新项目；一个 Principal 可有个人/家庭/职业多个 Role，家庭成员各自为独立 Principal
   non_goals:
   - Delegation Mandate（属 W2-02）
