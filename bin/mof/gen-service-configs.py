@@ -121,14 +121,28 @@ def gen_launchd_plist(svc: dict) -> str:
         env_xml = f"    <key>EnvironmentVariables</key>\n    <dict>\n{items}    </dict>\n"
     res = svc.get("resilience", {})
     keepalive_xml = ""
-    if res.get("keepalive") == "crashed":
+    # always = 无条件常驻(退出即拉起); crashed = 仅崩溃后拉起。
+    # 此前只认 crashed, 声明 always 的服务会静默失去常驻语义 ——
+    # plist 看着生成成功, 但服务退出后不会被拉起, 且当场看不出来。
+    if res.get("keepalive") == "always":
+        keepalive_xml = "    <key>KeepAlive</key>\n    <true/>\n"
+    elif res.get("keepalive") == "crashed":
         keepalive_xml = "    <key>KeepAlive</key>\n    <dict>\n        <key>Crashed</key>\n        <true/>\n    </dict>\n"
     throttle = res.get("throttle_interval")
     throttle_xml = f"    <key>ThrottleInterval</key>\n    <integer>{throttle}</integer>\n" if throttle else ""
     run_at_load_xml = "    <key>RunAtLoad</key>\n    <true/>\n" if svc.get("run_at_load") else ""
     out = svc.get("outputs", {})
-    stdout_xml = f"    <key>StandardOutPath</key>\n    <string>{WORKSPACE / out['stdout']}</string>\n" if out.get("stdout") else ""
-    stderr_xml = f"    <key>StandardErrorPath</key>\n    <string>{WORKSPACE / out['stderr']}</string>\n" if out.get("stderr") else ""
+    # 与 entrypoint 同样要过 _resolve_path —— 否则 "~/Library/Logs/x.log" 会被
+    # 拼成 "<workspace>/~/Library/Logs/x.log"(带字面量 ~ 的死路径)。
+    # 2026-08-08 修 entrypoint 时漏了这里, 同一个 bug 换了个字段。
+    stdout_xml = (
+        f"    <key>StandardOutPath</key>\n    <string>{_resolve_path(out['stdout'])}</string>\n"
+        if out.get("stdout") else ""
+    )
+    stderr_xml = (
+        f"    <key>StandardErrorPath</key>\n    <string>{_resolve_path(out['stderr'])}</string>\n"
+        if out.get("stderr") else ""
+    )
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
