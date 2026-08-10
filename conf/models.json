@@ -464,7 +464,7 @@
         "port": 1234,
         "model": "gemma-4-e4b-it-mlx",
         "ssh": true,
-        "lms_args": "-c 16384 --parallel 1 --ttl 86400"
+        "lms_args": "-c 16384 --parallel 1 --ttl 3600"
       },
       {
         "host": "100.64.43.36",
@@ -474,7 +474,7 @@
         "ssh": true,
         "windows": true,
         "ssh_alias": "y7000p",
-        "lms_args": "-c 16384 --ttl 86400"
+        "lms_args": "-c 8192 --parallel 1 --ttl 3600"
       }
     ],
     "mem_free_pct_floor": 15

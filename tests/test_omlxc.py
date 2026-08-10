@@ -36,6 +36,21 @@ def test_model_memory_admission_values_cover_measured_large_models():
     assert models["mistral-medium-128b"]["size_gb"] >= 74
 
 
+def test_remote_lmstudio_policy_avoids_day_long_residency_and_gpu_oom():
+    remotes = _load_models_config()["autopilot"]["remote_resident"]
+    by_host = {entry["host"]: entry for entry in remotes if entry["engine"] == "lmstudio"}
+
+    macmini = by_host["100.99.210.78"]["lms_args"]
+    assert "--ttl 3600" in macmini
+    assert "-c 16384" in macmini
+    assert "--parallel 1" in macmini
+
+    y7000p = by_host["100.64.43.36"]["lms_args"]
+    assert "--ttl 3600" in y7000p
+    assert "-c 8192" in y7000p
+    assert "--parallel 1" in y7000p
+
+
 def test_app_projection_is_flat_idempotent_and_only_cleans_managed_links(tmp_path, monkeypatch):
     cli = _load_cli()
     active = tmp_path / "active"
