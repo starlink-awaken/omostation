@@ -110,7 +110,9 @@ services:
       纳入注册表就是为了让这种"少了一台"能被看见。lms server start 幂等。
 
   - id: omlx.gateway
-    enabled: true
+    # 2026-08-10 已 bootout, 端口 4000 交给 aetherforge.gateway。
+    # 先关不删: 观察期内若门面出问题, bootstrap 回来即可回滚。
+    enabled: false
     # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
     generate: false
     config_source: ~/omlx-orchestration/launchd/com.omlx.gateway.plist
