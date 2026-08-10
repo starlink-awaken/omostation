@@ -77,6 +77,11 @@ omlxc tune --apply --yes --restart
 omlxc tune --rollback ~/omlx/backups/app-tune-YYYYMMDD-HHMMSS.json --yes
 ```
 
+When oMLX App 0.5.7 accepts the API restart but its menu-bar supervisor does not
+bring the server back, `--restart` waits for the normal recovery path and then
+performs one guarded fallback: it terminates only a single exact `oMLX` process
+and relaunches the application. Multiple or missing matches fail closed.
+
 Global fields whose current value is `null` are intentionally not managed because
 oMLX App 0.5.7 cannot reliably restore those values through its global settings
 endpoint. Per-model `null` overrides are reversible and are included in backups.

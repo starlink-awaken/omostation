@@ -4,6 +4,7 @@ run/
 logs/
 cache/
 app-models/
+backups/
 __pycache__/
 *.pyc
 

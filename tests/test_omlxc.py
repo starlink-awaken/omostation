@@ -467,6 +467,71 @@ def test_tune_apply_requires_explicit_yes_before_any_http(monkeypatch):
     assert calls == []
 
 
+def test_restart_falls_back_to_relaunch_when_menubar_supervisor_stalls(monkeypatch):
+    cli = _load_cli()
+    health_calls = []
+    relaunches = []
+    clock = iter(range(100))
+
+    def fake_http(url, payload=None, method=None, **_kwargs):
+        if url.endswith("/admin/api/server/restart"):
+            return {"status": "accepted"}
+        health_calls.append(url)
+        if len(health_calls) < 12:
+            raise ConnectionError("server is still down")
+        return {"status": "ok"}
+
+    monkeypatch.setattr(cli, "_http_json", fake_http)
+    monkeypatch.setattr(cli.time, "monotonic", lambda: next(clock))
+    monkeypatch.setattr(cli.time, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(
+        cli,
+        "_relaunch_omlx_menubar",
+        lambda: relaunches.append(True) or True,
+        raising=False,
+    )
+
+    cli._restart_app_and_wait(
+        {"omlx_app": {"base_url": "http://127.0.0.1:8000"}},
+        timeout=45,
+    )
+
+    assert relaunches == [True]
+
+
+def test_menubar_relaunch_only_terminates_one_exact_omlx_process(monkeypatch):
+    cli = _load_cli()
+    helper = getattr(cli, "_relaunch_omlx_menubar", None)
+    assert helper is not None
+
+    commands = []
+    signals = []
+
+    def fake_run(command):
+        commands.append(command)
+        if command == ["/usr/bin/pgrep", "-x", "oMLX"]:
+            return SimpleNamespace(returncode=0, stdout="12345\n", stderr="")
+        if command == ["/usr/bin/open", "-a", "oMLX"]:
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+        raise AssertionError(f"unexpected command: {command}")
+
+    def fake_kill(pid, sig):
+        signals.append((pid, sig))
+        if sig == 0:
+            raise ProcessLookupError
+
+    monkeypatch.setattr(cli, "_run", fake_run)
+    monkeypatch.setattr(cli.os, "kill", fake_kill)
+    monkeypatch.setattr(cli.time, "sleep", lambda _seconds: None)
+
+    assert helper()
+    assert signals == [(12345, cli.signal.SIGTERM), (12345, 0)]
+    assert commands == [
+        ["/usr/bin/pgrep", "-x", "oMLX"],
+        ["/usr/bin/open", "-a", "oMLX"],
+    ]
+
+
 def test_apply_app_tuning_writes_only_changed_fields(monkeypatch):
     cli = _load_cli()
     calls = []

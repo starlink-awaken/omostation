@@ -420,6 +420,40 @@ def _apply_app_tuning(conf, current, target):
     }
 
 
+def _relaunch_omlx_menubar():
+    """Relaunch the one exact oMLX menu-bar process after a stalled restart."""
+    probe = _run(["/usr/bin/pgrep", "-x", "oMLX"])
+    if not probe or probe.returncode != 0:
+        return False
+    try:
+        pids = [int(line) for line in probe.stdout.splitlines() if line.strip()]
+    except ValueError:
+        return False
+    if len(pids) != 1:
+        return False
+
+    pid = pids[0]
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except (ProcessLookupError, PermissionError):
+        return False
+
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            break
+        except PermissionError:
+            return False
+        time.sleep(0.25)
+    else:
+        return False
+
+    launched = _run(["/usr/bin/open", "-a", "oMLX"])
+    return bool(launched and launched.returncode == 0)
+
+
 def _restart_app_and_wait(conf, timeout=45):
     app = _app_conf(conf)
     started = time.monotonic()
@@ -431,6 +465,7 @@ def _restart_app_and_wait(conf, timeout=45):
     )
     deadline = started + timeout
     consecutive_ready = 0
+    relaunch_attempted = False
     while time.monotonic() < deadline:
         time.sleep(1)
         try:
@@ -442,6 +477,10 @@ def _restart_app_and_wait(conf, timeout=45):
                 return
         except Exception:
             consecutive_ready = 0
+            if not relaunch_attempted and time.monotonic() - started >= 10:
+                relaunch_attempted = True
+                if not _relaunch_omlx_menubar():
+                    die("oMLX App API 重启失效，且菜单栏进程安全重启失败")
     die(f"oMLX App 重启后 {timeout}s 内未恢复")
 
 
