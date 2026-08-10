@@ -1186,6 +1186,82 @@ services:
   status: active
   transport: mcp_stdio
   uri: bos://governance/omo/sync
+- action: ledger-append
+  command:
+  - uv
+  - run
+  - --frozen
+  - --directory
+  - projects/omo
+  - python
+  - -m
+  - omo.cli
+  - ledger
+  - append
+  - --agora
+  description: OMO 事件台账追加 (stdio one-shot)
+  domain: governance
+  package: omo
+  status: active
+  transport: stdio
+  uri: bos://governance/omo/ledger-append
+- action: ledger-read
+  command:
+  - uv
+  - run
+  - --frozen
+  - --directory
+  - projects/omo
+  - python
+  - -m
+  - omo.cli
+  - ledger
+  - read
+  - --agora
+  description: OMO 事件台账读取 (stdio one-shot)
+  domain: governance
+  package: omo
+  status: active
+  transport: stdio
+  uri: bos://governance/omo/ledger-read
+- action: ledger-verify
+  command:
+  - uv
+  - run
+  - --frozen
+  - --directory
+  - projects/omo
+  - python
+  - -m
+  - omo.cli
+  - ledger
+  - verify
+  - --agora
+  description: OMO 事件台账完整性校验 (stdio one-shot)
+  domain: governance
+  package: omo
+  status: active
+  transport: stdio
+  uri: bos://governance/omo/ledger-verify
+- action: ledger-status
+  command:
+  - uv
+  - run
+  - --frozen
+  - --directory
+  - projects/omo
+  - python
+  - -m
+  - omo.cli
+  - ledger
+  - status
+  - --agora
+  description: OMO 事件台账状态查询 (stdio one-shot)
+  domain: governance
+  package: omo
+  status: active
+  transport: stdio
+  uri: bos://governance/omo/ledger-status
 - action: mcp
   command:
   - uv
