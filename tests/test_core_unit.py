@@ -17,7 +17,7 @@ ECOS_HOME = Path(__file__).resolve().parent
 
 
 class TestSsbAuth:
-    def test_compute_signature_deterministic(self):
+    def test_compute_signature_deterministic(self, ssb_key):
         """相同输入产生相同签名"""
         from ecos.protocol.ssb.ssb_auth import compute_signature  # type: ignore[reportAttributeAccessIssue]
 
@@ -26,7 +26,7 @@ class TestSsbAuth:
         assert s1 == s2
         assert s1 is not None
 
-    def test_compute_signature_different_seq(self):
+    def test_compute_signature_different_seq(self, ssb_key):
         """不同 seq 产生不同签名"""
         from ecos.protocol.ssb.ssb_auth import compute_signature  # type: ignore[reportAttributeAccessIssue]
 

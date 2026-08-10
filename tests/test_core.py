@@ -59,26 +59,38 @@ class TestSSBAuth:
         db.close()
 
         # Monkeypatch 路径
-        from ecos import ssb_auth as auth
+        from ecos.l0.ssb import ssb_auth as auth
 
         monkeypatch.setattr(auth, "KEY_FILE", key_file)
         monkeypatch.setattr(auth, "DB_PATH", db_file)
 
         return {"key": key, "db": db_file}
 
-    def test_keygen(self, tmp_path):
-        """测试密钥生成"""
-        from ecos import ssb_auth as auth
+    def test_keygen(self, tmp_path, monkeypatch):
+        """测试密钥生成: keygen() 写出 32 字节密钥且 _load_key() 可读回"""
+        from ecos.l0.ssb import ssb_auth as auth
 
-        tmp_path / "test_key"
-        # 直接测试 _load_key 返回 None 当文件不存在
-        assert (
-            auth._load_key() is not None  # type: ignore[reportAttributeAccessIssue]
-        )  # 真实密钥存在  # type: ignore[reportAttributeAccessIssue]
+        monkeypatch.delenv("SSB_KEY", raising=False)
+        monkeypatch.setattr(auth, "KEY_FILE", tmp_path / ".ssb_key")
+
+        auth.keygen()  # type: ignore[reportAttributeAccessIssue]
+        key = auth._load_key()  # type: ignore[reportAttributeAccessIssue]
+        assert key is not None, "keygen 后 _load_key 应返回密钥"
+        assert len(key) == 32, "SSB 密钥应为 32 字节"
+
+    def test_no_key_fail_closed(self, tmp_path, monkeypatch):
+        """无密钥时保持 fail-closed: _load_key/compute_signature 返回 None"""
+        from ecos.l0.ssb import ssb_auth as auth
+
+        monkeypatch.delenv("SSB_KEY", raising=False)
+        monkeypatch.setattr(auth, "KEY_FILE", tmp_path / "absent.ssb_key")
+
+        assert auth._load_key() is None  # type: ignore[reportAttributeAccessIssue]
+        assert auth.compute_signature(1, "e1", "AGENT", "{}") is None  # type: ignore[reportAttributeAccessIssue]
 
     def test_compute_signature(self, temp_env):
         """测试签名计算"""
-        from ecos import ssb_auth as auth
+        from ecos.l0.ssb import ssb_auth as auth
 
         sig1 = auth.compute_signature(1000, "e1", "SSB_CLIENT", '{"test":"event_0"}')  # type: ignore[reportAttributeAccessIssue]
         sig2 = auth.compute_signature(1000, "e1", "SSB_CLIENT", '{"test":"event_0"}')  # type: ignore[reportAttributeAccessIssue]
@@ -91,7 +103,7 @@ class TestSSBAuth:
 
     def test_verify_all_unsigned(self, temp_env):
         """测试verify: 所有事件无签名"""
-        from ecos import ssb_auth as auth
+        from ecos.l0.ssb import ssb_auth as auth
 
         stats = auth.verify(limit=10)  # type: ignore[reportAttributeAccessIssue]
         assert stats["total"] > 0
@@ -101,7 +113,7 @@ class TestSSBAuth:
 
     def test_sign_new_events(self, temp_env):
         """测试sign-new: 补充签名"""
-        from ecos import ssb_auth as auth
+        from ecos.l0.ssb import ssb_auth as auth
 
         signed = auth.sign_new_events(limit=10)  # type: ignore[reportAttributeAccessIssue]
         assert signed == 5, "应为5个事件签名"
@@ -113,7 +125,7 @@ class TestSSBAuth:
 
     def test_tampered_event_detected(self, temp_env, monkeypatch):
         """测试篡改检测"""
-        from ecos import ssb_auth as auth
+        from ecos.l0.ssb import ssb_auth as auth
 
         # 先签名
         auth.sign_new_events(limit=10)  # type: ignore[reportAttributeAccessIssue]

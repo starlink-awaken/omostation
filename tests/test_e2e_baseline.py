@@ -118,7 +118,7 @@ class TestE2E_SSB_Lifecycle:  # noqa: N801
 class TestE2E_Auth:  # noqa: N801
     """端到端: 密钥生成→签名→验证→篡改检测"""
 
-    def test_sign_verify_roundtrip(self):
+    def test_sign_verify_roundtrip(self, ssb_key):
         """签名-验证往返"""
         from ecos import ssb_auth as auth
 
@@ -141,7 +141,7 @@ class TestE2E_Auth:  # noqa: N801
         stats = auth.verify(limit=20)  # type: ignore[reportAttributeAccessIssue]
         assert stats["mismatch"] == 0, f"Found {stats['mismatch']} tampered events"
 
-    def test_key_exists(self):
+    def test_key_exists(self, ssb_key):
         from ecos import ssb_auth as auth
 
         key = auth._load_key()  # type: ignore[reportAttributeAccessIssue]
