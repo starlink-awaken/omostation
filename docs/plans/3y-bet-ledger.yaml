@@ -1407,7 +1407,8 @@ bets:
   title: Blueprint W1-05 JSONL shadow migration adapter
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-10
   goal: 基于已合并 W1-03/W1-04 LedgerBroker，为旧 JSONL 治理历史（如 .omo/_knowledge/governance-history.jsonl）建立 shadow 迁移适配器，提供 import-jsonl / export-jsonl / compare-jsonl，不触碰旧 JSONL 权威
   non_goals:
   - 新建顶级项目
@@ -1428,16 +1429,25 @@ bets:
     expect: exit 0
   - cmd: >-
       cd projects/omo && tmp="$(mktemp -d)" && trap 'rm -rf "$tmp"' EXIT &&
-      python -m omo.omo_ledger import-jsonl --db "$tmp/ledger.db" --file
+      uv run --frozen omo ledger import-jsonl --db "$tmp/ledger.db" --file
       ../../.omo/_knowledge/governance-history.jsonl --quarantine
-      "$tmp/quarantine.jsonl" --json && python -m omo.omo_ledger import-jsonl
+      "$tmp/quarantine.jsonl" --json > "$tmp/import-1.json" && jq -e '.ok == true and
+      .imported > 0 and (.imported + .duplicates == .healthy)' "$tmp/import-1.json" &&
+      uv run --frozen omo ledger import-jsonl
       --db "$tmp/ledger.db" --file ../../.omo/_knowledge/governance-history.jsonl
-      --quarantine "$tmp/quarantine.jsonl" --json && python -m
-      omo.omo_ledger export-jsonl --db "$tmp/ledger.db" --output
-      "$tmp/export.jsonl" --json && python -m omo.omo_ledger compare-jsonl --db
+      --quarantine "$tmp/quarantine.jsonl" --json > "$tmp/import-2.json" && jq -e
+      '.ok == true and .imported == 0 and .duplicates == .healthy'
+      "$tmp/import-2.json" && uv run --frozen omo ledger export-jsonl --db
+      "$tmp/ledger.db" --output "$tmp/export.jsonl" --json > "$tmp/export.json" &&
+      jq -e '.ok == true and .exported > 0' "$tmp/export.json" && jq -sc 'length > 0
+      and all(.[]; .authority == "ledger" and .read_only == true and .projection ==
+      "jsonl-shadow/v1")' "$tmp/export.jsonl" && uv run --frozen omo ledger
+      compare-jsonl --db
       "$tmp/ledger.db" --file ../../.omo/_knowledge/governance-history.jsonl
-      --json && python -m omo.omo_ledger verify --db "$tmp/ledger.db" --from 1
-      --json
+      --json > "$tmp/compare.json" && jq -e '.ok == true and .missing == 0 and
+      .extra == 0 and .source_digest == .ledger_digest' "$tmp/compare.json" && uv run
+      --frozen omo ledger verify --db "$tmp/ledger.db" --from 1 --json >
+      "$tmp/verify.json" && jq -e '.ok == true and .total > 0' "$tmp/verify.json"
     expect: 二次导入新增为 0；导出逐行只读且合法；compare 无不可解释差异；hash chain ok
   workflow: bet-execution
   underlying_workflow: project-code-change
