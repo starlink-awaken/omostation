@@ -1,5 +1,6 @@
 """Tests for check-submodule-pointer-drift.py (BET-Y1Q2-T1-05)."""
 
+import importlib.util
 import json
 import subprocess
 import sys
@@ -10,6 +11,14 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = REPO_ROOT / "bin" / "gac" / "check-submodule-pointer-drift.py"
+
+
+def _load_module():
+    spec = importlib.util.spec_from_file_location("check_submodule_pointer_drift", SCRIPT)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def _run(*extra_args: str) -> subprocess.CompletedProcess:
@@ -63,3 +72,35 @@ def test_detects_omo_divergence():
     if omo_results:
         r = omo_results[0]
         assert r["status"] in ("DIVERGED", "aligned", "behind")
+
+
+def test_submodule_git_clears_superproject_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pre-push Git state must not force submodule commands into the root repo."""
+    module = _load_module()
+    monkeypatch.setenv("GIT_DIR", "/tmp/root.git")
+    monkeypatch.setenv("GIT_WORK_TREE", "/tmp/root-worktree")
+
+    completed = subprocess.CompletedProcess(
+        args=["git", "rev-parse", "origin/main"],
+        returncode=0,
+        stdout="abc123\n",
+        stderr="",
+    )
+    with (
+        patch.object(
+            module,
+            "_git_local_env_vars",
+            return_value=frozenset({"GIT_DIR", "GIT_WORK_TREE"}),
+        ),
+        patch.object(module.subprocess, "run", return_value=completed) as run,
+    ):
+        result = module._git(
+            "rev-parse",
+            "origin/main",
+            cwd=REPO_ROOT / "projects" / "aetherforge",
+        )
+
+    assert result == "abc123"
+    child_env = run.call_args.kwargs["env"]
+    assert "GIT_DIR" not in child_env
+    assert "GIT_WORK_TREE" not in child_env
