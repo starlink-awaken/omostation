@@ -84,6 +84,31 @@ services:
   # ── 计算面 (omlx) ──────────────────────────────────────────
   # 2026-08-08: 这些一直在跑但没有生命周期声明, wsvc 的 S1 检查会持续告警。
   # 字段照 ~/Library/LaunchAgents/*.plist 的真实配置登记, 未臆造。
+  # ── 本地算力中枢 ────────────────────────────────────────────────────────
+  # 分工(SSOT: ~/omlx/conf/models.json 的 engine_policy):
+  #   MBP      omlx(mlx_lm.server 等) 主引擎 + 加载器, LM Studio 兜底
+  #   mac-mini / Y7000P   只跑 LM Studio, 三机经 LM Link 合成同一模型池
+  - id: lmstudio.server
+    enabled: true
+    generate: false
+    config_source: ~/Library/LaunchAgents/com.lmstudio.server.plist
+    scheduler: launchd
+    trigger: run_at_load
+    label: com.lmstudio.server
+    program:
+      interpreter: /bin/bash
+      entrypoint: ~/.lmstudio/bin/lms
+      args: ["server", "start", "--port", "1234"]
+    run_at_load: true
+    outputs:
+      stdout: /tmp/lmstudio-server.out.log
+      stderr: /tmp/lmstudio-server.err.log
+    notes: >-
+      MBP 的 LM Studio server :1234(只绑 loopback; 跨机走 LM Link 自己的通道)。
+      是 omlx 后端起不来时的兜底引擎, 也是 MBP 向 LM Link 池供模型的入口。
+      2026-08-10 实测它当时并未运行, 池子从 43 个模型缩到 17 个而无人察觉 ——
+      纳入注册表就是为了让这种"少了一台"能被看见。lms server start 幂等。
+
   - id: omlx.gateway
     enabled: true
     # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
@@ -102,7 +127,11 @@ services:
     outputs:
       stdout: ~/Library/Logs/omlx-gateway.log
       stderr: ~/Library/Logs/omlx-gateway.log
-    notes: LiteLLM 网关 :4000 (tailnet + localhost), 常驻集成员
+    notes: >-
+      LiteLLM 网关 :4000 —— **待退役**。职责已由 aetherforge.gateway 接管
+      (门面过渡期同时监听 4000)。两者不能同时绑 4000, 切换时先停这条。
+      另: 它实际下发的是 --host 0.0.0.0, 对同网段任意机器开放, 与
+      "tailnet + localhost" 的说法不符; 门面只绑 loopback + tailnet。
 
   - id: omlx.gateway-ui
     enabled: true
@@ -241,6 +270,8 @@ services:
   # ── LLM 入口 ───────────────────────────────────────────────
   - id: aetherforge.gateway
     enabled: true
+    generate: false
+    config_source: ~/Library/LaunchAgents/com.aetherforge.gateway.plist
     scheduler: launchd
     trigger: keepalive
     label: com.aetherforge.gateway
@@ -251,7 +282,10 @@ services:
     resilience:
       keepalive: always
     run_at_load: true
-    ports: [9290]
+    # 过渡期同时监听 4000: 调用方(kairon 10 处 / cockpit 2 处 / bin/gac 1 处)
+    # 全写着 :4000, 门面就地接管这个位置, 停 LiteLLM 就是零改动的事。
+    # 调用方迁到 9290 之后再把 4000 摘掉。两者不能同时绑 4000。
+    ports: [9290, 4000]
     outputs:
       stdout: ~/Library/Logs/aetherforge-gateway.log
       stderr: ~/Library/Logs/aetherforge-gateway.log
@@ -260,3 +294,5 @@ services:
       别名见 llm_gateway/aliases.yaml; SSOT 的 ENG-OMLX-LOCAL 已改指本端点。
       硬约束: 启动路径不得有外部网络依赖(guard 直接用项目 venv 解释器,
       不走 uv run), 且显式隔离系统代理 —— LiteLLM 曾栽在这两条上。
+      绑到 loopback 之外(--bind tailnet)必须配 AETHERFORGE_API_KEY,
+      否则拒绝启动 —— 绑定范围变大和鉴权消失不允许同时发生。
