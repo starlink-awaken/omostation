@@ -258,7 +258,26 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if all_valid else 1
 
     if command == "check":
-        result = check_readiness(args.root, args.scene_card)
+        try:
+            result = check_readiness(args.root, args.scene_card)
+        except Exception as exc:
+            # Keep the honest gate machine-readable even when a card is
+            # malformed or violates a preflight contract.  A traceback is
+            # useful for debugging but is not stable evidence for a gate.
+            print(
+                json.dumps(
+                    {
+                        "error": str(exc),
+                        "error_type": type(exc).__name__,
+                        "ready": False,
+                        "scene_card": str(args.scene_card),
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            return 2
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0 if result["ready"] else 1
 
