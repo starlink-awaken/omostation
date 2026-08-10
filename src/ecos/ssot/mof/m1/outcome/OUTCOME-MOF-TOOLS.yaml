@@ -9,6 +9,7 @@ version: 1.0.0
 layer: multi
 properties:
   outcome: 13 个 L0 工具就绪
+  schema_version: outcome/v1
   from_action: ACTION-L0-REFACTOR
 
 model_driven_refs:

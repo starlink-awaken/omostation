@@ -1,0 +1,94 @@
+# M2: Signal
+# W1-01 strict contract — derived trigger from events with explicit provenance.
+# Anchored to BehavioralElement — a signal is a behavioral trigger derived from events.
+
+m2_type: Signal
+version: 1.0.0
+created: '2026-08-10T10:00:00+08:00'
+Signal:
+  m3_parent: BehavioralElement
+  description: |
+    信号——从 EventEnvelope 衍生的触发器，携带显式来源关系字段。
+    定义"从事件中检测到了什么值得行动的东西"。
+    每个 Signal 必须声明 source_event_ref（来源事件引用），
+    确保信号的可溯源性不可缺失、不可歧义。
+
+  icon: 📡
+
+  stateMachine:
+    detected:
+      description: 已检测
+      transitions: [escalated, dismissed]
+    escalated:
+      description: 已升级为 Commitment
+      transitions: [archived]
+    dismissed:
+      description: 已驳回
+      transitions: [archived]
+    archived:
+      description: 归档
+      transitions: []
+
+  requiredProperties:
+    signal_id:
+      type: string
+      description: 信号全局唯一标识
+      pattern: '^[A-Za-z0-9_-]{8,}$'
+    schema_version:
+      type: string
+      description: 契约版本号
+      pattern: '^signal/v[0-9]+$'
+    source_event_ref:
+      type: ref
+      description: |
+        显式来源事件引用 (→EventEnvelope)。
+        这是 Signal 的核心关系字段 — 信号必须有明确的来源事件，
+        不可缺失、不可为空字符串。
+    detected_at:
+      type: string
+      description: 检测时间 (ISO-8601)
+      format: date-time
+    pattern:
+      type: string
+      description: 检测到的模式/规则名称
+
+  optionalProperties:
+    triggers_commitment_ref:
+      type: ref
+      description: 此信号触发的 Commitment 引用 (→Commitment)
+    episode_ref:
+      type: ref
+      description: 所属 Episode 引用 (→Episode)
+    confidence:
+      type: number
+      description: 置信度 (0.0-1.0)
+
+  validationRules:
+    - rule: signal_id is not None and signal_id != ''
+      level: error
+      message: signal_id 必须非空
+    - rule: schema_version is not None and schema_version.startswith('signal/v')
+      level: error
+      message: schema_version 必须匹配 signal/vN 格式
+    - rule: source_event_ref is not None and source_event_ref != ''
+      level: error
+      message: source_event_ref 必须非空 — 信号的来源事件不可缺失或空 (歧义 provenance)
+    - rule: detected_at is not None and detected_at != ''
+      level: error
+      message: detected_at 必须非空
+    - rule: not (confidence is not None and (confidence < 0 or confidence > 1))
+      level: error
+      message: confidence 必须在 0.0-1.0 范围内
+
+  relationConstraints:
+    can_be_source_of:
+      - TriggersCommitment  # →Commitment
+    can_be_target_of:
+      - DerivesSignal  # ←EventEnvelope
+
+  examples:
+    - id: SIGNAL-EXAMPLE-001
+      name: 最小信号实例
+      description: |
+        一个从 EventEnvelope 衍生的最小 Signal 实例，
+        携带显式 source_event_ref。

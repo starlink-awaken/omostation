@@ -9,6 +9,7 @@ version: 1.0.0
 layer: multi
 properties:
   outcome: 565 M1 节点·17 M2 类型·自举健康
+  schema_version: outcome/v1
   from_action: ACTION-L0-REFACTOR
 
 model_driven_refs:

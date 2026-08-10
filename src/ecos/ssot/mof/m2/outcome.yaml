@@ -1,11 +1,17 @@
 # M2: Outcome
+# W1-01 enhanced (v1.1.0) — adds schema_version + from_commitment_ref explicit relationship.
+# Backward compatible: from_action remains; from_commitment_ref is the explicit W1-01 linkage.
 
 m2_type: Outcome
-version: 1.0.0
+version: 1.1.0
 created: '2026-06-06T08:00:00'
+updated: '2026-08-10'
 Outcome:
   m3_parent: StructuralElement.Artifact
-  description: 成果——产出了什么。交付物·变更·产出。回答"产出了什么"。
+  description: |
+    成果——产出了什么。交付物·变更·产出。回答"产出了什么"。
+    v1.1.0 增强: 新增 schema_version (契约版本) + from_commitment_ref (显式来源承诺引用)。
+    from_action (历史来源行动) 仍保留，但 from_commitment_ref 是 W1-01 契约链的首选来源字段。
   icon: 📦
   stateMachine:
     draft:
@@ -38,10 +44,19 @@ Outcome:
     outcome:
       type: string
       description: 成果描述
+    schema_version:
+      type: string
+      description: 契约版本号 (必须匹配 outcome/vN)
+      pattern: '^outcome/v[0-9]+$'
     from_action:
       type: ref
-      description: 来源行动 (→Action)
+      description: 来源行动 (→Action) — 历史来源字段，仍保留
   optionalProperties:
+    from_commitment_ref:
+      type: ref
+      description: |
+        显式来源承诺引用 (→Commitment)。
+        W1-01 契约链的首选来源字段。如果提供，必须非空。
     artifact:
       type: ref
       description: 关联产物 (→Artifact)
@@ -49,9 +64,22 @@ Outcome:
       type: string
       description: 可访问地址
   validationRules:
-  - rule: outcome != null
+  - rule: outcome is not None and outcome != ''
     level: error
     message: 成果必须有描述
+  - rule: schema_version is not None and schema_version.startswith('outcome/v')
+    level: error
+    message: schema_version 必须匹配 outcome/vN 格式
+  - rule: not (from_commitment_ref is not None and from_commitment_ref == '')
+    level: error
+    message: from_commitment_ref 如果提供则不能为空字符串 — 歧义来源被拒绝
+  relationConstraints:
+    can_be_source_of:
+      - Realizes
+      - EvidenceFor
+    can_be_target_of:
+      - ProducesOutcome  # ←Commitment
+      - References
   examples:
   - id: OUTCOME-2026-06-06-001
     name: mof-audit.py v1.0

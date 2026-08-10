@@ -1,0 +1,104 @@
+# M2: Commitment
+# W1-01 strict contract — binding obligation from a signal with explicit provenance.
+# Anchored to GovernanceElement.Policy — a commitment is a governance obligation.
+
+m2_type: Commitment
+version: 1.0.0
+created: '2026-08-10T10:00:00+08:00'
+Commitment:
+  m3_parent: GovernanceElement.Policy
+  description: |
+    承诺——从 Signal 衍生的约束性义务，携带显式来源关系字段。
+    定义"答应了什么"——一个可追踪、可验收的承诺。
+    每个 Commitment 必须声明 from_signal_ref（来源信号引用），
+    确保承诺的触发源不可缺失、不可歧义。
+
+  icon: 🔗
+
+  stateMachine:
+    proposed:
+      description: 已提议
+      transitions: [active, rejected]
+    active:
+      description: 活跃·执行中
+      transitions: [fulfilled, breached]
+    fulfilled:
+      description: 已兑现
+      transitions: [archived]
+    breached:
+      description: 已违约
+      transitions: [archived]
+    rejected:
+      description: 已拒绝
+      transitions: [archived]
+    archived:
+      description: 归档
+      transitions: []
+
+  requiredProperties:
+    commitment_id:
+      type: string
+      description: 承诺全局唯一标识
+      pattern: '^[A-Za-z0-9_-]{8,}$'
+    schema_version:
+      type: string
+      description: 契约版本号
+      pattern: '^commitment/v[0-9]+$'
+    from_signal_ref:
+      type: ref
+      description: |
+        显式来源信号引用 (→Signal)。
+        这是 Commitment 的核心关系字段 — 承诺必须有明确的触发信号，
+        不可缺失、不可为空字符串。
+    promise:
+      type: string
+      description: 承诺内容 (一句话描述将做什么)
+    created_at:
+      type: string
+      description: 创建时间 (ISO-8601)
+      format: date-time
+
+  optionalProperties:
+    produces_outcome_ref:
+      type: ref
+      description: 此承诺产出的 Outcome 引用 (→Outcome)
+    episode_ref:
+      type: ref
+      description: 所属 Episode 引用 (→Episode)
+    deadline:
+      type: string
+      description: 承诺截止时间 (ISO-8601)
+      format: date-time
+    owner:
+      type: string
+      description: 承诺所有者 (agent/entity ID)
+
+  validationRules:
+    - rule: commitment_id is not None and commitment_id != ''
+      level: error
+      message: commitment_id 必须非空
+    - rule: schema_version is not None and schema_version.startswith('commitment/v')
+      level: error
+      message: schema_version 必须匹配 commitment/vN 格式
+    - rule: from_signal_ref is not None and from_signal_ref != ''
+      level: error
+      message: from_signal_ref 必须非空 — 承诺的来源信号不可缺失或空 (歧义 provenance)
+    - rule: promise is not None and promise != ''
+      level: error
+      message: promise 必须非空
+    - rule: created_at is not None and created_at != ''
+      level: error
+      message: created_at 必须非空
+
+  relationConstraints:
+    can_be_source_of:
+      - ProducesOutcome  # →Outcome
+    can_be_target_of:
+      - TriggersCommitment  # ←Signal
+
+  examples:
+    - id: COMMITMENT-EXAMPLE-001
+      name: 最小承诺实例
+      description: |
+        一个从 Signal 衍生的最小 Commitment 实例，
+        携带显式 from_signal_ref。

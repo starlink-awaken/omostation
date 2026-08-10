@@ -1,0 +1,88 @@
+# M2: Episode
+# W1-01 strict contract — narrative grouping of events with explicit membership.
+# Anchored to StructuralElement — an episode is a structural container for events.
+
+m2_type: Episode
+version: 1.0.0
+created: '2026-08-10T10:00:00+08:00'
+Episode:
+  m3_parent: StructuralElement
+  description: |
+    剧集——一组相关 EventEnvelope 的叙事性容器，携带显式成员关系字段。
+    定义"这些事件属于同一个故事"。
+    每个 Episode 必须声明 contains_event_refs（成员事件列表），
+    确保成员关系不可缺失、不可为空列表 (无成员的剧集是歧义的)。
+
+  icon: 📖
+
+  stateMachine:
+    open:
+      description: 开放·可追加事件
+      transitions: [closed]
+    closed:
+      description: 已关闭·不再追加
+      transitions: [archived]
+    archived:
+      description: 归档
+      transitions: []
+
+  requiredProperties:
+    episode_id:
+      type: string
+      description: 剧集全局唯一标识
+      pattern: '^[A-Za-z0-9_-]{8,}$'
+    schema_version:
+      type: string
+      description: 契约版本号
+      pattern: '^episode/v[0-9]+$'
+    contains_event_refs:
+      type: list
+      description: |
+        显式成员事件引用列表 (→EventEnvelope)。
+        这是 Episode 的核心关系字段 — 剧集必须有至少 1 个成员事件，
+        空列表被拒绝 (空剧集是歧义的)。
+      items:
+        type: ref
+    opened_at:
+      type: string
+      description: 开放时间 (ISO-8601)
+      format: date-time
+
+  optionalProperties:
+    outcome_ref:
+      type: ref
+      description: 此剧集关联的 Outcome 引用 (→Outcome)
+    summary:
+      type: string
+      description: 剧集摘要 (自然语言)
+    signal_refs:
+      type: list
+      description: 剧集中衍生的 Signal 引用列表 (→Signal)
+      items:
+        type: ref
+
+  validationRules:
+    - rule: episode_id is not None and episode_id != ''
+      level: error
+      message: episode_id 必须非空
+    - rule: schema_version is not None and schema_version.startswith('episode/v')
+      level: error
+      message: schema_version 必须匹配 episode/vN 格式
+    - rule: contains_event_refs is not None and len(contains_event_refs) >= 1
+      level: error
+      message: contains_event_refs 必须包含至少 1 个事件引用 — 空剧集被拒绝 (歧义成员关系)
+    - rule: opened_at is not None and opened_at != ''
+      level: error
+      message: opened_at 必须非空
+
+  relationConstraints:
+    can_be_source_of:
+      - ContainsEvents  # →EventEnvelope[]
+    can_be_target_of:
+      - ContainedBy  # ←EventEnvelope
+
+  examples:
+    - id: EPISODE-EXAMPLE-001
+      name: 最小剧集实例
+      description: |
+        一个包含 2 个 EventEnvelope 的最小 Episode 实例。
