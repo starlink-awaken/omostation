@@ -1461,6 +1461,70 @@ bets:
   human_gate: false
   circuit_breaker: 超 2 天 → 只交付 import-jsonl 幂等导入 + 坏行隔离，export/compare 留下一 bet
   retro: required
+- id: BET-Y1Q2-T1-04
+  track: T1-TRUTH
+  window: Y1Q2
+  title: Blueprint W2-01 thin OMO sovereignty kernel
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 落地瘦主权内核 — Principal/Role/Responsibility/RoleAssignment 版本化、查询与确定性重放，全部经 LedgerBroker 写、无新项目；一个 Principal 可有个人/家庭/职业多个 Role，家庭成员各自为独立 Principal
+  non_goals:
+  - Delegation Mandate（属 W2-02）
+  - PDP/PEP 与 Capability Gateway（属 W2-03）
+  - Episode / Role Portfolio / Inbox 投影（属 W2-04）
+  - DDL/MOF 或额外 schema 迁移机制
+  - Personal Constitution
+  - 新建顶级项目
+  - Agora/BOS/MCP/Cockpit 远程写面或新入口
+  - 任何外部副作用（邮件/日历/任务等）
+  done_when:
+  - Principal/Role/Responsibility/RoleAssignment 有严格 ID 前缀（principal:/role:/responsibility:/assignment:）与单调递增版本，同一 ID 每次变更版本 +1
+  - assign / revoke / replace 是 RoleAssignment 的合法状态转换；对已失效或旧版本号的写入被拒绝，版本号禁止倒退
+  - 所有写只经 LedgerBroker.append，无绕过 broker 的直接 SQL 或文件写
+  - 每个 Principal 数据互相隔离：查询与重放按 principal_id 过滤，跨 Principal 不泄漏
+  - 删除本模块派生查询状态后可由事件日志重建，不涉及 W2-04 投影
+  - 目标 pytest 通过；真实 CLI smoke（sovereignty-assign / sovereignty-query / ledger verify）exit 0
+  verify:
+  - cmd: cd projects/omo && uv run --with pytest python -m pytest tests/test_sovereignty_roles.py
+      tests/test_sovereignty_replay.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/omo && tmp="$(mktemp -d)" && trap 'rm -rf "$tmp"' EXIT &&
+      uv run --frozen omo ledger sovereignty-assign --db "$tmp/ledger.db"
+      --principal-id principal:alice --role-id role:family-steward --json > "$tmp/assign1.json" &&
+      jq -e '.ok == true' "$tmp/assign1.json" &&
+      uv run --frozen omo ledger sovereignty-assign --db "$tmp/ledger.db"
+      --principal-id principal:alice --role-id role:professional --json > "$tmp/assign2.json" &&
+      jq -e '.ok == true' "$tmp/assign2.json" &&
+      uv run --frozen omo ledger sovereignty-assign --db "$tmp/ledger.db"
+      --principal-id principal:bob --role-id role:learner --json > "$tmp/assign3.json" &&
+      jq -e '.ok == true' "$tmp/assign3.json" &&
+      uv run --frozen omo ledger sovereignty-query --db "$tmp/ledger.db"
+      --principal-id principal:alice --json > "$tmp/query.json" &&
+      jq -e '.ok == true and .count == 2 and
+      (all(.assignments[]; .principal_id == "principal:alice")) and
+      (.role_ids | index("role:family-steward") != null) and
+      (.role_ids | index("role:professional") != null) and
+      (.role_ids | index("role:learner") == null)' "$tmp/query.json" &&
+      uv run --frozen omo ledger verify --db "$tmp/ledger.db" --from 1 --json > "$tmp/v.json" &&
+      jq -e '.ok == true and .total == 3' "$tmp/v.json"
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/sovereignty/__init__.py
+  - projects/omo/src/omo/sovereignty/roles.py
+  - projects/omo/src/omo/omo_ledger.py
+  - projects/omo/tests/test_sovereignty_roles.py
+  - projects/omo/tests/test_sovereignty_replay.py
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q2-T1-03
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 超 3 天或需 DDL/MOF/远程写 → 缩到 Python API + replay tests，CLI 延后
+  retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
   window: Y1Q2
