@@ -775,8 +775,45 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("templates", help="show journey template usage / blast radius")
 
+    validate_parser = sub.add_parser("validate", help="validate journey spec(s)")
+    validate_parser.add_argument("spec_path", type=Path, nargs="?", help="single spec file (omit for all)")
+    validate_parser.add_argument("--json", action="store_true", help="emit JSON output")
+
     args = parser.parse_args(argv)
     command = args.command
+
+    if command == "validate":
+        import importlib.util as _ilu
+
+        _spec = _ilu.spec_from_file_location("journey_validator", ROOT / "bin/ssot/journey-validator.py")
+        _mod = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)
+        files = [args.spec_path] if args.spec_path else sorted((ROOT / "docs" / "journey-specs").glob("*.yaml"))
+        if not files:
+            print("No journey specs found.")
+            return 1
+        all_valid = True
+        results = []
+        for path in files:
+            try:
+                spec = _mod._load_yaml(path)
+                result = _mod.validate_journey(spec, _mod._load_scene_ids(ROOT))
+                results.append(result)
+                if not result["valid"]:
+                    all_valid = False
+                if not args.json:
+                    status = "PASS" if result["valid"] else "FAIL"
+                    print(f"[{status}] {path.name}: {result['states']} states, {result['transitions']} transitions")
+                    for e in result["errors"]:
+                        print(f"    ERROR: {e}")
+                    for w in result["warnings"]:
+                        print(f"    WARN: {w}")
+            except Exception as exc:
+                print(f"[FAIL] {path.name}: {exc}")
+                all_valid = False
+        if args.json:
+            print(json.dumps(results, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if all_valid else 1
 
     if command == "run":
         dry_run = not args.live
@@ -786,11 +823,15 @@ def main(argv: list[str] | None = None) -> int:
             backedge_limit=args.backedge_limit,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+        if result.get("status") == "human_hold" or "error" in result:
+            return 1
         return 0
 
     if command == "resume":
         result = run_journey(args.journey_id, resume=True, run_id=args.run_id)
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+        if result.get("status") == "human_hold" or "error" in result:
+            return 1
         return 0
 
     if command == "templates":
