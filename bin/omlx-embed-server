@@ -1,0 +1,55 @@
+#!/opt/homebrew/bin/python3
+"""omlx-embed-server — 用 mlx_embeddings 暴露 OpenAI 兼容 /v1/embeddings 接口。
+   由 `omlx serve embedding` 调起，也可单独运行:
+   omlx-embed-server --model <path> --host 127.0.0.1 --port 8090
+"""
+import argparse, json, sys
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--model", required=True)
+ap.add_argument("--host", default="127.0.0.1")
+ap.add_argument("--port", type=int, default=8090)
+ap.add_argument("--max-length", type=int, default=512)
+args = ap.parse_args()
+
+print(f"[omlx-embed] loading {args.model} ...", flush=True)
+import mlx_embeddings.utils as u
+import mlx.core as mx
+MODEL, TOK = u.load(args.model)
+print("[omlx-embed] model ready", flush=True)
+
+def embed(texts):
+    out = u.generate(MODEL, TOK, texts, max_length=args.max_length)
+    arr = out.text_embeds
+    mx.eval(arr)
+    return [[float(x) for x in row] for row in arr.tolist()]
+
+class H(BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+    def _send(self, code, obj):
+        b = json.dumps(obj).encode()
+        self.send_response(code); self.send_header("Content-Type","application/json")
+        self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
+    def do_GET(self):
+        if self.path.startswith("/v1/models"):
+            self._send(200, {"object":"list","data":[{"id":args.model,"object":"model"}]})
+        else: self._send(404, {"error":"not found"})
+    def do_POST(self):
+        if not self.path.startswith("/v1/embeddings"):
+            self._send(404, {"error":"use /v1/embeddings"}); return
+        n = int(self.headers.get("Content-Length", 0))
+        try:
+            body = json.loads(self.rfile.read(n) or b"{}")
+            inp = body.get("input", "")
+            texts = [inp] if isinstance(inp, str) else list(inp)
+            vecs = embed(texts)
+            data = [{"object":"embedding","index":i,"embedding":v} for i,v in enumerate(vecs)]
+            tok = sum(len(t.split()) for t in texts)
+            self._send(200, {"object":"list","data":data,"model":args.model,
+                             "usage":{"prompt_tokens":tok,"total_tokens":tok}})
+        except Exception as e:
+            self._send(500, {"error":str(e)})
+
+print(f"[omlx-embed] serving http://{args.host}:{args.port}/v1/embeddings", flush=True)
+ThreadingHTTPServer((args.host, args.port), H).serve_forever()

@@ -1,0 +1,552 @@
+{
+  "_comment": "omlx 单一数据源 (schema v2)。CLI `omlx` 读取本文件。落地: /Users/xiamingxing/omlx/conf/models.json — 2026-08-10 从 /Volumes/Model/omlx 迁出: launchd 服务受 macOS TCC 限制无法执行外置卷上的二进制(Operation not permitted), 导致 aetherforge 门面无法调用 omlx。模型权重仍在 /Volumes/Model/LMStudio, 未迁移。",
+  "version": 2,
+  "active_root": "/Users/xiamingxing/omlx/models-active",
+  "log_dir": "/Users/xiamingxing/omlx/logs",
+  "run_dir": "/Users/xiamingxing/omlx/run",
+  "cache_dir": "/Users/xiamingxing/omlx/cache",
+  "host": "127.0.0.1",
+  "python": "/opt/homebrew/bin/python3",
+  "defaults": {
+    "temp": 0.2,
+    "top_p": 0.9,
+    "kv_bits": 8,
+    "kv_group_size": 64,
+    "max_tokens": 1024
+  },
+  "models": {
+    "coding": {
+      "category": "coding",
+      "alias": "coding/current",
+      "port": 8082,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": true,
+      "params": {
+        "temp": 0.1,
+        "top_p": 0.9,
+        "kv_bits": 8,
+        "max_tokens": 2048,
+        "chat_template_args": {
+          "enable_thinking": false
+        }
+      },
+      "note": "编码 Agent 主力 (current 软链)。会输出 reasoning 段，max_tokens 要给够。",
+      "size_gb": 24
+    },
+    "coding-fast": {
+      "category": "coding",
+      "alias": "coding/qwopus-holo3-op6-mtp",
+      "port": 8081,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": true,
+      "params": {
+        "temp": 0.2,
+        "top_p": 0.9,
+        "kv_bits": 8,
+        "max_tokens": 2048,
+        "chat_template_args": {
+          "enable_thinking": false
+        }
+      },
+      "note": "MoE+MTP 高吞吐。若加载报 MTP 错请运行 `omlx doctor --fix`。",
+      "size_gb": 35
+    },
+    "coding-next": {
+      "category": "coding",
+      "alias": "coding/qwen3-coder-next-5bit",
+      "port": 8084,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": false,
+      "params": {
+        "temp": 0.1,
+        "top_p": 0.9,
+        "kv_bits": 8,
+        "max_tokens": 4096,
+        "chat_template_args": {
+          "enable_thinking": false
+        }
+      },
+      "note": "qwen3_next 线性注意力，51G，巨型仓库。占内存最大。",
+      "size_gb": 10
+    },
+    "reasoning": {
+      "category": "reasoning",
+      "alias": "reasoning/current",
+      "port": 8083,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": true,
+      "params": {
+        "temp": 0.3,
+        "top_p": 0.95,
+        "kv_bits": 8,
+        "max_tokens": 4096,
+        "chat_template_args": {
+          "enable_thinking": false
+        }
+      },
+      "note": "GLM-4.7-Flash，复杂规划/多步推理。推理段长，max_tokens 要大。",
+      "size_gb": 8
+    },
+    "reasoning-lite": {
+      "category": "reasoning",
+      "alias": "reasoning/nemotron-cascade-2-4bit",
+      "port": 8085,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": false,
+      "params": {
+        "temp": 0.3,
+        "top_p": 0.95,
+        "kv_bits": 8,
+        "max_tokens": 2048,
+        "chat_template_args": {
+          "enable_thinking": false
+        }
+      },
+      "note": "nemotron_h，4bit 轻量推理，省内存。",
+      "size_gb": 10
+    },
+    "embedding": {
+      "category": "retrieval",
+      "alias": "retrieval/qwen3-embedding-8b",
+      "port": 8183,
+      "engine": "mlx_embeddings",
+      "role": "embedding",
+      "reasoning": false,
+      "params": {},
+      "requires_pip": "mlx-embeddings",
+      "note": "RAG 检索，暴露 /v1/embeddings。需先 pip 安装 mlx-embeddings。",
+      "size_gb": 1
+    },
+    "vision": {
+      "category": "vision",
+      "alias": "vision/qwen3-vl-8b-4bit",
+      "port": 8181,
+      "engine": "mlx_vlm",
+      "role": "vision",
+      "reasoning": false,
+      "params": {
+        "temp": 0.2,
+        "max_tokens": 2048
+      },
+      "requires_pip": "mlx-vlm",
+      "note": "多模态。需先 pip 安装 mlx-vlm。",
+      "size_gb": 5
+    },
+    "vision-large": {
+      "category": "vision",
+      "alias": "vision/qwen3.6-27b-4bit",
+      "port": 8182,
+      "engine": "mlx_vlm",
+      "role": "vision",
+      "reasoning": true,
+      "params": {
+        "temp": 0.2,
+        "max_tokens": 3072
+      },
+      "requires_pip": "mlx-vlm",
+      "note": "Qwen3.6-27B 多模态。注意原 config 有 MTP 坑，`omlx doctor --fix` 已处理。",
+      "size_gb": 10
+    },
+    "mythos": {
+      "category": "vision",
+      "alias": "vision/mythos-9b",
+      "port": 8184,
+      "engine": "mlx_vlm",
+      "role": "vision",
+      "reasoning": false,
+      "params": {
+        "temp": 0.7,
+        "max_tokens": 2048
+      },
+      "requires_pip": "mlx-vlm",
+      "note": "Qwythos-9B 多模态 bf16 · 1M 上下文 · 创意/角色扮演(Claude 风格)",
+      "size_gb": 18
+    },
+    "mythos-fast": {
+      "category": "reasoning",
+      "alias": "reasoning/mythos-fast",
+      "port": 8185,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": false,
+      "params": {
+        "temp": 0.7,
+        "top_p": 0.9,
+        "kv_bits": 8,
+        "max_tokens": 2048,
+        "chat_template_args": {
+          "enable_thinking": false
+        }
+      },
+      "note": "Qwythos-9B mxfp4 纯文本(无视觉)· 创意/角色扮演 · 快速版",
+      "size_gb": 10
+    },
+    "deepseek-v4-flash": {
+      "category": "coding",
+      "alias": "coding/deepseek-v4-flash",
+      "port": 8086,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": false,
+      "params": {
+        "temp": 0.3,
+        "top_p": 0.9,
+        "kv_bits": 8,
+        "max_tokens": 2048,
+        "chat_template_args": {
+          "enable_thinking": false
+        }
+      },
+      "note": "DeepSeek-V4 Flash MoE 编码/通用",
+      "size_gb": 10
+    },
+    "deepseek-v4-pro": {
+      "category": "coding",
+      "alias": "coding/deepseek-v4-pro",
+      "port": 8087,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": false,
+      "params": {
+        "temp": 0.3,
+        "top_p": 0.9,
+        "kv_bits": 8,
+        "max_tokens": 2048,
+        "chat_template_args": {
+          "enable_thinking": false
+        }
+      },
+      "note": "DeepSeek-V4 Pro MoE(大)",
+      "size_gb": 10
+    },
+    "mistral-medium-128b": {
+      "category": "reasoning",
+      "alias": "reasoning/mistral-medium-128b",
+      "port": 8088,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": false,
+      "params": {
+        "temp": 0.3,
+        "top_p": 0.9,
+        "kv_bits": 8,
+        "max_tokens": 2048
+      },
+      "note": "Mistral-Medium 128B(巨大,按需)",
+      "size_gb": 10
+    },
+    "nemotron-omni": {
+      "category": "reasoning",
+      "alias": "reasoning/nemotron-omni",
+      "port": 8089,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": true,
+      "params": {
+        "temp": 0.3,
+        "top_p": 0.9,
+        "kv_bits": 8,
+        "max_tokens": 2048
+      },
+      "note": "Nemotron Omni 30B MoE 推理",
+      "size_gb": 10
+    },
+    "ornith-9b": {
+      "category": "vision",
+      "alias": "vision/ornith-9b",
+      "port": 8186,
+      "engine": "mlx_vlm",
+      "role": "vision",
+      "reasoning": false,
+      "params": {
+        "max_tokens": 2048
+      },
+      "note": "Ornith 1.0 9B 多模态(轻)",
+      "requires_pip": "mlx-vlm",
+      "size_gb": 10
+    },
+    "ornith-35b": {
+      "category": "vision",
+      "alias": "vision/ornith-35b",
+      "port": 8187,
+      "engine": "mlx_vlm",
+      "role": "vision",
+      "reasoning": false,
+      "params": {
+        "max_tokens": 2048
+      },
+      "note": "Ornith 1.0 35B 多模态",
+      "requires_pip": "mlx-vlm",
+      "size_gb": 10
+    },
+    "embed-bge-m3": {
+      "category": "retrieval",
+      "alias": "retrieval/embed-bge-m3",
+      "port": 8188,
+      "engine": "mlx_embeddings",
+      "role": "chat",
+      "reasoning": false,
+      "params": {
+        "max_tokens": 2048
+      },
+      "note": "bge-m3 备用检索 embedding",
+      "requires_pip": "mlx-embeddings",
+      "size_gb": 10
+    },
+    "baai-bge-reranker-v2-m3-mlx-fp16": {
+      "category": "retrieval",
+      "alias": "retrieval/baai-bge-reranker-v2-m3-mlx-fp16",
+      "port": 8189,
+      "engine": "mlx_embeddings",
+      "role": "chat",
+      "reasoning": false,
+      "params": {
+        "max_tokens": 2048
+      },
+      "note": "omlx link 自动接入",
+      "requires_pip": "mlx-embeddings",
+      "size_gb": 10
+    },
+    "gemma-4-26b-a4b-it-qat-mlx-4bit": {
+      "category": "vision",
+      "alias": "vision/gemma-4-26b-a4b-it-qat-mlx-4bit",
+      "port": 8190,
+      "engine": "mlx_vlm",
+      "role": "vision",
+      "reasoning": false,
+      "params": {
+        "max_tokens": 2048
+      },
+      "note": "omlx link 自动接入",
+      "requires_pip": "mlx-vlm",
+      "size_gb": 10
+    },
+    "gemma-4-31b-it-mlx-8bit": {
+      "category": "vision",
+      "alias": "vision/gemma-4-31b-it-mlx-8bit",
+      "port": 8191,
+      "engine": "mlx_vlm",
+      "role": "vision",
+      "reasoning": false,
+      "params": {
+        "max_tokens": 2048
+      },
+      "note": "omlx link 自动接入",
+      "requires_pip": "mlx-vlm",
+      "size_gb": 10
+    },
+    "gemma-4-e2b-it-mlx-8bit": {
+      "category": "vision",
+      "alias": "vision/gemma-4-e2b-it-mlx-8bit",
+      "port": 8192,
+      "engine": "mlx_vlm",
+      "role": "vision",
+      "reasoning": false,
+      "params": {
+        "max_tokens": 2048
+      },
+      "note": "omlx link 自动接入",
+      "requires_pip": "mlx-vlm",
+      "size_gb": 10
+    },
+    "mid-local": {
+      "category": "coding",
+      "alias": "mid-local/current",
+      "port": 8194,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": false,
+      "params": {
+        "temp": 0.2,
+        "top_p": 0.9,
+        "kv_bits": 8,
+        "max_tokens": 2048,
+        "chat_template_args": {
+          "enable_thinking": false
+        }
+      },
+      "note": "Qwen3.6-27B 通用对话 (15GB, 比 coding-fast 更通用)",
+      "size_gb": 12
+    },
+    "coder-precise": {
+      "category": "coding",
+      "alias": "coder-precise/current",
+      "port": 8193,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": false,
+      "params": {
+        "temp": 0.1,
+        "top_p": 0.9,
+        "kv_bits": 8,
+        "max_tokens": 4096,
+        "chat_template_args": {
+          "enable_thinking": false
+        }
+      },
+      "note": "Qwopus3.6-27B-Coder 精确编码 (27GB, 比 coding-fast 更精确)",
+      "size_gb": 10
+    }
+  },
+  "cluster": {
+    "gateway_port": 4000,
+    "nodes": [
+      {
+        "name": "MBP · M5 Max 128G",
+        "host": "127.0.0.1",
+        "role": "主力+网关",
+        "probe": {
+          "reasoner": 8083,
+          "embed": 8183
+        }
+      },
+      {
+        "name": "mac-mini · M4 24G",
+        "host": "100.99.210.78",
+        "role": "LMStudio+Ollama 第二节点",
+        "probe": {
+          "lmstudio": 1234,
+          "ollama": 11434,
+          "oMLX": 8000
+        }
+      },
+      {
+        "name": "Y7000P · RTX4070 8G",
+        "host": "100.64.43.36",
+        "role": "CUDA 小模型",
+        "probe": {
+          "lmstudio": 1234,
+          "ollama": 11434
+        }
+      }
+    ]
+  },
+  "disabled": {
+    "vision-nemotron-omini": {
+      "reason": "GGUF 格式，MLX(mlx_lm/mlx_vlm) 无法加载。请用 LM Studio 或 Ollama(llama.cpp) 运行。",
+      "path": "/Volumes/Model/LMStudio/lmstudio-community/nemotron-3-nano-omni-30b-a3b-reasoning-gguf"
+    }
+  },
+  "autopilot": {
+    "enabled": true,
+    "idle_ttl_sec": 900,
+    "resident": [
+      "coding",
+      "reasoning",
+      "embedding"
+    ],
+    "remote_resident": [
+      {
+        "host": "100.99.210.78",
+        "engine": "ollama",
+        "port": 11434,
+        "model": "qwen3.5:9b"
+      },
+      {
+        "host": "100.99.210.78",
+        "engine": "lmstudio",
+        "port": 1234,
+        "model": "gemma-4-e4b-it-mlx",
+        "ssh": true,
+        "lms_args": "-c 16384 --parallel 1 --ttl 86400"
+      },
+      {
+        "host": "100.64.43.36",
+        "engine": "lmstudio",
+        "port": 1234,
+        "model": "qwen/qwen3.5-9b",
+        "ssh": true,
+        "windows": true,
+        "ssh_alias": "y7000p",
+        "lms_args": "-c 16384 --ttl 86400"
+      }
+    ],
+    "mem_free_pct_floor": 15
+  },
+  "presets": {
+    "dev": [
+      "coding",
+      "reasoning",
+      "embedding"
+    ],
+    "coding": [
+      "coding",
+      "embedding"
+    ],
+    "chat": [
+      "reasoning",
+      "embedding"
+    ],
+    "fast": [
+      "deepseek-v4-flash",
+      "embedding"
+    ],
+    "vision": [
+      "vision",
+      "embedding"
+    ],
+    "creative": [
+      "mythos-fast",
+      "embedding"
+    ],
+    "lean": [
+      "embedding"
+    ]
+  },
+  "engine_policy": {
+    "_comment": "各节点的引擎分工。MBP 用 omlx(mlx_lm.server / mlx_vlm / mlx_embeddings) 做主引擎与加载器, LM Studio 作兜底; mac-mini 与 Y7000P 只用 LM Studio (三机经 LM Link 合成同一模型池)。网关按此决定路由顺序。",
+    "nodes": {
+      "mbp": {
+        "host": "127.0.0.1",
+        "primary": "omlx",
+        "fallback": [
+          "lmstudio"
+        ],
+        "lmstudio_port": 1234,
+        "note": "omlx 后端每模型一个端口(见 models.*.port); LM Studio 需 `lms server start`"
+      },
+      "macmini": {
+        "host": "100.99.210.78",
+        "primary": "lmstudio",
+        "fallback": [],
+        "lmstudio_port": 1234
+      },
+      "y7000p": {
+        "host": "100.64.43.36",
+        "primary": "lmstudio",
+        "fallback": [],
+        "lmstudio_port": 1234
+      }
+    }
+  },
+  "fallback": {
+    "_comment": "本机 omlx 后端不可用时改路由到 LM Studio 池的哪个模型。键为 models 里的 omlx key; 值为 LM Studio 模型 id。空/缺失 = 没有兜底(宁可如实失败, 也不要兜到能力不匹配的模型上)。",
+    "coding": "qwen/qwen3.5-9b",
+    "coding-fast": "qwen/qwen3.5-9b",
+    "coding-next": "qwen/qwen3.5-9b",
+    "coder-precise": "qwen/qwen3.5-9b",
+    "mid-local": "qwen/qwen3.5-9b",
+    "deepseek-v4-flash": "qwen/qwen3.5-9b",
+    "deepseek-v4-pro": "qwen/qwen3.5-9b",
+    "reasoning": "qwen/qwen3.5-9b",
+    "reasoning-lite": "qwen/qwen3.5-9b",
+    "mistral-medium-128b": "qwen/qwen3.5-9b",
+    "nemotron-omni": "qwen/qwen3.5-9b",
+    "mythos": "qwythos-9b-claude-mythos-5-1m",
+    "mythos-fast": "qwythos-9b-claude-mythos-5-1m-mlx",
+    "vision": "google/gemma-4-12b-qat",
+    "vision-large": "google/gemma-4-12b-qat",
+    "ornith-9b": "google/gemma-4-12b-qat",
+    "ornith-35b": "google/gemma-4-12b-qat",
+    "gemma-4-26b-a4b-it-qat-mlx-4bit": "google/gemma-4-12b-qat",
+    "gemma-4-31b-it-mlx-8bit": "google/gemma-4-12b-qat",
+    "gemma-4-e2b-it-mlx-8bit": "google/gemma-4-e4b",
+    "embed-bge-m3": "bge-m3-mlx",
+    "baai-bge-reranker-v2-m3-mlx-fp16": "baai-bge-reranker-v2-m3-mlx"
+  }
+}

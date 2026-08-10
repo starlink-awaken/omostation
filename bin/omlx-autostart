@@ -1,0 +1,101 @@
+#!/opt/homebrew/bin/python3
+"""omlx-autostart —— 按需自启代理。监听 127.0.0.1:9000。
+网关把 MBP 模型路由指向 http://127.0.0.1:9000/<omlx_key>/v1 ；
+本代理收到请求时若该后端没起，自动 `omlx serve <key>` 并等加载好，再把请求转发过去。
+首条请求会等数十秒(模型加载)，之后直连一样快。
+注意：必须在"有外置盘访问权限的用户会话"里运行(普通终端/osascript 即可)，
+     不要用 launchd(会被 macOS 隐私控制挡住读外置盘)。
+"""
+import os, json, socket, subprocess, threading, time, urllib.request, urllib.error
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+OMLX_ROOT = os.environ.get("OMLX_ROOT", "/Volumes/Model/omlx")
+CONF = os.path.join(OMLX_ROOT, "conf", "models.json")
+HOST = "127.0.0.1"
+LISTEN = 9000
+
+conf = json.load(open(CONF))
+MODELS = conf.get("models", {})
+_locks, _ll = {}, threading.Lock()
+def klock(k):
+    with _ll:
+        return _locks.setdefault(k, threading.Lock())
+
+def healthy(port):
+    try:
+        with urllib.request.urlopen(f"http://{HOST}:{port}/v1/models", timeout=3) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+def ensure(key):
+    m = MODELS.get(key)
+    if not m:
+        return None, f"unknown key {key}"
+    port = m["port"]
+    if healthy(port):
+        return port, None
+    with klock(key):
+        if healthy(port):
+            return port, None
+        env = dict(os.environ, PATH="/opt/homebrew/bin:/usr/local/bin:" + os.environ.get("PATH", ""))
+        cli = os.path.join(OMLX_ROOT, "bin", "omlx")   # 按绝对路径调 CLI, 与命令名解耦
+        subprocess.Popen([cli, "serve", key], stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, env=env)
+        for _ in range(150):           # 最多等 150s 加载
+            if healthy(port):
+                return port, None
+            time.sleep(1)
+        return None, f"{key} 启动超时"
+
+HOP = {"connection","keep-alive","proxy-authenticate","proxy-authorization","te",
+       "trailers","transfer-encoding","upgrade","content-length","host"}
+
+class H(BaseHTTPRequestHandler):
+    # HTTP/1.0 + Connection: close → 流式响应靠读到 EOF，免手写 chunked
+    def log_message(self, *a): pass
+    def _err(self, code, msg):
+        b = json.dumps({"error": msg}).encode()
+        self.send_response(code); self.send_header("Content-Type","application/json")
+        self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
+    def _proxy(self, method):
+        p = self.path.lstrip("/")
+        if "/" not in p:
+            return self._err(404, "path 需为 /<key>/v1/...")
+        key, rest = p.split("/", 1)
+        port, err = ensure(key)
+        if err:
+            return self._err(503, f"自启失败: {err}")
+        body = None
+        if self.headers.get("Content-Length"):
+            body = self.rfile.read(int(self.headers["Content-Length"]))
+        req = urllib.request.Request(f"http://{HOST}:{port}/{rest}", data=body, method=method)
+        for k, v in self.headers.items():
+            if k.lower() not in HOP:
+                req.add_header(k, v)
+        try:
+            resp = urllib.request.urlopen(req, timeout=900)
+        except urllib.error.HTTPError as e:
+            data = e.read()
+            self.send_response(e.code)
+            self.send_header("Content-Type", e.headers.get("Content-Type","application/json"))
+            self.send_header("Content-Length", str(len(data))); self.end_headers()
+            self.wfile.write(data); return
+        except Exception as e:
+            return self._err(502, f"转发失败: {e}")
+        self.send_response(resp.status)
+        self.send_header("Content-Type", resp.headers.get("Content-Type","application/json"))
+        self.send_header("Connection", "close"); self.end_headers()
+        try:
+            while True:
+                chunk = resp.read(2048)
+                if not chunk: break
+                self.wfile.write(chunk); self.wfile.flush()
+        except Exception:
+            pass
+    def do_POST(self): self._proxy("POST")
+    def do_GET(self):  self._proxy("GET")
+
+if __name__ == "__main__":
+    print(f"omlx-autostart 监听 http://{HOST}:{LISTEN}  (网关 MBP 路由指这里)", flush=True)
+    ThreadingHTTPServer((HOST, LISTEN), H).serve_forever()

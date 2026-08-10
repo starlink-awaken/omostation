@@ -1,0 +1,137 @@
+#!/opt/homebrew/bin/python3
+"""omlx-dashboard —— 本地算力大盘。拓扑 + 三机服务活状态 + 网关路由，自刷新。
+   由 `omlx dashboard` 后台拉起；也可直接运行: omlx-dashboard --port 4500
+   只监听 127.0.0.1，浏览器开 http://localhost:4500
+"""
+import os, json, socket, urllib.request, argparse, subprocess
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+OMLX_ROOT = os.environ.get("OMLX_ROOT", "/Volumes/Model/omlx")
+CONF = os.path.join(OMLX_ROOT, "conf", "models.json")
+
+def load_conf():
+    try: return json.load(open(CONF))
+    except Exception: return {}
+
+def port_open(host, port, t=0.7):
+    try:
+        with socket.create_connection((host, int(port)), timeout=t): return True
+    except OSError: return False
+
+def models_at(host, port, t=3):
+    try:
+        req = urllib.request.Request(f"http://{host}:{port}/v1/models")
+        with urllib.request.urlopen(req, timeout=t) as r:
+            d = json.load(r); return [m.get("id","") for m in d.get("data",[])]
+    except Exception: return None
+
+def ts_ip(fallback="127.0.0.1"):
+    import subprocess
+    for cand in (["tailscale","ip","-4"],["/usr/local/bin/tailscale","ip","-4"],
+                 ["/opt/homebrew/bin/tailscale","ip","-4"],
+                 ["/Applications/Tailscale.app/Contents/MacOS/Tailscale","ip","-4"]):
+        try:
+            r=subprocess.run(cand,capture_output=True,text=True,timeout=5)
+            ip=(r.stdout or "").strip().split("\n")[0].strip()
+            if ip: return ip
+        except Exception: continue
+    return fallback
+
+def probe():
+    c = load_conf()
+    host_local = c.get("host","127.0.0.1")
+    gport = (c.get("cluster") or {}).get("gateway_port", 4000)
+    # gateway 绑在 tailnet IP 上
+    ghost = ts_ip(host_local)
+    groutes = models_at(ghost, gport) or []
+    gw = {"up": port_open(ghost, gport), "routes": groutes, "port": gport}
+    # cluster nodes
+    nodes = []
+    for n in (c.get("cluster") or {}).get("nodes", []):
+        svcs = []
+        for svc, port in n.get("probe", {}).items():
+            up = port_open(n["host"], port)
+            ids = models_at(n["host"], port) if up else None
+            svcs.append({"svc": svc, "port": port, "up": up,
+                         "count": (len(ids) if ids is not None else None)})
+        nodes.append({"name": n["name"], "host": n["host"], "role": n.get("role",""), "svcs": svcs})
+    # MBP 本地 omlx 后端
+    backends = []
+    for k, m in (c.get("models") or {}).items():
+        if m.get("engine") in ("mlx_lm","mlx_vlm","mlx_embeddings"):
+            backends.append({"key": k, "port": m["port"], "up": port_open(host_local, m["port"]),
+                             "cat": m.get("category",""), "alias": m.get("alias","")})
+    # routes 详情 (从 conf 的 gateway 配置无法读, 用 groutes 名字)
+    return {"gateway": gw, "nodes": nodes, "backends": backends}
+
+HTML = """<!doctype html><html lang=zh><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>omlx 算力大盘</title>
+<style>
+:root{--bg:#0f1115;--card:#1a1d24;--line:#2a2f3a;--tx:#e6e8ec;--dim:#8b919e;--ok:#3fb96b;--down:#5a606e;--acc:#e08a4c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 -apple-system,system-ui,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:20px}
+h1{font-size:20px;margin:0 0 2px}.sub{color:var(--dim);font-size:12px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h2{font-size:14px;margin:0 0 2px}.card .role{color:var(--dim);font-size:11px;margin-bottom:10px}
+.svc{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:8px}
+.up{background:var(--ok);box-shadow:0 0 8px var(--ok)}.down{background:var(--down)}
+.svc .r{color:var(--dim);font-size:12px}
+.gw{grid-column:1/-1;background:linear-gradient(180deg,#1c2129,#1a1d24);border-color:var(--acc)}
+.routes{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{background:#222732;border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--tx)}
+.muted{color:var(--down)}
+.foot{color:var(--dim);font-size:11px;margin-top:16px;text-align:center}
+.big{font-size:22px;font-weight:700}
+</style></head><body><div class=wrap>
+<h1>omlx 算力大盘</h1><div class=sub id=ts>加载中…</div>
+<div class=grid id=grid></div>
+<div class=foot>每 5 秒自动刷新 · 数据源 omlx cluster 探针</div>
+</div><script>
+const C={up:'<span class="dot up"></span>',down:'<span class="dot down"></span>'};
+async function tick(){
+ try{const r=await fetch('/api/status');const d=await r.json();render(d);
+   document.getElementById('ts').textContent='更新于 '+new Date().toLocaleTimeString();}
+ catch(e){document.getElementById('ts').textContent='探针读取失败';}
+}
+function render(d){
+ const g=document.getElementById('grid');let h='';
+ const gw=d.gateway;
+ h+=`<div class="card gw"><h2>${gw.up?C.up:C.down}统一网关 LiteLLM :${gw.port}</h2>
+   <div class="role">单端点 · ${gw.routes.length} 条路由</div>
+   <div class="routes">${gw.routes.map(x=>`<span class="tag">${x}</span>`).join('')||'<span class=muted>无</span>'}</div></div>`;
+ for(const n of d.nodes){
+   h+=`<div class="card"><h2>${n.name}</h2><div class="role">${n.role} · ${n.host}</div>`;
+   for(const s of n.svcs){
+     const cnt=s.count!=null?`${s.count} 模型`:(s.up?'在线':'');
+     h+=`<div class="svc"><span>${s.up?C.up:C.down}${s.svc} <span class=muted>:${s.port}</span></span><span class="r">${s.up?cnt:'离线'}</span></div>`;
+   }
+   h+=`</div>`;
+ }
+ // MBP 本地后端
+ let bk=d.backends.map(b=>`<div class="svc"><span>${b.up?C.up:C.down}${b.key} <span class=muted>:${b.port}</span></span><span class="r">${b.up?'运行':'待起'}</span></div>`).join('');
+ h+=`<div class="card"><h2>MBP 本地 omlx 后端</h2><div class="role">按需启动 (omlx serve)</div>${bk}</div>`;
+ g.innerHTML=h;
+}
+tick();setInterval(tick,5000);
+</script></body></html>"""
+
+class H(BaseHTTPRequestHandler):
+    def log_message(self,*a): pass
+    def _send(self,code,body,ctype="application/json"):
+        b=body if isinstance(body,bytes) else body.encode()
+        self.send_response(code);self.send_header("Content-Type",ctype)
+        self.send_header("Content-Length",str(len(b)));self.end_headers();self.wfile.write(b)
+    def do_GET(self):
+        if self.path.startswith("/api/status"):
+            self._send(200,json.dumps(probe()))
+        elif self.path=="/" or self.path.startswith("/index"):
+            self._send(200,HTML,"text/html; charset=utf-8")
+        else: self._send(404,"{}")
+
+if __name__=="__main__":
+    ap=argparse.ArgumentParser();ap.add_argument("--port",type=int,default=4500);a=ap.parse_args()
+    print(f"omlx 算力大盘: http://localhost:{a.port}",flush=True)
+    ThreadingHTTPServer(("127.0.0.1",a.port),H).serve_forever()

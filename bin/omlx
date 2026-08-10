@@ -1,0 +1,1251 @@
+#!/opt/homebrew/bin/python3
+"""
+omlx — 本地 MLX 模型统一命令行工具 (体系化管理 mlx_lm.server 服务)
+单一数据源: $OMLX_ROOT/conf/models.json   (默认 /Volumes/Model/omlx)
+
+常用:
+  omlxc list                 列出所有配置 + 运行状态
+  omlxc serve coding         后台启动 (─f 前台)
+  omlxc status               查看运行中的服务
+  omlxc stop coding|all      停止
+  omlxc health [key]         探活 /v1/models
+  omlxc test coding [-m ..]  冒烟测试一次对话 (自动处理 reasoning 段, 显示 tok/s)
+  omlxc doctor [--fix]       体检所有模型 config (MTP坑/权重/GGUF错位/工具缺失)
+  omlxc use coding <alias>   切换某类别的 current 指向
+  omlxc models               列出磁盘上可用的 MLX 模型 (发现用)
+  omlxc resolve <名> [--json] 这个名字会打到哪台机器的哪个引擎 (中枢解析点)
+"""
+import os, sys, json, glob, time, socket, signal, subprocess, argparse, urllib.request, re, shutil
+
+# 2026-08-10 迁出外置卷: launchd 服务受 macOS TCC 限制无法**执行**外置卷上的
+# 二进制(Operation not permitted), 导致 aetherforge 门面调不到 omlx。
+# 控制面(bin/conf/run/logs/models-active)迁到 $HOME; 模型权重仍在
+# /Volumes/Model/LMStudio, 未动。仍可用 OMLX_ROOT 覆盖。
+OMLX_ROOT = os.environ.get("OMLX_ROOT", os.path.expanduser("~/omlx"))
+CONF = os.path.join(OMLX_ROOT, "conf", "models.json")
+SELF = [sys.executable, os.path.realpath(__file__)]   # 自调用用绝对路径, 与命令名(omlxc)解耦
+
+def die(msg, code=1):
+    print(f"\033[31mERROR:\033[0m {msg}", file=sys.stderr); sys.exit(code)
+
+def load_conf():
+    if not os.path.exists(CONF): die(f"找不到配置: {CONF}")
+    c = json.load(open(CONF))
+    for k in ("log_dir","run_dir","cache_dir"):
+        os.makedirs(c.get(k, os.path.join(OMLX_ROOT,k.split('_')[0])), exist_ok=True)
+    return c
+
+def C(s, col): return f"\033[{col}m{s}\033[0m"
+def green(s): return C(s,32)
+def red(s): return C(s,31)
+def yel(s): return C(s,33)
+def dim(s): return C(s,90)
+
+def port_open(host, port, t=0.4):
+    try:
+        with socket.create_connection((host, int(port)), timeout=t): return True
+    except OSError: return False
+
+_ts_cache = None
+def ts_ip(conf):
+    """Tailscale 网卡 IP；网关绑在这上面。失败回退 conf['host']。"""
+    global _ts_cache
+    if _ts_cache is None:
+        for cand in (["tailscale","ip","-4"], ["/usr/local/bin/tailscale","ip","-4"],
+                     ["/opt/homebrew/bin/tailscale","ip","-4"],
+                     ["/Applications/Tailscale.app/Contents/MacOS/Tailscale","ip","-4"]):
+            try:
+                r = subprocess.run(cand, capture_output=True, text=True, timeout=5)
+                ip = (r.stdout or "").strip().split("\n")[0].strip()
+                if ip: _ts_cache = ip; break
+            except Exception: continue
+        if _ts_cache is None: _ts_cache = conf.get("host", "127.0.0.1")
+    return _ts_cache
+
+def realpath_of(conf, alias):
+    p = os.path.join(conf["active_root"], alias)
+    return os.path.realpath(p) if os.path.exists(p) else None
+
+def pidfile(conf, key): return os.path.join(conf["run_dir"], f"{key}.pid")
+def logfile(conf, key): return os.path.join(conf["log_dir"], f"{key}.log")
+
+def read_pid(conf, key):
+    pf = pidfile(conf, key)
+    if not os.path.exists(pf): return None
+    try:
+        pid = int(open(pf).read().strip())
+        os.kill(pid, 0); return pid
+    except (ValueError, ProcessLookupError, PermissionError): return None
+
+# ---------- flag 探测 (按命令缓存 help 文本) ----------
+_help_cache = {}
+def help_text(cmd):
+    key = " ".join(cmd)
+    if key not in _help_cache:
+        try:
+            r = subprocess.run(cmd+["--help"], capture_output=True, text=True, timeout=30)
+            _help_cache[key] = (r.stdout or "") + (r.stderr or "")
+        except Exception: _help_cache[key] = ""
+    return _help_cache[key]
+
+# ---------- commands ----------
+def cmd_list(conf, args):
+    print(f"\n{'KEY':<16}{'CATEGORY':<11}{'PORT':<7}{'ENGINE':<14}{'STATUS':<10}ALIAS")
+    print(dim("-"*92))
+    for key, m in conf["models"].items():
+        up = port_open(conf["host"], m["port"])
+        st = green("● running") if up else dim("○ stopped")
+        eng = m["engine"]; tag = "" if eng=="mlx_lm" else yel(" (需"+m.get("requires_pip","?")+")")
+        print(f"{key:<16}{m['category']:<11}{m['port']:<7}{eng:<14}{st:<19}{m['alias']}{tag}")
+    if conf.get("disabled"):
+        print(dim("\n已禁用:"))
+        for k,v in conf["disabled"].items(): print(dim(f"  {k}: {v['reason']}"))
+    print()
+
+def build_cmd(conf, m, real):
+    """按引擎组装启动命令，flag 按各自 --help 自动探测。"""
+    host=conf["host"]; port=str(m["port"]); py=conf.get("python","python3")
+    p={**conf.get("defaults",{}), **m.get("params",{})}
+    eng=m["engine"]
+    if eng=="mlx_lm":
+        cmd=["mlx_lm.server","--model",real,"--host",host,"--port",port]; h=help_text([py,"-m","mlx_lm.server"])
+        if "--temp" in h:  cmd+=["--temp",str(p.get("temp",0.2))]
+        if "--top-p" in h: cmd+=["--top-p",str(p.get("top_p",0.9))]
+        if p.get("kv_bits") and "--kv-bits" in h: cmd+=["--kv-bits",str(p["kv_bits"])]
+        if p.get("max_kv_size") and "--max-kv-size" in h: cmd+=["--max-kv-size",str(p["max_kv_size"])]
+        if "--trust-remote-code" in h: cmd+=["--trust-remote-code"]
+        if p.get("chat_template_args") and "--chat-template-args" in h: cmd+=["--chat-template-args",json.dumps(p["chat_template_args"])]
+        return cmd
+    if eng=="mlx_vlm":
+        cmd=[py,"-m","mlx_vlm.server","--model",real,"--host",host,"--port",port]; h=help_text([py,"-m","mlx_vlm.server"])
+        if p.get("max_tokens") and "--max-tokens" in h: cmd+=["--max-tokens",str(p["max_tokens"])]
+        if p.get("kv_bits") and "--kv-bits" in h: cmd+=["--kv-bits",str(p["kv_bits"])]
+        if p.get("max_kv_size") and "--max-kv-size" in h: cmd+=["--max-kv-size",str(p["max_kv_size"])]
+        if "--trust-remote-code" in h: cmd+=["--trust-remote-code"]
+        return cmd
+    if eng=="mlx_embeddings":
+        embd=os.path.join(OMLX_ROOT,"bin","omlx-embed-server")
+        return [py,embd,"--model",real,"--host",host,"--port",port]
+    die(f"未知引擎: {eng}")
+
+def cmd_serve(conf, args):
+    key = args.key
+    m = conf["models"].get(key) or die(f"未知模型: {key} (用 `omlxc list`)")
+    if getattr(args, "host", None): conf["host"] = args.host   # 绑定覆盖 (如 tailnet IP)
+    req = m.get("requires_pip")
+    if req:
+        import importlib.util
+        if importlib.util.find_spec(req.replace("-","_")) is None:
+            die(f"{key} 需要 {req}，请先: pip3 install --break-system-packages {req}")
+    real = realpath_of(conf, m["alias"]) or die(f"模型路径无效: {m['alias']} (外接盘挂了?)")
+    if not os.path.exists(os.path.join(real,"config.json")):
+        die(f"{real} 缺 config.json，不是有效 MLX 模型")
+    if read_pid(conf, key) or port_open(conf["host"], m["port"]):
+        print(yel(f"{key} 似乎已在运行 (port {m['port']})。先 `omlxc stop {key}`")); return
+    cmd = build_cmd(conf, m, real)
+    print(f"模型: {key} -> {m['alias']}\n      {dim(real)}\nAPI : http://{conf['host']}:{m['port']}/v1  (OpenAI 兼容)")
+    print(dim("+ "+" ".join(cmd)))
+    if args.foreground:
+        os.execvp(cmd[0], cmd)
+    lf = open(logfile(conf,key),"ab")
+    proc = subprocess.Popen(cmd, stdout=lf, stderr=lf, start_new_session=True)
+    open(pidfile(conf,key),"w").write(str(proc.pid))
+    print(green(f"已后台启动 pid={proc.pid}  日志: {logfile(conf,key)}"))
+    print(dim(f"加载需数十秒，用 `omlxc health {key}` 探活，`omlxc test {key}` 冒烟"))
+
+def _pid_on_port(port):
+    """返回监听该端口的 pid(lsof),无则 None。"""
+    try:
+        out = subprocess.run(["lsof", "-nP", "-iTCP:%d" % int(port), "-sTCP:LISTEN", "-t"],
+                             capture_output=True, text=True, timeout=5).stdout.strip()
+        return int(out.split("\n")[0]) if out else None
+    except Exception:
+        return None
+
+def _is_omlx_backend(pid):
+    """确认该 pid 是 omlx 拉起的模型后端(防误杀无关进程)。"""
+    try:
+        cmd = subprocess.run(["ps", "-p", str(pid), "-o", "command="],
+                            capture_output=True, text=True, timeout=5).stdout
+        return any(x in cmd for x in ("mlx_lm.server", "mlx_vlm.server", "omlx-embed-server"))
+    except Exception:
+        return False
+
+def cmd_stop(conf, args):
+    keys = list(conf["models"]) if args.key=="all" else [args.key]
+    for key in keys:
+        pid = read_pid(conf, key)
+        if not pid:
+            port = conf["models"][key].get("port")
+            opid = _pid_on_port(port) if port else None
+            if opid and _is_omlx_backend(opid):
+                pid = opid
+                print(dim(f"{key} pidfile 失联,按端口 :{port} 兜底杀 (pid {pid})"))
+        if not pid:
+            if args.key!="all": print(dim(f"{key} 未在运行"))
+            continue
+        try:
+            os.killpg(os.getpgid(pid), signal.SIGTERM)
+        except Exception:
+            try: os.kill(pid, signal.SIGTERM)
+            except Exception: pass
+        try: os.remove(pidfile(conf,key))
+        except OSError: pass
+        print(green(f"已停止 {key} (pid {pid})"))
+
+def cmd_status(conf, args):
+    any_up=False
+    for key, m in conf["models"].items():
+        pid = read_pid(conf, key); up = port_open(conf["host"], m["port"])
+        if pid or up:
+            any_up=True
+            mem=""
+            if pid:
+                try:
+                    rss=subprocess.run(["ps","-o","rss=","-p",str(pid)],capture_output=True,text=True).stdout.strip()
+                    if rss: mem=f", {int(rss)/1048576:.1f} GB"
+                except Exception: pass
+            print(f"{green('●')} {key:<14} port {m['port']}  pid {pid or '?'}{mem}  -> {m['alias']}")
+    if not any_up: print(dim("没有运行中的 omlx 服务"))
+
+def _api(conf, port, path, payload=None, timeout=180):
+    url=f"http://{conf['host']}:{port}{path}"
+    data=json.dumps(payload).encode() if payload is not None else None
+    req=urllib.request.Request(url, data=data, headers={"Content-Type":"application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as r: return json.load(r)
+
+def cmd_health(conf, args):
+    keys=list(conf["models"]) if not args.key else [args.key]
+    for key in keys:
+        m=conf["models"][key]
+        if not port_open(conf["host"], m["port"]):
+            if args.key: print(red(f"{key}: 端口未开"));
+            continue
+        try:
+            d=_api(conf, m["port"], "/v1/models", timeout=8)
+            mid=d.get("data",[{}])[0].get("id","?")
+            print(green(f"{key}: OK")+f"  {dim(mid)}")
+        except Exception as e:
+            print(red(f"{key}: 端口开但 /v1/models 失败 ({e})"))
+
+def cmd_test(conf, args):
+    key=args.key; m=conf["models"].get(key) or die(f"未知模型: {key}")
+    if not port_open(conf["host"], m["port"]): die(f"{key} 未运行，先 `omlxc serve {key}`")
+    if m.get("role")=="embedding":
+        prompt=args.message or "你好，世界"
+        print(dim(f"→ embedding: {prompt}"))
+        t0=time.time()
+        try: d=_api(conf, m["port"], "/v1/embeddings", {"input":prompt}, timeout=120)
+        except Exception as e: die(f"请求失败: {e}")
+        v=d["data"][0]["embedding"]
+        print(green(f"OK")+f"  维度={len(v)}  用时 {time.time()-t0:.1f}s")
+        print(dim("前5维: ")+str([round(x,4) for x in v[:5]])); return
+    prompt=args.message or "用一行Python打印1到10的和，直接给代码"
+    mx=m.get("params",{}).get("max_tokens", conf["defaults"]["max_tokens"])
+    real=realpath_of(conf, m["alias"])
+    is_vision = m.get("role")=="vision"
+    content=[{"type":"text","text":prompt}] if is_vision else prompt
+    payload={"model":real,"messages":[{"role":"user","content":content}],"max_tokens":mx}
+    if not is_vision: payload["temperature"]=m.get("params",{}).get("temp",0.2)
+    print(dim(f"→ {prompt}  (max_tokens={mx})"))
+    t0=time.time()
+    try: d=_api(conf, m["port"], "/v1/chat/completions", payload, timeout=240)
+    except Exception as e: die(f"请求失败: {e}")
+    dt=time.time()-t0
+    msg=d["choices"][0]["message"]; fin=d["choices"][0]["finish_reason"]
+    usage=d.get("usage",{}); ct=usage.get("completion_tokens",0)
+    if msg.get("reasoning") and not msg.get("content"):
+        print(yel("⚠ 只输出了 reasoning 段(被 max_tokens 截断)。reasoning 模型请调大 max_tokens。"))
+        print(dim("reasoning 预览: ")+ (msg["reasoning"][:200]+" ..."))
+    print(green(f"finish={fin}"))
+    if msg.get("reasoning"): print(dim(f"[reasoning {len(msg['reasoning'])} 字]"))
+    print(C("CONTENT:",36)); print(msg.get("content") or "(空)")
+    if ct and dt: print(dim(f"\n{ct} tokens / {dt:.1f}s = {ct/dt:.1f} tok/s"))
+
+def _scan(conf):
+    rows=[]
+    root=conf["active_root"]
+    for cat in sorted(os.listdir(root)):
+        cd=os.path.join(root,cat)
+        if not os.path.isdir(cd): continue
+        for name in sorted(os.listdir(cd)):
+            real=os.path.realpath(os.path.join(cd,name))
+            r={"cat":cat,"alias":name,"real":real,"issues":[]}
+            if not os.path.exists(real): r["issues"].append("BROKEN_LINK"); rows.append(r); continue
+            st=glob.glob(real+"/*.safetensors"); gg=glob.glob(real+"/*.gguf")
+            if gg and not st: r["issues"].append("GGUF_NOT_MLX")
+            if not st and not gg: r["issues"].append("NO_WEIGHTS")
+            cfgp=real+"/config.json"
+            if os.path.exists(cfgp):
+                try:
+                    cfg=json.load(open(cfgp))
+                    def dg(o,k,acc):
+                        if isinstance(o,dict):
+                            for kk,v in o.items():
+                                if kk==k and isinstance(v,int): acc.append(v)
+                                dg(v,k,acc)
+                        elif isinstance(o,list):
+                            for v in o: dg(v,k,acc)
+                    mtp=[]; dg(cfg,"mtp_num_hidden_layers",mtp)
+                    # mlx_lm 0.31.3 无法加载 MTP(无论权重在否都会崩)，任何 mtp>0 都需关闭
+                    if any(x>0 for x in mtp): r["issues"].append("MTP_ON")
+                    r["cfg"]=cfgp
+                except Exception: r["issues"].append("BAD_CONFIG")
+            rows.append(r)
+    return rows
+
+def cmd_doctor(conf, args):
+    print("\n=== 工具链 ===")
+    import importlib.metadata as M
+    for p in ["mlx","mlx-lm","mlx-vlm","mlx-embeddings"]:
+        try: print(f"  {green('✓')} {p} {M.version(p)}")
+        except Exception: print(f"  {red('✗')} {p} 未安装  {dim('pip3 install '+p)}")
+    print("\n=== 模型体检 ===")
+    rows=_scan(conf); fixed=0
+    for r in rows:
+        problems=r["issues"]
+        tag = green("OK") if not problems else red(",".join(problems))
+        print(f"  [{r['cat']}/{r['alias']}] {tag}")
+        if args.fix and "MTP_ON" in r["issues"] and r.get("cfg"):
+            cfg=json.load(open(r["cfg"]))
+            bak=r["cfg"]+".bak"
+            if not os.path.exists(bak): json.dump(cfg, open(bak,"w"), indent=2)
+            def fix(o):
+                n=0
+                if isinstance(o,dict):
+                    for k,v in o.items():
+                        if k=="mtp_num_hidden_layers" and isinstance(v,int) and v>0: o[k]=0; n+=1
+                        else: n+=fix(v)
+                elif isinstance(o,list):
+                    for v in o: n+=fix(v)
+                return n
+            n=fix(cfg)
+            if n: json.dump(cfg, open(r["cfg"],"w"), indent=2); fixed+=1; print(yel(f"      → 已修 MTP {n} 处 (备份 {os.path.basename(bak)})"))
+    if args.fix: print(green(f"\n修复完成，共处理 {fixed} 个模型"))
+    else: print(dim("\n加 --fix 自动修正 MTP 类问题(会先备份 config.json)"))
+
+def cmd_use(conf, args):
+    cat=args.category; alias=args.alias
+    cd=os.path.join(conf["active_root"], cat)
+    if not os.path.isdir(cd): die(f"无此类别: {cat}")
+    target=os.path.join(cd, alias)
+    if not os.path.exists(target):
+        opts=[x for x in os.listdir(cd) if x!="current"]
+        die(f"{cat}/ 下无 {alias}。可选: {', '.join(opts)}")
+    link=os.path.join(cd,"current")
+    if os.path.islink(link) or os.path.exists(link): os.remove(link)
+    os.symlink(alias, link)
+    print(green(f"{cat}/current → {alias}"))
+
+GW_PORT = 4000
+GW_HOME = os.path.expanduser("~/Library/Application Support/omlx-gateway")  # 本地, 不依赖外置盘
+def cmd_gw(conf, args):
+    act = args.action
+    cfg = os.path.join(GW_HOME, "litellm-config.yaml")
+    pf  = os.path.join(conf["run_dir"], "gateway.pid")
+    lf  = os.path.join(conf["log_dir"], "gateway.log")
+    host = ts_ip(conf)   # 网关绑 tailnet IP
+    def gw_pid():
+        if not os.path.exists(pf): return None
+        try:
+            p=int(open(pf).read().strip()); os.kill(p,0); return p
+        except Exception: return None
+    if act == "start":
+        if not os.path.exists(cfg): die(f"找不到网关配置: {cfg}")
+        if gw_pid() or port_open(host, GW_PORT):
+            print(yel(f"网关似乎已在运行 :{GW_PORT}。先 `omlxc gw stop`")); return
+        venv_litellm = os.path.join(GW_HOME, "venv", "bin", "litellm")
+        litellm_bin = venv_litellm if os.path.exists(venv_litellm) else "litellm"
+        cmd = [litellm_bin,"--config",cfg,"--host","0.0.0.0","--port",str(GW_PORT)]
+        out = open(lf,"ab")
+        proc = subprocess.Popen(cmd, stdout=out, stderr=out, start_new_session=True)
+        open(pf,"w").write(str(proc.pid))
+        print(green(f"网关已启动 pid={proc.pid}  :{GW_PORT}  (0.0.0.0, tailnet 可达)"))
+        print(dim(f"日志 {lf} · 探活 `omlxc gw status` · 测试 `omlxc gw test coder`"))
+    elif act == "stop":
+        p = gw_pid()
+        if not p: print(dim("网关未在运行")); return
+        try: os.killpg(os.getpgid(p), signal.SIGTERM)
+        except Exception:
+            try: os.kill(p, signal.SIGTERM)
+            except Exception: pass
+        try: os.remove(pf)
+        except OSError: pass
+        print(green(f"网关已停止 (pid {p})"))
+    elif act == "status":
+        if not port_open(host, GW_PORT): print(dim(f"网关未运行 (:{GW_PORT})")); return
+        aliases=[]; wilds=[]; cur=None
+        try:
+            for ln in open(cfg):
+                mm=re.match(r'\s*- model_name:\s*"?([^"#\n]+?)"?\s*(#.*)?$', ln)
+                if mm: cur=mm.group(1).strip(); continue
+                bb=re.match(r'\s*api_base:\s*(\S+)', ln)
+                if bb and cur is not None:
+                    (wilds if cur.endswith("/*") else aliases).append((cur, bb.group(1))); cur=None
+        except Exception as e:
+            print(yel(f"读网关配置失败: {e}")); return
+        def _loc(b):
+            if ":9000/" in b or "127.0.0.1:8" in b: return "MBP 本地"
+            if "127.0.0.1:1234" in b or "localhost:1234" in b: return "MBP LMStudio"
+            if "100.99.210.78" in b: return "mac-mini"
+            if "100.64.43.36" in b: return "Y7000P"
+            return "其它"
+        from collections import OrderedDict
+        nl=OrderedDict()
+        for name,base in aliases: nl.setdefault(name,[]).append(_loc(base))
+        single=OrderedDict(); multi=[]
+        for name,locs in nl.items():
+            u=list(dict.fromkeys(locs))
+            (multi.append((name,u)) if len(u)>1 else single.setdefault(u[0],[]).append(name))
+        print(green(f"网关 OK {host}:{GW_PORT}") + dim(f"   {len(aliases)} 别名 · {len(wilds)} 通配 · 绑 tailnet"))
+        for g in ("MBP 本地","MBP LMStudio","mac-mini","Y7000P","其它"):
+            if single.get(g): print(f"  {bold(g):<12} " + ", ".join(single[g]))
+        for name,locs in multi: print(f"  {bold('智能路由')}  {name} " + dim("→ "+"+".join(locs)+" (latency 选)"))
+        if wilds: print(f"  {bold('通配透传')}  " + ", ".join(n for n,_ in wilds) + dim("  (那台机任意模型)"))
+    elif act == "sync":
+        if not os.path.exists(cfg): die(f"找不到网关配置: {cfg}")
+        text = open(cfg).read()
+        # MBP 路由经自启代理 http://127.0.0.1:9000/<key>/v1 ，从 key 取当前真实模型路径
+        blocks = re.split(r'(?m)^(?=  - model_name:)', text)
+        changed = 0
+        for i, b in enumerate(blocks):
+            mb = re.search(r'api_base:\s*http://127\.0\.0\.1:9000/([\w-]+)/v1', b)
+            if not mb: continue
+            mm = conf["models"].get(mb.group(1))
+            if not mm: continue
+            rp = realpath_of(conf, mm["alias"])
+            if not rp: continue
+            newmodel = "openai/" + rp
+            nb = re.sub(r'(model:\s*)openai/\S+', lambda m: m.group(1)+newmodel, b, count=1)
+            if nb != b: blocks[i] = nb; changed += 1
+        if changed:
+            bak = cfg + ".bak"; open(bak,"w").write(text)
+            open(cfg,"w").write("".join(blocks))
+            print(green(f"已同步 {changed} 条 omlx 路由的模型路径")+dim(f" (备份 {os.path.basename(bak)})"))
+            print(dim("重启生效: omlxc gw stop && omlxc gw start"))
+        else:
+            print(dim("路径已是最新，无需更新"))
+    elif act == "test":
+        name = args.extra or "coder"
+        if not port_open(host, GW_PORT): die("网关未运行，先 `omlxc gw start`")
+        payload={"model":name,"messages":[{"role":"user","content":"用一行Python打印1到10的和"}],"max_tokens":1024}
+        print(dim(f"→ 经网关请求 model={name}"))
+        try: d=_api({**conf,"host":host}, GW_PORT, "/v1/chat/completions", payload, timeout=240)
+        except Exception as e: die(f"网关请求失败: {e}")
+        m=d["choices"][0]["message"]
+        print(green(f"OK  finish={d['choices'][0]['finish_reason']}"))
+        print(C("CONTENT:",36)); print(m.get("content") or dim("(空, 可能是 reasoning 段被截断)"))
+    else:
+        die("用法: omlxc gw start|stop|status|test [model]")
+
+def cmd_dashboard(conf, args):
+    script = os.path.join(OMLX_ROOT, "bin", "omlx-dashboard")
+    py = conf.get("python", "python3")
+    pf = os.path.join(conf["run_dir"], "dashboard.pid")
+    lf = os.path.join(conf["log_dir"], "dashboard.log")
+    port = 4500
+    def dpid():
+        if not os.path.exists(pf): return None
+        try:
+            p=int(open(pf).read().strip()); os.kill(p,0); return p
+        except Exception: return None
+    if args.action == "stop":
+        p=dpid()
+        if not p: print(dim("大盘未运行")); return
+        try: os.killpg(os.getpgid(p), signal.SIGTERM)
+        except Exception:
+            try: os.kill(p, signal.SIGTERM)
+            except Exception: pass
+        try: os.remove(pf)
+        except OSError: pass
+        print(green(f"大盘已停止 (pid {p})")); return
+    if dpid() or port_open(conf["host"], port):
+        print(green(f"大盘已在运行: ")+f"http://localhost:{port}"); return
+    if not os.path.exists(script): die(f"找不到 {script}")
+    out=open(lf,"ab")
+    proc=subprocess.Popen([py, script, "--port", str(port)], stdout=out, stderr=out, start_new_session=True)
+    open(pf,"w").write(str(proc.pid))
+    print(green("算力大盘已启动: ")+f"http://localhost:{port}")
+    print(dim(f"浏览器打开即可看实时拓扑+三机状态 · 停止: omlxc dashboard stop"))
+
+_EXENV = dict(os.environ, PATH="/opt/homebrew/bin:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:" + os.environ.get("PATH",""))
+def _run(cmd):
+    try: return subprocess.run(cmd, capture_output=True, text=True, timeout=60, env=_EXENV)
+    except Exception: return None
+
+def cmd_up(conf, args):
+    uid = str(os.getuid())
+    print(C("启动 omlx 全套...", 36))
+    _run(["launchctl","kickstart","gui/%s/com.omlx.gateway" % uid])
+    print(green("  ✓")+" 网关 :4000 (launchd)")
+    _run(SELF+["autostart"]); print(green("  ✓")+" 按需自启代理 :9000")
+    for c in ("omlx-litellm-pg","lobe-chat"):
+        _run(["docker","start",c])
+    print(green("  ✓")+" Docker: LobeChat :3210 · 管理后台 :4001")
+    print(dim("\n看状态: omlxc cluster   ·   首次用 MBP 模型(coder 等)会自动拉起后端"))
+
+def cmd_down(conf, args):
+    print(C("停止可选组件(释放内存)...", 36))
+    _run(SELF+["stop","all"]);        print(green("  ✓")+" 已停所有本地模型后端")
+    _run(SELF+["autostart","stop"]);  print(green("  ✓")+" 已停自启代理")
+    _run(SELF+["dashboard","stop"]);  print(green("  ✓")+" 已停算力大盘")
+    print(dim("\n网关与 Docker(LobeChat/UI) 仍常驻(占用很小)。"))
+    print(dim("要更彻底: docker stop lobe-chat omlx-litellm-pg ; launchctl bootout gui/$(id -u)/com.omlx.gateway"))
+
+def cmd_autostart(conf, args):
+    script = os.path.join(OMLX_ROOT, "bin", "omlx-autostart")
+    py = conf.get("python", "python3")
+    pf = os.path.join(conf["run_dir"], "autostart.pid")
+    lf = os.path.join(conf["log_dir"], "autostart.log")
+    port = 9000
+    def apid():
+        if not os.path.exists(pf): return None
+        try:
+            p=int(open(pf).read().strip()); os.kill(p,0); return p
+        except Exception: return None
+    if args.action == "stop":
+        p=apid()
+        if not p: print(dim("自启代理未运行")); return
+        try: os.killpg(os.getpgid(p), signal.SIGTERM)
+        except Exception:
+            try: os.kill(p, signal.SIGTERM)
+            except Exception: pass
+        try: os.remove(pf)
+        except OSError: pass
+        print(green(f"自启代理已停止 (pid {p})")); return
+    if apid() or port_open(conf["host"], port):
+        print(green("自启代理已在运行 :9000")); return
+    if not os.path.exists(script): die(f"找不到 {script}")
+    out=open(lf,"ab")
+    proc=subprocess.Popen([py, script], stdout=out, stderr=out, start_new_session=True)
+    open(pf,"w").write(str(proc.pid))
+    print(green("按需自启代理已启动 :9000")+dim("  (网关 MBP 路由会自动拉起后端)"))
+
+def cmd_cluster(conf, args):
+    cl = conf.get("cluster") or die("models.json 缺 cluster 配置")
+    print(f"\n{'节点':<20}{'角色':<22}{'服务':<13}状态")
+    print(dim("-"*74))
+    for n in cl["nodes"]:
+        host=n["host"]; first=True
+        for svc,port in n["probe"].items():
+            up=port_open(host, port, 0.8)
+            extra=""
+            if up:
+                try:
+                    d=_api({"host":host}, port, "/v1/models", timeout=4)
+                    ids=[m.get("id","") for m in d.get("data",[])]
+                    extra=dim("  "+ (os.path.basename(ids[0]) if len(ids)==1 else f"{len(ids)} 模型"))
+                except Exception: extra=dim("  (端口开)")
+            st=(green("● up")+extra) if up else dim("○ down")
+            print(f"{(n['name'] if first else ''):<20}{(n['role'] if first else ''):<22}{svc:<13}{st}")
+            first=False
+        print()
+    g=cl.get("gateway_port",4000)
+    print((green(f"网关 :{g} ● up") if port_open(ts_ip(conf),g) else dim(f"网关 :{g} ○ down"))
+          + dim("   (omlxc gw status 看路由)"))
+
+def cmd_models(conf, args):
+    base="/Volumes/Model/LMStudio"
+    print(dim(f"扫描 {base} 下的 MLX 模型...  ✅=已接入  ○=未接入\n"))
+    linked=_linked_realpaths(conf); seen=set(); nl=0; nu=0
+    for st in sorted(glob.glob(base+"/*/*/*.safetensors")):
+        d=os.path.dirname(st)
+        if d in seen: continue
+        seen.add(d)
+        isl = os.path.realpath(d) in linked
+        if isl: nl+=1
+        else: nu+=1
+        print(f"  {green('✅') if isl else dim('○')} {d.replace(base+'/','')}")
+    print(dim(f"\n共 {len(seen)} 个 · 已接 {nl} · 未接 {nu}。未接的一键接入: `omlxc link --apply`"))
+
+# ========== 全节点管理 (node 子命令 · HTTP 统一控制远程 LMStudio/Ollama) ==========
+def _norm(s): return re.sub(r"[^a-z0-9]", "", (s or "").lower())
+
+def _node_alias(node): return _norm(node["name"].split("·")[0])
+
+def _is_local(node): return node.get("host") in ("127.0.0.1", "localhost")
+
+def _find_node(conf, name):
+    cl = conf.get("cluster") or die("models.json 缺 cluster 配置")
+    key = _norm(name)
+    for n in cl["nodes"]:
+        a = _node_alias(n)
+        if a == key or a.startswith(key) or key in a:
+            return n
+    die(f"无此节点: {name}。可选: " + ", ".join(_node_alias(n) for n in cl["nodes"]))
+
+def _svc_engines(node):
+    """yield (engine, host, port) — 可控制的模型服务 (远程)."""
+    host = node["host"]
+    for svc, port in (node.get("probe") or {}).items():
+        s = svc.lower()
+        if s == "ollama": yield ("ollama", host, port)
+        elif s == "lmstudio": yield ("lmstudio", host, port)
+
+def _ollama_ps(h, p):
+    try: return [(m["name"], m.get("size_vram", 0)) for m in _api({"host": h}, p, "/api/ps", timeout=5).get("models", [])]
+    except Exception: return []
+
+def _ollama_tags(h, p):
+    try: return [m["name"] for m in _api({"host": h}, p, "/api/tags", timeout=5).get("models", [])]
+    except Exception: return []
+
+def _lms_models(h, p):
+    try:
+        d = _api({"host": h}, p, "/api/v0/models", timeout=5)
+        return [(m.get("id"), m.get("state", "?"), m.get("type", "")) for m in d.get("data", [])]
+    except Exception: return []
+
+def cmd_node(conf, args):
+    action = args.action
+    cl = conf.get("cluster") or die("models.json 缺 cluster 配置")
+
+    if action == "ls":
+        for n in cl["nodes"]:
+            parts = []
+            if _is_local(n): parts.append("local-omlx (serve/stop)")
+            for eng, h, p in _svc_engines(n):
+                up = port_open(h, p, 0.8)
+                parts.append(f"{eng}:{p} " + (green("up") if up else dim("down")))
+            print(f"{green(_node_alias(n)):<14} {n['name']}")
+            print("   " + ("  ".join(parts) if parts else dim("(无可控服务)")))
+        return
+
+    targets = [_find_node(conf, args.name)] if args.name else cl["nodes"]
+
+    if action in ("ps", "models"):
+        for n in targets:
+            print(f"\n{green(_node_alias(n))} — {n['name']}")
+            if _is_local(n):
+                any_r = False
+                for key, m in conf["models"].items():
+                    if port_open(conf["host"], m["port"], 0.3):
+                        print(f"   {green('●')} {key} :{m['port']} {dim('('+m['engine']+')')}"); any_r = True
+                if not any_r: print(dim("   (无本地后端在跑; omlxc serve <key> 启动)"))
+                continue
+            for eng, h, p in _svc_engines(n):
+                if not port_open(h, p, 0.8): print(f"   {dim(eng + ' :' + str(p) + ' down')}"); continue
+                if eng == "ollama":
+                    if action == "ps":
+                        ld = _ollama_ps(h, p)
+                        print(f"   ollama :{p} — " + (", ".join(f"{nm} ({sz//10**9}GB)" for nm, sz in ld) if ld else dim("空闲")))
+                    else:
+                        print(f"   ollama :{p} — " + ", ".join(_ollama_tags(h, p)))
+                elif eng == "lmstudio":
+                    ms = _lms_models(h, p)
+                    if action == "ps":
+                        loaded = [i for i, st, _ in ms if st == "loaded"]
+                        print(f"   lmstudio :{p} — " + (", ".join(loaded) if loaded else dim("空闲")))
+                    else:
+                        print(f"   lmstudio :{p} ({len(ms)} 模型):")
+                        for i, st, ty in ms:
+                            print(f"      {green('●') if st=='loaded' else dim('○')} {i} {dim('['+ty+']')}")
+        return
+
+    if action in ("load", "unload"):
+        if not args.name or not args.model:
+            die("用法: omlxc node " + action + " <节点> <模型>")
+        n = _find_node(conf, args.name)
+        if _is_local(n):
+            _run(SELF + (["serve", args.model] if action == "load" else ["stop", args.model])); return
+        for eng, h, p in _svc_engines(n):
+            if not port_open(h, p, 0.8): continue
+            if eng == "ollama" and args.model in _ollama_tags(h, p):
+                ka = "10m" if action == "load" else 0
+                print(dim(f"ollama {action} {args.model} (keep_alive={ka})..."))
+                try:
+                    _api({"host": h}, p, "/api/generate", payload={"model": args.model, "keep_alive": ka}, timeout=120)
+                    print(green(f"  ✓ {action} 完成 @ {_node_alias(n)}")); return
+                except Exception as e: die(f"ollama {action} 失败: {e}")
+            if eng == "lmstudio" and args.model in [i for i, _, _ in _lms_models(h, p)]:
+                if action == "unload":
+                    die("LMStudio 暂不支持 HTTP 卸载(需 lms CLI 或 idle TTL 自动卸)")
+                print(dim(f"lmstudio JIT 加载 {args.model}(发一次预热请求)..."))
+                try:
+                    _api({"host": h}, p, "/v1/chat/completions", payload={"model": args.model, "messages": [{"role": "user", "content": "hi"}], "max_tokens": 1}, timeout=180)
+                    print(green(f"  ✓ 已加载 @ {_node_alias(n)}")); return
+                except Exception as e: die(f"lmstudio 加载失败: {e}")
+        die(f"节点 {args.name} 上无在线引擎拥有模型 '{args.model}'")
+
+
+def bold(s): return C(s, 1)
+
+def cmd_ls(conf, args):
+    """全节点统一模型视图:本地 omlx 后端 + 各副机真实模型(loaded 态)。"""
+    print(bold("● MBP 本地 (omlx 后端):"))
+    for key, m in conf["models"].items():
+        run = port_open(conf["host"], m["port"])
+        print(f"    {green('●') if run else dim('○')} {key:<14} {dim(':' + str(m['port']) + ' ' + m['engine'])}")
+    for n in (conf.get("cluster") or {}).get("nodes", []):
+        if _is_local(n):
+            continue
+        engs = list(_svc_engines(n))
+        anyup = any(port_open(h, p, 0.8) for _, h, p in engs)
+        print(bold(f"\n● {_node_alias(n)} ({n['name']}):") + ("" if anyup else dim("  离线")))
+        for eng, h, p in engs:
+            if not port_open(h, p, 0.8):
+                continue
+            if eng == "ollama":
+                for nm in _ollama_tags(h, p):
+                    print(f"    {green('●')} {nm} {dim('(ollama)')}")
+            elif eng == "lmstudio":
+                for i, st, ty in _lms_models(h, p):
+                    print(f"    {green('●') if st == 'loaded' else dim('○')} {i} {dim('(lmstudio ' + ty + ')')}")
+    print(dim("\n● 在跑/已加载  ○ 停/未加载  ·  控制: omlxc load|unload <模型>  ·  经网关调用见 omlxc gw status"))
+
+_GW_ALIAS = {"coder":"coding","coder-fast":"coding-fast","reasoner":"reasoning",
+             "reasoner-lite":"reasoning-lite","embed":"embedding"}
+
+def _load_unload(conf, model, action):
+    # 网关别名 → 本地 key(上层/习惯用别名)
+    if model not in conf["models"] and model in _GW_ALIAS:
+        model = _GW_ALIAS[model]
+    if model in conf["models"]:
+        _run(SELF + (["serve", model] if action == "load" else ["stop", model])); return
+    for n in (conf.get("cluster") or {}).get("nodes", []):
+        if _is_local(n):
+            continue
+        for eng, h, p in _svc_engines(n):
+            if not port_open(h, p, 0.8):
+                continue
+            names = _ollama_tags(h, p) if eng == "ollama" else [i for i, _, _ in _lms_models(h, p)]
+            if model in names:
+                cmd_node(conf, argparse.Namespace(action=action, name=_node_alias(n), model=model)); return
+    die(f"找不到模型 '{model}'(本地 key 或在线节点上都没有)。用 `omlxc ls` 看可用。")
+
+def cmd_load(conf, args):   _load_unload(conf, args.model, "load")
+def cmd_unload(conf, args): _load_unload(conf, args.model, "unload")
+
+
+
+# ─────────────────────────────────────────────────────────────
+# resolve — 中枢的单一解析点
+# ─────────────────────────────────────────────────────────────
+_ALIAS_SEARCH = [
+    os.environ.get("AETHERFORGE_ALIASES"),
+    os.path.expanduser("~/.config/aetherforge/aliases.yaml"),
+    os.path.expanduser("~/Workspace/projects/aetherforge/packages/gateway/src/"
+                       "llm_gateway/aliases.yaml"),
+]
+
+
+def _load_gw_aliases():
+    """读网关别名表。返回 (映射, 来源描述)。
+
+    刻意不 import yaml —— omlxc 要在裸 python3 下能跑。别名表结构简单
+    (aliases: 下一层 key: value), 手工解析足够, 解析不了就如实降级。
+    """
+    for p in _ALIAS_SEARCH:
+        if not p or not os.path.exists(p):
+            continue
+        try:
+            out, inside = {}, False
+            for ln in open(p):
+                s = ln.rstrip("\n")
+                if re.match(r"^aliases:\s*$", s):
+                    inside = True; continue
+                if inside:
+                    if s and not s.startswith((" ", "\t")):
+                        break          # 缩进结束, 离开 aliases 段
+                    m = re.match(r"\s+([\w./-]+)\s*:\s*(\S+)", s)
+                    if m:
+                        out[m.group(1)] = m.group(2)
+            if out:
+                return out, p
+        except Exception:
+            continue
+    return dict(_GW_ALIAS), "内置 _GW_ALIAS(未找到 aliases.yaml, 可能与网关不一致)"
+
+
+def _pool_state(conf, model_id):
+    """该模型在 LM Link 池里的状态: (可达节点, 是否已加载)。"""
+    pol = (conf.get("engine_policy") or {}).get("nodes") or {}
+    for name, nd in pol.items():
+        if nd.get("primary") != "lmstudio" and "lmstudio" not in (nd.get("fallback") or []):
+            continue
+        h, p = nd.get("host"), nd.get("lmstudio_port", 1234)
+        if not port_open(h, p, 0.8):
+            continue
+        for i, st, _ty in _lms_models(h, p):
+            if i == model_id:
+                return name, st == "loaded"
+    return None, False
+
+
+def cmd_resolve(conf, args):
+    aliases, alias_src = _load_gw_aliases()
+    want = args.name
+    seen, key = set(), want
+    while key in aliases and key not in seen:      # 别名可链式, 但不能成环
+        seen.add(key)
+        key = aliases[key]
+
+    models = conf.get("models", {})
+    fb_map = conf.get("fallback") or {}
+    pol_nodes = (conf.get("engine_policy") or {}).get("nodes") or {}
+
+    info = {"request": want, "resolved": key, "alias_source": alias_src}
+
+    if key in models:
+        m = models[key]
+        port = m["port"]
+        up = port_open(conf["host"], port)
+        fb = fb_map.get(key)
+        fb_node, fb_loaded = _pool_state(conf, fb) if fb else (None, False)
+        info.update(
+            kind="omlx-local", node="mbp", engine=m["engine"],
+            endpoint=f"http://{conf['host']}:{port}/v1", port=port, up=up,
+            model_path=m["alias"], category=m["category"],
+            fallback=fb, fallback_node=fb_node, fallback_loaded=fb_loaded,
+        )
+    else:
+        node, loaded = _pool_state(conf, key)
+        nd = pol_nodes.get(node or "", {})
+        info.update(
+            kind="lm-link-pool" if node else "unknown",
+            node=node, engine="lmstudio" if node else None,
+            endpoint=(f"http://{nd.get('host')}:{nd.get('lmstudio_port', 1234)}/v1"
+                      if node else None),
+            up=bool(node), loaded=loaded, fallback=None,
+        )
+
+    if args.json:
+        print(json.dumps(info, ensure_ascii=False, indent=2)); return
+
+    print(f"\n  请求名   {bold(want)}")
+    if key != want:
+        print(f"  别名展开 → {green(key)}   {dim('(来源: ' + alias_src + ')')}")
+    if info["kind"] == "omlx-local":
+        print(f"  归属     MBP · omlx({info['engine']})   {dim(info['category'])}")
+        print(f"  端点     {info['endpoint']}   " +
+              (green("● 在跑") if info["up"] else yel("○ 未加载 (网关会自动 omlxc load)")))
+        print(f"  权重     {dim(info['model_path'])}")
+        if info["fallback"]:
+            st = (green(f"● 已加载 @ {info['fallback_node']}") if info["fallback_loaded"]
+                  else (dim(f"○ 池中未加载 @ {info['fallback_node']}") if info["fallback_node"]
+                        else red("池不可达")))
+            print(f"  兜底     LM Studio {info['fallback']}  {st}")
+        else:
+            print(f"  兜底     {yel('无')} {dim('(刻意留空: 池中无能力等价模型, 宁可如实失败)')}")
+        print(dim(f"\n  手动:  omlxc serve {key}   ·   omlxc test {key}"))
+    elif info["kind"] == "lm-link-pool":
+        print(f"  归属     LM Link 池 · 就近节点 {info['node']}")
+        print(f"  端点     {info['endpoint']}   " +
+              (green("● 已加载") if info["loaded"] else dim("○ 未加载 (LM Studio 会 JIT 载入)")))
+        print(dim(f"\n  手动:  omlxc load {key}"))
+    else:
+        print(f"  {red('无法解析')} —— 既不是 omlx 本机 key, 也不在在线的 LM Link 池中")
+        print(dim("  用 `omlxc ls` 看当前全部可用模型"))
+    print()
+
+
+def cmd_warm(conf, args):
+    """切换 MBP 常驻模式:同步 autopilot.resident + 暖预设 + 卸其余。"""
+    presets = conf.get("presets") or {}
+    if not args.preset:
+        print(bold("可用预设(omlxc warm <名>):"))
+        for k, v in presets.items():
+            print(f"  {green(k):<10} {dim(', '.join(v))}")
+        return
+    if args.preset not in presets:
+        die(f"无此预设: {args.preset}。可选: {', '.join(presets)}")
+    want = presets[args.preset]
+    for k in want:
+        if k not in conf["models"]:
+            die(f"预设 {args.preset} 含未知本地模型 {k}")
+    # 持久化常驻集(autopilot 会据此保持/卸载)
+    dd = json.load(open(CONF))
+    dd.setdefault("autopilot", {})["resident"] = list(want)
+    json.dump(dd, open(CONF, "w"), ensure_ascii=False, indent=2)
+    print(green(f"常驻模式 → {args.preset}: {', '.join(want)}"))
+    # 停掉不在预设里的本地后端
+    for key, m in conf["models"].items():
+        if key not in want and port_open(conf["host"], m["port"]):
+            _run(SELF + ["stop", key]); print(dim(f"  停 {key}"))
+    # 暖预设
+    for key in want:
+        if not port_open(conf["host"], conf["models"][key]["port"]):
+            _run(SELF + ["serve", key]); print(green(f"  暖 {key} (冷加载数十秒)"))
+    print(dim("autopilot 会保持常驻集、卸载其余空闲后端。"))
+
+
+
+def _fmt_ago(sec):
+    sec = int(sec)
+    if sec < 60: return f"{sec}s前"
+    if sec < 3600: return f"{sec//60}m前"
+    if sec < 86400: return f"{sec//3600}h前"
+    return f"{sec//86400}d前"
+
+def cmd_stats(conf, args):
+    """用量可观测:各本地后端请求量/最近活跃 + 各节点加载/显存。"""
+    logs = os.path.join(OMLX_ROOT, "logs")
+    print(bold("● MBP 本地后端 — 推理请求量 / 最近活跃:"))
+    rows = []
+    for key, m in conf["models"].items():
+        lf = os.path.join(logs, f"{key}.log")
+        if not os.path.exists(lf): continue
+        posts = 0; last = 0.0
+        try:
+            for ln in open(lf, errors="ignore"):
+                if '"POST /v1/' in ln: posts += 1
+            last = os.path.getmtime(lf)
+        except Exception: pass
+        run = port_open(conf["host"], m["port"])
+        if posts or run:
+            ago = "—" if not last else _fmt_ago(time.time() - last)
+            rows.append((key, posts, run, ago))
+    rows.sort(key=lambda r: -r[1])
+    if not rows:
+        print(dim("  (无本地日志)"))
+    for key, posts, run, ago in rows:
+        print(f"  {green('●') if run else dim('○')} {key:<14} {str(posts):>5} 次   {dim('最近 ' + ago)}")
+
+    print(bold("\n● 各节点当前加载 / 显存:"))
+    for n in (conf.get("cluster") or {}).get("nodes", []):
+        al = _node_alias(n)
+        if _is_local(n):
+            loaded = [k for k, m in conf["models"].items() if port_open(conf["host"], m["port"])]
+            print(f"  {al:<9} {len(loaded)} 后端在跑: {', '.join(loaded) if loaded else dim('无')}")
+        else:
+            for eng, h, p in _svc_engines(n):
+                if not port_open(h, p, 0.8):
+                    print(f"  {al:<9} {dim(eng + ' 离线')}"); continue
+                if eng == "ollama":
+                    ld = _ollama_ps(h, p)
+                    s = ", ".join(f"{nm}({sz//10**9}G)" for nm, sz in ld) if ld else dim("空闲")
+                    print(f"  {al:<9} ollama:   {s}")
+                elif eng == "lmstudio":
+                    lo = [i for i, st, _ in _lms_models(h, p) if st == "loaded"]
+                    print(f"  {al:<9} lmstudio: {', '.join(lo) if lo else dim('空闲')}")
+    print(dim("\n网关无 DB 不记 spend;以上按各后端日志 + 实时探活统计。"))
+
+
+
+def _active_root(conf):
+    return conf.get("active_root") or os.path.join(OMLX_ROOT, "models-active")
+
+def _linked_realpaths(conf):
+    # 遍历 models-active 下所有软链(含只有软链无 key 的备选)
+    out = set()
+    root = _active_root(conf)
+    for dp, dirs, files in os.walk(root):
+        for nm in list(dirs) + list(files):
+            p = os.path.join(dp, nm)
+            if os.path.islink(p):
+                rp = os.path.realpath(p)
+                if os.path.exists(rp): out.add(rp)
+    return out
+
+def _scan_disk_mlx(base="/Volumes/Model/LMStudio"):
+    seen = []
+    for st in sorted(glob.glob(base + "/*/*/*.safetensors")):
+        d = os.path.dirname(st)
+        if d not in seen:
+            seen.append(d)
+    return [(d, d.replace(base + "/", "")) for d in seen]
+
+def _is_audio(name):
+    n = name.lower()
+    return any(x in n for x in ("whisper","kokoro","chatterbox","parakeet","moonshine","bark","xtts","vall-e","seamless","canary","sensevoice","funasr","wav2vec","-tts","tts-","-asr","speech"))
+
+def _detect_engine(model_dir):
+    name = os.path.basename(model_dir).lower()
+    if any(x in name for x in ("embed", "bge", "gte", "e5-", "nomic")):
+        return "mlx_embeddings"
+    cfg = os.path.join(model_dir, "config.json")
+    try:
+        s = open(cfg, errors="ignore").read().lower()
+        if any(x in s for x in ('"vision_config"', 'vision_tower', 'image_size', '"visual"', 'image_token')):
+            return "mlx_vlm"
+    except Exception:
+        pass
+    if any(x in name for x in ("-vl", "vlm", "omni", "ornith", "mythos")):
+        return "mlx_vlm"
+    return "mlx_lm"
+
+def _fix_mtp_dir(model_dir):
+    cfg = os.path.join(model_dir, "config.json")
+    if not os.path.exists(cfg): return False
+    try: txt = open(cfg).read(); d = json.loads(txt)
+    except Exception: return False
+    hit = [False]
+    def w(o):
+        if isinstance(o, dict):
+            for k, v in list(o.items()):
+                if k == "mtp_num_hidden_layers" and v: o[k] = 0; hit[0] = True
+                else: w(v)
+        elif isinstance(o, list):
+            for x in o: w(x)
+    w(d)
+    if hit[0]:
+        open(cfg + ".bak-mtp", "w").write(txt)
+        json.dump(d, open(cfg, "w"), ensure_ascii=False, indent=2)
+    return hit[0]
+
+def _mk_key(sub, taken):
+    base = re.sub(r"[^a-z0-9]+", "-", os.path.basename(sub).lower()).strip("-")[:32]
+    k = base; i = 2
+    while k in taken: k = f"{base}-{i}"; i += 1
+    return k
+
+def _next_free_port(conf, used):
+    for p in list(range(8086, 8090)) + list(range(8189, 8210)):
+        if p in used: continue
+        if not port_open(conf["host"], p, 0.2):
+            return p
+    die("无空闲端口(8086-8099/8189-8199 都占了)")
+
+def cmd_link(conf, args):
+    base = "/Volumes/Model/LMStudio"
+    linked = _linked_realpaths(conf)
+    all_un = [(d, sub) for d, sub in _scan_disk_mlx(base) if os.path.realpath(d) not in linked]
+    audio = [(d, sub) for d, sub in all_un if _is_audio(os.path.basename(d))]
+    cand = [(d, sub) for d, sub in all_un if not _is_audio(os.path.basename(d))]
+    for d, sub in audio:
+        print(dim(f"  跳过(音频/语音, omlx 无引擎): {sub}"))
+    if not cand:
+        print(green("盘上 MLX 模型都已接入 omlx,无新增。")); return
+    taken = set(conf["models"].keys()); plans = []
+    for d, sub in cand:
+        eng = _detect_engine(d)
+        cat = {"mlx_vlm": "vision", "mlx_embeddings": "retrieval"}.get(eng, "coding")
+        key = _mk_key(sub, taken); taken.add(key)
+        plans.append((key, sub, d, cat, eng))
+    print(bold(f"发现 {len(plans)} 个未接入的 MLX 模型:"))
+    for key, sub, d, cat, eng in plans:
+        print(f"  {green(key):<30} {dim(eng + ' → ' + cat)}  {dim(sub)}")
+    if not args.apply:
+        print(dim("\n以上为预览。确认后一键接入: omlxc link --apply")); return
+
+    dd = json.load(open(CONF))
+    open(CONF + ".bak-link-" + time.strftime("%H%M%S"), "w").write(json.dumps(dd, ensure_ascii=False, indent=2))
+    used = {m["port"] for m in dd["models"].values()}
+    root = _active_root(conf); nmtp = 0
+    for key, sub, d, cat, eng in plans:
+        cd = os.path.join(root, cat); os.makedirs(cd, exist_ok=True)
+        link = os.path.join(cd, key)
+        if os.path.islink(link) or os.path.exists(link): os.remove(link)
+        os.symlink(d, link)
+        if _fix_mtp_dir(d): nmtp += 1
+        port = _next_free_port(conf, used); used.add(port)
+        dd["models"][key] = {
+            "category": cat, "alias": f"{cat}/{key}", "port": port, "engine": eng,
+            "role": "vision" if eng == "mlx_vlm" else "chat",
+            "reasoning": False,
+            "params": ({"max_tokens": 2048} if eng != "mlx_lm" else {"temp": 0.3, "top_p": 0.9, "kv_bits": 8, "max_tokens": 2048}),
+            "note": "omlx link 自动接入",
+        }
+        if eng != "mlx_lm":
+            dd["models"][key]["requires_pip"] = "mlx-vlm" if eng == "mlx_vlm" else "mlx-embeddings"
+        print(f"  {green('✓')} {key} :{port} ({eng})")
+    json.dump(dd, open(CONF, "w"), ensure_ascii=False, indent=2)
+    print(green(f"\n已接入 {len(plans)} 个" + (f"(修 MTP {nmtp} 个)" if nmtp else "")))
+    print(dim("下一步(经网关调用):在网关配置加 model_name=<key> → :9000/<key>/v1,再 `omlxc gw sync` + 重启网关。"))
+    print(dim("或用 `omlxc serve <key>` / `omlxc load <key>` 直接本地起。`omlxc doctor` 校验。"))
+
+
+
+def _port_owner(port):
+    """返回 (pid, 命令) 或 (None, None)。"""
+    try:
+        out = subprocess.run(["lsof", "-nP", "-iTCP:%d" % int(port), "-sTCP:LISTEN", "-t"],
+                             capture_output=True, text=True, timeout=5).stdout.strip()
+        if not out: return (None, None)
+        pid = int(out.split("\n")[0])
+        cmd = subprocess.run(["ps", "-p", str(pid), "-o", "command="],
+                             capture_output=True, text=True, timeout=5).stdout.strip()
+        return (pid, cmd)
+    except Exception:
+        return (None, None)
+
+def _is_omlx_proc(cmd):
+    return bool(cmd) and any(x in cmd for x in ("mlx_lm.server", "mlx_vlm.server", "omlx-embed-server"))
+
+def cmd_portcheck(conf, args):
+    """检查每个模型端口是否被非 omlx 进程占用(配错端口/被 Docker 等抢占)。"""
+    bad = []
+    for key, m in conf["models"].items():
+        p = m.get("port")
+        if not p: continue
+        pid, cmd = _port_owner(p)
+        if pid and not _is_omlx_proc(cmd):
+            bad.append((key, p, pid, (cmd or "")[:60]))
+    if not bad:
+        print(green("✅ 端口检查通过:所有模型端口未被外部进程占用"))
+    else:
+        print(red("❌ 端口冲突(被非 omlx 进程占用,该模型无法启动):"))
+        for key, p, pid, cmd in bad:
+            print(f"   {key:<22} :{p}  被 pid {pid} 占用  {dim(cmd)}")
+        print(dim("\n处理:改 models.json 里该模型的 port 到空闲端口(建议 8189-8209 段),或停掉占用进程。"))
+    return bad
+
+
+
+M1_MODEL_DIR = os.path.expanduser(
+    "~/Workspace/projects/ecos/src/ecos/ssot/mof/m1/model")
+SSOT_OMLX_FILE = os.path.join(M1_MODEL_DIR, "MODEL-BREW-OMLX-LOCAL.yaml")
+
+_CAP_HINT = {
+    "mlx_vlm": ["chat", "vision"],
+    "mlx_embeddings": ["embedding"],
+    "mlx_lm": ["chat"],
+}
+
+def _infer_caps(alias, backend_key, conf):
+    """按别名语义 + 本地引擎类型推断能力。"""
+    a = alias.lower()
+    if "embed" in a or "bge" in a:
+        return ["embedding"]
+    if "rerank" in a:
+        return ["rerank"]
+    if "ocr" in a:
+        return ["chat", "vision", "ocr"]
+    if "vision" in a or "vl" in a or "ornith" in a or a in ("mythos",):
+        return ["chat", "vision"]
+    caps = ["chat"]
+    m = conf.get("models", {}).get(backend_key or "", {})
+    eng = m.get("engine")
+    if eng in _CAP_HINT:
+        caps = list(_CAP_HINT[eng])
+    if m.get("reasoning") or "reason" in a or a in ("reasoner", "coder", "coder-fast"):
+        if "reasoning" not in caps:
+            caps.append("reasoning")
+    if "coder" in a or "coding" in a:
+        if "tools" not in caps:
+            caps.append("tools")
+    return caps
+
+def _gw_aliases(conf):
+    """Return [(model_key, api_base, backend_key)] from omlx models.json (SSOT).
+
+    Reads models.json directly — LiteLLM :4000 deprecated, models.json is the
+    single naming authority. Ensures omlx key names flow unchanged into SSOT.
+    """
+    out = []
+    host = conf.get("host", "127.0.0.1")
+    for key, m in conf.get("models", {}).items():
+        port = m.get("port")
+        if not port:
+            continue
+        base = f"http://{host}:9000/{key}/v1"
+        out.append((key, base, key))
+    return out
+
+def cmd_ssot_sync(conf, args):
+    """把网关别名同步成 aetherforge SSOT 的 ModelDefinition(本地算力可被上层发现)。"""
+    if not os.path.isdir(M1_MODEL_DIR):
+        die(f"找不到 SSOT model 目录: {M1_MODEL_DIR}")
+    aliases = _gw_aliases(conf)
+    if not aliases:
+        die("网关里没解析到别名")
+    models = []
+    _seen = {}   # model_id -> index(多部署智能路由合并为一条)
+    for alias, base, key in aliases:
+        loc = ("MBP-local" if (":9000/" in base or "127.0.0.1:8" in base)
+               else "MBP-LMStudio" if "127.0.0.1:1234" in base
+               else "mac-mini" if "100.99.210.78" in base
+               else "Y7000P" if "100.64.43.36" in base else "other")
+        if alias in _seen:
+            prev = models[_seen[alias]]
+            locs = set(prev["runs_on"].replace("multi:", "").split("+")) | {loc}
+            prev["runs_on"] = "multi:" + "+".join(sorted(locs))
+            prev["display_name"] = f"{alias} ({prev['runs_on']})"
+            continue
+        _seen[alias] = len(models)
+        models.append({
+            "model_id": alias,
+            "display_name": f"{alias} ({loc})",
+            "cost_per_1k_input": 0.0,     # 本地算力零边际成本
+            "cost_per_1k_output": 0.0,
+            "context_window": int(conf.get("models", {}).get(key or "", {})
+                                  .get("params", {}).get("max_tokens", 0) or 32768),
+            "capabilities": _infer_caps(alias, key, conf),
+            "runs_on": loc,
+        })
+    doc = {
+        "type": "ModelDefinition",
+        "status": "active",
+        "engine_ref": "ENG-OMLX-LOCAL",
+        "model_driven_refs": {
+            "source": "omlxc ssot-sync (gateway aliases + models.json)",
+            "synced_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        },
+        "governance": {
+            "owner": "omlx",
+            "steward": "omlxc-ssot-sync",
+            "freshness_policy": "on-change (跑 `omlxc ssot-sync`)",
+        },
+        "models": models,
+    }
+    if args.dry:
+        print(bold(f"预览:{len(models)} 个本地模型将写入 SSOT"))
+        for m in models[:40]:
+            print(f"  {green(m['model_id']):<22} {dim(m['runs_on']):<16} {dim(','.join(m['capabilities']))}")
+        print(dim(f"\n目标: {SSOT_OMLX_FILE}\n确认后执行: omlxc ssot-sync --apply"))
+        return
+    if not args.apply:
+        print(dim("默认只预览。写入请加 --apply(或 --dry 明确预览)"))
+        args.dry = True
+        return cmd_ssot_sync(conf, args)
+    try:
+        import yaml as _y
+    except ImportError:
+        die("需要 pyyaml: pip3 install pyyaml")
+    if os.path.exists(SSOT_OMLX_FILE):
+        shutil.copy2(SSOT_OMLX_FILE, SSOT_OMLX_FILE + ".bak")
+    with open(SSOT_OMLX_FILE, "w") as f:
+        _y.safe_dump(doc, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
+    print(green(f"✅ 已写入 SSOT: {len(models)} 个本地模型"))
+    print(dim(f"   {SSOT_OMLX_FILE}"))
+    print(dim("   上层(aetherforge/agora/cockpit)现在能发现本地模型及其能力。"))
+
+
+
+def main():
+    conf=load_conf()
+    ap=argparse.ArgumentParser(prog="omlxc", description="omlxc — 本地/集群 MLX 统一管理 CLI",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""注: 本工具是 omlxc(你的集群 CLI)。omlx 是另一个第三方 oMLX server(start/serve/diagnose),勿混。
+
+命令分组:
+  看:   ls 全节点模型 · stats 用量/显存 · node ps 已加载 · cluster 健康大盘 · status 本地
+  控:   load/unload <模型>(自动本地或远程) · serve/stop <key> 本地 · warm <预设> 切模式 · use 切主力 · node 按节点
+  网关: gw status|sync|start|stop|test
+  运维: up/down 整套 · autostart · dashboard · doctor · portcheck 端口冲突 · health · test · models 磁盘发现(标已接) · link 一键接入新模型 · ssot-sync 同步到 aetherforge SSOT""")
+    sub=ap.add_subparsers(dest="cmd")
+    sub.add_parser("list")
+    s=sub.add_parser("serve"); s.add_argument("key"); s.add_argument("-f","--foreground",action="store_true"); s.add_argument("--host", help="绑定地址覆盖, 如 tailnet IP 或 0.0.0.0")
+    s=sub.add_parser("stop"); s.add_argument("key")
+    sub.add_parser("status")
+    s=sub.add_parser("health"); s.add_argument("key",nargs="?")
+    s=sub.add_parser("test"); s.add_argument("key"); s.add_argument("-m","--message")
+    s=sub.add_parser("doctor"); s.add_argument("--fix",action="store_true")
+    s=sub.add_parser("use"); s.add_argument("category"); s.add_argument("alias")
+    sub.add_parser("models")
+    s=sub.add_parser("resolve"); s.add_argument("name"); s.add_argument("--json",action="store_true")
+    sub.add_parser("cluster")
+    sub.add_parser("up")
+    sub.add_parser("down")
+    s=sub.add_parser("dashboard"); s.add_argument("action", nargs="?", default="start", choices=["start","stop"])
+    s=sub.add_parser("autostart"); s.add_argument("action", nargs="?", default="start", choices=["start","stop"])
+    s=sub.add_parser("gw"); s.add_argument("action", choices=["start","stop","status","test","sync"]); s.add_argument("extra", nargs="?")
+    s=sub.add_parser("node"); s.add_argument("action", choices=["ls","ps","models","load","unload"]); s.add_argument("name", nargs="?"); s.add_argument("model", nargs="?")
+    sub.add_parser("ls")
+    sub.add_parser("stats")
+    sub.add_parser("portcheck")
+    s=sub.add_parser("ssot-sync"); s.add_argument("--apply",action="store_true"); s.add_argument("--dry",action="store_true")
+    s=sub.add_parser("link"); s.add_argument("--apply", action="store_true")
+    s=sub.add_parser("warm"); s.add_argument("preset", nargs="?")
+    s=sub.add_parser("load"); s.add_argument("model")
+    s=sub.add_parser("unload"); s.add_argument("model")
+    args=ap.parse_args()
+    fn={"list":cmd_list,"serve":cmd_serve,"stop":cmd_stop,"status":cmd_status,
+        "health":cmd_health,"test":cmd_test,"doctor":cmd_doctor,"use":cmd_use,"models":cmd_models,"resolve":cmd_resolve,
+        "cluster":cmd_cluster,"dashboard":cmd_dashboard,"autostart":cmd_autostart,
+        "up":cmd_up,"down":cmd_down,"gw":cmd_gw,"node":cmd_node,"ls":cmd_ls,"load":cmd_load,"unload":cmd_unload,"warm":cmd_warm,"stats":cmd_stats,"link":cmd_link,"portcheck":cmd_portcheck,"ssot-sync":cmd_ssot_sync}.get(args.cmd)
+    if not fn: ap.print_help(); return
+    fn(conf, args)
+
+if __name__=="__main__":
+    main()

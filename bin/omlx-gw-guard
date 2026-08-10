@@ -1,0 +1,13 @@
+#!/bin/bash
+# omlx-gw-guard —— 被 launchd 托管，前台运行 LiteLLM 网关。
+# 挂载守卫：模型盘没挂就退出重试(由 launchd KeepAlive+ThrottleInterval 轮询)。
+export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
+ROOT=/Volumes/Model/omlx
+CFG="$ROOT/gateway/litellm-config.yaml"
+BIN="$ROOT/gateway/venv/bin/litellm"
+
+if [ ! -r "$CFG" ] || [ ! -x "$BIN" ]; then
+  echo "[gw-guard] 模型盘/网关未就绪，10s 后重试"; sleep 10; exit 1
+fi
+echo "[gw-guard] 启动网关 :4000"
+exec "$BIN" --config "$CFG" --host 0.0.0.0 --port 4000
