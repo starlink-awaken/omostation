@@ -31,6 +31,12 @@ def _run(*extra_args: str) -> subprocess.CompletedProcess:
     )
 
 
+def test_annotations_are_deferred_for_python39_compatibility() -> None:
+    """The pre-push hook uses Python 3.9, where ``Path | None`` evaluates eagerly."""
+    source = SCRIPT.read_text(encoding="utf-8")
+    assert "from __future__ import annotations" in source
+
+
 def test_detect_runs_cleanly():
     result = _run()
     assert result.returncode in (0, 1)
@@ -51,7 +57,10 @@ def test_json_output():
 def test_fix_dry_run():
     result = _run("--fix")
     assert result.returncode in (0, 1)
-    if "DIVERGED" in result.stdout:
+    has_diverged_result = any(
+        line.lstrip().startswith("FAIL ") for line in result.stdout.splitlines()
+    )
+    if has_diverged_result:
         assert "would fix" in result.stdout or "→" in result.stdout
 
 
