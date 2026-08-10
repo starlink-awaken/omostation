@@ -1,4 +1,4 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene delegation-preflight delegation-alias-check
 
 PY := uv run --with pyyaml python
 
@@ -250,6 +250,12 @@ ci-local-fast: check-layers
 check-layers:
 	@echo "── 分层依赖检查 ─────────────────────────────────────"
 	$(PY) bin/layer-dependency-check.py
+
+delegation-preflight:  ## delegation preflight — 会话启动前检查 subagent 委托基础设施 (--json)
+	$(PY) bin/delegation-preflight.py --json
+
+delegation-alias-check:  ## delegation alias check — opencode ↔ omlx 网关别名双向交叉检查 (--json)
+	$(PY) bin/delegation-alias-check.py --json
 
 ssot-status:  ## SSOT 变更状态检查
 	@echo "── SSOT 状态 ────────────────────────────────────────"
