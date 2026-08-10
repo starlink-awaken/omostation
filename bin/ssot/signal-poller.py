@@ -21,6 +21,9 @@ from typing import Any
 
 from _shared import ROOT, load_yaml, utc_now
 
+# W0-03: wire canonical freshness-based health derivation
+from freshness import project_all_health
+
 SIGNAL_SOURCES = ROOT / ".omo" / "_truth" / "registry" / "signal-sources.yaml"
 STATE_FILE = ROOT / ".omo" / "state" / "signal-poller-state.json"
 
@@ -195,7 +198,46 @@ def main(argv: list[str] | None = None) -> int:
         "--auto-trigger", action="store_true",
         help="auto-start journeys on signal detection",
     )
+    parser.add_argument(
+        "--health", action="store_true",
+        help="output canonical freshness-derived health projection (W0-03)",
+    )
+    parser.add_argument(
+        "--json", action="store_true",
+        help="JSON output (for --health mode)",
+    )
     args = parser.parse_args(argv)
+
+    # W0-03: canonical health projection mode.
+    # Routes through freshness.project_all_health — no state duplication.
+    if args.health:
+        projections = project_all_health()
+        if args.json:
+            output = {
+                "derived_at": utc_now(),
+                "sources": [p.to_dict() for p in projections],
+                "summary": {
+                    "total": len(projections),
+                    "healthy": sum(1 for p in projections if p.status == "healthy"),
+                    "degraded": sum(1 for p in projections if p.status == "degraded"),
+                    "unreachable": sum(1 for p in projections if p.status == "unreachable"),
+                    "unknown": sum(1 for p in projections if p.status == "unknown"),
+                },
+            }
+            print(json.dumps(output, ensure_ascii=False, indent=2, sort_keys=True))
+        else:
+            print(f"{'Source':<30} {'Status':<14} {'Age':<12} {'Reason'}")
+            print("-" * 90)
+            for p in projections:
+                age_str = f"{p.age_seconds:.0f}s" if p.age_seconds is not None else "—"
+                icon = {
+                    "healthy": "✅",
+                    "degraded": "⚠️ ",
+                    "unreachable": "🔴",
+                    "unknown": "❓",
+                }.get(p.status, "  ")
+                print(f"{p.source_id:<30} {icon}{p.status:<12} {age_str:<12} {p.reason}")
+        return 0
 
     if args.watch:
         auto_info = (
