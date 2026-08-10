@@ -62,7 +62,7 @@
         }
       },
       "note": "MoE+MTP 高吞吐。若加载报 MTP 错请运行 `omlx doctor --fix`。",
-      "size_gb": 35
+      "size_gb": 28
     },
     "coding-next": {
       "category": "coding",
@@ -81,7 +81,7 @@
         }
       },
       "note": "qwen3_next 线性注意力，51G，巨型仓库。占内存最大。",
-      "size_gb": 10
+      "size_gb": 52
     },
     "reasoning": {
       "category": "reasoning",
@@ -100,7 +100,7 @@
         }
       },
       "note": "GLM-4.7-Flash，复杂规划/多步推理。推理段长，max_tokens 要大。",
-      "size_gb": 8
+      "size_gb": 30
     },
     "reasoning-lite": {
       "category": "reasoning",
@@ -119,7 +119,7 @@
         }
       },
       "note": "nemotron_h，4bit 轻量推理，省内存。",
-      "size_gb": 10
+      "size_gb": 18
     },
     "embedding": {
       "category": "retrieval",
@@ -131,7 +131,7 @@
       "params": {},
       "requires_pip": "mlx-embeddings",
       "note": "RAG 检索，暴露 /v1/embeddings。需先 pip 安装 mlx-embeddings。",
-      "size_gb": 1
+      "size_gb": 8
     },
     "vision": {
       "category": "vision",
@@ -146,7 +146,7 @@
       },
       "requires_pip": "mlx-vlm",
       "note": "多模态。需先 pip 安装 mlx-vlm。",
-      "size_gb": 5
+      "size_gb": 6
     },
     "vision-large": {
       "category": "vision",
@@ -161,7 +161,7 @@
       },
       "requires_pip": "mlx-vlm",
       "note": "Qwen3.6-27B 多模态。注意原 config 有 MTP 坑，`omlx doctor --fix` 已处理。",
-      "size_gb": 10
+      "size_gb": 16
     },
     "mythos": {
       "category": "vision",
@@ -195,7 +195,7 @@
         }
       },
       "note": "Qwythos-9B mxfp4 纯文本(无视觉)· 创意/角色扮演 · 快速版",
-      "size_gb": 10
+      "size_gb": 5
     },
     "deepseek-v4-flash": {
       "category": "coding",
@@ -214,7 +214,7 @@
         }
       },
       "note": "DeepSeek-V4 Flash MoE 编码/通用",
-      "size_gb": 10
+      "size_gb": 4
     },
     "deepseek-v4-pro": {
       "category": "coding",
@@ -233,7 +233,7 @@
         }
       },
       "note": "DeepSeek-V4 Pro MoE(大)",
-      "size_gb": 10
+      "size_gb": 14
     },
     "mistral-medium-128b": {
       "category": "reasoning",
@@ -249,7 +249,7 @@
         "max_tokens": 2048
       },
       "note": "Mistral-Medium 128B(巨大,按需)",
-      "size_gb": 10
+      "size_gb": 74
     },
     "nemotron-omni": {
       "category": "reasoning",
@@ -265,7 +265,7 @@
         "max_tokens": 2048
       },
       "note": "Nemotron Omni 30B MoE 推理",
-      "size_gb": 10
+      "size_gb": 23
     },
     "ornith-9b": {
       "category": "vision",
@@ -279,7 +279,7 @@
       },
       "note": "Ornith 1.0 9B 多模态(轻)",
       "requires_pip": "mlx-vlm",
-      "size_gb": 10
+      "size_gb": 6
     },
     "ornith-35b": {
       "category": "vision",
@@ -293,7 +293,7 @@
       },
       "note": "Ornith 1.0 35B 多模态",
       "requires_pip": "mlx-vlm",
-      "size_gb": 10
+      "size_gb": 25
     },
     "embed-bge-m3": {
       "category": "retrieval",
@@ -307,7 +307,7 @@
       },
       "note": "bge-m3 备用检索 embedding",
       "requires_pip": "mlx-embeddings",
-      "size_gb": 10
+      "size_gb": 1
     },
     "baai-bge-reranker-v2-m3-mlx-fp16": {
       "category": "retrieval",
@@ -321,7 +321,7 @@
       },
       "note": "omlx link 自动接入",
       "requires_pip": "mlx-embeddings",
-      "size_gb": 10
+      "size_gb": 3
     },
     "gemma-4-26b-a4b-it-qat-mlx-4bit": {
       "category": "vision",
@@ -335,7 +335,7 @@
       },
       "note": "omlx link 自动接入",
       "requires_pip": "mlx-vlm",
-      "size_gb": 10
+      "size_gb": 15
     },
     "gemma-4-31b-it-mlx-8bit": {
       "category": "vision",
@@ -349,7 +349,7 @@
       },
       "note": "omlx link 自动接入",
       "requires_pip": "mlx-vlm",
-      "size_gb": 10
+      "size_gb": 32
     },
     "gemma-4-e2b-it-mlx-8bit": {
       "category": "vision",
@@ -363,7 +363,7 @@
       },
       "note": "omlx link 自动接入",
       "requires_pip": "mlx-vlm",
-      "size_gb": 10
+      "size_gb": 6
     },
     "mid-local": {
       "category": "coding",
@@ -382,7 +382,7 @@
         }
       },
       "note": "Qwen3.6-27B 通用对话 (15GB, 比 coding-fast 更通用)",
-      "size_gb": 12
+      "size_gb": 16
     },
     "coder-precise": {
       "category": "coding",
@@ -401,7 +401,7 @@
         }
       },
       "note": "Qwopus3.6-27B-Coder 精确编码 (27GB, 比 coding-fast 更精确)",
-      "size_gb": 10
+      "size_gb": 28
     }
   },
   "cluster": {

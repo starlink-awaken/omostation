@@ -37,9 +37,21 @@ omlxc app load mythos-fast
 omlxc app unload mythos-fast
 omlxc gw test mythos-fast
 
+# Benchmark an already loaded model with memory/OOM and thinking guards
+omlxc bench mythos-fast --iterations 5
+
 # Validate tools, model paths, and every configured fallback target
 omlxc doctor
 ```
+
+`omlxc bench` deliberately refuses to JIT-load an unloaded model. It samples the
+oMLX process footprint and host memory pressure before every request, treats the
+first request as warm-up, fails on retained post-warm-up growth, and rejects any
+reasoning field or `<think>` output. Load one model at a time when comparing large
+models, then unload it before moving to the next candidate.
+
+The measured fleet/model baseline and placement recommendations live in
+[`docs/model-audit-2026-08-10.md`](docs/model-audit-2026-08-10.md).
 
 `omlxc up` reconciles the App projection and starts the AetherForge launch agent.
 `omlxc down` stops the facade and legacy local processes without unloading the
