@@ -2,6 +2,17 @@
   "_comment": "omlx 单一数据源 (schema v2)。CLI `omlx` 读取本文件。落地: /Users/xiamingxing/omlx/conf/models.json — 2026-08-10 从 /Volumes/Model/omlx 迁出: launchd 服务受 macOS TCC 限制无法执行外置卷上的二进制(Operation not permitted), 导致 aetherforge 门面无法调用 omlx。模型权重仍在 /Volumes/Model/LMStudio, 未迁移。",
   "version": 2,
   "active_root": "/Users/xiamingxing/omlx/models-active",
+  "omlx_app": {
+    "base_url": "http://127.0.0.1:8000",
+    "model_dir": "/Users/xiamingxing/omlx/app-models",
+    "timeout_sec": 30,
+    "request_defaults": {
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      },
+      "thinking_budget": 0
+    }
+  },
   "log_dir": "/Users/xiamingxing/omlx/logs",
   "run_dir": "/Users/xiamingxing/omlx/run",
   "cache_dir": "/Users/xiamingxing/omlx/cache",
@@ -401,8 +412,9 @@
         "host": "127.0.0.1",
         "role": "主力+网关",
         "probe": {
-          "reasoner": 8083,
-          "embed": 8183
+          "oMLX App": 8000,
+          "lmstudio": 1234,
+          "ollama": 11434
         }
       },
       {
@@ -411,8 +423,7 @@
         "role": "LMStudio+Ollama 第二节点",
         "probe": {
           "lmstudio": 1234,
-          "ollama": 11434,
-          "oMLX": 8000
+          "ollama": 11434
         }
       },
       {
@@ -433,7 +444,7 @@
     }
   },
   "autopilot": {
-    "enabled": true,
+    "enabled": false,
     "idle_ttl_sec": 900,
     "resident": [
       "coding",
@@ -499,54 +510,81 @@
     ]
   },
   "engine_policy": {
-    "_comment": "各节点的引擎分工。MBP 用 omlx(mlx_lm.server / mlx_vlm / mlx_embeddings) 做主引擎与加载器, LM Studio 作兜底; mac-mini 与 Y7000P 只用 LM Studio (三机经 LM Link 合成同一模型池)。网关按此决定路由顺序。",
+    "_comment": "各节点的引擎分工。MBP 用 oMLX App 统一承载本地 MLX，LM Link 池作第一兜底，Ollama 作第二兜底；旧的每模型独立端口仅保留为人工回滚通道。",
     "nodes": {
       "mbp": {
         "host": "127.0.0.1",
-        "primary": "omlx",
+        "primary": "omlx_app",
         "fallback": [
-          "lmstudio"
+          "lmstudio",
+          "ollama"
         ],
+        "omlx_app_port": 8000,
         "lmstudio_port": 1234,
-        "note": "omlx 后端每模型一个端口(见 models.*.port); LM Studio 需 `lms server start`"
+        "ollama_port": 11434,
+        "note": "oMLX App 读取 app-models 扁平投影；models.*.port 只供 legacy serve/stop 回滚"
       },
       "macmini": {
         "host": "100.99.210.78",
         "primary": "lmstudio",
-        "fallback": [],
-        "lmstudio_port": 1234
+        "fallback": [
+          "ollama"
+        ],
+        "lmstudio_port": 1234,
+        "ollama_port": 11434
       },
       "y7000p": {
         "host": "100.64.43.36",
         "primary": "lmstudio",
-        "fallback": [],
-        "lmstudio_port": 1234
+        "fallback": [
+          "ollama"
+        ],
+        "lmstudio_port": 1234,
+        "ollama_port": 11434
       }
     }
   },
   "fallback": {
     "_comment": "本机 omlx 后端不可用时改路由到 LM Studio 池的哪个模型。键为 models 里的 omlx key; 值为 LM Studio 模型 id。空/缺失 = 没有兜底(宁可如实失败, 也不要兜到能力不匹配的模型上)。",
-    "coding": "qwen/qwen3.5-9b",
-    "coding-fast": "qwen/qwen3.5-9b",
-    "coding-next": "qwen/qwen3.5-9b",
-    "coder-precise": "qwen/qwen3.5-9b",
-    "mid-local": "qwen/qwen3.5-9b",
-    "deepseek-v4-flash": "qwen/qwen3.5-9b",
-    "deepseek-v4-pro": "qwen/qwen3.5-9b",
-    "reasoning": "qwen/qwen3.5-9b",
-    "reasoning-lite": "qwen/qwen3.5-9b",
-    "mistral-medium-128b": "qwen/qwen3.5-9b",
-    "nemotron-omni": "qwen/qwen3.5-9b",
-    "mythos": "qwythos-9b-claude-mythos-5-1m",
+    "coding": "gemma-4-e4b-it-mlx",
+    "coding-fast": "gemma-4-e4b-it-mlx",
+    "coding-next": "gemma-4-e4b-it-mlx",
+    "coder-precise": "gemma-4-e4b-it-mlx",
+    "mid-local": "gemma-4-e4b-it-mlx",
+    "deepseek-v4-flash": "gemma-4-e4b-it-mlx",
+    "deepseek-v4-pro": "gemma-4-e4b-it-mlx",
+    "reasoning": "gemma-4-e4b-it-mlx",
+    "reasoning-lite": "gemma-4-e4b-it-mlx",
+    "mistral-medium-128b": "gemma-4-e4b-it-mlx",
+    "nemotron-omni": "gemma-4-e4b-it-mlx",
+    "mythos": "qwythos-9b-claude-mythos-5-1m-mlx",
     "mythos-fast": "qwythos-9b-claude-mythos-5-1m-mlx",
-    "vision": "google/gemma-4-12b-qat",
-    "vision-large": "google/gemma-4-12b-qat",
-    "ornith-9b": "google/gemma-4-12b-qat",
-    "ornith-35b": "google/gemma-4-12b-qat",
-    "gemma-4-26b-a4b-it-qat-mlx-4bit": "google/gemma-4-12b-qat",
-    "gemma-4-31b-it-mlx-8bit": "google/gemma-4-12b-qat",
-    "gemma-4-e2b-it-mlx-8bit": "google/gemma-4-e4b",
+    "vision": "google/gemma-4-26b-a4b-qat",
+    "vision-large": "google/gemma-4-26b-a4b-qat",
+    "ornith-9b": "google/gemma-4-26b-a4b-qat",
+    "ornith-35b": "google/gemma-4-26b-a4b-qat",
+    "gemma-4-26b-a4b-it-qat-mlx-4bit": "google/gemma-4-26b-a4b-qat",
+    "gemma-4-31b-it-mlx-8bit": "gemma-4-31b-it-mlx",
+    "gemma-4-e2b-it-mlx-8bit": "google/gemma-4-e2b",
     "embed-bge-m3": "bge-m3-mlx",
     "baai-bge-reranker-v2-m3-mlx-fp16": "baai-bge-reranker-v2-m3-mlx"
+  },
+  "fallback_ollama": {
+    "_comment": "oMLX App 与 LM Link 都失败后的第二兜底。只登记能力足够接近且当前节点真实存在的模型。",
+    "coding": "qwen3.5:9b",
+    "coding-fast": "qwen3.5:9b",
+    "coding-next": "qwen3.5:9b",
+    "coder-precise": "qwen3.5:9b",
+    "mid-local": "qwen3.5:9b",
+    "deepseek-v4-flash": "qwen3.5:9b",
+    "deepseek-v4-pro": "qwen3.5:9b",
+    "reasoning": "qwen3.5:9b",
+    "reasoning-lite": "qwen3.5:9b",
+    "mistral-medium-128b": "qwen3.5:9b",
+    "nemotron-omni": "qwen3.5:9b",
+    "mythos": "qwen3.5:9b",
+    "mythos-fast": "qwen3.5:9b",
+    "embedding": "nomic-embed-text:latest",
+    "embed-bge-m3": "nomic-embed-text:latest"
   }
 }

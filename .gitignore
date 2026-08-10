@@ -3,6 +3,7 @@
 run/
 logs/
 cache/
+app-models/
 __pycache__/
 *.pyc
 

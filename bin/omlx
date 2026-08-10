@@ -15,7 +15,7 @@ omlx — 本地 MLX 模型统一命令行工具 (体系化管理 mlx_lm.server �
   omlxc models               列出磁盘上可用的 MLX 模型 (发现用)
   omlxc resolve <名> [--json] 这个名字会打到哪台机器的哪个引擎 (中枢解析点)
 """
-import os, sys, json, glob, time, socket, signal, subprocess, argparse, urllib.request, re, shutil
+import os, sys, json, glob, time, socket, signal, subprocess, argparse, urllib.request, urllib.error, re, shutil
 
 # 2026-08-10 迁出外置卷: launchd 服务受 macOS TCC 限制无法**执行**外置卷上的
 # 二进制(Operation not permitted), 导致 aetherforge 门面调不到 omlx。
@@ -45,6 +45,117 @@ def port_open(host, port, t=0.4):
     try:
         with socket.create_connection((host, int(port)), timeout=t): return True
     except OSError: return False
+
+def _app_conf(conf):
+    """oMLX App 物理端点配置。控制面只认这里，不再猜端口。"""
+    app = conf.get("omlx_app") or {}
+    return {
+        "base_url": str(app.get("base_url") or "http://127.0.0.1:8000").rstrip("/"),
+        "model_dir": os.path.expanduser(str(app.get("model_dir") or os.path.join(OMLX_ROOT, "app-models"))),
+        "timeout": float(app.get("timeout_sec") or 30),
+    }
+
+def _http_json(url, payload=None, method=None, timeout=30, headers=None):
+    """裸 Python 可用的 JSON HTTP 客户端；错误中保留服务端正文。"""
+    data = None if payload is None else json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        method=method or ("POST" if payload is not None else "GET"),
+        headers={"Content-Type": "application/json", **(headers or {})},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read()
+            return json.loads(raw.decode("utf-8")) if raw else {}
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"HTTP {e.code}: {body[:300]}") from e
+
+def _app_enabled(conf):
+    mbp = ((conf.get("engine_policy") or {}).get("nodes") or {}).get("mbp") or {}
+    return mbp.get("primary") == "omlx_app"
+
+def _app_model_paths(conf):
+    """logical model id → 真正权重目录；无效链接不投影。"""
+    out = {}
+    for key, model in (conf.get("models") or {}).items():
+        real = realpath_of(conf, model.get("alias", ""))
+        if real and os.path.isdir(real):
+            out[key] = real
+    return out
+
+def _app_models(conf):
+    app = _app_conf(conf)
+    data = _http_json(f"{app['base_url']}/v1/models", timeout=app["timeout"])
+    models = {m.get("id"): m for m in data.get("data", []) if m.get("id")}
+    try:
+        status = _http_json(f"{app['base_url']}/v1/models/status", timeout=app["timeout"])
+        for item in status.get("models", []):
+            if item.get("id") in models:
+                models[item["id"]].update(item)
+    except Exception:
+        pass
+    return models
+
+def _app_status(conf):
+    app = _app_conf(conf)
+    return _http_json(f"{app['base_url']}/api/status", timeout=app["timeout"])
+
+def _app_reload(conf):
+    app = _app_conf(conf)
+    return _http_json(f"{app['base_url']}/admin/api/reload", payload={}, timeout=app["timeout"])
+
+def _app_sync(conf, apply=False):
+    """把嵌套 models-active 投影成 oMLX App 能发现的扁平目录。"""
+    app = _app_conf(conf)
+    root = app["model_dir"]
+    wanted = _app_model_paths(conf)
+    marker = os.path.join(root, ".omlxc-managed.json")
+    previous = set()
+    try:
+        previous = set(json.load(open(marker)).get("models", []))
+    except Exception:
+        pass
+
+    stale = sorted(previous - set(wanted))
+    changed = []
+    for key, real in sorted(wanted.items()):
+        link = os.path.join(root, key)
+        if os.path.islink(link) and os.path.realpath(link) == real:
+            continue
+        changed.append((key, real))
+
+    if not apply:
+        return {"model_dir": root, "wanted": wanted, "changed": changed, "stale": stale}
+
+    os.makedirs(root, exist_ok=True)
+    for key in stale:
+        path = os.path.join(root, key)
+        if os.path.islink(path):
+            os.unlink(path)
+    for key, real in changed:
+        path = os.path.join(root, key)
+        if os.path.lexists(path):
+            if os.path.islink(path):
+                os.unlink(path)
+            else:
+                raise RuntimeError(f"拒绝覆盖非软链: {path}")
+        os.symlink(real, path)
+    with open(marker, "w") as f:
+        json.dump({"models": sorted(wanted), "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}, f, ensure_ascii=False, indent=2)
+    reload_result = _app_reload(conf)
+    return {"model_dir": root, "wanted": wanted, "changed": changed, "stale": stale, "reload": reload_result}
+
+def _app_load_unload(conf, model, action):
+    app = _app_conf(conf)
+    if model not in (conf.get("models") or {}):
+        die(f"oMLX App 中枢没有逻辑模型 '{model}'")
+    path = f"{app['base_url']}/v1/models/{model}/{action}"
+    result = _http_json(path, payload={}, timeout=max(app["timeout"], 600))
+    print(green(f"✓ oMLX App {action} {model}"))
+    if result:
+        print(dim(json.dumps(result, ensure_ascii=False)))
 
 _ts_cache = None
 def ts_ip(conf):
@@ -92,11 +203,18 @@ def help_text(cmd):
 def cmd_list(conf, args):
     print(f"\n{'KEY':<16}{'CATEGORY':<11}{'PORT':<7}{'ENGINE':<14}{'STATUS':<10}ALIAS")
     print(dim("-"*92))
+    app_models = {}
+    if _app_enabled(conf):
+        try: app_models = _app_models(conf)
+        except Exception: pass
     for key, m in conf["models"].items():
-        up = port_open(conf["host"], m["port"])
-        st = green("● running") if up else dim("○ stopped")
+        up = key in app_models if _app_enabled(conf) else port_open(conf["host"], m["port"])
+        loaded = bool((app_models.get(key) or {}).get("loaded")) if _app_enabled(conf) else up
+        st = green("● loaded") if loaded else (dim("○ ready") if up else red("× missing") if _app_enabled(conf) else dim("○ stopped"))
         eng = m["engine"]; tag = "" if eng=="mlx_lm" else yel(" (需"+m.get("requires_pip","?")+")")
-        print(f"{key:<16}{m['category']:<11}{m['port']:<7}{eng:<14}{st:<19}{m['alias']}{tag}")
+        port = 8000 if _app_enabled(conf) else m["port"]
+        shown_eng = "omlx_app" if _app_enabled(conf) else eng
+        print(f"{key:<16}{m['category']:<11}{port:<7}{shown_eng:<14}{st:<19}{m['alias']}{tag}")
     if conf.get("disabled"):
         print(dim("\n已禁用:"))
         for k,v in conf["disabled"].items(): print(dim(f"  {k}: {v['reason']}"))
@@ -194,6 +312,8 @@ def cmd_stop(conf, args):
         print(green(f"已停止 {key} (pid {pid})"))
 
 def cmd_status(conf, args):
+    if _app_enabled(conf):
+        return cmd_app(conf, argparse.Namespace(action="status", model=None, apply=False))
     any_up=False
     for key, m in conf["models"].items():
         pid = read_pid(conf, key); up = port_open(conf["host"], m["port"])
@@ -215,6 +335,19 @@ def _api(conf, port, path, payload=None, timeout=180):
     with urllib.request.urlopen(req, timeout=timeout) as r: return json.load(r)
 
 def cmd_health(conf, args):
+    if _app_enabled(conf):
+        try:
+            models = _app_models(conf)
+        except Exception as e:
+            die(f"oMLX App 不可达: {e}")
+        keys=list(conf["models"]) if not args.key else [args.key]
+        for key in keys:
+            item = models.get(key)
+            if item:
+                print(green(f"{key}: discovered") + (green(" · loaded") if item.get("loaded") else dim(" · unloaded")))
+            else:
+                print(red(f"{key}: not discovered"))
+        return
     keys=list(conf["models"]) if not args.key else [args.key]
     for key in keys:
         m=conf["models"][key]
@@ -230,6 +363,34 @@ def cmd_health(conf, args):
 
 def cmd_test(conf, args):
     key=args.key; m=conf["models"].get(key) or die(f"未知模型: {key}")
+    if _app_enabled(conf):
+        app = _app_conf(conf)
+        if key not in _app_models(conf):
+            die(f"{key} 未被 oMLX App 发现，先 `omlxc app sync --apply`")
+        prompt = args.message or "Reply OK only"
+        if m.get("role") == "embedding":
+            payload = {"model": key, "input": prompt}
+            path = "/v1/embeddings"
+        else:
+            payload = {
+                "model": key,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": min(64, int(m.get("params", {}).get("max_tokens", 64))),
+                "temperature": m.get("params", {}).get("temp", 0.2),
+                **((conf.get("omlx_app") or {}).get("request_defaults") or {}),
+            }
+            path = "/v1/chat/completions"
+        print(dim(f"→ oMLX App {key}: {prompt}"))
+        t0 = time.time()
+        try: data = _http_json(app["base_url"] + path, payload, timeout=240)
+        except Exception as e: die(f"请求失败: {e}")
+        if path.endswith("embeddings"):
+            vector = data["data"][0]["embedding"]
+            print(green(f"OK  dim={len(vector)}  {time.time()-t0:.2f}s")); return
+        choice = data["choices"][0]
+        print(green(f"OK  finish={choice.get('finish_reason')}  {time.time()-t0:.2f}s"))
+        print(C("CONTENT:",36)); print(choice.get("message", {}).get("content") or dim("(空)"))
+        return
     if not port_open(conf["host"], m["port"]): die(f"{key} 未运行，先 `omlxc serve {key}`")
     if m.get("role")=="embedding":
         prompt=args.message or "你好，世界"
@@ -300,6 +461,28 @@ def cmd_doctor(conf, args):
     for p in ["mlx","mlx-lm","mlx-vlm","mlx-embeddings"]:
         try: print(f"  {green('✓')} {p} {M.version(p)}")
         except Exception: print(f"  {red('✗')} {p} 未安装  {dim('pip3 install '+p)}")
+    print("\n=== 算力中枢契约 ===")
+    try:
+        app_models = set(_app_models(conf))
+        missing = sorted(set(conf.get("models", {})) - app_models)
+        print(f"  {green('✓') if not missing else red('✗')} oMLX App 发现 {len(app_models)} 个逻辑模型")
+        if missing: print(red("      未发现: " + ", ".join(missing)))
+    except Exception as e:
+        print(red(f"  ✗ oMLX App 不可达: {e}"))
+
+    lm_ids, ollama_ids = set(), set()
+    for node in (conf.get("cluster") or {}).get("nodes", []):
+        for eng, host, port in _svc_engines(node):
+            if not port_open(host, port, 0.5): continue
+            if eng == "lmstudio": lm_ids.update(i for i, _, _ in _lms_models(host, port))
+            if eng == "ollama": ollama_ids.update(_ollama_tags(host, port))
+    lm_targets = {v for k, v in (conf.get("fallback") or {}).items() if not k.startswith("_")}
+    ol_targets = {v for k, v in (conf.get("fallback_ollama") or {}).items() if not k.startswith("_")}
+    lm_missing, ol_missing = sorted(lm_targets - lm_ids), sorted(ol_targets - ollama_ids)
+    print(f"  {green('✓') if not lm_missing else red('✗')} LM Link fallback 目标 {len(lm_targets)} 个")
+    if lm_missing: print(red("      不存在: " + ", ".join(lm_missing)))
+    print(f"  {green('✓') if not ol_missing else red('✗')} Ollama fallback 目标 {len(ol_targets)} 个")
+    if ol_missing: print(red("      不存在: " + ", ".join(ol_missing)))
     print("\n=== 模型体检 ===")
     rows=_scan(conf); fixed=0
     for r in rows:
@@ -337,103 +520,76 @@ def cmd_use(conf, args):
     os.symlink(alias, link)
     print(green(f"{cat}/current → {alias}"))
 
-GW_PORT = 4000
-GW_HOME = os.path.expanduser("~/Library/Application Support/omlx-gateway")  # 本地, 不依赖外置盘
+GW_PORTS = (9290, 4000)
+AF_LABEL = "com.aetherforge.gateway"
+AF_PLIST = os.path.expanduser("~/Library/LaunchAgents/com.aetherforge.gateway.plist")
+
+def _aetherforge_key():
+    key = os.environ.get("AETHERFORGE_API_KEY")
+    if key:
+        return key
+    try:
+        r = subprocess.run(
+            ["security", "find-generic-password", "-s", "aetherforge-gateway", "-w"],
+            capture_output=True, text=True, timeout=5,
+        )
+        return r.stdout.strip() if r.returncode == 0 else ""
+    except Exception:
+        return ""
+
+def _af_headers():
+    key = _aetherforge_key()
+    return {"Authorization": f"Bearer {key}"} if key else {}
+
 def cmd_gw(conf, args):
     act = args.action
-    cfg = os.path.join(GW_HOME, "litellm-config.yaml")
-    pf  = os.path.join(conf["run_dir"], "gateway.pid")
-    lf  = os.path.join(conf["log_dir"], "gateway.log")
-    host = ts_ip(conf)   # 网关绑 tailnet IP
-    def gw_pid():
-        if not os.path.exists(pf): return None
-        try:
-            p=int(open(pf).read().strip()); os.kill(p,0); return p
-        except Exception: return None
+    uid = str(os.getuid())
     if act == "start":
-        if not os.path.exists(cfg): die(f"找不到网关配置: {cfg}")
-        if gw_pid() or port_open(host, GW_PORT):
-            print(yel(f"网关似乎已在运行 :{GW_PORT}。先 `omlxc gw stop`")); return
-        venv_litellm = os.path.join(GW_HOME, "venv", "bin", "litellm")
-        litellm_bin = venv_litellm if os.path.exists(venv_litellm) else "litellm"
-        cmd = [litellm_bin,"--config",cfg,"--host","0.0.0.0","--port",str(GW_PORT)]
-        out = open(lf,"ab")
-        proc = subprocess.Popen(cmd, stdout=out, stderr=out, start_new_session=True)
-        open(pf,"w").write(str(proc.pid))
-        print(green(f"网关已启动 pid={proc.pid}  :{GW_PORT}  (0.0.0.0, tailnet 可达)"))
-        print(dim(f"日志 {lf} · 探活 `omlxc gw status` · 测试 `omlxc gw test coder`"))
+        if not os.path.exists(AF_PLIST):
+            die(f"找不到 AetherForge LaunchAgent: {AF_PLIST}")
+        r = _run(["launchctl", "kickstart", "-k", f"gui/{uid}/{AF_LABEL}"])
+        if not r or r.returncode != 0:
+            # bootout 过的服务需先重新 bootstrap。
+            r = _run(["launchctl", "bootstrap", f"gui/{uid}", AF_PLIST])
+        if not r or r.returncode != 0:
+            die("AetherForge 启动失败: " + ((r.stderr or r.stdout).strip() if r else "launchctl timeout"))
+        time.sleep(1)
+        print(green("✓ AetherForge 网关已启动"))
+        return cmd_gw(conf, argparse.Namespace(action="status", extra=None))
     elif act == "stop":
-        p = gw_pid()
-        if not p: print(dim("网关未在运行")); return
-        try: os.killpg(os.getpgid(p), signal.SIGTERM)
-        except Exception:
-            try: os.kill(p, signal.SIGTERM)
-            except Exception: pass
-        try: os.remove(pf)
-        except OSError: pass
-        print(green(f"网关已停止 (pid {p})"))
-    elif act == "status":
-        if not port_open(host, GW_PORT): print(dim(f"网关未运行 (:{GW_PORT})")); return
-        aliases=[]; wilds=[]; cur=None
-        try:
-            for ln in open(cfg):
-                mm=re.match(r'\s*- model_name:\s*"?([^"#\n]+?)"?\s*(#.*)?$', ln)
-                if mm: cur=mm.group(1).strip(); continue
-                bb=re.match(r'\s*api_base:\s*(\S+)', ln)
-                if bb and cur is not None:
-                    (wilds if cur.endswith("/*") else aliases).append((cur, bb.group(1))); cur=None
-        except Exception as e:
-            print(yel(f"读网关配置失败: {e}")); return
-        def _loc(b):
-            if ":9000/" in b or "127.0.0.1:8" in b: return "MBP 本地"
-            if "127.0.0.1:1234" in b or "localhost:1234" in b: return "MBP LMStudio"
-            if "100.99.210.78" in b: return "mac-mini"
-            if "100.64.43.36" in b: return "Y7000P"
-            return "其它"
-        from collections import OrderedDict
-        nl=OrderedDict()
-        for name,base in aliases: nl.setdefault(name,[]).append(_loc(base))
-        single=OrderedDict(); multi=[]
-        for name,locs in nl.items():
-            u=list(dict.fromkeys(locs))
-            (multi.append((name,u)) if len(u)>1 else single.setdefault(u[0],[]).append(name))
-        print(green(f"网关 OK {host}:{GW_PORT}") + dim(f"   {len(aliases)} 别名 · {len(wilds)} 通配 · 绑 tailnet"))
-        for g in ("MBP 本地","MBP LMStudio","mac-mini","Y7000P","其它"):
-            if single.get(g): print(f"  {bold(g):<12} " + ", ".join(single[g]))
-        for name,locs in multi: print(f"  {bold('智能路由')}  {name} " + dim("→ "+"+".join(locs)+" (latency 选)"))
-        if wilds: print(f"  {bold('通配透传')}  " + ", ".join(n for n,_ in wilds) + dim("  (那台机任意模型)"))
-    elif act == "sync":
-        if not os.path.exists(cfg): die(f"找不到网关配置: {cfg}")
-        text = open(cfg).read()
-        # MBP 路由经自启代理 http://127.0.0.1:9000/<key>/v1 ，从 key 取当前真实模型路径
-        blocks = re.split(r'(?m)^(?=  - model_name:)', text)
-        changed = 0
-        for i, b in enumerate(blocks):
-            mb = re.search(r'api_base:\s*http://127\.0\.0\.1:9000/([\w-]+)/v1', b)
-            if not mb: continue
-            mm = conf["models"].get(mb.group(1))
-            if not mm: continue
-            rp = realpath_of(conf, mm["alias"])
-            if not rp: continue
-            newmodel = "openai/" + rp
-            nb = re.sub(r'(model:\s*)openai/\S+', lambda m: m.group(1)+newmodel, b, count=1)
-            if nb != b: blocks[i] = nb; changed += 1
-        if changed:
-            bak = cfg + ".bak"; open(bak,"w").write(text)
-            open(cfg,"w").write("".join(blocks))
-            print(green(f"已同步 {changed} 条 omlx 路由的模型路径")+dim(f" (备份 {os.path.basename(bak)})"))
-            print(dim("重启生效: omlxc gw stop && omlxc gw start"))
+        r = _run(["launchctl", "bootout", f"gui/{uid}/{AF_LABEL}"])
+        if r and r.returncode == 0:
+            print(green("✓ AetherForge 网关已停止"))
         else:
-            print(dim("路径已是最新，无需更新"))
+            print(dim("AetherForge 网关未加载"))
+    elif act == "status":
+        alive = []
+        for host in ("127.0.0.1", ts_ip(conf)):
+            for port in GW_PORTS:
+                if port_open(host, port, 0.5):
+                    alive.append(f"{host}:{port}")
+        if not alive:
+            print(dim("AetherForge 网关未运行 (:9290/:4000)")); return
+        models = "?"
+        try:
+            data = _http_json("http://127.0.0.1:9290/v1/models", timeout=8, headers=_af_headers())
+            models = len(data.get("data", []))
+        except Exception as e:
+            print(yel(f"⚠ /v1/models 不可用: {e}"))
+        print(green("● AetherForge 网关") + f"  models={models}")
+        print(dim("  " + " · ".join(dict.fromkeys(alive))))
+        print(dim("  路由: oMLX App → LM Link → Ollama；默认 local，云端需 routing_mode=hybrid/cloud"))
+    elif act == "sync":
+        print(dim("LiteLLM 配置同步已退役。现在执行: omlxc app sync --apply && omlxc ssot-sync --apply"))
     elif act == "test":
         name = args.extra or "coder"
-        if not port_open(host, GW_PORT): die("网关未运行，先 `omlxc gw start`")
-        payload={"model":name,"messages":[{"role":"user","content":"用一行Python打印1到10的和"}],"max_tokens":1024}
+        if not port_open("127.0.0.1", 9290): die("AetherForge 网关未运行，先 `omlxc gw start`")
+        payload={"model":name,"messages":[{"role":"user","content":"Reply OK only"}],"max_tokens":16,"routing_mode":"local","timeout":30}
         print(dim(f"→ 经网关请求 model={name}"))
-        try: d=_api({**conf,"host":host}, GW_PORT, "/v1/chat/completions", payload, timeout=240)
+        try: d=_http_json("http://127.0.0.1:9290/v1/chat/completions", payload, timeout=32, headers=_af_headers())
         except Exception as e: die(f"网关请求失败: {e}")
         m=d["choices"][0]["message"]
-        print(green(f"OK  finish={d['choices'][0]['finish_reason']}"))
+        print(green(f"OK  finish={d['choices'][0]['finish_reason']} provider={d.get('provider','?')}"))
         print(C("CONTENT:",36)); print(m.get("content") or dim("(空, 可能是 reasoning 段被截断)"))
     else:
         die("用法: omlxc gw start|stop|status|test [model]")
@@ -474,23 +630,18 @@ def _run(cmd):
     except Exception: return None
 
 def cmd_up(conf, args):
-    uid = str(os.getuid())
-    print(C("启动 omlx 全套...", 36))
-    _run(["launchctl","kickstart","gui/%s/com.omlx.gateway" % uid])
-    print(green("  ✓")+" 网关 :4000 (launchd)")
-    _run(SELF+["autostart"]); print(green("  ✓")+" 按需自启代理 :9000")
-    for c in ("omlx-litellm-pg","lobe-chat"):
-        _run(["docker","start",c])
-    print(green("  ✓")+" Docker: LobeChat :3210 · 管理后台 :4001")
-    print(dim("\n看状态: omlxc cluster   ·   首次用 MBP 模型(coder 等)会自动拉起后端"))
+    print(C("启动本地算力中枢...", 36))
+    _run(["/opt/homebrew/bin/omlx", "start"])
+    _run(SELF + ["app", "sync", "--apply"])
+    cmd_gw(conf, argparse.Namespace(action="start", extra=None))
+    print(dim("\n看状态: omlxc cluster · 真生成: omlxc gw test mythos-fast"))
 
 def cmd_down(conf, args):
     print(C("停止可选组件(释放内存)...", 36))
-    _run(SELF+["stop","all"]);        print(green("  ✓")+" 已停所有本地模型后端")
-    _run(SELF+["autostart","stop"]);  print(green("  ✓")+" 已停自启代理")
+    _run(SELF+["stop","all"]);        print(green("  ✓")+" 已停 legacy 独立模型后端")
+    _run(SELF+["autostart","stop"]);  print(green("  ✓")+" 已停 legacy :9000 代理")
     _run(SELF+["dashboard","stop"]);  print(green("  ✓")+" 已停算力大盘")
-    print(dim("\n网关与 Docker(LobeChat/UI) 仍常驻(占用很小)。"))
-    print(dim("要更彻底: docker stop lobe-chat omlx-litellm-pg ; launchctl bootout gui/$(id -u)/com.omlx.gateway"))
+    print(dim("\noMLX App 与 AetherForge 仍常驻；需要完全停止时分别执行 omlx stop / omlxc gw stop。"))
 
 def cmd_autostart(conf, args):
     script = os.path.join(OMLX_ROOT, "bin", "omlx-autostart")
@@ -513,13 +664,7 @@ def cmd_autostart(conf, args):
         try: os.remove(pf)
         except OSError: pass
         print(green(f"自启代理已停止 (pid {p})")); return
-    if apid() or port_open(conf["host"], port):
-        print(green("自启代理已在运行 :9000")); return
-    if not os.path.exists(script): die(f"找不到 {script}")
-    out=open(lf,"ab")
-    proc=subprocess.Popen([py, script], stdout=out, stderr=out, start_new_session=True)
-    open(pf,"w").write(str(proc.pid))
-    print(green("按需自启代理已启动 :9000")+dim("  (网关 MBP 路由会自动拉起后端)"))
+    die("legacy :9000 自启代理已退役；请用 `omlxc app sync --apply` + `omlxc gw start`")
 
 def cmd_cluster(conf, args):
     cl = conf.get("cluster") or die("models.json 缺 cluster 配置")
@@ -540,9 +685,13 @@ def cmd_cluster(conf, args):
             print(f"{(n['name'] if first else ''):<20}{(n['role'] if first else ''):<22}{svc:<13}{st}")
             first=False
         print()
-    g=cl.get("gateway_port",4000)
-    print((green(f"网关 :{g} ● up") if port_open(ts_ip(conf),g) else dim(f"网关 :{g} ○ down"))
-          + dim("   (omlxc gw status 看路由)"))
+    local_ports = [p for p in GW_PORTS if port_open("127.0.0.1", p)]
+    tailnet_ports = [p for p in GW_PORTS if port_open(ts_ip(conf), p)]
+    state = green("● up") if local_ports else dim("○ down")
+    print(f"AetherForge {state}" + dim(
+        f"   loopback={','.join(map(str, local_ports)) or '-'} · tailnet={','.join(map(str, tailnet_ports)) or '-'}"
+    ))
+    print(dim("路由顺序: MBP oMLX App → LM Link 池 → Ollama；离线节点由网关跳过"))
 
 def cmd_models(conf, args):
     base="/Volumes/Model/LMStudio"
@@ -671,11 +820,24 @@ def cmd_node(conf, args):
 def bold(s): return C(s, 1)
 
 def cmd_ls(conf, args):
-    """全节点统一模型视图:本地 omlx 后端 + 各副机真实模型(loaded 态)。"""
-    print(bold("● MBP 本地 (omlx 后端):"))
+    """全节点统一模型视图:oMLX App + 各副机真实模型(loaded 态)。"""
+    app_models = {}
+    if _app_enabled(conf):
+        try:
+            app_models = _app_models(conf)
+        except Exception as e:
+            print(yel(f"⚠ oMLX App 不可达: {e}"))
+    print(bold("● MBP 本地 (oMLX App):" if _app_enabled(conf) else "● MBP 本地 (legacy 独立后端):"))
     for key, m in conf["models"].items():
-        run = port_open(conf["host"], m["port"])
-        print(f"    {green('●') if run else dim('○')} {key:<14} {dim(':' + str(m['port']) + ' ' + m['engine'])}")
+        if _app_enabled(conf):
+            seen = key in app_models
+            loaded = bool((app_models.get(key) or {}).get("loaded"))
+            mark = green("●") if loaded else (dim("○") if seen else red("×"))
+            detail = "loaded" if loaded else ("available" if seen else "not discovered")
+            print(f"    {mark} {key:<24} {dim('oMLX App · ' + detail)}")
+        else:
+            run = port_open(conf["host"], m["port"])
+            print(f"    {green('●') if run else dim('○')} {key:<14} {dim(':' + str(m['port']) + ' ' + m['engine'])}")
     for n in (conf.get("cluster") or {}).get("nodes", []):
         if _is_local(n):
             continue
@@ -701,6 +863,8 @@ def _load_unload(conf, model, action):
     if model not in conf["models"] and model in _GW_ALIAS:
         model = _GW_ALIAS[model]
     if model in conf["models"]:
+        if _app_enabled(conf):
+            _app_load_unload(conf, model, action); return
         _run(SELF + (["serve", model] if action == "load" else ["stop", model])); return
     for n in (conf.get("cluster") or {}).get("nodes", []):
         if _is_local(n):
@@ -788,13 +952,24 @@ def cmd_resolve(conf, args):
 
     if key in models:
         m = models[key]
-        port = m["port"]
-        up = port_open(conf["host"], port)
+        if _app_enabled(conf):
+            app = _app_conf(conf)
+            try:
+                discovered = _app_models(conf)
+            except Exception:
+                discovered = {}
+            up = key in discovered
+            endpoint = f"{app['base_url']}/v1"
+            port = int(app["base_url"].rsplit(":", 1)[-1])
+        else:
+            port = m["port"]
+            up = port_open(conf["host"], port)
+            endpoint = f"http://{conf['host']}:{port}/v1"
         fb = fb_map.get(key)
         fb_node, fb_loaded = _pool_state(conf, fb) if fb else (None, False)
         info.update(
-            kind="omlx-local", node="mbp", engine=m["engine"],
-            endpoint=f"http://{conf['host']}:{port}/v1", port=port, up=up,
+            kind="omlx-local", node="mbp", engine="omlx_app" if _app_enabled(conf) else m["engine"],
+            endpoint=endpoint, port=port, up=up,
             model_path=m["alias"], category=m["category"],
             fallback=fb, fallback_node=fb_node, fallback_loaded=fb_loaded,
         )
@@ -816,9 +991,9 @@ def cmd_resolve(conf, args):
     if key != want:
         print(f"  别名展开 → {green(key)}   {dim('(来源: ' + alias_src + ')')}")
     if info["kind"] == "omlx-local":
-        print(f"  归属     MBP · omlx({info['engine']})   {dim(info['category'])}")
+        print(f"  归属     MBP · {info['engine']}   {dim(info['category'])}")
         print(f"  端点     {info['endpoint']}   " +
-              (green("● 在跑") if info["up"] else yel("○ 未加载 (网关会自动 omlxc load)")))
+              (green("● 已发现") if info["up"] else yel("○ 未发现 (先跑 omlxc app sync --apply)")))
         print(f"  权重     {dim(info['model_path'])}")
         if info["fallback"]:
             st = (green(f"● 已加载 @ {info['fallback_node']}") if info["fallback_loaded"]
@@ -827,7 +1002,7 @@ def cmd_resolve(conf, args):
             print(f"  兜底     LM Studio {info['fallback']}  {st}")
         else:
             print(f"  兜底     {yel('无')} {dim('(刻意留空: 池中无能力等价模型, 宁可如实失败)')}")
-        print(dim(f"\n  手动:  omlxc serve {key}   ·   omlxc test {key}"))
+        print(dim(f"\n  手动:  omlxc load {key}   ·   omlxc app status"))
     elif info["kind"] == "lm-link-pool":
         print(f"  归属     LM Link 池 · 就近节点 {info['node']}")
         print(f"  端点     {info['endpoint']}   " +
@@ -853,12 +1028,22 @@ def cmd_warm(conf, args):
     for k in want:
         if k not in conf["models"]:
             die(f"预设 {args.preset} 含未知本地模型 {k}")
-    # 持久化常驻集(autopilot 会据此保持/卸载)
+    # 持久化常驻集。oMLX App 模式由控制面显式 load/unload；legacy 才靠 autopilot。
     dd = json.load(open(CONF))
     dd.setdefault("autopilot", {})["resident"] = list(want)
     json.dump(dd, open(CONF, "w"), ensure_ascii=False, indent=2)
     print(green(f"常驻模式 → {args.preset}: {', '.join(want)}"))
-    # 停掉不在预设里的本地后端
+    if _app_enabled(conf):
+        available = _app_models(conf)
+        for key in conf["models"]:
+            if key not in want and bool((available.get(key) or {}).get("loaded")):
+                _app_load_unload(conf, key, "unload")
+        for key in want:
+            if not bool((available.get(key) or {}).get("loaded")):
+                _app_load_unload(conf, key, "load")
+        print(dim("oMLX App 常驻集已同步；独立端口 autopilot 不再参与。"))
+        return
+    # 停掉不在预设里的 legacy 本地后端
     for key, m in conf["models"].items():
         if key not in want and port_open(conf["host"], m["port"]):
             _run(SELF + ["stop", key]); print(dim(f"  停 {key}"))
@@ -867,6 +1052,46 @@ def cmd_warm(conf, args):
         if not port_open(conf["host"], conf["models"][key]["port"]):
             _run(SELF + ["serve", key]); print(green(f"  暖 {key} (冷加载数十秒)"))
     print(dim("autopilot 会保持常驻集、卸载其余空闲后端。"))
+
+def cmd_app(conf, args):
+    """oMLX App 控制面：扁平投影、发现、加载和卸载。"""
+    if args.action == "sync":
+        result = _app_sync(conf, apply=args.apply)
+        print(bold(f"oMLX App 模型目录: {result['model_dir']}"))
+        print(f"  目标模型 {len(result['wanted'])} · 需更新 {len(result['changed'])} · 需清理 {len(result['stale'])}")
+        for key, real in result["changed"]:
+            print(f"  {green('+') if args.apply else yel('~')} {key:<24} {dim(real)}")
+        for key in result["stale"]:
+            print(f"  {red('-')} {key}")
+        if not args.apply:
+            print(dim("预览完成；执行写入请加 --apply。"))
+        else:
+            print(green("✓ 扁平模型投影已同步，oMLX App 已 reload"))
+        return
+    if args.action == "reload":
+        print(json.dumps(_app_reload(conf), ensure_ascii=False, indent=2)); return
+    if args.action in ("load", "unload"):
+        if not args.model:
+            die(f"app {args.action} 需要模型名")
+        _app_load_unload(conf, args.model, args.action); return
+
+    app = _app_conf(conf)
+    try:
+        status = _app_status(conf)
+        models = _app_models(conf)
+    except Exception as e:
+        die(f"oMLX App 不可达 ({app['base_url']}): {e}")
+    loaded = sorted(k for k, v in models.items() if v.get("loaded"))
+    expected = set((conf.get("models") or {}).keys())
+    missing = sorted(expected - set(models))
+    print(green(f"● oMLX App {app['base_url']} · discovered={len(models)} · loaded={len(loaded)}"))
+    print(dim(f"  model_dir={app['model_dir']}"))
+    print(f"  loaded: {', '.join(loaded) if loaded else dim('无')}")
+    if missing:
+        print(yel(f"  未发现 {len(missing)} 个逻辑模型: {', '.join(missing)}"))
+        print(dim("  修复: omlxc app sync --apply"))
+    if status.get("version"):
+        print(dim(f"  version={status['version']}"))
 
 
 
@@ -1082,8 +1307,10 @@ def cmd_portcheck(conf, args):
 
 
 
-M1_MODEL_DIR = os.path.expanduser(
-    "~/Workspace/projects/ecos/src/ecos/ssot/mof/m1/model")
+M1_MODEL_DIR = os.path.expanduser(os.environ.get(
+    "OMLXC_M1_MODEL_DIR",
+    "~/Workspace/projects/ecos/src/ecos/ssot/mof/m1/model",
+))
 SSOT_OMLX_FILE = os.path.join(M1_MODEL_DIR, "MODEL-BREW-OMLX-LOCAL.yaml")
 
 _CAP_HINT = {
@@ -1095,13 +1322,13 @@ _CAP_HINT = {
 def _infer_caps(alias, backend_key, conf):
     """按别名语义 + 本地引擎类型推断能力。"""
     a = alias.lower()
-    if "embed" in a or "bge" in a:
-        return ["embedding"]
     if "rerank" in a:
         return ["rerank"]
+    if "embed" in a or "bge" in a:
+        return ["embedding"]
     if "ocr" in a:
         return ["chat", "vision", "ocr"]
-    if "vision" in a or "vl" in a or "ornith" in a or a in ("mythos",):
+    if "vision" in a or "vl" in a or "ornith" in a:
         return ["chat", "vision"]
     caps = ["chat"]
     m = conf.get("models", {}).get(backend_key or "", {})
@@ -1123,13 +1350,9 @@ def _gw_aliases(conf):
     single naming authority. Ensures omlx key names flow unchanged into SSOT.
     """
     out = []
-    host = conf.get("host", "127.0.0.1")
+    app_base = _app_conf(conf)["base_url"]
     for key, m in conf.get("models", {}).items():
-        port = m.get("port")
-        if not port:
-            continue
-        base = f"http://{host}:9000/{key}/v1"
-        out.append((key, base, key))
+        out.append((key, f"{app_base}/v1", key))
     return out
 
 def cmd_ssot_sync(conf, args):
@@ -1142,7 +1365,7 @@ def cmd_ssot_sync(conf, args):
     models = []
     _seen = {}   # model_id -> index(多部署智能路由合并为一条)
     for alias, base, key in aliases:
-        loc = ("MBP-local" if (":9000/" in base or "127.0.0.1:8" in base)
+        loc = ("MBP-oMLX-App" if "127.0.0.1:8000" in base
                else "MBP-LMStudio" if "127.0.0.1:1234" in base
                else "mac-mini" if "100.99.210.78" in base
                else "Y7000P" if "100.64.43.36" in base else "other")
@@ -1210,7 +1433,7 @@ def main():
 
 命令分组:
   看:   ls 全节点模型 · stats 用量/显存 · node ps 已加载 · cluster 健康大盘 · status 本地
-  控:   load/unload <模型>(自动本地或远程) · serve/stop <key> 本地 · warm <预设> 切模式 · use 切主力 · node 按节点
+  控:   app status|sync|load|unload · load/unload <模型> · serve/stop <key>(legacy 回滚) · warm <预设> · node 按节点
   网关: gw status|sync|start|stop|test
   运维: up/down 整套 · autostart · dashboard · doctor · portcheck 端口冲突 · health · test · models 磁盘发现(标已接) · link 一键接入新模型 · ssot-sync 同步到 aetherforge SSOT""")
     sub=ap.add_subparsers(dest="cmd")
@@ -1230,6 +1453,7 @@ def main():
     s=sub.add_parser("dashboard"); s.add_argument("action", nargs="?", default="start", choices=["start","stop"])
     s=sub.add_parser("autostart"); s.add_argument("action", nargs="?", default="start", choices=["start","stop"])
     s=sub.add_parser("gw"); s.add_argument("action", choices=["start","stop","status","test","sync"]); s.add_argument("extra", nargs="?")
+    s=sub.add_parser("app"); s.add_argument("action", nargs="?", default="status", choices=["status","sync","reload","load","unload"]); s.add_argument("model", nargs="?"); s.add_argument("--apply", action="store_true")
     s=sub.add_parser("node"); s.add_argument("action", choices=["ls","ps","models","load","unload"]); s.add_argument("name", nargs="?"); s.add_argument("model", nargs="?")
     sub.add_parser("ls")
     sub.add_parser("stats")
@@ -1243,7 +1467,7 @@ def main():
     fn={"list":cmd_list,"serve":cmd_serve,"stop":cmd_stop,"status":cmd_status,
         "health":cmd_health,"test":cmd_test,"doctor":cmd_doctor,"use":cmd_use,"models":cmd_models,"resolve":cmd_resolve,
         "cluster":cmd_cluster,"dashboard":cmd_dashboard,"autostart":cmd_autostart,
-        "up":cmd_up,"down":cmd_down,"gw":cmd_gw,"node":cmd_node,"ls":cmd_ls,"load":cmd_load,"unload":cmd_unload,"warm":cmd_warm,"stats":cmd_stats,"link":cmd_link,"portcheck":cmd_portcheck,"ssot-sync":cmd_ssot_sync}.get(args.cmd)
+        "up":cmd_up,"down":cmd_down,"gw":cmd_gw,"app":cmd_app,"node":cmd_node,"ls":cmd_ls,"load":cmd_load,"unload":cmd_unload,"warm":cmd_warm,"stats":cmd_stats,"link":cmd_link,"portcheck":cmd_portcheck,"ssot-sync":cmd_ssot_sync}.get(args.cmd)
     if not fn: ap.print_help(); return
     fn(conf, args)
 
