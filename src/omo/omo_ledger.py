@@ -13,6 +13,14 @@ New subcommand mode::
     omo ledger import-jsonl --file governance-history.jsonl [--quarantine q.jsonl]
     omo ledger export-jsonl --output shadow.jsonl
     omo ledger compare-jsonl --file governance-history.jsonl
+    omo ledger sovereignty-assign --principal-id principal:alice --role-id role:family-steward ...
+    omo ledger sovereignty-query --principal-id principal:alice
+
+The ``sovereignty-assign`` / ``sovereignty-query`` commands are the local-only
+W2-01 sovereignty surface (see ``omo.sovereignty``): flat CLI with
+``--principal-id`` / ``--role-id`` / ``--db`` / ``--json``.  They are local
+only (no ``--agora``), write exclusively through ``LedgerBroker.append``, and
+each query replays the ledger for the requested principal_id.
 
 The ``import-jsonl`` / ``export-jsonl`` / ``compare-jsonl`` commands are the
 local JSONL shadow adapter (BET-Y1Q2-T1-03): they are local-only, do not
@@ -100,6 +108,8 @@ SUBCMDS = frozenset(
         "import-jsonl",
         "export-jsonl",
         "compare-jsonl",
+        "sovereignty-assign",
+        "sovereignty-query",
     }
 )
 
@@ -253,6 +263,47 @@ def _build_subcommand_parser() -> argparse.ArgumentParser:
         help="Logical source identity (default: file basename)",
     )
     _add_local_flags(pc)
+
+    # W2-01 sovereignty commands — local only, no --agora.
+    psa = sub.add_parser(
+        "sovereignty-assign",
+        help="Assign (or replace) a role to a principal (local only)",
+    )
+    psa.add_argument(
+        "--principal-id", required=True, help="Principal id (principal:...)"
+    )
+    psa.add_argument("--role-id", required=True, help="Role id (role:...)")
+    psa.add_argument(
+        "--role-name", default=None, help="Display name (default: role-id)"
+    )
+    psa.add_argument("--scope", default="", help="Role scope (e.g. family, career)")
+    psa.add_argument(
+        "--responsibilities",
+        default=None,
+        help="Comma-separated responsibility names (auto responsibility:<slug> ids)",
+    )
+    psa.add_argument(
+        "--replace",
+        action="store_true",
+        help="Use the replace transition when an active assignment exists",
+    )
+    psa.add_argument(
+        "--expected-version",
+        type=int,
+        default=None,
+        help="Expected current assignment version (0 for a fresh assign); "
+        "a mismatch is rejected as stale_version",
+    )
+    _add_local_flags(psa)
+
+    psq = sub.add_parser(
+        "sovereignty-query",
+        help="Query a principal's roles by replaying the ledger (local only)",
+    )
+    psq.add_argument(
+        "--principal-id", required=True, help="Principal id (principal:...)"
+    )
+    _add_local_flags(psq)
 
     return parser
 
@@ -566,6 +617,10 @@ def _subcommand_main(argv: list[str]) -> int:
             return _cmd_export_jsonl(surface, params, is_json, is_agora)
         elif subcmd == "compare-jsonl":
             return _cmd_compare_jsonl(surface, params, is_json, is_agora)
+        elif subcmd == "sovereignty-assign":
+            return _cmd_sovereignty_assign(surface, params, is_json)
+        elif subcmd == "sovereignty-query":
+            return _cmd_sovereignty_query(surface, params, is_json)
         else:
             _emit_error(
                 {
@@ -740,6 +795,84 @@ def _cmd_compare_jsonl(
         is_agora,
     )
     return 0 if report["ok"] else 1
+
+
+def _cmd_sovereignty_assign(
+    surface: EventLedgerSurface, params: dict[str, Any], is_json: bool
+) -> int:
+    """Assign (or replace) a role for a principal. Local only, writes via broker."""
+    from omo.sovereignty import SovereigntyError, SovereigntyService
+
+    svc = SovereigntyService(surface.broker)
+    principal_id = params.get("principal_id")
+    role_id = params.get("role_id")
+    responsibilities = _split_responsibilities(params.get("responsibilities"))
+    # None means "preserve existing" (replace / reactivation); only pass an
+    # explicit list when --responsibilities was actually provided so a replace
+    # never wipes the assignment's responsibility list by omission.
+    responsibilities_arg = responsibilities if params.get("responsibilities") else None
+    expected_version = params.get("expected_version")
+    try:
+        if params.get("replace"):
+            assignment = svc.replace(
+                principal_id,
+                role_id,
+                role_name=params.get("role_name"),
+                scope=params.get("scope") or None,
+                responsibilities=responsibilities_arg,
+                expected_version=expected_version,
+            )
+        else:
+            assignment = svc.assign(
+                principal_id,
+                role_id,
+                role_name=params.get("role_name"),
+                scope=params.get("scope") or "",
+                responsibilities=responsibilities_arg,
+                expected_version=expected_version,
+            )
+    except SovereigntyError as exc:
+        _emit_error(
+            {"ok": False, "error": exc.message, "reason": exc.reason},
+            is_agora=False,
+            is_json=is_json,
+        )
+        return 1
+    _emit_receipt(
+        {"ok": True, **assignment.to_dict(), "db_path": str(surface.db_path)},
+        is_json,
+        False,
+    )
+    return 0
+
+
+def _cmd_sovereignty_query(
+    surface: EventLedgerSurface, params: dict[str, Any], is_json: bool
+) -> int:
+    """Query a principal by replaying the ledger. Local only, read-only."""
+    from omo.sovereignty import SovereigntyError, SovereigntyService
+
+    svc = SovereigntyService(surface.broker)
+    principal_id = params.get("principal_id")
+    try:
+        principal = svc.query(principal_id)
+    except SovereigntyError as exc:
+        _emit_error(
+            {"ok": False, "error": exc.message, "reason": exc.reason},
+            is_agora=False,
+            is_json=is_json,
+        )
+        return 1
+    receipt = {"ok": True, **principal.to_dict()}
+    _emit_receipt(receipt, is_json, False)
+    return 0
+
+
+def _split_responsibilities(raw: str | None) -> list[str]:
+    """Split a comma-separated responsibility string into stripped names."""
+    if not raw or not raw.strip():
+        return []
+    return [part.strip() for part in raw.split(",") if part.strip()]
 
 
 # ---------------------------------------------------------------------------
