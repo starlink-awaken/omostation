@@ -2,104 +2,127 @@
 status: active
 lifecycle: contract
 owner: architecture-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-08-10
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---
-# omlx × aetherforge 本地算力集群 — 架构与运维
+# omlx × aetherforge 本地算力中枢 — 架构与运维
 
-> 最后更新: 2026-07-05 · 三机 Tailscale 集群 · 统一 LiteLLM 网关 · aetherforge/agora/cockpit 消费
+> 三机 Tailscale 组网 · omlxc 为中枢 · aetherforge 门面为唯一 OpenAI 入口
+> 运行时事实(模型清单/端口/在线状态)一律从 CLI 与注册表读, 本文不复制。
 
-## 1. 总览
-
-一套自建的本地大模型算力底座:三台机器经 Tailscale 组网,由 MBP 上的 **LiteLLM 统一网关** 收敛成单一 OpenAI 兼容入口;上层 aetherforge / agora / cockpit 全部经 BOS 能力路由调用,不直接碰模型。
+## 1. 形状
 
 ```mermaid
 flowchart TD
   subgraph 消费方
-    A1[agora] --- A2[cockpit 后端/UI] --- A3[aetherforge 调用方]
+    A1[agora] --- A2[cockpit] --- A3[kairon / 其它]
   end
-  A2 --> BOS["BOS 能力路由<br/>bos://capability/compute/*"]
-  BOS --> AF["aetherforge<br/>ENG-OMLX-LOCAL(SSOT) · mesh · swarm"]
-  AF --> GW["LiteLLM 统一网关 :4000<br/>仅 tailnet · 精选别名 + 通配透传"]
-  GW -->|:9000 自启代理| MBP["MBP · M5 Max 128G<br/>reasoner+embed 常驻 · 重活按需"]
-  GW -->|Tailscale| MM["mac-mini · M4 24G<br/>qwen3.5:9b 常驻(通用)"]
-  GW -->|Tailscale| Y7["Y7000P · RTX4070 8G<br/>小快模型 · 机会算力"]
+  A2 --> AF["aetherforge 门面<br/>OpenAI 兼容 · 别名解析 · 路由 · 兜底"]
+  AF -->|端口直连, 不通则先 omlxc load| OMLX["MBP · omlx 后端<br/>mlx_lm.server / mlx_vlm / mlx_embeddings<br/>每模型一个端口"]
+  AF -->|omlx 起不来时兜底| LMS["LM Studio 池<br/>MBP + mac-mini + Y7000P<br/>经 LM Link 合成同一个池"]
+  CLI["omlxc<br/>中枢 CLI"] -.控制.-> OMLX
+  CLI -.观测/控制.-> LMS
 ```
 
-## 2. 三机分配(算力自治)
+两条职责分得很清:
 
-| 机器 | Tailnet IP | 角色 | 常驻 | 说明 |
-|---|---|---|---|---|
-| **MBP M5 Max 128G** | 100.96.126.35 | 工作机 + 网关宿主 | `reasoner`(GLM-4.7-Flash 综合)+ `embed` | 重模型(coder/mythos)按需;autopilot 空闲自动卸 |
-| **mac-mini M4 24G** | 100.99.210.78 | 常在线副机 | `qwen3.5:9b`(ollama keep_alive=-1) | 日常通用,给 MBP 分流,不占工作机 |
-| **Y7000P RTX4070 8G** | 100.64.43.36 | 机会算力(时开时关) | 无(在线才用) | 小快模型;整机离线时网关自动跳过 |
+- **omlxc 是控制面** —— 谁在哪台机器上、加载什么、当前状态如何、一个名字该打到哪里。
+  它不承载推理流量(内部那几处 `/v1/chat/completions` 只用于探活与预热)。
+- **aetherforge 门面是数据面** —— 消费方唯一的 OpenAI 兼容入口。
 
-**设计原则**:MBP 最强但你在用它 → 只留 1 个综合模型 + 空闲自动释放;常用通用模型放闲着的副机 → 用它时 GPU 不动 MBP,不卡。
+## 2. 引擎分工
 
-## 3. 分层调用链
+SSOT 是 `~/omlx/conf/models.json` 的 `engine_policy` 段, 不要在别处复述:
 
-1. **消费方** → 不直连模型,统一发 `bos://capability/compute/{generate,mesh-status}`
-2. **aetherforge** → `ENG-OMLX-LOCAL`(SSOT,指向网关)解析模型;mesh 实时探活各节点;swarm 多 Agent
-3. **LiteLLM 网关 :4000** → 绑 tailscale IP(局域网其它机器连不上);两种路由:
-   - **精选别名**(稳定契约):`coder/reasoner/vision/mythos/mythos-fast/embed/mini-9b/fast/mid`
-   - **通配透传**:`macmini/*`、`macmini-ollama/*`、`y7000p/*` → 那台机任意模型即时可达
-   - **fallback**:MBP 忙/冷 → 溢出到副机(`reasoner→mini-9b→mid`),不再连环点 MBP 重模型
-4. **后端**:MBP 经 `:9000 自启代理` 按需拉起 omlx 后端(8080–8185);副机是各自的 LMStudio(:1234)/ Ollama(:11434)
+| 机器 | 主引擎 | 兜底 | 说明 |
+|---|---|---|---|
+| MBP | omlx(mlx_lm.server 等) | LM Studio | 每个模型一个端口; omlx 同时是加载器 |
+| mac-mini | LM Studio | 无 | |
+| Y7000P | LM Studio | 无 | 时开时关, 离线自动跳过 |
 
-## 4. 关键机制
+三台的 LM Studio 经 **LM Link** 合成同一个池: 任一端点都能看见全部模型,
+具体在哪台执行由 LM Link 决定。所以别名里**不携带机器地址** —— 要指定机器
+用 `lms link set-preferred-device`, 而不是在别名里编码 IP。
 
-- **:9000 自启代理**(`com.omlx.autostart`):网关把 MBP 路由指到 `127.0.0.1:9000/<key>/v1`,代理收到请求若后端没起就 `omlx serve` 拉起。开机自启(等外置盘挂载)。
-- **autopilot**(`com.omlx.autopilot`,每 5 min):预热常驻集 + 按日志 mtime 卸载空闲非常驻(idle_ttl 900s)。治"模型越堆越卡"。
-- **网关 guard**(`omlx-gw-guard`):启动前 `NO_PROXY=*` + 装了 socksio,防系统 SOCKS 代理(Clash)致 litellm 崩。
-- **background_health_checks: false**:关掉每 60s 保温所有模型的健康检查(曾是卡的主因)。
+> 2026-08-10 教训: MBP 的 LM Studio 当时并未运行, 池子从 43 个模型缩到 17 个,
+> 而没有任何检查报警。它现在有 `com.lmstudio.server` 这个 LaunchAgent, 并在
+> `services.yaml` 里登记, 就是为了让"少了一台"这件事能被看见。
 
-## 5. 运维 Runbook
+## 3. 一个请求怎么走
+
+```
+消费者给一个意图名(coder / triage / ...)
+  → 别名展开(aliases.yaml)
+  → 落在 omlx 本机 key 上?
+      是 → 端口通? 直连
+           端口不通? omlxc load 拉起 → 就绪探针 → 直连
+           拉不起来? 按 models.json 的 fallback 落 LM Studio
+           都不行? 如实报错(不模糊匹配, 不静默换模型)
+      否 → registry/provider(LM Link 池 或 云端)
+```
+
+想知道某个名字实际会走哪条路, 不要读代码猜, 直接问中枢:
 
 ```bash
-# 看三机在跑什么 / 全部模型 + loaded 态
-omlxc node ps            # 各节点已加载
-omlxc node models macmini   # 某节点全部模型
-omlxc cluster            # 三机服务状态大盘
-
-# 远程管理副机模型(HTTP,无需 SSH)
-omlxc node load macmini <model>     # 加载(Ollama 真载 / LMStudio JIT)
-omlxc node unload macmini <model>   # 卸载(Ollama)
-
-# 本地(MBP)
-omlxc serve <key>    # 拉起本地后端    omlxc stop <key>|all   # 停(pidfile 失联会按端口兜底)
-omlxc status         # 本地后端 + 内存
-
-# 网关
-omlxc gw status|sync|start|stop      # sync: 换模型后刷路由的真实路径
-
-# 备份(live → git 仓,再 commit 即快照)
-bash ~/omlx-orchestration/bin/omlx-backup.sh && git -C ~/omlx-orchestration commit -am snapshot
+omlxc resolve coder            # 人类视图: 归属 / 端点 / 当前状态 / 兜底是谁
+omlxc resolve coder --json     # 机器视图
 ```
 
-**日常怎么调**:通用问答→`mini-9b`(mac-mini);强推理→`reasoner`(MBP,常驻秒回);写代码→`coder`(MBP 按需);RAG→`embed`。
+## 4. 几条来自事故的硬约束
+
+这些不是设计偏好, 是踩过才写下来的:
+
+- **健康检查必须证明"能干活", 不能只证明"活着"**。mlx_lm.server 会进入一种
+  卡死态: TCP 照收、`GET /v1/models` 照答 200、CPU 0%、一串 CLOSE_WAIT 挂着,
+  但 POST 永不处理。所有基于 `/v1/models` 的探活全绿, 而请求全挂。
+  门面加载后会补一发 `max_tokens=1` 的真生成作为就绪探针, 不过就回收后端。
+- **不做子串模糊匹配**。曾经 `reasoning` 会撞上 `...-reasoning-distilled`、
+  `embedding` 会撞上云端的 `gemini-embedding-001`, 且返回 200, 错得悄无声息。
+- **空回复不算成功**。thinking 段剥完没正文 = 没回答, 必须让 fallback 继续。
+- **绑定范围变大时鉴权不能消失**。门面绑到 loopback 之外必须配
+  `AETHERFORGE_API_KEY`, 否则拒绝启动。
+- **启动路径不得有外部网络依赖**, 且要显式隔离系统代理 —— LiteLLM 栽过。
+- **launchd 不能执行外置卷上的二进制**(macOS TCC)。omlx 控制面因此从
+  `/Volumes/Model/omlx` 迁到 `~/omlx`; 模型权重仍在外置卷, 只是不被 launchd 直接 exec。
+
+## 5. Runbook
+
+```bash
+# 看
+omlxc ls                  # 全节点模型 + 加载态
+omlxc status              # MBP 本地后端
+omlxc resolve <名>        # 这个名字会打到哪
+omlxc stats               # 用量 / 显存
+lms ps                    # LM Link 池里谁在跑、在哪台
+
+# 控
+omlxc load|unload <模型>  # 自动判断本地还是远程
+omlxc warm <预设>         # 切常驻模式
+omlxc serve|stop <key>    # 只管 MBP 本地
+
+# 门面
+curl -s localhost:9290/health
+tail -f ~/Library/Logs/aetherforge-gateway.log
+```
 
 ## 6. 关键位置
 
-| 东西 | 位置 |
+| 内容 | 位置 |
 |---|---|
-| 网关(运行时读) | `~/Library/Application Support/omlx-gateway/litellm-config.yaml` |
-| 模型清单 SSOT | `/Volumes/Model/omlx/conf/models.json`(含 cluster/autopilot 段) |
-| omlx CLI | `/Volumes/Model/omlx/bin/omlx`(→ `omlxc`) |
-| 模型权重 | `/Volumes/Model/LMStudio/…`(外置盘,必须挂着) |
-| 编排层备份仓 | `~/omlx-orchestration`(git · RESTORE.md 恢复指南) |
-| aetherforge SSOT | `~/Workspace/projects/ecos/src/ecos/ssot/mof/m1/compute_engine/ENG-OMLX-LOCAL.yaml` |
-| 端口登记 | `~/Workspace/protocols/port-registry.yaml`(omlx 占 818x) |
+| 模型/集群/引擎分工/兜底映射 | `~/omlx/conf/models.json`(已入 git) |
+| 中枢 CLI | `~/omlx/bin/omlx`(`omlxc` 是它的软链) |
+| 别名表 | `projects/aetherforge/packages/gateway/src/llm_gateway/aliases.yaml` |
+| 门面代码 | `projects/aetherforge/packages/gateway/src/llm_gateway/openai_proxy.py` |
+| 路由逻辑 | 同上目录 `gateway.py` |
+| 引擎 SSOT | `projects/ecos/src/ecos/ssot/mof/m1/compute_engine/ENG-*.yaml` |
+| 服务注册 | `.omo/_truth/registry/services.yaml` |
 
-## 7. 依赖与前置
+## 7. 待办
 
-- **Tailscale** 必须连着同一 tailnet(网关绑 tailscale IP)。
-- **外置盘 `/Volumes/Model`** 必须挂着(模型 + omlx CLI + config 都在上面)。
-- 系统若开 SOCKS 代理(Clash),网关已用 `NO_PROXY=*` + socksio 兜住。
-
-## 8. 已知边界 / 待办
-
-- **Y7000P** 整机离线时够不着(HTTP/SSH 都不通);要可靠化需在那台机上开 SSH + WoL + 开机起 LMStudio。
-- **LMStudio HTTP 卸载**无官方接口(`node unload` 对 LMStudio 只能靠 idle TTL 或 lms CLI)。
-- **智能路由**目前是静态别名 + fallback;进一步可让 mesh 动态选最闲的在线节点。
-- 网关 master key `sk-omlx-admin` 为静态,备份仓含端点/密钥(须私有仓)。
+- 调用方从 `:4000` 迁到 `:9290`(kairon 约 10 处 / cockpit 2 处 / `bin/gac` 1 处)。
+  门面过渡期同时监听两个端口, 所以这件事不阻塞 LiteLLM 下线。
+- 迁完后把门面的 `:4000` 摘掉, 并从 port-registry 注销 LiteLLM。
+- 成本落账接到门面。
+- LM Link 的派发目前会把 12B 模型放到 Y7000P(三台里最弱), 冷启动实测上百秒。
+  是否设 preferred-device 待定 —— 放本机会和 omlx 抢内存。
