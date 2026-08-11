@@ -18,6 +18,8 @@
 - [ ] 代码型历史资料仅通过 schema-valid `CONTENT_ARCHIVE.yaml` 归类为 `content_archive`，且具备冻结清单、消费者扫描证据和内容指纹。
 - [ ] 所有活跃 crontab、LaunchAgent、Claude Scheduled、域 CLAUDE 和 Cockpit contracts 不再执行 Documents 内脚本。
 - [ ] `cockpit context`、`cockpit cards --check`、`cockpit kems domains/status/scan` 在实际安装入口通过 smoke，且输出来源可追溯。
+- [ ] 12 个 Documents 知识域都能作为独立 Cowork 项目打开：Claude 类客户端读薄 `CLAUDE.md`，Codex/兼容客户端读薄 `AGENTS.md`，并通过同一个 Workspace MCP 获取 `domain_context`、CARDS、Skills 与 Workflows；域内不复制执行实现。
+- [ ] `@公共/_control/L4-DOMAIN-REGISTRY.yaml` + 各域 `DOMAIN.yaml` 是域身份 SSOT；Workspace 域项目绑定注册表是能力/入口 SSOT；所有客户端文件均为可验证投影，不形成第三真源。
 - [ ] KEMS ingest/eval/graph/recovery 只由 Kairon/KOS 提供；任务/审批只由 OMO 提供；执行只经 Workflow Mesh/Runtime。
 - [ ] `family-dashboard-app` 能力完整合入 `family-hub`，Cockpit 只暴露一个家庭应用 contract。
 - [ ] 四个外部 Git 仓保留 remote、HEAD、工作树内容和可验证目标位置，Documents 只留内容索引。
@@ -72,7 +74,7 @@ ToolBox (独立仓，如需) ─────────────> root regis
 - [x] 启动 `project-doc-change` governance run。
 - [x] 复现 321,787 资产、44,528 违规候选、227 个非四大面 runtime 候选。
 - [x] 运行 doc SSOT checks 和 workflow verify。
-- [ ] 提交 root 文档 checkpoint：`docs(documents): plan full content-plane convergence`。
+- [x] 提交 root 文档 checkpoint：`docs(documents): plan full content-plane convergence`。
 
 **Verification:**
 
@@ -197,12 +199,13 @@ consumer_evidence:
 
 **TDD and installed smoke:**
 
-- [ ] 写 RED tests 覆盖 owner healthy/degraded/malformed/timeout。
+- [x] 写 RED tests 覆盖 owner healthy/degraded/malformed/timeout。
 - [ ] 对 API route 修改先运行 GitNexus `api_impact`。
-- [ ] focused：`uv run pytest src/cockpit/tests/test_governance_context_adapter.py src/cockpit/tests/test_capability_commands.py -q`。
-- [ ] full：`uv run pytest src/cockpit/tests/ tests/ -q`。
-- [ ] lint：`uv run ruff check src tests`。
-- [ ] PR 合并后从 accepted checkout 重装 Cockpit。
+- [x] focused：`uv run pytest src/cockpit/tests/test_governance_context_adapter.py src/cockpit/tests/test_capability_commands.py -q`。
+- [x] full：`uv run pytest src/cockpit/tests/ tests/ -q`。
+- [x] lint：`uv run ruff check src tests`。
+- [x] PR #35 通过 CI 并合并到 accepted Cockpit checkout。
+- [ ] 从 accepted checkout 重装用户级 Cockpit 入口。
 - [ ] installed smoke：
 
 ```bash
@@ -217,6 +220,45 @@ L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
 最后一条在存量债务未清零前必须 exit 1 且报告真实数量；不能把 fail-closed 当安装失败。
 
 **Commit:** `fix(cockpit): restore registry-backed governance context`
+
+---
+
+### Task 3A: 建立 Documents 独立域项目与 Cowork 接入契约
+
+**Architecture:**
+
+- 域身份：`@公共/_control/L4-DOMAIN-REGISTRY.yaml` → 各域 `DOMAIN.yaml`，唯一机器真源。
+- Workspace 能力绑定：`.omo/_truth/registry/documents-domain-projects.yaml`，只记录 `domain_id`、可用 MCP tools、Skill/Workflow profile 与客户端入口，不复制域元数据。
+- 客户端投影：各域根的 `CLAUDE.md` / `AGENTS.md` 只负责引导读取 `DOMAIN.yaml`、调用 Workspace MCP、遵守内容边界；不得内嵌运行代码或复制注册表。
+- MCP：Cockpit 现有 server 增加 `domain_context(domain_id)` 只读工具，在同一 envelope 内返回 capabilities，并组合 L4 manifest 与 Workspace binding；owner 不可达时明确 degraded。
+
+**Verified client compatibility (official docs, checked 2026-08-11):**
+
+- Codex reads project `AGENTS.md` and supports project/user MCP configuration: <https://learn.chatgpt.com/docs/agent-configuration/agents-md>, <https://learn.chatgpt.com/docs/extend/mcp?surface=cli>
+- Claude Desktop supports local MCP servers/Desktop Extensions installed once at client scope: <https://support.anthropic.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop>
+- Zed recognizes project `AGENTS.md`/`CLAUDE.md` and supports MCP in its Agent surface: <https://zed.dev/docs/ai/instructions>, <https://zed.dev/docs/ai/mcp>
+- ChatGPT web does not consume local Codex MCP configuration; local-domain access therefore remains desktop/local-client only until a reviewed remote plugin exists.
+
+**Files (expected):**
+
+- Create: `.omo/_truth/registry/documents-domain-projects.yaml`
+- Create: `bin/gac/documents-domain-project-check.py`
+- Create: `tests/test_documents_domain_project_check.py`
+- Modify: `.omo/_truth/registry/INDEX.md`
+- Modify: `.subtrees/cockpit/src/cockpit/adapters/governance_context.py`
+- Modify: `.subtrees/cockpit/src/cockpit/agent_runtime_mcp_server.py`
+- Modify: corresponding Cockpit tests
+- Modify after explicit batch-write confirmation: the 12 registered domain-root `AGENTS.md` / existing `CLAUDE.md` gateways
+
+**Acceptance:**
+
+- [x] registry contains each validated L4 manifest exactly once; unknown/missing domain, duplicate tool binding, missing skill/workflow ref fail closed.
+- [x] `domain_context` never returns a path/identity that disagrees with the referenced `DOMAIN.yaml`.
+- [ ] no domain gateway instructs execution from Documents `_runtime`, `_control` scripts, `.kems/_scripts`, or app roots.
+- [ ] Claude/Codex-compatible local-project smoke opens at least `vault`、`work-weijian`、`creative` and recovers the correct domain ID plus Workspace MCP guidance.
+- [ ] platform-specific configuration is generated from the binding registry or documented as a pointer; no manually duplicated MCP command matrices.
+
+**Commit:** `feat(cockpit): expose SSOT-backed domain project contexts`
 
 ---
 

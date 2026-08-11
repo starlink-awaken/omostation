@@ -1,0 +1,98 @@
+apiVersion: workspace.omostation/v1
+kind: DocumentsDomainProjects
+id: documents-domain-projects
+status: active
+owner: cockpit
+
+# Domain identity/path/authority are intentionally not duplicated here.
+# They resolve through the Documents registry and each referenced DOMAIN.yaml.
+domain_registry:
+  owner: l4-kernel
+  documents_relative_ref: "@公共/_control/L4-DOMAIN-REGISTRY.yaml"
+  environment_override: L4_DOMAIN_REGISTRY
+
+workspace_mcp:
+  owner: cockpit
+  server: cockpit
+  entrypoint: cockpit-mcp
+  transport: stdio
+  read_tools:
+    - workspace_context
+    - domains_list
+    - domain_context
+    - cards_status
+    - cards_check
+    - kems_status
+
+capability_routes:
+  skills:
+    owner: workspace-skills
+    registry_ref: "bos://shared/_control/SKILL-INDEX.md"
+    guidance: "Discover the relevant Workspace skill; do not copy skill implementations into Documents."
+  workflows:
+    owner: workspace-workflow-mesh
+    registry_ref: "bos://shared/_control/REGISTRY.md"
+    guidance: "Route multi-step execution through Workspace Workflow Mesh/Runtime; Documents stores only declarations and evidence."
+  tasks_and_approvals:
+    owner: omo
+    tool_refs:
+      - cards_status
+      - cards_check
+  knowledge_runtime:
+    owner: kairon-kos
+    guidance: "Use Kairon/KOS through Workspace routes; never start a domain-local KEMS runtime."
+
+clients:
+  claude:
+    instruction_file: CLAUDE.md
+    mcp_scope: user
+    note: "Install/configure the Cockpit MCP once; the domain gateway selects domain context."
+  codex:
+    instruction_file: AGENTS.md
+    mcp_scope: user_or_project
+    note: "Codex/ChatGPT desktop share the Codex-host MCP configuration."
+  agents_compatible:
+    instruction_file: AGENTS.md
+    mcp_scope: client
+    note: "For Zed/ZCode-like clients, use AGENTS.md plus the client MCP settings."
+  chatgpt_web:
+    instruction_file: null
+    mcp_scope: remote_plugin_required
+    note: "The web client does not consume local MCP config; use a reviewed remote plugin before enabling."
+
+profiles:
+  content-domain:
+    allowed_workspace_tools:
+      - workspace_context
+      - domain_context
+      - cards_status
+      - cards_check
+    skill_route: skills
+    workflow_route: workflows
+    execution_policy: workspace_only
+
+domains:
+  - id: shared
+    profile: content-domain
+  - id: personal
+    profile: content-domain
+  - id: vault
+    profile: content-domain
+  - id: family
+    profile: content-domain
+  - id: creative
+    profile: content-domain
+  - id: opc
+    profile: content-domain
+  - id: work-docs
+    profile: content-domain
+  - id: work-weijian
+    profile: content-domain
+  - id: work-guozhuan
+    profile: content-domain
+  - id: work-liyongke
+    profile: content-domain
+  - id: work-contracts
+    profile: content-domain
+  - id: cockpit
+    profile: content-domain
