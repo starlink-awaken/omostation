@@ -12,7 +12,6 @@ _CREDENTIAL_WORDS = frozenset(
     {
         "authorization",
         "credential",
-        "credentials",
         "key",
         "passwd",
         "password",
@@ -24,6 +23,7 @@ _CREDENTIAL_COMPOUNDS = frozenset(
     {
         "accesstoken",
         "apikey",
+        "apitoken",
         "authtoken",
         "bearertoken",
         "clientsecret",
@@ -31,6 +31,14 @@ _CREDENTIAL_COMPOUNDS = frozenset(
         "refreshtoken",
     }
 )
+_PLURAL_CREDENTIAL_WORDS = {
+    "credentials": "credential",
+    "keys": "key",
+    "passwords": "password",
+    "secrets": "secret",
+    "tokens": "token",
+}
+_CREDENTIAL_SUFFIXES = ("ref", "value")
 
 
 def canonical_key_words(key: str) -> tuple[str, ...]:
@@ -43,7 +51,19 @@ def canonical_key_words(key: str) -> tuple[str, ...]:
 
 def is_credential_key(key: str) -> bool:
     words = canonical_key_words(key)
-    return bool(_CREDENTIAL_WORDS.intersection(words)) or "".join(words) in _CREDENTIAL_COMPOUNDS
+    normalized_words = tuple(_PLURAL_CREDENTIAL_WORDS.get(word, word) for word in words)
+    joined = "".join(normalized_words)
+    if len(normalized_words) == 1 and joined in _CREDENTIAL_WORDS:
+        return True
+    if joined in _CREDENTIAL_COMPOUNDS:
+        return True
+    if joined.endswith("s") and joined[:-1] in _CREDENTIAL_COMPOUNDS:
+        return True
+    return any(
+        joined.endswith(suffix)
+        and joined[: -len(suffix)] in (_CREDENTIAL_WORDS | _CREDENTIAL_COMPOUNDS)
+        for suffix in _CREDENTIAL_SUFFIXES
+    )
 
 
 def is_keychain_reference(value: str) -> bool:

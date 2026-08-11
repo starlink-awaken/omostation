@@ -266,6 +266,12 @@ def test_plaintext_secrets_in_legacy_extensions_fail_closed(tmp_path: Path) -> N
         "passwd",
         "credential",
         "credentials",
+        "apiKeys",
+        "api_keys",
+        "APIKEYS",
+        "accessTokens",
+        "clientSecrets",
+        "passwords",
     ],
 )
 def test_all_canonical_credential_key_spellings_reject_plaintext(
@@ -315,7 +321,13 @@ def test_valid_keychain_references_survive_nested_legacy_extensions(tmp_path: Pa
 
 def test_noncredential_words_are_not_false_positives(tmp_path: Path) -> None:
     data = _sanitized_legacy_config()
-    data["custom_operational"] = {"monkey": "banana", "hockey": "stick"}
+    data["custom_operational"] = {
+        "monkey": "banana",
+        "monkeys": "bananas",
+        "hockey": "stick",
+        "keychain_service": "omlxc",
+        "routingKey": "interactive",
+    }
 
     migrated = migrate_legacy_json(
         _write_legacy(tmp_path / "noncredentials.json", data), base_directory=tmp_path
@@ -323,7 +335,10 @@ def test_noncredential_words_are_not_false_positives(tmp_path: Path) -> None:
 
     assert migrated.legacy_extensions["custom_operational"] == {
         "monkey": "banana",
+        "monkeys": "bananas",
         "hockey": "stick",
+        "keychain_service": "omlxc",
+        "routingKey": "interactive",
     }
 
 

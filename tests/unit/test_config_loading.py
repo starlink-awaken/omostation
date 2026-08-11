@@ -212,3 +212,110 @@ legacy_extensions_json = '{"nested":[{"apiKey":"synthetic-do-not-copy"}]}'
         load_config(config_path, env={}, base_directory=tmp_path)
 
     assert "synthetic-do-not-copy" not in str(captured.value)
+
+
+@pytest.mark.parametrize(
+    ("toml_body", "plaintext"),
+    [
+        (
+            """
+[[models]]
+id = "model-a"
+category = "chat"
+role = "interactive"
+engine = "mlx"
+
+[models.parameters]
+apiKey = "synthetic-model-plaintext"
+""",
+            "synthetic-model-plaintext",
+        ),
+        (
+            """
+[policies.sampling_defaults]
+accessTokens = "synthetic-sampling-plaintext"
+""",
+            "synthetic-sampling-plaintext",
+        ),
+        (
+            """
+[policies.thinking_settings]
+nested = [{ clientSecrets = "synthetic-thinking-plaintext" }]
+""",
+            "synthetic-thinking-plaintext",
+        ),
+        (
+            """
+[policies.thinking_settings]
+endpoint = "https://operator:synthetic-url-password@example.invalid"
+""",
+            "synthetic-url-password",
+        ),
+    ],
+)
+def test_handwritten_toml_validates_arbitrary_json_fields_across_entire_tree(
+    tmp_path: Path, toml_body: str, plaintext: str
+) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(f"schema_version = 1\n{toml_body}", encoding="utf-8")
+
+    with pytest.raises(ConfigError, match="Keychain") as captured:
+        load_config(config_path, env={}, base_directory=tmp_path)
+
+    assert plaintext not in str(captured.value)
+
+
+def test_environment_injection_cannot_bypass_whole_config_credential_validation(
+    tmp_path: Path,
+) -> None:
+    plaintext = "synthetic-environment-plaintext"
+
+    with pytest.raises(ConfigError, match="Keychain") as captured:
+        load_config(
+            None,
+            env={"OMLXC_POLICIES__SAMPLING_DEFAULTS__APIKEYS": f'"{plaintext}"'},
+            base_directory=tmp_path,
+        )
+
+    assert plaintext not in str(captured.value)
+
+
+def test_override_injection_cannot_bypass_nested_list_credential_validation(
+    tmp_path: Path,
+) -> None:
+    plaintext = "synthetic-override-plaintext"
+
+    with pytest.raises(ConfigError, match="Keychain") as captured:
+        load_config(
+            None,
+            env={},
+            overrides={
+                "policies": {"thinking_settings": {"nested": [{"clientSecrets": plaintext}]}}
+            },
+            base_directory=tmp_path,
+        )
+
+    assert plaintext not in str(captured.value)
+
+
+def test_whole_config_validation_accepts_keychain_refs_and_business_keys(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        """
+schema_version = 1
+
+[policies.sampling_defaults]
+apiKeys = "keychain://omlxc/sampling"
+monkey = "banana"
+monkeys = "bananas"
+hockey = "stick"
+keychain_service = "omlxc"
+routingKey = "interactive"
+""".strip(),
+        encoding="utf-8",
+    )
+
+    loaded = load_config(config_path, env={}, base_directory=tmp_path)
+
+    assert loaded.policies.sampling_defaults["apiKeys"] == "keychain://omlxc/sampling"
+    assert loaded.policies.sampling_defaults["routingKey"] == "interactive"

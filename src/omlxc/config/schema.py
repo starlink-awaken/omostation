@@ -205,7 +205,7 @@ class AppConfig(ConfigModel):
                 raise ValueError(f"placement {placement.id!r} references unknown backend")
             if placement.model_id not in model_ids:
                 raise ValueError(f"placement {placement.id!r} references unknown model")
-        validate_keychain_only(self.legacy_extensions)
+        validate_keychain_only(self.model_dump(mode="python", exclude_none=True))
         return self
 
 
