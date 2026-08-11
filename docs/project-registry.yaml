@@ -13,7 +13,7 @@
 workspace:
   architecture: "5+4+1+1"
   ecos_version: "v6"
-  total_submodules: 18          # git submodule status | wc -l
+  total_submodules: 19          # git submodule status | wc -l
   total_projects: 18            # ls projects/*/ | wc -l (含 cockpit-ui 非子模块)
 
 layers:
