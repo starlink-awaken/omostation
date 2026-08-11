@@ -110,14 +110,8 @@ class FakeDurableProvider:
 
     def evaluate(self, request: dict) -> PolicyDecision | None:
         self.evaluate_calls += 1
-        h = compute_request_hash(
-            uri=request.get("uri", ""),
-            tool_name=request.get("tool_name", ""),
-            operation=request.get("operation", ""),
-            caller_id=request.get("caller_id", ""),
-            arguments=request.get("arguments", {}),
-            payload=request.get("payload"),
-        )
+        # Use trusted top-level request_hash injected by enforce()
+        h = request.get("request_hash", "")
         decision_val = "deny" if self._deny else "allow"
         reason = "policy_denied" if self._deny else "allowed"
         return _make_decision(h, decision=decision_val, reason=reason)
@@ -307,16 +301,65 @@ class TestPayloadChangeReject:
         _inject_provider(monkeypatch, fake)
 
         # Tamper with the provider to return a wrong hash
-        original_eval = fake.evaluate
-
         def tampered_eval(request):
-            d = original_eval(request)
-            # Return a different hash than expected
+            h = request.get("request_hash", "")
+            d = _make_decision(h)
             return d.model_copy(update={"request_hash": "tampered12345"})
         fake.evaluate = tampered_eval
 
         with pytest.raises(PEPDenied) as exc_info:
             enforce(uri="bos://test/data", tool_name="mutate_resource", operation="write")
+        assert "hash_mismatch" in exc_info.value.reason
+
+    def test_payload_change_changes_top_level_hash(self, monkeypatch):
+        """Different payload → different request_dict['request_hash'] → deny on replay."""
+        fake = FakeDurableProvider()
+        _inject_provider(monkeypatch, fake)
+        captured_hashes: list[str] = []
+
+        def capturing_eval(request: dict):
+            captured_hashes.append(request.get("request_hash", ""))
+            h = request.get("request_hash", "")
+            return _make_decision(h)
+        fake.evaluate = capturing_eval
+
+        # First call with payload A — succeeds
+        d1, r1 = enforce(
+            uri="bos://test/data", tool_name="mutate_resource", operation="write",
+            payload={"value": 1},
+        )
+        # Second call with payload B — different hash, should still succeed
+        # (provider returns allow for the new hash)
+        d2, r2 = enforce(
+            uri="bos://test/data", tool_name="mutate_resource", operation="write",
+            payload={"value": 2},
+        )
+        # The two request_hashes must differ
+        assert len(captured_hashes) == 2
+        assert captured_hashes[0] != captured_hashes[1]
+
+    def test_payload_replay_with_stale_hash_denies(self, monkeypatch):
+        """Replaying an old hash with changed payload → deny."""
+        fake = FakeDurableProvider()
+        _inject_provider(monkeypatch, fake)
+
+        stale_hash: list[str] = []
+
+        def stale_eval(request: dict):
+            # Always return the FIRST hash, ignoring the current one
+            h = request.get("request_hash", "")
+            if not stale_hash:
+                stale_hash.append(h)
+            return _make_decision(stale_hash[0])
+        fake.evaluate = stale_eval
+
+        # First call — succeeds (hash matches)
+        enforce(uri="bos://t/d", tool_name="mutate_resource", operation="write",
+                payload={"v": 1})
+        # Second call with different payload — stale hash → mismatch → deny
+        with pytest.raises(PEPDenied) as exc_info:
+            enforce(uri="bos://t/d", tool_name="mutate_resource", operation="write",
+                    payload={"v": 2})
         assert "hash_mismatch" in exc_info.value.reason
 
 

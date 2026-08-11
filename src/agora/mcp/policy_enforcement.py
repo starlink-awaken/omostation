@@ -301,13 +301,17 @@ def enforce(
     if provider is None:
         raise PEPDenied("pdp_unavailable")
 
-    # Build request and expected hash
+    # Build request and compute trusted canonical hash
+    # Caller can only control arguments._omo_policy — NOT top-level request_hash
+    clean_arguments = dict(arguments or {})
+    clean_arguments.pop("_omo_request_hash", None)  # strip any caller override attempt
+
     request_dict: dict[str, Any] = {
         "uri": uri,
         "tool_name": tool_name,
         "operation": operation,
         "caller_id": caller_id,
-        "arguments": arguments or {},
+        "arguments": clean_arguments,
         "payload": payload,
     }
     expected_hash = compute_request_hash(
@@ -315,9 +319,11 @@ def enforce(
         tool_name=tool_name,
         operation=operation,
         caller_id=caller_id,
-        arguments=arguments,
+        arguments=clean_arguments,
         payload=payload,
     )
+    # Inject trusted top-level request_hash — OMO must not re-canonicalize
+    request_dict["request_hash"] = expected_hash
 
     # Rule 2: PDP exception → deny
     try:
