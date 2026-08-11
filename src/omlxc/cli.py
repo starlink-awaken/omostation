@@ -34,4 +34,3 @@ def command(
 def main() -> None:
     """Run the ``omlxc`` console script."""
     app()
-

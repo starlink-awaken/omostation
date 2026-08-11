@@ -8,4 +8,3 @@
 - Do not globally install `omlxc`, modify `/opt/homebrew/bin/omlxc`, contact
   real hardware from ordinary tests, or add public-release material.
 - Keep personal configuration, secrets, model files, logs, and state out of git.
-

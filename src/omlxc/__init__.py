@@ -5,4 +5,3 @@ TUI implementations intentionally arrive in later tasks.
 """
 
 __version__ = "3.0.0a1"
-

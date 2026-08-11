@@ -8,4 +8,3 @@ Report potential vulnerabilities privately to the repository owner. Include a
 minimal reproduction and avoid placing secrets in issues, logs, commits, or
 screenshots. No public disclosure process is established for this private
 repository.
-

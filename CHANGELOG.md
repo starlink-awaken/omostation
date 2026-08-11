@@ -5,4 +5,3 @@
 - Added the private, installable Python package skeleton.
 - Added `omlxc` and explicit `omlxcd` placeholder console scripts.
 - Preserved the 32-test `bin/omlx` legacy characterization baseline.
-
