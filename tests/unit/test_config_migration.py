@@ -291,7 +291,22 @@ def test_all_canonical_credential_key_spellings_reject_plaintext(
 
 @pytest.mark.parametrize(
     "invalid_reference",
-    ["keychain://", "keychain://service", "keychain:///account"],
+    [
+        "keychain://",
+        "keychain://service",
+        "keychain:///account",
+        "keychain://service/account?x=y",
+        "keychain://service/account#frag",
+        "keychain://user@host/account",
+        "keychain://service/account\t",
+        "keychain://service/a:b",
+        "keychain://service/%2F",
+        "keychain://service/a\\b",
+        "keychain://service/account/extra",
+        "keychain://service/",
+        f"keychain://{'s' * 129}/account",
+        f"keychain://service/{'a' * 129}",
+    ],
 )
 def test_credential_fields_reject_malformed_keychain_references(
     tmp_path: Path, invalid_reference: str

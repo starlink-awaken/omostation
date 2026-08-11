@@ -6,7 +6,8 @@ import re
 from collections.abc import Mapping
 from typing import cast
 
-_KEYCHAIN_REFERENCE = re.compile(r"^keychain://[^/\s]+/[^/\s]+(?:/[^/\s]+)*$")
+_KEYCHAIN_IDENTIFIER = r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}"
+_KEYCHAIN_REFERENCE = re.compile(rf"^keychain://{_KEYCHAIN_IDENTIFIER}/{_KEYCHAIN_IDENTIFIER}$")
 _URL_AUTH = re.compile(r"(?i)[a-z][a-z0-9+.-]*://[^/@\s]+@")
 _CREDENTIAL_WORDS = frozenset(
     {
@@ -39,6 +40,10 @@ _PLURAL_CREDENTIAL_WORDS = {
     "tokens": "token",
 }
 _CREDENTIAL_SUFFIXES = ("ref", "value")
+
+
+class CredentialPolicyError(Exception):
+    """Safe credential-boundary failure that Pydantic must not wrap with raw input."""
 
 
 def canonical_key_words(key: str) -> tuple[str, ...]:
@@ -81,9 +86,13 @@ def validate_keychain_only(value: object, *, key: str | None = None) -> None:
         and is_credential_key(key)
         and not (isinstance(value, str) and is_keychain_reference(value))
     ):
-        raise ValueError("plaintext authentication material must use a valid Keychain reference")
+        raise CredentialPolicyError(
+            "plaintext authentication material must use a valid Keychain reference"
+        )
     if isinstance(value, str) and has_embedded_url_auth(value):
-        raise ValueError("address authentication material must use a valid Keychain reference")
+        raise CredentialPolicyError(
+            "address authentication material must use a valid Keychain reference"
+        )
     if isinstance(value, Mapping):
         mapping = cast(Mapping[object, object], value)
         for child_key, child in mapping.items():

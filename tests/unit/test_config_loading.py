@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from omlxc.config import ConfigError, load_config, safe_defaults
+from omlxc.config import AppConfig, ConfigError, load_config, safe_defaults
 from omlxc.domain import RouteProfile
 
 
@@ -319,3 +321,97 @@ routingKey = "interactive"
 
     assert loaded.policies.sampling_defaults["apiKeys"] == "keychain://omlxc/sampling"
     assert loaded.policies.sampling_defaults["routingKey"] == "interactive"
+
+
+@pytest.mark.parametrize(
+    "invalid_reference",
+    [
+        "keychain://service/account?x=y",
+        "keychain://service/account#frag",
+        "keychain://user@host/account",
+        "keychain://service/account\t",
+        "keychain://service/a:b",
+        "keychain://service/%2F",
+        "keychain://service/a\\b",
+        "keychain://service/account/extra",
+        "keychain:///account",
+        "keychain://service/",
+        f"keychain://{'s' * 129}/account",
+        f"keychain://service/{'a' * 129}",
+    ],
+)
+def test_loader_rejects_noncanonical_keychain_references(
+    tmp_path: Path, invalid_reference: str
+) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        f"""
+schema_version = 1
+
+[[nodes]]
+id = "node-a"
+display_name = "Node A"
+platform = "linux"
+
+[[backends]]
+id = "backend-a"
+node_id = "node-a"
+kind = "ollama"
+base_url = "https://node-a.example.invalid"
+credential_ref = {json.dumps(invalid_reference)}
+""".strip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ConfigError, match="Keychain") as captured:
+        load_config(config_path, env={}, base_directory=tmp_path)
+
+    assert invalid_reference not in str(captured.value)
+
+
+@pytest.mark.parametrize(
+    "valid_reference",
+    [
+        "keychain://com.omlxc.backend/node-1",
+        "keychain://Service_1/Account.Name-2",
+    ],
+)
+def test_loader_accepts_canonical_keychain_references(tmp_path: Path, valid_reference: str) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        f"""
+schema_version = 1
+
+[[nodes]]
+id = "node-a"
+display_name = "Node A"
+platform = "linux"
+
+[[backends]]
+id = "backend-a"
+node_id = "node-a"
+kind = "ollama"
+base_url = "https://node-a.example.invalid"
+credential_ref = "{valid_reference}"
+""".strip(),
+        encoding="utf-8",
+    )
+
+    assert (
+        load_config(config_path, env={}, base_directory=tmp_path).backends[0].credential_ref
+        == valid_reference
+    )
+
+
+def test_direct_app_config_credential_rejection_raises_safe_domain_error(
+    tmp_path: Path,
+) -> None:
+    plaintext = "synthetic-direct-model-plaintext"
+    payload = safe_defaults(base_directory=tmp_path).model_dump(mode="python")
+    payload["policies"]["sampling_defaults"] = {"apiKey": plaintext}
+
+    with pytest.raises(Exception) as captured:
+        AppConfig.model_validate(payload)
+
+    assert not isinstance(captured.value, ValidationError)
+    assert plaintext not in str(captured.value)

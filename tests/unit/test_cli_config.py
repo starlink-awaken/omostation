@@ -106,6 +106,28 @@ def test_config_validate_emits_sanitized_structured_error(tmp_path: Path) -> Non
     assert "must-not-leak" not in result.stderr
 
 
+def test_config_validate_credential_policy_error_does_not_leak_input(tmp_path: Path) -> None:
+    plaintext = "synthetic-cli-credential-plaintext"
+    config = tmp_path / "config.toml"
+    config.write_text(
+        f"""
+schema_version = 1
+
+[policies.sampling_defaults]
+apiKeys = "{plaintext}"
+""".strip(),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["config", "validate", "--path", str(config)])
+
+    assert result.exit_code == 2
+    assert result.stdout == ""
+    payload = json.loads(result.stderr)
+    assert payload["error"]["code"] == "E100"
+    assert plaintext not in result.stderr
+
+
 def test_config_migrate_defaults_to_summary_plan_without_writing(tmp_path: Path) -> None:
     source = _legacy_source(tmp_path / "models.json")
     target = tmp_path / "config.toml"

@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator, m
 
 from omlxc.domain import BackendKind, RouteProfile
 from omlxc.domain.security import (
+    CredentialPolicyError,
     has_embedded_url_auth,
     is_keychain_reference,
     validate_keychain_only,
@@ -81,7 +82,7 @@ class BackendConfig(ConfigModel):
     @classmethod
     def keychain_reference_only(cls, value: str | None) -> str | None:
         if value is not None and not is_keychain_reference(value):
-            raise ValueError("credential_ref must be a Keychain reference")
+            raise CredentialPolicyError("credential_ref must be a valid Keychain reference")
         return value
 
     @field_validator("base_url", "control_endpoint")
@@ -222,4 +223,6 @@ def _unique_ids(kind: str, values: Sequence[_Identified]) -> set[str]:
 
 def _require_keychain_for_url_auth(value: str) -> None:
     if has_embedded_url_auth(value):
-        raise ValueError("URL authentication material must use a Keychain reference")
+        raise CredentialPolicyError(
+            "URL authentication material must use a valid Keychain reference"
+        )

@@ -14,7 +14,7 @@ from typing import Any, cast
 from pydantic import BaseModel, ConfigDict, JsonValue
 
 from omlxc.domain import BackendKind, RouteProfile
-from omlxc.domain.security import validate_keychain_only
+from omlxc.domain.security import CredentialPolicyError, validate_keychain_only
 
 from .loading import ConfigError, safe_defaults
 from .schema import (
@@ -383,7 +383,7 @@ def _string_mapping(value: object, name: str) -> dict[str, str]:
 def _assert_no_plaintext_auth(value: object, *, key: str | None = None) -> None:
     try:
         validate_keychain_only(value, key=key)
-    except ValueError as exc:
+    except CredentialPolicyError as exc:
         raise ConfigError(f"legacy {exc}") from exc
 
 

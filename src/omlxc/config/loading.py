@@ -13,7 +13,7 @@ from typing import Any, cast
 from platformdirs import user_config_path
 from pydantic import ValidationError
 
-from omlxc.domain import sanitize_sensitive
+from omlxc.domain import CredentialPolicyError, sanitize_sensitive
 
 from .schema import AppConfig, DaemonConfig, PoliciesConfig, StorageConfig
 
@@ -62,6 +62,8 @@ def load_config(
     _require_schema_version(merged)
     try:
         return AppConfig.model_validate(merged)
+    except CredentialPolicyError as exc:
+        raise ConfigError(f"invalid configuration: {exc}") from exc
     except ValidationError as exc:
         details = sanitize_sensitive(str(exc.errors(include_input=False)))
         raise ConfigError(f"invalid configuration: {details}") from exc

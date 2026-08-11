@@ -30,6 +30,7 @@ from .models import (
     RouteProfile,
     RouteRequest,
 )
+from .security import CredentialPolicyError
 from .state import JOB_TRANSITIONS, NODE_TRANSITIONS, transition_job, transition_node
 
 __all__ = [
@@ -44,6 +45,7 @@ __all__ = [
     "BackendAdapter",
     "BackendInstance",
     "BackendKind",
+    "CredentialPolicyError",
     "ErrorEnvelope",
     "HealthSnapshot",
     "FrozenDict",
