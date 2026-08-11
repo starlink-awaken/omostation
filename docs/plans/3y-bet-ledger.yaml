@@ -1682,7 +1682,8 @@ bets:
   title: Blueprint W2-03 single-user PDP/PEP Capability Gateway enforcement
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-11
   goal: >-
     在可信本地单用户部署上，将 W2-02 纯授权准入转为对受支持的公共 Agora Capability
     Gateway 副作用路由的真实 fail-closed 强制执行。ECOS 提供生成的 PolicyDecision/ActionReceipt
@@ -1749,12 +1750,12 @@ bets:
       --out-dir src/ecos/ssot/mof/generated/control && uv run python src/ecos/ssot/tools/mof-compile.py
       check --out-dir src/ecos/ssot/mof/generated/control
     expect: exit 0
-  - cmd: cd projects/omo && uv run --with pytest python -m pytest tests/test_sovereignty_policy_enforcement.py
+  - cmd: cd projects/omo && uv sync --frozen --reinstall-package ecos && uv run --with pytest python -m pytest tests/test_sovereignty_policy_enforcement.py
       tests/integration/test_w2_03_capability_enforcement.py tests/test_sovereignty_mandate_admission.py
       tests/test_sovereignty_mandate_replay.py -q
     expect: exit 0
-  - cmd: cd projects/agora && uv run --with pytest python -m pytest tests/unit/test_policy_enforcement.py
-      tests/integration/test_policy_enforcement_routes.py -q
+  - cmd: cd projects/agora && uv sync --frozen --reinstall-package ecos && uv run --with pytest python -m pytest tests/test_pep_integration.py
+      -q
     expect: exit 0
   - cmd: cd projects/omo && uv lock --check && cd projects/agora && uv lock --check
       && git diff --check
@@ -1767,6 +1768,7 @@ bets:
   - projects/ecos/src/ecos/ssot/mof/m2/action_receipt.yaml
   - projects/ecos/src/ecos/ssot/mof/generated/control/**
   - projects/ecos/tests/test_mof_w2_policy_enforcement_contract.py
+  - .omo/_truth/registry/mof-capabilities.yaml
   - projects/omo/src/omo/sovereignty/__init__.py
   - projects/omo/src/omo/sovereignty/enforcement.py
   - projects/omo/src/omo/omo_ledger.py
@@ -1779,8 +1781,7 @@ bets:
   - projects/agora/src/agora/mcp/resolver/api.py
   - projects/agora/src/agora/mcp_proxy/manager.py
   - projects/agora/src/agora/mcp/mcp_stdio_bridge.py
-  - projects/agora/tests/unit/test_policy_enforcement.py
-  - projects/agora/tests/integration/test_policy_enforcement_routes.py
+  - projects/agora/tests/test_pep_integration.py
   - projects/omo/pyproject.toml
   - projects/omo/uv.lock
   - projects/agora/pyproject.toml
