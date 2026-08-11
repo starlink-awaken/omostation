@@ -178,15 +178,62 @@ class TestKemsCommand:
         assert "KEMS" in out
         assert "domains" in out
 
-    def test_domains_l4bridge_unavailable(self, capsys):
-        """l4bridge 不可用时 domains 报错 rc=1, 不 traceback."""
+    def test_domains_uses_governance_adapter(self, monkeypatch, capsys):
+        """domains 从治理适配器读取正式 L4 registry 投影。"""
         from cockpit.commands import kems
 
-        with patch.dict("sys.modules", {"cockpit.scripts.cockpit_mcp": None}):
-            args = argparse.Namespace(kems_command="domains")
-            # 即使 import 失败, 函数应优雅返回 1
-            try:
-                rc = kems.cmd_kems_domains(args)
-                assert rc in (0, 1)  # 不应抛异常
-            except (ImportError, SystemExit):
-                pytest.fail("kems domains 不应抛未捕获异常")
+        called = []
+        monkeypatch.setattr(
+            kems.governance_context,
+            "domains_list",
+            lambda: (
+                called.append(True)
+                or {
+                    "status": "ok",
+                    "available": True,
+                    "total": 1,
+                    "domains": [
+                        {
+                            "id": "vault",
+                            "name": "@学习进化",
+                            "type": "document",
+                            "path": "/tmp/vault",
+                            "bos_uri": "bos://vault/**",
+                            "capabilities": ["knowledge.read"],
+                            "exists": True,
+                        }
+                    ],
+                }
+            ),
+        )
+
+        rc = kems.cmd_kems_domains(argparse.Namespace(kems_command="domains"))
+
+        assert rc == 0
+        assert called == [True]
+        output = capsys.readouterr().out
+        assert "@学习进化" in output
+        assert "bos://vault/**" in output
+
+    def test_status_uses_governance_adapter_and_reports_degraded(self, monkeypatch, capsys):
+        from cockpit.commands import kems
+
+        monkeypatch.setattr(
+            kems.governance_context,
+            "kems_status",
+            lambda: {
+                "status": "degraded",
+                "available": True,
+                "documents_root": "/tmp/Documents",
+                "domains": {"status": "ok", "total": 12},
+                "content_audit": {"status": "degraded", "violations": [{"code": "L4-CONTENT-001"}]},
+                "owners": {"omo": {"status": "ok"}, "kairon": {"status": "unavailable"}},
+            },
+        )
+
+        rc = kems.cmd_kems_status(argparse.Namespace(kems_command="status"))
+
+        assert rc == 1
+        output = capsys.readouterr().out
+        assert "degraded" in output
+        assert "L4-CONTENT-001" in output

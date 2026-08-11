@@ -4,7 +4,7 @@ KEMS 的执行能力归 Workspace；Documents 仅保留内容、契约与证据.
 本命令通过 l4bridge 复用已有 L4 能力, 不重写逻辑.
 
 子命令:
-  domains  — 列出 L4 所有域及其状态 (28 domains)
+  domains  — 列出 Documents 正式注册的知识域
   status   — KEMS 控制面状态
   scan     — KEMS 平面扫描
 
@@ -14,10 +14,11 @@ KEMS 的执行能力归 Workspace；Documents 仅保留内容、契约与证据.
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import subprocess
 from pathlib import Path
+
+from cockpit.adapters import governance_context
 
 from .base import _get_console, _get_err, _panel
 
@@ -25,82 +26,56 @@ from .base import _get_console, _get_err, _panel
 def cmd_kems_domains(args: argparse.Namespace) -> int:
     """cockpit kems domains — 列出 L4 所有域及其状态."""
     console = _get_console()
-    try:
-        from cockpit.scripts.cockpit_mcp import workspace_context
-    except ImportError:
-        _get_err().print("[red]❌ L4 bridge 不可用 (cockpit_mcp 未安装)[/red]")
+    result = governance_context.domains_list()
+    if not result["available"]:
+        _get_err().print(f"[red]❌ L4 域注册不可用: {result.get('error', 'unknown error')}[/red]")
         return 1
-
-    try:
-        ctx = json.loads(workspace_context())
-    except Exception as exc:
-        _get_err().print(f"[red]❌ workspace_context 调用失败: {exc}[/red]")
-        return 1
-
-    domains = ctx.get("domains") or ctx.get("domain_summary") or {}
-    phase = ctx.get("phase", "?")
 
     console.print(
         _panel(
-            f"[bold cyan]🧬 KEMS 域注册 · Phase {phase}[/bold cyan]",
+            f"[bold cyan]🧬 Documents 域注册 · {result['status']}[/bold cyan]",
             "cyan",
         )
     )
+    from rich import box as rich_box
+    from rich.table import Table
 
-    if isinstance(domains, dict):
-        from rich import box as rich_box
-        from rich.table import Table
-
-        table = Table(box=rich_box.ROUNDED, header_style="bold cyan")
-        table.add_column("域", style="bold green")
-        table.add_column("状态", style="cyan")
-        table.add_column("详情", style="dim")
-        for name, info in sorted(domains.items()):
-            if isinstance(info, dict):
-                status = info.get("status", "?")
-                detail = info.get("detail") or info.get("cards_count", "")
-            else:
-                status = str(info)
-                detail = ""
-            table.add_row(name, str(status), str(detail))
-        console.print(table)
-        console.print(f"\n[dim]共 {len(domains)} 个域[/dim]")
-    elif isinstance(domains, list):
-        for d in domains:
-            console.print(f"  [green]▪[/] {d}")
-        console.print(f"\n[dim]共 {len(domains)} 个域[/dim]")
-    else:
-        console.print(f"[yellow]域数据格式未知: {type(domains)}[/yellow]")
-        console.print(json.dumps(ctx, ensure_ascii=False, indent=2)[:500])
-    return 0
+    table = Table(box=rich_box.ROUNDED, header_style="bold cyan")
+    table.add_column("域", style="bold green")
+    table.add_column("状态", style="cyan")
+    table.add_column("BOS URI", style="dim")
+    table.add_column("能力", style="dim")
+    for domain in result["domains"]:
+        table.add_row(
+            domain["name"],
+            "exists" if domain["exists"] else "missing",
+            domain["bos_uri"],
+            ", ".join(domain["capabilities"]),
+        )
+    console.print(table)
+    console.print(f"\n[dim]共 {result['total']} 个域 · SSOT: {result.get('source', '?')}[/dim]")
+    return 0 if result["status"] == "ok" else 1
 
 
 def cmd_kems_status(args: argparse.Namespace) -> int:
     """cockpit kems status — KEMS 控制面状态."""
     console = _get_console()
-    try:
-        from cockpit.scripts.cockpit_mcp import workspace_context
-    except ImportError:
-        _get_err().print("[red]❌ L4 bridge 不可用[/red]")
-        return 1
-
-    try:
-        ctx = json.loads(workspace_context())
-    except Exception as exc:
-        _get_err().print(f"[red]❌ workspace_context 调用失败: {exc}[/red]")
-        return 1
-
-    cards = ctx.get("cards_summary", {})
+    result = governance_context.kems_status()
+    audit = result["content_audit"]
+    owners = result["owners"]
     console.print(
         _panel(
             f"[bold cyan]🧬 KEMS 控制面状态[/bold cyan]\n"
-            f"Phase: [bold]{ctx.get('phase', '?')}[/bold] · {ctx.get('theme', '')}\n"
-            f"CARDS: P0={cards.get('p0_open', 0)} open · total={cards.get('total', '?')}\n"
-            f"域数: {len(ctx.get('domains') or {})}",
+            f"状态: [bold]{result['status']}[/bold]\n"
+            f"域注册: {result['domains']['status']} · {result['domains']['total']} domains\n"
+            f"内容审计: {audit['status']} · violations={len(audit.get('violations', []))}\n"
+            f"Owners: OMO={owners['omo']['status']} · Kairon={owners['kairon']['status']}",
             "cyan",
         )
     )
-    return 0
+    for violation in audit.get("violations", [])[:10]:
+        console.print(f"  [yellow]{violation.get('code', '?')}[/] {violation.get('relative_path', '')}")
+    return 0 if result["status"] == "ok" else 1
 
 
 def cmd_kems_scan(args: argparse.Namespace) -> int:

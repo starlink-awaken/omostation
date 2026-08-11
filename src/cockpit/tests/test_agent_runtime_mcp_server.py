@@ -1,5 +1,6 @@
 """Tests for agent_runtime_mcp_server.py"""
 
+import json
 import sys
 from unittest import mock
 
@@ -201,3 +202,39 @@ class TestL0ToolRegistration:
             if t.name in {"run_task", "chat"}:
                 continue  # builtin agent-runtime tools
             assert t.description, f"Tool {t.name} missing description"
+
+
+class TestGovernanceTools:
+    """Cowork 客户端通过同一个 MCP server 获取只读 SSOT 投影。"""
+
+    def test_governance_tools_registered(self):
+        import asyncio
+
+        tools = asyncio.run(agent_runtime_mcp_server.mcp.list_tools())
+        names = {tool.name for tool in tools}
+        assert {
+            "workspace_context",
+            "domains_list",
+            "domain_context",
+            "cards_status",
+            "cards_check",
+            "kems_status",
+        } <= names
+
+    def test_workspace_context_returns_stable_json_from_adapter(self, monkeypatch):
+        payload = {"schema": "cockpit.governance-context.v1", "status": "degraded", "available": True}
+        monkeypatch.setattr(agent_runtime_mcp_server.governance_context, "workspace_context", lambda: payload)
+
+        assert json.loads(agent_runtime_mcp_server.workspace_context()) == payload
+
+    def test_domain_context_passes_domain_id_to_adapter(self, monkeypatch):
+        seen = []
+        payload = {"schema": "cockpit.domain-context.v1", "status": "unavailable", "available": False}
+        monkeypatch.setattr(
+            agent_runtime_mcp_server.governance_context,
+            "domain_context",
+            lambda domain_id: seen.append(domain_id) or payload,
+        )
+
+        assert json.loads(agent_runtime_mcp_server.domain_context("unknown")) == payload
+        assert seen == ["unknown"]

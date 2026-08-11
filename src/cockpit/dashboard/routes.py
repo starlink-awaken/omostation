@@ -10,6 +10,7 @@ import yaml
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
+from cockpit.adapters import governance_context
 from cockpit.dashboard.constants import (
     ARCH_HTML,
     BOS_DASHBOARD_HTML,
@@ -32,18 +33,6 @@ from cockpit.dashboard.helpers import (
     run_e2e,
 )
 from cockpit.web.auth import verify_api_key
-
-# L4 bridge imports (try/except for graceful degradation)
-try:
-    from cockpit.scripts.cockpit_mcp import cards_check, cards_status, workspace_context
-
-    _HAS_L4_BRIDGE = True
-except ImportError:
-    cards_check = None  # type: ignore[assignment]
-    cards_status = None  # type: ignore[assignment]
-    workspace_context = None  # type: ignore[assignment]
-    _HAS_L4_BRIDGE = False
-
 
 # ─── Auth ─────────────────────────────────────────────────────
 
@@ -204,23 +193,20 @@ async def api_omo_report():
 
 @router.get("/api/context", dependencies=_AUTH_DEPS)
 async def api_context():
-    if not _HAS_L4_BRIDGE:
-        return JSONResponse(content={"error": "L4 bridge not available"})
-    return JSONResponse(content=json.loads(workspace_context()))  # type: ignore[union-attr]
+    payload = governance_context.workspace_context()
+    return JSONResponse(content=payload, status_code=200 if payload["available"] else 503)
 
 
 @router.get("/api/cards", dependencies=_AUTH_DEPS)
 async def api_cards():
-    if not _HAS_L4_BRIDGE:
-        return JSONResponse(content={"error": "L4 bridge not available"})
-    return JSONResponse(content=json.loads(cards_status()))  # type: ignore[union-attr]
+    payload = governance_context.cards_status()
+    return JSONResponse(content=payload, status_code=200 if payload["available"] else 503)
 
 
 @router.get("/api/cards/check", dependencies=_AUTH_DEPS)
 async def api_cards_check():
-    if not _HAS_L4_BRIDGE:
-        return JSONResponse(content={"error": "L4 bridge not available"})
-    return JSONResponse(content=json.loads(cards_check()))  # type: ignore[union-attr]
+    payload = governance_context.cards_check()
+    return JSONResponse(content=payload, status_code=200 if payload["available"] else 503)
 
 
 # ─── BOS 可观测 ────────────────────────────────────────────────

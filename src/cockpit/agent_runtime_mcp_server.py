@@ -15,6 +15,8 @@ from typing import Any
 
 from fastmcp import FastMCP  # type: ignore[import-not-found]
 
+from cockpit.adapters import governance_context
+
 mcp = FastMCP("agent-runtime")
 
 # 延迟导入避免启动时挂住
@@ -132,6 +134,52 @@ def chat(message: str, history_json: str = "") -> str:
             messages.append(tool_result)
 
     return messages[-1].get("content", "")
+
+
+def _json_envelope(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, ensure_ascii=False, default=str)
+
+
+@mcp.tool()
+def workspace_context() -> str:
+    """Read the Workspace phase, Documents domains, and CARDS summary from their SSOT owners."""
+
+    return _json_envelope(governance_context.workspace_context())
+
+
+@mcp.tool()
+def domains_list() -> str:
+    """List validated Documents knowledge domains with paths, BOS URIs, and capabilities."""
+
+    return _json_envelope(governance_context.domains_list())
+
+
+@mcp.tool()
+def domain_context(domain_id: str) -> str:
+    """Resolve one Documents domain and its optional Workspace Cowork binding."""
+
+    return _json_envelope(governance_context.domain_context(domain_id))
+
+
+@mcp.tool()
+def cards_status() -> str:
+    """List CARDS through the OMO authority."""
+
+    return _json_envelope(governance_context.cards_status())
+
+
+@mcp.tool()
+def cards_check(card_id: str = "") -> str:
+    """Run the OMO CARDS constraint authority and preserve its result envelope."""
+
+    return _json_envelope(governance_context.cards_check(card_id=card_id))
+
+
+@mcp.tool()
+def kems_status() -> str:
+    """Read Documents content-audit and KEMS owner reachability status."""
+
+    return _json_envelope(governance_context.kems_status())
 
 
 # ── L0 治理查询工具 (P78 audit 发现 8 个工具定义在 l0_mcp_tools.py 但未注册) ──
