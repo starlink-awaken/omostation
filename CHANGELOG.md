@@ -57,3 +57,12 @@
   versioned JSON/NDJSON, stable exits, TTY-aware behavior, and R1/R2 gates; and
   added the eight-page Textual compute cockpit with keyboard navigation, confirmed
   mutations, incremental events, explicit STALE recovery, and narrow-screen mode.
+- Wired the macOS user LaunchAgent lifecycle into the CLI with bounded argv-only
+  `launchctl`, R2 confirmation, rollback-safe install, recoverable uninstall, and
+  stable typed failures; added a no-write `doctor --direct` path.
+- Added schema-v1 Tailscale executable/TTL and strong per-node allowlists, automatic
+  production adapter construction with authorization-before-discovery, and LM
+  Studio remote-control factory wiring. Windows subprocess output now decodes
+  bounded UTF-8/UTF-16 and rejects CLIXML or invalid bytes without leaking them.
+- Made daemon, CLI socket discovery, and direct diagnostics load the platform
+  default configuration file when it exists.

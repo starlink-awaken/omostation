@@ -69,6 +69,22 @@ def load_config(
         raise ConfigError(f"invalid configuration: {details}") from exc
 
 
+def load_user_config(
+    *,
+    env: Mapping[str, str] | None = None,
+    overrides: Mapping[str, Any] | None = None,
+    base_directory: Path | None = None,
+) -> AppConfig:
+    """Load the platform default file when present, otherwise safe defaults."""
+    path = default_config_path()
+    return load_config(
+        path if path.exists() else None,
+        env=env,
+        overrides=overrides,
+        base_directory=base_directory,
+    )
+
+
 def _require_schema_version(values: Mapping[str, Any]) -> None:
     if values.get("schema_version") != 1:
         raise ConfigError("unsupported schema_version; expected 1")

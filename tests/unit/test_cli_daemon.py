@@ -330,15 +330,21 @@ def test_r2_shows_plan_and_requires_two_confirmations_without_daemon_write(
     assert json.loads(incomplete.stderr)["error"]["code"] == "E700"
     assert fake_client.entered == 0
 
+    class FakeLaunchd:
+        async def restart(self) -> object:
+            return object()
+
+    monkeypatch.setattr(cli_module, "_launchd_controller", lambda: FakeLaunchd())
+
     bypassed = runner.invoke(
         app,
         ["daemon", "restart", "--yes", "--confirm-impact", "--json"],
     )
-    assert bypassed.exit_code == 2
-    assert json.loads(bypassed.stdout)["data"]["rollback"]
-    payload = json.loads(bypassed.stderr)
-    assert payload["error"]["code"] == "E100"
-    assert "unsupported" in payload["error"]["message"]
+    assert bypassed.exit_code == 0
+    records = [json.loads(line) for line in bypassed.stdout.splitlines()]
+    assert records[0]["data"]["rollback"]
+    assert records[-1]["data"]["status"] == "restart"
+    assert bypassed.stderr == ""
     assert fake_client.entered == 0
 
 

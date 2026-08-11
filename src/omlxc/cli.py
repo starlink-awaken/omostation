@@ -21,12 +21,19 @@ from .config import (
     build_migration_plan,
     default_config_path,
     load_config,
+    load_user_config,
     migrate_legacy_json,
     render_toml,
     write_config_atomic,
 )
+from .diagnostics import run_direct_doctor
 from .domain import EXIT_CONFIG, ErrorEnvelope, error_exit_code
-from .service import LaunchdPaths, build_launchd_plan
+from .service import (
+    LaunchdController,
+    LaunchdFailure,
+    LaunchdPaths,
+    build_launchd_plan,
+)
 
 app = typer.Typer(
     add_completion=False,
@@ -61,6 +68,10 @@ MAX_LOOKUP_PAGES = 100
 
 _client_factory: ClientFactory = DaemonClient
 _socket_override: Path | None = None
+
+
+def _launchd_controller(home: Path | None = None) -> LaunchdController:
+    return LaunchdController(LaunchdPaths.for_home(home or Path.home()))
 
 
 def _show_version(value: bool) -> None:
@@ -105,7 +116,7 @@ def _socket_path() -> Path:
     if _socket_override is not None:
         return _socket_override
     try:
-        return load_config().daemon.socket_path
+        return load_user_config().daemon.socket_path
     except ConfigError:
         return default_config_path().parent / "omlxcd.sock"
 
@@ -633,30 +644,56 @@ def config_rollback(
 def daemon_status(
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    _execute(lambda client: client.health(), json_output=json_output, renderer=_render_status)
+    try:
+        asyncio.run(_launchd_controller().status())
+    except LaunchdFailure as exc:
+        _fail_local(exc.code, str(exc), json_output=json_output)
+    data = {"label": "com.omlxc.daemon", "status": "running"}
+    if json_output:
+        _emit_success(data, request_id=_request_id())
+    else:
+        typer.echo("com.omlxc.daemon running")
 
 
 @daemon_app.command("install")
 def daemon_install(
     home: Annotated[Path | None, typer.Option("--home", file_okay=False)] = None,
     apply: Annotated[bool, typer.Option("--apply")] = False,
+    yes: Annotated[bool, typer.Option("--yes")] = False,
+    confirm_impact: Annotated[bool, typer.Option("--confirm-impact")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    if apply:
-        _unsupported("daemon install --apply", json_output=json_output)
     plan = build_launchd_plan(LaunchdPaths.for_home(home or Path.home()))
     data = {
         "label": "com.omlxc.daemon",
         "executable": str(plan.paths.executable),
         "plist_path": str(plan.paths.plist_path),
-        "will_write": False,
+        "will_write": apply,
     }
+    if apply:
+        _require_r2(
+            "install daemon",
+            yes=yes,
+            confirm_impact=confirm_impact,
+            json_output=json_output,
+        )
+        try:
+            result = asyncio.run(_launchd_controller(home).install())
+        except LaunchdFailure as exc:
+            _fail_local(exc.code, str(exc), json_output=json_output)
+        data.update(
+            {
+                "status": "installed",
+                "plist_path": str(result.plist_path),
+                "snapshot_created": result.snapshot_path is not None,
+            }
+        )
     if json_output:
         _emit_success(data, request_id=_request_id())
     else:
         text = (
             f"INSTALL PLAN\nexecutable {data['executable']}\n"
-            f"plist {data['plist_path']}\nwill_write no"
+            f"plist {data['plist_path']}\nwill_write {'yes' if apply else 'no'}"
         )
         typer.echo(text)
 
@@ -673,7 +710,19 @@ def daemon_uninstall(
         confirm_impact=confirm_impact,
         json_output=json_output,
     )
-    _unsupported("daemon uninstall", json_output=json_output)
+    try:
+        result = asyncio.run(_launchd_controller().uninstall())
+    except LaunchdFailure as exc:
+        _fail_local(exc.code, str(exc), json_output=json_output)
+    data = {
+        "status": "uninstalled",
+        "backup_path": str(result.backup_path) if result.backup_path is not None else None,
+        "preserved": [str(path) for path in result.preserved_paths],
+    }
+    if json_output:
+        _emit_success(data, request_id=_request_id())
+    else:
+        typer.echo(f"uninstalled {data['backup_path'] or '(no plist)'}")
 
 
 def _daemon_action(action: str, *, yes: bool, confirm_impact: bool, json_output: bool) -> None:
@@ -683,7 +732,21 @@ def _daemon_action(action: str, *, yes: bool, confirm_impact: bool, json_output:
         confirm_impact=confirm_impact,
         json_output=json_output,
     )
-    _unsupported(f"daemon {action}", json_output=json_output)
+    try:
+        controller = _launchd_controller()
+        if action == "start":
+            asyncio.run(controller.start())
+        elif action == "stop":
+            asyncio.run(controller.stop())
+        else:
+            asyncio.run(controller.restart())
+    except LaunchdFailure as exc:
+        _fail_local(exc.code, str(exc), json_output=json_output)
+    data = {"label": "com.omlxc.daemon", "status": action}
+    if json_output:
+        _emit_success(data, request_id=_request_id())
+    else:
+        typer.echo(f"com.omlxc.daemon {action}")
 
 
 @daemon_app.command("start")
@@ -718,8 +781,20 @@ def doctor(
     direct: Annotated[bool, typer.Option("--direct")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    del direct
-    _unsupported("doctor", json_output=json_output)
+    if not direct:
+        _execute(lambda client: client.health(), json_output=json_output, renderer=_render_status)
+        return
+    try:
+        config = load_user_config()
+        data = asyncio.run(run_direct_doctor(config))
+    except ConfigError as exc:
+        _fail_local("E100", str(exc), json_output=json_output)
+    except Exception:
+        _fail_local("E900", "direct diagnostics failed", json_output=json_output)
+    if json_output:
+        _emit_success(data, request_id=_request_id())
+    else:
+        typer.echo(_render_mapping(cast(JsonValue, data)))
 
 
 @app.command("benchmark")

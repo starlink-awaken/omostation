@@ -16,7 +16,14 @@ from uuid import uuid4
 
 from fastapi import FastAPI
 
-from omlxc.adapters import LmStudioAdapter, OllamaAdapter, OmlxAppAdapter, TailscaleAdapter
+from omlxc.adapters import (
+    LmsPlatform,
+    LmStudioAdapter,
+    OllamaAdapter,
+    OmlxAppAdapter,
+    TailscaleAdapter,
+    TailscaleNodePolicy,
+)
 from omlxc.api import create_app
 from omlxc.config import AppConfig, BackendConfig, PlacementConfig
 from omlxc.dataplane import (
@@ -190,10 +197,10 @@ class CatalogProbe:
     async def _authorize(
         self, backend: BackendConfig, authorization: asyncio.Task[None] | None
     ) -> tuple[bool, bool]:
-        if _is_loopback_url(backend.base_url):
+        if is_loopback_url(backend.base_url):
             return True, True
         node = self._nodes[backend.node_id]
-        if node.tailscale_identity is None or self._tailscale is None or authorization is None:
+        if node.tailscale is None or self._tailscale is None or authorization is None:
             return False, False
         await authorization
         self._tailscale.authorize_http(backend.node_id, backend.base_url)
@@ -609,7 +616,7 @@ def build_production_daemon(
 ) -> ProductionComposition:
     """Build the real daemon graph without starting network or model operations."""
     clock = now or (lambda: datetime.now(UTC))
-    bindings = dict(adapters) if adapters is not None else _build_adapters(config)
+    bindings = dict(adapters) if adapters is not None else build_configured_adapters(config)
     catalog = SnapshotCatalog(snapshots or _configured_snapshots(config))
     planner = RoutePlanner(default_policies())
     storage = StorageHandle(config)
@@ -639,12 +646,15 @@ def build_production_daemon(
         reranker,
     )
     events = ProductionEventService(storage, bus)
+    configured_tailscale = (
+        tailscale if tailscale is not None else build_configured_tailscale(config)
+    )
     probe = (
         CatalogProbe(
             config=config,
             adapters=bindings,
             catalog=catalog,
-            tailscale=tailscale,
+            tailscale=configured_tailscale,
             now=clock,
         )
         if snapshots is None
@@ -669,17 +679,54 @@ def build_production_daemon(
     return ProductionComposition(app, runtime, control, inference, events)
 
 
-def _build_adapters(config: AppConfig) -> dict[str, BackendAdapter]:
-    adapters: dict[str, BackendAdapter] = {}
-    for backend in config.backends:
-        if backend.kind is BackendKind.OMLX_APP:
-            adapter: object = OmlxAppAdapter(backend_id=backend.id, base_url=backend.base_url)
-        elif backend.kind is BackendKind.OLLAMA:
-            adapter = OllamaAdapter(backend_id=backend.id, base_url=backend.base_url)
-        else:
-            adapter = LmStudioAdapter(backend_id=backend.id, base_url=backend.base_url)
-        adapters[backend.id] = cast(BackendAdapter, adapter)
-    return adapters
+def build_configured_adapters(config: AppConfig) -> dict[str, BackendAdapter]:
+    return {backend.id: build_configured_adapter(backend) for backend in config.backends}
+
+
+def build_configured_adapter(backend: BackendConfig) -> BackendAdapter:
+    if backend.kind is BackendKind.OMLX_APP:
+        adapter: object = OmlxAppAdapter(backend_id=backend.id, base_url=backend.base_url)
+    elif backend.kind is BackendKind.OLLAMA:
+        adapter = OllamaAdapter(backend_id=backend.id, base_url=backend.base_url)
+    else:
+        adapter = LmStudioAdapter(
+            backend_id=backend.id,
+            base_url=backend.base_url,
+            probe_model_id=backend.probe_model_id,
+            ssh_target=backend.control_endpoint,
+            known_hosts_file=backend.known_hosts_file,
+            platform=LmsPlatform(backend.lms_platform),
+        )
+    return cast(BackendAdapter, adapter)
+
+
+def build_configured_tailscale(config: AppConfig) -> TailscaleAdapter | None:
+    if config.tailscale is None:
+        return None
+    policies = tuple(
+        TailscaleNodePolicy(
+            node_id=node.id,
+            expected_peer_id=policy.peer_id,
+            expected_public_key=policy.public_key,
+            magic_dns_name=policy.magic_dns_name,
+            allowed_ips=frozenset(policy.allowed_ips),
+            allowed_http_ports=frozenset(policy.allowed_http_ports),
+            allowed_ssh_users=frozenset(policy.allowed_ssh_users),
+        )
+        for node in config.nodes
+        if (policy := node.tailscale) is not None
+    )
+    if not policies:
+        return None
+    try:
+        return TailscaleAdapter(
+            policies=policies,
+            tailscale_executable=config.tailscale.executable,
+            snapshot_ttl_seconds=config.tailscale.snapshot_ttl_seconds,
+        )
+    except ValueError:
+        # Local backends remain available; every remote backend still fails closed.
+        return None
 
 
 def _configured_snapshots(config: AppConfig) -> tuple[PlacementSnapshot, ...]:
@@ -720,7 +767,7 @@ def _configured_snapshots(config: AppConfig) -> tuple[PlacementSnapshot, ...]:
     return tuple(result)
 
 
-def _is_loopback_url(value: str) -> bool:
+def is_loopback_url(value: str) -> bool:
     try:
         host = urlsplit(value).hostname
         return host is not None and ipaddress.ip_address(host).is_loopback

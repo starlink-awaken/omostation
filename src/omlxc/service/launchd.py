@@ -7,6 +7,20 @@ import plistlib
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
+from uuid import uuid4
+
+from omlxc.adapters.process import (
+    BoundedProcessRunner,
+    ProcessOutput,
+    ProcessOutputLimitError,
+    ProcessRunner,
+    ProcessSpawnError,
+)
+
+LAUNCHD_LABEL = "com.omlxc.daemon"
+LAUNCHCTL = "/bin/launchctl"
+LAUNCHCTL_TIMEOUT_SECONDS = 10.0
+LAUNCHCTL_OUTPUT_LIMIT = 256 * 1024
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,9 +56,105 @@ class LaunchdWriteResult:
     snapshot_path: Path | None
 
 
+@dataclass(frozen=True, slots=True)
+class LaunchdInstallResult:
+    plist_path: Path
+    snapshot_path: Path | None
+
+
+@dataclass(frozen=True, slots=True)
+class LaunchdUninstallResult:
+    backup_path: Path | None
+    preserved_paths: tuple[Path, Path]
+
+
+class LaunchdFailure(RuntimeError):
+    """Sanitized lifecycle failure with a stable public CLI code."""
+
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        super().__init__(message)
+
+
+class LaunchdController:
+    """Bounded, argv-only controller for the current macOS user domain."""
+
+    def __init__(
+        self,
+        paths: LaunchdPaths,
+        *,
+        uid: int | None = None,
+        process_runner: ProcessRunner | None = None,
+        timeout_seconds: float = LAUNCHCTL_TIMEOUT_SECONDS,
+    ) -> None:
+        if timeout_seconds <= 0:
+            raise ValueError("launchctl timeout must be positive")
+        self.paths = paths
+        self._uid = os.getuid() if uid is None else uid
+        if self._uid < 0:
+            raise ValueError("launchd uid must be non-negative")
+        self._runner = process_runner or BoundedProcessRunner(LAUNCHCTL_OUTPUT_LIMIT)
+        self._timeout = timeout_seconds
+
+    @property
+    def domain(self) -> str:
+        return f"gui/{self._uid}"
+
+    @property
+    def service_target(self) -> str:
+        return f"{self.domain}/{LAUNCHD_LABEL}"
+
+    async def install(self) -> LaunchdInstallResult:
+        _require_private_executable(self.paths.executable)
+        written = write_launchd_plist(build_launchd_plan(self.paths))
+        try:
+            await self._run((LAUNCHCTL, "bootstrap", self.domain, str(written.path)))
+        except BaseException:
+            if written.snapshot_path is None:
+                written.path.unlink(missing_ok=True)
+            else:
+                os.replace(written.snapshot_path, written.path)
+            raise
+        return LaunchdInstallResult(written.path, written.snapshot_path)
+
+    async def uninstall(self) -> LaunchdUninstallResult:
+        await self._run((LAUNCHCTL, "bootout", self.service_target))
+        backup = _backup_uninstalled_plist(self.paths.plist_path)
+        return LaunchdUninstallResult(
+            backup_path=backup,
+            preserved_paths=(self.paths.log_directory, self.paths.data_directory),
+        )
+
+    async def status(self) -> ProcessOutput:
+        return await self._run((LAUNCHCTL, "print", self.service_target), unavailable=True)
+
+    async def start(self) -> ProcessOutput:
+        return await self._run((LAUNCHCTL, "bootstrap", self.domain, str(self.paths.plist_path)))
+
+    async def stop(self) -> ProcessOutput:
+        return await self._run((LAUNCHCTL, "bootout", self.service_target))
+
+    async def restart(self) -> ProcessOutput:
+        return await self._run((LAUNCHCTL, "kickstart", "-k", self.service_target))
+
+    async def _run(self, argv: tuple[str, ...], *, unavailable: bool = False) -> ProcessOutput:
+        try:
+            output = await self._runner(argv, self._timeout)
+        except TimeoutError:
+            raise LaunchdFailure("E305", "launchd operation timed out") from None
+        except (ProcessSpawnError, OSError):
+            raise LaunchdFailure("E200", "launchctl is unavailable") from None
+        except ProcessOutputLimitError:
+            raise LaunchdFailure("E900", "launchctl output exceeded its safety limit") from None
+        if output.returncode != 0:
+            code = "E200" if unavailable else "E500"
+            raise LaunchdFailure(code, "launchd service is unavailable")
+        return output
+
+
 def build_launchd_plan(paths: LaunchdPaths) -> LaunchdPlan:
     payload: dict[str, object] = {
-        "Label": "com.omlxc.daemon",
+        "Label": LAUNCHD_LABEL,
         "ProgramArguments": [str(paths.executable)],
         "RunAtLoad": True,
         "KeepAlive": True,
@@ -94,3 +204,25 @@ def _atomic_write(target: Path, payload: bytes) -> None:
     except BaseException:
         temporary_path.unlink(missing_ok=True)
         raise
+
+
+def _require_private_executable(path: Path) -> None:
+    try:
+        metadata = path.lstat()
+    except OSError:
+        raise LaunchdFailure("E100", "fixed omlxcd entrypoint is not installed") from None
+    if path.is_symlink() or not path.is_file() or metadata.st_uid != os.geteuid():
+        raise LaunchdFailure("E700", "fixed omlxcd entrypoint is not trusted")
+    if metadata.st_mode & 0o022 or metadata.st_mode & 0o111 == 0:
+        raise LaunchdFailure("E700", "fixed omlxcd entrypoint is not trusted")
+
+
+def _backup_uninstalled_plist(target: Path) -> Path | None:
+    if target.is_symlink():
+        raise LaunchdFailure("E700", "refusing launchd plist symlink")
+    if not target.exists():
+        return None
+    backup = target.with_name(f"{target.name}.uninstalled-{uuid4().hex[:12]}")
+    os.replace(target, backup)
+    os.chmod(backup, 0o600, follow_symlinks=False)
+    return backup

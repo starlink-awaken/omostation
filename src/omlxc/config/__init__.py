@@ -12,6 +12,7 @@ from .loading import (
     default_config_directory,
     default_config_path,
     load_config,
+    load_user_config,
     safe_defaults,
 )
 from .migration import MigrationPlan, build_migration_plan, migrate_legacy_json
@@ -25,6 +26,8 @@ from .schema import (
     PoliciesConfig,
     RemoteResidentConfig,
     StorageConfig,
+    TailscaleConfig,
+    TailscaleNodePolicyConfig,
 )
 
 __all__ = [
@@ -42,10 +45,13 @@ __all__ = [
     "PoliciesConfig",
     "RemoteResidentConfig",
     "StorageConfig",
+    "TailscaleConfig",
+    "TailscaleNodePolicyConfig",
     "build_migration_plan",
     "default_config_directory",
     "default_config_path",
     "load_config",
+    "load_user_config",
     "migrate_legacy_json",
     "render_toml",
     "safe_defaults",

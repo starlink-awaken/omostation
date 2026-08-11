@@ -30,6 +30,35 @@ class ProcessSpawnError(Exception):
     """Distinguish process creation failure from post-spawn stream failure."""
 
 
+class ProcessOutputDecodeError(UnicodeError):
+    """Sanitized rejection of undecodable or PowerShell diagnostic output."""
+
+
+def decode_process_output(payload: bytes) -> str:
+    """Decode bounded UTF-8/UTF-16 output and reject CLIXML diagnostics."""
+    if not payload:
+        return ""
+    try:
+        if payload.startswith((b"\xff\xfe", b"\xfe\xff")):
+            decoded = payload.decode("utf-16", errors="strict")
+        else:
+            try:
+                decoded = payload.decode("utf-8", errors="strict")
+            except UnicodeDecodeError:
+                if len(payload) % 2 != 0 or b"\x00" not in payload:
+                    raise
+                encoding = (
+                    "utf-16-le" if payload[1::2].count(0) >= payload[::2].count(0) else "utf-16-be"
+                )
+                decoded = payload.decode(encoding, errors="strict")
+    except UnicodeDecodeError:
+        raise ProcessOutputDecodeError("process output encoding is unsupported") from None
+    normalized = decoded.lstrip("\ufeff\r\n \t")
+    if normalized.startswith("#< CLIXML") or normalized.startswith("<Objs"):
+        raise ProcessOutputDecodeError("PowerShell CLIXML output is not accepted")
+    return decoded.lstrip("\ufeff")
+
+
 @dataclass(frozen=True, slots=True)
 class BoundedProcessRunner:
     output_limit: int
@@ -106,6 +135,6 @@ async def default_process_runner(
         raise
     return ProcessOutput(
         returncode=process.returncode or 0,
-        stdout=stdout.decode("utf-8", errors="replace"),
-        stderr=stderr.decode("utf-8", errors="replace"),
+        stdout=decode_process_output(stdout),
+        stderr=decode_process_output(stderr),
     )

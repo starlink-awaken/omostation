@@ -29,6 +29,7 @@ omlxc routes plan local/model-id --profile interactive --json
 omlxc jobs watch --output ndjson
 omlxc metrics show
 omlxc daemon status
+omlxc doctor --direct --json
 ```
 
 Reversible R1 operations require a terminal confirmation or explicit `--yes`:
@@ -60,6 +61,31 @@ omlxc config validate --path /path/to/config.toml
 Persistent writes use private `0600` files, a pre-overwrite snapshot, and atomic
 replacement. Credential fields accept Keychain references such as
 `keychain://omlxc/backend-name`; plaintext credentials are rejected.
+
+The daemon reads the platform default `config.toml` automatically. Remote
+backends require a schema-v1 `tailscale` executable/TTL plus a complete per-node
+allowlist (peer ID, node public key, MagicDNS name, tailnet IPs, HTTP ports, and
+SSH users). A hostname alone never authorizes discovery. LM Studio SSH control
+also requires an absolute private `known_hosts_file`; inference remains direct
+HTTP after Tailscale authorization.
+
+## macOS service lifecycle
+
+`daemon install` is plan-only by default. Applying any lifecycle change is R2:
+
+```bash
+omlxc daemon install
+omlxc daemon install --apply --yes --confirm-impact --json
+omlxc daemon start --yes --confirm-impact
+omlxc daemon restart --yes --confirm-impact
+omlxc daemon stop --yes --confirm-impact
+omlxc daemon uninstall --yes --confirm-impact --json
+```
+
+The user LaunchAgent always executes `~/.local/bin/omlxcd`. Uninstall keeps data
+and logs and reports the recoverable plist backup. `doctor --direct` is strictly
+read-only: it does not create SQLite state, change services, write configuration,
+or load models.
 
 ## Development
 

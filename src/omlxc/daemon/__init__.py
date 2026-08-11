@@ -9,7 +9,7 @@ from typing import Annotated
 
 import typer
 
-from omlxc.config import ConfigError, load_config
+from omlxc.config import ConfigError, load_config, load_user_config
 from omlxc.domain import EXIT_CONFIG, EXIT_INTERNAL
 
 from .composition import ProductionComposition, build_production_daemon
@@ -32,7 +32,7 @@ def command(
 ) -> None:
     """Load daemon configuration, then validate or serve it."""
     try:
-        loaded = load_config(config) if config is not None else load_config()
+        loaded = load_config(config) if config is not None else load_user_config()
     except ConfigError:
         typer.echo(
             json.dumps(
