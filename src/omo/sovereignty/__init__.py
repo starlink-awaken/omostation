@@ -1,20 +1,50 @@
-"""OMO Sovereignty (W2-01 / W2-02) — Principal/Role/Responsibility/RoleAssignment + Mandates.
+"""OMO Sovereignty (W2-01 / W2-02 / W2-03) — Roles/Mandates + PDP enforcement.
 
 Local-only sovereignty governance on top of the causal event ledger:
 
 - W2-01 models: :class:`Principal`, :class:`Role`, :class:`Responsibility`,
   :class:`RoleAssignment` with strict literal prefix ids and monotonic versions;
 - W2-02 models: :class:`MandateManager` for DelegationMandate grant/revoke/admit;
+- W2-03 runtime: :class:`PolicyEnforcementService` (PDP/Ledger) with durable
+  PolicyDecision + ActionReceipt causality and the :class:`AgoraPepProvider`
+  narrow injection port for Agora's PEP (no Agora→OMO hard import);
 - every model is validated, immutable and versioned; each mutation persists
   exactly one lifecycle event carrying the aggregate snapshots;
 - every write goes through ``LedgerBroker.append`` and every query replays
   the ledger for a single principal_id;
 - admission is pure read / pure decision and never appends.
 
-Explicitly out of scope: PDP / PEP / W2-04 projections / Constitution /
-any Agora or remote interface.
+Explicitly out of scope: PEP / W2-04 projections / Constitution /
+real side effects / DDL / cryptography / distributed exactly-once.
 """
 
+from omo.sovereignty.enforcement import (
+    EVT_ACTION_FAILED,
+    EVT_ACTION_STARTED,
+    EVT_ACTION_SUCCEEDED,
+    EVT_POLICY_DECISION,
+    OUTCOME_DENIED,
+    OUTCOME_FAILED,
+    OUTCOME_SUCCEEDED,
+    OUTCOME_UNCONFIRMED,
+    PDP_PRODUCER,
+    PDP_SPACE_ID,
+    REASON_ALLOWED,
+    REASON_LEDGER_UNAVAILABLE,
+    REASON_PDP_UNAVAILABLE,
+    REASON_POLICY_DENIED,
+    REASON_PROVIDER_FAILED,
+    REASON_RECEIPT_UNCONFIRMED,
+    STABLE_REASONS,
+    ActionRequest,
+    AgoraPepProvider,
+    DecisionResult,
+    ExecutionOutcome,
+    InvalidActionRequestError,
+    PolicyEnforcementError,
+    PolicyEnforcementService,
+    compute_request_hash,
+)
 from omo.sovereignty.mandates import (
     EVT_MANDATE_GRANT,
     EVT_MANDATE_REVOKE,
@@ -71,15 +101,26 @@ from omo.sovereignty.roles import (
 )
 
 __all__ = [
+    "EVT_ACTION_FAILED",
+    "EVT_ACTION_STARTED",
+    "EVT_ACTION_SUCCEEDED",
     "EVT_ASSIGN",
     "EVT_MANDATE_GRANT",
     "EVT_MANDATE_REVOKE",
+    "EVT_POLICY_DECISION",
     "EVT_REPLACE",
     "EVT_REVOKE",
     "MANDATE_PRODUCER",
     "MANDATE_SPACE_ID",
+    "OUTCOME_DENIED",
+    "OUTCOME_FAILED",
+    "OUTCOME_SUCCEEDED",
+    "OUTCOME_UNCONFIRMED",
+    "PDP_PRODUCER",
+    "PDP_SPACE_ID",
     "PRODUCER",
     "REASON_ALLOW",
+    "REASON_ALLOWED",
     "REASON_APPROVAL_REQUIRED",
     "REASON_AUTONOMY_FORBIDS",
     "REASON_BUDGET_EXCEEDED",
@@ -88,27 +129,40 @@ __all__ = [
     "REASON_EPISODE_MISMATCH",
     "REASON_EXECUTOR_MISMATCH",
     "REASON_HUMAN_ADJUDICATION_REQUIRED",
+    "REASON_LEDGER_UNAVAILABLE",
     "REASON_MANDATE_EXPIRED",
     "REASON_MANDATE_NOT_FOUND",
     "REASON_MANDATE_NOT_YET_VALID",
     "REASON_MANDATE_REVOKED",
+    "REASON_PDP_UNAVAILABLE",
     "REASON_PER_ACTION_APPROVAL_REQUIRED",
+    "REASON_POLICY_DENIED",
     "REASON_PRINCIPAL_MISMATCH",
+    "REASON_PROVIDER_FAILED",
+    "REASON_RECEIPT_UNCONFIRMED",
     "REASON_RESPONSIBILITY_STALE",
     "REASON_RISK_CEILING_EXCEEDED",
     "REASON_ROLE_CONTEXT_STALE",
     "REASON_SUGGEST_ONLY",
     "SPACE_ID",
+    "STABLE_REASONS",
     "STATUS_ACTIVE",
     "STATUS_REVOKED",
+    "ActionRequest",
     "AdmissionResult",
+    "AgoraPepProvider",
+    "DecisionResult",
+    "ExecutionOutcome",
     "IllegalMandateTransitionError",
     "IllegalTransitionError",
+    "InvalidActionRequestError",
     "InvalidIdError",
     "MandateError",
     "MandateManager",
     "MandateReplayError",
     "MandateState",
+    "PolicyEnforcementError",
+    "PolicyEnforcementService",
     "Principal",
     "Responsibility",
     "Role",
@@ -119,6 +173,7 @@ __all__ = [
     "SovereigntyState",
     "StaleMandateVersionError",
     "StaleVersionError",
+    "compute_request_hash",
     "generate_id",
     "validate_id",
 ]
