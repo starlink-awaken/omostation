@@ -2,7 +2,7 @@
 
 > Date: 2026-08-12
 > Scope: Documents content-plane convergence, Task 4
-> Delivery: root PR pending from `work/documents-content-plane-migrations`
+> Delivery: root PR #1359 from `work/documents-content-plane-migrations`
 
 ## Outcome
 
