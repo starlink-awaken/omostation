@@ -24,3 +24,9 @@
 - Added fail-closed Tailscale identity discovery and pure HTTP/SSH endpoint
   authorization backed by an explicit strong-identity allowlist, plus a shared
   bounded subprocess primitive used by both Tailscale and LM Studio control.
+- Added the Task 5 runtime foundation: a private, versioned, single-writer
+  SQLite store with durable Job/event recovery and idempotent metric retention;
+  independent bounded AnyIO event subscriptions; fail-closed health freshness,
+  transport circuits and adaptive probe timing; and policy-driven placement
+  reconciliation with memory admission, keyed single-flight and explicit loop
+  lifecycle management.
