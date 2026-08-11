@@ -1797,6 +1797,83 @@ bets:
     物理拦截时，停止并保持 BET 未完成；绝不声称 schema/decorator-only 完成。推迟的
     极端边界是诚实债务，不是阻断器
   retro: required
+- id: BET-Y1Q2-T1-07
+  track: T1-TRUTH
+  window: Y1Q2
+  title: Blueprint W2-04 single-user Episode Role Portfolio Inbox projections
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: >-
+    在可信本地单用户环境中，以 LedgerBroker、既有 Episode M2 与 W2-01
+    RoleAssignment 为唯一事实源，提供可重复重放的 Episode summary、Role Portfolio
+    和 Inbox cards 三类只读投影。投影不成为新权威，不写回旧 Decision Inbox，供
+    OMO 查询与 Cockpit 只读 API 复用。
+  non_goals:
+  - Episode 写入命令或新事件协议
+  - W2-03 enforcement 或真实外部副作用
+  - 审批/执行/投影写回
+  - 完整 Inbox UI、推送通知或前端新页面
+  - 家庭成员、多租户、跨组织共享
+  - 极端并发、跨进程或分布式精确一次
+  - Postgres/EventStore 或 Ledger DDL/trigger
+  - 旧 JSONL/Scene Card 权威迁移
+  - 复杂角色组合优化或 Personal Constitution
+  done_when:
+  - >-
+      OMO 从 LedgerBroker 的有序事件重放 Episode 投影，输出 episode_id、schema_version、
+      contains_event_refs、opened_at 与可选 summary/outcome/signal refs；缺 episode_id、空成员或
+      非法成员不进入正式结果，并返回稳定 blocked reason
+  - >-
+      相同 Ledger 重复构建得到规范 JSON 完全一致；投影构建只调用 read/verify，不依赖旧投影，
+      Ledger event count 与 hash chain 保持不变
+  - >-
+      Role Portfolio 按单一 principal_id 隔离，至少列出 active role assignments、责任关联和
+      Episode 状态计数；其他 principal 的角色与责任不可泄漏
+  - >-
+      Inbox 仅输出 FYI/Approval/Decision 最小卡片：episode、principal/role/responsibility、
+      why_now/summary、risk/authority/status、evidence refs、deadline；缺数据显式 null/unknown，
+      不触发 approve、execute、provider 或任何文件写
+  - >-
+      Cockpit 复用现有 Workflow Mesh 只读 API 暴露三类投影；重复 GET 幂等，OMO Ledger/
+      W2-01/W2-02/W2-03 与 Cockpit API 定向回归通过
+  verify:
+  - cmd: >-
+      cd projects/omo && uv sync --frozen --reinstall-package ecos && uv run --with pytest
+      python -m pytest tests/test_episode_projection.py tests/test_sovereignty_roles.py
+      tests/test_event_ledger.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python -m pytest
+      src/cockpit/tests/test_api_episode_projection.py
+      src/cockpit/tests/test_api_workflow_mesh_operations.py -q
+    expect: exit 0
+  - cmd: cd projects/omo && uv lock --check && cd projects/cockpit && uv lock --check
+      && git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - projects/omo/src/omo/episode_projection.py
+  - projects/omo/tests/test_episode_projection.py
+  - projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+  - projects/cockpit/src/cockpit/tests/test_api_episode_projection.py
+  - projects/omo/uv.lock
+  - projects/cockpit/uv.lock
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-07.md
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q2-T1-03
+  - BET-Y1Q2-T1-04
+  - BET-Y1Q2-T1-06
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    超 2 天、需要 Ledger DDL/新顶级项目/多租户/实时分布式并发才能通过时，立即缩回为
+    OMO 只读 replay projector 与 Cockpit GET API；不扩写协议，不把部分投影宣称为完整
+    Digital Twin
+  retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
   window: Y1Q2
