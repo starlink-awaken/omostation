@@ -44,3 +44,7 @@
   Task 5 single-flight load verification, backend-model translation, deadline-aware
   chat/vision/embedding/rerank execution, replay-safe streaming failover, and
   content-free route audit and metric persistence.
+- Added the Task 7 private daemon surface: versioned control envelopes and durable
+  Job endpoints, OpenAI-compatible chat/SSE/embedding plus rerank, replay-to-live
+  NDJSON events, a restart-safe `0600` Unix socket server, ordered runtime lifecycle,
+  and pure private launchd plist planning with atomic snapshots.

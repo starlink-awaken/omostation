@@ -384,17 +384,37 @@ class DataPlaneOrchestrator:
                             if not emitted_content and self._can_failover(event.error):
                                 retry = True
                                 break
-                            yield event
+                            yield event.model_copy(
+                                update={
+                                    "placement_id": placement.placement_id,
+                                    "backend_id": placement.backend_id,
+                                }
+                            )
                             return
                         if event.kind is StreamEventKind.CONTENT:
                             emitted_content = True
-                            yield event
+                            yield event.model_copy(
+                                update={
+                                    "placement_id": placement.placement_id,
+                                    "backend_id": placement.backend_id,
+                                }
+                            )
                         elif event.kind is StreamEventKind.USAGE:
                             if not emitted_usage:
                                 emitted_usage = True
-                                yield event
+                                yield event.model_copy(
+                                    update={
+                                        "placement_id": placement.placement_id,
+                                        "backend_id": placement.backend_id,
+                                    }
+                                )
                         elif event.kind is StreamEventKind.DONE:
-                            yield event
+                            yield event.model_copy(
+                                update={
+                                    "placement_id": placement.placement_id,
+                                    "backend_id": placement.backend_id,
+                                }
+                            )
                             return
                     else:
                         if emitted_content:

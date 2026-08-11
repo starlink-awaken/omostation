@@ -319,6 +319,8 @@ class StreamEvent(DomainModel):
     error: AdapterError | None = None
     emitted_content: bool
     phase: StreamPhase
+    placement_id: str | None = None
+    backend_id: str | None = None
 
     @model_validator(mode="after")
     def validate_event(self) -> StreamEvent:

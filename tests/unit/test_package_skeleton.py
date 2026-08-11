@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 import sys
@@ -73,16 +72,12 @@ def test_package_exposes_the_v3_alpha_version() -> None:
     assert result.stdout.strip() == "3.0.0a1"
 
 
-def test_daemon_placeholder_reports_its_unimplemented_state() -> None:
-    """The daemon entry point does not imply that a daemon API exists yet."""
-    result = _run_module("omlxc.daemon")
+def test_daemon_module_exposes_private_uds_help() -> None:
+    """The daemon module exposes its real Task 7 Unix-socket entry point."""
+    result = _run_module("omlxc.daemon", "--help")
 
     assert result.returncode == 0
-    assert json.loads(result.stdout) == {
-        "component": "omlxcd",
-        "status": "placeholder",
-        "version": "3.0.0a1",
-    }
+    assert "Unix Socket" in result.stdout
 
 
 def test_installed_omlxc_console_script_reports_its_version() -> None:
@@ -93,13 +88,9 @@ def test_installed_omlxc_console_script_reports_its_version() -> None:
     assert result.stdout.strip() == "3.0.0a1"
 
 
-def test_installed_omlxcd_console_script_reports_placeholder_json() -> None:
-    """Run the generated daemon script instead of importing its module directly."""
-    result = _run_installed_script("omlxcd")
+def test_installed_omlxcd_console_script_exposes_private_uds_help() -> None:
+    """Run the installed Task 7 daemon entry without binding a real socket."""
+    result = _run_installed_script("omlxcd", "--help")
 
     assert result.returncode == 0
-    assert json.loads(result.stdout) == {
-        "component": "omlxcd",
-        "status": "placeholder",
-        "version": "3.0.0a1",
-    }
+    assert "Unix Socket" in result.stdout
