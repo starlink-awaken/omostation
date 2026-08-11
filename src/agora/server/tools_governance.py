@@ -281,11 +281,12 @@ def register_governance_tools(mcp: FastMCP) -> None:
         session_id: str = "",
         run_id: str = "",
         bos_uri: str = "",
+        execute_immediately: bool = True,
     ) -> dict:
-        """Submit a tool call as an A2A task and execute it with OMO convergence metadata (ADR-0300).
+        """Submit an A2A task, optionally executing it immediately (ADR-0300).
 
-        Creates a task, routes it to the appropriate service via the router,
-        and returns the completed result with task metadata and convergence bridge info.
+        By default the task is routed synchronously for backward compatibility.
+        Deferred tasks remain submitted so callers can query or cancel them.
 
         Args:
             tool_name: Full tool name (e.g. 'minerva.research_now')
@@ -293,17 +294,22 @@ def register_governance_tools(mcp: FastMCP) -> None:
             session_id: Optional session identifier for grouping related tasks
             run_id: Optional OMO Agent Workflow run identifier for task convergence
             bos_uri: Optional BOS URI mapping for 5-domain convergence
+            execute_immediately: Execute now when true; otherwise leave submitted
         """
         try:
             args = json.loads(arguments) if isinstance(arguments, str) else arguments
-        except json.JSONDecodeError:
-            args = {}
+        except (json.JSONDecodeError, TypeError):
+            return _error("arguments must be a valid JSON object")
+        if not isinstance(args, dict):
+            return _error("arguments must be a valid JSON object")
 
         tm = _get_task_manager()
         task = tm.create_task("", tool_name, args, session_id)  # type: ignore[reportCallIssue]
-        result = await tm.execute_task(task.id)  # type: ignore[reportAttributeAccessIssue]
-        if result is None:
-            return _error("Task execution returned no result")
+        result = task
+        if execute_immediately:
+            result = await tm.execute_task(task.id)  # type: ignore[reportAttributeAccessIssue]
+            if result is None:
+                return _error("Task execution returned no result")
 
         convergence_meta = _resolve_convergence_meta(tool_name, run_id, bos_uri)
         result_dict = result.to_dict()

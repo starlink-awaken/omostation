@@ -115,19 +115,26 @@ async def health_self_check() -> dict:
     backend_health: dict = {}
     backends_alive = 0
     backends_total = 0
+    client_names: set[str] = set()
+    service_names: set[str] = set()
     if pm is not None:
         proxy_registry = getattr(pm, "registry", None)
         if proxy_registry is not None:
             clients = getattr(proxy_registry, "_clients", {}) or {}
             entries = getattr(proxy_registry, "entries", {}) or {}
-            backends_alive = len(clients) if hasattr(clients, "__len__") else 0
-            # MED-2: entries 值可能含 name 字段, 去重得服务数; 否则退回工具数并标注
-            service_names = {
-                (v.get("name") if isinstance(v, dict) else k)
-                for k, v in entries.items()
-            }
-            service_names.discard(None)
-            backends_total = len(service_names) if service_names else len(entries)
+            client_names = set(clients) if isinstance(clients, dict) else set()
+            known_services = getattr(proxy_registry, "known_services", []) or []
+            if isinstance(known_services, (list, tuple, set, frozenset)):
+                service_names.update(
+                    name for name in known_services if isinstance(name, str) and name
+                )
+            for entry in entries.values():
+                if isinstance(entry, dict):
+                    name = entry.get("service_name")
+                else:
+                    name = getattr(entry, "service_name", None)
+                if isinstance(name, str) and name:
+                    service_names.add(name)
         # 兼容: 有 _health_checker 时仍纳入其状态 (非 stdio backends)
         checker = getattr(pm, "_health_checker", None)
         if checker is not None and hasattr(checker, "get_all_status"):
@@ -170,11 +177,24 @@ async def health_self_check() -> dict:
     issues: list[str] = []
     if len(healthy_services) < len(all_services):
         issues.append(f"{len(all_services) - len(healthy_services)} unhealthy services")
-    dead_backends = [
+    health_backend_names = {
+        name for name in backend_health if isinstance(name, str) and name
+    }
+    dead_backend_names = {
         name
         for name, info in backend_health.items()
         if isinstance(info, dict) and not info.get("alive", True)
-    ]
+    }
+    health_alive_names = {
+        name
+        for name, info in backend_health.items()
+        if isinstance(info, dict) and info.get("alive", True)
+    }
+    all_backend_names = service_names | client_names | health_backend_names
+    alive_backend_names = (client_names | health_alive_names) - dead_backend_names
+    backends_total = len(all_backend_names)
+    backends_alive = len(alive_backend_names & all_backend_names)
+    dead_backends = sorted(dead_backend_names)
     # P2-5: 以 registry 已连接 client 数作为真实 backends 口径
     if backends_total > 0 and backends_alive < backends_total:
         issues.append(f"backends partial: {backends_alive}/{backends_total} alive")

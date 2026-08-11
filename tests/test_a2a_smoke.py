@@ -11,15 +11,22 @@ not full network integration tests.
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock
+import json
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastmcp import FastMCP
+from metaos.a2a.task_manager import TaskManager
 
 
 async def _tool_names(mcp: FastMCP) -> set[str]:
     tools = await mcp.list_tools()
     return {t.name for t in tools}
+
+
+async def _call_tool(mcp: FastMCP, name: str, arguments: dict) -> dict:
+    result = await mcp.call_tool(name, arguments)
+    return json.loads(result.content[0].text)
 
 
 @pytest.fixture
@@ -68,6 +75,93 @@ class TestA2AToolsRegistered:
     def test_get_agent_card_registered(self, mcp_app):
         names = asyncio.run(_tool_names(mcp_app))
         assert "get_agent_card" in names
+
+    @pytest.mark.asyncio
+    async def test_deferred_send_can_be_queried_then_canceled(
+        self, mcp_app, monkeypatch, tmp_path
+    ):
+        manager = TaskManager(MagicMock(), storage_path=str(tmp_path / "tasks.json"))
+        monkeypatch.setattr(
+            "agora.server.tools_governance._get_task_manager", lambda: manager
+        )
+
+        sent = await _call_tool(
+            mcp_app,
+            "a2a_send_task",
+            {
+                "tool_name": "g1.smoke.noop",
+                "arguments": "{}",
+                "session_id": "g1-sr03",
+                "execute_immediately": False,
+            },
+        )
+        task_id = sent["task"]["id"]
+        assert sent["status"] == "ok"
+        assert sent["task"]["status"] == "submitted"
+
+        queried = await _call_tool(mcp_app, "a2a_get_task", {"task_id": task_id})
+        assert queried["task"]["id"] == task_id
+        assert queried["task"]["status"] == "submitted"
+
+        canceled = await _call_tool(mcp_app, "a2a_cancel_task", {"task_id": task_id})
+        assert canceled["status"] == "ok"
+        assert canceled["task_id"] == task_id
+        assert canceled["task"]["status"] == "canceled"
+
+    @pytest.mark.asyncio
+    async def test_default_send_executes_and_completed_task_cannot_be_canceled(
+        self, mcp_app, monkeypatch, tmp_path
+    ):
+        router = MagicMock()
+        router.route = AsyncMock(return_value={"data": {"result": "ok"}})
+        manager = TaskManager(router, storage_path=str(tmp_path / "tasks.json"))
+        monkeypatch.setattr(
+            "agora.server.tools_governance._get_task_manager", lambda: manager
+        )
+
+        sent = await _call_tool(
+            mcp_app,
+            "a2a_send_task",
+            {"tool_name": "g1.smoke.noop", "arguments": "{}"},
+        )
+        task_id = sent["task"]["id"]
+        assert sent["status"] == "ok"
+        assert sent["task"]["status"] == "completed"
+        router.route.assert_awaited_once()
+
+        canceled = await _call_tool(mcp_app, "a2a_cancel_task", {"task_id": task_id})
+        assert canceled["status"] == "error"
+
+    @pytest.mark.asyncio
+    async def test_missing_task_get_and_cancel_fail_closed(
+        self, mcp_app, monkeypatch, tmp_path
+    ):
+        manager = TaskManager(MagicMock(), storage_path=str(tmp_path / "tasks.json"))
+        monkeypatch.setattr(
+            "agora.server.tools_governance._get_task_manager", lambda: manager
+        )
+
+        queried = await _call_tool(mcp_app, "a2a_get_task", {"task_id": "missing"})
+        canceled = await _call_tool(mcp_app, "a2a_cancel_task", {"task_id": "missing"})
+        assert queried["status"] == "error"
+        assert canceled["status"] == "error"
+
+    @pytest.mark.asyncio
+    async def test_invalid_arguments_do_not_create_task(
+        self, mcp_app, monkeypatch, tmp_path
+    ):
+        manager = TaskManager(MagicMock(), storage_path=str(tmp_path / "tasks.json"))
+        monkeypatch.setattr(
+            "agora.server.tools_governance._get_task_manager", lambda: manager
+        )
+
+        result = await _call_tool(
+            mcp_app,
+            "a2a_send_task",
+            {"tool_name": "g1.smoke.noop", "arguments": "{"},
+        )
+        assert result["status"] == "error"
+        assert manager.list_tasks() == []
 
 
 class TestSwarmToolsRegistered:
