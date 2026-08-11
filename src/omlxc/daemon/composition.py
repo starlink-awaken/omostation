@@ -309,7 +309,11 @@ class CatalogProbe:
                 and capability.model_available
                 and model is not None
                 and model.state is not ModelRuntimeState.UNKNOWN
-                and (not loaded or capability.generation_ready)
+                and (
+                    not loaded
+                    or capability.generation_ready
+                    or capabilities.isdisjoint(_GENERATION_MODEL_CAPABILITIES)
+                )
             )
             self._catalog.update(
                 snapshot.placement_id,
@@ -1120,6 +1124,14 @@ _ROUTABLE_MODEL_CAPABILITIES = frozenset(
         AdapterCapability.STREAMING,
         AdapterCapability.VISION,
         AdapterCapability.EMBEDDING,
+    }
+)
+
+_GENERATION_MODEL_CAPABILITIES = frozenset(
+    {
+        AdapterCapability.CHAT,
+        AdapterCapability.STREAMING,
+        AdapterCapability.VISION,
     }
 )
 
