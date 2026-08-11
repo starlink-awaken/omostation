@@ -1526,6 +1526,150 @@ bets:
   human_gate: false
   circuit_breaker: 超 3 天或需 DDL/MOF/远程写 → 缩到 Python API + replay tests，CLI 延后
   retro: required
+- id: BET-Y1Q2-T1-05
+  track: T1-TRUTH
+  window: Y1Q2
+  title: Blueprint W2-02 model-driven Delegation Mandate 与 A0-A3/R0-R3 风险矩阵
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: >-
+    在 W2-01 瘦主权内核上落地不可原地变更、可撤销、可重放的 DelegationMandate，
+    由 ECOS M2 经确定性 Control Compiler 生成运行契约并被 OMO 真实消费；所有
+    Mandate.Granted.v1 / Mandate.Revoked.v1 事件经 LedgerBroker 写入并强制关联
+    episode_id。提供纯判定的 mandate-admit 边界和稳定 reason code，使无有效
+    Mandate 的副作用请求在决策层硬拒绝，但本 bet 不执行任何真实副作用。
+  non_goals:
+  - PDP/PEP、Capability Gateway enforcement hook、PolicyDecision 与 ActionReceipt（属 W2-03）
+  - Episode / Role Portfolio / Decision Inbox 投影与审批路由（属 W2-04）
+  - 创建 Episode 聚合或 Episode 投影；本 bet 只要求调用方提供符合现有 Episode M2 的 episode_id 引用
+  - Mandate replace 或同 ID 改范围；授权变更必须 revoke 旧 Mandate 后 grant 新 mandate_id
+  - Mandate.Expired 事件或时钟触发写；到期状态由注入时钟在查询/判定时计算
+  - 累计预算结算；W2-02 只比较本次请求预算与 Mandate 声明上限
+  - Capability Registry 真实性校验；能力范围先使用无通配符的精确字符串白名单
+  - M3、Ledger DDL/trigger/broker 规则变更，新顶级项目，Agora/BOS/MCP/Cockpit 远程写面
+  - 任何邮件、日历、任务、文件、网络或其他真实外部副作用
+  done_when:
+  - >-
+    ECOS 新增正式 DelegationMandate M2（语义版本 1.0.0、责任所有者、迁移策略、
+    active→revoked 状态机），现有 Control Compiler 确定性生成 JSON Schema、
+    Pydantic、Zod、SQLite 与 hash manifest；check 可发现缺失、篡改和模型漂移
+  - >-
+    OMO 运行时直接消费生成的 DelegationMandate Pydantic 契约；仅新增 M2 YAML、
+    仅复制字段或仅写测试夹具均判定 model-only 并拒收
+  - >-
+    Mandate 必含 mandate_id、schema_version、principal_id、executor_id、episode_id、
+    role_context_id、role_assignment_id/version、responsibility_id/version、purpose、
+    capability_scope、autonomy_level、risk_ceiling、valid_from/expires_at、
+    approval_mode、disclosure_policy、budget_limit/unit、revocable、trace_id、
+    mandate_version 与 status；capability_scope 非空、无通配符且只做精确匹配
+  - >-
+    grant 只能从不存在到 active(v1)，revoke 只能从 active 到 revoked(v2) 且校验
+    expected_version；重复 grant/revoke、旧版本写、并发同基线写均在 append 前或
+    idempotency backstop 处失败，不产生部分事件
+  - >-
+    grant 必须验证 W2-01 当前 RoleAssignment 为 active，responsibility 属于该
+    assignment，并快照 role/assignment/responsibility 版本；后续角色撤销、替换或
+    责任版本漂移会使 admission 以 role_context_stale / responsibility_stale 拒绝
+  - >-
+    事件类型严格为 Mandate.Granted.v1 / Mandate.Revoked.v1；每次 append 同时填写
+    episode_id、mandate_id、role_context_id、responsibility_id 与 principal_id，
+    不得借 Sovereignty.* 命名绕过 broker 和 DB trigger 的 Episode 强制门
+  - >-
+    A0-A3/R0-R3 全 16 格按蓝图固定：A0 仅 R0 观察；A1 只建议；A2 为 R0 allow、
+    R1 approval_required、R2 per_action_approval_required、R3 deny；A3 为 R0/R1 allow、
+    R2 仅在精确白名单+预算内+可撤销时 allow、R3 human_adjudication_required。
+    approval_mode 只能收紧矩阵，不能放宽
+  - >-
+    mandate-admit 为纯读、纯判定且默认拒绝；至少覆盖 mandate_not_found、
+    mandate_not_yet_valid、mandate_expired、mandate_revoked、principal_mismatch、
+    executor_mismatch、episode_mismatch、role_context_stale、responsibility_stale、
+    capability_out_of_scope、risk_ceiling_exceeded、budget_exceeded、
+    disclosure_mismatch、autonomy_forbids、suggest_only、approval_required、
+    per_action_approval_required、human_adjudication_required 与 allow 稳定 reason code
+  - >-
+    按 principal_id 隔离查询与 replay；Malformed Mandate event 产生稳定
+    MandateReplayError，禁止静默跳过；删除派生内存状态后可仅从 Ledger 重建
+  - >-
+    负向证明：无 mandate_id、未知、过期、撤销、越权 capability 或超风险/预算的
+    effect request 均返回非零/deny，Ledger 事件总数不变且 hash chain 仍为 ok；
+    本 bet 不宣称已经物理拦截真实副作用
+  - ECOS/OMO 目标 pytest、MOF artifact drift check、W2-01 回归与真实本地 CLI smoke 全部 exit 0
+  verify:
+  - cmd: >-
+      cd projects/ecos && uv run pytest tests/test_mof_w2_mandate_contract.py
+      tests/test_mof_compiler.py -q
+    expect: exit 0；DelegationMandate 模型、非法样例、确定性编译与 tamper 检测通过
+  - cmd: >-
+      cd projects/ecos && uv run python src/ecos/ssot/tools/mof-compile.py compile
+      --out-dir src/ecos/ssot/mof/generated/control && uv run python
+      src/ecos/ssot/tools/mof-compile.py check
+      --out-dir src/ecos/ssot/mof/generated/control
+    expect: exit 0；四类产物和 manifest 与 M2 模型真相一致
+  - cmd: >-
+      cd projects/omo && uv run --with pytest python -m pytest
+      tests/test_sovereignty_mandates.py tests/test_sovereignty_mandate_replay.py
+      tests/test_sovereignty_mandate_admission.py tests/test_sovereignty_roles.py
+      tests/test_sovereignty_replay.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/omo && tmp="$(mktemp -d)" && trap 'rm -rf "$tmp"' EXIT &&
+      uv run --frozen omo ledger sovereignty-assign --db "$tmp/ledger.db"
+      --principal-id principal:alice --role-id role:family-steward
+      --responsibilities family-commitments --json > "$tmp/role.json" &&
+      uv run --frozen omo ledger mandate-grant --db "$tmp/ledger.db"
+      --mandate-id mandate:family-mail-draft --principal-id principal:alice
+      --executor-id agent:planner --episode-id episode_001
+      --role-context-id role:family-steward
+      --responsibility-id responsibility:family-commitments
+      --capability bos://mail/draft --autonomy-level A3 --risk-ceiling R2
+      --approval-mode matrix --disclosure-policy disclosure:private
+      --budget-limit 1 --budget-unit call --revocable --json > "$tmp/grant.json" &&
+      uv run --frozen omo ledger mandate-admit --db "$tmp/ledger.db"
+      --mandate-id mandate:family-mail-draft --principal-id principal:alice
+      --executor-id agent:planner --episode-id episode_001
+      --role-context-id role:family-steward
+      --responsibility-id responsibility:family-commitments
+      --capability bos://mail/draft --risk-level R2 --requested-budget 1
+      --budget-unit call --disclosure-policy disclosure:private --json > "$tmp/allow.json" &&
+      jq -e '.allowed == true and .reason == "allow"' "$tmp/allow.json" &&
+      if uv run --frozen omo ledger mandate-admit --db "$tmp/ledger.db"
+      --mandate-id mandate:missing --principal-id principal:alice
+      --executor-id agent:planner --episode-id episode_001
+      --role-context-id role:family-steward
+      --responsibility-id responsibility:family-commitments
+      --capability bos://mail/draft --risk-level R2 --requested-budget 1
+      --budget-unit call --disclosure-policy disclosure:private --json > "$tmp/deny.json";
+      then exit 1; fi && jq -e '.allowed == false and .reason == "mandate_not_found"'
+      "$tmp/deny.json" && uv run --frozen omo ledger verify --db "$tmp/ledger.db"
+      --from 1 --json > "$tmp/verify.json" && jq -e '.ok == true and .total == 2'
+      "$tmp/verify.json"
+    expect: exit 0；有效 A3/R2 判定 allow、无 Mandate 判定 deny 且只存在 role+grant 两条事件
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/ecos/src/ecos/ssot/mof/m2/delegation_mandate.yaml
+  - projects/ecos/src/ecos/ssot/mof/generated/**
+  - projects/ecos/tests/test_mof_w2_mandate_contract.py
+  - projects/omo/pyproject.toml
+  - projects/omo/uv.lock
+  - projects/omo/src/omo/sovereignty/__init__.py
+  - projects/omo/src/omo/sovereignty/mandates.py
+  - projects/omo/src/omo/omo_ledger.py
+  - projects/omo/tests/test_sovereignty_mandates.py
+  - projects/omo/tests/test_sovereignty_mandate_replay.py
+  - projects/omo/tests/test_sovereignty_mandate_admission.py
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q2-T1-04
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: >-
+    超 3 天或生成契约无法被 OMO 真实消费 → 停止扩大范围，只保留可执行的
+    DelegationMandate M2+编译产物+纯 Python grant/revoke/admit+回放/负向测试；
+    绝不改 Ledger DDL/trigger，不借 Sovereignty.* 绕门，不提前实现 W2-03/W2-04
+  retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
   window: Y1Q2
