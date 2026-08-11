@@ -34,3 +34,8 @@
   shutdown, atomic Job cancellation, verified v1 schema invariants, typed route
   audit/config revision repositories, conflict-safe durable events, bounded
   placement-operation phases, and shared explicit/reconcile coordination.
+- Strengthened Task 5 recovery invariants with full SQLite column/index/foreign-key
+  and constraint validation, canonical persisted UTC/JSON checks, content-free read
+  conversion failures, complete Job cancellation semantics, cancellation-shielded
+  circuit leases, safe reconciliation error reporting, verified config fingerprints,
+  and explicit async-context ownership for SQLite task cleanup.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import math
 import os
@@ -11,7 +12,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
-from types import MappingProxyType
+from types import MappingProxyType, TracebackType
 from typing import Any, TypeVar, cast
 
 import aiosqlite
@@ -109,6 +110,106 @@ _REQUIRED_COLUMNS: dict[str, tuple[str, ...]] = {
 _REQUIRED_INDEXES: dict[str, tuple[str, ...]] = {
     "health_latest_idx": ("resource_kind", "resource_id", "observed_at", "sequence"),
     "request_metrics_observed_idx": ("observed_at",),
+}
+_REQUIRED_COLUMN_SPECS: dict[str, tuple[tuple[str, str, int, str | None, int, int], ...]] = {
+    "health_snapshots": (
+        ("sequence", "INTEGER", 0, None, 1, 0),
+        ("resource_kind", "TEXT", 1, None, 0, 0),
+        ("resource_id", "TEXT", 1, None, 0, 0),
+        ("state", "TEXT", 1, None, 0, 0),
+        ("observed_at", "TEXT", 1, None, 0, 0),
+        ("observed_monotonic", "REAL", 1, None, 0, 0),
+        ("stale", "INTEGER", 1, None, 0, 0),
+    ),
+    "route_audits": (
+        ("sequence", "INTEGER", 0, None, 1, 0),
+        ("request_id", "TEXT", 1, None, 0, 0),
+        ("observed_at", "TEXT", 1, None, 0, 0),
+        ("selected_placement_id", "TEXT", 0, None, 0, 0),
+        ("candidate_json", "TEXT", 1, None, 0, 0),
+        ("rejection_json", "TEXT", 1, None, 0, 0),
+        ("config_revision", "TEXT", 1, None, 0, 0),
+    ),
+    "request_metrics": (
+        ("sequence", "INTEGER", 0, None, 1, 0),
+        ("request_id", "TEXT", 1, None, 0, 0),
+        ("observed_at", "TEXT", 1, None, 0, 0),
+        ("latency_ms", "REAL", 1, None, 0, 0),
+        ("success", "INTEGER", 1, None, 0, 0),
+    ),
+    "jobs": (
+        ("job_id", "TEXT", 0, None, 1, 0),
+        ("idempotency_key", "TEXT", 0, None, 0, 0),
+        ("payload_fingerprint", "TEXT", 1, None, 0, 0),
+        ("kind", "TEXT", 1, None, 0, 0),
+        ("initiator", "TEXT", 1, None, 0, 0),
+        ("risk", "TEXT", 1, None, 0, 0),
+        ("state", "TEXT", 1, None, 0, 0),
+        ("progress", "REAL", 1, None, 0, 0),
+        ("created_at", "TEXT", 1, None, 0, 0),
+        ("updated_at", "TEXT", 1, None, 0, 0),
+        ("rollback_reference", "TEXT", 0, None, 0, 0),
+        ("attempt", "INTEGER", 1, "0", 0, 0),
+        ("error_code", "TEXT", 0, None, 0, 0),
+    ),
+    "job_transitions": (
+        ("sequence", "INTEGER", 0, None, 1, 0),
+        ("job_id", "TEXT", 1, None, 0, 0),
+        ("from_state", "TEXT", 0, None, 0, 0),
+        ("to_state", "TEXT", 1, None, 0, 0),
+        ("progress", "REAL", 1, None, 0, 0),
+        ("observed_at", "TEXT", 1, None, 0, 0),
+    ),
+    "durable_events": (
+        ("sequence", "INTEGER", 0, None, 1, 0),
+        ("event_id", "TEXT", 1, None, 0, 0),
+        ("schema_version", "INTEGER", 1, None, 0, 0),
+        ("observed_at", "TEXT", 1, None, 0, 0),
+        ("priority", "TEXT", 1, None, 0, 0),
+        ("kind", "TEXT", 1, None, 0, 0),
+        ("payload_json", "TEXT", 1, None, 0, 0),
+        ("job_id", "TEXT", 0, None, 0, 0),
+        ("resource_id", "TEXT", 0, None, 0, 0),
+    ),
+    "config_revisions": (
+        ("sequence", "INTEGER", 0, None, 1, 0),
+        ("revision_id", "TEXT", 1, None, 0, 0),
+        ("observed_at", "TEXT", 1, None, 0, 0),
+        ("rollback_reference", "TEXT", 0, None, 0, 0),
+        ("config_json", "TEXT", 1, None, 0, 0),
+        ("fingerprint", "TEXT", 1, None, 0, 0),
+    ),
+    "daily_metric_aggregates": (
+        ("day", "TEXT", 0, None, 1, 0),
+        ("request_count", "INTEGER", 1, None, 0, 0),
+        ("error_count", "INTEGER", 1, None, 0, 0),
+        ("latency_sum_ms", "REAL", 1, None, 0, 0),
+    ),
+}
+_REQUIRED_INDEX_PROPERTIES: dict[str, tuple[str, bool, tuple[str, ...]]] = {
+    "health_latest_idx": ("health_snapshots", False, _REQUIRED_INDEXES["health_latest_idx"]),
+    "request_metrics_observed_idx": (
+        "request_metrics",
+        False,
+        _REQUIRED_INDEXES["request_metrics_observed_idx"],
+    ),
+}
+_REQUIRED_UNIQUE_COLUMNS: dict[str, frozenset[tuple[str, ...]]] = {
+    "jobs": frozenset({("job_id",), ("idempotency_key",)}),
+    "durable_events": frozenset({("event_id",)}),
+    "config_revisions": frozenset({("revision_id",)}),
+    "daily_metric_aggregates": frozenset({("day",)}),
+}
+_REQUIRED_FOREIGN_KEYS: dict[str, tuple[tuple[str, str, str, str, str, str], ...]] = {
+    "job_transitions": (("jobs", "job_id", "job_id", "NO ACTION", "NO ACTION", "NONE"),)
+}
+_REQUIRED_SQL_FRAGMENTS: dict[str, tuple[str, ...]] = {
+    "health_snapshots": ("autoincrement", "check(stalein(0,1))"),
+    "request_metrics": ("autoincrement", "check(successin(0,1))"),
+    "jobs": ("check(progress>=0andprogress<=1)", "idempotency_keytextunique"),
+    "job_transitions": ("autoincrement", "referencesjobs(job_id)"),
+    "durable_events": ("autoincrement", "event_idtextnotnullunique"),
+    "config_revisions": ("autoincrement", "revision_idtextnotnullunique"),
 }
 _SENSITIVE_TEXT = re.compile(
     r"(?:authorization\s*:|bearer\s+\S+|api[_-]?key|password|secret|token\s*[=:])",
@@ -229,6 +330,20 @@ class SQLiteRuntimeStore:
     def writer_task_settled(self) -> bool:
         return self._actor is None or self._actor.done()
 
+    async def __aenter__(self) -> SQLiteRuntimeStore:
+        if self._closed or self._closing:
+            raise StorageDegradedError("runtime storage is unavailable")
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        del exc_type, exc_value, traceback
+        await asyncio.shield(self.close())
+
     async def _writer_loop(self) -> None:
         writer = self._writer
         if writer is None:
@@ -337,14 +452,17 @@ class SQLiteRuntimeStore:
         await cursor.close()
         if row is None:
             return None
-        return HealthRecord(
-            resource_kind=str(row[0]),
-            resource_id=str(row[1]),
-            state=str(row[2]),
-            observed_at=_parse_utc(str(row[3])),
-            observed_monotonic=float(row[4]),
-            stale=bool(row[5]),
-        )
+        try:
+            return HealthRecord(
+                resource_kind=str(row[0]),
+                resource_id=str(row[1]),
+                state=str(row[2]),
+                observed_at=_parse_stored_utc(row[3]),
+                observed_monotonic=float(row[4]),
+                stale=bool(row[5]),
+            )
+        except (TypeError, ValueError, UnicodeError):
+            raise _stored_value_error() from None
 
     async def append_route_audit(self, record: RouteAuditWrite) -> RouteAuditRecord:
         timestamp = _utc_text(record.observed_at)
@@ -419,6 +537,8 @@ class SQLiteRuntimeStore:
         _validate_config_revision(revision)
         timestamp = _utc_text(revision.observed_at)
         config_json = _canonical_json_object(revision.config_json, label="config revision")
+        if revision.fingerprint != _config_fingerprint(config_json):
+            raise ValueError("config revision fingerprint does not match canonical JSON")
 
         async def operation(connection: aiosqlite.Connection) -> ConfigRevisionRecord:
             cursor = await connection.execute(
@@ -608,12 +728,15 @@ class SQLiteRuntimeStore:
         await cursor.close()
         if row is None:
             return None
-        return DailyMetricAggregate(
-            day=date.fromisoformat(str(row[0])),
-            request_count=int(row[1]),
-            error_count=int(row[2]),
-            latency_sum_ms=float(row[3]),
-        )
+        try:
+            return DailyMetricAggregate(
+                day=date.fromisoformat(str(row[0])),
+                request_count=int(row[1]),
+                error_count=int(row[2]),
+                latency_sum_ms=float(row[3]),
+            )
+        except (TypeError, ValueError, UnicodeError):
+            raise _stored_value_error() from None
 
     async def append_durable_event(
         self,
@@ -676,15 +799,18 @@ class SQLiteRuntimeStore:
                     job_id,
                     resource_id,
                 )
-                actual = (
-                    int(row[1]),
-                    str(row[2]),
-                    str(row[3]),
-                    str(row[4]),
-                    _canonical_json_object(str(row[5]), label="durable event payload"),
-                    str(row[6]) if row[6] is not None else None,
-                    str(row[7]) if row[7] is not None else None,
-                )
+                try:
+                    actual = (
+                        int(row[1]),
+                        str(row[2]),
+                        str(row[3]),
+                        str(row[4]),
+                        _canonical_json_object(str(row[5]), label="durable event payload"),
+                        str(row[6]) if row[6] is not None else None,
+                        str(row[7]) if row[7] is not None else None,
+                    )
+                except (TypeError, ValueError, UnicodeError):
+                    raise _stored_value_error() from None
                 if actual != expected:
                     raise EventConflictError(
                         "durable event ID conflicts with existing immutable content"
@@ -862,7 +988,11 @@ class SQLiteRuntimeStore:
                 return current
             if current.state is JobState.RUNNING:
                 target = JobState.CANCELLING
-            elif current.state in {JobState.PENDING, JobState.AWAITING_CONFIRMATION}:
+            elif current.state in {
+                JobState.PENDING,
+                JobState.PLANNING,
+                JobState.AWAITING_CONFIRMATION,
+            }:
                 target = JobState.CANCELLED
             else:
                 raise ValueError(f"Job in {current.state.value} cannot be cancelled")
@@ -985,20 +1115,7 @@ class SQLiteRuntimeStore:
         )
         rows = await cursor.fetchall()
         await cursor.close()
-        return tuple(
-            DurableEventRecord(
-                sequence=int(row[0]),
-                event_id=str(row[1]),
-                schema_version=int(row[2]),
-                observed_at=_parse_utc(str(row[3])),
-                priority=str(row[4]),
-                kind=str(row[5]),
-                payload_json=str(row[6]),
-                job_id=str(row[7]) if row[7] is not None else None,
-                resource_id=str(row[8]) if row[8] is not None else None,
-            )
-            for row in rows
-        )
+        return tuple(_durable_event_record(row) for row in rows)
 
     async def close(self) -> int:
         task = self._close_task
@@ -1157,41 +1274,167 @@ async def _validate_schema(connection: aiosqlite.Connection) -> None:
     await cursor.close()
     if tables != set(_REQUIRED_COLUMNS):
         raise aiosqlite.DatabaseError("SQLite required table invariant failed")
-    for table, expected in _REQUIRED_COLUMNS.items():
+    for table, expected in _REQUIRED_COLUMN_SPECS.items():
         cursor = await connection.execute(
-            "SELECT name FROM pragma_table_info(?) ORDER BY cid", (table,)
+            'SELECT name, type, "notnull", dflt_value, pk, hidden '
+            "FROM pragma_table_xinfo(?) ORDER BY cid",
+            (table,),
         )
-        actual = tuple(str(row[0]) for row in await cursor.fetchall())
+        actual = tuple(
+            (
+                str(row[0]),
+                str(row[1]).upper(),
+                int(row[2]),
+                str(row[3]) if row[3] is not None else None,
+                int(row[4]),
+                int(row[5]),
+            )
+            for row in await cursor.fetchall()
+        )
         await cursor.close()
         if actual != expected:
-            raise aiosqlite.DatabaseError("SQLite required column invariant failed")
-    for index, expected in _REQUIRED_INDEXES.items():
+            raise aiosqlite.DatabaseError("SQLite column metadata invariant failed")
+
+    unique_columns: dict[str, set[tuple[str, ...]]] = {
+        table: set() for table in _REQUIRED_UNIQUE_COLUMNS
+    }
+    for table in _REQUIRED_COLUMNS:
         cursor = await connection.execute(
-            "SELECT name FROM pragma_index_info(?) ORDER BY seqno", (index,)
+            'SELECT name, "unique", origin, partial FROM pragma_index_list(?) ORDER BY seq',
+            (table,),
         )
-        actual = tuple(str(row[0]) for row in await cursor.fetchall())
+        indexes = await cursor.fetchall()
         await cursor.close()
-        if actual != expected:
+        for row in indexes:
+            index_name = str(row[0])
+            is_unique = bool(row[1])
+            origin = str(row[2])
+            partial = bool(row[3])
+            columns_cursor = await connection.execute(
+                "SELECT name FROM pragma_index_info(?) ORDER BY seqno", (index_name,)
+            )
+            columns = tuple(str(item[0]) for item in await columns_cursor.fetchall())
+            await columns_cursor.close()
+            expected_named = _REQUIRED_INDEX_PROPERTIES.get(index_name)
+            if expected_named is not None:
+                expected_table, expected_unique, expected_columns = expected_named
+                if (
+                    table != expected_table
+                    or is_unique is not expected_unique
+                    or origin != "c"
+                    or partial
+                    or columns != expected_columns
+                ):
+                    raise aiosqlite.DatabaseError("SQLite named index invariant failed")
+            if is_unique and table in unique_columns:
+                unique_columns[table].add(columns)
+    if any(
+        unique_columns[table] != set(expected)
+        for table, expected in _REQUIRED_UNIQUE_COLUMNS.items()
+    ):
+        raise aiosqlite.DatabaseError("SQLite uniqueness invariant failed")
+    for index in _REQUIRED_INDEX_PROPERTIES:
+        cursor = await connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = ?", (index,)
+        )
+        present = await cursor.fetchone()
+        await cursor.close()
+        if present is None:
             raise aiosqlite.DatabaseError("SQLite required index invariant failed")
+
+    for table in _REQUIRED_COLUMNS:
+        cursor = await connection.execute(
+            'SELECT "table", "from", "to", on_update, on_delete, match '
+            "FROM pragma_foreign_key_list(?) ORDER BY id, seq",
+            (table,),
+        )
+        foreign_keys = tuple(tuple(str(value) for value in row) for row in await cursor.fetchall())
+        await cursor.close()
+        if foreign_keys != _REQUIRED_FOREIGN_KEYS.get(table, ()):
+            raise aiosqlite.DatabaseError("SQLite foreign key definition invariant failed")
     cursor = await connection.execute("PRAGMA foreign_key_check")
     violations = await cursor.fetchone()
     await cursor.close()
     if violations is not None:
         raise aiosqlite.DatabaseError("SQLite foreign key invariant failed")
-    for statement in (
-        "SELECT 1 FROM route_audits "
-        "WHERE json_valid(candidate_json) = 0 OR json_type(candidate_json) != 'array' "
-        "OR json_valid(rejection_json) = 0 OR json_type(rejection_json) != 'object' LIMIT 1",
-        "SELECT 1 FROM durable_events "
-        "WHERE json_valid(payload_json) = 0 OR json_type(payload_json) != 'object' LIMIT 1",
-        "SELECT 1 FROM config_revisions "
-        "WHERE json_valid(config_json) = 0 OR json_type(config_json) != 'object' LIMIT 1",
+
+    for table, fragments in _REQUIRED_SQL_FRAGMENTS.items():
+        cursor = await connection.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?", (table,)
+        )
+        row = await cursor.fetchone()
+        await cursor.close()
+        normalized = re.sub(r"\s+", "", str(row[0])).lower() if row is not None else ""
+        if any(fragment not in normalized for fragment in fragments):
+            raise aiosqlite.DatabaseError("SQLite table constraint invariant failed")
+
+    await _validate_persisted_values(connection)
+
+
+async def _validate_persisted_values(connection: aiosqlite.Connection) -> None:
+    timestamp_cursor = await connection.execute(
+        """
+        SELECT observed_at FROM health_snapshots
+        UNION ALL SELECT observed_at FROM route_audits
+        UNION ALL SELECT observed_at FROM request_metrics
+        UNION ALL SELECT created_at FROM jobs
+        UNION ALL SELECT updated_at FROM jobs
+        UNION ALL SELECT observed_at FROM job_transitions
+        UNION ALL SELECT observed_at FROM durable_events
+        UNION ALL SELECT observed_at FROM config_revisions
+        """
+    )
+    try:
+        async for row in timestamp_cursor:
+            _validate_canonical_utc(str(row[0]))
+    except (TypeError, ValueError, UnicodeError):
+        raise aiosqlite.DatabaseError("SQLite persisted timestamp invariant failed") from None
+    finally:
+        await timestamp_cursor.close()
+
+    route_cursor = await connection.execute(
+        "SELECT candidate_json, rejection_json FROM route_audits"
+    )
+    try:
+        async for row in route_cursor:
+            _decode_route_json(str(row[0]), str(row[1]))
+    except (TypeError, ValueError, UnicodeError):
+        raise aiosqlite.DatabaseError("SQLite persisted JSON invariant failed") from None
+    finally:
+        await route_cursor.close()
+
+    for statement, label in (
+        ("SELECT payload_json FROM durable_events", "durable event payload"),
+        ("SELECT config_json FROM config_revisions", "config revision"),
     ):
         cursor = await connection.execute(statement)
-        invalid = await cursor.fetchone()
-        await cursor.close()
-        if invalid is not None:
-            raise aiosqlite.DatabaseError("SQLite JSON invariant failed")
+        try:
+            async for row in cursor:
+                raw = str(row[0])
+                if _canonical_json_object(raw, label=label) != raw:
+                    raise ValueError("stored JSON is not canonical")
+        except (TypeError, ValueError, UnicodeError):
+            raise aiosqlite.DatabaseError("SQLite persisted JSON invariant failed") from None
+        finally:
+            await cursor.close()
+
+    fingerprint_cursor = await connection.execute(
+        "SELECT config_json, fingerprint FROM config_revisions"
+    )
+    try:
+        async for row in fingerprint_cursor:
+            if str(row[1]) != _config_fingerprint(str(row[0])):
+                raise ValueError("stored config fingerprint mismatch")
+    except (TypeError, ValueError, UnicodeError):
+        raise aiosqlite.DatabaseError("SQLite config fingerprint invariant failed") from None
+    finally:
+        await fingerprint_cursor.close()
+
+
+def _validate_canonical_utc(value: str) -> None:
+    parsed = datetime.fromisoformat(value)
+    if parsed.utcoffset() != timedelta(0) or value != parsed.isoformat(timespec="microseconds"):
+        raise ValueError("stored timestamp is not canonical UTC")
 
 
 def _utc(value: datetime) -> datetime:
@@ -1207,6 +1450,16 @@ def _utc_text(value: datetime) -> str:
 def _parse_utc(value: str) -> datetime:
     parsed = datetime.fromisoformat(value)
     return _utc(parsed)
+
+
+def _parse_stored_utc(value: object) -> datetime:
+    text = str(value)
+    _validate_canonical_utc(text)
+    return datetime.fromisoformat(text)
+
+
+def _stored_value_error() -> StorageDegradedError:
+    return StorageDegradedError("stored runtime value is invalid")
 
 
 def _bounded_text(
@@ -1238,6 +1491,11 @@ def _canonical_json_object(value: str, *, label: str) -> str:
     return json.dumps(document, ensure_ascii=True, separators=(",", ":"), sort_keys=True)
 
 
+def _config_fingerprint(canonical_json: str) -> str:
+    digest = hashlib.sha256(canonical_json.encode("utf-8")).hexdigest()
+    return f"sha256:{digest}"
+
+
 def _validate_page(after_sequence: int, limit: int) -> None:
     if after_sequence < 0 or limit < 1 or limit > MAX_PAGE_SIZE:
         raise ValueError("repository page cursor or size is invalid")
@@ -1256,63 +1514,120 @@ def _validate_config_revision(revision: ConfigRevisionWrite) -> None:
         raise ValueError("config rollback reference is invalid")
 
 
-def _route_audit_record(row: Any) -> RouteAuditRecord:
-    candidates_document = cast(object, json.loads(str(row[4])))
-    rejections_document = cast(object, json.loads(str(row[5])))
+def _decode_route_json(
+    candidates_json: str, rejections_json: str
+) -> tuple[tuple[str, ...], MappingProxyType[str, str]]:
+    if (
+        len(candidates_json.encode("utf-8")) + len(rejections_json.encode("utf-8"))
+        > _MAX_REPOSITORY_JSON_BYTES
+    ):
+        raise ValueError("route JSON size exceeds the limit")
+    candidates_document = cast(
+        object, json.loads(candidates_json, parse_constant=_reject_nonfinite_json)
+    )
+    rejections_document = cast(
+        object, json.loads(rejections_json, parse_constant=_reject_nonfinite_json)
+    )
     if not isinstance(candidates_document, list):
-        raise StorageDegradedError("stored route candidates are invalid")
+        raise ValueError("route candidates are invalid")
     candidates_raw = cast(list[object], candidates_document)
     if not all(isinstance(item, str) for item in candidates_raw):
-        raise StorageDegradedError("stored route candidates are invalid")
+        raise ValueError("route candidates are invalid")
     if not isinstance(rejections_document, dict):
-        raise StorageDegradedError("stored route rejections are invalid")
+        raise ValueError("route rejections are invalid")
     rejections_raw = cast(dict[object, object], rejections_document)
     if not all(
         isinstance(key, str) and isinstance(value, str) for key, value in rejections_raw.items()
     ):
-        raise StorageDegradedError("stored route rejections are invalid")
+        raise ValueError("route rejections are invalid")
     candidates = tuple(cast(str, item) for item in candidates_raw)
     rejections = MappingProxyType(
         {cast(str, key): cast(str, value) for key, value in rejections_raw.items()}
     )
-    return RouteAuditRecord(
-        sequence=int(row[0]),
-        request_id=str(row[1]),
-        observed_at=_parse_utc(str(row[2])),
-        selected_placement_id=str(row[3]) if row[3] is not None else None,
-        candidates=candidates,
-        rejections=rejections,
-        config_revision=str(row[6]),
+    canonical_candidates = json.dumps(list(candidates), ensure_ascii=True, separators=(",", ":"))
+    canonical_rejections = json.dumps(
+        dict(rejections), ensure_ascii=True, separators=(",", ":"), sort_keys=True
     )
+    if canonical_candidates != candidates_json or canonical_rejections != rejections_json:
+        raise ValueError("route JSON is not canonical")
+    return candidates, rejections
+
+
+def _route_audit_record(row: Any) -> RouteAuditRecord:
+    try:
+        candidates, rejections = _decode_route_json(str(row[4]), str(row[5]))
+        return RouteAuditRecord(
+            sequence=int(row[0]),
+            request_id=str(row[1]),
+            observed_at=_parse_stored_utc(row[2]),
+            selected_placement_id=str(row[3]) if row[3] is not None else None,
+            candidates=candidates,
+            rejections=rejections,
+            config_revision=str(row[6]),
+        )
+    except (TypeError, ValueError, UnicodeError):
+        raise _stored_value_error() from None
 
 
 def _config_revision_record(row: Any) -> ConfigRevisionRecord:
-    return ConfigRevisionRecord(
-        sequence=int(row[0]),
-        revision_id=str(row[1]),
-        observed_at=_parse_utc(str(row[2])),
-        rollback_reference=str(row[3]) if row[3] is not None else None,
-        config_json=_canonical_json_object(str(row[4]), label="stored config revision"),
-        fingerprint=str(row[5]),
-    )
+    try:
+        config_json = str(row[4])
+        if _canonical_json_object(config_json, label="stored config revision") != config_json:
+            raise ValueError("config JSON is not canonical")
+        fingerprint = str(row[5])
+        if fingerprint != _config_fingerprint(config_json):
+            raise ValueError("config fingerprint mismatch")
+        return ConfigRevisionRecord(
+            sequence=int(row[0]),
+            revision_id=str(row[1]),
+            observed_at=_parse_stored_utc(row[2]),
+            rollback_reference=str(row[3]) if row[3] is not None else None,
+            config_json=config_json,
+            fingerprint=fingerprint,
+        )
+    except (TypeError, ValueError, UnicodeError):
+        raise _stored_value_error() from None
 
 
 def _stored_job(row: Any) -> StoredJob:
-    return StoredJob(
-        id=str(row[0]),
-        idempotency_key=str(row[1]) if row[1] is not None else None,
-        payload_fingerprint=str(row[2]),
-        kind=str(row[3]),
-        initiator=str(row[4]),
-        risk=RiskLevel(str(row[5])),
-        state=JobState(str(row[6])),
-        progress=float(row[7]),
-        created_at=_parse_utc(str(row[8])),
-        updated_at=_parse_utc(str(row[9])),
-        rollback_reference=str(row[10]) if row[10] is not None else None,
-        attempt=int(row[11]),
-        error_code=str(row[12]) if row[12] is not None else None,
-    )
+    try:
+        return StoredJob(
+            id=str(row[0]),
+            idempotency_key=str(row[1]) if row[1] is not None else None,
+            payload_fingerprint=str(row[2]),
+            kind=str(row[3]),
+            initiator=str(row[4]),
+            risk=RiskLevel(str(row[5])),
+            state=JobState(str(row[6])),
+            progress=float(row[7]),
+            created_at=_parse_stored_utc(row[8]),
+            updated_at=_parse_stored_utc(row[9]),
+            rollback_reference=str(row[10]) if row[10] is not None else None,
+            attempt=int(row[11]),
+            error_code=str(row[12]) if row[12] is not None else None,
+        )
+    except (TypeError, ValueError, UnicodeError):
+        raise _stored_value_error() from None
+
+
+def _durable_event_record(row: Any) -> DurableEventRecord:
+    try:
+        payload_json = str(row[6])
+        if _canonical_json_object(payload_json, label="stored durable event") != payload_json:
+            raise ValueError("event JSON is not canonical")
+        return DurableEventRecord(
+            sequence=int(row[0]),
+            event_id=str(row[1]),
+            schema_version=int(row[2]),
+            observed_at=_parse_stored_utc(row[3]),
+            priority=str(row[4]),
+            kind=str(row[5]),
+            payload_json=payload_json,
+            job_id=str(row[7]) if row[7] is not None else None,
+            resource_id=str(row[8]) if row[8] is not None else None,
+        )
+    except (TypeError, ValueError, UnicodeError):
+        raise _stored_value_error() from None
 
 
 async def _insert_job_event(

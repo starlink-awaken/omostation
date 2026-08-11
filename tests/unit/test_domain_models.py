@@ -253,7 +253,12 @@ def test_job_transition_table_is_exhaustive_and_terminal_states_cannot_exit() ->
     expected = {
         JobState.PENDING: frozenset({JobState.PLANNING, JobState.CANCELLED}),
         JobState.PLANNING: frozenset(
-            {JobState.AWAITING_CONFIRMATION, JobState.RUNNING, JobState.FAILED}
+            {
+                JobState.AWAITING_CONFIRMATION,
+                JobState.RUNNING,
+                JobState.FAILED,
+                JobState.CANCELLED,
+            }
         ),
         JobState.AWAITING_CONFIRMATION: frozenset({JobState.RUNNING, JobState.CANCELLED}),
         JobState.RUNNING: frozenset({JobState.SUCCEEDED, JobState.FAILED, JobState.CANCELLING}),

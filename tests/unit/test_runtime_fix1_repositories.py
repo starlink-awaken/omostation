@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -7,6 +8,10 @@ import pytest
 
 from omlxc import storage
 from omlxc.storage import SQLiteRuntimeStore
+
+
+def _fingerprint(config_json: str) -> str:
+    return "sha256:" + hashlib.sha256(config_json.encode("utf-8")).hexdigest()
 
 
 @pytest.mark.asyncio
@@ -45,7 +50,7 @@ async def test_route_audit_and_config_revision_round_trip_pagination_and_restart
             observed_at=now,
             rollback_reference="snapshot:config-0",
             config_json='{"z":2,"enabled":true}',
-            fingerprint="sha256:" + "a" * 64,
+            fingerprint=_fingerprint('{"enabled":true,"z":2}'),
         )
     )
     config_two = await store.save_config_revision(
@@ -54,7 +59,7 @@ async def test_route_audit_and_config_revision_round_trip_pagination_and_restart
             observed_at=now + timedelta(seconds=1),
             rollback_reference="snapshot:config-1",
             config_json='{"enabled":false}',
-            fingerprint="sha256:" + "b" * 64,
+            fingerprint=_fingerprint('{"enabled":false}'),
         )
     )
     assert first.sequence < second.sequence
@@ -123,4 +128,14 @@ async def test_route_and_config_repository_validation_fails_closed(tmp_path: Pat
         )
     with pytest.raises(ValueError, match="page"):
         await store.list_route_audits(after_sequence=0, limit=501)
+    with pytest.raises(ValueError, match="fingerprint"):
+        await store.save_config_revision(
+            ConfigRevisionWrite(
+                revision_id="config-mismatch",
+                observed_at=now,
+                rollback_reference=None,
+                config_json='{"enabled":true}',
+                fingerprint="sha256:" + "0" * 64,
+            )
+        )
     await store.close()

@@ -556,9 +556,15 @@ class ReconcileLoop:
                 memory = await self._memory_probe()
                 await self._engine.reconcile_many(targets, memory, now_monotonic=self._clock())
             except Exception as exc:
-                self._error_sink(type(exc).__name__)
+                self._report_error(exc)
             try:
                 await self._wait_next(self._interval)
             except Exception as exc:
-                self._error_sink(type(exc).__name__)
+                self._report_error(exc)
                 return
+
+    def _report_error(self, error: Exception) -> None:
+        try:
+            self._error_sink(type(error).__name__)
+        except Exception:
+            return

@@ -29,6 +29,8 @@ def _job(job_id: str) -> Job:
     ("initial", "expected"),
     [
         (JobState.PENDING, JobState.CANCELLED),
+        (JobState.PLANNING, JobState.CANCELLED),
+        (JobState.AWAITING_CONFIRMATION, JobState.CANCELLED),
         (JobState.RUNNING, JobState.CANCELLING),
         (JobState.CANCELLING, JobState.CANCELLING),
         (JobState.SUCCEEDED, JobState.SUCCEEDED),
@@ -49,7 +51,11 @@ async def test_repeated_concurrent_cancel_is_one_atomic_transition_and_event(
     )
     at = created.created_at + timedelta(seconds=1)
     if initial is not JobState.PENDING:
-        path = [JobState.PLANNING, JobState.RUNNING]
+        path = [JobState.PLANNING]
+        if initial is JobState.AWAITING_CONFIRMATION:
+            path.append(JobState.AWAITING_CONFIRMATION)
+        elif initial is not JobState.PLANNING:
+            path.append(JobState.RUNNING)
         if initial is JobState.CANCELLING:
             path.append(JobState.CANCELLING)
         elif initial in {JobState.SUCCEEDED, JobState.FAILED}:
@@ -82,7 +88,17 @@ async def test_repeated_concurrent_cancel_is_one_atomic_transition_and_event(
         states = {result.state for result in results if not isinstance(result, BaseException)}
         assert states == {expected}
         after = await store.replay_durable_events(after_sequence=0)
-        expected_new_events = 1 if initial in {JobState.PENDING, JobState.RUNNING} else 0
+        expected_new_events = (
+            1
+            if initial
+            in {
+                JobState.PENDING,
+                JobState.PLANNING,
+                JobState.AWAITING_CONFIRMATION,
+                JobState.RUNNING,
+            }
+            else 0
+        )
         assert len(after) - len(before) == expected_new_events
     finally:
         await store.close()

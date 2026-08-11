@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -167,8 +168,21 @@ class CircuitBreaker:
 
     async def release(self, permit: CircuitPermit) -> None:
         """Settle an unused permit without changing circuit outcome state."""
-        async with self._lock:
-            self._consume(permit)
+        with anyio.CancelScope(shield=True):
+            async with self._lock:
+                self._consume(permit)
+
+    @asynccontextmanager
+    async def lease(self) -> AsyncGenerator[CircuitPermit]:
+        """Acquire a permit whose unused capacity is cancellation-safely reclaimed."""
+        permit = await self.acquire()
+        try:
+            yield permit
+        finally:
+            with anyio.CancelScope(shield=True):
+                async with self._lock:
+                    if permit.token in self._permits:
+                        self._consume(permit)
 
     def _consume(self, permit: CircuitPermit) -> CircuitPermit:
         accepted = self._permits.pop(permit.token, None)
