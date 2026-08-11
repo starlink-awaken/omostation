@@ -52,3 +52,8 @@
   bounded request bodies and shutdown, and typed fail-closed stream errors.
 - Added bounded, failure-isolated backend discovery that refreshes production
   placement readiness while retaining fail-closed local security authorization.
+- Added the Task 8 typed UDS client with strict envelope/request identity and
+  bounded incremental NDJSON decoding; completed the Typer command tree with
+  versioned JSON/NDJSON, stable exits, TTY-aware behavior, and R1/R2 gates; and
+  added the eight-page Textual compute cockpit with keyboard navigation, confirmed
+  mutations, incremental events, explicit STALE recovery, and narrow-screen mode.

@@ -1,18 +1,46 @@
 # omlxc
 
-`omlxc` is a private local compute-hub project. Version `3.0.0a1` currently
-provides the installable package skeleton plus Task 3's pure domain contract and
-versioned configuration migration. It does not start a daemon, alter existing
-local services, contact hardware, or replace the stable
+`omlxc` is a private local compute hub. Version `3.0.0a1` provides a persistent
+`omlxcd` control/data plane, a typed Unix-socket client, a scriptable Typer CLI,
+and a keyboard-first Textual cockpit. Development and tests do not alter existing
+local services, contact real hardware, or replace the stable
 `/opt/homebrew/bin/omlxc` command.
 
-The v3 boundary is intentionally narrow in this task:
+The v3 boundary is explicit:
 
-- `omlxc --help`, `omlxc --version`, and `omlxc config validate|migrate` work
-  after installation.
-- `omlxcd` emits a stable JSON placeholder instead of claiming that an API is
-  available.
+- An interactive `omlxc` opens the eight-page compute cockpit; a non-TTY caller
+  must select a command.
+- CLI/TUI state and mutations use only the private `omlxcd` Unix socket. Commands
+  whose daemon endpoint does not exist return a typed `unsupported` error instead
+  of bypassing the daemon.
+- JSON and NDJSON include `schema_version` and `request_id`; stable exit codes
+  distinguish config, daemon, capacity, timeout, partial, security, and internal
+  failures.
 - `bin/omlx` and its 32 tests remain the legacy characterization baseline.
+
+Common read-only commands:
+
+```bash
+omlxc status
+omlxc status --json
+omlxc nodes list
+omlxc models list
+omlxc routes plan local/model-id --profile interactive --json
+omlxc jobs watch --output ndjson
+omlxc metrics show
+omlxc daemon status
+```
+
+Reversible R1 operations require a terminal confirmation or explicit `--yes`:
+
+```bash
+omlxc models load local/model-id --yes --json
+omlxc models unload local/model-id --yes --json
+omlxc jobs cancel job-id --yes --json
+```
+
+The TUI uses `g`, `/`, `:`, `r`, `?`, `q`, and `Esc`. It keeps the last snapshot
+visible as `STALE` while reconnecting and degrades its layout below `80x24`.
 
 ## Configuration migration
 
