@@ -71,6 +71,55 @@ beliefs:
   created_at: '2026-08-08T11:08:18Z'
   confidence: 1.0
   source_run_id: 20260808T104413Z-bet-execution-aace7ca1
+- id: belief-0011
+  topic: workflow:project-code-change
+  belief: 'Workflow run 20260810T215958Z-project-code-change-01085a26 achieved objective:
+    L4 知识主权 Phase 0：严格契约加载、只读 Harness、路径安全和 CLI/MCP'
+  created_at: '2026-08-10T22:03:24Z'
+  confidence: 1.0
+  source_run_id: 20260810T215958Z-project-code-change-01085a26
+- id: belief-0012
+  topic: workflow:pyright-sweep
+  belief: 'Workflow run 20260810T220647Z-pyright-sweep-84c871b9 achieved objective:
+    修复 Workspace 治理基线：恢复 nested-with 工具并退休 5 个零字节死 stub'
+  created_at: '2026-08-10T22:13:56Z'
+  confidence: 1.0
+  source_run_id: 20260810T220647Z-pyright-sweep-84c871b9
+- id: belief-0013
+  topic: workflow:mof-model-change
+  belief: 'Workflow run 20260810T221411Z-mof-model-change-37dd008a achieved objective:
+    L4 知识主权 Phase 0：ECOS/MOF DomainManifest、HarnessProfile、DomainHealth 契约最终 Closeout'
+  created_at: '2026-08-10T22:16:29Z'
+  confidence: 1.0
+  source_run_id: 20260810T221411Z-mof-model-change-37dd008a
+- id: belief-0014
+  topic: workflow:governance-state-mutation
+  belief: 'Workflow run 20260810T221411Z-governance-state-mutation-6d9ecf47 achieved
+    objective: L4 知识主权 Phase 0：personal-space 与单所有者准入最终 Closeout'
+  created_at: '2026-08-10T22:16:41Z'
+  confidence: 1.0
+  source_run_id: 20260810T221411Z-governance-state-mutation-6d9ecf47
+- id: belief-0015
+  topic: workflow:project-code-change
+  belief: 'Workflow run 20260810T234112Z-project-code-change-c5b666d5 achieved objective:
+    发布 L4 知识主权 Phase 0：同步 ECOS CI 基线、验证并提交子仓 PR'
+  created_at: '2026-08-10T23:48:53Z'
+  confidence: 1.0
+  source_run_id: 20260810T234112Z-project-code-change-c5b666d5
+- id: belief-0016
+  topic: workflow:project-code-change
+  belief: 'Workflow run 20260810T235057Z-project-code-change-551dab75 achieved objective:
+    修复 l4-kernel standalone GitHub Actions 并完成 Phase 0 PR 合并'
+  created_at: '2026-08-11T00:08:55Z'
+  confidence: 1.0
+  source_run_id: 20260810T235057Z-project-code-change-551dab75
+- id: belief-0017
+  topic: workflow:submodule-pointer-close
+  belief: 'Workflow run 20260811T000905Z-submodule-pointer-close-3c97a0a0 achieved
+    objective: 同步并验证 ECOS 与 l4-kernel Phase 0 合并指针'
+  created_at: '2026-08-11T00:12:51Z'
+  confidence: 1.0
+  source_run_id: 20260811T000905Z-submodule-pointer-close-3c97a0a0
 lessons:
 - id: lesson-0001
   belief_id: belief-0001
@@ -120,6 +169,48 @@ lessons:
   solution: Executed agent-workflow verify & observe pass
   severity: warning
   created_at: '2026-08-08T11:08:18Z'
+- id: lesson-0009
+  belief_id: belief-0011
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-10T22:03:24Z'
+- id: lesson-0010
+  belief_id: belief-0012
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-10T22:13:56Z'
+- id: lesson-0011
+  belief_id: belief-0013
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-10T22:16:29Z'
+- id: lesson-0012
+  belief_id: belief-0014
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-10T22:16:41Z'
+- id: lesson-0013
+  belief_id: belief-0015
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-10T23:48:53Z'
+- id: lesson-0014
+  belief_id: belief-0016
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-11T00:08:55Z'
+- id: lesson-0015
+  belief_id: belief-0017
+  pitfall: Unverified workflow closeout
+  solution: Executed agent-workflow verify & observe pass
+  severity: warning
+  created_at: '2026-08-11T00:12:51Z'
 contexts:
 - id: ctx-0001
   belief_id: belief-0001
@@ -161,6 +252,41 @@ contexts:
   scope_path: .omo/_delivery/agent-workflows/runs/20260808T104413Z-bet-execution-aace7ca1.yaml
   applicable_tags:
   - workflow:bet-execution
+- id: ctx-0009
+  belief_id: belief-0011
+  scope_path: .omo/_delivery/agent-workflows/runs/20260810T215958Z-project-code-change-01085a26.yaml
+  applicable_tags:
+  - workflow:project-code-change
+- id: ctx-0010
+  belief_id: belief-0012
+  scope_path: .omo/_delivery/agent-workflows/runs/20260810T220647Z-pyright-sweep-84c871b9.yaml
+  applicable_tags:
+  - workflow:pyright-sweep
+- id: ctx-0011
+  belief_id: belief-0013
+  scope_path: .omo/_delivery/agent-workflows/runs/20260810T221411Z-mof-model-change-37dd008a.yaml
+  applicable_tags:
+  - workflow:mof-model-change
+- id: ctx-0012
+  belief_id: belief-0014
+  scope_path: .omo/_delivery/agent-workflows/runs/20260810T221411Z-governance-state-mutation-6d9ecf47.yaml
+  applicable_tags:
+  - workflow:governance-state-mutation
+- id: ctx-0013
+  belief_id: belief-0015
+  scope_path: .omo/_delivery/agent-workflows/runs/20260810T234112Z-project-code-change-c5b666d5.yaml
+  applicable_tags:
+  - workflow:project-code-change
+- id: ctx-0014
+  belief_id: belief-0016
+  scope_path: .omo/_delivery/agent-workflows/runs/20260810T235057Z-project-code-change-551dab75.yaml
+  applicable_tags:
+  - workflow:project-code-change
+- id: ctx-0015
+  belief_id: belief-0017
+  scope_path: .omo/_delivery/agent-workflows/runs/20260811T000905Z-submodule-pointer-close-3c97a0a0.yaml
+  applicable_tags:
+  - workflow:submodule-pointer-close
 world_snapshots:
 - id: ws-0001
   observed_at: '2026-08-08T05:33:25Z'
