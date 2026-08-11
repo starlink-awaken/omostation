@@ -40,6 +40,7 @@ except ImportError:
         return None
 
 
+from ..omo_io import write_yaml_atomic
 from .core import (
     CLAIM_POLICY_MODES,
     RUN_UPDATE_LOCK_TIMEOUT_SECONDS,
@@ -304,12 +305,96 @@ def heartbeat_lock(lock_path: Path) -> None:
     try:
         payload = yaml.safe_load(lock_path.read_text(encoding="utf-8")) or {}
         payload["last_heartbeat"] = utc_now()
-        lock_path.write_text(
-            yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
-            encoding="utf-8",
-        )
+        write_yaml_atomic(lock_path, payload)
     except OSError:
         pass
+
+
+def heartbeat_run(registry: dict[str, Any], run_id: str) -> dict[str, Any]:
+    """Renew ``last_heartbeat`` on every lock owned by an active run.
+
+    Prevalidates all locks before writing any:
+      - lock file must exist
+      - YAML payload must be a mapping
+      - payload ``run_id`` must exactly match
+      - resolved path must be within the configured lock directory
+
+    On validation failure no lock is modified.
+    Returns ``{"run_id", "heartbeat_at", "renewed", "count"}``.
+    """
+    _, payload = read_run(registry, run_id)
+    if payload.get("status") != "active":
+        raise WorkflowError(
+            f"cannot heartbeat non-active run {run_id} "
+            f"(status={payload.get('status', 'unknown')})"
+        )
+
+    lock_dir = lock_state_dir(registry).resolve()
+    raw_locks = payload.get("locks")
+    if raw_locks is None:
+        raw_locks = []
+    if not isinstance(raw_locks, list):
+        raise WorkflowError(
+            f"run {run_id} locks must be a list, got {type(raw_locks).__name__}"
+        )
+    for entry in raw_locks:
+        if not isinstance(entry, str) or not entry:
+            raise WorkflowError(f"run {run_id} locks contains invalid entry: {entry!r}")
+
+    # Phase 1 — prevalidate every lock (no writes yet)
+    validated: list[tuple[Path, dict[str, Any], str]] = []
+    for lock_display in raw_locks:
+        lock_path_raw = Path(lock_display)
+        if not lock_path_raw.is_absolute():
+            lock_path_raw = WORKSPACE / lock_display
+        try:
+            lock_path = lock_path_raw.resolve()
+        except OSError:
+            raise WorkflowError(f"cannot resolve lock path: {lock_display}")
+
+        try:
+            lock_path.relative_to(lock_dir)
+        except ValueError:
+            raise WorkflowError(f"lock path escapes lock directory: {lock_display}")
+
+        if not lock_path.exists():
+            raise WorkflowError(f"missing lock file: {lock_display}")
+
+        try:
+            lock_data = yaml.safe_load(lock_path.read_text(encoding="utf-8"))
+        except yaml.YAMLError as exc:
+            raise WorkflowError(f"malformed YAML in lock {lock_display}: {exc}")
+        except OSError as exc:
+            raise WorkflowError(f"unreadable lock {lock_display}: {exc}")
+        except UnicodeError as exc:
+            raise WorkflowError(
+                f"malformed lock (encoding error) {lock_display}: {exc}"
+            )
+        if not isinstance(lock_data, dict):
+            raise WorkflowError(f"malformed lock (not a mapping): {lock_display}")
+
+        if lock_data.get("run_id") != run_id:
+            raise WorkflowError(
+                f"lock run_id mismatch in {lock_display}: "
+                f"expected {run_id}, found {lock_data.get('run_id')}"
+            )
+
+        validated.append((lock_path, lock_data, lock_display))
+
+    # Phase 2 — write: only last_heartbeat changes (atomic per lock)
+    heartbeat_at = utc_now()
+    renewed: list[str] = []
+    for lock_path, lock_data, lock_display in validated:
+        lock_data["last_heartbeat"] = heartbeat_at
+        write_yaml_atomic(lock_path, lock_data)
+        renewed.append(lock_display)
+
+    return {
+        "run_id": run_id,
+        "heartbeat_at": heartbeat_at,
+        "renewed": renewed,
+        "count": len(renewed),
+    }
 
 
 def acquire_locks(
@@ -579,6 +664,7 @@ def claim_run(
     force_lock: bool,
     affected_hash: str | None = None,
 ) -> dict[str, Any]:
+    heartbeat_run(registry, run_id)  # SR-01: renew before claim
     if not affected_hash:
         raise WorkflowError(
             "Missing or invalid affected-hash. You must run affected-graph.py first."
@@ -744,6 +830,8 @@ def closeout_run(
     all_checks: bool,
     keep_locks: bool,
 ) -> dict[str, Any]:
+    if status == "ok":
+        heartbeat_run(registry, run_id)  # SR-01: renew before successful closeout
     from .diagnostics import build_observe_report, build_verify_report
 
     verify_report = build_verify_report(

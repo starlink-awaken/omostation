@@ -40,6 +40,7 @@ from .lifecycle import (
     claim_run,
     close_run,
     closeout_run,
+    heartbeat_run,
     print_plan,
     prune_stale_locks,
     read_run,
@@ -259,6 +260,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Only scan and report locks, do not prune",
     )
 
+    p_heartbeat = sub.add_parser(
+        "heartbeat", help="Renew heartbeat for an active run's locks (SR-01)"
+    )
+    p_heartbeat.add_argument("run_id")
+    p_heartbeat.add_argument("--json", action="store_true")
+
     return parser
 
 
@@ -303,6 +310,16 @@ def main(argv: list[str] | None = None) -> int:
                     for entry in locks:
                         print(f"  - {entry['path']} ({entry['kind']})")
             return 0
+        if args.command == "heartbeat":
+            receipt = heartbeat_run(registry, args.run_id)
+            if args.json:
+                print(json.dumps(receipt, ensure_ascii=False, indent=2))
+            else:
+                print(
+                    f"heartbeat {receipt['run_id']}: "
+                    f"{receipt['count']} lock(s) renewed at {receipt['heartbeat_at']}"
+                )
+            return 0
         if args.command == "claim":
             claim = claim_run(
                 registry,
@@ -321,6 +338,8 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"- {scope}")
             return 0
         if args.command == "verify":
+            if args.run_id:
+                heartbeat_run(registry, args.run_id)
             report = build_verify_report(
                 registry,
                 args.run_id,
@@ -379,8 +398,9 @@ def main(argv: list[str] | None = None) -> int:
             objective = args.objective
             if getattr(args, "bet", None):
                 bet_id = args.bet
-                from ..omo_paths import WORKSPACE_ROOT
                 import yaml
+
+                from ..omo_paths import WORKSPACE_ROOT
 
                 ledger_file = WORKSPACE_ROOT / "docs/plans/3y-bet-ledger.yaml"
                 if ledger_file.exists():
