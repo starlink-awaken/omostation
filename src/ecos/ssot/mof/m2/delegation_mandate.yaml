@@ -1,0 +1,247 @@
+# M2: DelegationMandate
+# Formal delegation contract (BET-Y1Q2-T1-05 / W2-02 execution-control).
+# Anchored to GovernanceElement.Policy — a DelegationMandate is an
+# authorization policy (not an execution process) that grants an executor the
+# right to perform side effects on behalf of a principal, bounded by role context,
+# capability scope, autonomy/risk ceiling, budget, disclosure, and time.
+# Model-first: this YAML is the single source of truth; the five control
+# artifacts under src/ecos/ssot/mof/generated/control are compiler output
+# and must never be hand-edited.
+
+m2_type: DelegationMandate
+version: 1.0.0
+created: '2026-08-11T00:32:56Z'
+updated: '2026-08-11'
+owner:
+  team: execution-control
+  contact: xiamingxing
+  policy: 本 M2 由 execution-control 域负责；任何变更须走 MOF ADR 并重新编译 control 工件，禁止直接手改生成物。
+migrationPolicy:
+  strategy: additive-only
+  constraints:
+    - 遵守 semver：1.0.0 为已发布基线。
+    - 新增可选字段 → optionalProperties，minor 版本（1.1.0），同步重编译全部 control 工件。
+    - 新增必填字段/枚举收窄 → major 版本（2.0.0），并声明 1.x 实例的显式迁移路径。
+    - 破坏性变更（删除/改名 required 字段、删除枚举值）禁止静默进行；须先弃用后移除。
+    - 生成物（schema/pydantic/zod/sql/manifest）由确定性编译器重生成；任何手工改动视为篡改（compiler check 会失败）。
+
+DelegationMandate:
+  m3_parent: GovernanceElement.Policy
+  description: |
+    Formal DelegationMandate M2 schema (version 1.0.0): the declarative
+    authorization contract for delegated side effects. A mandate is granted
+    by a principal to an executor within an episode, anchored to a role
+    context (role_assignment + responsibility at pinned versions), scoped by
+    an exact capability list (no wildcards), bounded by autonomy/risk matrix
+    (A0-A3 / R0-R3), budget, disclosure policy, and validity window.
+    The 16-cell autonomy/risk matrix is evaluated against the request risk at
+    runtime in OMO mandate admission; approval_mode may only tighten a cell's
+    bar (never loosen it). M2 declares the enums and local invariants below;
+    cell-level equality is a runtime decision, not an M2 rule. Lifecycle
+    is a strict active → revoked state machine: a mandate can only be revoked
+    (never re-activated, never mutated in place — revocation produces a new
+    mandate_version with status=revoked and a fresh trace_id). active means
+    the mandate is eligible for admission, not that its side effects are
+    automatically allowed to execute.
+
+  icon: 🪪
+
+  stateMachine:
+    active:
+      description: 已授权·可准入 (eligible for admission)·不自动放行执行
+      transitions: [revoked]
+    revoked:
+      description: 已撤销·不可执行任何副作用
+      transitions: []
+
+  requiredProperties:
+    mandate_id:
+      type: string
+      description: Mandate 唯一标识 (format mandate:<id>)
+      pattern: '^mandate:[A-Za-z0-9_:.-]+$'
+    schema_version:
+      type: string
+      description: 必须等于 delegation-mandate/v1
+      pattern: '^delegation-mandate/v1$'
+    principal_id:
+      type: string
+      description: 授权主 (Human/Agent 身份, format principal:<id>)
+      pattern: '^principal:[A-Za-z0-9_:.-]+$'
+    executor_id:
+      type: string
+      description: 被授权执行器 (format agent:<id>)
+      pattern: '^agent:[A-Za-z0-9_:.-]+$'
+    episode_id:
+      type: string
+      description: 所属 Episode (须 open 且已 admitted)
+      pattern: '^[A-Za-z0-9_-]{8,}$'
+    role_context_id:
+      type: string
+      description: 角色上下文 (format role:<id>)
+      pattern: '^role:[A-Za-z0-9_:.-]+$'
+    role_assignment_id:
+      type: string
+      description: 角色分配记录 ID (format assignment:<id>; 须已 admitted)
+      pattern: '^assignment:[A-Za-z0-9_:.-]+$'
+    role_assignment_version:
+      type: int
+      description: 角色分配版本号 (>= 1; 授权时锁定)
+    responsibility_id:
+      type: string
+      description: 责任 ID (format responsibility:<id>)
+      pattern: '^responsibility:[A-Za-z0-9_:.-]+$'
+    responsibility_version:
+      type: int
+      description: 责任版本号 (>= 1; 授权时锁定)
+    purpose:
+      type: string
+      description: 授权目的 (non-empty 陈述)
+    capability_scope:
+      type: list
+      description: 精确能力清单 (bos:// URI 精确匹配; 禁止通配符 * ?)
+      items:
+        type: string
+    autonomy_level:
+      type: enum
+      description: 自治级别 (A0-A3)
+      values: [A0, A1, A2, A3]
+    risk_ceiling:
+      type: enum
+      description: 风险上限 (R0-R3)
+      values: [R0, R1, R2, R3]
+    approval_mode:
+      type: enum
+      description: 审批模式 (matrix=由 OMO 按 16 格矩阵评估请求风险; 其他模式只能收紧, 不能放宽)
+      values: [matrix, approval_required, per_action_approval_required, human_adjudication_required, deny]
+    disclosure_policy:
+      type: string
+      description: 披露策略 (format disclosure:<policy>)
+      pattern: '^disclosure:[A-Za-z0-9_-]+$'
+    valid_from:
+      type: string
+      description: 生效时间 (ISO-8601; 不得晚于 expires_at)
+      format: date-time
+    expires_at:
+      type: string
+      description: 过期时间 (ISO-8601; 必须在有效期内可被 check)
+      format: date-time
+    budget_limit:
+      type: number
+      description: 预算上限 (>= 0; 与 budget_unit 成对)
+    budget_unit:
+      type: string
+      description: 预算计量单位 (format <unit>; e.g. call)
+      pattern: '^[a-z][a-z0-9_-]*$'
+    revocable:
+      type: bool
+      description: 是否允许在过期前撤销 (grant/revoke 时锁定)
+    trace_id:
+      type: string
+      description: 授权事件链路追踪 ID (24 hex 或 ULID)
+      pattern: '^[A-Za-z0-9_-]{8,}$'
+    mandate_version:
+      type: int
+      description: Mandate 版本号 (grant=1; revoke 递增到 2)
+    status:
+      type: enum
+      description: 生命周期状态 (active|revoked; 必须匹配 stateMachine key)
+      values: [active, revoked]
+
+  optionalProperties:
+    description:
+      type: string
+      description: 详细描述
+    tags:
+      type: list
+      description: 分类标签
+      items:
+        type: string
+
+  validationRules:
+    - rule: mandate_id is not None and mandate_id != ''
+      level: error
+      message: mandate_id 必须非空
+    - rule: schema_version == 'delegation-mandate/v1'
+      level: error
+      message: schema_version 必须为 delegation-mandate/v1
+    - rule: mandate_id.startswith('mandate:')
+      level: error
+      message: "mandate_id 必须以 mandate: 开头"
+    - rule: principal_id.startswith('principal:')
+      level: error
+      message: "principal_id 必须以 principal: 开头"
+    - rule: executor_id.startswith('agent:')
+      level: error
+      message: "executor_id 必须以 agent: 开头"
+    - rule: role_context_id.startswith('role:')
+      level: error
+      message: "role_context_id 必须以 role: 开头"
+    - rule: responsibility_id.startswith('responsibility:')
+      level: error
+      message: "responsibility_id 必须以 responsibility: 开头"
+    - rule: role_assignment_id.startswith('assignment:')
+      level: error
+      message: "role_assignment_id 必须以 assignment: 开头 (W2-01 严格前缀)"
+    - rule: role_assignment_version is not None and role_assignment_version >= 1
+      level: error
+      message: role_assignment_version 必须 >= 1
+    - rule: responsibility_version is not None and responsibility_version >= 1
+      level: error
+      message: responsibility_version 必须 >= 1
+    - rule: purpose is not None and purpose != ''
+      level: error
+      message: purpose 必须非空
+    - rule: capability_scope is not None and len(capability_scope) > 0
+      level: error
+      message: capability_scope 必须非空
+    - rule: not any(('*' in c or '?' in c) for c in (capability_scope or []))
+      level: error
+      message: capability_scope 禁止通配符, 只做精确匹配
+    - rule: autonomy_level in ['A0', 'A1', 'A2', 'A3']
+      level: error
+      message: autonomy_level 枚举不合法
+    - rule: risk_ceiling in ['R0', 'R1', 'R2', 'R3']
+      level: error
+      message: risk_ceiling 枚举不合法
+    - rule: approval_mode in ['matrix', 'approval_required', 'per_action_approval_required', 'human_adjudication_required', 'deny']
+      level: error
+      message: approval_mode 枚举不合法 (matrix 为默认; 其他模式仅收紧)
+    - rule: disclosure_policy is not None and disclosure_policy.startswith('disclosure:')
+      level: error
+      message: "disclosure_policy 必须以 disclosure: 开头"
+    - rule: "valid_from is not None and expires_at is not None and valid_from <= expires_at"
+      level: error
+      message: valid_from 不得晚于 expires_at
+    - rule: budget_limit is not None and budget_limit >= 0
+      level: error
+      message: budget_limit 必须 >= 0
+    - rule: revocable in [True, False]
+      level: error
+      message: revocable 必须是布尔值
+    - rule: mandate_version is not None and mandate_version >= 1
+      level: error
+      message: mandate_version 必须 >= 1
+    - rule: status in ['active', 'revoked']
+      level: error
+      message: status 必须是合法的 stateMachine 键
+    # 16 格 autonomy/risk 矩阵 (A0-A3 × R0-R3) 不在 M2 编码单元格等值:
+    # 请求风险在 OMO mandate admission 运行时对照矩阵评估, approval_mode
+    # 只能收紧 (matrix 为默认裁决; 显式模式提升单元格审批门槛), 不能放宽。
+    # M2 只声明有根枚举与本地不变量 (前缀/版本/时间/预算/生命周期)。
+    - rule: "not (status == 'revoked' and mandate_version < 2)"
+      level: error
+      message: revoked 状态要求 mandate_version >= 2 (grant=1, revoke=2)
+
+  examples:
+    - id: DELEGATION-MANDATE-EXAMPLE-001
+      name: 最小可授权 Mandate (active v1)
+      description: |
+        A3/R2 精确白名单 + 预算 + 可撤销的最小 active 实例。
+        capability_scope 精确匹配 bos://mail/draft, 无通配符。
+        approval_mode=matrix: 由 OMO 在准入时对照 16 格矩阵评估请求风险;
+        active 表示可准入 (eligible for admission), 不自动放行执行。
+    - id: DELEGATION-MANDATE-EXAMPLE-002
+      name: 已撤销 Mandate (revoked v2)
+      description: |
+        同一授权经 revoke 后的 v2 实例: status=revoked, mandate_version=2,
+        携带新的 trace_id (revocation 事件链路), 其余字段与 v1 对齐。
