@@ -1,0 +1,300 @@
+apiVersion: workspace.omostation/v1
+kind: DocumentsContentPlaneMigrations
+id: documents-content-plane-migrations
+status: active
+owner: governance-team
+
+documents_root:
+  default: "~/Documents"
+  environment_override: L4_DOCUMENTS_ROOT
+
+candidate_kinds:
+  - runtime
+  - cache
+
+baseline:
+  observed_at: "2026-08-12T05:58:22+08:00"
+  l4_merge: e5d92646a114c11bb98a29a9959d2dca157029a6
+  runtime: 7649
+  cache: 36878
+  runtime_and_cache: 44527
+  invalid_archive: 7
+  total_violations: 44534
+  note: Counts are evidence, not a frozen gate; exact-one family coverage is the gate.
+
+major_surfaces:
+  - family-dashboard-app
+  - toolbox-staging
+  - career-code-archives
+  - zotero-app-data
+
+coverage_samples:
+  - relative_path: "@家庭生活/family-dashboard-app/node_modules/pkg/index.js"
+    kind: cache
+    family: family-dashboard-app
+  - relative_path: "@学习进化/_external/toolbox-staging/DeepTutor/main.py"
+    kind: runtime
+    family: toolbox-staging
+  - relative_path: "@个人/_storage/职业历史/美团/example.js"
+    kind: runtime
+    family: career-code-archives
+  - relative_path: "Zotero/translators/example.js"
+    kind: runtime
+    family: zotero-app-data
+  - relative_path: "@家庭生活/_archive/closed-app/index.js"
+    kind: runtime
+    family: family-content-archives
+  - relative_path: "@家庭生活/_runtime/kems-init.py"
+    kind: runtime
+    family: family-runtime-kems
+  - relative_path: "@学习进化/_storage/资料库/example.py"
+    kind: runtime
+    family: learning-content-archives
+  - relative_path: "@学习进化/_control/scripts/concept-weave.py"
+    kind: runtime
+    family: learning-runtime
+  - relative_path: "@工作文档/卫健委/_storage/06-工具/example.py"
+    kind: runtime
+    family: work-content-archives
+  - relative_path: "@工作文档/卫健委/_runtime/check-kems-update.py"
+    kind: runtime
+    family: work-runtime
+  - relative_path: "@公共/_runtime/watch-dispatch.py"
+    kind: runtime
+    family: public-runtime
+  - relative_path: "@驾驶舱/_runtime/ecos-health-check.py"
+    kind: runtime
+    family: cockpit-runtime
+  - relative_path: "@OPC/setup-codebase-memory-mcp.sh"
+    kind: runtime
+    family: opc-tools
+  - relative_path: "@创意创作/_archive/example/setup.sh"
+    kind: runtime
+    family: creative-content-archives
+  - relative_path: "_inbox/2026-08-03-kems-repair.py"
+    kind: runtime
+    family: root-oneoff-assets
+
+families:
+  - id: family-dashboard-app
+    major_surface: true
+    source_globs:
+      - "@家庭生活/family-dashboard-app/**"
+    artifact_kind: [runtime, cache]
+    disposition: migrate
+    owner: family-hub
+    replacement: "projects/family-hub/apps/dashboard plus Workspace runtime state"
+    consumer_refs:
+      - ".omo/_truth/registry/documents-content-plane-migrations.yaml#family-dashboard-app"
+      - "projects/cockpit/src/cockpit/web/api_domain_apps.py"
+    rollback: "Keep the Documents app and its fingerprint until family-hub build, E2E, and client cutover pass."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: toolbox-staging
+    major_surface: true
+    source_globs:
+      - "@学习进化/_external/toolbox-staging/**"
+    artifact_kind: [runtime, cache]
+    disposition: relocate
+    owner: toolbox
+    replacement: "ToolBox managed capability staging with preserved Git remotes and HEADs"
+    consumer_refs:
+      - "docs/reports/2026-08-11-documents-content-plane-full-inventory.md#101-四个外部-git-仓"
+    rollback: "Copy first, verify Git remotes/HEAD/tree hashes, and retain the original until the target is accepted."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: career-code-archives
+    major_surface: true
+    source_globs:
+      - "@个人/_storage/职业历史/**"
+    artifact_kind: [runtime, cache]
+    disposition: content_archive
+    owner: l4-kernel
+    replacement: "schema-valid CONTENT_ARCHIVE.yaml at governed career archive roots; content remains in place"
+    consumer_refs:
+      - "docs/reports/2026-08-11-documents-content-plane-full-inventory.md#3-全量基线"
+    rollback: "Remove only newly published manifests after recording their hashes; never move or delete the 16 GiB source."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: zotero-app-data
+    major_surface: true
+    source_globs:
+      - "Zotero/**"
+    artifact_kind: [runtime, cache]
+    disposition: relocate
+    owner: zotero-app
+    replacement: "~/Library/Application Support/Zotero with Documents retaining readable exports or attachments only"
+    consumer_refs:
+      - "~/Library/Application Support/Zotero/Profiles/c2ap8dvs.default/prefs.js"
+    rollback: "Back up SQLite and preferences, copy before switching dataDir, and retain the original until Zotero opens the library and attachments."
+    confirmation_gate: before_external_config
+    status: pending
+
+  - id: family-content-archives
+    source_globs:
+      - "@家庭生活/_archive/**"
+      - "@家庭生活/_knowledge/**"
+    artifact_kind: [runtime, cache]
+    disposition: content_archive
+    owner: l4-kernel
+    replacement: "CONTENT_ARCHIVE.yaml or plain content after cache removal, with execution denied"
+    consumer_refs:
+      - "audit://documents/family-content/consumer-scan-pending"
+    rollback: "Preserve source bytes; revert only new declarations if validation fails."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: family-runtime-kems
+    source_globs:
+      - "@家庭生活/_runtime/**"
+      - "@家庭生活/_control/**"
+    artifact_kind: [runtime, cache]
+    disposition: delegate
+    owner: runtime
+    replacement: "Runtime jobs delegating KEMS operations to Kairon/KOS and storing state outside Documents"
+    consumer_refs:
+      - "audit://documents/family-runtime/consumer-scan-pending"
+    rollback: "Keep legacy commands until parity and scheduled-consumer cutover evidence pass."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: learning-content-archives
+    source_globs:
+      - "@学习进化/_storage/**"
+      - "@学习进化/_knowledge/**"
+      - "@学习进化/.kems-repair-backups/**"
+    artifact_kind: [runtime, cache]
+    disposition: content_archive
+    owner: l4-kernel
+    replacement: "governed content archives or plain evidence; no executable consumer"
+    consumer_refs:
+      - "audit://documents/learning-content/consumer-scan-pending"
+    rollback: "Preserve source bytes and remove only declarations that fail validation."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: learning-runtime
+    source_globs:
+      - "@学习进化/_control/**"
+      - "@学习进化/.githooks/**"
+      - "@学习进化/_inbox/**"
+    artifact_kind: [runtime, cache]
+    disposition: delegate
+    owner: runtime
+    replacement: "Workspace Runtime jobs plus Kairon/KOS owner calls; declarations remain in Documents"
+    consumer_refs:
+      - "~/Library/LaunchAgents/com.learningevolution.concept-weave.monthly.plist"
+      - "audit://claude-scheduled/vault-daily-health"
+    rollback: "Keep the legacy path inactive but intact until launchd and scheduled-client consumers are verified on the Workspace owner."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: work-content-archives
+    source_globs:
+      - "@工作文档/*/_storage/**"
+      - "@工作文档/*/_knowledge/**"
+      - "@工作文档/*/.git/**"
+      - "@工作文档/*/.crush/**"
+    artifact_kind: [runtime, cache]
+    disposition: content_archive
+    owner: l4-kernel
+    replacement: "governed historical/tooling content archive or removable derived cache"
+    consumer_refs:
+      - "audit://documents/work-content/consumer-scan-pending"
+    rollback: "Preserve source content and snapshots; remove only new declarations or derived target copies."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: work-runtime
+    source_globs:
+      - "@工作文档/_control/**"
+      - "@工作文档/tools/**"
+      - "@工作文档/*/_control/**"
+      - "@工作文档/*/_runtime/**"
+      - "@工作文档/*/_scripts/**"
+      - "@工作文档/*/tools/**"
+    artifact_kind: [runtime, cache]
+    disposition: delegate
+    owner: runtime
+    replacement: "Runtime domain adapters delegating KEMS to Kairon/KOS and task state to OMO"
+    consumer_refs:
+      - "crontab://weijian/check-kems-update"
+      - "@工作文档/卫健委/CLAUDE.md"
+      - "@驾驶舱/_control/async-tasks.yaml"
+    rollback: "Do not remove legacy commands until crontab, Claude Scheduled, and domain gateway consumers use verified Workspace commands."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: public-runtime
+    source_globs:
+      - "@公共/_runtime/**"
+    artifact_kind: [runtime, cache]
+    disposition: delegate
+    owner: runtime
+    replacement: "Runtime jobs calling the existing L4, Cockpit, OMO, ECOS, Agora, and Kairon owners"
+    consumer_refs:
+      - "crontab://documents-public-governance"
+      - "audit://claude-scheduled/l4-governance-weekly"
+    rollback: "Keep each source command until its registered owner command, exit-code parity, and consumer cutover are verified."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: cockpit-runtime
+    source_globs:
+      - "@驾驶舱/_runtime/**"
+    artifact_kind: [runtime, cache]
+    disposition: delegate
+    owner: cockpit
+    replacement: "accepted Cockpit CLI/Web/MCP projections and generated non-SSOT views"
+    consumer_refs:
+      - "@驾驶舱/CLAUDE.md"
+      - "@驾驶舱/_control/async-tasks.yaml"
+    rollback: "Retain old projections until installed Cockpit smoke and view parity pass."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: opc-tools
+    source_globs:
+      - "@OPC/**"
+    artifact_kind: [runtime, cache]
+    disposition: delegate
+    owner: toolbox
+    replacement: "Workspace setup capability plus pointer-only Documents guidance"
+    consumer_refs:
+      - "audit://documents/opc/consumer-scan-pending"
+    rollback: "Keep setup scripts until the Workspace capability is installed and documented."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: creative-content-archives
+    source_globs:
+      - "@创意创作/**"
+    artifact_kind: [runtime, cache]
+    disposition: content_archive
+    owner: l4-kernel
+    replacement: "governed creative examples/templates with execution denied"
+    consumer_refs:
+      - "audit://documents/creative/consumer-scan-pending"
+    rollback: "Preserve source bytes and revert only new archive declarations."
+    confirmation_gate: before_write
+    status: pending
+
+  - id: root-oneoff-assets
+    source_globs:
+      - "_inbox/**"
+      - "cron-service-db-fix.py"
+      - "cron-service-error-reset.py"
+      - "cron-service-fix.sh"
+      - "kos-index.sqlite"
+    artifact_kind: [runtime, cache]
+    disposition: retire
+    owner: governance-team
+    replacement: "immutable evidence document or existing Workspace owner command; no executable/cache remains at Documents root"
+    consumer_refs:
+      - "audit://documents/root-oneoff/consumer-scan-pending"
+    rollback: "Archive evidence and record hashes before any delete; restore from the rollback package if a consumer is discovered."
+    confirmation_gate: before_delete
+    status: pending
