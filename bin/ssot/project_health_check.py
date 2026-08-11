@@ -14,10 +14,19 @@ import sys
 from pathlib import Path
 
 
+_EXCLUDE_DIRS = {
+    ".venv", "venv", "node_modules", "dist", "build", "__pycache__",
+    ".tox", ".pytest_cache", ".mypy_cache", ".git",
+}
+
+
 def frontmatter_coverage(project_dir: str) -> dict:
-    """统计项目 frontmatter 覆盖率。"""
+    """统计项目 frontmatter 覆盖率（排除依赖/构建目录噪音）。"""
     root = Path(project_dir)
-    md_files = list(root.rglob("*.md"))
+    md_files = [
+        p for p in root.rglob("*.md")
+        if not any(part in _EXCLUDE_DIRS for part in p.parts)
+    ]
     total = len(md_files)
     with_fm = 0
     for f in md_files:
