@@ -1,0 +1,9 @@
+apiVersion: omo/v1
+kind: SpaceCapabilityTaxonomy
+id: personal-space-capability-taxonomy
+space_ref: spaces/personal-space.yaml
+actions:
+  - knowledge.read
+  - knowledge.validate
+  - knowledge.propose
+  - knowledge.approve

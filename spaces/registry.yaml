@@ -47,3 +47,20 @@ spaces:
       - spaces/runtime-space-rollout-policy.yaml
       - spaces/runtime-space-cross-root-rule-registry.yaml
       - data/runtime-space-access-policy.yaml
+  - id: personal-space
+    display_name: Personal Knowledge Space
+    manifest: spaces/personal-space.yaml
+    space_kind: personal
+    status: active
+    owners:
+      governance_root: .omo
+    roots:
+      governance: .omo
+      spaces: spaces
+      data: data
+      runtime: runtime
+      knowledge: ../Documents
+    policy_refs:
+      - spaces/personal-space-identity-admission.yaml
+      - spaces/personal-space-capability-taxonomy.yaml
+      - spaces/personal-space-admission-matrix.yaml

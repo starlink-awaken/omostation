@@ -23,7 +23,10 @@
     },
     "roots": {
       "type": "object",
-      "required": ["governance", "spaces", "data", "runtime"]
+      "required": ["governance", "spaces", "data", "runtime"],
+      "properties": {
+        "knowledge": { "type": "string" }
+      }
     },
     "routing": {
       "type": "object",

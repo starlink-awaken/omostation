@@ -18,6 +18,8 @@ root_keys:
   - spaces
   - data
   - runtime
+optional_root_keys:
+  - knowledge
 policy_ref_field: policy_refs
 registry_entry_required:
   - id
