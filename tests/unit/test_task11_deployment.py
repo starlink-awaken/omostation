@@ -3,19 +3,21 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import cast
 
+import httpx
 import pytest
 from typer.testing import CliRunner
 
 import omlxc.cli as cli_module
-from omlxc.adapters import TailscaleAdapter
+from omlxc.adapters import LmStudioAdapter, TailscaleAdapter, TailscaleNodePolicy
 from omlxc.adapters.process import ProcessOutput, ProcessOutputDecodeError, decode_process_output
 from omlxc.cli import app
 from omlxc.config import AppConfig, BackendConfig, DaemonConfig, NodeConfig, StorageConfig
 from omlxc.domain import BackendKind
-from omlxc.domain.protocols import BackendAdapter
+from omlxc.domain.protocols import BackendAdapter, OperationStatus
 from omlxc.service import LaunchdController, LaunchdFailure, LaunchdPaths
 
 
@@ -273,6 +275,44 @@ def test_production_lm_factory_passes_remote_control_fields(
     assert captured["probe_model_id"] == "model-a"
 
 
+@pytest.mark.asyncio
+async def test_production_lm_factory_binds_per_control_tailscale_authorizer(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import omlxc.daemon.composition as composition_module
+
+    captured: dict[str, object] = {}
+    authorization_calls: list[tuple[str, str]] = []
+
+    class FakeLmStudio:
+        def __init__(self, **kwargs: object) -> None:
+            captured.update(kwargs)
+
+    class FakeTailscale:
+        def authorize_ssh(self, node_id: str, target: str) -> object:
+            authorization_calls.append((node_id, target))
+            return type("Authorized", (), {"target": target})()
+
+    backend = BackendConfig(
+        id="lm",
+        node_id="remote",
+        kind=BackendKind.LM_STUDIO,
+        base_url="http://remote.example.ts.net:1234",
+        control_endpoint="operator@remote.example.ts.net",
+        known_hosts_file=tmp_path / "known_hosts",
+    )
+    monkeypatch.setattr(composition_module, "LmStudioAdapter", FakeLmStudio)
+    composition_module.build_configured_adapter(
+        backend,
+        tailscale=cast(TailscaleAdapter, FakeTailscale()),
+    )
+    authorizer = cast("Callable[[str], Awaitable[None]]", captured["control_authorizer"])
+
+    await authorizer("operator@remote.example.ts.net")
+
+    assert authorization_calls == [("remote", "operator@remote.example.ts.net")]
+
+
 def test_doctor_direct_is_read_only_and_does_not_use_daemon_client(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -504,3 +544,153 @@ async def test_remote_lm_discovery_denies_mismatched_ssh_target_before_adapter_c
         "http:node-a:http://node-a.example.ts.net:1234",
         "ssh:node-a:intruder@node-b.example.ts.net",
     ]
+
+
+def _tailscale_status() -> str:
+    return json.dumps(
+        {
+            "Self": {
+                "ID": "self_peer_identifier_1234",
+                "PublicKey": "nodekey:selfabcdefghijklmnopqrstuvwxyz",
+                "HostName": "mbp",
+                "DNSName": "mbp.example.ts.net.",
+                "TailscaleIPs": ["100.64.0.1"],
+                "Online": True,
+                "OS": "macOS",
+            },
+            "Peer": {
+                "nodekey:remoteabcdefghijklmnopqrstuv": {
+                    "ID": "remote_peer_identifier_1",
+                    "PublicKey": "nodekey:remoteabcdefghijklmnopqrstuv",
+                    "HostName": "remote",
+                    "DNSName": "remote.example.ts.net.",
+                    "TailscaleIPs": ["100.64.0.10"],
+                    "Online": True,
+                    "OS": "windows",
+                }
+            },
+        }
+    )
+
+
+def _trusted_tailscale_executable(tmp_path: Path) -> Path:
+    executable = tmp_path / "trusted-bin" / "tailscale"
+    executable.parent.mkdir(mode=0o700)
+    executable.write_text("fixture", encoding="utf-8")
+    executable.chmod(0o700)
+    return executable
+
+
+@pytest.mark.asyncio
+async def test_lm_load_reauthorizes_every_ssh_control_and_blocks_expired_snapshot(
+    tmp_path: Path,
+) -> None:
+    monotonic = [0.0]
+    ssh_calls: list[tuple[str, ...]] = []
+
+    async def tailscale_runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
+        del argv, timeout
+        return ProcessOutput(0, _tailscale_status(), "")
+
+    tailscale = TailscaleAdapter(
+        policies=(
+            TailscaleNodePolicy(
+                node_id="remote",
+                expected_peer_id="remote_peer_identifier_1",
+                expected_public_key="nodekey:remoteabcdefghijklmnopqrstuv",
+                magic_dns_name="remote.example.ts.net",
+                allowed_ips=frozenset({"100.64.0.10"}),
+                allowed_http_ports=frozenset({1234}),
+                allowed_ssh_users=frozenset({"operator"}),
+            ),
+        ),
+        tailscale_executable=_trusted_tailscale_executable(tmp_path),
+        process_runner=tailscale_runner,
+        snapshot_ttl_seconds=30,
+        monotonic_clock=lambda: monotonic[0],
+    )
+    await tailscale.snapshot()
+
+    async def authorize(target: str) -> None:
+        accepted = tailscale.authorize_ssh("remote", target)
+        if accepted.target != target:
+            raise PermissionError
+
+    known_hosts = tmp_path / "known_hosts"
+    known_hosts.write_text("fixture", encoding="utf-8")
+    known_hosts.chmod(0o600)
+
+    async def control_runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
+        del timeout
+        ssh_calls.append(argv)
+        return ProcessOutput(0, "[]", "")
+
+    async def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"data": [{"id": "model-a"}]})
+
+    adapter = LmStudioAdapter(
+        backend_id="lm",
+        base_url="http://remote.example.ts.net:1234",
+        ssh_target="operator@remote.example.ts.net",
+        known_hosts_file=known_hosts,
+        process_runner=control_runner,
+        control_authorizer=authorize,
+        transport=httpx.MockTransport(handler),
+    )
+    await adapter.list_models()
+    assert len(ssh_calls) == 1
+
+    monotonic[0] = 31.0
+    result = await adapter.load_model("model-a")
+
+    assert result.status is OperationStatus.FAILED
+    assert len(ssh_calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_lm_load_with_fresh_per_call_authorization_executes_each_control_once(
+    tmp_path: Path,
+) -> None:
+    authorizations: list[str] = []
+    ssh_calls: list[tuple[str, ...]] = []
+    known_hosts = tmp_path / "known_hosts"
+    known_hosts.write_text("fixture", encoding="utf-8")
+    known_hosts.chmod(0o600)
+
+    async def authorize(target: str) -> None:
+        authorizations.append(target)
+
+    outputs = iter(
+        (
+            ProcessOutput(0, "[]", ""),
+            ProcessOutput(0, "ok", ""),
+            ProcessOutput(
+                0,
+                '[{"modelKey":"model-a","identifier":"model-a"}]',
+                "",
+            ),
+        )
+    )
+
+    async def control_runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
+        del timeout
+        ssh_calls.append(argv)
+        return next(outputs)
+
+    async def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"data": [{"id": "model-a"}]})
+
+    adapter = LmStudioAdapter(
+        backend_id="lm",
+        base_url="http://remote.example.ts.net:1234",
+        ssh_target="operator@remote.example.ts.net",
+        known_hosts_file=known_hosts,
+        process_runner=control_runner,
+        control_authorizer=authorize,
+        transport=httpx.MockTransport(handler),
+    )
+
+    result = await adapter.load_model("model-a")
+
+    assert result.status is OperationStatus.SUCCEEDED
+    assert len(authorizations) == len(ssh_calls) == 3

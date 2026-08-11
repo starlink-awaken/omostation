@@ -45,7 +45,7 @@ async def run_direct_doctor(config: AppConfig) -> dict[str, Any]:
         adapter = None
         try:
             try:
-                adapter = build_configured_adapter(backend)
+                adapter = build_configured_adapter(backend, tailscale=tailscale)
                 if not is_loopback_url(backend.base_url):
                     node = nodes[backend.node_id]
                     if node.tailscale is None or tailscale is None:

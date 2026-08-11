@@ -6,7 +6,7 @@ import asyncio
 import hashlib
 import ipaddress
 import json
-from collections.abc import AsyncIterator, Callable, Mapping
+from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
@@ -625,7 +625,14 @@ def build_production_daemon(
 ) -> ProductionComposition:
     """Build the real daemon graph without starting network or model operations."""
     clock = now or (lambda: datetime.now(UTC))
-    bindings = dict(adapters) if adapters is not None else build_configured_adapters(config)
+    configured_tailscale = (
+        tailscale if tailscale is not None else build_configured_tailscale(config)
+    )
+    bindings = (
+        dict(adapters)
+        if adapters is not None
+        else build_configured_adapters(config, tailscale=configured_tailscale)
+    )
     catalog = SnapshotCatalog(snapshots or _configured_snapshots(config))
     planner = RoutePlanner(default_policies())
     storage = StorageHandle(config)
@@ -655,9 +662,6 @@ def build_production_daemon(
         reranker,
     )
     events = ProductionEventService(storage, bus)
-    configured_tailscale = (
-        tailscale if tailscale is not None else build_configured_tailscale(config)
-    )
     probe = (
         CatalogProbe(
             config=config,
@@ -688,16 +692,32 @@ def build_production_daemon(
     return ProductionComposition(app, runtime, control, inference, events)
 
 
-def build_configured_adapters(config: AppConfig) -> dict[str, BackendAdapter]:
-    return {backend.id: build_configured_adapter(backend) for backend in config.backends}
+def build_configured_adapters(
+    config: AppConfig,
+    *,
+    tailscale: TailscaleAdapter | None = None,
+) -> dict[str, BackendAdapter]:
+    return {
+        backend.id: build_configured_adapter(backend, tailscale=tailscale)
+        for backend in config.backends
+    }
 
 
-def build_configured_adapter(backend: BackendConfig) -> BackendAdapter:
+def build_configured_adapter(
+    backend: BackendConfig,
+    *,
+    tailscale: TailscaleAdapter | None = None,
+) -> BackendAdapter:
     if backend.kind is BackendKind.OMLX_APP:
         adapter: object = OmlxAppAdapter(backend_id=backend.id, base_url=backend.base_url)
     elif backend.kind is BackendKind.OLLAMA:
         adapter = OllamaAdapter(backend_id=backend.id, base_url=backend.base_url)
     else:
+        control_authorizer = (
+            _lm_control_authorizer(backend, tailscale)
+            if backend.control_endpoint is not None and not is_loopback_url(backend.base_url)
+            else None
+        )
         adapter = LmStudioAdapter(
             backend_id=backend.id,
             base_url=backend.base_url,
@@ -705,8 +725,25 @@ def build_configured_adapter(backend: BackendConfig) -> BackendAdapter:
             ssh_target=backend.control_endpoint,
             known_hosts_file=backend.known_hosts_file,
             platform=LmsPlatform(backend.lms_platform),
+            control_authorizer=control_authorizer,
         )
     return cast(BackendAdapter, adapter)
+
+
+def _lm_control_authorizer(
+    backend: BackendConfig,
+    tailscale: TailscaleAdapter | None,
+) -> Callable[[str], Awaitable[None]]:
+    async def authorize(target: str) -> None:
+        # Request-path control never performs an implicit status refresh. The
+        # bounded periodic catalog probe owns refresh; stale state fails closed.
+        if tailscale is None:
+            raise PermissionError("Tailscale authorization is unavailable")
+        accepted = tailscale.authorize_ssh(backend.node_id, target)
+        if accepted.target != target:
+            raise PermissionError("SSH control endpoint is not canonical")
+
+    return authorize
 
 
 def build_configured_tailscale(config: AppConfig) -> TailscaleAdapter | None:

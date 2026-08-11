@@ -7,7 +7,7 @@ import json
 import os
 import re
 import stat
-from collections.abc import AsyncIterator, Callable, Mapping
+from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -61,6 +61,8 @@ DEFAULT_PROCESS_OUTPUT_LIMIT = 1024 * 1024
 _UNSUPPORTED_STATUSES = frozenset({404, 405, 501})
 _SAFE_TARGET_PART = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9._-]{0,252}[A-Za-z0-9])?$")
 _SAFE_MODEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/+@-]{0,511}$")
+
+ControlAuthorizer = Callable[[str], Awaitable[None]]
 
 
 class LmsPlatform(StrEnum):
@@ -165,6 +167,7 @@ class LmStudioAdapter:
         known_hosts_file: Path | None = None,
         platform: LmsPlatform = LmsPlatform.MACOS,
         process_runner: ProcessRunner | None = None,
+        control_authorizer: ControlAuthorizer | None = None,
         process_output_limit: int = DEFAULT_PROCESS_OUTPUT_LIMIT,
         load_options: LmsLoadOptions | None = None,
         client: httpx.AsyncClient | None = None,
@@ -198,6 +201,7 @@ class LmStudioAdapter:
         if process_output_limit <= 0:
             raise ValueError("process_output_limit must be positive")
         self._runner = process_runner or _DefaultProcessRunner(process_output_limit)
+        self._control_authorizer = control_authorizer
         self._load_options = load_options or LmsLoadOptions()
         self._clock = clock or (lambda: datetime.now(UTC))
         self._owns_client = client is None
@@ -335,6 +339,18 @@ class LmStudioAdapter:
 
     async def _run_control(self, arguments: tuple[str, ...], *, timeout: float) -> ProcessOutput:
         argv = self._ssh_argv(arguments)
+        if self._control_authorizer is not None:
+            assert self._ssh_target is not None
+            try:
+                await self._control_authorizer(self._ssh_target)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                raise AdapterFailure.from_detail(
+                    code=AdapterErrorCode.INVALID_REQUEST,
+                    message="LM Studio control authorization failed",
+                    detail={},
+                ) from None
         try:
             output = await self._runner(argv, timeout)
         except asyncio.CancelledError:
