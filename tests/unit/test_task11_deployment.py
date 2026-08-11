@@ -196,6 +196,48 @@ def test_cli_daemon_apply_requires_r2_gate_before_lifecycle_call(
     assert json.loads(accepted.stdout.splitlines()[-1])["data"]["status"] == "installed"
 
 
+def test_cli_daemon_install_rejects_config_symlink_before_any_lifecycle_write(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    target = _private_config(tmp_path / "real/config.toml")
+    link = tmp_path / "selected-config.toml"
+    link.symlink_to(target)
+    home = tmp_path / "home"
+    lifecycle_calls: list[str] = []
+
+    class FakeController:
+        async def install(self) -> object:
+            lifecycle_calls.append("install")
+            return object()
+
+    monkeypatch.setattr(
+        cli_module,
+        "_launchd_controller",
+        lambda _home=None, _config=None: FakeController(),
+    )
+    monkeypatch.setattr(cli_module, "_stdio_is_tty", lambda: False)
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "daemon",
+            "install",
+            "--home",
+            str(home),
+            "--config",
+            str(link),
+            "--apply",
+            "--yes",
+            "--confirm-impact",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 7
+    assert lifecycle_calls == []
+    assert not LaunchdPaths.for_home(home).plist_path.exists()
+
+
 @pytest.mark.parametrize(
     ("payload", "expected"),
     [

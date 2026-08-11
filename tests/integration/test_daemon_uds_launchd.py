@@ -243,3 +243,26 @@ def test_daemon_rejects_valid_but_non_private_explicit_config(tmp_path: Path) ->
 
     assert result.exit_code == 2
     assert json.loads(result.stderr)["error"]["code"] == "E100"
+
+
+@pytest.mark.parametrize("case", ["missing", "permissive", "symlink"])
+def test_daemon_without_config_requires_private_default_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, case: str
+) -> None:
+    import omlxc.daemon as daemon_module
+
+    default = tmp_path / "omlxc/config.toml"
+    if case != "missing":
+        target = tmp_path / "real/config.toml" if case == "symlink" else default
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("schema_version = 1\n", encoding="utf-8")
+        target.chmod(0o600 if case == "symlink" else 0o644)
+        if case == "symlink":
+            default.parent.mkdir(parents=True, exist_ok=True)
+            default.symlink_to(target)
+    monkeypatch.setattr(daemon_module, "default_config_path", lambda: default, raising=False)
+
+    result = CliRunner().invoke(daemon_cli, ["--check"])
+
+    assert result.exit_code == 2
+    assert json.loads(result.stderr)["error"]["code"] == "E100"

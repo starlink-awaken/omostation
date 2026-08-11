@@ -12,8 +12,8 @@ import typer
 from omlxc.config import (
     ConfigError,
     config_identity,
+    default_config_path,
     load_config,
-    load_user_config,
     require_private_config_path,
 )
 from omlxc.domain import EXIT_CONFIG, EXIT_INTERNAL
@@ -38,11 +38,10 @@ def command(
 ) -> None:
     """Load daemon configuration, then validate or serve it."""
     try:
-        if config is None:
-            loaded = load_user_config()
-        else:
-            selected_config = require_private_config_path(config)
-            loaded = load_config(selected_config, base_directory=selected_config.parent)
+        selected_config = require_private_config_path(
+            default_config_path() if config is None else config
+        )
+        loaded = load_config(selected_config, base_directory=selected_config.parent)
     except ConfigError:
         typer.echo(
             json.dumps(

@@ -73,7 +73,7 @@ _socket_override: Path | None = None
 def _launchd_controller(
     home: Path | None = None, config_path: Path | None = None
 ) -> LaunchdController:
-    selected_config = (config_path or default_config_path()).expanduser().resolve()
+    selected_config = (config_path or default_config_path()).expanduser()
     return LaunchdController(
         LaunchdPaths.for_home(home or Path.home()),
         config_path=selected_config,
@@ -670,7 +670,7 @@ def daemon_install(
     confirm_impact: Annotated[bool, typer.Option("--confirm-impact")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    selected_config = (config or default_config_path()).expanduser().resolve()
+    selected_config = (config or default_config_path()).expanduser()
     try:
         plan = build_launchd_plan(LaunchdPaths.for_home(home or Path.home()), selected_config)
     except LaunchdFailure as exc:
@@ -690,7 +690,7 @@ def daemon_install(
             json_output=json_output,
         )
         try:
-            result = asyncio.run(_launchd_controller(home, selected_config).install())
+            result = asyncio.run(_launchd_controller(home, plan.config_path).install())
         except LaunchdFailure as exc:
             _fail_local(exc.code, str(exc), json_output=json_output)
         data.update(
