@@ -90,7 +90,7 @@ def test_filter_order_rejections_and_local_only_are_deterministic() -> None:
         "cloud": RejectionCode.LOCAL_SECURITY.value,
         "context": RejectionCode.CONTEXT.value,
         "memory": RejectionCode.MEMORY.value,
-        "stale": RejectionCode.HEALTH.value,
+        "stale": RejectionCode.STALE.value,
         "wrong-model": RejectionCode.MODEL.value,
     }
     assert "cloud" not in first.candidates
@@ -152,3 +152,31 @@ def test_duplicate_placement_ids_fail_closed_before_scoring() -> None:
     )
     assert isinstance(result, RouteFailure)
     assert result.code is RouteFailureCode.INVALID_SNAPSHOT
+
+
+@pytest.mark.parametrize(
+    ("updates", "expected"),
+    [
+        ({"authorized": False}, "authorization_denied"),
+        ({"fresh": False}, "stale"),
+        ({"available": False}, "unavailable"),
+    ],
+)
+def test_health_rejections_are_stable_and_distinguish_the_failed_gate(
+    updates: dict[str, object], expected: str
+) -> None:
+    result = RoutePlanner(default_policies()).plan(
+        _request(), (_placement("blocked", **updates),)
+    )
+
+    assert isinstance(result, RouteFailure)
+    assert result.rejected == {"blocked": expected}
+
+
+def test_static_memory_unknown_is_not_reported_ready_or_routable() -> None:
+    result = RoutePlanner(default_policies()).plan(
+        _request(), (_placement("unknown-memory", memory_admitted=None),)
+    )
+
+    assert isinstance(result, RouteFailure)
+    assert result.rejected == {"unknown-memory": RejectionCode.MEMORY.value}

@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import ipaddress
 import json
+import time
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, replace
@@ -25,6 +26,12 @@ from omlxc.adapters import (
     TailscaleNodePolicy,
 )
 from omlxc.api import create_app
+from omlxc.autonomy import (
+    OperationTimeouts,
+    PlacementOperationCoordinator,
+    PlacementOperationOutcome,
+    PlacementTarget,
+)
 from omlxc.config import (
     AppConfig,
     BackendConfig,
@@ -66,11 +73,18 @@ from omlxc.domain.protocols import (
     EmbeddingRequest,
     LifecycleResult,
     ModelRuntime,
+    ModelRuntimeState,
     OperationStatus,
     StreamEvent,
 )
 from omlxc.events import EventBus, EventSubscription
-from omlxc.scheduler import PlacementSnapshot, RouteFailure, RoutePlanner, default_policies
+from omlxc.scheduler import (
+    PlacementSnapshot,
+    RouteFailure,
+    RoutePlanner,
+    default_policies,
+    is_static_eligible,
+)
 from omlxc.storage import (
     DurableEventRecord,
     RunningRecoveryPolicy,
@@ -121,9 +135,8 @@ class SnapshotCatalog:
     def get(self) -> tuple[PlacementSnapshot, ...]:
         return tuple(self._snapshots[key] for key in sorted(self._snapshots))
 
-    def mark_loaded(self, placement_id: str, loaded: bool) -> None:
-        snapshot = self._snapshots[placement_id]
-        self._snapshots[placement_id] = replace(snapshot, loaded=loaded)
+    def get_one(self, placement_id: str) -> PlacementSnapshot:
+        return self._snapshots[placement_id]
 
     def update(self, placement_id: str, **changes: object) -> None:
         self._snapshots[placement_id] = replace(self._snapshots[placement_id], **changes)
@@ -162,6 +175,7 @@ class CatalogProbe:
         self._timeout = min(max(self._interval, 0.1), 5.0)
         self._placements = {item.id: item for item in config.placements}
         self._nodes = {item.id: item for item in config.nodes}
+        self._backends = {item.id: item for item in config.backends}
         self._backend_nodes = {item.id: item.node_id for item in config.backends}
         self._task: asyncio.Task[None] | None = None
 
@@ -197,6 +211,17 @@ class CatalogProbe:
         if authorization is not None:
             await asyncio.gather(authorization, return_exceptions=True)
 
+    async def refresh_backend(self, backend_id: str) -> None:
+        backend = self._backends[backend_id]
+        authorization = (
+            asyncio.create_task(self._refresh_tailscale(), name="omlxcd-tailscale-write-probe")
+            if self._tailscale is not None
+            else None
+        )
+        await self._probe_backend(backend, authorization)
+        if authorization is not None:
+            await asyncio.gather(authorization, return_exceptions=True)
+
     async def _refresh_tailscale(self) -> None:
         assert self._tailscale is not None
         async with asyncio.timeout(self._timeout):
@@ -210,6 +235,13 @@ class CatalogProbe:
                 authorized, local = await self._authorize(backend, authorization)
                 if not authorized or not local:
                     raise PermissionError("backend endpoint is not authorized")
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            self._fail_authorization(backend.id)
+            return
+        try:
+            async with asyncio.timeout(self._timeout):
                 adapter = self._adapters[backend.id]
                 capability = await adapter.discover()
                 if capability.backend_id != backend.id:
@@ -219,7 +251,7 @@ class CatalogProbe:
         except asyncio.CancelledError:
             raise
         except Exception:
-            self._fail_closed(backend.id)
+            self._fail_stale(backend.id, authorized=authorized, local=local)
 
     async def _authorize(
         self, backend: BackendConfig, authorization: asyncio.Task[None] | None
@@ -264,18 +296,20 @@ class CatalogProbe:
                 if model is None
                 else (model.capabilities or capability.capabilities)
             )
-            ready = (
+            loaded = model is not None and model.state is ModelRuntimeState.LOADED
+            loadable = (
                 fresh
                 and capability.reachable
                 and capability.compatible
-                and capability.generation_ready
+                and capability.model_available
                 and model is not None
-                and model.loaded is True
+                and model.state is not ModelRuntimeState.UNKNOWN
+                and (not loaded or capability.generation_ready)
             )
             self._catalog.update(
                 snapshot.placement_id,
                 fresh=fresh,
-                available=ready,
+                available=loadable,
                 authorized=authorized,
                 capabilities=frozenset(item.value for item in capabilities),
                 context_limit=(
@@ -284,19 +318,19 @@ class CatalogProbe:
                     else placement.context_limit
                 ),
                 memory_admitted=self._memory_admitted(placement),
-                loaded=model is not None and model.loaded is True,
-                available_concurrency=1 if ready else 0,
+                loaded=loaded,
+                available_concurrency=1 if loadable else 0,
                 local=local,
                 security_allowed=authorized and local,
             )
 
     def _memory_admitted(self, placement: PlacementConfig) -> bool | None:
         if placement.memory_gb is None:
-            return True
+            return None
         available = self._nodes[self._backend_nodes[placement.backend_id]].memory_gb
         return None if available is None else placement.memory_gb <= available
 
-    def _fail_closed(self, backend_id: str) -> None:
+    def _fail_authorization(self, backend_id: str) -> None:
         for snapshot in self._catalog.get():
             if snapshot.backend_id == backend_id:
                 self._catalog.update(
@@ -308,6 +342,100 @@ class CatalogProbe:
                     available_concurrency=0,
                     security_allowed=False,
                 )
+
+    def _fail_stale(self, backend_id: str, *, authorized: bool, local: bool) -> None:
+        for snapshot in self._catalog.get():
+            if snapshot.backend_id == backend_id:
+                self._catalog.update(
+                    snapshot.placement_id,
+                    fresh=False,
+                    available=False,
+                    authorized=authorized,
+                    memory_admitted=None,
+                    available_concurrency=0,
+                    security_allowed=authorized and local,
+                )
+
+
+class PlacementTargetFactory:
+    def __init__(
+        self,
+        config: AppConfig,
+        *,
+        monotonic: Callable[[], float] = time.monotonic,
+    ) -> None:
+        self._placements = {item.id: item for item in config.placements}
+        self._backends = {item.id: item for item in config.backends}
+        self._monotonic = monotonic
+
+    def __call__(self, snapshot: PlacementSnapshot) -> PlacementTarget:
+        placement = self._placements[snapshot.placement_id]
+        backend = self._backends[placement.backend_id]
+        expected = (
+            placement.model_id,
+            placement.backend_id,
+            placement.backend_model_id,
+            backend.node_id,
+        )
+        actual = (
+            snapshot.model_id,
+            snapshot.backend_id,
+            snapshot.backend_model_id,
+            snapshot.node_id,
+        )
+        if actual != expected:
+            raise ValueError("placement runtime binding differs from configuration")
+        if placement.memory_gb is None:
+            raise ValueError("placement memory budget is required for lifecycle operations")
+        return PlacementTarget(
+            id=placement.id,
+            node_id=backend.node_id,
+            model_id=placement.backend_model_id,
+            resident=placement.resident,
+            memory_gb=placement.memory_gb,
+            idle_unload_seconds=0,
+            last_used_monotonic=self._monotonic(),
+            rollback_reference=f"placement:{placement.id}",
+        )
+
+
+class ProductionPlacementOperator:
+    """Adapter lifecycle boundary whose catalog state always comes from fresh probes."""
+
+    def __init__(
+        self,
+        *,
+        config: AppConfig,
+        adapters: Mapping[str, BackendAdapter],
+        catalog: SnapshotCatalog,
+        probe: CatalogProbe,
+    ) -> None:
+        self._adapters = dict(adapters)
+        self._catalog = catalog
+        self._probe = probe
+        self._backend_by_placement = {
+            placement.id: placement.backend_id for placement in config.placements
+        }
+
+    async def fresh_for_write(self, target: PlacementTarget) -> bool:
+        return is_static_eligible(self._catalog.get_one(target.id))
+
+    async def is_loaded(self, target: PlacementTarget) -> bool:
+        await self._probe.refresh_backend(self._backend_by_placement[target.id])
+        snapshot = self._catalog.get_one(target.id)
+        return snapshot.loaded and is_static_eligible(snapshot)
+
+    async def load(self, target: PlacementTarget, *, idempotency_key: str) -> LifecycleResult:
+        backend_id = self._backend_by_placement[target.id]
+        return await self._adapters[backend_id].load_model(
+            target.model_id, idempotency_key=idempotency_key
+        )
+
+    async def unload(self, target: PlacementTarget, *, idempotency_key: str) -> LifecycleResult:
+        backend_id = self._backend_by_placement[target.id]
+        return await self._adapters[backend_id].unload_model(
+            target.model_id, idempotency_key=idempotency_key
+        )
 
 
 class ProductionEventService:
@@ -375,9 +503,10 @@ class ProductionControlService:
         *,
         config: AppConfig,
         storage: StorageHandle,
-        adapters: Mapping[str, BackendAdapter],
         catalog: SnapshotCatalog,
         planner: RoutePlanner,
+        coordinator: PlacementOperationCoordinator,
+        target_factory: PlacementTargetFactory,
         bus: EventBus,
         id_factory: Callable[[], str],
         now: Callable[[], datetime],
@@ -386,9 +515,10 @@ class ProductionControlService:
     ) -> None:
         self._config = config
         self._storage = storage
-        self._adapters = dict(adapters)
         self._catalog = catalog
         self._planner = planner
+        self._coordinator = coordinator
+        self._target_factory = target_factory
         self._bus = bus
         self._id_factory = id_factory
         self._now = now
@@ -625,13 +755,15 @@ class ProductionControlService:
                 event_id=f"job-{job.id}-running-{job.attempt}",
             )
             placement = self._placement_from_reference(planning.rollback_reference)
-            adapter = self._adapters[placement.backend_id]
-            operation = adapter.load_model if job.kind == "load" else adapter.unload_model
+            target = self._target_factory(placement)
+            operation = (
+                self._coordinator.ensure_loaded
+                if job.kind == "load"
+                else self._coordinator.ensure_unloaded
+            )
             async with asyncio.timeout(self._worker_timeout):
-                result = await operation(
-                    placement.backend_model_id, idempotency_key=job.idempotency_key
-                )
-            await self._finish(job, placement.placement_id, result)
+                outcome = await operation(target)
+            await self._finish(job, outcome)
         except asyncio.CancelledError:
             current = await store.get_job(job.id)
             if current is not None and current.state is JobState.CANCELLING:
@@ -655,19 +787,32 @@ class ProductionControlService:
                     error_code="operation_failed",
                 )
 
-    async def _finish(self, job: StoredJob, placement_id: str, result: LifecycleResult) -> None:
-        succeeded = result.status in {OperationStatus.SUCCEEDED, OperationStatus.UNCHANGED}
-        if succeeded:
-            self._catalog.mark_loaded(placement_id, job.kind == "load")
+    async def _finish(self, job: StoredJob, outcome: PlacementOperationOutcome) -> None:
+        desired_loaded = job.kind == "load"
+        result_succeeded = outcome.result is None or outcome.result.status in {
+            OperationStatus.SUCCEEDED,
+            OperationStatus.UNCHANGED,
+        }
+        succeeded = (
+            outcome.authorized
+            and outcome.actual_loaded is desired_loaded
+            and result_succeeded
+        )
         await self._storage.require().transition_job(
             job.id,
             JobState.SUCCEEDED if succeeded else JobState.FAILED,
             progress=1.0 if succeeded else 0.2,
             observed_at=self._now(),
             event_id=f"job-{job.id}-terminal-{job.attempt}",
-            error_code=None
-            if succeeded
-            else (result.error.code.value if result.error else "failed"),
+            error_code=(
+                None
+                if succeeded
+                else "authorization_denied"
+                if not outcome.authorized
+                else outcome.result.error.code.value
+                if outcome.result is not None and outcome.result.error is not None
+                else "postverify_failed"
+            ),
         )
 
     def _placement_for_model(self, model_id: str) -> PlacementSnapshot:
@@ -745,12 +890,33 @@ def build_production_daemon(
     planner = RoutePlanner(default_policies())
     storage = StorageHandle(config)
     bus = EventBus(capacity=128)
+    probe = CatalogProbe(
+        config=config,
+        adapters=bindings,
+        catalog=catalog,
+        tailscale=configured_tailscale,
+        now=clock,
+    )
+    target_factory = PlacementTargetFactory(config)
+    placement_operator = ProductionPlacementOperator(
+        config=config,
+        adapters=bindings,
+        catalog=catalog,
+        probe=probe,
+    )
+    coordinator = PlacementOperationCoordinator(
+        placement_operator,
+        timeouts=OperationTimeouts.uniform(120.0),
+        global_limit=4,
+        per_node_limit=2,
+    )
     control = ProductionControlService(
         config=config,
         storage=storage,
-        adapters=bindings,
         catalog=catalog,
         planner=planner,
+        coordinator=coordinator,
+        target_factory=target_factory,
         bus=bus,
         id_factory=id_factory or (lambda: uuid4().hex),
         now=clock,
@@ -766,23 +932,14 @@ def build_production_daemon(
                 )
             ),
             capacity=CapacityCoordinator(global_limit=8, per_node=4, per_backend=4),
+            loader=coordinator,
+            load_target=target_factory,
         ),
         tuple(model.id for model in config.models),
         reranker,
     )
     events = ProductionEventService(storage, bus)
-    probe = (
-        CatalogProbe(
-            config=config,
-            adapters=bindings,
-            catalog=catalog,
-            tailscale=configured_tailscale,
-            now=clock,
-        )
-        if snapshots is None
-        else None
-    )
-    resources = ResourceComponent(bus, bindings, probe)
+    resources = ResourceComponent(bus, bindings, probe if snapshots is None else None)
     runtime = DaemonRuntime(
         config_runtime=storage,
         recovery=control,
@@ -931,14 +1088,7 @@ def is_loopback_url(value: str) -> bool:
 
 
 def _runtime_ready(snapshot: PlacementSnapshot) -> bool:
-    return (
-        snapshot.fresh
-        and snapshot.available
-        and snapshot.authorized
-        and snapshot.security_allowed
-        and snapshot.memory_admitted is not False
-        and snapshot.available_concurrency != 0
-    )
+    return is_static_eligible(snapshot)
 
 
 def _job(stored: StoredJob) -> Job:

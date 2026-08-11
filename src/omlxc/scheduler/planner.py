@@ -12,6 +12,7 @@ from .models import (
     RouteFailure,
     RouteFailureCode,
     RoutePolicy,
+    is_static_eligible,
 )
 
 
@@ -88,8 +89,12 @@ class RoutePlanner:
     def evaluate(request: RouteRequest, placement: PlacementSnapshot) -> RejectionCode | None:
         if placement.model_id != request.model_id:
             return RejectionCode.MODEL
-        if not placement.fresh or not placement.available or not placement.authorized:
-            return RejectionCode.HEALTH
+        if not placement.authorized:
+            return RejectionCode.AUTHORIZATION
+        if not placement.fresh:
+            return RejectionCode.STALE
+        if not placement.available:
+            return RejectionCode.UNAVAILABLE
         if not request.required_capabilities.issubset(placement.capabilities):
             return RejectionCode.CAPABILITY
         if placement.context_limit is None or placement.context_limit < request.context_tokens:
@@ -100,6 +105,7 @@ class RoutePlanner:
             return RejectionCode.NO_CAPACITY
         if not placement.local or not placement.security_allowed:
             return RejectionCode.LOCAL_SECURITY
+        assert is_static_eligible(placement)
         return None
 
     @staticmethod

@@ -13,7 +13,9 @@ from omlxc.domain import RouteProfile
 
 class RejectionCode(StrEnum):
     MODEL = "model_mismatch"
-    HEALTH = "health_or_authorization"
+    AUTHORIZATION = "authorization_denied"
+    STALE = "stale"
+    UNAVAILABLE = "unavailable"
     CAPABILITY = "capability_missing"
     CONTEXT = "context_exceeded"
     MEMORY = "memory_denied"
@@ -95,6 +97,20 @@ class PlacementSnapshot:
         _validate_optional_number("affinity", self.affinity, minimum=0, maximum=1)
         if self.queue_depth is not None and self.queue_depth < 0:
             raise ValueError("queue depth must be non-negative")
+
+
+def is_static_eligible(placement: PlacementSnapshot) -> bool:
+    """Return request-independent scheduler eligibility for catalog projections."""
+    return (
+        placement.authorized
+        and placement.fresh
+        and placement.available
+        and placement.memory_admitted is True
+        and placement.available_concurrency is not None
+        and placement.available_concurrency > 0
+        and placement.local
+        and placement.security_allowed
+    )
 
 
 @dataclass(frozen=True, slots=True)

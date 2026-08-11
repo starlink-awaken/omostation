@@ -10,6 +10,7 @@ from .models import (
     RoutePolicy,
     ScoreWeights,
     default_policies,
+    is_static_eligible,
 )
 from .planner import RoutePlanner
 
@@ -24,4 +25,5 @@ __all__ = [
     "RoutePolicy",
     "ScoreWeights",
     "default_policies",
+    "is_static_eligible",
 ]

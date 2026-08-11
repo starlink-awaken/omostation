@@ -486,7 +486,7 @@ class DataPlaneOrchestrator:
         if placement.loaded:
             return placement, None
         if self._loader is None or self._load_target is None:
-            return None, RejectionCode.HEALTH
+            return None, RejectionCode.UNAVAILABLE
         remaining = self._remaining(deadline)
         if remaining <= 0:
             return None, RejectionCode.NO_CAPACITY
@@ -495,14 +495,21 @@ class DataPlaneOrchestrator:
                 outcome = await self._loader.ensure_loaded(self._load_target(placement))
         except TimeoutError:
             return None, RejectionCode.NO_CAPACITY
-        if not outcome.authorized or not outcome.actual_loaded:
-            return None, RejectionCode.HEALTH
+        if not outcome.authorized:
+            return None, RejectionCode.AUTHORIZATION
+        if outcome.result is not None and outcome.result.status not in {
+            OperationStatus.SUCCEEDED,
+            OperationStatus.UNCHANGED,
+        }:
+            return None, RejectionCode.UNAVAILABLE
+        if not outcome.actual_loaded:
+            return None, RejectionCode.UNAVAILABLE
         try:
             refreshed = self._by_id(self._snapshot_provider()).get(placement.placement_id)
         except LookupError:
             return None, RejectionCode.LOCAL_SECURITY
         if refreshed is None or not refreshed.loaded:
-            return None, RejectionCode.HEALTH
+            return None, RejectionCode.UNAVAILABLE
         immutable_binding = (
             refreshed.model_id,
             refreshed.backend_id,

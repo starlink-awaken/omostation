@@ -46,6 +46,7 @@ class FakeBackend:
         self.operations: list[tuple[str, str, str | None]] = []
         self.block = False
         self.started = asyncio.Event()
+        self.loaded = True
 
     async def _maybe_block(self) -> None:
         self.started.set()
@@ -57,6 +58,7 @@ class FakeBackend:
     ) -> LifecycleResult:
         self.operations.append(("load", model_id, idempotency_key))
         await self._maybe_block()
+        self.loaded = True
         return LifecycleResult(
             model_id=model_id,
             status=OperationStatus.SUCCEEDED,
@@ -69,6 +71,7 @@ class FakeBackend:
     ) -> LifecycleResult:
         self.operations.append(("unload", model_id, idempotency_key))
         await self._maybe_block()
+        self.loaded = False
         return LifecycleResult(
             model_id=model_id,
             status=OperationStatus.SUCCEEDED,
@@ -78,6 +81,32 @@ class FakeBackend:
 
     async def chat(self, request: ChatRequest) -> ChatResult:
         return ChatResult(request_id=request.request_id, success=True, content="ok")
+
+    async def discover(self) -> CapabilitySnapshot:
+        return CapabilitySnapshot(
+            backend_id="backend",
+            reachable=True,
+            compatible=True,
+            model_available=True,
+            generation_ready=self.loaded,
+            observed_at=datetime.now(UTC),
+            capabilities=frozenset(
+                {AdapterCapability.CHAT, AdapterCapability.EMBEDDING, AdapterCapability.STREAMING}
+            ),
+        )
+
+    async def list_models(self) -> tuple[ModelRuntime, ...]:
+        return (
+            ModelRuntime(
+                id="physical/model",
+                state=ModelRuntimeState.LOADED
+                if self.loaded
+                else ModelRuntimeState.AVAILABLE,
+                loaded=self.loaded,
+                capabilities=frozenset({AdapterCapability.CHAT, AdapterCapability.EMBEDDING}),
+                context_limit=4096,
+            ),
+        )
 
     async def embed(self, request: EmbeddingRequest) -> EmbeddingResult:
         return EmbeddingResult(
@@ -136,7 +165,7 @@ def _config(root: Path) -> AppConfig:
     return AppConfig(
         daemon=DaemonConfig(socket_path=root / "omlxcd.sock"),
         storage=StorageConfig(database_path=root / "state.db"),
-        nodes=(NodeConfig(id="node", display_name="Node", platform="macos"),),
+        nodes=(NodeConfig(id="node", display_name="Node", platform="macos", memory_gb=16),),
         backends=(
             BackendConfig(
                 id="backend",
@@ -153,6 +182,7 @@ def _config(root: Path) -> AppConfig:
                 backend_id="backend",
                 backend_model_id="physical/model",
                 context_limit=8192,
+                memory_gb=2,
             ),
         ),
     )
@@ -189,8 +219,8 @@ def _discovery_config(root: Path) -> AppConfig:
     return config.model_copy(
         update={
             "nodes": (
-                NodeConfig(id="bad-node", display_name="Bad", platform="macos"),
-                NodeConfig(id="good-node", display_name="Good", platform="macos"),
+                NodeConfig(id="bad-node", display_name="Bad", platform="macos", memory_gb=16),
+                NodeConfig(id="good-node", display_name="Good", platform="macos", memory_gb=16),
             ),
             "backends": (
                 BackendConfig(
@@ -213,6 +243,7 @@ def _discovery_config(root: Path) -> AppConfig:
                     backend_id="bad",
                     backend_model_id="physical/model",
                     context_limit=8192,
+                    memory_gb=2,
                 ),
                 PlacementConfig(
                     id="healthy-placement",
@@ -220,6 +251,7 @@ def _discovery_config(root: Path) -> AppConfig:
                     backend_id="healthy",
                     backend_model_id="physical/model",
                     context_limit=8192,
+                    memory_gb=2,
                 ),
             ),
         }
@@ -366,7 +398,7 @@ async def test_production_composition_and_jobs_survive_real_uds_restart() -> Non
             adapters={"backend": backend},
             snapshots=(_snapshot(),),
             id_factory=lambda: f"job-{next(ids)}",
-            now=lambda: datetime(2026, 8, 11, tzinfo=UTC),
+            now=lambda: datetime.now(UTC),
         )
         server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
         await server.start()
@@ -410,10 +442,7 @@ async def test_production_composition_and_jobs_survive_real_uds_restart() -> Non
         assert first.status_code == repeated.status_code == 202
         assert first.json()["data"]["id"] == repeated.json()["data"]["id"]
         assert conflict.status_code == 409
-        assert backend.operations == [
-            ("load", "physical/model", "same-key"),
-            ("unload", "physical/model", "recover-key"),
-        ]
+        assert backend.operations == [("unload", "physical/model", "placement:unload:placement")]
 
         recovery_backend = FakeBackend()
         restarted = build_production_daemon(
@@ -518,7 +547,7 @@ async def test_route_failure_and_catalog_views_are_typed_and_observable(tmp_path
         "kind": "no_candidate",
         "rejected": {
             "placement": "capability_missing",
-            "placement-b": "health_or_authorization",
+            "placement-b": "authorization_denied",
         },
         "config_version": "scheduler-v1",
     }
