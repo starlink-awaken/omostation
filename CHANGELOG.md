@@ -17,3 +17,7 @@
 - Added the LM Studio / LM Link adapter: direct OpenAI-compatible HTTP inference,
   three-state inventory merged with `lms ps --json`, and hardened argv-only SSH
   lifecycle control for macOS and Windows with strict known-host verification.
+- Added the native Ollama HTTP adapter with strict version and model identity
+  discovery, three-state residency, bounded `keep_alive` lifecycle control,
+  thinking-safe chat and vision, current batch embeddings, and replay-safe
+  incremental NDJSON streaming.
