@@ -16,6 +16,7 @@ from types import MappingProxyType, TracebackType
 from typing import Any, TypeVar, cast
 
 import aiosqlite
+import anyio
 
 from omlxc.domain import Job, JobState, RiskLevel, transition_job
 
@@ -203,14 +204,89 @@ _REQUIRED_UNIQUE_COLUMNS: dict[str, frozenset[tuple[str, ...]]] = {
 _REQUIRED_FOREIGN_KEYS: dict[str, tuple[tuple[str, str, str, str, str, str], ...]] = {
     "job_transitions": (("jobs", "job_id", "job_id", "NO ACTION", "NO ACTION", "NONE"),)
 }
-_REQUIRED_SQL_FRAGMENTS: dict[str, tuple[str, ...]] = {
-    "health_snapshots": ("autoincrement", "check(stalein(0,1))"),
-    "request_metrics": ("autoincrement", "check(successin(0,1))"),
-    "jobs": ("check(progress>=0andprogress<=1)", "idempotency_keytextunique"),
-    "job_transitions": ("autoincrement", "referencesjobs(job_id)"),
-    "durable_events": ("autoincrement", "event_idtextnotnullunique"),
-    "config_revisions": ("autoincrement", "revision_idtextnotnullunique"),
+_V1_TABLE_SQL: dict[str, str] = {
+    "health_snapshots": """CREATE TABLE health_snapshots (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+        resource_kind TEXT NOT NULL,
+        resource_id TEXT NOT NULL,
+        state TEXT NOT NULL,
+        observed_at TEXT NOT NULL,
+        observed_monotonic REAL NOT NULL,
+        stale INTEGER NOT NULL CHECK(stale IN (0, 1))
+    )""",
+    "route_audits": """CREATE TABLE route_audits (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_id TEXT NOT NULL,
+        observed_at TEXT NOT NULL,
+        selected_placement_id TEXT,
+        candidate_json TEXT NOT NULL,
+        rejection_json TEXT NOT NULL,
+        config_revision TEXT NOT NULL
+    )""",
+    "request_metrics": """CREATE TABLE request_metrics (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_id TEXT NOT NULL,
+        observed_at TEXT NOT NULL,
+        latency_ms REAL NOT NULL,
+        success INTEGER NOT NULL CHECK(success IN (0, 1))
+    )""",
+    "jobs": """CREATE TABLE jobs (
+        job_id TEXT PRIMARY KEY,
+        idempotency_key TEXT UNIQUE,
+        payload_fingerprint TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        initiator TEXT NOT NULL,
+        risk TEXT NOT NULL,
+        state TEXT NOT NULL,
+        progress REAL NOT NULL CHECK(progress >= 0 AND progress <= 1),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        rollback_reference TEXT,
+        attempt INTEGER NOT NULL DEFAULT 0,
+        error_code TEXT
+    )""",
+    "job_transitions": """CREATE TABLE job_transitions (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+        job_id TEXT NOT NULL REFERENCES jobs(job_id),
+        from_state TEXT,
+        to_state TEXT NOT NULL,
+        progress REAL NOT NULL,
+        observed_at TEXT NOT NULL
+    )""",
+    "durable_events": """CREATE TABLE durable_events (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_id TEXT NOT NULL UNIQUE,
+        schema_version INTEGER NOT NULL,
+        observed_at TEXT NOT NULL,
+        priority TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        job_id TEXT,
+        resource_id TEXT
+    )""",
+    "config_revisions": """CREATE TABLE config_revisions (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+        revision_id TEXT NOT NULL UNIQUE,
+        observed_at TEXT NOT NULL,
+        rollback_reference TEXT,
+        config_json TEXT NOT NULL,
+        fingerprint TEXT NOT NULL
+    )""",
+    "daily_metric_aggregates": """CREATE TABLE daily_metric_aggregates (
+        day TEXT PRIMARY KEY,
+        request_count INTEGER NOT NULL,
+        error_count INTEGER NOT NULL,
+        latency_sum_ms REAL NOT NULL
+    )""",
 }
+_V1_INDEX_SQL: dict[str, str] = {
+    "health_latest_idx": """CREATE INDEX health_latest_idx
+        ON health_snapshots(resource_kind, resource_id, observed_at DESC, sequence DESC)""",
+    "request_metrics_observed_idx": (
+        "CREATE INDEX request_metrics_observed_idx ON request_metrics(observed_at)"
+    ),
+}
+_V1_SCHEMA_SQL = ";\n".join((*_V1_TABLE_SQL.values(), *_V1_INDEX_SQL.values()))
 _SENSITIVE_TEXT = re.compile(
     r"(?:authorization\s*:|bearer\s+\S+|api[_-]?key|password|secret|token\s*[=:])",
     re.I,
@@ -342,7 +418,8 @@ class SQLiteRuntimeStore:
         traceback: TracebackType | None,
     ) -> None:
         del exc_type, exc_value, traceback
-        await asyncio.shield(self.close())
+        with anyio.CancelScope(shield=True):
+            await self.close()
 
     async def _writer_loop(self) -> None:
         writer = self._writer
@@ -1123,7 +1200,20 @@ class SQLiteRuntimeStore:
             self._closing = True
             task = asyncio.create_task(self._close_impl(), name="omlxc-storage-close")
             self._close_task = task
-        return await asyncio.shield(task)
+        interrupted = False
+        with anyio.CancelScope(shield=True):
+            while not task.done():
+                try:
+                    await asyncio.shield(task)
+                except asyncio.CancelledError:
+                    interrupted = True
+                    current = asyncio.current_task()
+                    if current is not None:
+                        current.uncancel()
+        result = task.result()
+        if interrupted:
+            raise asyncio.CancelledError
+        return result
 
     async def _close_impl(self) -> int:
         if self._closed:
@@ -1175,87 +1265,7 @@ async def _migrate(connection: aiosqlite.Connection) -> None:
     if version != 0:
         raise UnsupportedSchemaError("database schema migration path is unavailable")
     await connection.executescript(
-        """
-        BEGIN IMMEDIATE;
-        CREATE TABLE health_snapshots (
-            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
-            resource_kind TEXT NOT NULL,
-            resource_id TEXT NOT NULL,
-            state TEXT NOT NULL,
-            observed_at TEXT NOT NULL,
-            observed_monotonic REAL NOT NULL,
-            stale INTEGER NOT NULL CHECK(stale IN (0, 1))
-        );
-        CREATE INDEX health_latest_idx
-            ON health_snapshots(resource_kind, resource_id, observed_at DESC, sequence DESC);
-        CREATE TABLE route_audits (
-            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
-            request_id TEXT NOT NULL,
-            observed_at TEXT NOT NULL,
-            selected_placement_id TEXT,
-            candidate_json TEXT NOT NULL,
-            rejection_json TEXT NOT NULL,
-            config_revision TEXT NOT NULL
-        );
-        CREATE TABLE request_metrics (
-            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
-            request_id TEXT NOT NULL,
-            observed_at TEXT NOT NULL,
-            latency_ms REAL NOT NULL,
-            success INTEGER NOT NULL CHECK(success IN (0, 1))
-        );
-        CREATE INDEX request_metrics_observed_idx ON request_metrics(observed_at);
-        CREATE TABLE jobs (
-            job_id TEXT PRIMARY KEY,
-            idempotency_key TEXT UNIQUE,
-            payload_fingerprint TEXT NOT NULL,
-            kind TEXT NOT NULL,
-            initiator TEXT NOT NULL,
-            risk TEXT NOT NULL,
-            state TEXT NOT NULL,
-            progress REAL NOT NULL CHECK(progress >= 0 AND progress <= 1),
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL,
-            rollback_reference TEXT,
-            attempt INTEGER NOT NULL DEFAULT 0,
-            error_code TEXT
-        );
-        CREATE TABLE job_transitions (
-            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
-            job_id TEXT NOT NULL REFERENCES jobs(job_id),
-            from_state TEXT,
-            to_state TEXT NOT NULL,
-            progress REAL NOT NULL,
-            observed_at TEXT NOT NULL
-        );
-        CREATE TABLE durable_events (
-            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
-            event_id TEXT NOT NULL UNIQUE,
-            schema_version INTEGER NOT NULL,
-            observed_at TEXT NOT NULL,
-            priority TEXT NOT NULL,
-            kind TEXT NOT NULL,
-            payload_json TEXT NOT NULL,
-            job_id TEXT,
-            resource_id TEXT
-        );
-        CREATE TABLE config_revisions (
-            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
-            revision_id TEXT NOT NULL UNIQUE,
-            observed_at TEXT NOT NULL,
-            rollback_reference TEXT,
-            config_json TEXT NOT NULL,
-            fingerprint TEXT NOT NULL
-        );
-        CREATE TABLE daily_metric_aggregates (
-            day TEXT PRIMARY KEY,
-            request_count INTEGER NOT NULL,
-            error_count INTEGER NOT NULL,
-            latency_sum_ms REAL NOT NULL
-        );
-        PRAGMA user_version = 1;
-        COMMIT;
-        """
+        f"BEGIN IMMEDIATE;\n{_V1_SCHEMA_SQL};\nPRAGMA user_version = 1;\nCOMMIT;"
     )
 
 
@@ -1358,17 +1368,28 @@ async def _validate_schema(connection: aiosqlite.Connection) -> None:
     if violations is not None:
         raise aiosqlite.DatabaseError("SQLite foreign key invariant failed")
 
-    for table, fragments in _REQUIRED_SQL_FRAGMENTS.items():
-        cursor = await connection.execute(
-            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?", (table,)
-        )
-        row = await cursor.fetchone()
-        await cursor.close()
-        normalized = re.sub(r"\s+", "", str(row[0])).lower() if row is not None else ""
-        if any(fragment not in normalized for fragment in fragments):
-            raise aiosqlite.DatabaseError("SQLite table constraint invariant failed")
+    expected_objects = {
+        **{("table", name): sql for name, sql in _V1_TABLE_SQL.items()},
+        **{("index", name): sql for name, sql in _V1_INDEX_SQL.items()},
+    }
+    cursor = await connection.execute(
+        "SELECT type, name, sql FROM sqlite_master "
+        "WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name"
+    )
+    actual_objects = {(str(row[0]), str(row[1])): str(row[2]) for row in await cursor.fetchall()}
+    await cursor.close()
+    if set(actual_objects) != set(expected_objects) or any(
+        _canonical_schema_sql(actual_objects[key]) != _canonical_schema_sql(expected)
+        for key, expected in expected_objects.items()
+    ):
+        raise aiosqlite.DatabaseError("SQLite schema object invariant failed")
 
     await _validate_persisted_values(connection)
+
+
+def _canonical_schema_sql(statement: str) -> tuple[str, ...]:
+    """Normalize SQLite's harmless case/spacing choices without weakening structure."""
+    return tuple(token.lower() for token in re.findall(r"<=|>=|<>|!=|\w+|[^\s\w]", statement))
 
 
 async def _validate_persisted_values(connection: aiosqlite.Connection) -> None:
