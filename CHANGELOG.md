@@ -11,3 +11,6 @@
   Keychain-reference-only credentials.
 - Added dry-run legacy JSON migration plus confirmed `0600` atomic writes,
   private snapshots, and failure recovery.
+- Added a reusable typed backend-adapter contract and the asynchronous oMLX App
+  adapter for capability/readiness discovery, model lifecycle and tuning, chat,
+  vision, embeddings, replay-safe SSE streaming, and recursive redaction.
