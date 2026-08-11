@@ -22,6 +22,8 @@ cat > "$LAUNCH_DIR/com.agora.sse.plist" <<'PLIST'
     <array>
         <string>/opt/homebrew/bin/uv</string>
         <string>run</string>
+        <string>--extra</string>
+        <string>admission</string>
         <string>--directory</string>
         <string>__AGORA_DIR__</string>
         <string>agora-mcp</string>
