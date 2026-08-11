@@ -311,6 +311,12 @@ def heartbeat_lock(lock_path: Path) -> None:
 
 
 def heartbeat_run(registry: dict[str, Any], run_id: str) -> dict[str, Any]:
+    """Serialize and renew every lock owned by one active run."""
+    with run_update_lock(registry, run_id):
+        return _heartbeat_run_locked(registry, run_id)
+
+
+def _heartbeat_run_locked(registry: dict[str, Any], run_id: str) -> dict[str, Any]:
     """Renew ``last_heartbeat`` on every lock owned by an active run.
 
     Prevalidates all locks before writing any:

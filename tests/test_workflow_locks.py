@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -452,6 +454,45 @@ def test_heartbeat_run_uses_atomic_write(
     assert receipt["count"] == 1
     assert len(atomic_calls) == 1
     assert atomic_calls[0].name == "path_atomic.py.lock.yaml"
+
+
+def test_heartbeat_run_serializes_concurrent_renewals(
+    registry: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Concurrent renewals for one run never enter the atomic writer together."""
+    _seed_run(registry, "run-concurrent", lock_scopes=["path:concurrent.py"])
+
+    original_write = lifecycle_mod.write_yaml_atomic
+    state_lock = threading.Lock()
+    start = threading.Barrier(2)
+    active_writers = 0
+    max_active_writers = 0
+
+    def slow_atomic_write(path: Path, data: dict) -> None:
+        nonlocal active_writers, max_active_writers
+        with state_lock:
+            active_writers += 1
+            max_active_writers = max(max_active_writers, active_writers)
+        try:
+            time.sleep(0.05)
+            original_write(path, data)
+        finally:
+            with state_lock:
+                active_writers -= 1
+
+    def renew() -> dict:
+        start.wait(timeout=5)
+        return heartbeat_run(registry, "run-concurrent")
+
+    monkeypatch.setattr(lifecycle_mod, "write_yaml_atomic", slow_atomic_write)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        receipts = [
+            future.result(timeout=5)
+            for future in (pool.submit(renew), pool.submit(renew))
+        ]
+
+    assert [receipt["count"] for receipt in receipts] == [1, 1]
+    assert max_active_writers == 1
 
 
 def test_heartbeat_run_symlink_escape(registry: dict) -> None:
