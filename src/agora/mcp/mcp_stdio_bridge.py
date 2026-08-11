@@ -106,6 +106,20 @@ class MCPStdioBridge:
         action = params.get("arguments", {}).get("action", "main")
         args_list = params.get("arguments", {}).get("args", [])
 
+        # PEP enforcement (BET-Y1Q2-T1-06): evaluate before provider dispatch
+        from agora.mcp.policy_enforcement import PolicyRequest, get_pep
+
+        _pep = get_pep()
+        _decision = _pep.evaluate(
+            PolicyRequest(
+                tool_name=f"poc_exec:{action}",
+                operation="read",
+            )
+        )
+        if _decision.effect == "deny":
+            return self._error(req_id, -32000, f"Policy denied: {_decision.reason}")
+        _pep.record_started(_decision.decision_hash)
+
         # 使用自定义 POC 协议调用子进程
         self._request_id += 1
         poc_request = json.dumps(
@@ -126,6 +140,12 @@ class MCPStdioBridge:
             poc_result = json.loads(response_line.strip())
 
             if poc_result.get("status") == "ok":
+                _pep.record_provider_call(_decision.decision_hash)
+                _pep.confirm_terminal(
+                    _decision.decision_hash,
+                    status="succeeded",
+                    tool_name=f"poc_exec:{action}",
+                )
                 return {
                     "jsonrpc": "2.0",
                     "id": req_id,
@@ -141,10 +161,22 @@ class MCPStdioBridge:
                     },
                 }
             else:
+                _pep.confirm_terminal(
+                    _decision.decision_hash,
+                    status="failed",
+                    tool_name=f"poc_exec:{action}",
+                    error=poc_result.get("error", "POC execution failed"),
+                )
                 return self._error(
                     req_id, -32000, poc_result.get("error", "POC execution failed")
                 )
         except (BrokenPipeError, json.JSONDecodeError, OSError) as e:
+            _pep.confirm_terminal(
+                _decision.decision_hash,
+                status="failed",
+                tool_name=f"poc_exec:{action}",
+                error=str(e),
+            )
             return self._error(req_id, -32000, str(e))
 
     def _error(self, req_id: Any, code: int, message: str) -> dict:

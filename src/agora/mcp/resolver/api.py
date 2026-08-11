@@ -318,6 +318,18 @@ async def resolve_bos_uri(
     uri: str, *args: Any, proxy_manager: Any | None = None, **kwargs: Any
 ) -> dict:
     """异步 BOS URI 解析 — Swarm 路由感知版本 (Phase 3)."""
+    # PEP enforcement (BET-Y1Q2-T1-06): evaluate before provider dispatch
+    from agora.mcp.policy_enforcement import PolicyRequest, get_pep
+
+    _pep = get_pep()
+    _decision = _pep.evaluate(
+        PolicyRequest(uri=uri, tool_name="resolve_bos_uri", operation="read")
+    )
+    if _decision.effect == "deny":
+        _log.warning("pep_denied: uri=%s reason=%s", uri, _decision.reason)
+        return {"status": "error", "error": f"Policy denied: {_decision.reason}"}
+    _pep.record_started(_decision.decision_hash, uri=uri)
+
     # ── Step 1: 尝试通过 BOSRouter 路由 (支持远程代理) ──
     try:
         from agora.mcp.bos_router import bos_router

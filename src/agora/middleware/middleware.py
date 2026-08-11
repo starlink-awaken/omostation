@@ -185,25 +185,72 @@ try:
             conv_id = meta.get("x-conversation-id", "none")
             bind_contextvars(agent_id=agent_id, conversation_id=conv_id)
 
+            tool_name = getattr(request_obj, "name", "unknown")
+            _decision = None
+
             try:
                 # FastMCP context.message is CallToolRequestParams which has 'name' and 'arguments'
-                tool_name = getattr(request_obj, "name", "unknown")
                 args = getattr(request_obj, "arguments", {})
                 self._logger.info("mcp_tool_call", tool=tool_name, arguments=args)
+
+                # PEP enforcement (BET-Y1Q2-T1-06): evaluate before dispatch
+                from agora.mcp.policy_enforcement import PolicyRequest, get_pep
+
+                _pep = get_pep()
+                _pep_req = PolicyRequest(
+                    uri=args.get("uri", "") if isinstance(args, dict) else "",
+                    tool_name=tool_name,
+                    operation=(
+                        "write" if tool_name == "mutate_resource" else "read"
+                    ),
+                    caller_id=agent_id,
+                    arguments=args if isinstance(args, dict) else {},
+                )
+                _decision = _pep.evaluate(_pep_req)
+                if _decision.effect == "deny":
+                    self._logger.warning(
+                        "pep_denied",
+                        tool=tool_name,
+                        reason=_decision.reason,
+                    )
+                    raise PermissionError(f"Policy denied: {_decision.reason}")
+
+                _pep.record_started(
+                    _decision.decision_hash,
+                    uri=args.get("uri", "") if isinstance(args, dict) else "",
+                )
                 result = await call_next(context)
+                _pep.record_provider_call(_decision.decision_hash)
 
                 # Context Window Shield
                 result = await self._apply_shield_and_cleanup(
                     result, f"tool:{tool_name}"
                 )
 
+                # Confirm terminal (Rule 5: terminal not confirmed → cannot return succeeded)
+                _pep.confirm_terminal(
+                    _decision.decision_hash,
+                    status="succeeded",
+                    tool_name=tool_name,
+                )
+
                 self._logger.info("mcp_tool_success", tool=tool_name)
                 return result
+            except PermissionError:
+                raise
             except Exception as e:  # defensive fallback
-                # fallback if context doesn't have request.name
-                tool_name = getattr(
-                    getattr(context, "request", None), "name", "unknown"
-                )
+                if _decision is not None:
+                    try:
+                        from agora.mcp.policy_enforcement import get_pep
+
+                        get_pep().confirm_terminal(
+                            _decision.decision_hash,
+                            status="failed",
+                            tool_name=tool_name,
+                            error=str(e),
+                        )
+                    except Exception:
+                        pass
                 self._logger.error("mcp_tool_error", tool=tool_name, error=str(e))
                 raise
 
