@@ -106,7 +106,7 @@ help:
 	@echo ""
 	@echo "=== 本地 CI ==="
 	@echo "make ci-local            本地 CI 预检 (push 前跑, ~30s, 拦 90% CI 失败)"
-	@echo "make ci-local-fast       快速模式 (跳 pytest, ~5s, 仅 governance+lint+yaml)"
+	@echo "make ci-local-fast       快速模式 (真实退出码 + Ruff 回归基线, 无 pytest)"
 	@echo ""
 	@echo "make help                显示本消息"
 
@@ -163,7 +163,7 @@ install-hooks:  ## 装 git pre-push + pre-commit + post-commit + prepare-commit-
 # ── 本地 CI 预检 ────────────────────────────────────────────────────────────────
 # 目的: push 前本地跑一遍 CI 等价检查, 拦 90% CI 失败, 省等 CI 的时间.
 # 分两档:
-#   ci-local-fast  (~5s)  — GaC gate + ruff + YAML 语法 (无 pytest)
+#   ci-local-fast  (~5s)  — GaC + Ruff 回归基线 + YAML (全量 Ruff 债务显式 advisory)
 #   ci-local       (~30s) — 上述 + omo pytest + integration tests
 # 嵌入点: pre-push hook (见 .githooks/pre-push)
 
@@ -223,38 +223,7 @@ signal-poll:  ## 手动执行一次感知面信号轮询
 	@python3 bin/ssot/signal-poller.py
 
 ci-local-fast: check-layers
-	@echo "════════════════════════════════════════════════════"
-	@echo "  ci-local-fast — 本地 CI 预检 (快速模式, ~5s)"
-	@echo "════════════════════════════════════════════════════"
-	@CI_LOCAL_FAIL=0; \
-	echo "── GaC local gate ───────────────────────────────────"; \
-	$(PY) bin/gac/gac-local-gate.py 2>&1 | sed 's/^/[gac] /' || CI_LOCAL_FAIL=1; \
-	echo ""; \
-	echo "── dir-hygiene ──────────────────────────────────────"; \
-	$(PY) bin/ssot/dir-hygiene-check.py 2>&1 | sed 's/^/[hygiene] /' || CI_LOCAL_FAIL=1; \
-	echo ""; \
-	echo "── ruff check (omo + scripts) ──────────────────────"; \
-	ruff check projects/omo/src scripts --ignore F401,F821,E402,E722 2>&1 | sed 's/^/[ruff] /' || CI_LOCAL_FAIL=1; \
-	echo ""; \
- 	echo "── HTML entity 编码检查 (Python/YAML) ──────────────"; \
- 	if grep -rn '&[gl]t;' projects/ --include='*.py' --include='*.yaml' --include='*.yml' 2>/dev/null \
- 	   | grep -v 'tests/' | grep -v 'test_' | grep -v 'replace(' | grep -v '\.git/' \
-	   | grep -v node_modules | grep -v '\.venv'; then \
- 		echo "❌ 发现 HTML 实体编码泄漏 (&gt; / &lt;)，请替换为 > / <"; \
- 		CI_LOCAL_FAIL=1; \
- 	else \
- 		echo "✅ 未发现 HTML 实体编码泄漏"; \
- 	fi; \
-	echo ""; \
-	echo "── YAML 语法校验 (workflows + protocols) ───────────"; \
-	uv run --with pyyaml python3 bin/ssot/yaml-validate.py 2>&1 | sed 's/^/[yaml] /' || CI_LOCAL_FAIL=1; \
-	echo ""; \
-	if [ "$$CI_LOCAL_FAIL" = "1" ]; then \
-		echo "❌ ci-local-fast: 有检查未通过"; \
-		exit 1; \
-	else \
-		echo "✅ ci-local-fast: 全部通过 (~5s)"; \
-	fi
+	@$(PY) bin/gac/ci-local-fast.py
 
 check-layers:
 	@echo "── 分层依赖检查 ─────────────────────────────────────"
