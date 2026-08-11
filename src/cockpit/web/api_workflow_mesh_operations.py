@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import datetime
+import hashlib
+import json
 import logging
 import os
 import sys
+import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +21,11 @@ except ImportError:
     APIRouter = None  # type: ignore[assignment,misc]
     Query = None  # type: ignore[assignment,misc]
     Request = None  # type: ignore[assignment,misc]
+
+try:
+    from fastapi.responses import JSONResponse
+except ImportError:
+    JSONResponse = None  # type: ignore[assignment,misc]
 
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
@@ -63,6 +72,29 @@ except Exception as exc:  # Keep the episode projection route independently unav
 else:
     _EPISODE_PROJECTION_IMPORT_ERROR = None
 
+try:
+    from omo.event_ledger import LedgerBroker
+    from omo.personal_episode import CAPABILITY, PersonalEpisodeError, PersonalEpisodeService
+except Exception as exc:  # Keep the existing Workflow Mesh routes independently available.
+    CAPABILITY = "bos://personal/followup/draft"
+    LedgerBroker = None  # type: ignore[assignment]
+    PersonalEpisodeError = ValueError  # type: ignore[assignment,misc]
+    PersonalEpisodeService = None  # type: ignore[assignment]
+    _PERSONAL_EPISODE_IMPORT_ERROR: Exception | None = exc
+else:
+    _PERSONAL_EPISODE_IMPORT_ERROR = None
+
+try:
+    from agora.mcp.policy_enforcement import PEPDenied, complete, enforce, reset_pep_provider_cache
+except Exception as exc:  # An effectful local draft must fail closed without Agora PEP.
+    PEPDenied = RuntimeError  # type: ignore[assignment,misc]
+    complete = None  # type: ignore[assignment]
+    enforce = None  # type: ignore[assignment]
+    reset_pep_provider_cache = None  # type: ignore[assignment]
+    _PEP_IMPORT_ERROR: Exception | None = exc
+else:
+    _PEP_IMPORT_ERROR = None
+
 
 router = APIRouter(prefix="/api/workflow-mesh", tags=["workflow-mesh"]) if APIRouter else None
 from cockpit.web._agora_ports import agora_http_endpoint
@@ -89,6 +121,79 @@ def _event_ledger_db_path() -> Path:
     if env:
         return Path(env).resolve()
     return (_REPO_ROOT / "runtime" / "omo" / "event-ledger.sqlite3").resolve()
+
+
+def _personal_draft_dir() -> Path:
+    """Resolve the server-owned local draft directory, never a caller path."""
+    configured = os.environ.get("PERSONAL_DRAFT_DIR")
+    if configured:
+        return Path(configured).resolve()
+    return (_REPO_ROOT / "runtime" / "omo" / "personal-drafts").resolve()
+
+
+@contextmanager
+def _personal_episode_service() -> Any:
+    """Create one request-local OMO service and always close its SQLite broker."""
+    if PersonalEpisodeService is None or LedgerBroker is None:
+        raise RuntimeError("personal episode runtime unavailable")
+    broker = LedgerBroker.connect(_event_ledger_db_path())
+    try:
+        yield PersonalEpisodeService(broker)
+    finally:
+        broker.close()
+
+
+def _personal_error(reason: str, *, status_code: int = 409) -> Any:
+    """Return a non-success response without leaking broker or PEP internals."""
+    payload = {"ok": False, "status": "blocked", "error": reason}
+    if JSONResponse is None:
+        return payload
+    return JSONResponse(status_code=status_code, content=payload)
+
+
+def _personal_request(body: Any, allowed: set[str]) -> dict[str, Any]:
+    if not isinstance(body, dict):
+        raise PersonalEpisodeError("invalid_request", "request body must be an object")
+    unknown = sorted(set(body) - allowed)
+    if unknown:
+        raise PersonalEpisodeError("invalid_request", f"unsupported fields: {unknown}")
+    return body
+
+
+def _required_text(body: dict[str, Any], field: str) -> str:
+    value = body.get(field)
+    if not isinstance(value, str) or not value.strip():
+        raise PersonalEpisodeError("invalid_request", f"{field} must be non-empty")
+    return value.strip()
+
+
+def _write_local_draft(context: Any, draft: dict[str, str]) -> Path:
+    """Atomically persist one server-named, never-send JSON artifact."""
+    draft_dir = _personal_draft_dir()
+    draft_dir.mkdir(parents=True, exist_ok=True)
+    stable_name = hashlib.sha256(
+        f"{context.episode_id}|{context.action_id}".encode()
+    ).hexdigest()[:24]
+    target = draft_dir / f"personal-followup-{stable_name}.json"
+    payload = {**draft, "never_send": True}
+    descriptor, temporary_name = tempfile.mkstemp(
+        dir=draft_dir,
+        prefix=f".{target.name}.",
+        suffix=".tmp",
+        text=True,
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, ensure_ascii=False, sort_keys=False)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        temporary.replace(target)
+    except Exception:
+        temporary.unlink(missing_ok=True)
+        raise
+    return target
 
 
 async def _read_capability_health(required_capabilities: list[str]) -> dict[str, Any]:
@@ -283,6 +388,136 @@ if router:
             "projection": projection,
             **controls,
         }
+
+    @router.post("/personal-episode/start")
+    async def post_personal_episode_start(request: Request) -> Any:  # type: ignore[valid-type]
+        """Create one human-confirmation-required personal Inbox episode."""
+        if PersonalEpisodeService is None:
+            return _personal_error("personal_episode_unavailable", status_code=503)
+        try:
+            body = _personal_request(
+                await request.json(),
+                {
+                    "principal_id",
+                    "role_id",
+                    "responsibility_id",
+                    "executor_id",
+                    "request_id",
+                    "summary",
+                    "why_now",
+                    "deadline",
+                },
+            )
+            with _personal_episode_service() as service:
+                episode = service.start(
+                    principal_id=_required_text(body, "principal_id"),
+                    role_id=_required_text(body, "role_id"),
+                    responsibility_id=_required_text(body, "responsibility_id"),
+                    executor_id=_required_text(body, "executor_id"),
+                    request_id=_required_text(body, "request_id"),
+                    summary=_required_text(body, "summary"),
+                    why_now=str(body.get("why_now") or ""),
+                    deadline=str(body["deadline"]) if body.get("deadline") is not None else None,
+                )
+        except (PersonalEpisodeError, OSError, TypeError, ValueError) as exc:
+            _logger.info("personal_episode_start_blocked: %s", type(exc).__name__)
+            return _personal_error(getattr(exc, "reason", "personal_episode_start_invalid"))
+        return {"ok": True, "status": "pending_confirmation", "episode": episode.to_dict()}
+
+    @router.post("/personal-episode/confirm")
+    async def post_personal_episode_confirm(request: Request) -> Any:  # type: ignore[valid-type]
+        """Grant the exact revocable A2/R0 mandate after an explicit human confirm."""
+        if PersonalEpisodeService is None:
+            return _personal_error("personal_episode_unavailable", status_code=503)
+        try:
+            body = _personal_request(
+                await request.json(),
+                {"episode_id", "principal_id", "executor_id", "human_confirmed"},
+            )
+            with _personal_episode_service() as service:
+                confirmation = service.confirm(
+                    episode_id=_required_text(body, "episode_id"),
+                    principal_id=_required_text(body, "principal_id"),
+                    executor_id=_required_text(body, "executor_id"),
+                    human_confirmed=body.get("human_confirmed") is True,
+                )
+        except (PersonalEpisodeError, OSError, TypeError, ValueError) as exc:
+            _logger.info("personal_episode_confirm_blocked: %s", type(exc).__name__)
+            return _personal_error(getattr(exc, "reason", "personal_episode_confirm_invalid"))
+        return {"ok": True, "status": "confirmed", "confirmation": confirmation.to_dict()}
+
+    @router.post("/personal-episode/execute")
+    async def post_personal_episode_execute(request: Request) -> Any:  # type: ignore[valid-type]
+        """PEP-gate and create one server-owned never-send local draft artifact."""
+        if PersonalEpisodeService is None or enforce is None or complete is None:
+            return _personal_error("personal_episode_execution_unavailable", status_code=503)
+        artifact: Path | None = None
+        decision = receipt = None
+        terminal_confirmed = False
+        try:
+            body = _personal_request(
+                await request.json(),
+                {"episode_id", "principal_id", "title", "context", "deadline", "next_action"},
+            )
+            with _personal_episode_service() as service:
+                context = service.reload_execution_context(
+                    _required_text(body, "episode_id"), _required_text(body, "principal_id")
+                )
+                draft = {
+                    field: _required_text(body, field)
+                    for field in ("title", "context", "deadline", "next_action")
+                }
+                # Trusted-local default only; an explicit deployment binding wins unchanged.
+                if not os.environ.get("AGORA_PEP_PROVIDER"):
+                    os.environ["AGORA_PEP_PROVIDER"] = "omo.sovereignty.enforcement:AgoraPepProvider"
+                    if reset_pep_provider_cache is not None:
+                        reset_pep_provider_cache()
+                decision, receipt = enforce(
+                    uri=CAPABILITY,
+                    tool_name="personal_followup_draft",
+                    operation="write",
+                    caller_id=context.executor_id,
+                    arguments={"_omo_policy": context.omo_policy},
+                    payload=draft,
+                )
+                artifact = _write_local_draft(context, draft)
+                evidence_uri = artifact.resolve().as_uri()
+                complete(decision, receipt, succeeded=True, result={"evidence_uri": evidence_uri})
+                terminal_confirmed = True
+                service.record_evidence(context, evidence_uri)
+        except (PersonalEpisodeError, PEPDenied, OSError, TypeError, ValueError) as exc:
+            if artifact is not None and not terminal_confirmed:
+                artifact.unlink(missing_ok=True)
+            if (decision is not None or receipt is not None) and not terminal_confirmed:
+                try:
+                    complete(decision, receipt, succeeded=False, error=type(exc).__name__)
+                except Exception as terminal_exc:  # Terminal failure is evidence, not a silent cleanup detail.
+                    _logger.warning("personal_episode_terminal_failure: %s", type(terminal_exc).__name__)
+            _logger.info("personal_episode_execute_blocked: %s", type(exc).__name__)
+            return _personal_error(getattr(exc, "reason", "personal_episode_execution_blocked"))
+        return {
+            "ok": True,
+            "status": "completed",
+            "episode_id": context.episode_id,
+            "evidence_uri": evidence_uri,
+        }
+
+    @router.post("/personal-episode/feedback")
+    async def post_personal_episode_feedback(request: Request) -> Any:  # type: ignore[valid-type]
+        """Append one closed-vocabulary human outcome to the causal episode."""
+        if PersonalEpisodeService is None:
+            return _personal_error("personal_episode_unavailable", status_code=503)
+        try:
+            body = _personal_request(await request.json(), {"episode_id", "principal_id", "verdict"})
+            with _personal_episode_service() as service:
+                context = service.reload_execution_context(
+                    _required_text(body, "episode_id"), _required_text(body, "principal_id")
+                )
+                sequence = service.record_outcome(context, _required_text(body, "verdict"))
+        except (PersonalEpisodeError, OSError, TypeError, ValueError) as exc:
+            _logger.info("personal_episode_feedback_blocked: %s", type(exc).__name__)
+            return _personal_error(getattr(exc, "reason", "personal_episode_feedback_invalid"))
+        return {"ok": True, "status": "recorded", "sequence": sequence}
 
     @router.post("/engineering-delivery/review")
     async def post_engineering_delivery_review(request: Request) -> dict[str, Any]:  # type: ignore[valid-type]
