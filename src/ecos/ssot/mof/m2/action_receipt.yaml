@@ -1,0 +1,240 @@
+# M2: ActionReceipt
+# W2-03 (BET-Y1Q2-T1-06) single-user execution receipt.
+# Anchored to StructuralElement.Artifact — an ActionReceipt is the durable
+# execution record the Agora PEP writes next to the provider boundary:
+# started is persisted before the at-most-once provider call, then a terminal
+# succeeded|failed state. It carries the same authorization context as the
+# governing PolicyDecision plus a decision_id link so a replayed receipt is
+# independently verifiable without copied dict/dataclass mirrors.
+# Model-first: this YAML is the single source of truth; the control artifacts
+# under src/ecos/ssot/mof/generated/control are compiler output and must never
+# be hand-edited.
+
+m2_type: ActionReceipt
+version: 1.0.0
+created: '2026-08-11T12:45:00Z'
+updated: '2026-08-11'
+owner:
+  team: execution-control
+  contact: xiamingxing
+  policy: 本 M2 由 execution-control 域负责；任何变更须走 MOF ADR 并重新编译 control 工件，禁止直接手改生成物。
+migrationPolicy:
+  strategy: additive-only
+  constraints:
+    - 遵守 semver：1.0.0 为已发布基线。
+    - 新增可选字段 → optionalProperties，minor 版本（1.1.0），同步重编译全部 control 工件。
+    - 新增必填字段/枚举收窄 → major 版本（2.0.0），并声明 1.x 实例的显式迁移路径。
+    - 破坏性变更（删除/改名 required 字段、删除枚举值）禁止静默进行；须先弃用后移除。
+    - 生成物（schema/pydantic/zod/sql/manifest）由确定性编译器重生成；任何手工改动视为篡改（compiler check 会失败）。
+
+ActionReceipt:
+  m3_parent: StructuralElement.Artifact
+  description: |
+    Formal ActionReceipt M2 schema (version 1.0.0): the durable execution
+    receipt for one authorized action. A strict started → succeeded|failed
+    state machine records the at-most-once provider attempt: started is
+    appended before the provider call, the terminal state after. Every
+    receipt carries the full decision context (decision_id + action,
+    principal/executor/episode, mandate id+version, capability, server risk,
+    budget/unit, disclosure, canonical request hash, trace, issued/expires)
+    so PEP matching and replay need no copied runtime dict/dataclass mirrors.
+    reason is optional and meaningful on terminal failure (provider_failed,
+    receipt_unconfirmed, ...). No cryptographic signatures; single-user trust
+    domain.
+  icon: 🧾
+
+  stateMachine:
+    started:
+      description: 已启动·provider 至多一次
+      transitions: [succeeded, failed]
+    succeeded:
+      description: 成功完成·provider 返回正常
+      transitions: []
+    failed:
+      description: 失败·provider 异常或终态未确认
+      transitions: []
+
+  requiredProperties:
+    receipt_id:
+      type: string
+      description: 回执唯一标识 (format receipt:<id>)
+      pattern: '^receipt:[A-Za-z0-9_:.-]+$'
+    schema_version:
+      type: string
+      description: 必须等于 action-receipt/v1
+      pattern: '^action-receipt/v1$'
+    decision_id:
+      type: string
+      description: 依据的 PolicyDecision (format decision:<id>)
+      pattern: '^decision:[A-Za-z0-9_:.-]+$'
+    action_id:
+      type: string
+      description: 执行的 Action 标识 (format action:<id>)
+      pattern: '^action:[A-Za-z0-9_:.-]+$'
+    principal_id:
+      type: string
+      description: 授权主 (format principal:<id>)
+      pattern: '^principal:[A-Za-z0-9_:.-]+$'
+    executor_id:
+      type: string
+      description: 实际执行器 (format agent:<id>)
+      pattern: '^agent:[A-Za-z0-9_:.-]+$'
+    episode_id:
+      type: string
+      description: 所属 Episode (须 open 且已 admitted)
+      pattern: '^[A-Za-z0-9_-]{8,}$'
+    mandate_id:
+      type: string
+      description: 授权依据的 Mandate (format mandate:<id>)
+      pattern: '^mandate:[A-Za-z0-9_:.-]+$'
+    mandate_version:
+      type: int
+      description: 授权时锁定的 Mandate 版本号 (>= 1)
+    capability:
+      type: string
+      description: 精确能力 bos:// URI (PEP 在 provider 前匹配)
+      pattern: '^bos://[A-Za-z0-9_.:/%?=+-]+$'
+    server_risk:
+      type: enum
+      description: 服务端能力描述符风险 (R0-R3)
+      values: [R0, R1, R2, R3]
+    budget_limit:
+      type: number
+      description: 本次执行预算上限 (>= 0; 与 budget_unit 成对)
+    budget_unit:
+      type: string
+      description: 预算计量单位 (format <unit>; e.g. call)
+      pattern: '^[a-z][a-z0-9_-]*$'
+    disclosure:
+      type: string
+      description: 披露策略 (format disclosure:<policy>)
+      pattern: '^disclosure:[A-Za-z0-9_-]+$'
+    request_hash:
+      type: string
+      description: Canonical request hash (相同 action+hash 幂等复用; 不同 hash 拒绝)
+      pattern: '^[A-Za-z0-9_-]{8,}$'
+    trace_id:
+      type: string
+      description: 决策事件链路追踪 ID (24 hex 或 ULID)
+      pattern: '^[A-Za-z0-9_-]{8,}$'
+    issued_at:
+      type: string
+      description: 决策签发时间 (ISO-8601; PEP 在 provider 前校验)
+      format: date-time
+    expires_at:
+      type: string
+      description: 决策过期时间 (ISO-8601; expired 拒绝且 provider.calls=0)
+      format: date-time
+    status:
+      type: enum
+      description: 回执状态 (started|succeeded|failed; 必须匹配 stateMachine key)
+      values: [started, succeeded, failed]
+    started_at:
+      type: string
+      description: 回执启动时间 (ISO-8601; 持久化于 provider 调用前)
+      format: date-time
+
+  optionalProperties:
+    completed_at:
+      type: string
+      description: 终态完成时间 (ISO-8601; 仅 succeeded|failed 时存在)
+      format: date-time
+    reason:
+      type: enum
+      description: 稳定 reason 词表 (终态失败时使用; succeeded 通常缺省)
+      values: [allowed, policy_denied, pdp_unavailable, ledger_unavailable, provider_failed, receipt_unconfirmed]
+    result:
+      type: map
+      description: provider 返回结果 (JSON 对象; 无真实外部副作用)
+    description:
+      type: string
+      description: 详细描述
+    tags:
+      type: list
+      description: 分类标签
+      items:
+        type: string
+
+  validationRules:
+    - rule: receipt_id is not None and receipt_id != ''
+      level: error
+      message: receipt_id 必须非空
+    - rule: schema_version == 'action-receipt/v1'
+      level: error
+      message: schema_version 必须为 action-receipt/v1
+    - rule: receipt_id.startswith('receipt:')
+      level: error
+      message: "receipt_id 必须以 receipt: 开头"
+    - rule: decision_id.startswith('decision:')
+      level: error
+      message: "decision_id 必须以 decision: 开头"
+    - rule: action_id.startswith('action:')
+      level: error
+      message: "action_id 必须以 action: 开头"
+    - rule: principal_id.startswith('principal:')
+      level: error
+      message: "principal_id 必须以 principal: 开头"
+    - rule: executor_id.startswith('agent:')
+      level: error
+      message: "executor_id 必须以 agent: 开头"
+    - rule: episode_id is not None and len(episode_id) >= 8
+      level: error
+      message: episode_id 长度必须 >= 8
+    - rule: mandate_id.startswith('mandate:')
+      level: error
+      message: "mandate_id 必须以 mandate: 开头"
+    - rule: mandate_version is not None and mandate_version >= 1
+      level: error
+      message: mandate_version 必须 >= 1
+    - rule: capability is not None and capability.startswith('bos://')
+      level: error
+      message: "capability 必须以 bos:// 开头 (精确 URI, 无通配符)"
+    - rule: server_risk in ['R0', 'R1', 'R2', 'R3']
+      level: error
+      message: server_risk 枚举不合法
+    - rule: budget_limit is not None and budget_limit >= 0
+      level: error
+      message: budget_limit 必须 >= 0
+    - rule: budget_unit is not None and budget_unit != ''
+      level: error
+      message: budget_unit 必须非空
+    - rule: disclosure is not None and disclosure.startswith('disclosure:')
+      level: error
+      message: "disclosure 必须以 disclosure: 开头"
+    - rule: request_hash is not None and len(request_hash) >= 8
+      level: error
+      message: request_hash 长度必须 >= 8
+    - rule: trace_id is not None and len(trace_id) >= 8
+      level: error
+      message: trace_id 长度必须 >= 8
+    - rule: "issued_at is not None and expires_at is not None and issued_at <= expires_at"
+      level: error
+      message: issued_at 不得晚于 expires_at
+    - rule: status in ['started', 'succeeded', 'failed']
+      level: error
+      message: status 必须是合法的 stateMachine 键
+    - rule: "not (status in ('succeeded', 'failed') and completed_at is None)"
+      level: error
+      message: 终态 (succeeded|failed) 必须携带 completed_at
+    - rule: "not (status == 'failed' and reason in (None, '', 'allowed'))"
+      level: error
+      message: failed 回执必须携带稳定的失败 reason
+    - rule: "started_at is not None and (completed_at is None or started_at <= completed_at)"
+      level: error
+      message: started_at 不得晚于 completed_at
+
+  examples:
+    - id: ACTION-RECEIPT-EXAMPLE-001
+      name: 最小 started 回执
+      description: |
+        provider 调用前持久化的启动回执: status=started, 携带完整决策上下文绑定
+        (decision_id/action/principal/executor/episode/mandate+version/capability/
+        risk/budget/disclosure/hash/trace/issued/expires)。
+    - id: ACTION-RECEIPT-EXAMPLE-002
+      name: succeeded 终态回执
+      description: |
+        provider 正常返回后: status=succeeded, completed_at 补齐, reason 缺省。
+    - id: ACTION-RECEIPT-EXAMPLE-003
+      name: failed 终态回执
+      description: |
+        provider 异常: status=failed, reason=provider_failed, completed_at 补齐。

@@ -1,0 +1,206 @@
+# M2: PolicyDecision
+# W2-03 (BET-Y1Q2-T1-06) single-user PDP decision record.
+# Anchored to GovernanceElement.Decision — a PolicyDecision is the immutable
+# in-process decision context produced by the OMO PDP after admission checks,
+# persisted to the decision ledger before any side effect is allowed.
+# Model-first: this YAML is the single source of truth; the control artifacts
+# under src/ecos/ssot/mof/generated/control are compiler output and must never
+# be hand-edited.
+
+m2_type: PolicyDecision
+version: 1.0.0
+created: '2026-08-11T12:45:00Z'
+updated: '2026-08-11'
+owner:
+  team: execution-control
+  contact: xiamingxing
+  policy: 本 M2 由 execution-control 域负责；任何变更须走 MOF ADR 并重新编译 control 工件，禁止直接手改生成物。
+migrationPolicy:
+  strategy: additive-only
+  constraints:
+    - 遵守 semver：1.0.0 为已发布基线。
+    - 新增可选字段 → optionalProperties，minor 版本（1.1.0），同步重编译全部 control 工件。
+    - 新增必填字段/枚举收窄 → major 版本（2.0.0），并声明 1.x 实例的显式迁移路径。
+    - 破坏性变更（删除/改名 required 字段、删除枚举值）禁止静默进行；须先弃用后移除。
+    - 生成物（schema/pydantic/zod/sql/manifest）由确定性编译器重生成；任何手工改动视为篡改（compiler check 会失败）。
+
+PolicyDecision:
+  m3_parent: GovernanceElement.Decision
+  description: |
+    Formal PolicyDecision M2 schema (version 1.0.0): the immutable decision
+    context produced by the OMO PDP for one action request, persisted before
+    any provider call. Binds the decision outcome (allow|deny, fail-closed)
+    to the full authorization context: action, principal/executor/episode
+    identity, pinned mandate id+version, capability (exact bos:// URI),
+    server-side risk, budget/unit, disclosure, canonical request hash, trace,
+    and the issued/expires validity window. reason carries a stable vocabulary
+    (allowed, policy_denied, pdp_unavailable, ledger_unavailable,
+    provider_failed, receipt_unconfirmed) — no broad exception may map to
+    allow. The Agora PEP matches this context immediately before the provider
+    and refuses mismatch/expired/revoked with provider.calls=0. No
+    cryptographic signatures; single-user trust domain.
+  icon: 🚦
+
+  requiredProperties:
+    decision_id:
+      type: string
+      description: 决策唯一标识 (format decision:<id>)
+      pattern: '^decision:[A-Za-z0-9_:.-]+$'
+    schema_version:
+      type: string
+      description: 必须等于 policy-decision/v1
+      pattern: '^policy-decision/v1$'
+    decision:
+      type: enum
+      description: 决策结果 (fail-closed; 取值 allow|deny)
+      values: [allow, deny]
+    action_id:
+      type: string
+      description: 被裁决 Action 标识 (format action:<id>)
+      pattern: '^action:[A-Za-z0-9_:.-]+$'
+    principal_id:
+      type: string
+      description: 授权主 (Human/Agent 身份, format principal:<id>)
+      pattern: '^principal:[A-Za-z0-9_:.-]+$'
+    executor_id:
+      type: string
+      description: 实际执行器 (format agent:<id>)
+      pattern: '^agent:[A-Za-z0-9_:.-]+$'
+    episode_id:
+      type: string
+      description: 所属 Episode (须 open 且已 admitted)
+      pattern: '^[A-Za-z0-9_-]{8,}$'
+    mandate_id:
+      type: string
+      description: 授权依据的 Mandate (format mandate:<id>)
+      pattern: '^mandate:[A-Za-z0-9_:.-]+$'
+    mandate_version:
+      type: int
+      description: 授权时锁定的 Mandate 版本号 (>= 1)
+    capability:
+      type: string
+      description: 精确能力 bos:// URI (PEP 在 provider 前匹配)
+      pattern: '^bos://[A-Za-z0-9_.:/%?=+-]+$'
+    server_risk:
+      type: enum
+      description: 服务端能力描述符风险 (R0-R3)
+      values: [R0, R1, R2, R3]
+    budget_limit:
+      type: number
+      description: 本次执行预算上限 (>= 0; 与 budget_unit 成对)
+    budget_unit:
+      type: string
+      description: 预算计量单位 (format <unit>; e.g. call)
+      pattern: '^[a-z][a-z0-9_-]*$'
+    disclosure:
+      type: string
+      description: 披露策略 (format disclosure:<policy>)
+      pattern: '^disclosure:[A-Za-z0-9_-]+$'
+    request_hash:
+      type: string
+      description: Canonical request hash (相同 action+hash 幂等复用; 不同 hash 拒绝)
+      pattern: '^[A-Za-z0-9_-]{8,}$'
+    trace_id:
+      type: string
+      description: 决策事件链路追踪 ID (24 hex 或 ULID)
+      pattern: '^[A-Za-z0-9_-]{8,}$'
+    issued_at:
+      type: string
+      description: 决策签发时间 (ISO-8601; 不得晚于 expires_at)
+      format: date-time
+    expires_at:
+      type: string
+      description: 决策过期时间 (ISO-8601; PEP 在 provider 前校验, expired 拒绝)
+      format: date-time
+    reason:
+      type: enum
+      description: 稳定 reason 词表 (至少 policy_denied/pdp_unavailable/ledger_unavailable/provider_failed/receipt_unconfirmed; allow 决策必须为 allowed)
+      values: [allowed, policy_denied, pdp_unavailable, ledger_unavailable, provider_failed, receipt_unconfirmed]
+
+  optionalProperties:
+    description:
+      type: string
+      description: 详细描述
+    tags:
+      type: list
+      description: 分类标签
+      items:
+        type: string
+
+  validationRules:
+    - rule: decision_id is not None and decision_id != ''
+      level: error
+      message: decision_id 必须非空
+    - rule: schema_version == 'policy-decision/v1'
+      level: error
+      message: schema_version 必须为 policy-decision/v1
+    - rule: decision_id.startswith('decision:')
+      level: error
+      message: "decision_id 必须以 decision: 开头"
+    - rule: action_id.startswith('action:')
+      level: error
+      message: "action_id 必须以 action: 开头"
+    - rule: principal_id.startswith('principal:')
+      level: error
+      message: "principal_id 必须以 principal: 开头"
+    - rule: executor_id.startswith('agent:')
+      level: error
+      message: "executor_id 必须以 agent: 开头"
+    - rule: episode_id is not None and len(episode_id) >= 8
+      level: error
+      message: episode_id 长度必须 >= 8
+    - rule: mandate_id.startswith('mandate:')
+      level: error
+      message: "mandate_id 必须以 mandate: 开头"
+    - rule: mandate_version is not None and mandate_version >= 1
+      level: error
+      message: mandate_version 必须 >= 1
+    - rule: capability is not None and capability.startswith('bos://')
+      level: error
+      message: "capability 必须以 bos:// 开头 (精确 URI, 无通配符)"
+    - rule: server_risk in ['R0', 'R1', 'R2', 'R3']
+      level: error
+      message: server_risk 枚举不合法
+    - rule: budget_limit is not None and budget_limit >= 0
+      level: error
+      message: budget_limit 必须 >= 0
+    - rule: budget_unit is not None and budget_unit != ''
+      level: error
+      message: budget_unit 必须非空
+    - rule: disclosure is not None and disclosure.startswith('disclosure:')
+      level: error
+      message: "disclosure 必须以 disclosure: 开头"
+    - rule: request_hash is not None and len(request_hash) >= 8
+      level: error
+      message: request_hash 长度必须 >= 8
+    - rule: trace_id is not None and len(trace_id) >= 8
+      level: error
+      message: trace_id 长度必须 >= 8
+    - rule: "issued_at is not None and expires_at is not None and issued_at <= expires_at"
+      level: error
+      message: issued_at 不得晚于 expires_at
+    - rule: decision in ['allow', 'deny']
+      level: error
+      message: decision 枚举不合法 (fail-closed, 无宽泛 exception 映射)
+    - rule: reason in ['allowed', 'policy_denied', 'pdp_unavailable', 'ledger_unavailable', 'provider_failed', 'receipt_unconfirmed']
+      level: error
+      message: reason 必须属于稳定 reason 词表
+    - rule: "not (decision == 'allow' and reason != 'allowed')"
+      level: error
+      message: allow 决策的 reason 必须为 allowed (禁止宽泛 exception 映射到 allow)
+    - rule: "not (decision == 'deny' and reason == 'allowed')"
+      level: error
+      message: deny 决策的 reason 不得为 allowed
+
+  examples:
+    - id: POLICY-DECISION-EXAMPLE-001
+      name: 最小 allow 决策
+      description: |
+        fail-closed 下通过 PDP 校验的允许决策: 精确 capability bos://mail/draft、
+        server risk R2、预算 call*1、disclosure:private、canonical request hash、
+        issued/expires 窗口、reason=allowed。
+    - id: POLICY-DECISION-EXAMPLE-002
+      name: policy_denied 决策
+      description: |
+        无有效授权依据时拒绝: decision=deny, reason=policy_denied, 其余上下文仍完整绑定
+        (action/principal/executor/episode/mandate+version/capability/risk/budget/disclosure/hash/trace/window)。

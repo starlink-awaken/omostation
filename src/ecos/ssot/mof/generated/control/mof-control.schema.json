@@ -66,6 +66,177 @@
         ]
       }
     },
+    "ActionReceipt": {
+      "$id": "urn:mof:ActionReceipt:1.0.0",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "Formal ActionReceipt M2 schema (version 1.0.0): the durable execution\nreceipt for one authorized action. A strict started \u2192 succeeded|failed\nstate machine records the at-most-once provider attempt: started is\nappended before the provider call, the terminal state after. Every\nreceipt carries the full decision context (decision_id + action,\nprincipal/executor/episode, mandate id+version, capability, server risk,\nbudget/unit, disclosure, canonical request hash, trace, issued/expires)\nso PEP matching and replay need no copied runtime dict/dataclass mirrors.\nreason is optional and meaningful on terminal failure (provider_failed,\nreceipt_unconfirmed, ...). No cryptographic signatures; single-user trust\ndomain.",
+      "properties": {
+        "action_id": {
+          "description": "\u6267\u884c\u7684 Action \u6807\u8bc6 (format action:<id>)",
+          "pattern": "^action:[A-Za-z0-9_:.-]+$",
+          "type": "string"
+        },
+        "budget_limit": {
+          "description": "\u672c\u6b21\u6267\u884c\u9884\u7b97\u4e0a\u9650 (>= 0; \u4e0e budget_unit \u6210\u5bf9)",
+          "type": "number"
+        },
+        "budget_unit": {
+          "description": "\u9884\u7b97\u8ba1\u91cf\u5355\u4f4d (format <unit>; e.g. call)",
+          "pattern": "^[a-z][a-z0-9_-]*$",
+          "type": "string"
+        },
+        "capability": {
+          "description": "\u7cbe\u786e\u80fd\u529b bos:// URI (PEP \u5728 provider \u524d\u5339\u914d)",
+          "pattern": "^bos://[A-Za-z0-9_.:/%?=+-]+$",
+          "type": "string"
+        },
+        "completed_at": {
+          "description": "\u7ec8\u6001\u5b8c\u6210\u65f6\u95f4 (ISO-8601; \u4ec5 succeeded|failed \u65f6\u5b58\u5728)",
+          "format": "date-time",
+          "type": "string"
+        },
+        "decision_id": {
+          "description": "\u4f9d\u636e\u7684 PolicyDecision (format decision:<id>)",
+          "pattern": "^decision:[A-Za-z0-9_:.-]+$",
+          "type": "string"
+        },
+        "description": {
+          "description": "\u8be6\u7ec6\u63cf\u8ff0",
+          "type": "string"
+        },
+        "disclosure": {
+          "description": "\u62ab\u9732\u7b56\u7565 (format disclosure:<policy>)",
+          "pattern": "^disclosure:[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        "episode_id": {
+          "description": "\u6240\u5c5e Episode (\u987b open \u4e14\u5df2 admitted)",
+          "pattern": "^[A-Za-z0-9_-]{8,}$",
+          "type": "string"
+        },
+        "executor_id": {
+          "description": "\u5b9e\u9645\u6267\u884c\u5668 (format agent:<id>)",
+          "pattern": "^agent:[A-Za-z0-9_:.-]+$",
+          "type": "string"
+        },
+        "expires_at": {
+          "description": "\u51b3\u7b56\u8fc7\u671f\u65f6\u95f4 (ISO-8601; expired \u62d2\u7edd\u4e14 provider.calls=0)",
+          "format": "date-time",
+          "type": "string"
+        },
+        "issued_at": {
+          "description": "\u51b3\u7b56\u7b7e\u53d1\u65f6\u95f4 (ISO-8601; PEP \u5728 provider \u524d\u6821\u9a8c)",
+          "format": "date-time",
+          "type": "string"
+        },
+        "mandate_id": {
+          "description": "\u6388\u6743\u4f9d\u636e\u7684 Mandate (format mandate:<id>)",
+          "pattern": "^mandate:[A-Za-z0-9_:.-]+$",
+          "type": "string"
+        },
+        "mandate_version": {
+          "description": "\u6388\u6743\u65f6\u9501\u5b9a\u7684 Mandate \u7248\u672c\u53f7 (>= 1)",
+          "type": "integer"
+        },
+        "principal_id": {
+          "description": "\u6388\u6743\u4e3b (format principal:<id>)",
+          "pattern": "^principal:[A-Za-z0-9_:.-]+$",
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "allowed",
+            "policy_denied",
+            "pdp_unavailable",
+            "ledger_unavailable",
+            "provider_failed",
+            "receipt_unconfirmed"
+          ]
+        },
+        "receipt_id": {
+          "description": "\u56de\u6267\u552f\u4e00\u6807\u8bc6 (format receipt:<id>)",
+          "pattern": "^receipt:[A-Za-z0-9_:.-]+$",
+          "type": "string"
+        },
+        "request_hash": {
+          "description": "Canonical request hash (\u76f8\u540c action+hash \u5e42\u7b49\u590d\u7528; \u4e0d\u540c hash \u62d2\u7edd)",
+          "pattern": "^[A-Za-z0-9_-]{8,}$",
+          "type": "string"
+        },
+        "result": {
+          "description": "provider \u8fd4\u56de\u7ed3\u679c (JSON \u5bf9\u8c61; \u65e0\u771f\u5b9e\u5916\u90e8\u526f\u4f5c\u7528)",
+          "type": "object"
+        },
+        "schema_version": {
+          "description": "\u5fc5\u987b\u7b49\u4e8e action-receipt/v1",
+          "pattern": "^action-receipt/v1$",
+          "type": "string"
+        },
+        "server_risk": {
+          "enum": [
+            "R0",
+            "R1",
+            "R2",
+            "R3"
+          ]
+        },
+        "started_at": {
+          "description": "\u56de\u6267\u542f\u52a8\u65f6\u95f4 (ISO-8601; \u6301\u4e45\u5316\u4e8e provider \u8c03\u7528\u524d)",
+          "format": "date-time",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "started",
+            "succeeded",
+            "failed"
+          ]
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "trace_id": {
+          "description": "\u51b3\u7b56\u4e8b\u4ef6\u94fe\u8def\u8ffd\u8e2a ID (24 hex \u6216 ULID)",
+          "pattern": "^[A-Za-z0-9_-]{8,}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "receipt_id",
+        "schema_version",
+        "decision_id",
+        "action_id",
+        "principal_id",
+        "executor_id",
+        "episode_id",
+        "mandate_id",
+        "mandate_version",
+        "capability",
+        "server_risk",
+        "budget_limit",
+        "budget_unit",
+        "disclosure",
+        "request_hash",
+        "trace_id",
+        "issued_at",
+        "expires_at",
+        "status",
+        "started_at"
+      ],
+      "title": "ActionReceipt",
+      "type": "object",
+      "x-mof-state-machine": {
+        "failed": [],
+        "started": [
+          "succeeded",
+          "failed"
+        ],
+        "succeeded": []
+      }
+    },
     "Agent": {
       "$id": "urn:mof:Agent:1.0.0",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -3219,6 +3390,148 @@
           "deprecated"
         ]
       }
+    },
+    "PolicyDecision": {
+      "$id": "urn:mof:PolicyDecision:1.0.0",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "Formal PolicyDecision M2 schema (version 1.0.0): the immutable decision\ncontext produced by the OMO PDP for one action request, persisted before\nany provider call. Binds the decision outcome (allow|deny, fail-closed)\nto the full authorization context: action, principal/executor/episode\nidentity, pinned mandate id+version, capability (exact bos:// URI),\nserver-side risk, budget/unit, disclosure, canonical request hash, trace,\nand the issued/expires validity window. reason carries a stable vocabulary\n(allowed, policy_denied, pdp_unavailable, ledger_unavailable,\nprovider_failed, receipt_unconfirmed) \u2014 no broad exception may map to\nallow. The Agora PEP matches this context immediately before the provider\nand refuses mismatch/expired/revoked with provider.calls=0. No\ncryptographic signatures; single-user trust domain.",
+      "properties": {
+        "action_id": {
+          "description": "\u88ab\u88c1\u51b3 Action \u6807\u8bc6 (format action:<id>)",
+          "pattern": "^action:[A-Za-z0-9_:.-]+$",
+          "type": "string"
+        },
+        "budget_limit": {
+          "description": "\u672c\u6b21\u6267\u884c\u9884\u7b97\u4e0a\u9650 (>= 0; \u4e0e budget_unit \u6210\u5bf9)",
+          "type": "number"
+        },
+        "budget_unit": {
+          "description": "\u9884\u7b97\u8ba1\u91cf\u5355\u4f4d (format <unit>; e.g. call)",
+          "pattern": "^[a-z][a-z0-9_-]*$",
+          "type": "string"
+        },
+        "capability": {
+          "description": "\u7cbe\u786e\u80fd\u529b bos:// URI (PEP \u5728 provider \u524d\u5339\u914d)",
+          "pattern": "^bos://[A-Za-z0-9_.:/%?=+-]+$",
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "decision_id": {
+          "description": "\u51b3\u7b56\u552f\u4e00\u6807\u8bc6 (format decision:<id>)",
+          "pattern": "^decision:[A-Za-z0-9_:.-]+$",
+          "type": "string"
+        },
+        "description": {
+          "description": "\u8be6\u7ec6\u63cf\u8ff0",
+          "type": "string"
+        },
+        "disclosure": {
+          "description": "\u62ab\u9732\u7b56\u7565 (format disclosure:<policy>)",
+          "pattern": "^disclosure:[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        "episode_id": {
+          "description": "\u6240\u5c5e Episode (\u987b open \u4e14\u5df2 admitted)",
+          "pattern": "^[A-Za-z0-9_-]{8,}$",
+          "type": "string"
+        },
+        "executor_id": {
+          "description": "\u5b9e\u9645\u6267\u884c\u5668 (format agent:<id>)",
+          "pattern": "^agent:[A-Za-z0-9_:.-]+$",
+          "type": "string"
+        },
+        "expires_at": {
+          "description": "\u51b3\u7b56\u8fc7\u671f\u65f6\u95f4 (ISO-8601; PEP \u5728 provider \u524d\u6821\u9a8c, expired \u62d2\u7edd)",
+          "format": "date-time",
+          "type": "string"
+        },
+        "issued_at": {
+          "description": "\u51b3\u7b56\u7b7e\u53d1\u65f6\u95f4 (ISO-8601; \u4e0d\u5f97\u665a\u4e8e expires_at)",
+          "format": "date-time",
+          "type": "string"
+        },
+        "mandate_id": {
+          "description": "\u6388\u6743\u4f9d\u636e\u7684 Mandate (format mandate:<id>)",
+          "pattern": "^mandate:[A-Za-z0-9_:.-]+$",
+          "type": "string"
+        },
+        "mandate_version": {
+          "description": "\u6388\u6743\u65f6\u9501\u5b9a\u7684 Mandate \u7248\u672c\u53f7 (>= 1)",
+          "type": "integer"
+        },
+        "principal_id": {
+          "description": "\u6388\u6743\u4e3b (Human/Agent \u8eab\u4efd, format principal:<id>)",
+          "pattern": "^principal:[A-Za-z0-9_:.-]+$",
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "allowed",
+            "policy_denied",
+            "pdp_unavailable",
+            "ledger_unavailable",
+            "provider_failed",
+            "receipt_unconfirmed"
+          ]
+        },
+        "request_hash": {
+          "description": "Canonical request hash (\u76f8\u540c action+hash \u5e42\u7b49\u590d\u7528; \u4e0d\u540c hash \u62d2\u7edd)",
+          "pattern": "^[A-Za-z0-9_-]{8,}$",
+          "type": "string"
+        },
+        "schema_version": {
+          "description": "\u5fc5\u987b\u7b49\u4e8e policy-decision/v1",
+          "pattern": "^policy-decision/v1$",
+          "type": "string"
+        },
+        "server_risk": {
+          "enum": [
+            "R0",
+            "R1",
+            "R2",
+            "R3"
+          ]
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "trace_id": {
+          "description": "\u51b3\u7b56\u4e8b\u4ef6\u94fe\u8def\u8ffd\u8e2a ID (24 hex \u6216 ULID)",
+          "pattern": "^[A-Za-z0-9_-]{8,}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "decision_id",
+        "schema_version",
+        "decision",
+        "action_id",
+        "principal_id",
+        "executor_id",
+        "episode_id",
+        "mandate_id",
+        "mandate_version",
+        "capability",
+        "server_risk",
+        "budget_limit",
+        "budget_unit",
+        "disclosure",
+        "request_hash",
+        "trace_id",
+        "issued_at",
+        "expires_at",
+        "reason"
+      ],
+      "title": "PolicyDecision",
+      "type": "object"
     },
     "PredictiveGovernance": {
       "$id": "urn:mof:PredictiveGovernance:1.0.0",
