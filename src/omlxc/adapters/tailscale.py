@@ -11,6 +11,7 @@ import re
 import stat
 import time
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -99,6 +100,27 @@ class _DuplicateJsonKey(ValueError):
 
 class _InvalidJsonConstant(ValueError):
     pass
+
+
+class _AuthorizationFreshness(StrEnum):
+    UNKNOWN = "unknown"
+    STALE = "stale"
+    FRESH = "fresh"
+
+
+@dataclass(frozen=True, slots=True)
+class _PathFingerprint:
+    path: str
+    device: int
+    inode: int
+    mode: int
+    uid: int
+
+
+@dataclass(frozen=True, slots=True)
+class _TrustedExecutable:
+    path: Path
+    fingerprint: tuple[_PathFingerprint, ...]
 
 
 class TailscaleNodePolicy(DomainModel):
@@ -218,9 +240,9 @@ class TailscaleAdapter:
         wall_clock: Callable[[], datetime] | None = None,
     ) -> None:
         snapshot_ttl = _validate_snapshot_ttl(snapshot_ttl_seconds)
-        _validate_trusted_executable(tailscale_executable)
+        trusted_executable = _validate_trusted_executable(tailscale_executable)
         self._policies = policies
-        self._tailscale_executable = tailscale_executable
+        self._trusted_executable = trusted_executable
         self._runner = process_runner or BoundedProcessRunner(
             TAILSCALE_STATUS_OUTPUT_LIMIT,
             env=TAILSCALE_PROCESS_ENV,
@@ -230,10 +252,12 @@ class TailscaleAdapter:
         self._wall_clock = wall_clock or (lambda: datetime.now(UTC))
         self._snapshot: TailscaleSnapshot | None = None
         self._snapshot_monotonic: float | None = None
+        self._authorization_freshness = _AuthorizationFreshness.UNKNOWN
 
     async def snapshot(self) -> TailscaleSnapshot:
         self._snapshot = None
         self._snapshot_monotonic = None
+        self._authorization_freshness = _AuthorizationFreshness.STALE
         self._validate_policy_conflicts()
         output = await self._status_output()
         document = _json_document(output.stdout)
@@ -269,14 +293,20 @@ class TailscaleAdapter:
         snapshot = TailscaleSnapshot(nodes=nodes, observed_at=observed_at)
         self._snapshot = snapshot
         self._snapshot_monotonic = refresh_monotonic
+        self._authorization_freshness = _AuthorizationFreshness.FRESH
         return snapshot
 
     async def _status_output(self) -> ProcessOutput:
         try:
-            executable = _validate_trusted_executable(self._tailscale_executable)
+            accepted = _validate_trusted_executable(self._trusted_executable.path)
+            if accepted.fingerprint != self._trusted_executable.fingerprint:
+                raise ValueError
+            immediate = _validate_trusted_executable(self._trusted_executable.path)
+            if immediate.fingerprint != accepted.fingerprint:
+                raise ValueError
         except ValueError:
             raise TailscaleFailure(TailscaleErrorCode.SPAWN) from None
-        argv = (str(executable), *TAILSCALE_STATUS_ARGS)
+        argv = (str(immediate.path), *TAILSCALE_STATUS_ARGS)
         try:
             output = await self._runner(argv, TAILSCALE_STATUS_TIMEOUT)
         except asyncio.CancelledError:
@@ -366,13 +396,20 @@ class TailscaleAdapter:
     ) -> tuple[TailscaleNodePolicy, TailscaleNodeSnapshot]:
         snapshot = self._snapshot
         refresh_monotonic = self._snapshot_monotonic
-        if snapshot is None or refresh_monotonic is None:
+        if self._authorization_freshness is _AuthorizationFreshness.UNKNOWN:
             raise TailscaleFailure(TailscaleErrorCode.UNKNOWN_NODE)
+        if self._authorization_freshness is not _AuthorizationFreshness.FRESH:
+            raise TailscaleFailure(TailscaleErrorCode.STALE)
+        if snapshot is None or refresh_monotonic is None:
+            self._authorization_freshness = _AuthorizationFreshness.STALE
+            raise TailscaleFailure(TailscaleErrorCode.STALE)
         try:
             elapsed = self._monotonic_clock() - refresh_monotonic
         except Exception:
+            self._authorization_freshness = _AuthorizationFreshness.STALE
             raise TailscaleFailure(TailscaleErrorCode.STALE) from None
         if not math.isfinite(elapsed) or elapsed < 0 or elapsed > self._snapshot_ttl_seconds:
+            self._authorization_freshness = _AuthorizationFreshness.STALE
             raise TailscaleFailure(TailscaleErrorCode.STALE)
         policies = [policy for policy in self._policies if policy.node_id == node_id]
         nodes = [node for node in snapshot.nodes if node.node_id == node_id]
@@ -599,15 +636,22 @@ def _tailscale_ip(value: object) -> str:
     return str(address)
 
 
-def _validate_trusted_executable(path: object) -> Path:
+def _validate_trusted_executable(path: object) -> _TrustedExecutable:
     message = "trusted Tailscale executable is invalid"
     if not isinstance(path, Path) or not path.is_absolute():
         raise ValueError(message)
+    fingerprints: list[_PathFingerprint] = []
     try:
-        for candidate in (path, *path.parents):
+        for candidate in (path.parent, *path.parent.parents):
             metadata = candidate.lstat()
-            if stat.S_ISLNK(metadata.st_mode):
+            if (
+                stat.S_ISLNK(metadata.st_mode)
+                or not stat.S_ISDIR(metadata.st_mode)
+                or metadata.st_uid not in {0, os.geteuid()}
+                or metadata.st_mode & 0o022
+            ):
                 raise ValueError(message)
+            fingerprints.append(_path_fingerprint(candidate, metadata))
         metadata = path.lstat()
     except OSError:
         raise ValueError(message) from None
@@ -618,10 +662,24 @@ def _validate_trusted_executable(path: object) -> Path:
         or not metadata.st_mode & 0o111
     ):
         raise ValueError(message)
+    fingerprints.append(_path_fingerprint(path, metadata))
     try:
-        return path.resolve(strict=True)
+        resolved = path.resolve(strict=True)
     except OSError:
         raise ValueError(message) from None
+    if resolved != path:
+        raise ValueError(message)
+    return _TrustedExecutable(path=resolved, fingerprint=tuple(fingerprints))
+
+
+def _path_fingerprint(path: Path, metadata: os.stat_result) -> _PathFingerprint:
+    return _PathFingerprint(
+        path=str(path),
+        device=metadata.st_dev,
+        inode=metadata.st_ino,
+        mode=metadata.st_mode,
+        uid=metadata.st_uid,
+    )
 
 
 def _validate_snapshot_ttl(value: object) -> int:

@@ -339,7 +339,7 @@ async def test_failed_refresh_clears_old_snapshot_and_successful_refresh_renews_
         await adapter.snapshot()
     with pytest.raises(TailscaleFailure) as cleared:
         adapter.authorize_http("node-a", f"http://{_DNS}:1234")
-    assert cleared.value.code is TailscaleErrorCode.UNKNOWN_NODE
+    assert cleared.value.code is TailscaleErrorCode.STALE
 
     monotonic[0] = 20.0
     await adapter.snapshot()
