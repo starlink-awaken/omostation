@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import tomllib
 from collections.abc import Mapping
@@ -52,6 +53,7 @@ def load_config(
         except (OSError, tomllib.TOMLDecodeError) as exc:
             raise ConfigError("unable to read valid TOML configuration") from exc
         _require_schema_version(file_values)
+        file_values = _decode_legacy_extensions(file_values)
         merged = _deep_merge(merged, file_values)
     environment_values = _environment_overrides(os.environ if env is None else env)
     merged = _deep_merge(merged, environment_values)
@@ -111,3 +113,23 @@ def _parse_environment_value(raw_value: str) -> Any:
         return tomllib.loads(f"value = {raw_value}")["value"]
     except tomllib.TOMLDecodeError:
         return raw_value
+
+
+def _decode_legacy_extensions(values: dict[str, Any]) -> dict[str, Any]:
+    if "legacy_extensions_json" not in values:
+        return values
+    if "legacy_extensions" in values:
+        raise ConfigError(
+            "configuration cannot contain both legacy_extensions and legacy_extensions_json"
+        )
+    encoded = values.pop("legacy_extensions_json")
+    if not isinstance(encoded, str):
+        raise ConfigError("legacy_extensions_json must be a JSON string")
+    try:
+        decoded = json.loads(encoded)
+    except json.JSONDecodeError as exc:
+        raise ConfigError("legacy_extensions_json must contain valid JSON") from exc
+    if not isinstance(decoded, dict):
+        raise ConfigError("legacy_extensions_json must contain a JSON object")
+    values["legacy_extensions"] = cast(dict[str, Any], decoded)
+    return values

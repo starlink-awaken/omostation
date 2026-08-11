@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Protocol, Self, cast
@@ -10,8 +9,11 @@ from typing import Protocol, Self, cast
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator, model_validator
 
 from omlxc.domain import BackendKind, RouteProfile
-
-_URL_WITH_PASSWORD = re.compile(r"(?i)[a-z][a-z0-9+.-]*://[^/@:]+:[^/@]+@")
+from omlxc.domain.security import (
+    has_embedded_url_auth,
+    is_keychain_reference,
+    validate_keychain_only,
+)
 
 
 class ConfigModel(BaseModel):
@@ -78,9 +80,7 @@ class BackendConfig(ConfigModel):
     @field_validator("credential_ref")
     @classmethod
     def keychain_reference_only(cls, value: str | None) -> str | None:
-        if value is not None and (
-            not value.startswith("keychain://") or len(value.split("/", maxsplit=3)) < 4
-        ):
+        if value is not None and not is_keychain_reference(value):
             raise ValueError("credential_ref must be a Keychain reference")
         return value
 
@@ -205,6 +205,7 @@ class AppConfig(ConfigModel):
                 raise ValueError(f"placement {placement.id!r} references unknown backend")
             if placement.model_id not in model_ids:
                 raise ValueError(f"placement {placement.id!r} references unknown model")
+        validate_keychain_only(self.legacy_extensions)
         return self
 
 
@@ -220,5 +221,5 @@ def _unique_ids(kind: str, values: Sequence[_Identified]) -> set[str]:
 
 
 def _require_keychain_for_url_auth(value: str) -> None:
-    if _URL_WITH_PASSWORD.search(value):
+    if has_embedded_url_auth(value):
         raise ValueError("URL authentication material must use a Keychain reference")

@@ -14,6 +14,7 @@ from .errors import (
     error_exit_code,
     sanitize_sensitive,
 )
+from .immutable import FrozenDict
 from .models import (
     BackendInstance,
     BackendKind,
@@ -29,7 +30,7 @@ from .models import (
     RouteProfile,
     RouteRequest,
 )
-from .state import transition_job, transition_node
+from .state import JOB_TRANSITIONS, NODE_TRANSITIONS, transition_job, transition_node
 
 __all__ = [
     "EXIT_CAPACITY",
@@ -45,11 +46,14 @@ __all__ = [
     "BackendKind",
     "ErrorEnvelope",
     "HealthSnapshot",
+    "FrozenDict",
     "Job",
     "JobState",
+    "JOB_TRANSITIONS",
     "ModelSpec",
     "Node",
     "NodeState",
+    "NODE_TRANSITIONS",
     "Placement",
     "RiskLevel",
     "RouteDecision",

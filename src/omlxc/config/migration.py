@@ -5,13 +5,16 @@ from __future__ import annotations
 import json
 import re
 import shlex
+import unicodedata
 from collections.abc import Mapping
+from hashlib import sha256
 from pathlib import Path
 from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, JsonValue
 
 from omlxc.domain import BackendKind, RouteProfile
+from omlxc.domain.security import validate_keychain_only
 
 from .loading import ConfigError, safe_defaults
 from .schema import (
@@ -48,7 +51,7 @@ def migrate_legacy_json(source: Path, *, base_directory: Path | None = None) -> 
     _assert_no_plaintext_auth(legacy)
     cluster = _mapping(legacy.get("cluster"), "cluster")
     legacy_nodes = _sequence(cluster.get("nodes"), "cluster.nodes")
-    nodes = tuple(_migrate_node(item, index) for index, item in enumerate(legacy_nodes))
+    nodes = _migrate_nodes(legacy_nodes)
     address_to_node = {address: node.id for node in nodes for address in node.addresses}
     local_node_id = _local_node_id(legacy, nodes)
     backends = _migrate_backends(legacy, legacy_nodes, nodes, local_node_id)
@@ -129,13 +132,37 @@ def _read_legacy_json(source: Path) -> dict[str, Any]:
     return typed_raw
 
 
-def _migrate_node(value: object, index: int) -> NodeConfig:
+def _migrate_nodes(values: list[object]) -> tuple[NodeConfig, ...]:
+    parsed = [_mapping(value, f"cluster.nodes[{index}]") for index, value in enumerate(values)]
+    names = [_required_string(item.get("name"), "node name") for item in parsed]
+    canonical_names = [_canonical_node_identity(name) for name in names]
+    if len(canonical_names) != len(set(canonical_names)):
+        raise ConfigError("duplicate legacy node identity")
+
+    slugs = [_slug(name) for name in names]
+    collision_counts = {slug: slugs.count(slug) for slug in set(slugs)}
+    identifiers = [
+        (
+            f"{slug}-{sha256(canonical.encode('utf-8')).hexdigest()[:12]}"
+            if collision_counts[slug] > 1
+            else slug
+        )
+        for slug, canonical in zip(slugs, canonical_names, strict=True)
+    ]
+    if len(identifiers) != len(set(identifiers)):
+        raise ConfigError("deterministic legacy node id collision")
+    return tuple(
+        _migrate_node(item, index, node_id=identifiers[index]) for index, item in enumerate(parsed)
+    )
+
+
+def _migrate_node(value: object, index: int, *, node_id: str) -> NodeConfig:
     item = _mapping(value, f"cluster.nodes[{index}]")
     display_name = _required_string(item.get("name"), "node name")
     role = _required_string(item.get("role"), "node role")
     address = _required_string(item.get("host"), "node address")
     return NodeConfig(
-        id=_slug(display_name),
+        id=node_id,
         display_name=display_name,
         platform="unknown",
         role=role,
@@ -302,6 +329,11 @@ def _slug(value: str) -> str:
     return slug
 
 
+def _canonical_node_identity(value: str) -> str:
+    normalized = unicodedata.normalize("NFKC", value)
+    return " ".join(normalized.split()).casefold()
+
+
 def _mapping(value: object, name: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ConfigError(f"legacy field {name} must be an object")
@@ -348,31 +380,11 @@ def _string_mapping(value: object, name: str) -> dict[str, str]:
     return result
 
 
-_AUTH_KEY = re.compile(
-    r"(?i)(^|[_-])(secret|token|key|password|authorization|credential)"
-    r"([_-](value|ref))?$"
-)
-_URL_AUTH = re.compile(r"(?i)[a-z][a-z0-9+.-]*://[^/@\s]+@")
-
-
 def _assert_no_plaintext_auth(value: object, *, key: str | None = None) -> None:
-    if (
-        key is not None
-        and _AUTH_KEY.search(key)
-        and value is not None
-        and not (isinstance(value, str) and value.startswith("keychain://"))
-    ):
-        raise ConfigError("legacy plaintext authentication material must use a Keychain reference")
-    if isinstance(value, str) and _URL_AUTH.search(value):
-        raise ConfigError(
-            "legacy address authentication material must be replaced with a Keychain reference"
-        )
-    if isinstance(value, dict):
-        for child_key, child in cast(dict[object, object], value).items():
-            _assert_no_plaintext_auth(child, key=str(child_key))
-    elif isinstance(value, list):
-        for child in cast(list[object], value):
-            _assert_no_plaintext_auth(child)
+    try:
+        validate_keychain_only(value, key=key)
+    except ValueError as exc:
+        raise ConfigError(f"legacy {exc}") from exc
 
 
 def _legacy_extensions(legacy: Mapping[str, Any]) -> dict[str, JsonValue]:

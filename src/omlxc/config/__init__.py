@@ -1,6 +1,12 @@
 """Public configuration and migration API."""
 
-from .io import AtomicWriteError, AtomicWriteResult, render_toml, write_config_atomic
+from .io import (
+    AtomicRollbackError,
+    AtomicWriteError,
+    AtomicWriteResult,
+    render_toml,
+    write_config_atomic,
+)
 from .loading import (
     ConfigError,
     default_config_directory,
@@ -24,6 +30,7 @@ from .schema import (
 __all__ = [
     "AppConfig",
     "AtomicWriteError",
+    "AtomicRollbackError",
     "AtomicWriteResult",
     "BackendConfig",
     "ConfigError",

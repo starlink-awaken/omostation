@@ -171,3 +171,44 @@ base_url = "https://operator:synthetic-password@node-a.example.invalid"
         load_config(config_path, env={}, base_directory=tmp_path)
 
     assert "synthetic-password" not in str(captured.value)
+
+
+def test_malformed_backend_keychain_reference_is_rejected(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        """
+schema_version = 1
+
+[[nodes]]
+id = "node-a"
+display_name = "Node A"
+platform = "linux"
+
+[[backends]]
+id = "backend-a"
+node_id = "node-a"
+kind = "ollama"
+base_url = "https://node-a.example.invalid"
+credential_ref = "keychain:///account"
+""".strip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ConfigError, match="Keychain"):
+        load_config(config_path, env={}, base_directory=tmp_path)
+
+
+def test_encoded_legacy_extensions_cannot_bypass_keychain_policy(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        """
+schema_version = 1
+legacy_extensions_json = '{"nested":[{"apiKey":"synthetic-do-not-copy"}]}'
+""".strip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ConfigError, match="Keychain") as captured:
+        load_config(config_path, env={}, base_directory=tmp_path)
+
+    assert "synthetic-do-not-copy" not in str(captured.value)

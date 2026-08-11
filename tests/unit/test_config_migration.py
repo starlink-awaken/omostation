@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from omlxc.config import (
+    AtomicRollbackError,
     AtomicWriteError,
     ConfigError,
     build_migration_plan,
@@ -160,6 +161,48 @@ def test_migrated_node_ids_do_not_change_when_addresses_change(tmp_path: Path) -
     assert first.nodes[0].addresses != second.nodes[0].addresses
 
 
+def test_distinct_node_names_with_same_slug_receive_stable_collision_safe_ids(
+    tmp_path: Path,
+) -> None:
+    data = _sanitized_legacy_config()
+    data["cluster"]["nodes"][0]["name"] = "Same Node"
+    data["cluster"]["nodes"][1]["name"] = "Same-Node"
+    first = migrate_legacy_json(
+        _write_legacy(tmp_path / "slug-collision-first.json", data),
+        base_directory=tmp_path,
+    )
+
+    changed_addresses = json.loads(json.dumps(data))
+    changed_addresses["cluster"]["nodes"][0]["host"] = "changed-0.example.invalid"
+    changed_addresses["cluster"]["nodes"][1]["host"] = "changed-1.example.invalid"
+    changed_addresses["host"] = "changed-0.example.invalid"
+    first_remote = changed_addresses["autopilot"]["remote_resident"][0]
+    first_remote["host"] = "changed-1.example.invalid"
+    second = migrate_legacy_json(
+        _write_legacy(tmp_path / "slug-collision-second.json", changed_addresses),
+        base_directory=tmp_path,
+    )
+
+    first_ids = tuple(node.id for node in first.nodes[:2])
+    second_ids = tuple(node.id for node in second.nodes[:2])
+    assert first_ids == second_ids
+    assert len(set(first_ids)) == 2
+    assert all(identifier.startswith("same-node-") for identifier in first_ids)
+
+
+def test_exact_duplicate_node_identity_fails_closed_with_precise_error(
+    tmp_path: Path,
+) -> None:
+    data = _sanitized_legacy_config()
+    data["cluster"]["nodes"][1]["name"] = data["cluster"]["nodes"][0]["name"]
+
+    with pytest.raises(ConfigError, match="duplicate legacy node identity"):
+        migrate_legacy_json(
+            _write_legacy(tmp_path / "duplicate-node.json", data),
+            base_directory=tmp_path,
+        )
+
+
 def test_unmapped_legacy_fields_are_retained_as_safe_extensions(tmp_path: Path) -> None:
     data = _sanitized_legacy_config()
     data["active_root"] = "/legacy/control-root"
@@ -177,6 +220,26 @@ def test_unmapped_legacy_fields_are_retained_as_safe_extensions(tmp_path: Path) 
     assert migrated.legacy_extensions["cluster_metadata"] == {"gateway_port": 9290}
 
 
+def test_legacy_extensions_toml_round_trip_preserves_nested_json_and_null(
+    tmp_path: Path,
+) -> None:
+    data = _sanitized_legacy_config()
+    data["custom_operational"] = {
+        "nullable": None,
+        "nested": [{"enabled": True, "weight": 1.5}, None],
+    }
+    migrated = migrate_legacy_json(
+        _write_legacy(tmp_path / "extensions-round-trip.json", data),
+        base_directory=tmp_path,
+    )
+    target = tmp_path / "config.toml"
+
+    target.write_text(render_toml(migrated), encoding="utf-8")
+    loaded = load_config(target, env={}, base_directory=tmp_path)
+
+    assert loaded.legacy_extensions == migrated.legacy_extensions
+
+
 def test_plaintext_secrets_in_legacy_extensions_fail_closed(tmp_path: Path) -> None:
     data = _sanitized_legacy_config()
     data["custom_operational"] = {"api_token": "synthetic-do-not-copy"}
@@ -185,6 +248,83 @@ def test_plaintext_secrets_in_legacy_extensions_fail_closed(tmp_path: Path) -> N
         migrate_legacy_json(_write_legacy(tmp_path / "secret.json", data), base_directory=tmp_path)
 
     assert "synthetic-do-not-copy" not in str(captured.value)
+
+
+@pytest.mark.parametrize(
+    "credential_key",
+    [
+        "apiKey",
+        "APIKey",
+        "APIKEY",
+        "api_key",
+        "api-key",
+        "accessToken",
+        "access.token",
+        "clientSecret",
+        "clientsecret",
+        "password",
+        "passwd",
+        "credential",
+        "credentials",
+    ],
+)
+def test_all_canonical_credential_key_spellings_reject_plaintext(
+    tmp_path: Path, credential_key: str
+) -> None:
+    data = _sanitized_legacy_config()
+    data["custom_operational"] = {"nested": [{credential_key: "synthetic-do-not-copy"}]}
+
+    with pytest.raises(ConfigError, match="Keychain") as captured:
+        migrate_legacy_json(
+            _write_legacy(tmp_path / f"{credential_key}.json", data),
+            base_directory=tmp_path,
+        )
+
+    assert "synthetic-do-not-copy" not in str(captured.value)
+
+
+@pytest.mark.parametrize(
+    "invalid_reference",
+    ["keychain://", "keychain://service", "keychain:///account"],
+)
+def test_credential_fields_reject_malformed_keychain_references(
+    tmp_path: Path, invalid_reference: str
+) -> None:
+    data = _sanitized_legacy_config()
+    data["custom_operational"] = {"accessToken": invalid_reference}
+
+    with pytest.raises(ConfigError, match="Keychain"):
+        migrate_legacy_json(
+            _write_legacy(tmp_path / "malformed-keychain.json", data),
+            base_directory=tmp_path,
+        )
+
+
+def test_valid_keychain_references_survive_nested_legacy_extensions(tmp_path: Path) -> None:
+    data = _sanitized_legacy_config()
+    data["custom_operational"] = {"credentials": "keychain://omlxc/legacy-backend"}
+
+    migrated = migrate_legacy_json(
+        _write_legacy(tmp_path / "valid-keychain.json", data), base_directory=tmp_path
+    )
+
+    assert migrated.legacy_extensions["custom_operational"] == {
+        "credentials": "keychain://omlxc/legacy-backend"
+    }
+
+
+def test_noncredential_words_are_not_false_positives(tmp_path: Path) -> None:
+    data = _sanitized_legacy_config()
+    data["custom_operational"] = {"monkey": "banana", "hockey": "stick"}
+
+    migrated = migrate_legacy_json(
+        _write_legacy(tmp_path / "noncredentials.json", data), base_directory=tmp_path
+    )
+
+    assert migrated.legacy_extensions["custom_operational"] == {
+        "monkey": "banana",
+        "hockey": "stick",
+    }
 
 
 def test_repository_legacy_json_migrates_read_only_with_expected_counts(tmp_path: Path) -> None:
@@ -274,3 +414,97 @@ def test_atomic_replace_failure_preserves_target_and_cleans_temporary_file(
     snapshots = list(tmp_path.glob("config.toml.snapshot-*"))
     assert len(snapshots) == 1
     assert snapshots[0].read_text(encoding="utf-8") == "original"
+
+
+def test_atomic_chmod_failure_happens_before_replace_and_preserves_original(
+    tmp_path: Path,
+) -> None:
+    target = tmp_path / "config.toml"
+    target.write_text("original", encoding="utf-8")
+    target.chmod(0o640)
+    replacements: list[tuple[str, str]] = []
+
+    def fail_chmod(_path: str, _mode: int) -> None:
+        raise OSError("injected chmod failure")
+
+    def observe_replace(source: str, destination: str) -> None:
+        replacements.append((source, destination))
+        os.replace(source, destination)
+
+    with pytest.raises(AtomicWriteError, match="chmod"):
+        write_config_atomic(
+            target,
+            "replacement",
+            chmod=fail_chmod,
+            replace=observe_replace,
+        )
+
+    assert replacements == []
+    assert target.read_text(encoding="utf-8") == "original"
+    assert target.stat().st_mode & 0o777 == 0o640
+    assert list(tmp_path.glob(".config.toml.*.tmp")) == []
+
+
+def test_directory_fsync_failure_rolls_back_original_content_and_mode(
+    tmp_path: Path,
+) -> None:
+    target = tmp_path / "config.toml"
+    target.write_text("original", encoding="utf-8")
+    target.chmod(0o640)
+    sync_calls = 0
+
+    def fail_first_directory_fsync(_directory: Path) -> None:
+        nonlocal sync_calls
+        sync_calls += 1
+        if sync_calls == 1:
+            raise OSError("injected directory fsync failure")
+
+    with pytest.raises(AtomicWriteError, match="directory_fsync"):
+        write_config_atomic(
+            target,
+            "replacement",
+            fsync_directory=fail_first_directory_fsync,
+        )
+
+    assert sync_calls == 2
+    assert target.read_text(encoding="utf-8") == "original"
+    assert target.stat().st_mode & 0o777 == 0o640
+    snapshots = list(tmp_path.glob("config.toml.snapshot-*"))
+    assert len(snapshots) == 1
+    assert snapshots[0].read_text(encoding="utf-8") == "original"
+    assert snapshots[0].stat().st_mode & 0o777 == 0o600
+    assert list(tmp_path.glob(".config.toml.*.tmp")) == []
+    assert list(tmp_path.glob(".config.toml.*.rollback")) == []
+
+
+def test_rollback_failure_exposes_both_operation_and_rollback_stages(
+    tmp_path: Path,
+) -> None:
+    target = tmp_path / "config.toml"
+    target.write_text("original", encoding="utf-8")
+    replacement_calls = 0
+
+    def fail_rollback_replace(source: str, destination: str) -> None:
+        nonlocal replacement_calls
+        replacement_calls += 1
+        if replacement_calls == 2:
+            raise OSError("injected rollback replace failure")
+        os.replace(source, destination)
+
+    def fail_directory_fsync(_directory: Path) -> None:
+        raise OSError("injected directory fsync failure")
+
+    with pytest.raises(AtomicRollbackError) as captured:
+        write_config_atomic(
+            target,
+            "replacement",
+            replace=fail_rollback_replace,
+            fsync_directory=fail_directory_fsync,
+        )
+
+    assert captured.value.operation_stage == "directory_fsync"
+    assert captured.value.rollback_stage == "replace"
+    assert isinstance(captured.value.operation_error, OSError)
+    assert isinstance(captured.value.rollback_error, OSError)
+    assert list(tmp_path.glob(".config.toml.*.tmp")) == []
+    assert list(tmp_path.glob(".config.toml.*.rollback")) == []

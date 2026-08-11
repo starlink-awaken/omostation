@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from types import MappingProxyType
 from typing import Any, cast
 
 from pydantic import JsonValue, field_serializer, field_validator
 
+from .immutable import FrozenDict, freeze_mapping, thaw_json
 from .models import DomainModel
+from .security import is_credential_key
 
 EXIT_SUCCESS = 0
 EXIT_CONFIG = 2
@@ -23,7 +24,6 @@ EXIT_INTERNAL = 10
 _SECRET_ASSIGNMENT = re.compile(r"(?i)(secret|token|api[_-]?key|password)\s*[:=]\s*([^\s,;]+)")
 _URL_AUTH = re.compile(r"(?i)([a-z][a-z0-9+.-]*://)[^/@\s]+@")
 _BEARER = re.compile(r"(?i)(authorization\s*:\s*bearer\s+)[^\s,;]+")
-_SENSITIVE_KEYS = re.compile(r"(?i)(secret|token|api[_-]?key|password|authorization)")
 
 
 def sanitize_sensitive(value: object) -> object:
@@ -35,7 +35,7 @@ def sanitize_sensitive(value: object) -> object:
     if isinstance(value, dict):
         mapping = cast(dict[object, object], value)
         return {
-            str(key): "[REDACTED]" if _SENSITIVE_KEYS.search(str(key)) else sanitize_sensitive(item)
+            str(key): "[REDACTED]" if is_credential_key(str(key)) else sanitize_sensitive(item)
             for key, item in mapping.items()
         }
     if isinstance(value, (list, tuple)):
@@ -65,13 +65,16 @@ class ErrorEnvelope(DomainModel):
     def freeze_partial_result(
         cls, value: Mapping[str, JsonValue] | None
     ) -> Mapping[str, JsonValue] | None:
-        return None if value is None else MappingProxyType(dict(value))
+        return None if value is None else cast(Mapping[str, JsonValue], freeze_mapping(value))
 
     @field_serializer("partial_result")
     def serialize_partial_result(
         self, value: Mapping[str, JsonValue] | None
     ) -> dict[str, JsonValue] | None:
-        return None if value is None else dict(value)
+        if value is None:
+            return None
+        thawed = thaw_json(cast(FrozenDict, value))
+        return cast(dict[str, JsonValue], thawed)
 
 
 def error_exit_code(code: str) -> int:

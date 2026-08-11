@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
 from datetime import UTC, datetime
+from itertools import product
 
 import pytest
 from pydantic import ValidationError
@@ -16,6 +19,8 @@ from omlxc.domain import (
     EXIT_SECURITY,
     EXIT_SUCCESS,
     EXIT_TIMEOUT,
+    JOB_TRANSITIONS,
+    NODE_TRANSITIONS,
     BackendInstance,
     BackendKind,
     ErrorEnvelope,
@@ -219,6 +224,59 @@ def test_job_state_machine_fails_closed_on_illegal_transition() -> None:
         transition_job(JobState.SUCCEEDED, JobState.RUNNING)
 
 
+def test_node_transition_table_exhaustively_accepts_only_declared_edges() -> None:
+    expected = {
+        NodeState.UNKNOWN: frozenset({NodeState.PROBING}),
+        NodeState.PROBING: frozenset(
+            {NodeState.HEALTHY, NodeState.DEGRADED, NodeState.UNREACHABLE}
+        ),
+        NodeState.HEALTHY: frozenset(
+            {NodeState.PROBING, NodeState.DEGRADED, NodeState.UNREACHABLE}
+        ),
+        NodeState.DEGRADED: frozenset(
+            {NodeState.PROBING, NodeState.HEALTHY, NodeState.UNREACHABLE}
+        ),
+        NodeState.UNREACHABLE: frozenset({NodeState.RECOVERING}),
+        NodeState.RECOVERING: frozenset({NodeState.PROBING, NodeState.UNREACHABLE}),
+    }
+    assert expected == NODE_TRANSITIONS
+
+    for current, target in product(NodeState, repeat=2):
+        if target in expected[current]:
+            assert transition_node(current, target) is target
+        else:
+            with pytest.raises(ValueError, match="illegal node state transition"):
+                transition_node(current, target)
+
+
+def test_job_transition_table_is_exhaustive_and_terminal_states_cannot_exit() -> None:
+    expected = {
+        JobState.PENDING: frozenset({JobState.PLANNING, JobState.CANCELLED}),
+        JobState.PLANNING: frozenset(
+            {JobState.AWAITING_CONFIRMATION, JobState.RUNNING, JobState.FAILED}
+        ),
+        JobState.AWAITING_CONFIRMATION: frozenset({JobState.RUNNING, JobState.CANCELLED}),
+        JobState.RUNNING: frozenset({JobState.SUCCEEDED, JobState.FAILED, JobState.CANCELLING}),
+        JobState.SUCCEEDED: frozenset(),
+        JobState.FAILED: frozenset(),
+        JobState.CANCELLING: frozenset({JobState.CANCELLED, JobState.FAILED}),
+        JobState.CANCELLED: frozenset(),
+    }
+    assert expected == JOB_TRANSITIONS
+
+    for current, target in product(JobState, repeat=2):
+        if target in expected[current]:
+            assert transition_job(current, target) is target
+        else:
+            with pytest.raises(ValueError, match="illegal job state transition"):
+                transition_job(current, target)
+
+    for terminal in (JobState.SUCCEEDED, JobState.FAILED, JobState.CANCELLED):
+        for target in JobState:
+            with pytest.raises(ValueError, match="illegal job state transition"):
+                transition_job(terminal, target)
+
+
 @pytest.mark.parametrize(
     ("code", "expected"),
     [
@@ -244,7 +302,11 @@ def test_error_envelope_redacts_auth_material_and_is_frozen() -> None:
         request_id="req-redaction",
         retryable=False,
         affected_resources=("Authorization: Bearer secret-bearer",),
-        partial_result={"secret": "must-not-survive", "safe": "visible"},
+        partial_result={
+            "secret": "must-not-survive",
+            "nested": {"apiKey": "must-not-survive-camel"},
+            "safe": "visible",
+        },
     )
     serialized = error.model_dump_json()
 
@@ -255,9 +317,68 @@ def test_error_envelope_redacts_auth_material_and_is_frozen() -> None:
         "something-else",
         "secret-bearer",
         "must-not-survive",
+        "must-not-survive-camel",
     ):
         assert sensitive not in serialized
     assert "visible" in serialized
     assert error.partial_result is not None
     with pytest.raises(TypeError):
         error.partial_result["safe"] = "mutated"  # type: ignore[index]
+
+
+def test_public_domain_containers_are_recursively_immutable_and_json_round_trip() -> None:
+    model = ModelSpec(
+        id="model-a",
+        role="chat",
+        capabilities=frozenset({"chat", "vision"}),
+    )
+    request = RouteRequest(
+        request_id="req-immutable",
+        model_id=model.id,
+        profile=RouteProfile.INTERACTIVE,
+        required_capabilities=frozenset({"chat"}),
+        context_tokens=128,
+    )
+    decision = RouteDecision(
+        request_id=request.request_id,
+        selected_placement_id=None,
+        candidates=("placement-a",),
+        rejected={"placement-a": "capacity"},
+        fallback_chain=("placement-b",),
+        config_version="1",
+        explanation="capacity exhausted",
+    )
+    error = ErrorEnvelope(
+        code="E500",
+        message="partial result",
+        request_id=request.request_id,
+        partial_result={
+            "details": {"attempts": [{"placement": "placement-a", "reasons": ["capacity"]}]}
+        },
+    )
+
+    assert error.partial_result is not None
+    details = error.partial_result["details"]
+    assert isinstance(details, Mapping)
+    attempts = details["attempts"]
+    assert isinstance(attempts, tuple)
+    assert isinstance(attempts[0], Mapping)
+    with pytest.raises(TypeError):
+        details["status"] = "mutated"
+    with pytest.raises(TypeError):
+        attempts[0] = {"placement": "mutated"}
+    with pytest.raises(TypeError):
+        attempts[0]["placement"] = "mutated"
+    with pytest.raises(AttributeError):
+        model.capabilities.add("mutable")  # type: ignore[attr-defined]
+    with pytest.raises(AttributeError):
+        request.required_capabilities.add("mutable")  # type: ignore[attr-defined]
+    with pytest.raises(TypeError):
+        decision.candidates[0] = "mutated"  # type: ignore[index]
+
+    assert json.loads(error.model_dump_json())["partial_result"] == {
+        "details": {"attempts": [{"placement": "placement-a", "reasons": ["capacity"]}]}
+    }
+    assert set(json.loads(model.model_dump_json())["capabilities"]) == {"chat", "vision"}
+    assert json.loads(request.model_dump_json())["required_capabilities"] == ["chat"]
+    assert json.loads(decision.model_dump_json())["rejected"] == {"placement-a": "capacity"}
