@@ -28,6 +28,8 @@ jobs:
           python-version: "3.13"
       - name: install pyyaml
         run: pip install pyyaml
+      - name: CR-L4-DOCUMENTS-MIGRATION-COVERAGE — Documents 迁移 registry 覆盖
+        run: python3 bin/gac/documents-content-plane-migration-check.py --json
       - name: CR-PR-DESCRIPTION-NON-EMPTY — PR 描述非空校验
         # PR 描述必须包含变更动机与验证说明, 防空 PR body
         run: python3 bin/gac/check-pr-description.py

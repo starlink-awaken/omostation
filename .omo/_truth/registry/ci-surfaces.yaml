@@ -24,6 +24,13 @@ surfaces:
     triggers: [manual, push]
     status: active
     note: ADR-0407 本地 pre-push 编排器；保留 producer 退出码并阻断 Ruff baseline 回归
+  - id: bin-gac-documents-content-plane-migration-check-py
+    tool: bin/gac/documents-content-plane-migration-check.py
+    workflow: gac-gate.yml
+    gate: false
+    triggers: [manual, per_pr, push]
+    status: active
+    note: CR-L4-DOCUMENTS-MIGRATION-COVERAGE；CI 校验样本，真实 Documents 全量扫描由本机显式传 root
   - id: bin-gac-check-adversarial-effectiveness-py
     tool: bin/gac/check-adversarial-effectiveness.py
     workflow: (none)

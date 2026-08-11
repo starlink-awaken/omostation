@@ -279,10 +279,10 @@ L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
 
 **Steps:**
 
-- [ ] 写 fixture 和 RED tests 覆盖零匹配、多匹配、owner 空、replacement 空、非法完成状态。
-- [ ] 实现 read-only checker；不得自动移动/删除。
-- [ ] 把 checker 注册为治理检查和 CI surface。
-- [ ] 对真实 Documents 运行，预期所有候选已分类但迁移状态仍有 pending。
+- [x] 写 fixture 和 RED tests 覆盖零匹配、多匹配、owner 空、replacement 空、非法完成状态。
+- [x] 实现 read-only checker；不得自动移动/删除。
+- [x] 把 checker 注册为治理检查和 CI surface。
+- [x] 对真实 Documents 运行：44,527 个 runtime/cache 候选零漏配、零多配，15 个迁移族仍全部 pending。
 
 **Commit:** `feat(governance): register Documents runtime migrations`
 

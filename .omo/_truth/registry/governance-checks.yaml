@@ -1713,23 +1713,6 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-principle-enforcement.py
     target: .omo/_truth/registry/**
-  - id: CR-P76-6-2-MONITORING-CADENCE
-    dimension: X2
-    layer: meta
-    name: 监控节奏 6h 周期
-    description: 单人监控压缩到 6h 周期, 9 个 manual 节奏. 对应 P76-6-2 (6h-by-9-deck)
-    check_type: hygiene_case
-    executor:
-    - omo_audit
-    lifecycle: removed
-    superseded_at: 2026-08-06
-    superseded_by: CR-FOUNDRY-MONITOR
-    superseded_reason: 被 CR-FOUNDRY-MONITOR (active, ADR-0160) 取代, 实现 Knowledge Foundry
-      9-cron deck 监控
-    version: 0.1.0
-    created_at: 2026-07-08
-    adr: ADR-0158
-    source_type: native
   - id: CR-SUBMODULE-REWIND
     dimension: X1
     layer: meta
@@ -2728,6 +2711,22 @@ gac:
     version: 1.0.0
     created_at: '2026-08-06'
     adr: ADR-0106
+  - id: CR-L4-DOCUMENTS-MIGRATION-COVERAGE
+    dimension: X4
+    layer: L4
+    name: Documents 内容面迁移覆盖
+    description: runtime/cache 候选必须恰好归属一个声明式迁移族，且目标 owner、replacement、回滚与确认门完整
+    check_type: registry_integrity
+    target: .omo/_truth/registry/documents-content-plane-migrations.yaml
+    source_ref: bin/gac/documents-content-plane-migration-check.py
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-12'
+    adr: ADR-0106
+    source_type: native
+    enforcement: required
   drift:
     schedule: daily
     auto_heal: false
