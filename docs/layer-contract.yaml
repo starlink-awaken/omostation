@@ -13,8 +13,8 @@ layers:
 
   L1:
     name: "运行时层"
-    projects: ["runtime"]
-    description: "Matrix/Scheduler/KEI 沙箱"
+    projects: ["runtime", "omlxc"]
+    description: "Matrix/Scheduler/KEI 沙箱与本地算力运行时"
 
   L2:
     name: "引擎层"

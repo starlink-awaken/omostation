@@ -13,12 +13,12 @@
 workspace:
   architecture: "5+4+1+1"
   ecos_version: "v6"
-  total_submodules: 17          # git submodule status | wc -l
-  total_projects: 17            # ls projects/*/ | wc -l (含 cockpit-ui 非子模块)
+  total_submodules: 18          # git submodule status | wc -l
+  total_projects: 18            # ls projects/*/ | wc -l (含 cockpit-ui 非子模块)
 
 layers:
   L0: "协议层 (ecos)"
-  L1: "运行时 (runtime)"
+  L1: "运行时 (runtime / omlxc)"
   L2: "引擎面 (kairon / gbrain / omo / metaos)"
   L3: "入口层 (cockpit 控制面; cockpit-ui 表现面, layer=L3)"
   L4: "自我层 (l4-kernel)"
@@ -130,6 +130,16 @@ projects:
     version: "1.0.0"
     role: "运行时 · Matrix/Scheduler/KEI 沙箱"
     src_dir: "src/"
+
+  omlxc:
+    layer: "L1"
+    stack: "Python (pytest)"
+    python: ">=3.13"
+    build_backend: "legacy-script"
+    version: "2.4"
+    role: "本地算力运行时 · 节点、模型驻留与物理调度"
+    src_dir: "bin/"
+    status: "redesign-baseline"
 
   ecos:
     layer: "L0"
@@ -360,6 +370,7 @@ submodule_policy:
     - projects/metaos        # work/adr-0181-scheme-c
     - projects/aetherforge   # r94-otel-linkage
     - projects/agora         # work/add-pydantic-dep
+    - projects/omlxc         # codex/omlxc-v3
   tracking:                   # detached HEAD — 由 CI/bot 保持
     - projects/ecos
     - projects/runtime
@@ -373,7 +384,7 @@ submodule_policy:
   tolerance_days: 30
 
 # ── Metadata ──
-_last_updated: "2026-07-15"
+_last_updated: "2026-08-11"
 _update_method: "Manual version/python; drift 由 bin/gen-project-registry.py 检测 (代码→registry SSOT 链闭环)"
 
 # ── omlx Local Compute Mesh Nodes ──
