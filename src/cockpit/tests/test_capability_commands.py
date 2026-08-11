@@ -237,3 +237,40 @@ class TestKemsCommand:
         output = capsys.readouterr().out
         assert "degraded" in output
         assert "L4-CONTENT-001" in output
+
+
+class TestHealthCommand:
+    """cockpit health --full — 人类输出必须与退出码一致。"""
+
+    def test_full_health_degraded_does_not_print_green_success(self, monkeypatch, tmp_path, capsys):
+        from cockpit.commands import health, l4bridge
+
+        monkeypatch.setenv("WORKSPACE_ROOT", str(tmp_path))
+        monkeypatch.setattr(l4bridge, "cmd_context", lambda _args: 0)
+        monkeypatch.setattr(health, "_get_l4_registry", lambda: None)
+        monkeypatch.setattr(
+            health.governance_context,
+            "workspace_context",
+            lambda: {
+                "status": "ok",
+                "phase": 49,
+                "theme": "Documents 内容主权收敛",
+                "cards_summary": {"active": 0, "p0_open": 0},
+            },
+        )
+        monkeypatch.setattr(
+            health.governance_context,
+            "kems_status",
+            lambda: {
+                "status": "degraded",
+                "domains": {"status": "ok", "total": 12},
+                "content_audit": {"status": "degraded", "violations": [{"code": "L4-CONTENT-001"}]},
+            },
+        )
+
+        rc = health._cmd_health(argparse.Namespace(full=True, json=False))
+
+        assert rc == 1
+        output = capsys.readouterr().out
+        assert "✅ 全栈健康检查完成" not in output
+        assert "存在异常" in output

@@ -179,6 +179,9 @@ def _cmd_health(args: Namespace) -> int:
         if kems["status"] != "ok":
             return_code = 1
 
-        console.print("\n[bold green]✅ 全栈健康检查完成[/]\n")
+        if return_code == 0:
+            console.print("\n[bold green]✅ 全栈健康检查完成[/]\n")
+        else:
+            console.print("\n[bold yellow]⚠ 全栈健康检查完成，但存在异常[/]\n")
 
     return return_code
