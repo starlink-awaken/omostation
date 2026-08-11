@@ -7,6 +7,8 @@ app-models/
 backups/
 __pycache__/
 *.pyc
+.venv/
+dist/
 
 # 手工备份 —— 有了 git 就该退休; 文件留在磁盘上但不入库
 *.bak-*

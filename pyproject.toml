@@ -1,0 +1,80 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "omlxc"
+version = "3.0.0a1"
+description = "Private local compute-hub control plane"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "aiosqlite>=0.21",
+  "anyio>=4.8",
+  "fastapi>=0.115",
+  "httpx>=0.28",
+  "keyring>=25.6",
+  "platformdirs>=4.3",
+  "pydantic>=2.10",
+  "structlog>=25.1",
+  "textual>=1.0",
+  "tomlkit>=0.13",
+  "typer>=0.15",
+  "uvicorn>=0.34",
+]
+
+[project.scripts]
+omlxc = "omlxc.cli:main"
+omlxcd = "omlxc.daemon:main"
+
+[dependency-groups]
+dev = [
+  "pip-audit>=2.8",
+  "pyright>=1.1.394",
+  "pytest>=8.3",
+  "pytest-asyncio>=0.25",
+  "pytest-cov>=6.0",
+  "respx>=0.22",
+  "ruff>=0.9",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/omlxc"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src/omlxc",
+  "/tests",
+  "/.github/workflows/ci.yml",
+  "/AGENTS.md",
+  "/CHANGELOG.md",
+  "/CLAUDE.md",
+  "/CONTRIBUTING.md",
+  "/README.md",
+  "/SECURITY.md",
+  "/pyproject.toml",
+  "/uv.lock",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+  "hardware: requires an explicitly requested real-hardware smoke environment",
+]
+
+[tool.coverage.run]
+source = ["omlxc"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pyright]
+include = ["src"]
+pythonVersion = "3.13"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = false

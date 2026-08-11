@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    name: ${{ matrix.os }} / Python 3.13
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.12.3"
+          python-version: "3.13"
+      - run: uv sync --all-groups --locked
+      - run: uv run pytest -q
+      - run: uv run ruff check .
+      - run: uv run pyright
+      - run: uv build
+      - run: uv run pip-audit
