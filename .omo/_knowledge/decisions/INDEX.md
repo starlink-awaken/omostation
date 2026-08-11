@@ -496,3 +496,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0391: M5 数据黑障修复验证 — ADR-0390 cherry-pick 到 omo main 路径 — **ACCEPTED** | 2026-08-08 | M5 fix verification | 0398-adr-0390-verification.md
 - ADR-0404: Phase 3 Ecos Submodule Governance — **ACCEPTED** | 2026-08-08 | Phase 3 Ecos Submodule Governance | 0404-phase3-ecos-submodule-governance.md
 - ADR-0406: model-driven (M0) 维持子模块形态 — **PROPOSED** | 2026-08-09 | Model-driven submodule decision | 0406-model-driven-submodule-decision.md
+- ADR-0407: ci-local-fast 真实退出码与 Ruff 有界债务门 — **ACCEPTED** | 2026-08-11 | G-1 control-plane truthfulness | 0407-truthful-ci-local-fast.md
