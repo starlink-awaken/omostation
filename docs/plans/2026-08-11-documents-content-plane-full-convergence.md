@@ -1,0 +1,654 @@
+# Documents Content Plane Full Convergence Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: use `subagent-driven-development` task-by-task. Each implementation task gets a fresh implementer, then a specification review and a code-quality review. Use `verification-before-completion` before every commit/PR and final closeout.
+
+**Goal:** 把 `/Users/xiamingxing/Documents` 全面收敛成内容主权面；把 KEMS 与全部功能运行层统一归入既有 Workspace owners，同时保持内容无损、消费者连续、状态可恢复、入口真实可用。
+
+**Architecture:** 不创建新平台。Documents 只保存内容、契约、人工决策、证据和可重建文档投影；l4-kernel 提供分类、内容归档契约与 T8；Kairon/KOS 是唯一 KEMS runtime；OMO 是任务/审批/证据 SSOT；Workflow Mesh + Runtime 是唯一执行与调度面；Cockpit 是唯一人机入口；family-hub 吸收家庭应用；ToolBox 管理外部能力仓。迁移按“新 owner 实装 → 对等验证 → 消费者切换 → 观测 → 旧面退役”的顺序执行。
+
+**Tech Stack:** Python 3.13、pytest、uv、YAML contracts、Kairon/KOS、OMO、Runtime cron service、Cockpit CLI/Web、Next.js/React、Bun、Vitest、Playwright、GaC/PASW。
+
+**Baseline evidence:** `docs/reports/2026-08-11-documents-content-plane-full-inventory.md`
+
+## 0. Completion Contract
+
+全面落地不是“有计划”或“某几个测试绿”。最终必须同时证明：
+
+- [ ] Documents 全量扫描 `runtime=0`、`cache=0`、`bridge=0`。
+- [ ] 代码型历史资料仅通过 schema-valid `CONTENT_ARCHIVE.yaml` 归类为 `content_archive`，且具备冻结清单、消费者扫描证据和内容指纹。
+- [ ] 所有活跃 crontab、LaunchAgent、Claude Scheduled、域 CLAUDE 和 Cockpit contracts 不再执行 Documents 内脚本。
+- [ ] `cockpit context`、`cockpit cards --check`、`cockpit kems domains/status/scan` 在实际安装入口通过 smoke，且输出来源可追溯。
+- [ ] KEMS ingest/eval/graph/recovery 只由 Kairon/KOS 提供；任务/审批只由 OMO 提供；执行只经 Workflow Mesh/Runtime。
+- [ ] `family-dashboard-app` 能力完整合入 `family-hub`，Cockpit 只暴露一个家庭应用 contract。
+- [ ] 四个外部 Git 仓保留 remote、HEAD、工作树内容和可验证目标位置，Documents 只留内容索引。
+- [ ] Zotero 从非 Documents dataDir 正常启动、库与附件可访问。
+- [ ] 每个域单独 T8 通过，之后 T8 进入默认文档域 profile。
+- [ ] 每个物理迁移都有前后文件数、字节数、SHA-256/树指纹、消费者证据和回滚包。
+
+## 1. Non-Negotiable Boundaries
+
+1. 不扶正 `projects/domain-kems`，不创建第二 KEMS runtime。
+2. 不把 16 GiB 职业历史代码资料搬到 Workspace 项目，更不能因后缀误删。
+3. 不把家庭 Next 应用直接丢弃；先在 family-hub 达成功能、安全、构建和 E2E 对等。
+4. 不把 Zotero translators/SQLite 假装成“内容归档”；它们必须随 app dataDir 迁出。
+5. 不在共享脏 `/Users/xiamingxing/Workspace` 上 reset、checkout 或提交。
+6. 所有子仓修改只在本 session 的 PASW worktree：
+   - `.subtrees/l4-kernel`
+   - `.subtrees/kairon`
+   - `.subtrees/runtime`
+   - `.subtrees/cockpit`
+   - `.subtrees/family-hub`
+   - 必要时 `.subtrees/omo`、`.subtrees/ecos`、`.subtrees/agora`
+7. 不把缓存、SQLite、日志、索引或构建物提交进 Git。
+8. 删除、批量移动、批量 chmod、Zotero 配置写入和大目录复制必须到达对应任务后再次给出精确危险操作确认。
+
+## 2. Delivery and PR Topology
+
+子仓按依赖顺序交付，不能先 bump 根指针再补子仓：
+
+```text
+l4-kernel ─┐
+kairon ────┼─> runtime ─> cockpit ─┐
+omo/ecos ──┘                        ├─> root pointer/config/docs PR
+family-hub ─────────────────────────┘
+ToolBox (独立仓，如需) ─────────────> root registry/pointer evidence
+```
+
+每个子仓：focused tests → full tests/lint → commit → push → PR → CI → merge。根仓最后 bump 已合并 commit 指针，运行 GaC gates 后提交 PR。Documents 非 Git 变更通过哈希清单和 root evidence report 取证。
+
+---
+
+### Task 0: 固化全面审计、计划和治理运行
+
+**Files:**
+
+- Create: `docs/reports/2026-08-11-documents-content-plane-full-inventory.md`
+- Create: `docs/plans/2026-08-11-documents-content-plane-full-convergence.md`
+
+**Steps:**
+
+- [x] 从远端 `main@35bd0757` 创建 `work/documents-content-plane-full-convergence`。
+- [x] 初始化 18 个子模块并创建 PASW 分支/worktree。
+- [x] 启动 `project-doc-change` governance run。
+- [x] 复现 321,787 资产、44,528 违规候选、227 个非四大面 runtime 候选。
+- [x] 运行 doc SSOT checks 和 workflow verify。
+- [ ] 提交 root 文档 checkpoint：`docs(documents): plan full content-plane convergence`。
+
+**Verification:**
+
+```bash
+uv run --with pyyaml python "bin/ssot/doc-ssot-lint.py" --json
+uv run --with pyyaml python "bin/ssot/ssot-guardian.py"
+uv run --with pyyaml python "bin/agent-workflow.py" verify \
+  "20260811T062626Z-project-doc-change-3d40efae" --from-diff --execute
+```
+
+---
+
+## Wave 1 — 先建立不会撒谎的边界与入口
+
+### Task 1: l4-kernel `CONTENT_ARCHIVE.yaml` 强契约
+
+**Files:**
+
+- Create: `.subtrees/l4-kernel/src/l4_kernel/content_archive.py`
+- Modify: `.subtrees/l4-kernel/src/l4_kernel/content_plane.py`
+- Modify: `.subtrees/l4-kernel/src/l4_kernel/cli.py`
+- Modify: `.subtrees/l4-kernel/src/l4_kernel/harness.py`
+- Create: `.subtrees/l4-kernel/tests/test_content_archive.py`
+- Modify: `.subtrees/l4-kernel/tests/test_content_plane.py`
+- Modify: `.subtrees/l4-kernel/tests/test_cli_contracts.py`
+- Modify: `.subtrees/l4-kernel/tests/test_harness.py`
+
+**Contract:**
+
+`CONTENT_ARCHIVE.yaml` v1 必填：
+
+```yaml
+schema: l4.content-archive/v1
+owner: personal
+reason: 职业历史代码资料
+source_kind: historical-source-material
+status: frozen
+execution_policy: deny
+captured_at: 2026-08-11T00:00:00+08:00
+inventory:
+  files: 0
+  bytes: 0
+  tree_sha256: "..."
+consumer_evidence:
+  scanned_at: 2026-08-11T00:00:00+08:00
+  active_consumers: []
+```
+
+规则：
+
+- 只允许在 `_archive`、`_storage`、`_knowledge` 下声明；`_runtime`、`_control`、应用根和 `_external` 禁止声明。
+- manifest 缺字段、数字/指纹不匹配、发现活动消费者时 fail closed 为 `L4-CONTENT-011`。
+- cache 仍优先判为 cache；workspace bridge 仍是 bridge；有效 manifest 下的代码资料判 `content_archive`。
+- manifest 本身判 `contract`，不得把任意目录一张 YAML 洗成内容。
+
+**TDD steps:**
+
+- [ ] 写失败测试：合法 archive、非法位置、缺字段、库存漂移、活动消费者、cache 不被覆盖。
+- [ ] 运行 RED：`uv run --group dev pytest tests/test_content_archive.py tests/test_content_plane.py -q`。
+- [ ] 实现 parser、validation、nearest-manifest lookup 和稳定 issue envelope。
+- [ ] 运行 GREEN 与全量：`uv run --group dev pytest tests/ -q`。
+- [ ] lint：`uv run --group dev ruff check src tests`。
+
+**Commit:** `feat(l4): add governed content archive classification`
+
+**Rollback:** revert l4 commit；旧分类器继续把资料列为 runtime，不会误放行。
+
+---
+
+### Task 2: l4-kernel 停止生成 KEMS runtime
+
+**Files:**
+
+- Modify: `.subtrees/l4-kernel/src/l4_kernel/templates.py`
+- Modify: `.subtrees/l4-kernel/src/l4_kernel/lifecycle.py`
+- Modify: `.subtrees/l4-kernel/src/l4_kernel/cli.py`
+- Modify: `.subtrees/l4-kernel/tests/test_templates.py`
+- Modify: `.subtrees/l4-kernel/tests/test_lifecycle.py`
+- Modify: `.subtrees/l4-kernel/tests/test_cli_contracts.py`
+
+**Interface change:**
+
+- `init_domain_kems()` 保留兼容 API，但只能生成 Method/Profile/ontology/rubric 与声明式 manifest；不得创建 `.kems/_scripts`、`_runtime`、MCP server、daemon 或 executor。
+- 新增明确命令 `l4-kernel domain init-content-contracts`；legacy 名称输出 deprecation evidence。
+
+**TDD steps:**
+
+- [ ] 写失败测试：初始化后 `content audit` 的 runtime/cache 均为 0。
+- [ ] 写失败测试：legacy 调用产生 declarative-only result，不出现可执行位或脚本后缀。
+- [ ] 运行 RED。
+- [ ] 最小修改模板和 lifecycle 调用链。
+- [ ] 运行 focused/full tests 与 ruff。
+
+**Impact gate:** 修改 `init_domain_kems` 前运行 GitNexus `impact`；HIGH/CRITICAL 必须先记录调用方和兼容策略。
+
+**Commit:** `refactor(l4): make domain bootstrap declarative only`
+
+---
+
+### Task 3: Cockpit 恢复真实 context/cards/KEMS 入口
+
+**Files:**
+
+- Create: `.subtrees/cockpit/src/cockpit/adapters/governance_context.py`
+- Create: `.subtrees/cockpit/src/cockpit/tests/test_governance_context_adapter.py`
+- Modify: `.subtrees/cockpit/src/cockpit/commands/l4bridge.py`
+- Modify: `.subtrees/cockpit/src/cockpit/commands/kems.py`
+- Modify: `.subtrees/cockpit/src/cockpit/commands/health.py`
+- Modify: `.subtrees/cockpit/src/cockpit/commands/brief.py`
+- Modify: `.subtrees/cockpit/src/cockpit/dashboard/routes.py`
+- Modify: `.subtrees/cockpit/pyproject.toml`
+- Modify: `.subtrees/cockpit/src/cockpit/tests/test_capability_commands.py`
+- Modify: `.subtrees/cockpit/src/cockpit/tests/test_cli_mcp.py`
+
+**Design:**
+
+- 删除对已移除 `cockpit.scripts.cockpit_mcp` 的所有生产 import。
+- `governance_context` 只组合真实 owner：l4 registry/content audit、OMO cards/status、Workspace BRIEF/registry；任何 owner 不可达时标 `degraded/unavailable`，不得返回假成功。
+- `kems domains` 从 l4 registry 获取；`kems status` 汇总 l4 audit + Kairon/OMO 可达性；`kems scan` 保留 l4 audit exit code。
+- `cards --check` 经 OMO cards authority；Cockpit 不复制 CARDS 规则。
+- `cockpit-mcp` entrypoint 要么指向现存受测 server，要么明确移除并提供替代；禁止继续指向不存在模块。
+
+**TDD and installed smoke:**
+
+- [ ] 写 RED tests 覆盖 owner healthy/degraded/malformed/timeout。
+- [ ] 对 API route 修改先运行 GitNexus `api_impact`。
+- [ ] focused：`uv run pytest src/cockpit/tests/test_governance_context_adapter.py src/cockpit/tests/test_capability_commands.py -q`。
+- [ ] full：`uv run pytest src/cockpit/tests/ tests/ -q`。
+- [ ] lint：`uv run ruff check src tests`。
+- [ ] PR 合并后从 accepted checkout 重装 Cockpit。
+- [ ] installed smoke：
+
+```bash
+"/Users/xiamingxing/.local/bin/cockpit" context
+"/Users/xiamingxing/.local/bin/cockpit" cards --check
+"/Users/xiamingxing/.local/bin/cockpit" kems domains
+"/Users/xiamingxing/.local/bin/cockpit" kems status
+L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
+  "/Users/xiamingxing/.local/bin/cockpit" kems scan
+```
+
+最后一条在存量债务未清零前必须 exit 1 且报告真实数量；不能把 fail-closed 当安装失败。
+
+**Commit:** `fix(cockpit): restore registry-backed governance context`
+
+---
+
+### Task 4: 建立机器可验的迁移 registry 与覆盖门
+
+**Files:**
+
+- Create: `.omo/_truth/registry/documents-content-plane-migrations.yaml`
+- Create: `bin/gac/documents-content-plane-migration-check.py`
+- Create: `tests/test_documents_content_plane_migration_check.py`
+- Modify: `.omo/_truth/registry/INDEX.md`
+- Modify: `.omo/_truth/registry/governance-checks.yaml`
+- Modify: `.omo/_truth/registry/ci-surfaces.yaml`
+
+**Registry fields:** `id`、`source_globs`、`artifact_kind`、`disposition`、`owner`、`replacement`、`consumer_refs`、`rollback`、`confirmation_gate`、`status`。
+
+**Invariant:** 当前 227 个非四大面 runtime 候选和四个大面必须“恰好匹配一个”迁移族；零匹配与多匹配都 fail closed。历史文档文本引用不算活动消费者，但 crontab、LaunchAgent、Claude Scheduled、CLAUDE 强制命令和可执行 import 算。
+
+**Steps:**
+
+- [ ] 写 fixture 和 RED tests 覆盖零匹配、多匹配、owner 空、replacement 空、非法完成状态。
+- [ ] 实现 read-only checker；不得自动移动/删除。
+- [ ] 把 checker 注册为治理检查和 CI surface。
+- [ ] 对真实 Documents 运行，预期所有候选已分类但迁移状态仍有 pending。
+
+**Commit:** `feat(governance): register Documents runtime migrations`
+
+---
+
+## Wave 2 — KEMS、公共运行态与真实消费者切换
+
+### Task 5: Kairon/KOS 吸收仍有价值的 KEMS 内容操作
+
+**Files:**
+
+- Create: `.subtrees/kairon/packages/kos/src/kos/kems/domain_profile.py`
+- Create: `.subtrees/kairon/packages/kos/src/kos/kems/content_checks.py`
+- Create: `.subtrees/kairon/packages/kos/tests/test_kems_domain_profile.py`
+- Create: `.subtrees/kairon/packages/kos/tests/test_kems_content_checks.py`
+- Modify: `.subtrees/kairon/packages/kos/src/kos/kems/__init__.py`
+- Modify as required after impact review: existing `graph_store.py`、`health.py`、`ingest.py`、`model_acceptance.py`、`ontology/*`
+
+**Scope:** 对 `@公共/_runtime/kems-v2` 和学习 KEMS `.kems/_scripts` 做行为对照。只吸收现有 KOS 未覆盖、且有真实消费者/方法价值的纯函数；graph query、snapshot、model acceptance、source consistency 必须复用现有 store/health 接口，禁止复制旧脚本。
+
+**Steps:**
+
+- [ ] 为 12 个公共 KEMS 脚本和 10 个学习脚本建立 `retire | map-existing | extend` 表。
+- [ ] 对要修改的 Kairon symbols 逐个运行 GitNexus `impact`；HIGH/CRITICAL 先停并审查。
+- [ ] 先写 parity fixtures/RED tests，再实现最小 adapter。
+- [ ] 运行 KEMS focused tests、KOS full tests、ruff/pyright（按项目现有 gate）。
+- [ ] 证明 raw private content 不进入 Kairon state，输出只持 citation/ref/hash。
+
+**Commit:** `feat(kos): absorb governed Documents KEMS content checks`
+
+---
+
+### Task 6: Runtime 建立 Documents 运行适配与调度包
+
+**Files:**
+
+- Create: `.subtrees/runtime/src/runtime/documents_plane/__init__.py`
+- Create: `.subtrees/runtime/src/runtime/documents_plane/paths.py`
+- Create: `.subtrees/runtime/src/runtime/documents_plane/commands.py`
+- Create: `.subtrees/runtime/src/runtime/documents_plane/jobs.py`
+- Create: `.subtrees/runtime/src/runtime/documents_plane/cli.py`
+- Create: `.subtrees/runtime/tests/test_documents_plane_paths.py`
+- Create: `.subtrees/runtime/tests/test_documents_plane_commands.py`
+- Create: `.subtrees/runtime/tests/test_documents_plane_jobs.py`
+- Modify: `.subtrees/runtime/pyproject.toml`
+
+**Interfaces:**
+
+- `DOCUMENTS_CONTENT_ROOT`：只读内容根，默认 `~/Documents`。
+- `OMOSTATION_RUNTIME_STATE_ROOT`：所有状态、日志、缓存、SQLite、索引和 receipt 的唯一写根；不得落回 Documents。
+- `runtime documents run <job-id> --dry-run/--json`：调用注册 owner 命令，不复制 l4/Kairon/OMO/Cockpit 逻辑。
+- job spec 明确 `reads`、`writes`、`owner`、`schedule`、`timeout`、`evidence_path`、`fail_closed`。
+
+**Tests:** path traversal、Documents write denial、state root 创建、owner timeout、非零 exit 透传、dry-run 无副作用、job ID 唯一。
+
+**Commit:** `feat(runtime): add governed Documents plane adapters`
+
+---
+
+### Task 7: 拆解并迁移 `@公共/_runtime` 与 `@驾驶舱/_runtime`
+
+**Source families:**
+
+- Documents: `@公共/_runtime/*`（59 个 runtime）
+- Documents: `@驾驶舱/_runtime/*`（9 个 runtime）
+
+**Target owners:**
+
+| 族 | owner |
+|---|---|
+| domain contract/convergence/meta-model/freshness | l4-kernel |
+| cards/context/dashboard/brief/bridge views | Cockpit |
+| C2G/MOF/registry writeback | ECOS/OMO 对应现有命令 |
+| ingest/notification/reach/private connectors | Runtime + Agora registry |
+| KEMS graph/eval/snapshot | Kairon/KOS |
+| scheduler/watch/logs/state | Runtime |
+| dated repair/deploy/cleanup scripts | evidence archive or retire |
+
+**Files:** 由 Task 4 registry 的 replacement 精确决定；任何新增 owner 文件必须位于上述现有项目，不创建 `projects/documents-runtime`。
+
+**Steps per family:**
+
+- [ ] 记录源 SHA-256、CLI help、fixture output 和所有活动消费者。
+- [ ] 在 owner 侧写 RED parity test。
+- [ ] port/compose 最小实现，所有路径 env-driven。
+- [ ] 验证输出语义、exit code、读写根和 error envelope。
+- [ ] 把 Documents 实现先替换为带 telemetry/sunset 的薄桥；此步不删除。
+- [ ] 更新 migration registry 为 `bridged`。
+
+**Commit:** 按 owner 子仓拆分，不得把 68 个脚本塞进一个巨型提交。
+
+---
+
+### Task 8: 切换 crontab、LaunchAgent、Claude Scheduled 与控制文档
+
+**Files:**
+
+- Create: `.omo/cron/documents-content-plane-crontab`
+- Modify: `/Users/xiamingxing/Library/LaunchAgents/com.learningevolution.concept-weave.monthly.plist`
+- Modify: `/Users/xiamingxing/Documents/Claude/Scheduled/vault-daily-health/SKILL.md`
+- Modify: `/Users/xiamingxing/Documents/Claude/Scheduled/l4-governance-weekly/SKILL.md`
+- Modify: `/Users/xiamingxing/Documents/Claude/Scheduled/monday-vault-health/SKILL.md`
+- Modify: `/Users/xiamingxing/Documents/Claude/Scheduled/weijian-daily-health/SKILL.md`
+- Modify: `/Users/xiamingxing/Documents/@工作文档/卫健委/CLAUDE.md`
+- Modify: `/Users/xiamingxing/Documents/@驾驶舱/_control/async-tasks.yaml`
+- Modify active pointers under `/Users/xiamingxing/Documents/@驾驶舱/_control/`
+
+**Steps:**
+
+- [ ] 生成旧/新 schedule 对照，保证分钟、时区、超时、日志和 failure semantics 不变。
+- [ ] `runtime documents run ... --dry-run` 全部通过后，构造新 crontab；禁止使用 `/tmp/gen_index.py`。
+- [ ] 安装前备份 `crontab -l` 与 plist SHA-256。
+- [ ] 原子切换并立即 `crontab -l`、`plutil -lint`、`launchctl print` 验证。
+- [ ] 手动触发每个 job 的只读/dry-run smoke，确认 evidence 写入 Runtime state root。
+- [ ] 连续观测至少一个触发周期；旧桥 telemetry 无调用后才进入退役队列。
+
+**Rollback:** 恢复备份 crontab/plist；旧薄桥在观测期内保留。
+
+---
+
+## Wave 3 — 各域功能层与大型资产归位
+
+### Task 9: 学习进化运行层归 Kairon/Runtime/ToolBox
+
+**Source:**
+
+- `@学习进化/_control/daemon/`
+- `@学习进化/_control/executors/`
+- `@学习进化/_control/scripts/`
+- `@学习进化/_control/l4-kernel.sh`
+- `@学习进化/_knowledge/10-systems/KEMS/.kems/_scripts/`
+- `@学习进化/_inbox/inbox-router.sh`
+
+**Targets:**
+
+- concept weave、freshness、schema/frontmatter/index checks → Kairon/KOS；
+- job execution、daemon、monthly schedule、logs/state → Runtime；
+- human commands → Cockpit；
+- method/profile/schema/rubric → Documents；
+- repair backups、旧方法论脚本 → `CONTENT_ARCHIVE.yaml`。
+
+**Files:** target files由 Task 5/6 adapters 承接；Documents active CLAUDE/Scheduled/INDEX 指针同步更新。
+
+**Verification:** concept-weave fixture parity、KEMS validator parity、launchd manual trigger、Documents write deny、Kairon/Runtime full tests。
+
+---
+
+### Task 10: 工作文档域 controller/OCR/index/report 归 Runtime domain adapters
+
+**Files:**
+
+- Create: `.subtrees/runtime/src/runtime/documents_plane/domain_adapters/__init__.py`
+- Create: `.subtrees/runtime/src/runtime/documents_plane/domain_adapters/weijian.py`
+- Create: `.subtrees/runtime/src/runtime/documents_plane/domain_adapters/ocr.py`
+- Create: `.subtrees/runtime/tests/test_documents_weijian_adapter.py`
+- Create: `.subtrees/runtime/tests/test_documents_ocr_adapter.py`
+- Kairon domain profile changes only if Task 5 parity proves necessary。
+
+**Source families:**
+
+- `@工作文档/_control/tools/`
+- `@工作文档/tools/`
+- `卫健委/_control/`、`卫健委/_runtime/`
+- `合同法规/_control/tools/`
+- `国转中心/tools/`、`国转中心/_runtime/`
+- `规自委/tools/`、`规自委/_scripts/`、`规自委/_runtime/`
+
+**Rules:**
+
+- OCR 可读 Documents 文件，但索引、临时图像、SQLite 和日志只能写 Runtime state root。
+- predictor/controller 的状态与 task 必须进 OMO，不得改写 Documents control state 冒充任务完成。
+- 交付区/历史工具按 `CONTENT_ARCHIVE.yaml` 冻结，不 port 无消费者的一次性脚本。
+
+**Verification:** fixture parity、中文路径、权限拒绝、幂等、断点恢复、crontab manual run、无 `/tmp` SSOT。
+
+---
+
+### Task 11: 家庭 Next 应用完整合并到 `family-hub`
+
+**Danger gate:** 执行大目录复制/移动前再次确认。
+
+**Source:** `/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app`
+
+**Target files:**
+
+- Create: `.subtrees/family-hub/apps/dashboard/`（仅源代码、tests、config、lockfile；排除 `.next`、`node_modules`、日志、SQLite）
+- Preserve/move existing quest UI under a documented family-hub app boundary if needed
+- Modify: `.subtrees/family-hub/package.json`
+- Modify: `.subtrees/family-hub/pyproject.toml`
+- Modify: `.subtrees/family-hub/README.md`
+- Modify: `.subtrees/family-hub/docs/ARCHITECTURE.md`
+- Add unit/integration/E2E tests under family-hub
+- Modify: `.subtrees/cockpit/src/cockpit/web/api_domain_apps.py`
+- Modify: `.subtrees/cockpit/src/cockpit/tests/test_domain_apps_api.py`
+
+**Boundary:**
+
+- `FAMILY_DOCUMENTS_ROOT` 只读；
+- build/cache/index/SQLite 写 family-hub runtime state；
+- 写 Documents 文件的 API 默认禁用，启用时必须经 OMO proposal/approval；
+- 保留 auth、CSRF、redaction、path traversal 和 write audit 测试；
+- Cockpit 移除 `family-dashboard-app` contract，只保留 `family-hub`。
+
+**Steps:**
+
+- [ ] 生成源排除清单和树指纹。
+- [ ] 复制 327 个非构建文件到隔离 target，保持源不动。
+- [ ] 在 family-hub 修正相对路径/state root，先单测再 build/E2E。
+- [ ] 运行功能矩阵：summary/daily/members/health/growth/assets/search/tasks/files/graph/AI/backup。
+- [ ] 切换 Cockpit contract 与本地启动入口。
+- [ ] 观测稳定后，旧 app 进入删除确认；cache 只重建不迁移。
+
+**Commit:** `feat(family-hub): absorb canonical family dashboard app`
+
+---
+
+### Task 12: 四个外部 Git 仓迁入 ToolBox 受管 staging
+
+**Danger gate:** ToolBox 分支/worktree、目录移动和 Documents 源删除前再次确认。
+
+**Targets:**
+
+```text
+/Users/xiamingxing/ToolBox/_staging/education/DeepTutor
+/Users/xiamingxing/ToolBox/_staging/education/ai-engineering-from-scratch
+/Users/xiamingxing/ToolBox/_staging/methodology/BMAD-METHOD
+/Users/xiamingxing/ToolBox/_staging/capabilities/gstack
+```
+
+**Steps:**
+
+- [ ] 检查 target 不存在、ToolBox worktree clean、四源 clean。
+- [ ] 记录每仓 remote、HEAD、tracked/untracked、文件数、字节数和树哈希。
+- [ ] 在 ToolBox 隔离分支复制/移动并更新 `registry/tools.json`、`CLASSIFICATION.md`、`CLAUDE.md`。
+- [ ] Workspace capability registry 指向 ToolBox owner；不复制能力实现进 Workspace 子仓。
+- [ ] Documents 建立内容索引，保留学习笔记和使用说明，不保留 `.git`/源码树。
+- [ ] 验证四 target `git fsck`、remote、HEAD、status 与源一致。
+- [ ] 删除源目录前再次确认并保留回滚包。
+
+---
+
+### Task 13: 历史代码资料、模板和一次性脚本转强内容归档
+
+**Primary manifests:**
+
+- `/Users/xiamingxing/Documents/@个人/_storage/职业历史/CONTENT_ARCHIVE.yaml`
+- 家庭成员历史设计稿/已办结目录的局部 manifests
+- 创意创作 `_archive` 与模板目录的局部 manifests
+- 工作文档交付区/历史工具目录的局部 manifests
+- KEMS repair backups、Documents `_inbox` 已完成脚本的局部 manifests
+
+**Steps:**
+
+- [ ] 对每个 archive root 生成文件数、字节数、tree SHA-256 和活动消费者扫描。
+- [ ] 明确 archive root，不允许用顶层 manifest 覆盖仍活跃目录。
+- [ ] 写 manifest 后运行 l4 archive validation；库存漂移必须 fail closed。
+- [ ] 对仍有活动消费者的脚本拒绝归档，返回 Task 7/9/10。
+- [ ] 批量 chmod 如确有必要，先输出 20,833+ affected entries 的精确统计并再次确认。
+
+**Result:** 职业历史代码仍是 Documents 资料，不再被误报为 Workspace runtime，也不被错误物理迁移。
+
+---
+
+### Task 14: Zotero app dataDir 迁出 Documents
+
+**Danger gate:** 修改 prefs、复制/移动数据库和删除旧目录前再次确认。
+
+**Source:** `/Users/xiamingxing/Documents/Zotero`
+
+**Proposed target:** `/Users/xiamingxing/Library/Application Support/Zotero/Data`
+
+**Steps:**
+
+- [ ] 确认 Zotero 无进程；记录 SQLite quick-check、文件数、字节数、附件清单、translators 数量和树指纹。
+- [ ] 复制到 target，保留源不动；运行 `sqlite3 ... 'PRAGMA quick_check;'`。
+- [ ] 备份并更新 profile `prefs.js` 的 dataDir 与 watcher path。
+- [ ] 启动 Zotero，验证库项目数、附件可打开、Better BibTeX 与 translators 正常。
+- [ ] 关闭再启动一次，确认 target 是实际写入位置。
+- [ ] Documents 只保留显式导出/附件资料目录和说明，不留 app runtime。
+- [ ] 旧目录删除前再次确认；回滚为恢复 prefs + 原目录。
+
+---
+
+## Wave 4 — 退役、缓存清理、强门禁与最终无损证明
+
+### Task 15: 退役 legacy scripts/symlinks、旁路原型与缓存
+
+**Danger gate:** 输出精确删除清单后再次确认。
+
+**Targets:**
+
+- Documents 中已零消费者的 runtime 文件、KEMS 域级绝对符号链接和 Phase 0 薄桥；
+- `family-dashboard-app/node_modules`、`.next` 和其他可重建 caches；
+- Documents 下 SQLite/index/pycache/log cache；
+- `projects/domain-kems`（仅在有价值配置已吸收、根仓无消费者、历史证据已记录后）；
+- broken root `tools/kems` legacy island（按消费者决定薄客户端或退役）。
+
+**Pre-delete evidence:** 每个 target 的路径、类型、文件数、字节数、SHA-256/tree hash、owner replacement、consumer search、last observed invocation、backup/restore command。
+
+**Steps:**
+
+- [ ] 运行全局 consumer search：crontab、launchd、Claude Scheduled、shell history/config、source imports、BOS registry、Cockpit contract。
+- [ ] 运行 replacement smoke 和 rollback drill。
+- [ ] 获得明确确认后，优先移入可恢复隔离区；确认后再永久清理。
+- [ ] 从 owner source 重建必要 cache，证明不依赖旧 Documents cache。
+- [ ] 更新 migration registry 为 `retired`，不得手填完成而无 evidence。
+
+---
+
+### Task 16: T8 单域推广与默认强制
+
+**Files:**
+
+- Modify: `.subtrees/l4-kernel/src/l4_kernel/harness_profiles.py`
+- Modify: `.subtrees/l4-kernel/tests/test_harness.py`
+- Modify: `.subtrees/l4-kernel/tests/test_harness_profiles.py`
+- Modify: Documents domain manifests/registry only for declarative gate enablement
+- Modify root CI/governance surfaces as required
+
+**Steps:**
+
+- [ ] 按域运行 T8：个人 → 创意 → OPC → 公共 → 驾驶舱 → 学习 → 工作子域 → 家庭。
+- [ ] 每域必须 `runtime=0/cache=0/bridge=0/archive_invalid=0` 才启用；不得用 waiver 假绿。
+- [ ] 所有域通过后把 T8 加入文档域默认 profile。
+- [ ] 测试新建域默认生成 declarative-only 内容并自动通过 T8。
+- [ ] 运行 l4 full tests、所有 owner full tests、Workspace GaC gates。
+
+**Commit:** `feat(l4): enforce T8 for all Documents domains`
+
+---
+
+### Task 17: 全局验证、PR 合并与最终审计
+
+**Verification matrix:**
+
+```bash
+# l4-kernel
+uv run --directory ".subtrees/l4-kernel" --group dev pytest tests/ -q
+uv run --directory ".subtrees/l4-kernel" --group dev ruff check src tests
+
+# Kairon/KOS
+uv run --directory ".subtrees/kairon" pytest packages/kos/tests -q
+
+# Runtime
+uv run --directory ".subtrees/runtime" pytest tests -q
+
+# Cockpit
+uv run --directory ".subtrees/cockpit" pytest src/cockpit/tests tests -q
+
+# Family Hub
+uv run --directory ".subtrees/family-hub" pytest tests -q
+bun --cwd ".subtrees/family-hub/apps/dashboard" test
+bun --cwd ".subtrees/family-hub/apps/dashboard" run build
+bun --cwd ".subtrees/family-hub/apps/dashboard" run test:e2e
+
+# Root governance
+make check-layers
+make doc-ssot-lint
+make ssot-guardian
+make gac-local-gate
+uv run --with pyyaml python "bin/agent-workflow.py" compliance
+
+# Installed surface
+"/Users/xiamingxing/.local/bin/cockpit" context
+"/Users/xiamingxing/.local/bin/cockpit" cards --check
+"/Users/xiamingxing/.local/bin/cockpit" kems status
+
+# Final authoritative audit
+L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
+  "/Users/xiamingxing/.local/bin/cockpit" kems scan
+```
+
+**Final evidence bundle:**
+
+- final audit JSON and counts;
+- before/after inventory diff;
+- scheduler/LaunchAgent snapshots;
+- installed Cockpit version + loaded commits;
+- family-hub functional matrix and E2E artifacts;
+- Zotero quick-check and attachment smoke;
+- external repo origin/HEAD parity;
+- per-repo PR/CI/merge URLs and accepted commits;
+- rollback drill results;
+- migration registry with every entry `retired | content_archive | moved` and evidence refs.
+
+只有上述证据逐项成立，才能关闭 governance runs、提交 root pointer PR、合并并宣称“全面落地完成”。
+
+## 3. Error and Rollback Matrix
+
+| Failure | Required behavior | Rollback |
+|---|---|---|
+| archive manifest invalid/drift | T8 fail closed；不得降级 content | 修 manifest/库存，或恢复 runtime 候选 |
+| owner command unavailable | Cockpit/Runtime 返回 degraded + non-zero | 继续使用旧桥，不切消费者 |
+| parity output differs | 停止该族迁移 | revert owner commit |
+| crontab/launchd trigger fails | 立即恢复备份 schedule | 恢复旧 crontab/plist |
+| family-hub build/E2E fails | 不切 Cockpit contract | 旧 app 保持原位 |
+| external repo target dirty/hash mismatch | 停止源删除 | 删除未采用 target copy，源不动 |
+| Zotero library/attachment mismatch | 不删除源，恢复 prefs | prefs 指回 Documents/Zotero |
+| final audit仍有 runtime/cache/bridge | 不启用默认 T8、不宣称完成 | 回到 registry 未完成项 |
+| CI/GaC failure | 不 merge | 修复或 revert 对应子仓 PR |
+
+## 4. Physical-Migration Confirmation Checkpoints
+
+需要单独再次确认的四个 checkpoint：
+
+1. 家庭应用 327 个源文件复制进 family-hub，以及后续删除旧 806 MiB 目录/缓存；
+2. 四个外部 Git 仓迁入 ToolBox；
+3. Zotero 24 MiB dataDir 迁移与 prefs 修改；
+4. 最终删除 legacy scripts/symlinks/caches、批量 chmod 或退役 `domain-kems`。
+
+确认请求必须给出当时的精确清单和证据，不能拿本计划当无限期删除授权。
