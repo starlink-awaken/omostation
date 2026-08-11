@@ -1,3 +1,11 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-11
+bet_id: BET-Y1Q2-T6-03
+---
+
 # BET-Y1Q2-T6-03 Retro: bin 脚本清理
 
 ## 完成日期
@@ -23,3 +31,14 @@
 - `bin-orphan-scan.py --json` 输出扫描结果
 - gate 引用的脚本已恢复
 - 归档不影响 CI (gate 全绿)
+
+## 2026-08-11 纠正性复验
+
+原“gate 全绿”证据不可采信：`ci-local-fast` 在 `/bin/sh` 下以
+`producer | sed` 执行四个检查，producer 非零状态被 `sed` 的零状态覆盖。
+该问题不推翻已归档脚本的交付事实，但使本 BET 的验收链失真。
+
+ADR-0407 已将目标改为真实退出码 runner，并把 Ruff 分为“26 条已审阅
+CI 级 baseline + path/code/message bucket 净新增硬阻断”和“997 条全量债务显式 advisory”。纠正后
+验收以失败注入测试和真实 `make ci-local-fast` 的 blocking 结果为准；不得再
+把 advisory 债务描述为全绿。

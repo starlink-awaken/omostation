@@ -17,6 +17,13 @@ surfaces:
     gate: false
     triggers: [manual]
     status: active
+  - id: bin-gac-ci-local-fast-py
+    tool: bin/gac/ci-local-fast.py
+    workflow: (none)
+    gate: true
+    triggers: [manual, push]
+    status: active
+    note: ADR-0407 本地 pre-push 编排器；保留 producer 退出码并阻断 Ruff baseline 回归
   - id: bin-gac-check-adversarial-effectiveness-py
     tool: bin/gac/check-adversarial-effectiveness.py
     workflow: (none)
