@@ -74,6 +74,10 @@ class ProcessOutputLimitError(Exception):
     """Raised without remote bytes when either process stream exceeds its cap."""
 
 
+class ProcessSpawnError(Exception):
+    """Distinguish process creation failure from post-spawn stream failure."""
+
+
 @dataclass(frozen=True, slots=True)
 class _DefaultProcessRunner:
     output_limit: int
@@ -198,11 +202,14 @@ async def _default_process_runner(
 ) -> ProcessOutput:
     if output_limit <= 0:
         raise ValueError("process output limit must be positive")
-    process = await asyncio.create_subprocess_exec(
-        *argv,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *argv,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    except OSError as exc:
+        raise ProcessSpawnError from exc
     if process.stdout is None or process.stderr is None:
         await _kill_reap_and_cleanup(process, ())
         raise RuntimeError("subprocess pipes were not created")
@@ -217,10 +224,7 @@ async def _default_process_runner(
         stdout, stderr, _ = await asyncio.wait_for(
             asyncio.gather(stdout_task, stderr_task, wait_task), timeout=timeout
         )
-    except asyncio.CancelledError:
-        await _kill_reap_and_cleanup(process, tasks)
-        raise
-    except (TimeoutError, ProcessOutputLimitError):
+    except BaseException:
         await _kill_reap_and_cleanup(process, tasks)
         raise
     return ProcessOutput(
@@ -430,7 +434,7 @@ class LmStudioAdapter:
                 message="LM Studio control output exceeded its safety limit",
                 detail={},
             ) from exc
-        except OSError as exc:
+        except ProcessSpawnError as exc:
             raise AdapterFailure.from_detail(
                 code=AdapterErrorCode.UNREACHABLE,
                 message="LM Studio control process is unavailable",
@@ -896,7 +900,12 @@ class LmStudioAdapter:
         model_id = request.model_id
         try:
             _validate_model_token(model_id)
-            rows, row_error = await self._probe_control()
+            (
+                models,
+                state_error,
+                control_known,
+                control_by_model,
+            ) = await self._list_models_with_control()
         except ValueError:
             return self._tune_failure(
                 request,
@@ -907,17 +916,18 @@ class LmStudioAdapter:
             )
         except AdapterFailure as failure:
             return self._tune_failure(request, failure.error)
-        if rows is None:
+        model = next((candidate for candidate in models if candidate.id == model_id), None)
+        if not control_known or (model is not None and model.loaded is None):
             return self._tune_failure(
                 request,
-                row_error
+                state_error
                 or AdapterError(
                     code=AdapterErrorCode.BAD_RESPONSE,
                     message="LM Studio tuning state is indeterminate",
                 ),
             )
-        row = next((candidate for candidate in rows if candidate.model_id == model_id), None)
-        if row is None:
+        row = control_by_model.get(model_id)
+        if model is None or model.loaded is not True or row is None:
             return self._tune_failure(
                 request,
                 AdapterError(
@@ -959,9 +969,20 @@ class LmStudioAdapter:
         unload_verified = False
         try:
             await self._run_control(("unload", row.identifier), timeout=300.0)
-            unloaded_rows, unloaded_error = await self._probe_control()
-            if unloaded_rows is None or any(
-                candidate.model_id == model_id for candidate in unloaded_rows
+            (
+                unloaded_models,
+                unloaded_error,
+                unloaded_control_known,
+                unloaded_by_model,
+            ) = await self._list_models_with_control()
+            unloaded_model = next(
+                (candidate for candidate in unloaded_models if candidate.id == model_id), None
+            )
+            if (
+                not unloaded_control_known
+                or unloaded_model is None
+                or unloaded_model.loaded is not False
+                or model_id in unloaded_by_model
             ):
                 return self._tune_failure(
                     request,
@@ -973,8 +994,13 @@ class LmStudioAdapter:
                     ),
                 )
             unload_verified = True
-            await self._run_control(self._load_arguments(model_id, options), timeout=300.0)
-            loaded_rows, loaded_error = await self._probe_control()
+            await self._run_control(self._load_arguments(row.model_id, options), timeout=300.0)
+            (
+                loaded_models,
+                loaded_error,
+                loaded_control_known,
+                loaded_by_model,
+            ) = await self._list_models_with_control()
         except AdapterFailure as failure:
             if unload_verified:
                 return self._tune_failure(
@@ -988,16 +1014,15 @@ class LmStudioAdapter:
                     ),
                 )
             return self._tune_failure(request, failure.error)
-        verified = (
-            next(
-                (candidate for candidate in loaded_rows if candidate.model_id == model_id),
-                None,
-            )
-            if loaded_rows is not None
-            else None
+        loaded_model = next(
+            (candidate for candidate in loaded_models if candidate.id == model_id), None
         )
+        verified = loaded_by_model.get(model_id)
         if (
-            verified is None
+            not loaded_control_known
+            or loaded_model is None
+            or loaded_model.loaded is not True
+            or verified is None
             or verified.context_length != options.context_length
             or verified.parallel != options.parallel
             or verified.ttl_seconds != options.ttl_seconds

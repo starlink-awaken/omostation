@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from collections.abc import Coroutine
 from pathlib import Path
+from typing import Any
 
 import httpx
 import pytest
@@ -69,6 +71,32 @@ class FakeBoundedProcess:
         return self.returncode
 
 
+class FakeExplodingReader(FakeAsyncReader):
+    def __init__(self, failure: Exception) -> None:
+        super().__init__([])
+        self._failure = failure
+
+    async def read(self, size: int = -1) -> bytes:
+        del size
+        self.started.set()
+        raise self._failure
+
+
+class FakeRunningProcess(FakeBoundedProcess):
+    def __init__(self, stdout: FakeAsyncReader, stderr: FakeAsyncReader) -> None:
+        super().__init__(stdout, stderr)
+        self._released = asyncio.Event()
+
+    def kill(self) -> None:
+        super().kill()
+        self._released.set()
+
+    async def wait(self) -> int:
+        self.wait_count += 1
+        await self._released.wait()
+        return self.returncode or 0
+
+
 def _known_hosts(tmp_path: Path) -> Path:
     path = tmp_path / "known_hosts"
     path.write_text("node.invalid ssh-ed25519 AAAATEST\n", encoding="utf-8")
@@ -76,10 +104,12 @@ def _known_hosts(tmp_path: Path) -> Path:
     return path
 
 
-def _models_transport(*, chat_content: str = "visible") -> httpx.MockTransport:
+def _models_transport(
+    *, chat_content: str = "visible", model_id: str = "model-a"
+) -> httpx.MockTransport:
     async def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/v1/models":
-            return httpx.Response(200, json={"data": [{"id": "model-a"}]})
+            return httpx.Response(200, json={"data": [{"id": model_id}]})
         if request.url.path == "/v1/chat/completions":
             return httpx.Response(
                 200,
@@ -838,6 +868,165 @@ async def test_tune_uses_confirmed_unload_load_and_verifies(tmp_path: Path) -> N
 
 
 @pytest.mark.asyncio
+async def test_tune_uses_canonical_http_identifier_and_control_source(
+    tmp_path: Path,
+) -> None:
+    calls: list[tuple[str, ...]] = []
+    current = (
+        '[{"modelKey":"source-model","identifier":"public-model",'
+        '"contextLength":4096,"parallel":2,"ttlMs":60000}]'
+    )
+    desired = (
+        '[{"modelKey":"source-model","identifier":"public-model",'
+        '"contextLength":8192,"parallel":2,"ttlMs":60000}]'
+    )
+    outputs = iter(
+        [
+            ProcessOutput(0, current, ""),
+            ProcessOutput(0, "unloaded", ""),
+            ProcessOutput(0, "[]", ""),
+            ProcessOutput(0, "loaded", ""),
+            ProcessOutput(0, desired, ""),
+        ]
+    )
+
+    async def runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
+        del timeout
+        calls.append(argv)
+        return next(outputs)
+
+    adapter = LmStudioAdapter(
+        backend_id="lm",
+        base_url="http://node.invalid:1234",
+        ssh_target="node.invalid",
+        known_hosts_file=_known_hosts(tmp_path),
+        process_runner=runner,
+        transport=_models_transport(model_id="public-model"),
+    )
+
+    result = await adapter.tune(
+        TuneRequest(
+            scope=TuneScope.MODEL,
+            model_id="public-model",
+            settings=TuneSettings(max_context_window=8192),
+        )
+    )
+
+    assert result.status is OperationStatus.SUCCEEDED
+    assert result.changed_fields == ("max_context_window",)
+    assert calls[1][-3:] == ("lms", "unload", "public-model")
+    assert calls[3][-12:] == (
+        "lms",
+        "load",
+        "source-model",
+        "-c",
+        "8192",
+        "--parallel",
+        "2",
+        "--ttl",
+        "60",
+        "--identifier",
+        "public-model",
+        "-y",
+    )
+
+
+@pytest.mark.asyncio
+async def test_tune_canonical_unload_verification_failure_does_not_load(
+    tmp_path: Path,
+) -> None:
+    calls: list[tuple[str, ...]] = []
+    current = (
+        '[{"modelKey":"source-model","identifier":"public-model",'
+        '"contextLength":4096,"parallel":2,"ttlMs":60000}]'
+    )
+    outputs = iter(
+        [
+            ProcessOutput(0, current, ""),
+            ProcessOutput(0, "unloaded", ""),
+            ProcessOutput(0, current, ""),
+        ]
+    )
+
+    async def runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
+        del timeout
+        calls.append(argv)
+        return next(outputs)
+
+    adapter = LmStudioAdapter(
+        backend_id="lm",
+        base_url="http://node.invalid:1234",
+        ssh_target="node.invalid",
+        known_hosts_file=_known_hosts(tmp_path),
+        process_runner=runner,
+        transport=_models_transport(model_id="public-model"),
+    )
+
+    result = await adapter.tune(
+        TuneRequest(
+            scope=TuneScope.MODEL,
+            model_id="public-model",
+            settings=TuneSettings(max_context_window=8192),
+        )
+    )
+
+    assert result.status is OperationStatus.FAILED
+    assert result.error is not None
+    assert result.error.code is AdapterErrorCode.BAD_RESPONSE
+    assert len(calls) == 3
+    assert calls[1][-3:] == ("lms", "unload", "public-model")
+    assert all("load" not in call[-11:] for call in calls)
+
+
+@pytest.mark.asyncio
+async def test_tune_canonical_load_verification_failure_is_partial(
+    tmp_path: Path,
+) -> None:
+    calls: list[tuple[str, ...]] = []
+    current = (
+        '[{"modelKey":"source-model","identifier":"public-model",'
+        '"contextLength":4096,"parallel":2,"ttlMs":60000}]'
+    )
+    outputs = iter(
+        [
+            ProcessOutput(0, current, ""),
+            ProcessOutput(0, "unloaded", ""),
+            ProcessOutput(0, "[]", ""),
+            ProcessOutput(0, "loaded", ""),
+            ProcessOutput(0, "[]", ""),
+        ]
+    )
+
+    async def runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
+        del timeout
+        calls.append(argv)
+        return next(outputs)
+
+    adapter = LmStudioAdapter(
+        backend_id="lm",
+        base_url="http://node.invalid:1234",
+        ssh_target="node.invalid",
+        known_hosts_file=_known_hosts(tmp_path),
+        process_runner=runner,
+        transport=_models_transport(model_id="public-model"),
+    )
+
+    result = await adapter.tune(
+        TuneRequest(
+            scope=TuneScope.MODEL,
+            model_id="public-model",
+            settings=TuneSettings(max_context_window=8192),
+        )
+    )
+
+    assert result.status is OperationStatus.FAILED
+    assert result.error is not None
+    assert result.error.code is AdapterErrorCode.PARTIAL_FAILURE
+    assert calls[1][-3:] == ("lms", "unload", "public-model")
+    assert calls[3][-12:-9] == ("lms", "load", "source-model")
+
+
+@pytest.mark.asyncio
 async def test_tune_reports_partial_failure_after_verified_unload_then_load_failure(
     tmp_path: Path,
 ) -> None:
@@ -1075,6 +1264,146 @@ async def test_default_process_runner_cancellation_kills_reaps_and_cleans_reader
     assert process.wait_count >= 1
     assert process.stdout.cancelled is True
     assert process.stderr.cancelled is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("failing_stream", "failure"),
+    [
+        ("stdout", OSError("stdout-reader-secret")),
+        ("stderr", RuntimeError("stderr-reader-secret")),
+    ],
+)
+async def test_default_process_runner_reader_exception_kills_reaps_and_settles_tasks(
+    monkeypatch: pytest.MonkeyPatch,
+    failing_stream: str,
+    failure: Exception,
+) -> None:
+    blocker = FakeAsyncReader([], block=True)
+    exploding = FakeExplodingReader(failure)
+    process = FakeRunningProcess(
+        exploding if failing_stream == "stdout" else blocker,
+        exploding if failing_stream == "stderr" else blocker,
+    )
+    created_tasks: list[asyncio.Task[Any]] = []
+    real_create_task = asyncio.create_task
+
+    def tracked_create_task(
+        coroutine: Coroutine[Any, Any, Any],
+    ) -> asyncio.Task[Any]:
+        task = real_create_task(coroutine)
+        created_tasks.append(task)
+        return task
+
+    async def fake_exec(*argv: str, **kwargs: object) -> FakeRunningProcess:
+        del argv, kwargs
+        return process
+
+    loop = asyncio.get_running_loop()
+    loop_errors: list[dict[str, Any]] = []
+    previous_handler = loop.get_exception_handler()
+
+    def capture_loop_error(event_loop: asyncio.AbstractEventLoop, context: dict[str, Any]) -> None:
+        del event_loop
+        loop_errors.append(context)
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+    monkeypatch.setattr(asyncio, "create_task", tracked_create_task)
+    loop.set_exception_handler(capture_loop_error)
+    try:
+        with pytest.raises(type(failure), match="reader-secret"):
+            await lmstudio_module._default_process_runner(("ssh",), 1.0)
+        await asyncio.sleep(0)
+        killed_before_test_cleanup = process.killed
+        reaped_before_test_cleanup = process.wait_count >= 1
+        tasks_done_before_test_cleanup = all(task.done() for task in created_tasks)
+        blocker_cancelled_before_test_cleanup = blocker.cancelled
+        loop_errors_before_test_cleanup = tuple(loop_errors)
+    finally:
+        for task in created_tasks:
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(*created_tasks, return_exceptions=True)
+        if not process.killed:
+            process.kill()
+        await process.wait()
+        loop.set_exception_handler(previous_handler)
+
+    assert killed_before_test_cleanup is True
+    assert reaped_before_test_cleanup is True
+    assert tasks_done_before_test_cleanup is True
+    assert blocker_cancelled_before_test_cleanup is True
+    assert loop_errors_before_test_cleanup == ()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("failing_stream", "failure"),
+    [
+        ("stdout", OSError("stdout-reader-remote-secret")),
+        ("stderr", RuntimeError("stderr-reader-remote-secret")),
+    ],
+)
+async def test_adapter_maps_default_runner_reader_failure_without_remote_detail(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failing_stream: str,
+    failure: Exception,
+) -> None:
+    blocker = FakeAsyncReader([], block=True)
+    exploding = FakeExplodingReader(failure)
+    process = FakeRunningProcess(
+        exploding if failing_stream == "stdout" else blocker,
+        exploding if failing_stream == "stderr" else blocker,
+    )
+
+    async def fake_exec(*argv: str, **kwargs: object) -> FakeRunningProcess:
+        del argv, kwargs
+        return process
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+    adapter = LmStudioAdapter(
+        backend_id="lm",
+        base_url="http://node.invalid:1234",
+        ssh_target="node.invalid",
+        known_hosts_file=_known_hosts(tmp_path),
+        transport=_models_transport(),
+    )
+
+    result = await adapter.load_model("model-a")
+
+    assert result.status is OperationStatus.FAILED
+    assert result.error is not None
+    assert result.error.code is AdapterErrorCode.BAD_RESPONSE
+    assert str(failure) not in result.model_dump_json()
+    assert process.killed is True
+    assert process.wait_count >= 1
+    assert blocker.cancelled is True
+
+
+@pytest.mark.asyncio
+async def test_adapter_keeps_default_process_spawn_failure_unreachable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def fake_exec(*argv: str, **kwargs: object) -> FakeRunningProcess:
+        del argv, kwargs
+        raise OSError("spawn-remote-secret")
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+    adapter = LmStudioAdapter(
+        backend_id="lm",
+        base_url="http://node.invalid:1234",
+        ssh_target="node.invalid",
+        known_hosts_file=_known_hosts(tmp_path),
+        transport=_models_transport(),
+    )
+
+    result = await adapter.load_model("model-a")
+
+    assert result.status is OperationStatus.FAILED
+    assert result.error is not None
+    assert result.error.code is AdapterErrorCode.UNREACHABLE
+    assert "spawn-remote-secret" not in result.model_dump_json()
 
 
 @pytest.mark.asyncio
