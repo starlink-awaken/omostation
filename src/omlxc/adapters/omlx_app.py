@@ -34,12 +34,11 @@ from omlxc.domain.protocols import (
     TuneScope,
 )
 
+from .reasoning import ReasoningFilter
 from .security import AdapterFailure
 from .sse import SSEDecoder
 
 _UNSUPPORTED_STATUSES = frozenset({404, 405, 501})
-_THINK_OPEN = "<think>"
-_THINK_CLOSE = "</think>"
 _SEMVER = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
     r"(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)"
@@ -73,75 +72,6 @@ def _semver_core(value: str) -> tuple[int, int, int] | None:
         int(matched.group(2)),
         int(matched.group(3)),
     )
-
-
-def _partial_tag_length(value: str, tag: str) -> int:
-    lowered = value.lower()
-    for length in range(min(len(value), len(tag) - 1), 0, -1):
-        if lowered[-length:] == tag[:length]:
-            return length
-    return 0
-
-
-class _ReasoningFilter:
-    """Remove think blocks without leaking tags split across SSE chunks."""
-
-    def __init__(self) -> None:
-        self._buffer = ""
-        self._depth = 0
-
-    def feed(self, chunk: str) -> str:
-        self._buffer += chunk
-        output: list[str] = []
-        while self._buffer:
-            lowered = self._buffer.lower()
-            if self._depth:
-                open_at = lowered.find(_THINK_OPEN)
-                close_at = lowered.find(_THINK_CLOSE)
-                positions: list[tuple[int, str]] = [
-                    (position, tag)
-                    for position, tag in (
-                        (open_at, _THINK_OPEN),
-                        (close_at, _THINK_CLOSE),
-                    )
-                    if position >= 0
-                ]
-                if positions:
-                    position, tag = min(positions, key=lambda item: item[0])
-                    self._buffer = self._buffer[position + len(tag) :]
-                    self._depth += 1 if tag == _THINK_OPEN else -1
-                    continue
-                keep = max(
-                    _partial_tag_length(self._buffer, _THINK_OPEN),
-                    _partial_tag_length(self._buffer, _THINK_CLOSE),
-                )
-                self._buffer = self._buffer[-keep:] if keep else ""
-                return "".join(output)
-
-            open_at = lowered.find(_THINK_OPEN)
-            if open_at >= 0:
-                output.append(self._buffer[:open_at])
-                self._buffer = self._buffer[open_at + len(_THINK_OPEN) :]
-                self._depth = 1
-                continue
-
-            keep = _partial_tag_length(self._buffer, _THINK_OPEN)
-            if keep:
-                output.append(self._buffer[:-keep])
-                self._buffer = self._buffer[-keep:]
-            else:
-                output.append(self._buffer)
-                self._buffer = ""
-            return "".join(output)
-        return "".join(output)
-
-    def finish(self) -> tuple[str, bool]:
-        if self._depth:
-            self._buffer = ""
-            return "", True
-        remaining = self._buffer
-        self._buffer = ""
-        return remaining, False
 
 
 class OmlxAppAdapter:
@@ -699,7 +629,7 @@ class OmlxAppAdapter:
 
     @staticmethod
     def _strip_reasoning(content: str) -> tuple[str, bool]:
-        filtered = _ReasoningFilter()
+        filtered = ReasoningFilter()
         safe = filtered.feed(content)
         remaining, unclosed = filtered.finish()
         return safe + remaining, unclosed
@@ -784,7 +714,7 @@ class OmlxAppAdapter:
         emitted_content = False
         saw_data = False
         completed = False
-        reasoning_filter = _ReasoningFilter()
+        reasoning_filter = ReasoningFilter()
         decoder = SSEDecoder()
         try:
             async with self._client.stream(
@@ -895,7 +825,7 @@ class OmlxAppAdapter:
         *,
         request_id: str,
         data: str,
-        reasoning_filter: _ReasoningFilter,
+        reasoning_filter: ReasoningFilter,
         emitted_content: bool,
     ) -> tuple[tuple[StreamEvent, ...], bool, bool]:
         if data.strip() == "[DONE]":

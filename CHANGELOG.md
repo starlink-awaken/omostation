@@ -14,3 +14,6 @@
 - Added a reusable typed backend-adapter contract and the asynchronous oMLX App
   adapter for capability/readiness discovery, model lifecycle and tuning, chat,
   vision, embeddings, replay-safe SSE streaming, and recursive redaction.
+- Added the LM Studio / LM Link adapter: direct OpenAI-compatible HTTP inference,
+  three-state inventory merged with `lms ps --json`, and hardened argv-only SSH
+  lifecycle control for macOS and Windows with strict known-host verification.
