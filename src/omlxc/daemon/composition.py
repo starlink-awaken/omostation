@@ -1,0 +1,544 @@
+"""Production composition root joining Task 5 runtime and Task 6 data plane."""
+
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import json
+from collections.abc import AsyncIterator, Callable, Mapping
+from contextlib import asynccontextmanager
+from dataclasses import dataclass, replace
+from datetime import UTC, datetime
+from typing import cast
+from uuid import uuid4
+
+from fastapi import FastAPI
+
+from omlxc.adapters import LmStudioAdapter, OllamaAdapter, OmlxAppAdapter
+from omlxc.api import create_app
+from omlxc.config import AppConfig
+from omlxc.dataplane import (
+    AdapterBinding,
+    AdapterRegistry,
+    CapacityCoordinator,
+    ChatExecution,
+    DataPlaneOrchestrator,
+    EmbeddingExecution,
+    ExecutionError,
+    ExecutionErrorCode,
+    Reranker,
+    RerankExecution,
+    RerankRequest,
+)
+from omlxc.domain import (
+    BackendKind,
+    HealthSnapshot,
+    Job,
+    JobState,
+    ModelSpec,
+    Node,
+    NodeState,
+    RiskLevel,
+    RouteDecision,
+    RouteRequest,
+)
+from omlxc.domain.protocols import (
+    BackendAdapter,
+    ChatRequest,
+    EmbeddingRequest,
+    LifecycleResult,
+    OperationStatus,
+    StreamEvent,
+)
+from omlxc.events import EventBus, EventSubscription
+from omlxc.scheduler import PlacementSnapshot, RouteFailure, RoutePlanner, default_policies
+from omlxc.storage import (
+    DurableEventRecord,
+    RunningRecoveryPolicy,
+    SQLiteRuntimeStore,
+    StoredJob,
+)
+
+from .runtime import DaemonRuntime
+
+
+class StorageHandle:
+    def __init__(self, config: AppConfig) -> None:
+        self._path = config.storage.database_path
+        self._store: SQLiteRuntimeStore | None = None
+
+    @property
+    def ready(self) -> bool:
+        return self._store is not None and not self._store.degraded
+
+    @property
+    def diagnostic(self) -> str:
+        return self._store.diagnostic if self._store is not None else "storage_not_started"
+
+    def require(self) -> SQLiteRuntimeStore:
+        if self._store is None:
+            raise RuntimeError("daemon storage is not started")
+        return self._store
+
+    async def start(self) -> None:
+        if self._store is None:
+            self._store = await SQLiteRuntimeStore.open(self._path)
+
+    async def close(self) -> None:
+        store, self._store = self._store, None
+        if store is not None:
+            await store.close()
+
+
+class SnapshotCatalog:
+    def __init__(self, snapshots: tuple[PlacementSnapshot, ...]) -> None:
+        self._snapshots = {snapshot.placement_id: snapshot for snapshot in snapshots}
+
+    def get(self) -> tuple[PlacementSnapshot, ...]:
+        return tuple(self._snapshots[key] for key in sorted(self._snapshots))
+
+    def mark_loaded(self, placement_id: str, loaded: bool) -> None:
+        snapshot = self._snapshots[placement_id]
+        self._snapshots[placement_id] = replace(snapshot, loaded=loaded)
+
+
+class ProductionEventService:
+    def __init__(self, storage: StorageHandle, bus: EventBus) -> None:
+        self._storage = storage
+        self._bus = bus
+
+    async def replay_events(
+        self, *, after_sequence: int, limit: int
+    ) -> tuple[DurableEventRecord, ...]:
+        return await self._storage.require().replay_durable_events(
+            after_sequence=after_sequence, limit=limit
+        )
+
+    def subscribe_events(self) -> EventSubscription:
+        return self._bus.subscribe()
+
+
+class ProductionInferenceService:
+    def __init__(
+        self,
+        orchestrator: DataPlaneOrchestrator,
+        model_ids: tuple[str, ...],
+        reranker: Reranker | None,
+    ) -> None:
+        self._orchestrator = orchestrator
+        self._model_ids = tuple(sorted(model_ids))
+        self._reranker = reranker
+
+    async def list_openai_models(self) -> tuple[str, ...]:
+        return self._model_ids
+
+    async def chat(
+        self, route: RouteRequest, request: ChatRequest, *, deadline: float
+    ) -> ChatExecution:
+        return await self._orchestrator.chat(route, request, deadline=deadline)
+
+    def stream_chat(
+        self, route: RouteRequest, request: ChatRequest, *, deadline: float
+    ) -> AsyncIterator[StreamEvent]:
+        return self._orchestrator.stream_chat(route, request, deadline=deadline)
+
+    async def embed(
+        self, route: RouteRequest, request: EmbeddingRequest, *, deadline: float
+    ) -> EmbeddingExecution:
+        return await self._orchestrator.embed(route, request, deadline=deadline)
+
+    async def rerank(
+        self, *, request_id: str, query: str, documents: tuple[str, ...]
+    ) -> RerankExecution:
+        if self._reranker is None:
+            return RerankExecution(
+                request_id,
+                (),
+                ExecutionError(ExecutionErrorCode.UNSUPPORTED, False, reason="reranker_unset"),
+            )
+        return await self._orchestrator.rerank(
+            self._reranker, RerankRequest(request_id, query, documents)
+        )
+
+
+class ProductionControlService:
+    def __init__(
+        self,
+        *,
+        config: AppConfig,
+        storage: StorageHandle,
+        adapters: Mapping[str, BackendAdapter],
+        catalog: SnapshotCatalog,
+        planner: RoutePlanner,
+        bus: EventBus,
+        id_factory: Callable[[], str],
+        now: Callable[[], datetime],
+        worker_timeout: float = 120.0,
+    ) -> None:
+        self._config = config
+        self._storage = storage
+        self._adapters = dict(adapters)
+        self._catalog = catalog
+        self._planner = planner
+        self._bus = bus
+        self._id_factory = id_factory
+        self._now = now
+        self._worker_timeout = worker_timeout
+        self._tasks: dict[str, asyncio.Task[None]] = {}
+
+    @property
+    def task_settled(self) -> bool:
+        return all(task.done() for task in self._tasks.values())
+
+    async def start(self) -> None:
+        recovered = await self._storage.require().recover_jobs(
+            {"load": RunningRecoveryPolicy.REQUEUE, "unload": RunningRecoveryPolicy.REQUEUE},
+            observed_at=self._now(),
+        )
+        for job in recovered:
+            if job.state is JobState.PENDING:
+                self._schedule(job)
+
+    async def close(self) -> None:
+        tasks = tuple(self._tasks.values())
+        for task in tasks:
+            task.cancel()
+        if tasks:
+            done, pending = await asyncio.wait(tasks, timeout=1.0)
+            del done
+            for task in pending:
+                task.cancel()
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
+        self._tasks.clear()
+
+    async def health(self) -> Mapping[str, object]:
+        return {
+            "status": "ready" if self._storage.ready else "degraded",
+            "degraded": not self._storage.ready,
+            "diagnostic": self._storage.diagnostic,
+        }
+
+    async def list_nodes(self, *, after: str | None, limit: int) -> tuple[Node, ...]:
+        nodes = tuple(
+            Node(
+                id=item.id,
+                display_name=item.display_name,
+                platform=item.platform,
+                tailscale_identity=item.tailscale_identity,
+                memory_gb=item.memory_gb,
+                health=HealthSnapshot(
+                    state=NodeState.UNKNOWN,
+                    observed_at=self._now(),
+                    stale=True,
+                    detail="configured_not_probed",
+                ),
+            )
+            for item in sorted(self._config.nodes, key=lambda node: node.id)
+            if after is None or item.id > after
+        )
+        return nodes[:limit]
+
+    async def list_models(self, *, after: str | None, limit: int) -> tuple[ModelSpec, ...]:
+        models = tuple(
+            ModelSpec(id=item.id, role=item.role, reasoning=item.reasoning)
+            for item in sorted(self._config.models, key=lambda model: model.id)
+            if after is None or item.id > after
+        )
+        return models[:limit]
+
+    async def plan_route(self, request: RouteRequest) -> RouteDecision | RouteFailure:
+        return self._planner.plan(request, self._catalog.get())
+
+    async def list_jobs(self, *, after: str | None, limit: int) -> tuple[Job, ...]:
+        stored = await self._storage.require().list_jobs(after_job_id=after, limit=limit)
+        return tuple(_job(item) for item in stored)
+
+    async def get_job(self, job_id: str) -> Job | None:
+        stored = await self._storage.require().get_job(job_id)
+        return _job(stored) if stored is not None else None
+
+    async def load_model(self, model_id: str, *, idempotency_key: str) -> Job:
+        return await self._create_operation("load", model_id, idempotency_key)
+
+    async def unload_model(self, model_id: str, *, idempotency_key: str) -> Job:
+        return await self._create_operation("unload", model_id, idempotency_key)
+
+    async def cancel_job(self, job_id: str) -> Job | None:
+        store = self._storage.require()
+        if await store.get_job(job_id) is None:
+            return None
+        stored = await store.request_job_cancel(
+            job_id,
+            observed_at=self._now(),
+            event_id=f"job-{job_id}-cancel-requested",
+        )
+        task = self._tasks.get(job_id)
+        if task is not None and not task.done():
+            task.cancel()
+        return _job(stored)
+
+    async def metrics_summary(self) -> Mapping[str, object]:
+        return {
+            "requests": await self._storage.require().metric_count(),
+            "event_drops": self._bus.dropped_low_priority,
+        }
+
+    async def _create_operation(self, kind: str, model_id: str, key: str) -> Job:
+        placement = self._placement_for_model(model_id)
+        fingerprint = hashlib.sha256(
+            json.dumps(
+                {"kind": kind, "model_id": model_id}, separators=(",", ":"), sort_keys=True
+            ).encode()
+        ).hexdigest()
+        now = self._now()
+        created = await self._storage.require().create_job(
+            Job(
+                id=self._id_factory(),
+                kind=kind,
+                initiator="api",
+                risk=RiskLevel.R1,
+                state=JobState.PENDING,
+                progress=0,
+                created_at=now,
+                updated_at=now,
+                rollback_reference=f"placement:{placement.placement_id}",
+            ),
+            idempotency_key=key,
+            payload_fingerprint=fingerprint,
+        )
+        if created.state is JobState.PENDING:
+            self._schedule(created)
+        return _job(created)
+
+    def _schedule(self, job: StoredJob) -> None:
+        existing = self._tasks.get(job.id)
+        if existing is None or existing.done():
+            task = asyncio.create_task(self._run_job(job), name=f"omlxcd-job-{job.id}")
+            self._tasks[job.id] = task
+            task.add_done_callback(lambda _task, job_id=job.id: self._tasks.pop(job_id, None))
+
+    async def _run_job(self, job: StoredJob) -> None:
+        store = self._storage.require()
+        try:
+            planning = await store.transition_job(
+                job.id,
+                JobState.PLANNING,
+                progress=max(job.progress, 0.1),
+                observed_at=self._now(),
+                event_id=f"job-{job.id}-planning-{job.attempt}",
+            )
+            await store.transition_job(
+                job.id,
+                JobState.RUNNING,
+                progress=max(planning.progress, 0.2),
+                observed_at=self._now(),
+                event_id=f"job-{job.id}-running-{job.attempt}",
+            )
+            placement = self._placement_from_reference(planning.rollback_reference)
+            adapter = self._adapters[placement.backend_id]
+            operation = adapter.load_model if job.kind == "load" else adapter.unload_model
+            async with asyncio.timeout(self._worker_timeout):
+                result = await operation(
+                    placement.backend_model_id, idempotency_key=job.idempotency_key
+                )
+            await self._finish(job, placement.placement_id, result)
+        except asyncio.CancelledError:
+            current = await store.get_job(job.id)
+            if current is not None and current.state is JobState.CANCELLING:
+                await store.transition_job(
+                    job.id,
+                    JobState.CANCELLED,
+                    progress=current.progress,
+                    observed_at=self._now(),
+                    event_id=f"job-{job.id}-cancelled-{job.attempt}",
+                )
+            raise
+        except Exception:
+            current = await store.get_job(job.id)
+            if current is not None and current.state in {JobState.PLANNING, JobState.RUNNING}:
+                await store.transition_job(
+                    job.id,
+                    JobState.FAILED,
+                    progress=current.progress,
+                    observed_at=self._now(),
+                    event_id=f"job-{job.id}-failed-{job.attempt}",
+                    error_code="operation_failed",
+                )
+
+    async def _finish(self, job: StoredJob, placement_id: str, result: LifecycleResult) -> None:
+        succeeded = result.status in {OperationStatus.SUCCEEDED, OperationStatus.UNCHANGED}
+        if succeeded:
+            self._catalog.mark_loaded(placement_id, job.kind == "load")
+        await self._storage.require().transition_job(
+            job.id,
+            JobState.SUCCEEDED if succeeded else JobState.FAILED,
+            progress=1.0 if succeeded else 0.2,
+            observed_at=self._now(),
+            event_id=f"job-{job.id}-terminal-{job.attempt}",
+            error_code=None
+            if succeeded
+            else (result.error.code.value if result.error else "failed"),
+        )
+
+    def _placement_for_model(self, model_id: str) -> PlacementSnapshot:
+        candidates = [item for item in self._catalog.get() if item.model_id == model_id]
+        if not candidates:
+            raise KeyError("model has no configured placement")
+        return candidates[0]
+
+    def _placement_from_reference(self, reference: str | None) -> PlacementSnapshot:
+        if reference is None or not reference.startswith("placement:"):
+            raise ValueError("job placement reference is invalid")
+        placement_id = reference.removeprefix("placement:")
+        return next(item for item in self._catalog.get() if item.placement_id == placement_id)
+
+
+class ResourceComponent:
+    def __init__(self, bus: EventBus, adapters: Mapping[str, BackendAdapter]) -> None:
+        self._bus = bus
+        self._adapters = tuple(adapters.values())
+
+    async def start(self) -> None:
+        return None
+
+    async def close(self) -> None:
+        await self._bus.close()
+        for adapter in self._adapters:
+            close = getattr(adapter, "aclose", None)
+            if close is not None:
+                await close()
+
+
+@dataclass(frozen=True, slots=True)
+class ProductionComposition:
+    app: FastAPI
+    runtime: DaemonRuntime
+    control: ProductionControlService
+    inference: ProductionInferenceService
+    events: ProductionEventService
+
+
+def build_production_daemon(
+    config: AppConfig,
+    *,
+    adapters: Mapping[str, BackendAdapter] | None = None,
+    snapshots: tuple[PlacementSnapshot, ...] | None = None,
+    reranker: Reranker | None = None,
+    id_factory: Callable[[], str] | None = None,
+    now: Callable[[], datetime] | None = None,
+) -> ProductionComposition:
+    """Build the real daemon graph without starting network or model operations."""
+    clock = now or (lambda: datetime.now(UTC))
+    bindings = dict(adapters) if adapters is not None else _build_adapters(config)
+    catalog = SnapshotCatalog(snapshots or _configured_snapshots(config))
+    planner = RoutePlanner(default_policies())
+    storage = StorageHandle(config)
+    bus = EventBus(capacity=128)
+    control = ProductionControlService(
+        config=config,
+        storage=storage,
+        adapters=bindings,
+        catalog=catalog,
+        planner=planner,
+        bus=bus,
+        id_factory=id_factory or (lambda: uuid4().hex),
+        now=clock,
+    )
+    inference = ProductionInferenceService(
+        DataPlaneOrchestrator(
+            planner=planner,
+            snapshot_provider=catalog.get,
+            registry=AdapterRegistry(
+                tuple(
+                    AdapterBinding(backend_id, adapter) for backend_id, adapter in bindings.items()
+                )
+            ),
+            capacity=CapacityCoordinator(global_limit=8, per_node=4, per_backend=4),
+        ),
+        tuple(model.id for model in config.models),
+        reranker,
+    )
+    events = ProductionEventService(storage, bus)
+    resources = ResourceComponent(bus, bindings)
+    runtime = DaemonRuntime(
+        config_runtime=storage,
+        recovery=control,
+        event_runtime=resources,
+    )
+
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI):
+        await runtime.start()
+        try:
+            yield
+        finally:
+            await runtime.close()
+
+    app = create_app(control=control, inference=inference, events=events, lifespan=lifespan)
+    return ProductionComposition(app, runtime, control, inference, events)
+
+
+def _build_adapters(config: AppConfig) -> dict[str, BackendAdapter]:
+    adapters: dict[str, BackendAdapter] = {}
+    for backend in config.backends:
+        if backend.kind is BackendKind.OMLX_APP:
+            adapter: object = OmlxAppAdapter(backend_id=backend.id, base_url=backend.base_url)
+        elif backend.kind is BackendKind.OLLAMA:
+            adapter = OllamaAdapter(backend_id=backend.id, base_url=backend.base_url)
+        else:
+            adapter = LmStudioAdapter(backend_id=backend.id, base_url=backend.base_url)
+        adapters[backend.id] = cast(BackendAdapter, adapter)
+    return adapters
+
+
+def _configured_snapshots(config: AppConfig) -> tuple[PlacementSnapshot, ...]:
+    backends = {backend.id: backend for backend in config.backends}
+    models = {model.id: model for model in config.models}
+    result: list[PlacementSnapshot] = []
+    for placement in config.placements:
+        backend = backends[placement.backend_id]
+        model = models[placement.model_id]
+        capabilities = {"chat", "streaming"}
+        if model.role == "embedding":
+            capabilities.add("embedding")
+        result.append(
+            PlacementSnapshot(
+                placement_id=placement.id,
+                model_id=placement.model_id,
+                backend_id=placement.backend_id,
+                backend_model_id=placement.backend_model_id,
+                node_id=backend.node_id,
+                fresh=False,
+                available=False,
+                authorized=False,
+                capabilities=frozenset(capabilities),
+                context_limit=placement.context_limit,
+                memory_admitted=None,
+                loaded=placement.resident,
+                ttft_ms=None,
+                throughput_tps=None,
+                queue_depth=0,
+                error_rate=0,
+                network_cost_ms=None,
+                affinity=0,
+                available_concurrency=1,
+                local=True,
+                security_allowed=True,
+            )
+        )
+    return tuple(result)
+
+
+def _job(stored: StoredJob) -> Job:
+    return Job(
+        id=stored.id,
+        kind=stored.kind,
+        initiator=stored.initiator,
+        risk=stored.risk,
+        state=stored.state,
+        progress=stored.progress,
+        created_at=stored.created_at,
+        updated_at=stored.updated_at,
+        rollback_reference=stored.rollback_reference,
+    )

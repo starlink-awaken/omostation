@@ -36,11 +36,15 @@ class DaemonServer:
         socket_path: Path,
         server_factory: ServerFactory | None = None,
         startup_timeout: float = 5.0,
+        shutdown_timeout: int = 2,
     ) -> None:
         self._application = application
         self.socket_path = socket_path
         self._server_factory = server_factory or _uvicorn_server
         self._startup_timeout = startup_timeout
+        if shutdown_timeout <= 0:
+            raise ValueError("shutdown timeout must be positive")
+        self._shutdown_timeout = shutdown_timeout
         self._server: ServerLike | None = None
         self._task: asyncio.Task[None] | None = None
         self._socket_identity: tuple[int, int] | None = None
@@ -63,6 +67,7 @@ class DaemonServer:
             self._application,
             log_level="warning",
             access_log=False,
+            timeout_graceful_shutdown=self._shutdown_timeout,
         )
         server = self._server_factory(config)
         self._server = server
@@ -89,14 +94,15 @@ class DaemonServer:
         interrupted = False
         if task is not None:
             try:
-                while not task.done():
-                    try:
-                        await asyncio.shield(task)
-                    except asyncio.CancelledError:
-                        interrupted = True
-                        current = asyncio.current_task()
-                        if current is not None:
-                            current.uncancel()
+                done, pending = await asyncio.wait({task}, timeout=self._shutdown_timeout + 0.5)
+                del done
+                if pending:
+                    task.cancel()
+                    await asyncio.gather(task, return_exceptions=True)
+            except asyncio.CancelledError:
+                interrupted = True
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
             finally:
                 self._task = None
         self._remove_owned_socket()

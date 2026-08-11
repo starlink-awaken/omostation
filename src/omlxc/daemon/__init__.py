@@ -9,10 +9,10 @@ from typing import Annotated
 
 import typer
 
-from omlxc.api import create_app
 from omlxc.config import ConfigError, load_config
 from omlxc.domain import EXIT_CONFIG, EXIT_INTERNAL
 
+from .composition import ProductionComposition, build_production_daemon
 from .runtime import DaemonRuntime, RuntimeComponent
 from .server import DaemonServer
 
@@ -47,7 +47,8 @@ def command(
     if check:
         typer.echo(json.dumps({"schema_version": 1, "data": {"status": "valid"}}))
         return
-    server = DaemonServer(create_app(), socket_path=loaded.daemon.socket_path)
+    composition = build_production_daemon(loaded)
+    server = DaemonServer(composition.app, socket_path=loaded.daemon.socket_path)
     try:
         asyncio.run(_serve(server))
     except (OSError, RuntimeError):
@@ -74,4 +75,12 @@ def main() -> None:
     app()
 
 
-__all__ = ["DaemonRuntime", "DaemonServer", "RuntimeComponent", "app", "main"]
+__all__ = [
+    "DaemonRuntime",
+    "DaemonServer",
+    "ProductionComposition",
+    "RuntimeComponent",
+    "app",
+    "build_production_daemon",
+    "main",
+]

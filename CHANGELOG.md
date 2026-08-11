@@ -48,3 +48,5 @@
   Job endpoints, OpenAI-compatible chat/SSE/embedding plus rerank, replay-to-live
   NDJSON events, a restart-safe `0600` Unix socket server, ordered runtime lifecycle,
   and pure private launchd plist planning with atomic snapshots.
+- Wired `omlxcd` to the production Task 5/6 runtime with durable restart recovery,
+  bounded request bodies and shutdown, and typed fail-closed stream errors.

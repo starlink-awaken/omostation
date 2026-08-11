@@ -327,3 +327,46 @@ async def test_openai_errors_are_sanitized_and_request_bodies_are_bounded(
     assert failed.json()["error"]["message"] == "local inference failed"
     assert "do-not-leak" not in failed.text
     assert oversized.status_code == 413
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("code", "message", "status", "error_type"),
+    [
+        (AdapterErrorCode.TIMEOUT, "timeout", 504, "timeout"),
+        (AdapterErrorCode.UNSUPPORTED, "unsupported", 400, "unsupported_feature"),
+        (AdapterErrorCode.MODEL_UNAVAILABLE, "no_capacity", 409, "insufficient_capacity"),
+    ],
+)
+async def test_first_stream_error_reuses_typed_http_mapping(
+    inference: FakeInferenceService,
+    code: AdapterErrorCode,
+    message: str,
+    status: int,
+    error_type: str,
+) -> None:
+    inference.stream = FakeStream(
+        (
+            StreamEvent(
+                kind=StreamEventKind.ERROR,
+                request_id="unused",
+                error=AdapterError(code=code, message=message),
+                emitted_content=False,
+                phase=StreamPhase.BEFORE_CONTENT,
+            ),
+        )
+    )
+    transport = httpx.ASGITransport(app=create_app(inference=inference))
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            json={
+                "model": "local/model",
+                "messages": [{"role": "user", "content": "hello"}],
+                "stream": True,
+            },
+        )
+
+    assert response.status_code == status
+    assert response.json()["error"]["type"] == error_type
+    assert inference.stream.closed

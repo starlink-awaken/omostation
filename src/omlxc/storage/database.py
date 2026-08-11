@@ -988,6 +988,24 @@ class SQLiteRuntimeStore:
         await cursor.close()
         return _stored_job(row) if row is not None else None
 
+    async def list_jobs(
+        self, *, after_job_id: str | None = None, limit: int = 100
+    ) -> tuple[StoredJob, ...]:
+        if limit < 1 or limit > MAX_PAGE_SIZE:
+            raise ValueError("job page size is invalid")
+        cursor = await self._require_reader().execute(
+            """
+            SELECT * FROM jobs
+            WHERE job_id > ?
+            ORDER BY job_id ASC
+            LIMIT ?
+            """,
+            (after_job_id or "", limit),
+        )
+        rows = await cursor.fetchall()
+        await cursor.close()
+        return tuple(_stored_job(row) for row in rows)
+
     async def transition_job(
         self,
         job_id: str,

@@ -34,6 +34,10 @@ class DaemonRuntime:
     def diagnostic(self) -> str:
         return self._diagnostic
 
+    @property
+    def task_settled(self) -> bool:
+        return all(bool(getattr(component, "task_settled", True)) for component in self._components)
+
     async def start(self) -> None:
         if self._ready:
             return

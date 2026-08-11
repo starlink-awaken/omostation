@@ -15,6 +15,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from starlette.responses import Response
+from starlette.types import Message, Receive, Scope, Send
 
 from omlxc.dataplane import ExecutionErrorCode
 from omlxc.domain import RouteProfile, RouteRequest
@@ -28,7 +29,7 @@ from omlxc.domain.protocols import (
     TokenUsage,
 )
 from omlxc.events import EventSubscriptionClosed, RuntimeEvent
-from omlxc.storage import DurableEventRecord
+from omlxc.storage import DurableEventRecord, JobConflictError
 
 from .contracts import ControlService, EventService, InferenceService
 
@@ -46,6 +47,45 @@ class ApiError(Exception):
         self.status = status
         self.code = code
         self.message = message
+
+
+class LimitedFastAPI(FastAPI):
+    def __init__(self, *, max_body_bytes: int, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self._max_body_bytes = max_body_bytes
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await super().__call__(scope, receive, send)
+            return
+        received = 0
+        exceeded = False
+        replaced = False
+
+        async def limited_receive() -> Message:
+            nonlocal exceeded, received
+            message = await receive()
+            if message["type"] == "http.request":
+                received += len(message.get("body", b""))
+                if received > self._max_body_bytes:
+                    exceeded = True
+                    return {"type": "http.request", "body": b"", "more_body": False}
+            return message
+
+        async def limited_send(message: Message) -> None:
+            nonlocal replaced
+            if not exceeded:
+                await send(message)
+                return
+            if not replaced and message["type"] == "http.response.start":
+                replaced = True
+                request_id = _scope_request_id(scope)
+                response = _error_response(
+                    request_id, 413, "E100", "request body exceeds the size limit"
+                )
+                await response(scope, receive, send)
+
+        await super().__call__(scope, limited_receive, limited_send)
 
 
 class ApiModel(BaseModel):
@@ -129,9 +169,17 @@ def create_app(
     inference: InferenceService | None = None,
     events: EventService | None = None,
     request_id_factory: Callable[[], str] | None = None,
+    lifespan: Any = None,
 ) -> FastAPI:
     """Create an injectable app with no implicit network or hardware access."""
-    app = FastAPI(title="omlxcd", version="1", docs_url=None, redoc_url=None)
+    app = LimitedFastAPI(
+        max_body_bytes=MAX_BODY_BYTES,
+        title="omlxcd",
+        version="1",
+        docs_url=None,
+        redoc_url=None,
+        lifespan=lifespan,
+    )
     ids = request_id_factory or (lambda: uuid4().hex)
 
     @app.middleware("http")
@@ -164,6 +212,10 @@ def create_app(
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, _error: RequestValidationError) -> JSONResponse:
         return _error_response(_request_id(request), 422, "E100", "request validation failed")
+
+    @app.exception_handler(JobConflictError)
+    async def job_conflict(request: Request, _error: JobConflictError) -> JSONResponse:
+        return _error_response(_request_id(request), 409, "E500", "job request conflicts")
 
     @app.get("/api/v1/health")
     async def health(request: Request) -> JSONResponse:
@@ -352,7 +404,7 @@ def create_app(
             return _openai_error(request_id, 503, "backend_unavailable")
         if first.kind is StreamEventKind.ERROR and not first.emitted_content:
             await _close_iterator(source)
-            return _openai_error(request_id, 503, "backend_unavailable")
+            return _stream_error_response(request_id, first)
 
         async def sse() -> AsyncIterator[bytes]:
             try:
@@ -460,6 +512,22 @@ def _execution_error(request_id: str, error: Any) -> JSONResponse:
         return _openai_error(request_id, 504, "timeout")
     if code is ExecutionErrorCode.UNSUPPORTED:
         return _openai_error(request_id, 400, "unsupported_feature")
+    return _openai_error(request_id, 503, "backend_unavailable")
+
+
+def _stream_error_response(request_id: str, event: StreamEvent) -> JSONResponse:
+    error = event.error
+    if error is None:
+        return _openai_error(request_id, 503, "backend_unavailable")
+    if error.code.value == "timeout":
+        return _openai_error(request_id, 504, "timeout")
+    if error.code.value == "unsupported":
+        return _openai_error(request_id, 400, "unsupported_feature")
+    if error.code.value == "model_unavailable" and error.message in {
+        "no_capacity",
+        "no_candidate",
+    }:
+        return _openai_error(request_id, 409, "insufficient_capacity")
     return _openai_error(request_id, 503, "backend_unavailable")
 
 
@@ -579,3 +647,16 @@ def _runtime_line(event: RuntimeEvent) -> bytes:
         "resource_id": event.resource_id,
     }
     return (json.dumps(payload, separators=(",", ":")) + "\n").encode()
+
+
+def _scope_request_id(scope: Scope) -> str:
+    headers = cast(list[tuple[bytes, bytes]], scope.get("headers", []))
+    for name, value in headers:
+        if name.lower() == b"x-omlxc-request-id":
+            try:
+                candidate = value.decode("ascii")
+            except UnicodeDecodeError:
+                break
+            if REQUEST_ID.fullmatch(candidate) is not None:
+                return candidate
+    return uuid4().hex

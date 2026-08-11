@@ -9,6 +9,7 @@ from omlxc.dataplane import ChatExecution, EmbeddingExecution, RerankExecution
 from omlxc.domain import Job, ModelSpec, Node, RouteDecision, RouteRequest
 from omlxc.domain.protocols import ChatRequest, EmbeddingRequest, StreamEvent
 from omlxc.events import EventSubscription
+from omlxc.scheduler import RouteFailure
 from omlxc.storage import DurableEventRecord
 
 
@@ -19,7 +20,7 @@ class ControlService(Protocol):
 
     async def list_models(self, *, after: str | None, limit: int) -> tuple[ModelSpec, ...]: ...
 
-    async def plan_route(self, request: RouteRequest) -> RouteDecision: ...
+    async def plan_route(self, request: RouteRequest) -> RouteDecision | RouteFailure: ...
 
     async def list_jobs(self, *, after: str | None, limit: int) -> tuple[Job, ...]: ...
 
