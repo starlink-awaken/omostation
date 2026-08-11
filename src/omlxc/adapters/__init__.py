@@ -1,8 +1,19 @@
 """Infrastructure adapters for local inference backends."""
 
-from .lmstudio import LmsLoadOptions, LmsPlatform, LmStudioAdapter, ProcessOutput
+from .lmstudio import LmsLoadOptions, LmsPlatform, LmStudioAdapter
 from .ollama import OllamaAdapter
 from .omlx_app import OmlxAppAdapter
+from .process import ProcessOutput
+from .tailscale import (
+    AuthorizedHttpEndpoint,
+    AuthorizedSshTarget,
+    TailscaleAdapter,
+    TailscaleErrorCode,
+    TailscaleFailure,
+    TailscaleNodePolicy,
+    TailscaleNodeSnapshot,
+    TailscaleSnapshot,
+)
 
 __all__ = [
     "LmStudioAdapter",
@@ -11,4 +22,12 @@ __all__ = [
     "OllamaAdapter",
     "OmlxAppAdapter",
     "ProcessOutput",
+    "AuthorizedHttpEndpoint",
+    "AuthorizedSshTarget",
+    "TailscaleAdapter",
+    "TailscaleErrorCode",
+    "TailscaleFailure",
+    "TailscaleNodePolicy",
+    "TailscaleNodeSnapshot",
+    "TailscaleSnapshot",
 ]

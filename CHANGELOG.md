@@ -21,3 +21,6 @@
   discovery, three-state residency, bounded `keep_alive` lifecycle control,
   thinking-safe chat and vision, current batch embeddings, and replay-safe
   incremental NDJSON streaming.
+- Added fail-closed Tailscale identity discovery and pure HTTP/SSH endpoint
+  authorization backed by an explicit strong-identity allowlist, plus a shared
+  bounded subprocess primitive used by both Tailscale and LM Studio control.

@@ -8,12 +8,11 @@ import os
 import re
 import stat
 from collections.abc import AsyncIterator, Callable, Mapping
-from contextlib import suppress
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Literal, Protocol, cast
+from typing import Literal, cast
 from urllib.parse import urlsplit
 
 import httpx
@@ -43,9 +42,19 @@ from omlxc.domain.protocols import (
     TuneScope,
 )
 
+from .process import BoundedProcessRunner as _DefaultProcessRunner
+from .process import (
+    ProcessOutput,
+    ProcessOutputLimitError,
+    ProcessRunner,
+    ProcessSpawnError,
+    default_process_runner,
+)
 from .reasoning import ReasoningFilter
 from .security import AdapterFailure
 from .sse import SSEDecoder
+
+_default_process_runner = default_process_runner
 
 _TIMEOUT = httpx.Timeout(connect=2.0, read=30.0, write=10.0, pool=2.0)
 DEFAULT_PROCESS_OUTPUT_LIMIT = 1024 * 1024
@@ -57,33 +66,6 @@ _SAFE_MODEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/+@-]{0,511}$")
 class LmsPlatform(StrEnum):
     MACOS = "macos"
     WINDOWS = "windows"
-
-
-@dataclass(frozen=True, slots=True)
-class ProcessOutput:
-    returncode: int
-    stdout: str = field(repr=False)
-    stderr: str = field(repr=False)
-
-
-class ProcessRunner(Protocol):
-    async def __call__(self, argv: tuple[str, ...], timeout: float) -> ProcessOutput: ...
-
-
-class ProcessOutputLimitError(Exception):
-    """Raised without remote bytes when either process stream exceeds its cap."""
-
-
-class ProcessSpawnError(Exception):
-    """Distinguish process creation failure from post-spawn stream failure."""
-
-
-@dataclass(frozen=True, slots=True)
-class _DefaultProcessRunner:
-    output_limit: int
-
-    async def __call__(self, argv: tuple[str, ...], timeout: float) -> ProcessOutput:
-        return await _default_process_runner(argv, timeout, output_limit=self.output_limit)
 
 
 class LmsLoadOptions(DomainModel):
@@ -168,70 +150,6 @@ def _validate_known_hosts(path: Path) -> None:
     parent_metadata = path.parent.lstat()
     if parent_metadata.st_mode & 0o022:
         raise ValueError("known_hosts parent must reject group/world writes")
-
-
-async def _read_bounded(stream: asyncio.StreamReader, output_limit: int) -> bytes:
-    captured = bytearray()
-    while True:
-        chunk = await stream.read(65536)
-        if not chunk:
-            return bytes(captured)
-        captured.extend(chunk)
-        if len(captured) > output_limit:
-            raise ProcessOutputLimitError
-
-
-async def _kill_reap_and_cleanup(
-    process: asyncio.subprocess.Process, tasks: tuple[asyncio.Task[object], ...]
-) -> None:
-    with suppress(ProcessLookupError):
-        process.kill()
-    for task in tasks:
-        if not task.done():
-            task.cancel()
-    await asyncio.gather(*tasks, return_exceptions=True)
-    with suppress(ProcessLookupError):
-        await process.wait()
-
-
-async def _default_process_runner(
-    argv: tuple[str, ...],
-    timeout: float,
-    *,
-    output_limit: int = DEFAULT_PROCESS_OUTPUT_LIMIT,
-) -> ProcessOutput:
-    if output_limit <= 0:
-        raise ValueError("process output limit must be positive")
-    try:
-        process = await asyncio.create_subprocess_exec(
-            *argv,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-    except OSError as exc:
-        raise ProcessSpawnError from exc
-    if process.stdout is None or process.stderr is None:
-        await _kill_reap_and_cleanup(process, ())
-        raise RuntimeError("subprocess pipes were not created")
-    stdout_task = asyncio.create_task(_read_bounded(process.stdout, output_limit))
-    stderr_task = asyncio.create_task(_read_bounded(process.stderr, output_limit))
-    wait_task = asyncio.create_task(process.wait())
-    tasks = cast(
-        tuple[asyncio.Task[object], ...],
-        (stdout_task, stderr_task, wait_task),
-    )
-    try:
-        stdout, stderr, _ = await asyncio.wait_for(
-            asyncio.gather(stdout_task, stderr_task, wait_task), timeout=timeout
-        )
-    except BaseException:
-        await _kill_reap_and_cleanup(process, tasks)
-        raise
-    return ProcessOutput(
-        returncode=process.returncode or 0,
-        stdout=stdout.decode("utf-8", errors="replace"),
-        stderr=stderr.decode("utf-8", errors="replace"),
-    )
 
 
 class LmStudioAdapter:
