@@ -127,18 +127,20 @@ class RouteDecision(DomainModel):
     request_id: str = Field(min_length=1)
     selected_placement_id: str | None
     candidates: tuple[str, ...]
+    candidate_scores: Mapping[str, float] = Field(default_factory=dict)
     rejected: Mapping[str, str]
     fallback_chain: tuple[str, ...]
     config_version: str
     explanation: str
+    thinking_authorized: bool = False
 
-    @field_validator("rejected")
+    @field_validator("candidate_scores", "rejected")
     @classmethod
-    def freeze_rejections(cls, value: Mapping[str, str]) -> Mapping[str, str]:
+    def freeze_mapping(cls, value: Mapping[str, object]) -> Mapping[str, object]:
         return MappingProxyType(dict(value))
 
-    @field_serializer("rejected")
-    def serialize_rejections(self, value: Mapping[str, str]) -> dict[str, str]:
+    @field_serializer("candidate_scores", "rejected")
+    def serialize_mapping(self, value: Mapping[str, object]) -> dict[str, object]:
         return dict(value)
 
 

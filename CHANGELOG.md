@@ -39,3 +39,8 @@
   conversion failures, complete Job cancellation semantics, cancellation-shielded
   circuit leases, safe reconciliation error reporting, verified config fingerprints,
   and explicit async-context ownership for SQLite task cleanup.
+- Added the Task 6 local inference data plane: deterministic local-only placement
+  filtering/scoring for four route profiles, hierarchical bounded concurrency,
+  Task 5 single-flight load verification, backend-model translation, deadline-aware
+  chat/vision/embedding/rerank execution, replay-safe streaming failover, and
+  content-free route audit and metric persistence.
