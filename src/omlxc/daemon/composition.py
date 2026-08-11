@@ -25,7 +25,7 @@ from omlxc.adapters import (
     TailscaleNodePolicy,
 )
 from omlxc.api import create_app
-from omlxc.config import AppConfig, BackendConfig, PlacementConfig
+from omlxc.config import AppConfig, BackendConfig, PlacementConfig, config_identity
 from omlxc.dataplane import (
     AdapterBinding,
     AdapterRegistry,
@@ -354,6 +354,7 @@ class ProductionControlService:
         bus: EventBus,
         id_factory: Callable[[], str],
         now: Callable[[], datetime],
+        loaded_config_identity: str,
         worker_timeout: float = 120.0,
     ) -> None:
         self._config = config
@@ -364,6 +365,7 @@ class ProductionControlService:
         self._bus = bus
         self._id_factory = id_factory
         self._now = now
+        self._config_identity = loaded_config_identity
         self._worker_timeout = worker_timeout
         self._tasks: dict[str, asyncio.Task[None]] = {}
 
@@ -398,6 +400,7 @@ class ProductionControlService:
             "status": "ready" if self._storage.ready else "degraded",
             "degraded": not self._storage.ready,
             "diagnostic": self._storage.diagnostic,
+            "config_identity": self._config_identity,
         }
 
     async def list_nodes(self, *, after: str | None, limit: int) -> tuple[Node, ...]:
@@ -646,6 +649,7 @@ def build_production_daemon(
         bus=bus,
         id_factory=id_factory or (lambda: uuid4().hex),
         now=clock,
+        loaded_config_identity=config_identity(config),
     )
     inference = ProductionInferenceService(
         DataPlaneOrchestrator(

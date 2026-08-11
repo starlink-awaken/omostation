@@ -159,11 +159,15 @@ async def test_uds_rejects_symlink_regular_file_and_foreign_listener() -> None:
 def test_launchd_plist_is_pure_private_and_contains_no_secret(tmp_path: Path) -> None:
     home = tmp_path / "home"
     paths = LaunchdPaths.for_home(home)
-    plan = build_launchd_plan(paths)
+    config = tmp_path / "config.toml"
+    config.write_text("schema_version = 1\n", encoding="utf-8")
+    config.chmod(0o600)
+    plan = build_launchd_plan(paths, config.resolve())
     payload = plistlib.loads(plan.plist_bytes)
 
     assert payload["Label"] == "com.omlxc.daemon"
     assert payload["ProgramArguments"][0] == str(home / ".local/bin/omlxcd")
+    assert payload["ProgramArguments"][1:] == ["--config", str(config.resolve())]
     assert payload["RunAtLoad"] is True
     assert payload["KeepAlive"] is True
     assert "uv" not in " ".join(payload["ProgramArguments"])
@@ -196,3 +200,46 @@ def test_daemon_entry_help_and_bad_config_do_not_echo_secrets(tmp_path: Path) ->
     assert result.exit_code == 2
     assert "do-not-echo" not in result.stdout + (result.stderr or "")
     assert os.path.exists(config)
+
+
+def test_daemon_explicit_config_survives_missing_xdg_and_reports_identity(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    shell_xdg = tmp_path / "shell-xdg"
+    config = shell_xdg / "omlxc/config.toml"
+    config.parent.mkdir(parents=True)
+    config.write_text(
+        (
+            "schema_version = 1\n"
+            f'[daemon]\nsocket_path = "{tmp_path / "omlxcd.sock"}"\n'
+            f'[storage]\ndatabase_path = "{tmp_path / "state.db"}"\n'
+            + "".join(
+                f'[[nodes]]\nid = "node-{index}"\n'
+                f'display_name = "Node {index}"\nplatform = "macos"\n'
+                for index in range(3)
+            )
+        ),
+        encoding="utf-8",
+    )
+    config.chmod(0o600)
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    plan = build_launchd_plan(LaunchdPaths.for_home(tmp_path / "home"), config.resolve())
+
+    result = CliRunner().invoke(daemon_cli, ["--config", str(config.resolve()), "--check"])
+
+    assert result.exit_code == 0
+    data = json.loads(result.stdout)["data"]
+    assert data["node_count"] == 3
+    assert data["config_identity"] == plan.config_identity
+    assert str(config) not in result.stdout
+
+
+def test_daemon_rejects_valid_but_non_private_explicit_config(tmp_path: Path) -> None:
+    config = tmp_path / "config.toml"
+    config.write_text("schema_version = 1\n", encoding="utf-8")
+    config.chmod(0o644)
+
+    result = CliRunner().invoke(daemon_cli, ["--config", str(config.resolve()), "--check"])
+
+    assert result.exit_code == 2
+    assert json.loads(result.stderr)["error"]["code"] == "E100"

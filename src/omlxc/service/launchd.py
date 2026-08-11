@@ -18,6 +18,12 @@ from omlxc.adapters.process import (
     ProcessRunner,
     ProcessSpawnError,
 )
+from omlxc.config import (
+    ConfigError,
+    config_identity,
+    load_config,
+    require_private_config_path,
+)
 
 LAUNCHD_LABEL = "com.omlxc.daemon"
 LAUNCHCTL = "/bin/launchctl"
@@ -55,6 +61,8 @@ class LaunchdPaths:
 @dataclass(frozen=True, slots=True)
 class LaunchdPlan:
     paths: LaunchdPaths
+    config_path: Path
+    config_identity: str
     plist_bytes: bytes
     uninstall_preserves: tuple[Path, Path]
 
@@ -92,6 +100,7 @@ class LaunchdController:
         self,
         paths: LaunchdPaths,
         *,
+        config_path: Path | None = None,
         uid: int | None = None,
         process_runner: ProcessRunner | None = None,
         timeout_seconds: float = LAUNCHCTL_TIMEOUT_SECONDS,
@@ -99,6 +108,7 @@ class LaunchdController:
         if timeout_seconds <= 0:
             raise ValueError("launchctl timeout must be positive")
         self.paths = paths
+        self._config_path = config_path
         self._uid = os.getuid() if uid is None else uid
         if self._uid < 0:
             raise ValueError("launchd uid must be non-negative")
@@ -118,7 +128,9 @@ class LaunchdController:
 
     async def install(self) -> LaunchdInstallResult:
         _require_private_executable(self.paths.executable)
-        written = write_launchd_plist(build_launchd_plan(self.paths))
+        if self._config_path is None:
+            raise LaunchdFailure("E100", "daemon configuration is required")
+        written = write_launchd_plist(build_launchd_plan(self.paths, self._config_path))
         try:
             await self._run((LAUNCHCTL, "bootstrap", self.domain, str(written.path)))
         except BaseException:
@@ -173,10 +185,17 @@ class LaunchdController:
         return output
 
 
-def build_launchd_plan(paths: LaunchdPaths) -> LaunchdPlan:
+def build_launchd_plan(paths: LaunchdPaths, config_path: Path) -> LaunchdPlan:
+    validated_config = _require_private_config(config_path)
+    try:
+        identity = config_identity(
+            load_config(validated_config, env={}, base_directory=validated_config.parent)
+        )
+    except ConfigError:
+        raise LaunchdFailure("E100", "daemon configuration is invalid") from None
     payload: dict[str, object] = {
         "Label": LAUNCHD_LABEL,
-        "ProgramArguments": [str(paths.executable)],
+        "ProgramArguments": [str(paths.executable), "--config", str(validated_config)],
         "RunAtLoad": True,
         "KeepAlive": True,
         "ProcessType": "Background",
@@ -189,6 +208,8 @@ def build_launchd_plan(paths: LaunchdPaths) -> LaunchdPlan:
     }
     return LaunchdPlan(
         paths=paths,
+        config_path=validated_config,
+        config_identity=identity,
         plist_bytes=plistlib.dumps(payload, fmt=plistlib.FMT_XML, sort_keys=True),
         uninstall_preserves=(paths.log_directory, paths.data_directory),
     )
@@ -236,6 +257,14 @@ def _require_private_executable(path: Path) -> None:
         raise LaunchdFailure("E700", "fixed omlxcd entrypoint is not trusted")
     if metadata.st_mode & 0o022 or metadata.st_mode & 0o111 == 0:
         raise LaunchdFailure("E700", "fixed omlxcd entrypoint is not trusted")
+
+
+def _require_private_config(path: Path) -> Path:
+    try:
+        return require_private_config_path(path)
+    except ConfigError as exc:
+        code = "E100" if "unavailable" in str(exc) else "E700"
+        raise LaunchdFailure(code, str(exc)) from None
 
 
 def _backup_uninstalled_plist(target: Path) -> Path | None:

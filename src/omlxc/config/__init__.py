@@ -9,10 +9,12 @@ from .io import (
 )
 from .loading import (
     ConfigError,
+    config_identity,
     default_config_directory,
     default_config_path,
     load_config,
     load_user_config,
+    require_private_config_path,
     safe_defaults,
 )
 from .migration import MigrationPlan, build_migration_plan, migrate_legacy_json
@@ -37,6 +39,7 @@ __all__ = [
     "AtomicWriteResult",
     "BackendConfig",
     "ConfigError",
+    "config_identity",
     "DaemonConfig",
     "MigrationPlan",
     "ModelConfig",
@@ -52,6 +55,7 @@ __all__ = [
     "default_config_path",
     "load_config",
     "load_user_config",
+    "require_private_config_path",
     "migrate_legacy_json",
     "render_toml",
     "safe_defaults",

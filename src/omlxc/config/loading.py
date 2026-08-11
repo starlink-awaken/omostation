@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 import os
+import stat
 import tomllib
 from collections.abc import Mapping
 from copy import deepcopy
+from hashlib import sha256
 from pathlib import Path
 from typing import Any, cast
 
@@ -28,6 +30,33 @@ def default_config_directory() -> Path:
 
 def default_config_path() -> Path:
     return default_config_directory() / "config.toml"
+
+
+def config_identity(config: AppConfig) -> str:
+    """Return a path-free identity for the fully resolved daemon configuration."""
+    canonical = json.dumps(
+        config.model_dump(mode="json"),
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    return f"sha256:{sha256(canonical.encode('utf-8')).hexdigest()}"
+
+
+def require_private_config_path(path: Path) -> Path:
+    """Resolve and validate a daemon config without exposing its path in errors."""
+    if not path.is_absolute():
+        raise ConfigError("daemon configuration path is not trusted")
+    try:
+        resolved = path.resolve(strict=True)
+        metadata = path.lstat()
+    except OSError:
+        raise ConfigError("daemon configuration is unavailable") from None
+    if resolved != path or path.is_symlink() or not path.is_file():
+        raise ConfigError("daemon configuration path is not trusted")
+    if metadata.st_uid != os.geteuid() or stat.S_IMODE(metadata.st_mode) != 0o600:
+        raise ConfigError("daemon configuration is not private")
+    return resolved
 
 
 def safe_defaults(*, base_directory: Path | None = None) -> AppConfig:

@@ -205,7 +205,7 @@ class LmStudioAdapter:
         self._load_options = load_options or LmsLoadOptions()
         self._clock = clock or (lambda: datetime.now(UTC))
         self._owns_client = client is None
-        self._client = client or httpx.AsyncClient(transport=transport)
+        self._client = client or httpx.AsyncClient(transport=transport, trust_env=False)
         self._timeout = _TIMEOUT
 
     async def aclose(self) -> None:

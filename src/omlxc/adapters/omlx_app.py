@@ -105,7 +105,7 @@ class OmlxAppAdapter:
         self._minimum_version = minimum_version
         self._maximum_version = maximum_version
         self._owns_client = client is None
-        self._client = client or httpx.AsyncClient(transport=transport)
+        self._client = client or httpx.AsyncClient(transport=transport, trust_env=False)
         self._timeout = _TIMEOUT
 
     async def aclose(self) -> None:

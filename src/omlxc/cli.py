@@ -70,8 +70,14 @@ _client_factory: ClientFactory = DaemonClient
 _socket_override: Path | None = None
 
 
-def _launchd_controller(home: Path | None = None) -> LaunchdController:
-    return LaunchdController(LaunchdPaths.for_home(home or Path.home()))
+def _launchd_controller(
+    home: Path | None = None, config_path: Path | None = None
+) -> LaunchdController:
+    selected_config = (config_path or default_config_path()).expanduser().resolve()
+    return LaunchdController(
+        LaunchdPaths.for_home(home or Path.home()),
+        config_path=selected_config,
+    )
 
 
 def _show_version(value: bool) -> None:
@@ -658,16 +664,22 @@ def daemon_status(
 @daemon_app.command("install")
 def daemon_install(
     home: Annotated[Path | None, typer.Option("--home", file_okay=False)] = None,
+    config: Annotated[Path | None, typer.Option("--config", dir_okay=False)] = None,
     apply: Annotated[bool, typer.Option("--apply")] = False,
     yes: Annotated[bool, typer.Option("--yes")] = False,
     confirm_impact: Annotated[bool, typer.Option("--confirm-impact")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    plan = build_launchd_plan(LaunchdPaths.for_home(home or Path.home()))
+    selected_config = (config or default_config_path()).expanduser().resolve()
+    try:
+        plan = build_launchd_plan(LaunchdPaths.for_home(home or Path.home()), selected_config)
+    except LaunchdFailure as exc:
+        _fail_local(exc.code, str(exc), json_output=json_output)
     data = {
         "label": "com.omlxc.daemon",
         "executable": str(plan.paths.executable),
         "plist_path": str(plan.paths.plist_path),
+        "config_identity": plan.config_identity,
         "will_write": apply,
     }
     if apply:
@@ -678,7 +690,7 @@ def daemon_install(
             json_output=json_output,
         )
         try:
-            result = asyncio.run(_launchd_controller(home).install())
+            result = asyncio.run(_launchd_controller(home, selected_config).install())
         except LaunchdFailure as exc:
             _fail_local(exc.code, str(exc), json_output=json_output)
         data.update(

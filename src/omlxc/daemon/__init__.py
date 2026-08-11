@@ -9,7 +9,13 @@ from typing import Annotated
 
 import typer
 
-from omlxc.config import ConfigError, load_config, load_user_config
+from omlxc.config import (
+    ConfigError,
+    config_identity,
+    load_config,
+    load_user_config,
+    require_private_config_path,
+)
 from omlxc.domain import EXIT_CONFIG, EXIT_INTERNAL
 
 from .composition import ProductionComposition, build_production_daemon
@@ -32,7 +38,11 @@ def command(
 ) -> None:
     """Load daemon configuration, then validate or serve it."""
     try:
-        loaded = load_config(config) if config is not None else load_user_config()
+        if config is None:
+            loaded = load_user_config()
+        else:
+            selected_config = require_private_config_path(config)
+            loaded = load_config(selected_config, base_directory=selected_config.parent)
     except ConfigError:
         typer.echo(
             json.dumps(
@@ -45,7 +55,18 @@ def command(
         )
         raise typer.Exit(EXIT_CONFIG) from None
     if check:
-        typer.echo(json.dumps({"schema_version": 1, "data": {"status": "valid"}}))
+        typer.echo(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "data": {
+                        "status": "valid",
+                        "config_identity": config_identity(loaded),
+                        "node_count": len(loaded.nodes),
+                    },
+                }
+            )
+        )
         return
     composition = build_production_daemon(loaded)
     server = DaemonServer(composition.app, socket_path=loaded.daemon.socket_path)

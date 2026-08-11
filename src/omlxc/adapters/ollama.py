@@ -174,7 +174,7 @@ class OllamaAdapter:
         self._keep_alive_seconds = keep_alive_seconds
         self._clock = clock or (lambda: datetime.now(UTC))
         self._owns_client = client is None
-        self._client = client or httpx.AsyncClient(transport=transport)
+        self._client = client or httpx.AsyncClient(transport=transport, trust_env=False)
         self._timeout = _TIMEOUT
         self._max_response_bytes = max_response_bytes
         self._max_ndjson_record_bytes = max_ndjson_record_bytes

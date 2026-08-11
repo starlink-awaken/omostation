@@ -20,6 +20,7 @@ from omlxc.config import (
     NodeConfig,
     PlacementConfig,
     StorageConfig,
+    config_identity,
 )
 from omlxc.daemon import DaemonServer, build_production_daemon
 from omlxc.domain import BackendKind
@@ -402,6 +403,8 @@ async def test_production_composition_and_jobs_survive_real_uds_restart() -> Non
 
         assert health.status_code == 200
         assert health.json()["data"]["status"] == "ready"
+        assert health.json()["data"]["config_identity"] == config_identity(config)
+        assert str(root) not in health.text
         assert models.status_code == 200
         assert first.status_code == repeated.status_code == 202
         assert first.json()["data"]["id"] == repeated.json()["data"]["id"]

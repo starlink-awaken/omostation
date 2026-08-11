@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import plistlib
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import cast
@@ -18,7 +19,12 @@ from omlxc.cli import app
 from omlxc.config import AppConfig, BackendConfig, DaemonConfig, NodeConfig, StorageConfig
 from omlxc.domain import BackendKind
 from omlxc.domain.protocols import BackendAdapter, OperationStatus
-from omlxc.service import LaunchdController, LaunchdFailure, LaunchdPaths
+from omlxc.service import (
+    LaunchdController,
+    LaunchdFailure,
+    LaunchdPaths,
+    build_launchd_plan,
+)
 
 
 class RecordingRunner:
@@ -31,6 +37,57 @@ class RecordingRunner:
         return self.outputs.pop(0) if self.outputs else ProcessOutput(0, "ok", "")
 
 
+def _private_config(path: Path, *, nodes: int = 0) -> Path:
+    node_blocks = "\n".join(
+        f'[[nodes]]\nid = "node-{index}"\ndisplay_name = "Node {index}"\nplatform = "macos"'
+        for index in range(nodes)
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        (
+            "schema_version = 1\n"
+            f'[daemon]\nsocket_path = "{path.parent / "omlxcd.sock"}"\n'
+            f'[storage]\ndatabase_path = "{path.parent / "state.db"}"\n'
+            f"{node_blocks}\n"
+        ),
+        encoding="utf-8",
+    )
+    path.chmod(0o600)
+    return path
+
+
+def test_launchd_plan_pins_validated_absolute_config_without_xdg_environment(
+    tmp_path: Path,
+) -> None:
+    paths = LaunchdPaths.for_home(tmp_path / "home")
+    config = _private_config(tmp_path / "shell-xdg/omlxc/config.toml", nodes=3).resolve()
+
+    payload = plistlib.loads(build_launchd_plan(paths, config).plist_bytes)
+
+    assert payload["ProgramArguments"] == [
+        str(paths.executable),
+        "--config",
+        str(config),
+    ]
+    assert "XDG_CONFIG_HOME" not in payload["EnvironmentVariables"]
+
+
+@pytest.mark.parametrize("case", ["missing", "permissive", "invalid"])
+def test_launchd_plan_rejects_missing_or_unsafe_config(tmp_path: Path, case: str) -> None:
+    config = tmp_path / "config.toml"
+    if case == "permissive":
+        _private_config(config)
+        config.chmod(0o644)
+    elif case == "invalid":
+        config.write_text('schema_version = 1\nunknown = "private-value"\n', encoding="utf-8")
+        config.chmod(0o600)
+
+    with pytest.raises(LaunchdFailure) as captured:
+        build_launchd_plan(LaunchdPaths.for_home(tmp_path / "home"), config.resolve())
+
+    assert captured.value.code in {"E100", "E700"}
+
+
 @pytest.mark.asyncio
 async def test_launchd_controller_uses_exact_user_domain_argv_and_preserves_uninstall_backup(
     tmp_path: Path,
@@ -40,6 +97,7 @@ async def test_launchd_controller_uses_exact_user_domain_argv_and_preserves_unin
     paths.executable.parent.mkdir(parents=True)
     paths.executable.write_text("binary", encoding="utf-8")
     paths.executable.chmod(0o700)
+    config = _private_config(tmp_path / "config.toml").resolve()
     runner = RecordingRunner(
         [
             ProcessOutput(0, "", ""),
@@ -50,7 +108,7 @@ async def test_launchd_controller_uses_exact_user_domain_argv_and_preserves_unin
             ProcessOutput(3, "", "Boot-out failed: 3: No such process"),
         ]
     )
-    controller = LaunchdController(paths, uid=501, process_runner=runner)
+    controller = LaunchdController(paths, config_path=config, uid=501, process_runner=runner)
 
     installed = await controller.install()
     assert installed.plist_path == paths.plist_path
@@ -117,7 +175,13 @@ def test_cli_daemon_apply_requires_r2_gate_before_lifecycle_call(
             calls.append("install")
             return type("Result", (), {"plist_path": tmp_path / "x", "snapshot_path": None})()
 
-    monkeypatch.setattr(cli_module, "_launchd_controller", lambda _home=None: FakeController())
+    config = _private_config(tmp_path / "config.toml")
+    monkeypatch.setattr(
+        cli_module,
+        "_launchd_controller",
+        lambda _home=None, _config=None: FakeController(),
+    )
+    monkeypatch.setattr(cli_module, "default_config_path", lambda: config)
     monkeypatch.setattr(cli_module, "_stdio_is_tty", lambda: False)
     runner = CliRunner()
 
