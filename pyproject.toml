@@ -10,6 +10,7 @@ dependencies = [
     "aetherforge",
     "agora",
     "bus-foundation",
+    "ecos",
     "openai>=2.41.1",
     "pydantic>=2.0.0",
     "pyyaml>=6.0.3",
@@ -39,6 +40,7 @@ build-backend = "uv_build"
 aetherforge = { path = "../aetherforge", editable = true }
 agora = { path = "../agora", editable = true }
 bus-foundation = { path = "../bus-foundation" }
+ecos = { path = "../ecos" }
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

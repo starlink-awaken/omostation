@@ -16,7 +16,6 @@ dependencies = [
     { name = "aetherforge-gateway" },
     { name = "aetherforge-mesh" },
     { name = "aetherforge-swarm" },
-    { name = "bus-foundation" },
     { name = "fastmcp" },
     { name = "httpx", extra = ["socks"] },
     { name = "langfuse" },
@@ -28,7 +27,6 @@ requires-dist = [
     { name = "aetherforge-gateway", editable = "../aetherforge/packages/gateway" },
     { name = "aetherforge-mesh", editable = "../aetherforge/packages/mesh" },
     { name = "aetherforge-swarm", editable = "../aetherforge/packages/swarm" },
-    { name = "bus-foundation", directory = "../bus-foundation" },
     { name = "fastmcp", specifier = ">=3.4.2" },
     { name = "httpx", extras = ["socks"], specifier = ">=0.28.1" },
     { name = "langfuse", specifier = ">=2.0.0" },
@@ -43,6 +41,7 @@ dev = [
     { name = "pytest", specifier = ">=9.0" },
     { name = "pytest-asyncio", specifier = ">=1.4.0" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
+    { name = "ruff", specifier = ">=0.14" },
 ]
 
 [[package]]
@@ -1432,6 +1431,7 @@ dependencies = [
     { name = "aetherforge-gateway" },
     { name = "agora" },
     { name = "bus-foundation" },
+    { name = "ecos" },
     { name = "fastmcp" },
     { name = "httpx", extra = ["socks"] },
     { name = "openai" },
@@ -1457,6 +1457,7 @@ requires-dist = [
     { name = "aetherforge-gateway" },
     { name = "agora", editable = "../agora" },
     { name = "bus-foundation", directory = "../bus-foundation" },
+    { name = "ecos", directory = "../ecos" },
     { name = "fastmcp", specifier = ">=3.4.2" },
     { name = "httpx", extras = ["socks"], specifier = ">=0.28.1" },
     { name = "openai", specifier = ">=2.41.1" },

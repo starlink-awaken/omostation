@@ -1,24 +1,52 @@
-"""OMO Sovereignty (W2-01) — Principal/Role/Responsibility/RoleAssignment.
+"""OMO Sovereignty (W2-01 / W2-02) — Principal/Role/Responsibility/RoleAssignment + Mandates.
 
 Local-only sovereignty governance on top of the causal event ledger:
 
-- models: :class:`Principal`, :class:`Role`, :class:`Responsibility`,
-  :class:`RoleAssignment` with strict literal prefix ids (``principal:`` /
-  ``role:`` / ``responsibility:`` / ``assignment:``) and monotonic versions;
+- W2-01 models: :class:`Principal`, :class:`Role`, :class:`Responsibility`,
+  :class:`RoleAssignment` with strict literal prefix ids and monotonic versions;
+- W2-02 models: :class:`MandateManager` for DelegationMandate grant/revoke/admit;
 - every model is validated, immutable and versioned; each mutation persists
-  exactly one assignment-lifecycle event carrying the four aggregate snapshots;
-- state machine: :class:`SovereigntyService` implements legal
-  ``assign`` / ``replace`` / ``revoke`` transitions and rejects stale
-  versions (including reactivation) before any write;
+  exactly one lifecycle event carrying the aggregate snapshots;
 - every write goes through ``LedgerBroker.append`` and every query replays
-  the ledger for a single principal_id (no projection table, no remote
-  surface — local only); malformed sovereignty rows raise a stable
-  :class:`SovereigntyReplayError` instead of being silently dropped.
+  the ledger for a single principal_id;
+- admission is pure read / pure decision and never appends.
 
-Explicitly out of scope (W2-01): Mandate / PDP / PEP / W2-04 projections /
-Constitution / any Agora or remote interface.
+Explicitly out of scope: PDP / PEP / W2-04 projections / Constitution /
+any Agora or remote interface.
 """
 
+from omo.sovereignty.mandates import (
+    EVT_MANDATE_GRANT,
+    EVT_MANDATE_REVOKE,
+    MANDATE_PRODUCER,
+    MANDATE_SPACE_ID,
+    REASON_ALLOW,
+    REASON_APPROVAL_REQUIRED,
+    REASON_AUTONOMY_FORBIDS,
+    REASON_BUDGET_EXCEEDED,
+    REASON_CAPABILITY_OUT_OF_SCOPE,
+    REASON_DISCLOSURE_MISMATCH,
+    REASON_EPISODE_MISMATCH,
+    REASON_EXECUTOR_MISMATCH,
+    REASON_HUMAN_ADJUDICATION_REQUIRED,
+    REASON_MANDATE_EXPIRED,
+    REASON_MANDATE_NOT_FOUND,
+    REASON_MANDATE_NOT_YET_VALID,
+    REASON_MANDATE_REVOKED,
+    REASON_PER_ACTION_APPROVAL_REQUIRED,
+    REASON_PRINCIPAL_MISMATCH,
+    REASON_RESPONSIBILITY_STALE,
+    REASON_RISK_CEILING_EXCEEDED,
+    REASON_ROLE_CONTEXT_STALE,
+    REASON_SUGGEST_ONLY,
+    AdmissionResult,
+    IllegalMandateTransitionError,
+    MandateError,
+    MandateManager,
+    MandateReplayError,
+    MandateState,
+    StaleMandateVersionError,
+)
 from omo.sovereignty.roles import (
     EVT_ASSIGN,
     EVT_REPLACE,
@@ -44,14 +72,43 @@ from omo.sovereignty.roles import (
 
 __all__ = [
     "EVT_ASSIGN",
+    "EVT_MANDATE_GRANT",
+    "EVT_MANDATE_REVOKE",
     "EVT_REPLACE",
     "EVT_REVOKE",
+    "MANDATE_PRODUCER",
+    "MANDATE_SPACE_ID",
     "PRODUCER",
+    "REASON_ALLOW",
+    "REASON_APPROVAL_REQUIRED",
+    "REASON_AUTONOMY_FORBIDS",
+    "REASON_BUDGET_EXCEEDED",
+    "REASON_CAPABILITY_OUT_OF_SCOPE",
+    "REASON_DISCLOSURE_MISMATCH",
+    "REASON_EPISODE_MISMATCH",
+    "REASON_EXECUTOR_MISMATCH",
+    "REASON_HUMAN_ADJUDICATION_REQUIRED",
+    "REASON_MANDATE_EXPIRED",
+    "REASON_MANDATE_NOT_FOUND",
+    "REASON_MANDATE_NOT_YET_VALID",
+    "REASON_MANDATE_REVOKED",
+    "REASON_PER_ACTION_APPROVAL_REQUIRED",
+    "REASON_PRINCIPAL_MISMATCH",
+    "REASON_RESPONSIBILITY_STALE",
+    "REASON_RISK_CEILING_EXCEEDED",
+    "REASON_ROLE_CONTEXT_STALE",
+    "REASON_SUGGEST_ONLY",
     "SPACE_ID",
     "STATUS_ACTIVE",
     "STATUS_REVOKED",
+    "AdmissionResult",
+    "IllegalMandateTransitionError",
     "IllegalTransitionError",
     "InvalidIdError",
+    "MandateError",
+    "MandateManager",
+    "MandateReplayError",
+    "MandateState",
     "Principal",
     "Responsibility",
     "Role",
@@ -60,6 +117,7 @@ __all__ = [
     "SovereigntyReplayError",
     "SovereigntyService",
     "SovereigntyState",
+    "StaleMandateVersionError",
     "StaleVersionError",
     "generate_id",
     "validate_id",

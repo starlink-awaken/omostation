@@ -15,12 +15,19 @@ New subcommand mode::
     omo ledger compare-jsonl --file governance-history.jsonl
     omo ledger sovereignty-assign --principal-id principal:alice --role-id role:family-steward ...
     omo ledger sovereignty-query --principal-id principal:alice
+    omo ledger mandate-grant --mandate-id mandate:... --principal-id principal:alice ...
+    omo ledger mandate-revoke --mandate-id mandate:... --principal-id principal:alice
+    omo ledger mandate-admit --mandate-id mandate:... --principal-id principal:alice ...
 
 The ``sovereignty-assign`` / ``sovereignty-query`` commands are the local-only
 W2-01 sovereignty surface (see ``omo.sovereignty``): flat CLI with
-``--principal-id`` / ``--role-id`` / ``--db`` / ``--json``.  They are local
-only (no ``--agora``), write exclusively through ``LedgerBroker.append``, and
-each query replays the ledger for the requested principal_id.
+``--principal-id`` / ``--role-id`` / ``--db`` / ``--json``.
+
+The ``mandate-grant`` / ``mandate-revoke`` / ``mandate-admit`` commands are the
+local-only W2-02 DelegationMandate surface: grant writes Mandate.Granted.v1
+events, revoke writes Mandate.Revoked.v1, and admit is a pure-read decision
+that never appends (exit 0 only for allow; all other outcomes emit JSON and
+exit nonzero).
 
 The ``import-jsonl`` / ``export-jsonl`` / ``compare-jsonl`` commands are the
 local JSONL shadow adapter (BET-Y1Q2-T1-03): they are local-only, do not
@@ -38,6 +45,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import shutil
 import sys
 from datetime import UTC, datetime
@@ -110,6 +118,9 @@ SUBCMDS = frozenset(
         "compare-jsonl",
         "sovereignty-assign",
         "sovereignty-query",
+        "mandate-grant",
+        "mandate-revoke",
+        "mandate-admit",
     }
 )
 
@@ -304,6 +315,133 @@ def _build_subcommand_parser() -> argparse.ArgumentParser:
         "--principal-id", required=True, help="Principal id (principal:...)"
     )
     _add_local_flags(psq)
+
+    # W2-02 mandate commands — local only, no --agora.
+    pmg = sub.add_parser(
+        "mandate-grant",
+        help="Grant a DelegationMandate to an executor (W2-02, local only)",
+    )
+    pmg.add_argument("--mandate-id", required=True, help="Mandate id (mandate:...)")
+    pmg.add_argument(
+        "--principal-id", required=True, help="Principal id (principal:...)"
+    )
+    pmg.add_argument("--executor-id", required=True, help="Executor id (agent:...)")
+    pmg.add_argument("--episode-id", required=True, help="Episode id")
+    pmg.add_argument(
+        "--role-context-id", required=True, help="Role context id (role:...)"
+    )
+    pmg.add_argument(
+        "--responsibility-id",
+        required=True,
+        help="Responsibility id (responsibility:...)",
+    )
+    pmg.add_argument(
+        "--capability",
+        action="append",
+        default=None,
+        help="Capability URI (e.g. bos://mail/draft), repeatable",
+    )
+    pmg.add_argument(
+        "--autonomy-level",
+        required=True,
+        choices=["A0", "A1", "A2", "A3"],
+        help="Autonomy level (A0-A3)",
+    )
+    pmg.add_argument(
+        "--risk-ceiling",
+        required=True,
+        choices=["R0", "R1", "R2", "R3"],
+        help="Risk ceiling (R0-R3)",
+    )
+    pmg.add_argument(
+        "--approval-mode",
+        required=True,
+        choices=[
+            "matrix",
+            "approval_required",
+            "per_action_approval_required",
+            "human_adjudication_required",
+            "deny",
+        ],
+        help="Approval mode",
+    )
+    pmg.add_argument(
+        "--disclosure-policy", required=True, help="Disclosure policy (disclosure:...)"
+    )
+    pmg.add_argument(
+        "--budget-limit", type=float, required=True, help="Budget limit (>= 0)"
+    )
+    pmg.add_argument("--budget-unit", required=True, help="Budget unit (e.g. call)")
+    pmg.add_argument(
+        "--revocable",
+        action="store_true",
+        default=False,
+        help="Mandate is revocable before expiry",
+    )
+    pmg.add_argument(
+        "--purpose", default="Granted via CLI", help="Mandate purpose description"
+    )
+    pmg.add_argument(
+        "--valid-from", default=None, help="Valid from ISO-8601 datetime (default: now)"
+    )
+    pmg.add_argument(
+        "--expires-at",
+        default=None,
+        help="Expires at ISO-8601 datetime (default: 1 year from now)",
+    )
+    _add_local_flags(pmg)
+
+    pmr = sub.add_parser(
+        "mandate-revoke",
+        help="Revoke an active DelegationMandate (W2-02, local only)",
+    )
+    pmr.add_argument("--mandate-id", required=True, help="Mandate id (mandate:...)")
+    pmr.add_argument(
+        "--principal-id", required=True, help="Principal id (principal:...)"
+    )
+    pmr.add_argument(
+        "--expected-version",
+        type=int,
+        required=True,
+        help="Expected mandate version (must be 1 for active mandate)",
+    )
+    _add_local_flags(pmr)
+
+    pma = sub.add_parser(
+        "mandate-admit",
+        help="Pure admission decision for a DelegationMandate (W2-02, local only)",
+    )
+    pma.add_argument("--mandate-id", required=True, help="Mandate id (mandate:...)")
+    pma.add_argument(
+        "--principal-id", required=True, help="Principal id (principal:...)"
+    )
+    pma.add_argument("--executor-id", required=True, help="Executor id (agent:...)")
+    pma.add_argument("--episode-id", required=True, help="Episode id")
+    pma.add_argument(
+        "--role-context-id", required=True, help="Role context id (role:...)"
+    )
+    pma.add_argument(
+        "--responsibility-id",
+        required=True,
+        help="Responsibility id (responsibility:...)",
+    )
+    pma.add_argument(
+        "--capability", required=True, help="Capability URI (exact match required)"
+    )
+    pma.add_argument(
+        "--risk-level",
+        required=True,
+        choices=["R0", "R1", "R2", "R3"],
+        help="Request risk level (R0-R3)",
+    )
+    pma.add_argument(
+        "--requested-budget", type=float, required=True, help="Requested budget amount"
+    )
+    pma.add_argument("--budget-unit", required=True, help="Budget unit (e.g. call)")
+    pma.add_argument(
+        "--disclosure-policy", required=True, help="Disclosure policy (disclosure:...)"
+    )
+    _add_local_flags(pma)
 
     return parser
 
@@ -621,6 +759,12 @@ def _subcommand_main(argv: list[str]) -> int:
             return _cmd_sovereignty_assign(surface, params, is_json)
         elif subcmd == "sovereignty-query":
             return _cmd_sovereignty_query(surface, params, is_json)
+        elif subcmd == "mandate-grant":
+            return _cmd_mandate_grant(surface, params, is_json)
+        elif subcmd == "mandate-revoke":
+            return _cmd_mandate_revoke(surface, params, is_json)
+        elif subcmd == "mandate-admit":
+            return _cmd_mandate_admit(surface, params, is_json)
         else:
             _emit_error(
                 {
@@ -873,6 +1017,266 @@ def _split_responsibilities(raw: str | None) -> list[str]:
     if not raw or not raw.strip():
         return []
     return [part.strip() for part in raw.split(",") if part.strip()]
+
+
+# ---------------------------------------------------------------------------
+# W2-02 mandate CLI commands
+# ---------------------------------------------------------------------------
+
+
+def _cmd_mandate_grant(
+    surface: EventLedgerSurface, params: dict[str, Any], is_json: bool
+) -> int:
+    """Grant a DelegationMandate. Local only, writes via broker."""
+    from datetime import UTC, datetime, timedelta
+
+    from ecos.ssot.mof.generated.control.mof_control_models import DelegationMandate
+
+    from omo.sovereignty import (
+        MandateError,
+        MandateManager,
+        SovereigntyService,
+    )
+
+    broker = surface.broker
+    svc = SovereigntyService(broker)
+    mgr = MandateManager(broker)
+
+    principal_id = params["principal_id"]
+    role_context_id = params["role_context_id"]
+
+    # Get current assignment to snapshot versions
+    assignment = svc.current_assignment(principal_id, role_context_id)
+    if assignment is None or assignment.status != "active":
+        _emit_error(
+            {
+                "ok": False,
+                "error": f"role {role_context_id} not active for {principal_id}",
+                "reason": "role_context_stale",
+            },
+            is_agora=False,
+            is_json=is_json,
+        )
+        return 1
+
+    resp = next(
+        (
+            r
+            for r in assignment.responsibilities
+            if r.resp_id == params["responsibility_id"]
+        ),
+        None,
+    )
+    if resp is None:
+        _emit_error(
+            {
+                "ok": False,
+                "error": f"responsibility {params['responsibility_id']} not in assignment",
+                "reason": "responsibility_stale",
+            },
+            is_agora=False,
+            is_json=is_json,
+        )
+        return 1
+
+    now = datetime.now(UTC)
+    now_iso = now.isoformat()
+    valid_from = params.get("valid_from") or now_iso
+    expires_at = params.get("expires_at") or (now + timedelta(days=365)).isoformat()
+
+    # Generate trace_id before Pydantic construction (can't pass "")
+    import uuid as _uuid
+
+    trace_id = _uuid.uuid4().hex[:24]
+
+    from pydantic import ValidationError as PydanticValidationError
+
+    try:
+        mandate = DelegationMandate(
+            mandate_id=params["mandate_id"],
+            schema_version="delegation-mandate/v1",
+            principal_id=principal_id,
+            executor_id=params["executor_id"],
+            episode_id=params["episode_id"],
+            role_context_id=role_context_id,
+            role_assignment_id=assignment.assignment_id,
+            role_assignment_version=assignment.version,
+            responsibility_id=params["responsibility_id"],
+            responsibility_version=resp.version,
+            purpose=params.get("purpose", "Granted via CLI"),
+            capability_scope=params.get("capability") or [],
+            autonomy_level=params["autonomy_level"],
+            risk_ceiling=params["risk_ceiling"],
+            approval_mode=params["approval_mode"],
+            disclosure_policy=params["disclosure_policy"],
+            valid_from=valid_from,
+            expires_at=expires_at,
+            budget_limit=float(params["budget_limit"]),
+            budget_unit=params["budget_unit"],
+            revocable=bool(params.get("revocable", False)),
+            trace_id=trace_id,
+            mandate_version=1,
+            status="active",
+        )
+    except PydanticValidationError as exc:
+        _emit_error(
+            {"ok": False, "error": str(exc), "reason": "invalid_mandate_payload"},
+            is_agora=False,
+            is_json=is_json,
+        )
+        return 1
+
+    try:
+        granted = mgr.grant(mandate)
+    except MandateError as exc:
+        _emit_error(
+            {"ok": False, "error": exc.message, "reason": exc.reason},
+            is_agora=False,
+            is_json=is_json,
+        )
+        return 1
+
+    _emit_receipt(
+        {
+            "ok": True,
+            "mandate_id": granted.mandate_id,
+            "status": granted.status,
+            "mandate_version": granted.mandate_version,
+            "trace_id": granted.trace_id,
+            "db_path": str(surface.db_path),
+        },
+        is_json,
+        False,
+    )
+    return 0
+
+
+def _cmd_mandate_revoke(
+    surface: EventLedgerSurface, params: dict[str, Any], is_json: bool
+) -> int:
+    """Revoke an active DelegationMandate. Local only, writes via broker."""
+    from omo.sovereignty import MandateError, MandateManager
+
+    mgr = MandateManager(surface.broker)
+
+    # expected_version is required (no silent default)
+    expected_version = params.get("expected_version")
+    if expected_version is None:
+        _emit_error(
+            {
+                "ok": False,
+                "error": "--expected-version is required for mandate-revoke",
+                "reason": "missing_expected_version",
+            },
+            is_agora=False,
+            is_json=is_json,
+        )
+        return 1
+
+    try:
+        revoked = mgr.revoke(
+            mandate_id=params["mandate_id"],
+            principal_id=params["principal_id"],
+            expected_version=int(expected_version),
+        )
+    except MandateError as exc:
+        _emit_error(
+            {"ok": False, "error": exc.message, "reason": exc.reason},
+            is_agora=False,
+            is_json=is_json,
+        )
+        return 1
+
+    _emit_receipt(
+        {
+            "ok": True,
+            "mandate_id": revoked.mandate_id,
+            "status": revoked.status,
+            "mandate_version": revoked.mandate_version,
+            "trace_id": revoked.trace_id,
+            "db_path": str(surface.db_path),
+        },
+        is_json,
+        False,
+    )
+    return 0
+
+
+def _cmd_mandate_admit(
+    surface: EventLedgerSurface, params: dict[str, Any], is_json: bool
+) -> int:
+    """Pure admission decision. Local only, read-only — exit 0 only for allow."""
+    from omo.sovereignty import MandateError, MandateManager, MandateReplayError
+
+    mgr = MandateManager(surface.broker)
+
+    requested_budget = float(params.get("requested_budget", 0))
+
+    # Non-finite (NaN/±inf) and negative requested budgets: default-deny
+    # as budget_exceeded (H4).
+    if not math.isfinite(requested_budget) or requested_budget < 0:
+        _emit_error(
+            {
+                "ok": True,
+                "allowed": False,
+                "reason": "budget_exceeded",
+            },
+            is_agora=False,
+            is_json=is_json,
+        )
+        return 1
+
+    try:
+        result = mgr.admit(
+            mandate_id=params["mandate_id"],
+            principal_id=params["principal_id"],
+            executor_id=params["executor_id"],
+            episode_id=params["episode_id"],
+            role_context_id=params["role_context_id"],
+            responsibility_id=params["responsibility_id"],
+            capability=params["capability"],
+            risk_level=params["risk_level"],
+            requested_budget=requested_budget,
+            budget_unit=params["budget_unit"],
+            disclosure_policy=params["disclosure_policy"],
+        )
+    except MandateReplayError:
+        # Corrupted replay → stable malformed_mandate_replay, never masquerade.
+        _emit_error(
+            {"ok": True, "allowed": False, "reason": "malformed_mandate_replay"},
+            is_agora=False,
+            is_json=is_json,
+        )
+        return 1
+    except MandateError as exc:
+        # Expected mandate error → report the real stable reason + message,
+        # never masquerade as mandate_not_found.
+        _emit_error(
+            {
+                "ok": True,
+                "allowed": False,
+                "reason": exc.reason,
+                "error": exc.message,
+            },
+            is_agora=False,
+            is_json=is_json,
+        )
+        return 1
+
+    receipt = {
+        "ok": True,
+        "allowed": result.allowed,
+        "reason": result.reason,
+    }
+    if result.mandate:
+        receipt["mandate_id"] = result.mandate.mandate_id
+
+    if result.allowed:
+        _emit_receipt(receipt, is_json, False)
+        return 0
+    else:
+        _emit_error(receipt, is_agora=False, is_json=is_json)
+        return 1
 
 
 # ---------------------------------------------------------------------------
