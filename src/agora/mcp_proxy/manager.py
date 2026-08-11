@@ -417,8 +417,7 @@ class ProxyManager:
         If the target service has been disconnected (e.g. by idle
         timeout), this method attempts a lazy reconnect automatically.
 
-        PEP enforcement (BET-Y1Q2-T1-06): evaluates policy before
-        dispatching to the downstream provider.
+        PEP (BET-Y1Q2-T1-06): verifies permit at final adapter.
 
         Args:
             tool_name: Full tool name (e.g. 'kos.semantic_search').
@@ -427,29 +426,10 @@ class ProxyManager:
         Returns:
             Tool result dict.
         """
-        # PEP enforcement — final adapter before downstream provider
-        from agora.mcp.policy_enforcement import PolicyRequest, get_pep
+        from agora.mcp.policy_enforcement import verify_permit
 
-        _pep = get_pep()
-        _decision = _pep.evaluate(
-            PolicyRequest(
-                uri=arguments.get("uri", ""),
-                tool_name=tool_name,
-                operation="read",
-            )
-        )
-        if _decision.effect == "deny":
-            return {"status": "error", "error": f"Policy denied: {_decision.reason}"}
-        _pep.record_started(_decision.decision_hash, uri=arguments.get("uri", ""))
-
-        result = await self.registry.dispatch(tool_name, arguments)
-        _pep.record_provider_call(_decision.decision_hash)
-        _pep.confirm_terminal(
-            _decision.decision_hash,
-            status="succeeded" if isinstance(result, dict) and result.get("status") != "error" else "failed",
-            tool_name=tool_name,
-        )
-        return result
+        verify_permit(tool_name=tool_name)
+        return await self.registry.dispatch(tool_name, arguments)
 
     async def list_resources(self) -> list[dict]:
         """Aggregate resources from all connected/known downstream services."""
@@ -472,22 +452,14 @@ class ProxyManager:
     async def read_resource(self, uri: str) -> dict:
         """Route a resource read request based on its prefix.
 
-        PEP enforcement (BET-Y1Q2-T1-06): evaluates policy before
-        routing to the downstream provider.
+        PEP (BET-Y1Q2-T1-06): verifies permit at final adapter.
 
         Currently tries all connected clients until one returns the resource,
         or we can use a prefix mapping. For now we will fan-out or route by known prefixes.
         """
-        # PEP enforcement — final adapter gate
-        from agora.mcp.policy_enforcement import PolicyRequest, get_pep
+        from agora.mcp.policy_enforcement import verify_permit
 
-        _pep = get_pep()
-        _decision = _pep.evaluate(
-            PolicyRequest(uri=uri, tool_name="read_resource", operation="read")
-        )
-        if _decision.effect == "deny":
-            return {"status": "error", "error": f"Policy denied: {_decision.reason}"}
-        _pep.record_started(_decision.decision_hash, uri=uri)
+        verify_permit(tool_name="read_resource")
 
         # Use MountRegistry to dynamically resolve routing instead of hardcoded if/else
         from agora.mcp.mount_registry import get_mount_registry

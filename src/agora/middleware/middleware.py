@@ -186,73 +186,74 @@ try:
             bind_contextvars(agent_id=agent_id, conversation_id=conv_id)
 
             tool_name = getattr(request_obj, "name", "unknown")
+            args = getattr(request_obj, "arguments", {})
+
+            # PEP single lifecycle (BET-Y1Q2-T1-06): enforce → start → call → complete
+            from agora.mcp.policy_enforcement import (
+                PEPDenied,
+                complete,
+                enforce,
+                reset_permit,
+                set_current_permit,
+            )
+
             _decision = None
+            _receipt = None
+            _permit_token = None
 
             try:
-                # FastMCP context.message is CallToolRequestParams which has 'name' and 'arguments'
-                args = getattr(request_obj, "arguments", {})
                 self._logger.info("mcp_tool_call", tool=tool_name, arguments=args)
 
-                # PEP enforcement (BET-Y1Q2-T1-06): evaluate before dispatch
-                from agora.mcp.policy_enforcement import PolicyRequest, get_pep
+                _uri = args.get("uri", "") if isinstance(args, dict) else ""
+                _operation = "write" if tool_name == "mutate_resource" else "read"
+                _args_dict = args if isinstance(args, dict) else {}
 
-                _pep = get_pep()
-                _pep_req = PolicyRequest(
-                    uri=args.get("uri", "") if isinstance(args, dict) else "",
+                # enforce() raises PEPDenied on denial; returns (None,None) for read-only
+                _decision, _receipt = enforce(
+                    uri=_uri,
                     tool_name=tool_name,
-                    operation=(
-                        "write" if tool_name == "mutate_resource" else "read"
-                    ),
+                    operation=_operation,
                     caller_id=agent_id,
-                    arguments=args if isinstance(args, dict) else {},
+                    arguments=_args_dict,
+                    payload=_args_dict.get("payload"),
                 )
-                _decision = _pep.evaluate(_pep_req)
-                if _decision.effect == "deny":
-                    self._logger.warning(
-                        "pep_denied",
-                        tool=tool_name,
-                        reason=_decision.reason,
-                    )
-                    raise PermissionError(f"Policy denied: {_decision.reason}")
 
-                _pep.record_started(
-                    _decision.decision_hash,
-                    uri=args.get("uri", "") if isinstance(args, dict) else "",
-                )
+                # Set permit for downstream adapters
+                _permit_hash = _decision.request_hash if _decision else "read_only_exempt"
+                _permit_token = set_current_permit(_permit_hash)
+
                 result = await call_next(context)
-                _pep.record_provider_call(_decision.decision_hash)
 
                 # Context Window Shield
                 result = await self._apply_shield_and_cleanup(
                     result, f"tool:{tool_name}"
                 )
 
-                # Confirm terminal (Rule 5: terminal not confirmed → cannot return succeeded)
-                _pep.confirm_terminal(
-                    _decision.decision_hash,
-                    status="succeeded",
-                    tool_name=tool_name,
-                )
+                # Complete lifecycle (Rule 5: terminal write failure → can't succeed)
+                complete(_decision, _receipt, succeeded=True)
 
                 self._logger.info("mcp_tool_success", tool=tool_name)
                 return result
-            except PermissionError:
-                raise
-            except Exception as e:  # defensive fallback
+            except PEPDenied as e:
+                self._logger.warning("pep_denied", tool=tool_name, reason=e.reason)
+                # Complete as failed if we had a decision
                 if _decision is not None:
                     try:
-                        from agora.mcp.policy_enforcement import get_pep
-
-                        get_pep().confirm_terminal(
-                            _decision.decision_hash,
-                            status="failed",
-                            tool_name=tool_name,
-                            error=str(e),
-                        )
-                    except Exception:
+                        complete(_decision, _receipt, succeeded=False, error=e.reason)
+                    except PEPDenied:
+                        pass
+                raise
+            except Exception as e:
+                if _decision is not None:
+                    try:
+                        complete(_decision, _receipt, succeeded=False, error=str(e))
+                    except PEPDenied:
                         pass
                 self._logger.error("mcp_tool_error", tool=tool_name, error=str(e))
                 raise
+            finally:
+                if _permit_token is not None:
+                    reset_permit(_permit_token)
 
         async def on_read_resource(self, context: Any, call_next: Any) -> Any:
             from structlog.contextvars import bind_contextvars

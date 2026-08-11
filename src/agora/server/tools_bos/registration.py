@@ -50,9 +50,6 @@ from ._helpers import (
 )
 from .routing import _resolve_with_router
 
-# PEP (BET-Y1Q2-T1-06)
-from agora.mcp.policy_enforcement import PolicyRequest, get_pep
-
 
 def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
     """向 FastMCP 实例注册所有 BOS URI 工具。
@@ -95,40 +92,18 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             logger.warning("bos_pre_check_blocked", uri=uri, reason=reason)
             return _error(f"BOS pre-check failed: {reason}")
 
-        # PEP enforcement (BET-Y1Q2-T1-06)
-        _pep = get_pep()
-        _decision = _pep.evaluate(
-            PolicyRequest(
-                uri=uri,
-                tool_name="mutate_resource",
-                operation="write",
-            )
-        )
-        if _decision.effect == "deny":
-            return _error(f"Policy denied: {_decision.reason}")
-
         _t0 = _time.time()
-        _pep.record_started(_decision.decision_hash, uri=uri)
         try:
             result, source = await _resolve_with_router(
                 uri,
                 proxy_manager=_get_proxy_manager(),
                 payload=json.loads(payload) if isinstance(payload, str) else payload,
                 action=action,
-                decision_hash=_decision.decision_hash,
             )
             _duration_ms = int((_time.time() - _t0) * 1000)
             bos_cache.invalidate(uri)
             _bos_post_audit(uri, 200, _duration_ms)
             _publish_bos_event(_bus_ref, uri, "mutate", "ok", _duration_ms)  # type: ignore[reportCallIssue]
-            _pep.record_provider_call(_decision.decision_hash)
-            _pep.confirm_terminal(
-                _decision.decision_hash,
-                status="succeeded",
-                uri=uri,
-                tool_name="mutate_resource",
-                duration_ms=_duration_ms,
-            )
             return _ok(
                 {
                     "format_version": FORMAT_VERSION,
@@ -142,14 +117,6 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             _duration_ms = int((_time.time() - _t0) * 1000)
             _bos_post_audit(uri, 500, _duration_ms)
             _publish_bos_event(_bus_ref, uri, "mutate", "error", _duration_ms)  # type: ignore[reportCallIssue]
-            _pep.confirm_terminal(
-                _decision.decision_hash,
-                status="failed",
-                uri=uri,
-                tool_name="mutate_resource",
-                duration_ms=_duration_ms,
-                error=str(e),
-            )
             logger.exception("mutate_resource_failed", uri=uri, action=action)
             return _error(f"Mutation failed: {e}")
 
@@ -199,15 +166,6 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         if bos_circuit_breaker.is_open(uri):
             return _error(f"Circuit breaker open for: {uri}")
 
-        # PEP enforcement (BET-Y1Q2-T1-06)
-        _pep = get_pep()
-        _decision = _pep.evaluate(
-            PolicyRequest(uri=uri, tool_name="resolve_bos_uri", operation="read")
-        )
-        if _decision.effect == "deny":
-            return _error(f"Policy denied: {_decision.reason}")
-        _pep.record_started(_decision.decision_hash, uri=uri)
-
         _t0 = _time.time()
         try:
             args = json.loads(arguments) if isinstance(arguments, str) else arguments
@@ -215,12 +173,6 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             cached = bos_cache.get(uri, args)
             if cached:
                 bos_circuit_breaker.record_success(uri)
-                _pep.confirm_terminal(
-                    _decision.decision_hash,
-                    status="succeeded",
-                    uri=uri,
-                    tool_name="resolve_bos_uri",
-                )
                 return _ok(
                     {
                         "format_version": FORMAT_VERSION,
@@ -233,16 +185,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             result, source = await _resolve_with_router(
                 uri,
                 proxy_manager=_get_proxy_manager(),
-                decision_hash=_decision.decision_hash,
                 **args,
-            )
-            _pep.record_provider_call(_decision.decision_hash)
-            _pep.confirm_terminal(
-                _decision.decision_hash,
-                status="succeeded",
-                uri=uri,
-                tool_name="resolve_bos_uri",
-                duration_ms=int((_time.time() - _t0) * 1000),
             )
             bos_cache.set(uri, args, result, ttl=_get_cache_ttl(uri))
             bos_circuit_breaker.record_success(uri)
@@ -292,25 +235,10 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 }
             )
         except json.JSONDecodeError:
-            _pep.confirm_terminal(
-                _decision.decision_hash,
-                status="failed",
-                uri=uri,
-                tool_name="resolve_bos_uri",
-                error="json_decode",
-            )
             return _error(f"Invalid JSON arguments: {arguments}")
         except Exception as e:  # defensive fallback
             bos_circuit_breaker.record_failure(uri)
             _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
-            _pep.confirm_terminal(
-                _decision.decision_hash,
-                status="failed",
-                uri=uri,
-                tool_name="resolve_bos_uri",
-                duration_ms=int((_time.time() - _t0) * 1000),
-                error=str(e),
-            )
             _publish_bos_event(
                 bus,
                 uri,

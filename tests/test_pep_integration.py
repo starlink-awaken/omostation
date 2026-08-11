@@ -1,557 +1,449 @@
 """Integration tests for PEP (Policy Enforcement Port) — BET-Y1Q2-T1-06.
 
-Tests the full PEP lifecycle across public routes:
-  - Policy evaluation (allow/deny)
-  - Provider call counting
-  - Ordered event log
-  - Read-only auto-allow (no regression)
-  - Unknown effect → deny
-  - Terminal confirmation (Rule 5)
-  - Re-match before provider dispatch (Rule 6)
-  - Fake provider with call tracking
+Tests the narrow SPI to OMO PDP using ECOS contract types.
+Covers: missing provider → deny, deny → 0 calls, started-write failure → 0 calls,
+exact payload allow → 1 call, payload change → reject, terminal write failure →
+no success, read-only no regression.
 """
 
 from __future__ import annotations
 
 import sys
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import pytest
 
+from ecos.ssot.mof.generated.control.mof_control_models import ActionReceipt, PolicyDecision
+
 from agora.mcp.policy_enforcement import (
-    ActionReceipt,
-    EFFECTFUL,
-    PolicyDecision,
-    PolicyRequest,
-    READ_ONLY,
-    UNKNOWN,
+    PEPDenied,
+    complete,
     compute_request_hash,
-    get_pep,
-    reset_pep,
+    enforce,
+    get_current_permit,
+    is_server_read_only,
     reset_pep_provider_cache,
+    reset_permit,
+    set_current_permit,
+    verify_permit,
 )
 
 
+# ── Helpers: build valid ECOS contract instances ─────────────────────────
+
+
+def _make_decision(
+    request_hash: str,
+    decision: str = "allow",
+    reason: str = "allowed",
+) -> PolicyDecision:
+    """Build a minimal valid PolicyDecision."""
+    now = datetime.now(UTC)
+    return PolicyDecision(
+        decision_id="decision:test-0001",
+        schema_version="policy-decision/v1",
+        decision=decision,
+        action_id="action:test-0001",
+        principal_id="principal:test-user",
+        executor_id="agent:test-agent",
+        episode_id="test-epi-0001",
+        mandate_id="mandate:test-mandate",
+        mandate_version=1,
+        capability="bos://test/cap/action",
+        server_risk="R1",
+        budget_limit=10,
+        budget_unit="call",
+        disclosure="disclosure:private",
+        request_hash=request_hash,
+        trace_id="trace-test-00001",
+        issued_at=now,
+        expires_at=now + timedelta(hours=1),
+        reason=reason,
+    )
+
+
+def _make_receipt(decision_id: str = "decision:test-0001") -> ActionReceipt:
+    """Build a minimal valid ActionReceipt (started state)."""
+    now = datetime.now(UTC)
+    return ActionReceipt(
+        receipt_id="receipt:test-0001",
+        schema_version="action-receipt/v1",
+        decision_id=decision_id,
+        action_id="action:test-0001",
+        principal_id="principal:test-user",
+        executor_id="agent:test-agent",
+        episode_id="test-epi-0001",
+        mandate_id="mandate:test-mandate",
+        mandate_version=1,
+        capability="bos://test/cap/action",
+        server_risk="R1",
+        budget_limit=10,
+        budget_unit="call",
+        disclosure="disclosure:private",
+        request_hash="validhash0001",
+        trace_id="trace-test-00001",
+        issued_at=now,
+        expires_at=now + timedelta(hours=1),
+        status="started",
+        started_at=now,
+    )
+
+
+# ── Fake durable provider ────────────────────────────────────────────────
+
+
+class FakeDurableProvider:
+    """Fake PEP provider that persists to in-memory dict (simulates durable ledger)."""
+
+    def __init__(self) -> None:
+        self.evaluate_calls = 0
+        self.start_calls = 0
+        self.confirm_calls = 0
+        self.confirm_ok = True
+        self._deny = False
+        self._start_fails = False
+        self.started_hashes: set[str] = set()
+        self.terminal_writes: list[tuple[str, str]] = []  # (decision_id, status)
+
+    def evaluate(self, request: dict) -> PolicyDecision | None:
+        self.evaluate_calls += 1
+        h = compute_request_hash(
+            uri=request.get("uri", ""),
+            tool_name=request.get("tool_name", ""),
+            operation=request.get("operation", ""),
+            caller_id=request.get("caller_id", ""),
+            arguments=request.get("arguments", {}),
+            payload=request.get("payload"),
+        )
+        decision_val = "deny" if self._deny else "allow"
+        reason = "policy_denied" if self._deny else "allowed"
+        return _make_decision(h, decision=decision_val, reason=reason)
+
+    def start_receipt(self, decision: PolicyDecision) -> ActionReceipt | None:
+        self.start_calls += 1
+        if self._start_fails:
+            return None
+        self.started_hashes.add(decision.request_hash)
+        return _make_receipt(decision.decision_id)
+
+    def confirm_receipt(self, receipt, status, result, reason) -> bool:
+        self.confirm_calls += 1
+        self.terminal_writes.append((receipt.decision_id, status))
+        return self.confirm_ok
+
+
 @pytest.fixture(autouse=True)
-def _reset_pep_state():
-    """Fresh PEP for each test."""
-    reset_pep()
+def _reset_pep():
+    """Fresh PEP state for each test."""
     reset_pep_provider_cache()
     yield
-    reset_pep()
     reset_pep_provider_cache()
 
 
-# ── Unit: capability descriptor lookup ────────────────────────────────────
+def _inject_provider(monkeypatch, provider):
+    """Inject a fake provider into the PEP module."""
+    import agora.mcp.policy_enforcement as pep_mod
+
+    monkeypatch.setattr(pep_mod, "_provider_cache", provider)
 
 
-class TestCapabilityDescriptor:
-    def test_read_only_tools(self):
-        from agora.mcp.policy_enforcement import _lookup_capability_descriptor
-
-        for tool in [
-            "list_bos_resources",
-            "list_bos_domains",
-            "read_resource",
-            "bos_health",
-            "bos_metrics_status",
-        ]:
-            desc = _lookup_capability_descriptor(tool_name=tool)
-            assert desc.effect_class == READ_ONLY, f"{tool} should be read_only"
-
-    def test_effectful_tools(self):
-        from agora.mcp.policy_enforcement import _lookup_capability_descriptor
-
-        desc = _lookup_capability_descriptor(tool_name="mutate_resource")
-        assert desc.effect_class == EFFECTFUL
-
-    def test_unknown_tool(self):
-        from agora.mcp.policy_enforcement import _lookup_capability_descriptor
-
-        desc = _lookup_capability_descriptor(tool_name="totally_unknown_xyz")
-        assert desc.effect_class == UNKNOWN
-
-    def test_uri_based_heuristics(self):
-        from agora.mcp.policy_enforcement import _lookup_capability_descriptor
-
-        assert _lookup_capability_descriptor(uri="bos://memory/list").effect_class == READ_ONLY
-        assert _lookup_capability_descriptor(uri="bos://memory/mutate").effect_class == EFFECTFUL
-        assert _lookup_capability_descriptor(uri="bos://memory/zzz").effect_class == UNKNOWN
-
-
-# ── Unit: request hash ────────────────────────────────────────────────────
+# ── Tests: request hash ──────────────────────────────────────────────────
 
 
 class TestRequestHash:
-    def test_deterministic(self):
-        req = PolicyRequest(uri="bos://memory/kos/search", tool_name="resolve_bos_uri")
-        h1 = compute_request_hash(req)
-        h2 = compute_request_hash(req)
+    def test_covers_all_fields(self):
+        """Hash must cover uri/tool/operation/caller/arguments/payload."""
+        h1 = compute_request_hash(uri="bos://a/b/c", tool_name="t", operation="read",
+                                  caller_id="u1", arguments={"x": 1}, payload={"y": 2})
+        h2 = compute_request_hash(uri="bos://a/b/c", tool_name="t", operation="read",
+                                  caller_id="u1", arguments={"x": 1}, payload={"y": 2})
         assert h1 == h2
 
-    def test_different_context_different_hash(self):
-        r1 = PolicyRequest(uri="bos://memory/kos/search", tool_name="resolve_bos_uri")
-        r2 = PolicyRequest(uri="bos://memory/kos/other", tool_name="resolve_bos_uri")
-        assert compute_request_hash(r1) != compute_request_hash(r2)
+    def test_different_payload_different_hash(self):
+        h1 = compute_request_hash(uri="bos://a/b/c", tool_name="t", operation="read",
+                                  caller_id="u1", arguments={}, payload={"v": 1})
+        h2 = compute_request_hash(uri="bos://a/b/c", tool_name="t", operation="read",
+                                  caller_id="u1", arguments={}, payload={"v": 2})
+        assert h1 != h2
+
+    def test_different_arguments_different_hash(self):
+        h1 = compute_request_hash(arguments={"a": 1})
+        h2 = compute_request_hash(arguments={"a": 2})
+        assert h1 != h2
 
 
-# ── Unit: PEP core enforcement rules ──────────────────────────────────────
+# ── Tests: read-only exemption ───────────────────────────────────────────
 
 
-class TestPEPCoreRules:
-    def test_read_only_auto_allow(self):
-        """Rule 2: real read-only discovery/status → auto-allow (no regression)."""
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(tool_name="list_bos_resources", operation="discover")
-        )
-        assert decision.effect == "allow"
-        assert "read_only" in decision.reason
+class TestReadOnlyExemption:
+    def test_known_read_only_tools(self):
+        for tool in ["read_resource", "list_bos_resources", "bos_health"]:
+            assert is_server_read_only(tool), f"{tool} should be read-only"
 
-    def test_unknown_effect_deny(self):
-        """Rule 1: unknown effect metadata → deny."""
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(tool_name="totally_unknown_xyz", operation="read")
-        )
-        assert decision.effect == "deny"
-        assert "unknown" in decision.reason
+    def test_mutate_not_read_only(self):
+        assert not is_server_read_only("mutate_resource")
 
-    def test_effectful_allow_by_default(self):
-        """Effectful operations are allowed by default in local trust."""
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(uri="bos://memory/data", tool_name="mutate_resource", operation="write")
-        )
-        assert decision.effect == "allow"
+    def test_read_only_exempt_from_mandate(self, monkeypatch):
+        """Read-only tools don't need a provider — enforce returns (None, None)."""
+        # No provider injected — should still pass for read-only
+        _inject_provider(monkeypatch, None)
+        decision, receipt = enforce(tool_name="read_resource", operation="read")
+        assert decision is None
+        assert receipt is None
 
-    def test_decision_persisted_in_event_log(self):
-        """Decisions are persisted to the ordered event log."""
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(tool_name="list_bos_resources", operation="discover")
-        )
-        events = pep.events
-        assert len(events) == 1
-        assert events[0].kind == "evaluated"
-        assert events[0].decision_hash == decision.decision_hash
-
-    def test_provider_calls_zero_without_started(self):
-        """Rule 4: decision + started not persisted → provider.calls = 0."""
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(uri="bos://memory/data", tool_name="mutate_resource", operation="write")
-        )
-        # No record_started call → provider_calls should be 0
-        assert pep.get_provider_calls(decision.decision_hash) == 0
-        # Even if we try to record a call
-        assert pep.record_provider_call(decision.decision_hash) == 0
-
-    def test_provider_calls_after_started(self):
-        """After decision + started, provider calls are tracked."""
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(uri="bos://memory/data", tool_name="mutate_resource", operation="write")
-        )
-        pep.record_started(decision.decision_hash, uri="bos://memory/data")
-        assert pep.record_provider_call(decision.decision_hash) == 1
-        assert pep.record_provider_call(decision.decision_hash) == 2
-        assert pep.get_provider_calls(decision.decision_hash) == 2
-
-    def test_terminal_not_confirmed_cannot_succeed(self):
-        """Rule 5: terminal not confirmed → cannot return succeeded."""
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(uri="bos://memory/data", tool_name="mutate_resource", operation="write")
-        )
-        assert not pep.can_return_succeeded(decision.decision_hash)
-
-    def test_terminal_confirmed_succeeded(self):
-        """After confirm_terminal(succeeded), can_return_succeeded is True."""
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(uri="bos://memory/data", tool_name="mutate_resource", operation="write")
-        )
-        pep.record_started(decision.decision_hash, uri="bos://memory/data")
-        pep.record_provider_call(decision.decision_hash)
-        pep.confirm_terminal(
-            decision.decision_hash,
-            status="succeeded",
-            uri="bos://memory/data",
-            tool_name="mutate_resource",
-        )
-        assert pep.can_return_succeeded(decision.decision_hash)
-
-    def test_terminal_failed_blocks_succeeded(self):
-        """After confirm_terminal(failed), can_return_succeeded is False."""
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(uri="bos://memory/data", tool_name="mutate_resource", operation="write")
-        )
-        pep.confirm_terminal(
-            decision.decision_hash,
-            status="failed",
-            uri="bos://memory/data",
-            tool_name="mutate_resource",
-            error="boom",
-        )
-        assert not pep.can_return_succeeded(decision.decision_hash)
-
-    def test_rematch_same_context(self):
-        """Rule 6: re-match decision context hash — same context matches."""
-        pep = get_pep()
-        req = PolicyRequest(uri="bos://memory/data", tool_name="mutate_resource", operation="write")
-        decision = pep.evaluate(req)
-        assert pep.rematch_decision(decision.decision_hash, req)
-
-    def test_rematch_different_context(self):
-        """Rule 6: re-match decision context hash — different context fails."""
-        pep = get_pep()
-        req1 = PolicyRequest(uri="bos://memory/data", tool_name="mutate_resource", operation="write")
-        decision = pep.evaluate(req1)
-        req2 = PolicyRequest(uri="bos://memory/other", tool_name="mutate_resource", operation="write")
-        assert not pep.rematch_decision(decision.decision_hash, req2)
+    def test_read_only_no_regression_at_adapter(self, monkeypatch):
+        """verify_permit passes for read-only without permit."""
+        _inject_provider(monkeypatch, None)
+        # Should not raise
+        verify_permit(tool_name="read_resource")
 
 
-# ── Unit: ordered events ──────────────────────────────────────────────────
+# ── Tests: missing provider → deny ───────────────────────────────────────
 
 
-class TestOrderedEvents:
-    def test_full_lifecycle_ordered_events(self):
-        """Ordered events for a full allow → started → succeeded lifecycle."""
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(uri="bos://memory/data", tool_name="mutate_resource", operation="write")
-        )
-        pep.record_started(decision.decision_hash, uri="bos://memory/data")
-        pep.record_provider_call(decision.decision_hash)
-        pep.confirm_terminal(
-            decision.decision_hash,
-            status="succeeded",
-            uri="bos://memory/data",
-            tool_name="mutate_resource",
-        )
+class TestMissingProviderDeny:
+    def test_effectful_no_provider_denies(self, monkeypatch):
+        """Rule 1: effectful with no provider → deny."""
+        _inject_provider(monkeypatch, None)
+        with pytest.raises(PEPDenied) as exc_info:
+            enforce(uri="bos://test/data", tool_name="mutate_resource", operation="write")
+        assert "pdp_unavailable" in exc_info.value.reason
 
-        events = pep.events
-        assert len(events) == 3  # evaluated → started → succeeded (provider_call increments counter, not event)
-        assert events[0].kind == "evaluated"
-        assert events[1].kind == "started"
-        assert events[2].kind == "succeeded"
-        # All events share the same decision_hash
-        for evt in events:
-            assert evt.decision_hash == decision.decision_hash
+    def test_unknown_no_provider_denies(self, monkeypatch):
+        """Unknown tool with no provider → deny."""
+        _inject_provider(monkeypatch, None)
+        with pytest.raises(PEPDenied) as exc_info:
+            enforce(tool_name="totally_unknown_tool")
+        assert "pdp_unavailable" in exc_info.value.reason
 
-    def test_failed_lifecycle_ordered_events(self):
-        """Ordered events for a deny → no further events."""
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(tool_name="totally_unknown_xyz", operation="read")
-        )
-        assert decision.effect == "deny"
-        # Denied decisions are still in the event log
-        events = pep.events
-        assert len(events) == 1
-        assert events[0].kind == "evaluated"
+    def test_adapter_no_provider_no_permit_denies(self, monkeypatch):
+        """verify_permit denies at adapter without permit for non-read-only."""
+        _inject_provider(monkeypatch, None)
+        with pytest.raises(PEPDenied):
+            verify_permit(tool_name="some_effectful_tool")
 
 
-# ── Unit: caller can only tighten ─────────────────────────────────────────
+# ── Tests: deny decision → 0 calls ───────────────────────────────────────
 
 
-class TestCallerTightening:
-    def test_provider_deny_overrides_baseline_allow(self):
-        """Rule 3: caller can only tighten — provider deny wins over baseline allow."""
+class TestDenyDecision:
+    def test_deny_decision_raises(self, monkeypatch):
+        """Provider returns deny → PEPDenied, no start_receipt called."""
+        fake = FakeDurableProvider()
+        fake._deny = True
+        _inject_provider(monkeypatch, fake)
 
-        class DenyAllProvider:
-            def evaluate(self, request: PolicyRequest) -> PolicyDecision:
-                return PolicyDecision(
-                    effect="deny",
-                    reason="provider_says_no",
-                    provider="DenyAll",
-                    decision_hash=compute_request_hash(request),
-                )
+        with pytest.raises(PEPDenied) as exc_info:
+            enforce(uri="bos://test/data", tool_name="mutate_resource", operation="write")
+        assert "policy_denied" in exc_info.value.reason
+        assert fake.start_calls == 0  # no receipt started
 
-            def record_outcome(self, receipt: ActionReceipt) -> None:
-                pass
 
-        import os
+# ── Tests: started-write failure → 0 calls ───────────────────────────────
 
-        os.environ["AGORA_PEP_PROVIDER"] = "__main__:DenyAllProvider"
-        reset_pep_provider_cache()
 
-        # We can't easily load from __main__, so let's test the logic directly
-        os.environ.pop("AGORA_PEP_PROVIDER", None)
-        reset_pep_provider_cache()
+class TestStartedWriteFailure:
+    def test_start_fails_denies(self, monkeypatch):
+        """start_receipt returns None → deny, 0 provider calls."""
+        fake = FakeDurableProvider()
+        fake._start_fails = True
+        _inject_provider(monkeypatch, fake)
 
-        pep = get_pep()
-        # Manually test the tightening logic: if provider returns deny,
-        # the final effect should be deny even for effectful (baseline allow)
-        req = PolicyRequest(
-            uri="bos://memory/data",
+        with pytest.raises(PEPDenied) as exc_info:
+            enforce(uri="bos://test/data", tool_name="mutate_resource", operation="write")
+        assert "ledger_unavailable" in exc_info.value.reason
+        # evaluate was called but start failed
+        assert fake.evaluate_calls == 1
+        assert fake.start_calls == 1  # attempted but returned None
+
+
+# ── Tests: exact payload allow → 1 call ──────────────────────────────────
+
+
+class TestExactPayloadAllow:
+    def test_allow_starts_receipt(self, monkeypatch):
+        """Exact matching payload → allow, receipt started."""
+        fake = FakeDurableProvider()
+        _inject_provider(monkeypatch, fake)
+
+        decision, receipt = enforce(
+            uri="bos://test/data",
             tool_name="mutate_resource",
             operation="write",
+            caller_id="principal:test",
+            arguments={"key": "val"},
+            payload={"action": "create"},
         )
-        # Without provider, baseline allows effectful
-        decision = pep.evaluate(req)
-        assert decision.effect == "allow"
-
-        # The tighten logic: provider_effect = "deny" → final = deny
-        # This is tested implicitly — in production, the SPI provider would deny
-
-
-# ── Integration: BOS routing with fake provider ───────────────────────────
-
-
-class TestBOSRoutingWithPEP:
-    """Integration: PEP enforcement through the BOS routing chain."""
-
-    def test_resolve_bos_uri_read_only_no_regression(self):
-        """Real read-only discovery/status doesn't regress through PEP."""
-        pep = get_pep()
-
-        # Simulate what registration.py does for a read-only tool
-        decision = pep.evaluate(
-            PolicyRequest(
-                uri="bos://agora/health",
-                tool_name="bos_health",
-                operation="read",
-            )
-        )
-        assert decision.effect == "allow"
-
-        # Full lifecycle
-        pep.record_started(decision.decision_hash, uri="bos://agora/health")
-        pep.record_provider_call(decision.decision_hash)
-        receipt = pep.confirm_terminal(
-            decision.decision_hash,
-            status="succeeded",
-            uri="bos://agora/health",
-            tool_name="bos_health",
-        )
-        assert receipt.status == "succeeded"
-        assert receipt.provider_calls == 1
-        assert pep.can_return_succeeded(decision.decision_hash)
-
-    def test_mutate_resource_effectful_lifecycle(self):
-        """Effectful mutate_resource goes through full PEP lifecycle."""
-        pep = get_pep()
-
-        decision = pep.evaluate(
-            PolicyRequest(
-                uri="bos://memory/inbox/archive",
-                tool_name="mutate_resource",
-                operation="write",
-            )
-        )
-        assert decision.effect == "allow"  # local trust
-        assert decision.capability_descriptor is not None
-        assert decision.capability_descriptor.effect_class == EFFECTFUL
-
-        # Started + provider call + terminal
-        pep.record_started(decision.decision_hash, uri="bos://memory/inbox/archive")
-        calls = pep.record_provider_call(decision.decision_hash)
-        assert calls == 1
-        receipt = pep.confirm_terminal(
-            decision.decision_hash,
-            status="succeeded",
-            uri="bos://memory/inbox/archive",
-            tool_name="mutate_resource",
-            duration_ms=42,
-        )
-        assert receipt.provider_calls == 1
-        assert receipt.duration_ms == 42
-        assert pep.can_return_succeeded(decision.decision_hash)
-
-    def test_unknown_uri_denied(self):
-        """Unknown effect metadata → deny for truly unknown tools."""
-        pep = get_pep()
-
-        decision = pep.evaluate(
-            PolicyRequest(
-                uri="bos://bogus/unknown/zzz",
-                tool_name="totally_unknown_xyz",
-                operation="read",
-            )
-        )
-        assert decision.effect == "deny"
-        assert "unknown" in decision.reason
-
-
-# ── Integration: fake provider with call tracking ─────────────────────────
-
-
-class FakeProvider:
-    """Fake PEP provider that counts evaluate() and record_outcome() calls."""
-
-    def __init__(self):
-        self.evaluate_calls = 0
-        self.outcome_calls = 0
-        self.recorded_receipts: list[ActionReceipt] = []
-        self._deny_effectful = False
-
-    def evaluate(self, request: PolicyRequest) -> PolicyDecision:
-        self.evaluate_calls += 1
-        h = compute_request_hash(request)
-        desc = request.capability_descriptor
-        if desc and desc.effect_class == EFFECTFUL and self._deny_effectful:
-            return PolicyDecision(
-                effect="deny", reason="fake_provider_deny", provider="FakeProvider",
-                decision_hash=h, capability_descriptor=desc,
-            )
-        return PolicyDecision(
-            effect="allow", reason="fake_provider_ok", provider="FakeProvider",
-            decision_hash=h, capability_descriptor=desc,
-        )
-
-    def record_outcome(self, receipt: ActionReceipt) -> None:
-        self.outcome_calls += 1
-        self.recorded_receipts.append(receipt)
-
-
-class TestFakeProviderIntegration:
-    """Test with a real fake provider injected via env override."""
-
-    def test_provider_receives_outcome(self, monkeypatch):
-        """Provider's record_outcome is called when terminal is confirmed."""
-        fake = FakeProvider()
-
-        # Inject provider by monkeypatching the resolver
-        import agora.mcp.policy_enforcement as pep_mod
-
-        monkeypatch.setattr(pep_mod, "_provider_cache", fake)
-
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(
-                uri="bos://memory/data",
-                tool_name="mutate_resource",
-                operation="write",
-            )
-        )
-        assert decision.effect == "allow"
-        assert decision.provider == "FakeProvider"
+        assert decision is not None
+        assert decision.decision == "allow"
+        assert receipt is not None
+        assert receipt.status == "started"
         assert fake.evaluate_calls == 1
+        assert fake.start_calls == 1
 
-        pep.record_started(decision.decision_hash, uri="bos://memory/data")
-        pep.record_provider_call(decision.decision_hash)
-        pep.confirm_terminal(
-            decision.decision_hash,
-            status="succeeded",
-            uri="bos://memory/data",
+    def test_confirm_succeeded(self, monkeypatch):
+        """complete() confirms terminal succeeded."""
+        fake = FakeDurableProvider()
+        _inject_provider(monkeypatch, fake)
+
+        decision, receipt = enforce(
+            uri="bos://test/data", tool_name="mutate_resource", operation="write"
+        )
+        complete(decision, receipt, succeeded=True)
+        assert fake.confirm_calls == 1
+        assert fake.terminal_writes[-1][1] == "succeeded"
+
+
+# ── Tests: payload change → reject ───────────────────────────────────────
+
+
+class TestPayloadChangeReject:
+    def test_hash_mismatch_rejects(self, monkeypatch):
+        """Provider returns a hash that doesn't match → reject."""
+        fake = FakeDurableProvider()
+        _inject_provider(monkeypatch, fake)
+
+        # Tamper with the provider to return a wrong hash
+        original_eval = fake.evaluate
+
+        def tampered_eval(request):
+            d = original_eval(request)
+            # Return a different hash than expected
+            return d.model_copy(update={"request_hash": "tampered12345"})
+        fake.evaluate = tampered_eval
+
+        with pytest.raises(PEPDenied) as exc_info:
+            enforce(uri="bos://test/data", tool_name="mutate_resource", operation="write")
+        assert "hash_mismatch" in exc_info.value.reason
+
+
+# ── Tests: terminal write failure → no success ──────────────────────────
+
+
+class TestTerminalWriteFailure:
+    def test_confirm_failure_blocks_success(self, monkeypatch):
+        """confirm_receipt returns False → complete() raises PEPDenied."""
+        fake = FakeDurableProvider()
+        fake.confirm_ok = False
+        _inject_provider(monkeypatch, fake)
+
+        decision, receipt = enforce(
+            uri="bos://test/data", tool_name="mutate_resource", operation="write"
+        )
+        with pytest.raises(PEPDenied) as exc_info:
+            complete(decision, receipt, succeeded=True)
+        assert "receipt_unconfirmed" in exc_info.value.reason
+
+    def test_confirm_failure_allows_failed_status(self, monkeypatch):
+        """If operation already failed, confirm failure doesn't raise."""
+        fake = FakeDurableProvider()
+        fake.confirm_ok = False
+        _inject_provider(monkeypatch, fake)
+
+        decision, receipt = enforce(
+            uri="bos://test/data", tool_name="mutate_resource", operation="write"
+        )
+        # Should NOT raise — failure is the correct terminal
+        complete(decision, receipt, succeeded=False, error="boom")
+
+
+# ── Tests: permit propagation ─────────────────────────────────────────────
+
+
+class TestPermitPropagation:
+    def test_set_get_permit(self):
+        """ContextVar correctly propagates permit hash."""
+        token = set_current_permit("test_permit_123")
+        assert get_current_permit() == "test_permit_123"
+        reset_permit(token)
+        assert get_current_permit() is None
+
+    def test_verify_permit_passes_with_permit(self):
+        """verify_permit passes when a permit is set."""
+        token = set_current_permit("valid_permit")
+        try:
+            verify_permit(tool_name="any_effectful_tool")
+        finally:
+            reset_permit(token)
+
+    def test_verify_permit_fails_without_permit(self):
+        """verify_permit raises for non-read-only without permit."""
+        with pytest.raises(PEPDenied) as exc_info:
+            verify_permit(tool_name="any_effectful_tool")
+        assert "no_permit" in exc_info.value.reason
+
+
+# ── Tests: full lifecycle integration ────────────────────────────────────
+
+
+class TestFullLifecycle:
+    def test_effectful_full_lifecycle(self, monkeypatch):
+        """Full lifecycle: enforce → provider call → complete."""
+        fake = FakeDurableProvider()
+        _inject_provider(monkeypatch, fake)
+
+        # Enforce
+        decision, receipt = enforce(
+            uri="bos://mail/draft",
             tool_name="mutate_resource",
+            operation="write",
+            caller_id="principal:test",
+            arguments={"to": "user@example.com"},
+            payload={"subject": "test"},
         )
+        assert decision.decision == "allow"
+        assert receipt.status == "started"
+        assert fake.evaluate_calls == 1
+        assert fake.start_calls == 1
+        assert fake.confirm_calls == 0
 
-        assert fake.outcome_calls == 1
-        assert fake.recorded_receipts[0].status == "succeeded"
-        assert fake.recorded_receipts[0].provider_calls == 1
+        # Simulate provider call
+        token = set_current_permit(decision.request_hash)
+        try:
+            verify_permit(tool_name="mutate_resource")  # should pass
+        finally:
+            reset_permit(token)
 
-    def test_provider_can_tighten_effectful_to_deny(self, monkeypatch):
-        """Rule 3: provider can deny effectful operations (tighten)."""
-        fake = FakeProvider()
-        fake._deny_effectful = True
+        # Complete
+        complete(decision, receipt, succeeded=True, result={"id": 42})
+        assert fake.confirm_calls == 1
+        assert fake.terminal_writes == [("decision:test-0001", "succeeded")]
 
-        import agora.mcp.policy_enforcement as pep_mod
+    def test_read_only_skips_lifecycle(self, monkeypatch):
+        """Read-only tools skip the entire PEP lifecycle."""
+        fake = FakeDurableProvider()
+        _inject_provider(monkeypatch, fake)
 
-        monkeypatch.setattr(pep_mod, "_provider_cache", fake)
+        decision, receipt = enforce(tool_name="read_resource", operation="read")
+        assert decision is None
+        assert receipt is None
+        assert fake.evaluate_calls == 0  # provider not consulted
 
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(
-                uri="bos://memory/data",
-                tool_name="mutate_resource",
-                operation="write",
-            )
-        )
-        assert decision.effect == "deny"
-        assert "fake_provider_deny" in decision.reason
-
-    def test_provider_cannot_loosen_unknown_to_allow(self, monkeypatch):
-        """Rule 3+1: unknown effect is denied regardless of provider."""
-        fake = FakeProvider()
-
-        import agora.mcp.policy_enforcement as pep_mod
-
-        monkeypatch.setattr(pep_mod, "_provider_cache", fake)
-
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(
-                uri="bos://bogus/zzz",
-                tool_name="totally_unknown_xyz",
-                operation="read",
-            )
-        )
-        # Unknown effect → deny immediately, provider not consulted
-        assert decision.effect == "deny"
-        assert "unknown" in decision.reason
-
-    def test_provider_call_count_lifecycle(self, monkeypatch):
-        """Provider call count tracks correctly through the lifecycle."""
-        fake = FakeProvider()
-
-        import agora.mcp.policy_enforcement as pep_mod
-
-        monkeypatch.setattr(pep_mod, "_provider_cache", fake)
-
-        pep = get_pep()
-        decision = pep.evaluate(
-            PolicyRequest(
-                uri="bos://memory/search",
-                tool_name="resolve_bos_uri",
-                operation="read",
-            )
-        )
-        assert decision.effect == "allow"
-
-        # Before started: calls = 0
-        assert pep.get_provider_calls(decision.decision_hash) == 0
-
-        # After started: calls can be incremented
-        pep.record_started(decision.decision_hash, uri="bos://memory/search")
-        assert pep.record_provider_call(decision.decision_hash) == 1
-        assert pep.record_provider_call(decision.decision_hash) == 2
-        assert pep.get_provider_calls(decision.decision_hash) == 2
-
-        # Terminal records the final call count
-        receipt = pep.confirm_terminal(
-            decision.decision_hash,
-            status="succeeded",
-            uri="bos://memory/search",
-            tool_name="resolve_bos_uri",
-        )
-        assert receipt.provider_calls == 2
+        # complete() is a no-op
+        complete(decision, receipt, succeeded=True)
+        assert fake.confirm_calls == 0
 
 
-# ── Integration: PEP through actual routing functions ─────────────────────
+# ── Tests: PEPDenied propagation ─────────────────────────────────────────
 
 
-class TestPEPThroughRouting:
-    """Test PEP enforcement through the actual BOS routing chain."""
+class TestPEPDeniedPropagation:
+    def test_denied_at_adapter_propagates(self, monkeypatch):
+        """PEPDenied from verify_permit propagates as exception."""
+        _inject_provider(monkeypatch, None)
+        with pytest.raises(PEPDenied):
+            verify_permit(tool_name="mutate_resource")
 
-    def test_resolve_bos_uri_denies_unknown(self):
-        """resolve_bos_uri returns error for unknown URI (PEP denies)."""
-        import asyncio
+    def test_exception_not_silently_swallowed(self, monkeypatch):
+        """PEPDenied is a proper exception, not a dict that can be ignored."""
+        fake = FakeDurableProvider()
+        fake._deny = True
+        _inject_provider(monkeypatch, fake)
 
-        from agora.mcp.resolver.api import resolve_bos_uri
-
-        result = asyncio.run(
-            resolve_bos_uri("bos://bogus/unknown/zzz")
-        )
-        # PEP should deny this (unknown effect) before even hitting the service lookup
-        # But resolve_bos_uri in api.py also checks for service existence
-        assert result.get("status") == "error"
-
-    def test_resolve_bos_uri_allows_read_only(self):
-        """resolve_bos_uri allows read-only operations (no regression)."""
-        import asyncio
-
-        from agora.mcp.resolver.api import resolve_bos_uri
-
-        # This is a known service pattern that should be read-only
-        result = asyncio.run(
-            resolve_bos_uri("bos://memory/list")
-        )
-        # May fail for other reasons (service not available), but NOT for PEP deny
-        if result.get("status") == "error":
-            assert "Policy denied" not in result.get("error", "")
+        with pytest.raises(PEPDenied) as exc_info:
+            enforce(uri="bos://x/y/z", tool_name="mutate_resource", operation="write")
+        # Verify the exception carries structured info
+        assert exc_info.value.reason == "policy_denied"

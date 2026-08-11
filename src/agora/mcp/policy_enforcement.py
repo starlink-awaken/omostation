@@ -1,33 +1,27 @@
-"""Policy Enforcement Port / PEP (BET-Y1Q2-T1-06).
+"""Policy Enforcement Port — narrow SPI to OMO PDP (BET-Y1Q2-T1-06).
 
-Shared injectable policy enforcement for Agora gateway routes.
+Agora does NOT define its own PolicyDecision/ActionReceipt types.
+It imports the ECOS-generated contract models and delegates to the OMO
+PDP provider via the same SPI binding pattern as admission/port.py.
 
-Design mirrors ``admission/port.py`` — a Protocol-based SPI with provider
-loading via env / entry_points / soft import.  **Never hard-imports OMO.**
-
-Core types:
-    - CapabilityDescriptor  (effectful / read_only / unknown + risk)
-    - PolicyRequest          (what the caller wants to do)
-    - PolicyDecision         (allow / deny from the provider)
-    - ActionReceipt          (terminal outcome record)
-
-Enforcement rules (trusted local single-user boundary):
-    1. Unknown effect metadata → deny
-    2. Real read-only discovery/status → auto-allow (no regression)
-    3. Caller can only tighten (most restrictive wins)
-    4. Decision + started not persisted → provider.calls stays 0
-    5. Terminal not confirmed → cannot return succeeded
-    6. Re-match decision context hash adjacent to provider dispatch
+Rules (trusted local single-user boundary):
+    1. Effectful/unknown with no provider → deny (provider.calls=0)
+    2. PDP exception or ledger exception → deny (provider.calls=0)
+    3. Only server-registered real read-only tools are exempt from mandate
+    4. Lifecycle happens ONCE at the entry point; adapters only verify permit
+    5. Terminal write-back failure → cannot return succeeded
+    6. Request hash covers canonical uri/tool/operation/caller/arguments/payload
+    7. No URI keyword guessing for effect classification
 """
 
 from __future__ import annotations
 
+import contextvars
 import hashlib
 import importlib
 import json
 import os
-import time
-from dataclasses import dataclass, field
+from contextvars import Token
 from importlib import metadata as _ilmd
 from typing import Any, Protocol, runtime_checkable
 
@@ -35,91 +29,41 @@ import structlog
 
 logger = structlog.get_logger(__name__)
 
-# ── Enums (string literals — no enum import needed for KISS) ─────────────
+# ── ECOS contract models (NOT mirrors) ───────────────────────────────────
+# These are the SSOT types compiled from m2/*.yaml by the MOF control compiler.
+# Agora must never redefine or shadow them.
 
-EffectClass = str  # "read_only" | "effectful" | "unknown"
-RiskLevel = str  # "low" | "medium" | "high"
-Effect = str  # "allow" | "deny"
+try:
+    from ecos.ssot.mof.generated.control.mof_control_models import (
+        ActionReceipt,
+        PolicyDecision,
+    )
+except ImportError:  # pragma: no cover — ecos always available in workspace
+    ActionReceipt = None  # type: ignore[assignment,misc]
+    PolicyDecision = None  # type: ignore[assignment,misc]
 
-READ_ONLY = "read_only"
-EFFECTFUL = "effectful"
-UNKNOWN = "unknown"
 
-# ── Data classes ─────────────────────────────────────────────────────────
+# ── Stable exception ─────────────────────────────────────────────────────
 
 
-@dataclass(frozen=True)
-class CapabilityDescriptor:
-    """Server-side capability classification.
+class PEPDenied(Exception):
+    """Raised when PEP denies an operation or detects a permit violation.
 
-    ``effect_class`` drives the baseline policy:
-      - read_only → auto-allow baseline
-      - effectful → requires explicit PolicyDecision allow
-      - unknown   → deny (fail-closed)
-
-    ``risk_level`` is advisory metadata the provider may consult.
+    Propagates through the routing chain so callers cannot accidentally
+    ignore a denial (unlike a dict return).
     """
 
-    effect_class: EffectClass = UNKNOWN
-    risk_level: RiskLevel = "low"
+    def __init__(self, reason: str, decision_id: str = "") -> None:
+        self.reason = reason
+        self.decision_id = decision_id
+        super().__init__(f"PEP denied: {reason}")
 
 
-@dataclass(frozen=True)
-class PolicyRequest:
-    """What the caller wants to do — input to ``evaluate``."""
+# ── Server-side read-only tool registry ──────────────────────────────────
+# Explicit declarations by the server code (registration.py). NOT URI keyword
+# guessing — these are the server's own tools with known read-only semantics.
 
-    uri: str = ""
-    tool_name: str = ""
-    operation: str = "read"  # "read" | "write" | "discover"
-    caller_id: str = "anonymous"
-    arguments: dict[str, Any] = field(default_factory=dict)
-    capability_descriptor: CapabilityDescriptor | None = None
-
-
-@dataclass(frozen=True)
-class PolicyDecision:
-    """Decision returned by the provider (or default policy).
-
-    ``decision_hash`` binds the decision to the exact request context
-    so the PEP can re-match before provider dispatch.
-    """
-
-    effect: Effect = "deny"
-    reason: str = ""
-    provider: str = ""
-    decision_hash: str = ""
-    capability_descriptor: CapabilityDescriptor | None = None
-
-
-@dataclass
-class ActionReceipt:
-    """Terminal outcome record — persisted to the event log."""
-
-    decision_hash: str = ""
-    status: str = "started"  # "started" | "succeeded" | "failed"
-    provider_calls: int = 0
-    uri: str = ""
-    tool_name: str = ""
-    duration_ms: int = 0
-    error: str = ""
-
-
-# ── Event log entry ──────────────────────────────────────────────────────
-
-
-@dataclass
-class PolicyEvent:
-    """Ordered event in the enforcement audit trail."""
-
-    timestamp: float
-    kind: str  # "evaluated" | "started" | "succeeded" | "failed"
-    decision_hash: str
-    detail: str = ""
-
-
-# ── Built-in read-only tool set (discovery / status — no regression) ─────
-
-_BUILTIN_READ_ONLY: frozenset[str] = frozenset(
+SERVER_READ_ONLY_TOOLS: frozenset[str] = frozenset(
     {
         "list_bos_resources",
         "list_bos_domains",
@@ -144,72 +88,100 @@ _BUILTIN_READ_ONLY: frozenset[str] = frozenset(
 )
 
 
-def _lookup_capability_descriptor(
-    uri: str = "", tool_name: str = ""
-) -> CapabilityDescriptor:
-    """Determine the capability descriptor from server-side metadata.
+def is_server_read_only(tool_name: str) -> bool:
+    """Check if the tool is server-registered read-only (exempt from mandate)."""
+    return tool_name in SERVER_READ_ONLY_TOOLS
 
-    Rules:
-      - Built-in read-only tools → read_only
-      - mutate_resource → effectful
-      - Unknown → unknown (will deny)
+
+# ── Canonical request hash ───────────────────────────────────────────────
+
+
+def compute_request_hash(
+    uri: str = "",
+    tool_name: str = "",
+    operation: str = "",
+    caller_id: str = "",
+    arguments: dict[str, Any] | None = None,
+    payload: Any = None,
+) -> str:
+    """Deterministic hash covering all canonical request fields.
+
+    Per W2-03 contract: uri/tool/operation/caller/arguments/payload.
     """
-    if tool_name in _BUILTIN_READ_ONLY:
-        return CapabilityDescriptor(effect_class=READ_ONLY, risk_level="low")
-    if tool_name == "mutate_resource":
-        return CapabilityDescriptor(effect_class=EFFECTFUL, risk_level="medium")
-    # URI-based heuristics for BOS routes
-    if uri:
-        # discovery / status patterns
-        lower_uri = uri.lower()
-        if any(
-            kw in lower_uri
-            for kw in ("list", "discover", "status", "health", "schema", "metrics")
-        ):
-            return CapabilityDescriptor(effect_class=READ_ONLY, risk_level="low")
-        if any(
-            kw in lower_uri
-            for kw in ("mutate", "create", "update", "delete", "write", "archive")
-        ):
-            return CapabilityDescriptor(effect_class=EFFECTFUL, risk_level="medium")
-    return CapabilityDescriptor(effect_class=UNKNOWN)
-
-
-# ── Request hash ─────────────────────────────────────────────────────────
-
-
-def compute_request_hash(request: PolicyRequest) -> str:
-    """Deterministic hash of the request context for decision re-matching."""
-    payload = json.dumps(
+    canonical = json.dumps(
         {
-            "uri": request.uri,
-            "tool_name": request.tool_name,
-            "operation": request.operation,
-            "caller_id": request.caller_id,
+            "uri": uri,
+            "tool_name": tool_name,
+            "operation": operation,
+            "caller_id": caller_id,
+            "arguments": arguments or {},
+            "payload": _safe_str(payload),
         },
         sort_keys=True,
+        default=str,
     )
-    return hashlib.sha256(payload.encode()).hexdigest()[:16]
+    return hashlib.sha256(canonical.encode()).hexdigest()[:16]
 
 
-# ── Protocol (SPI) ───────────────────────────────────────────────────────
+def _safe_str(obj: Any) -> str:
+    """Safely stringify arbitrary payload for hashing."""
+    try:
+        return json.dumps(obj, sort_keys=True, default=str)
+    except (TypeError, ValueError):
+        return str(obj)
+
+
+# ── ContextVar for current permit ────────────────────────────────────────
+# The entry point (middleware) sets the permit; downstream adapters read it.
+# This avoids changing function signatures throughout the routing chain.
+
+_current_permit: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "_pep_permit", default=None
+)
+
+
+def set_current_permit(permit_hash: str | None) -> Token[str | None]:
+    """Set the current permit hash (called by entry point after enforce)."""
+    return _current_permit.set(permit_hash)
+
+
+def reset_permit(token: Token[str | None]) -> None:
+    """Reset permit to previous value."""
+    _current_permit.reset(token)
+
+
+def get_current_permit() -> str | None:
+    """Get the current permit hash (called by downstream adapters)."""
+    return _current_permit.get()
+
+
+# ── Narrow SPI protocol ──────────────────────────────────────────────────
 
 
 @runtime_checkable
 class PolicyEnforcementPort(Protocol):
-    """SPI: evaluate policy and record outcomes.
+    """SPI: OMO PDP provider — evaluates, persists, and confirms actions.
 
-    ECOS / OMO / external providers implement this interface.
-    Agora never hard-imports OMO — providers are resolved via the same
-    binding chain as AdmissionPort (env → entry_points → soft import).
+    The provider persists decisions and receipts to a durable ledger.
+    Agora never mirrors this state; it only calls the provider.
     """
 
-    def evaluate(self, request: PolicyRequest) -> PolicyDecision:
-        """Evaluate whether the request is permitted."""
+    def evaluate(self, request: dict[str, Any]) -> PolicyDecision | None:
+        """Evaluate request → return persisted PolicyDecision (or None on failure)."""
         ...
 
-    def record_outcome(self, receipt: ActionReceipt) -> None:
-        """Record the terminal outcome of an evaluated request."""
+    def start_receipt(self, decision: PolicyDecision) -> ActionReceipt | None:
+        """Persist 'started' state before provider call (or None on failure)."""
+        ...
+
+    def confirm_receipt(
+        self,
+        receipt: ActionReceipt,
+        status: str,
+        result: dict[str, Any] | None,
+        reason: str | None,
+    ) -> bool:
+        """Persist terminal state (succeeded|failed). Returns True on success."""
         ...
 
 
@@ -217,15 +189,11 @@ class PolicyEnforcementPort(Protocol):
 
 _SOFT_PROVIDERS: tuple[str, ...] = (
     "ecos.ssot.tools.policy_provider:PROVIDER",
+    "omo.integrations.pep_provider:PROVIDER",
 )
 
 _UNSET: object = object()
 _provider_cache: PolicyEnforcementPort | None | object = _UNSET
-
-
-def _missing_mode() -> str:
-    mode = os.environ.get("AGORA_PEP_MODE", "required").strip().lower()
-    return mode if mode in {"required", "degraded"} else "required"
 
 
 def reset_pep_provider_cache() -> None:
@@ -235,7 +203,6 @@ def reset_pep_provider_cache() -> None:
 
 
 def _load_from_spec(spec: str) -> PolicyEnforcementPort | None:
-    """Load provider from 'module.path:attr' spec."""
     if ":" not in spec:
         return None
     mod_name, attr = spec.split(":", 1)
@@ -246,7 +213,7 @@ def _load_from_spec(spec: str) -> PolicyEnforcementPort | None:
             obj = obj()
         if isinstance(obj, type):
             obj = obj()
-        if hasattr(obj, "evaluate") and hasattr(obj, "record_outcome"):
+        if hasattr(obj, "evaluate") and hasattr(obj, "start_receipt"):
             return obj  # type: ignore[return-value]
     except Exception as e:
         logger.debug("pep_provider_load_failed", spec=spec, error=str(e))
@@ -256,10 +223,7 @@ def _load_from_spec(spec: str) -> PolicyEnforcementPort | None:
 def get_pep_provider() -> PolicyEnforcementPort | None:
     """Resolve and cache the PEP provider (or None if unavailable).
 
-    Binding order (first match wins):
-    1. env AGORA_PEP_PROVIDER = "module:attr"
-    2. entry_points group "agora.pep"
-    3. soft import of known providers
+    Binding order: env AGORA_PEP_PROVIDER → entry_points → soft import.
     """
     global _provider_cache
     if _provider_cache is not _UNSET:
@@ -267,12 +231,10 @@ def get_pep_provider() -> PolicyEnforcementPort | None:
 
     provider: PolicyEnforcementPort | None = None
 
-    # 1. Explicit env override
     env_spec = os.environ.get("AGORA_PEP_PROVIDER", "").strip()
     if env_spec:
         provider = _load_from_spec(env_spec)
 
-    # 2. entry_points
     if provider is None:
         try:
             eps = _ilmd.entry_points()
@@ -286,7 +248,7 @@ def get_pep_provider() -> PolicyEnforcementPort | None:
                     obj = ep.load()
                     if isinstance(obj, type):
                         obj = obj()
-                    if hasattr(obj, "evaluate") and hasattr(obj, "record_outcome"):
+                    if hasattr(obj, "evaluate") and hasattr(obj, "start_receipt"):
                         provider = obj  # type: ignore[reportAssignmentType]
                         break
                 except Exception as e:
@@ -294,7 +256,6 @@ def get_pep_provider() -> PolicyEnforcementPort | None:
         except Exception as e:
             logger.debug("pep_entry_points_unavailable", error=str(e))
 
-    # 3. Soft import known providers
     if provider is None:
         for spec in _SOFT_PROVIDERS:
             provider = _load_from_spec(spec)
@@ -303,279 +264,143 @@ def get_pep_provider() -> PolicyEnforcementPort | None:
 
     _provider_cache = provider
     if provider is None:
-        logger.info("pep_provider_unavailable", mode=_missing_mode())
+        logger.info("pep_provider_unavailable")
     else:
         logger.info("pep_provider_bound", provider=type(provider).__name__)
     return provider
 
 
-# ── PolicyEnforcementPoint (singleton wrapper) ───────────────────────────
+# ── Enforcement gate (single lifecycle) ──────────────────────────────────
 
 
-class PolicyEnforcementPoint:
-    """Singleton PEP — wraps provider + maintains ordered event log.
-
-    Enforces:
-      1. Unknown effect → deny
-      2. read_only → allow baseline
-      3. Caller can only tighten (provider deny overrides default allow)
-      4. decision + started persisted → provider_calls tracked
-      5. Terminal not confirmed → cannot return succeeded
-      6. Re-match decision hash before provider dispatch
-    """
-
-    def __init__(self) -> None:
-        self._events: list[PolicyEvent] = []
-        # decision_hash → (decision, started_bool)
-        self._decisions: dict[str, PolicyDecision] = {}
-        self._started: dict[str, bool] = {}
-        # decision_hash → provider_call_count
-        self._provider_calls: dict[str, int] = {}
-
-    def clear(self) -> None:
-        """Test helper: reset all state."""
-        self._events.clear()
-        self._decisions.clear()
-        self._started.clear()
-        self._provider_calls.clear()
-
-    @property
-    def events(self) -> list[PolicyEvent]:
-        """Ordered audit trail."""
-        return list(self._events)
-
-    def evaluate(self, request: PolicyRequest) -> PolicyDecision:
-        """Evaluate request, persist decision, return PolicyDecision.
-
-        Merges baseline (capability descriptor) with provider SPI.
-        Most restrictive wins (caller can only tighten).
-        """
-        desc = request.capability_descriptor or _lookup_capability_descriptor(
-            request.uri, request.tool_name
-        )
-        request_with_desc = PolicyRequest(
-            uri=request.uri,
-            tool_name=request.tool_name,
-            operation=request.operation,
-            caller_id=request.caller_id,
-            arguments=request.arguments,
-            capability_descriptor=desc,
-        )
-        h = compute_request_hash(request_with_desc)
-
-        # Rule 1: unknown → deny immediately
-        if desc.effect_class == UNKNOWN:
-            decision = PolicyDecision(
-                effect="deny",
-                reason="unknown_effect_metadata",
-                provider="baseline",
-                decision_hash=h,
-                capability_descriptor=desc,
-            )
-            self._persist_decision(decision)
-            return decision
-
-        # Baseline from capability descriptor
-        if desc.effect_class == READ_ONLY:
-            baseline = "allow"
-            baseline_reason = "read_only_baseline"
-        else:
-            baseline = "allow"  # effectful: local trust by default
-            baseline_reason = "effectful_local_trust"
-
-        # Provider SPI (may tighten)
-        provider = get_pep_provider()
-        provider_effect: Effect | None = None
-        provider_reason = ""
-        provider_name = "default"
-        if provider is not None:
-            try:
-                pd = provider.evaluate(request_with_desc)
-                provider_effect = pd.effect
-                provider_reason = pd.reason
-                provider_name = type(provider).__name__
-            except Exception as e:
-                logger.warning("pep_provider_error", error=str(e))
-                provider_effect = "deny"  # fail-closed on provider error
-                provider_reason = f"provider_error: {e}"
-                provider_name = "error"
-
-        # Rule 3: most restrictive wins
-        if provider_effect == "deny":
-            final_effect = "deny"
-            final_reason = provider_reason or "provider_deny"
-        else:
-            final_effect = baseline
-            final_reason = baseline_reason
-
-        decision = PolicyDecision(
-            effect=final_effect,
-            reason=final_reason,
-            provider=provider_name,
-            decision_hash=h,
-            capability_descriptor=desc,
-        )
-        self._persist_decision(decision)
-        return decision
-
-    def _persist_decision(self, decision: PolicyDecision) -> None:
-        self._decisions[decision.decision_hash] = decision
-        self._events.append(
-            PolicyEvent(
-                timestamp=time.time(),
-                kind="evaluated",
-                decision_hash=decision.decision_hash,
-                detail=f"effect={decision.effect} reason={decision.reason}",
-            )
-        )
-
-    def record_started(self, decision_hash: str, uri: str = "") -> None:
-        """Record that the provider has started executing."""
-        self._started[decision_hash] = True
-        self._events.append(
-            PolicyEvent(
-                timestamp=time.time(),
-                kind="started",
-                decision_hash=decision_hash,
-                detail=uri,
-            )
-        )
-
-    def record_provider_call(self, decision_hash: str) -> int:
-        """Increment provider call count — only if decision + started persisted.
-
-        Returns the new call count.
-        Rule 4: if decision or started missing, returns 0 (no-op).
-        """
-        if decision_hash not in self._decisions:
-            return 0
-        if not self._started.get(decision_hash):
-            return 0
-        self._provider_calls[decision_hash] = (
-            self._provider_calls.get(decision_hash, 0) + 1
-        )
-        return self._provider_calls[decision_hash]
-
-    def get_provider_calls(self, decision_hash: str) -> int:
-        """Return the provider call count for a decision.
-
-        Returns 0 if decision + started not persisted.
-        """
-        if decision_hash not in self._decisions:
-            return 0
-        if not self._started.get(decision_hash):
-            return 0
-        return self._provider_calls.get(decision_hash, 0)
-
-    def confirm_terminal(
-        self,
-        decision_hash: str,
-        status: str,
-        uri: str = "",
-        tool_name: str = "",
-        duration_ms: int = 0,
-        error: str = "",
-    ) -> ActionReceipt:
-        """Record terminal outcome and persist to provider.
-
-        Rule 5: terminal not confirmed → caller cannot return succeeded.
-        """
-        receipt = ActionReceipt(
-            decision_hash=decision_hash,
-            status=status,
-            provider_calls=self.get_provider_calls(decision_hash),
-            uri=uri,
-            tool_name=tool_name,
-            duration_ms=duration_ms,
-            error=error,
-        )
-        # Persist to provider
-        provider = get_pep_provider()
-        if provider is not None:
-            try:
-                provider.record_outcome(receipt)
-            except Exception as e:
-                logger.warning("pep_record_outcome_error", error=str(e))
-
-        self._events.append(
-            PolicyEvent(
-                timestamp=time.time(),
-                kind=status,
-                decision_hash=decision_hash,
-                detail=f"uri={uri} calls={receipt.provider_calls}",
-            )
-        )
-        return receipt
-
-    def can_return_succeeded(self, decision_hash: str) -> bool:
-        """Rule 5: terminal not confirmed → cannot return succeeded."""
-        # Must have a terminal event (succeeded or failed)
-        for evt in reversed(self._events):
-            if evt.decision_hash == decision_hash and evt.kind in (
-                "succeeded",
-                "failed",
-            ):
-                return evt.kind == "succeeded"
-        return False
-
-    def rematch_decision(
-        self, decision_hash: str, request: PolicyRequest
-    ) -> bool:
-        """Rule 6: re-match decision context hash before provider dispatch.
-
-        Returns True if the hash matches the current request context.
-        """
-        current_hash = compute_request_hash(request)
-        return current_hash == decision_hash
-
-    def get_decision(self, decision_hash: str) -> PolicyDecision | None:
-        return self._decisions.get(decision_hash)
-
-
-# ── Module-level singleton ───────────────────────────────────────────────
-
-_pep: PolicyEnforcementPoint | None = None
-
-
-def get_pep() -> PolicyEnforcementPoint:
-    """Get the singleton PEP instance."""
-    global _pep
-    if _pep is None:
-        _pep = PolicyEnforcementPoint()
-    return _pep
-
-
-def reset_pep() -> None:
-    """Test helper: reset the singleton."""
-    global _pep
-    _pep = None
-
-
-# ── Convenience module-level API ─────────────────────────────────────────
-
-
-def evaluate_policy(
+def enforce(
     uri: str = "",
     tool_name: str = "",
     operation: str = "read",
     caller_id: str = "anonymous",
     arguments: dict[str, Any] | None = None,
-) -> PolicyDecision:
-    """Evaluate a policy request and return the decision.
+    payload: Any = None,
+) -> tuple[PolicyDecision | None, ActionReceipt | None]:
+    """Single-point PEP enforcement gate.
 
-    Convenience wrapper around ``get_pep().evaluate()``.
+    Called ONCE at the entry point (middleware). Adapters call verify_permit().
+
+    Returns:
+        (None, None) — read-only exemption, no mandate needed.
+        (PolicyDecision, ActionReceipt) — permitted by PDP.
+
+    Raises:
+        PEPDenied — on denial, provider failure, or ledger failure.
     """
-    request = PolicyRequest(
+    # Rule 3: server-registered read-only → exempt
+    if is_server_read_only(tool_name):
+        return None, None
+
+    # Rule 1: effectful/unknown with no provider → deny
+    provider = get_pep_provider()
+    if provider is None:
+        raise PEPDenied("pdp_unavailable")
+
+    # Build request and expected hash
+    request_dict: dict[str, Any] = {
+        "uri": uri,
+        "tool_name": tool_name,
+        "operation": operation,
+        "caller_id": caller_id,
+        "arguments": arguments or {},
+        "payload": payload,
+    }
+    expected_hash = compute_request_hash(
         uri=uri,
         tool_name=tool_name,
         operation=operation,
         caller_id=caller_id,
-        arguments=arguments or {},
+        arguments=arguments,
+        payload=payload,
     )
-    return get_pep().evaluate(request)
+
+    # Rule 2: PDP exception → deny
+    try:
+        decision = provider.evaluate(request_dict)
+    except Exception as e:
+        logger.warning("pep_evaluate_exception", error=str(e))
+        raise PEPDenied(f"provider_failed: {e}") from e
+
+    if decision is None:
+        raise PEPDenied("pdp_unavailable")
+
+    if decision.decision == "deny":
+        raise PEPDenied(decision.reason, decision.decision_id)
+
+    # Rule 6: verify hash match
+    if decision.request_hash != expected_hash:
+        raise PEPDenied("request_hash_mismatch", decision.decision_id)
+
+    # Persist 'started' receipt before provider call
+    try:
+        receipt = provider.start_receipt(decision)
+    except Exception as e:
+        logger.warning("pep_start_receipt_exception", error=str(e))
+        raise PEPDenied(f"ledger_unavailable: {e}", decision.decision_id) from e
+
+    if receipt is None:
+        raise PEPDenied("ledger_unavailable", decision.decision_id)
+
+    return decision, receipt
 
 
-def is_read_only(uri: str = "", tool_name: str = "") -> bool:
-    """Quick check: is this capability read-only?"""
-    desc = _lookup_capability_descriptor(uri, tool_name)
-    return desc.effect_class == READ_ONLY
+def complete(
+    decision: PolicyDecision | None,
+    receipt: ActionReceipt | None,
+    succeeded: bool,
+    result: dict[str, Any] | None = None,
+    error: str = "",
+) -> None:
+    """Complete the PEP lifecycle by confirming terminal state.
+
+    Rule 5: if terminal write-back fails, raises PEPDenied(receipt_unconfirmed).
+    No-op for read-only exemption (decision=None).
+    """
+    if decision is None or receipt is None:
+        return  # read-only exemption
+
+    provider = get_pep_provider()
+    if provider is None:
+        # Provider vanished mid-flight — can't confirm, can't succeed
+        if succeeded:
+            raise PEPDenied("pdp_unavailable", decision.decision_id)
+        return
+
+    status = "succeeded" if succeeded else "failed"
+    reason: str | None = None
+    if not succeeded:
+        reason = "provider_failed" if error else "provider_failed"
+
+    try:
+        ok = provider.confirm_receipt(receipt, status, result, reason)
+    except Exception as e:
+        logger.warning("pep_confirm_receipt_exception", error=str(e))
+        ok = False
+
+    # Rule 5: terminal write-back failure blocks succeeded
+    if not ok and succeeded:
+        raise PEPDenied("receipt_unconfirmed", decision.decision_id)
+
+
+def verify_permit(tool_name: str = "") -> None:
+    """Verify permit at downstream adapter.
+
+    Called by ProxyManager / MCP-stdio bridge. Raises PEPDenied if no
+    permit is set and the tool is not server-registered read-only.
+
+    The permit hash is propagated via ContextVar from the entry point.
+    """
+    permit = get_current_permit()
+    if permit is not None:
+        return  # valid permit from entry point
+
+    # Read-only exemption
+    if is_server_read_only(tool_name):
+        return
+
+    raise PEPDenied("no_permit_at_adapter")
