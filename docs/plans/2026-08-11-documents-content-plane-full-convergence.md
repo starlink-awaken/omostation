@@ -305,11 +305,13 @@ L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
 
 **Steps:**
 
-- [ ] 为 12 个公共 KEMS 脚本和 10 个学习脚本建立 `retire | map-existing | extend` 表。
-- [ ] 对要修改的 Kairon symbols 逐个运行 GitNexus `impact`；HIGH/CRITICAL 先停并审查。
-- [ ] 先写 parity fixtures/RED tests，再实现最小 adapter。
-- [ ] 运行 KEMS focused tests、KOS full tests、ruff/pyright（按项目现有 gate）。
-- [ ] 证明 raw private content 不进入 Kairon state，输出只持 citation/ref/hash。
+- [x] 为 12 个公共 KEMS 脚本和 10 个学习脚本建立 `retire | map-existing | extend` 表。
+- [x] 对要修改的 Kairon symbols 逐个运行 GitNexus `impact`；结果均为 LOW，无受影响执行流程。
+- [x] 先写 parity fixtures/RED tests，再实现最小 adapter。
+- [x] 运行 KEMS focused tests、KOS affected tests、scoped Ruff/mypy 与 GitHub CI；全仓既有门禁债单独记录。
+- [x] 证明 raw private content 不进入 Kairon state，输出只持 ref/hash/字段名/计数。
+
+**Accepted:** Kairon PR #65，squash merge `0a31da635826019927a99f0b67b0d89c5e342785`；22 个入口分类为 retire 7、map-existing 8、extend 7。
 
 **Commit:** `feat(kos): absorb governed Documents KEMS content checks`
 
