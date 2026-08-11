@@ -1664,6 +1664,7 @@ bets:
   - bin/plan/bet-ledger.py
   - tests/test_bet_ledger_d0.py
   - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/mof-capabilities.yaml
   - .omo/_knowledge/retros/BET-Y1Q2-T1-05.md
   pasw_required: true
   depends_on:
