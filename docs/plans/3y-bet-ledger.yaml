@@ -1676,6 +1676,126 @@ bets:
     DelegationMandate M2+编译产物+纯 Python grant/revoke/admit+回放/负向测试；
     绝不改 Ledger DDL/trigger，不借 Sovereignty.* 绕门，不提前实现 W2-03/W2-04
   retro: required
+- id: BET-Y1Q2-T1-06
+  track: T1-TRUTH
+  window: Y1Q2
+  title: Blueprint W2-03 single-user PDP/PEP Capability Gateway enforcement
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: >-
+    在可信本地单用户部署上，将 W2-02 纯授权准入转为对受支持的公共 Agora Capability
+    Gateway 副作用路由的真实 fail-closed 强制执行。ECOS 提供生成的 PolicyDecision/ActionReceipt
+    M2；OMO 拥有 PDP 及 LedgerBroker 决策/回执因果；Agora 拥有紧邻 provider 的共享 PEP。
+    通过窄注入端口/运行时适配器避免 Agora→OMO 硬 Python 依赖环。
+  non_goals:
+  - W2-04 投影/收件箱
+  - 真实邮件/日历/任务/文件/业务副作用
+  - 审批 UI
+  - 累计预算结算
+  - Ledger DDL/trigger
+  - 新项目/入口/治理维度
+  - M3/Constitution
+  - 恶意任意同进程 import
+  - 凭证窃取
+  - 密码学签名
+  - 多主机或敌意多进程强制执行
+  - 未经 Agora 路由的后台/重试系统
+  - legacy agora_execute 穷尽加固（除非它调用了已注册的副作用路由）
+  - 分布式并发/精确一次
+  - provider 崩溃后自动对账
+  - schema-only/decorator-only/OMO-only/demo-only 声明
+  done_when:
+  - >-
+      ECOS M2 PolicyDecision+ActionReceipt 确定性编译到已有生成产物/hash manifest；OMO
+      和 Agora 校验相同的生成 Pydantic 契约，无复制的 dict/dataclass 镜像
+  - >-
+      服务端能力描述符决定 effectful/read-only/risk；caller 只能收紧；未知 effect metadata
+      拒绝；已注册 discovery/status 读路径无需 effect receipt 仍可用
+  - >-
+      共享 PEP 覆盖受支持的公共 /v1/tools/call/FastMCP、BOS mutate_resource 和 resolve_bos_uri，
+      以及从这些路由到达的 ProxyManager/MCP-stdio 终端适配器；无已验证 decision context
+      的对这些已注册路径的直接调用拒绝。不要求任意 Python import 隔离或不相关的 legacy/background
+      路由
+  - >-
+      严格的进程内 decision context 绑定 decision_id/action_id、principal/executor/episode、
+      mandate id+version、capability、server risk、budget/unit、disclosure、canonical request hash、
+      trace、issued/expires。PEP 在 provider 前立即匹配；mismatch/expired/revoked 拒绝且
+      provider.calls=0。无需密码学
+  - >-
+      排序：validate+PDP → 持久化 PolicyDecision → 持久化 ActionReceipt(started) → fake
+      provider 至多一次 → 持久化终态 succeeded|failed。PDP 不可用/decision append/start
+      append 失败 ⇒ 0 calls。provider 异常 ⇒ failed receipt。终态 append 失败 ⇒ 永不返回
+      succeeded；返回 receipt_unconfirmed 且 started 可见。本波次无自动崩溃对账
+  - >-
+      简单 ledger 支撑的 action_id/幂等防止同进程重复重试：相同 action+相同 hash 返回先前状态不再调用；
+      不同 hash 拒绝。分布式/并发精确一次推迟
+  - >-
+      稳定 reason 至少包含 policy_denied、pdp_unavailable、ledger_unavailable、provider_failed、
+      receipt_unconfirmed；无宽泛 exception 映射到 allow/succeeded
+  - >-
+      真实集成使用真实 LedgerBroker + 实际受支持的 Agora 公共路由 + 受控 fake provider；断言
+      结果、provider 调用计数、有序 decision/start/terminal replay。覆盖 allow、no mandate、
+      request mismatch、PDP failure、decision/start append failure、provider failure、terminal
+      failure、同进程重复重试、只读非回归。无真实外部副作用
+  - >-
+      定向 ECOS/OMO/Agora 测试套件加 W2-01/W2-02 回归通过；ledger hash chain/replay 全绿
+  verify:
+  - cmd: cd projects/ecos && uv run --with pytest python -m pytest tests/test_mof_w2_policy_enforcement_contract.py
+      tests/test_mof_compiler.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/ecos && uv run python src/ecos/ssot/tools/mof-compile.py compile
+      --out-dir src/ecos/ssot/mof/generated/control && uv run python src/ecos/ssot/tools/mof-compile.py
+      check --out-dir src/ecos/ssot/mof/generated/control
+    expect: exit 0
+  - cmd: cd projects/omo && uv run --with pytest python -m pytest tests/test_sovereignty_policy_enforcement.py
+      tests/integration/test_w2_03_capability_enforcement.py tests/test_sovereignty_mandate_admission.py
+      tests/test_sovereignty_mandate_replay.py -q
+    expect: exit 0
+  - cmd: cd projects/agora && uv run --with pytest python -m pytest tests/unit/test_policy_enforcement.py
+      tests/integration/test_policy_enforcement_routes.py -q
+    expect: exit 0
+  - cmd: cd projects/omo && uv lock --check && cd projects/agora && uv lock --check
+      && git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - projects/ecos/src/ecos/ssot/mof/m2/policy_decision.yaml
+  - projects/ecos/src/ecos/ssot/mof/m2/action_receipt.yaml
+  - projects/ecos/src/ecos/ssot/mof/generated/control/**
+  - projects/ecos/tests/test_mof_w2_policy_enforcement_contract.py
+  - projects/omo/src/omo/sovereignty/__init__.py
+  - projects/omo/src/omo/sovereignty/enforcement.py
+  - projects/omo/src/omo/omo_ledger.py
+  - projects/omo/tests/test_sovereignty_policy_enforcement.py
+  - projects/omo/tests/integration/test_w2_03_capability_enforcement.py
+  - projects/agora/src/agora/mcp/policy_enforcement.py
+  - projects/agora/src/agora/middleware/middleware.py
+  - projects/agora/src/agora/server/tools_bos/registration.py
+  - projects/agora/src/agora/server/tools_bos/routing.py
+  - projects/agora/src/agora/mcp/resolver/api.py
+  - projects/agora/src/agora/mcp_proxy/manager.py
+  - projects/agora/src/agora/mcp/mcp_stdio_bridge.py
+  - projects/agora/tests/unit/test_policy_enforcement.py
+  - projects/agora/tests/integration/test_policy_enforcement_routes.py
+  - projects/omo/pyproject.toml
+  - projects/omo/uv.lock
+  - projects/agora/pyproject.toml
+  - projects/agora/uv.lock
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-06.md
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q2-T1-05
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: >-
+    超 3 天或核心受支持的公共路由需要真实业务副作用、DDL、新项目、硬依赖环、或无法
+    物理拦截时，停止并保持 BET 未完成；绝不声称 schema/decorator-only 完成。推迟的
+    极端边界是诚实债务，不是阻断器
+  retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
   window: Y1Q2
