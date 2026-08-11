@@ -25,7 +25,7 @@ import json
 import re
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 try:
     import yaml
@@ -90,6 +90,96 @@ def bet_by_id(data: dict, bet_id: str) -> dict:
         if b["id"] == bet_id:
             return b
     sys.exit(f"未找到 bet: {bet_id}")
+
+
+def _d0_surface_tracked(surface: str, *, ws: Path | None = None) -> tuple[bool, str]:
+    """Check one exact write surface against the root index or a pinned gitlink.
+
+    A superproject tracks only the mode-160000 gitlink, not paths inside the
+    submodule.  For an internal path, the staged gitlink OID is therefore the
+    persistence boundary: the exact child path must exist in that commit.
+    """
+    root = ws or WS
+    normalized = PurePosixPath(surface)
+    if normalized.is_absolute() or ".." in normalized.parts:
+        return False, "invalid path"
+
+    root_match = subprocess.run(
+        ["git", "ls-files", "--error-unmatch", "--", surface],
+        cwd=root,
+        capture_output=True,
+        check=False,
+    )
+    if root_match.returncode == 0:
+        return True, "root index"
+
+    staged = subprocess.run(
+        ["git", "ls-files", "--stage"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if staged.returncode != 0:
+        return False, "root index unavailable"
+
+    gitlinks: list[tuple[str, str]] = []
+    for line in staged.stdout.splitlines():
+        try:
+            metadata, tracked_path = line.split("\t", 1)
+            mode, oid, stage = metadata.split()
+        except ValueError:
+            continue
+        if mode == "160000" and stage == "0":
+            gitlinks.append((tracked_path, oid))
+
+    matches = [item for item in gitlinks if surface.startswith(f"{item[0]}/")]
+    if not matches:
+        return False, "not tracked"
+    gitlink_path, oid = max(matches, key=lambda item: len(item[0]))
+    child_path = surface[len(gitlink_path) + 1 :]
+    child_repo = root / gitlink_path
+
+    commit = subprocess.run(
+        ["git", "-C", str(child_repo), "cat-file", "-e", f"{oid}^{{commit}}"],
+        capture_output=True,
+        check=False,
+    )
+    if commit.returncode != 0:
+        return False, f"gitlink object unavailable: {gitlink_path}@{oid[:12]}"
+
+    tree = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(child_repo),
+            "ls-tree",
+            "-r",
+            "--name-only",
+            oid,
+            "--",
+            child_path,
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if tree.returncode != 0 or child_path not in tree.stdout.splitlines():
+        return False, f"absent from pinned gitlink: {gitlink_path}@{oid[:12]}"
+
+    head = subprocess.run(
+        ["git", "ls-tree", "HEAD", "--", gitlink_path],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    pin_kind = (
+        "HEAD gitlink"
+        if f"commit {oid}\t{gitlink_path}" in head.stdout
+        else "staged gitlink"
+    )
+    return True, f"{pin_kind}: {gitlink_path}@{oid[:12]}"
 
 
 # ── 表面积实测 ────────────────────────────────────────────────
@@ -329,13 +419,11 @@ def cmd_verify(data: dict, args) -> int:
         if "*" in p:
             print(f"  [跳过] {p} (通配, 需人工核对)")
             continue
-        r = subprocess.run(
-            ["git", "ls-files", "--error-unmatch", p], cwd=WS, capture_output=True
-        )
-        if r.returncode == 0:
-            print(f"  [OK]   {p}")
+        tracked, detail = _d0_surface_tracked(p)
+        if tracked:
+            print(f"  [OK]   {p} ({detail})")
         else:
-            print(f"  [未入库] {p}")
+            print(f"  [未入库] {p} ({detail})")
             rc = 1
     print("\nD2 (表面积记账): 见 `bet-ledger.py surface`")
     if not args.execute:
@@ -515,12 +603,9 @@ def cmd_complete(data: dict, args) -> int:
         for p in b.get("write_surfaces", []):
             if "*" in p:
                 continue
-            r = subprocess.run(
-                ["git", "ls-files", "--error-unmatch", p],
-                cwd=WS, capture_output=True, check=False,
-            )
-            if r.returncode != 0:
-                print(f"[complete] ❌ 未入库: {p} (D0 铁律)")
+            tracked, detail = _d0_surface_tracked(p)
+            if not tracked:
+                print(f"[complete] ❌ 未入库: {p} ({detail}; D0 铁律)")
                 rc = 1
         if rc:
             print("[complete] 请先完成 D0 (write_surfaces 全部入库) 或 --force")
