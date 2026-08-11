@@ -10,6 +10,7 @@ import pytest
 from typer.testing import CliRunner
 
 import omlxc.cli as cli_module
+from omlxc.adapters import TailscaleAdapter
 from omlxc.adapters.process import ProcessOutput, ProcessOutputDecodeError, decode_process_output
 from omlxc.cli import app
 from omlxc.config import AppConfig, BackendConfig, DaemonConfig, NodeConfig, StorageConfig
@@ -37,7 +38,16 @@ async def test_launchd_controller_uses_exact_user_domain_argv_and_preserves_unin
     paths.executable.parent.mkdir(parents=True)
     paths.executable.write_text("binary", encoding="utf-8")
     paths.executable.chmod(0o700)
-    runner = RecordingRunner()
+    runner = RecordingRunner(
+        [
+            ProcessOutput(0, "", ""),
+            ProcessOutput(0, "", ""),
+            ProcessOutput(0, "", ""),
+            ProcessOutput(0, "", ""),
+            ProcessOutput(0, "", ""),
+            ProcessOutput(3, "", "Boot-out failed: 3: No such process"),
+        ]
+    )
     controller = LaunchdController(paths, uid=501, process_runner=runner)
 
     installed = await controller.install()
@@ -77,6 +87,22 @@ async def test_launchd_failure_is_typed_and_sanitized(tmp_path: Path) -> None:
     assert captured.value.code == "E200"
     assert "secret-status" not in str(captured.value)
     assert "private-detail" not in str(captured.value)
+
+
+@pytest.mark.asyncio
+async def test_uninstall_does_not_swallow_unrelated_launchctl_exit_three(tmp_path: Path) -> None:
+    paths = LaunchdPaths.for_home(tmp_path)
+    paths.plist_path.parent.mkdir(parents=True)
+    paths.plist_path.write_text("private plist", encoding="utf-8")
+    runner = RecordingRunner([ProcessOutput(3, "", "Boot-out failed: permission denied")])
+    controller = LaunchdController(paths, uid=501, process_runner=runner)
+
+    with pytest.raises(LaunchdFailure) as captured:
+        await controller.uninstall()
+
+    assert captured.value.code == "E500"
+    assert paths.plist_path.read_text(encoding="utf-8") == "private plist"
+    assert not tuple(paths.plist_path.parent.glob("*.uninstalled-*"))
 
 
 def test_cli_daemon_apply_requires_r2_gate_before_lifecycle_call(
@@ -323,6 +349,10 @@ async def test_production_composition_builds_tailscale_and_authorizes_before_rem
             events.append(f"authorize:{node_id}:{base_url}")
             return object()
 
+        def authorize_ssh(self, node_id: str, target: str) -> object:
+            events.append(f"authorize-ssh:{node_id}:{target}")
+            return type("Authorized", (), {"target": target})()
+
     class FakeBackend:
         async def discover(self) -> CapabilitySnapshot:
             events.append("discover")
@@ -373,6 +403,8 @@ async def test_production_composition_builds_tailscale_and_authorizes_before_rem
                     "node_id": "remote",
                     "kind": "lm_studio",
                     "base_url": "http://remote.example.ts.net:1234",
+                    "control_endpoint": "operator@remote.example.ts.net",
+                    "known_hosts_file": tmp_path / "known_hosts",
                 }
             ],
         }
@@ -389,5 +421,86 @@ async def test_production_composition_builds_tailscale_and_authorizes_before_rem
         "constructed",
         "snapshot",
         "authorize:remote:http://remote.example.ts.net:1234",
-        "discover",
+        "authorize-ssh:remote:operator@remote.example.ts.net",
+    ]
+    assert events[4] == "discover"
+
+
+@pytest.mark.asyncio
+async def test_remote_lm_discovery_denies_mismatched_ssh_target_before_adapter_call(
+    tmp_path: Path,
+) -> None:
+    import omlxc.daemon.composition as composition_module
+
+    events: list[str] = []
+
+    class DenyingTailscale:
+        async def snapshot(self) -> object:
+            events.append("snapshot")
+            return object()
+
+        def authorize_http(self, node_id: str, base_url: str) -> object:
+            events.append(f"http:{node_id}:{base_url}")
+            return object()
+
+        def authorize_ssh(self, node_id: str, target: str) -> object:
+            events.append(f"ssh:{node_id}:{target}")
+            raise PermissionError("mismatched SSH identity")
+
+    class NeverDiscover:
+        async def discover(self) -> object:
+            events.append("discover")
+            raise AssertionError("adapter discovery would execute SSH control")
+
+        async def list_models(self) -> tuple[object, ...]:
+            return ()
+
+        async def aclose(self) -> None:
+            return None
+
+    config = AppConfig.model_validate(
+        {
+            "schema_version": 1,
+            "daemon": {"socket_path": tmp_path / "daemon.sock", "probe_interval_seconds": 60.0},
+            "storage": {"database_path": tmp_path / "state.db"},
+            "nodes": [
+                {
+                    "id": "node-a",
+                    "display_name": "Node A",
+                    "platform": "windows",
+                    "tailscale": {
+                        "peer_id": "peer_identifier_123456",
+                        "public_key": "nodekey:abcdefghijklmnopqrstuvwxyz1234",
+                        "magic_dns_name": "node-a.example.ts.net",
+                        "allowed_ips": ["100.64.0.10"],
+                        "allowed_http_ports": [1234],
+                        "allowed_ssh_users": ["operator"],
+                    },
+                }
+            ],
+            "backends": [
+                {
+                    "id": "lm",
+                    "node_id": "node-a",
+                    "kind": "lm_studio",
+                    "base_url": "http://node-a.example.ts.net:1234",
+                    "control_endpoint": "intruder@node-b.example.ts.net",
+                    "known_hosts_file": tmp_path / "known_hosts",
+                }
+            ],
+        }
+    )
+    composition = composition_module.build_production_daemon(
+        config,
+        adapters={"lm": cast(BackendAdapter, NeverDiscover())},
+        tailscale=cast(TailscaleAdapter, DenyingTailscale()),
+    )
+
+    await composition.runtime.start()
+    await composition.runtime.close()
+
+    assert events == [
+        "snapshot",
+        "http:node-a:http://node-a.example.ts.net:1234",
+        "ssh:node-a:intruder@node-b.example.ts.net",
     ]

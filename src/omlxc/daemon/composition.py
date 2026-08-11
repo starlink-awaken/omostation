@@ -204,6 +204,15 @@ class CatalogProbe:
             return False, False
         await authorization
         self._tailscale.authorize_http(backend.node_id, backend.base_url)
+        if (
+            backend.kind in {BackendKind.LM_STUDIO, BackendKind.LM_LINK}
+            and backend.control_endpoint is not None
+        ):
+            authorized_ssh = self._tailscale.authorize_ssh(
+                backend.node_id, backend.control_endpoint
+            )
+            if authorized_ssh.target != backend.control_endpoint:
+                raise PermissionError("SSH control endpoint is not canonical")
         return True, True
 
     def _apply(

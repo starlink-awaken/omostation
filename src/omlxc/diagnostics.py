@@ -14,6 +14,7 @@ from omlxc.daemon.composition import (
     build_configured_tailscale,
     is_loopback_url,
 )
+from omlxc.domain import BackendKind
 from omlxc.service import LaunchdPaths
 
 
@@ -50,6 +51,13 @@ async def run_direct_doctor(config: AppConfig) -> dict[str, Any]:
                     if node.tailscale is None or tailscale is None:
                         raise PermissionError
                     tailscale.authorize_http(node.id, backend.base_url)
+                    if (
+                        backend.kind in {BackendKind.LM_STUDIO, BackendKind.LM_LINK}
+                        and backend.control_endpoint is not None
+                    ):
+                        authorized_ssh = tailscale.authorize_ssh(node.id, backend.control_endpoint)
+                        if authorized_ssh.target != backend.control_endpoint:
+                            raise PermissionError
                 await adapter.discover()
                 checks.append({"name": f"backend:{backend.id}", "ok": True})
             except asyncio.CancelledError:

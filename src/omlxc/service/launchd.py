@@ -5,8 +5,10 @@ from __future__ import annotations
 import os
 import plistlib
 import tempfile
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from uuid import uuid4
 
 from omlxc.adapters.process import (
@@ -21,6 +23,13 @@ LAUNCHD_LABEL = "com.omlxc.daemon"
 LAUNCHCTL = "/bin/launchctl"
 LAUNCHCTL_TIMEOUT_SECONDS = 10.0
 LAUNCHCTL_OUTPUT_LIMIT = 256 * 1024
+LAUNCHCTL_PROCESS_ENV: Mapping[str, str] = MappingProxyType(
+    {
+        "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+        "LANG": "C",
+        "LC_ALL": "C",
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,7 +102,10 @@ class LaunchdController:
         self._uid = os.getuid() if uid is None else uid
         if self._uid < 0:
             raise ValueError("launchd uid must be non-negative")
-        self._runner = process_runner or BoundedProcessRunner(LAUNCHCTL_OUTPUT_LIMIT)
+        self._runner = process_runner or BoundedProcessRunner(
+            LAUNCHCTL_OUTPUT_LIMIT,
+            env=LAUNCHCTL_PROCESS_ENV,
+        )
         self._timeout = timeout_seconds
 
     @property
@@ -118,7 +130,10 @@ class LaunchdController:
         return LaunchdInstallResult(written.path, written.snapshot_path)
 
     async def uninstall(self) -> LaunchdUninstallResult:
-        await self._run((LAUNCHCTL, "bootout", self.service_target))
+        await self._run(
+            (LAUNCHCTL, "bootout", self.service_target),
+            allow_not_loaded=True,
+        )
         backup = _backup_uninstalled_plist(self.paths.plist_path)
         return LaunchdUninstallResult(
             backup_path=backup,
@@ -137,7 +152,13 @@ class LaunchdController:
     async def restart(self) -> ProcessOutput:
         return await self._run((LAUNCHCTL, "kickstart", "-k", self.service_target))
 
-    async def _run(self, argv: tuple[str, ...], *, unavailable: bool = False) -> ProcessOutput:
+    async def _run(
+        self,
+        argv: tuple[str, ...],
+        *,
+        unavailable: bool = False,
+        allow_not_loaded: bool = False,
+    ) -> ProcessOutput:
         try:
             output = await self._runner(argv, self._timeout)
         except TimeoutError:
@@ -146,7 +167,7 @@ class LaunchdController:
             raise LaunchdFailure("E200", "launchctl is unavailable") from None
         except ProcessOutputLimitError:
             raise LaunchdFailure("E900", "launchctl output exceeded its safety limit") from None
-        if output.returncode != 0:
+        if output.returncode != 0 and not (allow_not_loaded and _is_service_not_loaded(output)):
             code = "E200" if unavailable else "E500"
             raise LaunchdFailure(code, "launchd service is unavailable")
         return output
@@ -226,3 +247,10 @@ def _backup_uninstalled_plist(target: Path) -> Path | None:
     os.replace(target, backup)
     os.chmod(backup, 0o600, follow_symlinks=False)
     return backup
+
+
+def _is_service_not_loaded(output: ProcessOutput) -> bool:
+    if output.returncode != 3:
+        return False
+    detail = f"{output.stdout}\n{output.stderr}".lower()
+    return "no such process" in detail
