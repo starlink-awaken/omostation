@@ -165,6 +165,11 @@ class CircuitBreaker:
             if self._failures >= self._config.failure_threshold:
                 self._open()
 
+    async def release(self, permit: CircuitPermit) -> None:
+        """Settle an unused permit without changing circuit outcome state."""
+        async with self._lock:
+            self._consume(permit)
+
     def _consume(self, permit: CircuitPermit) -> CircuitPermit:
         accepted = self._permits.pop(permit.token, None)
         if accepted is None or accepted != permit:

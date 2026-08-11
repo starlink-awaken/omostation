@@ -30,3 +30,7 @@
   transport circuits and adaptive probe timing; and policy-driven placement
   reconciliation with memory admission, keyed single-flight and explicit loop
   lifecycle management.
+- Hardened the Task 5 runtime with cancellation-safe metric draining and writer
+  shutdown, atomic Job cancellation, verified v1 schema invariants, typed route
+  audit/config revision repositories, conflict-safe durable events, bounded
+  placement-operation phases, and shared explicit/reconcile coordination.

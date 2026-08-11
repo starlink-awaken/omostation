@@ -2,15 +2,10 @@ from __future__ import annotations
 
 import math
 from datetime import UTC, datetime
-from importlib.util import find_spec
 from pathlib import Path
 
 import anyio
 import pytest
-
-
-def test_runtime_events_module_is_available() -> None:
-    assert find_spec("omlxc.events") is not None
 
 
 def test_secret_like_text_is_recursively_redacted_even_under_innocent_key() -> None:

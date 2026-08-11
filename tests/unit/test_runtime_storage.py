@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import sqlite3
 from datetime import UTC, datetime, timedelta
-from importlib.util import find_spec
 from pathlib import Path
 from typing import Any
 
@@ -14,10 +13,6 @@ def _storage() -> Any:
     import omlxc.storage as storage
 
     return storage
-
-
-def test_runtime_storage_module_is_available() -> None:
-    assert find_spec("omlxc.storage") is not None
 
 
 @pytest.mark.asyncio

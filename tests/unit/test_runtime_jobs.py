@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
@@ -22,10 +21,6 @@ def _job(*, job_id: str = "job-1", state: JobState = JobState.PENDING) -> Job:
         updated_at=now,
         rollback_reference="rollback:placement-a",
     )
-
-
-def test_runtime_job_repository_is_available() -> None:
-    assert find_spec("omlxc.storage.jobs") is not None
 
 
 @pytest.mark.asyncio

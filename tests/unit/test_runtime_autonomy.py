@@ -1,23 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from importlib.util import find_spec
 from typing import Any
 
 import anyio
 import pytest
 
 from omlxc.domain.protocols import LifecycleResult, OperationStatus
-
-
-def test_runtime_autonomy_module_is_available() -> None:
-    assert find_spec("omlxc.autonomy") is not None
-
-
-def test_reconcile_loop_lifecycle_api_is_available() -> None:
-    from omlxc import autonomy
-
-    assert autonomy.ReconcileLoop is not None
 
 
 def test_memory_admission_fails_closed_for_unknown_stale_and_invalid_values() -> None:

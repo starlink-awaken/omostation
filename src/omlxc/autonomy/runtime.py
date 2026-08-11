@@ -123,6 +123,88 @@ class AutonomyResult:
     rollback_reference: str | None = None
 
 
+class OperationPhase(StrEnum):
+    DISCOVER = "discover"
+    AUTHORIZATION = "authorization"
+    LOAD = "load"
+    UNLOAD = "unload"
+    POSTVERIFY = "postverify"
+
+
+class OperationPhaseTimeout(TimeoutError):
+    def __init__(self, resource_id: str, phase: OperationPhase) -> None:
+        self.resource_id = resource_id
+        self.phase = phase
+        super().__init__(f"placement operation phase timed out: {phase.value}")
+
+
+@dataclass(frozen=True, slots=True)
+class OperationTimeouts:
+    discover_seconds: float
+    authorization_seconds: float
+    load_seconds: float
+    unload_seconds: float
+    postverify_seconds: float
+
+    def __post_init__(self) -> None:
+        if any(
+            not math.isfinite(value) or value <= 0
+            for value in (
+                self.discover_seconds,
+                self.authorization_seconds,
+                self.load_seconds,
+                self.unload_seconds,
+                self.postverify_seconds,
+            )
+        ):
+            raise ValueError("placement operation timeouts must be finite and positive")
+
+    @classmethod
+    def uniform(cls, seconds: float) -> OperationTimeouts:
+        return cls(seconds, seconds, seconds, seconds, seconds)
+
+    def for_phase(self, phase: OperationPhase) -> float:
+        return {
+            OperationPhase.DISCOVER: self.discover_seconds,
+            OperationPhase.AUTHORIZATION: self.authorization_seconds,
+            OperationPhase.LOAD: self.load_seconds,
+            OperationPhase.UNLOAD: self.unload_seconds,
+            OperationPhase.POSTVERIFY: self.postverify_seconds,
+        }[phase]
+
+
+class TimeoutRunner(Protocol):
+    async def run[T](
+        self,
+        resource_id: str,
+        phase: OperationPhase,
+        timeout_seconds: float,
+        operation: Callable[[], Awaitable[T]],
+    ) -> T: ...
+
+
+class AnyioTimeoutRunner:
+    async def run[T](
+        self,
+        resource_id: str,
+        phase: OperationPhase,
+        timeout_seconds: float,
+        operation: Callable[[], Awaitable[T]],
+    ) -> T:
+        try:
+            with anyio.fail_after(timeout_seconds):
+                return await operation()
+        except TimeoutError:
+            raise OperationPhaseTimeout(resource_id, phase) from None
+
+
+@dataclass(frozen=True, slots=True)
+class PlacementOperationOutcome:
+    actual_loaded: bool
+    authorized: bool
+    result: LifecycleResult | None
+
+
 @dataclass(slots=True)
 class _KeyEntry:
     lock: anyio.Lock
@@ -135,19 +217,23 @@ class _NodeEntry:
     users: int = 0
 
 
-class ReconciliationEngine:
+class PlacementOperationCoordinator:
+    """Shared placement lock, capacity, timeout, and adapter-operation boundary."""
+
     def __init__(
         self,
         operator: PlacementOperator,
         *,
-        memory_policy: MemoryAdmissionPolicy,
+        timeouts: OperationTimeouts,
         global_limit: int,
         per_node_limit: int,
+        timeout_runner: TimeoutRunner | None = None,
     ) -> None:
         if global_limit <= 0 or per_node_limit <= 0:
-            raise ValueError("reconciliation concurrency limits must be positive")
+            raise ValueError("placement operation concurrency limits must be positive")
         self._operator = operator
-        self._memory_policy = memory_policy
+        self._timeouts = timeouts
+        self._timeout_runner = timeout_runner or AnyioTimeoutRunner()
         self._global = anyio.CapacityLimiter(global_limit)
         self._per_node_limit = per_node_limit
         self._registry_lock = anyio.Lock()
@@ -158,121 +244,74 @@ class ReconciliationEngine:
     def active_key_count(self) -> int:
         return len(self._keys)
 
-    async def reconcile(
+    async def ensure_loaded(self, target: PlacementTarget) -> PlacementOperationOutcome:
+        async with self._resources(target):
+            loaded = await self._phase(
+                target, OperationPhase.DISCOVER, lambda: self._operator.is_loaded(target)
+            )
+            if loaded:
+                return PlacementOperationOutcome(True, True, None)
+            authorized = await self._phase(
+                target,
+                OperationPhase.AUTHORIZATION,
+                lambda: self._operator.fresh_for_write(target),
+            )
+            if not authorized:
+                return PlacementOperationOutcome(False, False, None)
+            result = await self._phase(
+                target,
+                OperationPhase.LOAD,
+                lambda: self._operator.load(target, idempotency_key=f"placement:load:{target.id}"),
+            )
+            actual = await self._phase(
+                target, OperationPhase.POSTVERIFY, lambda: self._operator.is_loaded(target)
+            )
+            return PlacementOperationOutcome(actual, True, result)
+
+    async def ensure_unloaded(self, target: PlacementTarget) -> PlacementOperationOutcome:
+        async with self._resources(target):
+            loaded = await self._phase(
+                target, OperationPhase.DISCOVER, lambda: self._operator.is_loaded(target)
+            )
+            if not loaded:
+                return PlacementOperationOutcome(False, True, None)
+            authorized = await self._phase(
+                target,
+                OperationPhase.AUTHORIZATION,
+                lambda: self._operator.fresh_for_write(target),
+            )
+            if not authorized:
+                return PlacementOperationOutcome(True, False, None)
+            result = await self._phase(
+                target,
+                OperationPhase.UNLOAD,
+                lambda: self._operator.unload(
+                    target, idempotency_key=f"placement:unload:{target.id}"
+                ),
+            )
+            actual = await self._phase(
+                target, OperationPhase.POSTVERIFY, lambda: self._operator.is_loaded(target)
+            )
+            return PlacementOperationOutcome(actual, True, result)
+
+    async def _phase[T](
         self,
         target: PlacementTarget,
-        memory: MemorySnapshot | None,
-        *,
-        now_monotonic: float,
-    ) -> AutonomyResult:
-        if not math.isfinite(now_monotonic):
-            return AutonomyResult(target.id, AutonomyStatus.DENIED, "none", "clock_invalid")
+        phase: OperationPhase,
+        operation: Callable[[], Awaitable[T]],
+    ) -> T:
+        return await self._timeout_runner.run(
+            target.id, phase, self._timeouts.for_phase(phase), operation
+        )
+
+    @asynccontextmanager
+    async def _resources(self, target: PlacementTarget) -> AsyncGenerator[None]:
         async with (
             self._placement_lock(target.id),
             self._global,
             self._node_limiter(target.node_id),
         ):
-            return await self._reconcile_locked(target, memory, now_monotonic)
-
-    async def reconcile_many(
-        self,
-        targets: tuple[PlacementTarget, ...],
-        memory: MemorySnapshot | None,
-        *,
-        now_monotonic: float,
-    ) -> dict[str, AutonomyResult]:
-        results: dict[str, AutonomyResult] = {}
-
-        async def run(target: PlacementTarget) -> None:
-            try:
-                results[target.id] = await self.reconcile(
-                    target, memory, now_monotonic=now_monotonic
-                )
-            except Exception as exc:
-                results[target.id] = AutonomyResult(
-                    target.id,
-                    AutonomyStatus.FAILED,
-                    "reconcile",
-                    type(exc).__name__,
-                    target.rollback_reference,
-                )
-
-        async with anyio.create_task_group() as group:
-            for target in targets:
-                group.start_soon(run, target)
-        return {target.id: results[target.id] for target in targets}
-
-    async def _reconcile_locked(
-        self,
-        target: PlacementTarget,
-        memory: MemorySnapshot | None,
-        now_monotonic: float,
-    ) -> AutonomyResult:
-        loaded = await self._operator.is_loaded(target)
-        if target.resident and loaded:
-            return AutonomyResult(target.id, AutonomyStatus.NOOP, "none", "already_resident")
-        if target.resident:
-            admission = self._memory_policy.admit(
-                memory, required_gb=target.memory_gb, now_monotonic=now_monotonic
-            )
-            if not admission.allowed:
-                return AutonomyResult(target.id, AutonomyStatus.DENIED, "load", admission.reason)
-            if not await self._operator.fresh_for_write(target):
-                return AutonomyResult(
-                    target.id, AutonomyStatus.DENIED, "load", "health_or_authorization_stale"
-                )
-            result = await self._operator.load(
-                target, idempotency_key=f"reconcile:load:{target.id}"
-            )
-            return await self._verify_result(target, result, expected_loaded=True, action="load")
-        idle_age = now_monotonic - target.last_used_monotonic
-        if idle_age < 0:
-            return AutonomyResult(target.id, AutonomyStatus.DENIED, "none", "clock_rollback")
-        if not loaded or idle_age < target.idle_unload_seconds:
-            return AutonomyResult(target.id, AutonomyStatus.NOOP, "none", "no_change")
-        if not await self._operator.fresh_for_write(target):
-            return AutonomyResult(
-                target.id, AutonomyStatus.DENIED, "unload", "health_or_authorization_stale"
-            )
-        result = await self._operator.unload(
-            target, idempotency_key=f"reconcile:unload:{target.id}"
-        )
-        return await self._verify_result(target, result, expected_loaded=False, action="unload")
-
-    async def _verify_result(
-        self,
-        target: PlacementTarget,
-        result: LifecycleResult,
-        *,
-        expected_loaded: bool,
-        action: str,
-    ) -> AutonomyResult:
-        actual_loaded = await self._operator.is_loaded(target)
-        if result.status in {OperationStatus.FAILED, OperationStatus.UNSUPPORTED}:
-            partial = (
-                result.error is not None and result.error.code is AdapterErrorCode.PARTIAL_FAILURE
-            )
-            return AutonomyResult(
-                target.id,
-                AutonomyStatus.PARTIAL if partial else AutonomyStatus.FAILED,
-                action,
-                result.error.code.value if result.error is not None else "adapter_failed",
-                target.rollback_reference if partial else None,
-            )
-        if actual_loaded is not expected_loaded:
-            return AutonomyResult(
-                target.id,
-                AutonomyStatus.PARTIAL,
-                action,
-                "postcondition_failed",
-                target.rollback_reference,
-            )
-        status = (
-            AutonomyStatus.NOOP
-            if result.status is OperationStatus.UNCHANGED
-            else AutonomyStatus.SUCCEEDED
-        )
-        return AutonomyResult(target.id, status, action, result.status.value)
+            yield
 
     @asynccontextmanager
     async def _placement_lock(self, key: str) -> AsyncGenerator[None]:
@@ -303,6 +342,152 @@ class ReconciliationEngine:
                 entry.users -= 1
                 if entry.users == 0:
                     self._nodes.pop(node_id, None)
+
+
+class ReconciliationEngine:
+    def __init__(
+        self,
+        operator: PlacementOperator,
+        *,
+        memory_policy: MemoryAdmissionPolicy,
+        global_limit: int,
+        per_node_limit: int,
+        coordinator: PlacementOperationCoordinator | None = None,
+        operation_timeouts: OperationTimeouts | None = None,
+    ) -> None:
+        if global_limit <= 0 or per_node_limit <= 0:
+            raise ValueError("reconciliation concurrency limits must be positive")
+        self._memory_policy = memory_policy
+        self._coordinator = coordinator or PlacementOperationCoordinator(
+            operator,
+            timeouts=operation_timeouts or OperationTimeouts.uniform(30.0),
+            global_limit=global_limit,
+            per_node_limit=per_node_limit,
+        )
+
+    @property
+    def active_key_count(self) -> int:
+        return self._coordinator.active_key_count
+
+    async def reconcile(
+        self,
+        target: PlacementTarget,
+        memory: MemorySnapshot | None,
+        *,
+        now_monotonic: float,
+    ) -> AutonomyResult:
+        if not math.isfinite(now_monotonic):
+            return AutonomyResult(target.id, AutonomyStatus.DENIED, "none", "clock_invalid")
+        return await self._reconcile(target, memory, now_monotonic)
+
+    async def reconcile_many(
+        self,
+        targets: tuple[PlacementTarget, ...],
+        memory: MemorySnapshot | None,
+        *,
+        now_monotonic: float,
+    ) -> dict[str, AutonomyResult]:
+        results: dict[str, AutonomyResult] = {}
+
+        async def run(target: PlacementTarget) -> None:
+            try:
+                results[target.id] = await self.reconcile(
+                    target, memory, now_monotonic=now_monotonic
+                )
+            except Exception as exc:
+                results[target.id] = AutonomyResult(
+                    target.id,
+                    AutonomyStatus.FAILED,
+                    "reconcile",
+                    type(exc).__name__,
+                    target.rollback_reference,
+                )
+
+        async with anyio.create_task_group() as group:
+            for target in targets:
+                group.start_soon(run, target)
+        return {target.id: results[target.id] for target in targets}
+
+    async def _reconcile(
+        self,
+        target: PlacementTarget,
+        memory: MemorySnapshot | None,
+        now_monotonic: float,
+    ) -> AutonomyResult:
+        if target.resident:
+            admission = self._memory_policy.admit(
+                memory, required_gb=target.memory_gb, now_monotonic=now_monotonic
+            )
+            if not admission.allowed:
+                return AutonomyResult(target.id, AutonomyStatus.DENIED, "load", admission.reason)
+            outcome = await self._coordinator.ensure_loaded(target)
+            if not outcome.authorized:
+                return AutonomyResult(
+                    target.id, AutonomyStatus.DENIED, "load", "health_or_authorization_stale"
+                )
+            if outcome.result is None:
+                return AutonomyResult(target.id, AutonomyStatus.NOOP, "none", "already_resident")
+            return self._verify_result(
+                target,
+                outcome.result,
+                actual_loaded=outcome.actual_loaded,
+                expected_loaded=True,
+                action="load",
+            )
+        idle_age = now_monotonic - target.last_used_monotonic
+        if idle_age < 0:
+            return AutonomyResult(target.id, AutonomyStatus.DENIED, "none", "clock_rollback")
+        if idle_age < target.idle_unload_seconds:
+            return AutonomyResult(target.id, AutonomyStatus.NOOP, "none", "no_change")
+        outcome = await self._coordinator.ensure_unloaded(target)
+        if not outcome.authorized:
+            return AutonomyResult(
+                target.id, AutonomyStatus.DENIED, "unload", "health_or_authorization_stale"
+            )
+        if outcome.result is None:
+            return AutonomyResult(target.id, AutonomyStatus.NOOP, "none", "no_change")
+        return self._verify_result(
+            target,
+            outcome.result,
+            actual_loaded=outcome.actual_loaded,
+            expected_loaded=False,
+            action="unload",
+        )
+
+    def _verify_result(
+        self,
+        target: PlacementTarget,
+        result: LifecycleResult,
+        *,
+        actual_loaded: bool,
+        expected_loaded: bool,
+        action: str,
+    ) -> AutonomyResult:
+        if result.status in {OperationStatus.FAILED, OperationStatus.UNSUPPORTED}:
+            partial = (
+                result.error is not None and result.error.code is AdapterErrorCode.PARTIAL_FAILURE
+            )
+            return AutonomyResult(
+                target.id,
+                AutonomyStatus.PARTIAL if partial else AutonomyStatus.FAILED,
+                action,
+                result.error.code.value if result.error is not None else "adapter_failed",
+                target.rollback_reference if partial else None,
+            )
+        if actual_loaded is not expected_loaded:
+            return AutonomyResult(
+                target.id,
+                AutonomyStatus.PARTIAL,
+                action,
+                "postcondition_failed",
+                target.rollback_reference,
+            )
+        status = (
+            AutonomyStatus.NOOP
+            if result.status is OperationStatus.UNCHANGED
+            else AutonomyStatus.SUCCEEDED
+        )
+        return AutonomyResult(target.id, status, action, result.status.value)
 
 
 def select_eviction_candidate(
@@ -348,14 +533,19 @@ class ReconcileLoop:
     async def start(self) -> None:
         if self.running:
             return
+        previous = self._task
+        if previous is not None:
+            with suppress(asyncio.CancelledError):
+                await previous
         self._task = asyncio.create_task(self._run(), name="omlxc-reconcile-loop")
 
     async def stop(self) -> None:
         task = self._task
         self._task = None
-        if task is None or task.done():
+        if task is None:
             return
-        task.cancel()
+        if not task.done():
+            task.cancel()
         with suppress(asyncio.CancelledError):
             await task
 
@@ -367,4 +557,8 @@ class ReconcileLoop:
                 await self._engine.reconcile_many(targets, memory, now_monotonic=self._clock())
             except Exception as exc:
                 self._error_sink(type(exc).__name__)
-            await self._wait_next(self._interval)
+            try:
+                await self._wait_next(self._interval)
+            except Exception as exc:
+                self._error_sink(type(exc).__name__)
+                return

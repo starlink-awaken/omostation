@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 
@@ -16,6 +17,14 @@ class UnsupportedSchemaError(StorageError):
 
 class StorageDegradedError(StorageError):
     """The store cannot accept writes and is restricted to diagnostics."""
+
+
+class ConfigRevisionConflictError(StorageError):
+    """A revision ID was reused with different immutable content."""
+
+
+class EventConflictError(StorageError):
+    """A durable event ID was reused with different immutable content."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,3 +64,32 @@ class DurableEventRecord:
     payload_json: str
     job_id: str | None
     resource_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class RouteAuditWrite:
+    request_id: str
+    observed_at: datetime
+    selected_placement_id: str | None
+    candidates: tuple[str, ...]
+    rejections: Mapping[str, str]
+    config_revision: str
+
+
+@dataclass(frozen=True, slots=True)
+class RouteAuditRecord(RouteAuditWrite):
+    sequence: int
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigRevisionWrite:
+    revision_id: str
+    observed_at: datetime
+    rollback_reference: str | None
+    config_json: str
+    fingerprint: str
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigRevisionRecord(ConfigRevisionWrite):
+    sequence: int

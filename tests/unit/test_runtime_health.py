@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import math
 from datetime import UTC, datetime
-from importlib.util import find_spec
 
 import pytest
 
@@ -15,10 +14,6 @@ class FakeMonotonic:
 
     def __call__(self) -> float:
         return self.value
-
-
-def test_runtime_health_module_is_available() -> None:
-    assert find_spec("omlxc.health") is not None
 
 
 @pytest.mark.parametrize(
