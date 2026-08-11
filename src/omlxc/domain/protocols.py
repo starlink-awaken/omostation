@@ -31,6 +31,8 @@ class AdapterErrorCode(StrEnum):
     MODEL_UNAVAILABLE = "model_unavailable"
     INVALID_REQUEST = "invalid_request"
     TIMEOUT = "timeout"
+    OUTPUT_LIMIT = "output_limit"
+    PARTIAL_FAILURE = "partial_failure"
     BAD_RESPONSE = "bad_response"
     STREAM_INTERRUPTED = "stream_interrupted"
 

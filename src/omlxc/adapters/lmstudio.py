@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import re
 import stat
 from collections.abc import AsyncIterator, Callable, Mapping
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -46,6 +48,7 @@ from .security import AdapterFailure
 from .sse import SSEDecoder
 
 _TIMEOUT = httpx.Timeout(connect=2.0, read=30.0, write=10.0, pool=2.0)
+DEFAULT_PROCESS_OUTPUT_LIMIT = 1024 * 1024
 _UNSUPPORTED_STATUSES = frozenset({404, 405, 501})
 _SAFE_TARGET_PART = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9._-]{0,252}[A-Za-z0-9])?$")
 _SAFE_MODEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/+@-]{0,511}$")
@@ -65,6 +68,18 @@ class ProcessOutput:
 
 class ProcessRunner(Protocol):
     async def __call__(self, argv: tuple[str, ...], timeout: float) -> ProcessOutput: ...
+
+
+class ProcessOutputLimitError(Exception):
+    """Raised without remote bytes when either process stream exceeds its cap."""
+
+
+@dataclass(frozen=True, slots=True)
+class _DefaultProcessRunner:
+    output_limit: int
+
+    async def __call__(self, argv: tuple[str, ...], timeout: float) -> ProcessOutput:
+        return await _default_process_runner(argv, timeout, output_limit=self.output_limit)
 
 
 class LmsLoadOptions(DomainModel):
@@ -135,25 +150,78 @@ def _validate_known_hosts(path: Path) -> None:
         raise ValueError("known_hosts file must exist") from exc
     if not stat.S_ISREG(metadata.st_mode):
         raise ValueError("known_hosts path must be a regular file")
+    if metadata.st_uid != os.geteuid():
+        raise ValueError("known_hosts file owner must match the current effective user")
     if metadata.st_mode & 0o022:
         raise ValueError("known_hosts file permissions must reject group/world writes")
+    for ancestor in path.parents:
+        try:
+            ancestor_metadata = ancestor.lstat()
+        except OSError as exc:
+            raise ValueError("known_hosts path ancestor must exist") from exc
+        if stat.S_ISLNK(ancestor_metadata.st_mode):
+            raise ValueError("known_hosts path must not traverse a symlink")
+    parent_metadata = path.parent.lstat()
+    if parent_metadata.st_mode & 0o022:
+        raise ValueError("known_hosts parent must reject group/world writes")
 
 
-async def _default_process_runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
+async def _read_bounded(stream: asyncio.StreamReader, output_limit: int) -> bytes:
+    captured = bytearray()
+    while True:
+        chunk = await stream.read(65536)
+        if not chunk:
+            return bytes(captured)
+        captured.extend(chunk)
+        if len(captured) > output_limit:
+            raise ProcessOutputLimitError
+
+
+async def _kill_reap_and_cleanup(
+    process: asyncio.subprocess.Process, tasks: tuple[asyncio.Task[object], ...]
+) -> None:
+    with suppress(ProcessLookupError):
+        process.kill()
+    for task in tasks:
+        if not task.done():
+            task.cancel()
+    await asyncio.gather(*tasks, return_exceptions=True)
+    with suppress(ProcessLookupError):
+        await process.wait()
+
+
+async def _default_process_runner(
+    argv: tuple[str, ...],
+    timeout: float,
+    *,
+    output_limit: int = DEFAULT_PROCESS_OUTPUT_LIMIT,
+) -> ProcessOutput:
+    if output_limit <= 0:
+        raise ValueError("process output limit must be positive")
     process = await asyncio.create_subprocess_exec(
         *argv,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
+    if process.stdout is None or process.stderr is None:
+        await _kill_reap_and_cleanup(process, ())
+        raise RuntimeError("subprocess pipes were not created")
+    stdout_task = asyncio.create_task(_read_bounded(process.stdout, output_limit))
+    stderr_task = asyncio.create_task(_read_bounded(process.stderr, output_limit))
+    wait_task = asyncio.create_task(process.wait())
+    tasks = cast(
+        tuple[asyncio.Task[object], ...],
+        (stdout_task, stderr_task, wait_task),
+    )
     try:
-        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
+        stdout, stderr, _ = await asyncio.wait_for(
+            asyncio.gather(stdout_task, stderr_task, wait_task), timeout=timeout
+        )
     except asyncio.CancelledError:
-        process.kill()
-        await process.wait()
+        await _kill_reap_and_cleanup(process, tasks)
         raise
-    except TimeoutError:
-        process.kill()
-        await process.wait()
+    except (TimeoutError, ProcessOutputLimitError):
+        await _kill_reap_and_cleanup(process, tasks)
         raise
     return ProcessOutput(
         returncode=process.returncode or 0,
@@ -175,6 +243,7 @@ class LmStudioAdapter:
         known_hosts_file: Path | None = None,
         platform: LmsPlatform = LmsPlatform.MACOS,
         process_runner: ProcessRunner | None = None,
+        process_output_limit: int = DEFAULT_PROCESS_OUTPUT_LIMIT,
         load_options: LmsLoadOptions | None = None,
         client: httpx.AsyncClient | None = None,
         transport: httpx.AsyncBaseTransport | None = None,
@@ -204,7 +273,9 @@ class LmStudioAdapter:
         self._ssh_target = ssh_target
         self._known_hosts_file = known_hosts_file
         self._platform = LmsPlatform(platform)
-        self._runner = process_runner or _default_process_runner
+        if process_output_limit <= 0:
+            raise ValueError("process_output_limit must be positive")
+        self._runner = process_runner or _DefaultProcessRunner(process_output_limit)
         self._load_options = load_options or LmsLoadOptions()
         self._clock = clock or (lambda: datetime.now(UTC))
         self._owns_client = client is None
@@ -327,6 +398,8 @@ class LmStudioAdapter:
             "-o",
             f"UserKnownHostsFile={self._known_hosts_file}",
             "-o",
+            "GlobalKnownHostsFile=/dev/null",
+            "-o",
             "ConnectTimeout=7",
             "-o",
             "ServerAliveInterval=5",
@@ -350,6 +423,12 @@ class LmStudioAdapter:
                 message="LM Studio control command timed out",
                 detail={},
                 retryable=True,
+            ) from exc
+        except ProcessOutputLimitError as exc:
+            raise AdapterFailure.from_detail(
+                code=AdapterErrorCode.OUTPUT_LIMIT,
+                message="LM Studio control output exceeded its safety limit",
+                detail={},
             ) from exc
         except OSError as exc:
             raise AdapterFailure.from_detail(
@@ -417,6 +496,17 @@ class LmStudioAdapter:
             )
         raw_rows = _list(parsed)
         if raw_rows is None:
+            wrapper = _mapping(parsed)
+            wrapper_key: str | None = None
+            if wrapper is not None:
+                wrapper_keys = frozenset(wrapper.keys())
+                if wrapper_keys == frozenset({"models"}):
+                    wrapper_key = "models"
+                elif wrapper_keys == frozenset({"data"}):
+                    wrapper_key = "data"
+            if wrapper is not None and wrapper_key is not None:
+                raw_rows = _list(wrapper[wrapper_key])
+        if raw_rows is None:
             return (
                 None,
                 AdapterError(
@@ -425,6 +515,7 @@ class LmStudioAdapter:
                 ),
             )
         rows: list[_ControlRow] = []
+        identity_owners: dict[str, int] = {}
         for raw in raw_rows:
             item = _mapping(raw)
             if item is None:
@@ -458,6 +549,17 @@ class LmStudioAdapter:
                         message="LM Studio control inventory contains an unsafe identity",
                     ),
                 )
+            identities = {model_id, identifier}
+            if any(identity in identity_owners for identity in identities):
+                return (
+                    None,
+                    AdapterError(
+                        code=AdapterErrorCode.BAD_RESPONSE,
+                        message="LM Studio control inventory contains ambiguous identities",
+                    ),
+                )
+            for identity in identities:
+                identity_owners[identity] = len(rows)
             context_length = item.get("contextLength")
             parallel = item.get("parallel")
             ttl_ms = item.get("ttlMs")
@@ -588,10 +690,19 @@ class LmStudioAdapter:
         control_only_ids: list[str] = []
         if control_rows is not None:
             for row in control_rows:
-                matched_id = next(
-                    (http_id for http_id in http_ids if http_id in {row.model_id, row.identifier}),
-                    None,
-                )
+                matched_ids = [
+                    http_id for http_id in http_ids if http_id in {row.model_id, row.identifier}
+                ]
+                if len(matched_ids) > 1:
+                    control_rows = None
+                    control_error = AdapterError(
+                        code=AdapterErrorCode.BAD_RESPONSE,
+                        message="LM Studio HTTP and control identities are ambiguous",
+                    )
+                    control_by_model.clear()
+                    control_only_ids.clear()
+                    break
+                matched_id = matched_ids[0] if matched_ids else None
                 if matched_id is not None:
                     control_by_model[matched_id] = row
                 else:
@@ -845,6 +956,7 @@ class LmStudioAdapter:
             ttl_seconds=desired_ttl or row.ttl_seconds,
             identifier=row.identifier,
         )
+        unload_verified = False
         try:
             await self._run_control(("unload", row.identifier), timeout=300.0)
             unloaded_rows, unloaded_error = await self._probe_control()
@@ -860,9 +972,21 @@ class LmStudioAdapter:
                         retryable=True,
                     ),
                 )
+            unload_verified = True
             await self._run_control(self._load_arguments(model_id, options), timeout=300.0)
             loaded_rows, loaded_error = await self._probe_control()
         except AdapterFailure as failure:
+            if unload_verified:
+                return self._tune_failure(
+                    request,
+                    AdapterError(
+                        code=AdapterErrorCode.PARTIAL_FAILURE,
+                        message=(
+                            "LM Studio tuning partially applied: the original model was "
+                            "unloaded but the replacement load failed"
+                        ),
+                    ),
+                )
             return self._tune_failure(request, failure.error)
         verified = (
             next(
@@ -880,11 +1004,13 @@ class LmStudioAdapter:
         ):
             return self._tune_failure(
                 request,
-                loaded_error
-                or AdapterError(
-                    code=AdapterErrorCode.BAD_RESPONSE,
-                    message="LM Studio tune load postcondition did not verify",
-                    retryable=True,
+                AdapterError(
+                    code=AdapterErrorCode.PARTIAL_FAILURE,
+                    message=(
+                        "LM Studio tuning partially applied: the original model was "
+                        "unloaded but the replacement load did not verify"
+                    ),
+                    retryable=loaded_error.retryable if loaded_error is not None else True,
                 ),
             )
         return TuneResult(
