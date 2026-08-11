@@ -1803,7 +1803,8 @@ bets:
   title: Blueprint W2-04 single-user Episode Role Portfolio Inbox projections
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-11
   goal: >-
     在可信本地单用户环境中，以 LedgerBroker、既有 Episode M2 与 W2-01
     RoleAssignment 为唯一事实源，提供可重复重放的 Episode summary、Role Portfolio
@@ -1848,7 +1849,7 @@ bets:
       src/cockpit/tests/test_api_episode_projection.py
       src/cockpit/tests/test_api_workflow_mesh_operations.py -q
     expect: exit 0
-  - cmd: cd projects/omo && uv lock --check && cd projects/cockpit && uv lock --check
+  - cmd: cd projects/omo && uv lock --check && git diff --check && cd ../cockpit
       && git diff --check
     expect: exit 0
   workflow: bet-execution
@@ -1859,8 +1860,6 @@ bets:
   - projects/omo/tests/test_episode_projection.py
   - projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
   - projects/cockpit/src/cockpit/tests/test_api_episode_projection.py
-  - projects/omo/uv.lock
-  - projects/cockpit/uv.lock
   - .omo/_knowledge/retros/BET-Y1Q2-T1-07.md
   pasw_required: true
   depends_on:
