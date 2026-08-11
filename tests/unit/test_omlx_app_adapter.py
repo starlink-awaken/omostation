@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 
@@ -17,6 +18,7 @@ from omlxc.domain.protocols import (
     EmbeddingRequest,
     ImageContentBlock,
     ImageURL,
+    ModelRuntimeState,
     OperationStatus,
     StreamEventKind,
     TextContentBlock,
@@ -50,6 +52,11 @@ def chat_request(*, content: str = "hello") -> ChatRequest:
         model="model-a",
         messages=(ChatMessage(role="user", content=content),),
     )
+
+
+def sse_content_frame(content: str) -> str:
+    payload = {"choices": [{"delta": {"content": content}}]}
+    return f"data: {json.dumps(payload)}\n\n"
 
 
 @pytest.mark.asyncio
@@ -123,7 +130,7 @@ async def test_discovery_uses_injected_clock_and_four_bounded_timeout_components
     async def handler(request: httpx.Request) -> httpx.Response:
         requests.append(request)
         if request.url.path == "/api/status":
-            return httpx.Response(200, json={"status": "running", "version": "0.5.7"})
+            return httpx.Response(200, json={"status": "ok", "version": "0.5.7"})
         if request.url.path == "/v1/models":
             return httpx.Response(200, json={"object": "list", "data": []})
         if request.url.path == "/v1/models/status":
@@ -165,6 +172,121 @@ async def test_unreachable_discovery_is_typed_and_not_ready() -> None:
     assert snapshot.reachable is False
     assert snapshot.generation_ready is False
     assert snapshot.errors[0].code is AdapterErrorCode.UNREACHABLE
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "status_response",
+    [
+        httpx.Response(500, json={"status": "ok", "version": "0.5.7"}),
+        httpx.Response(200, content=b"not-json"),
+        httpx.Response(200, json={"status": "ok"}),
+        httpx.Response(200, json={"status": "running", "version": "0.5.7"}),
+        httpx.Response(200, json={"status": "ok", "version": "not-semver"}),
+        httpx.Response(200, json={"status": "ok", "version": "0.4.99"}),
+        httpx.Response(200, json={"status": "ok", "version": "0.6.0"}),
+        httpx.Response(200, json={"status": "ok", "version": "1.0.0"}),
+    ],
+)
+async def test_discovery_fails_closed_on_status_or_version_drift(
+    status_response: httpx.Response,
+) -> None:
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.url.path == "/api/status":
+            return status_response
+        raise AssertionError("incompatible status must stop feature and generation probes")
+
+    adapter = make_adapter(httpx.MockTransport(handler))
+
+    snapshot = await adapter.discover()  # type: ignore[attr-defined]
+
+    assert snapshot.reachable is True
+    assert snapshot.compatible is False
+    assert snapshot.model_available is False
+    assert snapshot.generation_ready is False
+    assert snapshot.errors[-1].code is AdapterErrorCode.INCOMPATIBLE
+    assert [request.url.path for request in requests] == ["/api/status"]
+
+
+@pytest.mark.asyncio
+async def test_discovery_accepts_observed_0_5_7_status_shape() -> None:
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.url.path == "/api/status":
+            return httpx.Response(200, json={"status": "ok", "version": "0.5.7"})
+        if request.url.path == "/v1/models":
+            return httpx.Response(200, json={"data": []})
+        if request.url.path == "/v1/models/status":
+            return httpx.Response(404)
+        raise AssertionError(request.url.path)
+
+    adapter = make_adapter(httpx.MockTransport(handler))
+
+    snapshot = await adapter.discover()  # type: ignore[attr-defined]
+
+    assert snapshot.reachable is True
+    assert snapshot.compatible is True
+    assert snapshot.protocol_version == "0.5.7"
+    assert snapshot.generation_ready is False
+    assert all(not request.url.path.endswith("chat/completions") for request in requests)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "status_response",
+    [
+        httpx.Response(404),
+        httpx.Response(200, content=b"not-json"),
+        httpx.Response(200, json={"models": [{"id": "model-a"}]}),
+    ],
+)
+async def test_model_inventory_preserves_unknown_when_status_is_unavailable(
+    status_response: httpx.Response,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/v1/models":
+            return httpx.Response(200, json={"data": [{"id": "model-a"}]})
+        if request.url.path == "/v1/models/status":
+            return status_response
+        raise AssertionError(request.url.path)
+
+    adapter = make_adapter(httpx.MockTransport(handler))
+
+    models = await adapter.list_models()  # type: ignore[attr-defined]
+
+    assert len(models) == 1
+    assert models[0].state is ModelRuntimeState.UNKNOWN
+    assert models[0].loaded is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("operation", ["load_model", "unload_model"])
+async def test_lifecycle_refuses_to_write_when_loaded_state_is_unknown(operation: str) -> None:
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.url.path == "/v1/models":
+            return httpx.Response(200, json={"data": [{"id": "model-a"}]})
+        if request.url.path == "/v1/models/status":
+            return httpx.Response(404)
+        raise AssertionError("unknown state must not trigger a lifecycle write")
+
+    adapter = make_adapter(httpx.MockTransport(handler))
+
+    result = await getattr(adapter, operation)("model-a")
+
+    assert result.status is OperationStatus.FAILED
+    assert result.changed is False
+    assert result.error is not None
+    assert result.error.code is AdapterErrorCode.BAD_RESPONSE
+    assert result.error.retryable is True
+    assert all(request.method == "GET" for request in requests)
 
 
 def test_vision_accepts_openai_image_blocks_and_rejects_unsafe_shapes() -> None:
@@ -326,10 +448,14 @@ async def test_tune_is_idempotent_and_uses_observed_global_and_model_routes() ->
 
     writes = [request for request in requests if request.method in {"POST", "PUT"}]
     assert unchanged.status is OperationStatus.UNCHANGED
-    assert changed.changed_fields == ("max_tokens",)
+    assert changed.changed_fields == ("max_tokens", "reasoning_off")
     assert [request.method for request in writes] == ["PUT"]
     assert writes[0].url.path == "/admin/api/models/model-a/settings"
     assert writes[0].headers["idempotency-key"] == "idem-tune"
+    payload = json.loads(writes[0].content)
+    assert payload["enable_thinking"] is False
+    assert payload["thinking_budget_enabled"] is False
+    assert payload["chat_template_kwargs"] == {"enable_thinking": False}
 
 
 @pytest.mark.asyncio
@@ -451,6 +577,22 @@ class BrokenStream(httpx.AsyncByteStream):
         raise httpx.ReadError("synthetic disconnect")
 
 
+class TrackingChunkStream(httpx.AsyncByteStream):
+    def __init__(self, chunks: tuple[bytes, ...], *, hang: bool = False) -> None:
+        self._chunks = chunks
+        self._hang = hang
+        self.closed = False
+
+    async def __aiter__(self) -> AsyncIterator[bytes]:
+        for chunk in self._chunks:
+            yield chunk
+        if self._hang:
+            await anyio.sleep_forever()
+
+    async def aclose(self) -> None:
+        self.closed = True
+
+
 @pytest.mark.asyncio
 async def test_stream_http_error_is_typed_before_any_content() -> None:
     adapter = make_adapter(
@@ -490,6 +632,130 @@ async def test_stream_filters_reasoning_tags_even_when_split_across_chunks() -> 
 
     assert rendered == "visible"
     assert "hidden" not in rendered
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "literal",
+    [
+        "<thinker>ordinary</thinker>",
+        "<thinking>ordinary</thinking>",
+        "<think reason='quoted'>ordinary</think>",
+        "ordinary </think> literal",
+    ],
+)
+async def test_reasoning_filter_preserves_non_exact_literal_markup(literal: str) -> None:
+    body = sse_content_frame(literal) + "data: [DONE]\n\n"
+    adapter = make_adapter(httpx.MockTransport(lambda _request: httpx.Response(200, content=body)))
+
+    events = [event async for event in adapter.stream_chat(chat_request())]  # type: ignore[attr-defined]
+
+    assert "".join(event.content for event in events) == literal
+
+
+@pytest.mark.asyncio
+async def test_reasoning_filter_is_case_insensitive_and_tracks_nested_exact_tags() -> None:
+    chunks = (
+        "<THINK>outer",
+        "<think>inner</THINK>",
+        "outer-tail</think>visible",
+    )
+    body = "".join(sse_content_frame(chunk) for chunk in chunks) + "data: [DONE]\n\n"
+    adapter = make_adapter(httpx.MockTransport(lambda _request: httpx.Response(200, content=body)))
+
+    events = [event async for event in adapter.stream_chat(chat_request())]  # type: ignore[attr-defined]
+
+    assert "".join(event.content for event in events) == "visible"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("safe_prefix", "emitted"), [("", False), ("safe", True)])
+async def test_unclosed_reasoning_block_returns_typed_stream_error_without_leak(
+    safe_prefix: str, emitted: bool
+) -> None:
+    chunks = tuple(filter(None, (safe_prefix, "<think>hidden")))
+    body = "".join(sse_content_frame(chunk) for chunk in chunks) + "data: [DONE]\n\n"
+    adapter = make_adapter(httpx.MockTransport(lambda _request: httpx.Response(200, content=body)))
+
+    events = [event async for event in adapter.stream_chat(chat_request())]  # type: ignore[attr-defined]
+
+    assert events[-1].kind is StreamEventKind.ERROR
+    assert events[-1].error is not None
+    assert events[-1].error.code is AdapterErrorCode.BAD_RESPONSE
+    assert events[-1].emitted_content is emitted
+    assert "hidden" not in "".join(event.content for event in events)
+    assert all(event.kind is not StreamEventKind.DONE for event in events)
+
+
+@pytest.mark.asyncio
+async def test_sse_framing_supports_multiline_data_comments_fields_and_crlf() -> None:
+    body = (
+        b": keepalive\r\n"
+        b"event: message\r\n"
+        b"unknown: ignored\r\n"
+        b'data: {"choices":\r\n'
+        b'data: [{"delta":{"content":"hello"}}]}\r\n\r\n'
+        b"data: [DONE]\r\n\r\n"
+    )
+    stream = TrackingChunkStream((body[:19], body[19:57], body[57:]))
+    adapter = make_adapter(
+        httpx.MockTransport(
+            lambda _request: httpx.Response(
+                200,
+                stream=stream,
+                headers={"content-type": "text/event-stream"},
+            )
+        )
+    )
+
+    events = [event async for event in adapter.stream_chat(chat_request())]  # type: ignore[attr-defined]
+
+    assert [event.kind for event in events] == [StreamEventKind.CONTENT, StreamEventKind.DONE]
+    assert events[0].content == "hello"
+    assert stream.closed is True
+
+
+@pytest.mark.asyncio
+async def test_sse_framing_decodes_utf8_split_across_byte_chunks() -> None:
+    body = ('data: {"choices":[{"delta":{"content":"你好"}}]}\n\ndata: [DONE]\n\n').encode()
+    split_at = body.index("你".encode()) + 1
+    stream = TrackingChunkStream(
+        (body[:split_at], body[split_at : split_at + 1], body[split_at + 1 :])
+    )
+    adapter = make_adapter(httpx.MockTransport(lambda _request: httpx.Response(200, stream=stream)))
+
+    events = [event async for event in adapter.stream_chat(chat_request())]  # type: ignore[attr-defined]
+
+    assert "".join(event.content for event in events) == "你好"
+    assert events[-1].kind is StreamEventKind.DONE
+
+
+@pytest.mark.asyncio
+async def test_sse_final_incomplete_event_is_not_dispatched() -> None:
+    stream = TrackingChunkStream((b'data: {"choices":[{"delta":{"content":"must-not-emit"}}]}',))
+    adapter = make_adapter(httpx.MockTransport(lambda _request: httpx.Response(200, stream=stream)))
+
+    events = [event async for event in adapter.stream_chat(chat_request())]  # type: ignore[attr-defined]
+
+    assert len(events) == 1
+    assert events[0].kind is StreamEventKind.ERROR
+    assert events[0].emitted_content is False
+    assert "must-not-emit" not in events[0].model_dump_json()
+
+
+@pytest.mark.asyncio
+async def test_stream_response_closes_when_cancel_scope_propagates() -> None:
+    stream = TrackingChunkStream((), hang=True)
+    adapter = make_adapter(httpx.MockTransport(lambda _request: httpx.Response(200, stream=stream)))
+
+    with pytest.raises(TimeoutError):
+        with anyio.fail_after(0.01):
+            _events = [
+                event
+                async for event in adapter.stream_chat(chat_request())  # type: ignore[attr-defined]
+            ]
+
+    assert stream.closed is True
 
 
 def test_adapter_redaction_is_recursive_and_exception_repr_is_safe() -> None:

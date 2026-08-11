@@ -109,13 +109,18 @@ class ModelRuntime(DomainModel):
     id: str = Field(min_length=1)
     display_name: str | None = None
     state: ModelRuntimeState
-    loaded: bool
+    loaded: bool | None
     capabilities: frozenset[AdapterCapability] = frozenset()
     context_limit: int | None = Field(default=None, gt=0)
 
     @model_validator(mode="after")
     def validate_loaded_state(self) -> ModelRuntime:
-        if self.loaded != (self.state is ModelRuntimeState.LOADED):
+        expected = {
+            ModelRuntimeState.LOADED: True,
+            ModelRuntimeState.AVAILABLE: False,
+            ModelRuntimeState.UNKNOWN: None,
+        }[self.state]
+        if self.loaded is not expected:
             raise ValueError("loaded must agree with runtime state")
         return self
 
@@ -265,8 +270,6 @@ class TuneSettings(DomainModel):
     top_p: float | None = Field(default=None, gt=0.0, le=1.0)
     ttl_seconds: int | None = Field(default=None, ge=0)
     is_pinned: bool | None = None
-    enable_thinking: Literal[False] = False
-    thinking_budget_enabled: Literal[False] = False
 
 
 class TuneRequest(DomainModel):
@@ -342,7 +345,7 @@ class StreamEvent(DomainModel):
 
 
 @runtime_checkable
-class BackendAdapterV1(Protocol):
+class BackendAdapter(Protocol):
     async def discover(self) -> CapabilitySnapshot: ...
 
     async def list_models(self) -> tuple[ModelRuntime, ...]: ...

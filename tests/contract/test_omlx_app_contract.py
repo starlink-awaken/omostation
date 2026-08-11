@@ -36,7 +36,7 @@ class TestOmlxAppContract(BackendAdapterContract):
         async def handler(request: httpx.Request) -> httpx.Response:
             requests.append(request)
             if request.url.path == "/api/status":
-                return httpx.Response(200, json={"status": "running", "version": "0.5.7"})
+                return httpx.Response(200, json={"status": "ok", "version": "0.5.7"})
             if request.url.path == "/v1/models":
                 if scenario is ContractScenario.HEALTH_ONLY:
                     return httpx.Response(404, json={"detail": "not found"})
@@ -127,4 +127,4 @@ class TestOmlxAppContract(BackendAdapterContract):
             probe_model_id="model-a",
             transport=transport,
         )
-        return ContractHarness(adapter=adapter, requests=requests)
+        return ContractHarness(adapter=adapter)

@@ -35,10 +35,20 @@ from omlxc.domain.protocols import (
 )
 
 from .security import AdapterFailure
+from .sse import SSEDecoder
 
 _UNSUPPORTED_STATUSES = frozenset({404, 405, 501})
-_THINK_BLOCK = re.compile(r"<think\b[^>]*>.*?</think\s*>", re.IGNORECASE | re.DOTALL)
+_THINK_OPEN = "<think>"
+_THINK_CLOSE = "</think>"
+_SEMVER = re.compile(
+    r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
+    r"(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)"
+    r"(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
+)
 _TIMEOUT = httpx.Timeout(connect=2.0, read=30.0, write=10.0, pool=2.0)
+DEFAULT_MINIMUM_VERSION = (0, 5, 0)
+DEFAULT_MAXIMUM_VERSION = (0, 6, 0)
 
 
 def _object_mapping(value: object) -> Mapping[str, object] | None:
@@ -54,6 +64,17 @@ def _object_list(value: object) -> list[object] | None:
     return cast(list[object], value)
 
 
+def _semver_core(value: str) -> tuple[int, int, int] | None:
+    matched = _SEMVER.fullmatch(value)
+    if matched is None:
+        return None
+    return (
+        int(matched.group(1)),
+        int(matched.group(2)),
+        int(matched.group(3)),
+    )
+
+
 def _partial_tag_length(value: str, tag: str) -> int:
     lowered = value.lower()
     for length in range(min(len(value), len(tag) - 1), 0, -1):
@@ -67,35 +88,44 @@ class _ReasoningFilter:
 
     def __init__(self) -> None:
         self._buffer = ""
-        self._inside_think = False
+        self._depth = 0
 
     def feed(self, chunk: str) -> str:
         self._buffer += chunk
         output: list[str] = []
         while self._buffer:
             lowered = self._buffer.lower()
-            if self._inside_think:
-                close_at = lowered.find("</think>")
-                if close_at >= 0:
-                    self._buffer = self._buffer[close_at + len("</think>") :]
-                    self._inside_think = False
+            if self._depth:
+                open_at = lowered.find(_THINK_OPEN)
+                close_at = lowered.find(_THINK_CLOSE)
+                positions: list[tuple[int, str]] = [
+                    (position, tag)
+                    for position, tag in (
+                        (open_at, _THINK_OPEN),
+                        (close_at, _THINK_CLOSE),
+                    )
+                    if position >= 0
+                ]
+                if positions:
+                    position, tag = min(positions, key=lambda item: item[0])
+                    self._buffer = self._buffer[position + len(tag) :]
+                    self._depth += 1 if tag == _THINK_OPEN else -1
                     continue
-                keep = _partial_tag_length(self._buffer, "</think>")
+                keep = max(
+                    _partial_tag_length(self._buffer, _THINK_OPEN),
+                    _partial_tag_length(self._buffer, _THINK_CLOSE),
+                )
                 self._buffer = self._buffer[-keep:] if keep else ""
                 return "".join(output)
 
-            open_at = lowered.find("<think")
+            open_at = lowered.find(_THINK_OPEN)
             if open_at >= 0:
                 output.append(self._buffer[:open_at])
-                end_at = self._buffer.find(">", open_at)
-                if end_at < 0:
-                    self._buffer = self._buffer[open_at:]
-                    return "".join(output)
-                self._buffer = self._buffer[end_at + 1 :]
-                self._inside_think = True
+                self._buffer = self._buffer[open_at + len(_THINK_OPEN) :]
+                self._depth = 1
                 continue
 
-            keep = _partial_tag_length(self._buffer, "<think")
+            keep = _partial_tag_length(self._buffer, _THINK_OPEN)
             if keep:
                 output.append(self._buffer[:-keep])
                 self._buffer = self._buffer[-keep:]
@@ -105,13 +135,13 @@ class _ReasoningFilter:
             return "".join(output)
         return "".join(output)
 
-    def finish(self) -> str:
-        if self._inside_think:
+    def finish(self) -> tuple[str, bool]:
+        if self._depth:
             self._buffer = ""
-            return ""
+            return "", True
         remaining = self._buffer
         self._buffer = ""
-        return remaining
+        return remaining, False
 
 
 class OmlxAppAdapter:
@@ -126,6 +156,8 @@ class OmlxAppAdapter:
         client: httpx.AsyncClient | None = None,
         transport: httpx.AsyncBaseTransport | None = None,
         clock: Callable[[], datetime] | None = None,
+        minimum_version: tuple[int, int, int] = DEFAULT_MINIMUM_VERSION,
+        maximum_version: tuple[int, int, int] = DEFAULT_MAXIMUM_VERSION,
     ) -> None:
         parsed = urlsplit(base_url)
         if parsed.scheme not in {"http", "https"} or not parsed.netloc:
@@ -138,6 +170,10 @@ class OmlxAppAdapter:
         self._base_url = httpx.URL(base_url.rstrip("/") + "/")
         self._probe_model_id = probe_model_id
         self._clock = clock or (lambda: datetime.now(UTC))
+        if minimum_version >= maximum_version:
+            raise ValueError("minimum_version must be lower than maximum_version")
+        self._minimum_version = minimum_version
+        self._maximum_version = maximum_version
         self._owns_client = client is None
         self._client = client or httpx.AsyncClient(transport=transport)
         self._timeout = _TIMEOUT
@@ -249,14 +285,36 @@ class OmlxAppAdapter:
             )
 
         reachable = True
-        protocol_version: str | None = None
-        if status_response.is_success:
-            try:
-                status = self._json_object(status_response, endpoint="/api/status")
-                raw_version = status.get("version")
-                protocol_version = raw_version if isinstance(raw_version, str) else None
-            except AdapterFailure as failure:
-                errors.append(failure.error)
+        if not status_response.is_success:
+            return self._incompatible_snapshot(
+                observed_at=observed_at,
+                http_status=status_response.status_code,
+                message="oMLX App status endpoint did not succeed",
+            )
+        try:
+            status = self._json_object(status_response, endpoint="/api/status")
+        except AdapterFailure:
+            return self._incompatible_snapshot(
+                observed_at=observed_at,
+                http_status=status_response.status_code,
+                message="oMLX App status response is incompatible",
+            )
+        raw_status = status.get("status")
+        raw_version = status.get("version")
+        protocol_version = raw_version if isinstance(raw_version, str) else None
+        version = _semver_core(protocol_version) if protocol_version is not None else None
+        if (
+            raw_status != "ok"
+            or version is None
+            or not (self._minimum_version <= version < self._maximum_version)
+        ):
+            return self._incompatible_snapshot(
+                observed_at=observed_at,
+                http_status=status_response.status_code,
+                message="oMLX App status or version is outside the supported contract",
+                protocol_version=protocol_version,
+            )
+        assert protocol_version is not None
 
         try:
             models = await self.list_models()
@@ -271,7 +329,7 @@ class OmlxAppAdapter:
         probe_id = self._probe_model_id
         if probe_id is None:
             probe_id = next((model.id for model in models if model.loaded), None)
-        loaded_ids = {model.id for model in models if model.loaded}
+        loaded_ids = {model.id for model in models if model.loaded is True}
         if compatible and probe_id is not None and probe_id in loaded_ids:
             probe = await self.chat(
                 ChatRequest(
@@ -301,6 +359,30 @@ class OmlxAppAdapter:
             errors=tuple(errors),
         )
 
+    def _incompatible_snapshot(
+        self,
+        *,
+        observed_at: datetime,
+        http_status: int,
+        message: str,
+        protocol_version: str | None = None,
+    ) -> CapabilitySnapshot:
+        error = AdapterError(
+            code=AdapterErrorCode.INCOMPATIBLE,
+            message=message,
+            http_status=http_status,
+        )
+        return CapabilitySnapshot(
+            backend_id=self._backend_id,
+            reachable=True,
+            compatible=False,
+            model_available=False,
+            generation_ready=False,
+            observed_at=observed_at,
+            protocol_version=protocol_version,
+            errors=(error,),
+        )
+
     async def list_models(self) -> tuple[ModelRuntime, ...]:
         endpoint = "/v1/models"
         response = await self._send("GET", endpoint)
@@ -320,7 +402,10 @@ class OmlxAppAdapter:
         status_by_id: dict[str, bool] = {}
         status_response = await self._send("GET", "/v1/models/status")
         if status_response.is_success and status_response.content:
-            status_document = self._json_object(status_response, endpoint="/v1/models/status")
+            try:
+                status_document = self._json_object(status_response, endpoint="/v1/models/status")
+            except AdapterFailure:
+                status_document = {}
             status_models = _object_list(status_document.get("models"))
             if status_models is not None:
                 for raw_item in status_models:
@@ -341,15 +426,21 @@ class OmlxAppAdapter:
             model_id = item.get("id")
             if not isinstance(model_id, str) or not model_id:
                 continue
-            raw_loaded = status_by_id.get(model_id, item.get("loaded", False))
-            loaded = raw_loaded if isinstance(raw_loaded, bool) else False
+            raw_loaded = status_by_id.get(model_id, item.get("loaded"))
+            loaded = raw_loaded if isinstance(raw_loaded, bool) else None
             display_name = item.get("name")
             context_limit = item.get("context_limit")
             models.append(
                 ModelRuntime(
                     id=model_id,
                     display_name=display_name if isinstance(display_name, str) else None,
-                    state=(ModelRuntimeState.LOADED if loaded else ModelRuntimeState.AVAILABLE),
+                    state=(
+                        ModelRuntimeState.LOADED
+                        if loaded is True
+                        else ModelRuntimeState.AVAILABLE
+                        if loaded is False
+                        else ModelRuntimeState.UNKNOWN
+                    ),
                     loaded=loaded,
                     context_limit=context_limit if isinstance(context_limit, int) else None,
                 )
@@ -375,6 +466,19 @@ class OmlxAppAdapter:
             error = AdapterError(
                 code=AdapterErrorCode.MODEL_UNAVAILABLE,
                 message="model is not present in the oMLX App inventory",
+            )
+            return LifecycleResult(
+                model_id=model_id,
+                status=OperationStatus.FAILED,
+                changed=False,
+                idempotency_key=idempotency_key,
+                error=error,
+            )
+        if model.loaded is None:
+            error = AdapterError(
+                code=AdapterErrorCode.BAD_RESPONSE,
+                message="model loaded state is indeterminate",
+                retryable=True,
             )
             return LifecycleResult(
                 model_id=model_id,
@@ -462,6 +566,20 @@ class OmlxAppAdapter:
 
         target = cast(dict[str, object], request.settings.model_dump(exclude_unset=True))
         changes = {key: value for key, value in target.items() if current.get(key) != value}
+        changed_fields = list(changes)
+        if request.scope is TuneScope.MODEL:
+            reasoning_off: dict[str, object] = {
+                "enable_thinking": False,
+                "thinking_budget_enabled": False,
+                "chat_template_kwargs": {"enable_thinking": False},
+            }
+            reasoning_changed = False
+            for key, value in reasoning_off.items():
+                if current.get(key) != value:
+                    changes[key] = value
+                    reasoning_changed = True
+            if reasoning_changed:
+                changed_fields.append("reasoning_off")
         if not changes:
             return TuneResult(
                 scope=request.scope,
@@ -483,7 +601,7 @@ class OmlxAppAdapter:
             scope=request.scope,
             model_id=request.model_id,
             status=OperationStatus.SUCCEEDED,
-            changed_fields=tuple(sorted(changes)),
+            changed_fields=tuple(sorted(changed_fields)),
             idempotency_key=request.idempotency_key,
         )
 
@@ -575,7 +693,9 @@ class OmlxAppAdapter:
     @staticmethod
     def _strip_reasoning(content: str) -> str:
         filtered = _ReasoningFilter()
-        return filtered.feed(_THINK_BLOCK.sub("", content)) + filtered.finish()
+        safe = filtered.feed(content)
+        remaining, _unclosed = filtered.finish()
+        return safe + remaining
 
     @staticmethod
     def _parse_usage(value: object) -> TokenUsage | None:
@@ -658,6 +778,7 @@ class OmlxAppAdapter:
         saw_data = False
         completed = False
         reasoning_filter = _ReasoningFilter()
+        decoder = SSEDecoder()
         try:
             async with self._client.stream(
                 "POST",
@@ -672,78 +793,55 @@ class OmlxAppAdapter:
                         emitted_content=False,
                     )
                     return
-                async for line in response.aiter_lines():
-                    if not line.startswith("data:"):
-                        continue
-                    saw_data = True
-                    data = line.removeprefix("data:").strip()
-                    if data == "[DONE]":
-                        completed = True
-                        remaining = reasoning_filter.finish()
-                        if remaining:
-                            emitted_content = True
-                            yield StreamEvent(
-                                kind=StreamEventKind.CONTENT,
+                try:
+                    async for chunk in response.aiter_bytes():
+                        frames = decoder.feed(chunk)
+                        for data in frames:
+                            saw_data = True
+                            events, emitted_content, completed = self._stream_frame_events(
                                 request_id=request.request_id,
-                                content=remaining,
-                                emitted_content=True,
-                                phase=StreamPhase.AFTER_CONTENT,
+                                data=data,
+                                reasoning_filter=reasoning_filter,
+                                emitted_content=emitted_content,
                             )
-                        yield StreamEvent(
-                            kind=StreamEventKind.DONE,
-                            request_id=request.request_id,
-                            emitted_content=emitted_content,
-                            phase=StreamPhase.COMPLETE,
-                        )
+                            for event in events:
+                                yield event
+                            if completed:
+                                return
+                    finish = decoder.finish()
+                except UnicodeDecodeError:
+                    yield self._stream_error(
+                        request.request_id,
+                        AdapterError(
+                            code=AdapterErrorCode.BAD_RESPONSE,
+                            message="oMLX App stream emitted invalid UTF-8",
+                        ),
+                        emitted_content=emitted_content,
+                    )
+                    return
+                for data in finish.events:
+                    saw_data = True
+                    events, emitted_content, completed = self._stream_frame_events(
+                        request_id=request.request_id,
+                        data=data,
+                        reasoning_filter=reasoning_filter,
+                        emitted_content=emitted_content,
+                    )
+                    for event in events:
+                        yield event
+                    if completed:
                         return
-                    try:
-                        parsed = cast(object, json.loads(data))
-                    except json.JSONDecodeError:
-                        yield self._stream_error(
-                            request.request_id,
-                            AdapterError(
-                                code=AdapterErrorCode.BAD_RESPONSE,
-                                message="oMLX App stream emitted non-JSON data",
-                            ),
-                            emitted_content=emitted_content,
-                        )
-                        return
-                    if not isinstance(parsed, dict):
-                        yield self._stream_error(
-                            request.request_id,
-                            AdapterError(
-                                code=AdapterErrorCode.BAD_RESPONSE,
-                                message="oMLX App stream emitted an unexpected JSON shape",
-                            ),
-                            emitted_content=emitted_content,
-                        )
-                        return
-                    document = cast(dict[str, object], parsed)
-                    usage = self._parse_usage(document.get("usage"))
-                    if usage is not None:
-                        yield StreamEvent(
-                            kind=StreamEventKind.USAGE,
-                            request_id=request.request_id,
-                            usage=usage,
-                            emitted_content=emitted_content,
-                            phase=(
-                                StreamPhase.AFTER_CONTENT
-                                if emitted_content
-                                else StreamPhase.BEFORE_CONTENT
-                            ),
-                        )
-                    content, finish_reason = self._parse_stream_choice(document)
-                    content = reasoning_filter.feed(content)
-                    if content:
-                        emitted_content = True
-                        yield StreamEvent(
-                            kind=StreamEventKind.CONTENT,
-                            request_id=request.request_id,
-                            content=content,
-                            finish_reason=finish_reason,
-                            emitted_content=True,
-                            phase=StreamPhase.AFTER_CONTENT,
-                        )
+                if finish.incomplete_event:
+                    yield self._stream_error(
+                        request.request_id,
+                        AdapterError(
+                            code=AdapterErrorCode.BAD_RESPONSE,
+                            message="oMLX App stream ended with an incomplete SSE event",
+                            retryable=not emitted_content,
+                        ),
+                        emitted_content=emitted_content,
+                    )
+                    return
         except httpx.TimeoutException:
             error = AdapterError(
                 code=AdapterErrorCode.TIMEOUT,
@@ -784,6 +882,102 @@ class OmlxAppAdapter:
                 ),
             )
             yield self._stream_error(request.request_id, error, emitted_content=emitted_content)
+
+    def _stream_frame_events(
+        self,
+        *,
+        request_id: str,
+        data: str,
+        reasoning_filter: _ReasoningFilter,
+        emitted_content: bool,
+    ) -> tuple[tuple[StreamEvent, ...], bool, bool]:
+        if data.strip() == "[DONE]":
+            events: list[StreamEvent] = []
+            remaining, unclosed = reasoning_filter.finish()
+            if unclosed:
+                error = AdapterError(
+                    code=AdapterErrorCode.BAD_RESPONSE,
+                    message="oMLX App stream ended with an unclosed reasoning block",
+                    retryable=not emitted_content,
+                )
+                return (
+                    (self._stream_error(request_id, error, emitted_content=emitted_content),),
+                    emitted_content,
+                    True,
+                )
+            if remaining:
+                emitted_content = True
+                events.append(
+                    StreamEvent(
+                        kind=StreamEventKind.CONTENT,
+                        request_id=request_id,
+                        content=remaining,
+                        emitted_content=True,
+                        phase=StreamPhase.AFTER_CONTENT,
+                    )
+                )
+            events.append(
+                StreamEvent(
+                    kind=StreamEventKind.DONE,
+                    request_id=request_id,
+                    emitted_content=emitted_content,
+                    phase=StreamPhase.COMPLETE,
+                )
+            )
+            return tuple(events), emitted_content, True
+
+        try:
+            parsed = cast(object, json.loads(data))
+        except json.JSONDecodeError:
+            error = AdapterError(
+                code=AdapterErrorCode.BAD_RESPONSE,
+                message="oMLX App stream emitted non-JSON data",
+            )
+            return (
+                (self._stream_error(request_id, error, emitted_content=emitted_content),),
+                emitted_content,
+                True,
+            )
+        if not isinstance(parsed, dict):
+            error = AdapterError(
+                code=AdapterErrorCode.BAD_RESPONSE,
+                message="oMLX App stream emitted an unexpected JSON shape",
+            )
+            return (
+                (self._stream_error(request_id, error, emitted_content=emitted_content),),
+                emitted_content,
+                True,
+            )
+        document = cast(dict[str, object], parsed)
+        events = []
+        usage = self._parse_usage(document.get("usage"))
+        if usage is not None:
+            events.append(
+                StreamEvent(
+                    kind=StreamEventKind.USAGE,
+                    request_id=request_id,
+                    usage=usage,
+                    emitted_content=emitted_content,
+                    phase=(
+                        StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
+                    ),
+                )
+            )
+        content, finish_reason = self._parse_stream_choice(document)
+        content = reasoning_filter.feed(content)
+        if content:
+            emitted_content = True
+            events.append(
+                StreamEvent(
+                    kind=StreamEventKind.CONTENT,
+                    request_id=request_id,
+                    content=content,
+                    finish_reason=finish_reason,
+                    emitted_content=True,
+                    phase=StreamPhase.AFTER_CONTENT,
+                )
+            )
+        return tuple(events), emitted_content, False
 
     @staticmethod
     def _parse_stream_choice(document: Mapping[str, object]) -> tuple[str, str | None]:

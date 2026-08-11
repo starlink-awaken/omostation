@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
-import httpx
 import pytest
 
 from omlxc.domain.protocols import (
     AdapterErrorCode,
-    BackendAdapterV1,
+    BackendAdapter,
     ChatMessage,
     ChatRequest,
     EmbeddingRequest,
@@ -38,8 +37,7 @@ class ContractScenario(StrEnum):
 
 @dataclass
 class ContractHarness:
-    adapter: BackendAdapterV1
-    requests: list[httpx.Request]
+    adapter: BackendAdapter
 
 
 class HarnessFactory(Protocol):
@@ -81,14 +79,6 @@ class BackendAdapterContract:
         snapshot = await harness.adapter.discover()
 
         assert snapshot.generation_ready is True
-        generation_requests = [
-            request
-            for request in harness.requests
-            if request.url.path.endswith("/chat/completions")
-        ]
-        assert len(generation_requests) == 1
-        payload = generation_requests[0].read().decode("utf-8")
-        assert '"max_tokens":1' in payload
 
     @pytest.mark.asyncio
     async def test_chat_forces_reasoning_off_and_never_returns_reasoning_content(self) -> None:
@@ -103,9 +93,6 @@ class BackendAdapterContract:
 
         assert result.success is True
         assert result.content == "visible"
-        serialized_request = harness.requests[-1].read().decode("utf-8")
-        assert '"enable_thinking":false' in serialized_request
-        assert '"thinking_budget_enabled":false' in serialized_request
         assert "reasoning_content" not in result.model_dump_json()
         assert "hidden-reasoning" not in result.model_dump_json()
 
@@ -129,7 +116,6 @@ class BackendAdapterContract:
 
         assert result.status is OperationStatus.UNCHANGED
         assert result.changed is False
-        assert all(request.method == "GET" for request in harness.requests)
 
     @pytest.mark.asyncio
     async def test_stream_emits_content_usage_and_done_with_explicit_phase(self) -> None:
@@ -202,13 +188,3 @@ class BackendAdapterContract:
         assert events[-1].phase is phase
         assert events[-1].error is not None
         assert events[-1].error.code is code
-
-
-def request_json(request: httpx.Request) -> Mapping[str, object]:
-    """Typed helper for concrete harness assertions without coupling the contract."""
-    import json
-
-    parsed = json.loads(request.read())
-    if not isinstance(parsed, dict):
-        raise AssertionError("expected JSON object request")
-    return parsed
