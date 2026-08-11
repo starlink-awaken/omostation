@@ -1,0 +1,37 @@
+# M1 Node: COMP-WS-omlxc
+# Type: Component
+# Modeled: 2026-08-11
+
+id: COMP-WS-omlxc
+type: Component
+m3_parent: StructuralElement.Component
+subtype: Project
+name: omlxc
+description: omlxc — 本地算力控制面、物理放置与运行时
+project: omlxc
+status: active
+domain: compute
+created: '2026-08-11'
+version: 3.0.0a1
+layer: L1
+runtime: active
+properties:
+  layer: L1
+  runtime: active
+  has_pyproject: true
+  has_package_json: false
+  has_tests: true
+
+model_driven_refs:
+  source_file: projects/omlxc/
+
+state_history:
+  - state: active
+    timestamp: '2026-08-11T00:00:00Z'
+    reason: workspace_l1_registration
+
+value_metrics:
+  business_value: high
+  technical_debt: low
+  maintenance_cost: medium
+  strategic_importance: critical

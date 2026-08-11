@@ -3,15 +3,20 @@ type: ComputeEngine
 node_ref: NODE-LOCAL-MAC
 engine_type: local_inference
 network_zone: local
-base_url: "http://127.0.0.1:8000/v1"
-supported_protocols: ["openai"]
+base_url: "unix://omlxc/api/v1"
+transport: unix_socket
+endpoint_ref: omlxc.daemon.socket
+placement_source: "omlxc GET /api/v1/models"
+supported_protocols: ["omlxc-v1", "openai"]
 request_defaults:
   chat_template_kwargs:
     enable_thinking: false
   thinking_budget: 0
 cost_multiplier: 0.0001
 status: active
-description: "MBP oMLX App 物理推理端点 · AetherForge 数据面从此端点调用逻辑模型 · 模型清单见 MODEL-BREW-OMLX-LOCAL(omlxc ssot-sync 生成) · 仅 loopback 可达"
+description: >-
+  omlxc UDS/API 提供本地物理 placement、容量准入与执行；AetherForge 保持逻辑模型、
+  认证和唯一公共数据面 bos://compute/aetherforge/infer。默认关闭 thinking。
 
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m1/
@@ -39,3 +44,8 @@ state_history:
     reason: >-
       repoint_to_physical_omlx_app_8000 — AetherForge 是逻辑数据面，ComputeEngine
       必须登记物理 provider，不能再指回 AetherForge 自己；默认关闭 thinking。
+  - state: active
+    timestamp: '2026-08-11T00:00:00Z'
+    reason: >-
+      repoint_physical_placement_to_omlxc_uds_api — 本地 placement 与执行由 omlxc
+      Unix Socket API 提供；AetherForge 只保留逻辑与公共数据面职责。

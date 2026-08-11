@@ -2,12 +2,13 @@ type: ModelDefinition
 status: active
 engine_ref: ENG-OMLX-LOCAL
 model_driven_refs:
-  source: omlxc ssot-sync (gateway aliases + models.json)
-  synced_at: '2026-08-10T12:57:31Z'
+  source: "omlxc daemon GET /api/v1/models"
+  source_component: COMP-WS-omlxc
+  export: "explicit read-only export from omlxc daemon"
 governance:
-  owner: omlx
-  steward: omlxc-ssot-sync
-  freshness_policy: on-change (跑 `omlxc ssot-sync`)
+  owner: omlxc
+  steward: omlxc-api
+  freshness_policy: "on-demand explicit read-only export; no implicit synchronization"
 models:
 - model_id: coding
   display_name: coding (MBP-oMLX-App)
