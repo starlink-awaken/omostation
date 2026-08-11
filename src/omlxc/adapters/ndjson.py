@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import codecs
 import json
 from collections.abc import Mapping
 from typing import cast
@@ -15,50 +14,73 @@ class NDJSONDecodeError(ValueError):
         super().__init__(message)
 
 
+class NDJSONLimitError(NDJSONDecodeError):
+    """A fixed-message record or aggregate stream size violation."""
+
+    def __init__(self) -> None:
+        super().__init__("NDJSON stream exceeds its configured byte limit")
+
+
 class NDJSONDecoder:
     """Decode UTF-8 bytes into one JSON object per LF or CRLF-delimited line."""
 
-    def __init__(self) -> None:
-        decoder_factory = codecs.getincrementaldecoder("utf-8")
-        self._decoder: codecs.IncrementalDecoder = decoder_factory(errors="strict")
-        self._text = ""
+    def __init__(
+        self,
+        *,
+        max_record_bytes: int = 1_048_576,
+        max_total_bytes: int = 16_777_216,
+    ) -> None:
+        if (
+            type(max_record_bytes) is not int
+            or type(max_total_bytes) is not int
+            or max_record_bytes <= 0
+            or max_total_bytes < max_record_bytes
+        ):
+            raise ValueError("NDJSON limits must be positive and total must cover one record")
+        self._max_record_bytes = max_record_bytes
+        self._max_total_bytes = max_total_bytes
+        self._record = bytearray()
+        self._total_bytes = 0
 
     def feed(self, chunk: bytes) -> tuple[dict[str, object], ...]:
-        try:
-            self._text += self._decoder.decode(chunk, final=False)
-        except UnicodeDecodeError as exc:
-            raise NDJSONDecodeError("NDJSON stream contains invalid UTF-8") from exc
-        return self._drain(final=False)
-
-    def finish(self) -> tuple[dict[str, object], ...]:
-        try:
-            self._text += self._decoder.decode(b"", final=True)
-        except UnicodeDecodeError as exc:
-            raise NDJSONDecodeError("NDJSON stream contains invalid UTF-8") from exc
-        return self._drain(final=True)
-
-    def _drain(self, *, final: bool) -> tuple[dict[str, object], ...]:
+        self._total_bytes += len(chunk)
+        if self._total_bytes > self._max_total_bytes:
+            raise NDJSONLimitError()
         documents: list[dict[str, object]] = []
+        start = 0
         while True:
-            newline = self._text.find("\n")
+            newline = chunk.find(b"\n", start)
             if newline < 0:
+                self._append(chunk[start:])
                 break
-            line = self._text[:newline]
-            self._text = self._text[newline + 1 :]
-            if line.endswith("\r"):
-                line = line[:-1]
-            if line:
-                documents.append(self._parse(line))
-        if final and self._text:
-            tail = self._text
-            self._text = ""
-            documents.append(self._parse(tail))
+            self._append(chunk[start:newline])
+            if self._record.endswith(b"\r"):
+                del self._record[-1]
+            if self._record:
+                documents.append(self._parse(bytes(self._record)))
+            self._record.clear()
+            start = newline + 1
         return tuple(documents)
 
+    def finish(self) -> tuple[dict[str, object], ...]:
+        if not self._record:
+            return ()
+        record = bytes(self._record)
+        self._record.clear()
+        return (self._parse(record),)
+
+    def _append(self, value: bytes) -> None:
+        if len(self._record) + len(value) > self._max_record_bytes:
+            raise NDJSONLimitError()
+        self._record.extend(value)
+
     @staticmethod
-    def _parse(line: str) -> dict[str, object]:
+    def _parse(line: bytes) -> dict[str, object]:
         try:
-            value = cast(object, json.loads(line))
+            text = line.decode("utf-8", errors="strict")
+            value = cast(object, json.loads(text))
+        except UnicodeDecodeError as exc:
+            raise NDJSONDecodeError("NDJSON stream contains invalid UTF-8") from exc
         except json.JSONDecodeError as exc:
             raise NDJSONDecodeError() from exc
         if not isinstance(value, Mapping):

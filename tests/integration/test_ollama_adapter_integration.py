@@ -76,9 +76,11 @@ async def test_ollama_native_discover_lifecycle_chat_embed_and_stream_flow() -> 
             return httpx.Response(
                 200,
                 json={
-                    "message": {"content": "<think>private</think>visible"},
+                    "message": {"content": "visible"},
                     "done": True,
                     "done_reason": "stop",
+                    "prompt_eval_count": 1,
+                    "eval_count": 1,
                 },
             )
         raise AssertionError(request.url.path)

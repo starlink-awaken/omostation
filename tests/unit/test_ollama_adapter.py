@@ -9,6 +9,7 @@ from collections.abc import AsyncIterator, Callable
 import httpx
 import pytest
 
+from omlxc.adapters.ollama import OllamaAdapter
 from omlxc.domain.protocols import (
     AdapterErrorCode,
     BackendAdapter,
@@ -45,9 +46,7 @@ def _request(request_id: str = "req") -> ChatRequest:
 def _adapter(
     handler: Callable[[httpx.Request], httpx.Response],
     **kwargs: object,
-) -> object:
-    from omlxc.adapters.ollama import OllamaAdapter
-
+) -> OllamaAdapter:
     return OllamaAdapter(
         backend_id="ollama-test",
         base_url="https://ollama.invalid",
@@ -82,7 +81,7 @@ def test_base_url_accepts_only_clean_http_root(url: str) -> None:
 async def test_model_identifier_rejects_shell_userinfo_and_traversal(model_id: str) -> None:
     adapter = _adapter(lambda request: httpx.Response(500))
 
-    result = await adapter.load_model(model_id)  # type: ignore[attr-defined]
+    result = await adapter.load_model(model_id)
 
     assert result.status is OperationStatus.FAILED
     assert result.error is not None
@@ -129,7 +128,7 @@ async def test_version_must_be_2xx_strict_json_with_semantic_version() -> None:
     )
     adapter = _adapter(lambda request: next(responses))
 
-    snapshots = [await adapter.discover() for _ in range(3)]  # type: ignore[attr-defined]
+    snapshots = [await adapter.discover() for _ in range(3)]
 
     assert all(item.reachable for item in snapshots)
     assert all(not item.compatible for item in snapshots)
@@ -142,7 +141,7 @@ async def test_discovery_transport_failure_is_typed_unreachable() -> None:
         raise httpx.ReadTimeout("remote secret")
 
     adapter = _adapter(handler)
-    snapshot = await adapter.discover()  # type: ignore[attr-defined]
+    snapshot = await adapter.discover()
 
     assert snapshot.reachable is False
     assert snapshot.errors[0].code is AdapterErrorCode.TIMEOUT
@@ -159,7 +158,7 @@ async def test_tags_success_and_ps_failure_produces_unknown_not_available() -> N
         raise AssertionError(request.url.path)
 
     adapter = _adapter(handler)
-    models = await adapter.list_models()  # type: ignore[attr-defined]
+    models = await adapter.list_models()
 
     assert [(model.id, model.state, model.loaded) for model in models] == [
         ("library/model:latest", ModelRuntimeState.UNKNOWN, None)
@@ -174,7 +173,7 @@ async def test_ps_only_loaded_model_is_preserved() -> None:
         return httpx.Response(200, json={"models": [_tag("loaded-only:latest", "sha256:def")]})
 
     adapter = _adapter(handler)
-    models = await adapter.list_models()  # type: ignore[attr-defined]
+    models = await adapter.list_models()
 
     assert [(model.id, model.loaded) for model in models] == [
         ("catalog:latest", False),
@@ -200,13 +199,13 @@ async def test_identity_alias_or_digest_ambiguity_fails_closed(
 
     adapter = _adapter(handler)
     with pytest.raises(Exception) as captured:
-        await adapter.list_models()  # type: ignore[attr-defined]
+        await adapter.list_models()
 
     assert "sha256:abc" not in f"{captured.value!s} {captured.value!r}"
 
 
 @pytest.mark.asyncio
-async def test_chat_payload_is_native_minimal_and_filters_all_thinking() -> None:
+async def test_chat_payload_is_native_minimal_with_thinking_disabled() -> None:
     captured: dict[str, object] = {}
 
     async def handler(request: httpx.Request) -> httpx.Response:
@@ -214,11 +213,7 @@ async def test_chat_payload_is_native_minimal_and_filters_all_thinking() -> None
         return httpx.Response(
             200,
             json={
-                "message": {
-                    "content": "<think>secret</think>visible",
-                    "thinking": "separate secret",
-                },
-                "thinking": "top secret",
+                "message": {"content": "visible"},
                 "done": True,
                 "done_reason": "stop",
                 "prompt_eval_count": 4,
@@ -227,7 +222,7 @@ async def test_chat_payload_is_native_minimal_and_filters_all_thinking() -> None
         )
 
     adapter = _adapter(handler, keep_alive_seconds=42)
-    result = await adapter.chat(_request())  # type: ignore[attr-defined]
+    result = await adapter.chat(_request())
 
     assert result.success is True
     assert result.content == "visible"
@@ -248,7 +243,16 @@ async def test_chat_converts_only_validated_data_images_without_fetching() -> No
 
     async def handler(request: httpx.Request) -> httpx.Response:
         captured.update(json.loads(request.content))
-        return httpx.Response(200, json={"message": {"content": "ok"}, "done": True})
+        return httpx.Response(
+            200,
+            json={
+                "message": {"content": "ok"},
+                "done": True,
+                "done_reason": "stop",
+                "prompt_eval_count": 1,
+                "eval_count": 1,
+            },
+        )
 
     adapter = _adapter(handler)
     data_image = "data:image/png;base64,aGVsbG8="
@@ -266,7 +270,7 @@ async def test_chat_converts_only_validated_data_images_without_fetching() -> No
         ),
     )
 
-    result = await adapter.chat(request)  # type: ignore[attr-defined]
+    result = await adapter.chat(request)
 
     assert result.success is True
     assert captured["messages"] == [{"role": "user", "content": "describe", "images": ["aGVsbG8="]}]
@@ -297,7 +301,7 @@ async def test_chat_rejects_remote_image_without_issuing_http_request() -> None:
         ),
     )
 
-    result = await adapter.chat(request)  # type: ignore[attr-defined]
+    result = await adapter.chat(request)
 
     assert result.success is False
     assert result.error is not None
@@ -314,7 +318,7 @@ async def test_unclosed_reasoning_fails_closed() -> None:
         )
     )
 
-    result = await adapter.chat(_request())  # type: ignore[attr-defined]
+    result = await adapter.chat(_request())
 
     assert result.success is False
     assert result.content == ""
@@ -327,7 +331,7 @@ async def test_embed_current_endpoint_maps_unsupported_statuses(status: int) -> 
     adapter = _adapter(lambda request: httpx.Response(status, content=b"secret"))
     result = await adapter.embed(
         EmbeddingRequest(request_id="embed", model="embed:latest", input="hello")
-    )  # type: ignore[attr-defined]
+    )
 
     assert result.status is OperationStatus.UNSUPPORTED
     assert result.error is not None
@@ -357,9 +361,9 @@ async def test_embed_preserves_batch_order_and_validates_shape_and_finiteness() 
     adapter = _adapter(handler)
     batch = EmbeddingRequest(request_id="batch", model="embed:latest", input=("a", "b"))
 
-    good = await adapter.embed(batch)  # type: ignore[attr-defined]
-    bad = [await adapter.embed(batch) for _ in range(3)]  # type: ignore[attr-defined]
-    wrong_count = await adapter.embed(batch)  # type: ignore[attr-defined]
+    good = await adapter.embed(batch)
+    bad = [await adapter.embed(batch) for _ in range(3)]
+    wrong_count = await adapter.embed(batch)
 
     assert good.embeddings == ((1.0, 2.0), (3.0, 4.0))
     assert all(item.status is OperationStatus.FAILED for item in bad)
@@ -384,8 +388,8 @@ async def test_load_and_unload_use_generate_and_fresh_inventory_verification() -
         return httpx.Response(200, json={"done": True, "response": ""})
 
     adapter = _adapter(handler, keep_alive_seconds=90)
-    loaded = await adapter.load_model("library/model:latest", idempotency_key="load")  # type: ignore[attr-defined]
-    unloaded = await adapter.unload_model("library/model:latest", idempotency_key="unload")  # type: ignore[attr-defined]
+    loaded = await adapter.load_model("library/model:latest", idempotency_key="load")
+    unloaded = await adapter.unload_model("library/model:latest", idempotency_key="unload")
 
     assert loaded.status is OperationStatus.SUCCEEDED
     assert unloaded.status is OperationStatus.SUCCEEDED
@@ -409,7 +413,7 @@ async def test_unknown_lifecycle_state_never_writes() -> None:
         return httpx.Response(200)
 
     adapter = _adapter(handler)
-    result = await adapter.load_model("library/model:latest")  # type: ignore[attr-defined]
+    result = await adapter.load_model("library/model:latest")
 
     assert result.status is OperationStatus.FAILED
     assert writes == 0
@@ -427,7 +431,7 @@ async def test_lifecycle_missing_model_is_typed_without_writing() -> None:
         return httpx.Response(200)
 
     adapter = _adapter(handler)
-    result = await adapter.load_model("missing:latest")  # type: ignore[attr-defined]
+    result = await adapter.load_model("missing:latest")
 
     assert result.error is not None
     assert result.error.code is AdapterErrorCode.MODEL_UNAVAILABLE
@@ -444,7 +448,7 @@ async def test_post_operation_verification_mismatch_is_partial_failure() -> None
         return httpx.Response(200, json={"done": True})
 
     adapter = _adapter(handler)
-    result = await adapter.load_model("library/model:latest")  # type: ignore[attr-defined]
+    result = await adapter.load_model("library/model:latest")
 
     assert result.status is OperationStatus.FAILED
     assert result.error is not None
@@ -467,7 +471,7 @@ async def test_post_operation_verification_transport_failure_is_partial_failure(
         return httpx.Response(200, json={"done": True})
 
     adapter = _adapter(handler)
-    result = await adapter.load_model("library/model:latest")  # type: ignore[attr-defined]
+    result = await adapter.load_model("library/model:latest")
 
     assert result.status is OperationStatus.FAILED
     assert result.error is not None
@@ -475,7 +479,7 @@ async def test_post_operation_verification_transport_failure_is_partial_failure(
 
 
 @pytest.mark.asyncio
-async def test_tune_maps_only_model_ttl_and_pin_to_bounded_keep_alive() -> None:
+async def test_tune_maps_only_model_ttl_to_bounded_keep_alive() -> None:
     payloads: list[dict[str, object]] = []
 
     async def handler(request: httpx.Request) -> httpx.Response:
@@ -487,14 +491,14 @@ async def test_tune_maps_only_model_ttl_and_pin_to_bounded_keep_alive() -> None:
         return httpx.Response(200, json={"done": True})
 
     adapter = _adapter(handler)
-    result = await adapter.tune(  # type: ignore[attr-defined]
+    result = await adapter.tune(
         TuneRequest(
             scope=TuneScope.MODEL,
             model_id="library/model:latest",
-            settings=TuneSettings(ttl_seconds=123, is_pinned=False),
+            settings=TuneSettings(ttl_seconds=123),
         )
     )
-    unsupported = await adapter.tune(  # type: ignore[attr-defined]
+    unsupported = await adapter.tune(
         TuneRequest(
             scope=TuneScope.MODEL,
             model_id="library/model:latest",
@@ -503,7 +507,7 @@ async def test_tune_maps_only_model_ttl_and_pin_to_bounded_keep_alive() -> None:
     )
 
     assert result.status is OperationStatus.SUCCEEDED
-    assert result.changed_fields == ("is_pinned", "ttl_seconds")
+    assert result.changed_fields == ("ttl_seconds",)
     assert payloads[0]["keep_alive"] == 123
     assert unsupported.status is OperationStatus.UNSUPPORTED
     assert len(payloads) == 1
@@ -537,7 +541,7 @@ async def test_stream_handles_chunked_utf8_blank_lines_tail_and_closes_resource(
     )
     adapter = _adapter(lambda request: httpx.Response(200, stream=stream))
 
-    events = [event async for event in adapter.stream_chat(_request("stream"))]  # type: ignore[attr-defined]
+    events = [event async for event in adapter.stream_chat(_request("stream"))]
 
     assert [event.kind for event in events] == [
         StreamEventKind.CONTENT,
@@ -560,8 +564,8 @@ async def test_stream_unclosed_reasoning_and_eof_without_done_fail_closed() -> N
     )
     adapter = _adapter(lambda request: httpx.Response(200, content=next(bodies)))
 
-    unclosed = [event async for event in adapter.stream_chat(_request("unclosed"))]  # type: ignore[attr-defined]
-    eof = [event async for event in adapter.stream_chat(_request("eof"))]  # type: ignore[attr-defined]
+    unclosed = [event async for event in adapter.stream_chat(_request("unclosed"))]
+    eof = [event async for event in adapter.stream_chat(_request("eof"))]
 
     assert unclosed[-1].kind is StreamEventKind.ERROR
     assert "secret" not in "".join(event.model_dump_json() for event in unclosed)
@@ -582,7 +586,7 @@ async def test_stream_unclosed_reasoning_and_eof_without_done_fail_closed() -> N
 async def test_stream_record_shape_and_trailing_data_fail_closed(body: bytes) -> None:
     adapter = _adapter(lambda request: httpx.Response(200, content=body))
 
-    events = [event async for event in adapter.stream_chat(_request("bad-record"))]  # type: ignore[attr-defined]
+    events = [event async for event in adapter.stream_chat(_request("bad-record"))]
 
     assert events[-1].kind is StreamEventKind.ERROR
     assert events[-1].error is not None
@@ -593,8 +597,8 @@ async def test_stream_record_shape_and_trailing_data_fail_closed(body: bytes) ->
 async def test_chat_and_stream_http_errors_are_typed_without_body_echo() -> None:
     adapter = _adapter(lambda request: httpx.Response(503, content=b"remote secret"))
 
-    chat = await adapter.chat(_request("http-chat"))  # type: ignore[attr-defined]
-    stream = [event async for event in adapter.stream_chat(_request("http-stream"))]  # type: ignore[attr-defined]
+    chat = await adapter.chat(_request("http-chat"))
+    stream = [event async for event in adapter.stream_chat(_request("http-stream"))]
 
     assert chat.error is not None
     assert stream[-1].error is not None
@@ -612,8 +616,8 @@ async def test_stream_read_error_tracks_first_token_boundary_and_redacts_excepti
     )
     adapter = _adapter(lambda request: httpx.Response(200, stream=next(streams)))
 
-    before = [event async for event in adapter.stream_chat(_request("before"))]  # type: ignore[attr-defined]
-    after = [event async for event in adapter.stream_chat(_request("after"))]  # type: ignore[attr-defined]
+    before = [event async for event in adapter.stream_chat(_request("before"))]
+    after = [event async for event in adapter.stream_chat(_request("after"))]
 
     assert before[-1].error is not None
     assert before[-1].error.code is AdapterErrorCode.STREAM_INTERRUPTED
@@ -644,7 +648,7 @@ async def test_stream_cancellation_propagates_and_closes_resource() -> None:
     adapter = _adapter(lambda request: httpx.Response(200, stream=stream))
 
     async def consume() -> None:
-        async for _ in adapter.stream_chat(_request("cancel")):  # type: ignore[attr-defined]
+        async for _ in adapter.stream_chat(_request("cancel")):
             pass
 
     task = asyncio.create_task(consume())

@@ -20,6 +20,11 @@ class ReasoningFilter:
     def __init__(self) -> None:
         self._buffer = ""
         self._depth = 0
+        self._saw_reasoning = False
+
+    @property
+    def saw_reasoning(self) -> bool:
+        return self._saw_reasoning
 
     def feed(self, chunk: str) -> str:
         self._buffer += chunk
@@ -49,6 +54,7 @@ class ReasoningFilter:
 
             open_at = lowered.find(_THINK_OPEN)
             if open_at >= 0:
+                self._saw_reasoning = True
                 output.append(self._buffer[:open_at])
                 self._buffer = self._buffer[open_at + len(_THINK_OPEN) :]
                 self._depth = 1

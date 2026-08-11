@@ -97,19 +97,24 @@ class TestOllamaContract(BackendAdapterContract):
                     return httpx.Response(
                         200,
                         json={
-                            "message": {
-                                "content": "<think>hidden-reasoning</think>visible",
-                                "thinking": "hidden-reasoning",
-                            },
-                            "thinking": "hidden-reasoning",
+                            "message": {"content": "visible"},
                             "done": True,
+                            "done_reason": "stop",
+                            "prompt_eval_count": 1,
+                            "eval_count": 1,
                         },
                     )
                 assert payload["stream"] is False
                 assert payload["options"]["num_predict"] == 1
                 return httpx.Response(
                     200,
-                    json={"message": {"content": "O"}, "done": True},
+                    json={
+                        "message": {"content": "O"},
+                        "done": True,
+                        "done_reason": "stop",
+                        "prompt_eval_count": 1,
+                        "eval_count": 1,
+                    },
                 )
             raise AssertionError(f"unexpected request: {request.method} {request.url.path}")
 
