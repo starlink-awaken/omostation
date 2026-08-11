@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import tempfile
 from collections.abc import AsyncIterator
+from dataclasses import replace
 from datetime import UTC, datetime
 from itertools import count
 from pathlib import Path
@@ -465,6 +466,96 @@ async def test_receive_layer_rejects_chunked_body_without_content_length() -> No
         response = await client.post("/openai/v1/embeddings", content=chunks())
 
     assert response.status_code == 413
+
+
+@pytest.mark.asyncio
+async def test_route_failure_and_catalog_views_are_typed_and_observable(tmp_path: Path) -> None:
+    config = _config(tmp_path).model_copy(
+        update={
+            "nodes": (
+                NodeConfig(id="node", display_name="Ready", platform="macos"),
+                NodeConfig(
+                    id="node-b",
+                    display_name="Rejected",
+                    platform="windows",
+                    tailscale_identity="private-peer-identity",
+                ),
+            )
+        }
+    )
+    ready = _snapshot()
+    rejected = replace(
+        ready,
+        placement_id="placement-b",
+        node_id="node-b",
+        fresh=False,
+        available=False,
+        authorized=False,
+        loaded=False,
+        available_concurrency=0,
+        security_allowed=False,
+    )
+    composition = build_production_daemon(
+        config,
+        adapters={"backend": FakeBackend()},
+        snapshots=(ready, rejected),
+        now=lambda: datetime(2026, 8, 12, tzinfo=UTC),
+    )
+    transport = httpx.ASGITransport(app=composition.app)
+
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        failure = await client.post(
+            "/api/v1/routes/plan",
+            json={"model_id": "local/model", "required_capabilities": ["vision"]},
+        )
+        nodes = await client.get("/api/v1/nodes")
+        models = await client.get("/api/v1/models")
+
+    assert failure.status_code == 409
+    error = failure.json()["error"]
+    assert error["code"] == "E400"
+    assert error["partial_result"] == {
+        "kind": "no_candidate",
+        "rejected": {
+            "placement": "capability_missing",
+            "placement-b": "health_or_authorization",
+        },
+        "config_version": "scheduler-v1",
+    }
+    assert "http://" not in failure.text and "physical/model" not in failure.text
+
+    node_items = nodes.json()["data"]["items"]
+    assert "private-peer-identity" not in nodes.text
+    assert [(item["id"], item["fresh"], item["ready"]) for item in node_items] == [
+        ("node", True, True),
+        ("node-b", False, False),
+    ]
+    assert node_items[0]["last_observed_at"] == "2026-08-12T00:00:00Z"
+    model = models.json()["data"]["items"][0]
+    assert model["fresh"] is True
+    assert model["available"] is True
+    assert model["authorized"] is True
+    assert model["loaded"] is True
+    assert model["ready"] is True
+    assert [item["placement_id"] for item in model["placement_states"]] == [
+        "placement",
+        "placement-b",
+    ]
+
+    capacity_composition = build_production_daemon(
+        config,
+        adapters={"backend": FakeBackend()},
+        snapshots=(replace(ready, available_concurrency=0),),
+        now=lambda: datetime(2026, 8, 12, tzinfo=UTC),
+    )
+    capacity_transport = httpx.ASGITransport(app=capacity_composition.app)
+    async with httpx.AsyncClient(transport=capacity_transport, base_url="http://omlxc") as client:
+        capacity = await client.post("/api/v1/routes/plan", json={"model_id": "local/model"})
+
+    assert capacity.status_code == 409
+    assert capacity.json()["error"]["code"] == "E401"
+    assert capacity.json()["error"]["retryable"] is True
+    assert capacity.json()["error"]["partial_result"]["rejected"] == {"placement": "no_capacity"}
 
 
 @pytest.mark.asyncio

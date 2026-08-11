@@ -25,7 +25,14 @@ from omlxc.adapters import (
     TailscaleNodePolicy,
 )
 from omlxc.api import create_app
-from omlxc.config import AppConfig, BackendConfig, PlacementConfig, config_identity
+from omlxc.config import (
+    AppConfig,
+    BackendConfig,
+    ModelConfig,
+    NodeConfig,
+    PlacementConfig,
+    config_identity,
+)
 from omlxc.dataplane import (
     AdapterBinding,
     AdapterRegistry,
@@ -47,6 +54,7 @@ from omlxc.domain import (
     ModelSpec,
     Node,
     NodeState,
+    PlacementRuntimeStatus,
     RiskLevel,
     RouteDecision,
     RouteRequest,
@@ -102,8 +110,13 @@ class StorageHandle:
 
 
 class SnapshotCatalog:
-    def __init__(self, snapshots: tuple[PlacementSnapshot, ...]) -> None:
+    def __init__(
+        self, snapshots: tuple[PlacementSnapshot, ...], *, now: Callable[[], datetime]
+    ) -> None:
         self._snapshots = {snapshot.placement_id: snapshot for snapshot in snapshots}
+        observed_at = now()
+        self._observed_at = {snapshot.placement_id: observed_at for snapshot in snapshots}
+        self._now = now
 
     def get(self) -> tuple[PlacementSnapshot, ...]:
         return tuple(self._snapshots[key] for key in sorted(self._snapshots))
@@ -114,6 +127,20 @@ class SnapshotCatalog:
 
     def update(self, placement_id: str, **changes: object) -> None:
         self._snapshots[placement_id] = replace(self._snapshots[placement_id], **changes)
+        self._observed_at[placement_id] = self._now()
+
+    def observed_at(self, placement_id: str) -> datetime:
+        return self._observed_at[placement_id]
+
+
+@dataclass(frozen=True, slots=True)
+class _RuntimeSummary:
+    fresh: bool | None
+    authorized: bool | None
+    available: bool | None
+    loaded: bool | None
+    ready: bool | None
+    last_observed_at: datetime | None
 
 
 class CatalogProbe:
@@ -404,19 +431,11 @@ class ProductionControlService:
         }
 
     async def list_nodes(self, *, after: str | None, limit: int) -> tuple[Node, ...]:
+        snapshots = self._catalog.get()
         nodes = tuple(
-            Node(
-                id=item.id,
-                display_name=item.display_name,
-                platform=item.platform,
-                tailscale_identity=item.tailscale_identity,
-                memory_gb=item.memory_gb,
-                health=HealthSnapshot(
-                    state=NodeState.UNKNOWN,
-                    observed_at=self._now(),
-                    stale=True,
-                    detail="configured_not_probed",
-                ),
+            self._node_view(
+                item,
+                tuple(snapshot for snapshot in snapshots if snapshot.node_id == item.id),
             )
             for item in sorted(self._config.nodes, key=lambda node: node.id)
             if after is None or item.id > after
@@ -424,12 +443,98 @@ class ProductionControlService:
         return nodes[:limit]
 
     async def list_models(self, *, after: str | None, limit: int) -> tuple[ModelSpec, ...]:
+        snapshots = self._catalog.get()
         models = tuple(
-            ModelSpec(id=item.id, role=item.role, reasoning=item.reasoning)
+            self._model_view(
+                item,
+                tuple(snapshot for snapshot in snapshots if snapshot.model_id == item.id),
+            )
             for item in sorted(self._config.models, key=lambda model: model.id)
             if after is None or item.id > after
         )
         return models[:limit]
+
+    def _node_view(self, node: NodeConfig, snapshots: tuple[PlacementSnapshot, ...]) -> Node:
+        runtime = self._runtime_summary(snapshots)
+        state = (
+            NodeState.HEALTHY
+            if runtime.ready is True
+            else NodeState.DEGRADED
+            if snapshots
+            else NodeState.UNKNOWN
+        )
+        return Node(
+            id=node.id,
+            display_name=node.display_name,
+            platform=node.platform,
+            # Catalog views expose runtime health, never configured network identity.
+            tailscale_identity=None,
+            memory_gb=node.memory_gb,
+            capabilities=frozenset(
+                capability for snapshot in snapshots for capability in snapshot.capabilities
+            ),
+            health=HealthSnapshot(
+                state=state,
+                observed_at=runtime.last_observed_at or self._now(),
+                stale=runtime.fresh is not True,
+                detail="catalog_runtime" if snapshots else "configured_not_probed",
+            ),
+            fresh=runtime.fresh,
+            authorized=runtime.authorized,
+            available=runtime.available,
+            loaded=runtime.loaded,
+            ready=runtime.ready,
+            last_observed_at=runtime.last_observed_at,
+        )
+
+    def _model_view(
+        self, model: ModelConfig, snapshots: tuple[PlacementSnapshot, ...]
+    ) -> ModelSpec:
+        runtime = self._runtime_summary(snapshots)
+        states = tuple(
+            PlacementRuntimeStatus(
+                placement_id=snapshot.placement_id,
+                node_id=snapshot.node_id,
+                backend_id=snapshot.backend_id,
+                fresh=snapshot.fresh,
+                stale=not snapshot.fresh,
+                authorized=snapshot.authorized,
+                available=snapshot.available,
+                loaded=snapshot.loaded,
+                ready=_runtime_ready(snapshot),
+                last_observed_at=self._catalog.observed_at(snapshot.placement_id),
+            )
+            for snapshot in snapshots
+        )
+        return ModelSpec(
+            id=model.id,
+            role=model.role,
+            reasoning=model.reasoning,
+            capabilities=frozenset(
+                capability for snapshot in snapshots for capability in snapshot.capabilities
+            ),
+            placement_states=states,
+            fresh=runtime.fresh,
+            authorized=runtime.authorized,
+            available=runtime.available,
+            loaded=runtime.loaded,
+            ready=runtime.ready,
+            last_observed_at=runtime.last_observed_at,
+        )
+
+    def _runtime_summary(self, snapshots: tuple[PlacementSnapshot, ...]) -> _RuntimeSummary:
+        if not snapshots:
+            return _RuntimeSummary(None, None, None, None, None, None)
+        return _RuntimeSummary(
+            fresh=any(item.fresh for item in snapshots),
+            authorized=any(item.authorized for item in snapshots),
+            available=any(item.available for item in snapshots),
+            loaded=any(item.loaded for item in snapshots),
+            ready=any(_runtime_ready(item) for item in snapshots),
+            last_observed_at=max(
+                self._catalog.observed_at(item.placement_id) for item in snapshots
+            ),
+        )
 
     async def plan_route(self, request: RouteRequest) -> RouteDecision | RouteFailure:
         return self._planner.plan(request, self._catalog.get())
@@ -636,7 +741,7 @@ def build_production_daemon(
         if adapters is not None
         else build_configured_adapters(config, tailscale=configured_tailscale)
     )
-    catalog = SnapshotCatalog(snapshots or _configured_snapshots(config))
+    catalog = SnapshotCatalog(snapshots or _configured_snapshots(config), now=clock)
     planner = RoutePlanner(default_policies())
     storage = StorageHandle(config)
     bus = EventBus(capacity=128)
@@ -823,6 +928,17 @@ def is_loopback_url(value: str) -> bool:
         return host is not None and ipaddress.ip_address(host).is_loopback
     except ValueError:
         return False
+
+
+def _runtime_ready(snapshot: PlacementSnapshot) -> bool:
+    return (
+        snapshot.fresh
+        and snapshot.available
+        and snapshot.authorized
+        and snapshot.security_allowed
+        and snapshot.memory_admitted is not False
+        and snapshot.available_concurrency != 0
+    )
 
 
 def _job(stored: StoredJob) -> Job:

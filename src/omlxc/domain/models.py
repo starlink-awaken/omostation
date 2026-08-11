@@ -80,6 +80,12 @@ class Node(DomainModel):
     capabilities: frozenset[str] = frozenset()
     memory_gb: float | None = Field(default=None, gt=0)
     health: HealthSnapshot
+    fresh: bool | None = None
+    authorized: bool | None = None
+    available: bool | None = None
+    loaded: bool | None = None
+    ready: bool | None = None
+    last_observed_at: datetime | None = None
 
 
 class BackendInstance(DomainModel):
@@ -99,6 +105,26 @@ class ModelSpec(DomainModel):
     role: str
     capabilities: frozenset[str] = frozenset()
     reasoning: bool = False
+    fresh: bool | None = None
+    authorized: bool | None = None
+    available: bool | None = None
+    loaded: bool | None = None
+    ready: bool | None = None
+    last_observed_at: datetime | None = None
+    placement_states: tuple[PlacementRuntimeStatus, ...] = ()
+
+
+class PlacementRuntimeStatus(DomainModel):
+    placement_id: str = Field(min_length=1)
+    node_id: str = Field(min_length=1)
+    backend_id: str = Field(min_length=1)
+    fresh: bool
+    stale: bool
+    authorized: bool
+    available: bool
+    loaded: bool
+    ready: bool
+    last_observed_at: datetime
 
 
 class Placement(DomainModel):

@@ -29,6 +29,7 @@ from omlxc.domain.protocols import (
     TokenUsage,
 )
 from omlxc.events import EventSubscriptionClosed, RuntimeEvent
+from omlxc.scheduler import RouteFailure, RouteFailureCode
 from omlxc.storage import DurableEventRecord, JobConflictError
 
 from .contracts import ControlService, EventService, InferenceService
@@ -248,7 +249,10 @@ def create_app(
     async def route_plan(request: Request, body: RoutePlanBody) -> JSONResponse:
         service = _require_control(control)
         route = _route_request(_request_id(request), body)
-        return _success(request, await service.plan_route(route))
+        result = await service.plan_route(route)
+        if isinstance(result, RouteFailure):
+            return _route_failure_response(_request_id(request), result)
+        return _success(request, result)
 
     @app.get("/api/v1/jobs")
     async def jobs(
@@ -490,6 +494,49 @@ def _error_response(request_id: str, status: int, code: str, message: str) -> JS
             "schema_version": SCHEMA_VERSION,
             "request_id": request_id,
             "error": {"code": code, "message": message, "retryable": False},
+        },
+        status_code=status,
+        headers={"X-OMLXC-Request-ID": request_id},
+    )
+
+
+def _route_failure_response(request_id: str, failure: RouteFailure) -> JSONResponse:
+    if failure.code is RouteFailureCode.INVALID_SNAPSHOT:
+        code, status, message, retryable = (
+            "E500",
+            500,
+            "local route catalog is invalid",
+            False,
+        )
+    elif failure.code is RouteFailureCode.NO_CAPACITY:
+        code, status, message, retryable = (
+            "E401",
+            409,
+            "local route has no eligible capacity",
+            True,
+        )
+    else:
+        code, status, message, retryable = (
+            "E400",
+            409,
+            "local route has no eligible candidate",
+            False,
+        )
+    return JSONResponse(
+        {
+            "schema_version": SCHEMA_VERSION,
+            "request_id": request_id,
+            "error": {
+                "code": code,
+                "message": message,
+                "retryable": retryable,
+                "affected_resources": sorted(failure.rejected),
+                "partial_result": {
+                    "kind": failure.code.value,
+                    "rejected": dict(failure.rejected),
+                    "config_version": failure.config_version,
+                },
+            },
         },
         status_code=status,
         headers={"X-OMLXC-Request-ID": request_id},
