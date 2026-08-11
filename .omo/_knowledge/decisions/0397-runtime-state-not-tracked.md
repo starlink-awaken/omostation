@@ -6,7 +6,7 @@ owner: '@Builder'
 last-reviewed: '2026-08-09'
 ---
 
-# ADR-0404: 运行时状态文件不进git
+# ADR-0397: 运行时状态文件不进git
 
 - status: accepted
 - date: 2026-08-08
