@@ -1,0 +1,42 @@
+apiVersion: omo/v1
+kind: SpaceIdentityAdmission
+schema: spaces/_schema/space-identity-admission.schema.yaml
+id: personal-space-identity-admission
+space_ref: spaces/personal-space.yaml
+identity_anchor: actor_space_membership
+capability_taxonomy_ref: spaces/personal-space-capability-taxonomy.yaml
+admission_matrix_ref: spaces/personal-space-admission-matrix.yaml
+actors:
+  - id: personal-space-owner
+    actor_type: human
+    description: Sole human owner of personal canonical knowledge.
+  - id: l4-readonly-agent
+    actor_type: agent
+    description: Read-only contract compiler and harness actor.
+memberships:
+  - id: personal-owner-membership
+    actor_ref: personal-space-owner
+    space_ref: spaces/personal-space.yaml
+    roles:
+      - owner
+  - id: l4-readonly-membership
+    actor_ref: l4-readonly-agent
+    space_ref: spaces/personal-space.yaml
+    roles:
+      - readonly-validator
+capability_bindings:
+  - id: personal-owner-capabilities
+    membership_ref: personal-owner-membership
+    capabilities:
+      - knowledge.read
+      - knowledge.propose
+      - knowledge.approve
+  - id: l4-readonly-capabilities
+    membership_ref: l4-readonly-membership
+    capabilities:
+      - knowledge.read
+      - knowledge.validate
+admission:
+  decision_scope: knowledge_action
+  subject_binding: membership
+  default_mode: explicit_grant_required

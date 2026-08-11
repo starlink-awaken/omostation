@@ -31,7 +31,7 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-lock="$ROOT/.git/submodule-pointer-transaction.lock"
+lock="$(git rev-parse --path-format=absolute --git-path "submodule-pointer-transaction.lock")"
 if ! mkdir "$lock" 2>/dev/null; then
   echo "❌ another submodule pointer transaction is active: $lock" >&2
   exit 1

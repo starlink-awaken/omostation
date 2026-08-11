@@ -1,0 +1,22 @@
+apiVersion: omo/v1
+kind: SpaceAdmissionMatrix
+id: personal-space-admission-matrix
+space_ref: spaces/personal-space.yaml
+default_decision: deny
+rules:
+  - action: knowledge.read
+    required_capabilities:
+      - knowledge.read
+    decision: allow
+  - action: knowledge.validate
+    required_capabilities:
+      - knowledge.validate
+    decision: allow
+  - action: knowledge.propose
+    required_capabilities:
+      - knowledge.propose
+    decision: conditional_approval
+  - action: knowledge.approve
+    required_capabilities:
+      - knowledge.approve
+    decision: conditional_approval
