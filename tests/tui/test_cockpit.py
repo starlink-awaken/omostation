@@ -135,19 +135,26 @@ def _disconnected() -> DaemonClientError:
     )
 
 
-def _event() -> DaemonEvent:
+def _event(
+    *,
+    kind: str = "job.running",
+    payload: dict[str, object] | None = None,
+    resource_id: str | None = None,
+    job_id: str | None = "job-1",
+    cursor: int = 7,
+) -> DaemonEvent:
     return DaemonEvent.model_validate(
         {
             "schema_version": 1,
             "request_id": "req-event",
-            "cursor": 7,
-            "event_id": "event-7",
+            "cursor": cursor,
+            "event_id": f"event-{cursor}",
             "timestamp": datetime(2026, 8, 11, tzinfo=UTC),
             "priority": "high",
-            "kind": "job.running",
-            "payload": {"state": "running", "progress": 0.5},
-            "job_id": "job-1",
-            "resource_id": None,
+            "kind": kind,
+            "payload": payload or {"state": "running", "progress": 0.5},
+            "job_id": job_id,
+            "resource_id": resource_id,
         }
     )
 
@@ -245,6 +252,62 @@ async def test_disconnect_keeps_snapshot_stale_then_reconnects_and_applies_event
         assert app.connection_state == "LIVE"
         assert factory.calls >= 2
         assert "LIVE" in str(app.query_one("#topbar", Static).render())
+
+
+@pytest.mark.asyncio
+async def test_known_events_merge_snapshot_and_render_resource_state_without_rescan() -> None:
+    api = _tui_api()
+    client = CockpitClient("stable")
+    app = api.CockpitApp(client_factory=lambda: client)
+
+    async with app.run_test(size=(110, 34)) as pilot:
+        await pilot.pause(0.03)
+        health_calls = client.health_calls
+        app._apply_event(
+            _event(
+                kind="node.health",
+                payload={"state": "degraded", "stale": True},
+                resource_id="mbp",
+                job_id=None,
+                cursor=8,
+            )
+        )
+        app._apply_event(
+            _event(
+                kind="model.loaded",
+                payload={"loaded": True, "state": "loaded"},
+                resource_id="local/model-a",
+                job_id=None,
+                cursor=9,
+            )
+        )
+        app._apply_event(
+            _event(
+                kind="job.succeeded",
+                payload={"state": "succeeded", "progress": 1.0},
+                cursor=10,
+            )
+        )
+        app._apply_event(
+            _event(
+                kind="metrics.updated",
+                payload={"requests": 6, "errors": 1},
+                job_id=None,
+                cursor=11,
+            )
+        )
+        await pilot.pause()
+
+        assert app.snapshot.nodes[0]["health"] == {"state": "degraded", "stale": True}
+        assert app.snapshot.models[0]["loaded"] is True
+        assert app.snapshot.jobs[0]["state"] == "succeeded"
+        assert app.snapshot.jobs[0]["progress"] == 1.0
+        assert app.snapshot.metrics["requests"] == 6
+        assert client.health_calls == health_calls
+        assert "degraded" in str(app.query_one("#page-nodes", api.CockpitPage).render())
+        assert "loaded" in str(app.query_one("#page-models", api.CockpitPage).render())
+        assert "succeeded" in str(app.query_one("#page-jobs", api.CockpitPage).render())
+        assert "ERRORS 1" in str(app.query_one("#page-performance", api.CockpitPage).render())
 
 
 @pytest.mark.asyncio

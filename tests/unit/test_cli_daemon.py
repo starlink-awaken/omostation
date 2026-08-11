@@ -123,6 +123,42 @@ class FakeClient:
         )
 
 
+class PagedClient(FakeClient):
+    def __init__(self, *, cycle: bool = False) -> None:
+        super().__init__()
+        self.cycle = cycle
+
+    async def nodes(self, *, after: str | None = None, limit: int = 100) -> DaemonEnvelope:
+        self.calls.append(("nodes", after, limit))
+        if self.cycle:
+            return _envelope({"items": [{"id": "node-000"}], "next_cursor": "same-cursor"})
+        start = 0 if after is None else int(after.removeprefix("node-")) + 1
+        items = [
+            {"id": f"node-{index:03d}", "display_name": f"Node {index}"}
+            for index in range(start, min(start + limit, 101))
+        ]
+        return _envelope(
+            {
+                "items": items,
+                "next_cursor": items[-1]["id"] if items else None,
+            }
+        )
+
+    async def models(self, *, after: str | None = None, limit: int = 100) -> DaemonEnvelope:
+        self.calls.append(("models", after, limit))
+        start = 0 if after is None else int(after.removeprefix("model-")) + 1
+        items = [
+            {"id": f"model-{index:03d}", "role": "chat"}
+            for index in range(start, min(start + limit, 101))
+        ]
+        return _envelope(
+            {
+                "items": items,
+                "next_cursor": items[-1]["id"] if items else None,
+            }
+        )
+
+
 @pytest.fixture
 def fake_client(monkeypatch: pytest.MonkeyPatch) -> FakeClient:
     client = FakeClient()
@@ -205,6 +241,34 @@ def test_show_json_returns_only_the_selected_resource(fake_client: FakeClient) -
     assert json.loads(model.stdout)["data"]["id"] == "local/model-a"
 
 
+def test_show_follows_stable_pagination_beyond_first_page(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = PagedClient()
+    monkeypatch.setattr(cli_module, "_client_factory", lambda _path: client)
+
+    node = runner.invoke(app, ["nodes", "show", "node-100", "--json"])
+    model = runner.invoke(app, ["models", "show", "model-100", "--json"])
+
+    assert node.exit_code == model.exit_code == 0
+    assert json.loads(node.stdout)["data"]["id"] == "node-100"
+    assert json.loads(model.stdout)["data"]["id"] == "model-100"
+    assert ("nodes", "node-099", 100) in client.calls
+    assert ("models", "model-099", 100) in client.calls
+
+
+def test_show_cursor_cycle_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = PagedClient(cycle=True)
+    monkeypatch.setattr(cli_module, "_client_factory", lambda _path: client)
+
+    result = runner.invoke(app, ["nodes", "show", "missing", "--json"])
+
+    assert result.exit_code == 10
+    assert result.stdout == ""
+    assert json.loads(result.stderr)["error"]["code"] == "E900"
+    assert len([call for call in client.calls if call[0] == "nodes"]) == 2
+
+
 def test_daemon_errors_use_stderr_and_public_exit_code(monkeypatch: pytest.MonkeyPatch) -> None:
     failure = DaemonClientError(
         RemoteError(code="E200", message="daemon is unavailable", retryable=True),
@@ -227,10 +291,23 @@ def test_r1_noninteractive_requires_yes_before_mutation(fake_client: FakeClient)
     refused = runner.invoke(app, ["models", "load", "local/model-a"])
     accepted = runner.invoke(app, ["models", "load", "local/model-a", "--yes", "--json"])
 
-    assert refused.exit_code == 2
+    assert refused.exit_code == 7
+    assert "E700" in refused.stderr
     assert accepted.exit_code == 0
     assert [call[0] for call in fake_client.calls] == ["load"]
     assert json.loads(accepted.stdout)["data"]["id"] == "job-load"
+
+
+def test_r1_interactive_refusal_is_typed_safety_error(
+    fake_client: FakeClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(cli_module, "_stdio_is_tty", lambda: True)
+
+    refused = runner.invoke(app, ["models", "unload", "local/model-a"], input="n\n")
+
+    assert refused.exit_code == 7
+    assert "E700" in refused.stderr
+    assert fake_client.calls == []
 
 
 def test_r2_shows_plan_and_requires_two_confirmations_without_daemon_write(
@@ -240,14 +317,25 @@ def test_r2_shows_plan_and_requires_two_confirmations_without_daemon_write(
 
     refused = runner.invoke(app, ["daemon", "restart"], input="y\nn\n")
 
-    assert refused.exit_code == 2
+    assert refused.exit_code == 7
     assert "impact" in refused.stdout.lower()
     assert "rollback" in refused.stdout.lower()
+    assert "E700" in refused.stderr
     assert fake_client.entered == 0
 
-    bypassed = runner.invoke(app, ["daemon", "restart", "--yes", "--json"])
+    monkeypatch.setattr(cli_module, "_stdio_is_tty", lambda: False, raising=False)
+    incomplete = runner.invoke(app, ["daemon", "restart", "--yes", "--json"])
+    assert incomplete.exit_code == 7
+    assert json.loads(incomplete.stdout)["data"]["risk"] == "R2"
+    assert json.loads(incomplete.stderr)["error"]["code"] == "E700"
+    assert fake_client.entered == 0
+
+    bypassed = runner.invoke(
+        app,
+        ["daemon", "restart", "--yes", "--confirm-impact", "--json"],
+    )
     assert bypassed.exit_code == 2
-    assert bypassed.stdout == ""
+    assert json.loads(bypassed.stdout)["data"]["rollback"]
     payload = json.loads(bypassed.stderr)
     assert payload["error"]["code"] == "E100"
     assert "unsupported" in payload["error"]["message"]

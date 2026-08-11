@@ -381,12 +381,61 @@ class CockpitApp(App[None]):
         if event.cursor is not None:
             self.event_cursor = max(self.event_cursor, event.cursor)
         self.last_event_kind = event.kind
+        self._merge_known_event(event)
         label = f"{event.timestamp.isoformat()}  {event.kind}"
         if event.job_id is not None:
             label += f"  job={event.job_id}"
         self._event_log.append(label)
         del self._event_log[:-50]
         self._render_snapshot()
+
+    def _merge_known_event(self, event: DaemonEvent) -> None:
+        payload = _event_payload(event.payload)
+        family, _, state = event.kind.partition(".")
+        if family == "node":
+            identifier = event.resource_id or _event_identifier(payload, "node_id", "id")
+            if identifier is None:
+                return
+            nodes = _merge_resource(self.snapshot.nodes, identifier, payload, health=True)
+            self.snapshot = _snapshot_with(self.snapshot, nodes=nodes)
+            return
+        if family == "model":
+            identifier = event.resource_id or _event_identifier(payload, "model_id", "id")
+            if identifier is None:
+                return
+            changes = dict(payload)
+            if state == "loaded":
+                changes.setdefault("loaded", True)
+            elif state == "unloaded":
+                changes.setdefault("loaded", False)
+            models = _merge_resource(self.snapshot.models, identifier, changes)
+            self.snapshot = _snapshot_with(self.snapshot, models=models)
+            return
+        if family == "job":
+            identifier = (
+                event.job_id or event.resource_id or _event_identifier(payload, "job_id", "id")
+            )
+            if identifier is None:
+                return
+            changes = dict(payload)
+            if state in {
+                "pending",
+                "planning",
+                "awaiting_confirmation",
+                "running",
+                "succeeded",
+                "failed",
+                "cancelling",
+                "cancelled",
+            }:
+                changes.setdefault("state", state)
+            jobs = _merge_resource(self.snapshot.jobs, identifier, changes)
+            self.snapshot = _snapshot_with(self.snapshot, jobs=jobs)
+            return
+        if family in {"metric", "metrics"}:
+            metrics = dict(self.snapshot.metrics)
+            metrics.update(payload)
+            self.snapshot = _snapshot_with(self.snapshot, metrics=metrics)
 
     def _set_connection_state(self, state: str) -> None:
         self.connection_state = state
@@ -417,9 +466,13 @@ class CockpitApp(App[None]):
                 + f"Models {len(self.snapshot.models)}\nJobs {len(self.snapshot.jobs)}"
             )
         if slug == "nodes":
-            return prefix + "\n" + _rows(self.snapshot.nodes, ("id", "display_name", "platform"))
+            return (
+                prefix
+                + "\n"
+                + _rows(self.snapshot.nodes, ("id", "display_name", "platform", "state"))
+            )
         if slug == "models":
-            return prefix + "\n" + _rows(self.snapshot.models, ("id", "role", "reasoning"))
+            return prefix + "\n" + _rows(self.snapshot.models, ("id", "role", "loaded", "state"))
         if slug == "routes":
             return prefix + f"\nPolicy {self.policy}\nPhysical placement is explained by omlxcd."
         if slug == "jobs":
@@ -427,7 +480,7 @@ class CockpitApp(App[None]):
             return (
                 prefix
                 + f"\nLast event {event}\n"
-                + _rows(self.snapshot.jobs, ("id", "kind", "state"))
+                + _rows(self.snapshot.jobs, ("id", "kind", "state", "progress"))
             )
         if slug == "performance":
             return prefix + "\n" + _key_values(self.snapshot.metrics)
@@ -451,8 +504,97 @@ def _page_items(value: JsonValue | None) -> tuple[JsonObject, ...]:
 
 def _rows(items: tuple[JsonObject, ...], columns: tuple[str, ...]) -> str:
     header = "  ".join(column.upper() for column in columns)
-    rows = ["  ".join(str(item.get(column, "-")) for column in columns) for item in items]
+    rows = ["  ".join(str(_row_value(item, column)) for column in columns) for item in items]
     return "\n".join((header, *rows)) if rows else f"{header}\n(no items)"
+
+
+def _row_value(item: JsonObject, column: str) -> JsonValue:
+    if column == "state" and "state" not in item:
+        health = item.get("health")
+        if isinstance(health, dict):
+            return cast(JsonObject, health).get("state", "-")
+    return item.get(column, "-")
+
+
+def _event_payload(value: JsonValue) -> JsonObject:
+    return cast(JsonObject, value) if isinstance(value, dict) else {}
+
+
+def _event_identifier(payload: JsonObject, *keys: str) -> str | None:
+    for key in keys:
+        value = payload.get(key)
+        if isinstance(value, str) and value:
+            return value
+    return None
+
+
+def _merge_resource(
+    items: tuple[JsonObject, ...],
+    identifier: str,
+    changes: JsonObject,
+    *,
+    health: bool = False,
+) -> tuple[JsonObject, ...]:
+    result: list[JsonObject] = []
+    matched = False
+    for item in items:
+        if item.get("id") != identifier:
+            result.append(item)
+            continue
+        result.append(_merged_item(item, identifier, changes, health=health))
+        matched = True
+    if not matched:
+        result.append(_merged_item({"id": identifier}, identifier, changes, health=health))
+    return tuple(result)
+
+
+def _merged_item(
+    item: JsonObject,
+    identifier: str,
+    changes: JsonObject,
+    *,
+    health: bool,
+) -> JsonObject:
+    merged = dict(item)
+    merged["id"] = identifier
+    ignored = {"id", "node_id", "model_id", "job_id"}
+    if not health:
+        merged.update({key: value for key, value in changes.items() if key not in ignored})
+        return merged
+    health_keys = {"state", "stale", "detail", "observed_at"}
+    health_update = {key: value for key, value in changes.items() if key in health_keys}
+    nested = changes.get("health")
+    if isinstance(nested, dict):
+        health_update.update(cast(JsonObject, nested))
+    existing = merged.get("health")
+    current_health = dict(cast(JsonObject, existing)) if isinstance(existing, dict) else {}
+    current_health.update(health_update)
+    merged["health"] = current_health
+    merged.update(
+        {
+            key: value
+            for key, value in changes.items()
+            if key not in ignored | health_keys | {"health"}
+        }
+    )
+    return merged
+
+
+def _snapshot_with(
+    snapshot: CockpitSnapshot,
+    *,
+    nodes: tuple[JsonObject, ...] | None = None,
+    models: tuple[JsonObject, ...] | None = None,
+    jobs: tuple[JsonObject, ...] | None = None,
+    metrics: JsonObject | None = None,
+) -> CockpitSnapshot:
+    return CockpitSnapshot(
+        health=snapshot.health,
+        nodes=snapshot.nodes if nodes is None else nodes,
+        models=snapshot.models if models is None else models,
+        jobs=snapshot.jobs if jobs is None else jobs,
+        metrics=snapshot.metrics if metrics is None else metrics,
+    )
 
 
 def _key_values(values: JsonObject) -> str:

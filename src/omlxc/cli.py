@@ -56,6 +56,8 @@ for name, group in (
 ClientFactory = Callable[[Path], DaemonClient]
 ClientOperation = Callable[[DaemonClient], Awaitable[DaemonEnvelope]]
 Renderer = Callable[[JsonValue | None], str]
+PageFetcher = Callable[[str | None], Awaitable[DaemonEnvelope]]
+MAX_LOOKUP_PAGES = 100
 
 _client_factory: ClientFactory = DaemonClient
 _socket_override: Path | None = None
@@ -241,25 +243,60 @@ def _require_r1(action: str, *, yes: bool, json_output: bool) -> None:
     if yes:
         return
     if not _stdio_is_tty():
-        _fail_local("E100", f"{action} requires explicit --yes", json_output=json_output)
+        _fail_local("E700", f"safety confirmation required for {action}", json_output=json_output)
     if not typer.confirm(f"Confirm {action}?"):
-        typer.echo("Cancelled.", err=True)
-        raise typer.Exit(EXIT_CONFIG)
+        _fail_local("E700", f"safety confirmation refused for {action}", json_output=json_output)
 
 
-def _require_r2(action: str, *, yes: bool, json_output: bool) -> None:
-    if yes:
+def _require_r2(
+    action: str,
+    *,
+    yes: bool,
+    confirm_impact: bool,
+    json_output: bool,
+) -> None:
+    impact = f"{action} may interrupt active local inference."
+    rollback = "Restore the previous service/config snapshot."
+    _emit_r2_plan(action, impact=impact, rollback=rollback, json_output=json_output)
+    if _stdio_is_tty():
+        if not typer.confirm("Proceed with the service-impacting action?"):
+            _fail_local(
+                "E700", f"impact confirmation refused for {action}", json_output=json_output
+            )
+        if not typer.confirm("Confirm the rollback point is understood?"):
+            _fail_local(
+                "E700", f"rollback confirmation refused for {action}", json_output=json_output
+            )
         return
-    if not _stdio_is_tty():
-        _fail_local("E100", f"{action} requires explicit --yes", json_output=json_output)
-    typer.echo(f"Impact: {action} may interrupt active local inference.")
-    typer.echo("Rollback: restore the previous service/config snapshot.")
-    if not typer.confirm("Proceed with the service-impacting action?"):
-        typer.echo("Cancelled.", err=True)
-        raise typer.Exit(EXIT_CONFIG)
-    if not typer.confirm("Confirm the rollback point is understood?"):
-        typer.echo("Cancelled.", err=True)
-        raise typer.Exit(EXIT_CONFIG)
+    if not yes or not confirm_impact:
+        _fail_local(
+            "E700",
+            f"{action} requires --yes and --confirm-impact outside a TTY",
+            json_output=json_output,
+        )
+
+
+def _emit_r2_plan(action: str, *, impact: str, rollback: str, json_output: bool) -> None:
+    if json_output:
+        typer.echo(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "request_id": _request_id(),
+                    "data": {
+                        "risk": "R2",
+                        "action": action,
+                        "impact": impact,
+                        "rollback": rollback,
+                    },
+                },
+                ensure_ascii=False,
+                separators=(",", ":"),
+            )
+        )
+        return
+    typer.echo(f"Impact: {impact}")
+    typer.echo(f"Rollback: {rollback}")
 
 
 @app.command("status")
@@ -565,18 +602,30 @@ def config_diff(
 @config_app.command("apply")
 def config_apply(
     yes: Annotated[bool, typer.Option("--yes")] = False,
+    confirm_impact: Annotated[bool, typer.Option("--confirm-impact")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    _require_r2("apply persistent configuration", yes=yes, json_output=json_output)
+    _require_r2(
+        "apply persistent configuration",
+        yes=yes,
+        confirm_impact=confirm_impact,
+        json_output=json_output,
+    )
     _unsupported("config apply", json_output=json_output)
 
 
 @config_app.command("rollback")
 def config_rollback(
     yes: Annotated[bool, typer.Option("--yes")] = False,
+    confirm_impact: Annotated[bool, typer.Option("--confirm-impact")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    _require_r2("rollback persistent configuration", yes=yes, json_output=json_output)
+    _require_r2(
+        "rollback persistent configuration",
+        yes=yes,
+        confirm_impact=confirm_impact,
+        json_output=json_output,
+    )
     _unsupported("config rollback", json_output=json_output)
 
 
@@ -615,39 +664,53 @@ def daemon_install(
 @daemon_app.command("uninstall")
 def daemon_uninstall(
     yes: Annotated[bool, typer.Option("--yes")] = False,
+    confirm_impact: Annotated[bool, typer.Option("--confirm-impact")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    _require_r2("uninstall daemon", yes=yes, json_output=json_output)
+    _require_r2(
+        "uninstall daemon",
+        yes=yes,
+        confirm_impact=confirm_impact,
+        json_output=json_output,
+    )
     _unsupported("daemon uninstall", json_output=json_output)
 
 
-def _daemon_action(action: str, *, yes: bool, json_output: bool) -> None:
-    _require_r2(f"{action} daemon", yes=yes, json_output=json_output)
+def _daemon_action(action: str, *, yes: bool, confirm_impact: bool, json_output: bool) -> None:
+    _require_r2(
+        f"{action} daemon",
+        yes=yes,
+        confirm_impact=confirm_impact,
+        json_output=json_output,
+    )
     _unsupported(f"daemon {action}", json_output=json_output)
 
 
 @daemon_app.command("start")
 def daemon_start(
     yes: Annotated[bool, typer.Option("--yes")] = False,
+    confirm_impact: Annotated[bool, typer.Option("--confirm-impact")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    _daemon_action("start", yes=yes, json_output=json_output)
+    _daemon_action("start", yes=yes, confirm_impact=confirm_impact, json_output=json_output)
 
 
 @daemon_app.command("stop")
 def daemon_stop(
     yes: Annotated[bool, typer.Option("--yes")] = False,
+    confirm_impact: Annotated[bool, typer.Option("--confirm-impact")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    _daemon_action("stop", yes=yes, json_output=json_output)
+    _daemon_action("stop", yes=yes, confirm_impact=confirm_impact, json_output=json_output)
 
 
 @daemon_app.command("restart")
 def daemon_restart(
     yes: Annotated[bool, typer.Option("--yes")] = False,
+    confirm_impact: Annotated[bool, typer.Option("--confirm-impact")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    _daemon_action("restart", yes=yes, json_output=json_output)
+    _daemon_action("restart", yes=yes, confirm_impact=confirm_impact, json_output=json_output)
 
 
 @app.command("doctor")
@@ -704,24 +767,47 @@ def _render_items(data: JsonValue | None, columns: Sequence[str]) -> str:
 
 
 async def _selected_node(client: DaemonClient, identifier: str) -> DaemonEnvelope:
-    return _select_from_page(await client.nodes(), identifier, "node")
+    return await _select_from_pages(
+        lambda after: client.nodes(after=after, limit=100), identifier, "node"
+    )
 
 
 async def _selected_model(client: DaemonClient, identifier: str) -> DaemonEnvelope:
-    return _select_from_page(await client.models(), identifier, "model")
+    return await _select_from_pages(
+        lambda after: client.models(after=after, limit=100), identifier, "model"
+    )
 
 
-def _select_from_page(envelope: DaemonEnvelope, identifier: str, resource: str) -> DaemonEnvelope:
-    for item in _items(envelope.data):
-        if item.get("id") == identifier:
-            return DaemonEnvelope(
-                schema_version=envelope.schema_version,
-                request_id=envelope.request_id,
-                data=cast(JsonValue, item),
+async def _select_from_pages(fetch: PageFetcher, identifier: str, resource: str) -> DaemonEnvelope:
+    cursor: str | None = None
+    seen: set[str] = set()
+    request_id = _request_id()
+    for _page in range(MAX_LOOKUP_PAGES):
+        envelope = await fetch(cursor)
+        request_id = envelope.request_id
+        for item in _items(envelope.data):
+            if item.get("id") == identifier:
+                return DaemonEnvelope(
+                    schema_version=envelope.schema_version,
+                    request_id=envelope.request_id,
+                    data=cast(JsonValue, item),
+                )
+        next_cursor = _mapping(envelope.data).get("next_cursor")
+        if next_cursor is None:
+            raise DaemonClientError(
+                RemoteError(code="E100", message=f"{resource} was not found", retryable=False),
+                request_id=request_id,
             )
+        if not isinstance(next_cursor, str) or not next_cursor or next_cursor in seen:
+            raise DaemonClientError(
+                RemoteError(code="E900", message="daemon pagination cursor is invalid"),
+                request_id=request_id,
+            )
+        seen.add(next_cursor)
+        cursor = next_cursor
     raise DaemonClientError(
-        RemoteError(code="E100", message=f"{resource} was not found", retryable=False),
-        request_id=envelope.request_id,
+        RemoteError(code="E900", message="daemon pagination exceeded its page limit"),
+        request_id=request_id,
     )
 
 
