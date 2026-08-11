@@ -96,8 +96,29 @@ class PlacementTarget:
             raise ValueError("placement rollback reference is required")
 
 
+class PlacementWriteAction(StrEnum):
+    LOAD = "load"
+    UNLOAD = "unload"
+
+
+class PlacementProbeReason(StrEnum):
+    AUTHORIZATION = "authorization_denied"
+    STALE = "stale"
+    UNAVAILABLE = "unavailable"
+    LOCAL_SECURITY = "local_security_denied"
+
+
+class PlacementProbeFailure(RuntimeError):
+    def __init__(self, placement_id: str, reason: PlacementProbeReason) -> None:
+        self.placement_id = placement_id
+        self.reason = reason
+        super().__init__(f"placement probe failed: {reason.value}")
+
+
 class PlacementOperator(Protocol):
-    async def fresh_for_write(self, target: PlacementTarget) -> bool: ...
+    async def fresh_for_write(
+        self, target: PlacementTarget, *, action: PlacementWriteAction
+    ) -> bool: ...
 
     async def is_loaded(self, target: PlacementTarget) -> bool: ...
 
@@ -249,15 +270,17 @@ class PlacementOperationCoordinator:
             loaded = await self._phase(
                 target, OperationPhase.DISCOVER, lambda: self._operator.is_loaded(target)
             )
-            if loaded:
-                return PlacementOperationOutcome(True, True, None)
             authorized = await self._phase(
                 target,
                 OperationPhase.AUTHORIZATION,
-                lambda: self._operator.fresh_for_write(target),
+                lambda: self._operator.fresh_for_write(
+                    target, action=PlacementWriteAction.LOAD
+                ),
             )
             if not authorized:
-                return PlacementOperationOutcome(False, False, None)
+                return PlacementOperationOutcome(loaded, False, None)
+            if loaded:
+                return PlacementOperationOutcome(True, True, None)
             result = await self._phase(
                 target,
                 OperationPhase.LOAD,
@@ -278,7 +301,9 @@ class PlacementOperationCoordinator:
             authorized = await self._phase(
                 target,
                 OperationPhase.AUTHORIZATION,
-                lambda: self._operator.fresh_for_write(target),
+                lambda: self._operator.fresh_for_write(
+                    target, action=PlacementWriteAction.UNLOAD
+                ),
             )
             if not authorized:
                 return PlacementOperationOutcome(True, False, None)

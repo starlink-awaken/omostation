@@ -9,7 +9,12 @@ from typing import Protocol
 
 import anyio
 
-from omlxc.autonomy import PlacementOperationOutcome, PlacementTarget
+from omlxc.autonomy import (
+    PlacementOperationOutcome,
+    PlacementProbeFailure,
+    PlacementProbeReason,
+    PlacementTarget,
+)
 from omlxc.domain import RouteDecision, RouteRequest
 from omlxc.domain.protocols import (
     AdapterError,
@@ -495,6 +500,14 @@ class DataPlaneOrchestrator:
                 outcome = await self._loader.ensure_loaded(self._load_target(placement))
         except TimeoutError:
             return None, RejectionCode.NO_CAPACITY
+        except PlacementProbeFailure as failure:
+            rejection = {
+                PlacementProbeReason.AUTHORIZATION: RejectionCode.AUTHORIZATION,
+                PlacementProbeReason.STALE: RejectionCode.STALE,
+                PlacementProbeReason.UNAVAILABLE: RejectionCode.UNAVAILABLE,
+                PlacementProbeReason.LOCAL_SECURITY: RejectionCode.LOCAL_SECURITY,
+            }[failure.reason]
+            return None, rejection
         if not outcome.authorized:
             return None, RejectionCode.AUTHORIZATION
         if outcome.result is not None and outcome.result.status not in {

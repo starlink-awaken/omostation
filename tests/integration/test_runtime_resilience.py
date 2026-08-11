@@ -81,7 +81,8 @@ class IsolatedOperator:
     def __init__(self) -> None:
         self.loaded: set[str] = set()
 
-    async def fresh_for_write(self, target: PlacementTarget) -> bool:
+    async def fresh_for_write(self, target: PlacementTarget, *, action: object) -> bool:
+        del action
         return target.node_id != "offline"
 
     async def is_loaded(self, target: PlacementTarget) -> bool:

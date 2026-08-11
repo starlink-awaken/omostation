@@ -41,7 +41,8 @@ class FakePlacementOperator:
         self.release = anyio.Event()
         self.block_first_load = block_first_load
 
-    async def fresh_for_write(self, target: Any) -> bool:
+    async def fresh_for_write(self, target: Any, *, action: Any) -> bool:
+        del target, action
         return self.authorized
 
     async def is_loaded(self, target: Any) -> bool:

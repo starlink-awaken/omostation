@@ -30,7 +30,10 @@ from omlxc.autonomy import (
     OperationTimeouts,
     PlacementOperationCoordinator,
     PlacementOperationOutcome,
+    PlacementProbeFailure,
+    PlacementProbeReason,
     PlacementTarget,
+    PlacementWriteAction,
 )
 from omlxc.config import (
     AppConfig,
@@ -417,13 +420,33 @@ class ProductionPlacementOperator:
             placement.id: placement.backend_id for placement in config.placements
         }
 
-    async def fresh_for_write(self, target: PlacementTarget) -> bool:
-        return is_static_eligible(self._catalog.get_one(target.id))
+    async def fresh_for_write(
+        self, target: PlacementTarget, *, action: PlacementWriteAction
+    ) -> bool:
+        snapshot = self._catalog.get_one(target.id)
+        if action is PlacementWriteAction.LOAD:
+            return is_static_eligible(snapshot)
+        return (
+            snapshot.fresh
+            and snapshot.authorized
+            and snapshot.local
+            and snapshot.security_allowed
+        )
 
     async def is_loaded(self, target: PlacementTarget) -> bool:
         await self._probe.refresh_backend(self._backend_by_placement[target.id])
         snapshot = self._catalog.get_one(target.id)
-        return snapshot.loaded and is_static_eligible(snapshot)
+        if not snapshot.authorized:
+            raise PlacementProbeFailure(target.id, PlacementProbeReason.AUTHORIZATION)
+        if not snapshot.fresh:
+            raise PlacementProbeFailure(target.id, PlacementProbeReason.STALE)
+        if not snapshot.local or not snapshot.security_allowed:
+            raise PlacementProbeFailure(target.id, PlacementProbeReason.LOCAL_SECURITY)
+        if snapshot.loaded:
+            return True
+        if not snapshot.available:
+            raise PlacementProbeFailure(target.id, PlacementProbeReason.UNAVAILABLE)
+        return False
 
     async def load(self, target: PlacementTarget, *, idempotency_key: str) -> LifecycleResult:
         backend_id = self._backend_by_placement[target.id]
@@ -775,6 +798,17 @@ class ProductionControlService:
                     event_id=f"job-{job.id}-cancelled-{job.attempt}",
                 )
             raise
+        except PlacementProbeFailure as failure:
+            current = await store.get_job(job.id)
+            if current is not None and current.state in {JobState.PLANNING, JobState.RUNNING}:
+                await store.transition_job(
+                    job.id,
+                    JobState.FAILED,
+                    progress=current.progress,
+                    observed_at=self._now(),
+                    event_id=f"job-{job.id}-failed-{job.attempt}",
+                    error_code=failure.reason.value,
+                )
         except Exception:
             current = await store.get_job(job.id)
             if current is not None and current.state in {JobState.PLANNING, JobState.RUNNING}:

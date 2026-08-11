@@ -38,7 +38,8 @@ class CoordinatorOperator:
         self.entered = anyio.Event()
         self.release = anyio.Event()
 
-    async def fresh_for_write(self, target: PlacementTarget) -> bool:
+    async def fresh_for_write(self, target: PlacementTarget, *, action: object) -> bool:
+        del target, action
         return True
 
     async def is_loaded(self, target: PlacementTarget) -> bool:

@@ -55,12 +55,15 @@ class ColdBackend:
         complete_load: bool = True,
         block_load: bool = False,
         load_status: OperationStatus = OperationStatus.SUCCEEDED,
+        stale_probe: bool = False,
     ) -> None:
         self.state = state
         self.complete_load = complete_load
         self.block_load = block_load
         self.load_status = load_status
+        self.stale_probe = stale_probe
         self.load_calls = 0
+        self.unload_calls = 0
         self.chat_calls = 0
         self.events: list[str] = []
         self.load_started = asyncio.Event()
@@ -75,7 +78,11 @@ class ColdBackend:
             compatible=True,
             model_available=self.state is not ModelRuntimeState.UNKNOWN,
             generation_ready=loaded,
-            observed_at=datetime.now(UTC),
+            observed_at=(
+                datetime(2020, 1, 1, tzinfo=UTC)
+                if self.stale_probe
+                else datetime.now(UTC)
+            ),
             capabilities=frozenset(
                 {
                     AdapterCapability.CHAT,
@@ -130,6 +137,7 @@ class ColdBackend:
         self, model_id: str, *, idempotency_key: str | None = None
     ) -> LifecycleResult:
         self.events.append("unload")
+        self.unload_calls += 1
         self.state = ModelRuntimeState.AVAILABLE
         return LifecycleResult(
             model_id=model_id,
@@ -218,6 +226,15 @@ async def _uds_client(socket_path: Path) -> httpx.AsyncClient:
         transport=httpx.AsyncHTTPTransport(uds=str(socket_path)),
         base_url="http://omlxc",
     )
+
+
+async def _wait_job(client: httpx.AsyncClient, job_id: str) -> httpx.Response:
+    for _ in range(100):
+        current = await client.get(f"/api/v1/jobs/{job_id}")
+        if current.json()["data"]["state"] in {"succeeded", "failed"}:
+            return current
+        await asyncio.sleep(0)
+    raise AssertionError("job did not reach a terminal state")
 
 
 @pytest.mark.asyncio
@@ -394,11 +411,7 @@ async def test_explicit_job_and_inference_share_placement_singleflight(short_roo
             backend.load_release.set()
             chat = await asyncio.wait_for(chat_task, 2)
             job_id = job.json()["data"]["id"]
-            for _ in range(100):
-                current = await client.get(f"/api/v1/jobs/{job_id}")
-                if current.json()["data"]["state"] in {"succeeded", "failed"}:
-                    break
-                await asyncio.sleep(0)
+            current = await _wait_job(client, job_id)
     finally:
         backend.load_release.set()
         await server.stop()
@@ -406,3 +419,84 @@ async def test_explicit_job_and_inference_share_placement_singleflight(short_roo
     assert chat.status_code == 200
     assert current.json()["data"]["state"] == "succeeded"
     assert backend.load_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_loaded_memory_denied_job_still_physically_unloads_and_postverifies(
+    short_root: Path,
+) -> None:
+    config = _config(short_root, node_memory_gb=1)
+    backend = ColdBackend(state=ModelRuntimeState.LOADED)
+    composition = build_production_daemon(
+        config, adapters={"backend": cast(BackendAdapter, backend)}
+    )
+    server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
+    await server.start()
+    try:
+        async with await _uds_client(config.daemon.socket_path) as client:
+            job = await client.post(
+                "/api/v1/models/local%2Fmodel/unload",
+                headers={"Idempotency-Key": "memory-pressure-unload"},
+            )
+            current = await _wait_job(client, job.json()["data"]["id"])
+    finally:
+        await server.stop()
+
+    assert current.json()["data"]["state"] == "succeeded"
+    assert backend.unload_calls == 1
+    assert backend.state is ModelRuntimeState.AVAILABLE
+    load_index = backend.events.index("unload")
+    assert backend.events[load_index + 1 : load_index + 3] == ["discover", "list"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", ["stale", "authorization"])
+async def test_unload_probe_failure_never_becomes_false_noop_success(
+    short_root: Path, case: str
+) -> None:
+    config = _config(short_root, remote=case == "authorization")
+    backend = ColdBackend(state=ModelRuntimeState.LOADED, stale_probe=case == "stale")
+    composition = build_production_daemon(
+        config,
+        adapters={"backend": cast(BackendAdapter, backend)},
+        tailscale=(
+            cast(TailscaleAdapter, DenyingTailscale()) if case == "authorization" else None
+        ),
+    )
+    server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
+    await server.start()
+    try:
+        async with await _uds_client(config.daemon.socket_path) as client:
+            job = await client.post(
+                "/api/v1/models/local%2Fmodel/unload",
+                headers={"Idempotency-Key": f"{case}-unload"},
+            )
+            current = await _wait_job(client, job.json()["data"]["id"])
+    finally:
+        await server.stop()
+
+    assert current.json()["data"]["state"] == "failed"
+    assert backend.unload_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_load_memory_denied_never_calls_adapter_and_job_fails(short_root: Path) -> None:
+    config = _config(short_root, node_memory_gb=1)
+    backend = ColdBackend()
+    composition = build_production_daemon(
+        config, adapters={"backend": cast(BackendAdapter, backend)}
+    )
+    server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
+    await server.start()
+    try:
+        async with await _uds_client(config.daemon.socket_path) as client:
+            job = await client.post(
+                "/api/v1/models/local%2Fmodel/load",
+                headers={"Idempotency-Key": "memory-denied-load"},
+            )
+            current = await _wait_job(client, job.json()["data"]["id"])
+    finally:
+        await server.stop()
+
+    assert current.json()["data"]["state"] == "failed"
+    assert backend.load_calls == 0
