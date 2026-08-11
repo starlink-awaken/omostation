@@ -60,6 +60,12 @@ def changed_submodule_paths(base: str) -> set[str]:
 
 def gitlink_sha(path: str, source: str) -> str | None:
     if source == "worktree":
+        # An uninitialized submodule may still have an empty directory. Running
+        # `git -C` there walks up into the superproject and returns the root
+        # HEAD, which is not the gitlink. Fall back to the staged gitlink until
+        # the submodule has its own Git marker.
+        if not (WORKSPACE / path / ".git").exists():
+            return gitlink_sha(path, "index")
         result = run(["git", "-C", path, "rev-parse", "HEAD"])
         return result.stdout.strip() if result.returncode == 0 else None
     if source == "index":
@@ -81,6 +87,11 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
     submodule_dir = WORKSPACE / path
     if not submodule_dir.exists():
         return False, "submodule working tree missing"
+    if not (submodule_dir / ".git").exists():
+        return (
+            True,
+            "submodule not initialized (partial worktree) - CI full checkout will verify",
+        )
     # G1 (P79, 2026-08-04): partial worktree 降级 — 子模块目录存在但非有效 git repo
     # (PASW ISOLATED partial init / 新建 worktree 未 init) → 本地 push 降级 warning 不 block.
     # 治本 #907 35+ iteration: partial worktree reachability gate false-positive 死路
