@@ -10,52 +10,60 @@ from cockpit.web import api_system_map, api_system_map_io_commands, api_system_m
 from cockpit.web.api_system_map import build_source_ref_preview, build_system_map
 
 
-def _seed_workflow_events(workspace_root: Path) -> Path:
-    """Create a minimal agent-workflow events.jsonl so cockpit has workflow runs."""
-    events_dir = workspace_root / ".omo" / "_delivery" / "agent-workflows"
-    events_dir.mkdir(parents=True, exist_ok=True)
-    events_path = events_dir / "events.jsonl"
-    events = [
-        {
-            "event": "agent_workflow_start",
-            "run_id": "cockpit-run-1",
-            "workflow_id": "cockpit-docs",
-            "objective": "test",
-            "ts": "2024-01-01T00:00:00Z",
-        },
-        {
-            "event": "agent_workflow_claim",
-            "run_id": "cockpit-run-1",
-            "paths": ["projects/cockpit"],
-            "ts": "2024-01-01T00:00:01Z",
-        },
-        {
-            "event": "agent_workflow_verify",
-            "run_id": "cockpit-run-1",
-            "changed_files": ["projects/cockpit/README.md"],
-            "ok": True,
-            "checks": ["check-1"],
-            "ts": "2024-01-01T00:00:02Z",
-        },
-        {
-            "event": "agent_workflow_closeout",
-            "run_id": "cockpit-run-1",
-            "ok": True,
-            "status": "closed",
-            "ts": "2024-01-01T00:00:03Z",
-        },
-    ]
-    events_path.write_text("\n".join(json.dumps(e, ensure_ascii=False) for e in events) + "\n", encoding="utf-8")
-    return events_path
+def _workflow_lifecycle_fixture(project_id: str) -> dict:
+    """Return deterministic workflow evidence without touching a live Workspace."""
+    if project_id != "cockpit":
+        return {
+            "latest_run_id": None,
+            "latest_status": "unknown",
+            "latest_ts": None,
+            "runs": [],
+            "summary": {"runs": 0, "verified": 0, "failed": 0, "active": 0},
+        }
+    run = {
+        "run_id": "cockpit-run-1",
+        "workflow_id": "cockpit-docs",
+        "objective": "test",
+        "status": "closed",
+        "verify_status": "verified",
+        "verify_checks": 1,
+        "latest_ts": "2024-01-01T00:00:03Z",
+        "paths": ["projects/cockpit"],
+        "events": [
+            {
+                "type": "claim",
+                "status": "claimed",
+                "ts": "2024-01-01T00:00:01Z",
+                "summary": "claimed 1 path(s)",
+                "paths": ["projects/cockpit"],
+            },
+            {
+                "type": "verify",
+                "status": "verified",
+                "ts": "2024-01-01T00:00:02Z",
+                "summary": "checks=1",
+                "paths": ["projects/cockpit/README.md"],
+            },
+            {
+                "type": "closeout",
+                "status": "closed",
+                "ts": "2024-01-01T00:00:03Z",
+                "summary": "status=closed",
+            },
+        ],
+    }
+    return {
+        "latest_run_id": run["run_id"],
+        "latest_status": run["status"],
+        "latest_ts": run["latest_ts"],
+        "runs": [run],
+        "summary": {"runs": 1, "verified": 1, "failed": 0, "active": 0},
+    }
 
 
-def test_system_map_builds_workspace_dimensions():
-    workspace_root = Path(__file__).resolve().parents[4]
-    events_path = _seed_workflow_events(workspace_root)
-    try:
-        payload = build_system_map()
-    finally:
-        events_path.unlink(missing_ok=True)
+def test_system_map_builds_workspace_dimensions(monkeypatch):
+    monkeypatch.setattr(api_system_map, "_project_workflow_lifecycle", _workflow_lifecycle_fixture)
+    payload = build_system_map()
 
     assert payload["schema_version"] == "v1"
     assert payload["architecture"]["model"] == "5+4+1+1"

@@ -100,32 +100,24 @@ class TestCmdMcpDispatch:
 
         # 验证 --list-tools 触发 _list_tools 分支
         ns = argparse.Namespace(list_tools=True, transport="stdio", port=7431)
-        # Mock cockpit.scripts.cockpit_mcp import and _list_tools
-        import sys
-
         mock_mcp = mock.MagicMock()
         mock_tm = mock.MagicMock()
         mock_tm.list_tools.return_value = []
         mock_mcp._tool_manager = mock_tm
-        monkeypatch.setattr("cockpit.commands.mcp._list_tools", lambda mcp_obj: 0)
-
-        # Patch the correct module path so cmd_mcp's import uses our mock
-        class _FakeModule:
-            mcp = mock_mcp
-
-        monkeypatch.setitem(sys.modules, "cockpit.scripts.cockpit_mcp", _FakeModule())
+        seen = []
+        monkeypatch.setattr("cockpit.agent_runtime_mcp_server.mcp", mock_mcp)
+        monkeypatch.setattr("cockpit.commands.mcp._list_tools", lambda mcp_obj: seen.append(mcp_obj) or 0)
 
         code = cmd_mcp(ns)
         assert code == 0
+        assert seen == [mock_mcp]
 
     def test_argparse_transport_default(self, monkeypatch):
         """默认 transport 为 stdio"""
-        import sys
-
         from cockpit.commands.mcp import cmd_mcp
 
         mock_mcp = mock.MagicMock()
-        monkeypatch.setitem(sys.modules, "cockpit.scripts.cockpit_mcp", type("_M", (), {"mcp": mock_mcp})())
+        monkeypatch.setattr("cockpit.agent_runtime_mcp_server.mcp", mock_mcp)
 
         ns = argparse.Namespace(list_tools=False, transport="stdio", port=7431)
         # 需要 patch console 以阻止实际打印
@@ -136,3 +128,9 @@ class TestCmdMcpDispatch:
         code = cmd_mcp(ns)
         assert code == 0
         mock_mcp.run.assert_called_once_with(transport="stdio")
+
+    def test_console_entry_points_to_agent_runtime_server(self):
+        from pathlib import Path
+
+        pyproject = Path(__file__).resolve().parents[3] / "pyproject.toml"
+        assert 'cockpit-mcp = "cockpit.agent_runtime_mcp_server:main"' in pyproject.read_text(encoding="utf-8")

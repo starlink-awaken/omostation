@@ -2,39 +2,20 @@
 
 from __future__ import annotations
 
-import json
 from argparse import Namespace
 from pathlib import Path
 
+from cockpit.adapters import governance_context
+
 from .base import _get_console, _get_err, _panel
-
-try:
-    from cockpit.scripts.cockpit_mcp import (
-        cards_check,
-        cards_status,
-        vault_search,
-        workspace_context,
-    )
-
-    _HAS_L4 = True
-except ImportError:
-    cards_check = None  # type: ignore[assignment]
-    cards_status = None  # type: ignore[assignment]
-    vault_search = None  # type: ignore[assignment]
-    workspace_context = None  # type: ignore[assignment]
-    _HAS_L4 = False
 
 
 def cmd_context(_args: Namespace) -> int:
     """显示 workspace 完整上下文 (Phase / CARDS / 约束 / 引导)。"""
     console = _get_console()
 
-    if not _HAS_L4:
-        _get_err().print("[red]❌ L4 bridge 不可用[/]")
-        return 1
-
     try:
-        ctx = json.loads(workspace_context())  # type: ignore[union-attr]
+        ctx = governance_context.workspace_context()
     except Exception as e:  # defensive fallback
         _get_err().print(f"[red]❌ workspace_context 调用失败: {e}[/]")
         return 1
@@ -43,8 +24,8 @@ def cmd_context(_args: Namespace) -> int:
     console.print(
         _panel(
             f"[bold cyan]🛸 Workspace Context[/bold cyan]\n"
-            f"Phase [bold]{ctx['phase']}[/bold] · {ctx['theme']}\n"
-            f"状态: [bold green]{ctx.get('phase_status', '?')}[/]",
+            f"Phase [bold]{ctx.get('phase') or '?'}[/bold] · {ctx.get('theme') or ''}\n"
+            f"状态: [bold]{ctx.get('status', 'unavailable')}[/]",
             "cyan",
         )
     )
@@ -58,54 +39,34 @@ def cmd_context(_args: Namespace) -> int:
     else:
         console.print("\n[green]✅ 无 P0 待处理[/]")
 
-    # Constraints
-    constraints = ctx.get("constraints", [])
-    console.print(f"\n[bold yellow]🔒 约束 ({len(constraints)}):[/]")
-    for c in constraints[:5]:
-        console.print(f"  [dim]◦[/] {c}")
-
-    # Guidance
-    guidance = ctx.get("next_guidance", "")
-    if guidance:
-        # 产品走查 v5 #V5-06: guidance 形如 "1.\\n查看P0...。2.\\n调用...",
-        # 旧版 split(".") 会把编号 "1"/"2" 和正文切成碎片, 每段都加 "→ {line}.",
-        # 渲染成 "→ 1." "→ 查看P0..." 的断行错乱。改用正则按编号/换行切分成干净步骤。
-        import re
-
-        parts = re.split(r"\s*\d+\.\s*|\n+", guidance)
-        steps = [p.strip("。. ") for p in parts if p.strip("。. ")]
-        if not steps:
-            steps = [guidance.strip()]
-        console.print("\n[bold blue]🧭 下一步:[/]")
-        for i, step in enumerate(steps, 1):
-            console.print(f"  [blue]{i}.[/] {step}")
+    domain_summary = ctx.get("domain_summary", {})
+    console.print(
+        f"\n[bold cyan]🌐 Documents 域:[/] {domain_summary.get('existing', 0)}/{domain_summary.get('total', 0)}"
+    )
 
     console.print()
-    return 0
+    return 0 if ctx.get("status") == "ok" else 1
 
 
 def cmd_domains(_args: Namespace) -> int:
     """列出 L4 所有域及其状态。"""
     console = _get_console()
 
-    if not _HAS_L4:
-        _get_err().print("[red]❌ L4 bridge 不可用[/]")
-        return 1
-
     try:
-        from cockpit.scripts.cockpit_mcp import domains_list
-
-        result = json.loads(domains_list())
+        result = governance_context.domains_list()
     except Exception as e:  # defensive fallback
         _get_err().print(f"[red]❌ domains_list 失败: {e}[/]")
         return 1
 
-    console.print(f"\n[bold cyan]🌐 L4 域状态 ({result['total']} 域)[/]\n")
+    if not result["available"]:
+        _get_err().print(f"[red]❌ domains_list 不可用: {result.get('error', 'unknown error')}[/]")
+        return 1
+    console.print(f"\n[bold cyan]🌐 Documents 域状态 ({result['total']} 域)[/]\n")
     for d in result.get("domains", []):
         icon = "[green]✓[/]" if d["exists"] else "[red]✗[/]"
         console.print(f"  {icon} [bold]{d['name']}[/] [dim]{d['path']}[/]")
 
-    return 0
+    return 0 if result["status"] == "ok" else 1
 
 
 def cmd_skill(args: Namespace) -> int:
@@ -153,14 +114,10 @@ def cmd_cards(args: Namespace) -> int:
     """显示 CARDS 状态。"""
     console = _get_console()
 
-    if not _HAS_L4:
-        _get_err().print("[red]❌ L4 bridge 不可用[/]")
-        return 1
-
     if getattr(args, "check", False):
         card_id = getattr(args, "card_id", "") or ""
         try:
-            result = json.loads(cards_check(card_id=card_id))  # type: ignore[union-attr]
+            result = governance_context.cards_check(card_id=card_id)
         except Exception as e:  # defensive fallback
             _get_err().print(f"[red]❌ cards_check 失败: {e}[/]")
             return 1
@@ -171,16 +128,20 @@ def cmd_cards(args: Namespace) -> int:
             console.print("[bold red]❌ 违规:[/]")
             for v in result.get("violations", []):
                 console.print(f"  [red]▪[/] {v}")
-        console.print(f"\n[dim]已检查 {result['constraints_checked']} 项约束[/]")
-        return 0
+        console.print(f"\n[dim]OMO exit={result['returncode']} · scope={result['scope']}[/]")
+        return int(result["returncode"])
 
     try:
-        items = json.loads(cards_status())  # type: ignore[union-attr]
+        result = governance_context.cards_status()
     except Exception as e:  # defensive fallback
         _get_err().print(f"[red]❌ cards_status 失败: {e}[/]")
         return 1
 
-    # 产品走查 v5 #V5-14: 同 title 重复卡去重合并 (如 "变更门禁:DATA-CARDS-DB" ×N 刷屏)
+    if not result["available"]:
+        _get_err().print(f"[red]❌ cards_status 不可用: {result.get('error', 'unknown error')}[/]")
+        return 1
+    items = result["items"]
+    # 产品走查 v5 #V5-14: 同 title 重复卡去重合并
     seen: dict[str, dict] = {}
     for card in items:
         key = str(card.get("title", "")).strip()
@@ -199,42 +160,22 @@ def cmd_cards(args: Namespace) -> int:
         console.print(
             f"  [[{color}]{card['priority']}[/]] "
             f"[{status_color}]{card['title']}[/]{dup} "
-            f"[dim]({card['type']} · {card['domain']})[/]"
+            f"[dim]({card.get('type', '?')} · {card.get('domain', '?')})[/]"
         )
 
     console.print()
-    return 0
+    return 0 if result["status"] == "ok" else 1
 
 
 def cmd_vault(args: Namespace) -> int:
     """搜索 L4 Vault。"""
-    console = _get_console()
-
-    if not _HAS_L4:
-        _get_err().print("[red]❌ L4 bridge 不可用[/]")
-        return 1
-
     keyword = getattr(args, "keyword", "") or ""
     if not keyword:
         _get_err().print("[yellow]用法: cockpit vault search <keyword>[/]")
         return 1
 
-    try:
-        result = json.loads(vault_search(keyword=keyword))  # type: ignore[union-attr]
-    except Exception as e:  # defensive fallback
-        _get_err().print(f"[red]❌ vault_search 失败: {e}[/]")
-        return 1
-
-    console.print(f'[bold cyan]🔍 Vault 搜索: "{keyword}" ({result["total"]} 结果)[/]\n')
-
-    for r in result.get("results", []):
-        console.print(f"  [bold]{r['title']}[/]")
-        console.print(f"  [dim]{r['path']}[/]")
-        if r.get("snippet"):
-            snippet = r["snippet"].replace(keyword, f"[bold yellow]{keyword}[/]")
-            console.print(f"  {snippet}\n")
-
-    return 0
+    _get_err().print("[yellow]⚠ vault search owner 尚未接入新治理适配器，请通过 Workspace/KOS 搜索[/]")
+    return 1
 
 
 # ── 统一 model-driven 入口 ────────────────────────────────────────

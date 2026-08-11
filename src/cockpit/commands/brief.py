@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import json
 from argparse import Namespace
 from datetime import datetime
 
 from rich.console import Console
+
+from cockpit.adapters import governance_context
 
 from .base import _panel
 
@@ -16,12 +17,11 @@ def _cmd_brief(args: Namespace) -> int:
     console.print(_panel("[bold cyan]📋 会话简报[/]", "cyan"))
 
     try:
-        from cockpit.scripts.cockpit_mcp import cards_status, workspace_context
+        ctx = governance_context.workspace_context()
+        cards_result = governance_context.cards_status()
+        cards = cards_result.get("items") or []
 
-        ctx = json.loads(workspace_context())
-        cards = json.loads(cards_status()) or []
-
-        console.print(f"Phase {ctx['phase']} · {ctx.get('theme', '')}")
+        console.print(f"Phase {ctx.get('phase') or '?'} · {ctx.get('theme') or ''} · {ctx['status']}")
         cs = ctx.get("cards_summary", {}) or {}
         active = cs.get("active", 0)
         p0_open = cs.get("p0_open", 0)
@@ -52,7 +52,11 @@ def _cmd_brief(args: Namespace) -> int:
         console.print("  · cockpit compass radar — 战略对齐审计")
 
         console.print(f"\n[dim]生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M')}[/]")
+        if ctx["status"] != "ok" or cards_result["status"] != "ok":
+            console.print("\n[yellow]⚠ 简报数据源处于 degraded/unavailable 状态[/]")
+            return 1
     except Exception as e:  # defensive fallback
         console.print(f"[yellow]⚠ Brief generation limited: {e}[/]")
+        return 1
 
     return 0

@@ -1,27 +1,30 @@
 from __future__ import annotations
 
+import json
 import os
-import sys
 from argparse import Namespace
 from pathlib import Path
 
 from rich.console import Console
 
+from cockpit.adapters import governance_context
+
 console = Console()
 
 
 def _get_l4_registry():
-    """获取 l4-kernel DomainRegistry；配置缺失时返回 None 而不是崩溃。"""
+    """获取正式 ManifestRegistry 的只读 legacy 投影。"""
     try:
-        from cockpit.adapters.l4_kernel import (  # type: ignore[import-not-found]
-            DomainRegistry,
-            load_overrides_from_config,  # pyright: ignore[reportAttributeAccessIssue]
-        )
+        from l4_kernel.manifest_registry import ManifestRegistry  # type: ignore[import-not-found]
 
-        l4_config_path = Path(
-            os.environ.get("L4_DOMAIN_CONFIG", str(Path.home() / ".config" / "l4-kernel" / "domains.toml"))
+        documents_root = Path(os.environ.get("L4_DOCUMENTS_ROOT", str(Path.home() / "Documents"))).expanduser()
+        registry_path = Path(
+            os.environ.get(
+                "L4_DOMAIN_REGISTRY",
+                str(documents_root / "@公共" / "_control" / "L4-DOMAIN-REGISTRY.yaml"),
+            )
         )
-        return DomainRegistry(path_overrides=load_overrides_from_config(l4_config_path))  # type: ignore[call-arg]
+        return ManifestRegistry.load(registry_path).as_legacy_registry()
     except Exception:
         return None
 
@@ -32,23 +35,16 @@ def _cmd_health(args: Namespace) -> int:
 
     # JSON 模式：直接输出 workspace_context() 并退出，不混入人类可读面板。
     if bool(getattr(args, "json", False)):
-        try:
-            from cockpit.scripts.cockpit_mcp import workspace_context
-
-            print(workspace_context())
-            return 0
-        except Exception as e:  # defensive fallback
-            import json as _json
-
-            print(_json.dumps({"error": str(e)}, ensure_ascii=False))
-            return 1
+        ctx = governance_context.workspace_context()
+        print(json.dumps(ctx, ensure_ascii=False))
+        return 0 if ctx["status"] == "ok" else 1
 
     # ── L4 Context ──────────────────────────────────────────────
     console.print("\n[bold cyan]═══ L4 上下文 ═══[/]\n")
     try:
         from .l4bridge import cmd_context
 
-        cmd_context(args)
+        return_code = max(return_code, cmd_context(args))
     except Exception:  # defensive fallback
         console.print("[yellow]⚠ L4 bridge 不可用[/]")
         return_code = 1
@@ -58,15 +54,14 @@ def _cmd_health(args: Namespace) -> int:
     try:
         # 产品走查 v5 #V5-02: health 不重复完整 status 工作台 (避免与 cockpit status
         # 输出冗余); 聚焦健康摘要, 完整工作台引导用户用 cockpit status
-        import json as _json
-
-        from cockpit.scripts.cockpit_mcp import workspace_context
-
-        ctx = _json.loads(workspace_context())
+        ctx = governance_context.workspace_context()
         console.print(f"  Phase {ctx.get('phase', '?')} · {str(ctx.get('theme', ''))[:40]}")
         cs = ctx.get("cards_summary", {}) or {}
         console.print(f"  活跃卡片: {cs.get('active', 0)} (P0: {cs.get('p0_open', 0)})")
+        console.print(f"  状态: {ctx['status']}")
         console.print("  [dim]完整工作台 → [cyan]cockpit status[/][/]")
+        if ctx["status"] != "ok":
+            return_code = 1
     except Exception as e:  # defensive fallback
         console.print(f"[red]Cockpit status error: {e}[/]")
         return_code = 1
@@ -175,27 +170,18 @@ def _cmd_health(args: Namespace) -> int:
 
         # ── Full: L4 文档域健康 ─────────────────────────────────
         console.print("\n[bold cyan]═══ L4 文档域 ═══[/]\n")
-        l4_health = Path.home() / "Documents" / "@驾驶舱" / "_runtime" / "ecos-health-check.py"
-        if l4_health.exists():
-            try:
-                import subprocess as _l4sp
+        kems = governance_context.kems_status()
+        audit = kems["content_audit"]
+        console.print(
+            f"  [dim]域注册: {kems['domains']['status']} ({kems['domains']['total']})  |  "
+            f"内容审计: {audit['status']} ({len(audit.get('violations', []))} violations)[/]"
+        )
+        if kems["status"] != "ok":
+            return_code = 1
 
-                result = _l4sp.run(
-                    [sys.executable, str(l4_health)],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                )
-                if not args.json:
-                    for line in result.stdout.split("\n"):
-                        stripped = line.strip()
-                        if stripped and not stripped.startswith("L4"):
-                            console.print(f"  [dim]{stripped}[/]")
-            except Exception as e:  # defensive fallback
-                console.print(f"[yellow]⚠ L4 文档域检查跳过: {e}[/]")
-        elif not args.json:
-            console.print("[yellow]⚠ L4 健康脚本未找到 (创建 _runtime/ecos-health-check.py)[/]")
-
-        console.print("\n[bold green]✅ 全栈健康检查完成[/]\n")
+        if return_code == 0:
+            console.print("\n[bold green]✅ 全栈健康检查完成[/]\n")
+        else:
+            console.print("\n[bold yellow]⚠ 全栈健康检查完成，但存在异常[/]\n")
 
     return return_code
