@@ -36,6 +36,7 @@ last-reviewed: 2026-06-28
 | `mof-capabilities.yaml` | 4-layer MOF tool registry |
 | `workers.yaml` | Worker role/lease/transport policy |
 | `external-connection-fabric.yaml` | External knowledge/data/resource/method/tool/channel/model descriptor and lifecycle SSOT |
+| `documents-domain-projects.yaml` | Documents 知识域的 Cowork 客户端、Workspace MCP、Skill/Workflow 路由绑定；域身份仍由 L4 manifest registry 拥有 |
 | `agent-workflows` | Executable workflow and diff-check registry, including current-state coherence coverage |
 | `compute/engines.yaml` | LLM runtime engine + scheduling endpoints |
 | `compute/nodes.yaml` | Physical compute nodes |
