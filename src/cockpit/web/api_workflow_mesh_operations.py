@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -54,6 +55,14 @@ except Exception as exc:  # Keep the existing Workflow Mesh routes independently
 else:
     _ENGINEERING_DELIVERY_IMPORT_ERROR = None
 
+try:
+    from omo.episode_projection import build_episode_projection_snapshot_from_path
+except Exception as exc:  # Keep the episode projection route independently unavailable.
+    build_episode_projection_snapshot_from_path = None  # type: ignore[assignment]
+    _EPISODE_PROJECTION_IMPORT_ERROR: Exception | None = exc
+else:
+    _EPISODE_PROJECTION_IMPORT_ERROR = None
+
 
 router = APIRouter(prefix="/api/workflow-mesh", tags=["workflow-mesh"]) if APIRouter else None
 from cockpit.web._agora_ports import agora_http_endpoint
@@ -72,6 +81,14 @@ def _unavailable_projection(error_type: str, next_action: str) -> dict[str, Any]
         "error_type": error_type,
         "next_action": next_action,
     }
+
+
+def _event_ledger_db_path() -> Path:
+    """Resolve the existing Event Ledger SQLite path without creating it."""
+    env = os.environ.get("OMO_EVENT_LEDGER_DB")
+    if env:
+        return Path(env).resolve()
+    return (_REPO_ROOT / "runtime" / "omo" / "event-ledger.sqlite3").resolve()
 
 
 async def _read_capability_health(required_capabilities: list[str]) -> dict[str, Any]:
@@ -196,6 +213,73 @@ if router:
         return {
             "ok": True,
             "status": "live",
+            "projection": projection,
+            **controls,
+        }
+
+    @router.get("/episode-projections")
+    async def get_episode_projections(
+        principal_id: str = Query(..., description="Principal identity for the episode projection"),  # type: ignore[union-attr]
+    ) -> dict[str, Any]:
+        """Expose the OMO-owned W2-04 episode projection read-only.
+
+        The endpoint only resolves the existing Event Ledger database path and
+        delegates to ``omo.episode_projection``.  It never appends, writes
+        scene cards, approves, executes, or triggers external side effects.
+        """
+        controls = {
+            "read_only": True,
+            "workflow_state_mutation": False,
+            "provider_invocation": False,
+            "automatic_promotion": False,
+        }
+        if build_episode_projection_snapshot_from_path is None:
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "schema": "episode-projections/v1",
+                "principal_id": principal_id,
+                "error": "episode_projection_unavailable",
+                "error_type": type(_EPISODE_PROJECTION_IMPORT_ERROR).__name__
+                if _EPISODE_PROJECTION_IMPORT_ERROR
+                else "ImportError",
+                "next_action": "安装并挂载 OMO episode_projection 投影后重试。",
+                **controls,
+            }
+        db_path = _event_ledger_db_path()
+        if not db_path.exists():
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "schema": "episode-projections/v1",
+                "principal_id": principal_id,
+                "error": "episode_projection_ledger_missing",
+                "next_action": "确认 Event Ledger 数据库已初始化后重试。",
+                "db_path": str(db_path),
+                **controls,
+            }
+        try:
+            projection = build_episode_projection_snapshot_from_path(
+                db_path,
+                principal_id=principal_id,
+            )
+        except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+            _logger.info("episode_projection_failed: %s", type(exc).__name__)
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "schema": "episode-projections/v1",
+                "principal_id": principal_id,
+                "error": "episode_projection_failed",
+                "message": f"episode 投影不可用: {type(exc).__name__}",
+                "next_action": "检查 Event Ledger 数据与 OMO episode_projection 契约后重试。",
+                **controls,
+            }
+        return {
+            "ok": projection.get("status") == "live",
+            "status": projection.get("status", "unavailable"),
+            "schema": "episode-projections/v1",
+            "principal_id": principal_id,
             "projection": projection,
             **controls,
         }
