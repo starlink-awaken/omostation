@@ -169,6 +169,8 @@ async def test_chat_maps_backend_model_and_preserves_public_identity_with_failov
     assert result.success
     assert result.model_id == "public/model"
     assert result.placement_id == "b"
+    assert result.backend_id == "b2"
+    assert result.profile is RouteProfile.INTERACTIVE
     assert result.attempted_placements == ("a", "b")
     assert first.chat_requests[0].model == "physical/a"
     assert second.chat_requests[0].model == "physical/b"
@@ -293,6 +295,9 @@ async def test_embedding_preserves_batch_order_and_rejects_bad_shape() -> None:
         deadline=10.0,
     )
     assert success.embeddings == ((1.0, 2.0), (3.0, 4.0))
+    assert success.placement_id == "p"
+    assert success.backend_id == "b"
+    assert success.profile is RouteProfile.INTERACTIVE
     assert adapter.embedding_requests[0].model == "physical/p"
 
     invalid = await orchestrator.embed(
@@ -324,7 +329,12 @@ async def test_unexpected_embedding_exception_is_sanitized() -> None:
 
 class FakeReranker:
     async def rerank(self, request: RerankRequest) -> RerankResult:
-        return RerankResult(scores=(0.5, 0.5, 0.8))
+        return RerankResult(
+            scores=(0.5, 0.5, 0.8),
+            placement_id="rerank-placement",
+            backend_id="rerank-backend",
+            profile=RouteProfile.QUALITY,
+        )
 
 
 class BrokenTelemetry:
@@ -346,6 +356,9 @@ async def test_rerank_validates_and_stably_orders_equal_scores() -> None:
         (0, 0.5),
         (1, 0.5),
     ]
+    assert result.placement_id == "rerank-placement"
+    assert result.backend_id == "rerank-backend"
+    assert result.profile is RouteProfile.QUALITY
 
 
 @pytest.mark.asyncio

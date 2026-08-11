@@ -168,6 +168,8 @@ class DataPlaneOrchestrator:
                     placement_id,
                     tuple(attempted),
                     result=result,
+                    backend_id=placement.backend_id,
+                    profile=route_request.profile,
                 )
             assert result.error is not None
             if not self._can_failover(result.error):
@@ -303,6 +305,8 @@ class DataPlaneOrchestrator:
                     placement_id,
                     tuple(attempted),
                     embeddings=result.embeddings,
+                    backend_id=placement.backend_id,
+                    profile=route_request.profile,
                 )
             assert result.error is not None
             if not self._can_failover(result.error):
@@ -472,7 +476,13 @@ class DataPlaneOrchestrator:
                 enumerate(result.scores), key=lambda item: (-item[1], item[0])
             )
         )
-        return RerankExecution(request.request_id, items)
+        return RerankExecution(
+            request.request_id,
+            items,
+            placement_id=result.placement_id,
+            backend_id=result.backend_id,
+            profile=result.profile,
+        )
 
     def _deadline(self, budget: float) -> float:
         if not math.isfinite(budget) or budget <= 0:

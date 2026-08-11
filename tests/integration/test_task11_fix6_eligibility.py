@@ -257,9 +257,11 @@ async def test_cold_available_production_uds_plans_loads_postverifies_and_infers
             )
             chat = await client.post(
                 "/openai/v1/chat/completions",
+                headers={"X-OMLXC-Request-ID": "active.contract-1"},
                 json={
                     "model": "local/model",
                     "messages": [{"role": "user", "content": "hello"}],
+                    "profile": "eco",
                 },
             )
             models = await client.get("/api/v1/models")
@@ -270,6 +272,10 @@ async def test_cold_available_production_uds_plans_loads_postverifies_and_infers
     assert plan.json()["data"]["selected_placement_id"] == "placement"
     assert chat.status_code == 200
     assert chat.json()["choices"][0]["message"]["content"] == "cold-loaded"
+    assert chat.headers["X-OMLXC-Request-ID"] == "active.contract-1"
+    assert chat.headers["X-OMLXC-Placement"] == "placement"
+    assert chat.headers["X-OMLXC-Backend"] == "backend"
+    assert chat.headers["X-OMLXC-Profile"] == "eco"
     assert backend.load_calls == backend.chat_calls == 1
     load_index = backend.events.index("load")
     assert backend.events[load_index + 1 : load_index + 3] == ["discover", "list"]

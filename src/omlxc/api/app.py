@@ -384,6 +384,14 @@ def create_app(
             execution = await service.chat(route, chat_request, deadline=body.timeout_seconds)
             if not execution.success or execution.result is None:
                 return _execution_error(request_id, execution.error)
+            headers = _final_route_headers(
+                request_id,
+                placement_id=execution.placement_id,
+                backend_id=execution.backend_id,
+                profile=execution.profile,
+            )
+            if headers is None:
+                return _openai_error(request_id, 503, "backend_unavailable")
             result = execution.result
             return JSONResponse(
                 {
@@ -399,7 +407,7 @@ def create_app(
                     ],
                     "usage": _usage(result.usage),
                 },
-                headers={"X-OMLXC-Request-ID": request_id},
+                headers=headers,
             )
         source = service.stream_chat(route, chat_request, deadline=body.timeout_seconds)
         try:
@@ -449,6 +457,14 @@ def create_app(
         execution = await service.embed(route, embedding_request, deadline=body.timeout_seconds)
         if execution.error is not None:
             return _execution_error(request_id, execution.error)
+        headers = _final_route_headers(
+            request_id,
+            placement_id=execution.placement_id,
+            backend_id=execution.backend_id,
+            profile=execution.profile,
+        )
+        if headers is None:
+            return _openai_error(request_id, 503, "backend_unavailable")
         return JSONResponse(
             {
                 "object": "list",
@@ -458,7 +474,8 @@ def create_app(
                     for index, vector in enumerate(execution.embeddings)
                 ],
                 "usage": {"prompt_tokens": 0, "total_tokens": 0},
-            }
+            },
+            headers=headers,
         )
 
     @app.post("/api/v1/rerank")
@@ -469,9 +486,18 @@ def create_app(
         )
         if execution.error is not None:
             raise ApiError(503, "E300", "local rerank failed")
+        headers = _final_route_headers(
+            request_id,
+            placement_id=execution.placement_id,
+            backend_id=execution.backend_id,
+            profile=execution.profile,
+        )
+        if headers is None:
+            raise ApiError(503, "E300", "local rerank failed")
         return _success(
             request,
             [{"index": item.index, "relevance_score": item.score} for item in execution.items],
+            headers=headers,
         )
 
     return app
@@ -481,10 +507,34 @@ def _request_id(request: Request) -> str:
     return cast(str, request.state.request_id)
 
 
-def _success(request: Request, data: object, *, status: int = 200) -> JSONResponse:
+def _final_route_headers(
+    request_id: str,
+    *,
+    placement_id: str | None,
+    backend_id: str | None,
+    profile: RouteProfile | None,
+) -> dict[str, str] | None:
+    if not placement_id or not backend_id or profile is None:
+        return None
+    return {
+        "X-OMLXC-Request-ID": request_id,
+        "X-OMLXC-Placement": placement_id,
+        "X-OMLXC-Backend": backend_id,
+        "X-OMLXC-Profile": profile.value,
+    }
+
+
+def _success(
+    request: Request,
+    data: object,
+    *,
+    status: int = 200,
+    headers: Mapping[str, str] | None = None,
+) -> JSONResponse:
     return JSONResponse(
         {"schema_version": SCHEMA_VERSION, "request_id": _request_id(request), "data": _json(data)},
         status_code=status,
+        headers=headers,
     )
 
 

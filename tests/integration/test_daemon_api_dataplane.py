@@ -15,6 +15,7 @@ from omlxc.dataplane import (
     RankedItem,
     RerankExecution,
 )
+from omlxc.domain import RouteProfile
 from omlxc.domain.protocols import (
     AdapterError,
     AdapterErrorCode,
@@ -47,6 +48,10 @@ class FakeStream(AsyncIterator[StreamEvent]):
 
 
 class FakeInferenceService:
+    final_placement_id = "placement-a"
+    final_backend_id = "backend-a"
+    final_profile = RouteProfile.QUALITY
+
     def __init__(self) -> None:
         self.chat_requests: list[ChatRequest] = []
         self.embedding_requests: list[EmbeddingRequest] = []
@@ -91,8 +96,8 @@ class FakeInferenceService:
             request_id=request.request_id,
             model_id=request.model,
             success=True,
-            placement_id="placement-a",
-            attempted_placements=("placement-a",),
+            placement_id=self.final_placement_id,
+            attempted_placements=(self.final_placement_id,),
             result=ChatResult(
                 request_id=request.request_id,
                 success=True,
@@ -100,6 +105,8 @@ class FakeInferenceService:
                 finish_reason="stop",
                 usage=TokenUsage(prompt_tokens=2, completion_tokens=1, total_tokens=3),
             ),
+            backend_id=self.final_backend_id,
+            profile=self.final_profile,
         )
 
     def stream_chat(
@@ -117,9 +124,11 @@ class FakeInferenceService:
         return EmbeddingExecution(
             request_id=request.request_id,
             model_id=request.model,
-            placement_id="placement-a",
-            attempted_placements=("placement-a",),
+            placement_id=self.final_placement_id,
+            attempted_placements=(self.final_placement_id,),
             embeddings=tuple((float(index), 1.0) for index in range(count)),
+            backend_id=self.final_backend_id,
+            profile=self.final_profile,
         )
 
     async def rerank(
@@ -131,6 +140,9 @@ class FakeInferenceService:
             tuple(
                 RankedItem(index=index, score=1.0 - index / 10) for index in range(len(documents))
             ),
+            placement_id=self.final_placement_id,
+            backend_id=self.final_backend_id,
+            profile=self.final_profile,
         )
 
 
@@ -145,13 +157,14 @@ def transport(inference: FakeInferenceService) -> httpx.ASGITransport:
 
 
 @pytest.mark.asyncio
-async def test_openai_models_and_nonstream_chat_shape_preserve_typed_image(
+async def test_openai_nonstream_chat_shape_and_aetherforge_strict_route_headers(
     transport: httpx.ASGITransport, inference: FakeInferenceService
 ) -> None:
     async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
         models = await client.get("/openai/v1/models")
         chat = await client.post(
             "/openai/v1/chat/completions",
+            headers={"X-OMLXC-Request-ID": "strict.req-1"},
             json={
                 "model": "local/model",
                 "messages": [
@@ -166,6 +179,7 @@ async def test_openai_models_and_nonstream_chat_shape_preserve_typed_image(
                         ],
                     }
                 ],
+                "profile": "batch",
             },
         )
 
@@ -176,9 +190,15 @@ async def test_openai_models_and_nonstream_chat_shape_preserve_typed_image(
     payload = chat.json()
     assert chat.status_code == 200
     assert payload["object"] == "chat.completion"
+    assert payload["id"] == "chatcmpl-strict.req-1"
     assert payload["model"] == "local/model"
     assert payload["choices"][0]["message"] == {"role": "assistant", "content": "answer"}
     assert payload["usage"]["total_tokens"] == 3
+    assert chat.headers["content-type"].startswith("application/json")
+    assert chat.headers["X-OMLXC-Request-ID"] == "strict.req-1"
+    assert chat.headers["X-OMLXC-Placement"] == inference.final_placement_id
+    assert chat.headers["X-OMLXC-Backend"] == inference.final_backend_id
+    assert chat.headers["X-OMLXC-Profile"] == inference.final_profile.value
     blocks = inference.chat_requests[0].messages[0].content
     assert not isinstance(blocks, str)
     assert blocks[1].image_url.url == "https://images.invalid/local.png"
@@ -264,15 +284,17 @@ async def test_post_token_stream_error_is_structured_without_replay(
 
 @pytest.mark.asyncio
 async def test_embeddings_rerank_and_thinking_fail_closed(
-    transport: httpx.ASGITransport,
+    transport: httpx.ASGITransport, inference: FakeInferenceService
 ) -> None:
     async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
         embeddings = await client.post(
             "/openai/v1/embeddings",
-            json={"model": "local/model", "input": ["a", "b"]},
+            headers={"X-OMLXC-Request-ID": "strict.embed-1"},
+            json={"model": "local/model", "input": ["a", "b"], "profile": "batch"},
         )
         rerank = await client.post(
             "/api/v1/rerank",
+            headers={"X-OMLXC-Request-ID": "strict.rerank-1"},
             json={"model": "local/reranker", "query": "q", "documents": ["a", "b"]},
         )
         thinking = await client.post(
@@ -287,8 +309,19 @@ async def test_embeddings_rerank_and_thinking_fail_closed(
 
     assert embeddings.status_code == 200
     assert [item["index"] for item in embeddings.json()["data"]] == [0, 1]
+    assert embeddings.headers["content-type"].startswith("application/json")
+    assert embeddings.headers["X-OMLXC-Request-ID"] == "strict.embed-1"
+    assert embeddings.headers["X-OMLXC-Placement"] == "placement-a"
+    assert embeddings.headers["X-OMLXC-Backend"] == inference.final_backend_id
+    assert embeddings.headers["X-OMLXC-Profile"] == inference.final_profile.value
     assert rerank.status_code == 200
+    assert rerank.json()["request_id"] == "strict.rerank-1"
     assert rerank.json()["data"][0] == {"index": 0, "relevance_score": 1.0}
+    assert rerank.headers["content-type"].startswith("application/json")
+    assert rerank.headers["X-OMLXC-Request-ID"] == "strict.rerank-1"
+    assert rerank.headers["X-OMLXC-Placement"] == inference.final_placement_id
+    assert rerank.headers["X-OMLXC-Backend"] == inference.final_backend_id
+    assert rerank.headers["X-OMLXC-Profile"] == inference.final_profile.value
     assert thinking.status_code == 400
     assert thinking.json()["error"]["type"] == "unsupported_feature"
 
@@ -316,6 +349,7 @@ async def test_openai_errors_are_sanitized_and_request_bodies_are_bounded(
     async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
         failed = await client.post(
             "/openai/v1/chat/completions",
+            headers={"X-OMLXC-Request-ID": "strict.error-1"},
             json={"model": "local/model", "messages": [{"role": "user", "content": "x"}]},
         )
         oversized = await client.post(
@@ -325,8 +359,44 @@ async def test_openai_errors_are_sanitized_and_request_bodies_are_bounded(
 
     assert failed.status_code == 503
     assert failed.json()["error"]["message"] == "local inference failed"
+    assert failed.headers["X-OMLXC-Request-ID"] == "strict.error-1"
+    assert "X-OMLXC-Placement" not in failed.headers
+    assert "X-OMLXC-Backend" not in failed.headers
+    assert "X-OMLXC-Profile" not in failed.headers
     assert "do-not-leak" not in failed.text
     assert oversized.status_code == 413
+
+
+@pytest.mark.asyncio
+async def test_incomplete_success_metadata_fails_closed_without_route_headers(
+    transport: httpx.ASGITransport, inference: FakeInferenceService
+) -> None:
+    async def incomplete_chat(
+        route: object, request: ChatRequest, *, deadline: float
+    ) -> ChatExecution:
+        del route, deadline
+        return ChatExecution(
+            request_id=request.request_id,
+            model_id=request.model,
+            success=True,
+            placement_id="observed-placement",
+            attempted_placements=("observed-placement",),
+            result=ChatResult(request_id=request.request_id, success=True, content="answer"),
+        )
+
+    inference.chat = incomplete_chat  # type: ignore[method-assign]
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            headers={"X-OMLXC-Request-ID": "strict.incomplete-1"},
+            json={"model": "local/model", "messages": [{"role": "user", "content": "x"}]},
+        )
+
+    assert response.status_code == 503
+    assert response.headers["X-OMLXC-Request-ID"] == "strict.incomplete-1"
+    assert "X-OMLXC-Placement" not in response.headers
+    assert "X-OMLXC-Backend" not in response.headers
+    assert "X-OMLXC-Profile" not in response.headers
 
 
 @pytest.mark.asyncio

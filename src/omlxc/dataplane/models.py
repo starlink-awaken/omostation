@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
+from omlxc.domain import RouteProfile
 from omlxc.domain.protocols import BackendAdapter, ChatResult, StreamPhase
 
 
@@ -38,6 +39,8 @@ class ChatExecution:
     attempted_placements: tuple[str, ...]
     result: ChatResult | None = None
     error: ExecutionError | None = None
+    backend_id: str | None = None
+    profile: RouteProfile | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +51,8 @@ class EmbeddingExecution:
     attempted_placements: tuple[str, ...]
     embeddings: tuple[tuple[float, ...], ...] = ()
     error: ExecutionError | None = None
+    backend_id: str | None = None
+    profile: RouteProfile | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,6 +81,13 @@ class RerankRequest:
 @dataclass(frozen=True, slots=True)
 class RerankResult:
     scores: tuple[float, ...]
+    placement_id: str
+    backend_id: str
+    profile: RouteProfile
+
+    def __post_init__(self) -> None:
+        if not self.placement_id or not self.backend_id:
+            raise ValueError("rerank route metadata is required")
 
 
 class Reranker(Protocol):
@@ -93,6 +105,9 @@ class RerankExecution:
     request_id: str
     items: tuple[RankedItem, ...]
     error: ExecutionError | None = None
+    placement_id: str | None = None
+    backend_id: str | None = None
+    profile: RouteProfile | None = None
 
 
 def validate_vectors(vectors: tuple[tuple[float, ...], ...], *, expected_count: int) -> bool:
