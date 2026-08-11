@@ -10,6 +10,7 @@ from collections.abc import AsyncIterator, Callable, Mapping, Sequence
 from typing import Annotated, Any, Literal, cast
 from uuid import uuid4
 
+import anyio
 from fastapi import FastAPI, Header, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -726,7 +727,8 @@ def _sse_event(request_id: str, model: str, event: StreamEvent) -> bytes:
 async def _close_iterator(iterator: AsyncIterator[object]) -> None:
     close = getattr(iterator, "aclose", None)
     if close is not None:
-        await close()
+        with anyio.CancelScope(shield=True):
+            await close()
 
 
 def _durable_line(record: DurableEventRecord) -> bytes:

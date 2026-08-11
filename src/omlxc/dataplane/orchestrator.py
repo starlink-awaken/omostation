@@ -327,23 +327,26 @@ class DataPlaneOrchestrator:
     async def stream_chat(
         self, route_request: RouteRequest, request: ChatRequest, *, deadline: float
     ) -> AsyncGenerator[StreamEvent]:
+        source = self._stream_chat_unobserved(route_request, request, deadline=deadline)
         if self._telemetry is None:
-            async for event in self._stream_chat_unobserved(
-                route_request, request, deadline=deadline
-            ):
-                yield event
+            try:
+                async for event in source:
+                    yield event
+            finally:
+                await self._close_iterator(source)
             return
         started = self._monotonic()
         success = False
         try:
-            async for event in self._stream_chat_unobserved(
-                route_request, request, deadline=deadline
-            ):
+            async for event in source:
                 if event.kind is StreamEventKind.DONE:
                     success = True
                 yield event
         finally:
-            self._record_metric(request.request_id, started, success)
+            try:
+                await self._close_iterator(source)
+            finally:
+                self._record_metric(request.request_id, started, success)
 
     async def _stream_chat_unobserved(
         self, route_request: RouteRequest, request: ChatRequest, *, deadline: float
@@ -441,9 +444,7 @@ class DataPlaneOrchestrator:
                 return
             finally:
                 if iterator is not None:
-                    close = getattr(iterator, "aclose", None)
-                    if close is not None:
-                        await close()
+                    await self._close_iterator(iterator)
             if not retry:
                 return
         yield self._interrupted_event(request.request_id, emitted_content)
@@ -630,6 +631,14 @@ class DataPlaneOrchestrator:
             self._telemetry_error_sink("telemetry_write_failed")
         except Exception:
             return
+
+    @staticmethod
+    async def _close_iterator(iterator: AsyncIterator[object]) -> None:
+        close = getattr(iterator, "aclose", None)
+        if close is None:
+            return
+        with anyio.CancelScope(shield=True):
+            await close()
 
     @staticmethod
     def _error_event(request_id: str, error: ExecutionError) -> StreamEvent:
