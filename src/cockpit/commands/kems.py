@@ -1,6 +1,6 @@
-"""cockpit.commands.kems — KEMS (Knowledge Entanglement Mesh System) 域治理入口.
+"""cockpit.commands.kems — KEMS (Knowledge Engineering Methodology System) 治理入口.
 
-KEMS 是 L4 自我层的知识纠缠管理系统, 管理 28 个域的注册/状态/扫描.
+KEMS 的执行能力归 Workspace；Documents 仅保留内容、契约与证据.
 本命令通过 l4bridge 复用已有 L4 能力, 不重写逻辑.
 
 子命令:
@@ -15,6 +15,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import subprocess
+from pathlib import Path
 
 from .base import _get_console, _get_err, _panel
 
@@ -101,14 +104,12 @@ def cmd_kems_status(args: argparse.Namespace) -> int:
 
 
 def cmd_kems_scan(args: argparse.Namespace) -> int:
-    """cockpit kems scan — KEMS 平面扫描 (委派 l4 kems_plane_scan)."""
+    """cockpit kems scan — 审计 Documents 内容主权面。"""
     console = _get_console()
-    console.print("[cyan]🔍 KEMS 平面扫描中...[/cyan]")
-    # 委派到 l4-kernel CLI
-    import subprocess
-    from pathlib import Path
+    console.print("[cyan]🔍 Documents 内容主权面扫描中...[/cyan]")
 
     workspace = Path(__file__).resolve().parents[5]
+    documents_root = Path(os.environ.get("L4_DOCUMENTS_ROOT", Path.home() / "Documents")).expanduser()
     cmd = [
         "uv",
         "run",
@@ -117,8 +118,10 @@ def cmd_kems_scan(args: argparse.Namespace) -> int:
         "python",
         "-m",
         "l4_kernel.cli",
-        "kems",
-        "scan",
+        "content",
+        "audit",
+        str(documents_root),
+        "--json",
     ]
     result = subprocess.run(cmd, cwd=str(workspace))
     return result.returncode
@@ -135,9 +138,9 @@ def cmd_kems(args: argparse.Namespace) -> int:
         return cmd_kems_scan(args)
 
     console = _get_console()
-    console.print(_panel("[bold cyan]🧬 KEMS · Knowledge Entanglement Mesh System[/bold cyan]", "cyan"))
+    console.print(_panel("[bold cyan]🧬 KEMS · Knowledge Engineering Methodology System[/bold cyan]", "cyan"))
     console.print("\n[bold]可用子命令:[/]")
-    console.print("  [cyan]cockpit kems domains[/]  — 列出 28 域状态")
+    console.print("  [cyan]cockpit kems domains[/]  — 列出当前注册域状态")
     console.print("  [cyan]cockpit kems status[/]   — 控制面状态")
-    console.print("  [cyan]cockpit kems scan[/]     — 平面扫描")
+    console.print("  [cyan]cockpit kems scan[/]     — Documents 内容主权面扫描")
     return 0

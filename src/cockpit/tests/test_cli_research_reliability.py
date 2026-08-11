@@ -248,6 +248,7 @@ def test_cmd_research_saves_successful_output(monkeypatch):
         monkeypatch,
         {
             "_find_cli": lambda name: "/usr/local/bin/minerva",
+            "_searxng_alive": lambda: True,
             "subprocess": type(
                 "_FakeSubprocess",
                 (),

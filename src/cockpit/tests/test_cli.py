@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import patch
 
 from cockpit.cli import main
@@ -91,9 +92,10 @@ def test_help_command():
     assert rc == 0
 
 
-def test_demo_command():
+def test_demo_command(monkeypatch, tmp_path):
     """cockpit demo should return 0 with mock data access."""
     _setup_mock()
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
     with patch("sys.argv", ["workspace", "demo"]):
         rc = main()
     assert rc == 0
