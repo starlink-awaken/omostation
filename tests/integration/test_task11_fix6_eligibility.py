@@ -56,12 +56,14 @@ class ColdBackend:
         block_load: bool = False,
         load_status: OperationStatus = OperationStatus.SUCCEEDED,
         stale_probe: bool = False,
+        reachable: bool = True,
     ) -> None:
         self.state = state
         self.complete_load = complete_load
         self.block_load = block_load
         self.load_status = load_status
         self.stale_probe = stale_probe
+        self.reachable = reachable
         self.load_calls = 0
         self.unload_calls = 0
         self.chat_calls = 0
@@ -74,10 +76,10 @@ class ColdBackend:
         loaded = self.state is ModelRuntimeState.LOADED
         return CapabilitySnapshot(
             backend_id="backend",
-            reachable=True,
+            reachable=self.reachable,
             compatible=True,
             model_available=self.state is not ModelRuntimeState.UNKNOWN,
-            generation_ready=loaded,
+            generation_ready=loaded and self.reachable,
             observed_at=(
                 datetime(2020, 1, 1, tzinfo=UTC)
                 if self.stale_probe
@@ -447,6 +449,30 @@ async def test_loaded_memory_denied_job_still_physically_unloads_and_postverifie
     assert backend.state is ModelRuntimeState.AVAILABLE
     load_index = backend.events.index("unload")
     assert backend.events[load_index + 1 : load_index + 3] == ["discover", "list"]
+
+
+@pytest.mark.asyncio
+async def test_loaded_unavailable_backend_never_receives_unload_write(short_root: Path) -> None:
+    config = _config(short_root)
+    backend = ColdBackend(state=ModelRuntimeState.LOADED, reachable=False)
+    composition = build_production_daemon(
+        config, adapters={"backend": cast(BackendAdapter, backend)}
+    )
+    server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
+    await server.start()
+    try:
+        async with await _uds_client(config.daemon.socket_path) as client:
+            job = await client.post(
+                "/api/v1/models/local%2Fmodel/unload",
+                headers={"Idempotency-Key": "unavailable-unload"},
+            )
+            current = await _wait_job(client, job.json()["data"]["id"])
+    finally:
+        await server.stop()
+
+    assert current.json()["data"]["state"] == "failed"
+    assert backend.unload_calls == 0
+    assert backend.state is ModelRuntimeState.LOADED
 
 
 @pytest.mark.asyncio

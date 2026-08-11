@@ -428,6 +428,7 @@ class ProductionPlacementOperator:
             return is_static_eligible(snapshot)
         return (
             snapshot.fresh
+            and snapshot.available
             and snapshot.authorized
             and snapshot.local
             and snapshot.security_allowed
