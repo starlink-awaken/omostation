@@ -246,6 +246,61 @@ class TestHealthSelfCheck:
         }
 
     @pytest.mark.asyncio
+    @patch("agora.server.tools_health._bos_registry_health")
+    @patch("agora.server.tools_health._scan_debt_items")
+    @patch("agora.server.tools_health._get_auditor")
+    @patch("agora.server.tools_health._get_proxy_manager")
+    @patch("agora.server.tools_health._get_registry")
+    async def test_standby_backends_do_not_degrade_health(
+        self,
+        mock_reg_fn,
+        mock_pm_fn,
+        mock_aud_fn,
+        mock_debt,
+        mock_bos_health,
+    ):
+        registry = MagicMock()
+        registry.list_all.return_value = [MagicMock(name="svc-a")]
+        registry.list_healthy.return_value = registry.list_all.return_value
+        mock_reg_fn.return_value = registry
+
+        client = MagicMock()
+        pm = MagicMock()
+        pm.registry.entries = {
+            "svc-a.first": ProxyEntry(
+                tool_name="svc-a.first",
+                service_name="svc-a",
+                original_name="first",
+                description="",
+                parameters={},
+                client=client,
+            )
+        }
+        pm.registry._clients = {"svc-a": client}
+        pm.registry.known_services = ["svc-a", "svc-b"]
+        pm._health_checker.get_all_status.return_value = {}
+        mock_pm_fn.return_value = pm
+
+        auditor = MagicMock()
+        auditor.stats.return_value = {"total": 0}
+        auditor.verify_chain.return_value = {"checked": True, "ok": True}
+        mock_aud_fn.return_value = auditor
+        mock_debt.return_value = {"total": 0, "open": 0, "resolved": 0}
+        mock_bos_health.return_value = {"broken": [], "broken_count": 0}
+
+        result = await health_self_check()
+
+        assert result["status"] == "healthy"
+        assert result["issues"] == []
+        assert result["backends"] == {
+            "total": 2,
+            "alive": 1,
+            "standby": 1,
+            "dead": [],
+            "alive_ratio": 0.5,
+        }
+
+    @pytest.mark.asyncio
     @patch("agora.server.tools_health._get_auditor")
     @patch("agora.server.tools_health._get_proxy_manager")
     @patch("agora.server.tools_health._get_registry")

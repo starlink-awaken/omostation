@@ -195,9 +195,6 @@ async def health_self_check() -> dict:
     backends_total = len(all_backend_names)
     backends_alive = len(alive_backend_names & all_backend_names)
     dead_backends = sorted(dead_backend_names)
-    # P2-5: 以 registry 已连接 client 数作为真实 backends 口径
-    if backends_total > 0 and backends_alive < backends_total:
-        issues.append(f"backends partial: {backends_alive}/{backends_total} alive")
     if dead_backends:
         issues.append(f"dead backends: {', '.join(dead_backends)}")
     # MED-3: 链完整性失败视为问题
