@@ -1,0 +1,62 @@
+"""Public pure-domain contract for omlxc."""
+
+from .adapters import BackendAdapter
+from .errors import (
+    EXIT_CAPACITY,
+    EXIT_CONFIG,
+    EXIT_DAEMON,
+    EXIT_INTERNAL,
+    EXIT_PARTIAL,
+    EXIT_SECURITY,
+    EXIT_SUCCESS,
+    EXIT_TIMEOUT,
+    ErrorEnvelope,
+    error_exit_code,
+    sanitize_sensitive,
+)
+from .models import (
+    BackendInstance,
+    BackendKind,
+    HealthSnapshot,
+    Job,
+    JobState,
+    ModelSpec,
+    Node,
+    NodeState,
+    Placement,
+    RiskLevel,
+    RouteDecision,
+    RouteProfile,
+    RouteRequest,
+)
+from .state import transition_job, transition_node
+
+__all__ = [
+    "EXIT_CAPACITY",
+    "EXIT_CONFIG",
+    "EXIT_DAEMON",
+    "EXIT_INTERNAL",
+    "EXIT_PARTIAL",
+    "EXIT_SECURITY",
+    "EXIT_SUCCESS",
+    "EXIT_TIMEOUT",
+    "BackendAdapter",
+    "BackendInstance",
+    "BackendKind",
+    "ErrorEnvelope",
+    "HealthSnapshot",
+    "Job",
+    "JobState",
+    "ModelSpec",
+    "Node",
+    "NodeState",
+    "Placement",
+    "RiskLevel",
+    "RouteDecision",
+    "RouteProfile",
+    "RouteRequest",
+    "error_exit_code",
+    "sanitize_sensitive",
+    "transition_job",
+    "transition_node",
+]

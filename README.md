@@ -1,16 +1,37 @@
 # omlxc
 
-`omlxc` is a private local compute-hub project. Version `3.0.0a1` is the Task 2
-installable skeleton for a future `omlxc` CLI and `omlxcd` local daemon. It does
-not start a daemon, alter existing local services, contact hardware, or replace
-the stable `/opt/homebrew/bin/omlxc` command.
+`omlxc` is a private local compute-hub project. Version `3.0.0a1` currently
+provides the installable package skeleton plus Task 3's pure domain contract and
+versioned configuration migration. It does not start a daemon, alter existing
+local services, contact hardware, or replace the stable
+`/opt/homebrew/bin/omlxc` command.
 
 The v3 boundary is intentionally narrow in this task:
 
-- `omlxc --help` and `omlxc --version` work after installation.
+- `omlxc --help`, `omlxc --version`, and `omlxc config validate|migrate` work
+  after installation.
 - `omlxcd` emits a stable JSON placeholder instead of claiming that an API is
   available.
 - `bin/omlx` and its 32 tests remain the legacy characterization baseline.
+
+## Configuration migration
+
+Configuration schema v1 uses TOML and keeps node IDs independent from network
+addresses. Runtime precedence is: safe defaults, TOML, `OMLXC_` environment
+variables, then one-shot overrides. Environment nesting uses double underscores,
+for example `OMLXC_STORAGE__RETENTION_DAYS=45`; values use TOML scalar syntax.
+
+Migration is plan-only unless both confirmation flags are present:
+
+```bash
+omlxc config migrate --from /path/to/models.json --target /path/to/config.toml
+omlxc config migrate --from /path/to/models.json --target /path/to/config.toml --apply --yes
+omlxc config validate --path /path/to/config.toml
+```
+
+Persistent writes use private `0600` files, a pre-overwrite snapshot, and atomic
+replacement. Credential fields accept Keychain references such as
+`keychain://omlxc/backend-name`; plaintext credentials are rejected.
 
 ## Development
 
