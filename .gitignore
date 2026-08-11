@@ -12,6 +12,9 @@ __pycache__/
 *.bak-*
 *.bak
 
+# Superpowers brainstorming visual sessions are local review artifacts.
+.superpowers/
+
 # models-active/ 是**故意**入库的:
 # 里面全是 alias → 外置卷权重 的 symlink, 也就是 "coding/current 现在指着谁"。
 # 这正是最容易被 `omlxc use` / 手滑改掉又说不清的东西, 入库后 git 能给出历史。
