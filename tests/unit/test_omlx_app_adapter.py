@@ -21,6 +21,7 @@ from omlxc.domain.protocols import (
     ModelRuntimeState,
     OperationStatus,
     StreamEventKind,
+    StreamPhase,
     TextContentBlock,
     TuneRequest,
     TuneScope,
@@ -555,6 +556,35 @@ async def test_non_stream_chat_maps_empty_non_json_and_http_errors(
     assert result.success is False
     assert result.error is not None
     assert result.error.code is code
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("content", ["<think>secret", "visible<think>secret"])
+async def test_non_stream_chat_fails_closed_on_unclosed_reasoning(content: str) -> None:
+    response = httpx.Response(
+        200,
+        json={
+            "choices": [
+                {
+                    "message": {"content": content},
+                    "finish_reason": "stop",
+                }
+            ]
+        },
+    )
+    adapter = make_adapter(httpx.MockTransport(lambda _request: response))
+
+    result = await adapter.chat(chat_request())  # type: ignore[attr-defined]
+
+    assert result.success is False
+    assert result.content == ""
+    assert result.error is not None
+    assert result.error.code is AdapterErrorCode.BAD_RESPONSE
+    assert result.error.retryable is False
+    assert result.error.emitted_content is False
+    assert result.error.phase is StreamPhase.BEFORE_CONTENT
+    assert "secret" not in result.model_dump_json()
+    assert "visible" not in result.model_dump_json()
 
 
 @pytest.mark.asyncio

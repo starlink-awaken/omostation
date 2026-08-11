@@ -646,6 +646,13 @@ class OmlxAppAdapter:
             document = self._json_object(response, endpoint=endpoint)
             content, finish_reason = self._parse_chat_choice(document)
             usage = self._parse_usage(document.get("usage"))
+            safe_content, unclosed_reasoning = self._strip_reasoning(content)
+            if unclosed_reasoning:
+                raise AdapterFailure.from_detail(
+                    code=AdapterErrorCode.BAD_RESPONSE,
+                    message="oMLX App chat response contains an unclosed reasoning block",
+                    detail={},
+                )
         except AdapterFailure as failure:
             return ChatResult(
                 request_id=request.request_id,
@@ -655,7 +662,7 @@ class OmlxAppAdapter:
         return ChatResult(
             request_id=request.request_id,
             success=True,
-            content=self._strip_reasoning(content),
+            content=safe_content,
             finish_reason=finish_reason,
             usage=usage,
         )
@@ -691,11 +698,11 @@ class OmlxAppAdapter:
         return content, finish_reason if isinstance(finish_reason, str) else None
 
     @staticmethod
-    def _strip_reasoning(content: str) -> str:
+    def _strip_reasoning(content: str) -> tuple[str, bool]:
         filtered = _ReasoningFilter()
         safe = filtered.feed(content)
-        remaining, _unclosed = filtered.finish()
-        return safe + remaining
+        remaining, unclosed = filtered.finish()
+        return safe + remaining, unclosed
 
     @staticmethod
     def _parse_usage(value: object) -> TokenUsage | None:
