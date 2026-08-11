@@ -1532,7 +1532,8 @@ bets:
   title: Blueprint W2-02 model-driven Delegation Mandate 与 A0-A3/R0-R3 风险矩阵
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-11
   goal: >-
     在 W2-01 瘦主权内核上落地不可原地变更、可撤销、可重放的 DelegationMandate，
     由 ECOS M2 经确定性 Control Compiler 生成运行契约并被 OMO 真实消费；所有
@@ -1659,7 +1660,11 @@ bets:
   - projects/omo/tests/test_sovereignty_mandates.py
   - projects/omo/tests/test_sovereignty_mandate_replay.py
   - projects/omo/tests/test_sovereignty_mandate_admission.py
+  - projects/omo/.github/workflows/ci.yml
+  - bin/plan/bet-ledger.py
+  - tests/test_bet_ledger_d0.py
   - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-05.md
   pasw_required: true
   depends_on:
   - BET-Y1Q2-T1-04
