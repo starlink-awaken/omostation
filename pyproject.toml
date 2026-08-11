@@ -58,7 +58,7 @@ include = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+addopts = '-ra -m "not hardware"'
 markers = [
   "hardware: requires an explicitly requested real-hardware smoke environment",
 ]

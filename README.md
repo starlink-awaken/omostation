@@ -25,6 +25,9 @@ uv run pyright
 uv build
 ```
 
+Ordinary `uv run pytest` explicitly deselects `hardware` tests. Run
+`uv run pytest -m hardware` only when a real-device smoke has been requested.
+
 To smoke the build without affecting a system command, create an isolated
 environment and install the wheel there:
 
@@ -37,4 +40,3 @@ uv venv --python 3.13 /tmp/omlxc-smoke
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md) for the
 development and disclosure boundaries.
-

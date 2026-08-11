@@ -23,4 +23,11 @@ jobs:
       - run: uv run ruff check .
       - run: uv run pyright
       - run: uv build
+      - name: Smoke generated wheel entry points in an isolated environment
+        run: |
+          smoke_dir="$RUNNER_TEMP/omlxc-wheel-smoke"
+          uv venv --python 3.13 "$smoke_dir"
+          uv pip install --python "$smoke_dir/bin/python" dist/omlxc-3.0.0a1-py3-none-any.whl
+          "$smoke_dir/bin/omlxc" --version
+          "$smoke_dir/bin/omlxcd"
       - run: uv run pip-audit

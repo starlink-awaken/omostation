@@ -11,5 +11,5 @@ New work belongs in a layer:
 - `integration/` — controlled process, HTTP, Unix-socket, and SQLite tests.
 - `tui/` — Textual behavior tests.
 - `hardware/` — explicitly marked real-device smoke tests; ordinary `pytest`
-  must never initiate a hardware connection.
-
+  deselects them and must never initiate a hardware connection. Run
+  `uv run pytest -m hardware` only for an explicitly requested hardware smoke.

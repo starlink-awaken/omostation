@@ -18,5 +18,5 @@ uv build
 
 Never install a development build globally or overwrite the stable system
 `omlxc` entry point. Use an isolated virtual environment for console smoke
-tests.
-
+tests. Ordinary `uv run pytest` explicitly deselects `hardware` tests; use
+`uv run pytest -m hardware` only for an explicitly requested real-device smoke.
