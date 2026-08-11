@@ -40,8 +40,10 @@ async def test_corrupt_database_is_quarantined_without_creating_fake_primary(
     assert store.degraded
     assert not database.exists()
     quarantine = tmp_path / "state.db.corrupt-deterministic"
-    assert quarantine.exists()
+    assert quarantine.is_dir()
     assert quarantine.stat().st_mode & 0o077 == 0
+    assert (quarantine / "state.db").exists()
+    assert (quarantine / "state.db").stat().st_mode & 0o077 == 0
     assert "api_key" not in store.diagnostic
     with pytest.raises(StorageDegradedError):
         store.accept_metric(MetricRecord("req", datetime(2026, 8, 11, tzinfo=UTC), 1.0, True))

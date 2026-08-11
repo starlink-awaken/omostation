@@ -354,6 +354,19 @@ class SQLiteRuntimeStore:
         path = path.expanduser()
         path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         os.chmod(path.parent, 0o700)
+        if (not path.exists() and any(asset.exists() for asset in _sidecars(path))) or (
+            path.exists() and _invalid_sqlite_header(path)
+        ):
+            quarantine = _quarantine_asset_group(path, quarantine_suffix_factory)
+            return cls(
+                path,
+                None,
+                None,
+                writer_queue_capacity=writer_queue_capacity,
+                metric_buffer_capacity=metric_buffer_capacity,
+                diagnostic=f"storage_corruption_quarantined:{quarantine.name}",
+                before_writer_commit=before_writer_commit,
+            )
         writer = await aiosqlite.connect(path)
         try:
             await _configure(writer)
@@ -361,15 +374,7 @@ class SQLiteRuntimeStore:
             await _validate_schema(writer)
         except aiosqlite.DatabaseError:
             await writer.close()
-            suffix_factory = quarantine_suffix_factory or (
-                lambda: datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
-            )
-            suffix = suffix_factory()
-            if not re.fullmatch(r"[A-Za-z0-9._-]{1,80}", suffix):
-                raise ValueError("quarantine suffix is invalid") from None
-            quarantine = path.with_name(f"{path.name}.corrupt-{suffix}")
-            os.replace(path, quarantine)
-            os.chmod(quarantine, 0o600)
+            quarantine = _quarantine_asset_group(path, quarantine_suffix_factory)
             return cls(
                 path,
                 None,
@@ -1251,6 +1256,47 @@ async def _configure(connection: aiosqlite.Connection) -> None:
     if row is None or str(row[0]).lower() != "wal":
         raise StorageDegradedError("SQLite WAL mode is unavailable")
     await connection.commit()
+
+
+def _sidecars(path: Path) -> tuple[Path, Path]:
+    return (path.with_name(f"{path.name}-wal"), path.with_name(f"{path.name}-shm"))
+
+
+def _invalid_sqlite_header(path: Path) -> bool:
+    with path.open("rb") as stream:
+        header = stream.read(16)
+    return bool(header) and header != b"SQLite format 3\x00"
+
+
+def _quarantine_asset_group(path: Path, suffix_factory: Callable[[], str] | None) -> Path:
+    factory = suffix_factory or (lambda: datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ"))
+    suffix = factory()
+    if not re.fullmatch(r"[A-Za-z0-9._-]{1,80}", suffix):
+        raise ValueError("quarantine suffix is invalid")
+    base = path.with_name(f"{path.name}.corrupt-{suffix}")
+    quarantine = base
+    counter = 0
+    while quarantine.exists():
+        counter += 1
+        quarantine = base.with_name(f"{base.name}-{counter}")
+    quarantine.mkdir(mode=0o700)
+    os.chmod(quarantine, 0o700)
+    for asset in (path, *_sidecars(path)):
+        if asset.exists():
+            destination = quarantine / asset.name
+            os.replace(asset, destination)
+            os.chmod(destination, 0o600)
+    _fsync_path(quarantine)
+    _fsync_path(path.parent)
+    return quarantine
+
+
+def _fsync_path(path: Path) -> None:
+    descriptor = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
 
 
 async def _migrate(connection: aiosqlite.Connection) -> None:

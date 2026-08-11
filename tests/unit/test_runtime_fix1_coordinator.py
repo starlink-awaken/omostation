@@ -102,6 +102,54 @@ async def test_explicit_operation_and_reconcile_share_placement_single_flight() 
 
 
 @pytest.mark.asyncio
+async def test_node_waiter_does_not_reserve_global_capacity_from_other_node() -> None:
+    from omlxc.autonomy import OperationTimeouts, PlacementOperationCoordinator
+
+    class FairnessOperator(CoordinatorOperator):
+        def __init__(self) -> None:
+            super().__init__()
+            self.a1_blocked = anyio.Event()
+            self.release_a1 = anyio.Event()
+            self.b_started = anyio.Event()
+
+        async def load(self, target: PlacementTarget, *, idempotency_key: str) -> LifecycleResult:
+            del idempotency_key
+            self.load_calls.append(target.id)
+            if target.id == "a1":
+                self.a1_blocked.set()
+                await self.release_a1.wait()
+            if target.id == "b":
+                self.b_started.set()
+            self.loaded.add(target.id)
+            return LifecycleResult(
+                model_id=target.model_id,
+                status=OperationStatus.SUCCEEDED,
+                changed=True,
+            )
+
+    operator = FairnessOperator()
+    coordinator = PlacementOperationCoordinator(
+        operator,
+        timeouts=OperationTimeouts.uniform(10.0),
+        global_limit=2,
+        per_node_limit=1,
+    )
+    tasks = [asyncio.create_task(coordinator.ensure_loaded(_target("a1", "node-a")))]
+    try:
+        await operator.a1_blocked.wait()
+        tasks.append(asyncio.create_task(coordinator.ensure_loaded(_target("a2", "node-a"))))
+        await anyio.lowlevel.checkpoint()
+        tasks.append(asyncio.create_task(coordinator.ensure_loaded(_target("b", "node-b"))))
+        with anyio.fail_after(0.5):
+            await operator.b_started.wait()
+        assert "a2" not in operator.load_calls
+    finally:
+        operator.release_a1.set()
+        await asyncio.gather(*tasks, return_exceptions=True)
+    assert coordinator.active_key_count == 0
+
+
+@pytest.mark.asyncio
 async def test_phase_timeout_is_injected_bounded_and_releases_all_resources() -> None:
     from omlxc.autonomy import (
         OperationPhase,

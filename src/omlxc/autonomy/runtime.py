@@ -308,8 +308,8 @@ class PlacementOperationCoordinator:
     async def _resources(self, target: PlacementTarget) -> AsyncGenerator[None]:
         async with (
             self._placement_lock(target.id),
-            self._global,
             self._node_limiter(target.node_id),
+            self._global,
         ):
             yield
 
