@@ -5,7 +5,11 @@
 
 from pathlib import Path
 
-from omo.omo_adjudication import AdjudicationStore, VERDICT_CONFIDENCE_DELTA
+import pytest
+import yaml
+
+from omo.omo_adjudication import VERDICT_CONFIDENCE_DELTA, AdjudicationStore
+from omo.omo_autonomy_level import REGISTRY_PATH, AutonomyLadder
 from omo.omo_belief import MOSBeliefManager
 from omo.scenewatcher import SceneWatcher, create_watcher
 
@@ -93,8 +97,8 @@ def test_adjudication_triggers_belief_update(tmp_path: Path):
         actual_outcome="pass confidence=0.9",
     )
 
-    from omo.omo_io import AppendOnlyLog, fcntl_lock
     from omo.omo_adjudication import ADJUDICATIONS_LOG
+    from omo.omo_io import AppendOnlyLog, fcntl_lock
 
     log_path = tmp_path / "adj.jsonl"
     lock_path = tmp_path / "adj.lock"
@@ -290,8 +294,6 @@ def test_calibration_formula_accepted_over_total(tmp_path: Path):
 
 def test_calibration_summary_yaml_written(tmp_path: Path):
     """BET-Y1Q2-T4-01: calibration 值变化可在 /outcomes 观察."""
-    import yaml
-
     mos = MOSBeliefManager(root=tmp_path)
     do_id = mos.record_decision_outcome(
         decision_type="deploy-check",
@@ -300,29 +302,223 @@ def test_calibration_summary_yaml_written(tmp_path: Path):
         actual_outcome="pass",
     )
 
-    outcomes_dir = tmp_path / "outcomes"
-    outcomes_dir.mkdir(parents=True, exist_ok=True)
-
     from omo.omo_io import AppendOnlyLog, fcntl_lock
-    from omo import omo_adjudication as adj_mod
 
-    original_outcomes = adj_mod.OUTCOMES_DIR
-    adj_mod.OUTCOMES_DIR = outcomes_dir
+    log_path = tmp_path / "adj.jsonl"
+    lock_path = tmp_path / "adj.lock"
+    summary_file = tmp_path / "runtime/omo/_delivery/outcomes/calibration.yaml"
+    log = AppendOnlyLog(path=log_path, lock=fcntl_lock(lock_path))
+    store = AdjudicationStore(
+        log=log,
+        mos_manager=mos,
+        calibration_summary_path=summary_file,
+    )
+    store.record(decision_id=do_id, verdict="accepted")
 
-    try:
-        log_path = tmp_path / "adj.jsonl"
-        lock_path = tmp_path / "adj.lock"
-        log = AppendOnlyLog(path=log_path, lock=fcntl_lock(lock_path))
-        store = AdjudicationStore(log=log, mos_manager=mos)
-        store.record(decision_id=do_id, verdict="accepted")
+    assert summary_file.exists()
+    data = yaml.safe_load(summary_file.read_text(encoding="utf-8"))
+    assert "deploy-check" in data
+    assert data["deploy-check"]["calibration"] == 1.0
+    assert data["deploy-check"]["accepted"] == 1
+    assert data["deploy-check"]["total"] == 1
 
-        summary_file = outcomes_dir / "capability_calibration_summary.yaml"
-        assert summary_file.exists()
-        with open(summary_file, encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-        assert "deploy-check" in data
-        assert data["deploy-check"]["calibration"] == 1.0
-        assert data["deploy-check"]["accepted"] == 1
-        assert data["deploy-check"]["total"] == 1
-    finally:
-        adj_mod.OUTCOMES_DIR = original_outcomes
+
+def test_explicit_observation_state_stays_in_injected_runtime_paths(
+    tmp_path: Path,
+):
+    mos = MOSBeliefManager(root=tmp_path / "mos")
+    decision_id = mos.record_decision_outcome(
+        decision_type="deploy-check",
+        input_summary="x",
+        expected_outcome="pass",
+        actual_outcome="pass",
+    )
+    from omo.omo_adjudication import OUTCOMES_DIR
+    from omo.omo_io import AppendOnlyLog, fcntl_lock
+
+    default_summary = OUTCOMES_DIR / "capability_calibration_summary.yaml"
+    before_summary = default_summary.read_bytes() if default_summary.exists() else None
+    before_ladder = REGISTRY_PATH.read_bytes() if REGISTRY_PATH.exists() else None
+
+    runtime_root = tmp_path / "runtime/omo"
+    summary_path = (
+        runtime_root / "_delivery/outcomes/capability_calibration_summary.yaml"
+    )
+    ladder_path = runtime_root / "_truth/registry/autonomy-levels.yaml"
+    log_path = tmp_path / "adjudications.jsonl"
+    store = AdjudicationStore(
+        log=AppendOnlyLog(
+            path=log_path,
+            lock=fcntl_lock(log_path.with_suffix(".lock")),
+        ),
+        mos_manager=mos,
+        calibration_summary_path=summary_path,
+        autonomy_ladder=AutonomyLadder(registry_path=ladder_path),
+    )
+
+    store.record(decision_id=decision_id, verdict="accepted")
+
+    summary = yaml.safe_load(summary_path.read_text(encoding="utf-8"))
+    ladder = yaml.safe_load(ladder_path.read_text(encoding="utf-8"))
+    assert summary["deploy-check"]["calibration"] == 1.0
+    assert ladder["capabilities"]["deploy-check"]["observations"] == 1
+    assert (
+        default_summary.read_bytes() if default_summary.exists() else None
+    ) == before_summary
+    assert (
+        REGISTRY_PATH.read_bytes() if REGISTRY_PATH.exists() else None
+    ) == before_ladder
+
+
+def test_missing_observation_dependencies_do_not_write_global_state(tmp_path: Path):
+    mos = MOSBeliefManager(root=tmp_path / "mos")
+    decision_id = mos.record_decision_outcome(
+        decision_type="review",
+        input_summary="x",
+        expected_outcome="pass",
+        actual_outcome="pass",
+    )
+    from omo.omo_adjudication import OUTCOMES_DIR
+    from omo.omo_io import AppendOnlyLog
+
+    default_summary = OUTCOMES_DIR / "capability_calibration_summary.yaml"
+    before_summary = default_summary.read_bytes() if default_summary.exists() else None
+    before_ladder = REGISTRY_PATH.read_bytes() if REGISTRY_PATH.exists() else None
+    log_path = tmp_path / "adjudications.jsonl"
+    store = AdjudicationStore(
+        log=AppendOnlyLog(path=log_path, lock=None),
+        mos_manager=mos,
+    )
+
+    store.record(decision_id=decision_id, verdict="accepted")
+
+    assert mos._load_state()["capability_calibrations"][-1]["sample_size"] == 1
+    assert (
+        default_summary.read_bytes() if default_summary.exists() else None
+    ) == before_summary
+    assert (
+        REGISTRY_PATH.read_bytes() if REGISTRY_PATH.exists() else None
+    ) == before_ladder
+
+
+def test_observation_failure_is_not_silenced_after_primary_append(tmp_path: Path):
+    class FailingLadder:
+        def record_adjudication(self, capability: str, verdict: str) -> None:
+            raise RuntimeError(f"ladder unavailable for {capability}:{verdict}")
+
+    mos = MOSBeliefManager(root=tmp_path / "mos")
+    decision_id = mos.record_decision_outcome(
+        decision_type="review",
+        input_summary="x",
+        expected_outcome="pass",
+        actual_outcome="pass",
+    )
+    from omo.omo_io import AppendOnlyLog
+
+    log = AppendOnlyLog(path=tmp_path / "adjudications.jsonl", lock=None)
+    store = AdjudicationStore(
+        log=log,
+        mos_manager=mos,
+        autonomy_ladder=FailingLadder(),
+    )
+
+    with pytest.raises(RuntimeError, match="ladder unavailable"):
+        store.record(decision_id=decision_id, verdict="accepted")
+
+    assert len(log.read_all()) == 1
+
+
+def test_calibration_summary_merges_capabilities(tmp_path: Path):
+    mos = MOSBeliefManager(root=tmp_path / "mos")
+    first = mos.record_decision_outcome(
+        decision_type="review",
+        input_summary="a",
+        expected_outcome="pass",
+        actual_outcome="pass",
+    )
+    second = mos.record_decision_outcome(
+        decision_type="deploy",
+        input_summary="b",
+        expected_outcome="pass",
+        actual_outcome="pass",
+    )
+    from omo.omo_io import AppendOnlyLog
+
+    summary_path = tmp_path / "runtime/omo/calibration.yaml"
+    store = AdjudicationStore(
+        log=AppendOnlyLog(path=tmp_path / "adjudications.jsonl", lock=None),
+        mos_manager=mos,
+        calibration_summary_path=summary_path,
+    )
+
+    store.record(decision_id=first, verdict="accepted")
+    store.record(decision_id=second, verdict="accepted")
+
+    summary = yaml.safe_load(summary_path.read_text(encoding="utf-8"))
+    assert set(summary) == {"deploy", "review"}
+
+
+def test_feedback_composes_runtime_observation_dependencies(
+    tmp_path: Path, monkeypatch
+):
+    import omo.omo_adjudication as adjudication_module
+    import omo.omo_belief as belief_module
+    import omo.omo_paths as paths_module
+    from omo import cli
+
+    workspace_root = tmp_path / "workspace"
+    runtime_root = workspace_root / "runtime/omo"
+    runtime_delivery = runtime_root / "_delivery"
+    runtime_truth = runtime_root / "_truth"
+    primary_outcomes = tmp_path / "primary-outcomes"
+    monkeypatch.setattr(belief_module, "WORKSPACE_ROOT", workspace_root)
+    monkeypatch.setattr(paths_module, "RUNTIME_DELIVERY_DIR", runtime_delivery)
+    monkeypatch.setattr(paths_module, "RUNTIME_TRUTH_DIR", runtime_truth)
+    monkeypatch.setattr(adjudication_module, "OUTCOMES_DIR", primary_outcomes)
+    monkeypatch.setattr(
+        adjudication_module,
+        "ADJUDICATIONS_LOG",
+        primary_outcomes / "adjudications.jsonl",
+    )
+
+    seed_mos = MOSBeliefManager(root=workspace_root)
+    decision_id = seed_mos.record_decision_outcome(
+        decision_type="deploy-check",
+        input_summary="x",
+        expected_outcome="pass",
+        actual_outcome="pass",
+    )
+    root_truth = workspace_root / ".omo/_truth/registry/memory-os.yaml"
+    before_root_truth = root_truth.read_bytes()
+
+    assert (
+        cli._cmd_feedback(["--decision-id", decision_id, "--verdict", "accepted"]) == 0
+    )
+    assert root_truth.read_bytes() == before_root_truth
+
+    calibration_summary = (
+        runtime_delivery / "outcomes/capability_calibration_summary.yaml"
+    )
+    autonomy_state = runtime_truth / "registry/autonomy-levels.yaml"
+    memory_summary = runtime_truth / "registry/memory-os.yaml"
+    assert (
+        yaml.safe_load(calibration_summary.read_text(encoding="utf-8"))["deploy-check"][
+            "total"
+        ]
+        == 1
+    )
+    assert (
+        yaml.safe_load(autonomy_state.read_text(encoding="utf-8"))["capabilities"][
+            "deploy-check"
+        ]["observations"]
+        == 1
+    )
+    assert (
+        yaml.safe_load(memory_summary.read_text(encoding="utf-8"))[
+            "total_capability_calibrations"
+        ]
+        == 1
+    )
+    assert (primary_outcomes / "adjudications.jsonl").read_text(encoding="utf-8").count(
+        "\n"
+    ) == 1

@@ -90,10 +90,15 @@ class DecisionOutcome:
 class MOSBeliefManager:
     """MOS agent_belief 三表持久化与查询管理器"""
 
-    def __init__(self, root: Path | None = None):
+    def __init__(
+        self,
+        root: Path | None = None,
+        *,
+        registry_file: Path | None = None,
+    ):
         self.root = root or WORKSPACE_ROOT
-        self.registry_file = (
-            self.root / ".omo" / "_truth" / "registry" / "memory-os.yaml"
+        self.registry_file = registry_file or (
+            self.root / ".omo/_truth/registry/memory-os.yaml"
         )
         self.state_dir = self.root / ".omo" / "state" / "agent-beliefs"
         self.state_file = self.state_dir / "index.yaml"

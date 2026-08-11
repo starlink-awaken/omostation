@@ -12,12 +12,15 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
-
-from .omo_io import AppendOnlyLog, fcntl_lock
-from .omo_paths import DELIVERY_DIR
+from typing import TYPE_CHECKING, Any
 
 import yaml
+
+from .omo_io import AppendOnlyLog, fcntl_lock, write_yaml_atomic
+from .omo_paths import DELIVERY_DIR
+
+if TYPE_CHECKING:
+    from .omo_autonomy_level import AutonomyLadder
 
 VERDICT_CONFIDENCE_DELTA: dict[str, float] = {
     "accepted": +0.05,
@@ -65,9 +68,13 @@ class AdjudicationStore:
         self,
         log: AppendOnlyLog | None = None,
         mos_manager: Any | None = None,
+        calibration_summary_path: Path | None = None,
+        autonomy_ladder: AutonomyLadder | None = None,
     ) -> None:
         self._log = log or _log()
         self._mos_manager = mos_manager
+        self._calibration_summary_path = calibration_summary_path
+        self._autonomy_ladder = autonomy_ladder
         self._counter: int | None = None
 
     def _next_id(self) -> str:
@@ -94,6 +101,10 @@ class AdjudicationStore:
             time_spent_seconds: 审阅耗时.
             adjudicator: 裁决人标识.
             notes: 自由文本备注.
+
+        The primary adjudication is appended before injected observation sinks run.
+        Observation failures propagate so callers can report a partial closeout instead
+        of claiming that every derived state update succeeded.
         """
         if verdict not in VALID_VERDICTS:
             raise ValueError(
@@ -143,63 +154,77 @@ class AdjudicationStore:
         """
         if self._mos_manager is None:
             return
-        try:
-            outcome = self._mos_manager.get_decision_outcome(decision_id)
-            if outcome is None:
-                return
-            capability = outcome.get("decision_type", "unknown")
+        outcome = self._mos_manager.get_decision_outcome(decision_id)
+        if outcome is None:
+            return
+        capability = outcome.get("decision_type", "unknown")
 
-            records = self._log.read_all()
-            total = 0
-            accepted = 0
-            for r in records:
-                rid = r.get("decision_id", "")
-                if not rid:
-                    continue
-                rel = self._mos_manager.get_decision_outcome(rid)
-                if rel and rel.get("decision_type") == capability:
-                    total += 1
-                    if r.get("verdict") == "accepted":
-                        accepted += 1
+        records = self._log.read_all()
+        total = 0
+        accepted = 0
+        for record in records:
+            related_decision_id = record.get("decision_id", "")
+            if not related_decision_id:
+                continue
+            related = self._mos_manager.get_decision_outcome(related_decision_id)
+            if related and related.get("decision_type") == capability:
+                total += 1
+                if record.get("verdict") == "accepted":
+                    accepted += 1
 
-            if total == 0:
-                return
-            calibration = accepted / total
-            self._mos_manager.record_capability_calibration(
-                capability_ref=capability,
-                success_rate=round(calibration, 4),
-                sample_size=total,
-                last_run_id=decision_id,
+        if total == 0:
+            return
+        calibration = accepted / total
+        self._mos_manager.record_capability_calibration(
+            capability_ref=capability,
+            success_rate=round(calibration, 4),
+            sample_size=total,
+            last_run_id=decision_id,
+        )
+
+        if self._calibration_summary_path is not None:
+            self._write_calibration_summary(
+                capability=capability,
+                calibration=calibration,
+                accepted=accepted,
+                total=total,
             )
 
-            OUTCOMES_DIR.mkdir(parents=True, exist_ok=True)
-            summary_file = OUTCOMES_DIR / "capability_calibration_summary.yaml"
-            existing: dict = {}
-            if summary_file.exists():
-                with open(summary_file, encoding="utf-8") as f:
-                    existing = yaml.safe_load(f) or {}
+        self._check_autonomy_ladder(capability, verdict)
+
+    def _write_calibration_summary(
+        self,
+        *,
+        capability: str,
+        calibration: float,
+        accepted: int,
+        total: int,
+    ) -> None:
+        summary_path = self._calibration_summary_path
+        if summary_path is None:
+            return
+        with fcntl_lock(summary_path.with_suffix(".lock")):
+            existing: dict[str, Any] = {}
+            if summary_path.exists():
+                loaded = yaml.safe_load(summary_path.read_text(encoding="utf-8")) or {}
+                if not isinstance(loaded, dict):
+                    raise ValueError(
+                        f"calibration summary must be a mapping: {summary_path}"
+                    )
+                existing = loaded
             existing[capability] = {
                 "calibration": round(calibration, 4),
                 "accepted": accepted,
                 "total": total,
                 "updated_at": _utc_now(),
             }
-            with open(summary_file, "w", encoding="utf-8") as f:
-                yaml.dump(existing, f, default_flow_style=False, allow_unicode=True)
-
-            self._check_autonomy_ladder(capability, verdict)
-        except Exception:
-            pass
+            write_yaml_atomic(summary_path, existing)
 
     def _check_autonomy_ladder(self, capability: str, verdict: str) -> None:
         """闭环: 裁决 → 自主性阶梯升降级检查 (BET-Y1Q4-T3-01)."""
-        try:
-            from .omo_autonomy_level import AutonomyLadder
-
-            ladder = AutonomyLadder()
-            ladder.record_adjudication(capability, verdict)
-        except Exception:
-            pass
+        if self._autonomy_ladder is None:
+            return
+        self._autonomy_ladder.record_adjudication(capability, verdict)
 
     def query(
         self,
