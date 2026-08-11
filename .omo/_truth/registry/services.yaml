@@ -109,10 +109,32 @@ services:
       2026-08-10 实测它当时并未运行, 池子从 43 个模型缩到 17 个而无人察觉 ——
       纳入注册表就是为了让这种"少了一台"能被看见。lms server start 幂等。
 
+  - id: omlxc.daemon
+    enabled: true
+    generate: false
+    config_source: projects/omlxc/packaging/launchd/com.omlxc.daemon.plist
+    scheduler: launchd
+    trigger: keepalive
+    label: com.omlxc.daemon
+    program:
+      interpreter: /usr/bin/env
+      entrypoint: ~/.local/bin/omlxcd
+      args: []
+    transport: unix_socket
+    socket_ref: omlxc.config.socket
+    resilience:
+      keepalive: crashed
+    run_at_load: true
+    notes: >-
+      omlxc 私有本地算力守护进程，仅经权限受限的 Unix Socket 服务 CLI、TUI 与
+      AetherForge；不声明网络端口。plist 由 projects/omlxc 自己安装和管理，
+      Workspace 只登记生命周期，因此 generate=false。
+
   - id: omlx.gateway
     # 2026-08-10 已 bootout, 端口 4000 交给 aetherforge.gateway。
     # 先关不删: 观察期内若门面出问题, bootstrap 回来即可回滚。
     enabled: false
+    lifecycle: retired
     # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
     generate: false
     config_source: ~/omlx-orchestration/launchd/com.omlx.gateway.plist
@@ -130,13 +152,15 @@ services:
       stdout: ~/Library/Logs/omlx-gateway.log
       stderr: ~/Library/Logs/omlx-gateway.log
     notes: >-
-      LiteLLM 网关 :4000 —— **待退役**。职责已由 aetherforge.gateway 接管
-      (门面过渡期同时监听 4000)。两者不能同时绑 4000, 切换时先停这条。
+      LiteLLM 网关 :4000 —— 已退役。职责已由 aetherforge.gateway 接管
+      (门面过渡期同时监听 4000)。保留本条 config_source/program 作为回滚记录，
+      不得与 aetherforge.gateway 同时启用。
       另: 它实际下发的是 --host 0.0.0.0, 对同网段任意机器开放, 与
       "tailnet + localhost" 的说法不符; 门面只绑 loopback + tailnet。
 
   - id: omlx.gateway-ui
-    enabled: true
+    enabled: false
+    lifecycle: retired
     # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
     generate: false
     config_source: ~/omlx-orchestration/launchd/com.omlx.gateway-ui.plist
@@ -153,10 +177,11 @@ services:
     outputs:
       stdout: ~/Library/Logs/omlx-gateway-ui.log
       stderr: ~/Library/Logs/omlx-gateway-ui.log
-    notes: 网关 UI
+    notes: 已退役的网关 UI；保留 config_source/program 作为只读归档与回滚记录。
 
   - id: omlx.autopilot
-    enabled: true
+    enabled: false
+    lifecycle: retired
     # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
     generate: false
     config_source: ~/omlx-orchestration/launchd/com.omlx.autopilot.plist
@@ -172,10 +197,13 @@ services:
     outputs:
       stdout: ~/omlx-orchestration/logs/autopilot.out.log
       stderr: ~/omlx-orchestration/logs/autopilot.err.log
-    notes: 常驻预热 / 空闲卸载 / 内存压力触发 / LaunchAgent 自愈 / SSOT 自动同步
+    notes: >-
+      已退役；预热、空闲卸载、内存准入与自愈职责归 omlxc.daemon。
+      保留 config_source/program 作为只读归档与回滚记录。
 
   - id: omlx.autostart
-    enabled: true
+    enabled: false
+    lifecycle: retired
     # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
     generate: false
     config_source: ~/omlx-orchestration/launchd/com.omlx.autostart.plist
@@ -192,7 +220,9 @@ services:
     outputs:
       stdout: ~/omlx-orchestration/logs/autostart-agent.out.log
       stderr: ~/omlx-orchestration/logs/autostart-agent.err.log
-    notes: 开机拉起本地模型
+    notes: >-
+      已退役；本地运行时启动与模型驻留由 omlxc.daemon 管理。
+      保留 config_source/program 作为只读归档与回滚记录。
 
   # ── 服务面 (Workspace) ─────────────────────────────────────
   - id: agora.sse
@@ -293,7 +323,8 @@ services:
       stderr: ~/Library/Logs/aetherforge-gateway.log
     notes: >-
       aetherforge OpenAI 兼容门面 — LiteLLM :4000 的继任者。
-      别名见 llm_gateway/aliases.yaml; SSOT 的 ENG-OMLX-LOCAL 已改指本端点。
+      唯一公共推理 URI 是 bos://compute/aetherforge/infer；逻辑模型、认证与公共数据面
+      归 AetherForge，本地物理 placement 与执行经 omlxc Unix Socket API。
       硬约束: 启动路径不得有外部网络依赖(guard 直接用项目 venv 解释器,
       不走 uv run), 且显式隔离系统代理 —— LiteLLM 曾栽在这两条上。
       绑到 loopback 之外(--bind tailnet)必须配 AETHERFORGE_API_KEY,
