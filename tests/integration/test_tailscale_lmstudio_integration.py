@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
+from typing import Any
 
 import httpx
 import pytest
@@ -14,6 +16,21 @@ from omlxc.domain.protocols import ChatMessage, ChatRequest
 
 _KEY = "nodekey:FAKEPEER000000000000000000000001"
 _DNS = "compute-a.example.test"
+_TRUSTED_EXECUTABLE: Path | None = None
+
+
+@pytest.fixture(autouse=True)
+def _trusted_executable(tmp_path: Path) -> None:
+    global _TRUSTED_EXECUTABLE
+    executable = tmp_path / "tailscale-fake"
+    executable.write_text("integration fixture; never executed\n", encoding="utf-8")
+    executable.chmod(0o700)
+    _TRUSTED_EXECUTABLE = executable
+
+
+def _adapter(**kwargs: Any) -> TailscaleAdapter:
+    assert _TRUSTED_EXECUTABLE is not None
+    return TailscaleAdapter(tailscale_executable=_TRUSTED_EXECUTABLE, **kwargs)
 
 
 def _policy() -> TailscaleNodePolicy:
@@ -63,7 +80,7 @@ async def test_authorized_lmstudio_inference_uses_original_http_not_ssh() -> Non
         process_calls.append(argv)
         return ProcessOutput(0, json.dumps(_status()), "")
 
-    tailscale = TailscaleAdapter(policies=(_policy(),), process_runner=runner)
+    tailscale = _adapter(policies=(_policy(),), process_runner=runner)
     await tailscale.snapshot()
     endpoint = tailscale.authorize_http("node-a", f"http://{_DNS}:1234")
     control = tailscale.authorize_ssh("node-a", f"operator@{_DNS}")
@@ -88,7 +105,8 @@ async def test_authorized_lmstudio_inference_uses_original_http_not_ssh() -> Non
     assert result.success is True
     assert result.content == "direct"
     assert [str(url) for url in http_calls] == [f"http://{_DNS}:1234/v1/chat/completions"]
-    assert process_calls == [("tailscale", "status", "--json")]
+    assert _TRUSTED_EXECUTABLE is not None
+    assert process_calls == [(str(_TRUSTED_EXECUTABLE.resolve()), "status", "--json")]
     assert control.target == f"operator@{_DNS}"
 
 
@@ -107,7 +125,7 @@ async def test_unauthorized_endpoint_is_rejected_before_lmstudio_or_http_constru
         http_calls += 1
         return httpx.Response(500)
 
-    tailscale = TailscaleAdapter(policies=(_policy(),), process_runner=runner)
+    tailscale = _adapter(policies=(_policy(),), process_runner=runner)
     await tailscale.snapshot()
 
     with pytest.raises(TailscaleFailure):

@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -27,6 +29,21 @@ _OTHER_ID = "peeridFAKE000000000000000000000002"
 _DNS = "compute-a.example.test"
 _IPV4 = "100.64.0.10"
 _IPV6 = "fd7a:115c:a1e0::10"
+_TRUSTED_EXECUTABLE: Path | None = None
+
+
+@pytest.fixture(autouse=True)
+def _trusted_executable(tmp_path: Path) -> None:
+    global _TRUSTED_EXECUTABLE
+    executable = tmp_path / "tailscale-fake"
+    executable.write_text("unit fixture; never executed\n", encoding="utf-8")
+    executable.chmod(0o700)
+    _TRUSTED_EXECUTABLE = executable
+
+
+def _adapter(**kwargs: Any) -> TailscaleAdapter:
+    assert _TRUSTED_EXECUTABLE is not None
+    return TailscaleAdapter(tailscale_executable=_TRUSTED_EXECUTABLE, **kwargs)
 
 
 def _policy(**changes: object) -> TailscaleNodePolicy:
@@ -105,20 +122,19 @@ async def test_snapshot_uses_fixed_argv_and_returns_only_allowlisted_nodes() -> 
         dns_name="ignored.example.test.",
         ips=["100.64.0.20"],
     )
-    adapter = TailscaleAdapter(
-        policies=(_policy(),), process_runner=_runner_for(document, calls=calls)
-    )
+    adapter = _adapter(policies=(_policy(),), process_runner=_runner_for(document, calls=calls))
 
     snapshot = await adapter.snapshot()
 
-    assert calls == [(("tailscale", "status", "--json"), 10.0)]
+    assert _TRUSTED_EXECUTABLE is not None
+    assert calls == [((str(_TRUSTED_EXECUTABLE.resolve()), "status", "--json"), 10.0)]
     assert tuple(node.node_id for node in snapshot.nodes) == ("node-a",)
     assert snapshot.nodes[0].online is True
 
 
 @pytest.mark.asyncio
 async def test_valid_offline_peer_is_visible_but_authorization_is_typed_offline() -> None:
-    adapter = TailscaleAdapter(
+    adapter = _adapter(
         policies=(_policy(),),
         process_runner=_runner_for(_document(peer=_row(online=False))),
     )
@@ -150,7 +166,7 @@ async def test_offline_allowlisted_peer_does_not_block_another_online_peer() -> 
         dns_name="compute-b.example.test.",
         ips=["100.64.0.20"],
     )
-    adapter = TailscaleAdapter(policies=(_policy(), policy_b), process_runner=_runner_for(document))
+    adapter = _adapter(policies=(_policy(), policy_b), process_runner=_runner_for(document))
 
     await adapter.snapshot()
     online = adapter.authorize_http("node-b", "http://compute-b.example.test:1234")
@@ -217,7 +233,7 @@ def test_policy_requires_strong_identity_and_safe_endpoint_constraints(
     ],
 )
 async def test_malformed_or_map_key_mismatched_status_fails_closed(document: object) -> None:
-    adapter = TailscaleAdapter(policies=(_policy(),), process_runner=_runner_for(document))
+    adapter = _adapter(policies=(_policy(),), process_runner=_runner_for(document))
 
     with pytest.raises(TailscaleFailure) as captured:
         await adapter.snapshot()
@@ -243,9 +259,7 @@ async def test_malformed_or_map_key_mismatched_status_fails_closed(document: obj
 async def test_every_required_peer_field_is_strictly_typed(field: str, invalid: object) -> None:
     peer = _row()
     peer[field] = invalid
-    adapter = TailscaleAdapter(
-        policies=(_policy(),), process_runner=_runner_for(_document(peer=peer))
-    )
+    adapter = _adapter(policies=(_policy(),), process_runner=_runner_for(_document(peer=peer)))
 
     with pytest.raises(TailscaleFailure) as captured:
         await adapter.snapshot()
@@ -268,14 +282,18 @@ async def test_duplicate_identity_across_any_peer_fails_the_whole_snapshot(
         dns_name="other.example.test.",
         ips=["100.64.0.20"],
     )
-    if duplicate_field == "TailscaleIPs":
+    if duplicate_field == "PublicKey":
+        second[duplicate_field] = _SELF_KEY
+        map_key = _SELF_KEY
+    elif duplicate_field == "TailscaleIPs":
         second[duplicate_field] = [_IPV4]
+        map_key = _OTHER_KEY
     else:
         first = _row()[duplicate_field]
         second[duplicate_field] = first
-    map_key = "peer-index-2" if duplicate_field == "PublicKey" else _OTHER_KEY
+        map_key = _OTHER_KEY
     peers[map_key] = second
-    adapter = TailscaleAdapter(policies=(_policy(),), process_runner=_runner_for(document))
+    adapter = _adapter(policies=(_policy(),), process_runner=_runner_for(document))
 
     with pytest.raises(TailscaleFailure) as captured:
         await adapter.snapshot()
@@ -287,7 +305,7 @@ async def test_duplicate_identity_across_any_peer_fails_the_whole_snapshot(
 async def test_self_cannot_impersonate_a_peer() -> None:
     document = _document()
     document["Self"] = _row()
-    adapter = TailscaleAdapter(policies=(_policy(),), process_runner=_runner_for(document))
+    adapter = _adapter(policies=(_policy(),), process_runner=_runner_for(document))
 
     with pytest.raises(TailscaleFailure) as captured:
         await adapter.snapshot()
@@ -309,7 +327,7 @@ async def test_partial_policy_identity_match_is_typed_identity_drift(peer: objec
     key = (
         _OTHER_KEY if isinstance(peer, dict) and peer.get("PublicKey") == _OTHER_KEY else _PEER_KEY
     )
-    adapter = TailscaleAdapter(
+    adapter = _adapter(
         policies=(_policy(),), process_runner=_runner_for(_document(peer=peer, peer_key=key))
     )
 
@@ -322,7 +340,7 @@ async def test_partial_policy_identity_match_is_typed_identity_drift(peer: objec
 @pytest.mark.asyncio
 async def test_peer_and_policy_multiplicity_fail_closed_without_first_match() -> None:
     duplicate_policy = _policy(node_id="node-b")
-    adapter = TailscaleAdapter(
+    adapter = _adapter(
         policies=(_policy(), duplicate_policy), process_runner=_runner_for(_document())
     )
 
@@ -349,7 +367,7 @@ async def test_process_failures_are_typed_without_echoing_status(
         del argv, timeout
         raise failure
 
-    adapter = TailscaleAdapter(policies=(_policy(),), process_runner=runner)
+    adapter = _adapter(policies=(_policy(),), process_runner=runner)
 
     with pytest.raises(TailscaleFailure) as captured:
         await adapter.snapshot()
@@ -373,7 +391,7 @@ async def test_nonzero_and_invalid_json_are_distinct_and_redacted() -> None:
         (nonzero, TailscaleErrorCode.STATUS_FAILED),
         (invalid_json, TailscaleErrorCode.INVALID_JSON),
     ):
-        adapter = TailscaleAdapter(policies=(_policy(),), process_runner=runner)
+        adapter = _adapter(policies=(_policy(),), process_runner=runner)
         with pytest.raises(TailscaleFailure) as captured:
             await adapter.snapshot()
         assert captured.value.code is code
@@ -398,7 +416,7 @@ async def test_duplicate_json_object_keys_fail_before_dict_overwrite(
         del argv, timeout
         return ProcessOutput(0, raw_status, "")
 
-    adapter = TailscaleAdapter(policies=(_policy(),), process_runner=runner)
+    adapter = _adapter(policies=(_policy(),), process_runner=runner)
 
     with pytest.raises(TailscaleFailure) as captured:
         await adapter.snapshot()
@@ -414,7 +432,7 @@ async def test_nonstandard_json_constants_are_rejected_even_in_unused_fields() -
         del argv, timeout
         return ProcessOutput(0, raw_status, "")
 
-    adapter = TailscaleAdapter(policies=(_policy(),), process_runner=runner)
+    adapter = _adapter(policies=(_policy(),), process_runner=runner)
 
     with pytest.raises(TailscaleFailure) as captured:
         await adapter.snapshot()
@@ -428,7 +446,7 @@ async def test_snapshot_cancellation_is_not_converted_to_a_typed_process_error()
         del argv, timeout
         raise asyncio.CancelledError
 
-    adapter = TailscaleAdapter(policies=(_policy(),), process_runner=runner)
+    adapter = _adapter(policies=(_policy(),), process_runner=runner)
 
     with pytest.raises(asyncio.CancelledError):
         await adapter.snapshot()
@@ -436,7 +454,7 @@ async def test_snapshot_cancellation_is_not_converted_to_a_typed_process_error()
 
 @pytest.mark.asyncio
 async def test_authorize_http_accepts_exact_live_dns_or_ip_and_returns_canonical_url() -> None:
-    adapter = TailscaleAdapter(policies=(_policy(),), process_runner=_runner_for(_document()))
+    adapter = _adapter(policies=(_policy(),), process_runner=_runner_for(_document()))
     await adapter.snapshot()
 
     dns = adapter.authorize_http("node-a", "HTTP://COMPUTE-A.EXAMPLE.TEST.:1234/")
@@ -450,7 +468,7 @@ async def test_authorize_http_accepts_exact_live_dns_or_ip_and_returns_canonical
 
 @pytest.mark.asyncio
 async def test_unallowlisted_peer_cannot_be_used_as_an_endpoint() -> None:
-    adapter = TailscaleAdapter(policies=(), process_runner=_runner_for(_document()))
+    adapter = _adapter(policies=(), process_runner=_runner_for(_document()))
     snapshot = await adapter.snapshot()
 
     assert snapshot.nodes == ()
@@ -460,7 +478,7 @@ async def test_unallowlisted_peer_cannot_be_used_as_an_endpoint() -> None:
 
 
 def test_authorization_requires_an_adapter_owned_validated_snapshot() -> None:
-    adapter = TailscaleAdapter(policies=(_policy(),), process_runner=_runner_for(_document()))
+    adapter = _adapter(policies=(_policy(),), process_runner=_runner_for(_document()))
 
     with pytest.raises(TailscaleFailure) as captured:
         adapter.authorize_http("node-a", f"http://{_DNS}:1234")
@@ -488,9 +506,7 @@ def test_authorization_requires_an_adapter_owned_validated_snapshot() -> None:
 )
 async def test_authorize_http_rejects_every_bypass_before_network(url: str) -> None:
     peer = _row(ips=[_IPV6]) if url == f"http://{_IPV4}:1234" else _row()
-    adapter = TailscaleAdapter(
-        policies=(_policy(),), process_runner=_runner_for(_document(peer=peer))
-    )
+    adapter = _adapter(policies=(_policy(),), process_runner=_runner_for(_document(peer=peer)))
     await adapter.snapshot()
 
     with pytest.raises(TailscaleFailure) as captured:
@@ -501,7 +517,7 @@ async def test_authorize_http_rejects_every_bypass_before_network(url: str) -> N
 
 @pytest.mark.asyncio
 async def test_authorize_ssh_requires_explicit_allowed_user_and_exact_live_host() -> None:
-    adapter = TailscaleAdapter(policies=(_policy(),), process_runner=_runner_for(_document()))
+    adapter = _adapter(policies=(_policy(),), process_runner=_runner_for(_document()))
     await adapter.snapshot()
 
     dns = adapter.authorize_ssh("node-a", f"operator@{_DNS}.")
@@ -528,7 +544,7 @@ async def test_authorize_ssh_requires_explicit_allowed_user_and_exact_live_host(
     ],
 )
 async def test_authorize_ssh_rejects_options_ports_and_command_injection(target: str) -> None:
-    adapter = TailscaleAdapter(policies=(_policy(),), process_runner=_runner_for(_document()))
+    adapter = _adapter(policies=(_policy(),), process_runner=_runner_for(_document()))
     await adapter.snapshot()
 
     with pytest.raises(TailscaleFailure) as captured:

@@ -5,9 +5,16 @@ from __future__ import annotations
 import asyncio
 import ipaddress
 import json
+import math
+import os
 import re
-from collections.abc import Mapping
+import stat
+import time
+from collections.abc import Callable, Mapping
+from datetime import UTC, datetime
 from enum import StrEnum
+from pathlib import Path
+from types import MappingProxyType
 from typing import cast
 from urllib.parse import urlsplit
 
@@ -23,9 +30,16 @@ from .process import (
     ProcessSpawnError,
 )
 
-TAILSCALE_STATUS_ARGV = ("tailscale", "status", "--json")
+TAILSCALE_STATUS_ARGS = ("status", "--json")
 TAILSCALE_STATUS_TIMEOUT = 10.0
 TAILSCALE_STATUS_OUTPUT_LIMIT = 4 * 1024 * 1024
+TAILSCALE_PROCESS_ENV: Mapping[str, str] = MappingProxyType(
+    {
+        "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+        "LANG": "C",
+        "LC_ALL": "C",
+    }
+)
 
 _TAILSCALE_V4 = ipaddress.ip_network("100.64.0.0/10")
 _TAILSCALE_V6 = ipaddress.ip_network("fd7a:115c:a1e0::/48")
@@ -47,6 +61,7 @@ class TailscaleErrorCode(StrEnum):
     IDENTITY_DRIFT = "identity_drift"
     UNKNOWN_NODE = "unknown_node"
     OFFLINE = "offline"
+    STALE = "stale"
     ENDPOINT_NOT_ALLOWED = "endpoint_not_allowed"
 
 
@@ -62,6 +77,7 @@ _ERROR_MESSAGES: dict[TailscaleErrorCode, str] = {
     TailscaleErrorCode.IDENTITY_DRIFT: "Tailscale identity drift detected",
     TailscaleErrorCode.UNKNOWN_NODE: "Tailscale node is not allowlisted",
     TailscaleErrorCode.OFFLINE: "Tailscale node is offline",
+    TailscaleErrorCode.STALE: "Tailscale snapshot is stale",
     TailscaleErrorCode.ENDPOINT_NOT_ALLOWED: "Tailscale endpoint is not authorized",
 }
 
@@ -156,6 +172,14 @@ class TailscaleNodeSnapshot(DomainModel):
 
 class TailscaleSnapshot(DomainModel):
     nodes: tuple[TailscaleNodeSnapshot, ...]
+    observed_at: datetime
+
+    @field_validator("observed_at")
+    @classmethod
+    def normalize_observed_at(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("Tailscale observation time must be timezone-aware")
+        return value.astimezone(UTC)
 
 
 class AuthorizedHttpEndpoint(DomainModel):
@@ -187,14 +211,29 @@ class TailscaleAdapter:
         self,
         *,
         policies: tuple[TailscaleNodePolicy, ...],
+        tailscale_executable: Path,
         process_runner: ProcessRunner | None = None,
+        snapshot_ttl_seconds: int = 30,
+        monotonic_clock: Callable[[], float] | None = None,
+        wall_clock: Callable[[], datetime] | None = None,
     ) -> None:
+        snapshot_ttl = _validate_snapshot_ttl(snapshot_ttl_seconds)
+        _validate_trusted_executable(tailscale_executable)
         self._policies = policies
-        self._runner = process_runner or BoundedProcessRunner(TAILSCALE_STATUS_OUTPUT_LIMIT)
+        self._tailscale_executable = tailscale_executable
+        self._runner = process_runner or BoundedProcessRunner(
+            TAILSCALE_STATUS_OUTPUT_LIMIT,
+            env=TAILSCALE_PROCESS_ENV,
+        )
+        self._snapshot_ttl_seconds = snapshot_ttl
+        self._monotonic_clock = monotonic_clock or time.monotonic
+        self._wall_clock = wall_clock or (lambda: datetime.now(UTC))
         self._snapshot: TailscaleSnapshot | None = None
+        self._snapshot_monotonic: float | None = None
 
     async def snapshot(self) -> TailscaleSnapshot:
         self._snapshot = None
+        self._snapshot_monotonic = None
         self._validate_policy_conflicts()
         output = await self._status_output()
         document = _json_document(output.stdout)
@@ -223,13 +262,23 @@ class TailscaleAdapter:
             for policy in self._policies
             if (owners := matches[policy.node_id])
         )
-        snapshot = TailscaleSnapshot(nodes=nodes)
+        observed_at = self._wall_clock()
+        refresh_monotonic = self._monotonic_clock()
+        if not math.isfinite(refresh_monotonic):
+            raise TailscaleFailure(TailscaleErrorCode.PROCESS)
+        snapshot = TailscaleSnapshot(nodes=nodes, observed_at=observed_at)
         self._snapshot = snapshot
+        self._snapshot_monotonic = refresh_monotonic
         return snapshot
 
     async def _status_output(self) -> ProcessOutput:
         try:
-            output = await self._runner(TAILSCALE_STATUS_ARGV, TAILSCALE_STATUS_TIMEOUT)
+            executable = _validate_trusted_executable(self._tailscale_executable)
+        except ValueError:
+            raise TailscaleFailure(TailscaleErrorCode.SPAWN) from None
+        argv = (str(executable), *TAILSCALE_STATUS_ARGS)
+        try:
+            output = await self._runner(argv, TAILSCALE_STATUS_TIMEOUT)
         except asyncio.CancelledError:
             raise
         except TimeoutError:
@@ -255,6 +304,8 @@ class TailscaleAdapter:
         if (
             not base_url.isascii()
             or any(character.isspace() for character in base_url)
+            or "?" in base_url
+            or "#" in base_url
             or "%" in base_url
             or "\\" in base_url
             or parsed.scheme not in {"http", "https"}
@@ -314,8 +365,15 @@ class TailscaleAdapter:
         self, node_id: str
     ) -> tuple[TailscaleNodePolicy, TailscaleNodeSnapshot]:
         snapshot = self._snapshot
-        if snapshot is None:
+        refresh_monotonic = self._snapshot_monotonic
+        if snapshot is None or refresh_monotonic is None:
             raise TailscaleFailure(TailscaleErrorCode.UNKNOWN_NODE)
+        try:
+            elapsed = self._monotonic_clock() - refresh_monotonic
+        except Exception:
+            raise TailscaleFailure(TailscaleErrorCode.STALE) from None
+        if not math.isfinite(elapsed) or elapsed < 0 or elapsed > self._snapshot_ttl_seconds:
+            raise TailscaleFailure(TailscaleErrorCode.STALE)
         policies = [policy for policy in self._policies if policy.node_id == node_id]
         nodes = [node for node in snapshot.nodes if node.node_id == node_id]
         if len(policies) != 1 or len(nodes) != 1:
@@ -394,7 +452,7 @@ def _parse_document(document: Mapping[str, object]) -> tuple[_Peer, tuple[_Peer,
         if not isinstance(raw_key, str) or not isinstance(raw_row, dict):
             raise TailscaleFailure(TailscaleErrorCode.INVALID_SNAPSHOT)
         peer = _parse_peer(cast(Mapping[object, object], raw_row))
-        if raw_key.startswith("nodekey:") and raw_key != peer.public_key:
+        if raw_key != peer.public_key:
             raise TailscaleFailure(TailscaleErrorCode.INVALID_SNAPSHOT)
         peers.append(peer)
     return self_peer, tuple(peers)
@@ -539,3 +597,34 @@ def _tailscale_ip(value: object) -> str:
     if address not in _TAILSCALE_V4 and address not in _TAILSCALE_V6:
         raise ValueError("IP is outside Tailscale ranges")
     return str(address)
+
+
+def _validate_trusted_executable(path: object) -> Path:
+    message = "trusted Tailscale executable is invalid"
+    if not isinstance(path, Path) or not path.is_absolute():
+        raise ValueError(message)
+    try:
+        for candidate in (path, *path.parents):
+            metadata = candidate.lstat()
+            if stat.S_ISLNK(metadata.st_mode):
+                raise ValueError(message)
+        metadata = path.lstat()
+    except OSError:
+        raise ValueError(message) from None
+    if (
+        not stat.S_ISREG(metadata.st_mode)
+        or metadata.st_uid not in {0, os.geteuid()}
+        or metadata.st_mode & 0o022
+        or not metadata.st_mode & 0o111
+    ):
+        raise ValueError(message)
+    try:
+        return path.resolve(strict=True)
+    except OSError:
+        raise ValueError(message) from None
+
+
+def _validate_snapshot_ttl(value: object) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 1 or value > 300:
+        raise ValueError("snapshot TTL must be an integer from 1 to 300 seconds")
+    return value

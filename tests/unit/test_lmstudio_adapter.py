@@ -1165,6 +1165,7 @@ async def test_default_process_runner_uses_exec_argv_and_decodes_streams(
         assert kwargs == {
             "stdout": asyncio.subprocess.PIPE,
             "stderr": asyncio.subprocess.PIPE,
+            "env": None,
         }
         return FakeProcess()
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass, field
 from typing import Protocol, cast
@@ -32,9 +33,15 @@ class ProcessSpawnError(Exception):
 @dataclass(frozen=True, slots=True)
 class BoundedProcessRunner:
     output_limit: int
+    env: Mapping[str, str] | None = None
 
     async def __call__(self, argv: tuple[str, ...], timeout: float) -> ProcessOutput:
-        return await default_process_runner(argv, timeout, output_limit=self.output_limit)
+        return await default_process_runner(
+            argv,
+            timeout,
+            output_limit=self.output_limit,
+            env=self.env,
+        )
 
 
 async def _read_bounded(stream: asyncio.StreamReader, output_limit: int) -> bytes:
@@ -66,6 +73,7 @@ async def default_process_runner(
     timeout: float,
     *,
     output_limit: int = DEFAULT_PROCESS_OUTPUT_LIMIT,
+    env: Mapping[str, str] | None = None,
 ) -> ProcessOutput:
     """Execute an argv without a shell and settle every subprocess task on exit."""
     if output_limit <= 0:
@@ -75,6 +83,7 @@ async def default_process_runner(
             *argv,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            env=env,
         )
     except OSError as exc:
         raise ProcessSpawnError from exc
