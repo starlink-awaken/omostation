@@ -368,7 +368,13 @@ def create_app(
             request_id=request_id,
             model_id=body.model,
             profile=body.profile,
-            required_capabilities=frozenset({"chat", *(("streaming",) if body.stream else ())}),
+            required_capabilities=frozenset(
+                {
+                    "chat",
+                    *(("streaming",) if body.stream else ()),
+                    *(("vision",) if _has_image_content(body) else ()),
+                }
+            ),
             context_tokens=0,
         )
         chat_request = ChatRequest(
@@ -505,6 +511,14 @@ def create_app(
 
 def _request_id(request: Request) -> str:
     return cast(str, request.state.request_id)
+
+
+def _has_image_content(body: OpenAIChatBody) -> bool:
+    return any(
+        not isinstance(message.content, str)
+        and any(block.type == "image_url" for block in message.content)
+        for message in body.messages
+    )
 
 
 def _final_route_headers(

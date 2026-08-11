@@ -70,6 +70,7 @@ from omlxc.domain import (
     RouteRequest,
 )
 from omlxc.domain.protocols import (
+    AdapterCapability,
     BackendAdapter,
     CapabilitySnapshot,
     ChatRequest,
@@ -177,6 +178,7 @@ class CatalogProbe:
         self._interval = config.daemon.probe_interval_seconds
         self._timeout = min(max(self._interval, 0.1), 5.0)
         self._placements = {item.id: item for item in config.placements}
+        self._models = {item.id: item for item in config.models}
         self._nodes = {item.id: item for item in config.nodes}
         self._backends = {item.id: item for item in config.backends}
         self._backend_nodes = {item.id: item.node_id for item in config.backends}
@@ -294,10 +296,10 @@ class CatalogProbe:
                 continue
             placement = self._placements[snapshot.placement_id]
             model = inventory.get(snapshot.backend_model_id)
-            capabilities = (
-                capability.capabilities
-                if model is None
-                else (model.capabilities or capability.capabilities)
+            capabilities = _model_capabilities(
+                configured=_configured_model_capabilities(self._models[placement.model_id]),
+                backend=capability.capabilities,
+                runtime=(frozenset() if model is None else model.capabilities),
             )
             loaded = model is not None and model.state is ModelRuntimeState.LOADED
             loadable = (
@@ -1083,9 +1085,7 @@ def _configured_snapshots(config: AppConfig) -> tuple[PlacementSnapshot, ...]:
     for placement in config.placements:
         backend = backends[placement.backend_id]
         model = models[placement.model_id]
-        capabilities = {"chat", "streaming"}
-        if model.role == "embedding":
-            capabilities.add("embedding")
+        capabilities = _configured_model_capabilities(model)
         result.append(
             PlacementSnapshot(
                 placement_id=placement.id,
@@ -1096,7 +1096,7 @@ def _configured_snapshots(config: AppConfig) -> tuple[PlacementSnapshot, ...]:
                 fresh=False,
                 available=False,
                 authorized=False,
-                capabilities=frozenset(capabilities),
+                capabilities=frozenset(item.value for item in capabilities),
                 context_limit=placement.context_limit,
                 memory_admitted=None,
                 loaded=placement.resident,
@@ -1112,6 +1112,44 @@ def _configured_snapshots(config: AppConfig) -> tuple[PlacementSnapshot, ...]:
             )
         )
     return tuple(result)
+
+
+_ROUTABLE_MODEL_CAPABILITIES = frozenset(
+    {
+        AdapterCapability.CHAT,
+        AdapterCapability.STREAMING,
+        AdapterCapability.VISION,
+        AdapterCapability.EMBEDDING,
+    }
+)
+
+
+def _configured_model_capabilities(model: ModelConfig) -> frozenset[AdapterCapability]:
+    role = model.role.strip().lower()
+    if role == "embedding":
+        return frozenset({AdapterCapability.EMBEDDING})
+    if role == "vision":
+        return frozenset(
+            {
+                AdapterCapability.CHAT,
+                AdapterCapability.STREAMING,
+                AdapterCapability.VISION,
+            }
+        )
+    if role == "chat":
+        return frozenset({AdapterCapability.CHAT, AdapterCapability.STREAMING})
+    return frozenset()
+
+
+def _model_capabilities(
+    *,
+    configured: frozenset[AdapterCapability],
+    backend: frozenset[AdapterCapability],
+    runtime: frozenset[AdapterCapability],
+) -> frozenset[AdapterCapability]:
+    if not runtime:
+        return configured
+    return runtime & backend & _ROUTABLE_MODEL_CAPABILITIES
 
 
 def is_loopback_url(value: str) -> bool:
