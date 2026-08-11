@@ -50,3 +50,5 @@
   and pure private launchd plist planning with atomic snapshots.
 - Wired `omlxcd` to the production Task 5/6 runtime with durable restart recovery,
   bounded request bodies and shutdown, and typed fail-closed stream errors.
+- Added bounded, failure-isolated backend discovery that refreshes production
+  placement readiness while retaining fail-closed local security authorization.

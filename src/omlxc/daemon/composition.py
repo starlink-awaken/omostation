@@ -4,19 +4,21 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import ipaddress
 import json
 from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from typing import cast
+from urllib.parse import urlsplit
 from uuid import uuid4
 
 from fastapi import FastAPI
 
-from omlxc.adapters import LmStudioAdapter, OllamaAdapter, OmlxAppAdapter
+from omlxc.adapters import LmStudioAdapter, OllamaAdapter, OmlxAppAdapter, TailscaleAdapter
 from omlxc.api import create_app
-from omlxc.config import AppConfig
+from omlxc.config import AppConfig, BackendConfig, PlacementConfig
 from omlxc.dataplane import (
     AdapterBinding,
     AdapterRegistry,
@@ -44,9 +46,11 @@ from omlxc.domain import (
 )
 from omlxc.domain.protocols import (
     BackendAdapter,
+    CapabilitySnapshot,
     ChatRequest,
     EmbeddingRequest,
     LifecycleResult,
+    ModelRuntime,
     OperationStatus,
     StreamEvent,
 )
@@ -100,6 +104,167 @@ class SnapshotCatalog:
     def mark_loaded(self, placement_id: str, loaded: bool) -> None:
         snapshot = self._snapshots[placement_id]
         self._snapshots[placement_id] = replace(snapshot, loaded=loaded)
+
+    def update(self, placement_id: str, **changes: object) -> None:
+        self._snapshots[placement_id] = replace(self._snapshots[placement_id], **changes)
+
+
+class CatalogProbe:
+    def __init__(
+        self,
+        *,
+        config: AppConfig,
+        adapters: Mapping[str, BackendAdapter],
+        catalog: SnapshotCatalog,
+        tailscale: TailscaleAdapter | None,
+        now: Callable[[], datetime],
+    ) -> None:
+        self._config = config
+        self._adapters = dict(adapters)
+        self._catalog = catalog
+        self._tailscale = tailscale
+        self._now = now
+        self._interval = config.daemon.probe_interval_seconds
+        self._timeout = min(max(self._interval, 0.1), 5.0)
+        self._placements = {item.id: item for item in config.placements}
+        self._nodes = {item.id: item for item in config.nodes}
+        self._backend_nodes = {item.id: item.node_id for item in config.backends}
+        self._task: asyncio.Task[None] | None = None
+
+    @property
+    def task_settled(self) -> bool:
+        return self._task is None or self._task.done()
+
+    async def start(self) -> None:
+        await self._refresh()
+        self._task = asyncio.create_task(self._run(), name="omlxcd-catalog-probe")
+
+    async def close(self) -> None:
+        task, self._task = self._task, None
+        if task is not None:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+    async def _run(self) -> None:
+        while True:
+            await asyncio.sleep(self._interval)
+            await self._refresh()
+
+    async def _refresh(self) -> None:
+        authorization = (
+            asyncio.create_task(self._refresh_tailscale(), name="omlxcd-tailscale-probe")
+            if self._tailscale is not None
+            else None
+        )
+        await asyncio.gather(
+            *(self._probe_backend(backend, authorization) for backend in self._config.backends),
+            return_exceptions=True,
+        )
+        if authorization is not None:
+            await asyncio.gather(authorization, return_exceptions=True)
+
+    async def _refresh_tailscale(self) -> None:
+        assert self._tailscale is not None
+        async with asyncio.timeout(self._timeout):
+            await self._tailscale.snapshot()
+
+    async def _probe_backend(
+        self, backend: BackendConfig, authorization: asyncio.Task[None] | None
+    ) -> None:
+        try:
+            async with asyncio.timeout(self._timeout):
+                authorized, local = await self._authorize(backend, authorization)
+                if not authorized or not local:
+                    raise PermissionError("backend endpoint is not authorized")
+                adapter = self._adapters[backend.id]
+                capability = await adapter.discover()
+                if capability.backend_id != backend.id:
+                    raise ValueError("backend discovery identity mismatch")
+                models = await adapter.list_models()
+            self._apply(backend, capability, models, authorized=authorized, local=local)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            self._fail_closed(backend.id)
+
+    async def _authorize(
+        self, backend: BackendConfig, authorization: asyncio.Task[None] | None
+    ) -> tuple[bool, bool]:
+        if _is_loopback_url(backend.base_url):
+            return True, True
+        node = self._nodes[backend.node_id]
+        if node.tailscale_identity is None or self._tailscale is None or authorization is None:
+            return False, False
+        await authorization
+        self._tailscale.authorize_http(backend.node_id, backend.base_url)
+        return True, True
+
+    def _apply(
+        self,
+        backend: BackendConfig,
+        capability: CapabilitySnapshot,
+        models: tuple[ModelRuntime, ...],
+        *,
+        authorized: bool,
+        local: bool,
+    ) -> None:
+        observed_age = (self._now() - capability.observed_at).total_seconds()
+        fresh = 0 <= observed_age <= max(self._interval * 2, 1.0)
+        inventory = {model.id: model for model in models}
+        for snapshot in self._catalog.get():
+            if snapshot.backend_id != backend.id:
+                continue
+            placement = self._placements[snapshot.placement_id]
+            model = inventory.get(snapshot.backend_model_id)
+            capabilities = (
+                capability.capabilities
+                if model is None
+                else (model.capabilities or capability.capabilities)
+            )
+            ready = (
+                fresh
+                and capability.reachable
+                and capability.compatible
+                and capability.generation_ready
+                and model is not None
+                and model.loaded is True
+            )
+            self._catalog.update(
+                snapshot.placement_id,
+                fresh=fresh,
+                available=ready,
+                authorized=authorized,
+                capabilities=frozenset(item.value for item in capabilities),
+                context_limit=(
+                    model.context_limit
+                    if model is not None and model.context_limit is not None
+                    else placement.context_limit
+                ),
+                memory_admitted=self._memory_admitted(placement),
+                loaded=model is not None and model.loaded is True,
+                available_concurrency=1 if ready else 0,
+                local=local,
+                security_allowed=authorized and local,
+            )
+
+    def _memory_admitted(self, placement: PlacementConfig) -> bool | None:
+        if placement.memory_gb is None:
+            return True
+        available = self._nodes[self._backend_nodes[placement.backend_id]].memory_gb
+        return None if available is None else placement.memory_gb <= available
+
+    def _fail_closed(self, backend_id: str) -> None:
+        for snapshot in self._catalog.get():
+            if snapshot.backend_id == backend_id:
+                self._catalog.update(
+                    snapshot.placement_id,
+                    fresh=False,
+                    available=False,
+                    authorized=False,
+                    memory_admitted=None,
+                    available_concurrency=0,
+                    security_allowed=False,
+                )
 
 
 class ProductionEventService:
@@ -395,14 +560,27 @@ class ProductionControlService:
 
 
 class ResourceComponent:
-    def __init__(self, bus: EventBus, adapters: Mapping[str, BackendAdapter]) -> None:
+    def __init__(
+        self,
+        bus: EventBus,
+        adapters: Mapping[str, BackendAdapter],
+        probe: CatalogProbe | None,
+    ) -> None:
         self._bus = bus
         self._adapters = tuple(adapters.values())
+        self._probe = probe
+
+    @property
+    def task_settled(self) -> bool:
+        return self._probe is None or self._probe.task_settled
 
     async def start(self) -> None:
-        return None
+        if self._probe is not None:
+            await self._probe.start()
 
     async def close(self) -> None:
+        if self._probe is not None:
+            await self._probe.close()
         await self._bus.close()
         for adapter in self._adapters:
             close = getattr(adapter, "aclose", None)
@@ -425,6 +603,7 @@ def build_production_daemon(
     adapters: Mapping[str, BackendAdapter] | None = None,
     snapshots: tuple[PlacementSnapshot, ...] | None = None,
     reranker: Reranker | None = None,
+    tailscale: TailscaleAdapter | None = None,
     id_factory: Callable[[], str] | None = None,
     now: Callable[[], datetime] | None = None,
 ) -> ProductionComposition:
@@ -460,7 +639,18 @@ def build_production_daemon(
         reranker,
     )
     events = ProductionEventService(storage, bus)
-    resources = ResourceComponent(bus, bindings)
+    probe = (
+        CatalogProbe(
+            config=config,
+            adapters=bindings,
+            catalog=catalog,
+            tailscale=tailscale,
+            now=clock,
+        )
+        if snapshots is None
+        else None
+    )
+    resources = ResourceComponent(bus, bindings, probe)
     runtime = DaemonRuntime(
         config_runtime=storage,
         recovery=control,
@@ -528,6 +718,14 @@ def _configured_snapshots(config: AppConfig) -> tuple[PlacementSnapshot, ...]:
             )
         )
     return tuple(result)
+
+
+def _is_loopback_url(value: str) -> bool:
+    try:
+        host = urlsplit(value).hostname
+        return host is not None and ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
 
 
 def _job(stored: StoredJob) -> Job:

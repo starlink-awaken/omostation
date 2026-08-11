@@ -24,11 +24,15 @@ from omlxc.config import (
 from omlxc.daemon import DaemonServer, build_production_daemon
 from omlxc.domain import BackendKind
 from omlxc.domain.protocols import (
+    AdapterCapability,
+    CapabilitySnapshot,
     ChatRequest,
     ChatResult,
     EmbeddingRequest,
     EmbeddingResult,
     LifecycleResult,
+    ModelRuntime,
+    ModelRuntimeState,
     OperationStatus,
     StreamEvent,
 )
@@ -87,6 +91,45 @@ class FakeBackend:
         return None
 
 
+class DiscoveringBackend(FakeBackend):
+    def __init__(self, *, backend_id: str = "healthy", fail: bool = False) -> None:
+        super().__init__()
+        self.backend_id = backend_id
+        self.fail = fail
+        self.discoveries = 0
+
+    async def discover(self) -> CapabilitySnapshot:
+        self.discoveries += 1
+        if self.fail:
+            raise RuntimeError("backend probe failed")
+        return CapabilitySnapshot(
+            backend_id=self.backend_id,
+            reachable=True,
+            compatible=True,
+            model_available=True,
+            generation_ready=True,
+            observed_at=datetime.now(UTC),
+            capabilities=frozenset(
+                {
+                    AdapterCapability.CHAT,
+                    AdapterCapability.STREAMING,
+                    AdapterCapability.EMBEDDING,
+                }
+            ),
+        )
+
+    async def list_models(self) -> tuple[ModelRuntime, ...]:
+        return (
+            ModelRuntime(
+                id="physical/model",
+                state=ModelRuntimeState.LOADED,
+                loaded=True,
+                capabilities=frozenset({AdapterCapability.CHAT, AdapterCapability.EMBEDDING}),
+                context_limit=4096,
+            ),
+        )
+
+
 def _config(root: Path) -> AppConfig:
     return AppConfig(
         daemon=DaemonConfig(socket_path=root / "omlxcd.sock"),
@@ -137,6 +180,176 @@ def _snapshot() -> PlacementSnapshot:
         local=True,
         security_allowed=True,
     )
+
+
+def _discovery_config(root: Path) -> AppConfig:
+    config = _config(root)
+    return config.model_copy(
+        update={
+            "nodes": (
+                NodeConfig(id="bad-node", display_name="Bad", platform="macos"),
+                NodeConfig(id="good-node", display_name="Good", platform="macos"),
+            ),
+            "backends": (
+                BackendConfig(
+                    id="bad",
+                    node_id="bad-node",
+                    kind=BackendKind.OMLX_APP,
+                    base_url="http://127.0.0.1:8001",
+                ),
+                BackendConfig(
+                    id="healthy",
+                    node_id="good-node",
+                    kind=BackendKind.OMLX_APP,
+                    base_url="http://127.0.0.1:8002",
+                ),
+            ),
+            "placements": (
+                PlacementConfig(
+                    id="bad-placement",
+                    model_id="local/model",
+                    backend_id="bad",
+                    backend_model_id="physical/model",
+                    context_limit=8192,
+                ),
+                PlacementConfig(
+                    id="healthy-placement",
+                    model_id="local/model",
+                    backend_id="healthy",
+                    backend_model_id="physical/model",
+                    context_limit=8192,
+                ),
+            ),
+        }
+    )
+
+
+@pytest.mark.asyncio
+async def test_production_discovery_isolates_failure_and_enables_chat_and_embed() -> None:
+    with tempfile.TemporaryDirectory(prefix="omlxc-fix2-", dir="/tmp") as directory:
+        root = Path(directory)
+        config = _discovery_config(root)
+        bad = DiscoveringBackend(fail=True)
+        healthy = DiscoveringBackend()
+        composition = build_production_daemon(
+            config,
+            adapters={"bad": bad, "healthy": healthy},
+        )
+        server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
+        await server.start()
+        try:
+            transport = httpx.AsyncHTTPTransport(uds=str(config.daemon.socket_path))
+            async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+                chat = await client.post(
+                    "/openai/v1/chat/completions",
+                    json={
+                        "model": "local/model",
+                        "messages": [{"role": "user", "content": "hello"}],
+                    },
+                )
+                embedding = await client.post(
+                    "/openai/v1/embeddings",
+                    json={"model": "local/model", "input": "hello"},
+                )
+        finally:
+            await server.stop()
+
+    assert bad.discoveries == healthy.discoveries == 1
+    assert chat.status_code == 200
+    assert chat.json()["choices"][0]["message"]["content"] == "ok"
+    assert embedding.status_code == 200
+    assert embedding.json()["data"][0]["embedding"] == [1.0]
+
+
+@pytest.mark.asyncio
+async def test_production_discovery_periodically_recovers_a_failed_backend() -> None:
+    with tempfile.TemporaryDirectory(prefix="omlxc-fix2-refresh-", dir="/tmp") as directory:
+        root = Path(directory)
+        config = _config(root).model_copy(
+            update={
+                "daemon": DaemonConfig(
+                    socket_path=root / "omlxcd.sock", probe_interval_seconds=0.01
+                )
+            }
+        )
+        backend = DiscoveringBackend(backend_id="backend", fail=True)
+        composition = build_production_daemon(config, adapters={"backend": backend})
+        server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
+        await server.start()
+        try:
+            transport = httpx.AsyncHTTPTransport(uds=str(config.daemon.socket_path))
+            async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+                unavailable = await client.post(
+                    "/openai/v1/chat/completions",
+                    json={
+                        "model": "local/model",
+                        "messages": [{"role": "user", "content": "hello"}],
+                    },
+                )
+                backend.fail = False
+                for _ in range(50):
+                    recovered = await client.post(
+                        "/openai/v1/chat/completions",
+                        json={
+                            "model": "local/model",
+                            "messages": [{"role": "user", "content": "hello"}],
+                        },
+                    )
+                    if recovered.status_code == 200:
+                        break
+                    await asyncio.sleep(0.01)
+        finally:
+            await server.stop()
+
+    assert unavailable.status_code == 409
+    assert backend.discoveries >= 2
+    assert recovered.status_code == 200
+    assert composition.runtime.task_settled
+
+
+@pytest.mark.asyncio
+async def test_remote_discovery_is_blocked_before_tailscale_authorization() -> None:
+    with tempfile.TemporaryDirectory(prefix="omlxc-fix2-auth-", dir="/tmp") as directory:
+        root = Path(directory)
+        config = _config(root).model_copy(
+            update={
+                "nodes": (
+                    NodeConfig(
+                        id="node",
+                        display_name="Node",
+                        platform="macos",
+                        tailscale_identity="node.example.ts.net",
+                    ),
+                ),
+                "backends": (
+                    BackendConfig(
+                        id="backend",
+                        node_id="node",
+                        kind=BackendKind.OMLX_APP,
+                        base_url="http://100.64.0.10:8000",
+                    ),
+                ),
+            }
+        )
+        backend = DiscoveringBackend(backend_id="backend")
+        composition = build_production_daemon(config, adapters={"backend": backend})
+        server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
+        await server.start()
+        try:
+            transport = httpx.AsyncHTTPTransport(uds=str(config.daemon.socket_path))
+            async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+                response = await client.post(
+                    "/openai/v1/chat/completions",
+                    json={
+                        "model": "local/model",
+                        "messages": [{"role": "user", "content": "hello"}],
+                    },
+                )
+        finally:
+            await server.stop()
+
+    assert backend.discoveries == 0
+    assert response.status_code == 409
 
 
 @pytest.mark.asyncio
