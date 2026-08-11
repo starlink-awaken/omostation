@@ -1901,7 +1901,7 @@ bets:
       W2-04 GET 随即在同一 principal 的 Inbox 中可见
   - >-
       明确人工 confirm 后才由 OMO 在同一 episode_id 授予仅限
-      bos://personal/followup/draft、A2/R1、单次预算的可撤销 Mandate；未确认、角色失效或责任不匹配
+      bos://personal/followup/draft、A2/R0、单次预算的可撤销 Mandate；未确认、角色失效或责任不匹配
       均拒绝且不生成本地草稿
   - >-
       execute 复用现有 Agora enforce/complete 与
