@@ -112,22 +112,27 @@ post-snapshot state:
 
 - root PR #1372 makes the source-level gateway checker live green for 12/12
   domains;
-- the Claude-3p configuration contains Cockpit, but process reload and UI
-  smoke remain pending;
+- the configuration transaction covers Codex, standard Claude, Claude-3p, and
+  one Zed/ZCode configuration; each client's reload, UI, and
+  installed-entrypoint smoke remains separately unverified;
+- root PR #1366 / commit `aa43a79d` completed the governed manifest owner job
+  with dry-run, success, owner nonzero, evidence, and no-write-back proof;
 - no ChatGPT Secure MCP Tunnel was provisioned;
 - no current Codex or Zed UI smoke is claimed.
 
-The configuration-state premise in historical step 1 is superseded only for
-Claude-3p; its confirmation requirement still applies to any write. The
-12-domain expansion clause in historical step 3 is superseded by PR #1372;
-its client-smoke work remains pending. Historical step 2 is not superseded.
+Historical step 1 is superseded for the recorded configuration transaction,
+but not for each client's reload/UI/installed-entrypoint smoke. Historical
+step 2 is completed by PR #1366 / `aa43a79d`. The 12-domain expansion clause
+in historical step 3 is superseded by PR #1372; its client-smoke work remains
+pending.
 
 Current non-destructive next steps are to retain live 12/12 checker evidence,
-review each client reload/UI-smoke procedure independently, review the
-official ChatGPT public HTTPS/Secure MCP Tunnel requirements without
-provisioning a tunnel or handling credentials, and continue physical
-migration, cache-cleanup, retirement, Zotero, family-app, external-repository,
-and T8 work under their existing evidence and confirmation gates.
+perform and record each client's reload/UI/installed-entrypoint smoke
+independently, review the official ChatGPT public HTTPS/Secure MCP Tunnel
+requirements without provisioning a tunnel or handling credentials, and
+continue physical migration, cache-cleanup, retirement, Zotero, family-app,
+external-repository, and T8 work under their existing evidence and
+confirmation gates.
 
 ## 2026-08-12 correction — ChatGPT MCP routing
 
