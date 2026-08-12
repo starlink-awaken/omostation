@@ -216,6 +216,7 @@ families:
       - "@工作文档/*/_runtime/**"
       - "@工作文档/*/_scripts/**"
       - "@工作文档/*/tools/**"
+      - "@工作文档/卫健委/cleanup-commit.sh"
     artifact_kind: [runtime, cache]
     disposition: delegate
     owner: runtime
