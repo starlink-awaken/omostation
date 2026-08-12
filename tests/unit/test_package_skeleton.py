@@ -48,7 +48,7 @@ def test_project_metadata_declares_the_v3_package_and_console_scripts() -> None:
     assert pyproject.is_file()
 
     metadata = tomllib.loads(pyproject.read_text(encoding="utf-8"))
-    assert metadata["project"]["version"] == "3.0.1"
+    assert metadata["project"]["version"] == "3.0.2"
     assert metadata["project"]["requires-python"] == ">=3.13,<3.14"
     assert metadata["project"]["scripts"] == {
         "omlxc": "omlxc.cli:main",
@@ -74,12 +74,20 @@ def test_ci_smoke_requires_exactly_one_version_agnostic_wheel() -> None:
     assert "dist/omlxc-3.0.1-py3-none-any.whl" not in workflow
 
 
+def test_readme_release_and_wheel_smoke_are_patch_agnostic() -> None:
+    readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "Version `3.0.2`" in readme
+    assert "dist/omlxc-3.0.2-py3-none-any.whl" not in readme
+    assert "dist/omlxc-*.whl" in readme
+
+
 def test_package_exposes_the_v3_release_version() -> None:
     """The importable package is the single source for the release version."""
     result = _run_module("omlxc", "--version")
 
     assert result.returncode == 0
-    assert result.stdout.strip() == "3.0.1"
+    assert result.stdout.strip() == "3.0.2"
 
 
 def test_daemon_module_exposes_private_uds_help() -> None:
@@ -95,7 +103,7 @@ def test_installed_omlxc_console_script_reports_its_version() -> None:
     result = _run_installed_script("omlxc", "--version")
 
     assert result.returncode == 0
-    assert result.stdout.strip() == "3.0.1"
+    assert result.stdout.strip() == "3.0.2"
 
 
 def test_installed_omlxcd_console_script_exposes_private_uds_help() -> None:

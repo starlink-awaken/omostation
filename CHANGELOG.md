@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.2 — 2026-08-12
+
+- Persist accepted terminal request metrics on a bounded daemon-owned interval while
+  preserving the existing shielded final flush on shutdown.
+- Keep transient metric flush failures fail-safe and visible without stopping inference.
+
 ## 3.0.1 — 2026-08-12
 
 - Increased the bounded daemon startup budget to accommodate a normal five-second
