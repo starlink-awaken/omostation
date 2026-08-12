@@ -136,7 +136,7 @@ projects:
     stack: "Python (uv, pytest, Textual)"
     python: ">=3.13,<3.14"
     build_backend: "hatchling"
-    version: "3.0.0a1"
+    version: "3.0.0"
     role: "本地算力运行时 · omlxcd 守护进程、物理放置与算力驾驶舱"
     src_dir: "src/omlxc/"
     cli_entry: "omlxc"

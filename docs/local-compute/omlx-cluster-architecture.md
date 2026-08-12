@@ -2,127 +2,142 @@
 status: active
 lifecycle: contract
 owner: architecture-team
-last-reviewed: 2026-08-10
-review-state: metadata-only
-metadata-migrated-at: 2026-07-31
+last-reviewed: 2026-08-12
+review-state: verified-v3
 ---
-# omlx × aetherforge 本地算力中枢 — 架构与运维
+# omlxc v3 × AetherForge 本地算力中枢
 
-> 三机 Tailscale 组网 · omlxc 为中枢 · aetherforge 门面为唯一 OpenAI 入口
-> 运行时事实(模型清单/端口/在线状态)一律从 CLI 与注册表读, 本文不复制。
+> `omlxc` 管本地物理算力，AetherForge 管公共推理策略；唯一公共算力入口是
+> `bos://compute/aetherforge/infer`。运行时节点、模型、端点与健康状态必须从 API
+> 或 CLI 查询，本文不复制易漂移清单。
 
-## 1. 形状
+## 1. 稳定边界
 
 ```mermaid
-flowchart TD
-  subgraph 消费方
-    A1[agora] --- A2[cockpit] --- A3[kairon / 其它]
-  end
-  A2 --> AF["aetherforge 门面<br/>OpenAI 兼容 · 别名解析 · 路由 · 兜底"]
-  AF -->|端口直连, 不通则先 omlxc load| OMLX["MBP · omlx 后端<br/>mlx_lm.server / mlx_vlm / mlx_embeddings<br/>每模型一个端口"]
-  AF -->|omlx 起不来时兜底| LMS["LM Studio 池<br/>MBP + mac-mini + Y7000P<br/>经 LM Link 合成同一个池"]
-  CLI["omlxc<br/>中枢 CLI"] -.控制.-> OMLX
-  CLI -.观测/控制.-> LMS
+flowchart LR
+  C["Workspace consumers"] --> B["Agora / BOS"]
+  B --> A["AetherForge<br/>认证 · 逻辑模型 · 云策略"]
+  A -->|"private Unix socket"| D["omlxcd<br/>容量 · placement · 执行 · 指标"]
+  T["omlxc CLI / TUI"] -->|"private Unix socket"| D
+  D --> M["MBP<br/>oMLX App · fallback backends"]
+  D --> R["Tailnet nodes<br/>LM Studio / LM Link · Ollama"]
 ```
 
-两条职责分得很清:
+职责不可交叉：
 
-- **omlxc 是控制面** —— 谁在哪台机器上、加载什么、当前状态如何、一个名字该打到哪里。
-  它不承载推理流量(内部那几处 `/v1/chat/completions` 只用于探活与预热)。
-- **aetherforge 门面是数据面** —— 消费方唯一的 OpenAI 兼容入口。
+| 层 | 拥有的决策 | 不拥有的决策 |
+|---|---|---|
+| Agora / BOS | 能力发现与 `bos://compute/aetherforge/infer` 寻址 | 模型 placement、后端控制 |
+| AetherForge | 认证、逻辑别名、敏感流约束、云端 fallback 与成本策略 | 本地容量、驻留、物理 fallback |
+| `omlxcd` | 节点健康、模型生命周期、容量准入、物理 placement、并发、作业、指标与本地执行 | 业务别名、认证、自动启用云端 |
+| 后端 adapter | 能力发现、加载/卸载、推理与真实生成探针 | 跨后端策略 |
 
-## 2. 引擎分工
+`omlxc` 不提供绕过 AetherForge 的公共 BOS URI。它的数据面仅供本机受控消费者
+通过权限受限的 Unix Socket 使用。
 
-SSOT 是 `~/omlx/conf/models.json` 的 `engine_policy` 段, 不要在别处复述:
+## 2. SSOT
 
-| 机器 | 主引擎 | 兜底 | 说明 |
-|---|---|---|---|
-| MBP | omlx(mlx_lm.server 等) | LM Studio | 每个模型一个端口; omlx 同时是加载器 |
-| mac-mini | LM Studio | 无 | |
-| Y7000P | LM Studio | 无 | 时开时关, 离线自动跳过 |
-
-三台的 LM Studio 经 **LM Link** 合成同一个池: 任一端点都能看见全部模型,
-具体在哪台执行由 LM Link 决定。所以别名里**不携带机器地址** —— 要指定机器
-用 `lms link set-preferred-device`, 而不是在别名里编码 IP。
-
-> 2026-08-10 教训: MBP 的 LM Studio 当时并未运行, 池子从 43 个模型缩到 17 个,
-> 而没有任何检查报警。它现在有 `com.lmstudio.server` 这个 LaunchAgent, 并在
-> `services.yaml` 里登记, 就是为了让"少了一台"这件事能被看见。
-
-## 3. 一个请求怎么走
-
-```
-消费者给一个意图名(coder / triage / ...)
-  → 别名展开(aliases.yaml)
-  → 落在 omlx 本机 key 上?
-      是 → 端口通? 直连
-           端口不通? omlxc load 拉起 → 就绪探针 → 直连
-           拉不起来? 按 models.json 的 fallback 落 LM Studio
-           都不行? 如实报错(不模糊匹配, 不静默换模型)
-      否 → registry/provider(LM Link 池 或 云端)
-```
-
-想知道某个名字实际会走哪条路, 不要读代码猜, 直接问中枢:
-
-```bash
-omlxc resolve coder            # 人类视图: 归属 / 端点 / 当前状态 / 兜底是谁
-omlxc resolve coder --json     # 机器视图
-```
-
-## 4. 几条来自事故的硬约束
-
-这些不是设计偏好, 是踩过才写下来的:
-
-- **健康检查必须证明"能干活", 不能只证明"活着"**。mlx_lm.server 会进入一种
-  卡死态: TCP 照收、`GET /v1/models` 照答 200、CPU 0%、一串 CLOSE_WAIT 挂着,
-  但 POST 永不处理。所有基于 `/v1/models` 的探活全绿, 而请求全挂。
-  门面加载后会补一发 `max_tokens=1` 的真生成作为就绪探针, 不过就回收后端。
-- **不做子串模糊匹配**。曾经 `reasoning` 会撞上 `...-reasoning-distilled`、
-  `embedding` 会撞上云端的 `gemini-embedding-001`, 且返回 200, 错得悄无声息。
-- **空回复不算成功**。thinking 段剥完没正文 = 没回答, 必须让 fallback 继续。
-- **绑定范围变大时鉴权不能消失**。门面绑到 loopback 之外必须配
-  `AETHERFORGE_API_KEY`, 否则拒绝启动。
-- **启动路径不得有外部网络依赖**, 且要显式隔离系统代理 —— LiteLLM 栽过。
-- **launchd 不能执行外置卷上的二进制**(macOS TCC)。omlx 控制面因此从
-  `/Volumes/Model/omlx` 迁到 `~/omlx`; 模型权重仍在外置卷, 只是不被 launchd 直接 exec。
-
-## 5. Runbook
-
-```bash
-# 看
-omlxc ls                  # 全节点模型 + 加载态
-omlxc status              # MBP 本地后端
-omlxc resolve <名>        # 这个名字会打到哪
-omlxc stats               # 用量 / 显存
-lms ps                    # LM Link 池里谁在跑、在哪台
-
-# 控
-omlxc load|unload <模型>  # 自动判断本地还是远程
-omlxc warm <预设>         # 切常驻模式
-omlxc serve|stop <key>    # 只管 MBP 本地
-
-# 门面
-curl -s localhost:9290/health
-tail -f ~/Library/Logs/aetherforge-gateway.log
-```
-
-## 6. 关键位置
-
-| 内容 | 位置 |
+| 事实 | 权威来源 |
 |---|---|
-| 模型/集群/引擎分工/兜底映射 | `~/omlx/conf/models.json`(已入 git) |
-| 中枢 CLI | `~/omlx/bin/omlx`(`omlxc` 是它的软链) |
-| 别名表 | `projects/aetherforge/packages/gateway/src/llm_gateway/aliases.yaml` |
-| 门面代码 | `projects/aetherforge/packages/gateway/src/llm_gateway/openai_proxy.py` |
-| 路由逻辑 | 同上目录 `gateway.py` |
-| 引擎 SSOT | `projects/ecos/src/ecos/ssot/mof/m1/compute_engine/ENG-*.yaml` |
-| 服务注册 | `.omo/_truth/registry/services.yaml` |
+| 逻辑别名、认证、云策略 | AetherForge 配置与策略层 |
+| 节点、后端、模型 placement、本地策略 | `omlxc` schema v1 TOML 用户配置 |
+| 凭据 | TOML 中的 Keychain 引用；不保存明文密钥 |
+| 在线状态、容量、作业、路由与指标 | `omlxcd` API；持久状态由 daemon 自己管理 |
+| 对 Workspace / MOF 的模型投影 | `omlxc` API 或显式只读导出 |
+| 服务生命周期 | [服务注册表](../../.omo/_truth/registry/services.yaml) |
+| 引擎与模型语义 | [eCOS MOF](../../projects/ecos/src/ecos/ssot/mof/m1/) |
 
-## 7. 待办
+旧跨仓模型 JSON、独立模型端口和 CLI 子进程调用不是 v3 的事实源。旧配置只允许通过
+`omlxc config migrate` 进入 schema v1；迁移默认只生成计划，显式确认后才原子写入。
 
-- 调用方从 `:4000` 迁到 `:9290`(kairon 约 10 处 / cockpit 2 处 / `bin/gac` 1 处)。
-  门面过渡期同时监听两个端口, 所以这件事不阻塞 LiteLLM 下线。
-- 迁完后把门面的 `:4000` 摘掉, 并从 port-registry 注销 LiteLLM。
-- 成本落账接到门面。
-- LM Link 的派发目前会把 12B 模型放到 Y7000P(三台里最弱), 冷启动实测上百秒。
-  是否设 preferred-device 待定 —— 放本机会和 omlx 抢内存。
+配置优先级固定为：安全默认值 → TOML → `OMLXC_` 环境变量 → 单次命令参数。
+地址不是节点身份；tailnet 节点必须通过稳定 ID 和显式 allowlist 校验。
+
+## 3. 请求路径
+
+```text
+consumer
+  → bos://compute/aetherforge/infer
+  → AetherForge 认证并解析逻辑模型
+  → AetherForge 将已解析的本地模型 ID 交给 omlxcd
+  → omlxcd 过滤健康、能力、上下文、内存、并发与安全约束
+  → omlxcd 选择物理 placement 并调用对应 adapter
+  → 结果沿原链返回
+```
+
+- `local` 请求的本地阶段失败时返回 typed error，不得静默转云。
+- `hybrid` 是否进入云端由 AetherForge 决定；`omlxc` 永不自行启用云服务。
+- 首 token 前可在剩余 deadline 内切换本地候选；首 token 后断流必须显式报错，
+  不得重放请求。
+- thinking 默认关闭。只有质量策略且调用方明确授权时，才允许传递后端 reasoning
+  参数；响应仍不得泄漏隐藏推理。
+
+## 4. 三机与后端
+
+- MBP 是权威 daemon 主机，oMLX App 是主要 Apple Silicon 执行后端；LM Studio 与
+  Ollama 可作为配置驱动的本机 fallback。
+- 远端机器通过 Tailscale 身份与 allowlist 纳入节点池。LM Studio / LM Link 与
+  Ollama 都是 `omlxcd` 管理的物理 backend，不是 AetherForge 中的平行本地路由器。
+- SSH 只用于受控加载、卸载或探测；推理优先走已授权的 tailnet API。SSH 参数使用
+  数组并严格校验 known-host，不拼接 shell 字符串。
+- 离线或 stale 节点只从候选中剔除，不得阻塞其他节点。
+
+具体机器地址、模型路径、端口、驻留模型和资源预算属于用户配置或运行时 API，
+不写入 Workspace 文档。
+
+## 5. 控制面与本地数据面
+
+控制 API 位于 `/api/v1/*`，本地 OpenAI 兼容数据面位于 `/openai/v1/*`；二者使用
+同一私有 Unix Socket。控制操作返回 Job，事件通过版本化事件流增量交付。JSON、
+NDJSON 与错误响应携带 schema version 和 request ID。
+
+CLI 与 TUI 都是 daemon client，不直接读取数据库、扫描后端或启动临时状态库。
+常用入口：
+
+```bash
+# 总览与诊断
+omlxc
+omlxc status
+omlxc doctor --direct --json
+
+# 节点、模型与路由
+omlxc nodes list
+omlxc nodes probe
+omlxc models list
+omlxc models load <model-id> --yes --json
+omlxc models unload <model-id> --yes --json
+omlxc models reconcile
+omlxc routes plan <model-id> --profile interactive --json
+omlxc routes test <model-id>
+
+# 作业、指标、配置与服务
+omlxc jobs list
+omlxc jobs watch --output ndjson
+omlxc metrics show
+omlxc config validate
+omlxc config diff
+omlxc daemon status
+```
+
+破坏性或持久化操作遵循风险门：只读查询直接执行；加载、卸载和临时 pin 需要一次
+确认；服务重启与持久配置必须展示影响、二次确认并建立回滚点。
+
+## 6. 可靠性与安全约束
+
+- 健康必须证明真实生成就绪，不能只证明端口存在或模型目录可读。
+- 节点、backend 与 placement 各自有并发闸门；加载使用 single-flight。
+- 健康 TTL、stale 状态、熔断与半开恢复都由 daemon 维护。
+- 本地 Socket 父目录与文件使用私有权限；Keychain 引用、日志和错误均须脱敏。
+- 事件队列可以丢弃低优先级指标，但不能丢失 Job 状态转换。
+- daemon 断开时 TUI 保留最后快照并明确标为 stale，不伪装实时状态。
+
+## 7. 发布与回滚
+
+正式路径是 AetherForge `active` 模式。`shadow` 只做一次只读 route plan，真实推理
+仍走一次 legacy 路径；`legacy` 仅作为回滚入口。三种模式都不能产生重复推理。
+
+回滚按边界逆序执行：AetherForge 切回 `legacy` → 停止 `omlxcd` → 恢复旧 CLI
+入口与配置快照。回滚不重写子仓历史、不移动发布标签，也不删除旧归档。
+
+运行状态用 CLI/API 验证；公共链路用 `bos://compute/aetherforge/infer` 验证。禁止用
+本文中的示例替代真实健康、路由与指标证据。
