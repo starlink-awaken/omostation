@@ -2161,6 +2161,77 @@ bets:
   human_gate: false
   circuit_breaker: 超 2 周 → 改为每日批量重算而非实时
   retro: required
+- id: BET-Y1Q2-T4-02
+  track: T4-OUTCOME
+  window: Y1Q2
+  title: Blueprint W4-04 个人结果观测与真实价值采样起点
+  appetite: 2 days
+  priority: P0
+  status: done
+  done_at: 2026-08-12
+  goal: >-
+    在可信本地单用户阶段，以现有 Personal Event Ledger 为唯一事实源，区分系统生成与用户自填草稿，
+    记录结构化人工裁决和显式人力投入，提供按周可重放的个人结果观测；代码交付只代表观测能力可用，
+    四周真实价值门必须由后续真实样本满足，禁止用测试、工程治理或全零结果冒充通过。
+  non_goals:
+  - 新 UI、dashboard、第二 Inbox、第二 Ledger、DDL、MOF/M2 或顶级项目
+  - 第二信号源、watcher、daemon、LLM 承诺提取、自动审批、自动发送或外部副作用
+  - 家庭成员、多租户、跨组织、敌意同进程、极端并发、exactly-once 或崩溃 reconcile
+  - 在没有连续四周真实个人样本时宣称 W3/W4、90 天 Golden Scenario 或自治升级通过
+  - 将 caller-authored、测试、工程交付或治理产出计入个人系统价值分子
+  done_when:
+  - >-
+    Evidence.LocalDraft.v1 持久记录受控 output_origin=system|user_provided；只有同 Episode 的 system evidence、
+    Action.Succeeded 与 Human Outcome 完整关联时才成为系统价值候选，旧事件或未知来源显式归为 unknown
+  - >-
+    Human Outcome 支持 accept/edit/reject/defer/ignore，并可记录显式 review_duration_seconds 与
+    estimated_time_saved_seconds；未提供时保持 null/unknown，不得推测或默认成 0
+  - >-
+    OMO 从同一 Ledger 按 principal 只读重放 verdict 分布、系统候选数、signal-to-verdict 延迟、人工负担、
+    节省时间与自然周样本；重复查询结果确定，Ledger event count/hash 不变
+  - >-
+    四周价值门仅在连续四个自然周各有至少 3 个可追溯且本人 accept 的 system outcome、且有完整人力数据并
+    满足 review time < saved time 时返回 passed；其余统一为 collecting/not_ready 并给出缺口，不伪装成功
+  - >-
+    Cockpit 既有 personal status/feedback API 与 CLI 暴露该只读观测和可选人力字段；响应不含正文、绝对路径、
+    source URI、digest、凭证或自由日志，缺 Ledger 明确 unavailable
+  - >-
+    无 mock 公共边界 E2E 验证 system 与 user_provided 分母隔离、五类 verdict、跨 principal 隔离、周门槛、
+    隐私字段缺席与读前后 hash/count 不变；现有 W3-01A/B 定向回归通过
+  verify:
+  - cmd: >-
+      cd projects/omo && uv run --with pytest python -m pytest tests/test_personal_episode.py
+      tests/test_episode_projection.py -q && uv run ruff check src/omo/personal_episode.py tests/test_personal_episode.py
+    expect: exit 0；覆盖同 Ledger 重放、system/user 分区、五类裁决、自然周门槛与只读性
+  - cmd: >-
+      cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python -m pytest
+      src/cockpit/tests/test_api_personal_episode.py src/cockpit/tests/test_cli_personal_dogfood.py -q &&
+      uv run ruff check src/cockpit/commands/workflow_mesh.py src/cockpit/web/api_workflow_mesh_operations.py
+      src/cockpit/tests/test_api_personal_episode.py src/cockpit/tests/test_cli_personal_dogfood.py
+    expect: exit 0；包含真实 HTTP/CLI、隐私与 Ledger 不变断言
+  - cmd: cd projects/omo && git diff --check && cd ../cockpit && git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - projects/omo/src/omo/personal_episode.py
+  - projects/omo/tests/test_personal_episode.py
+  - projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+  - projects/cockpit/src/cockpit/commands/workflow_mesh.py
+  - projects/cockpit/src/cockpit/tests/test_api_personal_episode.py
+  - projects/cockpit/src/cockpit/tests/test_cli_personal_dogfood.py
+  - .omo/_knowledge/retros/BET-Y1Q2-T4-02.md
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q2-T4-01
+  - BET-Y1Q2-T2-02
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    超 2 天、需要新 DDL/M2/第二账本/UI/第二信号源或外部副作用才能交付时，立即缩回 verdict 分区、显式人力字段、
+    只读周汇总和 collecting 状态。没有连续四周真实样本时只能宣称 E3 观测能力完成，不得宣称价值门通过
+  retro: required
 - id: BET-Y1Q2-T8-01
   track: T8-SURFACE
   window: Y1Q2
@@ -2186,6 +2257,7 @@ bets:
   pasw_required: true
   depends_on:
   - BET-Y1Q2-T4-01
+  - BET-Y1Q2-T4-02
   - BET-Y1Q1-T8-01
   risk_level: L2
   human_gate: false
