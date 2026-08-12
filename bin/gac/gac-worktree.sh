@@ -47,6 +47,127 @@ validate_session() {
 # 核心函数在根 lib/pasw-core.sh (脚本在 bin/gac/, 需 ../../lib/ 到仓库根)
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/pasw-core.sh"
 
+# ── Fail-closed verification before --force worktree removal ──────────────
+# Bug: git worktree remove (without --force) returns exit 128 on worktrees
+# with initialized submodules even when everything is clean; --force succeeds.
+# This function is the safety gate: dirty root/submodule → abort before removal.
+verify_clean_for_force_removal() {
+  local wt="$1"
+  local dirty=""
+
+  # Use porcelain rather than only diff/diff --cached: it covers unstaged,
+  # staged, and untracked changes in one fail-closed check.  .subtrees is an
+  # ignored container, not root content; its linked repos are checked below.
+  local root_status root_status_line
+  if ! root_status=$(git -C "$wt" status --porcelain --untracked-files=all 2>/dev/null); then
+    echo "❌ 无法检查 root worktree 状态, 拒绝释放: $wt" >&2
+    return 1
+  fi
+  while IFS= read -r root_status_line; do
+    [ -z "$root_status_line" ] && continue
+    case "$root_status_line" in
+      "?? $PASW_SUBTREE_DIR"|"?? $PASW_SUBTREE_DIR"/*) ;;
+      *) dirty="${dirty}root has changes; " ;;
+    esac
+  done <<< "$root_status"
+
+  # Every initialized ordinary submodule, including nested initialized ones,
+  # must be clean before PASW or root worktree removal.
+  local sub_path sub_status sub_paths
+  if ! sub_paths=$(git -C "$wt" submodule foreach --quiet --recursive 'printf "%s\\n" "$displaypath"' 2>/dev/null); then
+    echo "❌ 无法枚举已初始化子模块, 拒绝释放: $wt" >&2
+    return 1
+  fi
+  while IFS= read -r sub_path; do
+    [ -z "$sub_path" ] && continue
+    if ! sub_status=$(git -C "$wt/$sub_path" status --porcelain --untracked-files=all 2>/dev/null); then
+      echo "❌ 无法检查子模块状态, 拒绝释放: $wt/$sub_path" >&2
+      return 1
+    fi
+    if [ -n "$sub_status" ]; then
+      dirty="${dirty}submodule $sub_path has changes; "
+    fi
+  done <<< "$sub_paths"
+
+  # PASW worktrees live under an ignored root directory, so git status at the
+  # root cannot protect them.  Check each existing PASW worktree explicitly.
+  local sub sub_name pasw_wt pasw_status
+  for sub in $PASW_ISOLATED_SUBS; do
+    sub_name=$(basename "$sub")
+    pasw_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
+    [ -d "$pasw_wt" ] || continue
+    if ! git -C "$pasw_wt" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      dirty="${dirty}PASW $sub has invalid worktree metadata; "
+      continue
+    fi
+    if ! pasw_status=$(git -C "$pasw_wt" status --porcelain --untracked-files=all 2>/dev/null); then
+      echo "❌ 无法检查 PASW worktree 状态, 拒绝释放: $pasw_wt" >&2
+      return 1
+    fi
+    if [ -n "$pasw_status" ]; then
+      dirty="${dirty}PASW $sub has changes; "
+    fi
+  done
+
+  if [ -n "$dirty" ]; then
+    echo "❌ worktree 不干净, 拒绝释放 ($dirty)" >&2
+    git -C "$wt" status --short 2>/dev/null | head -10 >&2 || true
+    return 1
+  fi
+  return 0
+}
+
+# PASW paths are exact, registered git worktrees.  Do not call the legacy
+# pasw_cleanup helper here: it falls back to rm -rf when Git refuses removal,
+# which would turn a failed safety operation into data loss.  This helper is
+# called only after verify_clean_for_force_removal and stops on its first error.
+remove_verified_pasw() {
+  local wt="$1"
+  local sub sub_name pasw_wt pasw_branch registrations
+
+  # Preflight every registered path before touching the first child.  This
+  # cannot make Git removal transactional, but catches invalid registrations
+  # before a partial cleanup is possible.
+  for sub in $PASW_ISOLATED_SUBS; do
+    sub_name=$(basename "$sub")
+    pasw_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
+    [ -d "$pasw_wt" ] || continue
+
+    pasw_branch=$(git -C "$pasw_wt" rev-parse --abbrev-ref HEAD 2>/dev/null) || {
+      echo "❌ PASW worktree 元数据无效, 拒绝释放: $pasw_wt" >&2
+      return 1
+    }
+    if ! registrations=$(git -C "$wt/$sub" worktree list --porcelain 2>/dev/null); then
+      echo "❌ 无法枚举 PASW worktree, 拒绝释放: $pasw_wt" >&2
+      return 1
+    fi
+    if ! printf '%s\n' "$registrations" | grep -Fqx "worktree $pasw_wt"; then
+      echo "❌ PASW worktree 未注册, 拒绝释放: $pasw_wt" >&2
+      return 1
+    fi
+  done
+
+  for sub in $PASW_ISOLATED_SUBS; do
+    sub_name=$(basename "$sub")
+    pasw_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
+    [ -d "$pasw_wt" ] || continue
+    pasw_branch=$(git -C "$pasw_wt" rev-parse --abbrev-ref HEAD 2>/dev/null) || {
+      echo "❌ PASW worktree 元数据无效, 拒绝释放: $pasw_wt" >&2
+      return 1
+    }
+    if ! git -C "$wt/$sub" worktree remove --force "$pasw_wt"; then
+      echo "❌ PASW worktree 清理失败, 拒绝继续释放: $pasw_wt" >&2
+      return 1
+    fi
+    if [ -n "$pasw_branch" ] && [ "$pasw_branch" != "HEAD" ]; then
+      git -C "$wt/$sub" branch -d "$pasw_branch" 2>/dev/null || true
+    fi
+    echo "   🧹 PASW: 已清理 $sub worktree"
+  done
+
+  rmdir "$wt/$PASW_SUBTREE_DIR" 2>/dev/null || true
+}
+
 case "$cmd" in
   claim)
     [ -z "$session" ] && echo "用法: claim <session>" >&2 && exit 1
@@ -223,9 +344,12 @@ except Exception:
       exit 1
     fi
     cd "$WS_ROOT"
-    # PASW: 清理子模块 worktree (在移除 root worktree 前)
-    pasw_cleanup "$wt"
-    git worktree remove "$wt" 2>&1
+    # Fail-closed: verify root untracked + submodules clean before --force removal
+    # (plain git worktree remove returns 128 on worktrees with initialized submodules)
+    verify_clean_for_force_removal "$wt" || exit 1
+    # PASW: only remove verified Git worktrees; no filesystem fallback.
+    remove_verified_pasw "$wt" || exit 1
+    git worktree remove --force "$wt" 2>&1
     echo "✅ worktree 释放: $wt"
     # PASW: 清理 claim 记录
     pasw_claim_clean "$session"
@@ -300,10 +424,12 @@ except Exception:
       # 主仓切 main + 拉最新 (含刚合并的)
       git checkout main 2>&1 | tail -1
       git pull --ff-only "$ROOT_REMOTE" main 2>&1 | tail -2
-      # PASW: 清理子模块 worktree (在移除 root worktree 前)
-      pasw_cleanup "$wt"
-      # 释放 worktree (clean, 因 submit 已 push 全部)
-      git worktree remove "$wt" 2>&1
+      # Fail-closed: verify clean before --force (plain remove fails on initialized submodules)
+      verify_clean_for_force_removal "$wt" || exit 1
+      # PASW: only remove verified Git worktrees; no filesystem fallback.
+      remove_verified_pasw "$wt" || exit 1
+      # 释放 worktree (verified clean; --force needed for initialized submodules)
+      git worktree remove --force "$wt" 2>&1
       echo "✅ worktree 释放: $wt"
       # 删本地分支 (远程已 --delete-branch)
       git branch -D "$branch" 2>&1 | tail -1
