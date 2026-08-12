@@ -14,6 +14,21 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 
+# ── T1-05 D1: independent-clone identity guard ────────────────────
+# New agent clones activate this tracked hook through clone-local
+# core.hooksPath=.githooks. Human shells (AGENT_ID unset) remain unaffected.
+# During migration, legacy isolated worktrees are allowed, while the human
+# integration tree and any nested checkout remain read-only to agent identities.
+if [ -f "$ROOT/bin/gac/agent-clone.py" ]; then
+  _clone_guard_out="$(python3 "$ROOT/bin/gac/agent-clone.py" guard --workspace "$ROOT" --json 2>&1)" || _clone_guard_rc=$?
+  _clone_guard_rc="${_clone_guard_rc:-0}"
+  printf '%s\n' "$_clone_guard_out" | sed 's/^/[clone-guard] /' >&2
+  if [ "$_clone_guard_rc" -ne 0 ]; then
+    echo "[clone-guard] ❌ agent identity is not allowed to commit from this workspace" >&2
+    exit 1
+  fi
+fi
+
 # ── G-CONV.7 / ADR-0220 D3: shared worktree claim-before-commit ──────
 # install-hooks path SSOT (.githooks/pre-commit → .git/hooks/pre-commit).
 # Fail-closed on shared main/detached: unclaimed staged writes are rejected.
@@ -139,4 +154,3 @@ if [ -f "$CONFLICT_CHECK" ]; then
 fi
 
 exit 0
-
