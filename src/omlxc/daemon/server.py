@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import math
 import os
 import socket
 import stat
@@ -35,12 +36,14 @@ class DaemonServer:
         *,
         socket_path: Path,
         server_factory: ServerFactory | None = None,
-        startup_timeout: float = 5.0,
+        startup_timeout: float = 30.0,
         shutdown_timeout: int = 2,
     ) -> None:
         self._application = application
         self.socket_path = socket_path
         self._server_factory = server_factory or _uvicorn_server
+        if not math.isfinite(startup_timeout) or startup_timeout <= 0:
+            raise ValueError("startup timeout must be finite and positive")
         self._startup_timeout = startup_timeout
         if shutdown_timeout <= 0:
             raise ValueError("shutdown timeout must be positive")

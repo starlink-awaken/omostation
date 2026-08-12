@@ -1,17 +1,22 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import plistlib
 import socket
 import stat
 import tempfile
+import time
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import httpx
 import pytest
+from fastapi import FastAPI
 from typer.testing import CliRunner
 
 from omlxc.api import create_app
@@ -124,6 +129,68 @@ async def test_real_tmp_uds_permissions_concurrency_and_restart() -> None:
         finally:
             await server.stop()
         assert server.task_settled
+
+
+@pytest.mark.asyncio
+async def test_default_startup_budget_allows_five_second_lifespan() -> None:
+    @asynccontextmanager
+    async def delayed_lifespan(_app: Any) -> AsyncIterator[None]:
+        await asyncio.sleep(5.05)
+        yield
+
+    with tempfile.TemporaryDirectory(prefix="omlxc-slow-start-", dir="/tmp") as directory:
+        socket_path = Path(directory) / "daemon.sock"
+        server = DaemonServer(FastAPI(lifespan=delayed_lifespan), socket_path=socket_path)
+        started_at = time.monotonic()
+
+        await asyncio.wait_for(server.start(), timeout=7.0)
+        try:
+            assert time.monotonic() - started_at >= 5.0
+            assert socket_path.exists()
+        finally:
+            await server.stop()
+
+        assert server.task_settled
+        assert not socket_path.exists()
+
+
+@pytest.mark.asyncio
+async def test_hung_lifespan_times_out_and_releases_server_resources() -> None:
+    never_ready = asyncio.Event()
+
+    @asynccontextmanager
+    async def hung_lifespan(_app: Any) -> AsyncIterator[None]:
+        await never_ready.wait()
+        yield
+
+    with tempfile.TemporaryDirectory(prefix="omlxc-hung-start-", dir="/tmp") as directory:
+        socket_path = Path(directory) / "daemon.sock"
+        server = DaemonServer(
+            FastAPI(lifespan=hung_lifespan),
+            socket_path=socket_path,
+            startup_timeout=0.05,
+            shutdown_timeout=1,
+        )
+        started_at = time.monotonic()
+
+        with pytest.raises(RuntimeError, match="startup timed out"):
+            await asyncio.wait_for(server.start(), timeout=2.5)
+
+        assert time.monotonic() - started_at < 2.0
+        assert server.task_settled
+        assert not socket_path.exists()
+
+
+@pytest.mark.parametrize("startup_timeout", [0.0, -1.0, float("inf"), float("nan")])
+def test_startup_timeout_must_be_finite_and_positive(
+    startup_timeout: float, tmp_path: Path
+) -> None:
+    with pytest.raises(ValueError, match="startup timeout must be finite and positive"):
+        DaemonServer(
+            create_app(control=HealthControl()),
+            socket_path=tmp_path / "daemon.sock",
+            startup_timeout=startup_timeout,
+        )
 
 
 @pytest.mark.asyncio

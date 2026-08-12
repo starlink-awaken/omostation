@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.1 — 2026-08-12
+
+- Increased the bounded daemon startup budget to accommodate a normal five-second
+  production discovery pass while retaining timeout cleanup for hung lifespans.
+
 ## 3.0.0 — 2026-08-12
 
 - Added the private, installable Python package skeleton.

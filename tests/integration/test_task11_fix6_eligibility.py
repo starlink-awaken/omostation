@@ -231,12 +231,16 @@ async def _uds_client(socket_path: Path) -> httpx.AsyncClient:
 
 
 async def _wait_job(client: httpx.AsyncClient, job_id: str) -> httpx.Response:
-    for _ in range(100):
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + 2.0
+    last_state = "not_observed"
+    while loop.time() < deadline:
         current = await client.get(f"/api/v1/jobs/{job_id}")
-        if current.json()["data"]["state"] in {"succeeded", "failed"}:
+        last_state = current.json()["data"]["state"]
+        if last_state in {"succeeded", "failed"}:
             return current
-        await asyncio.sleep(0)
-    raise AssertionError("job did not reach a terminal state")
+        await asyncio.sleep(0.01)
+    raise AssertionError(f"job did not reach a terminal state; last_state={last_state}")
 
 
 @pytest.mark.asyncio

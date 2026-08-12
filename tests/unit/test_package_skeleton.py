@@ -48,7 +48,7 @@ def test_project_metadata_declares_the_v3_package_and_console_scripts() -> None:
     assert pyproject.is_file()
 
     metadata = tomllib.loads(pyproject.read_text(encoding="utf-8"))
-    assert metadata["project"]["version"] == "3.0.0"
+    assert metadata["project"]["version"] == "3.0.1"
     assert metadata["project"]["requires-python"] == ">=3.13,<3.14"
     assert metadata["project"]["scripts"] == {
         "omlxc": "omlxc.cli:main",
@@ -64,12 +64,22 @@ def test_default_pytest_configuration_excludes_hardware() -> None:
     assert '-m "not hardware"' in metadata["tool"]["pytest"]["ini_options"]["addopts"]
 
 
+def test_ci_smoke_requires_exactly_one_version_agnostic_wheel() -> None:
+    """Patch releases must not require another hard-coded CI wheel filename."""
+    workflow = (REPOSITORY_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+
+    assert "wheels=(dist/omlxc-*.whl)" in workflow
+    assert "if (( ${#wheels[@]} != 1 )); then" in workflow
+    assert 'uv pip install --python "$smoke_dir/bin/python" "${wheels[0]}"' in workflow
+    assert "dist/omlxc-3.0.1-py3-none-any.whl" not in workflow
+
+
 def test_package_exposes_the_v3_release_version() -> None:
     """The importable package is the single source for the release version."""
     result = _run_module("omlxc", "--version")
 
     assert result.returncode == 0
-    assert result.stdout.strip() == "3.0.0"
+    assert result.stdout.strip() == "3.0.1"
 
 
 def test_daemon_module_exposes_private_uds_help() -> None:
@@ -85,7 +95,7 @@ def test_installed_omlxc_console_script_reports_its_version() -> None:
     result = _run_installed_script("omlxc", "--version")
 
     assert result.returncode == 0
-    assert result.stdout.strip() == "3.0.0"
+    assert result.stdout.strip() == "3.0.1"
 
 
 def test_installed_omlxcd_console_script_exposes_private_uds_help() -> None:
