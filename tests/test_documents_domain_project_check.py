@@ -130,6 +130,20 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                     {"id": domain_id, "profile": "content-domain"}
                     for domain_id in domain_ids
                 ],
+                "runtime_jobs": [
+                    {
+                        "id": "creative-manifest-check",
+                        "domain_id": domain_ids[0],
+                        "owner": "l4-kernel",
+                        "action": "validate_manifest",
+                        "schedule": "manual",
+                        "timeout_seconds": 10,
+                        "reads": ["domain_registry", "registered_manifests"],
+                        "writes": [],
+                        "evidence_path": "manifest-validation.json",
+                        "fail_closed": True,
+                    }
+                ],
             },
             allow_unicode=True,
             sort_keys=False,
@@ -189,6 +203,66 @@ def test_valid_domain_project_registry_passes(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload == {"ok": True, "domain_count": 2, "errors": []}
+
+
+def test_runtime_jobs_must_be_a_non_empty_list(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["creative"])
+    project_registry = _project_registry(tmp_path, ["creative"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["runtime_jobs"] = []
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "runtime_jobs must be a non-empty list"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        (
+            "domain_id",
+            "missing",
+            "runtime job creative-manifest-check references unknown domain: missing",
+        ),
+        (
+            "owner",
+            "runtime",
+            "runtime job creative-manifest-check owner must be l4-kernel",
+        ),
+        (
+            "action",
+            "run_script",
+            "runtime job creative-manifest-check action must be validate_manifest",
+        ),
+        (
+            "writes",
+            ["output.txt"],
+            "runtime job creative-manifest-check must not declare Documents writes",
+        ),
+        (
+            "fail_closed",
+            False,
+            "runtime job creative-manifest-check must be fail_closed",
+        ),
+    ],
+)
+def test_runtime_job_contract_fails_closed(
+    field: str, value: object, expected: str, tmp_path: Path
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["creative"])
+    project_registry = _project_registry(tmp_path, ["creative"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["runtime_jobs"][0][field] = value
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [expected]
 
 
 def test_project_registry_must_cover_each_manifest_exactly_once(tmp_path: Path) -> None:

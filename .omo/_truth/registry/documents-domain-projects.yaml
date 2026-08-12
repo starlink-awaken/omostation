@@ -71,6 +71,20 @@ profiles:
     workflow_route: workflows
     execution_policy: workspace_only
 
+runtime_jobs:
+  - id: creative-manifest-check
+    domain_id: creative
+    owner: l4-kernel
+    action: validate_manifest
+    schedule: manual
+    timeout_seconds: 10
+    reads:
+      - domain_registry
+      - registered_manifests
+    writes: []
+    evidence_path: manifest-validation.json
+    fail_closed: true
+
 domains:
   - id: shared
     profile: content-domain

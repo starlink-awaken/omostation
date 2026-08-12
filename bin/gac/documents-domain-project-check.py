@@ -16,6 +16,7 @@ L4_SRC = ROOT / "projects" / "l4-kernel" / "src"
 if str(L4_SRC) not in sys.path:
     sys.path.insert(0, str(L4_SRC))
 
+from documents_domain_jobs import validate_runtime_jobs
 from l4_kernel.manifest_registry import ManifestRegistry
 
 _LOGICAL_BINDING_REGISTRY = "Workspace binding registry `documents-domain-projects`"
@@ -219,6 +220,8 @@ def check_domain_projects(
         errors.append(f"domains missing manifest ids: {', '.join(missing)}")
     if unknown:
         errors.append(f"domains contains unknown manifest ids: {', '.join(unknown)}")
+
+    errors.extend(validate_runtime_jobs(raw.get("runtime_jobs"), project_ids))
 
     selected_ids = list(gateway_domain_ids)
     if len(set(selected_ids)) != len(selected_ids):
