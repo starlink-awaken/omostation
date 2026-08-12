@@ -7,7 +7,7 @@ schema_version: 1
 ---
 meta:
   horizon: 2026H2-2029
-  total_bets: 58
+  total_bets: 82
   windows:
   - Y1Q1
   - Y1Q2
@@ -2164,6 +2164,87 @@ bets:
     需要修改 Orca 安装包、依赖固定 sleep、自动重复注入、强行关闭未知归属 terminal，
     或无法获得真实 tui-idle/Yolo mode/dispatch receipt 时立即停止；只保留诊断和 fail-closed
     wrapper，不宣称 worker ready
+  retro: required
+- id: BET-Y1Q2-T1-10
+  track: T5-ORCH
+  window: Y1Q2
+  title: Unified agent pool declaration, observation and admission preflight v1
+  appetite: 1 day
+  priority: P0
+  status: done
+  done_at: 2026-08-12
+  goal: >-
+    在可信本地单用户环境中，把 Pi、Oh My Pi、OpenCode、CodeBuddy、Claude Code、
+    Crush、Grok、MiMo、AGY、Codex、Reasonix 与 Kilo 统一登记为可治理的候选 worker，
+    通过 CodexBar 和 omlxc 形成只读、脱敏、可验真的观测回执；准入状态与执行调度严格分离，
+    为后续复用 AetherForge/omlxc 与既有调度策略提供事实输入。
+  non_goals:
+  - 新建 scheduler、router、task queue、provider gateway 或第二套 worker 生命周期
+  - 自动选择模型、自动切换账号、自动 fallback、自动重试或执行任何真实 agent/model 请求
+  - 修改用户级 OpenCode、CodexBar、cc-switch、omlxc、AetherForge 配置或读取凭证
+  - 把 CLI 存在、额度未知、Orca dispatch injected 或本地算力 ready 冒充 worker admitted/task completed
+  - 修改 Orca、Multica、Kandev、Ruflo 或开展跨主机、多租户、成本优化与自治晋升
+  done_when:
+  - >-
+      capability-providers 与 workers SSOT 覆盖当前候选池并以 provider_ref 关联；新增候选默认
+      enabled=false、admission_state=declared，使用 argv 列表描述版本探针，禁止 shell command string
+  - >-
+      只读 observer 对每个候选最多执行一次白名单 version probe，不调用模型、不写用户配置；
+      缺 CLI、非零退出、超时或非法 argv 均产生 unavailable/error 回执，绝不转为 admitted
+  - >-
+      CodexBar 仅作为额度 observation adapter，回执删除 email/account/raw payload 等身份数据；
+      malformed、unauthorized、stale 或不可用时 quota 保持 unknown，禁止用代理值补齐
+  - >-
+      omlxc status 作为独立 compute health observation；AetherForge 只登记
+      bos://compute/aetherforge/infer 路由契约，禁止把 compute health 冒充 provider quota 或模型调用成功
+  - >-
+      observer 输出 canonical manifest checksum；独立 verify 传入外部 expected digest 后能发现
+      payload 与内嵌 checksum 同时被替换；版本化真实探针证据证明
+      OpenCode 配置前后 hash 不变、无模型调用、无自动 dispatch，Kilo 未安装时诚实显示 unavailable
+  - >-
+      worker collaboration 标准明确 pool 是既有 OMO worker policy、AetherForge/omlxc compute 与
+      runtime observation 的只读联合投影；真正执行仍须走原 task/Mesh/lease/review/receipt 生命周期
+  verify:
+  - cmd: >-
+      uv run --with pytest --with pyyaml python -m pytest
+      tests/unit/gac/test_agent_pool_observe.py -q
+    expect: exit 0
+  - cmd: >-
+      uv run --with ruff ruff check bin/gac/agent-pool-observe.py
+      tests/unit/gac/test_agent_pool_observe.py
+    expect: exit 0
+  - cmd: >-
+      uv run --with pyyaml python bin/gac/agent-pool-observe.py observe --json
+      > /tmp/agent-pool-observation.json && uv run --with pyyaml python
+      bin/gac/agent-pool-observe.py verify --manifest /tmp/agent-pool-observation.json --json
+    expect: exit 0；只读探针，不调用模型、不修改用户配置
+  - cmd: git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/capability-providers.yaml
+  - .omo/_truth/registry/mof-m2-extensions/capability_provider.yaml
+  - .omo/_truth/registry/workers.yaml
+  - .omo/standards/agent-cli-worker-collaboration.md
+  - bin/gac/agent-pool-observe.py
+  - tests/unit/gac/test_agent_pool_observe.py
+  - projects/omo/src/omo/omo_worker_core.py
+  - projects/omo/src/omo/omo_worker_dispatch.py
+  - projects/omo/tests/test_omo_worker_admission_gate.py
+  - projects/omo/tests/test_workflow_dispatch.py
+  - projects/omo/tests/test_workflow_mesh_task_dogfood.py
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-10.md
+  - docs/evidence/BET-Y1Q2-T1-10-agent-pool-observe.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-09
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    需要写用户配置、读取或持久化凭证/身份、发起模型调用、自动选择/切换/fallback，或必须新增
+    调度器才能继续时立即停止；只保留静态声明、只读观测与 fail-closed 准入前回执
   retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE

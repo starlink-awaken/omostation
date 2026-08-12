@@ -7,7 +7,7 @@ last-reviewed: 2026-06-22
 
 # Agent CLI Worker Collaboration Standard
 
-> Status: active | Version: v1.0 | Scope: external agent CLI workers
+> Status: active | Version: v1.1 | Scope: external agent CLI workers
 > Related: `.omo/tasks/README.md`, `.omo/standards/operation-levels.md`,
 > `.omo/standards/agent-registry-heartbeat.md`,
 > `.omo/_knowledge/summaries/agent-task-contract.md`
@@ -22,10 +22,20 @@ discipline.
 
 Current worker set:
 
-- `codebuddy`
-- `reasonix`
+- admitted by the existing runtime contract: `codebuddy`, `reasonix`
+- declared candidates: `pi`, `oh-my-pi`, `opencode`, `claude-code`, `crush`,
+  `grok`, `mimo`, `agy`, `codex`, `kilo`
 
 Future agent CLIs may be added through the same registry and handoff flow.
+
+`declared` and `observed` do not mean `admitted`. A candidate remains disabled
+until the coordinator supplies a complete transport contract, verifies the
+worker, and explicitly promotes its policy record.
+
+The historical `bin/_archive/capability-router.py` is not a consumer of the v2
+registry. It remains archived and must not be revived as a fallback: it expects
+the retired shell-string `launch` field and has no admission or observation
+contract.
 
 ## 2. Core Rules
 
@@ -36,15 +46,48 @@ Future agent CLIs may be added through the same registry and handoff flow.
 5. **L2/L3 operations require explicit human approval and coordinator release.**
 6. **Sensitive capabilities remain blocked by default.**
 7. **Every worker run must leave reusable evidence and knowledge artifacts.**
+8. **Provider/worker discovery is read-only and never dispatches a worker.**
+9. **Unknown or stale quota remains unknown; proxy values are forbidden.**
+
+### 2.1 Agent Pool Projection
+
+The agent pool is a read-only union, not another scheduler or source of truth:
+
+```text
+CapabilityProvider M2 + capability-providers.yaml  # static CLI/provider facts
+workers.yaml                                        # identity + authority policy
+CodexBar                                            # sanitized quota observation
+cc-switch                                           # catalog observation; no safe CLI in v1
+AetherForge -> omlxc                                # governed local compute route + health
+                         |
+                         v
+agent-pool-observe.py -> checksummed manifest       # observation, not admission
+                         |
+                         v
+existing coordinator -> task/Mesh/lease/review      # only governed execution path
+```
+
+Cloud model inventory may be observed through cc-switch after a safe,
+non-secret CLI contract exists. Until then it is explicitly unavailable to
+automation. Local inference must route through
+`bos://compute/aetherforge/infer`; direct OpenCode-to-local-port bindings are
+not a governed compute path.
+
+CodexBar is an observation adapter only. Its raw output, account identity,
+email and credentials must never be persisted. `omlxc status` proves only
+compute health; it proves neither provider quota nor a successful model call.
+The embedded manifest digest detects accidental corruption. A verifier that
+must detect replacement also needs the separately recorded expected digest;
+the checksum is not a signature or proof of origin.
 
 ## 3. Collaboration Topology
 
 ```text
 Coordinator
   -> .omo/tasks/active/*.yaml               # task SSOT
-  -> .omo/workers/registry.yaml             # worker capabilities + policy
+  -> .omo/_truth/registry/workers.yaml      # worker identity + authority policy
   -> .omo/workers/templates/*               # handoff envelope + prompt contract
-  -> external worker CLI                    # codebuddy / reasonix / future workers
+  -> external worker CLI                    # admitted workers only
   -> task evidence + review notes
   -> review / requeue / archive
 ```
@@ -103,7 +146,7 @@ register -> assign -> acknowledge -> execute -> checkpoint -> review -> close/re
 
 ### 5.1 Register
 
-Worker must exist in `.omo/workers/registry.yaml` with:
+Worker must exist in `.omo/_truth/registry/workers.yaml` with:
 
 - worker ID
 - transport modes
@@ -399,13 +442,14 @@ Forbidden write zones for workers:
 
 To add a new worker CLI:
 
-1. add entry to `.omo/workers/registry.yaml`
-2. define transport mode and launch command
-3. declare capabilities and write scope
-4. assign default max operation level
-5. declare heartbeat + stall policy
-6. run one low-risk pilot task
-7. collect evidence before broad use
+1. add a disabled declaration to `.omo/_truth/registry/workers.yaml`
+2. add the static provider/argv contract to
+   `.omo/_truth/registry/capability-providers.yaml`
+3. obtain a current observation receipt; do not copy runtime facts into either registry
+4. add and verify the governed transport contract
+5. coordinator/reviewer explicitly promotes the worker to `admitted` and enables it
+6. declare capabilities, write scope, heartbeat and stall policy
+7. run one low-risk pilot task and collect evidence before broad use
 
 ## 12. Minimal Success Criteria
 

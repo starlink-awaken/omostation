@@ -42,6 +42,8 @@ defaults:
 workers:
   - id: codebuddy
     enabled: true
+    admission_state: admitted
+    provider_ref: codebuddy
     role: worker
     class: external_agent_cli
     transports:
@@ -84,6 +86,8 @@ workers:
 
   - id: reasonix
     enabled: true
+    admission_state: admitted
+    provider_ref: reasonix
     role: worker
     class: external_agent_cli
     transports:
@@ -119,3 +123,105 @@ workers:
       warning_after_seconds: 900
       lease_expired_after_seconds: 1200
       reclaim_after_seconds: 1800
+
+  # Candidate pool: declarations are discoverable but cannot be dispatched until a
+  # coordinator promotes them and supplies a complete governed transport contract.
+  - id: pi
+    enabled: false
+    admission_state: declared
+    provider_ref: pi
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: oh-my-pi
+    enabled: false
+    admission_state: declared
+    provider_ref: oh-my-pi
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: opencode
+    enabled: false
+    admission_state: declared
+    provider_ref: opencode
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: claude-code
+    enabled: false
+    admission_state: declared
+    provider_ref: claude-code
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, research, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: crush
+    enabled: false
+    admission_state: declared
+    provider_ref: crush
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: grok
+    enabled: false
+    admission_state: declared
+    provider_ref: grok
+    role: worker
+    class: external_agent_cli
+    capabilities: [research, diagnosis, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: mimo
+    enabled: false
+    admission_state: declared
+    provider_ref: mimo
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: agy
+    enabled: false
+    admission_state: declared
+    provider_ref: agy
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: codex
+    enabled: false
+    admission_state: declared
+    provider_ref: codex
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: kilo
+    enabled: false
+    admission_state: declared
+    provider_ref: kilo
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
