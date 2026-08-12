@@ -3,7 +3,7 @@ title: Engineering Delivery Dogfood Scene Card
 status: active
 type: scene-card
 owner: product-architecture
-last-reviewed: 2026-08-07
+last-reviewed: 2026-08-12
 related:
   - ../WORKFLOW-MESH-IMPLEMENTATION.md
   - ../SCENE-CARD-REVIEW-RUNBOOK.md
@@ -24,7 +24,7 @@ approval:
   basis:
     - "9 PRs delivered with evidence chain (#1034~#1089)"
     - "trial evidence documented (schema PASS, preflight honest blocked)"
-    - "fabric red line upheld (activation=forbidden, lifecycle=proposal_only)"
+    - "fabric red line upheld: shadow observation only; activation permits evidence collection, not autonomous execution"
 scene_id: engineering-delivery
 journey_id: intent-to-evidence
 goal: 将已确认的工程意图转化为可验证、可回滚、可消费的交付证据
