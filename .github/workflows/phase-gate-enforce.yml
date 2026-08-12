@@ -49,7 +49,7 @@ jobs:
     name: Documents domain projects
     needs: documents-changes
     if: needs.documents-changes.outputs.required == 'true'
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Checkout required owners
