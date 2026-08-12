@@ -41,7 +41,7 @@ from omlxc.scheduler import PlacementSnapshot
 
 @pytest.fixture
 def short_root() -> Iterator[Path]:
-    with tempfile.TemporaryDirectory(prefix="omlxc-fix8-", dir="/private/tmp") as directory:
+    with tempfile.TemporaryDirectory(prefix="omlxc-fix8-") as directory:
         yield Path(directory)
 
 

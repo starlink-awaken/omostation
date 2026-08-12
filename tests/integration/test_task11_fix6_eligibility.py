@@ -43,7 +43,7 @@ from omlxc.domain.protocols import (
 
 @pytest.fixture
 def short_root() -> Iterator[Path]:
-    with tempfile.TemporaryDirectory(prefix="omlxc-fix6-", dir="/private/tmp") as directory:
+    with tempfile.TemporaryDirectory(prefix="omlxc-fix6-") as directory:
         yield Path(directory)
 
 

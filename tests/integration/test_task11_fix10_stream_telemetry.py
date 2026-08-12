@@ -41,7 +41,7 @@ from omlxc.storage import SQLiteRuntimeStore
 
 @pytest.fixture
 def short_root() -> Iterator[Path]:
-    with tempfile.TemporaryDirectory(prefix="omlxc-fix10-", dir="/private/tmp") as directory:
+    with tempfile.TemporaryDirectory(prefix="omlxc-fix10-") as directory:
         yield Path(directory)
 
 
