@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.0a1 — 2026-08-11
+## 3.0.0 — 2026-08-12
 
 - Added the private, installable Python package skeleton.
 - Added `omlxc` and explicit `omlxcd` placeholder console scripts.

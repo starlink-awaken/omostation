@@ -1,6 +1,6 @@
 # omlxc
 
-`omlxc` is a private local compute hub. Version `3.0.0a1` provides a persistent
+`omlxc` is a private local compute hub. Version `3.0.0` provides a persistent
 `omlxcd` control/data plane, a typed Unix-socket client, a scriptable Typer CLI,
 and a keyboard-first Textual cockpit. Development and tests do not alter existing
 local services, contact real hardware, or replace the stable
@@ -108,7 +108,7 @@ environment and install the wheel there:
 
 ```bash
 uv venv --python 3.13 /tmp/omlxc-smoke
-/tmp/omlxc-smoke/bin/python -m pip install dist/omlxc-3.0.0a1-py3-none-any.whl
+/tmp/omlxc-smoke/bin/python -m pip install dist/omlxc-3.0.0-py3-none-any.whl
 /tmp/omlxc-smoke/bin/omlxc --version
 /tmp/omlxc-smoke/bin/omlxcd
 ```
