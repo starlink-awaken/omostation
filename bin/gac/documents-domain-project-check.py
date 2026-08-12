@@ -93,7 +93,7 @@ def _check_gateway_file(path: Path, domain_id: str) -> list[str]:
 def check_domain_projects(
     domain_registry_path: Path,
     project_registry_path: Path,
-    gateway_domain_ids: Sequence[str] = (),
+    gateway_domain_ids: Sequence[str] | None = None,
 ) -> dict[str, object]:
     """Return a stable, read-only consistency report for both registries."""
 
@@ -223,7 +223,9 @@ def check_domain_projects(
 
     errors.extend(validate_runtime_jobs(raw.get("runtime_jobs"), project_ids))
 
-    selected_ids = list(gateway_domain_ids)
+    selected_ids = (
+        project_ids if gateway_domain_ids is None else list(gateway_domain_ids)
+    )
     if len(set(selected_ids)) != len(selected_ids):
         errors.append("gateway domains contains duplicate ids")
     if selected_ids and not gateway_files:
@@ -253,7 +255,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--domain-registry", type=Path, required=True)
     parser.add_argument("--project-registry", type=Path, required=True)
-    parser.add_argument("--gateway-domain", action="append", default=[])
+    parser.add_argument("--gateway-domain", action="append")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
