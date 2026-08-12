@@ -1,6 +1,6 @@
 name: Submodule Auto-Bump
-# 自动 bump 子模块指针到最新 origin/main, 每 2h 运行一次.
-# 如果有变动, 自动开 PR.
+# 自动 bump 子模块指针到远端 main 的精确 SHA, 每 2h 运行一次.
+# 全量验证通过且有变动才 bump + 开 PR; 任何 fetch/验证失败 → fail-closed, 不开 PR.
 
 on:
   schedule:
@@ -17,23 +17,26 @@ jobs:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
           fetch-depth: 0
 
-      - name: Fetch all submodule remotes
-        run: |
-          git submodule foreach 'git fetch origin main 2>/dev/null || true'
-
       - name: Check for submodule advances
         id: check
         run: |
           chmod +x bin/ssot/submodule-autobump.sh
-          if bash bin/ssot/submodule-autobump.sh --check-only 2>&1; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          fi
+          set +e
+          bash bin/ssot/submodule-autobump.sh --check-only 2>&1
+          rc=$?
+          set -e
+          case "$rc" in
+            0) echo "has_changes=false" >> "$GITHUB_OUTPUT" ;;
+            1) echo "has_changes=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::submodule-autobump check failed (exit $rc)" && exit 1 ;;
+          esac
 
       - name: Apply bump and create PR
         if: steps.check.outputs.has_changes == 'true'
         run: |
+          # bot identity: 脚本 commit 前显式配置 (脚本自身不设置身份)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           bash bin/ssot/submodule-autobump.sh
           BRANCH="auto/submodule-bump-$(date +%Y%m%d%H%M)"
           git checkout -b "$BRANCH"
