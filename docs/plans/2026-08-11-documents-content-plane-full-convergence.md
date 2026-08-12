@@ -58,6 +58,21 @@ ToolBox (独立仓，如需) ─────────────> root regis
 
 每个子仓：focused tests → full tests/lint → commit → push → PR → CI → merge。根仓最后 bump 已合并 commit 指针，运行 GaC gates 后提交 PR。Documents 非 Git 变更通过哈希清单和 root evidence report 取证。
 
+## 2.1 MVP-first 交付边界
+
+全面收敛保留为最终目标，但不再把全部物理迁移和债务清零作为首个可用版本的前置条件。先交付一个可日常使用、可追溯、可继续迭代的 MVP：
+
+- [x] L4 提供统一域身份、内容分类与审计；Cockpit 提供 Workspace 上下文、域上下文、CARDS 与 KEMS 投影。
+- [x] 12 个域在 Workspace binding registry 中各有唯一能力绑定，且不复制域身份 SSOT。
+- [x] Kairon/KOS 提供 metadata-only 内容检查与域 profile；Runtime 提供 Documents 只读、state-only 写入的 owner adapter。
+- [ ] 只先更新并 smoke 三个代表域：`vault`、`work-weijian`、`creative`；它们分别覆盖个人知识、工作知识与创作场景。
+- [ ] 三个域的薄 `CLAUDE.md` / `AGENTS.md` 能恢复正确 `domain_id`，并引导同一个 Workspace MCP、Skills 与 Workflows；不得复制 MCP 命令矩阵或执行实现。
+- [ ] 注册并跑通一条真实、低风险、只读 Documents 的 owner job：dry-run、成功、owner 非零、evidence 与 no-write-back 都有实证。
+- [ ] 完成 Claude/Codex/Zed 本地项目 smoke；ChatGPT web 仍明确为远程插件后续项，不伪装成本地已支持。
+- [ ] MVP 验收后先形成日常使用版本与复盘，再扩到 12/12 域和 44,527 个迁移候选。
+
+**MVP 不包含：** 批量删除/移动、Zotero dataDir 写入、家庭应用迁移、四个外部仓迁移、12 域全量 gateway 修改、runtime/cache 清零、旧脚本退役和最终 T8。这些进入 MVP 后迭代，继续受原确认门、指纹、消费者证据和回滚要求约束。
+
 ---
 
 ### Task 0: 固化全面审计、计划和治理运行
@@ -339,6 +354,8 @@ L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
 - job spec 明确 `reads`、`writes`、`owner`、`schedule`、`timeout`、`evidence_path`、`fail_closed`。
 
 **Tests:** path traversal、Documents write denial、state root 创建、owner timeout、非零 exit 透传、dry-run 无副作用、job ID 唯一。
+
+**Accepted:** Runtime PR #46，squash merge `822656c56ae745e57d6c4aa6f0b64c451d76281c`。`runtime documents run` 只委托显式注册 owner；owner 写入限制在每次运行的新隔离根，Runtime 私有 evidence/control 使用 descriptor-anchored publication；非 macOS 或缺少系统 sandbox 时稳定 fail-closed（125）。
 
 **Commit:** `feat(runtime): add governed Documents plane adapters`
 
