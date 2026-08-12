@@ -111,6 +111,28 @@ def _run_claim(
     )
 
 
+def _run_release(
+    parent: Path, tmp_path: Path, session: str
+) -> subprocess.CompletedProcess[str]:
+    wrapper_dir = _write_git_wrapper(tmp_path)
+    env = {
+        **os.environ,
+        "WS_ROOT": str(parent),
+        "WS_PARENT": str(tmp_path / "worktrees"),
+        "PATH": f"{wrapper_dir}{os.pathsep}{os.environ['PATH']}",
+        "GIT_ALLOW_PROTOCOL": "file",
+    }
+    return subprocess.run(
+        ["bash", str(SCRIPT), "release", session],
+        cwd=parent,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=120,
+    )
+
+
 def _worktree(tmp_path: Path, session: str) -> Path:
     return tmp_path / "worktrees" / f"ws-{session}"
 
@@ -155,6 +177,11 @@ def _assert_complete_pasw(
         expected = _git(parent, "rev-parse", f"HEAD:{submodule}").stdout.strip()
         assert _git(wt / submodule, "rev-parse", "HEAD").stdout.strip() == expected
         assert _git(pasw, "rev-parse", "HEAD").stdout.strip() == expected
+
+
+def _worktree_git_dir(path: Path) -> Path:
+    git_dir = Path(_git(path, "rev-parse", "--git-common-dir").stdout.strip())
+    return git_dir if git_dir.is_absolute() else (path / git_dir).resolve()
 
 
 def test_existing_root_worktree_is_repaired_with_all_pasw(tmp_path: Path) -> None:
@@ -217,6 +244,47 @@ def test_claim_preserves_submodule_paths_with_spaces(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     _assert_complete_pasw(parent, wt, submodule_paths)
     assert _git(wt, "status", "--porcelain").stdout == ""
+
+
+def test_release_removes_spaced_pasw_worktree_and_registration(tmp_path: Path) -> None:
+    submodule_paths = ("modules/alpha", "modules/space alpha")
+    parent = _make_parent_with_two_submodules(tmp_path, submodule_paths)
+    session = "space-release"
+    claim = _run_claim(parent, tmp_path, session)
+    wt = _worktree(tmp_path, session)
+    pasw = _pasw_path(wt, "modules/space alpha")
+    git_dir = _worktree_git_dir(wt / "modules/space alpha")
+    registrations_before = _git(
+        wt / "modules/space alpha", "worktree", "list", "--porcelain"
+    ).stdout
+
+    assert claim.returncode == 0, claim.stderr
+    assert f"worktree {pasw}" in registrations_before
+    release = _run_release(parent, tmp_path, session)
+
+    assert release.returncode == 0, release.stderr + release.stdout
+    assert not wt.exists()
+    assert not pasw.exists()
+    assert not git_dir.exists(), "PASW registration metadata must be removed"
+
+
+def test_release_refuses_dirty_spaced_pasw_and_retains_worktree(tmp_path: Path) -> None:
+    submodule_paths = ("modules/alpha", "modules/space alpha")
+    parent = _make_parent_with_two_submodules(tmp_path, submodule_paths)
+    session = "space-dirty"
+    claim = _run_claim(parent, tmp_path, session)
+    wt = _worktree(tmp_path, session)
+    pasw = _pasw_path(wt, "modules/space alpha")
+    (pasw / "untracked.txt").write_text("must remain\n")
+
+    assert claim.returncode == 0, claim.stderr
+    release = _run_release(parent, tmp_path, session)
+
+    assert release.returncode != 0
+    assert "拒绝释放" in release.stderr
+    assert "PASW modules/space alpha has changes" in release.stderr
+    assert wt.exists()
+    assert (pasw / "untracked.txt").exists()
 
 
 def test_retry_repairs_pasw_after_a_partial_worktree_add_failure(tmp_path: Path) -> None:

@@ -54,6 +54,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../lib/pasw-core.sh"
 verify_clean_for_force_removal() {
   local wt="$1"
   local dirty=""
+  declare -p PASW_ISOLATED_SUBS_ARRAY >/dev/null 2>&1 || PASW_ISOLATED_SUBS_ARRAY=()
 
   # Use porcelain rather than only diff/diff --cached: it covers unstaged,
   # staged, and untracked changes in one fail-closed check.  .subtrees is an
@@ -92,7 +93,8 @@ verify_clean_for_force_removal() {
   # PASW worktrees live under an ignored root directory, so git status at the
   # root cannot protect them.  Check each existing PASW worktree explicitly.
   local sub sub_name pasw_wt pasw_status
-  for sub in $PASW_ISOLATED_SUBS; do
+  for sub in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
+    [ -n "$sub" ] || continue
     sub_name=$(basename "$sub")
     pasw_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
     [ -d "$pasw_wt" ] || continue
@@ -128,7 +130,8 @@ remove_verified_pasw() {
   # Preflight every registered path before touching the first child.  This
   # cannot make Git removal transactional, but catches invalid registrations
   # before a partial cleanup is possible.
-  for sub in $PASW_ISOLATED_SUBS; do
+  for sub in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
+    [ -n "$sub" ] || continue
     sub_name=$(basename "$sub")
     pasw_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
     [ -d "$pasw_wt" ] || continue
@@ -147,7 +150,8 @@ remove_verified_pasw() {
     fi
   done
 
-  for sub in $PASW_ISOLATED_SUBS; do
+  for sub in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
+    [ -n "$sub" ] || continue
     sub_name=$(basename "$sub")
     pasw_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
     [ -d "$pasw_wt" ] || continue
