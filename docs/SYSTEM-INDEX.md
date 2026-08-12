@@ -196,4 +196,5 @@
 → [layer-contract.yaml](layer-contract.yaml) — 分层依赖规则
 → [生成的索引](generated/) — `project-layer-index.md`, `agent-gac-rules.md` 等自动生成的文档
 → [近期报告](closeout/) — 2026-07-15 各轮 closeout 记录
+→ [运行验证证据](evidence/) — 可重放、脱敏的交付验证回执
 → [操作 SOP](operations/) — 运维手册、模板、清单

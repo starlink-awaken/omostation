@@ -7,7 +7,7 @@ schema_version: 1
 ---
 meta:
   horizon: 2026H2-2029
-  total_bets: 57
+  total_bets: 58
   windows:
   - Y1Q1
   - Y1Q2
@@ -2100,6 +2100,69 @@ bets:
     超 2 天、需要真实外部副作用、新协议/DDL、新顶级项目或第二个场景才能闭环时，立即停止扩展；
     只保留可重放 Episode ingress、人工确认和本地 never-send 草稿链路。任何无法通过真实
     Ledger+Agora PEP+HTTP E2E 的部分不得以 mock、schema 或文件存在冒充完成
+  retro: required
+- id: BET-Y1Q2-T1-09
+  track: T5-ORCH
+  window: Y1Q2
+  title: Orca Crush worker readiness handshake and honest dispatch receipt
+  appetite: 1 day
+  priority: P0
+  status: in_progress
+  goal: >-
+    在不修改 Orca 安装包的前提下，为可信本地单用户环境建立一个 fail-closed Crush
+    worker 启动适配器：只有 Orca runtime、Crush TUI 与 yolo 模式均被直接证明可用后，
+    才向该 terminal 注入一次已登记任务，并如实区分 dispatch injected 与模型输入已确认。
+  non_goals:
+  - 修改或重新打包 Orca、Crush
+  - 建设新的通用编排器、自动重试器、进程 reaper 或跨主机 worker 协议
+  - 宣称 Orca dispatch injected 等同模型 input accepted 或任务完成
+  - 接入 Pi、Oh My Pi、Grok、MiMo、AGY、Kilo、CodeBuddy、OpenCode 的统一 provider/quota registry
+  - 自动关闭无法归属的 terminal，或以关闭 terminal 代替 worker release
+  done_when:
+  - >-
+      适配器先验证当前 Crush help 明确支持 --yolo，再验证 Orca app running/runtime ready；
+      创建 terminal 时只使用正确的 crush --yolo 启动命令，不发送 crush '-yolo'
+  - >-
+      terminal 创建后必须等待 Orca tui-idle，并从可读、可写 terminal preview 直接确认
+      Crush 的 Yolo mode；任一步失败均禁止 dispatch，且回执列出残留 terminal
+  - >-
+      对同一调用最多执行一次 orchestration dispatch --inject；成功仅返回
+      state=dispatch_injected、input_accepted=unproven，不把注入回执冒充 TUI/model ACK
+  - >-
+      单元测试覆盖成功顺序、TUI timeout、错误 Crush 参数回落、runtime 未 ready、
+      dispatch 失败不重试与 malformed JSON fail-closed
+  - >-
+      一条无代码写入的真实 Orca+Crush 探针完成 terminal ready → dispatch injected →
+      worker_done 回执；无法从当前 coordinator 归属安全 release 的 terminal 必须记录为残留风险
+  verify:
+  - cmd: >-
+      uv run --with pytest python -m pytest tests/unit/gac/test_orca_worker_start.py -q
+    expect: exit 0
+  - cmd: >-
+      uv run --with ruff ruff check bin/gac/orca-worker-start.py
+      tests/unit/gac/test_orca_worker_start.py
+    expect: exit 0
+  - cmd: >-
+      python3 bin/gac/orca-worker-start.py --help && git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - bin/gac/orca-worker-start.py
+  - tests/unit/gac/test_orca_worker_start.py
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-09.md
+  - docs/evidence/BET-Y1Q2-T1-09-orca-crush-e2e.md
+  - docs/SYSTEM-INDEX.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-08
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    需要修改 Orca 安装包、依赖固定 sleep、自动重复注入、强行关闭未知归属 terminal，
+    或无法获得真实 tui-idle/Yolo mode/dispatch receipt 时立即停止；只保留诊断和 fail-closed
+    wrapper，不宣称 worker ready
   retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
