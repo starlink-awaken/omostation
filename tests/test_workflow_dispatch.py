@@ -29,6 +29,7 @@ def _task(tmp_path: Path, *, approval_ref: str | None = None) -> None:
                     {
                         "id": "worker-a",
                         "enabled": True,
+                        "admission_state": "admitted",
                         "transports": {"cli_prompt": {"command": "worker-a"}},
                     }
                 ]

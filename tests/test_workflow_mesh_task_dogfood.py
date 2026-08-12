@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
+
 from omo.omo_ingress_task_lifecycle import (
     complete_task,
     create_planned_task,
@@ -53,6 +54,7 @@ def _worker_registry(root: Path) -> None:
                     {
                         "id": "worker-dogfood",
                         "enabled": True,
+                        "admission_state": "admitted",
                         "transports": {"cli_prompt": {"command": "worker-dogfood"}},
                     }
                 ]

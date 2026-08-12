@@ -69,24 +69,70 @@ def _find_dispatch_file(runs_dir: Path, dispatch_id: str) -> Path:
     return path
 
 
+def _require_admitted_worker(
+    registry: dict, worker_id: str, transport: str
+) -> dict[str, Any]:
+    """Return an admitted worker or fail before dispatch side effects.
+
+    The registry is the admission SSOT.  A worker that is merely declared (or
+    enabled without an admission decision) must never reach command
+    construction.  Keeping this validation in one helper lets callers place it
+    at their own side-effect boundary while preserving one stable error shape.
+    """
+    worker = next(
+        (
+            candidate
+            for candidate in registry.get("workers", [])
+            if isinstance(candidate, dict) and candidate.get("id") == worker_id
+        ),
+        None,
+    )
+    if worker is None:
+        raise ValueError(
+            f"worker admission denied: worker_id={worker_id} reason=not_registered"
+        )
+    if worker.get("enabled") is not True:
+        raise ValueError(
+            f"worker admission denied: worker_id={worker_id} reason=disabled"
+        )
+    if worker.get("admission_state") != "admitted":
+        raise ValueError(
+            f"worker admission denied: worker_id={worker_id} reason=not_admitted"
+        )
+    transports = worker.get("transports")
+    transport_spec = transports.get(transport) if isinstance(transports, dict) else None
+    if (
+        not isinstance(transport_spec, dict)
+        or not str(transport_spec.get("command", "")).strip()
+    ):
+        raise ValueError(
+            "worker admission denied: "
+            f"worker_id={worker_id} reason=transport_missing transport={transport}"
+        )
+    return worker
+
+
 def _worker_command(registry: dict, worker_id: str, transport: str) -> str:
-    for worker in registry.get("workers", []):
-        if worker.get("id") == worker_id:
-            return worker["transports"][transport]["command"]
-    raise KeyError(f"Worker not registered: {worker_id}")
+    worker = _require_admitted_worker(registry, worker_id, transport)
+    return str(worker["transports"][transport]["command"])
 
 
 def _default_enabled_worker_id(registry: dict) -> str:
     default_role = registry.get("default_worker_role")
     for worker in registry.get("workers", []):
-        if worker.get("enabled", True) and (
-            default_role is None or worker.get("role") == default_role
+        if (
+            worker.get("enabled") is True
+            and worker.get("admission_state") == "admitted"
+            and (default_role is None or worker.get("role") == default_role)
         ):
             return str(worker["id"])
     for worker in registry.get("workers", []):
-        if worker.get("enabled", True):
+        if (
+            worker.get("enabled") is True
+            and worker.get("admission_state") == "admitted"
+        ):
             return str(worker["id"])
-    raise ValueError("no enabled worker is registered")
+    raise ValueError("no admitted worker is registered")
 
 
 def _dispatch_allowed_write_paths(task: dict) -> list[str]:

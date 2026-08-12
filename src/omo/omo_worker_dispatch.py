@@ -20,6 +20,7 @@ from .omo_worker_core import (
     _find_task_file_safe,
     _load_yaml,
     _omo_path,
+    _require_admitted_worker,
     _timestamp_slug,
     _utc_now,
     _worker_command,
@@ -169,6 +170,9 @@ def dispatch_task(
         raise ValueError("; ".join(validation_errors))
     task = _load_yaml(task_file)
     registry = _load_yaml(omo / "_truth" / "registry" / "workers.yaml")
+    # Admission is a hard precondition.  Validate before deriving a dispatch
+    # id or creating any run/envelope/task/Mesh state so rejection is side-effect free.
+    _require_admitted_worker(registry, worker_id, transport)
 
     dispatch_now = now or _utc_now()
     dispatch_id = f"{task_id.lower()}-{worker_id}-{_timestamp_slug(dispatch_now)}"
