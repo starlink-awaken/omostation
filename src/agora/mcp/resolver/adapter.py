@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import queue
+import re
 import subprocess
 import threading
 from dataclasses import dataclass, field
@@ -15,6 +16,67 @@ from .services import BosService, _with_uv_package
 _log = logging.getLogger(__name__)
 
 _STDIO_TIMEOUT_DEFAULT = 10.0
+_MAX_STRUCTURED_STDOUT_BYTES = 64 * 1024
+_MAX_STRUCTURED_ITEMS = 100
+_MAX_STRUCTURED_DEPTH = 8
+_SENSITIVE_KEY_PARTS = (
+    "api_key",
+    "apikey",
+    "authorization",
+    "bearer",
+    "credential",
+    "identity",
+    "password",
+    "path",
+    "secret",
+    "token",
+)
+_SENSITIVE_TEXT = re.compile(r"(?i)(?:bearer\s+|sk-)[A-Za-z0-9._~+\-/=]+")
+
+
+def _redact_structured_value(value: Any, *, depth: int = 0) -> Any:
+    """限制并脱敏来自不可信子进程 stdout 的 JSON。"""
+    if depth >= _MAX_STRUCTURED_DEPTH:
+        return "[TRUNCATED]"
+    if isinstance(value, dict):
+        redacted: dict[str, Any] = {}
+        for index, (raw_key, item) in enumerate(value.items()):
+            if index >= _MAX_STRUCTURED_ITEMS:
+                redacted["[TRUNCATED]"] = True
+                break
+            key = str(raw_key)
+            normalized = key.lower().replace("-", "_")
+            if any(part in normalized for part in _SENSITIVE_KEY_PARTS):
+                redacted[key] = "[REDACTED]"
+            else:
+                redacted[key] = _redact_structured_value(item, depth=depth + 1)
+        return redacted
+    if isinstance(value, list):
+        items = [
+            _redact_structured_value(item, depth=depth + 1)
+            for item in value[:_MAX_STRUCTURED_ITEMS]
+        ]
+        if len(value) > _MAX_STRUCTURED_ITEMS:
+            items.append("[TRUNCATED]")
+        return items
+    if isinstance(value, str):
+        return _SENSITIVE_TEXT.sub("[REDACTED]", value[:4096])
+    return value
+
+
+def _parse_structured_stdout(stdout: str) -> Any | None:
+    """仅解析有界 JSON；非结构化或过大输出不进入错误 envelope。"""
+    raw = stdout.strip()
+    if (
+        not raw
+        or len(raw.encode("utf-8", errors="replace")) > _MAX_STRUCTURED_STDOUT_BYTES
+    ):
+        return None
+    try:
+        parsed = json.loads(raw)
+    except (json.JSONDecodeError, RecursionError):
+        return None
+    return _redact_structured_value(parsed)
 
 
 class _McpStdioSession:
@@ -181,14 +243,22 @@ class StdioAdapter:
             )
             pid = proc.pid
             request = json.dumps(self._build_stdio_request(args, kwargs))
-            stdout, stderr = proc.communicate(input=request, timeout=self.timeout)
+            stdout, _stderr = proc.communicate(input=request, timeout=self.timeout)
             if proc.returncode != 0:
-                return {
+                structured = _parse_structured_stdout(stdout)
+                error = "subprocess_exit_nonzero"
+                if isinstance(structured, dict) and "error" in structured:
+                    error = structured["error"]
+                result = {
                     "status": "error",
-                    "error": stderr or f"exit code {proc.returncode}",
+                    "error": error,
+                    "exit_code": proc.returncode,
                     "pid": pid,
                     "alive_at_spawn": True,
                 }
+                if structured is not None:
+                    result["result"] = structured
+                return result
             try:
                 result = json.loads(stdout)
             except json.JSONDecodeError:
@@ -202,6 +272,10 @@ class StdioAdapter:
         except subprocess.TimeoutExpired:
             if proc:
                 proc.kill()
+                try:
+                    proc.communicate(timeout=2.0)
+                except subprocess.TimeoutExpired:
+                    proc.wait(timeout=2.0)
             return {
                 "status": "error",
                 "error": "timeout",

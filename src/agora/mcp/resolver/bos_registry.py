@@ -13,12 +13,17 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import pathlib
 import re
 from typing import Any
 
 import yaml
+
+_log = logging.getLogger(__name__)
+_REQUIRED_ROUTE_FIELDS = ("uri", "domain", "action")
+_ROUTABLE_STATUSES = {"active", "deprecated"}
 
 
 def _resolve_agora_root() -> pathlib.Path:
@@ -92,19 +97,13 @@ def _dict_to_bos_service(data: dict[str, Any]) -> object:
     )
 
 
-def load_from_yaml(path: str | pathlib.Path | None = None) -> list:
-    """从 YAML 文件加载 BOS 服务注册表。
+def _load_from_yaml_with_diagnostics(
+    path: str | pathlib.Path | None = None,
+) -> tuple[list, list[str]]:
+    """加载可路由声明，并逐条隔离无效行。"""
 
-    Args:
-        path: YAML 文件路径。None 则使用环境变量 AGORA_BOS_REGISTRY 或默认路径。
+    from agora.mcp.resolver.services import BOS_URI_PATTERN
 
-    Returns:
-        list[BosService]: 解析后的服务列表。
-
-    Raises:
-        FileNotFoundError: 指定路径不存在。
-        yaml.YAMLError: YAML 格式错误。
-    """
     if path is None:
         env_path = os.environ.get("AGORA_BOS_REGISTRY", "")
         path = pathlib.Path(env_path) if env_path else DEFAULT_REGISTRY_PATH
@@ -119,6 +118,9 @@ def load_from_yaml(path: str | pathlib.Path | None = None) -> list:
 
     if not data or "services" not in data:
         raise ValueError(f"YAML 注册表缺少 'services' 根键: {path}")
+    entries = data["services"]
+    if not isinstance(entries, list):
+        raise ValueError(f"YAML 注册表 'services' 必须是列表: {path}")
 
     # ADR-0181 Phase 2: status=deprecated 默认不进入可路由表
     # P0-1: status=unimplemented 永远不进入可路由表（声明/执行鸿沟修复）
@@ -127,19 +129,52 @@ def load_from_yaml(path: str | pathlib.Path | None = None) -> list:
     include_deprecated = (
         os.environ.get("AGORA_BOS_INCLUDE_DEPRECATED", "0").strip() == "1"
     )
-    if not include_deprecated:
-        data["services"] = [
-            s for s in data["services"] if s.get("status", "active") != "deprecated"
-        ]
-    # unimplemented 始终排除
-    data["services"] = [
-        s for s in data["services"] if s.get("status", "active") != "unimplemented"
-    ]
-
     services = []
-    for entry in data["services"]:
-        svc = _dict_to_bos_service(entry)
-        services.append(svc)
+    diagnostics: list[str] = []
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            diagnostics.append(f"[{index}] registry row {index}: 必须是映射")
+            continue
+
+        status = str(entry.get("status", "active")).strip().lower()
+        if status == "unimplemented":
+            continue
+        if status == "deprecated" and not include_deprecated:
+            continue
+        if status not in _ROUTABLE_STATUSES:
+            diagnostics.append(f"[{index}] registry row {index}: 非可路由 status")
+            continue
+
+        missing = [field for field in _REQUIRED_ROUTE_FIELDS if not entry.get(field)]
+        if missing:
+            diagnostics.append(
+                f"[{index}] registry row {index}: 缺少必填字段: {', '.join(missing)}"
+            )
+            continue
+        uri = entry["uri"]
+        if not isinstance(uri, str) or BOS_URI_PATTERN.fullmatch(uri) is None:
+            diagnostics.append(f"[{index}] registry row {index}: URI 格式错误")
+            continue
+
+        try:
+            services.append(_dict_to_bos_service(entry))
+        except (TypeError, ValueError) as exc:
+            diagnostics.append(
+                f"[{index}] registry row {index}: 声明无效 ({type(exc).__name__})"
+            )
+
+    return services, diagnostics
+
+
+def load_from_yaml(path: str | pathlib.Path | None = None) -> list:
+    """从 YAML 文件加载 BOS 服务注册表。
+
+    单条无效声明会失败闭合并写入不含声明内容的诊断日志；其余有效声明继续
+    加载，避免无关坏行导致整张注册表退回硬编码 fallback。
+    """
+    services, diagnostics = _load_from_yaml_with_diagnostics(path)
+    for diagnostic in diagnostics:
+        _log.warning("Skipping invalid BOS %s", diagnostic)
 
     return services
 
@@ -168,9 +203,8 @@ def registry_info(path: str | pathlib.Path | None = None) -> dict[str, Any]:
 
 def validate_registry(path: str | pathlib.Path | None = None) -> list[str]:
     """校验注册表的完整性，返回错误列表（空 = 全通过）。"""
-    errors: list[str] = []
     try:
-        services = load_from_yaml(path)
+        services, errors = _load_from_yaml_with_diagnostics(path)
     except (FileNotFoundError, ValueError, yaml.YAMLError, KeyError) as e:
         return [f"加载失败: {e}"]
 

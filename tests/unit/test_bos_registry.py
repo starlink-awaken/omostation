@@ -114,6 +114,72 @@ class TestBosRegistryLoader:
         with pytest.raises(yaml.YAMLError):
             load_from_yaml(invalid_yaml_path)
 
+    def test_load_skips_bad_row_without_discarding_valid_routes(self, tmp_path, caplog):
+        """单条坏声明必须失败闭合，但不能让无关的有效路由退回硬编码表。"""
+        registry = tmp_path / "bos-services.yaml"
+        registry.write_text(
+            """services:
+  - domain: compute
+    package: broken
+    action: infer
+    transport: stdio
+    command: ["false"]
+  - uri: "bos://compute/aetherforge/infer"
+    domain: compute
+    package: aetherforge
+    action: infer
+    transport: stdio
+    command: ["python", "-m", "aetherforge.cli", "infer"]
+""",
+            encoding="utf-8",
+        )
+
+        from agora.mcp.resolver.bos_registry import load_from_yaml
+
+        with caplog.at_level("WARNING"):
+            services = load_from_yaml(registry)
+
+        assert [service.uri for service in services] == [
+            "bos://compute/aetherforge/infer"
+        ]
+        assert "row 0" in caplog.text
+        assert "uri" in caplog.text
+
+    def test_load_skips_malformed_uri_without_logging_row_content(
+        self, tmp_path, caplog
+    ):
+        """非空但非法的 URI 必须逐条失败闭合，且诊断不能泄漏声明内容。"""
+        malformed_uri = "https://private.invalid/identity-path"
+        registry = tmp_path / "bos-services.yaml"
+        registry.write_text(
+            f"""services:
+  - uri: "{malformed_uri}"
+    domain: compute
+    package: broken
+    action: infer
+    transport: stdio
+    command: ["false"]
+  - uri: "bos://compute/aetherforge/infer"
+    domain: compute
+    package: aetherforge
+    action: infer
+    transport: stdio
+    command: ["python", "-m", "aetherforge.cli", "infer"]
+""",
+            encoding="utf-8",
+        )
+
+        from agora.mcp.resolver.bos_registry import load_from_yaml
+
+        with caplog.at_level("WARNING"):
+            services = load_from_yaml(registry)
+
+        assert [service.uri for service in services] == [
+            "bos://compute/aetherforge/infer"
+        ]
+        assert "row 0" in caplog.text
+        assert malformed_uri not in caplog.text
+
 
 class TestBosRegistryInfo:
     """注册表统计信息测试。"""
@@ -177,7 +243,7 @@ class TestBosRegistryValidate:
             os.unlink(path)
 
     def test_validate_detect_missing_uri(self):
-        """检测缺少 uri 字段（加载时 KeyError）。"""
+        """逐条报告缺少 uri，且不把整张注册表误报为加载失败。"""
         bad_yaml = """services:
   - domain: memory
     action: test
@@ -192,7 +258,8 @@ class TestBosRegistryValidate:
             from agora.mcp.resolver.bos_registry import validate_registry
 
             errors = validate_registry(path)
-            assert any("加载失败" in e for e in errors)
+            assert any("缺少必填字段" in e and "uri" in e for e in errors)
+            assert not any("加载失败" in e for e in errors)
         finally:
             os.unlink(path)
 

@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import sys
 import types
 
@@ -627,6 +628,156 @@ class TestStdioAdapterProtocol:
         result = adapter.call(svc, {"x": 1})
         assert result["status"] == "ok"
         assert result["result"] == {"args": [{"x": 1}], "kwargs": {}}
+
+    def test_stdio_nonzero_preserves_bounded_structured_error_without_secrets(self):
+        """非零退出保留 typed JSON stdout，但 stderr 与敏感字段不得外泄。"""
+        from agora.mcp.resolver.adapter import StdioAdapter
+
+        script = """
+import json, sys
+print(json.dumps({
+    "error": {"code": "gateway_auth_failed", "message": "denied"},
+    "status": 401,
+    "api_key": "stdout-secret",
+}))
+print("stderr-secret", file=sys.stderr)
+raise SystemExit(7)
+"""
+        svc = BosService(
+            uri="bos://compute/aetherforge/infer",
+            domain="compute",
+            package="aetherforge",
+            action="infer",
+            transport="stdio",
+            command=[sys.executable, "-c", script],
+        )
+
+        result = StdioAdapter(timeout=2.0).call(svc)
+
+        assert result["status"] == "error"
+        assert result["exit_code"] == 7
+        assert result["result"]["error"] == {
+            "code": "gateway_auth_failed",
+            "message": "denied",
+        }
+        assert result["result"]["api_key"] == "[REDACTED]"
+        serialized = json.dumps(result)
+        assert "stdout-secret" not in serialized
+        assert "stderr-secret" not in serialized
+
+    def test_stdio_nonzero_redacts_nested_path_and_identity_keys(self):
+        """path/identity 组合键在任意嵌套层都必须失败闭合脱敏。"""
+        from agora.mcp.resolver.adapter import StdioAdapter
+
+        script = """
+import json
+print(json.dumps({
+    "error": {
+        "code": "gateway_failed",
+        "details": {
+            "workspacePath": "/Users/private/workspace",
+            "ssh-identity-file": "/Users/private/.ssh/id_ed25519",
+            "nested": [{"caller_identity": "private-user", "safe": "public-code"}],
+        },
+    },
+    "path_identity_bundle": "private-bundle",
+}))
+raise SystemExit(8)
+"""
+        svc = BosService(
+            uri="bos://compute/aetherforge/infer",
+            domain="compute",
+            package="aetherforge",
+            action="infer",
+            transport="stdio",
+            command=[sys.executable, "-c", script],
+        )
+
+        result = StdioAdapter(timeout=2.0).call(svc)
+
+        assert result["status"] == "error"
+        assert result["exit_code"] == 8
+        assert result["error"]["details"]["workspacePath"] == "[REDACTED]"
+        assert result["error"]["details"]["ssh-identity-file"] == "[REDACTED]"
+        assert result["error"]["details"]["nested"] == [
+            {"caller_identity": "[REDACTED]", "safe": "public-code"}
+        ]
+        assert result["result"]["path_identity_bundle"] == "[REDACTED]"
+        serialized = json.dumps(result)
+        assert "/Users/private" not in serialized
+        assert "private-user" not in serialized
+        assert "private-bundle" not in serialized
+
+    def test_stdio_nonzero_drops_oversized_structured_stdout(self):
+        """过大的失败 stdout 不能进入 BOS envelope。"""
+        from agora.mcp.resolver.adapter import StdioAdapter
+
+        script = """
+import json
+print(json.dumps({"error": {"code": "too_large"}, "blob": "x" * 70000}))
+raise SystemExit(9)
+"""
+        svc = BosService(
+            uri="bos://compute/aetherforge/infer",
+            domain="compute",
+            package="aetherforge",
+            action="infer",
+            transport="stdio",
+            command=[sys.executable, "-c", script],
+        )
+
+        result = StdioAdapter(timeout=2.0).call(svc)
+
+        assert result["status"] == "error"
+        assert result["exit_code"] == 9
+        assert result["error"] == "subprocess_exit_nonzero"
+        assert "result" not in result
+
+    def test_stdio_timeout_kills_and_reaps_child(self, monkeypatch):
+        """超时必须同时 kill 和 communicate，不能留下僵尸子进程。"""
+        import subprocess
+
+        from agora.mcp.resolver.adapter import StdioAdapter
+
+        class TimedOutProcess:
+            pid = 1234
+            returncode = None
+
+            def __init__(self):
+                self.communicate_calls = 0
+                self.killed = False
+                self.reaped = False
+
+            def communicate(self, *, input=None, timeout=None):
+                self.communicate_calls += 1
+                if self.communicate_calls == 1:
+                    raise subprocess.TimeoutExpired(["fake"], timeout)
+                self.reaped = True
+                self.returncode = -9
+                return "", ""
+
+            def kill(self):
+                self.killed = True
+
+        proc = TimedOutProcess()
+        monkeypatch.setattr(
+            "agora.mcp.resolver.adapter.subprocess.Popen", lambda *_a, **_kw: proc
+        )
+        svc = BosService(
+            uri="bos://compute/aetherforge/infer",
+            domain="compute",
+            package="aetherforge",
+            action="infer",
+            transport="stdio",
+            command=["fake"],
+        )
+
+        result = StdioAdapter(timeout=0.01).call(svc)
+
+        assert result["status"] == "error"
+        assert result["error"] == "timeout"
+        assert proc.killed is True
+        assert proc.reaped is True
 
     def test_mcp_stdio_full_session_ok(self):
         """transport=mcp_stdio 走完整 initialize / initialized / tools/call."""
