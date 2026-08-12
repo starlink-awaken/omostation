@@ -115,6 +115,13 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                         "instruction_file": "AGENTS.md",
                         "mcp_scope": "client",
                     },
+                    "chatgpt_web": {
+                        "instruction_file": None,
+                        "mcp_scope": "public_https_or_secure_tunnel",
+                        "requires_developer_mode": True,
+                        "setup_ref": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
+                        "tunnel_ref": "https://developers.openai.com/api/docs/guides/secure-mcp-tunnels",
+                    },
                 },
                 "profiles": {
                     "content-domain": {
@@ -216,6 +223,66 @@ def test_valid_domain_project_registry_passes(tmp_path: Path) -> None:
         "gateway_count": 2,
         "errors": [],
     }
+
+
+@pytest.mark.parametrize(
+    ("path", "value", "expected"),
+    [
+        (("clients",), None, "clients must be a mapping"),
+        (
+            ("clients", "chatgpt_web"),
+            None,
+            "clients.chatgpt_web must be a mapping",
+        ),
+        (
+            ("clients", "chatgpt_web", "instruction_file"),
+            "AGENTS.md",
+            "clients.chatgpt_web.instruction_file must be null",
+        ),
+        (
+            ("clients", "chatgpt_web", "mcp_scope"),
+            "user_or_project",
+            "clients.chatgpt_web.mcp_scope must be public_https_or_secure_tunnel",
+        ),
+        (
+            ("clients", "chatgpt_web", "requires_developer_mode"),
+            False,
+            "clients.chatgpt_web.requires_developer_mode must be true",
+        ),
+        (
+            ("clients", "chatgpt_web", "setup_ref"),
+            "https://example.test/connect-chatgpt",
+            "clients.chatgpt_web.setup_ref must be https://developers.openai.com/plugins/deploy/connect-chatgpt",
+        ),
+        (
+            ("clients", "chatgpt_web", "tunnel_ref"),
+            "https://example.test/secure-mcp-tunnels",
+            "clients.chatgpt_web.tunnel_ref must be https://developers.openai.com/api/docs/guides/secure-mcp-tunnels",
+        ),
+    ],
+)
+def test_chatgpt_web_contract_fails_closed(
+    tmp_path: Path,
+    path: tuple[str, ...],
+    value: object,
+    expected: str,
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    target = raw
+    for key in path[:-1]:
+        target = target[key]
+    if value is None:
+        target.pop(path[-1])
+    else:
+        target[path[-1]] = value
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [expected]
 
 
 def test_default_gateway_check_fails_if_registered_projection_is_missing(

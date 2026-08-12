@@ -37,6 +37,13 @@ _COMMAND_WRAPPER = re.compile(r"\b(?:env|command|xargs)\b")
 _APP_ROOT_EXECUTION = re.compile(
     r"^\s*(?:\$\s*)?(?:make|npm|bun)\b|(?:^|\s)\./(?:app|src|bin|scripts)(?:/|\b)"
 )
+_CHATGPT_WEB_BINDING = {
+    "instruction_file": None,
+    "mcp_scope": "public_https_or_secure_tunnel",
+    "requires_developer_mode": True,
+    "setup_ref": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
+    "tunnel_ref": "https://developers.openai.com/api/docs/guides/secure-mcp-tunnels",
+}
 
 
 def _execution_fragments(text: str) -> Sequence[str]:
@@ -154,6 +161,14 @@ def check_domain_projects(
     if not isinstance(clients, dict):
         errors.append("clients must be a mapping")
     else:
+        chatgpt_web = clients.get("chatgpt_web")
+        if not isinstance(chatgpt_web, dict):
+            errors.append("clients.chatgpt_web must be a mapping")
+        else:
+            for field, expected in _CHATGPT_WEB_BINDING.items():
+                if chatgpt_web.get(field) != expected:
+                    required = "null" if expected is None else str(expected).lower()
+                    errors.append(f"clients.chatgpt_web.{field} must be {required}")
         gateway_files = sorted(
             {
                 instruction_file
@@ -228,7 +243,7 @@ def check_domain_projects(
     )
     if len(set(selected_ids)) != len(selected_ids):
         errors.append("gateway domains contains duplicate ids")
-    if selected_ids and not gateway_files:
+    if selected_ids and isinstance(clients, dict) and not gateway_files:
         errors.append("clients must expose at least one instruction file")
     for domain_id in sorted(set(selected_ids)):
         if domain_id not in manifest_ids or domain_id not in project_ids:

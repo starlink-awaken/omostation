@@ -103,3 +103,11 @@ exact confirmation gate.
    dry-run, success, owner non-zero, evidence, and no-write-back behavior.
 3. Run local project smoke in Claude/Codex/Zed, then close the MVP acceptance
    report before expanding to 12/12 domains.
+
+## 2026-08-12 correction — ChatGPT MCP routing
+
+Official OpenAI evidence supersedes the prior “remote plugin only” assumption.
+ChatGPT developer mode connects either a public HTTPS MCP endpoint or a Secure
+MCP Tunnel; the tunnel can forward to a private stdio or HTTP MCP server without
+public ingress. This task did not provision a tunnel: credentials and external
+Platform state remain a separate, owner-confirmed operation.

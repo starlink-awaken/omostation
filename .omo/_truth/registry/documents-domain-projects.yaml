@@ -57,8 +57,11 @@ clients:
     note: "For Zed/ZCode-like clients, use AGENTS.md plus the client MCP settings."
   chatgpt_web:
     instruction_file: null
-    mcp_scope: remote_plugin_required
-    note: "The web client does not consume local MCP config; use a reviewed remote plugin before enabling."
+    mcp_scope: public_https_or_secure_tunnel
+    requires_developer_mode: true
+    setup_ref: "https://developers.openai.com/plugins/deploy/connect-chatgpt"
+    tunnel_ref: "https://developers.openai.com/api/docs/guides/secure-mcp-tunnels"
+    note: "Developer mode connects a public HTTPS MCP endpoint or Secure MCP Tunnel; local Claude/Codex JSON is not consumed."
 
 profiles:
   content-domain:
