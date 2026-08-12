@@ -495,7 +495,8 @@ except Exception:
       [ -d "$wt_path" ] || continue
       wt_name=$(basename "$wt_path")
       sub_list=""
-      for sub in $PASW_ISOLATED_SUBS; do
+      for sub in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
+        [ -n "$sub" ] || continue
         sub_name=$(basename "$sub")
         [ -d "$wt_path/$PASW_SUBTREE_DIR/$sub_name" ] && sub_list="$sub_list $sub_name"
       done

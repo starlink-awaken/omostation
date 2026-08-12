@@ -10,6 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "gac-worktree.sh"
+CORE = ROOT / "lib" / "pasw-core.sh"
 SUBMODULES = ("modules/alpha", "modules/beta")
 
 
@@ -124,6 +125,26 @@ def _run_release(
     }
     return subprocess.run(
         ["bash", str(SCRIPT), "release", session],
+        cwd=parent,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=120,
+    )
+
+
+def _run_list(parent: Path, tmp_path: Path) -> subprocess.CompletedProcess[str]:
+    wrapper_dir = _write_git_wrapper(tmp_path)
+    env = {
+        **os.environ,
+        "WS_ROOT": str(parent),
+        "WS_PARENT": str(tmp_path / "worktrees"),
+        "PATH": f"{wrapper_dir}{os.pathsep}{os.environ['PATH']}",
+        "GIT_ALLOW_PROTOCOL": "file",
+    }
+    return subprocess.run(
+        ["bash", str(SCRIPT), "list"],
         cwd=parent,
         env=env,
         capture_output=True,
@@ -285,6 +306,26 @@ def test_release_refuses_dirty_spaced_pasw_and_retains_worktree(tmp_path: Path) 
     assert "PASW modules/space alpha has changes" in release.stderr
     assert wt.exists()
     assert (pasw / "untracked.txt").exists()
+
+
+def test_pasw_core_has_no_legacy_destructive_cleanup() -> None:
+    source = CORE.read_text()
+
+    assert "pasw_cleanup()" not in source
+    assert 'rm -rf "$sub_wt"' not in source
+
+
+def test_list_displays_spaced_pasw_worktree(tmp_path: Path) -> None:
+    submodule_paths = ("modules/alpha", "modules/space alpha")
+    parent = _make_parent_with_two_submodules(tmp_path, submodule_paths)
+    session = "space-list"
+    claim = _run_claim(parent, tmp_path, session)
+
+    assert claim.returncode == 0, claim.stderr
+    listed = _run_list(parent, tmp_path)
+
+    assert listed.returncode == 0, listed.stderr
+    assert f"ws-{session}: alpha space alpha" in listed.stdout
 
 
 def test_retry_repairs_pasw_after_a_partial_worktree_add_failure(tmp_path: Path) -> None:

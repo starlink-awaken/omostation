@@ -2,7 +2,7 @@
 # lib/pasw-core.sh — PASW (Per-Agent Submodule Worktree) 核心函数库
 #
 # 被 gac-worktree.sh source 使用.
-# 提供: pasw_create, pasw_cleanup, pasw_claim_*
+# 提供: pasw_create, pasw_claim_*
 
 # 子模块 worktree 存放路径 (root worktree 内)
 export PASW_SUBTREE_DIR=".subtrees"
@@ -138,26 +138,6 @@ if [ -r "$PASW_REPOSITORY_ROOT/.gitmodules" ]; then
   pasw_resolve_isolated_subs "$PASW_REPOSITORY_ROOT" >/dev/null || true
 fi
 unset PASW_LIBRARY_ROOT PASW_REPOSITORY_ROOT
-
-pasw_cleanup() {
-  local wt="$1"
-  local cleaned=0
-  for sub in $PASW_ISOLATED_SUBS; do
-    local sub_name
-    sub_name=$(basename "$sub")
-    local sub_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
-    local sub_branch
-    if [ -d "$sub_wt" ]; then
-      sub_branch=$(git -C "$sub_wt" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-      ( cd "$wt/$sub" && git worktree remove "$sub_wt" 2>/dev/null && [ -n "$sub_branch" ] && [ "$sub_branch" != "HEAD" ] && git branch -d "$sub_branch" 2>/dev/null || true ) && {
-        echo "   🧹 PASW: 已清理 $sub worktree"
-        cleaned=$((cleaned + 1))
-      } || { echo "   ⚠️  $sub 清理失败, 强制移除"; rm -rf "$sub_wt" 2>/dev/null || true; }
-    fi
-  done
-  rmdir "$wt/$PASW_SUBTREE_DIR" 2>/dev/null || true
-  [ "$cleaned" -gt 0 ] && echo "   ✅ PASW: $cleaned 个子模块 worktree 已清理"
-}
 
 pasw_claim_record() {
   local session="$1" wt="$2"
