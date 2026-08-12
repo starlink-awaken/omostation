@@ -428,7 +428,9 @@ def test_domain_facts_audit_reports_present_file_and_local_date(
 
     assert result["status"] == "ok"
     assert result["summary"] == {"present": 1, "missing": 0, "unreadable": 0, "invalid": 0}
-    assert result["domains"][0]["facts"]["modified_on"] == datetime.fromtimestamp(facts.stat().st_mtime).date().isoformat()
+    assert (
+        result["domains"][0]["facts"]["modified_on"] == datetime.fromtimestamp(facts.stat().st_mtime).date().isoformat()
+    )
 
 
 def test_domain_facts_audit_reports_missing_and_static_artifacts_as_violations(

@@ -117,9 +117,7 @@ def cmd_facts_audit(args: Namespace) -> int:
         summary_text = " ".join(
             f"{name}={summary.get(name, 0)}" for name in ("present", "missing", "unreadable", "invalid")
         )
-        console.print(
-            f"[bold cyan]Documents facts 审计[/] {result.get('status', 'unavailable')} · {summary_text}"
-        )
+        console.print(f"[bold cyan]Documents facts 审计[/] {result.get('status', 'unavailable')} · {summary_text}")
         for domain in result.get("domains", []):
             facts = domain.get("facts", {})
             modified_on = facts.get("modified_on")
