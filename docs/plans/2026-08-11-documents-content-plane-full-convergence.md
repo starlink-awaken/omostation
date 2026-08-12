@@ -65,11 +65,11 @@ ToolBox (独立仓，如需) ─────────────> root regis
 - [x] L4 提供统一域身份、内容分类与审计；Cockpit 提供 Workspace 上下文、域上下文、CARDS 与 KEMS 投影。
 - [x] 12 个域在 Workspace binding registry 中各有唯一能力绑定，且不复制域身份 SSOT。
 - [x] Kairon/KOS 提供 metadata-only 内容检查与域 profile；Runtime 提供 Documents 只读、state-only 写入的 owner adapter。
-- [ ] 只先更新并 smoke 三个代表域：`vault`、`work-weijian`、`creative`；它们分别覆盖个人知识、工作知识与创作场景。
-- [ ] 三个域的薄 `CLAUDE.md` / `AGENTS.md` 能恢复正确 `domain_id`，并引导同一个 Workspace MCP、Skills 与 Workflows；不得复制 MCP 命令矩阵或执行实现。
-- [ ] 注册并跑通一条真实、低风险、只读 Documents 的 owner job：dry-run、成功、owner 非零、evidence 与 no-write-back 都有实证。
-- [ ] 完成 Claude/Codex/Zed 本地项目 smoke；ChatGPT web 仍明确为远程插件后续项，不伪装成本地已支持。
-- [ ] MVP 验收后先形成日常使用版本与复盘，再扩到 12/12 域和 44,527 个迁移候选。
+- [x] 先更新并 smoke 三个代表域：`vault`、`work-weijian`、`creative`；它们分别覆盖个人知识、工作知识与创作场景。
+- [x] 三个域的薄 `CLAUDE.md` / `AGENTS.md` 能恢复正确 `domain_id`，并引导同一个 Workspace MCP、Skills 与 Workflows；不得复制 MCP 命令矩阵或执行实现。
+- [x] 注册并跑通一条真实、低风险、只读 Documents 的 owner job：dry-run、成功、owner 非零、evidence 与 no-write-back 都有实证。
+- [x] 完成 Claude/Codex/Zed 配置与 MCP 协议级本地项目 smoke；ChatGPT web 仍明确为远程插件后续项，不伪装成本地已支持。
+- [x] MVP 验收后形成日常使用版本与复盘，并扩展到 12/12 域；44,527 个迁移候选继续按迁移证据推进。
 
 **MVP 不包含：** 批量删除/移动、Zotero dataDir 写入、家庭应用迁移、四个外部仓迁移、12 域全量 gateway 修改、runtime/cache 清零、旧脚本退役和最终 T8。这些进入 MVP 后迭代，继续受原确认门、指纹、消费者证据和回滚要求约束。
 
@@ -269,9 +269,9 @@ L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
 
 - [x] registry contains each validated L4 manifest exactly once; unknown/missing domain, duplicate tool binding, missing skill/workflow ref fail closed.
 - [x] `domain_context` never returns a path/identity that disagrees with the referenced `DOMAIN.yaml`.
-- [ ] no domain gateway instructs execution from Documents `_runtime`, `_control` scripts, `.kems/_scripts`, or app roots.
-- [ ] Claude/Codex-compatible local-project smoke opens at least `vault`、`work-weijian`、`creative` and recovers the correct domain ID plus Workspace MCP guidance.
-- [ ] platform-specific configuration is generated from the binding registry or documented as a pointer; no manually duplicated MCP command matrices.
+- [x] no domain gateway instructs execution from Documents `_runtime`, `_control` scripts, `.kems/_scripts`, or app roots.
+- [x] Claude/Codex-compatible MCP protocol smoke covers all 12 projects and recovers the correct domain ID plus Workspace MCP guidance.
+- [x] platform-specific configuration points to one accepted Cockpit MCP installation; no domain copies an MCP command matrix.
 
 **Commit:** `feat(cockpit): expose SSOT-backed domain project contexts`
 

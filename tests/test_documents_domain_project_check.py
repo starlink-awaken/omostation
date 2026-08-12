@@ -156,8 +156,16 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
 def _run(
     domain_registry: Path,
     project_registry: Path,
-    gateway_domain_ids: tuple[str, ...] = (),
+    gateway_domain_ids: tuple[str, ...] | None = None,
+    *,
+    prepare_default_gateways: bool = True,
 ) -> subprocess.CompletedProcess[str]:
+    if gateway_domain_ids is None and prepare_default_gateways:
+        raw = yaml.safe_load(domain_registry.read_text(encoding="utf-8"))
+        for entry in raw["manifests"]:
+            manifest_path = domain_registry.parent / entry["path"]
+            manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+            _write_gateways(manifest_path.parent, manifest["id"])
     return subprocess.run(
         [
             sys.executable,
@@ -168,7 +176,7 @@ def _run(
             str(project_registry),
             *[
                 argument
-                for domain_id in gateway_domain_ids
+                for domain_id in gateway_domain_ids or ()
                 for argument in ("--gateway-domain", domain_id)
             ],
             "--json",
@@ -202,7 +210,51 @@ def test_valid_domain_project_registry_passes(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
-    assert payload == {"ok": True, "domain_count": 2, "errors": []}
+    assert payload == {
+        "ok": True,
+        "domain_count": 2,
+        "gateway_count": 2,
+        "errors": [],
+    }
+
+
+def test_default_gateway_check_fails_if_registered_projection_is_missing(
+    tmp_path: Path,
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault", "shared"])
+    project_registry = _project_registry(tmp_path, ["vault", "shared"])
+    _write_gateways(tmp_path / "documents" / "vault", "vault")
+
+    result = _run(
+        domain_registry,
+        project_registry,
+        prepare_default_gateways=False,
+    )
+
+    assert result.returncode == 1
+    payload = json.loads(result.stdout)
+    assert payload["gateway_count"] == 2
+    assert len(payload["errors"]) == 2
+    assert payload["errors"][0].startswith("shared/AGENTS.md unavailable:")
+    assert payload["errors"][1].startswith("shared/CLAUDE.md unavailable:")
+
+
+def test_explicit_gateway_selector_only_checks_requested_domain(
+    tmp_path: Path,
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault", "shared"])
+    project_registry = _project_registry(tmp_path, ["vault", "shared"])
+    _write_gateways(tmp_path / "documents" / "vault", "vault")
+
+    result = _run(domain_registry, project_registry, ("vault",))
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout) == {
+        "ok": True,
+        "domain_count": 2,
+        "gateway_count": 1,
+        "errors": [],
+    }
 
 
 def test_runtime_jobs_must_be_a_non_empty_list(tmp_path: Path) -> None:
