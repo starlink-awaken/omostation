@@ -12,7 +12,7 @@ project: omlxc
 status: active
 domain: compute
 created: '2026-08-11'
-version: 3.0.0
+version: 3.0.1
 layer: L1
 runtime: active
 properties:
