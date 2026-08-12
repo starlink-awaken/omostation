@@ -848,7 +848,8 @@ bets:
   title: Blueprint W3-01A 本地真实信号到受治理个人 Episode 单源薄切片
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-12
   goal: >-
     在可信本地单用户环境中，复用 Iris LocalFilesConnector 与 W2-05 PersonalEpisodeService，
     让用户投放到服务端固定允许目录的一条 Markdown item 先以隐私安全的 SignalObserved 写入
