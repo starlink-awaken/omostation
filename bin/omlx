@@ -596,7 +596,8 @@ def _app_sync(conf, apply=False):
     marker = os.path.join(root, ".omlxc-managed.json")
     previous = set()
     try:
-        previous = set(json.load(open(marker)).get("models", []))
+        with open(marker, encoding="utf-8") as handle:
+            previous = set(json.load(handle).get("models", []))
     except Exception:
         pass
 

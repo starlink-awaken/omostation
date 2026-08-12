@@ -5,6 +5,7 @@ import sqlite3
 import tempfile
 from collections import deque
 from collections.abc import AsyncIterator, Iterator
+from contextlib import closing as closing_resource
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
@@ -270,7 +271,7 @@ async def test_production_metric_becomes_durable_while_daemon_keeps_running(
         deadline = asyncio.get_running_loop().time() + 1.0
         durable: list[tuple[str, int, str | None]] = []
         while asyncio.get_running_loop().time() < deadline:
-            with sqlite3.connect(config.storage.database_path) as connection:
+            with closing_resource(sqlite3.connect(config.storage.database_path)) as connection:
                 durable = connection.execute(
                     """
                     SELECT request_id, success, phase
@@ -327,7 +328,7 @@ async def test_periodic_metric_flush_recovers_after_one_write_failure_without_lo
         deadline = asyncio.get_running_loop().time() + 1.0
         durable = 0
         while asyncio.get_running_loop().time() < deadline:
-            with sqlite3.connect(config.storage.database_path) as connection:
+            with closing_resource(sqlite3.connect(config.storage.database_path)) as connection:
                 durable = connection.execute(
                     "SELECT COUNT(*) FROM request_metrics WHERE request_id = ?",
                     ("metric.retry-safe",),
@@ -381,7 +382,7 @@ async def test_metric_capacity_threshold_wakes_long_interval_flush_without_drops
         deadline = asyncio.get_running_loop().time() + 1.0
         durable = 0
         while asyncio.get_running_loop().time() < deadline:
-            with sqlite3.connect(config.storage.database_path) as connection:
+            with closing_resource(sqlite3.connect(config.storage.database_path)) as connection:
                 durable = connection.execute(
                     "SELECT COUNT(*) FROM request_metrics WHERE request_id LIKE 'metric.burst-%'"
                 ).fetchone()[0]
@@ -486,7 +487,7 @@ async def test_cancelled_storage_close_still_performs_final_metric_flush(
     with pytest.raises(asyncio.CancelledError):
         await closing
 
-    with sqlite3.connect(config.storage.database_path) as connection:
+    with closing_resource(sqlite3.connect(config.storage.database_path)) as connection:
         assert (
             connection.execute(
                 "SELECT COUNT(*) FROM request_metrics WHERE request_id = ?",
@@ -553,7 +554,7 @@ async def test_storage_handle_two_start_close_cycles_share_each_close_exactly_on
 
     assert close_calls == 1
     assert storage.task_settled
-    with sqlite3.connect(config.storage.database_path) as connection:
+    with closing_resource(sqlite3.connect(config.storage.database_path)) as connection:
         assert connection.execute(
             "SELECT request_id FROM request_metrics ORDER BY sequence"
         ).fetchall() == [("metric.cycle-one",), ("metric.cycle-two",)]
@@ -627,7 +628,7 @@ async def test_production_stream_owner_closes_once_and_releases_capacity_after_d
         loop.set_exception_handler(original_handler)
 
     assert composition.runtime.task_settled
-    with sqlite3.connect(config.storage.database_path) as connection:
+    with closing_resource(sqlite3.connect(config.storage.database_path)) as connection:
         terminal = connection.execute(
             "SELECT request_id, success FROM request_metrics ORDER BY sequence"
         ).fetchall()
@@ -703,7 +704,7 @@ async def test_production_chat_embed_stream_and_error_telemetry_is_restart_safe_
         "fix10.error",
     ]
     assert metric_count == 4
-    with sqlite3.connect(config.storage.database_path) as connection:
+    with closing_resource(sqlite3.connect(config.storage.database_path)) as connection:
         terminal = connection.execute(
             "SELECT request_id, success FROM request_metrics ORDER BY sequence"
         ).fetchall()
