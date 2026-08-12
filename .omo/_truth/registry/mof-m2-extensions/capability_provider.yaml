@@ -1,16 +1,26 @@
-# M2: CapabilityProvider — external tool registry (Claude Code/Codex/Crush/etc.)
+# M2: CapabilityProvider — static external agent CLI/provider declaration
 m2_type: CapabilityProvider
-version: 1.0.0
+version: 1.1.0
 CapabilityProvider:
   m3_parent: StructuralElement.Service
-  description: 外部执行者 — Claude Code/Codex/Crush/Kilo/Droid/OpenCode 统一能力提供者
+  description: >-
+    外部执行能力的静态声明。运行时可用性、额度和算力健康属于 Observation，
+    不得由本模型直接推导 admission 或 task completion。
   requiredProperties:
-    provider_id: {type: string}
+    id: {type: string, description: "provider_ref 使用的稳定 ID"}
     capabilities: {type: list, items: string}
-    launch: {type: string, description: "启动命令"}
+    launch_argv: {type: list, items: string, description: "无 shell 的启动 argv 前缀"}
+    version_probe_argv: {type: list, items: string, description: "只读版本探针 argv"}
+    availability_policy:
+      {type: enum, values: [runtime_observation_required]}
   optionalProperties:
+    provider_id: {type: string, description: "兼容外部 M0 envelope；registry canonical 字段为 id"}
     model: {type: string}
-    cost: {type: enum, values: [free, low, medium, high]}
+    cost: {type: enum, values: [free, low, medium, high, variable]}
     governance: {type: enum, values: [full, sandboxed]}
     performance: {type: object}
-  selectionCriteria: [capability_match, cost, availability, performance_history]
+    quota_observation: {type: object}
+  selectionCriteria: [capability_match, cost, observed_availability, performance_history]
+  admissionInvariant: >-
+    declared or observed is not admitted; admission requires the worker policy and
+    coordinator-owned review lifecycle outside this model

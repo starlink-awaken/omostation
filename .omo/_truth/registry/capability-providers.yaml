@@ -1,37 +1,163 @@
-schema: capability-providers/v1
-description: External AI tool providers for Capability Router (ADR-0396)
+schema: capability-providers/v2
+description: >-
+  Static agent CLI/provider declarations. Runtime availability, quota and compute health
+  are observations, never truth and never admission by themselves.
+
+observation_contract:
+  version_probe_timeout_seconds: 15
+  quota_probe_timeout_seconds: 20
+  subprocess_shell: false
+  retry_count: 0
+  forbidden_identity_fields: [account, accountEmail, email, identity, token, key]
+  admission_rule: observation_never_implies_admission
+
+quota_observer:
+  executable: codexbar
+  argv_prefix: [codexbar, usage]
+  output_format: json
+  role: observation_only
+
+model_catalog_observer:
+  source: cc-switch
+  automation_policy: disabled_until_safe_cli_contract
+  unavailable_reason: cli_not_installed_or_machine_contract_missing
+  role: catalog_observation_only
+
+compute_plane:
+  route_uri: bos://compute/aetherforge/infer
+  gateway: aetherforge
+  runtime: omlxc
+  health_probe_argv: [omlxc, status, --json]
+  role: compute_health_only
+  quota_semantics: unknown
+
 providers:
   - id: claude-code
     capabilities: [code_edit, document_draft, shell, mcp, web_search, file_system, email_compose]
-    launch: "claude --print"
+    launch_argv: [claude, --print]
+    version_probe_argv: [claude, --version]
+    quota_observation: {source: codexbar, provider: claude}
     strengths: [complex_reasoning, mcp_access, multi_domain]
     cost: high
     governance: full
+    availability_policy: runtime_observation_required
 
   - id: codex
     capabilities: [code_edit, shell, file_system]
-    launch: "codex exec"
+    launch_argv: [codex, exec]
+    version_probe_argv: [codex, --version]
+    quota_observation: {source: codexbar, provider: codex}
     strengths: [implementation, debugging, structured_output]
     cost: medium
     governance: sandboxed
+    availability_policy: runtime_observation_required
 
   - id: crush
     capabilities: [code_edit, shell]
-    launch: "crush"
+    launch_argv: [crush, --yolo]
+    version_probe_argv: [crush, --version]
+    quota_observation: {source: none}
     strengths: [speed, lightweight]
     cost: low
     governance: sandboxed
+    availability_policy: runtime_observation_required
 
   - id: opencode
-    capabilities: [code_edit, shell]
-    launch: "opencode"
-    strengths: [open_source, local_model]
-    cost: free
+    capabilities: [code_edit, shell, local_model]
+    launch_argv: [opencode]
+    version_probe_argv: [opencode, --version]
+    quota_observation: {source: codexbar, provider: opencode}
+    strengths: [open_source, subscription_models, local_model]
+    cost: variable
     governance: sandboxed
+    availability_policy: runtime_observation_required
+
+  - id: codebuddy
+    capabilities: [code_edit, shell, acp]
+    launch_argv: [codebuddy, -y, -p]
+    version_probe_argv: [codebuddy, --version]
+    quota_observation: {source: none}
+    strengths: [implementation, resumable_sessions, acp]
+    cost: variable
+    governance: sandboxed
+    availability_policy: runtime_observation_required
+
+  - id: reasonix
+    capabilities: [code_edit, shell, diagnosis]
+    launch_argv: [reasonix, run]
+    version_probe_argv: [reasonix, --version]
+    quota_observation: {source: none}
+    strengths: [focused_execution, diagnostics]
+    cost: variable
+    governance: sandboxed
+    availability_policy: runtime_observation_required
+
+  - id: pi
+    capabilities: [code_edit, shell]
+    launch_argv: [pi]
+    version_probe_argv: [pi, --version]
+    quota_observation: {source: none}
+    strengths: [lightweight, extensible]
+    cost: variable
+    governance: sandboxed
+    availability_policy: runtime_observation_required
+
+  - id: oh-my-pi
+    capabilities: [code_edit, shell]
+    launch_argv: [omp]
+    version_probe_argv: [omp, --version]
+    quota_observation: {source: none}
+    strengths: [pi_ecosystem, extensible]
+    cost: variable
+    governance: sandboxed
+    availability_policy: runtime_observation_required
+
+  - id: grok
+    capabilities: [code_edit, research, shell]
+    launch_argv: [grok]
+    version_probe_argv: [grok, --version]
+    quota_observation: {source: codexbar, provider: grok}
+    strengths: [research, contrarian_review]
+    cost: variable
+    governance: sandboxed
+    availability_policy: runtime_observation_required
+
+  - id: mimo
+    capabilities: [code_edit, shell]
+    launch_argv: [mimo]
+    version_probe_argv: [mimo, --version]
+    quota_observation: {source: codexbar, provider: mimo}
+    strengths: [implementation, low_cost]
+    cost: low
+    governance: sandboxed
+    availability_policy: runtime_observation_required
+
+  - id: agy
+    capabilities: [code_edit, shell]
+    launch_argv: [agy]
+    version_probe_argv: [agy, --version]
+    quota_observation: {source: none}
+    strengths: [implementation, lightweight]
+    cost: variable
+    governance: sandboxed
+    availability_policy: runtime_observation_required
+
+  - id: kilo
+    capabilities: [code_edit, shell]
+    launch_argv: [kilo]
+    version_probe_argv: [kilo, --version]
+    quota_observation: {source: codexbar, provider: kilo}
+    strengths: [implementation, model_flexibility]
+    cost: variable
+    governance: sandboxed
+    availability_policy: runtime_observation_required
 
   - id: iris_builtin
     capabilities: [email_read, email_write, note_read, note_write, file_read]
-    launch: "iris"
+    launch_argv: [iris]
+    version_probe_argv: [iris, --version]
+    quota_observation: {source: none}
     strengths: [connector_access, low_latency]
     cost: free
     governance: full
+    availability_policy: runtime_observation_required
