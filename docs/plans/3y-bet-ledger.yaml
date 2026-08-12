@@ -2116,8 +2116,10 @@ bets:
   - engineering-delivery 场景 lifecycle=shadow
   - 每周产出 >= 20 条 decision_outcome
   - 明确标注"本场景产出永不计入价值指标"
+  notes:
+    - "2026-08-12: 恢复 shadow 配置. 周产20条 decision_outcome 尚未验证, 继续观察."
   verify:
-  - cmd: 'grep -c ''lifecycle: shadow'' docs/scene-cards/v2/engineering-delivery.yaml'
+  - cmd: 'grep -c ''lifecycle: shadow'' docs/scene-cards/engineering-delivery-dogfood.yaml'
     expect: '>= 1'
   workflow: bet-execution
   underlying_workflow: project-doc-change
