@@ -116,6 +116,31 @@ def test_workspace_registry_samples_pass():
     }
 
 
+def test_workspace_registry_covers_weijian_cleanup_commit_script():
+    module = _load_module()
+    registry = (
+        ROOT
+        / ".omo"
+        / "_truth"
+        / "registry"
+        / "documents-content-plane-migrations.yaml"
+    )
+
+    report = module.check_migrations(
+        registry,
+        candidates=[
+            {
+                "relative_path": "@工作文档/卫健委/cleanup-commit.sh",
+                "kind": "runtime",
+            }
+        ],
+    )
+
+    assert report["ok"] is True
+    assert report["family_counts"]["work-runtime"] == 1
+    assert sum(report["family_counts"].values()) == 1
+
+
 def test_zero_match_fails_closed(tmp_path):
     module = _load_module()
     registry = _write_registry(tmp_path / "registry.yaml")
