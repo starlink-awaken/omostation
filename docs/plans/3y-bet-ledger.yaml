@@ -2171,7 +2171,8 @@ bets:
   title: Unified agent pool declaration, observation and admission preflight v1
   appetite: 1 day
   priority: P0
-  status: in_progress
+  status: done
+  done_at: 2026-08-12
   goal: >-
     在可信本地单用户环境中，把 Pi、Oh My Pi、OpenCode、CodeBuddy、Claude Code、
     Crush、Grok、MiMo、AGY、Codex、Reasonix 与 Kilo 统一登记为可治理的候选 worker，
