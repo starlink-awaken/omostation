@@ -49,15 +49,16 @@ class CapacityCoordinator:
             self._global,
         )
         acquired: list[anyio.CapacityLimiter] = []
+        borrower = object()
         try:
             for limiter in limiters:
                 remaining = deadline - monotonic()
                 if not math.isfinite(remaining) or remaining <= 0:
                     raise TimeoutError
                 with anyio.fail_after(remaining):
-                    await limiter.acquire()
+                    await limiter.acquire_on_behalf_of(borrower)
                 acquired.append(limiter)
             yield
         finally:
             for limiter in reversed(acquired):
-                limiter.release()
+                limiter.release_on_behalf_of(borrower)

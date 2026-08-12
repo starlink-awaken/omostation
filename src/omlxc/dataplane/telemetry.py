@@ -8,7 +8,7 @@ from typing import Protocol
 
 from omlxc.domain import RouteDecision
 from omlxc.scheduler import RouteFailure
-from omlxc.storage import MetricRecord, RouteAuditWrite, SQLiteRuntimeStore
+from omlxc.storage import MetricRecord, RouteAuditRecord, RouteAuditWrite
 
 RoutePlan = RouteDecision | RouteFailure
 
@@ -16,14 +16,28 @@ RoutePlan = RouteDecision | RouteFailure
 class TelemetrySink(Protocol):
     async def record_route(self, plan: RoutePlan) -> None: ...
 
-    def record_metric(self, *, request_id: str, latency_ms: float, success: bool) -> bool: ...
+    def record_metric(
+        self,
+        *,
+        request_id: str,
+        latency_ms: float,
+        success: bool,
+        error_code: str | None = None,
+        phase: str | None = None,
+    ) -> bool: ...
+
+
+class TelemetryStore(Protocol):
+    async def append_route_audit(self, record: RouteAuditWrite) -> RouteAuditRecord: ...
+
+    def accept_metric(self, metric: MetricRecord) -> bool: ...
 
 
 class RouteTelemetryRecorder:
     def __init__(self, *, now: Callable[[], datetime]) -> None:
         self._now = now
 
-    async def record_route(self, store: SQLiteRuntimeStore, plan: RoutePlan) -> None:
+    async def record_route(self, store: TelemetryStore, plan: RoutePlan) -> None:
         if isinstance(plan, RouteDecision):
             candidates = tuple(
                 f"{placement_id}@{plan.candidate_scores[placement_id]:.12f}"
@@ -46,29 +60,43 @@ class RouteTelemetryRecorder:
 
     def record_metric(
         self,
-        store: SQLiteRuntimeStore,
+        store: TelemetryStore,
         *,
         request_id: str,
         latency_ms: float,
         success: bool,
+        error_code: str | None = None,
+        phase: str | None = None,
     ) -> bool:
-        return store.accept_metric(MetricRecord(request_id, self._now(), latency_ms, success))
+        return store.accept_metric(
+            MetricRecord(request_id, self._now(), latency_ms, success, error_code, phase)
+        )
 
 
 class BoundRouteTelemetry:
     """Bind the Task 5 store once so execution cannot bypass route telemetry."""
 
-    def __init__(self, store: SQLiteRuntimeStore, recorder: RouteTelemetryRecorder) -> None:
+    def __init__(self, store: TelemetryStore, recorder: RouteTelemetryRecorder) -> None:
         self._store = store
         self._recorder = recorder
 
     async def record_route(self, plan: RoutePlan) -> None:
         await self._recorder.record_route(self._store, plan)
 
-    def record_metric(self, *, request_id: str, latency_ms: float, success: bool) -> bool:
+    def record_metric(
+        self,
+        *,
+        request_id: str,
+        latency_ms: float,
+        success: bool,
+        error_code: str | None = None,
+        phase: str | None = None,
+    ) -> bool:
         return self._recorder.record_metric(
             self._store,
             request_id=request_id,
             latency_ms=latency_ms,
             success=success,
+            error_code=error_code,
+            phase=phase,
         )

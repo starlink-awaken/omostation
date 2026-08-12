@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 from collections.abc import AsyncIterator
 
 import pytest
 
-from omlxc.autonomy import PlacementOperationOutcome, PlacementTarget
+from omlxc.autonomy import (
+    PlacementOperationOutcome,
+    PlacementProbeFailure,
+    PlacementProbeReason,
+    PlacementTarget,
+)
 from omlxc.dataplane import (
     AdapterBinding,
     AdapterRegistry,
@@ -28,8 +34,9 @@ from omlxc.domain.protocols import (
     ImageURL,
     OperationStatus,
     StreamEvent,
+    StreamEventKind,
 )
-from omlxc.scheduler import PlacementSnapshot, RoutePlanner, default_policies
+from omlxc.scheduler import PlacementSnapshot, RejectionCode, RoutePlanner, default_policies
 
 
 class FakeAdapter:
@@ -43,6 +50,7 @@ class FakeAdapter:
         self.embeddings = embeddings or []
         self.chat_requests: list[ChatRequest] = []
         self.embedding_requests: list[EmbeddingRequest] = []
+        self.stream_requests: list[ChatRequest] = []
         self.active = 0
         self.max_active = 0
         self.release = asyncio.Event()
@@ -69,6 +77,7 @@ class FakeAdapter:
         return result
 
     def stream_chat(self, request: ChatRequest) -> AsyncIterator[StreamEvent]:
+        self.stream_requests.append(request)
         raise NotImplementedError
 
 
@@ -80,6 +89,29 @@ class FakeLoader:
     async def ensure_loaded(self, target: PlacementTarget) -> PlacementOperationOutcome:
         self.targets.append(target)
         return PlacementOperationOutcome(self.loaded, True, None)
+
+
+class RejectingLoader:
+    def __init__(self, rejection: RejectionCode) -> None:
+        self.rejection = rejection
+
+    async def ensure_loaded(self, target: PlacementTarget) -> PlacementOperationOutcome:
+        if self.rejection is RejectionCode.NO_CAPACITY:
+            raise TimeoutError
+        if self.rejection in {
+            RejectionCode.AUTHORIZATION,
+            RejectionCode.STALE,
+            RejectionCode.UNAVAILABLE,
+            RejectionCode.LOCAL_SECURITY,
+        }:
+            reason = {
+                RejectionCode.AUTHORIZATION: PlacementProbeReason.AUTHORIZATION,
+                RejectionCode.STALE: PlacementProbeReason.STALE,
+                RejectionCode.UNAVAILABLE: PlacementProbeReason.UNAVAILABLE,
+                RejectionCode.LOCAL_SECURITY: PlacementProbeReason.LOCAL_SECURITY,
+            }[self.rejection]
+            raise PlacementProbeFailure(target.id, reason)
+        return PlacementOperationOutcome(True, True, None)
 
 
 def _snapshot(pid: str, backend: str, node: str, **updates: object) -> PlacementSnapshot:
@@ -341,7 +373,16 @@ class BrokenTelemetry:
     async def record_route(self, plan: object) -> None:
         raise RuntimeError("database-path=do-not-leak")
 
-    def record_metric(self, *, request_id: str, latency_ms: float, success: bool) -> bool:
+    def record_metric(
+        self,
+        *,
+        request_id: str,
+        latency_ms: float,
+        success: bool,
+        error_code: str | None = None,
+        phase: str | None = None,
+    ) -> bool:
+        del request_id, latency_ms, success, error_code, phase
         raise RuntimeError("database-path=do-not-leak")
 
 
@@ -478,6 +519,130 @@ async def test_post_load_snapshot_replays_full_eligibility_filter() -> None:
     assert result.error is not None
     assert result.error.code is ExecutionErrorCode.NO_CANDIDATE
     assert adapter.chat_requests == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("rejection", "placement_id"),
+    [
+        (rejection, placement_id)
+        for rejection in (
+            RejectionCode.UNAVAILABLE,
+            RejectionCode.AUTHORIZATION,
+            RejectionCode.STALE,
+            RejectionCode.LOCAL_SECURITY,
+            RejectionCode.MEMORY,
+            RejectionCode.CAPABILITY,
+            RejectionCode.NO_CAPACITY,
+        )
+        for placement_id in ("placement.safe-1", "node/private/model")
+    ],
+)
+async def test_prepare_failure_preserves_ordered_typed_rejection_without_adapter_call(
+    rejection: RejectionCode,
+    placement_id: str,
+) -> None:
+    adapter = FakeAdapter(chats=[_success()])
+    unloaded = _snapshot(placement_id, "b", "n", loaded=False)
+    refreshed_updates: dict[str, object] = {"loaded": True}
+    if rejection is RejectionCode.MEMORY:
+        refreshed_updates["memory_admitted"] = False
+    elif rejection is RejectionCode.CAPABILITY:
+        refreshed_updates["capabilities"] = frozenset({"chat"})
+    refreshed = _snapshot(placement_id, "b", "n", **refreshed_updates)
+    snapshots = iter(((unloaded,), (refreshed,)))
+    target = PlacementTarget(
+        id=placement_id,
+        node_id="n",
+        model_id="physical/p",
+        resident=False,
+        memory_gb=1,
+        idle_unload_seconds=0,
+        last_used_monotonic=0,
+        rollback_reference="placement:p",
+    )
+    orchestrator = DataPlaneOrchestrator(
+        planner=RoutePlanner(default_policies()),
+        snapshot_provider=lambda: next(snapshots),
+        registry=AdapterRegistry((AdapterBinding("b", adapter),)),
+        capacity=CapacityCoordinator(global_limit=1, per_node=1, per_backend=1),
+        loader=RejectingLoader(rejection),
+        load_target=lambda _placement: target,
+    )
+
+    result = await orchestrator.chat(
+        _route_request(required_capabilities=frozenset({"chat", "vision"})),
+        _chat(),
+        deadline=10,
+    )
+
+    assert result.error is not None
+    assert result.error.code in {ExecutionErrorCode.NO_CANDIDATE, ExecutionErrorCode.NO_CAPACITY}
+    safe_id = (
+        placement_id
+        if "/" not in placement_id
+        else f"opaque:{hashlib.sha256(placement_id.encode()).hexdigest()[:12]}"
+    )
+    assert result.error.prepare_rejections == ((safe_id, rejection),)
+    assert placement_id == safe_id or placement_id not in repr(result.error)
+    assert adapter.chat_requests == []
+
+    stream_snapshots = iter(((unloaded,), (refreshed,)))
+    stream_orchestrator = DataPlaneOrchestrator(
+        planner=RoutePlanner(default_policies()),
+        snapshot_provider=lambda: next(stream_snapshots),
+        registry=AdapterRegistry((AdapterBinding("b", adapter),)),
+        capacity=CapacityCoordinator(global_limit=1, per_node=1, per_backend=1),
+        loader=RejectingLoader(rejection),
+        load_target=lambda _placement: target,
+    )
+    stream = [
+        event
+        async for event in stream_orchestrator.stream_chat(
+            _route_request(required_capabilities=frozenset({"chat", "vision"})),
+            _chat(),
+            deadline=10,
+        )
+    ]
+
+    assert len(stream) == 1
+    assert stream[0].kind is StreamEventKind.ERROR
+    assert [
+        (item.placement_id, item.reason.value) for item in stream[0].prepare_rejections
+    ] == [(safe_id, rejection.value)]
+    assert placement_id == safe_id or placement_id not in repr(stream[0])
+    assert adapter.stream_requests == []
+
+
+@pytest.mark.asyncio
+async def test_prepare_rejection_is_consistent_for_embedding_and_stream_without_adapter_call(
+) -> None:
+    adapter = FakeAdapter(chats=[_success()])
+    unloaded = _snapshot("p", "b", "n", loaded=False)
+    orchestrator = _orchestrator((unloaded,), (AdapterBinding("b", adapter),))
+
+    embedding = await orchestrator.embed(
+        _route_request(required_capabilities=frozenset({"embedding"})),
+        EmbeddingRequest(request_id="req", model="public/model", input="one"),
+        deadline=10,
+    )
+    stream = [
+        event
+        async for event in orchestrator.stream_chat(_route_request(), _chat(), deadline=10)
+    ]
+
+    assert embedding.error is not None
+    assert embedding.error.prepare_rejections == (("p", RejectionCode.UNAVAILABLE),)
+    assert len(stream) == 1
+    assert stream[0].kind is StreamEventKind.ERROR
+    assert stream[0].error is not None
+    assert stream[0].error.message == RejectionCode.UNAVAILABLE.value
+    assert [
+        (item.placement_id, item.reason.value) for item in stream[0].prepare_rejections
+    ] == [("p", RejectionCode.UNAVAILABLE.value)]
+    assert adapter.embedding_requests == []
+    assert adapter.chat_requests == []
+    assert adapter.stream_requests == []
 
 
 @pytest.mark.asyncio

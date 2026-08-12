@@ -46,6 +46,7 @@ from omlxc.config import (
 from omlxc.dataplane import (
     AdapterBinding,
     AdapterRegistry,
+    BoundRouteTelemetry,
     CapacityCoordinator,
     ChatExecution,
     DataPlaneOrchestrator,
@@ -55,6 +56,7 @@ from omlxc.dataplane import (
     Reranker,
     RerankExecution,
     RerankRequest,
+    RouteTelemetryRecorder,
 )
 from omlxc.domain import (
     BackendKind,
@@ -91,6 +93,9 @@ from omlxc.scheduler import (
 )
 from omlxc.storage import (
     DurableEventRecord,
+    MetricRecord,
+    RouteAuditRecord,
+    RouteAuditWrite,
     RunningRecoveryPolicy,
     SQLiteRuntimeStore,
     StoredJob,
@@ -125,6 +130,12 @@ class StorageHandle:
         store, self._store = self._store, None
         if store is not None:
             await store.close()
+
+    async def append_route_audit(self, record: RouteAuditWrite) -> RouteAuditRecord:
+        return await self.require().append_route_audit(record)
+
+    def accept_metric(self, metric: MetricRecord) -> bool:
+        return self.require().accept_metric(metric)
 
 
 class SnapshotCatalog:
@@ -309,7 +320,11 @@ class CatalogProbe:
                 and capability.model_available
                 and model is not None
                 and model.state is not ModelRuntimeState.UNKNOWN
-                and (not loaded or capability.generation_ready)
+                and (
+                    not loaded
+                    or capability.generation_ready
+                    or capabilities.isdisjoint(_GENERATION_MODEL_CAPABILITIES)
+                )
             )
             self._catalog.update(
                 snapshot.placement_id,
@@ -971,6 +986,7 @@ def build_production_daemon(
             capacity=CapacityCoordinator(global_limit=8, per_node=4, per_backend=4),
             loader=coordinator,
             load_target=target_factory,
+            telemetry=BoundRouteTelemetry(storage, RouteTelemetryRecorder(now=clock)),
         ),
         tuple(model.id for model in config.models),
         reranker,
@@ -1120,6 +1136,14 @@ _ROUTABLE_MODEL_CAPABILITIES = frozenset(
         AdapterCapability.STREAMING,
         AdapterCapability.VISION,
         AdapterCapability.EMBEDDING,
+    }
+)
+
+_GENERATION_MODEL_CAPABILITIES = frozenset(
+    {
+        AdapterCapability.CHAT,
+        AdapterCapability.STREAMING,
+        AdapterCapability.VISION,
     }
 )
 

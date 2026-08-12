@@ -10,6 +10,7 @@ from collections.abc import AsyncIterator, Callable, Mapping, Sequence
 from typing import Annotated, Any, Literal, cast
 from uuid import uuid4
 
+import anyio
 from fastapi import FastAPI, Header, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -18,6 +19,7 @@ from starlette.responses import Response
 from starlette.types import Message, Receive, Scope, Send
 
 from omlxc.dataplane import ExecutionErrorCode
+from omlxc.dataplane.models import safe_placement_id
 from omlxc.domain import RouteProfile, RouteRequest
 from omlxc.domain.protocols import (
     ChatContentBlock,
@@ -29,7 +31,7 @@ from omlxc.domain.protocols import (
     TokenUsage,
 )
 from omlxc.events import EventSubscriptionClosed, RuntimeEvent
-from omlxc.scheduler import RouteFailure, RouteFailureCode
+from omlxc.scheduler import RejectionCode, RouteFailure, RouteFailureCode
 from omlxc.storage import DurableEventRecord, JobConflictError
 
 from .contracts import ControlService, EventService, InferenceService
@@ -607,9 +609,22 @@ def _route_failure_response(request_id: str, failure: RouteFailure) -> JSONRespo
     )
 
 
-def _openai_error(request_id: str, status: int, error_type: str) -> JSONResponse:
+def _openai_error(
+    request_id: str,
+    status: int,
+    error_type: str,
+    *,
+    partial_result: Mapping[str, object] | None = None,
+) -> JSONResponse:
+    error: dict[str, object] = {
+        "message": "local inference failed",
+        "type": error_type,
+        "code": error_type,
+    }
+    if partial_result is not None:
+        error["partial_result"] = dict(partial_result)
     return JSONResponse(
-        {"error": {"message": "local inference failed", "type": error_type, "code": error_type}},
+        {"error": error},
         status_code=status,
         headers={"X-OMLXC-Request-ID": request_id},
     )
@@ -618,7 +633,15 @@ def _openai_error(request_id: str, status: int, error_type: str) -> JSONResponse
 def _execution_error(request_id: str, error: Any) -> JSONResponse:
     code = getattr(error, "code", ExecutionErrorCode.BACKEND_FAILURE)
     if code in {ExecutionErrorCode.NO_CANDIDATE, ExecutionErrorCode.NO_CAPACITY}:
-        return _openai_error(request_id, 409, "insufficient_capacity")
+        partial_result = _prepare_rejection_partial_result(
+            getattr(error, "prepare_rejections", ())
+        )
+        return _openai_error(
+            request_id,
+            409,
+            "insufficient_capacity",
+            partial_result=partial_result,
+        )
     if code is ExecutionErrorCode.TIMEOUT:
         return _openai_error(request_id, 504, "timeout")
     if code is ExecutionErrorCode.UNSUPPORTED:
@@ -634,9 +657,16 @@ def _stream_error_response(request_id: str, event: StreamEvent) -> JSONResponse:
         return _openai_error(request_id, 504, "timeout")
     if error.code.value == "unsupported":
         return _openai_error(request_id, 400, "unsupported_feature")
+    if event.prepare_rejections:
+        return _openai_error(
+            request_id,
+            409,
+            "insufficient_capacity",
+            partial_result=_stream_prepare_rejection_partial_result(event),
+        )
     if error.code.value == "model_unavailable" and error.message in {
-        "no_capacity",
-        "no_candidate",
+        ExecutionErrorCode.NO_CANDIDATE.value,
+        *(code.value for code in RejectionCode),
     }:
         return _openai_error(request_id, 409, "insufficient_capacity")
     return _openai_error(request_id, 503, "backend_unavailable")
@@ -697,11 +727,13 @@ def _sse_event(request_id: str, model: str, event: StreamEvent) -> bytes:
     if event.kind is StreamEventKind.DONE:
         return b"data: [DONE]\n\n"
     if event.kind is StreamEventKind.ERROR:
+        assert event.error is not None
         payload: dict[str, object] = {
             "error": {
                 "message": "local stream failed",
                 "type": "stream_error",
                 "code": "stream_error",
+                "partial_result": _stream_error_partial_result(event),
             }
         }
     elif event.kind is StreamEventKind.USAGE:
@@ -723,10 +755,44 @@ def _sse_event(request_id: str, model: str, event: StreamEvent) -> bytes:
     return f"data: {encoded}\n\n".encode()
 
 
+def _prepare_rejection_partial_result(
+    rejections: Sequence[tuple[str, RejectionCode]],
+) -> Mapping[str, object] | None:
+    if not rejections:
+        return None
+    return {
+        "prepare_rejections": [
+            {"placement_id": safe_placement_id(placement_id), "reason": rejection.value}
+            for placement_id, rejection in rejections
+        ]
+    }
+
+
+def _stream_prepare_rejection_partial_result(event: StreamEvent) -> Mapping[str, object]:
+    return {
+        "prepare_rejections": [
+            {"placement_id": item.placement_id, "reason": item.reason.value}
+            for item in event.prepare_rejections
+        ]
+    }
+
+
+def _stream_error_partial_result(event: StreamEvent) -> Mapping[str, object]:
+    assert event.error is not None
+    if event.prepare_rejections:
+        return _stream_prepare_rejection_partial_result(event)
+    return {
+        "error_code": event.error.code.value,
+        "phase": event.phase.value,
+        "emitted_content": event.emitted_content,
+    }
+
+
 async def _close_iterator(iterator: AsyncIterator[object]) -> None:
     close = getattr(iterator, "aclose", None)
     if close is not None:
-        await close()
+        with anyio.CancelScope(shield=True):
+            await close()
 
 
 def _durable_line(record: DurableEventRecord) -> bytes:

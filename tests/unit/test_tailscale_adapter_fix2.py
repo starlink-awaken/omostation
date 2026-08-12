@@ -114,6 +114,30 @@ def test_constructor_rejects_group_or_world_writable_ancestor(tmp_path: Path, mo
         )
 
 
+def test_constructor_accepts_root_owned_sticky_temp_ancestor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    parent = tmp_path / "trusted-bin"
+    executable = _executable(parent)
+    real_lstat = Path.lstat
+
+    def fake_lstat(candidate: Path) -> os.stat_result | SimpleNamespace:
+        metadata = real_lstat(candidate)
+        if candidate == tmp_path.parent:
+            return _metadata_with(metadata, mode=stat.S_IFDIR | 0o1777, uid=0)
+        return metadata
+
+    monkeypatch.setattr(Path, "lstat", fake_lstat)
+
+    adapter = TailscaleAdapter(
+        policies=(_policy(),),
+        tailscale_executable=executable,
+        process_runner=_runner([_status()]),
+    )
+
+    assert adapter is not None
+
+
 @pytest.mark.parametrize("drift", ["wrong-owner", "non-directory", "symlink"])
 def test_constructor_rejects_untrusted_ancestor_metadata(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, drift: str

@@ -2,13 +2,31 @@
 
 from __future__ import annotations
 
+import hashlib
 import math
+import re
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
 from omlxc.domain import RouteProfile
 from omlxc.domain.protocols import BackendAdapter, ChatResult, StreamPhase
+from omlxc.scheduler import RejectionCode
+
+_SAFE_PLACEMENT_ID = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
+
+
+def safe_placement_id(value: str) -> str:
+    if _SAFE_PLACEMENT_ID.fullmatch(value):
+        return value
+    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()[:12]
+    return f"opaque:{digest}"
+
+
+def safe_prepare_rejections(
+    rejections: tuple[tuple[str, RejectionCode], ...],
+) -> tuple[tuple[str, RejectionCode], ...]:
+    return tuple((safe_placement_id(placement_id), reason) for placement_id, reason in rejections)
 
 
 class ExecutionErrorCode(StrEnum):
@@ -28,6 +46,14 @@ class ExecutionError:
     phase: StreamPhase = StreamPhase.BEFORE_CONTENT
     emitted_content: bool = False
     reason: str = ""
+    prepare_rejections: tuple[tuple[str, RejectionCode], ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "prepare_rejections",
+            safe_prepare_rejections(self.prepare_rejections),
+        )
 
 
 @dataclass(frozen=True, slots=True)

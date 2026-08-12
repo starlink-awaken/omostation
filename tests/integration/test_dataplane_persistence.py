@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 
 import pytest
@@ -10,6 +11,7 @@ from omlxc.dataplane import (
     BoundRouteTelemetry,
     CapacityCoordinator,
     DataPlaneOrchestrator,
+    ExecutionErrorCode,
     RouteTelemetryRecorder,
 )
 from omlxc.domain import RouteProfile, RouteRequest
@@ -184,3 +186,95 @@ async def test_orchestrator_persists_route_and_terminal_metric_across_restart(
         ]
         assert await reopened.metric_count() == 3
         assert "never persist me" not in repr(audits)
+
+
+@pytest.mark.asyncio
+async def test_terminal_metric_persists_safe_error_code_and_phase_across_restart(
+    tmp_path: object,
+) -> None:
+    from pathlib import Path
+
+    db = Path(str(tmp_path)) / "terminal.db"
+    placement = replace(_placement("cold"), loaded=False)
+    route = RouteRequest(
+        request_id="req-terminal",
+        model_id="public/model",
+        profile=RouteProfile.INTERACTIVE,
+        required_capabilities=frozenset({"chat"}),
+        context_tokens=1,
+    )
+    request = ChatRequest(
+        request_id="req-terminal",
+        model="public/model",
+        messages=(ChatMessage(role="user", content="never persist me"),),
+    )
+    async with await SQLiteRuntimeStore.open(db) as store:
+        orchestrator = DataPlaneOrchestrator(
+            planner=RoutePlanner(default_policies()),
+            snapshot_provider=lambda: (placement,),
+            registry=AdapterRegistry(
+                (AdapterBinding(placement.backend_id, PersistingAdapter()),)
+            ),
+            capacity=CapacityCoordinator(global_limit=1, per_node=1, per_backend=1),
+            telemetry=BoundRouteTelemetry(
+                store,
+                RouteTelemetryRecorder(now=lambda: datetime(2026, 8, 11, tzinfo=UTC)),
+            ),
+        )
+        result = await orchestrator.chat(route, request, deadline=10)
+        assert result.error is not None
+        assert result.error.code is ExecutionErrorCode.NO_CANDIDATE
+        await store.flush_metrics()
+
+    async with await SQLiteRuntimeStore.open(db) as reopened:
+        metrics = await reopened.list_metrics(after_sequence=0)
+
+    assert len(metrics) == 1
+    assert metrics[0].error_code == "unavailable"
+    assert metrics[0].phase == StreamPhase.BEFORE_CONTENT.value
+    assert "never persist me" not in repr(metrics)
+
+
+@pytest.mark.asyncio
+async def test_terminal_metric_never_persists_unsafe_placement_identity(
+    tmp_path: object,
+) -> None:
+    from pathlib import Path
+
+    unsafe_id = "node/private/model"
+    db = Path(str(tmp_path)) / "unsafe-terminal.db"
+    placement = replace(_placement(unsafe_id), loaded=False)
+    route = RouteRequest(
+        request_id="req-unsafe-terminal",
+        model_id="public/model",
+        profile=RouteProfile.INTERACTIVE,
+        required_capabilities=frozenset({"chat"}),
+        context_tokens=1,
+    )
+    request = ChatRequest(
+        request_id="req-unsafe-terminal",
+        model="public/model",
+        messages=(ChatMessage(role="user", content="never persist me"),),
+    )
+    async with await SQLiteRuntimeStore.open(db) as store:
+        orchestrator = DataPlaneOrchestrator(
+            planner=RoutePlanner(default_policies()),
+            snapshot_provider=lambda: (placement,),
+            registry=AdapterRegistry(
+                (AdapterBinding(placement.backend_id, PersistingAdapter()),)
+            ),
+            capacity=CapacityCoordinator(global_limit=1, per_node=1, per_backend=1),
+            telemetry=BoundRouteTelemetry(
+                store,
+                RouteTelemetryRecorder(now=lambda: datetime(2026, 8, 11, tzinfo=UTC)),
+            ),
+        )
+        result = await orchestrator.chat(route, request, deadline=10)
+        assert result.error is not None
+        await store.flush_metrics()
+
+    async with await SQLiteRuntimeStore.open(db) as reopened:
+        metrics = await reopened.list_metrics(after_sequence=0)
+
+    assert metrics[0].error_code == "unavailable"
+    assert unsafe_id not in repr(metrics)

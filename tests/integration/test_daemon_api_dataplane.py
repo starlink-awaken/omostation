@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import AsyncIterator
 
@@ -22,11 +23,14 @@ from omlxc.domain.protocols import (
     ChatRequest,
     ChatResult,
     EmbeddingRequest,
+    PrepareRejection,
+    PrepareRejectionCode,
     StreamEvent,
     StreamEventKind,
     StreamPhase,
     TokenUsage,
 )
+from omlxc.scheduler import RejectionCode
 
 
 class FakeStream(AsyncIterator[StreamEvent]):
@@ -276,9 +280,71 @@ async def test_post_token_stream_error_is_structured_without_replay(
 
     assert "partial" in response.text
     assert '"type":"stream_error"' in response.text
+    chunks = [
+        json.loads(line[6:])
+        for line in response.text.splitlines()
+        if line.startswith("data: ")
+    ]
+    assert chunks[-1]["error"]["partial_result"] == {
+        "error_code": "stream_interrupted",
+        "phase": "after_content",
+        "emitted_content": True,
+    }
     assert "secret backend detail" not in response.text
     assert "[DONE]" not in response.text
-    assert response.text.count("partial") == 1
+    assert sum(
+        chunk.get("choices", [{}])[0].get("delta", {}).get("content") == "partial"
+        for chunk in chunks
+    ) == 1
+    assert inference.stream.closed
+
+
+@pytest.mark.asyncio
+async def test_first_stream_prepare_error_matches_nonstream_typed_partial_result(
+    inference: FakeInferenceService,
+) -> None:
+    inference.stream = FakeStream(
+        (
+            StreamEvent(
+                kind=StreamEventKind.ERROR,
+                request_id="unused",
+                error=AdapterError(
+                    code=AdapterErrorCode.MODEL_UNAVAILABLE,
+                    message="safe typed preparation failure",
+                ),
+                emitted_content=False,
+                phase=StreamPhase.BEFORE_CONTENT,
+                prepare_rejections=(
+                    PrepareRejection(
+                        placement_id="placement-a", reason=PrepareRejectionCode.STALE
+                    ),
+                    PrepareRejection(
+                        placement_id="placement-b",
+                        reason=PrepareRejectionCode.CAPABILITY,
+                    ),
+                ),
+            ),
+        )
+    )
+    transport = httpx.ASGITransport(app=create_app(inference=inference))
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            json={
+                "model": "local/model",
+                "messages": [{"role": "user", "content": "hello"}],
+                "stream": True,
+            },
+        )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["partial_result"] == {
+        "prepare_rejections": [
+            {"placement_id": "placement-a", "reason": "stale"},
+            {"placement_id": "placement-b", "reason": "capability_missing"},
+        ]
+    }
+    assert "safe typed preparation failure" not in response.text
     assert inference.stream.closed
 
 
@@ -365,6 +431,85 @@ async def test_openai_errors_are_sanitized_and_request_bodies_are_bounded(
     assert "X-OMLXC-Profile" not in failed.headers
     assert "do-not-leak" not in failed.text
     assert oversized.status_code == 413
+
+
+@pytest.mark.asyncio
+async def test_prepare_rejections_are_ordered_typed_and_sanitized(
+    transport: httpx.ASGITransport, inference: FakeInferenceService
+) -> None:
+    async def rejected_chat(
+        route: object, request: ChatRequest, *, deadline: float
+    ) -> ChatExecution:
+        del route, deadline
+        return ChatExecution(
+            request_id=request.request_id,
+            model_id=request.model,
+            success=False,
+            placement_id="placement-b",
+            attempted_placements=("placement-a", "placement-b"),
+            error=ExecutionError(
+                ExecutionErrorCode.NO_CANDIDATE,
+                False,
+                prepare_rejections=(
+                    ("placement-a", RejectionCode.STALE),
+                    ("placement-b", RejectionCode.CAPABILITY),
+                ),
+            ),
+        )
+
+    inference.chat = rejected_chat  # type: ignore[method-assign]
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            json={"model": "local/model", "messages": [{"role": "user", "content": "x"}]},
+        )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["partial_result"] == {
+        "prepare_rejections": [
+            {"placement_id": "placement-a", "reason": "stale"},
+            {"placement_id": "placement-b", "reason": "capability_missing"},
+        ]
+    }
+    assert "X-OMLXC-Placement" not in response.headers
+
+
+@pytest.mark.asyncio
+async def test_prepare_rejection_api_uses_stable_opaque_id_for_unsafe_config_id(
+    transport: httpx.ASGITransport, inference: FakeInferenceService
+) -> None:
+    unsafe_id = "node/private/model"
+    expected_id = f"opaque:{hashlib.sha256(unsafe_id.encode()).hexdigest()[:12]}"
+
+    async def rejected_chat(
+        route: object, request: ChatRequest, *, deadline: float
+    ) -> ChatExecution:
+        del route, deadline
+        return ChatExecution(
+            request_id=request.request_id,
+            model_id=request.model,
+            success=False,
+            placement_id=unsafe_id,
+            attempted_placements=(unsafe_id,),
+            error=ExecutionError(
+                ExecutionErrorCode.NO_CANDIDATE,
+                False,
+                prepare_rejections=((unsafe_id, RejectionCode.UNAVAILABLE),),
+            ),
+        )
+
+    inference.chat = rejected_chat  # type: ignore[method-assign]
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            json={"model": "local/model", "messages": [{"role": "user", "content": "x"}]},
+        )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["partial_result"] == {
+        "prepare_rejections": [{"placement_id": expected_id, "reason": "unavailable"}]
+    }
+    assert unsafe_id not in response.text
 
 
 @pytest.mark.asyncio

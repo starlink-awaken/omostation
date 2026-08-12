@@ -23,6 +23,8 @@ from omlxc.domain.protocols import (
     ChatResult,
     EmbeddingRequest,
     OperationStatus,
+    PrepareRejection,
+    PrepareRejectionCode,
     StreamEvent,
     StreamEventKind,
     StreamPhase,
@@ -93,12 +95,14 @@ class DataPlaneOrchestrator:
             return await self._chat_unobserved(route_request, request, deadline=deadline)
         started = self._monotonic()
         success = False
+        error: ExecutionError | None = None
         try:
             result = await self._chat_unobserved(route_request, request, deadline=deadline)
             success = result.success
+            error = result.error
             return result
         finally:
-            self._record_metric(request.request_id, started, success)
+            self._record_metric(request.request_id, started, success, error=error)
 
     async def _chat_unobserved(
         self, route_request: RouteRequest, request: ChatRequest, *, deadline: float
@@ -126,13 +130,13 @@ class DataPlaneOrchestrator:
         end = self._deadline(deadline)
         placements = self._by_id(snapshots)
         attempted: list[str] = []
-        preparation_rejections: list[RejectionCode] = []
+        preparation_rejections: list[tuple[str, RejectionCode]] = []
         for placement_id in plan.fallback_chain:
             attempted.append(placement_id)
             placement, rejection = await self._prepare(route_request, placements[placement_id], end)
             if placement is None:
                 if rejection is not None:
-                    preparation_rejections.append(rejection)
+                    preparation_rejections.append((placement_id, rejection))
                 continue
             try:
                 result = await self._chat_once(placement, request, end)
@@ -202,10 +206,12 @@ class DataPlaneOrchestrator:
             attempted[-1] if attempted else None,
             tuple(attempted),
             error=ExecutionError(
-                self._preparation_error(preparation_rejections)
+                self._preparation_error([reason for _, reason in preparation_rejections])
                 if preparation_rejections
                 else ExecutionErrorCode.BACKEND_FAILURE,
                 False,
+                reason=preparation_rejections[-1][1].value if preparation_rejections else "",
+                prepare_rejections=tuple(preparation_rejections),
             ),
         )
 
@@ -228,12 +234,14 @@ class DataPlaneOrchestrator:
             return await self._embed_unobserved(route_request, request, deadline=deadline)
         started = self._monotonic()
         success = False
+        error: ExecutionError | None = None
         try:
             result = await self._embed_unobserved(route_request, request, deadline=deadline)
             success = result.error is None
+            error = result.error
             return result
         finally:
-            self._record_metric(request.request_id, started, success)
+            self._record_metric(request.request_id, started, success, error=error)
 
     async def _embed_unobserved(
         self, route_request: RouteRequest, request: EmbeddingRequest, *, deadline: float
@@ -248,14 +256,14 @@ class DataPlaneOrchestrator:
         end = self._deadline(deadline)
         placements = self._by_id(snapshots)
         attempted: list[str] = []
-        preparation_rejections: list[RejectionCode] = []
+        preparation_rejections: list[tuple[str, RejectionCode]] = []
         expected = 1 if isinstance(request.input, str) else len(request.input)
         for placement_id in plan.fallback_chain:
             attempted.append(placement_id)
             placement, rejection = await self._prepare(route_request, placements[placement_id], end)
             if placement is None:
                 if rejection is not None:
-                    preparation_rejections.append(rejection)
+                    preparation_rejections.append((placement_id, rejection))
                 continue
             adapter = self._registry.resolve(placement)
             backend_request = request.model_copy(update={"model": placement.backend_model_id})
@@ -317,33 +325,60 @@ class DataPlaneOrchestrator:
             attempted[-1] if attempted else None,
             tuple(attempted),
             error=ExecutionError(
-                self._preparation_error(preparation_rejections)
+                self._preparation_error([reason for _, reason in preparation_rejections])
                 if preparation_rejections and len(preparation_rejections) == len(attempted)
                 else ExecutionErrorCode.BACKEND_FAILURE,
                 False,
+                reason=preparation_rejections[-1][1].value if preparation_rejections else "",
+                prepare_rejections=tuple(preparation_rejections),
             ),
         )
 
     async def stream_chat(
         self, route_request: RouteRequest, request: ChatRequest, *, deadline: float
     ) -> AsyncGenerator[StreamEvent]:
+        source = self._stream_chat_unobserved(route_request, request, deadline=deadline)
         if self._telemetry is None:
-            async for event in self._stream_chat_unobserved(
-                route_request, request, deadline=deadline
-            ):
-                yield event
+            try:
+                async for event in source:
+                    yield event
+            finally:
+                await self._close_iterator(source)
             return
         started = self._monotonic()
         success = False
+        emitted_content = False
+        terminal_code: str | None = None
+        terminal_phase: StreamPhase | None = None
         try:
-            async for event in self._stream_chat_unobserved(
-                route_request, request, deadline=deadline
-            ):
+            async for event in source:
                 if event.kind is StreamEventKind.DONE:
                     success = True
+                    terminal_phase = StreamPhase.COMPLETE
+                elif event.kind is StreamEventKind.CONTENT:
+                    emitted_content = True
+                elif event.kind is StreamEventKind.ERROR:
+                    terminal_code = self._stream_terminal_code(event)
+                    terminal_phase = event.phase
                 yield event
         finally:
-            self._record_metric(request.request_id, started, success)
+            try:
+                await self._close_iterator(source)
+            finally:
+                if not success and terminal_code is None:
+                    terminal_code = AdapterErrorCode.STREAM_INTERRUPTED.value
+                    terminal_phase = (
+                        StreamPhase.AFTER_CONTENT
+                        if emitted_content
+                        else StreamPhase.BEFORE_CONTENT
+                    )
+                self._record_metric(
+                    request.request_id,
+                    started,
+                    success,
+                    error_code=terminal_code,
+                    phase=terminal_phase,
+                )
 
     async def _stream_chat_unobserved(
         self, route_request: RouteRequest, request: ChatRequest, *, deadline: float
@@ -366,13 +401,16 @@ class DataPlaneOrchestrator:
         placements = self._by_id(snapshots)
         emitted_content = False
         emitted_usage = False
+        preparation_rejections: list[tuple[str, RejectionCode]] = []
         for placement_id in plan.fallback_chain:
             if self._remaining(end) <= 0:
                 yield self._timeout_stream_event(request.request_id, emitted_content)
                 return
             placement = placements[placement_id]
-            prepared, _rejection = await self._prepare(route_request, placement, end)
+            prepared, rejection = await self._prepare(route_request, placement, end)
             if prepared is None:
+                if rejection is not None:
+                    preparation_rejections.append((placement_id, rejection))
                 continue
             placement = prepared
             adapter = self._registry.resolve(placement)
@@ -397,6 +435,7 @@ class DataPlaneOrchestrator:
                                 update={
                                     "placement_id": placement.placement_id,
                                     "backend_id": placement.backend_id,
+                                    "prepare_rejections": (),
                                 }
                             )
                             return
@@ -441,11 +480,21 @@ class DataPlaneOrchestrator:
                 return
             finally:
                 if iterator is not None:
-                    close = getattr(iterator, "aclose", None)
-                    if close is not None:
-                        await close()
+                    await self._close_iterator(iterator)
             if not retry:
                 return
+        if preparation_rejections:
+            reasons = [reason for _, reason in preparation_rejections]
+            yield self._error_event(
+                request.request_id,
+                ExecutionError(
+                    self._preparation_error(reasons),
+                    False,
+                    reason=preparation_rejections[-1][1].value,
+                    prepare_rejections=tuple(preparation_rejections),
+                ),
+            )
+            return
         yield self._interrupted_event(request.request_id, emitted_content)
 
     @staticmethod
@@ -608,19 +657,56 @@ class DataPlaneOrchestrator:
         except Exception:
             self._telemetry_failed()
 
-    def _record_metric(self, request_id: str, started: float, success: bool) -> None:
+    def _record_metric(
+        self,
+        request_id: str,
+        started: float,
+        success: bool,
+        *,
+        error: ExecutionError | None = None,
+        error_code: str | None = None,
+        phase: StreamPhase | None = None,
+    ) -> None:
         if self._telemetry is None:
             return
         elapsed_ms = max(0.0, (self._monotonic() - started) * 1_000.0)
+        terminal_error_code = error_code or (
+            self._terminal_error_code(error)
+            if error is not None
+            else None
+            if success
+            else ExecutionErrorCode.BACKEND_FAILURE.value
+        )
+        terminal_phase = (
+            phase
+            or (error.phase if error is not None else None)
+            or (StreamPhase.COMPLETE if success else StreamPhase.BEFORE_CONTENT)
+        )
         try:
             if not self._telemetry.record_metric(
                 request_id=request_id,
                 latency_ms=elapsed_ms,
                 success=success,
+                error_code=terminal_error_code,
+                phase=terminal_phase.value,
             ):
                 self._telemetry_failed()
         except Exception:
             self._telemetry_failed()
+
+    @staticmethod
+    def _terminal_error_code(error: ExecutionError) -> str:
+        if error.prepare_rejections:
+            return error.prepare_rejections[-1][1].value
+        return error.code.value
+
+    @staticmethod
+    def _stream_terminal_code(event: StreamEvent) -> str:
+        assert event.error is not None
+        try:
+            return RejectionCode(event.error.message).value
+        except ValueError:
+            return event.error.code.value
 
     def _telemetry_failed(self) -> None:
         self._telemetry_failure_count += 1
@@ -630,6 +716,14 @@ class DataPlaneOrchestrator:
             self._telemetry_error_sink("telemetry_write_failed")
         except Exception:
             return
+
+    @staticmethod
+    async def _close_iterator(iterator: AsyncIterator[object]) -> None:
+        close = getattr(iterator, "aclose", None)
+        if close is None:
+            return
+        with anyio.CancelScope(shield=True):
+            await close()
 
     @staticmethod
     def _error_event(request_id: str, error: ExecutionError) -> StreamEvent:
@@ -653,6 +747,13 @@ class DataPlaneOrchestrator:
             error=adapter_error,
             emitted_content=error.emitted_content,
             phase=error.phase,
+            prepare_rejections=tuple(
+                PrepareRejection(
+                    placement_id=placement_id,
+                    reason=PrepareRejectionCode(rejection.value),
+                )
+                for placement_id, rejection in error.prepare_rejections
+            ),
         )
 
     @classmethod

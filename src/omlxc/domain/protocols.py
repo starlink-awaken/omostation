@@ -68,6 +68,23 @@ class TuneScope(StrEnum):
     MODEL = "model"
 
 
+class PrepareRejectionCode(StrEnum):
+    MODEL = "model_mismatch"
+    AUTHORIZATION = "authorization_denied"
+    STALE = "stale"
+    UNAVAILABLE = "unavailable"
+    CAPABILITY = "capability_missing"
+    CONTEXT = "context_exceeded"
+    MEMORY = "memory_denied"
+    NO_CAPACITY = "no_capacity"
+    LOCAL_SECURITY = "local_security_denied"
+
+
+class PrepareRejection(DomainModel):
+    placement_id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")
+    reason: PrepareRejectionCode
+
+
 class AdapterError(DomainModel):
     code: AdapterErrorCode
     message: str = Field(min_length=1)
@@ -321,6 +338,7 @@ class StreamEvent(DomainModel):
     phase: StreamPhase
     placement_id: str | None = None
     backend_id: str | None = None
+    prepare_rejections: tuple[PrepareRejection, ...] = ()
 
     @model_validator(mode="after")
     def validate_event(self) -> StreamEvent:
@@ -334,6 +352,12 @@ class StreamEvent(DomainModel):
                 raise ValueError("stream error replay state must match the event")
         elif self.error is not None:
             raise ValueError("non-error stream events cannot include an error")
+        if self.prepare_rejections and (
+            self.kind is not StreamEventKind.ERROR
+            or self.phase is not StreamPhase.BEFORE_CONTENT
+            or self.emitted_content
+        ):
+            raise ValueError("prepare rejections require a pre-content stream error")
 
         if self.kind is StreamEventKind.CONTENT and (
             not self.content

@@ -644,11 +644,14 @@ def _validate_trusted_executable(path: object) -> _TrustedExecutable:
     try:
         for candidate in (path.parent, *path.parent.parents):
             metadata = candidate.lstat()
+            root_owned_sticky_directory = (
+                metadata.st_uid == 0 and bool(metadata.st_mode & stat.S_ISVTX)
+            )
             if (
                 stat.S_ISLNK(metadata.st_mode)
                 or not stat.S_ISDIR(metadata.st_mode)
                 or metadata.st_uid not in {0, os.geteuid()}
-                or metadata.st_mode & 0o022
+                or (metadata.st_mode & 0o022 and not root_owned_sticky_directory)
             ):
                 raise ValueError(message)
             fingerprints.append(_path_fingerprint(candidate, metadata))
