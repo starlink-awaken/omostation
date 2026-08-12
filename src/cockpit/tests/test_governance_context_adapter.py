@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -70,6 +71,24 @@ def _write_workspace_state(root: Path) -> None:
     goals_path.parent.mkdir(parents=True)
     goals_path.write_text(
         "status: active\nlifecycle: ssot\n---\ntheme: Goals 权威主题\ncurrent_wave: W5\ngoals:\n  - id: G-1\n    desc: Domain SSOT\n    status: active\n",
+        encoding="utf-8",
+    )
+
+
+def _write_binding_registry(root: Path, clients: dict[str, object]) -> None:
+    binding_path = root / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
+    binding_path.parent.mkdir(parents=True, exist_ok=True)
+    binding_path.write_text(
+        yaml.safe_dump(
+            {
+                "apiVersion": "workspace.omostation/v1",
+                "kind": "DocumentsDomainProjects",
+                "clients": clients,
+                "profiles": {"content-domain": {"execution_policy": "workspace_only"}},
+                "domains": [{"id": "vault", "profile": "content-domain"}],
+            },
+            allow_unicode=True,
+        ),
         encoding="utf-8",
     )
 
@@ -257,6 +276,121 @@ def test_domain_context_fails_closed_for_unknown_domain(tmp_path: Path, monkeypa
     assert result["available"] is False
     assert result["domain"] is None
     assert "unknown domain" in result["error"]
+
+
+def test_domain_project_status_is_ok_when_identity_binding_and_gateways_exist(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    domain_root = tmp_path / "domains" / "vault"
+    (domain_root / "CLAUDE.md").write_text("# Vault", encoding="utf-8")
+    (domain_root / "AGENTS.md").write_text("# Vault", encoding="utf-8")
+    _write_binding_registry(
+        tmp_path,
+        {
+            "claude": {"instruction_file": "CLAUDE.md"},
+            "codex": {"instruction_file": "AGENTS.md"},
+            "chatgpt_web": {"instruction_file": None},
+        },
+    )
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = gc.domain_project_status("vault", workspace_root=tmp_path)
+
+    assert result["schema"] == "cockpit.domain-project-status.v1"
+    assert result["status"] == "ok"
+    assert result["summary"] == {"ok": 1, "degraded": 0, "unavailable": 0}
+    assert [gateway["status"] for gateway in result["domains"][0]["gateways"]] == ["present", "present"]
+
+
+def test_domain_project_status_does_not_degrade_when_facts_are_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    domain_root = tmp_path / "domains" / "vault"
+    (domain_root / "CLAUDE.md").write_text("# Vault", encoding="utf-8")
+    _write_binding_registry(tmp_path, {"claude": {"instruction_file": "CLAUDE.md"}})
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = gc.domain_project_status("vault", workspace_root=tmp_path)
+
+    assert result["status"] == "ok"
+    assert result["domains"][0]["facts"]["status"] == "missing"
+
+
+def test_domain_project_status_degrades_when_binding_or_gateway_is_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    without_binding = gc.domain_project_status("vault", workspace_root=tmp_path)
+
+    _write_binding_registry(tmp_path, {"claude": {"instruction_file": "CLAUDE.md"}})
+    without_gateway = gc.domain_project_status("vault", workspace_root=tmp_path)
+
+    assert without_binding["status"] == "degraded"
+    assert without_binding["domains"][0]["binding"]["status"] == "unavailable"
+    assert without_gateway["status"] == "degraded"
+    assert without_gateway["domains"][0]["gateways"][0]["status"] == "missing"
+
+
+def test_domain_project_status_degrades_when_binding_clients_are_malformed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, ["not-a-client-mapping"])
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = gc.domain_project_status("vault", workspace_root=tmp_path)
+
+    assert result["status"] == "degraded"
+    assert result["domains"][0]["binding"]["status"] == "unavailable"
+
+
+def test_domain_project_status_does_not_follow_symlink_or_fifo_gateways(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    domain_root = tmp_path / "domains" / "vault"
+    outside = tmp_path / "outside.md"
+    outside.write_text("outside", encoding="utf-8")
+    (domain_root / "CLAUDE.md").symlink_to(outside)
+    _write_binding_registry(tmp_path, {"claude": {"instruction_file": "CLAUDE.md"}})
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    symlink_result = gc.domain_project_status("vault", workspace_root=tmp_path)
+
+    assert symlink_result["status"] == "degraded"
+    assert symlink_result["domains"][0]["gateways"][0]["status"] == "invalid"
+
+    if hasattr(os, "mkfifo"):
+        (domain_root / "CLAUDE.md").unlink()
+        os.mkfifo(domain_root / "CLAUDE.md")
+        fifo_result = gc.domain_project_status("vault", workspace_root=tmp_path)
+        assert fifo_result["status"] == "degraded"
+        assert fifo_result["domains"][0]["gateways"][0]["status"] == "invalid"
+
+
+def test_domain_project_status_is_unavailable_for_unknown_domain_or_bad_registry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    unknown = gc.domain_project_status("unknown", workspace_root=tmp_path)
+    registry_path.write_text("manifests: [", encoding="utf-8")
+    malformed = gc.domain_project_status("vault", workspace_root=tmp_path)
+
+    assert unknown["status"] == "unavailable"
+    assert unknown["domains"] == []
+    assert malformed["status"] == "unavailable"
 
 
 def test_dashboard_governance_routes_use_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
