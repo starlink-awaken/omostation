@@ -49,6 +49,7 @@ class FakeAdapter:
         self.embeddings = embeddings or []
         self.chat_requests: list[ChatRequest] = []
         self.embedding_requests: list[EmbeddingRequest] = []
+        self.stream_requests: list[ChatRequest] = []
         self.active = 0
         self.max_active = 0
         self.release = asyncio.Event()
@@ -75,6 +76,7 @@ class FakeAdapter:
         return result
 
     def stream_chat(self, request: ChatRequest) -> AsyncIterator[StreamEvent]:
+        self.stream_requests.append(request)
         raise NotImplementedError
 
 
@@ -573,6 +575,31 @@ async def test_prepare_failure_preserves_ordered_typed_rejection_without_adapter
     assert result.error.prepare_rejections == (("p", rejection),)
     assert adapter.chat_requests == []
 
+    stream_snapshots = iter(((unloaded,), (refreshed,)))
+    stream_orchestrator = DataPlaneOrchestrator(
+        planner=RoutePlanner(default_policies()),
+        snapshot_provider=lambda: next(stream_snapshots),
+        registry=AdapterRegistry((AdapterBinding("b", adapter),)),
+        capacity=CapacityCoordinator(global_limit=1, per_node=1, per_backend=1),
+        loader=RejectingLoader(rejection),
+        load_target=lambda _placement: target,
+    )
+    stream = [
+        event
+        async for event in stream_orchestrator.stream_chat(
+            _route_request(required_capabilities=frozenset({"chat", "vision"})),
+            _chat(),
+            deadline=10,
+        )
+    ]
+
+    assert len(stream) == 1
+    assert stream[0].kind is StreamEventKind.ERROR
+    assert [
+        (item.placement_id, item.reason.value) for item in stream[0].prepare_rejections
+    ] == [("p", rejection.value)]
+    assert adapter.stream_requests == []
+
 
 @pytest.mark.asyncio
 async def test_prepare_rejection_is_consistent_for_embedding_and_stream_without_adapter_call(
@@ -597,8 +624,12 @@ async def test_prepare_rejection_is_consistent_for_embedding_and_stream_without_
     assert stream[0].kind is StreamEventKind.ERROR
     assert stream[0].error is not None
     assert stream[0].error.message == RejectionCode.UNAVAILABLE.value
+    assert [
+        (item.placement_id, item.reason.value) for item in stream[0].prepare_rejections
+    ] == [("p", RejectionCode.UNAVAILABLE.value)]
     assert adapter.embedding_requests == []
     assert adapter.chat_requests == []
+    assert adapter.stream_requests == []
 
 
 @pytest.mark.asyncio

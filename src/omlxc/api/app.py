@@ -632,16 +632,8 @@ def _openai_error(
 def _execution_error(request_id: str, error: Any) -> JSONResponse:
     code = getattr(error, "code", ExecutionErrorCode.BACKEND_FAILURE)
     if code in {ExecutionErrorCode.NO_CANDIDATE, ExecutionErrorCode.NO_CAPACITY}:
-        prepare_rejections = getattr(error, "prepare_rejections", ())
-        partial_result: Mapping[str, object] | None = (
-            {
-                "prepare_rejections": [
-                    {"placement_id": placement_id, "reason": rejection.value}
-                    for placement_id, rejection in prepare_rejections
-                ]
-            }
-            if prepare_rejections
-            else None
+        partial_result = _prepare_rejection_partial_result(
+            getattr(error, "prepare_rejections", ())
         )
         return _openai_error(
             request_id,
@@ -664,6 +656,13 @@ def _stream_error_response(request_id: str, event: StreamEvent) -> JSONResponse:
         return _openai_error(request_id, 504, "timeout")
     if error.code.value == "unsupported":
         return _openai_error(request_id, 400, "unsupported_feature")
+    if event.prepare_rejections:
+        return _openai_error(
+            request_id,
+            409,
+            "insufficient_capacity",
+            partial_result=_stream_prepare_rejection_partial_result(event),
+        )
     if error.code.value == "model_unavailable" and error.message in {
         ExecutionErrorCode.NO_CANDIDATE.value,
         *(code.value for code in RejectionCode),
@@ -727,11 +726,13 @@ def _sse_event(request_id: str, model: str, event: StreamEvent) -> bytes:
     if event.kind is StreamEventKind.DONE:
         return b"data: [DONE]\n\n"
     if event.kind is StreamEventKind.ERROR:
+        assert event.error is not None
         payload: dict[str, object] = {
             "error": {
                 "message": "local stream failed",
                 "type": "stream_error",
                 "code": "stream_error",
+                "partial_result": _stream_error_partial_result(event),
             }
         }
     elif event.kind is StreamEventKind.USAGE:
@@ -751,6 +752,39 @@ def _sse_event(request_id: str, model: str, event: StreamEvent) -> bytes:
         }
     encoded = json.dumps(payload, ensure_ascii=True, separators=(",", ":"))
     return f"data: {encoded}\n\n".encode()
+
+
+def _prepare_rejection_partial_result(
+    rejections: Sequence[tuple[str, RejectionCode]],
+) -> Mapping[str, object] | None:
+    if not rejections:
+        return None
+    return {
+        "prepare_rejections": [
+            {"placement_id": placement_id, "reason": rejection.value}
+            for placement_id, rejection in rejections
+        ]
+    }
+
+
+def _stream_prepare_rejection_partial_result(event: StreamEvent) -> Mapping[str, object]:
+    return {
+        "prepare_rejections": [
+            {"placement_id": item.placement_id, "reason": item.reason.value}
+            for item in event.prepare_rejections
+        ]
+    }
+
+
+def _stream_error_partial_result(event: StreamEvent) -> Mapping[str, object]:
+    assert event.error is not None
+    if event.prepare_rejections:
+        return _stream_prepare_rejection_partial_result(event)
+    return {
+        "error_code": event.error.code.value,
+        "phase": event.phase.value,
+        "emitted_content": event.emitted_content,
+    }
 
 
 async def _close_iterator(iterator: AsyncIterator[object]) -> None:

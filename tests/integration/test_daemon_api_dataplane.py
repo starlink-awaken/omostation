@@ -22,6 +22,8 @@ from omlxc.domain.protocols import (
     ChatRequest,
     ChatResult,
     EmbeddingRequest,
+    PrepareRejection,
+    PrepareRejectionCode,
     StreamEvent,
     StreamEventKind,
     StreamPhase,
@@ -277,9 +279,71 @@ async def test_post_token_stream_error_is_structured_without_replay(
 
     assert "partial" in response.text
     assert '"type":"stream_error"' in response.text
+    chunks = [
+        json.loads(line[6:])
+        for line in response.text.splitlines()
+        if line.startswith("data: ")
+    ]
+    assert chunks[-1]["error"]["partial_result"] == {
+        "error_code": "stream_interrupted",
+        "phase": "after_content",
+        "emitted_content": True,
+    }
     assert "secret backend detail" not in response.text
     assert "[DONE]" not in response.text
-    assert response.text.count("partial") == 1
+    assert sum(
+        chunk.get("choices", [{}])[0].get("delta", {}).get("content") == "partial"
+        for chunk in chunks
+    ) == 1
+    assert inference.stream.closed
+
+
+@pytest.mark.asyncio
+async def test_first_stream_prepare_error_matches_nonstream_typed_partial_result(
+    inference: FakeInferenceService,
+) -> None:
+    inference.stream = FakeStream(
+        (
+            StreamEvent(
+                kind=StreamEventKind.ERROR,
+                request_id="unused",
+                error=AdapterError(
+                    code=AdapterErrorCode.MODEL_UNAVAILABLE,
+                    message="safe typed preparation failure",
+                ),
+                emitted_content=False,
+                phase=StreamPhase.BEFORE_CONTENT,
+                prepare_rejections=(
+                    PrepareRejection(
+                        placement_id="placement-a", reason=PrepareRejectionCode.STALE
+                    ),
+                    PrepareRejection(
+                        placement_id="placement-b",
+                        reason=PrepareRejectionCode.CAPABILITY,
+                    ),
+                ),
+            ),
+        )
+    )
+    transport = httpx.ASGITransport(app=create_app(inference=inference))
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            json={
+                "model": "local/model",
+                "messages": [{"role": "user", "content": "hello"}],
+                "stream": True,
+            },
+        )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["partial_result"] == {
+        "prepare_rejections": [
+            {"placement_id": "placement-a", "reason": "stale"},
+            {"placement_id": "placement-b", "reason": "capability_missing"},
+        ]
+    }
+    assert "safe typed preparation failure" not in response.text
     assert inference.stream.closed
 
 

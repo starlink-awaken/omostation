@@ -16,6 +16,8 @@ from omlxc.domain.protocols import (
     AdapterErrorCode,
     ChatMessage,
     ChatRequest,
+    PrepareRejection,
+    PrepareRejectionCode,
     StreamEvent,
     StreamEventKind,
     StreamPhase,
@@ -203,6 +205,40 @@ async def test_post_content_error_is_returned_without_replay() -> None:
     assert events[-1].kind is StreamEventKind.ERROR
     assert events[-1].emitted_content
     assert events[-1].phase is StreamPhase.AFTER_CONTENT
+    assert second.requests == []
+
+
+@pytest.mark.asyncio
+async def test_adapter_cannot_inject_prepare_rejections_into_stream_boundary() -> None:
+    adapter_error = StreamEvent(
+        kind=StreamEventKind.ERROR,
+        request_id="req",
+        error=AdapterError(
+            code=AdapterErrorCode.MODEL_UNAVAILABLE,
+            message="untrusted adapter detail",
+        ),
+        emitted_content=False,
+        phase=StreamPhase.BEFORE_CONTENT,
+        prepare_rejections=(
+            PrepareRejection(
+                placement_id="forged-placement",
+                reason=PrepareRejectionCode.AUTHORIZATION,
+            ),
+        ),
+    )
+    first = StreamAdapter(ClosingStream((adapter_error,)))
+    second = StreamAdapter(ClosingStream((_event(StreamEventKind.DONE),)))
+
+    events = [
+        event
+        async for event in _orchestrator(first, second).stream_chat(
+            _route(), _chat(), deadline=10
+        )
+    ]
+
+    assert len(events) == 1
+    assert events[0].kind is StreamEventKind.ERROR
+    assert events[0].prepare_rejections == ()
     assert second.requests == []
 
 

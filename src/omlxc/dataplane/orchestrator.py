@@ -23,6 +23,8 @@ from omlxc.domain.protocols import (
     ChatResult,
     EmbeddingRequest,
     OperationStatus,
+    PrepareRejection,
+    PrepareRejectionCode,
     StreamEvent,
     StreamEventKind,
     StreamPhase,
@@ -433,6 +435,7 @@ class DataPlaneOrchestrator:
                                 update={
                                     "placement_id": placement.placement_id,
                                     "backend_id": placement.backend_id,
+                                    "prepare_rejections": (),
                                 }
                             )
                             return
@@ -744,6 +747,13 @@ class DataPlaneOrchestrator:
             error=adapter_error,
             emitted_content=error.emitted_content,
             phase=error.phase,
+            prepare_rejections=tuple(
+                PrepareRejection(
+                    placement_id=placement_id,
+                    reason=PrepareRejectionCode(rejection.value),
+                )
+                for placement_id, rejection in error.prepare_rejections
+            ),
         )
 
     @classmethod
