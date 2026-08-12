@@ -23,10 +23,43 @@ _PHYSICAL_BINDING_REGISTRY = re.compile(
     r"(?:/Users/[^/]+/(?:ws-[^/]+|Workspace)|~/Workspace)/\.omo/_truth/registry/"
     r"documents-domain-projects\.yaml"
 )
-_LOCAL_EXECUTION = re.compile(
-    r"(?im)^\s*(?:[-*]\s*)?`?(?:python(?:3)?|bash|sh|zsh|node|bun|uv\s+run)\b"
-    r"[^\n]*(?:_runtime|_control|\.kems/_scripts)"
+_CODE_BLOCK = re.compile(r"(?ms)^```[^\n]*\n(.*?)^```")
+_INLINE_CODE = re.compile(r"`([^`\n]+)`")
+_SHELL_COMMAND = re.compile(
+    r"^\s*(?:[-*]\s*)?(?:`)?(?:\$\s*)?"
+    r"(?:python(?:3)?|bash|sh|zsh|node|bun|uv\s+run|make|npm|env|command|xargs|cd)\b"
 )
+_PROTECTED_PATH = re.compile(
+    r"(?:^|[\s/])(?:_runtime|_control|\.kems/_scripts)(?:/|\b)"
+)
+_COMMAND_WRAPPER = re.compile(r"\b(?:env|command|xargs)\b")
+_APP_ROOT_EXECUTION = re.compile(
+    r"^\s*(?:\$\s*)?(?:make|npm|bun)\b|(?:^|\s)\./(?:app|src|bin|scripts)(?:/|\b)"
+)
+
+
+def _execution_fragments(text: str) -> Sequence[str]:
+    """Return Markdown fragments that can reasonably contain a command."""
+
+    return [
+        *(match.group(1) for match in _CODE_BLOCK.finditer(text)),
+        *(match.group(1) for match in _INLINE_CODE.finditer(text)),
+        *(line for line in text.splitlines() if _SHELL_COMMAND.match(line)),
+    ]
+
+
+def _instructs_documents_local_execution(text: str) -> bool:
+    """Detect explicit local execution forms without parsing prose as shell."""
+
+    for fragment in _execution_fragments(text):
+        command = " ".join(fragment.splitlines())
+        if _APP_ROOT_EXECUTION.search(command):
+            return True
+        if _PROTECTED_PATH.search(command) and (
+            _SHELL_COMMAND.match(command) or _COMMAND_WRAPPER.search(command)
+        ):
+            return True
+    return False
 
 
 def _check_gateway_file(path: Path, domain_id: str) -> list[str]:
@@ -51,7 +84,7 @@ def _check_gateway_file(path: Path, domain_id: str) -> list[str]:
         errors.append(f"{label} must define degraded and default-read-only behavior")
     if "ChatGPT Web" not in text:
         errors.append(f"{label} must state the ChatGPT Web remote-plugin boundary")
-    if _LOCAL_EXECUTION.search(text):
+    if _instructs_documents_local_execution(text):
         errors.append(f"{label} instructs Documents-local execution")
     return errors
 

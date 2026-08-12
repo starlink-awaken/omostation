@@ -6,6 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -336,3 +337,52 @@ def test_gateway_rejects_documents_local_execution_instructions(tmp_path: Path) 
     assert json.loads(result.stdout)["errors"] == [
         "vault/CLAUDE.md instructs Documents-local execution"
     ]
+
+
+@pytest.mark.parametrize(
+    "instruction",
+    [
+        "```sh\nmake -C app run\n```",
+        "```sh\ncd _runtime && ./controller.py\n```",
+        "`./app/server`",
+        "```sh\nenv python3 _control/x.py\n```",
+        "```sh\ncommand python3 _control/x.py\n```",
+        "```sh\nxargs python3 _control/x.py\n```",
+    ],
+)
+def test_gateway_rejects_common_documents_local_execution_forms(
+    tmp_path: Path, instruction: str
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    domain_root = tmp_path / "documents" / "vault"
+    _write_gateways(domain_root, "vault")
+    claude = domain_root / "CLAUDE.md"
+    claude.write_text(
+        claude.read_text(encoding="utf-8") + f"\n{instruction}\n",
+        encoding="utf-8",
+    )
+
+    result = _run(domain_registry, project_registry, ("vault",))
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "vault/CLAUDE.md instructs Documents-local execution"
+    ]
+
+
+def test_gateway_allows_non_executable_prohibition_statement(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    domain_root = tmp_path / "documents" / "vault"
+    _write_gateways(domain_root, "vault")
+    claude = domain_root / "CLAUDE.md"
+    claude.write_text(
+        claude.read_text(encoding="utf-8")
+        + "\n不要执行或引导执行 Documents 内 `_runtime`、`_control` 脚本。\n",
+        encoding="utf-8",
+    )
+
+    result = _run(domain_registry, project_registry, ("vault",))
+
+    assert result.returncode == 0, result.stderr

@@ -35,13 +35,13 @@ validated L4 manifest registry and verifies both client files:
 - the logical Workspace binding registry is named without binding a worktree;
 - degraded and default-read-only behavior are explicit;
 - the ChatGPT Web remote-plugin boundary is truthful;
-- no shell/Python/Node command executes Documents `_runtime`, `_control`, or
-  `.kems/_scripts` paths;
+- no common shell/interpreter command executes Documents `_runtime`,
+  `_control`, `.kems/_scripts`, or application-root paths;
 - the projection remains below 80 lines.
 
 Focused tests use RED/GREEN coverage for a wrong domain ID, a physical session
-worktree reference, and a Documents-local execution command. Current focused
-result: `10 passed`.
+worktree reference, application-root execution, common command wrappers, and
+Documents-local execution commands. Current focused result: `17 passed`.
 
 The live three-domain check returned:
 
@@ -61,12 +61,12 @@ post-change SHA-256 values are the immutable evidence for this phase:
 
 | Projection | SHA-256 |
 |---|---|
-| `@学习进化/CLAUDE.md` | `482f475d14eb3d60648cccd100db2c0ced6121b2c84b867346a90db2663264df` |
-| `@学习进化/AGENTS.md` | `9f81a0a171a140d4a4842321876f5c635336c3641002f24d2a8d9efcc16323e5` |
-| `@工作文档/卫健委/CLAUDE.md` | `9ad6fe234bf4747b2350c1ee2d34a5d12a588ae042ffe7834fe6fdd6ee324495` |
-| `@工作文档/卫健委/AGENTS.md` | `a41f333d40a93b101d5aaac2ab6b0c4ea70fcb1b6dc8c4f5a69b4bc86757a90e` |
-| `@创意创作/CLAUDE.md` | `eb1537aa397f9be85294f0a71f8939ddfa074229e2fbc3fa2cc163d3e0ca8b39` |
-| `@创意创作/AGENTS.md` | `c59f2b425b71deb8dae39d3f50a039c37cd665ed0f7474ad67c4882651c00996` |
+| `@学习进化/CLAUDE.md` | `9afa26c5be937c9a50cf8a3e97967434de3a1ee28862edf144aaf0cb499b4176` |
+| `@学习进化/AGENTS.md` | `abb5bf199665edbaf3ff8c6b940379bb9ea9bcafe868fff0c4d70be9e2b6116f` |
+| `@工作文档/卫健委/CLAUDE.md` | `8208a3d74b463b391edd1f50726b4864dfcff3e71fa33e4a1f1ca3d91b6f0a65` |
+| `@工作文档/卫健委/AGENTS.md` | `2ab6900df3232eb8ac0a90e8f5f40b4cb8448acc1eda1e56f5d6a980a5843dea` |
+| `@创意创作/CLAUDE.md` | `31d7f2ef5768a49a5e7199f321b18dd4e1a42610fb24f1f7e678a57cf8a58683` |
+| `@创意创作/AGENTS.md` | `7a93c001c6b1be3763c9c9a7aefe3b58a08303c6c70b119b7efbd7a79573697c` |
 
 ## Honest remaining gap
 
