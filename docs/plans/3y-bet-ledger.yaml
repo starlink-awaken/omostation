@@ -842,6 +842,82 @@ bets:
   human_gate: true
   circuit_breaker: 超 2 周仍不通 → 启用 R2 备选(文件夹监听/日历导出/手动投递), 但必须标 degraded
   retro: required
+- id: BET-Y1Q2-T2-01
+  track: T2-PERCEPT
+  window: Y1Q2
+  title: Blueprint W3-01A 本地真实信号到受治理个人 Episode 单源薄切片
+  appetite: 3 days
+  priority: P0
+  status: done
+  done_at: 2026-08-12
+  goal: >-
+    在可信本地单用户环境中，复用 Iris LocalFilesConnector 与 W2-05 PersonalEpisodeService，
+    让用户投放到服务端固定允许目录的一条 Markdown item 先以隐私安全的 SignalObserved 写入
+    唯一 Event Ledger，再创建与该 signal 具备因果关系、待人工确认的个人 Episode；后续继续复用
+    既有 confirm → Mandate → Agora PEP → never-send 本地草稿 → Human Outcome 链路。
+  non_goals:
+  - Apple Mail、日历、Reminders、任务系统或第二信号源
+  - watcher、daemon、cron、旧 signal-poller auto-trigger 或第二条 Journey/MOS 写链
+  - LLM 承诺提取、自动角色匹配、置信度模型或内容外发
+  - 新 MOF/M2、Ledger DDL/trigger、顶级项目、入口、规则、ADR 或 dashboard
+  - 自动审批、自动发送、外部任务创建、日历写入或自治等级晋升
+  - 两周价值观察、节省时间结论或 W3 gate 宣称；这些必须由后续 observation BET 使用真实运行数据验证
+  - exactly-once、崩溃 reconcile、多租户、跨主机或敌意同进程防护
+  done_when:
+  - >-
+    Cockpit 只接受 server-side item_id 与显式 principal/role/responsibility/executor；服务端从配置的
+    固定允许目录经现有 Iris LocalFilesConnector 读取 Markdown，调用方不能提交 summary、原文或任意文件路径
+  - >-
+    OMO 使用现有 ECOS generated EventEnvelope 与 Signal 校验输入，先追加 privacy_class=private 的
+    SignalObserved.v1，再追加具有 causation_id/source_signal_ref 的 Episode.Decision.v1；两者位于同一
+    Ledger，Episode 绑定 active role assignment 与 responsibility
+  - >-
+    Ledger 仅保存必要标题摘要、内容 SHA-256、稳定 source URI、scene/journey/outcome 三锚点与隐私分类；
+    Markdown 正文、绝对路径、凭证和自由文本日志不得入 Ledger、Git、MOS 或网络调用
+  - >-
+    幂等键由 source_id + 相对 item_id + content digest 决定；同一内容重复摄取复用同一 Signal/Episode，
+    内容变化产生新的 Signal/Episode
+  - >-
+    未配置允许目录、item 不存在、绝对/上级路径、越界 symlink、非 Markdown、空标题、失效角色或责任不匹配
+    均 fail closed，且 Ledger event count/hash 不变
+  - >-
+    一条无 mock HTTP + Iris + SQLite E2E 完成 item ingest → SignalObserved → Inbox pending Episode →
+    confirm → 真实 Agora PEP → never-send 本地草稿 → feedback；重复摄取与所有负向路径均验证无伪成功
+  - >-
+    W2-01 至 W2-05 定向回归通过；不改 Kairon、Agora、ECOS、Ledger schema、旧 Workflow Mesh 或 Cockpit UI
+  verify:
+  - cmd: >-
+      cd projects/omo && uv sync --frozen --reinstall-package ecos && uv run --with pytest python -m pytest
+      tests/test_personal_episode.py tests/test_episode_projection.py tests/test_sovereignty_policy_enforcement.py -q
+    expect: exit 0；覆盖 generated Signal/EventEnvelope、Signal→Episode 因果关系、去重和 fail-closed
+  - cmd: >-
+      cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python -m pytest
+      src/cockpit/tests/test_api_personal_signal.py src/cockpit/tests/test_api_personal_episode.py
+      src/cockpit/tests/test_api_episode_projection.py -q
+    expect: exit 0；包含真实临时允许目录、真实 Iris item、真实 Ledger/OMO/Agora PEP，不 monkeypatch 核心链路
+  - cmd: >-
+      cd projects/omo && uv lock --check && git diff --check && cd ../cockpit && git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - projects/omo/src/omo/personal_episode.py
+  - projects/omo/tests/test_personal_episode.py
+  - projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+  - projects/cockpit/src/cockpit/tests/test_api_personal_signal.py
+  - .omo/_knowledge/retros/BET-Y1Q2-T2-01.md
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q1-T2-01
+  - BET-Y1Q2-T1-08
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    超 3 天、需要新 M2/DDL/第二账本/第二入口/LLM/云调用或第二信号源才能闭环时，立即缩为固定目录、
+    单 item、一次性显式 ingest，不加 watcher。任何正文进入 Git、日志、MOS/JSONL 副本或外发链立即停止并回滚；
+    没有真实用户 item 与裁决时仅能声称 E3 工程能力完成，不得宣称个人价值或 W3 gate 通过
+  retro: required
 - id: BET-Y1Q1-T3-01
   track: T3-COGNI
   window: Y1Q1
