@@ -158,6 +158,12 @@ def _c_domains(a):
     return _c(a)
 
 
+def _c_domain_status(a):
+    from cockpit.commands.l4bridge import cmd_domain_status as _c
+
+    return _c(a)
+
+
 def _c_skill(a):
     from cockpit.commands.l4bridge import cmd_skill as _c
 
@@ -723,6 +729,7 @@ def main() -> int:
         "finance": lambda a: __import__("cockpit.commands.finance", fromlist=["cmd_finance"]).cmd_finance(a),
         "governance": cmd_governance,
         "domains": _c_domains,
+        "domain-status": _c_domain_status,
         "skill": _c_skill,
         "events": _c_events,
         "ssb": cmd_ssb,

@@ -216,6 +216,7 @@ class TestGovernanceTools:
             "workspace_context",
             "domains_list",
             "domain_context",
+            "domain_project_status",
             "cards_status",
             "cards_check",
             "kems_status",
@@ -238,3 +239,15 @@ class TestGovernanceTools:
 
         assert json.loads(agent_runtime_mcp_server.domain_context("unknown")) == payload
         assert seen == ["unknown"]
+
+    def test_domain_project_status_passes_domain_id_to_adapter(self, monkeypatch):
+        seen = []
+        payload = {"schema": "cockpit.domain-project-status.v1", "status": "ok", "available": True}
+        monkeypatch.setattr(
+            agent_runtime_mcp_server.governance_context,
+            "domain_project_status",
+            lambda domain_id="": seen.append(domain_id) or payload,
+        )
+
+        assert json.loads(agent_runtime_mcp_server.domain_project_status("vault")) == payload
+        assert seen == ["vault"]

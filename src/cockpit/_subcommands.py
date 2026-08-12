@@ -295,6 +295,9 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     vault_p.add_argument("keyword", nargs="?", help="搜索关键词")
 
     sub.add_parser("domains", help="列出 L4 所有域及其状态")
+    domain_status_p = sub.add_parser("domain-status", help="显示 Documents 域项目绑定与引导状态")
+    domain_status_p.add_argument("domain_id", nargs="?", default="", help="可选 L4 域 ID")
+    domain_status_p.add_argument("--json", action="store_true", help="输出稳定 JSON envelope")
     skill_p = sub.add_parser("skill", help="运行 L4 定时技能")
     skill_p.add_argument("skill_name", help="技能名称 (如 kos-daily-ontology-sync)")
 

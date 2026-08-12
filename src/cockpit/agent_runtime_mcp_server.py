@@ -162,6 +162,13 @@ def domain_context(domain_id: str) -> str:
 
 
 @mcp.tool()
+def domain_project_status(domain_id: str = "") -> str:
+    """Read one or all Documents domain project bindings and gateway files."""
+
+    return _json_envelope(governance_context.domain_project_status(domain_id))
+
+
+@mcp.tool()
 def cards_status() -> str:
     """List CARDS through the OMO authority."""
 
