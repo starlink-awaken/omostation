@@ -377,6 +377,27 @@ def test_domain_project_status_does_not_follow_symlink_or_fifo_gateways(
         assert fifo_result["domains"][0]["gateways"][0]["status"] == "invalid"
 
 
+def test_domain_project_status_rejects_directory_and_parent_escape_gateways(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    domain_root = tmp_path / "domains" / "vault"
+    (domain_root / "guidance").mkdir()
+    _write_binding_registry(tmp_path, {"claude": {"instruction_file": "guidance"}})
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    directory_result = gc.domain_project_status("vault", workspace_root=tmp_path)
+
+    _write_binding_registry(tmp_path, {"claude": {"instruction_file": "../outside.md"}})
+    escaped_result = gc.domain_project_status("vault", workspace_root=tmp_path)
+
+    assert directory_result["status"] == "degraded"
+    assert directory_result["domains"][0]["gateways"][0]["status"] == "invalid"
+    assert escaped_result["status"] == "degraded"
+    assert escaped_result["domains"][0]["gateways"][0]["status"] == "invalid"
+
+
 def test_domain_project_status_is_unavailable_for_unknown_domain_or_bad_registry(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
