@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
 import yaml
@@ -16,15 +18,88 @@ if str(L4_SRC) not in sys.path:
 
 from l4_kernel.manifest_registry import ManifestRegistry
 
+_LOGICAL_BINDING_REGISTRY = "Workspace binding registry `documents-domain-projects`"
+_PHYSICAL_BINDING_REGISTRY = re.compile(
+    r"(?:/Users/[^/]+/(?:ws-[^/]+|Workspace)|~/Workspace)/\.omo/_truth/registry/"
+    r"documents-domain-projects\.yaml"
+)
+_CODE_BLOCK = re.compile(r"(?ms)^```[^\n]*\n(.*?)^```")
+_INLINE_CODE = re.compile(r"`([^`\n]+)`")
+_SHELL_COMMAND = re.compile(
+    r"^\s*(?:[-*]\s*)?(?:`)?(?:\$\s*)?"
+    r"(?:python(?:3)?|bash|sh|zsh|node|bun|uv\s+run|make|npm|env|command|xargs|cd)\b"
+)
+_PROTECTED_PATH = re.compile(
+    r"(?:^|[\s/])(?:_runtime|_control|\.kems/_scripts)(?:/|\b)"
+)
+_COMMAND_WRAPPER = re.compile(r"\b(?:env|command|xargs)\b")
+_APP_ROOT_EXECUTION = re.compile(
+    r"^\s*(?:\$\s*)?(?:make|npm|bun)\b|(?:^|\s)\./(?:app|src|bin|scripts)(?:/|\b)"
+)
+
+
+def _execution_fragments(text: str) -> Sequence[str]:
+    """Return Markdown fragments that can reasonably contain a command."""
+
+    return [
+        *(match.group(1) for match in _CODE_BLOCK.finditer(text)),
+        *(match.group(1) for match in _INLINE_CODE.finditer(text)),
+        *(line for line in text.splitlines() if _SHELL_COMMAND.match(line)),
+    ]
+
+
+def _instructs_documents_local_execution(text: str) -> bool:
+    """Detect explicit local execution forms without parsing prose as shell."""
+
+    for fragment in _execution_fragments(text):
+        command = " ".join(fragment.splitlines())
+        if _APP_ROOT_EXECUTION.search(command):
+            return True
+        if _PROTECTED_PATH.search(command) and (
+            _SHELL_COMMAND.match(command) or _COMMAND_WRAPPER.search(command)
+        ):
+            return True
+    return False
+
+
+def _check_gateway_file(path: Path, domain_id: str) -> list[str]:
+    """Validate one client projection without interpreting domain content."""
+
+    label = f"{domain_id}/{path.name}"
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        return [f"{label} unavailable: {exc}"]
+
+    errors: list[str] = []
+    if len(text.splitlines()) >= 80:
+        errors.append(f"{label} must remain under 80 lines")
+    if "DOMAIN.yaml" not in text or "SSOT" not in text:
+        errors.append(f"{label} must point to DOMAIN.yaml as identity SSOT")
+    if f'domain_context(domain_id="{domain_id}")' not in text:
+        errors.append(f"{label} must call domain_context for {domain_id}")
+    if _LOGICAL_BINDING_REGISTRY not in text or _PHYSICAL_BINDING_REGISTRY.search(text):
+        errors.append(f"{label} must reference the logical Workspace binding registry")
+    if "degraded" not in text or "默认只读" not in text:
+        errors.append(f"{label} must define degraded and default-read-only behavior")
+    if "ChatGPT Web" not in text:
+        errors.append(f"{label} must state the ChatGPT Web remote-plugin boundary")
+    if _instructs_documents_local_execution(text):
+        errors.append(f"{label} instructs Documents-local execution")
+    return errors
+
 
 def check_domain_projects(
-    domain_registry_path: Path, project_registry_path: Path
+    domain_registry_path: Path,
+    project_registry_path: Path,
+    gateway_domain_ids: Sequence[str] = (),
 ) -> dict[str, object]:
     """Return a stable, read-only consistency report for both registries."""
 
     errors: list[str] = []
     try:
-        manifests = ManifestRegistry.load(domain_registry_path)
+        registry = ManifestRegistry.load(domain_registry_path)
+        manifests = registry
         manifest_ids = [manifest.id for manifest in manifests.list_all()]
     except (
         OSError,
@@ -73,6 +148,20 @@ def check_domain_projects(
     if not isinstance(routes, dict):
         routes = {}
         errors.append("capability_routes must be a mapping")
+    clients = raw.get("clients")
+    gateway_files: list[str] = []
+    if not isinstance(clients, dict):
+        errors.append("clients must be a mapping")
+    else:
+        gateway_files = sorted(
+            {
+                instruction_file
+                for client in clients.values()
+                if isinstance(client, dict)
+                and isinstance(instruction_file := client.get("instruction_file"), str)
+                and instruction_file
+            }
+        )
 
     for profile_id, profile in profiles.items():
         if not isinstance(profile, dict):
@@ -131,17 +220,45 @@ def check_domain_projects(
     if unknown:
         errors.append(f"domains contains unknown manifest ids: {', '.join(unknown)}")
 
-    return {"ok": not errors, "domain_count": len(manifest_ids), "errors": errors}
+    selected_ids = list(gateway_domain_ids)
+    if len(set(selected_ids)) != len(selected_ids):
+        errors.append("gateway domains contains duplicate ids")
+    if selected_ids and not gateway_files:
+        errors.append("clients must expose at least one instruction file")
+    for domain_id in sorted(set(selected_ids)):
+        if domain_id not in manifest_ids or domain_id not in project_ids:
+            errors.append(f"gateway domain is not registered: {domain_id}")
+            continue
+        domain_root = registry.resolve_path(domain_id)
+        if domain_root is None:
+            errors.append(f"gateway domain root is unavailable: {domain_id}")
+            continue
+        for filename in gateway_files:
+            errors.extend(_check_gateway_file(domain_root / filename, domain_id))
+
+    report: dict[str, object] = {
+        "ok": not errors,
+        "domain_count": len(manifest_ids),
+    }
+    if selected_ids:
+        report["gateway_count"] = len(set(selected_ids))
+    report["errors"] = errors
+    return report
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--domain-registry", type=Path, required=True)
     parser.add_argument("--project-registry", type=Path, required=True)
+    parser.add_argument("--gateway-domain", action="append", default=[])
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
-    report = check_domain_projects(args.domain_registry, args.project_registry)
+    report = check_domain_projects(
+        args.domain_registry,
+        args.project_registry,
+        args.gateway_domain,
+    )
     if args.json:
         print(json.dumps(report, ensure_ascii=False))
     else:

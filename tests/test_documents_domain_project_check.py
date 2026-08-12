@@ -6,6 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -102,10 +103,18 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                     }
                 },
                 "clients": {
+                    "claude": {
+                        "instruction_file": "CLAUDE.md",
+                        "mcp_scope": "user",
+                    },
                     "codex": {
                         "instruction_file": "AGENTS.md",
                         "mcp_scope": "user_or_project",
-                    }
+                    },
+                    "agents_compatible": {
+                        "instruction_file": "AGENTS.md",
+                        "mcp_scope": "client",
+                    },
                 },
                 "profiles": {
                     "content-domain": {
@@ -131,7 +140,9 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
 
 
 def _run(
-    domain_registry: Path, project_registry: Path
+    domain_registry: Path,
+    project_registry: Path,
+    gateway_domain_ids: tuple[str, ...] = (),
 ) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [
@@ -141,6 +152,11 @@ def _run(
             str(domain_registry),
             "--project-registry",
             str(project_registry),
+            *[
+                argument
+                for domain_id in gateway_domain_ids
+                for argument in ("--gateway-domain", domain_id)
+            ],
             "--json",
         ],
         cwd=ROOT,
@@ -148,6 +164,20 @@ def _run(
         text=True,
         check=False,
     )
+
+
+def _write_gateways(domain_root: Path, domain_id: str) -> None:
+    text = f"""# Thin client gateway
+
+Read `DOMAIN.yaml`; its id is `{domain_id}` and it is the identity SSOT.
+Use Cockpit Workspace MCP `domain_context(domain_id=\"{domain_id}\")`.
+Capabilities are owned by Workspace binding registry `documents-domain-projects`.
+When MCP is unavailable report **degraded**. Documents 内容默认只读。
+Do not execute Documents `_runtime`, `_control`, `.kems/_scripts`, or app code.
+ChatGPT Web requires a reviewed remote plugin.
+"""
+    for filename in ("CLAUDE.md", "AGENTS.md"):
+        (domain_root / filename).write_text(text, encoding="utf-8")
 
 
 def test_valid_domain_project_registry_passes(tmp_path: Path) -> None:
@@ -231,3 +261,128 @@ def test_domain_execution_must_remain_workspace_owned(tmp_path: Path) -> None:
     assert json.loads(result.stdout)["errors"] == [
         "profiles.content-domain.execution_policy must be workspace_only"
     ]
+
+
+def test_selected_domain_gateways_are_thin_ssot_projections(tmp_path: Path) -> None:
+    domain_ids = ["vault", "work-weijian", "creative"]
+    domain_registry = _domain_registry(tmp_path, domain_ids)
+    project_registry = _project_registry(tmp_path, domain_ids)
+    for domain_id in domain_ids:
+        _write_gateways(tmp_path / "documents" / domain_id, domain_id)
+
+    result = _run(domain_registry, project_registry, tuple(domain_ids))
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout) == {
+        "ok": True,
+        "domain_count": 3,
+        "gateway_count": 3,
+        "errors": [],
+    }
+
+
+def test_gateway_domain_context_must_match_manifest_id(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    domain_root = tmp_path / "documents" / "vault"
+    _write_gateways(domain_root, "wrong-domain")
+
+    result = _run(domain_registry, project_registry, ("vault",))
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "vault/AGENTS.md must call domain_context for vault",
+        "vault/CLAUDE.md must call domain_context for vault",
+    ]
+
+
+def test_gateway_rejects_physical_worktree_as_workspace_ssot(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    domain_root = tmp_path / "documents" / "vault"
+    _write_gateways(domain_root, "vault")
+    for filename in ("CLAUDE.md", "AGENTS.md"):
+        path = domain_root / filename
+        path.write_text(
+            path.read_text(encoding="utf-8").replace(
+                "Workspace binding registry `documents-domain-projects`",
+                "/Users/example/ws-documents-session/.omo/_truth/registry/documents-domain-projects.yaml",
+            ),
+            encoding="utf-8",
+        )
+
+    result = _run(domain_registry, project_registry, ("vault",))
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "vault/AGENTS.md must reference the logical Workspace binding registry",
+        "vault/CLAUDE.md must reference the logical Workspace binding registry",
+    ]
+
+
+def test_gateway_rejects_documents_local_execution_instructions(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    domain_root = tmp_path / "documents" / "vault"
+    _write_gateways(domain_root, "vault")
+    claude = domain_root / "CLAUDE.md"
+    claude.write_text(
+        claude.read_text(encoding="utf-8") + "\npython3 _runtime/controller.py\n",
+        encoding="utf-8",
+    )
+
+    result = _run(domain_registry, project_registry, ("vault",))
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "vault/CLAUDE.md instructs Documents-local execution"
+    ]
+
+
+@pytest.mark.parametrize(
+    "instruction",
+    [
+        "```sh\nmake -C app run\n```",
+        "```sh\ncd _runtime && ./controller.py\n```",
+        "`./app/server`",
+        "```sh\nenv python3 _control/x.py\n```",
+        "```sh\ncommand python3 _control/x.py\n```",
+        "```sh\nxargs python3 _control/x.py\n```",
+    ],
+)
+def test_gateway_rejects_common_documents_local_execution_forms(
+    tmp_path: Path, instruction: str
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    domain_root = tmp_path / "documents" / "vault"
+    _write_gateways(domain_root, "vault")
+    claude = domain_root / "CLAUDE.md"
+    claude.write_text(
+        claude.read_text(encoding="utf-8") + f"\n{instruction}\n",
+        encoding="utf-8",
+    )
+
+    result = _run(domain_registry, project_registry, ("vault",))
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "vault/CLAUDE.md instructs Documents-local execution"
+    ]
+
+
+def test_gateway_allows_non_executable_prohibition_statement(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    domain_root = tmp_path / "documents" / "vault"
+    _write_gateways(domain_root, "vault")
+    claude = domain_root / "CLAUDE.md"
+    claude.write_text(
+        claude.read_text(encoding="utf-8")
+        + "\n不要执行或引导执行 Documents 内 `_runtime`、`_control` 脚本。\n",
+        encoding="utf-8",
+    )
+
+    result = _run(domain_registry, project_registry, ("vault",))
+
+    assert result.returncode == 0, result.stderr
