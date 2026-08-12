@@ -14,21 +14,26 @@ export PASW_CLAIMS_DIR=".omo/_delivery/agent-claims"
 pasw_resolve_isolated_subs() {
   local repo_root="$1"
   local gitmodules="$repo_root/.gitmodules"
-  local isolated_subs
+  local config_entry sub_path
 
   if [ ! -r "$gitmodules" ]; then
     echo "❌ 无法读取 PASW 子模块清单: $gitmodules" >&2
     return 1
   fi
-  if ! isolated_subs=$(git -C "$repo_root" config --file "$gitmodules" --get-regexp path 2>/dev/null | awk '{ print $2 }' | tr '\n' ' '); then
-    echo "❌ 无法解析 PASW 子模块清单: $gitmodules" >&2
-    return 1
-  fi
-  if [ -z "$isolated_subs" ]; then
+  PASW_ISOLATED_SUBS_ARRAY=()
+  while IFS= read -r -d '' config_entry; do
+    sub_path="${config_entry#*$'\n'}"
+    if [ "$sub_path" = "$config_entry" ] || [ -z "$sub_path" ]; then
+      echo "❌ 无法解析 PASW 子模块清单: $gitmodules" >&2
+      return 1
+    fi
+    PASW_ISOLATED_SUBS_ARRAY+=("$sub_path")
+  done < <(git -C "$repo_root" config --null --file "$gitmodules" --get-regexp '^submodule\..*\.path$' 2>/dev/null)
+  if [ "${#PASW_ISOLATED_SUBS_ARRAY[@]}" -eq 0 ]; then
     echo "❌ PASW 子模块清单为空: $gitmodules" >&2
     return 1
   fi
-  export PASW_ISOLATED_SUBS="$isolated_subs"
+  export PASW_ISOLATED_SUBS="$(printf '%s\n' "${PASW_ISOLATED_SUBS_ARRAY[@]}")"
 }
 
 pasw_verify_isolation() {
@@ -37,7 +42,7 @@ pasw_verify_isolation() {
   local sub sub_name sub_wt root_sha ordinary_sha pasw_sha registrations
 
   pasw_resolve_isolated_subs "$wt" || return 1
-  for sub in $PASW_ISOLATED_SUBS; do
+  for sub in "${PASW_ISOLATED_SUBS_ARRAY[@]}"; do
     sub_name=$(basename "$sub")
     sub_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
     if ! root_sha=$(git -C "$wt" rev-parse "HEAD:$sub" 2>/dev/null); then
@@ -78,13 +83,14 @@ pasw_create() {
   local wt="$1" session="$2"
   local created=0
   local failed=0
-  local sub sub_name sub_wt sub_branch root_sha
+  local sub sub_name sub_wt sub_branch sub_branch_name root_sha
 
   pasw_resolve_isolated_subs "$wt" || return 1
-  for sub in $PASW_ISOLATED_SUBS; do
+  for sub in "${PASW_ISOLATED_SUBS_ARRAY[@]}"; do
     sub_name=$(basename "$sub")
     sub_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
-    sub_branch="agent/${session}-${sub_name}"
+    sub_branch_name="${sub_name// /-}"
+    sub_branch="agent/${session}-${sub_branch_name}"
     if [ ! -e "$wt/$sub/.git" ]; then
       echo "   📥 init $sub (PASW 需要)..."
       if ! (cd "$wt" && git submodule update --init "$sub" 2>&1); then
@@ -127,6 +133,7 @@ pasw_create() {
 PASW_LIBRARY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PASW_REPOSITORY_ROOT="${WS_ROOT:-$PASW_LIBRARY_ROOT}"
 export PASW_ISOLATED_SUBS=""
+declare -a PASW_ISOLATED_SUBS_ARRAY=()
 if [ -r "$PASW_REPOSITORY_ROOT/.gitmodules" ]; then
   pasw_resolve_isolated_subs "$PASW_REPOSITORY_ROOT" >/dev/null || true
 fi

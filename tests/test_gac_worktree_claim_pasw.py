@@ -31,21 +31,23 @@ def _init_repo(path: Path) -> None:
     _git(path, "commit", "-q", "-m", "initial")
 
 
-def _make_parent_with_two_submodules(tmp_path: Path) -> Path:
+def _make_parent_with_two_submodules(
+    tmp_path: Path, submodule_paths: tuple[str, ...] = SUBMODULES
+) -> Path:
     parent = tmp_path / "parent"
     parent.mkdir()
     _init_repo(parent)
     (parent / ".gitignore").write_text(".subtrees/\n")
     _git(parent, "add", ".gitignore")
     _git(parent, "commit", "-q", "-m", "ignore PASW worktrees")
-    for name in ("alpha", "beta"):
-        child = tmp_path / f"child-{name}"
+    for submodule_path in submodule_paths:
+        child = tmp_path / f"child-{submodule_path.replace('/', '-').replace(' ', '-')}"
         child.mkdir()
         _init_repo(child)
         subprocess.run(
             [
                 "git", "-C", str(parent), "-c", "protocol.file.allow=always",
-                "submodule", "add", "-q", str(child), f"modules/{name}",
+                "submodule", "add", "-q", str(child), submodule_path,
             ],
             check=True,
         )
@@ -142,8 +144,10 @@ def _create_pasw(wt: Path, submodule: str, session: str) -> Path:
     return pasw
 
 
-def _assert_complete_pasw(parent: Path, wt: Path) -> None:
-    for submodule in SUBMODULES:
+def _assert_complete_pasw(
+    parent: Path, wt: Path, submodule_paths: tuple[str, ...] = SUBMODULES
+) -> None:
+    for submodule in submodule_paths:
         pasw = _pasw_path(wt, submodule)
         assert pasw.is_dir(), f"missing PASW worktree: {pasw}"
         registrations = _git(wt / submodule, "worktree", "list", "--porcelain").stdout
@@ -201,6 +205,18 @@ def test_complete_claim_registers_matching_pasw_from_non_repo_cwd(tmp_path: Path
 
     assert retry.returncode == 0, retry.stderr
     _assert_complete_pasw(parent, wt)
+
+
+def test_claim_preserves_submodule_paths_with_spaces(tmp_path: Path) -> None:
+    submodule_paths = ("modules/alpha", "modules/space alpha")
+    parent = _make_parent_with_two_submodules(tmp_path, submodule_paths)
+
+    result = _run_claim(parent, tmp_path, "space-path")
+    wt = _worktree(tmp_path, "space-path")
+
+    assert result.returncode == 0, result.stderr
+    _assert_complete_pasw(parent, wt, submodule_paths)
+    assert _git(wt, "status", "--porcelain").stdout == ""
 
 
 def test_retry_repairs_pasw_after_a_partial_worktree_add_failure(tmp_path: Path) -> None:
