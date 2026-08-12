@@ -240,6 +240,11 @@ def test_valid_domain_project_registry_passes(tmp_path: Path) -> None:
             "clients.chatgpt_web.instruction_file must be null",
         ),
         (
+            ("clients", "chatgpt_web", "instruction_file"),
+            None,
+            "clients.chatgpt_web.instruction_file must be null",
+        ),
+        (
             ("clients", "chatgpt_web", "mcp_scope"),
             "user_or_project",
             "clients.chatgpt_web.mcp_scope must be public_https_or_secure_tunnel",
@@ -247,6 +252,11 @@ def test_valid_domain_project_registry_passes(tmp_path: Path) -> None:
         (
             ("clients", "chatgpt_web", "requires_developer_mode"),
             False,
+            "clients.chatgpt_web.requires_developer_mode must be true",
+        ),
+        (
+            ("clients", "chatgpt_web", "requires_developer_mode"),
+            1,
             "clients.chatgpt_web.requires_developer_mode must be true",
         ),
         (

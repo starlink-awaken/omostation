@@ -50,7 +50,7 @@ clients:
   codex:
     instruction_file: AGENTS.md
     mcp_scope: user_or_project
-    note: "Codex/ChatGPT desktop share the Codex-host MCP configuration."
+    note: "Use AGENTS.md and the configured Codex MCP scope."
   agents_compatible:
     instruction_file: AGENTS.md
     mcp_scope: client

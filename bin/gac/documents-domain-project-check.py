@@ -46,6 +46,16 @@ _CHATGPT_WEB_BINDING = {
 }
 
 
+def _matches_chatgpt_binding(value: object, expected: object) -> bool:
+    """Require the exact YAML type and value for each ChatGPT binding field."""
+
+    if expected is None:
+        return value is None
+    if isinstance(expected, bool):
+        return type(value) is bool and value is expected
+    return type(value) is type(expected) and value == expected
+
+
 def _execution_fragments(text: str) -> Sequence[str]:
     """Return Markdown fragments that can reasonably contain a command."""
 
@@ -166,7 +176,9 @@ def check_domain_projects(
             errors.append("clients.chatgpt_web must be a mapping")
         else:
             for field, expected in _CHATGPT_WEB_BINDING.items():
-                if chatgpt_web.get(field) != expected:
+                if field not in chatgpt_web or not _matches_chatgpt_binding(
+                    chatgpt_web[field], expected
+                ):
                     required = "null" if expected is None else str(expected).lower()
                     errors.append(f"clients.chatgpt_web.{field} must be {required}")
         gateway_files = sorted(
