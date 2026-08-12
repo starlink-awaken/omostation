@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from argparse import Namespace
 from pathlib import Path
 
@@ -67,6 +68,36 @@ def cmd_domains(_args: Namespace) -> int:
         console.print(f"  {icon} [bold]{d['name']}[/] [dim]{d['path']}[/]")
 
     return 0 if result["status"] == "ok" else 1
+
+
+def cmd_domain_status(args: Namespace) -> int:
+    """显示 Documents 域项目的只读 binding 和引导文件状态。"""
+
+    console = _get_console()
+    domain_id = getattr(args, "domain_id", "") or ""
+    try:
+        result = governance_context.domain_project_status(domain_id)
+    except Exception as exc:  # defensive boundary: never report an unknown error as success
+        result = {"status": "unavailable", "error": str(exc), "domains": [], "summary": {}}
+
+    if getattr(args, "json", False):
+        print(json.dumps(result, ensure_ascii=False, default=str))
+    else:
+        summary = result.get("summary", {})
+        console.print(
+            f"[bold cyan]Documents 域项目状态[/] {result.get('status', 'unavailable')} "
+            f"· ok={summary.get('ok', 0)} degraded={summary.get('degraded', 0)}"
+        )
+        for domain in result.get("domains", []):
+            console.print(f"  [bold]{domain.get('id', '?')}[/] · {domain.get('status', 'unavailable')}")
+            for gateway in domain.get("gateways", []):
+                console.print(f"    {gateway.get('client', '?')}: {gateway.get('status', 'unknown')}")
+            facts = domain.get("facts", {})
+            console.print(f"    facts: {facts.get('status', 'unknown')}")
+        if result.get("error"):
+            _get_err().print(f"[red]❌ {result['error']}[/]")
+
+    return {"ok": 0, "degraded": 1, "unavailable": 2}.get(result.get("status"), 2)
 
 
 def cmd_skill(args: Namespace) -> int:

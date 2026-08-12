@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from unittest.mock import patch
 
@@ -190,3 +191,43 @@ def test_runtime_subcommand_registered():
         with pytest.raises(SystemExit) as exc:
             main()
         assert exc.value.code == 0
+
+
+def test_domain_status_json_propagates_ok_status(monkeypatch, capsys):
+    from cockpit.commands import l4bridge
+
+    payload = {
+        "schema": "cockpit.domain-project-status.v1",
+        "status": "ok",
+        "available": True,
+        "total": 1,
+        "summary": {"ok": 1, "degraded": 0, "unavailable": 0},
+        "domains": [],
+    }
+    monkeypatch.setattr(l4bridge.governance_context, "domain_project_status", lambda _domain_id="": payload)
+
+    with patch("sys.argv", ["cockpit", "domain-status", "vault", "--json"]):
+        rc = main()
+
+    assert rc == 0
+    assert json.loads(capsys.readouterr().out) == payload
+
+
+def test_domain_status_maps_degraded_and_unavailable_to_nonzero(monkeypatch):
+    from cockpit.commands import l4bridge
+
+    monkeypatch.setattr(
+        l4bridge.governance_context,
+        "domain_project_status",
+        lambda _domain_id="": {"status": "degraded", "domains": [], "summary": {}},
+    )
+    with patch("sys.argv", ["cockpit", "domain-status"]):
+        assert main() == 1
+
+    monkeypatch.setattr(
+        l4bridge.governance_context,
+        "domain_project_status",
+        lambda _domain_id="": {"status": "unavailable", "domains": [], "summary": {}},
+    )
+    with patch("sys.argv", ["cockpit", "domain-status", "unknown"]):
+        assert main() == 2
