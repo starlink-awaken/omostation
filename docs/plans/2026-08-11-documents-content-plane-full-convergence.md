@@ -68,10 +68,12 @@ ToolBox (独立仓，如需) ─────────────> root regis
 - [x] 先更新并 smoke 三个代表域：`vault`、`work-weijian`、`creative`；它们分别覆盖个人知识、工作知识与创作场景。
 - [x] 三个域的薄 `CLAUDE.md` / `AGENTS.md` 能恢复正确 `domain_id`，并引导同一个 Workspace MCP、Skills 与 Workflows；不得复制 MCP 命令矩阵或执行实现。
 - [x] 注册并跑通一条真实、低风险、只读 Documents 的 owner job：dry-run、成功、owner 非零、evidence 与 no-write-back 都有实证。
-- [x] 完成 Claude/Codex/Zed 配置与 MCP 协议级本地项目 smoke；ChatGPT web 仍明确为远程插件后续项，不伪装成本地已支持。
-- [x] MVP 验收后形成日常使用版本与复盘，并扩展到 12/12 域；44,527 个迁移候选继续按迁移证据推进。
+- [x] 完成 Claude/Codex/Zed 的源级 MCP 协议与项目 gateway 验收；该证据不等同于客户端进程已 reload 或终端用户 UI smoke。
+- [x] ChatGPT developer mode 的绑定契约允许官方 public HTTPS MCP 或 Secure MCP Tunnel；未配置 tunnel，也未宣称终端用户 UI 已验证。
+- [x] 根 PR #1372 已将 12/12 域 gateway 纳入 source-level checker；MVP 验收后形成日常使用版本与复盘。
+- [x] 迁移 checker 从当前 L4 audit 与 exact-one registry composition 计算迁移候选；物理迁移继续按逐项证据推进。
 
-**MVP 不包含：** 批量删除/移动、Zotero dataDir 写入、家庭应用迁移、四个外部仓迁移、12 域全量 gateway 修改、runtime/cache 清零、旧脚本退役和最终 T8。这些进入 MVP 后迭代，继续受原确认门、指纹、消费者证据和回滚要求约束。
+**MVP 不包含：** 批量删除/移动、Zotero dataDir 写入、家庭应用迁移、四个外部仓迁移、runtime/cache 清零、旧脚本退役和最终 T8。这些进入 MVP 后迭代，继续受原确认门、指纹、消费者证据和回滚要求约束。
 
 ---
 
@@ -87,7 +89,7 @@ ToolBox (独立仓，如需) ─────────────> root regis
 - [x] 从远端 `main@35bd0757` 创建 `work/documents-content-plane-full-convergence`。
 - [x] 初始化 18 个子模块并创建 PASW 分支/worktree。
 - [x] 启动 `project-doc-change` governance run。
-- [x] 复现 321,787 资产、44,528 违规候选、227 个非四大面 runtime 候选。
+- [x] 复现基线资产、违规候选与非四大面 runtime 候选；具体历史快照保留在 inventory evidence，不能视为当前迁移候选总数。
 - [x] 运行 doc SSOT checks 和 workflow verify。
 - [x] 提交 root 文档 checkpoint：`docs(documents): plan full content-plane convergence`。
 
@@ -252,7 +254,7 @@ L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
 - Codex reads project `AGENTS.md` and supports project/user MCP configuration: <https://learn.chatgpt.com/docs/agent-configuration/agents-md>, <https://learn.chatgpt.com/docs/extend/mcp?surface=cli>
 - Claude Desktop supports local MCP servers/Desktop Extensions installed once at client scope: <https://support.anthropic.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop>
 - Zed recognizes project `AGENTS.md`/`CLAUDE.md` and supports MCP in its Agent surface: <https://zed.dev/docs/ai/instructions>, <https://zed.dev/docs/ai/mcp>
-- ChatGPT web does not consume local Codex MCP configuration; local-domain access therefore remains desktop/local-client only until a reviewed remote plugin exists.
+- ChatGPT developer mode connects an official public HTTPS MCP endpoint or Secure MCP Tunnel: <https://developers.openai.com/plugins/deploy/connect-chatgpt>, <https://developers.openai.com/api/docs/guides/secure-mcp-tunnels>. It does not consume local Claude/Codex JSON; this is a binding contract, not evidence that a tunnel or end-user UI smoke exists.
 
 **Files (expected):**
 
@@ -270,8 +272,14 @@ L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
 - [x] registry contains each validated L4 manifest exactly once; unknown/missing domain, duplicate tool binding, missing skill/workflow ref fail closed.
 - [x] `domain_context` never returns a path/identity that disagrees with the referenced `DOMAIN.yaml`.
 - [x] no domain gateway instructs execution from Documents `_runtime`, `_control` scripts, `.kems/_scripts`, or app roots.
-- [x] Claude/Codex-compatible MCP protocol smoke covers all 12 projects and recovers the correct domain ID plus Workspace MCP guidance.
-- [x] platform-specific configuration points to one accepted Cockpit MCP installation; no domain copies an MCP command matrix.
+- [x] Root PR #1372 makes the source-level gateway checker enforce all 12 projects, recovering the correct domain ID plus Workspace MCP guidance.
+- [x] Platform-specific source projections name one accepted Cockpit MCP installation; no domain copies an MCP command matrix. This does not claim a client config reload or current Claude/Codex/Zed UI smoke.
+
+**Accepted root evidence:**
+
+- PR #1364 accepted representative gateway validation.
+- PR #1372 accepted all-12 source-level gateway enforcement.
+- PR #1376 accepted the ChatGPT public HTTPS/Secure MCP Tunnel routing contract.
 
 **Commit:** `feat(cockpit): expose SSOT-backed domain project contexts`
 
@@ -290,14 +298,16 @@ L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
 
 **Registry fields:** `id`、`source_globs`、`artifact_kind`、`disposition`、`owner`、`replacement`、`consumer_refs`、`rollback`、`confirmation_gate`、`status`。
 
-**Invariant:** 当前 227 个非四大面 runtime 候选和四个大面必须“恰好匹配一个”迁移族；零匹配与多匹配都 fail closed。历史文档文本引用不算活动消费者，但 crontab、LaunchAgent、Claude Scheduled、CLAUDE 强制命令和可执行 import 算。
+**Invariant:** 当前 L4 audit 发现的非四大面 runtime 候选和四个大面必须“恰好匹配一个”迁移族；零匹配与多匹配都 fail closed。迁移候选总数由 live audit 与 exact-one registry composition 计算，迁移状态由 registry lifecycle 动态权威。历史文档文本引用不算活动消费者，但 crontab、LaunchAgent、Claude Scheduled、CLAUDE 强制命令和可执行 import 算。
 
 **Steps:**
 
 - [x] 写 fixture 和 RED tests 覆盖零匹配、多匹配、owner 空、replacement 空、非法完成状态。
 - [x] 实现 read-only checker；不得自动移动/删除。
 - [x] 把 checker 注册为治理检查和 CI surface。
-- [x] 对真实 Documents 运行：44,527 个 runtime/cache 候选零漏配、零多配，15 个迁移族仍全部 pending。
+- [x] 对真实 Documents 运行：checker 从当前 L4 audit 与 exact-one registry composition 计算候选，并对零漏配、零多配 fail closed；迁移状态以 registry lifecycle 为准，不在计划中固化为当前 pending 总数。
+
+**Accepted root evidence:** PR #1359 accepted the migration registry/checker; PR #1374 accepted tracked cleanup-runtime coverage.
 
 **Commit:** `feat(governance): register Documents runtime migrations`
 
