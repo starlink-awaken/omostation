@@ -151,6 +151,23 @@ T1-07 已落地 PATH shim（`bin/gac/git-shim` + `AGENT_ID` circuit_breaker）�
 拓扑层根治方案（每 agent 独立 clone，主仓降级为集成点，D2/D3/D5 随之退役）见
 [`docs/reports/2026-08-06-multi-agent-git-topology.md`](docs/reports/2026-08-06-multi-agent-git-topology.md) 与 `BET-Y1Q1-T1-05`。
 
+**T1-05 D1 试点（2026-08-12）**：独立 clone 通过 `bin/gac/agent-clone.py`
+创建，不允许长期依赖 `objects/info/alternates`。每个 clone 生成可重放的
+`agent-clone-manifest/v1`，跨仓候选变更生成 `cross-repo-changeset/v1`。新 clone
+自动切换到 `agent/<agent-id>` 私有分支并启用 `core.hooksPath=.githooks`，
+`AGENT_ID` 在 `~/Workspace`（含嵌套路径）
+提交时由 clone guard 拒绝；人类终端不受影响。迁移期 D2/D3/D5/PASW 继续生效，
+只有真实 clone、manifest 回放、changeset 和全员迁移证据全部成立后才能退役。
+
+```bash
+python3 bin/gac/agent-clone.py create --agent-id <id> \
+  --source <origin-url-or-path> --destination "$HOME/agents/<id>/ws" --json
+python3 bin/gac/agent-clone.py manifest --clone "$HOME/agents/<id>/ws" \
+  --output "$HOME/agents/<id>/manifest.json" --json
+python3 bin/gac/agent-clone.py verify --clone "$HOME/agents/<id>/ws" \
+  --manifest "$HOME/agents/<id>/manifest.json" --json
+```
+
 ### 1.6.3 多 Agent 蜂群感知与硬规约契约 (Swarm Perception & Hard Constraints)
 
 | 视角 | 机制 | 物理暴露与硬规约 |

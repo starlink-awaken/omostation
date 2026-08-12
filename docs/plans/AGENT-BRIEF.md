@@ -65,6 +65,29 @@ bash bin/gac/gac-worktree.sh claim <bet-id 小写>
 
 **不要在共享主工作树上直接改文件。** 如果 bet 的 `pasw_required: true`，子模块改动必须在 `.subtrees/<sub>/` 内完成（ADR-0371，涉及 gbrain / cockpit / agora）。
 
+#### T1-05 独立 clone 试点
+
+新接入的 agent 优先使用独立 clone；既有 agent 在迁移完成前继续使用上面的
+worktree + PASW 流程。不要手工复制目录，也不要用长期 `--reference` 借用
+`~/Workspace` 的对象库：源仓移动或 GC 会破坏借用仓。
+
+```bash
+python3 bin/gac/agent-clone.py create --agent-id <agent-id> \
+  --source <origin-url-or-path> --destination "$HOME/agents/<agent-id>/ws" --json
+python3 bin/gac/agent-clone.py manifest \
+  --clone "$HOME/agents/<agent-id>/ws" \
+  --output "$HOME/agents/<agent-id>/manifest.json" --json
+python3 bin/gac/agent-clone.py verify \
+  --clone "$HOME/agents/<agent-id>/ws" \
+  --manifest "$HOME/agents/<agent-id>/manifest.json" --json
+```
+
+`create` 只接受不存在的目标路径，初始化根仓声明的全部子模块（不递归穿越
+嵌套 Workspace 镜像），切换到 `agent/<agent-id>` 私有分支，并在成功后写入
+clone 私有 identity、启用 `.githooks`。冻结 manifest 是执行基线，不是第二份
+任务 SSOT。跨仓交付由 `changeset` 汇总 root 与子仓 SHA；它只生成候选收据，
+不会自行 push 或 merge。
+
 ### 2.4 起 workflow（ADR-0203 红线：先 start 再改文件）
 
 ```bash
