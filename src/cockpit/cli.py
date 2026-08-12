@@ -164,6 +164,12 @@ def _c_domain_status(a):
     return _c(a)
 
 
+def _c_facts_audit(a):
+    from cockpit.commands.l4bridge import cmd_facts_audit as _c
+
+    return _c(a)
+
+
 def _c_skill(a):
     from cockpit.commands.l4bridge import cmd_skill as _c
 
@@ -730,6 +736,7 @@ def main() -> int:
         "governance": cmd_governance,
         "domains": _c_domains,
         "domain-status": _c_domain_status,
+        "facts-audit": _c_facts_audit,
         "skill": _c_skill,
         "events": _c_events,
         "ssb": cmd_ssb,

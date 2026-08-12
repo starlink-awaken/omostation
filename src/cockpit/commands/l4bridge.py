@@ -100,6 +100,40 @@ def cmd_domain_status(args: Namespace) -> int:
     return {"ok": 0, "degraded": 1, "unavailable": 2}.get(result.get("status"), 2)
 
 
+def cmd_facts_audit(args: Namespace) -> int:
+    """审计 Documents 域声明的 facts 文件。"""
+
+    console = _get_console()
+    domain_id = getattr(args, "domain_id", "") or ""
+    try:
+        result = governance_context.domain_facts_audit(domain_id)
+    except Exception as exc:  # defensive boundary: preserve the contract exit code
+        result = {"status": "unavailable", "error": str(exc), "domains": [], "summary": {}}
+
+    if getattr(args, "json", False):
+        print(json.dumps(result, ensure_ascii=False, default=str))
+    else:
+        summary = result.get("summary", {})
+        summary_text = " ".join(
+            f"{name}={summary.get(name, 0)}" for name in ("present", "missing", "unreadable", "invalid")
+        )
+        console.print(
+            f"[bold cyan]Documents facts 审计[/] {result.get('status', 'unavailable')} · {summary_text}"
+        )
+        for domain in result.get("domains", []):
+            facts = domain.get("facts", {})
+            modified_on = facts.get("modified_on")
+            date = f" · {modified_on}" if modified_on else ""
+            console.print(
+                f"  [bold]{domain.get('id', '?')}[/] · {domain.get('name', '?')} · "
+                f"facts: {facts.get('status', 'unknown')}{date}"
+            )
+        if result.get("error"):
+            _get_err().print(f"[red]❌ {result['error']}[/]")
+
+    return {"ok": 0, "violations": 1, "unavailable": 2}.get(result.get("status"), 2)
+
+
 def cmd_skill(args: Namespace) -> int:
     """运行 L4 定时技能 (由 cron_service 触发)。"""
     console = _get_console()
