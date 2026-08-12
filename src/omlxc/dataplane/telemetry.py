@@ -16,7 +16,15 @@ RoutePlan = RouteDecision | RouteFailure
 class TelemetrySink(Protocol):
     async def record_route(self, plan: RoutePlan) -> None: ...
 
-    def record_metric(self, *, request_id: str, latency_ms: float, success: bool) -> bool: ...
+    def record_metric(
+        self,
+        *,
+        request_id: str,
+        latency_ms: float,
+        success: bool,
+        error_code: str | None = None,
+        phase: str | None = None,
+    ) -> bool: ...
 
 
 class TelemetryStore(Protocol):
@@ -57,8 +65,12 @@ class RouteTelemetryRecorder:
         request_id: str,
         latency_ms: float,
         success: bool,
+        error_code: str | None = None,
+        phase: str | None = None,
     ) -> bool:
-        return store.accept_metric(MetricRecord(request_id, self._now(), latency_ms, success))
+        return store.accept_metric(
+            MetricRecord(request_id, self._now(), latency_ms, success, error_code, phase)
+        )
 
 
 class BoundRouteTelemetry:
@@ -71,10 +83,20 @@ class BoundRouteTelemetry:
     async def record_route(self, plan: RoutePlan) -> None:
         await self._recorder.record_route(self._store, plan)
 
-    def record_metric(self, *, request_id: str, latency_ms: float, success: bool) -> bool:
+    def record_metric(
+        self,
+        *,
+        request_id: str,
+        latency_ms: float,
+        success: bool,
+        error_code: str | None = None,
+        phase: str | None = None,
+    ) -> bool:
         return self._recorder.record_metric(
             self._store,
             request_id=request_id,
             latency_ms=latency_ms,
             success=success,
+            error_code=error_code,
+            phase=phase,
         )

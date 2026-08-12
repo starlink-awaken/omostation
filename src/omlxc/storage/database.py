@@ -36,7 +36,7 @@ from .models import (
     UnsupportedSchemaError,
 )
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 MAX_PAGE_SIZE = 500
 _T = TypeVar("_T")
 _REQUIRED_COLUMNS: dict[str, tuple[str, ...]] = {
@@ -58,7 +58,15 @@ _REQUIRED_COLUMNS: dict[str, tuple[str, ...]] = {
         "rejection_json",
         "config_revision",
     ),
-    "request_metrics": ("sequence", "request_id", "observed_at", "latency_ms", "success"),
+    "request_metrics": (
+        "sequence",
+        "request_id",
+        "observed_at",
+        "latency_ms",
+        "success",
+        "error_code",
+        "phase",
+    ),
     "jobs": (
         "job_id",
         "idempotency_key",
@@ -137,6 +145,8 @@ _REQUIRED_COLUMN_SPECS: dict[str, tuple[tuple[str, str, int, str | None, int, in
         ("observed_at", "TEXT", 1, None, 0, 0),
         ("latency_ms", "REAL", 1, None, 0, 0),
         ("success", "INTEGER", 1, None, 0, 0),
+        ("error_code", "TEXT", 0, None, 0, 0),
+        ("phase", "TEXT", 0, None, 0, 0),
     ),
     "jobs": (
         ("job_id", "TEXT", 0, None, 1, 0),
@@ -287,6 +297,19 @@ _V1_INDEX_SQL: dict[str, str] = {
     ),
 }
 _V1_SCHEMA_SQL = ";\n".join((*_V1_TABLE_SQL.values(), *_V1_INDEX_SQL.values()))
+_V2_TABLE_SQL = {
+    **_V1_TABLE_SQL,
+    "request_metrics": """CREATE TABLE request_metrics (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_id TEXT NOT NULL,
+        observed_at TEXT NOT NULL,
+        latency_ms REAL NOT NULL,
+        success INTEGER NOT NULL CHECK(success IN (0, 1)),
+        error_code TEXT,
+        phase TEXT
+    )""",
+}
+_V2_SCHEMA_SQL = ";\n".join((*_V2_TABLE_SQL.values(), *_V1_INDEX_SQL.values()))
 _SENSITIVE_TEXT = re.compile(
     r"(?:authorization\s*:|bearer\s+\S+|api[_-]?key|password|secret|token\s*[=:])",
     re.I,
@@ -294,6 +317,33 @@ _SENSITIVE_TEXT = re.compile(
 _REVISION_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 _FINGERPRINT = re.compile(r"^sha256:[0-9a-f]{64}$")
 _ROLLBACK_REFERENCE = re.compile(r"^[a-z][a-z0-9+.-]*:[A-Za-z0-9._:/-]{1,480}$")
+_SAFE_METRIC_CODES = frozenset(
+    {
+        "authorization_denied",
+        "backend_failure",
+        "bad_response",
+        "capability_missing",
+        "context_exceeded",
+        "incompatible",
+        "invalid_binding",
+        "invalid_request",
+        "local_security_denied",
+        "memory_denied",
+        "model_mismatch",
+        "model_unavailable",
+        "no_candidate",
+        "no_capacity",
+        "output_limit",
+        "partial_failure",
+        "stale",
+        "stream_interrupted",
+        "timeout",
+        "unavailable",
+        "unreachable",
+        "unsupported",
+    }
+)
+_METRIC_PHASES = frozenset({"before_content", "after_content", "complete"})
 _MAX_REPOSITORY_JSON_BYTES = 64 * 1024
 
 
@@ -707,6 +757,7 @@ class SQLiteRuntimeStore:
         _utc_text(record.observed_at)
         if not math.isfinite(record.latency_ms) or record.latency_ms < 0:
             raise ValueError("metric latency must be finite and non-negative")
+        _validate_metric_terminal(record.error_code, record.phase)
         if len(self._metrics) >= self._metric_capacity:
             return False
         self._metrics.append(record)
@@ -737,8 +788,8 @@ class SQLiteRuntimeStore:
                 await connection.executemany(
                     """
                     INSERT INTO request_metrics
-                        (request_id, observed_at, latency_ms, success)
-                    VALUES (?, ?, ?, ?)
+                        (request_id, observed_at, latency_ms, success, error_code, phase)
+                    VALUES (?, ?, ?, ?, ?, ?)
                     """,
                     [
                         (
@@ -746,6 +797,8 @@ class SQLiteRuntimeStore:
                             _utc_text(metric.observed_at),
                             metric.latency_ms,
                             int(metric.success),
+                            metric.error_code,
+                            metric.phase,
                         )
                         for metric in records
                     ],
@@ -764,6 +817,31 @@ class SQLiteRuntimeStore:
         row = await cursor.fetchone()
         await cursor.close()
         return int(row[0]) if row else 0
+
+    async def list_metrics(
+        self, *, after_sequence: int, limit: int = 100
+    ) -> tuple[MetricRecord, ...]:
+        _validate_page(after_sequence, limit)
+        cursor = await self._require_reader().execute(
+            """
+            SELECT request_id, observed_at, latency_ms, success, error_code, phase
+            FROM request_metrics WHERE sequence > ? ORDER BY sequence ASC LIMIT ?
+            """,
+            (after_sequence, limit),
+        )
+        rows = await cursor.fetchall()
+        await cursor.close()
+        return tuple(
+            MetricRecord(
+                request_id=str(row[0]),
+                observed_at=_parse_utc(str(row[1])),
+                latency_ms=float(row[2]),
+                success=bool(row[3]),
+                error_code=str(row[4]) if row[4] is not None else None,
+                phase=str(row[5]) if row[5] is not None else None,
+            )
+            for row in rows
+        )
 
     async def apply_retention(self, *, now: datetime, retention_days: int = 30) -> int:
         if retention_days < 1:
@@ -1326,11 +1404,23 @@ async def _migrate(connection: aiosqlite.Connection) -> None:
         raise UnsupportedSchemaError("database schema is newer than this runtime")
     if version == SCHEMA_VERSION:
         return
-    if version != 0:
-        raise UnsupportedSchemaError("database schema migration path is unavailable")
-    await connection.executescript(
-        f"BEGIN IMMEDIATE;\n{_V1_SCHEMA_SQL};\nPRAGMA user_version = 1;\nCOMMIT;"
-    )
+    if version == 0:
+        await connection.executescript(
+            f"BEGIN IMMEDIATE;\n{_V2_SCHEMA_SQL};\nPRAGMA user_version = 2;\nCOMMIT;"
+        )
+        return
+    if version == 1:
+        await connection.executescript(
+            """
+            BEGIN IMMEDIATE;
+            ALTER TABLE request_metrics ADD COLUMN error_code TEXT;
+            ALTER TABLE request_metrics ADD COLUMN phase TEXT;
+            PRAGMA user_version = 2;
+            COMMIT;
+            """
+        )
+        return
+    raise UnsupportedSchemaError("database schema migration path is unavailable")
 
 
 async def _validate_schema(connection: aiosqlite.Connection) -> None:
@@ -1433,7 +1523,7 @@ async def _validate_schema(connection: aiosqlite.Connection) -> None:
         raise aiosqlite.DatabaseError("SQLite foreign key invariant failed")
 
     expected_objects = {
-        **{("table", name): sql for name, sql in _V1_TABLE_SQL.items()},
+        **{("table", name): sql for name, sql in _V2_TABLE_SQL.items()},
         **{("index", name): sql for name, sql in _V1_INDEX_SQL.items()},
     }
     cursor = await connection.execute(
@@ -1476,6 +1566,18 @@ async def _validate_persisted_values(connection: aiosqlite.Connection) -> None:
         raise aiosqlite.DatabaseError("SQLite persisted timestamp invariant failed") from None
     finally:
         await timestamp_cursor.close()
+
+    metric_cursor = await connection.execute("SELECT error_code, phase FROM request_metrics")
+    try:
+        async for row in metric_cursor:
+            _validate_metric_terminal(
+                str(row[0]) if row[0] is not None else None,
+                str(row[1]) if row[1] is not None else None,
+            )
+    except ValueError:
+        raise aiosqlite.DatabaseError("SQLite metric terminal invariant failed") from None
+    finally:
+        await metric_cursor.close()
 
     route_cursor = await connection.execute(
         "SELECT candidate_json, rejection_json FROM route_audits"
@@ -1584,6 +1686,13 @@ def _config_fingerprint(canonical_json: str) -> str:
 def _validate_page(after_sequence: int, limit: int) -> None:
     if after_sequence < 0 or limit < 1 or limit > MAX_PAGE_SIZE:
         raise ValueError("repository page cursor or size is invalid")
+
+
+def _validate_metric_terminal(error_code: str | None, phase: str | None) -> None:
+    if error_code is not None and error_code not in _SAFE_METRIC_CODES:
+        raise ValueError("metric terminal error code is invalid")
+    if phase is not None and phase not in _METRIC_PHASES:
+        raise ValueError("metric terminal phase is invalid")
 
 
 def _validate_config_revision(revision: ConfigRevisionWrite) -> None:

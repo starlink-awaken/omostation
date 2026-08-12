@@ -20,7 +20,7 @@ async def test_schema_migrates_once_and_enforces_private_wal_pragmas(tmp_path: P
     database = tmp_path / "private" / "state.db"
     SQLiteRuntimeStore = _storage().SQLiteRuntimeStore
     store = await SQLiteRuntimeStore.open(database)
-    assert await store.schema_version() == 1
+    assert await store.schema_version() == 2
     assert await store.pragma_state() == {
         "busy_timeout": 5000,
         "foreign_keys": 1,
@@ -29,7 +29,7 @@ async def test_schema_migrates_once_and_enforces_private_wal_pragmas(tmp_path: P
     await store.close()
 
     reopened = await SQLiteRuntimeStore.open(database)
-    assert await reopened.schema_version() == 1
+    assert await reopened.schema_version() == 2
     await reopened.close()
     assert os.stat(database.parent).st_mode & 0o077 == 0
     assert os.stat(database).st_mode & 0o077 == 0
@@ -45,6 +45,34 @@ async def test_unknown_newer_schema_fails_closed(tmp_path: Path) -> None:
 
     with pytest.raises(storage.UnsupportedSchemaError):
         await storage.SQLiteRuntimeStore.open(database)
+
+
+@pytest.mark.asyncio
+async def test_v1_metrics_migrate_to_v2_with_nullable_typed_terminal_fields(
+    tmp_path: Path,
+) -> None:
+    from omlxc.storage import database as storage_database
+
+    database = tmp_path / "state.db"
+    connection = sqlite3.connect(database)
+    connection.executescript(
+        f"""
+        {storage_database._V1_SCHEMA_SQL};
+        INSERT INTO request_metrics (request_id, observed_at, latency_ms, success)
+        VALUES ('legacy-request', '2026-08-11T00:00:00.000000+00:00', 1.0, 1);
+        PRAGMA user_version = 1;
+        """
+    )
+    connection.commit()
+    connection.close()
+
+    storage = _storage()
+    store = await storage.SQLiteRuntimeStore.open(database)
+    assert await store.schema_version() == 2
+    metrics = await store.list_metrics(after_sequence=0)
+    assert metrics[0].error_code is None
+    assert metrics[0].phase is None
+    await store.close()
 
 
 @pytest.mark.asyncio
@@ -84,6 +112,26 @@ async def test_metric_batch_flush_and_idempotent_daily_retention(tmp_path: Path)
     updated = await store.daily_metric_aggregate(old.date())
     assert updated is not None
     assert (updated.request_count, updated.error_count, updated.latency_sum_ms) == (3, 1, 90.0)
+    await store.close()
+
+
+@pytest.mark.asyncio
+async def test_metric_terminal_fields_reject_untrusted_text(tmp_path: Path) -> None:
+    storage = _storage()
+    store = await storage.SQLiteRuntimeStore.open(tmp_path / "state.db")
+
+    with pytest.raises(ValueError, match="error code"):
+        store.accept_metric(
+            storage.MetricRecord(
+                "req",
+                datetime(2026, 8, 11, tzinfo=UTC),
+                1.0,
+                False,
+                "Bearer do-not-persist",
+                "before_content",
+            )
+        )
+
     await store.close()
 
 

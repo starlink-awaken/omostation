@@ -30,7 +30,7 @@ from omlxc.domain.protocols import (
     TokenUsage,
 )
 from omlxc.events import EventSubscriptionClosed, RuntimeEvent
-from omlxc.scheduler import RouteFailure, RouteFailureCode
+from omlxc.scheduler import RejectionCode, RouteFailure, RouteFailureCode
 from omlxc.storage import DurableEventRecord, JobConflictError
 
 from .contracts import ControlService, EventService, InferenceService
@@ -608,9 +608,22 @@ def _route_failure_response(request_id: str, failure: RouteFailure) -> JSONRespo
     )
 
 
-def _openai_error(request_id: str, status: int, error_type: str) -> JSONResponse:
+def _openai_error(
+    request_id: str,
+    status: int,
+    error_type: str,
+    *,
+    partial_result: Mapping[str, object] | None = None,
+) -> JSONResponse:
+    error: dict[str, object] = {
+        "message": "local inference failed",
+        "type": error_type,
+        "code": error_type,
+    }
+    if partial_result is not None:
+        error["partial_result"] = dict(partial_result)
     return JSONResponse(
-        {"error": {"message": "local inference failed", "type": error_type, "code": error_type}},
+        {"error": error},
         status_code=status,
         headers={"X-OMLXC-Request-ID": request_id},
     )
@@ -619,7 +632,23 @@ def _openai_error(request_id: str, status: int, error_type: str) -> JSONResponse
 def _execution_error(request_id: str, error: Any) -> JSONResponse:
     code = getattr(error, "code", ExecutionErrorCode.BACKEND_FAILURE)
     if code in {ExecutionErrorCode.NO_CANDIDATE, ExecutionErrorCode.NO_CAPACITY}:
-        return _openai_error(request_id, 409, "insufficient_capacity")
+        prepare_rejections = getattr(error, "prepare_rejections", ())
+        partial_result: Mapping[str, object] | None = (
+            {
+                "prepare_rejections": [
+                    {"placement_id": placement_id, "reason": rejection.value}
+                    for placement_id, rejection in prepare_rejections
+                ]
+            }
+            if prepare_rejections
+            else None
+        )
+        return _openai_error(
+            request_id,
+            409,
+            "insufficient_capacity",
+            partial_result=partial_result,
+        )
     if code is ExecutionErrorCode.TIMEOUT:
         return _openai_error(request_id, 504, "timeout")
     if code is ExecutionErrorCode.UNSUPPORTED:
@@ -636,8 +665,8 @@ def _stream_error_response(request_id: str, event: StreamEvent) -> JSONResponse:
     if error.code.value == "unsupported":
         return _openai_error(request_id, 400, "unsupported_feature")
     if error.code.value == "model_unavailable" and error.message in {
-        "no_capacity",
-        "no_candidate",
+        ExecutionErrorCode.NO_CANDIDATE.value,
+        *(code.value for code in RejectionCode),
     }:
         return _openai_error(request_id, 409, "insufficient_capacity")
     return _openai_error(request_id, 503, "backend_unavailable")

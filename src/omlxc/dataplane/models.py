@@ -9,6 +9,7 @@ from typing import Protocol
 
 from omlxc.domain import RouteProfile
 from omlxc.domain.protocols import BackendAdapter, ChatResult, StreamPhase
+from omlxc.scheduler import RejectionCode
 
 
 class ExecutionErrorCode(StrEnum):
@@ -28,6 +29,7 @@ class ExecutionError:
     phase: StreamPhase = StreamPhase.BEFORE_CONTENT
     emitted_content: bool = False
     reason: str = ""
+    prepare_rejections: tuple[tuple[str, RejectionCode], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

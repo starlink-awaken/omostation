@@ -43,6 +43,8 @@ class MetricRecord:
     observed_at: datetime
     latency_ms: float
     success: bool
+    error_code: str | None = None
+    phase: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

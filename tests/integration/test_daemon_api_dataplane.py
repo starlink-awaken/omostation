@@ -27,6 +27,7 @@ from omlxc.domain.protocols import (
     StreamPhase,
     TokenUsage,
 )
+from omlxc.scheduler import RejectionCode
 
 
 class FakeStream(AsyncIterator[StreamEvent]):
@@ -365,6 +366,47 @@ async def test_openai_errors_are_sanitized_and_request_bodies_are_bounded(
     assert "X-OMLXC-Profile" not in failed.headers
     assert "do-not-leak" not in failed.text
     assert oversized.status_code == 413
+
+
+@pytest.mark.asyncio
+async def test_prepare_rejections_are_ordered_typed_and_sanitized(
+    transport: httpx.ASGITransport, inference: FakeInferenceService
+) -> None:
+    async def rejected_chat(
+        route: object, request: ChatRequest, *, deadline: float
+    ) -> ChatExecution:
+        del route, deadline
+        return ChatExecution(
+            request_id=request.request_id,
+            model_id=request.model,
+            success=False,
+            placement_id="placement-b",
+            attempted_placements=("placement-a", "placement-b"),
+            error=ExecutionError(
+                ExecutionErrorCode.NO_CANDIDATE,
+                False,
+                prepare_rejections=(
+                    ("placement-a", RejectionCode.STALE),
+                    ("placement-b", RejectionCode.CAPABILITY),
+                ),
+            ),
+        )
+
+    inference.chat = rejected_chat  # type: ignore[method-assign]
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            json={"model": "local/model", "messages": [{"role": "user", "content": "x"}]},
+        )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["partial_result"] == {
+        "prepare_rejections": [
+            {"placement_id": "placement-a", "reason": "stale"},
+            {"placement_id": "placement-b", "reason": "capability_missing"},
+        ]
+    }
+    assert "X-OMLXC-Placement" not in response.headers
 
 
 @pytest.mark.asyncio
