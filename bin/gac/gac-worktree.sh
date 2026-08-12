@@ -54,6 +54,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../lib/pasw-core.sh"
 verify_clean_for_force_removal() {
   local wt="$1"
   local dirty=""
+  declare -p PASW_ISOLATED_SUBS_ARRAY >/dev/null 2>&1 || PASW_ISOLATED_SUBS_ARRAY=()
 
   # Use porcelain rather than only diff/diff --cached: it covers unstaged,
   # staged, and untracked changes in one fail-closed check.  .subtrees is an
@@ -92,7 +93,8 @@ verify_clean_for_force_removal() {
   # PASW worktrees live under an ignored root directory, so git status at the
   # root cannot protect them.  Check each existing PASW worktree explicitly.
   local sub sub_name pasw_wt pasw_status
-  for sub in $PASW_ISOLATED_SUBS; do
+  for sub in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
+    [ -n "$sub" ] || continue
     sub_name=$(basename "$sub")
     pasw_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
     [ -d "$pasw_wt" ] || continue
@@ -128,7 +130,8 @@ remove_verified_pasw() {
   # Preflight every registered path before touching the first child.  This
   # cannot make Git removal transactional, but catches invalid registrations
   # before a partial cleanup is possible.
-  for sub in $PASW_ISOLATED_SUBS; do
+  for sub in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
+    [ -n "$sub" ] || continue
     sub_name=$(basename "$sub")
     pasw_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
     [ -d "$pasw_wt" ] || continue
@@ -147,7 +150,8 @@ remove_verified_pasw() {
     fi
   done
 
-  for sub in $PASW_ISOLATED_SUBS; do
+  for sub in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
+    [ -n "$sub" ] || continue
     sub_name=$(basename "$sub")
     pasw_wt="$wt/$PASW_SUBTREE_DIR/$sub_name"
     [ -d "$pasw_wt" ] || continue
@@ -172,7 +176,7 @@ case "$cmd" in
   claim)
     [ -z "$session" ] && echo "用法: claim <session>" >&2 && exit 1
     validate_session "$session"
-    ROOT_REMOTE=$(resolve_root_remote) || exit 1
+    ROOT_REMOTE=$(cd "$WS_ROOT" && resolve_root_remote) || exit 1
     wt="$WS_PARENT/ws-$session"
     branch="work/$session"
     claim_in_progress="$WS_PARENT/.ws-$session.claiming"
@@ -194,7 +198,7 @@ case "$cmd" in
       echo "   🔒 D2 branch lock: $branch (session=$session)"
     fi
     # 分支已存在但 worktree 缺失 → 残留/重名, 提示清理 (防 claim 撞残留分支)
-    if git show-ref --verify --quiet "refs/heads/$branch" 2>/dev/null && [ ! -d "$wt" ]; then
+    if git -C "$WS_ROOT" show-ref --verify --quiet "refs/heads/$branch" 2>/dev/null && [ ! -d "$wt" ]; then
       echo "⚠️  分支 $branch 已存在但 worktree 缺失 (残留? 清理: git branch -D $branch)" >&2
       exit 1
     fi
@@ -202,46 +206,50 @@ case "$cmd" in
       echo "⚠️  worktree 已存在: $wt (cd 过去继续工作)"
     else
       : > "$claim_in_progress"
-      git fetch "$ROOT_REMOTE" main 2>&1 | sed '/FETCH_HEAD/d' >&2
-      git worktree add "$wt" -b "$branch" "$ROOT_REMOTE/main" 2>&1
+      git -C "$WS_ROOT" fetch "$ROOT_REMOTE" main 2>&1 | sed '/FETCH_HEAD/d' >&2
+      git -C "$WS_ROOT" worktree add "$wt" -b "$branch" "$ROOT_REMOTE/main" 2>&1
       echo "✅ worktree 创建: $wt"
       echo "   分支: $branch (base: $ROOT_REMOTE/main, repo: $CANONICAL_ROOT_REPO)"
-      # PASW: 默认 init 全部子模块 (disk 便宜, 完整环境避免按需 init 的摩擦).
-      # SKIP_SUBMODULE_INIT=1 跳过 (CI/fast-claim 场景).
-      if [ "${SKIP_SUBMODULE_INIT:-}" = "1" ]; then
-        echo "   ⏭ SKIP_SUBMODULE_INIT=1 — 子模块未 init (按需: cd $wt && git submodule update --init <sub>)"
-      else
-        echo "   init 全部子模块 (完整环境, 慢 ~60s; SKIP_SUBMODULE_INIT=1 跳过)..."
-        t0=$(date +%s)
-        init_out=$(cd "$wt" && git submodule update --init 2>&1)
-        init_rc=$?
-        t1=$(date +%s)
-        init_cnt=$(echo "$init_out" | grep -cE "checked out|initialized" || echo 0)
-        if [ $init_rc -eq 0 ]; then
-          echo "   ✅ 全部 init (${init_cnt} 子模块, $((t1-t0))s)"
-        else
-          echo "   ⚠️  部分子模块 init 失败 (rc=$init_rc, $((t1-t0))s), 继续..."
-          echo "$init_out" | tail -3
-        fi
-      fi
-      # ADR 占号提示 (不落锁文件除非 --claim; 防并发撞号)
-      if [ -x "$WS_ROOT/bin/adr/next-adr-id.py" ] || [ -f "$WS_ROOT/bin/adr/next-adr-id.py" ]; then
-        next_adr=$(cd "$wt" && python3 "$WS_ROOT/bin/adr/next-adr-id.py" --session "$session" 2>/dev/null || true)
-        if [ -n "$next_adr" ]; then
-          echo "   📋 next ADR hint: $next_adr  (claim: python3 bin/adr/next-adr-id.py --session $session --claim)"
-        fi
-      fi
-      # PASW: 创建子模块隔离 worktree
-      pasw_create "$wt" "$session"
-      echo ""
-      echo "   下一步:"
-      echo "     cd $wt"
-      echo "     uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> --profile <agent> --objective '...'"
-      echo "     # ... 工作 (改文件, commit) ..."
-      echo "     # 如需改子模块: cd $wt/$PASW_SUBTREE_DIR/<sub_name> && git add . && git commit"
-      echo "     # 更新指针:    gac-worktree.sh bump-pointer $session projects/<sub_name>"
-      echo "     gac-worktree.sh submit $session"
     fi
+    # PASW: 默认 init 全部子模块 (disk 便宜, 完整环境避免按需 init 的摩擦).
+    # Existing root worktrees are repaired and verified too; success must mean
+    # full PASW isolation, never merely that the root directory exists.
+    if [ "${SKIP_SUBMODULE_INIT:-}" = "1" ]; then
+      echo "   ⚠️ SKIP_SUBMODULE_INIT=1 — root worktree only; PASW isolation not established."
+      echo "   子模块未 init (按需: cd $wt && git submodule update --init <sub>)"
+    else
+      echo "   init 全部子模块 (完整环境, 慢 ~60s; SKIP_SUBMODULE_INIT=1 跳过)..."
+      t0=$(date +%s)
+      init_rc=0
+      init_out=$(cd "$wt" && git submodule update --init 2>&1) || init_rc=$?
+      t1=$(date +%s)
+      init_cnt=$(echo "$init_out" | grep -cE "checked out|initialized" || echo 0)
+      if [ "$init_rc" -ne 0 ]; then
+        echo "❌ 全部子模块 init 失败 (rc=$init_rc, $((t1-t0))s); 拒绝 PASW claim" >&2
+        echo "$init_out" | tail -3 >&2
+        exit 1
+      fi
+      echo "   ✅ 全部 init (${init_cnt} 子模块, $((t1-t0))s)"
+      if ! pasw_create "$wt" "$session"; then
+        echo "❌ PASW isolation 未完整建立; 保留现有 worktree 供诊断/重试: $wt" >&2
+        exit 1
+      fi
+    fi
+    # ADR 占号提示 (不落锁文件除非 --claim; 防并发撞号)
+    if [ -x "$WS_ROOT/bin/adr/next-adr-id.py" ] || [ -f "$WS_ROOT/bin/adr/next-adr-id.py" ]; then
+      next_adr=$(cd "$wt" && python3 "$WS_ROOT/bin/adr/next-adr-id.py" --session "$session" 2>/dev/null || true)
+      if [ -n "$next_adr" ]; then
+        echo "   📋 next ADR hint: $next_adr  (claim: python3 bin/adr/next-adr-id.py --session $session --claim)"
+      fi
+    fi
+    echo ""
+    echo "   下一步:"
+    echo "     cd $wt"
+    echo "     uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> --profile <agent> --objective '...'"
+    echo "     # ... 工作 (改文件, commit) ..."
+    echo "     # 如需改子模块: cd $wt/$PASW_SUBTREE_DIR/<sub_name> && git add . && git commit"
+    echo "     # 更新指针:    gac-worktree.sh bump-pointer $session projects/<sub_name>"
+    echo "     gac-worktree.sh submit $session"
     cleanup_claim_marker
     trap - EXIT INT TERM
     ;;
@@ -487,7 +495,8 @@ except Exception:
       [ -d "$wt_path" ] || continue
       wt_name=$(basename "$wt_path")
       sub_list=""
-      for sub in $PASW_ISOLATED_SUBS; do
+      for sub in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
+        [ -n "$sub" ] || continue
         sub_name=$(basename "$sub")
         [ -d "$wt_path/$PASW_SUBTREE_DIR/$sub_name" ] && sub_list="$sub_list $sub_name"
       done
