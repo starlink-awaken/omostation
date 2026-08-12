@@ -222,8 +222,8 @@ consumer_evidence:
 - [x] full：`uv run pytest src/cockpit/tests/ tests/ -q`。
 - [x] lint：`uv run ruff check src tests`。
 - [x] PR #35 通过 CI 并合并到 accepted Cockpit checkout。
-- [ ] 从 accepted checkout 重装用户级 Cockpit 入口。
-- [ ] installed smoke：
+- [x] accepted 用户级 Cockpit 入口已就位，并完成下列 installed smoke；这只证明入口与 owner 输出，不证明任何桌面客户端已经 reload。
+- [x] installed smoke（前四项按实际返回值接受）：
 
 ```bash
 "/Users/xiamingxing/.local/bin/cockpit" context
@@ -234,7 +234,35 @@ L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
   "/Users/xiamingxing/.local/bin/cockpit" kems scan
 ```
 
-最后一条在存量债务未清零前必须 exit 1 且报告真实数量；不能把 fail-closed 当安装失败。
+- `context`、`cards --check`、`kems domains`、`kems status` 已从上述用户级入口实际执行；前 3 项 exit 0，`kems status` 按内容审计债务 exit 1/degraded，且不把 fail-closed 当安装失败。
+- `kems scan` 仍未标记为 green：在存量债务未清零前必须 exit 1 且报告真实数量。
+
+**2026-08-12 installed smoke reconciliation (accepted evidence):**
+
+The accepted user-level Cockpit installation was exercised directly. The first four
+commands are accepted only to the observed extent:
+
+| Command | Observed result | Acceptance |
+|---|---|---|
+| `/Users/xiamingxing/.local/bin/cockpit context` | exit 0; `status: ok`; Documents `12/12` | accepted |
+| `/Users/xiamingxing/.local/bin/cockpit cards --check` | exit 0; compliant; OMO exit 0; scope `all` | accepted |
+| `/Users/xiamingxing/.local/bin/cockpit kems domains` | exit 0; 12 domains; source `/Users/xiamingxing/Documents/@公共/_control/L4-DOMAIN-REGISTRY.yaml` | accepted |
+| `/Users/xiamingxing/.local/bin/cockpit kems status` | exit 1; `degraded` because the L4 content audit reports existing violations; OMO and Kairon owners `ok` | accepted as truthful degraded status |
+| `L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" /Users/xiamingxing/.local/bin/cockpit kems scan` | non-zero full audit; not a green installation result | remains open |
+
+The independent accepted `cockpit-mcp` stdio server smoke also succeeded: initialize
+completed, `tools/list` reported 17 tools, and `workspace_context`,
+`domain_context(vault)`, and `cards_check` each returned JSON-RPC success with a
+status-`ok` business envelope. This is installed Cockpit/MCP evidence only; it does
+not prove Claude, Codex, Zed, or ChatGPT UI reload, and it does not provision a
+ChatGPT tunnel.
+
+The same full Documents L4 audit was non-zero and reported 322,871 artifacts,
+41,987 violations, 5,097 runtime artifacts, 36,867 cache artifacts, 1 bridge,
+31,441 content archives, and 23 `invalid_archive` artifacts. The scan observed live
+filesystem changes and therefore emitted `L4-CONTENT-011` as designed. These are
+content-plane debts, not an installed-entrypoint failure; runtime/cache/bridge
+remain non-zero and the overall completion contract stays unchecked.
 
 **Commit:** `fix(cockpit): restore registry-backed governance context`
 

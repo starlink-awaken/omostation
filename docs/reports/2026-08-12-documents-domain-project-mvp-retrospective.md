@@ -69,7 +69,7 @@ post-change SHA-256 values are the immutable evidence for this phase:
 | `@创意创作/CLAUDE.md` | `31d7f2ef5768a49a5e7199f321b18dd4e1a42610fb24f1f7e678a57cf8a58683` |
 | `@创意创作/AGENTS.md` | `7a93c001c6b1be3763c9c9a7aefe3b58a08303c6c70b119b7efbd7a79573697c` |
 
-## Honest remaining gap
+## Historical snapshot (pre-installation, preserved)
 
 The local client deployment is not yet ready:
 
@@ -80,10 +80,9 @@ The local client deployment is not yet ready:
 - The installed `cockpit context` and `cockpit cards --check` currently return
   `L4 bridge unavailable` with exit code 1.
 
-Therefore this phase proves gateway and accepted-source behavior, but does not
-claim end-user client installation. Updating a user package and three global
-client configurations is a separate high-risk operation and remains behind an
-exact confirmation gate.
+Therefore this historical snapshot proved gateway and accepted-source behavior
+before the user-level installation transaction. It is retained as history; the
+current installed-entrypoint result is recorded in the dated reconciliation below.
 
 ## Retrospective
 
@@ -96,7 +95,7 @@ exact confirmation gate.
 3. The selected-domain option keeps MVP verification fast while remaining the
    same checker that will later enforce all 12 domains.
 
-## Next MVP steps
+## Historical next steps (pre-installation snapshot)
 
 1. Prepare and review a single client installation/configuration transaction,
    then request exact user confirmation before applying it.
@@ -104,6 +103,34 @@ exact confirmation gate.
    dry-run, success, owner non-zero, evidence, and no-write-back behavior.
 3. Run local project smoke in Claude/Codex/Zed, then close the MVP acceptance
    report before expanding to 12/12 domains.
+
+## 2026-08-12 installed Cockpit/MCP smoke reconciliation
+
+The accepted user-level Cockpit installation was exercised directly on
+2026-08-12. The first four installed commands are accepted exactly as observed:
+
+| Invocation | Observable result | Acceptance |
+|---|---|---|
+| `/Users/xiamingxing/.local/bin/cockpit context` | exit 0; status `ok`; Documents `12/12` | accepted |
+| `/Users/xiamingxing/.local/bin/cockpit cards --check` | exit 0; compliant; OMO exit 0; scope `all` | accepted |
+| `/Users/xiamingxing/.local/bin/cockpit kems domains` | exit 0; 12 domains; L4 registry source | accepted |
+| `/Users/xiamingxing/.local/bin/cockpit kems status` | exit 1; `degraded` because the L4 content audit truthfully reports existing violations; OMO and Kairon owners `ok` | accepted as truthful degraded status |
+| `L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" /Users/xiamingxing/.local/bin/cockpit kems scan` | non-zero full audit; not green | remains open |
+
+The accepted `cockpit-mcp` stdio server was independently exercised. Initialize
+succeeded; `tools/list` reported 17 tools; and `workspace_context`,
+`domain_context(vault)`, and `cards_check` each returned JSON-RPC success with a
+status-`ok` business envelope. This proves the installed Cockpit binary and MCP
+protocol surface, not Claude, Codex, Zed, or ChatGPT UI reload. It does not
+provision a ChatGPT Secure MCP Tunnel.
+
+The same full Documents L4 audit completed non-zero with 322,871 artifacts,
+41,987 violations, 5,097 runtime artifacts, 36,867 cache artifacts, 1 bridge,
+31,441 content archives, and 23 `invalid_archive` artifacts. Live filesystem
+changes were observed while scanning, so `L4-CONTENT-011` was emitted as
+designed. This is content-plane debt, not an installed-entrypoint failure; the
+overall completion contract and physical migration confirmation gates remain
+unchanged.
 
 ## 2026-08-12 status reconciliation
 
@@ -113,22 +140,22 @@ post-snapshot state:
 - root PR #1372 makes the source-level gateway checker live green for 12/12
   domains;
 - the configuration transaction covers Codex, standard Claude, Claude-3p, and
-  one Zed/ZCode configuration; each client's reload, UI, and
-  installed-entrypoint smoke remains separately unverified;
+  one Zed/ZCode configuration; the installed Cockpit/MCP smoke is now recorded
+  above, while each client's reload and UI smoke remains separately unverified;
 - root PR #1366 / commit `aa43a79d` completed the governed manifest owner job
   with dry-run, success, owner nonzero, evidence, and no-write-back proof;
 - no ChatGPT Secure MCP Tunnel was provisioned;
 - no current Codex or Zed UI smoke is claimed.
 
 Historical step 1 is superseded for the recorded configuration transaction,
-but not for each client's reload/UI/installed-entrypoint smoke. Historical
+but not for each client's reload/UI smoke. Historical
 step 2 is completed by PR #1366 / `aa43a79d`. The 12-domain expansion clause
 in historical step 3 is superseded by PR #1372; its client-smoke work remains
 pending.
 
 Current non-destructive next steps are to retain live 12/12 checker evidence,
-perform and record each client's reload/UI/installed-entrypoint smoke
-independently, review the official ChatGPT public HTTPS/Secure MCP Tunnel
+perform and record each client's reload/UI smoke independently, review the
+official ChatGPT public HTTPS/Secure MCP Tunnel
 requirements without provisioning a tunnel or handling credentials, and
 continue physical migration, cache-cleanup, retirement, Zotero, family-app,
 external-repository, and T8 work under their existing evidence and
