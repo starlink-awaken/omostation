@@ -115,6 +115,13 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                         "instruction_file": "AGENTS.md",
                         "mcp_scope": "client",
                     },
+                    "chatgpt_web": {
+                        "instruction_file": None,
+                        "mcp_scope": "public_https_or_secure_tunnel",
+                        "requires_developer_mode": True,
+                        "setup_ref": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
+                        "tunnel_ref": "https://developers.openai.com/api/docs/guides/secure-mcp-tunnels",
+                    },
                 },
                 "profiles": {
                     "content-domain": {
@@ -196,7 +203,7 @@ Use Cockpit Workspace MCP `domain_context(domain_id=\"{domain_id}\")`.
 Capabilities are owned by Workspace binding registry `documents-domain-projects`.
 When MCP is unavailable report **degraded**. Documents 内容默认只读。
 Do not execute Documents `_runtime`, `_control`, `.kems/_scripts`, or app code.
-ChatGPT Web requires a reviewed remote plugin.
+ChatGPT Web uses public HTTPS MCP or Secure MCP Tunnel.
 """
     for filename in ("CLAUDE.md", "AGENTS.md"):
         (domain_root / filename).write_text(text, encoding="utf-8")
@@ -216,6 +223,126 @@ def test_valid_domain_project_registry_passes(tmp_path: Path) -> None:
         "gateway_count": 2,
         "errors": [],
     }
+
+
+@pytest.mark.parametrize(
+    ("path", "value", "expected"),
+    [
+        (("clients",), None, "clients must be a mapping"),
+        (
+            ("clients", "chatgpt_web"),
+            None,
+            "clients.chatgpt_web must be a mapping",
+        ),
+        (
+            ("clients", "chatgpt_web", "instruction_file"),
+            "AGENTS.md",
+            "clients.chatgpt_web.instruction_file must be null",
+        ),
+        (
+            ("clients", "chatgpt_web", "instruction_file"),
+            None,
+            "clients.chatgpt_web.instruction_file must be null",
+        ),
+        (
+            ("clients", "chatgpt_web", "mcp_scope"),
+            "user_or_project",
+            "clients.chatgpt_web.mcp_scope must be public_https_or_secure_tunnel",
+        ),
+        (
+            ("clients", "chatgpt_web", "requires_developer_mode"),
+            False,
+            "clients.chatgpt_web.requires_developer_mode must be true",
+        ),
+        (
+            ("clients", "chatgpt_web", "requires_developer_mode"),
+            1,
+            "clients.chatgpt_web.requires_developer_mode must be true",
+        ),
+        (
+            ("clients", "chatgpt_web", "setup_ref"),
+            "https://example.test/connect-chatgpt",
+            "clients.chatgpt_web.setup_ref must be https://developers.openai.com/plugins/deploy/connect-chatgpt",
+        ),
+        (
+            ("clients", "chatgpt_web", "tunnel_ref"),
+            "https://example.test/secure-mcp-tunnels",
+            "clients.chatgpt_web.tunnel_ref must be https://developers.openai.com/api/docs/guides/secure-mcp-tunnels",
+        ),
+    ],
+)
+def test_chatgpt_web_contract_fails_closed(
+    tmp_path: Path,
+    path: tuple[str, ...],
+    value: object,
+    expected: str,
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    target = raw
+    for key in path[:-1]:
+        target = target[key]
+    if value is None:
+        target.pop(path[-1])
+    else:
+        target[path[-1]] = value
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [expected]
+
+
+@pytest.mark.parametrize(
+    "instruction_file",
+    [
+        "../../escape/AGENTS.md",
+        "/private/tmp/escape/AGENTS.md",
+        "nested/AGENTS.md",
+    ],
+)
+def test_client_instruction_file_must_be_a_safe_filename(
+    tmp_path: Path, instruction_file: str
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["clients"]["agents_compatible"]["instruction_file"] = instruction_file
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        f"clients instruction_file must be a safe filename: {instruction_file}"
+    ]
+
+
+def test_gateway_file_must_not_be_a_symlink(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    domain_root = tmp_path / "documents" / "vault"
+    _write_gateways(domain_root, "vault")
+    outside_root = tmp_path / "outside"
+    outside_root.mkdir()
+    _write_gateways(outside_root, "vault")
+    agent_gateway = domain_root / "AGENTS.md"
+    agent_gateway.unlink()
+    agent_gateway.symlink_to(outside_root / "AGENTS.md")
+
+    result = _run(
+        domain_registry,
+        project_registry,
+        ("vault",),
+        prepare_default_gateways=False,
+    )
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "vault/AGENTS.md must not be a symlink"
+    ]
 
 
 def test_default_gateway_check_fails_if_registered_projection_is_missing(
