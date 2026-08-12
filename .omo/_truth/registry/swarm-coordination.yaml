@@ -12,10 +12,11 @@
 #   D5 pasw_submodule_isolation — Per-Agent Submodule Worktree (ADR-0371)
 
 version: 1
-last_updated: "2026-07-17"
+last_updated: "2026-08-12"
 related:
   - adr: "0220"
   - goal: "G-CONV.7"
+  - bet: "BET-Y1Q1-T1-05"
   - m1_gate: concurrent_main_conflict_zero
 
 delivery:
@@ -25,6 +26,28 @@ delivery:
   conflict_events: .omo/_delivery/swarm-conflicts/events.jsonl
   conflict_window: .omo/_delivery/swarm-conflicts/window.json
   lock_ttl_hours: 24
+
+topology_migration:
+  phase: d1_pilot
+  target: independent_clone_per_agent
+  integration_root: "~/Workspace"
+  tool: bin/gac/agent-clone.py
+  manifest_schema: agent-clone-manifest/v1
+  changeset_schema: cross-repo-changeset/v1
+  persistent_git_alternates_allowed: false
+  invariants:
+    - integration_root_read_only_for_agent_identity
+    - one_independent_clone_per_agent
+    - integration_only_through_refs_and_review
+  transition:
+    legacy_worktrees_allowed: true
+    existing_gates_remain_active: [d2, d3, d5]
+    retirement_requires:
+      - real_clone_pilot_verified
+      - frozen_manifest_replay_verified
+      - cross_repo_changeset_verified
+      - all_active_agents_migrated
+      - integration_root_agent_reflog_window_clean
 
 gates:
   d1_adr_atomic_claim:
