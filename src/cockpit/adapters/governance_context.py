@@ -8,6 +8,7 @@ import re
 import stat
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -243,13 +244,72 @@ def _artifact_status(root: Path, relative: Path) -> dict[str, str]:
     descriptor: int | None = None
     try:
         descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
-        os.read(descriptor, 1)
     except OSError:
         return {"status": "unreadable", "path": str(path)}
     finally:
         if descriptor is not None:
             os.close(descriptor)
-    return {"status": "present", "path": str(path)}
+    return {
+        "status": "present",
+        "path": str(path),
+        "modified_on": datetime.fromtimestamp(file_stat.st_mtime).date().isoformat(),
+    }
+
+
+def _domain_facts_audit_unavailable(requested: str, source: Path, error: str) -> dict[str, Any]:
+    return {
+        "schema": "cockpit.domain-facts-audit.v1",
+        "status": "unavailable",
+        "available": False,
+        "requested_domain_id": requested,
+        "total": 0,
+        "summary": {"present": 0, "missing": 0, "unreadable": 0, "invalid": 0},
+        "domains": [],
+        "sources": {"domain_registry": str(source)},
+        "error": error,
+    }
+
+
+def domain_facts_audit(
+    domain_id: str = "",
+    *,
+    registry_path: str | Path | None = None,
+    documents_root: str | Path | None = None,
+) -> dict[str, Any]:
+    """Audit declared per-domain facts artifacts through the L4 registry authority."""
+
+    requested = domain_id.strip()
+    source = _registry_path(registry_path, documents_root=documents_root)
+    try:
+        source, _registry, domains = _load_domains(registry_path, documents_root=documents_root)
+    except Exception as exc:
+        return _domain_facts_audit_unavailable(requested, source, str(exc))
+    if not domains:
+        return _domain_facts_audit_unavailable(requested, source, "no registered domain projects")
+
+    selected = domains
+    if requested:
+        selected = [domain for domain in domains if domain["id"] == requested]
+        if not selected:
+            return _domain_facts_audit_unavailable(requested, source, f"unknown domain: {requested}")
+
+    summary = {"present": 0, "missing": 0, "unreadable": 0, "invalid": 0}
+    items: list[dict[str, Any]] = []
+    for domain in selected:
+        facts = _artifact_status(Path(domain["path"]), Path("_entities/facts.md"))
+        summary[facts["status"]] += 1
+        items.append({"id": domain["id"], "name": domain["name"], "facts": facts})
+
+    return {
+        "schema": "cockpit.domain-facts-audit.v1",
+        "status": "ok" if summary["present"] == len(items) else "violations",
+        "available": True,
+        "requested_domain_id": requested,
+        "total": len(items),
+        "summary": summary,
+        "domains": items,
+        "sources": {"domain_registry": str(source)},
+    }
 
 
 def _domain_project_unavailable(

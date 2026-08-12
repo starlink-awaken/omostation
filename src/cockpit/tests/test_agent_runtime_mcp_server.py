@@ -217,6 +217,7 @@ class TestGovernanceTools:
             "domains_list",
             "domain_context",
             "domain_project_status",
+            "domain_facts_audit",
             "cards_status",
             "cards_check",
             "kems_status",
@@ -250,4 +251,16 @@ class TestGovernanceTools:
         )
 
         assert json.loads(agent_runtime_mcp_server.domain_project_status("vault")) == payload
+        assert seen == ["vault"]
+
+    def test_domain_facts_audit_passes_domain_id_and_returns_parseable_envelope(self, monkeypatch):
+        seen = []
+        payload = {"schema": "cockpit.domain-facts-audit.v1", "status": "ok", "available": True}
+        monkeypatch.setattr(
+            agent_runtime_mcp_server.governance_context,
+            "domain_facts_audit",
+            lambda domain_id="": seen.append(domain_id) or payload,
+        )
+
+        assert json.loads(agent_runtime_mcp_server.domain_facts_audit("vault")) == payload
         assert seen == ["vault"]

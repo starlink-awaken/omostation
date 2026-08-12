@@ -169,6 +169,13 @@ def domain_project_status(domain_id: str = "") -> str:
 
 
 @mcp.tool()
+def domain_facts_audit(domain_id: str = "") -> str:
+    """Audit registered Documents document-domain facts files without reading content."""
+
+    return _json_envelope(governance_context.domain_facts_audit(domain_id))
+
+
+@mcp.tool()
 def cards_status() -> str:
     """List CARDS through the OMO authority."""
 

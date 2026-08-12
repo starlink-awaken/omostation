@@ -231,3 +231,49 @@ def test_domain_status_maps_degraded_and_unavailable_to_nonzero(monkeypatch):
     )
     with patch("sys.argv", ["cockpit", "domain-status", "unknown"]):
         assert main() == 2
+
+
+def test_facts_audit_json_forwards_domain_id_and_preserves_envelope(monkeypatch, capsys):
+    """facts-audit forwards its optional domain ID and prints the shared envelope unchanged."""
+    from cockpit.commands import l4bridge
+
+    payload = {
+        "schema": "cockpit.domain-facts-audit.v1",
+        "status": "ok",
+        "available": True,
+        "domains": [],
+        "summary": {"present": 1, "missing": 0, "unreadable": 0, "invalid": 0},
+    }
+    seen = []
+    monkeypatch.setattr(
+        l4bridge.governance_context,
+        "domain_facts_audit",
+        lambda domain_id="": seen.append(domain_id) or payload,
+    )
+
+    with patch("sys.argv", ["cockpit", "facts-audit", "vault", "--json"]):
+        assert main() == 0
+
+    assert seen == ["vault"]
+    assert json.loads(capsys.readouterr().out) == payload
+
+
+def test_facts_audit_maps_violations_and_unavailable_to_contract_exit_codes(monkeypatch):
+    """facts-audit reserves exit 1 for violations and exit 2 for unavailable results."""
+    from cockpit.commands import l4bridge
+
+    monkeypatch.setattr(
+        l4bridge.governance_context,
+        "domain_facts_audit",
+        lambda domain_id="": {"status": "violations", "domains": [], "summary": {}},
+    )
+    with patch("sys.argv", ["cockpit", "facts-audit"]):
+        assert main() == 1
+
+    monkeypatch.setattr(
+        l4bridge.governance_context,
+        "domain_facts_audit",
+        lambda domain_id="": {"status": "unavailable", "domains": [], "summary": {}},
+    )
+    with patch("sys.argv", ["cockpit", "facts-audit", "unknown"]):
+        assert main() == 2
