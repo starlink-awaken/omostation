@@ -918,6 +918,77 @@ bets:
     单 item、一次性显式 ingest，不加 watcher。任何正文进入 Git、日志、MOS/JSONL 副本或外发链立即停止并回滚；
     没有真实用户 item 与裁决时仅能声称 E3 工程能力完成，不得宣称个人价值或 W3 gate 通过
   retro: required
+- id: BET-Y1Q2-T2-02
+  track: T2-PERCEPT
+  window: Y1Q2
+  title: Blueprint W3-01B 个人 dogfood 操作入口与系统生成本地草稿
+  appetite: 2 days
+  priority: P0
+  status: done
+  done_at: 2026-08-12
+  goal: >-
+    在可信本地单用户阶段，把 W3-01A 从需要手写 Python、环境变量与多段 HTTP 请求的工程链路，
+    收敛为 Cockpit 唯一入口可直接操作的个人 dogfood：幂等初始化个人角色、摄取固定目录 Markdown、
+    人工确认、由服务端基于 Episode 生成 never-send 本地草稿、记录人工 verdict，并提供只读状态视图。
+  non_goals:
+  - 第二信号源、watcher、daemon、cron、邮件/日历/Reminders 或 W3-02 多源 normalizer
+  - LLM 生成、自动承诺提取、自动角色匹配、自动审批、自动发送或外部任务创建
+  - 家庭成员、多租户、跨组织、敌意同进程、并发 exactly-once 或崩溃 reconcile
+  - 两周价值结论、W3 gate 通过或自治升级；本轮只让真实观察可开始
+  - 新 M2、Ledger DDL、第二账本、第二 Inbox、顶级项目、ADR、dashboard 或 UI 页面
+  done_when:
+  - >-
+    Cockpit 提供幂等 trusted-local role setup；首次创建 active role/responsibility，重复调用返回 reused，
+    已存在但冲突的定义 fail closed，不覆盖其他个人、家庭或组织角色
+  - >-
+    `cockpit workflow mesh personal` 提供 setup、ingest、confirm、draft、feedback、status 薄入口；业务规则仍由
+    现有 Cockpit API、OMO PersonalEpisodeService 与 Agora PEP 拥有，CLI 不复制 Ledger/mandate/policy 逻辑
+  - >-
+    draft 未提交 title/context/deadline/next_action 时，由服务端从已持久化 Episode 安全字段生成结构化本地草稿，
+    产物明确 `output_origin=system` 与 `never_send=true`；兼容的 caller-authored 草稿标记为 user_provided，
+    后者不得计入系统价值样本
+  - >-
+    一条无 mock 公共边界 E2E 完成 setup → 真实 Iris item → causal Episode → confirm → 真实 PEP →
+    system-owned local draft → feedback → status/projection；重复 setup/ingest 幂等，未确认或 PEP 失败时零产物
+  - >-
+    status 只读展示 signal/episode/system-output/verdict 计数及最近 Episode，不修改 Ledger；原始 Markdown 正文、
+    绝对信号路径、凭证和自由日志不进入响应、Ledger、Git 或 MOS
+  verify:
+  - cmd: >-
+      cd projects/omo && uv run --with pytest python -m pytest tests/test_personal_episode.py
+      tests/test_episode_projection.py -q && uv run ruff check src/omo/personal_episode.py tests/test_personal_episode.py
+    expect: exit 0
+  - cmd: >-
+      cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python -m pytest
+      src/cockpit/tests/test_api_personal_episode.py src/cockpit/tests/test_api_personal_signal.py
+      src/cockpit/tests/test_cli_personal_dogfood.py -q && uv run ruff check src/cockpit/commands/workflow_mesh.py
+      src/cockpit/web/api_workflow_mesh_operations.py src/cockpit/tests/test_cli_personal_dogfood.py
+    expect: exit 0
+  - cmd: cd projects/omo && git diff --check && cd ../cockpit && git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - projects/omo/src/omo/personal_episode.py
+  - projects/omo/tests/test_personal_episode.py
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - projects/cockpit/src/cockpit/cli.py
+  - projects/cockpit/src/cockpit/commands/workflow_mesh.py
+  - projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+  - projects/cockpit/src/cockpit/tests/test_api_personal_episode.py
+  - projects/cockpit/src/cockpit/tests/test_api_personal_signal.py
+  - projects/cockpit/src/cockpit/tests/test_cli_personal_dogfood.py
+  - .omo/_knowledge/retros/BET-Y1Q2-T2-02.md
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q2-T2-01
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    超 2 天、需要新协议/DDL/第二信号源/LLM/外部副作用才能可用时，停止扩展并只交付 setup、薄 CLI 与
+    deterministic system draft。任何真实发送、正文入 Ledger 或 caller-authored smoke 被计入价值时立即阻断
+  retro: required
 - id: BET-Y1Q1-T3-01
   track: T3-COGNI
   window: Y1Q1
@@ -2289,8 +2360,11 @@ bets:
   title: 感知面第二根管子 (文件夹 / 日历)
   appetite: 1 week
   priority: P1
-  status: done
-  done_at: 2026-08-09
+  status: candidate
+  reopened_at: 2026-08-12
+  reopen_reason: >-
+    2026-08-12 复核发现原 verify 只统计注册项数量，无法证明第二源存在真实信号或每周 >=10；
+    当前 inbox_folder health=unknown 且 last_signal_at=null。登记不等于运行，故撤回 done，等待真实运行证据。
   goal: 降低单一信号源风险, 验证 signal-sources 抽象对第二类源成立
   non_goals:
   - 第三/四根管子(属 Y2Q4)
