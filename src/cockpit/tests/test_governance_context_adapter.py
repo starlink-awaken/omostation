@@ -6,6 +6,7 @@ import importlib.util
 import json
 import os
 import subprocess
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -412,6 +413,57 @@ def test_domain_project_status_is_unavailable_for_unknown_domain_or_bad_registry
     assert unknown["status"] == "unavailable"
     assert unknown["domains"] == []
     assert malformed["status"] == "unavailable"
+
+
+def test_domain_facts_audit_reports_present_file_and_local_date(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    registry_path = _write_domain_registry(tmp_path)
+    facts = tmp_path / "domains" / "vault" / "_entities" / "facts.md"
+    facts.parent.mkdir()
+    facts.write_text("# facts\n", encoding="utf-8")
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = _adapter().domain_facts_audit("vault")
+
+    assert result["status"] == "ok"
+    assert result["summary"] == {"present": 1, "missing": 0, "unreadable": 0, "invalid": 0}
+    assert result["domains"][0]["facts"]["modified_on"] == datetime.fromtimestamp(facts.stat().st_mtime).date().isoformat()
+
+
+def test_domain_facts_audit_reports_missing_and_static_artifacts_as_violations(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    registry_path = _write_domain_registry(tmp_path)
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    assert _adapter().domain_facts_audit("vault")["status"] == "violations"
+
+    facts = tmp_path / "domains" / "vault" / "_entities" / "facts.md"
+    facts.parent.mkdir()
+    facts.symlink_to(tmp_path / "outside.md")
+    result = _adapter().domain_facts_audit("vault")
+
+    assert result["status"] == "violations"
+    assert result["domains"][0]["facts"]["status"] == "invalid"
+
+    if hasattr(os, "mkfifo"):
+        facts.unlink()
+        os.mkfifo(facts)
+        fifo_result = _adapter().domain_facts_audit("vault")
+        assert fifo_result["status"] == "violations"
+        assert fifo_result["domains"][0]["facts"]["status"] == "invalid"
+
+
+def test_domain_facts_audit_is_unavailable_without_authority_or_for_unknown_domain(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    registry_path = _write_domain_registry(tmp_path)
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    assert _adapter().domain_facts_audit("unknown")["status"] == "unavailable"
+    registry_path.write_text("manifests: [", encoding="utf-8")
+    assert _adapter().domain_facts_audit()["status"] == "unavailable"
 
 
 def test_dashboard_governance_routes_use_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
