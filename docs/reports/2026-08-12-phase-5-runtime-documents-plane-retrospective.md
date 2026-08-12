@@ -18,6 +18,36 @@ Runtime now has a narrow execution boundary for Documents-owned content domains:
 
 This phase establishes a safe owner adapter. It does not register or switch real Documents consumers; those changes remain governed migration work.
 
+## Post-MVP Owner Registration — 2026-08-12
+
+Runtime PR #47, merged as `e727c00e86fa8584c7e1766a1ef7f05b7b9826c5`, added two
+read-only L4 owner jobs to the previously empty default registry. Root PR #1380,
+merged as `47f8dba1a7a1b8bb76315c33543c7ba3f0124d7d`, adopted that Runtime
+revision in Workspace.
+
+- `l4-registry-list` delegates `l4-kernel registry list --registry <path> --json`;
+  an overridden `L4_DOMAIN_REGISTRY` must resolve below
+  `DOCUMENTS_CONTENT_ROOT`, and its declared read scope is the same resolved
+  relative path.
+- `l4-content-audit` delegates `l4-kernel content audit <Documents-root> --json`.
+  It is an observation job: an existing L4 audit failure remains a non-zero
+  Runtime result rather than a Runtime false success.
+- Both jobs remain manual, have no Documents write scope, and record their
+  metadata-only receipt under the Runtime state root. The immediate CLI JSON
+  retains owner stdout and stderr; the receipt deliberately does not copy them
+  because an audit response can contain private content and be very large.
+
+Verification for this addendum: Runtime focused job tests (22 passed), scoped
+Ruff check/format, full Runtime suite, the Runtime PR lint/test jobs, an
+independent code review, and all root PR #1380 checks passed. A real registry
+run succeeded. A real content audit returned its existing non-zero result, which
+is expected evidence of unresolved Documents content-plane debt rather than a
+successful migration.
+
+This is shared infrastructure only. It does **not** establish source parity,
+consumer cutover, a compatibility bridge, or a terminal migration state for
+`@公共/_runtime`, `@驾驶舱/_runtime`, or any other migration family.
+
 ## SSOT Decision
 
 Runtime owns execution mechanics and schedules, not domain meaning. Job specifications record owner, reads, writes, schedule, timeout, evidence path, and fail-closed policy, while the underlying commands remain authoritative in L4, Kairon, OMO, Cockpit, or another registered owner.
@@ -64,7 +94,9 @@ Fresh per-run working roots are currently retained for diagnosis. Cleanup policy
 
 ## Remaining Debt
 
-- No production Documents jobs are registered yet; Tasks 7–9 add owners only after parity and consumer evidence.
+- Only the two generic, read-only L4 observation jobs are registered. Tasks 7–9
+  still need a per-family owner command, source parity, consumer evidence, and
+  any required compatibility bridge before a migration-family status can move.
 - Non-macOS execution stays unavailable until an equally strong write sandbox is implemented.
 - Fresh work-root retention needs an explicit Runtime-owned cleanup/retention policy after operational volume is measured.
 - The 12 domain gateways still need their separately confirmed batch update and standalone Cowork-client smoke.
@@ -72,8 +104,14 @@ Fresh per-run working roots are currently retained for diagnosis. Cleanup policy
 
 ## Next Phase
 
-1. Freeze infrastructure hardening and deliver the three-domain MVP first.
-2. Under an exact three-domain write confirmation, update only `vault`, `work-weijian`, and `creative` gateways.
-3. Register one low-risk read-only owner job and smoke the standalone Claude/Codex/Zed project flow.
-4. After MVP acceptance, register and cut over the public/cockpit Runtime families and expand to 12/12 domains.
-5. Advance migration registry states only when owner parity and rollback evidence are present.
+1. Build a source-command, consumer, owner, parity, and rollback record for one
+   `@公共/_runtime` or `@驾驶舱/_runtime` family at a time.
+2. Add a dedicated owner job only when the owner implementation and its direct
+   parity tests exist; do not relabel the generic L4 observation jobs as a
+   family replacement.
+3. Publish a compatibility bridge with telemetry where a live consumer still
+   calls a Documents path; do not delete or switch schedules in that PR.
+4. Advance the migration registry only with source and target fingerprints,
+   consumer evidence, and the required confirmation gate.
+5. Treat cron, LaunchAgent, Claude Scheduled, and client reload/UI changes as a
+   separately confirmed physical cutover after the owner command is proven.
