@@ -34,7 +34,8 @@ validated L4 manifest registry and verifies both client files:
 - the requested `domain_context` ID equals the manifest ID;
 - the logical Workspace binding registry is named without binding a worktree;
 - degraded and default-read-only behavior are explicit;
-- the ChatGPT Web remote-plugin boundary is truthful;
+- the ChatGPT Web routing boundary is truthful: developer mode accepts public
+  HTTPS MCP or Secure MCP Tunnel and does not consume local Claude/Codex JSON;
 - no common shell/interpreter command executes Documents `_runtime`,
   `_control`, `.kems/_scripts`, or application-root paths;
 - the projection remains below 80 lines.
@@ -70,19 +71,19 @@ post-change SHA-256 values are the immutable evidence for this phase:
 
 ## Honest remaining gap
 
-The local client deployment is not yet ready:
+The accepted evidence is source/protocol-level, not an end-user deployment
+claim:
 
-- Codex, Claude Desktop, and both inspected Zed settings files contain no
-  Cockpit MCP registration.
-- `/Users/xiamingxing/.local/bin/cockpit{,-mcp}` still points to the older
-  `/Users/xiamingxing/Workspace/projects/cockpit/.venv` installation.
-- The installed `cockpit context` and `cockpit cards --check` currently return
-  `L4 bridge unavailable` with exit code 1.
+- the 12/12 source-level gateway checker is live green;
+- the Claude-3p configuration contains Cockpit, but its process reload and UI
+  smoke remain pending;
+- no ChatGPT Secure MCP Tunnel was provisioned;
+- no current Codex or Zed UI smoke is claimed.
 
-Therefore this phase proves gateway and accepted-source behavior, but does not
-claim end-user client installation. Updating a user package and three global
-client configurations is a separate high-risk operation and remains behind an
-exact confirmation gate.
+Therefore this phase proves the routing boundary and accepted-source behavior,
+not client reload or end-user UI readiness. Any configuration write, tunnel
+provisioning, or client smoke remains a separate, explicitly authorized
+operation.
 
 ## Retrospective
 
@@ -92,22 +93,32 @@ exact confirmation gate.
 2. A green source-level MCP test is not evidence that desktop clients are
    configured. Configuration presence and installed-entrypoint smoke must be
    separate acceptance gates.
-3. The selected-domain option keeps MVP verification fast while remaining the
-   same checker that will later enforce all 12 domains.
+3. The initial selected-domain result was useful historical evidence; root PR
+   #1372 now makes the same checker enforce all 12 domains at source level.
 
-## Next MVP steps
+## Historical next MVP steps (superseded by 2026-08-12 reconciliation)
 
-1. Prepare and review a single client installation/configuration transaction,
-   then request exact user confirmation before applying it.
-2. Register one real low-risk read-only Runtime Documents owner job and prove
-   dry-run, success, owner non-zero, evidence, and no-write-back behavior.
-3. Run local project smoke in Claude/Codex/Zed, then close the MVP acceptance
-   report before expanding to 12/12 domains.
+The following was the pre-#1372 next-step list; it must not be read as saying
+that gateway expansion remains uncompleted.
+
+## Current non-destructive next steps
+
+1. Re-run and retain the live 12/12 gateway-check evidence when a new root
+   change touches the binding contract.
+2. Review client reload and UI-smoke procedures separately; execute them only
+   with their required authorization and report each client independently.
+3. Review the official ChatGPT public HTTPS/Secure MCP Tunnel requirements
+   without provisioning a tunnel or handling credentials.
+4. Continue the physical-migration, cache-cleanup, retirement, Zotero, family
+   app, external-repository, and T8 work under their existing evidence and
+   confirmation gates.
 
 ## 2026-08-12 correction — ChatGPT MCP routing
 
 Official OpenAI evidence supersedes the prior “remote plugin only” assumption.
 ChatGPT developer mode connects either a public HTTPS MCP endpoint or a Secure
-MCP Tunnel; the tunnel can forward to a private stdio or HTTP MCP server without
-public ingress. This task did not provision a tunnel: credentials and external
-Platform state remain a separate, owner-confirmed operation.
+MCP Tunnel; local Claude/Codex JSON is not consumed. The official references
+are <https://developers.openai.com/plugins/deploy/connect-chatgpt> and
+<https://developers.openai.com/api/docs/guides/secure-mcp-tunnels>. This task
+did not provision a tunnel: credentials and external Platform state remain a
+separate, owner-confirmed operation.
