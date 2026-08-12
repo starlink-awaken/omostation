@@ -56,6 +56,18 @@ def _matches_chatgpt_binding(value: object, expected: object) -> bool:
     return type(value) is type(expected) and value == expected
 
 
+def _is_safe_gateway_filename(filename: str) -> bool:
+    """Accept only one plain, relative filename for domain projections."""
+
+    candidate = Path(filename)
+    return (
+        not candidate.anchor
+        and len(candidate.parts) == 1
+        and candidate.name == filename
+        and candidate.name not in {".", ".."}
+    )
+
+
 def _execution_fragments(text: str) -> Sequence[str]:
     """Return Markdown fragments that can reasonably contain a command."""
 
@@ -80,11 +92,16 @@ def _instructs_documents_local_execution(text: str) -> bool:
     return False
 
 
-def _check_gateway_file(path: Path, domain_id: str) -> list[str]:
+def _check_gateway_file(path: Path, domain_id: str, domain_root: Path) -> list[str]:
     """Validate one client projection without interpreting domain content."""
 
     label = f"{domain_id}/{path.name}"
     try:
+        resolved_root = domain_root.resolve(strict=True)
+        if path.is_symlink():
+            return [f"{label} must not be a symlink"]
+        if not path.resolve(strict=True).is_relative_to(resolved_root):
+            return [f"{label} must remain within the domain root"]
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
         return [f"{label} unavailable: {exc}"]
@@ -101,7 +118,7 @@ def _check_gateway_file(path: Path, domain_id: str) -> list[str]:
     if "degraded" not in text or "默认只读" not in text:
         errors.append(f"{label} must define degraded and default-read-only behavior")
     if "ChatGPT Web" not in text:
-        errors.append(f"{label} must state the ChatGPT Web remote-plugin boundary")
+        errors.append(f"{label} must state the ChatGPT routing boundary")
     if _instructs_documents_local_execution(text):
         errors.append(f"{label} instructs Documents-local execution")
     return errors
@@ -181,15 +198,23 @@ def check_domain_projects(
                 ):
                     required = "null" if expected is None else str(expected).lower()
                     errors.append(f"clients.chatgpt_web.{field} must be {required}")
-        gateway_files = sorted(
-            {
-                instruction_file
-                for client in clients.values()
-                if isinstance(client, dict)
-                and isinstance(instruction_file := client.get("instruction_file"), str)
-                and instruction_file
-            }
+        instruction_files = {
+            instruction_file
+            for client in clients.values()
+            if isinstance(client, dict)
+            and isinstance(instruction_file := client.get("instruction_file"), str)
+            and instruction_file
+        }
+        unsafe_gateway_files = sorted(
+            filename
+            for filename in instruction_files
+            if not _is_safe_gateway_filename(filename)
         )
+        errors.extend(
+            f"clients instruction_file must be a safe filename: {filename}"
+            for filename in unsafe_gateway_files
+        )
+        gateway_files = sorted(instruction_files - set(unsafe_gateway_files))
 
     for profile_id, profile in profiles.items():
         if not isinstance(profile, dict):
@@ -255,7 +280,12 @@ def check_domain_projects(
     )
     if len(set(selected_ids)) != len(selected_ids):
         errors.append("gateway domains contains duplicate ids")
-    if selected_ids and isinstance(clients, dict) and not gateway_files:
+    if (
+        selected_ids
+        and isinstance(clients, dict)
+        and not gateway_files
+        and not unsafe_gateway_files
+    ):
         errors.append("clients must expose at least one instruction file")
     for domain_id in sorted(set(selected_ids)):
         if domain_id not in manifest_ids or domain_id not in project_ids:
@@ -266,7 +296,9 @@ def check_domain_projects(
             errors.append(f"gateway domain root is unavailable: {domain_id}")
             continue
         for filename in gateway_files:
-            errors.extend(_check_gateway_file(domain_root / filename, domain_id))
+            errors.extend(
+                _check_gateway_file(domain_root / filename, domain_id, domain_root)
+            )
 
     report: dict[str, object] = {
         "ok": not errors,
