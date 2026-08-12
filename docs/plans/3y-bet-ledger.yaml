@@ -1873,6 +1873,87 @@ bets:
     OMO 只读 replay projector 与 Cockpit GET API；不扩写协议，不把部分投影宣称为完整
     Digital Twin
   retro: required
+- id: BET-Y1Q2-T1-08
+  track: T1-TRUTH
+  window: Y1Q2
+  title: Blueprint W2-05 personal Episode ingress and governed local draft golden slice
+  appetite: 2 days
+  priority: P0
+  status: done
+  done_at: 2026-08-12
+  goal: >-
+    在可信本地单用户环境中，把 W2-01 角色/责任、W2-02 Mandate、W2-03 PDP/PEP
+    与回执、W2-04 Episode/Inbox 投影串成第一条可实际操作的个人闭环：由 Cockpit
+    发起一条个人跟进 Episode，经人工确认后生成一个只保存在本机 runtime 的结构化跟进草稿，
+    全链路事件、回执、证据和人工 Outcome 归入同一 Event Ledger 与 episode_id。草稿永不发送。
+  non_goals:
+  - 发送邮件、创建外部任务、修改日历或调用任何远端写接口
+  - 自动审批、无人监督执行或自治等级晋升
+  - 第二个业务场景、完整场景编排器或新顶级入口
+  - 新 MOF/M2、Ledger DDL/trigger 或 Workflow Mesh 历史迁移
+  - 新 Inbox UI 页面、通知推送或前端视觉改造
+  - 家庭成员、多租户、跨组织、权限后台或凭证管理
+  - 恶意同进程绕过、分布式并发、精确一次、崩溃自动对账或跨主机执行
+  - 自动长期记忆固化、信号源采集/去重或真实价值指标升级
+  done_when:
+  - >-
+      Cockpit 的受控 POST 入口在真实 LedgerBroker 中创建个人跟进 Episode.Decision 卡；
+      请求必须绑定已有 active role assignment 与 responsibility，重复 idempotency key 不重复建卡，
+      W2-04 GET 随即在同一 principal 的 Inbox 中可见
+  - >-
+      明确人工 confirm 后才由 OMO 在同一 episode_id 授予仅限
+      bos://personal/followup/draft、A2/R0、单次预算的可撤销 Mandate；未确认、角色失效或责任不匹配
+      均拒绝且不生成本地草稿
+  - >-
+      execute 复用现有 Agora enforce/complete 与
+      AGORA_PEP_PROVIDER=omo.sovereignty.enforcement:AgoraPepProvider，生成一个服务端命名、
+      仅写 PERSONAL_DRAFT_DIR/runtime 的 JSON 草稿；草稿包含主题、上下文、deadline、下一步与
+      never_send=true，不接受调用方文件路径且不触达外部系统
+  - >-
+      PolicyDecision、ActionReceipt started/terminal、Evidence.LocalDraft 与 Outcome 共享
+      principal/episode/role/responsibility/mandate/trace 因果；人工 accept/edit/reject/defer
+      feedback 追加 Outcome.Human，随后 Episode projection 可见完整成员引用且 hash chain 为 ok
+  - >-
+      一条无 mock HTTP E2E 完成 assign role → start → Inbox 可见 → confirm → PEP execute 一次
+      → 本地草稿存在 → feedback → GET 显示完整 Episode；缺 role、缺 mandate、缺 _omo_policy、
+      PEP/provider/terminal receipt 失败均不返回 succeeded，且可逆本地草稿被清理
+  - >-
+      只新增这一条 golden slice 所需的窄 OMO service 与 Cockpit composition；不改 Agora、ECOS、
+      Ledger schema、旧 Workflow Mesh 写链或 Cockpit UI，W2-01 至 W2-04 定向回归通过
+  verify:
+  - cmd: >-
+      cd projects/omo && uv sync --frozen --reinstall-package ecos && uv run --with pytest
+      python -m pytest tests/test_personal_episode.py tests/test_episode_projection.py
+      tests/test_sovereignty_policy_enforcement.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python -m pytest
+      src/cockpit/tests/test_api_personal_episode.py
+      src/cockpit/tests/test_api_episode_projection.py -q
+    expect: exit 0；包含真实临时 Ledger、真实 OMO+Agora PEP 与真实本地草稿文件，不 monkeypatch 核心链路
+  - cmd: >-
+      cd projects/omo && uv lock --check && git diff --check && cd ../cockpit && git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - projects/omo/src/omo/personal_episode.py
+  - projects/omo/tests/test_personal_episode.py
+  - projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+  - projects/cockpit/src/cockpit/tests/test_api_personal_episode.py
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-08.md
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q2-T1-06
+  - BET-Y1Q2-T1-07
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    超 2 天、需要真实外部副作用、新协议/DDL、新顶级项目或第二个场景才能闭环时，立即停止扩展；
+    只保留可重放 Episode ingress、人工确认和本地 never-send 草稿链路。任何无法通过真实
+    Ledger+Agora PEP+HTTP E2E 的部分不得以 mock、schema 或文件存在冒充完成
+  retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
   window: Y1Q2
