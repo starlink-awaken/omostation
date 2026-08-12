@@ -12,8 +12,9 @@
 
 - Never write Documents, Workspace/Runtime state, manifests, bindings, client configuration, schedules or legacy scripts.
 - Use `_load_domains()` exactly once per audit call; it stays the sole manifest/registry authority path.
-- Audit every domain projected by `_load_domains()`; it is already the authoritative L4 Documents-domain projection. A requested unknown ID is `unavailable`, not an implicit all-domain query.
+- Audit every domain projected by `_load_domains()`; it is already the authoritative L4 Documents-domain projection. An empty projection is `unavailable` with `no registered domain projects`; a requested unknown ID is also `unavailable`, not an implicit all-domain query.
 - Reuse `_artifact_status(root, Path("_entities/facts.md"))`; no second file walker or static-link following.
+- A regular facts file may be opened with `O_NOFOLLOW` only to validate readability; audit code never reads its content.
 - `modified_on` is a local date from `lstat` metadata and never a freshness or health verdict.
 - Exact exit mapping: `ok=0`, `violations=1`, `unavailable=2`.
 - Do not claim legacy retirement, bridge parity, scheduled operation or client installation/reload.
@@ -102,7 +103,7 @@ uv run --no-project --with pytest --with pyyaml --with rich --with fastmcp --wit
   python -m pytest src/cockpit/tests/test_governance_context_adapter.py -q
 ```
 
-Expected: new tests fail because `domain_facts_audit` does not exist.
+Expected: the empty-registry and no-content-read regressions fail against the prior behavior.
 
 - [ ] **Step 3: Implement only the shared envelope**
 
@@ -130,13 +131,13 @@ Add an unavailable helper returning exactly:
 }
 ```
 
-`domain_facts_audit()` loads domains once; handles a non-empty request before iteration; probes only `Path("_entities/facts.md")`; and creates each item exactly as:
+`domain_facts_audit()` loads domains once; returns the unavailable envelope with `no registered domain projects` for an empty projection; handles a non-empty request before iteration; probes only `Path("_entities/facts.md")`; and creates each item exactly as:
 
 ```python
 {"id": domain["id"], "name": domain["name"], "facts": facts}
 ```
 
-Initialize the four summary counts to zero. Return `ok` only if every selected artifact is `present`; otherwise return `violations` with `available=True`. Do not call `_binding_context()`.
+Initialize the four summary counts to zero. Return `ok` only if every selected artifact is `present`; otherwise return `violations` with `available=True`. `_artifact_status()` may open a regular file with `O_NOFOLLOW` to validate readability but never reads content. Do not call `_binding_context()`.
 
 - [ ] **Step 4: Confirm GREEN and commit**
 

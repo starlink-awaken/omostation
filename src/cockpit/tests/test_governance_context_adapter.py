@@ -433,6 +433,41 @@ def test_domain_facts_audit_reports_present_file_and_local_date(
     )
 
 
+def test_domain_facts_audit_is_unavailable_when_registry_is_empty(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    source = tmp_path / "L4-DOMAIN-REGISTRY.yaml"
+    monkeypatch.setattr(gc, "_load_domains", lambda *_args, **_kwargs: (source, object(), []))
+
+    result = gc.domain_facts_audit()
+
+    assert result["status"] == "unavailable"
+    assert result["available"] is False
+    assert result["total"] == 0
+    assert result["domains"] == []
+    assert result["error"] == "no registered domain projects"
+
+
+def test_domain_facts_audit_does_not_read_facts_content(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    facts = tmp_path / "domains" / "vault" / "_entities" / "facts.md"
+    facts.parent.mkdir()
+    facts.write_text("# facts\n", encoding="utf-8")
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    def fail_if_content_is_read(*_args: object, **_kwargs: object) -> bytes:
+        raise AssertionError("facts audit must not read artifact content")
+
+    monkeypatch.setattr(gc.os, "read", fail_if_content_is_read)
+
+    result = gc.domain_facts_audit("vault")
+
+    assert result["status"] == "ok"
+    assert result["domains"][0]["facts"]["status"] == "present"
+
+
 def test_domain_facts_audit_reports_missing_and_static_artifacts_as_violations(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -244,7 +244,6 @@ def _artifact_status(root: Path, relative: Path) -> dict[str, str]:
     descriptor: int | None = None
     try:
         descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
-        os.read(descriptor, 1)
     except OSError:
         return {"status": "unreadable", "path": str(path)}
     finally:
@@ -285,6 +284,8 @@ def domain_facts_audit(
         source, _registry, domains = _load_domains(registry_path, documents_root=documents_root)
     except Exception as exc:
         return _domain_facts_audit_unavailable(requested, source, str(exc))
+    if not domains:
+        return _domain_facts_audit_unavailable(requested, source, "no registered domain projects")
 
     selected = domains
     if requested:

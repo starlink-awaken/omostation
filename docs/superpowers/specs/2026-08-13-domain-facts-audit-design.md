@@ -32,7 +32,7 @@ def domain_facts_audit(
 ) -> dict[str, Any]
 ```
 
-The adapter calls `_load_domains()` once and selects all registered L4 Documents domains only when `domain_id` is empty. `ManifestRegistry.as_legacy_registry()` is already the authority projection for these manifests and marks them as document domains; Cockpit does not invent a separate type rule. An unknown requested ID is `unavailable`; it does not silently widen the request.
+The adapter calls `_load_domains()` once and selects all registered L4 Documents domains only when `domain_id` is empty. `ManifestRegistry.as_legacy_registry()` is already the authority projection for these manifests and marks them as document domains; Cockpit does not invent a separate type rule. An empty registry is `unavailable` with the `no registered domain projects` error; an unknown requested ID is also `unavailable` and does not silently widen the request.
 
 The response schema is `cockpit.domain-facts-audit.v1`:
 
@@ -65,7 +65,7 @@ This corrects the legacy script's false-success exit behavior. It is a new owner
 
 ## Safety
 
-The implementation reuses the existing no-follow artifact probe. `_entities/facts.md` is valid only if each component remains inside the registered domain root and the final artifact is a regular file. Static symlinks, directories, FIFOs, path escape and unreadable files are reported rather than followed or opened. The probe reads at most one byte and never returns content.
+The implementation reuses the existing no-follow artifact probe. `_entities/facts.md` is valid only if each component remains inside the registered domain root and the final artifact is a regular file. Static symlinks, directories, FIFOs and path escapes are reported without being followed or opened; unreadable files are reported. A regular file may be opened with `O_NOFOLLOW` solely to validate readability, but the probe never reads or returns facts content.
 
 ## CLI and MCP
 
