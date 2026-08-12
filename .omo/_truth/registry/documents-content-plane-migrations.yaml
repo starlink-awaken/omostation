@@ -239,9 +239,10 @@ families:
     consumer_refs:
       - "crontab://documents-public-governance"
       - "audit://claude-scheduled/l4-governance-weekly"
+      - "docs/reports/2026-08-12-documents-runtime-owner-parity-inventory.md#公共-runtime-sources"
     rollback: "Keep each source command until its registered owner command, exit-code parity, and consumer cutover are verified."
     confirmation_gate: before_write
-    status: pending
+    status: in_progress
 
   - id: cockpit-runtime
     source_globs:
@@ -253,9 +254,10 @@ families:
     consumer_refs:
       - "@驾驶舱/CLAUDE.md"
       - "@驾驶舱/_control/async-tasks.yaml"
+      - "docs/reports/2026-08-12-documents-runtime-owner-parity-inventory.md#驾驶舱-runtime-sources"
     rollback: "Retain old projections until installed Cockpit smoke and view parity pass."
     confirmation_gate: before_write
-    status: pending
+    status: in_progress
 
   - id: opc-tools
     source_globs:
