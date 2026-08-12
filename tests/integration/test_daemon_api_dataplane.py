@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import AsyncIterator
 
@@ -471,6 +472,44 @@ async def test_prepare_rejections_are_ordered_typed_and_sanitized(
         ]
     }
     assert "X-OMLXC-Placement" not in response.headers
+
+
+@pytest.mark.asyncio
+async def test_prepare_rejection_api_uses_stable_opaque_id_for_unsafe_config_id(
+    transport: httpx.ASGITransport, inference: FakeInferenceService
+) -> None:
+    unsafe_id = "node/private/model"
+    expected_id = f"opaque:{hashlib.sha256(unsafe_id.encode()).hexdigest()[:12]}"
+
+    async def rejected_chat(
+        route: object, request: ChatRequest, *, deadline: float
+    ) -> ChatExecution:
+        del route, deadline
+        return ChatExecution(
+            request_id=request.request_id,
+            model_id=request.model,
+            success=False,
+            placement_id=unsafe_id,
+            attempted_placements=(unsafe_id,),
+            error=ExecutionError(
+                ExecutionErrorCode.NO_CANDIDATE,
+                False,
+                prepare_rejections=((unsafe_id, RejectionCode.UNAVAILABLE),),
+            ),
+        )
+
+    inference.chat = rejected_chat  # type: ignore[method-assign]
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            json={"model": "local/model", "messages": [{"role": "user", "content": "x"}]},
+        )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["partial_result"] == {
+        "prepare_rejections": [{"placement_id": expected_id, "reason": "unavailable"}]
+    }
+    assert unsafe_id not in response.text
 
 
 @pytest.mark.asyncio

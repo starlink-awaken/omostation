@@ -19,6 +19,7 @@ from starlette.responses import Response
 from starlette.types import Message, Receive, Scope, Send
 
 from omlxc.dataplane import ExecutionErrorCode
+from omlxc.dataplane.models import safe_placement_id
 from omlxc.domain import RouteProfile, RouteRequest
 from omlxc.domain.protocols import (
     ChatContentBlock,
@@ -761,7 +762,7 @@ def _prepare_rejection_partial_result(
         return None
     return {
         "prepare_rejections": [
-            {"placement_id": placement_id, "reason": rejection.value}
+            {"placement_id": safe_placement_id(placement_id), "reason": rejection.value}
             for placement_id, rejection in rejections
         ]
     }

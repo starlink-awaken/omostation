@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 from collections.abc import AsyncIterator
 
 import pytest
@@ -522,31 +523,36 @@ async def test_post_load_snapshot_replays_full_eligibility_filter() -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "rejection",
+    ("rejection", "placement_id"),
     [
-        RejectionCode.UNAVAILABLE,
-        RejectionCode.AUTHORIZATION,
-        RejectionCode.STALE,
-        RejectionCode.LOCAL_SECURITY,
-        RejectionCode.MEMORY,
-        RejectionCode.CAPABILITY,
-        RejectionCode.NO_CAPACITY,
+        (rejection, placement_id)
+        for rejection in (
+            RejectionCode.UNAVAILABLE,
+            RejectionCode.AUTHORIZATION,
+            RejectionCode.STALE,
+            RejectionCode.LOCAL_SECURITY,
+            RejectionCode.MEMORY,
+            RejectionCode.CAPABILITY,
+            RejectionCode.NO_CAPACITY,
+        )
+        for placement_id in ("placement.safe-1", "node/private/model")
     ],
 )
 async def test_prepare_failure_preserves_ordered_typed_rejection_without_adapter_call(
     rejection: RejectionCode,
+    placement_id: str,
 ) -> None:
     adapter = FakeAdapter(chats=[_success()])
-    unloaded = _snapshot("p", "b", "n", loaded=False)
+    unloaded = _snapshot(placement_id, "b", "n", loaded=False)
     refreshed_updates: dict[str, object] = {"loaded": True}
     if rejection is RejectionCode.MEMORY:
         refreshed_updates["memory_admitted"] = False
     elif rejection is RejectionCode.CAPABILITY:
         refreshed_updates["capabilities"] = frozenset({"chat"})
-    refreshed = _snapshot("p", "b", "n", **refreshed_updates)
+    refreshed = _snapshot(placement_id, "b", "n", **refreshed_updates)
     snapshots = iter(((unloaded,), (refreshed,)))
     target = PlacementTarget(
-        id="p",
+        id=placement_id,
         node_id="n",
         model_id="physical/p",
         resident=False,
@@ -572,7 +578,13 @@ async def test_prepare_failure_preserves_ordered_typed_rejection_without_adapter
 
     assert result.error is not None
     assert result.error.code in {ExecutionErrorCode.NO_CANDIDATE, ExecutionErrorCode.NO_CAPACITY}
-    assert result.error.prepare_rejections == (("p", rejection),)
+    safe_id = (
+        placement_id
+        if "/" not in placement_id
+        else f"opaque:{hashlib.sha256(placement_id.encode()).hexdigest()[:12]}"
+    )
+    assert result.error.prepare_rejections == ((safe_id, rejection),)
+    assert placement_id == safe_id or placement_id not in repr(result.error)
     assert adapter.chat_requests == []
 
     stream_snapshots = iter(((unloaded,), (refreshed,)))
@@ -597,7 +609,8 @@ async def test_prepare_failure_preserves_ordered_typed_rejection_without_adapter
     assert stream[0].kind is StreamEventKind.ERROR
     assert [
         (item.placement_id, item.reason.value) for item in stream[0].prepare_rejections
-    ] == [("p", rejection.value)]
+    ] == [(safe_id, rejection.value)]
+    assert placement_id == safe_id or placement_id not in repr(stream[0])
     assert adapter.stream_requests == []
 
 
