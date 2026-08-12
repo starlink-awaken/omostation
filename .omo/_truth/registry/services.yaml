@@ -85,9 +85,8 @@ services:
   # 2026-08-08: 这些一直在跑但没有生命周期声明, wsvc 的 S1 检查会持续告警。
   # 字段照 ~/Library/LaunchAgents/*.plist 的真实配置登记, 未臆造。
   # ── 本地算力中枢 ────────────────────────────────────────────────────────
-  # 分工(SSOT: ~/omlx/conf/models.json 的 engine_policy):
-  #   MBP      omlx(mlx_lm.server 等) 主引擎 + 加载器, LM Studio 兜底
-  #   mac-mini / Y7000P   只跑 LM Studio, 三机经 LM Link 合成同一模型池
+  # 算力配置、模型放置与节点授权以 omlxc 私有配置及 Unix Socket API 为 SSOT。
+  # AetherForge 只持有逻辑路由与公共数据面；后端、驻留、内存准入与远程身份均由 omlxc 决策。
   - id: lmstudio.server
     enabled: true
     generate: false

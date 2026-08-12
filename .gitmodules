@@ -56,4 +56,4 @@
 [submodule "projects/omlxc"]
 	path = projects/omlxc
 	url = https://github.com/starlink-awaken/omostation-omlxc.git
-	branch = codex/omlxc-v3
+	branch = main
