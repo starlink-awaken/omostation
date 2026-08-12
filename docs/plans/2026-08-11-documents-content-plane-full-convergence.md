@@ -397,6 +397,13 @@ remain non-zero and the overall completion contract stays unchecked.
 
 **Commit:** `feat(runtime): add governed Documents plane adapters`
 
+**Post-MVP update (2026-08-12):** Runtime PR #47 (`e727c00e86fa8584c7e1766a1ef7f05b7b9826c5`)
+registered the manual, read-only `l4-registry-list` and `l4-content-audit`
+owner jobs. Root PR #1380 (`47f8dba1a7a1b8bb76315c33543c7ba3f0124d7d`)
+adopted that Runtime revision. These are generic L4 observation commands, not
+replacement implementations for a Documents runtime family: no migration-family
+status, legacy bridge, schedule, or physical consumer was changed by this step.
+
 ---
 
 ### Task 7: 拆解并迁移 `@公共/_runtime` 与 `@驾驶舱/_runtime`
