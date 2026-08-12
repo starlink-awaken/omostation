@@ -71,19 +71,19 @@ post-change SHA-256 values are the immutable evidence for this phase:
 
 ## Honest remaining gap
 
-The accepted evidence is source/protocol-level, not an end-user deployment
-claim:
+The local client deployment is not yet ready:
 
-- the 12/12 source-level gateway checker is live green;
-- the Claude-3p configuration contains Cockpit, but its process reload and UI
-  smoke remain pending;
-- no ChatGPT Secure MCP Tunnel was provisioned;
-- no current Codex or Zed UI smoke is claimed.
+- Codex, Claude Desktop, and both inspected Zed settings files contain no
+  Cockpit MCP registration.
+- `/Users/xiamingxing/.local/bin/cockpit{,-mcp}` still points to the older
+  `/Users/xiamingxing/Workspace/projects/cockpit/.venv` installation.
+- The installed `cockpit context` and `cockpit cards --check` currently return
+  `L4 bridge unavailable` with exit code 1.
 
-Therefore this phase proves the routing boundary and accepted-source behavior,
-not client reload or end-user UI readiness. Any configuration write, tunnel
-provisioning, or client smoke remains a separate, explicitly authorized
-operation.
+Therefore this phase proves gateway and accepted-source behavior, but does not
+claim end-user client installation. Updating a user package and three global
+client configurations is a separate high-risk operation and remains behind an
+exact confirmation gate.
 
 ## Retrospective
 
@@ -93,25 +93,41 @@ operation.
 2. A green source-level MCP test is not evidence that desktop clients are
    configured. Configuration presence and installed-entrypoint smoke must be
    separate acceptance gates.
-3. The initial selected-domain result was useful historical evidence; root PR
-   #1372 now makes the same checker enforce all 12 domains at source level.
+3. The selected-domain option keeps MVP verification fast while remaining the
+   same checker that will later enforce all 12 domains.
 
-## Historical next MVP steps (superseded by 2026-08-12 reconciliation)
+## Next MVP steps
 
-The following was the pre-#1372 next-step list; it must not be read as saying
-that gateway expansion remains uncompleted.
+1. Prepare and review a single client installation/configuration transaction,
+   then request exact user confirmation before applying it.
+2. Register one real low-risk read-only Runtime Documents owner job and prove
+   dry-run, success, owner non-zero, evidence, and no-write-back behavior.
+3. Run local project smoke in Claude/Codex/Zed, then close the MVP acceptance
+   report before expanding to 12/12 domains.
 
-## Current non-destructive next steps
+## 2026-08-12 status reconciliation
 
-1. Re-run and retain the live 12/12 gateway-check evidence when a new root
-   change touches the binding contract.
-2. Review client reload and UI-smoke procedures separately; execute them only
-   with their required authorization and report each client independently.
-3. Review the official ChatGPT public HTTPS/Secure MCP Tunnel requirements
-   without provisioning a tunnel or handling credentials.
-4. Continue the physical-migration, cache-cleanup, retirement, Zotero, family
-   app, external-repository, and T8 work under their existing evidence and
-   confirmation gates.
+This addendum preserves the Phase 6 snapshot above and records the accepted
+post-snapshot state:
+
+- root PR #1372 makes the source-level gateway checker live green for 12/12
+  domains;
+- the Claude-3p configuration contains Cockpit, but process reload and UI
+  smoke remain pending;
+- no ChatGPT Secure MCP Tunnel was provisioned;
+- no current Codex or Zed UI smoke is claimed.
+
+The configuration-state premise in historical step 1 is superseded only for
+Claude-3p; its confirmation requirement still applies to any write. The
+12-domain expansion clause in historical step 3 is superseded by PR #1372;
+its client-smoke work remains pending. Historical step 2 is not superseded.
+
+Current non-destructive next steps are to retain live 12/12 checker evidence,
+review each client reload/UI-smoke procedure independently, review the
+official ChatGPT public HTTPS/Secure MCP Tunnel requirements without
+provisioning a tunnel or handling credentials, and continue physical
+migration, cache-cleanup, retirement, Zotero, family-app, external-repository,
+and T8 work under their existing evidence and confirmation gates.
 
 ## 2026-08-12 correction — ChatGPT MCP routing
 

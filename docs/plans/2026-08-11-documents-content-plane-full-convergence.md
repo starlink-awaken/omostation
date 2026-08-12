@@ -298,14 +298,14 @@ L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
 
 **Registry fields:** `id`、`source_globs`、`artifact_kind`、`disposition`、`owner`、`replacement`、`consumer_refs`、`rollback`、`confirmation_gate`、`status`。
 
-**Invariant:** 当前 227 个非四大面 runtime 候选和四个大面必须“恰好匹配一个”迁移族；零匹配与多匹配都 fail closed。历史文档文本引用不算活动消费者，但 crontab、LaunchAgent、Claude Scheduled、CLAUDE 强制命令和可执行 import 算。
+**Invariant:** 当前 L4 audit 发现的非四大面 runtime 候选和四个大面必须“恰好匹配一个”迁移族；零匹配与多匹配都 fail closed。迁移候选总数由 live audit 与 exact-one registry composition 计算，迁移状态由 registry lifecycle 动态权威。历史文档文本引用不算活动消费者，但 crontab、LaunchAgent、Claude Scheduled、CLAUDE 强制命令和可执行 import 算。
 
 **Steps:**
 
 - [x] 写 fixture 和 RED tests 覆盖零匹配、多匹配、owner 空、replacement 空、非法完成状态。
 - [x] 实现 read-only checker；不得自动移动/删除。
 - [x] 把 checker 注册为治理检查和 CI surface。
-- [x] 对真实 Documents 运行：checker 从当前 L4 audit 与 exact-one registry composition 计算候选，并对零漏配、零多配 fail closed；15 个迁移族仍全部 pending。
+- [x] 对真实 Documents 运行：checker 从当前 L4 audit 与 exact-one registry composition 计算候选，并对零漏配、零多配 fail closed；迁移状态以 registry lifecycle 为准，不在计划中固化为当前 pending 总数。
 
 **Accepted root evidence:** PR #1359 accepted the migration registry/checker; PR #1374 accepted tracked cleanup-runtime coverage.
 
