@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.3 — Unreleased
+
+- Added deterministic human status summaries, safe actionable typed errors, and
+  a bounded read-only guide workflow while explicitly preserving JSON/NDJSON and
+  risk-gate contracts.
+
 ## 3.0.2 — 2026-08-12
 
 - Persist accepted terminal request metrics on a bounded daemon-owned interval while

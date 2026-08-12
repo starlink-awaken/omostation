@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import stat
+import sys
 import tomllib
 from collections.abc import Mapping
 from copy import deepcopy
@@ -29,7 +30,20 @@ def default_config_directory() -> Path:
 
 
 def default_config_path() -> Path:
-    return default_config_directory() / "config.toml"
+    platform_path = default_config_directory() / "config.toml"
+    if sys.platform != "darwin" or platform_path.exists() or platform_path.is_symlink():
+        return platform_path
+    compatibility_path = _xdg_compatibility_config_path()
+    if compatibility_path == platform_path:
+        return platform_path
+    try:
+        return require_private_config_path(compatibility_path)
+    except ConfigError:
+        return platform_path
+
+
+def _xdg_compatibility_config_path() -> Path:
+    return Path.home() / ".config/omlxc/config.toml"
 
 
 def config_identity(config: AppConfig) -> str:

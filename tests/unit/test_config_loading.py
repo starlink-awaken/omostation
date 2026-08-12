@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+import omlxc.config.loading as loading_module
 from omlxc.config import AppConfig, ConfigError, load_config, safe_defaults
 from omlxc.domain import RouteProfile
 
@@ -25,6 +26,87 @@ def test_safe_defaults_are_versioned_and_disable_thinking(tmp_path: Path) -> Non
     assert config.placements == ()
     assert config.policies.default_profile is RouteProfile.INTERACTIVE
     assert config.policies.thinking_enabled is False
+
+
+def test_default_config_path_reuses_private_xdg_compatibility_config_when_needed(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    platform_directory = tmp_path / "platform-default/omlxc"
+    compatibility_path = tmp_path / "xdg/omlxc/config.toml"
+    compatibility_path.parent.mkdir(parents=True)
+    compatibility_path.write_text("schema_version = 1\n", encoding="utf-8")
+    compatibility_path.chmod(0o600)
+
+    monkeypatch.setattr(loading_module, "default_config_directory", lambda: platform_directory)
+    monkeypatch.setattr(
+        loading_module, "_xdg_compatibility_config_path", lambda: compatibility_path
+    )
+    monkeypatch.setattr(loading_module.sys, "platform", "darwin")
+
+    assert loading_module.default_config_path() == compatibility_path
+
+
+def test_default_config_path_prefers_existing_platform_config_over_xdg_compatibility(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    platform_path = tmp_path / "platform-default/omlxc/config.toml"
+    compatibility_path = tmp_path / "xdg/omlxc/config.toml"
+    for path in (platform_path, compatibility_path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("schema_version = 1\n", encoding="utf-8")
+        path.chmod(0o600)
+
+    monkeypatch.setattr(loading_module, "default_config_directory", lambda: platform_path.parent)
+    monkeypatch.setattr(
+        loading_module, "_xdg_compatibility_config_path", lambda: compatibility_path
+    )
+
+    assert loading_module.default_config_path() == platform_path
+
+
+def test_default_config_path_never_uses_macos_compatibility_path_on_linux(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    platform_path = tmp_path / "custom-xdg/omlxc/config.toml"
+    compatibility_path = tmp_path / "legacy-xdg/omlxc/config.toml"
+    compatibility_path.parent.mkdir(parents=True)
+    compatibility_path.write_text("schema_version = 1\n", encoding="utf-8")
+    compatibility_path.chmod(0o600)
+
+    monkeypatch.setattr(loading_module, "default_config_directory", lambda: platform_path.parent)
+    monkeypatch.setattr(
+        loading_module, "_xdg_compatibility_config_path", lambda: compatibility_path
+    )
+    monkeypatch.setattr(loading_module.sys, "platform", "linux")
+
+    assert loading_module.default_config_path() == platform_path
+
+
+@pytest.mark.parametrize("mode", (0o644, 0o600))
+def test_default_config_path_rejects_unsafe_xdg_compatibility_config(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, mode: int
+) -> None:
+    platform_directory = tmp_path / "platform-default/omlxc"
+    compatibility_path = tmp_path / "xdg/omlxc/config.toml"
+    target = tmp_path / "real/config.toml"
+    target.parent.mkdir(parents=True)
+    target.write_text("schema_version = 1\n", encoding="utf-8")
+    target.chmod(0o600)
+    if mode == 0o600:
+        compatibility_path.parent.mkdir(parents=True)
+        compatibility_path.symlink_to(target)
+    else:
+        compatibility_path.parent.mkdir(parents=True)
+        compatibility_path.write_text("schema_version = 1\n", encoding="utf-8")
+        compatibility_path.chmod(mode)
+
+    monkeypatch.setattr(loading_module, "default_config_directory", lambda: platform_directory)
+    monkeypatch.setattr(
+        loading_module, "_xdg_compatibility_config_path", lambda: compatibility_path
+    )
+    monkeypatch.setattr(loading_module.sys, "platform", "darwin")
+
+    assert loading_module.default_config_path() == platform_directory / "config.toml"
 
 
 def test_config_precedence_is_defaults_toml_env_then_overrides(tmp_path: Path) -> None:

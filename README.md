@@ -32,6 +32,27 @@ omlxc daemon status
 omlxc doctor --direct --json
 ```
 
+## Guided CLI quick start
+
+```bash
+omlxc status        # cached daemon health plus safe next commands
+omlxc guide         # bounded, read-only TTY workflow
+omlxc status --json # unchanged machine contract
+```
+
+`guide` is TTY-only and bounded. It offers exactly six goals: system health,
+available model, route explanation, running job, daemon troubleshooting, and
+safe lifecycle command help. `guide` never mutates models, jobs, services, or configuration;
+lifecycle guidance prints commands but does not execute them. The no-argument TUI
+remains the interactive entry, while status --json is the automation/machine entry.
+
+## 接入本地编码助手
+
+OpenCode、Pi、oh-my-pi、Kilo Code 及其他 OpenAI 兼容客户端应只连接 AetherForge 的受认证
+门面；它会通过私有 `omlxcd` Unix socket 使用本地算力。不要让客户端直连 daemon、节点或后端
+端口。完整的环境变量、模型发现、四个工具的增量配置、安全边界、流式行为和排障步骤见
+[本地 Agent 工具接入指南](docs/local-openai-client-integration.md)。
+
 Reversible R1 operations require a terminal confirmation or explicit `--yes`:
 
 ```bash

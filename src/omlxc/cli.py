@@ -12,8 +12,26 @@ from uuid import uuid4
 
 import typer
 from pydantic import JsonValue
+from typer import Abort
 
 from . import __version__
+from .cli_guide import (
+    DAEMON_OPERATIONS,
+    MAX_GUIDE_TRANSITIONS,
+    GuideOperation,
+    GuideRequest,
+    GuideState,
+    advance,
+    render_prompt,
+    validate_public_identifier,
+)
+from .cli_presenter import (
+    ErrorContext,
+    render_error,
+    render_lifecycle_help,
+    render_sections,
+    status_sections,
+)
 from .client import DaemonClient, DaemonClientError, DaemonEnvelope, RemoteError
 from .config import (
     AtomicWriteError,
@@ -38,8 +56,10 @@ from .service import (
 app = typer.Typer(
     add_completion=False,
     help="Private local compute-hub CLI and keyboard-first cockpit.",
+    epilog="Quick start: omlxc status\nGuided help: omlxc guide",
     invoke_without_command=True,
     no_args_is_help=False,
+    rich_markup_mode=None,
 )
 nodes_app = typer.Typer(help="Inspect configured compute nodes.")
 models_app = typer.Typer(help="Inspect and control daemon model placements.")
@@ -180,7 +200,13 @@ def _fail_config(message: str, *, request_id: str, detail: str | None = None) ->
     raise typer.Exit(EXIT_CONFIG)
 
 
-def _fail_local(code: str, message: str, *, json_output: bool) -> Never:
+def _fail_local(
+    code: str,
+    message: str,
+    *,
+    json_output: bool,
+    context: ErrorContext = ErrorContext.GENERAL,
+) -> Never:
     request_id = _request_id()
     error = RemoteError(code=code, message=message, retryable=False)
     if json_output:
@@ -197,11 +223,16 @@ def _fail_local(code: str, message: str, *, json_output: bool) -> Never:
             err=True,
         )
     else:
-        typer.echo(f"ERROR [{code}] {message} (request_id={request_id})", err=True)
+        typer.echo(render_error(error, request_id=request_id, context=context), err=True)
     raise typer.Exit(error_exit_code(code))
 
 
-def _emit_client_failure(error: DaemonClientError, *, json_output: bool) -> Never:
+def _emit_client_failure(
+    error: DaemonClientError,
+    *,
+    json_output: bool,
+    context: ErrorContext = ErrorContext.GENERAL,
+) -> Never:
     if json_output:
         typer.echo(
             json.dumps(
@@ -217,7 +248,7 @@ def _emit_client_failure(error: DaemonClientError, *, json_output: bool) -> Neve
         )
     else:
         typer.echo(
-            f"ERROR [{error.error.code}] {error.error.message} (request_id={error.request_id})",
+            render_error(error.error, request_id=error.request_id, context=context),
             err=True,
         )
     raise typer.Exit(error.exit_code)
@@ -233,6 +264,7 @@ def _execute(
     *,
     json_output: bool,
     renderer: Renderer,
+    error_context: ErrorContext = ErrorContext.GENERAL,
 ) -> None:
     try:
         envelope = asyncio.run(_call_daemon(operation))
@@ -241,11 +273,16 @@ def _execute(
         else:
             typer.echo(renderer(envelope.data))
     except DaemonClientError as exc:
-        _emit_client_failure(exc, json_output=json_output)
+        _emit_client_failure(exc, json_output=json_output, context=error_context)
     except typer.Exit:
         raise
     except Exception:
-        _fail_local("E900", "client could not process the daemon response", json_output=json_output)
+        _fail_local(
+            "E900",
+            "client could not process the daemon response",
+            json_output=json_output,
+            context=error_context,
+        )
 
 
 def _unsupported(action: str, *, json_output: bool) -> Never:
@@ -321,7 +358,143 @@ def status(
     json_output: Annotated[bool, typer.Option("--json", help="Emit versioned JSON.")] = False,
 ) -> None:
     """Show cached daemon health without probing hardware."""
-    _execute(lambda client: client.health(), json_output=json_output, renderer=_render_status)
+    _execute(
+        lambda client: client.health(),
+        json_output=json_output,
+        renderer=lambda data: render_sections(status_sections(data)),
+        error_context=ErrorContext.STATUS,
+    )
+
+
+def _guide_argument(request: GuideRequest) -> str:
+    argument = request.argument
+    if not isinstance(argument, str) or not argument:
+        raise ValueError("guide operation is invalid")
+    return argument
+
+
+async def _guide_operation(client: DaemonClient, request: GuideRequest) -> DaemonEnvelope:
+    if request.operation not in DAEMON_OPERATIONS:
+        raise ValueError("guide operation is invalid")
+    if request.operation in {GuideOperation.HEALTH, GuideOperation.DAEMON_HEALTH}:
+        return await client.health()
+    if request.operation is GuideOperation.MODELS:
+        return await client.models(after=None, limit=20)
+    if request.operation is GuideOperation.ROUTE:
+        argument = _guide_argument(request)
+        body: dict[str, JsonValue] = {
+            "model_id": argument,
+            "profile": "interactive",
+            "context_tokens": 0,
+            "required_capabilities": [],
+            "thinking_requested": False,
+        }
+        return await client.plan_route(body)
+    if request.operation is GuideOperation.JOB:
+        return await client.job(_guide_argument(request))
+    raise ValueError("guide operation is invalid")
+
+
+def _render_guide_result(operation: GuideOperation, data: JsonValue | None) -> str:
+    if operation in {GuideOperation.HEALTH, GuideOperation.DAEMON_HEALTH}:
+        return render_sections(status_sections(data))
+    if operation is GuideOperation.MODELS:
+        return _render_items(data, ("id", "role", "reasoning"))
+    if operation is GuideOperation.ROUTE:
+        return _render_guide_route(data)
+    if operation is GuideOperation.JOB:
+        return _render_job(data)
+    raise ValueError("guide operation is invalid")
+
+
+def _render_guide_route(data: JsonValue | None) -> str:
+    mapping = _mapping(data)
+    selected = mapping.get("selected_placement_id")
+    fallback = mapping.get("fallback_chain")
+    if not isinstance(selected, str) or not isinstance(fallback, list):
+        raise ValueError("guide route data is invalid")
+    safe_route: dict[str, JsonValue] = {
+        "selected_placement_id": validate_public_identifier(selected),
+        "fallback_chain": [validate_public_identifier(value) for value in fallback],
+    }
+    return _render_route(safe_route)
+
+
+@app.command("guide")
+def guide() -> None:
+    """Choose a bounded, read-only workflow for a common compute goal."""
+    if not _stdio_is_tty():
+        _fail_local(
+            "E100",
+            "guide requires an interactive terminal",
+            json_output=False,
+            context=ErrorContext.GUIDE,
+        )
+
+    state = GuideState.GOAL
+    for _ in range(MAX_GUIDE_TRANSITIONS):
+        try:
+            typer.echo(render_prompt(state))
+            answer = typer.prompt("Select")
+            transition = advance(state, answer)
+        except (Abort, EOFError, KeyboardInterrupt):
+            _fail_local("E100", "guide cancelled", json_output=False, context=ErrorContext.GUIDE)
+        except ValueError:
+            _fail_local(
+                "E100", "guide input is invalid", json_output=False, context=ErrorContext.GUIDE
+            )
+
+        state = transition.next_state
+        request = transition.request
+        if request is None:
+            continue
+        if request.operation is GuideOperation.LIFECYCLE_HELP:
+            try:
+                typer.echo(render_lifecycle_help(_guide_argument(request)))
+            except ValueError:
+                _fail_local(
+                    "E100", "guide input is invalid", json_output=False, context=ErrorContext.GUIDE
+                )
+            return
+
+        guide_request = request
+        try:
+            envelope = asyncio.run(
+                _call_daemon(
+                    lambda client, guide_request=guide_request: _guide_operation(
+                        client, guide_request
+                    )
+                )
+            )
+        except DaemonClientError as exc:
+            _emit_client_failure(exc, json_output=False, context=ErrorContext.GUIDE)
+        except ValueError:
+            _fail_local(
+                "E900",
+                "guide could not safely process the daemon response",
+                json_output=False,
+                context=ErrorContext.GUIDE,
+            )
+
+        try:
+            typer.echo(_render_guide_result(guide_request.operation, envelope.data))
+        except Abort:
+            _fail_local("E100", "guide cancelled", json_output=False, context=ErrorContext.GUIDE)
+        except Exception:
+            _fail_local(
+                "E900",
+                "guide could not safely process the daemon response",
+                json_output=False,
+                context=ErrorContext.GUIDE,
+            )
+        return
+
+    _fail_local(
+        "E900",
+        "guide transition limit exceeded",
+        json_output=False,
+        context=ErrorContext.GUIDE,
+    )
 
 
 @nodes_app.command("list")
@@ -794,7 +967,12 @@ def doctor(
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     if not direct:
-        _execute(lambda client: client.health(), json_output=json_output, renderer=_render_status)
+        _execute(
+            lambda client: client.health(),
+            json_output=json_output,
+            renderer=lambda data: render_sections(status_sections(data)),
+            error_context=ErrorContext.STATUS,
+        )
         return
     try:
         config = load_user_config()
@@ -901,13 +1079,6 @@ async def _select_from_pages(fetch: PageFetcher, identifier: str, resource: str)
 def _render_mapping(data: JsonValue | None) -> str:
     mapping = _mapping(data)
     return "\n".join(f"{key.upper()} {_text(value)}" for key, value in sorted(mapping.items()))
-
-
-def _render_status(data: JsonValue | None) -> str:
-    mapping = _mapping(data)
-    status_value = _text(mapping.get("status", "unknown")).upper()
-    policy = _text(mapping.get("policy", "interactive"))
-    return f"DAEMON {status_value}\nPOLICY {policy}"
 
 
 def _render_job(data: JsonValue | None) -> str:
