@@ -27,6 +27,8 @@ from .schema import (
     RemoteResidentConfig,
 )
 
+_LEGACY_DEFAULT_CONTEXT_LIMIT = 32_768
+
 
 class MigrationPlan(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -232,14 +234,26 @@ def _migrate_placement(
 ) -> PlacementConfig:
     path = value.get("alias")
     port = value.get("port")
-    max_tokens = _mapping(value.get("params", {}), "model.params").get("max_tokens")
+    parameters = _mapping(value.get("params", {}), "model.params")
+    explicit_context = next(
+        (
+            parameters[key]
+            for key in ("max_context_window", "context_window", "context_limit")
+            if parameters.get(key) is not None
+        ),
+        None,
+    )
     return PlacementConfig(
         id=f"{_slug(model.id)}-local",
         model_id=model.id,
         backend_id=backend_id,
         backend_model_id=model.id,
         model_path=str(path) if path is not None else None,
-        context_limit=_integer(max_tokens, "params.max_tokens") if max_tokens else None,
+        context_limit=(
+            _integer(explicit_context, "model context limit")
+            if explicit_context is not None
+            else _LEGACY_DEFAULT_CONTEXT_LIMIT
+        ),
         memory_gb=model.size_gb,
         resident=model.id in resident,
         legacy_port=_integer(port, "model.port") if port is not None else None,

@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.6 — 2026-08-13
+
+- Preserve the legacy 32K input context contract during JSON migration instead
+  of confusing per-model output `max_tokens` with a placement context limit.
+- Honor explicit legacy context-window fields when present while retaining
+  `max_tokens` solely as a model generation parameter.
+
 ## 3.0.5 — 2026-08-13
 
 - Added bounded OpenAI function-tool definitions, tool selection, assistant

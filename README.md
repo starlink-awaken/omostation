@@ -1,6 +1,6 @@
 # omlxc
 
-`omlxc` is a private local compute hub. Version `3.0.5` provides a persistent
+`omlxc` is a private local compute hub. Version `3.0.6` provides a persistent
 `omlxcd` control/data plane, a typed Unix-socket client, a scriptable Typer CLI,
 and a keyboard-first Textual cockpit. Development and tests do not alter existing
 local services, contact real hardware, or replace the stable

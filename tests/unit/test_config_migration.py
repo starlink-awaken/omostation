@@ -121,6 +121,8 @@ def test_migration_preserves_required_legacy_semantics(tmp_path: Path) -> None:
     assert migrated.models[0].reasoning is True
     assert migrated.models[0].parameters["chat_template_args"] == {"enable_thinking": True}
     assert migrated.placements[0].model_path == "/models/model-00"
+    assert migrated.models[0].parameters["max_tokens"] == 4096
+    assert migrated.placements[0].context_limit == 32_768
 
     target = tmp_path / "config.toml"
     target.write_text(render_toml(migrated), encoding="utf-8")
@@ -143,6 +145,20 @@ def test_migration_plan_is_summary_only_and_does_not_write(tmp_path: Path) -> No
     assert "example.invalid" not in serialized
     assert "/models/" not in serialized
     assert not target.exists()
+
+
+def test_migration_keeps_explicit_context_separate_from_output_budget(tmp_path: Path) -> None:
+    data = _sanitized_legacy_config()
+    model = data["models"]["model-00"]
+    model["params"]["max_tokens"] = 2048
+    model["params"]["max_context_window"] = 16_384
+
+    migrated = migrate_legacy_json(
+        _write_legacy(tmp_path / "models.json", data), base_directory=tmp_path
+    )
+
+    assert migrated.models[0].parameters["max_tokens"] == 2048
+    assert migrated.placements[0].context_limit == 16_384
 
 
 def test_migrated_node_ids_do_not_change_when_addresses_change(tmp_path: Path) -> None:
