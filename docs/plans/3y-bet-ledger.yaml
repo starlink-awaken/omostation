@@ -2454,6 +2454,7 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - bin/gac/omp-worker-adapter.py
   - tests/unit/gac/test_omp_worker_adapter.py
+  - tests/unit/gac/test_pi_worker_adapter.py
   - .omo/_truth/registry/workers.yaml
   - .omo/standards/agent-cli-worker-collaboration.md
   - .omo/_knowledge/retros/BET-Y1Q2-T1-13.md
