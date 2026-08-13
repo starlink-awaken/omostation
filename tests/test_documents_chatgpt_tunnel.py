@@ -300,5 +300,6 @@ def test_required_phase_gate_covers_tunnel_and_cockpit_tests() -> None:
         "tests/test_documents_chatgpt_tunnel.py",
         "projects/cockpit",
         "test_documents_read_mcp_server.py",
+        "secrets.CROSS_REPO_TOKEN",
     ):
         assert required in workflow
