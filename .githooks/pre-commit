@@ -17,10 +17,14 @@ ROOT="$(git rev-parse --show-toplevel)"
 # ── T1-05 D1: independent-clone identity guard ────────────────────
 # New agent clones activate this tracked hook through clone-local
 # core.hooksPath=.githooks. Human shells (AGENT_ID unset) remain unaffected.
-# During migration, legacy isolated worktrees are allowed, while the human
-# integration tree and any nested checkout remain read-only to agent identities.
+# Every agent identity must now present a verified independent-clone identity;
+# legacy linked worktrees remain available only to human migration/inspection.
 if [ -f "$ROOT/bin/gac/agent-clone.py" ]; then
-  _clone_guard_out="$(python3 "$ROOT/bin/gac/agent-clone.py" guard --workspace "$ROOT" --json 2>&1)" || _clone_guard_rc=$?
+  if [ -n "${AGENT_ID:-}" ]; then
+    _clone_guard_out="$(python3 "$ROOT/bin/gac/agent-clone.py" guard --workspace "$ROOT" --require-clone --json 2>&1)" || _clone_guard_rc=$?
+  else
+    _clone_guard_out="$(python3 "$ROOT/bin/gac/agent-clone.py" guard --workspace "$ROOT" --json 2>&1)" || _clone_guard_rc=$?
+  fi
   _clone_guard_rc="${_clone_guard_rc:-0}"
   printf '%s\n' "$_clone_guard_out" | sed 's/^/[clone-guard] /' >&2
   if [ "$_clone_guard_rc" -ne 0 ]; then

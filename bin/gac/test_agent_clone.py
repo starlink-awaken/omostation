@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 TOOL = Path(__file__).resolve().parents[2] / "bin" / "gac" / "agent-clone.py"
+PRE_COMMIT = Path(__file__).resolve().parents[2] / ".githooks" / "pre-commit"
 
 _GIT_ENV = {
     "GIT_CONFIG_NOSYSTEM": "1",
@@ -622,6 +623,105 @@ def test_guard_states(tmp_path):
     )
     out = parse_json(proc)
     assert out["ok"] is True and out["state"] == "legacy_isolated_worktree"
+
+
+def test_guard_require_clone_rejects_legacy_worktree(tmp_path):
+    _src, _child, bare = make_source(tmp_path, with_hooks=True)
+    integration = tmp_path / "integration-workspace"
+    integration.mkdir()
+    dest = create_clone(tmp_path, bare)
+
+    legacy = tmp_path / "legacy"
+    legacy.mkdir()
+    git(legacy, "init", "-b", "main")
+    (legacy / "f.txt").write_text("x\n")
+    git(legacy, "add", "f.txt")
+    git(legacy, "commit", "-m", "x")
+
+    proc = run_cli(
+        "guard", "--workspace", str(legacy),
+        "--integration-root", str(integration), "--require-clone", "--json",
+        env={"AGENT_ID": "agent-1"}, check=False,
+    )
+    assert proc.returncode == 1
+    assert parse_json(proc)["reason"] == "clone_identity_required"
+
+    proc = run_cli(
+        "guard", "--workspace", str(dest),
+        "--integration-root", str(integration), "--require-clone", "--json",
+        env={"AGENT_ID": "agent-1"},
+    )
+    out = parse_json(proc)
+    assert out["ok"] is True and out["state"] == "verified_clone"
+
+    proc = run_cli(
+        "guard", "--workspace", str(integration),
+        "--integration-root", str(integration), "--require-clone", "--json",
+    )
+    out = parse_json(proc)
+    assert out["ok"] is True and out["state"] == "human"
+
+
+def test_tracked_pre_commit_requires_clone_for_agent_identity(tmp_path):
+    legacy = tmp_path / "legacy"
+    legacy.mkdir()
+    git(legacy, "init", "-b", "main")
+    (legacy / "f.txt").write_text("x\n")
+    git(legacy, "add", "f.txt")
+    git(legacy, "commit", "-m", "x")
+
+    tool = legacy / "bin" / "gac" / "agent-clone.py"
+    tool.parent.mkdir(parents=True)
+    shutil.copy2(TOOL, tool)
+    hook = legacy / ".githooks" / "pre-commit"
+    hook.parent.mkdir()
+    shutil.copy2(PRE_COMMIT, hook)
+
+    env = os.environ.copy()
+    env.update(_GIT_ENV)
+    env.update({"AGENT_ID": "agent-1", "HOME": str(tmp_path / "alternate-home")})
+    proc = subprocess.run(
+        ["bash", str(hook)], cwd=legacy, capture_output=True, text=True, env=env, check=False
+    )
+    assert proc.returncode == 1
+    assert "clone_identity_required" in proc.stderr
+
+    env.pop("AGENT_ID")
+    proc = subprocess.run(
+        ["bash", str(hook)], cwd=legacy, capture_output=True, text=True, env=env, check=False
+    )
+    assert proc.returncode == 0
+    assert "human_operation_allowed" in proc.stderr
+
+
+def test_tracked_pre_commit_rejects_real_linked_worktree_with_alternate_home(tmp_path):
+    common = tmp_path / "common"
+    common.mkdir()
+    git(common, "init", "-b", "main")
+    tool = common / "bin" / "gac" / "agent-clone.py"
+    tool.parent.mkdir(parents=True)
+    shutil.copy2(TOOL, tool)
+    hook = common / ".githooks" / "pre-commit"
+    hook.parent.mkdir()
+    shutil.copy2(PRE_COMMIT, hook)
+    git(common, "add", ".")
+    git(common, "commit", "-m", "base")
+    linked = tmp_path / "linked"
+    git(common, "worktree", "add", "-b", "work/linked", str(linked))
+
+    env = os.environ.copy()
+    env.update(_GIT_ENV)
+    env.update({"AGENT_ID": "agent-1", "HOME": str(tmp_path / "alternate-home")})
+    proc = subprocess.run(
+        ["bash", str(linked / ".githooks" / "pre-commit")],
+        cwd=linked,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert proc.returncode == 1
+    assert "clone_identity_required" in proc.stderr
 
 
 # ---------------------------------------------------------------------------
