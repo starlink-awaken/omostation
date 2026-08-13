@@ -2628,7 +2628,7 @@ bets:
   title: Restore completed personal value capabilities to subrepo main and prevent gitlink regression
   appetite: 2 days
   priority: P0
-  status: in_progress
+  status: done
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-13-personal-capability-mainline-restore.md
     spec_version: 1.0.0
