@@ -107,6 +107,34 @@ def test_dry_run_never_probes_health_or_starts_process(tmp_path: Path, monkeypat
     assert result["command"] == adapter.fixed_argv("hello")
 
 
+def test_symlinked_user_config_root_is_rejected_before_process_launch(tmp_path: Path):
+    real_home = user_pi_home(tmp_path / "real")
+    linked_home = tmp_path / "linked"
+    (linked_home / ".pi").mkdir(parents=True)
+    os.symlink(real_home / ".pi" / "agent", linked_home / ".pi" / "agent")
+    called = False
+
+    def start(*_args, **_kwargs):
+        nonlocal called
+        called = True
+        (real_home / ".pi" / "agent" / "mutated-through-link").write_text("bad", encoding="utf-8")
+        raise AssertionError("symlink root must reject before launch")
+
+    with pytest.raises(adapter.AdapterError, match="config_root_rejected"):
+        adapter.run_worker(
+            prompt="x",
+            execute=True,
+            user_home=linked_home,
+            popen_factory=start,
+            health_probe=healthy,
+            marker_probe=no_marker,
+            version_reader=lambda: "0.84.1",
+        )
+
+    assert called is False
+    assert not (real_home / ".pi" / "agent" / "mutated-through-link").exists()
+
+
 @pytest.mark.parametrize(
     "overrides",
     [
