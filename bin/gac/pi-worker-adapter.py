@@ -10,6 +10,7 @@ import re
 import shlex
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -28,7 +29,6 @@ PROVIDER = "omlxc"
 MODEL = "coding"
 MAX_TIMEOUT_SECONDS = 120
 SAFE_PATH = "/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin"
-USER_CONFIG_NAMES = ("models.json", "settings.json", "auth.json", "trust.json")
 VERSION_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
 
 
@@ -93,15 +93,6 @@ def validate_receipt_path(receipt_path: Path | str, *, user_home: Path) -> Path:
     return receipt
 
 
-def _user_config_digests(user_home: Path) -> dict[str, str]:
-    config_dir = user_home / ".pi" / "agent"
-    result: dict[str, str] = {}
-    for name in USER_CONFIG_NAMES:
-        path = config_dir / name
-        result[name] = digest_bytes(path.read_bytes()) if path.is_file() else "missing"
-    return result
-
-
 def _copy_omlxc_provider(user_home: Path, agent_dir: Path) -> None:
     source = user_home / ".pi" / "agent" / "models.json"
     try:
@@ -113,7 +104,14 @@ def _copy_omlxc_provider(user_home: Path, agent_dir: Path) -> None:
         raise AdapterError("models_config_rejected")
     agent_dir.mkdir(mode=0o700)
     models = agent_dir / "models.json"
-    models.write_text(json.dumps({"providers": {PROVIDER: provider}}, separators=(",", ":")), encoding="utf-8")
+    projected_provider = {
+        "api": provider["api"],
+        "apiKey": provider["apiKey"],
+        "authHeader": provider["authHeader"],
+        "baseUrl": provider["baseUrl"],
+        "models": [{"id": MODEL}],
+    }
+    models.write_text(json.dumps({"providers": {PROVIDER: projected_provider}}, separators=(",", ":")), encoding="utf-8")
     models.chmod(0o600)
     auth = agent_dir / "auth.json"
     auth.write_text("{}", encoding="utf-8")
@@ -121,7 +119,11 @@ def _copy_omlxc_provider(user_home: Path, agent_dir: Path) -> None:
 
 
 def _is_audited_omlxc_provider(provider: object) -> bool:
-    """Allow only the local AetherForge provider and one non-shell Keychain form."""
+    """Allow only local AetherForge and Pi's non-shell Keychain command form.
+
+    Pi interprets this command-shaped API key itself; the adapter never invokes
+    it through a shell, and the child process keeps a fixed argv contract.
+    """
     if not isinstance(provider, dict):
         return False
     if provider.get("baseUrl") != "http://127.0.0.1:9290/v1":
@@ -148,13 +150,46 @@ def _is_audited_omlxc_provider(provider: object) -> bool:
     )
 
 
+def _node_type(mode: int) -> str:
+    if stat.S_ISREG(mode):
+        return "regular"
+    if stat.S_ISDIR(mode):
+        return "directory"
+    if stat.S_ISLNK(mode):
+        return "symlink"
+    if stat.S_ISFIFO(mode):
+        return "fifo"
+    if stat.S_ISSOCK(mode):
+        return "socket"
+    if stat.S_ISCHR(mode):
+        return "character"
+    if stat.S_ISBLK(mode):
+        return "block"
+    return "other"
+
+
 def _trial_tree_digest(trial_dir: Path) -> str:
-    entries: list[tuple[str, str]] = []
-    for path in sorted(trial_dir.rglob("*")):
-        if path.is_file():
-            entries.append((str(path.relative_to(trial_dir)), digest_bytes(path.read_bytes())))
-        elif path.is_symlink():
-            entries.append((str(path.relative_to(trial_dir)), "symlink:" + os.readlink(path)))
+    """Digest all paths, node types, and safe node identity without reading devices."""
+    entries: list[tuple[str, str, str]] = []
+
+    def visit(path: Path, relative: Path) -> None:
+        node = os.lstat(path)
+        node_type = _node_type(node.st_mode)
+        payload = ""
+        if node_type == "regular":
+            payload = digest_bytes(path.read_bytes())
+        elif node_type == "symlink":
+            payload = os.readlink(path)
+        entries.append((relative.as_posix(), node_type, payload))
+        if node_type == "directory":
+            with os.scandir(path) as children:
+                for child in sorted(children, key=lambda item: item.name):
+                    visit(Path(child.path), relative / child.name)
+
+    try:
+        visit(trial_dir, Path("."))
+    except FileNotFoundError:
+        entries.append((".", "missing", ""))
     return digest_bytes(json.dumps(entries, separators=(",", ":")).encode("utf-8"))
 
 
@@ -272,7 +307,8 @@ def _default_version_reader() -> str:
 
 
 def _write_receipt(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+    with path.open("x", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n")
 
 
 def run_worker(
@@ -299,7 +335,8 @@ def run_worker(
     marker = f"OMO_PI_TRIAL_ID={uuid.uuid4()}"
     started_at = _utc_now()
     started = time.monotonic()
-    before_config = _user_config_digests(home)
+    config_root = home / ".pi" / "agent"
+    before_config = _trial_tree_digest(config_root)
     receipt: dict[str, Any] = {
         "checks": {
             "aetherforge_health": False,
@@ -355,7 +392,7 @@ def run_worker(
             raise AdapterError("empty_output")
         if expect_exact is not None and output.strip() != expect_exact:
             raise AdapterError("output_mismatch")
-        if before_config != _user_config_digests(home):
+        if before_config != _trial_tree_digest(config_root):
             raise AdapterError("config_drift")
         receipt["checks"]["user_config_unchanged"] = True
         receipt["checks"]["temp_cwd_unchanged"] = before_trial == _trial_tree_digest(trial_dir)
@@ -380,7 +417,7 @@ def run_worker(
                 error_code = "process_leaked"
         else:
             receipt["checks"]["child_reaped"] = not marker_probe(marker)
-        if before_config != _user_config_digests(home) and error_code is None:
+        if before_config != _trial_tree_digest(config_root) and error_code is None:
             error_code = "config_drift"
         if trial_dir is not None:
             try:
