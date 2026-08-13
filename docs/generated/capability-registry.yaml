@@ -8,10 +8,10 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 554
-  bos_services: 219
+  mcp_tools: 565
+  bos_services: 223
   bos_domains: 17
-  cli_commands: 0
+  cli_commands: 130
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -164,6 +164,7 @@ mcp_servers:
   - l4_cards_search
   - l4_claude_validate
   - l4_config_read
+  - l4_contract_validate
   - l4_cross_search
   - l4_dashboard
   - l4_domain_create
@@ -181,6 +182,7 @@ mcp_servers:
   - l4_evolution_trigger
   - l4_files_list
   - l4_freshness
+  - l4_harness_run
   - l4_health
   - l4_kems_validate
   - l4_memory_read
@@ -202,7 +204,7 @@ mcp_servers:
   - l4_timeline_list
   - l4_tools_list
   - l4_workspace_search
-  tool_count: 45
+  tool_count: 47
 - id: agora
   name: Agora Service Convergence Hub
   layer: I0
@@ -516,9 +518,18 @@ mcp_servers:
   transport: stdio
   exists: true
   tools:
+  - cards_check
+  - cards_status
   - chat
+  - domain_context
+  - domain_facts_audit
+  - domain_facts_validation_status
+  - domain_project_status
+  - domains_list
+  - kems_status
   - run_task
-  tool_count: 2
+  - workspace_context
+  tool_count: 11
 - id: runtime
   name: eCOS Runtime Services
   layer: L1
@@ -795,7 +806,7 @@ bos_services:
     compute: 3
     ecos: 10
     forge: 1
-    governance: 50
+    governance: 54
     l4-kernel: 1
     memory: 47
     meta: 1
@@ -1262,6 +1273,22 @@ bos_services:
       description: OMO 状态同步 (mcp_stdio transport 跨进程)
       transport: mcp_stdio
       status: active
+    - uri: bos://governance/omo/ledger-append
+      description: OMO 事件台账追加 (stdio one-shot)
+      transport: stdio
+      status: active
+    - uri: bos://governance/omo/ledger-read
+      description: OMO 事件台账读取 (stdio one-shot)
+      transport: stdio
+      status: active
+    - uri: bos://governance/omo/ledger-verify
+      description: OMO 事件台账完整性校验 (stdio one-shot)
+      transport: stdio
+      status: active
+    - uri: bos://governance/omo/ledger-status
+      description: OMO 事件台账状态查询 (stdio one-shot)
+      transport: stdio
+      status: active
     - uri: bos://governance/l4-kernel/domains
       description: L4 Domain Kernel MCP — 24域管理
       transport: mcp_stdio
@@ -1699,4 +1726,264 @@ bos_services:
       description: vault _state 端点 (ecos services integration gateway 引用)
       transport: inline
       status: active
-cli_commands: []
+cli_commands:
+- name: ack
+  description: 确认任务完成
+- name: agent
+  description: 🤖 Agent 治理控制入口 (bootstrap / status / start / claim / verify / closeout)
+- name: agent-onboard
+  description: 🤖 Agent 入职引导 checklist (profile + MCP + BOS + skills)
+- name: agent-runtime
+  description: 🤖 Agent Runtime 任务执行 / HTTP server (替代独立 agent-runtime 命令)
+- name: agent-workflow
+  description: 🤖 Agent 可执行治理流程 (委派 root bin/agent-workflow.py)
+- name: agora
+  description: Agora BOS 网关入口 (委派 agora CLI)
+- name: analyze
+  description: 运行全部分析工具
+- name: api
+  description: 启动 API server
+- name: archive
+  description: 归档已处理完毕的 Inbox 待办文件
+- name: ask
+  description: 向大脑提问（知识检索 + LLM 回答）
+- name: audit
+  description: 🔍 6 维度全方位审计 (调 bin/workspace-audit)
+- name: backends
+  description: 列出 BOS 后端
+- name: bdsk
+  description: 🧠 B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演)
+- name: bos
+  description: BOS URI 查询与管理
+- name: bos-capability
+  description: BOS capability / toolbox 外部能力
+- name: bos-inbox
+  description: BOS Inbox 多源私有知识神经网查询与操作
+- name: brain
+  description: 个人数字大脑 — 知识检索 + 记忆 + 智能问答
+- name: brief
+  description: 会话简报
+- name: bus
+  description: Omni-Bus 三平面入口
+- name: c2g
+  description: 🎯 C2G 战略罗盘 (status/pipeline)
+- name: capability
+  description: BOS capability 域 / toolbox 外部能力
+- name: cards
+  description: 显示 CARDS 卡片状态
+- name: channels
+  description: 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml
+- name: code
+  description: 代码库分析与审查 (基于 codeanalyze)
+- name: compass
+  description: 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)
+- name: compute
+  description: 算力与 LLM 网关操作 (委派 aetherforge)
+- name: consolidate
+  description: sleep-time 巩固 (默认 dry-run)
+- name: context
+  description: 显示系统上下文 (Phase/CARDS/约束/引导)
+- name: contracts
+  description: 契约验证
+- name: control
+  description: 控制平面：submit / ack / nack
+- name: daily
+  description: 每日研究简报
+- name: dashboard
+  description: 打开 Web Dashboard
+- name: data
+  description: 数据目录索引 / 类型注册 / TTL 清理
+- name: debt
+  description: 债务评分 (omo-debt Pattern 09 v2.1)
+- name: demo
+  description: 快速演示
+- name: discover
+  description: 发现可用功能和资源
+- name: domain-status
+  description: 显示 Documents 域项目绑定与引导状态
+- name: domains
+  description: 列出 L4 所有域及其状态
+- name: down
+  description: 停止观测栈
+- name: event
+  description: 导出事件封套 (EventEnvelope)
+- name: events
+  description: 实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)
+- name: events-watch
+  description: 实时监听 SSE 事件流简便入口
+- name: export
+  description: 导出契约封套
+- name: export-research
+  description: 将研究对象导出为 WorkspaceObject JSON
+- name: facts-audit
+  description: 审计 Documents 文档域 facts 文件
+- name: facts-validation
+  description: 读取 Runtime Facts 审计回执
+- name: family-hub
+  description: 家庭数字枢纽入口
+- name: finance
+  description: 💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域)
+- name: forget
+  description: 遗忘传播
+- name: gac
+  description: GaC 治理健康检查 (ADR-0106, 7 机制 + 115 规则 + drift)
+- name: gbrain
+  description: Postgres-native 知识库入口 (委派 gbrain CLI)
+- name: gc
+  description: 清理 data/tmp 过期文件
+- name: get
+  description: 查 1 个 card
+- name: gongwen
+  description: 📄 公文写作门户引导 (文种/规范/入口, 委派 @公文 域)
+- name: governance
+  description: 架构治理 (委派 arcnode-*)
+- name: graph
+  description: 运行语义图谱分析
+- name: health
+  description: 一键系统健康检查
+- name: help
+  description: 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务)
+- name: history
+  description: 查看对话历史
+- name: identity
+  description: 导出身份封套 (IdentityEnvelope)
+- name: impact
+  description: 分析符号的变更影响面
+- name: import
+  description: 导入外部内容
+- name: inbox
+  description: BOS Inbox 多源私有知识神经网查询与操作
+- name: index
+  description: 刷新 data/_index 元数据
+- name: init
+  description: 🚀 初始化向导（同 quickstart）
+- name: invoke
+  description: 调用 capability 服务（执行 BOS YAML command）
+- name: iterate
+  description: ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行)
+- name: journey
+  description: 🗺️ Journey State Graph 状态表达校验器
+- name: kairon
+  description: kairon 知识引擎 monorepo 聚合入口
+- name: kems
+  description: 🧬 KEMS 域治理 (domains/status/scan)
+- name: knowledge
+  description: 📚 KOS 知识检索 (search/status/stats)
+- name: list
+  description: 列债务项 (委派 omo debt)
+- name: logs
+  description: 查看日志
+- name: mcp
+  description: 启动 MCP server 或列出工具
+- name: memory
+  description: 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref)
+- name: mesh
+  description: omlx 算力网格路由入口
+- name: metrics
+  description: 查看 bus metrics 快照
+- name: model-driven
+  description: '[DEPRECATED] 模型驱动生命周期入口 (ADR-0240 D1) — 拒绝执行'
+- name: mof
+  description: MOF 元模型操作 (委派 mof CLI)
+- name: monitor
+  description: 📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出)
+- name: mutate
+  description: 通过 agora 统一 BOS URI 写协议修改资源
+- name: nack
+  description: 否定确认任务
+- name: nodes
+  description: 列出 KOS 中注册的算力节点
+- name: observe
+  description: 可观测性栈（Langfuse）入口
+- name: omo
+  description: OMO CLI 委派 (debt/state/governance/lint/...)
+- name: onboarding
+  description: 为 AI 构建项目全貌上下文
+- name: pack
+  description: 将代码库打包为 LLM 友好格式
+- name: panorama
+  description: 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)
+- name: pending
+  description: 查看未决待办快照预览
+- name: pipeline
+  description: pipeline 概览
+- name: product-health
+  description: 产品健康度检测
+- name: profile
+  description: 查看/编辑身份档案 (L4 入口)
+- name: project
+  description: 🔍 17 项目全景 4D 体检与诊断
+- name: publish
+  description: 发布事件
+- name: quickstart
+  description: 🚀 新用户快速上手向导（环境核验 + 上手指引）
+- name: quickstart-check
+  description: 快速检查新用户环境核验状态
+- name: read
+  description: 通过 BOS 网关统一读取指定 URI 资源
+- name: readiness
+  description: 'P66: governance readiness dashboard 摘要 (4 卡片: summary/dimensions/alerts/history)'
+- name: recall
+  description: 意图路由召回（neo4j/temporal 支持 --as-of）
+- name: register
+  description: 注册 BOS 服务
+- name: reload
+  description: 重载 BOS 配置/M1
+- name: remember
+  description: 手动存入偏好/事实
+- name: research
+  description: 深度研究
+- name: resolve
+  description: 统一 BOS URI 路由解析与目标元数据提取
+- name: route
+  description: 为模型选择最优节点
+- name: runtime
+  description: runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱)
+- name: scan
+  description: 平面扫描
+- name: scenario
+  description: P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review)
+- name: score
+  description: 评分债务项
+- name: search
+  description: 全文搜 CARDS
+- name: serve
+  description: stdio JSON-RPC serve mode
+- name: skill
+  description: 运行 L4 定时技能
+- name: ssb
+  description: '[DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用'
+- name: stats
+  description: 索引统计
+- name: status
+  description: 系统健康
+- name: submit
+  description: 提交控制任务
+- name: summary
+  description: 债务摘要 (委派 omo debt)
+- name: swarm
+  description: 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突)
+- name: topics
+  description: 列出已注册 topic
+- name: tui
+  description: 极客终端交互控制台 (Textual 全屏 TUI)
+- name: types
+  description: 查看已注册的数据类型
+- name: up
+  description: 启动观测栈
+- name: url
+  description: 打印 Langfuse Web URL
+- name: validate
+  description: 验证 Workspace 契约
+- name: vault
+  description: 搜索 L4 Vault 知识库
+- name: version
+  description: 版本信息
+- name: watch
+  description: 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher)
+- name: wave2
+  description: 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON)
+- name: workflow
+  description: BOS workflow 相关
+- name: write
+  description: 双轨写入 (+ Neo4j FACT 若配置)
