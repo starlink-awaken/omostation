@@ -74,6 +74,12 @@ coverage_samples:
   - relative_path: "_inbox/2026-08-03-kems-repair.py"
     kind: runtime
     family: root-oneoff-assets
+  - relative_path: "ZCode/.zcode/v2/tasks-index.sqlite"
+    kind: cache
+    family: documents-client-state
+  - relative_path: "index-BYqQMscj.js"
+    kind: runtime
+    family: root-oneoff-assets
 
 families:
   - id: family-dashboard-app
@@ -292,6 +298,7 @@ families:
       - "cron-service-error-reset.py"
       - "cron-service-fix.sh"
       - "kos-index.sqlite"
+      - "index-BYqQMscj.js"
     artifact_kind: [runtime, cache]
     disposition: retire
     owner: governance-team
@@ -300,4 +307,18 @@ families:
       - "audit://documents/root-oneoff/consumer-scan-pending"
     rollback: "Archive evidence and record hashes before any delete; restore from the rollback package if a consumer is discovered."
     confirmation_gate: before_delete
+    status: pending
+
+  - id: documents-client-state
+    source_globs:
+      - "ZCode/.zcode/**"
+    artifact_kind: [cache]
+    disposition: relocate
+    owner: zcode
+    replacement: "ZCode task state under the user's native ~/.zcode application-data root, outside Documents"
+    consumer_refs:
+      - "bin/gac/documents-zcode-config.py"
+      - ".omo/_truth/registry/documents-domain-projects.yaml#zcode"
+    rollback: "Copy and verify task state before changing any ZCode data root; retain the Documents source until a ZCode restart confirms the target."
+    confirmation_gate: before_external_config
     status: pending
