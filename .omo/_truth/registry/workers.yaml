@@ -132,8 +132,9 @@ workers:
     class: external_agent_cli
     transports:
       cli_prompt:
-        command: '/usr/bin/python3 bin/gac/pi-worker-adapter.py run --execute --timeout-seconds 120 --prompt "{prompt}"'
+        command: '/usr/bin/python3 "{workspace_root}/bin/gac/pi-worker-adapter.py" run --execute --timeout-seconds 120 --prompt "{prompt}"'
     capabilities: [reasoning, verification]
+    require_explicit_capabilities: true
     allowed_operation_level: L0
     forbidden_domains: [apple, wechat, smb, family, media]
     write_scope: {mode: none}

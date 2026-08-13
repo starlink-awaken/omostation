@@ -52,6 +52,11 @@ tracked independently from the admitted Pi worker transport.
 7. **Every worker run must leave reusable evidence and knowledge artifacts.**
 8. **Provider/worker discovery is read-only and never dispatches a worker.**
 9. **Unknown or stale quota remains unknown; proxy values are forbidden.**
+10. **Capability requirements are explicit when worker policy requires them.**
+    Any declared `capabilities` or `required_capabilities` field on a task,
+    workflow packet, or admission grant must be a non-empty list of non-empty
+    strings. Workers with `require_explicit_capabilities: true` reject dispatch
+    when all three surfaces omit capability requirements.
 
 ### 2.1 Agent Pool Projection
 
@@ -156,6 +161,7 @@ Worker must exist in `.omo/_truth/registry/workers.yaml` with:
 - transport modes
 - allowed operation level
 - allowed write scope
+- declared capabilities and whether explicit capability requirements are mandatory
 - heartbeat policy
 - stall policy
 
