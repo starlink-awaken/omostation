@@ -27,11 +27,11 @@ workspace_mcp:
 capability_routes:
   skills:
     owner: workspace-skills
-    registry_ref: "bos://shared/_control/SKILL-INDEX.md"
+    registry_ref: ".agents/skills"
     guidance: "Discover the relevant Workspace skill; do not copy skill implementations into Documents."
   workflows:
     owner: workspace-workflow-mesh
-    registry_ref: "bos://shared/_control/REGISTRY.md"
+    registry_ref: ".omo/_truth/registry/agent-workflows.yaml"
     guidance: "Route multi-step execution through Workspace Workflow Mesh/Runtime; Documents stores only declarations and evidence."
   tasks_and_approvals:
     owner: omo

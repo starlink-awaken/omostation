@@ -498,3 +498,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0406: model-driven (M0) 维持子模块形态 — **PROPOSED** | 2026-08-09 | Model-driven submodule decision | 0406-model-driven-submodule-decision.md
 - ADR-0407: ci-local-fast 真实退出码与 Ruff 有界债务门 — **ACCEPTED** | 2026-08-11 | G-1 control-plane truthfulness | 0407-truthful-ci-local-fast.md
 - ADR-0408: G-1 Swarm Readiness Gate Close — six SR direct evidence — **ACCEPTED** | 2026-08-11 | G-1 swarm readiness closeout | 0408-g1-swarm-readiness-gate-close.md
+- ADR-0409: Documents capability routes converge on Workspace owners — **ACCEPTED** | 2026-08-13 | Documents capability ownership | 0409-documents-capability-route-owner-convergence.md
