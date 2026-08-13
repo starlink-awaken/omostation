@@ -124,3 +124,63 @@ gitlink 指向该版本。accepted root 已快进到 `66cb8fea`，并以冻结�
 其正式 checker 或生成器确认，但每个客户端的重载后 UI/模型调用仍是独立操作面。
 ChatGPT 也仍缺外部 Tunnel 的实际 provision；本地已具备的只读 MCP 契约不替代
 平台连接、凭据或 Developer Mode 授权。
+
+## 安装态与能力目录复验（2026-08-13，Phase 49）
+
+本节是对上文历史快照的追加核验，不回写上文的时间、范围或结论。验收使用的
+Workspace accepted checkout 已处于根提交 `4291b4b`，其 Cockpit gitlink 为
+`626d3a0`。
+
+### 全域独立项目路由
+
+以新的 Cockpit MCP 调用分别请求 12 个 L4 已注册 Documents 域的
+`domain_context(domain_id)`。12 个结果都为 `status=ok`、`available=true`，且都
+解析到唯一的 `content-domain` profile：
+
+- Skills route 解析到 Workspace `.agents/skills`，状态为 `ok`；
+- Workflow route 解析到 Workspace `agent-workflows.yaml`，状态为 `ok`；
+- 执行策略均为 `workspace_only`，因此域内不会再成为 KEMS 或 Runtime 的第二套
+  实现/状态权威；
+- `documents-domain-index check` 与 `documents-domain-project-check --json` 同时
+  通过，后者返回 `domain_count=12`、`gateway_count=12`、`errors=[]`。
+
+这证明“每个 Documents 域可作为独立项目接入同一个 Workspace 控制面”的协议面已经
+成立。它不意味着所有域都拥有相同的内容审计任务；例如结构化 Facts Runtime job 仍
+只在已显式注册的卫健委域上返回可用回执。
+
+### 能力目录的 SSOT 修复
+
+复验中发现 Workspace 能力注册表生成器只扫描了 Cockpit 的旧 `cli.py`，而部分
+命令已经注册在 `_subcommands.py`。结果会把 CLI 目录错误生成成零命令，影响客户端
+从能力目录发现 Documents 的 Cockpit 入口。
+
+该缺陷已由 Cockpit PR #48 和 Workspace PR #1423 修复并合并：生成器现在扫描两个
+注册模块，测试锁定 `context`、`domain-status`、`facts-validation` 与 `kems`，再生成
+`capability-registry.yaml`、CLI reference、MCP index 与 Cockpit capability map。
+安装态重复生成后没有这些派生文件的差异；目录当前记录 130 条 Cockpit CLI 命令和
+565 个 MCP 工具。该修复只同步派生目录，不改变 Documents 内容或 Runtime 行为。
+
+### 客户端验收矩阵
+
+| 客户端 | 当前已证实 | 尚待的外部验收 |
+|---|---|---|
+| Claude Desktop（第三方部署） | 配置含受管 `cockpit` server，且正在运行的 Claude 进程已启动 accepted `cockpit-mcp` | 在 Claude UI 中以实际模型调用 `domain_context` |
+| Codex | `documents-codex-profile check` 为 `ok`；profile 只保留受管 Cockpit 入口 | 在 Documents 项目窗口执行一次只读工具调用 |
+| Zed | `documents-zed-profile check` 为 `ok` | 重载 Agent Profile 后调用一次只读工具 |
+| ZCode | `documents-zcode-config check` 为 `ok`，且不相关 provider/MCP 设置保持不变 | 安装/启动 ZCode 后调用一次只读工具 |
+| ChatGPT Web/Cowork | 受管预检如实返回 `unavailable` | 建立 Tunnel 并在 Developer Mode 调用一次只读工具 |
+
+ChatGPT 的未完成项不是本地配置遗漏。官方 Secure MCP Tunnel 文档要求：Platform
+tunnel endpoint 的 `tunnel_id`、供 `tunnel-client` 使用的 runtime API key，以及该
+client 能从私网到达 MCP server；创建/管理 tunnel 的权限与 ChatGPT Developer Mode
+访问也相互独立。当前机器未配置 tunnel client、平台 API key 或 tunnel ID，因此本轮
+没有创建 tunnel、没有写入凭据，也不宣称 ChatGPT 已连通。官方指南：
+<https://developers.openai.com/api/docs/guides/secure-mcp-tunnels>。
+
+### 阶段结论
+
+Documents 域身份（L4 Manifest）、能力绑定（Workspace binding registry）、能力目录
+（Workspace generated registry）和客户端投影已经各自回到单一权威来源，并通过
+实际 12 域 MCP 路由及安装态 checker 交叉验证。剩余工作是四个本地客户端的 UI
+smoke 与 ChatGPT 的外部 Platform provisioning；这些需要客户端会话或平台权限，不能
+由静态配置、进程存在或本地 checker 替代。
