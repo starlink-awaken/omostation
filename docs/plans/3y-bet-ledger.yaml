@@ -7,7 +7,7 @@ schema_version: 1
 ---
 meta:
   horizon: 2026H2-2029
-  total_bets: 82
+  total_bets: 83
   windows:
   - Y1Q1
   - Y1Q2
@@ -2245,6 +2245,74 @@ bets:
   circuit_breaker: >-
     需要写用户配置、读取或持久化凭证/身份、发起模型调用、自动选择/切换/fallback，或必须新增
     调度器才能继续时立即停止；只保留静态声明、只读观测与 fail-closed 准入前回执
+  retro: required
+- id: BET-Y1Q2-T1-11
+  track: T5-ORCH
+  window: Y1Q2
+  title: Kandev loopback control-plane phase-0 reversible trial
+  appetite: 1 day
+  priority: P0
+  status: done
+  done_at: 2026-08-13
+  goal: >-
+    在不改变 Workspace BET、Workflow Mesh、worker admission、receipt 与 verifier 权威边界的前提下，
+    建立 Kandev 候选控制面的最小可撤销 Phase-0：只在隔离 home 和 loopback 端口启动固定版本，
+    验证健康、监听边界、终止回收与脱敏回执，为后续 Pi/Oh My Pi 受治理试点提供安全接线基线。
+  non_goals:
+  - 创建 Kandev workspace、task、session、automation、MCP 服务、远程 executor 或常驻 daemon
+  - 让 Kandev 或其 Completed 状态取代 Workspace BET、Workflow Mesh、review、receipt 或 verifier 真相
+  - 调用 Pi、Oh My Pi 或其他模型，修改 worker admission，自动调度、自动合并或 fallback
+  - 读取、复制或持久化用户凭证、身份、OpenCode/CodexBar/cc-switch/omlxc 配置
+  - 在非 loopback 地址监听，写入共享 Workspace 运行态或用户级 Kandev 配置
+  done_when:
+  - >-
+      runner 默认只输出 dry-run 计划；只有显式 run-smoke --execute、固定 package version、空且安全的
+      隔离 home 与有效端口同时满足时才可启动，禁止 latest、shell string 和默认用户目录
+  - >-
+      执行时强制 KANDEV_SERVER_HOST=127.0.0.1、KANDEV_HOME_DIR=<isolated-home>、KANDEV_NO_BROWSER=1；
+      health 或 listener 不可验、绑定 0.0.0.0/*、超时、子进程退出异常均 fail-closed
+  - >-
+      成功或失败后均终止并 reap 子进程，不遗留 listener/daemon；结构化回执仅保留版本、
+      时间、回环地址、health/listener/process 结果与无副作用断言，不包含身份、凭证和原始日志
+  - >-
+      真实 Phase-0 使用一次性隔离 home 和临时端口完成启动→health→loopback 监听→终止→无残留验证；
+      回执明确 task_created=false、agent_spawned=false、model_called=false、workspace_written=false
+  - >-
+      单测覆盖 dry-run、非固定版本、危险 home、非回环监听、health 失败、超时回收、脱敏回执和成功路径；
+      独立 reviewer 审核后才可进入 Pi 真实 admission smoke
+  verify:
+  - cmd: >-
+      uv run --with pytest python -m pytest
+      tests/unit/gac/test_kandev_loopback_trial.py -q
+    expect: exit 0
+  - cmd: >-
+      uv run --with ruff ruff check bin/gac/kandev-loopback-trial.py
+      tests/unit/gac/test_kandev_loopback_trial.py
+    expect: exit 0
+  - cmd: >-
+      python3 bin/gac/kandev-loopback-trial.py --help &&
+      trial_home=$(mktemp -d /tmp/kandev-plan.XXXXXX) &&
+      python3 bin/gac/kandev-loopback-trial.py run-smoke
+      --package-version 0.87.1 --home "$trial_home" --port 43123 &&
+      rmdir "$trial_home"
+    expect: exit 0；不联网、不启动进程、不写配置
+  - cmd: git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - bin/gac/kandev-loopback-trial.py
+  - tests/unit/gac/test_kandev_loopback_trial.py
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-11.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-10
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    出现非 loopback 监听、无法验证或回收进程、访问用户凭证/配置、创建任务/代理/模型调用、
+    写入主树或必须将 Kandev 定义为交付真相才能继续时立即停止，只保留脱敏诊断证据，不宣称试点通过
   retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
