@@ -91,3 +91,27 @@ ChatGPT 发起的只读 `domain_context` 验收。
    证据，而不影响日常 `kems status` 的有界返回；
 4. 为确有结构化 Facts 的其他域显式注册 Runtime job；在未注册前保持
    `facts-validation` 的 unavailable 语义。
+
+## 阶段收口复验（2026-08-13）
+
+后续安装态复验发现并修正了 Cockpit 的一个实际解析缺陷：accepted checkout 中
+`projects/.omo -> ../.omo` 是兼容软链；旧解析器把它当作工作区根，导致未显式设置
+`WORKSPACE_ROOT` 的 CLI 将能力注册表解析到 `accepted/projects`。修复后的解析器忽略
+该兼容软链，只接受真实的 Workspace authority 目录。
+
+修复已先合并至 Cockpit PR #45（`906d009`），再由 Workspace PR #1417 将根仓库
+gitlink 指向该版本。accepted root 已快进到 `66cb8fea`，并以冻结依赖重装 Cockpit。
+以下是安装态的实际结果：
+
+- 默认 `cockpit domain-status` 返回 12/12 `ok`；
+- 默认 `cockpit facts-validation work-weijian` 返回 `ok`，总量 271、错误 0、警告 4；
+- accepted `cockpit-documents-mcp` 仅暴露五个只读工具：`workspace_context`、
+  `domain_context`、`cards_status`、`cards_check`、
+  `domain_facts_validation_status`；最后一项对 `work-weijian` 返回 `ok`；
+- `cockpit kems status` 在有界时间内返回 `degraded`，唯一原因仍是全盘 audit
+  `not_run`，不是超时或错误成功。
+
+这不是全体客户端 UI 验收：Claude、Codex、Zed 与 ZCode 的本机配置投影已分别由
+其正式 checker 或生成器确认，但每个客户端的重载后 UI/模型调用仍是独立操作面。
+ChatGPT 也仍缺外部 Tunnel 的实际 provision；本地已具备的只读 MCP 契约不替代
+平台连接、凭据或 Developer Mode 授权。
