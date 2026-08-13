@@ -53,6 +53,16 @@ _CONTROLLER_SHADOW_EVIDENCE_PATH = (
     "control/evidence/documents-weijian-controller-shadow/"
     "documents-weijian-controller-shadow.json"
 )
+_MODEL_FRESHNESS_JOB_ID = "documents-weijian-model-freshness"
+_MODEL_FRESHNESS_READS = [
+    "@工作文档/卫健委/_entities/facts.md",
+    "@工作文档/卫健委/_entities/models",
+]
+_MODEL_FRESHNESS_SCHEMA = "runtime.documents-model-freshness.evidence.v1"
+_MODEL_FRESHNESS_EVIDENCE_PATH = (
+    "control/evidence/documents-weijian-model-freshness/"
+    "documents-weijian-model-freshness.json"
+)
 
 
 def _safe_relative_path(value: object) -> bool:
@@ -202,6 +212,55 @@ def _validate_controller_shadow_job(value: dict[str, object], label: str) -> lis
     return errors
 
 
+def _validate_model_freshness_job(
+    value: dict[str, object], label: str
+) -> list[str]:
+    errors: list[str] = []
+    unknown_fields = sorted(set(value) - _FACTS_AUDIT_JOB_FIELDS)
+    missing_fields = sorted(_FACTS_AUDIT_JOB_FIELDS - set(value))
+    if unknown_fields:
+        errors.append(
+            f"runtime model freshness job {label} has unknown fields: {', '.join(unknown_fields)}"
+        )
+    if missing_fields:
+        errors.append(
+            f"runtime model freshness job {label} is missing fields: {', '.join(missing_fields)}"
+        )
+    if value.get("id") != _MODEL_FRESHNESS_JOB_ID:
+        errors.append(
+            f"runtime model freshness job {label} id must be {_MODEL_FRESHNESS_JOB_ID}"
+        )
+    if value.get("owner") != "runtime-control":
+        errors.append(
+            f"runtime model freshness job {label} owner must be runtime-control"
+        )
+    if value.get("action") != "audit_model_freshness":
+        errors.append(
+            f"runtime model freshness job {label} action must be audit_model_freshness"
+        )
+    if value.get("domain_id") != "work-weijian":
+        errors.append(
+            f"runtime model freshness job {label} domain_id must be work-weijian"
+        )
+    if value.get("timeout_seconds") != 30:
+        errors.append(
+            f"runtime model freshness job {label} timeout_seconds must be 30"
+        )
+    if value.get("reads") != _MODEL_FRESHNESS_READS:
+        errors.append(
+            f"runtime model freshness job {label} reads must declare facts.md and models"
+        )
+    if value.get("evidence_relative_path") != _MODEL_FRESHNESS_EVIDENCE_PATH:
+        errors.append(
+            f"runtime model freshness job {label} evidence_relative_path must be {_MODEL_FRESHNESS_EVIDENCE_PATH}"
+        )
+    if value.get("evidence_schema") != _MODEL_FRESHNESS_SCHEMA:
+        errors.append(
+            f"runtime model freshness job {label} evidence_schema must be {_MODEL_FRESHNESS_SCHEMA}"
+        )
+    return errors
+
+
 def validate_runtime_state(raw: object) -> list[str]:
     """Require the one Runtime state binding that Cockpit can resolve."""
 
@@ -238,6 +297,11 @@ def validate_runtime_jobs(raw: object, domain_ids: Sequence[str]) -> list[str]:
         )
         errors.extend(common_errors)
         if (
+            value.get("id") == _MODEL_FRESHNESS_JOB_ID
+            or value.get("action") == "audit_model_freshness"
+        ):
+            errors.extend(_validate_model_freshness_job(value, label))
+        elif (
             value.get("owner") == "runtime-facts"
             or value.get("action") == "audit_structured_facts"
         ):
