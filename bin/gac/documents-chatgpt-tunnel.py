@@ -32,6 +32,7 @@ EXPECTED_TOOLS = [
     "cards_status",
     "cards_check",
     "domain_facts_validation_status",
+    "domain_controller_shadow_status",
 ]
 
 
