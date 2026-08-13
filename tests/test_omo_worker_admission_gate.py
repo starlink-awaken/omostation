@@ -6,7 +6,11 @@ from pathlib import Path
 import pytest
 import yaml
 
-from omo.omo_worker_core import _default_enabled_worker_id, _require_admitted_worker
+from omo.omo_worker_core import (
+    _build_launch_argv,
+    _default_enabled_worker_id,
+    _require_admitted_worker,
+)
 from omo.omo_worker_dispatch import dispatch_task
 
 
@@ -61,6 +65,35 @@ def _worker(
         "transports": transports
         if transports is not None
         else {"cli_prompt": {"command": "pi --prompt {prompt}"}},
+    }
+
+
+def _admitted_pi_worker() -> dict:
+    return {
+        "id": "pi",
+        "enabled": True,
+        "admission_state": "admitted",
+        "provider_ref": "pi",
+        "role": "worker",
+        "class": "external_agent_cli",
+        "transports": {
+            "cli_prompt": {
+                "command": (
+                    "/usr/bin/python3 bin/gac/pi-worker-adapter.py run --execute "
+                    '--timeout-seconds 120 --prompt "{prompt}"'
+                )
+            }
+        },
+        "capabilities": ["reasoning", "verification"],
+        "allowed_operation_level": "L0",
+        "forbidden_domains": ["apple", "wechat", "smb", "family", "media"],
+        "write_scope": {"mode": "none"},
+        "lease_policy": {
+            "heartbeat_interval_seconds": 300,
+            "warning_after_seconds": 900,
+            "lease_expired_after_seconds": 1200,
+            "reclaim_after_seconds": 1800,
+        },
     }
 
 
@@ -155,3 +188,83 @@ def test_default_worker_requires_an_admitted_worker() -> None:
         _default_enabled_worker_id(
             {"workers": [_worker(enabled=True, admission_state="declared")]}
         )
+
+
+def test_admitted_pi_worker_uses_one_shell_free_omo_transport() -> None:
+    pi = _admitted_pi_worker()
+
+    assert pi["enabled"] is True
+    assert pi["admission_state"] == "admitted"
+    assert pi["provider_ref"] == "pi"
+    assert pi["role"] == "worker"
+    assert pi["class"] == "external_agent_cli"
+    assert pi["capabilities"] == ["reasoning", "verification"]
+    assert pi["allowed_operation_level"] == "L0"
+    assert pi["write_scope"] == {"mode": "none"}
+    assert pi["transports"] == {
+        "cli_prompt": {
+            "command": (
+                "/usr/bin/python3 bin/gac/pi-worker-adapter.py run --execute "
+                '--timeout-seconds 120 --prompt "{prompt}"'
+            )
+        }
+    }
+    assert "receipt" not in pi["transports"]["cli_prompt"]["command"]
+
+    prompt = "quoted prompt; $(must remain one argv)"
+    argv = _build_launch_argv({"workers": [pi]}, "pi", "cli_prompt", prompt)
+
+    assert argv == [
+        "/usr/bin/python3",
+        "bin/gac/pi-worker-adapter.py",
+        "run",
+        "--execute",
+        "--timeout-seconds",
+        "120",
+        "--prompt",
+        prompt,
+    ]
+    assert argv.count(prompt) == 1
+    assert "-c" not in argv
+    assert not any(
+        fragment in argument for argument in argv for fragment in ("&&", "||", "|")
+    )
+
+
+def test_admitted_pi_worker_dispatch_without_launch_creates_only_governed_artifacts(
+    tmp_path: Path,
+) -> None:
+    pi = _admitted_pi_worker()
+    task_path = _task_fixture(tmp_path, worker=pi)
+    task = yaml.safe_load(task_path.read_text(encoding="utf-8"))
+    task["risk_level"] = "L0"
+    task["allowed_operation_level"] = "L0"
+    task_path.write_text(yaml.safe_dump(task, sort_keys=False), encoding="utf-8")
+    before = _file_snapshot(tmp_path)
+
+    result = dispatch_task(
+        tmp_path,
+        task_id="TASK-ADMISSION-GATE",
+        worker_id="pi",
+        allowed_write_paths=[],
+        launch=False,
+        now="2026-08-13T01:02:03+00:00",
+    )
+
+    after = _file_snapshot(tmp_path)
+    changed_paths = {
+        path for path, digest in after.items() if before.get(path) != digest
+    }
+    expected_run_paths = {
+        Path(path).as_posix() for name, path in result.items() if name.endswith("_path")
+    }
+    assert expected_run_paths <= changed_paths
+    assert changed_paths <= {
+        str(task_path.relative_to(tmp_path)),
+        *expected_run_paths,
+        ".omo/_knowledge/workflow-mesh/events.jsonl",
+        ".omo/_knowledge/workflow-mesh/events.jsonl.lock",
+    }
+    assert not (
+        tmp_path / ".omo" / "workers" / "runs" / f"{result['dispatch_id']}-stdout.log"
+    ).exists()
