@@ -364,3 +364,39 @@ This completes the Zed configuration MVP. Remaining client work is deliberately
 small and separate: one unlocked Zed model-originated read call, one fresh
 Claude-3p domain-tool call, a dedicated decision for ZCode, and remote connector
 provisioning before any ChatGPT web acceptance claim.
+
+## 2026-08-13 ZCode native configuration reconciliation
+
+ZCode is a separate Electron application, not another name for Zed. Its native
+user-level MCP configuration is `~/.zcode/cli/config.json` under
+`mcp.servers`, while workspace instructions are read from the workspace-root
+`AGENTS.md`. These locations follow the ZCode documentation for
+[MCP services](https://zcode.z.ai/cn/docs/mcp-services) and
+[agent instructions](https://zcode.z.ai/cn/docs/agents).
+
+The existing local ZCode configuration already contained a working Cockpit
+server entry alongside unrelated third-party model and MCP settings. A direct
+stdio protocol smoke using that exact Cockpit command initialized successfully,
+listed the expected Documents tools, and returned `binding.status=ok` for
+`work-weijian`. No provider, credential, model, or unrelated MCP value was
+copied into source control or emitted as evidence.
+
+This change adds a Workspace-owned native JSON contract instead of overwriting
+that caller-owned configuration. The new `render`, `install`, and `check`
+surfaces manage only `mcp.servers.cockpit`, preserve unrelated settings, write
+atomically with mode `0600`, and fail closed for symlink, non-regular, or drifted
+targets. The Documents project checker and the required `phase-gate` path now
+cover the same declared ZCode contract. Focused configuration, checker, and CI
+contract tests pass; the root-wide workflow gate remains unavailable in this
+partial worktree because unrelated project submodules and generated runtime
+surfaces are intentionally absent.
+
+The evidence boundary remains explicit. The direct protocol smoke proves the
+configured server contract, not a ZCode-originated model journey or a per-tool
+allow-list that the inspected native configuration surface does not expose.
+No client configuration is installed until this change reaches the accepted
+Workspace checkout. ChatGPT still has no reviewed public HTTPS MCP endpoint or
+Secure MCP Tunnel, so no ChatGPT web acceptance is claimed. The next steps are
+to merge this contract, install and re-check the accepted ZCode entry while
+proving unrelated settings are preserved, then treat the ZCode model call and
+ChatGPT remote connector as separate iterations.
