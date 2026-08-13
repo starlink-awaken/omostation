@@ -2710,6 +2710,83 @@ bets:
     需要修改 Ledger DDL、Workflow Mesh 状态机、产生真实外部副作用、删除当前子仓 main 能力，或两天内
     无法把历史 feature 与当前 main 合并时立即停止并拆兼容修复；不得通过 pin agent 分支伪造恢复
   retro: required
+- id: BET-Y1Q2-T1-17
+  track: T5-ORCH
+  window: Y1Q2
+  title: Codex Exec unattended Orca worker admission
+  appetite: 1 day
+  priority: P0
+  status: done
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-13-codex-exec-worker-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d1ea6190a38dfe64a0d205727706ea6b8aff13cac1d4a4badc9621152136ff70
+  goal: >-
+    以受治理的 bounded adapter 将 Codex `exec --approve-for-me` 接入 OMO worker admission
+    与 Orca supervised Dispatch，使 L1 代码任务可在独立 clone 中零人工点击运行，同时保留
+    workspace-write 沙箱、任务写面、父进程超时回收、脱敏回执和独立完成判定。
+  non_goals:
+  - 修改 Orca 内置 Codex TUI、Orca runtime 或 Codex 用户配置/认证/execpolicy
+  - 使用 dangerously-bypass-approvals-and-sandbox、danger-full-access、任意 argv/profile/model/add-dir
+  - 新建 scheduler、task database、Workflow Mesh 状态机、Ledger DDL、Cockpit UI 或第二 adapter
+  - 准入 Claude/OpenCode/Grok/MiMo/AGY/Kilo，做自动模型选择、账号切换、fallback 或额度调度
+  - 多租户、跨主机、恶意同机隔离、exactly-once、自动 merge/promotion 或业务外部副作用
+  done_when:
+  - >-
+      bounded adapter 只接受 agent-clone identity 证明的独立非 symlink clone，再在其一次性 execution clone
+      中以固定 shell=false argv 调用 codex exec --approve-for-me --ephemeral --ignore-user-config --json；
+      共享/linked workspace 在启动前拒绝
+  - >-
+      secret/proxy/SSH/AWS/GitHub 环境不传入子进程；超时执行 process-group TERM→KILL→wait；非零、
+      malformed/empty JSONL、marker 不匹配、cleanup 或 receipt 失败均非成功
+  - >-
+      回执只保留版本、时间、结果、exit、输出摘要、相对 changed paths 与边界断言，不保留 prompt、
+      raw stdout/stderr、token、身份、绝对工作区路径或用户配置内容
+  - >-
+      worker delta 仅在 allowlist、ignored/symlink/gitlink/commit 与并发指纹审计后以 binary patch 回写；
+      patch 或回执发布失败必须回滚并证明原 clone 基线恢复，不得留下部分成功
+  - >-
+      一次真实 read-only Codex smoke 零人工确认并返回精确 marker；一次 Orca Run/Task/Dispatch 可查询
+      succeeded worker_done，且 ready/input accepted 不作为完成证据
+  - >-
+      独立 reviewer 通过后只有 codex 晋升为 L1 admitted worker，transport 固定走 bounded adapter、
+      require_explicit_capabilities=true、write_scope=task_declared_only；其他候选状态不变
+  verify:
+  - cmd: >-
+      uv run --no-project --with pytest --with pyyaml python -m pytest
+      tests/unit/gac/test_codex_worker_adapter.py tests/unit/gac/test_agent_pool_observe.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/omo && uv run python -m pytest tests/test_omo_worker_admission_gate.py
+      tests/test_omo_worker_core.py -q
+    expect: exit 0
+  - cmd: >-
+      uv run --with ruff ruff check bin/gac/codex-worker-adapter.py
+      tests/unit/gac/test_codex_worker_adapter.py
+    expect: exit 0
+  - cmd: git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/SYSTEM-INDEX.md
+  - docs/superpowers/specs/2026-08-13-codex-exec-worker-design.md
+  - docs/superpowers/plans/2026-08-13-codex-exec-worker.md
+  - bin/gac/codex-worker-adapter.py
+  - tests/unit/gac/test_codex_worker_adapter.py
+  - .omo/_truth/registry/workers.yaml
+  - .omo/standards/agent-cli-worker-collaboration.md
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-17.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-16
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    需要 dangerous bypass、共享 worktree、修改用户配置/认证、无法回收进程、回执泄露 raw output，
+    或 Orca 无法查询同一 Task/Dispatch completion 时立即停止；保持 codex declared，只交付脱敏诊断
+  retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
   window: Y1Q2
