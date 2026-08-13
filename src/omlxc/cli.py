@@ -13,6 +13,10 @@ from uuid import uuid4
 import typer
 from pydantic import JsonValue
 from typer import Abort
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table, box
+from rich.text import Text
 
 from . import __version__
 from .cli_guide import (
@@ -52,6 +56,44 @@ from .service import (
     LaunchdPaths,
     build_launchd_plan,
 )
+
+_console = Console(highlight=False)
+_err_console = Console(stderr=True, highlight=False)
+
+# State → (symbol, rich style)
+_STATE_STYLES: dict[str, tuple[str, str]] = {
+    "healthy": ("●", "bold green"),
+    "online": ("●", "bold green"),
+    "ok": ("●", "bold green"),
+    "loaded": ("◆", "bold cyan"),
+    "running": ("▶", "bold yellow"),
+    "planning": ("◌", "yellow"),
+    "pending": ("○", "dim"),
+    "awaiting_confirmation": ("?", "yellow"),
+    "cancelling": ("◐", "magenta"),
+    "succeeded": ("✔", "bold green"),
+    "failed": ("✖", "bold red"),
+    "cancelled": ("⊘", "dim"),
+    "degraded": ("◑", "yellow"),
+    "offline": ("○", "dim"),
+    "stale": ("◌", "dim"),
+    "unknown": ("·", "dim"),
+}
+
+
+def _rich_state(state: str) -> Text:
+    sym, style = _STATE_STYLES.get(state.lower(), ("·", "dim"))
+    return Text(f"{sym} {state}", style=style)
+
+
+def _rich_bool(value: object) -> Text:
+    if value is True:
+        return Text("yes", style="green")
+    if value is False:
+        return Text("no", style="red")
+    return Text("—", style="dim")
+
+
 
 app = typer.Typer(
     add_completion=False,
@@ -102,7 +144,7 @@ def _launchd_controller(
 
 def _show_version(value: bool) -> None:
     if value:
-        typer.echo(__version__)
+        _console.print(f"omlxc [bold cyan]v{__version__}[/bold cyan]  [dim]© 2026[/dim]")
         raise typer.Exit()
 
 
@@ -271,7 +313,9 @@ def _execute(
         if json_output:
             _emit_envelope(envelope)
         else:
-            typer.echo(renderer(envelope.data))
+            result = renderer(envelope.data)
+            if result:
+                typer.echo(result)
     except DaemonClientError as exc:
         _emit_client_failure(exc, json_output=json_output, context=error_context)
     except typer.Exit:
@@ -298,7 +342,14 @@ def _require_r1(action: str, *, yes: bool, json_output: bool) -> None:
         return
     if not _stdio_is_tty():
         _fail_local("E700", f"safety confirmation required for {action}", json_output=json_output)
-    if not typer.confirm(f"Confirm {action}?"):
+    _console.print(
+        Panel(
+            f"This action carries Risk Level 1 (R1).\\nImpact: {action}",
+            title="[bold yellow]Warning[/bold yellow]",
+            border_style="yellow"
+        )
+    )
+    if not typer.confirm(typer.style(f"? Confirm {action}?", fg=typer.colors.YELLOW)):
         _fail_local("E700", f"safety confirmation refused for {action}", json_output=json_output)
 
 
@@ -349,8 +400,13 @@ def _emit_r2_plan(action: str, *, impact: str, rollback: str, json_output: bool)
             )
         )
         return
-    typer.echo(f"Impact: {impact}")
-    typer.echo(f"Rollback: {rollback}")
+    _console.print(
+        Panel(
+            f"[bold]Impact:[/bold] {impact}\n[bold]Rollback:[/bold] {rollback}",
+            title=f"[bold red]R2 Warning: {action}[/bold red]",
+            border_style="red"
+        )
+    )
 
 
 @app.command("status")
@@ -686,22 +742,29 @@ def jobs_cancel(
 def jobs_watch(
     job_id: Annotated[str | None, typer.Argument()] = None,
     after: Annotated[int, typer.Option("--after", min=0)] = 0,
-    output: Annotated[str, typer.Option("--output")] = "ndjson",
+    output: Annotated[str, typer.Option("--output")] = "text",
 ) -> None:
-    if output != "ndjson":
-        _fail_local("E100", "jobs watch only supports --output ndjson", json_output=True)
-
     async def watch() -> None:
         async with _client_factory(_socket_path()) as client:
             async for event in client.stream_events(after=after):
                 if job_id is None or event.job_id == job_id:
-                    typer.echo(
-                        json.dumps(
-                            event.model_dump(mode="json"),
-                            ensure_ascii=False,
-                            separators=(",", ":"),
+                    if output == "ndjson":
+                        typer.echo(
+                            json.dumps(
+                                event.model_dump(mode="json"),
+                                ensure_ascii=False,
+                                separators=(",", ":"),
+                            )
                         )
-                    )
+                    else:
+                        data = event.model_dump(mode="json")
+                        ts = data.get("timestamp", 0)
+                        kind = data.get("type", "unknown")
+                        jid = data.get("job_id", "?")
+                        c = "yellow" if "job" in kind else "blue"
+                        c = "cyan" if "model" in kind else c
+                        c = "red" if "error" in kind.lower() else c
+                        _console.print(f"[dim]{ts}[/dim] [{c}]{kind}[/{c}] [dim]job=[/dim]{jid}")
 
     try:
         asyncio.run(watch())
@@ -731,6 +794,7 @@ def config_validate(
         Path | None,
         typer.Option("--path", help="TOML file to validate."),
     ] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     """Validate config schema v1 without contacting a daemon or backend."""
     request_id = _request_id()
@@ -738,11 +802,19 @@ def config_validate(
     try:
         config = load_config(selected_path)
     except ConfigError as exc:
-        _fail_config("configuration validation failed", request_id=request_id, detail=str(exc))
-    _emit_success(
-        {"config_schema_version": config.schema_version, "status": "valid"},
-        request_id=request_id,
-    )
+        if json_output:
+            _fail_config("configuration validation failed", request_id=request_id, detail=str(exc))
+        _console.print(f"[bold red]✖  validation failed[/bold red]  {str(exc)}")
+        raise typer.Exit(1) from None
+        
+    if json_output:
+        _emit_success(
+            {"config_schema_version": config.schema_version, "status": "valid"},
+            request_id=request_id,
+        )
+    else:
+        v = config.schema_version
+        _console.print(f"[bold green]✔  config valid[/bold green]  schema_version={v}")
 
 
 @config_app.command("migrate")
@@ -831,7 +903,8 @@ def daemon_status(
     if json_output:
         _emit_success(data, request_id=_request_id())
     else:
-        typer.echo("com.omlxc.daemon running")
+        p = Panel("[green]● running[/green]", title="[bold]com.omlxc.daemon[/bold]", expand=False)
+        _console.print(p)
 
 
 @daemon_app.command("install")
@@ -876,11 +949,12 @@ def daemon_install(
     if json_output:
         _emit_success(data, request_id=_request_id())
     else:
-        text = (
-            f"INSTALL PLAN\nexecutable {data['executable']}\n"
-            f"plist {data['plist_path']}\nwill_write {'yes' if apply else 'no'}"
-        )
-        typer.echo(text)
+        _console.print(Panel(
+            f"[dim]executable[/dim]  {data['executable']}\n"
+            f"[dim]plist[/dim]       {data['plist_path']}\n"
+            f"[dim]will_write[/dim]  {'[green]yes[/green]' if apply else '[yellow]no[/yellow]'}",
+            title="[bold]Install Plan[/bold]", expand=False
+        ))
 
 
 @daemon_app.command("uninstall")
@@ -931,7 +1005,7 @@ def _daemon_action(action: str, *, yes: bool, confirm_impact: bool, json_output:
     if json_output:
         _emit_success(data, request_id=_request_id())
     else:
-        typer.echo(f"com.omlxc.daemon {action}")
+        _console.print(f"[bold green]✔[/bold green] com.omlxc.daemon {action} succeeded")
 
 
 @daemon_app.command("start")
@@ -984,7 +1058,22 @@ def doctor(
     if json_output:
         _emit_success(data, request_id=_request_id())
     else:
-        typer.echo(_render_mapping(cast(JsonValue, data)))
+        mapping = _mapping(data)
+        passed = 0
+        failed = 0
+        for k, v in mapping.items():
+            if k in ("items", "summary"):
+                continue
+            vs = str(v).lower()
+            if vs in ("ok", "passed", "true"):
+                _console.print(f"[green]✔[/green] {k}")
+                passed += 1
+            elif vs in ("warn", "warning"):
+                _console.print(f"[yellow]⚠[/yellow] {k}")
+            else:
+                _console.print(f"[red]✖[/red] {k}")
+                failed += 1
+        _console.print(f"\n[bold]{passed} passed, {failed} failed[/bold]")
 
 
 @app.command("benchmark")
@@ -1025,10 +1114,38 @@ def _nested(item: Mapping[str, JsonValue], key: str) -> JsonValue | None:
 
 
 def _render_items(data: JsonValue | None, columns: Sequence[str]) -> str:
+    """Rich-formatted table output for list commands."""
     items = _items(data)
-    header = "  ".join(column.upper() for column in columns)
-    rows = ["  ".join(_text(_nested(item, column)) for column in columns) for item in items]
-    return "\n".join((header, *rows)) if rows else f"{header}\n(no items)"
+    if not items:
+        _console.print("[dim](no items)[/dim]")
+        return ""
+
+    table = Table(
+        box=box.SIMPLE_HEAD,
+        show_header=True,
+        header_style="bold #2a7ab5",
+        border_style="#122035",
+        row_styles=["#c8d8ec", "dim #c8d8ec"],
+        pad_edge=False,
+        expand=False,
+    )
+    for col in columns:
+        table.add_column(col.upper(), no_wrap=True, min_width=8)
+
+    for item in items:
+        row: list[Text | str] = []
+        for col in columns:
+            val = _nested(item, col)
+            if col in ("state", "health"):
+                row.append(_rich_state(_text(val)))
+            elif col == "loaded":
+                row.append(_rich_bool(val))
+            else:
+                row.append(_text(val) if val is not None else Text("—", style="dim"))
+        table.add_row(*row)
+
+    _console.print(table)
+    return ""
 
 
 async def _selected_node(client: DaemonClient, identifier: str) -> DaemonEnvelope:
@@ -1077,26 +1194,64 @@ async def _select_from_pages(fetch: PageFetcher, identifier: str, resource: str)
 
 
 def _render_mapping(data: JsonValue | None) -> str:
+    """Rich key-value panel output for show/detail commands."""
     mapping = _mapping(data)
-    return "\n".join(f"{key.upper()} {_text(value)}" for key, value in sorted(mapping.items()))
+    lines: list[str] = []
+    for key, value in sorted(mapping.items()):
+        key_text = f"[#5a7a9a]{key.upper():<20}[/#5a7a9a]"
+        val_s = _text(value)
+        if key == "state":
+            val_text = _rich_state(val_s).markup
+        elif isinstance(value, bool):
+            val_text = _rich_bool(value).markup
+        else:
+            val_text = f"[#c8d8ec]{val_s}[/#c8d8ec]"
+        lines.append(f"{key_text}  {val_text}")
+    _console.print("\n".join(lines))
+    return ""
 
 
-def _render_job(data: JsonValue | None) -> str:
+def _render_status(data: JsonValue | None) -> str:
+    """Rich status panel for 'omlxc status'."""
     mapping = _mapping(data)
-    return (
-        f"JOB {_text(mapping.get('id'))}\n"
-        f"KIND {_text(mapping.get('kind'))}\n"
-        f"STATE {_text(mapping.get('state'))}\n"
-        f"PROGRESS {_text(mapping.get('progress'))}"
+    status_s = _text(mapping.get("status", "unknown"))
+    policy = _text(mapping.get("policy", "interactive"))
+    sym, style = _STATE_STYLES.get(status_s.lower(), ("·", "dim"))
+    _console.print(
+        f"[bold #7dd3f5]omlxcd[/bold #7dd3f5]  "
+        f"[{style}]{sym} {status_s.upper()}[/{style}]"
+        f"  [dim]policy={policy}[/dim]"
     )
+    return ""
+def _render_job(data: JsonValue | None) -> str:
+    """Rich panel for a single job."""
+    mapping = _mapping(data)
+    state_s = _text(mapping.get("state", "unknown"))
+    sym, style = _STATE_STYLES.get(state_s.lower(), ("·", "dim"))
+    _console.print(
+        Panel(
+            f"[#5a7a9a]kind    [/#5a7a9a] [#c8d8ec]{_text(mapping.get('kind'))}[/#c8d8ec]\n"
+            f"[#5a7a9a]state   [/#5a7a9a] [{style}]{sym} {state_s}[/{style}]\n"
+            f"[#5a7a9a]progress[/#5a7a9a] [#c8d8ec]{_text(mapping.get('progress'))}[/#c8d8ec]",
+            title=f"[bold #7dd3f5]job  {_text(mapping.get('id'))}[/bold #7dd3f5]",
+            border_style="#1a4d80",
+            expand=False,
+        )
+    )
+    return ""
 
 
 def _render_route(data: JsonValue | None) -> str:
+    """Rich output for route planning."""
     mapping = _mapping(data)
     selected = _text(mapping.get("selected_placement_id"))
     fallback = mapping.get("fallback_chain")
-    fallback_text = ", ".join(map(str, fallback)) if isinstance(fallback, list) else "-"
-    return f"SELECTED {selected}\nFALLBACK {fallback_text}"
+    fallback_text = ", ".join(map(str, fallback)) if isinstance(fallback, list) else "—"
+    _console.print(
+        f"[#5a7a9a]selected[/#5a7a9a]  [cyan]{selected}[/cyan]\n"
+        f"[#5a7a9a]fallback[/#5a7a9a]  [dim]{fallback_text}[/dim]"
+    )
+    return ""
 
 
 def main() -> None:
