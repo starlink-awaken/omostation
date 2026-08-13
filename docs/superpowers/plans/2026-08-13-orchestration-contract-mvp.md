@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-13
+---
+
 # 编排器无关交付合同 MVP 实施计划
 
 > 对执行者：严格按 TDD 推进；不得改 ECOS 既有 M2、Workflow Mesh 状态机或新增第二套任务真相。

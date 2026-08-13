@@ -63,15 +63,15 @@
 → [工具索引](INDEX-TOOLS.md) — bin/ + scripts/ + .agents/skills 统一目录
 
 → [知识索引](INDEX-KNOWLEDGE.md) — ADR + 审计 + 模式 + 总结交叉索引
-→ [计划与决策台账](docs/plans/) — 3Y-BET-LEDGER 等计划/台账文档
+→ [计划与决策台账](plans/) — 3Y-BET-LEDGER 等计划/台账文档
 
 ### 场景执行架构 (四面一脊)
 
 → [Scene Cards](scene-cards/) — 9 个场景卡 (external + internal_pipeline, 双轨准入)
 → [Journey Specs](journey-specs/) — 3 个 journey 状态机 (inbox-to-decision, meeting-to-delivery, research-to-insight)
-→ [External Connection Fabric](.omo/standards/external-connection-fabric.md) — §7: dual-track admission standard
-→ [Permission Scope Vocabulary](.omo/standards/permission-scope-vocabulary.yaml) — RBAC scope 受控词表
-→ [Signal Sources](.omo/_truth/registry/signal-sources.yaml) — 感知面信号源注册表
+→ [External Connection Fabric](../.omo/standards/external-connection-fabric.md) — §7: dual-track admission standard
+→ [Permission Scope Vocabulary](../.omo/standards/permission-scope-vocabulary.yaml) — RBAC scope 受控词表
+→ [Signal Sources](../.omo/_truth/registry/signal-sources.yaml) — 感知面信号源注册表
 
 → [Agent 能力索引](INDEX-AGENTS.md) — 当前 agent 配置 + 技能清单
 
@@ -96,6 +96,8 @@
 - [`plans/AGENT-TEMPLATES.md`](plans/AGENT-TEMPLATES.md) — 按轨道分工的 agent 指令模板（8 轨道 + 协调者 + 观察者）
 - [`plans/AGENT-GOALS-4X.md`](plans/AGENT-GOALS-4X.md) — goal 模式：4 agent 并行持续推进的零冲突组合与 LOOP 协议
 - [`plans/2026-08-06-agora-p2-deepening-plan.md`](plans/2026-08-06-agora-p2-deepening-plan.md) — agora P2 深化计划
+- [`superpowers/specs/2026-08-13-orchestration-contract-mvp-design.md`](superpowers/specs/2026-08-13-orchestration-contract-mvp-design.md) — 编排器无关的 WorkPacket/CompletionManifest/独立验证合同
+- [`superpowers/plans/2026-08-13-orchestration-contract-mvp.md`](superpowers/plans/2026-08-13-orchestration-contract-mvp.md) — 上述合同的 TDD 实施与验收计划
 
 ---
 
