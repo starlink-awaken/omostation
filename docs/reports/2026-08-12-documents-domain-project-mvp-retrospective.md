@@ -400,3 +400,29 @@ Secure MCP Tunnel, so no ChatGPT web acceptance is claimed. The next steps are
 to merge this contract, install and re-check the accepted ZCode entry while
 proving unrelated settings are preserved, then treat the ZCode model call and
 ChatGPT remote connector as separate iterations.
+
+## 2026-08-13 ZCode installation and ChatGPT tunnel MVP reconciliation
+
+The ZCode contract from the preceding section is now merged through Workspace
+PR #1401 and installed from the accepted checkout. The installer preserved all
+unrelated settings, the post-install checker passed, and a direct stdio smoke
+using the exact installed Cockpit command initialized successfully, listed the
+declared tools, and returned `binding.status=ok` for `work-weijian`. macOS was
+locked, so no ZCode-originated model call or UI reload is claimed.
+
+The ChatGPT iteration deliberately stops at a smaller, reviewable boundary.
+Cockpit PR #39 adds a dedicated `cockpit-documents-mcp` entrypoint exposing only
+`workspace_context`, `domain_context`, `cards_status`, and `cards_check`. The
+Workspace registry owns a matching Secure MCP Tunnel contract and a secret-free
+`render`/`check` command. The check fails closed unless the local MCP entrypoint,
+`tunnel-client`, the external Platform API key, the tunnel identifier, and
+`tunnel-client doctor` are all available. Focused root and Cockpit tests, scoped
+format/lint checks, YAML loading, and the live 12-domain contract checker passed.
+
+No Secure MCP Tunnel was provisioned in this iteration. `tunnel-client` and the
+two required environment values were absent, and Platform tunnel permissions
+and ChatGPT developer-mode state were not assumed. No credential is stored in
+the Workspace registry, client configuration, Documents domains, or test
+evidence. After this change reaches the accepted checkout, the remaining work
+is an explicit external provisioning step followed by a ChatGPT-originated
+read-only domain call; neither is represented as complete here.
