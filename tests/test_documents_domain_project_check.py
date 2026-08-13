@@ -76,7 +76,16 @@ def _domain_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
 
 
 def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
-    path = tmp_path / "documents-domain-projects.yaml"
+    skills_path = tmp_path / ".agents" / "skills" / "example"
+    skills_path.mkdir(parents=True)
+    (skills_path / "SKILL.md").write_text("# Example\n", encoding="utf-8")
+    registry_dir = tmp_path / ".omo" / "_truth" / "registry"
+    registry_dir.mkdir(parents=True)
+    (registry_dir / "agent-workflows.yaml").write_text(
+        "apiVersion: workspace.omostation/v1\nkind: AgentWorkflowRegistry\n",
+        encoding="utf-8",
+    )
+    path = registry_dir / "documents-domain-projects.yaml"
     path.write_text(
         yaml.safe_dump(
             {
@@ -99,8 +108,12 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                 "capability_routes": {
                     "skills": {
                         "owner": "workspace-skills",
-                        "registry_ref": "bos://shared/skills",
-                    }
+                        "registry_ref": ".agents/skills",
+                    },
+                    "workflows": {
+                        "owner": "workspace-workflow-mesh",
+                        "registry_ref": ".omo/_truth/registry/agent-workflows.yaml",
+                    },
                 },
                 "clients": {
                     "claude": {
@@ -130,6 +143,7 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                             "domain_context",
                         ],
                         "skill_route": "skills",
+                        "workflow_route": "workflows",
                         "execution_policy": "workspace_only",
                     }
                 },
@@ -498,6 +512,61 @@ def test_profile_capability_routes_must_exist(tmp_path: Path) -> None:
     assert result.returncode == 1
     assert json.loads(result.stdout)["errors"] == [
         "profiles.content-domain.workflow_route references unknown route: missing-workflows"
+    ]
+
+
+@pytest.mark.parametrize(
+    "invalid_ref",
+    [
+        "bos://shared/_control/SKILL-INDEX.md",
+        "/Users/example/Documents/@公共/_control/SKILL-INDEX.md",
+        "../Documents/@公共/_control/SKILL-INDEX.md",
+    ],
+)
+def test_capability_routes_must_use_workspace_relative_paths(
+    tmp_path: Path, invalid_ref: str
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["capability_routes"]["skills"]["registry_ref"] = invalid_ref
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "capability_routes.skills.registry_ref must be a Workspace-relative path"
+    ]
+
+
+def test_capability_route_source_must_exist(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["capability_routes"]["skills"]["registry_ref"] = ".agents/missing"
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "capability_routes.skills.registry_ref is unavailable: .agents/missing"
+    ]
+
+
+def test_capability_route_owner_must_match_workspace_authority(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["capability_routes"]["skills"]["owner"] = "documents"
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "capability_routes.skills.owner must be workspace-skills"
     ]
 
 

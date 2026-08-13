@@ -44,6 +44,10 @@ _CHATGPT_WEB_BINDING = {
     "setup_ref": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
     "tunnel_ref": "https://developers.openai.com/api/docs/guides/secure-mcp-tunnels",
 }
+_CAPABILITY_ROUTE_CONTRACTS = {
+    "skills": ("workspace-skills", "directory"),
+    "workflows": ("workspace-workflow-mesh", "file"),
+}
 
 
 def _matches_chatgpt_binding(value: object, expected: object) -> bool:
@@ -124,6 +128,81 @@ def _check_gateway_file(path: Path, domain_id: str, domain_root: Path) -> list[s
     return errors
 
 
+def _validate_capability_routes(
+    routes: dict[str, object], project_registry_path: Path
+) -> list[str]:
+    """Validate that executable capabilities resolve to Workspace-owned sources."""
+
+    registry_parent = project_registry_path.parent
+    if (
+        project_registry_path.name != "documents-domain-projects.yaml"
+        or registry_parent.name != "registry"
+        or registry_parent.parent.name != "_truth"
+        or registry_parent.parent.parent.name != ".omo"
+    ):
+        return [
+            (
+                "project registry must be Workspace .omo/_truth/registry/"
+                "documents-domain-projects.yaml"
+            )
+        ]
+
+    workspace_root = registry_parent.parents[2]
+    try:
+        resolved_workspace = workspace_root.resolve(strict=True)
+    except OSError as exc:
+        return [f"Workspace root is unavailable: {exc}"]
+
+    errors: list[str] = []
+    for route_id, (
+        expected_owner,
+        expected_kind,
+    ) in _CAPABILITY_ROUTE_CONTRACTS.items():
+        route = routes.get(route_id)
+        if not isinstance(route, dict):
+            errors.append(f"capability_routes.{route_id} must be a mapping")
+            continue
+        if route.get("owner") != expected_owner:
+            errors.append(
+                f"capability_routes.{route_id}.owner must be {expected_owner}"
+            )
+
+        registry_ref = route.get("registry_ref")
+        if not isinstance(registry_ref, str) or not registry_ref:
+            errors.append(
+                f"capability_routes.{route_id}.registry_ref must be a "
+                "Workspace-relative path"
+            )
+            continue
+        candidate = Path(registry_ref)
+        if candidate.is_absolute() or ".." in candidate.parts or "://" in registry_ref:
+            errors.append(
+                f"capability_routes.{route_id}.registry_ref must be a "
+                "Workspace-relative path"
+            )
+            continue
+        try:
+            resolved = (resolved_workspace / candidate).resolve(strict=True)
+        except OSError:
+            errors.append(
+                f"capability_routes.{route_id}.registry_ref is unavailable: "
+                f"{registry_ref}"
+            )
+            continue
+        if not resolved.is_relative_to(resolved_workspace):
+            errors.append(
+                f"capability_routes.{route_id}.registry_ref must be a "
+                "Workspace-relative path"
+            )
+        elif expected_kind == "directory" and not resolved.is_dir():
+            errors.append(
+                f"capability_routes.{route_id}.registry_ref must be a directory"
+            )
+        elif expected_kind == "file" and not resolved.is_file():
+            errors.append(f"capability_routes.{route_id}.registry_ref must be a file")
+    return errors
+
+
 def check_domain_projects(
     domain_registry_path: Path,
     project_registry_path: Path,
@@ -183,6 +262,8 @@ def check_domain_projects(
     if not isinstance(routes, dict):
         routes = {}
         errors.append("capability_routes must be a mapping")
+    else:
+        errors.extend(_validate_capability_routes(routes, project_registry_path))
     clients = raw.get("clients")
     gateway_files: list[str] = []
     if not isinstance(clients, dict):

@@ -264,6 +264,40 @@ filesystem changes and therefore emitted `L4-CONTENT-011` as designed. These are
 content-plane debts, not an installed-entrypoint failure; runtime/cache/bridge
 remain non-zero and the overall completion contract stays unchecked.
 
+**2026-08-13 accepted release and third-party Claude reconciliation:**
+
+The accepted root was refreshed from `origin/main` to
+`ac185a2974fa65ae7b222c8934885fb1725093a4`; its relevant checkout pointers are
+Cockpit `636cc22257ba74a7717d20a2965b9f3fda54c160` and L4 kernel
+`0d688ead82f18edf307056f8f667083b0c523a1e`. Cockpit was reinstalled from that
+accepted checkout with `uv sync --frozen --reinstall-package cockpit`. This replaces
+the prior installed snapshot; historical tool counts and prior root pointers above
+must not be read as current release evidence.
+
+- `/Users/xiamingxing/.local/bin/cockpit facts-audit --json` now resolves to the
+  accepted installation and returns `cockpit.domain-facts-audit.v1`. Its exit `1`
+  is truthful `violations`, not an installation error: the L4 registry has 12
+  domains, with 9 present facts files and 3 missing (`opc`, `work-docs`, and
+  `work-contracts`).
+- A direct stdio smoke using the exact MCP environment now configured in clients
+  negotiated protocol `2025-06-18`, exposed 19 tools including `domain_context`,
+  `domain_project_status`, and `domain_facts_audit`, and returned
+  `status=ok`/`binding=ok` for `vault`, `work-weijian`, and `creative`.
+- Codex, standard Claude Desktop, active `Claude-3p`, Zed, and ZCode now each name
+  the same accepted `cockpit-mcp` command and the same three scope variables
+  (`WORKSPACE_ROOT`, `L4_DOCUMENTS_ROOT`, and `L4_DOMAIN_REGISTRY`). The active
+  third-party Claude configuration was backed up before adding its missing
+  `cockpit` entry; the atomic rewrite was verified to differ from that backup only
+  by this entry. No model-provider configuration or credential was changed.
+- This is a release and protocol result, not a desktop-UI result. Each desktop
+  client still needs one restart/reload and visual tool-list smoke. ChatGPT Web or
+  Cowork remains unconfigured until a separately reviewed public HTTPS MCP or
+  Secure MCP Tunnel exists.
+- No Documents content was edited by the release or MCP smoke. A concurrent legacy
+  governance refresher did update three derived `@驾驶舱` artifacts during the
+  observation window, so this window is not claimed as a strong whole-Documents
+  zero-write proof.
+
 **Commit:** `fix(cockpit): restore registry-backed governance context`
 
 ---

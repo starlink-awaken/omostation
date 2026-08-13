@@ -117,3 +117,48 @@ connector exists; this phase does not claim otherwise.
   does not imply T8 completion.
 - Design a reviewed remote connector before claiming ChatGPT Web or Cowork
   access to private local Documents content.
+
+## 2026-08-13 Installed Release Reconciliation
+
+The current accepted runtime is root
+`ac185a2974fa65ae7b222c8934885fb1725093a4`, Cockpit
+`636cc22257ba74a7717d20a2965b9f3fda54c160`, and L4 kernel
+`0d688ead82f18edf307056f8f667083b0c523a1e`. Cockpit was reinstalled in that
+accepted checkout. This is the authoritative installed-state evidence for this
+report; all preceding 2026-08-12 sections are historical rollout snapshots.
+
+The installed CLI now serves `facts-audit`, returning the L4-backed
+`cockpit.domain-facts-audit.v1` envelope. It found 12 domains, 9 present facts
+files, and three true gaps: `opc`, `work-docs`, and `work-contracts`. The resulting
+exit `1` and `violations` status are content work to schedule, not a release
+failure.
+
+The installed `cockpit-mcp` was started with the exact client scope variables. It
+negotiated MCP protocol `2025-06-18`, listed 19 tools including
+`domain_context`, `domain_project_status`, and `domain_facts_audit`, and returned
+`status=ok` plus `binding=ok` for the representative `vault`, `work-weijian`, and
+`creative` domains. Thus the current CLI/MCP route resolves identity through L4 and
+capability binding through Workspace rather than through a copied domain-local
+matrix.
+
+Direct configuration verification now finds the identical accepted `cockpit-mcp`
+command and Documents/Workspace scope variables in Codex, standard Claude Desktop,
+active `Claude-3p`, Zed, and ZCode. In particular, the current third-party Claude
+Desktop profile did not contain Cockpit at verification time; it was backed up and
+then received only this MCP entry. The third-party model gateway and credentials
+were not modified. Desktop restart/reload and visible tool-list confirmation remain
+human UX checks, not evidence that can be inferred from JSON configuration.
+
+One evidence limitation remains explicit: the deployment and protocol calls did
+not edit Documents content, but a separate legacy governance refresher concurrently
+rewrote three derived `@驾驶舱` artifacts. Therefore this reconciliation does not
+claim a whole-Documents zero-write observation window. ChatGPT Web/Cowork also
+remains degraded until its reviewed remote MCP connector is separately provisioned.
+
+The direct documentation gates passed: `doc-ssot-lint` reported zero conflicts and
+`ssot-guardian` passed. The broad file-scoped GaC gate was not accepted as evidence
+for this documentation-only change: it failed on unrelated missing `cockpit-ui`,
+Kairon, and GBrain checkout surfaces, and its `install-watch-agent` check also
+loaded an existing WatchPaths agent. No attempt was made to suppress, reset, or
+unload that external state; the focused SSOT gates are the applicable verification
+for this dated reconciliation.
