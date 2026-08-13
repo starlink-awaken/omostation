@@ -33,14 +33,17 @@ jobs:
               bin/gac/documents-codex-profile.py|\
               bin/gac/documents-zed-profile.py|\
               bin/gac/documents-zcode-config.py|\
+              bin/gac/documents-chatgpt-tunnel.py|\
               bin/gac/documents-domain-project-check.py|\
               bin/gac/documents-domain-owner-job.py|\
               bin/gac/documents_domain_jobs.py|\
               tests/test_documents_codex_profile.py|\
               tests/test_documents_zed_profile.py|\
               tests/test_documents_zcode_config.py|\
+              tests/test_documents_chatgpt_tunnel.py|\
               tests/test_documents_domain_project_check.py|\
               tests/test_documents_domain_owner_job.py|\
+              projects/cockpit|\
               projects/l4-kernel|\
               projects/runtime|\
               .github/workflows/phase-gate-enforce.yml)
@@ -67,6 +70,7 @@ jobs:
           tests/test_documents_codex_profile.py
           tests/test_documents_zed_profile.py
           tests/test_documents_zcode_config.py
+          tests/test_documents_chatgpt_tunnel.py
           tests/test_documents_domain_project_check.py
           tests/test_documents_domain_owner_job.py -q
       - name: Ruff
@@ -76,12 +80,14 @@ jobs:
           bin/gac/documents-codex-profile.py
           bin/gac/documents-zed-profile.py
           bin/gac/documents-zcode-config.py
+          bin/gac/documents-chatgpt-tunnel.py
           bin/gac/documents-domain-owner-job.py
           bin/gac/documents_domain_jobs.py
           tests/test_documents_domain_project_check.py
           tests/test_documents_codex_profile.py
           tests/test_documents_zed_profile.py
           tests/test_documents_zcode_config.py
+          tests/test_documents_chatgpt_tunnel.py
           tests/test_documents_domain_owner_job.py
 
   phase-gate:
