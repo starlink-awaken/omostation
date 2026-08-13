@@ -140,6 +140,27 @@ def test_provider_copy_keeps_only_validated_omlxc_provider(tmp_path: Path):
     }
 
 
+def test_provider_projection_strips_unknown_and_non_coding_model_fields(tmp_path: Path):
+    destination = tmp_path / "isolated"
+    home = user_pi_home(
+        tmp_path,
+        provider_overrides={
+            "unknown_provider_setting": "must-not-cross-boundary",
+            "models": [{"id": "coding", "unknown_model_setting": "must-not-cross-boundary"}, {"id": "other"}],
+        },
+    )
+    adapter._copy_omlxc_provider(home, destination)
+
+    copied = json.loads((destination / "models.json").read_text(encoding="utf-8"))
+    assert copied["providers"]["omlxc"] == {
+        "api": "openai-completions",
+        "apiKey": "!security find-generic-password -s omlxc -w",
+        "authHeader": True,
+        "baseUrl": "http://127.0.0.1:9290/v1",
+        "models": [{"id": "coding"}],
+    }
+
+
 def test_execute_uses_fixed_argv_shell_false_and_scrubbed_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     home = user_pi_home(tmp_path)
     receipt = safe_receipt(tmp_path)
@@ -326,6 +347,27 @@ def test_user_config_drift_fails_closed(tmp_path: Path):
         )
 
 
+def test_unknown_user_agent_config_addition_fails_closed(tmp_path: Path):
+    home = user_pi_home(tmp_path)
+
+    class Mutating(FakeProcess):
+        def communicate(self, timeout=None):
+            (home / ".pi" / "agent" / "unknown-config.json").write_text("changed", encoding="utf-8")
+            return super().communicate(timeout)
+
+    with pytest.raises(adapter.AdapterError, match="config_drift"):
+        adapter.run_worker(
+            prompt="x",
+            execute=True,
+            receipt_path=safe_receipt(tmp_path),
+            user_home=home,
+            popen_factory=lambda *_args, **_kwargs: Mutating(),
+            health_probe=healthy,
+            marker_probe=no_marker,
+            version_reader=lambda: "0.84.1",
+        )
+
+
 def test_temp_cwd_write_fails_closed(tmp_path: Path):
     receipt = safe_receipt(tmp_path)
 
@@ -345,6 +387,70 @@ def test_temp_cwd_write_fails_closed(tmp_path: Path):
             receipt_path=receipt,
             user_home=user_pi_home(tmp_path),
             popen_factory=lambda *_argv, **kwargs: Writing(kwargs["cwd"]),
+            health_probe=healthy,
+            marker_probe=no_marker,
+            version_reader=lambda: "0.84.1",
+        )
+
+
+def test_empty_temp_directory_write_fails_closed(tmp_path: Path):
+    class WritingEmptyDirectory(FakeProcess):
+        def __init__(self, cwd: str) -> None:
+            super().__init__()
+            self.cwd = Path(cwd)
+
+        def communicate(self, timeout=None):
+            (self.cwd / "unexpected-empty-directory").mkdir()
+            return super().communicate(timeout)
+
+    with pytest.raises(adapter.AdapterError, match="temp_write_detected"):
+        adapter.run_worker(
+            prompt="x",
+            execute=True,
+            receipt_path=safe_receipt(tmp_path),
+            user_home=user_pi_home(tmp_path),
+            popen_factory=lambda *_argv, **kwargs: WritingEmptyDirectory(kwargs["cwd"]),
+            health_probe=healthy,
+            marker_probe=no_marker,
+            version_reader=lambda: "0.84.1",
+        )
+
+
+def test_tree_snapshot_detects_symlink_type_and_target(tmp_path: Path):
+    before = adapter._trial_tree_digest(tmp_path)
+    os.symlink("missing-target", tmp_path / "unexpected-link")
+
+    assert adapter._trial_tree_digest(tmp_path) != before
+
+
+def test_tree_snapshot_detects_same_path_node_type_change(tmp_path: Path):
+    target = tmp_path / "type-changed"
+    target.write_text("content", encoding="utf-8")
+    before = adapter._trial_tree_digest(tmp_path)
+    target.unlink()
+    target.mkdir()
+
+    assert adapter._trial_tree_digest(tmp_path) != before
+
+
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="platform does not support FIFO")
+def test_fifo_temp_write_fails_closed(tmp_path: Path):
+    class WritingFifo(FakeProcess):
+        def __init__(self, cwd: str) -> None:
+            super().__init__()
+            self.cwd = Path(cwd)
+
+        def communicate(self, timeout=None):
+            os.mkfifo(self.cwd / "unexpected-fifo")
+            return super().communicate(timeout)
+
+    with pytest.raises(adapter.AdapterError, match="temp_write_detected"):
+        adapter.run_worker(
+            prompt="x",
+            execute=True,
+            receipt_path=safe_receipt(tmp_path),
+            user_home=user_pi_home(tmp_path),
+            popen_factory=lambda *_argv, **kwargs: WritingFifo(kwargs["cwd"]),
             health_probe=healthy,
             marker_probe=no_marker,
             version_reader=lambda: "0.84.1",
@@ -421,6 +527,16 @@ def test_receipt_write_failure_is_a_stable_error_without_raw_exception(tmp_path:
             marker_probe=no_marker,
             version_reader=lambda: "0.84.1",
         )
+
+
+def test_receipt_write_is_exclusive_and_does_not_overwrite(tmp_path: Path):
+    receipt = safe_receipt(tmp_path)
+    receipt.write_text("original", encoding="utf-8")
+
+    with pytest.raises(FileExistsError):
+        adapter._write_receipt(receipt, {"outcome": "new"})
+
+    assert receipt.read_text(encoding="utf-8") == "original"
 
 
 def test_marker_probe_uses_absolute_system_ps(monkeypatch: pytest.MonkeyPatch):
