@@ -7,6 +7,7 @@ submodule) and drives the CLI via subprocess.  No source-string assertions.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import os
 import shutil
@@ -64,6 +65,14 @@ def run_cli(
 
 def parse_json(proc: subprocess.CompletedProcess) -> dict:
     return json.loads(proc.stdout)
+
+
+def load_tool_module():
+    spec = importlib.util.spec_from_file_location("agent_clone_tool", TOOL)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def sha256_canonical(obj: dict, exclude: str | None = None) -> str:
@@ -209,6 +218,23 @@ def test_create_refuses_existing_path(tmp_path):
     assert parse_json(proc)["reason"] == "destination_collision"
     assert os.listdir(empty) == []
 
+    dangling = tmp_path / "dangling-destination"
+    dangling.symlink_to(tmp_path / "missing-target", target_is_directory=True)
+    proc = run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dangling),
+        "--json",
+        check=False,
+    )
+    assert proc.returncode == 1
+    assert parse_json(proc)["reason"] == "destination_collision"
+    assert dangling.is_symlink()
+
 
 def test_create_with_revision(tmp_path):
     src, _child, bare = make_source(tmp_path)
@@ -228,6 +254,187 @@ def test_create_with_revision(tmp_path):
     identity = json.loads((dest / ".git" / "agent-clone-identity.json").read_text())
     assert identity["frozen_root_sha"] == m1_sha
     assert git(dest, "branch", "--show-current").stdout.strip() == "agent/agent-1"
+
+
+def test_create_resolves_local_source_revision_before_clone(tmp_path):
+    src, _child, bare = make_source(tmp_path)
+    updater = tmp_path / "updater"
+    git(tmp_path, "clone", str(bare), str(updater))
+    (updater / "README.md").write_text("remote-v2\n")
+    git(updater, "add", "README.md")
+    git(updater, "commit", "-m", "remote-v2")
+    git(updater, "push", "origin", "main")
+    git(src, "fetch", "origin", "main")
+    expected = git(src, "rev-parse", "origin/main").stdout.strip()
+    assert git(src, "rev-parse", "main").stdout.strip() != expected
+
+    dest = tmp_path / "clone-from-local-source"
+    proc = run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(src),
+        "--destination",
+        str(dest),
+        "--revision",
+        "origin/main",
+        "--json",
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert git(dest, "rev-parse", "HEAD").stdout.strip() == expected
+    assert git(dest, "remote", "get-url", "origin").stdout.strip() == str(bare)
+    identity = json.loads((dest / ".git" / "agent-clone-identity.json").read_text())
+    assert identity["frozen_root_sha"] == expected
+    assert identity["source_url"] == str(bare)
+
+
+def test_create_resolves_relative_local_origin_against_source_repo(tmp_path):
+    src, _child, bare = make_source(tmp_path)
+    upstream = tmp_path / "upstream repo.git"
+    bare.rename(upstream)
+    git(src, "remote", "set-url", "origin", "../upstream repo.git")
+
+    dest = tmp_path / "clone-from-relative-origin"
+    proc = run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(src),
+        "--destination",
+        str(dest),
+        "--revision",
+        "main",
+        "--json",
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert git(dest, "remote", "get-url", "origin").stdout.strip() == str(upstream)
+    assert git(dest, "ls-remote", "origin").returncode == 0
+    identity = json.loads((dest / ".git" / "agent-clone-identity.json").read_text())
+    assert identity["source_url"] == str(upstream)
+
+
+def test_atomic_publish_refuses_to_replace_existing_directory(tmp_path):
+    tool = load_tool_module()
+    staging = tmp_path / "staging"
+    destination = tmp_path / "destination"
+    staging.mkdir()
+    destination.mkdir()
+    victim_inode = destination.stat().st_ino
+
+    try:
+        tool.atomic_publish_no_replace(str(staging), str(destination))
+    except tool.ToolError as exc:
+        assert exc.reason == "destination_collision"
+    else:
+        raise AssertionError("atomic publication replaced an existing destination")
+
+    assert destination.is_dir()
+    assert destination.stat().st_ino == victim_inode
+    assert staging.is_dir()
+
+
+def test_create_reports_published_clone_when_staging_cleanup_fails(tmp_path, monkeypatch):
+    tool = load_tool_module()
+    _src, _child, bare = make_source(tmp_path)
+    destination = tmp_path / "published-clone"
+
+    def fail_cleanup(_path):
+        raise PermissionError("simulated cleanup failure")
+
+    monkeypatch.setattr(tool.shutil, "rmtree", fail_cleanup)
+    args = tool.argparse.Namespace(
+        agent_id="agent-1",
+        source=str(bare),
+        destination=str(destination),
+        revision=None,
+        no_submodules=True,
+    )
+
+    try:
+        tool.cmd_create(args)
+    except tool.ToolError as exc:
+        assert exc.reason == "staging_cleanup_failed"
+        assert exc.details["publication_state"] == "published_cleanup_unconfirmed"
+        assert exc.details["published_resource"] == str(destination.resolve())
+        assert str(destination.resolve()) not in exc.details["residual_resources"]
+    else:
+        raise AssertionError("cleanup failure was reported as clone success")
+
+    assert destination.is_dir()
+
+
+def test_create_preserves_cleanup_evidence_for_unexpected_primary_error(
+    tmp_path, monkeypatch
+):
+    tool = load_tool_module()
+    _src, _child, bare = make_source(tmp_path)
+    destination = tmp_path / "unpublished-clone"
+
+    def fail_identity(_root, _identity):
+        raise OSError("simulated identity write failure")
+
+    def fail_cleanup(_path):
+        raise PermissionError("simulated cleanup failure")
+
+    monkeypatch.setattr(tool, "write_identity", fail_identity)
+    monkeypatch.setattr(tool.shutil, "rmtree", fail_cleanup)
+    args = tool.argparse.Namespace(
+        agent_id="agent-1",
+        source=str(bare),
+        destination=str(destination),
+        revision=None,
+        no_submodules=True,
+    )
+
+    try:
+        tool.cmd_create(args)
+    except tool.ToolError as exc:
+        assert exc.reason == "internal_error"
+        assert exc.exit_code == tool.EXIT_USAGE
+        assert exc.details["cleanup_reason"] == "PermissionError"
+        assert len(exc.details["residual_resources"]) == 1
+    else:
+        raise AssertionError("unexpected error lost its cleanup evidence")
+
+    assert not destination.exists()
+
+
+def test_create_submodule_failure_does_not_publish_partial_destination(tmp_path):
+    src, _child, bare = make_source(tmp_path)
+    doomed = tmp_path / "doomed-child"
+    doomed.mkdir()
+    git(doomed, "init", "-b", "main")
+    (doomed / "doomed.txt").write_text("doomed\n")
+    git(doomed, "add", "doomed.txt")
+    git(doomed, "commit", "-m", "doomed")
+    git(src, "-c", "protocol.file.allow=always", "submodule", "add", str(doomed), "z-doomed")
+    git(src, "commit", "-m", "add doomed child")
+    git(src, "push", "origin", "main")
+    shutil.rmtree(doomed)
+
+    dest = tmp_path / "must-not-be-published"
+    proc = run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+        "--json",
+        check=False,
+    )
+
+    assert proc.returncode == 1
+    assert parse_json(proc)["reason"] == "submodule_init_failed"
+    assert not dest.exists()
+    assert not list(tmp_path.glob(f".{dest.name}.agent-clone-*"))
 
 
 def test_create_no_submodules_manifest_uninitialized(tmp_path):
