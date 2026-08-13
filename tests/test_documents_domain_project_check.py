@@ -88,6 +88,8 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
     profile_generator = tmp_path / "bin" / "gac" / "documents-codex-profile.py"
     profile_generator.parent.mkdir(parents=True)
     profile_generator.write_text("# profile generator\n", encoding="utf-8")
+    zed_profile_generator = tmp_path / "bin" / "gac" / "documents-zed-profile.py"
+    zed_profile_generator.write_text("# profile generator\n", encoding="utf-8")
     path = registry_dir / "documents-domain-projects.yaml"
     path.write_text(
         yaml.safe_dump(
@@ -133,6 +135,18 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                             "exclusive_mcp_server": "cockpit",
                             "approval_mode": "approve",
                             "skill_policy": "disable_user_local",
+                        },
+                    },
+                    "zed": {
+                        "instruction_file": "AGENTS.md",
+                        "mcp_scope": "client",
+                        "profile_contract": {
+                            "name": "documents",
+                            "owner": "workspace",
+                            "generator_ref": "bin/gac/documents-zed-profile.py",
+                            "exclusive_mcp_server": "cockpit",
+                            "approval_mode": "allow_read_tools",
+                            "builtin_tool_policy": "disable_all",
                         },
                     },
                     "agents_compatible": {
@@ -304,6 +318,59 @@ def test_codex_profile_generator_must_be_workspace_relative(tmp_path: Path) -> N
     assert result.returncode == 1
     assert json.loads(result.stdout)["errors"] == [
         "clients.codex.profile_contract.generator_ref must be a Workspace-relative file"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        ("owner", "documents", "clients.zed.profile_contract.owner must be workspace"),
+        (
+            "exclusive_mcp_server",
+            "runtime",
+            "clients.zed.profile_contract.exclusive_mcp_server must match workspace_mcp.server",
+        ),
+        (
+            "approval_mode",
+            "confirm",
+            "clients.zed.profile_contract.approval_mode must be allow_read_tools",
+        ),
+        (
+            "builtin_tool_policy",
+            "allow_defaults",
+            "clients.zed.profile_contract.builtin_tool_policy must be disable_all",
+        ),
+    ],
+)
+def test_zed_profile_contract_fails_closed(
+    tmp_path: Path, field: str, value: str, expected: str
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["clients"]["zed"]["profile_contract"][field] = value
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [expected]
+
+
+def test_zed_profile_generator_must_be_workspace_relative(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["clients"]["zed"]["profile_contract"]["generator_ref"] = (
+        "../Documents/profile.py"
+    )
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "clients.zed.profile_contract.generator_ref must be a Workspace-relative file"
     ]
 
 

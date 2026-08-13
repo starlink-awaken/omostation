@@ -947,3 +947,38 @@ state while preserving that earlier attempt as historical evidence. The next
 client iteration can move to a fresh Claude domain-tool journey, then the
 Zed/ZCode-compatible client path; ChatGPT web remains a separately provisioned
 public HTTPS or secure-tunnel track.
+
+## 10. 2026-08-13 Zed Documents Profile MVP Checkpoint
+
+The Zed client now has a Workspace-owned `documents` profile contract rather
+than relying only on a broad client MCP registration. The contract derives its
+tool allow-list from the existing `content-domain` profile and keeps execution
+outside Documents:
+
+- `bin/gac/documents-zed-profile.py` renders, installs, and checks the profile
+  while preserving unrelated settings, MCP servers, themes, and permissions;
+- the `Documents` Agent Profile has no built-in tools, does not enable all
+  context servers, and explicitly enables only Cockpit `workspace_context`,
+  `domain_context`, `cards_status`, and `cards_check`;
+- those four MCP tools have explicit `allow` rules, while the existing global
+  confirmation policy and unrelated tool rules remain unchanged;
+- installation is atomic, idempotent, mode `0600`, rejects symbolic-link
+  settings paths, and refuses to overwrite a different existing `documents`
+  profile or conflicting tool permission;
+- the root registry checker and required `phase-gate` workflow own the source
+  contract and its focused tests.
+
+The installed `~/.config/zed/settings.json` passed a post-install check. A
+protocol smoke using the exact configured Cockpit command and environment
+successfully initialized the server, found `domain_context`, and returned
+`binding.status=ok` for `work-weijian`. This is configuration and server-contract
+evidence; it is not a Zed Agent Panel green-dot observation or a Zed
+model-originated tool invocation. The running Zed process predated the settings
+write, and the desktop was at the macOS lock screen; activating the application
+did not establish reload evidence. The iteration did not bypass login or claim
+UI acceptance.
+
+The next bounded client step is a fresh Zed Agent Panel journey after the user
+session is unlocked. ZCode remains on the generic `agents_compatible` contract,
+and ChatGPT web remains the separately provisioned public HTTPS or secure-tunnel
+track.
