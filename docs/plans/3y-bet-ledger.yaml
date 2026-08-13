@@ -2411,7 +2411,15 @@ bets:
   title: Oh My Pi bounded local reasoning worker admission via AetherForge and omlxc
   appetite: 1 day
   priority: P0
-  status: in_progress
+  status: done
+  done_at: 2026-08-13
+  done_evidence: >-
+    Oh My Pi 16.1.16 已通过正式 WorkflowRequested→WorkflowAdmitted→StepDispatched→OMO dispatch
+    链路，由 bounded adapter 经 AetherForge 127.0.0.1:9290 调用 omlxc/coding，返回精确 marker
+    OMO_WORKER_DISPATCH_OK:oh-my-pi:BET-Y1Q2-T1-13；formal canonical receipt SHA-256
+    dc86dc1543f39b47c6e7d5cb4e6b06597cdac6359ba96dd6840180d28e3d1518，stdout digest
+    10b6d789fdbb4946fcba59b4bd7e1d5109e9d6113c6df61e0ae1b32d12f250d3。
+    根 adapter+Pi registry 回归 94 tests、Ruff 与 diff-check 通过；两轮独立 reviewer CLEAR。
   goal: >-
     为 Oh My Pi 16.1.16 建立独立、受限、可回收的 L0 reasoning/verification worker；
     单次 headless 模型调用固定经 AetherForge loopback 进入 omlxc/coding，真实回执通过后
