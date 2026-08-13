@@ -153,11 +153,13 @@ def _orca_refs(
 
 
 def _worker_failure_context(
-    result: dict[str, Any], *, orca_run_id: str, residual_resources: list[str]
+    result: dict[str, Any],
+    *,
+    terminal_handle: str,
+    residual_resources: list[str],
 ) -> tuple[dict[str, str] | None, list[str]]:
     dispatch_id = result.get("dispatchId")
     task_id = result.get("taskId")
-    terminal_handle = result.get("agentTerminalHandle")
     reported_run_id = result.get("runId")
     worker_orca = (
         _orca_refs(
@@ -169,7 +171,6 @@ def _worker_failure_context(
         if isinstance(reported_run_id, str)
         and isinstance(dispatch_id, str)
         and isinstance(task_id, str)
-        and isinstance(terminal_handle, str)
         else None
     )
     resources = list(residual_resources)
@@ -183,6 +184,73 @@ def _worker_failure_context(
             if resource not in resources:
                 resources.append(resource)
     return worker_orca, resources
+
+
+def _has_worker_effect(
+    effects: object, *, kind: str, terminal_handle: str, **expected: str
+) -> bool:
+    return isinstance(effects, list) and any(
+        isinstance(effect, dict)
+        and effect.get("kind") == kind
+        and effect.get("id") == terminal_handle
+        and all(effect.get(field) == value for field, value in expected.items())
+        for effect in effects
+    )
+
+
+def _ready_worker_orca(
+    result: dict[str, Any],
+    *,
+    orca_run_id: str,
+    orca_task_id: str,
+    terminal_handle: str,
+    expected_request_id: str | None,
+) -> dict[str, str] | None:
+    reported_run_id = result.get("runId")
+    reported_task_id = result.get("taskId")
+    dispatch_id = result.get("dispatchId")
+    mutation = result.get("mutation")
+    if not all(
+        isinstance(value, str)
+        for value in (reported_run_id, reported_task_id, dispatch_id)
+    ):
+        return None
+    orca = _orca_refs(
+        orca_run_id=reported_run_id,
+        orca_task_id=reported_task_id,
+        orca_dispatch_id=dispatch_id,
+        terminal_handle=terminal_handle,
+    )
+    if (
+        orca is None
+        or orca["run_id"] != orca_run_id
+        or orca["task_id"] != orca_task_id
+        or result.get("state") != "ready"
+        or result.get("stage") != "input_accepted"
+        or not isinstance(mutation, dict)
+        or not isinstance(mutation.get("requestId"), str)
+        or not _valid_identity(mutation["requestId"])
+        or (
+            expected_request_id is not None
+            and mutation["requestId"] != expected_request_id
+        )
+        or not _has_worker_effect(
+            result.get("effects"),
+            kind="terminal",
+            terminal_handle=terminal_handle,
+            role="agent",
+            action="reused",
+        )
+        or not _has_worker_effect(
+            result.get("effects"),
+            kind="dispatch_input",
+            terminal_handle=terminal_handle,
+            role="agent",
+            state="accepted",
+        )
+    ):
+        return None
+    return orca
 
 
 def _failure(
@@ -601,46 +669,32 @@ def start_supervised_codex(
         residual_resources=terminal_residuals,
         failure_context=lambda result: _worker_failure_context(
             result,
-            orca_run_id=orca_run_id,
+            terminal_handle=terminal_handle,
             residual_resources=terminal_residuals,
         ),
     )
     if failure:
         return failure
     assert started_worker is not None
-    orca_dispatch_id = started_worker.get("dispatchId")
-    reported_terminal_handle = started_worker.get("agentTerminalHandle")
     worker_orca, worker_residuals = _worker_failure_context(
         started_worker,
-        orca_run_id=orca_run_id,
+        terminal_handle=terminal_handle,
         residual_resources=terminal_residuals,
     )
-    if (
-        started_worker.get("state") != "ready"
-        or started_worker.get("taskId") != orca_task_id
-        or started_worker.get("runId") != orca_run_id
-        or not isinstance(orca_dispatch_id, str)
-        or reported_terminal_handle != terminal_handle
-    ):
-        return _failure(
-            binding=binding,
-            stage="worker_start",
-            reason="orca_response_invalid",
-            orca=worker_orca,
-            residual_resources=worker_residuals,
-        )
-    orca = _orca_refs(
+    orca = _ready_worker_orca(
+        started_worker,
         orca_run_id=orca_run_id,
         orca_task_id=orca_task_id,
-        orca_dispatch_id=orca_dispatch_id,
         terminal_handle=terminal_handle,
+        expected_request_id=retry_requests.get("worker-start"),
     )
     if orca is None:
         return _failure(
             binding=binding,
             stage="worker_start",
             reason="orca_response_invalid",
-            residual_resources=terminal_residuals,
+            orca=worker_orca,
+            residual_resources=worker_residuals,
         )
     receipt = {
         "schema": SCHEMA,
