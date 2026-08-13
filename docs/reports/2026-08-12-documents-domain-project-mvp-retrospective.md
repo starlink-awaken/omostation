@@ -464,3 +464,28 @@ simultaneously carrying the 271-fact conversion batch, so the cleanup has not
 been force-merged into that dirty worktree. This is an intentional pending
 integration, not evidence that the content batch or all Documents-local
 execution has already been retired.
+
+## 2026-08-13 Runtime KEMS owner parity reconciliation
+
+Runtime PR #51 merged as `64e6823`; Workspace PR #1427 merged as `5a1753444`
+and advances `projects/runtime` to that accepted owner. The registered manual
+job `documents-weijian-kems-check` reads only the 卫健委 KEMS metadata scope
+and the shared inbox, records its baseline and receipt under Runtime state,
+and exposes only a bounded change summary. Its focused tests, scoped Ruff
+checks, and both Runtime and Workspace pull-request CI runs passed.
+
+An installed-entrypoint smoke invoked
+`~/.local/bin/runtime documents run documents-weijian-kems-check --json` with
+an isolated Runtime state root. It returned `status=succeeded`, initialized a
+zero-change baseline, wrote its baseline and evidence only below that state
+root, and left the pre-existing Documents KEMS state file unchanged.
+
+This is owner parity, not a consumer cutover. The `work-runtime` migration
+family remains `pending`: the active crontab entry, Claude Scheduled consumer,
+and domain-gateway references still invoke legacy paths and have not been
+modified. The default shell command `runtime` currently resolves first to the
+older `/opt/homebrew/bin/runtime` 0.1.0 entrypoint, which does not expose the
+`documents` subcommand; the accepted Runtime entrypoint is installed at
+`~/.local/bin/runtime`. Changing PATH precedence or replacing the older global
+entrypoint is a separate system-configuration decision and is intentionally
+not performed here.
