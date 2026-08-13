@@ -679,7 +679,7 @@ def test_cli_failure_emits_only_safe_provider_review(
     }
 
 
-def test_codex_worker_registry_admits_only_the_bounded_adapter() -> None:
+def test_codex_worker_registry_admits_only_the_interactive_orca_supervisor() -> None:
     registry = list(yaml.safe_load_all(WORKERS.read_text(encoding="utf-8")))[-1]
     codex = next(worker for worker in registry["workers"] if worker["id"] == "codex")
 
@@ -699,11 +699,18 @@ def test_codex_worker_registry_admits_only_the_bounded_adapter() -> None:
     assert codex["transports"] == {
         "cli_prompt": {
             "command": (
-                '/usr/bin/python3 "{workspace_root}/bin/gac/codex-worker-adapter.py" '
-                "run --execute --timeout-seconds 900 "
-                '--workspace-root "{workspace_root}" --prompt "{prompt}"'
+                '/usr/bin/python3 "{workspace_root}/bin/gac/'
+                'orca-codex-supervisor.py" start'
             )
         }
+    }
+    assert codex["supervision"] == {
+        "controller_approval": "required",
+        "provider_review": "manual_click_required",
+        "waiting_state": "awaiting_human_action",
+        "readiness_evidence": "settled_worker_done_and_transcript_digest",
+        "transport_ack_is_readiness": False,
+        "controller_direct_start_required": True,
     }
 
 
