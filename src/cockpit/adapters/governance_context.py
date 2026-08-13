@@ -34,7 +34,8 @@ def resolve_workspace_root(explicit: str | Path | None = None) -> Path:
 
     source = Path(__file__).resolve()
     for parent in source.parents:
-        if (parent / ".omo" / "state" / "system.yaml").is_file():
+        authority = parent / ".omo"
+        if not authority.is_symlink() and (authority / "state" / "system.yaml").is_file():
             return parent
         if parent.name == ".subtrees":
             return parent.parent

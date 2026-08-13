@@ -76,6 +76,21 @@ def _write_workspace_state(root: Path) -> None:
     )
 
 
+def test_resolve_workspace_root_ignores_compatibility_omo_symlink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    _write_workspace_state(tmp_path)
+    project_root = tmp_path / "projects"
+    project_root.mkdir()
+    (project_root / ".omo").symlink_to("../.omo", target_is_directory=True)
+    source = project_root / "cockpit" / "src" / "cockpit" / "adapters" / "governance_context.py"
+    monkeypatch.delenv("WORKSPACE_ROOT", raising=False)
+    monkeypatch.setattr(gc, "__file__", str(source))
+
+    assert gc.resolve_workspace_root() == tmp_path
+
+
 def _write_binding_registry(root: Path, clients: dict[str, object]) -> None:
     skills_path = root / ".agents" / "skills" / "example"
     skills_path.mkdir(parents=True, exist_ok=True)
