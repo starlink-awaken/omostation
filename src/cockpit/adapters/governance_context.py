@@ -22,7 +22,9 @@ _CAPABILITY_ROUTE_CONTRACTS = {
 _FACTS_EVIDENCE_SCHEMA = "runtime.documents-facts-audit.evidence.v1"
 _CONTROLLER_SHADOW_EVIDENCE_SCHEMA = "runtime.documents-controller-shadow.evidence.v2"
 _DOMAIN_REGISTRY_AUTHORITY = "l4-domain-registry"
+_DOMAIN_BINDING_AUTHORITY = "workspace-documents-domain-projects"
 _MODEL_FRESHNESS_EVIDENCE_SCHEMA = "runtime.documents-model-freshness.evidence.v1"
+_MODEL_FRESHNESS_EVIDENCE_AUTHORITY = "runtime-model-freshness-evidence"
 _MODEL_FRESHNESS_EVIDENCE_PATH = (
     "control/evidence/documents-weijian-model-freshness/documents-weijian-model-freshness.json"
 )
@@ -477,25 +479,29 @@ def _controller_shadow_unavailable(
     }
 
 
-def _model_freshness_unavailable(
-    requested: str,
-    binding_source: str,
-    error: str,
+def model_freshness_unavailable_envelope(
+    domain_id: str,
+    error_category: str,
     *,
-    runtime_evidence: Path | None = None,
+    include_runtime_evidence: bool = False,
 ) -> dict[str, Any]:
-    sources = {"domain_registry": _DOMAIN_REGISTRY_AUTHORITY, "binding_registry": binding_source}
-    if runtime_evidence is not None:
-        sources["runtime_evidence"] = str(runtime_evidence)
+    """Return the stable pathless unavailable envelope for this surface."""
+
+    sources = {
+        "domain_registry": _DOMAIN_REGISTRY_AUTHORITY,
+        "binding_registry": _DOMAIN_BINDING_AUTHORITY,
+    }
+    if include_runtime_evidence:
+        sources["runtime_evidence"] = _MODEL_FRESHNESS_EVIDENCE_AUTHORITY
     return {
         "schema": "cockpit.domain-model-freshness.v1",
         "status": "unavailable",
         "available": False,
-        "domain_id": requested,
+        "domain_id": domain_id.strip(),
         "job": None,
         "freshness": None,
         "sources": sources,
-        "error": error,
+        "error": error_category,
     }
 
 
@@ -986,20 +992,19 @@ def domain_model_freshness_status(
     requested = domain_id.strip()
     workspace = resolve_workspace_root(workspace_root)
     binding = _binding_context(requested, workspace)
-    binding_source = str(binding["source"])
     try:
         _source, _registry, domains = _load_domains(registry_path, documents_root=documents_root)
         registered = requested and any(domain["id"] == requested for domain in domains)
     except Exception:
-        return _model_freshness_unavailable(requested, binding_source, "domain_registry_unavailable")
+        return model_freshness_unavailable_envelope(requested, "domain_registry_unavailable")
     if not registered:
-        return _model_freshness_unavailable(requested, binding_source, "domain_not_registered")
+        return model_freshness_unavailable_envelope(requested, "domain_not_registered")
     if binding["status"] != "ok":
-        return _model_freshness_unavailable(requested, binding_source, "domain_binding_unavailable")
+        return model_freshness_unavailable_envelope(requested, "domain_binding_unavailable")
     try:
         job = _runtime_model_freshness_job(binding, requested)
     except (OSError, ValueError):
-        return _model_freshness_unavailable(requested, binding_source, "runtime_job_unavailable")
+        return model_freshness_unavailable_envelope(requested, "runtime_job_unavailable")
     try:
         state_root = _runtime_state_root(
             binding,
@@ -1007,17 +1012,15 @@ def domain_model_freshness_status(
             documents_root=documents_root,
         )
     except (OSError, ValueError):
-        return _model_freshness_unavailable(requested, binding_source, "runtime_state_unavailable")
-    evidence_path = state_root / job["evidence_relative_path"]
+        return model_freshness_unavailable_envelope(requested, "runtime_state_unavailable")
     try:
         receipt = _read_bounded_runtime_receipt(state_root, Path(job["evidence_relative_path"]))
         status, freshness = _validated_model_freshness_receipt(receipt, job)
     except (OSError, ValueError):
-        return _model_freshness_unavailable(
+        return model_freshness_unavailable_envelope(
             requested,
-            binding_source,
             "runtime_receipt_unavailable",
-            runtime_evidence=evidence_path,
+            include_runtime_evidence=True,
         )
 
     return {
@@ -1029,8 +1032,8 @@ def domain_model_freshness_status(
         "freshness": freshness,
         "sources": {
             "domain_registry": _DOMAIN_REGISTRY_AUTHORITY,
-            "binding_registry": binding_source,
-            "runtime_evidence": str(evidence_path),
+            "binding_registry": _DOMAIN_BINDING_AUTHORITY,
+            "runtime_evidence": _MODEL_FRESHNESS_EVIDENCE_AUTHORITY,
         },
     }
 

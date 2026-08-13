@@ -164,8 +164,11 @@ def cmd_model_freshness(args: Namespace) -> int:
     domain_id = getattr(args, "domain_id", "") or ""
     try:
         result = governance_context.domain_model_freshness_status(domain_id)
-    except Exception as exc:  # defensive boundary: preserve the contract exit code
-        result = {"status": "unavailable", "error": str(exc), "freshness": None}
+    except Exception:  # defensive boundary: preserve a pathless contract envelope
+        result = governance_context.model_freshness_unavailable_envelope(
+            domain_id,
+            "model_freshness_cli_unavailable",
+        )
 
     if getattr(args, "json", False):
         print(json.dumps(result, ensure_ascii=False, default=str))
