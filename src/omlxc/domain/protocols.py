@@ -210,6 +210,7 @@ class ChatToolFunction(DomainModel):
     name: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
     description: str = Field(default="", max_length=8192)
     parameters: dict[str, object]
+    strict: bool = Field(default=False, exclude_if=lambda value: not value)
 
     @field_validator("parameters")
     @classmethod

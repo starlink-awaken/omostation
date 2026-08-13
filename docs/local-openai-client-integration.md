@@ -82,6 +82,34 @@ test -n "${AETHERFORGE_API_KEY}"
 
 若要把环境变量长期交给客户端启动器，使用操作系统的 secret 管理机制或权限为 `0600` 的、本机私有的环境文件。不要把 `.env` 加入版本控制。
 
+### 本机已验证的快速启动方式
+
+本机受管部署把凭据保存在系统钥匙串。只在准备启动客户端的当前 shell 中读取，既不打印也不写回配置：
+
+```bash
+export AETHERFORGE_BASE_URL="http://127.0.0.1:9290/v1"
+export AETHERFORGE_API_KEY="$(security find-generic-password -s aetherforge-gateway -w)"
+test -n "${AETHERFORGE_API_KEY}"
+```
+
+随后可先检查客户端目录解析：
+
+```bash
+opencode models omlxc
+pi --list-models omlxc
+```
+
+本机已登记的常用逻辑模型限制如下。它们是客户端预算，不代表每次请求一定有合格 placement；最终仍以 typed HTTP 结果为准。
+
+| 逻辑 ID | 输入上下文 | 最大输出 | 用途 |
+| --- | ---: | ---: | --- |
+| `coding` | 32768 | 2048 | 通用编码 |
+| `coding-fast` | 32768 | 2048 | 低延迟小任务 |
+| `coding-next` | 32768 | 4096 | 多轮工具任务首选 |
+| `mythos-fast` | 32768 | 2048 | 快速文本任务 |
+| `reasoning-lite` | 32768 | 2048 | 轻量分析 |
+| `vision` | 32768 | 2048 | 需要图像能力的请求 |
+
 ## 4. 先做无推理连通性验证
 
 先验证门面和模型目录，再发真实请求。以下命令不会执行推理：
@@ -120,11 +148,9 @@ active 模式的公开目录应只公布 `omlxcd` 已知的逻辑模型 ID。它
 
 当前 OpenCode 的正式配置使用 `provider` 结构；这台机器也已经有名为 `omlxc` 的 provider。**增量修改这个 provider，不要并行新增第二个指向相同门面的 provider，也不要覆写既有的其它 provider。** 这样能保持既有 alias 与权限策略不变。
 
-已做过只读比对：该 provider 的部分既有模型映射已不在当前 `omlxcd` 逻辑目录中。这属于旧目录遗留，不表示后端模型服务宕机。稳定观察窗口结束后，按本节的“增量更新”方式只替换失效条目的 `id`；保留 provider ID、现有选择名和权限策略。观察窗口内不要修改用户级 OpenCode 配置。
-
 OpenCode 的 provider 模板适用于任何 OpenAI 兼容服务：使用 `@ai-sdk/openai-compatible`、指定 `options.baseURL`，并把实际模型 ID 写入 `models`。不要混入来自旧教程、实验分支或第三方适配层的 `providers`、`package`、`settings` 或 `modelID` 键。配置语法始终以 [OpenCode Providers](https://opencode.ai/docs/providers/) 与 [OpenCode Config](https://opencode.ai/docs/config/) 的当前版本为准。
 
-保留既有 `provider.omlxc` 的 `npm`、`options`、models 和所有其它 provider。需要新增或更新一个模型时，只在它的 `models` 对象内加入下列条目；`local-coding` 是 OpenCode 的选择名，`id` 才是发送给门面的逻辑模型 ID：
+保留既有 `provider.omlxc` 的 `npm`、`options`、models 和所有其它 provider。需要新增或更新一个模型时，只在它的 `models` 对象内加入下列条目；`coding-next` 是 OpenCode 的选择名，`id` 才是发送给门面的逻辑模型 ID：
 
 ```json
 {
@@ -136,13 +162,22 @@ OpenCode 的 provider 模板适用于任何 OpenAI 兼容服务：使用 `@ai-sd
         "apiKey": "{env:AETHERFORGE_API_KEY}"
       },
       "models": {
-        "local-coding": {
-          "id": "REPLACE_WITH_A_LOGICAL_MODEL_ID",
-          "name": "AetherForge local coding"
+        "coding-next": {
+          "id": "coding-next",
+          "name": "AetherForge local coding",
+          "tool_call": true,
+          "limit": {"context": 32768, "output": 4096}
         }
       }
     }
-  }
+  },
+  "agent": {
+    "omlxc-local": {
+      "model": "omlxc/coding-next",
+      "tools": {"*": false, "read": true}
+    }
+  },
+  "share": "disabled"
 }
 ```
 
@@ -151,16 +186,17 @@ OpenCode 的 provider 模板适用于任何 OpenAI 兼容服务：使用 `@ai-sd
 - `omlxc` 是已有 provider ID；不要改为物理后端或节点名。
 - `{env:…}` 是 OpenCode 的环境变量替换语法。环境变量不存在时会展开为空，因此先做上一节的 `test -n`。
 - `models` 的 key 是 OpenCode 本地选择名；其中的 `id` 必须与 `GET /v1/models` 返回的 `id` **完全一致**。模型列表变化后，只更新这一项的 `id`。
+- `omlxc-local` 是低风险起步 agent：只开放 `read`，不会因为模型返回了 tool call 就自动获得编辑或 shell 权限。确认协议正常后，再按项目策略逐项开放。
 - `permission.edit` 与 `permission.bash` 设为 `ask`，使编码助手的文件和命令操作逐次确认；模型可用不等于应自动执行本机命令。
 - `share: "disabled"` 是适合本地工作区的保守默认值。按团队的合规要求单独调整它。
 
-随后启动 OpenCode，通过 `/models` 选择 `omlxc/local-coding`；也可先运行 `opencode models omlxc` 只查看现有配置的候选项。不要让它自动从旧的、混合的后端目录导入模型。active 模式的目录收敛补丁落地前，优先使用已配置且已验证的 `omlxc/*` alias；补丁落地后，再从认证的 `/v1/models` 更新 `id`。
+随后启动 OpenCode，通过 `/models` 选择 `omlxc/coding-next`；也可先运行 `opencode models omlxc` 只查看现有配置候选项。`opencode models omlxc` 展示的是客户端已配置子集，公共 `/v1/models` 展示的是门面逻辑目录；两者数量不同不等于注册链路断裂。
 
 对现有配置做**无推理**校验：先备份用户配置，再运行下文的“迁移前只读预检”；它只输出 provider 是否存在和条目数量。不要在终端录屏、CI 日志或共享会话中运行 `opencode debug config`，因为该命令可能展示已解析的认证配置。
 
 ### 迁移前的只读预检
 
-在稳定观察窗口结束后、**但仍未修改配置前**，先执行下列预检。它只输出条目数量，不输出 key、模型名、节点信息或内部地址：
+在修改配置前，先执行下列预检。它只输出条目数量，不输出 key、模型名、节点信息或内部地址：
 
 ```bash
 python3 - <<'PY'
@@ -227,7 +263,7 @@ Pi 使用 `~/.pi/agent/models.json` 注册自定义 provider。该文件是用�
 ```json
 {
   "providers": {
-    "aetherforge": {
+    "omlxc": {
       "baseUrl": "http://127.0.0.1:9290/v1",
       "api": "openai-completions",
       "apiKey": "$AETHERFORGE_API_KEY",
@@ -238,12 +274,13 @@ Pi 使用 `~/.pi/agent/models.json` 注册自定义 provider。该文件是用�
       },
       "models": [
         {
-          "id": "REPLACE_WITH_A_LOGICAL_MODEL_ID",
+          "id": "coding-next",
           "name": "AetherForge local coding",
           "reasoning": false,
           "input": ["text"],
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 4096,
+          "supportsTools": true
         }
       ]
     }
@@ -251,7 +288,7 @@ Pi 使用 `~/.pi/agent/models.json` 注册自定义 provider。该文件是用�
 }
 ```
 
-Pi 的 `$AETHERFORGE_API_KEY` 是环境变量引用，缺失时 provider 会不可用；不要把真实 key 写成 JSON 字面量。首次运行后使用 `/model` 选择 `aetherforge/REPLACE_WITH_A_LOGICAL_MODEL_ID`。Pi 会在每次打开 `/model` 时重新读取该配置，所以不需要重启守护进程。这里的 context/output 数值只是保守客户端上限；在将它设为默认模型前，必须以选定逻辑模型的实际限制替换。
+Pi 的 `$AETHERFORGE_API_KEY` 是环境变量引用，缺失时 provider 会不可用；不要把真实 key 写成 JSON 字面量。首次运行后使用 `/model` 选择 `omlxc/coding-next`。Pi 会在每次打开 `/model` 时重新读取该配置，所以不需要重启守护进程。v3.0.7 接受 Pi 当前发送的 `max_completion_tokens`、`stream_options`、`store`、`parallel_tool_calls` 与 bounded `strict` 工具定义。
 
 ## 7. oh-my-pi
 
@@ -259,19 +296,20 @@ oh-my-pi（`omp`）的自定义 provider 放在 `~/.omp/agent/models.yml`。这�
 
 ```yaml
 providers:
-  aetherforge:
+  omlxc:
     baseUrl: http://127.0.0.1:9290/v1
     api: openai-completions
     apiKey: AETHERFORGE_API_KEY
     authHeader: true
     models:
-      - id: REPLACE_WITH_A_LOGICAL_MODEL_ID
+      - id: coding-next
         name: AetherForge local coding
         contextWindow: 32768
-        maxTokens: 8192
+        maxTokens: 4096
+        supportsTools: true
 ```
 
-启动前只需在受管 shell 或私有环境文件中提供 `AETHERFORGE_API_KEY`；不要用仓库内 `.env` 覆盖该值。稳定观察窗口内只做 YAML 语法/配置加载检查；不要运行 `omp models`，因为它可能刷新 provider 目录。窗口结束后，确认 AetherForge 目录可用，再在模型选择器中选 `aetherforge/REPLACE_WITH_A_LOGICAL_MODEL_ID`。在将它设为默认模型前，将 `contextWindow` 与 `maxTokens` 替换为选定逻辑模型的实际限制。若它提示 provider 未启用，检查 `disabledProviders` 中没有 `aetherforge`；该数组在项目级配置中会整体覆盖全局数组，不能假定自动合并。
+启动前只需在受管 shell 或私有环境文件中提供 `AETHERFORGE_API_KEY`；不要用仓库内 `.env` 覆盖该值。选择 `omlxc/coding-next` 即可。若它提示 provider 未启用，检查 `disabledProviders` 中没有 `omlxc`；该数组在项目级配置中会整体覆盖全局数组，不能假定自动合并。`models.yml` 是 canonical 配置，兼容 `models.json` 只用于迁移或回退，不要长期双写两份不同值。
 
 ## 8. Kilo Code
 
@@ -291,14 +329,14 @@ Kilo Code 的终端版与 VS Code 扩展都支持 OpenAI-compatible provider。�
       },
       "models": {
         "local-coding": {
-          "id": "REPLACE_WITH_A_LOGICAL_MODEL_ID",
+          "id": "coding-next",
           "name": "AetherForge local coding",
           "reasoning": false,
-          "tool_call": false,
+          "tool_call": true,
           "limit": {
             // Replace both caps with limits confirmed for the selected logical model.
             "context": 32768,
-            "output": 8192
+            "output": 4096
           }
         }
       }
@@ -308,23 +346,23 @@ Kilo Code 的终端版与 VS Code 扩展都支持 OpenAI-compatible provider。�
 }
 ```
 
-`tool_call: false` 是安全默认值：模型是否可生成文本，不代表已经验证了 tool/function calling。Kilo 的文件与命令执行权限仍由客户端控制，保持其交互确认默认值，直到你在非敏感项目验证后再放宽。当前机器未安装 Kilo CLI，因此本轮只验证了配置结构；不要根据未安装版本猜测 `kilo models` 一类子命令。初次真实 agent 任务属于推理实验，应在当前稳定观察窗口结束后、单独记录地进行。
+`tool_call: true` 只表示协议支持函数工具，不会替客户端批准文件或命令操作。Kilo 的文件与命令执行权限仍由客户端控制，应保持交互确认默认值。当前机器未安装 Kilo CLI，因此本轮只验证了配置结构；不要根据未安装版本猜测 `kilo models` 一类子命令，安装后应先用只读工具做一次有界实验。
 
 ## 9. 统一实验流程
 
-四个工具共用同一条规则：**先确认模型目录，后写配置，最后才做一次有界的非敏感推理实验。** 在当前稳定观察窗口内，实验停在配置和只读目录校验，不能为了“验证”触发推理、模型加载或远端探测。
+四个工具共用同一条规则：**先确认模型目录，后写配置，最后才做一次有界的非敏感推理实验。** 接入实验不应触发客户端驱动的模型 load/unload，也不应探测远端节点。
 
 | 阶段 | OpenCode | Pi | oh-my-pi | Kilo Code |
 | --- | --- | --- | --- | --- |
 | 配置位置 | 既有用户级 `opencode.json` 的 `provider.omlxc` | `~/.pi/agent/models.json` | `~/.omp/agent/models.yml` | `~/.config/kilo/kilo.jsonc` |
 | 认证来源 | `{env:AETHERFORGE_API_KEY}` | `$AETHERFORGE_API_KEY` | `AETHERFORGE_API_KEY` | `{env:AETHERFORGE_API_KEY}` |
-| 模型选择 | `omlxc/<本地选择名>` | `aetherforge/<逻辑 ID>` | `aetherforge/<逻辑 ID>` | `aetherforge/<本地选择名>` |
-| 当前可做的验证 | 本文的脱敏预检脚本 | JSON 语法检查 | YAML 配置加载 | JSONC 语法检查 |
+| 模型选择 | `omlxc/<本地选择名>` | `omlxc/<逻辑 ID>` | `omlxc/<逻辑 ID>` | `openai-compatible/<本地选择名>` |
+| 本机验证状态 | 目录、文本与 read 工具轮次通过 | 目录/取密通过；v3.0.7 请求形状已做契约测试 | 取密/请求形状已做契约测试 | CLI 未安装，仅配置结构待实机验证 |
 
 对于任何工具：
 
 1. 导出凭据时只检查变量是否为空，不能 `echo` 它。
-2. 从已认证的 `GET /v1/models` 取得逻辑 ID；active 目录修复合入前，沿用现有已验证的 `omlxc/*` 映射，不把物理目录导入工具。
+2. 从已认证的 `GET /v1/models` 取得逻辑 ID，不把物理目录导入工具。
 3. 全局私有配置权限保持为用户可读写；不要将 key、prompt、内部地址或模型驻留信息提交进仓库。
 4. 初次推理仅用一个短的非敏感请求，明确超时和零重试；记录 HTTP 状态、客户端版本、请求是否流式，不记录正文、密钥或内部拓扑。
 5. 若返回 409/503/504，停止而不是直接连接后端或让客户端执行 load/unload。
@@ -356,7 +394,8 @@ print(response.choices[0].message.content)
 ### Tools、结构化输出与多模态
 
 - 编码助手的文件读取、编辑与 shell 执行是**客户端能力**。把它们设置为需要确认，不要误以为模型服务会限制本机工具权限。
-- OpenAI 风格的额外 body 字段会保留给下游能力协商，但工具调用和结构化输出是否可用取决于所选模型与实际后端。先在非敏感项目验证，不要把它作为初次接入的前置条件。
+- v3.0.7 支持有界 function tools、`tool_choice`、assistant `tool_calls`、tool-result messages 与流式 tool-call delta；同时兼容 Pi/OMP 当前的 `max_completion_tokens` 和工具 schema。模型是否真的选择某个工具仍取决于模型与上下文。
+- `response_format` 等结构化输出字段尚不是本指南承诺的统一契约；需要 JSON 时优先让客户端做结构验证，不要假定所有物理后端都支持相同私有扩展。
 - 图像消息会要求 vision 能力；embedding 请求会要求 embedding 能力。没有相应 placement 时，服务会拒绝请求，而不是把普通聊天模型伪装成对应能力。
 - 优先选择客户端支持的 Chat Completions 流程；不要假定 `/v1/responses` 或厂商私有扩展存在。
 
@@ -373,6 +412,8 @@ print(response.choices[0].message.content)
 | `504` | 在调用预算内未完成 | 适度提高客户端超时或缩短上下文；不要用无限重试掩盖容量问题。 |
 
 `/health` 返回成功只表示门面进程存活；模型可用性仍以 `/v1/models` 与具体调用的 typed 结果为准。
+
+若 Pi/OMP 在旧版服务上反复得到 `400 invalid`，并且 AetherForge 到私有 UDS 显示 `422`，通常是 SDK 使用了 `max_completion_tokens` 或 bounded `strict` 工具定义而服务尚未升级。升级到 v3.0.7 或更高版本；不要用移除全部工具、无限重试或直连后端来掩盖协议不兼容。
 
 ## 12. 排障顺序
 

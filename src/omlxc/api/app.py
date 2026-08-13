@@ -14,7 +14,7 @@ import anyio
 from fastapi import FastAPI, Header, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 from starlette.responses import Response
 from starlette.types import Message, Receive, Scope, Send
 
@@ -137,7 +137,12 @@ class OpenAIChatBody(ApiModel):
     model: str = Field(min_length=1, max_length=512)
     messages: tuple[OpenAIChatMessage, ...] = Field(min_length=1, max_length=256)
     stream: bool = False
-    max_tokens: int = Field(default=64, gt=0, le=1_000_000)
+    max_tokens: int = Field(
+        default=64,
+        gt=0,
+        le=1_000_000,
+        validation_alias=AliasChoices("max_tokens", "max_completion_tokens"),
+    )
     temperature: float = Field(default=0.0, ge=0, le=2)
     profile: RouteProfile = RouteProfile.INTERACTIVE
     thinking: bool = False
@@ -145,6 +150,8 @@ class OpenAIChatBody(ApiModel):
     timeout_seconds: float = Field(default=120.0, gt=0, le=3600)
     tools: tuple[ChatTool, ...] = Field(default=(), max_length=128)
     tool_choice: ToolChoice | None = None
+    parallel_tool_calls: bool = False
+    store: bool = False
     stream_options: OpenAIStreamOptions | None = None
 
     @field_validator("messages")

@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.7 — 2026-08-13
+
+- Accept the current Pi/oh-my-pi OpenAI Chat Completions request shape,
+  including `max_completion_tokens`, bounded strict tool definitions,
+  `parallel_tool_calls`, and the optional non-persistence hint.
+- Preserve the existing internal generation budget, tool bounds, and
+  fail-closed routing behavior while adding this wire compatibility.
+
 ## 3.0.6 — 2026-08-13
 
 - Preserve the legacy 32K input context contract during JSON migration instead

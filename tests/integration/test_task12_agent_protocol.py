@@ -202,3 +202,71 @@ async def test_openai_nonstream_and_stream_preserve_typed_tool_calls() -> None:
     assert data[1]["choices"][0]["delta"]["tool_calls"][0]["function"]["arguments"] == 'README.md"}'
     assert data[2]["choices"][0]["finish_reason"] == "tool_calls"
     assert stream.text.count("data: [DONE]") == 1
+
+
+@pytest.mark.asyncio
+async def test_openai_chat_accepts_pi_sdk_completion_fields() -> None:
+    service = AgentProtocolService()
+    service.events = (
+        StreamEvent(
+            kind=StreamEventKind.DONE,
+            request_id="unused",
+            emitted_content=False,
+            phase=StreamPhase.COMPLETE,
+            placement_id="placement-local",
+            backend_id="backend-local",
+        ),
+    )
+    transport = httpx.ASGITransport(app=create_app(inference=service))
+
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            json={
+                "model": "coding",
+                "messages": [{"role": "user", "content": "inspect"}],
+                "stream": True,
+                "stream_options": {"include_usage": True},
+                "max_completion_tokens": 321,
+                "parallel_tool_calls": True,
+                "tools": [
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": "tool_0",
+                            "description": "bounded test tool",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {"path": {"type": "string"}},
+                                "required": ["path"],
+                            },
+                            "strict": False,
+                        },
+                    }
+                ],
+                "store": False,
+            },
+        )
+
+    assert response.status_code == 200
+    assert service.requests[0].max_tokens == 321
+
+
+@pytest.mark.asyncio
+async def test_openai_chat_rejects_conflicting_completion_token_fields() -> None:
+    service = AgentProtocolService()
+    transport = httpx.ASGITransport(app=create_app(inference=service))
+
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            json={
+                "model": "coding",
+                "messages": [{"role": "user", "content": "inspect"}],
+                "max_tokens": 100,
+                "max_completion_tokens": 200,
+            },
+        )
+
+    assert response.status_code == 422
+    assert service.requests == []
