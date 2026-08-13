@@ -426,3 +426,41 @@ the Workspace registry, client configuration, Documents domains, or test
 evidence. After this change reaches the accepted checkout, the remaining work
 is an explicit external provisioning step followed by a ChatGPT-originated
 read-only domain call; neither is represented as complete here.
+
+## 2026-08-13 Runtime facts owner and client-readiness reconciliation
+
+The first Documents execution-layer migration is now live in Workspace without
+making Documents a second runtime. Runtime PR #48 merged as `50ee0e9b`; root
+PR #1407 merged as `71dd4b9a` and points `projects/runtime` to that commit. The
+registered `documents-weijian-facts-audit` job reads the 卫健委 facts surface
+through the Runtime Documents plane and writes receipts only to Runtime state.
+Its live run validated 271 facts with no errors and four non-blocking warnings
+for facts without `entity_ids`; it did not write to the Documents content root.
+
+Current configuration evidence is deliberately separated from model/UI claims:
+
+- the accepted 12-domain project checker returned `ok=true`,
+  `domain_count=12`, `gateway_count=12`, and no errors;
+- the dedicated Codex Documents profile check returned `ok=true` (13 managed
+  MCP entries and 219 disabled user-scope Skill paths);
+- Claude Desktop's own configuration contains the Cockpit MCP entry;
+- the ZCode native configuration contains Cockpit under `mcp.servers`, retains
+  its caller-owned provider and model settings, and now passes the Workspace
+  checker with mode `0600`;
+- ChatGPT remains **unavailable**, not degraded-to-success: the Secure MCP
+  Tunnel client, Platform API key, and tunnel ID are absent. No tunnel,
+  credential, or ChatGPT developer-mode connection was created.
+
+The domain-project status projection is therefore complete for local gateway
+and Workspace-routing evidence, but not a claim of every client UI journey.
+Claude-3p, Codex, Zed, and ZCode UI/model behavior remain bounded by the
+per-client evidence already recorded above; ChatGPT requires an explicit
+external provisioning decision.
+
+The Documents-side retirement of the old 卫健委 dashboard script is committed
+locally on the isolated branch `agent/weijian-runtime-cleanup`
+(`32ef724`). The domain repository has no remote and its main worktree is
+simultaneously carrying the 271-fact conversion batch, so the cleanup has not
+been force-merged into that dirty worktree. This is an intentional pending
+integration, not evidence that the content batch or all Documents-local
+execution has already been retired.
