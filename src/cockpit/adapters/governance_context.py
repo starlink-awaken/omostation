@@ -984,32 +984,40 @@ def domain_model_freshness_status(
     """Project only a validated Runtime model-freshness receipt."""
 
     requested = domain_id.strip()
-    source = _registry_path(registry_path, documents_root=documents_root)
     workspace = resolve_workspace_root(workspace_root)
     binding = _binding_context(requested, workspace)
     binding_source = str(binding["source"])
     try:
-        source, _registry, domains = _load_domains(registry_path, documents_root=documents_root)
-        if not requested or not any(domain["id"] == requested for domain in domains):
-            raise ValueError(f"unknown domain: {requested}")
-        if binding["status"] != "ok":
-            raise ValueError(binding.get("error", "domain binding is unavailable"))
+        _source, _registry, domains = _load_domains(registry_path, documents_root=documents_root)
+        registered = requested and any(domain["id"] == requested for domain in domains)
+    except Exception:
+        return _model_freshness_unavailable(requested, binding_source, "domain_registry_unavailable")
+    if not registered:
+        return _model_freshness_unavailable(requested, binding_source, "domain_not_registered")
+    if binding["status"] != "ok":
+        return _model_freshness_unavailable(requested, binding_source, "domain_binding_unavailable")
+    try:
         job = _runtime_model_freshness_job(binding, requested)
+    except (OSError, ValueError):
+        return _model_freshness_unavailable(requested, binding_source, "runtime_job_unavailable")
+    try:
         state_root = _runtime_state_root(
             binding,
             runtime_state_root=runtime_state_root,
             documents_root=documents_root,
         )
-        evidence_path = state_root / job["evidence_relative_path"]
+    except (OSError, ValueError):
+        return _model_freshness_unavailable(requested, binding_source, "runtime_state_unavailable")
+    evidence_path = state_root / job["evidence_relative_path"]
+    try:
         receipt = _read_bounded_runtime_receipt(state_root, Path(job["evidence_relative_path"]))
         status, freshness = _validated_model_freshness_receipt(receipt, job)
-    except (OSError, ValueError) as exc:
-        evidence = locals().get("evidence_path")
+    except (OSError, ValueError):
         return _model_freshness_unavailable(
             requested,
             binding_source,
-            str(exc),
-            runtime_evidence=evidence if isinstance(evidence, Path) else None,
+            "runtime_receipt_unavailable",
+            runtime_evidence=evidence_path,
         )
 
     return {

@@ -864,6 +864,37 @@ def test_domain_model_freshness_projects_only_the_bounded_runtime_receipt(
     assert "fixture private model body" not in json.dumps(result)
 
 
+@pytest.mark.parametrize("registry_state", ["missing", "malformed"])
+def test_domain_model_freshness_redacts_documents_registry_failures(
+    tmp_path: Path,
+    registry_state: str,
+) -> None:
+    gc = _adapter()
+    workspace_root = tmp_path / "workspace"
+    documents_root = tmp_path / "Documents-private"
+    registry_path = documents_root / "private-domain-registry.yaml"
+    documents_root.mkdir()
+    _write_binding_registry(workspace_root, {})
+    if registry_state == "malformed":
+        registry_path.write_text("not: [valid", encoding="utf-8")
+
+    result = gc.domain_model_freshness_status(
+        "vault",
+        workspace_root=workspace_root,
+        registry_path=registry_path,
+        documents_root=documents_root,
+    )
+
+    encoded = json.dumps(result, ensure_ascii=False)
+    assert result["status"] == "unavailable"
+    assert result["available"] is False
+    assert result["error"] == "domain_registry_unavailable"
+    assert result["sources"]["domain_registry"] == "l4-domain-registry"
+    assert str(documents_root) not in encoded
+    assert registry_path.name not in encoded
+    assert str(registry_path) not in encoded
+
+
 @pytest.mark.parametrize(
     ("owner_status", "job_status", "exit_code", "available"),
     [
@@ -905,6 +936,8 @@ def test_domain_model_freshness_accepts_only_contract_status_relationships(
     assert result["schema"] == "cockpit.domain-model-freshness.v1"
     assert result["sources"]["domain_registry"] == "l4-domain-registry"
     assert str(documents_root) not in json.dumps(result)
+    if owner_status == "unavailable":
+        assert result["freshness"]["error"] == "facts_file_missing"
 
 
 @pytest.mark.parametrize(
@@ -939,6 +972,7 @@ def test_domain_model_freshness_rejects_malformed_owner_evidence(
     assert result["status"] == "unavailable"
     assert result["available"] is False
     assert result["freshness"] is None
+    assert result["error"] == "runtime_receipt_unavailable"
 
 
 @pytest.mark.parametrize(
@@ -972,6 +1006,7 @@ def test_domain_model_freshness_rejects_malformed_runtime_receipt(
     assert result["schema"] == "cockpit.domain-model-freshness.v1"
     assert result["status"] == "unavailable"
     assert result["available"] is False
+    assert result["error"] == "runtime_receipt_unavailable"
 
 
 def test_domain_model_freshness_fails_closed_for_missing_symlinked_and_oversized_receipts(
@@ -986,6 +1021,7 @@ def test_domain_model_freshness_fails_closed_for_missing_symlinked_and_oversized
     missing = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
     assert missing["status"] == "unavailable"
     assert missing["available"] is False
+    assert missing["error"] == "runtime_receipt_unavailable"
 
     state_root = _write_runtime_model_freshness_receipt(tmp_path)
     receipt = (
@@ -1000,6 +1036,7 @@ def test_domain_model_freshness_fails_closed_for_missing_symlinked_and_oversized
     malformed = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
     assert malformed["status"] == "unavailable"
     assert malformed["available"] is False
+    assert malformed["error"] == "runtime_receipt_unavailable"
 
     receipt.write_bytes(valid_receipt)
     target = tmp_path / "caller-owned-model-freshness.json"
@@ -1009,24 +1046,26 @@ def test_domain_model_freshness_fails_closed_for_missing_symlinked_and_oversized
     symlinked = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
     assert symlinked["status"] == "unavailable"
     assert symlinked["available"] is False
+    assert symlinked["error"] == "runtime_receipt_unavailable"
 
     receipt.unlink()
     receipt.write_bytes(b"{" + b" " * (32 * 1024))
     oversized = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
     assert oversized["status"] == "unavailable"
     assert oversized["available"] is False
+    assert oversized["error"] == "runtime_receipt_unavailable"
 
 
 @pytest.mark.parametrize(
-    ("mutation", "domain_id"),
+    ("mutation", "domain_id", "expected_error"),
     [
-        ("duplicate", "vault"),
-        ("wrong_action", "vault"),
-        ("wrong_owner", "vault"),
-        ("wrong_schema", "vault"),
-        ("traversal", "vault"),
-        ("wrong_safe_path", "vault"),
-        ("unchanged", "unknown"),
+        ("duplicate", "vault", "runtime_job_unavailable"),
+        ("wrong_action", "vault", "runtime_job_unavailable"),
+        ("wrong_owner", "vault", "runtime_job_unavailable"),
+        ("wrong_schema", "vault", "runtime_job_unavailable"),
+        ("traversal", "vault", "runtime_job_unavailable"),
+        ("wrong_safe_path", "vault", "runtime_job_unavailable"),
+        ("unchanged", "unknown", "domain_not_registered"),
     ],
 )
 def test_domain_model_freshness_rejects_invalid_binding_or_domain(
@@ -1034,6 +1073,7 @@ def test_domain_model_freshness_rejects_invalid_binding_or_domain(
     monkeypatch: pytest.MonkeyPatch,
     mutation: str,
     domain_id: str,
+    expected_error: str,
 ) -> None:
     gc = _adapter()
     registry_path = _write_domain_registry(tmp_path)
@@ -1062,8 +1102,39 @@ def test_domain_model_freshness_rejects_invalid_binding_or_domain(
     assert result["schema"] == "cockpit.domain-model-freshness.v1"
     assert result["status"] == "unavailable"
     assert result["available"] is False
-    if mutation == "wrong_safe_path":
-        assert "unsupported evidence path" in result["error"]
+    assert result["error"] == expected_error
+
+
+def test_domain_model_freshness_maps_binding_and_runtime_state_failures_to_stable_categories(tmp_path: Path) -> None:
+    gc = _adapter()
+    workspace_root = tmp_path / "workspace"
+    documents_root = tmp_path / "Documents-private"
+    registry_path = _write_domain_registry(documents_root)
+    workspace_root.mkdir()
+
+    missing_binding = gc.domain_model_freshness_status(
+        "vault",
+        workspace_root=workspace_root,
+        registry_path=registry_path,
+        documents_root=documents_root,
+    )
+    assert missing_binding["error"] == "domain_binding_unavailable"
+
+    _write_binding_registry(workspace_root, {})
+    overlapping_state = gc.domain_model_freshness_status(
+        "vault",
+        workspace_root=workspace_root,
+        registry_path=registry_path,
+        documents_root=documents_root,
+        runtime_state_root=documents_root / "runtime-state",
+    )
+    assert overlapping_state["error"] == "runtime_state_unavailable"
+
+    for result in (missing_binding, overlapping_state):
+        encoded = json.dumps(result, ensure_ascii=False)
+        assert result["status"] == "unavailable"
+        assert str(documents_root) not in encoded
+        assert registry_path.name not in encoded
 
 
 def test_domain_model_freshness_never_reads_documents_content(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -398,6 +398,28 @@ def test_model_freshness_json_preserves_envelope_and_exit_contract(monkeypatch, 
     assert "/Users/reviewer/Documents" not in output
 
 
+def test_model_freshness_json_actual_adapter_redacts_documents_registry_failure(tmp_path, monkeypatch, capsys):
+    workspace_root = tmp_path / "workspace"
+    documents_root = tmp_path / "Documents-private"
+    registry_path = documents_root / "private-domain-registry.yaml"
+    workspace_root.mkdir()
+    documents_root.mkdir()
+    monkeypatch.setenv("WORKSPACE_ROOT", str(workspace_root))
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    with patch("sys.argv", ["cockpit", "model-freshness", "vault", "--json"]):
+        assert main() == 2
+
+    output = capsys.readouterr().out
+    payload = json.loads(output)
+    assert payload["status"] == "unavailable"
+    assert payload["error"] == "domain_registry_unavailable"
+    assert payload["sources"]["domain_registry"] == "l4-domain-registry"
+    assert str(documents_root) not in output
+    assert registry_path.name not in output
+    assert str(registry_path) not in output
+
+
 def test_model_freshness_text_prints_only_status_and_aggregates(monkeypatch, capsys):
     from cockpit.commands import l4bridge
 
