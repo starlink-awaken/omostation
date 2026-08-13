@@ -9,7 +9,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 WORKSPACE = Path(__file__).resolve().parents[2]
 
 # 治本 followup E (2026-07-04): pre-push hook 跑时 git 设 GIT_DIR/GIT_WORK_TREE 指向主仓,
@@ -83,11 +82,15 @@ def gitlink_sha(path: str, source: str) -> str | None:
     return parts[2] if len(parts) >= 3 and parts[0] == "160000" else None
 
 
-def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
+def remote_contains(
+    path: str, sha: str, *, fetch: bool, require_main: bool = False
+) -> tuple[bool, str]:
     submodule_dir = WORKSPACE / path
     if not submodule_dir.exists():
         return False, "submodule working tree missing"
     if not (submodule_dir / ".git").exists():
+        if require_main:
+            return False, "submodule not initialized; cannot verify origin/main ancestry"
         return (
             True,
             "submodule not initialized (partial worktree) - CI full checkout will verify",
@@ -102,6 +105,8 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
     )
     # stdout 检查覆盖失败 (空) + false 两种非 init 情况, returncode 冗余
     if init_check.stdout.strip() != "true":
+        if require_main:
+            return False, "submodule not initialized; cannot verify origin/main ancestry"
         return (
             True,
             "submodule not initialized (partial worktree) - CI full checkout will verify",
@@ -124,6 +129,15 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
             fetch_result = run(["git", "fetch", "--quiet", "origin", refspec], cwd=submodule_dir)
         if fetch_result.returncode != 0:
             return False, f"fetch failed: {fetch_result.stderr.strip()}"
+
+    if require_main:
+        main_ref = "refs/remotes/origin/main"
+        contains_main = run(
+            ["git", "merge-base", "--is-ancestor", sha, main_ref], cwd=submodule_dir
+        )
+        if contains_main.returncode == 0:
+            return True, main_ref
+        return False, f"not contained in {main_ref}"
 
     contains = run(["git", "branch", "-r", "--contains", sha], cwd=submodule_dir)
     branches = [
@@ -159,7 +173,12 @@ def changed_submodules(base_ref: str, source: str) -> set[str] | None:
 
 
 def check(
-    source: str, *, fetch: bool, skip_paths: set[str] | None = None, only_paths: set[str] | None = None
+    source: str,
+    *,
+    fetch: bool,
+    require_main: bool = False,
+    skip_paths: set[str] | None = None,
+    only_paths: set[str] | None = None,
 ) -> dict[str, object]:
     findings: list[dict[str, object]] = []
     checked = 0
@@ -191,13 +210,16 @@ def check(
             findings.append({"path": path, "sha": None, "ok": False, "reason": f"no {source} gitlink"})
             continue
         checked += 1
-        ok, detail = remote_contains(path, sha, fetch=fetch)
+        ok, detail = remote_contains(
+            path, sha, fetch=fetch, require_main=require_main
+        )
         findings.append({"path": path, "sha": sha, "ok": ok, "reason": detail})
     failures = [item for item in findings if not item["ok"]]
     return {
         "ok": not failures,
         "source": source,
         "fetch": fetch,
+        "require_main": require_main,
         "checked": checked,
         "skipped": skipped,
         "failures": failures,
@@ -209,6 +231,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Verify submodule gitlinks are reachable from origin")
     parser.add_argument("--source", choices=("head", "index", "worktree"), default="head")
     parser.add_argument("--fetch", action="store_true", help="Fetch origin branches before checking")
+    parser.add_argument(
+        "--require-main",
+        action="store_true",
+        help="Require each gitlink to be an ancestor of refs/remotes/origin/main, "
+        "not merely reachable from any origin branch",
+    )
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     parser.add_argument("--skip", nargs="*", default=[], help="Submodule paths to skip (known false positives)")
     parser.add_argument("--skip-file", type=str, help="File with submodule paths to skip (one per line)")
@@ -254,7 +282,13 @@ def main() -> int:
         else:
             mode = f"changed-from {args.changed_from}"
 
-    report = check(args.source, fetch=args.fetch, skip_paths=skip_paths, only_paths=only_paths)
+    report = check(
+        args.source,
+        fetch=args.fetch,
+        require_main=args.require_main,
+        skip_paths=skip_paths,
+        only_paths=only_paths,
+    )
     report["mode"] = mode
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))

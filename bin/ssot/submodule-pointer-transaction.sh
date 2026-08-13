@@ -41,12 +41,12 @@ trap 'rmdir "$lock"' EXIT
 echo "== submodule pointer transaction =="
 if [ "$dry" = "1" ]; then
   bash "$ROOT/bin/ssot/sync-submodules-push.sh" --dry-run
-  python3 "$ROOT/bin/ssot/submodule-reachability-gate.py" --source worktree
+  python3 "$ROOT/bin/ssot/submodule-reachability-gate.py" --source worktree --require-main
   exit 0
 fi
 
 bash "$ROOT/bin/ssot/sync-submodules-push.sh"
-python3 "$ROOT/bin/ssot/submodule-reachability-gate.py" --source worktree --fetch
+python3 "$ROOT/bin/ssot/submodule-reachability-gate.py" --source worktree --fetch --require-main
 
 git config --file .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}' | xargs git add --
 python3 "$ROOT/bin/change-lane-check.py" --staged
