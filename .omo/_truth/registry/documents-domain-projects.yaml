@@ -90,7 +90,16 @@ clients:
     requires_developer_mode: true
     setup_ref: "https://developers.openai.com/plugins/deploy/connect-chatgpt"
     tunnel_ref: "https://developers.openai.com/api/docs/guides/secure-mcp-tunnels"
-    note: "Developer mode connects a public HTTPS MCP endpoint or Secure MCP Tunnel; local Claude/Codex JSON is not consumed."
+    tunnel_contract:
+      owner: workspace
+      checker_ref: bin/gac/documents-chatgpt-tunnel.py
+      transport: secure_mcp_tunnel
+      local_entrypoint: cockpit-documents-mcp
+      tool_profile: content-domain
+      tunnel_profile: documents-readonly
+      tunnel_id_env: DOCUMENTS_CHATGPT_TUNNEL_ID
+      api_key_env: CONTROL_PLANE_API_KEY
+    note: "Developer mode uses the bounded Documents read MCP through a Secure MCP Tunnel; Platform tunnel state and credentials remain external."
 
 profiles:
   content-domain:
