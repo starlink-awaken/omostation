@@ -44,6 +44,16 @@ _CHATGPT_WEB_BINDING = {
     "setup_ref": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
     "tunnel_ref": "https://developers.openai.com/api/docs/guides/secure-mcp-tunnels",
 }
+_CHATGPT_TUNNEL_CONTRACT = {
+    "owner": "workspace",
+    "checker_ref": "bin/gac/documents-chatgpt-tunnel.py",
+    "transport": "secure_mcp_tunnel",
+    "local_entrypoint": "cockpit-documents-mcp",
+    "tool_profile": "content-domain",
+    "tunnel_profile": "documents-readonly",
+    "tunnel_id_env": "DOCUMENTS_CHATGPT_TUNNEL_ID",
+    "api_key_env": "CONTROL_PLANE_API_KEY",
+}
 _CAPABILITY_ROUTE_CONTRACTS = {
     "skills": ("workspace-skills", "directory"),
     "workflows": ("workspace-workflow-mesh", "file"),
@@ -431,6 +441,10 @@ def check_domain_projects(
                 ):
                     required = "null" if expected is None else str(expected).lower()
                     errors.append(f"clients.chatgpt_web.{field} must be {required}")
+            if chatgpt_web.get("tunnel_contract") != _CHATGPT_TUNNEL_CONTRACT:
+                errors.append(
+                    "clients.chatgpt_web.tunnel_contract must match the Workspace contract"
+                )
         instruction_files = {
             instruction_file
             for client in clients.values()
