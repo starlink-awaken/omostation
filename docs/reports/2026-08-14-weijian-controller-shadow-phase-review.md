@@ -88,3 +88,34 @@ Documents 内执行或写入任何内容。
 历史语义，不因新增独立 owner 而回写或改释旧收据；旧 controller 与其定时调用继续是
 唯一生效路径。CR24 的阶段完成状态只能在 Workspace 根变更合并且安装态 smoke 成功后
 更新；本补记不声称 ChatGPT Secure MCP Tunnel 已安装或可用。
+
+## 2026-08-14 CR24 已安装闭环结论
+
+CR24 独立 owner 已完成代码、Workspace binding 与已安装命令行/MCP 协议三层闭环。
+Runtime 最终合并头为 `fe3926ec559aba4f879b88dcf276abd60a7147c5`，Cockpit 最终
+合并头为 `211f0abd5a1cdcefd1e889fdb707e8d4ba3e79a2`；Workspace binding 由
+PR #1441 的 `1ac8d2f881451794c561aae205a22073db49172f` 合并，客户端工具绑定测试
+清理由 PR #1442 的 `ebfa8bdcf8b8da896ee1fa77b8992e3edb51590e` 合并。
+
+在 accepted Workspace 上重装两个已合并包后，以全新、位于 Documents 之外的 Runtime
+state root 运行真实作业。当前内容返回 `attention` / exit 1：共检查 31 个模型 Markdown，
+其中 31 个 stale、0 个 fresh、0 个无效 reviewed 日期、0 个不可读普通文件；收据
+`evidence_error=null`，schema 与 job/owner 均匹配。声明的 `facts.md` 与 `models`
+输入在运行前后的内容摘要和元数据摘要完全一致，收据只写入临时 Runtime state。
+
+installed Cockpit CLI 返回同一 `attention` 聚合；真实 `cockpit-mcp` stdio 会话已完成
+`initialize`、`tools/list` 与 `tools/call`，模型新鲜度结果为
+`cockpit.domain-model-freshness.v1` 且不暴露 Documents 物理路径或收据文件名。
+`domain_context(work-weijian)` 同时从 Workspace MCP `read_tools` 与
+`content-domain.allowed_workspace_tools` 发现 `domain_model_freshness_status`，
+证明能力由 Workspace SSOT 投影，而不是手抄进 Documents 网关。
+
+复审重跑了 Runtime/Cockpit 变更面的聚焦测试与 Ruff、Workspace binding/tunnel 聚焦
+测试、真实 12 域 binding checker，以及三个合并范围的 `git diff --check`；全部通过。
+这只证明 CR24 独立 owner 和客户端只读投影可用，不代表 31 个 stale 项已整改，不代表
+controller-shadow v2 的历史观测语义发生变化，也不代表任何 Desktop UI 重载或 ChatGPT
+Secure MCP Tunnel 已配置。
+
+下一条独立规则建议选择 CR08 断链检查：它与此前 KEMS/符号链接可达性异常最接近，且可
+继续沿用“Runtime 单 owner、state-only receipt、Cockpit 只读投影、无 Documents 写入”的
+最小闭环。该建议不是本阶段切换或实现承诺。
