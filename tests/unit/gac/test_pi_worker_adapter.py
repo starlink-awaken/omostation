@@ -14,6 +14,7 @@ import time
 from pathlib import Path
 
 import pytest
+import yaml
 
 SCRIPT = Path(__file__).parents[3] / "bin/gac/pi-worker-adapter.py"
 SPEC = importlib.util.spec_from_file_location("pi_worker_adapter", SCRIPT)
@@ -95,6 +96,37 @@ def healthy() -> dict[str, str]:
 
 def no_marker(_marker: str) -> dict[int, int]:
     return {}
+
+
+def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
+    registry_path = SCRIPT.parents[2] / ".omo" / "_truth" / "registry" / "workers.yaml"
+    documents = list(yaml.safe_load_all(registry_path.read_text(encoding="utf-8")))
+    registry = next(
+        document
+        for document in documents
+        if isinstance(document, dict) and "workers" in document
+    )
+    workers = {worker["id"]: worker for worker in registry["workers"]}
+    pi = workers["pi"]
+
+    assert pi["enabled"] is True
+    assert pi["admission_state"] == "admitted"
+    assert pi["allowed_operation_level"] == "L0"
+    assert pi["capabilities"] == ["reasoning", "verification"]
+    assert pi["write_scope"] == {"mode": "none"}
+    assert pi["transports"] == {
+        "cli_prompt": {
+            "command": (
+                "/usr/bin/python3 bin/gac/pi-worker-adapter.py run --execute "
+                '--timeout-seconds 120 --prompt "{prompt}"'
+            )
+        }
+    }
+
+    for candidate_id in ("oh-my-pi", "opencode", "grok", "mimo", "agy", "kilo"):
+        candidate = workers[candidate_id]
+        assert candidate["enabled"] is False
+        assert candidate["admission_state"] == "declared"
 
 
 def test_dry_run_never_probes_health_or_starts_process(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
