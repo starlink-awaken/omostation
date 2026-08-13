@@ -984,25 +984,12 @@ def _module_status(module_name: str, owner: str) -> dict[str, Any]:
 
 
 def _content_status(documents_root: Path) -> dict[str, Any]:
-    try:
-        from l4_kernel.content_plane import audit_content_plane  # type: ignore[import-not-found]
-
-        report = audit_content_plane(documents_root)
-    except Exception as exc:
-        return {
-            "owner": "l4-kernel",
-            "status": "unavailable",
-            "available": False,
-            "root": str(documents_root),
-            "error": str(exc),
-        }
     return {
         "owner": "l4-kernel",
-        "status": "ok" if report.ok else "degraded",
-        "available": True,
-        "root": str(report.root),
-        "counts": report.counts,
-        "violations": [item.to_dict() for item in report.violations],
+        "status": "not_run",
+        "available": False,
+        "root": str(documents_root),
+        "reason": "full Documents content audit is on-demand; run cockpit kems scan",
     }
 
 

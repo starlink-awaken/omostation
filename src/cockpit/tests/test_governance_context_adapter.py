@@ -688,6 +688,24 @@ def test_domain_facts_validation_fails_closed_for_missing_or_symlinked_receipts(
     assert symlinked["available"] is False
 
 
+def test_kems_status_leaves_full_content_scan_to_explicit_command(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    registry_path = _write_domain_registry(tmp_path)
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = _adapter().kems_status(documents_root=tmp_path)
+
+    assert result["status"] == "degraded"
+    assert result["content_audit"] == {
+        "owner": "l4-kernel",
+        "status": "not_run",
+        "available": False,
+        "root": str(tmp_path.resolve()),
+        "reason": "full Documents content audit is on-demand; run cockpit kems scan",
+    }
+
+
 def test_dashboard_governance_routes_use_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     import asyncio
 

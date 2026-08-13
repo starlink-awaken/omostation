@@ -226,7 +226,10 @@ class TestKemsCommand:
                 "available": True,
                 "documents_root": "/tmp/Documents",
                 "domains": {"status": "ok", "total": 12},
-                "content_audit": {"status": "degraded", "violations": [{"code": "L4-CONTENT-001"}]},
+                "content_audit": {
+                    "status": "not_run",
+                    "reason": "full Documents content audit is on-demand; run cockpit kems scan",
+                },
                 "owners": {"omo": {"status": "ok"}, "kairon": {"status": "unavailable"}},
             },
         )
@@ -236,7 +239,7 @@ class TestKemsCommand:
         assert rc == 1
         output = capsys.readouterr().out
         assert "degraded" in output
-        assert "L4-CONTENT-001" in output
+        assert "cockpit kems scan" in output
 
 
 class TestHealthCommand:
