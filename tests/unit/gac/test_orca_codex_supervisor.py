@@ -361,9 +361,7 @@ def test_start_rejects_orca_codex_profile_bypass_before_dispatch(
             {
                 "terminal": {
                     "handle": "terminal-001",
-                    "tail": [
-                        "codex --dangerously-bypass-approvals-and-sandbox"
-                    ],
+                    "tail": ["codex --dangerously-bypass-approvals-and-sandbox"],
                 }
             }
         ),
@@ -699,6 +697,61 @@ def test_start_rejects_symlink_prompt_ref_before_orca_calls(tmp_path: Path) -> N
     assert receipt["ok"] is False
     assert receipt["stage"] == "input"
     assert receipt["reason"] == "prompt_ref_unsafe"
+    assert runner.calls == []
+
+
+def test_start_accepts_plus_sign_in_dispatch_id(tmp_path: Path) -> None:
+    """Realistic omo_dispatch_id with +0000 suffix must pass identity validation."""
+    module = _load_module()
+    runner = FakeRunner(_start_responses(tmp_path))
+    identity = _identity(tmp_path)
+    identity["omo_dispatch_id"] = "ctx_1d58fa0dd44d+0000"
+
+    receipt = module.start_supervised_codex(
+        **identity,
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    assert receipt["binding"]["omo_dispatch_id"] == "ctx_1d58fa0dd44d+0000"
+    assert len(runner.calls) > 0  # identity passed validation, reached runner
+
+
+@pytest.mark.parametrize(
+    "bad_char",
+    [" ", "\t", "\n", "\r", "/", "\\", ";", "|", "&", "$", "`", "'", '"', "(", ")"],
+    ids=[
+        "space",
+        "tab",
+        "newline",
+        "carriage-return",
+        "slash",
+        "backslash",
+        "semicolon",
+        "pipe",
+        "ampersand",
+        "dollar",
+        "backtick",
+        "single-quote",
+        "double-quote",
+        "lparen",
+        "rparen",
+    ],
+)
+def test_start_rejects_shell_dangerous_chars_in_dispatch_id(
+    tmp_path: Path, bad_char: str
+) -> None:
+    """Shell-dangerous / path-traversal chars in dispatch ID must still be rejected."""
+    module = _load_module()
+    runner = FakeRunner([])
+    identity = _identity(tmp_path)
+    identity["omo_dispatch_id"] = f"ctx_abc{bad_char}def"
+
+    receipt = module.start_supervised_codex(**identity, runner=runner)
+
+    assert receipt["ok"] is False
+    assert receipt["reason"] == "identity_invalid"
     assert runner.calls == []
 
 
