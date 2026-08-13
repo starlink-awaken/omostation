@@ -55,13 +55,74 @@ def _identity(
     }
 
 
-def _start_responses() -> list[tuple[int, object, str]]:
+def _start_responses(workspace: Path) -> list[tuple[int, object, str]]:
     return [
         (0, _ok({"app": {"running": True}, "runtime": {"state": "ready"}}), ""),
-        (0, _ok({"run": {"id": "orca-run-001"}}), ""),
+        (
+            0,
+            _ok(
+                {
+                    "run": {
+                        "id": "orca-run-001",
+                        "coordinator_handle": "coordinator-001",
+                    }
+                }
+            ),
+            "",
+        ),
         (
             0,
             _ok({"task": {"id": "orca-task-001", "run_id": "orca-run-001"}}),
+            "",
+        ),
+        (
+            0,
+            _ok(
+                {
+                    "terminal": {
+                        "handle": "terminal-001",
+                        "worktreePath": str(workspace),
+                        "connected": True,
+                        "writable": True,
+                    }
+                }
+            ),
+            "",
+        ),
+        (
+            0,
+            _ok({"wait": {"condition": "tui-idle", "satisfied": True}}),
+            "",
+        ),
+        (
+            0,
+            _ok(
+                {
+                    "terminal": {
+                        "handle": "terminal-001",
+                        "worktreePath": str(workspace),
+                        "connected": True,
+                        "writable": True,
+                    }
+                }
+            ),
+            "",
+        ),
+        (
+            0,
+            _ok(
+                {
+                    "terminal": {
+                        "handle": "terminal-001",
+                        "tail": [
+                            (
+                                "/opt/homebrew/bin/codex --ask-for-approval "
+                                f"on-request --sandbox read-only -C {workspace}"
+                            )
+                        ],
+                    }
+                }
+            ),
             "",
         ),
         (
@@ -92,10 +153,14 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
     tmp_path: Path,
 ) -> None:
     module = _load_module()
-    runner = FakeRunner(_start_responses())
+    runner = FakeRunner(_start_responses(tmp_path))
     identity = _identity(tmp_path)
 
-    receipt = module.start_supervised_codex(**identity, runner=runner)
+    receipt = module.start_supervised_codex(
+        **identity,
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
 
     assert receipt == {
         "schema": "orca-codex-supervisor/v1",
@@ -111,6 +176,12 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
             "terminal_handle": "terminal-001",
         },
         "human_action_required": True,
+        "approval": {
+            "mode": "manual_click",
+            "policy": "on-request",
+            "sandbox": "read-only",
+            "write_requires_human_click": True,
+        },
         "input_accepted": "unproven",
         "model_completion": "unproven",
     }
@@ -138,6 +209,50 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
         ),
         (
             "orca",
+            "terminal",
+            "create",
+            "--worktree",
+            f"path:{tmp_path}",
+            "--title",
+            "supervised-codex-OMO-TASK-001",
+            "--command",
+            f"/opt/homebrew/bin/codex --ask-for-approval on-request --sandbox read-only -C {tmp_path}",
+            "--json",
+        ),
+        (
+            "orca",
+            "terminal",
+            "wait",
+            "--terminal",
+            "terminal-001",
+            "--for",
+            "tui-idle",
+            "--timeout-ms",
+            "60000",
+            "--json",
+        ),
+        (
+            "orca",
+            "terminal",
+            "show",
+            "--terminal",
+            "terminal-001",
+            "--json",
+        ),
+        (
+            "orca",
+            "terminal",
+            "read",
+            "--terminal",
+            "terminal-001",
+            "--cursor",
+            "0",
+            "--limit",
+            "80",
+            "--json",
+        ),
+        (
+            "orca",
             "orchestration",
             "worker-start",
             "--run",
@@ -146,8 +261,10 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
             "orca-task-001",
             "--worktree",
             "current",
-            "--agent",
-            "codex",
+            "--terminal",
+            "terminal-001",
+            "--from",
+            "coordinator-001",
             "--json",
         ),
     ]
@@ -157,11 +274,12 @@ def test_start_derives_one_stable_retry_request_per_orca_mutation(
     tmp_path: Path,
 ) -> None:
     module = _load_module()
-    runner = FakeRunner(_start_responses())
+    runner = FakeRunner(_start_responses(tmp_path))
 
     receipt = module.start_supervised_codex(
         **_identity(tmp_path),
         idempotency_key="retry-request-001",
+        codex_executable="/opt/homebrew/bin/codex",
         runner=runner,
     )
 
@@ -173,7 +291,7 @@ def test_start_derives_one_stable_retry_request_per_orca_mutation(
     assert set(stage_ids) == {"run-create", "task-create", "worker-start"}
     assert len(set(stage_ids.values())) == 3
     for command, stage in zip(
-        runner.calls[1:],
+        (runner.calls[1], runner.calls[2], runner.calls[-1]),
         ("run-create", "task-create", "worker-start"),
         strict=True,
     ):
@@ -184,7 +302,7 @@ def test_start_fails_closed_on_unbound_worker_receipt_without_cleanup(
     tmp_path: Path,
 ) -> None:
     module = _load_module()
-    responses = _start_responses()
+    responses = _start_responses(tmp_path)
     responses[-1] = (
         0,
         _ok(
@@ -201,7 +319,11 @@ def test_start_fails_closed_on_unbound_worker_receipt_without_cleanup(
     runner = FakeRunner(responses)
     identity = _identity(tmp_path)
 
-    receipt = module.start_supervised_codex(**identity, runner=runner)
+    receipt = module.start_supervised_codex(
+        **identity,
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
 
     assert receipt == {
         "schema": "orca-codex-supervisor/v1",
@@ -220,12 +342,50 @@ def test_start_fails_closed_on_unbound_worker_receipt_without_cleanup(
         "residual_resources": [
             "orca:run:orca-run-001",
             "orca:task:orca-task-001",
+            "orca:terminal:terminal-001",
             "orca:task:wrong-task",
             "orca:dispatch:orca-dispatch-001",
-            "orca:terminal:terminal-001",
         ],
     }
     assert not any("worker-stop" in command for command in runner.calls)
+
+
+def test_start_rejects_orca_codex_profile_bypass_before_dispatch(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    responses = _start_responses(tmp_path)
+    responses[-2] = (
+        0,
+        _ok(
+            {
+                "terminal": {
+                    "handle": "terminal-001",
+                    "tail": [
+                        "codex --dangerously-bypass-approvals-and-sandbox"
+                    ],
+                }
+            }
+        ),
+        "",
+    )
+    runner = FakeRunner(responses[:-1])
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "terminal_read"
+    assert receipt["reason"] == "codex_launch_unverified"
+    assert receipt["residual_resources"] == [
+        "orca:run:orca-run-001",
+        "orca:task:orca-task-001",
+        "orca:terminal:terminal-001",
+    ]
+    assert not any("worker-start" in command for command in runner.calls)
 
 
 def test_start_rejects_non_json_status_before_orca_mutations(tmp_path: Path) -> None:
@@ -270,7 +430,7 @@ def test_task_create_failure_preserves_created_run(
     tmp_path: Path, task_response: tuple[int, object, str], reason: str
 ) -> None:
     module = _load_module()
-    runner = FakeRunner(_start_responses()[:2] + [task_response])
+    runner = FakeRunner(_start_responses(tmp_path)[:2] + [task_response])
 
     receipt = module.start_supervised_codex(**_identity(tmp_path), runner=runner)
 
@@ -326,15 +486,18 @@ def test_worker_start_failure_preserves_created_run_and_task(
     residual_resources: list[str],
 ) -> None:
     module = _load_module()
-    runner = FakeRunner(_start_responses()[:3] + [worker_response])
+    runner = FakeRunner(_start_responses(tmp_path)[:-1] + [worker_response])
 
     receipt = module.start_supervised_codex(**_identity(tmp_path), runner=runner)
 
     assert receipt["ok"] is False
     assert receipt["stage"] == "worker_start"
     assert receipt["reason"] == reason
-    assert receipt["residual_resources"] == residual_resources
-    assert len(runner.calls) == 4
+    expected = [*_run_task_residuals(), "orca:terminal:terminal-001"]
+    if "orca:dispatch:orca-dispatch-001" in residual_resources:
+        expected.append("orca:dispatch:orca-dispatch-001")
+    assert receipt["residual_resources"] == expected
+    assert len(runner.calls) == 8
 
 
 def test_collect_returns_only_digest_after_succeeded_worker_done_and_transcript(
