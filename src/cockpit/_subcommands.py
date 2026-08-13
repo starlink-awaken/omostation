@@ -603,7 +603,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
         epilog='子命令: plan / run / history / approve (MetaOS) | ecos (L0 M1 引擎)\n示例:\n  cockpit workflow ecos list\n  cockpit workflow plan "目标"\n  cockpit workflow history',
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    wf_p.add_argument("workflow_args", nargs="*", help="workflow 子命令和参数")
+    wf_p.add_argument("workflow_args", nargs=argparse.REMAINDER, help="workflow 子命令和参数")
 
     agent_wf_p = sub.add_parser(
         "agent-workflow",

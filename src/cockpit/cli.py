@@ -589,6 +589,16 @@ def main() -> int:
         if wf_args and wf_args[0] == "mesh":
             from cockpit.commands.workflow_mesh import cmd_workflow_mesh
 
+            # personal dogfood CLI (thin HTTP client)
+            if len(wf_args) > 1 and wf_args[1] == "personal":
+                from cockpit.commands.workflow_mesh import cmd_personal
+
+                personal_args = argparse.Namespace(
+                    personal_command=wf_args[2] if len(wf_args) > 2 else None,
+                    rest=wf_args[3:] if len(wf_args) > 3 else [],
+                )
+                return cmd_personal(personal_args)
+
             mesh_args = argparse.Namespace(mesh_command=wf_args[1] if len(wf_args) > 1 else None)
             if len(wf_args) > 2 and wf_args[1] == "events":
                 try:

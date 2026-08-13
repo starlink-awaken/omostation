@@ -20,6 +20,16 @@ jobs:
         run: uv run --no-project --with ruff ruff check src/cockpit/web/api_kems.py tests/test_api_kems.py tests/test_api_kems_ocr.py
       - name: Ruff format check
         run: uv run --no-project --with ruff ruff format src/cockpit/web/api_kems.py tests/test_api_kems.py tests/test_api_kems_ocr.py --check
+      - name: Ruff personal capability checks
+        run: |
+          uv run --no-project --with ruff ruff check \
+            src/cockpit/web/api_workflow_mesh_operations.py \
+            src/cockpit/commands/workflow_mesh.py \
+            src/cockpit/tests/test_api_episode_projection.py \
+            src/cockpit/tests/test_api_personal_episode.py \
+            src/cockpit/tests/test_api_personal_signal.py \
+            src/cockpit/tests/test_cli_personal_dogfood.py \
+            tests/test_personal_feedback_boundaries.py
       - name: Contract Gatekeeper
         run: python3 scripts/contract_gatekeeper.py src/cockpit/web/api_kems.py tests/test_api_kems_ocr.py
 
@@ -36,3 +46,11 @@ jobs:
         run: |
           PYTHONPATH=src uv run --no-project --with pytest --with fastapi --with httpx --with pyyaml \
             pytest tests/test_api_kems.py tests/test_api_kems_ocr.py -q --tb=short
+      - name: Run personal capability tests
+        run: |
+          PYTHONPATH=src uv run --no-project \
+            --with pytest --with fastapi --with httpx --with pydantic --with pyyaml --with rich \
+            pytest \
+            src/cockpit/tests/test_api_episode_projection.py \
+            tests/test_personal_feedback_boundaries.py \
+            -q --tb=short

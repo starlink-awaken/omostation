@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
+import os
 from collections import Counter
 from pathlib import Path
 
@@ -203,4 +205,371 @@ def cmd_workflow_mesh(args: argparse.Namespace) -> int:
     console.print("  [cyan]cockpit workflow mesh status[/]    — 运行状态")
     console.print("  [cyan]cockpit workflow mesh delivery[/]  — delivery pipeline")
     console.print("  [cyan]cockpit workflow mesh events[/]    — 最近事件")
+    return 0
+
+
+# ── Personal dogfood CLI (thin HTTP client over existing APIs) ─────────
+
+
+def _base_url() -> str:
+    """Resolve cockpit HTTP API base from env (COCKPIT_API_URL or default 8090)."""
+    return os.environ.get("COCKPIT_API_URL", "http://127.0.0.1:8090")
+
+
+def _api_post(path: str, payload: dict) -> tuple[int, dict]:
+    """POST JSON to cockpit API, return (status_code, response_json).
+
+    Raises a RuntimeError with a clear message on connection or decode failure.
+    """
+    import httpx
+
+    try:
+        with httpx.Client(base_url=_base_url(), timeout=15.0) as client:
+            response = client.post(path, json=payload)
+        return response.status_code, response.json()
+    except httpx.ConnectError as exc:
+        raise RuntimeError(f"cannot connect to {_base_url()}: {exc}") from exc
+    except httpx.HTTPError as exc:
+        raise RuntimeError(f"HTTP error: {exc}") from exc
+    except ValueError as exc:
+        raise RuntimeError(f"invalid response from server: {exc}") from exc
+
+
+def _api_get(path: str, params: dict | None = None) -> tuple[int, dict]:
+    """GET JSON from cockpit API, return (status_code, response_json).
+
+    Raises a RuntimeError with a clear message on connection or decode failure.
+    """
+    import httpx
+
+    try:
+        with httpx.Client(base_url=_base_url(), timeout=15.0) as client:
+            response = client.get(path, params=params or {})
+        return response.status_code, response.json()
+    except httpx.ConnectError as exc:
+        raise RuntimeError(f"cannot connect to {_base_url()}: {exc}") from exc
+    except httpx.HTTPError as exc:
+        raise RuntimeError(f"HTTP error: {exc}") from exc
+    except ValueError as exc:
+        raise RuntimeError(f"invalid response from server: {exc}") from exc
+
+
+def _api_result(console, status: int, body: dict, action: str) -> int:
+    """Unified success/failure check: ok=true → 0, otherwise print error → 1."""
+    if status == 200 and body.get("ok") is True:
+        return 0
+    error = body.get("error", "unknown") if isinstance(body, dict) else "invalid_response"
+    console.print(f"[red]✗ {action} failed: {error}[/red]")
+    return 1
+
+
+def _personal_setup(rest: list[str]) -> int:
+    """cockpit workflow mesh personal setup — seed trusted-local role."""
+    parser = argparse.ArgumentParser(prog="cockpit workflow mesh personal setup")
+    parser.add_argument("--principal", default="principal:alice")
+    parser.add_argument("--role", default="role:personal-steward")
+    parser.add_argument("--role-name", default="Personal Steward")
+    parser.add_argument("--scope", default="personal")
+    parser.add_argument("--responsibilities", nargs="*", default=["responsibility:follow-up"])
+    args = parser.parse_args(rest)
+    console = _get_console()
+    try:
+        status, body = _api_post(
+            "/api/workflow-mesh/personal-episode/setup",
+            {
+                "principal_id": args.principal,
+                "role_id": args.role,
+                "role_name": args.role_name,
+                "scope": args.scope,
+                "responsibilities": args.responsibilities,
+            },
+        )
+    except RuntimeError as exc:
+        console.print(f"[red]✗ Setup failed: {exc}[/red]")
+        return 1
+    if _api_result(console, status, body, "Setup"):
+        return 1
+    console.print(
+        _panel(
+            f"[green]✅ Role assignment: {body.get('status')}[/green]\n"
+            f"Principal: {args.principal}\n"
+            f"Role: {args.role}",
+            "green",
+        )
+    )
+    return 0
+
+
+def _personal_ingest(rest: list[str]) -> int:
+    """cockpit workflow mesh personal ingest — resolve local Markdown into episode."""
+    parser = argparse.ArgumentParser(prog="cockpit workflow mesh personal ingest")
+    parser.add_argument("--item-id", required=True, help="Opaque Iris item ID (base64 relative path)")
+    parser.add_argument("--principal", default="principal:alice")
+    parser.add_argument("--role", default="role:personal-steward")
+    parser.add_argument("--responsibility", default="responsibility:follow-up")
+    parser.add_argument("--executor", default="agent:personal-steward")
+    args = parser.parse_args(rest)
+    console = _get_console()
+    try:
+        status, body = _api_post(
+            "/api/workflow-mesh/personal-signal/ingest",
+            {
+                "item_id": args.item_id,
+                "principal_id": args.principal,
+                "role_id": args.role,
+                "responsibility_id": args.responsibility,
+                "executor_id": args.executor,
+            },
+        )
+    except RuntimeError as exc:
+        console.print(f"[red]✗ Ingest failed: {exc}[/red]")
+        return 1
+    if _api_result(console, status, body, "Ingest"):
+        return 1
+    episode = body.get("episode", {})
+    console.print(
+        _panel(
+            f"[green]✅ Episode created: {episode.get('episode_id')}[/green]\n"
+            f"Summary: {episode.get('summary', '?')}\n"
+            f"Reused: {episode.get('reused', False)}",
+            "green",
+        )
+    )
+    return 0
+
+
+def _personal_confirm(rest: list[str]) -> int:
+    """cockpit workflow mesh personal confirm — human-confirmed mandate."""
+    parser = argparse.ArgumentParser(prog="cockpit workflow mesh personal confirm")
+    parser.add_argument("--episode-id", required=True)
+    parser.add_argument("--principal", default="principal:alice")
+    parser.add_argument("--executor", default="agent:personal-steward")
+    args = parser.parse_args(rest)
+    console = _get_console()
+    try:
+        status, body = _api_post(
+            "/api/workflow-mesh/personal-episode/confirm",
+            {
+                "episode_id": args.episode_id,
+                "principal_id": args.principal,
+                "executor_id": args.executor,
+                "human_confirmed": True,
+            },
+        )
+    except RuntimeError as exc:
+        console.print(f"[red]✗ Confirm failed: {exc}[/red]")
+        return 1
+    if _api_result(console, status, body, "Confirm"):
+        return 1
+    confirmation = body.get("confirmation", {})
+    console.print(
+        _panel(
+            f"[green]✅ Mandate granted: {confirmation.get('mandate_id')}[/green]\n"
+            f"Episode: {args.episode_id}",
+            "green",
+        )
+    )
+    return 0
+
+
+def _personal_draft(rest: list[str]) -> int:
+    """cockpit workflow mesh personal draft — PEP-gated local draft creation.
+
+    Without --title/--context/--deadline/--next-action, the server builds a
+    draft deterministically from the safe persisted Episode snapshot.
+    """
+    parser = argparse.ArgumentParser(prog="cockpit workflow mesh personal draft")
+    parser.add_argument("--episode-id", required=True)
+    parser.add_argument("--principal", default="principal:alice")
+    parser.add_argument("--title", default=None)
+    parser.add_argument("--context", default=None)
+    parser.add_argument("--deadline", default=None)
+    parser.add_argument("--next-action", dest="next_action", default=None)
+    args = parser.parse_args(rest)
+    console = _get_console()
+    payload: dict = {"episode_id": args.episode_id, "principal_id": args.principal}
+    # Only include draft fields when ALL are present (all-or-nothing contract).
+    draft_keys = ("title", "context", "deadline", "next_action")
+    provided_count = sum(1 for k in draft_keys if getattr(args, k.replace("-", "_")) is not None)
+    if provided_count == len(draft_keys):
+        payload.update({k: getattr(args, k.replace("-", "_")) for k in draft_keys})
+    elif provided_count > 0:
+        console.print(
+            "[red]✗ Either provide ALL draft fields (--title --context --deadline --next-action) "
+            "or omit them ALL for a system-built draft.[/red]"
+        )
+        return 1
+    try:
+        status, body = _api_post("/api/workflow-mesh/personal-episode/execute", payload)
+    except RuntimeError as exc:
+        console.print(f"[red]✗ Draft failed: {exc}[/red]")
+        return 1
+    if _api_result(console, status, body, "Draft"):
+        return 1
+    origin = body.get("output_origin", "?")
+    console.print(
+        _panel(
+            f"[green]✅ Draft created ({origin})[/green]\n"
+            f"Local draft recorded: {body.get('local_draft_recorded', False)}\n"
+            f"Episode: {args.episode_id}",
+            "green",
+        )
+    )
+    return 0
+
+
+def _personal_feedback(rest: list[str]) -> int:
+    """cockpit workflow mesh personal feedback — record human outcome.
+
+    Optional --feedback-id identifies one idempotent request. Burden values
+    are non-negative finite values; omitted values are not sent.
+    """
+    parser = argparse.ArgumentParser(prog="cockpit workflow mesh personal feedback")
+    parser.add_argument("--episode-id", required=True)
+    parser.add_argument("--principal", default="principal:alice")
+    parser.add_argument("--feedback-id", default=None)
+    parser.add_argument(
+        "--verdict", required=True, choices=["accept", "edit", "reject", "defer", "ignore"]
+    )
+    parser.add_argument("--review-duration-seconds", type=float, default=None)
+    parser.add_argument("--estimated-time-saved-seconds", type=float, default=None)
+    args = parser.parse_args(rest)
+    console = _get_console()
+    for field, value in (
+        ("review_duration_seconds", args.review_duration_seconds),
+        ("estimated_time_saved_seconds", args.estimated_time_saved_seconds),
+    ):
+        if value is not None and (value < 0 or not math.isfinite(value)):
+            console.print(f"[red]✗ Feedback failed: {field} must be non-negative and finite[/red]")
+            return 1
+    payload: dict = {
+        "episode_id": args.episode_id,
+        "principal_id": args.principal,
+        "verdict": args.verdict,
+    }
+    if args.review_duration_seconds is not None:
+        payload["review_duration_seconds"] = args.review_duration_seconds
+    if args.estimated_time_saved_seconds is not None:
+        payload["estimated_time_saved_seconds"] = args.estimated_time_saved_seconds
+    if args.feedback_id is not None:
+        payload["feedback_id"] = args.feedback_id
+    try:
+        status, body = _api_post(
+            "/api/workflow-mesh/personal-episode/feedback",
+            payload,
+        )
+    except RuntimeError as exc:
+        console.print(f"[red]✗ Feedback failed: {exc}[/red]")
+        return 1
+    if _api_result(console, status, body, "Feedback"):
+        return 1
+    console.print(
+        _panel(
+            f"[green]✅ Feedback recorded: {args.verdict}[/green]\n"
+            f"Sequence: {body.get('sequence', '?')}",
+            "green",
+        )
+    )
+    return 0
+
+
+def _personal_status(rest: list[str]) -> int:
+    """cockpit workflow mesh personal status — read-only episode summary.
+
+    Includes the OMO principal observation: readiness gate (not_ready /
+    collecting / passed), gate gaps, weekly samples, verdict
+    distribution and evidence origin counts.
+    """
+    parser = argparse.ArgumentParser(prog="cockpit workflow mesh personal status")
+    parser.add_argument("--principal", default="principal:alice")
+    args = parser.parse_args(rest)
+    console = _get_console()
+    try:
+        status, body = _api_get(
+            "/api/workflow-mesh/personal-episode/status",
+            params={"principal_id": args.principal},
+        )
+    except RuntimeError as exc:
+        console.print(f"[red]✗ Status failed: {exc}[/red]")
+        return 1
+    if _api_result(console, status, body, "Status"):
+        return 1
+    summary = body.get("summary", {})
+    observation = body.get("observation")
+    readiness = observation.get("readiness", "?") if observation else "?"
+    console.print(
+        _panel(
+            f"[bold cyan]📊 Personal Episode Status[/bold cyan]\n"
+            f"Principal: {args.principal}\n"
+            f"Total episodes: {summary.get('total_episodes', 0)}\n"
+            f"Pending confirmation: {summary.get('pending_confirmation', 0)}\n"
+            f"Inbox cards: {summary.get('inbox_cards', 0)}\n"
+            f"Readiness: {readiness}",
+            "cyan",
+        )
+    )
+
+    # Observation details
+    if observation:
+        gaps = observation.get("gate_gaps", [])
+        if gaps:
+            console.print("[yellow]Gate gaps:[/yellow]")
+            for gap in gaps:
+                console.print(f"  • {gap}")
+        verdict_dist = observation.get("verdict_distribution", {})
+        if verdict_dist:
+            from rich import box as rich_box
+            from rich.table import Table
+
+            table = Table(box=rich_box.ROUNDED, header_style="bold cyan", title="Verdict Distribution")
+            table.add_column("Verdict", style="bold")
+            table.add_column("Count", style="green", justify="right")
+            for verdict, count in sorted(verdict_dist.items()):
+                table.add_row(verdict, str(count))
+            console.print(table)
+
+    pending = body.get("pending", [])
+    if pending:
+        from rich import box as rich_box
+        from rich.table import Table
+
+        table = Table(box=rich_box.ROUNDED, header_style="bold cyan", title="Pending Episodes")
+        table.add_column("Episode", style="bold")
+        table.add_column("Summary", style="dim")
+        for card in pending[:10]:
+            table.add_row(
+                str(card.get("episode", "?"))[:36],
+                str(card.get("summary", ""))[:50],
+            )
+        console.print(table)
+    return 0
+
+
+def cmd_personal(args: argparse.Namespace) -> int:
+    """cockpit workflow mesh personal — personal dogfood CLI (thin HTTP client)."""
+    sub = getattr(args, "personal_command", None)
+    rest = list(getattr(args, "rest", []))
+
+    handlers = {
+        "setup": _personal_setup,
+        "ingest": _personal_ingest,
+        "confirm": _personal_confirm,
+        "draft": _personal_draft,
+        "feedback": _personal_feedback,
+        "status": _personal_status,
+    }
+
+    if sub in handlers:
+        return handlers[sub](rest)
+
+    console = _get_console()
+    console.print(_panel("[bold cyan]👤 Personal Dogfood CLI[/bold cyan]", "cyan"))
+    console.print("\n[bold]可用子命令:[/]")
+    console.print("  [cyan]setup[/]     — Seed trusted-local role (idempotent)")
+    console.print("  [cyan]ingest[/]    — Resolve local Markdown into episode")
+    console.print("  [cyan]confirm[/]   — Human-confirmed mandate")
+    console.print("  [cyan]draft[/]     — PEP-gated local draft (system or caller-authored)")
+    console.print("  [cyan]feedback[/]  — Record human outcome (accept/edit/reject/defer/ignore)")
+    console.print("  [cyan]status[/]    — Read-only episode summary")
+    console.print("\n[dim]Set COCKPIT_API_URL to target a specific server.[/]")
     return 0

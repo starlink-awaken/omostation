@@ -6,6 +6,7 @@ import datetime
 import hashlib
 import json
 import logging
+import math
 import os
 import sys
 import tempfile
@@ -32,6 +33,9 @@ _REPO_ROOT = Path(__file__).resolve().parents[5]
 _OMO_SRC = _REPO_ROOT / "projects" / "omo" / "src"
 if str(_OMO_SRC) not in sys.path:
     sys.path.insert(0, str(_OMO_SRC))
+_IRIS_SRC = _REPO_ROOT / "projects" / "kairon" / "packages" / "iris" / "src"
+if str(_IRIS_SRC) not in sys.path:
+    sys.path.insert(0, str(_IRIS_SRC))
 
 try:
     from omo.omo_external_receipt import (
@@ -85,6 +89,40 @@ else:
     _PERSONAL_EPISODE_IMPORT_ERROR = None
 
 try:
+    from omo.personal_episode import PersonalLocalSignal
+except Exception as exc:  # The local-signal ingress degrades on its own.
+    PersonalLocalSignal = None  # type: ignore[assignment,misc]
+    _PERSONAL_LOCAL_SIGNAL_IMPORT_ERROR: Exception | None = exc
+else:
+    _PERSONAL_LOCAL_SIGNAL_IMPORT_ERROR = None
+
+try:
+    from omo.personal_episode import EpisodeDraftSnapshot
+except Exception as exc:  # Available after OMO gitlink sync (.subtrees/omo).
+    EpisodeDraftSnapshot = None  # type: ignore[assignment,misc]
+    _DRAFT_SNAPSHOT_IMPORT_ERROR: Exception | None = exc
+else:
+    _DRAFT_SNAPSHOT_IMPORT_ERROR = None
+
+try:
+    from iris.connectors.local_files import LocalFilesConnector
+except Exception as exc:  # Iris is an optional runtime dependency for Cockpit.
+    LocalFilesConnector = None  # type: ignore[assignment,misc]
+    _IRIS_IMPORT_ERROR: Exception | None = exc
+else:
+    _IRIS_IMPORT_ERROR = None
+
+try:
+    from omo.sovereignty import SovereigntyService
+    from omo.sovereignty.roles import STATUS_ACTIVE
+except Exception as exc:  # Sovereignty is an optional runtime dependency for Cockpit.
+    SovereigntyService = None  # type: ignore[assignment,misc]
+    STATUS_ACTIVE = "active"
+    _SOVEREIGNTY_IMPORT_ERROR: Exception | None = exc
+else:
+    _SOVEREIGNTY_IMPORT_ERROR = None
+
+try:
     from agora.mcp.policy_enforcement import PEPDenied, complete, enforce, reset_pep_provider_cache
 except Exception as exc:  # An effectful local draft must fail closed without Agora PEP.
     PEPDenied = RuntimeError  # type: ignore[assignment,misc]
@@ -131,6 +169,82 @@ def _personal_draft_dir() -> Path:
     return (_REPO_ROOT / "runtime" / "omo" / "personal-drafts").resolve()
 
 
+PERSONAL_SIGNAL_SOURCE_ID = "iris-local-files"
+PERSONAL_SIGNAL_URI_PREFIX = "iris://local-files/"
+
+
+def _personal_signal_dir() -> Path:
+    """Resolve the server-owned local Markdown directory, never a caller path."""
+    configured = os.environ.get("PERSONAL_SIGNAL_DIR")
+    if not configured or not configured.strip():
+        raise PersonalEpisodeError("missing_config", "PERSONAL_SIGNAL_DIR is not set")
+    return Path(configured).expanduser().resolve()
+
+
+def _local_files_connector(allowed_dir: Path) -> Any:
+    """Construct Iris's read-only local-files connector scoped to ``allowed_dir``."""
+    if LocalFilesConnector is None:
+        raise RuntimeError("iris local-files connector unavailable")
+    # Iris's directory is server-owned configuration: scope the connector to
+    # PERSONAL_SIGNAL_DIR through the documented IRIS_* env override, so no
+    # caller-supplied path and no user config file can redirect it.
+    os.environ["IRIS_LOCAL_FILES_DIRECTORY"] = str(allowed_dir)
+    return LocalFilesConnector()
+
+
+def _resolve_local_signal(
+    *,
+    item_id: str,
+    principal_id: str,
+    role_id: str,
+    responsibility_id: str,
+    executor_id: str,
+) -> Any:
+    """Resolve an opaque item into a trusted PersonalLocalSignal descriptor.
+
+    Every verification is performed server-side on the resolved path: the
+    item must be a regular ``.md`` file strictly inside ``PERSONAL_SIGNAL_DIR``
+    (``Path.relative_to`` rejects traversal and symlink escape), must have a
+    non-empty title, and the digest is computed from the resolved file bytes.
+    The returned descriptor never contains the absolute path or file body.
+    """
+    allowed_dir = _personal_signal_dir()
+    if not allowed_dir.is_dir():
+        raise PersonalEpisodeError("missing_config", "PERSONAL_SIGNAL_DIR must be a directory")
+    connector = _local_files_connector(allowed_dir)
+    try:
+        note = connector.get_item(item_id)
+    except (ValueError, OSError) as exc:
+        raise PersonalEpisodeError(
+            "item_not_found", "no local item matches the given item_id"
+        ) from exc
+    if note is None:
+        raise PersonalEpisodeError("item_not_found", "no local item matches the given item_id")
+    resolved = Path(note.source_path).resolve()
+    try:
+        resolved.relative_to(allowed_dir)
+    except ValueError:
+        raise PersonalEpisodeError(
+            "source_outside_allowed_dir", "resolved item escapes the allowed directory"
+        ) from None
+    if resolved == allowed_dir or not resolved.is_file() or resolved.suffix.lower() != ".md":
+        raise PersonalEpisodeError("not_markdown", "item must be a regular markdown file")
+    title = (note.title or resolved.stem).strip()
+    if not title:
+        raise PersonalEpisodeError("empty_title", "item must have a non-empty title")
+    return PersonalLocalSignal(
+        source_id=PERSONAL_SIGNAL_SOURCE_ID,
+        item_id=item_id,
+        title=title,
+        content_sha256=hashlib.sha256(resolved.read_bytes()).hexdigest(),
+        source_uri=f"{PERSONAL_SIGNAL_URI_PREFIX}{item_id}",
+        principal_id=principal_id,
+        role_id=role_id,
+        responsibility_id=responsibility_id,
+        executor_id=executor_id,
+    )
+
+
 @contextmanager
 def _personal_episode_service() -> Any:
     """Create one request-local OMO service and always close its SQLite broker."""
@@ -167,7 +281,213 @@ def _required_text(body: dict[str, Any], field: str) -> str:
     return value.strip()
 
 
-def _write_local_draft(context: Any, draft: dict[str, str]) -> Path:
+def _optional_burden(body: dict[str, Any], field: str) -> float | None:
+    """Extract an optional non-negative finite numeric burden field.
+
+    Returns None when the field is absent; otherwise validates that the
+    value is a real number (rejecting bool, NaN, inf, negative).  The
+    OMO layer re-validates, but catching at the boundary gives a clean
+    error without touching the ledger.
+    """
+    if field not in body or body[field] is None:
+        return None
+    value = body[field]
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise PersonalEpisodeError("invalid_burden", f"{field} must be a number")
+    v = float(value)
+    if v < 0 or not math.isfinite(v):
+        raise PersonalEpisodeError("invalid_burden", f"{field} must be non-negative and finite")
+    return v
+
+
+def _projection_value_is_private(value: Any) -> bool:
+    """Reject path- and connector-shaped strings from the public projection."""
+    if not isinstance(value, str):
+        return False
+    stripped = value.strip()
+    lowered = stripped.lower()
+    return (
+        "file://" in lowered
+        or "iris://" in lowered
+        or stripped.startswith(("/", "~/"))
+        or "/users/" in lowered
+    )
+
+
+def _projection_fields(source: Any, fields: tuple[str, ...]) -> dict[str, Any]:
+    """Copy explicitly public scalar fields from one projection mapping."""
+    if not isinstance(source, dict):
+        return {}
+    result: dict[str, Any] = {}
+    for field in fields:
+        if field not in source:
+            continue
+        value = source.get(field)
+        if value is None or isinstance(value, (str, int, float, bool)):
+            if not _projection_value_is_private(value):
+                result[field] = value
+    return result
+
+
+def _episode_projection_http_dto(projection: Any) -> dict[str, Any]:
+    """Build the public allowlisted DTO without mutating OMO's ledger view."""
+    if not isinstance(projection, dict):
+        return {}
+
+    episodes: list[dict[str, Any]] = []
+    for raw_episode in projection.get("episodes", []):
+        episode = _projection_fields(
+            raw_episode,
+            (
+                "episode_id",
+                "schema_version",
+                "opened_at",
+                "closed_at",
+                "status",
+                "name",
+                "event_count",
+            ),
+        )
+        members: list[dict[str, Any]] = []
+        if isinstance(raw_episode, dict):
+            for raw_member in raw_episode.get("contains_event_refs", []):
+                member = _projection_fields(
+                    raw_member,
+                    ("event_id", "schema_version", "emitted_at"),
+                )
+                raw_payload = raw_member.get("payload", {}) if isinstance(raw_member, dict) else {}
+                member["payload"] = _projection_fields(
+                    raw_payload,
+                    (
+                        "episode_id",
+                        "request_id",
+                        "summary",
+                        "why_now",
+                        "deadline",
+                        "status",
+                        "confidence",
+                        "role_id",
+                        "responsibility_id",
+                        "action_id",
+                        "output_origin",
+                        "feedback_id",
+                        "verdict",
+                        "review_duration_seconds",
+                        "estimated_time_saved_seconds",
+                    ),
+                )
+                members.append(member)
+        episode["contains_event_refs"] = members
+        episodes.append(episode)
+
+    raw_portfolio = projection.get("role_portfolio", {})
+    role_portfolio = _projection_fields(raw_portfolio, ("principal_id",))
+    assignments: list[dict[str, Any]] = []
+    responsibilities: list[dict[str, Any]] = []
+    if isinstance(raw_portfolio, dict):
+        for raw_assignment in raw_portfolio.get("active_assignments", []):
+            assignment = _projection_fields(
+                raw_assignment,
+                (
+                    "assignment_id",
+                    "principal_id",
+                    "role_id",
+                    "role_name",
+                    "role_scope",
+                    "version",
+                    "status",
+                ),
+            )
+            if isinstance(raw_assignment, dict):
+                assignment["responsibilities"] = [
+                    _projection_fields(item, ("resp_id", "responsibility_id", "name", "version"))
+                    for item in raw_assignment.get("responsibilities", [])
+                    if isinstance(item, dict)
+                ]
+            assignments.append(assignment)
+        responsibilities = [
+            _projection_fields(item, ("resp_id", "responsibility_id", "name", "version"))
+            for item in raw_portfolio.get("responsibilities", [])
+            if isinstance(item, dict)
+        ]
+        raw_counts = raw_portfolio.get("episode_counts", {})
+        episode_counts = {
+            key: value
+            for key, value in raw_counts.items()
+            if isinstance(key, str)
+            and not _projection_value_is_private(key)
+            and isinstance(value, int)
+            and not isinstance(value, bool)
+        } if isinstance(raw_counts, dict) else {}
+    else:
+        episode_counts = {}
+    role_portfolio.update(
+        {
+            "active_assignments": assignments,
+            "responsibilities": responsibilities,
+            "episode_counts": episode_counts,
+        }
+    )
+
+    inbox = [
+        _projection_fields(
+            item,
+            (
+                "card_type",
+                "episode",
+                "principal",
+                "role",
+                "responsibility",
+                "request",
+                "summary",
+                "why_now",
+                "risk",
+                "authority",
+                "deadline",
+                "status",
+                "confidence",
+            ),
+        )
+        for item in projection.get("inbox", [])
+        if isinstance(item, dict)
+    ]
+    blocked = [
+        _projection_fields(item, ("event_id", "event_type", "sequence", "reason"))
+        for item in projection.get("blocked", [])
+        if isinstance(item, dict)
+    ]
+    raw_controls = projection.get("controls", {})
+    controls = _projection_fields(
+        raw_controls,
+        (
+            "events_read",
+            "events_ignored",
+            "events_blocked",
+            "ledger_count_before",
+            "ledger_count_after",
+            "ledger_unchanged",
+        ),
+    )
+    if isinstance(raw_controls, dict):
+        controls["chain_before"] = _projection_fields(raw_controls.get("chain_before"), ("ok", "total"))
+        controls["chain_after"] = _projection_fields(raw_controls.get("chain_after"), ("ok", "total"))
+
+    dto = _projection_fields(projection, ("schema_version", "status", "principal_id"))
+    dto.update(
+        {
+            "episodes": episodes,
+            "role_portfolio": role_portfolio,
+            "inbox": inbox,
+            "blocked": blocked,
+            "controls": controls,
+        }
+    )
+    return dto
+
+
+def _write_local_draft(
+    context: Any, draft: dict[str, str], output_origin: str = "system"
+) -> Path:
     """Atomically persist one server-named, never-send JSON artifact."""
     draft_dir = _personal_draft_dir()
     draft_dir.mkdir(parents=True, exist_ok=True)
@@ -175,7 +495,7 @@ def _write_local_draft(context: Any, draft: dict[str, str]) -> Path:
         f"{context.episode_id}|{context.action_id}".encode()
     ).hexdigest()[:24]
     target = draft_dir / f"personal-followup-{stable_name}.json"
-    payload = {**draft, "never_send": True}
+    payload = {**draft, "never_send": True, "output_origin": output_origin}
     descriptor, temporary_name = tempfile.mkstemp(
         dir=draft_dir,
         prefix=f".{target.name}.",
@@ -194,6 +514,54 @@ def _write_local_draft(context: Any, draft: dict[str, str]) -> Path:
         temporary.unlink(missing_ok=True)
         raise
     return target
+
+
+_DRAFT_FIELDS = frozenset({"title", "context", "deadline", "next_action"})
+
+
+def _normalize_resp_input(responsibilities: list[str]) -> tuple[list, set[str]]:
+    """Normalize caller responsibility strings for OMO assign() and comparison.
+
+    ``responsibility:xxx`` → mapping dict (exact resp_id, no re-slug);
+    plain string → left as-is for OMO slug+prefix normalization.
+    Returns ``(items_for_assign, expected_canonical_ids)``.
+    """
+    import re
+
+    def _slugify(name: str) -> str:
+        slug = re.sub(r"[^A-Za-z0-9]+", "-", name).strip("-").lower()
+        return slug or "item"
+
+    items: list = []
+    expected: set[str] = set()
+    for r in responsibilities:
+        r = r.strip()
+        if r.startswith("responsibility:"):
+            suffix = r.split(":", 1)[1]
+            items.append({"resp_id": r, "name": suffix})
+            expected.add(r)
+        else:
+            items.append(r)
+            expected.add(f"responsibility:{_slugify(r)}")
+    return items, expected
+
+
+def _build_draft_from_snapshot(snapshot: Any) -> dict[str, str]:
+    """Deterministically build a safe draft dict from a persisted Episode snapshot.
+
+    Only uses fields already in the ledger event — summary, why_now,
+    deadline.  Never touches raw signal body, filesystem paths, or URIs.
+    """
+    summary = str(getattr(snapshot, "summary", "") or "").strip()
+    why_now = str(getattr(snapshot, "why_now", "") or "").strip()
+    deadline = str(getattr(snapshot, "deadline", "") or "").strip()
+    context_text = f"{summary}. {why_now}." if why_now else f"{summary}."
+    return {
+        "title": summary or "Personal follow-up draft",
+        "context": context_text.strip(),
+        "deadline": deadline,
+        "next_action": "Review and edit the local draft.",
+    }
 
 
 async def _read_capability_health(required_capabilities: list[str]) -> dict[str, Any]:
@@ -360,7 +728,6 @@ if router:
                 "principal_id": principal_id,
                 "error": "episode_projection_ledger_missing",
                 "next_action": "确认 Event Ledger 数据库已初始化后重试。",
-                "db_path": str(db_path),
                 **controls,
             }
         try:
@@ -385,9 +752,202 @@ if router:
             "status": projection.get("status", "unavailable"),
             "schema": "episode-projections/v1",
             "principal_id": principal_id,
-            "projection": projection,
+            "projection": _episode_projection_http_dto(projection),
             **controls,
         }
+
+    @router.post("/personal-episode/setup")
+    async def post_personal_episode_setup(request: Request) -> Any:  # type: ignore[valid-type]
+        """Idempotently assign the trusted-local personal steward role.
+
+        If the (principal, role) pair is already active, returns immediately
+        without error — safe to call repeatedly.  This is the single seed
+        step that makes every subsequent personal-episode flow possible.
+        """
+        if SovereigntyService is None or LedgerBroker is None:
+            return _personal_error("sovereignty_unavailable", status_code=503)
+        try:
+            body = _personal_request(
+                await request.json(),
+                {"principal_id", "role_id", "role_name", "scope", "responsibilities"},
+            )
+            principal_id = _required_text(body, "principal_id")
+            role_id = _required_text(body, "role_id")
+            role_name = str(body.get("role_name") or "Personal Steward")
+            scope = str(body.get("scope") or "personal")
+            responsibilities = body.get("responsibilities")
+            if responsibilities is not None:
+                if not isinstance(responsibilities, list) or not all(
+                    isinstance(r, str) and r.strip() for r in responsibilities
+                ):
+                    raise PersonalEpisodeError(
+                        "invalid_request", "responsibilities must be a list of non-empty strings"
+                    )
+                resp_items, expected_ids = _normalize_resp_input(responsibilities)
+            else:
+                resp_items, expected_ids = None, set()
+            broker = LedgerBroker.connect(_event_ledger_db_path())
+            try:
+                service = SovereigntyService(broker)
+                existing = service.current_assignment(principal_id, role_id)
+                if existing is not None and existing.status == STATUS_ACTIVE:
+                    # Idempotent only when the existing assignment matches
+                    # the caller's expectations — silent drift is blocked.
+                    if existing.role_scope != scope:
+                        raise PersonalEpisodeError(
+                            "scope_conflict",
+                            f"active role scope is '{existing.role_scope}', "
+                            f"caller requested '{scope}'",
+                        )
+                    if existing.role_name != role_name:
+                        raise PersonalEpisodeError(
+                            "role_name_conflict",
+                            f"active role name is '{existing.role_name}', "
+                            f"caller requested '{role_name}'",
+                        )
+                    if expected_ids:
+                        existing_resp = {r.resp_id for r in existing.responsibilities}
+                        missing = expected_ids - existing_resp
+                        if missing:
+                            raise PersonalEpisodeError(
+                                "responsibility_conflict",
+                                f"active assignment lacks responsibilities: {sorted(missing)}",
+                            )
+                    return {
+                        "ok": True,
+                        "status": "already_active",
+                        "assignment": {
+                            "assignment_id": existing.assignment_id,
+                            "role_id": role_id,
+                            "version": existing.version,
+                        },
+                    }
+                service.assign(
+                    principal_id,
+                    role_id,
+                    role_name=role_name,
+                    scope=scope,
+                    responsibilities=resp_items,
+                )
+            finally:
+                broker.close()
+        except (PersonalEpisodeError, OSError, TypeError, ValueError) as exc:
+            _logger.info("personal_episode_setup_blocked: %s", type(exc).__name__)
+            return _personal_error(getattr(exc, "reason", "personal_episode_setup_invalid"))
+        return {
+            "ok": True,
+            "status": "assigned",
+            "assignment": {"role_id": role_id},
+        }
+
+    @router.get("/personal-episode/status")
+    async def get_personal_episode_status(
+        principal_id: str = Query(..., description="Principal identity for status lookup"),  # type: ignore[union-attr]
+    ) -> dict[str, Any]:
+        """Read-only personal episode status — no mutation, no side effects.
+
+        Delegates to the existing W2-04 episode projection for the compact
+        inbox/episode summary and additionally projects the OMO read-only
+        principal observation (readiness gate, weekly samples, evidence
+        origin counts).  The observation never mutates the ledger — it only
+        calls ``broker.read()``.
+        """
+        controls = {
+            "read_only": True,
+            "workflow_state_mutation": False,
+            "provider_invocation": False,
+            "automatic_promotion": False,
+        }
+        if build_episode_projection_snapshot_from_path is None:
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "error": "episode_projection_unavailable",
+                "principal_id": principal_id,
+                **controls,
+            }
+        db_path = _event_ledger_db_path()
+        if not db_path.exists():
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "error": "episode_projection_ledger_missing",
+                "principal_id": principal_id,
+                **controls,
+            }
+        try:
+            projection = build_episode_projection_snapshot_from_path(
+                db_path, principal_id=principal_id
+            )
+        except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+            _logger.info("personal_episode_status_failed: %s", type(exc).__name__)
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "error": "episode_projection_failed",
+                "principal_id": principal_id,
+                **controls,
+            }
+        inbox = projection.get("inbox", [])
+        episodes = projection.get("episodes", [])
+        pending = [c for c in inbox if c.get("status") == "pending_confirmation"]
+
+        # OMO read-only observation: readiness gate, weekly samples, gaps.
+        observation: dict[str, Any] | None = None
+        if PersonalEpisodeService is None:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "ok": False,
+                    "status": "unavailable",
+                    "error": "personal_episode_observation_unavailable",
+                    "principal_id": principal_id,
+                    **controls,
+                },
+            ) if JSONResponse is not None else {
+                "ok": False,
+                "status": "unavailable",
+                "error": "personal_episode_observation_unavailable",
+                "principal_id": principal_id,
+                **controls,
+            }
+        try:
+            with _personal_episode_service() as service:
+                obs = service.observe_principal(principal_id)
+            observation = obs.to_dict()
+        except (
+            AttributeError,
+            PersonalEpisodeError,
+            OSError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ) as exc:
+            _logger.info("personal_episode_observation_failed: %s", type(exc).__name__)
+            payload = {
+                "ok": False,
+                "status": "unavailable",
+                "error": "personal_episode_observation_failed",
+                "principal_id": principal_id,
+                **controls,
+            }
+            return JSONResponse(status_code=503, content=payload) if JSONResponse is not None else payload
+
+        response: dict[str, Any] = {
+            "ok": projection.get("status") == "live",
+            "status": projection.get("status", "unavailable"),
+            "principal_id": principal_id,
+            "summary": {
+                "total_episodes": len(episodes),
+                "pending_confirmation": len(pending),
+                "inbox_cards": len(inbox),
+            },
+            "pending": pending,
+            "controls": controls,
+        }
+        if observation is not None:
+            response["observation"] = observation
+        return response
 
     @router.post("/personal-episode/start")
     async def post_personal_episode_start(request: Request) -> Any:  # type: ignore[valid-type]
@@ -459,14 +1019,34 @@ if router:
                 await request.json(),
                 {"episode_id", "principal_id", "title", "context", "deadline", "next_action"},
             )
-            with _personal_episode_service() as service:
-                context = service.reload_execution_context(
-                    _required_text(body, "episode_id"), _required_text(body, "principal_id")
+            episode_id = _required_text(body, "episode_id")
+            principal_id = _required_text(body, "principal_id")
+            provided = {f for f in _DRAFT_FIELDS if f in body}
+            if provided and provided != _DRAFT_FIELDS:
+                raise PersonalEpisodeError(
+                    "invalid_request",
+                    "either provide all draft fields (title, context, deadline, next_action) "
+                    "or omit them all for a system-built draft",
                 )
-                draft = {
-                    field: _required_text(body, field)
-                    for field in ("title", "context", "deadline", "next_action")
-                }
+            with _personal_episode_service() as service:
+                context = service.reload_execution_context(episode_id, principal_id)
+                if provided:
+                    # Caller-authored full draft — validate each field
+                    draft = {
+                        field: _required_text(body, field)
+                        for field in _DRAFT_FIELDS
+                    }
+                    output_origin = "user_provided"
+                else:
+                    # System-built draft from safe persisted Episode snapshot
+                    if not hasattr(service, "get_draft_snapshot"):
+                        raise PersonalEpisodeError(
+                            "draft_snapshot_unavailable",
+                            "OMO runtime does not provide get_draft_snapshot; sync submodule",
+                        )
+                    snapshot = service.get_draft_snapshot(episode_id, principal_id)
+                    draft = _build_draft_from_snapshot(snapshot)
+                    output_origin = "system"
                 # Trusted-local default only; an explicit deployment binding wins unchanged.
                 if not os.environ.get("AGORA_PEP_PROVIDER"):
                     os.environ["AGORA_PEP_PROVIDER"] = "omo.sovereignty.enforcement:AgoraPepProvider"
@@ -480,11 +1060,11 @@ if router:
                     arguments={"_omo_policy": context.omo_policy},
                     payload=draft,
                 )
-                artifact = _write_local_draft(context, draft)
+                artifact = _write_local_draft(context, draft, output_origin=output_origin)
                 evidence_uri = artifact.resolve().as_uri()
                 complete(decision, receipt, succeeded=True, result={"evidence_uri": evidence_uri})
                 terminal_confirmed = True
-                service.record_evidence(context, evidence_uri)
+                service.record_evidence(context, evidence_uri, output_origin=output_origin)
         except (PersonalEpisodeError, PEPDenied, OSError, TypeError, ValueError) as exc:
             if artifact is not None and not terminal_confirmed:
                 artifact.unlink(missing_ok=True)
@@ -499,25 +1079,90 @@ if router:
             "ok": True,
             "status": "completed",
             "episode_id": context.episode_id,
-            "evidence_uri": evidence_uri,
+            "local_draft_recorded": True,
+            "output_origin": output_origin,
         }
 
     @router.post("/personal-episode/feedback")
     async def post_personal_episode_feedback(request: Request) -> Any:  # type: ignore[valid-type]
-        """Append one closed-vocabulary human outcome to the causal episode."""
+        """Append one closed-vocabulary human outcome to the causal episode.
+
+        Optional ``review_duration_seconds`` and
+        ``estimated_time_saved_seconds`` are non-negative finite values;
+        omitted values stay null.  The verdict vocabulary includes
+        accept/edit/reject/defer/ignore.
+        """
         if PersonalEpisodeService is None:
             return _personal_error("personal_episode_unavailable", status_code=503)
         try:
-            body = _personal_request(await request.json(), {"episode_id", "principal_id", "verdict"})
+            body = _personal_request(
+                await request.json(),
+                {
+                    "episode_id",
+                    "principal_id",
+                    "feedback_id",
+                    "verdict",
+                    "review_duration_seconds",
+                    "estimated_time_saved_seconds",
+                },
+            )
+            review_duration = _optional_burden(body, "review_duration_seconds")
+            estimated_saved = _optional_burden(body, "estimated_time_saved_seconds")
+            feedback_id = _required_text(body, "feedback_id") if "feedback_id" in body else None
             with _personal_episode_service() as service:
                 context = service.reload_execution_context(
                     _required_text(body, "episode_id"), _required_text(body, "principal_id")
                 )
-                sequence = service.record_outcome(context, _required_text(body, "verdict"))
+                sequence = service.record_outcome(
+                    context,
+                    _required_text(body, "verdict"),
+                    feedback_id=feedback_id,
+                    review_duration_seconds=review_duration,
+                    estimated_time_saved_seconds=estimated_saved,
+                )
         except (PersonalEpisodeError, OSError, TypeError, ValueError) as exc:
             _logger.info("personal_episode_feedback_blocked: %s", type(exc).__name__)
             return _personal_error(getattr(exc, "reason", "personal_episode_feedback_invalid"))
         return {"ok": True, "status": "recorded", "sequence": sequence}
+
+    @router.post("/personal-signal/ingest")
+    async def post_personal_signal_ingest(request: Request) -> Any:  # type: ignore[valid-type]
+        """Resolve one private local Markdown item into a causal Inbox episode.
+
+        The body carries only the opaque ``item_id`` plus the sovereignty
+        identity fields; the server resolves the item through Iris and verifies
+        it is a regular ``.md`` file strictly inside ``PERSONAL_SIGNAL_DIR``
+        before building a ``PersonalLocalSignal`` and delegating to OMO.  The
+        raw body, file content and absolute paths are never logged or stored.
+        """
+        if PersonalEpisodeService is None or PersonalLocalSignal is None or LocalFilesConnector is None:
+            return _personal_error("personal_signal_unavailable", status_code=503)
+        try:
+            body = _personal_request(
+                await request.json(),
+                {"item_id", "principal_id", "role_id", "responsibility_id", "executor_id"},
+            )
+            signal = _resolve_local_signal(
+                item_id=_required_text(body, "item_id"),
+                principal_id=_required_text(body, "principal_id"),
+                role_id=_required_text(body, "role_id"),
+                responsibility_id=_required_text(body, "responsibility_id"),
+                executor_id=_required_text(body, "executor_id"),
+            )
+            with _personal_episode_service() as service:
+                result = service.ingest_local_signal(signal)
+        except (PersonalEpisodeError, OSError, TypeError, ValueError) as exc:
+            _logger.info("personal_signal_ingest_blocked: %s", type(exc).__name__)
+            return _personal_error(getattr(exc, "reason", "personal_signal_ingest_invalid"))
+        return {
+            "ok": True,
+            "status": "pending_confirmation",
+            "signal": {
+                "signal_event_id": result.signal_event_id,
+                "signal_id": result.signal_id,
+            },
+            "episode": result.episode.to_dict(),
+        }
 
     @router.post("/engineering-delivery/review")
     async def post_engineering_delivery_review(request: Request) -> dict[str, Any]:  # type: ignore[valid-type]
