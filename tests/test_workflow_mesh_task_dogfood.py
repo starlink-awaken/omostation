@@ -55,6 +55,7 @@ def _worker_registry(root: Path) -> None:
                         "id": "worker-dogfood",
                         "enabled": True,
                         "admission_state": "admitted",
+                        "capabilities": ["workflow.execute", "runtime"],
                         "transports": {"cli_prompt": {"command": "worker-dogfood"}},
                     }
                 ]

@@ -11,6 +11,8 @@ from omo import mcp_server
 
 def test_default_workspace_root_is_workspace_not_projects_directory() -> None:
     expected = Path(__file__).resolve().parents[3]
+    if not (expected / ".omo").is_dir() or not (expected / "projects" / "omo").is_dir():
+        pytest.skip("requires a Workspace checkout rather than standalone OMO CI")
 
     assert mcp_server._default_workspace_root() == expected
     assert (expected / ".omo").is_dir()

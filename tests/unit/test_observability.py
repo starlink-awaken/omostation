@@ -21,7 +21,7 @@ def _run(args: list[str], timeout: int = 30) -> subprocess.CompletedProcess:
     """在 omo 根目录跑 uv run omo <args>."""
     env = os.environ.copy()
     return subprocess.run(
-        ["uv", "run", "omo", *args],
+        [sys.executable, "-m", "omo.cli", *args],
         cwd=str(OMO_ROOT),
         capture_output=True,
         text=True,
