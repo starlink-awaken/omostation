@@ -25,6 +25,7 @@ workspace_mcp:
     - kems_status
     - domain_facts_validation_status
     - domain_controller_shadow_status
+    - domain_model_freshness_status
 
 capability_routes:
   skills:
@@ -112,6 +113,7 @@ profiles:
       - cards_check
       - domain_facts_validation_status
       - domain_controller_shadow_status
+      - domain_model_freshness_status
     skill_route: skills
     workflow_route: workflows
     execution_policy: workspace_only
@@ -162,6 +164,19 @@ runtime_jobs:
     writes: []
     evidence_relative_path: control/evidence/documents-weijian-controller-shadow/documents-weijian-controller-shadow.json
     evidence_schema: runtime.documents-controller-shadow.evidence.v2
+    fail_closed: true
+  - id: documents-weijian-model-freshness
+    domain_id: work-weijian
+    owner: runtime-control
+    action: audit_model_freshness
+    schedule: manual
+    timeout_seconds: 30
+    reads:
+      - "@工作文档/卫健委/_entities/facts.md"
+      - "@工作文档/卫健委/_entities/models"
+    writes: []
+    evidence_relative_path: control/evidence/documents-weijian-model-freshness/documents-weijian-model-freshness.json
+    evidence_schema: runtime.documents-model-freshness.evidence.v1
     fail_closed: true
 
 domains:
