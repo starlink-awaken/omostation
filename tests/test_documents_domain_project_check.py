@@ -90,6 +90,8 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
     profile_generator.write_text("# profile generator\n", encoding="utf-8")
     zed_profile_generator = tmp_path / "bin" / "gac" / "documents-zed-profile.py"
     zed_profile_generator.write_text("# profile generator\n", encoding="utf-8")
+    zcode_config_generator = tmp_path / "bin" / "gac" / "documents-zcode-config.py"
+    zcode_config_generator.write_text("# config generator\n", encoding="utf-8")
     path = registry_dir / "documents-domain-projects.yaml"
     path.write_text(
         yaml.safe_dump(
@@ -147,6 +149,18 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                             "exclusive_mcp_server": "cockpit",
                             "approval_mode": "allow_read_tools",
                             "builtin_tool_policy": "disable_all",
+                        },
+                    },
+                    "zcode": {
+                        "instruction_file": "AGENTS.md",
+                        "mcp_scope": "user",
+                        "config_contract": {
+                            "owner": "workspace",
+                            "generator_ref": "bin/gac/documents-zcode-config.py",
+                            "configuration_surface": "native_json",
+                            "config_path": "~/.zcode/cli/config.json",
+                            "managed_mcp_server": "cockpit",
+                            "preserve_unrelated_servers": True,
                         },
                     },
                     "agents_compatible": {
@@ -372,6 +386,90 @@ def test_zed_profile_generator_must_be_workspace_relative(tmp_path: Path) -> Non
     assert json.loads(result.stdout)["errors"] == [
         "clients.zed.profile_contract.generator_ref must be a Workspace-relative file"
     ]
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        ("owner", "documents", "clients.zcode.config_contract.owner must be workspace"),
+        (
+            "configuration_surface",
+            "opaque_store",
+            "clients.zcode.config_contract.configuration_surface must be native_json",
+        ),
+        (
+            "config_path",
+            "~/.agents/mcp.json",
+            "clients.zcode.config_contract.config_path must be ~/.zcode/cli/config.json",
+        ),
+        (
+            "managed_mcp_server",
+            "runtime",
+            "clients.zcode.config_contract.managed_mcp_server must match workspace_mcp.server",
+        ),
+        (
+            "preserve_unrelated_servers",
+            False,
+            "clients.zcode.config_contract.preserve_unrelated_servers must be true",
+        ),
+    ],
+)
+def test_zcode_config_contract_fails_closed(
+    tmp_path: Path, field: str, value: object, expected: str
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["clients"]["zcode"]["config_contract"][field] = value
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [expected]
+
+
+def test_zcode_config_generator_must_be_workspace_relative(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["clients"]["zcode"]["config_contract"]["generator_ref"] = (
+        "../Documents/config.py"
+    )
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "clients.zcode.config_contract.generator_ref must be a Workspace-relative file"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        (
+            "instruction_file",
+            "CLAUDE.md",
+            "clients.zcode.instruction_file must be AGENTS.md",
+        ),
+        ("mcp_scope", "workspace", "clients.zcode.mcp_scope must be user"),
+    ],
+)
+def test_zcode_client_binding_fails_closed(
+    tmp_path: Path, field: str, value: str, expected: str
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["clients"]["zcode"][field] = value
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [expected]
 
 
 @pytest.mark.parametrize(
