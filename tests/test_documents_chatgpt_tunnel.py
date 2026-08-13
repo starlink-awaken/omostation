@@ -17,6 +17,7 @@ TOOLS = [
     "cards_check",
     "domain_facts_validation_status",
     "domain_controller_shadow_status",
+    "domain_model_freshness_status",
 ]
 
 
@@ -295,6 +296,21 @@ def test_workspace_registry_declares_bounded_tunnel_contract() -> None:
         "api_key_env": "CONTROL_PLANE_API_KEY",
     }
     assert raw["profiles"]["content-domain"]["allowed_workspace_tools"] == TOOLS
+
+
+def test_model_freshness_tool_is_in_bounded_tunnel_profile() -> None:
+    assert "domain_model_freshness_status" in TOOLS
+
+    raw = yaml.safe_load(
+        (
+            ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
+        ).read_text(encoding="utf-8")
+    )
+    assert (
+        "domain_model_freshness_status"
+        in raw["profiles"]["content-domain"]["allowed_workspace_tools"]
+    )
+    assert raw["clients"]["chatgpt_web"]["requires_developer_mode"] is True
 
 
 def test_required_phase_gate_covers_root_tunnel_contract() -> None:

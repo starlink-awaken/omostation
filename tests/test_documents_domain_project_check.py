@@ -276,6 +276,25 @@ def _weijian_controller_shadow_job() -> dict[str, object]:
     }
 
 
+def _weijian_model_freshness_job() -> dict[str, object]:
+    return {
+        "id": "documents-weijian-model-freshness",
+        "domain_id": "work-weijian",
+        "owner": "runtime-control",
+        "action": "audit_model_freshness",
+        "schedule": "manual",
+        "timeout_seconds": 30,
+        "reads": [
+            "@工作文档/卫健委/_entities/facts.md",
+            "@工作文档/卫健委/_entities/models",
+        ],
+        "writes": [],
+        "evidence_relative_path": "control/evidence/documents-weijian-model-freshness/documents-weijian-model-freshness.json",
+        "evidence_schema": "runtime.documents-model-freshness.evidence.v1",
+        "fail_closed": True,
+    }
+
+
 def _run(
     domain_registry: Path,
     project_registry: Path,
@@ -387,6 +406,26 @@ def test_workspace_binding_declares_weijian_runtime_facts_validation() -> None:
     assert "domain_controller_shadow_status" in registry["workspace_mcp"]["read_tools"]
     assert (
         "domain_controller_shadow_status"
+        in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
+    )
+
+
+def test_workspace_binding_declares_weijian_model_freshness_owner() -> None:
+    registry = yaml.safe_load(
+        (
+            ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
+        ).read_text(encoding="utf-8")
+    )
+
+    jobs = [
+        job
+        for job in registry["runtime_jobs"]
+        if job["id"] == "documents-weijian-model-freshness"
+    ]
+    assert jobs == [_weijian_model_freshness_job()]
+    assert "domain_model_freshness_status" in registry["workspace_mcp"]["read_tools"]
+    assert (
+        "domain_model_freshness_status"
         in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
     )
 
@@ -834,6 +873,81 @@ def test_runtime_controller_shadow_job_rejects_evidence_path_drift(
     assert json.loads(result.stdout)["errors"] == [
         "runtime controller shadow job documents-weijian-controller-shadow evidence_relative_path must be control/evidence/documents-weijian-controller-shadow/documents-weijian-controller-shadow.json"
     ]
+
+
+def test_runtime_model_freshness_job_contract_passes(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["creative", "work-weijian"])
+    project_registry = _project_registry(tmp_path, ["creative", "work-weijian"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["runtime_jobs"].append(_weijian_model_freshness_job())
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 0, result.stdout
+    assert json.loads(result.stdout)["errors"] == []
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        (
+            "owner",
+            "runtime-facts",
+            "runtime model freshness job documents-weijian-model-freshness owner must be runtime-control",
+        ),
+        (
+            "action",
+            "shadow_legacy_controller",
+            "runtime model freshness job documents-weijian-model-freshness action must be audit_model_freshness",
+        ),
+        (
+            "reads",
+            ["@工作文档/卫健委/_entities/models"],
+            "runtime model freshness job documents-weijian-model-freshness reads must declare facts.md and models",
+        ),
+        (
+            "timeout_seconds",
+            60,
+            "runtime model freshness job documents-weijian-model-freshness timeout_seconds must be 30",
+        ),
+        (
+            "writes",
+            ["@工作文档/卫健委/_entities/models"],
+            "runtime job documents-weijian-model-freshness must not declare Documents writes",
+        ),
+        (
+            "evidence_relative_path",
+            "control/evidence/renamed/receipt.json",
+            "runtime model freshness job documents-weijian-model-freshness evidence_relative_path must be control/evidence/documents-weijian-model-freshness/documents-weijian-model-freshness.json",
+        ),
+        (
+            "evidence_schema",
+            "runtime.documents-model-freshness.evidence.v2",
+            "runtime model freshness job documents-weijian-model-freshness evidence_schema must be runtime.documents-model-freshness.evidence.v1",
+        ),
+        (
+            "fail_closed",
+            False,
+            "runtime job documents-weijian-model-freshness must be fail_closed",
+        ),
+    ],
+)
+def test_runtime_model_freshness_job_contract_fails_closed(
+    field: str, value: object, expected: str, tmp_path: Path
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["creative", "work-weijian"])
+    project_registry = _project_registry(tmp_path, ["creative", "work-weijian"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    model_job = _weijian_model_freshness_job()
+    model_job[field] = value
+    raw["runtime_jobs"].append(model_job)
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [expected]
 
 
 @pytest.mark.parametrize(
