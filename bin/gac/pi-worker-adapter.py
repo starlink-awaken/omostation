@@ -93,6 +93,18 @@ def validate_receipt_path(receipt_path: Path | str, *, user_home: Path) -> Path:
     return receipt
 
 
+def validate_config_root(user_home: Path) -> Path:
+    """Require Pi's user config root to be a real directory, never a link."""
+    config_root = user_home / ".pi" / "agent"
+    try:
+        mode = os.lstat(config_root).st_mode
+    except OSError as exc:
+        raise AdapterError("config_root_rejected") from exc
+    if stat.S_ISLNK(mode) or not stat.S_ISDIR(mode):
+        raise AdapterError("config_root_rejected")
+    return config_root
+
+
 def _copy_omlxc_provider(user_home: Path, agent_dir: Path) -> None:
     source = user_home / ".pi" / "agent" / "models.json"
     try:
@@ -332,10 +344,10 @@ def run_worker(
         raise AdapterError("timeout_rejected")
     home = (Path.home() if user_home is None else Path(user_home).expanduser()).resolve()
     receipt_file = validate_receipt_path(receipt_path, user_home=home) if receipt_path is not None else None
+    config_root = validate_config_root(home)
     marker = f"OMO_PI_TRIAL_ID={uuid.uuid4()}"
     started_at = _utc_now()
     started = time.monotonic()
-    config_root = home / ".pi" / "agent"
     before_config = _trial_tree_digest(config_root)
     receipt: dict[str, Any] = {
         "checks": {
