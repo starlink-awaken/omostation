@@ -71,10 +71,21 @@ def _launch_worker_from_prompt(
     stdout_path: Path,
 ) -> str:
     prompt_text = prompt_path.read_text(encoding="utf-8")
-    argv = _build_launch_argv(registry, worker_id, transport, prompt_text)
+    argv = _build_launch_argv(
+        registry,
+        worker_id,
+        transport,
+        prompt_text,
+        workspace_root=root,
+    )
     result = subprocess.run(argv, cwd=root, capture_output=True, text=True)
     output = redact_sensitive_text((result.stdout or "") + (result.stderr or ""))
     write_text_atomic(stdout_path, output)
+    if result.returncode != 0:
+        raise RuntimeError(
+            "worker launch failed: "
+            f"worker_id={worker_id} returncode={result.returncode} log={stdout_path}"
+        )
     return output
 
 

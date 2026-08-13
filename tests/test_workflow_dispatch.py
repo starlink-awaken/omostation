@@ -31,6 +31,7 @@ def _task(tmp_path: Path, *, approval_ref: str | None = None) -> None:
                         "enabled": True,
                         "admission_state": "admitted",
                         "transports": {"cli_prompt": {"command": "worker-a"}},
+                        "capabilities": ["workflow.execute", "runtime"],
                     }
                 ]
             },

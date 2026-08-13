@@ -9,7 +9,23 @@ from pydantic import BaseModel
 mcp = FastMCP("omo")
 
 OMO_ROOT = Path(__file__).resolve().parents[1]
-WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(OMO_ROOT.parents[1])))
+
+
+def _default_workspace_root() -> Path:
+    """Derive the Workspace root from projects/omo/src without using cwd."""
+    return OMO_ROOT.parents[2].resolve()
+
+
+def _resolve_workspace_root() -> Path:
+    configured = os.environ.get("WORKSPACE_ROOT")
+    return (
+        Path(configured).expanduser().resolve()
+        if configured
+        else _default_workspace_root()
+    )
+
+
+WORKSPACE_ROOT = _resolve_workspace_root()
 
 
 class BridgeRequest(BaseModel):
@@ -101,6 +117,7 @@ async def omo_bridge(req: BridgeRequest) -> str:
     try:
         result = subprocess.run(
             ["python3", "-m", "omo.cli", "bridge", req.spec_path, "--sequential"],
+            cwd=WORKSPACE_ROOT,
             capture_output=True,
             text=True,
             check=True,
@@ -125,6 +142,7 @@ async def omo_worker_dispatch(req: DispatchRequest) -> str:
                 "--worker",
                 req.worker_id,
             ],
+            cwd=WORKSPACE_ROOT,
             capture_output=True,
             text=True,
             check=True,
@@ -149,6 +167,7 @@ async def omo_worker_reclaim(req: ReclaimRequest) -> str:
                 "--worker",
                 req.worker_id,
             ],
+            cwd=WORKSPACE_ROOT,
             capture_output=True,
             text=True,
             check=True,
@@ -173,6 +192,7 @@ async def omo_yield_task(req: YieldRequest) -> str:
                 "--reason",
                 req.reason,
             ],
+            cwd=WORKSPACE_ROOT,
             capture_output=True,
             text=True,
             check=True,
@@ -188,6 +208,7 @@ async def omo_gc() -> str:
     try:
         result = subprocess.run(
             ["python3", "-m", "omo.cli", "worker", "gc"],
+            cwd=WORKSPACE_ROOT,
             capture_output=True,
             text=True,
             check=True,

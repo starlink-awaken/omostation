@@ -11,6 +11,8 @@ from .omo_io import write_text_atomic, write_yaml_atomic
 from .omo_redaction import redact_sensitive_text
 from .omo_shared import load_yaml
 
+_OPERATION_LEVELS = {"L0": 0, "L1": 1, "L2": 2, "L3": 3}
+
 
 def _timestamp_slug(now: str | None = None) -> str:
     if now:
@@ -117,6 +119,121 @@ def _worker_command(registry: dict, worker_id: str, transport: str) -> str:
     return str(worker["transports"][transport]["command"])
 
 
+def _capability_values(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item).strip() for item in value if str(item).strip()]
+
+
+def _required_capabilities(
+    task: dict[str, Any],
+    workflow_packet: dict[str, Any] | None,
+    *,
+    worker_id: str,
+) -> tuple[list[str], bool]:
+    required: list[str] = []
+    explicit = False
+
+    def collect(container: dict[str, Any], source: str) -> None:
+        nonlocal explicit
+        for key in ("required_capabilities", "capabilities"):
+            if key not in container:
+                continue
+            explicit = True
+            value = container[key]
+            if (
+                not isinstance(value, list)
+                or not value
+                or any(not isinstance(item, str) or not item.strip() for item in value)
+            ):
+                raise ValueError(
+                    "worker policy denied: "
+                    f"worker_id={worker_id} "
+                    "reason=invalid_capability_requirements "
+                    f"source={source}.{key}"
+                )
+            required.extend(item.strip() for item in value)
+
+    collect(task, "task")
+    if workflow_packet:
+        collect(workflow_packet, "workflow_packet")
+        admission = workflow_packet.get("admission")
+        if isinstance(admission, dict):
+            collect(admission, "workflow_packet.admission")
+    return list(dict.fromkeys(required)), explicit
+
+
+def _require_worker_policy(
+    registry: dict[str, Any],
+    worker: dict[str, Any],
+    task: dict[str, Any],
+    *,
+    allowed_write_paths: list[str],
+    workflow_packet: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Enforce the worker's bounded execution contract before dispatch writes."""
+    worker_id = str(worker.get("id", "unknown"))
+    allowed_level = str(
+        worker.get(
+            "allowed_operation_level",
+            registry.get("default_allowed_operation_level", "L1"),
+        )
+    ).upper()
+    if allowed_level not in _OPERATION_LEVELS:
+        raise ValueError(
+            "worker policy denied: "
+            f"worker_id={worker_id} reason=invalid_worker_operation_level"
+        )
+    task_levels: list[str] = []
+    for field in ("risk_level", "allowed_operation_level"):
+        level = str(task.get(field) or "L0").upper()
+        if level not in _OPERATION_LEVELS:
+            raise ValueError(
+                "worker policy denied: "
+                f"worker_id={worker_id} reason=invalid_task_operation_level "
+                f"field={field}"
+            )
+        task_levels.append(level)
+    requested_level = max(task_levels, key=_OPERATION_LEVELS.__getitem__)
+    if _OPERATION_LEVELS[requested_level] > _OPERATION_LEVELS[allowed_level]:
+        raise ValueError(
+            "worker policy denied: "
+            f"worker_id={worker_id} reason=operation_level_exceeded "
+            f"requested={requested_level} allowed={allowed_level}"
+        )
+
+    write_scope = worker.get("write_scope")
+    scope_mode = write_scope.get("mode") if isinstance(write_scope, dict) else None
+    if scope_mode == "none" and allowed_write_paths:
+        raise ValueError(
+            "worker policy denied: "
+            f"worker_id={worker_id} reason=write_scope_denied mode=none"
+        )
+
+    required, explicit_capabilities = _required_capabilities(
+        task,
+        workflow_packet,
+        worker_id=worker_id,
+    )
+    if (
+        worker.get("require_explicit_capabilities") is True
+        and not explicit_capabilities
+    ):
+        raise ValueError(
+            "worker policy denied: "
+            f"worker_id={worker_id} reason=capability_requirements_missing"
+        )
+    provided = set(_capability_values(worker.get("capabilities")))
+    missing = [capability for capability in required if capability not in provided]
+    if missing:
+        raise ValueError(
+            "worker policy denied: "
+            f"worker_id={worker_id} reason=capability_mismatch "
+            f"missing={','.join(missing)}"
+        )
+    return worker
+
+
 def _default_enabled_worker_id(registry: dict) -> str:
     default_role = registry.get("default_worker_role")
     for worker in registry.get("workers", []):
@@ -161,10 +278,21 @@ def _launch_worker_from_prompt(
     stdout_path: Path,
 ) -> str:
     prompt_text = prompt_path.read_text(encoding="utf-8")
-    argv = _build_launch_argv(registry, worker_id, transport, prompt_text)
+    argv = _build_launch_argv(
+        registry,
+        worker_id,
+        transport,
+        prompt_text,
+        workspace_root=root,
+    )
     result = subprocess.run(argv, cwd=root, capture_output=True, text=True)
     output = redact_sensitive_text((result.stdout or "") + (result.stderr or ""))
     write_text_atomic(stdout_path, output)
+    if result.returncode != 0:
+        raise RuntimeError(
+            "worker launch failed: "
+            f"worker_id={worker_id} returncode={result.returncode} log={stdout_path}"
+        )
     return output
 
 
@@ -209,10 +337,32 @@ def _omo_path(root: Path, omo_dir: str | Path = ".omo") -> Path:
 
 
 def _build_launch_argv(
-    registry: dict, worker_id: str, transport: str, prompt_text: str
+    registry: dict,
+    worker_id: str,
+    transport: str,
+    prompt_text: str,
+    *,
+    workspace_root: Path | None = None,
+    redact_workspace_root: bool = False,
 ) -> list[str]:
-    sentinel = "__OMO_PROMPT__"
-    template = _worker_command(registry, worker_id, transport).format(prompt=sentinel)
+    prompt_sentinel = "__OMO_PROMPT__"
+    workspace_sentinel = "__OMO_WORKSPACE_ROOT__"
+    command = _worker_command(registry, worker_id, transport)
+    if "{workspace_root}" in command:
+        if workspace_root is None:
+            raise ValueError("worker command requires a workspace root")
+        resolved_root = workspace_root.resolve()
+        if not resolved_root.is_dir():
+            raise ValueError(f"invalid workspace root: {resolved_root}")
+    else:
+        resolved_root = None
+    try:
+        template = command.format(
+            prompt=prompt_sentinel,
+            workspace_root=workspace_sentinel,
+        )
+    except (KeyError, ValueError) as exc:
+        raise ValueError(f"invalid worker command template: {command}") from exc
     argv = shlex.split(template)
     forbidden_fragments = ("&&", "||", "|")
     for index, arg in enumerate(argv):
@@ -222,4 +372,17 @@ def _build_launch_argv(
             raise ValueError(f"unsafe worker command template: {template}")
         if ";" in arg and arg != ";" and not arg.startswith("-c"):
             raise ValueError(f"unsafe worker command template: {template}")
-    return [prompt_text if arg == sentinel else arg for arg in argv]
+    resolved_argv: list[str] = []
+    for arg in argv:
+        if arg == prompt_sentinel:
+            resolved_argv.append(prompt_text)
+            continue
+        if workspace_sentinel in arg:
+            if resolved_root is None:
+                raise ValueError("worker command requires a workspace root")
+            workspace_value = (
+                "<workspace_root>" if redact_workspace_root else str(resolved_root)
+            )
+            arg = arg.replace(workspace_sentinel, workspace_value)
+        resolved_argv.append(arg)
+    return resolved_argv

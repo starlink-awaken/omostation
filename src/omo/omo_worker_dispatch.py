@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shlex
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -21,9 +22,9 @@ from .omo_worker_core import (
     _load_yaml,
     _omo_path,
     _require_admitted_worker,
+    _require_worker_policy,
     _timestamp_slug,
     _utc_now,
-    _worker_command,
     _write_yaml,
 )
 
@@ -172,12 +173,18 @@ def dispatch_task(
     registry = _load_yaml(omo / "_truth" / "registry" / "workers.yaml")
     # Admission is a hard precondition.  Validate before deriving a dispatch
     # id or creating any run/envelope/task/Mesh state so rejection is side-effect free.
-    _require_admitted_worker(registry, worker_id, transport)
+    worker = _require_admitted_worker(registry, worker_id, transport)
+    _require_worker_policy(
+        registry,
+        worker,
+        task,
+        allowed_write_paths=allowed_write_paths,
+        workflow_packet=workflow_packet,
+    )
 
     dispatch_now = now or _utc_now()
     dispatch_id = f"{task_id.lower()}-{worker_id}-{_timestamp_slug(dispatch_now)}"
     run_dir = omo / "workers" / "runs"
-    run_dir.mkdir(parents=True, exist_ok=True)
 
     # OMO v4.0 Task Gate: Anti-Entropy Mechanism
     debt_dispatch_file = omo / "debt" / "dispatch" / "current.yaml"
@@ -207,10 +214,51 @@ def dispatch_task(
     reclaim_path = omo_ref / "workers" / "runs" / f"{dispatch_id}-reclaim.md"
     review_path = omo_ref / "workers" / "runs" / f"{dispatch_id}-review.md"
     stdout_path = omo_ref / "workers" / "runs" / f"{dispatch_id}-stdout.log"
+    persisted_launch_argv = _build_launch_argv(
+        registry,
+        worker_id,
+        transport,
+        f"<prompt:{prompt_path}>",
+        workspace_root=root,
+        redact_workspace_root=True,
+    )
+    run_dir.mkdir(parents=True, exist_ok=True)
 
     source_docs = task.get("source_docs", [])
     deliverables = task.get("deliverables", [])
     allowed_paths = list(allowed_write_paths)
+    write_scope = worker.get("write_scope")
+    no_worker_writes = (
+        isinstance(write_scope, dict) and write_scope.get("mode") == "none"
+    )
+    write_constraints = (
+        [
+            "- No repository writes are permitted.",
+            "- Return the result on stdout or the governed evidence channel.",
+        ]
+        if no_worker_writes
+        else [
+            *(f"- You may write to `{path}`" for path in allowed_paths),
+            f"- You may write to `{task_file.relative_to(root)}`",
+            f"- You may write to `{review_path}`",
+        ]
+    )
+    deliverable_constraints = (
+        [
+            *(f"- Expected result reference: `{path}`" for path in deliverables),
+            "- The coordinator owns materialization of result references.",
+        ]
+        if no_worker_writes
+        else [
+            *(f"- Required deliverable: `{path}`" for path in deliverables),
+            "- Updating only the review note is not sufficient when required deliverables are listed.",
+        ]
+    )
+    deliverables_heading = (
+        "## Expected output references"
+        if no_worker_writes
+        else "## Required deliverables"
+    )
     recovery_lines = list(prompt_addendum or [])
     prompt = "\n".join(
         [
@@ -232,9 +280,7 @@ def dispatch_task(
             "",
             "## Constraints",
             "",
-            *(f"- You may write to `{path}`" for path in allowed_paths),
-            f"- You may write to `{task_file.relative_to(root)}`",
-            f"- You may write to `{review_path}`",
+            *write_constraints,
             "- Do not modify global state files.",
             "- Do not mark the task `done`.",
             *(
@@ -245,10 +291,9 @@ def dispatch_task(
                 if workflow_packet
             ),
             "",
-            "## Required deliverables",
+            deliverables_heading,
             "",
-            *(f"- Required deliverable: `{path}`" for path in deliverables),
-            "- Updating only the review note is not sufficient when required deliverables are listed.",
+            *deliverable_constraints,
             *recovery_lines,
         ]
     )
@@ -332,8 +377,8 @@ def dispatch_task(
     }
     _write_yaml(root / envelope_path, envelope)
 
-    launch_command = _worker_command(registry, worker_id, transport).format(
-        prompt=f"<prompt:{prompt_path}>"
+    launch_command = " ".join(
+        shlex.quote(argument) for argument in persisted_launch_argv
     )
     dispatch = {
         "version": 1,
@@ -409,12 +454,23 @@ def dispatch_task(
 
     if launch:
         prompt_text = (root / prompt_path).read_text(encoding="utf-8")
-        argv = _build_launch_argv(registry, worker_id, transport, prompt_text)
+        argv = _build_launch_argv(
+            registry,
+            worker_id,
+            transport,
+            prompt_text,
+            workspace_root=root,
+        )
         result = subprocess.run(argv, cwd=root, capture_output=True, text=True)
         log_content = redact_sensitive_text(
             (result.stdout or "") + (result.stderr or "")
         )
         write_text_atomic(root / stdout_path, log_content)
+        if result.returncode != 0:
+            raise RuntimeError(
+                "worker launch failed: "
+                f"worker_id={worker_id} returncode={result.returncode} log={stdout_path}"
+            )
 
         # Phase 28 Step 3: Tri-Plane Bus - Broadcast event to Agora EventBus
         def push_log_to_agora(dispatch_id: str, content: str):
