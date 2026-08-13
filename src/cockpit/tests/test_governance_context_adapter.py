@@ -133,7 +133,17 @@ def _write_binding_registry(root: Path, clients: dict[str, object]) -> None:
                             "control/evidence/documents-weijian-facts-audit/documents-weijian-facts-audit.json"
                         ),
                         "evidence_schema": "runtime.documents-facts-audit.evidence.v1",
-                    }
+                    },
+                    {
+                        "id": "documents-weijian-model-freshness",
+                        "domain_id": "vault",
+                        "owner": "runtime-control",
+                        "action": "audit_model_freshness",
+                        "evidence_relative_path": (
+                            "control/evidence/documents-weijian-model-freshness/documents-weijian-model-freshness.json"
+                        ),
+                        "evidence_schema": "runtime.documents-model-freshness.evidence.v1",
+                    },
                 ],
                 "domains": [{"id": "vault", "profile": "content-domain"}],
             },
@@ -234,6 +244,61 @@ def _write_runtime_controller_shadow_receipt(root: Path) -> Path:
         ),
         encoding="utf-8",
     )
+    return state_root
+
+
+def _write_runtime_model_freshness_receipt(
+    root: Path,
+    *,
+    owner_status: str = "attention",
+    job_status: str = "failed",
+    exit_code: int = 1,
+    owner_overrides: dict[str, object] | None = None,
+    receipt_overrides: dict[str, object] | None = None,
+) -> Path:
+    state_root = root / "runtime-state"
+    receipt = (
+        state_root
+        / "control"
+        / "evidence"
+        / "documents-weijian-model-freshness"
+        / "documents-weijian-model-freshness.json"
+    )
+    receipt.parent.mkdir(parents=True)
+    owner_evidence: dict[str, object] = {
+        "schema": "runtime.documents-model-freshness.evidence.v1",
+        "status": owner_status,
+        "checked_on": "2026-08-14",
+        "facts_last_reviewed": "2026-08-13",
+        "model_markdown_count": 2,
+        "fresh_model_count": 1 if owner_status != "unavailable" else 0,
+        "stale_model_count": 1 if owner_status == "attention" else 0,
+        "invalid_reviewed_count": 0,
+        "unreadable_regular_file_count": 0,
+        "error": None,
+    }
+    if owner_status == "ok":
+        owner_evidence["fresh_model_count"] = 2
+    elif owner_status == "unavailable":
+        owner_evidence.update(
+            {
+                "facts_last_reviewed": None,
+                "model_markdown_count": 0,
+                "error": "facts_file_missing",
+            }
+        )
+    owner_evidence.update(owner_overrides or {})
+    payload: dict[str, object] = {
+        "job_id": "documents-weijian-model-freshness",
+        "owner": "runtime-control",
+        "status": job_status,
+        "exit_code": exit_code,
+        "timed_out": False,
+        "evidence_error": None,
+        "owner_evidence": owner_evidence,
+    }
+    payload.update(receipt_overrides or {})
+    receipt.write_text(json.dumps(payload), encoding="utf-8")
     return state_root
 
 
@@ -759,6 +824,275 @@ def test_domain_facts_validation_fails_closed_for_missing_or_symlinked_receipts(
     symlinked = gc.domain_facts_validation_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
     assert symlinked["status"] == "unavailable"
     assert symlinked["available"] is False
+
+
+def test_domain_model_freshness_projects_only_the_bounded_runtime_receipt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, {})
+    state_root = _write_runtime_model_freshness_receipt(tmp_path)
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+
+    assert result["schema"] == "cockpit.domain-model-freshness.v1"
+    assert result["status"] == "attention"
+    assert result["available"] is True
+    assert result["freshness"] == {
+        "checked_on": "2026-08-14",
+        "facts_last_reviewed": "2026-08-13",
+        "model_markdown_count": 2,
+        "fresh_model_count": 1,
+        "stale_model_count": 1,
+        "invalid_reviewed_count": 0,
+        "unreadable_regular_file_count": 0,
+        "error": None,
+    }
+    assert result["job"] == {
+        "id": "documents-weijian-model-freshness",
+        "owner": "runtime-control",
+        "action": "audit_model_freshness",
+    }
+    assert set(result["sources"]) == {
+        "domain_registry",
+        "binding_registry",
+        "runtime_evidence",
+    }
+    assert "fixture-private-model.md" not in json.dumps(result)
+    assert "fixture private model body" not in json.dumps(result)
+
+
+@pytest.mark.parametrize(
+    ("owner_status", "job_status", "exit_code", "available"),
+    [
+        ("ok", "succeeded", 0, True),
+        ("attention", "failed", 1, True),
+        ("unavailable", "failed", 2, False),
+    ],
+)
+def test_domain_model_freshness_accepts_only_contract_status_relationships(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    owner_status: str,
+    job_status: str,
+    exit_code: int,
+    available: bool,
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, {})
+    state_root = _write_runtime_model_freshness_receipt(
+        tmp_path,
+        owner_status=owner_status,
+        job_status=job_status,
+        exit_code=exit_code,
+    )
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+
+    assert result["status"] == owner_status
+    assert result["available"] is available
+    assert result["schema"] == "cockpit.domain-model-freshness.v1"
+
+
+@pytest.mark.parametrize(
+    "owner_overrides",
+    [
+        {"model_markdown_count": True},
+        {"model_markdown_count": -1},
+        {"fresh_model_count": 2},
+        {"checked_on": "2026-02-30"},
+        {"facts_last_reviewed": "2026-8-13"},
+        {"error": "private/model.md"},
+        {"private_model_name": "fixture-private-model.md"},
+    ],
+)
+def test_domain_model_freshness_rejects_malformed_owner_evidence(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    owner_overrides: dict[str, object],
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, {})
+    state_root = _write_runtime_model_freshness_receipt(
+        tmp_path,
+        owner_overrides=owner_overrides,
+    )
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+
+    assert result["schema"] == "cockpit.domain-model-freshness.v1"
+    assert result["status"] == "unavailable"
+    assert result["available"] is False
+    assert result["freshness"] is None
+
+
+@pytest.mark.parametrize(
+    "receipt_overrides",
+    [
+        {"job_id": "wrong-job"},
+        {"owner": "wrong-owner"},
+        {"status": "succeeded", "exit_code": 1},
+        {"status": "failed", "exit_code": 0},
+        {"status": "failed", "exit_code": 2},
+        {"timed_out": True},
+        {"evidence_error": "private failure"},
+    ],
+)
+def test_domain_model_freshness_rejects_malformed_runtime_receipt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    receipt_overrides: dict[str, object],
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, {})
+    state_root = _write_runtime_model_freshness_receipt(
+        tmp_path,
+        receipt_overrides=receipt_overrides,
+    )
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+
+    assert result["schema"] == "cockpit.domain-model-freshness.v1"
+    assert result["status"] == "unavailable"
+    assert result["available"] is False
+
+
+def test_domain_model_freshness_fails_closed_for_missing_symlinked_and_oversized_receipts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, {})
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+    state_root = tmp_path / "runtime-state"
+
+    missing = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+    assert missing["status"] == "unavailable"
+    assert missing["available"] is False
+
+    state_root = _write_runtime_model_freshness_receipt(tmp_path)
+    receipt = (
+        state_root
+        / "control"
+        / "evidence"
+        / "documents-weijian-model-freshness"
+        / "documents-weijian-model-freshness.json"
+    )
+    valid_receipt = receipt.read_bytes()
+    receipt.write_text("{", encoding="utf-8")
+    malformed = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+    assert malformed["status"] == "unavailable"
+    assert malformed["available"] is False
+
+    receipt.write_bytes(valid_receipt)
+    target = tmp_path / "caller-owned-model-freshness.json"
+    target.write_text(receipt.read_text(encoding="utf-8"), encoding="utf-8")
+    receipt.unlink()
+    receipt.symlink_to(target)
+    symlinked = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+    assert symlinked["status"] == "unavailable"
+    assert symlinked["available"] is False
+
+    receipt.unlink()
+    receipt.write_bytes(b"{" + b" " * (32 * 1024))
+    oversized = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+    assert oversized["status"] == "unavailable"
+    assert oversized["available"] is False
+
+
+@pytest.mark.parametrize(
+    ("mutation", "domain_id"),
+    [
+        ("duplicate", "vault"),
+        ("wrong_action", "vault"),
+        ("wrong_owner", "vault"),
+        ("wrong_schema", "vault"),
+        ("traversal", "vault"),
+        ("unchanged", "unknown"),
+    ],
+)
+def test_domain_model_freshness_rejects_invalid_binding_or_domain(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mutation: str,
+    domain_id: str,
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, {})
+    binding_path = tmp_path / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
+    binding = yaml.safe_load(binding_path.read_text(encoding="utf-8"))
+    job = next(item for item in binding["runtime_jobs"] if item["action"] == "audit_model_freshness")
+    if mutation == "duplicate":
+        binding["runtime_jobs"].append(dict(job))
+    elif mutation == "wrong_action":
+        job["action"] = "audit_model_freshness_wrong"
+    elif mutation == "wrong_owner":
+        job["owner"] = "runtime-facts"
+    elif mutation == "wrong_schema":
+        job["evidence_schema"] = "runtime.documents-model-freshness.evidence.v0"
+    elif mutation == "traversal":
+        job["evidence_relative_path"] = "../private-model.json"
+    binding_path.write_text(yaml.safe_dump(binding, sort_keys=False), encoding="utf-8")
+    state_root = _write_runtime_model_freshness_receipt(tmp_path)
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = gc.domain_model_freshness_status(domain_id, workspace_root=tmp_path, runtime_state_root=state_root)
+
+    assert result["schema"] == "cockpit.domain-model-freshness.v1"
+    assert result["status"] == "unavailable"
+    assert result["available"] is False
+
+
+def test_domain_model_freshness_never_reads_documents_content(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, {})
+    state_root = _write_runtime_model_freshness_receipt(tmp_path)
+    documents_root = tmp_path / "documents-content"
+    domain_root = documents_root / "vault"
+    models_root = domain_root / "_entities" / "models"
+    models_root.mkdir(parents=True)
+    models_root.joinpath("fixture-private-model.md").write_text(
+        "last-reviewed: 2026-08-01\nfixture private model body\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+    monkeypatch.setattr(
+        gc,
+        "_load_domains",
+        lambda *_args, **_kwargs: (
+            registry_path,
+            object(),
+            [{"id": "vault", "path": str(domain_root)}],
+        ),
+    )
+    original_read_text = Path.read_text
+
+    def guarded_read_text(path: Path, *args: object, **kwargs: object) -> str:
+        if documents_root in path.parents or path == documents_root:
+            raise AssertionError("model freshness projection must not read Documents content")
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", guarded_read_text)
+
+    result = gc.domain_model_freshness_status(
+        "vault",
+        workspace_root=tmp_path,
+        documents_root=documents_root,
+        runtime_state_root=state_root,
+    )
+
+    assert result["status"] == "attention"
+    assert result["freshness"]["stale_model_count"] == 1
 
 
 def test_domain_controller_shadow_reads_only_the_registered_incomplete_receipt(

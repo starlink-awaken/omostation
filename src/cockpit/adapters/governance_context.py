@@ -21,6 +21,56 @@ _CAPABILITY_ROUTE_CONTRACTS = {
 }
 _FACTS_EVIDENCE_SCHEMA = "runtime.documents-facts-audit.evidence.v1"
 _CONTROLLER_SHADOW_EVIDENCE_SCHEMA = "runtime.documents-controller-shadow.evidence.v2"
+_MODEL_FRESHNESS_EVIDENCE_SCHEMA = "runtime.documents-model-freshness.evidence.v1"
+_MODEL_FRESHNESS_ERRORS = frozenset(
+    {
+        "domain_root_missing",
+        "domain_root_unreadable",
+        "domain_root_not_direct",
+        "domain_path_invalid",
+        "entities_directory_missing",
+        "entities_directory_unreadable",
+        "entities_directory_not_direct",
+        "facts_file_missing",
+        "facts_file_not_regular",
+        "facts_file_unreadable",
+        "facts_last_reviewed_missing",
+        "facts_last_reviewed_invalid",
+        "models_directory_missing",
+        "models_directory_unreadable",
+        "models_directory_not_direct",
+        "models_directory_empty",
+        "model_file_not_regular",
+        "model_file_unreadable",
+        "model_last_reviewed_missing",
+        "model_last_reviewed_invalid",
+    }
+)
+_MODEL_FRESHNESS_PRE_FACTS_ERRORS = frozenset(
+    {
+        "domain_root_missing",
+        "domain_root_unreadable",
+        "domain_root_not_direct",
+        "domain_path_invalid",
+        "entities_directory_missing",
+        "entities_directory_unreadable",
+        "entities_directory_not_direct",
+        "facts_file_missing",
+        "facts_file_not_regular",
+        "facts_file_unreadable",
+        "facts_last_reviewed_missing",
+        "facts_last_reviewed_invalid",
+    }
+)
+_MODEL_FRESHNESS_DIRECTORY_ERRORS = frozenset(
+    {
+        "models_directory_missing",
+        "models_directory_unreadable",
+        "models_directory_not_direct",
+        "models_directory_empty",
+    }
+)
+_MODEL_FRESHNESS_REVIEWED_ERRORS = frozenset({"model_last_reviewed_missing", "model_last_reviewed_invalid"})
 _CONTROLLER_SHADOW_LEGACY_RULE_IDS = (
     "CR01",
     "CR02",
@@ -423,6 +473,29 @@ def _controller_shadow_unavailable(
     }
 
 
+def _model_freshness_unavailable(
+    requested: str,
+    source: Path,
+    binding_source: str,
+    error: str,
+    *,
+    runtime_evidence: Path | None = None,
+) -> dict[str, Any]:
+    sources = {"domain_registry": str(source), "binding_registry": binding_source}
+    if runtime_evidence is not None:
+        sources["runtime_evidence"] = str(runtime_evidence)
+    return {
+        "schema": "cockpit.domain-model-freshness.v1",
+        "status": "unavailable",
+        "available": False,
+        "domain_id": requested,
+        "job": None,
+        "freshness": None,
+        "sources": sources,
+        "error": error,
+    }
+
+
 def _relative_path(value: object, *, label: str) -> Path:
     if not isinstance(value, str) or not value:
         raise ValueError(f"{label} must be a non-empty relative path")
@@ -486,6 +559,37 @@ def _runtime_controller_shadow_job(binding: dict[str, Any], domain_id: str) -> d
         "id": job_id,
         "owner": owner,
         "action": "shadow_legacy_controller",
+        "evidence_relative_path": str(evidence_path),
+    }
+
+
+def _runtime_model_freshness_job(binding: dict[str, Any], domain_id: str) -> dict[str, str]:
+    """Return the unique configured Runtime model-freshness job."""
+
+    matches = [
+        item
+        for item in binding.get("runtime_jobs", [])
+        if isinstance(item, dict)
+        and item.get("domain_id") == domain_id
+        and item.get("action") == "audit_model_freshness"
+    ]
+    if len(matches) != 1:
+        raise ValueError(f"no unique Runtime model freshness job configured for domain: {domain_id}")
+    item = matches[0]
+    job_id = item.get("id")
+    owner = item.get("owner")
+    evidence_schema = item.get("evidence_schema")
+    if not isinstance(job_id, str) or not job_id:
+        raise ValueError("Runtime model freshness job id must be non-empty")
+    if owner != "runtime-control":
+        raise ValueError("Runtime model freshness job owner must be runtime-control")
+    if evidence_schema != _MODEL_FRESHNESS_EVIDENCE_SCHEMA:
+        raise ValueError("Runtime model freshness job has an unsupported evidence schema")
+    evidence_path = _relative_path(item.get("evidence_relative_path"), label="Runtime evidence path")
+    return {
+        "id": job_id,
+        "owner": owner,
+        "action": "audit_model_freshness",
         "evidence_relative_path": str(evidence_path),
     }
 
@@ -571,6 +675,65 @@ def _non_negative_int(value: object, *, label: str) -> int:
     return value
 
 
+def _iso_date(value: object, *, label: str, optional: bool = False) -> str | None:
+    if value is None and optional:
+        return None
+    if not isinstance(value, str):
+        raise ValueError(f"runtime evidence {label} must be an ISO date")
+    try:
+        parsed = datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError as exc:
+        raise ValueError(f"runtime evidence {label} must be an ISO date") from exc
+    if parsed.isoformat() != value:
+        raise ValueError(f"runtime evidence {label} must be an ISO date")
+    return value
+
+
+def _unavailable_model_freshness_is_consistent(freshness: dict[str, Any]) -> bool:
+    error = freshness["error"]
+    facts_reviewed = freshness["facts_last_reviewed"]
+    model_count = freshness["model_markdown_count"]
+    fresh_count = freshness["fresh_model_count"]
+    stale_count = freshness["stale_model_count"]
+    invalid_count = freshness["invalid_reviewed_count"]
+    unreadable_count = freshness["unreadable_regular_file_count"]
+    no_model_observation = (
+        model_count == 0 and fresh_count == 0 and stale_count == 0 and invalid_count == 0 and unreadable_count == 0
+    )
+    if error in _MODEL_FRESHNESS_PRE_FACTS_ERRORS:
+        return facts_reviewed is None and no_model_observation
+    if error in _MODEL_FRESHNESS_DIRECTORY_ERRORS:
+        return facts_reviewed is not None and no_model_observation
+    if error == "model_file_not_regular":
+        return (
+            facts_reviewed is not None
+            and model_count > 0
+            and fresh_count == 0
+            and stale_count == 0
+            and invalid_count == 0
+            and unreadable_count == 0
+        )
+    if error == "model_file_unreadable":
+        return (
+            facts_reviewed is not None
+            and model_count > 0
+            and fresh_count == 0
+            and stale_count == 0
+            and invalid_count == 0
+            and unreadable_count == 1
+        )
+    if error in _MODEL_FRESHNESS_REVIEWED_ERRORS:
+        return (
+            facts_reviewed is not None
+            and model_count > 0
+            and fresh_count == 0
+            and stale_count == 0
+            and invalid_count == 1
+            and unreadable_count == 0
+        )
+    return False
+
+
 def _validated_facts_receipt(receipt: dict[str, Any], job: dict[str, str]) -> tuple[str, dict[str, Any]]:
     if receipt.get("job_id") != job["id"] or receipt.get("owner") != job["owner"]:
         raise ValueError("runtime evidence does not match the configured job")
@@ -606,6 +769,102 @@ def _validated_facts_receipt(receipt: dict[str, Any], job: dict[str, str]) -> tu
     if owner_status == "invalid" and receipt_status == "failed" and exit_code != 0:
         return "violations", validation
     raise ValueError("runtime receipt and facts validation status disagree")
+
+
+def _validated_model_freshness_receipt(receipt: dict[str, Any], job: dict[str, str]) -> tuple[str, dict[str, Any]]:
+    """Validate status, aggregates and exit-code relationship in one receipt."""
+
+    if receipt.get("job_id") != job["id"] or receipt.get("owner") != job["owner"]:
+        raise ValueError("Runtime evidence does not match the configured job")
+    if receipt.get("timed_out") is not False or receipt.get("evidence_error") is not None:
+        raise ValueError("Runtime evidence did not complete a valid model freshness audit")
+    owner_evidence = receipt.get("owner_evidence")
+    fields = {
+        "schema",
+        "status",
+        "checked_on",
+        "facts_last_reviewed",
+        "model_markdown_count",
+        "fresh_model_count",
+        "stale_model_count",
+        "invalid_reviewed_count",
+        "unreadable_regular_file_count",
+        "error",
+    }
+    if (
+        not isinstance(owner_evidence, dict)
+        or set(owner_evidence) != fields
+        or owner_evidence.get("schema") != _MODEL_FRESHNESS_EVIDENCE_SCHEMA
+    ):
+        raise ValueError("Runtime evidence has an invalid model freshness schema")
+    status = owner_evidence.get("status")
+    if status not in {"ok", "attention", "unavailable"}:
+        raise ValueError("Runtime evidence has an invalid model freshness status")
+    freshness = {
+        "checked_on": _iso_date(owner_evidence.get("checked_on"), label="checked_on"),
+        "facts_last_reviewed": _iso_date(
+            owner_evidence.get("facts_last_reviewed"),
+            label="facts_last_reviewed",
+            optional=True,
+        ),
+        "model_markdown_count": _non_negative_int(
+            owner_evidence.get("model_markdown_count"), label="model_markdown_count"
+        ),
+        "fresh_model_count": _non_negative_int(owner_evidence.get("fresh_model_count"), label="fresh_model_count"),
+        "stale_model_count": _non_negative_int(owner_evidence.get("stale_model_count"), label="stale_model_count"),
+        "invalid_reviewed_count": _non_negative_int(
+            owner_evidence.get("invalid_reviewed_count"), label="invalid_reviewed_count"
+        ),
+        "unreadable_regular_file_count": _non_negative_int(
+            owner_evidence.get("unreadable_regular_file_count"),
+            label="unreadable_regular_file_count",
+        ),
+        "error": owner_evidence.get("error"),
+    }
+    model_count = freshness["model_markdown_count"]
+    fresh_count = freshness["fresh_model_count"]
+    stale_count = freshness["stale_model_count"]
+    invalid_count = freshness["invalid_reviewed_count"]
+    unreadable_count = freshness["unreadable_regular_file_count"]
+    error = freshness["error"]
+    if (
+        fresh_count + stale_count > model_count
+        or (status == "unavailable") != (error in _MODEL_FRESHNESS_ERRORS)
+        or (status != "unavailable" and error is not None)
+        or (status == "unavailable" and not _unavailable_model_freshness_is_consistent(freshness))
+        or (
+            status == "ok"
+            and (
+                model_count == 0
+                or fresh_count != model_count
+                or stale_count != 0
+                or invalid_count != 0
+                or unreadable_count != 0
+                or freshness["facts_last_reviewed"] is None
+            )
+        )
+        or (
+            status == "attention"
+            and (
+                model_count == 0
+                or fresh_count + stale_count != model_count
+                or stale_count == 0
+                or invalid_count != 0
+                or unreadable_count != 0
+                or freshness["facts_last_reviewed"] is None
+            )
+        )
+    ):
+        raise ValueError("Runtime evidence has invalid model freshness aggregates")
+    exit_code = receipt.get("exit_code")
+    expected = {
+        "ok": ("succeeded", 0),
+        "attention": ("failed", 1),
+        "unavailable": ("failed", 2),
+    }[status]
+    if isinstance(exit_code, bool) or (receipt.get("status"), exit_code) != expected:
+        raise ValueError("Runtime receipt and model freshness status disagree")
+    return status, freshness
 
 
 def _validated_controller_shadow_receipt(receipt: dict[str, Any], job: dict[str, str]) -> dict[str, Any]:
@@ -701,6 +960,61 @@ def domain_facts_validation_status(
         "domain_id": requested,
         "job": {key: job[key] for key in ("id", "owner", "action")},
         "validation": validation,
+        "sources": {
+            "domain_registry": str(source),
+            "binding_registry": binding_source,
+            "runtime_evidence": str(evidence_path),
+        },
+    }
+
+
+def domain_model_freshness_status(
+    domain_id: str,
+    *,
+    workspace_root: str | Path | None = None,
+    registry_path: str | Path | None = None,
+    documents_root: str | Path | None = None,
+    runtime_state_root: str | Path | None = None,
+) -> dict[str, Any]:
+    """Project only a validated Runtime model-freshness receipt."""
+
+    requested = domain_id.strip()
+    source = _registry_path(registry_path, documents_root=documents_root)
+    workspace = resolve_workspace_root(workspace_root)
+    binding = _binding_context(requested, workspace)
+    binding_source = str(binding["source"])
+    try:
+        source, _registry, domains = _load_domains(registry_path, documents_root=documents_root)
+        if not requested or not any(domain["id"] == requested for domain in domains):
+            raise ValueError(f"unknown domain: {requested}")
+        if binding["status"] != "ok":
+            raise ValueError(binding.get("error", "domain binding is unavailable"))
+        job = _runtime_model_freshness_job(binding, requested)
+        state_root = _runtime_state_root(
+            binding,
+            runtime_state_root=runtime_state_root,
+            documents_root=documents_root,
+        )
+        evidence_path = state_root / job["evidence_relative_path"]
+        receipt = _read_bounded_runtime_receipt(state_root, Path(job["evidence_relative_path"]))
+        status, freshness = _validated_model_freshness_receipt(receipt, job)
+    except (OSError, ValueError) as exc:
+        evidence = locals().get("evidence_path")
+        return _model_freshness_unavailable(
+            requested,
+            source,
+            binding_source,
+            str(exc),
+            runtime_evidence=evidence if isinstance(evidence, Path) else None,
+        )
+
+    return {
+        "schema": "cockpit.domain-model-freshness.v1",
+        "status": status,
+        "available": status != "unavailable",
+        "domain_id": requested,
+        "job": {key: job[key] for key in ("id", "owner", "action")},
+        "freshness": freshness,
         "sources": {
             "domain_registry": str(source),
             "binding_registry": binding_source,

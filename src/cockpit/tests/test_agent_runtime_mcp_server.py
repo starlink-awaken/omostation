@@ -219,6 +219,8 @@ class TestGovernanceTools:
             "domain_project_status",
             "domain_facts_audit",
             "domain_facts_validation_status",
+            "domain_controller_shadow_status",
+            "domain_model_freshness_status",
             "cards_status",
             "cards_check",
             "kems_status",
@@ -288,4 +290,21 @@ class TestGovernanceTools:
         )
 
         assert json.loads(agent_runtime_mcp_server.domain_controller_shadow_status("vault")) == payload
+        assert seen == ["vault"]
+
+    def test_domain_model_freshness_status_passes_domain_id_and_returns_parseable_envelope(self, monkeypatch):
+        seen = []
+        payload = {
+            "schema": "cockpit.domain-model-freshness.v1",
+            "status": "attention",
+            "available": True,
+        }
+        monkeypatch.setattr(
+            agent_runtime_mcp_server.governance_context,
+            "domain_model_freshness_status",
+            lambda domain_id: seen.append(domain_id) or payload,
+            raising=False,
+        )
+
+        assert json.loads(agent_runtime_mcp_server.domain_model_freshness_status("vault")) == payload
         assert seen == ["vault"]
