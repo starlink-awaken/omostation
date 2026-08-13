@@ -10,7 +10,13 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "documents-chatgpt-tunnel.py"
-TOOLS = ["workspace_context", "domain_context", "cards_status", "cards_check"]
+TOOLS = [
+    "workspace_context",
+    "domain_context",
+    "cards_status",
+    "cards_check",
+    "domain_facts_validation_status",
+]
 
 
 def _project_registry(tmp_path: Path) -> tuple[Path, Path]:
