@@ -489,3 +489,24 @@ older `/opt/homebrew/bin/runtime` 0.1.0 entrypoint, which does not expose the
 `~/.local/bin/runtime`. Changing PATH precedence or replacing the older global
 entrypoint is a separate system-configuration decision and is intentionally
 not performed here.
+
+## 2026-08-13 Runtime control-health owner reconciliation
+
+Runtime PR #52 merged as `57b5d54`; Workspace PR #1429 merged as `e63d8dc`
+and advances `projects/runtime` to that owner. The registered manual job
+`documents-weijian-control-health` is a bounded, read-only health projection:
+it reads the Weijian `signals.md` and facts view, writes its receipt only below
+the Runtime state root, and does not start or replace the domain-local
+controller.
+
+An installed-entrypoint smoke used an isolated Runtime state root. It completed
+the projection without a process error and left both Documents inputs unchanged.
+The owner correctly returned `exit_code=1` with `status=attention`, rather than
+pretending success: the facts view was current, there were no red signals, and
+13 warning signals require follow-up. Runtime PR lint/test CI and the complete
+Workspace PR gate set passed before merge.
+
+This extends owner parity only. The `work-runtime` migration remains `pending`:
+the existing crontab, Claude Scheduled, domain gateway, PATH precedence, and
+Documents-local controller consumers are unchanged. Any consumer or schedule
+cutover remains a separately confirmed operation.
