@@ -207,3 +207,30 @@ facts artifact and three do not (`opc`, `work-docs`, `work-contracts`). This is
 the next content-quality iteration, not a reason to create empty facts files or
 to reopen the capability-route work. Per-client reload/UI evidence and ChatGPT
 tunnel provisioning also remain unclaimed.
+
+## 2026-08-13 domain facts reconciliation
+
+The facts gate was closed by adding evidence, not by weakening the audit. Before
+the change, the installed command reported nine present and three missing
+domains. The missing domains all had source material, so treating the absence as
+intentional would have hidden useful structure.
+
+Three minimal facts files were added:
+
+- `@OPC/_entities/facts.md` cites `DOMAIN.yaml`, `ENTITIES.md`, and `INDEX.md`;
+- `@工作文档/_entities/facts.md` stays at the federation layer and cites the L4
+  registry plus its entity/knowledge routing indexes;
+- `@工作文档/合同法规/_entities/facts.md` distinguishes original documents,
+  navigation indexes, and derived OCR text.
+
+No volatile counts, customer claims, budgets, or inferred business state were
+introduced. Post-change evidence is `status=ok`, total 12, present 12, and zero
+missing/unreadable/invalid; all three targeted single-domain calls also return
+`status=ok`.
+
+The contracts domain is a nested local Git repository without a remote. Only the
+new facts file was committed (`7acdccb`); its unrelated existing modifications,
+deletions, and untracked files were not staged. Documents root, OPC, and the
+work-docs federation root are not Git repositories, so their facts files remain
+installed content-plane artifacts. This evidence closes the facts-surface gap,
+not repository cleanliness, whole-domain freshness, or client UI validation.
