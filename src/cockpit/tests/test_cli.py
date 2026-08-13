@@ -367,8 +367,8 @@ def test_model_freshness_json_preserves_envelope_and_exit_contract(monkeypatch, 
         "domain_id": "work-weijian",
         "sources": {
             "domain_registry": "l4-domain-registry",
-            "binding_registry": ".omo/_truth/registry/documents-domain-projects.yaml",
-            "runtime_evidence": ".local/state/omostation/runtime/control/evidence/model-freshness.json",
+            "binding_registry": "workspace-documents-domain-projects",
+            "runtime_evidence": "runtime-model-freshness-evidence",
         },
         "freshness": {
             "checked_on": "2026-08-14",
@@ -418,6 +418,53 @@ def test_model_freshness_json_actual_adapter_redacts_documents_registry_failure(
     assert str(documents_root) not in output
     assert registry_path.name not in output
     assert str(registry_path) not in output
+
+
+@pytest.mark.parametrize("json_mode", [True, False])
+def test_model_freshness_cli_exception_boundary_returns_pathless_unavailable_envelope(
+    tmp_path, monkeypatch, capsys, json_mode
+):
+    from cockpit.commands import l4bridge
+
+    documents_root = tmp_path / "Documents-private"
+    secret_path = documents_root / "private-domain-registry.yaml"
+
+    def raise_documents_path(_domain_id):
+        raise RuntimeError(f"failed to load {secret_path}")
+
+    monkeypatch.setattr(
+        l4bridge.governance_context,
+        "domain_model_freshness_status",
+        raise_documents_path,
+    )
+    argv = ["cockpit", "model-freshness", "work-weijian"]
+    if json_mode:
+        argv.append("--json")
+
+    with patch("sys.argv", argv):
+        assert main() == 2
+
+    captured = capsys.readouterr()
+    output = captured.out + captured.err
+    assert str(documents_root) not in output
+    assert secret_path.name not in output
+    if json_mode:
+        payload = json.loads(captured.out)
+        assert payload == {
+            "schema": "cockpit.domain-model-freshness.v1",
+            "status": "unavailable",
+            "available": False,
+            "domain_id": "work-weijian",
+            "job": None,
+            "freshness": None,
+            "sources": {
+                "domain_registry": "l4-domain-registry",
+                "binding_registry": "workspace-documents-domain-projects",
+            },
+            "error": "model_freshness_cli_unavailable",
+        }
+    else:
+        assert "unavailable" in captured.out
 
 
 def test_model_freshness_text_prints_only_status_and_aggregates(monkeypatch, capsys):

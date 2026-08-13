@@ -309,8 +309,8 @@ class TestGovernanceTools:
             "available": available,
             "sources": {
                 "domain_registry": "l4-domain-registry",
-                "binding_registry": ".omo/_truth/registry/documents-domain-projects.yaml",
-                "runtime_evidence": ".local/state/omostation/runtime/control/evidence/model-freshness.json",
+                "binding_registry": "workspace-documents-domain-projects",
+                "runtime_evidence": "runtime-model-freshness-evidence",
             },
         }
         monkeypatch.setattr(
@@ -344,3 +344,35 @@ class TestGovernanceTools:
         assert str(documents_root) not in output
         assert registry_path.name not in output
         assert str(registry_path) not in output
+
+    def test_domain_model_freshness_status_exception_boundary_returns_pathless_unavailable_envelope(
+        self, tmp_path: Path, monkeypatch
+    ):
+        documents_root = tmp_path / "Documents-private"
+        secret_path = documents_root / "private-domain-registry.yaml"
+
+        def raise_documents_path(_domain_id):
+            raise RuntimeError(f"failed to load {secret_path}")
+
+        monkeypatch.setattr(
+            agent_runtime_mcp_server.governance_context,
+            "domain_model_freshness_status",
+            raise_documents_path,
+        )
+
+        output = agent_runtime_mcp_server.domain_model_freshness_status("work-weijian")
+        assert json.loads(output) == {
+            "schema": "cockpit.domain-model-freshness.v1",
+            "status": "unavailable",
+            "available": False,
+            "domain_id": "work-weijian",
+            "job": None,
+            "freshness": None,
+            "sources": {
+                "domain_registry": "l4-domain-registry",
+                "binding_registry": "workspace-documents-domain-projects",
+            },
+            "error": "model_freshness_mcp_unavailable",
+        }
+        assert str(documents_root) not in output
+        assert secret_path.name not in output

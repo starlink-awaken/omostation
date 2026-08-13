@@ -940,6 +940,50 @@ def test_domain_model_freshness_accepts_only_contract_status_relationships(
         assert result["freshness"]["error"] == "facts_file_missing"
 
 
+@pytest.mark.parametrize("scenario", ["ok", "valid_unavailable", "adapter_unavailable"])
+def test_domain_model_freshness_sources_never_expose_physical_paths(
+    tmp_path: Path,
+    scenario: str,
+) -> None:
+    gc = _adapter()
+    documents_root = tmp_path / "Documents-private"
+    workspace_root = documents_root / "workspace"
+    registry_path = _write_domain_registry(documents_root)
+    _write_binding_registry(workspace_root, {})
+    runtime_root = tmp_path / "runtime-state"
+    if scenario != "adapter_unavailable":
+        runtime_root = _write_runtime_model_freshness_receipt(
+            tmp_path,
+            owner_status="ok" if scenario == "ok" else "unavailable",
+            job_status="succeeded" if scenario == "ok" else "failed",
+            exit_code=0 if scenario == "ok" else 2,
+        )
+
+    result = gc.domain_model_freshness_status(
+        "vault",
+        workspace_root=workspace_root,
+        registry_path=registry_path,
+        documents_root=documents_root,
+        runtime_state_root=runtime_root,
+    )
+
+    expected_status = {
+        "ok": "ok",
+        "valid_unavailable": "unavailable",
+        "adapter_unavailable": "unavailable",
+    }[scenario]
+    assert result["status"] == expected_status
+    if scenario == "valid_unavailable":
+        assert result["freshness"]["error"] == "facts_file_missing"
+    if scenario == "adapter_unavailable":
+        assert result["error"] == "runtime_receipt_unavailable"
+    encoded = json.dumps(result, ensure_ascii=False)
+    assert result["sources"]["binding_registry"] == "workspace-documents-domain-projects"
+    assert all(not Path(source).is_absolute() for source in result["sources"].values())
+    assert str(documents_root) not in encoded
+    assert str(workspace_root) not in encoded
+
+
 @pytest.mark.parametrize(
     "owner_overrides",
     [
