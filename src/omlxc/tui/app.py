@@ -13,7 +13,9 @@ from pydantic import JsonValue
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
+from textual.coordinate import Coordinate
 from textual.events import Resize
+from textual.widget import Widget
 from textual.widgets import (
     ContentSwitcher,
     DataTable,
@@ -154,6 +156,7 @@ class PendingMutation:
 
 # ─── Overview page ────────────────────────────────────────────────────────────
 
+
 class OverviewPage(Static):
     """Animated summary card grid."""
 
@@ -215,7 +218,7 @@ class OverviewPage(Static):
         )
         yield Label("Last refresh: —", id="ov-last-refresh", classes="stat-footer")
 
-    def refresh_data(self, snapshot: CockpitSnapshot, conn: str) -> None:
+    def refresh_data(self, snapshot: CockpitSnapshot, conn: str, last_update: str) -> None:
         status = str(snapshot.health.get("status", "unknown"))
         active = sum(
             item.get("state") in {"pending", "planning", "running", "cancelling"}
@@ -224,25 +227,23 @@ class OverviewPage(Static):
         sym, color = STATE_ICONS.get(status.lower(), ("·", "bright_black"))
         self.query_one("#ov-daemon", Label).update(f"[{color}]{sym}  {status}[/{color}]")
         daemon_card = self.query_one("#ov-daemon").parent
+        if daemon_card is None:
+            return
+        card = cast(Widget, daemon_card)
         if status.lower() not in ("healthy", "online", "ok"):
-            daemon_card.set_styles("border: solid red;")
+            card.set_styles("border: solid red;")
         else:
-            daemon_card.set_styles("border: solid #1c3a5e;")
-        self.query_one("#ov-nodes", Label).update(
-            f"[cyan]{len(snapshot.nodes)}[/cyan]"
-        )
-        self.query_one("#ov-models", Label).update(
-            f"[cyan]{len(snapshot.models)}[/cyan]"
-        )
+            card.set_styles("border: solid #1c3a5e;")
+        self.query_one("#ov-nodes", Label).update(f"[cyan]{len(snapshot.nodes)}[/cyan]")
+        self.query_one("#ov-models", Label).update(f"[cyan]{len(snapshot.models)}[/cyan]")
         job_color = "yellow" if active else "bright_black"
         self.query_one("#ov-jobs", Label).update(f"[{job_color}]{active}[/{job_color}]")
-        
-        app = self.app
-        last_str = getattr(app, '_last_update_str', '00:00:00')
-        self.query_one("#ov-last-refresh", Label).update(f"[dim]Last refresh: {last_str}[/dim]")
+
+        self.query_one("#ov-last-refresh", Label).update(f"[dim]Last refresh: {last_update}[/dim]")
 
 
 # ─── Table pages ──────────────────────────────────────────────────────────────
+
 
 class TablePage(Static):
     """A page backed by a DataTable widget."""
@@ -259,11 +260,11 @@ class TablePage(Static):
         yield Label(f"No {self.slug}", id=f"empty-{self.slug}", classes="empty-state")
 
     def on_mount(self) -> None:
-        table = self.query_one(DataTable)
+        table = cast(DataTable[str], self.query_one(DataTable))
         table.add_columns(*self.COLUMN_LABELS)
 
     def _sync_rows(self, rows: list[tuple[str, ...]]) -> None:
-        table = self.query_one(DataTable)
+        table = cast(DataTable[str], self.query_one(DataTable))
         empty_lbl = self.query_one(f"#empty-{self.slug}", Label)
         if not rows:
             table.display = False
@@ -350,7 +351,7 @@ class MetricsPage(TablePage):
         super().__init__("performance")
 
     def refresh_data(self, snapshot: CockpitSnapshot) -> None:
-        rows = []
+        rows: list[tuple[str, ...]] = []
         for key, value in sorted(snapshot.metrics.items()):
             val_str = str(value)
             if isinstance(value, (int, float)):
@@ -375,7 +376,7 @@ class LogsPage(Static):
         super().__init__(id="page-logs", classes="cockpit-page")
 
     def refresh_data(self, event_log: list[str]) -> None:
-        lines = []
+        lines: list[str] = []
         for entry in event_log[-40:]:
             ts, _, rest = entry.partition("  ")
             parts = rest.split("  ", 1)
@@ -385,9 +386,7 @@ class LogsPage(Static):
             c = "cyan" if "model." in kind else c
             c = "red" if "error" in kind.lower() else c
             lines.append(f"[dim]{ts}[/dim]  [{c}]{kind}[/{c}]  {extra}")
-        self.update(
-            "\n".join(lines) if lines else "[dim]No events yet.[/dim]"
-        )
+        self.update("\n".join(lines) if lines else "[dim]No events yet.[/dim]")
 
 
 class RoutesPage(Static):
@@ -422,6 +421,7 @@ class SettingsPage(Static):
 
 # ─── Nav item ─────────────────────────────────────────────────────────────────
 
+
 class NavItem(ListItem):
     def __init__(self, slug: str) -> None:
         icon = PAGE_ICONS[slug]
@@ -433,6 +433,7 @@ class NavItem(ListItem):
 
 
 # ─── Main app ─────────────────────────────────────────────────────────────────
+
 
 class CockpitApp(App[None]):
     """Keyboard-first local compute dashboard with explicit freshness state."""
@@ -656,15 +657,16 @@ class CockpitApp(App[None]):
             self.show_page(event.item.id.removeprefix("nav-"))
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
-        table = event.data_table
+        # Textual publishes the event table without propagating its cell generic.
+        table = cast(DataTable[str], event.data_table)  # pyright: ignore[reportUnknownMemberType]
         if not table.is_valid_row_index(event.cursor_row):
             return
         try:
-            val = table.get_cell_at((event.cursor_row, 0))
-            if isinstance(val, str):
-                import re
-                val = re.sub(r'\[.*?\]', '', val).strip()
-                self.sub_title = f"Selected ID: {val}"
+            value = table.get_cell_at(Coordinate(event.cursor_row, 0))
+            import re
+
+            identifier = re.sub(r"\[.*?\]", "", value).strip()
+            self.sub_title = f"Selected ID: {identifier}"
         except Exception:
             pass
 
@@ -898,12 +900,13 @@ class CockpitApp(App[None]):
 
     def _render_snapshot(self) -> None:
         import datetime
+
         conn = self.connection_state
         if conn == "LIVE":
             self._last_update_str = datetime.datetime.now().strftime("%H:%M:%S")
             conn_markup = "[green]● LIVE[/green]"
         elif conn == "STALE":
-            st = getattr(self, '_last_update_str', '00:00:00')
+            st = getattr(self, "_last_update_str", "00:00:00")
             conn_markup = f"[yellow]◌ STALE — last update {st}[/yellow]"
         else:
             sym = "⟳" if getattr(self, "_flash_tick", False) else " "
@@ -916,15 +919,15 @@ class CockpitApp(App[None]):
         badge_text = (
             f"{conn_markup}"
             f"  [bright_black]policy {self.policy}[/bright_black]"
-            f"  [yellow]jobs {active_jobs}[/yellow]" if active_jobs
-            else f"{conn_markup}"
-            f"  [bright_black]policy {self.policy}[/bright_black]"
+            f"  [yellow]jobs {active_jobs}[/yellow]"
+            if active_jobs
+            else f"{conn_markup}  [bright_black]policy {self.policy}[/bright_black]"
         )
         self.query_one("#conn-badge", Static).update(badge_text)
 
         # Per-page updates
         with contextlib.suppress(Exception):
-            self.query_one(OverviewPage).refresh_data(self.snapshot, conn)
+            self.query_one(OverviewPage).refresh_data(self.snapshot, conn, self._last_update_str)
         with contextlib.suppress(Exception):
             self.query_one(NodesPage).refresh_data(self.snapshot)
         with contextlib.suppress(Exception):
@@ -942,6 +945,7 @@ class CockpitApp(App[None]):
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
+
 
 def _object(value: JsonValue | None) -> JsonObject:
     if not isinstance(value, dict):

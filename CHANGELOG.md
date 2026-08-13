@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.10 — 2026-08-13
+
+- Added the bounded `omlxc resolve` alias-inspection command and completed the
+  current CLI/TUI readability improvements without changing model routing,
+  node authorization, or daemon lifecycle behavior.
+
 ## 3.0.9 — 2026-08-13
 
 - Accept bounded OpenAI-compatible function descriptions up to 16 KiB, covering

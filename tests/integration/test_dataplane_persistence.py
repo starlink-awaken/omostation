@@ -212,9 +212,7 @@ async def test_terminal_metric_persists_safe_error_code_and_phase_across_restart
         orchestrator = DataPlaneOrchestrator(
             planner=RoutePlanner(default_policies()),
             snapshot_provider=lambda: (placement,),
-            registry=AdapterRegistry(
-                (AdapterBinding(placement.backend_id, PersistingAdapter()),)
-            ),
+            registry=AdapterRegistry((AdapterBinding(placement.backend_id, PersistingAdapter()),)),
             capacity=CapacityCoordinator(global_limit=1, per_node=1, per_backend=1),
             telemetry=BoundRouteTelemetry(
                 store,
@@ -260,9 +258,7 @@ async def test_terminal_metric_never_persists_unsafe_placement_identity(
         orchestrator = DataPlaneOrchestrator(
             planner=RoutePlanner(default_policies()),
             snapshot_provider=lambda: (placement,),
-            registry=AdapterRegistry(
-                (AdapterBinding(placement.backend_id, PersistingAdapter()),)
-            ),
+            registry=AdapterRegistry((AdapterBinding(placement.backend_id, PersistingAdapter()),)),
             capacity=CapacityCoordinator(global_limit=1, per_node=1, per_backend=1),
             telemetry=BoundRouteTelemetry(
                 store,

@@ -70,9 +70,7 @@ class JumpScreen(ModalScreen[str | None]):
 
     def compose(self) -> ComposeResult:
         yield Vertical(
-            Static(
-                "[bold #7dd3f5]⟡  快速跳转[/bold #7dd3f5]\n"
-            ),
+            Static("[bold #7dd3f5]⟡  快速跳转[/bold #7dd3f5]\n"),
             Static(
                 "[#2a7ab5]1[/#2a7ab5] [#c8d8ec]总览[/#c8d8ec]    "
                 "[#2a7ab5]2[/#2a7ab5] [#c8d8ec]节点[/#c8d8ec]    "
@@ -168,17 +166,13 @@ class ConfirmationScreen(ModalScreen[bool]):
     def compose(self) -> ComposeResult:
         risk_color = "red" if self._risk == "R2" else "yellow"
         yield Vertical(
-            Static(
-                f"[bold {risk_color}]⚠  {self._risk} 确认[/bold {risk_color}]\n"
-            ),
+            Static(f"[bold {risk_color}]⚠  {self._risk} 确认[/bold {risk_color}]\n"),
             Static(
                 f"[#5a7a9a]Action  [/#5a7a9a][#c8d8ec]{self._action}[/#c8d8ec]\n"
                 f"[#5a7a9a]Impact  [/#5a7a9a][yellow]{self._impact}[/yellow]\n"
                 f"[#5a7a9a]Rollback[/#5a7a9a][#c8d8ec]{self._rollback}[/#c8d8ec]"
             ),
-            Label(
-                "\n[green]y[/green] 确认    [red]n[/red] / [red]Esc[/red] 拒绝"
-            ),
+            Label("\n[green]y[/green] 确认    [red]n[/red] / [red]Esc[/red] 拒绝"),
         )
 
     def action_accept(self) -> None:
