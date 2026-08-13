@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+from pathlib import Path
 from typing import Any
 
 from fastmcp import FastMCP  # type: ignore[import-not-found]
@@ -10,6 +12,20 @@ from fastmcp import FastMCP  # type: ignore[import-not-found]
 from cockpit.adapters import governance_context
 
 mcp = FastMCP("documents-readonly")
+
+
+def _configure_workspace_root(source: Path | None = None) -> None:
+    if os.environ.get("WORKSPACE_ROOT"):
+        return
+    start = (source or Path(__file__)).resolve()
+    for parent in start.parents:
+        authority = parent / ".omo"
+        if authority.is_symlink():
+            continue
+        registry = authority / "_truth" / "registry" / "documents-domain-projects.yaml"
+        if registry.is_file():
+            os.environ["WORKSPACE_ROOT"] = str(parent)
+            return
 
 
 def _json_envelope(payload: dict[str, Any]) -> str:
@@ -47,6 +63,7 @@ def cards_check(card_id: str = "") -> str:
 def main() -> None:
     """Run the bounded MCP server over stdio."""
 
+    _configure_workspace_root()
     mcp.run(transport="stdio")
 
 

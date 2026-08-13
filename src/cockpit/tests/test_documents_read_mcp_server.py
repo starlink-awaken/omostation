@@ -4,6 +4,7 @@ import asyncio
 import importlib
 import importlib.util
 import json
+import os
 import tomllib
 from pathlib import Path
 
@@ -32,6 +33,29 @@ def test_documents_read_server_has_dedicated_entrypoint() -> None:
     project = tomllib.loads((Path(__file__).resolve().parents[3] / "pyproject.toml").read_text(encoding="utf-8"))
 
     assert project["project"]["scripts"]["cockpit-documents-mcp"] == ("cockpit.documents_read_mcp_server:main")
+
+
+def test_documents_read_server_discovers_workspace_without_overriding_explicit_root(
+    tmp_path: Path, monkeypatch
+) -> None:
+    server = _server()
+    workspace = tmp_path / "workspace"
+    registry = workspace / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
+    registry.parent.mkdir(parents=True)
+    registry.write_text("clients: {}\n", encoding="utf-8")
+    projects = workspace / "projects"
+    projects.mkdir()
+    (projects / ".omo").symlink_to("../.omo", target_is_directory=True)
+    source = workspace / "projects" / "cockpit" / "src" / "cockpit" / "server.py"
+
+    monkeypatch.delenv("WORKSPACE_ROOT", raising=False)
+    server._configure_workspace_root(source)
+    assert os.environ["WORKSPACE_ROOT"] == str(workspace)
+
+    explicit = tmp_path / "explicit"
+    monkeypatch.setenv("WORKSPACE_ROOT", str(explicit))
+    server._configure_workspace_root(source)
+    assert os.environ["WORKSPACE_ROOT"] == str(explicit)
 
 
 def test_domain_context_delegates_to_cockpit_authority(monkeypatch) -> None:
