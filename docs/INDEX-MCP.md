@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-全生态共 **27** 个 MCP 服务器, **554** 个工具。
+全生态共 **27** 个 MCP 服务器, **565** 个工具。
 
 | 服务器 | 层 | 工具数 | 传输 | 端口 | 源文件 |
 |--------|-----|--------|------|------|--------|
@@ -25,8 +25,8 @@
 | `forge` | L2 | 7 | stdio | — | `projects/kairon/packages/forge/src/mcp_server.py` |
 | `ontoderive` | L2 | 7 | stdio | — | `projects/kairon/packages/ontoderive/src/ontoderive/mcp_server.py` |
 | `toolforge` | L2 | 5 | stdio | — | `projects/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py` |
-| `agent-runtime` | L3 | 2 | stdio | — | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
-| `l4-kernel` | L4 | 45 | stdio/http/sse | http:7455, sse:7456 | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
+| `agent-runtime` | L3 | 11 | stdio | — | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
+| `l4-kernel` | L4 | 47 | stdio/http/sse | http:7455, sse:7456 | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `model-driven` | M0 | 28 | stdio | — | `projects/model-driven/src/model_driven/mcp_server.py` |
 | `model-driven-fastmcp` | M0 | 2 | stdio | — | `projects/model-driven/src/model_driven/fastmcp_server.py` |
 | `aetherforge` | X | 10 | stdio | — | `projects/aetherforge/src/aetherforge/mcp_server.py` |
@@ -45,9 +45,9 @@
 
 `a2a_cancel_task`, `a2a_get_task`, `a2a_list_tasks`, `a2a_send_task`, `add_route`, `agora_capability_discover`, `agora_execute`, `audit_query`, `audit_stats`, `bos_reload_routes`, `create_api_key`, `debt_auto_seed_tool`, `entropy_cleanup_tool`, `get_agent_card`, `get_event_log`, `get_state_transitions`, `health_check`, `lifecycle_load_all`, `lifecycle_start_watch`, `lifecycle_status`, `lifecycle_stop_watch`, `lifecycle_unload_all`, `list_agent_cards`, `list_api_keys`, `list_routes`, `list_services`, `proxy_add_service`, `proxy_arch_health`, `proxy_backend_health`, `proxy_connect`, `proxy_governance_status`, `proxy_list_tools`, `proxy_omo_debt`, `publish_event`, `python`, `register_push_notification`, `register_service`, `registry_find_agent_tool`, `registry_health_tool`, `registry_heartbeat_tool`, `registry_list_agents_tool`, `registry_list_tasks_tool`, `registry_register_agent_tool`, `registry_submit_task_tool`, `repo_discover`, `repo_install`, `repo_load`, `repo_pipeline`, `repo_search`, `repo_status`, `repo_unload`, `revoke_api_key`, `route_call`, `subscribe_event`, `swarm_nodes`, `swarm_resolve`, `swarm_status`, `workflow_capability_health`, `workspace_audit_gitlink`, `workspace_audit_governance`, `workspace_audit_lint`, `workspace_audit_ops`, `workspace_audit_radar`, `workspace_audit_run`, `workspace_audit_ssot`
 
-### l4-kernel (45 tools)
+### l4-kernel (47 tools)
 
-`l4_cards_check`, `l4_cards_compliance`, `l4_cards_get`, `l4_cards_list`, `l4_cards_search`, `l4_claude_validate`, `l4_config_read`, `l4_cross_search`, `l4_dashboard`, `l4_domain_create`, `l4_domain_freeze`, `l4_domain_info`, `l4_domain_migrate`, `l4_domain_unfreeze`, `l4_domain_validate`, `l4_domains_list`, `l4_engine_check`, `l4_engine_logs`, `l4_entrypoint_read`, `l4_evolution_status`, `l4_evolution_tasks`, `l4_evolution_trigger`, `l4_files_list`, `l4_freshness`, `l4_health`, `l4_kems_validate`, `l4_memory_read`, `l4_models_list`, `l4_plugin_actions`, `l4_plugin_run_action`, `l4_plugin_run_mechanism`, `l4_plugin_specs`, `l4_plugin_workflows`, `l4_reload`, `l4_rules_read`, `l4_search`, `l4_signal_emit`, `l4_signal_patterns`, `l4_signals_list`, `l4_state_read`, `l4_status_read`, `l4_storage_usage`, `l4_timeline_list`, `l4_tools_list`, `l4_workspace_search`
+`l4_cards_check`, `l4_cards_compliance`, `l4_cards_get`, `l4_cards_list`, `l4_cards_search`, `l4_claude_validate`, `l4_config_read`, `l4_contract_validate`, `l4_cross_search`, `l4_dashboard`, `l4_domain_create`, `l4_domain_freeze`, `l4_domain_info`, `l4_domain_migrate`, `l4_domain_unfreeze`, `l4_domain_validate`, `l4_domains_list`, `l4_engine_check`, `l4_engine_logs`, `l4_entrypoint_read`, `l4_evolution_status`, `l4_evolution_tasks`, `l4_evolution_trigger`, `l4_files_list`, `l4_freshness`, `l4_harness_run`, `l4_health`, `l4_kems_validate`, `l4_memory_read`, `l4_models_list`, `l4_plugin_actions`, `l4_plugin_run_action`, `l4_plugin_run_mechanism`, `l4_plugin_specs`, `l4_plugin_workflows`, `l4_reload`, `l4_rules_read`, `l4_search`, `l4_signal_emit`, `l4_signal_patterns`, `l4_signals_list`, `l4_state_read`, `l4_status_read`, `l4_storage_usage`, `l4_timeline_list`, `l4_tools_list`, `l4_workspace_search`
 
 ### kos (44 tools)
 
@@ -88,6 +88,10 @@
 ### kronos (16 tools)
 
 `cloakbrowser`, `eidos`, `kos`, `kronos`, `kronos_browser_fetch`, `kronos_extract`, `kronos_fetch`, `kronos_insight`, `kronos_pipelines`, `kronos_plan`, `kronos_route`, `kronos_status`, `kronos_tools`, `ollama`, `vault`, `wps_note`
+
+### agent-runtime (11 tools)
+
+`cards_check`, `cards_status`, `chat`, `domain_context`, `domain_facts_audit`, `domain_facts_validation_status`, `domain_project_status`, `domains_list`, `kems_status`, `run_task`, `workspace_context`
 
 ### aetherforge (10 tools)
 
@@ -140,9 +144,5 @@
 ### model-driven-fastmcp (2 tools)
 
 `model_tool_execute`, `model_tools_list`
-
-### agent-runtime (2 tools)
-
-`chat`, `run_task`
 
 *由 `bin/cockpit/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*

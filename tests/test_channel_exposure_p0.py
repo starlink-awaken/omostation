@@ -56,7 +56,9 @@ def test_gen_capability_registry_build_has_channels():
         reg = mod.generate()
     else:
         # fall back: assert output file shape after generate
-        import subprocess, yaml
+        import subprocess
+
+        import yaml
         subprocess.run(["python3", str(ROOT / "bin/cockpit/gen-capability-registry.py"), "--quiet"], check=True, cwd=ROOT)
         reg = yaml.safe_load((ROOT / "docs/generated/capability-registry.yaml").read_text())
     # flexible totals key layout
@@ -70,6 +72,14 @@ def test_gen_capability_registry_build_has_channels():
     # channels command should appear in CLI inventory if present
     text = (ROOT / "docs/generated/capability-registry.yaml").read_text()
     assert "bos" in text.lower()
+
+
+def test_gen_capability_registry_includes_documents_cockpit_commands():
+    mod = _load("gen_cap_reg_commands", ROOT / "bin/cockpit/gen-capability-registry.py")
+
+    commands = {command["name"] for command in mod.scan_cli_commands()}
+
+    assert {"context", "domain-status", "facts-validation", "kems"} <= commands
 
 
 def test_attach_card_and_skills_exist():
