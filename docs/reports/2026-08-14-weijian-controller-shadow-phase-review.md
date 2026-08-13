@@ -75,3 +75,16 @@ smoke 证实作业返回 `exit_code=1`，但 `evidence_error=null`，并给出�
 controller 的消费者。
 
 在那之前：旧 controller 和定时调用继续是唯一生效路径；影子作业只用于发现和证据。
+
+## 2026-08-14 CR24 独立 owner 绑定补记
+
+CR24 模型新鲜度现已获得独立的 Workspace Runtime owner job：
+`documents-weijian-model-freshness` 由 `runtime-control` 以手动、只读、fail-closed
+方式执行，并由 Cockpit 的 `domain_model_freshness_status` 只读投影状态。Runtime 与
+Cockpit 的独立 owner 实现已合并；Workspace 此处只绑定已合并 contract，不在
+Documents 内执行或写入任何内容。
+
+这仍不是 legacy cutover。controller-shadow v2 的 `unobserved_rule_ids` 保持生成当时的
+历史语义，不因新增独立 owner 而回写或改释旧收据；旧 controller 与其定时调用继续是
+唯一生效路径。CR24 的阶段完成状态只能在 Workspace 根变更合并且安装态 smoke 成功后
+更新；本补记不声称 ChatGPT Secure MCP Tunnel 已安装或可用。
