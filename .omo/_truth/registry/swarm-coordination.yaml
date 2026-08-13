@@ -12,7 +12,7 @@
 #   D5 pasw_submodule_isolation — Per-Agent Submodule Worktree (ADR-0371)
 
 version: 1
-last_updated: "2026-08-12"
+last_updated: "2026-08-13"
 related:
   - adr: "0220"
   - goal: "G-CONV.7"
@@ -28,7 +28,7 @@ delivery:
   lock_ttl_hours: 24
 
 topology_migration:
-  phase: d1_pilot
+  phase: writer_clone_gate_pilot
   target: independent_clone_per_agent
   integration_root: "~/Workspace"
   tool: bin/gac/agent-clone.py
@@ -39,8 +39,20 @@ topology_migration:
     - integration_root_read_only_for_agent_identity
     - one_independent_clone_per_agent
     - integration_only_through_refs_and_review
+  writer_clone_gate:
+    entry: bin/gac/agent-clone.py guard --require-clone
+    hook_activation: agent_identity_present
+    admission_requires:
+      - agent_identity_present
+      - independent_clone_identity_verified
+      - clone_private_branch_matches_identity
+      - clone_local_hooks_active
+    human_operation_unaffected: true
+    observation_never_implies_admission: true
   transition:
-    legacy_worktrees_allowed: true
+    legacy_worktrees_allowed_for_agent_identity: false
+    legacy_worktrees_allowed_for_human_migration: true
+    strict_gate_for_migrated_writers: true
     existing_gates_remain_active: [d2, d3, d5]
     retirement_requires:
       - real_clone_pilot_verified
@@ -82,12 +94,17 @@ gates:
     id: d5
     name: Per-Agent Submodule Worktree isolation
     entry: >
-      PASW (ADR-0371): 高冲突子模块 (gbrain/cockpit/agora) 的 per-agent 独立 worktree.
-      claim 时创建 .subtrees/<sub>/ 隔离 worktree, release 时清理.
-      强制: 子模块修改必须在 .subtrees/ 内, 不允许 root 直接 git add projects/<sub>.
+      PASW (ADR-0371/0404): claim 动态读取根 .gitmodules, 为全部直接子模块创建
+      per-agent .subtrees/<sub>/ worktree, release 时清理. pre-commit 的 gitlink
+      来源校验仍只覆盖高冲突 gbrain/cockpit/agora; 其余由 PASW 完整性验证与
+      CI reachability gate 覆盖.
     check: .githooks/pre-commit (submodule-guard) + CI reachability gate
     fail_closed: true
-    isolated_submodules: projects/gbrain, projects/cockpit, projects/agora
+    claimed_submodules: from_root_gitmodules
+    precommit_gitlink_guard:
+      - projects/gbrain
+      - projects/cockpit
+      - projects/agora
     ttl_hours: 24
     cleanup_script: bin/gac/gac-worktree-cleanup.sh
 
