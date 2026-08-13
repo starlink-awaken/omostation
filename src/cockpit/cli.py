@@ -176,6 +176,12 @@ def _c_facts_validation(a):
     return _c(a)
 
 
+def _c_controller_shadow(a):
+    from cockpit.commands.l4bridge import cmd_controller_shadow as _c
+
+    return _c(a)
+
+
 def _c_skill(a):
     from cockpit.commands.l4bridge import cmd_skill as _c
 
@@ -754,6 +760,7 @@ def main() -> int:
         "domain-status": _c_domain_status,
         "facts-audit": _c_facts_audit,
         "facts-validation": _c_facts_validation,
+        "controller-shadow": _c_controller_shadow,
         "skill": _c_skill,
         "events": _c_events,
         "ssb": cmd_ssb,

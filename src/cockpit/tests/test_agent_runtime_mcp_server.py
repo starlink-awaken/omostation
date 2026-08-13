@@ -277,3 +277,15 @@ class TestGovernanceTools:
 
         assert json.loads(agent_runtime_mcp_server.domain_facts_validation_status("vault")) == payload
         assert seen == ["vault"]
+
+    def test_domain_controller_shadow_status_passes_domain_id_and_returns_parseable_envelope(self, monkeypatch):
+        seen = []
+        payload = {"schema": "cockpit.domain-controller-shadow.v1", "status": "shadow_incomplete", "available": True}
+        monkeypatch.setattr(
+            agent_runtime_mcp_server.governance_context,
+            "domain_controller_shadow_status",
+            lambda domain_id: seen.append(domain_id) or payload,
+        )
+
+        assert json.loads(agent_runtime_mcp_server.domain_controller_shadow_status("vault")) == payload
+        assert seen == ["vault"]

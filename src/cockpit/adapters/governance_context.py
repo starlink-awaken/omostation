@@ -20,6 +20,17 @@ _CAPABILITY_ROUTE_CONTRACTS = {
     "workflows": ("workspace-workflow-mesh", "file"),
 }
 _FACTS_EVIDENCE_SCHEMA = "runtime.documents-facts-audit.evidence.v1"
+_CONTROLLER_SHADOW_EVIDENCE_SCHEMA = "runtime.documents-controller-shadow.evidence.v1"
+_CONTROLLER_SHADOW_COVERED_RULE_IDS = ("CR01", "CR02", "CR03", "CR05")
+_CONTROLLER_SHADOW_UNMIGRATED_RULE_IDS = (
+    "CR08",
+    "CR23",
+    "CR24",
+    "CR25",
+    "CR26",
+    "CR29",
+    "CR30",
+)
 _MAX_RUNTIME_RECEIPT_BYTES = 32 * 1024
 
 
@@ -382,6 +393,29 @@ def _facts_validation_unavailable(
     }
 
 
+def _controller_shadow_unavailable(
+    requested: str,
+    source: Path,
+    binding_source: str,
+    error: str,
+    *,
+    runtime_evidence: Path | None = None,
+) -> dict[str, Any]:
+    sources = {"domain_registry": str(source), "binding_registry": binding_source}
+    if runtime_evidence is not None:
+        sources["runtime_evidence"] = str(runtime_evidence)
+    return {
+        "schema": "cockpit.domain-controller-shadow.v1",
+        "status": "unavailable",
+        "available": False,
+        "domain_id": requested,
+        "job": None,
+        "shadow": None,
+        "sources": sources,
+        "error": error,
+    }
+
+
 def _relative_path(value: object, *, label: str) -> Path:
     if not isinstance(value, str) or not value:
         raise ValueError(f"{label} must be a non-empty relative path")
@@ -416,6 +450,35 @@ def _runtime_facts_job(binding: dict[str, Any], domain_id: str) -> dict[str, str
         "id": job_id,
         "owner": owner,
         "action": "audit_structured_facts",
+        "evidence_relative_path": str(evidence_path),
+    }
+
+
+def _runtime_controller_shadow_job(binding: dict[str, Any], domain_id: str) -> dict[str, str]:
+    matches = [
+        item
+        for item in binding.get("runtime_jobs", [])
+        if isinstance(item, dict)
+        and item.get("domain_id") == domain_id
+        and item.get("action") == "shadow_legacy_controller"
+    ]
+    if len(matches) != 1:
+        raise ValueError(f"no unique Runtime controller shadow job configured for domain: {domain_id}")
+    item = matches[0]
+    job_id = item.get("id")
+    owner = item.get("owner")
+    evidence_schema = item.get("evidence_schema")
+    if not isinstance(job_id, str) or not job_id:
+        raise ValueError("Runtime controller shadow job id must be non-empty")
+    if owner != "runtime-control":
+        raise ValueError("Runtime controller shadow job owner must be runtime-control")
+    if evidence_schema != _CONTROLLER_SHADOW_EVIDENCE_SCHEMA:
+        raise ValueError("Runtime controller shadow job has an unsupported evidence schema")
+    evidence_path = _relative_path(item.get("evidence_relative_path"), label="Runtime evidence path")
+    return {
+        "id": job_id,
+        "owner": owner,
+        "action": "shadow_legacy_controller",
         "evidence_relative_path": str(evidence_path),
     }
 
@@ -538,6 +601,44 @@ def _validated_facts_receipt(receipt: dict[str, Any], job: dict[str, str]) -> tu
     raise ValueError("runtime receipt and facts validation status disagree")
 
 
+def _validated_controller_shadow_receipt(receipt: dict[str, Any], job: dict[str, str]) -> dict[str, Any]:
+    if receipt.get("job_id") != job["id"] or receipt.get("owner") != job["owner"]:
+        raise ValueError("Runtime evidence does not match the configured job")
+    if receipt.get("timed_out") is not False or receipt.get("evidence_error") is not None:
+        raise ValueError("Runtime evidence did not complete a valid controller shadow")
+    exit_code = receipt.get("exit_code")
+    if (
+        receipt.get("status") != "failed"
+        or isinstance(exit_code, bool)
+        or not isinstance(exit_code, int)
+        or exit_code == 0
+    ):
+        raise ValueError("Runtime receipt does not preserve the incomplete shadow status")
+    owner_evidence = receipt.get("owner_evidence")
+    if (
+        not isinstance(owner_evidence, dict)
+        or owner_evidence.get("schema") != _CONTROLLER_SHADOW_EVIDENCE_SCHEMA
+        or owner_evidence.get("status") != "shadow_incomplete"
+        or owner_evidence.get("legacy_controller_replaced") is not False
+    ):
+        raise ValueError("Runtime evidence has an invalid controller shadow schema")
+    covered = owner_evidence.get("covered_rule_ids")
+    unmigrated = owner_evidence.get("unmigrated_rule_ids")
+    if covered != list(_CONTROLLER_SHADOW_COVERED_RULE_IDS):
+        raise ValueError("Runtime evidence has invalid controller shadow covered rules")
+    if unmigrated != list(_CONTROLLER_SHADOW_UNMIGRATED_RULE_IDS):
+        raise ValueError("Runtime evidence has invalid controller shadow unmigrated rules")
+    if owner_evidence.get("covered_rule_count") != len(covered):
+        raise ValueError("Runtime evidence has an invalid controller shadow covered rule count")
+    if owner_evidence.get("unmigrated_rule_count") != len(unmigrated):
+        raise ValueError("Runtime evidence has an invalid controller shadow unmigrated rule count")
+    return {
+        "legacy_controller_replaced": False,
+        "covered_rule_ids": covered,
+        "unmigrated_rule_ids": unmigrated,
+    }
+
+
 def domain_facts_validation_status(
     domain_id: str,
     *,
@@ -585,6 +686,61 @@ def domain_facts_validation_status(
         "domain_id": requested,
         "job": {key: job[key] for key in ("id", "owner", "action")},
         "validation": validation,
+        "sources": {
+            "domain_registry": str(source),
+            "binding_registry": binding_source,
+            "runtime_evidence": str(evidence_path),
+        },
+    }
+
+
+def domain_controller_shadow_status(
+    domain_id: str,
+    *,
+    workspace_root: str | Path | None = None,
+    registry_path: str | Path | None = None,
+    documents_root: str | Path | None = None,
+    runtime_state_root: str | Path | None = None,
+) -> dict[str, Any]:
+    """Read the bounded Runtime receipt for an incomplete legacy controller shadow."""
+
+    requested = domain_id.strip()
+    source = _registry_path(registry_path, documents_root=documents_root)
+    workspace = resolve_workspace_root(workspace_root)
+    binding = _binding_context(requested, workspace)
+    binding_source = str(binding["source"])
+    try:
+        source, _registry, domains = _load_domains(registry_path, documents_root=documents_root)
+        if not requested or not any(domain["id"] == requested for domain in domains):
+            raise ValueError(f"unknown domain: {requested}")
+        if binding["status"] != "ok":
+            raise ValueError(binding.get("error", "domain binding is unavailable"))
+        job = _runtime_controller_shadow_job(binding, requested)
+        state_root = _runtime_state_root(
+            binding,
+            runtime_state_root=runtime_state_root,
+            documents_root=documents_root,
+        )
+        evidence_path = state_root / job["evidence_relative_path"]
+        receipt = _read_bounded_runtime_receipt(state_root, Path(job["evidence_relative_path"]))
+        shadow = _validated_controller_shadow_receipt(receipt, job)
+    except (OSError, ValueError) as exc:
+        evidence = locals().get("evidence_path")
+        return _controller_shadow_unavailable(
+            requested,
+            source,
+            binding_source,
+            str(exc),
+            runtime_evidence=evidence if isinstance(evidence, Path) else None,
+        )
+
+    return {
+        "schema": "cockpit.domain-controller-shadow.v1",
+        "status": "shadow_incomplete",
+        "available": True,
+        "domain_id": requested,
+        "job": {key: job[key] for key in ("id", "owner", "action")},
+        "shadow": shadow,
         "sources": {
             "domain_registry": str(source),
             "binding_registry": binding_source,

@@ -14,6 +14,7 @@ EXPECTED_TOOLS = {
     "cards_status",
     "cards_check",
     "domain_facts_validation_status",
+    "domain_controller_shadow_status",
 }
 
 
@@ -92,6 +93,24 @@ def test_facts_validation_delegates_to_cockpit_authority(monkeypatch) -> None:
     )
 
     assert json.loads(server.domain_facts_validation_status("work-weijian")) == payload
+    assert seen == ["work-weijian"]
+
+
+def test_controller_shadow_delegates_to_cockpit_authority(monkeypatch) -> None:
+    server = _server()
+    seen: list[str] = []
+    payload = {
+        "schema": "cockpit.domain-controller-shadow.v1",
+        "status": "shadow_incomplete",
+        "available": True,
+    }
+    monkeypatch.setattr(
+        server.governance_context,
+        "domain_controller_shadow_status",
+        lambda domain_id: seen.append(domain_id) or payload,
+    )
+
+    assert json.loads(server.domain_controller_shadow_status("work-weijian")) == payload
     assert seen == ["work-weijian"]
 
 

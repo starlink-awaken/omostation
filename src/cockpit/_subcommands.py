@@ -304,6 +304,9 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     facts_validation_p = sub.add_parser("facts-validation", help="读取 Runtime Facts 审计回执")
     facts_validation_p.add_argument("domain_id", help="L4 document 域 ID")
     facts_validation_p.add_argument("--json", action="store_true", help="输出稳定 JSON envelope")
+    controller_shadow_p = sub.add_parser("controller-shadow", help="读取 Runtime 旧控制器影子迁移回执")
+    controller_shadow_p.add_argument("domain_id", help="L4 document 域 ID")
+    controller_shadow_p.add_argument("--json", action="store_true", help="输出稳定 JSON envelope")
     skill_p = sub.add_parser("skill", help="运行 L4 定时技能")
     skill_p.add_argument("skill_name", help="技能名称 (如 kos-daily-ontology-sync)")
 

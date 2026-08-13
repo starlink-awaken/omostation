@@ -179,6 +179,49 @@ def _write_runtime_facts_receipt(
     return state_root
 
 
+def _write_runtime_controller_shadow_receipt(root: Path) -> Path:
+    state_root = root / "runtime-state"
+    receipt = (
+        state_root
+        / "control"
+        / "evidence"
+        / "documents-weijian-controller-shadow"
+        / "documents-weijian-controller-shadow.json"
+    )
+    receipt.parent.mkdir(parents=True)
+    receipt.write_text(
+        json.dumps(
+            {
+                "job_id": "documents-weijian-controller-shadow",
+                "owner": "runtime-control",
+                "status": "failed",
+                "exit_code": 1,
+                "timed_out": False,
+                "evidence_error": None,
+                "owner_evidence": {
+                    "schema": "runtime.documents-controller-shadow.evidence.v1",
+                    "status": "shadow_incomplete",
+                    "legacy_controller_replaced": False,
+                    "covered_rule_ids": ["CR01", "CR02", "CR03", "CR05"],
+                    "covered_rule_count": 4,
+                    "unmigrated_rule_ids": [
+                        "CR08",
+                        "CR23",
+                        "CR24",
+                        "CR25",
+                        "CR26",
+                        "CR29",
+                        "CR30",
+                    ],
+                    "unmigrated_rule_count": 7,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return state_root
+
+
 def _adapter():
     from cockpit.adapters import governance_context
 
@@ -701,6 +744,86 @@ def test_domain_facts_validation_fails_closed_for_missing_or_symlinked_receipts(
     symlinked = gc.domain_facts_validation_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
     assert symlinked["status"] == "unavailable"
     assert symlinked["available"] is False
+
+
+def test_domain_controller_shadow_reads_only_the_registered_incomplete_receipt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, {})
+    binding_path = tmp_path / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
+    binding = yaml.safe_load(binding_path.read_text(encoding="utf-8"))
+    binding["runtime_jobs"].append(
+        {
+            "id": "documents-weijian-controller-shadow",
+            "domain_id": "vault",
+            "owner": "runtime-control",
+            "action": "shadow_legacy_controller",
+            "evidence_relative_path": (
+                "control/evidence/documents-weijian-controller-shadow/documents-weijian-controller-shadow.json"
+            ),
+            "evidence_schema": "runtime.documents-controller-shadow.evidence.v1",
+        }
+    )
+    binding_path.write_text(yaml.safe_dump(binding, sort_keys=False), encoding="utf-8")
+    state_root = _write_runtime_controller_shadow_receipt(tmp_path)
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = gc.domain_controller_shadow_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+
+    assert result == {
+        "schema": "cockpit.domain-controller-shadow.v1",
+        "status": "shadow_incomplete",
+        "available": True,
+        "domain_id": "vault",
+        "job": {
+            "id": "documents-weijian-controller-shadow",
+            "owner": "runtime-control",
+            "action": "shadow_legacy_controller",
+        },
+        "shadow": {
+            "legacy_controller_replaced": False,
+            "covered_rule_ids": ["CR01", "CR02", "CR03", "CR05"],
+            "unmigrated_rule_ids": [
+                "CR08",
+                "CR23",
+                "CR24",
+                "CR25",
+                "CR26",
+                "CR29",
+                "CR30",
+            ],
+        },
+        "sources": {
+            "domain_registry": str(registry_path),
+            "binding_registry": str(binding_path),
+            "runtime_evidence": str(
+                state_root
+                / "control"
+                / "evidence"
+                / "documents-weijian-controller-shadow"
+                / "documents-weijian-controller-shadow.json"
+            ),
+        },
+    }
+
+    evidence_path = (
+        state_root
+        / "control"
+        / "evidence"
+        / "documents-weijian-controller-shadow"
+        / "documents-weijian-controller-shadow.json"
+    )
+    receipt = json.loads(evidence_path.read_text(encoding="utf-8"))
+    receipt["exit_code"] = "1"
+    evidence_path.write_text(json.dumps(receipt), encoding="utf-8")
+
+    malformed = gc.domain_controller_shadow_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+
+    assert malformed["status"] == "unavailable"
+    assert malformed["available"] is False
+    assert "incomplete shadow status" in malformed["error"]
 
 
 def test_kems_status_leaves_full_content_scan_to_explicit_command(

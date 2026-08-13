@@ -157,6 +157,32 @@ def cmd_facts_validation(args: Namespace) -> int:
     return {"ok": 0, "violations": 1, "unavailable": 2}.get(result.get("status"), 2)
 
 
+def cmd_controller_shadow(args: Namespace) -> int:
+    """Read the incomplete legacy controller shadow receipt for one domain."""
+
+    console = _get_console()
+    domain_id = getattr(args, "domain_id", "") or ""
+    try:
+        result = governance_context.domain_controller_shadow_status(domain_id)
+    except Exception as exc:  # defensive boundary: preserve the contract exit code
+        result = {"status": "unavailable", "error": str(exc), "shadow": None}
+
+    if getattr(args, "json", False):
+        print(json.dumps(result, ensure_ascii=False, default=str))
+    else:
+        shadow = result.get("shadow") or {}
+        console.print(
+            "[bold yellow]Documents 控制器影子迁移[/] "
+            f"{result.get('status', 'unavailable')} · "
+            f"covered={len(shadow.get('covered_rule_ids', []))} · "
+            f"unmigrated={len(shadow.get('unmigrated_rule_ids', []))}"
+        )
+        if result.get("error"):
+            _get_err().print(f"[red]❌ {result['error']}[/]")
+
+    return {"shadow_incomplete": 1, "unavailable": 2}.get(result.get("status"), 2)
+
+
 def cmd_skill(args: Namespace) -> int:
     """运行 L4 定时技能 (由 cron_service 触发)。"""
     console = _get_console()
