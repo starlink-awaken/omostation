@@ -113,18 +113,32 @@ def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
     assert pi["admission_state"] == "admitted"
     assert pi["allowed_operation_level"] == "L0"
     assert pi["capabilities"] == ["reasoning", "verification"]
+    assert pi["require_explicit_capabilities"] is True
     assert pi["write_scope"] == {"mode": "none"}
     assert pi["transports"] == {
         "cli_prompt": {
             "command": (
-                "/usr/bin/python3 bin/gac/pi-worker-adapter.py run --execute "
+                '/usr/bin/python3 "{workspace_root}/bin/gac/pi-worker-adapter.py" '
+                "run --execute "
                 '--timeout-seconds 120 --prompt "{prompt}"'
             )
         }
     }
 
-    for candidate_id in ("oh-my-pi", "opencode", "grok", "mimo", "agy", "kilo"):
-        candidate = workers[candidate_id]
+    admitted_worker_ids = {
+        worker_id
+        for worker_id, worker in workers.items()
+        if worker.get("enabled") is True
+        and worker.get("admission_state") == "admitted"
+    }
+    assert admitted_worker_ids == {"codebuddy", "reasonix", "pi"}
+    candidates = {
+        worker_id: worker
+        for worker_id, worker in workers.items()
+        if worker_id not in admitted_worker_ids
+    }
+    assert candidates
+    for candidate in candidates.values():
         assert candidate["enabled"] is False
         assert candidate["admission_state"] == "declared"
 
