@@ -124,7 +124,7 @@ def _launchd_controller(
 
 def _show_version(value: bool) -> None:
     if value:
-        typer.echo(__version__)
+        _console.print(f"omlxc [bold cyan]v{__version__}[/bold cyan]  [dim]© 2026[/dim]")
         raise typer.Exit()
 
 
@@ -284,7 +284,9 @@ def _execute(
         if json_output:
             _emit_envelope(envelope)
         else:
-            typer.echo(renderer(envelope.data))
+            result = renderer(envelope.data)
+            if result:
+                typer.echo(result)
     except DaemonClientError as exc:
         _emit_client_failure(exc, json_output=json_output)
     except typer.Exit:
@@ -306,7 +308,14 @@ def _require_r1(action: str, *, yes: bool, json_output: bool) -> None:
         return
     if not _stdio_is_tty():
         _fail_local("E700", f"safety confirmation required for {action}", json_output=json_output)
-    if not typer.confirm(f"Confirm {action}?"):
+    _console.print(
+        Panel(
+            f"This action carries Risk Level 1 (R1).\\nImpact: {action}",
+            title="[bold yellow]Warning[/bold yellow]",
+            border_style="yellow"
+        )
+    )
+    if not typer.confirm(typer.style(f"? Confirm {action}?", fg=typer.colors.YELLOW)):
         _fail_local("E700", f"safety confirmation refused for {action}", json_output=json_output)
 
 
@@ -357,8 +366,13 @@ def _emit_r2_plan(action: str, *, impact: str, rollback: str, json_output: bool)
             )
         )
         return
-    typer.echo(f"Impact: {impact}")
-    typer.echo(f"Rollback: {rollback}")
+    _console.print(
+        Panel(
+            f"[bold]Impact:[/bold] {impact}\n[bold]Rollback:[/bold] {rollback}",
+            title=f"[bold red]R2 Warning: {action}[/bold red]",
+            border_style="red"
+        )
+    )
 
 
 @app.command("status")
@@ -558,22 +572,29 @@ def jobs_cancel(
 def jobs_watch(
     job_id: Annotated[str | None, typer.Argument()] = None,
     after: Annotated[int, typer.Option("--after", min=0)] = 0,
-    output: Annotated[str, typer.Option("--output")] = "ndjson",
+    output: Annotated[str, typer.Option("--output")] = "text",
 ) -> None:
-    if output != "ndjson":
-        _fail_local("E100", "jobs watch only supports --output ndjson", json_output=True)
-
     async def watch() -> None:
         async with _client_factory(_socket_path()) as client:
             async for event in client.stream_events(after=after):
                 if job_id is None or event.job_id == job_id:
-                    typer.echo(
-                        json.dumps(
-                            event.model_dump(mode="json"),
-                            ensure_ascii=False,
-                            separators=(",", ":"),
+                    if output == "ndjson":
+                        typer.echo(
+                            json.dumps(
+                                event.model_dump(mode="json"),
+                                ensure_ascii=False,
+                                separators=(",", ":"),
+                            )
                         )
-                    )
+                    else:
+                        data = event.model_dump(mode="json")
+                        ts = data.get("timestamp", 0)
+                        kind = data.get("type", "unknown")
+                        jid = data.get("job_id", "?")
+                        c = "yellow" if "job" in kind else "blue"
+                        c = "cyan" if "model" in kind else c
+                        c = "red" if "error" in kind.lower() else c
+                        _console.print(f"[dim]{ts}[/dim] [{c}]{kind}[/{c}] [dim]job=[/dim]{jid}")
 
     try:
         asyncio.run(watch())
@@ -603,6 +624,7 @@ def config_validate(
         Path | None,
         typer.Option("--path", help="TOML file to validate."),
     ] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     """Validate config schema v1 without contacting a daemon or backend."""
     request_id = _request_id()
@@ -610,11 +632,19 @@ def config_validate(
     try:
         config = load_config(selected_path)
     except ConfigError as exc:
-        _fail_config("configuration validation failed", request_id=request_id, detail=str(exc))
-    _emit_success(
-        {"config_schema_version": config.schema_version, "status": "valid"},
-        request_id=request_id,
-    )
+        if json_output:
+            _fail_config("configuration validation failed", request_id=request_id, detail=str(exc))
+        _console.print(f"[bold red]✖  validation failed[/bold red]  {str(exc)}")
+        raise typer.Exit(1) from None
+        
+    if json_output:
+        _emit_success(
+            {"config_schema_version": config.schema_version, "status": "valid"},
+            request_id=request_id,
+        )
+    else:
+        v = config.schema_version
+        _console.print(f"[bold green]✔  config valid[/bold green]  schema_version={v}")
 
 
 @config_app.command("migrate")
@@ -703,7 +733,8 @@ def daemon_status(
     if json_output:
         _emit_success(data, request_id=_request_id())
     else:
-        typer.echo("com.omlxc.daemon running")
+        p = Panel("[green]● running[/green]", title="[bold]com.omlxc.daemon[/bold]", expand=False)
+        _console.print(p)
 
 
 @daemon_app.command("install")
@@ -748,11 +779,12 @@ def daemon_install(
     if json_output:
         _emit_success(data, request_id=_request_id())
     else:
-        text = (
-            f"INSTALL PLAN\nexecutable {data['executable']}\n"
-            f"plist {data['plist_path']}\nwill_write {'yes' if apply else 'no'}"
-        )
-        typer.echo(text)
+        _console.print(Panel(
+            f"[dim]executable[/dim]  {data['executable']}\n"
+            f"[dim]plist[/dim]       {data['plist_path']}\n"
+            f"[dim]will_write[/dim]  {'[green]yes[/green]' if apply else '[yellow]no[/yellow]'}",
+            title="[bold]Install Plan[/bold]", expand=False
+        ))
 
 
 @daemon_app.command("uninstall")
@@ -803,7 +835,7 @@ def _daemon_action(action: str, *, yes: bool, confirm_impact: bool, json_output:
     if json_output:
         _emit_success(data, request_id=_request_id())
     else:
-        typer.echo(f"com.omlxc.daemon {action}")
+        _console.print(f"[bold green]✔[/bold green] com.omlxc.daemon {action} succeeded")
 
 
 @daemon_app.command("start")
@@ -851,7 +883,22 @@ def doctor(
     if json_output:
         _emit_success(data, request_id=_request_id())
     else:
-        typer.echo(_render_mapping(cast(JsonValue, data)))
+        mapping = _mapping(data)
+        passed = 0
+        failed = 0
+        for k, v in mapping.items():
+            if k in ("items", "summary"):
+                continue
+            vs = str(v).lower()
+            if vs in ("ok", "passed", "true"):
+                _console.print(f"[green]✔[/green] {k}")
+                passed += 1
+            elif vs in ("warn", "warning"):
+                _console.print(f"[yellow]⚠[/yellow] {k}")
+            else:
+                _console.print(f"[red]✖[/red] {k}")
+                failed += 1
+        _console.print(f"\n[bold]{passed} passed, {failed} failed[/bold]")
 
 
 @app.command("benchmark")

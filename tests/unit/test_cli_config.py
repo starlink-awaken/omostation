@@ -76,7 +76,7 @@ database_path = "{tmp_path / "state.db"}"
         encoding="utf-8",
     )
 
-    result = runner.invoke(app, ["config", "validate", "--path", str(config)])
+    result = runner.invoke(app, ["config", "validate", "--path", str(config), "--json"])
 
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
@@ -95,7 +95,7 @@ def test_config_validate_emits_sanitized_structured_error(tmp_path: Path) -> Non
         encoding="utf-8",
     )
 
-    result = runner.invoke(app, ["config", "validate", "--path", str(config)])
+    result = runner.invoke(app, ["config", "validate", "--path", str(config), "--json"])
 
     assert result.exit_code == 2
     assert result.stdout == ""
@@ -119,7 +119,7 @@ apiKeys = "{plaintext}"
         encoding="utf-8",
     )
 
-    result = runner.invoke(app, ["config", "validate", "--path", str(config)])
+    result = runner.invoke(app, ["config", "validate", "--path", str(config), "--json"])
 
     assert result.exit_code == 2
     assert result.stdout == ""

@@ -160,7 +160,7 @@ class OverviewPage(Static):
     DEFAULT_CSS = """
     OverviewPage {
         layout: grid;
-        grid-size: 2 2;
+        grid-size: 2 3;
         grid-gutter: 1 2;
         padding: 1 2;
         height: 1fr;
@@ -180,6 +180,12 @@ class OverviewPage(Static):
     OverviewPage .stat-card .stat-label {
         color: #5a7a9a;
         text-style: italic;
+    }
+    OverviewPage .stat-footer {
+        column-span: 2;
+        text-align: right;
+        color: #5a7a9a;
+        margin-top: 1;
     }
     """
 
@@ -207,6 +213,7 @@ class OverviewPage(Static):
             Label("—", id="ov-jobs", classes="stat-value"),
             classes="stat-card",
         )
+        yield Label("Last refresh: —", id="ov-last-refresh", classes="stat-footer")
 
     def refresh_data(self, snapshot: CockpitSnapshot, conn: str) -> None:
         status = str(snapshot.health.get("status", "unknown"))
@@ -216,6 +223,11 @@ class OverviewPage(Static):
         )
         sym, color = STATE_ICONS.get(status.lower(), ("·", "bright_black"))
         self.query_one("#ov-daemon", Label).update(f"[{color}]{sym}  {status}[/{color}]")
+        daemon_card = self.query_one("#ov-daemon").parent
+        if status.lower() not in ("healthy", "online", "ok"):
+            daemon_card.set_styles("border: solid red;")
+        else:
+            daemon_card.set_styles("border: solid #1c3a5e;")
         self.query_one("#ov-nodes", Label).update(
             f"[cyan]{len(snapshot.nodes)}[/cyan]"
         )
@@ -224,6 +236,10 @@ class OverviewPage(Static):
         )
         job_color = "yellow" if active else "bright_black"
         self.query_one("#ov-jobs", Label).update(f"[{job_color}]{active}[/{job_color}]")
+        
+        app = self.app
+        last_str = getattr(app, '_last_update_str', '00:00:00')
+        self.query_one("#ov-last-refresh", Label).update(f"[dim]Last refresh: {last_str}[/dim]")
 
 
 # ─── Table pages ──────────────────────────────────────────────────────────────
@@ -240,6 +256,7 @@ class TablePage(Static):
 
     def compose(self) -> ComposeResult:
         yield DataTable(id=f"dt-{self.slug}", zebra_stripes=True, cursor_type="row")
+        yield Label(f"No {self.slug}", id=f"empty-{self.slug}", classes="empty-state")
 
     def on_mount(self) -> None:
         table = self.query_one(DataTable)
@@ -247,9 +264,16 @@ class TablePage(Static):
 
     def _sync_rows(self, rows: list[tuple[str, ...]]) -> None:
         table = self.query_one(DataTable)
-        table.clear()
-        for row in rows:
-            table.add_row(*row)
+        empty_lbl = self.query_one(f"#empty-{self.slug}", Label)
+        if not rows:
+            table.display = False
+            empty_lbl.display = True
+        else:
+            table.display = True
+            empty_lbl.display = False
+            table.clear()
+            for row in rows:
+                table.add_row(*row)
 
 
 class NodesPage(TablePage):
@@ -318,40 +342,21 @@ class JobsPage(TablePage):
         self._sync_rows(rows)
 
 
-class MetricsPage(Static):
-    """Key–value performance metrics."""
-
-    DEFAULT_CSS = """
-    MetricsPage {
-        padding: 1 2;
-        height: 1fr;
-        width: 1fr;
-        overflow-y: auto;
-    }
-    MetricsPage .metric-row {
-        height: 1;
-        margin-bottom: 1;
-    }
-    MetricsPage .metric-key {
-        width: 28;
-        color: #5a7a9a;
-    }
-    MetricsPage .metric-val {
-        color: #7dd3f5;
-        text-style: bold;
-    }
-    """
+class MetricsPage(TablePage):
+    COLUMNS = ("key", "value")
+    COLUMN_LABELS = ("  METRIC", "  VALUE")
 
     def __init__(self) -> None:
-        super().__init__(id="page-performance", classes="cockpit-page")
+        super().__init__("performance")
 
     def refresh_data(self, snapshot: CockpitSnapshot) -> None:
-        lines = []
+        rows = []
         for key, value in sorted(snapshot.metrics.items()):
-            lines.append(
-                f"[#5a7a9a]{key:<28}[/#5a7a9a][#7dd3f5]{value}[/#7dd3f5]"
-            )
-        self.update("\n".join(lines) if lines else "[bright_black]No metrics yet.[/bright_black]")
+            val_str = str(value)
+            if isinstance(value, (int, float)):
+                val_str = f"[cyan]{val_str}[/cyan]"
+            rows.append((f"[#5a7a9a]{key}[/#5a7a9a]", val_str))
+        self._sync_rows(rows)
 
 
 class LogsPage(Static):
@@ -373,9 +378,15 @@ class LogsPage(Static):
         lines = []
         for entry in event_log[-40:]:
             ts, _, rest = entry.partition("  ")
-            lines.append(f"[bright_black]{ts}[/bright_black]  [cyan]{rest}[/cyan]")
+            parts = rest.split("  ", 1)
+            kind = parts[0]
+            extra = parts[1] if len(parts) > 1 else ""
+            c = "yellow" if "job." in kind else "blue"
+            c = "cyan" if "model." in kind else c
+            c = "red" if "error" in kind.lower() else c
+            lines.append(f"[dim]{ts}[/dim]  [{c}]{kind}[/{c}]  {extra}")
         self.update(
-            "\n".join(lines) if lines else "[bright_black]No events yet.[/bright_black]"
+            "\n".join(lines) if lines else "[dim]No events yet.[/dim]"
         )
 
 
@@ -591,6 +602,8 @@ class CockpitApp(App[None]):
         self.snapshot = CockpitSnapshot()
         self.connection_state = "CONNECTING"
         self.policy = "interactive"
+        self._last_update_str = "00:00:00"
+        self._flash_tick = False
         self.event_cursor = 0
         self.last_event_kind: str | None = None
         self._event_log: list[str] = []
@@ -621,6 +634,7 @@ class CockpitApp(App[None]):
     def on_mount(self) -> None:
         self._set_narrow(self.size.width < 80 or self.size.height < 24)
         self._render_snapshot()
+        self.set_interval(0.5, self._tick_flash)
         self.run_worker(
             self._connection_loop(),
             name="daemon-events",
@@ -629,12 +643,30 @@ class CockpitApp(App[None]):
             exit_on_error=False,
         )
 
+    def _tick_flash(self) -> None:
+        self._flash_tick = not getattr(self, "_flash_tick", False)
+        if self.connection_state == "CONNECTING":
+            self._render_snapshot()
+
     def on_resize(self, event: Resize) -> None:
         self._set_narrow(event.size.width < 80 or event.size.height < 24)
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         if event.item.id is not None and event.item.id.startswith("nav-"):
             self.show_page(event.item.id.removeprefix("nav-"))
+
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        table = event.data_table
+        if not table.is_valid_row_index(event.cursor_row):
+            return
+        try:
+            val = table.get_cell_at((event.cursor_row, 0))
+            if isinstance(val, str):
+                import re
+                val = re.sub(r'\[.*?\]', '', val).strip()
+                self.sub_title = f"Selected ID: {val}"
+        except Exception:
+            pass
 
     def show_page(self, slug: str) -> None:
         if slug not in PAGE_SLUGS:
@@ -865,20 +897,27 @@ class CockpitApp(App[None]):
         self.set_class(narrow, "narrow")
 
     def _render_snapshot(self) -> None:
+        import datetime
         conn = self.connection_state
-        conn_color = {"LIVE": "green", "STALE": "yellow", "CONNECTING": "bright_black"}.get(
-            conn, "bright_black"
-        )
-        conn_sym = {"LIVE": "●", "STALE": "◌", "CONNECTING": "⟳"}.get(conn, "·")
+        if conn == "LIVE":
+            self._last_update_str = datetime.datetime.now().strftime("%H:%M:%S")
+            conn_markup = "[green]● LIVE[/green]"
+        elif conn == "STALE":
+            st = getattr(self, '_last_update_str', '00:00:00')
+            conn_markup = f"[yellow]◌ STALE — last update {st}[/yellow]"
+        else:
+            sym = "⟳" if getattr(self, "_flash_tick", False) else " "
+            conn_markup = f"[bright_black]{sym} CONNECTING…[/bright_black]"
+
         active_jobs = sum(
             item.get("state") in {"pending", "planning", "running", "cancelling"}
             for item in self.snapshot.jobs
         )
         badge_text = (
-            f"[{conn_color}]{conn_sym} {conn}[/{conn_color}]"
+            f"{conn_markup}"
             f"  [bright_black]policy {self.policy}[/bright_black]"
             f"  [yellow]jobs {active_jobs}[/yellow]" if active_jobs
-            else f"[{conn_color}]{conn_sym} {conn}[/{conn_color}]"
+            else f"{conn_markup}"
             f"  [bright_black]policy {self.policy}[/bright_black]"
         )
         self.query_one("#conn-badge", Static).update(badge_text)

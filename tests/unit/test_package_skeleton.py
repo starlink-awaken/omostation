@@ -69,7 +69,7 @@ def test_package_exposes_the_v3_alpha_version() -> None:
     result = _run_module("omlxc", "--version")
 
     assert result.returncode == 0
-    assert result.stdout.strip() == "3.0.0a1"
+    assert "3.0.0a1" in result.stdout.strip()
 
 
 def test_daemon_module_exposes_private_uds_help() -> None:
@@ -85,7 +85,7 @@ def test_installed_omlxc_console_script_reports_its_version() -> None:
     result = _run_installed_script("omlxc", "--version")
 
     assert result.returncode == 0
-    assert result.stdout.strip() == "3.0.0a1"
+    assert "3.0.0a1" in result.stdout.strip()
 
 
 def test_installed_omlxcd_console_script_exposes_private_uds_help() -> None:
