@@ -226,7 +226,7 @@ families:
     artifact_kind: [runtime, cache]
     disposition: delegate
     owner: runtime
-    replacement: "Runtime domain adapters, including runtime://documents/documents-weijian-kems-check@64e68230452e4240faeaccacd4b9d2df2a6452b0, delegating KEMS to Kairon/KOS and task state to OMO"
+    replacement: "Runtime domain adapters, including runtime://documents/documents-weijian-kems-check@64e68230452e4240faeaccacd4b9d2df2a6452b0 and runtime://documents/documents-weijian-control-health@57b5d54c5e483a5a2f5c0e79b7225cf6094a6c81; KEMS delegates to Kairon/KOS, the control-health view reads the Weijian signals/facts projections, and both keep task state and receipts in Runtime/OMO"
     consumer_refs:
       - "crontab://weijian/check-kems-update"
       - "@工作文档/卫健委/CLAUDE.md"
