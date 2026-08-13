@@ -69,10 +69,21 @@ clients:
       approval_mode: allow_read_tools
       builtin_tool_policy: disable_all
     note: "Use the generated `Documents` Agent Profile; it disables built-in tools and enables only the Cockpit read tools declared by content-domain."
+  zcode:
+    instruction_file: AGENTS.md
+    mcp_scope: user
+    config_contract:
+      owner: workspace
+      generator_ref: bin/gac/documents-zcode-config.py
+      configuration_surface: native_json
+      config_path: ~/.zcode/cli/config.json
+      managed_mcp_server: cockpit
+      preserve_unrelated_servers: true
+    note: "Open Documents as the ZCode workspace so its root AGENTS.md is authoritative; the native user config manages only Cockpit and preserves third-party model and MCP settings."
   agents_compatible:
     instruction_file: AGENTS.md
     mcp_scope: client
-    note: "For ZCode-like clients without a dedicated contract, use AGENTS.md plus the client MCP settings."
+    note: "For clients without a dedicated contract, use AGENTS.md plus the client MCP settings."
   chatgpt_web:
     instruction_file: null
     mcp_scope: public_https_or_secure_tunnel
