@@ -234,3 +234,40 @@ deletions, and untracked files were not staged. Documents root, OPC, and the
 work-docs federation root are not Git repositories, so their facts files remain
 installed content-plane artifacts. This evidence closes the facts-surface gap,
 not repository cleanliness, whole-domain freshness, or client UI validation.
+
+## 2026-08-13 Claude-3p reload/UI reconciliation
+
+Claude-3p is not a separate application bundle. The installed
+`/Applications/Claude.app` runs in `deploymentMode=3p` and uses the independent
+`Claude-3p` Application Support and log roots. The user-visible configuration
+entrypoint is the **Inference configuration** item under the Gateway account
+menu. The applied profile was `CC Switch`; the UI showed provider `Gateway`, a
+masked static credential, and the `deepseek-v4-flash` model label. No inference
+setting was changed.
+
+The first Developer inspection was intentionally treated as a RED observation:
+the Claude process had started on 2026-08-12, before the Claude-3p Cockpit MCP
+configuration was updated on 2026-08-13, and `cockpit` was absent from the Local
+MCP servers list. After the active Cowork task finished and its deliverables were
+visible, Claude was quit cleanly and relaunched. The new process:
+
+- continued to use `~/Library/Application Support/Claude-3p`;
+- retained the Gateway deployment and `deepseek-v4-flash` model label;
+- directly spawned the accepted Cockpit command under
+  `projects/cockpit/.venv/bin/cockpit-mcp`;
+- displayed `cockpit` as `running` in Developer settings.
+
+Three unrelated configured servers (`MCP_DOCKER`, `MiniMax`, and
+`wps-note-cloud`) reported disconnected and remain truthful client-local debt.
+The UI automation could inspect and click the application but could not acquire
+keyboard focus for a safe read-only `workspace_context` prompt, so no
+Claude-originated tool invocation is claimed. Installed stdio initialize,
+tools/list, and direct Cockpit tool-call evidence remains valid command-level
+coverage.
+
+This completes the Claude-3p reload/UI MVP, not all-client rollout. The next
+client iteration should exercise one real Documents domain journey through the
+running Cockpit surface and separately close reload/UI evidence for each other
+configured client. Configuration inspection also found existing remote-MCP
+credentials embedded in command arguments; their values were not recorded here,
+and rotation plus secret-storage migration remains a separate hardening task.

@@ -843,3 +843,38 @@ This checkpoint does not claim that all facts are fresh or exhaustive. It closes
 only the missing-surface gate with stable source pointers. The next MVP iteration
 should be one real client reload/UI smoke, preferably Claude-3p because it uses a
 third-party model and has its own configuration entrypoint.
+
+## 7. 2026-08-13 Claude-3p Reload/UI Checkpoint
+
+The bounded Claude-3p client smoke is now complete without changing inference or
+MCP configuration:
+
+- the running application is `/Applications/Claude.app` in `deploymentMode=3p`,
+  with its helpers anchored to `~/Library/Application Support/Claude-3p`;
+- the third-party inference entrypoint is the in-app **Inference
+  configuration** surface. Its applied profile is `CC Switch`, provider
+  `Gateway`, with a static credential and model labels projected through the
+  local gateway;
+- the pre-smoke Claude process predated the 2026-08-13 Cockpit configuration and
+  its Developer list did not contain `cockpit`, so configuration-file presence
+  was correctly rejected as reload evidence;
+- after the in-flight Cowork task completed, Claude was quit cleanly and
+  relaunched. The new Claude process retained the Claude-3p data directory and
+  the `deepseek-v4-flash` Gateway model label;
+- the relaunched Claude process started the accepted `cockpit-mcp` command, and
+  Developer settings showed `cockpit` with status `running` and no warning
+  marker.
+
+This closes the Claude-3p reload/UI portion of the client MVP. It does not claim
+that every configured MCP is healthy: `MCP_DOCKER`, `MiniMax`, and
+`wps-note-cloud` independently reported disconnected after restart. It also does
+not claim a Claude-side tool invocation, because the automation provider could
+inspect and click the Electron UI but could not acquire keyboard focus for a
+safe read-only prompt. The installed Cockpit stdio protocol/tool smoke remains
+the command-level evidence for tool execution.
+
+The next bounded iteration is one real domain journey through the now-running
+Claude-3p Cockpit surface, followed by independently recorded reload/UI evidence
+for the remaining clients. Existing inline remote-MCP credentials should be
+rotated and moved out of command arguments as a separate security-hardening
+change; no credential value was copied into this plan.
