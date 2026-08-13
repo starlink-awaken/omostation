@@ -1,4 +1,5 @@
-"""Run Codex exec as a bounded unattended worker."""
+#!/usr/bin/env python3
+"""Run Codex exec as a bounded supervised worker."""
 
 # ruff: noqa: UP007, UP045 -- the adapter contract supports Python 3.9.
 
@@ -45,14 +46,31 @@ FORBIDDEN_WRITE_PATHS = (
     "convergence.yaml",
 )
 WRITE_PATH_RE = re.compile(r"^- You may write to `([^`]+)`$")
+APPROVAL_EVENT_TYPES = {
+    "apply_patch_approval_request",
+    "exec_approval_request",
+}
+KNOWN_JSONL_EVENT_TYPES = {
+    "error",
+    "item.completed",
+    "item.started",
+    "item.updated",
+    "message",
+    "response.output_item.done",
+    "thread.started",
+    "turn.completed",
+    "turn.failed",
+    "turn.started",
+}
 
 
 class AdapterError(RuntimeError):
     """Expose only stable bounded-adapter failure codes."""
 
-    def __init__(self, code: str) -> None:
+    def __init__(self, code: str, *, provider_review: str = "unknown") -> None:
         super().__init__(code)
         self.code = code
+        self.provider_review = provider_review
 
 
 def _utc_now() -> str:
@@ -231,6 +249,39 @@ def _final_assistant_message(stdout: str) -> str:
     return final
 
 
+def _provider_review(stdout: str, *, timed_out: bool = False) -> str:
+    approval_observed = False
+    unknown_observed = False
+    for line in stdout.splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            unknown_observed = True
+            continue
+        if not isinstance(event, dict):
+            unknown_observed = True
+            continue
+        event_type = event.get("type")
+        if event_type in APPROVAL_EVENT_TYPES:
+            approval_observed = True
+        elif event_type not in KNOWN_JSONL_EVENT_TYPES:
+            unknown_observed = True
+    if approval_observed:
+        return "human_required"
+    if timed_out:
+        return "timed_out"
+    if unknown_observed:
+        return "unknown"
+    return "completed_without_observed_escalation"
+
+
+def _timeout_output(exc: subprocess.TimeoutExpired) -> str:
+    output = exc.output
+    if isinstance(output, bytes):
+        return output.decode("utf-8", errors="replace")
+    return output if isinstance(output, str) else ""
+
+
 def _run_git(
     root: Path,
     arguments: Sequence[str],
@@ -316,6 +367,29 @@ def _workspace_fingerprint(
         "head": head,
         "index": index,
         "states": {path: _path_state(root, path) for path in changed},
+    }
+
+
+def _fingerprint_digest(fingerprint: dict[str, Any]) -> str:
+    return f"sha256:{digest_text(_canonical_json(fingerprint))}"
+
+
+def _patch_digest(patch: bytes) -> str:
+    return f"sha256:{hashlib.sha256(patch).hexdigest()}"
+
+
+def _expected_post_fingerprint(
+    baseline_fingerprint: dict[str, Any],
+    changed: Sequence[str],
+    expected_worker_states: dict[str, tuple[str, str]],
+) -> dict[str, Any]:
+    expected_paths = sorted(set(baseline_fingerprint["changed_paths"]) | set(changed))
+    expected_states = dict(baseline_fingerprint["states"])
+    expected_states.update(expected_worker_states)
+    return {
+        **baseline_fingerprint,
+        "changed_paths": expected_paths,
+        "states": {path: expected_states[path] for path in expected_paths},
     }
 
 
@@ -509,16 +583,9 @@ def _apply_delta(
     try:
         _run_git(root, ["apply", "--whitespace=nowarn", "-"], input_bytes=patch)
         applied = True
-        expected_paths = sorted(
-            set(baseline_fingerprint["changed_paths"]) | set(changed)
+        expected = _expected_post_fingerprint(
+            baseline_fingerprint, changed, expected_worker_states
         )
-        expected_states = dict(baseline_fingerprint["states"])
-        expected_states.update(expected_worker_states)
-        expected = {
-            **baseline_fingerprint,
-            "changed_paths": expected_paths,
-            "states": {path: expected_states[path] for path in expected_paths},
-        }
         if _workspace_fingerprint(root, changed_paths_reader) != expected:
             raise AdapterError("delta_apply_unconfirmed")
     except (AdapterError, OSError) as exc:
@@ -669,9 +736,12 @@ def run_worker(
         try:
             stdout, _stderr = process.communicate(timeout=timeout_seconds)
         except subprocess.TimeoutExpired as exc:
+            provider_review = _provider_review(_timeout_output(exc), timed_out=True)
             if not _terminate_timed_out_process(process, group_probe, group_terminator):
                 raise AdapterError("cleanup_unconfirmed") from exc
-            raise AdapterError("worker_timeout") from exc
+            raise AdapterError(
+                "worker_timeout", provider_review=provider_review
+            ) from exc
         if group_probe(process.pid):
             if not _terminate_surviving_group(
                 process.pid, group_probe, group_terminator
@@ -681,6 +751,11 @@ def run_worker(
         if process.returncode != 0:
             raise AdapterError("worker_nonzero")
         output = _final_assistant_message(stdout)
+        provider_review = _provider_review(stdout)
+        if provider_review == "human_required":
+            raise AdapterError(
+                "human_approval_required", provider_review=provider_review
+            )
         if expect_exact is not None and output != expect_exact:
             raise AdapterError("marker_mismatch")
         changed_paths, patch, worker_states = _execution_delta(
@@ -695,7 +770,11 @@ def run_worker(
     receipt: Optional[dict[str, Any]] = None
     staged_receipt: Path | None = None
     if receipt_file is not None:
+        expected_post = _expected_post_fingerprint(
+            baseline_fingerprint, changed_paths, worker_states
+        )
         receipt = {
+            "baseline_digest": _fingerprint_digest(baseline_fingerprint),
             "boundaries": {
                 "approval": "approve-for-me",
                 "config": "ignore-user-config",
@@ -707,9 +786,16 @@ def run_worker(
             "completed_at": _utc_now(),
             "exit_code": process.returncode,
             "output_sha256": digest_text(output),
+            "patch_digest": _patch_digest(patch),
+            "post_digest": _fingerprint_digest(expected_post),
+            "readiness": "model_output_observed",
             "schema": RECEIPT_SCHEMA,
             "started_at": started_at,
             "status": "succeeded",
+            "supervision": {
+                "controller_approval": "granted",
+                "provider_review": provider_review,
+            },
             "worker": "codex",
         }
         receipt["receipt_sha256"] = receipt_digest(receipt)
@@ -788,7 +874,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         )
     except AdapterError as exc:
         print(
-            _canonical_json({"error_code": exc.code, "status": "failed"}),
+            _canonical_json(
+                {
+                    "error_code": exc.code,
+                    "provider_review": exc.provider_review,
+                    "status": "failed",
+                }
+            ),
             file=sys.stderr,
         )
         return 2

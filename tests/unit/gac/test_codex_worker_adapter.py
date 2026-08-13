@@ -122,6 +122,11 @@ class HungProcess(FakeProcess):
         return self.returncode
 
 
+class PartialHungProcess(HungProcess):
+    def communicate(self, timeout: float | None = None) -> tuple[str, str]:
+        raise subprocess.TimeoutExpired("codex", timeout, output=self.stdout)
+
+
 def run_success(tmp_path: Path, **overrides):
     arguments = {
         "workspace_root": real_clone_root(tmp_path),
@@ -294,6 +299,71 @@ def test_jsonl_projects_only_last_assistant_message(tmp_path: Path):
     assert result["output"] == "safe final"
 
 
+def test_unknown_jsonl_event_keeps_provider_review_unknown(tmp_path: Path) -> None:
+    receipt = tmp_path / "receipt.json"
+    stdout = "\n".join(
+        [
+            json.dumps({"type": "future.provider.event", "detail": "secret"}),
+            jsonl("safe final"),
+        ]
+    )
+
+    result = run_success(
+        tmp_path,
+        receipt_path=receipt,
+        popen_factory=lambda *_args, **_kwargs: FakeProcess(stdout=stdout),
+    )
+
+    assert result["receipt"]["supervision"]["provider_review"] == "unknown"
+    assert "future.provider.event" not in receipt.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "approval_event_type", ["exec_approval_request", "apply_patch_approval_request"]
+)
+def test_observed_approval_event_fails_closed_without_receipt_or_patch(
+    tmp_path: Path, approval_event_type: str
+) -> None:
+    root = real_clone_root(tmp_path)
+    receipt = tmp_path / "receipt.json"
+    stdout = "\n".join(
+        [
+            json.dumps({"type": approval_event_type, "command": "secret"}),
+            jsonl("safe final"),
+        ]
+    )
+
+    def start(argv, **_kwargs):
+        execution_root = Path(argv[argv.index("-C") + 1])
+        (execution_root / "allowed.txt").write_text("candidate\n", encoding="utf-8")
+        return FakeProcess(stdout=stdout)
+
+    with pytest.raises(adapter.AdapterError, match="human_approval_required") as raised:
+        adapter.run_worker(
+            workspace_root=root,
+            prompt=write_prompt("allowed.txt"),
+            execute=True,
+            receipt_path=receipt,
+            popen_factory=start,
+            codex_resolver=lambda: Path("/usr/local/bin/codex"),
+            version_reader=lambda _binary: "codex-cli 0.147.0",
+            group_probe=lambda _pid: False,
+        )
+
+    assert raised.value.provider_review == "human_required"
+    assert not receipt.exists()
+    assert not (root / "allowed.txt").exists()
+    assert (
+        subprocess.run(
+            ["git", "-C", str(root), "status", "--short"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+        == ""
+    )
+
+
 @pytest.mark.parametrize(
     ("stdout", "returncode", "error"),
     [
@@ -340,6 +410,49 @@ def test_timeout_sends_term_then_kill_and_waits_after_each(tmp_path: Path):
 
     assert signals == [(process.pid, signal.SIGTERM), (process.pid, signal.SIGKILL)]
     assert len(process.wait_calls) == 2
+
+
+@pytest.mark.parametrize(
+    ("partial_stdout", "provider_review"),
+    [
+        (json.dumps({"type": "turn.started"}), "timed_out"),
+        (
+            json.dumps(
+                {"type": "apply_patch_approval_request", "path": "/private/secret"}
+            ),
+            "human_required",
+        ),
+    ],
+)
+def test_timeout_classifies_partial_jsonl_without_receipt_or_patch_application(
+    tmp_path: Path, partial_stdout: str, provider_review: str
+) -> None:
+    root = real_clone_root(tmp_path)
+    receipt = tmp_path / "receipt.json"
+    process = PartialHungProcess(stdout=partial_stdout)
+
+    def start(argv, **_kwargs):
+        execution_root = Path(argv[argv.index("-C") + 1])
+        (execution_root / "allowed.txt").write_text("candidate\n", encoding="utf-8")
+        return process
+
+    with pytest.raises(adapter.AdapterError, match="worker_timeout") as raised:
+        adapter.run_worker(
+            workspace_root=root,
+            prompt=write_prompt("allowed.txt"),
+            execute=True,
+            receipt_path=receipt,
+            popen_factory=start,
+            codex_resolver=lambda: Path("/usr/local/bin/codex"),
+            version_reader=lambda _binary: "codex-cli 0.147.0",
+            group_terminator=lambda *_args: None,
+            group_probe=lambda _pid: False,
+            timeout_seconds=1,
+        )
+
+    assert raised.value.provider_review == provider_review
+    assert not receipt.exists()
+    assert not (root / "allowed.txt").exists()
 
 
 def test_timeout_parent_exit_does_not_hide_surviving_process_group(tmp_path: Path):
@@ -446,6 +559,15 @@ def test_receipt_is_exclusive_temp_only_canonical_and_redacted(
         assert payload["status"] == "succeeded"
         assert payload["changed_paths"] == []
         assert payload["output_sha256"] == adapter.digest_text("final answer")
+        assert payload["supervision"] == {
+            "controller_approval": "granted",
+            "provider_review": "completed_without_observed_escalation",
+        }
+        assert payload["readiness"] == "model_output_observed"
+        assert payload["baseline_digest"].startswith("sha256:")
+        assert payload["post_digest"].startswith("sha256:")
+        assert payload["patch_digest"].startswith("sha256:")
+        assert payload["baseline_digest"] == payload["post_digest"]
         assert payload["receipt_sha256"] == adapter.receipt_digest(payload)
         assert result["receipt"] == payload
         for secret in (
@@ -533,7 +655,31 @@ def test_cli_exposes_only_bounded_options_and_emits_final_message(
         )
 
 
-def test_codex_worker_registry_admits_only_the_bounded_adapter() -> None:
+def test_cli_failure_emits_only_safe_provider_review(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    monkeypatch.setattr(
+        adapter,
+        "run_worker",
+        lambda **_kwargs: (_ for _ in ()).throw(
+            adapter.AdapterError("worker_timeout", provider_review="human_required")
+        ),
+    )
+
+    assert (
+        adapter.main(
+            ["run", "--execute", "--workspace-root", "/clone", "--prompt", "secret"]
+        )
+        == 2
+    )
+    assert json.loads(capsys.readouterr().err) == {
+        "error_code": "worker_timeout",
+        "provider_review": "human_required",
+        "status": "failed",
+    }
+
+
+def test_codex_worker_registry_admits_only_the_interactive_orca_supervisor() -> None:
     registry = list(yaml.safe_load_all(WORKERS.read_text(encoding="utf-8")))[-1]
     codex = next(worker for worker in registry["workers"] if worker["id"] == "codex")
 
@@ -553,11 +699,18 @@ def test_codex_worker_registry_admits_only_the_bounded_adapter() -> None:
     assert codex["transports"] == {
         "cli_prompt": {
             "command": (
-                '/usr/bin/python3 "{workspace_root}/bin/gac/codex-worker-adapter.py" '
-                "run --execute --timeout-seconds 900 "
-                '--workspace-root "{workspace_root}" --prompt "{prompt}"'
+                '/usr/bin/python3 "{workspace_root}/bin/gac/'
+                'orca-codex-supervisor.py" start'
             )
         }
+    }
+    assert codex["supervision"] == {
+        "controller_approval": "required",
+        "provider_review": "manual_click_required",
+        "waiting_state": "awaiting_human_action",
+        "readiness_evidence": "settled_worker_done_and_transcript_digest",
+        "transport_ack_is_readiness": False,
+        "controller_direct_start_required": True,
     }
 
 
@@ -585,7 +738,11 @@ def test_execution_clone_applies_only_declared_worker_delta(tmp_path: Path) -> N
 
     assert (root / "allowed.txt").read_text(encoding="utf-8") == "worker result\n"
     assert (root / "preexisting.txt").read_text(encoding="utf-8") == "keep me\n"
-    assert result["receipt"]["changed_paths"] == ["allowed.txt"]
+    payload = result["receipt"]
+    assert payload["changed_paths"] == ["allowed.txt"]
+    assert payload["baseline_digest"] != payload["post_digest"]
+    assert payload["patch_digest"] != f"sha256:{adapter.digest_text('')}"
+    assert "worker result" not in receipt.read_text(encoding="utf-8")
 
 
 def test_out_of_scope_execution_is_discarded_without_touching_clone(

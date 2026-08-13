@@ -2,12 +2,12 @@
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-08-14
 ---
 
 # Agent CLI Worker Collaboration Standard
 
-> Status: active | Version: v1.1 | Scope: external agent CLI workers
+> Status: active | Version: v1.2 | Scope: external agent CLI workers
 > Related: `.omo/tasks/README.md`, `.omo/standards/operation-levels.md`,
 > `.omo/standards/agent-registry-heartbeat.md`,
 > `.omo/_knowledge/summaries/agent-task-contract.md`
@@ -42,15 +42,20 @@ contract.
 as a fallback. It is an uncontrolled historical entrypoint; its convergence is
 tracked independently from the admitted Pi worker transport.
 
-The admitted Codex transport is only
-`bin/gac/codex-worker-adapter.py`. It invokes the fixed
-`codex exec --approve-for-me --ephemeral --ignore-user-config --json` contract
-inside an identity-verified independent clone. `--approve-for-me` keeps the
-Codex review policy active while removing interactive approval prompts; it is
-not permission to use `--dangerously-bypass-approvals-and-sandbox`, change the
-sandbox, add arbitrary arguments, or run outside task-declared write surfaces.
-The adapter must fail closed on timeout, malformed output, process-group leaks,
-receipt failure, or workspace identity failure.
+The admitted Codex production transport is the Orca-managed interactive Codex
+TUI, observed through `bin/gac/orca-codex-supervisor.py`. Every provider approval
+must remain visible for a human click in the retained terminal. An unresolved
+approval is `awaiting_human_action`, not success and not a terminal failure.
+`bin/gac/codex-worker-adapter.py` remains a bounded diagnostic adapter: its
+`codex exec --approve-for-me --ephemeral --ignore-user-config --json` path cannot
+carry a human approval response or resume the same ephemeral session, so it must
+fail closed on an approval request and must not be used as the T1-18 production
+execution path. Controller approval and provider approval are separate evidence
+fields.
+The flag is not permission to use `--dangerously-bypass-approvals-and-sandbox`,
+change the sandbox, add arbitrary arguments, or run outside task-declared write
+surfaces. The adapter must fail closed on timeout, malformed output,
+process-group leaks, receipt failure, or workspace identity failure.
 
 ## 2. Core Rules
 
@@ -68,6 +73,12 @@ receipt failure, or workspace identity failure.
     workflow packet, or admission grant must be a non-empty list of non-empty
     strings. Workers with `require_explicit_capabilities: true` reject dispatch
     when all three surfaces omit capability requirements.
+11. **Transport acknowledgement is not readiness.** `ready`, `tui-idle`,
+    `input_accepted`, process start, and exit 0 remain distinct from a valid
+    final model output, candidate collection, and independent verification.
+12. **Supervised providers may escalate.** A controller release authorizes the
+    bounded attempt, not every provider-side tool request. Any later provider
+    confirmation remains human-owned and must be observed or time out honestly.
 
 ### 2.1 Agent Pool Projection
 
