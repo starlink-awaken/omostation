@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-13
+---
+
 # Supervised Blueprint Control Loop Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -61,7 +68,7 @@ Add `BET-Y1Q2-T1-18`, increment `meta.total_bets`, and copy the spec SHA-256 int
 accepted_specifications:
 - spec_ref: repo://docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md
   spec_version: 1.0.0
-  content_digest: sha256:5e021ca689e809316f550e463e28175fbf5c506ad89e4d72315205e78bc57936
+  content_digest: sha256:0c344987452535e9e8ac4bd871311bd3c206f21a5bfac6376b1ecf317b79b836
 ```
 
 Use the design's eight acceptance criteria verbatim, set `human_gate: true`, `risk_level: L1`, appetite `3 days`, and dependency `BET-Y1Q2-T1-17`.

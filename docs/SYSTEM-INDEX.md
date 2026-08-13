@@ -101,6 +101,8 @@
 - [`superpowers/specs/2026-08-13-personal-capability-mainline-restore.md`](superpowers/specs/2026-08-13-personal-capability-mainline-restore.md) — Personal 能力主线恢复与子模块防回退合同
 - [`superpowers/specs/2026-08-13-codex-exec-worker-design.md`](superpowers/specs/2026-08-13-codex-exec-worker-design.md) — Codex 无人值守 bounded worker、执行副本与事务回写合同
 - [`superpowers/plans/2026-08-13-codex-exec-worker.md`](superpowers/plans/2026-08-13-codex-exec-worker.md) — Codex worker 的 TDD、Orca 运输与独立复核计划
+- [`superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md`](superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md) — 人工确认 Codex TUI、证据收集与补偿回滚合同
+- [`superpowers/plans/2026-08-14-supervised-blueprint-control-loop.md`](superpowers/plans/2026-08-14-supervised-blueprint-control-loop.md) — 受监督 Blueprint 控制闭环实施与真实 dogfood 计划
 
 ---
 

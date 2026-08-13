@@ -2,7 +2,7 @@
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-14
+last-reviewed: 2026-08-13
 ---
 
 # 受监督 Blueprint 控制闭环设计
