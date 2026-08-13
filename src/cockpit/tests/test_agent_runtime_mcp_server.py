@@ -4,6 +4,8 @@ import json
 import sys
 from unittest import mock
 
+import pytest
+
 # Pre-mock runtime dependencies
 _mock_runtime = mock.MagicMock()
 _mock_runtime_executor = mock.MagicMock()
@@ -292,12 +294,23 @@ class TestGovernanceTools:
         assert json.loads(agent_runtime_mcp_server.domain_controller_shadow_status("vault")) == payload
         assert seen == ["vault"]
 
-    def test_domain_model_freshness_status_passes_domain_id_and_returns_parseable_envelope(self, monkeypatch):
+    @pytest.mark.parametrize(
+        ("status", "available"),
+        [("ok", True), ("attention", True), ("unavailable", False)],
+    )
+    def test_domain_model_freshness_status_passes_domain_id_and_returns_parseable_envelope(
+        self, monkeypatch, status, available
+    ):
         seen = []
         payload = {
             "schema": "cockpit.domain-model-freshness.v1",
-            "status": "attention",
-            "available": True,
+            "status": status,
+            "available": available,
+            "sources": {
+                "domain_registry": "l4-domain-registry",
+                "binding_registry": ".omo/_truth/registry/documents-domain-projects.yaml",
+                "runtime_evidence": ".local/state/omostation/runtime/control/evidence/model-freshness.json",
+            },
         }
         monkeypatch.setattr(
             agent_runtime_mcp_server.governance_context,
@@ -306,5 +319,7 @@ class TestGovernanceTools:
             raising=False,
         )
 
-        assert json.loads(agent_runtime_mcp_server.domain_model_freshness_status("vault")) == payload
+        output = agent_runtime_mcp_server.domain_model_freshness_status("vault")
+        assert json.loads(output) == payload
+        assert "/Users/reviewer/Documents" not in output
         assert seen == ["vault"]

@@ -881,21 +881,30 @@ def test_domain_model_freshness_accepts_only_contract_status_relationships(
     available: bool,
 ) -> None:
     gc = _adapter()
-    registry_path = _write_domain_registry(tmp_path)
-    _write_binding_registry(tmp_path, {})
+    workspace_root = tmp_path / "workspace"
+    documents_root = tmp_path / "Documents"
+    registry_path = _write_domain_registry(documents_root)
+    _write_binding_registry(workspace_root, {})
     state_root = _write_runtime_model_freshness_receipt(
-        tmp_path,
+        workspace_root,
         owner_status=owner_status,
         job_status=job_status,
         exit_code=exit_code,
     )
-    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
 
-    result = gc.domain_model_freshness_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+    result = gc.domain_model_freshness_status(
+        "vault",
+        workspace_root=workspace_root,
+        registry_path=registry_path,
+        documents_root=documents_root,
+        runtime_state_root=state_root,
+    )
 
     assert result["status"] == owner_status
     assert result["available"] is available
     assert result["schema"] == "cockpit.domain-model-freshness.v1"
+    assert result["sources"]["domain_registry"] == "l4-domain-registry"
+    assert str(documents_root) not in json.dumps(result)
 
 
 @pytest.mark.parametrize(
@@ -1016,6 +1025,7 @@ def test_domain_model_freshness_fails_closed_for_missing_symlinked_and_oversized
         ("wrong_owner", "vault"),
         ("wrong_schema", "vault"),
         ("traversal", "vault"),
+        ("wrong_safe_path", "vault"),
         ("unchanged", "unknown"),
     ],
 )
@@ -1041,6 +1051,8 @@ def test_domain_model_freshness_rejects_invalid_binding_or_domain(
         job["evidence_schema"] = "runtime.documents-model-freshness.evidence.v0"
     elif mutation == "traversal":
         job["evidence_relative_path"] = "../private-model.json"
+    elif mutation == "wrong_safe_path":
+        job["evidence_relative_path"] = "control/evidence/sibling/sibling.json"
     binding_path.write_text(yaml.safe_dump(binding, sort_keys=False), encoding="utf-8")
     state_root = _write_runtime_model_freshness_receipt(tmp_path)
     monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
@@ -1050,6 +1062,8 @@ def test_domain_model_freshness_rejects_invalid_binding_or_domain(
     assert result["schema"] == "cockpit.domain-model-freshness.v1"
     assert result["status"] == "unavailable"
     assert result["available"] is False
+    if mutation == "wrong_safe_path":
+        assert "unsupported evidence path" in result["error"]
 
 
 def test_domain_model_freshness_never_reads_documents_content(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

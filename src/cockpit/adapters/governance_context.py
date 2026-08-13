@@ -21,7 +21,11 @@ _CAPABILITY_ROUTE_CONTRACTS = {
 }
 _FACTS_EVIDENCE_SCHEMA = "runtime.documents-facts-audit.evidence.v1"
 _CONTROLLER_SHADOW_EVIDENCE_SCHEMA = "runtime.documents-controller-shadow.evidence.v2"
+_DOMAIN_REGISTRY_AUTHORITY = "l4-domain-registry"
 _MODEL_FRESHNESS_EVIDENCE_SCHEMA = "runtime.documents-model-freshness.evidence.v1"
+_MODEL_FRESHNESS_EVIDENCE_PATH = (
+    "control/evidence/documents-weijian-model-freshness/documents-weijian-model-freshness.json"
+)
 _MODEL_FRESHNESS_ERRORS = frozenset(
     {
         "domain_root_missing",
@@ -475,13 +479,12 @@ def _controller_shadow_unavailable(
 
 def _model_freshness_unavailable(
     requested: str,
-    source: Path,
     binding_source: str,
     error: str,
     *,
     runtime_evidence: Path | None = None,
 ) -> dict[str, Any]:
-    sources = {"domain_registry": str(source), "binding_registry": binding_source}
+    sources = {"domain_registry": _DOMAIN_REGISTRY_AUTHORITY, "binding_registry": binding_source}
     if runtime_evidence is not None:
         sources["runtime_evidence"] = str(runtime_evidence)
     return {
@@ -586,6 +589,8 @@ def _runtime_model_freshness_job(binding: dict[str, Any], domain_id: str) -> dic
     if evidence_schema != _MODEL_FRESHNESS_EVIDENCE_SCHEMA:
         raise ValueError("Runtime model freshness job has an unsupported evidence schema")
     evidence_path = _relative_path(item.get("evidence_relative_path"), label="Runtime evidence path")
+    if str(evidence_path) != _MODEL_FRESHNESS_EVIDENCE_PATH:
+        raise ValueError("Runtime model freshness job has an unsupported evidence path")
     return {
         "id": job_id,
         "owner": owner,
@@ -1002,7 +1007,6 @@ def domain_model_freshness_status(
         evidence = locals().get("evidence_path")
         return _model_freshness_unavailable(
             requested,
-            source,
             binding_source,
             str(exc),
             runtime_evidence=evidence if isinstance(evidence, Path) else None,
@@ -1016,7 +1020,7 @@ def domain_model_freshness_status(
         "job": {key: job[key] for key in ("id", "owner", "action")},
         "freshness": freshness,
         "sources": {
-            "domain_registry": str(source),
+            "domain_registry": _DOMAIN_REGISTRY_AUTHORITY,
             "binding_registry": binding_source,
             "runtime_evidence": str(evidence_path),
         },
