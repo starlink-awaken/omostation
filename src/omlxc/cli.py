@@ -12,11 +12,11 @@ from uuid import uuid4
 
 import typer
 from pydantic import JsonValue
-from typer import Abort
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table, box
 from rich.text import Text
+from typer import Abort
 
 from . import __version__
 from .cli_guide import (
@@ -419,6 +419,20 @@ def status(
         json_output=json_output,
         renderer=lambda data: render_sections(status_sections(data)),
         error_context=ErrorContext.STATUS,
+    )
+
+
+@app.command("resolve")
+def resolve(
+    alias: Annotated[str, typer.Argument(help="The model alias or ID to resolve")],
+    json_output: Annotated[bool, typer.Option("--json", help="Emit versioned JSON.")] = False,
+) -> None:
+    """Resolve an alias to a fully qualified model specification."""
+    _execute(
+        lambda client: client.resolve_model(alias),
+        json_output=json_output,
+        renderer=_render_mapping,
+        error_context=ErrorContext.GENERAL,
     )
 
 

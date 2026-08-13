@@ -204,8 +204,14 @@ class ModelConfig(ConfigModel):
     size_gb: float | None = Field(default=None, gt=0)
     reasoning: bool = False
     parameters: dict[str, JsonValue] = Field(default_factory=dict)
+    aliases: tuple[str, ...] = ()
     note: str | None = None
     requires_pip: str | None = None
+
+    @field_validator("aliases", mode="before")
+    @classmethod
+    def list_to_tuple(cls, value: object) -> object:
+        return tuple(cast(list[object], value)) if isinstance(value, list) else value
 
 
 class PlacementConfig(ConfigModel):

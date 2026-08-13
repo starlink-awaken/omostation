@@ -105,6 +105,7 @@ class ModelSpec(DomainModel):
     role: str
     capabilities: frozenset[str] = frozenset()
     reasoning: bool = False
+    aliases: frozenset[str] = frozenset()
     fresh: bool | None = None
     authorized: bool | None = None
     available: bool | None = None

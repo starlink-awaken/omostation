@@ -310,6 +310,14 @@ def create_app(
         service = _require_control(control)
         return _success(request, _page(await service.list_models(after=after, limit=limit)))
 
+    @app.get("/api/v1/models/resolve/{alias}")
+    async def resolve_model(request: Request, alias: str) -> JSONResponse:
+        service = _require_control(control)
+        model = await service.resolve_model(alias)
+        if not model:
+            return _error_response(_request_id(request), 404, "E404", "model alias not found")
+        return _success(request, model)
+
     @app.post("/api/v1/routes/plan")
     async def route_plan(request: Request, body: RoutePlanBody) -> JSONResponse:
         service = _require_control(control)
