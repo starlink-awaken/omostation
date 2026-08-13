@@ -60,6 +60,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
       - name: Checkout required owners
         run: git submodule update --init projects/cockpit projects/l4-kernel projects/runtime
       - uses: astral-sh/setup-uv@v4
