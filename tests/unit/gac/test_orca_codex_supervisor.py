@@ -130,10 +130,25 @@ def _start_responses(workspace: Path) -> list[tuple[int, object, str]]:
             _ok(
                 {
                     "state": "ready",
+                    "stage": "input_accepted",
                     "dispatchId": "orca-dispatch-001",
                     "taskId": "orca-task-001",
                     "runId": "orca-run-001",
-                    "agentTerminalHandle": "terminal-001",
+                    "effects": [
+                        {
+                            "kind": "terminal",
+                            "role": "agent",
+                            "action": "reused",
+                            "id": "terminal-001",
+                        },
+                        {
+                            "kind": "dispatch_input",
+                            "role": "agent",
+                            "id": "terminal-001",
+                            "state": "accepted",
+                        },
+                    ],
+                    "mutation": {"requestId": "worker-request-001"},
                 }
             ),
             "",
@@ -274,7 +289,10 @@ def test_start_derives_one_stable_retry_request_per_orca_mutation(
     tmp_path: Path,
 ) -> None:
     module = _load_module()
-    runner = FakeRunner(_start_responses(tmp_path))
+    responses = _start_responses(tmp_path)
+    worker_request_id = hashlib.sha256(b"retry-request-001\nworker-start").hexdigest()
+    responses[-1][1]["result"]["mutation"]["requestId"] = worker_request_id
+    runner = FakeRunner(responses)
 
     receipt = module.start_supervised_codex(
         **_identity(tmp_path),
@@ -296,6 +314,27 @@ def test_start_derives_one_stable_retry_request_per_orca_mutation(
         strict=True,
     ):
         assert command[-3:] == ("--retry-request", stage_ids[stage], "--json")
+    assert worker_request_id == stage_ids["worker-start"]
+
+
+def test_start_rejects_worker_start_receipt_without_bound_terminal_effect(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    responses = _start_responses(tmp_path)
+    result = responses[-1][1]["result"]
+    result["effects"][0]["id"] = "wrong-terminal"
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=FakeRunner(responses),
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "worker_start"
+    assert receipt["reason"] == "orca_response_invalid"
+    assert "orca:dispatch:orca-dispatch-001" in receipt["residual_resources"]
 
 
 def test_start_fails_closed_on_unbound_worker_receipt_without_cleanup(
