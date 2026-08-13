@@ -365,6 +365,11 @@ def test_model_freshness_json_preserves_envelope_and_exit_contract(monkeypatch, 
         "status": status,
         "available": status != "unavailable",
         "domain_id": "work-weijian",
+        "sources": {
+            "domain_registry": "l4-domain-registry",
+            "binding_registry": ".omo/_truth/registry/documents-domain-projects.yaml",
+            "runtime_evidence": ".local/state/omostation/runtime/control/evidence/model-freshness.json",
+        },
         "freshness": {
             "checked_on": "2026-08-14",
             "facts_last_reviewed": "2026-08-13",
@@ -388,7 +393,9 @@ def test_model_freshness_json_preserves_envelope_and_exit_contract(monkeypatch, 
         assert main() == expected_exit
 
     assert seen == ["work-weijian"]
-    assert json.loads(capsys.readouterr().out) == payload
+    output = capsys.readouterr().out
+    assert json.loads(output) == payload
+    assert "/Users/reviewer/Documents" not in output
 
 
 def test_model_freshness_text_prints_only_status_and_aggregates(monkeypatch, capsys):
