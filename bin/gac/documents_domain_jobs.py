@@ -48,7 +48,7 @@ _CONTROLLER_SHADOW_READS = [
     "@工作文档/卫健委/_storage",
     "@工作文档/卫健委/_knowledge",
 ]
-_CONTROLLER_SHADOW_SCHEMA = "runtime.documents-controller-shadow.evidence.v1"
+_CONTROLLER_SHADOW_SCHEMA = "runtime.documents-controller-shadow.evidence.v2"
 _CONTROLLER_SHADOW_EVIDENCE_PATH = (
     "control/evidence/documents-weijian-controller-shadow/"
     "documents-weijian-controller-shadow.json"

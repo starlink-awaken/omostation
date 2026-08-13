@@ -161,7 +161,7 @@ runtime_jobs:
       - "@工作文档/卫健委/_knowledge"
     writes: []
     evidence_relative_path: control/evidence/documents-weijian-controller-shadow/documents-weijian-controller-shadow.json
-    evidence_schema: runtime.documents-controller-shadow.evidence.v1
+    evidence_schema: runtime.documents-controller-shadow.evidence.v2
     fail_closed: true
 
 domains:

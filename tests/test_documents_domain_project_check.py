@@ -271,7 +271,7 @@ def _weijian_controller_shadow_job() -> dict[str, object]:
         ],
         "writes": [],
         "evidence_relative_path": "control/evidence/documents-weijian-controller-shadow/documents-weijian-controller-shadow.json",
-        "evidence_schema": "runtime.documents-controller-shadow.evidence.v1",
+        "evidence_schema": "runtime.documents-controller-shadow.evidence.v2",
         "fail_closed": True,
     }
 
