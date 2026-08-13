@@ -159,6 +159,13 @@ T1-07 已落地 PATH shim（`bin/gac/git-shim` + `AGENT_ID` circuit_breaker）�
 提交时由 clone guard 拒绝；人类终端不受影响。迁移期 D2/D3/D5/PASW 继续生效，
 只有真实 clone、manifest 回放、changeset 和全员迁移证据全部成立后才能退役。
 
+写入型 agent 必须设置 `AGENT_ID=<id>` 并使用独立 clone。tracked pre-commit 会调用
+`agent-clone.py guard --require-clone`：身份匹配的独立 clone 放行，没有 clone
+identity 的 linked worktree（包括 Orca 创建的普通 worktree）拒绝，且改写 `HOME`
+不会降级准入。legacy worktree 仅保留给没有 `AGENT_ID` 的人类迁移/检查，不是
+writer cell。Orca 只作为终端/worker transport，写入任务应把已有独立 clone 注册为
+repo，不得把 Orca linked worktree 当成独立 clone 的替代品。
+
 ```bash
 python3 bin/gac/agent-clone.py create --agent-id <id> \
   --source <origin-url-or-path> --destination "$HOME/agents/<id>/ws" --json
@@ -166,6 +173,9 @@ python3 bin/gac/agent-clone.py manifest --clone "$HOME/agents/<id>/ws" \
   --output "$HOME/agents/<id>/manifest.json" --json
 python3 bin/gac/agent-clone.py verify --clone "$HOME/agents/<id>/ws" \
   --manifest "$HOME/agents/<id>/manifest.json" --json
+AGENT_ID=<id> \
+  python3 bin/gac/agent-clone.py guard --workspace "$HOME/agents/<id>/ws" \
+  --require-clone --json
 ```
 
 ### 1.6.3 多 Agent 蜂群感知与硬规约契约 (Swarm Perception & Hard Constraints)

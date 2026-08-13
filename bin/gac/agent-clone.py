@@ -777,6 +777,12 @@ def cmd_guard(args: argparse.Namespace) -> dict:
     except ToolError:
         identity = None
     if identity is None:
+        if args.require_clone:
+            raise ToolError(
+                "clone_identity_required",
+                f"agent {agent_id} must operate from an independent agent clone",
+                EXIT_POLICY,
+            )
         result["state"] = "legacy_isolated_worktree"
         result["reason"] = "legacy_isolated_worktree_allowed"
         return result
@@ -849,6 +855,11 @@ def build_parser() -> argparse.ArgumentParser:
     add_common(p)
     p.add_argument("--workspace", required=True)
     p.add_argument("--integration-root")
+    p.add_argument(
+        "--require-clone",
+        action="store_true",
+        help="reject agent workspaces without a verified independent-clone identity",
+    )
     p.set_defaults(func=cmd_guard)
     return parser
 
