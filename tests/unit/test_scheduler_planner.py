@@ -165,9 +165,7 @@ def test_duplicate_placement_ids_fail_closed_before_scoring() -> None:
 def test_health_rejections_are_stable_and_distinguish_the_failed_gate(
     updates: dict[str, object], expected: str
 ) -> None:
-    result = RoutePlanner(default_policies()).plan(
-        _request(), (_placement("blocked", **updates),)
-    )
+    result = RoutePlanner(default_policies()).plan(_request(), (_placement("blocked", **updates),))
 
     assert isinstance(result, RouteFailure)
     assert result.rejected == {"blocked": expected}

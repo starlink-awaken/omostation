@@ -607,16 +607,17 @@ async def test_prepare_failure_preserves_ordered_typed_rejection_without_adapter
 
     assert len(stream) == 1
     assert stream[0].kind is StreamEventKind.ERROR
-    assert [
-        (item.placement_id, item.reason.value) for item in stream[0].prepare_rejections
-    ] == [(safe_id, rejection.value)]
+    assert [(item.placement_id, item.reason.value) for item in stream[0].prepare_rejections] == [
+        (safe_id, rejection.value)
+    ]
     assert placement_id == safe_id or placement_id not in repr(stream[0])
     assert adapter.stream_requests == []
 
 
 @pytest.mark.asyncio
-async def test_prepare_rejection_is_consistent_for_embedding_and_stream_without_adapter_call(
-) -> None:
+async def test_prepare_rejection_is_consistent_for_embedding_and_stream_without_adapter_call() -> (
+    None
+):
     adapter = FakeAdapter(chats=[_success()])
     unloaded = _snapshot("p", "b", "n", loaded=False)
     orchestrator = _orchestrator((unloaded,), (AdapterBinding("b", adapter),))
@@ -627,8 +628,7 @@ async def test_prepare_rejection_is_consistent_for_embedding_and_stream_without_
         deadline=10,
     )
     stream = [
-        event
-        async for event in orchestrator.stream_chat(_route_request(), _chat(), deadline=10)
+        event async for event in orchestrator.stream_chat(_route_request(), _chat(), deadline=10)
     ]
 
     assert embedding.error is not None
@@ -637,9 +637,9 @@ async def test_prepare_rejection_is_consistent_for_embedding_and_stream_without_
     assert stream[0].kind is StreamEventKind.ERROR
     assert stream[0].error is not None
     assert stream[0].error.message == RejectionCode.UNAVAILABLE.value
-    assert [
-        (item.placement_id, item.reason.value) for item in stream[0].prepare_rejections
-    ] == [("p", RejectionCode.UNAVAILABLE.value)]
+    assert [(item.placement_id, item.reason.value) for item in stream[0].prepare_rejections] == [
+        ("p", RejectionCode.UNAVAILABLE.value)
+    ]
     assert adapter.embedding_requests == []
     assert adapter.chat_requests == []
     assert adapter.stream_requests == []

@@ -231,9 +231,7 @@ async def test_adapter_cannot_inject_prepare_rejections_into_stream_boundary() -
 
     events = [
         event
-        async for event in _orchestrator(first, second).stream_chat(
-            _route(), _chat(), deadline=10
-        )
+        async for event in _orchestrator(first, second).stream_chat(_route(), _chat(), deadline=10)
     ]
 
     assert len(events) == 1

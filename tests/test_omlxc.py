@@ -51,7 +51,8 @@ def test_remote_lmstudio_policy_avoids_day_long_residency_and_gpu_oom():
     assert "--parallel 1" in y7000p
 
     ollama = next(
-        entry for entry in remotes
+        entry
+        for entry in remotes
         if entry["host"] == "100.99.210.78" and entry["engine"] == "ollama"
     )
     assert ollama["keep_alive_sec"] == 3600
@@ -405,9 +406,7 @@ def test_app_tuning_snapshot_contains_only_controlled_reversible_fields():
     assert "api_key" not in json.dumps(snapshot)
     assert snapshot["models"]["mythos-fast"]["is_pinned"] is False
     assert snapshot["models"]["mythos-fast"]["enable_thinking"] is None
-    assert snapshot["models"]["mythos-fast"]["chat_template_kwargs"] == {
-        "custom_flag": "keep"
-    }
+    assert snapshot["models"]["mythos-fast"]["chat_template_kwargs"] == {"custom_flag": "keep"}
 
 
 def test_tune_preview_performs_gets_only(monkeypatch, capsys):
@@ -538,9 +537,9 @@ def test_apply_app_tuning_writes_only_changed_fields(monkeypatch):
     monkeypatch.setattr(
         cli,
         "_http_json",
-        lambda url, payload=None, method=None, **_kwargs: calls.append(
-            (url, payload, method)
-        ) or {},
+        lambda url, payload=None, method=None, **_kwargs: (
+            calls.append((url, payload, method)) or {}
+        ),
     )
     current = {
         "global": {"max_concurrent_requests": 1, "chunked_prefill": False},
@@ -704,15 +703,18 @@ def test_fleet_tuning_changes_detect_long_lived_fallbacks_but_allow_countdown():
             "keep_alive_seconds": -1,
         },
     ) == [{"field": "keep_alive_seconds", "from": -1, "to": 3600}]
-    assert cli._fleet_tuning_changes(
-        ollama_target,
-        {
-            "reachable": True,
-            "manageable": True,
-            "loaded": True,
-            "keep_alive_seconds": 1700,
-        },
-    ) == []
+    assert (
+        cli._fleet_tuning_changes(
+            ollama_target,
+            {
+                "reachable": True,
+                "manageable": True,
+                "loaded": True,
+                "keep_alive_seconds": 1700,
+            },
+        )
+        == []
+    )
 
 
 def test_fleet_tune_preview_never_applies(monkeypatch, capsys):
@@ -808,9 +810,9 @@ def test_apply_fleet_target_sets_only_ollama_residency(monkeypatch):
     monkeypatch.setattr(
         cli,
         "_api",
-        lambda conf, port, endpoint, payload=None, timeout=None: calls.append(
-            (conf, port, endpoint, payload, timeout)
-        ) or {"done": True},
+        lambda conf, port, endpoint, payload=None, timeout=None: (
+            calls.append((conf, port, endpoint, payload, timeout)) or {"done": True}
+        ),
     )
     target = {
         "engine": "ollama",

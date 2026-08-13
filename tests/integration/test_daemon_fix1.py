@@ -99,9 +99,7 @@ class FakeBackend:
         return (
             ModelRuntime(
                 id="physical/model",
-                state=ModelRuntimeState.LOADED
-                if self.loaded
-                else ModelRuntimeState.AVAILABLE,
+                state=ModelRuntimeState.LOADED if self.loaded else ModelRuntimeState.AVAILABLE,
                 loaded=self.loaded,
                 capabilities=frozenset({AdapterCapability.CHAT, AdapterCapability.EMBEDDING}),
                 context_limit=4096,

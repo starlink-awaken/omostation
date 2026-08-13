@@ -94,7 +94,6 @@ def _rich_bool(value: object) -> Text:
     return Text("—", style="dim")
 
 
-
 app = typer.Typer(
     add_completion=False,
     help="Private local compute-hub CLI and keyboard-first cockpit.",
@@ -346,7 +345,7 @@ def _require_r1(action: str, *, yes: bool, json_output: bool) -> None:
         Panel(
             f"This action carries Risk Level 1 (R1).\\nImpact: {action}",
             title="[bold yellow]Warning[/bold yellow]",
-            border_style="yellow"
+            border_style="yellow",
         )
     )
     if not typer.confirm(typer.style(f"? Confirm {action}?", fg=typer.colors.YELLOW)):
@@ -404,7 +403,7 @@ def _emit_r2_plan(action: str, *, impact: str, rollback: str, json_output: bool)
         Panel(
             f"[bold]Impact:[/bold] {impact}\n[bold]Rollback:[/bold] {rollback}",
             title=f"[bold red]R2 Warning: {action}[/bold red]",
-            border_style="red"
+            border_style="red",
         )
     )
 
@@ -820,7 +819,7 @@ def config_validate(
             _fail_config("configuration validation failed", request_id=request_id, detail=str(exc))
         _console.print(f"[bold red]✖  validation failed[/bold red]  {str(exc)}")
         raise typer.Exit(1) from None
-        
+
     if json_output:
         _emit_success(
             {"config_schema_version": config.schema_version, "status": "valid"},
@@ -963,12 +962,16 @@ def daemon_install(
     if json_output:
         _emit_success(data, request_id=_request_id())
     else:
-        _console.print(Panel(
-            f"[dim]executable[/dim]  {data['executable']}\n"
-            f"[dim]plist[/dim]       {data['plist_path']}\n"
-            f"[dim]will_write[/dim]  {'[green]yes[/green]' if apply else '[yellow]no[/yellow]'}",
-            title="[bold]Install Plan[/bold]", expand=False
-        ))
+        _console.print(
+            Panel(
+                f"[dim]executable[/dim]  {data['executable']}\n"
+                f"[dim]plist[/dim]       {data['plist_path']}\n"
+                f"[dim]will_write[/dim]  "
+                f"{'[green]yes[/green]' if apply else '[yellow]no[/yellow]'}",
+                title="[bold]Install Plan[/bold]",
+                expand=False,
+            )
+        )
 
 
 @daemon_app.command("uninstall")
@@ -1225,18 +1228,6 @@ def _render_mapping(data: JsonValue | None) -> str:
     return ""
 
 
-def _render_status(data: JsonValue | None) -> str:
-    """Rich status panel for 'omlxc status'."""
-    mapping = _mapping(data)
-    status_s = _text(mapping.get("status", "unknown"))
-    policy = _text(mapping.get("policy", "interactive"))
-    sym, style = _STATE_STYLES.get(status_s.lower(), ("·", "dim"))
-    _console.print(
-        f"[bold #7dd3f5]omlxcd[/bold #7dd3f5]  "
-        f"[{style}]{sym} {status_s.upper()}[/{style}]"
-        f"  [dim]policy={policy}[/dim]"
-    )
-    return ""
 def _render_job(data: JsonValue | None) -> str:
     """Rich panel for a single job."""
     mapping = _mapping(data)

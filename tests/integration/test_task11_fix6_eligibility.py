@@ -81,9 +81,7 @@ class ColdBackend:
             model_available=self.state is not ModelRuntimeState.UNKNOWN,
             generation_ready=loaded and self.reachable,
             observed_at=(
-                datetime(2020, 1, 1, tzinfo=UTC)
-                if self.stale_probe
-                else datetime.now(UTC)
+                datetime(2020, 1, 1, tzinfo=UTC) if self.stale_probe else datetime.now(UTC)
             ),
             capabilities=frozenset(
                 {
@@ -256,9 +254,7 @@ async def test_cold_available_production_uds_plans_loads_postverifies_and_infers
     await server.start()
     try:
         async with await _uds_client(config.daemon.socket_path) as client:
-            plan = await client.post(
-                "/api/v1/routes/plan", json={"model_id": "local/model"}
-            )
+            plan = await client.post("/api/v1/routes/plan", json={"model_id": "local/model"})
             chat = await client.post(
                 "/openai/v1/chat/completions",
                 headers={"X-OMLXC-Request-ID": "active.contract-1"},
@@ -305,17 +301,13 @@ async def test_ineligible_production_catalog_never_attempts_load(
     composition = build_production_daemon(
         config,
         adapters={"backend": cast(BackendAdapter, backend)},
-        tailscale=(
-            cast(TailscaleAdapter, DenyingTailscale()) if case == "authorization" else None
-        ),
+        tailscale=(cast(TailscaleAdapter, DenyingTailscale()) if case == "authorization" else None),
     )
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
     try:
         async with await _uds_client(config.daemon.socket_path) as client:
-            plan = await client.post(
-                "/api/v1/routes/plan", json={"model_id": "local/model"}
-            )
+            plan = await client.post("/api/v1/routes/plan", json={"model_id": "local/model"})
             chat = await client.post(
                 "/openai/v1/chat/completions",
                 json={
@@ -495,9 +487,7 @@ async def test_unload_probe_failure_never_becomes_false_noop_success(
     composition = build_production_daemon(
         config,
         adapters={"backend": cast(BackendAdapter, backend)},
-        tailscale=(
-            cast(TailscaleAdapter, DenyingTailscale()) if case == "authorization" else None
-        ),
+        tailscale=(cast(TailscaleAdapter, DenyingTailscale()) if case == "authorization" else None),
     )
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()

@@ -96,9 +96,7 @@ class DaemonClient:
         )
 
     async def resolve_model(self, alias: str) -> DaemonEnvelope:
-        return await self._request(
-            "GET", f"/api/v1/models/resolve/{quote(alias, safe='')}"
-        )
+        return await self._request("GET", f"/api/v1/models/resolve/{quote(alias, safe='')}")
 
     async def jobs(self, *, after: str | None = None, limit: int = 100) -> DaemonEnvelope:
         return await self._request(

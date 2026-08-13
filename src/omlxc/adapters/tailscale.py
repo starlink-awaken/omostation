@@ -644,8 +644,8 @@ def _validate_trusted_executable(path: object) -> _TrustedExecutable:
     try:
         for candidate in (path.parent, *path.parent.parents):
             metadata = candidate.lstat()
-            root_owned_sticky_directory = (
-                metadata.st_uid == 0 and bool(metadata.st_mode & stat.S_ISVTX)
+            root_owned_sticky_directory = metadata.st_uid == 0 and bool(
+                metadata.st_mode & stat.S_ISVTX
             )
             if (
                 stat.S_ISLNK(metadata.st_mode)

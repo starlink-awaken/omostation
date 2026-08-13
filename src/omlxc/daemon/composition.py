@@ -933,9 +933,7 @@ class ProductionControlService:
             OperationStatus.UNCHANGED,
         }
         succeeded = (
-            outcome.authorized
-            and outcome.actual_loaded is desired_loaded
-            and result_succeeded
+            outcome.authorized and outcome.actual_loaded is desired_loaded and result_succeeded
         )
         await self._storage.require().transition_job(
             job.id,

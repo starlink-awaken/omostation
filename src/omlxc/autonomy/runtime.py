@@ -273,9 +273,7 @@ class PlacementOperationCoordinator:
             authorized = await self._phase(
                 target,
                 OperationPhase.AUTHORIZATION,
-                lambda: self._operator.fresh_for_write(
-                    target, action=PlacementWriteAction.LOAD
-                ),
+                lambda: self._operator.fresh_for_write(target, action=PlacementWriteAction.LOAD),
             )
             if not authorized:
                 return PlacementOperationOutcome(loaded, False, None)
@@ -301,9 +299,7 @@ class PlacementOperationCoordinator:
             authorized = await self._phase(
                 target,
                 OperationPhase.AUTHORIZATION,
-                lambda: self._operator.fresh_for_write(
-                    target, action=PlacementWriteAction.UNLOAD
-                ),
+                lambda: self._operator.fresh_for_write(target, action=PlacementWriteAction.UNLOAD),
             )
             if not authorized:
                 return PlacementOperationOutcome(True, False, None)
