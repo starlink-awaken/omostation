@@ -7,7 +7,7 @@ schema_version: 1
 ---
 meta:
   horizon: 2026H2-2029
-  total_bets: 88
+  total_bets: 89
   windows:
   - Y1Q1
   - Y1Q2
@@ -2713,7 +2713,7 @@ bets:
 - id: BET-Y1Q2-T1-17
   track: T5-ORCH
   window: Y1Q2
-  title: Codex Exec unattended Orca worker admission
+  title: Codex Exec supervised Orca worker admission
   appetite: 1 day
   priority: P0
   status: done
@@ -2723,7 +2723,8 @@ bets:
     content_digest: sha256:d1ea6190a38dfe64a0d205727706ea6b8aff13cac1d4a4badc9621152136ff70
   goal: >-
     以受治理的 bounded adapter 将 Codex `exec --approve-for-me` 接入 OMO worker admission
-    与 Orca supervised Dispatch，使 L1 代码任务可在独立 clone 中零人工点击运行，同时保留
+    与 Orca supervised Dispatch，使 L1 代码任务可在独立 clone 中运行；自动 review 仍可能升级为
+    人工确认，同时保留
     workspace-write 沙箱、任务写面、父进程超时回收、脱敏回执和独立完成判定。
   non_goals:
   - 修改 Orca 内置 Codex TUI、Orca runtime 或 Codex 用户配置/认证/execpolicy
@@ -2746,8 +2747,9 @@ bets:
       worker delta 仅在 allowlist、ignored/symlink/gitlink/commit 与并发指纹审计后以 binary patch 回写；
       patch 或回执发布失败必须回滚并证明原 clone 基线恢复，不得留下部分成功
   - >-
-      一次真实 read-only Codex smoke 零人工确认并返回精确 marker；一次 Orca Run/Task/Dispatch 可查询
-      succeeded worker_done，且 ready/input accepted 不作为完成证据
+      一次真实 read-only Codex smoke 在该次观测中未升级人工确认并返回精确 marker；这不构成通用
+      zero-click/unattended 保证；一次 Orca Run/Task/Dispatch 可查询 succeeded worker_done，且
+      ready/input accepted 不作为完成证据
   - >-
       独立 reviewer 通过后只有 codex 晋升为 L1 admitted worker，transport 固定走 bounded adapter、
       require_explicit_capabilities=true、write_scope=task_declared_only；其他候选状态不变
@@ -2783,9 +2785,111 @@ bets:
   - BET-Y1Q2-T1-16
   risk_level: L1
   human_gate: false
+  notes:
+  - >-
+      2026-08-14 contract correction: this completed run observed no provider escalation,
+      but `--approve-for-me` is supervised automatic review and may still require a human.
+      The historical zero-click/unattended wording is superseded by BET-Y1Q2-T1-18 and must
+      not be interpreted as a reusable worker guarantee.
   circuit_breaker: >-
     需要 dangerous bypass、共享 worktree、修改用户配置/认证、无法回收进程、回执泄露 raw output，
     或 Orca 无法查询同一 Task/Dispatch completion 时立即停止；保持 codex declared，只交付脱敏诊断
+  retro: required
+- id: BET-Y1Q2-T1-18
+  track: T5-ORCH
+  window: Y1Q2
+  title: Supervised Blueprint control loop and SR-06 rollback
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:4c74ce83bff82e4b55ee61024a6b53471e342606842b4ce41cba107109b95d36
+  goal: >-
+    将已落地的 ECOS WorkPacket/CompletionManifest/VerificationReceipt、OMO admission/Workflow Mesh、
+    Codex bounded adapter 与 Orca transport 接成一条受监督的生产纵切：candidate BET 确定性编译、
+    人工 release、真实模型输出、实际 diff/receipt 收集、独立验证，以及 reject 后可证明的补偿回滚。
+  non_goals:
+  - 新建 WorkPacket/M2、task/blueprint database、event ledger、scheduler、daemon、watchdog 或第二任务真相
+  - 把 --approve-for-me、Orca ready、tui-idle、input accepted、进程 exit 0 或 Agent 自报 done 当作无人值守/完成证据
+  - 接入第二 live adapter、Kandev/Ruflo/Multica 生产控制面、Cockpit UI、账号/额度自动调度或自动 merge
+  - 修复 Pi/Oh My Pi 的首次设置/skill metadata；本轮只保留其 false-ready quarantine 证据
+  - 邮件、日历、任务、家庭、多租户、跨主机、恶意同机、exactly-once 或任何真实业务外部副作用
+  done_when:
+  - >-
+      candidate BET 能 deterministic compile；不存在 accepted binding、spec drift、假 ledger
+      或 Task 无人工 gate 时均拒绝且零 Mesh 写入。
+  - >-
+      dispatch 必须在人工批准后才产生 request/admission/StepDispatched；结果只称
+      `transport_accepted`。
+  - >-
+      一次真实 supervised Codex R1 非 marker 变更产生有效 model output、实际 diff、adapter
+      receipt 和 CompletionManifest；任何额外手点确认如实记录，不声称无人值守。
+  - >-
+      collect 严格绑定 BET/spec/packet/assignment/admission/dispatch/receipt/diff/claims；越权、
+      篡改、缺 receipt 时无 EvidenceRecorded/WorkflowVerified。
+  - >-
+      独立 verifier 重放声明命令；只有 accept 写 WorkflowVerified；executor 自验、同一
+      receipt 篡改和 input ack 均拒绝。
+  - >-
+      verifier reject 保留候选 evidence，并通过 inverse patch 恢复 baseline tree hash；
+      WorkflowVerified 不存在，run 最终 recovered/cancelled/closed。
+  - >-
+      compile、collect、verify 和 rollback 重放幂等；同 id 不同内容冲突 fail closed。
+  - >-
+      OMO/ECOS/root 定向回归、Ruff、diff check、agent-workflow verify、独立 code review 和
+      PR checks 通过；子仓提交先进入子仓 main，根仓只 pin 可从 main 到达的 SHA。
+  verify:
+  - cmd: >-
+      cd projects/omo && uv run python -m pytest tests/test_blueprint_control.py
+      tests/test_orchestration_contract.py tests/test_workflow_mesh.py tests/test_workflow_dispatch.py
+      tests/test_omo_worker_admission_gate.py -q
+    expect: exit 0
+  - cmd: >-
+      uv run --no-project --with pytest --with pyyaml python -m pytest
+      tests/unit/gac/test_codex_worker_adapter.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/omo && uv run ruff check src/omo/blueprint_control.py
+      src/omo/orchestration_contract.py src/omo/workflow_mesh.py src/omo/cli.py
+      tests/test_blueprint_control.py tests/test_orchestration_contract.py tests/test_workflow_mesh.py
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py claim-check BET-Y1Q2-T1-18
+    expect: exit 0
+  - cmd: git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md
+  - docs/superpowers/plans/2026-08-14-supervised-blueprint-control-loop.md
+  - .omo/_truth/registry/workers.yaml
+  - .omo/standards/agent-cli-worker-collaboration.md
+  - bin/gac/codex-worker-adapter.py
+  - tests/unit/gac/test_codex_worker_adapter.py
+  - projects/omo/src/omo/blueprint_control.py
+  - projects/omo/src/omo/cli.py
+  - projects/omo/src/omo/orchestration_contract.py
+  - projects/omo/src/omo/omo_worker_dispatch.py
+  - projects/omo/src/omo/workflow_dispatch.py
+  - projects/omo/src/omo/workflow_mesh.py
+  - projects/omo/tests/test_blueprint_control.py
+  - projects/omo/tests/test_orchestration_contract.py
+  - projects/omo/tests/test_workflow_dispatch.py
+  - projects/omo/tests/test_workflow_mesh.py
+  - projects/omo
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-18.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-17
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: >-
+    需要 dangerous bypass、共享 Workspace 写入、修改 Ledger DDL/ECOS M2、第二任务真相、不能确认人工批准、
+    不能回收子进程、无法从 git 直接测量 delta、Mesh append 被吞、rollback 后 baseline 不一致、真实业务
+    外部副作用，或三天内无法形成一条真实纵切时立即停止；不得用 fixture/marker/input ack 伪造完成
   retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
