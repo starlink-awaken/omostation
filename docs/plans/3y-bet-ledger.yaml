@@ -7,7 +7,7 @@ schema_version: 1
 ---
 meta:
   horizon: 2026H2-2029
-  total_bets: 83
+  total_bets: 84
   windows:
   - Y1Q1
   - Y1Q2
@@ -2233,6 +2233,7 @@ bets:
   - projects/omo/src/omo/omo_worker_core.py
   - projects/omo/src/omo/omo_worker_dispatch.py
   - projects/omo/tests/test_omo_worker_admission_gate.py
+  - projects/omo/tests/test_omo_worker_core.py
   - projects/omo/tests/test_workflow_dispatch.py
   - projects/omo/tests/test_workflow_mesh_task_dogfood.py
   - .omo/_knowledge/retros/BET-Y1Q2-T1-10.md
@@ -2313,6 +2314,96 @@ bets:
   circuit_breaker: >-
     出现非 loopback 监听、无法验证或回收进程、访问用户凭证/配置、创建任务/代理/模型调用、
     写入主树或必须将 Kandev 定义为交付真相才能继续时立即停止，只保留脱敏诊断证据，不宣称试点通过
+  retro: required
+- id: BET-Y1Q2-T1-12
+  track: T5-ORCH
+  window: Y1Q2
+  title: Pi bounded local reasoning worker admission via AetherForge and omlxc
+  appetite: 1 day
+  priority: P0
+  status: done
+  done_at: 2026-08-13
+  done_evidence: >-
+    Pi 0.84.1 已通过正式 WorkflowRequested→WorkflowAdmitted→StepDispatched→OMO dispatch
+    链路，由 bounded adapter 经 AetherForge 127.0.0.1:9290 调用 omlxc/coding，返回精确 marker
+    OMO_WORKER_DISPATCH_OK:pi:BET-Y1Q2-T1-12；canonical receipt SHA-256
+    3185833834b6e62a1828b8d468154372d60dc223ce1a285aa81b599fd2ba3028，stdout
+    digest c25099daa48f9fad68f177a748073a1f176600ab31a60bcc454fcb3656ba13c6。
+    根 adapter 34 tests、OMO worker/MCP/lifecycle 48 tests、Ruff 与 diff-check 通过；独立 reviewer CLEAR。
+  goal: >-
+    将已声明的 Pi CLI 收口为一个 L0、无工具、无会话持久化、可超时回收的本地推理 worker；
+    真实模型调用固定经 AetherForge 9290 认证门面进入 omlxc coding 模型，成功且独立复核后
+    才在 workers.yaml 将 Pi 从 declared 晋升为 admitted。
+  non_goals:
+  - 允许 Pi 读写仓库、调用 shell/工具、执行测试、维护会话或修改用户 Pi 配置
+  - 云模型、混合 fallback、自动选模、额度调度、并发消费、精确一次或恶意同机进程隔离
+  - 准入 Oh My Pi、OpenCode、Grok、MiMo、AGY 或 Kilo；它们必须各自有真实回执和独立晋升
+  - 修改 AetherForge、omlxc、Pi 用户配置、Workflow Mesh 事件协议或 OMO worker 生命周期状态机；仅补准入前权限门与启动根目录解析
+  done_when:
+  - >-
+      adapter 只使用固定无 shell argv 运行 pi --print，强制 no-session/no-tools/no-extensions/no-skills/
+      no-context-files/no-approve/offline，固定 provider=omlxc、model=coding，且在独立临时 cwd/config 中运行
+  - >-
+      调用前真实校验 127.0.0.1:9290/health 返回 aetherforge-openai-proxy；任何非 loopback 配置、
+      健康异常、超时、非零退出、空输出、用户配置变化或子进程残留均 fail-closed
+  - >-
+      结构化回执只保留 worker/provider/route、版本、时间、结果、输出摘要与无副作用断言；
+      不保留 prompt、模型原文、账号、凭证、配置原文或原始日志
+  - >-
+      一次真实 Pi→AetherForge→omlxc/coding 调用返回约定 marker，且用户配置、临时 cwd、
+      会话目录、工具调用与子进程残留均无变化/无发生
+  - >-
+      独立 reviewer 通过后 Pi 在 workers.yaml 仅以 L0 reasoning/verification worker 准入，transport 固定走
+      bounded adapter；其他候选 worker 保持 declared/disabled，现有未准入零写入回归持续通过
+  - >-
+      OMO dispatch 在生成任何运行工件前强制 worker operation level、capability 与 write scope；Pi 收到 L1、
+      非空写路径或不相容能力时稳定拒绝且零写入，MCP/CLI 从任意 cwd 调度仍解析到受管 Workspace adapter
+  verify:
+  - cmd: >-
+      uv run --with pytest --with pyyaml --no-project python -m pytest
+      tests/unit/gac/test_pi_worker_adapter.py -q
+    expect: exit 0
+  - cmd: >-
+      uv run --with ruff ruff check bin/gac/pi-worker-adapter.py
+      tests/unit/gac/test_pi_worker_adapter.py
+    expect: exit 0
+  - cmd: >-
+      uv run --with pyyaml --with pytest --with pytest-asyncio --with fastmcp
+      --python 3.13 --no-project python -m pytest -q
+      projects/omo/tests/test_omo_worker_admission_gate.py
+      projects/omo/tests/test_omo_worker_core.py
+      projects/omo/tests/test_mcp_server.py
+      projects/omo/tests/test_workflow_dispatch.py
+      projects/omo/tests/test_omo_worker_promotion_defaults.py
+      projects/omo/tests/test_worker_lifecycle_mesh.py
+    expect: exit 0
+  - cmd: git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - bin/gac/pi-worker-adapter.py
+  - tests/unit/gac/test_pi_worker_adapter.py
+  - .omo/_truth/registry/workers.yaml
+  - .omo/standards/agent-cli-worker-collaboration.md
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-12.md
+  - projects/omo/src/omo/omo_worker_core.py
+  - projects/omo/src/omo/omo_worker_dispatch.py
+  - projects/omo/src/omo/omo_worker_promotion.py
+  - projects/omo/src/omo/mcp_server.py
+  - projects/omo/tests/test_omo_worker_admission_gate.py
+  - projects/omo/tests/test_workflow_dispatch.py
+  - projects/omo/tests/test_mcp_server.py
+  - projects/omo
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-11
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    AetherForge 9290 不可识别、omlxc coding 不可用、必须切云/fallback/修用户配置才能通过、出现无法回收进程、
+    配置或 cwd 变化、输出泄露，或需要将 Pi 提升至 L1/工具权限时立即停止；保持 declared，只交付脱敏诊断
   retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
