@@ -16,6 +16,7 @@ from pydantic import Field, field_validator, model_validator
 from .models import DomainModel
 
 MAX_CHAT_TOOLS = 256
+MAX_CHAT_TOOL_DESCRIPTION_LENGTH = 16_384
 
 
 class AdapterCapability(StrEnum):
@@ -210,7 +211,7 @@ class ChatToolCall(DomainModel):
 
 class ChatToolFunction(DomainModel):
     name: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
-    description: str = Field(default="", max_length=8192)
+    description: str = Field(default="", max_length=MAX_CHAT_TOOL_DESCRIPTION_LENGTH)
     parameters: dict[str, object]
     strict: bool = Field(default=False, exclude_if=lambda value: not value)
 

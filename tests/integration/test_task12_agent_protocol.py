@@ -135,6 +135,46 @@ async def test_openai_agent_tool_catalog_remains_bounded() -> None:
 
 
 @pytest.mark.asyncio
+async def test_openai_agent_request_accepts_omp_sized_tool_description() -> None:
+    service = AgentProtocolService()
+    service.events = (
+        StreamEvent(
+            kind=StreamEventKind.DONE,
+            request_id="unused",
+            emitted_content=False,
+            phase=StreamPhase.COMPLETE,
+            placement_id="placement-local",
+            backend_id="backend-local",
+        ),
+    )
+    transport = httpx.ASGITransport(app=create_app(inference=service))
+    tools = _tools(11)
+    tools[0]["function"]["description"] = "d" * 13_466  # type: ignore[index]
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            json={
+                "model": "coding",
+                "messages": [
+                    {"role": "system", "content": "s" * 220_322},
+                    {"role": "user", "content": [{"type": "text", "text": "inspect"}]},
+                ],
+                "stream": True,
+                "stream_options": {"include_usage": True},
+                "max_completion_tokens": 2_048,
+                "store": False,
+                "tools": tools,
+            },
+        )
+
+    assert response.status_code == 200
+    assert len(service.requests) == 1
+    assert len(service.requests[0].tools[0].function.description) == 13_466
+    assert len(service.requests[0].tools) == 11
+    assert response.text.count("data: [DONE]") == 1
+
+
+@pytest.mark.asyncio
 async def test_openai_agent_request_accepts_large_system_tools_and_tool_result_roundtrip() -> None:
     service = AgentProtocolService()
     transport = httpx.ASGITransport(app=create_app(inference=service))

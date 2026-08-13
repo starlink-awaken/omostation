@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.9 — 2026-08-13
+
+- Accept bounded OpenAI-compatible function descriptions up to 16 KiB, covering
+  current local coding-agent tool catalogs while retaining the 1 MiB request
+  body and 256-tool limits.
+
 ## 3.0.8 — 2026-08-13
 
 - Accept bounded OpenAI function-tool catalogs from local coding agents that
