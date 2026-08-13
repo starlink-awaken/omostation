@@ -32,11 +32,13 @@ jobs:
               .omo/_truth/registry/documents-domain-projects.yaml|\
               bin/gac/documents-codex-profile.py|\
               bin/gac/documents-zed-profile.py|\
+              bin/gac/documents-zcode-config.py|\
               bin/gac/documents-domain-project-check.py|\
               bin/gac/documents-domain-owner-job.py|\
               bin/gac/documents_domain_jobs.py|\
               tests/test_documents_codex_profile.py|\
               tests/test_documents_zed_profile.py|\
+              tests/test_documents_zcode_config.py|\
               tests/test_documents_domain_project_check.py|\
               tests/test_documents_domain_owner_job.py|\
               projects/l4-kernel|\
@@ -64,6 +66,7 @@ jobs:
           uv run --with pytest --with pyyaml python -m pytest
           tests/test_documents_codex_profile.py
           tests/test_documents_zed_profile.py
+          tests/test_documents_zcode_config.py
           tests/test_documents_domain_project_check.py
           tests/test_documents_domain_owner_job.py -q
       - name: Ruff
@@ -72,11 +75,13 @@ jobs:
           bin/gac/documents-domain-project-check.py
           bin/gac/documents-codex-profile.py
           bin/gac/documents-zed-profile.py
+          bin/gac/documents-zcode-config.py
           bin/gac/documents-domain-owner-job.py
           bin/gac/documents_domain_jobs.py
           tests/test_documents_domain_project_check.py
           tests/test_documents_codex_profile.py
           tests/test_documents_zed_profile.py
+          tests/test_documents_zcode_config.py
           tests/test_documents_domain_owner_job.py
 
   phase-gate:
