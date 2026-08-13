@@ -8,11 +8,11 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 121 |
-| MCP 工具 | 554 |
+| CLI 命令 (含子命令) | 130 |
+| MCP 工具 | 565 |
 | MCP 服务器 | 27 |
-| BOS 服务 | 202 |
-| BOS 域 | 16 |
+| BOS 服务 | 223 |
+| BOS 域 | 17 |
 
 ## MCP 服务器清单
 
@@ -20,7 +20,7 @@
 |--------|-----|--------|------|------|
 | `gbrain` | L2 | 75 | stdio | `projects/gbrain/src/core/operations/exports.ts` |
 | `agora` | I0 | 65 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
-| `l4-kernel` | L4 | 45 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
+| `l4-kernel` | L4 | 47 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `kos` | L2 | 44 | stdio | `projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `kos-stdio` | L2 | 44 | stdio | `projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `ecos` | L0 | 28 | stdio | `projects/ecos/src/ecos/mcp_server.py` |
@@ -31,6 +31,7 @@
 | `metaos` | L2 | 24 | stdio | `projects/metaos/src/metaos/mcp_server.py` |
 | `omo` | L2 | 22 | stdio | `projects/omo/src/omo/mcp_server.py` |
 | `kronos` | L2 | 16 | stdio | `projects/kairon/packages/kronos/src/kronos/mcp_server.py` |
+| `agent-runtime` | L3 | 11 | stdio | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
 | `aetherforge` | X | 10 | stdio | `projects/aetherforge/src/aetherforge/mcp_server.py` |
 | `ecos-ssot` | L0 | 9 | stdio | `projects/ecos/src/ecos/l0/ssot/mcp_server.py` |
 | `iris` | L2 | 8 | stdio | `projects/kairon/packages/iris/src/iris/mcp_server.py` |
@@ -44,7 +45,6 @@
 | `aetherforge-gateway` | X | 3 | stdio | `projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py` |
 | `c2g` | X | 3 | stdio | `projects/c2g/src/c2g/mcp_server.py` |
 | `model-driven-fastmcp` | M0 | 2 | stdio | `projects/model-driven/src/model_driven/fastmcp_server.py` |
-| `agent-runtime` | L3 | 2 | stdio | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
 
 ## BOS 服务域分布
 
@@ -53,15 +53,16 @@
 | `agora` | 3 |
 | `analysis` | 28 |
 | `capability` | 44 |
-| `cockpit` | 3 |
+| `cockpit` | 2 |
 | `compute` | 3 |
 | `ecos` | 10 |
 | `forge` | 1 |
-| `governance` | 34 |
+| `governance` | 54 |
 | `l4-kernel` | 1 |
 | `memory` | 47 |
 | `meta` | 1 |
 | `omo` | 4 |
+| `perception` | 2 |
 | `persona` | 10 |
 | `runtime` | 1 |
 | `swarm` | 1 |
@@ -73,6 +74,7 @@
 
 | 命令 | 描述 |
 |------|------|
+| `cockpit ack` | 确认任务完成 |
 | `cockpit agent` | 🤖 Agent 治理控制入口 (bootstrap / status / start / claim / verify / closeout) |
 | `cockpit agent-onboard` | 🤖 Agent 入职引导 checklist (profile + MCP + BOS + skills) |
 | `cockpit agent-runtime` | 🤖 Agent Runtime 任务执行 / HTTP server (替代独立 agent-runtime 命令) |
@@ -82,9 +84,9 @@
 | `cockpit api` | 启动 API server |
 | `cockpit archive` | 归档已处理完毕的 Inbox 待办文件 |
 | `cockpit ask` | 向大脑提问（知识检索 + LLM 回答） |
-| `cockpit assistant` | P5-F2 work-assistant: 1 真实工作 query → 结构化草稿 |
 | `cockpit audit` | 🔍 6 维度全方位审计 (调 bin/workspace-audit) |
 | `cockpit backends` | 列出 BOS 后端 |
+| `cockpit bdsk` | 🧠 B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演) |
 | `cockpit bos` | BOS URI 查询与管理 |
 | `cockpit bos-capability` | BOS capability / toolbox 外部能力 |
 | `cockpit bos-inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
@@ -101,12 +103,14 @@
 | `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
 | `cockpit context` | 显示系统上下文 (Phase/CARDS/约束/引导) |
 | `cockpit contracts` | 契约验证 |
+| `cockpit control` | 控制平面：submit / ack / nack |
 | `cockpit daily` | 每日研究简报 |
 | `cockpit dashboard` | 打开 Web Dashboard |
 | `cockpit data` | 数据目录索引 / 类型注册 / TTL 清理 |
 | `cockpit debt` | 债务评分 (omo-debt Pattern 09 v2.1) |
 | `cockpit demo` | 快速演示 |
 | `cockpit discover` | 发现可用功能和资源 |
+| `cockpit domain-status` | 显示 Documents 域项目绑定与引导状态 |
 | `cockpit domains` | 列出 L4 所有域及其状态 |
 | `cockpit down` | 停止观测栈 |
 | `cockpit event` | 导出事件封套 (EventEnvelope) |
@@ -114,6 +118,8 @@
 | `cockpit events-watch` | 实时监听 SSE 事件流简便入口 |
 | `cockpit export` | 导出契约封套 |
 | `cockpit export-research` | 将研究对象导出为 WorkspaceObject JSON |
+| `cockpit facts-audit` | 审计 Documents 文档域 facts 文件 |
+| `cockpit facts-validation` | 读取 Runtime Facts 审计回执 |
 | `cockpit family-hub` | 家庭数字枢纽入口 |
 | `cockpit finance` | 💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域) |
 | `cockpit forget` | 遗忘传播 |
@@ -135,6 +141,7 @@
 | `cockpit init` | 🚀 初始化向导（同 quickstart） |
 | `cockpit invoke` | 调用 capability 服务（执行 BOS YAML command） |
 | `cockpit iterate` | ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行) |
+| `cockpit journey` | 🗺️ Journey State Graph 状态表达校验器 |
 | `cockpit kairon` | kairon 知识引擎 monorepo 聚合入口 |
 | `cockpit kems` | 🧬 KEMS 域治理 (domains/status/scan) |
 | `cockpit knowledge` | 📚 KOS 知识检索 (search/status/stats) |
@@ -144,23 +151,25 @@
 | `cockpit memory` | 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref) |
 | `cockpit mesh` | omlx 算力网格路由入口 |
 | `cockpit metrics` | 查看 bus metrics 快照 |
-| `cockpit model-driven` | 模型驱动生命周期入口 (委派 model-driven CLI) |
+| `cockpit model-driven` | [DEPRECATED] 模型驱动生命周期入口 (ADR-0240 D1) — 拒绝执行 |
 | `cockpit mof` | MOF 元模型操作 (委派 mof CLI) |
 | `cockpit monitor` | 📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出) |
 | `cockpit mutate` | 通过 agora 统一 BOS URI 写协议修改资源 |
+| `cockpit nack` | 否定确认任务 |
 | `cockpit nodes` | 列出 KOS 中注册的算力节点 |
 | `cockpit observe` | 可观测性栈（Langfuse）入口 |
 | `cockpit omo` | OMO CLI 委派 (debt/state/governance/lint/...) |
 | `cockpit onboarding` | 为 AI 构建项目全貌上下文 |
 | `cockpit pack` | 将代码库打包为 LLM 友好格式 |
+| `cockpit panorama` | 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产) |
 | `cockpit pending` | 查看未决待办快照预览 |
 | `cockpit pipeline` | pipeline 概览 |
 | `cockpit product-health` | 产品健康度检测 |
 | `cockpit profile` | 查看/编辑身份档案 (L4 入口) |
+| `cockpit project` | 🔍 17 项目全景 4D 体检与诊断 |
 | `cockpit publish` | 发布事件 |
 | `cockpit quickstart` | 🚀 新用户快速上手向导（环境核验 + 上手指引） |
 | `cockpit quickstart-check` | 快速检查新用户环境核验状态 |
-| `cockpit radar` | P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates |
 | `cockpit read` | 通过 BOS 网关统一读取指定 URI 资源 |
 | `cockpit readiness` | P66: governance readiness dashboard 摘要 (4 卡片: summary/dimensions/alerts/history) |
 | `cockpit recall` | 意图路由召回（neo4j/temporal 支持 --as-of） |
@@ -172,14 +181,15 @@
 | `cockpit route` | 为模型选择最优节点 |
 | `cockpit runtime` | runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱) |
 | `cockpit scan` | 平面扫描 |
-| `cockpit scenario` | P5 统一 scenario 入口 (radar/assistant/health) |
+| `cockpit scenario` | P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review) |
 | `cockpit score` | 评分债务项 |
 | `cockpit search` | 全文搜 CARDS |
 | `cockpit serve` | stdio JSON-RPC serve mode |
 | `cockpit skill` | 运行 L4 定时技能 |
-| `cockpit ssb` | SSB 签名链操作 (委派 ecos-ssb) |
+| `cockpit ssb` | [DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用 |
 | `cockpit stats` | 索引统计 |
 | `cockpit status` | 系统健康 |
+| `cockpit submit` | 提交控制任务 |
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
 | `cockpit swarm` | 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
 | `cockpit topics` | 列出已注册 topic |
