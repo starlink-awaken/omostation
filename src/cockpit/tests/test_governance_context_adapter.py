@@ -199,12 +199,15 @@ def _write_runtime_controller_shadow_receipt(root: Path) -> Path:
                 "timed_out": False,
                 "evidence_error": None,
                 "owner_evidence": {
-                    "schema": "runtime.documents-controller-shadow.evidence.v1",
-                    "status": "shadow_incomplete",
+                    "schema": "runtime.documents-controller-shadow.evidence.v2",
+                    "status": "shadow_observed",
                     "legacy_controller_replaced": False,
-                    "covered_rule_ids": ["CR01", "CR02", "CR03", "CR05"],
-                    "covered_rule_count": 4,
-                    "unmigrated_rule_ids": [
+                    "cutover_ready": False,
+                    "legacy_rule_ids": [
+                        "CR01",
+                        "CR02",
+                        "CR03",
+                        "CR05",
                         "CR08",
                         "CR23",
                         "CR24",
@@ -213,7 +216,19 @@ def _write_runtime_controller_shadow_receipt(root: Path) -> Path:
                         "CR29",
                         "CR30",
                     ],
-                    "unmigrated_rule_count": 7,
+                    "legacy_rule_count": 11,
+                    "observed_rule_ids": ["CR01", "CR02", "CR03", "CR05"],
+                    "observed_rule_count": 4,
+                    "unobserved_rule_ids": [
+                        "CR08",
+                        "CR23",
+                        "CR24",
+                        "CR25",
+                        "CR26",
+                        "CR29",
+                        "CR30",
+                    ],
+                    "unobserved_rule_count": 7,
                 },
             }
         ),
@@ -763,7 +778,7 @@ def test_domain_controller_shadow_reads_only_the_registered_incomplete_receipt(
             "evidence_relative_path": (
                 "control/evidence/documents-weijian-controller-shadow/documents-weijian-controller-shadow.json"
             ),
-            "evidence_schema": "runtime.documents-controller-shadow.evidence.v1",
+            "evidence_schema": "runtime.documents-controller-shadow.evidence.v2",
         }
     )
     binding_path.write_text(yaml.safe_dump(binding, sort_keys=False), encoding="utf-8")
@@ -773,8 +788,8 @@ def test_domain_controller_shadow_reads_only_the_registered_incomplete_receipt(
     result = gc.domain_controller_shadow_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
 
     assert result == {
-        "schema": "cockpit.domain-controller-shadow.v1",
-        "status": "shadow_incomplete",
+        "schema": "cockpit.domain-controller-shadow.v2",
+        "status": "shadow_observed",
         "available": True,
         "domain_id": "vault",
         "job": {
@@ -783,9 +798,23 @@ def test_domain_controller_shadow_reads_only_the_registered_incomplete_receipt(
             "action": "shadow_legacy_controller",
         },
         "shadow": {
+            "cutover_ready": False,
             "legacy_controller_replaced": False,
-            "covered_rule_ids": ["CR01", "CR02", "CR03", "CR05"],
-            "unmigrated_rule_ids": [
+            "legacy_rule_ids": [
+                "CR01",
+                "CR02",
+                "CR03",
+                "CR05",
+                "CR08",
+                "CR23",
+                "CR24",
+                "CR25",
+                "CR26",
+                "CR29",
+                "CR30",
+            ],
+            "observed_rule_ids": ["CR01", "CR02", "CR03", "CR05"],
+            "unobserved_rule_ids": [
                 "CR08",
                 "CR23",
                 "CR24",
@@ -823,7 +852,19 @@ def test_domain_controller_shadow_reads_only_the_registered_incomplete_receipt(
 
     assert malformed["status"] == "unavailable"
     assert malformed["available"] is False
-    assert "incomplete shadow status" in malformed["error"]
+    assert malformed["schema"] == "cockpit.domain-controller-shadow.v2"
+    assert "observed shadow status" in malformed["error"]
+
+    receipt["exit_code"] = 1
+    receipt["owner_evidence"]["schema"] = "runtime.documents-controller-shadow.evidence.v1"
+    evidence_path.write_text(json.dumps(receipt), encoding="utf-8")
+
+    legacy_schema = gc.domain_controller_shadow_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+
+    assert legacy_schema["status"] == "unavailable"
+    assert legacy_schema["available"] is False
+    assert legacy_schema["schema"] == "cockpit.domain-controller-shadow.v2"
+    assert "invalid controller shadow schema" in legacy_schema["error"]
 
 
 def test_kems_status_leaves_full_content_scan_to_explicit_command(

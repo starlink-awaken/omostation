@@ -20,9 +20,12 @@ _CAPABILITY_ROUTE_CONTRACTS = {
     "workflows": ("workspace-workflow-mesh", "file"),
 }
 _FACTS_EVIDENCE_SCHEMA = "runtime.documents-facts-audit.evidence.v1"
-_CONTROLLER_SHADOW_EVIDENCE_SCHEMA = "runtime.documents-controller-shadow.evidence.v1"
-_CONTROLLER_SHADOW_COVERED_RULE_IDS = ("CR01", "CR02", "CR03", "CR05")
-_CONTROLLER_SHADOW_UNMIGRATED_RULE_IDS = (
+_CONTROLLER_SHADOW_EVIDENCE_SCHEMA = "runtime.documents-controller-shadow.evidence.v2"
+_CONTROLLER_SHADOW_LEGACY_RULE_IDS = (
+    "CR01",
+    "CR02",
+    "CR03",
+    "CR05",
     "CR08",
     "CR23",
     "CR24",
@@ -30,6 +33,10 @@ _CONTROLLER_SHADOW_UNMIGRATED_RULE_IDS = (
     "CR26",
     "CR29",
     "CR30",
+)
+_CONTROLLER_SHADOW_OBSERVED_RULE_IDS = ("CR01", "CR02", "CR03", "CR05")
+_CONTROLLER_SHADOW_UNOBSERVED_RULE_IDS = tuple(
+    rule_id for rule_id in _CONTROLLER_SHADOW_LEGACY_RULE_IDS if rule_id not in _CONTROLLER_SHADOW_OBSERVED_RULE_IDS
 )
 _MAX_RUNTIME_RECEIPT_BYTES = 32 * 1024
 
@@ -405,7 +412,7 @@ def _controller_shadow_unavailable(
     if runtime_evidence is not None:
         sources["runtime_evidence"] = str(runtime_evidence)
     return {
-        "schema": "cockpit.domain-controller-shadow.v1",
+        "schema": "cockpit.domain-controller-shadow.v2",
         "status": "unavailable",
         "available": False,
         "domain_id": requested,
@@ -613,29 +620,37 @@ def _validated_controller_shadow_receipt(receipt: dict[str, Any], job: dict[str,
         or not isinstance(exit_code, int)
         or exit_code == 0
     ):
-        raise ValueError("Runtime receipt does not preserve the incomplete shadow status")
+        raise ValueError("Runtime receipt does not preserve the observed shadow status")
     owner_evidence = receipt.get("owner_evidence")
     if (
         not isinstance(owner_evidence, dict)
         or owner_evidence.get("schema") != _CONTROLLER_SHADOW_EVIDENCE_SCHEMA
-        or owner_evidence.get("status") != "shadow_incomplete"
+        or owner_evidence.get("status") != "shadow_observed"
         or owner_evidence.get("legacy_controller_replaced") is not False
+        or owner_evidence.get("cutover_ready") is not False
     ):
         raise ValueError("Runtime evidence has an invalid controller shadow schema")
-    covered = owner_evidence.get("covered_rule_ids")
-    unmigrated = owner_evidence.get("unmigrated_rule_ids")
-    if covered != list(_CONTROLLER_SHADOW_COVERED_RULE_IDS):
-        raise ValueError("Runtime evidence has invalid controller shadow covered rules")
-    if unmigrated != list(_CONTROLLER_SHADOW_UNMIGRATED_RULE_IDS):
-        raise ValueError("Runtime evidence has invalid controller shadow unmigrated rules")
-    if owner_evidence.get("covered_rule_count") != len(covered):
-        raise ValueError("Runtime evidence has an invalid controller shadow covered rule count")
-    if owner_evidence.get("unmigrated_rule_count") != len(unmigrated):
-        raise ValueError("Runtime evidence has an invalid controller shadow unmigrated rule count")
+    legacy_rule_ids = owner_evidence.get("legacy_rule_ids")
+    if legacy_rule_ids != list(_CONTROLLER_SHADOW_LEGACY_RULE_IDS):
+        raise ValueError("Runtime evidence has invalid controller shadow legacy rules")
+    if owner_evidence.get("legacy_rule_count") != len(legacy_rule_ids):
+        raise ValueError("Runtime evidence has an invalid controller shadow legacy rule count")
+    observed_rule_ids = owner_evidence.get("observed_rule_ids")
+    if observed_rule_ids != list(_CONTROLLER_SHADOW_OBSERVED_RULE_IDS):
+        raise ValueError("Runtime evidence has invalid observed controller rules")
+    if owner_evidence.get("observed_rule_count") != len(observed_rule_ids):
+        raise ValueError("Runtime evidence has an invalid observed controller rule count")
+    unobserved_rule_ids = owner_evidence.get("unobserved_rule_ids")
+    if unobserved_rule_ids != list(_CONTROLLER_SHADOW_UNOBSERVED_RULE_IDS):
+        raise ValueError("Runtime evidence has invalid unobserved controller rules")
+    if owner_evidence.get("unobserved_rule_count") != len(unobserved_rule_ids):
+        raise ValueError("Runtime evidence has an invalid unobserved controller rule count")
     return {
+        "cutover_ready": False,
         "legacy_controller_replaced": False,
-        "covered_rule_ids": covered,
-        "unmigrated_rule_ids": unmigrated,
+        "legacy_rule_ids": legacy_rule_ids,
+        "observed_rule_ids": observed_rule_ids,
+        "unobserved_rule_ids": unobserved_rule_ids,
     }
 
 
@@ -735,8 +750,8 @@ def domain_controller_shadow_status(
         )
 
     return {
-        "schema": "cockpit.domain-controller-shadow.v1",
-        "status": "shadow_incomplete",
+        "schema": "cockpit.domain-controller-shadow.v2",
+        "status": "shadow_observed",
         "available": True,
         "domain_id": requested,
         "job": {key: job[key] for key in ("id", "owner", "action")},

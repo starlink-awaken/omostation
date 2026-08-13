@@ -280,7 +280,7 @@ class TestGovernanceTools:
 
     def test_domain_controller_shadow_status_passes_domain_id_and_returns_parseable_envelope(self, monkeypatch):
         seen = []
-        payload = {"schema": "cockpit.domain-controller-shadow.v1", "status": "shadow_incomplete", "available": True}
+        payload = {"schema": "cockpit.domain-controller-shadow.v2", "status": "shadow_observed", "available": True}
         monkeypatch.setattr(
             agent_runtime_mcp_server.governance_context,
             "domain_controller_shadow_status",

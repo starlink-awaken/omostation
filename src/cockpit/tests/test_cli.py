@@ -351,12 +351,12 @@ def test_facts_validation_maps_violations_and_unavailable_to_contract_exit_codes
         assert main() == 2
 
 
-def test_controller_shadow_json_preserves_incomplete_migration_contract(monkeypatch, capsys):
+def test_controller_shadow_json_preserves_observed_not_cut_over_contract(monkeypatch, capsys):
     from cockpit.commands import l4bridge
 
     payload = {
-        "schema": "cockpit.domain-controller-shadow.v1",
-        "status": "shadow_incomplete",
+        "schema": "cockpit.domain-controller-shadow.v2",
+        "status": "shadow_observed",
         "available": True,
         "domain_id": "work-weijian",
         "shadow": {"legacy_controller_replaced": False},

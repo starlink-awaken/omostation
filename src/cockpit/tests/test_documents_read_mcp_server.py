@@ -100,8 +100,8 @@ def test_controller_shadow_delegates_to_cockpit_authority(monkeypatch) -> None:
     server = _server()
     seen: list[str] = []
     payload = {
-        "schema": "cockpit.domain-controller-shadow.v1",
-        "status": "shadow_incomplete",
+        "schema": "cockpit.domain-controller-shadow.v2",
+        "status": "shadow_observed",
         "available": True,
     }
     monkeypatch.setattr(

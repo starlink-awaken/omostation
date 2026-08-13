@@ -174,13 +174,15 @@ def cmd_controller_shadow(args: Namespace) -> int:
         console.print(
             "[bold yellow]Documents 控制器影子迁移[/] "
             f"{result.get('status', 'unavailable')} · "
-            f"covered={len(shadow.get('covered_rule_ids', []))} · "
-            f"unmigrated={len(shadow.get('unmigrated_rule_ids', []))}"
+            f"observed_rules={len(shadow.get('observed_rule_ids', []))}/"
+            f"{len(shadow.get('legacy_rule_ids', []))} · "
+            f"unobserved_rules={len(shadow.get('unobserved_rule_ids', []))} · "
+            f"cutover_ready={shadow.get('cutover_ready', False)}"
         )
         if result.get("error"):
             _get_err().print(f"[red]❌ {result['error']}[/]")
 
-    return {"shadow_incomplete": 1, "unavailable": 2}.get(result.get("status"), 2)
+    return {"shadow_observed": 1, "unavailable": 2}.get(result.get("status"), 2)
 
 
 def cmd_skill(args: Namespace) -> int:
