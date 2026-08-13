@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -11,9 +12,18 @@ from typing import Protocol, Self, cast
 from pydantic import JsonValue
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal
+from textual.containers import Horizontal, Vertical
 from textual.events import Resize
-from textual.widgets import ContentSwitcher, Label, ListItem, ListView, Static
+from textual.widgets import (
+    ContentSwitcher,
+    DataTable,
+    Footer,
+    Header,
+    Label,
+    ListItem,
+    ListView,
+    Static,
+)
 
 from omlxc.client import DaemonClient, DaemonClientError, DaemonEnvelope, DaemonEvent
 
@@ -30,17 +40,71 @@ PAGE_SLUGS = (
     "settings",
 )
 PAGE_TITLES = {
-    "overview": "总览 · Overview",
-    "nodes": "节点 · Nodes",
-    "models": "模型 · Models",
-    "routes": "路由 · Routes",
-    "jobs": "任务 · Jobs",
-    "performance": "性能 · Performance",
-    "logs": "日志 · Logs",
-    "settings": "设置 · Settings",
+    "overview": "总览",
+    "nodes": "节点",
+    "models": "模型",
+    "routes": "路由",
+    "jobs": "任务",
+    "performance": "性能",
+    "logs": "日志",
+    "settings": "设置",
+}
+PAGE_ICONS = {
+    "overview": "⬡",
+    "nodes": "◈",
+    "models": "⬢",
+    "routes": "⟡",
+    "jobs": "⟳",
+    "performance": "◬",
+    "logs": "≡",
+    "settings": "✦",
+}
+
+# Status → (symbol, color-markup)
+STATE_ICONS: dict[str, tuple[str, str]] = {
+    "healthy": ("●", "green"),
+    "online": ("●", "green"),
+    "ok": ("●", "green"),
+    "loaded": ("◆", "cyan"),
+    "running": ("▶", "yellow"),
+    "planning": ("◌", "yellow"),
+    "pending": ("○", "bright_black"),
+    "awaiting_confirmation": ("?", "yellow"),
+    "cancelling": ("◐", "magenta"),
+    "succeeded": ("✔", "green"),
+    "failed": ("✖", "red"),
+    "cancelled": ("⊘", "bright_black"),
+    "degraded": ("◑", "yellow"),
+    "offline": ("○", "bright_black"),
+    "stale": ("◌", "bright_black"),
+    "unknown": ("·", "bright_black"),
 }
 
 JsonObject = dict[str, JsonValue]
+
+
+def _state_markup(state: str) -> str:
+    sym, color = STATE_ICONS.get(state.lower(), ("·", "bright_black"))
+    return f"[{color}]{sym} {state}[/{color}]"
+
+
+def _bool_markup(value: object) -> str:
+    if value is True:
+        return "[green]yes[/green]"
+    if value is False:
+        return "[red]no[/red]"
+    return "[bright_black]-[/bright_black]"
+
+
+def _cell(value: object) -> str:
+    if value is None or value == "-":
+        return "[bright_black]—[/bright_black]"
+    if isinstance(value, bool):
+        return _bool_markup(value)
+    s = str(value)
+    if s in STATE_ICONS:
+        return _state_markup(s)
+    return s
 
 
 class CockpitClient(Protocol):
@@ -88,74 +152,422 @@ class PendingMutation:
     rollback: str
 
 
-class CockpitPage(Static):
-    """A consistent textual page shell; networking stays in ``CockpitApp``."""
+# ─── Overview page ────────────────────────────────────────────────────────────
+
+class OverviewPage(Static):
+    """Animated summary card grid."""
+
+    DEFAULT_CSS = """
+    OverviewPage {
+        layout: grid;
+        grid-size: 2 2;
+        grid-gutter: 1 2;
+        padding: 1 2;
+        height: 1fr;
+        width: 1fr;
+    }
+    OverviewPage .stat-card {
+        background: #0d1f35;
+        border: solid #1c3a5e;
+        padding: 1 2;
+        height: 7;
+    }
+    OverviewPage .stat-card .stat-value {
+        text-style: bold;
+        color: #7dd3f5;
+        margin-top: 1;
+    }
+    OverviewPage .stat-card .stat-label {
+        color: #5a7a9a;
+        text-style: italic;
+    }
+    """
+
+    def __init__(self) -> None:
+        super().__init__(id="page-overview", classes="cockpit-page")
+
+    def compose(self) -> ComposeResult:
+        yield Vertical(
+            Label("[bright_black]daemon[/bright_black]", classes="stat-label"),
+            Label("—", id="ov-daemon", classes="stat-value"),
+            classes="stat-card",
+        )
+        yield Vertical(
+            Label("[bright_black]nodes[/bright_black]", classes="stat-label"),
+            Label("—", id="ov-nodes", classes="stat-value"),
+            classes="stat-card",
+        )
+        yield Vertical(
+            Label("[bright_black]models[/bright_black]", classes="stat-label"),
+            Label("—", id="ov-models", classes="stat-value"),
+            classes="stat-card",
+        )
+        yield Vertical(
+            Label("[bright_black]active jobs[/bright_black]", classes="stat-label"),
+            Label("—", id="ov-jobs", classes="stat-value"),
+            classes="stat-card",
+        )
+
+    def refresh_data(self, snapshot: CockpitSnapshot, conn: str) -> None:
+        status = str(snapshot.health.get("status", "unknown"))
+        active = sum(
+            item.get("state") in {"pending", "planning", "running", "cancelling"}
+            for item in snapshot.jobs
+        )
+        sym, color = STATE_ICONS.get(status.lower(), ("·", "bright_black"))
+        self.query_one("#ov-daemon", Label).update(f"[{color}]{sym}  {status}[/{color}]")
+        self.query_one("#ov-nodes", Label).update(
+            f"[cyan]{len(snapshot.nodes)}[/cyan]"
+        )
+        self.query_one("#ov-models", Label).update(
+            f"[cyan]{len(snapshot.models)}[/cyan]"
+        )
+        job_color = "yellow" if active else "bright_black"
+        self.query_one("#ov-jobs", Label).update(f"[{job_color}]{active}[/{job_color}]")
+
+
+# ─── Table pages ──────────────────────────────────────────────────────────────
+
+class TablePage(Static):
+    """A page backed by a DataTable widget."""
+
+    COLUMNS: tuple[str, ...] = ()
+    COLUMN_LABELS: tuple[str, ...] = ()
 
     def __init__(self, slug: str) -> None:
         self.slug = slug
-        super().__init__(PAGE_TITLES[slug], id=f"page-{slug}", classes="cockpit-page")
+        super().__init__(id=f"page-{slug}", classes="cockpit-page")
 
+    def compose(self) -> ComposeResult:
+        yield DataTable(id=f"dt-{self.slug}", zebra_stripes=True, cursor_type="row")
+
+    def on_mount(self) -> None:
+        table = self.query_one(DataTable)
+        table.add_columns(*self.COLUMN_LABELS)
+
+    def _sync_rows(self, rows: list[tuple[str, ...]]) -> None:
+        table = self.query_one(DataTable)
+        table.clear()
+        for row in rows:
+            table.add_row(*row)
+
+
+class NodesPage(TablePage):
+    COLUMNS = ("id", "display_name", "platform", "state")
+    COLUMN_LABELS = ("  ID", "  DISPLAY NAME", "  PLATFORM", "  STATE")
+
+    def __init__(self) -> None:
+        super().__init__("nodes")
+
+    def refresh_data(self, snapshot: CockpitSnapshot) -> None:
+        rows = [
+            (
+                _cell(item.get("id")),
+                _cell(item.get("display_name")),
+                _cell(item.get("platform")),
+                _state_markup(
+                    str(
+                        cast(JsonObject, item.get("health", {})).get("state", "unknown")
+                        if isinstance(item.get("health"), dict)
+                        else item.get("state", "unknown")
+                    )
+                ),
+            )
+            for item in snapshot.nodes
+        ]
+        self._sync_rows(rows)
+
+
+class ModelsPage(TablePage):
+    COLUMNS = ("id", "role", "loaded", "state")
+    COLUMN_LABELS = ("  ID", "  ROLE", "  LOADED", "  STATE")
+
+    def __init__(self) -> None:
+        super().__init__("models")
+
+    def refresh_data(self, snapshot: CockpitSnapshot) -> None:
+        rows = [
+            (
+                _cell(item.get("id")),
+                _cell(item.get("role")),
+                _bool_markup(item.get("loaded")),
+                _state_markup(str(item.get("state", "unknown"))),
+            )
+            for item in snapshot.models
+        ]
+        self._sync_rows(rows)
+
+
+class JobsPage(TablePage):
+    COLUMNS = ("id", "kind", "state", "progress")
+    COLUMN_LABELS = ("  ID", "  KIND", "  STATE", "  PROGRESS")
+
+    def __init__(self) -> None:
+        super().__init__("jobs")
+
+    def refresh_data(self, snapshot: CockpitSnapshot) -> None:
+        rows = [
+            (
+                _cell(item.get("id")),
+                _cell(item.get("kind")),
+                _state_markup(str(item.get("state", "unknown"))),
+                _cell(item.get("progress")),
+            )
+            for item in snapshot.jobs
+        ]
+        self._sync_rows(rows)
+
+
+class MetricsPage(Static):
+    """Key–value performance metrics."""
+
+    DEFAULT_CSS = """
+    MetricsPage {
+        padding: 1 2;
+        height: 1fr;
+        width: 1fr;
+        overflow-y: auto;
+    }
+    MetricsPage .metric-row {
+        height: 1;
+        margin-bottom: 1;
+    }
+    MetricsPage .metric-key {
+        width: 28;
+        color: #5a7a9a;
+    }
+    MetricsPage .metric-val {
+        color: #7dd3f5;
+        text-style: bold;
+    }
+    """
+
+    def __init__(self) -> None:
+        super().__init__(id="page-performance", classes="cockpit-page")
+
+    def refresh_data(self, snapshot: CockpitSnapshot) -> None:
+        lines = []
+        for key, value in sorted(snapshot.metrics.items()):
+            lines.append(
+                f"[#5a7a9a]{key:<28}[/#5a7a9a][#7dd3f5]{value}[/#7dd3f5]"
+            )
+        self.update("\n".join(lines) if lines else "[bright_black]No metrics yet.[/bright_black]")
+
+
+class LogsPage(Static):
+    """Scrolling event log."""
+
+    DEFAULT_CSS = """
+    LogsPage {
+        padding: 1 2;
+        height: 1fr;
+        width: 1fr;
+        overflow-y: auto;
+    }
+    """
+
+    def __init__(self) -> None:
+        super().__init__(id="page-logs", classes="cockpit-page")
+
+    def refresh_data(self, event_log: list[str]) -> None:
+        lines = []
+        for entry in event_log[-40:]:
+            ts, _, rest = entry.partition("  ")
+            lines.append(f"[bright_black]{ts}[/bright_black]  [cyan]{rest}[/cyan]")
+        self.update(
+            "\n".join(lines) if lines else "[bright_black]No events yet.[/bright_black]"
+        )
+
+
+class RoutesPage(Static):
+    DEFAULT_CSS = """
+    RoutesPage { padding: 1 2; height: 1fr; width: 1fr; }
+    """
+
+    def __init__(self) -> None:
+        super().__init__(id="page-routes", classes="cockpit-page")
+
+    def refresh_data(self, policy: str) -> None:
+        self.update(
+            f"[#5a7a9a]Policy[/#5a7a9a]  [cyan]{policy}[/cyan]\n\n"
+            "[bright_black]Physical placement is resolved by omlxcd.[/bright_black]"
+        )
+
+
+class SettingsPage(Static):
+    DEFAULT_CSS = """
+    SettingsPage { padding: 1 2; height: 1fr; width: 1fr; }
+    """
+
+    def __init__(self) -> None:
+        super().__init__(id="page-settings", classes="cockpit-page")
+
+    def refresh_data(self, policy: str) -> None:
+        self.update(
+            f"[#5a7a9a]Default policy[/#5a7a9a]  [cyan]{policy}[/cyan]\n\n"
+            "[bright_black]Thinking OFF by default.[/bright_black]"
+        )
+
+
+# ─── Nav item ─────────────────────────────────────────────────────────────────
+
+class NavItem(ListItem):
+    def __init__(self, slug: str) -> None:
+        icon = PAGE_ICONS[slug]
+        title = PAGE_TITLES[slug]
+        super().__init__(
+            Label(f"  {icon}  {title}", id=f"nav-label-{slug}"),
+            id=f"nav-{slug}",
+        )
+
+
+# ─── Main app ─────────────────────────────────────────────────────────────────
 
 class CockpitApp(App[None]):
     """Keyboard-first local compute dashboard with explicit freshness state."""
 
-    TITLE = "omlxc · Local Compute Hub"
+    TITLE = "omlxc"
+    SUB_TITLE = "Local Compute Hub"
+
     BINDINGS = [
-        Binding("g", "quick_jump", "Jump"),
-        Binding("slash", "search", "Search"),
-        Binding("colon", "command_palette", "Command"),
-        Binding("r", "refresh", "Refresh"),
-        Binding("question_mark", "show_help", "Help"),
-        Binding("q", "quit", "Quit"),
+        Binding("g", "quick_jump", "Jump", show=True),
+        Binding("slash", "search", "Search", show=True),
+        Binding("colon", "command_palette", "Command", show=True),
+        Binding("r", "refresh", "Refresh", show=True),
+        Binding("question_mark", "show_help", "Help", show=True),
+        Binding("q", "quit", "Quit", show=True),
         Binding("escape", "escape_overlay", "Close", show=False),
     ]
+
     CSS = """
+    /* ── Global ── */
     Screen {
-        background: #0b1018;
-        color: #dce7f5;
+        background: #060d18;
+        color: #c8d8ec;
+        layers: base overlay;
     }
-    #topbar {
-        height: 3;
-        padding: 1 2;
-        background: #142236;
-        color: #f2f7ff;
+
+    /* ── Header override ── */
+    Header {
+        background: #091525;
+        color: #7dd3f5;
+        border-bottom: solid #1a3550;
         text-style: bold;
+        height: 3;
     }
+    Header .header--icon { color: #2a6090; }
+
+    /* ── Connection badge in topbar ── */
+    #conn-badge {
+        dock: right;
+        width: auto;
+        padding: 0 2;
+        height: 3;
+        content-align: right middle;
+        color: #5a7a9a;
+    }
+
+    /* ── Body ── */
     #body {
         height: 1fr;
+        width: 1fr;
     }
+
+    /* ── Nav sidebar ── */
     #nav {
-        width: 24;
-        min-width: 18;
-        border-right: solid #294361;
-        background: #101a28;
+        width: 22;
+        min-width: 16;
+        border-right: solid #122035;
+        background: #080f1c;
+        padding-top: 1;
+    }
+    #nav ListView {
+        background: transparent;
     }
     #nav ListItem {
-        padding: 0 1;
+        padding: 0 0;
+        height: 2;
+        background: transparent;
+        color: #506a85;
+    }
+    #nav ListItem Label {
+        height: 2;
+        content-align: left middle;
+        color: #506a85;
+    }
+    #nav ListItem:hover {
+        background: #0d1f35;
+        color: #a8c8e8;
+    }
+    #nav ListItem:hover Label {
+        color: #a8c8e8;
     }
     #nav ListItem.--highlight {
-        background: #23466d;
+        background: #102840;
+        border-left: solid #2a7ab5 2;
+        color: #7dd3f5;
     }
+    #nav ListItem.--highlight Label {
+        color: #7dd3f5;
+        text-style: bold;
+    }
+
+    /* ── Pages area ── */
     #pages {
         width: 1fr;
         height: 1fr;
+        border-left: solid #0f2035;
     }
+
+    /* ── Common page shell ── */
     .cockpit-page {
         width: 1fr;
         height: 1fr;
-        padding: 1 2;
-        border-top: solid #294361;
+        background: #060d18;
     }
-    #footerbar {
-        height: 3;
-        padding: 1 2;
-        background: #101a28;
-        color: #a9bdd4;
+
+    /* ── DataTable theming ── */
+    DataTable {
+        height: 1fr;
+        width: 1fr;
+        background: #060d18;
     }
+    DataTable > .datatable--header {
+        background: #0b1e30;
+        color: #2a7ab5;
+        text-style: bold;
+    }
+    DataTable > .datatable--odd-row {
+        background: #060d18;
+    }
+    DataTable > .datatable--even-row {
+        background: #080f1c;
+    }
+    DataTable > .datatable--cursor {
+        background: #102840;
+        color: #7dd3f5;
+    }
+    DataTable > .datatable--highlight {
+        background: #0d1f35;
+    }
+
+    /* ── Footer ── */
+    Footer {
+        background: #080f1c;
+        color: #3d6080;
+        border-top: solid #122035;
+        height: 1;
+    }
+    Footer > .footer--highlight {
+        background: #102840;
+        color: #7dd3f5;
+    }
+
+    /* ── Narrow layout ── */
     .narrow #nav {
         display: none;
     }
-    .narrow #topbar, .narrow #footerbar, .narrow .cockpit-page {
+    .narrow #topbar-title, .narrow .cockpit-page {
         padding-left: 1;
         padding-right: 1;
     }
@@ -185,18 +597,26 @@ class CockpitApp(App[None]):
         self._pending_mutation: PendingMutation | None = None
 
     def compose(self) -> ComposeResult:
-        yield Static("omlxc · CONNECTING · interactive", id="topbar")
+        yield Header(show_clock=True)
+        yield Static("", id="conn-badge")
         with Horizontal(id="body"):
             yield ListView(
-                *(ListItem(Label(PAGE_TITLES[slug]), id=f"nav-{slug}") for slug in PAGE_SLUGS),
+                *(NavItem(slug) for slug in PAGE_SLUGS),
                 id="nav",
             )
             yield ContentSwitcher(
-                *(CockpitPage(slug) for slug in PAGE_SLUGS),
+                OverviewPage(),
+                NodesPage(),
+                ModelsPage(),
+                RoutesPage(),
+                JobsPage(),
+                MetricsPage(),
+                LogsPage(),
+                SettingsPage(),
                 initial="page-overview",
                 id="pages",
             )
-        yield Static("g 跳转 · / 搜索 · : 命令 · r 刷新 · ? 帮助 · q 退出", id="footerbar")
+        yield Footer()
 
     def on_mount(self) -> None:
         self._set_narrow(self.size.width < 80 or self.size.height < 24)
@@ -445,49 +865,44 @@ class CockpitApp(App[None]):
         self.set_class(narrow, "narrow")
 
     def _render_snapshot(self) -> None:
+        conn = self.connection_state
+        conn_color = {"LIVE": "green", "STALE": "yellow", "CONNECTING": "bright_black"}.get(
+            conn, "bright_black"
+        )
+        conn_sym = {"LIVE": "●", "STALE": "◌", "CONNECTING": "⟳"}.get(conn, "·")
         active_jobs = sum(
             item.get("state") in {"pending", "planning", "running", "cancelling"}
             for item in self.snapshot.jobs
         )
-        self.query_one("#topbar", Static).update(
-            f"omlxc · {self.connection_state} · policy {self.policy} · active jobs {active_jobs}"
+        badge_text = (
+            f"[{conn_color}]{conn_sym} {conn}[/{conn_color}]"
+            f"  [bright_black]policy {self.policy}[/bright_black]"
+            f"  [yellow]jobs {active_jobs}[/yellow]" if active_jobs
+            else f"[{conn_color}]{conn_sym} {conn}[/{conn_color}]"
+            f"  [bright_black]policy {self.policy}[/bright_black]"
         )
-        for slug in PAGE_SLUGS:
-            self.query_one(f"#page-{slug}", CockpitPage).update(self._page_text(slug))
+        self.query_one("#conn-badge", Static).update(badge_text)
 
-    def _page_text(self, slug: str) -> str:
-        title = PAGE_TITLES[slug]
-        prefix = f"[b]{title}[/b]\nSTATE {self.connection_state}\n"
-        if slug == "overview":
-            health = self.snapshot.health.get("status", "unknown")
-            return (
-                prefix
-                + f"\nDaemon {health}\nNodes {len(self.snapshot.nodes)}\n"
-                + f"Models {len(self.snapshot.models)}\nJobs {len(self.snapshot.jobs)}"
-            )
-        if slug == "nodes":
-            return (
-                prefix
-                + "\n"
-                + _rows(self.snapshot.nodes, ("id", "display_name", "platform", "state"))
-            )
-        if slug == "models":
-            return prefix + "\n" + _rows(self.snapshot.models, ("id", "role", "loaded", "state"))
-        if slug == "routes":
-            return prefix + f"\nPolicy {self.policy}\nPhysical placement is explained by omlxcd."
-        if slug == "jobs":
-            event = self.last_event_kind or "none"
-            return (
-                prefix
-                + f"\nLast event {event}\n"
-                + _rows(self.snapshot.jobs, ("id", "kind", "state", "progress"))
-            )
-        if slug == "performance":
-            return prefix + "\n" + _key_values(self.snapshot.metrics)
-        if slug == "logs":
-            return prefix + "\n" + ("\n".join(self._event_log[-12:]) or "No events yet.")
-        return prefix + f"\nDefault policy {self.policy}\nThinking OFF by default."
+        # Per-page updates
+        with contextlib.suppress(Exception):
+            self.query_one(OverviewPage).refresh_data(self.snapshot, conn)
+        with contextlib.suppress(Exception):
+            self.query_one(NodesPage).refresh_data(self.snapshot)
+        with contextlib.suppress(Exception):
+            self.query_one(ModelsPage).refresh_data(self.snapshot)
+        with contextlib.suppress(Exception):
+            self.query_one(JobsPage).refresh_data(self.snapshot)
+        with contextlib.suppress(Exception):
+            self.query_one(MetricsPage).refresh_data(self.snapshot)
+        with contextlib.suppress(Exception):
+            self.query_one(LogsPage).refresh_data(self._event_log)
+        with contextlib.suppress(Exception):
+            self.query_one(RoutesPage).refresh_data(self.policy)
+        with contextlib.suppress(Exception):
+            self.query_one(SettingsPage).refresh_data(self.policy)
 
+
+# ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def _object(value: JsonValue | None) -> JsonObject:
     if not isinstance(value, dict):
@@ -500,20 +915,6 @@ def _page_items(value: JsonValue | None) -> tuple[JsonObject, ...]:
     if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
         raise ValueError("expected paginated object items")
     return tuple(cast(list[JsonObject], items))
-
-
-def _rows(items: tuple[JsonObject, ...], columns: tuple[str, ...]) -> str:
-    header = "  ".join(column.upper() for column in columns)
-    rows = ["  ".join(str(_row_value(item, column)) for column in columns) for item in items]
-    return "\n".join((header, *rows)) if rows else f"{header}\n(no items)"
-
-
-def _row_value(item: JsonObject, column: str) -> JsonValue:
-    if column == "state" and "state" not in item:
-        health = item.get("health")
-        if isinstance(health, dict):
-            return cast(JsonObject, health).get("state", "-")
-    return item.get(column, "-")
 
 
 def _event_payload(value: JsonValue) -> JsonObject:
@@ -595,9 +996,3 @@ def _snapshot_with(
         jobs=snapshot.jobs if jobs is None else jobs,
         metrics=snapshot.metrics if metrics is None else metrics,
     )
-
-
-def _key_values(values: JsonObject) -> str:
-    if not values:
-        return "No metrics yet."
-    return "\n".join(f"{key.upper()} {value}" for key, value in sorted(values.items()))
