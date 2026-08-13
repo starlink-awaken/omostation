@@ -58,10 +58,21 @@ clients:
       approval_mode: approve
       skill_policy: disable_user_local
     note: "Use AGENTS.md with the generated `documents` profile; the profile keeps only Cockpit read tools and removes user-local Skill injection from this client context."
+  zed:
+    instruction_file: AGENTS.md
+    mcp_scope: client
+    profile_contract:
+      name: documents
+      owner: workspace
+      generator_ref: bin/gac/documents-zed-profile.py
+      exclusive_mcp_server: cockpit
+      approval_mode: allow_read_tools
+      builtin_tool_policy: disable_all
+    note: "Use the generated `Documents` Agent Profile; it disables built-in tools and enables only the Cockpit read tools declared by content-domain."
   agents_compatible:
     instruction_file: AGENTS.md
     mcp_scope: client
-    note: "For Zed/ZCode-like clients, use AGENTS.md plus the client MCP settings."
+    note: "For ZCode-like clients without a dedicated contract, use AGENTS.md plus the client MCP settings."
   chatgpt_web:
     instruction_file: null
     mcp_scope: public_https_or_secure_tunnel
