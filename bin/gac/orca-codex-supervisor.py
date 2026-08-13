@@ -13,6 +13,8 @@ import hashlib
 import json
 import os
 import re
+import shlex
+import shutil
 import stat
 import subprocess
 from collections.abc import Callable, Sequence
@@ -266,6 +268,7 @@ def start_supervised_codex(
     prompt_ref: str,
     prompt_digest: str,
     idempotency_key: str | None = None,
+    codex_executable: str | None = None,
     timeout_ms: int = 60_000,
     runner: Runner = _subprocess_runner,
 ) -> dict[str, Any]:
@@ -295,6 +298,16 @@ def start_supervised_codex(
     if prompt_error:
         return _failure(binding=binding, stage="input", reason=prompt_error)
     assert prompt is not None
+    resolved_codex = codex_executable or shutil.which("codex")
+    if not isinstance(resolved_codex, str):
+        return _failure(binding=binding, stage="input", reason="codex_not_found")
+    codex_path = Path(resolved_codex)
+    if not codex_path.is_absolute() or codex_path.name != "codex":
+        return _failure(binding=binding, stage="input", reason="codex_path_unsafe")
+    try:
+        resolved_workspace = str(Path(workspace_root).resolve(strict=True))
+    except OSError:
+        return _failure(binding=binding, stage="input", reason="workspace_root_unsafe")
     retry_requests: dict[str, str] = {}
     if idempotency_key is not None:
         for stage in ("run-create", "task-create", "worker-start"):
@@ -353,7 +366,15 @@ def start_supervised_codex(
     assert created_run is not None
     run = created_run.get("run")
     orca_run_id = run.get("id") if isinstance(run, dict) else None
-    if not isinstance(orca_run_id, str) or not _valid_identity(orca_run_id):
+    coordinator_handle = (
+        run.get("coordinator_handle") if isinstance(run, dict) else None
+    )
+    if (
+        not isinstance(orca_run_id, str)
+        or not _valid_identity(orca_run_id)
+        or not isinstance(coordinator_handle, str)
+        or not _valid_identity(coordinator_handle)
+    ):
         return _failure(
             binding=binding, stage="run_create", reason="orca_response_invalid"
         )
@@ -399,6 +420,161 @@ def start_supervised_codex(
         )
     run_task_residuals = [*run_residuals, f"orca:task:{orca_task_id}"]
 
+    codex_command = shlex.join(
+        (
+            resolved_codex,
+            "--ask-for-approval",
+            "on-request",
+            "--sandbox",
+            "read-only",
+            "-C",
+            resolved_workspace,
+        )
+    )
+    created_terminal, failure = _response(
+        runner,
+        (
+            "orca",
+            "terminal",
+            "create",
+            "--worktree",
+            f"path:{resolved_workspace}",
+            "--title",
+            f"supervised-codex-{omo_task_id}",
+            "--command",
+            codex_command,
+            "--json",
+        ),
+        timeout_seconds=30.0,
+        binding=binding,
+        stage="terminal_create",
+        reason="orca_terminal_not_created",
+        residual_resources=run_task_residuals,
+    )
+    if failure:
+        return failure
+    assert created_terminal is not None
+    terminal = created_terminal.get("terminal")
+    terminal_handle = terminal.get("handle") if isinstance(terminal, dict) else None
+    if not isinstance(terminal_handle, str) or not _valid_identity(terminal_handle):
+        return _failure(
+            binding=binding,
+            stage="terminal_create",
+            reason="orca_response_invalid",
+            residual_resources=run_task_residuals,
+        )
+    terminal_residuals = [
+        *run_task_residuals,
+        f"orca:terminal:{terminal_handle}",
+    ]
+
+    waited, failure = _response(
+        runner,
+        (
+            "orca",
+            "terminal",
+            "wait",
+            "--terminal",
+            terminal_handle,
+            "--for",
+            "tui-idle",
+            "--timeout-ms",
+            str(timeout_ms),
+            "--json",
+        ),
+        timeout_seconds=max(30.0, timeout_ms / 1000.0),
+        binding=binding,
+        stage="terminal_wait",
+        reason="codex_tui_not_idle",
+        residual_resources=terminal_residuals,
+    )
+    if failure:
+        return failure
+    wait_result = waited.get("wait") if waited else None
+    if (
+        not isinstance(wait_result, dict)
+        or wait_result.get("condition") != "tui-idle"
+        or wait_result.get("satisfied") is not True
+    ):
+        return _failure(
+            binding=binding,
+            stage="terminal_wait",
+            reason="codex_tui_not_idle",
+            residual_resources=terminal_residuals,
+        )
+
+    shown, failure = _response(
+        runner,
+        (
+            "orca",
+            "terminal",
+            "show",
+            "--terminal",
+            terminal_handle,
+            "--json",
+        ),
+        timeout_seconds=10.0,
+        binding=binding,
+        stage="terminal_show",
+        reason="codex_terminal_unverified",
+        residual_resources=terminal_residuals,
+    )
+    if failure:
+        return failure
+    shown_terminal = shown.get("terminal") if shown else None
+    if (
+        not isinstance(shown_terminal, dict)
+        or shown_terminal.get("handle") != terminal_handle
+        or shown_terminal.get("worktreePath") != resolved_workspace
+        or shown_terminal.get("connected") is not True
+        or shown_terminal.get("writable") is not True
+    ):
+        return _failure(
+            binding=binding,
+            stage="terminal_show",
+            reason="codex_terminal_unverified",
+            residual_resources=terminal_residuals,
+        )
+
+    readback, failure = _response(
+        runner,
+        (
+            "orca",
+            "terminal",
+            "read",
+            "--terminal",
+            terminal_handle,
+            "--cursor",
+            "0",
+            "--limit",
+            "80",
+            "--json",
+        ),
+        timeout_seconds=10.0,
+        binding=binding,
+        stage="terminal_read",
+        reason="codex_launch_unverified",
+        residual_resources=terminal_residuals,
+    )
+    if failure:
+        return failure
+    read_terminal = readback.get("terminal") if readback else None
+    tail = read_terminal.get("tail") if isinstance(read_terminal, dict) else None
+    rendered_tail = "\n".join(tail) if isinstance(tail, list) else ""
+    if (
+        read_terminal is None
+        or read_terminal.get("handle") != terminal_handle
+        or codex_command not in rendered_tail
+        or "--dangerously-bypass-approvals-and-sandbox" in rendered_tail
+        or "--approve-for-me" in rendered_tail
+    ):
+        return _failure(
+            binding=binding,
+            stage="terminal_read",
+            reason="codex_launch_unverified",
+            residual_resources=terminal_residuals,
+        )
+
     started_worker, failure = _response(
         runner,
         (
@@ -411,8 +587,10 @@ def start_supervised_codex(
             orca_task_id,
             "--worktree",
             "current",
-            "--agent",
-            "codex",
+            "--terminal",
+            terminal_handle,
+            "--from",
+            coordinator_handle,
             *retry_request("worker-start"),
             "--json",
         ),
@@ -420,29 +598,29 @@ def start_supervised_codex(
         binding=binding,
         stage="worker_start",
         reason="orca_worker_not_started",
-        residual_resources=run_task_residuals,
+        residual_resources=terminal_residuals,
         failure_context=lambda result: _worker_failure_context(
             result,
             orca_run_id=orca_run_id,
-            residual_resources=run_task_residuals,
+            residual_resources=terminal_residuals,
         ),
     )
     if failure:
         return failure
     assert started_worker is not None
     orca_dispatch_id = started_worker.get("dispatchId")
-    terminal_handle = started_worker.get("agentTerminalHandle")
+    reported_terminal_handle = started_worker.get("agentTerminalHandle")
     worker_orca, worker_residuals = _worker_failure_context(
         started_worker,
         orca_run_id=orca_run_id,
-        residual_resources=run_task_residuals,
+        residual_resources=terminal_residuals,
     )
     if (
         started_worker.get("state") != "ready"
         or started_worker.get("taskId") != orca_task_id
         or started_worker.get("runId") != orca_run_id
         or not isinstance(orca_dispatch_id, str)
-        or not isinstance(terminal_handle, str)
+        or reported_terminal_handle != terminal_handle
     ):
         return _failure(
             binding=binding,
@@ -462,7 +640,7 @@ def start_supervised_codex(
             binding=binding,
             stage="worker_start",
             reason="orca_response_invalid",
-            residual_resources=run_task_residuals,
+            residual_resources=terminal_residuals,
         )
     receipt = {
         "schema": SCHEMA,
@@ -471,6 +649,12 @@ def start_supervised_codex(
         "binding": binding,
         "orca": orca,
         "human_action_required": True,
+        "approval": {
+            "mode": "manual_click",
+            "policy": "on-request",
+            "sandbox": "read-only",
+            "write_requires_human_click": True,
+        },
         "input_accepted": "unproven",
         "model_completion": "unproven",
     }
