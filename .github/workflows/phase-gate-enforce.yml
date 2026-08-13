@@ -33,12 +33,14 @@ jobs:
               bin/gac/documents-codex-profile.py|\
               bin/gac/documents-zed-profile.py|\
               bin/gac/documents-zcode-config.py|\
+              bin/gac/documents-chatgpt-tunnel.py|\
               bin/gac/documents-domain-project-check.py|\
               bin/gac/documents-domain-owner-job.py|\
               bin/gac/documents_domain_jobs.py|\
               tests/test_documents_codex_profile.py|\
               tests/test_documents_zed_profile.py|\
               tests/test_documents_zcode_config.py|\
+              tests/test_documents_chatgpt_tunnel.py|\
               tests/test_documents_domain_project_check.py|\
               tests/test_documents_domain_owner_job.py|\
               projects/l4-kernel|\
@@ -59,7 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Checkout required owners
-        run: git submodule update --init projects/l4-kernel projects/runtime
+        run: git submodule update --init projects/cockpit projects/l4-kernel projects/runtime
       - uses: astral-sh/setup-uv@v4
       - name: Focused tests
         run: >-
@@ -67,8 +69,15 @@ jobs:
           tests/test_documents_codex_profile.py
           tests/test_documents_zed_profile.py
           tests/test_documents_zcode_config.py
+          tests/test_documents_chatgpt_tunnel.py
           tests/test_documents_domain_project_check.py
           tests/test_documents_domain_owner_job.py -q
+      - name: Cockpit bounded Documents MCP tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/projects/cockpit/src:${{ github.workspace }}/projects/l4-kernel/src
+        run: >-
+          uv run --with pytest --with fastmcp --with pyyaml python -m pytest
+          projects/cockpit/src/cockpit/tests/test_documents_read_mcp_server.py -q
       - name: Ruff
         run: >-
           uv run --with ruff ruff check
@@ -76,13 +85,17 @@ jobs:
           bin/gac/documents-codex-profile.py
           bin/gac/documents-zed-profile.py
           bin/gac/documents-zcode-config.py
+          bin/gac/documents-chatgpt-tunnel.py
           bin/gac/documents-domain-owner-job.py
           bin/gac/documents_domain_jobs.py
           tests/test_documents_domain_project_check.py
           tests/test_documents_codex_profile.py
           tests/test_documents_zed_profile.py
           tests/test_documents_zcode_config.py
+          tests/test_documents_chatgpt_tunnel.py
           tests/test_documents_domain_owner_job.py
+          projects/cockpit/src/cockpit/documents_read_mcp_server.py
+          projects/cockpit/src/cockpit/tests/test_documents_read_mcp_server.py
 
   phase-gate:
     name: phase-gate
