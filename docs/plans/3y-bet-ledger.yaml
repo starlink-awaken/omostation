@@ -7,7 +7,7 @@ schema_version: 1
 ---
 meta:
   horizon: 2026H2-2029
-  total_bets: 86
+  total_bets: 87
   windows:
   - Y1Q1
   - Y1Q2
@@ -2483,6 +2483,10 @@ bets:
   priority: P0
   status: done
   completed_at: '2026-08-13'
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-13-orchestration-contract-mvp-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d8d85873c0e68ec1eac0e6602b48ade37c7c89f9f1746f4664c5bd3b515687ca
   goal: >-
     复用 ECOS 既有 WorkPacket、CompletionManifest 与 VerificationReceipt，建立外部编排器候选交付
     到 OMO EvidenceRecorded、独立验证和 WorkflowVerified 的最小生产链；Orca、Kandev、Multica、
@@ -2540,6 +2544,83 @@ bets:
   circuit_breaker: >-
     需要修改 Workflow Mesh 状态机或 Ledger DDL、启动外部服务、接入第二 adapter、生产模块超过两个，
     或无法证明同一 run 的 EvidenceRecorded→WorkflowVerified 时立即停止并拆包，不得扩大本 BET
+  retro: required
+- id: BET-Y1Q2-T1-15
+  track: T5-ORCH
+  window: Y1Q2
+  title: Frozen specification binding and fail-closed OMO ingress
+  appetite: 2 days
+  priority: P0
+  status: done
+  done_at: 2026-08-13
+  goal: >-
+    在不建立第二套规范或任务真相的前提下，将已确认的外部 Specification 以稳定引用、版本和内容摘要
+    绑定到新版本 ECOS WorkPacket；OMO 在收集候选交付和独立验证前重验该绑定，源规范变化后旧候选不得
+    被误判为可验证，同时收口 BMAD/OpenSpec bridge 的静默 fallback、碰撞和部分导入问题。
+  non_goals:
+  - 新建 Specification 数据库、任务队列、scheduler、watchdog、UI 或第二套 workflow 状态机
+  - 复制规范正文到 WorkPacket、让外部编排器拥有规范真相，或改变旧 work-packet/v1 的 hash
+  - 启动外部模型/服务、真实副作用、自动审批/合并，或接入第二个 orchestrator adapter
+  - 重构 pitch/fast-track 以外的 OMO ingress、修改 Workflow Mesh 状态机或 Ledger DDL
+  done_when:
+  - >-
+      work-packet/v2 必须携带 immutable spec_binding（spec_ref、spec_version、content_digest、decision_ref），
+      binding 进入 packet hash；旧 work-packet/v1 的 canonical hash 保持字节级不变
+  - >-
+      OMO orchestration coordinator 对 v2 packet 重读允许范围内的冻结规范并校验摘要；缺失、越界、摘要变化、
+      未确认 decision 或旧 candidate 重放均 fail-closed；decision 必须在权威台账中显式绑定同一 spec_ref、
+      spec_version 与 content_digest，不产生 EvidenceRecorded/WorkflowVerified
+  - >-
+      BMAD/OpenSpec bridge 缺 test plan/evidence、重复标题、unsupported checkbox 或内容漂移时明确失败；
+      先完整解析和预检再写入，禁止默认 fallback 和部分导入
+  - ECOS 全量生成产物一致，OMO bridge/orchestration targeted tests、跨仓合同回归和独立只读 reviewer 通过
+  verify:
+  - cmd: >-
+      cd projects/ecos && PYTHONPATH=src uv run --no-project --with pytest --with pydantic
+      --with pyyaml python -m pytest tests/test_mof_compiler.py tests/test_work_packet_compiler.py
+      tests/test_mof_agent_execution_contracts.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/omo && PYTHONPATH=src:../ecos/src uv run --no-project --with pytest
+      --with pydantic --with pyyaml python -m pytest tests/test_omo_bridge.py
+      tests/test_orchestration_contract.py tests/test_omo_external_receipt.py tests/test_workflow_mesh.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/omo && uv run --no-project --with ruff ruff check src/omo/omo_bridge.py
+      src/omo/orchestration_contract.py tests/test_omo_bridge.py tests/test_orchestration_contract.py
+    expect: exit 0
+  - cmd: git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - projects/ecos/src/ecos/ssot/mof/m2/specification_binding.yaml
+  - projects/ecos/src/ecos/ssot/mof/m2/work_packet.yaml
+  - projects/ecos/src/ecos/ssot/mof/compiler/api.py
+  - projects/ecos/src/ecos/ssot/mof/compiler/emitters.py
+  - projects/ecos/src/ecos/ssot/mof/generated/control/**
+  - projects/ecos/src/ecos/ssot/tools/work_packet_compiler.py
+  - projects/ecos/tests/test_mof_compiler.py
+  - projects/ecos/tests/test_work_packet_compiler.py
+  - projects/ecos/tests/test_mof_agent_execution_contracts.py
+  - projects/ecos
+  - projects/omo/src/omo/omo_bridge.py
+  - projects/omo/src/omo/orchestration_contract.py
+  - projects/omo/tests/test_omo_bridge.py
+  - projects/omo/tests/test_orchestration_contract.py
+  - projects/omo/.github/workflows/ci.yml
+  - projects/omo
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-15.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-14
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    需要第二套规范/任务真相、修改旧 v1 hash、改 Workflow Mesh 状态机或 Ledger DDL、引入外部服务，
+    或无法在两天内证明规范变更使旧候选失效时立即停止并拆包，不得以 optional ignored 字段假接线
   retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
