@@ -17,7 +17,7 @@ for source_root in (RUNTIME_SRC, L4_SRC):
     if str(source_root) not in sys.path:
         sys.path.insert(0, str(source_root))
 
-from documents_domain_jobs import get_runtime_job
+from documents_domain_jobs import get_manifest_validation_job
 from l4_kernel.contracts import ContractError
 from l4_kernel.manifest_registry import ManifestRegistry
 from runtime.documents_plane.jobs import JobRegistry, JobSpec, run_job
@@ -72,7 +72,9 @@ def _build_job(
 
     registry = ManifestRegistry.load(domain_registry)
     manifest_ids = [manifest.id for manifest in registry.list_all()]
-    binding = get_runtime_job(project.get("runtime_jobs"), job_id, manifest_ids)
+    binding = get_manifest_validation_job(
+        project.get("runtime_jobs"), job_id, manifest_ids
+    )
     domain_id = str(binding["domain_id"])
     manifest = registry.get(domain_id)
     if manifest is None:  # pragma: no cover - shared binding validation owns this

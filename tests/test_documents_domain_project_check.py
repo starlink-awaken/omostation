@@ -205,6 +205,11 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                         "execution_policy": "workspace_only",
                     }
                 },
+                "runtime_state": {
+                    "owner": "runtime",
+                    "environment_override": "OMOSTATION_RUNTIME_STATE_ROOT",
+                    "default_home_relative": ".local/state/omostation/runtime",
+                },
                 "domains": [
                     {"id": domain_id, "profile": "content-domain"}
                     for domain_id in domain_ids
@@ -230,6 +235,22 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
         encoding="utf-8",
     )
     return path
+
+
+def _weijian_facts_audit_job() -> dict[str, object]:
+    return {
+        "id": "documents-weijian-facts-audit",
+        "domain_id": "work-weijian",
+        "owner": "runtime-facts",
+        "action": "audit_structured_facts",
+        "schedule": "manual",
+        "timeout_seconds": 60,
+        "reads": ["@工作文档/卫健委/_entities/facts"],
+        "writes": [],
+        "evidence_relative_path": "control/evidence/documents-weijian-facts-audit/documents-weijian-facts-audit.json",
+        "evidence_schema": "runtime.documents-facts-audit.evidence.v1",
+        "fail_closed": True,
+    }
 
 
 def _run(
@@ -295,6 +316,45 @@ def test_valid_domain_project_registry_passes(tmp_path: Path) -> None:
         "gateway_count": 2,
         "errors": [],
     }
+
+
+def test_workspace_binding_declares_weijian_runtime_facts_validation() -> None:
+    """The configured Cockpit tool consumes Runtime's bounded audit receipt."""
+
+    registry = yaml.safe_load(
+        (
+            ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
+        ).read_text(encoding="utf-8")
+    )
+
+    assert registry["runtime_state"] == {
+        "owner": "runtime",
+        "environment_override": "OMOSTATION_RUNTIME_STATE_ROOT",
+        "default_home_relative": ".local/state/omostation/runtime",
+    }
+    job = next(
+        job
+        for job in registry["runtime_jobs"]
+        if job["id"] == "documents-weijian-facts-audit"
+    )
+    assert job == {
+        "id": "documents-weijian-facts-audit",
+        "domain_id": "work-weijian",
+        "owner": "runtime-facts",
+        "action": "audit_structured_facts",
+        "schedule": "manual",
+        "timeout_seconds": 60,
+        "reads": ["@工作文档/卫健委/_entities/facts"],
+        "writes": [],
+        "evidence_relative_path": "control/evidence/documents-weijian-facts-audit/documents-weijian-facts-audit.json",
+        "evidence_schema": "runtime.documents-facts-audit.evidence.v1",
+        "fail_closed": True,
+    }
+    assert "domain_facts_validation_status" in registry["workspace_mcp"]["read_tools"]
+    assert (
+        "domain_facts_validation_status"
+        in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
+    )
 
 
 @pytest.mark.parametrize(
@@ -678,6 +738,51 @@ def test_runtime_jobs_must_be_a_non_empty_list(tmp_path: Path) -> None:
     assert json.loads(result.stdout)["errors"] == [
         "runtime_jobs must be a non-empty list"
     ]
+
+
+def test_runtime_facts_audit_job_contract_passes(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["creative", "work-weijian"])
+    project_registry = _project_registry(tmp_path, ["creative", "work-weijian"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["runtime_jobs"].append(_weijian_facts_audit_job())
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["errors"] == []
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        (
+            "evidence_schema",
+            "runtime.documents-facts-audit.evidence.v2",
+            "runtime facts job documents-weijian-facts-audit evidence_schema must be runtime.documents-facts-audit.evidence.v1",
+        ),
+        (
+            "reads",
+            ["@工作文档/卫健委/_entities"],
+            "runtime facts job documents-weijian-facts-audit reads must be @工作文档/卫健委/_entities/facts",
+        ),
+    ],
+)
+def test_runtime_facts_audit_job_contract_fails_closed(
+    field: str, value: object, expected: str, tmp_path: Path
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["creative", "work-weijian"])
+    project_registry = _project_registry(tmp_path, ["creative", "work-weijian"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    facts_job = _weijian_facts_audit_job()
+    facts_job[field] = value
+    raw["runtime_jobs"].append(facts_job)
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [expected]
 
 
 @pytest.mark.parametrize(

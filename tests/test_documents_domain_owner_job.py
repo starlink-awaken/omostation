@@ -103,12 +103,13 @@ def _run(
     state: Path,
     owner: Path,
     *extra: str,
+    job_id: str = "creative-manifest-check",
 ) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [
             sys.executable,
             str(SCRIPT),
-            "creative-manifest-check",
+            job_id,
             "--documents-root",
             str(documents),
             "--domain-registry",
@@ -166,6 +167,66 @@ def test_owner_job_dry_run_resolves_binding_without_writes(tmp_path: Path) -> No
 
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["status"] == "dry_run"
+    assert not state.exists()
+
+
+def test_owner_job_rejects_facts_audit_binding_before_execution(tmp_path: Path) -> None:
+    documents, registry, project, state = _fixture(tmp_path)
+    facts_root = documents / "@工作文档" / "卫健委"
+    facts_root.mkdir(parents=True)
+    facts_manifest = facts_root / "DOMAIN.yaml"
+    manifest_payload = yaml.safe_load(
+        (documents / "@创意创作" / "DOMAIN.yaml").read_text(encoding="utf-8")
+    )
+    manifest_payload.update({"id": "work-weijian", "display_name": "@工作文档/卫健委"})
+    facts_manifest.write_text(
+        yaml.safe_dump(manifest_payload, allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
+    registry_payload = yaml.safe_load(registry.read_text(encoding="utf-8"))
+    registry_payload["manifests"].append(
+        {
+            "id": "work-weijian",
+            "path": os.path.relpath(facts_manifest, registry.parent),
+        }
+    )
+    registry.write_text(
+        yaml.safe_dump(registry_payload, allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
+    raw = yaml.safe_load(project.read_text(encoding="utf-8"))
+    raw["runtime_jobs"].append(
+        {
+            "id": "documents-weijian-facts-audit",
+            "domain_id": "work-weijian",
+            "owner": "runtime-facts",
+            "action": "audit_structured_facts",
+            "schedule": "manual",
+            "timeout_seconds": 60,
+            "reads": ["@工作文档/卫健委/_entities/facts"],
+            "writes": [],
+            "evidence_relative_path": "control/evidence/documents-weijian-facts-audit/documents-weijian-facts-audit.json",
+            "evidence_schema": "runtime.documents-facts-audit.evidence.v1",
+            "fail_closed": True,
+        }
+    )
+    project.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(
+        documents,
+        registry,
+        project,
+        state,
+        tmp_path / "not-executed",
+        "--dry-run",
+        job_id="documents-weijian-facts-audit",
+    )
+
+    assert result.returncode == 2
+    assert json.loads(result.stdout) == {
+        "status": "failed",
+        "error": "runtime job is not a manifest validation job: documents-weijian-facts-audit",
+    }
     assert not state.exists()
 
 

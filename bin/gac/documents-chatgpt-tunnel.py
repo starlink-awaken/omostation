@@ -31,6 +31,7 @@ EXPECTED_TOOLS = [
     "domain_context",
     "cards_status",
     "cards_check",
+    "domain_facts_validation_status",
 ]
 
 
