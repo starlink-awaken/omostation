@@ -125,6 +125,9 @@ def _copy_omlxc_provider(user_home: Path, agent_dir: Path) -> None:
     }
     models.write_text(json.dumps({"providers": {PROVIDER: projected_provider}}, separators=(",", ":")), encoding="utf-8")
     models.chmod(0o600)
+    store = agent_dir / "models-store.json"
+    store.write_bytes(b"{}")
+    store.chmod(0o600)
     auth = agent_dir / "auth.json"
     auth.write_text("{}", encoding="utf-8")
     auth.chmod(0o600)
