@@ -725,7 +725,20 @@ def _usage(usage: TokenUsage | None) -> dict[str, int]:
 
 def _sse_event(request_id: str, model: str, event: StreamEvent) -> bytes:
     if event.kind is StreamEventKind.DONE:
-        return b"data: [DONE]\n\n"
+        payload = {
+            "id": f"chatcmpl-{request_id}",
+            "object": "chat.completion.chunk",
+            "model": model,
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {},
+                    "finish_reason": event.finish_reason or "stop",
+                }
+            ],
+        }
+        encoded = json.dumps(payload, ensure_ascii=True, separators=(",", ":"))
+        return f"data: {encoded}\n\ndata: [DONE]\n\n".encode()
     if event.kind is StreamEventKind.ERROR:
         assert event.error is not None
         payload: dict[str, object] = {

@@ -1,6 +1,14 @@
 # Changelog
 
-## 3.0.3 — Unreleased
+## 3.0.4 — 2026-08-13
+
+- Emit a terminal OpenAI-compatible SSE choice with a non-empty
+  `finish_reason` before the unique `[DONE]` sentinel so strict local agent
+  clients can complete streamed sessions deterministically.
+- Preserve terminal reasons such as `length` when backends send them in an
+  empty delta frame before usage and `[DONE]`.
+
+## 3.0.3 — 2026-08-13
 
 - Added deterministic human status summaries, safe actionable typed errors, and
   a bounded read-only guide workflow while explicitly preserving JSON/NDJSON and

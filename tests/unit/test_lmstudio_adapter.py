@@ -27,6 +27,7 @@ from omlxc.domain.protocols import (
     EmbeddingRequest,
     ModelRuntimeState,
     OperationStatus,
+    StreamEventKind,
     TuneRequest,
     TuneScope,
     TuneSettings,
@@ -773,6 +774,36 @@ async def test_stream_done_without_visible_content_fails_closed() -> None:
     assert events[0].kind.value == "error"
     assert events[0].error is not None
     assert events[0].error.code is AdapterErrorCode.BAD_RESPONSE
+
+
+@pytest.mark.asyncio
+async def test_stream_preserves_finish_reason_from_empty_terminal_frame() -> None:
+    body = (
+        'data: {"choices":[{"delta":{"content":"partial"}}]}\n\n'
+        'data: {"usage":{"prompt_tokens":2,"completion_tokens":1,"total_tokens":3},'
+        '"choices":[]}\n\n'
+        'data: {"choices":[{"delta":{},"finish_reason":"length"}]}\n\n'
+        "data: [DONE]\n\n"
+    )
+    adapter = LmStudioAdapter(
+        backend_id="lm",
+        base_url="https://node.invalid:1234",
+        transport=httpx.MockTransport(lambda _request: httpx.Response(200, content=body)),
+    )
+    request = ChatRequest(
+        request_id="req-stream-length",
+        model="model-a",
+        messages=(ChatMessage(role="user", content="hello"),),
+    )
+
+    events = [event async for event in adapter.stream_chat(request)]
+
+    assert [event.kind for event in events] == [
+        StreamEventKind.CONTENT,
+        StreamEventKind.USAGE,
+        StreamEventKind.DONE,
+    ]
+    assert events[-1].finish_reason == "length"
 
 
 @pytest.mark.asyncio

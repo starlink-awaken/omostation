@@ -1143,6 +1143,7 @@ class LmStudioAdapter:
         endpoint = "/v1/chat/completions"
         emitted_content = False
         saw_data = False
+        finish_reason: str | None = None
         reasoning_filter = ReasoningFilter()
         decoder = SSEDecoder()
         try:
@@ -1163,11 +1164,14 @@ class LmStudioAdapter:
                     async for chunk in response.aiter_bytes():
                         for data in decoder.feed(chunk):
                             saw_data = True
-                            events, emitted_content, complete = self._stream_frame_events(
-                                request_id=request.request_id,
-                                data=data,
-                                reasoning_filter=reasoning_filter,
-                                emitted_content=emitted_content,
+                            events, emitted_content, complete, finish_reason = (
+                                self._stream_frame_events(
+                                    request_id=request.request_id,
+                                    data=data,
+                                    reasoning_filter=reasoning_filter,
+                                    emitted_content=emitted_content,
+                                    finish_reason=finish_reason,
+                                )
                             )
                             for event in events:
                                 yield event
@@ -1186,11 +1190,12 @@ class LmStudioAdapter:
                     return
                 for data in finish.events:
                     saw_data = True
-                    events, emitted_content, complete = self._stream_frame_events(
+                    events, emitted_content, complete, finish_reason = self._stream_frame_events(
                         request_id=request.request_id,
                         data=data,
                         reasoning_filter=reasoning_filter,
                         emitted_content=emitted_content,
+                        finish_reason=finish_reason,
                     )
                     for event in events:
                         yield event
@@ -1262,7 +1267,8 @@ class LmStudioAdapter:
         data: str,
         reasoning_filter: ReasoningFilter,
         emitted_content: bool,
-    ) -> tuple[tuple[StreamEvent, ...], bool, bool]:
+        finish_reason: str | None,
+    ) -> tuple[tuple[StreamEvent, ...], bool, bool, str | None]:
         if data.strip() == "[DONE]":
             events: list[StreamEvent] = []
             remaining, unclosed = reasoning_filter.finish()
@@ -1276,6 +1282,7 @@ class LmStudioAdapter:
                     (self._stream_error(request_id, error, emitted_content=emitted_content),),
                     emitted_content,
                     True,
+                    finish_reason,
                 )
             if remaining:
                 emitted_content = True
@@ -1297,16 +1304,18 @@ class LmStudioAdapter:
                     (self._stream_error(request_id, error, emitted_content=False),),
                     False,
                     True,
+                    finish_reason,
                 )
             events.append(
                 StreamEvent(
                     kind=StreamEventKind.DONE,
                     request_id=request_id,
+                    finish_reason=finish_reason,
                     emitted_content=emitted_content,
                     phase=StreamPhase.COMPLETE,
                 )
             )
-            return tuple(events), emitted_content, True
+            return tuple(events), emitted_content, True, finish_reason
         try:
             parsed = cast(object, json.loads(data))
         except json.JSONDecodeError:
@@ -1318,6 +1327,7 @@ class LmStudioAdapter:
                 (self._stream_error(request_id, error, emitted_content=emitted_content),),
                 emitted_content,
                 True,
+                finish_reason,
             )
         if not isinstance(parsed, dict):
             error = AdapterError(
@@ -1328,6 +1338,7 @@ class LmStudioAdapter:
                 (self._stream_error(request_id, error, emitted_content=emitted_content),),
                 emitted_content,
                 True,
+                finish_reason,
             )
         document = cast(dict[str, object], parsed)
         events: list[StreamEvent] = []
@@ -1344,7 +1355,8 @@ class LmStudioAdapter:
                     ),
                 )
             )
-        content, finish_reason = self._parse_stream_choice(document)
+        content, frame_finish_reason = self._parse_stream_choice(document)
+        finish_reason = frame_finish_reason or finish_reason
         content = reasoning_filter.feed(content)
         if content:
             emitted_content = True
@@ -1353,12 +1365,12 @@ class LmStudioAdapter:
                     kind=StreamEventKind.CONTENT,
                     request_id=request_id,
                     content=content,
-                    finish_reason=finish_reason,
+                    finish_reason=frame_finish_reason,
                     emitted_content=True,
                     phase=StreamPhase.AFTER_CONTENT,
                 )
             )
-        return tuple(events), emitted_content, False
+        return tuple(events), emitted_content, False, finish_reason
 
     @staticmethod
     def _parse_stream_choice(document: Mapping[str, object]) -> tuple[str, str | None]:

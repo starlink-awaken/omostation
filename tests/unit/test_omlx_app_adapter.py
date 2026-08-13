@@ -746,6 +746,27 @@ async def test_sse_framing_supports_multiline_data_comments_fields_and_crlf() ->
 
 
 @pytest.mark.asyncio
+async def test_stream_preserves_finish_reason_from_empty_terminal_frame() -> None:
+    body = (
+        sse_content_frame("partial")
+        + 'data: {"usage":{"prompt_tokens":2,"completion_tokens":1,"total_tokens":3},'
+        '"choices":[]}\n\n'
+        + 'data: {"choices":[{"delta":{},"finish_reason":"length"}]}\n\n'
+        + "data: [DONE]\n\n"
+    )
+    adapter = make_adapter(httpx.MockTransport(lambda _request: httpx.Response(200, content=body)))
+
+    events = [event async for event in adapter.stream_chat(chat_request())]  # type: ignore[attr-defined]
+
+    assert [event.kind for event in events] == [
+        StreamEventKind.CONTENT,
+        StreamEventKind.USAGE,
+        StreamEventKind.DONE,
+    ]
+    assert events[-1].finish_reason == "length"
+
+
+@pytest.mark.asyncio
 async def test_sse_framing_decodes_utf8_split_across_byte_chunks() -> None:
     body = ('data: {"choices":[{"delta":{"content":"你好"}}]}\n\ndata: [DONE]\n\n').encode()
     split_at = body.index("你".encode()) + 1

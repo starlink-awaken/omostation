@@ -233,7 +233,62 @@ async def test_sse_prefetches_final_failover_metadata_and_emits_unique_done(
     assert data_lines.count("[DONE]") == 1
     chunks = [json.loads(line) for line in data_lines[:-1]]
     assert chunks[0]["choices"][0]["delta"]["content"] == "hello"
+    assert chunks[-1]["choices"] == [{"index": 0, "delta": {}, "finish_reason": "stop"}]
     assert inference.stream.closed
+
+
+@pytest.mark.asyncio
+async def test_sse_preserves_length_finish_reason_after_usage(
+    transport: httpx.ASGITransport, inference: FakeInferenceService
+) -> None:
+    inference.stream = FakeStream(
+        (
+            StreamEvent(
+                kind=StreamEventKind.CONTENT,
+                request_id="unused",
+                content="partial",
+                emitted_content=True,
+                phase=StreamPhase.AFTER_CONTENT,
+                placement_id="placement-final",
+                backend_id="backend-final",
+            ),
+            StreamEvent(
+                kind=StreamEventKind.USAGE,
+                request_id="unused",
+                usage=TokenUsage(prompt_tokens=2, completion_tokens=1, total_tokens=3),
+                emitted_content=True,
+                phase=StreamPhase.AFTER_CONTENT,
+                placement_id="placement-final",
+                backend_id="backend-final",
+            ),
+            StreamEvent(
+                kind=StreamEventKind.DONE,
+                request_id="unused",
+                finish_reason="length",
+                emitted_content=True,
+                phase=StreamPhase.COMPLETE,
+                placement_id="placement-final",
+                backend_id="backend-final",
+            ),
+        )
+    )
+
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            json={
+                "model": "local/model",
+                "messages": [{"role": "user", "content": "hello"}],
+                "stream": True,
+            },
+        )
+
+    assert response.status_code == 200
+    data_lines = [line[6:] for line in response.text.splitlines() if line.startswith("data: ")]
+    assert data_lines[-1] == "[DONE]"
+    chunks = [json.loads(line) for line in data_lines[:-1]]
+    assert chunks[-2]["choices"] == []
+    assert chunks[-1]["choices"] == [{"index": 0, "delta": {}, "finish_reason": "length"}]
 
 
 @pytest.mark.asyncio
@@ -281,9 +336,7 @@ async def test_post_token_stream_error_is_structured_without_replay(
     assert "partial" in response.text
     assert '"type":"stream_error"' in response.text
     chunks = [
-        json.loads(line[6:])
-        for line in response.text.splitlines()
-        if line.startswith("data: ")
+        json.loads(line[6:]) for line in response.text.splitlines() if line.startswith("data: ")
     ]
     assert chunks[-1]["error"]["partial_result"] == {
         "error_code": "stream_interrupted",
@@ -292,10 +345,13 @@ async def test_post_token_stream_error_is_structured_without_replay(
     }
     assert "secret backend detail" not in response.text
     assert "[DONE]" not in response.text
-    assert sum(
-        chunk.get("choices", [{}])[0].get("delta", {}).get("content") == "partial"
-        for chunk in chunks
-    ) == 1
+    assert (
+        sum(
+            chunk.get("choices", [{}])[0].get("delta", {}).get("content") == "partial"
+            for chunk in chunks
+        )
+        == 1
+    )
     assert inference.stream.closed
 
 
@@ -315,9 +371,7 @@ async def test_first_stream_prepare_error_matches_nonstream_typed_partial_result
                 emitted_content=False,
                 phase=StreamPhase.BEFORE_CONTENT,
                 prepare_rejections=(
-                    PrepareRejection(
-                        placement_id="placement-a", reason=PrepareRejectionCode.STALE
-                    ),
+                    PrepareRejection(placement_id="placement-a", reason=PrepareRejectionCode.STALE),
                     PrepareRejection(
                         placement_id="placement-b",
                         reason=PrepareRejectionCode.CAPABILITY,
