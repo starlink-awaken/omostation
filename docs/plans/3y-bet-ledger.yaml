@@ -7,7 +7,7 @@ schema_version: 1
 ---
 meta:
   horizon: 2026H2-2029
-  total_bets: 85
+  total_bets: 86
   windows:
   - Y1Q1
   - Y1Q2
@@ -2474,6 +2474,72 @@ bets:
   circuit_breaker: >-
     无法固定到 loopback AetherForge+omlxc/coding、需要复制用户凭证/配置、必须启用工具/规则/PTY/LSP、
     出现不可回收进程或配置/Workspace 写入时立即停止；保持 declared，只交付脱敏诊断
+  retro: required
+- id: BET-Y1Q2-T1-14
+  track: T5-ORCH
+  window: Y1Q2
+  title: Orchestrator-neutral WorkPacket delivery contract wired into OMO truth
+  appetite: 1 day
+  priority: P0
+  status: done
+  completed_at: '2026-08-13'
+  goal: >-
+    复用 ECOS 既有 WorkPacket、CompletionManifest 与 VerificationReceipt，建立外部编排器候选交付
+    到 OMO EvidenceRecorded、独立验证和 WorkflowVerified 的最小生产链；Orca、Kandev、Multica、
+    Ruflo 只作为可替换运输层，Workspace 继续拥有任务、范围、证据与完成判定。
+  non_goals:
+  - 启动、联网或安装 Kandev，接入其 MCP/API/ACP，或接第二个 adapter
+  - 修改 ECOS M2、Workflow Mesh 状态机、Ledger DDL、Agent Workflow run schema
+  - 新增 Cockpit/UI/BOS/Agora/MCP/CLI 入口、task queue、scheduler、watchdog、自动 retry/merge/promotion
+  - R2/R3、多用户、跨主机、分布式并发、exactly-once 或真实外部副作用
+  done_when:
+  - adapter 元数据和 external task 状态不进入 WorkPacket 规范 hash，跨运输平台保持同一合同身份
+  - >-
+      schema-valid CompletionManifest 经 Kandev 离线 fixture 映射后，成功候选在同一 workflow run 上
+      形成 EvidenceRecorded；VerificationReceipt accept 后才形成 WorkflowVerified
+  - packet hash 篡改、changed path 越界、manifest 冲突、transport failure 均 fail-closed 且不产生虚假 verified
+  - 同一 external receipt 与 verification receipt 重放幂等，冲突重放拒绝
+  - ECOS 既有合同回归、OMO Mesh/receipt 回归、新增端到端与独立只读 reviewer 全部通过
+  verify:
+  - cmd: >-
+      cd projects/omo && PYTHONPATH=src:../ecos/src uv run --no-project --with pytest
+      --with pydantic --with pyyaml python -m pytest tests/test_orchestration_contract.py
+      tests/test_omo_external_receipt.py tests/test_workflow_mesh.py tests/test_workflow_operations.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/ecos && PYTHONPATH=src uv run --no-project --with pytest --with pydantic
+      --with pyyaml python -m pytest tests/test_mof_agent_execution_contracts.py
+      tests/test_work_packet_compiler.py tests/test_sr06_rehearsal.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/omo && uv run --no-project --with ruff ruff check src/omo/orchestration_contract.py
+      tests/test_orchestration_contract.py
+    expect: exit 0
+  - cmd: git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-13-orchestration-contract-mvp-design.md
+  - docs/superpowers/plans/2026-08-13-orchestration-contract-mvp.md
+  - docs/SYSTEM-INDEX.md
+  - projects/omo/src/omo/orchestration_contract.py
+  - projects/omo/tests/test_orchestration_contract.py
+  - projects/omo/.github/workflows/ci.yml
+  - projects/omo/tests/test_mcp_server.py
+  - projects/omo/tests/test_workflow_mesh_task_dogfood.py
+  - projects/omo/tests/unit/test_observability.py
+  - projects/omo
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-14.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-13
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    需要修改 Workflow Mesh 状态机或 Ledger DDL、启动外部服务、接入第二 adapter、生产模块超过两个，
+    或无法证明同一 run 的 EvidenceRecorded→WorkflowVerified 时立即停止并拆包，不得扩大本 BET
   retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
