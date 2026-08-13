@@ -42,13 +42,16 @@ contract.
 as a fallback. It is an uncontrolled historical entrypoint; its convergence is
 tracked independently from the admitted Pi worker transport.
 
-The admitted Codex transport is only
-`bin/gac/codex-worker-adapter.py`. It invokes the fixed
-`codex exec --approve-for-me --ephemeral --ignore-user-config --json` contract
-inside an identity-verified independent clone. Codex is a supervised worker:
-`--approve-for-me` routes approval requests through automatic review, but the
-provider can still require human confirmation. Controller approval and provider
-review are separate evidence fields, and an unresolved review is a failed run.
+The admitted Codex production transport is the Orca-managed interactive Codex
+TUI, observed through `bin/gac/orca-codex-supervisor.py`. Every provider approval
+must remain visible for a human click in the retained terminal. An unresolved
+approval is `awaiting_human_action`, not success and not a terminal failure.
+`bin/gac/codex-worker-adapter.py` remains a bounded diagnostic adapter: its
+`codex exec --approve-for-me --ephemeral --ignore-user-config --json` path cannot
+carry a human approval response or resume the same ephemeral session, so it must
+fail closed on an approval request and must not be used as the T1-18 production
+execution path. Controller approval and provider approval are separate evidence
+fields.
 The flag is not permission to use `--dangerously-bypass-approvals-and-sandbox`,
 change the sandbox, add arbitrary arguments, or run outside task-declared write
 surfaces. The adapter must fail closed on timeout, malformed output,

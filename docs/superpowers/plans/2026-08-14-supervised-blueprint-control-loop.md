@@ -4,15 +4,15 @@
 
 **Goal:** Build one production OMO control-loop entrypoint that deterministically compiles an accepted candidate BET into a WorkPacket, obtains explicit human release, dispatches and observes a supervised Codex worker, collects a contract-bound CompletionManifest, independently verifies it, and rolls back a rejected candidate to the exact baseline.
 
-**Architecture:** OMO remains the single control-plane truth and reuses the existing BET ledger, Task YAML, Workflow Mesh, worker admission, ECOS contracts, and bounded Codex adapter. A focused `BlueprintControlService` coordinates these existing components; it writes only projection/evidence artifacts under the existing worker-run surface. Orca and external agents remain transports and never decide completion.
+**Architecture:** OMO remains the single control-plane truth and reuses the existing BET ledger, Task YAML, Workflow Mesh, worker admission, and ECOS contracts. A focused `BlueprintControlService` freezes the baseline, starts an Orca-managed interactive Codex TUI, pauses for the user's click, then collects Git and acceptance evidence after the same worker settles. It writes only projection/evidence artifacts under the existing worker-run surface. Orca remains transport and never decides completion.
 
-**Tech Stack:** Python 3.13, PyYAML, Pydantic-generated ECOS models, OMO Workflow Mesh, Git binary patches, Codex CLI JSONL, pytest, Ruff.
+**Tech Stack:** Python 3.13, PyYAML, Pydantic-generated ECOS models, OMO Workflow Mesh, Git binary patches, Orca CLI, interactive Codex TUI, pytest, Ruff.
 
 ## Global Constraints
 
-- Codex is a supervised worker. `--approve-for-me` activates automatic review but does not prove universal no-click approval.
+- Codex is manually supervised. The production path uses an Orca-retained interactive TUI; every provider approval is clicked by the user. The bounded `exec --approve-for-me --ephemeral` adapter is diagnostic-only because it cannot carry or resume an interactive approval.
 - `Orca ready`, `workerStart ready`, `tui-idle`, `dispatch_input=accepted`, and process exit 0 never imply model readiness or completion.
-- Controller approval, provider review, process start, model-output observation, candidate collection, and independent verification remain distinct states.
+- Controller approval, interactive session start, `awaiting_human_action`, provider approval, model-output observation, candidate collection, and independent verification remain distinct states.
 - Task YAML is the only task SSOT; the BET ledger is the only strategy/specification-acceptance SSOT; Workflow Mesh is the only execution/verification event truth.
 - Reuse ECOS `WorkPacket`, `CompletionManifest`, `VerificationReceipt`, `canonicalize`, and `compute_packet_hash`; do not add or alter ECOS M2 in this BET.
 - Do not add a scheduler, daemon, watchdog, task database, blueprint-run database, second ledger, second live adapter, Cockpit UI, account switcher, or automatic merge.
@@ -61,7 +61,7 @@ Add `BET-Y1Q2-T1-18`, increment `meta.total_bets`, and copy the spec SHA-256 int
 accepted_specifications:
 - spec_ref: repo://docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md
   spec_version: 1.0.0
-  content_digest: sha256:4c74ce83bff82e4b55ee61024a6b53471e342606842b4ce41cba107109b95d36
+  content_digest: sha256:5e021ca689e809316f550e463e28175fbf5c506ad89e4d72315205e78bc57936
 ```
 
 Use the design's eight acceptance criteria verbatim, set `human_gate: true`, `risk_level: L1`, appetite `3 days`, and dependency `BET-Y1Q2-T1-17`.
@@ -71,9 +71,11 @@ Use the design's eight acceptance criteria verbatim, set `human_gate: true`, `ri
 Replace claims that `--approve-for-me` removes interactive prompts with:
 
 ```text
-Codex is supervised. --approve-for-me routes approval requests through automatic review;
-provider review can still require human confirmation. Controller approval and provider
-review are separate evidence fields, and an unresolved review is a failed run.
+Codex production execution is manually supervised through an Orca-retained interactive
+TUI. The user must click provider approvals in that same terminal. --approve-for-me is
+diagnostic-only and cannot prove or carry the click. Controller approval and provider
+approval are separate evidence fields; an unresolved provider approval remains
+awaiting_human_action.
 ```
 
 In `workers.yaml`, add a `supervision` map to the existing Codex record:
@@ -81,8 +83,9 @@ In `workers.yaml`, add a `supervision` map to the existing Codex record:
 ```yaml
 supervision:
   controller_approval: required
-  provider_review: may_require_human
-  readiness_evidence: model_output_observed
+  provider_review: manual_click_required
+  waiting_state: awaiting_human_action
+  readiness_evidence: settled_worker_done_and_transcript_digest
   transport_ack_is_readiness: false
 ```
 
@@ -293,15 +296,17 @@ git -C projects/omo add src/omo/blueprint_control.py src/omo/workflow_dispatch.p
 git -C projects/omo commit -m "feat: add supervised blueprint controller"
 ```
 
-### Task 4: Extend the bounded Codex receipt for supervised collection and rollback
+### Task 4: Keep the bounded exec adapter fail-closed and add the Orca interactive supervisor
 
 **Files:**
 - Modify: `bin/gac/codex-worker-adapter.py`
 - Modify: `tests/unit/gac/test_codex_worker_adapter.py`
+- Create: `bin/gac/orca-codex-supervisor.py`
+- Create: `tests/unit/gac/test_orca_codex_supervisor.py`
 
 **Interfaces:**
-- Consumes: fixed Codex exec argv and transaction/delta logic from T1-17.
-- Produces: a privacy-safe receipt with model-output evidence, supervision fields, patch digest, baseline/post identities, and durable rollback material requested by Task 5.
+- Consumes: the T1-17 diagnostic exec adapter and Orca's interactive Codex worker contract.
+- Produces: a diagnostic adapter that fails on approval, plus a thin start/collect supervisor that binds OMO and Orca identities without storing prompt/transcript content.
 
 - [ ] **Step 1: Write failing receipt tests**
 
@@ -310,7 +315,7 @@ Add tests for:
 ```python
 assert receipt["supervision"]["controller_approval"] == "granted"
 assert receipt["supervision"]["provider_review"] in {
-    "completed_without_observed_escalation", "human_required", "unknown", "timed_out"
+    "human_required", "unknown", "timed_out"
 }
 assert receipt["readiness"] == "model_output_observed"
 assert receipt["baseline_digest"].startswith("sha256:")
@@ -321,16 +326,17 @@ Also cover timeout/partial JSONL as `timed_out` or `human_required` when an appr
 
 - [ ] **Step 2: Implement minimal event classification and rollback evidence**
 
-Parse only documented/observed JSONL event types; unknown events remain unknown. Do not infer human approval from silence. A successful final assistant message yields `model_output_observed` and `completed_without_observed_escalation`, not universal approval.
+Parse only documented/observed JSONL event types; unknown events remain unknown. Any approval request makes the diagnostic exec adapter fail closed before applying a patch. It never claims the user clicked or that the ephemeral session can resume.
 
-The adapter receipt stores only the forward patch SHA-256 and baseline/post identities. The controller independently measures the applied delta from Git and persists the rollback artifact; the adapter does not emit raw patch bytes through stdout or the receipt. Preserve all existing secret, path, prompt and raw-output redaction rules.
+The Orca supervisor must run `status -> run-create -> task-create -> worker-start`, bind workflow/task/packet/hash/OMO dispatch/prompt digest, and return `awaiting_human_action`. Its collect side accepts only the same worker's settled+succeeded+worker_done plus a non-empty transcript, and stores only the transcript digest. It never treats ready/input accepted as completion and never stores prompt/transcript content.
 
 - [ ] **Step 3: Run adapter regression**
 
 ```bash
 uv run --no-project --with pytest --with pyyaml python -m pytest tests/unit/gac/test_codex_worker_adapter.py -q
-uv run --with ruff ruff check bin/gac/codex-worker-adapter.py tests/unit/gac/test_codex_worker_adapter.py
-git diff --check -- bin/gac/codex-worker-adapter.py tests/unit/gac/test_codex_worker_adapter.py
+uv run --no-project --with pytest python -m pytest tests/unit/gac/test_orca_codex_supervisor.py -q
+uv run --with ruff ruff check bin/gac/codex-worker-adapter.py bin/gac/orca-codex-supervisor.py tests/unit/gac/test_codex_worker_adapter.py tests/unit/gac/test_orca_codex_supervisor.py
+git diff --check -- bin/gac/codex-worker-adapter.py bin/gac/orca-codex-supervisor.py tests/unit/gac/test_codex_worker_adapter.py tests/unit/gac/test_orca_codex_supervisor.py
 ```
 
 Expected: all pass and existing transactional rollback tests remain green.
@@ -338,11 +344,11 @@ Expected: all pass and existing transactional rollback tests remain green.
 - [ ] **Step 4: Commit the root adapter slice**
 
 ```bash
-git add bin/gac/codex-worker-adapter.py tests/unit/gac/test_codex_worker_adapter.py
-git commit -m "feat: expose supervised Codex execution evidence"
+git add bin/gac/codex-worker-adapter.py bin/gac/orca-codex-supervisor.py tests/unit/gac/test_codex_worker_adapter.py tests/unit/gac/test_orca_codex_supervisor.py
+git commit -m "feat: supervise interactive Codex through Orca"
 ```
 
-### Task 5: Collect, independently verify, and compensate rejected candidates
+### Task 5: Pause, collect, independently verify, and compensate rejected candidates
 
 **Files:**
 - Modify: `projects/omo/src/omo/blueprint_control.py`
@@ -352,7 +358,7 @@ git commit -m "feat: expose supervised Codex execution evidence"
 
 **Interfaces:**
 - Consumes: Task 3 dispatch projection, Task 4 adapter receipt, ECOS manifest/receipt builders, generic `record_candidate`.
-- Produces: `execute_and_collect(...)`, `verify_candidate(...)`, and `rollback_candidate(...)` with idempotent Mesh evidence.
+- Produces: `start_supervised_execution(...)`, `collect_supervised_execution(...)`, `verify_candidate(...)`, and `rollback_candidate(...)` with idempotent Mesh evidence. The old bounded `execute_and_collect(...)` remains test/diagnostic compatibility only and is not the production CLI path.
 
 - [ ] **Step 1: Write the golden-path RED test**
 
@@ -371,7 +377,7 @@ Cover receipt digest drift, wrong dispatch/assignment/packet, out-of-scope path,
 
 - [ ] **Step 3: Implement execute and collect**
 
-`execute_and_collect` must append `StepStarted` before launching, call the bounded runner with a temp receipt, measure Git delta directly against its pre-execution baseline, confirm the adapter patch digest, persist the measured patch as a Git blob, build a schema-valid candidate manifest, append `WorkflowSucceeded`, and call `record_candidate`. Idempotent replay returns the existing evidence; conflicting replay raises `manifest_conflict`.
+`start_supervised_execution` freezes the Git baseline before invoking the Orca supervisor, appends `StepStarted` only after a valid worker-start receipt, persists an atomic execution projection, and returns `awaiting_human_action`. `collect_supervised_execution` reloads and binds that projection, rejects active/unknown workers without candidate events, accepts only the settled worker receipt, then directly measures Git delta and one deterministic command per Task acceptance criterion. Only after those direct measurements may it build the manifest, append `WorkflowSucceeded`, and call `record_candidate`.
 
 - [ ] **Step 4: Write verifier and rollback RED tests**
 
@@ -484,7 +490,7 @@ Then `omo blueprint dispatch` creates the packet-bound WorkflowRequested/Admitte
 
 The task changes one declared documentation fixture, requires explicit human approval, and has one deterministic verify command. Record baseline tree/diff digest before release.
 
-Create an Orca Run/Task/Dispatch using the Codex worker and the fixed integration checkout. Perform any Codex UI confirmation manually if requested. Record this as `provider_review=human_required` or `completed_without_observed_escalation`; never call it unattended. Capture only identifiers/digests, not terminal transcripts or prompts. Orca `ready`, `tui-idle`, or `input_accepted` remains transport evidence only.
+Run `omo blueprint execute`, which creates the Orca Run/Task/Dispatch and retained interactive Codex terminal, then returns `awaiting_human_action`. The user opens that exact terminal and clicks the Codex approval. Until that happens, repeated collect calls must remain non-success and emit no candidate evidence. After the same worker emits `worker_done`, collect stores only identifiers and digests. Orca `ready`, `tui-idle`, or `input_accepted` remains transport evidence only.
 
 - [ ] **Step 5: Collect and independently verify**
 

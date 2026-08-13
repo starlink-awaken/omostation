@@ -2805,14 +2805,16 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md
     spec_version: 1.0.0
-    content_digest: sha256:4c74ce83bff82e4b55ee61024a6b53471e342606842b4ce41cba107109b95d36
+    content_digest: sha256:5e021ca689e809316f550e463e28175fbf5c506ad89e4d72315205e78bc57936
   goal: >-
     将已落地的 ECOS WorkPacket/CompletionManifest/VerificationReceipt、OMO admission/Workflow Mesh、
-    Codex bounded adapter 与 Orca transport 接成一条受监督的生产纵切：candidate BET 确定性编译、
-    人工 release、真实模型输出、实际 diff/receipt 收集、独立验证，以及 reject 后可证明的补偿回滚。
+    Orca 托管的交互 Codex TUI 接成一条人工确认的生产纵切：candidate BET 确定性编译、
+    人工 release、同一 terminal 手点 provider approval、真实模型输出、实际 diff/receipt 收集、
+    独立验证，以及 reject 后可证明的补偿回滚。
   non_goals:
   - 新建 WorkPacket/M2、task/blueprint database、event ledger、scheduler、daemon、watchdog 或第二任务真相
   - 把 --approve-for-me、Orca ready、tui-idle、input accepted、进程 exit 0 或 Agent 自报 done 当作无人值守/完成证据
+  - 把等待用户点击当成失败，或在未点击时丢弃/重建 Codex 会话
   - 接入第二 live adapter、Kandev/Ruflo/Multica 生产控制面、Cockpit UI、账号/额度自动调度或自动 merge
   - 修复 Pi/Oh My Pi 的首次设置/skill metadata；本轮只保留其 false-ready quarantine 证据
   - 邮件、日历、任务、家庭、多租户、跨主机、恶意同机、exactly-once 或任何真实业务外部副作用
@@ -2824,8 +2826,9 @@ bets:
       dispatch 必须在人工批准后才产生 request/admission/StepDispatched；结果只称
       `transport_accepted`。
   - >-
-      一次真实 supervised Codex R1 非 marker 变更产生有效 model output、实际 diff、adapter
-      receipt 和 CompletionManifest；任何额外手点确认如实记录，不声称无人值守。
+      一次真实 supervised Codex R1 非 marker 变更在同一 Orca terminal 经用户手点确认；未点击时
+      稳定保持 awaiting_human_action，点击后产生有效 model output、实际 diff、transport receipt
+      和 CompletionManifest，不声称无人值守。
   - >-
       collect 严格绑定 BET/spec/packet/assignment/admission/dispatch/receipt/diff/claims；越权、
       篡改、缺 receipt 时无 EvidenceRecorded/WorkflowVerified。
@@ -2851,6 +2854,10 @@ bets:
       tests/unit/gac/test_codex_worker_adapter.py -q
     expect: exit 0
   - cmd: >-
+      uv run --no-project --with pytest python -m pytest
+      tests/unit/gac/test_orca_codex_supervisor.py -q
+    expect: exit 0
+  - cmd: >-
       cd projects/omo && uv run ruff check src/omo/blueprint_control.py
       src/omo/orchestration_contract.py src/omo/workflow_mesh.py src/omo/cli.py
       tests/test_blueprint_control.py tests/test_orchestration_contract.py tests/test_workflow_mesh.py
@@ -2868,7 +2875,9 @@ bets:
   - .omo/_truth/registry/workers.yaml
   - .omo/standards/agent-cli-worker-collaboration.md
   - bin/gac/codex-worker-adapter.py
+  - bin/gac/orca-codex-supervisor.py
   - tests/unit/gac/test_codex_worker_adapter.py
+  - tests/unit/gac/test_orca_codex_supervisor.py
   - projects/omo/src/omo/blueprint_control.py
   - projects/omo/src/omo/cli.py
   - projects/omo/src/omo/orchestration_contract.py

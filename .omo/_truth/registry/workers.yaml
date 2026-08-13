@@ -172,16 +172,20 @@ workers:
     class: external_agent_cli
     transports:
       cli_prompt:
-        command: '/usr/bin/python3 "{workspace_root}/bin/gac/codex-worker-adapter.py" run --execute --timeout-seconds 900 --workspace-root "{workspace_root}" --prompt "{prompt}"'
+        # The Blueprint controller supplies the immutable identity arguments.
+        # A legacy direct launch intentionally exits non-zero on missing args.
+        command: '/usr/bin/python3 "{workspace_root}/bin/gac/orca-codex-supervisor.py" start'
     capabilities: [code_change, test_execution, verification]
     require_explicit_capabilities: true
     allowed_operation_level: L1
     may_prepare_levels: [L2]
     supervision:
       controller_approval: required
-      provider_review: may_require_human
-      readiness_evidence: model_output_observed
+      provider_review: manual_click_required
+      waiting_state: awaiting_human_action
+      readiness_evidence: settled_worker_done_and_transcript_digest
       transport_ack_is_readiness: false
+      controller_direct_start_required: true
     forbidden_domains: [apple, wechat, smb, family, media]
     write_scope:
       mode: task_declared_only

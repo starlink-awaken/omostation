@@ -20,11 +20,13 @@ ECOS 已经拥有 `WorkPacket`、`CompletionManifest` 和
 文件差异、候选清单和独立验证接成一条链。现有唯一 adapter 是不可 live dispatch 的
 Kandev fixture，不能继续拿 fixture 代替生产闭环。
 
-同时，T1-17 对 Codex 的描述过度泛化。Codex CLI 0.147.0 的
-`--approve-for-me` 只表示把审批请求交给自动审查，并不承诺所有调用都无人值守。
-本轮把 Codex 定义为 **supervised worker**：OMO 的人工 release 是启动前硬门；Codex
-内部自动审查可能继续升级到人工确认，任何未解决审批或超时都必须失败，不能称
-`unattended`、`zero-click` 或 `ready`。
+同时，T1-17 对 Codex 的描述过度泛化。Codex CLI 0.147.0 的非交互 `exec`
+模式不支持在同一 thread 中回传 command/file/permission approval；当前 bounded adapter
+又使用 `--ephemeral`，审批后也无法恢复同一会话。`--approve-for-me` 只是自动审查，
+不能替代用户手点。本轮把 Codex 定义为 **manually supervised worker**：OMO 的人工
+release 是启动前硬门；Orca 启动并保留 Codex 交互 TUI，provider approval 必须由用户在
+同一 terminal 点击。未处理的审批保持 `awaiting_human_action`，不能称 `failed`、
+`unattended`、`zero-click`、`ready` 或 `completed`。
 
 Orca 运行态也已证明 `worker ready` 和 `input_accepted` 只是 transport ack：OMP
 卡在首次模型设置、Pi 卡在 skill metadata 错误时，两者仍曾报告 ready/input accepted。
@@ -40,8 +42,9 @@ Orca 运行态也已证明 `worker ready` 和 `input_accepted` 只是 transport 
 - Workflow Mesh：request、admission、dispatch、execution、evidence、verification、
   compensation 的唯一事件真相；
 - OMO worker registry/admission：worker 身份、capability 和 operation-level 门；
-- Codex bounded adapter：独立 clone、固定 argv、进程组回收、delta 审计和脱敏回执；
-- Orca：Run/Task/Dispatch/terminal 的运输与人工可见控制，不拥有完成真相。
+- Orca Codex supervisor：交互 TUI、人工点击、Run/Task/Dispatch/terminal 绑定与脱敏回执；
+- bounded Codex exec adapter：只保留为诊断/失败检测，不作为本轮生产执行器；
+- Orca：运输与人工可见控制，不拥有完成真相。
 
 不新增 blueprint task database、第二个 event ledger、第二套 WorkPacket、scheduler、
 watchdog 或平台私有状态机。`.omo/workers/runs` 中的 packet、dispatch、receipt、manifest
@@ -57,7 +60,8 @@ spec_accepted
   -> controller_approval_required
   -> controller_approval_granted
   -> transport_accepted
-  -> process_started
+  -> interactive_session_started
+  -> awaiting_human_action
   -> model_output_observed
   -> candidate_collected
   -> independently_verified
@@ -69,22 +73,25 @@ spec_accepted
 1. `controller_approval_granted` 必须来自 Task `approval_ref` 指向的受治理批准记录；
    Codex 任务即使是 L1，也必须 `human_approval_required: true`。
 2. `transport_accepted` 仅表示 OMO/Orca 已把 immutable packet 交给 transport。
-3. `process_started` 只表示 bounded adapter 已启动受控子进程。
-4. `model_output_observed` 只在解析到有效 Codex JSONL 最终 assistant message 后成立。
-5. `candidate_collected` 只在实际 git delta、adapter receipt、AC claims、checks、
+3. `interactive_session_started` 只表示 Orca 已创建并保留 Codex TUI；`ready` 或
+   `input_accepted` 仍不是模型证据。
+4. `awaiting_human_action` 表示用户尚未在同一 TUI 完成 provider approval；它是可恢复
+   暂停态，而不是失败。
+5. `model_output_observed` 只在 Orca 报告 settled+succeeded+worker_done，且可读取非空
+   transcript 摘要时成立；系统只持久化摘要哈希，不持久化原文。
+6. `candidate_collected` 只在实际 git delta、transport receipt、AC claims、checks、
    durable artifact refs 全部绑定后成立。
-6. `independently_verified` 只由不同执行身份的 read-only direct measurement 产生；
+7. `independently_verified` 只由不同执行身份的 read-only direct measurement 产生；
    executor 的 exit 0、自报 done、Orca ready/input ack 均无此权限。
 
-Codex provider review 单独投影为：
+Codex provider approval 单独投影为：
 
 ```text
-auto_review_enabled | completed_without_observed_escalation |
-human_required | unknown | timed_out
+awaiting_human_action | confirmed | declined | timed_out | unknown
 ```
 
-该字段不得与 controller approval 合并，也不得从 `--approve-for-me` 推断 universal
-approval。
+该字段不得与 controller approval 合并，也不得从 `--approve-for-me`、Orca ready 或
+terminal idle 推断人工确认已经完成。
 
 ## 4. 生产接口
 
@@ -122,12 +129,14 @@ omo blueprint rollback --dispatch <json>
 
 ### 4.3 execute/collect
 
-- 从已 admit 的 codex worker transport 构建 shell=false argv，追加由控制器创建的安全
-  temp receipt 路径；不允许任意 argv/profile/model/add-dir。
-- 运行前记录 clean baseline tree/diff identity；运行后从 git 直接测量 changed paths、
+- `execute` 在任何外部启动前冻结 baseline tree/diff identity，经 shell=false 薄适配器
+  创建 Orca Run/Task/Dispatch 和交互 Codex TUI，持久化绑定投影，然后返回
+  `awaiting_human_action`；不得同步等待或绕过人工点击。
+- `collect` 只重载同一投影并核对 Orca worker settled+succeeded+worker_done 及 transcript
+  digest；运行后从 git 直接测量 changed paths、
   binary patch、line/file budget 和 pre/post hash。
-- 只有有效最终 model output 才写 `model_output_observed`；adapter exit 0 不充分。
-- controller 把 adapter receipt、实际 delta、checks、AC claims 和 git objects 编译为
+- 只有有效 settled worker output 才写 `model_output_observed`；transport exit 0 不充分。
+- controller 把 Orca transport receipt、实际 delta、逐项直接测量、AC claims 和 git objects 编译为
   ECOS CompletionManifest。manifest 不接受 `done`。
 - 在合同、scope、budget 和 identity 全部通过后追加 `WorkflowSucceeded`，再调用通用
   coordinator 写 `EvidenceRecorded`。有效但最终被 verifier reject 的候选证据保留，
@@ -183,8 +192,9 @@ acceptance claims + check receipts + artifact refs
    或 Task 无人工 gate 时均拒绝且零 Mesh 写入。
 2. dispatch 必须在人工批准后才产生 request/admission/StepDispatched；结果只称
    `transport_accepted`。
-3. 一次真实 supervised Codex R1 非 marker 变更产生有效 model output、实际 diff、adapter
-   receipt 和 CompletionManifest；任何额外手点确认如实记录，不声称无人值守。
+3. 一次真实 supervised Codex R1 非 marker 变更在同一 Orca terminal 中经用户手点确认，
+   产生有效 model output、实际 diff、transport receipt 和 CompletionManifest；未点击时保持
+   `awaiting_human_action`，不声称失败或无人值守。
 4. collect 严格绑定 BET/spec/packet/assignment/admission/dispatch/receipt/diff/claims；越权、
    篡改、缺 receipt 时无 EvidenceRecorded/WorkflowVerified。
 5. 独立 verifier 重放声明命令；只有 accept 写 WorkflowVerified；executor 自验、同一
