@@ -204,4 +204,5 @@
 → [生成的索引](generated/) — `project-layer-index.md`, `agent-gac-rules.md` 等自动生成的文档
 → [近期报告](closeout/) — 2026-07-15 各轮 closeout 记录
 → [运行验证证据](evidence/) — 可重放、脱敏的交付验证回执
+→ [T1-18 Codex 人工确认 canary](evidence/t1-18-codex-dogfood-canary.md) — Orca 交互式 Codex 手动批准验证工件
 → [操作 SOP](operations/) — 运维手册、模板、清单
