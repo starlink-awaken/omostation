@@ -921,3 +921,29 @@ The next bounded iteration is to repair or retire the two malformed user Skill
 files, retry the same read-only `work-weijian` journey when the model endpoint is
 reachable, and record the returned `binding_status`, skill path, and workflow
 path. Default Codex configuration and all Documents content remain unchanged.
+
+## 9. 2026-08-13 Codex Real-Journey Acceptance
+
+The bounded follow-up closed the two open items from the preceding checkpoint
+without changing the default Codex configuration or any Documents content.
+The two IMA child `SKILL.md` files in the local shared Skill catalog received
+only the required `name` and trigger-only `description` frontmatter. A fresh
+Codex app-server inventory then reported 237 parsed Skills and zero parse
+errors. The installed `documents` profile remained unchanged and passed its
+accepted generator check with 13 inventoried MCP servers and 219 disabled
+user-local Skill paths.
+
+A fresh ephemeral `codex --profile documents exec` run then completed with exit
+code zero. The model called exactly one MCP tool: Cockpit
+`domain_context(domain_id="work-weijian")`. The response returned
+`binding.status=ok`, resolved the Skill route to accepted Workspace
+`.agents/skills`, and resolved the Workflow route to accepted Workspace
+`.omo/_truth/registry/agent-workflows.yaml`. No shell tool, local file read, or
+write action was requested by the model.
+
+This is the first current model-originated acceptance proof for the Codex
+Documents profile. It supersedes the earlier connectivity blocker as current
+state while preserving that earlier attempt as historical evidence. The next
+client iteration can move to a fresh Claude domain-tool journey, then the
+Zed/ZCode-compatible client path; ChatGPT web remains a separately provisioned
+public HTTPS or secure-tunnel track.

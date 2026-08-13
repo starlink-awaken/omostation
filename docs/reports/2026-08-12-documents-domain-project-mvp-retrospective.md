@@ -311,3 +311,28 @@ profile filter takes effect. Repairing their YAML frontmatter is the next small
 client-hygiene task, followed by a retry of the exact read-only
 `domain_context(domain_id="work-weijian")` journey when model connectivity is
 available. No Documents domain received a client config or executable artifact.
+
+## 2026-08-13 Codex real-journey reconciliation
+
+The previous section remains the record of the first blocked attempt. Its two
+open conditions are now resolved. The local shared IMA `knowledge-base` and
+`notes` child Skills received valid minimal frontmatter; Codex subsequently
+reported 237 parsed Skills and zero errors. Because both paths were already in
+the generated disabled-user list, the installed `documents` profile did not
+drift and continued to report 13 MCP servers with 219 user-local Skill paths
+disabled.
+
+The fresh-client retry used an ephemeral, read-only Codex execution and asked
+for only `domain_context(domain_id="work-weijian")`. The model issued exactly
+that Cockpit MCP call and exited successfully. Its returned evidence was:
+
+- `binding.status`: `ok`;
+- Skill route: accepted Workspace `.agents/skills`;
+- Workflow route: accepted Workspace
+  `.omo/_truth/registry/agent-workflows.yaml`.
+
+No shell command, local file read, or write tool appeared in the model event
+stream. This closes the Codex profile's current model-originated MCP acceptance
+gap. The profile remains opt-in, the default Codex config remains untouched,
+and Documents domains still contain declarations and content rather than
+client/runtime implementations.
