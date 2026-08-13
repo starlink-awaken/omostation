@@ -88,6 +88,18 @@ clone 私有 identity、启用 `.githooks`。冻结 manifest 是执行基线，�
 任务 SSOT。跨仓交付由 `changeset` 汇总 root 与子仓 SHA；它只生成候选收据，
 不会自行 push 或 merge。
 
+写入型 agent 必须设置 `AGENT_ID=<agent-id>` 并使用独立 clone。tracked hook
+对所有 agent identity 自动启用严格门，拒绝没有独立 clone identity 的 linked
+worktree；改写 `HOME` 不会降级准入。Orca 可注册和打开独立 clone，但 Orca 自己
+创建的 linked worktree 只可作为人类迁移/检查环境，不能承接 agent 写入。
+D2/D3/D5 仅在全员迁移和 72 小时零冲突证据成立后退役。
+
+```bash
+AGENT_ID=<agent-id> \
+  python3 bin/gac/agent-clone.py guard \
+  --workspace "$HOME/agents/<agent-id>/ws" --require-clone --json
+```
+
 ### 2.4 起 workflow（ADR-0203 红线：先 start 再改文件）
 
 ```bash
