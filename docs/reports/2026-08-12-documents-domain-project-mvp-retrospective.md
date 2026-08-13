@@ -336,3 +336,31 @@ stream. This closes the Codex profile's current model-originated MCP acceptance
 gap. The profile remains opt-in, the default Codex config remains untouched,
 and Documents domains still contain declarations and content rather than
 client/runtime implementations.
+
+## 2026-08-13 Zed profile reconciliation
+
+Zed previously had a valid user-level Cockpit MCP entry, but that alone left
+the client free to expose built-in tools and unrelated context-server tools in
+the same agent context. The new Workspace-owned `documents` profile closes that
+configuration gap without adding anything to a Documents domain.
+
+The installed profile has an empty built-in tool map, disables the catch-all
+context-server switch, and enables exactly the four read tools declared by the
+`content-domain` registry profile. Matching per-tool permissions allow those
+read calls without weakening the existing global confirmation rule. The
+installer preserves all unrelated Zed settings, is idempotent, writes mode
+`0600`, and fails closed on caller-owned profile or permission conflicts.
+
+Focused profile, registry-checker, and existing Codex regression tests passed.
+Using the exact Zed Cockpit command and environment, a direct MCP protocol smoke
+initialized successfully, exposed `domain_context`, and returned
+`binding.status=ok` for `work-weijian`. That direct smoke proves the configured
+server contract, not a Zed-originated model journey. The existing Zed process
+started before the settings write, and activating it while macOS remained locked
+did not prove a reload. No attempt was made to bypass authentication, and no Zed
+Agent Panel green-dot or UI tool-call result is claimed.
+
+This completes the Zed configuration MVP. Remaining client work is deliberately
+small and separate: one unlocked Zed model-originated read call, one fresh
+Claude-3p domain-tool call, a dedicated decision for ZCode, and remote connector
+provisioning before any ChatGPT web acceptance claim.
