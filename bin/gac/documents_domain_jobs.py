@@ -40,6 +40,19 @@ _RUNTIME_STATE = {
 }
 _FACTS_AUDIT_READS = ["@工作文档/卫健委/_entities/facts"]
 _FACTS_AUDIT_SCHEMA = "runtime.documents-facts-audit.evidence.v1"
+_CONTROLLER_SHADOW_READS = [
+    "@工作文档/卫健委/_control",
+    "@工作文档/卫健委/_entities",
+    "@工作文档/卫健委/_meta",
+    "@工作文档/卫健委/_runtime",
+    "@工作文档/卫健委/_storage",
+    "@工作文档/卫健委/_knowledge",
+]
+_CONTROLLER_SHADOW_SCHEMA = "runtime.documents-controller-shadow.evidence.v1"
+_CONTROLLER_SHADOW_EVIDENCE_PATH = (
+    "control/evidence/documents-weijian-controller-shadow/"
+    "documents-weijian-controller-shadow.json"
+)
 
 
 def _safe_relative_path(value: object) -> bool:
@@ -150,6 +163,45 @@ def _validate_facts_audit_job(value: dict[str, object], label: str) -> list[str]
     return errors
 
 
+def _validate_controller_shadow_job(value: dict[str, object], label: str) -> list[str]:
+    errors: list[str] = []
+    unknown_fields = sorted(set(value) - _FACTS_AUDIT_JOB_FIELDS)
+    missing_fields = sorted(_FACTS_AUDIT_JOB_FIELDS - set(value))
+    if unknown_fields:
+        errors.append(
+            f"runtime controller shadow job {label} has unknown fields: {', '.join(unknown_fields)}"
+        )
+    if missing_fields:
+        errors.append(
+            f"runtime controller shadow job {label} is missing fields: {', '.join(missing_fields)}"
+        )
+    if value.get("owner") != "runtime-control":
+        errors.append(
+            f"runtime controller shadow job {label} owner must be runtime-control"
+        )
+    if value.get("action") != "shadow_legacy_controller":
+        errors.append(
+            f"runtime controller shadow job {label} action must be shadow_legacy_controller"
+        )
+    if value.get("domain_id") != "work-weijian":
+        errors.append(
+            f"runtime controller shadow job {label} domain_id must be work-weijian"
+        )
+    if value.get("reads") != _CONTROLLER_SHADOW_READS:
+        errors.append(
+            f"runtime controller shadow job {label} reads must declare the six legacy controller planes"
+        )
+    if value.get("evidence_relative_path") != _CONTROLLER_SHADOW_EVIDENCE_PATH:
+        errors.append(
+            f"runtime controller shadow job {label} evidence_relative_path must be {_CONTROLLER_SHADOW_EVIDENCE_PATH}"
+        )
+    if value.get("evidence_schema") != _CONTROLLER_SHADOW_SCHEMA:
+        errors.append(
+            f"runtime controller shadow job {label} evidence_schema must be {_CONTROLLER_SHADOW_SCHEMA}"
+        )
+    return errors
+
+
 def validate_runtime_state(raw: object) -> list[str]:
     """Require the one Runtime state binding that Cockpit can resolve."""
 
@@ -190,6 +242,11 @@ def validate_runtime_jobs(raw: object, domain_ids: Sequence[str]) -> list[str]:
             or value.get("action") == "audit_structured_facts"
         ):
             errors.extend(_validate_facts_audit_job(value, label))
+        elif (
+            value.get("owner") == "runtime-control"
+            or value.get("action") == "shadow_legacy_controller"
+        ):
+            errors.extend(_validate_controller_shadow_job(value, label))
         else:
             errors.extend(_validate_manifest_job(value, label))
     return errors
