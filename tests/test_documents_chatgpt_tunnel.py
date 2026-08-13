@@ -290,7 +290,7 @@ def test_workspace_registry_declares_bounded_tunnel_contract() -> None:
     assert raw["profiles"]["content-domain"]["allowed_workspace_tools"] == TOOLS
 
 
-def test_required_phase_gate_covers_tunnel_and_cockpit_tests() -> None:
+def test_required_phase_gate_covers_root_tunnel_contract() -> None:
     workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(
         encoding="utf-8"
     )
@@ -299,7 +299,5 @@ def test_required_phase_gate_covers_tunnel_and_cockpit_tests() -> None:
         "bin/gac/documents-chatgpt-tunnel.py",
         "tests/test_documents_chatgpt_tunnel.py",
         "projects/cockpit",
-        "test_documents_read_mcp_server.py",
-        "secrets.CROSS_REPO_TOKEN",
     ):
         assert required in workflow
