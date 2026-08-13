@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import tempfile
+import time
 from collections.abc import AsyncIterator
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -212,6 +213,30 @@ def _snapshot() -> PlacementSnapshot:
     )
 
 
+async def _wait_for_job_state(
+    client: httpx.AsyncClient,
+    job_id: str,
+    *,
+    expected: str = "succeeded",
+    timeout_seconds: float = 2.0,
+) -> httpx.Response:
+    """Poll a real UDS job with a bounded wall-clock deadline, not CPU-speed iterations."""
+    deadline = time.monotonic() + timeout_seconds
+    last_state = "unknown"
+    while True:
+        response = await client.get(f"/api/v1/jobs/{job_id}")
+        assert response.status_code == 200
+        last_state = str(response.json()["data"]["state"])
+        if last_state == expected:
+            return response
+        if time.monotonic() >= deadline:
+            pytest.fail(
+                f"job {job_id!r} did not reach {expected!r} within {timeout_seconds}s "
+                f"(last_state={last_state!r})"
+            )
+        await asyncio.sleep(0.01)
+
+
 def _discovery_config(root: Path) -> AppConfig:
     config = _config(root)
     return config.model_copy(
@@ -417,11 +442,7 @@ async def test_production_composition_and_jobs_survive_real_uds_restart() -> Non
                     "/api/v1/models/local%2Fmodel/unload",
                     headers={"Idempotency-Key": "same-key"},
                 )
-                for _ in range(100):
-                    current = await client.get(f"/api/v1/jobs/{first.json()['data']['id']}")
-                    if current.json()["data"]["state"] == "succeeded":
-                        break
-                    await asyncio.sleep(0)
+                await _wait_for_job_state(client, first.json()["data"]["id"])
                 backend.block = True
                 backend.started.clear()
                 recoverable = await client.post(
@@ -455,11 +476,7 @@ async def test_production_composition_and_jobs_survive_real_uds_restart() -> Non
             async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
                 persisted = await client.get("/api/v1/jobs/job-1")
                 await asyncio.wait_for(recovery_backend.started.wait(), 1)
-                for _ in range(100):
-                    recovered = await client.get(f"/api/v1/jobs/{recoverable.json()['data']['id']}")
-                    if recovered.json()["data"]["state"] == "succeeded":
-                        break
-                    await asyncio.sleep(0)
+                recovered = await _wait_for_job_state(client, recoverable.json()["data"]["id"])
                 jobs = await client.get("/api/v1/jobs")
         finally:
             await restarted_server.stop()
