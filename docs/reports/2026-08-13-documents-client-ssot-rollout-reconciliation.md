@@ -54,6 +54,9 @@ Workspace 物理路径。
 - `kems status` 现在是有界状态查询。它如实报告全盘 Documents content audit
   为 `not_run`，并提示显式运行 `cockpit kems scan`。本次没有把一次大范围内容
   扫描伪装成状态检查，也没有把 `not_run` 说成健康。
+- `kems scan` 使用 L4 的有界摘要契约：日常入口只返回分类计数、违规总数和有限
+  样例，不再把所有合法 artifact 的完整清单输出到终端。需要逐文件取证时，才直接
+  使用 L4 的完整 `content audit --json` 输出。
 
 ### 本机客户端投影
 
@@ -87,8 +90,10 @@ ChatGPT 发起的只读 `domain_context` 验收。
    项目中可见 Cockpit 工具且能调用 `domain_context`；
 2. 由具备外部平台权限的操作者 provision ChatGPT Secure MCP Tunnel，随后以
    ChatGPT Developer Mode 执行只读域上下文 smoke；
-3. 在可接受的维护窗口执行 `cockpit kems scan`，把全盘内容审计结果作为独立
-   证据，而不影响日常 `kems status` 的有界返回；
+3. 已在维护窗口执行一次 `cockpit kems scan`。它按预期以非零退出，报告已有
+   runtime、cache 和无效 archive 内容债务；债务归类和迁移另立变更集，不在这次
+   客户端/路由收口中删除或改写 Documents 内容。后续可重复运行摘要扫描，不影响
+   日常 `kems status` 的有界返回；
 4. 为确有结构化 Facts 的其他域显式注册 Runtime job；在未注册前保持
    `facts-validation` 的 unavailable 语义。
 
@@ -110,6 +115,10 @@ gitlink 指向该版本。accepted root 已快进到 `66cb8fea`，并以冻结�
   `domain_facts_validation_status`；最后一项对 `work-weijian` 返回 `ok`；
 - `cockpit kems status` 在有界时间内返回 `degraded`，唯一原因仍是全盘 audit
   `not_run`，不是超时或错误成功。
+- 完整 `cockpit kems scan` 已实际执行并返回预期的非零债务状态；先前完整 JSON
+  将海量合法 artifact 倾倒到终端的可用性缺口，已由 L4 PR #6（`f0026cc`）的摘要
+  契约和 Cockpit PR #46（`4707bed`）的有界渲染收口。扫描保留总量、违规类型与
+  最多十个样例，完整逐文件取证仍需显式走 L4 明细审计。
 
 这不是全体客户端 UI 验收：Claude、Codex、Zed 与 ZCode 的本机配置投影已分别由
 其正式 checker 或生成器确认，但每个客户端的重载后 UI/模型调用仍是独立操作面。
