@@ -7,7 +7,7 @@ schema_version: 1
 ---
 meta:
   horizon: 2026H2-2029
-  total_bets: 87
+  total_bets: 88
   windows:
   - Y1Q1
   - Y1Q2
@@ -2621,6 +2621,94 @@ bets:
   circuit_breaker: >-
     需要第二套规范/任务真相、修改旧 v1 hash、改 Workflow Mesh 状态机或 Ledger DDL、引入外部服务，
     或无法在两天内证明规范变更使旧候选失效时立即停止并拆包，不得以 optional ignored 字段假接线
+  retro: required
+- id: BET-Y1Q2-T1-16
+  track: T1-TRUTH
+  window: Y1Q2
+  title: Restore completed personal value capabilities to subrepo main and prevent gitlink regression
+  appetite: 2 days
+  priority: P0
+  status: done
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-13-personal-capability-mainline-restore.md
+    spec_version: 1.0.0
+    content_digest: sha256:a52d3495af26b727f6a8a3ba2916c1d582c75570cf3c059379dc58245ee5197b
+  goal: >-
+    把已完成的 T2-01/T2-02/T4-02 个人信号、可信本地 dogfood 与 Outcome 观测能力正式合入
+    OMO/Cockpit 子仓 main，再更新根 gitlink；同时让新的根子模块指针事务拒绝仅存在于 feature branch
+    而未进入子仓 main 的提交，消除 done 声明与当前可部署能力的漂移。
+  non_goals:
+  - 新增第二信号源、邮件/日历/提醒 adapter、watcher、daemon、cron 或新 UI
+  - 自动外发、自动批准、真实外部任务、A3 自主、多租户、家庭/组织、exactly-once 或崩溃恢复
+  - 新增 Ledger DDL、Workflow Mesh 状态机、第二任务真相、第二编排平台或 Blueprint R1 live adapter
+  - 直接把根 gitlink 指向 agent 分支、删除当前子仓 main 能力，或用 tag/测试替代子仓 main 合并
+  done_when:
+  - >-
+      OMO 三个历史 personal feature 在当前 origin/main 上无损恢复，personal、orchestration、worker admission
+      与 Mesh 定向回归通过，恢复提交已由 OMO origin/main 到达
+  - >-
+      Cockpit 三个历史 personal feature 在当前 origin/main 上无损恢复，并以已恢复的 OMO main 运行 API/CLI、
+      episode projection、Documents/Facts/KEMS 定向回归；恢复提交已由 Cockpit origin/main 到达
+  - 根仓只在两个子仓 PR 合并后更新 gitlink，两个指针均是对应子仓 origin/main 的祖先
+  - >-
+      main-ancestry 负测证明远端 feature-only SHA 即使可达也被拒；main 祖先通过；查询失败不部分修改 index/HEAD
+  - >-
+      干净根仓 main 可发现 personal CLI/API 并完成一条本地 never-send 链；Ledger 查询只读，Human Outcome
+      若未由本人裁决则诚实保持 0
+  verify:
+  - cmd: >-
+      cd projects/omo && uv run python -m pytest tests/test_personal_episode.py
+      tests/test_episode_projection.py tests/test_orchestration_contract.py
+      tests/test_omo_worker_admission_gate.py tests/test_workflow_mesh.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/cockpit && uv run python -m pytest src/cockpit/tests/test_api_personal_episode.py
+      src/cockpit/tests/test_api_personal_signal.py src/cockpit/tests/test_cli_personal_dogfood.py
+      src/cockpit/tests/test_api_episode_projection.py src/cockpit/tests/test_documents_read_mcp_server.py
+      src/cockpit/tests/test_governance_context_adapter.py -q
+    expect: exit 0
+  - cmd: >-
+      uv run --with pytest --with pyyaml python -m pytest
+      tests/unit/gac/test_submodule_reachability_gate.py
+      tests/unit/gac/test_submodule_pointer_transaction.py -q
+    expect: exit 0
+  - cmd: >-
+      git -C projects/omo merge-base --is-ancestor HEAD origin/main &&
+      git -C projects/cockpit merge-base --is-ancestor HEAD origin/main
+    expect: exit 0
+  - cmd: git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-13-personal-capability-mainline-restore.md
+  - bin/ssot/submodule-reachability-gate.py
+  - bin/ssot/submodule-pointer-transaction.sh
+  - tests/unit/gac/test_submodule_reachability_gate.py
+  - tests/unit/gac/test_submodule_pointer_transaction.py
+  - projects/omo/src/omo/personal_episode.py
+  - projects/omo/tests/test_personal_episode.py
+  - projects/omo
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - projects/cockpit/src/cockpit/cli.py
+  - projects/cockpit/src/cockpit/commands/workflow_mesh.py
+  - projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+  - projects/cockpit/src/cockpit/tests/test_api_personal_episode.py
+  - projects/cockpit/src/cockpit/tests/test_api_personal_signal.py
+  - projects/cockpit/src/cockpit/tests/test_cli_personal_dogfood.py
+  - projects/cockpit
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-16.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-15
+  - BET-Y1Q2-T2-02
+  - BET-Y1Q2-T4-02
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    需要修改 Ledger DDL、Workflow Mesh 状态机、产生真实外部副作用、删除当前子仓 main 能力，或两天内
+    无法把历史 feature 与当前 main 合并时立即停止并拆兼容修复；不得通过 pin agent 分支伪造恢复
   retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
