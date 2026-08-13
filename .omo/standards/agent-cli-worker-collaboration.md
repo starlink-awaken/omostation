@@ -23,9 +23,9 @@ discipline.
 Current worker set:
 
 - admitted by the existing runtime contract: `codebuddy`, `reasonix`, `pi`,
-  `oh-my-pi`
+  `oh-my-pi`, `codex`
 - declared candidates: `opencode`, `claude-code`, `crush`,
-  `grok`, `mimo`, `agy`, `codex`, `kilo`
+  `grok`, `mimo`, `agy`, `kilo`
 
 Future agent CLIs may be added through the same registry and handoff flow.
 
@@ -41,6 +41,16 @@ contract.
 `bin/ssot/pi-adapter.py` is likewise not a Pool transport and must not be used
 as a fallback. It is an uncontrolled historical entrypoint; its convergence is
 tracked independently from the admitted Pi worker transport.
+
+The admitted Codex transport is only
+`bin/gac/codex-worker-adapter.py`. It invokes the fixed
+`codex exec --approve-for-me --ephemeral --ignore-user-config --json` contract
+inside an identity-verified independent clone. `--approve-for-me` keeps the
+Codex review policy active while removing interactive approval prompts; it is
+not permission to use `--dangerously-bypass-approvals-and-sandbox`, change the
+sandbox, add arbitrary arguments, or run outside task-declared write surfaces.
+The adapter must fail closed on timeout, malformed output, process-group leaks,
+receipt failure, or workspace identity failure.
 
 ## 2. Core Rules
 
