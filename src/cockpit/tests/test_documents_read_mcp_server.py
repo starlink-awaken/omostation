@@ -13,6 +13,7 @@ EXPECTED_TOOLS = {
     "domain_context",
     "cards_status",
     "cards_check",
+    "domain_facts_validation_status",
 }
 
 
@@ -73,6 +74,24 @@ def test_domain_context_delegates_to_cockpit_authority(monkeypatch) -> None:
     )
 
     assert json.loads(server.domain_context("work-weijian")) == payload
+    assert seen == ["work-weijian"]
+
+
+def test_facts_validation_delegates_to_cockpit_authority(monkeypatch) -> None:
+    server = _server()
+    seen: list[str] = []
+    payload = {
+        "schema": "cockpit.domain-facts-validation.v1",
+        "status": "ok",
+        "available": True,
+    }
+    monkeypatch.setattr(
+        server.governance_context,
+        "domain_facts_validation_status",
+        lambda domain_id: seen.append(domain_id) or payload,
+    )
+
+    assert json.loads(server.domain_facts_validation_status("work-weijian")) == payload
     assert seen == ["work-weijian"]
 
 
