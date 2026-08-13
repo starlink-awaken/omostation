@@ -50,7 +50,14 @@ clients:
   codex:
     instruction_file: AGENTS.md
     mcp_scope: user_or_project
-    note: "Use AGENTS.md and the configured Codex MCP scope."
+    profile_contract:
+      name: documents
+      owner: workspace
+      generator_ref: bin/gac/documents-codex-profile.py
+      exclusive_mcp_server: cockpit
+      approval_mode: approve
+      skill_policy: disable_user_local
+    note: "Use AGENTS.md with the generated `documents` profile; the profile keeps only Cockpit read tools and removes user-local Skill injection from this client context."
   agents_compatible:
     instruction_file: AGENTS.md
     mcp_scope: client

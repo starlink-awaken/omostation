@@ -878,3 +878,72 @@ Claude-3p Cockpit surface, followed by independently recorded reload/UI evidence
 for the remaining clients. Existing inline remote-MCP credentials should be
 rotated and moved out of command arguments as a separate security-hardening
 change; no credential value was copied into this plan.
+
+## 8. 2026-08-13 Codex Documents Profile MVP Checkpoint
+
+The first real Codex domain journey exposed two client-context problems that
+were independent of Cockpit: every user MCP server was started for a read-only
+Documents request, and the user Skill inventory exceeded the model-context
+budget. The raw Codex inventory contained 13 MCP servers and 235 parsed Skills;
+all 229 user-scope Skills were enabled, two additional user Skill files had
+invalid frontmatter, and the model-visible prompt dropped descriptions and
+omitted part of the catalog.
+
+This iteration adds a Workspace-owned, opt-in `documents` profile contract and
+generator:
+
+- `.omo/_truth/registry/documents-domain-projects.yaml` owns the profile name,
+  generator reference, exclusive Cockpit binding, approval policy, and
+  user-local Skill policy;
+- `bin/gac/documents-codex-profile.py` derives current MCP and Skill inventory
+  from Codex itself, renders the profile, installs it atomically, refuses to
+  overwrite caller-owned content, and detects later inventory drift;
+- the installed projection is `~/.codex/documents.config.toml`; it affects only
+  sessions explicitly launched with `codex --profile documents` and does not
+  add `.codex`, runtime, or implementation files to any Documents domain;
+- the installed profile exposes only Cockpit, allows the four read tools in the
+  `content-domain` profile, uses `approve` only for those allow-listed tools,
+  and disables 219 user-local Skill paths while preserving system and installed
+  document/plugin Skills;
+- model-visible Skills fell to 17 fully described entries (five system and
+  twelve installed plugin Skills), and the profile file is mode `0600`.
+
+The source/profile/checker tests are green, and the live 12-domain binding
+checker remains the acceptance gate. A direct accepted Cockpit call still
+returns the authoritative binding and resolved Workspace capability paths.
+However, the final fresh `codex exec` attempt did not reach a tool call: the
+Codex process was observed in an external HTTPS `SYN_SENT` state and was stopped
+after the bounded wait. Therefore this checkpoint proves profile installation,
+context reduction, and Cockpit configuration, but does not claim a successful
+fresh Codex model-originated MCP invocation.
+
+The next bounded iteration is to repair or retire the two malformed user Skill
+files, retry the same read-only `work-weijian` journey when the model endpoint is
+reachable, and record the returned `binding_status`, skill path, and workflow
+path. Default Codex configuration and all Documents content remain unchanged.
+
+## 9. 2026-08-13 Codex Real-Journey Acceptance
+
+The bounded follow-up closed the two open items from the preceding checkpoint
+without changing the default Codex configuration or any Documents content.
+The two IMA child `SKILL.md` files in the local shared Skill catalog received
+only the required `name` and trigger-only `description` frontmatter. A fresh
+Codex app-server inventory then reported 237 parsed Skills and zero parse
+errors. The installed `documents` profile remained unchanged and passed its
+accepted generator check with 13 inventoried MCP servers and 219 disabled
+user-local Skill paths.
+
+A fresh ephemeral `codex --profile documents exec` run then completed with exit
+code zero. The model called exactly one MCP tool: Cockpit
+`domain_context(domain_id="work-weijian")`. The response returned
+`binding.status=ok`, resolved the Skill route to accepted Workspace
+`.agents/skills`, and resolved the Workflow route to accepted Workspace
+`.omo/_truth/registry/agent-workflows.yaml`. No shell tool, local file read, or
+write action was requested by the model.
+
+This is the first current model-originated acceptance proof for the Codex
+Documents profile. It supersedes the earlier connectivity blocker as current
+state while preserving that earlier attempt as historical evidence. The next
+client iteration can move to a fresh Claude domain-tool journey, then the
+Zed/ZCode-compatible client path; ChatGPT web remains a separately provisioned
+public HTTPS or secure-tunnel track.

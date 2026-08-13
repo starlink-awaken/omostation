@@ -271,3 +271,68 @@ running Cockpit surface and separately close reload/UI evidence for each other
 configured client. Configuration inspection also found existing remote-MCP
 credentials embedded in command arguments; their values were not recorded here,
 and rotation plus secret-storage migration remains a separate hardening task.
+
+## 2026-08-13 Codex profile and real-journey reconciliation
+
+The Codex journey showed why source-level MCP registration was not enough. The
+current client discovered Cockpit correctly, but also started every unrelated
+user MCP server. Separately, Codex discovered 235 valid Skills plus two invalid
+Skill files; the model prompt could not retain the full catalog with useful
+descriptions. The first non-interactive attempts also used the wrong MCP policy:
+`auto` can still enter an approval path, whereas the dedicated read-only profile
+needs the explicit `approve` value for its four allow-listed Cockpit tools.
+
+The correction is deliberately opt-in and Workspace-owned. The binding registry
+now declares a `documents` profile contract. Its generator queries `codex mcp
+list` and the app-server `skills/list` protocol instead of copying a machine
+inventory into source control. The installed profile disables all MCP servers
+except Cockpit and disables only user-scope Skills beneath the user Skill roots;
+system Skills and installed document/browser plugins remain available. This
+reduced the model-visible list to 17 described Skills and left the default Codex
+configuration untouched. Installation is atomic, mode `0600`, idempotent, and
+may replace only a stale file carrying the generator marker; caller-owned files
+fail closed.
+
+Two evidence boundaries remain important:
+
+- `codex mcp get` does not serialize `required` or
+  `default_tools_approval_mode`, even for the existing `runtime` configuration,
+  so that command is not used as proof for those fields; the generated TOML,
+  registry contract, parser acceptance, and focused tests are the available
+  local evidence;
+- the bounded fresh `codex exec` run opened external HTTPS connections but
+  remained in `SYN_SENT`, so it never emitted a model or MCP tool call. It was
+  terminated without writes. The successful direct accepted Cockpit call and
+  prior in-app Codex domain call remain separate evidence, not substitutes for
+  this missing fresh-client invocation.
+
+Codex still logs the two malformed user Skill files during `exec` before the
+profile filter takes effect. Repairing their YAML frontmatter is the next small
+client-hygiene task, followed by a retry of the exact read-only
+`domain_context(domain_id="work-weijian")` journey when model connectivity is
+available. No Documents domain received a client config or executable artifact.
+
+## 2026-08-13 Codex real-journey reconciliation
+
+The previous section remains the record of the first blocked attempt. Its two
+open conditions are now resolved. The local shared IMA `knowledge-base` and
+`notes` child Skills received valid minimal frontmatter; Codex subsequently
+reported 237 parsed Skills and zero errors. Because both paths were already in
+the generated disabled-user list, the installed `documents` profile did not
+drift and continued to report 13 MCP servers with 219 user-local Skill paths
+disabled.
+
+The fresh-client retry used an ephemeral, read-only Codex execution and asked
+for only `domain_context(domain_id="work-weijian")`. The model issued exactly
+that Cockpit MCP call and exited successfully. Its returned evidence was:
+
+- `binding.status`: `ok`;
+- Skill route: accepted Workspace `.agents/skills`;
+- Workflow route: accepted Workspace
+  `.omo/_truth/registry/agent-workflows.yaml`.
+
+No shell command, local file read, or write tool appeared in the model event
+stream. This closes the Codex profile's current model-originated MCP acceptance
+gap. The profile remains opt-in, the default Codex config remains untouched,
+and Documents domains still contain declarations and content rather than
+client/runtime implementations.
