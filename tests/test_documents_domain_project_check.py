@@ -85,6 +85,9 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
         "apiVersion: workspace.omostation/v1\nkind: AgentWorkflowRegistry\n",
         encoding="utf-8",
     )
+    profile_generator = tmp_path / "bin" / "gac" / "documents-codex-profile.py"
+    profile_generator.parent.mkdir(parents=True)
+    profile_generator.write_text("# profile generator\n", encoding="utf-8")
     path = registry_dir / "documents-domain-projects.yaml"
     path.write_text(
         yaml.safe_dump(
@@ -123,6 +126,14 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                     "codex": {
                         "instruction_file": "AGENTS.md",
                         "mcp_scope": "user_or_project",
+                        "profile_contract": {
+                            "name": "documents",
+                            "owner": "workspace",
+                            "generator_ref": "bin/gac/documents-codex-profile.py",
+                            "exclusive_mcp_server": "cockpit",
+                            "approval_mode": "approve",
+                            "skill_policy": "disable_user_local",
+                        },
                     },
                     "agents_compatible": {
                         "instruction_file": "AGENTS.md",
@@ -237,6 +248,63 @@ def test_valid_domain_project_registry_passes(tmp_path: Path) -> None:
         "gateway_count": 2,
         "errors": [],
     }
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        (
+            "owner",
+            "documents",
+            "clients.codex.profile_contract.owner must be workspace",
+        ),
+        (
+            "exclusive_mcp_server",
+            "runtime",
+            "clients.codex.profile_contract.exclusive_mcp_server must match workspace_mcp.server",
+        ),
+        (
+            "approval_mode",
+            "auto",
+            "clients.codex.profile_contract.approval_mode must be approve",
+        ),
+        (
+            "skill_policy",
+            "all_user_skills",
+            "clients.codex.profile_contract.skill_policy must be disable_user_local",
+        ),
+    ],
+)
+def test_codex_profile_contract_fails_closed(
+    tmp_path: Path, field: str, value: str, expected: str
+) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["clients"]["codex"]["profile_contract"][field] = value
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [expected]
+
+
+def test_codex_profile_generator_must_be_workspace_relative(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["clients"]["codex"]["profile_contract"]["generator_ref"] = (
+        "../Documents/profile.py"
+    )
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "clients.codex.profile_contract.generator_ref must be a Workspace-relative file"
+    ]
 
 
 @pytest.mark.parametrize(
