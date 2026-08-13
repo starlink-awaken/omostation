@@ -2,12 +2,12 @@
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-08-14
 ---
 
 # Agent CLI Worker Collaboration Standard
 
-> Status: active | Version: v1.1 | Scope: external agent CLI workers
+> Status: active | Version: v1.2 | Scope: external agent CLI workers
 > Related: `.omo/tasks/README.md`, `.omo/standards/operation-levels.md`,
 > `.omo/standards/agent-registry-heartbeat.md`,
 > `.omo/_knowledge/summaries/agent-task-contract.md`
@@ -45,12 +45,14 @@ tracked independently from the admitted Pi worker transport.
 The admitted Codex transport is only
 `bin/gac/codex-worker-adapter.py`. It invokes the fixed
 `codex exec --approve-for-me --ephemeral --ignore-user-config --json` contract
-inside an identity-verified independent clone. `--approve-for-me` keeps the
-Codex review policy active while removing interactive approval prompts; it is
-not permission to use `--dangerously-bypass-approvals-and-sandbox`, change the
-sandbox, add arbitrary arguments, or run outside task-declared write surfaces.
-The adapter must fail closed on timeout, malformed output, process-group leaks,
-receipt failure, or workspace identity failure.
+inside an identity-verified independent clone. Codex is a supervised worker:
+`--approve-for-me` routes approval requests through automatic review, but the
+provider can still require human confirmation. Controller approval and provider
+review are separate evidence fields, and an unresolved review is a failed run.
+The flag is not permission to use `--dangerously-bypass-approvals-and-sandbox`,
+change the sandbox, add arbitrary arguments, or run outside task-declared write
+surfaces. The adapter must fail closed on timeout, malformed output,
+process-group leaks, receipt failure, or workspace identity failure.
 
 ## 2. Core Rules
 
@@ -68,6 +70,12 @@ receipt failure, or workspace identity failure.
     workflow packet, or admission grant must be a non-empty list of non-empty
     strings. Workers with `require_explicit_capabilities: true` reject dispatch
     when all three surfaces omit capability requirements.
+11. **Transport acknowledgement is not readiness.** `ready`, `tui-idle`,
+    `input_accepted`, process start, and exit 0 remain distinct from a valid
+    final model output, candidate collection, and independent verification.
+12. **Supervised providers may escalate.** A controller release authorizes the
+    bounded attempt, not every provider-side tool request. Any later provider
+    confirmation remains human-owned and must be observed or time out honestly.
 
 ### 2.1 Agent Pool Projection
 

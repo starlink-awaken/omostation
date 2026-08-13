@@ -177,6 +177,11 @@ workers:
     require_explicit_capabilities: true
     allowed_operation_level: L1
     may_prepare_levels: [L2]
+    supervision:
+      controller_approval: required
+      provider_review: may_require_human
+      readiness_evidence: model_output_observed
+      transport_ack_is_readiness: false
     forbidden_domains: [apple, wechat, smb, family, media]
     write_scope:
       mode: task_declared_only
