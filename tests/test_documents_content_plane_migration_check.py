@@ -96,7 +96,7 @@ def test_workspace_registry_samples_pass():
     report = module.check_migrations(registry)
 
     assert report["ok"] is True
-    assert report["candidate_count"] == 15
+    assert report["candidate_count"] == 17
     assert set(report["family_counts"]) == {
         "family-dashboard-app",
         "toolbox-staging",
@@ -113,6 +113,7 @@ def test_workspace_registry_samples_pass():
         "opc-tools",
         "creative-content-archives",
         "root-oneoff-assets",
+        "documents-client-state",
     }
 
 
@@ -139,6 +140,36 @@ def test_workspace_registry_covers_weijian_cleanup_commit_script():
     assert report["ok"] is True
     assert report["family_counts"]["work-runtime"] == 1
     assert sum(report["family_counts"].values()) == 1
+
+
+def test_workspace_registry_covers_documents_root_client_state_and_build_asset():
+    module = _load_module()
+    registry = (
+        ROOT
+        / ".omo"
+        / "_truth"
+        / "registry"
+        / "documents-content-plane-migrations.yaml"
+    )
+
+    report = module.check_migrations(
+        registry,
+        candidates=[
+            {
+                "relative_path": "ZCode/.zcode/v2/tasks-index.sqlite",
+                "kind": "cache",
+            },
+            {
+                "relative_path": "index-BYqQMscj.js",
+                "kind": "runtime",
+            },
+        ],
+    )
+
+    assert report["ok"] is True
+    assert report["family_counts"]["documents-client-state"] == 1
+    assert report["family_counts"]["root-oneoff-assets"] == 1
+    assert sum(report["family_counts"].values()) == 2
 
 
 def test_zero_match_fails_closed(tmp_path):
