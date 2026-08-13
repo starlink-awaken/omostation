@@ -98,6 +98,7 @@
 - [`plans/2026-08-06-agora-p2-deepening-plan.md`](plans/2026-08-06-agora-p2-deepening-plan.md) — agora P2 深化计划
 - [`superpowers/specs/2026-08-13-orchestration-contract-mvp-design.md`](superpowers/specs/2026-08-13-orchestration-contract-mvp-design.md) — 编排器无关的 WorkPacket/CompletionManifest/独立验证合同
 - [`superpowers/plans/2026-08-13-orchestration-contract-mvp.md`](superpowers/plans/2026-08-13-orchestration-contract-mvp.md) — 上述合同的 TDD 实施与验收计划
+- [`superpowers/specs/2026-08-13-personal-capability-mainline-restore.md`](superpowers/specs/2026-08-13-personal-capability-mainline-restore.md) — Personal 能力主线恢复与子模块防回退合同
 
 ---
 
