@@ -2,6 +2,7 @@
 
 import json
 import sys
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -323,3 +324,23 @@ class TestGovernanceTools:
         assert json.loads(output) == payload
         assert "/Users/reviewer/Documents" not in output
         assert seen == ["vault"]
+
+    def test_domain_model_freshness_status_actual_adapter_redacts_documents_registry_failure(
+        self, tmp_path: Path, monkeypatch
+    ):
+        workspace_root = tmp_path / "workspace"
+        documents_root = tmp_path / "Documents-private"
+        registry_path = documents_root / "private-domain-registry.yaml"
+        workspace_root.mkdir()
+        documents_root.mkdir()
+        monkeypatch.setenv("WORKSPACE_ROOT", str(workspace_root))
+        monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+        output = agent_runtime_mcp_server.domain_model_freshness_status("vault")
+        payload = json.loads(output)
+        assert payload["status"] == "unavailable"
+        assert payload["error"] == "domain_registry_unavailable"
+        assert payload["sources"]["domain_registry"] == "l4-domain-registry"
+        assert str(documents_root) not in output
+        assert registry_path.name not in output
+        assert str(registry_path) not in output
