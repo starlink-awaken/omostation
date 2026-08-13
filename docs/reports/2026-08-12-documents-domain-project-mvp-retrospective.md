@@ -207,3 +207,67 @@ facts artifact and three do not (`opc`, `work-docs`, `work-contracts`). This is
 the next content-quality iteration, not a reason to create empty facts files or
 to reopen the capability-route work. Per-client reload/UI evidence and ChatGPT
 tunnel provisioning also remain unclaimed.
+
+## 2026-08-13 domain facts reconciliation
+
+The facts gate was closed by adding evidence, not by weakening the audit. Before
+the change, the installed command reported nine present and three missing
+domains. The missing domains all had source material, so treating the absence as
+intentional would have hidden useful structure.
+
+Three minimal facts files were added:
+
+- `@OPC/_entities/facts.md` cites `DOMAIN.yaml`, `ENTITIES.md`, and `INDEX.md`;
+- `@工作文档/_entities/facts.md` stays at the federation layer and cites the L4
+  registry plus its entity/knowledge routing indexes;
+- `@工作文档/合同法规/_entities/facts.md` distinguishes original documents,
+  navigation indexes, and derived OCR text.
+
+No volatile counts, customer claims, budgets, or inferred business state were
+introduced. Post-change evidence is `status=ok`, total 12, present 12, and zero
+missing/unreadable/invalid; all three targeted single-domain calls also return
+`status=ok`.
+
+The contracts domain is a nested local Git repository without a remote. Only the
+new facts file was committed (`7acdccb`); its unrelated existing modifications,
+deletions, and untracked files were not staged. Documents root, OPC, and the
+work-docs federation root are not Git repositories, so their facts files remain
+installed content-plane artifacts. This evidence closes the facts-surface gap,
+not repository cleanliness, whole-domain freshness, or client UI validation.
+
+## 2026-08-13 Claude-3p reload/UI reconciliation
+
+Claude-3p is not a separate application bundle. The installed
+`/Applications/Claude.app` runs in `deploymentMode=3p` and uses the independent
+`Claude-3p` Application Support and log roots. The user-visible configuration
+entrypoint is the **Inference configuration** item under the Gateway account
+menu. The applied profile was `CC Switch`; the UI showed provider `Gateway`, a
+masked static credential, and the `deepseek-v4-flash` model label. No inference
+setting was changed.
+
+The first Developer inspection was intentionally treated as a RED observation:
+the Claude process had started on 2026-08-12, before the Claude-3p Cockpit MCP
+configuration was updated on 2026-08-13, and `cockpit` was absent from the Local
+MCP servers list. After the active Cowork task finished and its deliverables were
+visible, Claude was quit cleanly and relaunched. The new process:
+
+- continued to use `~/Library/Application Support/Claude-3p`;
+- retained the Gateway deployment and `deepseek-v4-flash` model label;
+- directly spawned the accepted Cockpit command under
+  `projects/cockpit/.venv/bin/cockpit-mcp`;
+- displayed `cockpit` as `running` in Developer settings.
+
+Three unrelated configured servers (`MCP_DOCKER`, `MiniMax`, and
+`wps-note-cloud`) reported disconnected and remain truthful client-local debt.
+The UI automation could inspect and click the application but could not acquire
+keyboard focus for a safe read-only `workspace_context` prompt, so no
+Claude-originated tool invocation is claimed. Installed stdio initialize,
+tools/list, and direct Cockpit tool-call evidence remains valid command-level
+coverage.
+
+This completes the Claude-3p reload/UI MVP, not all-client rollout. The next
+client iteration should exercise one real Documents domain journey through the
+running Cockpit surface and separately close reload/UI evidence for each other
+configured client. Configuration inspection also found existing remote-MCP
+credentials embedded in command arguments; their values were not recorded here,
+and rotation plus secret-storage migration remains a separate hardening task.
