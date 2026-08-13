@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import re
 import stat
@@ -18,6 +19,8 @@ _CAPABILITY_ROUTE_CONTRACTS = {
     "skills": ("workspace-skills", "directory"),
     "workflows": ("workspace-workflow-mesh", "file"),
 }
+_FACTS_EVIDENCE_SCHEMA = "runtime.documents-facts-audit.evidence.v1"
+_MAX_RUNTIME_RECEIPT_BYTES = 32 * 1024
 
 
 def resolve_workspace_root(explicit: str | Path | None = None) -> Path:
@@ -191,6 +194,8 @@ def _binding_context(domain_id: str, workspace_root: Path) -> dict[str, Any]:
             "workspace_mcp": raw.get("workspace_mcp") if isinstance(raw.get("workspace_mcp"), dict) else {},
             "capability_routes": capability_routes,
             "clients": clients,
+            "runtime_state": raw.get("runtime_state") if isinstance(raw.get("runtime_state"), dict) else {},
+            "runtime_jobs": raw.get("runtime_jobs") if isinstance(raw.get("runtime_jobs"), list) else [],
         }
     except Exception as exc:
         return {
@@ -350,6 +355,240 @@ def domain_facts_audit(
         "summary": summary,
         "domains": items,
         "sources": {"domain_registry": str(source)},
+    }
+
+
+def _facts_validation_unavailable(
+    requested: str,
+    source: Path,
+    binding_source: str,
+    error: str,
+    *,
+    runtime_evidence: Path | None = None,
+) -> dict[str, Any]:
+    sources = {"domain_registry": str(source), "binding_registry": binding_source}
+    if runtime_evidence is not None:
+        sources["runtime_evidence"] = str(runtime_evidence)
+    return {
+        "schema": "cockpit.domain-facts-validation.v1",
+        "status": "unavailable",
+        "available": False,
+        "domain_id": requested,
+        "job": None,
+        "validation": None,
+        "sources": sources,
+        "error": error,
+    }
+
+
+def _relative_path(value: object, *, label: str) -> Path:
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{label} must be a non-empty relative path")
+    path = Path(value)
+    if path.is_absolute() or path == Path(".") or ".." in path.parts:
+        raise ValueError(f"{label} must be a non-traversing relative path")
+    return path
+
+
+def _runtime_facts_job(binding: dict[str, Any], domain_id: str) -> dict[str, str]:
+    matches = [
+        item
+        for item in binding.get("runtime_jobs", [])
+        if isinstance(item, dict)
+        and item.get("domain_id") == domain_id
+        and item.get("action") == "audit_structured_facts"
+    ]
+    if len(matches) != 1:
+        raise ValueError(f"no unique runtime facts validation job configured for domain: {domain_id}")
+    item = matches[0]
+    job_id = item.get("id")
+    owner = item.get("owner")
+    evidence_schema = item.get("evidence_schema")
+    if not isinstance(job_id, str) or not job_id:
+        raise ValueError("runtime facts validation job id must be non-empty")
+    if owner != "runtime-facts":
+        raise ValueError("runtime facts validation job owner must be runtime-facts")
+    if evidence_schema != _FACTS_EVIDENCE_SCHEMA:
+        raise ValueError("runtime facts validation job has an unsupported evidence schema")
+    evidence_path = _relative_path(item.get("evidence_relative_path"), label="runtime evidence path")
+    return {
+        "id": job_id,
+        "owner": owner,
+        "action": "audit_structured_facts",
+        "evidence_relative_path": str(evidence_path),
+    }
+
+
+def _path_identity_parts(path: Path) -> tuple[str, ...]:
+    return tuple(part.casefold() for part in path.resolve(strict=False).parts)
+
+
+def _paths_overlap(first: Path, second: Path) -> bool:
+    first_parts = _path_identity_parts(first)
+    second_parts = _path_identity_parts(second)
+    return first_parts[: len(second_parts)] == second_parts or second_parts[: len(first_parts)] == first_parts
+
+
+def _runtime_state_root(
+    binding: dict[str, Any],
+    *,
+    runtime_state_root: str | Path | None,
+    documents_root: str | Path | None,
+) -> Path:
+    state = binding.get("runtime_state")
+    if not isinstance(state, dict) or state.get("owner") != "runtime":
+        raise ValueError("runtime_state must be declared by runtime")
+    if runtime_state_root is not None:
+        candidate = Path(runtime_state_root).expanduser()
+    else:
+        environment_override = state.get("environment_override")
+        default_home_relative = state.get("default_home_relative")
+        if not isinstance(environment_override, str) or not environment_override:
+            raise ValueError("runtime_state environment_override must be non-empty")
+        default_relative = _relative_path(default_home_relative, label="runtime_state default_home_relative")
+        candidate = Path(os.environ.get(environment_override, str(Path.home() / default_relative))).expanduser()
+    resolved = candidate.resolve(strict=False)
+    if _paths_overlap(resolved, _documents_root(documents_root)):
+        raise ValueError("Runtime state root must not overlap Documents")
+    return resolved
+
+
+def _read_bounded_runtime_receipt(root: Path, relative: Path) -> dict[str, Any]:
+    path = root / relative
+    try:
+        if not stat.S_ISDIR(os.lstat(root).st_mode):
+            raise ValueError("runtime state root is not a directory")
+        parent = root
+        for part in relative.parts[:-1]:
+            parent = parent / part
+            if not stat.S_ISDIR(os.lstat(parent).st_mode):
+                raise ValueError("runtime evidence parent is not a directory")
+        before = os.lstat(path)
+        if not stat.S_ISREG(before.st_mode):
+            raise ValueError("runtime evidence is not a regular file")
+        if before.st_size > _MAX_RUNTIME_RECEIPT_BYTES:
+            raise ValueError("runtime evidence exceeds the bounded receipt size")
+        descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    except FileNotFoundError as exc:
+        raise ValueError("runtime evidence is unavailable") from exc
+    except OSError as exc:
+        raise ValueError("runtime evidence is unavailable") from exc
+
+    try:
+        opened = os.fstat(descriptor)
+        if not stat.S_ISREG(opened.st_mode):
+            raise ValueError("runtime evidence is not a regular file")
+        encoded = os.read(descriptor, _MAX_RUNTIME_RECEIPT_BYTES + 1)
+    except OSError as exc:
+        raise ValueError("runtime evidence is unreadable") from exc
+    finally:
+        os.close(descriptor)
+    if len(encoded) > _MAX_RUNTIME_RECEIPT_BYTES:
+        raise ValueError("runtime evidence exceeds the bounded receipt size")
+    try:
+        raw = json.loads(encoded.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("runtime evidence is not valid JSON") from exc
+    if not isinstance(raw, dict):
+        raise ValueError("runtime evidence must be a JSON object")
+    return raw
+
+
+def _non_negative_int(value: object, *, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"runtime evidence {label} must be a non-negative integer")
+    return value
+
+
+def _validated_facts_receipt(receipt: dict[str, Any], job: dict[str, str]) -> tuple[str, dict[str, Any]]:
+    if receipt.get("job_id") != job["id"] or receipt.get("owner") != job["owner"]:
+        raise ValueError("runtime evidence does not match the configured job")
+    if receipt.get("timed_out") is not False or receipt.get("evidence_error") is not None:
+        raise ValueError("runtime evidence did not complete a valid audit")
+    owner_evidence = receipt.get("owner_evidence")
+    if not isinstance(owner_evidence, dict) or owner_evidence.get("schema") != _FACTS_EVIDENCE_SCHEMA:
+        raise ValueError("runtime evidence has an invalid facts audit schema")
+    owner_status = owner_evidence.get("status")
+    if owner_status not in {"ok", "invalid"}:
+        raise ValueError("runtime evidence has an invalid facts audit status")
+    facts_total = _non_negative_int(owner_evidence.get("facts_total"), label="facts_total")
+    by_type = owner_evidence.get("by_type")
+    if not isinstance(by_type, dict) or any(
+        not isinstance(name, str) or not name or isinstance(count, bool) or not isinstance(count, int) or count < 0
+        for name, count in by_type.items()
+    ):
+        raise ValueError("runtime evidence has an invalid facts type summary")
+    if sum(by_type.values()) != facts_total:
+        raise ValueError("runtime evidence facts_total does not match by_type")
+    validation = {
+        "facts_total": facts_total,
+        "by_type": dict(sorted(by_type.items())),
+        "error_count": _non_negative_int(owner_evidence.get("error_count"), label="error_count"),
+        "warning_count": _non_negative_int(owner_evidence.get("warning_count"), label="warning_count"),
+    }
+    receipt_status = receipt.get("status")
+    exit_code = receipt.get("exit_code")
+    if isinstance(exit_code, bool) or not isinstance(exit_code, int):
+        raise ValueError("runtime evidence exit_code must be an integer")
+    if owner_status == "ok" and receipt_status == "succeeded" and exit_code == 0:
+        return "ok", validation
+    if owner_status == "invalid" and receipt_status == "failed" and exit_code != 0:
+        return "violations", validation
+    raise ValueError("runtime receipt and facts validation status disagree")
+
+
+def domain_facts_validation_status(
+    domain_id: str,
+    *,
+    workspace_root: str | Path | None = None,
+    registry_path: str | Path | None = None,
+    documents_root: str | Path | None = None,
+    runtime_state_root: str | Path | None = None,
+) -> dict[str, Any]:
+    """Read a bounded Runtime facts-audit receipt for one registered domain."""
+
+    requested = domain_id.strip()
+    source = _registry_path(registry_path, documents_root=documents_root)
+    workspace = resolve_workspace_root(workspace_root)
+    binding = _binding_context(requested, workspace)
+    binding_source = str(binding["source"])
+    try:
+        source, _registry, domains = _load_domains(registry_path, documents_root=documents_root)
+        if not requested or not any(domain["id"] == requested for domain in domains):
+            raise ValueError(f"unknown domain: {requested}")
+        if binding["status"] != "ok":
+            raise ValueError(binding.get("error", "domain binding is unavailable"))
+        job = _runtime_facts_job(binding, requested)
+        state_root = _runtime_state_root(
+            binding,
+            runtime_state_root=runtime_state_root,
+            documents_root=documents_root,
+        )
+        evidence_path = state_root / job["evidence_relative_path"]
+        receipt = _read_bounded_runtime_receipt(state_root, Path(job["evidence_relative_path"]))
+        status, validation = _validated_facts_receipt(receipt, job)
+    except (OSError, ValueError) as exc:
+        evidence = locals().get("evidence_path")
+        return _facts_validation_unavailable(
+            requested,
+            source,
+            binding_source,
+            str(exc),
+            runtime_evidence=evidence if isinstance(evidence, Path) else None,
+        )
+
+    return {
+        "schema": "cockpit.domain-facts-validation.v1",
+        "status": status,
+        "available": True,
+        "domain_id": requested,
+        "job": {key: job[key] for key in ("id", "owner", "action")},
+        "validation": validation,
+        "sources": {
+            "domain_registry": str(source),
+            "binding_registry": binding_source,
+            "runtime_evidence": str(evidence_path),
+        },
     }
 
 

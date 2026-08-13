@@ -277,3 +277,48 @@ def test_facts_audit_maps_violations_and_unavailable_to_contract_exit_codes(monk
     )
     with patch("sys.argv", ["cockpit", "facts-audit", "unknown"]):
         assert main() == 2
+
+
+def test_facts_validation_json_forwards_runtime_evidence_contract(monkeypatch, capsys):
+    """facts-validation preserves the bounded Runtime evidence envelope."""
+    from cockpit.commands import l4bridge
+
+    payload = {
+        "schema": "cockpit.domain-facts-validation.v1",
+        "status": "ok",
+        "available": True,
+        "domain_id": "vault",
+        "validation": {"facts_total": 3, "by_type": {"info": 3}, "error_count": 0, "warning_count": 0},
+    }
+    seen = []
+    monkeypatch.setattr(
+        l4bridge.governance_context,
+        "domain_facts_validation_status",
+        lambda domain_id="": seen.append(domain_id) or payload,
+    )
+
+    with patch("sys.argv", ["cockpit", "facts-validation", "vault", "--json"]):
+        assert main() == 0
+
+    assert seen == ["vault"]
+    assert json.loads(capsys.readouterr().out) == payload
+
+
+def test_facts_validation_maps_violations_and_unavailable_to_contract_exit_codes(monkeypatch):
+    from cockpit.commands import l4bridge
+
+    monkeypatch.setattr(
+        l4bridge.governance_context,
+        "domain_facts_validation_status",
+        lambda domain_id="": {"status": "violations", "validation": {}},
+    )
+    with patch("sys.argv", ["cockpit", "facts-validation", "vault"]):
+        assert main() == 1
+
+    monkeypatch.setattr(
+        l4bridge.governance_context,
+        "domain_facts_validation_status",
+        lambda domain_id="": {"status": "unavailable", "validation": {}},
+    )
+    with patch("sys.argv", ["cockpit", "facts-validation", "unknown"]):
+        assert main() == 2

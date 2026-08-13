@@ -176,6 +176,13 @@ def domain_facts_audit(domain_id: str = "") -> str:
 
 
 @mcp.tool()
+def domain_facts_validation_status(domain_id: str) -> str:
+    """Read Runtime's bounded structured-Facts validation receipt for one Documents domain."""
+
+    return _json_envelope(governance_context.domain_facts_validation_status(domain_id))
+
+
+@mcp.tool()
 def cards_status() -> str:
     """List CARDS through the OMO authority."""
 

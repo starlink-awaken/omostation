@@ -103,12 +103,65 @@ def _write_binding_registry(root: Path, clients: dict[str, object]) -> None:
                 },
                 "clients": clients,
                 "profiles": {"content-domain": {"execution_policy": "workspace_only"}},
+                "runtime_state": {
+                    "owner": "runtime",
+                    "environment_override": "OMOSTATION_RUNTIME_STATE_ROOT",
+                    "default_home_relative": ".local/state/omostation/runtime",
+                },
+                "runtime_jobs": [
+                    {
+                        "id": "documents-weijian-facts-audit",
+                        "domain_id": "vault",
+                        "owner": "runtime-facts",
+                        "action": "audit_structured_facts",
+                        "evidence_relative_path": (
+                            "control/evidence/documents-weijian-facts-audit/documents-weijian-facts-audit.json"
+                        ),
+                        "evidence_schema": "runtime.documents-facts-audit.evidence.v1",
+                    }
+                ],
                 "domains": [{"id": "vault", "profile": "content-domain"}],
             },
             allow_unicode=True,
         ),
         encoding="utf-8",
     )
+
+
+def _write_runtime_facts_receipt(
+    root: Path,
+    *,
+    owner_status: str = "ok",
+    job_status: str = "succeeded",
+    exit_code: int = 0,
+) -> Path:
+    state_root = root / "runtime-state"
+    receipt = (
+        state_root / "control" / "evidence" / "documents-weijian-facts-audit" / "documents-weijian-facts-audit.json"
+    )
+    receipt.parent.mkdir(parents=True)
+    receipt.write_text(
+        json.dumps(
+            {
+                "job_id": "documents-weijian-facts-audit",
+                "owner": "runtime-facts",
+                "status": job_status,
+                "exit_code": exit_code,
+                "timed_out": False,
+                "evidence_error": None,
+                "owner_evidence": {
+                    "schema": "runtime.documents-facts-audit.evidence.v1",
+                    "status": owner_status,
+                    "facts_total": 3,
+                    "by_type": {"info": 2, "rule": 1},
+                    "error_count": 0 if owner_status == "ok" else 1,
+                    "warning_count": 0,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return state_root
 
 
 def _adapter():
@@ -563,6 +616,76 @@ def test_domain_facts_audit_is_unavailable_without_authority_or_for_unknown_doma
     assert _adapter().domain_facts_audit("unknown")["status"] == "unavailable"
     registry_path.write_text("manifests: [", encoding="utf-8")
     assert _adapter().domain_facts_audit()["status"] == "unavailable"
+
+
+def test_domain_facts_validation_uses_only_the_runtime_bounded_receipt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, {})
+    state_root = _write_runtime_facts_receipt(tmp_path)
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = gc.domain_facts_validation_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+
+    assert result["schema"] == "cockpit.domain-facts-validation.v1"
+    assert result["status"] == "ok"
+    assert result["available"] is True
+    assert result["validation"] == {
+        "facts_total": 3,
+        "by_type": {"info": 2, "rule": 1},
+        "error_count": 0,
+        "warning_count": 0,
+    }
+    assert result["job"] == {
+        "id": "documents-weijian-facts-audit",
+        "owner": "runtime-facts",
+        "action": "audit_structured_facts",
+    }
+
+
+def test_domain_facts_validation_reports_runtime_semantic_failure_as_violation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, {})
+    state_root = _write_runtime_facts_receipt(tmp_path, owner_status="invalid", job_status="failed", exit_code=1)
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+
+    result = gc.domain_facts_validation_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+
+    assert result["status"] == "violations"
+    assert result["available"] is True
+    assert result["validation"]["error_count"] == 1
+
+
+def test_domain_facts_validation_fails_closed_for_missing_or_symlinked_receipts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, {})
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+    state_root = tmp_path / "runtime-state"
+
+    missing = gc.domain_facts_validation_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+    assert missing["status"] == "unavailable"
+    assert missing["available"] is False
+
+    state_root = _write_runtime_facts_receipt(tmp_path)
+    receipt = (
+        state_root / "control" / "evidence" / "documents-weijian-facts-audit" / "documents-weijian-facts-audit.json"
+    )
+    target = tmp_path / "caller-owned-receipt.json"
+    target.write_text(receipt.read_text(encoding="utf-8"), encoding="utf-8")
+    receipt.unlink()
+    receipt.symlink_to(target)
+
+    symlinked = gc.domain_facts_validation_status("vault", workspace_root=tmp_path, runtime_state_root=state_root)
+    assert symlinked["status"] == "unavailable"
+    assert symlinked["available"] is False
 
 
 def test_dashboard_governance_routes_use_adapter(monkeypatch: pytest.MonkeyPatch) -> None:

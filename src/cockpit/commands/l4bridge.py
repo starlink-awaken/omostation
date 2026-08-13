@@ -132,6 +132,31 @@ def cmd_facts_audit(args: Namespace) -> int:
     return {"ok": 0, "violations": 1, "unavailable": 2}.get(result.get("status"), 2)
 
 
+def cmd_facts_validation(args: Namespace) -> int:
+    """Read the bounded Runtime facts validation receipt for one domain."""
+
+    console = _get_console()
+    domain_id = getattr(args, "domain_id", "") or ""
+    try:
+        result = governance_context.domain_facts_validation_status(domain_id)
+    except Exception as exc:  # defensive boundary: preserve the contract exit code
+        result = {"status": "unavailable", "error": str(exc), "validation": None}
+
+    if getattr(args, "json", False):
+        print(json.dumps(result, ensure_ascii=False, default=str))
+    else:
+        validation = result.get("validation") or {}
+        console.print(
+            "[bold cyan]Documents Facts Runtime 校验[/] "
+            f"{result.get('status', 'unavailable')} · facts_total={validation.get('facts_total', 0)} "
+            f"· errors={validation.get('error_count', 0)} · warnings={validation.get('warning_count', 0)}"
+        )
+        if result.get("error"):
+            _get_err().print(f"[red]❌ {result['error']}[/]")
+
+    return {"ok": 0, "violations": 1, "unavailable": 2}.get(result.get("status"), 2)
+
+
 def cmd_skill(args: Namespace) -> int:
     """运行 L4 定时技能 (由 cron_service 触发)。"""
     console = _get_console()
