@@ -22,8 +22,8 @@ discipline.
 
 Current worker set:
 
-- admitted by the existing runtime contract: `codebuddy`, `reasonix`
-- declared candidates: `pi`, `oh-my-pi`, `opencode`, `claude-code`, `crush`,
+- admitted by the existing runtime contract: `codebuddy`, `reasonix`, `pi`
+- declared candidates: `oh-my-pi`, `opencode`, `claude-code`, `crush`,
   `grok`, `mimo`, `agy`, `codex`, `kilo`
 
 Future agent CLIs may be added through the same registry and handoff flow.
@@ -36,6 +36,10 @@ The historical `bin/_archive/capability-router.py` is not a consumer of the v2
 registry. It remains archived and must not be revived as a fallback: it expects
 the retired shell-string `launch` field and has no admission or observation
 contract.
+
+`bin/ssot/pi-adapter.py` is likewise not a Pool transport and must not be used
+as a fallback. It is an uncontrolled historical entrypoint; its convergence is
+tracked independently from the admitted Pi worker transport.
 
 ## 2. Core Rules
 
@@ -438,6 +442,16 @@ Forbidden write zones for workers:
 - strengths: task execution, code-mode workflows, ACP agent mode
 - default authority: L1
 
+### 10.3 Pi
+
+- preferred role: bounded local reasoning and verification worker
+- transport: one CLI prompt argv through `bin/gac/pi-worker-adapter.py`; the
+  adapter preserves its isolated AetherForge → omlxc coding route
+- runtime: no tools and no session persistence
+- default authority: L0; no file-write, code-change, or test-execution capability
+- evidence: admission smoke retains its receipt; formal OMO dispatch retains
+  the dispatch and stdout artifacts and does not pass an adapter receipt
+
 ## 11. Onboarding a New Worker
 
 To add a new worker CLI:
@@ -450,6 +464,9 @@ To add a new worker CLI:
 5. coordinator/reviewer explicitly promotes the worker to `admitted` and enables it
 6. declare capabilities, write scope, heartbeat and stall policy
 7. run one low-risk pilot task and collect evidence before broad use
+
+Observation or a smoke receipt is not admission: the coordinator/reviewer must
+still make the explicit registry promotion in step 5.
 
 ## 12. Minimal Success Criteria
 

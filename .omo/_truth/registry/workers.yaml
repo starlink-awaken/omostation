@@ -124,17 +124,27 @@ workers:
       lease_expired_after_seconds: 1200
       reclaim_after_seconds: 1800
 
-  # Candidate pool: declarations are discoverable but cannot be dispatched until a
-  # coordinator promotes them and supplies a complete governed transport contract.
   - id: pi
-    enabled: false
-    admission_state: declared
+    enabled: true
+    admission_state: admitted
     provider_ref: pi
     role: worker
     class: external_agent_cli
-    capabilities: [code_change, test_execution, verification]
-    allowed_operation_level: L1
-    write_scope: {mode: task_declared_only}
+    transports:
+      cli_prompt:
+        command: '/usr/bin/python3 bin/gac/pi-worker-adapter.py run --execute --timeout-seconds 120 --prompt "{prompt}"'
+    capabilities: [reasoning, verification]
+    allowed_operation_level: L0
+    forbidden_domains: [apple, wechat, smb, family, media]
+    write_scope: {mode: none}
+    lease_policy:
+      heartbeat_interval_seconds: 300
+      warning_after_seconds: 900
+      lease_expired_after_seconds: 1200
+      reclaim_after_seconds: 1800
+
+  # Candidate pool: declarations are discoverable but cannot be dispatched until a
+  # coordinator promotes them and supplies a complete governed transport contract.
 
   - id: oh-my-pi
     enabled: false
