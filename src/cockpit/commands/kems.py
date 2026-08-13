@@ -14,6 +14,7 @@ KEMS 的执行能力归 Workspace；Documents 仅保留内容、契约与证据.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -99,8 +100,32 @@ def cmd_kems_scan(args: argparse.Namespace) -> int:
         "audit",
         str(documents_root),
         "--json",
+        "--summary",
     ]
-    result = subprocess.run(cmd, cwd=str(workspace))
+    result = subprocess.run(cmd, cwd=str(workspace), capture_output=True, text=True)
+    try:
+        payload = json.loads(result.stdout)
+        data = payload["data"]
+    except (json.JSONDecodeError, KeyError, TypeError):
+        _get_err().print("[red]❌ L4 内容扫描未返回有效摘要[/red]")
+        if result.stderr.strip():
+            _get_err().print(result.stderr.strip())
+        return result.returncode or 2
+
+    counts = " · ".join(f"{kind}={count}" for kind, count in sorted(data.get("counts", {}).items()))
+    console.print(
+        _panel(
+            f"[bold cyan]🔍 Documents 内容主权面扫描[/bold cyan]\n"
+            f"状态: [bold]{'ok' if payload.get('ok') else 'violations'}[/bold]\n"
+            f"分类: {counts or 'none'}\n"
+            f"违规: {data.get('violation_count', 0)} · 未显示样例: {data.get('truncated_violation_count', 0)}",
+            "cyan",
+        )
+    )
+    for violation in data.get("violation_samples", []):
+        console.print(f"  [yellow]{violation.get('code', '?')}[/] {violation.get('relative_path', '')}")
+    if result.stderr.strip():
+        _get_err().print(f"[yellow]{result.stderr.strip()}[/yellow]")
     return result.returncode
 
 
