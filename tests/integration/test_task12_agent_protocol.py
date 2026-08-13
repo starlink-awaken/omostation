@@ -79,6 +79,62 @@ def _tools(count: int = 79) -> list[dict[str, object]]:
 
 
 @pytest.mark.asyncio
+async def test_openai_agent_request_accepts_omp_sized_tool_catalog() -> None:
+    service = AgentProtocolService()
+    service.events = (
+        StreamEvent(
+            kind=StreamEventKind.DONE,
+            request_id="unused",
+            emitted_content=False,
+            phase=StreamPhase.COMPLETE,
+            placement_id="placement-local",
+            backend_id="backend-local",
+        ),
+    )
+    transport = httpx.ASGITransport(app=create_app(inference=service))
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post(
+            "/openai/v1/chat/completions",
+            json={
+                "model": "coding",
+                "messages": [{"role": "user", "content": "inspect"}],
+                "stream": True,
+                "stream_options": {"include_usage": True},
+                "max_completion_tokens": 2_048,
+                "tools": _tools(151),
+            },
+        )
+
+    assert response.status_code == 200
+    assert len(service.requests) == 1
+    assert len(service.requests[0].tools) == 151
+    assert response.text.count("data: [DONE]") == 1
+
+
+@pytest.mark.asyncio
+async def test_openai_agent_tool_catalog_remains_bounded() -> None:
+    service = AgentProtocolService()
+    transport = httpx.ASGITransport(app=create_app(inference=service))
+    accepted = {
+        "model": "coding",
+        "messages": [{"role": "user", "content": "inspect"}],
+        "tools": _tools(256),
+    }
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        response = await client.post("/openai/v1/chat/completions", json=accepted)
+        rejected = await client.post(
+            "/openai/v1/chat/completions",
+            json={**accepted, "tools": _tools(257)},
+        )
+
+    assert response.status_code == 200
+    assert len(service.requests) == 1
+    assert len(service.requests[0].tools) == 256
+    assert rejected.status_code == 422
+    assert len(service.requests) == 1
+
+
+@pytest.mark.asyncio
 async def test_openai_agent_request_accepts_large_system_tools_and_tool_result_roundtrip() -> None:
     service = AgentProtocolService()
     transport = httpx.ASGITransport(app=create_app(inference=service))

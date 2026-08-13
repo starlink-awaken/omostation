@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.8 — 2026-08-13
+
+- Accept bounded OpenAI function-tool catalogs from local coding agents that
+  expose more than 128 tools, while retaining a 256-tool request limit, strict
+  tool schema validation, and the 1 MiB total request-body limit.
+
 ## 3.0.7 — 2026-08-13
 
 - Accept the current Pi/oh-my-pi OpenAI Chat Completions request shape,

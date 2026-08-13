@@ -15,6 +15,8 @@ from pydantic import Field, field_validator, model_validator
 
 from .models import DomainModel
 
+MAX_CHAT_TOOLS = 256
+
 
 class AdapterCapability(StrEnum):
     CHAT = "chat"
@@ -299,7 +301,7 @@ class ChatRequest(DomainModel):
     messages: tuple[ChatMessage, ...] = Field(min_length=1)
     max_tokens: int = Field(default=64, gt=0)
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
-    tools: tuple[ChatTool, ...] = Field(default=(), max_length=128)
+    tools: tuple[ChatTool, ...] = Field(default=(), max_length=MAX_CHAT_TOOLS)
     tool_choice: ToolChoice | None = None
 
     @model_validator(mode="after")

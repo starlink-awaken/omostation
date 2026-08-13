@@ -1,6 +1,6 @@
 # omlxc
 
-`omlxc` is a private local compute hub. Version `3.0.7` provides a persistent
+`omlxc` is a private local compute hub. Version `3.0.8` provides a persistent
 `omlxcd` control/data plane, a typed Unix-socket client, a scriptable Typer CLI,
 and a keyboard-first Textual cockpit. Development and tests do not alter existing
 local services, contact real hardware, or replace the stable
@@ -53,7 +53,7 @@ OpenCode、Pi、oh-my-pi、Kilo Code 及其他 OpenAI 兼容客户端应只连�
 端口。完整的环境变量、模型发现、四个工具的增量配置、安全边界、流式行为和排障步骤见
 [本地 Agent 工具接入指南](docs/local-openai-client-integration.md)。
 
-The OpenAI-compatible chat boundary accepts bounded function tools, assistant
+The OpenAI-compatible chat boundary accepts up to 256 bounded function tools, assistant
 `tool_calls`, tool-result messages, and streaming tool-call deltas. Chat text is
 bounded separately at 512,000 characters while the complete request remains
 subject to the 1 MiB body limit.
