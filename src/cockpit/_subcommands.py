@@ -868,7 +868,8 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     kems_p = sub.add_parser("kems", help="🧬 KEMS 域治理 (domains/status/scan)")
     kems_sub = kems_p.add_subparsers(dest="kems_command")
     kems_sub.add_parser("domains", help="列出 28 域状态")
-    kems_sub.add_parser("status", help="控制面状态")
+    kems_status_p = kems_sub.add_parser("status", help="控制面状态")
+    kems_status_p.add_argument("--json", action="store_true", help="输出稳定 JSON envelope")
     kems_sub.add_parser("scan", help="平面扫描")
 
     c2g_p = sub.add_parser("c2g", help="🎯 C2G 战略罗盘 (status/pipeline)")

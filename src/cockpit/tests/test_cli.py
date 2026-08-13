@@ -304,6 +304,33 @@ def test_facts_validation_json_forwards_runtime_evidence_contract(monkeypatch, c
     assert json.loads(capsys.readouterr().out) == payload
 
 
+def test_kems_status_json_preserves_governance_envelope(monkeypatch, capsys):
+    """The fast KEMS projection must be consumable without parsing Rich output."""
+    from cockpit.commands import kems
+
+    payload = {
+        "schema": "cockpit.kems-status.v1",
+        "status": "degraded",
+        "available": True,
+        "documents_root": "/tmp/Documents",
+        "domains": {"status": "ok", "total": 12},
+        "content_audit": {
+            "owner": "l4-kernel",
+            "status": "not_run",
+            "available": False,
+            "violations": [],
+            "reason": "full Documents content audit is on-demand; run cockpit kems scan",
+        },
+        "owners": {"omo": {"status": "ok"}, "kairon": {"status": "ok"}},
+    }
+    monkeypatch.setattr(kems.governance_context, "kems_status", lambda: payload)
+
+    with patch("sys.argv", ["cockpit", "kems", "status", "--json"]):
+        assert main() == 1
+
+    assert json.loads(capsys.readouterr().out) == payload
+
+
 def test_facts_validation_maps_violations_and_unavailable_to_contract_exit_codes(monkeypatch):
     from cockpit.commands import l4bridge
 

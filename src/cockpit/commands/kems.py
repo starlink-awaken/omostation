@@ -62,6 +62,9 @@ def cmd_kems_status(args: argparse.Namespace) -> int:
     """cockpit kems status — KEMS 控制面状态."""
     console = _get_console()
     result = governance_context.kems_status()
+    if getattr(args, "json", False):
+        print(json.dumps(result, ensure_ascii=False))
+        return 0 if result["status"] == "ok" else 1
     audit = result["content_audit"]
     owners = result["owners"]
     console.print(
