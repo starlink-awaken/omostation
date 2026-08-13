@@ -298,18 +298,39 @@ def test_workspace_registry_declares_bounded_tunnel_contract() -> None:
     assert raw["profiles"]["content-domain"]["allowed_workspace_tools"] == TOOLS
 
 
-def test_model_freshness_tool_is_in_bounded_tunnel_profile() -> None:
-    assert "domain_model_freshness_status" in TOOLS
-
+def test_model_freshness_tool_is_in_bounded_tunnel_profile(tmp_path: Path) -> None:
     raw = yaml.safe_load(
         (
             ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
         ).read_text(encoding="utf-8")
     )
-    assert (
-        "domain_model_freshness_status"
-        in raw["profiles"]["content-domain"]["allowed_workspace_tools"]
+    registry, _ = _project_registry(tmp_path)
+    registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+    domain_registry = _domain_registry(tmp_path)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "render",
+            "--project-registry",
+            str(registry),
+            "--domain-registry",
+            str(domain_registry),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
     )
+
+    assert result.returncode == 0, result.stdout
+    rendered_tools = json.loads(result.stdout)["allowed_tools"]
+    assert rendered_tools == raw["profiles"]["content-domain"][
+        "allowed_workspace_tools"
+    ]
+    assert "domain_model_freshness_status" in rendered_tools
+    assert "domain_model_freshness_status" in raw["workspace_mcp"]["read_tools"]
     assert raw["clients"]["chatgpt_web"]["requires_developer_mode"] is True
 
 
