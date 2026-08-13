@@ -515,7 +515,7 @@ class CockpitApp(App[None]):
     }
     #nav ListItem.--highlight {
         background: #102840;
-        border-left: solid #2a7ab5 2;
+        border-left: solid #2a7ab5;
         color: #7dd3f5;
     }
     #nav ListItem.--highlight Label {

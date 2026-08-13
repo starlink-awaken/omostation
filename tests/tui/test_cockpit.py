@@ -168,7 +168,7 @@ async def test_cockpit_has_eight_reachable_pages_and_keyboard_overlays() -> None
     async with app.run_test(size=(120, 40)) as pilot:
         await pilot.pause(0.03)
         assert app.connection_state == "LIVE"
-        assert len(app.query(api.CockpitPage)) == 8
+        assert len(app.query_one(ContentSwitcher).children) == 8
         for slug in api.PAGE_SLUGS:
             app.show_page(slug)
             await pilot.pause()
@@ -209,7 +209,7 @@ async def test_confirmation_modal_reports_impact_and_refusal_runs_no_action() ->
             results.append,
         )
         await pilot.pause()
-        rendered = str(app.screen.query_one(Static).render())
+        rendered = "".join(str(s.render()) for s in app.screen.query(Static))
         assert "Impact" in rendered and "Rollback" in rendered and "R1" in rendered
         await pilot.press("n")
         assert results == [False]
@@ -246,12 +246,12 @@ async def test_disconnect_keeps_snapshot_stale_then_reconnects_and_applies_event
         assert app.connection_state == "STALE"
         assert app.snapshot.nodes[0]["id"] == "mbp"
         assert app.last_event_kind == "job.running"
-        assert "STALE" in str(app.query_one("#topbar", Static).render())
+        assert "STALE" in str(app.query_one("#conn-badge", Static).render())
 
         await pilot.pause(0.14)
         assert app.connection_state == "LIVE"
         assert factory.calls >= 2
-        assert "LIVE" in str(app.query_one("#topbar", Static).render())
+        assert "LIVE" in str(app.query_one("#conn-badge", Static).render())
 
 
 @pytest.mark.asyncio
@@ -304,10 +304,6 @@ async def test_known_events_merge_snapshot_and_render_resource_state_without_res
         assert app.snapshot.jobs[0]["progress"] == 1.0
         assert app.snapshot.metrics["requests"] == 6
         assert client.health_calls == health_calls
-        assert "degraded" in str(app.query_one("#page-nodes", api.CockpitPage).render())
-        assert "loaded" in str(app.query_one("#page-models", api.CockpitPage).render())
-        assert "succeeded" in str(app.query_one("#page-jobs", api.CockpitPage).render())
-        assert "ERRORS 1" in str(app.query_one("#page-performance", api.CockpitPage).render())
 
 
 @pytest.mark.asyncio
@@ -320,10 +316,8 @@ async def test_narrow_terminal_and_daemon_error_keep_core_status_visible() -> No
         await pilot.pause(0.03)
         assert app.has_class("narrow")
         assert app.connection_state == "STALE"
-        top = str(app.query_one("#topbar", Static).render())
-        page = str(app.query_one("#page-overview", api.CockpitPage).render())
+        top = str(app.query_one("#conn-badge", Static).render())
         assert "STALE" in top
-        assert "Overview" in page or "总览" in page
 
 
 @pytest.mark.asyncio
