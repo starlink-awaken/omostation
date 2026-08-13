@@ -16,7 +16,7 @@ last-reviewed: 2026-08-13
 `36f92f3a405466b4372fc2a2b2e5254915db58e3`。根仓随后只更新这两个远端 `main` 精确指针。
 
 根指针门新增 `--require-main`：feature-only SHA 即使存在且远端可达，也不能再作为发布指针；远端
-查询、fetch、对象或 ancestry 失败均非零退出。根定向测试 6 条通过，索引态 19 个 gitlink 的
+查询、fetch、对象或 ancestry 失败均非零退出。根定向测试 8 条通过，索引态 19 个 gitlink 的
 `source=index --require-main` 实测通过。子仓恢复后 OMO 153 条、Cockpit 97 条根集成回归通过；Cockpit
 PR 平台 lint/test 均绿，独立复审额外以真实 OMO 跑了 64 条 personal 回归和隐私探测后 APPROVE。
 
