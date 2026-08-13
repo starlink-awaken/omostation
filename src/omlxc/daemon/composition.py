@@ -702,6 +702,13 @@ class ProductionControlService:
         )
         return models[:limit]
 
+    async def resolve_model(self, alias: str) -> ModelSpec | None:
+        models = await self.list_models(after=None, limit=10000)
+        for m in models:
+            if m.id == alias or alias in m.aliases:
+                return m
+        return None
+
     def _node_view(self, node: NodeConfig, snapshots: tuple[PlacementSnapshot, ...]) -> Node:
         runtime = self._runtime_summary(snapshots)
         state = (
@@ -758,6 +765,7 @@ class ProductionControlService:
             id=model.id,
             role=model.role,
             reasoning=model.reasoning,
+            aliases=frozenset(model.aliases),
             capabilities=frozenset(
                 capability for snapshot in snapshots for capability in snapshot.capabilities
             ),

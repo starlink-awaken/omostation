@@ -95,6 +95,11 @@ class DaemonClient:
             "GET", "/api/v1/models", params=_page_params(after=after, limit=limit)
         )
 
+    async def resolve_model(self, alias: str) -> DaemonEnvelope:
+        return await self._request(
+            "GET", f"/api/v1/models/resolve/{quote(alias, safe='')}"
+        )
+
     async def jobs(self, *, after: str | None = None, limit: int = 100) -> DaemonEnvelope:
         return await self._request(
             "GET", "/api/v1/jobs", params=_page_params(after=after, limit=limit)
