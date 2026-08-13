@@ -510,3 +510,44 @@ This extends owner parity only. The `work-runtime` migration remains `pending`:
 the existing crontab, Claude Scheduled, domain gateway, PATH precedence, and
 Documents-local controller consumers are unchanged. Any consumer or schedule
 cutover remains a separately confirmed operation.
+
+## 2026-08-14 Cockpit facts and KEMS reconciliation
+
+The Cockpit review separates three intentionally different read surfaces that
+an earlier ad-hoc review had conflated:
+
+- `facts-audit` checks only whether the human facts view
+  `_entities/facts.md` is present and readable; it is not a YAML-content
+  validator.
+- `facts-validation work-weijian` reads the bounded Runtime receipt for
+  `documents-weijian-facts-audit`. The receipt contract validates the structured
+  facts total, type summary, error count, and warning count, including the
+  `_entities/facts/_index.yaml` consistency check performed by the Runtime
+  owner. The observed 2026-08-14 receipt was `ok` with 271 facts, zero errors,
+  and four warnings.
+- `kems status` is deliberately a fast control-plane projection. Its `not_run`
+  content-audit value means that it has no retained full-scan result; it does
+  not mean that KEMS owner reachability failed. A full `kems scan` remains an
+  explicit, potentially long-running content-plane audit and returned existing
+  content violations in this observation.
+
+Cockpit PR #49 is merged as `bcf4fd8` and adds
+`cockpit kems status --json`. It returns the existing stable
+`cockpit.kems-status.v1` envelope without parsing terminal formatting; the
+exit code remains truthful (`0` only for `ok`, otherwise `1`). A direct smoke
+completed promptly with `degraded`, valid L4 registry data, and reachable OMO
+and Kairon owners. A separate filesystem check found all 15 KEMS-named
+symlinks reachable, so neither a broken link nor an execution timeout explains
+the quick-status result.
+
+The current Runtime KEMS and control-health jobs remain useful owner-parity
+steps, not a replacement claim for the old scheduled controller. The legacy
+controller scans six domain planes, invokes several local checkers, and writes
+a daily report inside Documents; `documents-weijian-control-health` reads only
+the signals and facts-view inputs and writes its receipt outside Documents.
+Likewise, the existing daily crontab still calls the legacy KEMS wrapper.
+The next migration must first run an explicit, time-bounded shadow comparison
+for each consumer and demonstrate an equivalent Workspace-owned command and
+recovery path. Until that evidence and a separate schedule-change approval
+exist, the legacy consumers stay active and the migration status remains
+`pending`.
