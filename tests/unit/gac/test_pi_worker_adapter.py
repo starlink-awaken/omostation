@@ -131,7 +131,7 @@ def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
         if worker.get("enabled") is True
         and worker.get("admission_state") == "admitted"
     }
-    assert admitted_worker_ids == {"codebuddy", "reasonix", "pi"}
+    assert admitted_worker_ids == {"codebuddy", "reasonix", "pi", "oh-my-pi"}
     candidates = {
         worker_id: worker
         for worker_id, worker in workers.items()
