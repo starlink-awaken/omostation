@@ -318,21 +318,50 @@ def test_unknown_jsonl_event_keeps_provider_review_unknown(tmp_path: Path) -> No
     assert "future.provider.event" not in receipt.read_text(encoding="utf-8")
 
 
-def test_observed_approval_event_is_recorded_as_human_required(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "approval_event_type", ["exec_approval_request", "apply_patch_approval_request"]
+)
+def test_observed_approval_event_fails_closed_without_receipt_or_patch(
+    tmp_path: Path, approval_event_type: str
+) -> None:
+    root = real_clone_root(tmp_path)
+    receipt = tmp_path / "receipt.json"
     stdout = "\n".join(
         [
-            json.dumps({"type": "exec_approval_request", "command": "secret"}),
+            json.dumps({"type": approval_event_type, "command": "secret"}),
             jsonl("safe final"),
         ]
     )
 
-    result = run_success(
-        tmp_path,
-        receipt_path=tmp_path / "receipt.json",
-        popen_factory=lambda *_args, **_kwargs: FakeProcess(stdout=stdout),
-    )
+    def start(argv, **_kwargs):
+        execution_root = Path(argv[argv.index("-C") + 1])
+        (execution_root / "allowed.txt").write_text("candidate\n", encoding="utf-8")
+        return FakeProcess(stdout=stdout)
 
-    assert result["receipt"]["supervision"]["provider_review"] == "human_required"
+    with pytest.raises(adapter.AdapterError, match="human_approval_required") as raised:
+        adapter.run_worker(
+            workspace_root=root,
+            prompt=write_prompt("allowed.txt"),
+            execute=True,
+            receipt_path=receipt,
+            popen_factory=start,
+            codex_resolver=lambda: Path("/usr/local/bin/codex"),
+            version_reader=lambda _binary: "codex-cli 0.147.0",
+            group_probe=lambda _pid: False,
+        )
+
+    assert raised.value.provider_review == "human_required"
+    assert not receipt.exists()
+    assert not (root / "allowed.txt").exists()
+    assert (
+        subprocess.run(
+            ["git", "-C", str(root), "status", "--short"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+        == ""
+    )
 
 
 @pytest.mark.parametrize(

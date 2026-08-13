@@ -752,6 +752,10 @@ def run_worker(
             raise AdapterError("worker_nonzero")
         output = _final_assistant_message(stdout)
         provider_review = _provider_review(stdout)
+        if provider_review == "human_required":
+            raise AdapterError(
+                "human_approval_required", provider_review=provider_review
+            )
         if expect_exact is not None and output != expect_exact:
             raise AdapterError("marker_mismatch")
         changed_paths, patch, worker_states = _execution_delta(
