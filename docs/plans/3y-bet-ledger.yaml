@@ -7,7 +7,7 @@ schema_version: 1
 ---
 meta:
   horizon: 2026H2-2029
-  total_bets: 84
+  total_bets: 85
   windows:
   - Y1Q1
   - Y1Q2
@@ -2404,6 +2404,67 @@ bets:
   circuit_breaker: >-
     AetherForge 9290 不可识别、omlxc coding 不可用、必须切云/fallback/修用户配置才能通过、出现无法回收进程、
     配置或 cwd 变化、输出泄露，或需要将 Pi 提升至 L1/工具权限时立即停止；保持 declared，只交付脱敏诊断
+  retro: required
+- id: BET-Y1Q2-T1-13
+  track: T5-ORCH
+  window: Y1Q2
+  title: Oh My Pi bounded local reasoning worker admission via AetherForge and omlxc
+  appetite: 1 day
+  priority: P0
+  status: in_progress
+  goal: >-
+    为 Oh My Pi 16.1.16 建立独立、受限、可回收的 L0 reasoning/verification worker；
+    单次 headless 模型调用固定经 AetherForge loopback 进入 omlxc/coding，真实回执通过后
+    才从 declared 晋升为 admitted，并完全复用 OMO 已落地的通用 worker policy。
+  non_goals:
+  - 抽象通用多 CLI adapter、重构 Pi adapter、修改 OMP 用户配置或启用 OMP 工具/规则/LSP/PTY/会话
+  - 云模型、fallback、自动选模、额度调度、并发消费、精确一次、崩溃恢复或恶意同机隔离
+  - 准入 OpenCode、Grok、MiMo、AGY、Kilo 或其他候选 worker
+  - 修改 OMO worker policy、Workflow Mesh 事件协议或 AetherForge/omlxc 服务
+  done_when:
+  - >-
+      独立 adapter 以固定无 shell argv 运行 omp --print，关闭 session/tools/lsp/pty/extensions/skills/
+      rules/title，固定 model=omlxc/coding，且仅在隔离临时 cwd/config 中运行
+  - >-
+      调用前验证 127.0.0.1:9290/health 的 AetherForge 身份；任何非 loopback 配置、健康异常、超时、
+      非零退出、空/错误 marker、用户配置变化或进程残留均 fail-closed
+  - >-
+      adapter 不继承云密钥、代理、SSH/token；回执只保留 worker/provider/model/route、版本、时间、
+      结果、输出摘要与无副作用断言，不保留 prompt、模型原文、身份或配置原文
+  - >-
+      一次真实 OMP→AetherForge→omlxc/coding 调用返回约定 marker；用户配置、工作区、会话、工具调用
+      与子进程残留均无变化/无发生
+  - >-
+      独立 reviewer 通过后 Oh My Pi 仅以 L0 reasoning/verification worker 准入，transport 固定走 bounded
+      adapter 且 require_explicit_capabilities=true；其他候选保持 declared/disabled
+  verify:
+  - cmd: >-
+      uv run --with pytest --with pyyaml --no-project python -m pytest
+      tests/unit/gac/test_omp_worker_adapter.py -q
+    expect: exit 0
+  - cmd: >-
+      uv run --with ruff ruff check bin/gac/omp-worker-adapter.py
+      tests/unit/gac/test_omp_worker_adapter.py
+    expect: exit 0
+  - cmd: git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - bin/gac/omp-worker-adapter.py
+  - tests/unit/gac/test_omp_worker_adapter.py
+  - .omo/_truth/registry/workers.yaml
+  - .omo/standards/agent-cli-worker-collaboration.md
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-13.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-12
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: >-
+    无法固定到 loopback AetherForge+omlxc/coding、需要复制用户凭证/配置、必须启用工具/规则/PTY/LSP、
+    出现不可回收进程或配置/Workspace 写入时立即停止；保持 declared，只交付脱敏诊断
   retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
