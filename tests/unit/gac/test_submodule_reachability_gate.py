@@ -111,3 +111,32 @@ def test_remote_contains_accepts_main_ancestor_when_main_is_required(
 
     assert ok is True
     assert detail == "refs/remotes/origin/main"
+
+
+def test_remote_contains_reports_main_ancestry_query_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_module()
+    module.WORKSPACE = tmp_path
+    submodule = tmp_path / "projects" / "runtime"
+    (submodule / ".git").mkdir(parents=True)
+    sha = "c" * 40
+
+    def fake_run(
+        cmd: list[str], *, cwd: Path = tmp_path, check: bool = False
+    ) -> subprocess.CompletedProcess[str]:
+        del check
+        if cmd == ["git", "rev-parse", "--is-inside-work-tree"]:
+            return subprocess.CompletedProcess(cmd, 0, "true\n", "")
+        if cmd == ["git", "merge-base", "--is-ancestor", sha, "refs/remotes/origin/main"]:
+            return subprocess.CompletedProcess(cmd, 128, "", "fatal: bad revision")
+        pytest.fail(f"unexpected command in {cwd}: {cmd}")
+
+    monkeypatch.setattr(module, "run", fake_run)
+
+    ok, detail = module.remote_contains(
+        "projects/runtime", sha, fetch=False, require_main=True
+    )
+
+    assert ok is False
+    assert detail == "main ancestry query failed: fatal: bad revision"
