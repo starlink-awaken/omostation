@@ -54,6 +54,12 @@ _CODEX_PROFILE_CONTRACT = {
     "approval_mode": "approve",
     "skill_policy": "disable_user_local",
 }
+_ZED_PROFILE_CONTRACT = {
+    "name": "documents",
+    "owner": "workspace",
+    "approval_mode": "allow_read_tools",
+    "builtin_tool_policy": "disable_all",
+}
 
 
 def _matches_chatgpt_binding(value: object, expected: object) -> bool:
@@ -209,41 +215,45 @@ def _validate_capability_routes(
     return errors
 
 
-def _validate_codex_profile_contract(
+def _validate_client_profile_contract(
+    client_id: str,
+    expected_contract: dict[str, str],
     clients: dict[str, object],
     workspace_mcp: dict[str, object],
     project_registry_path: Path,
 ) -> list[str]:
-    """Require one Workspace-owned, fail-closed Codex profile projection."""
+    """Require one Workspace-owned, fail-closed client profile projection."""
 
-    codex = clients.get("codex")
-    if not isinstance(codex, dict):
-        return ["clients.codex must be a mapping"]
-    contract = codex.get("profile_contract")
+    client = clients.get(client_id)
+    if not isinstance(client, dict):
+        return [f"clients.{client_id} must be a mapping"]
+    contract = client.get("profile_contract")
     if not isinstance(contract, dict):
-        return ["clients.codex.profile_contract must be a mapping"]
+        return [f"clients.{client_id}.profile_contract must be a mapping"]
 
     errors: list[str] = []
-    for field, expected in _CODEX_PROFILE_CONTRACT.items():
+    for field, expected in expected_contract.items():
         if contract.get(field) != expected:
-            errors.append(f"clients.codex.profile_contract.{field} must be {expected}")
+            errors.append(
+                f"clients.{client_id}.profile_contract.{field} must be {expected}"
+            )
     if contract.get("exclusive_mcp_server") != workspace_mcp.get("server"):
         errors.append(
-            "clients.codex.profile_contract.exclusive_mcp_server must match "
+            f"clients.{client_id}.profile_contract.exclusive_mcp_server must match "
             "workspace_mcp.server"
         )
 
     generator_ref = contract.get("generator_ref")
     if not isinstance(generator_ref, str) or not generator_ref:
         errors.append(
-            "clients.codex.profile_contract.generator_ref must be a "
+            f"clients.{client_id}.profile_contract.generator_ref must be a "
             "Workspace-relative file"
         )
         return errors
     candidate = Path(generator_ref)
     if candidate.is_absolute() or ".." in candidate.parts or "://" in generator_ref:
         errors.append(
-            "clients.codex.profile_contract.generator_ref must be a "
+            f"clients.{client_id}.profile_contract.generator_ref must be a "
             "Workspace-relative file"
         )
         return errors
@@ -255,7 +265,7 @@ def _validate_codex_profile_contract(
         resolved_generator = (resolved_workspace / candidate).resolve(strict=True)
     except OSError:
         errors.append(
-            "clients.codex.profile_contract.generator_ref is unavailable: "
+            f"clients.{client_id}.profile_contract.generator_ref is unavailable: "
             f"{generator_ref}"
         )
         return errors
@@ -264,7 +274,7 @@ def _validate_codex_profile_contract(
         or not resolved_generator.is_file()
     ):
         errors.append(
-            "clients.codex.profile_contract.generator_ref must be a "
+            f"clients.{client_id}.profile_contract.generator_ref must be a "
             "Workspace-relative file"
         )
     return errors
@@ -337,8 +347,21 @@ def check_domain_projects(
         errors.append("clients must be a mapping")
     else:
         errors.extend(
-            _validate_codex_profile_contract(
-                clients, workspace_mcp, project_registry_path
+            _validate_client_profile_contract(
+                "codex",
+                _CODEX_PROFILE_CONTRACT,
+                clients,
+                workspace_mcp,
+                project_registry_path,
+            )
+        )
+        errors.extend(
+            _validate_client_profile_contract(
+                "zed",
+                _ZED_PROFILE_CONTRACT,
+                clients,
+                workspace_mcp,
+                project_registry_path,
             )
         )
         chatgpt_web = clients.get("chatgpt_web")
