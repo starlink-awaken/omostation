@@ -183,6 +183,13 @@ def domain_facts_validation_status(domain_id: str) -> str:
 
 
 @mcp.tool()
+def domain_model_freshness_status(domain_id: str) -> str:
+    """Read Runtime's bounded model-freshness receipt for one Documents domain."""
+
+    return _json_envelope(governance_context.domain_model_freshness_status(domain_id))
+
+
+@mcp.tool()
 def domain_controller_shadow_status(domain_id: str) -> str:
     """Read Runtime's incomplete legacy controller-shadow receipt for one Documents domain."""
 

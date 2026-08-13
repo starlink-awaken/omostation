@@ -157,6 +157,33 @@ def cmd_facts_validation(args: Namespace) -> int:
     return {"ok": 0, "violations": 1, "unavailable": 2}.get(result.get("status"), 2)
 
 
+def cmd_model_freshness(args: Namespace) -> int:
+    """Read the bounded Runtime model freshness receipt for one domain."""
+
+    console = _get_console()
+    domain_id = getattr(args, "domain_id", "") or ""
+    try:
+        result = governance_context.domain_model_freshness_status(domain_id)
+    except Exception as exc:  # defensive boundary: preserve the contract exit code
+        result = {"status": "unavailable", "error": str(exc), "freshness": None}
+
+    if getattr(args, "json", False):
+        print(json.dumps(result, ensure_ascii=False, default=str))
+    else:
+        freshness = result.get("freshness") or {}
+        console.print(
+            "[bold cyan]Documents 模型新鲜度[/] "
+            f"{result.get('status', 'unavailable')} · "
+            f"models={freshness.get('model_markdown_count', 0)} · "
+            f"fresh={freshness.get('fresh_model_count', 0)} · "
+            f"stale={freshness.get('stale_model_count', 0)} · "
+            f"invalid={freshness.get('invalid_reviewed_count', 0)} · "
+            f"unreadable={freshness.get('unreadable_regular_file_count', 0)}"
+        )
+
+    return {"ok": 0, "attention": 1, "unavailable": 2}.get(result.get("status"), 2)
+
+
 def cmd_controller_shadow(args: Namespace) -> int:
     """Read the incomplete legacy controller shadow receipt for one domain."""
 

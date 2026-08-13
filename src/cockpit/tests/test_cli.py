@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from cockpit.cli import main
 from cockpit.storage import set_data_access
 
@@ -349,6 +351,81 @@ def test_facts_validation_maps_violations_and_unavailable_to_contract_exit_codes
     )
     with patch("sys.argv", ["cockpit", "facts-validation", "unknown"]):
         assert main() == 2
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_exit"),
+    [("ok", 0), ("attention", 1), ("unavailable", 2)],
+)
+def test_model_freshness_json_preserves_envelope_and_exit_contract(monkeypatch, capsys, status, expected_exit):
+    from cockpit.commands import l4bridge
+
+    payload = {
+        "schema": "cockpit.domain-model-freshness.v1",
+        "status": status,
+        "available": status != "unavailable",
+        "domain_id": "work-weijian",
+        "freshness": {
+            "checked_on": "2026-08-14",
+            "facts_last_reviewed": "2026-08-13",
+            "model_markdown_count": 2,
+            "fresh_model_count": 1,
+            "stale_model_count": 1,
+            "invalid_reviewed_count": 0,
+            "unreadable_regular_file_count": 0,
+            "error": None,
+        },
+    }
+    seen = []
+    monkeypatch.setattr(
+        l4bridge.governance_context,
+        "domain_model_freshness_status",
+        lambda domain_id: seen.append(domain_id) or payload,
+        raising=False,
+    )
+
+    with patch("sys.argv", ["cockpit", "model-freshness", "work-weijian", "--json"]):
+        assert main() == expected_exit
+
+    assert seen == ["work-weijian"]
+    assert json.loads(capsys.readouterr().out) == payload
+
+
+def test_model_freshness_text_prints_only_status_and_aggregates(monkeypatch, capsys):
+    from cockpit.commands import l4bridge
+
+    payload = {
+        "schema": "cockpit.domain-model-freshness.v1",
+        "status": "attention",
+        "available": True,
+        "domain_id": "work-weijian",
+        "freshness": {
+            "model_markdown_count": 2,
+            "fresh_model_count": 1,
+            "stale_model_count": 1,
+            "invalid_reviewed_count": 0,
+            "unreadable_regular_file_count": 0,
+            "private_model_name": "fixture-private-model.md",
+        },
+    }
+    monkeypatch.setattr(
+        l4bridge.governance_context,
+        "domain_model_freshness_status",
+        lambda _domain_id: payload,
+        raising=False,
+    )
+
+    with patch("sys.argv", ["cockpit", "model-freshness", "work-weijian"]):
+        assert main() == 1
+
+    output = capsys.readouterr().out
+    assert "attention" in output
+    assert "models=2" in output
+    assert "fresh=1" in output
+    assert "stale=1" in output
+    assert "invalid=0" in output
+    assert "unreadable=0" in output
+    assert "fixture-private-model.md" not in output
 
 
 def test_controller_shadow_json_preserves_observed_not_cut_over_contract(monkeypatch, capsys):
