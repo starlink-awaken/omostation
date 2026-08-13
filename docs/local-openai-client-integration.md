@@ -115,6 +115,8 @@ pi --list-models omlxc
 先验证门面和模型目录，再发真实请求。以下命令不会执行推理：
 
 ```bash
+set -o pipefail
+
 auth_header=()
 if [[ -n "${AETHERFORGE_API_KEY:-}" ]]; then
   auth_header=(-H "Authorization: Bearer ${AETHERFORGE_API_KEY}")
@@ -127,7 +129,14 @@ curl --fail --silent --show-error \
   "${auth_header[@]}" \
   "${AETHERFORGE_BASE_URL}/models" \
   | jq -r '.data[] | .id'
+
+# 私有控制面采用统一 envelope；列表位于 data.items，不是 data.models。
+omlxc models list --json | jq -e '.data.items | length > 0'
 ```
+
+`curl --fail` 与 `set -o pipefail` 不能省略。否则 `401` 的错误 body 可能被下游
+解析器当作空数组，最终被误报成“0 个模型”。同理，`omlxc models list --json`
+返回的是版本化 envelope；只读取不存在的 `.data.models` 也会制造一个假的零值。
 
 记录其中一个返回的模型 ID，以下用 `<model-id-from-models>` 表示。没有任何模型时，不要伪造 model ID 或让客户端直接连接后端；先由运维面处理容量、授权或库存问题。
 
@@ -290,6 +299,20 @@ Pi 使用 `~/.pi/agent/models.json` 注册自定义 provider。该文件是用�
 
 Pi 的 `$AETHERFORGE_API_KEY` 是环境变量引用，缺失时 provider 会不可用；不要把真实 key 写成 JSON 字面量。首次运行后使用 `/model` 选择 `omlxc/coding-next`。Pi 会在每次打开 `/model` 时重新读取该配置，所以不需要重启守护进程。v3.0.7 接受 Pi 当前发送的 `max_completion_tokens`、`stream_options`、`store`、`parallel_tool_calls` 与 bounded `strict` 工具定义。
 
+如果 Pi 的默认会话长时间没有结束，先用纯净、只读模式区分“协议不可用”和
+“本机旧扩展/上下文过重”。下面的探针仍保留 `read` 工具，但不会加载 ambient
+扩展、skills、prompt templates 或项目上下文：
+
+```bash
+pi --provider omlxc --model coding \
+  --mode json --no-session --tools read --thinking off \
+  --no-extensions --no-skills --no-prompt-templates --no-context-files \
+  --print "Read README.md with the read tool and return its title."
+```
+
+若纯净模式成功而默认模式长尾，问题在 Pi 本地启动面；逐项恢复扩展和上下文，
+不要改 OMLXC 路由、直接连接物理后端或无限提高服务超时。
+
 ## 7. oh-my-pi
 
 oh-my-pi（`omp`）的自定义 provider 放在 `~/.omp/agent/models.yml`。这是当前的 canonical 配置；旧的 `models.json` 仅作为迁移输入，不能同时手工维护两份。它把 `apiKey` 解析为“已存在的环境变量名或字面量”；`authHeader: true` 才会向门面发送 Bearer 认证头。因此，模板必须使用环境变量名，不能使用假的占位 key。
@@ -310,6 +333,16 @@ providers:
 ```
 
 启动前只需在受管 shell 或私有环境文件中提供 `AETHERFORGE_API_KEY`；不要用仓库内 `.env` 覆盖该值。选择 `omlxc/coding-next` 即可。若它提示 provider 未启用，检查 `disabledProviders` 中没有 `omlxc`；该数组在项目级配置中会整体覆盖全局数组，不能假定自动合并。`models.yml` 是 canonical 配置，兼容 `models.json` 只用于迁移或回退，不要长期双写两份不同值。
+
+目录检查应返回 JSON，而不是“退出 0 但没有任何输出”：
+
+```bash
+omp models omlxc --json | jq -e '.models | length > 0'
+```
+
+旧版 OMP 可能在只读 `models` 命令中误加载 ambient hooks。若遇到空输出，先用
+`omp models omlxc --json --no-extensions` 验证；它是有界诊断兜底，不应替代升级。
+已安装包含 ambient-hook 隔离修复的版本后，两条命令应返回相同模型集合。
 
 ## 8. Kilo Code
 
@@ -422,7 +455,8 @@ print(response.choices[0].message.content)
 1. 检查环境变量是否非空；不要打印 key。
 2. `GET /health`：确认 AetherForge 门面进程存活。
 3. `GET /v1/models`：确认至少一个逻辑模型 ID 可供客户端配置。
-4. `omlxc status --json`：确认私有执行平面正常。
+4. `omlxc status --json`：确认私有执行平面正常；用
+   `omlxc models list --json | jq '.data.items | length'` 检查控制目录。
 5. 仅用一个短、非敏感的聊天请求验证非流式；成功后再验证流式。
 6. 若仍失败，报告时间、HTTP 状态、客户端版本、是否流式、是否使用图片/embedding；不要报告 prompt、密钥、Unix socket 路径、节点地址或完整日志。
 
@@ -453,6 +487,8 @@ print(response.choices[0].message.content)
 - [ ] AetherForge 使用受管的 active 门面，未在项目中启动旁路代理。
 - [ ] `omlxc status --json` 表示 daemon 就绪、未降级。
 - [ ] `/health` 成功，`/v1/models` 返回至少一个模型。
+- [ ] 目录检查启用了认证、`curl --fail` 与 `pipefail`，没有把 `401` 当成空列表。
+- [ ] `omlxc models list --json` 从 `.data.items` 读取，而不是猜测 envelope 字段。
 - [ ] OpenCode 配置用 `{env:…}` 引用凭据，仓库中没有真实 key。
 - [ ] 模型 ID 从 `/v1/models` 复制，而不是猜测或使用物理后端名。
 - [ ] `permission.edit` 与 `permission.bash` 已设为 `ask` 或更严格的团队策略。
