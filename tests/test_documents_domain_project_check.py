@@ -92,6 +92,8 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
     zed_profile_generator.write_text("# profile generator\n", encoding="utf-8")
     zcode_config_generator = tmp_path / "bin" / "gac" / "documents-zcode-config.py"
     zcode_config_generator.write_text("# config generator\n", encoding="utf-8")
+    chatgpt_tunnel_checker = tmp_path / "bin" / "gac" / "documents-chatgpt-tunnel.py"
+    chatgpt_tunnel_checker.write_text("# tunnel checker\n", encoding="utf-8")
     path = registry_dir / "documents-domain-projects.yaml"
     path.write_text(
         yaml.safe_dump(
@@ -110,7 +112,12 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                     "server": "cockpit",
                     "entrypoint": "cockpit-mcp",
                     "transport": "stdio",
-                    "read_tools": ["workspace_context", "domain_context"],
+                    "read_tools": [
+                        "workspace_context",
+                        "domain_context",
+                        "cards_status",
+                        "cards_check",
+                    ],
                 },
                 "capability_routes": {
                     "skills": {
@@ -173,6 +180,16 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                         "requires_developer_mode": True,
                         "setup_ref": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
                         "tunnel_ref": "https://developers.openai.com/api/docs/guides/secure-mcp-tunnels",
+                        "tunnel_contract": {
+                            "owner": "workspace",
+                            "checker_ref": "bin/gac/documents-chatgpt-tunnel.py",
+                            "transport": "secure_mcp_tunnel",
+                            "local_entrypoint": "cockpit-documents-mcp",
+                            "tool_profile": "content-domain",
+                            "tunnel_profile": "documents-readonly",
+                            "tunnel_id_env": "DOCUMENTS_CHATGPT_TUNNEL_ID",
+                            "api_key_env": "CONTROL_PLANE_API_KEY",
+                        },
                     },
                 },
                 "profiles": {
@@ -180,6 +197,8 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                         "allowed_workspace_tools": [
                             "workspace_context",
                             "domain_context",
+                            "cards_status",
+                            "cards_check",
                         ],
                         "skill_route": "skills",
                         "workflow_route": "workflows",
@@ -540,6 +559,21 @@ def test_chatgpt_web_contract_fails_closed(
 
     assert result.returncode == 1
     assert json.loads(result.stdout)["errors"] == [expected]
+
+
+def test_chatgpt_web_tunnel_contract_is_required(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["clients"]["chatgpt_web"].pop("tunnel_contract")
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "clients.chatgpt_web.tunnel_contract must match the Workspace contract"
+    ]
 
 
 @pytest.mark.parametrize(
