@@ -355,7 +355,7 @@ class DataPlaneOrchestrator:
                 if event.kind is StreamEventKind.DONE:
                     success = True
                     terminal_phase = StreamPhase.COMPLETE
-                elif event.kind is StreamEventKind.CONTENT:
+                elif event.kind in {StreamEventKind.CONTENT, StreamEventKind.TOOL_CALL}:
                     emitted_content = True
                 elif event.kind is StreamEventKind.ERROR:
                     terminal_code = self._stream_terminal_code(event)
@@ -368,9 +368,7 @@ class DataPlaneOrchestrator:
                 if not success and terminal_code is None:
                     terminal_code = AdapterErrorCode.STREAM_INTERRUPTED.value
                     terminal_phase = (
-                        StreamPhase.AFTER_CONTENT
-                        if emitted_content
-                        else StreamPhase.BEFORE_CONTENT
+                        StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
                     )
                 self._record_metric(
                     request.request_id,
@@ -439,7 +437,7 @@ class DataPlaneOrchestrator:
                                 }
                             )
                             return
-                        if event.kind is StreamEventKind.CONTENT:
+                        if event.kind in {StreamEventKind.CONTENT, StreamEventKind.TOOL_CALL}:
                             emitted_content = True
                             yield event.model_copy(
                                 update={

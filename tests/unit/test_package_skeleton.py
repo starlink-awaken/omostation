@@ -53,7 +53,7 @@ def test_project_metadata_declares_the_v3_package_and_console_scripts() -> None:
     lock = tomllib.loads((REPOSITORY_ROOT / "uv.lock").read_text(encoding="utf-8"))
     locked_package = next(package for package in lock["package"] if package["name"] == "omlxc")
 
-    assert metadata["project"]["version"] == __version__ == locked_package["version"] == "3.0.4"
+    assert metadata["project"]["version"] == __version__ == locked_package["version"] == "3.0.5"
     assert metadata["project"]["requires-python"] == ">=3.13,<3.14"
     assert metadata["project"]["scripts"] == {
         "omlxc": "omlxc.cli:main",
@@ -82,8 +82,8 @@ def test_ci_smoke_requires_exactly_one_version_agnostic_wheel() -> None:
 def test_readme_release_and_wheel_smoke_are_patch_agnostic() -> None:
     readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "Version `3.0.2`" in readme
-    assert "dist/omlxc-3.0.2-py3-none-any.whl" not in readme
+    assert f"Version `{__version__}`" in readme
+    assert f"dist/omlxc-{__version__}-py3-none-any.whl" not in readme
     assert "dist/omlxc-*.whl" in readme
 
 
@@ -92,7 +92,7 @@ def test_package_exposes_the_v3_release_version() -> None:
     result = _run_module("omlxc", "--version")
 
     assert result.returncode == 0
-    assert result.stdout.strip() == "3.0.4"
+    assert result.stdout.strip() == "3.0.5"
 
 
 def test_daemon_module_exposes_private_uds_help() -> None:
@@ -108,7 +108,7 @@ def test_installed_omlxc_console_script_reports_its_version() -> None:
     result = _run_installed_script("omlxc", "--version")
 
     assert result.returncode == 0
-    assert result.stdout.strip() == "3.0.4"
+    assert result.stdout.strip() == "3.0.5"
 
 
 def test_installed_omlxcd_console_script_exposes_private_uds_help() -> None:

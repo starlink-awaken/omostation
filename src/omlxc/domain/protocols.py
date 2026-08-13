@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import json
 from collections.abc import AsyncIterator
 from datetime import datetime
 from enum import StrEnum
@@ -52,6 +53,7 @@ class OperationStatus(StrEnum):
 
 class StreamEventKind(StrEnum):
     CONTENT = "content"
+    TOOL_CALL = "tool_call"
     USAGE = "usage"
     DONE = "done"
     ERROR = "error"
@@ -182,20 +184,112 @@ class ImageContentBlock(DomainModel):
 ChatContentBlock = Annotated[TextContentBlock | ImageContentBlock, Field(discriminator="type")]
 
 
-class ChatMessage(DomainModel):
-    role: Literal["system", "user", "assistant"]
-    content: str | tuple[ChatContentBlock, ...]
+class ChatToolFunctionCall(DomainModel):
+    name: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
+    arguments: str = Field(max_length=262_144)
 
-    @field_validator("content")
+    @field_validator("arguments")
     @classmethod
-    def require_content(
-        cls, value: str | tuple[ChatContentBlock, ...]
-    ) -> str | tuple[ChatContentBlock, ...]:
-        if isinstance(value, str) and not value:
-            raise ValueError("message content must not be empty")
-        if isinstance(value, tuple) and not value:
-            raise ValueError("message content blocks must not be empty")
+    def require_json_object(cls, value: str) -> str:
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise ValueError("tool call arguments must be valid JSON") from exc
+        if not isinstance(parsed, dict):
+            raise ValueError("tool call arguments must encode an object")
         return value
+
+
+class ChatToolCall(DomainModel):
+    id: str = Field(min_length=1, max_length=256, pattern=r"^[A-Za-z0-9._:-]+$")
+    type: Literal["function"] = "function"
+    function: ChatToolFunctionCall
+
+
+class ChatToolFunction(DomainModel):
+    name: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
+    description: str = Field(default="", max_length=8192)
+    parameters: dict[str, object]
+
+    @field_validator("parameters")
+    @classmethod
+    def bound_parameters(cls, value: dict[str, object]) -> dict[str, object]:
+        try:
+            encoded = json.dumps(value, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("tool parameters must be JSON compatible") from exc
+        if len(encoded) > 262_144:
+            raise ValueError("tool parameters exceed the size limit")
+        return value
+
+
+class ChatTool(DomainModel):
+    type: Literal["function"] = "function"
+    function: ChatToolFunction
+
+
+class ChatToolChoiceFunction(DomainModel):
+    name: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
+
+
+class ChatToolChoice(DomainModel):
+    type: Literal["function"] = "function"
+    function: ChatToolChoiceFunction
+
+
+ToolChoice = Literal["auto", "none", "required"] | ChatToolChoice
+
+
+class ToolFunctionDelta(DomainModel):
+    name: str | None = Field(
+        default=None, min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_-]+$"
+    )
+    arguments: str | None = Field(default=None, max_length=262_144)
+
+    @model_validator(mode="after")
+    def require_fragment(self) -> ToolFunctionDelta:
+        if self.name is None and self.arguments is None:
+            raise ValueError("tool function delta must contain a fragment")
+        return self
+
+
+class ToolCallDelta(DomainModel):
+    index: int = Field(ge=0, le=127)
+    id: str | None = Field(
+        default=None, min_length=1, max_length=256, pattern=r"^[A-Za-z0-9._:-]+$"
+    )
+    type: Literal["function"] | None = None
+    function: ToolFunctionDelta | None = None
+
+    @model_validator(mode="after")
+    def require_fragment(self) -> ToolCallDelta:
+        if self.id is None and self.type is None and self.function is None:
+            raise ValueError("tool call delta must contain a fragment")
+        return self
+
+
+class ChatMessage(DomainModel):
+    role: Literal["system", "user", "assistant", "tool"]
+    content: str | tuple[ChatContentBlock, ...] | None
+    tool_calls: tuple[ChatToolCall, ...] = Field(default=(), max_length=128)
+    tool_call_id: str | None = Field(
+        default=None, min_length=1, max_length=256, pattern=r"^[A-Za-z0-9._:-]+$"
+    )
+
+    @model_validator(mode="after")
+    def validate_role_fields(self) -> ChatMessage:
+        empty_content = self.content is None or self.content == "" or self.content == ()
+        if self.role in {"system", "user"}:
+            if empty_content or self.tool_calls or self.tool_call_id is not None:
+                raise ValueError("system and user messages require content only")
+        elif self.role == "assistant":
+            if empty_content and not self.tool_calls:
+                raise ValueError("assistant messages require content or tool calls")
+            if self.tool_call_id is not None:
+                raise ValueError("assistant messages cannot include tool_call_id")
+        elif empty_content or self.tool_calls or self.tool_call_id is None:
+            raise ValueError("tool messages require content and tool_call_id")
+        return self
 
 
 class ChatRequest(DomainModel):
@@ -204,6 +298,14 @@ class ChatRequest(DomainModel):
     messages: tuple[ChatMessage, ...] = Field(min_length=1)
     max_tokens: int = Field(default=64, gt=0)
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
+    tools: tuple[ChatTool, ...] = Field(default=(), max_length=128)
+    tool_choice: ToolChoice | None = None
+
+    @model_validator(mode="after")
+    def validate_tool_choice(self) -> ChatRequest:
+        if self.tool_choice is not None and not self.tools:
+            raise ValueError("tool_choice requires tools")
+        return self
 
 
 class TokenUsage(DomainModel):
@@ -216,6 +318,7 @@ class ChatResult(DomainModel):
     request_id: str = Field(min_length=1)
     success: bool
     content: str = ""
+    tool_calls: tuple[ChatToolCall, ...] = Field(default=(), max_length=128)
     finish_reason: str | None = None
     usage: TokenUsage | None = None
     error: AdapterError | None = None
@@ -224,6 +327,8 @@ class ChatResult(DomainModel):
     def validate_result(self) -> ChatResult:
         if self.success == (self.error is not None):
             raise ValueError("successful results cannot have errors and failures require one")
+        if self.success and not self.content and not self.tool_calls:
+            raise ValueError("successful chat results require content or tool calls")
         return self
 
 
@@ -331,6 +436,7 @@ class StreamEvent(DomainModel):
     kind: StreamEventKind
     request_id: str = Field(min_length=1)
     content: str = ""
+    tool_calls: tuple[ToolCallDelta, ...] = Field(default=(), max_length=128)
     usage: TokenUsage | None = None
     finish_reason: str | None = None
     error: AdapterError | None = None
@@ -365,6 +471,14 @@ class StreamEvent(DomainModel):
             or self.phase is not StreamPhase.AFTER_CONTENT
         ):
             raise ValueError("content events require emitted content and after-content phase")
+        if self.kind is StreamEventKind.TOOL_CALL and (
+            not self.tool_calls
+            or not self.emitted_content
+            or self.phase is not StreamPhase.AFTER_CONTENT
+        ):
+            raise ValueError("tool call events require deltas and after-content phase")
+        if self.kind is not StreamEventKind.TOOL_CALL and self.tool_calls:
+            raise ValueError("only tool call events can include tool call deltas")
         if self.kind is StreamEventKind.USAGE and self.usage is None:
             raise ValueError("usage events require usage")
         if self.kind is StreamEventKind.DONE and self.phase is not StreamPhase.COMPLETE:

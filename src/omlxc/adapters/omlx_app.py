@@ -19,6 +19,7 @@ from omlxc.domain.protocols import (
     ChatMessage,
     ChatRequest,
     ChatResult,
+    ChatToolCall,
     EmbeddingRequest,
     EmbeddingResult,
     LifecycleResult,
@@ -29,6 +30,7 @@ from omlxc.domain.protocols import (
     StreamEventKind,
     StreamPhase,
     TokenUsage,
+    ToolCallDelta,
     TuneRequest,
     TuneResult,
     TuneScope,
@@ -37,6 +39,7 @@ from omlxc.domain.protocols import (
 from .reasoning import ReasoningFilter
 from .security import AdapterFailure
 from .sse import SSEDecoder
+from .tool_calls import parse_tool_call_deltas, parse_tool_calls, tools_payload
 
 _UNSUPPORTED_STATUSES = frozenset({404, 405, 501})
 _SEMVER = re.compile(
@@ -563,6 +566,7 @@ class OmlxAppAdapter:
             "enable_thinking": False,
             "thinking_budget_enabled": False,
             "chat_template_kwargs": {"enable_thinking": False},
+            **tools_payload(request),
         }
 
     async def chat(self, request: ChatRequest) -> ChatResult:
@@ -574,7 +578,7 @@ class OmlxAppAdapter:
             if not response.is_success:
                 raise self._http_error(response, endpoint=endpoint)
             document = self._json_object(response, endpoint=endpoint)
-            content, finish_reason = self._parse_chat_choice(document)
+            content, tool_calls, finish_reason = self._parse_chat_choice(document)
             usage = self._parse_usage(document.get("usage"))
             safe_content, unclosed_reasoning = self._strip_reasoning(content)
             if unclosed_reasoning:
@@ -593,12 +597,15 @@ class OmlxAppAdapter:
             request_id=request.request_id,
             success=True,
             content=safe_content,
+            tool_calls=tool_calls,
             finish_reason=finish_reason,
             usage=usage,
         )
 
     @staticmethod
-    def _parse_chat_choice(document: Mapping[str, object]) -> tuple[str, str | None]:
+    def _parse_chat_choice(
+        document: Mapping[str, object],
+    ) -> tuple[str, tuple[ChatToolCall, ...], str | None]:
         choices = document.get("choices")
         typed_choices = _object_list(choices)
         if not typed_choices:
@@ -624,8 +631,25 @@ class OmlxAppAdapter:
         content = message.get("content")
         if not isinstance(content, str):
             content = ""
+        try:
+            tool_calls = parse_tool_calls(message.get("tool_calls"))
+        except ValueError as exc:
+            raise AdapterFailure.from_detail(
+                code=AdapterErrorCode.BAD_RESPONSE,
+                message="oMLX App chat response contains invalid tool calls",
+                detail={},
+            ) from exc
+        if not content and not tool_calls:
+            raise AdapterFailure.from_detail(
+                code=AdapterErrorCode.BAD_RESPONSE,
+                message="oMLX App chat response contains no assistant output",
+                detail={},
+            )
         finish_reason = choice.get("finish_reason")
-        return content, finish_reason if isinstance(finish_reason, str) else None
+        typed_finish = finish_reason if isinstance(finish_reason, str) else None
+        if tool_calls and typed_finish in {None, "stop"}:
+            typed_finish = "tool_calls"
+        return content, tool_calls, typed_finish
 
     @staticmethod
     def _strip_reasoning(content: str) -> tuple[str, bool]:
@@ -910,8 +934,27 @@ class OmlxAppAdapter:
                     ),
                 )
             )
-        content, frame_finish_reason = self._parse_stream_choice(document)
+        try:
+            content, tool_calls, frame_finish_reason = self._parse_stream_choice(document)
+        except AdapterFailure as failure:
+            return (
+                (self._stream_error(request_id, failure.error, emitted_content=emitted_content),),
+                emitted_content,
+                True,
+                finish_reason,
+            )
         finish_reason = frame_finish_reason or finish_reason
+        if tool_calls:
+            emitted_content = True
+            events.append(
+                StreamEvent(
+                    kind=StreamEventKind.TOOL_CALL,
+                    request_id=request_id,
+                    tool_calls=tool_calls,
+                    emitted_content=True,
+                    phase=StreamPhase.AFTER_CONTENT,
+                )
+            )
         content = reasoning_filter.feed(content)
         if content:
             emitted_content = True
@@ -928,20 +971,36 @@ class OmlxAppAdapter:
         return tuple(events), emitted_content, False, finish_reason
 
     @staticmethod
-    def _parse_stream_choice(document: Mapping[str, object]) -> tuple[str, str | None]:
+    def _parse_stream_choice(
+        document: Mapping[str, object],
+    ) -> tuple[str, tuple[ToolCallDelta, ...], str | None]:
         choices = document.get("choices")
         typed_choices = _object_list(choices)
         if not typed_choices:
-            return "", None
+            return "", (), None
         choice = _object_mapping(typed_choices[0])
         if choice is None:
-            return "", None
+            return "", (), None
         delta = _object_mapping(choice.get("delta"))
         content = delta.get("content") if delta is not None else ""
+        try:
+            tool_calls = parse_tool_call_deltas(
+                delta.get("tool_calls") if delta is not None else None
+            )
+        except ValueError as exc:
+            raise AdapterFailure.from_detail(
+                code=AdapterErrorCode.BAD_RESPONSE,
+                message="oMLX App stream contains invalid tool call deltas",
+                detail={},
+            ) from exc
         finish_reason = choice.get("finish_reason")
+        typed_finish = finish_reason if isinstance(finish_reason, str) else None
+        if tool_calls and typed_finish in {None, "stop"}:
+            typed_finish = "tool_calls"
         return (
             content if isinstance(content, str) else "",
-            finish_reason if isinstance(finish_reason, str) else None,
+            tool_calls,
+            typed_finish,
         )
 
     @staticmethod

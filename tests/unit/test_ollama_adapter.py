@@ -238,6 +238,51 @@ async def test_chat_payload_is_native_minimal_with_thinking_disabled() -> None:
 
 
 @pytest.mark.asyncio
+async def test_chat_tools_use_native_schema_and_normalize_tool_call_arguments() -> None:
+    from omlxc.domain.protocols import ChatTool, ChatToolFunction
+
+    captured: dict[str, object] = {}
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        captured.update(json.loads(request.content))
+        return httpx.Response(
+            200,
+            json={
+                "message": {
+                    "content": "",
+                    "tool_calls": [
+                        {"function": {"name": "read", "arguments": {"path": "README.md"}}}
+                    ],
+                },
+                "done": True,
+                "done_reason": "stop",
+                "prompt_eval_count": 4,
+                "eval_count": 2,
+            },
+        )
+
+    adapter = _adapter(handler)
+    request = _request().model_copy(
+        update={
+            "tools": (
+                ChatTool(
+                    function=ChatToolFunction(
+                        name="read", parameters={"type": "object", "properties": {}}
+                    )
+                ),
+            ),
+            "tool_choice": "auto",
+        }
+    )
+    result = await adapter.chat(request)
+
+    assert captured["tools"][0]["function"]["name"] == "read"  # type: ignore[index]
+    assert "tool_choice" not in captured
+    assert result.tool_calls[0].function.arguments == '{"path":"README.md"}'
+    assert result.tool_calls[0].id.startswith("call_")
+
+
+@pytest.mark.asyncio
 async def test_chat_converts_only_validated_data_images_without_fetching() -> None:
     captured: dict[str, object] = {}
 

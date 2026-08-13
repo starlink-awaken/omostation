@@ -34,6 +34,8 @@ from omlxc.domain.protocols import (
     StreamPhase,
     TextContentBlock,
     TokenUsage,
+    ToolCallDelta,
+    ToolFunctionDelta,
     TuneRequest,
     TuneResult,
     TuneScope,
@@ -42,6 +44,7 @@ from omlxc.domain.protocols import (
 from .ndjson import NDJSONDecodeError, NDJSONDecoder, NDJSONLimitError
 from .reasoning import ReasoningFilter
 from .security import AdapterFailure
+from .tool_calls import parse_ollama_tool_calls
 
 _UNSUPPORTED_STATUSES = frozenset({404, 405, 501})
 _SEMVER = re.compile(
@@ -753,8 +756,18 @@ class OllamaAdapter:
         )
 
     def _message_payload(self, message: ChatMessage, *, budget: _ImageBudget) -> dict[str, object]:
-        if isinstance(message.content, str):
-            return {"role": message.role, "content": message.content}
+        if message.content is None or isinstance(message.content, str):
+            message_payload: dict[str, object] = {
+                "role": message.role,
+                "content": message.content or "",
+            }
+            if message.tool_calls:
+                message_payload["tool_calls"] = [
+                    call.model_dump(mode="json") for call in message.tool_calls
+                ]
+            if message.tool_call_id is not None:
+                message_payload["tool_call_id"] = message.tool_call_id
+            return message_payload
         text_parts: list[str] = []
         images: list[str] = []
         for block in message.content:
@@ -818,7 +831,7 @@ class OllamaAdapter:
                 detail={},
             )
         budget = _ImageBudget()
-        return {
+        payload: dict[str, object] = {
             "model": request.model,
             "messages": [
                 self._message_payload(message, budget=budget) for message in request.messages
@@ -831,6 +844,15 @@ class OllamaAdapter:
             },
             "keep_alive": self._keep_alive_seconds,
         }
+        if request.tools:
+            payload["tools"] = [tool.model_dump(mode="json") for tool in request.tools]
+        if request.tool_choice is not None and request.tool_choice != "auto":
+            raise AdapterFailure.from_detail(
+                code=AdapterErrorCode.UNSUPPORTED,
+                message="Ollama native chat has no stable tool_choice field",
+                detail={},
+            )
+        return payload
 
     async def chat(self, request: ChatRequest) -> ChatResult:
         endpoint = "/api/chat"
@@ -862,20 +884,31 @@ class OllamaAdapter:
                     message="Ollama returned observable reasoning despite think=false",
                     detail={},
                 )
-            if not safe_content:
+            try:
+                tool_calls = parse_ollama_tool_calls(
+                    message.get("tool_calls") if message is not None else None
+                )
+            except ValueError as exc:
+                raise AdapterFailure.from_detail(
+                    code=AdapterErrorCode.BAD_RESPONSE,
+                    message="Ollama chat response contains invalid tool calls",
+                    detail={},
+                ) from exc
+            if not safe_content and not tool_calls:
                 raise AdapterFailure.from_detail(
                     code=AdapterErrorCode.BAD_RESPONSE,
                     message="Ollama chat response has no safe visible content",
                     detail={},
                 )
             usage = self._terminal_usage(document)
-            finish_reason = self._done_reason(document)
+            finish_reason = "tool_calls" if tool_calls else self._done_reason(document)
         except AdapterFailure as failure:
             return ChatResult(request_id=request.request_id, success=False, error=failure.error)
         return ChatResult(
             request_id=request.request_id,
             success=True,
             content=safe_content,
+            tool_calls=tool_calls,
             finish_reason=finish_reason,
             usage=usage,
         )
@@ -1311,6 +1344,26 @@ class OllamaAdapter:
                     terminal,
                     True,
                 )
+            try:
+                tool_calls = parse_ollama_tool_calls(
+                    message.get("tool_calls") if message is not None else None
+                )
+            except ValueError:
+                error = AdapterError(
+                    code=AdapterErrorCode.BAD_RESPONSE,
+                    message="Ollama stream contains invalid tool calls",
+                )
+                return (
+                    tuple(
+                        [
+                            *events,
+                            self._stream_error(request_id, error, emitted_content=emitted_content),
+                        ]
+                    ),
+                    emitted_content,
+                    terminal,
+                    True,
+                )
             visible = reasoning_filter.feed(content)
             if reasoning_filter.saw_reasoning:
                 error = AdapterError(
@@ -1352,7 +1405,7 @@ class OllamaAdapter:
                     )
                 try:
                     usage = self._terminal_usage(document)
-                    finish_reason = self._done_reason(document)
+                    finish_reason = "tool_calls" if tool_calls else self._done_reason(document)
                 except AdapterFailure as failure:
                     return (
                         tuple(
@@ -1374,7 +1427,45 @@ class OllamaAdapter:
                     usage=usage,
                     finish_reason=finish_reason,
                 )
+                if tool_calls:
+                    emitted_content = True
+                    events.append(
+                        StreamEvent(
+                            kind=StreamEventKind.TOOL_CALL,
+                            request_id=request_id,
+                            tool_calls=tuple(
+                                ToolCallDelta(
+                                    index=index,
+                                    id=call.id,
+                                    type="function",
+                                    function=ToolFunctionDelta(
+                                        name=call.function.name,
+                                        arguments=call.function.arguments,
+                                    ),
+                                )
+                                for index, call in enumerate(tool_calls)
+                            ),
+                            emitted_content=True,
+                            phase=StreamPhase.AFTER_CONTENT,
+                        )
+                    )
                 continue
+            if tool_calls:
+                error = AdapterError(
+                    code=AdapterErrorCode.BAD_RESPONSE,
+                    message="Ollama streamed tool calls before its terminal record",
+                )
+                return (
+                    tuple(
+                        [
+                            *events,
+                            self._stream_error(request_id, error, emitted_content=emitted_content),
+                        ]
+                    ),
+                    emitted_content,
+                    terminal,
+                    True,
+                )
             if visible:
                 emitted_content = True
                 events.append(

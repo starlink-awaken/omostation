@@ -14,7 +14,7 @@ import anyio
 from fastapi import FastAPI, Header, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from starlette.responses import Response
 from starlette.types import Message, Receive, Scope, Send
 
@@ -25,10 +25,13 @@ from omlxc.domain.protocols import (
     ChatContentBlock,
     ChatMessage,
     ChatRequest,
+    ChatTool,
+    ChatToolCall,
     EmbeddingRequest,
     StreamEvent,
     StreamEventKind,
     TokenUsage,
+    ToolChoice,
 )
 from omlxc.events import EventSubscriptionClosed, RuntimeEvent
 from omlxc.scheduler import RejectionCode, RouteFailure, RouteFailureCode
@@ -40,6 +43,7 @@ SCHEMA_VERSION = 1
 MAX_PAGE_SIZE = 100
 MAX_BODY_BYTES = 1_048_576
 MAX_TEXT_LENGTH = 100_000
+MAX_CHAT_TEXT_LENGTH = 512_000
 MAX_DOCUMENTS = 256
 REQUEST_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
@@ -104,8 +108,29 @@ class RoutePlanBody(ApiModel):
 
 
 class OpenAIChatMessage(ApiModel):
-    role: Literal["system", "user", "assistant"]
-    content: str | tuple[ChatContentBlock, ...]
+    role: Literal["system", "user", "assistant", "tool"]
+    content: str | tuple[ChatContentBlock, ...] | None = None
+    tool_calls: tuple[ChatToolCall, ...] = Field(default=(), max_length=128)
+    tool_call_id: str | None = Field(
+        default=None, min_length=1, max_length=256, pattern=r"^[A-Za-z0-9._:-]+$"
+    )
+
+    @model_validator(mode="after")
+    def validate_role_fields(self) -> OpenAIChatMessage:
+        self.to_domain()
+        return self
+
+    def to_domain(self) -> ChatMessage:
+        return ChatMessage(
+            role=self.role,
+            content=self.content,
+            tool_calls=self.tool_calls,
+            tool_call_id=self.tool_call_id,
+        )
+
+
+class OpenAIStreamOptions(ApiModel):
+    include_usage: bool = False
 
 
 class OpenAIChatBody(ApiModel):
@@ -118,6 +143,9 @@ class OpenAIChatBody(ApiModel):
     thinking: bool = False
     reasoning: bool = False
     timeout_seconds: float = Field(default=120.0, gt=0, le=3600)
+    tools: tuple[ChatTool, ...] = Field(default=(), max_length=128)
+    tool_choice: ToolChoice | None = None
+    stream_options: OpenAIStreamOptions | None = None
 
     @field_validator("messages")
     @classmethod
@@ -126,14 +154,41 @@ class OpenAIChatBody(ApiModel):
     ) -> tuple[OpenAIChatMessage, ...]:
         total = 0
         for message in value:
+            if message.content is None:
+                continue
             if isinstance(message.content, str):
                 total += len(message.content)
             else:
                 for block in message.content:
                     total += len(block.text) if block.type == "text" else len(block.image_url.url)
-        if total > MAX_TEXT_LENGTH:
+        if total > MAX_CHAT_TEXT_LENGTH:
             raise ValueError("message content exceeds the size limit")
         return value
+
+    def estimated_context_tokens(self) -> int:
+        characters = 0
+        for message in self.messages:
+            if message.content is None:
+                pass
+            elif isinstance(message.content, str):
+                characters += len(message.content)
+            else:
+                characters += sum(
+                    len(block.text) if block.type == "text" else len(block.image_url.url)
+                    for block in message.content
+                )
+            characters += sum(
+                len(call.function.name) + len(call.function.arguments)
+                for call in message.tool_calls
+            )
+        characters += sum(len(tool.model_dump_json()) for tool in self.tools)
+        return (characters + 3) // 4
+
+    @model_validator(mode="after")
+    def validate_stream_options(self) -> OpenAIChatBody:
+        if self.stream_options is not None and not self.stream:
+            raise ValueError("stream_options require stream=true")
+        return self
 
 
 class OpenAIEmbeddingBody(ApiModel):
@@ -377,16 +432,16 @@ def create_app(
                     *(("vision",) if _has_image_content(body) else ()),
                 }
             ),
-            context_tokens=0,
+            context_tokens=body.estimated_context_tokens(),
         )
         chat_request = ChatRequest(
             request_id=request_id,
             model=body.model,
-            messages=tuple(
-                ChatMessage(role=message.role, content=message.content) for message in body.messages
-            ),
+            messages=tuple(message.to_domain() for message in body.messages),
             max_tokens=body.max_tokens,
             temperature=body.temperature,
+            tools=body.tools,
+            tool_choice=body.tool_choice,
         )
         if not body.stream:
             execution = await service.chat(route, chat_request, deadline=body.timeout_seconds)
@@ -401,6 +456,9 @@ def create_app(
             if headers is None:
                 return _openai_error(request_id, 503, "backend_unavailable")
             result = execution.result
+            message: dict[str, object] = {"role": "assistant", "content": result.content}
+            if result.tool_calls:
+                message["tool_calls"] = [call.model_dump(mode="json") for call in result.tool_calls]
             return JSONResponse(
                 {
                     "id": f"chatcmpl-{request_id}",
@@ -409,7 +467,7 @@ def create_app(
                     "choices": [
                         {
                             "index": 0,
-                            "message": {"role": "assistant", "content": result.content},
+                            "message": message,
                             "finish_reason": result.finish_reason or "stop",
                         }
                     ],
@@ -517,7 +575,8 @@ def _request_id(request: Request) -> str:
 
 def _has_image_content(body: OpenAIChatBody) -> bool:
     return any(
-        not isinstance(message.content, str)
+        message.content is not None
+        and not isinstance(message.content, str)
         and any(block.type == "image_url" for block in message.content)
         for message in body.messages
     )
@@ -633,9 +692,7 @@ def _openai_error(
 def _execution_error(request_id: str, error: Any) -> JSONResponse:
     code = getattr(error, "code", ExecutionErrorCode.BACKEND_FAILURE)
     if code in {ExecutionErrorCode.NO_CANDIDATE, ExecutionErrorCode.NO_CAPACITY}:
-        partial_result = _prepare_rejection_partial_result(
-            getattr(error, "prepare_rejections", ())
-        )
+        partial_result = _prepare_rejection_partial_result(getattr(error, "prepare_rejections", ()))
         return _openai_error(
             request_id,
             409,
@@ -756,6 +813,24 @@ def _sse_event(request_id: str, model: str, event: StreamEvent) -> bytes:
             "model": model,
             "choices": [],
             "usage": _usage(event.usage),
+        }
+    elif event.kind is StreamEventKind.TOOL_CALL:
+        payload = {
+            "id": f"chatcmpl-{request_id}",
+            "object": "chat.completion.chunk",
+            "model": model,
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {
+                        "tool_calls": [
+                            call.model_dump(mode="json", exclude_none=True)
+                            for call in event.tool_calls
+                        ]
+                    },
+                    "finish_reason": None,
+                }
+            ],
         }
     else:
         payload = {

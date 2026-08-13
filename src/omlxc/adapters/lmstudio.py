@@ -27,6 +27,7 @@ from omlxc.domain.protocols import (
     ChatMessage,
     ChatRequest,
     ChatResult,
+    ChatToolCall,
     EmbeddingRequest,
     EmbeddingResult,
     LifecycleResult,
@@ -37,6 +38,7 @@ from omlxc.domain.protocols import (
     StreamEventKind,
     StreamPhase,
     TokenUsage,
+    ToolCallDelta,
     TuneRequest,
     TuneResult,
     TuneScope,
@@ -53,6 +55,7 @@ from .process import (
 from .reasoning import ReasoningFilter
 from .security import AdapterFailure
 from .sse import SSEDecoder
+from .tool_calls import parse_tool_call_deltas, parse_tool_calls, tools_payload
 
 _default_process_runner = default_process_runner
 
@@ -1007,6 +1010,7 @@ class LmStudioAdapter:
             "max_tokens": request.max_tokens,
             "temperature": request.temperature,
             "stream": stream,
+            **tools_payload(request),
         }
 
     async def chat(self, request: ChatRequest) -> ChatResult:
@@ -1018,7 +1022,7 @@ class LmStudioAdapter:
             if not response.is_success:
                 raise self._http_error(response, endpoint=endpoint)
             document = self._json_object(response, endpoint=endpoint)
-            content, finish_reason = self._parse_chat_choice(document)
+            content, tool_calls, finish_reason = self._parse_chat_choice(document)
             safe_content, unclosed = self._strip_reasoning(content)
             if unclosed:
                 raise AdapterFailure.from_detail(
@@ -1026,7 +1030,7 @@ class LmStudioAdapter:
                     message="LM Studio chat response contains an unclosed reasoning block",
                     detail={},
                 )
-            if not safe_content:
+            if not safe_content and not tool_calls:
                 raise AdapterFailure.from_detail(
                     code=AdapterErrorCode.BAD_RESPONSE,
                     message="LM Studio chat response contains no visible content",
@@ -1042,12 +1046,15 @@ class LmStudioAdapter:
             request_id=request.request_id,
             success=True,
             content=safe_content,
+            tool_calls=tool_calls,
             finish_reason=finish_reason,
             usage=self._parse_usage(document.get("usage")),
         )
 
     @staticmethod
-    def _parse_chat_choice(document: Mapping[str, object]) -> tuple[str, str | None]:
+    def _parse_chat_choice(
+        document: Mapping[str, object],
+    ) -> tuple[str, tuple[ChatToolCall, ...], str | None]:
         choices = _list(document.get("choices"))
         choice = _mapping(choices[0]) if choices else None
         message = _mapping(choice.get("message")) if choice is not None else None
@@ -1058,10 +1065,22 @@ class LmStudioAdapter:
                 detail={},
             )
         content = message.get("content")
+        try:
+            tool_calls = parse_tool_calls(message.get("tool_calls"))
+        except ValueError as exc:
+            raise AdapterFailure.from_detail(
+                code=AdapterErrorCode.BAD_RESPONSE,
+                message="LM Studio chat response contains invalid tool calls",
+                detail={},
+            ) from exc
         finish_reason = choice.get("finish_reason") if choice is not None else None
+        typed_finish = finish_reason if isinstance(finish_reason, str) else None
+        if tool_calls and typed_finish in {None, "stop"}:
+            typed_finish = "tool_calls"
         return (
             content if isinstance(content, str) else "",
-            finish_reason if isinstance(finish_reason, str) else None,
+            tool_calls,
+            typed_finish,
         )
 
     @staticmethod
@@ -1355,8 +1374,27 @@ class LmStudioAdapter:
                     ),
                 )
             )
-        content, frame_finish_reason = self._parse_stream_choice(document)
+        try:
+            content, tool_calls, frame_finish_reason = self._parse_stream_choice(document)
+        except AdapterFailure as failure:
+            return (
+                (self._stream_error(request_id, failure.error, emitted_content=emitted_content),),
+                emitted_content,
+                True,
+                finish_reason,
+            )
         finish_reason = frame_finish_reason or finish_reason
+        if tool_calls:
+            emitted_content = True
+            events.append(
+                StreamEvent(
+                    kind=StreamEventKind.TOOL_CALL,
+                    request_id=request_id,
+                    tool_calls=tool_calls,
+                    emitted_content=True,
+                    phase=StreamPhase.AFTER_CONTENT,
+                )
+            )
         content = reasoning_filter.feed(content)
         if content:
             emitted_content = True
@@ -1373,15 +1411,31 @@ class LmStudioAdapter:
         return tuple(events), emitted_content, False, finish_reason
 
     @staticmethod
-    def _parse_stream_choice(document: Mapping[str, object]) -> tuple[str, str | None]:
+    def _parse_stream_choice(
+        document: Mapping[str, object],
+    ) -> tuple[str, tuple[ToolCallDelta, ...], str | None]:
         choices = _list(document.get("choices"))
         choice = _mapping(choices[0]) if choices else None
         delta = _mapping(choice.get("delta")) if choice is not None else None
         content = delta.get("content") if delta is not None else ""
+        try:
+            tool_calls = parse_tool_call_deltas(
+                delta.get("tool_calls") if delta is not None else None
+            )
+        except ValueError as exc:
+            raise AdapterFailure.from_detail(
+                code=AdapterErrorCode.BAD_RESPONSE,
+                message="LM Studio stream contains invalid tool call deltas",
+                detail={},
+            ) from exc
         finish_reason = choice.get("finish_reason") if choice is not None else None
+        typed_finish = finish_reason if isinstance(finish_reason, str) else None
+        if tool_calls and typed_finish in {None, "stop"}:
+            typed_finish = "tool_calls"
         return (
             content if isinstance(content, str) else "",
-            finish_reason if isinstance(finish_reason, str) else None,
+            tool_calls,
+            typed_finish,
         )
 
     @staticmethod

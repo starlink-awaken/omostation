@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.5 — 2026-08-13
+
+- Added bounded OpenAI function-tool definitions, tool selection, assistant
+  tool calls, tool-result messages, and streaming tool-call deltas across the
+  private daemon and all three backend adapters.
+- Raised only the chat aggregate text budget for real coding-agent system
+  prompts while retaining the global 1 MiB request-body limit and routing by
+  an estimated context-token budget.
+
 ## 3.0.4 — 2026-08-13
 
 - Emit a terminal OpenAI-compatible SSE choice with a non-empty
