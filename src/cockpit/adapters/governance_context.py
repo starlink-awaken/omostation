@@ -14,6 +14,11 @@ from typing import Any
 
 import yaml
 
+_CAPABILITY_ROUTE_CONTRACTS = {
+    "skills": ("workspace-skills", "directory"),
+    "workflows": ("workspace-workflow-mesh", "file"),
+}
+
 
 def resolve_workspace_root(explicit: str | Path | None = None) -> Path:
     """Resolve Workspace without assuming one fixed checkout layout."""
@@ -117,6 +122,43 @@ def domains_list(
     }
 
 
+def _validated_capability_routes(raw_routes: object, workspace_root: Path) -> dict[str, Any]:
+    """Resolve the Workspace-owned skill and workflow sources fail closed."""
+
+    if not isinstance(raw_routes, dict):
+        raise ValueError("capability_routes must be a mapping")
+    resolved_workspace = workspace_root.resolve(strict=True)
+    routes = dict(raw_routes)
+    for route_id, (expected_owner, expected_kind) in _CAPABILITY_ROUTE_CONTRACTS.items():
+        route = raw_routes.get(route_id)
+        if not isinstance(route, dict):
+            raise ValueError(f"capability_routes.{route_id} must be a mapping")
+        if route.get("owner") != expected_owner:
+            raise ValueError(f"capability_routes.{route_id}.owner must be {expected_owner}")
+        registry_ref = route.get("registry_ref")
+        if not isinstance(registry_ref, str) or not registry_ref:
+            raise ValueError(f"capability_routes.{route_id}.registry_ref must be a Workspace-relative path")
+        candidate = Path(registry_ref)
+        if candidate.is_absolute() or ".." in candidate.parts or "://" in registry_ref:
+            raise ValueError(f"capability_routes.{route_id}.registry_ref must be a Workspace-relative path")
+        try:
+            resolved = (resolved_workspace / candidate).resolve(strict=True)
+        except OSError as exc:
+            raise ValueError(f"capability_routes.{route_id}.registry_ref is unavailable: {registry_ref}") from exc
+        if not resolved.is_relative_to(resolved_workspace):
+            raise ValueError(f"capability_routes.{route_id}.registry_ref must be a Workspace-relative path")
+        if expected_kind == "directory" and not resolved.is_dir():
+            raise ValueError(f"capability_routes.{route_id}.registry_ref must be a directory")
+        if expected_kind == "file" and not resolved.is_file():
+            raise ValueError(f"capability_routes.{route_id}.registry_ref must be a file")
+        routes[route_id] = {
+            **route,
+            "resolved_path": str(resolved),
+            "status": "ok",
+        }
+    return routes
+
+
 def _binding_context(domain_id: str, workspace_root: Path) -> dict[str, Any]:
     path = workspace_root / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
     try:
@@ -139,6 +181,7 @@ def _binding_context(domain_id: str, workspace_root: Path) -> dict[str, Any]:
         clients = raw.get("clients")
         if not isinstance(clients, dict):
             raise ValueError("binding registry clients must be a mapping")
+        capability_routes = _validated_capability_routes(raw.get("capability_routes"), workspace_root)
         return {
             "status": "ok",
             "available": True,
@@ -146,9 +189,7 @@ def _binding_context(domain_id: str, workspace_root: Path) -> dict[str, Any]:
             "profile_id": profile_id,
             "profile": profile,
             "workspace_mcp": raw.get("workspace_mcp") if isinstance(raw.get("workspace_mcp"), dict) else {},
-            "capability_routes": (
-                raw.get("capability_routes") if isinstance(raw.get("capability_routes"), dict) else {}
-            ),
+            "capability_routes": capability_routes,
             "clients": clients,
         }
     except Exception as exc:

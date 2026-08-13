@@ -77,13 +77,30 @@ def _write_workspace_state(root: Path) -> None:
 
 
 def _write_binding_registry(root: Path, clients: dict[str, object]) -> None:
+    skills_path = root / ".agents" / "skills" / "example"
+    skills_path.mkdir(parents=True, exist_ok=True)
+    (skills_path / "SKILL.md").write_text("# Example\n", encoding="utf-8")
     binding_path = root / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
     binding_path.parent.mkdir(parents=True, exist_ok=True)
+    (binding_path.parent / "agent-workflows.yaml").write_text(
+        "apiVersion: workspace.omostation/v1\nkind: AgentWorkflowRegistry\n",
+        encoding="utf-8",
+    )
     binding_path.write_text(
         yaml.safe_dump(
             {
                 "apiVersion": "workspace.omostation/v1",
                 "kind": "DocumentsDomainProjects",
+                "capability_routes": {
+                    "skills": {
+                        "owner": "workspace-skills",
+                        "registry_ref": ".agents/skills",
+                    },
+                    "workflows": {
+                        "owner": "workspace-workflow-mesh",
+                        "registry_ref": ".omo/_truth/registry/agent-workflows.yaml",
+                    },
+                },
                 "clients": clients,
                 "profiles": {"content-domain": {"execution_policy": "workspace_only"}},
                 "domains": [{"id": "vault", "profile": "content-domain"}],
@@ -219,13 +236,29 @@ def test_domain_context_returns_identity_and_selected_binding(tmp_path: Path, mo
     monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
     binding_path = tmp_path / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
     binding_path.parent.mkdir(parents=True)
+    skills_path = tmp_path / ".agents" / "skills" / "example"
+    skills_path.mkdir(parents=True)
+    (skills_path / "SKILL.md").write_text("# Example\n", encoding="utf-8")
+    (binding_path.parent / "agent-workflows.yaml").write_text(
+        "apiVersion: workspace.omostation/v1\nkind: AgentWorkflowRegistry\n",
+        encoding="utf-8",
+    )
     binding_path.write_text(
         yaml.safe_dump(
             {
                 "apiVersion": "workspace.omostation/v1",
                 "kind": "DocumentsDomainProjects",
                 "workspace_mcp": {"entrypoint": "cockpit-mcp", "transport": "stdio"},
-                "capability_routes": {"skills": {"owner": "workspace-skills"}},
+                "capability_routes": {
+                    "skills": {
+                        "owner": "workspace-skills",
+                        "registry_ref": ".agents/skills",
+                    },
+                    "workflows": {
+                        "owner": "workspace-workflow-mesh",
+                        "registry_ref": ".omo/_truth/registry/agent-workflows.yaml",
+                    },
+                },
                 "clients": {"claude": {"instruction_file": "CLAUDE.md"}},
                 "profiles": {
                     "content-domain": {
@@ -248,7 +281,36 @@ def test_domain_context_returns_identity_and_selected_binding(tmp_path: Path, mo
     assert result["binding"]["profile_id"] == "content-domain"
     assert result["binding"]["profile"]["execution_policy"] == "workspace_only"
     assert result["binding"]["workspace_mcp"]["entrypoint"] == "cockpit-mcp"
+    assert result["binding"]["capability_routes"]["skills"] == {
+        "owner": "workspace-skills",
+        "registry_ref": ".agents/skills",
+        "resolved_path": str(tmp_path / ".agents" / "skills"),
+        "status": "ok",
+    }
     assert "domains" not in result["binding"]
+
+
+@pytest.mark.parametrize(
+    "registry_ref",
+    ["bos://shared/_control/SKILL-INDEX.md", ".agents/missing"],
+)
+def test_domain_context_degrades_for_invalid_capability_route(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, registry_ref: str
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path)
+    _write_binding_registry(tmp_path, {"claude": {"instruction_file": "CLAUDE.md"}})
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+    binding_path = tmp_path / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
+    raw = yaml.safe_load(binding_path.read_text(encoding="utf-8"))
+    raw["capability_routes"]["skills"]["registry_ref"] = registry_ref
+    binding_path.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = gc.domain_context("vault", workspace_root=tmp_path)
+
+    assert result["status"] == "degraded"
+    assert result["binding"]["status"] == "unavailable"
+    assert "capability_routes.skills.registry_ref" in result["binding"]["error"]
 
 
 def test_domain_context_keeps_valid_identity_when_binding_is_missing(
