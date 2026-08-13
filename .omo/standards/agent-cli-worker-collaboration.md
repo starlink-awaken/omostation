@@ -22,8 +22,9 @@ discipline.
 
 Current worker set:
 
-- admitted by the existing runtime contract: `codebuddy`, `reasonix`, `pi`
-- declared candidates: `oh-my-pi`, `opencode`, `claude-code`, `crush`,
+- admitted by the existing runtime contract: `codebuddy`, `reasonix`, `pi`,
+  `oh-my-pi`
+- declared candidates: `opencode`, `claude-code`, `crush`,
   `grok`, `mimo`, `agy`, `codex`, `kilo`
 
 Future agent CLIs may be added through the same registry and handoff flow.
@@ -457,6 +458,16 @@ Forbidden write zones for workers:
 - default authority: L0; no file-write, code-change, or test-execution capability
 - evidence: admission smoke retains its receipt; formal OMO dispatch retains
   the dispatch and stdout artifacts and does not pass an adapter receipt
+
+### 10.4 Oh My Pi
+
+- preferred role: bounded local reasoning and verification worker
+- transport: one CLI prompt argv through `bin/gac/omp-worker-adapter.py`; the
+  adapter pins OMP 16.1.16 and routes only through AetherForge → omlxc coding
+- runtime: no tools, LSP, PTY, extensions, skills, rules, or persisted session
+- default authority: L0; no file-write, code-change, or test-execution capability
+- evidence: admission smoke retains a privacy-safe digest receipt; formal OMO
+  dispatch retains the dispatch and stdout artifacts
 
 ## 11. Onboarding a New Worker
 
