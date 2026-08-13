@@ -819,3 +819,27 @@ is domain-content quality: resolve or explicitly accept the current
 empty placeholder truth. Client configuration remains aligned to the accepted
 Cockpit MCP entrypoint, while per-client reload/UI smoke and ChatGPT public
 HTTPS/Secure MCP Tunnel provisioning remain separate work.
+
+## 6. 2026-08-13 Domain Facts Quality Checkpoint
+
+The three previously missing facts surfaces now contain short, source-backed
+structural facts:
+
+- `opc` records its operational ownership, one-person-company identity, pipeline
+  states, and existing system entrypoints;
+- `work-docs` records only federation and subdomain routing facts, without
+  copying business facts from child domains;
+- `work-contracts` records the reference-library boundary, source categories,
+  navigation indexes, and the derived status of OCR text.
+
+The installed `facts-audit` moved from the observed RED baseline of nine present
+and three missing to 12 present, zero missing, zero unreadable, and zero invalid.
+Each target also passes an independent single-domain audit. The contracts facts
+file is locally committed as `7acdccb`; that nested repository has no configured
+remote and retains unrelated pre-existing dirty state. The OPC and work-docs
+files live on the non-Git Documents content plane.
+
+This checkpoint does not claim that all facts are fresh or exhaustive. It closes
+only the missing-surface gate with stable source pointers. The next MVP iteration
+should be one real client reload/UI smoke, preferably Claude-3p because it uses a
+third-party model and has its own configuration entrypoint.
