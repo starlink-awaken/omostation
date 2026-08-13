@@ -60,6 +60,12 @@ _ZED_PROFILE_CONTRACT = {
     "approval_mode": "allow_read_tools",
     "builtin_tool_policy": "disable_all",
 }
+_ZCODE_CONFIG_CONTRACT: dict[str, object] = {
+    "owner": "workspace",
+    "configuration_surface": "native_json",
+    "config_path": "~/.zcode/cli/config.json",
+    "preserve_unrelated_servers": True,
+}
 
 
 def _matches_chatgpt_binding(value: object, expected: object) -> bool:
@@ -243,41 +249,85 @@ def _validate_client_profile_contract(
             "workspace_mcp.server"
         )
 
+    errors.extend(
+        _validate_client_generator_ref(
+            client_id,
+            "profile_contract",
+            contract,
+            project_registry_path,
+        )
+    )
+    return errors
+
+
+def _validate_zcode_config_contract(
+    clients: dict[str, object],
+    workspace_mcp: dict[str, object],
+    project_registry_path: Path,
+) -> list[str]:
+    """Require the native ZCode user-config projection owned by Workspace."""
+
+    client = clients.get("zcode")
+    if not isinstance(client, dict):
+        return ["clients.zcode must be a mapping"]
+    errors: list[str] = []
+    if client.get("instruction_file") != "AGENTS.md":
+        errors.append("clients.zcode.instruction_file must be AGENTS.md")
+    if client.get("mcp_scope") != "user":
+        errors.append("clients.zcode.mcp_scope must be user")
+
+    contract = client.get("config_contract")
+    if not isinstance(contract, dict):
+        errors.append("clients.zcode.config_contract must be a mapping")
+        return errors
+    for field, expected in _ZCODE_CONFIG_CONTRACT.items():
+        if not _matches_chatgpt_binding(contract.get(field), expected):
+            required = str(expected).lower() if isinstance(expected, bool) else expected
+            errors.append(f"clients.zcode.config_contract.{field} must be {required}")
+    if contract.get("managed_mcp_server") != workspace_mcp.get("server"):
+        errors.append(
+            "clients.zcode.config_contract.managed_mcp_server must match "
+            "workspace_mcp.server"
+        )
+
+    generator_errors = _validate_client_generator_ref(
+        "zcode",
+        "config_contract",
+        contract,
+        project_registry_path,
+    )
+    errors.extend(generator_errors)
+    return errors
+
+
+def _validate_client_generator_ref(
+    client_id: str,
+    contract_name: str,
+    contract: dict[str, object],
+    project_registry_path: Path,
+) -> list[str]:
+    """Require one safe Workspace-relative client projection generator."""
+
+    prefix = f"clients.{client_id}.{contract_name}.generator_ref"
     generator_ref = contract.get("generator_ref")
     if not isinstance(generator_ref, str) or not generator_ref:
-        errors.append(
-            f"clients.{client_id}.profile_contract.generator_ref must be a "
-            "Workspace-relative file"
-        )
-        return errors
+        return [f"{prefix} must be a Workspace-relative file"]
     candidate = Path(generator_ref)
     if candidate.is_absolute() or ".." in candidate.parts or "://" in generator_ref:
-        errors.append(
-            f"clients.{client_id}.profile_contract.generator_ref must be a "
-            "Workspace-relative file"
-        )
-        return errors
+        return [f"{prefix} must be a Workspace-relative file"]
 
-    registry_parent = project_registry_path.parent
-    workspace_root = registry_parent.parents[2]
+    workspace_root = project_registry_path.parent.parents[2]
     try:
         resolved_workspace = workspace_root.resolve(strict=True)
         resolved_generator = (resolved_workspace / candidate).resolve(strict=True)
     except OSError:
-        errors.append(
-            f"clients.{client_id}.profile_contract.generator_ref is unavailable: "
-            f"{generator_ref}"
-        )
-        return errors
+        return [f"{prefix} is unavailable: {generator_ref}"]
     if (
         not resolved_generator.is_relative_to(resolved_workspace)
         or not resolved_generator.is_file()
     ):
-        errors.append(
-            f"clients.{client_id}.profile_contract.generator_ref must be a "
-            "Workspace-relative file"
-        )
-    return errors
+        return [f"{prefix} must be a Workspace-relative file"]
+    return []
 
 
 def check_domain_projects(
@@ -350,6 +400,13 @@ def check_domain_projects(
             _validate_client_profile_contract(
                 "codex",
                 _CODEX_PROFILE_CONTRACT,
+                clients,
+                workspace_mcp,
+                project_registry_path,
+            )
+        )
+        errors.extend(
+            _validate_zcode_config_contract(
                 clients,
                 workspace_mcp,
                 project_registry_path,
