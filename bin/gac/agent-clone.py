@@ -22,12 +22,16 @@ emits objects/info/alternates.
 from __future__ import annotations
 
 import argparse
+import ctypes
+import errno
 import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 
 SCHEMA_MANIFEST = "agent-clone-manifest/v1"
 SCHEMA_CHANGESET = "cross-repo-changeset/v1"
@@ -43,11 +47,18 @@ EXIT_USAGE = 2
 class ToolError(Exception):
     """A structured failure with a stable reason and exit code."""
 
-    def __init__(self, reason: str, message: str, exit_code: int = EXIT_POLICY) -> None:
+    def __init__(
+        self,
+        reason: str,
+        message: str,
+        exit_code: int = EXIT_POLICY,
+        details: dict | None = None,
+    ) -> None:
         super().__init__(message)
         self.reason = reason
         self.message = message
         self.exit_code = exit_code
+        self.details = details or {}
 
 
 # ---------------------------------------------------------------------------
@@ -216,6 +227,68 @@ def normalize_source(source: str) -> str:
     return source
 
 
+def normalize_local_upstream(source_root: str, upstream: str) -> str:
+    """Resolve local relative remotes in the source repository's namespace."""
+    if "://" in upstream or re.match(r"^(?:[^/@:]+@)?[^/:]+:.+", upstream):
+        return upstream
+    expanded = os.path.expanduser(upstream)
+    if os.path.isabs(expanded):
+        return canonical(expanded)
+    return canonical(os.path.join(source_root, expanded))
+
+
+def atomic_publish_no_replace(source: str, destination: str) -> None:
+    """Atomically publish a directory without replacing a concurrent path."""
+    libc = ctypes.CDLL(None, use_errno=True)
+    source_bytes = os.fsencode(source)
+    destination_bytes = os.fsencode(destination)
+    if sys.platform == "darwin" and hasattr(libc, "renamex_np"):
+        rename_exclusive = 0x00000004
+        rename = libc.renamex_np
+        rename.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+        rename.restype = ctypes.c_int
+        result = rename(source_bytes, destination_bytes, rename_exclusive)
+    elif sys.platform.startswith("linux") and hasattr(libc, "renameat2"):
+        at_fdcwd = -100
+        rename_no_replace = 1
+        rename = libc.renameat2
+        rename.argtypes = [
+            ctypes.c_int,
+            ctypes.c_char_p,
+            ctypes.c_int,
+            ctypes.c_char_p,
+            ctypes.c_uint,
+        ]
+        rename.restype = ctypes.c_int
+        result = rename(
+            at_fdcwd,
+            source_bytes,
+            at_fdcwd,
+            destination_bytes,
+            rename_no_replace,
+        )
+    else:
+        raise ToolError(
+            "atomic_publish_unsupported",
+            "this platform does not expose an atomic no-replace directory rename",
+            EXIT_POLICY,
+        )
+    if result == 0:
+        return
+    error_number = ctypes.get_errno()
+    if error_number in {errno.EEXIST, errno.ENOTEMPTY}:
+        raise ToolError(
+            "destination_collision",
+            f"destination {destination} appeared during clone; refusing publication",
+            EXIT_POLICY,
+        )
+    raise ToolError(
+        "atomic_publish_failed",
+        f"cannot atomically publish clone: {os.strerror(error_number)}",
+        EXIT_POLICY,
+    )
+
+
 def cmd_create(args: argparse.Namespace) -> dict:
     agent_id = args.agent_id
     if not agent_id or not AGENT_ID_RE.match(agent_id):
@@ -234,7 +307,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
         )
 
     dest = args.destination
-    if os.path.exists(dest):
+    if os.path.lexists(dest):
         raise ToolError(
             "destination_collision",
             f"destination {dest} already exists; refusing every pre-existing path",
@@ -242,84 +315,205 @@ def cmd_create(args: argparse.Namespace) -> dict:
         )
 
     source = args.source
+    source_url = normalize_source(source)
+    revision = args.revision
+    source_revision_ref = revision
+    if os.path.isdir(source):
+        upstream = git(source, "remote", "get-url", "origin")
+        if upstream.returncode == 0 and upstream.stdout.strip():
+            source_url = normalize_local_upstream(source, upstream.stdout.strip())
+        if revision:
+            resolved = git(source, "rev-parse", "--verify", f"{revision}^{{commit}}")
+            if resolved.returncode != 0:
+                raise ToolError(
+                    "revision_checkout_failed",
+                    f"cannot resolve revision {revision} in source: "
+                    f"{resolved.stderr.strip()}",
+                    EXIT_POLICY,
+                )
+            revision = resolved.stdout.strip()
+            symbolic = git(
+                source, "rev-parse", "--symbolic-full-name", source_revision_ref
+            )
+            if symbolic.returncode == 0 and symbolic.stdout.strip():
+                source_revision_ref = symbolic.stdout.strip()
+
+    destination_parent = os.path.dirname(os.path.abspath(dest)) or os.curdir
+    if not os.path.isdir(destination_parent):
+        raise ToolError(
+            "destination_parent_missing",
+            f"destination parent does not exist: {destination_parent}",
+            EXIT_POLICY,
+        )
+    staging_root = tempfile.mkdtemp(
+        prefix=f".{os.path.basename(dest)}.agent-clone-", dir=destination_parent
+    )
+    staging_clone = os.path.join(staging_root, "workspace")
+    published = False
+
     clone_args = ["clone"]
     if os.path.isdir(source):
         # Force a full copy: no hardlinks, no alternates, no dependence on the
         # human Workspace as a persistent Git alternate.
         clone_args.append("--no-local")
-    clone_args += [source, dest]
-    proc = git(None, *clone_args)
-    if proc.returncode != 0:
-        raise ToolError(
-            "clone_failed",
-            f"git clone failed (exit {proc.returncode}): {proc.stderr.strip()}",
-            EXIT_POLICY,
-        )
-
-    # Fail closed if a clone still emitted an alternates pointer.
-    alt = os.path.join(git_common_dir(dest), "objects", "info", "alternates")
-    if os.path.exists(alt) and os.path.getsize(alt) > 0:
-        raise ToolError(
-            "alternates_emitted",
-            f"clone emitted persistent alternates at {alt}",
-            EXIT_POLICY,
-        )
-
-    if args.revision:
-        proc = git(dest, "checkout", args.revision)
+    clone_args += [source, staging_clone]
+    failure = None
+    cleanup_failure = None
+    try:
+        proc = git(None, *clone_args)
         if proc.returncode != 0:
             raise ToolError(
-                "revision_checkout_failed",
-                f"cannot checkout revision {args.revision}: {proc.stderr.strip()}",
+                "clone_failed",
+                f"git clone failed (exit {proc.returncode}): {proc.stderr.strip()}",
                 EXIT_POLICY,
             )
 
-    proc = git(dest, "switch", "-c", working_branch)
-    if proc.returncode != 0:
+        # Fail closed if a clone still emitted an alternates pointer.
+        alt = os.path.join(
+            git_common_dir(staging_clone), "objects", "info", "alternates"
+        )
+        if os.path.exists(alt) and os.path.getsize(alt) > 0:
+            raise ToolError(
+                "alternates_emitted",
+                f"clone emitted persistent alternates at {alt}",
+                EXIT_POLICY,
+            )
+
+        if revision:
+            object_probe = git(staging_clone, "cat-file", "-e", f"{revision}^{{commit}}")
+            if object_probe.returncode != 0 and os.path.isdir(source):
+                fetch = git(
+                    staging_clone,
+                    "fetch",
+                    "--no-tags",
+                    source,
+                    source_revision_ref,
+                )
+                if fetch.returncode != 0:
+                    raise ToolError(
+                        "revision_checkout_failed",
+                        f"cannot fetch source revision {source_revision_ref}: "
+                        f"{fetch.stderr.strip()}",
+                        EXIT_POLICY,
+                    )
+            proc = git(staging_clone, "checkout", revision)
+            if proc.returncode != 0:
+                raise ToolError(
+                    "revision_checkout_failed",
+                    f"cannot checkout revision {revision}: {proc.stderr.strip()}",
+                    EXIT_POLICY,
+                )
+
+        proc = git(staging_clone, "switch", "-c", working_branch)
+        if proc.returncode != 0:
+            raise ToolError(
+                "agent_branch_failed",
+                f"cannot create private branch {working_branch}: {proc.stderr.strip()}",
+                EXIT_POLICY,
+            )
+
+        if source_url != normalize_source(source):
+            proc = git(staging_clone, "remote", "set-url", "origin", source_url)
+            if proc.returncode != 0:
+                raise ToolError(
+                    "origin_rebind_failed",
+                    f"cannot bind clone origin to source upstream: {proc.stderr.strip()}",
+                    EXIT_POLICY,
+                )
+
+        submodules_initialized = False
+        if not args.no_submodules:
+            # Initialize the superproject's complete gitlink set. Do not recurse
+            # into nested workspace mirrors: a submodule may itself contain the
+            # entire project graph, causing scripts/scripts/... expansion.
+            proc = git(
+                staging_clone,
+                "-c",
+                "protocol.file.allow=always",
+                "submodule",
+                "update",
+                "--init",
+            )
+            if proc.returncode != 0:
+                raise ToolError(
+                    "submodule_init_failed",
+                    f"submodule init failed: {proc.stderr.strip()}",
+                    EXIT_POLICY,
+                )
+            for path, pinned_sha in gitlinks(staging_clone).items():
+                initialized, child_head, _origin, clean = submodule_state(
+                    staging_clone, path
+                )
+                if not initialized or child_head != pinned_sha or not clean:
+                    raise ToolError(
+                        "submodule_init_incomplete",
+                        f"submodule {path} did not reach a clean pinned checkout",
+                        EXIT_POLICY,
+                    )
+            submodules_initialized = True
+
+        # Clone-local hook activation must succeed before the clone is declared ready.
+        if os.path.isfile(os.path.join(staging_clone, ".githooks", "pre-commit")):
+            proc = git(staging_clone, "config", "core.hooksPath", ".githooks")
+            if proc.returncode != 0:
+                raise ToolError(
+                    "hook_activation_failed",
+                    f"cannot set core.hooksPath: {proc.stderr.strip()}",
+                    EXIT_POLICY,
+                )
+
+        frozen_sha = root_head(staging_clone)
+        identity = {
+            "schema": SCHEMA_IDENTITY,
+            "agent_id": agent_id,
+            "canonical_root": canonical(dest),
+            "source_url": source_url,
+            "frozen_root_sha": frozen_sha,
+            "working_branch": working_branch,
+            "ready": True,
+        }
+        write_identity(staging_clone, identity)
+        atomic_publish_no_replace(staging_clone, dest)
+        published = True
+    except ToolError as exc:
+        failure = exc
+    except Exception as exc:  # noqa: BLE001 - preserve cleanup evidence
+        failure = ToolError(
+            "internal_error",
+            f"{type(exc).__name__}: {exc}",
+            EXIT_USAGE,
+        )
+    finally:
+        try:
+            shutil.rmtree(staging_root)
+        except OSError as exc:
+            cleanup_failure = exc
+
+    if failure is not None:
+        if cleanup_failure is not None:
+            failure.details.update(
+                {
+                    "cleanup_reason": type(cleanup_failure).__name__,
+                    "residual_resources": [canonical(staging_root)],
+                }
+            )
+        raise failure
+    if cleanup_failure is not None:
         raise ToolError(
-            "agent_branch_failed",
-            f"cannot create private branch {working_branch}: {proc.stderr.strip()}",
+            "staging_cleanup_failed",
+            f"clone was published but staging cleanup failed: {cleanup_failure}",
             EXIT_POLICY,
+            {
+                "cleanup_reason": type(cleanup_failure).__name__,
+                "publication_state": "published_cleanup_unconfirmed",
+                "published_resource": canonical(dest),
+                "residual_resources": [canonical(staging_root)],
+            },
         )
 
-    submodules_initialized = False
-    if not args.no_submodules:
-        # Initialize the superproject's complete gitlink set. Do not recurse
-        # into nested workspace mirrors: a submodule may itself contain the
-        # entire project graph, causing scripts/scripts/... expansion.
-        proc = git(
-            dest, "-c", "protocol.file.allow=always",
-            "submodule", "update", "--init",
-        )
-        if proc.returncode != 0:
-            raise ToolError(
-                "submodule_init_failed",
-                f"submodule init failed: {proc.stderr.strip()}",
-                EXIT_POLICY,
-            )
-        submodules_initialized = True
-
-    # Clone-local hook activation must succeed before the clone is declared ready.
-    if os.path.isfile(os.path.join(dest, ".githooks", "pre-commit")):
-        proc = git(dest, "config", "core.hooksPath", ".githooks")
-        if proc.returncode != 0:
-            raise ToolError(
-                "hook_activation_failed",
-                f"cannot set core.hooksPath: {proc.stderr.strip()}",
-                EXIT_POLICY,
-            )
-
-    frozen_sha = root_head(dest)
-    identity = {
-        "schema": SCHEMA_IDENTITY,
-        "agent_id": agent_id,
-        "canonical_root": canonical(dest),
-        "source_url": normalize_source(source),
-        "frozen_root_sha": frozen_sha,
-        "working_branch": working_branch,
-        "ready": True,
-    }
-    identity_file = write_identity(dest, identity)
+    if not published:
+        raise ToolError("clone_failed", "clone was not published", EXIT_POLICY)
+    identity_file = identity_path(dest)
 
     return {
         "ok": True,
@@ -888,8 +1082,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         result = args.func(args)
     except ToolError as exc:
+        error = {"ok": False, "reason": exc.reason, "message": exc.message}
+        error.update(exc.details)
         emit(
-            {"ok": False, "reason": exc.reason, "message": exc.message},
+            error,
             getattr(args, "json", False),
         )
         return exc.exit_code
