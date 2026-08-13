@@ -73,6 +73,8 @@ def cmd_kems_status(args: argparse.Namespace) -> int:
             "cyan",
         )
     )
+    if reason := audit.get("reason"):
+        console.print(f"  [yellow]{reason}[/]")
     for violation in audit.get("violations", [])[:10]:
         console.print(f"  [yellow]{violation.get('code', '?')}[/] {violation.get('relative_path', '')}")
     return 0 if result["status"] == "ok" else 1
