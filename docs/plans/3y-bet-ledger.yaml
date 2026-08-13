@@ -2669,7 +2669,8 @@ bets:
     expect: exit 0
   - cmd: >-
       uv run --with pytest --with pyyaml python -m pytest
-      tests/unit/gac/test_submodule_reachability_gate.py -q
+      tests/unit/gac/test_submodule_reachability_gate.py
+      tests/unit/gac/test_submodule_pointer_transaction.py -q
     expect: exit 0
   - cmd: >-
       git -C projects/omo merge-base --is-ancestor HEAD origin/main &&
