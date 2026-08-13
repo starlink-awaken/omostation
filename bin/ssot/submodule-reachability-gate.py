@@ -137,6 +137,9 @@ def remote_contains(
         )
         if contains_main.returncode == 0:
             return True, main_ref
+        if contains_main.returncode != 1:
+            detail = contains_main.stderr.strip() or f"exit {contains_main.returncode}"
+            return False, f"main ancestry query failed: {detail}"
         return False, f"not contained in {main_ref}"
 
     contains = run(["git", "branch", "-r", "--contains", sha], cwd=submodule_dir)
