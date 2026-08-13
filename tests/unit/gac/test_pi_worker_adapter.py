@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import time
@@ -166,6 +167,9 @@ def test_provider_copy_keeps_only_validated_omlxc_provider(tmp_path: Path):
             }
         }
     }
+    store = destination / "models-store.json"
+    assert store.read_bytes() == b"{}"
+    assert stat.S_IMODE(store.stat().st_mode) == 0o600
 
 
 def test_provider_projection_strips_unknown_and_non_coding_model_fields(tmp_path: Path):
@@ -415,6 +419,55 @@ def test_temp_cwd_write_fails_closed(tmp_path: Path):
             receipt_path=receipt,
             user_home=user_pi_home(tmp_path),
             popen_factory=lambda *_argv, **kwargs: Writing(kwargs["cwd"]),
+            health_probe=healthy,
+            marker_probe=no_marker,
+            version_reader=lambda: "0.84.1",
+        )
+
+
+def test_precreated_models_store_is_part_of_unchanged_trial_baseline(tmp_path: Path):
+    class InspectingProcess(FakeProcess):
+        def __init__(self, cwd: str) -> None:
+            super().__init__()
+            self.cwd = Path(cwd)
+
+        def communicate(self, timeout=None):
+            store = self.cwd / "agent" / "models-store.json"
+            assert store.read_bytes() == b"{}"
+            assert stat.S_IMODE(store.stat().st_mode) == 0o600
+            return super().communicate(timeout)
+
+    result = adapter.run_worker(
+        prompt="x",
+        execute=True,
+        receipt_path=safe_receipt(tmp_path),
+        user_home=user_pi_home(tmp_path),
+        popen_factory=lambda *_argv, **kwargs: InspectingProcess(kwargs["cwd"]),
+        health_probe=healthy,
+        marker_probe=no_marker,
+        version_reader=lambda: "0.84.1",
+    )
+
+    assert result["receipt"]["checks"]["temp_cwd_unchanged"] is True
+
+
+def test_models_store_change_still_fails_closed(tmp_path: Path):
+    class MutatingStore(FakeProcess):
+        def __init__(self, cwd: str) -> None:
+            super().__init__()
+            self.cwd = Path(cwd)
+
+        def communicate(self, timeout=None):
+            (self.cwd / "agent" / "models-store.json").write_text('{"changed":true}', encoding="utf-8")
+            return super().communicate(timeout)
+
+    with pytest.raises(adapter.AdapterError, match="temp_write_detected"):
+        adapter.run_worker(
+            prompt="x",
+            execute=True,
+            receipt_path=safe_receipt(tmp_path),
+            user_home=user_pi_home(tmp_path),
+            popen_factory=lambda *_argv, **kwargs: MutatingStore(kwargs["cwd"]),
             health_probe=healthy,
             marker_probe=no_marker,
             version_reader=lambda: "0.84.1",
