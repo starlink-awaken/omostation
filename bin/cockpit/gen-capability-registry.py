@@ -31,7 +31,6 @@ import ast
 import json
 import re
 import sys
-from datetime import UTC, datetime
 from pathlib import Path
 
 try:
@@ -140,10 +139,13 @@ def _extract_tools_from_python(file_path: Path) -> list[str]:
                     isinstance(t, ast.Name) and t.id == "TOOLS" for t in node.targets
                 ) and isinstance(node.value, ast.Dict):
                     for key in node.value.keys:
-                        if isinstance(key, ast.Constant) and isinstance(key.value, str):
-                            if key.value not in seen:
-                                seen.add(key.value)
-                                tools.append(key.value)
+                        if (
+                            isinstance(key, ast.Constant)
+                            and isinstance(key.value, str)
+                            and key.value not in seen
+                        ):
+                            seen.add(key.value)
+                            tools.append(key.value)
         except SyntaxError:
             pass
 
@@ -301,25 +303,33 @@ _RE_ADD_PARSER = re.compile(r'sub\.add_parser\s*\(\s*["\']([a-zA-Z0-9_\-]+)["\']
 
 
 def scan_cli_commands() -> list[dict]:
-    """从 cockpit cli.py 提取所有 add_parser 注册的子命令."""
-    cli_path = WORKSPACE / "projects" / "cockpit" / "src" / "cockpit" / "cli.py"
-    if not cli_path.exists():
-        return []
-    content = cli_path.read_text(encoding="utf-8")
+    """Extract registered Cockpit CLI commands from its registration modules."""
+
+    cockpit_source = WORKSPACE / "projects" / "cockpit" / "src" / "cockpit"
+    registration_paths = (
+        cockpit_source / "cli.py",
+        cockpit_source / "_subcommands.py",
+    )
     seen: set[str] = set()
     commands: list[dict] = []
-    for m in _RE_ADD_PARSER.finditer(content):
-        name = m.group(1)
-        if name in seen:
+    for path in registration_paths:
+        if not path.is_file():
             continue
-        seen.add(name)
-        # 尝试从同一行后面提取 help="..."
-        rest = content[m.end():m.end() + 200]
-        help_match = re.search(r'help\s*=\s*["\']([^"\']+)["\']', rest)
-        commands.append({
-            "name": name,
-            "description": help_match.group(1) if help_match else "",
-        })
+        content = path.read_text(encoding="utf-8", errors="replace")
+        for match in _RE_ADD_PARSER.finditer(content):
+            name = match.group(1)
+            if name in seen:
+                continue
+            seen.add(name)
+            # 尝试从同一行后面提取 help="..."
+            rest = content[match.end() : match.end() + 200]
+            help_match = re.search(r'help\s*=\s*["\']([^"\']+)["\']', rest)
+            commands.append(
+                {
+                    "name": name,
+                    "description": help_match.group(1) if help_match else "",
+                }
+            )
     return sorted(commands, key=lambda c: c["name"])
 
 
@@ -387,8 +397,6 @@ def verify_runtime(registry: dict) -> int:
     目前覆盖 cockpit 自身 MCP (可 import). 其他 server 需独立启动, 留待后续.
     返回: 0=全部匹配, 1=有偏差.
     """
-    import asyncio
-
     runtime_checks: list[dict] = []
 
     print("🔍 运行时内省校验 (in-process MCP servers):")
