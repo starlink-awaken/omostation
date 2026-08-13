@@ -170,3 +170,40 @@ are <https://developers.openai.com/plugins/deploy/connect-chatgpt> and
 <https://developers.openai.com/api/docs/guides/secure-mcp-tunnels>. This task
 did not provision a tunnel: credentials and external Platform state remain a
 separate, owner-confirmed operation.
+
+## 2026-08-13 capability-owner convergence reconciliation
+
+The MVP originally named Workspace as the skill/workflow owner but routed both
+capabilities through Documents `bos://` indexes. That was a semantic split:
+human projections could drift while the checker and Cockpit still reported a
+healthy binding.
+
+The split is now closed through two merged changes:
+
+- Cockpit PR #38 / merge `78af7865` validates capability owners and
+  Workspace-relative sources, derives their installed paths, and returns a
+  degraded binding for an invalid route;
+- root PR #1391 / merge `536b0d97` points skills to `.agents/skills`, workflows
+  to `.omo/_truth/registry/agent-workflows.yaml`, adds RED/GREEN contract
+  coverage, records ADR-0409, and installs the Cockpit pointer.
+
+Observed verification after installation:
+
+- both repositories' remote lint/test and root governance checks passed;
+- the installed Documents checker returned `ok=true`, `domain_count=12`,
+  `gateway_count=12`, and no errors;
+- twelve direct installed `domain_context` calls all returned `status=ok`;
+- their route evidence resolved under the accepted Workspace checkout, not
+  under Documents;
+- Codex, standard Claude, Claude-3p, Zed, and ZCode configuration still point
+  to the same accepted `cockpit-mcp` command and L4 registry environment;
+- `@公共/_control/SKILL-INDEX.md` and `REGISTRY.md` were relabeled as human
+  projections with no inventory-row deletion; the exact pre-change files are
+  backed up at
+  `/Users/xiamingxing/.local/state/omostation/backups/20260813T1029+0800-documents-capability-route-projection/`.
+
+The current `facts-audit` remains truthfully non-green: nine domains have a
+facts artifact and three do not (`opc`, `work-docs`, `work-contracts`). This is
+the next content-quality iteration, not a reason to create empty facts files or
+to reopen the capability-route work. Per-client reload/UI evidence and ChatGPT
+tunnel provisioning also remain unclaimed.

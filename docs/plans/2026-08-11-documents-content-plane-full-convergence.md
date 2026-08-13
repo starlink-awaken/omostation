@@ -792,3 +792,30 @@ L4_DOCUMENTS_ROOT="/Users/xiamingxing/Documents" \
 4. 最终删除 legacy scripts/symlinks/caches、批量 chmod 或退役 `domain-kems`。
 
 确认请求必须给出当时的精确清单和证据，不能拿本计划当无限期删除授权。
+
+## 5. 2026-08-13 Capability-Route MVP Checkpoint
+
+This iteration closes the capability-owner ambiguity without expanding the
+product surface:
+
+- Cockpit PR #38 validates skill and workflow routes at `domain_context` time,
+  returns their resolved Workspace paths, and degrades invalid bindings;
+- root PR #1391 records ADR-0409, moves the two executable route references to
+  Workspace sources, adds fail-closed checker coverage, and advances the
+  Cockpit gitlink;
+- the accepted checkout is clean at root merge `536b0d97` and Cockpit
+  `78af7865`;
+- the installed checker reports 12 domains, 12 gateways, and zero errors;
+- all 12 installed `domain_context` calls report `ok` and resolve skills to
+  accepted `.agents/skills` and workflows to accepted
+  `.omo/_truth/registry/agent-workflows.yaml`;
+- the Documents Skill and Registry indexes are now explicitly human
+  projections. Their pre-change copies are retained under the 2026-08-13
+  capability-route-projection backup.
+
+This is an MVP checkpoint, not Task 17 completion. The next bounded iteration
+is domain-content quality: resolve or explicitly accept the current
+`facts-audit` gaps (`opc`, `work-docs`, and `work-contracts`) without creating
+empty placeholder truth. Client configuration remains aligned to the accepted
+Cockpit MCP entrypoint, while per-client reload/UI smoke and ChatGPT public
+HTTPS/Secure MCP Tunnel provisioning remain separate work.
