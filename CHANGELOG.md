@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.12 — 2026-08-14
+
+- Added `omlxc nodes probe <node-id>` for an explicit, node-scoped catalog
+  refresh. It refreshes only that node's configured backends and never starts
+  inference or model lifecycle work.
+
 ## 3.0.11 — 2026-08-14
 
 - Accept bounded composite OpenAI-compatible function descriptions up to
