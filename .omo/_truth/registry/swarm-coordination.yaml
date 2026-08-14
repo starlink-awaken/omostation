@@ -60,6 +60,28 @@ topology_migration:
       - cross_repo_changeset_verified
       - all_active_agents_migrated
       - integration_root_agent_reflog_window_clean
+  # BET-Y1Q1-T1-05A: 共享运行时协调层 (跨 clone 认领/心跳/消息).
+  # shadow 灰度: D2/D3 文件锁仍是权威判定源, SQLite 是镜像; warning/fail
+  # 阶段翻开关只改处置不改判定. D2/D3 gate 条目退役属 T1-05 D3 阶段,
+  # 本 bet 不动 (T1-05 verify grep 依赖它们存在).
+  coordination_layer:
+    db_path: "~/agents/_shared/runtime/coordination.sqlite3"
+    db_env_override: OMO_COORDINATION_DB
+    mode: shadow
+    owner_bet: BET-Y1Q1-T1-05A
+    store: bin/gac/coordination_store.py
+    cli_status: bin/gac/swarm-discipline-cli.py status
+    cli_token_check: bin/gac/swarm-discipline-cli.py token-check
+    heartbeat_source: bin/ssot/agent-tick-daemon.py
+    heartbeat_interval_min: 5
+    stale_after_ticks: 3
+    tables: [claims, agent_health, messages, shadow_events]
+    shadow_started_at: "2026-08-14T12:56:00Z"
+    shadow_window_days: 7
+    non_goals:
+      - cross_host_coordination
+      - messages_table_data_flow
+      - cockpit_ui
 
 gates:
   d1_adr_atomic_claim:
