@@ -26,11 +26,12 @@ python3 bin/gac/swarm-discipline-cli.py status # 期望三段可读
 ls -la ~/agents/_shared/runtime/                # 看备份轮转与 last-backup 戳
 ```
 
-`Agent Health` 每行的 `rev=` / `code=` 是实际运行中 tick daemon 的版本指纹。若
+`Agent Health` 每行的 `rev=` / `code=` 是实际运行中 tick daemon 的版本指纹。JSON
+中的 `runtime_root_digest` 是权威运行态 workspace 规范路径的 SHA-256，不暴露原始路径。若
 `rev` 不等于准备部署的 checkout `git rev-parse HEAD`，或显示
 `runtime=unattested`，说明 launchd 仍在跑旧代码；先修部署源，不要把新 checkout
-的测试结果当成运行态已经升级。指纹只含 commit SHA、源码 SHA-256 和 Python 版本，
-不记录本机路径、用户名或主机名。
+的测试结果当成运行态已经升级。指纹只含 commit SHA、源码 SHA-256、运行态根摘要和
+Python 版本，不记录本机路径、用户名或主机名。
 
 integrity_check 非 `ok` / `status` 报 `CoordinationStoreError` / DB 文件大小为 0 → 走 §3 恢复。
 
@@ -60,13 +61,51 @@ python3 bin/gac/swarm-discipline-cli.py status
 
 ## 4. 备份节奏与部署
 
+### 4.1 Tick daemon：代码根与运行态根必须分离
+
+daemon 代码必须从 main 对齐、保持 clean 的独立部署 clone 加载；`.omo`、MOS、journey
+和 heartbeat 仍只写权威 Workspace。禁止再让 LaunchAgent 直接执行一个落后且 dirty 的
+共享 checkout，也禁止把部署 clone 自己的 `.omo` 变成第二运行真相。daemon 会在导入
+OMO 前设置 `WORKSPACE_CODE_ROOT`；JourneyRunner 读取运行态 journey 数据时仍使用
+`WORKSPACE_ROOT`，执行 `journey-runner.py` 时只使用代码根。
+
+```bash
+CODE_ROOT="$HOME/agents/coordination-daemon/ws"
+RUNTIME_ROOT="$HOME/Workspace"
+
+# 发布前单次受控验证：代码从 CODE_ROOT 加载，运行态写 RUNTIME_ROOT
+python3 "$CODE_ROOT/bin/ssot/agent-tick-daemon.py" \
+  --once --workspace-root "$RUNTIME_ROOT"
+```
+
+LaunchAgent 的 `ProgramArguments` 必须使用同一绑定：
+
+```text
+/opt/homebrew/bin/python3
+$HOME/agents/coordination-daemon/ws/bin/ssot/agent-tick-daemon.py
+--run
+--interval
+300
+--workspace-root
+$HOME/Workspace
+```
+
+并在 plist 的 `EnvironmentVariables` 设置 `PYTHONDONTWRITEBYTECODE=1`，防止运行进程
+向只读部署 clone 写 `__pycache__`。
+
+切换后以 `swarm-discipline-cli.py status --json` 的 `workspace_revision`、
+`code_sha256` 和 `runtime_root_digest` 为准；至少观察三个 5min 心跳周期。只看到进程存在
+或 LaunchAgent loaded 不算部署成功。
+
+### 4.2 备份
+
 两层 (grill Q9 裁定):
 
 1. **crontab 日备 (主)** — 机器本地配置不进 git, 新机器要手工装:
 
 ```cron
 # 协调层日备 (BET-Y1Q1-T1-05A): integrity + backup + 轮转
-30 8 * * * cd "$HOME/Workspace" && python3 bin/gac/coordination_store.py --backup >> runtime/logs/coordination-backup.log 2>&1
+30 8 * * * cd "$HOME/agents/coordination-daemon/ws" && python3 bin/gac/coordination_store.py --backup >> "$HOME/Workspace/runtime/logs/coordination-backup.log" 2>&1
 ```
 
 2. **24h 时间戳兜底 (自动)** — 任何 store 访问若发现

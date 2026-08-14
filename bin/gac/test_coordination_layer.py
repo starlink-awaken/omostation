@@ -27,7 +27,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import coordination_store as cs  # noqa: E402
+import coordination_store as cs
 
 
 def _prep_db(tag: str) -> Path:
@@ -308,9 +308,120 @@ def suite_runtime() -> bool:
     assert spec and spec.loader
     daemon = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(daemon)
-    daemon._coordination_heartbeat(
-        {"results": [{"agent_id": "runtime-agent", "ok": True, "action": "noop"}]}
-    )
+    original_workspace_root = os.environ.get("WORKSPACE_ROOT")
+    original_code_root = os.environ.get("WORKSPACE_CODE_ROOT")
+    runtime_root = Path(tempfile.mkdtemp(prefix="coord-runtime-root-")).resolve()
+    (runtime_root / ".omo" / "state").mkdir(parents=True)
+    try:
+        configured_root = daemon._configure_runtime_workspace(runtime_root)
+        assert configured_root == runtime_root.resolve()
+        assert os.environ["WORKSPACE_ROOT"] == str(runtime_root.resolve())
+        assert os.environ["WORKSPACE_CODE_ROOT"] == str(daemon.CODE_ROOT)
+        daemon._heartbeat({"type": "runtime-root-probe"})
+        heartbeat_path = runtime_root / ".omo" / "state" / "agent-tick-daemon.jsonl"
+        assert heartbeat_path.exists(), (
+            "heartbeat 必须写 runtime root，不得写 code root"
+        )
+        heartbeat_entry = json.loads(
+            heartbeat_path.read_text().strip().splitlines()[-1]
+        )
+        assert heartbeat_entry["type"] == "runtime-root-probe"
+
+        expected_root_digest = (
+            __import__("hashlib")
+            .sha256(str(runtime_root.resolve()).encode())
+            .hexdigest()
+        )
+        daemon._coordination_heartbeat(
+            {"results": [{"agent_id": "runtime-agent", "ok": True, "action": "noop"}]}
+        )
+        observed_root: dict[str, str] = {}
+        original_load_omo = daemon._load_omo
+        original_coordination_heartbeat = daemon._coordination_heartbeat
+
+        def fake_load_omo():
+            observed_root["before_import"] = os.environ["WORKSPACE_ROOT"]
+            observed_root["code_before_import"] = os.environ["WORKSPACE_CODE_ROOT"]
+            return lambda: {
+                "agent_count": 0,
+                "ok_count": 0,
+                "failed_count": 0,
+                "results": [],
+            }
+
+        daemon._load_omo = fake_load_omo
+        daemon._coordination_heartbeat = lambda _result: None
+        try:
+            assert daemon.main(["--once", "--workspace-root", str(runtime_root)]) == 0
+        finally:
+            daemon._load_omo = original_load_omo
+            daemon._coordination_heartbeat = original_coordination_heartbeat
+        assert observed_root["before_import"] == str(runtime_root.resolve())
+        assert observed_root["code_before_import"] == str(daemon.CODE_ROOT)
+
+        code_status_cmd = [
+            "git",
+            "-C",
+            str(daemon.CODE_ROOT),
+            "status",
+            "--porcelain=v2",
+            "--ignored=matching",
+        ]
+        code_status_before = subprocess.run(
+            code_status_cmd, capture_output=True, text=True, check=True
+        ).stdout
+        subprocess_env = os.environ.copy()
+        subprocess_env["PYTHONDONTWRITEBYTECODE"] = "1"
+        subprocess_env[cs.ENV_DB_PATH] = str(runtime_root / "coordination.sqlite3")
+        isolated_tick = subprocess.run(
+            [
+                sys.executable,
+                str(daemon_path),
+                "--once",
+                "--workspace-root",
+                str(runtime_root),
+            ],
+            env=subprocess_env,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=120,
+        )
+        assert isolated_tick.returncode == 0, (
+            isolated_tick.stdout + isolated_tick.stderr
+        )
+        isolated_result = json.loads(isolated_tick.stdout)
+        expected_agent_ids = {
+            "health-monitor",
+            "knowledge-curator",
+            "journey-runner",
+            "governor",
+            "advisor",
+            "autonomy-assessment",
+        }
+        assert isolated_result["mode"] == "once"
+        assert isolated_result["agent_count"] == len(expected_agent_ids)
+        assert isolated_result["ok_count"] == len(expected_agent_ids)
+        assert isolated_result["failed_count"] == 0
+        assert {item["agent_id"] for item in isolated_result["results"]} == (
+            expected_agent_ids
+        )
+        code_status_after = subprocess.run(
+            code_status_cmd, capture_output=True, text=True, check=True
+        ).stdout
+        assert code_status_after == code_status_before, (
+            "isolated --once must not mutate the code checkout\n"
+            f"before={code_status_before!r}\nafter={code_status_after!r}"
+        )
+    finally:
+        if original_workspace_root is None:
+            os.environ.pop("WORKSPACE_ROOT", None)
+        else:
+            os.environ["WORKSPACE_ROOT"] = original_workspace_root
+        if original_code_root is None:
+            os.environ.pop("WORKSPACE_CODE_ROOT", None)
+        else:
+            os.environ["WORKSPACE_CODE_ROOT"] = original_code_root
     conn = sqlite3.connect(str(db))
     detail_json = conn.execute(
         "SELECT detail_json FROM agent_health WHERE agent_id='runtime-agent'"
@@ -319,15 +430,50 @@ def suite_runtime() -> bool:
     detail = json.loads(detail_json)
     attestation = detail["runtime_attestation"]
     assert set(attestation) == {
-        "component", "code_sha256", "workspace_revision", "python_version"
+        "component",
+        "code_sha256",
+        "workspace_revision",
+        "python_version",
+        "runtime_root_digest",
     }
     assert len(attestation["code_sha256"]) == 64
     assert attestation["workspace_revision"]
+    assert attestation["runtime_root_digest"] == expected_root_digest
     assert "/Users/" not in json.dumps(attestation), "attestation 不得泄露本机路径"
     snap_health = cs.snapshot()["agent_health"]
     visible = next(h for h in snap_health if h["agent_id"] == "runtime-agent")
     assert visible["runtime_attestation"] == attestation, "status 快照必须暴露部署指纹"
-    print("runtime: heartbeat 含 privacy-safe code/version attestation OK")
+
+    unsafe_link_root = Path(tempfile.mkdtemp(prefix="coord-runtime-link-parent-"))
+    link_path = unsafe_link_root / "workspace-link"
+    link_path.symlink_to(runtime_root, target_is_directory=True)
+    try:
+        daemon._configure_runtime_workspace(link_path)
+    except ValueError as exc:
+        assert "symlink" in str(exc)
+    else:
+        raise AssertionError("runtime workspace symlink 必须 fail closed")
+
+    parent_link = unsafe_link_root / "parent-link"
+    parent_link.symlink_to(runtime_root.parent, target_is_directory=True)
+    nested_link_path = parent_link / runtime_root.name
+    assert not nested_link_path.is_symlink()
+    try:
+        daemon._configure_runtime_workspace(nested_link_path)
+    except ValueError as exc:
+        assert "symlink" in str(exc)
+    else:
+        raise AssertionError("runtime workspace symlink parent 必须 fail closed")
+
+    dotdot_link_path = f"{parent_link}/../{runtime_root.name}"
+    try:
+        daemon._configure_runtime_workspace(dotdot_link_path)
+    except ValueError as exc:
+        assert "canonical" in str(exc)
+    else:
+        raise AssertionError("含 symlink/.. 的 runtime workspace 必须 fail closed")
+
+    print("runtime: code/runtime root 分离 + privacy-safe attestation OK")
     return True
 
 
