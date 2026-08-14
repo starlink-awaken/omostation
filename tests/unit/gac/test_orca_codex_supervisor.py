@@ -474,6 +474,8 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
             "supervised-codex-OMO-TASK-001",
             "--spec",
             "Update the declared documentation fixture.",
+            "--from",
+            "coordinator-001",
             "--json",
         ),
         (

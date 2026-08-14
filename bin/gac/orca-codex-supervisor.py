@@ -795,6 +795,8 @@ def start_supervised_codex(
             f"supervised-codex-{omo_task_id}",
             "--spec",
             prompt,
+            "--from",
+            coordinator_handle,
             *retry_request("task-create"),
             "--json",
         ),
