@@ -291,6 +291,85 @@ def test_create_resolves_local_source_revision_before_clone(tmp_path):
     assert identity["source_url"] == str(bare)
 
 
+def test_create_resolves_stale_remote_ref_from_canonical_upstream_without_source_writes(
+    tmp_path,
+):
+    _src, _child, bare = make_source(tmp_path)
+    middle = tmp_path / "middle-clone"
+    leaf = tmp_path / "leaf-clone"
+    updater = tmp_path / "updater"
+    git(tmp_path, "clone", str(bare), str(middle))
+    git(tmp_path, "clone", str(bare), str(leaf))
+    git(leaf, "remote", "set-url", "origin", str(middle))
+    stale_leaf_ref = git(leaf, "rev-parse", "origin/main").stdout.strip()
+    stale_middle_ref = git(middle, "rev-parse", "origin/main").stdout.strip()
+
+    git(tmp_path, "clone", str(bare), str(updater))
+    (updater / "README.md").write_text("remote-v2\n")
+    git(updater, "add", "README.md")
+    git(updater, "commit", "-m", "remote-v2")
+    git(updater, "push", "origin", "main")
+    expected = git(updater, "rev-parse", "HEAD").stdout.strip()
+    assert expected not in {stale_leaf_ref, stale_middle_ref}
+
+    destination = tmp_path / "canonical-upstream-clone"
+    proc = run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(leaf),
+        "--destination",
+        str(destination),
+        "--revision",
+        "origin/main",
+        "--no-submodules",
+        "--json",
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert git(destination, "rev-parse", "HEAD").stdout.strip() == expected
+    assert git(destination, "remote", "get-url", "origin").stdout.strip() == str(bare)
+    identity = json.loads(
+        (destination / ".git" / "agent-clone-identity.json").read_text()
+    )
+    assert identity["source_url"] == str(bare)
+    assert identity["frozen_root_sha"] == expected
+    assert git(leaf, "rev-parse", "origin/main").stdout.strip() == stale_leaf_ref
+    assert git(middle, "rev-parse", "origin/main").stdout.strip() == stale_middle_ref
+
+
+def test_create_rejects_local_origin_cycle_before_destination_write(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    left = tmp_path / "left-clone"
+    right = tmp_path / "right-clone"
+    git(tmp_path, "clone", str(bare), str(left))
+    git(tmp_path, "clone", str(bare), str(right))
+    git(left, "remote", "set-url", "origin", str(right))
+    git(right, "remote", "set-url", "origin", str(left))
+    destination = tmp_path / "cycle-destination"
+
+    proc = run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(left),
+        "--destination",
+        str(destination),
+        "--revision",
+        "origin/main",
+        "--no-submodules",
+        "--json",
+        check=False,
+    )
+
+    assert proc.returncode == 1
+    assert parse_json(proc)["reason"] == "origin_cycle"
+    assert not destination.exists()
+
+
 def test_create_resolves_relative_local_origin_against_source_repo(tmp_path):
     src, _child, bare = make_source(tmp_path)
     upstream = tmp_path / "upstream repo.git"
