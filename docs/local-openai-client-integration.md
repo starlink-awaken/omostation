@@ -62,6 +62,23 @@ http://127.0.0.1:9290/v1
 - 模型可用性是动态的。每次启动客户端或修改 provider 前，都以 `GET /v1/models` 的实际返回值为准。
 - 不把请求体里的模型 ID 当作节点或后端标识，也不要把内部 placement ID 写入项目配置。
 
+### 上下文与输出预算：目录不等于固定容量
+
+`GET /v1/models` 回答的是“哪些逻辑模型 ID 可以由门面公布”，**不**公布实时的
+context window、显存余量或最终 placement。一个逻辑模型可以映射到多个 placement；
+它们的 context limit 可能不同。请求到达后，`omlxc` 才按授权、可用性、能力、上下文、
+内存和并发条件选择候选。没有合格候选时会返回 typed `409`，而不是把超长输入截断或
+偷偷切到物理后端。
+
+因此，`/v1/models` 不公布实时 context window，客户端也不应把“目录中有此模型”
+理解成每次都保证相同的输入容量。下表中的数值是**保守客户端预算**：它们适合当前
+本机常用逻辑模型的正常使用，而不是服务端对每一个 placement 的硬承诺。
+
+- 默认把单次输入控制在 **16K token** 以内；这会给工具结果、系统提示词和输出留出余量。
+- 只有在调用方能接受 typed `409` 并重新缩短上下文时，才把请求提高到 **32K token**。
+- `max_tokens` 是期望输出上限；输入加输出仍必须落在实际获选 placement 的 context limit 内。
+- 需要稳定长上下文时，在客户端做摘要、检索或分段，而不要设置无限请求超时。
+
 ## 3. 安全地准备环境变量
 
 把地址和凭据放在终端会话、受管 secret store 或系统钥匙串导出的环境变量中；不要把 key 写进仓库、`opencode.json`、shell history、截图或 issue。
@@ -99,16 +116,18 @@ opencode models omlxc
 pi --list-models omlxc
 ```
 
-本机已登记的常用逻辑模型限制如下。它们是客户端预算，不代表每次请求一定有合格 placement；最终仍以 typed HTTP 结果为准。
+本机已登记的常用逻辑模型限制如下。它们是保守的客户端起步预算，不代表每次请求
+一定有合格 placement，也不是所有候选的固定 context window；最终仍以 typed HTTP
+结果为准。
 
 | 逻辑 ID | 输入上下文 | 最大输出 | 用途 |
 | --- | ---: | ---: | --- |
-| `coding` | 32768 | 2048 | 通用编码 |
-| `coding-fast` | 32768 | 2048 | 低延迟小任务 |
-| `coding-next` | 32768 | 4096 | 多轮工具任务首选 |
-| `mythos-fast` | 32768 | 2048 | 快速文本任务 |
-| `reasoning-lite` | 32768 | 2048 | 轻量分析 |
-| `vision` | 32768 | 2048 | 需要图像能力的请求 |
+| `coding` | 16384 | 2048 | 通用编码 |
+| `coding-fast` | 16384 | 2048 | 低延迟小任务 |
+| `coding-next` | 16384 | 4096 | 多轮工具任务首选 |
+| `mythos-fast` | 16384 | 2048 | 快速文本任务 |
+| `reasoning-lite` | 16384 | 2048 | 轻量分析 |
+| `vision` | 16384 | 2048 | 需要图像能力的请求 |
 
 ## 4. 先做无推理连通性验证
 
@@ -379,7 +398,14 @@ Kilo Code 的终端版与 VS Code 扩展都支持 OpenAI-compatible provider。�
 }
 ```
 
-`tool_call: true` 只表示协议支持函数工具，不会替客户端批准文件或命令操作。Kilo 的文件与命令执行权限仍由客户端控制，应保持交互确认默认值。当前机器未安装 Kilo CLI，因此本轮只验证了配置结构；不要根据未安装版本猜测 `kilo models` 一类子命令，安装后应先用只读工具做一次有界实验。
+`tool_call: true` 只表示协议支持函数工具，不会替客户端批准文件或命令操作。Kilo 的文件与命令执行权限仍由客户端控制，应保持交互确认默认值。
+
+当前 VS Code 扩展安装会附带 `kilo` CLI，但它未必自动加入 shell `PATH`。先在扩展的
+`bin/kilo` 路径执行 `kilo --help` 确认版本，再按该版本实际提供的 `kilo models <provider>`
+做**只读**目录检查；不要因为 shell 找不到 `kilo` 就全局安装第二份 CLI，也不要使用
+`--refresh`（它会请求外部目录）。若已认证的 AetherForge 目录非空、Kilo 的 provider
+筛选仍没有模型，先检查全局配置中的 provider ID、环境变量引用和模型 mapping，而不是
+扫描后端或改动服务配置。
 
 ## 9. 统一实验流程
 
@@ -390,7 +416,7 @@ Kilo Code 的终端版与 VS Code 扩展都支持 OpenAI-compatible provider。�
 | 配置位置 | 既有用户级 `opencode.json` 的 `provider.omlxc` | `~/.pi/agent/models.json` | `~/.omp/agent/models.yml` | `~/.config/kilo/kilo.jsonc` |
 | 认证来源 | `{env:AETHERFORGE_API_KEY}` | `$AETHERFORGE_API_KEY` | `AETHERFORGE_API_KEY` | `{env:AETHERFORGE_API_KEY}` |
 | 模型选择 | `omlxc/<本地选择名>` | `omlxc/<逻辑 ID>` | `omlxc/<逻辑 ID>` | `openai-compatible/<本地选择名>` |
-| 本机验证状态 | 目录、文本与 read 工具轮次通过 | 目录/取密通过；v3.0.7 请求形状已做契约测试 | 取密/请求形状已做契约测试 | CLI 未安装，仅配置结构待实机验证 |
+| 本机验证状态 | 目录、文本与 read 工具轮次通过 | 目录/取密通过；v3.0.7 请求形状已做契约测试 | 取密/请求形状已做契约测试 | 扩展自带 CLI 已发现；全局 provider 与凭据引用已做只读核验，待首次有界推理实验 |
 
 对于任何工具：
 
