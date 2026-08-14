@@ -795,7 +795,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     ask_p.add_argument("prompt", nargs="+", help="对话内容")
     ask_p.add_argument("--model", "-m", help="指定模型 ID (例如 omlxc/coding-next)")
 
-    proxy_env_p = sub.add_parser("proxy-env", help="输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE)")
+    sub.add_parser("proxy-env", help="输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE)")
 
     # ── knowledge / memory / kems / c2g ───────────────────────
     knowledge_p = sub.add_parser("knowledge", help="📚 KOS 知识检索 (search/status/stats)")

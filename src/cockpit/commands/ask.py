@@ -34,12 +34,12 @@ def _get_api_key() -> str:
 def _get_model() -> str:
     """Get the available coding model from the local directory."""
     url = f"{AETHERFORGE_BASE_URL}/models"
-    req = urllib.request.Request(url)
+    req = urllib.request.Request(url)  # noqa: S310
     key = _get_api_key()
     if key:
         req.add_header("Authorization", f"Bearer {key}")
     try:
-        with urllib.request.urlopen(req, timeout=3.0) as response:
+        with urllib.request.urlopen(req, timeout=3.0) as response:  # noqa: S310
             catalog = json.load(response)
             items = catalog.get("data", [])
             for item in items:
@@ -57,34 +57,34 @@ def cmd_ask(args) -> int:
     if not prompt:
         console.print("[yellow]用法: cockpit ask \"你的问题\"[/yellow]")
         return 1
-        
+
     model = getattr(args, "model", None) or _get_model()
-    
+
     url = f"{AETHERFORGE_BASE_URL}/chat/completions"
     payload = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "stream": False
     }
-    
-    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"))
+
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"))  # noqa: S310
     req.add_header("Content-Type", "application/json")
-    
+
     key = _get_api_key()
     if key:
         req.add_header("Authorization", f"Bearer {key}")
-        
+
     try:
         with console.status(f"[cyan]AetherForge ({model}) is thinking...[/cyan]"):
-            with urllib.request.urlopen(req, timeout=120.0) as response:
+            with urllib.request.urlopen(req, timeout=120.0) as response:  # noqa: S310
                 result = json.load(response)
                 content = result["choices"][0]["message"]["content"]
-                
+
         console.print()
         console.print(Markdown(content))
         console.print()
         return 0
-        
+
     except urllib.error.HTTPError as e:
         console.print(f"[red]HTTP Error {e.code}: {e.read().decode('utf-8')}[/red]")
         return 1
@@ -98,7 +98,7 @@ def cmd_proxy_env(args) -> int:
     if not key:
         console.print("[red]AETHERFORGE_API_KEY 未找到。请确认 AetherForge 已就绪或环境变量已设置。[/red]")
         return 1
-        
+
     console.print(f"export OPENAI_API_BASE=\"{AETHERFORGE_BASE_URL}\"")
     console.print(f"export OPENAI_API_KEY=\"{key}\"")
     console.print(f"export AETHERFORGE_BASE_URL=\"{AETHERFORGE_BASE_URL}\"")
