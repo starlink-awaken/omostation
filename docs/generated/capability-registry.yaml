@@ -8,10 +8,10 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 565
+  mcp_tools: 568
   bos_services: 223
   bos_domains: 17
-  cli_commands: 130
+  cli_commands: 133
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -522,14 +522,17 @@ mcp_servers:
   - cards_status
   - chat
   - domain_context
+  - domain_controller_shadow_status
   - domain_facts_audit
   - domain_facts_validation_status
+  - domain_model_freshness_status
   - domain_project_status
+  - domain_sanyi_status_consistency_status
   - domains_list
   - kems_status
   - run_task
   - workspace_context
-  tool_count: 11
+  tool_count: 14
 - id: runtime
   name: eCOS Runtime Services
   layer: L1
@@ -1787,6 +1790,8 @@ cli_commands:
   description: 契约验证
 - name: control
   description: 控制平面：submit / ack / nack
+- name: controller-shadow
+  description: 读取 Runtime 旧控制器影子迁移回执
 - name: daily
   description: 每日研究简报
 - name: dashboard
@@ -1883,6 +1888,8 @@ cli_commands:
   description: 查看 bus metrics 快照
 - name: model-driven
   description: '[DEPRECATED] 模型驱动生命周期入口 (ADR-0240 D1) — 拒绝执行'
+- name: model-freshness
+  description: 读取 Runtime 模型新鲜度回执
 - name: mof
   description: MOF 元模型操作 (委派 mof CLI)
 - name: monitor
@@ -1939,6 +1946,8 @@ cli_commands:
   description: 为模型选择最优节点
 - name: runtime
   description: runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱)
+- name: sanyi-status
+  description: 读取 Runtime 三医状态一致性回执
 - name: scan
   description: 平面扫描
 - name: scenario
