@@ -221,6 +221,62 @@ def _check_projection(
     return errors
 
 
+def _is_prior_managed_projection(
+    current_profile: object,
+    projection: dict[str, Any],
+    current_permissions: dict[str, Any],
+) -> bool:
+    """Accept only an older generated profile with a strict tool subset."""
+    expected_profile = projection["profile"]
+    if not isinstance(current_profile, dict) or not isinstance(expected_profile, dict):
+        return False
+    if set(current_profile) != set(expected_profile):
+        return False
+    for key, expected in expected_profile.items():
+        if key != "context_servers" and current_profile.get(key) != expected:
+            return False
+
+    expected_servers = expected_profile.get("context_servers")
+    current_servers = current_profile.get("context_servers")
+    if not isinstance(expected_servers, dict) or not isinstance(current_servers, dict):
+        return False
+    if set(expected_servers) != set(current_servers) or len(expected_servers) != 1:
+        return False
+    server = next(iter(expected_servers))
+    expected_server = expected_servers.get(server)
+    current_server = current_servers.get(server)
+    if not isinstance(expected_server, dict) or not isinstance(current_server, dict):
+        return False
+    expected_tools = expected_server.get("tools")
+    current_tools = current_server.get("tools")
+    if (
+        set(expected_server) != {"tools"}
+        or set(current_server) != {"tools"}
+        or not isinstance(expected_tools, dict)
+        or not isinstance(current_tools, dict)
+    ):
+        return False
+    current_tool_names = set(current_tools)
+    if (
+        not current_tool_names
+        or not current_tool_names < set(expected_tools)
+        or any(current_tools.get(tool) is not True for tool in current_tool_names)
+    ):
+        return False
+
+    expected_permissions = projection["tool_permissions"]
+    expected_current_permissions = {
+        f"mcp:{server}:{tool}": expected_permissions[f"mcp:{server}:{tool}"]
+        for tool in current_tool_names
+    }
+    managed_permissions = {
+        key: value
+        for key, value in current_permissions.items()
+        if key.startswith(f"mcp:{server}:")
+    }
+    return managed_permissions == expected_current_permissions
+
+
 def _install_projection(settings: dict[str, Any], projection: dict[str, Any]) -> bool:
     agent = _agent_settings(settings)
     profiles = agent.setdefault("profiles", {})
@@ -228,10 +284,6 @@ def _install_projection(settings: dict[str, Any], projection: dict[str, Any]) ->
         raise ProfileError("agent.profiles must be a mapping")
     profile_id = projection["profile_id"]
     current_profile = profiles.get(profile_id)
-    if current_profile is not None and current_profile != projection["profile"]:
-        raise ProfileError(
-            f"agent.profiles.{profile_id} already exists with different content"
-        )
 
     tool_permissions = agent.setdefault("tool_permissions", {})
     if not isinstance(tool_permissions, dict):
@@ -239,6 +291,14 @@ def _install_projection(settings: dict[str, Any], projection: dict[str, Any]) ->
     tools = tool_permissions.setdefault("tools", {})
     if not isinstance(tools, dict):
         raise ProfileError("agent.tool_permissions.tools must be a mapping")
+    if (
+        current_profile is not None
+        and current_profile != projection["profile"]
+        and not _is_prior_managed_projection(current_profile, projection, tools)
+    ):
+        raise ProfileError(
+            f"agent.profiles.{profile_id} already exists with different content"
+        )
     for key, expected in projection["tool_permissions"].items():
         current = tools.get(key)
         if current is not None and current != expected:
@@ -246,8 +306,9 @@ def _install_projection(settings: dict[str, Any], projection: dict[str, Any]) ->
                 f"agent.tool_permissions.tools.{key} conflicts with the Workspace contract"
             )
 
-    changed = current_profile is None
-    profiles.setdefault(profile_id, projection["profile"])
+    changed = current_profile != projection["profile"]
+    if changed:
+        profiles[profile_id] = projection["profile"]
     for key, expected in projection["tool_permissions"].items():
         if key not in tools:
             tools[key] = expected
