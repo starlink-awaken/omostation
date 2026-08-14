@@ -566,7 +566,7 @@ diff_checks:
       - bin/gac/gac-local-gate.py
       - .omo/_truth/registry/agent-workflows.yaml
       - tests/test_agent_workflow.py
-    command: [uv, run, pytest, tests/test_agent_workflow.py, -q]
+    command: [uv, run, --with, pyyaml, --with, pytest, python, -m, pytest, tests/test_agent_workflow.py, -q]
   - id: governance-evolution-validate
     description: Governance evolution roadmap structure and traceability validation.
     required: true
@@ -716,7 +716,7 @@ diff_checks:
   - id: gac-local-gate
     description: Full local governance gate for broad contract changes.
     required: true
-    allowed_lanes: [code, docs, governance_code, governance_state, config]
+    allowed_lanes: [code, docs, docs_data, governance_code, governance_state, config]
     paths:
       - Makefile
       - bin/**

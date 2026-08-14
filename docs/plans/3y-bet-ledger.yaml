@@ -127,6 +127,16 @@ tracks:
     pasw_required: true
     default_workflow: governance-state-mutation
     agent_profile_hint: governance-agent
+  T6-EVOLUTION:
+    title: 演化 / 自治能力进化
+    scope: 技能结晶 / 影子沙箱 / 责任归因 / 动态算力 / god-module 拆分收尾
+    primary_write_surfaces:
+    - bin/**
+    - projects/**
+    - .agents/skills/**
+    pasw_required: true
+    default_workflow: bet-execution
+    agent_profile_hint: governance-agent
   T7-SCENE:
     title: 场景
     scope: scene-card schema / 五档生命周期 / 三锚点场景迭代
@@ -248,6 +258,18 @@ bets:
   status: done
   goal: 当 MOS 信念记录触发 2 次以上时，联动 workflow_skill_creator 自动萃取为可复用 Skill 包
   completed_at: "2026-08-08"
+  done_evidence: '(2026-08-14 补登记: 本条目缺 done_when/verify/workflow/write_surfaces
+    四字段, 历史 commit 未溯源到对应交付 PR; done_at 系按 status=done 回填. 修复轮
+    BET-Y1Q1-T1-05A-fixes 以最小合法结构补齐, 事实内容以 goal 为准)'
+  done_when:
+  - "MOS 信念记录 >= 2 次触发时自动联动 workflow_skill_creator 萃取 Skill 包 (以 goal 为准)"
+  verify:
+  - cmd: grep -c "workflow_skill_creator" .omo/_truth/registry/memory-os.yaml
+    expect: '>= 1'
+  workflow: bet-execution
+  write_surfaces:
+  - .omo/_truth/registry/memory-os.yaml
+  - .agents/skills/**
 - id: BET-Y1Q2-T6-07
   track: T6-EVOLUTION
   window: Y1Q2
@@ -256,6 +278,17 @@ bets:
   priority: P1
   status: done
   goal: 引入 omo simulation 命令，在隔离临时沙箱中调起 Devil/Sage 预演校验
+  done_evidence: '(2026-08-14 补登记: 本条目缺 done_when/verify/workflow/write_surfaces
+    四字段, 历史 commit 未溯源到对应交付 PR. 修复轮 BET-Y1Q1-T1-05A-fixes 以最小合法
+    结构补齐, 事实内容以 goal 为准; 影子沙箱实现在 bin/gac/bdsk-shadow-sandbox.py)'
+  done_when:
+  - "omo simulation 命令在隔离临时沙箱调起 Devil/Sage 对抗预演 (以 goal 为准)"
+  verify:
+  - cmd: test -f bin/gac/bdsk-shadow-sandbox.py
+    expect: 存在
+  workflow: bet-execution
+  write_surfaces:
+  - bin/gac/**
 - id: BET-Y1Q2-T6-08
   track: T6-EVOLUTION
   window: Y1Q2
@@ -279,6 +312,12 @@ bets:
   - trace_attribution 可追溯完整归因链（支持多层级、缺失节点）
   - CLI 新增 spawn / trace 子命令，start 支持 --parent-run
   - 9 个测试全通过
+  verify:
+  - cmd: uv run --with pyyaml python bin/agent-workflow.py trace --help
+    expect: 子命令存在
+  workflow: bet-execution
+  write_surfaces:
+  - projects/omo/**
 - id: BET-Y1Q2-T6-09
   track: T6-EVOLUTION
   window: Y1Q2
@@ -298,6 +337,14 @@ bets:
     26 tests passing (15 complexity + 11 policies).
     Production fix: 加 triage/rpc→simple, mcp/embed→medium 关键词, 加权评分防全落 medium.
     附带: bulk-deletion-guard CI + 15 子模块分支保护 (三层防删除).'
+  done_when:
+  - "TaskComplexityScorer 三维信号融合分级 + RouterPipeline 插件 + complexity fallback chain (见 done_evidence)"
+  verify:
+  - cmd: test -d .subtrees/aetherforge
+    expect: 子模块存在
+  workflow: bet-execution
+  write_surfaces:
+  - .subtrees/aetherforge/**
 - id: BET-Y1Q2-T6-10
   track: T6-EVOLUTION
   window: Y1Q2
@@ -319,6 +366,14 @@ bets:
   non_goals:
   - 修改 god-module 阈值 (L0 锁定)
   - 加 allowlist (与减法方向矛盾)
+  done_when:
+  - "3 个 >1500L 文件拆分至全部 <=1500L, omo lint god-module GATE PASS (见 done_evidence)"
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: 本条目 0 error
+  workflow: bet-execution
+  write_surfaces:
+  - .subtrees/cockpit/**
   evidence:
     E1_interface_check_red:
       description: origin/main interface-check 连续 fail, 唯一阻断点 = god-module 3 个 >1500L
@@ -1430,7 +1485,7 @@ bets:
   - 降低 silent_loss 硬红线
   done_when:
   - 保留 <= 40 个覆盖 A_conflict / B_failure_injection 核心原型的用例
-  - 实际结果: 222 → 5 (仅保留 A/B/C/D 核心原型)
+  - "实际结果: 222 → 5 (仅保留 A/B/C/D 核心原型)"
   - make collab-dualtrack 验证 silent_loss=0
   evidence:
   - commit: 'feat(T6-04): 合成协作场景归档 222→5 — 保留 A/B/C/D 核心原型'

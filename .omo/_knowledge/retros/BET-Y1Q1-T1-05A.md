@@ -27,13 +27,25 @@
 
 1. **台账存量 25 个 lint error** (T6-06~10 缺字段 + T6-04 dict) — 与本 bet 无关,
    留给人类决定归属 (不在本 bet write_surfaces 语义内修复).
+   → **修复轮 (2026-08-14 fixes) 已清零**: 92 bet / 10 轨道全绿 (补 T6-EVOLUTION
+   track 登记 + T6-06/07/09/10 最小合法结构 + T6-04 引号).
 2. **agent-claim 需要 affected-hash** — claim-check 输出的流程没提, 实际
    `agent-workflow.py claim` 强制要求 (affected-graph.py 计算), AGENT-BRIEF §2.4
    与实际行为有一步未文档化的 gap.
+   → **修复轮已补进 AGENT-BRIEF §2.4** (含三个实测坑).
 3. **engineering-agent 无权跑 governance-state-mutation** — 必须 governance-agent,
    AGENT-BRIEF 的 claim-check 输出 profile 提示与 profile 实际权限矩阵不一致.
 4. **token 写死 0 的自纠** — 初版 submit 挂点用 `--token 0` 会让每次 submit 误报
    stale; 改为 claim 文件持久化 `coordination_token` 字段, submit 读文件.
+5. **〔修复轮 2026-08-14 追加〕verify gate FAIL 根因纠正**: 交付轮会话汇报曾诊断
+   "verify 的 gate 跑在主仓 (WORKSPACE 解析回主仓)" — **该诊断错误**。修复轮实测:
+   `verify --from-diff --execute` 在 worktree 内 PASS, omo 从 worktree
+   `projects/omo/src` 加载, WORKSPACE 解析正确。真实根因 = 纯 lane 混合:
+   diff 含 `docs/plans/3y-bet-ledger.yaml` (docs_data lane), 而 gac-local-gate
+   diff check 的 `allowed_lanes` 缺 `docs_data`, 5 lanes ⊄ 4 allowed → FAIL。
+   修复 = `agent-workflows.yaml` 该 check 补 `docs_data` (ADR-0129 §11.3.2 通道)。
+   当时交付轮手动 env 注入 AGENT_WORKFLOW_ALLOWED_LANES 是误打误撞走对了接口,
+   但根因归因错了 — 教训: 诊断要重现, 不能拿 "现象吻合" 当因果。
 
 ## Q4 净增减：代码行 / 文件 / GaC 规则 / ADR / 脚本？
 
@@ -63,3 +75,19 @@
 ```
 # python3 bin/gac/swarm-discipline-cli.py status --json 的导出贴这里
 ```
+
+## 附: 修复轮 (2026-08-14, PR #1477)
+
+交付轮汇报挂账的五项缺陷已修:
+1. gac-local-gate diff check 补 `docs_data` lane (真 SSOT 是 `_root.yaml`
+   split 目录, legacy 单文件同步修 — 两份 registry 并存本身是存量漂移,
+   彻底清理留后续 bet)
+2. 台账 lint 25 → **0** (T6-EVOLUTION track 登记 + 五 bet 最小结构回填)
+3. AGENT-BRIEF §2.4 补 affected-hash 前置 + profile 权限矩阵 + 三个实测坑
+4. omo lifecycle `_bounded_lock_name` 修 Errno 63 锁名超长崩溃
+5. agent-workflow-tests check 命令补 pyyaml 依赖
+
+verify 7/7 PASS (新配置下含 gac-local-gate 与 agent-workflow-tests),
+36/36 tests, 台账 lint 0 error。**本轮最大教训**: 交付轮对 verify FAIL 的
+"主仓解析"诊断是错的 — P73 D1 (凭路径直觉判存在性) 的又一案例,
+诊断必须重现, 现象吻合 ≠ 因果成立。

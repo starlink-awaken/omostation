@@ -106,10 +106,28 @@ AGENT_ID=<agent-id> \
 uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> \
   --profile <agent-profile> --objective "<BET-ID> <标题>"
 
-uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <每个写面>
+# claim 前必须先算 affected-hash (lifecycle 强制, 缺了 claim 直接拒绝):
+uv run --with pyyaml python bin/gac/affected-graph.py --changed-projects <涉及项目> --json \
+  | python3 -c "import sys,json,hashlib; d=json.load(sys.stdin); print(hashlib.sha256(json.dumps(d,sort_keys=True).encode()).hexdigest()[:16])"
+# 得到 <hash> 后:
+uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <每个写面> --affected-hash <hash>
 ```
 
 `workflow-id` 和 `agent-profile` 在 `claim-check` 的输出里，也在 bet 的 `workflow` 字段和轨道的 `agent_profile_hint` 里。
+
+**⚠️ 三个实测过的坑（2026-08-14 T1-05A 修复轮补充）**：
+
+1. **profile × workflow 权限矩阵是硬约束**——`start` 会拒绝无权跑该 workflow 的 profile（如
+   engineering-agent 跑 governance-state-mutation）。不确定时先跑
+   `bin/agent-workflow.py agents` 查权限矩阵，别照抄轨道 hint 就开工。
+2. **`verify --file` 必须逐个 append**——`--file` 是 `action=append`，一次传多个路径会报
+   unrecognized arguments。批量大 diff 直接用 `verify --from-diff`。
+3. **verify 不带 run_id 时**，lifecycle 会把 argv 串拼进锁文件名——多文件场景直接撞
+   `Errno 63 File name too long`。**带 run_id 或用 `--from-diff`**。
+4. **跨 lane 的基础设施 bet**——`make gac-local-gate` 的 change-lane-check 若报 mixed
+   lanes，先查 `agent-workflows.yaml` 里对应 diff check 的 `allowed_lanes` 是否覆盖你的
+   lane 组合（ADR-0129 §11.3.2: workflow 显式授权优先于硬编码隔离）；修复通道是补
+   check 的 `allowed_lanes`，不是手动 env 伪造。
 
 ---
 
