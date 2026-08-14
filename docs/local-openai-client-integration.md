@@ -402,7 +402,9 @@ Kilo Code 的终端版与 VS Code 扩展都支持 OpenAI-compatible provider。�
 
 当前 VS Code 扩展安装会附带 `kilo` CLI，但它未必自动加入 shell `PATH`。先在扩展的
 `bin/kilo` 路径执行 `kilo --help` 确认版本，再按该版本实际提供的 `kilo models <provider>`
-做**只读**目录检查；不要因为 shell 找不到 `kilo` 就全局安装第二份 CLI，也不要使用
+做**只读**目录检查。此机器的 provider 名是 `omlxc`，因此可直接执行
+`kilo models omlxc`；`openai-compatible` 是协议类型，不是可传给该命令的 provider 名。
+不要因为 shell 找不到 `kilo` 就全局安装第二份 CLI，也不要使用
 `--refresh`（它会请求外部目录）。若已认证的 AetherForge 目录非空、Kilo 的 provider
 筛选仍没有模型，先检查全局配置中的 provider ID、环境变量引用和模型 mapping，而不是
 扫描后端或改动服务配置。
