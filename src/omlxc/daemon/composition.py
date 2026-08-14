@@ -828,6 +828,7 @@ class ProductionControlService:
                 placement_id=snapshot.placement_id,
                 node_id=snapshot.node_id,
                 backend_id=snapshot.backend_id,
+                context_limit=snapshot.context_limit,
                 fresh=snapshot.fresh,
                 stale=not snapshot.fresh,
                 authorized=snapshot.authorized,

@@ -625,6 +625,7 @@ async def test_route_failure_and_catalog_views_are_typed_and_observable(tmp_path
         ready,
         placement_id="placement-b",
         node_id="node-b",
+        context_limit=2048,
         fresh=False,
         available=False,
         authorized=False,
@@ -674,9 +675,11 @@ async def test_route_failure_and_catalog_views_are_typed_and_observable(tmp_path
     assert model["authorized"] is True
     assert model["loaded"] is True
     assert model["ready"] is True
-    assert [item["placement_id"] for item in model["placement_states"]] == [
-        "placement",
-        "placement-b",
+    assert [
+        (item["placement_id"], item["context_limit"]) for item in model["placement_states"]
+    ] == [
+        ("placement", 8192),
+        ("placement-b", 2048),
     ]
 
     capacity_composition = build_production_daemon(

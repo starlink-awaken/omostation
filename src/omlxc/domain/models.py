@@ -147,6 +147,7 @@ class PlacementRuntimeStatus(DomainModel):
     placement_id: str = Field(min_length=1)
     node_id: str = Field(min_length=1)
     backend_id: str = Field(min_length=1)
+    context_limit: int | None = Field(default=None, gt=0)
     fresh: bool
     stale: bool
     authorized: bool
