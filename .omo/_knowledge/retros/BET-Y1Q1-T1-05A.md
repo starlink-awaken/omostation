@@ -16,11 +16,11 @@
 |------|------|------|
 | 共享 SQLite WAL 四表 | ✅ | ensure_ready 懒初始化 + user_version=1 |
 | 原子认领并发测试 | ✅ | 20/20 rounds exactly one winner |
-| 心跳 5min + fencing token | ✅ | agent-tick --once 落 6 agent; fencing suite PASS |
-| token-check in submit | ✅ | claim 文件持久化 coordination_token; exit 2 fail-closed |
+| 心跳 5min + fencing token | ⚠️ | 代码测试通过；现有 launchd 仍指向旧 Workspace，部署后才会写 runtime attestation |
+| token-check in submit | ✅ | normal/legacy missing-token/镜像缺失均有 verdict; 事件写失败 exit 2 |
 | status CLI 三段可读 | ✅ | 人类可读 + --json |
 | 双写 acquire/release 对称 | ✅ | E2E 冷启动验证 |
-| 备份双层 + runbook | ✅ | crontab 条目 + maybe_backup 时间戳兜底 + 恢复演练 ok |
+| 备份双层 + runbook | ✅ | crontab 条目 + 普通 store access 非递归 24h fallback |
 | shadow 窗口跑满 | ⏳ | 窗口结束用 status --json 导出快照贴此处 |
 
 ## Q3 过程中发现的与 plan 不符的事实？
@@ -46,6 +46,18 @@
    修复 = `agent-workflows.yaml` 该 check 补 `docs_data` (ADR-0129 §11.3.2 通道)。
    当时交付轮手动 env 注入 AGENT_WORKFLOW_ALLOWED_LANES 是误打误撞走对了接口,
    但根因归因错了 — 教训: 诊断要重现, 不能拿 "现象吻合" 当因果。
+6. **〔硬化轮 2026-08-14 追加〕TTL 原先只存不执行**: `claim_resource()` 看到任何
+   active 行就拒绝，`check_fencing()` 只比较 MAX(token)，导致过期 claim 永不回收，
+   released token 也可能通过。现改为认领事务内先转 `expired`，fencing 同时绑定
+   active state、owner、精确 token 与未过期。
+7. **〔硬化轮 2026-08-14 追加〕备份/部署声明与事实有 gap**: runbook 声称任意
+   store access 自动备份但无调用；实测 launchd plist 仍指向旧 Workspace。前者补为进程锁
+   串行、复用当前连接的非递归 fallback，后者通过 privacy-safe commit/source 指纹
+   写入 agent_health 并由 status 暴露。shadow 处置仍不阻断，未进入 warning/fail。
+8. **〔独立 review 修复〕submit 曾静默跳过无 `coordination_token` 的 claim**:
+   legacy claim 或镜像写失败会绕过 fencing 观察面。现统一调用 token-check，显式传
+   owner 与 token=0，并用 `token_missing_legacy` 记录 shadow reject；事件写不成则
+   exit 2 fail-closed，仍未切 warning/fail。
 
 ## Q4 净增减：代码行 / 文件 / GaC 规则 / ADR / 脚本？
 
@@ -57,6 +69,10 @@
 - **净增**: 文件 +5, 行数 ~860 (shadow 阶段换掉的是未来 D2/D3/D5 退役时的
   删除面, 见 T1-05 done_when "表面积净减" 条目 — 本 bet 是先增后减的前置)
 - GaC 规则: 0 新增 (未加 governance-checks) · ADR: 0 (bet 条目即决策记录)
+- **硬化轮增量**: 仅修改既有 9 文件，diff +474/-99（净 +375）；新文件 0、
+  GaC 规则 0、ADR 0、脚本 0。`bet-ledger.py surface` 在未初始化全量子模块的
+  independent clone 中会把缺失源码误算成大幅下降，故保留原始输出作环境证据，
+  不拿该代理量冒充本轮表面积收益。
 
 ## Q5 下一个认领本 track 的 agent 需要知道什么？
 

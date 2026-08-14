@@ -23,6 +23,7 @@ shadow 语义: 文件锁 (.omo/_delivery/) 仍是权威判定源; 本 store 是�
 from __future__ import annotations
 
 import calendar
+import fcntl
 import json
 import os
 import sqlite3
@@ -80,7 +81,7 @@ def db_path() -> Path:
     return DEFAULT_DB_PATH
 
 
-def _connect() -> sqlite3.Connection:
+def _connect(*, automatic_backup: bool = True) -> sqlite3.Connection:
     path = db_path()
     fresh = not path.exists()
     if fresh:
@@ -103,6 +104,12 @@ def _connect() -> sqlite3.Connection:
     if fresh:
         # 懒初始化兜底: 挂点首次调用可能没走 ensure_ready(); 幂等 DDL + 版本推进
         _migrate(conn, str(path))
+    if automatic_backup:
+        try:
+            _backup_with_connection(conn, path, max_age_h=24.0, keep=3)
+        except (CoordinationStoreError, OSError, sqlite3.Error) as exc:
+            # shadow fallback 不能反噬主操作；显式 --backup 仍会抛错。
+            print(f"[coordination] automatic backup skipped: {exc}", file=__import__("sys").stderr)
     return conn
 
 
@@ -218,6 +225,13 @@ def claim_resource(
     conn = _connect()
     try:
         conn.execute("BEGIN IMMEDIATE")
+        now = _utc_now()
+        conn.execute(
+            "UPDATE claims SET state='expired' "
+            "WHERE resource_type=? AND resource_id=? AND state='active' "
+            "AND expires_at IS NOT NULL AND expires_at<=?",
+            (resource_type, resource_id, now),
+        )
         active = conn.execute(
             "SELECT owner FROM claims WHERE resource_type=? AND resource_id=? AND state='active'",
             (resource_type, resource_id),
@@ -225,7 +239,6 @@ def claim_resource(
         if active is not None:
             conn.execute("ROLLBACK")
             return None
-        now = _utc_now()
         expires = time.strftime(
             "%Y-%m-%dT%H:%M:%SZ",
             time.gmtime(time.time() + ttl_hours * 3600),
@@ -302,21 +315,38 @@ def current_token(resource_type: str, resource_id: str) -> int:
         conn.close()
 
 
-def check_fencing(resource_type: str, resource_id: str, local_token: int) -> Verdict:
-    """fencing token 校验: 本地 token < DB 当前 token → 过期认领, 判 reject.
-
-    shadow 阶段只返回判定 (不阻断); submit 挂点据此落 shadow_events.
-    """
-    cur = current_token(resource_type, resource_id)
-    if cur is not None and local_token < cur:
-        return Verdict(
-            ok=False, reason=f"stale token {local_token} < current {cur}",
-            current_token=cur, local_token=local_token,
-        )
-    return Verdict(
-        ok=True, reason=f"token {local_token} >= current {cur}",
-        current_token=cur, local_token=local_token,
-    )
+def check_fencing(
+    resource_type: str,
+    resource_id: str,
+    owner: str,
+    local_token: int,
+) -> Verdict:
+    """仅 active + owner/token 精确匹配 + 未过期的 claim 通过 fencing."""
+    conn = _connect()
+    try:
+        latest = conn.execute(
+            "SELECT owner, token, state, expires_at FROM claims "
+            "WHERE resource_type=? AND resource_id=? ORDER BY token DESC LIMIT 1",
+            (resource_type, resource_id),
+        ).fetchone()
+        active = conn.execute(
+            "SELECT owner, token, state, expires_at FROM claims "
+            "WHERE resource_type=? AND resource_id=? AND state='active'",
+            (resource_type, resource_id),
+        ).fetchone()
+    finally:
+        conn.close()
+    current = latest["token"] if latest is not None else None
+    if active is None:
+        state = latest["state"] if latest is not None else "missing"
+        return Verdict(False, f"claim is {state}, not active", current, local_token)
+    if active["expires_at"] and active["expires_at"] <= _utc_now():
+        return Verdict(False, f"active claim expired at {active['expires_at']}", current, local_token)
+    if active["owner"] != owner:
+        return Verdict(False, f"owner mismatch: active={active['owner']} local={owner}", current, local_token)
+    if active["token"] != local_token:
+        return Verdict(False, f"token mismatch: active={active['token']} local={local_token}", current, local_token)
+    return Verdict(True, "active owner and token match", current, local_token)
 
 
 # ── agent_health: 心跳 (tick 源) ─────────────────────────────────────
@@ -366,7 +396,7 @@ def emit_shadow_event(
     resource_type: str | None = None,
     resource_id: str | None = None,
     detail: dict | None = None,
-) -> None:
+) -> bool:
     """shadow 事件落库. 事件写入本身失败 → 尽力 stderr, 不抛 (观察面不反噬主流程)."""
     try:
         conn = _connect()
@@ -377,10 +407,12 @@ def emit_shadow_event(
                 (_utc_now(), kind, resource_type, resource_id,
                  json.dumps(detail, ensure_ascii=False) if detail else None),
             )
+            return True
         finally:
             conn.close()
     except Exception as exc:  # noqa: BLE001 — 观察面尽力而为
         print(f"[coordination] shadow event drop: {kind}: {exc}", file=__import__('sys').stderr)
+        return False
 
 
 # ── 备份 / 完整性 ────────────────────────────────────────────────────
@@ -394,43 +426,53 @@ def integrity_check() -> str:
         conn.close()
 
 
-def maybe_backup(max_age_h: float = 24.0, keep: int = 3) -> Path | None:
-    """时间戳兜底备份: 超 max_age_h 才备, 轮转 .bak.1 ~ .bak.N.
-
-    主备份节奏是 crontab 日备; 这里只兜 'crontab 没部署的机器'.
-    """
-    path = db_path()
+def _backup_with_connection(
+    conn: sqlite3.Connection,
+    path: Path,
+    *,
+    max_age_h: float,
+    keep: int,
+) -> Path | None:
+    """用既有连接执行备份，避免 store access → backup → store access 递归."""
     stamp = path.parent / f"{path.name}.last-backup"
-    now = time.time()
-    if stamp.exists():
-        try:
-            if now - stamp.stat().st_mtime < max_age_h * 3600:
-                return None
-        except OSError:
-            pass
-    integrity = integrity_check()
-    if integrity != "ok":
-        emit_shadow_event("backup_fail", detail={"reason": f"integrity_check={integrity}"})
-        raise CoordinationStoreError(f"integrity_check={integrity}", db_path=str(path))
-    # 轮转: .bak.(N-1) → .bak.N ... .bak.1 → .bak.2, 新备份落 .bak.1
-    for i in range(keep - 1, 0, -1):
-        src = path.parent / f"{path.name}.bak.{i}"
-        dst = path.parent / f"{path.name}.bak.{i + 1}"
-        if src.exists():
-            src.replace(dst)
-    backup = path.parent / f"{path.name}.bak.1"
-    conn = _connect()
-    try:
+    lock_path = path.parent / f"{path.name}.backup.lock"
+    with lock_path.open("a+") as lock_fh:
+        fcntl.flock(lock_fh.fileno(), fcntl.LOCK_EX)
+        now = time.time()
+        if stamp.exists() and now - stamp.stat().st_mtime < max_age_h * 3600:
+            return None
+        integrity = conn.execute("PRAGMA integrity_check").fetchone()[0]
+        if integrity != "ok":
+            raise CoordinationStoreError(f"integrity_check={integrity}", db_path=str(path))
+        for i in range(keep - 1, 0, -1):
+            src = path.parent / f"{path.name}.bak.{i}"
+            dst = path.parent / f"{path.name}.bak.{i + 1}"
+            if src.exists():
+                src.replace(dst)
+        backup = path.parent / f"{path.name}.bak.1"
         dest = sqlite3.connect(str(backup))
         try:
             conn.backup(dest)
         finally:
             dest.close()
+        stamp.touch()
+        conn.execute(
+            "INSERT INTO shadow_events (ts, kind, detail_json) VALUES (?, 'backup_ok', ?)",
+            (_utc_now(), json.dumps({"backup": str(backup)}, ensure_ascii=False)),
+        )
+        return backup
+
+
+def maybe_backup(max_age_h: float = 24.0, keep: int = 3) -> Path | None:
+    """时间戳兜底备份；普通 store access 也会安全调用同一非递归实现."""
+    path = db_path()
+    conn = _connect(automatic_backup=False)
+    try:
+        return _backup_with_connection(
+            conn, path, max_age_h=max_age_h, keep=keep
+        )
     finally:
         conn.close()
-    stamp.touch()
-    emit_shadow_event("backup_ok", detail={"backup": str(backup)})
-    return backup
 
 
 # ── status 快照 (CLI/测试用) ────────────────────────────────────────
@@ -444,9 +486,21 @@ def snapshot() -> dict:
             "SELECT resource_type, resource_id, owner, token, state, claimed_at, expires_at "
             "FROM claims ORDER BY resource_type, resource_id"
         )]
-        health = [dict(r) for r in conn.execute(
-            "SELECT agent_id, last_seen, status, source, stale_after FROM agent_health ORDER BY agent_id"
-        )]
+        health = []
+        for row in conn.execute(
+            "SELECT agent_id, last_seen, status, source, stale_after, detail_json "
+            "FROM agent_health ORDER BY agent_id"
+        ):
+            item = dict(row)
+            detail_raw = item.pop("detail_json", None)
+            try:
+                detail = json.loads(detail_raw) if detail_raw else {}
+            except (TypeError, json.JSONDecodeError):
+                detail = {}
+            attestation = detail.get("runtime_attestation")
+            if isinstance(attestation, dict):
+                item["runtime_attestation"] = attestation
+            health.append(item)
         messages = [dict(r) for r in conn.execute(
             "SELECT id, ts, from_agent, to_agent, msg_type, consumed_at FROM messages ORDER BY id DESC LIMIT 20"
         )]

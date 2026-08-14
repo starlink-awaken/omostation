@@ -755,16 +755,18 @@ bets:
   - "认领是单条原子语句 (BEGIN IMMEDIATE 事务内 MAX(token)+1 + active 唯一部分索引),
     并发测试证明两进程抢同一 resource_id 仅一个成功"
   - "agent_health 由 launchd agent-tick-daemon (5min 周期) 写入, 心跳 <= 10min, stale
-    判定 <= 3 心跳周期; 认领带 fencing token (per-resource 同事务 MAX+1 单调递增)"
+    判定 <= 3 心跳周期; privacy-safe runtime code/version attestation 经 status 可见;
+    认领带 fencing token (per-resource 同事务 MAX+1 单调递增)"
   - "token-check 子命令在 gac-worktree.sh submit 前调用 (token 从 claim 文件读);
-    shadow 阶段旧 token 判定 reject + 落共享 shadow_events 表, 不阻断 push;
+    shadow 阶段旧 token / legacy missing-token 判定 reject + 落共享 shadow_events 表,
+    verdict 成功记录后不阻断 push;
     DB 打不开时 exit 2 fail-closed 停 submit; 判定逻辑由测试脚本断言"
   - "swarm-discipline-cli.py status 只读输出 claims/health/messages 三段, 无需
     sqlite3 客户端即可读 (--json 可机读)"
   - "双写挂 swarm_discipline.py::acquire_branch_lock 成功后 (文件锁仍为 shadow 阶段
     权威判定源, SQLite 为镜像), release 对称; 双写失败仅记事件不改变返回值"
-  - "备份: crontab 日备 (integrity_check + .backup 轮转 N=3) 为主 + store 内
-    maybe_backup() 时间戳兜底; 恢复 runbook 落 docs/operations/"
+  - "备份: crontab 日备 (integrity_check + .backup 轮转 N=3) 为主 + 每次 store access
+    的非递归 24h 时间戳兜底; 恢复 runbook 落 docs/operations/"
   - "shadow 窗口按 §3.4 规程跑满 1 周, 存量清单由 CLI 导出贴入 retro, 经 human_gate
     确认后才可置 done"
   verify:
@@ -774,6 +776,10 @@ bets:
     expect: 20/20 rounds exactly one winner
   - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 python3 bin/gac/test_coordination_layer.py --suite fencing
     expect: 旧 token 判定 reject PASS
+  - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 uv run --with pyyaml python bin/gac/test_coordination_layer.py --suite schema
+    expect: 普通 store access 触发非递归 24h backup fallback PASS
+  - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 uv run --with pyyaml python bin/gac/test_coordination_layer.py --suite runtime
+    expect: agent_health runtime attestation 写入且 status 可见 PASS
   - cmd: python3 bin/gac/swarm-discipline-cli.py status
     expect: claims/health/messages 三段可读
   - cmd: sqlite3 ~/agents/_shared/runtime/coordination.sqlite3 "PRAGMA integrity_check;"

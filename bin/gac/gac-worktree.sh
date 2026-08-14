@@ -276,7 +276,7 @@ case "$cmd" in
     fi
     # BET-Y1Q1-T1-05A: fencing token 校验 (shadow 阶段只判定不阻断, exit 2 才停)
     # token 从 claim 文件读 (claim 时由镜像写入 coordination_token 字段);
-    # 无 token (claim 早于本 bet / 镜像失败) → 跳过校验, 不误报
+    # 无 token (claim 早于本 bet / 镜像失败) 也必须进入可审计 shadow verdict
     _t05a_root="$(git rev-parse --show-toplevel)"
     if [ -f "$_t05a_root/bin/gac/swarm-discipline-cli.py" ]; then
       _t05a_token=""
@@ -288,17 +288,21 @@ try:
     print(json.load(open('${_claim_file}')).get('coordination_token', ''))
 except Exception: print('')" 2>/dev/null || true)"
       fi
-      if [ -n "$_t05a_token" ]; then
-        _t05a_out="$(python3 "$_t05a_root/bin/gac/swarm-discipline-cli.py" token-check \
-          --resource-type branch --resource-id "$branch" --token "$_t05a_token" 2>&1)" || _t05a_rc=$?
-        if [ "${_t05a_rc:-0}" -eq 2 ]; then
-          echo "❌ coordination store fail-closed (T1-05A): DB 打不开" >&2
-          echo "$_t05a_out" | sed 's/^/   [t05a] /' >&2
-          exit 1
-        fi
-        printf '%s\n' "$_t05a_out" | grep -q '"ok": false' && \
-          echo "⚠️  T1-05A shadow: stale token on $branch (recorded, not blocking)" >&2
+      _t05a_args=(token-check --resource-type branch --resource-id "$branch" \
+        --owner "$session" --token "${_t05a_token:-0}")
+      if [ -z "$_t05a_token" ]; then
+        _t05a_args+=(--missing-token)
       fi
+      _t05a_rc=0
+      _t05a_out="$(python3 "$_t05a_root/bin/gac/swarm-discipline-cli.py" \
+        "${_t05a_args[@]}" 2>&1)" || _t05a_rc=$?
+      if [ "$_t05a_rc" -eq 2 ]; then
+        echo "❌ coordination store fail-closed (T1-05A): verdict 未记录" >&2
+        echo "$_t05a_out" | sed 's/^/   [t05a] /' >&2
+        exit 1
+      fi
+      printf '%s\n' "$_t05a_out" | grep -q '"ok": false' && \
+        echo "⚠️  T1-05A shadow: fencing reject on $branch (recorded, not blocking)" >&2
     fi
     # 防 CI 死锁: 检查 dependency-baseline drift (submodule bump 可能引入新依赖)
     # 若 baseline 缺失新依赖, 自动补录 + amend commit, 避免 gac-gate strict 失败阻塞所有 PR

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """test_coordination_layer.py — BET-Y1Q1-T1-05A 协调层测试 (可重跑).
 
-三套件 (台账 verify 引用):
+四套件 (台账 verify 引用):
   --suite concurrency  两进程并发认领同一 resource → 恰 1 成功 (fencing token 单调)
   --suite fencing      释放→重认领→旧 token 校验必须 reject
   --suite schema       ensure_ready 幂等 / WAL 生效 / maybe_backup 产出
+  --suite runtime      agent_health runtime attestation 写入并通过 status 暴露
 
 用法:
   OMO_COORDINATION_DB=/tmp/x.sqlite3 python3 bin/gac/test_coordination_layer.py --suite all
@@ -15,9 +16,11 @@ DB 路径: 优先 env OMO_COORDINATION_DB; 否则用临时目录 (测试不污�
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import time
@@ -31,8 +34,15 @@ def _prep_db(tag: str) -> Path:
     """测试 DB: env 覆盖或临时目录; 每次全新."""
     env_db = os.environ.get(cs.ENV_DB_PATH)
     if env_db:
-        for suffix in ("", "-wal", "-shm"):
-            Path(env_db + suffix).unlink(missing_ok=True)
+        path = Path(env_db)
+        for candidate in (
+            path,
+            Path(env_db + "-wal"),
+            Path(env_db + "-shm"),
+            path.parent / f"{path.name}.last-backup",
+            *(path.parent.glob(f"{path.name}.bak.*")),
+        ):
+            candidate.unlink(missing_ok=True)
         return Path(env_db)
     tmp = Path(tempfile.mkdtemp(prefix=f"coord-test-{tag}-"))
     os.environ[cs.ENV_DB_PATH] = str(tmp / "coordination.sqlite3")
@@ -55,13 +65,13 @@ def _claim_worker(tmp_db: str, resource_id: str, owner: str, delay: float) -> No
 
 
 def suite_concurrency(repeat: int = 20) -> bool:
+    import multiprocessing as mp
+
     ok_rounds = 0
     for i in range(repeat):
         db = _prep_db(f"conc-{i}")
         cs.ensure_ready()
         rid = f"work/conc-{i}"
-        import multiprocessing as mp
-
         procs = [
             mp.Process(target=_claim_worker, args=(str(db), rid, "a", 0.05)),
             mp.Process(target=_claim_worker, args=(str(db), rid, "b", 0.05)),
@@ -80,7 +90,35 @@ def suite_concurrency(repeat: int = 20) -> bool:
             ok_rounds += 1
         else:
             print(f"  FAIL round {i}: winners={len(winners)} results={results}")
+    expiry_db = _prep_db("expired-concurrency")
+    cs.ensure_ready()
+    expired_rid = "work/expired-concurrency"
+    stale = cs.claim_resource("branch", expired_rid, owner="stale", ttl_hours=1)
+    assert stale and stale.token == 1
+    conn = sqlite3.connect(str(expiry_db))
+    conn.execute(
+        "UPDATE claims SET expires_at='2000-01-01T00:00:00Z' "
+        "WHERE resource_type='branch' AND resource_id=? AND state='active'",
+        (expired_rid,),
+    )
+    conn.commit()
+    conn.close()
+    procs = [
+        mp.Process(target=_claim_worker, args=(str(expiry_db), expired_rid, owner, 0.05))
+        for owner in ("a", "b")
+    ]
+    for proc in procs:
+        proc.start()
+    for proc in procs:
+        proc.join(timeout=30)
+    expiry_results = [
+        json.loads((expiry_db.parent / f"worker-{owner}.result").read_text())
+        for owner in ("a", "b")
+    ]
+    expiry_winners = [result for result in expiry_results if result["ok"]]
+    assert len(expiry_winners) == 1 and expiry_winners[0]["token"] == 2, expiry_results
     print(f"concurrency: {ok_rounds}/{repeat} rounds → exactly one winner")
+    print("concurrency: expired active claim 原子回收后 exactly one token=2 winner")
     return ok_rounds == repeat
 
 
@@ -93,16 +131,136 @@ def suite_fencing() -> bool:
     rid = "work/fencing"
     c1 = cs.claim_resource("branch", rid, owner="a", ttl_hours=1)
     assert c1 and c1.token == 1
-    assert cs.check_fencing("branch", rid, c1.token).ok, "新 token 应通过"
+    assert cs.check_fencing("branch", rid, "a", c1.token).ok, "active owner/token 应通过"
+    wrong_owner = cs.check_fencing("branch", rid, "intruder", c1.token)
+    assert not wrong_owner.ok and "owner" in wrong_owner.reason, "错误 owner 必须 reject"
     assert cs.release_resource("branch", rid, "a"), "owner 匹配释放"
+    released = cs.check_fencing("branch", rid, "a", c1.token)
+    assert not released.ok and "released" in released.reason, "released token 必须 reject"
     c2 = cs.claim_resource("branch", rid, owner="b", ttl_hours=1)
     assert c2 and c2.token == 2, f"reclaim token 应=2 实际={c2.token if c2 else None}"
-    old = cs.check_fencing("branch", rid, c1.token)
+    old = cs.check_fencing("branch", rid, "a", c1.token)
     assert not old.ok, "旧 token 必须 reject"
     assert cs.current_token("branch", rid) == 2
     # 非 owner 不能释放
     assert not cs.release_resource("branch", rid, "intruder")
-    print(f"fencing: release→reclaim token=2, 旧 token={c1.token} reject, 非法释放拒绝 OK")
+    conn = sqlite3.connect(str(cs.db_path()))
+    conn.execute(
+        "UPDATE claims SET expires_at='2000-01-01T00:00:00Z' "
+        "WHERE resource_type='branch' AND resource_id=? AND state='active'",
+        (rid,),
+    )
+    conn.commit()
+    conn.close()
+    expired = cs.check_fencing("branch", rid, "b", c2.token)
+    assert not expired.ok and "expired" in expired.reason, "过期 active token 必须 reject"
+    c3 = cs.claim_resource("branch", rid, owner="c", ttl_hours=1)
+    assert c3 and c3.token == 3, "过期 claim 应在同一认领事务内回收并递增 token"
+    conn = sqlite3.connect(str(cs.db_path()))
+    old_state = conn.execute(
+        "SELECT state FROM claims WHERE resource_type='branch' AND resource_id=? AND token=2",
+        (rid,),
+    ).fetchone()[0]
+    conn.close()
+    assert old_state == "expired", f"过期 claim state 应为 expired, 实际={old_state}"
+
+    cli = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).with_name("swarm-discipline-cli.py")),
+            "token-check", "--resource-type", "branch", "--resource-id", rid,
+            "--owner", "c", "--token", str(c3.token),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    cli_payload = json.loads(cli.stdout)
+    assert cli.returncode == 0 and cli_payload["ok"], cli.stdout + cli.stderr
+    shadow_reject = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).with_name("swarm-discipline-cli.py")),
+            "token-check", "--resource-type", "branch", "--resource-id", rid,
+            "--owner", "intruder", "--token", str(c3.token),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    reject_payload = json.loads(shadow_reject.stdout)
+    assert shadow_reject.returncode == 0, "shadow reject 仍不得阻断调用方"
+    assert not reject_payload["ok"] and "owner" in reject_payload["reason"]
+
+    missing_token = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).with_name("swarm-discipline-cli.py")),
+            "token-check", "--resource-type", "branch", "--resource-id", rid,
+            "--owner", "legacy", "--token", "0", "--missing-token",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    missing_payload = json.loads(missing_token.stdout)
+    assert missing_token.returncode == 0, "legacy missing-token 在 shadow 阶段不阻断"
+    assert not missing_payload["ok"] and missing_payload["reason"] == "missing local fencing token"
+
+    mirror_missing = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).with_name("swarm-discipline-cli.py")),
+            "token-check", "--resource-type", "branch", "--resource-id", "work/mirror-missing",
+            "--owner", "mirror-owner", "--token", "7",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    mirror_payload = json.loads(mirror_missing.stdout)
+    assert mirror_missing.returncode == 0, "SQLite 镜像缺 claim 在 shadow 阶段不阻断"
+    assert not mirror_payload["ok"] and "missing" in mirror_payload["reason"]
+
+    broken_db = Path(tempfile.mkdtemp(prefix="coord-broken-db-"))
+    broken_env = os.environ.copy()
+    broken_env[cs.ENV_DB_PATH] = str(broken_db)
+    unrecordable = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).with_name("swarm-discipline-cli.py")),
+            "token-check", "--resource-type", "branch", "--resource-id", "work/broken-mirror",
+            "--owner", "broken-owner", "--token", "0", "--missing-token",
+        ],
+        env=broken_env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    unrecordable_payload = json.loads(unrecordable.stdout)
+    assert unrecordable.returncode == 2, "shadow verdict 无法落事件时必须 fail-closed"
+    assert unrecordable_payload["fail_closed"] and not unrecordable_payload["event_recorded"]
+
+    conn = sqlite3.connect(str(cs.db_path()))
+    event_rows = conn.execute(
+        "SELECT kind, resource_id, detail_json FROM shadow_events "
+        "WHERE kind IN ('token_missing_legacy', 'token_stale_rejected')"
+    ).fetchall()
+    events = {
+        (row[0], row[1]): json.loads(row[2])
+        for row in event_rows
+    }
+    conn.close()
+    legacy_detail = events[("token_missing_legacy", rid)]
+    assert legacy_detail["owner"] == "legacy" and legacy_detail["local_token"] == 0
+    mirror_detail = events[("token_stale_rejected", "work/mirror-missing")]
+    assert mirror_detail["owner"] == "mirror-owner" and mirror_detail["local_token"] == 7
+    worktree_script = Path(__file__).with_name("gac-worktree.sh").read_text()
+    assert '--owner "$session"' in worktree_script, "submit token-check 必须传 claim owner"
+    assert 'if [ -n "$_t05a_token" ]; then' not in worktree_script, "missing token 不得静默跳过"
+    assert '--missing-token' in worktree_script
+    assert '--token "${_t05a_token:-0}"' in worktree_script
+    print("fencing: 正常/旧 claim missing-token/镜像缺失均进入可审计 shadow verdict")
     return True
 
 
@@ -127,13 +285,59 @@ def suite_schema() -> bool:
     assert bak and bak.exists()
     assert cs.maybe_backup(max_age_h=24) is None, "24h 内应跳过"
     assert cs.integrity_check() == "ok"
-    print(f"schema: WAL={journal}, user_version={version}, 四表齐, backup 轮转 OK")
+    bak.unlink()
+    (db.parent / f"{db.name}.last-backup").unlink()
+    cs.heartbeat("backup-fallback", "ok")
+    fallback = db.parent / f"{db.name}.bak.1"
+    assert fallback.exists(), "普通 store access 应触发 24h backup fallback"
+    backup_conn = sqlite3.connect(str(fallback))
+    backup_integrity = backup_conn.execute("PRAGMA integrity_check").fetchone()[0]
+    backup_conn.close()
+    assert backup_integrity == "ok", f"fallback backup integrity={backup_integrity}"
+    print(f"schema: WAL={journal}, user_version={version}, 四表齐, 自动 backup fallback OK")
+    return True
+
+
+def suite_runtime() -> bool:
+    db = _prep_db("runtime")
+    cs.ensure_ready()
+    ssot_dir = Path(__file__).resolve().parents[1] / "ssot"
+    sys.path.insert(0, str(ssot_dir))
+    daemon_path = ssot_dir / "agent-tick-daemon.py"
+    spec = importlib.util.spec_from_file_location("agent_tick_daemon", daemon_path)
+    assert spec and spec.loader
+    daemon = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(daemon)
+    daemon._coordination_heartbeat(
+        {"results": [{"agent_id": "runtime-agent", "ok": True, "action": "noop"}]}
+    )
+    conn = sqlite3.connect(str(db))
+    detail_json = conn.execute(
+        "SELECT detail_json FROM agent_health WHERE agent_id='runtime-agent'"
+    ).fetchone()[0]
+    conn.close()
+    detail = json.loads(detail_json)
+    attestation = detail["runtime_attestation"]
+    assert set(attestation) == {
+        "component", "code_sha256", "workspace_revision", "python_version"
+    }
+    assert len(attestation["code_sha256"]) == 64
+    assert attestation["workspace_revision"]
+    assert "/Users/" not in json.dumps(attestation), "attestation 不得泄露本机路径"
+    snap_health = cs.snapshot()["agent_health"]
+    visible = next(h for h in snap_health if h["agent_id"] == "runtime-agent")
+    assert visible["runtime_attestation"] == attestation, "status 快照必须暴露部署指纹"
+    print("runtime: heartbeat 含 privacy-safe code/version attestation OK")
     return True
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--suite", choices=["concurrency", "fencing", "schema", "all"], default="all")
+    ap.add_argument(
+        "--suite",
+        choices=["concurrency", "fencing", "schema", "runtime", "all"],
+        default="all",
+    )
     ap.add_argument("--repeat", type=int, default=20, help="concurrency 轮数")
     args = ap.parse_args(argv)
 
@@ -144,6 +348,8 @@ def main(argv: list[str] | None = None) -> int:
         results["fencing"] = suite_fencing()
     if args.suite in ("schema", "all"):
         results["schema"] = suite_schema()
+    if args.suite in ("runtime", "all"):
+        results["runtime"] = suite_runtime()
 
     print("\n── RESULTS ──")
     all_ok = True
