@@ -593,11 +593,14 @@ def nodes_show(
 
 @nodes_app.command("probe")
 def nodes_probe(
-    node_id: Annotated[str | None, typer.Argument()] = None,
+    node_id: Annotated[str, typer.Argument()],
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    del node_id
-    _unsupported("nodes probe", json_output=json_output)
+    _execute(
+        lambda client: client.probe_node(node_id),
+        json_output=json_output,
+        renderer=_render_mapping,
+    )
 
 
 @models_app.command("list")

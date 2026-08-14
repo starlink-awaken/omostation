@@ -319,6 +319,48 @@ async def test_production_discovery_isolates_failure_and_enables_chat_and_embed(
 
 
 @pytest.mark.asyncio
+async def test_production_node_probe_recovers_only_the_requested_node() -> None:
+    with tempfile.TemporaryDirectory(prefix="omlxc-node-probe-", dir="/tmp") as directory:
+        root = Path(directory)
+        config = _discovery_config(root)
+        bad = DiscoveringBackend(backend_id="bad", fail=True)
+        healthy = DiscoveringBackend()
+        composition = build_production_daemon(
+            config,
+            adapters={"bad": bad, "healthy": healthy},
+        )
+        server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
+        await server.start()
+        try:
+            transport = httpx.AsyncHTTPTransport(uds=str(config.daemon.socket_path))
+            async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+                bad.fail = False
+                refreshed = await client.post("/api/v1/nodes/bad-node/probe")
+                missing = await client.post("/api/v1/nodes/missing/probe")
+        finally:
+            await server.stop()
+
+    assert refreshed.status_code == 200
+    data = refreshed.json()["data"]
+    assert data["id"] == "bad-node"
+    assert data["health"]["state"] == "healthy"
+    assert data["health"]["stale"] is False
+    runtime_fields = ("fresh", "authorized", "available", "loaded", "ready")
+    assert {field: data[field] for field in runtime_fields} == {
+        "fresh": True,
+        "authorized": True,
+        "available": True,
+        "loaded": True,
+        "ready": True,
+    }
+    assert missing.status_code == 404
+    assert missing.json()["error"]["code"] == "E404"
+    assert bad.discoveries == 2
+    assert healthy.discoveries == 1
+    assert composition.runtime.task_settled
+
+
+@pytest.mark.asyncio
 async def test_production_discovery_periodically_recovers_a_failed_backend() -> None:
     with tempfile.TemporaryDirectory(prefix="omlxc-fix2-refresh-", dir="/tmp") as directory:
         root = Path(directory)

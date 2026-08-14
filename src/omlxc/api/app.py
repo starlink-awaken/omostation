@@ -301,6 +301,14 @@ def create_app(
         service = _require_control(control)
         return _success(request, _page(await service.list_nodes(after=after, limit=limit)))
 
+    @app.post("/api/v1/nodes/{node_id}/probe")
+    async def probe_node(request: Request, node_id: str) -> JSONResponse:
+        service = _require_control(control)
+        node = await service.probe_node(node_id)
+        if node is None:
+            return _error_response(_request_id(request), 404, "E404", "node not found")
+        return _success(request, node)
+
     @app.get("/api/v1/models")
     async def models(
         request: Request,

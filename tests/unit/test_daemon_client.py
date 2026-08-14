@@ -70,6 +70,25 @@ async def test_client_accepts_strict_success_envelope_and_closes_transport() -> 
 
 
 @pytest.mark.asyncio
+async def test_client_probes_one_url_escaped_node_over_the_daemon_socket() -> None:
+    api = _client_api()
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return _json_response(request, data={"id": "node-a", "fresh": True, "ready": True})
+
+    async with api.DaemonClient(
+        Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)
+    ) as client:
+        envelope = await client.probe_node("node-a")
+
+    assert envelope.data == {"id": "node-a", "fresh": True, "ready": True}
+    assert seen[0].method == "POST"
+    assert seen[0].url.path == "/api/v1/nodes/node-a/probe"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("code", "expected_exit"),
     [

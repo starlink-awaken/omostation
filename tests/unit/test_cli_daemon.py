@@ -68,6 +68,19 @@ class FakeClient:
             }
         )
 
+    async def probe_node(self, node_id: str) -> DaemonEnvelope:
+        self.calls.append(("probe_node", node_id))
+        return _envelope(
+            {
+                "id": node_id,
+                "health": {"state": "healthy", "stale": False},
+                "fresh": True,
+                "available": True,
+                "authorized": True,
+                "ready": True,
+            }
+        )
+
     async def models(self, *, after: str | None = None, limit: int = 100) -> DaemonEnvelope:
         self.calls.append(("models", after, limit))
         return _envelope(
@@ -607,6 +620,16 @@ def test_status_json_and_human_table_keep_stdout_machine_clean(fake_client: Fake
     assert machine.stderr == ""
     assert "MBP" in human.stdout and "healthy" in human.stdout
     assert "\x1b[" not in human.stdout
+
+
+def test_nodes_probe_calls_the_daemon_for_only_the_requested_node(
+    fake_client: FakeClient,
+) -> None:
+    result = runner.invoke(app, ["nodes", "probe", "mbp", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["data"]["id"] == "mbp"
+    assert fake_client.calls == [("probe_node", "mbp")]
 
 
 def test_status_json_bytes_remain_unchanged(fake_client: FakeClient) -> None:

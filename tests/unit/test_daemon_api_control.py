@@ -46,6 +46,7 @@ class FakeControlService:
             updated_at=now,
         )
         self.load_calls: list[tuple[str, str]] = []
+        self.probe_calls: list[str] = []
 
     async def health(self) -> dict[str, Any]:
         return {"status": "ready", "degraded": False}
@@ -57,6 +58,10 @@ class FakeControlService:
     async def list_models(self, *, after: str | None, limit: int) -> tuple[ModelSpec, ...]:
         assert limit <= 100
         return () if after == self.model.id else (self.model,)
+
+    async def probe_node(self, node_id: str) -> Node | None:
+        self.probe_calls.append(node_id)
+        return self.node if node_id == self.node.id else None
 
     async def plan_route(self, request: RouteRequest) -> RouteDecision:
         request_id = request.request_id
@@ -161,6 +166,25 @@ async def test_control_queries_are_paginated_and_stably_shaped(
     assert models.json()["data"]["items"][0]["id"] == "local/model"
     assert jobs.json()["data"]["items"][0]["id"] == "job-1"
     assert metrics.json()["data"] == {"requests": 4, "errors": 0}
+
+
+@pytest.mark.asyncio
+async def test_node_probe_returns_the_refreshed_node_or_a_safe_not_found(
+    transport: httpx.ASGITransport, control: FakeControlService
+) -> None:
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        refreshed = await client.post("/api/v1/nodes/mbp/probe")
+        missing = await client.post("/api/v1/nodes/missing/probe")
+
+    assert refreshed.status_code == 200
+    assert refreshed.json()["data"]["id"] == "mbp"
+    assert missing.status_code == 404
+    assert missing.json()["error"] == {
+        "code": "E404",
+        "message": "node not found",
+        "retryable": False,
+    }
+    assert control.probe_calls == ["mbp", "missing"]
 
 
 @pytest.mark.asyncio

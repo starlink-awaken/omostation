@@ -271,6 +271,7 @@ class CatalogProbe:
         self._backends = {item.id: item for item in config.backends}
         self._backend_nodes = {item.id: item.node_id for item in config.backends}
         self._task: asyncio.Task[None] | None = None
+        self._refresh_lock = asyncio.Lock()
 
     @property
     def task_settled(self) -> bool:
@@ -292,28 +293,37 @@ class CatalogProbe:
             await self._refresh()
 
     async def _refresh(self) -> None:
-        authorization = (
-            asyncio.create_task(self._refresh_tailscale(), name="omlxcd-tailscale-probe")
-            if self._tailscale is not None
-            else None
-        )
-        await asyncio.gather(
-            *(self._probe_backend(backend, authorization) for backend in self._config.backends),
-            return_exceptions=True,
-        )
-        if authorization is not None:
-            await asyncio.gather(authorization, return_exceptions=True)
+        await self._refresh_backends(self._config.backends, task_name="omlxcd-tailscale-probe")
 
     async def refresh_backend(self, backend_id: str) -> None:
-        backend = self._backends[backend_id]
-        authorization = (
-            asyncio.create_task(self._refresh_tailscale(), name="omlxcd-tailscale-write-probe")
-            if self._tailscale is not None
-            else None
+        await self._refresh_backends(
+            (self._backends[backend_id],), task_name="omlxcd-tailscale-write-probe"
         )
-        await self._probe_backend(backend, authorization)
-        if authorization is not None:
-            await asyncio.gather(authorization, return_exceptions=True)
+
+    async def refresh_node(self, node_id: str) -> bool:
+        if node_id not in self._nodes:
+            return False
+        await self._refresh_backends(
+            tuple(backend for backend in self._config.backends if backend.node_id == node_id),
+            task_name="omlxcd-tailscale-node-probe",
+        )
+        return True
+
+    async def _refresh_backends(
+        self, backends: tuple[BackendConfig, ...], *, task_name: str
+    ) -> None:
+        async with self._refresh_lock:
+            authorization = (
+                asyncio.create_task(self._refresh_tailscale(), name=task_name)
+                if self._tailscale is not None
+                else None
+            )
+            await asyncio.gather(
+                *(self._probe_backend(backend, authorization) for backend in backends),
+                return_exceptions=True,
+            )
+            if authorization is not None:
+                await asyncio.gather(authorization, return_exceptions=True)
 
     async def _refresh_tailscale(self) -> None:
         assert self._tailscale is not None
@@ -622,6 +632,7 @@ class ProductionControlService:
         config: AppConfig,
         storage: StorageHandle,
         catalog: SnapshotCatalog,
+        probe: CatalogProbe,
         planner: RoutePlanner,
         coordinator: PlacementOperationCoordinator,
         target_factory: PlacementTargetFactory,
@@ -634,6 +645,7 @@ class ProductionControlService:
         self._config = config
         self._storage = storage
         self._catalog = catalog
+        self._probe = probe
         self._planner = planner
         self._coordinator = coordinator
         self._target_factory = target_factory
@@ -689,6 +701,15 @@ class ProductionControlService:
             if after is None or item.id > after
         )
         return nodes[:limit]
+
+    async def probe_node(self, node_id: str) -> Node | None:
+        node = next((item for item in self._config.nodes if item.id == node_id), None)
+        if node is None or not await self._probe.refresh_node(node_id):
+            return None
+        snapshots = tuple(
+            snapshot for snapshot in self._catalog.get() if snapshot.node_id == node.id
+        )
+        return self._node_view(node, snapshots)
 
     async def list_models(self, *, after: str | None, limit: int) -> tuple[ModelSpec, ...]:
         snapshots = self._catalog.get()
@@ -1052,6 +1073,7 @@ def build_production_daemon(
         config=config,
         storage=storage,
         catalog=catalog,
+        probe=probe,
         planner=planner,
         coordinator=coordinator,
         target_factory=target_factory,
