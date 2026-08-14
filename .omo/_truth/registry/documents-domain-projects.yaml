@@ -50,6 +50,13 @@ clients:
   claude:
     instruction_file: CLAUDE.md
     mcp_scope: user
+    config_contract:
+      owner: workspace
+      generator_ref: bin/gac/documents-claude-desktop-config.py
+      configuration_surface: native_json
+      config_path: ~/Library/Application Support/Claude/claude_desktop_config.json
+      managed_mcp_server: cockpit
+      preserve_unrelated_servers: true
     note: "Install/configure the Cockpit MCP once; the domain gateway selects domain context."
   codex:
     instruction_file: AGENTS.md

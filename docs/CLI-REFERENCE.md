@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **130** 个命令 (含子命令)。按场景分组如下。
+共 **133** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -126,6 +126,7 @@
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
 | `cockpit control` | 控制平面：submit / ack / nack |
+| `cockpit controller-shadow` | 读取 Runtime 旧控制器影子迁移回执 |
 | `cockpit domain-status` | 显示 Documents 域项目绑定与引导状态 |
 | `cockpit down` | 停止观测栈 |
 | `cockpit event` | 导出事件封套 (EventEnvelope) |
@@ -151,6 +152,7 @@
 | `cockpit logs` | 查看日志 |
 | `cockpit memory` | 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref) |
 | `cockpit metrics` | 查看 bus metrics 快照 |
+| `cockpit model-freshness` | 读取 Runtime 模型新鲜度回执 |
 | `cockpit mutate` | 通过 agora 统一 BOS URI 写协议修改资源 |
 | `cockpit nack` | 否定确认任务 |
 | `cockpit nodes` | 列出 KOS 中注册的算力节点 |
@@ -169,6 +171,7 @@
 | `cockpit remember` | 手动存入偏好/事实 |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit route` | 为模型选择最优节点 |
+| `cockpit sanyi-status` | 读取 Runtime 三医状态一致性回执 |
 | `cockpit scan` | 平面扫描 |
 | `cockpit score` | 评分债务项 |
 | `cockpit serve` | stdio JSON-RPC serve mode |
