@@ -793,6 +793,8 @@ bets:
   write_surfaces:
   - bin/gac/**
   - bin/ssot/agent-tick-daemon.py
+  - projects/omo/src/omo/omo_agent_host.py
+  - projects/omo/tests/test_omo_agent_host.py
   - .omo/_truth/registry/swarm-coordination.yaml
   - docs/plans/3y-bet-ledger.yaml
   - docs/reports/2026-08-14-shared-runtime-coordination-gap.md
