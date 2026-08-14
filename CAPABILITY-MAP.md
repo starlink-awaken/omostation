@@ -8,8 +8,8 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 130 |
-| MCP 工具 | 565 |
+| CLI 命令 (含子命令) | 133 |
+| MCP 工具 | 568 |
 | MCP 服务器 | 27 |
 | BOS 服务 | 223 |
 | BOS 域 | 17 |
@@ -31,7 +31,7 @@
 | `metaos` | L2 | 24 | stdio | `projects/metaos/src/metaos/mcp_server.py` |
 | `omo` | L2 | 22 | stdio | `projects/omo/src/omo/mcp_server.py` |
 | `kronos` | L2 | 16 | stdio | `projects/kairon/packages/kronos/src/kronos/mcp_server.py` |
-| `agent-runtime` | L3 | 11 | stdio | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
+| `agent-runtime` | L3 | 14 | stdio | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
 | `aetherforge` | X | 10 | stdio | `projects/aetherforge/src/aetherforge/mcp_server.py` |
 | `ecos-ssot` | L0 | 9 | stdio | `projects/ecos/src/ecos/l0/ssot/mcp_server.py` |
 | `iris` | L2 | 8 | stdio | `projects/kairon/packages/iris/src/iris/mcp_server.py` |
@@ -104,6 +104,7 @@
 | `cockpit context` | 显示系统上下文 (Phase/CARDS/约束/引导) |
 | `cockpit contracts` | 契约验证 |
 | `cockpit control` | 控制平面：submit / ack / nack |
+| `cockpit controller-shadow` | 读取 Runtime 旧控制器影子迁移回执 |
 | `cockpit daily` | 每日研究简报 |
 | `cockpit dashboard` | 打开 Web Dashboard |
 | `cockpit data` | 数据目录索引 / 类型注册 / TTL 清理 |
@@ -152,6 +153,7 @@
 | `cockpit mesh` | omlx 算力网格路由入口 |
 | `cockpit metrics` | 查看 bus metrics 快照 |
 | `cockpit model-driven` | [DEPRECATED] 模型驱动生命周期入口 (ADR-0240 D1) — 拒绝执行 |
+| `cockpit model-freshness` | 读取 Runtime 模型新鲜度回执 |
 | `cockpit mof` | MOF 元模型操作 (委派 mof CLI) |
 | `cockpit monitor` | 📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出) |
 | `cockpit mutate` | 通过 agora 统一 BOS URI 写协议修改资源 |
@@ -180,6 +182,7 @@
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit route` | 为模型选择最优节点 |
 | `cockpit runtime` | runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱) |
+| `cockpit sanyi-status` | 读取 Runtime 三医状态一致性回执 |
 | `cockpit scan` | 平面扫描 |
 | `cockpit scenario` | P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review) |
 | `cockpit score` | 评分债务项 |
