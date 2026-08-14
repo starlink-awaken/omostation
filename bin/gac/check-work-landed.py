@@ -125,7 +125,8 @@ def _sha_landed(sha: str) -> bool:
     if cp.returncode == 0:
         return True
     # 3. Check submodules
-    subdirs = [p.parent for p in WORKSPACE.glob("projects/*") if p.is_dir()]
+    # 遍历项目目录本体，而不是其父目录（修复子模块落地校验误判）
+    subdirs = [p for p in WORKSPACE.glob("projects/*") if p.is_dir()]
     for sub in subdirs:
         try:
             cp2 = subprocess.run(
