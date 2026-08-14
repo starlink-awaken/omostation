@@ -33,6 +33,7 @@ _FACTS_AUDIT_JOB_FIELDS = {
     "evidence_schema",
     "fail_closed",
 }
+_SANYI_STATUS_JOB_FIELDS = _FACTS_AUDIT_JOB_FIELDS | {"scope_entity_ids"}
 _RUNTIME_STATE = {
     "owner": "runtime",
     "environment_override": "OMOSTATION_RUNTIME_STATE_ROOT",
@@ -62,6 +63,17 @@ _MODEL_FRESHNESS_SCHEMA = "runtime.documents-model-freshness.evidence.v1"
 _MODEL_FRESHNESS_EVIDENCE_PATH = (
     "control/evidence/documents-weijian-model-freshness/"
     "documents-weijian-model-freshness.json"
+)
+_SANYI_STATUS_JOB_ID = "documents-weijian-sanyi-status-audit"
+_SANYI_STATUS_READS = [
+    "@工作文档/卫健委/_control/三医态势仪表盘.md",
+    "@工作文档/卫健委/_entities/facts/01-progress.yaml",
+]
+_SANYI_STATUS_SCOPE_ENTITY_IDS = ["proj-syld", "proj-jingbao", "proj-emr-quality"]
+_SANYI_STATUS_SCHEMA = "runtime.documents-sanyi-status-consistency.evidence.v1"
+_SANYI_STATUS_EVIDENCE_PATH = (
+    "control/evidence/documents-weijian-sanyi-status-audit/"
+    "documents-weijian-sanyi-status-audit.json"
 )
 
 
@@ -261,6 +273,57 @@ def _validate_model_freshness_job(
     return errors
 
 
+def _validate_sanyi_status_job(value: dict[str, object], label: str) -> list[str]:
+    errors: list[str] = []
+    unknown_fields = sorted(set(value) - _SANYI_STATUS_JOB_FIELDS)
+    missing_fields = sorted(_SANYI_STATUS_JOB_FIELDS - set(value))
+    if unknown_fields:
+        errors.append(
+            f"runtime sanyi status consistency job {label} has unknown fields: {', '.join(unknown_fields)}"
+        )
+    if missing_fields:
+        errors.append(
+            f"runtime sanyi status consistency job {label} is missing fields: {', '.join(missing_fields)}"
+        )
+    if value.get("id") != _SANYI_STATUS_JOB_ID:
+        errors.append(
+            f"runtime sanyi status consistency job {label} id must be {_SANYI_STATUS_JOB_ID}"
+        )
+    if value.get("owner") != "runtime-control":
+        errors.append(
+            f"runtime sanyi status consistency job {label} owner must be runtime-control"
+        )
+    if value.get("action") != "audit_sanyi_status_consistency":
+        errors.append(
+            f"runtime sanyi status consistency job {label} action must be audit_sanyi_status_consistency"
+        )
+    if value.get("domain_id") != "work-weijian":
+        errors.append(
+            f"runtime sanyi status consistency job {label} domain_id must be work-weijian"
+        )
+    if value.get("timeout_seconds") != 30:
+        errors.append(
+            f"runtime sanyi status consistency job {label} timeout_seconds must be 30"
+        )
+    if value.get("reads") != _SANYI_STATUS_READS:
+        errors.append(
+            f"runtime sanyi status consistency job {label} reads must declare the dashboard and progress facts"
+        )
+    if value.get("scope_entity_ids") != _SANYI_STATUS_SCOPE_ENTITY_IDS:
+        errors.append(
+            f"runtime sanyi status consistency job {label} scope_entity_ids must declare proj-syld, proj-jingbao, proj-emr-quality"
+        )
+    if value.get("evidence_relative_path") != _SANYI_STATUS_EVIDENCE_PATH:
+        errors.append(
+            f"runtime sanyi status consistency job {label} evidence_relative_path must be {_SANYI_STATUS_EVIDENCE_PATH}"
+        )
+    if value.get("evidence_schema") != _SANYI_STATUS_SCHEMA:
+        errors.append(
+            f"runtime sanyi status consistency job {label} evidence_schema must be {_SANYI_STATUS_SCHEMA}"
+        )
+    return errors
+
+
 def validate_runtime_state(raw: object) -> list[str]:
     """Require the one Runtime state binding that Cockpit can resolve."""
 
@@ -297,6 +360,11 @@ def validate_runtime_jobs(raw: object, domain_ids: Sequence[str]) -> list[str]:
         )
         errors.extend(common_errors)
         if (
+            value.get("id") == _SANYI_STATUS_JOB_ID
+            or value.get("action") == "audit_sanyi_status_consistency"
+        ):
+            errors.extend(_validate_sanyi_status_job(value, label))
+        elif (
             value.get("id") == _MODEL_FRESHNESS_JOB_ID
             or value.get("action") == "audit_model_freshness"
         ):
