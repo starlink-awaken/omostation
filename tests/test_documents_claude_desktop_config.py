@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import sys
+from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
 import yaml
@@ -106,6 +107,15 @@ def _run(
     )
 
 
+def _load_module():
+    spec = spec_from_file_location("documents_claude_desktop_config", SCRIPT)
+    assert spec is not None and spec.loader is not None
+    module = module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_render_derives_claude_cockpit_projection(tmp_path: Path) -> None:
     registry, cockpit = _project_registry(tmp_path)
     domain_registry = _domain_registry(tmp_path)
@@ -199,6 +209,38 @@ def test_check_does_not_create_missing_config(tmp_path: Path) -> None:
     assert result.returncode == 1
     assert not settings.exists()
     assert json.loads(result.stdout)["errors"] == [f"settings unavailable: {settings}"]
+
+
+def test_install_refuses_default_config_while_claude_is_running(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    registry, _ = _project_registry(tmp_path)
+    domain_registry = _domain_registry(tmp_path)
+    settings = _settings(tmp_path)
+    before = settings.read_text(encoding="utf-8")
+    module = _load_module()
+    monkeypatch.setattr(module, "DEFAULT_SETTINGS", settings)
+    monkeypatch.setattr(module, "_claude_desktop_running", lambda: True)
+
+    exit_code = module.main(
+        [
+            "install",
+            "--project-registry",
+            str(registry),
+            "--domain-registry",
+            str(domain_registry),
+        ]
+    )
+
+    assert exit_code == 1
+    assert settings.read_text(encoding="utf-8") == before
+    assert json.loads(capsys.readouterr().out) == {
+        "ok": False,
+        "status": "client_running",
+        "settings_path": str(settings),
+        "restart_required": True,
+        "errors": ["Claude Desktop must be fully exited before installation"],
+    }
 
 
 def test_required_phase_gate_covers_claude_config_generator_and_tests() -> None:
