@@ -34,6 +34,7 @@ EXPECTED_TOOLS = [
     "domain_facts_validation_status",
     "domain_controller_shadow_status",
     "domain_model_freshness_status",
+    "domain_sanyi_status_consistency_status",
 ]
 
 

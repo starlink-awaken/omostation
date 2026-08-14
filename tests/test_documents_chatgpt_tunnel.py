@@ -18,6 +18,7 @@ TOOLS = [
     "domain_facts_validation_status",
     "domain_controller_shadow_status",
     "domain_model_freshness_status",
+    "domain_sanyi_status_consistency_status",
 ]
 
 
@@ -332,6 +333,38 @@ def test_model_freshness_tool_is_in_bounded_tunnel_profile(tmp_path: Path) -> No
     assert "domain_model_freshness_status" in rendered_tools
     assert "domain_model_freshness_status" in raw["workspace_mcp"]["read_tools"]
     assert raw["clients"]["chatgpt_web"]["requires_developer_mode"] is True
+
+
+def test_sanyi_status_tool_aligns_global_profile_and_tunnel(tmp_path: Path) -> None:
+    raw = yaml.safe_load(
+        (
+            ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
+        ).read_text(encoding="utf-8")
+    )
+    registry, _ = _project_registry(tmp_path)
+    registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+    domain_registry = _domain_registry(tmp_path)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "render",
+            "--project-registry",
+            str(registry),
+            "--domain-registry",
+            str(domain_registry),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout
+    assert "domain_sanyi_status_consistency_status" in raw["workspace_mcp"]["read_tools"]
+    assert raw["profiles"]["content-domain"]["allowed_workspace_tools"] == TOOLS
+    assert json.loads(result.stdout)["allowed_tools"] == TOOLS
 
 
 def test_required_phase_gate_covers_root_tunnel_contract() -> None:
