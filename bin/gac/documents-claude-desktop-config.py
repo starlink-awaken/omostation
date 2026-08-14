@@ -7,6 +7,8 @@ import argparse
 import json
 import os
 import stat
+import subprocess
+import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -199,6 +201,21 @@ def _projection(contract: ConfigContract) -> dict[str, Any]:
     }
 
 
+def _claude_desktop_running() -> bool:
+    if sys.platform != "darwin":
+        return False
+    try:
+        result = subprocess.run(
+            ["pgrep", "-x", "Claude"],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError as exc:
+        raise ConfigError(f"Claude Desktop process check unavailable: {exc}") from exc
+    return result.returncode == 0
+
+
 def _load_settings(path: Path, *, allow_missing: bool) -> dict[str, Any]:
     try:
         metadata = path.lstat()
@@ -312,6 +329,27 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "render":
             print(json.dumps(projection, ensure_ascii=False, indent=2))
             return 0
+
+        if (
+            args.command == "install"
+            and args.settings_path == DEFAULT_SETTINGS
+            and _claude_desktop_running()
+        ):
+            print(
+                json.dumps(
+                    _envelope(
+                        False,
+                        status="client_running",
+                        settings_path=args.settings_path,
+                        restart_required=True,
+                        errors=[
+                            "Claude Desktop must be fully exited before installation"
+                        ],
+                    ),
+                    ensure_ascii=False,
+                )
+            )
+            return 1
 
         settings = _load_settings(
             args.settings_path, allow_missing=args.command == "install"
