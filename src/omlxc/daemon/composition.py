@@ -66,6 +66,9 @@ from omlxc.domain import (
     JobState,
     ModelSpec,
     Node,
+    NodeDiagnosticCode,
+    NodeDiagnosticOutcome,
+    NodeDiagnosticReport,
     NodeState,
     PlacementRuntimeStatus,
     RiskLevel,
@@ -74,6 +77,7 @@ from omlxc.domain import (
 )
 from omlxc.domain.protocols import (
     AdapterCapability,
+    AdapterErrorCode,
     BackendAdapter,
     CapabilitySnapshot,
     ChatRequest,
@@ -270,6 +274,7 @@ class CatalogProbe:
         self._nodes = {item.id: item for item in config.nodes}
         self._backends = {item.id: item for item in config.backends}
         self._backend_nodes = {item.id: item.node_id for item in config.backends}
+        self._diagnostics = {item.id: NodeDiagnosticCode.NOT_PROBED for item in config.backends}
         self._task: asyncio.Task[None] | None = None
         self._refresh_lock = asyncio.Lock()
 
@@ -342,6 +347,7 @@ class CatalogProbe:
             raise
         except Exception:
             self._fail_authorization(backend.id)
+            self._diagnostics[backend.id] = NodeDiagnosticCode.AUTHORIZATION_DENIED
             return
         try:
             async with asyncio.timeout(self._timeout):
@@ -353,8 +359,12 @@ class CatalogProbe:
             self._apply(backend, capability, models, authorized=authorized, local=local)
         except asyncio.CancelledError:
             raise
+        except TimeoutError:
+            self._fail_stale(backend.id, authorized=authorized, local=local)
+            self._diagnostics[backend.id] = NodeDiagnosticCode.TIMEOUT
         except Exception:
             self._fail_stale(backend.id, authorized=authorized, local=local)
+            self._diagnostics[backend.id] = NodeDiagnosticCode.PROBE_FAILED
 
     async def _authorize(
         self, backend: BackendConfig, authorization: asyncio.Task[None] | None
@@ -389,6 +399,10 @@ class CatalogProbe:
         observed_age = (self._now() - capability.observed_at).total_seconds()
         fresh = 0 <= observed_age <= max(self._interval * 2, 1.0)
         inventory = {model.id: model for model in models}
+        loadable_any = False
+        saw_model = False
+        saw_known_model = False
+        generation_blocked = False
         for snapshot in self._catalog.get():
             if snapshot.backend_id != backend.id:
                 continue
@@ -400,6 +414,15 @@ class CatalogProbe:
                 runtime=(frozenset() if model is None else model.capabilities),
             )
             loaded = model is not None and model.state is ModelRuntimeState.LOADED
+            saw_model = saw_model or model is not None
+            saw_known_model = saw_known_model or (
+                model is not None and model.state is not ModelRuntimeState.UNKNOWN
+            )
+            generation_blocked = generation_blocked or (
+                loaded
+                and not capability.generation_ready
+                and not capabilities.isdisjoint(_GENERATION_MODEL_CAPABILITIES)
+            )
             loadable = (
                 fresh
                 and capability.reachable
@@ -413,6 +436,7 @@ class CatalogProbe:
                     or capabilities.isdisjoint(_GENERATION_MODEL_CAPABILITIES)
                 )
             )
+            loadable_any = loadable_any or loadable
             self._catalog.update(
                 snapshot.placement_id,
                 fresh=fresh,
@@ -430,6 +454,26 @@ class CatalogProbe:
                 local=local,
                 security_allowed=authorized and local,
             )
+        self._diagnostics[backend.id] = _node_diagnostic_code(
+            capability=capability,
+            fresh=fresh,
+            loadable=loadable_any,
+            saw_model=saw_model,
+            saw_known_model=saw_known_model,
+            generation_blocked=generation_blocked,
+        )
+
+    def diagnostics_for_node(self, node_id: str) -> tuple[NodeDiagnosticOutcome, ...]:
+        counts: dict[NodeDiagnosticCode, int] = {}
+        for backend in self._config.backends:
+            if backend.node_id != node_id:
+                continue
+            code = self._diagnostics[backend.id]
+            counts[code] = counts.get(code, 0) + 1
+        return tuple(
+            NodeDiagnosticOutcome(code=code, count=count)
+            for code, count in sorted(counts.items(), key=lambda item: item[0].value)
+        )
 
     def _memory_admitted(self, placement: PlacementConfig) -> bool | None:
         if placement.memory_gb is None:
@@ -710,6 +754,18 @@ class ProductionControlService:
             snapshot for snapshot in self._catalog.get() if snapshot.node_id == node.id
         )
         return self._node_view(node, snapshots)
+
+    async def diagnose_node(self, node_id: str) -> NodeDiagnosticReport | None:
+        node = next((item for item in self._config.nodes if item.id == node_id), None)
+        if node is None:
+            return None
+        snapshots = tuple(
+            snapshot for snapshot in self._catalog.get() if snapshot.node_id == node.id
+        )
+        return NodeDiagnosticReport(
+            node=self._node_view(node, snapshots),
+            outcomes=self._probe.diagnostics_for_node(node.id),
+        )
 
     async def list_models(self, *, after: str | None, limit: int) -> tuple[ModelSpec, ...]:
         snapshots = self._catalog.get()
@@ -1254,6 +1310,43 @@ _GENERATION_MODEL_CAPABILITIES = frozenset(
         AdapterCapability.VISION,
     }
 )
+
+
+def _node_diagnostic_code(
+    *,
+    capability: CapabilitySnapshot,
+    fresh: bool,
+    loadable: bool,
+    saw_model: bool,
+    saw_known_model: bool,
+    generation_blocked: bool,
+) -> NodeDiagnosticCode:
+    """Reduce catalog facts to a stable, non-sensitive backend outcome."""
+    if loadable:
+        return NodeDiagnosticCode.AVAILABLE
+    for error in capability.errors:
+        if error.code is AdapterErrorCode.UNREACHABLE:
+            return NodeDiagnosticCode.UNREACHABLE
+        if error.code is AdapterErrorCode.TIMEOUT:
+            return NodeDiagnosticCode.TIMEOUT
+        if error.code is AdapterErrorCode.INCOMPATIBLE:
+            return NodeDiagnosticCode.INCOMPATIBLE
+        if error.code is AdapterErrorCode.MODEL_UNAVAILABLE:
+            return NodeDiagnosticCode.MODEL_UNAVAILABLE
+        return NodeDiagnosticCode.PROBE_FAILED
+    if not capability.reachable:
+        return NodeDiagnosticCode.UNREACHABLE
+    if not capability.compatible:
+        return NodeDiagnosticCode.INCOMPATIBLE
+    if not capability.model_available or not saw_model:
+        return NodeDiagnosticCode.MODEL_UNAVAILABLE
+    if not fresh:
+        return NodeDiagnosticCode.STALE
+    if not saw_known_model:
+        return NodeDiagnosticCode.RUNTIME_UNKNOWN
+    if generation_blocked:
+        return NodeDiagnosticCode.GENERATION_NOT_READY
+    return NodeDiagnosticCode.PROBE_FAILED
 
 
 def _configured_model_capabilities(model: ModelConfig) -> frozenset[AdapterCapability]:

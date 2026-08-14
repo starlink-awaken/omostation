@@ -361,6 +361,57 @@ async def test_production_node_probe_recovers_only_the_requested_node() -> None:
 
 
 @pytest.mark.asyncio
+async def test_node_diagnostics_returns_cached_safe_probe_state() -> None:
+    with tempfile.TemporaryDirectory(prefix="omlxc-node-diagnostics-", dir="/tmp") as directory:
+        root = Path(directory)
+        config = _discovery_config(root)
+        bad = DiscoveringBackend(backend_id="bad", fail=True)
+        healthy = DiscoveringBackend()
+        composition = build_production_daemon(
+            config,
+            adapters={"bad": bad, "healthy": healthy},
+        )
+        server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
+        await server.start()
+        try:
+            transport = httpx.AsyncHTTPTransport(uds=str(config.daemon.socket_path))
+            async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+                diagnosed = await client.get("/api/v1/nodes/bad-node/diagnostics")
+        finally:
+            await server.stop()
+
+    assert diagnosed.status_code == 200
+    data = diagnosed.json()["data"]
+    assert data["node"]["id"] == "bad-node"
+    assert data["outcomes"] == [{"code": "probe_failed", "count": 1}]
+    assert bad.discoveries == 1
+    assert "backend probe failed" not in diagnosed.text
+    assert composition.runtime.task_settled
+
+
+@pytest.mark.asyncio
+async def test_node_diagnostics_classifies_a_healthy_cached_backend_as_available() -> None:
+    with tempfile.TemporaryDirectory(prefix="omlxc-node-diagnostics-", dir="/tmp") as directory:
+        root = Path(directory)
+        config = _config(root)
+        backend = DiscoveringBackend(backend_id="backend")
+        composition = build_production_daemon(config, adapters={"backend": backend})
+        server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
+        await server.start()
+        try:
+            transport = httpx.AsyncHTTPTransport(uds=str(config.daemon.socket_path))
+            async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+                diagnosed = await client.get("/api/v1/nodes/node/diagnostics")
+        finally:
+            await server.stop()
+
+    assert diagnosed.status_code == 200
+    assert diagnosed.json()["data"]["outcomes"] == [{"code": "available", "count": 1}]
+    assert backend.discoveries == 1
+    assert composition.runtime.task_settled
+
+
+@pytest.mark.asyncio
 async def test_production_discovery_periodically_recovers_a_failed_backend() -> None:
     with tempfile.TemporaryDirectory(prefix="omlxc-fix2-refresh-", dir="/tmp") as directory:
         root = Path(directory)

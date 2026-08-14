@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.13 — 2026-08-14
+
+- Added `omlxc nodes diagnose <node-id>` and its private read-only daemon API.
+  It reports stable aggregate catalog outcomes without refreshing hardware or
+  exposing node addresses, identities, or backend error text.
+
 ## 3.0.12 — 2026-08-14
 
 - Added `omlxc nodes probe <node-id>` for an explicit, node-scoped catalog

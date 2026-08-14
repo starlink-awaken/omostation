@@ -89,6 +89,31 @@ async def test_client_probes_one_url_escaped_node_over_the_daemon_socket() -> No
 
 
 @pytest.mark.asyncio
+async def test_client_reads_node_diagnostics_without_triggering_a_probe() -> None:
+    api = _client_api()
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return _json_response(
+            request,
+            data={"node": {"id": "node-a"}, "outcomes": [{"code": "probe_failed", "count": 1}]},
+        )
+
+    async with api.DaemonClient(
+        Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)
+    ) as client:
+        envelope = await client.node_diagnostics("node-a")
+
+    assert envelope.data == {
+        "node": {"id": "node-a"},
+        "outcomes": [{"code": "probe_failed", "count": 1}],
+    }
+    assert seen[0].method == "GET"
+    assert seen[0].url.path == "/api/v1/nodes/node-a/diagnostics"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("code", "expected_exit"),
     [

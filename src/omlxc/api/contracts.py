@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Mapping
 from typing import Protocol
 
 from omlxc.dataplane import ChatExecution, EmbeddingExecution, RerankExecution
-from omlxc.domain import Job, ModelSpec, Node, RouteDecision, RouteRequest
+from omlxc.domain import Job, ModelSpec, Node, NodeDiagnosticReport, RouteDecision, RouteRequest
 from omlxc.domain.protocols import ChatRequest, EmbeddingRequest, StreamEvent
 from omlxc.events import EventSubscription
 from omlxc.scheduler import RouteFailure
@@ -19,6 +19,8 @@ class ControlService(Protocol):
     async def list_nodes(self, *, after: str | None, limit: int) -> tuple[Node, ...]: ...
 
     async def probe_node(self, node_id: str) -> Node | None: ...
+
+    async def diagnose_node(self, node_id: str) -> NodeDiagnosticReport | None: ...
 
     async def list_models(self, *, after: str | None, limit: int) -> tuple[ModelSpec, ...]: ...
 

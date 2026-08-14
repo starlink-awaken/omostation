@@ -309,6 +309,14 @@ def create_app(
             return _error_response(_request_id(request), 404, "E404", "node not found")
         return _success(request, node)
 
+    @app.get("/api/v1/nodes/{node_id}/diagnostics")
+    async def node_diagnostics(request: Request, node_id: str) -> JSONResponse:
+        service = _require_control(control)
+        report = await service.diagnose_node(node_id)
+        if report is None:
+            return _error_response(_request_id(request), 404, "E404", "node not found")
+        return _success(request, report)
+
     @app.get("/api/v1/models")
     async def models(
         request: Request,

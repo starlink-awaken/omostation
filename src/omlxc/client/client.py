@@ -93,6 +93,9 @@ class DaemonClient:
     async def probe_node(self, node_id: str) -> DaemonEnvelope:
         return await self._request("POST", f"/api/v1/nodes/{quote(node_id, safe='')}/probe")
 
+    async def node_diagnostics(self, node_id: str) -> DaemonEnvelope:
+        return await self._request("GET", f"/api/v1/nodes/{quote(node_id, safe='')}/diagnostics")
+
     async def models(self, *, after: str | None = None, limit: int = 100) -> DaemonEnvelope:
         return await self._request(
             "GET", "/api/v1/models", params=_page_params(after=after, limit=limit)

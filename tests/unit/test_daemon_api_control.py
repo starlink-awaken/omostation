@@ -47,6 +47,7 @@ class FakeControlService:
         )
         self.load_calls: list[tuple[str, str]] = []
         self.probe_calls: list[str] = []
+        self.diagnostic_calls: list[str] = []
 
     async def health(self) -> dict[str, Any]:
         return {"status": "ready", "degraded": False}
@@ -62,6 +63,15 @@ class FakeControlService:
     async def probe_node(self, node_id: str) -> Node | None:
         self.probe_calls.append(node_id)
         return self.node if node_id == self.node.id else None
+
+    async def diagnose_node(self, node_id: str) -> dict[str, object] | None:
+        self.diagnostic_calls.append(node_id)
+        if node_id != self.node.id:
+            return None
+        return {
+            "node": self.node,
+            "outcomes": ({"code": "available", "count": 1},),
+        }
 
     async def plan_route(self, request: RouteRequest) -> RouteDecision:
         request_id = request.request_id
@@ -185,6 +195,45 @@ async def test_node_probe_returns_the_refreshed_node_or_a_safe_not_found(
         "retryable": False,
     }
     assert control.probe_calls == ["mbp", "missing"]
+
+
+@pytest.mark.asyncio
+async def test_node_diagnostics_are_read_only_and_return_safe_aggregate_outcomes(
+    transport: httpx.ASGITransport, control: FakeControlService
+) -> None:
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        diagnosed = await client.get("/api/v1/nodes/mbp/diagnostics")
+        missing = await client.get("/api/v1/nodes/missing/diagnostics")
+
+    assert diagnosed.status_code == 200
+    assert diagnosed.json()["data"] == {
+        "node": {
+            "id": "mbp",
+            "display_name": "MBP",
+            "platform": "macos",
+            "tailscale_identity": None,
+            "control_endpoint": None,
+            "inference_endpoints": [],
+            "capabilities": [],
+            "memory_gb": None,
+            "health": {
+                "state": "healthy",
+                "observed_at": "2026-08-11T00:00:00Z",
+                "stale": False,
+                "detail": None,
+            },
+            "fresh": None,
+            "authorized": None,
+            "available": None,
+            "loaded": None,
+            "ready": None,
+            "last_observed_at": None,
+        },
+        "outcomes": [{"code": "available", "count": 1}],
+    }
+    assert missing.status_code == 404
+    assert control.diagnostic_calls == ["mbp", "missing"]
+    assert control.probe_calls == []
 
 
 @pytest.mark.asyncio

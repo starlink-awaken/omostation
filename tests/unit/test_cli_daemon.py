@@ -81,6 +81,15 @@ class FakeClient:
             }
         )
 
+    async def node_diagnostics(self, node_id: str) -> DaemonEnvelope:
+        self.calls.append(("node_diagnostics", node_id))
+        return _envelope(
+            {
+                "node": {"id": node_id, "health": {"state": "degraded", "stale": True}},
+                "outcomes": [{"code": "probe_failed", "count": 1}],
+            }
+        )
+
     async def models(self, *, after: str | None = None, limit: int = 100) -> DaemonEnvelope:
         self.calls.append(("models", after, limit))
         return _envelope(
@@ -630,6 +639,17 @@ def test_nodes_probe_calls_the_daemon_for_only_the_requested_node(
     assert result.exit_code == 0
     assert json.loads(result.stdout)["data"]["id"] == "mbp"
     assert fake_client.calls == [("probe_node", "mbp")]
+
+
+def test_nodes_diagnose_reads_safe_cached_outcomes_without_triggering_a_probe(
+    fake_client: FakeClient,
+) -> None:
+    result = runner.invoke(app, ["nodes", "diagnose", "mbp", "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["data"]["outcomes"] == [{"code": "probe_failed", "count": 1}]
+    assert fake_client.calls == [("node_diagnostics", "mbp")]
 
 
 def test_status_json_bytes_remain_unchanged(fake_client: FakeClient) -> None:

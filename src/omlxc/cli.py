@@ -603,6 +603,19 @@ def nodes_probe(
     )
 
 
+@nodes_app.command("diagnose")
+def nodes_diagnose(
+    node_id: Annotated[str, typer.Argument()],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Explain cached node availability without refreshing backend hardware."""
+    _execute(
+        lambda client: client.node_diagnostics(node_id),
+        json_output=json_output,
+        renderer=_render_mapping,
+    )
+
+
 @models_app.command("list")
 def models_list(
     json_output: Annotated[bool, typer.Option("--json")] = False,

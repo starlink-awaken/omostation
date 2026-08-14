@@ -19,6 +19,22 @@ class NodeState(StrEnum):
     RECOVERING = "recovering"
 
 
+class NodeDiagnosticCode(StrEnum):
+    """Safe aggregate outcomes from cached backend catalog refreshes."""
+
+    NOT_PROBED = "not_probed"
+    AUTHORIZATION_DENIED = "authorization_denied"
+    STALE = "stale"
+    TIMEOUT = "timeout"
+    UNREACHABLE = "unreachable"
+    INCOMPATIBLE = "incompatible"
+    MODEL_UNAVAILABLE = "model_unavailable"
+    RUNTIME_UNKNOWN = "runtime_unknown"
+    GENERATION_NOT_READY = "generation_not_ready"
+    AVAILABLE = "available"
+    PROBE_FAILED = "probe_failed"
+
+
 class JobState(StrEnum):
     PENDING = "pending"
     PLANNING = "planning"
@@ -86,6 +102,18 @@ class Node(DomainModel):
     loaded: bool | None = None
     ready: bool | None = None
     last_observed_at: datetime | None = None
+
+
+class NodeDiagnosticOutcome(DomainModel):
+    code: NodeDiagnosticCode
+    count: int = Field(ge=1)
+
+
+class NodeDiagnosticReport(DomainModel):
+    """Read-only node health explanation with no network identity or error text."""
+
+    node: Node
+    outcomes: tuple[NodeDiagnosticOutcome, ...]
 
 
 class BackendInstance(DomainModel):
