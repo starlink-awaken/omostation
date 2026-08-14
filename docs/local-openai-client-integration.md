@@ -316,7 +316,7 @@ Pi 使用 `~/.pi/agent/models.json` 注册自定义 provider。该文件是用�
 }
 ```
 
-Pi 的 `$AETHERFORGE_API_KEY` 是环境变量引用，缺失时 provider 会不可用；不要把真实 key 写成 JSON 字面量。首次运行后使用 `/model` 选择 `omlxc/coding-next`。Pi 会在每次打开 `/model` 时重新读取该配置，所以不需要重启守护进程。v3.0.9 接受 Pi/oh-my-pi 当前发送的 `max_completion_tokens`、`stream_options`、`store`、`parallel_tool_calls` 与 bounded `strict` 工具定义；每个请求最多 256 个工具、单个工具说明最多 16 KiB，完整请求仍受 1 MiB 总体上限保护。
+Pi 的 `$AETHERFORGE_API_KEY` 是环境变量引用，缺失时 provider 会不可用；不要把真实 key 写成 JSON 字面量。首次运行后使用 `/model` 选择 `omlxc/coding-next`。Pi 会在每次打开 `/model` 时重新读取该配置，所以不需要重启守护进程。v3.0.11 接受 Pi/oh-my-pi 当前发送的 `max_completion_tokens`、`stream_options`、`store`、`parallel_tool_calls` 与 bounded `strict` 工具定义；每个请求最多 256 个工具、单个工具说明最多 128 KiB，完整请求仍受 1 MiB 总体上限保护。
 
 如果 Pi 的默认会话长时间没有结束，先用纯净、只读模式区分“协议不可用”和
 “本机旧扩展/上下文过重”。下面的探针仍保留 `read` 工具，但不会加载 ambient
@@ -453,7 +453,7 @@ print(response.choices[0].message.content)
 ### Tools、结构化输出与多模态
 
 - 编码助手的文件读取、编辑与 shell 执行是**客户端能力**。把它们设置为需要确认，不要误以为模型服务会限制本机工具权限。
-- v3.0.9 支持有界 function tools、`tool_choice`、assistant `tool_calls`、tool-result messages 与流式 tool-call delta；同时兼容 Pi/OMP 当前的 `max_completion_tokens` 和工具 schema。单个请求最多包含 256 个工具、单个工具说明最多 16 KiB，完整请求仍限于 1 MiB。模型是否真的选择某个工具仍取决于模型与上下文。
+- v3.0.11 支持有界 function tools、`tool_choice`、assistant `tool_calls`、tool-result messages 与流式 tool-call delta；同时兼容 Pi/OMP 当前的 `max_completion_tokens` 和工具 schema。单个请求最多包含 256 个工具、单个工具说明最多 128 KiB，完整请求仍限于 1 MiB。模型是否真的选择某个工具仍取决于模型与上下文。
 - `response_format` 等结构化输出字段尚不是本指南承诺的统一契约；需要 JSON 时优先让客户端做结构验证，不要假定所有物理后端都支持相同私有扩展。
 - 图像消息会要求 vision 能力；embedding 请求会要求 embedding 能力。没有相应 placement 时，服务会拒绝请求，而不是把普通聊天模型伪装成对应能力。
 - 优先选择客户端支持的 Chat Completions 流程；不要假定 `/v1/responses` 或厂商私有扩展存在。
@@ -472,7 +472,7 @@ print(response.choices[0].message.content)
 
 `/health` 返回成功只表示门面进程存活；模型可用性仍以 `/v1/models` 与具体调用的 typed 结果为准。
 
-若 Pi/OMP 在旧版服务上反复得到 `400 invalid`，并且 AetherForge 到私有 UDS 显示 `422`，通常是 SDK 使用了 `max_completion_tokens`、超过 128 个工具，或超过旧 8 KiB 的工具说明而服务尚未升级。升级到 v3.0.9 或更高版本；不要用移除全部工具、无限重试或直连后端来掩盖协议不兼容。
+若 Pi/OMP/Kilo 在旧版服务上反复得到 `400 invalid`，并且 AetherForge 到私有 UDS 显示 `422`，通常是 SDK 使用了 `max_completion_tokens`、超过 128 个工具，或超过旧 16 KiB 的工具说明而服务尚未升级。升级到 v3.0.11 或更高版本；不要用移除全部工具、无限重试或直连后端来掩盖协议不兼容。
 
 ## 12. 排障顺序
 

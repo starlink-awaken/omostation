@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.11 — 2026-08-14
+
+- Accept bounded composite OpenAI-compatible function descriptions up to
+  128 KiB, so standard local coding-agent tool catalogs can reach routing while
+  the existing 1 MiB request-body and 256-tool limits remain enforced.
+
 ## 3.0.10 — 2026-08-13
 
 - Added the bounded `omlxc resolve` alias-inspection command and completed the

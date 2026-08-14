@@ -16,7 +16,12 @@ from pydantic import Field, field_validator, model_validator
 from .models import DomainModel
 
 MAX_CHAT_TOOLS = 256
-MAX_CHAT_TOOL_DESCRIPTION_LENGTH = 16_384
+# OpenAI-compatible coding clients can generate one bounded, composite tool
+# description substantially larger than a human-authored function summary.
+# The HTTP ingress still caps the complete request body; keep this per-tool
+# limit below that boundary so a valid catalog can reach routing without
+# weakening request-size protection.
+MAX_CHAT_TOOL_DESCRIPTION_LENGTH = 131_072
 
 
 class AdapterCapability(StrEnum):
