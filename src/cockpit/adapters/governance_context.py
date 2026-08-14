@@ -28,6 +28,21 @@ _MODEL_FRESHNESS_EVIDENCE_AUTHORITY = "runtime-model-freshness-evidence"
 _MODEL_FRESHNESS_EVIDENCE_PATH = (
     "control/evidence/documents-weijian-model-freshness/documents-weijian-model-freshness.json"
 )
+_SANYI_STATUS_EVIDENCE_SCHEMA = "runtime.documents-sanyi-status-consistency.evidence.v1"
+_SANYI_STATUS_EVIDENCE_AUTHORITY = "runtime-sanyi-status-consistency-evidence"
+_SANYI_STATUS_JOB_ID = "documents-weijian-sanyi-status-audit"
+_SANYI_STATUS_EVIDENCE_PATH = (
+    "control/evidence/documents-weijian-sanyi-status-audit/documents-weijian-sanyi-status-audit.json"
+)
+_SANYI_STATUS_ERRORS = frozenset(
+    {
+        "dashboard_invalid",
+        "dashboard_unavailable",
+        "facts_invalid",
+        "facts_scope_empty",
+        "facts_unavailable",
+    }
+)
 _MODEL_FRESHNESS_ERRORS = frozenset(
     {
         "domain_root_missing",
@@ -505,6 +520,32 @@ def model_freshness_unavailable_envelope(
     }
 
 
+def sanyi_status_consistency_unavailable_envelope(
+    domain_id: str,
+    error_category: str,
+    *,
+    include_runtime_evidence: bool = False,
+) -> dict[str, Any]:
+    """Return the stable pathless unavailable envelope for the CR08 projection."""
+
+    sources = {
+        "domain_registry": _DOMAIN_REGISTRY_AUTHORITY,
+        "binding_registry": _DOMAIN_BINDING_AUTHORITY,
+    }
+    if include_runtime_evidence:
+        sources["runtime_evidence"] = _SANYI_STATUS_EVIDENCE_AUTHORITY
+    return {
+        "schema": "cockpit.domain-sanyi-status-consistency.v1",
+        "status": "unavailable",
+        "available": False,
+        "domain_id": domain_id.strip(),
+        "job": None,
+        "consistency": None,
+        "sources": sources,
+        "error": error_category,
+    }
+
+
 def _relative_path(value: object, *, label: str) -> Path:
     if not isinstance(value, str) or not value:
         raise ValueError(f"{label} must be a non-empty relative path")
@@ -602,6 +643,41 @@ def _runtime_model_freshness_job(binding: dict[str, Any], domain_id: str) -> dic
         "owner": owner,
         "action": "audit_model_freshness",
         "evidence_relative_path": str(evidence_path),
+    }
+
+
+def _runtime_sanyi_status_job(binding: dict[str, Any], domain_id: str) -> dict[str, str]:
+    """Return the one exact CR08 Runtime job contract declared by the binding."""
+
+    matches = [
+        item
+        for item in binding.get("runtime_jobs", [])
+        if isinstance(item, dict) and item.get("id") == _SANYI_STATUS_JOB_ID
+    ]
+    expected = {
+        "id": _SANYI_STATUS_JOB_ID,
+        "domain_id": domain_id,
+        "owner": "runtime-control",
+        "action": "audit_sanyi_status_consistency",
+        "schedule": "manual",
+        "timeout_seconds": 30,
+        "reads": [
+            "@工作文档/卫健委/_control/三医态势仪表盘.md",
+            "@工作文档/卫健委/_entities/facts/01-progress.yaml",
+        ],
+        "scope_entity_ids": ["proj-syld", "proj-jingbao", "proj-emr-quality"],
+        "writes": [],
+        "evidence_relative_path": _SANYI_STATUS_EVIDENCE_PATH,
+        "evidence_schema": _SANYI_STATUS_EVIDENCE_SCHEMA,
+        "fail_closed": True,
+    }
+    if len(matches) != 1 or matches[0] != expected:
+        raise ValueError("Runtime sanyi status job has an invalid contract")
+    return {
+        "id": _SANYI_STATUS_JOB_ID,
+        "owner": "runtime-control",
+        "action": "audit_sanyi_status_consistency",
+        "evidence_relative_path": _SANYI_STATUS_EVIDENCE_PATH,
     }
 
 
@@ -878,6 +954,72 @@ def _validated_model_freshness_receipt(receipt: dict[str, Any], job: dict[str, s
     return status, freshness
 
 
+def _validated_sanyi_status_receipt(receipt: dict[str, Any], job: dict[str, str]) -> tuple[str, dict[str, Any]]:
+    """Validate the aggregate-only CR08 Runtime receipt before projecting it."""
+
+    if receipt.get("job_id") != job["id"] or receipt.get("owner") != job["owner"]:
+        raise ValueError("Runtime evidence does not match the configured job")
+    if receipt.get("timed_out") is not False or receipt.get("evidence_error") is not None:
+        raise ValueError("Runtime evidence did not complete a valid sanyi status audit")
+    owner_evidence = receipt.get("owner_evidence")
+    fields = {
+        "schema",
+        "status",
+        "checked_on",
+        "dashboard_last_reviewed",
+        "latest_verified_at",
+        "relevant_fact_count",
+        "error",
+    }
+    if (
+        not isinstance(owner_evidence, dict)
+        or set(owner_evidence) != fields
+        or owner_evidence.get("schema") != _SANYI_STATUS_EVIDENCE_SCHEMA
+    ):
+        raise ValueError("Runtime evidence has an invalid sanyi status schema")
+    status = owner_evidence.get("status")
+    if status not in {"ok", "attention", "unavailable"}:
+        raise ValueError("Runtime evidence has an invalid sanyi status")
+    consistency = {
+        "checked_on": _iso_date(owner_evidence.get("checked_on"), label="checked_on"),
+        "dashboard_last_reviewed": _iso_date(
+            owner_evidence.get("dashboard_last_reviewed"), label="dashboard_last_reviewed", optional=True
+        ),
+        "latest_verified_at": _iso_date(
+            owner_evidence.get("latest_verified_at"), label="latest_verified_at", optional=True
+        ),
+        "relevant_fact_count": _non_negative_int(
+            owner_evidence.get("relevant_fact_count"), label="relevant_fact_count"
+        ),
+        "error": owner_evidence.get("error"),
+    }
+    dashboard = consistency["dashboard_last_reviewed"]
+    latest = consistency["latest_verified_at"]
+    count = consistency["relevant_fact_count"]
+    error = consistency["error"]
+    if status == "unavailable":
+        valid = dashboard is None and latest is None and count == 0 and error in _SANYI_STATUS_ERRORS
+    else:
+        valid = (
+            dashboard is not None
+            and latest is not None
+            and count > 0
+            and error is None
+            and ((status == "ok" and latest <= dashboard) or (status == "attention" and latest > dashboard))
+        )
+    if not valid:
+        raise ValueError("Runtime evidence has invalid sanyi status aggregates")
+    expected = {
+        "ok": ("succeeded", 0),
+        "attention": ("failed", 1),
+        "unavailable": ("failed", 2),
+    }[status]
+    exit_code = receipt.get("exit_code")
+    if isinstance(exit_code, bool) or (receipt.get("status"), exit_code) != expected:
+        raise ValueError("Runtime receipt and sanyi status disagree")
+    return status, consistency
+
+
 def _validated_controller_shadow_receipt(receipt: dict[str, Any], job: dict[str, str]) -> dict[str, Any]:
     if receipt.get("job_id") != job["id"] or receipt.get("owner") != job["owner"]:
         raise ValueError("Runtime evidence does not match the configured job")
@@ -1034,6 +1176,64 @@ def domain_model_freshness_status(
             "domain_registry": _DOMAIN_REGISTRY_AUTHORITY,
             "binding_registry": _DOMAIN_BINDING_AUTHORITY,
             "runtime_evidence": _MODEL_FRESHNESS_EVIDENCE_AUTHORITY,
+        },
+    }
+
+
+def domain_sanyi_status_consistency_status(
+    domain_id: str,
+    *,
+    workspace_root: str | Path | None = None,
+    registry_path: str | Path | None = None,
+    documents_root: str | Path | None = None,
+    runtime_state_root: str | Path | None = None,
+) -> dict[str, Any]:
+    """Project only one validated aggregate CR08 Runtime receipt."""
+
+    requested = domain_id.strip()
+    workspace = resolve_workspace_root(workspace_root)
+    binding = _binding_context(requested, workspace)
+    try:
+        _source, _registry, domains = _load_domains(registry_path, documents_root=documents_root)
+        registered = requested and any(domain["id"] == requested for domain in domains)
+    except Exception:
+        return sanyi_status_consistency_unavailable_envelope(requested, "domain_registry_unavailable")
+    if not registered:
+        return sanyi_status_consistency_unavailable_envelope(requested, "domain_not_registered")
+    if binding["status"] != "ok":
+        return sanyi_status_consistency_unavailable_envelope(requested, "domain_binding_unavailable")
+    try:
+        job = _runtime_sanyi_status_job(binding, requested)
+    except (OSError, ValueError):
+        return sanyi_status_consistency_unavailable_envelope(requested, "runtime_job_unavailable")
+    try:
+        state_root = _runtime_state_root(
+            binding,
+            runtime_state_root=runtime_state_root,
+            documents_root=documents_root,
+        )
+    except (OSError, ValueError):
+        return sanyi_status_consistency_unavailable_envelope(requested, "runtime_state_unavailable")
+    try:
+        receipt = _read_bounded_runtime_receipt(state_root, Path(job["evidence_relative_path"]))
+        status, consistency = _validated_sanyi_status_receipt(receipt, job)
+    except (OSError, ValueError):
+        return sanyi_status_consistency_unavailable_envelope(
+            requested,
+            "runtime_receipt_unavailable",
+            include_runtime_evidence=True,
+        )
+    return {
+        "schema": "cockpit.domain-sanyi-status-consistency.v1",
+        "status": status,
+        "available": status != "unavailable",
+        "domain_id": requested,
+        "job": {key: job[key] for key in ("id", "owner", "action")},
+        "consistency": consistency,
+        "sources": {
+            "domain_registry": _DOMAIN_REGISTRY_AUTHORITY,
+            "binding_registry": _DOMAIN_BINDING_AUTHORITY,
+            "runtime_evidence": _SANYI_STATUS_EVIDENCE_AUTHORITY,
         },
     }
 

@@ -224,6 +224,7 @@ class TestGovernanceTools:
             "domain_facts_validation_status",
             "domain_controller_shadow_status",
             "domain_model_freshness_status",
+            "domain_sanyi_status_consistency_status",
             "cards_status",
             "cards_check",
             "kems_status",
@@ -376,3 +377,25 @@ class TestGovernanceTools:
         }
         assert str(documents_root) not in output
         assert secret_path.name not in output
+
+    def test_domain_sanyi_status_consistency_delegates_and_preserves_the_envelope(self, monkeypatch):
+        seen = []
+        payload = {
+            "schema": "cockpit.domain-sanyi-status-consistency.v1",
+            "status": "attention",
+            "available": True,
+            "sources": {
+                "domain_registry": "l4-domain-registry",
+                "binding_registry": "workspace-documents-domain-projects",
+                "runtime_evidence": "runtime-sanyi-status-consistency-evidence",
+            },
+        }
+        monkeypatch.setattr(
+            agent_runtime_mcp_server.governance_context,
+            "domain_sanyi_status_consistency_status",
+            lambda domain_id: seen.append(domain_id) or payload,
+            raising=False,
+        )
+
+        assert json.loads(agent_runtime_mcp_server.domain_sanyi_status_consistency_status("work-weijian")) == payload
+        assert seen == ["work-weijian"]

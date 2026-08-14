@@ -8,6 +8,8 @@ import os
 import tomllib
 from pathlib import Path
 
+import pytest
+
 EXPECTED_TOOLS = {
     "workspace_context",
     "domain_context",
@@ -15,6 +17,8 @@ EXPECTED_TOOLS = {
     "cards_check",
     "domain_facts_validation_status",
     "domain_controller_shadow_status",
+    "domain_model_freshness_status",
+    "domain_sanyi_status_consistency_status",
 }
 
 
@@ -111,6 +115,25 @@ def test_controller_shadow_delegates_to_cockpit_authority(monkeypatch) -> None:
     )
 
     assert json.loads(server.domain_controller_shadow_status("work-weijian")) == payload
+    assert seen == ["work-weijian"]
+
+
+@pytest.mark.parametrize(
+    "tool_name",
+    ["domain_model_freshness_status", "domain_sanyi_status_consistency_status"],
+)
+def test_receipt_projections_delegate_to_cockpit_authority(monkeypatch, tool_name: str) -> None:
+    server = _server()
+    seen: list[str] = []
+    payload = {"schema": f"cockpit.{tool_name}.v1", "status": "attention", "available": True}
+    monkeypatch.setattr(
+        server.governance_context,
+        tool_name,
+        lambda domain_id: seen.append(domain_id) or payload,
+        raising=False,
+    )
+
+    assert json.loads(getattr(server, tool_name)("work-weijian")) == payload
     assert seen == ["work-weijian"]
 
 

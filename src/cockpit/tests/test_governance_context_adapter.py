@@ -153,6 +153,92 @@ def _write_binding_registry(root: Path, clients: dict[str, object]) -> None:
     )
 
 
+def _add_sanyi_status_binding_job(root: Path) -> None:
+    """Install the Task 3 CR08 binding contract only in this test fixture."""
+
+    binding_path = root / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
+    binding = yaml.safe_load(binding_path.read_text(encoding="utf-8"))
+    assert isinstance(binding, dict)
+    binding["runtime_jobs"].append(
+        {
+            "id": "documents-weijian-sanyi-status-audit",
+            "domain_id": "work-weijian",
+            "owner": "runtime-control",
+            "action": "audit_sanyi_status_consistency",
+            "schedule": "manual",
+            "timeout_seconds": 30,
+            "reads": [
+                "@工作文档/卫健委/_control/三医态势仪表盘.md",
+                "@工作文档/卫健委/_entities/facts/01-progress.yaml",
+            ],
+            "scope_entity_ids": ["proj-syld", "proj-jingbao", "proj-emr-quality"],
+            "writes": [],
+            "evidence_relative_path": (
+                "control/evidence/documents-weijian-sanyi-status-audit/documents-weijian-sanyi-status-audit.json"
+            ),
+            "evidence_schema": "runtime.documents-sanyi-status-consistency.evidence.v1",
+            "fail_closed": True,
+        }
+    )
+    binding["domains"].append({"id": "work-weijian", "profile": "content-domain"})
+    binding_path.write_text(yaml.safe_dump(binding, sort_keys=False), encoding="utf-8")
+
+
+def _write_runtime_sanyi_status_receipt(
+    root: Path,
+    *,
+    owner_status: str = "attention",
+    job_status: str = "failed",
+    exit_code: int = 1,
+    owner_overrides: dict[str, object] | None = None,
+) -> Path:
+    state_root = root / "runtime-state"
+    receipt = (
+        state_root
+        / "control"
+        / "evidence"
+        / "documents-weijian-sanyi-status-audit"
+        / "documents-weijian-sanyi-status-audit.json"
+    )
+    receipt.parent.mkdir(parents=True)
+    owner_evidence: dict[str, object] = {
+        "schema": "runtime.documents-sanyi-status-consistency.evidence.v1",
+        "status": owner_status,
+        "checked_on": "2026-08-14",
+        "dashboard_last_reviewed": "2026-08-05",
+        "latest_verified_at": "2026-08-06",
+        "relevant_fact_count": 3,
+        "error": None,
+    }
+    if owner_status == "ok":
+        owner_evidence["latest_verified_at"] = "2026-08-05"
+    if owner_status == "unavailable":
+        owner_evidence.update(
+            {
+                "dashboard_last_reviewed": None,
+                "latest_verified_at": None,
+                "relevant_fact_count": 0,
+                "error": "facts_unavailable",
+            }
+        )
+    owner_evidence.update(owner_overrides or {})
+    receipt.write_text(
+        json.dumps(
+            {
+                "job_id": "documents-weijian-sanyi-status-audit",
+                "owner": "runtime-control",
+                "status": job_status,
+                "exit_code": exit_code,
+                "timed_out": False,
+                "evidence_error": None,
+                "owner_evidence": owner_evidence,
+            }
+        ),
+        encoding="utf-8",
+    )
+    return state_root
+
+
 def _write_runtime_facts_receipt(
     root: Path,
     *,
@@ -1222,6 +1308,87 @@ def test_domain_model_freshness_never_reads_documents_content(tmp_path: Path, mo
 
     assert result["status"] == "attention"
     assert result["freshness"]["stale_model_count"] == 1
+
+
+def test_domain_sanyi_status_projects_only_a_valid_attention_receipt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path, domain_id="work-weijian")
+    _write_binding_registry(tmp_path, {})
+    _add_sanyi_status_binding_job(tmp_path)
+    state_root = _write_runtime_sanyi_status_receipt(tmp_path)
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+    monkeypatch.setattr(
+        gc,
+        "_load_domains",
+        lambda *_args, **_kwargs: (registry_path, object(), [{"id": "work-weijian"}]),
+    )
+
+    result = gc.domain_sanyi_status_consistency_status(
+        "work-weijian", workspace_root=tmp_path, runtime_state_root=state_root
+    )
+
+    assert result == {
+        "schema": "cockpit.domain-sanyi-status-consistency.v1",
+        "status": "attention",
+        "available": True,
+        "domain_id": "work-weijian",
+        "job": {
+            "id": "documents-weijian-sanyi-status-audit",
+            "owner": "runtime-control",
+            "action": "audit_sanyi_status_consistency",
+        },
+        "consistency": {
+            "checked_on": "2026-08-14",
+            "dashboard_last_reviewed": "2026-08-05",
+            "latest_verified_at": "2026-08-06",
+            "relevant_fact_count": 3,
+            "error": None,
+        },
+        "sources": {
+            "domain_registry": "l4-domain-registry",
+            "binding_registry": "workspace-documents-domain-projects",
+            "runtime_evidence": "runtime-sanyi-status-consistency-evidence",
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "owner_overrides",
+    [
+        {"error": "private/facts.yaml"},
+        {"dashboard_last_reviewed": "2026-8-05"},
+        {"latest_verified_at": "2026-08-04"},
+        {"private_fact": "secret statement"},
+    ],
+)
+def test_domain_sanyi_status_rejects_malformed_or_pathful_receipts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, owner_overrides: dict[str, object]
+) -> None:
+    gc = _adapter()
+    registry_path = _write_domain_registry(tmp_path, domain_id="work-weijian")
+    _write_binding_registry(tmp_path, {})
+    _add_sanyi_status_binding_job(tmp_path)
+    state_root = _write_runtime_sanyi_status_receipt(tmp_path, owner_overrides=owner_overrides)
+    monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry_path))
+    monkeypatch.setattr(
+        gc,
+        "_load_domains",
+        lambda *_args, **_kwargs: (registry_path, object(), [{"id": "work-weijian"}]),
+    )
+
+    result = gc.domain_sanyi_status_consistency_status(
+        "work-weijian", workspace_root=tmp_path, runtime_state_root=state_root
+    )
+
+    assert result["status"] == "unavailable"
+    assert result["available"] is False
+    assert result["consistency"] is None
+    assert result["error"] == "runtime_receipt_unavailable"
+    encoded = json.dumps(result, ensure_ascii=False)
+    assert "private/facts.yaml" not in encoded
+    assert "secret statement" not in encoded
 
 
 def test_domain_controller_shadow_reads_only_the_registered_incomplete_receipt(

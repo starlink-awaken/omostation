@@ -187,6 +187,30 @@ def cmd_model_freshness(args: Namespace) -> int:
     return {"ok": 0, "attention": 1, "unavailable": 2}.get(result.get("status"), 2)
 
 
+def cmd_sanyi_status(args: Namespace) -> int:
+    """Read the bounded Runtime CR08 status-consistency receipt for one domain."""
+
+    console = _get_console()
+    domain_id = getattr(args, "domain_id", "") or ""
+    try:
+        result = governance_context.domain_sanyi_status_consistency_status(domain_id)
+    except Exception:
+        result = governance_context.sanyi_status_consistency_unavailable_envelope(
+            domain_id,
+            "sanyi_status_cli_unavailable",
+        )
+    if getattr(args, "json", False):
+        print(json.dumps(result, ensure_ascii=False, default=str))
+    else:
+        consistency = result.get("consistency") or {}
+        console.print(
+            "[bold cyan]三医状态一致性[/] "
+            f"{result.get('status', 'unavailable')} · "
+            f"facts={consistency.get('relevant_fact_count', 0)}"
+        )
+    return {"ok": 0, "attention": 1, "unavailable": 2}.get(result.get("status"), 2)
+
+
 def cmd_controller_shadow(args: Namespace) -> int:
     """Read the incomplete legacy controller shadow receipt for one domain."""
 

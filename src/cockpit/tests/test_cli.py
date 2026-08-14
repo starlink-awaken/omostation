@@ -504,6 +504,39 @@ def test_model_freshness_text_prints_only_status_and_aggregates(monkeypatch, cap
     assert "fixture-private-model.md" not in output
 
 
+@pytest.mark.parametrize(
+    ("status", "expected_exit"),
+    [("ok", 0), ("attention", 1), ("unavailable", 2)],
+)
+def test_sanyi_status_json_preserves_pathless_envelope_and_exit_contract(monkeypatch, capsys, status, expected_exit):
+    from cockpit.commands import l4bridge
+
+    payload = {
+        "schema": "cockpit.domain-sanyi-status-consistency.v1",
+        "status": status,
+        "available": status != "unavailable",
+        "domain_id": "work-weijian",
+        "consistency": None,
+        "sources": {
+            "domain_registry": "l4-domain-registry",
+            "binding_registry": "workspace-documents-domain-projects",
+        },
+    }
+    seen = []
+    monkeypatch.setattr(
+        l4bridge.governance_context,
+        "domain_sanyi_status_consistency_status",
+        lambda domain_id: seen.append(domain_id) or payload,
+        raising=False,
+    )
+
+    with patch("sys.argv", ["cockpit", "sanyi-status", "work-weijian", "--json"]):
+        assert main() == expected_exit
+
+    assert seen == ["work-weijian"]
+    assert json.loads(capsys.readouterr().out) == payload
+
+
 def test_controller_shadow_json_preserves_observed_not_cut_over_contract(monkeypatch, capsys):
     from cockpit.commands import l4bridge
 

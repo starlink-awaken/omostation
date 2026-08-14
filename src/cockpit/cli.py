@@ -182,6 +182,12 @@ def _c_model_freshness(a):
     return _c(a)
 
 
+def _c_sanyi_status(a):
+    from cockpit.commands.l4bridge import cmd_sanyi_status as _c
+
+    return _c(a)
+
+
 def _c_controller_shadow(a):
     from cockpit.commands.l4bridge import cmd_controller_shadow as _c
 
@@ -767,6 +773,7 @@ def main() -> int:
         "facts-audit": _c_facts_audit,
         "facts-validation": _c_facts_validation,
         "model-freshness": _c_model_freshness,
+        "sanyi-status": _c_sanyi_status,
         "controller-shadow": _c_controller_shadow,
         "skill": _c_skill,
         "events": _c_events,

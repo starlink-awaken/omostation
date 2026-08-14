@@ -54,6 +54,34 @@ def domain_facts_validation_status(domain_id: str) -> str:
 
 
 @mcp.tool()
+def domain_model_freshness_status(domain_id: str) -> str:
+    """Read Runtime's bounded model-freshness receipt for one Documents domain."""
+
+    try:
+        result = governance_context.domain_model_freshness_status(domain_id)
+    except Exception:
+        result = governance_context.model_freshness_unavailable_envelope(
+            domain_id,
+            "model_freshness_documents_mcp_unavailable",
+        )
+    return _json_envelope(result)
+
+
+@mcp.tool()
+def domain_sanyi_status_consistency_status(domain_id: str) -> str:
+    """Read Runtime's bounded aggregate CR08 status-consistency receipt for one Documents domain."""
+
+    try:
+        result = governance_context.domain_sanyi_status_consistency_status(domain_id)
+    except Exception:
+        result = governance_context.sanyi_status_consistency_unavailable_envelope(
+            domain_id,
+            "sanyi_status_documents_mcp_unavailable",
+        )
+    return _json_envelope(result)
+
+
+@mcp.tool()
 def domain_controller_shadow_status(domain_id: str) -> str:
     """Read Runtime's incomplete legacy controller-shadow receipt for one domain."""
 
