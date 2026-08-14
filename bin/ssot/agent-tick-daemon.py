@@ -40,6 +40,31 @@ def _heartbeat(entry: dict[str, Any]) -> None:
     append_jsonl(HEARTBEAT, entry)
 
 
+def _coordination_heartbeat(result: dict[str, Any]) -> None:
+    """BET-Y1Q1-T1-05A: 巡检结果顺写共享协调层 agent_health 表.
+
+    shadow 语义: 协调层写入失败不反噬 tick 主流程 (F14 错误隔离同款),
+    只 stderr 警告 — agent_health 是镜像, 不是权威.
+    """
+    try:
+        sys.path.insert(0, str(ROOT / "bin" / "gac"))
+        import coordination_store
+
+        for r in result.get("results", []) or []:
+            agent_id = r.get("agent_id")
+            if not agent_id:
+                continue
+            ok = bool(r.get("ok"))
+            coordination_store.heartbeat(
+                agent_id,
+                "ok" if ok else "fail",
+                source="tick",
+                detail={"action": r.get("action"), "error": r.get("error")},
+            )
+    except Exception as exc:  # noqa: BLE001 — shadow 镜像不反噬主流程
+        print(f"[tick-coordination] heartbeat mirror failed: {exc}", file=sys.stderr)
+
+
 def run_once() -> dict[str, Any]:
     """Run one tick_all pass over all registered agents."""
     run_agent_tick = _load_omo()
@@ -52,6 +77,7 @@ def run_once() -> dict[str, Any]:
         "actions": [r.get("action") for r in result.get("results", [])],
     }
     _heartbeat(heartbeat)
+    _coordination_heartbeat(result)
     return result
 
 

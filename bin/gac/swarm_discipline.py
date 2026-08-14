@@ -298,6 +298,55 @@ def load_branch_claims(claims_dir: Path) -> dict[str, dict[str, Any]]:
     return out
 
 
+def _shadow_mirror_claim(branch: str, session: str, *, release: bool = False) -> dict[str, Any]:
+    """D2 文件锁 → 共享 SQLite 双写 (BET-Y1Q1-T1-05A shadow).
+
+    shadow 语义: 文件锁是权威判定源, 本镜像失败只落 shadow_events,
+    不改变调用方返回值. warning/fail 阶段翻开关时只改处置不改判定.
+    返回 {"token": int} 供 claim 文件持久化 (submit 时 token-check 用).
+    """
+    out: dict[str, Any] = {}
+    try:
+        _here = str(Path(__file__).resolve().parent)
+        if _here not in sys.path:
+            sys.path.insert(0, _here)
+        import coordination_store as cs
+
+        if release:
+            cs.release_resource("branch", branch, owner=session)
+            return out
+        claim = cs.claim_resource("branch", branch, owner=session, ttl_hours=24)
+        if claim is None:
+            # 文件锁判成功但镜像已有 active holder → 观察面记录漂移,
+            # 不翻转文件锁判定 (shadow 阶段文件锁说了算)
+            existing = cs.active_claim("branch", branch)
+            cs.emit_shadow_event(
+                "mirror_drift", "branch", branch,
+                {"holder": existing.owner if existing else "unknown",
+                 "session": session},
+            )
+            if existing:
+                out["token"] = existing.token  # 复用既有 claim 的 token, 防误报 stale
+        else:
+            cs.emit_shadow_event("write_ok", "branch", branch, {"token": claim.token})
+            out["token"] = claim.token
+    except Exception as exc:  # noqa: BLE001 — shadow 镜像永不反噬主流程
+        try:
+            _here = str(Path(__file__).resolve().parent)
+            if _here not in sys.path:
+                sys.path.insert(0, _here)
+            import coordination_store as cs
+            cs.emit_shadow_event("write_fail", "branch", branch, {"error": str(exc)})
+        except Exception:
+            pass
+        print(
+            f"[swarm-shadow] mirror {'release' if release else 'claim'} failed "
+            f"for {branch}: {exc}",
+            file=sys.stderr,
+        )
+    return out
+
+
 def acquire_branch_lock(
     root: Path,
     session: str,
@@ -341,12 +390,16 @@ def acquire_branch_lock(
             "gate": "d2_branch_occupancy",
         }
         path = claims_dir / f"{session}.json"
+        mirror = _shadow_mirror_claim(branch, session)
+        if "token" in mirror:
+            payload["coordination_token"] = mirror["token"]
         path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         return True, {
             "branch": branch,
             "session": session,
             "claim_path": str(path.relative_to(root)),
             "reused": bool(holder),
+            **({"coordination_token": mirror["token"]} if "token" in mirror else {}),
         }
 
 
@@ -378,6 +431,11 @@ def release_branch_lock(
     )
     path = claims_dir / f"{session}.json"
     if path.is_file():
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            payload = {}
+        _shadow_mirror_claim(payload.get("branch", f"work/{session}"), session, release=True)
         path.unlink()
     if purge_orphans and claims_dir.is_dir():
         for claim_file in claims_dir.glob("*.json"):

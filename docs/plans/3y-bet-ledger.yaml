@@ -670,9 +670,79 @@ bets:
   pasw_required: false
   depends_on:
   - BET-Y1Q1-T1-00
+  - BET-Y1Q1-T1-05A
   risk_level: L3
   human_gate: true
   circuit_breaker: 超 3 周 → 停在 D2(全员迁 clone), D3 减法推迟到 Y1Q2; 但不得只做 D0/D1 就收工(拓扑没改完等于没做)
+  retro: required
+- id: BET-Y1Q1-T1-05A
+  track: T1-TRUTH
+  window: Y1Q1
+  title: 共享运行时协调层 — 替代 D2/D3 文件锁的跨 clone 任务认领与心跳 (shadow)
+  appetite: 2 weeks
+  priority: P0
+  status: in_progress
+  goal: 在 T1-05 拓扑改造铺开之前, 建立不依赖共享物理 checkout 的运行时协调层
+    (~/agents/_shared/runtime/coordination.sqlite3, WAL), 承接任务认领/agent 心跳/
+    跨 agent 消息, 使 D2/D3 文件锁在 T1-05 D3 阶段可被安全退役而非静默失效
+  analysis_doc: docs/reports/2026-08-14-shared-runtime-coordination-gap.md
+  non_goals:
+  - 跨物理主机的 agent 协调 (访问层可替换, daemon 化留给后续 bet)
+  - 迁移 memory-os.yaml 之外的 MOS/belief 数据模型 (只处理运行时投影层)
+  - Cockpit UI 可视化 (只要求 CLI 可读)
+  - messages 表数据流接入 (shadow 阶段 schema-only, a2a-adapter 双写留 warning 阶段)
+  - warning/fail 灰度阶段 (本 bet 只做 shadow 并跑满窗口)
+  done_when:
+  - "共享 SQLite (WAL) 落地 ~/agents/_shared/runtime/coordination.sqlite3, 懒初始化
+    ensure_ready() + user_version 迁移, schema 含 claims/agent_health/messages/shadow_events
+    四表; claims 为通用 resource 模型 UNIQUE(resource_type, resource_id), type ∈
+    bet/branch/path/adr"
+  - "认领是单条原子语句 (BEGIN IMMEDIATE 事务内 MAX(token)+1 + active 唯一部分索引),
+    并发测试证明两进程抢同一 resource_id 仅一个成功"
+  - "agent_health 由 launchd agent-tick-daemon (5min 周期) 写入, 心跳 <= 10min, stale
+    判定 <= 3 心跳周期; 认领带 fencing token (per-resource 同事务 MAX+1 单调递增)"
+  - "token-check 子命令在 gac-worktree.sh submit 前调用 (token 从 claim 文件读);
+    shadow 阶段旧 token 判定 reject + 落共享 shadow_events 表, 不阻断 push;
+    DB 打不开时 exit 2 fail-closed 停 submit; 判定逻辑由测试脚本断言"
+  - "swarm-discipline-cli.py status 只读输出 claims/health/messages 三段, 无需
+    sqlite3 客户端即可读 (--json 可机读)"
+  - "双写挂 swarm_discipline.py::acquire_branch_lock 成功后 (文件锁仍为 shadow 阶段
+    权威判定源, SQLite 为镜像), release 对称; 双写失败仅记事件不改变返回值"
+  - "备份: crontab 日备 (integrity_check + .backup 轮转 N=3) 为主 + store 内
+    maybe_backup() 时间戳兜底; 恢复 runbook 落 docs/operations/"
+  - "shadow 窗口按 §3.4 规程跑满 1 周, 存量清单由 CLI 导出贴入 retro, 经 human_gate
+    确认后才可置 done"
+  verify:
+  - cmd: ls ~/agents/_shared/runtime/coordination.sqlite3
+    expect: 存在
+  - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 python3 bin/gac/test_coordination_layer.py --suite concurrency --repeat 20
+    expect: 20/20 rounds exactly one winner
+  - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 python3 bin/gac/test_coordination_layer.py --suite fencing
+    expect: 旧 token 判定 reject PASS
+  - cmd: python3 bin/gac/swarm-discipline-cli.py status
+    expect: claims/health/messages 三段可读
+  - cmd: sqlite3 ~/agents/_shared/runtime/coordination.sqlite3 "PRAGMA integrity_check;"
+    expect: ok
+  - cmd: test -f docs/operations/coordination-recovery-runbook.md
+    expect: runbook 存在
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: 无新增 error (存量 25 个 T6 债不在本 bet 范围)
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - bin/gac/**
+  - bin/ssot/agent-tick-daemon.py
+  - .omo/_truth/registry/swarm-coordination.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-08-14-shared-runtime-coordination-gap.md
+  - docs/operations/coordination-recovery-runbook.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q1-T1-00
+  risk_level: L3
+  human_gate: true
+  circuit_breaker: 超 1.5 周未完成 shadow 阶段验证 → 停下汇报; T1-05 depends_on 本 bet
+    (机器强制), D1 试点阶段协调层必须就位, 不得在未验证并发正确性的情况下推进 T1-05
   retro: required
 - id: BET-Y1Q1-T1-06
   track: T1-TRUTH
