@@ -224,7 +224,7 @@ def _codex_trust_override(workspace_root: str) -> str | None:
     if any(ord(char) < 32 or ord(char) == 127 for char in workspace_root):
         return None
     escaped_workspace = workspace_root.replace("\\", "\\\\").replace('"', '\\"')
-    return f'projects."{escaped_workspace}".trust_level="trusted"'
+    return f'projects={{"{escaped_workspace}"={{trust_level="trusted"}}}}'
 
 
 def _argv_digest(argv: tuple[str, ...]) -> str:
