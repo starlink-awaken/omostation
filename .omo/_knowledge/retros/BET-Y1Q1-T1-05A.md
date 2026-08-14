@@ -58,6 +58,12 @@
    legacy claim 或镜像写失败会绕过 fencing 观察面。现统一调用 token-check，显式传
    owner 与 token=0，并用 `token_missing_legacy` 记录 shadow reject；事件写不成则
    exit 2 fail-closed，仍未切 warning/fail。
+9. **〔部署收口〕代码根与运行态根原先被同一个 `ROOT` 绑定**: LaunchAgent 若指向
+   main 对齐的部署 clone，heartbeat 会写进部署 clone 自己的 `.omo`；若继续指向共享
+   Workspace，又加载不到已合并的新代码。daemon 现显式接收 `--workspace-root`，在导入
+   OMO 前绑定权威运行态根，并用 `WORKSPACE_CODE_ROOT` 约束 JourneyRunner 的可执行脚本
+   继续来自独立部署 clone；attestation 新增 privacy-safe `runtime_root_digest`，用于证明
+   没有形成第二运行真相。
 
 ## Q4 净增减：代码行 / 文件 / GaC 规则 / ADR / 脚本？
 
@@ -82,8 +88,9 @@
 2. **messages 表已建未接流** — a2a-adapter 双写是 warning 阶段第一件事.
 3. **跨机协调是 non_goal** — 访问层 coordination_store.py 单点封装就是为
    daemon 化预留的, 未来替换 `_connect()` 为 socket 客户端即可.
-4. **真实共享 DB 已在跑** — `~/agents/_shared/runtime/coordination.sqlite3`,
-   launchd tick 每 5min 自动心跳; 观察: `swarm-discipline-cli.py status`.
+4. **真实共享 DB 已存在，但新版 daemon 尚待部署** —
+   `~/agents/_shared/runtime/coordination.sqlite3`; 部署前旧 health 行会持续 stale，不能把
+   代码测试冒充 5min 自动心跳。观察入口: `swarm-discipline-cli.py status`.
 5. **crontab 日备需人工装载** — 条目在 runbook §4, 机器本地配置不进 git.
 
 ## Shadow 窗口收口快照 (待窗口跑满后填)
