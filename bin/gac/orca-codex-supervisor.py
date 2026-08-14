@@ -691,9 +691,7 @@ def start_supervised_codex(
     if (
         not isinstance(coordinator_handle, str)
         or not _valid_identity(coordinator_handle)
-        or coordinator.get("worktreePath") != resolved_workspace
-        or coordinator.get("connected") is not True
-        or coordinator.get("writable") is not True
+        or coordinator.get("worktreeId") != orca_worktree_id
     ):
         return _failure(
             binding=binding,
@@ -707,6 +705,42 @@ def start_supervised_codex(
             ),
         )
     coordinator_residuals = [f"orca:terminal:{coordinator_handle}"]
+
+    shown_coordinator, failure = _response(
+        runner,
+        (
+            "orca",
+            "terminal",
+            "show",
+            "--terminal",
+            coordinator_handle,
+            "--json",
+        ),
+        timeout_seconds=15.0,
+        binding=binding,
+        stage="coordinator_terminal_attestation",
+        reason="orca_coordinator_terminal_unavailable",
+        residual_resources=coordinator_residuals,
+    )
+    if failure:
+        return failure
+    shown_terminal = (
+        shown_coordinator.get("terminal") if shown_coordinator is not None else None
+    )
+    if (
+        not isinstance(shown_terminal, dict)
+        or shown_terminal.get("handle") != coordinator_handle
+        or shown_terminal.get("worktreeId") != orca_worktree_id
+        or shown_terminal.get("worktreePath") != resolved_workspace
+        or shown_terminal.get("connected") is not True
+        or shown_terminal.get("writable") is not True
+    ):
+        return _failure(
+            binding=binding,
+            stage="coordinator_terminal_attestation",
+            reason="orca_response_invalid",
+            residual_resources=coordinator_residuals,
+        )
 
     objective = "supervised-codex:{workflow_run_id}:{omo_task_id}:{packet_id}:{omo_dispatch_id}".format(
         **binding
