@@ -60,6 +60,19 @@ tool-call deltas. Chat text is
 bounded separately at 512,000 characters while the complete request remains
 subject to the 1 MiB body limit.
 
+## Backend Adapter Capability Matrix
+
+`omlxc` relies on adapters to translate local hardware requests to backend-specific APIs. Current capability support:
+
+| Capability | oMLX App | LM Studio / LM Link | Ollama |
+|---|---|---|---|
+| **Chat** | Supported | Supported | Supported |
+| **Vision** | *Gap* | Supported | Supported |
+| **Embedding**| Implemented (Not advertised) | Implemented (Not advertised) | Supported |
+| **Rerank** | *Gap* | *Gap* | *Gap* |
+
+*Note: Embedding endpoints (`/v1/embeddings`) exist for oMLX App and LM Studio under the hood, but are missing from their `AdapterCapability` sets. Rerank capabilities do not yet exist in the architecture.*
+
 Reversible R1 operations require a terminal confirmation or explicit `--yes`:
 
 ```bash

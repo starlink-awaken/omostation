@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.14 — 2026-08-14
+
+- Documented backend adapter capability gaps (vision/embedding/rerank) across oMLX App, LM Studio, and Ollama in README, preserving the "read-only diagnostic" and "fail-closed" architectural boundaries without modifying existing single-node probes or introducing automatic remediation risks.
+
 ## 3.0.13 — 2026-08-14
 
 - Added `omlxc nodes diagnose <node-id>` and its private read-only daemon API.
