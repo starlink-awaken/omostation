@@ -341,6 +341,8 @@ def main() -> int:
                 "[bold]工具[/]\n"
                 "  [cyan]cockpit search --all KEY[/]  — 跨源搜索 (本地+BOS)\n"
                 "  [cyan]cockpit discover[/]           — 发现可用功能\n"
+                "  [cyan]cockpit ask \"问题\"[/]        — 大模型终端问答\n"
+                "  [cyan]cockpit proxy-env[/]         — 导出大模型代理环境变量\n"
                 "  [cyan]cockpit status[/]            — 工作台\n"
                 "  [cyan]cockpit agent-workflow[/]    — Agent 可执行治理流程\n"
                 "  [cyan]cockpit agent-runtime[/]     — Agent Runtime 任务 / Server\n"
@@ -810,6 +812,8 @@ def main() -> int:
         "bos-capability": lambda a: __import__(
             "cockpit.commands.bos", fromlist=["cmd_bos_capability"]
         ).cmd_bos_capability(a),
+        "ask": lambda a: __import__("cockpit.commands.ask", fromlist=["cmd_ask"]).cmd_ask(a),
+        "proxy-env": lambda a: __import__("cockpit.commands.ask", fromlist=["cmd_proxy_env"]).cmd_proxy_env(a),
         "bos-inbox": lambda a: __import__("cockpit.commands.bos_inbox", fromlist=["cmd_bos_inbox"]).cmd_bos_inbox(a),
         "events-watch": lambda a: _c_events(
             __import__("argparse").Namespace(watch=True, limit=getattr(a, "limit", 20), topic=None)
