@@ -237,6 +237,69 @@ def normalize_local_upstream(source_root: str, upstream: str) -> str:
     return canonical(os.path.join(source_root, expanded))
 
 
+def canonical_upstream(source_root: str, upstream: str) -> str:
+    """Follow local working-clone origins to their final upstream endpoint."""
+    current = normalize_local_upstream(source_root, upstream)
+    visited = {canonical(source_root)}
+    while os.path.isdir(current):
+        repo_root = canonical(current)
+        if repo_root in visited:
+            raise ToolError(
+                "origin_cycle",
+                f"local origin chain cycles at {repo_root}",
+                EXIT_POLICY,
+            )
+        visited.add(repo_root)
+        probe = git(repo_root, "rev-parse", "--git-dir")
+        if probe.returncode != 0:
+            break
+        next_origin = git(repo_root, "remote", "get-url", "origin")
+        if next_origin.returncode != 0 or not next_origin.stdout.strip():
+            break
+        current = normalize_local_upstream(repo_root, next_origin.stdout.strip())
+    return current
+
+
+def origin_branch_name(revision: str) -> str | None:
+    """Return the branch portion of an origin remote-tracking ref."""
+    prefixes = ("origin/", "refs/remotes/origin/")
+    for prefix in prefixes:
+        if not revision.startswith(prefix):
+            continue
+        branch = revision[len(prefix) :]
+        check = git(None, "check-ref-format", f"refs/heads/{branch}")
+        return branch if branch and check.returncode == 0 else None
+    return None
+
+
+def resolve_upstream_branch(source_url: str, branch: str) -> tuple[str, str]:
+    """Resolve one canonical upstream branch without mutating the source clone."""
+    ref = f"refs/heads/{branch}"
+    resolved = git(None, "ls-remote", "--exit-code", source_url, ref)
+    if resolved.returncode != 0:
+        raise ToolError(
+            "revision_checkout_failed",
+            f"cannot resolve {ref} from canonical upstream: {resolved.stderr.strip()}",
+            EXIT_POLICY,
+        )
+    matches = []
+    for line in resolved.stdout.splitlines():
+        parts = line.split("\t", 1)
+        if (
+            len(parts) == 2
+            and parts[1] == ref
+            and re.fullmatch(r"[0-9a-fA-F]{40,64}", parts[0])
+        ):
+            matches.append(parts[0].lower())
+    if len(matches) != 1:
+        raise ToolError(
+            "revision_checkout_failed",
+            f"canonical upstream returned {len(matches)} exact matches for {ref}",
+            EXIT_POLICY,
+        )
+    return matches[0], ref
+
+
 def atomic_publish_no_replace(source: str, destination: str) -> None:
     """Atomically publish a directory without replacing a concurrent path."""
     libc = ctypes.CDLL(None, use_errno=True)
@@ -318,25 +381,35 @@ def cmd_create(args: argparse.Namespace) -> dict:
     source_url = normalize_source(source)
     revision = args.revision
     source_revision_ref = revision
+    revision_fetch_url = source
     if os.path.isdir(source):
         upstream = git(source, "remote", "get-url", "origin")
         if upstream.returncode == 0 and upstream.stdout.strip():
-            source_url = normalize_local_upstream(source, upstream.stdout.strip())
+            source_url = canonical_upstream(source, upstream.stdout.strip())
         if revision:
-            resolved = git(source, "rev-parse", "--verify", f"{revision}^{{commit}}")
-            if resolved.returncode != 0:
-                raise ToolError(
-                    "revision_checkout_failed",
-                    f"cannot resolve revision {revision} in source: "
-                    f"{resolved.stderr.strip()}",
-                    EXIT_POLICY,
+            remote_branch = origin_branch_name(revision)
+            if remote_branch is not None:
+                revision, source_revision_ref = resolve_upstream_branch(
+                    source_url, remote_branch
                 )
-            revision = resolved.stdout.strip()
-            symbolic = git(
-                source, "rev-parse", "--symbolic-full-name", source_revision_ref
-            )
-            if symbolic.returncode == 0 and symbolic.stdout.strip():
-                source_revision_ref = symbolic.stdout.strip()
+                revision_fetch_url = source_url
+            else:
+                resolved = git(
+                    source, "rev-parse", "--verify", f"{revision}^{{commit}}"
+                )
+                if resolved.returncode != 0:
+                    raise ToolError(
+                        "revision_checkout_failed",
+                        f"cannot resolve revision {revision} in source: "
+                        f"{resolved.stderr.strip()}",
+                        EXIT_POLICY,
+                    )
+                revision = resolved.stdout.strip()
+                symbolic = git(
+                    source, "rev-parse", "--symbolic-full-name", source_revision_ref
+                )
+                if symbolic.returncode == 0 and symbolic.stdout.strip():
+                    source_revision_ref = symbolic.stdout.strip()
 
     destination_parent = os.path.dirname(os.path.abspath(dest)) or os.curdir
     if not os.path.isdir(destination_parent):
@@ -386,7 +459,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
                     staging_clone,
                     "fetch",
                     "--no-tags",
-                    source,
+                    revision_fetch_url,
                     source_revision_ref,
                 )
                 if fetch.returncode != 0:
