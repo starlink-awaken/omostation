@@ -13,7 +13,7 @@ SCRIPT = ROOT / "bin" / "gac" / "documents-zed-profile.py"
 TOOLS = ("cards_check", "cards_status", "domain_context", "workspace_context")
 
 
-def _project_registry(tmp_path: Path) -> Path:
+def _project_registry(tmp_path: Path, *, tools: tuple[str, ...] = TOOLS) -> Path:
     registry_dir = tmp_path / ".omo" / "_truth" / "registry"
     registry_dir.mkdir(parents=True, exist_ok=True)
     generator = tmp_path / "bin" / "gac" / "documents-zed-profile.py"
@@ -25,7 +25,7 @@ def _project_registry(tmp_path: Path) -> Path:
             {
                 "workspace_mcp": {
                     "server": "cockpit",
-                    "read_tools": list(TOOLS),
+                    "read_tools": list(tools),
                 },
                 "clients": {
                     "zed": {
@@ -40,7 +40,7 @@ def _project_registry(tmp_path: Path) -> Path:
                     }
                 },
                 "profiles": {
-                    "content-domain": {"allowed_workspace_tools": list(TOOLS)}
+                    "content-domain": {"allowed_workspace_tools": list(tools)}
                 },
             },
             sort_keys=False,
@@ -89,6 +89,7 @@ def _run(
     command: str,
     *,
     settings_path: Path | None = None,
+    tools: tuple[str, ...] = TOOLS,
 ) -> subprocess.CompletedProcess[str]:
     settings_path = settings_path or _settings(tmp_path)
     return subprocess.run(
@@ -97,7 +98,7 @@ def _run(
             str(SCRIPT),
             command,
             "--project-registry",
-            str(_project_registry(tmp_path)),
+            str(_project_registry(tmp_path, tools=tools)),
             "--settings-path",
             str(settings_path),
         ],
@@ -109,12 +110,12 @@ def _run(
     )
 
 
-def _expected_profile() -> dict[str, object]:
+def _expected_profile(*, tools: tuple[str, ...] = TOOLS) -> dict[str, object]:
     return {
         "name": "Documents",
         "tools": {},
         "enable_all_context_servers": False,
-        "context_servers": {"cockpit": {"tools": {tool: True for tool in TOOLS}}},
+        "context_servers": {"cockpit": {"tools": {tool: True for tool in tools}}},
     }
 
 
@@ -151,6 +152,58 @@ def test_install_preserves_unrelated_settings_and_is_idempotent(tmp_path: Path) 
     assert settings_path.stat().st_mode & 0o777 == 0o600
     assert json.loads(first.stdout)["status"] == "installed"
     assert json.loads(second.stdout)["status"] == "unchanged"
+
+
+def test_install_migrates_a_prior_generated_profile_for_an_expanded_contract(
+    tmp_path: Path,
+) -> None:
+    settings_path = _settings(tmp_path)
+    expanded_tools = (*TOOLS, "domain_model_freshness_status")
+
+    assert _run(tmp_path, "install", settings_path=settings_path).returncode == 0
+    result = _run(
+        tmp_path,
+        "install",
+        settings_path=settings_path,
+        tools=expanded_tools,
+    )
+
+    assert result.returncode == 0, result.stderr
+    settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert settings["agent"]["profiles"]["documents"] == _expected_profile(
+        tools=expanded_tools
+    )
+    assert settings["agent"]["tool_permissions"]["tools"] == {
+        "move_path": {"default": "allow"},
+        **{f"mcp:cockpit:{tool}": {"default": "allow"} for tool in expanded_tools},
+    }
+    assert json.loads(result.stdout)["status"] == "installed"
+
+
+def test_install_refuses_documents_profile_with_custom_cockpit_tool_subset(
+    tmp_path: Path,
+) -> None:
+    settings_path = _settings(tmp_path)
+    expanded_tools = (*TOOLS, "domain_model_freshness_status")
+    assert _run(tmp_path, "install", settings_path=settings_path).returncode == 0
+    settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    settings["agent"]["profiles"]["documents"]["context_servers"]["cockpit"]["tools"][
+        "domain_context"
+    ] = False
+    settings_path.write_text(json.dumps(settings), encoding="utf-8")
+
+    result = _run(
+        tmp_path,
+        "install",
+        settings_path=settings_path,
+        tools=expanded_tools,
+    )
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "agent.profiles.documents already exists with different content"
+    ]
+    assert json.loads(settings_path.read_text(encoding="utf-8")) == settings
 
 
 def test_check_detects_profile_drift(tmp_path: Path) -> None:
