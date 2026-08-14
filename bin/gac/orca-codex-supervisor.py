@@ -17,6 +17,7 @@ import shlex
 import shutil
 import stat
 import subprocess
+import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -26,6 +27,7 @@ IDENTITY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:+-]{0,127}$")
 SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 Command = tuple[str, ...]
 Runner = Callable[[Command, float], tuple[int, str, str]]
+GuardRunner = Callable[[Command, float, str], tuple[int, str, str]]
 
 
 def _subprocess_runner(
@@ -49,6 +51,30 @@ def _subprocess_runner(
     return completed.returncode, completed.stdout, completed.stderr
 
 
+def _subprocess_guard_runner(
+    command: Command, timeout_seconds: float, agent_id: str
+) -> tuple[int, str, str]:
+    environment = os.environ.copy()
+    environment["AGENT_ID"] = agent_id
+    try:
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            check=False,
+            shell=False,
+            text=True,
+            timeout=timeout_seconds,
+            env=environment,
+        )
+    except FileNotFoundError as exc:
+        return 127, "", str(exc)
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout if isinstance(exc.stdout, str) else ""
+        stderr = exc.stderr if isinstance(exc.stderr, str) else "command timed out"
+        return 124, stdout, stderr
+    return completed.returncode, completed.stdout, completed.stderr
+
+
 def _canonical_json(payload: dict[str, Any]) -> str:
     return json.dumps(
         payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
@@ -62,7 +88,18 @@ def _digest_payload(payload: dict[str, Any]) -> str:
 
 
 def _valid_identity(value: str) -> bool:
-    return bool(IDENTITY_RE.fullmatch(value))
+    return isinstance(value, str) and bool(IDENTITY_RE.fullmatch(value))
+
+
+def _valid_worktree_id(value: str) -> bool:
+    if not isinstance(value, str) or "\x00" in value or "::" not in value:
+        return False
+    repo_id, worktree_path = value.split("::", 1)
+    return _valid_identity(repo_id) and worktree_path.startswith("/")
+
+
+def _path_digest(path: str) -> str:
+    return "sha256:" + hashlib.sha256(path.encode("utf-8")).hexdigest()
 
 
 def _binding(
@@ -134,6 +171,92 @@ def _read_prompt(
     if observed_digest != prompt_digest:
         return None, "prompt_digest_mismatch"
     return prompt, None
+
+
+def _clone_guard(
+    *,
+    workspace_root: str,
+    agent_id: str,
+    guard_runner: GuardRunner,
+) -> tuple[dict[str, str] | None, str | None]:
+    root = Path(workspace_root)
+    try:
+        git_dir = root / ".git"
+        if stat.S_ISLNK(os.lstat(git_dir).st_mode) or not stat.S_ISDIR(
+            os.lstat(git_dir).st_mode
+        ):
+            return None, "workspace_not_independent_clone"
+    except OSError:
+        return None, "workspace_not_independent_clone"
+    command = (
+        sys.executable,
+        str(Path(__file__).with_name("agent-clone.py")),
+        "guard",
+        "--workspace",
+        workspace_root,
+        "--require-clone",
+        "--json",
+    )
+    returncode, stdout, _stderr = guard_runner(command, 15.0, agent_id)
+    try:
+        receipt = json.loads(stdout)
+    except (TypeError, json.JSONDecodeError):
+        return None, "agent_clone_guard_invalid"
+    if (
+        returncode != 0
+        or not isinstance(receipt, dict)
+        or receipt.get("ok") is not True
+        or receipt.get("state") != "verified_clone"
+        or receipt.get("workspace") != workspace_root
+        or receipt.get("clone_root") != workspace_root
+        or receipt.get("agent_id") != agent_id
+    ):
+        return None, "agent_clone_guard_rejected"
+    return {
+        "clone_agent_id": agent_id,
+        "canonical_root_digest": _path_digest(workspace_root),
+        "guard_receipt_digest": _digest_payload(receipt),
+    }, None
+
+
+def _worktree_id(result: dict[str, Any], *, workspace_root: str) -> str | None:
+    worktree = result.get("worktree")
+    worktree_id = worktree.get("id") if isinstance(worktree, dict) else None
+    if (
+        not isinstance(worktree_id, str)
+        or not _valid_worktree_id(worktree_id)
+        or worktree.get("path") != workspace_root
+    ):
+        return None
+    _repo_id, id_path = worktree_id.split("::", 1)
+    try:
+        canonical_id_path = str(Path(id_path).resolve(strict=True))
+    except OSError:
+        return None
+    if canonical_id_path != workspace_root:
+        return None
+    return worktree_id
+
+
+def _has_model_output(messages: list[object]) -> bool:
+    for message in messages:
+        if not isinstance(message, dict) or message.get("role") not in {
+            "assistant",
+            "model",
+        }:
+            continue
+        if isinstance(message.get("content"), str) and message["content"].strip():
+            return True
+        blocks = message.get("blocks")
+        if not isinstance(blocks, list):
+            continue
+        for block in blocks:
+            if not isinstance(block, dict):
+                continue
+            for field in ("text", "output", "content"):
+                if isinstance(block.get(field), str) and block[field].strip():
+                    return True
+    return False
 
 
 def _orca_refs(
@@ -335,10 +458,12 @@ def start_supervised_codex(
     workspace_root: str,
     prompt_ref: str,
     prompt_digest: str,
+    agent_id: str,
     idempotency_key: str | None = None,
     codex_executable: str | None = None,
     timeout_ms: int = 60_000,
     runner: Runner = _subprocess_runner,
+    guard_runner: GuardRunner | None = None,
 ) -> dict[str, Any]:
     """Create one Orca Codex worker and return only supervised transport facts."""
     binding = _binding(
@@ -352,6 +477,8 @@ def start_supervised_codex(
     )
     if binding is None:
         return _failure(binding=None, stage="input", reason="identity_invalid")
+    if not _valid_identity(agent_id):
+        return _failure(binding=binding, stage="input", reason="agent_id_invalid")
     if idempotency_key is not None and not _valid_identity(idempotency_key):
         return _failure(
             binding=binding, stage="input", reason="idempotency_key_invalid"
@@ -376,6 +503,15 @@ def start_supervised_codex(
         resolved_workspace = str(Path(workspace_root).resolve(strict=True))
     except OSError:
         return _failure(binding=binding, stage="input", reason="workspace_root_unsafe")
+    clone_binding, clone_error = _clone_guard(
+        workspace_root=resolved_workspace,
+        agent_id=agent_id,
+        guard_runner=guard_runner or _subprocess_guard_runner,
+    )
+    if clone_error:
+        return _failure(binding=binding, stage="input", reason=clone_error)
+    assert clone_binding is not None
+    binding.update(clone_binding)
     retry_requests: dict[str, str] = {}
     if idempotency_key is not None:
         for stage in ("run-create", "task-create", "worker-start"):
@@ -386,6 +522,31 @@ def start_supervised_codex(
     def retry_request(stage: str) -> tuple[str, ...]:
         value = retry_requests.get(stage)
         return ("--retry-request", value) if value is not None else ()
+
+    shown_worktree, failure = _response(
+        runner,
+        (
+            "orca",
+            "worktree",
+            "show",
+            "--worktree",
+            f"path:{resolved_workspace}",
+            "--json",
+        ),
+        timeout_seconds=15.0,
+        binding=binding,
+        stage="worktree_show",
+        reason="orca_worktree_unavailable",
+    )
+    if failure:
+        return failure
+    assert shown_worktree is not None
+    orca_worktree_id = _worktree_id(shown_worktree, workspace_root=resolved_workspace)
+    if orca_worktree_id is None:
+        return _failure(
+            binding=binding, stage="worktree_show", reason="orca_worktree_unavailable"
+        )
+    binding["orca_worktree_id"] = orca_worktree_id
 
     status, failure = _response(
         runner,
@@ -490,6 +651,8 @@ def start_supervised_codex(
 
     codex_command = shlex.join(
         (
+            "env",
+            f"AGENT_ID={agent_id}",
             resolved_codex,
             "--ask-for-approval",
             "on-request",
@@ -506,7 +669,7 @@ def start_supervised_codex(
             "terminal",
             "create",
             "--worktree",
-            f"path:{resolved_workspace}",
+            f"id:{orca_worktree_id}",
             "--title",
             f"supervised-codex-{omo_task_id}",
             "--command",
@@ -654,7 +817,7 @@ def start_supervised_codex(
             "--task",
             orca_task_id,
             "--worktree",
-            "current",
+            f"id:{orca_worktree_id}",
             "--terminal",
             terminal_handle,
             "--from",
@@ -731,11 +894,16 @@ def collect_supervised_codex(
     workspace_root: str,
     prompt_ref: str,
     prompt_digest: str,
+    agent_id: str,
+    canonical_root_digest: str,
+    guard_receipt_digest: str,
+    orca_worktree_id: str,
     orca_run_id: str,
     orca_task_id: str,
     orca_dispatch_id: str,
     terminal_handle: str,
     runner: Runner = _subprocess_runner,
+    guard_runner: GuardRunner | None = None,
 ) -> dict[str, Any]:
     """Collect a settled worker's provenance without retaining transcript content."""
     binding = _binding(
@@ -757,6 +925,15 @@ def collect_supervised_codex(
         return _failure(
             binding=binding, stage="input", reason="identity_invalid", orca=orca
         )
+    if (
+        not _valid_identity(agent_id)
+        or not SHA256_RE.fullmatch(canonical_root_digest)
+        or not SHA256_RE.fullmatch(guard_receipt_digest)
+        or not _valid_worktree_id(orca_worktree_id)
+    ):
+        return _failure(
+            binding=binding, stage="input", reason="identity_invalid", orca=orca
+        )
     _prompt, prompt_error = _read_prompt(
         workspace_root=workspace_root,
         prompt_ref=prompt_ref,
@@ -764,6 +941,86 @@ def collect_supervised_codex(
     )
     if prompt_error:
         return _failure(binding=binding, stage="input", reason=prompt_error, orca=orca)
+
+    try:
+        resolved_workspace = str(Path(workspace_root).resolve(strict=True))
+    except OSError:
+        return _failure(
+            binding=binding, stage="input", reason="workspace_root_unsafe", orca=orca
+        )
+    clone_binding, clone_error = _clone_guard(
+        workspace_root=resolved_workspace,
+        agent_id=agent_id,
+        guard_runner=guard_runner or _subprocess_guard_runner,
+    )
+    if clone_error:
+        return _failure(binding=binding, stage="input", reason=clone_error, orca=orca)
+    assert clone_binding is not None
+    if (
+        clone_binding["canonical_root_digest"] != canonical_root_digest
+        or clone_binding["guard_receipt_digest"] != guard_receipt_digest
+    ):
+        return _failure(
+            binding=binding, stage="input", reason="clone_guard_drift", orca=orca
+        )
+    binding.update(clone_binding)
+    binding["orca_worktree_id"] = orca_worktree_id
+
+    shown_worktree, failure = _response(
+        runner,
+        (
+            "orca",
+            "worktree",
+            "show",
+            "--worktree",
+            f"path:{resolved_workspace}",
+            "--json",
+        ),
+        timeout_seconds=15.0,
+        binding=binding,
+        stage="worktree_show",
+        reason="orca_worktree_unavailable",
+        orca=orca,
+    )
+    if failure:
+        return failure
+    assert shown_worktree is not None
+    if (
+        _worktree_id(shown_worktree, workspace_root=resolved_workspace)
+        != orca_worktree_id
+    ):
+        return _failure(
+            binding=binding,
+            stage="worktree_show",
+            reason="orca_worktree_drift",
+            orca=orca,
+        )
+
+    shown_terminal, failure = _response(
+        runner,
+        ("orca", "terminal", "show", "--terminal", terminal_handle, "--json"),
+        timeout_seconds=10.0,
+        binding=binding,
+        stage="terminal_show",
+        reason="orca_terminal_unavailable",
+        orca=orca,
+    )
+    if failure:
+        return failure
+    terminal = shown_terminal.get("terminal") if shown_terminal else None
+    if (
+        not isinstance(terminal, dict)
+        or terminal.get("handle") != terminal_handle
+        or terminal.get("worktreePath") != resolved_workspace
+        or terminal.get("connected") is not True
+        or terminal.get("writable") is not True
+    ):
+        return _failure(
+            binding=binding,
+            stage="terminal_show",
+            reason="orca_terminal_drift",
+            orca=orca,
+        )
 
     shown, failure = _response(
         runner,
@@ -842,6 +1099,7 @@ def collect_supervised_codex(
         transcript.get("source") != "transcript"
         or not isinstance(messages, list)
         or not messages
+        or not _has_model_output(messages)
     ):
         return _failure(
             binding=binding,
@@ -876,9 +1134,14 @@ def _parser() -> argparse.ArgumentParser:
         command.add_argument("--prompt-ref", required=True)
         command.add_argument("--prompt-digest", required=True)
     start = commands.choices["start"]
+    start.add_argument("--agent-id", required=True)
     start.add_argument("--idempotency-key")
     start.add_argument("--timeout-ms", type=int, default=60_000)
     collect = commands.choices["collect"]
+    collect.add_argument("--agent-id", required=True)
+    collect.add_argument("--canonical-root-digest", required=True)
+    collect.add_argument("--guard-receipt-digest", required=True)
+    collect.add_argument("--orca-worktree-id", required=True)
     collect.add_argument("--orca-run-id", required=True)
     collect.add_argument("--orca-task-id", required=True)
     collect.add_argument("--orca-dispatch-id", required=True)
@@ -901,12 +1164,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "start":
         receipt = start_supervised_codex(
             **values,
+            agent_id=args.agent_id,
             idempotency_key=args.idempotency_key,
             timeout_ms=args.timeout_ms,
         )
     else:
         receipt = collect_supervised_codex(
             **values,
+            agent_id=args.agent_id,
+            canonical_root_digest=args.canonical_root_digest,
+            guard_receipt_digest=args.guard_receipt_digest,
+            orca_worktree_id=args.orca_worktree_id,
             orca_run_id=args.orca_run_id,
             orca_task_id=args.orca_task_id,
             orca_dispatch_id=args.orca_dispatch_id,
