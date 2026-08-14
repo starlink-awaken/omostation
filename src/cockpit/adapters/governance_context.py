@@ -356,6 +356,34 @@ def domain_context(
     }
 
 
+def mcp_safe_domain_context(
+    payload: dict[str, Any],
+    *,
+    documents_root: str | Path | None = None,
+) -> dict[str, Any]:
+    """Project domain context without exposing Documents absolute paths."""
+
+    root = str(_documents_root(documents_root))
+    root_prefix = f"{root}{os.sep}"
+
+    def project(value: Any) -> Any:
+        if isinstance(value, dict):
+            return {key: project(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [project(item) for item in value]
+        if isinstance(value, tuple):
+            return tuple(project(item) for item in value)
+        if isinstance(value, Path):
+            value = str(value)
+        if isinstance(value, str):
+            if value == root:
+                return "documents://"
+            return value.replace(root_prefix, "documents://")
+        return value
+
+    return project(payload)
+
+
 def _artifact_status(root: Path, relative: Path) -> dict[str, str]:
     """Inspect one declared domain artifact without following static links."""
 

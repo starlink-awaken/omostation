@@ -43,7 +43,7 @@ def workspace_context() -> str:
 def domain_context(domain_id: str) -> str:
     """Resolve one Documents domain and its Workspace binding."""
 
-    return _json_envelope(governance_context.domain_context(domain_id))
+    return _json_envelope(governance_context.mcp_safe_domain_context(governance_context.domain_context(domain_id)))
 
 
 @mcp.tool()

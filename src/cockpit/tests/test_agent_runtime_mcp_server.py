@@ -248,6 +248,39 @@ class TestGovernanceTools:
         assert json.loads(agent_runtime_mcp_server.domain_context("unknown")) == payload
         assert seen == ["unknown"]
 
+    def test_domain_context_redacts_documents_root_from_mcp_envelope(self, tmp_path: Path, monkeypatch):
+        documents_root = tmp_path / "Documents"
+        payload = {
+            "schema": "cockpit.domain-context.v1",
+            "status": "ok",
+            "available": True,
+            "domain_id": "work-weijian",
+            "domain": {
+                "id": "work-weijian",
+                "path": str(documents_root / "@工作文档" / "卫健委"),
+            },
+            "binding": {
+                "status": "ok",
+                "profile_id": "content-domain",
+                "capability_routes": {"workflows": {"status": "ok"}},
+            },
+            "sources": {"domain_registry": str(documents_root / "@公共" / "_control" / "L4-DOMAIN-REGISTRY.yaml")},
+        }
+        monkeypatch.setenv("L4_DOCUMENTS_ROOT", str(documents_root))
+        monkeypatch.setattr(
+            agent_runtime_mcp_server.governance_context,
+            "domain_context",
+            lambda _domain_id: payload,
+        )
+
+        serialized = agent_runtime_mcp_server.domain_context("work-weijian")
+        result = json.loads(serialized)
+
+        assert str(documents_root) not in serialized
+        assert result["domain_id"] == "work-weijian"
+        assert result["binding"]["profile_id"] == "content-domain"
+        assert result["binding"]["capability_routes"]["workflows"]["status"] == "ok"
+
     def test_domain_project_status_passes_domain_id_to_adapter(self, monkeypatch):
         seen = []
         payload = {"schema": "cockpit.domain-project-status.v1", "status": "ok", "available": True}

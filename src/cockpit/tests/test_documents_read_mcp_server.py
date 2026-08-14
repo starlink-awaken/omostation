@@ -82,6 +82,37 @@ def test_domain_context_delegates_to_cockpit_authority(monkeypatch) -> None:
     assert seen == ["work-weijian"]
 
 
+def test_domain_context_redacts_documents_root_from_mcp_envelope(tmp_path: Path, monkeypatch) -> None:
+    server = _server()
+    documents_root = tmp_path / "Documents"
+    payload = {
+        "schema": "cockpit.domain-context.v1",
+        "status": "ok",
+        "available": True,
+        "domain_id": "work-weijian",
+        "domain": {
+            "id": "work-weijian",
+            "path": str(documents_root / "@工作文档" / "卫健委"),
+        },
+        "binding": {
+            "status": "ok",
+            "profile_id": "content-domain",
+            "capability_routes": {"skills": {"status": "ok"}},
+        },
+        "sources": {"domain_registry": str(documents_root / "@公共" / "_control" / "L4-DOMAIN-REGISTRY.yaml")},
+    }
+    monkeypatch.setenv("L4_DOCUMENTS_ROOT", str(documents_root))
+    monkeypatch.setattr(server.governance_context, "domain_context", lambda _domain_id: payload)
+
+    serialized = server.domain_context("work-weijian")
+    result = json.loads(serialized)
+
+    assert str(documents_root) not in serialized
+    assert result["domain_id"] == "work-weijian"
+    assert result["binding"]["profile_id"] == "content-domain"
+    assert result["binding"]["capability_routes"]["skills"]["status"] == "ok"
+
+
 def test_facts_validation_delegates_to_cockpit_authority(monkeypatch) -> None:
     server = _server()
     seen: list[str] = []
