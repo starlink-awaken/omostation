@@ -416,7 +416,7 @@ def status(
     _execute(
         lambda client: client.health(),
         json_output=json_output,
-        renderer=lambda data: render_sections(status_sections(data)),
+        renderer=_render_status,
         error_context=ErrorContext.STATUS,
     )
 
@@ -466,7 +466,7 @@ async def _guide_operation(client: DaemonClient, request: GuideRequest) -> Daemo
 
 def _render_guide_result(operation: GuideOperation, data: JsonValue | None) -> str:
     if operation in {GuideOperation.HEALTH, GuideOperation.DAEMON_HEALTH}:
-        return render_sections(status_sections(data))
+        return _render_status(data)
     if operation is GuideOperation.MODELS:
         return _render_items(data, ("id", "role", "reasoning"))
     if operation is GuideOperation.ROUTE:
@@ -1077,7 +1077,7 @@ def doctor(
         _execute(
             lambda client: client.health(),
             json_output=json_output,
-            renderer=lambda data: render_sections(status_sections(data)),
+            renderer=_render_status,
             error_context=ErrorContext.STATUS,
         )
         return
@@ -1094,18 +1094,24 @@ def doctor(
         mapping = _mapping(data)
         passed = 0
         failed = 0
+        table = Table(box=box.SIMPLE_HEAD, show_header=True, header_style="bold #7dd3f5")
+        table.add_column("Status")
+        table.add_column("Check")
+
         for k, v in mapping.items():
             if k in ("items", "summary"):
                 continue
             vs = str(v).lower()
             if vs in ("ok", "passed", "true"):
-                _console.print(f"[green]✔[/green] {k}")
+                table.add_row("[green]✔[/green]", f"[#c8d8ec]{k}[/#c8d8ec]")
                 passed += 1
             elif vs in ("warn", "warning"):
-                _console.print(f"[yellow]⚠[/yellow] {k}")
+                table.add_row("[yellow]⚠[/yellow]", f"[#c8d8ec]{k}[/#c8d8ec]")
             else:
-                _console.print(f"[red]✖[/red] {k}")
+                table.add_row("[red]✖[/red]", f"[#c8d8ec]{k}[/#c8d8ec]")
                 failed += 1
+        
+        _console.print(table)
         _console.print(f"\n[bold]{passed} passed, {failed} failed[/bold]")
 
 
@@ -1154,13 +1160,10 @@ def _render_items(data: JsonValue | None, columns: Sequence[str]) -> str:
         return ""
 
     table = Table(
-        box=box.SIMPLE_HEAD,
-        show_header=True,
-        header_style="bold #2a7ab5",
-        border_style="#122035",
-        row_styles=["#c8d8ec", "dim #c8d8ec"],
-        pad_edge=False,
-        expand=False,
+        box=box.SIMPLE_HEAVY,
+        header_style="bold #7dd3f5",
+        show_edge=False,
+        row_styles=["none", "dim"],
     )
     for col in columns:
         table.add_column(col.upper(), no_wrap=True, min_width=8)
@@ -1229,18 +1232,25 @@ async def _select_from_pages(fetch: PageFetcher, identifier: str, resource: str)
 def _render_mapping(data: JsonValue | None) -> str:
     """Rich key-value panel output for show/detail commands."""
     mapping = _mapping(data)
-    lines: list[str] = []
+    if not mapping:
+        _console.print("[dim italic]No details available.[/dim italic]")
+        return ""
+    
+    table = Table(box=None, show_header=False, padding=(0, 2))
+    table.add_column("Property", style="#5a7a9a bold")
+    table.add_column("Value")
+    
     for key, value in sorted(mapping.items()):
-        key_text = f"[#5a7a9a]{key.upper():<20}[/#5a7a9a]"
         val_s = _text(value)
         if key == "state":
-            val_text = _rich_state(val_s).markup
+            val_text = _rich_state(val_s)
         elif isinstance(value, bool):
-            val_text = _rich_bool(value).markup
+            val_text = _rich_bool(value)
         else:
-            val_text = f"[#c8d8ec]{val_s}[/#c8d8ec]"
-        lines.append(f"{key_text}  {val_text}")
-    _console.print("\n".join(lines))
+            val_text = Text(val_s, style="#c8d8ec")
+        table.add_row(key.upper(), val_text)
+        
+    _console.print(Panel(table, title="[bold]Details[/bold]", border_style="#1a4d80", expand=False))
     return ""
 
 
@@ -1248,13 +1258,19 @@ def _render_job(data: JsonValue | None) -> str:
     """Rich panel for a single job."""
     mapping = _mapping(data)
     state_s = _text(mapping.get("state", "unknown"))
-    sym, style = _STATE_STYLES.get(state_s.lower(), ("·", "dim"))
+    
+    table = Table(box=None, show_header=False, padding=(0, 2))
+    table.add_column("Property", style="#5a7a9a bold")
+    table.add_column("Value", style="#c8d8ec")
+    
+    table.add_row("KIND", _text(mapping.get("kind")))
+    table.add_row("STATE", _rich_state(state_s))
+    table.add_row("PROGRESS", _text(mapping.get("progress")))
+    
     _console.print(
         Panel(
-            f"[#5a7a9a]kind    [/#5a7a9a] [#c8d8ec]{_text(mapping.get('kind'))}[/#c8d8ec]\n"
-            f"[#5a7a9a]state   [/#5a7a9a] [{style}]{sym} {state_s}[/{style}]\n"
-            f"[#5a7a9a]progress[/#5a7a9a] [#c8d8ec]{_text(mapping.get('progress'))}[/#c8d8ec]",
-            title=f"[bold #7dd3f5]job  {_text(mapping.get('id'))}[/bold #7dd3f5]",
+            table,
+            title=f"[bold #7dd3f5]Job: {_text(mapping.get('id'))}[/bold #7dd3f5]",
             border_style="#1a4d80",
             expand=False,
         )
@@ -1268,9 +1284,52 @@ def _render_route(data: JsonValue | None) -> str:
     selected = _text(mapping.get("selected_placement_id"))
     fallback = mapping.get("fallback_chain")
     fallback_text = ", ".join(map(str, fallback)) if isinstance(fallback, list) else "—"
+    
+    grid = Table.grid(padding=(0, 2))
+    grid.add_column(style="#5a7a9a bold")
+    grid.add_column()
+    grid.add_row("SELECTED", f"[bold cyan]{selected}[/bold cyan]")
+    grid.add_row("FALLBACK", f"[dim]{fallback_text}[/dim]")
+    
     _console.print(
-        f"[#5a7a9a]selected[/#5a7a9a]  [cyan]{selected}[/cyan]\n"
-        f"[#5a7a9a]fallback[/#5a7a9a]  [dim]{fallback_text}[/dim]"
+        Panel(
+            grid,
+            title="[bold]Route Plan[/bold]",
+            border_style="#1a4d80",
+            expand=False,
+        )
+    )
+    return ""
+
+def _render_status(data: JsonValue | None) -> str:
+    """Rich status panel for 'omlxc status'."""
+    mapping = _mapping(data)
+    status_s = _text(mapping.get("status", "unknown"))
+    degraded = mapping.get("degraded", False)
+    policy = _text(mapping.get("policy", "interactive"))
+    
+    if status_s == "ready" and not degraded:
+        sym, style = ("●", "bold green")
+        state_label = "HEALTHY"
+    else:
+        sym, style = ("◑", "bold yellow")
+        state_label = "DEGRADED"
+
+    grid = Table.grid(expand=True)
+    grid.add_column()
+    grid.add_column(justify="right")
+    grid.add_row(
+        f"[{style}]{sym} {state_label}[/{style}]",
+        f"[dim]policy:[/dim] {policy}"
+    )
+    
+    _console.print(
+        Panel(
+            grid,
+            title="[bold #7dd3f5]omlxcd[/bold #7dd3f5]",
+            border_style="#5a7a9a",
+            expand=False,
+        )
     )
     return ""
 
