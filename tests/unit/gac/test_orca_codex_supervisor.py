@@ -61,7 +61,7 @@ def _guard_runner(command: tuple[str, ...], _timeout: float, agent_id: str):
 def _trusted_codex_argv(workspace: Path) -> tuple[str, ...]:
     canonical_workspace = str(workspace.resolve())
     escaped_workspace = canonical_workspace.replace("\\", "\\\\").replace('"', '\\"')
-    trust_override = f'projects."{escaped_workspace}".trust_level="trusted"'
+    trust_override = f'projects={{"{escaped_workspace}"={{trust_level="trusted"}}}}'
     return (
         "env",
         "AGENT_ID=agent-001",
@@ -567,6 +567,9 @@ def test_start_uses_process_scoped_trust_override_after_verified_clone_guard(
     assert tuple(
         shlex.split(command[command.index("--command") + 1])
     ) == _trusted_codex_argv(tmp_path)
+    trust_override = _trusted_codex_argv(tmp_path)[8]
+    assert trust_override.startswith('projects={"')
+    assert 'projects."' not in trust_override
     assert "--approve-for-me" not in expected_command
     assert "--dangerously-bypass-approvals-and-sandbox" not in expected_command
     assert receipt["launch_request"] == _launch_request(_trusted_codex_argv(tmp_path))
@@ -579,7 +582,7 @@ def test_start_round_trips_quote_backslash_and_single_quote_workspace_path(
     tmp_path: Path,
 ) -> None:
     module = _load_module()
-    workspace = tmp_path / "quote\"-backslash\\-single'"
+    workspace = tmp_path / "quote\"-backslash\\-single'.with.dots"
     workspace.mkdir()
     expected_command = _trusted_codex_command(workspace)
     responses = _start_responses(workspace)
