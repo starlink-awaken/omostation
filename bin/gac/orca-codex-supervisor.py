@@ -259,6 +259,87 @@ def _has_model_output(messages: list[object]) -> bool:
     return False
 
 
+def _has_terminal_model_output(lines: list[object]) -> bool:
+    if not lines or not all(isinstance(line, str) for line in lines):
+        return False
+    completion_seen = any(
+        "Worked for " in line and line.lstrip().startswith(("─", "━")) for line in lines
+    )
+    tool_prefixes = (
+        "• Ran ",
+        "• Edited ",
+        "• Read ",
+        "• Explored ",
+        "• Searched ",
+        "• Called ",
+    )
+    model_output_seen = any(
+        line.startswith("• ") and not line.startswith(tool_prefixes) for line in lines
+    )
+    return completion_seen and model_output_seen
+
+
+def _session_not_reported(payload: object) -> bool:
+    if not isinstance(payload, dict) or payload.get("ok") is not False:
+        return False
+    error = payload.get("error")
+    data = error.get("data") if isinstance(error, dict) else None
+    return (
+        isinstance(error, dict)
+        and error.get("code") == "transcript_required"
+        and isinstance(data, dict)
+        and data.get("reason") == "session_not_reported"
+    )
+
+
+def _task_completion(
+    result: dict[str, Any],
+    *,
+    orca_run_id: str,
+    orca_task_id: str,
+    terminal_handle: str,
+) -> dict[str, Any] | None:
+    if result.get("runId") not in {None, orca_run_id}:
+        return None
+    tasks = result.get("tasks")
+    if not isinstance(tasks, list):
+        return None
+    matching = [
+        task
+        for task in tasks
+        if isinstance(task, dict) and task.get("id") == orca_task_id
+    ]
+    if len(matching) != 1:
+        return None
+    task = matching[0]
+    if task.get("status") != "completed" or task.get("run_id") not in {
+        None,
+        orca_run_id,
+    }:
+        return None
+    raw_completion = task.get("result")
+    try:
+        completion = json.loads(raw_completion)
+    except (TypeError, json.JSONDecodeError):
+        return None
+    files_modified = (
+        completion.get("filesModified") if isinstance(completion, dict) else None
+    )
+    if (
+        not isinstance(completion, dict)
+        or completion.get("provenance") != "worker_report"
+        or completion.get("outcome") != "succeeded"
+        or completion.get("reportedBy") != terminal_handle
+        or completion.get("completedBy") != terminal_handle
+        or not _valid_identity(completion.get("messageId"))
+        or not isinstance(files_modified, list)
+        or not files_modified
+        or not all(isinstance(path, str) and path for path in files_modified)
+    ):
+        return None
+    return completion
+
+
 def _orca_refs(
     *,
     orca_run_id: str,
@@ -1044,21 +1125,31 @@ def collect_supervised_codex(
     dispatch = shown.get("dispatch")
     worker = shown.get("worker")
     worker_done = worker.get("worker_done") if isinstance(worker, dict) else None
-    settled = (
+    dispatch_settled = (
         isinstance(dispatch, dict)
         and isinstance(worker, dict)
-        and isinstance(worker_done, dict)
         and dispatch.get("id") == orca_dispatch_id
         and dispatch.get("task_id") == orca_task_id
         and dispatch.get("run_id") == orca_run_id
         and dispatch.get("status") == "completed"
+    )
+    legacy_worker_settled = (
+        isinstance(worker, dict)
+        and isinstance(worker_done, dict)
         and worker.get("state") in {"completed", "succeeded"}
         and worker.get("outcome") == "succeeded"
         and worker_done.get("outcome") == "succeeded"
         and worker_done.get("task_id") == orca_task_id
         and worker_done.get("dispatch_id") == orca_dispatch_id
     )
-    if not settled:
+    current_worker_settled = (
+        isinstance(worker, dict)
+        and worker.get("dispatch_id") == orca_dispatch_id
+        and worker.get("agent_terminal_handle") == terminal_handle
+        and worker.get("state") in {"completed", "succeeded"}
+        and worker.get("stage") == "settled"
+    )
+    if not dispatch_settled or not (legacy_worker_settled or current_worker_settled):
         return _failure(
             binding=binding,
             stage="worker_show",
@@ -1066,7 +1157,104 @@ def collect_supervised_codex(
             orca=orca,
         )
 
-    transcript, failure = _response(
+    transcript_command = (
+        "orca",
+        "orchestration",
+        "worker-read",
+        "--dispatch",
+        orca_dispatch_id,
+        "--source",
+        "transcript",
+        "--limit",
+        "200",
+        "--json",
+    )
+    returncode, stdout, _stderr = runner(transcript_command, 15.0)
+    try:
+        transcript_payload_raw = json.loads(stdout)
+    except (TypeError, json.JSONDecodeError):
+        transcript_payload_raw = None
+    transcript = (
+        transcript_payload_raw.get("result")
+        if isinstance(transcript_payload_raw, dict)
+        and transcript_payload_raw.get("ok") is True
+        else None
+    )
+    if returncode == 0 and isinstance(transcript, dict):
+        transcript_payload = transcript.get("transcript")
+        messages = (
+            transcript_payload.get("messages")
+            if isinstance(transcript_payload, dict)
+            else None
+        )
+        if (
+            transcript.get("source") != "transcript"
+            or not isinstance(messages, list)
+            or not messages
+            or not _has_model_output(messages)
+        ):
+            return _failure(
+                binding=binding,
+                stage="worker_read",
+                reason="model_output_unproven",
+                orca=orca,
+            )
+        output_digest = _digest_payload(transcript)
+        return {
+            "schema": SCHEMA,
+            "ok": True,
+            "state": "settled",
+            "binding": binding,
+            "orca": orca,
+            "human_action_required": True,
+            "input_accepted": "unproven",
+            "model_completion": "observed",
+            "model_output_source": "structured_transcript",
+            "model_output_digest": output_digest,
+            "transcript_digest": output_digest,
+        }
+    if not _session_not_reported(transcript_payload_raw):
+        return _failure(
+            binding=binding,
+            stage="worker_read",
+            reason="orca_transcript_unavailable",
+            orca=orca,
+        )
+
+    task_list, failure = _response(
+        runner,
+        (
+            "orca",
+            "orchestration",
+            "task-list",
+            "--run",
+            orca_run_id,
+            "--json",
+        ),
+        timeout_seconds=15.0,
+        binding=binding,
+        stage="worker_read",
+        reason="worker_completion_unproven",
+        orca=orca,
+    )
+    if failure:
+        return failure
+    assert task_list is not None
+    completion = _task_completion(
+        task_list,
+        orca_run_id=orca_run_id,
+        orca_task_id=orca_task_id,
+        terminal_handle=terminal_handle,
+    )
+    if completion is None:
+        return _failure(
+            binding=binding,
+            stage="worker_read",
+            reason="worker_completion_unproven",
+            orca=orca,
+        )
+
+    terminal_output, failure = _response(
         runner,
         (
             "orca",
@@ -1075,7 +1263,7 @@ def collect_supervised_codex(
             "--dispatch",
             orca_dispatch_id,
             "--source",
-            "transcript",
+            "auto",
             "--limit",
             "200",
             "--json",
@@ -1083,23 +1271,29 @@ def collect_supervised_codex(
         timeout_seconds=15.0,
         binding=binding,
         stage="worker_read",
-        reason="orca_transcript_unavailable",
+        reason="model_output_unproven",
         orca=orca,
     )
     if failure:
         return failure
-    assert transcript is not None
-    transcript_payload = transcript.get("transcript")
-    messages = (
-        transcript_payload.get("messages")
-        if isinstance(transcript_payload, dict)
-        else None
+    assert terminal_output is not None
+    terminal_evidence = terminal_output.get("terminal")
+    source_identity = terminal_output.get("sourceIdentity")
+    status = terminal_output.get("status")
+    tail = (
+        terminal_evidence.get("tail") if isinstance(terminal_evidence, dict) else None
     )
     if (
-        transcript.get("source") != "transcript"
-        or not isinstance(messages, list)
-        or not messages
-        or not _has_model_output(messages)
+        terminal_output.get("source") != "terminal"
+        or terminal_output.get("fallbackReason") != "session_not_reported"
+        or not _valid_identity(source_identity)
+        or not isinstance(status, dict)
+        or status.get("worker") != "succeeded"
+        or not isinstance(terminal_evidence, dict)
+        or terminal_evidence.get("handle") != terminal_handle
+        or terminal_evidence.get("truncated") is not False
+        or not isinstance(tail, list)
+        or not _has_terminal_model_output(tail)
     ):
         return _failure(
             binding=binding,
@@ -1116,7 +1310,12 @@ def collect_supervised_codex(
         "human_action_required": True,
         "input_accepted": "unproven",
         "model_completion": "observed",
-        "transcript_digest": _digest_payload(transcript),
+        "model_output_source": "bounded_terminal_fallback",
+        "fallback_reason": "session_not_reported",
+        "model_output_digest": _digest_payload(terminal_output),
+        "completion_receipt_digest": _digest_payload(completion),
+        "source_identity_digest": "sha256:"
+        + hashlib.sha256(source_identity.encode("utf-8")).hexdigest(),
     }
 
 

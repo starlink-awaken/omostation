@@ -145,6 +145,79 @@ def _transcript_response(messages: list[object]) -> tuple[int, object, str]:
     return 0, _ok({"source": "transcript", "transcript": {"messages": messages}}), ""
 
 
+def _session_not_reported_response() -> tuple[int, object, str]:
+    return (
+        1,
+        {
+            "ok": False,
+            "error": {
+                "code": "transcript_required",
+                "message": "Structured output is unavailable: session_not_reported.",
+                "data": {"reason": "session_not_reported"},
+            },
+        },
+        "",
+    )
+
+
+def _terminal_fallback_response(
+    *, terminal_handle: str = "terminal-001", tail: list[str] | None = None
+) -> tuple[int, object, str]:
+    return (
+        0,
+        _ok(
+            {
+                "source": "terminal",
+                "fallbackReason": "session_not_reported",
+                "sourceIdentity": "terminal-source-001",
+                "status": {"worker": "succeeded", "terminal": "running"},
+                "terminal": {
+                    "handle": terminal_handle,
+                    "status": "running",
+                    "truncated": False,
+                    "limited": True,
+                    "tail": tail
+                    or [
+                        "• Completed the declared documentation update.",
+                        "",
+                        "─ Worked for 2m 45s ─",
+                    ],
+                },
+            }
+        ),
+        "",
+    )
+
+
+def _completed_task_list_response() -> tuple[int, object, str]:
+    return (
+        0,
+        _ok(
+            {
+                "runId": "orca-run-001",
+                "tasks": [
+                    {
+                        "id": "orca-task-001",
+                        "run_id": "orca-run-001",
+                        "status": "completed",
+                        "result": json.dumps(
+                            {
+                                "provenance": "worker_report",
+                                "outcome": "succeeded",
+                                "messageId": "message-001",
+                                "reportedBy": "terminal-001",
+                                "completedBy": "terminal-001",
+                                "filesModified": ["docs/evidence/canary.md"],
+                            }
+                        ),
+                    }
+                ],
+            }
+        ),
+        "",
+    )
+
+
 def _identity(
     tmp_path: Path, prompt: str = "Update the declared documentation fixture."
 ) -> dict[str, str]:
@@ -835,6 +908,154 @@ def test_collect_returns_only_digest_after_succeeded_worker_done_and_transcript(
             "--json",
         ),
     ]
+
+
+def test_collect_uses_bounded_terminal_evidence_when_session_was_not_reported(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    runner = FakeRunner(
+        _collect_prefix(tmp_path)
+        + [
+            (
+                0,
+                _ok(
+                    {
+                        "dispatch": {
+                            "id": "orca-dispatch-001",
+                            "task_id": "orca-task-001",
+                            "run_id": "orca-run-001",
+                            "status": "completed",
+                        },
+                        "worker": {
+                            "dispatch_id": "orca-dispatch-001",
+                            "agent_terminal_handle": "terminal-001",
+                            "state": "succeeded",
+                            "stage": "settled",
+                        },
+                    }
+                ),
+                "",
+            ),
+            _session_not_reported_response(),
+            _completed_task_list_response(),
+            _terminal_fallback_response(),
+        ]
+    )
+    identity = _identity(tmp_path)
+
+    receipt = module.collect_supervised_codex(
+        **identity,
+        orca_run_id="orca-run-001",
+        orca_task_id="orca-task-001",
+        orca_dispatch_id="orca-dispatch-001",
+        terminal_handle="terminal-001",
+        **_collect_clone_args(module, identity),
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    assert receipt["state"] == "settled"
+    assert receipt["model_completion"] == "observed"
+    assert receipt["model_output_source"] == "bounded_terminal_fallback"
+    assert receipt["fallback_reason"] == "session_not_reported"
+    assert receipt["model_output_digest"].startswith("sha256:")
+    assert receipt["completion_receipt_digest"].startswith("sha256:")
+    assert receipt["source_identity_digest"].startswith("sha256:")
+    serialized = json.dumps(receipt)
+    assert "Completed the declared documentation update" not in serialized
+    assert "terminal-source-001" not in serialized
+    assert runner.calls[-3:] == [
+        (
+            "orca",
+            "orchestration",
+            "worker-read",
+            "--dispatch",
+            "orca-dispatch-001",
+            "--source",
+            "transcript",
+            "--limit",
+            "200",
+            "--json",
+        ),
+        (
+            "orca",
+            "orchestration",
+            "task-list",
+            "--run",
+            "orca-run-001",
+            "--json",
+        ),
+        (
+            "orca",
+            "orchestration",
+            "worker-read",
+            "--dispatch",
+            "orca-dispatch-001",
+            "--source",
+            "auto",
+            "--limit",
+            "200",
+            "--json",
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    "terminal_response",
+    [
+        _terminal_fallback_response(terminal_handle="different-terminal"),
+        _terminal_fallback_response(tail=["• Ran a command", "no completion sentinel"]),
+    ],
+    ids=["terminal-drift", "model-output-unproven"],
+)
+def test_collect_terminal_fallback_fails_closed_without_bound_model_output(
+    tmp_path: Path, terminal_response: tuple[int, object, str]
+) -> None:
+    module = _load_module()
+    identity = _identity(tmp_path)
+    runner = FakeRunner(
+        _collect_prefix(tmp_path)
+        + [
+            (
+                0,
+                _ok(
+                    {
+                        "dispatch": {
+                            "id": "orca-dispatch-001",
+                            "task_id": "orca-task-001",
+                            "run_id": "orca-run-001",
+                            "status": "completed",
+                        },
+                        "worker": {
+                            "dispatch_id": "orca-dispatch-001",
+                            "agent_terminal_handle": "terminal-001",
+                            "state": "succeeded",
+                            "stage": "settled",
+                        },
+                    }
+                ),
+                "",
+            ),
+            _session_not_reported_response(),
+            _completed_task_list_response(),
+            terminal_response,
+        ]
+    )
+
+    receipt = module.collect_supervised_codex(
+        **identity,
+        **_collect_clone_args(module, identity),
+        orca_run_id="orca-run-001",
+        orca_task_id="orca-task-001",
+        orca_dispatch_id="orca-dispatch-001",
+        terminal_handle="terminal-001",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "worker_read"
+    assert receipt["reason"] == "model_output_unproven"
 
 
 def test_collect_keeps_active_worker_unmanaged_and_does_not_read_transcript(
