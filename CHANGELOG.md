@@ -2,7 +2,11 @@
 
 ## 3.0.14 — 2026-08-14
 
-- Documented backend adapter capability gaps (vision/embedding/rerank) across oMLX App, LM Studio, and Ollama in README, preserving the "read-only diagnostic" and "fail-closed" architectural boundaries without modifying existing single-node probes or introducing automatic remediation risks.
+- Improved the human-facing CLI with compact Rich panels and tables for status,
+  lists, details, jobs, and route plans. The versioned JSON and NDJSON contracts,
+  model routing, node authorization, and daemon lifecycle behavior are unchanged.
+- Documented backend adapter capability gaps (vision, embedding, and rerank) in
+  README while preserving the read-only diagnostic and fail-closed boundaries.
 
 ## 3.0.13 — 2026-08-14
 

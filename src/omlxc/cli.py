@@ -33,8 +33,6 @@ from .cli_presenter import (
     ErrorContext,
     render_error,
     render_lifecycle_help,
-    render_sections,
-    status_sections,
 )
 from .client import DaemonClient, DaemonClientError, DaemonEnvelope, RemoteError
 from .config import (
@@ -1110,7 +1108,7 @@ def doctor(
             else:
                 table.add_row("[red]✖[/red]", f"[#c8d8ec]{k}[/#c8d8ec]")
                 failed += 1
-        
+
         _console.print(table)
         _console.print(f"\n[bold]{passed} passed, {failed} failed[/bold]")
 
@@ -1235,11 +1233,11 @@ def _render_mapping(data: JsonValue | None) -> str:
     if not mapping:
         _console.print("[dim italic]No details available.[/dim italic]")
         return ""
-    
+
     table = Table(box=None, show_header=False, padding=(0, 2))
     table.add_column("Property", style="#5a7a9a bold")
     table.add_column("Value")
-    
+
     for key, value in sorted(mapping.items()):
         val_s = _text(value)
         if key == "state":
@@ -1249,7 +1247,7 @@ def _render_mapping(data: JsonValue | None) -> str:
         else:
             val_text = Text(val_s, style="#c8d8ec")
         table.add_row(key.upper(), val_text)
-        
+
     _console.print(Panel(table, title="[bold]Details[/bold]", border_style="#1a4d80", expand=False))
     return ""
 
@@ -1258,15 +1256,15 @@ def _render_job(data: JsonValue | None) -> str:
     """Rich panel for a single job."""
     mapping = _mapping(data)
     state_s = _text(mapping.get("state", "unknown"))
-    
+
     table = Table(box=None, show_header=False, padding=(0, 2))
     table.add_column("Property", style="#5a7a9a bold")
     table.add_column("Value", style="#c8d8ec")
-    
+
     table.add_row("KIND", _text(mapping.get("kind")))
     table.add_row("STATE", _rich_state(state_s))
     table.add_row("PROGRESS", _text(mapping.get("progress")))
-    
+
     _console.print(
         Panel(
             table,
@@ -1284,13 +1282,13 @@ def _render_route(data: JsonValue | None) -> str:
     selected = _text(mapping.get("selected_placement_id"))
     fallback = mapping.get("fallback_chain")
     fallback_text = ", ".join(map(str, fallback)) if isinstance(fallback, list) else "—"
-    
+
     grid = Table.grid(padding=(0, 2))
     grid.add_column(style="#5a7a9a bold")
     grid.add_column()
     grid.add_row("SELECTED", f"[bold cyan]{selected}[/bold cyan]")
     grid.add_row("FALLBACK", f"[dim]{fallback_text}[/dim]")
-    
+
     _console.print(
         Panel(
             grid,
@@ -1301,13 +1299,14 @@ def _render_route(data: JsonValue | None) -> str:
     )
     return ""
 
+
 def _render_status(data: JsonValue | None) -> str:
     """Rich status panel for 'omlxc status'."""
     mapping = _mapping(data)
     status_s = _text(mapping.get("status", "unknown"))
     degraded = mapping.get("degraded", False)
     policy = _text(mapping.get("policy", "interactive"))
-    
+
     if status_s == "ready" and not degraded:
         sym, style = ("●", "bold green")
         state_label = "HEALTHY"
@@ -1318,11 +1317,8 @@ def _render_status(data: JsonValue | None) -> str:
     grid = Table.grid(expand=True)
     grid.add_column()
     grid.add_column(justify="right")
-    grid.add_row(
-        f"[{style}]{sym} {state_label}[/{style}]",
-        f"[dim]policy:[/dim] {policy}"
-    )
-    
+    grid.add_row(f"[{style}]{sym} {state_label}[/{style}]", f"[dim]policy:[/dim] {policy}")
+
     _console.print(
         Panel(
             grid,
