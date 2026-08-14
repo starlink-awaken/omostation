@@ -304,8 +304,8 @@ phases:
     - LiveGbrainSearchBackend + optional gbrain put write
     - mos/cockpit recall --as-of
 schema: memory-os/v1
-as_of: '2026-08-11T00:22:49Z'
-total_beliefs: 19
+as_of: '2026-08-14T12:44:22Z'
+total_beliefs: 1
 tables:
 - agent_belief
 - agent_lesson
@@ -313,6 +313,6 @@ tables:
 - world_snapshot
 - capability_calibration
 - decision_outcome
-total_world_snapshots: 43
-total_capability_calibrations: 6
-total_decision_outcomes: 1
+total_world_snapshots: 0
+total_capability_calibrations: 0
+total_decision_outcomes: 0

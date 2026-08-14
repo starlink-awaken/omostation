@@ -7,3 +7,4 @@
 {"timestamp": "2026-08-07T22:21:06.162404+00:00", "type": "anomaly", "check": "check-x", "duration_ms": 1000.0, "z": 3.0, "ewma_z": 0.667, "reason": "slow", "ok": true}
 {"timestamp": "2026-08-07T22:23:44.993938+00:00", "type": "anomaly", "check": "check-x", "duration_ms": 1000.0, "z": 3.0, "ewma_z": 0.667, "reason": "slow", "ok": true}
 {"timestamp": "2026-08-07T22:32:18.676107+00:00", "type": "anomaly", "check": "check-x", "duration_ms": 1000.0, "z": 3.0, "ewma_z": 0.667, "reason": "slow", "ok": true}
+{"timestamp": "2026-08-14T11:25:31.892882+00:00", "type": "anomaly", "check": "check-x", "duration_ms": 1000.0, "z": 3.0, "ewma_z": 0.667, "reason": "slow", "ok": true}

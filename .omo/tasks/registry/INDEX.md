@@ -123,5 +123,5 @@
 当前无阻塞任务。
 
 ---
-*Updated: 2026-08-08 (依据 `omo state sync-tasks` 与真实目录重算: done=229, planned=68, active=0, archived=6 顶层)*
+*Updated: 2026-08-14 (依据 `omo state sync-tasks` 与真实目录重算: done=229, planned=68, active=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
