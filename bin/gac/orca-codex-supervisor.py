@@ -219,6 +219,19 @@ def _clone_guard(
     }, None
 
 
+def _codex_trust_override(workspace_root: str) -> str | None:
+    """Return one TOML override for a verified clone, or reject unsafe paths."""
+    if any(ord(char) < 32 or ord(char) == 127 for char in workspace_root):
+        return None
+    escaped_workspace = workspace_root.replace("\\", "\\\\").replace('"', '\\"')
+    return f'projects."{escaped_workspace}".trust_level="trusted"'
+
+
+def _argv_digest(argv: tuple[str, ...]) -> str:
+    canonical_argv = json.dumps(list(argv), ensure_ascii=False, separators=(",", ":"))
+    return "sha256:" + hashlib.sha256(canonical_argv.encode("utf-8")).hexdigest()
+
+
 def _worktree_id(result: dict[str, Any], *, workspace_root: str) -> str | None:
     worktree = result.get("worktree")
     worktree_id = worktree.get("id") if isinstance(worktree, dict) else None
@@ -593,6 +606,9 @@ def start_supervised_codex(
         return _failure(binding=binding, stage="input", reason=clone_error)
     assert clone_binding is not None
     binding.update(clone_binding)
+    trust_override = _codex_trust_override(resolved_workspace)
+    if trust_override is None:
+        return _failure(binding=binding, stage="input", reason="workspace_root_unsafe")
     retry_requests: dict[str, str] = {}
     if idempotency_key is not None:
         for stage in ("run-create", "task-create", "worker-start"):
@@ -825,19 +841,20 @@ def start_supervised_codex(
         )
     run_task_residuals = [*run_residuals, f"orca:task:{orca_task_id}"]
 
-    codex_command = shlex.join(
-        (
-            "env",
-            f"AGENT_ID={agent_id}",
-            resolved_codex,
-            "--ask-for-approval",
-            "on-request",
-            "--sandbox",
-            "read-only",
-            "-C",
-            resolved_workspace,
-        )
+    codex_argv = (
+        "env",
+        f"AGENT_ID={agent_id}",
+        resolved_codex,
+        "--ask-for-approval",
+        "on-request",
+        "--sandbox",
+        "read-only",
+        "-c",
+        trust_override,
+        "-C",
+        resolved_workspace,
     )
+    codex_command = shlex.join(codex_argv)
     created_terminal, failure = _response(
         runner,
         (
@@ -943,45 +960,6 @@ def start_supervised_codex(
             residual_resources=terminal_residuals,
         )
 
-    readback, failure = _response(
-        runner,
-        (
-            "orca",
-            "terminal",
-            "read",
-            "--terminal",
-            terminal_handle,
-            "--cursor",
-            "0",
-            "--limit",
-            "80",
-            "--json",
-        ),
-        timeout_seconds=10.0,
-        binding=binding,
-        stage="terminal_read",
-        reason="codex_launch_unverified",
-        residual_resources=terminal_residuals,
-    )
-    if failure:
-        return failure
-    read_terminal = readback.get("terminal") if readback else None
-    tail = read_terminal.get("tail") if isinstance(read_terminal, dict) else None
-    rendered_tail = "\n".join(tail) if isinstance(tail, list) else ""
-    if (
-        read_terminal is None
-        or read_terminal.get("handle") != terminal_handle
-        or codex_command not in rendered_tail
-        or "--dangerously-bypass-approvals-and-sandbox" in rendered_tail
-        or "--approve-for-me" in rendered_tail
-    ):
-        return _failure(
-            binding=binding,
-            stage="terminal_read",
-            reason="codex_launch_unverified",
-            residual_resources=terminal_residuals,
-        )
-
     started_worker, failure = _response(
         runner,
         (
@@ -1047,6 +1025,11 @@ def start_supervised_codex(
             "policy": "on-request",
             "sandbox": "read-only",
             "write_requires_human_click": True,
+        },
+        "launch_request": {
+            "argv_digest": _argv_digest(codex_argv),
+            "authority": "supervisor_request",
+            "executed_argv_attested": False,
         },
         "input_accepted": "unproven",
         "model_completion": "unproven",

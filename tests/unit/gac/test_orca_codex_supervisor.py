@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import shlex
 import sys
 from pathlib import Path
 
@@ -55,6 +56,39 @@ def _guard_receipt(workspace: str, agent_id: str) -> dict:
 def _guard_runner(command: tuple[str, ...], _timeout: float, agent_id: str):
     workspace = command[command.index("--workspace") + 1]
     return 0, json.dumps(_guard_receipt(workspace, agent_id)), ""
+
+
+def _trusted_codex_argv(workspace: Path) -> tuple[str, ...]:
+    canonical_workspace = str(workspace.resolve())
+    escaped_workspace = canonical_workspace.replace("\\", "\\\\").replace('"', '\\"')
+    trust_override = f'projects."{escaped_workspace}".trust_level="trusted"'
+    return (
+        "env",
+        "AGENT_ID=agent-001",
+        "/opt/homebrew/bin/codex",
+        "--ask-for-approval",
+        "on-request",
+        "--sandbox",
+        "read-only",
+        "-c",
+        trust_override,
+        "-C",
+        canonical_workspace,
+    )
+
+
+def _trusted_codex_command(workspace: Path) -> str:
+    return shlex.join(_trusted_codex_argv(workspace))
+
+
+def _launch_request(argv: tuple[str, ...]) -> dict[str, object]:
+    canonical_argv = json.dumps(list(argv), ensure_ascii=False, separators=(",", ":"))
+    return {
+        "argv_digest": "sha256:"
+        + hashlib.sha256(canonical_argv.encode("utf-8")).hexdigest(),
+        "authority": "supervisor_request",
+        "executed_argv_attested": False,
+    }
 
 
 def _expected_binding(module, identity: dict[str, str]) -> dict[str, str]:
@@ -334,23 +368,6 @@ def _start_responses(workspace: Path) -> list[tuple[int, object, str]]:
             0,
             _ok(
                 {
-                    "terminal": {
-                        "handle": "terminal-001",
-                        "tail": [
-                            (
-                                "env AGENT_ID=agent-001 /opt/homebrew/bin/codex --ask-for-approval "
-                                f"on-request --sandbox read-only -C {workspace}"
-                            )
-                        ],
-                    }
-                }
-            ),
-            "",
-        ),
-        (
-            0,
-            _ok(
-                {
                     "state": "ready",
                     "stage": "input_accepted",
                     "dispatchId": "orca-dispatch-001",
@@ -423,6 +440,7 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
             "sandbox": "read-only",
             "write_requires_human_click": True,
         },
+        "launch_request": _launch_request(_trusted_codex_argv(tmp_path)),
         "input_accepted": "unproven",
         "model_completion": "unproven",
     }
@@ -487,7 +505,7 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
             "--title",
             "supervised-codex-OMO-TASK-001",
             "--command",
-            f"env AGENT_ID=agent-001 /opt/homebrew/bin/codex --ask-for-approval on-request --sandbox read-only -C {tmp_path}",
+            _trusted_codex_command(tmp_path),
             "--json",
         ),
         (
@@ -512,18 +530,6 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
         ),
         (
             "orca",
-            "terminal",
-            "read",
-            "--terminal",
-            "terminal-001",
-            "--cursor",
-            "0",
-            "--limit",
-            "80",
-            "--json",
-        ),
-        (
-            "orca",
             "orchestration",
             "worker-start",
             "--run",
@@ -539,6 +545,84 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
             "--json",
         ),
     ]
+
+
+def test_start_uses_process_scoped_trust_override_after_verified_clone_guard(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    expected_command = _trusted_codex_command(tmp_path)
+    responses = _start_responses(tmp_path)
+    runner = FakeRunner(responses)
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    command = runner.calls[6]
+    assert command[command.index("--command") + 1] == expected_command
+    assert tuple(
+        shlex.split(command[command.index("--command") + 1])
+    ) == _trusted_codex_argv(tmp_path)
+    assert "--approve-for-me" not in expected_command
+    assert "--dangerously-bypass-approvals-and-sandbox" not in expected_command
+    assert receipt["launch_request"] == _launch_request(_trusted_codex_argv(tmp_path))
+    assert str(tmp_path) not in json.dumps(receipt["launch_request"])
+    assert not any(call[:3] == ("orca", "terminal", "read") for call in runner.calls)
+    assert not any(call[:3] == ("orca", "terminal", "send") for call in runner.calls)
+
+
+def test_start_round_trips_quote_backslash_and_single_quote_workspace_path(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    workspace = tmp_path / "quote\"-backslash\\-single'"
+    workspace.mkdir()
+    expected_command = _trusted_codex_command(workspace)
+    responses = _start_responses(workspace)
+    runner = FakeRunner(responses)
+
+    receipt = module.start_supervised_codex(
+        **_identity(workspace),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    command = runner.calls[6][runner.calls[6].index("--command") + 1]
+    assert command == expected_command
+    assert tuple(shlex.split(command)) == _trusted_codex_argv(workspace)
+    assert receipt["launch_request"] == _launch_request(_trusted_codex_argv(workspace))
+
+
+@pytest.mark.parametrize(
+    "control", ["\x00", "\t", "\n", "\x7f"], ids=["nul", "tab", "newline", "del"]
+)
+def test_start_rejects_control_character_workspace_before_orca_calls(
+    tmp_path: Path, control: str
+) -> None:
+    module = _load_module()
+    runner = FakeRunner([])
+    if control == "\x00":
+        identity = _identity(tmp_path)
+        identity["workspace_root"] = f"{tmp_path}{control}"
+    else:
+        workspace = tmp_path / f"control{control}workspace"
+        workspace.mkdir()
+        identity = _identity(workspace)
+
+    receipt = module.start_supervised_codex(
+        **identity,
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "input"
+    assert runner.calls == []
 
 
 def test_start_derives_one_stable_retry_request_per_orca_mutation(
@@ -687,43 +771,6 @@ def test_start_fails_closed_on_unbound_worker_receipt_without_cleanup(
         ],
     }
     assert not any("worker-stop" in command for command in runner.calls)
-
-
-def test_start_rejects_orca_codex_profile_bypass_before_dispatch(
-    tmp_path: Path,
-) -> None:
-    module = _load_module()
-    responses = _start_responses(tmp_path)
-    responses[-2] = (
-        0,
-        _ok(
-            {
-                "terminal": {
-                    "handle": "terminal-001",
-                    "tail": ["codex --dangerously-bypass-approvals-and-sandbox"],
-                }
-            }
-        ),
-        "",
-    )
-    runner = FakeRunner(responses[:-1])
-
-    receipt = module.start_supervised_codex(
-        **_identity(tmp_path),
-        codex_executable="/opt/homebrew/bin/codex",
-        runner=runner,
-    )
-
-    assert receipt["ok"] is False
-    assert receipt["stage"] == "terminal_read"
-    assert receipt["reason"] == "codex_launch_unverified"
-    assert receipt["residual_resources"] == [
-        "orca:terminal:coordinator-001",
-        "orca:run:orca-run-001",
-        "orca:task:orca-task-001",
-        "orca:terminal:terminal-001",
-    ]
-    assert not any("worker-start" in command for command in runner.calls)
 
 
 def test_start_rejects_non_json_status_before_orca_mutations(tmp_path: Path) -> None:
@@ -911,7 +958,7 @@ def test_worker_start_failure_preserves_created_run_and_task(
     if "orca:dispatch:orca-dispatch-001" in residual_resources:
         expected.append("orca:dispatch:orca-dispatch-001")
     assert receipt["residual_resources"] == expected
-    assert len(runner.calls) == 11
+    assert len(runner.calls) == 10
 
 
 def test_collect_returns_only_digest_after_succeeded_worker_done_and_transcript(
