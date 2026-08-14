@@ -10,7 +10,7 @@
 |------|---------|------|
 | branch-claim 双写 | stderr 打 `[swarm-shadow] mirror claim failed` | **无** — 文件锁照常判定, 只是镜像缺行 |
 | agent-tick 心跳 | stderr 打 `[tick-coordination] heartbeat mirror failed` | **无** — tick 巡检照常, agent_health 停更 |
-| submit 时 token-check | exit 2 → submit **停止** | 唯一 fail-closed 点 (防在坏 DB 上做 fencing 判定) |
+| submit 时 token-check | exit 2 → submit **停止** | token 缺失也落 `token_missing_legacy`; 只有 verdict 成功记录后 shadow 才放行 |
 | `status` / `snapshot()` | 报错退出 | 观察面不可用 |
 
 判断口径: shadow 阶段 `shadow_events.write_fail` 计数增长 = 降级运行中, 不算事故;
@@ -25,6 +25,12 @@ sqlite3 "$DB" "PRAGMA integrity_check;"        # 期望 ok
 python3 bin/gac/swarm-discipline-cli.py status # 期望三段可读
 ls -la ~/agents/_shared/runtime/                # 看备份轮转与 last-backup 戳
 ```
+
+`Agent Health` 每行的 `rev=` / `code=` 是实际运行中 tick daemon 的版本指纹。若
+`rev` 不等于准备部署的 checkout `git rev-parse HEAD`，或显示
+`runtime=unattested`，说明 launchd 仍在跑旧代码；先修部署源，不要把新 checkout
+的测试结果当成运行态已经升级。指纹只含 commit SHA、源码 SHA-256 和 Python 版本，
+不记录本机路径、用户名或主机名。
 
 integrity_check 非 `ok` / `status` 报 `CoordinationStoreError` / DB 文件大小为 0 → 走 §3 恢复。
 
@@ -63,8 +69,10 @@ python3 bin/gac/swarm-discipline-cli.py status
 30 8 * * * cd "$HOME/Workspace" && python3 bin/gac/coordination_store.py --backup >> runtime/logs/coordination-backup.log 2>&1
 ```
 
-2. **`maybe_backup()` 时间戳兜底 (自动)** — 任何 store 访问若发现 `coordination.last-backup`
-   超 24h 会顺带备份, 覆盖 crontab 没部署的机器。
+2. **24h 时间戳兜底 (自动)** — 任何 store 访问若发现
+   `coordination.sqlite3.last-backup` 超 24h，会在进程锁内复查完整性并用当前连接
+   执行非递归 SQLite 热备，覆盖 crontab 没部署的机器。自动兜底失败在 shadow
+   阶段只写 stderr，不反噬 claim/heartbeat；显式 `--backup` 仍会失败退出。
 
 ## 5. warning/fail 阶段的口径变化 (预告, 本 bet 不实施)
 

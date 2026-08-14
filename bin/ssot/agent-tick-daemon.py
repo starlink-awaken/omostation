@@ -14,7 +14,10 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import platform
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -50,6 +53,7 @@ def _coordination_heartbeat(result: dict[str, Any]) -> None:
         sys.path.insert(0, str(ROOT / "bin" / "gac"))
         import coordination_store
 
+        runtime_attestation = _runtime_attestation()
         for r in result.get("results", []) or []:
             agent_id = r.get("agent_id")
             if not agent_id:
@@ -59,10 +63,38 @@ def _coordination_heartbeat(result: dict[str, Any]) -> None:
                 agent_id,
                 "ok" if ok else "fail",
                 source="tick",
-                detail={"action": r.get("action"), "error": r.get("error")},
+                detail={
+                    "action": r.get("action"),
+                    "error": r.get("error"),
+                    "runtime_attestation": runtime_attestation,
+                },
             )
     except Exception as exc:  # noqa: BLE001 — shadow 镜像不反噬主流程
         print(f"[tick-coordination] heartbeat mirror failed: {exc}", file=sys.stderr)
+
+
+def _runtime_attestation() -> dict[str, str]:
+    """不含路径/用户名/主机名的运行代码指纹，供识别 launchd 部署漂移."""
+    code_sha256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    revision = "unavailable"
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=5,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            revision = result.stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    return {
+        "component": "agent-tick-daemon",
+        "code_sha256": code_sha256,
+        "workspace_revision": revision,
+        "python_version": platform.python_version(),
+    }
 
 
 def run_once() -> dict[str, Any]:

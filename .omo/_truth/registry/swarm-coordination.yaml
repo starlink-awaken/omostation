@@ -75,6 +75,16 @@ topology_migration:
     heartbeat_source: bin/ssot/agent-tick-daemon.py
     heartbeat_interval_min: 5
     stale_after_ticks: 3
+    heartbeat_attestation:
+      fields: [component, code_sha256, workspace_revision, python_version]
+      privacy_excludes: [filesystem_path, username, hostname]
+      visible_via: bin/gac/swarm-discipline-cli.py status
+    fencing_requires: [active, owner_match, token_match, unexpired]
+    missing_token_policy: audited_shadow_reject
+    backup_fallback:
+      max_age_hours: 24
+      non_recursive: true
+      lock_serialized: true
     tables: [claims, agent_health, messages, shadow_events]
     shadow_started_at: "2026-08-14T12:56:00Z"
     shadow_window_days: 7
