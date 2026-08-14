@@ -104,6 +104,7 @@
 - [`superpowers/specs/2026-08-13-codex-exec-worker-design.md`](superpowers/specs/2026-08-13-codex-exec-worker-design.md) — Codex 无人值守 bounded worker、执行副本与事务回写合同
 - [`superpowers/plans/2026-08-13-codex-exec-worker.md`](superpowers/plans/2026-08-13-codex-exec-worker.md) — Codex worker 的 TDD、Orca 运输与独立复核计划
 - [`superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md`](superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md) — 人工确认 Codex TUI、证据收集与补偿回滚合同
+- [`superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md`](superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md) — Codex ACP stdio 权限代理、真实 canary 与 cli_prompt 退役合同
 - [`superpowers/specs/2026-08-14-weijian-sanyi-status-consistency-design.md`](superpowers/specs/2026-08-14-weijian-sanyi-status-consistency-design.md) — 卫健委 CR08 三医态势只读一致性审计合同
 - [`superpowers/plans/2026-08-14-weijian-sanyi-status-consistency.md`](superpowers/plans/2026-08-14-weijian-sanyi-status-consistency.md) — 卫健委 CR08 三医态势一致性审计实施与安装态验收计划
 - [`superpowers/plans/2026-08-14-supervised-blueprint-control-loop.md`](superpowers/plans/2026-08-14-supervised-blueprint-control-loop.md) — 受监督 Blueprint 控制闭环实施与真实 dogfood 计划

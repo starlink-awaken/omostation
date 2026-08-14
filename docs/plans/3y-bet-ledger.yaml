@@ -7,7 +7,7 @@ schema_version: 1
 ---
 meta:
   horizon: 2026H2-2029
-  total_bets: 89
+  total_bets: 91
   windows:
   - Y1Q1
   - Y1Q2
@@ -2899,6 +2899,99 @@ bets:
     需要 dangerous bypass、共享 Workspace 写入、修改 Ledger DDL/ECOS M2、第二任务真相、不能确认人工批准、
     不能回收子进程、无法从 git 直接测量 delta、Mesh append 被吞、rollback 后 baseline 不一致、真实业务
     外部副作用，或三天内无法形成一条真实纵切时立即停止；不得用 fixture/marker/input ack 伪造完成
+  retro: required
+- id: BET-Y1Q2-T1-19
+  track: T5-ORCH
+  window: Y1Q2
+  title: Codex ACP stdio permission-broker cutover and cli_prompt retirement
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:c2ca365b1ea140da9be3b577617db0b329a059dd06fc43e3232fb5c570f6aba0
+  goal: >-
+    在不改变 OMO/ECOS 任务、事件和验收真相的前提下，将 Codex 本地 worker 从
+    Orca/cli_prompt 人工生产路径迁移到固定版本的 ACP v1 stdio，通过 WorkPacket、verified
+    independent clone、active claim 和 canonical argv/path 派生一次性权限决定；真实 canary
+    与独立验证通过后，退役 Codex 自动 cli_prompt 与 dispatcher 隐式 cli_prompt 默认。
+  non_goals:
+  - A2A、Agora 改造、remote ACP/HTTP、streaming federation 或第二 live adapter
+  - 新建 task/blueprint database、event ledger、scheduler、daemon、watchdog 或第二状态机
+  - 全局安装、修改用户认证/配置、allow_always、dangerous bypass 或持久化用户级永久授权
+  - 自动模型/额度选择、自动 fallback、自动 merge、真实业务外发、L2+ 自动执行或公网暴露
+  - 保存 raw prompt、transcript、token、账号、环境变量或绝对路径
+  - 把 fixture、initialize、session/new、session/prompt、turn-end、exit 0 或 Agent 自报 done 当完成
+  done_when:
+  - >-
+      固定 ACP v1 stdio 和 Codex ACP package/version/digest；initialize、capability negotiation、
+      session new/load、prompt/update、permission、cancel、EOF、timeout 和进程回收均有真实状态机与
+      failure-injection 覆盖，协议不兼容 fail closed。
+  - >-
+      权限代理仅对 R0 和满足 verified clone、active claim、WorkPacket 精确 write surface、canonical
+      path、无 symlink/gitlink 越界且 argv allowlist 命中的 R1 返回 allow_once；未知、越界和 L2+
+      不自动批准，每个决定都有脱敏 receipt，且不写用户级永久授权。
+  - >-
+      一次真实非 marker Codex ACP R1 canary 产生有效 model output、实际 git delta、逐项 acceptance
+      measurements 与 CompletionManifest；只有独立 verifier accept 才写 WorkflowVerified。
+  - >-
+      一次越权 permission 被拒且 tree/Mesh 不变；一次 cancel/timeout 后 child process group、ACP
+      session 和 lease 均清零；transport uncertainty 不触发自动 Orca fallback 或第二 dispatch。
+  - >-
+      cutover 后 Codex registry 不再有自动 cli_prompt transport，dispatcher 不再隐式默认
+      cli_prompt，Orca supervisor 不在自动 dispatch/fallback 路径；T1-18 的 wait/resume、collect、
+      rollback 和 independent verify 行为回归不得下降。
+  - >-
+      root/OMO 定向测试、Ruff、diff check、agent-workflow verify、独立 code review、live receipt
+      revalidation 与 PR checks 通过；surface 报告明确列出新增和指名删除，缺少减法不得 done。
+  verify:
+  - cmd: >-
+      uv run --no-project --with pytest --with pyyaml python -m pytest
+      tests/unit/gac/test_codex_worker_adapter.py -q
+    expect: exit 0
+  - cmd: >-
+      cd projects/omo && uv run python -m pytest tests/test_blueprint_control.py
+      tests/test_orchestration_contract.py tests/test_omo_worker_admission_gate.py -q
+    expect: exit 0
+  - cmd: >-
+      uv run --no-project --with pyyaml python bin/gac/codex-worker-adapter.py
+      verify-acp-receipt --receipt .omo/evidence/t1-19-acp-live-receipt.json
+    expect: exit 0 and live=true and fixture=false and independently_verified=true
+  - cmd: >-
+      uv run --with pyyaml python bin/plan/bet-ledger.py claim-check BET-Y1Q2-T1-19
+    expect: exit 0
+  - cmd: git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/SYSTEM-INDEX.md
+  - docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md
+  - .omo/_truth/registry/workers.yaml
+  - .omo/standards/agent-cli-worker-collaboration.md
+  - bin/gac/codex-worker-adapter.py
+  - bin/gac/orca-codex-supervisor.py
+  - tests/unit/gac/test_codex_worker_adapter.py
+  - tests/unit/gac/test_orca_codex_supervisor.py
+  - projects/omo/src/omo/blueprint_control.py
+  - projects/omo/src/omo/omo_worker_core.py
+  - projects/omo/src/omo/omo_worker_dispatch.py
+  - projects/omo/src/omo/omo_worker_promotion.py
+  - projects/omo/tests/test_blueprint_control.py
+  - projects/omo/tests/test_omo_worker_admission_gate.py
+  - projects/omo
+  - .omo/_knowledge/retros/BET-Y1Q2-T1-19.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-18
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: >-
+    需要修改用户认证/全局配置、global install、remote ACP、第二任务真相、自动 fallback、无法固定
+    package identity、无法证明 cancel/reap/tree hash、live canary 只能靠 fixture，或三天内不能同时
+    完成真实 canary 与 cli_prompt 指名减法时立即停止；保持 T1-18，不声称 ACP ready
   retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
