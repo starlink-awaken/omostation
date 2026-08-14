@@ -215,6 +215,22 @@ def test_execute_uses_exact_argv_no_shell_and_scrubbed_environment(
         assert name not in env
 
 
+def test_scrubbed_environment_removes_incomplete_git_config_tuple(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("GIT_CONFIG_COUNT", "2")
+    monkeypatch.setenv("GIT_CONFIG_KEY_0", "safe.directory")
+    monkeypatch.setenv("GIT_CONFIG_VALUE_0", "/private/tmp/one")
+    monkeypatch.setenv("GIT_CONFIG_KEY_1", "safe.directory")
+    monkeypatch.setenv("GIT_CONFIG_VALUE_1", "/private/tmp/two")
+
+    env = adapter._scrubbed_environment()
+
+    assert "GIT_CONFIG_COUNT" not in env
+    assert not any(name.startswith("GIT_CONFIG_KEY_") for name in env)
+    assert not any(name.startswith("GIT_CONFIG_VALUE_") for name in env)
+
+
 @pytest.mark.parametrize(
     "version",
     [

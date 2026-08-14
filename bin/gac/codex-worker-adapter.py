@@ -215,6 +215,8 @@ def _scrubbed_environment() -> dict[str, str]:
         name: value
         for name, value in os.environ.items()
         if not any(part in name.upper() for part in SECRET_ENV_PARTS)
+        and name != "GIT_CONFIG_COUNT"
+        and not name.startswith(("GIT_CONFIG_KEY_", "GIT_CONFIG_VALUE_"))
     }
 
 
