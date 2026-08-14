@@ -3,3 +3,87 @@
 {"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-08T11:00:42Z", "type": "task"}
 {"from": "knowledge-curator", "in_reply_to": "2026-08-08T11:00:42Z", "payload": {"finding_type": "high_event_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-09T06:29:38Z", "type": "reply"}
 {"from": "advisor", "in_reply_to": "2026-08-08T10:59:39Z", "payload": {"finding_type": null, "status": "processed"}, "to": "governor", "ts": "2026-08-09T06:29:38Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T10:23:21Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T10:23:21Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T10:23:21Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T10:23:21Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T10:28:22Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T10:28:22Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T10:28:22Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T10:28:22Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T10:33:22Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T10:33:22Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T10:33:22Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T10:33:22Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T10:38:23Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T10:38:23Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T10:38:23Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T10:38:23Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T10:43:23Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T10:43:23Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T10:43:23Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T10:43:24Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T10:48:24Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T10:48:24Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T10:48:24Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T10:48:24Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T10:53:25Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T10:53:25Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T10:53:25Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T10:53:25Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T10:58:25Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T10:58:25Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T10:58:25Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T10:58:26Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T11:03:26Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T11:03:26Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T11:03:26Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T11:03:26Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T11:08:27Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T11:08:27Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T11:08:27Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T11:08:27Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T11:13:28Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T11:13:28Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T11:13:28Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T11:13:28Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T11:18:29Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T11:18:29Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T11:18:29Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T11:18:29Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T11:23:30Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T11:23:30Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T11:23:30Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T11:23:30Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T11:28:31Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T11:28:31Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T11:28:31Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T11:28:31Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T11:33:32Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T11:33:32Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T11:33:32Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T11:33:32Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T11:38:32Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T11:38:32Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T11:38:32Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T11:38:33Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T11:43:33Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T11:43:33Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T11:43:33Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T11:43:33Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T11:48:34Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T11:48:34Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T11:48:34Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T11:48:34Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T11:53:35Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T11:53:35Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T11:53:35Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T11:53:35Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T11:58:36Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T11:58:36Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T11:58:36Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T11:58:36Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1353", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T12:03:37Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T12:03:37Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T12:03:37Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T12:03:37Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1358", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T12:08:38Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T12:08:38Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T12:08:38Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T12:08:38Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1359", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T12:13:39Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T12:13:39Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T12:13:39Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T12:13:39Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1365", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T12:18:41Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T12:18:41Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T12:18:41Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T12:18:41Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1371", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T12:23:42Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T12:23:42Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T12:23:42Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T12:23:42Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1376", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T12:28:43Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T12:28:43Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T12:28:43Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T12:28:44Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1382", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T12:33:45Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T12:33:45Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T12:33:45Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T12:33:45Z", "type": "reply"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"count": "1395", "type": "high_event_volume"}}, "to": "knowledge-curator", "ts": "2026-08-14T12:38:46Z", "type": "task"}
+{"from": "governor", "payload": {"action": "investigate", "finding": {"debt_items": "14", "gap_items": "27", "type": "high_debt_volume"}}, "to": "advisor", "ts": "2026-08-14T12:38:46Z", "type": "task"}
+{"from": "advisor", "in_reply_to": "2026-08-14T12:38:46Z", "payload": {"finding_type": "high_debt_volume", "status": "processed"}, "to": "governor", "ts": "2026-08-14T12:38:46Z", "type": "reply"}
