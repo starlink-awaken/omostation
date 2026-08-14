@@ -124,14 +124,10 @@ def test_cli_personal_full_flow_system_draft(cli_http, monkeypatch):
     episode_id = started.json()["episode"]["episode_id"]
 
     # Confirm via CLI
-    assert _run_cli(
-        monkeypatch, "workflow", "mesh", "personal", "confirm", "--episode-id", episode_id
-    ) == 0
+    assert _run_cli(monkeypatch, "workflow", "mesh", "personal", "confirm", "--episode-id", episode_id) == 0
 
     # Draft via CLI (system mode — no draft fields)
-    assert _run_cli(
-        monkeypatch, "workflow", "mesh", "personal", "draft", "--episode-id", episode_id
-    ) == 0
+    assert _run_cli(monkeypatch, "workflow", "mesh", "personal", "draft", "--episode-id", episode_id) == 0
 
     # Verify artifact
     draft_dir = cli_http["draft_dir"]
@@ -144,12 +140,20 @@ def test_cli_personal_full_flow_system_draft(cli_http, monkeypatch):
     assert artifact["never_send"] is True
 
     # Feedback via CLI
-    assert _run_cli(
-        monkeypatch,
-        "workflow", "mesh", "personal", "feedback",
-        "--episode-id", episode_id,
-        "--verdict", "accept",
-    ) == 0
+    assert (
+        _run_cli(
+            monkeypatch,
+            "workflow",
+            "mesh",
+            "personal",
+            "feedback",
+            "--episode-id",
+            episode_id,
+            "--verdict",
+            "accept",
+        )
+        == 0
+    )
 
 
 def test_cli_personal_draft_user_provided(cli_http, monkeypatch):
@@ -175,12 +179,20 @@ def test_cli_personal_draft_user_provided(cli_http, monkeypatch):
 
     rc = _run_cli(
         monkeypatch,
-        "workflow", "mesh", "personal", "draft",
-        "--episode-id", episode_id,
-        "--title", "My Draft",
-        "--context", "My context",
-        "--deadline", "2026-08-14",
-        "--next-action", "Do something",
+        "workflow",
+        "mesh",
+        "personal",
+        "draft",
+        "--episode-id",
+        episode_id,
+        "--title",
+        "My Draft",
+        "--context",
+        "My context",
+        "--deadline",
+        "2026-08-14",
+        "--next-action",
+        "Do something",
     )
     assert rc == 0
 
@@ -217,9 +229,14 @@ def test_cli_personal_draft_partial_rejected(cli_http, monkeypatch):
 
     rc = _run_cli(
         monkeypatch,
-        "workflow", "mesh", "personal", "draft",
-        "--episode-id", episode_id,
-        "--title", "Only Title",
+        "workflow",
+        "mesh",
+        "personal",
+        "draft",
+        "--episode-id",
+        episode_id,
+        "--title",
+        "Only Title",
     )
     assert rc != 0
 
@@ -240,8 +257,12 @@ def test_cli_personal_ingest_with_option_args(cli_http, monkeypatch):
 
     rc = _run_cli(
         monkeypatch,
-        "workflow", "mesh", "personal", "ingest",
-        "--item-id", item_id,
+        "workflow",
+        "mesh",
+        "personal",
+        "ingest",
+        "--item-id",
+        item_id,
     )
     assert rc == 0
 
@@ -310,12 +331,20 @@ def test_cli_personal_feedback_with_metrics(cli_http, monkeypatch):
     episode_id = _cli_full_flow_to_episode(cli_http, monkeypatch)
     rc = _run_cli(
         monkeypatch,
-        "workflow", "mesh", "personal", "feedback",
-        "--episode-id", episode_id,
-        "--feedback-id", "feedback:cli-metrics",
-        "--verdict", "accept",
-        "--review-duration-seconds", "90",
-        "--estimated-time-saved-seconds", "300",
+        "workflow",
+        "mesh",
+        "personal",
+        "feedback",
+        "--episode-id",
+        episode_id,
+        "--feedback-id",
+        "feedback:cli-metrics",
+        "--verdict",
+        "accept",
+        "--review-duration-seconds",
+        "90",
+        "--estimated-time-saved-seconds",
+        "300",
     )
     assert rc == 0
 
@@ -327,10 +356,16 @@ def test_cli_personal_feedback_id_supports_revisions(cli_http, monkeypatch):
     def submit(feedback_id: str, verdict: str, *metrics: str) -> int:
         return _run_cli(
             monkeypatch,
-            "workflow", "mesh", "personal", "feedback",
-            "--episode-id", episode_id,
-            "--feedback-id", feedback_id,
-            "--verdict", verdict,
+            "workflow",
+            "mesh",
+            "personal",
+            "feedback",
+            "--episode-id",
+            episode_id,
+            "--feedback-id",
+            feedback_id,
+            "--verdict",
+            verdict,
             *metrics,
         )
 
@@ -338,12 +373,17 @@ def test_cli_personal_feedback_id_supports_revisions(cli_http, monkeypatch):
     assert submit("feedback:cli-001", "accept") == 0
     assert submit("feedback:cli-002", "reject") == 0
     assert submit("feedback:cli-003", "accept") == 0
-    assert submit(
-        "feedback:cli-004",
-        "accept",
-        "--review-duration-seconds", "45",
-        "--estimated-time-saved-seconds", "240",
-    ) == 0
+    assert (
+        submit(
+            "feedback:cli-004",
+            "accept",
+            "--review-duration-seconds",
+            "45",
+            "--estimated-time-saved-seconds",
+            "240",
+        )
+        == 0
+    )
 
     broker = LedgerBroker.connect(cli_http["ledger_path"])
     try:
@@ -380,10 +420,16 @@ def test_cli_personal_feedback_rejects_invalid_burden_without_http(cli_http, mon
     ):
         rc = _run_cli(
             monkeypatch,
-            "workflow", "mesh", "personal", "feedback",
-            "--episode-id", "episode:test",
-            "--verdict", "accept",
-            option, value,
+            "workflow",
+            "mesh",
+            "personal",
+            "feedback",
+            "--episode-id",
+            "episode:test",
+            "--verdict",
+            "accept",
+            option,
+            value,
         )
         assert rc != 0
     assert calls == []
@@ -394,9 +440,14 @@ def test_cli_personal_feedback_ignore_verdict(cli_http, monkeypatch):
     episode_id = _cli_full_flow_to_episode(cli_http, monkeypatch)
     rc = _run_cli(
         monkeypatch,
-        "workflow", "mesh", "personal", "feedback",
-        "--episode-id", episode_id,
-        "--verdict", "ignore",
+        "workflow",
+        "mesh",
+        "personal",
+        "feedback",
+        "--episode-id",
+        episode_id,
+        "--verdict",
+        "ignore",
     )
     assert rc == 0
 
@@ -406,9 +457,14 @@ def test_cli_personal_status_shows_observation(cli_http, monkeypatch):
     episode_id = _cli_full_flow_to_episode(cli_http, monkeypatch)
     _run_cli(
         monkeypatch,
-        "workflow", "mesh", "personal", "feedback",
-        "--episode-id", episode_id,
-        "--verdict", "accept",
+        "workflow",
+        "mesh",
+        "personal",
+        "feedback",
+        "--episode-id",
+        episode_id,
+        "--verdict",
+        "accept",
     )
     rc = _run_cli(monkeypatch, "workflow", "mesh", "personal", "status")
     assert rc == 0
@@ -480,9 +536,7 @@ def test_cli_personal_setup_uses_configured_api_url_over_real_http(monkeypatch):
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
-        monkeypatch.setenv(
-            "COCKPIT_API_URL", f"http://127.0.0.1:{server.server_port}"
-        )
+        monkeypatch.setenv("COCKPIT_API_URL", f"http://127.0.0.1:{server.server_port}")
         import importlib
 
         importlib.reload(workflow_mesh)

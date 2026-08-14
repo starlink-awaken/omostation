@@ -57,9 +57,7 @@ def test_episode_projections_api_returns_read_only_projection(monkeypatch, tmp_p
     monkeypatch.setattr(api_workflow_mesh_operations, "_REPO_ROOT", tmp_path)
     monkeypatch.setattr(api_workflow_mesh_operations, "build_episode_projection_snapshot_from_path", fake_build)
 
-    response = TestClient(_make_app()).get(
-        "/api/workflow-mesh/episode-projections?principal_id=principal://alice"
-    )
+    response = TestClient(_make_app()).get("/api/workflow-mesh/episode-projections?principal_id=principal://alice")
 
     assert response.status_code == 200
     assert response.json() == {
@@ -161,9 +159,7 @@ def test_episode_projections_api_returns_privacy_safe_http_dto(monkeypatch, tmp_
         lambda *_args, **_kwargs: projection,
     )
 
-    response = TestClient(_make_app()).get(
-        "/api/workflow-mesh/episode-projections?principal_id=principal://alice"
-    )
+    response = TestClient(_make_app()).get("/api/workflow-mesh/episode-projections?principal_id=principal://alice")
 
     assert response.status_code == 200
     dto = response.json()["projection"]
@@ -201,9 +197,7 @@ def test_episode_projections_api_degrades_without_omo(monkeypatch, tmp_path):
         ImportError("missing omo.episode_projection"),
     )
 
-    response = TestClient(_make_app()).get(
-        "/api/workflow-mesh/episode-projections?principal_id=principal://alice"
-    )
+    response = TestClient(_make_app()).get("/api/workflow-mesh/episode-projections?principal_id=principal://alice")
 
     assert response.status_code == 200
     assert response.json()["ok"] is False
@@ -223,9 +217,7 @@ def test_episode_projections_api_reports_missing_ledger_without_calling_omo(monk
     monkeypatch.setattr(api_workflow_mesh_operations, "_REPO_ROOT", tmp_path)
     monkeypatch.setattr(api_workflow_mesh_operations, "build_episode_projection_snapshot_from_path", unexpected_build)
 
-    response = TestClient(_make_app()).get(
-        "/api/workflow-mesh/episode-projections?principal_id=principal://alice"
-    )
+    response = TestClient(_make_app()).get("/api/workflow-mesh/episode-projections?principal_id=principal://alice")
 
     assert response.status_code == 200
     assert response.json()["ok"] is False
@@ -244,9 +236,7 @@ def test_episode_projections_api_reports_projection_failure(monkeypatch, tmp_pat
     monkeypatch.setattr(api_workflow_mesh_operations, "_REPO_ROOT", tmp_path)
     monkeypatch.setattr(api_workflow_mesh_operations, "build_episode_projection_snapshot_from_path", fail_build)
 
-    response = TestClient(_make_app()).get(
-        "/api/workflow-mesh/episode-projections?principal_id=principal://alice"
-    )
+    response = TestClient(_make_app()).get("/api/workflow-mesh/episode-projections?principal_id=principal://alice")
 
     assert response.status_code == 200
     assert response.json()["ok"] is False
@@ -267,9 +257,7 @@ def test_episode_projections_api_honors_event_ledger_db_env_override(monkeypatch
     monkeypatch.setattr(api_workflow_mesh_operations, "build_episode_projection_snapshot_from_path", fake_build)
     monkeypatch.setenv("OMO_EVENT_LEDGER_DB", str(ledger_path))
 
-    response = TestClient(_make_app()).get(
-        "/api/workflow-mesh/episode-projections?principal_id=principal://alice"
-    )
+    response = TestClient(_make_app()).get("/api/workflow-mesh/episode-projections?principal_id=principal://alice")
 
     assert response.status_code == 200
     assert response.json()["ok"] is True

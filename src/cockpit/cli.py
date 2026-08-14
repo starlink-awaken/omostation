@@ -341,7 +341,7 @@ def main() -> int:
                 "[bold]工具[/]\n"
                 "  [cyan]cockpit search --all KEY[/]  — 跨源搜索 (本地+BOS)\n"
                 "  [cyan]cockpit discover[/]           — 发现可用功能\n"
-                "  [cyan]cockpit ask \"问题\"[/]        — 大模型终端问答\n"
+                '  [cyan]cockpit ask "问题"[/]        — 大模型终端问答\n'
                 "  [cyan]cockpit proxy-env[/]         — 导出大模型代理环境变量\n"
                 "  [cyan]cockpit status[/]            — 工作台\n"
                 "  [cyan]cockpit agent-workflow[/]    — Agent 可执行治理流程\n"

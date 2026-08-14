@@ -159,16 +159,21 @@ def _full_flow_episode(client, ledger_path) -> str:
     started = client.post("/api/workflow-mesh/personal-episode/start", json=_start_payload())
     assert started.status_code == 200
     episode_id = started.json()["episode"]["episode_id"]
-    assert client.post(
-        "/api/workflow-mesh/personal-episode/confirm",
-        json={
-            "episode_id": episode_id,
-            "principal_id": "principal:alice",
-            "executor_id": "agent:personal-steward",
-            "human_confirmed": True,
-        },
-    ).status_code == 200
-    assert client.post("/api/workflow-mesh/personal-episode/execute", json=_draft_payload(episode_id)).status_code == 200
+    assert (
+        client.post(
+            "/api/workflow-mesh/personal-episode/confirm",
+            json={
+                "episode_id": episode_id,
+                "principal_id": "principal:alice",
+                "executor_id": "agent:personal-steward",
+                "human_confirmed": True,
+            },
+        ).status_code
+        == 200
+    )
+    assert (
+        client.post("/api/workflow-mesh/personal-episode/execute", json=_draft_payload(episode_id)).status_code == 200
+    )
     return episode_id
 
 
@@ -194,10 +199,7 @@ def test_feedback_with_optional_burden_metrics(monkeypatch, tmp_path):
     # Verify the burden values are in the ledger event payload.
     broker = LedgerBroker.connect(ledger_path)
     try:
-        outcome_rows = [
-            row for row in broker.read(episode_id=episode_id)
-            if row["event_type"] == "Outcome.Human.v1"
-        ]
+        outcome_rows = [row for row in broker.read(episode_id=episode_id) if row["event_type"] == "Outcome.Human.v1"]
         assert len(outcome_rows) == 1
         payload = json.loads(outcome_rows[0]["payload_json"])
         assert payload["review_duration_seconds"] == 120.0
@@ -313,10 +315,7 @@ def test_feedback_ignore_verdict(monkeypatch, tmp_path):
 
     broker = LedgerBroker.connect(ledger_path)
     try:
-        outcome_rows = [
-            row for row in broker.read(episode_id=episode_id)
-            if row["event_type"] == "Outcome.Human.v1"
-        ]
+        outcome_rows = [row for row in broker.read(episode_id=episode_id) if row["event_type"] == "Outcome.Human.v1"]
         assert len(outcome_rows) == 1
         payload = json.loads(outcome_rows[0]["payload_json"])
         assert payload["verdict"] == "ignore"
@@ -338,10 +337,7 @@ def test_feedback_omitted_metrics_persisted_as_null(monkeypatch, tmp_path):
 
     broker = LedgerBroker.connect(ledger_path)
     try:
-        outcome_rows = [
-            row for row in broker.read(episode_id=episode_id)
-            if row["event_type"] == "Outcome.Human.v1"
-        ]
+        outcome_rows = [row for row in broker.read(episode_id=episode_id) if row["event_type"] == "Outcome.Human.v1"]
         assert len(outcome_rows) == 1
         payload = json.loads(outcome_rows[0]["payload_json"])
         assert payload["review_duration_seconds"] is None
@@ -395,10 +391,7 @@ def test_feedback_invalid_metric_no_write(monkeypatch, tmp_path):
     broker = LedgerBroker.connect(ledger_path)
     try:
         assert broker.count() == count_before
-        outcome_rows = [
-            row for row in broker.read(episode_id=episode_id)
-            if row["event_type"] == "Outcome.Human.v1"
-        ]
+        outcome_rows = [row for row in broker.read(episode_id=episode_id) if row["event_type"] == "Outcome.Human.v1"]
         assert len(outcome_rows) == 0
         assert broker.verify_chain()["ok"] is True
     finally:
@@ -877,15 +870,18 @@ def test_personal_setup_ingest_system_draft_e2e(monkeypatch, tmp_path):
     assert ingested.status_code == 200
     episode_id = ingested.json()["episode"]["episode_id"]
 
-    assert client.post(
-        "/api/workflow-mesh/personal-episode/confirm",
-        json={
-            "episode_id": episode_id,
-            "principal_id": "principal:alice",
-            "executor_id": "agent:personal-steward",
-            "human_confirmed": True,
-        },
-    ).status_code == 200
+    assert (
+        client.post(
+            "/api/workflow-mesh/personal-episode/confirm",
+            json={
+                "episode_id": episode_id,
+                "principal_id": "principal:alice",
+                "executor_id": "agent:personal-steward",
+                "human_confirmed": True,
+            },
+        ).status_code
+        == 200
+    )
 
     executed = client.post(
         "/api/workflow-mesh/personal-episode/execute",

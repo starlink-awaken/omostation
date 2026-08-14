@@ -291,9 +291,7 @@ def _personal_setup(rest: list[str]) -> int:
         return 1
     console.print(
         _panel(
-            f"[green]✅ Role assignment: {body.get('status')}[/green]\n"
-            f"Principal: {args.principal}\n"
-            f"Role: {args.role}",
+            f"[green]✅ Role assignment: {body.get('status')}[/green]\nPrincipal: {args.principal}\nRole: {args.role}",
             "green",
         )
     )
@@ -364,8 +362,7 @@ def _personal_confirm(rest: list[str]) -> int:
     confirmation = body.get("confirmation", {})
     console.print(
         _panel(
-            f"[green]✅ Mandate granted: {confirmation.get('mandate_id')}[/green]\n"
-            f"Episode: {args.episode_id}",
+            f"[green]✅ Mandate granted: {confirmation.get('mandate_id')}[/green]\nEpisode: {args.episode_id}",
             "green",
         )
     )
@@ -428,9 +425,7 @@ def _personal_feedback(rest: list[str]) -> int:
     parser.add_argument("--episode-id", required=True)
     parser.add_argument("--principal", default="principal:alice")
     parser.add_argument("--feedback-id", default=None)
-    parser.add_argument(
-        "--verdict", required=True, choices=["accept", "edit", "reject", "defer", "ignore"]
-    )
+    parser.add_argument("--verdict", required=True, choices=["accept", "edit", "reject", "defer", "ignore"])
     parser.add_argument("--review-duration-seconds", type=float, default=None)
     parser.add_argument("--estimated-time-saved-seconds", type=float, default=None)
     args = parser.parse_args(rest)
@@ -465,8 +460,7 @@ def _personal_feedback(rest: list[str]) -> int:
         return 1
     console.print(
         _panel(
-            f"[green]✅ Feedback recorded: {args.verdict}[/green]\n"
-            f"Sequence: {body.get('sequence', '?')}",
+            f"[green]✅ Feedback recorded: {args.verdict}[/green]\nSequence: {body.get('sequence', '?')}",
             "green",
         )
     )

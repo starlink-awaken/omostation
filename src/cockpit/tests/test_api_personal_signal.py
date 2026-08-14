@@ -392,7 +392,7 @@ def test_ingest_rejects_empty_title_without_touching_ledger(monkeypatch, tmp_pat
     _seed_role(ledger_path)
     target = signal_dir / "notes" / "blank.md"
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text("---\ntitle: \"   \"\n---\n\nEmpty title.\n", encoding="utf-8")
+    target.write_text('---\ntitle: "   "\n---\n\nEmpty title.\n', encoding="utf-8")
     client = TestClient(_app())
 
     _assert_fail_closed(client, ledger_path, _ingest_payload(_item_id("notes/blank.md")), "empty_title")

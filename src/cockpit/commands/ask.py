@@ -15,6 +15,7 @@ console = Console()
 
 AETHERFORGE_BASE_URL = os.environ.get("AETHERFORGE_BASE_URL", "http://127.0.0.1:9290/v1")
 
+
 def _get_api_key() -> str:
     """Retrieve AetherForge API key from macOS Keychain or environment."""
     key = os.environ.get("AETHERFORGE_API_KEY", "")
@@ -25,11 +26,12 @@ def _get_api_key() -> str:
             ["security", "find-generic-password", "-s", "aetherforge-gateway", "-w"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         return result.stdout.strip()
     except Exception:
         return ""
+
 
 def _get_model() -> str:
     """Get the available coding model from the local directory."""
@@ -51,21 +53,18 @@ def _get_model() -> str:
         pass
     return "coding-next"
 
+
 def cmd_ask(args) -> int:
     """快速询问本地大模型."""
     prompt = " ".join(args.prompt) if getattr(args, "prompt", None) else None
     if not prompt:
-        console.print("[yellow]用法: cockpit ask \"你的问题\"[/yellow]")
+        console.print('[yellow]用法: cockpit ask "你的问题"[/yellow]')
         return 1
 
     model = getattr(args, "model", None) or _get_model()
 
     url = f"{AETHERFORGE_BASE_URL}/chat/completions"
-    payload = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-        "stream": False
-    }
+    payload = {"model": model, "messages": [{"role": "user", "content": prompt}], "stream": False}
 
     req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"))  # noqa: S310
     req.add_header("Content-Type", "application/json")
@@ -92,6 +91,7 @@ def cmd_ask(args) -> int:
         console.print(f"[red]Error: {e}[/red]")
         return 1
 
+
 def cmd_proxy_env(args) -> int:
     """输出兼容外部 CLI 的环境变量."""
     key = _get_api_key()
@@ -99,9 +99,9 @@ def cmd_proxy_env(args) -> int:
         console.print("[red]AETHERFORGE_API_KEY 未找到。请确认 AetherForge 已就绪或环境变量已设置。[/red]")
         return 1
 
-    console.print(f"export OPENAI_API_BASE=\"{AETHERFORGE_BASE_URL}\"")
-    console.print(f"export OPENAI_API_KEY=\"{key}\"")
-    console.print(f"export AETHERFORGE_BASE_URL=\"{AETHERFORGE_BASE_URL}\"")
-    console.print(f"export AETHERFORGE_API_KEY=\"{key}\"")
+    console.print(f'export OPENAI_API_BASE="{AETHERFORGE_BASE_URL}"')
+    console.print(f'export OPENAI_API_KEY="{key}"')
+    console.print(f'export AETHERFORGE_BASE_URL="{AETHERFORGE_BASE_URL}"')
+    console.print(f'export AETHERFORGE_API_KEY="{key}"')
     console.print("\n# 用法: eval $(cockpit proxy-env)")
     return 0

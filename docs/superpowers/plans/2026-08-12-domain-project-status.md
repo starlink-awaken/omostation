@@ -53,11 +53,14 @@ def test_domain_project_status_ok_and_facts_are_informational(tmp_path, monkeypa
     root = tmp_path / "domains" / "vault"
     (root / "CLAUDE.md").write_text("# vault", encoding="utf-8")
     (root / "AGENTS.md").write_text("# vault", encoding="utf-8")
-    _write_binding_registry(tmp_path, {
-        "claude": {"instruction_file": "CLAUDE.md"},
-        "codex": {"instruction_file": "AGENTS.md"},
-        "chatgpt_web": {"instruction_file": None},
-    })
+    _write_binding_registry(
+        tmp_path,
+        {
+            "claude": {"instruction_file": "CLAUDE.md"},
+            "codex": {"instruction_file": "AGENTS.md"},
+            "chatgpt_web": {"instruction_file": None},
+        },
+    )
     monkeypatch.setenv("L4_DOMAIN_REGISTRY", str(registry))
     result = _adapter().domain_project_status("vault", workspace_root=tmp_path)
     assert result["status"] == "ok"
@@ -81,7 +84,10 @@ def test_domain_project_status_rejects_symlink_and_fifo_gateway(tmp_path, monkey
     outside = tmp_path / "outside.md"
     outside.write_text("outside", encoding="utf-8")
     (tmp_path / "domains" / "vault" / "CLAUDE.md").symlink_to(outside)
-    assert _adapter().domain_project_status("vault", workspace_root=tmp_path)["domains"][0]["gateways"][0]["status"] == "invalid"
+    assert (
+        _adapter().domain_project_status("vault", workspace_root=tmp_path)["domains"][0]["gateways"][0]["status"]
+        == "invalid"
+    )
     # On platforms with os.mkfifo(), replace the path with a FIFO and retain invalid/degraded.
 
 
@@ -174,8 +180,11 @@ Add this MCP test and assert its tool registration:
 def test_domain_project_status_is_registered_and_forwards_argument(monkeypatch):
     payload = {"schema": "cockpit.domain-project-status.v1", "status": "ok", "available": True}
     seen = []
-    monkeypatch.setattr(agent_runtime_mcp_server.governance_context, "domain_project_status",
-                        lambda domain_id="": seen.append(domain_id) or payload)
+    monkeypatch.setattr(
+        agent_runtime_mcp_server.governance_context,
+        "domain_project_status",
+        lambda domain_id="": seen.append(domain_id) or payload,
+    )
     tools = asyncio.run(agent_runtime_mcp_server.mcp.list_tools())
     assert "domain_project_status" in {tool.name for tool in tools}
     assert json.loads(agent_runtime_mcp_server.domain_project_status("vault")) == payload

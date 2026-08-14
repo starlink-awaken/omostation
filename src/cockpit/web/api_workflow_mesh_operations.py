@@ -215,9 +215,7 @@ def _resolve_local_signal(
     try:
         note = connector.get_item(item_id)
     except (ValueError, OSError) as exc:
-        raise PersonalEpisodeError(
-            "item_not_found", "no local item matches the given item_id"
-        ) from exc
+        raise PersonalEpisodeError("item_not_found", "no local item matches the given item_id") from exc
     if note is None:
         raise PersonalEpisodeError("item_not_found", "no local item matches the given item_id")
     resolved = Path(note.source_path).resolve()
@@ -306,12 +304,7 @@ def _projection_value_is_private(value: Any) -> bool:
         return False
     stripped = value.strip()
     lowered = stripped.lower()
-    return (
-        "file://" in lowered
-        or "iris://" in lowered
-        or stripped.startswith(("/", "~/"))
-        or "/users/" in lowered
-    )
+    return "file://" in lowered or "iris://" in lowered or stripped.startswith(("/", "~/")) or "/users/" in lowered
 
 
 def _projection_fields(source: Any, fields: tuple[str, ...]) -> dict[str, Any]:
@@ -411,14 +404,18 @@ def _episode_projection_http_dto(projection: Any) -> dict[str, Any]:
             if isinstance(item, dict)
         ]
         raw_counts = raw_portfolio.get("episode_counts", {})
-        episode_counts = {
-            key: value
-            for key, value in raw_counts.items()
-            if isinstance(key, str)
-            and not _projection_value_is_private(key)
-            and isinstance(value, int)
-            and not isinstance(value, bool)
-        } if isinstance(raw_counts, dict) else {}
+        episode_counts = (
+            {
+                key: value
+                for key, value in raw_counts.items()
+                if isinstance(key, str)
+                and not _projection_value_is_private(key)
+                and isinstance(value, int)
+                and not isinstance(value, bool)
+            }
+            if isinstance(raw_counts, dict)
+            else {}
+        )
     else:
         episode_counts = {}
     role_portfolio.update(
@@ -485,15 +482,11 @@ def _episode_projection_http_dto(projection: Any) -> dict[str, Any]:
     return dto
 
 
-def _write_local_draft(
-    context: Any, draft: dict[str, str], output_origin: str = "system"
-) -> Path:
+def _write_local_draft(context: Any, draft: dict[str, str], output_origin: str = "system") -> Path:
     """Atomically persist one server-named, never-send JSON artifact."""
     draft_dir = _personal_draft_dir()
     draft_dir.mkdir(parents=True, exist_ok=True)
-    stable_name = hashlib.sha256(
-        f"{context.episode_id}|{context.action_id}".encode()
-    ).hexdigest()[:24]
+    stable_name = hashlib.sha256(f"{context.episode_id}|{context.action_id}".encode()).hexdigest()[:24]
     target = draft_dir / f"personal-followup-{stable_name}.json"
     payload = {**draft, "never_send": True, "output_origin": output_origin}
     descriptor, temporary_name = tempfile.mkstemp(
@@ -796,14 +789,12 @@ if router:
                     if existing.role_scope != scope:
                         raise PersonalEpisodeError(
                             "scope_conflict",
-                            f"active role scope is '{existing.role_scope}', "
-                            f"caller requested '{scope}'",
+                            f"active role scope is '{existing.role_scope}', caller requested '{scope}'",
                         )
                     if existing.role_name != role_name:
                         raise PersonalEpisodeError(
                             "role_name_conflict",
-                            f"active role name is '{existing.role_name}', "
-                            f"caller requested '{role_name}'",
+                            f"active role name is '{existing.role_name}', caller requested '{role_name}'",
                         )
                     if expected_ids:
                         existing_resp = {r.resp_id for r in existing.responsibilities}
@@ -876,9 +867,7 @@ if router:
                 **controls,
             }
         try:
-            projection = build_episode_projection_snapshot_from_path(
-                db_path, principal_id=principal_id
-            )
+            projection = build_episode_projection_snapshot_from_path(db_path, principal_id=principal_id)
         except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
             _logger.info("personal_episode_status_failed: %s", type(exc).__name__)
             return {
@@ -895,22 +884,26 @@ if router:
         # OMO read-only observation: readiness gate, weekly samples, gaps.
         observation: dict[str, Any] | None = None
         if PersonalEpisodeService is None:
-            return JSONResponse(
-                status_code=503,
-                content={
+            return (
+                JSONResponse(
+                    status_code=503,
+                    content={
+                        "ok": False,
+                        "status": "unavailable",
+                        "error": "personal_episode_observation_unavailable",
+                        "principal_id": principal_id,
+                        **controls,
+                    },
+                )
+                if JSONResponse is not None
+                else {
                     "ok": False,
                     "status": "unavailable",
                     "error": "personal_episode_observation_unavailable",
                     "principal_id": principal_id,
                     **controls,
-                },
-            ) if JSONResponse is not None else {
-                "ok": False,
-                "status": "unavailable",
-                "error": "personal_episode_observation_unavailable",
-                "principal_id": principal_id,
-                **controls,
-            }
+                }
+            )
         try:
             with _personal_episode_service() as service:
                 obs = service.observe_principal(principal_id)
@@ -1032,10 +1025,7 @@ if router:
                 context = service.reload_execution_context(episode_id, principal_id)
                 if provided:
                     # Caller-authored full draft — validate each field
-                    draft = {
-                        field: _required_text(body, field)
-                        for field in _DRAFT_FIELDS
-                    }
+                    draft = {field: _required_text(body, field) for field in _DRAFT_FIELDS}
                     output_origin = "user_provided"
                 else:
                     # System-built draft from safe persisted Episode snapshot

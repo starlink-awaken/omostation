@@ -61,7 +61,8 @@ class TestObservabilityEventsAPI:
     def test_events_returns_all(self, tmp_path, monkeypatch):
         _write_events(tmp_path, _sample_events())
         monkeypatch.setattr(
-            api_observability, "_events_file",
+            api_observability,
+            "_events_file",
             lambda: tmp_path / ".omo" / "_delivery" / "observability" / "events.jsonl",
         )
         resp = TestClient(app).get("/api/observability/events")
@@ -74,7 +75,8 @@ class TestObservabilityEventsAPI:
     def test_events_alert_only(self, tmp_path, monkeypatch):
         _write_events(tmp_path, _sample_events())
         monkeypatch.setattr(
-            api_observability, "_events_file",
+            api_observability,
+            "_events_file",
             lambda: tmp_path / ".omo" / "_delivery" / "observability" / "events.jsonl",
         )
         resp = TestClient(app).get("/api/observability/events", params={"alert_only": "true"})
@@ -86,12 +88,11 @@ class TestObservabilityEventsAPI:
     def test_events_filter_by_trace_id(self, tmp_path, monkeypatch):
         _write_events(tmp_path, _sample_events())
         monkeypatch.setattr(
-            api_observability, "_events_file",
+            api_observability,
+            "_events_file",
             lambda: tmp_path / ".omo" / "_delivery" / "observability" / "events.jsonl",
         )
-        resp = TestClient(app).get(
-            "/api/observability/events", params={"trace_id": "trace-abc"}
-        )
+        resp = TestClient(app).get("/api/observability/events", params={"trace_id": "trace-abc"})
         assert resp.status_code == 200
         payload = resp.json()
         assert payload["total"] == 2
@@ -99,7 +100,8 @@ class TestObservabilityEventsAPI:
 
     def test_events_missing_file_returns_empty(self, tmp_path, monkeypatch):
         monkeypatch.setattr(
-            api_observability, "_events_file",
+            api_observability,
+            "_events_file",
             lambda: tmp_path / ".omo" / "_delivery" / "observability" / "events.jsonl",
         )
         resp = TestClient(app).get("/api/observability/events")
@@ -111,7 +113,8 @@ class TestObservabilityStatsAPI:
     def test_stats_aggregates(self, tmp_path, monkeypatch):
         _write_events(tmp_path, _sample_events())
         monkeypatch.setattr(
-            api_observability, "_events_file",
+            api_observability,
+            "_events_file",
             lambda: tmp_path / ".omo" / "_delivery" / "observability" / "events.jsonl",
         )
         resp = TestClient(app).get("/api/observability/stats")
