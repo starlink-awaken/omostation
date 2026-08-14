@@ -377,6 +377,13 @@ DISPATCHERS: dict[str, Any] = {
     "engineering-delivery": dispatch_real_delivery,
 }
 
+# 注册行政流程 scenes (数字大脑工作域)
+try:
+    from admin_scenes import ADMIN_SCENES
+    DISPATCHERS.update(ADMIN_SCENES)
+except Exception:
+    pass
+
 
 # ── Condition Evaluator ────────────────────────────────────────────
 

@@ -1,0 +1,58 @@
+journey_id: admin-notification-workflow
+title: 行政通知处理全流程 (9步闭环)
+status: active
+version: 2
+created: 2026-08-09
+owner: xiamingxing
+description: >
+  上级通知 → 分类 → 转发 → 收集 → 汇总 → 审阅 → 迭代 → 提交.
+  由 mail-daemon 触发, risk_engine 安全检查, 人审批后执行行动.
+
+trigger:
+  type: mail_classified_as_task
+  source: mail_daemon
+
+states:
+  - name: received
+    scene: admin-inbox
+    transitions:
+      - to: classified
+        condition: "has_task == true"
+      - to: received
+        condition: "has_task == false"
+
+  - name: classified
+    scene: admin-classify
+    transitions:
+      - to: forwarding
+        condition: "requires_forwarding == true"
+      - to: compiling
+        condition: "requires_forwarding == false"
+
+  - name: forwarding
+    scene: admin-forward
+    transitions:
+      - to: collecting
+        condition: "email_drafts_created == true"
+
+  - name: collecting
+    scene: admin-collect
+    transitions:
+      - to: compiling
+        condition: "status == succeeded"
+
+  - name: compiling
+    scene: admin-compile
+    transitions:
+      - to: reviewing
+        condition: "report_compiled == true"
+
+  - name: reviewing
+    scene: admin-review
+    transitions:
+      - to: submitted
+        condition: "status == succeeded"
+
+  - name: submitted
+    scene: admin-submit
+    terminal: true
