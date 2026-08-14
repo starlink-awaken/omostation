@@ -295,6 +295,26 @@ def _weijian_model_freshness_job() -> dict[str, object]:
     }
 
 
+def _weijian_sanyi_status_job() -> dict[str, object]:
+    return {
+        "id": "documents-weijian-sanyi-status-audit",
+        "domain_id": "work-weijian",
+        "owner": "runtime-control",
+        "action": "audit_sanyi_status_consistency",
+        "schedule": "manual",
+        "timeout_seconds": 30,
+        "reads": [
+            "@工作文档/卫健委/_control/三医态势仪表盘.md",
+            "@工作文档/卫健委/_entities/facts/01-progress.yaml",
+        ],
+        "scope_entity_ids": ["proj-syld", "proj-jingbao", "proj-emr-quality"],
+        "writes": [],
+        "evidence_relative_path": "control/evidence/documents-weijian-sanyi-status-audit/documents-weijian-sanyi-status-audit.json",
+        "evidence_schema": "runtime.documents-sanyi-status-consistency.evidence.v1",
+        "fail_closed": True,
+    }
+
+
 def _run(
     domain_registry: Path,
     project_registry: Path,
@@ -426,6 +446,28 @@ def test_workspace_binding_declares_weijian_model_freshness_owner() -> None:
     assert "domain_model_freshness_status" in registry["workspace_mcp"]["read_tools"]
     assert (
         "domain_model_freshness_status"
+        in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
+    )
+
+
+def test_workspace_binding_declares_weijian_sanyi_status_owner() -> None:
+    registry = yaml.safe_load(
+        (
+            ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
+        ).read_text(encoding="utf-8")
+    )
+
+    jobs = [
+        job
+        for job in registry["runtime_jobs"]
+        if job["id"] == "documents-weijian-sanyi-status-audit"
+    ]
+    assert jobs == [_weijian_sanyi_status_job()]
+    assert "domain_sanyi_status_consistency_status" in registry["workspace_mcp"][
+        "read_tools"
+    ]
+    assert (
+        "domain_sanyi_status_consistency_status"
         in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
     )
 
@@ -886,6 +928,23 @@ def test_runtime_model_freshness_job_contract_passes(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stdout
     assert json.loads(result.stdout)["errors"] == []
+
+
+def test_sanyi_binding_rejects_scope_drift(tmp_path: Path) -> None:
+    domain_registry = _domain_registry(tmp_path, ["creative", "work-weijian"])
+    project_registry = _project_registry(tmp_path, ["creative", "work-weijian"])
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    job = _weijian_sanyi_status_job()
+    job["scope_entity_ids"] = ["proj-syld"]
+    raw["runtime_jobs"].append(job)
+    project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "runtime sanyi status consistency job documents-weijian-sanyi-status-audit scope_entity_ids must declare proj-syld, proj-jingbao, proj-emr-quality"
+    ]
 
 
 @pytest.mark.parametrize(
