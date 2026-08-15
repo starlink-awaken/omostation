@@ -1,0 +1,23 @@
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 1,
+    "S3": 0
+  },
+  "external_proposals": 0,
+  "generated_at": "2026-08-15T06:59:40.179676+00:00",
+  "internal_proposals": 1,
+  "mode": "standard",
+  "proposals": [
+    {
+      "action": "create_scene_cards",
+      "level": "S2",
+      "proposal": "Only 9 scene cards — consider adding more domain coverage",
+      "severity": "medium",
+      "source": "scene_coverage",
+      "type": "insufficient_cards"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 1
+}
