@@ -125,10 +125,12 @@ last-reviewed: 2026-06-29
 ### 10. Project / Registry 生成 (2)
 `gen-project-registry.py` (registry 派生) / `project-layer-index.py` (layer digest)
 
-### 11. 入口 / framework (4) — 高频, 留 bin/ 根
+### 11. 入口 / framework (6) — 高频, 留 bin/ 根
 | 脚本 | 功能 | 调用方 |
 |:-----|:-----|:-------|
 | `agent-workflow.py` (1319L) | Agent Workflow Runner (framework 级) | CLAUDE/AGENTS §0 |
+| `omo-status` | Multi-Agent Swarm 全景秒级 Rich Panel 诊断快照 | 开发者/CI/开工自检 |
+| `omo-top` | Multi-Agent Swarm 4 象限实时互动大盘 (Textual 1.x) | 开发者/常驻监控 |
 | `compass_radar.py` | health radar 计算/兼容刷新 | `omo state sync` broker |
 | `state-stale-emit.py` | 发送 state_stale 事件 | post-commit / launchd WatchPaths |
 | `change-lane-check.py` | commit lane 校验 (pre-commit/gac-local-gate) | GaC gate |
