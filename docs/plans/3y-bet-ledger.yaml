@@ -1594,7 +1594,9 @@ bets:
   retro: required
 - id: BET-Y1Q2-T1-01
   track: T1-TRUTH
-  window: Y1Q2
+  window: Y1Q3
+  deferred_at: 2026-08-15
+  defer_reason: '与 BET-Y1Q3-T6-01 归并判定强耦合, 判定标准统一后同做'
   title: omo-debt + c2g 并入 omo
   appetite: 2 weeks
   priority: P1
@@ -1627,7 +1629,9 @@ bets:
   retro: required
 - id: BET-Y1Q2-T1-02
   track: T1-TRUTH
-  window: Y1Q2
+  window: Y1Q3
+  deferred_at: 2026-08-15
+  defer_reason: '与 BET-Y1Q3-T6-01 归并判定强耦合, 判定标准统一后同做'
   title: model-driven 去留判定
   appetite: 1 week
   priority: P1
@@ -2717,7 +2721,8 @@ bets:
   title: Supervised Blueprint control loop and SR-06 rollback
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: blocked
+  blocked_reason: '战略规划裁定 (2026-08-15): 外部依赖 Codex ACP 未定, Y1 末统一评审处置'
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md
     spec_version: 1.0.0
@@ -2807,7 +2812,8 @@ bets:
   title: Codex ACP stdio permission-broker cutover and cli_prompt retirement
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: blocked
+  blocked_reason: '战略规划裁定 (2026-08-15): T1-18 同冻 (强耦合), Y1 末统一评审处置'
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md
     spec_version: 1.0.0
@@ -2890,7 +2896,9 @@ bets:
   title: 工程交付 dogfood 开 shadow
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-15
+  note: '核实性补登 (2026-08-15): dogfood shadow 轮 #1517 retro + #1518 status merge 证据齐, 主仓台账曾漏登'
   goal: 建立高频低风险的 decision_outcome 样本源, PR 评审意见即天然 human_verdict
   non_goals:
   - 计入 X3 价值指标
@@ -3237,6 +3245,46 @@ bets:
   risk_level: L1
   human_gate: true
   circuit_breaker: 抽象被破坏 → 先重构抽象再接第二源
+  retro: required
+- id: BET-Y1Q3-T2-03
+  track: T2-PERCEPT
+  window: Y1Q3
+  title: 信号落盘管道修复 — 探测深度 + health 回写 + state 防御
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  diagnosed_at: 2026-08-15
+  diagnosis: >-
+    只读诊断结论 (证据链 E1-E5): 层1 探测面太浅 — _hash_path 只探 ~/Library/Mail/ 顶层,
+    顶层 mtime 停在 2026-02-08, hash 恒定, poller 正确判定无变化, 故不产生信号;
+    层2 health 回写缺失 — poller 只写 .omo/state/signal-poller-state.json 去重态,
+    从不回写 signal-sources.yaml 的 last_signal_at/health, 注册表显示 08-07 死值属显示 bug;
+    附带发现 08-14 三条重复信号 = state 丢失后 last_hash=None 触发重复上报。
+  goal: 让感知面信号真实落盘且可见 — 修复探测层级 + 打通注册表回写
+  non_goals:
+  - 新增信号源 (属 T2-01)
+  - 重构 signal-sources 抽象
+  - 跨主机同步
+  done_when:
+  - 探测深度修正 (~/Library/Mail/V10/ 递归最新 mtime 或等价深探测)
+  - 信号产生时回写 signal-sources.yaml 的 last_signal_at + health
+  - state 丢失场景下不重复上报 (或 state 路径迁出易失区)
+  - 修复后首 24h apple_mail_inbox 有真实新信号落盘且注册表同步
+  verify:
+  - cmd: python3 bin/ssot/signal-poller.py --health --json
+    expect: apple_mail_inbox health != degraded
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ssot/signal-poller.py
+  - .omo/_truth/registry/signal-sources.yaml
+  - tests/test_signal_poller.py
+  pasw_required: false
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: V10 内部结构不可稳定探测 → 降级为检测 Maildown/Envelope Index 文件集
+  note: 'T2-02 窗口观察依赖注册表字段, T2-03 修复前观察无效, 修复后窗口重起算'
   retro: required
 - id: BET-Y1Q4-T3-01
   track: T3-COGNI
@@ -4159,6 +4207,42 @@ bets:
   human_gate: false
   circuit_breaker: 超 3 天未完成 smoke → 降级为 import-only 测试, 标记部分完成
   retro: required
+- id: BET-Y1Q3-T9-01
+  track: T9-OBSERV
+  window: Y1Q3
+  title: 复盘制度落地四件套 — 防重犯机制固化
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  origin: 'SESSION-RETROSPECTIVE-20260814-15.md 六大失败模式 → 四个制度缺口'
+  goal: >-
+    会话复盘确认六类失败各有制度缺口承接。四件套: (1) verify 提交前 diff 校验
+    (worktree A 改 status / worktree B 提交漂移, PR #1518 教训); (2) err 日志按天 rotate
+    (08-08 旧错被当新问题误诊); (3) 写操作测试强制 temp repo (bump-fast 污染真实指针);
+    (4) 诊断三步法入 AGENT-BRIEF (先时间戳/再反驳证据/后结论, 两次误诊教训)。
+  non_goals:
+  - verify 语义重构 (只加 diff vs claim 基线对比)
+  - 历史日志清理
+  done_when:
+  - agent-workflow verify 含「当前 diff vs claim 时基线」对比并 FAIL 未提交变更
+  - err 日志按天 rotate 生效 (log-rotate 或等价机制覆盖 .omo/_log/*.err)
+  - AGENT-BRIEF 含测试隔离规则 (只读可 worktree/写操作必 temp repo) + 诊断三步法
+  verify:
+  - cmd: make log-rotate --dry-run
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/workflow/**
+  - bin/ssot/log-rotate.py
+  - docs/plans/AGENT-BRIEF.md
+  pasw_required: false
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: verify 基线对比与现有 claim 机制冲突 → 降级为提交前钩子提示
+  hard_sequence: 'T1-05 D2 启动前置条件之一: 本 bet 的 verify diff 校验部分必须先 merge (并发迁移高峰前就位)'
+  retro: required
 - id: BET-Y1Q3-T8-02
   track: T8-SURFACE
   window: Y1Q3
@@ -4268,6 +4352,71 @@ bets:
   human_gate: false
   circuit_breaker: SSOT 漂移范围扩大 → 只修复 registry/help_map，弃用 CLI 清理下个 bet
   retro: required
+- id: BET-Y1Q3-T1-04
+  track: T1-TRUTH
+  window: Y1Q3
+  title: Y1Q4 年度门修订评审 — code_loc 重基线 (human_gate)
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: >-
+    Y1Q4 门 code_loc <= 690000 按 Y1 初基线制定, 未纳入 gbrain 重写噪音与新项目出生两变量,
+    当前实测 src_loc 与门值缺口约 -58%。刻舟求剑的门会诱导第二个 T3-01 式谎报。
+    正式走年度门修订: 用 T1-03 净值口径重算真实缺口, 产出重基线提案交人类拍板。
+  non_goals:
+  - agent 自行修改门值 (必须人类拍板)
+  - 顺带修改其他窗口门
+  done_when:
+  - "重基线提案文档产出 (三种情景: 守原门/调门/拆门为分项目门)"
+  - 每种情景附 T1-03 净值口径的量化论证
+  - 人类明确批示后按批示更新 annual_gates 并留 ADR
+  verify:
+  - cmd: test -f docs/plans/annual-gate-rebaseline-2026Q4.md
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/annual-gate-rebaseline-2026Q4.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T1-03
+  risk_level: L3
+  human_gate: true
+  circuit_breaker: 人类否决全部情景 → 门维持原值, 短缺记为 Y1 已知缺口
+  retro: required
+- id: BET-Y1Q3-T1-03
+  track: T1-TRUTH
+  window: Y1Q3
+  title: surface 口径修正 — numstat 净值列, 剥离重写对称噪音
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  goal: >-
+    surface 指标对重写型变更失真 (gbrain +468K/-468K 净 0 被计为 +468K 增长)。
+    给 bet-ledger.py surface 子命令加 numstat 净值列, 区分「出生/膨胀/重写噪音」三种形态,
+    为 Y1Q4 年度门重基线提供诚实口径。
+  non_goals:
+  - 修改年度门数值 (属 BET-Y1Q3-T1-04)
+  - 删除任何代码
+  done_when:
+  - surface 输出含 numstat 净值列 (增-删) 与原始列并存
+  - 对 2026-08-15 快照跑通并复现审计结论 (gbrain 重写噪音被剥离)
+  - 溯源审计文档 surface-area-source-breakdown-20260815.md 的方法论固化为可重跑命令
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py surface
+    expect: 输出含净列且 exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/plan/bet-ledger.py
+  - tests/test_bet_ledger_surface.py
+  pasw_required: false
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: git log 解析超时 → 固定采样最近 90 天
+  retro: required
 - id: BET-Y1Q3-T1-02
   track: T1-TRUTH
   window: Y1Q3
@@ -4365,7 +4514,8 @@ bets:
   title: omlxc 子模块指针自动化 PR 试点
   appetite: 4 days
   priority: P2
-  status: candidate
+  status: blocked
+  blocked_reason: '战略规划裁定 (2026-08-15): bump-fast 已实质覆盖, Y1 末评审是否关闭'
   goal: 在 omlxc 一个子模块上试点"发布触发→CI 自动开指针更新 PR→人工点击合并"的自动化链路，为后续铺开到其他子模块提供依据
   non_goals:
   - 自动合并 PR（必须保留人工点击合并这道闸，不做无人值守合并）
