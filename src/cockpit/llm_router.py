@@ -26,10 +26,12 @@ def _get_bridge():
     try:
         import sys
         from pathlib import Path
+
         _af = str(Path(__file__).resolve().parents[3] / "projects" / "aetherforge" / "src")
         if _af not in sys.path:
             sys.path.insert(0, _af)
         from aetherforge.bridge import llm_generate, llm_list_models
+
         return llm_generate, llm_list_models
     except Exception:
         return None, None

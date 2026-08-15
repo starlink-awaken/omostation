@@ -12,7 +12,35 @@ cockpit.tui — 极客终端交互控制台 (NextGen TUI Engine)
   cockpit status --output tui    # 通过 output 切面进入 TUI
 """
 
-__all__ = ["launch", "is_tui_available"]
+__all__ = [
+    "launch",
+    "is_tui_available",
+    "launch_swarm_top",
+    "render_swarm_status",
+    "SwarmStateCollector",
+]
+
+
+def launch_swarm_top() -> int:
+    """启动 Multi-Agent Swarm 实时监控大盘 (omo-top)。"""
+    if is_tui_available():
+        from cockpit.tui.swarm_app import SwarmObservabilityApp
+
+        app = SwarmObservabilityApp()
+        app.run()
+        return 0
+    else:
+        from cockpit.tui.swarm_cli import main as cli_main
+
+        cli_main()
+        return 0
+
+
+def render_swarm_status() -> None:
+    """渲染 Multi-Agent Swarm 单次快照 (omo-status)。"""
+    from cockpit.tui.swarm_cli import main as cli_main
+
+    cli_main()
 
 
 def is_tui_available() -> bool:
