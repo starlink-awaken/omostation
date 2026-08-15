@@ -67,5 +67,5 @@ collab_scenarios           5             221      -216(-98%)   —
 1. 改 cockpit-ui 必须走 `.subtrees/cockpit-ui`（PASW），commit 后 `git push origin HEAD`，再 `gac-worktree.sh bump-pointer <session> projects/cockpit-ui`。
 2. D1 规则在 `src/components/outcomesDisplay.ts`：断连 →「未接入」；live 0 → `0`。不要再给 hook 写 `data: pending = []`。
 3. 台账 `verify` 仍只有 `npm run build`。要验 tab / 未接入，跑 `npm run test:unit -- src/components/__tests__/OutcomesView.test.tsx src/components/__tests__/JourneysTimelineView.test.tsx src/components/__tests__/outcomesDisplay.test.ts`。
-4. 不要把本 bet 的 yaml `status` 自行改成 done；`write_surfaces` 只有 `projects/cockpit-ui/**`。需要人拍板。
+4. 台账 `write_surfaces` 不含 yaml；**2026-08-15 人类口头授权**后由 `bet-ledger.py complete --force` 置 done（done_at 2026-08-15）。
 5. 隔离工作树可能被并发清掉。写完立刻 `git add`，子模块尽快 commit。
