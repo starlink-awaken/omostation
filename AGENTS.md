@@ -34,6 +34,8 @@ Project-specific instructions override this guide only within that project and o
 
 **窄豁免**：纯只读问答；`observer-audit`；用户书面明确 waiver（须写入 closeout 证据，模板见 [`docs/operations/workflow-waiver-template.md`](docs/operations/workflow-waiver-template.md)）。
 
+愿景→落地→复盘硬门（BET-Y1Q1-T6-02）：`start --bet` 把 `bet_id` 写入 run；`closeout`/`bet-ledger complete` 缺北极星/绑定/retro 会 halt。感知看 `bootstrap`/`status` 的 `chain:` 行。执行器 [`bin/plan/chain-bind-check.py`](bin/plan/chain-bind-check.py)，红线 `redlines.yaml::vision-to-retro-chain`，对照 [`docs/architecture/wave-gate-bet-map.md`](docs/architecture/wave-gate-bet-map.md)。
+
 **可执行闸门（ADR-0204）**：`compliance` / `status` 对 **已 stage** 的需求面路径检查是否存在 active run；无 run → **halt**（exit 1）。仅 unstaged dirty → warn。旁路：`AGCP_REQUIREMENT_ITERATION_GATE=0`（须用户授权并写入 waiver 证据）。
 
 ```bash
@@ -42,7 +44,7 @@ make agent-workflow-status
 # 有 diff 时先 suggest，避免错位 workflow（P74）
 uv run --with "pyyaml" python "bin/agent-workflow.py" suggest --from-diff --profile <agent-profile>
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> \
-  --profile <agent-profile> --objective "<summary>"
+  --profile <agent-profile> --bet <BET-ID> --objective "<summary>"
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 # ... edit / test ...
 uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
@@ -297,7 +299,7 @@ make agent-workflow-agents
 make agent-workflow-lint
 make agent-workflow-integrations
 make agent-workflow-adapters
-uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --objective "<summary>"
+uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --bet <BET-ID> --objective "<summary>"
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
 make agent-workflow-closeout RUN_ID=<run-id>
