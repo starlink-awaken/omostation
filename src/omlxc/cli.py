@@ -1224,7 +1224,11 @@ async def _select_from_pages(
     cursor: str | None = None
     seen: set[str] = set()
     request_id = _request_id()
-    matches = item_matches or (lambda item: item.get("id") == identifier)
+
+    def default_match(item: Mapping[str, JsonValue]) -> bool:
+        return item.get("id") == identifier
+
+    matches = item_matches or default_match
     for _page in range(MAX_LOOKUP_PAGES):
         envelope = await fetch(cursor)
         request_id = envelope.request_id

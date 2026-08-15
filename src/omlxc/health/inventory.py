@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+
 # Cliff is a drop strictly greater than 30%: current < 70% of baseline.
 INVENTORY_DROP_REMAINING_NUMERATOR = 7
 INVENTORY_DROP_REMAINING_DENOMINATOR = 10
@@ -20,11 +22,11 @@ def is_inventory_cliff(baseline: int, current: int) -> bool:
     )
 
 
-def inventory_count(model_ids: object) -> int:
+def inventory_count(models: Iterable[object]) -> int:
     """Count unique adapter list_models() IDs, including unloaded library entries."""
     unique: set[str] = set()
-    for item in model_ids:  # type: ignore[union-attr]
-        model_id = getattr(item, "id", item)
+    for item in models:
+        model_id: object = item if isinstance(item, str) else getattr(item, "id", None)
         if isinstance(model_id, str) and model_id:
             unique.add(model_id)
     return len(unique)
