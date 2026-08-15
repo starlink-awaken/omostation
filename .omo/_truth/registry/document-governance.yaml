@@ -127,10 +127,12 @@ warning_exceptions:
     - id: concurrent-plans-orphan-docs
       rule: orphan_document
       surface: docs-discoverable
-      max_findings: 6
-      expires: 2026-09-30
+      max_findings: 8
+      expires: 2026-10-31
       owner: governance-team
-      reason: ADR-0384 round 持续并发迁移 docs/plans, 同步期间放宽 (ADR-0381 设 2, 本轮升至 6 容纳 4 个). 收敛结束后回退. ADR-0384 B2 SSOT healthcheck 跟踪.
+      reason: >
+        ADR-0384 concurrent docs/plans migration plus BET-Y1Q1-T6-01 deferred
+        Phase-numbering rewrite. One budget per rule/surface. Revisit 2026-10-31.
     - id: legacy-omo-knowledge-frontmatter
       rule: missing_frontmatter
       surface: omo-knowledge
@@ -145,15 +147,6 @@ warning_exceptions:
       expires: 2026-10-31
       owner: governance-team
       reason: Existing truth documentation needs metadata migration without rewriting SSOT history.
-    - id: strategy-convergence-phase-hardcode-defer
-      rule: orphan_document
-      surface: docs-discoverable
-      max_findings: 8
-      expires: 2026-10-31
-      owner: governance-team
-      reason: >
-        BET-Y1Q1-T6-01 deferred rewriting 11 Phase numbering systems in
-        WORKFLOW-MESH / M4-ROADMAP / etc. Tracked, not silently unfixed.
     - id: legacy-omo-standards-frontmatter
       rule: missing_frontmatter
       surface: omo-standards

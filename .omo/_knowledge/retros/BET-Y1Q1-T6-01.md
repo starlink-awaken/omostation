@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: retro
+lifecycle: history
 owner: governance-team
 bet: BET-Y1Q1-T6-01
 last-reviewed: 2026-08-15
