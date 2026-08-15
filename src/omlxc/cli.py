@@ -1345,6 +1345,20 @@ def _render_status(data: JsonValue | None) -> str:
     grid.add_column()
     grid.add_column(justify="right")
     grid.add_row(f"[{style}]{sym} {state_label}[/{style}]", f"[dim]policy:[/dim] {policy}")
+    warnings = mapping.get("warnings")
+    if isinstance(warnings, list):
+        for raw in warnings:
+            item = _mapping(raw)
+            if _text(item.get("code")) != "inventory_drop":
+                continue
+            grid.add_row(
+                (
+                    f"[bold yellow]inventory_drop[/bold yellow] "
+                    f"{_text(item.get('node_id'))}/{_text(item.get('backend_id'))} "
+                    f"{item.get('baseline')}→{item.get('current')}"
+                ),
+                "",
+            )
 
     _console.print(
         Panel(
