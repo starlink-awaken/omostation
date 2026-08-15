@@ -290,7 +290,6 @@ worktree-hygiene:  ## worktree 卫生审计与自动清理 (dry-run, 需 --execu
 
 worktree-janitor:  ## worktree/废弃分支安全清理 (默认 dry-run)
 	python3 bin/gac/worktree-janitor.py
-||||||| 7b11ddb79
 	uv run python bin/gac/worktree-janitor.py
 
 # ── 能力注册表 + 文档自动生成 (P0-T2) ─────────────────────
