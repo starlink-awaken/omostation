@@ -175,6 +175,7 @@ def test_closed_error_guidance_has_exact_stable_text(
         ("E100", ErrorContext.GUIDE, ("omlxc guide --help", "omlxc --help")),
         ("E204", ErrorContext.JOB, ("omlxc jobs list",)),
         ("E400", ErrorContext.ROUTE, ("omlxc models list",)),
+        ("E404", ErrorContext.ROUTE, ("omlxc models resolve <model_id>", "omlxc models list")),
         ("E401", ErrorContext.ROUTE, ("omlxc metrics show", "omlxc nodes list")),
     ),
 )

@@ -858,6 +858,27 @@ def test_show_json_returns_only_the_selected_resource(fake_client: FakeClient) -
     assert json.loads(model.stdout)["data"]["id"] == "local/model-a"
 
 
+def test_show_model_command_matches_alias_in_list_payload(monkeypatch: pytest.MonkeyPatch) -> None:
+    class AliasModelClient(FakeClient):
+        async def models(self, *, after: str | None = None, limit: int = 100) -> DaemonEnvelope:
+            self.calls.append(("models", after, limit))
+            return _envelope(
+                {
+                    "items": [
+                        {"id": "local/model-a", "role": "chat", "aliases": ["legacy-model-a"]},
+                    ],
+                    "next_cursor": None,
+                }
+            )
+
+    monkeypatch.setattr(cli_module, "_client_factory", lambda _path: AliasModelClient())
+
+    result = runner.invoke(app, ["models", "show", "legacy-model-a", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["data"]["id"] == "local/model-a"
+
+
 def test_show_follows_stable_pagination_beyond_first_page(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

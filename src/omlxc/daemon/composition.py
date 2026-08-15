@@ -631,14 +631,22 @@ class ProductionInferenceService:
         self,
         orchestrator: DataPlaneOrchestrator,
         model_ids: tuple[str, ...],
+        model_aliases: Mapping[str, str] | None = None,
         reranker: Reranker | None,
     ) -> None:
         self._orchestrator = orchestrator
         self._model_ids = tuple(sorted(model_ids))
+        self._model_aliases = dict(model_aliases or {})
         self._reranker = reranker
 
+    def _normalized_model_id(self, model_id: str) -> str:
+        return self._model_aliases.get(model_id, model_id)
+
+    def _normalized_model_ids(self) -> tuple[str, ...]:
+        return tuple(sorted({self._normalized_model_id(model_id) for model_id in self._model_ids}))
+
     async def list_openai_models(self) -> tuple[str, ...]:
-        return self._model_ids
+        return self._normalized_model_ids()
 
     async def chat(
         self, route: RouteRequest, request: ChatRequest, *, deadline: float
@@ -683,6 +691,7 @@ class ProductionControlService:
         bus: EventBus,
         id_factory: Callable[[], str],
         now: Callable[[], datetime],
+        model_aliases: Mapping[str, str] | None = None,
         loaded_config_identity: str,
         worker_timeout: float = 120.0,
     ) -> None:
@@ -696,9 +705,13 @@ class ProductionControlService:
         self._bus = bus
         self._id_factory = id_factory
         self._now = now
+        self._model_aliases = dict(model_aliases or {})
         self._config_identity = loaded_config_identity
         self._worker_timeout = worker_timeout
         self._tasks: dict[str, asyncio.Task[None]] = {}
+
+    def _normalized_model_id(self, model_id: str) -> str:
+        return self._model_aliases.get(model_id, model_id)
 
     @property
     def task_settled(self) -> bool:
@@ -781,8 +794,9 @@ class ProductionControlService:
 
     async def resolve_model(self, alias: str) -> ModelSpec | None:
         models = await self.list_models(after=None, limit=10000)
+        normalized = self._normalized_model_id(alias)
         for m in models:
-            if m.id == alias or alias in m.aliases:
+            if m.id == normalized or alias in m.aliases:
                 return m
         return None
 
@@ -1031,7 +1045,10 @@ class ProductionControlService:
         )
 
     def _placement_for_model(self, model_id: str) -> PlacementSnapshot:
-        candidates = [item for item in self._catalog.get() if item.model_id == model_id]
+        canonical_model_id = self._normalized_model_id(model_id)
+        candidates = [
+            item for item in self._catalog.get() if item.model_id == canonical_model_id
+        ]
         if not candidates:
             raise KeyError("model has no configured placement")
         return candidates[0]
@@ -1102,6 +1119,7 @@ def build_production_daemon(
         if adapters is not None
         else build_configured_adapters(config, tailscale=configured_tailscale)
     )
+    model_aliases = _model_aliases(config)
     catalog = SnapshotCatalog(snapshots or _configured_snapshots(config), now=clock)
     planner = RoutePlanner(default_policies())
     storage = StorageHandle(config, metric_flush_interval_seconds=metric_flush_interval_seconds)
@@ -1137,6 +1155,7 @@ def build_production_daemon(
         bus=bus,
         id_factory=id_factory or (lambda: uuid4().hex),
         now=clock,
+        model_aliases=model_aliases,
         loaded_config_identity=config_identity(config),
     )
     inference = ProductionInferenceService(
@@ -1154,6 +1173,7 @@ def build_production_daemon(
             telemetry=BoundRouteTelemetry(storage, RouteTelemetryRecorder(now=clock)),
         ),
         tuple(model.id for model in config.models),
+        model_aliases=model_aliases,
         reranker,
     )
     events = ProductionEventService(storage, bus)
@@ -1228,6 +1248,15 @@ def _lm_control_authorizer(
             raise PermissionError("SSH control endpoint is not canonical")
 
     return authorize
+
+
+def _model_aliases(config: AppConfig) -> dict[str, str]:
+    aliases: dict[str, str] = {}
+    for model in config.models:
+        aliases[model.id] = model.id
+        for alias in model.aliases:
+            aliases.setdefault(alias, model.id)
+    return aliases
 
 
 def build_configured_tailscale(config: AppConfig) -> TailscaleAdapter | None:

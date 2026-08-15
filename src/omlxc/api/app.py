@@ -337,7 +337,7 @@ def create_app(
     @app.post("/api/v1/routes/plan")
     async def route_plan(request: Request, body: RoutePlanBody) -> JSONResponse:
         service = _require_control(control)
-        route = _route_request(_request_id(request), body)
+        route = await _route_request(_request_id(request), body, control=service)
         result = await service.plan_route(route)
         if isinstance(result, RouteFailure):
             return _route_failure_response(_request_id(request), result)
@@ -367,9 +367,19 @@ def create_app(
             str, Header(alias="Idempotency-Key", min_length=1, max_length=128)
         ],
     ) -> JSONResponse:
+        service = _require_control(control)
+        normalized_model_id = await _route_model_id(model_id, control=service)
+        try:
+            loaded = await service.load_model(
+                normalized_model_id, idempotency_key=idempotency_key
+            )
+        except KeyError as exc:
+            if exc.args != ("model has no configured placement",):
+                raise
+            raise ApiError(404, "E404", "model not configured")
         return _success(
             request,
-            await _require_control(control).load_model(model_id, idempotency_key=idempotency_key),
+            loaded,
             status=202,
         )
 
@@ -381,9 +391,19 @@ def create_app(
             str, Header(alias="Idempotency-Key", min_length=1, max_length=128)
         ],
     ) -> JSONResponse:
+        service = _require_control(control)
+        normalized_model_id = await _route_model_id(model_id, control=service)
+        try:
+            unloaded = await service.unload_model(
+                normalized_model_id, idempotency_key=idempotency_key
+            )
+        except KeyError as exc:
+            if exc.args != ("model has no configured placement",):
+                raise
+            raise ApiError(404, "E404", "model not configured")
         return _success(
             request,
-            await _require_control(control).unload_model(model_id, idempotency_key=idempotency_key),
+            unloaded,
             status=202,
         )
 
@@ -453,9 +473,12 @@ def create_app(
         if body.thinking or body.reasoning:
             return _openai_error(request_id, 400, "unsupported_feature")
         service = _require_inference(inference)
+        model_id = await _route_model_id(
+            body.model, control=_require_control_or_none(control)
+        )
         route = RouteRequest(
             request_id=request_id,
-            model_id=body.model,
+            model_id=model_id,
             profile=body.profile,
             required_capabilities=frozenset(
                 {
@@ -468,7 +491,7 @@ def create_app(
         )
         chat_request = ChatRequest(
             request_id=request_id,
-            model=body.model,
+            model=model_id,
             messages=tuple(message.to_domain() for message in body.messages),
             max_tokens=body.max_tokens,
             temperature=body.temperature,
@@ -495,7 +518,7 @@ def create_app(
                 {
                     "id": f"chatcmpl-{request_id}",
                     "object": "chat.completion",
-                    "model": body.model,
+                    "model": model_id,
                     "choices": [
                         {
                             "index": 0,
@@ -518,11 +541,11 @@ def create_app(
 
         async def sse() -> AsyncIterator[bytes]:
             try:
-                yield _sse_event(request_id, body.model, first)
+                yield _sse_event(request_id, model_id, first)
                 if first.kind is StreamEventKind.ERROR:
                     return
                 async for event in source:
-                    yield _sse_event(request_id, body.model, event)
+                    yield _sse_event(request_id, model_id, event)
                     if event.kind in {StreamEventKind.ERROR, StreamEventKind.DONE}:
                         return
             finally:
@@ -542,15 +565,18 @@ def create_app(
     async def embeddings(request: Request, body: OpenAIEmbeddingBody) -> JSONResponse:
         request_id = _request_id(request)
         service = _require_inference(inference)
+        model_id = await _route_model_id(
+            body.model, control=_require_control_or_none(control)
+        )
         route = RouteRequest(
             request_id=request_id,
-            model_id=body.model,
+            model_id=model_id,
             profile=body.profile,
             required_capabilities=frozenset({"embedding"}),
             context_tokens=0,
         )
         embedding_request = EmbeddingRequest(
-            request_id=request_id, model=body.model, input=body.input
+            request_id=request_id, model=model_id, input=body.input
         )
         execution = await service.embed(route, embedding_request, deadline=body.timeout_seconds)
         if execution.error is not None:
@@ -566,7 +592,7 @@ def create_app(
         return JSONResponse(
             {
                 "object": "list",
-                "model": body.model,
+                "model": model_id,
                 "data": [
                     {"object": "embedding", "embedding": list(vector), "index": index}
                     for index, vector in enumerate(execution.embeddings)
@@ -779,10 +805,29 @@ def _require_events(service: EventService | None) -> EventService:
     return service
 
 
-def _route_request(request_id: str, body: RoutePlanBody) -> RouteRequest:
+def _require_control_or_none(
+    service: ControlService | None,
+) -> ControlService | None:
+    if service is None:
+        return None
+    return service
+
+
+async def _route_model_id(model_id: str, *, control: ControlService | None) -> str:
+    if control is None:
+        return model_id
+    resolved = await control.resolve_model(model_id)
+    if resolved is None:
+        raise ApiError(404, "E404", "model not configured")
+    return resolved.id
+
+
+async def _route_request(
+    request_id: str, body: RoutePlanBody, *, control: ControlService
+) -> RouteRequest:
     return RouteRequest(
         request_id=request_id,
-        model_id=body.model_id,
+        model_id=await _route_model_id(body.model_id, control=control),
         profile=body.profile,
         required_capabilities=body.required_capabilities,
         context_tokens=body.context_tokens,
