@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **133** 个命令 (含子命令)。按场景分组如下。
+共 **134** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -162,6 +162,7 @@
 | `cockpit pending` | 查看未决待办快照预览 |
 | `cockpit pipeline` | pipeline 概览 |
 | `cockpit project` | 🔍 17 项目全景 4D 体检与诊断 |
+| `cockpit proxy-env` | 输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE) |
 | `cockpit publish` | 发布事件 |
 | `cockpit quickstart-check` | 快速检查新用户环境核验状态 |
 | `cockpit read` | 通过 BOS 网关统一读取指定 URI 资源 |

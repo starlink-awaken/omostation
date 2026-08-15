@@ -53,6 +53,7 @@ changed project、affected project、layer contract 和被认领路径绑定起�
 PR #1498 已合并独立 done 抽样审计：10 个样本中 2 个 false done，
 1 个因漂移无法验证，6 个缺 retro，只有 7/10 可按现有证据判为诚实。
 这个结果是快照审计，不应被改写成对整个台账的成熟度背书。
+集成门同时发现并修复了跨提交的 capability registry 生成文档漂移。
 
 ## SSOT 边界
 
