@@ -1,5 +1,5 @@
 title: Unified Inbox Scene Card (统一工作收件箱)
-status: active
+status: shadow
 type: scene-card
 owner: product-architecture
 last-reviewed: 2026-08-07
@@ -14,7 +14,7 @@ lifecycle: shadow
 activation: preview
 approval_state: pending_business_confirmation
 scene_id: unified-inbox
-journey_id: inbox-to-triage
+journey_id: inbox-to-decision
 goal: 将多渠道 (邮件/IM/OA) 的工作信息汇聚为统一、可分诊、可追踪的待办流
 trigger: '新邮件/消息/OA待办到达 (来源: 卫健委邮箱, 网易邮箱大师, 致远OA, 钉钉/飞书)'
 input_contract: 多渠道消息引用 (evidence:// 或 vault://redacted/), 不含原文

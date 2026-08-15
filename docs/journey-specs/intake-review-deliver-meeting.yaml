@@ -1,4 +1,6 @@
 schema: journey-spec/v1
+status: stub
+superseded_by_family: handwritten inbox/meeting/oversight journeys
 journey_id: intake-review-deliver-meeting
 description: "会议 → 评审 → 决策 → 交付 → 沉淀 (模板实例化)"
 template: intake-review-deliver

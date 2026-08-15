@@ -1,10 +1,12 @@
 ---
-status: active
+status: stale
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
-review-state: metadata-only
+last-reviewed: 2026-08-15
+review-state: stale-internal-contradiction
 metadata-migrated-at: 2026-07-31
+implemented-variant: SYSTEM-INDEX.md pointer file
+stale-reason: header claims 1 pointer file implemented; body still specifies a multi-file generator
 ---
 # 系统索引体系设计方案 — 全景调研 + 架构设计
 

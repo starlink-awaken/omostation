@@ -4,10 +4,10 @@ status: active
 type: strategy-index
 owner: 夏明星
 created: 2026-07-15
-updated: 2026-08-02
+updated: 2026-08-15
 lifecycle: contract
-last-reviewed: 2026-08-02
-review-state: scenario-and-mesh-converged
+last-reviewed: 2026-08-15
+review-state: plan-mainline-adr-0410
 note: >
   从愿景、战略、ADR、执行任务到运行证据的一页导航。动态事实必须读取对应 SSOT，
   本页不维护当前 Phase、健康分、项目数、服务数或任务数。
@@ -17,22 +17,28 @@ note: >
 
 ## 战略判断
 
-eCOS 已从基础设施建设期进入“平台产品化过渡、场景验证开始、状态真相仍需归一”的阶段。
-后续不再以新增 Phase、子项目或治理规则数量衡量进度，而以四条黄金旅程衡量：
+织星是夏明星一个人的业务操作系统。它的唯一职责是：把外部进来的信号，变成他愿意署名发出去的东西，并且记住他每次改了什么。
+若到 2027-12-31 未能连续 12 周每周产出 ≥3 条被本人采纳的建议，则本定位被证伪。
+
+四条黄金旅程是上述北极星的产品投影（不是并列愿景）：
 
 1. 工程交付闭环。
 2. 知识到行动闭环。
 3. 受控多 Agent 协作闭环。
 4. 外部知识与能力触达闭环。
 
-北极星是每周成功完成并被实际消费的闭环旅程数。
+主线是 [`STRATEGY-3YEAR-PLAN-2026H2-2029.md`](STRATEGY-3YEAR-PLAN-2026H2-2029.md)（ADR-0410）。
+[`STRATEGY-3YEAR-PANORAMA.md`](STRATEGY-3YEAR-PANORAMA.md) 已 superseded，五平面结构仅作投影阅读。
 
 ## 核心文档
 
 | 角色 | 文档 | 状态 |
 |---|---|---|
-| 终极愿景 | [`VISION-ROADMAP.md`](VISION-ROADMAP.md) | active |
-| 长期战略、场景组合与目标架构 | [`STRATEGY-3YEAR-PANORAMA.md`](STRATEGY-3YEAR-PANORAMA.md) | active v2.0，主方案 |
+| 终极愿景 | [`VISION-ROADMAP.md`](VISION-ROADMAP.md) | active（历史蜂群叙事见折叠区） |
+| 三年主线 | [`STRATEGY-3YEAR-PLAN-2026H2-2029.md`](STRATEGY-3YEAR-PLAN-2026H2-2029.md) | active，ADR-0410 主方案 |
+| 产品结构投影 | [`STRATEGY-3YEAR-PANORAMA.md`](STRATEGY-3YEAR-PANORAMA.md) | superseded |
+| 收敛总纲 | [`STRATEGY-CONVERGENCE-MASTER-2026-08.md`](STRATEGY-CONVERGENCE-MASTER-2026-08.md) | active |
+| 收敛落地包 | [`STRATEGY-CONVERGENCE-LANDING-PACKAGE-2026-08.md`](STRATEGY-CONVERGENCE-LANDING-PACKAGE-2026-08.md) | active |
 | Workflow Mesh 实施与运行合同 | [`WORKFLOW-MESH-IMPLEMENTATION.md`](WORKFLOW-MESH-IMPLEMENTATION.md) | active |
 | 外部连接机器 SSOT | [`../.omo/_truth/registry/external-connection-fabric.yaml`](../.omo/_truth/registry/external-connection-fabric.yaml) | ssot |
 | 外部连接操作标准 | [`../.omo/standards/external-connection-fabric.md`](../.omo/standards/external-connection-fabric.md) | contract |

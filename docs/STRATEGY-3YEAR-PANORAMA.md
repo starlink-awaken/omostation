@@ -1,15 +1,20 @@
 ---
 title: eCOS v6 愿景驱动的长期架构与战略执行方案
-status: active
+status: superseded
 type: strategy
 owner: 夏明星
 created: 2026-07-15
-updated: 2026-08-03
+updated: 2026-08-15
 horizon: 2026H2-2029
 version: v2.3
-lifecycle: contract
-last-reviewed: 2026-08-03
-review-state: scenario-and-mesh-converged
+lifecycle: archived
+last-reviewed: 2026-08-15
+review-state: superseded-by-plan
+superseded-by: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+superseded-by-adr: ADR-0410
+note: >
+  正文（五平面、四条黄金旅程）保留为 Plan 的产品投影，不再自称主方案。
+  「已完成从工具集合到 OS 骨架的跨越」不再作为当前成熟度声明。
 related:
   - docs/VISION-ROADMAP.md
   - docs/PROJECT-COMPLETE-GUIDE.md

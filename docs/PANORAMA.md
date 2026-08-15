@@ -1,10 +1,11 @@
 ---
-status: active
+status: stale
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
-review-state: metadata-only
+last-reviewed: 2026-08-15
+review-state: stale-needs-content-review
 metadata-migrated-at: 2026-07-31
+stale-reason: body frozen 2026-06-30; metadata-only review 2026-07-31; not a strategy mainline
 ---
 # PANORAMA.md — eCOS 系统全景架构
 

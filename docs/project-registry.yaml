@@ -49,7 +49,7 @@ projects:
     build_backend: "hatchling"
     version: "3.0.0"
     role: "MCP Hub · BOS URI 路由"
-    bos_services: 200  # live yaml total (active 188/unimplemented 11/deprecated 1)
+    bos_services: 223  # live yaml 2026-08-15 (active 191/unimplemented 29/deprecated 1/other 2)
     src_dir: "src/agora/"
 
   kairon:
@@ -339,7 +339,7 @@ projects:
 
 # ── Cross-project facts ──
 bos:
-  service_count: 196  # live bos-services.yaml; active=184 routable=184
+  service_count: 223  # live bos-services.yaml 2026-08-15; same count as agora.bos_services
   domains:
     primary: ["memory", "governance", "analysis", "persona", "capability"]
     extended: ["meta", "omo", "swarm", "system", "toolbox"]
