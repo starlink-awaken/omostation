@@ -169,6 +169,120 @@ def cmd_window_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_status(args: argparse.Namespace) -> int:
+    """BET-Y1Q1-T1-05A: 共享协调层只读快照 (claims/health/messages)."""
+    import coordination_store as cs
+
+    snap = cs.snapshot()
+    if args.json:
+        print(json.dumps(snap, indent=2, ensure_ascii=False))
+        return 0
+    # 人类可读三段式
+    print(f" Coordination Layer ({snap['db_path']})")
+    print(f" schema v{snap['schema_version']}")
+    print(f"\n── Claims ({len(snap['claims'])}) ──────────────────────")
+    for c in snap["claims"]:
+        print(
+            f"  {c['state']:<8} {c['resource_type']}/{c['resource_id']} "
+            f"owner={c['owner']} token={c['token']} claimed={c['claimed_at']}"
+        )
+    print(f"\n── Agent Health ({len(snap['agent_health'])}) ───────────")
+    for h in snap["agent_health"]:
+        stale_mark = " [STALE]" if any(
+            s["agent_id"] == h["agent_id"] for s in snap["stale_agents"]
+        ) else ""
+        attestation = h.get("runtime_attestation") or {}
+        runtime = (
+            f"rev={str(attestation.get('workspace_revision', ''))[:12]} "
+            f"code={str(attestation.get('code_sha256', ''))[:12]}"
+            if attestation else "runtime=unattested"
+        )
+        print(
+            f"  {h['agent_id']:<24} {h['status']:<5} src={h['source']} "
+            f"last_seen={h['last_seen']} {runtime}{stale_mark}"
+        )
+    print(f"\n── Messages ({len(snap['messages'])}) ──────────────────")
+    for m in snap["messages"]:
+        print(f"  #{m['id']} {m['ts']} {m['from_agent']} → {m['to_agent']} ({m['msg_type']})")
+    print(f"\n── Shadow Events ─────────────────────────────────────")
+    if snap["shadow_events"]:
+        for kind, n in sorted(snap["shadow_events"].items()):
+            print(f"  {kind}: {n}")
+    else:
+        print("  (无)")
+    return 0
+
+
+def cmd_token_check(args: argparse.Namespace) -> int:
+    """BET-Y1Q1-T1-05A: fencing token 校验.
+
+    shadow 阶段: 判定 reject 时落 shadow_events (token_stale_rejected)
+    但不阻断 submit (exit 0). DB 打不开 → exit 2 fail-closed.
+    """
+    import sqlite3
+
+    import coordination_store as cs
+
+    if args.missing_token:
+        recorded = cs.emit_shadow_event(
+            "token_missing_legacy",
+            args.resource_type,
+            args.resource_id,
+            {"owner": args.owner, "local_token": args.token},
+        )
+        payload = {
+            "ok": False,
+            "reason": "missing local fencing token",
+            "current_token": None,
+            "local_token": args.token,
+            "mode": "shadow",
+            "legacy": True,
+            "event_recorded": recorded,
+        }
+        if not recorded:
+            payload["fail_closed"] = True
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
+            return 2
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
+
+    try:
+        verdict = cs.check_fencing(
+            args.resource_type, args.resource_id, args.owner, args.token
+        )
+    except (cs.CoordinationStoreError, sqlite3.Error) as exc:
+        # fail-closed: DB 打不开/版本超前 → exit 2, submit 挂点据此停
+        print(
+            json.dumps({"ok": False, "fail_closed": True, "reason": str(exc)}),
+        )
+        return 2
+    payload = {
+        "ok": verdict.ok,
+        "reason": verdict.reason,
+        "current_token": verdict.current_token,
+        "local_token": verdict.local_token,
+        "mode": "shadow",
+    }
+    if not verdict.ok:
+        # shadow: 只记录, 不阻断 (warning 阶段改 exit 1)
+        recorded = cs.emit_shadow_event(
+            "token_stale_rejected",
+            args.resource_type, args.resource_id,
+            {
+                "owner": args.owner,
+                "local_token": args.token,
+                "current_token": verdict.current_token,
+            },
+        )
+        payload["event_recorded"] = recorded
+        if not recorded:
+            payload["fail_closed"] = True
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
+            return 2
+    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    return 0
+
+
 def cmd_inventory(_args: argparse.Namespace) -> int:
     root = root_from_cwd()
     reg = sd.load_registry(root)
@@ -241,6 +355,28 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--staged", action="store_true")
     s.add_argument("--paths", nargs="*", default=[])
     s.set_defaults(func=cmd_claim_check)
+
+    s = sub.add_parser(
+        "status",
+        help="BET-Y1Q1-T1-05A: 共享协调层只读快照 (claims/health/messages)",
+    )
+    s.add_argument("--json", action="store_true", help="机器可读 JSON 输出")
+    s.set_defaults(func=cmd_status)
+
+    s = sub.add_parser(
+        "token-check",
+        help="BET-Y1Q1-T1-05A: fencing token 校验 (shadow: 只判定不阻断)",
+    )
+    s.add_argument("--resource-type", required=True)
+    s.add_argument("--resource-id", required=True)
+    s.add_argument("--owner", required=True)
+    s.add_argument("--token", type=int, required=True)
+    s.add_argument(
+        "--missing-token",
+        action="store_true",
+        help="legacy claim/mirror failure: record auditable shadow verdict",
+    )
+    s.set_defaults(func=cmd_token_check)
 
     s = sub.add_parser("escape-check")
     s.add_argument(

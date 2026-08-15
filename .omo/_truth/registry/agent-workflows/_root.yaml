@@ -699,6 +699,12 @@ diff_checks:
   command:
   - uv
   - run
+  - --with
+  - pyyaml
+  - --with
+  - pytest
+  - python
+  - -m
   - pytest
   - tests/test_agent_workflow.py
   - -q
@@ -947,6 +953,7 @@ diff_checks:
   allowed_lanes:
   - code
   - docs
+  - docs_data
   - governance_code
   - governance_state
   - config

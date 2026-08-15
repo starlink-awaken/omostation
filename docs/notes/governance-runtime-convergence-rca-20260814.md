@@ -1,8 +1,9 @@
 ---
-status: active
+title: "RCA：Governance Runtime Convergence（2026-08-14）"
+status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-14
+last-reviewed: 2026-08-15
 ---
 
 # 复盘（RCA）：Governance Runtime Convergence（2026-08-14）
@@ -47,5 +48,5 @@ last-reviewed: 2026-08-14
 - 下一轮任务前先在同一主入口执行 “收口状态确认” 再开始新改动。
 
 ## 7. 证据文件
-- 合并后 closeout 记录：[docs/notes/governance-runtime-convergence-closeout-20260814.md](/Users/xiamingxing/Workspace/docs/notes/governance-runtime-convergence-closeout-20260814.md)
-- 本次 RCA：[docs/notes/governance-runtime-convergence-rca-20260814.md](/Users/xiamingxing/Workspace/docs/notes/governance-runtime-convergence-rca-20260814.md)
+- 合并后 closeout 记录：[governance-runtime-convergence-closeout-20260814](./governance-runtime-convergence-closeout-20260814.md)
+- 本次 RCA：[governance-runtime-convergence-rca-20260814](./governance-runtime-convergence-rca-20260814.md)

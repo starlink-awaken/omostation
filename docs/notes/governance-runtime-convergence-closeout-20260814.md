@@ -1,8 +1,9 @@
 ---
-status: active
+title: "governance-runtime-convergence 交付闭环说明"
+status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-14
+last-reviewed: 2026-08-15
 ---
 
 # 交付闭环说明：governance-runtime-convergence
