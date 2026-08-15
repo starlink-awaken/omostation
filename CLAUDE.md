@@ -59,6 +59,15 @@ make agent-workflow-status
 
 Read the SSOT files reported by `bootstrap` for task-specific runtime facts — **do not copy their values into this document** (they drift quickly). If MCP context is available, prefer the cockpit `workspace_context` tool.
 
+### Step B.0 · 全局状态快速感知 (Multi-Agent Swarm Status)
+
+在开工或排查前，先运行状态快照：
+
+```bash
+make omo-status        # 或 bin/omo-status：<0.2s 秒级 Rich 快照 (Agent心跳/锁/子仓/BET)
+make omo-top           # 或 bin/omo-top：Textual 实时 4 象限互动大盘
+```
+
 ### Step B.1 · RED LINE — 需求迭代强制 Workflow（ADR-0203）
 
 **所有需求迭代（功能/缺陷/运维落地、治理/SSOT/ADR、交付 closeout）必须先 `start` 再改文件。**  

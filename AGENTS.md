@@ -15,6 +15,7 @@ Before editing:
 5. For governed state, use OMO/C2G brokers instead of direct `.omo` writes.
 6. For multi-file or high-risk changes, explain the edit surface before applying patches.
 7. **B.D.S.K. Virtual Board & Compute Deliberation** — For high-risk architectural changes, trade-offs, or local LLM/edge compute integration, refer to [`.agents/skills/bdsk-virtual-board/SKILL.md`](.agents/skills/bdsk-virtual-board/SKILL.md) to invoke the 4-Corner (`@Builder`/`@Devil`/`@Sage`/`@Keeper`) consensus engine (Mode-A/B). All local/edge LLM inference MUST route through **AetherForge + omlxc (`bos://compute/aetherforge/infer`)**.
+8. **Multi-Agent Observability** — Run `bin/omo-status` (or `make omo-status`) for a <0.2s Rich Panel status snapshot (Agent heartbeats, locks, submodules, BETs), and `bin/omo-top` (or `make omo-top`) for the real-time Textual 1.x control plane.
 
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
 

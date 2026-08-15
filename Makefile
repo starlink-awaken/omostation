@@ -1,9 +1,13 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene worktree-janitor delegation-preflight delegation-alias-check bin-tool-registry-audit bin-tool-registry-audit-strict bin-tool-registry-audit-emit bin-tool-registry-convergence capability-sync capability-check
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene worktree-janitor delegation-preflight delegation-alias-check bin-tool-registry-audit bin-tool-registry-audit-strict bin-tool-registry-audit-emit bin-tool-registry-convergence capability-sync capability-check omo-status omo-top
 
 PY := uv run --with pyyaml python
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
+	@echo ""
+	@echo "=== 全局状态与大盘 ==="
+	@echo "make omo-status        Multi-Agent Swarm 全景秒级 Rich Panel 诊断快照"
+	@echo "make omo-top           Multi-Agent Swarm 4 象限实时互动大盘 (Textual 1.x)"
 	@echo ""
 	@echo "=== 测试 ==="
 	@echo "make kairon-test       运行 kairon 全部测试"
@@ -571,7 +575,13 @@ doc-ssot-lint:  ## 文档 SSOT 契约检查 (--json)
 ssot-guardian:  ## SSOT guardian (.omo 写入合规)
 	$(PY) bin/ssot/ssot-guardian.py
 
-# ── Agent Workflow status ─────────────────────────────────
+# ── Agent Workflow & Swarm Observability ──────────────────
+omo-status:  ## Multi-Agent Swarm 全景秒级 Rich Panel 诊断快照
+	@bash bin/omo-status
+
+omo-top:  ## Multi-Agent Swarm 4 象限实时互动大盘 (Textual 1.x)
+	@bash bin/omo-top
+
 agent-workflow-status:
 	$(PY) bin/agent-workflow.py status --json
 
