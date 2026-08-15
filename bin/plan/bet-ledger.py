@@ -494,6 +494,53 @@ def cmd_retro_due(data: dict, args) -> int:
     return 1
 
 
+def measure_numstat_net(since: str = "2026-08-01") -> dict:
+    """T1-03: numstat 净值口径 — 剥离重写对称噪音.
+
+    surface 审计 (2026-08-15) 发现: gbrain 重写产生 +468K/-468K (净 0) 被总量
+    口径计为 +468K 增长。本函数用 git log --numstat 按项目分桶统计:
+      churn_add/churn_del = 逐文件增删总和 (含重写对称噪音)
+      net = add - del (真实净值)
+      symmetric = min(add, del) 按文件聚合后求和 (重写噪音量)
+    """
+    def _parse_numstat(out: str, proj: str, per_project: dict) -> None:
+        for line in out.splitlines():
+            if "\t" not in line:
+                continue  # commit/author/merge 行
+            parts = line.split("\t")
+            if len(parts) < 3:
+                continue
+            try:
+                a = int(parts[0]) if parts[0] != "-" else 0
+                d = int(parts[1]) if parts[1] != "-" else 0
+            except ValueError:
+                continue
+            b = per_project.setdefault(proj, {"add": 0, "del": 0, "sym": 0})
+            b["add"] += a
+            b["del"] += d
+            b["sym"] += min(a, d)
+
+    per_project: dict[str, dict[str, int]] = {}
+    # 主仓 projects/ 路径
+    r = subprocess.run(
+        ["git", "log", "--numstat", "--no-renames", f"--since={since}",
+         "--format=", "--", "projects/"],
+        cwd=WS, capture_output=True, text=True,
+    )
+    _parse_numstat(r.stdout, "_root", per_project)
+    # 子模块: 各自 git 历史 (gbrain +468K 重写噪音就藏在子模块历史里)
+    for sub in (WS / "projects").iterdir():
+        if not (sub / ".git").exists():
+            continue
+        rs = subprocess.run(
+            ["git", "log", "--numstat", "--no-renames", f"--since={since}",
+             "--format=", "--", "src/"],
+            cwd=sub, capture_output=True, text=True,
+        )
+        _parse_numstat(rs.stdout, sub.name, per_project)
+    return per_project
+
+
 def cmd_surface(data: dict, args) -> int:
     cur = measure_surface()
     print("=== 表面积实测（git tracked 口径，含子模块）===")
@@ -523,6 +570,24 @@ def cmd_surface(data: dict, args) -> int:
 
     dq = cur.get("gac_required", 0) - BASELINE["gac_required"]
     print(f"   gac_required 变化 {dq:+,}  ← 会拦人的规则才是真成本；advisory 删了没收益")
+
+    # T1-03: numstat 净值口径 — 三口径对照 (总量口径会高估重写型变更)
+    try:
+        per_proj = measure_numstat_net()
+        if per_proj:
+            print("\n=== numstat 净值口径 (T1-03, since 2026-08-01, 只看 projects/) ===")
+            print(f"{'项目':<16}{'churn_add':>12}{'churn_del':>12}{'净值':>12}{'重写噪音':>12}")
+            print("-" * 64)
+            tot_a = tot_d = tot_s = 0
+            for proj, b in sorted(per_proj.items(), key=lambda kv: -(kv[1]["add"] + kv[1]["del"]))[:10]:
+                net = b["add"] - b["del"]
+                print(f"{proj:<16}{b['add']:>12,}{b['del']:>12,}{net:>+12,}{b['sym']:>12,}")
+                tot_a += b["add"]; tot_d += b["del"]; tot_s += b["sym"]
+            print("-" * 64)
+            print(f"{'合计':<16}{tot_a:>12,}{tot_d:>12,}{tot_a - tot_d:>+12,}{tot_s:>12,}")
+            print("   净值 = add - del; 重写噪音 = 逐文件 min(add,del) 聚合 (对称改写, 净贡献≈0)")
+    except Exception as exc:
+        print(f"\n[numstat] 统计跳过: {exc}")
 
     print("\nD2 记账：把上面这几行贴进复盘 Q4。")
     return rc
