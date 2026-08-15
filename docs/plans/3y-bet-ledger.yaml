@@ -3265,7 +3265,12 @@ bets:
   title: /outcomes 结果与校准面板
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-15
+  done_evidence: '三 commit 交付 (cockpit-ui 9ad22125→0d19a872: 三视图+D1未接入语义+Dashboard
+    路由接线, 含 OutcomesView/JourneysTimelineView/Dashboard.outcomes-routes 三测试), npm run
+    build exit 0 (2026-08-15 复核 238ms), 指针已 bump; 前会话 retro Q2 逐条证据 + 本轮
+    独立复核 — 见 retro 独立核实记录节'
   goal: 让"系统学得怎么样"可被一眼看见
   non_goals:
   - 复杂图表
