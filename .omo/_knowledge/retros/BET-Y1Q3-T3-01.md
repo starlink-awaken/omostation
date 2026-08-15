@@ -33,3 +33,16 @@ last-reviewed: 2026-08-14
 1. 是否批准本条改为“服务偏差优先”处理：先修复 KOS/AGORA 健康后再回归一致性门槛？  
 2. 是否同意将当前观察频率提升为每周 2 次（周一/周三）并保留 10 条 query 的扩容清单？  
 3. 是否同意先不改脚本 parser（暂存为人工复核期），仅用 intervention 记录与告警联动推进同步修复？  
+
+---
+
+## 状态纠正记录（2026-08-15，台账信任修复轮）
+
+**status: done → in_progress，done_at 已清除。** 纠正依据（全部可复核）：
+
+1. done_when 第 1 条（一致性 ≥ 99% 连续 8 周）**未满足**：实测 W32 = 1.0（2026-08-09）、W33 = 0.875（2026-08-14，`.omo/_knowledge/audits/mos-dual-stack-consistency/2026-W33.json`），窗口仅运行 1 周；本 retro Q3 复核后一致性跌至 0.5。
+2. done 系 commit `d8486d28d`（#1494 "governance convergence closeout notes and ledger completion"）批量收尾时误标——与本 retro Q2（2⏳ 1✅）直接矛盾，属 AGENT-BRIEF §1.3「声明 ≠ 事实」真实案例。
+3. **时钟不重置**：8 周观察窗口锚点保留 W32 首次观察（2026-08-09），W32/W33 结果为真实历史，窗口至 ~2026-10-03；本条在此期间保持 in_progress，期间任何 agent 不得再标 done。
+4. Q5 三个待人类拍板项维持悬置，未因纠正而消失。
+
+处置权限：人类 2026-08-15 指令明确授权状态纠正（"把 status 从 done 改回 in_progress"）。
