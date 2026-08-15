@@ -1,13 +1,12 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-08-07
+last-reviewed: 2026-08-15
 ---
-lifecycle: ssot
-owner: governance-team
-last-reviewed: 2026-08-07
 current_wave: W5
-entry_gate: phase41_completed
+entry_gate: deprecated-use-bet-ledger
+phase: 49
+phase_note: Integer is a projection of .omo/state/system.yaml current_phase, not a strategy epoch. Progress is BET-Y1QxTx via bin/plan/bet-ledger.py status.
 goals:
 - desc: Wave 1 — Agora MCP 隔离
   id: G27.1
@@ -407,7 +406,7 @@ objectives:
   progress: 0.0
   kpi: 跨节点状态同步机制 + 基础故障转移 (需物理主机)
   tasks: []
-phase: 49
+# phase integer removed (was 49). Read 3y-bet-ledger, not this field.
 source_plan_refs:
 - .omo/plans/phase27-swarm-network.md
 - .omo/_knowledge/management/5+3+1-full-audit-2026-06-06.md
