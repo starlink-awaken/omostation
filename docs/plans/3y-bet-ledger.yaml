@@ -1332,7 +1332,8 @@ bets:
   title: 战略-治理-场景声明收敛（总纲 §9 文档处置）
   appetite: 3 days
   priority: P0
-  status: in_progress
+  status: done
+  done_at: '2026-08-15'
   goal: 消除并行主线/场景 ID 碰撞/顶层 status 撒谎，不新增第四套追踪体系
   non_goals:
   - 改运行时代码
@@ -1368,24 +1369,45 @@ bets:
 - id: BET-Y1Q1-T6-02
   track: T6-SUBTRACT
   window: Y1Q1
-  title: Wave/Gate 与 BET 台账差异对齐（只登记）
+  title: Wave/Gate ↔ BET 映射 + 愿景到复盘硬门
   appetite: 1 week
   priority: P1
-  status: candidate
-  goal: 产出 Wave/Gate/Episode 与 BET-Y1QxTx 的映射表和差异清单，不新造第四套 ID
+  status: in_progress
+  goal: 产出 Wave/Gate 与 BET 对照表，并把 Plan→BET→workflow→closeout→retro 做成可 halt 的同一条谓词
   non_goals:
-  - 本 bet 未启动前把映射表写成已完成
-  - 用文档存在代替对齐完成
+  - 新造第四套 ID 或 compass/chain-card 面板
+  - 新增 GaC required 规则
+  - D3/D5 场景系统重写
+  - gbrain+kairon 归并
+  - 把映射表存在当成链门已生效
   done_when:
-  - 一份可复现的映射表覆盖 W0-W6 与现行 BET 轨道
+  - 一份可复现的映射表覆盖 W0-W6 与现行 BET 轨道 T1–T8 / T6-SUBTRACT
   - 差异清单列出无法一对一的项与处理建议
+  - requirement-iteration start 无 --bet 被拒绝，--bet 把 bet_id 写入 run record
+  - ok closeout 与 bet-ledger complete 在缺 binding / 北极星 / retro 时 halt
+  - bootstrap/status 打印北极星与 bet/retro 感知字段
+  - redlines.yaml 有一条 executor 为 chain-bind-check 的红线
   verify:
   - cmd: test -f docs/architecture/wave-gate-bet-map.md
     expect: exit 0
+  - cmd: python3 bin/plan/chain-bind-check.py self-check
+    expect: exit 0
+  - cmd: rg -n "W0|W1|W2|W3|W4|W5|W6|T1-TRUTH|T6-SUBTRACT|T8-SURFACE" docs/architecture/wave-gate-bet-map.md
+    expect: exit 0
   workflow: bet-execution
-  underlying_workflow: project-doc-change
+  underlying_workflow: governance-state-mutation
   write_surfaces:
   - docs/architecture/**
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/plans/AGENT-BRIEF.md
+  - bin/plan/**
+  - bin/agent-workflow.py
+  - tests/test_chain_bind.py
+  - .omo/_truth/registry/redlines.yaml
+  - .omo/_knowledge/retros/**
+  - .agents/skills/bet-execution/**
+  - .agents/skills/project-governance/**
+  - AGENTS.md
   pasw_required: false
   depends_on:
   - BET-Y1Q1-T6-01
