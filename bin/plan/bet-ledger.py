@@ -525,7 +525,7 @@ def measure_numstat_net(since: str = "2026-08-01") -> dict:
     r = subprocess.run(
         ["git", "log", "--numstat", "--no-renames", f"--since={since}",
          "--format=", "--", "projects/"],
-        cwd=WS, capture_output=True, text=True,
+        cwd=WS, capture_output=True, text=True, check=False,
     )
     _parse_numstat(r.stdout, "_root", per_project)
     # 子模块: 各自 git 历史 (gbrain +468K 重写噪音就藏在子模块历史里)
@@ -535,7 +535,7 @@ def measure_numstat_net(since: str = "2026-08-01") -> dict:
         rs = subprocess.run(
             ["git", "log", "--numstat", "--no-renames", f"--since={since}",
              "--format=", "--", "src/"],
-            cwd=sub, capture_output=True, text=True,
+            cwd=sub, capture_output=True, text=True, check=False,
         )
         _parse_numstat(rs.stdout, sub.name, per_project)
     return per_project
@@ -586,7 +586,7 @@ def cmd_surface(data: dict, args) -> int:
             print("-" * 64)
             print(f"{'合计':<16}{tot_a:>12,}{tot_d:>12,}{tot_a - tot_d:>+12,}{tot_s:>12,}")
             print("   净值 = add - del; 重写噪音 = 逐文件 min(add,del) 聚合 (对称改写, 净贡献≈0)")
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — 净值段是观察增量, 不能挡 surface 主流程
         print(f"\n[numstat] 统计跳过: {exc}")
 
     print("\nD2 记账：把上面这几行贴进复盘 Q4。")
