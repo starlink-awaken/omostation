@@ -4518,12 +4518,11 @@ bets:
 - id: BET-Y1Q2-T1-20
   track: T1-TRUTH
   window: Y1Q2
-  title: omlxc 子模块指针自动化 PR 试点
+  title: 子模块指针自动化 PR 试点与全仓推广
   appetite: 4 days
   priority: P2
-  status: blocked
-  blocked_reason: '战略规划裁定 (2026-08-15): bump-fast 已实质覆盖, Y1 末评审是否关闭'
-  goal: 在 omlxc 一个子模块上试点"发布触发→CI 自动开指针更新 PR→人工点击合并"的自动化链路，为后续铺开到其他子模块提供依据
+  status: done
+  goal: 在 omlxc 试点并向全仓推广"发布触发/手动触发→CI 自动开指针更新 PR→人工点击合并"的标准化 Reusable Workflow 链路，彻底消除 90s 全量检出成本
   non_goals:
   - 自动合并 PR（必须保留人工点击合并这道闸，不做无人值守合并）
   - 铺开到 omlxc 之外的其他子模块（本轮只做 1 个试点）
