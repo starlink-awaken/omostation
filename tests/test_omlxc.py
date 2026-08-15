@@ -36,6 +36,51 @@ def test_model_memory_admission_values_cover_measured_large_models():
     assert models["mistral-medium-128b"]["size_gb"] >= 74
 
 
+def test_catalog_ids_match_live_deepseek_v4_weights_not_renamed_qwen_keys(tmp_path):
+    """#26 renamed these IDs to qwen-3.5-9b-*; the App library and weights are DeepSeek-V4."""
+    conf = _load_models_config()
+    models = conf["models"]
+    discarded = {"qwen-3.5-9b-flash", "qwen-3.5-9b-pro"}
+    canonical = {
+        "deepseek-v4-flash": "coding/deepseek-v4-flash",
+        "deepseek-v4-pro": "coding/deepseek-v4-pro",
+    }
+
+    assert discarded.isdisjoint(models)
+    assert discarded.isdisjoint(conf["fallback"])
+    assert discarded.isdisjoint(conf["fallback_ollama"])
+    for preset in conf["presets"].values():
+        assert discarded.isdisjoint(preset)
+    for key, alias in canonical.items():
+        assert models[key]["alias"] == alias
+        assert float(models[key]["size_gb"]) > 0
+
+    cli = _load_cli()
+    active = tmp_path / "models-active"
+    for alias in canonical.values():
+        link = active.joinpath(*alias.split("/"))
+        target = tmp_path / "weights" / alias.replace("/", "-")
+        target.mkdir(parents=True)
+        link.parent.mkdir(parents=True, exist_ok=True)
+        link.symlink_to(target)
+    wanted = cli._app_model_paths({**conf, "active_root": str(active)})
+    assert discarded.isdisjoint(wanted)
+    for key in canonical:
+        assert key in wanted
+        assert Path(wanted[key]).is_dir()
+    leftover = cli._app_model_paths(
+        {
+            "active_root": str(active),
+            "models": {
+                "qwen-3.5-9b-flash": {"alias": "coding/qwen-3.5-9b-flash"},
+                "deepseek-v4-flash": {"alias": "coding/deepseek-v4-flash"},
+            },
+        }
+    )
+    assert "qwen-3.5-9b-flash" not in leftover
+    assert "deepseek-v4-flash" in leftover
+
+
 def test_remote_lmstudio_policy_avoids_day_long_residency_and_gpu_oom():
     remotes = _load_models_config()["autopilot"]["remote_resident"]
     by_host = {entry["host"]: entry for entry in remotes if entry["engine"] == "lmstudio"}
