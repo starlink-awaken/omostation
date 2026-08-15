@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import base64
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 
@@ -79,6 +81,125 @@ def _write_git_wrapper(tmp_path: Path) -> Path:
     )
     (wrapper_dir / "git").chmod(0o755)
     return wrapper_dir
+
+
+def _make_bump_fast_repo(
+    tmp_path: Path,
+) -> tuple[Path, Path, str, str]:
+    parent = tmp_path / "bump-parent"
+    child = tmp_path / "bump-child"
+    parent.mkdir()
+    child.mkdir()
+    _init_repo(parent)
+    _init_repo(child)
+    old_sha = _git(child, "rev-parse", "HEAD").stdout.strip()
+
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(parent),
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "add",
+            "-q",
+            str(child),
+            "modules/alpha",
+        ],
+        check=True,
+    )
+    _git(
+        parent,
+        "config",
+        "--file",
+        ".gitmodules",
+        "submodule.modules/alpha.url",
+        "https://github.com/example/alpha.git",
+    )
+    registry = parent / "docs" / "project-registry.yaml"
+    registry.parent.mkdir()
+    registry.write_text(
+        'projects:\n  alpha:\n    layer: "L2"\n    version: "1.0.0"\n',
+        encoding="utf-8",
+    )
+    _git(parent, "add", ".gitmodules", "modules/alpha", "docs/project-registry.yaml")
+    _git(parent, "commit", "-q", "-m", "pin alpha")
+
+    (child / "tracked.txt").write_text("remote main\n", encoding="utf-8")
+    _git(child, "add", "tracked.txt")
+    _git(child, "commit", "-q", "-m", "advance main")
+    new_sha = _git(child, "rev-parse", "HEAD").stdout.strip()
+    return parent, child, old_sha, new_sha
+
+
+def _write_bump_fast_wrappers(tmp_path: Path) -> Path:
+    real_git = shutil.which("git")
+    assert real_git
+    wrapper_dir = tmp_path / "bump-wrappers"
+    wrapper_dir.mkdir()
+    (wrapper_dir / "git").write_text(
+        "#!/bin/sh\n"
+        'if [ "$1" = "ls-remote" ]; then\n'
+        '  [ "${BUMP_FAIL_LS_REMOTE:-0}" = "1" ] && exit 71\n'
+        '  printf "%s\\trefs/heads/main\\n" "${BUMP_REMOTE_TIP:?}"\n'
+        "  exit 0\n"
+        "fi\n"
+        'if [ "$1" = "update-index" ] && [ "${BUMP_FAIL_UPDATE:-0}" = "1" ]; then\n'
+        "  exit 72\n"
+        "fi\n"
+        f'exec "{real_git}" "$@"\n',
+        encoding="utf-8",
+    )
+    (wrapper_dir / "git").chmod(0o755)
+    (wrapper_dir / "gh").write_text(
+        "#!/bin/sh\n"
+        '[ "${BUMP_FAIL_GH:-0}" = "1" ] && exit 73\n'
+        'case "$*" in\n'
+        '  *pyproject.toml*) printf "%s\\n" "${BUMP_PYPROJECT_B64:?}" ;;\n'
+        "  *) exit 74 ;;\n"
+        "esac\n",
+        encoding="utf-8",
+    )
+    (wrapper_dir / "gh").chmod(0o755)
+    return wrapper_dir
+
+
+def _run_bump_fast(
+    parent: Path,
+    tmp_path: Path,
+    new_sha: str,
+    *args: str,
+    extra_env: dict[str, str] | None = None,
+) -> tuple[subprocess.CompletedProcess[str], float]:
+    wrapper_dir = _write_bump_fast_wrappers(tmp_path)
+    encoded_pyproject = base64.b64encode(
+        b'[project]\nname = "alpha"\nversion = "2.0.0"\n'
+    ).decode()
+    env = {
+        **os.environ,
+        "WS_ROOT": str(parent),
+        "WS_PARENT": str(tmp_path),
+        "PATH": f"{wrapper_dir}{os.pathsep}{os.environ['PATH']}",
+        "BUMP_REMOTE_TIP": new_sha,
+        "BUMP_PYPROJECT_B64": encoded_pyproject,
+        **(extra_env or {}),
+    }
+    started = time.monotonic()
+    result = subprocess.run(
+        ["bash", str(SCRIPT), "bump-fast", "modules/alpha", *args],
+        cwd=parent,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=10,
+    )
+    return result, time.monotonic() - started
+
+
+def _index_sha(parent: Path, path: str = "modules/alpha") -> str:
+    return _git(parent, "ls-files", "-s", "--", path).stdout.split()[1]
 
 
 def _run_claim(
@@ -363,3 +484,71 @@ def test_skip_submodule_init_is_explicit_root_only_degraded_mode(tmp_path: Path)
     assert not (wt / "modules" / "alpha" / ".git").exists()
     assert "root worktree only" in result.stdout.lower()
     assert "pasw isolation not established" in result.stdout.lower()
+
+
+def test_bump_fast_updates_only_root_index_and_registry_under_two_seconds(
+    tmp_path: Path,
+) -> None:
+    parent, _child, old_sha, new_sha = _make_bump_fast_repo(tmp_path)
+    child_head_before = _git(parent / "modules/alpha", "rev-parse", "HEAD").stdout.strip()
+
+    result, elapsed = _run_bump_fast(parent, tmp_path, new_sha, "--latest-main")
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert elapsed < 2, f"bump-fast local deterministic path took {elapsed:.3f}s"
+    assert _index_sha(parent) == new_sha
+    assert old_sha != new_sha
+    assert _git(parent / "modules/alpha", "rev-parse", "HEAD").stdout.strip() == child_head_before
+    assert (
+        'version: "2.0.0"'
+        in (parent / "docs/project-registry.yaml").read_text(encoding="utf-8")
+    )
+    assert "不替代 D2/D3" in result.stdout
+
+
+def test_bump_fast_explicit_unreachable_sha_fails_without_mutation(
+    tmp_path: Path,
+) -> None:
+    parent, _child, old_sha, new_sha = _make_bump_fast_repo(tmp_path)
+    registry_before = (parent / "docs/project-registry.yaml").read_text(encoding="utf-8")
+    unreachable = "0" * 40
+
+    result, _elapsed = _run_bump_fast(
+        parent, tmp_path, new_sha, "--sha", unreachable
+    )
+
+    assert result.returncode != 0
+    assert "远端 main 不可达" in result.stderr
+    assert _index_sha(parent) == old_sha
+    assert (
+        parent / "docs/project-registry.yaml"
+    ).read_text(encoding="utf-8") == registry_before
+
+
+def test_bump_fast_version_lookup_failure_is_fail_closed(tmp_path: Path) -> None:
+    parent, _child, old_sha, new_sha = _make_bump_fast_repo(tmp_path)
+    registry_before = (parent / "docs/project-registry.yaml").read_text(encoding="utf-8")
+
+    result, _elapsed = _run_bump_fast(
+        parent,
+        tmp_path,
+        new_sha,
+        "--latest-main",
+        extra_env={"BUMP_FAIL_GH": "1"},
+    )
+
+    assert result.returncode != 0
+    assert "registry 与指针将保持未变" in result.stderr
+    assert _index_sha(parent) == old_sha
+    assert (
+        parent / "docs/project-registry.yaml"
+    ).read_text(encoding="utf-8") == registry_before
+
+
+def test_bump_fast_explicit_current_tip_is_accepted(tmp_path: Path) -> None:
+    parent, _child, _old_sha, new_sha = _make_bump_fast_repo(tmp_path)
+
+    result, _elapsed = _run_bump_fast(parent, tmp_path, new_sha, "--sha", new_sha)
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert _index_sha(parent) == new_sha
