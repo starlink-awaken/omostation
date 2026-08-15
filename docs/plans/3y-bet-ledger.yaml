@@ -1,10 +1,3 @@
-status: draft
-lifecycle: plan
-owner: 夏明星
-created: 2026-08-06
-last-reviewed: 2026-08-06
-schema_version: 1
----
 meta:
   horizon: 2026H2-2029
   total_bets: 91
@@ -257,12 +250,12 @@ bets:
   priority: P1
   status: done
   goal: 当 MOS 信念记录触发 2 次以上时，联动 workflow_skill_creator 自动萃取为可复用 Skill 包
-  completed_at: "2026-08-08"
-  done_evidence: '(2026-08-14 补登记: 本条目缺 done_when/verify/workflow/write_surfaces
-    四字段, 历史 commit 未溯源到对应交付 PR; done_at 系按 status=done 回填. 修复轮
-    BET-Y1Q1-T1-05A-fixes 以最小合法结构补齐, 事实内容以 goal 为准)'
+  completed_at: '2026-08-08'
+  done_evidence: '(2026-08-14 补登记: 本条目缺 done_when/verify/workflow/write_surfaces 四字段,
+    历史 commit 未溯源到对应交付 PR; done_at 系按 status=done 回填. 修复轮 BET-Y1Q1-T1-05A-fixes 以最小合法结构补齐,
+    事实内容以 goal 为准)'
   done_when:
-  - "MOS 信念记录 >= 2 次触发时自动联动 workflow_skill_creator 萃取 Skill 包 (以 goal 为准)"
+  - MOS 信念记录 >= 2 次触发时自动联动 workflow_skill_creator 萃取 Skill 包 (以 goal 为准)
   verify:
   - cmd: grep -c "workflow_skill_creator" .omo/_truth/registry/memory-os.yaml
     expect: '>= 1'
@@ -278,11 +271,11 @@ bets:
   priority: P1
   status: done
   goal: 引入 omo simulation 命令，在隔离临时沙箱中调起 Devil/Sage 预演校验
-  done_evidence: '(2026-08-14 补登记: 本条目缺 done_when/verify/workflow/write_surfaces
-    四字段, 历史 commit 未溯源到对应交付 PR. 修复轮 BET-Y1Q1-T1-05A-fixes 以最小合法
-    结构补齐, 事实内容以 goal 为准; 影子沙箱实现在 bin/gac/bdsk-shadow-sandbox.py)'
+  done_evidence: '(2026-08-14 补登记: 本条目缺 done_when/verify/workflow/write_surfaces 四字段,
+    历史 commit 未溯源到对应交付 PR. 修复轮 BET-Y1Q1-T1-05A-fixes 以最小合法 结构补齐, 事实内容以 goal 为准; 影子沙箱实现在
+    bin/gac/bdsk-shadow-sandbox.py)'
   done_when:
-  - "omo simulation 命令在隔离临时沙箱调起 Devil/Sage 对抗预演 (以 goal 为准)"
+  - omo simulation 命令在隔离临时沙箱调起 Devil/Sage 对抗预演 (以 goal 为准)
   verify:
   - cmd: test -f bin/gac/bdsk-shadow-sandbox.py
     expect: 存在
@@ -327,18 +320,17 @@ bets:
   status: done
   done_at: 2026-08-08
   goal: 结合 bos://compute/aetherforge/infer，按 Task 复杂度自动升降级模型与算力
-  done_evidence: 'PR #13 merged (aetherforge): feat(gateway) T6-09 动态算力路由.
-    Deliverables: (1) TaskComplexityScorer 三维信号融合 (length*0.5 + task*0.35 + caps*0.15)
-    → simple/medium/complex 分级; (2) ComplexityFilter + ComplexityScore RouterPipeline 插件
-    (simple→cost-first 0.6/0.3/0.1, complex→capability-first 0.1/0.2/0.7);
-    (3) ModelGateway.generate() 按 complexity.level 选 fallback chain
-    (simple→mythos-fast/coding-fast, complex→reasoning/coding);
-    (4) ModelRequest.complexity_hint 字段透传.
-    26 tests passing (15 complexity + 11 policies).
-    Production fix: 加 triage/rpc→simple, mcp/embed→medium 关键词, 加权评分防全落 medium.
-    附带: bulk-deletion-guard CI + 15 子模块分支保护 (三层防删除).'
+  done_evidence: 'PR #13 merged (aetherforge): feat(gateway) T6-09 动态算力路由. Deliverables:
+    (1) TaskComplexityScorer 三维信号融合 (length*0.5 + task*0.35 + caps*0.15) → simple/medium/complex
+    分级; (2) ComplexityFilter + ComplexityScore RouterPipeline 插件 (simple→cost-first
+    0.6/0.3/0.1, complex→capability-first 0.1/0.2/0.7); (3) ModelGateway.generate()
+    按 complexity.level 选 fallback chain (simple→mythos-fast/coding-fast, complex→reasoning/coding);
+    (4) ModelRequest.complexity_hint 字段透传. 26 tests passing (15 complexity + 11 policies).
+    Production fix: 加 triage/rpc→simple, mcp/embed→medium 关键词, 加权评分防全落 medium. 附带:
+    bulk-deletion-guard CI + 15 子模块分支保护 (三层防删除).'
   done_when:
-  - "TaskComplexityScorer 三维信号融合分级 + RouterPipeline 插件 + complexity fallback chain (见 done_evidence)"
+  - TaskComplexityScorer 三维信号融合分级 + RouterPipeline 插件 + complexity fallback chain
+    (见 done_evidence)
   verify:
   - cmd: test -d .subtrees/aetherforge
     expect: 子模块存在
@@ -367,7 +359,7 @@ bets:
   - 修改 god-module 阈值 (L0 锁定)
   - 加 allowlist (与减法方向矛盾)
   done_when:
-  - "3 个 >1500L 文件拆分至全部 <=1500L, omo lint god-module GATE PASS (见 done_evidence)"
+  - 3 个 >1500L 文件拆分至全部 <=1500L, omo lint god-module GATE PASS (见 done_evidence)
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error
@@ -737,9 +729,8 @@ bets:
   appetite: 2 weeks
   priority: P0
   status: in_progress
-  goal: 在 T1-05 拓扑改造铺开之前, 建立不依赖共享物理 checkout 的运行时协调层
-    (~/agents/_shared/runtime/coordination.sqlite3, WAL), 承接任务认领/agent 心跳/
-    跨 agent 消息, 使 D2/D3 文件锁在 T1-05 D3 阶段可被安全退役而非静默失效
+  goal: 在 T1-05 拓扑改造铺开之前, 建立不依赖共享物理 checkout 的运行时协调层 (~/agents/_shared/runtime/coordination.sqlite3,
+    WAL), 承接任务认领/agent 心跳/ 跨 agent 消息, 使 D2/D3 文件锁在 T1-05 D3 阶段可被安全退役而非静默失效
   analysis_doc: docs/reports/2026-08-14-shared-runtime-coordination-gap.md
   non_goals:
   - 跨物理主机的 agent 协调 (访问层可替换, daemon 化留给后续 bet)
@@ -748,37 +739,38 @@ bets:
   - messages 表数据流接入 (shadow 阶段 schema-only, a2a-adapter 双写留 warning 阶段)
   - warning/fail 灰度阶段 (本 bet 只做 shadow 并跑满窗口)
   done_when:
-  - "共享 SQLite (WAL) 落地 ~/agents/_shared/runtime/coordination.sqlite3, 懒初始化
-    ensure_ready() + user_version 迁移, schema 含 claims/agent_health/messages/shadow_events
-    四表; claims 为通用 resource 模型 UNIQUE(resource_type, resource_id), type ∈
-    bet/branch/path/adr"
-  - "认领是单条原子语句 (BEGIN IMMEDIATE 事务内 MAX(token)+1 + active 唯一部分索引),
-    并发测试证明两进程抢同一 resource_id 仅一个成功"
-  - "agent_health 由 launchd agent-tick-daemon (5min 周期) 写入, 心跳 <= 10min, stale
-    判定 <= 3 心跳周期; privacy-safe runtime code/version attestation 经 status 可见;
-    认领带 fencing token (per-resource 同事务 MAX+1 单调递增)"
-  - "token-check 子命令在 gac-worktree.sh submit 前调用 (token 从 claim 文件读);
-    shadow 阶段旧 token / legacy missing-token 判定 reject + 落共享 shadow_events 表,
-    verdict 成功记录后不阻断 push;
-    DB 打不开时 exit 2 fail-closed 停 submit; 判定逻辑由测试脚本断言"
-  - "swarm-discipline-cli.py status 只读输出 claims/health/messages 三段, 无需
-    sqlite3 客户端即可读 (--json 可机读)"
-  - "双写挂 swarm_discipline.py::acquire_branch_lock 成功后 (文件锁仍为 shadow 阶段
-    权威判定源, SQLite 为镜像), release 对称; 双写失败仅记事件不改变返回值"
-  - "备份: crontab 日备 (integrity_check + .backup 轮转 N=3) 为主 + 每次 store access
-    的非递归 24h 时间戳兜底; 恢复 runbook 落 docs/operations/"
-  - "shadow 窗口按 §3.4 规程跑满 1 周, 存量清单由 CLI 导出贴入 retro, 经 human_gate
-    确认后才可置 done"
+  - 共享 SQLite (WAL) 落地 ~/agents/_shared/runtime/coordination.sqlite3, 懒初始化 ensure_ready()
+    + user_version 迁移, schema 含 claims/agent_health/messages/shadow_events 四表; claims
+    为通用 resource 模型 UNIQUE(resource_type, resource_id), type ∈ bet/branch/path/adr
+  - 认领是单条原子语句 (BEGIN IMMEDIATE 事务内 MAX(token)+1 + active 唯一部分索引), 并发测试证明两进程抢同一 resource_id
+    仅一个成功
+  - agent_health 由 launchd agent-tick-daemon (5min 周期) 写入, 心跳 <= 10min, stale 判定 <=
+    3 心跳周期; privacy-safe runtime code/version attestation 经 status 可见; 认领带 fencing
+    token (per-resource 同事务 MAX+1 单调递增)
+  - token-check 子命令在 gac-worktree.sh submit 前调用 (token 从 claim 文件读); shadow 阶段旧 token
+    / legacy missing-token 判定 reject + 落共享 shadow_events 表, verdict 成功记录后不阻断 push;
+    DB 打不开时 exit 2 fail-closed 停 submit; 判定逻辑由测试脚本断言
+  - swarm-discipline-cli.py status 只读输出 claims/health/messages 三段, 无需 sqlite3 客户端即可读
+    (--json 可机读)
+  - 双写挂 swarm_discipline.py::acquire_branch_lock 成功后 (文件锁仍为 shadow 阶段 权威判定源, SQLite
+    为镜像), release 对称; 双写失败仅记事件不改变返回值
+  - '备份: crontab 日备 (integrity_check + .backup 轮转 N=3) 为主 + 每次 store access 的非递归 24h
+    时间戳兜底; 恢复 runbook 落 docs/operations/'
+  - shadow 窗口按 §3.4 规程跑满 1 周, 存量清单由 CLI 导出贴入 retro, 经 human_gate 确认后才可置 done
   verify:
   - cmd: ls ~/agents/_shared/runtime/coordination.sqlite3
     expect: 存在
-  - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 python3 bin/gac/test_coordination_layer.py --suite concurrency --repeat 20
+  - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 python3 bin/gac/test_coordination_layer.py
+      --suite concurrency --repeat 20
     expect: 20/20 rounds exactly one winner
-  - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 python3 bin/gac/test_coordination_layer.py --suite fencing
+  - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 python3 bin/gac/test_coordination_layer.py
+      --suite fencing
     expect: 旧 token 判定 reject PASS
-  - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 uv run --with pyyaml python bin/gac/test_coordination_layer.py --suite schema
+  - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 uv run --with pyyaml python
+      bin/gac/test_coordination_layer.py --suite schema
     expect: 普通 store access 触发非递归 24h backup fallback PASS
-  - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 uv run --with pyyaml python bin/gac/test_coordination_layer.py --suite runtime
+  - cmd: OMO_COORDINATION_DB=/tmp/t05a-verify.sqlite3 uv run --with pyyaml python
+      bin/gac/test_coordination_layer.py --suite runtime
     expect: agent_health runtime attestation 写入且 status 可见 PASS
   - cmd: python3 bin/gac/swarm-discipline-cli.py status
     expect: claims/health/messages 三段可读
@@ -804,8 +796,8 @@ bets:
   - BET-Y1Q1-T1-00
   risk_level: L3
   human_gate: true
-  circuit_breaker: 超 1.5 周未完成 shadow 阶段验证 → 停下汇报; T1-05 depends_on 本 bet
-    (机器强制), D1 试点阶段协调层必须就位, 不得在未验证并发正确性的情况下推进 T1-05
+  circuit_breaker: 超 1.5 周未完成 shadow 阶段验证 → 停下汇报; T1-05 depends_on 本 bet (机器强制), D1
+    试点阶段协调层必须就位, 不得在未验证并发正确性的情况下推进 T1-05
   retro: required
 - id: BET-Y1Q1-T1-06
   track: T1-TRUTH
@@ -816,9 +808,9 @@ bets:
   status: done
   done_at: 2026-08-08
   goal: 过渡期补齐 L2 层泄漏(15 个子模块跨 worktree 共享 HEAD), 并在拓扑改造完成后把 PASW 整体删除
-  done_evidence: 'PASW 已动态覆盖全部 18 个子模块 (lib/pasw-core.sh:8 从 .gitmodules 动态提取).
-    清理 stray worktrees: projects/Workspace/.subtrees/ (26M) + .subtrees/ (30M) 共 7 个错误路径 worktree 已移除.
-    验证测试: tests/bin/test_pasw_coverage.sh — 18/18 submodules covered.
+  done_evidence: 'PASW 已动态覆盖全部 18 个子模块 (lib/pasw-core.sh:8 从 .gitmodules 动态提取). 清理
+    stray worktrees: projects/Workspace/.subtrees/ (26M) + .subtrees/ (30M) 共 7 个错误路径
+    worktree 已移除. 验证测试: tests/bin/test_pasw_coverage.sh — 18/18 submodules covered.
     终局: 拓扑改造 (T1-05) 完成后 PASW 整体删除 (每个 clone 有独立 .git/modules).'
   non_goals:
   - 子模块内部代码修改
@@ -977,11 +969,10 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-12
-  goal: >-
-    在可信本地单用户环境中，复用 Iris LocalFilesConnector 与 W2-05 PersonalEpisodeService，
-    让用户投放到服务端固定允许目录的一条 Markdown item 先以隐私安全的 SignalObserved 写入
-    唯一 Event Ledger，再创建与该 signal 具备因果关系、待人工确认的个人 Episode；后续继续复用
-    既有 confirm → Mandate → Agora PEP → never-send 本地草稿 → Human Outcome 链路。
+  goal: 在可信本地单用户环境中，复用 Iris LocalFilesConnector 与 W2-05 PersonalEpisodeService， 让用户投放到服务端固定允许目录的一条
+    Markdown item 先以隐私安全的 SignalObserved 写入 唯一 Event Ledger，再创建与该 signal 具备因果关系、待人工确认的个人
+    Episode；后续继续复用 既有 confirm → Mandate → Agora PEP → never-send 本地草稿 → Human Outcome
+    链路。
   non_goals:
   - Apple Mail、日历、Reminders、任务系统或第二信号源
   - watcher、daemon、cron、旧 signal-poller auto-trigger 或第二条 Journey/MOS 写链
@@ -991,39 +982,32 @@ bets:
   - 两周价值观察、节省时间结论或 W3 gate 宣称；这些必须由后续 observation BET 使用真实运行数据验证
   - exactly-once、崩溃 reconcile、多租户、跨主机或敌意同进程防护
   done_when:
-  - >-
-    Cockpit 只接受 server-side item_id 与显式 principal/role/responsibility/executor；服务端从配置的
+  - Cockpit 只接受 server-side item_id 与显式 principal/role/responsibility/executor；服务端从配置的
     固定允许目录经现有 Iris LocalFilesConnector 读取 Markdown，调用方不能提交 summary、原文或任意文件路径
-  - >-
-    OMO 使用现有 ECOS generated EventEnvelope 与 Signal 校验输入，先追加 privacy_class=private 的
-    SignalObserved.v1，再追加具有 causation_id/source_signal_ref 的 Episode.Decision.v1；两者位于同一
+  - OMO 使用现有 ECOS generated EventEnvelope 与 Signal 校验输入，先追加 privacy_class=private
+    的 SignalObserved.v1，再追加具有 causation_id/source_signal_ref 的 Episode.Decision.v1；两者位于同一
     Ledger，Episode 绑定 active role assignment 与 responsibility
-  - >-
-    Ledger 仅保存必要标题摘要、内容 SHA-256、稳定 source URI、scene/journey/outcome 三锚点与隐私分类；
-    Markdown 正文、绝对路径、凭证和自由文本日志不得入 Ledger、Git、MOS 或网络调用
-  - >-
-    幂等键由 source_id + 相对 item_id + content digest 决定；同一内容重复摄取复用同一 Signal/Episode，
-    内容变化产生新的 Signal/Episode
-  - >-
-    未配置允许目录、item 不存在、绝对/上级路径、越界 symlink、非 Markdown、空标题、失效角色或责任不匹配
-    均 fail closed，且 Ledger event count/hash 不变
-  - >-
-    一条无 mock HTTP + Iris + SQLite E2E 完成 item ingest → SignalObserved → Inbox pending Episode →
-    confirm → 真实 Agora PEP → never-send 本地草稿 → feedback；重复摄取与所有负向路径均验证无伪成功
-  - >-
-    W2-01 至 W2-05 定向回归通过；不改 Kairon、Agora、ECOS、Ledger schema、旧 Workflow Mesh 或 Cockpit UI
+  - Ledger 仅保存必要标题摘要、内容 SHA-256、稳定 source URI、scene/journey/outcome 三锚点与隐私分类； Markdown
+    正文、绝对路径、凭证和自由文本日志不得入 Ledger、Git、MOS 或网络调用
+  - 幂等键由 source_id + 相对 item_id + content digest 决定；同一内容重复摄取复用同一 Signal/Episode， 内容变化产生新的
+    Signal/Episode
+  - 未配置允许目录、item 不存在、绝对/上级路径、越界 symlink、非 Markdown、空标题、失效角色或责任不匹配 均 fail closed，且
+    Ledger event count/hash 不变
+  - 一条无 mock HTTP + Iris + SQLite E2E 完成 item ingest → SignalObserved → Inbox pending
+    Episode → confirm → 真实 Agora PEP → never-send 本地草稿 → feedback；重复摄取与所有负向路径均验证无伪成功
+  - W2-01 至 W2-05 定向回归通过；不改 Kairon、Agora、ECOS、Ledger schema、旧 Workflow Mesh 或 Cockpit
+    UI
   verify:
-  - cmd: >-
-      cd projects/omo && uv sync --frozen --reinstall-package ecos && uv run --with pytest python -m pytest
-      tests/test_personal_episode.py tests/test_episode_projection.py tests/test_sovereignty_policy_enforcement.py -q
+  - cmd: cd projects/omo && uv sync --frozen --reinstall-package ecos && uv run --with
+      pytest python -m pytest tests/test_personal_episode.py tests/test_episode_projection.py
+      tests/test_sovereignty_policy_enforcement.py -q
     expect: exit 0；覆盖 generated Signal/EventEnvelope、Signal→Episode 因果关系、去重和 fail-closed
-  - cmd: >-
-      cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python -m pytest
-      src/cockpit/tests/test_api_personal_signal.py src/cockpit/tests/test_api_personal_episode.py
+  - cmd: cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python
+      -m pytest src/cockpit/tests/test_api_personal_signal.py src/cockpit/tests/test_api_personal_episode.py
       src/cockpit/tests/test_api_episode_projection.py -q
     expect: exit 0；包含真实临时允许目录、真实 Iris item、真实 Ledger/OMO/Agora PEP，不 monkeypatch 核心链路
-  - cmd: >-
-      cd projects/omo && uv lock --check && git diff --check && cd ../cockpit && git diff --check
+  - cmd: cd projects/omo && uv lock --check && git diff --check && cd ../cockpit &&
+      git diff --check
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
@@ -1040,10 +1024,9 @@ bets:
   - BET-Y1Q2-T1-08
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    超 3 天、需要新 M2/DDL/第二账本/第二入口/LLM/云调用或第二信号源才能闭环时，立即缩为固定目录、
-    单 item、一次性显式 ingest，不加 watcher。任何正文进入 Git、日志、MOS/JSONL 副本或外发链立即停止并回滚；
-    没有真实用户 item 与裁决时仅能声称 E3 工程能力完成，不得宣称个人价值或 W3 gate 通过
+  circuit_breaker: 超 3 天、需要新 M2/DDL/第二账本/第二入口/LLM/云调用或第二信号源才能闭环时，立即缩为固定目录、 单 item、一次性显式
+    ingest，不加 watcher。任何正文进入 Git、日志、MOS/JSONL 副本或外发链立即停止并回滚； 没有真实用户 item 与裁决时仅能声称
+    E3 工程能力完成，不得宣称个人价值或 W3 gate 通过
   retro: required
 - id: BET-Y1Q2-T2-02
   track: T2-PERCEPT
@@ -1053,10 +1036,9 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-12
-  goal: >-
-    在可信本地单用户阶段，把 W3-01A 从需要手写 Python、环境变量与多段 HTTP 请求的工程链路，
-    收敛为 Cockpit 唯一入口可直接操作的个人 dogfood：幂等初始化个人角色、摄取固定目录 Markdown、
-    人工确认、由服务端基于 Episode 生成 never-send 本地草稿、记录人工 verdict，并提供只读状态视图。
+  goal: 在可信本地单用户阶段，把 W3-01A 从需要手写 Python、环境变量与多段 HTTP 请求的工程链路， 收敛为 Cockpit 唯一入口可直接操作的个人
+    dogfood：幂等初始化个人角色、摄取固定目录 Markdown、 人工确认、由服务端基于 Episode 生成 never-send 本地草稿、记录人工
+    verdict，并提供只读状态视图。
   non_goals:
   - 第二信号源、watcher、daemon、cron、邮件/日历/Reminders 或 W3-02 多源 normalizer
   - LLM 生成、自动承诺提取、自动角色匹配、自动审批、自动发送或外部任务创建
@@ -1064,30 +1046,26 @@ bets:
   - 两周价值结论、W3 gate 通过或自治升级；本轮只让真实观察可开始
   - 新 M2、Ledger DDL、第二账本、第二 Inbox、顶级项目、ADR、dashboard 或 UI 页面
   done_when:
-  - >-
-    Cockpit 提供幂等 trusted-local role setup；首次创建 active role/responsibility，重复调用返回 reused，
+  - Cockpit 提供幂等 trusted-local role setup；首次创建 active role/responsibility，重复调用返回 reused，
     已存在但冲突的定义 fail closed，不覆盖其他个人、家庭或组织角色
-  - >-
-    `cockpit workflow mesh personal` 提供 setup、ingest、confirm、draft、feedback、status 薄入口；业务规则仍由
-    现有 Cockpit API、OMO PersonalEpisodeService 与 Agora PEP 拥有，CLI 不复制 Ledger/mandate/policy 逻辑
-  - >-
-    draft 未提交 title/context/deadline/next_action 时，由服务端从已持久化 Episode 安全字段生成结构化本地草稿，
+  - '`cockpit workflow mesh personal` 提供 setup、ingest、confirm、draft、feedback、status
+    薄入口；业务规则仍由 现有 Cockpit API、OMO PersonalEpisodeService 与 Agora PEP 拥有，CLI 不复制 Ledger/mandate/policy
+    逻辑'
+  - draft 未提交 title/context/deadline/next_action 时，由服务端从已持久化 Episode 安全字段生成结构化本地草稿，
     产物明确 `output_origin=system` 与 `never_send=true`；兼容的 caller-authored 草稿标记为 user_provided，
     后者不得计入系统价值样本
-  - >-
-    一条无 mock 公共边界 E2E 完成 setup → 真实 Iris item → causal Episode → confirm → 真实 PEP →
-    system-owned local draft → feedback → status/projection；重复 setup/ingest 幂等，未确认或 PEP 失败时零产物
-  - >-
-    status 只读展示 signal/episode/system-output/verdict 计数及最近 Episode，不修改 Ledger；原始 Markdown 正文、
-    绝对信号路径、凭证和自由日志不进入响应、Ledger、Git 或 MOS
+  - 一条无 mock 公共边界 E2E 完成 setup → 真实 Iris item → causal Episode → confirm → 真实 PEP
+    → system-owned local draft → feedback → status/projection；重复 setup/ingest 幂等，未确认或
+    PEP 失败时零产物
+  - status 只读展示 signal/episode/system-output/verdict 计数及最近 Episode，不修改 Ledger；原始 Markdown
+    正文、 绝对信号路径、凭证和自由日志不进入响应、Ledger、Git 或 MOS
   verify:
-  - cmd: >-
-      cd projects/omo && uv run --with pytest python -m pytest tests/test_personal_episode.py
-      tests/test_episode_projection.py -q && uv run ruff check src/omo/personal_episode.py tests/test_personal_episode.py
+  - cmd: cd projects/omo && uv run --with pytest python -m pytest tests/test_personal_episode.py
+      tests/test_episode_projection.py -q && uv run ruff check src/omo/personal_episode.py
+      tests/test_personal_episode.py
     expect: exit 0
-  - cmd: >-
-      cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python -m pytest
-      src/cockpit/tests/test_api_personal_episode.py src/cockpit/tests/test_api_personal_signal.py
+  - cmd: cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python
+      -m pytest src/cockpit/tests/test_api_personal_episode.py src/cockpit/tests/test_api_personal_signal.py
       src/cockpit/tests/test_cli_personal_dogfood.py -q && uv run ruff check src/cockpit/commands/workflow_mesh.py
       src/cockpit/web/api_workflow_mesh_operations.py src/cockpit/tests/test_cli_personal_dogfood.py
     expect: exit 0
@@ -1112,9 +1090,8 @@ bets:
   - BET-Y1Q2-T2-01
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    超 2 天、需要新协议/DDL/第二信号源/LLM/外部副作用才能可用时，停止扩展并只交付 setup、薄 CLI 与
-    deterministic system draft。任何真实发送、正文入 Ledger 或 caller-authored smoke 被计入价值时立即阻断
+  circuit_breaker: 超 2 天、需要新协议/DDL/第二信号源/LLM/外部副作用才能可用时，停止扩展并只交付 setup、薄 CLI 与 deterministic
+    system draft。任何真实发送、正文入 Ledger 或 caller-authored smoke 被计入价值时立即阻断
   retro: required
 - id: BET-Y1Q1-T3-01
   track: T3-COGNI
@@ -1487,7 +1464,7 @@ bets:
   - 降低 silent_loss 硬红线
   done_when:
   - 保留 <= 40 个覆盖 A_conflict / B_failure_injection 核心原型的用例
-  - "实际结果: 222 → 5 (仅保留 A/B/C/D 核心原型)"
+  - '实际结果: 222 → 5 (仅保留 A/B/C/D 核心原型)'
   - make collab-dualtrack 验证 silent_loss=0
   evidence:
   - commit: 'feat(T6-04): 合成协作场景归档 222→5 — 保留 A/B/C/D 核心原型'
@@ -1557,12 +1534,11 @@ bets:
   goal: 支持真实业务里"人工审批挂三天"这件天天发生的事
   done_evidence: 'ApprovalTimeout 事件落地: (1) workflow_mesh.py 状态机扩展 — ApprovalTimeout
     → failed, waiting_approval 允许 ApprovalTimeout 转换, projection 追踪 requested_at/timeout_at;
-    (2) approval_lifecycle.py — request_approval (默认 7 天超时), grant_approval,
-    expire_approval_timeout, scan_approval_timeouts (镜像 worker_lifecycle.py);
-    (3) approval_timeout_runner.py — governed runner (POSIX 锁 + 摘要持久化, 镜像 mesh_watchdog_runner.py);
-    (4) 20 tests passing (15 lifecycle + 5 runner), 含 7 天场景 + 进程重启存活测试.
-    done_when 全部满足: 状态 event-sourced 重启不丢 / 超时策略可配置 (timeout_seconds) /
-    到期产生 ApprovalTimeout 事件 / 时间可注入测试.'
+    (2) approval_lifecycle.py — request_approval (默认 7 天超时), grant_approval, expire_approval_timeout,
+    scan_approval_timeouts (镜像 worker_lifecycle.py); (3) approval_timeout_runner.py
+    — governed runner (POSIX 锁 + 摘要持久化, 镜像 mesh_watchdog_runner.py); (4) 20 tests
+    passing (15 lifecycle + 5 runner), 含 7 天场景 + 进程重启存活测试. done_when 全部满足: 状态 event-sourced
+    重启不丢 / 超时策略可配置 (timeout_seconds) / 到期产生 ApprovalTimeout 事件 / 时间可注入测试.'
   non_goals:
   - 并行会签(属 Y1Q4)
   - 超时自动执行
@@ -1602,8 +1578,7 @@ bets:
   verify:
   - cmd: python3 bin/ssot/journey-runner.py run --journey inbox-to-decision --backedge-limit
       2 --dry-run
-    expect: exit 0 且输出含 run_id (2026-08-15 实测 rc=0; 旧语法已失效, CLI 改为
-      run 子命令 + --journey)
+    expect: exit 0 且输出含 run_id (2026-08-15 实测 rc=0; 旧语法已失效, CLI 改为 run 子命令 + --journey)
   workflow: bet-execution
   underlying_workflow: project-code-change
   write_surfaces:
@@ -1684,7 +1659,8 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-10
-  goal: 基于已合并 W1-03/W1-04 LedgerBroker，为旧 JSONL 治理历史（如 .omo/_knowledge/governance-history.jsonl）建立 shadow 迁移适配器，提供 import-jsonl / export-jsonl / compare-jsonl，不触碰旧 JSONL 权威
+  goal: 基于已合并 W1-03/W1-04 LedgerBroker，为旧 JSONL 治理历史（如 .omo/_knowledge/governance-history.jsonl）建立
+    shadow 迁移适配器，提供 import-jsonl / export-jsonl / compare-jsonl，不触碰旧 JSONL 权威
   non_goals:
   - 新建顶级项目
   - 修改 DDL/MOF
@@ -1698,31 +1674,28 @@ bets:
   - export-jsonl 输出仍是合法 JSONL，且逐行 authority=ledger / read_only=true
   - import-jsonl 拒绝 authority=ledger / read_only=true 的输入（防反向写入）
   - compare-jsonl 对真实 tracked JSONL 与 shadow ledger 输出稳定计数 / 摘要 / 差异
-  - hash chain verify、目标 pytest、基于 .omo/_knowledge/governance-history.jsonl 的真实 CLI smoke 全部通过
+  - hash chain verify、目标 pytest、基于 .omo/_knowledge/governance-history.jsonl 的真实 CLI
+    smoke 全部通过
   verify:
-  - cmd: cd projects/omo && uv run --with pytest python -m pytest tests/test_event_ledger_jsonl.py -q
+  - cmd: cd projects/omo && uv run --with pytest python -m pytest tests/test_event_ledger_jsonl.py
+      -q
     expect: exit 0
-  - cmd: >-
-      cd projects/omo && tmp="$(mktemp -d)" && trap 'rm -rf "$tmp"' EXIT &&
-      uv run --frozen omo ledger import-jsonl --db "$tmp/ledger.db" --file
-      ../../.omo/_knowledge/governance-history.jsonl --quarantine
-      "$tmp/quarantine.jsonl" --json > "$tmp/import-1.json" && jq -e '.ok == true and
-      .imported > 0 and (.imported + .duplicates == .healthy)' "$tmp/import-1.json" &&
-      uv run --frozen omo ledger import-jsonl
-      --db "$tmp/ledger.db" --file ../../.omo/_knowledge/governance-history.jsonl
+  - cmd: cd projects/omo && tmp="$(mktemp -d)" && trap 'rm -rf "$tmp"' EXIT && uv
+      run --frozen omo ledger import-jsonl --db "$tmp/ledger.db" --file ../../.omo/_knowledge/governance-history.jsonl
+      --quarantine "$tmp/quarantine.jsonl" --json > "$tmp/import-1.json" && jq -e
+      '.ok == true and .imported > 0 and (.imported + .duplicates == .healthy)' "$tmp/import-1.json"
+      && uv run --frozen omo ledger import-jsonl --db "$tmp/ledger.db" --file ../../.omo/_knowledge/governance-history.jsonl
       --quarantine "$tmp/quarantine.jsonl" --json > "$tmp/import-2.json" && jq -e
-      '.ok == true and .imported == 0 and .duplicates == .healthy'
-      "$tmp/import-2.json" && uv run --frozen omo ledger export-jsonl --db
-      "$tmp/ledger.db" --output "$tmp/export.jsonl" --json > "$tmp/export.json" &&
-      jq -e '.ok == true and .exported > 0' "$tmp/export.json" && jq -sc 'length > 0
-      and all(.[]; .authority == "ledger" and .read_only == true and .projection ==
-      "jsonl-shadow/v1")' "$tmp/export.jsonl" && uv run --frozen omo ledger
-      compare-jsonl --db
-      "$tmp/ledger.db" --file ../../.omo/_knowledge/governance-history.jsonl
-      --json > "$tmp/compare.json" && jq -e '.ok == true and .missing == 0 and
-      .extra == 0 and .source_digest == .ledger_digest' "$tmp/compare.json" && uv run
-      --frozen omo ledger verify --db "$tmp/ledger.db" --from 1 --json >
-      "$tmp/verify.json" && jq -e '.ok == true and .total > 0' "$tmp/verify.json"
+      '.ok == true and .imported == 0 and .duplicates == .healthy' "$tmp/import-2.json"
+      && uv run --frozen omo ledger export-jsonl --db "$tmp/ledger.db" --output "$tmp/export.jsonl"
+      --json > "$tmp/export.json" && jq -e '.ok == true and .exported > 0' "$tmp/export.json"
+      && jq -sc 'length > 0 and all(.[]; .authority == "ledger" and .read_only ==
+      true and .projection == "jsonl-shadow/v1")' "$tmp/export.jsonl" && uv run --frozen
+      omo ledger compare-jsonl --db "$tmp/ledger.db" --file ../../.omo/_knowledge/governance-history.jsonl
+      --json > "$tmp/compare.json" && jq -e '.ok == true and .missing == 0 and .extra
+      == 0 and .source_digest == .ledger_digest' "$tmp/compare.json" && uv run --frozen
+      omo ledger verify --db "$tmp/ledger.db" --from 1 --json > "$tmp/verify.json"
+      && jq -e '.ok == true and .total > 0' "$tmp/verify.json"
     expect: 二次导入新增为 0；导出逐行只读且合法；compare 无不可解释差异；hash chain ok
   workflow: bet-execution
   underlying_workflow: project-code-change
@@ -1744,7 +1717,8 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-10
-  goal: 落地瘦主权内核 — Principal/Role/Responsibility/RoleAssignment 版本化、查询与确定性重放，全部经 LedgerBroker 写、无新项目；一个 Principal 可有个人/家庭/职业多个 Role，家庭成员各自为独立 Principal
+  goal: 落地瘦主权内核 — Principal/Role/Responsibility/RoleAssignment 版本化、查询与确定性重放，全部经 LedgerBroker
+    写、无新项目；一个 Principal 可有个人/家庭/职业多个 Role，家庭成员各自为独立 Principal
   non_goals:
   - Delegation Mandate（属 W2-02）
   - PDP/PEP 与 Capability Gateway（属 W2-03）
@@ -1755,36 +1729,33 @@ bets:
   - Agora/BOS/MCP/Cockpit 远程写面或新入口
   - 任何外部副作用（邮件/日历/任务等）
   done_when:
-  - Principal/Role/Responsibility/RoleAssignment 有严格 ID 前缀（principal:/role:/responsibility:/assignment:）与单调递增版本，同一 ID 每次变更版本 +1
+  - Principal/Role/Responsibility/RoleAssignment 有严格 ID 前缀（principal:/role:/responsibility:/assignment:）与单调递增版本，同一
+    ID 每次变更版本 +1
   - assign / revoke / replace 是 RoleAssignment 的合法状态转换；对已失效或旧版本号的写入被拒绝，版本号禁止倒退
   - 所有写只经 LedgerBroker.append，无绕过 broker 的直接 SQL 或文件写
   - 每个 Principal 数据互相隔离：查询与重放按 principal_id 过滤，跨 Principal 不泄漏
   - 删除本模块派生查询状态后可由事件日志重建，不涉及 W2-04 投影
-  - 目标 pytest 通过；真实 CLI smoke（sovereignty-assign / sovereignty-query / ledger verify）exit 0
+  - 目标 pytest 通过；真实 CLI smoke（sovereignty-assign / sovereignty-query / ledger verify）exit
+    0
   verify:
   - cmd: cd projects/omo && uv run --with pytest python -m pytest tests/test_sovereignty_roles.py
       tests/test_sovereignty_replay.py -q
     expect: exit 0
-  - cmd: >-
-      cd projects/omo && tmp="$(mktemp -d)" && trap 'rm -rf "$tmp"' EXIT &&
-      uv run --frozen omo ledger sovereignty-assign --db "$tmp/ledger.db"
-      --principal-id principal:alice --role-id role:family-steward --json > "$tmp/assign1.json" &&
-      jq -e '.ok == true' "$tmp/assign1.json" &&
-      uv run --frozen omo ledger sovereignty-assign --db "$tmp/ledger.db"
-      --principal-id principal:alice --role-id role:professional --json > "$tmp/assign2.json" &&
-      jq -e '.ok == true' "$tmp/assign2.json" &&
-      uv run --frozen omo ledger sovereignty-assign --db "$tmp/ledger.db"
-      --principal-id principal:bob --role-id role:learner --json > "$tmp/assign3.json" &&
-      jq -e '.ok == true' "$tmp/assign3.json" &&
-      uv run --frozen omo ledger sovereignty-query --db "$tmp/ledger.db"
-      --principal-id principal:alice --json > "$tmp/query.json" &&
-      jq -e '.ok == true and .count == 2 and
-      (all(.assignments[]; .principal_id == "principal:alice")) and
-      (.role_ids | index("role:family-steward") != null) and
-      (.role_ids | index("role:professional") != null) and
-      (.role_ids | index("role:learner") == null)' "$tmp/query.json" &&
-      uv run --frozen omo ledger verify --db "$tmp/ledger.db" --from 1 --json > "$tmp/v.json" &&
-      jq -e '.ok == true and .total == 3' "$tmp/v.json"
+  - cmd: cd projects/omo && tmp="$(mktemp -d)" && trap 'rm -rf "$tmp"' EXIT && uv
+      run --frozen omo ledger sovereignty-assign --db "$tmp/ledger.db" --principal-id
+      principal:alice --role-id role:family-steward --json > "$tmp/assign1.json" &&
+      jq -e '.ok == true' "$tmp/assign1.json" && uv run --frozen omo ledger sovereignty-assign
+      --db "$tmp/ledger.db" --principal-id principal:alice --role-id role:professional
+      --json > "$tmp/assign2.json" && jq -e '.ok == true' "$tmp/assign2.json" && uv
+      run --frozen omo ledger sovereignty-assign --db "$tmp/ledger.db" --principal-id
+      principal:bob --role-id role:learner --json > "$tmp/assign3.json" && jq -e '.ok
+      == true' "$tmp/assign3.json" && uv run --frozen omo ledger sovereignty-query
+      --db "$tmp/ledger.db" --principal-id principal:alice --json > "$tmp/query.json"
+      && jq -e '.ok == true and .count == 2 and (all(.assignments[]; .principal_id
+      == "principal:alice")) and (.role_ids | index("role:family-steward") != null)
+      and (.role_ids | index("role:professional") != null) and (.role_ids | index("role:learner")
+      == null)' "$tmp/query.json" && uv run --frozen omo ledger verify --db "$tmp/ledger.db"
+      --from 1 --json > "$tmp/v.json" && jq -e '.ok == true and .total == 3' "$tmp/v.json"
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
@@ -1809,12 +1780,10 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-11
-  goal: >-
-    在 W2-01 瘦主权内核上落地不可原地变更、可撤销、可重放的 DelegationMandate，
-    由 ECOS M2 经确定性 Control Compiler 生成运行契约并被 OMO 真实消费；所有
-    Mandate.Granted.v1 / Mandate.Revoked.v1 事件经 LedgerBroker 写入并强制关联
-    episode_id。提供纯判定的 mandate-admit 边界和稳定 reason code，使无有效
-    Mandate 的副作用请求在决策层硬拒绝，但本 bet 不执行任何真实副作用。
+  goal: 在 W2-01 瘦主权内核上落地不可原地变更、可撤销、可重放的 DelegationMandate， 由 ECOS M2 经确定性 Control
+    Compiler 生成运行契约并被 OMO 真实消费；所有 Mandate.Granted.v1 / Mandate.Revoked.v1 事件经 LedgerBroker
+    写入并强制关联 episode_id。提供纯判定的 mandate-admit 边界和稳定 reason code，使无有效 Mandate 的副作用请求在决策层硬拒绝，但本
+    bet 不执行任何真实副作用。
   non_goals:
   - PDP/PEP、Capability Gateway enforcement hook、PolicyDecision 与 ActionReceipt（属 W2-03）
   - Episode / Role Portfolio / Decision Inbox 投影与审批路由（属 W2-04）
@@ -1826,100 +1795,68 @@ bets:
   - M3、Ledger DDL/trigger/broker 规则变更，新顶级项目，Agora/BOS/MCP/Cockpit 远程写面
   - 任何邮件、日历、任务、文件、网络或其他真实外部副作用
   done_when:
-  - >-
-    ECOS 新增正式 DelegationMandate M2（语义版本 1.0.0、责任所有者、迁移策略、
-    active→revoked 状态机），现有 Control Compiler 确定性生成 JSON Schema、
-    Pydantic、Zod、SQLite 与 hash manifest；check 可发现缺失、篡改和模型漂移
-  - >-
-    OMO 运行时直接消费生成的 DelegationMandate Pydantic 契约；仅新增 M2 YAML、
-    仅复制字段或仅写测试夹具均判定 model-only 并拒收
-  - >-
-    Mandate 必含 mandate_id、schema_version、principal_id、executor_id、episode_id、
-    role_context_id、role_assignment_id/version、responsibility_id/version、purpose、
-    capability_scope、autonomy_level、risk_ceiling、valid_from/expires_at、
-    approval_mode、disclosure_policy、budget_limit/unit、revocable、trace_id、
+  - ECOS 新增正式 DelegationMandate M2（语义版本 1.0.0、责任所有者、迁移策略、 active→revoked 状态机），现有 Control
+    Compiler 确定性生成 JSON Schema、 Pydantic、Zod、SQLite 与 hash manifest；check 可发现缺失、篡改和模型漂移
+  - OMO 运行时直接消费生成的 DelegationMandate Pydantic 契约；仅新增 M2 YAML、 仅复制字段或仅写测试夹具均判定 model-only
+    并拒收
+  - Mandate 必含 mandate_id、schema_version、principal_id、executor_id、episode_id、 role_context_id、role_assignment_id/version、responsibility_id/version、purpose、
+    capability_scope、autonomy_level、risk_ceiling、valid_from/expires_at、 approval_mode、disclosure_policy、budget_limit/unit、revocable、trace_id、
     mandate_version 与 status；capability_scope 非空、无通配符且只做精确匹配
-  - >-
-    grant 只能从不存在到 active(v1)，revoke 只能从 active 到 revoked(v2) 且校验
-    expected_version；重复 grant/revoke、旧版本写、并发同基线写均在 append 前或
-    idempotency backstop 处失败，不产生部分事件
-  - >-
-    grant 必须验证 W2-01 当前 RoleAssignment 为 active，responsibility 属于该
-    assignment，并快照 role/assignment/responsibility 版本；后续角色撤销、替换或
-    责任版本漂移会使 admission 以 role_context_stale / responsibility_stale 拒绝
-  - >-
-    事件类型严格为 Mandate.Granted.v1 / Mandate.Revoked.v1；每次 append 同时填写
-    episode_id、mandate_id、role_context_id、responsibility_id 与 principal_id，
-    不得借 Sovereignty.* 命名绕过 broker 和 DB trigger 的 Episode 强制门
-  - >-
-    A0-A3/R0-R3 全 16 格按蓝图固定：A0 仅 R0 观察；A1 只建议；A2 为 R0 allow、
-    R1 approval_required、R2 per_action_approval_required、R3 deny；A3 为 R0/R1 allow、
-    R2 仅在精确白名单+预算内+可撤销时 allow、R3 human_adjudication_required。
-    approval_mode 只能收紧矩阵，不能放宽
-  - >-
-    mandate-admit 为纯读、纯判定且默认拒绝；至少覆盖 mandate_not_found、
-    mandate_not_yet_valid、mandate_expired、mandate_revoked、principal_mismatch、
-    executor_mismatch、episode_mismatch、role_context_stale、responsibility_stale、
-    capability_out_of_scope、risk_ceiling_exceeded、budget_exceeded、
-    disclosure_mismatch、autonomy_forbids、suggest_only、approval_required、
-    per_action_approval_required、human_adjudication_required 与 allow 稳定 reason code
-  - >-
-    按 principal_id 隔离查询与 replay；Malformed Mandate event 产生稳定
-    MandateReplayError，禁止静默跳过；删除派生内存状态后可仅从 Ledger 重建
-  - >-
-    负向证明：无 mandate_id、未知、过期、撤销、越权 capability 或超风险/预算的
-    effect request 均返回非零/deny，Ledger 事件总数不变且 hash chain 仍为 ok；
-    本 bet 不宣称已经物理拦截真实副作用
+  - grant 只能从不存在到 active(v1)，revoke 只能从 active 到 revoked(v2) 且校验 expected_version；重复
+    grant/revoke、旧版本写、并发同基线写均在 append 前或 idempotency backstop 处失败，不产生部分事件
+  - grant 必须验证 W2-01 当前 RoleAssignment 为 active，responsibility 属于该 assignment，并快照
+    role/assignment/responsibility 版本；后续角色撤销、替换或 责任版本漂移会使 admission 以 role_context_stale
+    / responsibility_stale 拒绝
+  - 事件类型严格为 Mandate.Granted.v1 / Mandate.Revoked.v1；每次 append 同时填写 episode_id、mandate_id、role_context_id、responsibility_id
+    与 principal_id， 不得借 Sovereignty.* 命名绕过 broker 和 DB trigger 的 Episode 强制门
+  - A0-A3/R0-R3 全 16 格按蓝图固定：A0 仅 R0 观察；A1 只建议；A2 为 R0 allow、 R1 approval_required、R2
+    per_action_approval_required、R3 deny；A3 为 R0/R1 allow、 R2 仅在精确白名单+预算内+可撤销时 allow、R3
+    human_adjudication_required。 approval_mode 只能收紧矩阵，不能放宽
+  - mandate-admit 为纯读、纯判定且默认拒绝；至少覆盖 mandate_not_found、 mandate_not_yet_valid、mandate_expired、mandate_revoked、principal_mismatch、
+    executor_mismatch、episode_mismatch、role_context_stale、responsibility_stale、 capability_out_of_scope、risk_ceiling_exceeded、budget_exceeded、
+    disclosure_mismatch、autonomy_forbids、suggest_only、approval_required、 per_action_approval_required、human_adjudication_required
+    与 allow 稳定 reason code
+  - 按 principal_id 隔离查询与 replay；Malformed Mandate event 产生稳定 MandateReplayError，禁止静默跳过；删除派生内存状态后可仅从
+    Ledger 重建
+  - 负向证明：无 mandate_id、未知、过期、撤销、越权 capability 或超风险/预算的 effect request 均返回非零/deny，Ledger
+    事件总数不变且 hash chain 仍为 ok； 本 bet 不宣称已经物理拦截真实副作用
   - ECOS/OMO 目标 pytest、MOF artifact drift check、W2-01 回归与真实本地 CLI smoke 全部 exit 0
   verify:
-  - cmd: >-
-      cd projects/ecos && uv run pytest tests/test_mof_w2_mandate_contract.py
-      tests/test_mof_compiler.py -q
+  - cmd: cd projects/ecos && uv run pytest tests/test_mof_w2_mandate_contract.py tests/test_mof_compiler.py
+      -q
     expect: exit 0；DelegationMandate 模型、非法样例、确定性编译与 tamper 检测通过
-  - cmd: >-
-      cd projects/ecos && uv run python src/ecos/ssot/tools/mof-compile.py compile
-      --out-dir src/ecos/ssot/mof/generated/control && uv run python
-      src/ecos/ssot/tools/mof-compile.py check
-      --out-dir src/ecos/ssot/mof/generated/control
+  - cmd: cd projects/ecos && uv run python src/ecos/ssot/tools/mof-compile.py compile
+      --out-dir src/ecos/ssot/mof/generated/control && uv run python src/ecos/ssot/tools/mof-compile.py
+      check --out-dir src/ecos/ssot/mof/generated/control
     expect: exit 0；四类产物和 manifest 与 M2 模型真相一致
-  - cmd: >-
-      cd projects/omo && uv run --with pytest python -m pytest
-      tests/test_sovereignty_mandates.py tests/test_sovereignty_mandate_replay.py
-      tests/test_sovereignty_mandate_admission.py tests/test_sovereignty_roles.py
-      tests/test_sovereignty_replay.py -q
+  - cmd: cd projects/omo && uv run --with pytest python -m pytest tests/test_sovereignty_mandates.py
+      tests/test_sovereignty_mandate_replay.py tests/test_sovereignty_mandate_admission.py
+      tests/test_sovereignty_roles.py tests/test_sovereignty_replay.py -q
     expect: exit 0
-  - cmd: >-
-      cd projects/omo && tmp="$(mktemp -d)" && trap 'rm -rf "$tmp"' EXIT &&
-      uv run --frozen omo ledger sovereignty-assign --db "$tmp/ledger.db"
-      --principal-id principal:alice --role-id role:family-steward
-      --responsibilities family-commitments --json > "$tmp/role.json" &&
-      uv run --frozen omo ledger mandate-grant --db "$tmp/ledger.db"
-      --mandate-id mandate:family-mail-draft --principal-id principal:alice
-      --executor-id agent:planner --episode-id episode_001
-      --role-context-id role:family-steward
-      --responsibility-id responsibility:family-commitments
-      --capability bos://mail/draft --autonomy-level A3 --risk-ceiling R2
-      --approval-mode matrix --disclosure-policy disclosure:private
-      --budget-limit 1 --budget-unit call --revocable --json > "$tmp/grant.json" &&
-      uv run --frozen omo ledger mandate-admit --db "$tmp/ledger.db"
-      --mandate-id mandate:family-mail-draft --principal-id principal:alice
-      --executor-id agent:planner --episode-id episode_001
-      --role-context-id role:family-steward
-      --responsibility-id responsibility:family-commitments
-      --capability bos://mail/draft --risk-level R2 --requested-budget 1
-      --budget-unit call --disclosure-policy disclosure:private --json > "$tmp/allow.json" &&
-      jq -e '.allowed == true and .reason == "allow"' "$tmp/allow.json" &&
-      if uv run --frozen omo ledger mandate-admit --db "$tmp/ledger.db"
-      --mandate-id mandate:missing --principal-id principal:alice
-      --executor-id agent:planner --episode-id episode_001
-      --role-context-id role:family-steward
-      --responsibility-id responsibility:family-commitments
-      --capability bos://mail/draft --risk-level R2 --requested-budget 1
-      --budget-unit call --disclosure-policy disclosure:private --json > "$tmp/deny.json";
-      then exit 1; fi && jq -e '.allowed == false and .reason == "mandate_not_found"'
-      "$tmp/deny.json" && uv run --frozen omo ledger verify --db "$tmp/ledger.db"
-      --from 1 --json > "$tmp/verify.json" && jq -e '.ok == true and .total == 2'
-      "$tmp/verify.json"
+  - cmd: cd projects/omo && tmp="$(mktemp -d)" && trap 'rm -rf "$tmp"' EXIT && uv
+      run --frozen omo ledger sovereignty-assign --db "$tmp/ledger.db" --principal-id
+      principal:alice --role-id role:family-steward --responsibilities family-commitments
+      --json > "$tmp/role.json" && uv run --frozen omo ledger mandate-grant --db "$tmp/ledger.db"
+      --mandate-id mandate:family-mail-draft --principal-id principal:alice --executor-id
+      agent:planner --episode-id episode_001 --role-context-id role:family-steward
+      --responsibility-id responsibility:family-commitments --capability bos://mail/draft
+      --autonomy-level A3 --risk-ceiling R2 --approval-mode matrix --disclosure-policy
+      disclosure:private --budget-limit 1 --budget-unit call --revocable --json >
+      "$tmp/grant.json" && uv run --frozen omo ledger mandate-admit --db "$tmp/ledger.db"
+      --mandate-id mandate:family-mail-draft --principal-id principal:alice --executor-id
+      agent:planner --episode-id episode_001 --role-context-id role:family-steward
+      --responsibility-id responsibility:family-commitments --capability bos://mail/draft
+      --risk-level R2 --requested-budget 1 --budget-unit call --disclosure-policy
+      disclosure:private --json > "$tmp/allow.json" && jq -e '.allowed == true and
+      .reason == "allow"' "$tmp/allow.json" && if uv run --frozen omo ledger mandate-admit
+      --db "$tmp/ledger.db" --mandate-id mandate:missing --principal-id principal:alice
+      --executor-id agent:planner --episode-id episode_001 --role-context-id role:family-steward
+      --responsibility-id responsibility:family-commitments --capability bos://mail/draft
+      --risk-level R2 --requested-budget 1 --budget-unit call --disclosure-policy
+      disclosure:private --json > "$tmp/deny.json"; then exit 1; fi && jq -e '.allowed
+      == false and .reason == "mandate_not_found"' "$tmp/deny.json" && uv run --frozen
+      omo ledger verify --db "$tmp/ledger.db" --from 1 --json > "$tmp/verify.json"
+      && jq -e '.ok == true and .total == 2' "$tmp/verify.json"
     expect: exit 0；有效 A3/R2 判定 allow、无 Mandate 判定 deny 且只存在 role+grant 两条事件
   workflow: bet-execution
   underlying_workflow: project-code-change
@@ -1946,10 +1883,9 @@ bets:
   - BET-Y1Q2-T1-04
   risk_level: L2
   human_gate: false
-  circuit_breaker: >-
-    超 3 天或生成契约无法被 OMO 真实消费 → 停止扩大范围，只保留可执行的
-    DelegationMandate M2+编译产物+纯 Python grant/revoke/admit+回放/负向测试；
-    绝不改 Ledger DDL/trigger，不借 Sovereignty.* 绕门，不提前实现 W2-03/W2-04
+  circuit_breaker: 超 3 天或生成契约无法被 OMO 真实消费 → 停止扩大范围，只保留可执行的 DelegationMandate M2+编译产物+纯
+    Python grant/revoke/admit+回放/负向测试； 绝不改 Ledger DDL/trigger，不借 Sovereignty.* 绕门，不提前实现
+    W2-03/W2-04
   retro: required
 - id: BET-Y1Q2-T1-06
   track: T1-TRUTH
@@ -1959,11 +1895,9 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-11
-  goal: >-
-    在可信本地单用户部署上，将 W2-02 纯授权准入转为对受支持的公共 Agora Capability
-    Gateway 副作用路由的真实 fail-closed 强制执行。ECOS 提供生成的 PolicyDecision/ActionReceipt
-    M2；OMO 拥有 PDP 及 LedgerBroker 决策/回执因果；Agora 拥有紧邻 provider 的共享 PEP。
-    通过窄注入端口/运行时适配器避免 Agora→OMO 硬 Python 依赖环。
+  goal: 在可信本地单用户部署上，将 W2-02 纯授权准入转为对受支持的公共 Agora Capability Gateway 副作用路由的真实 fail-closed
+    强制执行。ECOS 提供生成的 PolicyDecision/ActionReceipt M2；OMO 拥有 PDP 及 LedgerBroker 决策/回执因果；Agora
+    拥有紧邻 provider 的共享 PEP。 通过窄注入端口/运行时适配器避免 Agora→OMO 硬 Python 依赖环。
   non_goals:
   - W2-04 投影/收件箱
   - 真实邮件/日历/任务/文件/业务副作用
@@ -1982,55 +1916,42 @@ bets:
   - provider 崩溃后自动对账
   - schema-only/decorator-only/OMO-only/demo-only 声明
   done_when:
-  - >-
-      ECOS M2 PolicyDecision+ActionReceipt 确定性编译到已有生成产物/hash manifest；OMO
-      和 Agora 校验相同的生成 Pydantic 契约，无复制的 dict/dataclass 镜像
-  - >-
-      服务端能力描述符决定 effectful/read-only/risk；caller 只能收紧；未知 effect metadata
-      拒绝；已注册 discovery/status 读路径无需 effect receipt 仍可用
-  - >-
-      共享 PEP 覆盖受支持的公共 /v1/tools/call/FastMCP、BOS mutate_resource 和 resolve_bos_uri，
-      以及从这些路由到达的 ProxyManager/MCP-stdio 终端适配器；无已验证 decision context
-      的对这些已注册路径的直接调用拒绝。不要求任意 Python import 隔离或不相关的 legacy/background
-      路由
-  - >-
-      严格的进程内 decision context 绑定 decision_id/action_id、principal/executor/episode、
-      mandate id+version、capability、server risk、budget/unit、disclosure、canonical request hash、
-      trace、issued/expires。PEP 在 provider 前立即匹配；mismatch/expired/revoked 拒绝且
-      provider.calls=0。无需密码学
-  - >-
-      排序：validate+PDP → 持久化 PolicyDecision → 持久化 ActionReceipt(started) → fake
-      provider 至多一次 → 持久化终态 succeeded|failed。PDP 不可用/decision append/start
-      append 失败 ⇒ 0 calls。provider 异常 ⇒ failed receipt。终态 append 失败 ⇒ 永不返回
-      succeeded；返回 receipt_unconfirmed 且 started 可见。本波次无自动崩溃对账
-  - >-
-      简单 ledger 支撑的 action_id/幂等防止同进程重复重试：相同 action+相同 hash 返回先前状态不再调用；
-      不同 hash 拒绝。分布式/并发精确一次推迟
-  - >-
-      稳定 reason 至少包含 policy_denied、pdp_unavailable、ledger_unavailable、provider_failed、
-      receipt_unconfirmed；无宽泛 exception 映射到 allow/succeeded
-  - >-
-      真实集成使用真实 LedgerBroker + 实际受支持的 Agora 公共路由 + 受控 fake provider；断言
-      结果、provider 调用计数、有序 decision/start/terminal replay。覆盖 allow、no mandate、
-      request mismatch、PDP failure、decision/start append failure、provider failure、terminal
-      failure、同进程重复重试、只读非回归。无真实外部副作用
-  - >-
-      定向 ECOS/OMO/Agora 测试套件加 W2-01/W2-02 回归通过；ledger hash chain/replay 全绿
+  - ECOS M2 PolicyDecision+ActionReceipt 确定性编译到已有生成产物/hash manifest；OMO 和 Agora 校验相同的生成
+    Pydantic 契约，无复制的 dict/dataclass 镜像
+  - 服务端能力描述符决定 effectful/read-only/risk；caller 只能收紧；未知 effect metadata 拒绝；已注册 discovery/status
+    读路径无需 effect receipt 仍可用
+  - 共享 PEP 覆盖受支持的公共 /v1/tools/call/FastMCP、BOS mutate_resource 和 resolve_bos_uri，
+    以及从这些路由到达的 ProxyManager/MCP-stdio 终端适配器；无已验证 decision context 的对这些已注册路径的直接调用拒绝。不要求任意
+    Python import 隔离或不相关的 legacy/background 路由
+  - 严格的进程内 decision context 绑定 decision_id/action_id、principal/executor/episode、 mandate
+    id+version、capability、server risk、budget/unit、disclosure、canonical request hash、
+    trace、issued/expires。PEP 在 provider 前立即匹配；mismatch/expired/revoked 拒绝且 provider.calls=0。无需密码学
+  - 排序：validate+PDP → 持久化 PolicyDecision → 持久化 ActionReceipt(started) → fake provider
+    至多一次 → 持久化终态 succeeded|failed。PDP 不可用/decision append/start append 失败 ⇒ 0 calls。provider
+    异常 ⇒ failed receipt。终态 append 失败 ⇒ 永不返回 succeeded；返回 receipt_unconfirmed 且 started
+    可见。本波次无自动崩溃对账
+  - 简单 ledger 支撑的 action_id/幂等防止同进程重复重试：相同 action+相同 hash 返回先前状态不再调用； 不同 hash 拒绝。分布式/并发精确一次推迟
+  - 稳定 reason 至少包含 policy_denied、pdp_unavailable、ledger_unavailable、provider_failed、
+    receipt_unconfirmed；无宽泛 exception 映射到 allow/succeeded
+  - 真实集成使用真实 LedgerBroker + 实际受支持的 Agora 公共路由 + 受控 fake provider；断言 结果、provider 调用计数、有序
+    decision/start/terminal replay。覆盖 allow、no mandate、 request mismatch、PDP failure、decision/start
+    append failure、provider failure、terminal failure、同进程重复重试、只读非回归。无真实外部副作用
+  - 定向 ECOS/OMO/Agora 测试套件加 W2-01/W2-02 回归通过；ledger hash chain/replay 全绿
   verify:
   - cmd: cd projects/ecos && uv run --with pytest python -m pytest tests/test_mof_w2_policy_enforcement_contract.py
       tests/test_mof_compiler.py -q
     expect: exit 0
-  - cmd: >-
-      cd projects/ecos && uv run python src/ecos/ssot/tools/mof-compile.py compile
+  - cmd: cd projects/ecos && uv run python src/ecos/ssot/tools/mof-compile.py compile
       --out-dir src/ecos/ssot/mof/generated/control && uv run python src/ecos/ssot/tools/mof-compile.py
       check --out-dir src/ecos/ssot/mof/generated/control
     expect: exit 0
-  - cmd: cd projects/omo && uv sync --frozen --reinstall-package ecos && uv run --with pytest python -m pytest tests/test_sovereignty_policy_enforcement.py
-      tests/integration/test_w2_03_capability_enforcement.py tests/test_sovereignty_mandate_admission.py
-      tests/test_sovereignty_mandate_replay.py -q
-    expect: exit 0
-  - cmd: cd projects/agora && uv sync --frozen --reinstall-package ecos && uv run --with pytest python -m pytest tests/test_pep_integration.py
+  - cmd: cd projects/omo && uv sync --frozen --reinstall-package ecos && uv run --with
+      pytest python -m pytest tests/test_sovereignty_policy_enforcement.py tests/integration/test_w2_03_capability_enforcement.py
+      tests/test_sovereignty_mandate_admission.py tests/test_sovereignty_mandate_replay.py
       -q
+    expect: exit 0
+  - cmd: cd projects/agora && uv sync --frozen --reinstall-package ecos && uv run
+      --with pytest python -m pytest tests/test_pep_integration.py -q
     expect: exit 0
   - cmd: cd projects/omo && uv lock --check && cd projects/agora && uv lock --check
       && git diff --check
@@ -2067,10 +1988,8 @@ bets:
   - BET-Y1Q2-T1-05
   risk_level: L2
   human_gate: false
-  circuit_breaker: >-
-    超 3 天或核心受支持的公共路由需要真实业务副作用、DDL、新项目、硬依赖环、或无法
-    物理拦截时，停止并保持 BET 未完成；绝不声称 schema/decorator-only 完成。推迟的
-    极端边界是诚实债务，不是阻断器
+  circuit_breaker: 超 3 天或核心受支持的公共路由需要真实业务副作用、DDL、新项目、硬依赖环、或无法 物理拦截时，停止并保持 BET 未完成；绝不声称
+    schema/decorator-only 完成。推迟的 极端边界是诚实债务，不是阻断器
   retro: required
 - id: BET-Y1Q2-T1-07
   track: T1-TRUTH
@@ -2080,10 +1999,8 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-11
-  goal: >-
-    在可信本地单用户环境中，以 LedgerBroker、既有 Episode M2 与 W2-01
-    RoleAssignment 为唯一事实源，提供可重复重放的 Episode summary、Role Portfolio
-    和 Inbox cards 三类只读投影。投影不成为新权威，不写回旧 Decision Inbox，供
+  goal: 在可信本地单用户环境中，以 LedgerBroker、既有 Episode M2 与 W2-01 RoleAssignment 为唯一事实源，提供可重复重放的
+    Episode summary、Role Portfolio 和 Inbox cards 三类只读投影。投影不成为新权威，不写回旧 Decision Inbox，供
     OMO 查询与 Cockpit 只读 API 复用。
   non_goals:
   - Episode 写入命令或新事件协议
@@ -2096,36 +2013,27 @@ bets:
   - 旧 JSONL/Scene Card 权威迁移
   - 复杂角色组合优化或 Personal Constitution
   done_when:
-  - >-
-      OMO 从 LedgerBroker 的有序事件重放 Episode 投影，输出 episode_id、schema_version、
-      contains_event_refs、opened_at 与可选 summary/outcome/signal refs；缺 episode_id、空成员或
-      非法成员不进入正式结果，并返回稳定 blocked reason
-  - >-
-      相同 Ledger 重复构建得到规范 JSON 完全一致；投影构建只调用 read/verify，不依赖旧投影，
-      Ledger event count 与 hash chain 保持不变
-  - >-
-      Role Portfolio 按单一 principal_id 隔离，至少列出 active role assignments、责任关联和
-      Episode 状态计数；其他 principal 的角色与责任不可泄漏
-  - >-
-      Inbox 仅输出 FYI/Approval/Decision 最小卡片：episode、principal/role/responsibility、
-      why_now/summary、risk/authority/status、evidence refs、deadline；缺数据显式 null/unknown，
-      不触发 approve、execute、provider 或任何文件写
-  - >-
-      Cockpit 复用现有 Workflow Mesh 只读 API 暴露三类投影；重复 GET 幂等，OMO Ledger/
-      W2-01/W2-02/W2-03 与 Cockpit API 定向回归通过
+  - OMO 从 LedgerBroker 的有序事件重放 Episode 投影，输出 episode_id、schema_version、 contains_event_refs、opened_at
+    与可选 summary/outcome/signal refs；缺 episode_id、空成员或 非法成员不进入正式结果，并返回稳定 blocked reason
+  - 相同 Ledger 重复构建得到规范 JSON 完全一致；投影构建只调用 read/verify，不依赖旧投影， Ledger event count 与
+    hash chain 保持不变
+  - Role Portfolio 按单一 principal_id 隔离，至少列出 active role assignments、责任关联和 Episode
+    状态计数；其他 principal 的角色与责任不可泄漏
+  - Inbox 仅输出 FYI/Approval/Decision 最小卡片：episode、principal/role/responsibility、 why_now/summary、risk/authority/status、evidence
+    refs、deadline；缺数据显式 null/unknown， 不触发 approve、execute、provider 或任何文件写
+  - Cockpit 复用现有 Workflow Mesh 只读 API 暴露三类投影；重复 GET 幂等，OMO Ledger/ W2-01/W2-02/W2-03
+    与 Cockpit API 定向回归通过
   verify:
-  - cmd: >-
-      cd projects/omo && uv sync --frozen --reinstall-package ecos && uv run --with pytest
-      python -m pytest tests/test_episode_projection.py tests/test_sovereignty_roles.py
+  - cmd: cd projects/omo && uv sync --frozen --reinstall-package ecos && uv run --with
+      pytest python -m pytest tests/test_episode_projection.py tests/test_sovereignty_roles.py
       tests/test_event_ledger.py -q
     expect: exit 0
-  - cmd: >-
-      cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python -m pytest
-      src/cockpit/tests/test_api_episode_projection.py
-      src/cockpit/tests/test_api_workflow_mesh_operations.py -q
+  - cmd: cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python
+      -m pytest src/cockpit/tests/test_api_episode_projection.py src/cockpit/tests/test_api_workflow_mesh_operations.py
+      -q
     expect: exit 0
-  - cmd: cd projects/omo && uv lock --check && git diff --check && cd ../cockpit
-      && git diff --check
+  - cmd: cd projects/omo && uv lock --check && git diff --check && cd ../cockpit &&
+      git diff --check
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
@@ -2143,23 +2051,20 @@ bets:
   - BET-Y1Q2-T1-06
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    超 2 天、需要 Ledger DDL/新顶级项目/多租户/实时分布式并发才能通过时，立即缩回为
-    OMO 只读 replay projector 与 Cockpit GET API；不扩写协议，不把部分投影宣称为完整
-    Digital Twin
+  circuit_breaker: 超 2 天、需要 Ledger DDL/新顶级项目/多租户/实时分布式并发才能通过时，立即缩回为 OMO 只读 replay
+    projector 与 Cockpit GET API；不扩写协议，不把部分投影宣称为完整 Digital Twin
   retro: required
 - id: BET-Y1Q2-T1-08
   track: T1-TRUTH
   window: Y1Q2
-  title: Blueprint W2-05 personal Episode ingress and governed local draft golden slice
+  title: Blueprint W2-05 personal Episode ingress and governed local draft golden
+    slice
   appetite: 2 days
   priority: P0
   status: done
   done_at: 2026-08-12
-  goal: >-
-    在可信本地单用户环境中，把 W2-01 角色/责任、W2-02 Mandate、W2-03 PDP/PEP
-    与回执、W2-04 Episode/Inbox 投影串成第一条可实际操作的个人闭环：由 Cockpit
-    发起一条个人跟进 Episode，经人工确认后生成一个只保存在本机 runtime 的结构化跟进草稿，
+  goal: 在可信本地单用户环境中，把 W2-01 角色/责任、W2-02 Mandate、W2-03 PDP/PEP 与回执、W2-04 Episode/Inbox
+    投影串成第一条可实际操作的个人闭环：由 Cockpit 发起一条个人跟进 Episode，经人工确认后生成一个只保存在本机 runtime 的结构化跟进草稿，
     全链路事件、回执、证据和人工 Outcome 归入同一 Event Ledger 与 episode_id。草稿永不发送。
   non_goals:
   - 发送邮件、创建外部任务、修改日历或调用任何远端写接口
@@ -2171,43 +2076,32 @@ bets:
   - 恶意同进程绕过、分布式并发、精确一次、崩溃自动对账或跨主机执行
   - 自动长期记忆固化、信号源采集/去重或真实价值指标升级
   done_when:
-  - >-
-      Cockpit 的受控 POST 入口在真实 LedgerBroker 中创建个人跟进 Episode.Decision 卡；
-      请求必须绑定已有 active role assignment 与 responsibility，重复 idempotency key 不重复建卡，
-      W2-04 GET 随即在同一 principal 的 Inbox 中可见
-  - >-
-      明确人工 confirm 后才由 OMO 在同一 episode_id 授予仅限
-      bos://personal/followup/draft、A2/R0、单次预算的可撤销 Mandate；未确认、角色失效或责任不匹配
-      均拒绝且不生成本地草稿
-  - >-
-      execute 复用现有 Agora enforce/complete 与
-      AGORA_PEP_PROVIDER=omo.sovereignty.enforcement:AgoraPepProvider，生成一个服务端命名、
-      仅写 PERSONAL_DRAFT_DIR/runtime 的 JSON 草稿；草稿包含主题、上下文、deadline、下一步与
-      never_send=true，不接受调用方文件路径且不触达外部系统
-  - >-
-      PolicyDecision、ActionReceipt started/terminal、Evidence.LocalDraft 与 Outcome 共享
-      principal/episode/role/responsibility/mandate/trace 因果；人工 accept/edit/reject/defer
-      feedback 追加 Outcome.Human，随后 Episode projection 可见完整成员引用且 hash chain 为 ok
-  - >-
-      一条无 mock HTTP E2E 完成 assign role → start → Inbox 可见 → confirm → PEP execute 一次
-      → 本地草稿存在 → feedback → GET 显示完整 Episode；缺 role、缺 mandate、缺 _omo_policy、
-      PEP/provider/terminal receipt 失败均不返回 succeeded，且可逆本地草稿被清理
-  - >-
-      只新增这一条 golden slice 所需的窄 OMO service 与 Cockpit composition；不改 Agora、ECOS、
-      Ledger schema、旧 Workflow Mesh 写链或 Cockpit UI，W2-01 至 W2-04 定向回归通过
+  - Cockpit 的受控 POST 入口在真实 LedgerBroker 中创建个人跟进 Episode.Decision 卡； 请求必须绑定已有 active
+    role assignment 与 responsibility，重复 idempotency key 不重复建卡， W2-04 GET 随即在同一 principal
+    的 Inbox 中可见
+  - 明确人工 confirm 后才由 OMO 在同一 episode_id 授予仅限 bos://personal/followup/draft、A2/R0、单次预算的可撤销
+    Mandate；未确认、角色失效或责任不匹配 均拒绝且不生成本地草稿
+  - execute 复用现有 Agora enforce/complete 与 AGORA_PEP_PROVIDER=omo.sovereignty.enforcement:AgoraPepProvider，生成一个服务端命名、
+    仅写 PERSONAL_DRAFT_DIR/runtime 的 JSON 草稿；草稿包含主题、上下文、deadline、下一步与 never_send=true，不接受调用方文件路径且不触达外部系统
+  - PolicyDecision、ActionReceipt started/terminal、Evidence.LocalDraft 与 Outcome 共享
+    principal/episode/role/responsibility/mandate/trace 因果；人工 accept/edit/reject/defer
+    feedback 追加 Outcome.Human，随后 Episode projection 可见完整成员引用且 hash chain 为 ok
+  - 一条无 mock HTTP E2E 完成 assign role → start → Inbox 可见 → confirm → PEP execute 一次
+    → 本地草稿存在 → feedback → GET 显示完整 Episode；缺 role、缺 mandate、缺 _omo_policy、 PEP/provider/terminal
+    receipt 失败均不返回 succeeded，且可逆本地草稿被清理
+  - 只新增这一条 golden slice 所需的窄 OMO service 与 Cockpit composition；不改 Agora、ECOS、 Ledger
+    schema、旧 Workflow Mesh 写链或 Cockpit UI，W2-01 至 W2-04 定向回归通过
   verify:
-  - cmd: >-
-      cd projects/omo && uv sync --frozen --reinstall-package ecos && uv run --with pytest
-      python -m pytest tests/test_personal_episode.py tests/test_episode_projection.py
+  - cmd: cd projects/omo && uv sync --frozen --reinstall-package ecos && uv run --with
+      pytest python -m pytest tests/test_personal_episode.py tests/test_episode_projection.py
       tests/test_sovereignty_policy_enforcement.py -q
     expect: exit 0
-  - cmd: >-
-      cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python -m pytest
-      src/cockpit/tests/test_api_personal_episode.py
-      src/cockpit/tests/test_api_episode_projection.py -q
+  - cmd: cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python
+      -m pytest src/cockpit/tests/test_api_personal_episode.py src/cockpit/tests/test_api_episode_projection.py
+      -q
     expect: exit 0；包含真实临时 Ledger、真实 OMO+Agora PEP 与真实本地草稿文件，不 monkeypatch 核心链路
-  - cmd: >-
-      cd projects/omo && uv lock --check && git diff --check && cd ../cockpit && git diff --check
+  - cmd: cd projects/omo && uv lock --check && git diff --check && cd ../cockpit &&
+      git diff --check
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
@@ -2224,10 +2118,9 @@ bets:
   - BET-Y1Q2-T1-07
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    超 2 天、需要真实外部副作用、新协议/DDL、新顶级项目或第二个场景才能闭环时，立即停止扩展；
-    只保留可重放 Episode ingress、人工确认和本地 never-send 草稿链路。任何无法通过真实
-    Ledger+Agora PEP+HTTP E2E 的部分不得以 mock、schema 或文件存在冒充完成
+  circuit_breaker: 超 2 天、需要真实外部副作用、新协议/DDL、新顶级项目或第二个场景才能闭环时，立即停止扩展； 只保留可重放 Episode
+    ingress、人工确认和本地 never-send 草稿链路。任何无法通过真实 Ledger+Agora PEP+HTTP E2E 的部分不得以 mock、schema
+    或文件存在冒充完成
   retro: required
 - id: BET-Y1Q2-T1-09
   track: T5-ORCH
@@ -2237,10 +2130,8 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-12
-  goal: >-
-    在不修改 Orca 安装包的前提下，为可信本地单用户环境建立一个 fail-closed Crush
-    worker 启动适配器：只有 Orca runtime、Crush TUI 与 yolo 模式均被直接证明可用后，
-    才向该 terminal 注入一次已登记任务，并如实区分 dispatch injected 与模型输入已确认。
+  goal: 在不修改 Orca 安装包的前提下，为可信本地单用户环境建立一个 fail-closed Crush worker 启动适配器：只有 Orca runtime、Crush
+    TUI 与 yolo 模式均被直接证明可用后， 才向该 terminal 注入一次已登记任务，并如实区分 dispatch injected 与模型输入已确认。
   non_goals:
   - 修改或重新打包 Orca、Crush
   - 建设新的通用编排器、自动重试器、进程 reaper 或跨主机 worker 协议
@@ -2248,31 +2139,23 @@ bets:
   - 接入 Pi、Oh My Pi、Grok、MiMo、AGY、Kilo、CodeBuddy、OpenCode 的统一 provider/quota registry
   - 自动关闭无法归属的 terminal，或以关闭 terminal 代替 worker release
   done_when:
-  - >-
-      适配器先验证当前 Crush help 明确支持 --yolo，再验证 Orca app running/runtime ready；
-      创建 terminal 时只使用正确的 crush --yolo 启动命令，不发送 crush '-yolo'
-  - >-
-      terminal 创建后必须等待 Orca tui-idle，并从可读、可写 terminal preview 直接确认
-      Crush 的 Yolo mode；任一步失败均禁止 dispatch，且回执列出残留 terminal
-  - >-
-      对同一调用最多执行一次 orchestration dispatch --inject；成功仅返回
-      state=dispatch_injected、input_accepted=unproven，不把注入回执冒充 TUI/model ACK
-  - >-
-      单元测试覆盖成功顺序、TUI timeout、错误 Crush 参数回落、runtime 未 ready、
-      dispatch 失败不重试与 malformed JSON fail-closed
-  - >-
-      一条无代码写入的真实 Orca+Crush 探针完成 terminal ready → dispatch injected →
-      worker_done 回执；无法从当前 coordinator 归属安全 release 的 terminal 必须记录为残留风险
+  - 适配器先验证当前 Crush help 明确支持 --yolo，再验证 Orca app running/runtime ready； 创建 terminal
+    时只使用正确的 crush --yolo 启动命令，不发送 crush '-yolo'
+  - terminal 创建后必须等待 Orca tui-idle，并从可读、可写 terminal preview 直接确认 Crush 的 Yolo mode；任一步失败均禁止
+    dispatch，且回执列出残留 terminal
+  - 对同一调用最多执行一次 orchestration dispatch --inject；成功仅返回 state=dispatch_injected、input_accepted=unproven，不把注入回执冒充
+    TUI/model ACK
+  - 单元测试覆盖成功顺序、TUI timeout、错误 Crush 参数回落、runtime 未 ready、 dispatch 失败不重试与 malformed
+    JSON fail-closed
+  - 一条无代码写入的真实 Orca+Crush 探针完成 terminal ready → dispatch injected → worker_done 回执；无法从当前
+    coordinator 归属安全 release 的 terminal 必须记录为残留风险
   verify:
-  - cmd: >-
-      uv run --with pytest python -m pytest tests/unit/gac/test_orca_worker_start.py -q
+  - cmd: uv run --with pytest python -m pytest tests/unit/gac/test_orca_worker_start.py
+      -q
     expect: exit 0
-  - cmd: >-
-      uv run --with ruff ruff check bin/gac/orca-worker-start.py
-      tests/unit/gac/test_orca_worker_start.py
+  - cmd: uv run --with ruff ruff check bin/gac/orca-worker-start.py tests/unit/gac/test_orca_worker_start.py
     expect: exit 0
-  - cmd: >-
-      python3 bin/gac/orca-worker-start.py --help && git diff --check
+  - cmd: python3 bin/gac/orca-worker-start.py --help && git diff --check
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
@@ -2288,10 +2171,8 @@ bets:
   - BET-Y1Q2-T1-08
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    需要修改 Orca 安装包、依赖固定 sleep、自动重复注入、强行关闭未知归属 terminal，
-    或无法获得真实 tui-idle/Yolo mode/dispatch receipt 时立即停止；只保留诊断和 fail-closed
-    wrapper，不宣称 worker ready
+  circuit_breaker: 需要修改 Orca 安装包、依赖固定 sleep、自动重复注入、强行关闭未知归属 terminal， 或无法获得真实 tui-idle/Yolo
+    mode/dispatch receipt 时立即停止；只保留诊断和 fail-closed wrapper，不宣称 worker ready
   retro: required
 - id: BET-Y1Q2-T1-10
   track: T5-ORCH
@@ -2301,10 +2182,8 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-12
-  goal: >-
-    在可信本地单用户环境中，把 Pi、Oh My Pi、OpenCode、CodeBuddy、Claude Code、
-    Crush、Grok、MiMo、AGY、Codex、Reasonix 与 Kilo 统一登记为可治理的候选 worker，
-    通过 CodexBar 和 omlxc 形成只读、脱敏、可验真的观测回执；准入状态与执行调度严格分离，
+  goal: 在可信本地单用户环境中，把 Pi、Oh My Pi、OpenCode、CodeBuddy、Claude Code、 Crush、Grok、MiMo、AGY、Codex、Reasonix
+    与 Kilo 统一登记为可治理的候选 worker， 通过 CodexBar 和 omlxc 形成只读、脱敏、可验真的观测回执；准入状态与执行调度严格分离，
     为后续复用 AetherForge/omlxc 与既有调度策略提供事实输入。
   non_goals:
   - 新建 scheduler、router、task queue、provider gateway 或第二套 worker 生命周期
@@ -2313,38 +2192,28 @@ bets:
   - 把 CLI 存在、额度未知、Orca dispatch injected 或本地算力 ready 冒充 worker admitted/task completed
   - 修改 Orca、Multica、Kandev、Ruflo 或开展跨主机、多租户、成本优化与自治晋升
   done_when:
-  - >-
-      capability-providers 与 workers SSOT 覆盖当前候选池并以 provider_ref 关联；新增候选默认
-      enabled=false、admission_state=declared，使用 argv 列表描述版本探针，禁止 shell command string
-  - >-
-      只读 observer 对每个候选最多执行一次白名单 version probe，不调用模型、不写用户配置；
-      缺 CLI、非零退出、超时或非法 argv 均产生 unavailable/error 回执，绝不转为 admitted
-  - >-
-      CodexBar 仅作为额度 observation adapter，回执删除 email/account/raw payload 等身份数据；
-      malformed、unauthorized、stale 或不可用时 quota 保持 unknown，禁止用代理值补齐
-  - >-
-      omlxc status 作为独立 compute health observation；AetherForge 只登记
-      bos://compute/aetherforge/infer 路由契约，禁止把 compute health 冒充 provider quota 或模型调用成功
-  - >-
-      observer 输出 canonical manifest checksum；独立 verify 传入外部 expected digest 后能发现
-      payload 与内嵌 checksum 同时被替换；版本化真实探针证据证明
-      OpenCode 配置前后 hash 不变、无模型调用、无自动 dispatch，Kilo 未安装时诚实显示 unavailable
-  - >-
-      worker collaboration 标准明确 pool 是既有 OMO worker policy、AetherForge/omlxc compute 与
-      runtime observation 的只读联合投影；真正执行仍须走原 task/Mesh/lease/review/receipt 生命周期
+  - capability-providers 与 workers SSOT 覆盖当前候选池并以 provider_ref 关联；新增候选默认 enabled=false、admission_state=declared，使用
+    argv 列表描述版本探针，禁止 shell command string
+  - 只读 observer 对每个候选最多执行一次白名单 version probe，不调用模型、不写用户配置； 缺 CLI、非零退出、超时或非法 argv 均产生
+    unavailable/error 回执，绝不转为 admitted
+  - CodexBar 仅作为额度 observation adapter，回执删除 email/account/raw payload 等身份数据； malformed、unauthorized、stale
+    或不可用时 quota 保持 unknown，禁止用代理值补齐
+  - omlxc status 作为独立 compute health observation；AetherForge 只登记 bos://compute/aetherforge/infer
+    路由契约，禁止把 compute health 冒充 provider quota 或模型调用成功
+  - observer 输出 canonical manifest checksum；独立 verify 传入外部 expected digest 后能发现 payload
+    与内嵌 checksum 同时被替换；版本化真实探针证据证明 OpenCode 配置前后 hash 不变、无模型调用、无自动 dispatch，Kilo 未安装时诚实显示
+    unavailable
+  - worker collaboration 标准明确 pool 是既有 OMO worker policy、AetherForge/omlxc compute
+    与 runtime observation 的只读联合投影；真正执行仍须走原 task/Mesh/lease/review/receipt 生命周期
   verify:
-  - cmd: >-
-      uv run --with pytest --with pyyaml python -m pytest
-      tests/unit/gac/test_agent_pool_observe.py -q
+  - cmd: uv run --with pytest --with pyyaml python -m pytest tests/unit/gac/test_agent_pool_observe.py
+      -q
     expect: exit 0
-  - cmd: >-
-      uv run --with ruff ruff check bin/gac/agent-pool-observe.py
-      tests/unit/gac/test_agent_pool_observe.py
+  - cmd: uv run --with ruff ruff check bin/gac/agent-pool-observe.py tests/unit/gac/test_agent_pool_observe.py
     expect: exit 0
-  - cmd: >-
-      uv run --with pyyaml python bin/gac/agent-pool-observe.py observe --json
-      > /tmp/agent-pool-observation.json && uv run --with pyyaml python
-      bin/gac/agent-pool-observe.py verify --manifest /tmp/agent-pool-observation.json --json
+  - cmd: uv run --with pyyaml python bin/gac/agent-pool-observe.py observe --json
+      > /tmp/agent-pool-observation.json && uv run --with pyyaml python bin/gac/agent-pool-observe.py
+      verify --manifest /tmp/agent-pool-observation.json --json
     expect: exit 0；只读探针，不调用模型、不修改用户配置
   - cmd: git diff --check
     expect: exit 0
@@ -2371,9 +2240,8 @@ bets:
   - BET-Y1Q2-T1-09
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    需要写用户配置、读取或持久化凭证/身份、发起模型调用、自动选择/切换/fallback，或必须新增
-    调度器才能继续时立即停止；只保留静态声明、只读观测与 fail-closed 准入前回执
+  circuit_breaker: 需要写用户配置、读取或持久化凭证/身份、发起模型调用、自动选择/切换/fallback，或必须新增 调度器才能继续时立即停止；只保留静态声明、只读观测与
+    fail-closed 准入前回执
   retro: required
 - id: BET-Y1Q2-T1-11
   track: T5-ORCH
@@ -2383,47 +2251,35 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-13
-  goal: >-
-    在不改变 Workspace BET、Workflow Mesh、worker admission、receipt 与 verifier 权威边界的前提下，
-    建立 Kandev 候选控制面的最小可撤销 Phase-0：只在隔离 home 和 loopback 端口启动固定版本，
-    验证健康、监听边界、终止回收与脱敏回执，为后续 Pi/Oh My Pi 受治理试点提供安全接线基线。
+  goal: 在不改变 Workspace BET、Workflow Mesh、worker admission、receipt 与 verifier 权威边界的前提下，
+    建立 Kandev 候选控制面的最小可撤销 Phase-0：只在隔离 home 和 loopback 端口启动固定版本， 验证健康、监听边界、终止回收与脱敏回执，为后续
+    Pi/Oh My Pi 受治理试点提供安全接线基线。
   non_goals:
   - 创建 Kandev workspace、task、session、automation、MCP 服务、远程 executor 或常驻 daemon
-  - 让 Kandev 或其 Completed 状态取代 Workspace BET、Workflow Mesh、review、receipt 或 verifier 真相
+  - 让 Kandev 或其 Completed 状态取代 Workspace BET、Workflow Mesh、review、receipt 或 verifier
+    真相
   - 调用 Pi、Oh My Pi 或其他模型，修改 worker admission，自动调度、自动合并或 fallback
   - 读取、复制或持久化用户凭证、身份、OpenCode/CodexBar/cc-switch/omlxc 配置
   - 在非 loopback 地址监听，写入共享 Workspace 运行态或用户级 Kandev 配置
   done_when:
-  - >-
-      runner 默认只输出 dry-run 计划；只有显式 run-smoke --execute、固定 package version、空且安全的
-      隔离 home 与有效端口同时满足时才可启动，禁止 latest、shell string 和默认用户目录
-  - >-
-      执行时强制 KANDEV_SERVER_HOST=127.0.0.1、KANDEV_HOME_DIR=<isolated-home>、KANDEV_NO_BROWSER=1；
-      health 或 listener 不可验、绑定 0.0.0.0/*、超时、子进程退出异常均 fail-closed
-  - >-
-      成功或失败后均终止并 reap 子进程，不遗留 listener/daemon；结构化回执仅保留版本、
-      时间、回环地址、health/listener/process 结果与无副作用断言，不包含身份、凭证和原始日志
-  - >-
-      真实 Phase-0 使用一次性隔离 home 和临时端口完成启动→health→loopback 监听→终止→无残留验证；
-      回执明确 task_created=false、agent_spawned=false、model_called=false、workspace_written=false
-  - >-
-      单测覆盖 dry-run、非固定版本、危险 home、非回环监听、health 失败、超时回收、脱敏回执和成功路径；
-      独立 reviewer 审核后才可进入 Pi 真实 admission smoke
+  - runner 默认只输出 dry-run 计划；只有显式 run-smoke --execute、固定 package version、空且安全的 隔离 home
+    与有效端口同时满足时才可启动，禁止 latest、shell string 和默认用户目录
+  - 执行时强制 KANDEV_SERVER_HOST=127.0.0.1、KANDEV_HOME_DIR=<isolated-home>、KANDEV_NO_BROWSER=1；
+    health 或 listener 不可验、绑定 0.0.0.0/*、超时、子进程退出异常均 fail-closed
+  - 成功或失败后均终止并 reap 子进程，不遗留 listener/daemon；结构化回执仅保留版本、 时间、回环地址、health/listener/process
+    结果与无副作用断言，不包含身份、凭证和原始日志
+  - 真实 Phase-0 使用一次性隔离 home 和临时端口完成启动→health→loopback 监听→终止→无残留验证； 回执明确 task_created=false、agent_spawned=false、model_called=false、workspace_written=false
+  - 单测覆盖 dry-run、非固定版本、危险 home、非回环监听、health 失败、超时回收、脱敏回执和成功路径； 独立 reviewer 审核后才可进入
+    Pi 真实 admission smoke
   verify:
-  - cmd: >-
-      uv run --with pytest python -m pytest
-      tests/unit/gac/test_kandev_loopback_trial.py -q
+  - cmd: uv run --with pytest python -m pytest tests/unit/gac/test_kandev_loopback_trial.py
+      -q
     expect: exit 0
-  - cmd: >-
-      uv run --with ruff ruff check bin/gac/kandev-loopback-trial.py
-      tests/unit/gac/test_kandev_loopback_trial.py
+  - cmd: uv run --with ruff ruff check bin/gac/kandev-loopback-trial.py tests/unit/gac/test_kandev_loopback_trial.py
     expect: exit 0
-  - cmd: >-
-      python3 bin/gac/kandev-loopback-trial.py --help &&
-      trial_home=$(mktemp -d /tmp/kandev-plan.XXXXXX) &&
-      python3 bin/gac/kandev-loopback-trial.py run-smoke
-      --package-version 0.87.1 --home "$trial_home" --port 43123 &&
-      rmdir "$trial_home"
+  - cmd: python3 bin/gac/kandev-loopback-trial.py --help && trial_home=$(mktemp -d
+      /tmp/kandev-plan.XXXXXX) && python3 bin/gac/kandev-loopback-trial.py run-smoke
+      --package-version 0.87.1 --home "$trial_home" --port 43123 && rmdir "$trial_home"
     expect: exit 0；不联网、不启动进程、不写配置
   - cmd: git diff --check
     expect: exit 0
@@ -2439,9 +2295,8 @@ bets:
   - BET-Y1Q2-T1-10
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    出现非 loopback 监听、无法验证或回收进程、访问用户凭证/配置、创建任务/代理/模型调用、
-    写入主树或必须将 Kandev 定义为交付真相才能继续时立即停止，只保留脱敏诊断证据，不宣称试点通过
+  circuit_breaker: 出现非 loopback 监听、无法验证或回收进程、访问用户凭证/配置、创建任务/代理/模型调用、 写入主树或必须将 Kandev
+    定义为交付真相才能继续时立即停止，只保留脱敏诊断证据，不宣称试点通过
   retro: required
 - id: BET-Y1Q2-T1-12
   track: T5-ORCH
@@ -2451,58 +2306,40 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-13
-  done_evidence: >-
-    Pi 0.84.1 已通过正式 WorkflowRequested→WorkflowAdmitted→StepDispatched→OMO dispatch
-    链路，由 bounded adapter 经 AetherForge 127.0.0.1:9290 调用 omlxc/coding，返回精确 marker
-    OMO_WORKER_DISPATCH_OK:pi:BET-Y1Q2-T1-12；canonical receipt SHA-256
-    3185833834b6e62a1828b8d468154372d60dc223ce1a285aa81b599fd2ba3028，stdout
-    digest c25099daa48f9fad68f177a748073a1f176600ab31a60bcc454fcb3656ba13c6。
-    根 adapter 34 tests、OMO worker/MCP/lifecycle 48 tests、Ruff 与 diff-check 通过；独立 reviewer CLEAR。
-  goal: >-
-    将已声明的 Pi CLI 收口为一个 L0、无工具、无会话持久化、可超时回收的本地推理 worker；
-    真实模型调用固定经 AetherForge 9290 认证门面进入 omlxc coding 模型，成功且独立复核后
-    才在 workers.yaml 将 Pi 从 declared 晋升为 admitted。
+  done_evidence: Pi 0.84.1 已通过正式 WorkflowRequested→WorkflowAdmitted→StepDispatched→OMO
+    dispatch 链路，由 bounded adapter 经 AetherForge 127.0.0.1:9290 调用 omlxc/coding，返回精确
+    marker OMO_WORKER_DISPATCH_OK:pi:BET-Y1Q2-T1-12；canonical receipt SHA-256 3185833834b6e62a1828b8d468154372d60dc223ce1a285aa81b599fd2ba3028，stdout
+    digest c25099daa48f9fad68f177a748073a1f176600ab31a60bcc454fcb3656ba13c6。 根 adapter
+    34 tests、OMO worker/MCP/lifecycle 48 tests、Ruff 与 diff-check 通过；独立 reviewer CLEAR。
+  goal: 将已声明的 Pi CLI 收口为一个 L0、无工具、无会话持久化、可超时回收的本地推理 worker； 真实模型调用固定经 AetherForge
+    9290 认证门面进入 omlxc coding 模型，成功且独立复核后 才在 workers.yaml 将 Pi 从 declared 晋升为 admitted。
   non_goals:
   - 允许 Pi 读写仓库、调用 shell/工具、执行测试、维护会话或修改用户 Pi 配置
   - 云模型、混合 fallback、自动选模、额度调度、并发消费、精确一次或恶意同机进程隔离
   - 准入 Oh My Pi、OpenCode、Grok、MiMo、AGY 或 Kilo；它们必须各自有真实回执和独立晋升
   - 修改 AetherForge、omlxc、Pi 用户配置、Workflow Mesh 事件协议或 OMO worker 生命周期状态机；仅补准入前权限门与启动根目录解析
   done_when:
-  - >-
-      adapter 只使用固定无 shell argv 运行 pi --print，强制 no-session/no-tools/no-extensions/no-skills/
-      no-context-files/no-approve/offline，固定 provider=omlxc、model=coding，且在独立临时 cwd/config 中运行
-  - >-
-      调用前真实校验 127.0.0.1:9290/health 返回 aetherforge-openai-proxy；任何非 loopback 配置、
-      健康异常、超时、非零退出、空输出、用户配置变化或子进程残留均 fail-closed
-  - >-
-      结构化回执只保留 worker/provider/route、版本、时间、结果、输出摘要与无副作用断言；
-      不保留 prompt、模型原文、账号、凭证、配置原文或原始日志
-  - >-
-      一次真实 Pi→AetherForge→omlxc/coding 调用返回约定 marker，且用户配置、临时 cwd、
-      会话目录、工具调用与子进程残留均无变化/无发生
-  - >-
-      独立 reviewer 通过后 Pi 在 workers.yaml 仅以 L0 reasoning/verification worker 准入，transport 固定走
-      bounded adapter；其他候选 worker 保持 declared/disabled，现有未准入零写入回归持续通过
-  - >-
-      OMO dispatch 在生成任何运行工件前强制 worker operation level、capability 与 write scope；Pi 收到 L1、
-      非空写路径或不相容能力时稳定拒绝且零写入，MCP/CLI 从任意 cwd 调度仍解析到受管 Workspace adapter
+  - adapter 只使用固定无 shell argv 运行 pi --print，强制 no-session/no-tools/no-extensions/no-skills/
+    no-context-files/no-approve/offline，固定 provider=omlxc、model=coding，且在独立临时 cwd/config
+    中运行
+  - 调用前真实校验 127.0.0.1:9290/health 返回 aetherforge-openai-proxy；任何非 loopback 配置、 健康异常、超时、非零退出、空输出、用户配置变化或子进程残留均
+    fail-closed
+  - 结构化回执只保留 worker/provider/route、版本、时间、结果、输出摘要与无副作用断言； 不保留 prompt、模型原文、账号、凭证、配置原文或原始日志
+  - 一次真实 Pi→AetherForge→omlxc/coding 调用返回约定 marker，且用户配置、临时 cwd、 会话目录、工具调用与子进程残留均无变化/无发生
+  - 独立 reviewer 通过后 Pi 在 workers.yaml 仅以 L0 reasoning/verification worker 准入，transport
+    固定走 bounded adapter；其他候选 worker 保持 declared/disabled，现有未准入零写入回归持续通过
+  - OMO dispatch 在生成任何运行工件前强制 worker operation level、capability 与 write scope；Pi 收到
+    L1、 非空写路径或不相容能力时稳定拒绝且零写入，MCP/CLI 从任意 cwd 调度仍解析到受管 Workspace adapter
   verify:
-  - cmd: >-
-      uv run --with pytest --with pyyaml --no-project python -m pytest
-      tests/unit/gac/test_pi_worker_adapter.py -q
+  - cmd: uv run --with pytest --with pyyaml --no-project python -m pytest tests/unit/gac/test_pi_worker_adapter.py
+      -q
     expect: exit 0
-  - cmd: >-
-      uv run --with ruff ruff check bin/gac/pi-worker-adapter.py
-      tests/unit/gac/test_pi_worker_adapter.py
+  - cmd: uv run --with ruff ruff check bin/gac/pi-worker-adapter.py tests/unit/gac/test_pi_worker_adapter.py
     expect: exit 0
-  - cmd: >-
-      uv run --with pyyaml --with pytest --with pytest-asyncio --with fastmcp
-      --python 3.13 --no-project python -m pytest -q
-      projects/omo/tests/test_omo_worker_admission_gate.py
-      projects/omo/tests/test_omo_worker_core.py
-      projects/omo/tests/test_mcp_server.py
-      projects/omo/tests/test_workflow_dispatch.py
-      projects/omo/tests/test_omo_worker_promotion_defaults.py
+  - cmd: uv run --with pyyaml --with pytest --with pytest-asyncio --with fastmcp --python
+      3.13 --no-project python -m pytest -q projects/omo/tests/test_omo_worker_admission_gate.py
+      projects/omo/tests/test_omo_worker_core.py projects/omo/tests/test_mcp_server.py
+      projects/omo/tests/test_workflow_dispatch.py projects/omo/tests/test_omo_worker_promotion_defaults.py
       projects/omo/tests/test_worker_lifecycle_mesh.py
     expect: exit 0
   - cmd: git diff --check
@@ -2529,8 +2366,7 @@ bets:
   - BET-Y1Q2-T1-11
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    AetherForge 9290 不可识别、omlxc coding 不可用、必须切云/fallback/修用户配置才能通过、出现无法回收进程、
+  circuit_breaker: AetherForge 9290 不可识别、omlxc coding 不可用、必须切云/fallback/修用户配置才能通过、出现无法回收进程、
     配置或 cwd 变化、输出泄露，或需要将 Pi 提升至 L1/工具权限时立即停止；保持 declared，只交付脱敏诊断
   retro: required
 - id: BET-Y1Q2-T1-13
@@ -2541,46 +2377,35 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-13
-  done_evidence: >-
-    Oh My Pi 16.1.16 已通过正式 WorkflowRequested→WorkflowAdmitted→StepDispatched→OMO dispatch
-    链路，由 bounded adapter 经 AetherForge 127.0.0.1:9290 调用 omlxc/coding，返回精确 marker
-    OMO_WORKER_DISPATCH_OK:oh-my-pi:BET-Y1Q2-T1-13；formal canonical receipt SHA-256
-    dc86dc1543f39b47c6e7d5cb4e6b06597cdac6359ba96dd6840180d28e3d1518，stdout digest
-    10b6d789fdbb4946fcba59b4bd7e1d5109e9d6113c6df61e0ae1b32d12f250d3。
-    根 adapter+Pi registry 回归 94 tests、Ruff 与 diff-check 通过；两轮独立 reviewer CLEAR。
-  goal: >-
-    为 Oh My Pi 16.1.16 建立独立、受限、可回收的 L0 reasoning/verification worker；
-    单次 headless 模型调用固定经 AetherForge loopback 进入 omlxc/coding，真实回执通过后
-    才从 declared 晋升为 admitted，并完全复用 OMO 已落地的通用 worker policy。
+  done_evidence: Oh My Pi 16.1.16 已通过正式 WorkflowRequested→WorkflowAdmitted→StepDispatched→OMO
+    dispatch 链路，由 bounded adapter 经 AetherForge 127.0.0.1:9290 调用 omlxc/coding，返回精确
+    marker OMO_WORKER_DISPATCH_OK:oh-my-pi:BET-Y1Q2-T1-13；formal canonical receipt
+    SHA-256 dc86dc1543f39b47c6e7d5cb4e6b06597cdac6359ba96dd6840180d28e3d1518，stdout
+    digest 10b6d789fdbb4946fcba59b4bd7e1d5109e9d6113c6df61e0ae1b32d12f250d3。 根 adapter+Pi
+    registry 回归 94 tests、Ruff 与 diff-check 通过；两轮独立 reviewer CLEAR。
+  goal: 为 Oh My Pi 16.1.16 建立独立、受限、可回收的 L0 reasoning/verification worker； 单次 headless
+    模型调用固定经 AetherForge loopback 进入 omlxc/coding，真实回执通过后 才从 declared 晋升为 admitted，并完全复用
+    OMO 已落地的通用 worker policy。
   non_goals:
   - 抽象通用多 CLI adapter、重构 Pi adapter、修改 OMP 用户配置或启用 OMP 工具/规则/LSP/PTY/会话
   - 云模型、fallback、自动选模、额度调度、并发消费、精确一次、崩溃恢复或恶意同机隔离
   - 准入 OpenCode、Grok、MiMo、AGY、Kilo 或其他候选 worker
   - 修改 OMO worker policy、Workflow Mesh 事件协议或 AetherForge/omlxc 服务
   done_when:
-  - >-
-      独立 adapter 以固定无 shell argv 运行 omp --print，关闭 session/tools/lsp/pty/extensions/skills/
-      rules/title，固定 model=omlxc/coding，且仅在隔离临时 cwd/config 中运行
-  - >-
-      调用前验证 127.0.0.1:9290/health 的 AetherForge 身份；任何非 loopback 配置、健康异常、超时、
-      非零退出、空/错误 marker、用户配置变化或进程残留均 fail-closed
-  - >-
-      adapter 不继承云密钥、代理、SSH/token；回执只保留 worker/provider/model/route、版本、时间、
-      结果、输出摘要与无副作用断言，不保留 prompt、模型原文、身份或配置原文
-  - >-
-      一次真实 OMP→AetherForge→omlxc/coding 调用返回约定 marker；用户配置、工作区、会话、工具调用
-      与子进程残留均无变化/无发生
-  - >-
-      独立 reviewer 通过后 Oh My Pi 仅以 L0 reasoning/verification worker 准入，transport 固定走 bounded
-      adapter 且 require_explicit_capabilities=true；其他候选保持 declared/disabled
+  - 独立 adapter 以固定无 shell argv 运行 omp --print，关闭 session/tools/lsp/pty/extensions/skills/
+    rules/title，固定 model=omlxc/coding，且仅在隔离临时 cwd/config 中运行
+  - 调用前验证 127.0.0.1:9290/health 的 AetherForge 身份；任何非 loopback 配置、健康异常、超时、 非零退出、空/错误
+    marker、用户配置变化或进程残留均 fail-closed
+  - adapter 不继承云密钥、代理、SSH/token；回执只保留 worker/provider/model/route、版本、时间、 结果、输出摘要与无副作用断言，不保留
+    prompt、模型原文、身份或配置原文
+  - 一次真实 OMP→AetherForge→omlxc/coding 调用返回约定 marker；用户配置、工作区、会话、工具调用 与子进程残留均无变化/无发生
+  - 独立 reviewer 通过后 Oh My Pi 仅以 L0 reasoning/verification worker 准入，transport 固定走
+    bounded adapter 且 require_explicit_capabilities=true；其他候选保持 declared/disabled
   verify:
-  - cmd: >-
-      uv run --with pytest --with pyyaml --no-project python -m pytest
-      tests/unit/gac/test_omp_worker_adapter.py -q
+  - cmd: uv run --with pytest --with pyyaml --no-project python -m pytest tests/unit/gac/test_omp_worker_adapter.py
+      -q
     expect: exit 0
-  - cmd: >-
-      uv run --with ruff ruff check bin/gac/omp-worker-adapter.py
-      tests/unit/gac/test_omp_worker_adapter.py
+  - cmd: uv run --with ruff ruff check bin/gac/omp-worker-adapter.py tests/unit/gac/test_omp_worker_adapter.py
     expect: exit 0
   - cmd: git diff --check
     expect: exit 0
@@ -2599,8 +2424,7 @@ bets:
   - BET-Y1Q2-T1-12
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    无法固定到 loopback AetherForge+omlxc/coding、需要复制用户凭证/配置、必须启用工具/规则/PTY/LSP、
+  circuit_breaker: 无法固定到 loopback AetherForge+omlxc/coding、需要复制用户凭证/配置、必须启用工具/规则/PTY/LSP、
     出现不可回收进程或配置/Workspace 写入时立即停止；保持 declared，只交付脱敏诊断
   retro: required
 - id: BET-Y1Q2-T1-14
@@ -2615,10 +2439,9 @@ bets:
   - spec_ref: repo://docs/superpowers/specs/2026-08-13-orchestration-contract-mvp-design.md
     spec_version: 1.0.0
     content_digest: sha256:d8d85873c0e68ec1eac0e6602b48ade37c7c89f9f1746f4664c5bd3b515687ca
-  goal: >-
-    复用 ECOS 既有 WorkPacket、CompletionManifest 与 VerificationReceipt，建立外部编排器候选交付
-    到 OMO EvidenceRecorded、独立验证和 WorkflowVerified 的最小生产链；Orca、Kandev、Multica、
-    Ruflo 只作为可替换运输层，Workspace 继续拥有任务、范围、证据与完成判定。
+  goal: 复用 ECOS 既有 WorkPacket、CompletionManifest 与 VerificationReceipt，建立外部编排器候选交付
+    到 OMO EvidenceRecorded、独立验证和 WorkflowVerified 的最小生产链；Orca、Kandev、Multica、 Ruflo
+    只作为可替换运输层，Workspace 继续拥有任务、范围、证据与完成判定。
   non_goals:
   - 启动、联网或安装 Kandev，接入其 MCP/API/ACP，或接第二个 adapter
   - 修改 ECOS M2、Workflow Mesh 状态机、Ledger DDL、Agent Workflow run schema
@@ -2626,25 +2449,23 @@ bets:
   - R2/R3、多用户、跨主机、分布式并发、exactly-once 或真实外部副作用
   done_when:
   - adapter 元数据和 external task 状态不进入 WorkPacket 规范 hash，跨运输平台保持同一合同身份
-  - >-
-      schema-valid CompletionManifest 经 Kandev 离线 fixture 映射后，成功候选在同一 workflow run 上
-      形成 EvidenceRecorded；VerificationReceipt accept 后才形成 WorkflowVerified
-  - packet hash 篡改、changed path 越界、manifest 冲突、transport failure 均 fail-closed 且不产生虚假 verified
+  - schema-valid CompletionManifest 经 Kandev 离线 fixture 映射后，成功候选在同一 workflow run 上
+    形成 EvidenceRecorded；VerificationReceipt accept 后才形成 WorkflowVerified
+  - packet hash 篡改、changed path 越界、manifest 冲突、transport failure 均 fail-closed 且不产生虚假
+    verified
   - 同一 external receipt 与 verification receipt 重放幂等，冲突重放拒绝
   - ECOS 既有合同回归、OMO Mesh/receipt 回归、新增端到端与独立只读 reviewer 全部通过
   verify:
-  - cmd: >-
-      cd projects/omo && PYTHONPATH=src:../ecos/src uv run --no-project --with pytest
-      --with pydantic --with pyyaml python -m pytest tests/test_orchestration_contract.py
-      tests/test_omo_external_receipt.py tests/test_workflow_mesh.py tests/test_workflow_operations.py -q
+  - cmd: cd projects/omo && PYTHONPATH=src:../ecos/src uv run --no-project --with
+      pytest --with pydantic --with pyyaml python -m pytest tests/test_orchestration_contract.py
+      tests/test_omo_external_receipt.py tests/test_workflow_mesh.py tests/test_workflow_operations.py
+      -q
     expect: exit 0
-  - cmd: >-
-      cd projects/ecos && PYTHONPATH=src uv run --no-project --with pytest --with pydantic
-      --with pyyaml python -m pytest tests/test_mof_agent_execution_contracts.py
+  - cmd: cd projects/ecos && PYTHONPATH=src uv run --no-project --with pytest --with
+      pydantic --with pyyaml python -m pytest tests/test_mof_agent_execution_contracts.py
       tests/test_work_packet_compiler.py tests/test_sr06_rehearsal.py -q
     expect: exit 0
-  - cmd: >-
-      cd projects/omo && uv run --no-project --with ruff ruff check src/omo/orchestration_contract.py
+  - cmd: cd projects/omo && uv run --no-project --with ruff ruff check src/omo/orchestration_contract.py
       tests/test_orchestration_contract.py
     expect: exit 0
   - cmd: git diff --check
@@ -2669,8 +2490,7 @@ bets:
   - BET-Y1Q2-T1-13
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    需要修改 Workflow Mesh 状态机或 Ledger DDL、启动外部服务、接入第二 adapter、生产模块超过两个，
+  circuit_breaker: 需要修改 Workflow Mesh 状态机或 Ledger DDL、启动外部服务、接入第二 adapter、生产模块超过两个，
     或无法证明同一 run 的 EvidenceRecorded→WorkflowVerified 时立即停止并拆包，不得扩大本 BET
   retro: required
 - id: BET-Y1Q2-T1-15
@@ -2681,40 +2501,33 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-13
-  goal: >-
-    在不建立第二套规范或任务真相的前提下，将已确认的外部 Specification 以稳定引用、版本和内容摘要
-    绑定到新版本 ECOS WorkPacket；OMO 在收集候选交付和独立验证前重验该绑定，源规范变化后旧候选不得
-    被误判为可验证，同时收口 BMAD/OpenSpec bridge 的静默 fallback、碰撞和部分导入问题。
+  goal: 在不建立第二套规范或任务真相的前提下，将已确认的外部 Specification 以稳定引用、版本和内容摘要 绑定到新版本 ECOS WorkPacket；OMO
+    在收集候选交付和独立验证前重验该绑定，源规范变化后旧候选不得 被误判为可验证，同时收口 BMAD/OpenSpec bridge 的静默 fallback、碰撞和部分导入问题。
   non_goals:
   - 新建 Specification 数据库、任务队列、scheduler、watchdog、UI 或第二套 workflow 状态机
   - 复制规范正文到 WorkPacket、让外部编排器拥有规范真相，或改变旧 work-packet/v1 的 hash
   - 启动外部模型/服务、真实副作用、自动审批/合并，或接入第二个 orchestrator adapter
   - 重构 pitch/fast-track 以外的 OMO ingress、修改 Workflow Mesh 状态机或 Ledger DDL
   done_when:
-  - >-
-      work-packet/v2 必须携带 immutable spec_binding（spec_ref、spec_version、content_digest、decision_ref），
-      binding 进入 packet hash；旧 work-packet/v1 的 canonical hash 保持字节级不变
-  - >-
-      OMO orchestration coordinator 对 v2 packet 重读允许范围内的冻结规范并校验摘要；缺失、越界、摘要变化、
-      未确认 decision 或旧 candidate 重放均 fail-closed；decision 必须在权威台账中显式绑定同一 spec_ref、
-      spec_version 与 content_digest，不产生 EvidenceRecorded/WorkflowVerified
-  - >-
-      BMAD/OpenSpec bridge 缺 test plan/evidence、重复标题、unsupported checkbox 或内容漂移时明确失败；
-      先完整解析和预检再写入，禁止默认 fallback 和部分导入
+  - work-packet/v2 必须携带 immutable spec_binding（spec_ref、spec_version、content_digest、decision_ref），
+    binding 进入 packet hash；旧 work-packet/v1 的 canonical hash 保持字节级不变
+  - OMO orchestration coordinator 对 v2 packet 重读允许范围内的冻结规范并校验摘要；缺失、越界、摘要变化、 未确认 decision
+    或旧 candidate 重放均 fail-closed；decision 必须在权威台账中显式绑定同一 spec_ref、 spec_version 与
+    content_digest，不产生 EvidenceRecorded/WorkflowVerified
+  - BMAD/OpenSpec bridge 缺 test plan/evidence、重复标题、unsupported checkbox 或内容漂移时明确失败；
+    先完整解析和预检再写入，禁止默认 fallback 和部分导入
   - ECOS 全量生成产物一致，OMO bridge/orchestration targeted tests、跨仓合同回归和独立只读 reviewer 通过
   verify:
-  - cmd: >-
-      cd projects/ecos && PYTHONPATH=src uv run --no-project --with pytest --with pydantic
-      --with pyyaml python -m pytest tests/test_mof_compiler.py tests/test_work_packet_compiler.py
+  - cmd: cd projects/ecos && PYTHONPATH=src uv run --no-project --with pytest --with
+      pydantic --with pyyaml python -m pytest tests/test_mof_compiler.py tests/test_work_packet_compiler.py
       tests/test_mof_agent_execution_contracts.py -q
     expect: exit 0
-  - cmd: >-
-      cd projects/omo && PYTHONPATH=src:../ecos/src uv run --no-project --with pytest
-      --with pydantic --with pyyaml python -m pytest tests/test_omo_bridge.py
-      tests/test_orchestration_contract.py tests/test_omo_external_receipt.py tests/test_workflow_mesh.py -q
+  - cmd: cd projects/omo && PYTHONPATH=src:../ecos/src uv run --no-project --with
+      pytest --with pydantic --with pyyaml python -m pytest tests/test_omo_bridge.py
+      tests/test_orchestration_contract.py tests/test_omo_external_receipt.py tests/test_workflow_mesh.py
+      -q
     expect: exit 0
-  - cmd: >-
-      cd projects/omo && uv run --no-project --with ruff ruff check src/omo/omo_bridge.py
+  - cmd: cd projects/omo && uv run --no-project --with ruff ruff check src/omo/omo_bridge.py
       src/omo/orchestration_contract.py tests/test_omo_bridge.py tests/test_orchestration_contract.py
     expect: exit 0
   - cmd: git diff --check
@@ -2746,14 +2559,14 @@ bets:
   - BET-Y1Q2-T1-14
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    需要第二套规范/任务真相、修改旧 v1 hash、改 Workflow Mesh 状态机或 Ledger DDL、引入外部服务，
+  circuit_breaker: 需要第二套规范/任务真相、修改旧 v1 hash、改 Workflow Mesh 状态机或 Ledger DDL、引入外部服务，
     或无法在两天内证明规范变更使旧候选失效时立即停止并拆包，不得以 optional ignored 字段假接线
   retro: required
 - id: BET-Y1Q2-T1-16
   track: T1-TRUTH
   window: Y1Q2
-  title: Restore completed personal value capabilities to subrepo main and prevent gitlink regression
+  title: Restore completed personal value capabilities to subrepo main and prevent
+    gitlink regression
   appetite: 2 days
   priority: P0
   status: done
@@ -2761,48 +2574,37 @@ bets:
   - spec_ref: repo://docs/superpowers/specs/2026-08-13-personal-capability-mainline-restore.md
     spec_version: 1.0.0
     content_digest: sha256:a52d3495af26b727f6a8a3ba2916c1d582c75570cf3c059379dc58245ee5197b
-  goal: >-
-    把已完成的 T2-01/T2-02/T4-02 个人信号、可信本地 dogfood 与 Outcome 观测能力正式合入
-    OMO/Cockpit 子仓 main，再更新根 gitlink；同时让新的根子模块指针事务拒绝仅存在于 feature branch
-    而未进入子仓 main 的提交，消除 done 声明与当前可部署能力的漂移。
+  goal: 把已完成的 T2-01/T2-02/T4-02 个人信号、可信本地 dogfood 与 Outcome 观测能力正式合入 OMO/Cockpit 子仓
+    main，再更新根 gitlink；同时让新的根子模块指针事务拒绝仅存在于 feature branch 而未进入子仓 main 的提交，消除 done 声明与当前可部署能力的漂移。
   non_goals:
   - 新增第二信号源、邮件/日历/提醒 adapter、watcher、daemon、cron 或新 UI
   - 自动外发、自动批准、真实外部任务、A3 自主、多租户、家庭/组织、exactly-once 或崩溃恢复
   - 新增 Ledger DDL、Workflow Mesh 状态机、第二任务真相、第二编排平台或 Blueprint R1 live adapter
   - 直接把根 gitlink 指向 agent 分支、删除当前子仓 main 能力，或用 tag/测试替代子仓 main 合并
   done_when:
-  - >-
-      OMO 三个历史 personal feature 在当前 origin/main 上无损恢复，personal、orchestration、worker admission
-      与 Mesh 定向回归通过，恢复提交已由 OMO origin/main 到达
-  - >-
-      Cockpit 三个历史 personal feature 在当前 origin/main 上无损恢复，并以已恢复的 OMO main 运行 API/CLI、
-      episode projection、Documents/Facts/KEMS 定向回归；恢复提交已由 Cockpit origin/main 到达
+  - OMO 三个历史 personal feature 在当前 origin/main 上无损恢复，personal、orchestration、worker
+    admission 与 Mesh 定向回归通过，恢复提交已由 OMO origin/main 到达
+  - Cockpit 三个历史 personal feature 在当前 origin/main 上无损恢复，并以已恢复的 OMO main 运行 API/CLI、
+    episode projection、Documents/Facts/KEMS 定向回归；恢复提交已由 Cockpit origin/main 到达
   - 根仓只在两个子仓 PR 合并后更新 gitlink，两个指针均是对应子仓 origin/main 的祖先
-  - >-
-      main-ancestry 负测证明远端 feature-only SHA 即使可达也被拒；main 祖先通过；查询失败不部分修改 index/HEAD
-  - >-
-      干净根仓 main 可发现 personal CLI/API 并完成一条本地 never-send 链；Ledger 查询只读，Human Outcome
-      若未由本人裁决则诚实保持 0
+  - main-ancestry 负测证明远端 feature-only SHA 即使可达也被拒；main 祖先通过；查询失败不部分修改 index/HEAD
+  - 干净根仓 main 可发现 personal CLI/API 并完成一条本地 never-send 链；Ledger 查询只读，Human Outcome
+    若未由本人裁决则诚实保持 0
   verify:
-  - cmd: >-
-      cd projects/omo && uv run python -m pytest tests/test_personal_episode.py
-      tests/test_episode_projection.py tests/test_orchestration_contract.py
-      tests/test_omo_worker_admission_gate.py tests/test_workflow_mesh.py -q
+  - cmd: cd projects/omo && uv run python -m pytest tests/test_personal_episode.py
+      tests/test_episode_projection.py tests/test_orchestration_contract.py tests/test_omo_worker_admission_gate.py
+      tests/test_workflow_mesh.py -q
     expect: exit 0
-  - cmd: >-
-      cd projects/cockpit && uv run python -m pytest src/cockpit/tests/test_api_personal_episode.py
+  - cmd: cd projects/cockpit && uv run python -m pytest src/cockpit/tests/test_api_personal_episode.py
       src/cockpit/tests/test_api_personal_signal.py src/cockpit/tests/test_cli_personal_dogfood.py
       src/cockpit/tests/test_api_episode_projection.py src/cockpit/tests/test_documents_read_mcp_server.py
       src/cockpit/tests/test_governance_context_adapter.py -q
     expect: exit 0
-  - cmd: >-
-      uv run --with pytest --with pyyaml python -m pytest
-      tests/unit/gac/test_submodule_reachability_gate.py
+  - cmd: uv run --with pytest --with pyyaml python -m pytest tests/unit/gac/test_submodule_reachability_gate.py
       tests/unit/gac/test_submodule_pointer_transaction.py -q
     expect: exit 0
-  - cmd: >-
-      git -C projects/omo merge-base --is-ancestor HEAD origin/main &&
-      git -C projects/cockpit merge-base --is-ancestor HEAD origin/main
+  - cmd: git -C projects/omo merge-base --is-ancestor HEAD origin/main && git -C projects/cockpit
+      merge-base --is-ancestor HEAD origin/main
     expect: exit 0
   - cmd: git diff --check
     expect: exit 0
@@ -2834,8 +2636,7 @@ bets:
   - BET-Y1Q2-T4-02
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    需要修改 Ledger DDL、Workflow Mesh 状态机、产生真实外部副作用、删除当前子仓 main 能力，或两天内
+  circuit_breaker: 需要修改 Ledger DDL、Workflow Mesh 状态机、产生真实外部副作用、删除当前子仓 main 能力，或两天内
     无法把历史 feature 与当前 main 合并时立即停止并拆兼容修复；不得通过 pin agent 分支伪造恢复
   retro: required
 - id: BET-Y1Q2-T1-17
@@ -2849,10 +2650,8 @@ bets:
   - spec_ref: repo://docs/superpowers/specs/2026-08-13-codex-exec-worker-design.md
     spec_version: 1.0.0
     content_digest: sha256:d1ea6190a38dfe64a0d205727706ea6b8aff13cac1d4a4badc9621152136ff70
-  goal: >-
-    以受治理的 bounded adapter 将 Codex `exec --approve-for-me` 接入 OMO worker admission
-    与 Orca supervised Dispatch，使 L1 代码任务可在独立 clone 中运行；自动 review 仍可能升级为
-    人工确认，同时保留
+  goal: 以受治理的 bounded adapter 将 Codex `exec --approve-for-me` 接入 OMO worker admission
+    与 Orca supervised Dispatch，使 L1 代码任务可在独立 clone 中运行；自动 review 仍可能升级为 人工确认，同时保留
     workspace-write 沙箱、任务写面、父进程超时回收、脱敏回执和独立完成判定。
   non_goals:
   - 修改 Orca 内置 Codex TUI、Orca runtime 或 Codex 用户配置/认证/execpolicy
@@ -2861,38 +2660,27 @@ bets:
   - 准入 Claude/OpenCode/Grok/MiMo/AGY/Kilo，做自动模型选择、账号切换、fallback 或额度调度
   - 多租户、跨主机、恶意同机隔离、exactly-once、自动 merge/promotion 或业务外部副作用
   done_when:
-  - >-
-      bounded adapter 只接受 agent-clone identity 证明的独立非 symlink clone，再在其一次性 execution clone
-      中以固定 shell=false argv 调用 codex exec --approve-for-me --ephemeral --ignore-user-config --json；
-      共享/linked workspace 在启动前拒绝
-  - >-
-      secret/proxy/SSH/AWS/GitHub 环境不传入子进程；超时执行 process-group TERM→KILL→wait；非零、
-      malformed/empty JSONL、marker 不匹配、cleanup 或 receipt 失败均非成功
-  - >-
-      回执只保留版本、时间、结果、exit、输出摘要、相对 changed paths 与边界断言，不保留 prompt、
-      raw stdout/stderr、token、身份、绝对工作区路径或用户配置内容
-  - >-
-      worker delta 仅在 allowlist、ignored/symlink/gitlink/commit 与并发指纹审计后以 binary patch 回写；
-      patch 或回执发布失败必须回滚并证明原 clone 基线恢复，不得留下部分成功
-  - >-
-      一次真实 read-only Codex smoke 在该次观测中未升级人工确认并返回精确 marker；这不构成通用
-      zero-click/unattended 保证；一次 Orca Run/Task/Dispatch 可查询 succeeded worker_done，且
-      ready/input accepted 不作为完成证据
-  - >-
-      独立 reviewer 通过后只有 codex 晋升为 L1 admitted worker，transport 固定走 bounded adapter、
-      require_explicit_capabilities=true、write_scope=task_declared_only；其他候选状态不变
+  - bounded adapter 只接受 agent-clone identity 证明的独立非 symlink clone，再在其一次性 execution
+    clone 中以固定 shell=false argv 调用 codex exec --approve-for-me --ephemeral --ignore-user-config
+    --json； 共享/linked workspace 在启动前拒绝
+  - secret/proxy/SSH/AWS/GitHub 环境不传入子进程；超时执行 process-group TERM→KILL→wait；非零、 malformed/empty
+    JSONL、marker 不匹配、cleanup 或 receipt 失败均非成功
+  - 回执只保留版本、时间、结果、exit、输出摘要、相对 changed paths 与边界断言，不保留 prompt、 raw stdout/stderr、token、身份、绝对工作区路径或用户配置内容
+  - worker delta 仅在 allowlist、ignored/symlink/gitlink/commit 与并发指纹审计后以 binary patch
+    回写； patch 或回执发布失败必须回滚并证明原 clone 基线恢复，不得留下部分成功
+  - 一次真实 read-only Codex smoke 在该次观测中未升级人工确认并返回精确 marker；这不构成通用 zero-click/unattended
+    保证；一次 Orca Run/Task/Dispatch 可查询 succeeded worker_done，且 ready/input accepted
+    不作为完成证据
+  - 独立 reviewer 通过后只有 codex 晋升为 L1 admitted worker，transport 固定走 bounded adapter、
+    require_explicit_capabilities=true、write_scope=task_declared_only；其他候选状态不变
   verify:
-  - cmd: >-
-      uv run --no-project --with pytest --with pyyaml python -m pytest
-      tests/unit/gac/test_codex_worker_adapter.py tests/unit/gac/test_agent_pool_observe.py -q
+  - cmd: uv run --no-project --with pytest --with pyyaml python -m pytest tests/unit/gac/test_codex_worker_adapter.py
+      tests/unit/gac/test_agent_pool_observe.py -q
     expect: exit 0
-  - cmd: >-
-      cd projects/omo && uv run python -m pytest tests/test_omo_worker_admission_gate.py
+  - cmd: cd projects/omo && uv run python -m pytest tests/test_omo_worker_admission_gate.py
       tests/test_omo_worker_core.py -q
     expect: exit 0
-  - cmd: >-
-      uv run --with ruff ruff check bin/gac/codex-worker-adapter.py
-      tests/unit/gac/test_codex_worker_adapter.py
+  - cmd: uv run --with ruff ruff check bin/gac/codex-worker-adapter.py tests/unit/gac/test_codex_worker_adapter.py
     expect: exit 0
   - cmd: git diff --check
     expect: exit 0
@@ -2914,13 +2702,11 @@ bets:
   risk_level: L1
   human_gate: false
   notes:
-  - >-
-      2026-08-14 contract correction: this completed run observed no provider escalation,
-      but `--approve-for-me` is supervised automatic review and may still require a human.
-      The historical zero-click/unattended wording is superseded by BET-Y1Q2-T1-18 and must
-      not be interpreted as a reusable worker guarantee.
-  circuit_breaker: >-
-    需要 dangerous bypass、共享 worktree、修改用户配置/认证、无法回收进程、回执泄露 raw output，
+  - '2026-08-14 contract correction: this completed run observed no provider escalation,
+    but `--approve-for-me` is supervised automatic review and may still require a
+    human. The historical zero-click/unattended wording is superseded by BET-Y1Q2-T1-18
+    and must not be interpreted as a reusable worker guarantee.'
+  circuit_breaker: 需要 dangerous bypass、共享 worktree、修改用户配置/认证、无法回收进程、回执泄露 raw output，
     或 Orca 无法查询同一 Task/Dispatch completion 时立即停止；保持 codex declared，只交付脱敏诊断
   retro: required
 - id: BET-Y1Q2-T1-18
@@ -2934,61 +2720,47 @@ bets:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md
     spec_version: 1.0.0
     content_digest: sha256:0c344987452535e9e8ac4bd871311bd3c206f21a5bfac6376b1ecf317b79b836
-  goal: >-
-    将已落地的 ECOS WorkPacket/CompletionManifest/VerificationReceipt、OMO admission/Workflow Mesh、
-    Orca 托管的交互 Codex TUI 接成一条人工确认的生产纵切：candidate BET 确定性编译、
-    人工 release、同一 terminal 手点 provider approval、真实模型输出、实际 diff/receipt 收集、
-    独立验证，以及 reject 后可证明的补偿回滚。
+  goal: 将已落地的 ECOS WorkPacket/CompletionManifest/VerificationReceipt、OMO admission/Workflow
+    Mesh、 Orca 托管的交互 Codex TUI 接成一条人工确认的生产纵切：candidate BET 确定性编译、 人工 release、同一 terminal
+    手点 provider approval、真实模型输出、实际 diff/receipt 收集、 独立验证，以及 reject 后可证明的补偿回滚。
   non_goals:
-  - 新建 WorkPacket/M2、task/blueprint database、event ledger、scheduler、daemon、watchdog 或第二任务真相
-  - 把 --approve-for-me、Orca ready、tui-idle、input accepted、进程 exit 0 或 Agent 自报 done 当作无人值守/完成证据
+  - 新建 WorkPacket/M2、task/blueprint database、event ledger、scheduler、daemon、watchdog
+    或第二任务真相
+  - 把 --approve-for-me、Orca ready、tui-idle、input accepted、进程 exit 0 或 Agent 自报 done
+    当作无人值守/完成证据
   - 把等待用户点击当成失败，或在未点击时丢弃/重建 Codex 会话
   - 接入第二 live adapter、Kandev/Ruflo/Multica 生产控制面、Cockpit UI、账号/额度自动调度或自动 merge
   - 修复 Pi/Oh My Pi 的首次设置/skill metadata；本轮只保留其 false-ready quarantine 证据
   - 邮件、日历、任务、家庭、多租户、跨主机、恶意同机、exactly-once 或任何真实业务外部副作用
   done_when:
-  - >-
-      candidate BET 能 deterministic compile；不存在 accepted binding、spec drift、假 ledger
-      或 Task 无人工 gate 时均拒绝且零 Mesh 写入。
-  - >-
-      dispatch 必须在人工批准后才产生 request/admission/StepDispatched；结果只称
-      `transport_accepted`。
-  - >-
-      一次真实 supervised Codex R1 非 marker 变更在同一 Orca terminal 经用户手点确认；未点击时
-      稳定保持 awaiting_human_action，点击后产生有效 model output、实际 diff、transport receipt
-      和 CompletionManifest，不声称无人值守。
-  - >-
-      collect 严格绑定 BET/spec/packet/assignment/admission/dispatch/receipt/diff/claims；越权、
-      篡改、缺 receipt 时无 EvidenceRecorded/WorkflowVerified。
-  - >-
-      独立 verifier 重放声明命令；只有 accept 写 WorkflowVerified；executor 自验、同一
-      receipt 篡改和 input ack 均拒绝。
-  - >-
-      verifier reject 保留候选 evidence，并通过 inverse patch 恢复 baseline tree hash；
-      WorkflowVerified 不存在，run 最终 recovered/cancelled/closed。
-  - >-
-      compile、collect、verify 和 rollback 重放幂等；同 id 不同内容冲突 fail closed。
-  - >-
-      OMO/ECOS/root 定向回归、Ruff、diff check、agent-workflow verify、独立 code review 和
-      PR checks 通过；子仓提交先进入子仓 main，根仓只 pin 可从 main 到达的 SHA。
+  - candidate BET 能 deterministic compile；不存在 accepted binding、spec drift、假 ledger
+    或 Task 无人工 gate 时均拒绝且零 Mesh 写入。
+  - dispatch 必须在人工批准后才产生 request/admission/StepDispatched；结果只称 `transport_accepted`。
+  - 一次真实 supervised Codex R1 非 marker 变更在同一 Orca terminal 经用户手点确认；未点击时 稳定保持 awaiting_human_action，点击后产生有效
+    model output、实际 diff、transport receipt 和 CompletionManifest，不声称无人值守。
+  - collect 严格绑定 BET/spec/packet/assignment/admission/dispatch/receipt/diff/claims；越权、
+    篡改、缺 receipt 时无 EvidenceRecorded/WorkflowVerified。
+  - 独立 verifier 重放声明命令；只有 accept 写 WorkflowVerified；executor 自验、同一 receipt 篡改和 input
+    ack 均拒绝。
+  - verifier reject 保留候选 evidence，并通过 inverse patch 恢复 baseline tree hash； WorkflowVerified
+    不存在，run 最终 recovered/cancelled/closed。
+  - compile、collect、verify 和 rollback 重放幂等；同 id 不同内容冲突 fail closed。
+  - OMO/ECOS/root 定向回归、Ruff、diff check、agent-workflow verify、独立 code review 和 PR checks
+    通过；子仓提交先进入子仓 main，根仓只 pin 可从 main 到达的 SHA。
   verify:
-  - cmd: >-
-      cd projects/omo && uv run python -m pytest tests/test_blueprint_control.py
+  - cmd: cd projects/omo && uv run python -m pytest tests/test_blueprint_control.py
       tests/test_orchestration_contract.py tests/test_workflow_mesh.py tests/test_workflow_dispatch.py
       tests/test_omo_worker_admission_gate.py -q
     expect: exit 0
-  - cmd: >-
-      uv run --no-project --with pytest --with pyyaml python -m pytest
-      tests/unit/gac/test_codex_worker_adapter.py -q
+  - cmd: uv run --no-project --with pytest --with pyyaml python -m pytest tests/unit/gac/test_codex_worker_adapter.py
+      -q
     expect: exit 0
-  - cmd: >-
-      uv run --no-project --with pytest python -m pytest
-      tests/unit/gac/test_orca_codex_supervisor.py -q
+  - cmd: uv run --no-project --with pytest python -m pytest tests/unit/gac/test_orca_codex_supervisor.py
+      -q
     expect: exit 0
-  - cmd: >-
-      cd projects/omo && uv run ruff check src/omo/blueprint_control.py
-      src/omo/orchestration_contract.py src/omo/workflow_mesh.py src/omo/cli.py
-      tests/test_blueprint_control.py tests/test_orchestration_contract.py tests/test_workflow_mesh.py
+  - cmd: cd projects/omo && uv run ruff check src/omo/blueprint_control.py src/omo/orchestration_contract.py
+      src/omo/workflow_mesh.py src/omo/cli.py tests/test_blueprint_control.py tests/test_orchestration_contract.py
+      tests/test_workflow_mesh.py
     expect: exit 0
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py claim-check BET-Y1Q2-T1-18
     expect: exit 0
@@ -3023,10 +2795,9 @@ bets:
   - BET-Y1Q2-T1-17
   risk_level: L1
   human_gate: true
-  circuit_breaker: >-
-    需要 dangerous bypass、共享 Workspace 写入、修改 Ledger DDL/ECOS M2、第二任务真相、不能确认人工批准、
-    不能回收子进程、无法从 git 直接测量 delta、Mesh append 被吞、rollback 后 baseline 不一致、真实业务
-    外部副作用，或三天内无法形成一条真实纵切时立即停止；不得用 fixture/marker/input ack 伪造完成
+  circuit_breaker: 需要 dangerous bypass、共享 Workspace 写入、修改 Ledger DDL/ECOS M2、第二任务真相、不能确认人工批准、
+    不能回收子进程、无法从 git 直接测量 delta、Mesh append 被吞、rollback 后 baseline 不一致、真实业务 外部副作用，或三天内无法形成一条真实纵切时立即停止；不得用
+    fixture/marker/input ack 伪造完成
   retro: required
 - id: BET-Y1Q2-T1-19
   track: T5-ORCH
@@ -3039,55 +2810,46 @@ bets:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md
     spec_version: 1.0.0
     content_digest: sha256:c2ca365b1ea140da9be3b577617db0b329a059dd06fc43e3232fb5c570f6aba0
-  goal: >-
-    在不改变 OMO/ECOS 任务、事件和验收真相的前提下，将 Codex 本地 worker 从
-    Orca/cli_prompt 人工生产路径迁移到固定版本的 ACP v1 stdio，通过 WorkPacket、verified
-    independent clone、active claim 和 canonical argv/path 派生一次性权限决定；真实 canary
-    与独立验证通过后，退役 Codex 自动 cli_prompt 与 dispatcher 隐式 cli_prompt 默认。
+  goal: 在不改变 OMO/ECOS 任务、事件和验收真相的前提下，将 Codex 本地 worker 从 Orca/cli_prompt 人工生产路径迁移到固定版本的
+    ACP v1 stdio，通过 WorkPacket、verified independent clone、active claim 和 canonical
+    argv/path 派生一次性权限决定；真实 canary 与独立验证通过后，退役 Codex 自动 cli_prompt 与 dispatcher 隐式
+    cli_prompt 默认。
   non_goals:
   - A2A、Agora 改造、remote ACP/HTTP、streaming federation 或第二 live adapter
   - 新建 task/blueprint database、event ledger、scheduler、daemon、watchdog 或第二状态机
   - 全局安装、修改用户认证/配置、allow_always、dangerous bypass 或持久化用户级永久授权
   - 自动模型/额度选择、自动 fallback、自动 merge、真实业务外发、L2+ 自动执行或公网暴露
   - 保存 raw prompt、transcript、token、账号、环境变量或绝对路径
-  - 把 fixture、initialize、session/new、session/prompt、turn-end、exit 0 或 Agent 自报 done 当完成
+  - 把 fixture、initialize、session/new、session/prompt、turn-end、exit 0 或 Agent 自报 done
+    当完成
   done_when:
-  - >-
-      固定 ACP v1 stdio 和 Codex ACP package/version/digest；initialize、capability negotiation、
-      session new/load、prompt/update、permission、cancel、EOF、timeout 和进程回收均有真实状态机与
-      failure-injection 覆盖，协议不兼容 fail closed。
-  - >-
-      权限代理仅对 R0 和满足 verified clone、active claim、WorkPacket 精确 write surface、canonical
-      path、无 symlink/gitlink 越界且 argv allowlist 命中的 R1 返回 allow_once；未知、越界和 L2+
-      不自动批准，每个决定都有脱敏 receipt，且不写用户级永久授权。
-  - >-
-      一次真实非 marker Codex ACP R1 canary 产生有效 model output、实际 git delta、逐项 acceptance
-      measurements 与 CompletionManifest；只有独立 verifier accept 才写 WorkflowVerified。
-  - >-
-      一次越权 permission 被拒且 tree/Mesh 不变；一次 cancel/timeout 后 child process group、ACP
-      session 和 lease 均清零；transport uncertainty 不触发自动 Orca fallback 或第二 dispatch。
-  - >-
-      cutover 后 Codex registry 不再有自动 cli_prompt transport，dispatcher 不再隐式默认
-      cli_prompt，Orca supervisor 不在自动 dispatch/fallback 路径；T1-18 的 wait/resume、collect、
-      rollback 和 independent verify 行为回归不得下降。
-  - >-
-      root/OMO 定向测试、Ruff、diff check、agent-workflow verify、独立 code review、live receipt
-      revalidation 与 PR checks 通过；surface 报告明确列出新增和指名删除，缺少减法不得 done。
+  - 固定 ACP v1 stdio 和 Codex ACP package/version/digest；initialize、capability negotiation、
+    session new/load、prompt/update、permission、cancel、EOF、timeout 和进程回收均有真实状态机与 failure-injection
+    覆盖，协议不兼容 fail closed。
+  - 权限代理仅对 R0 和满足 verified clone、active claim、WorkPacket 精确 write surface、canonical
+    path、无 symlink/gitlink 越界且 argv allowlist 命中的 R1 返回 allow_once；未知、越界和 L2+ 不自动批准，每个决定都有脱敏
+    receipt，且不写用户级永久授权。
+  - 一次真实非 marker Codex ACP R1 canary 产生有效 model output、实际 git delta、逐项 acceptance
+    measurements 与 CompletionManifest；只有独立 verifier accept 才写 WorkflowVerified。
+  - 一次越权 permission 被拒且 tree/Mesh 不变；一次 cancel/timeout 后 child process group、ACP session
+    和 lease 均清零；transport uncertainty 不触发自动 Orca fallback 或第二 dispatch。
+  - cutover 后 Codex registry 不再有自动 cli_prompt transport，dispatcher 不再隐式默认 cli_prompt，Orca
+    supervisor 不在自动 dispatch/fallback 路径；T1-18 的 wait/resume、collect、 rollback 和 independent
+    verify 行为回归不得下降。
+  - root/OMO 定向测试、Ruff、diff check、agent-workflow verify、独立 code review、live receipt
+    revalidation 与 PR checks 通过；surface 报告明确列出新增和指名删除，缺少减法不得 done。
   verify:
-  - cmd: >-
-      uv run --no-project --with pytest --with pyyaml python -m pytest
-      tests/unit/gac/test_codex_worker_adapter.py -q
+  - cmd: uv run --no-project --with pytest --with pyyaml python -m pytest tests/unit/gac/test_codex_worker_adapter.py
+      -q
     expect: exit 0
-  - cmd: >-
-      cd projects/omo && uv run python -m pytest tests/test_blueprint_control.py
-      tests/test_orchestration_contract.py tests/test_omo_worker_admission_gate.py -q
+  - cmd: cd projects/omo && uv run python -m pytest tests/test_blueprint_control.py
+      tests/test_orchestration_contract.py tests/test_omo_worker_admission_gate.py
+      -q
     expect: exit 0
-  - cmd: >-
-      uv run --no-project --with pyyaml python bin/gac/codex-worker-adapter.py
+  - cmd: uv run --no-project --with pyyaml python bin/gac/codex-worker-adapter.py
       verify-acp-receipt --receipt .omo/evidence/t1-19-acp-live-receipt.json
     expect: exit 0 and live=true and fixture=false and independently_verified=true
-  - cmd: >-
-      uv run --with pyyaml python bin/plan/bet-ledger.py claim-check BET-Y1Q2-T1-19
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py claim-check BET-Y1Q2-T1-19
     expect: exit 0
   - cmd: git diff --check
     expect: exit 0
@@ -3116,10 +2878,9 @@ bets:
   - BET-Y1Q2-T1-18
   risk_level: L1
   human_gate: true
-  circuit_breaker: >-
-    需要修改用户认证/全局配置、global install、remote ACP、第二任务真相、自动 fallback、无法固定
-    package identity、无法证明 cancel/reap/tree hash、live canary 只能靠 fixture，或三天内不能同时
-    完成真实 canary 与 cli_prompt 指名减法时立即停止；保持 T1-18，不声称 ACP ready
+  circuit_breaker: 需要修改用户认证/全局配置、global install、remote ACP、第二任务真相、自动 fallback、无法固定
+    package identity、无法证明 cancel/reap/tree hash、live canary 只能靠 fixture，或三天内不能同时 完成真实
+    canary 与 cli_prompt 指名减法时立即停止；保持 T1-18，不声称 ACP ready
   retro: required
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
@@ -3137,7 +2898,7 @@ bets:
   - 每周产出 >= 20 条 decision_outcome
   - 明确标注"本场景产出永不计入价值指标"
   notes:
-    - "2026-08-12: 恢复 shadow 配置. 周产20条 decision_outcome 尚未验证, 继续观察."
+  - '2026-08-12: 恢复 shadow 配置. 周产20条 decision_outcome 尚未验证, 继续观察.'
   verify:
   - cmd: 'grep -c ''lifecycle: shadow'' docs/scene-cards/engineering-delivery-dogfood.yaml'
     expect: '>= 1'
@@ -3191,9 +2952,7 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-12
-  goal: >-
-    在可信本地单用户阶段，以现有 Personal Event Ledger 为唯一事实源，区分系统生成与用户自填草稿，
-    记录结构化人工裁决和显式人力投入，提供按周可重放的个人结果观测；代码交付只代表观测能力可用，
+  goal: 在可信本地单用户阶段，以现有 Personal Event Ledger 为唯一事实源，区分系统生成与用户自填草稿， 记录结构化人工裁决和显式人力投入，提供按周可重放的个人结果观测；代码交付只代表观测能力可用，
     四周真实价值门必须由后续真实样本满足，禁止用测试、工程治理或全零结果冒充通过。
   non_goals:
   - 新 UI、dashboard、第二 Inbox、第二 Ledger、DDL、MOF/M2 或顶级项目
@@ -3202,33 +2961,27 @@ bets:
   - 在没有连续四周真实个人样本时宣称 W3/W4、90 天 Golden Scenario 或自治升级通过
   - 将 caller-authored、测试、工程交付或治理产出计入个人系统价值分子
   done_when:
-  - >-
-    Evidence.LocalDraft.v1 持久记录受控 output_origin=system|user_provided；只有同 Episode 的 system evidence、
-    Action.Succeeded 与 Human Outcome 完整关联时才成为系统价值候选，旧事件或未知来源显式归为 unknown
-  - >-
-    Human Outcome 支持 accept/edit/reject/defer/ignore，并可记录显式 review_duration_seconds 与
-    estimated_time_saved_seconds；未提供时保持 null/unknown，不得推测或默认成 0
-  - >-
-    OMO 从同一 Ledger 按 principal 只读重放 verdict 分布、系统候选数、signal-to-verdict 延迟、人工负担、
-    节省时间与自然周样本；重复查询结果确定，Ledger event count/hash 不变
-  - >-
-    四周价值门仅在连续四个自然周各有至少 3 个可追溯且本人 accept 的 system outcome、且有完整人力数据并
-    满足 review time < saved time 时返回 passed；其余统一为 collecting/not_ready 并给出缺口，不伪装成功
-  - >-
-    Cockpit 既有 personal status/feedback API 与 CLI 暴露该只读观测和可选人力字段；响应不含正文、绝对路径、
-    source URI、digest、凭证或自由日志，缺 Ledger 明确 unavailable
-  - >-
-    无 mock 公共边界 E2E 验证 system 与 user_provided 分母隔离、五类 verdict、跨 principal 隔离、周门槛、
+  - Evidence.LocalDraft.v1 持久记录受控 output_origin=system|user_provided；只有同 Episode 的
+    system evidence、 Action.Succeeded 与 Human Outcome 完整关联时才成为系统价值候选，旧事件或未知来源显式归为
+    unknown
+  - Human Outcome 支持 accept/edit/reject/defer/ignore，并可记录显式 review_duration_seconds
+    与 estimated_time_saved_seconds；未提供时保持 null/unknown，不得推测或默认成 0
+  - OMO 从同一 Ledger 按 principal 只读重放 verdict 分布、系统候选数、signal-to-verdict 延迟、人工负担、 节省时间与自然周样本；重复查询结果确定，Ledger
+    event count/hash 不变
+  - 四周价值门仅在连续四个自然周各有至少 3 个可追溯且本人 accept 的 system outcome、且有完整人力数据并 满足 review time
+    < saved time 时返回 passed；其余统一为 collecting/not_ready 并给出缺口，不伪装成功
+  - Cockpit 既有 personal status/feedback API 与 CLI 暴露该只读观测和可选人力字段；响应不含正文、绝对路径、 source
+    URI、digest、凭证或自由日志，缺 Ledger 明确 unavailable
+  - 无 mock 公共边界 E2E 验证 system 与 user_provided 分母隔离、五类 verdict、跨 principal 隔离、周门槛、
     隐私字段缺席与读前后 hash/count 不变；现有 W3-01A/B 定向回归通过
   verify:
-  - cmd: >-
-      cd projects/omo && uv run --with pytest python -m pytest tests/test_personal_episode.py
-      tests/test_episode_projection.py -q && uv run ruff check src/omo/personal_episode.py tests/test_personal_episode.py
+  - cmd: cd projects/omo && uv run --with pytest python -m pytest tests/test_personal_episode.py
+      tests/test_episode_projection.py -q && uv run ruff check src/omo/personal_episode.py
+      tests/test_personal_episode.py
     expect: exit 0；覆盖同 Ledger 重放、system/user 分区、五类裁决、自然周门槛与只读性
-  - cmd: >-
-      cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python -m pytest
-      src/cockpit/tests/test_api_personal_episode.py src/cockpit/tests/test_cli_personal_dogfood.py -q &&
-      uv run ruff check src/cockpit/commands/workflow_mesh.py src/cockpit/web/api_workflow_mesh_operations.py
+  - cmd: cd projects/cockpit && uv run --with pytest --with fastapi --with httpx python
+      -m pytest src/cockpit/tests/test_api_personal_episode.py src/cockpit/tests/test_cli_personal_dogfood.py
+      -q && uv run ruff check src/cockpit/commands/workflow_mesh.py src/cockpit/web/api_workflow_mesh_operations.py
       src/cockpit/tests/test_api_personal_episode.py src/cockpit/tests/test_cli_personal_dogfood.py
     expect: exit 0；包含真实 HTTP/CLI、隐私与 Ledger 不变断言
   - cmd: cd projects/omo && git diff --check && cd ../cockpit && git diff --check
@@ -3250,8 +3003,7 @@ bets:
   - BET-Y1Q2-T2-02
   risk_level: L1
   human_gate: false
-  circuit_breaker: >-
-    超 2 天、需要新 DDL/M2/第二账本/UI/第二信号源或外部副作用才能交付时，立即缩回 verdict 分区、显式人力字段、
+  circuit_breaker: 超 2 天、需要新 DDL/M2/第二账本/UI/第二信号源或外部副作用才能交付时，立即缩回 verdict 分区、显式人力字段、
     只读周汇总和 collecting 状态。没有连续四周真实样本时只能宣称 E3 观测能力完成，不得宣称价值门通过
   retro: required
 - id: BET-Y1Q2-T8-01
@@ -3262,11 +3014,9 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-15
-  done_evidence: >-
-    2026-08-15 人类授权标 done。交付: cockpit-ui 0d19a872 + PR #1501
-    (三视图 / D1 未接入 / Dashboard /outcomes /journeys 接线);
-    verify `cd projects/cockpit-ui && npm run build` exit 0;
-    retro .omo/_knowledge/retros/BET-Y1Q2-T8-01.md。
+  done_evidence: '2026-08-15 人类授权标 done。交付: cockpit-ui 0d19a872 + PR #1501 (三视图 /
+    D1 未接入 / Dashboard /outcomes /journeys 接线); verify `cd projects/cockpit-ui &&
+    npm run build` exit 0; retro .omo/_knowledge/retros/BET-Y1Q2-T8-01.md。'
   goal: 让"系统学得怎么样"可被一眼看见
   non_goals:
   - 复杂图表
@@ -3463,9 +3213,8 @@ bets:
   priority: P1
   status: candidate
   reopened_at: 2026-08-12
-  reopen_reason: >-
-    2026-08-12 复核发现原 verify 只统计注册项数量，无法证明第二源存在真实信号或每周 >=10；
-    当前 inbox_folder health=unknown 且 last_signal_at=null。登记不等于运行，故撤回 done，等待真实运行证据。
+  reopen_reason: 2026-08-12 复核发现原 verify 只统计注册项数量，无法证明第二源存在真实信号或每周 >=10； 当前 inbox_folder
+    health=unknown 且 last_signal_at=null。登记不等于运行，故撤回 done，等待真实运行证据。
   goal: 降低单一信号源风险, 验证 signal-sources 抽象对第二类源成立
   non_goals:
   - 第三/四根管子(属 Y2Q4)
@@ -4261,7 +4010,7 @@ bets:
   priority: P1
   status: done
   done_at: 2026-08-08
-  note: "连接器体系 + cron 调度已落地 (PR #1217/#1218); 待配真实 webhook URL 后转 done"
+  note: '连接器体系 + cron 调度已落地 (PR #1217/#1218); 待配真实 webhook URL 后转 done'
   goal: 统一事件面落地后补最后一公里 — 告警通知到人 + 轮转/适配器常态化
   workflow: bet-execution
   verify:
@@ -4279,7 +4028,7 @@ bets:
   - alert-router 接微信/飞书 webhook, governance-alerts.yaml channels.webhook enabled
   - log-rotate + observability-adapters 挂 cron/launchd 常态化调度
   - P0/P1 告警 5 分钟内可达 (P2.2 成功度量)
-  - "observability-events.yaml notifications.status: todo 转为 done"
+  - 'observability-events.yaml notifications.status: todo 转为 done'
 - id: BET-Y1Q2-T9-02
   track: T9-OBSERV
   window: Y1Q2
@@ -4288,7 +4037,8 @@ bets:
   priority: P2
   status: done
   done_at: 2026-08-08
-  note: "Langfuse 修复 (v2.95.11 healthy) + agora RED 错误率 (bos_errors_total) + bus-foundation trace→事件面(被T6-01退役取代, 代码保留) + cockpit /api/observability 统一查询面; 复盘 .omo/_knowledge/retros/BET-Y1Q2-T9-02.md"
+  note: Langfuse 修复 (v2.95.11 healthy) + agora RED 错误率 (bos_errors_total) + bus-foundation
+    trace→事件面(被T6-01退役取代, 代码保留) + cockpit /api/observability 统一查询面; 复盘 .omo/_knowledge/retros/BET-Y1Q2-T9-02.md
   goal: trace/指标/展示三维补齐, 可观测四维全覆盖
   workflow: bet-execution
   verify:
@@ -4300,7 +4050,7 @@ bets:
   - projects/cockpit/src/cockpit/web/**
   - projects/observability/**
   done_when:
-  - "observability 栈决策: 修复 Langfuse (.env + up) 或正式退役并移除文档引用"
+  - 'observability 栈决策: 修复 Langfuse (.env + up) 或正式退役并移除文档引用'
   - agora /metrics 补 RED 指标 (QPS/延迟直方图/错误率)
   - bus-foundation trace_id → 事件面导出 (OTel 可选)
   - cockpit 可观测页聚合统一事件面 (替代分散 /api/logs /api/alerts)
@@ -4311,7 +4061,8 @@ bets:
   appetite: 3 days
   priority: P0
   status: candidate
-  goal: 完成 cockpit Phase 4 清理：清理 cockpit_mcp.py 残留 import，同步 audit worktree 子模块指针，修复 L4 bridge 全系列失效
+  goal: 完成 cockpit Phase 4 清理：清理 cockpit_mcp.py 残留 import，同步 audit worktree 子模块指针，修复
+    L4 bridge 全系列失效
   non_goals:
   - 新增 cockpit_mcp.py shim（除非 Agora BOS 路径短期不可用）
   - 修改 cockpit_mcp.py 原有功能（该文件已删除）
@@ -4319,21 +4070,23 @@ bets:
   evidence:
     E1_cockpit_mcp_removed:
       description: commit 5de9b5c 删除了 src/cockpit/scripts/cockpit_mcp.py (1197行)
-      ci_url: 'https://github.com/starlink-awaken/omostation/commit/5de9b5c'
+      ci_url: https://github.com/starlink-awaken/omostation/commit/5de9b5c
     E2_residual_imports:
-      description: 8+ 文件仍残留 cockpit.scripts.cockpit_mcp import，导致 context/cards/vault/domains/health/mcp/brief/kems 失效
+      description: 8+ 文件仍残留 cockpit.scripts.cockpit_mcp import，导致 context/cards/vault/domains/health/mcp/brief/kems
+        失效
       files:
-        - src/cockpit/commands/l4bridge.py
-        - src/cockpit/commands/mcp.py
-        - src/cockpit/commands/health.py
-        - src/cockpit/commands/brief.py
-        - src/cockpit/commands/kems.py
-        - src/cockpit/web/api_omos.py
-        - src/cockpit/web/dashboard/routes.py
+      - src/cockpit/commands/l4bridge.py
+      - src/cockpit/commands/mcp.py
+      - src/cockpit/commands/health.py
+      - src/cockpit/commands/brief.py
+      - src/cockpit/commands/kems.py
+      - src/cockpit/web/api_omos.py
+      - src/cockpit/web/dashboard/routes.py
     E3_submodule_drift:
-      description: audit worktree 子模块指针漂移至空提交 (c2g=44270d6, bus-foundation=23f4aba)，导致 6+ 命令因依赖缺失崩溃
-      main_worktree: "c2g=350c567, bus-foundation=900ca5f"
-      audit_worktree: "c2g=44270d6 (empty), bus-foundation=23f4aba (empty)"
+      description: audit worktree 子模块指针漂移至空提交 (c2g=44270d6, bus-foundation=23f4aba)，导致
+        6+ 命令因依赖缺失崩溃
+      main_worktree: c2g=350c567, bus-foundation=900ca5f
+      audit_worktree: c2g=44270d6 (empty), bus-foundation=23f4aba (empty)
   done_when:
   - 所有 cockpit.scripts.cockpit_mcp 残留 import 已清理或替换为 Agora BOS 调用
   - l4bridge.py 的 try/except 降级逻辑已移除（恢复为正常调用路径）
@@ -4365,6 +4118,45 @@ bets:
   human_gate: false
   circuit_breaker: 清理范围超出 3 天 appetite → 先完成 Agora BOS 迁移路径，剩余残留下个 bet
   retro: required
+- id: BET-Y1Q3-T6-03
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: mof-deepen 测试面补齐 — 10 模块最小触达验证
+  appetite: 2 days
+  priority: P2
+  status: candidate
+  goal: 为 575843deb 无主落账的 10 个 mof-deepen 模块补齐最小测试面, 降低 1444 行零测试功能面的运行风险
+  non_goals:
+  - 重构模块实现逻辑
+  - 补全单元测试到高覆盖率 (最小验证即可)
+  - 修改 journey-runner 或 PASW 机制
+  done_when:
+  - 每个模块至少 1 个 smoke 测试 (import + 核心函数可调用)
+  - ADMIN_SCENES dispatcher 注册路径有集成测试覆盖
+  - 新增测试在 CI 全绿 (uv run --with pytest python -m pytest 全量)
+  verify:
+  - cmd: uv run --with pytest python -m pytest tests/test_mof_deepen_smoke.py -q
+    expect: 10 passed
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - tests/test_mof_deepen_smoke.py
+  - bin/ssot/admin_scenes.py
+  - bin/ssot/deadline_tracker.py
+  - bin/ssot/doc_generator.py
+  - bin/ssot/health_agent.py
+  - bin/ssot/mail_agent.py
+  - bin/ssot/mail_daemon.py
+  - bin/ssot/mail_reader.py
+  - bin/ssot/mail_sender.py
+  - bin/ssot/risk_engine.py
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q3-T1-02
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 超 3 天未完成 smoke → 降级为 import-only 测试, 标记部分完成
+  retro: required
 - id: BET-Y1Q3-T8-02
   track: T8-SURFACE
   window: Y1Q3
@@ -4379,12 +4171,11 @@ bets:
   - 修改 bin/ssot/workspace-audit 脚本内容
   evidence:
     E1_events_watch_traceback:
-      description: "cockpit events-watch 无参运行报 AttributeError: 'Namespace' object has no attribute 'url'"
-      stacktrace: |
-        File "src/cockpit/cli.py", line 761, in (lambda)
-          "events-watch": lambda a: _c_events(
-        File "src/cockpit/cli.py", line 170, in _c_events
-          run_events_dashboard(a.url)
+      description: 'cockpit events-watch 无参运行报 AttributeError: ''Namespace'' object
+        has no attribute ''url'''
+      stacktrace: "File \"src/cockpit/cli.py\", line 761, in (lambda)\n  \"events-watch\"\
+        : lambda a: _c_events(\nFile \"src/cockpit/cli.py\", line 170, in _c_events\n\
+        \  run_events_dashboard(a.url)\n"
       source: docs/cockpit-cmd-audit-comprehensive.md
     E2_audit_path_error:
       description: cockpit audit 无参运行报 [Error] 找不到 /Users/xiamingxing/Workspace/bin/workspace-audit
@@ -4407,8 +4198,8 @@ bets:
   workflow: bet-execution
   underlying_workflow: project-code-change
   write_surfaces:
-  - src/cockpit/cli.py
-  - src/cockpit/commands/audit.py
+  - projects/cockpit/src/cockpit/cli.py
+  - projects/cockpit/src/cockpit/commands/audit.py
   pasw_required: false
   depends_on: []
   risk_level: L1
@@ -4431,25 +4222,25 @@ bets:
     E1_registry_drift:
       description: _subcommands.py 注册 73 个命令，但 COMMAND_CATALOG 仅 69 个，缺失 bdsk/journey/panorama/project
       missing_from_registry:
-        - bdsk
-        - journey
-        - panorama
-        - project
+      - bdsk
+      - journey
+      - panorama
+      - project
       source: docs/cockpit-cmd-audit-comprehensive.md
     E2_help_map_drift:
       description: help_map.py GROUPS 仅 68 个命令，缺失 bdsk/journey/panorama/project/quickstart-check
       missing_from_help_map:
-        - bdsk
-        - journey
-        - panorama
-        - project
-        - quickstart-check
+      - bdsk
+      - journey
+      - panorama
+      - project
+      - quickstart-check
       source: docs/cockpit-cmd-audit-comprehensive.md
     E3_deprecated_cli:
       description: ssb 和 model-driven 已弃用但仍注册在 _subcommands.py，执行时拒绝工作
       deprecated_commands:
-        - ssb: "ECOS SSB 独立 CLI 已弃用，请使用 cockpit 替代"
-        - model-driven: "Model-Driven 独立 CLI 已弃用 (ADR-0240 D1)，拒绝执行"
+      - ssb: ECOS SSB 独立 CLI 已弃用，请使用 cockpit 替代
+      - model-driven: Model-Driven 独立 CLI 已弃用 (ADR-0240 D1)，拒绝执行
       source: docs/cockpit-cmd-audit-comprehensive.md
   done_when:
   - COMMAND_CATALOG 补充 bdsk/journey/panorama/project 四个缺失命令
@@ -4466,16 +4257,15 @@ bets:
   workflow: bet-execution
   underlying_workflow: project-doc-change
   write_surfaces:
-  - src/cockpit/commands/registry.py
-  - src/cockpit/commands/help_map.py
-  - src/cockpit/_subcommands.py
+  - projects/cockpit/src/cockpit/commands/registry.py
+  - projects/cockpit/src/cockpit/commands/help_map.py
+  - projects/cockpit/src/cockpit/_subcommands.py
   pasw_required: false
   depends_on: []
   risk_level: L1
   human_gate: false
   circuit_breaker: SSOT 漂移范围扩大 → 只修复 registry/help_map，弃用 CLI 清理下个 bet
   retro: required
-
 - id: BET-Y1Q3-T1-02
   track: T1-TRUTH
   window: Y1Q3
@@ -4485,18 +4275,17 @@ bets:
   status: done
   done_at: 2026-08-15
   done_evidence: '追溯收口: commit 575843deb (PR #1465, 10 模块 1444 行) 落 main 时无 bet 约束,
-    2026-08-15 台账信任修复轮溯源登记 (audit retro: audit-mof-deepen-landing-20260815.md).
-    活性核实: journey-runner ADMIN_SCENES 注册在位, 各模块 1-6 处引用非死码; 10 模块零测试为
-    已知缺口, 处置交后续 bet (见 retro Q5)'
-  goal: 把 2026-08-14 无主落账的 mof-deepen 交付 (数字大脑 P0 域邮件/行政 10 模块) 纳入台账管辖,
-    补齐账实相符
+    2026-08-15 台账信任修复轮溯源登记 (audit retro: audit-mof-deepen-landing-20260815.md). 活性核实:
+    journey-runner ADMIN_SCENES 注册在位, 各模块 1-6 处引用非死码; 10 模块零测试为 已知缺口, 处置交后续 bet (见
+    retro Q5)'
+  goal: 把 2026-08-14 无主落账的 mof-deepen 交付 (数字大脑 P0 域邮件/行政 10 模块) 纳入台账管辖, 补齐账实相符
   non_goals:
   - 补 10 模块测试面 (独立 bet 处理)
   - PR gate 强制 bet-id 校验 (治理建议, 未立项)
   - work/mof-deepen 分支完整溯源
   done_when:
-  - "mof-deepen 交付物 (commit 575843deb) 在台账有对应 bet 且 write_surfaces 覆盖其实际改动路径"
-  - "归属判定与活性核查结论落盘 (.omo/_knowledge/retros/audit-mof-deepen-landing-20260815.md)"
+  - mof-deepen 交付物 (commit 575843deb) 在台账有对应 bet 且 write_surfaces 覆盖其实际改动路径
+  - 归属判定与活性核查结论落盘 (.omo/_knowledge/retros/audit-mof-deepen-landing-20260815.md)
   verify:
   - cmd: git log --format=%s -1 575843deb
     expect: 含 "数字大脑模块 + 行政流程 scenes"
@@ -4519,24 +4308,28 @@ bets:
   human_gate: false
   circuit_breaker: 无 (追溯登记, 一次性)
   retro: required
-
 - id: BET-Y1Q1-T1-08
   track: T1-TRUTH
   window: Y1Q1
   title: 子模块指针快速更新机制 (bump-fast)
   appetite: 2 days
   priority: P1
-  status: candidate
-  goal: 用 git cacheinfo 操作替代全量 submodule update 来更新单个子模块指针，在不牺牲可达性校验的前提下把单次指针更新耗时从近百秒降到亚秒级，直接缩短 D2 分支占用锁的持有时间
+  status: in_progress
+  goal: 用 git cacheinfo 操作替代全量 submodule update 来更新单个子模块指针，在不牺牲可达性校验的前提下把单次指针更新耗时从近百秒降到亚秒级，直接缩短
+    D2 分支占用锁的持有时间
   non_goals:
   - 批量指针更新的自动触发（属 BET-Y1Q2-T1-20）
   - 修改 PASW 机制本身
   - 改变子模块的实际内容/代码
   done_when:
-  - 'bin/gac/gac-worktree.sh bump-fast <submodule-path> [--sha <sha>|--latest-main] 落地，默认 --latest-main 取该子模块远端 main 分支当前 tip'
-  - 写入 cacheinfo 前必须完成可达性校验（ls-remote 确认目标 SHA 在该子模块远端 main 可达），校验失败时 fail-closed 拒绝写入并给出明确错误信息
-  - 操作不触碰目标子模块的工作树/.git/modules/<sub>/HEAD，对 PASW 覆盖的子模块（gbrain/cockpit/agora）同样适用且不需要额外 PASW 隔离
-  - 若目标子模块在 docs/project-registry.yaml 中有对应 version 字段，bump-fast 运行时同步更新该字段，避免指针与 registry 版本号不一致（历史上出现过 omlxc registry 显示 3.0.0a1 而 origin/main 已到 3.0.13 的真实案例）
+  - bin/gac/gac-worktree.sh bump-fast <submodule-path> [--sha <sha>|--latest-main]
+    落地，默认 --latest-main 取该子模块远端 main 分支当前 tip
+  - 写入 cacheinfo 前必须完成可达性校验（ls-remote 确认目标 SHA 在该子模块远端 main 可达），校验失败时 fail-closed
+    拒绝写入并给出明确错误信息
+  - 操作不触碰目标子模块的工作树/.git/modules/<sub>/HEAD，对 PASW 覆盖的子模块（gbrain/cockpit/agora）同样适用且不需要额外
+    PASW 隔离
+  - 若目标子模块在 docs/project-registry.yaml 中有对应 version 字段，bump-fast 运行时同步更新该字段，避免指针与
+    registry 版本号不一致（历史上出现过 omlxc registry 显示 3.0.0a1 而 origin/main 已到 3.0.13 的真实案例）
   - 单次操作端到端耗时（不含 claim/commit 流程本身）< 2 秒，有可重跑的计时测试佐证
   - 仍然走标准 D2/D3 claim-before-commit 流程，不绕过治理；文档写清楚这是流程内的加速手段，不是绕过治理的捷径
   verify:
@@ -4562,7 +4355,6 @@ bets:
   human_gate: false
   circuit_breaker: 超 appetite×1.5 未完成可达性校验这一核心安全项 → 停下汇报，不得先上线一个没有校验的 "裸快速通道"
   retro: required
-
 - id: BET-Y1Q2-T1-20
   track: T1-TRUTH
   window: Y1Q2
@@ -4577,7 +4369,8 @@ bets:
   - 重新实现指针更新逻辑（复用 BET-Y1Q1-T1-08 的 bump-fast 机制，不要另起一套）
   done_when:
   - omlxc 仓库新增一个 GitHub Action，在 v* tag push 时触发
-  - '触发后调用与 BET-Y1Q1-T1-08 相同的 bump-fast 逻辑，在 omostation 开一个 PR，标题形如 "chore(deps): bump projects/omlxc to <sha>"，PR body 链接到对应 CHANGELOG 条目'
+  - '触发后调用与 BET-Y1Q1-T1-08 相同的 bump-fast 逻辑，在 omostation 开一个 PR，标题形如 "chore(deps):
+    bump projects/omlxc to <sha>"，PR body 链接到对应 CHANGELOG 条目'
   - 若该子模块已存在未合并的 bump PR，更新该 PR 而不是重开新 PR（omlxc 发布频率高，需避免 PR 堆积）
   - PR 不自动合并；PR 必须通过与人工发起的 bump 完全相同的 CI 门禁（check-submodule-pointer-drift 等），不设特殊豁免通道
   - 有一次真实端到端演练：触发一次 tag push（测试 tag 或等真实发布），产出的 PR 被人工确认可以合并
@@ -4600,5 +4393,6 @@ bets:
   - BET-Y1Q1-T1-08
   risk_level: L2
   human_gate: true
-  circuit_breaker: 超 appetite×1.5，或 GitHub token/secret 配置卡住超过 1 天 → 停下汇报，由人类决定继续配置还是换更简单的触发方式（比如 cron 轮询代替 webhook）
+  circuit_breaker: 超 appetite×1.5，或 GitHub token/secret 配置卡住超过 1 天 → 停下汇报，由人类决定继续配置还是换更简单的触发方式（比如
+    cron 轮询代替 webhook）
   retro: required
