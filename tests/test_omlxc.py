@@ -36,14 +36,14 @@ def test_model_memory_admission_values_cover_measured_large_models():
     assert models["mistral-medium-128b"]["size_gb"] >= 74
 
 
-def test_catalog_ids_match_live_deepseek_v4_weights_not_renamed_qwen_keys(tmp_path):
-    """#26 renamed these IDs to qwen-3.5-9b-*; the App library and weights are DeepSeek-V4."""
+def test_catalog_ids_are_qwen35_not_deepseek_v4(tmp_path):
+    """Logical IDs stay qwen-3.5-9b-*; DeepSeek is not a catalog name."""
     conf = _load_models_config()
     models = conf["models"]
-    discarded = {"qwen-3.5-9b-flash", "qwen-3.5-9b-pro"}
+    discarded = {"deepseek-v4-flash", "deepseek-v4-pro"}
     canonical = {
-        "deepseek-v4-flash": "coding/deepseek-v4-flash",
-        "deepseek-v4-pro": "coding/deepseek-v4-pro",
+        "qwen-3.5-9b-flash": "coding/qwen-3.5-9b-flash",
+        "qwen-3.5-9b-pro": "coding/qwen-3.5-9b-pro",
     }
 
     assert discarded.isdisjoint(models)
@@ -54,6 +54,7 @@ def test_catalog_ids_match_live_deepseek_v4_weights_not_renamed_qwen_keys(tmp_pa
     for key, alias in canonical.items():
         assert models[key]["alias"] == alias
         assert float(models[key]["size_gb"]) > 0
+        assert "deepseek" not in models[key].get("note", "").lower()
 
     cli = _load_cli()
     active = tmp_path / "models-active"
@@ -72,13 +73,13 @@ def test_catalog_ids_match_live_deepseek_v4_weights_not_renamed_qwen_keys(tmp_pa
         {
             "active_root": str(active),
             "models": {
-                "qwen-3.5-9b-flash": {"alias": "coding/qwen-3.5-9b-flash"},
                 "deepseek-v4-flash": {"alias": "coding/deepseek-v4-flash"},
+                "qwen-3.5-9b-flash": {"alias": "coding/qwen-3.5-9b-flash"},
             },
         }
     )
-    assert "qwen-3.5-9b-flash" not in leftover
-    assert "deepseek-v4-flash" in leftover
+    assert "deepseek-v4-flash" not in leftover
+    assert "qwen-3.5-9b-flash" in leftover
 
 
 def test_remote_lmstudio_policy_avoids_day_long_residency_and_gpu_oom():
