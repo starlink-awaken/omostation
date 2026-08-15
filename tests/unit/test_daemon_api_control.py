@@ -34,7 +34,7 @@ class FakeControlService:
                 stale=False,
             ),
         )
-        self.model = ModelSpec(id="local/model", role="chat")
+        self.model = ModelSpec(id="local/model", role="chat", aliases=frozenset({"legacy/model"}))
         self.job = Job(
             id="job-1",
             kind="load",
@@ -46,6 +46,8 @@ class FakeControlService:
             updated_at=now,
         )
         self.load_calls: list[tuple[str, str]] = []
+        self.unload_calls: list[tuple[str, str]] = []
+        self.route_requests: list[RouteRequest] = []
         self.probe_calls: list[str] = []
         self.diagnostic_calls: list[str] = []
 
@@ -59,6 +61,11 @@ class FakeControlService:
     async def list_models(self, *, after: str | None, limit: int) -> tuple[ModelSpec, ...]:
         assert limit <= 100
         return () if after == self.model.id else (self.model,)
+
+    async def resolve_model(self, model_id: str) -> ModelSpec | None:
+        if model_id == self.model.id or model_id in self.model.aliases:
+            return self.model
+        return None
 
     async def probe_node(self, node_id: str) -> Node | None:
         self.probe_calls.append(node_id)
@@ -75,6 +82,7 @@ class FakeControlService:
 
     async def plan_route(self, request: RouteRequest) -> RouteDecision:
         request_id = request.request_id
+        self.route_requests.append(request)
         return RouteDecision(
             request_id=request_id,
             selected_placement_id="placement-a",
@@ -98,6 +106,7 @@ class FakeControlService:
         return self.job
 
     async def unload_model(self, model_id: str, *, idempotency_key: str) -> Job:
+        self.unload_calls.append((model_id, idempotency_key))
         return self.job.model_copy(update={"kind": "unload"})
 
     async def cancel_job(self, job_id: str) -> Job | None:
@@ -261,6 +270,60 @@ async def test_load_unload_and_cancel_return_durable_job_with_202(
     assert control.load_calls == [("local/model", "load-1"), ("local/model", "load-1")]
     assert cancelled.status_code == 202
     assert cancelled.json()["data"]["state"] == "cancelling"
+
+
+@pytest.mark.asyncio
+async def test_route_plan_resolves_alias_to_canonical_model(
+    transport: httpx.ASGITransport, control: FakeControlService
+) -> None:
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        planned = await client.post(
+            "/api/v1/routes/plan",
+            json={
+                "model_id": "legacy/model",
+                "profile": "quality",
+                "required_capabilities": ["embedding"],
+                "context_tokens": 0,
+                "thinking_requested": False,
+            },
+        )
+
+    assert planned.status_code == 200
+    assert planned.json()["data"]["selected_placement_id"] == "placement-a"
+    assert control.route_requests[0].model_id == "local/model"
+
+
+@pytest.mark.asyncio
+async def test_load_and_unload_resolve_aliases_and_unknown_model_is_404(
+    transport: httpx.ASGITransport, control: FakeControlService
+) -> None:
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        loaded = await client.post(
+            "/api/v1/models/legacy%2Fmodel/load",
+            headers={"Idempotency-Key": "load-1"},
+        )
+        unloaded = await client.post(
+            "/api/v1/models/legacy%2Fmodel/unload",
+            headers={"Idempotency-Key": "unload-1"},
+        )
+        missing_route = await client.post("/api/v1/routes/plan", json={"model_id": "missing/model"})
+        missing_load = await client.post(
+            "/api/v1/models/missing%2Fmodel/load",
+            headers={"Idempotency-Key": "missing"},
+        )
+
+    assert loaded.status_code == 202
+    assert unloaded.status_code == 202
+    assert loaded.json()["data"]["id"] == "job-1"
+    assert unloaded.json()["data"]["kind"] == "unload"
+    assert control.load_calls == [("local/model", "load-1")]
+    assert control.unload_calls == [("local/model", "unload-1")]
+    assert missing_route.status_code == 404
+    assert missing_load.status_code == 404
+    assert missing_route.json()["error"]["code"] == "E404"
+    assert missing_load.json()["error"]["code"] == "E404"
+    assert missing_route.json()["error"]["message"] == "model not configured"
+    assert missing_load.json()["error"]["message"] == "model not configured"
 
 
 @pytest.mark.asyncio

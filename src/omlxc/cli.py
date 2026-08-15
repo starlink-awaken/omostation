@@ -648,7 +648,12 @@ def _model_mutation(model_id: str, *, load: bool, yes: bool, json_output: bool) 
             return await client.load_model(model_id)
         return await client.unload_model(model_id)
 
-    _execute(operation, json_output=json_output, renderer=_render_job)
+    _execute(
+        operation,
+        json_output=json_output,
+        renderer=_render_job,
+        error_context=ErrorContext.ROUTE,
+    )
 
 
 @models_app.command("load")
@@ -706,6 +711,7 @@ def routes_plan(
         lambda client: client.plan_route(body),
         json_output=json_output,
         renderer=_render_route,
+        error_context=ErrorContext.ROUTE,
     )
 
 
@@ -1189,20 +1195,41 @@ async def _selected_node(client: DaemonClient, identifier: str) -> DaemonEnvelop
 
 
 async def _selected_model(client: DaemonClient, identifier: str) -> DaemonEnvelope:
+    """Match by model id or configured alias so users can select canonicalized aliases."""
     return await _select_from_pages(
-        lambda after: client.models(after=after, limit=100), identifier, "model"
+        lambda after: client.models(after=after, limit=100),
+        identifier,
+        "model",
+        item_matches=lambda item: _selected_model_identifier_matches(item, identifier),
     )
 
 
-async def _select_from_pages(fetch: PageFetcher, identifier: str, resource: str) -> DaemonEnvelope:
+def _selected_model_identifier_matches(item: Mapping[str, JsonValue], identifier: str) -> bool:
+    item_id = item.get("id")
+    if item_id == identifier:
+        return True
+    aliases = item.get("aliases")
+    if not isinstance(aliases, (list, tuple)):
+        return False
+    return any(alias == identifier for alias in aliases if isinstance(alias, str))
+
+
+async def _select_from_pages(
+    fetch: PageFetcher,
+    identifier: str,
+    resource: str,
+    *,
+    item_matches: Callable[[Mapping[str, JsonValue]], bool] | None = None,
+) -> DaemonEnvelope:
     cursor: str | None = None
     seen: set[str] = set()
     request_id = _request_id()
+    matches = item_matches or (lambda item: item.get("id") == identifier)
     for _page in range(MAX_LOOKUP_PAGES):
         envelope = await fetch(cursor)
         request_id = envelope.request_id
         for item in _items(envelope.data):
-            if item.get("id") == identifier:
+            if matches(item):
                 return DaemonEnvelope(
                     schema_version=envelope.schema_version,
                     request_id=envelope.request_id,

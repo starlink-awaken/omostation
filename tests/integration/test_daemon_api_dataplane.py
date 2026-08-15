@@ -16,7 +16,7 @@ from omlxc.dataplane import (
     RankedItem,
     RerankExecution,
 )
-from omlxc.domain import RouteProfile
+from omlxc.domain import ModelSpec, RouteProfile
 from omlxc.domain.protocols import (
     AdapterError,
     AdapterErrorCode,
@@ -150,6 +150,16 @@ class FakeInferenceService:
         )
 
 
+class FakeControlService:
+    def __init__(self, canonical: str = "local/model", alias: str = "legacy/model") -> None:
+        self.model = ModelSpec(id=canonical, role="chat", aliases=frozenset({alias}))
+
+    async def resolve_model(self, model_id: str) -> ModelSpec | None:
+        if model_id == self.model.id or model_id in self.model.aliases:
+            return self.model
+        return None
+
+
 @pytest.fixture
 def inference() -> FakeInferenceService:
     return FakeInferenceService()
@@ -235,6 +245,31 @@ async def test_sse_prefetches_final_failover_metadata_and_emits_unique_done(
     assert chunks[0]["choices"][0]["delta"]["content"] == "hello"
     assert chunks[-1]["choices"] == [{"index": 0, "delta": {}, "finish_reason": "stop"}]
     assert inference.stream.closed
+
+
+@pytest.mark.asyncio
+async def test_openai_endpoints_resolve_aliases_to_canonical_model_when_control_enabled(
+    inference: FakeInferenceService,
+) -> None:
+    transport = httpx.ASGITransport(
+        app=create_app(control=FakeControlService(), inference=inference)
+    )
+    async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
+        chat = await client.post(
+            "/openai/v1/chat/completions",
+            json={"model": "legacy/model", "messages": [{"role": "user", "content": "hello"}]},
+        )
+        embeddings = await client.post(
+            "/openai/v1/embeddings",
+            json={"model": "legacy/model", "input": "hello"},
+        )
+
+    assert chat.status_code == 200
+    assert embeddings.status_code == 200
+    assert chat.json()["model"] == "local/model"
+    assert embeddings.json()["model"] == "local/model"
+    assert inference.chat_requests[0].model == "local/model"
+    assert inference.embedding_requests[0].model == "local/model"
 
 
 @pytest.mark.asyncio
