@@ -97,6 +97,20 @@ $HOME/Workspace
 `code_sha256` 和 `runtime_root_digest` 为准；至少观察三个 5min 心跳周期。只看到进程存在
 或 LaunchAgent loaded 不算部署成功。
 
+**部署 clone 维护 SOP**（2026-08-15 ops 轮补充，实测踩坑后固化）：
+
+main 每次合并协调层相关变更后，部署 clone 不会自愈更新——需要手动同步并重启：
+
+```bash
+CODE_ROOT="$HOME/agents/coordination-daemon/ws"
+# 1. 同步 (必须 ff-only; 若无法 ff 说明部署分支被污染, 停下排查, 不要强推)
+git -C "$CODE_ROOT" fetch origin main && git -C "$CODE_ROOT" merge --ff-only origin/main
+# 2. 重启加载新代码 (常驻进程不重启就还在跑旧代码)
+launchctl kickstart -k "gui/$(id -u)/com.omostation.agent-tick-daemon"
+# 3. 验证: 观察 status --json 的 code_sha256 变化 + 三个心跳周期内 last_seen 持续更新
+python3 "$CODE_ROOT/bin/gac/swarm-discipline-cli.py" status --json | head -5
+```
+
 ### 4.2 备份
 
 两层 (grill Q9 裁定):
@@ -127,3 +141,6 @@ $HOME/Workspace
 | `unable to open database file` | 目录权限/只读 FS | `ls -ld ~/agents/_shared/runtime/` 查权限 |
 | submit 停在 "fail-closed (T1-05A)" | token-check exit 2 = DB 打不开 | 走 §2 → §3; 或 `SWARM_ESCAPE_ID=emergency-human-hotfix` 人工放行 |
 | `write_fail` 事件暴涨 | DB 所在盘满 / busy 超时 | `df -h` 检查盘; WAL 模式下偶发 busy 是正常 |
+| 备份静默断流（`.bak.1` mtime 超 24h 且 backup_ok 停更） | cron 指向的代码根停在 feature 分支/缺 store 文件（2026-08-15 实测: 主仓 checkout 被 human 切到 feature 分支, `coordination_store.py` 不在工作树） | `tail runtime/logs/coordination-backup.log` 确认; cron cd 路径改指部署 clone `~/agents/coordination-daemon/ws`（§4.2 条目已是正确写法）; 手动 `--backup` 验证 |
+| 心跳 code_sha256 落后 origin/main | 部署 clone 无自动更新机制 | 走 §4.1 维护 SOP: fetch + ff-only + kickstart + 三心跳观察 |
+

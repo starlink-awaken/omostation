@@ -128,3 +128,16 @@ claim, token 不变; 挂点侧无需改 (返回既有 Claim 自然走 write_ok �
 同轮情报: #1483 (硬化轮, 别的 agent) 已修 TTL 不执行/fencing 松弛/备份假声明,
 #1485 已把 daemon 部署到专属 clone `~/agents/coordination-daemon/ws` (心跳 00:06Z
 恢复)。本轮基于 cd550370 基线, 无重复造轮。
+
+## 附: ops 轮 (2026-08-15, PR 待提交)
+
+窗口第 2 天扫描发现两处部署漂移 (非代码 bug, 是部署面缺口):
+1. **备份静默断流 ~1 天**: cron cd 指向主仓, 但主仓 checkout 被切到 feature 分支,
+   工作树无 coordination_store.py → 08:30 cron 每次静默 fail, .bak.1 停在
+   2026-08-14T21:15. 处置: crontab 已切部署 clone (~/agents/coordination-daemon/ws,
+   #1485 建立的干净代码根) + 手动 --backup 验证 ok (新 .bak.1 落盘, integrity ok).
+2. **daemon clone 落后 main**: 无自动更新机制, #1490 不在其中 → 手动 fetch +
+   ff-only + launchctl kickstart, 心跳 01:13Z 恢复且加载新代码.
+
+代码修复: 仅 runbook (维护 SOP + 2 行故障速查固化上述坑), 零代码改动 —
+问题在部署面不在代码面. 文档先行, 后续若断流复发再考虑 cron 自愈/告警.
