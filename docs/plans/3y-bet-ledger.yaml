@@ -3302,8 +3302,7 @@ bets:
   title: MOS 双栈一致性观察 8 周
   appetite: 6 weeks
   priority: P0
-  status: done
-  done_at: 2026-08-15
+  status: in_progress
   goal: 归并前的必经硬门 — 证明 MOS 已可替代 KOS/gbrain 双栈
   non_goals:
   - 执行归并(属 T6-01)
@@ -4425,7 +4424,12 @@ bets:
   title: cockpit SSOT 漂移治理 — COMMAND_CATALOG + help_map 同步 + 弃用 CLI 清理
   appetite: 2 days
   priority: P2
-  status: candidate
+  status: done
+  done_at: 2026-08-15
+  done_evidence: '2026-08-09 会话实现 (retro 记录) + 2026-08-15 独立核实: registry=help_map=73 命令零漂移
+    (双向差集空), bdsk/journey/panorama/project/quickstart-check 全在位, ssb/model-driven
+    在 _subcommands.py:379/:407 与 help 主列表均标注 [DEPRECATED], cockpit help 实跑
+    五命令全现 — 逐条证据见 retro 独立核实记录节'
   goal: 修复 cockpit 命令注册表 SSOT 漂移：补充缺失命令到 registry/help_map，清理已弃用但仍注册的 CLI 入口
   non_goals:
   - 新增命令（仅同步现有注册）
