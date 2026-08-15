@@ -937,7 +937,9 @@ bets:
   title: iris apple_mail 真实轮询打通
   appetite: 1 week
   priority: P0
-  status: in_progress
+  status: done
+  done_at: 2026-08-15
+  done_evidence: poller 修复 + 窗口起算 2026-08-15 (signal-poller reload, 进程恢复运行)
   goal: 感知面从 0 到 1 — 让系统第一次看到仓库以外的东西
   non_goals:
   - 多信号源
@@ -4314,7 +4316,9 @@ bets:
   title: 子模块指针快速更新机制 (bump-fast)
   appetite: 2 days
   priority: P1
-  status: in_progress
+  status: done
+  done_at: 2026-08-15
+  done_evidence: bump-fast 已实现 (ls-remote + cacheinfo + registry 同步), 计时测试 0.07s, 测试全绿
   goal: 用 git cacheinfo 操作替代全量 submodule update 来更新单个子模块指针，在不牺牲可达性校验的前提下把单次指针更新耗时从近百秒降到亚秒级，直接缩短
     D2 分支占用锁的持有时间
   non_goals:
