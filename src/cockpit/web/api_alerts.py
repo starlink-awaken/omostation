@@ -343,7 +343,7 @@ class TriageResponse(BaseModel):
     error: str | None = Field(None, description="错误信息")
 
 
-GATEWAY_URL = "http://100.96.126.35:4000/v1/chat/completions"
+GATEWAY_URL = "http://127.0.0.1:9000/coding/v1/chat/completions"
 GATEWAY_KEY = "sk-omlx-admin"
 
 TRIAGE_PROMPT = """你是信息分诊助手。判断: 丢弃 / 沉淀 / 提醒 三选一。

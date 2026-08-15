@@ -14,15 +14,36 @@ import json
 import os
 from urllib import request as urlrequest
 
-OMLXC_GATEWAY_URL = os.environ.get("OMLXC_GATEWAY_URL", "http://100.96.126.35:4000/v1")
+OMLXC_GATEWAY_URL = os.environ.get("OMLXC_GATEWAY_URL", "http://127.0.0.1:9000/v1")
 OLLAMA_API = os.environ.get("OLLAMA_API", "http://localhost:11434")
 DEFAULT_GATEWAY_MODEL = os.environ.get("LLM_ROUTER_GATEWAY_MODEL", "coder-fast")
 # ollama 降级兜底: north-mini-code-1.0:mlx-nvfp4 实测正常 (gemma4:31b-mlx 返回空响应, 已弃用)
 DEFAULT_OLLAMA_FALLBACK = os.environ.get("LLM_ROUTER_OLLAMA_FALLBACK", "north-mini-code-1.0:mlx-nvfp4")
 
 
+def _get_bridge():
+    """Lazy import aetherforge bridge — returns None if unavailable."""
+    try:
+        import sys
+        from pathlib import Path
+        _af = str(Path(__file__).resolve().parents[3] / "projects" / "aetherforge" / "src")
+        if _af not in sys.path:
+            sys.path.insert(0, _af)
+        from aetherforge.bridge import llm_generate, llm_list_models
+        return llm_generate, llm_list_models
+    except Exception:
+        return None, None
+
+
 def discover_gateway_models() -> list[str]:
-    """查询 omlxc 网关 /v1/models 获取可用模型 ID 列表。"""
+    """查询可用模型列表 — 优先 bridge, 回退 HTTP。"""
+    _, list_models = _get_bridge()
+    if list_models:
+        try:
+            return [m["id"].split("/", 1)[-1] for m in list_models()]
+        except Exception:
+            pass
+    # Fallback: direct HTTP
     try:
         req = urlrequest.Request(f"{OMLXC_GATEWAY_URL}/models")  # noqa: S310
         with urlrequest.urlopen(req, timeout=5) as resp:  # noqa: S310
@@ -51,7 +72,17 @@ def model_exists(model: str, tier: str = "ollama") -> bool:
 
 
 def _chat_gateway(prompt: str, model: str, temperature: float = 0.7, max_tokens: int = 2048) -> str | None:
-    """Tier 1: omlxc 网关 OpenAI 兼容端点。失败返回 None 并说明原因。"""
+    """Tier 1: AetherForge bridge (unified LLM entry)。失败返回 None 并说明原因。"""
+    bridge_gen, _ = _get_bridge()
+    if bridge_gen:
+        try:
+            result = bridge_gen(prompt, model=model, timeout=120.0)
+            content = result.get("content", "") or ""
+            return content or None
+        except Exception as exc:
+            print(f"[llm-router] Tier1 bridge 失败: {exc}")
+            return None
+    # Fallback: direct HTTP to omlxc gateway
     try:
         payload = {
             "model": model,
@@ -70,11 +101,10 @@ def _chat_gateway(prompt: str, model: str, temperature: float = 0.7, max_tokens:
         msg = data["choices"][0]["message"]
         content = msg.get("content") or ""
         if not content:
-            # qwen 系模型默认开启 thinking: content 为空时用 reasoning_content 兜底
             content = msg.get("reasoning_content") or ""
         return content or None
     except Exception as exc:
-        print(f"[llm-router] Tier1 omlxc 网关失败: {exc}")
+        print(f"[llm-router] Tier1 HTTP 网关失败: {exc}")
         return None
 
 
