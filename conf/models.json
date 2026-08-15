@@ -402,6 +402,25 @@
       },
       "note": "Qwopus3.6-27B-Coder 精确编码 (27GB, 比 coding-fast 更精确)",
       "size_gb": 28
+    },
+    "qwen-3.8-27b": {
+      "category": "coding",
+      "alias": "qwen-3.8-27b/current",
+      "port": 8195,
+      "engine": "mlx_lm",
+      "role": "chat",
+      "reasoning": false,
+      "params": {
+        "temp": 0.2,
+        "top_p": 0.9,
+        "kv_bits": 8,
+        "max_tokens": 2048,
+        "chat_template_args": {
+          "enable_thinking": false
+        }
+      },
+      "note": "Qwen3.8-27B MLX 6bit 通用对话（约 22GB，含视觉）",
+      "size_gb": 22
     }
   },
   "cluster": {
@@ -554,6 +573,7 @@
     "mid-local": "gemma-4-e4b-it-mlx",
     "qwen-3.5-9b-flash": "gemma-4-e4b-it-mlx",
     "qwen-3.5-9b-pro": "gemma-4-e4b-it-mlx",
+    "qwen-3.8-27b": "gemma-4-e4b-it-mlx",
     "reasoning": "gemma-4-e4b-it-mlx",
     "reasoning-lite": "gemma-4-e4b-it-mlx",
     "mistral-medium-128b": "gemma-4-e4b-it-mlx",
@@ -579,6 +599,7 @@
     "mid-local": "qwen3.5:9b",
     "qwen-3.5-9b-flash": "qwen3.5:9b",
     "qwen-3.5-9b-pro": "qwen3.5:9b",
+    "qwen-3.8-27b": "qwen3.5:9b",
     "reasoning": "qwen3.5:9b",
     "reasoning-lite": "qwen3.5:9b",
     "mistral-medium-128b": "qwen3.5:9b",

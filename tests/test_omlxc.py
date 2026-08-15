@@ -82,6 +82,25 @@ def test_catalog_ids_are_qwen35_not_deepseek_v4(tmp_path):
     assert "qwen-3.5-9b-flash" in leftover
 
 
+def test_catalog_includes_qwen_38_27b(tmp_path):
+    conf = _load_models_config()
+    spec = conf["models"]["qwen-3.8-27b"]
+    assert spec["alias"] == "qwen-3.8-27b/current"
+    assert spec["role"] == "chat"
+    assert float(spec["size_gb"]) >= 22
+    assert spec["port"] == 8195
+
+    cli = _load_cli()
+    active = tmp_path / "models-active"
+    target = tmp_path / "weights" / "qwen-3.8-27b"
+    target.mkdir(parents=True)
+    link = active / "qwen-3.8-27b" / "current"
+    link.parent.mkdir(parents=True)
+    link.symlink_to(target)
+    wanted = cli._app_model_paths({**conf, "active_root": str(active)})
+    assert wanted["qwen-3.8-27b"] == str(target.resolve())
+
+
 def test_remote_lmstudio_policy_avoids_day_long_residency_and_gpu_oom():
     remotes = _load_models_config()["autopilot"]["remote_resident"]
     by_host = {entry["host"]: entry for entry in remotes if entry["engine"] == "lmstudio"}
