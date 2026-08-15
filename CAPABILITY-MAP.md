@@ -8,7 +8,7 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 133 |
+| CLI 命令 (含子命令) | 134 |
 | MCP 工具 | 568 |
 | MCP 服务器 | 27 |
 | BOS 服务 | 223 |
@@ -169,6 +169,7 @@
 | `cockpit product-health` | 产品健康度检测 |
 | `cockpit profile` | 查看/编辑身份档案 (L4 入口) |
 | `cockpit project` | 🔍 17 项目全景 4D 体检与诊断 |
+| `cockpit proxy-env` | 输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE) |
 | `cockpit publish` | 发布事件 |
 | `cockpit quickstart` | 🚀 新用户快速上手向导（环境核验 + 上手指引） |
 | `cockpit quickstart-check` | 快速检查新用户环境核验状态 |
