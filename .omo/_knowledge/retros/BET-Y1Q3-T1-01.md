@@ -41,3 +41,22 @@ last-reviewed: 2026-08-09
 4. **affected-hash 必填**: claim 命令须 `--affected-hash` (并发 0deecdd4 引入), 生成 = `affected-graph.py --changed-projects <proj> --json | shasum`。
 5. **弃用命令策略**: 标 [DEPRECATED] 而非移除 (保留兼容), 执行层已拒绝 (ssb/model-driven 均 rc 非 0)。
 6. **待办**: panorama/panorama 实际执行命令在 `panorama` parser (make panorama), 已标注可观测组; 无遗留。
+
+---
+
+## 独立核实记录（2026-08-15，台账信任修复轮）
+
+> 本节由核实 agent 追加，原 retro（2026-08-09）保留不动。核实背景：台账信任修复轮要求 done 状态必须有可复核证据。
+
+**逐条实测（worktree @ 最新 cockpit 子树）**：
+
+| done_when | 判定 | 实测证据 |
+|---|---|---|
+| ① registry 补 bdsk/journey/panorama/project | ✅ | `len(COMMAND_CATALOG)=73`，四命令逐一 `in C`=Y |
+| ② help_map 补五命令 | ✅ | `all_command_names()`=73；双向差集 `H−C=[]`、`C−H=[]` 零漂移 |
+| ③ ssb/model-driven 标注弃用 | ✅ | `_subcommands.py:379/:407` help 带 `[DEPRECATED]`；`cockpit help` 实跑输出 `ssb [DEPRECATED]`、`model-driven [DEPRECATED]` |
+| ④ help 含全部 73 命令 | ✅ | registry=73 = help_map=73，差集空；grep 五命令命中 6 行 |
+
+台账 verify 三条实跑全过（help grep 命中 / ssb、model-driven 弃用标注在 help 系统 + registry 元数据可见；子命令 `--help` usage 头不带描述为 argparse 默认行为，弃用信息以 help 系统为准）。
+
+**核实结论**：done_when 四条全部客观满足（由 2026-08-09 会话实现，本节独立复核确认），准予收口 status → done。发现两点台账债（不改，记录）：WS 前缀 `src/cockpit/` 与真实路径 `projects/cockpit/src/cockpit/` 不符；candidate 已完成却未及时置 done 属记账滞后。
