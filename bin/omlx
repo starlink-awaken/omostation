@@ -1407,6 +1407,99 @@ def _lms_models(h, p):
     except Exception: return []
 
 
+def _lms_cli_json(args, timeout=8):
+    """Run `lms … --json` and return parsed JSON, or None if the CLI is missing."""
+    env = dict(_EXENV)
+    env["PATH"] = os.path.expanduser("~/.lmstudio/bin") + os.pathsep + env.get("PATH", "")
+    try:
+        result = subprocess.run(
+            ["lms", *args],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
+        )
+    except Exception:
+        return None
+    if result.returncode != 0:
+        return None
+    try:
+        return json.loads(result.stdout)
+    except Exception:
+        return None
+
+
+def _local_cluster_alias(conf):
+    for node in (conf.get("cluster") or {}).get("nodes", []):
+        if _is_local(node):
+            return _node_alias(node)
+    return "mbp"
+
+
+def _alias_for_link_device(conf, device_name, device_id, local_id):
+    """Map an LM Link device to an omlxc node alias. Never use pool HTTP state."""
+    if not device_id or device_id == local_id:
+        return _local_cluster_alias(conf)
+    name = _norm(device_name or "")
+    for node in (conf.get("cluster") or {}).get("nodes", []):
+        alias = _node_alias(node)
+        if alias and name and (alias in name or name in alias):
+            return alias
+    if "y7000" in name:
+        return "y7000p"
+    if "mini" in name:
+        return "macmini"
+    return name or (str(device_id)[:8] if device_id else "unknown")
+
+
+def _loaded_by_node_from_snapshots(conf, status, ps_rows):
+    """Pure: LM Link status + lms ps rows → {node_alias: {model_id, ...}}."""
+    out = {}
+    local_id = status.get("deviceIdentifier") if isinstance(status, dict) else None
+    if isinstance(status, dict):
+        for peer in status.get("peers") or []:
+            if not isinstance(peer, dict):
+                continue
+            alias = _alias_for_link_device(
+                conf, peer.get("deviceName"), peer.get("deviceIdentifier"), local_id
+            )
+            models = {str(mid) for mid in (peer.get("loadedModels") or []) if mid}
+            out.setdefault(alias, set()).update(models)
+    if isinstance(ps_rows, list):
+        peer_names = {}
+        if isinstance(status, dict):
+            for peer in status.get("peers") or []:
+                if isinstance(peer, dict) and peer.get("deviceIdentifier"):
+                    peer_names[peer["deviceIdentifier"]] = peer.get("deviceName")
+        for row in ps_rows:
+            if not isinstance(row, dict):
+                continue
+            mid = row.get("identifier") or row.get("modelKey")
+            if not mid:
+                continue
+            dev = row.get("deviceIdentifier")
+            alias = _alias_for_link_device(
+                conf, peer_names.get(dev), dev, local_id
+            )
+            out.setdefault(alias, set()).add(str(mid))
+    return out
+
+
+def _lms_loaded_by_node(conf):
+    """Device-accurate loaded map, or None if LM Link CLI is unavailable."""
+    status = _lms_cli_json(["link", "status", "--json"])
+    rows = _lms_cli_json(["ps", "--json"])
+    if not isinstance(status, dict) and not isinstance(rows, list):
+        return None
+    return _loaded_by_node_from_snapshots(conf, status or {}, rows or [])
+
+
+def _lms_loaded_on_node(loaded_by_node, node_alias, model_id, http_state):
+    if loaded_by_node is None:
+        return http_state == "loaded"
+    return model_id in (loaded_by_node.get(node_alias) or set())
+
+
 def _flag_int(tokens, *flags):
     for index, token in enumerate(tokens[:-1]):
         if token in flags:
@@ -1799,6 +1892,7 @@ def cmd_node(conf, args):
     targets = [_find_node(conf, args.name)] if args.name else cl["nodes"]
 
     if action in ("ps", "models"):
+        loaded_by_node = _lms_loaded_by_node(conf)
         for n in targets:
             print(f"\n{green(_node_alias(n))} — {n['name']}")
             if _is_local(n):
@@ -1806,6 +1900,10 @@ def cmd_node(conf, args):
                 for key, m in conf["models"].items():
                     if port_open(conf["host"], m["port"], 0.3):
                         print(f"   {green('●')} {key} :{m['port']} {dim('('+m['engine']+')')}"); any_r = True
+                local_lms = sorted(loaded_by_node.get(_node_alias(n), set())) if loaded_by_node else []
+                if local_lms:
+                    print("   lmstudio — " + ", ".join(local_lms))
+                    any_r = True
                 if not any_r: print(dim("   (无本地后端在跑; omlxc serve <key> 启动)"))
                 continue
             for eng, h, p in _svc_engines(n):
@@ -1819,12 +1917,16 @@ def cmd_node(conf, args):
                 elif eng == "lmstudio":
                     ms = _lms_models(h, p)
                     if action == "ps":
-                        loaded = [i for i, st, _ in ms if st == "loaded"]
+                        loaded = [
+                            i for i, st, _ in ms
+                            if _lms_loaded_on_node(loaded_by_node, _node_alias(n), i, st)
+                        ]
                         print(f"   lmstudio :{p} — " + (", ".join(loaded) if loaded else dim("空闲")))
                     else:
                         print(f"   lmstudio :{p} ({len(ms)} 模型):")
                         for i, st, ty in ms:
-                            print(f"      {green('●') if st=='loaded' else dim('○')} {i} {dim('['+ty+']')}")
+                            on = _lms_loaded_on_node(loaded_by_node, _node_alias(n), i, st)
+                            print(f"      {green('●') if on else dim('○')} {i} {dim('['+ty+']')}")
         return
 
     if action in ("load", "unload"):
@@ -1863,6 +1965,7 @@ def cmd_ls(conf, args):
             app_models = _app_models(conf)
         except Exception as e:
             print(yel(f"⚠ oMLX App 不可达: {e}"))
+    loaded_by_node = _lms_loaded_by_node(conf)
     print(bold("● MBP 本地 (oMLX App):" if _app_enabled(conf) else "● MBP 本地 (legacy 独立后端):"))
     for key, m in conf["models"].items():
         if _app_enabled(conf):
@@ -1874,6 +1977,11 @@ def cmd_ls(conf, args):
         else:
             run = port_open(conf["host"], m["port"])
             print(f"    {green('●') if run else dim('○')} {key:<14} {dim(':' + str(m['port']) + ' ' + m['engine'])}")
+    local_lms = sorted((loaded_by_node or {}).get(_local_cluster_alias(conf), set()))
+    if local_lms:
+        print(bold("● MBP · LM Studio (本机已加载):"))
+        for mid in local_lms:
+            print(f"    {green('●')} {mid} {dim('(lmstudio local)')}")
     for n in (conf.get("cluster") or {}).get("nodes", []):
         if _is_local(n):
             continue
@@ -1888,7 +1996,8 @@ def cmd_ls(conf, args):
                     print(f"    {green('●')} {nm} {dim('(ollama)')}")
             elif eng == "lmstudio":
                 for i, st, ty in _lms_models(h, p):
-                    print(f"    {green('●') if st == 'loaded' else dim('○')} {i} {dim('(lmstudio ' + ty + ')')}")
+                    on = _lms_loaded_on_node(loaded_by_node, _node_alias(n), i, st)
+                    print(f"    {green('●') if on else dim('○')} {i} {dim('(lmstudio ' + ty + ')')}")
     print(dim("\n● 在跑/已加载  ○ 停/未加载  ·  控制: omlxc load|unload <模型>  ·  经网关调用见 omlxc gw status"))
 
 _GW_ALIAS = {"coder":"coding","coder-fast":"coding-fast","reasoner":"reasoning",
@@ -1958,18 +2067,30 @@ def _load_gw_aliases():
 
 
 def _pool_state(conf, model_id):
-    """该模型在 LM Link 池里的状态: (可达节点, 是否已加载)。"""
+    """该模型在 LM Link 池里的状态: (真实设备节点, 是否已加载)。"""
+    loaded_by_node = _lms_loaded_by_node(conf)
+    if loaded_by_node:
+        for alias, models in loaded_by_node.items():
+            if model_id in models:
+                return alias, True
     pol = (conf.get("engine_policy") or {}).get("nodes") or {}
+    first_reachable = None
     for name, nd in pol.items():
         if nd.get("primary") != "lmstudio" and "lmstudio" not in (nd.get("fallback") or []):
             continue
         h, p = nd.get("host"), nd.get("lmstudio_port", 1234)
         if not port_open(h, p, 0.8):
             continue
+        if first_reachable is None:
+            first_reachable = name
+        if loaded_by_node is not None:
+            continue
         for i, st, _ty in _lms_models(h, p):
             if i == model_id:
                 return name, st == "loaded"
-    return None, False
+    if loaded_by_node is not None and first_reachable:
+        return first_reachable, False
+    return first_reachable, False
 
 
 def cmd_resolve(conf, args):

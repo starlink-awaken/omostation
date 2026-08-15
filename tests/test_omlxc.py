@@ -119,15 +119,17 @@ def test_remote_lmstudio_policy_avoids_day_long_residency_and_gpu_oom():
     remotes = _load_models_config()["autopilot"]["remote_resident"]
     by_host = {entry["host"]: entry for entry in remotes if entry["engine"] == "lmstudio"}
 
-    macmini = by_host["100.99.210.78"]["lms_args"]
-    assert "--ttl 3600" in macmini
-    assert "-c 16384" in macmini
-    assert "--parallel 1" in macmini
+    macmini = by_host["100.99.210.78"]
+    assert macmini["model"] == "gemma-4-e4b-it-mlx"
+    assert "--ttl 3600" in macmini["lms_args"]
+    assert "-c 16384" in macmini["lms_args"]
+    assert "--parallel 1" in macmini["lms_args"]
 
-    y7000p = by_host["100.64.43.36"]["lms_args"]
-    assert "--ttl 3600" in y7000p
-    assert "-c 8192" in y7000p
-    assert "--parallel 1" in y7000p
+    y7000p = by_host["100.64.43.36"]
+    assert y7000p["model"] == "qwen/qwen3.5-9b"
+    assert "--ttl 3600" in y7000p["lms_args"]
+    assert "-c 8192" in y7000p["lms_args"]
+    assert "--parallel 1" in y7000p["lms_args"]
 
     ollama = next(
         entry
@@ -135,6 +137,58 @@ def test_remote_lmstudio_policy_avoids_day_long_residency_and_gpu_oom():
         if entry["host"] == "100.99.210.78" and entry["engine"] == "ollama"
     )
     assert ollama["keep_alive_sec"] == 3600
+    assert ollama["model"] == "qwen3.5:9b"
+    oversized = {"google/gemma-4-26b-a4b-qat", "qwen/qwen3.6-27b", "qwen3.8-27b-mlx"}
+    assert y7000p["model"] not in oversized
+
+
+def test_lm_link_loaded_state_is_device_accurate():
+    """Pool HTTP repeats loaded=true on every node; device map must not."""
+    cli = _load_cli()
+    conf = {
+        "cluster": {
+            "nodes": [
+                {"name": "MBP · M5 Max 128G", "host": "127.0.0.1"},
+                {"name": "mac-mini · M4 24G", "host": "100.99.210.78"},
+                {"name": "Y7000P · RTX4070 8G", "host": "100.64.43.36"},
+            ]
+        }
+    }
+    status = {
+        "deviceIdentifier": "local-mbp",
+        "deviceName": "MacBookPro M5",
+        "peers": [
+            {
+                "deviceIdentifier": "mini-id",
+                "deviceName": "MacMini-M4",
+                "loadedModels": ["gemma-4-e4b-it-mlx"],
+            },
+            {
+                "deviceIdentifier": "y7000-id",
+                "deviceName": "xia-y7000p",
+                "loadedModels": [],
+            },
+        ],
+    }
+    ps_rows = [
+        {
+            "identifier": "google/gemma-4-26b-a4b-qat",
+            "modelKey": "google/gemma-4-26b-a4b-qat",
+            "deviceIdentifier": None,
+        },
+        {
+            "identifier": "gemma-4-e4b-it-mlx",
+            "modelKey": "gemma-4-e4b-it-mlx",
+            "deviceIdentifier": "mini-id",
+        },
+    ]
+    loaded = cli._loaded_by_node_from_snapshots(conf, status, ps_rows)
+    assert loaded["mbp"] == {"google/gemma-4-26b-a4b-qat"}
+    assert loaded["macmini"] == {"gemma-4-e4b-it-mlx"}
+    assert loaded.get("y7000p", set()) == set()
+    assert cli._lms_loaded_on_node(loaded, "y7000p", "gemma-4-e4b-it-mlx", "loaded") is False
+    assert cli._lms_loaded_on_node(loaded, "macmini", "gemma-4-e4b-it-mlx", "not-loaded") is True
+    assert cli._lms_loaded_on_node(None, "y7000p", "gemma-4-e4b-it-mlx", "loaded") is True
 
 
 def test_app_projection_is_flat_idempotent_and_only_cleans_managed_links(tmp_path, monkeypatch):
