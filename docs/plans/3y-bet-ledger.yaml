@@ -4493,7 +4493,7 @@ bets:
   status: candidate
   goal: 用 git cacheinfo 操作替代全量 submodule update 来更新单个子模块指针，在不牺牲可达性校验的前提下把单次指针更新耗时从近百秒降到亚秒级，直接缩短 D2 分支占用锁的持有时间
   non_goals:
-  - 批量指针更新的自动触发（属 BET-Y1Q2-T1-20）
+  - 批量指针更新的自动触发（另行立项）
   - 修改 PASW 机制本身
   - 改变子模块的实际内容/代码
   done_when:
@@ -4525,44 +4525,4 @@ bets:
   risk_level: L2
   human_gate: false
   circuit_breaker: 超 appetite×1.5 未完成可达性校验这一核心安全项 → 停下汇报，不得先上线一个没有校验的 "裸快速通道"
-  retro: required
-
-- id: BET-Y1Q2-T1-20
-  track: T1-TRUTH
-  window: Y1Q2
-  title: omlxc 子模块指针自动化 PR 试点
-  appetite: 4 days
-  priority: P2
-  status: candidate
-  goal: 在 omlxc 一个子模块上试点"发布触发→CI 自动开指针更新 PR→人工点击合并"的自动化链路，为后续铺开到其他子模块提供依据
-  non_goals:
-  - 自动合并 PR（必须保留人工点击合并这道闸，不做无人值守合并）
-  - 铺开到 omlxc 之外的其他子模块（本轮只做 1 个试点）
-  - 重新实现指针更新逻辑（复用 BET-Y1Q1-T1-08 的 bump-fast 机制，不要另起一套）
-  done_when:
-  - omlxc 仓库新增一个 GitHub Action，在 v* tag push 时触发
-  - '触发后调用与 BET-Y1Q1-T1-08 相同的 bump-fast 逻辑，在 omostation 开一个 PR，标题形如 "chore(deps): bump projects/omlxc to <sha>"，PR body 链接到对应 CHANGELOG 条目'
-  - 若该子模块已存在未合并的 bump PR，更新该 PR 而不是重开新 PR（omlxc 发布频率高，需避免 PR 堆积）
-  - PR 不自动合并；PR 必须通过与人工发起的 bump 完全相同的 CI 门禁（check-submodule-pointer-drift 等），不设特殊豁免通道
-  - 有一次真实端到端演练：触发一次 tag push（测试 tag 或等真实发布），产出的 PR 被人工确认可以合并
-  - retro 里记录该 GitHub Action 使用的 token 权限范围，供安全审计
-  verify:
-  - cmd: 检查 omlxc 仓库 .github/workflows/ 下新增的 workflow 文件存在且 lint 通过
-    expect: 通过
-  - cmd: 触发一次测试 tag push，观察 omostation 侧是否在合理时间内出现对应 PR
-    expect: PR 出现，标题/内容符合规范，CI 检查全部触发
-  - cmd: 重复触发验证"已有未合并 PR 时更新而非重开"
-    expect: 只有一个 PR，内容更新为最新指针
-  workflow: bet-execution
-  underlying_workflow: external-adapter-sync
-  write_surfaces:
-  - projects/omlxc/.github/workflows/**
-  - docs/plans/3y-bet-ledger.yaml
-  - docs/operations/submodule-bump-bot-pilot-notes.md
-  pasw_required: false
-  depends_on:
-  - BET-Y1Q1-T1-08
-  risk_level: L2
-  human_gate: true
-  circuit_breaker: 超 appetite×1.5，或 GitHub token/secret 配置卡住超过 1 天 → 停下汇报，由人类决定继续配置还是换更简单的触发方式（比如 cron 轮询代替 webhook）
   retro: required
