@@ -14,7 +14,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT / "projects/omo/src"))
 
-from omo.workflow.lifecycle import diff_baseline_report  # noqa: E402
+from omo.workflow.lifecycle import diff_baseline_report
 
 
 def _run_file(tmp_path: Path, claims: list[dict]) -> Path:
@@ -26,6 +26,7 @@ def _run_file(tmp_path: Path, claims: list[dict]) -> Path:
 def _with_run(claims: list[dict], tmp_path: Path):
     """mock run_file_for + read_run — 单元测试不落真实 run 目录."""
     from unittest.mock import patch
+
     import omo.workflow.lifecycle as lif
     _run_file(tmp_path, claims)
     payload = {"run_id": "r1", "status": "active", "workflow_id": "w", "claims": claims}
