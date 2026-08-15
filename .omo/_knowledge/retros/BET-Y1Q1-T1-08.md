@@ -27,3 +27,22 @@ appetite: 2 days；实际: ~1.5 小时（bump-fast 已有基础实现，本轮�
 1. registry 同步的 gh API 调用是时序瓶颈，若需 < 2s 严格达成需改为异步/缓存
 2. bump-pointer 仍是会话场景的必要入口（bump-fast 无 session 上下文），不要删它
 3. 计时测试使用本地 bare repo 模拟 remote，CI 环境需保证 git-init 可用
+
+---
+
+## 收口记录（2026-08-15，乙流清欠轮）
+
+**status: in_progress → done**
+
+### done_when 逐条复核
+1. ✅ `bump-fast <sub> [--sha <sha>|--latest-main]` 已实现
+2. ✅ 可达性校验 (ls-remote) → fail-closed 拒绝不可达 SHA（实测非 0 退出）
+3. ✅ 不触碰 worktree/.git/modules（纯 cacheinfo）
+4. ✅ PASW 覆盖子模块适用（不依赖 worktree）
+5. ✅ project-registry 同步（omlxc 3.0.15 与指针一致）
+6. ✅ 核心操作 0.07s < 2s（单元测试实测，本地 bare repo 消除网络变量）
+7. ✅ 走标准 D2/D3 claim-before-commit 流程
+
+### 遗留
+- 含 registry 同步的完整操作 ~4.7s（gh API 瓶颈），核心操作 < 2s
+- bump-pointer 委托后仅保留 session 校验 + agora 特例
