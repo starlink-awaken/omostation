@@ -945,13 +945,7 @@ bets:
   title: iris apple_mail 真实轮询打通
   appetite: 1 week
   priority: P0
-  status: done
-  done_at: 2026-08-08
-  done_evidence: 'PR #1142 merged: verified iris apple_mail connector via mesh-iris-executor
-    (5 items), updated signal-sources.yaml (health: healthy, last_signal_at: 2026-08-07T23:45:22Z).
-    Note: CDP 9222 is seeyon_oa dependency, not applicable to Apple Mail (ECCP-HANDOFF.md).
-
-    '
+  status: in_progress
   goal: 感知面从 0 到 1 — 让系统第一次看到仓库以外的东西
   non_goals:
   - 多信号源
@@ -1606,9 +1600,10 @@ bets:
   - 回退次数上限可配置, 默认 3 次
   - 超限自动升级为 human_hold 并产生 OMO 事件
   verify:
-  - cmd: python3 bin/ssot/journey-runner.py docs/scene-cards/v2/document-review.yaml
-      --json
-    expect: 包含 backedge_limit
+  - cmd: python3 bin/ssot/journey-runner.py run --journey inbox-to-decision --backedge-limit
+      2 --dry-run
+    expect: exit 0 且输出含 run_id (2026-08-15 实测 rc=0; 旧语法已失效, CLI 改为
+      run 子命令 + --journey)
   workflow: bet-execution
   underlying_workflow: project-code-change
   write_surfaces:
@@ -4292,6 +4287,7 @@ bets:
   appetite: 1 week
   priority: P2
   status: done
+  done_at: 2026-08-08
   note: "Langfuse 修复 (v2.95.11 healthy) + agora RED 错误率 (bos_errors_total) + bus-foundation trace→事件面(被T6-01退役取代, 代码保留) + cockpit /api/observability 统一查询面; 复盘 .omo/_knowledge/retros/BET-Y1Q2-T9-02.md"
   goal: trace/指标/展示三维补齐, 可观测四维全覆盖
   workflow: bet-execution
@@ -4478,6 +4474,50 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: SSOT 漂移范围扩大 → 只修复 registry/help_map，弃用 CLI 清理下个 bet
+  retro: required
+
+- id: BET-Y1Q3-T1-02
+  track: T1-TRUTH
+  window: Y1Q3
+  title: mof-deepen 落账追溯 — 数字大脑模块 + 行政流程 scenes (575843deb)
+  appetite: 1 day
+  priority: P2
+  status: done
+  done_at: 2026-08-15
+  done_evidence: '追溯收口: commit 575843deb (PR #1465, 10 模块 1444 行) 落 main 时无 bet 约束,
+    2026-08-15 台账信任修复轮溯源登记 (audit retro: audit-mof-deepen-landing-20260815.md).
+    活性核实: journey-runner ADMIN_SCENES 注册在位, 各模块 1-6 处引用非死码; 10 模块零测试为
+    已知缺口, 处置交后续 bet (见 retro Q5)'
+  goal: 把 2026-08-14 无主落账的 mof-deepen 交付 (数字大脑 P0 域邮件/行政 10 模块) 纳入台账管辖,
+    补齐账实相符
+  non_goals:
+  - 补 10 模块测试面 (独立 bet 处理)
+  - PR gate 强制 bet-id 校验 (治理建议, 未立项)
+  - work/mof-deepen 分支完整溯源
+  done_when:
+  - "mof-deepen 交付物 (commit 575843deb) 在台账有对应 bet 且 write_surfaces 覆盖其实际改动路径"
+  - "归属判定与活性核查结论落盘 (.omo/_knowledge/retros/audit-mof-deepen-landing-20260815.md)"
+  verify:
+  - cmd: git log --format=%s -1 575843deb
+    expect: 含 "数字大脑模块 + 行政流程 scenes"
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - bin/ssot/admin_scenes.py
+  - bin/ssot/deadline_tracker.py
+  - bin/ssot/doc_generator.py
+  - bin/ssot/health_agent.py
+  - bin/ssot/mail_agent.py
+  - bin/ssot/mail_daemon.py
+  - bin/ssot/mail_reader.py
+  - bin/ssot/mail_sender.py
+  - bin/ssot/risk_engine.py
+  - docs/journey-specs/admin-notification-workflow.yaml
+  pasw_required: false
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 无 (追溯登记, 一次性)
   retro: required
 
 - id: BET-Y1Q1-T1-08
