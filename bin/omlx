@@ -630,6 +630,34 @@ def _app_sync(conf, apply=False):
     reload_result = _app_reload(conf)
     return {"model_dir": root, "wanted": wanted, "changed": changed, "stale": stale, "reload": reload_result}
 
+def _app_projection_health(conf):
+    """app-models/ 是运行时产物, 故意 .gitignore 掉不入库(见 .gitignore 注释), 所以
+    release 切版本(git checkout 新 tag + 重指 ~/omlx 软链)永远不会自动重建它——只能靠
+    人肉记得跑 `omlx app sync --apply`。2026-08-15 实测: 3.0.14 升级后没人跑, app-models
+    静默塌陷成空目录, 别名(coding/coding-fast/...)在 config 里还在, 但 oMLX App 发现的
+    模型清单是空的, 生成/路由全部失败且没有任何提示。这里在每次调用时轻量核对一次,
+    只警告不自动修(App 模型目录归 human/App 所有, omlxc 不擅自扫盘/改写)。"""
+    if not _app_enabled(conf):
+        return
+    try:
+        wanted = _app_model_paths(conf)
+        if not wanted:
+            return
+        root = _app_conf(conf)["model_dir"]
+        live = 0
+        for key, real in wanted.items():
+            link = os.path.join(root, key)
+            if os.path.islink(link) and os.path.realpath(link) == real:
+                live += 1
+    except Exception:
+        return  # 只读探测失败不影响正常命令执行
+    if live == 0:
+        print(yel(f"⚠ oMLX App 模型目录投影为空 (0/{len(wanted)}) — 本地模型对 App 全部不可见。"
+                   " 先跑 `omlx app sync --apply` 再用。"), file=sys.stderr)
+    elif live * 10 < len(wanted) * 7:
+        print(yel(f"⚠ oMLX App 模型目录投影可能过期 ({live}/{len(wanted)} 存活) —"
+                   " 建议跑 `omlx app sync --apply` 校正。"), file=sys.stderr)
+
 def _app_load_unload(conf, model, action):
     app = _app_conf(conf)
     if model not in (conf.get("models") or {}):
@@ -2480,6 +2508,8 @@ def main():
         "cluster":cmd_cluster,"dashboard":cmd_dashboard,"autostart":cmd_autostart,
         "up":cmd_up,"down":cmd_down,"gw":cmd_gw,"app":cmd_app,"node":cmd_node,"ls":cmd_ls,"load":cmd_load,"unload":cmd_unload,"warm":cmd_warm,"stats":cmd_stats,"link":cmd_link,"portcheck":cmd_portcheck,"ssot-sync":cmd_ssot_sync}.get(args.cmd)
     if not fn: ap.print_help(); return
+    if args.cmd != "app":
+        _app_projection_health(conf)  # release 切版本后 app-models 塌陷提醒, 见函数注释
     fn(conf, args)
 
 if __name__=="__main__":

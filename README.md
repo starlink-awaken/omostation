@@ -128,6 +128,36 @@ and logs and reports the recoverable plist backup. `doctor --direct` is strictly
 read-only: it does not create SQLite state, change services, write configuration,
 or load models.
 
+## Legacy `bin/omlx` release cutover — rebuild `app-models` after every upgrade
+
+The legacy management CLI (`bin/omlx`, distinct from the `omlxc`/`omlxcd` package
+above) is deployed as a versioned `git clone` into
+`~/.local/share/omlxc/releases/vX.Y.Z`, with `~/omlx` symlinked to the active
+release. `models-active/` (the `alias → real weight dir` symlink farm) is
+**deliberately committed to git** so it survives every cutover automatically.
+`app-models/` (the flat projection oMLX App actually reads its catalog from) is
+**deliberately `.gitignore`d** as a machine-local runtime artifact — which means
+`git clone`/checkout can never populate it. There is no automated step that
+rebuilds it.
+
+**After repointing `~/omlx` to a new release, always run:**
+
+```bash
+python3 ~/omlx/bin/omlx app sync --apply
+```
+
+Skipping this step leaves `app-models/` empty (or stale). Config-defined aliases
+still show up in listings — they are config-canonical — but oMLX App's own
+catalog silently collapses, generation/routing fail, and there is no error at
+cutover time to say why. `bin/omlx` now prints a one-line warning on every
+invocation when this drift is detected (see `_app_projection_health`), but the
+sync step itself still has to be run by hand — App model-directory ownership is
+human/App territory, `omlx`/`omlxc` warn only and never scan or rewrite it
+unprompted. Root-caused and documented 2026-08-15; see
+`.omo/_knowledge/audits/omlxc-model-discovery-current-state-2026-08-15.md` in
+the workspace root for the fuller inventory-drift investigation this sits next
+to.
+
 ## Development
 
 Python 3.13 and uv are required. This repository is private and is not a PyPI
