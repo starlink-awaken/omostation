@@ -9,6 +9,8 @@
 #   gac-worktree.sh submit <session>     # push 分支 + 开 PR (base main)
 #   gac-worktree.sh merge <session>      # squash 合并 PR + release worktree + 删分支
 #   gac-worktree.sh release <session>    # 清理 worktree (手动, 合并后)
+#   gac-worktree.sh bump-fast <submodule-path> [--sha <sha>|--latest-main]
+#                                         # 流程内快速更新单个子模块指针
 #   gac-worktree.sh list                 # 列所有 worktree
 #
 # session 命名: 只允许 [a-z0-9-] (防 git 分支非法字符), 如 "fix-route-bug".
@@ -481,63 +483,149 @@ except Exception:
     sub="${2:-}"
     arg2="${3:---latest-main}"
     [ -z "$sub" ] && echo "用法: bump-fast <submodule-path> [--sha <sha>|--latest-main]" >&2 && exit 1
-    
-    # 1. Extract URL
+
+    cd "$WS_ROOT"
+
+    # bump-fast 只改根仓 index。它仍要在已建立的 D2/D3 claim 内运行，
+    # 不是绕过 claim/commit/PR 的通道。全程不 checkout/fetch 子模块工作树。
     sub_url=$(git config --file .gitmodules --get "submodule.$sub.url" || true)
     [ -z "$sub_url" ] && { echo "❌ 找不到子模块 $sub 的 URL 配置" >&2; exit 1; }
-    
-    # 2. Check reachability via ls-remote
-    main_tip=$(git ls-remote "$sub_url" refs/heads/main | awk '{print $1}')
-    [ -z "$main_tip" ] && { echo "❌ 无法通过 ls-remote 访问远端 main" >&2; exit 1; }
-    
+
+    index_entry=$(git ls-files -s -- "$sub")
+    index_meta="${index_entry%%$'\t'*}"
+    read -r old_mode old_sha old_stage <<< "$index_meta"
+    if [ "$old_mode" != "160000" ] || [ "$old_stage" != "0" ]; then
+      echo "❌ $sub 不是当前 index 中的已跟踪子模块" >&2
+      exit 1
+    fi
+
+    # ls-remote 是唯一远端真相源。显式 --sha 用作乐观并发保护：
+    # 只有仍是远端 main tip 才允许写入，避免验证后又落后一个版本。
+    if ! remote_main=$(git ls-remote "$sub_url" refs/heads/main); then
+      echo "❌ 无法通过 ls-remote 访问 $sub 远端 main" >&2
+      exit 1
+    fi
+    main_tip=$(printf '%s\n' "$remote_main" | awk '$2 == "refs/heads/main" {print $1}')
+    if ! printf '%s' "$main_tip" | grep -qE '^[0-9a-fA-F]{40}$'; then
+      echo "❌ $sub 远端 main 未返回唯一合法 SHA" >&2
+      exit 1
+    fi
+
     if [ "$arg2" = "--latest-main" ]; then
-        new_sha="$main_tip"
+      [ -n "${4:-}" ] && { echo "❌ --latest-main 不接受额外参数" >&2; exit 1; }
+      new_sha="$main_tip"
     elif [[ "$arg2" == --sha* ]]; then
-        if [ "$arg2" = "--sha" ]; then
-            new_sha="${4:-}"
-        else
-            new_sha="${arg2#--sha=}"
-        fi
-        [ -z "$new_sha" ] && { echo "❌ 缺少 sha 值" >&2; exit 1; }
-        
-        if [ "$new_sha" != "$main_tip" ]; then
-            echo "❌ SHA $new_sha 在远端 main 不可达 (与 main tip $main_tip 不匹配)" >&2
-            exit 1
-        fi
-    else
-        echo "❌ 未知参数: $arg2" >&2
+      if [ "$arg2" = "--sha" ]; then
+        new_sha="${4:-}"
+        [ -n "${5:-}" ] && { echo "❌ --sha 不接受额外参数" >&2; exit 1; }
+      else
+        new_sha="${arg2#--sha=}"
+        [ -n "${4:-}" ] && { echo "❌ --sha=<sha> 不接受额外参数" >&2; exit 1; }
+      fi
+      if ! printf '%s' "$new_sha" | grep -qE '^[0-9a-fA-F]{40}$'; then
+        echo "❌ 缺少或非法 sha 值: $new_sha" >&2
         exit 1
+      fi
+      if [ "$new_sha" != "$main_tip" ]; then
+        echo "❌ SHA $new_sha 在远端 main 不可达（当前 main tip: ${main_tip}）" >&2
+        exit 1
+      fi
+    else
+      echo "❌ 未知参数: $arg2" >&2
+      exit 1
     fi
-    
-    # 3. Update cacheinfo
-    git update-index --cacheinfo 160000,"$new_sha","$sub"
-    echo "✅ 指针已更新: $sub → $new_sha (bump-fast)"
-    
-    # 4. Sync version in project-registry.yaml
+
+    # 先解析 registry 和远端版本，所有先决条件通过后才改 index。
+    # 若对应项目有 version，读取失败必须 fail-closed，不允许静默跳过。
     sub_name=$(basename "$sub")
-    if grep -q "^  $sub_name:" docs/project-registry.yaml 2>/dev/null; then
-        if [[ "$sub_url" == *github.com* ]]; then
-            repo_path=$(echo "$sub_url" | sed -E 's|.*github\.com[:/]([^/]+/[^/]+)(\.git)?|\1|' | sed 's|\.git$||')
-            pyproject=$(gh api "repos/$repo_path/contents/pyproject.toml?ref=$new_sha" -q .content 2>/dev/null | base64 -D 2>/dev/null || base64 -d 2>/dev/null || true)
-            if [ -n "$pyproject" ]; then
-                version=$(echo "$pyproject" | grep -m1 "^version =" | cut -d'"' -f2 | cut -d"'" -f2 || echo "")
-                if [ -n "$version" ]; then
-                    python3 - "$sub_name" "$version" << 'PYEOF'
-import sys, re
-sub_name = sys.argv[1]
-version = sys.argv[2]
-with open("docs/project-registry.yaml", "r") as f:
-    text = f.read()
-pattern = r"(  " + sub_name + r":\n(?:    .*\n)*?    version: \").*?(\")"
-new_text = re.sub(pattern, r"\g<1>" + version + r"\g<2>", text)
-with open("docs/project-registry.yaml", "w") as f:
-    f.write(new_text)
+    registry_version=$(python3 - "$sub_name" <<'PYEOF'
+import re
+import sys
+from pathlib import Path
+
+name = re.escape(sys.argv[1])
+text = Path("docs/project-registry.yaml").read_text(encoding="utf-8")
+project = re.search(rf"(?ms)^  {name}:\n(?P<body>(?:    .*\n|\s*\n)*)", text)
+if not project:
+    raise SystemExit(3)
+version = re.search(r'(?m)^    version:\s*["\x27]([^"\x27]+)["\x27]\s*$', project.group("body"))
+if not version:
+    raise SystemExit(4)
+print(version.group(1))
 PYEOF
-                    echo "   ✅ 同步更新 docs/project-registry.yaml 中的 version 到 $version"
-                fi
-            fi
-        fi
+    ) || registry_rc=$?
+    registry_rc="${registry_rc:-0}"
+
+    new_version=""
+    if [ "$registry_rc" = "0" ]; then
+      repo_path=$(printf '%s' "$sub_url" | sed -nE 's|.*github\.com[:/]([^/]+/[^/]+)(\.git)?$|\1|p' | sed 's|\.git$||')
+      [ -z "$repo_path" ] && { echo "❌ $sub 存在 registry version，但 URL 不是可识别的 GitHub 仓库" >&2; exit 1; }
+      command -v gh >/dev/null 2>&1 || { echo "❌ 同步 $sub registry version 需要 gh" >&2; exit 1; }
+
+      if new_version=$(gh api "repos/$repo_path/contents/pyproject.toml?ref=$new_sha" -q .content 2>/dev/null \
+          | python3 -c 'import base64,re,sys; t=base64.b64decode(sys.stdin.read()).decode(); s=re.search(r"(?ms)^\[(?:project|tool\.poetry)\]\s*\n(?P<body>.*?)(?=^\[|\Z)", t); v=re.search(r"(?m)^version\s*=\s*[\x27\"]([^\x27\"]+)[\x27\"]", s.group("body") if s else ""); print(v.group(1) if v else "")') \
+          && [ -n "$new_version" ]; then
+        :
+      elif new_version=$(gh api "repos/$repo_path/contents/package.json?ref=$new_sha" -q .content 2>/dev/null \
+          | python3 -c 'import base64,json,sys; print(json.loads(base64.b64decode(sys.stdin.read())).get("version", ""))') \
+          && [ -n "$new_version" ]; then
+        :
+      else
+        echo "❌ 无法从 $sub@$new_sha 读取 version，registry 与指针将保持未变" >&2
+        exit 1
+      fi
+    elif [ "$registry_rc" != "3" ] && [ "$registry_rc" != "4" ]; then
+      echo "❌ 无法检查 docs/project-registry.yaml 中的 $sub_name" >&2
+      exit 1
     fi
+
+    git update-index --cacheinfo 160000,"$new_sha","$sub"
+    if [ -n "$new_version" ]; then
+      if ! python3 - "$sub_name" "$new_version" <<'PYEOF'
+import os
+import re
+import sys
+import tempfile
+from pathlib import Path
+
+path = Path("docs/project-registry.yaml")
+name = re.escape(sys.argv[1])
+version = sys.argv[2]
+text = path.read_text(encoding="utf-8")
+project = re.search(rf"(?ms)^  {name}:\n(?P<body>(?:    .*\n|\s*\n)*)", text)
+if not project:
+    raise SystemExit(f"project not found: {sys.argv[1]}")
+version_match = re.search(
+    r'(?m)^(    version:\s*)["\x27]([^"\x27]+)["\x27](\s*)$', project.group("body")
+)
+if not version_match:
+    raise SystemExit(f"version not found: {sys.argv[1]}")
+start = project.start("body") + version_match.start()
+end = project.start("body") + version_match.end()
+replacement = f'{version_match.group(1)}"{version}"{version_match.group(3)}'
+updated = text[:start] + replacement + text[end:]
+fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", dir=path.parent)
+try:
+    with os.fdopen(fd, "w", encoding="utf-8") as stream:
+        stream.write(updated)
+    os.chmod(temp_name, path.stat().st_mode)
+    os.replace(temp_name, path)
+except BaseException:
+    try:
+        os.unlink(temp_name)
+    except FileNotFoundError:
+        pass
+    raise
+PYEOF
+      then
+        git update-index --cacheinfo 160000,"$old_sha","$sub" || true
+        echo "❌ registry version 更新失败，已回滚 $sub index 指针" >&2
+        exit 1
+      fi
+      echo "   ✅ docs/project-registry.yaml: $sub_name $registry_version → $new_version"
+    fi
+    echo "✅ 指针已更新: $sub → $new_sha (bump-fast)"
+    echo "   治理要求: 继续完成 claim 校验、commit、tag 与 PR；本命令不替代 D2/D3 门禁"
     ;;
   bump-pointer)
     [ -z "$session" ] && echo "用法: bump-pointer <session> <submodule>" >&2 && exit 1
@@ -774,12 +862,13 @@ PYEOF
   *)
     echo "GaC worktree per session (ADR-0106 P2)"
     echo ""
-    echo "用法: gac-worktree.sh {claim|submit|merge|release|bump-pointer|list|agents|onboard|cleanup} [args]"
+    echo "用法: gac-worktree.sh {claim|submit|merge|release|bump-fast|bump-pointer|list|agents|onboard|cleanup} [args]"
     echo ""
     echo "  claim <session>      创建 worktree + 分支 work/<session>"
     echo "  submit <session>     push 分支 + 开 PR (base main)"
     echo "  merge <session>      squash 合并 PR + release worktree + 删分支"
     echo "  release <session>    清理 worktree (手动, 合并后)"
+    echo "  bump-fast <submodule-path> [--sha <sha>|--latest-main]  流程内快速更新单个子模块指针"
     echo "  bump-pointer <session> <submodule>  更新子模块指针到 worktree HEAD"
     echo "  list                 列所有 worktree + PASW 状态"
     echo "  agents               Agent 活动看板 (session/分支/PR/活跃时间)"
