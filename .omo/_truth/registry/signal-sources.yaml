@@ -10,6 +10,7 @@ sources:
     description: Apple Mail 收件箱 — 个人邮件信号入口
     transport: local_filesystem
     path: "~/Library/Mail/"
+    probe_depth: 3  # T2-03: 顶层 mtime 半年不动, 深探 V10/<UUID>/<mbox>/ 之下 (见 bet diagnosis)
     poll_interval: 300s
     dedup_window: 24h
     idempotency_key: message_id

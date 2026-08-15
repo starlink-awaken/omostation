@@ -3252,7 +3252,9 @@ bets:
   title: 信号落盘管道修复 — 探测深度 + health 回写 + state 防御
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-15
+  pr: '#1521'
   diagnosed_at: 2026-08-15
   diagnosis: >-
     只读诊断结论 (证据链 E1-E5): 层1 探测面太浅 — _hash_path 只探 ~/Library/Mail/ 顶层,

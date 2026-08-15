@@ -41,6 +41,8 @@ from _shared import ROOT, load_yaml, utc_now
 
 SIGNAL_SOURCES = ROOT / ".omo" / "_truth" / "registry" / "signal-sources.yaml"
 POLLER_STATE = ROOT / ".omo" / "state" / "signal-poller-state.json"
+# T2-03: poller 信号落盘面 — 真实 last_signal_at (registry yaml 值为注册期死值)
+SIGNALS_FILE = ROOT / ".omo" / "state" / "signal-signals.json"
 
 # Freshness multiplier: 2x poll_interval per schema_contract.health_must_not
 FRESHNESS_MULTIPLIER = 2
@@ -227,6 +229,16 @@ def _load_poller_state() -> dict[str, str]:
     return {}
 
 
+def _load_last_signals() -> dict[str, str]:
+    """T2-03: 读取 poller 落盘的真实 last_signal_at (source_id → ISO ts)."""
+    if SIGNALS_FILE.exists():
+        try:
+            return json.loads(SIGNALS_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {}
+
+
 def project_all_health(
     *,
     now: datetime | None = None,
@@ -259,11 +271,21 @@ def project_all_health(
     resolved_sources: list[dict[str, Any]] = sources or []
     resolved_state: dict[str, str] = poller_state or {}
 
+    # T2-03: 真实信号时间戳优先 (poller 落盘), registry yaml 值兜底
+    last_signals = _load_last_signals()
+
     projections: list[HealthProjection] = []
     for src in resolved_sources:
         source_id = src.get("id", "?")
         poll_interval_s = _parse_duration(src.get("poll_interval", "300s"))
         last_signal_at = src.get("last_signal_at")
+        runtime_ts = last_signals.get(source_id)
+        if runtime_ts:
+            # 新鲜者优先: 运行时值更新则覆盖注册期死值
+            rt_dt = _parse_iso_timestamp(runtime_ts)
+            reg_dt = _parse_iso_timestamp(last_signal_at)
+            if rt_dt is not None and (reg_dt is None or rt_dt > reg_dt):
+                last_signal_at = runtime_ts
         # poller state key matches source_id
         poller_hash = resolved_state.get(source_id)
 

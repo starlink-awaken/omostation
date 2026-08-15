@@ -26,6 +26,8 @@ from freshness import project_all_health
 
 SIGNAL_SOURCES = ROOT / ".omo" / "_truth" / "registry" / "signal-sources.yaml"
 STATE_FILE = ROOT / ".omo" / "state" / "signal-poller-state.json"
+# T2-03: 信号落盘面 — poller 可写的运行时状态, freshness 优先消费 (治理面 registry 不允许 daemon ad-hoc 写)
+SIGNALS_FILE = ROOT / ".omo" / "state" / "signal-signals.json"
 
 
 def _load_signal_sources() -> list[dict[str, Any]]:
@@ -49,10 +51,12 @@ def _save_state(state: dict[str, str]) -> None:
     STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
 
 
-def _hash_path(path: str) -> str:
+def _hash_path(path: str, depth: int = 0) -> str:
     """Compute a lightweight hash of a filesystem path.
 
-    Uses mtime + child count (no recursion); directory mtime
+    T2-03: depth > 0 时递归子目录 — Apple Mail 数据在 ~/Library/Mail/V10/<UUID>/
+    两层之下, 顶层 mtime 半年不动, 浅探测恒判「无变化」(信号永久丢失)。
+    递归用 (max_mtime, file_count) 汇总, 限深防爆, 不读文件内容。
     """
     import os
 
@@ -60,18 +64,52 @@ def _hash_path(path: str) -> str:
     if not os.path.exists(p):
         return "unreachable"
     try:
-        st = os.stat(p)
-        dir_mtime = int(st.st_mtime)
-        # Count direct children only — directory mtime changes on add/remove
-        try:
-            children = sum(1 for _ in os.scandir(p))
-        except OSError:
-            children = 0
-        key = f"{dir_mtime}:{children}"
+        max_mtime = 0
+        file_count = 0
+        stack = [(p, 0)]
+        while stack:
+            cur, d = stack.pop()
+            try:
+                entries = list(os.scandir(cur))
+            except OSError:
+                continue
+            for e in entries:
+                try:
+                    if e.is_dir(follow_symlinks=False):
+                        if d < depth:
+                            stack.append((e.path, d + 1))
+                    elif e.is_file(follow_symlinks=False):
+                        file_count += 1
+                        m = int(e.stat().st_mtime)
+                        if m > max_mtime:
+                            max_mtime = m
+                except OSError:
+                    continue
+        key = f"{max_mtime}:{file_count}"
         return hashlib.sha256(key.encode()).hexdigest()[:16]
     except OSError:
         return "error"
 
+
+
+def _record_signals(triggers: list[dict[str, Any]]) -> None:
+    """T2-03: 信号落盘 — 把 last_signal_at 写入运行时状态面.
+
+    registry (signal-sources.yaml) 是治理面, daemon 不做 ad-hoc 写;
+    freshness.project_all_health 优先消费本文件 (yaml 值兜底)。
+    """
+    if not triggers:
+        return
+    data: dict[str, str] = {}
+    if SIGNALS_FILE.exists():
+        try:
+            data = json.loads(SIGNALS_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            data = {}
+    for t in triggers:
+        data[t["source_id"]] = t["ts"]
+    SIGNALS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    SIGNALS_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 def poll_once(root: Path | None = None) -> list[dict[str, Any]]:
     """Poll all signal sources once. Returns list of trigger events."""
@@ -87,7 +125,9 @@ def poll_once(root: Path | None = None) -> list[dict[str, Any]]:
 
         if transport == "local_filesystem":
             path = source.get("path", "")
-            current_hash = _hash_path(path)
+            # T2-03: 注册表可配探测深度 (默认 0 = 原浅探测, 兼容文件夹源)
+            depth = int(source.get("probe_depth", 0))
+            current_hash = _hash_path(path, depth=depth)
             last_hash = state.get(source_id)
 
             if (
@@ -109,6 +149,7 @@ def poll_once(root: Path | None = None) -> list[dict[str, Any]]:
     # Write state once after all sources processed
     # (was inside loop — N writes per poll)
     _save_state(new_state)
+    _record_signals(triggers)  # T2-03: 信号面落盘 (freshness 消费)
 
     return triggers
 
