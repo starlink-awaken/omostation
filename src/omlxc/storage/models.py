@@ -38,6 +38,14 @@ class HealthRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class InventoryHighWater:
+    node_id: str
+    backend_id: str
+    high_water_count: int
+    observed_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
 class MetricRecord:
     request_id: str
     observed_at: datetime

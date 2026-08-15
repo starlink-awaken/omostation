@@ -89,6 +89,11 @@ from omlxc.domain.protocols import (
     StreamEvent,
 )
 from omlxc.events import EventBus, EventSubscription
+from omlxc.health.inventory import (
+    inventory_count,
+    inventory_drop_warning,
+    is_inventory_cliff,
+)
 from omlxc.scheduler import (
     PlacementSnapshot,
     RouteFailure,
@@ -98,6 +103,7 @@ from omlxc.scheduler import (
 )
 from omlxc.storage import (
     DurableEventRecord,
+    InventoryHighWater,
     MetricRecord,
     RouteAuditRecord,
     RouteAuditWrite,
@@ -261,12 +267,14 @@ class CatalogProbe:
         catalog: SnapshotCatalog,
         tailscale: TailscaleAdapter | None,
         now: Callable[[], datetime],
+        storage: StorageHandle | None = None,
     ) -> None:
         self._config = config
         self._adapters = dict(adapters)
         self._catalog = catalog
         self._tailscale = tailscale
         self._now = now
+        self._storage = storage
         self._interval = config.daemon.probe_interval_seconds
         self._timeout = min(max(self._interval, 0.1), 5.0)
         self._placements = {item.id: item for item in config.placements}
@@ -275,6 +283,8 @@ class CatalogProbe:
         self._backends = {item.id: item for item in config.backends}
         self._backend_nodes = {item.id: item.node_id for item in config.backends}
         self._diagnostics = {item.id: NodeDiagnosticCode.NOT_PROBED for item in config.backends}
+        self._high_water: dict[tuple[str, str], int] = {}
+        self._drops: dict[tuple[str, str], tuple[int, int]] = {}
         self._task: asyncio.Task[None] | None = None
         self._refresh_lock = asyncio.Lock()
 
@@ -282,7 +292,19 @@ class CatalogProbe:
     def task_settled(self) -> bool:
         return self._task is None or self._task.done()
 
+    def inventory_warnings(self) -> tuple[Mapping[str, object], ...]:
+        return tuple(
+            inventory_drop_warning(
+                node_id=node_id,
+                backend_id=backend_id,
+                baseline=baseline,
+                current=current,
+            )
+            for (node_id, backend_id), (baseline, current) in sorted(self._drops.items())
+        )
+
     async def start(self) -> None:
+        await self._load_high_water()
         await self._refresh()
         self._task = asyncio.create_task(self._run(), name="omlxcd-catalog-probe")
 
@@ -357,6 +379,7 @@ class CatalogProbe:
                     raise ValueError("backend discovery identity mismatch")
                 models = await adapter.list_models()
             self._apply(backend, capability, models, authorized=authorized, local=local)
+            await self._observe_inventory(backend, capability, models)
         except asyncio.CancelledError:
             raise
         except TimeoutError:
@@ -507,6 +530,62 @@ class CatalogProbe:
                     security_allowed=authorized and local,
                 )
 
+    async def _load_high_water(self) -> None:
+        store = self._inventory_store()
+        if store is None:
+            return
+        try:
+            records = await store.list_inventory_high_water()
+        except Exception:
+            return
+        for record in records:
+            self._high_water[(record.node_id, record.backend_id)] = record.high_water_count
+
+    async def _observe_inventory(
+        self,
+        backend: BackendConfig,
+        capability: CapabilitySnapshot,
+        models: tuple[ModelRuntime, ...],
+    ) -> None:
+        if not capability.reachable or not capability.compatible:
+            return
+        current = inventory_count(models)
+        key = (backend.node_id, backend.id)
+        baseline = self._high_water.get(key)
+        if baseline is None or current > baseline:
+            self._high_water[key] = current
+            await self._persist_high_water(backend.node_id, backend.id, current)
+            baseline = current
+        if is_inventory_cliff(baseline, current):
+            self._drops[key] = (baseline, current)
+        else:
+            self._drops.pop(key, None)
+
+    def _inventory_store(self) -> SQLiteRuntimeStore | None:
+        storage = self._storage
+        if storage is None or not storage.ready:
+            return None
+        try:
+            return storage.require()
+        except RuntimeError:
+            return None
+
+    async def _persist_high_water(self, node_id: str, backend_id: str, count: int) -> None:
+        store = self._inventory_store()
+        if store is None:
+            return
+        try:
+            await store.save_inventory_high_water(
+                InventoryHighWater(
+                    node_id=node_id,
+                    backend_id=backend_id,
+                    high_water_count=count,
+                    observed_at=self._now(),
+                )
+            )
+        except Exception:
+            return
+
 
 class PlacementTargetFactory:
     def __init__(
@@ -632,7 +711,7 @@ class ProductionInferenceService:
         orchestrator: DataPlaneOrchestrator,
         model_ids: tuple[str, ...],
         model_aliases: Mapping[str, str] | None = None,
-        reranker: Reranker | None,
+        reranker: Reranker | None = None,
     ) -> None:
         self._orchestrator = orchestrator
         self._model_ids = tuple(sorted(model_ids))
@@ -745,6 +824,7 @@ class ProductionControlService:
             "degraded": not self._storage.ready,
             "diagnostic": self._storage.diagnostic,
             "config_identity": self._config_identity,
+            "warnings": list(self._probe.inventory_warnings()),
         }
 
     async def list_nodes(self, *, after: str | None, limit: int) -> tuple[Node, ...]:
@@ -1130,6 +1210,7 @@ def build_production_daemon(
         catalog=catalog,
         tailscale=configured_tailscale,
         now=clock,
+        storage=storage,
     )
     target_factory = PlacementTargetFactory(config)
     placement_operator = ProductionPlacementOperator(
@@ -1174,7 +1255,7 @@ def build_production_daemon(
         ),
         tuple(model.id for model in config.models),
         model_aliases=model_aliases,
-        reranker,
+        reranker=reranker,
     )
     events = ProductionEventService(storage, bus)
     resources = ResourceComponent(bus, bindings, probe if snapshots is None else None)

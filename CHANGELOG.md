@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.15 — 2026-08-15
+
+- Warn when a healthy adapter `list_models()` count falls more than 30% below
+  the persisted high-water for that node+backend. The warning appears on
+  `omlxc status` and `omlxc doctor` (daemon health) and does not mark the
+  daemon degraded. Failures and timeouts stay on the existing stale/circuit
+  path. `omlxc models list` remains config-canonical; periodic catalog probe
+  is unchanged.
+
 ## 3.0.14 — 2026-08-14
 
 - Improved the human-facing CLI with compact Rich panels and tables for status,

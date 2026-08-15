@@ -29,6 +29,7 @@ from .models import (
     DurableEventRecord,
     EventConflictError,
     HealthRecord,
+    InventoryHighWater,
     MetricRecord,
     RouteAuditRecord,
     RouteAuditWrite,
@@ -36,7 +37,7 @@ from .models import (
     UnsupportedSchemaError,
 )
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 MAX_PAGE_SIZE = 500
 _T = TypeVar("_T")
 _REQUIRED_COLUMNS: dict[str, tuple[str, ...]] = {
@@ -114,6 +115,12 @@ _REQUIRED_COLUMNS: dict[str, tuple[str, ...]] = {
         "request_count",
         "error_count",
         "latency_sum_ms",
+    ),
+    "inventory_high_water": (
+        "node_id",
+        "backend_id",
+        "high_water_count",
+        "observed_at",
     ),
 }
 _REQUIRED_INDEXES: dict[str, tuple[str, ...]] = {
@@ -196,6 +203,12 @@ _REQUIRED_COLUMN_SPECS: dict[str, tuple[tuple[str, str, int, str | None, int, in
         ("error_count", "INTEGER", 1, None, 0, 0),
         ("latency_sum_ms", "REAL", 1, None, 0, 0),
     ),
+    "inventory_high_water": (
+        ("node_id", "TEXT", 1, None, 1, 0),
+        ("backend_id", "TEXT", 1, None, 2, 0),
+        ("high_water_count", "INTEGER", 1, None, 0, 0),
+        ("observed_at", "TEXT", 1, None, 0, 0),
+    ),
 }
 _REQUIRED_INDEX_PROPERTIES: dict[str, tuple[str, bool, tuple[str, ...]]] = {
     "health_latest_idx": ("health_snapshots", False, _REQUIRED_INDEXES["health_latest_idx"]),
@@ -210,6 +223,7 @@ _REQUIRED_UNIQUE_COLUMNS: dict[str, frozenset[tuple[str, ...]]] = {
     "durable_events": frozenset({("event_id",)}),
     "config_revisions": frozenset({("revision_id",)}),
     "daily_metric_aggregates": frozenset({("day",)}),
+    "inventory_high_water": frozenset({("node_id", "backend_id")}),
 }
 _REQUIRED_FOREIGN_KEYS: dict[str, tuple[tuple[str, str, str, str, str, str], ...]] = {
     "job_transitions": (("jobs", "job_id", "job_id", "NO ACTION", "NO ACTION", "NONE"),)
@@ -310,6 +324,17 @@ _V2_TABLE_SQL = {
     )""",
 }
 _V2_SCHEMA_SQL = ";\n".join((*_V2_TABLE_SQL.values(), *_V1_INDEX_SQL.values()))
+_V3_TABLE_SQL = {
+    **_V2_TABLE_SQL,
+    "inventory_high_water": """CREATE TABLE inventory_high_water (
+        node_id TEXT NOT NULL,
+        backend_id TEXT NOT NULL,
+        high_water_count INTEGER NOT NULL CHECK(high_water_count >= 0),
+        observed_at TEXT NOT NULL,
+        PRIMARY KEY (node_id, backend_id)
+    )""",
+}
+_V3_SCHEMA_SQL = ";\n".join((*_V3_TABLE_SQL.values(), *_V1_INDEX_SQL.values()))
 _SENSITIVE_TEXT = re.compile(
     r"(?:authorization\s*:|bearer\s+\S+|api[_-]?key|password|secret|token\s*[=:])",
     re.I,
@@ -595,6 +620,64 @@ class SQLiteRuntimeStore:
             )
         except (TypeError, ValueError, UnicodeError):
             raise _stored_value_error() from None
+
+    async def save_inventory_high_water(self, record: InventoryHighWater) -> None:
+        if record.high_water_count < 0:
+            raise ValueError("inventory high-water count must be non-negative")
+        _bounded_text(record.node_id, "node_id")
+        _bounded_text(record.backend_id, "backend_id")
+        observed_at = _utc_text(record.observed_at)
+
+        async def operation(connection: aiosqlite.Connection) -> None:
+            await connection.execute(
+                """
+                INSERT INTO inventory_high_water (
+                    node_id, backend_id, high_water_count, observed_at
+                ) VALUES (?, ?, ?, ?)
+                ON CONFLICT(node_id, backend_id) DO UPDATE SET
+                    high_water_count = excluded.high_water_count,
+                    observed_at = excluded.observed_at
+                WHERE excluded.high_water_count >= inventory_high_water.high_water_count
+                """,
+                (
+                    record.node_id,
+                    record.backend_id,
+                    record.high_water_count,
+                    observed_at,
+                ),
+            )
+
+        await self._write(operation)
+
+    async def list_inventory_high_water(self) -> tuple[InventoryHighWater, ...]:
+        cursor = await self._require_reader().execute(
+            """
+            SELECT node_id, backend_id, high_water_count, observed_at
+            FROM inventory_high_water
+            ORDER BY node_id, backend_id
+            """
+        )
+        try:
+            rows = await cursor.fetchall()
+        finally:
+            await cursor.close()
+        records: list[InventoryHighWater] = []
+        for row in rows:
+            try:
+                count = int(row[2])
+                if count < 0:
+                    raise ValueError("inventory high-water count must be non-negative")
+                records.append(
+                    InventoryHighWater(
+                        node_id=str(row[0]),
+                        backend_id=str(row[1]),
+                        high_water_count=count,
+                        observed_at=_parse_stored_utc(row[3]),
+                    )
+                )
+            except (TypeError, ValueError, UnicodeError):
+                raise _stored_value_error() from None
+        return tuple(records)
 
     async def append_route_audit(self, record: RouteAuditWrite) -> RouteAuditRecord:
         timestamp = _utc_text(record.observed_at)
@@ -1406,7 +1489,7 @@ async def _migrate(connection: aiosqlite.Connection) -> None:
         return
     if version == 0:
         await connection.executescript(
-            f"BEGIN IMMEDIATE;\n{_V2_SCHEMA_SQL};\nPRAGMA user_version = 2;\nCOMMIT;"
+            f"BEGIN IMMEDIATE;\n{_V3_SCHEMA_SQL};\nPRAGMA user_version = 3;\nCOMMIT;"
         )
         return
     if version == 1:
@@ -1418,6 +1501,12 @@ async def _migrate(connection: aiosqlite.Connection) -> None:
             PRAGMA user_version = 2;
             COMMIT;
             """
+        )
+        version = 2
+    if version == 2:
+        await connection.executescript(
+            f"BEGIN IMMEDIATE;\n{_V3_TABLE_SQL['inventory_high_water']};\n"
+            "PRAGMA user_version = 3;\nCOMMIT;"
         )
         return
     raise UnsupportedSchemaError("database schema migration path is unavailable")
@@ -1523,7 +1612,7 @@ async def _validate_schema(connection: aiosqlite.Connection) -> None:
         raise aiosqlite.DatabaseError("SQLite foreign key invariant failed")
 
     expected_objects = {
-        **{("table", name): sql for name, sql in _V2_TABLE_SQL.items()},
+        **{("table", name): sql for name, sql in _V3_TABLE_SQL.items()},
         **{("index", name): sql for name, sql in _V1_INDEX_SQL.items()},
     }
     cursor = await connection.execute(
@@ -1557,6 +1646,7 @@ async def _validate_persisted_values(connection: aiosqlite.Connection) -> None:
         UNION ALL SELECT observed_at FROM job_transitions
         UNION ALL SELECT observed_at FROM durable_events
         UNION ALL SELECT observed_at FROM config_revisions
+        UNION ALL SELECT observed_at FROM inventory_high_water
         """
     )
     try:

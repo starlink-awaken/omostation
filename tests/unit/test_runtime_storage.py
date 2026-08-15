@@ -20,7 +20,7 @@ async def test_schema_migrates_once_and_enforces_private_wal_pragmas(tmp_path: P
     database = tmp_path / "private" / "state.db"
     SQLiteRuntimeStore = _storage().SQLiteRuntimeStore
     store = await SQLiteRuntimeStore.open(database)
-    assert await store.schema_version() == 2
+    assert await store.schema_version() == 3
     assert await store.pragma_state() == {
         "busy_timeout": 5000,
         "foreign_keys": 1,
@@ -29,7 +29,7 @@ async def test_schema_migrates_once_and_enforces_private_wal_pragmas(tmp_path: P
     await store.close()
 
     reopened = await SQLiteRuntimeStore.open(database)
-    assert await reopened.schema_version() == 2
+    assert await reopened.schema_version() == 3
     await reopened.close()
     assert os.stat(database.parent).st_mode & 0o077 == 0
     assert os.stat(database).st_mode & 0o077 == 0
@@ -68,10 +68,39 @@ async def test_v1_metrics_migrate_to_v2_with_nullable_typed_terminal_fields(
 
     storage = _storage()
     store = await storage.SQLiteRuntimeStore.open(database)
-    assert await store.schema_version() == 2
+    assert await store.schema_version() == 3
     metrics = await store.list_metrics(after_sequence=0)
     assert metrics[0].error_code is None
     assert metrics[0].phase is None
+    assert await store.list_inventory_high_water() == ()
+    await store.close()
+
+
+@pytest.mark.asyncio
+async def test_v2_schema_migrates_to_inventory_high_water(tmp_path: Path) -> None:
+    from omlxc.storage import database as storage_database
+
+    database = tmp_path / "state.db"
+    connection = sqlite3.connect(database)
+    connection.executescript(
+        f"""
+        {storage_database._V2_SCHEMA_SQL};
+        PRAGMA user_version = 2;
+        """
+    )
+    connection.commit()
+    connection.close()
+
+    storage = _storage()
+    store = await storage.SQLiteRuntimeStore.open(database)
+    assert await store.schema_version() == 3
+    observed = datetime(2026, 8, 15, 4, tzinfo=UTC)
+    await store.save_inventory_high_water(
+        storage.InventoryHighWater("node", "backend", 10, observed)
+    )
+    assert await store.list_inventory_high_water() == (
+        storage.InventoryHighWater("node", "backend", 10, observed),
+    )
     await store.close()
 
 

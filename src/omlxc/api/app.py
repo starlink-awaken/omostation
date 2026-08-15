@@ -376,7 +376,7 @@ def create_app(
         except KeyError as exc:
             if exc.args != ("model has no configured placement",):
                 raise
-            raise ApiError(404, "E404", "model not configured")
+            raise ApiError(404, "E404", "model not configured") from None
         return _success(
             request,
             loaded,
@@ -400,7 +400,7 @@ def create_app(
         except KeyError as exc:
             if exc.args != ("model has no configured placement",):
                 raise
-            raise ApiError(404, "E404", "model not configured")
+            raise ApiError(404, "E404", "model not configured") from None
         return _success(
             request,
             unloaded,
