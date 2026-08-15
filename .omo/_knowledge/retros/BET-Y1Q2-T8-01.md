@@ -69,19 +69,3 @@ collab_scenarios           5             221      -216(-98%)   —
 3. 台账 `verify` 仍只有 `npm run build`。要验 tab / 未接入，跑 `npm run test:unit -- src/components/__tests__/OutcomesView.test.tsx src/components/__tests__/JourneysTimelineView.test.tsx src/components/__tests__/outcomesDisplay.test.ts`。
 4. 不要把本 bet 的 yaml `status` 自行改成 done；`write_surfaces` 只有 `projects/cockpit-ui/**`。需要人拍板。
 5. 隔离工作树可能被并发清掉。写完立刻 `git add`，子模块尽快 commit。
-
----
-
-## 独立核实记录（2026-08-15，台账信任修复轮收口）
-
-> 原 retro（前会话）保留不动。本节为独立复核 + 收口记录。
-
-**实测（2026-08-15，worktree cockpit-ui @ 0d19a872）**：
-1. `origin/main..HEAD` 三 commit：`9ad22125`（三视图+时间线主体）、`3e081819`（D1 未接入 vs live 0 语义修正）、`0d19a872`（Dashboard 路由接线 + 测试）
-2. **verify 原文命令 `npm run build` → exit 0（✓ built in 238ms）**
-3. 测试文件三份在位（`OutcomesView.test.tsx` / `JourneysTimelineView.test.tsx` / `Dashboard.outcomes-routes.test.tsx`）；`npm test` preview 检查 HTTP 200 OK（exit 143 为清理阶段 SIGTERM 噪音）
-4. done_when 三条对照原 retro Q2 证据表逐条 ✅（三视图 / D1「未接入」非 0 / /journeys 同期上线），**无时间窗口条款**
-
-**收口动作**：根仓指针 bump `projects/cockpit-ui → 0d19a872`；台账 candidate → done（前会话因 WS 不含台账而未收，本轮补台账写面后收口）。
-
-**本轮打假补充**：前会话 Q3 已发现 6 条（旧复盘假宣称 3/3、verify 盲区、worktree 被清、PASW 双 inode、骨架已存在、路由未接线）——其中「旧复盘已宣称通过但台账 candidate」说明本 bet 曾有**两轮**前史；本轮是第三轮触达，终收口。
