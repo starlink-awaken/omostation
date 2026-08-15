@@ -106,11 +106,15 @@ AGENT_ID=<agent-id> \
 uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> \
   --profile <agent-profile> --objective "<BET-ID> <标题>"
 
-# claim 前必须先算 affected-hash (lifecycle 强制, 缺了 claim 直接拒绝):
-uv run --with pyyaml python bin/gac/affected-graph.py --changed-projects <涉及项目> --json \
-  | python3 -c "import sys,json,hashlib; d=json.load(sys.stdin); print(hashlib.sha256(json.dumps(d,sort_keys=True).encode()).hexdigest()[:16])"
-# 得到 <hash> 后:
-uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <每个写面> --affected-hash <hash>
+# claim 前必须生成可复算 receipt（缺失、篡改、过期或覆盖不全都会拒绝）。
+# 根仓文件（包括 docs/）必须显式加入 workspace-root；projects/<name>/ 路径加入对应项目名：
+uv run --with pyyaml python bin/gac/affected-graph.py \
+  --workspace-root . \
+  --changed-projects workspace-root <涉及项目> \
+  --output .omo/evidence/<session>/affected-graph-receipt.json --json
+uv run --with pyyaml python bin/agent-workflow.py claim <run-id> \
+  --path <每个写面> \
+  --affected-receipt .omo/evidence/<session>/affected-graph-receipt.json
 ```
 
 `workflow-id` 和 `agent-profile` 在 `claim-check` 的输出里，也在 bet 的 `workflow` 字段和轨道的 `agent_profile_hint` 里。

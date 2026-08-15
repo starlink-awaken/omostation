@@ -215,6 +215,7 @@
 - [closeout-template-5min-dev](notes/closeout-template-5min-dev.md)
 - [governance-runtime-convergence-closeout-20260814](notes/governance-runtime-convergence-closeout-20260814.md)
 - [governance-runtime-convergence-rca-20260814](notes/governance-runtime-convergence-rca-20260814.md)
+- [mechanism-convergence-retrospective-20260815](notes/mechanism-convergence-retrospective-20260815.md)
 → [运行验证证据](evidence/) — 可重放、脱敏的交付验证回执
 → [T1-18 Codex 人工确认 canary](evidence/t1-18-codex-dogfood-canary.md) — Orca 交互式 Codex 手动批准验证工件
 → [操作 SOP](operations/) — 运维手册、模板、清单
