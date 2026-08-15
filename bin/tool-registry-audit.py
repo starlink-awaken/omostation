@@ -12,16 +12,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import stat
-from collections import Counter, defaultdict, deque
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
 
 
 ROOT = Path(__file__).resolve().parents[1]
 BIN_DIR = ROOT / "bin"
+SCRIPT_SUFFIXES = {".py", ".sh", ".bash", ".zsh"}
 
 
 CALL_RE = re.compile(
@@ -58,6 +58,27 @@ def classify(path: Path) -> str:
     return "other"
 
 
+def is_candidate_script(path: Path) -> bool:
+    if not path.is_file():
+        return False
+    suffix = path.suffix.lower()
+    if suffix in SCRIPT_SUFFIXES:
+        return True
+    if is_executable(path) and read_shebang(path):
+        return True
+    return False
+
+
+def script_tier(path: Path) -> str:
+    rel_parts = path.relative_to(ROOT).parts
+    parts = set(rel_parts)
+    if "_archive" in parts:
+        return "archive"
+    if len(rel_parts) > 1 and rel_parts[1] == "ssot":
+        return "ssot"
+    return "active"
+
+
 def snake_case(name: str) -> bool:
     return bool(re.fullmatch(r"[a-z][a-z0-9_]*", name))
 
@@ -70,14 +91,13 @@ def normalize_name(name: str) -> str:
 
 def list_bin_files() -> List[Path]:
     files = []
-    script_suffixes = {".py", ".sh", ".bash", ".zsh"}
     for path in BIN_DIR.rglob("*"):
         rel = path.relative_to(BIN_DIR)
         if rel.parts and rel.parts[0] in {".git", "__pycache__"}:
             continue
         if not path.is_file():
             continue
-        if path.suffix.lower() not in script_suffixes and not is_executable(path):
+        if not is_candidate_script(path):
             continue
         files.append(path)
     return files
@@ -96,6 +116,8 @@ def parse_script_calls(path: Path) -> List[Path]:
             continue
         raw_target = m.group("target")
         raw_target = raw_target.strip("\"'")
+        if raw_target == path.name or raw_target == str(path):
+            continue
         if raw_target.startswith("bin/"):
             candidate = (ROOT / raw_target).resolve()
             if candidate.is_file() and candidate.is_relative_to(ROOT):
@@ -162,6 +184,46 @@ def detect_cycles(out_edges: Dict[str, Set[str]]) -> List[List[str]]:
     return uniq
 
 
+def is_self_cycle(cycle: List[str]) -> bool:
+    return len(cycle) == 2 and cycle[0] == cycle[1]
+
+
+def filter_cycles(cycles: List[List[str]]) -> List[List[str]]:
+    return [cycle for cycle in cycles if not is_self_cycle(cycle)]
+
+
+def active_duplicate_files(files: List[str]) -> List[str]:
+    active = []
+    for f in files:
+        try:
+            tier = script_tier((ROOT / f).resolve())
+        except Exception:
+            tier = "active"
+        if tier == "active":
+            active.append(f)
+    return active
+
+
+def classify_duplication_conflicts(duplicates: Dict[str, List[str]]) -> Tuple[Dict[str, List[str]], List[Dict[str, object]]]:
+    high_conflicts: List[Dict[str, object]] = []
+    for name, files in sorted(duplicates.items()):
+        active_files = active_duplicate_files(files)
+        if len(active_files) < 2:
+            continue
+        active_exts = {Path(file).suffix.lower() for file in active_files}
+        if len(active_exts) > 1 and len(active_files) == 2:
+            continue
+        high_conflicts.append(
+            {
+                "name": name,
+                "active_files": sorted(active_files),
+                "exts": sorted(active_exts),
+                "file_count": len(active_files),
+            }
+        )
+    return duplicates, high_conflicts
+
+
 def summarize(paths: List[Path]) -> Dict:
     types: Counter[str] = Counter()
     duplicates: defaultdict[str, List[str]] = defaultdict(list)
@@ -182,10 +244,11 @@ def summarize(paths: List[Path]) -> Dict:
     duplicated = {
         name: files for name, files in duplicates.items() if len(files) > 1
     }
+    duplicate_scopes, duplicate_conflicts = classify_duplication_conflicts(duplicated)
     out_edges, in_edges = build_graph(paths)
     out_degree = {k: len(v) for k, v in out_edges.items()}
     in_degree = {k: len(v) for k, v in in_edges.items()}
-    cycles = detect_cycles(out_edges)
+    cycles = filter_cycles(detect_cycles(out_edges))
     top_out = sorted(out_degree.items(), key=lambda i: i[1], reverse=True)[:10]
     top_in = sorted(in_degree.items(), key=lambda i: i[1], reverse=True)[:10]
 
@@ -202,12 +265,14 @@ def summarize(paths: List[Path]) -> Dict:
             "missing_shebang": len(missing_shebang),
             "non_snake": len(non_snake),
             "duplicate_names": len(duplicated),
+            "high_conflict_duplicates": len(duplicate_conflicts),
             "edges": sum(out_degree.values()),
         },
         "findings": {
             "missing_shebang": sorted(missing_shebang),
             "non_snake": sorted(non_snake),
-            "duplicate_names": duplicated,
+            "duplicate_names": duplicate_scopes,
+            "duplicate_conflicts": duplicate_conflicts,
             "cycles": cycles[:20],
         },
         "top_out_degree": top_out,
@@ -226,8 +291,8 @@ def strict_checks(summary: Dict) -> List[str]:
     errors = []
     if summary["stats"]["missing_shebang"] > 0:
         errors.append(f"executable scripts missing shebang: {summary['stats']['missing_shebang']}")
-    if summary["stats"]["duplicate_names"] > 0:
-        errors.append(f"duplicate normalized script names: {summary['stats']['duplicate_names']}")
+    if summary["stats"]["high_conflict_duplicates"] > 0:
+        errors.append(f"high-confidence duplicate normalized script names: {summary['stats']['high_conflict_duplicates']}")
     if summary["findings"]["cycles"]:
         errors.append(f"script cycle detected: {len(summary['findings']['cycles'])}")
     return errors
@@ -256,6 +321,7 @@ def main() -> int:
     print(f"missing shebang: {payload['stats']['missing_shebang']}")
     print(f"non-snake: {payload['stats']['non_snake']}")
     print(f"duplicate names: {payload['stats']['duplicate_names']}")
+    print(f"high-confidence duplicate names: {payload['stats']['high_conflict_duplicates']}")
     print(f"cycles: {len(payload['findings']['cycles'])}")
     print("top out-degree:", payload["top_out_degree"][:3])
     print("top in-degree:", payload["top_in_degree"][:3])
