@@ -197,9 +197,9 @@
       "note": "Qwythos-9B mxfp4 纯文本(无视觉)· 创意/角色扮演 · 快速版",
       "size_gb": 5
     },
-    "deepseek-v4-flash": {
+    "qwen-3.5-9b-flash": {
       "category": "coding",
-      "alias": "coding/deepseek-v4-flash",
+      "alias": "coding/qwen-3.5-9b-flash",
       "port": 8086,
       "engine": "mlx_lm",
       "role": "chat",
@@ -213,12 +213,12 @@
           "enable_thinking": false
         }
       },
-      "note": "DeepSeek-V4 Flash MoE 编码/通用",
+      "note": "Qwen-3.5 9B Flash 编码/通用",
       "size_gb": 4
     },
-    "deepseek-v4-pro": {
+    "qwen-3.5-9b-pro": {
       "category": "coding",
-      "alias": "coding/deepseek-v4-pro",
+      "alias": "coding/qwen-3.5-9b-pro",
       "port": 8087,
       "engine": "mlx_lm",
       "role": "chat",
@@ -232,7 +232,7 @@
           "enable_thinking": false
         }
       },
-      "note": "DeepSeek-V4 Pro MoE(大)",
+      "note": "Qwen-3.5 9B Pro",
       "size_gb": 14
     },
     "mistral-medium-128b": {
@@ -495,7 +495,7 @@
       "embedding"
     ],
     "fast": [
-      "deepseek-v4-flash",
+      "qwen-3.5-9b-flash",
       "embedding"
     ],
     "vision": [
@@ -552,8 +552,8 @@
     "coding-next": "gemma-4-e4b-it-mlx",
     "coder-precise": "gemma-4-e4b-it-mlx",
     "mid-local": "gemma-4-e4b-it-mlx",
-    "deepseek-v4-flash": "gemma-4-e4b-it-mlx",
-    "deepseek-v4-pro": "gemma-4-e4b-it-mlx",
+    "qwen-3.5-9b-flash": "gemma-4-e4b-it-mlx",
+    "qwen-3.5-9b-pro": "gemma-4-e4b-it-mlx",
     "reasoning": "gemma-4-e4b-it-mlx",
     "reasoning-lite": "gemma-4-e4b-it-mlx",
     "mistral-medium-128b": "gemma-4-e4b-it-mlx",
@@ -577,8 +577,8 @@
     "coding-next": "qwen3.5:9b",
     "coder-precise": "qwen3.5:9b",
     "mid-local": "qwen3.5:9b",
-    "deepseek-v4-flash": "qwen3.5:9b",
-    "deepseek-v4-pro": "qwen3.5:9b",
+    "qwen-3.5-9b-flash": "qwen3.5:9b",
+    "qwen-3.5-9b-pro": "qwen3.5:9b",
     "reasoning": "qwen3.5:9b",
     "reasoning-lite": "qwen3.5:9b",
     "mistral-medium-128b": "qwen3.5:9b",
