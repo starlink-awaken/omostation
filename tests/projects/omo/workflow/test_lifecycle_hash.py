@@ -1,5 +1,4 @@
 import pytest
-
 from omo.workflow.lifecycle import WorkflowError, claim_run
 
 
