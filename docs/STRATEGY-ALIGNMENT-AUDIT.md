@@ -1,9 +1,11 @@
 ---
 title: 三年战略 · c2g 对齐审计报告
-status: draft
+status: archived
 type: strategy-audit
 owner: 夏明星
 created: 2026-07-15
+archived: 2026-08-15
+superseded-by: docs/STRATEGY-CONVERGENCE-MASTER-2026-08.md
 related:
   - docs/STRATEGY-3YEAR-PANORAMA.md
   - .omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md

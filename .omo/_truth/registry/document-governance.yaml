@@ -145,6 +145,15 @@ warning_exceptions:
       expires: 2026-10-31
       owner: governance-team
       reason: Existing truth documentation needs metadata migration without rewriting SSOT history.
+    - id: strategy-convergence-phase-hardcode-defer
+      rule: orphan_document
+      surface: docs-discoverable
+      max_findings: 8
+      expires: 2026-10-31
+      owner: governance-team
+      reason: >
+        BET-Y1Q1-T6-01 deferred rewriting 11 Phase numbering systems in
+        WORKFLOW-MESH / M4-ROADMAP / etc. Tracked, not silently unfixed.
     - id: legacy-omo-standards-frontmatter
       rule: missing_frontmatter
       surface: omo-standards

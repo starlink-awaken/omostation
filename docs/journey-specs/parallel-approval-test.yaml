@@ -1,3 +1,5 @@
+test: true
+status: test-fixture
 schema: journey-spec/v1
 journey_id: parallel-approval-test
 description: "并行会签测试 — fork 三个分支 → join (策略可配置)"

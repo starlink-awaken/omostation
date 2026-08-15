@@ -1,10 +1,13 @@
 ---
-status: active
+status: stale
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
-review-state: metadata-only
+last-reviewed: 2026-08-15
+review-state: stale-needs-content-review
 metadata-migrated-at: 2026-07-31
+stale-reason: >
+  "5 缺口全修复" snapshot is 2026-06-28. BOS domain count in §11 must follow
+  ARCHITECTURE.md / LAYER-INDEX.md / PANORAMA.md (5 normative domains), not 9.
 ---
 
 # omostation 全量功能能力地图

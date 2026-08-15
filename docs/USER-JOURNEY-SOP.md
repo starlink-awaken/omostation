@@ -1,10 +1,11 @@
 ---
-status: active
+status: stale
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
-review-state: metadata-only
+last-reviewed: 2026-08-15
+review-state: stale-unlinked-to-scene-cards
 metadata-migrated-at: 2026-07-31
+stale-reason: 2026-06-12 SOP; zero cross-refs to docs/scene-cards or journey-specs
 ---
 # eCOS v6 用户旅程设计 + Workflow SOP
 
