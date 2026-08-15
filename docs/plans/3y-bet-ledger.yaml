@@ -1372,7 +1372,8 @@ bets:
   title: Wave/Gate ↔ BET 映射 + 愿景到复盘硬门
   appetite: 1 week
   priority: P1
-  status: in_progress
+  status: done
+  done_at: 2026-08-15
   goal: 产出 Wave/Gate 与 BET 对照表，并把 Plan→BET→workflow→closeout→retro 做成可 halt 的同一条谓词
   non_goals:
   - 新造第四套 ID 或 compass/chain-card 面板
