@@ -10,6 +10,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "affected-graph.py"
+CASCADE_WORKFLOW = ROOT / ".github" / "workflows" / "cascading-test.yml"
 
 
 def _load_module():
@@ -18,6 +19,13 @@ def _load_module():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def test_cascading_workflow_preserves_project_argument_boundaries():
+    workflow = CASCADE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "tr -d '[:space:]'" not in workflow
+    assert "--changed-projects $PROJS --json" in workflow
 
 
 def _workspace(tmp_path: Path) -> Path:
