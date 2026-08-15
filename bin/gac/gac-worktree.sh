@@ -551,19 +551,9 @@ PYEOF
     [ ! -d "$sub_wt" ] && { echo "❌ 子模块 worktree 不存在: $sub_wt" >&2; exit 1; }
     new_sha=$(git -C "$sub_wt" rev-parse HEAD 2>/dev/null)
     [ -z "$new_sha" ] && { echo "❌ 无法获取 $sub worktree HEAD" >&2; exit 1; }
-    # PASW: 验证 SHA 在 submodule remote 上可达 (任意 branch, 不限于 main)
-    ( cd "$wt/$sub" && if git branch -r --contains "$new_sha" 2>/dev/null | grep -q .; then
-        echo "   ✅ SHA $new_sha 在子模块 remote 上 (CI 可达)"
-      else
-        echo "   ❌ SHA $new_sha 不在子模块 remote 上" >&2
-        echo "   请先 push 子模块分支: cd $sub_wt && git push origin HEAD" >&2
-        exit 1
-      fi )
-    cd "$wt"
-    git update-index --cacheinfo 160000,"$new_sha","$sub"
-    # ── A (2026-08-06): agora bump → auto-sync bos-registry mirror (防 drift 复发, #1051/#1055 根因) ──
-    # agora 改 etc/bos-services.yaml 后, Workspace 根 bos-registry.json 镜像必须跟着 sync,
-    # 否则 evidence-gate 报 drift (live vs file) 阻塞 PR. bump-pointer 是精准触发点.
+    # 委托 bump-fast 完成可达性校验 + cacheinfo + registry 同步 (DRY, T1-08 最优解)
+    "$0" bump-fast "$sub" --sha "$new_sha" || exit 1
+    # agora bos-registry 镜像同步 (bump-pointer 特例, 不搬进 bump-fast)
     if [ "$sub" = "projects/agora" ] && [ -f "$wt/bin/ssot/sync-bos-registry.py" ]; then
       if ( cd "$wt" && uv run --with pyyaml python bin/ssot/sync-bos-registry.py --write ) >/dev/null 2>&1; then
         if git -C "$wt" add .omo/_knowledge/bos-registry.json 2>/dev/null; then
@@ -575,7 +565,6 @@ PYEOF
         echo "   ⚠️ bos-registry auto-sync 跳过 (sync 失败或 agora 未 init), 记得手动: make sync-bos-registry"
       fi
     fi
-    echo "✅ 指针已更新: $sub → $new_sha"
     echo "   下一步: git commit -m 'bump $sub' && gac-worktree.sh submit $session"
     ;;
 

@@ -36,3 +36,13 @@ appetite 1 week。过渡期 PASW 覆盖 + 路径 bug 修复 + 残留清理于 08
 1. **PASW 是过渡方案**: 终局在 T1-05 拓扑改造（每 agent 独立 clone）后删除 PASW 实现与 D5 纪律条目。
 2. worktree claim 自动提取所有子模块构建隔离树（Global PASW, ADR-0404）。
 3. 表面积测量应排除 .subtrees/ 等 gitignore 检出（E15 教训）。
+
+---
+
+## 条件移交记录（2026-08-15，台账信任修复 r2，处置 D2）
+
+spotcheck 曾判本 bet「❌ 不符（轻）」——Q2 第 5 条（拓扑改造完成后删除 PASW 实现与 D5 纪律条目）⏳ 未完成却标 done。复核后裁定**保持 done**，理由：
+
+1. **条件归属去重**：第 5 条在 BET-Y1Q1-T1-05 的 done_when 里**逐字重复**（"D3 减法: D2/D3/D5 三条纪律退役并删除实现"）——该终局条件的 owner 是 T1-05（candidate），不是 T1-06。
+2. T1-06 的实质交付 4/5 已全部实测通过（spotcheck 机械重跑：submodule=19、PASW_ISOLATED_SUBS grep=5）。
+3. 把 Y1Q1 的 bet 挂起数周等 Y1Q3 的依赖是记账错位——本条记为「移交 T1-05 的终局条件」，T1-06 账面关闭。（原 Q2 的 ⏳ 保留不动，历史如实。）

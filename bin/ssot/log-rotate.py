@@ -16,8 +16,7 @@
 from __future__ import annotations
 
 import argparse
-import os
-import sys
+import time
 from pathlib import Path
 
 HOME = Path.home()
@@ -33,7 +32,9 @@ LOG_PATHS = [
     Path("/tmp"),
 ]
 
-LOG_PATTERNS = ("*.log", "*.out.log", "*.err.log", "*.jsonl")
+LOG_PATTERNS = ("*.log", "*.out.log", "*.err.log", "*.jsonl", "*.err")
+# T9-01 ②: 裸 .err (launchd StandardErrorPath) 此前不匹配任何 pattern —
+# 旧错误无限累积并被误读为当前问题 (2026-08-08 Xcode 路径旧错案)
 SKIP_NAMES = {"agora-events.json", "agora-proxy-services.json", "agora-audit.db"}
 
 
@@ -79,11 +80,23 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--max-bytes", type=int, default=5 * 1024 * 1024, help="轮转阈值 (默认 5MB)")
     parser.add_argument("--keep", type=int, default=3, help="保留份数 (默认 3)")
+    parser.add_argument(
+        "--daily", action="store_true",
+        help="按天轮转模式: 跨天 (mtime 非今日) 的日志即使未超阈值也轮转 (T9-01 ②)",
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     candidates = _candidate_files()
     over = [p for p in candidates if p.stat().st_size > args.max_bytes]
+    if args.daily:
+        today = time.strftime("%Y-%m-%d", time.localtime())
+        stale_daily = [
+            p for p in candidates
+            if p not in over and p.stat().st_size > 0
+            and time.strftime("%Y-%m-%d", time.localtime(p.stat().st_mtime)) != today
+        ]
+        over = over + stale_daily
     print(f"log-rotate: {len(candidates)} candidate(s), {len(over)} over {args.max_bytes} bytes")
     rotated = 0
     for p in over:
