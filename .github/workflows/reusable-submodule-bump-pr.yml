@@ -1,0 +1,105 @@
+name: Reusable Submodule Bump PR
+
+on:
+  workflow_call:
+    inputs:
+      submodule_path:
+        description: 'Submodule directory path in main repo (e.g. projects/omlxc)'
+        required: true
+        type: string
+      target_sha:
+        description: 'Explicit Target Commit SHA (optional, defaults to latest main)'
+        required: false
+        type: string
+        default: ''
+      release_tag:
+        description: 'Release Tag if triggered by release'
+        required: false
+        type: string
+        default: ''
+    secrets:
+      bot_token:
+        required: true
+
+jobs:
+  bump-pointer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.bot_token }}
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Resolve Target SHA and Run bump-fast
+        id: bump
+        run: |
+          SUB="${{ inputs.submodule_path }}"
+          TARGET_SHA="${{ inputs.target_sha }}"
+          TAG="${{ inputs.release_tag }}"
+          
+          # 1. 运行 bump-fast 更新指针
+          if [ -n "$TARGET_SHA" ]; then
+            bash bin/gac/gac-worktree.sh bump-fast "$SUB" --sha="$TARGET_SHA"
+            ACTUAL_SHA="$TARGET_SHA"
+          else
+            bash bin/gac/gac-worktree.sh bump-fast "$SUB" --latest-main
+            ACTUAL_SHA=$(git rev-parse :"$SUB" 2>/dev/null || git ls-files -s "$SUB" | awk '{print $2}')
+          fi
+          
+          SHORT_SHA=$(echo "$ACTUAL_SHA" | cut -c1-7)
+          SUB_NAME=$(basename "$SUB")
+          BRANCH_NAME="auto-bump/${SUB_NAME}-${SHORT_SHA}"
+          
+          echo "sub_name=$SUB_NAME" >> $GITHUB_OUTPUT
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "actual_sha=$ACTUAL_SHA" >> $GITHUB_OUTPUT
+
+      - name: Check for Changes
+        id: git-diff
+        run: |
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No pointer changes detected."
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and Create Pull Request
+        if: steps.git-diff.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.bot_token }}
+        run: |
+          SUB_NAME="${{ steps.bump.outputs.sub_name }}"
+          SHORT_SHA="${{ steps.bump.outputs.short_sha }}"
+          ACTUAL_SHA="${{ steps.bump.outputs.actual_sha }}"
+          BRANCH_NAME="${{ steps.bump.outputs.branch_name }}"
+          TAG="${{ inputs.release_tag }}"
+          
+          git config user.name "omostation-bot[bot]"
+          git config user.email "omostation-bot@users.noreply.github.com"
+          
+          git checkout -B "$BRANCH_NAME"
+          git add -u
+          
+          TITLE="chore: auto-bump $SUB_NAME to ${TAG:-$SHORT_SHA}"
+          BODY="Automated submodule pointer bump triggered by $SUB_NAME release/commit ($ACTUAL_SHA)."
+          
+          git commit -m "$TITLE"
+          git push origin "$BRANCH_NAME" --force
+          
+          # 创建 PR (如果已存在则更新)
+          if ! gh pr view "$BRANCH_NAME" >/dev/null 2>&1; then
+            gh pr create \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --head "$BRANCH_NAME" \
+              --base main \
+              --label "submodule-bump"
+          fi
