@@ -300,7 +300,7 @@
       "alias": "retrieval/embed-bge-m3",
       "port": 8188,
       "engine": "mlx_embeddings",
-      "role": "chat",
+      "role": "embedding",
       "reasoning": false,
       "params": {
         "max_tokens": 2048
@@ -466,8 +466,7 @@
     "enabled": false,
     "idle_ttl_sec": 900,
     "resident": [
-      "coding",
-      "reasoning",
+      "mythos-fast",
       "embedding"
     ],
     "remote_resident": [
@@ -501,20 +500,20 @@
   },
   "presets": {
     "dev": [
-      "coding",
-      "reasoning",
+      "mythos-fast",
+      "coding-next",
       "embedding"
     ],
     "coding": [
-      "coding",
+      "coding-next",
       "embedding"
     ],
     "chat": [
-      "reasoning",
+      "qwen-3.8-27b",
       "embedding"
     ],
     "fast": [
-      "qwen-3.5-9b-flash",
+      "mythos-fast",
       "embedding"
     ],
     "vision": [

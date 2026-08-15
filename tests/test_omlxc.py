@@ -82,6 +82,20 @@ def test_catalog_ids_are_qwen35_not_deepseek_v4(tmp_path):
     assert "qwen-3.5-9b-flash" in leftover
 
 
+def test_mbp_first_tier_presets_and_embed_role():
+    """MBP 默认栈：常驻 mythos-fast+embedding，mid/chat 走 qwen-3.8-27b。"""
+    conf = _load_models_config()
+    assert conf["autopilot"]["resident"] == ["mythos-fast", "embedding"]
+    assert conf["presets"]["fast"] == ["mythos-fast", "embedding"]
+    assert conf["presets"]["coding"] == ["coding-next", "embedding"]
+    assert conf["presets"]["chat"] == ["qwen-3.8-27b", "embedding"]
+    assert conf["presets"]["dev"] == ["mythos-fast", "coding-next", "embedding"]
+    assert conf["models"]["embed-bge-m3"]["role"] == "embedding"
+    assert conf["models"]["qwen-3.8-27b"]["role"] == "chat"
+    assert "mid-local" in conf["models"]
+    assert "vision-large" in conf["models"]
+
+
 def test_catalog_includes_qwen_38_27b(tmp_path):
     conf = _load_models_config()
     spec = conf["models"]["qwen-3.8-27b"]
