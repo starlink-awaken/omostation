@@ -226,6 +226,10 @@ def claim_resource(
     try:
         conn.execute("BEGIN IMMEDIATE")
         now = _utc_now()
+        expires_hint = time.strftime(
+            "%Y-%m-%dT%H:%M:%SZ",
+            time.gmtime(time.time() + ttl_hours * 3600),
+        )
         conn.execute(
             "UPDATE claims SET state='expired' "
             "WHERE resource_type=? AND resource_id=? AND state='active' "
@@ -233,16 +237,28 @@ def claim_resource(
             (resource_type, resource_id, now),
         )
         active = conn.execute(
-            "SELECT owner FROM claims WHERE resource_type=? AND resource_id=? AND state='active'",
+            "SELECT owner, token, claimed_at FROM claims "
+            "WHERE resource_type=? AND resource_id=? AND state='active'",
             (resource_type, resource_id),
         ).fetchone()
         if active is not None:
+            if active["owner"] == owner:
+                # same-owner 幂等重取 (T1-05A drift 修复): 文件锁允许同 session
+                # 重取 (reused: true), 镜像同语义 — 顺延 TTL 返回既有 claim,
+                # token 不变 (不产生 mirror_drift 噪音, 不使旧 token 失效)
+                conn.execute(
+                    "UPDATE claims SET expires_at=? "
+                    "WHERE resource_type=? AND resource_id=? AND state='active'",
+                    (expires_hint, resource_type, resource_id),
+                )
+                conn.execute("COMMIT")
+                return Claim(
+                    resource_type=resource_type, resource_id=resource_id,
+                    owner=owner, token=active["token"],
+                    claimed_at=active["claimed_at"], expires_at=expires_hint,
+                )
             conn.execute("ROLLBACK")
             return None
-        expires = time.strftime(
-            "%Y-%m-%dT%H:%M:%SZ",
-            time.gmtime(time.time() + ttl_hours * 3600),
-        )
         token = (conn.execute(
             "SELECT COALESCE(MAX(token), 0) + 1 FROM claims WHERE resource_type=? AND resource_id=?",
             (resource_type, resource_id),
@@ -250,12 +266,12 @@ def claim_resource(
         conn.execute(
             "INSERT INTO claims (resource_type, resource_id, owner, token, state, claimed_at, expires_at) "
             "VALUES (?, ?, ?, ?, 'active', ?, ?)",
-            (resource_type, resource_id, owner, token, now, expires),
+            (resource_type, resource_id, owner, token, now, expires_hint),
         )
         conn.execute("COMMIT")
         return Claim(
             resource_type=resource_type, resource_id=resource_id,
-            owner=owner, token=token, claimed_at=now, expires_at=expires,
+            owner=owner, token=token, claimed_at=now, expires_at=expires_hint,
         )
     finally:
         conn.close()

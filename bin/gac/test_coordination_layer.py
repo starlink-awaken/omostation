@@ -131,6 +131,16 @@ def suite_fencing() -> bool:
     rid = "work/fencing"
     c1 = cs.claim_resource("branch", rid, owner="a", ttl_hours=1)
     assert c1 and c1.token == 1
+    # same-owner 幂等重取 (drift 修复): token 不变, TTL 顺延, 不产生新行
+    c1_re = cs.claim_resource("branch", rid, owner="a", ttl_hours=2)
+    assert c1_re and c1_re.token == 1, f"same-owner 重取应幂等返回 token=1, 实际={c1_re.token if c1_re else None}"
+    conn0 = sqlite3.connect(str(cs.db_path()))
+    rows0 = conn0.execute(
+        "SELECT COUNT(*) FROM claims WHERE resource_id=? AND state='active'", (rid,)
+    ).fetchone()[0]
+    conn0.close()
+    assert rows0 == 1, f"same-owner 重取不应新增 active 行, 实际={rows0}"
+    assert c1_re.expires_at > c1.expires_at, "same-owner 重取应顺延 TTL"
     assert cs.check_fencing("branch", rid, "a", c1.token).ok, "active owner/token 应通过"
     wrong_owner = cs.check_fencing("branch", rid, "intruder", c1.token)
     assert not wrong_owner.ok and "owner" in wrong_owner.reason, "错误 owner 必须 reject"

@@ -114,3 +114,17 @@ verify 7/7 PASS (新配置下含 gac-local-gate 与 agent-workflow-tests),
 36/36 tests, 台账 lint 0 error。**本轮最大教训**: 交付轮对 verify FAIL 的
 "主仓解析"诊断是错的 — P73 D1 (凭路径直觉判存在性) 的又一案例,
 诊断必须重现, 现象吻合 ≠ 因果成立。
+
+## 附: drift 修复轮 (2026-08-15, PR 待提交)
+
+窗口运行 ~1 天的 shadow 数据暴露: `mirror_drift` × 4 全是 holder==session 的
+same-owner 重复认领 (文件锁 reused 语义 vs 镜像 active-only 语义错位), 噪音会
+淹没真 drift。修复: `claim_resource` same-owner 幂等分支 — 顺延 TTL 返回既有
+claim, token 不变; 挂点侧无需改 (返回既有 Claim 自然走 write_ok 路径)。
+
+验证: 四套件 ALL PASS + E2E (幂等重取 token=1 保持 / 0 drift 事件 / 异 session
+仍拒绝 / release 对称)。
+
+同轮情报: #1483 (硬化轮, 别的 agent) 已修 TTL 不执行/fencing 松弛/备份假声明,
+#1485 已把 daemon 部署到专属 clone `~/agents/coordination-daemon/ws` (心跳 00:06Z
+恢复)。本轮基于 cd550370 基线, 无重复造轮。
