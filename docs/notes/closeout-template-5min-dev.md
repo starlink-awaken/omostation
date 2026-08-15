@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: pattern
+owner: governance-team
+last-reviewed: 2026-08-14
+---
+
 # 开发任务 Closeout 模板（5分钟）
 
 ## 任务信息

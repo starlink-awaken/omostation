@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-14
+---
+
 # 交付闭环说明：governance-runtime-convergence
 
 - 日期：2026-08-14

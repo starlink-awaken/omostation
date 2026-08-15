@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-14
+---
+
 # 复盘（RCA）：Governance Runtime Convergence（2026-08-14）
 
 ## 结论
