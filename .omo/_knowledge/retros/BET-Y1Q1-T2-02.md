@@ -42,3 +42,19 @@ last-reviewed: 2026-08-15
 2. 原 done_evidence（保留历史）: 'PR #1142 merged: verified iris apple_mail connector via mesh-iris-executor (5 items)…CDP 9222 is seeyon_oa dependency, not applicable to Apple Mail'。
 3. **真缺口留给下个 agent**：launchd `com.omostation.signal-poller`（PID 活）在跑但信号不落盘——「每天有信号」需先修 poller 落盘，再从首个成功落盘日起算 7 天。
 4. 处置授权：人类 2026-08-15「按照最优解来，你来判断」（spotcheck §6 建议 1，T3-01 同款处理）。
+
+---
+
+## Poller 修复与窗口起算记录（2026-08-15，乙流清欠轮）
+
+**修复动作**：
+1. 诊断 err 日志根因：`ImportError: cannot import name 'UTC' from datetime (Xcode Python 3.9)`——实为 08-08 旧日志残留，plist 从 08-08 起已正确指向 `/opt/homebrew/bin/python3`
+2. 真根因：signal-poller 进程已退出（launchctl exit code 0，非 crash）
+3. 处置：`launchctl unload + load` 重新加载，进程恢复运行（"Watching signal sources" 已重现）
+4. netease_mailmaster_inbox 源仍为 unreachable（邮箱大师路径问题，非本轮范围）
+
+**窗口起算**：2026-08-15 起算，需连续 7 天（至 ~08-22）每天有去重信号落盘方可收口。
+
+**老王诊断失误**：把 08-08 旧 err 日志当成当前问题，写进了 spotcheck 报告。修复动作（reload）恰好也解决了真实问题（进程死了），但归因错了。教训：先看日志时间戳，再看内容。
+
+**本轮不改 status**：保持 in_progress，窗口满再评。
