@@ -43,6 +43,11 @@
 - **指针快进**：使用 `bash bin/gac/gac-worktree.sh bump-fast <submodule_path> [--sha <sha>|--latest-main]`（基于 cacheinfo，<1s 完成）。
 - **发布自动化**：子模块打 Release Tag 或执行 `workflow_dispatch` 后，会自动调用主仓 Reusable Workflow 并在主仓发起 `auto-bump/*` PR，通过 CI 门禁后人工点击合并。全仓 19 个子仓均已预置 `OMOSTATION_BOT_TOKEN`。
 
+### 1.5 开工前与收工后使用 `omo-status` / `omo-top` 检查全局状态与锁占用
+
+- **秒级快照**：执行 `bin/omo-status`（或 `make omo-status`，<0.2s），快速自检 6 个 Agent 心跳、D2/D3 锁占用、19 子仓指针漂移与 BET 台账完成度。
+- **全屏实时大盘**：执行 `bin/omo-top`（或 `make omo-top`），按 `1~4` 深入查看锁堆栈与 A2A 消息流。
+
 ---
 
 ## 2. 认领流程（照抄命令）
