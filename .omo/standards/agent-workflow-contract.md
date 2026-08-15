@@ -81,7 +81,13 @@ uv run --with pyyaml python bin/agent-workflow.py status --json
 uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> \
   --profile <agent-profile> \
   --objective "<summary>"
-uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <path>
+uv run --with pyyaml python bin/gac/affected-graph.py \
+  --workspace-root . \
+  --changed-projects workspace-root <project-name> \
+  --output .omo/evidence/<session>/affected-graph-receipt.json --json
+uv run --with pyyaml python bin/agent-workflow.py claim <run-id> \
+  --path <path> \
+  --affected-receipt .omo/evidence/<session>/affected-graph-receipt.json
 ```
 
 Agent roles must be selected from `agent_profiles`. Workflow lint fails when a workflow references
@@ -101,6 +107,23 @@ the active run and records an `agent_workflow_claim` ledger event. Broad workflo
 created by `start`; `claim` narrows the edit surface for multi-agent work. The registry-owned
 `claim_policy` starts in `advisory` mode: verify, closeout, and status warn on unclaimed governed
 paths without hard failing. If the policy is raised to `required`, the same check becomes blocking.
+
+Every write claim must reference an `affected-graph-receipt/v1` JSON document. The receipt binds
+sorted `changed_projects` and `affected_projects` to the SHA-256 digest of
+`docs/layer-contract.yaml`; `receipt_hash` is SHA-256 over canonical JSON for the other receipt
+fields. Before acquiring a path lock, OMO recalculates both hashes and the affected graph, rejects
+unknown projects, and verifies that every `projects/<name>/...` claim is covered by
+`affected_projects`. Root repository paths, including `docs/`, are represented explicitly by the
+reserved project name `workspace-root`; they are never silently dropped from the graph.
+
+`--affected-hash` remains only as a deprecated CLI alias for a receipt **file path** during client
+migration. A bare hash, dummy string, missing file, tampered receipt, stale layer-contract digest,
+or receipt that omits a claimed project is invalid and must fail before lock acquisition.
+Receipt references must be canonical workspace-relative paths to regular files inside the workspace;
+absolute paths, traversal, symlinks, and external files are rejected so local machine paths never
+enter run or ledger state. The broad path `projects` is ambiguous and rejected. Any non-empty
+`--surface` claim requires `workspace-root` in the receipt. The root producer publishes a receipt
+atomically and exclusively and refuses to overwrite existing evidence.
 
 After compression or handoff:
 

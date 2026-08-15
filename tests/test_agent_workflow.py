@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 import subprocess
+import uuid
 from pathlib import Path
 
 import pytest
@@ -14,10 +15,21 @@ LANE_MODULE_PATH = ROOT / "bin" / "change-lane-check.py"
 GAC_GATE_MODULE_PATH = ROOT / "bin" / "gac" / "gac-local-gate.py"
 LAYER_INDEX_SCRIPT = ROOT / "bin" / "mof" / "project-layer-index.py"
 DOC_SSOT_SCRIPT = ROOT / "bin" / "ssot" / "doc-ssot-lint.py"
+AFFECTED_GRAPH_SCRIPT = ROOT / "bin" / "gac" / "affected-graph.py"
+_CREATED_RECEIPTS: list[Path] = []
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _cleanup_affected_graph_receipts():
+    yield
+    for receipt in _CREATED_RECEIPTS:
+        receipt.unlink(missing_ok=True)
 
 
 def _load_module_from_source(path: Path, name: str):
-    module = importlib.util.module_from_spec(importlib.util.spec_from_loader(name, loader=None))
+    module = importlib.util.module_from_spec(
+        importlib.util.spec_from_loader(name, loader=None)
+    )
     module.__dict__["__file__"] = str(path)
     exec(compile(path.read_text(encoding="utf-8"), str(path), "exec"), module.__dict__)
     return module
@@ -35,6 +47,38 @@ def _run_workflow(*args: str) -> subprocess.CompletedProcess[str]:
         check=False,
         env=env,
     )
+
+
+def _write_affected_receipt(
+    tmp_path: Path, *changed_projects: str, name: str = "affected-receipt.json"
+) -> Path:
+    del tmp_path, name
+    receipt_ref = Path(".omo/evidence") / f"pytest-affected-{uuid.uuid4().hex}.json"
+    output = ROOT / receipt_ref
+    result = subprocess.run(
+        [
+            "uv",
+            "run",
+            "--with",
+            "pyyaml",
+            "python",
+            str(AFFECTED_GRAPH_SCRIPT),
+            "--workspace-root",
+            str(ROOT),
+            "--changed-projects",
+            *changed_projects,
+            "--output",
+            str(receipt_ref),
+            "--json",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    _CREATED_RECEIPTS.append(output)
+    return receipt_ref
 
 
 def _run_layer_index(*args: str) -> subprocess.CompletedProcess[str]:
@@ -424,9 +468,13 @@ workflows:
     assert result.returncode == 1
     report = json.loads(result.stdout)
     assert "internal_integrations.loose-integration: missing status" in report["errors"]
-    assert "internal_integrations.loose-integration: missing authority" in report["errors"]
+    assert (
+        "internal_integrations.loose-integration: missing authority" in report["errors"]
+    )
     assert "internal_integrations.loose-integration: missing owner" in report["errors"]
-    assert "internal_integrations.loose-integration: missing ssot_rule" in report["errors"]
+    assert (
+        "internal_integrations.loose-integration: missing ssot_rule" in report["errors"]
+    )
 
 
 def test_start_run_dry_run_does_not_write_state() -> None:
@@ -487,7 +535,10 @@ def test_start_run_rejects_profile_outside_workflow_roles() -> None:
     )
 
     assert result.returncode == 2
-    assert "agent profile docs-agent cannot run workflow project-code-change" in result.stderr
+    assert (
+        "agent profile docs-agent cannot run workflow project-code-change"
+        in result.stderr
+    )
 
 
 def test_run_execute_requires_profile_for_governed_workflow() -> None:
@@ -688,6 +739,7 @@ workflows:
 
 def test_claim_adds_path_surface_locks_and_ledger_event(tmp_path: Path) -> None:
     registry = _write_control_plane_registry(tmp_path)
+    receipt = _write_affected_receipt(tmp_path, "workspace-root")
     start = _run_workflow(
         "--registry",
         str(registry),
@@ -713,8 +765,8 @@ def test_claim_adds_path_surface_locks_and_ledger_event(tmp_path: Path) -> None:
         "README.md",
         "--surface",
         "doc-ssot",
-        "--affected-hash",
-        "[]",
+        "--affected-receipt",
+        str(receipt),
         "--json",
     )
     assert claim.returncode == 0, claim.stderr
@@ -732,8 +784,177 @@ def test_claim_adds_path_surface_locks_and_ledger_event(tmp_path: Path) -> None:
     assert "agent_workflow_claim" in ledger
 
 
+def test_claim_rejects_dummy_nonexistent_and_tampered_receipts(tmp_path: Path) -> None:
+    registry = _write_control_plane_registry(tmp_path)
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "mini",
+        "--actor",
+        "tester",
+        "--objective",
+        "reject false affected graph claims",
+        "--json",
+    )
+    run_id = json.loads(start.stdout)["run_id"]
+
+    for reference in (
+        "dummy",
+        f".omo/evidence/missing-{uuid.uuid4().hex}.json",
+    ):
+        rejected = _run_workflow(
+            "--registry",
+            str(registry),
+            "claim",
+            run_id,
+            "--path",
+            "README.md",
+            "--affected-receipt",
+            reference,
+            "--json",
+        )
+        assert rejected.returncode == 2
+        assert "receipt file does not exist" in rejected.stderr
+
+    receipt = _write_affected_receipt(tmp_path, "workspace-root")
+    receipt_path = ROOT / receipt
+    payload = json.loads(receipt_path.read_text())
+    payload["affected_projects"] = []
+    receipt_path.write_text(json.dumps(payload), encoding="utf-8")
+    tampered = _run_workflow(
+        "--registry",
+        str(registry),
+        "claim",
+        run_id,
+        "--path",
+        "README.md",
+        "--affected-receipt",
+        str(receipt),
+        "--json",
+    )
+    assert tampered.returncode == 2
+    assert "receipt_hash mismatch" in tampered.stderr
+
+
+def test_claim_rejects_receipt_missing_claimed_project(tmp_path: Path) -> None:
+    registry = _write_control_plane_registry(tmp_path)
+    receipt = _write_affected_receipt(tmp_path, "workspace-root")
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "mini",
+        "--actor",
+        "tester",
+        "--objective",
+        "bind claimed project",
+        "--json",
+    )
+    run_id = json.loads(start.stdout)["run_id"]
+
+    rejected = _run_workflow(
+        "--registry",
+        str(registry),
+        "claim",
+        run_id,
+        "--path",
+        "projects/gbrain/src/gbrain/api.py",
+        "--affected-receipt",
+        str(receipt),
+        "--json",
+    )
+
+    assert rejected.returncode == 2
+    assert "claimed projects missing" in rejected.stderr
+
+
+def test_claim_accepts_cross_project_receipt_and_deprecated_path_alias(
+    tmp_path: Path,
+) -> None:
+    registry = _write_control_plane_registry(tmp_path)
+    receipt = _write_affected_receipt(tmp_path, "gbrain", "omo")
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "mini",
+        "--actor",
+        "tester",
+        "--objective",
+        "cross-project receipt",
+        "--json",
+    )
+    run_id = json.loads(start.stdout)["run_id"]
+
+    claim = _run_workflow(
+        "--registry",
+        str(registry),
+        "claim",
+        run_id,
+        "--path",
+        "projects/gbrain/src/gbrain/api.py",
+        "--path",
+        "projects/omo/src/omo/workflow/cli.py",
+        "--affected-hash",
+        str(receipt),
+        "--json",
+    )
+
+    assert claim.returncode == 0, claim.stderr
+    payload = json.loads(claim.stdout)
+    assert payload["affected_graph"]["receipt_hash"]
+
+
+def test_surface_only_claim_requires_workspace_root_receipt(tmp_path: Path) -> None:
+    registry = _write_control_plane_registry(tmp_path)
+    project_receipt = _write_affected_receipt(tmp_path, "omo")
+    root_receipt = _write_affected_receipt(tmp_path, "workspace-root")
+    start = _run_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "mini",
+        "--actor",
+        "tester",
+        "--objective",
+        "surface-only receipt binding",
+        "--json",
+    )
+    run_id = json.loads(start.stdout)["run_id"]
+
+    rejected = _run_workflow(
+        "--registry",
+        str(registry),
+        "claim",
+        run_id,
+        "--surface",
+        "doc-ssot",
+        "--affected-receipt",
+        str(project_receipt),
+        "--json",
+    )
+    assert rejected.returncode == 2
+    assert "workspace-root" in rejected.stderr
+
+    accepted = _run_workflow(
+        "--registry",
+        str(registry),
+        "claim",
+        run_id,
+        "--surface",
+        "doc-ssot",
+        "--affected-receipt",
+        str(root_receipt),
+        "--json",
+    )
+    assert accepted.returncode == 0, accepted.stderr
+    assert json.loads(accepted.stdout)["surfaces"] == ["doc-ssot"]
+
+
 def test_concurrent_claims_preserve_run_record(tmp_path: Path) -> None:
     registry = _write_control_plane_registry(tmp_path)
+    receipt = _write_affected_receipt(tmp_path, "workspace-root")
     start = _run_workflow(
         "--registry",
         str(registry),
@@ -764,14 +985,16 @@ def test_concurrent_claims_preserve_run_record(tmp_path: Path) -> None:
             "tester",
             "--path",
             path,
-            "--affected-hash",
-            "[]",
+            "--affected-receipt",
+            str(receipt),
             "--json",
         ]
         for path in ("README.md", "docs/README.md")
     ]
     processes = [
-        subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        subprocess.Popen(
+            command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
         for command in commands
     ]
     results = [process.communicate(timeout=60) for process in processes]
@@ -844,6 +1067,7 @@ def test_verify_reports_advisory_claim_gap(tmp_path: Path) -> None:
 
 def test_verify_blocks_required_claim_tier(tmp_path: Path) -> None:
     registry = _write_control_plane_registry(tmp_path)
+    receipt = _write_affected_receipt(tmp_path, "workspace-root")
     text = registry.read_text(encoding="utf-8")
     registry.write_text(
         text.replace(
@@ -886,7 +1110,9 @@ def test_verify_blocks_required_claim_tier(tmp_path: Path) -> None:
     assert blocked.returncode == 1
     blocked_report = json.loads(blocked.stdout)
     assert blocked_report["ok"] is False
-    assert blocked_report["claim_coverage"]["missing_required_files"] == ["bin/agent-workflow.py"]
+    assert blocked_report["claim_coverage"]["missing_required_files"] == [
+        "bin/agent-workflow.py"
+    ]
     assert blocked_report["claim_coverage"]["missing_advisory_files"] == []
 
     claim = _run_workflow(
@@ -896,8 +1122,8 @@ def test_verify_blocks_required_claim_tier(tmp_path: Path) -> None:
         run_id,
         "--path",
         "bin/agent-workflow.py",
-        "--affected-hash",
-        "[]",
+        "--affected-receipt",
+        str(receipt),
         "--json",
     )
     assert claim.returncode == 0, claim.stderr
@@ -1052,7 +1278,9 @@ def test_observe_heals_missing_ledger_from_run_yaml(tmp_path: Path) -> None:
     assert "healed" in text
 
 
-def test_closeout_verifies_observes_closes_and_compliance_passes(tmp_path: Path) -> None:
+def test_closeout_verifies_observes_closes_and_compliance_passes(
+    tmp_path: Path,
+) -> None:
     registry = _write_control_plane_registry(tmp_path)
     start = _run_workflow(
         "--registry",
@@ -1087,7 +1315,9 @@ def test_closeout_verifies_observes_closes_and_compliance_passes(tmp_path: Path)
     assert report["run"]["released_locks"]
     assert not list((tmp_path / "locks").glob("*.lock.yaml"))
 
-    compliance = _run_workflow("--registry", str(registry), "compliance", run_id, "--json")
+    compliance = _run_workflow(
+        "--registry", str(registry), "compliance", run_id, "--json"
+    )
     assert compliance.returncode == 0, compliance.stderr
     compliance_report = json.loads(compliance.stdout)
     assert compliance_report["decision"] == "continue"
@@ -1113,7 +1343,9 @@ def test_compliance_accepts_legacy_close_event_after_verify(tmp_path: Path) -> N
     assert start.returncode == 0, start.stderr
     run_id = json.loads(start.stdout)["run_id"]
 
-    verify = _run_workflow("--registry", str(registry), "verify", run_id, "--file", "README.md", "--json")
+    verify = _run_workflow(
+        "--registry", str(registry), "verify", run_id, "--file", "README.md", "--json"
+    )
     assert verify.returncode == 0, verify.stderr
 
     close = _run_workflow(
@@ -1129,7 +1361,9 @@ def test_compliance_accepts_legacy_close_event_after_verify(tmp_path: Path) -> N
     )
     assert close.returncode == 0, close.stderr
 
-    compliance = _run_workflow("--registry", str(registry), "compliance", run_id, "--json")
+    compliance = _run_workflow(
+        "--registry", str(registry), "compliance", run_id, "--json"
+    )
 
     assert compliance.returncode == 0, compliance.stderr
     compliance_report = json.loads(compliance.stdout)
@@ -1205,18 +1439,34 @@ def test_change_lane_knows_agent_workflow_files() -> None:
     assert module.classify("bin/compass_radar.py", set()) == "governance_code"
     assert module.classify("bin/ssot/doc-ssot-lint.py", set()) == "governance_code"
     assert module.classify("bin/mof/generate-brief.py", set()) == "governance_code"
-    assert module.classify("bin/gac/governance-evolution.py", set()) == "governance_code"
+    assert (
+        module.classify("bin/gac/governance-evolution.py", set()) == "governance_code"
+    )
     assert module.classify("bin/gac/state-stale-emit.py", set()) == "governance_code"
     assert module.classify("bin/README.md", set()) == "docs"
-    assert module.classify("projects/cockpit/src/cockpit/commands/governance.py", set()) == "governance_code"
     assert (
-        module.classify("projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py", set())
+        module.classify("projects/cockpit/src/cockpit/commands/governance.py", set())
         == "governance_code"
     )
-    assert module.classify("tests/test_governance_evolution.py", set()) == "governance_code"
+    assert (
+        module.classify(
+            "projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py", set()
+        )
+        == "governance_code"
+    )
+    assert (
+        module.classify("tests/test_governance_evolution.py", set())
+        == "governance_code"
+    )
     assert module.classify("bin/mof/project-layer-index.py", set()) == "governance_code"
-    assert module.classify(".omo/_truth/registry/agent-workflows.yaml", set()) == "governance_code"
-    assert module.classify(".agents/skills/project-governance/SKILL.md", set()) == "governance_code"
+    assert (
+        module.classify(".omo/_truth/registry/agent-workflows.yaml", set())
+        == "governance_code"
+    )
+    assert (
+        module.classify(".agents/skills/project-governance/SKILL.md", set())
+        == "governance_code"
+    )
     assert module.classify("docs/generated/project-layer-index.md", set()) == "docs"
 
 
@@ -1253,7 +1503,11 @@ def test_change_lane_can_use_explicit_allowed_lanes_for_workflow_scopes() -> Non
     assert strict_report["ok"] is False
     assert strict_report["lanes"] == ["docs", "governance_code", "governance_state"]
     assert scoped_report["ok"] is True
-    assert scoped_report["allowed_lanes"] == ["docs", "governance_code", "governance_state"]
+    assert scoped_report["allowed_lanes"] == [
+        "docs",
+        "governance_code",
+        "governance_state",
+    ]
 
 
 def test_gac_gate_can_scope_change_lane_to_files(monkeypatch) -> None:
@@ -1273,7 +1527,9 @@ def test_gac_gate_can_scope_change_lane_to_files(monkeypatch) -> None:
         "bin/agent-workflow.py",
     ]
 
-    monkeypatch.setenv("AGENT_WORKFLOW_MATCHED_FILES", json.dumps(["bin/gac/gac-local-gate.py"]))
+    monkeypatch.setenv(
+        "AGENT_WORKFLOW_MATCHED_FILES", json.dumps(["bin/gac/gac-local-gate.py"])
+    )
     assert module.scoped_change_lane_command() == [
         "bin/change-lane-check.py",
         "--file",

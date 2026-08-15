@@ -11,7 +11,7 @@ totals:
   mcp_tools: 568
   bos_services: 223
   bos_domains: 17
-  cli_commands: 133
+  cli_commands: 134
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -1920,6 +1920,8 @@ cli_commands:
   description: 查看/编辑身份档案 (L4 入口)
 - name: project
   description: 🔍 17 项目全景 4D 体检与诊断
+- name: proxy-env
+  description: 输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE)
 - name: publish
   description: 发布事件
 - name: quickstart

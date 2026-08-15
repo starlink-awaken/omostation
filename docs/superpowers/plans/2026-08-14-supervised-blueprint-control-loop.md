@@ -28,6 +28,13 @@ last-reviewed: 2026-08-13
 - Verification reject keeps valid candidate evidence, performs controlled compensation, and proves the repository baseline hash was restored before closing.
 - Root/submodule delivery follows independent-clone, child-main-first, reachable-gitlink, PR, tag, and cleanup discipline.
 
+## Fresh admission-bound approval-wait canary invariants
+
+- Provider launch must always require a fresh `WorkflowAdmitted` grant bound to the current `bet_id`, `task_id`, `workflow_run_id`, and `dispatch_id`; stale grants, replayed runs, or cross-run carryover must fail closed.
+- `ApprovalRequested` is treated as durable evidence that is recoverable only through replay with matching worker identity and explicit Orca re-attestation of the same run; a `collect` path must refuse completion if projection binding is incomplete.
+- `input_accepted` is only transport evidence (`transport_accepted` path) and never model readiness nor completion evidence; it cannot satisfy `EvidenceRecorded` or `WorkflowVerified` preconditions.
+- `WorkflowVerified` is gated by independent direct measurement and may only be emitted after verifier checks pass on the manifest, receipts, and measured outputs; executor self-reporting, exit status, `ready`, or `input_accepted` are out-of-band and must not produce `WorkflowVerified`.
+
 ---
 
 ### Execution preflight: initialize OMO path dependencies in the independent clone
