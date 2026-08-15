@@ -1,4 +1,4 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene worktree-janitor delegation-preflight delegation-alias-check
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene worktree-janitor delegation-preflight delegation-alias-check bin-tool-registry-audit bin-tool-registry-audit-strict bin-tool-registry-audit-emit bin-tool-registry-convergence capability-sync capability-check
 
 PY := uv run --with pyyaml python
 
@@ -15,6 +15,10 @@ help:
 	@echo ""
 	@echo "=== 架构检查 ==="
 	@echo "make check-layers      分层依赖检查 (docs/layer-contract.yaml)"
+	@echo "make bin-tool-registry-audit             扫描 bin 工具目录（依赖闭环/命名债务）"
+	@echo "make bin-tool-registry-audit-strict       扫描并启用严格门禁"
+	@echo "make bin-tool-registry-audit-emit         导出 bin 盘点 JSON"
+	@echo "make bin-tool-registry-convergence         盘点收敛候选（高出入度聚类）"
 	@echo "make ssot-status       SSOT 变更状态检查"
 	@echo "make evidence-smoke    BOS 声明/执行 + feedback 全量 smoke (ADR-0219)"
 	@echo "make ssot-log          SSOT 审计日志查看"
@@ -213,6 +217,21 @@ journey-check:  ## 验证所有 journey spec (状态机 + 不可达/死锁检测
 tool-audit:  ## 审计 bin/ssot/ 工具使用情况 (标记 dormant)
 	@python3 bin/ssot/tool-usage-audit.py
 
+TOOL_REGISTRY_SNAPSHOT ?= artifacts/bin-tool-registry-audit.json
+
+bin-tool-registry-audit:  ## 扫描 bin 工具调用图与命名债务
+	@python3 bin/tool-registry-audit.py --snapshot "$(TOOL_REGISTRY_SNAPSHOT)"
+
+bin-tool-registry-audit-emit:  ## 导出 bin 盘点 JSON
+	@python3 bin/tool-registry-audit.py --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --emit
+
+bin-tool-registry-audit-strict:  ## 严格检查（会返回非零）
+	@python3 bin/tool-registry-audit.py --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --strict
+
+bin-tool-registry-convergence:  ## 输出收敛候选（按度中心）
+		@python3 bin/tool-registry-audit.py --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --json | \
+		python3 -c "import json,sys;data=json.load(sys.stdin);print('Top out-degree convergence:');[print(f'  {path}: {outd}') for path,outd in data.get('top_out_degree',[])];print('Top in-degree convergence:');[print(f'  {path}: {ind}') for path,ind in data.get('top_in_degree',[])]"
+
 scene-feedback:  ## 列出最近的 scene feedback
 	@python3 bin/ssot/scene-feedback-collector.py list --limit 10
 
@@ -271,6 +290,8 @@ worktree-hygiene:  ## worktree 卫生审计与自动清理 (dry-run, 需 --execu
 
 worktree-janitor:  ## worktree/废弃分支安全清理 (默认 dry-run)
 	python3 bin/gac/worktree-janitor.py
+||||||| 7b11ddb79
+	uv run python bin/gac/worktree-janitor.py
 
 # ── 能力注册表 + 文档自动生成 (P0-T2) ─────────────────────
 sync-capability-registry:  ## 生成能力注册表 SSOT (扫描 MCP/BOS/CLI)
@@ -605,6 +626,12 @@ observability-trace:  ## 按 trace_id 跨链查询 (运行时→事件→治理)
 
 log-rotate:  ## 日志轮转 (launchd 守护日志, 默认 5MB 阈值)
 	$(PY) bin/ssot/log-rotate.py $(LOG_ROTATE_ARGS)
+
+capability-sync:  ## 生成 capability registry (四源扫描)
+	uv run --with pyyaml python bin/capability-sync.py sync
+
+capability-check:  ## capability registry 反漂移校验
+	uv run --with pyyaml python bin/capability-sync.py check
 
 debt-predict:  ## Phase 5 动态代码债务蔓延预测引擎
 	$(PY) bin/gac/debt-predictor.py

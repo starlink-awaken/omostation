@@ -37,6 +37,12 @@
 - **自出题自答冒充能力证据**：221 个"协作场景"是自造的区块链红队夹具，98.6% 通过率与真实业务无关。
 - **docstring 声称已做而代码未做**：`scenewatcher.py` 三处声称"决策日志入 `bos://memory/mos/*`"，代码里没有任何 MOS 调用。
 
+### 1.4 子模块指针更新统一走秒级 bump-fast 与 Auto-PR，严禁执行全量 submodule update
+
+- **严禁**：执行 `git submodule update --init --recursive`（耗时 >90s 且会长时间占用 D2 锁阻塞其他 agent）。
+- **指针快进**：使用 `bash bin/gac/gac-worktree.sh bump-fast <submodule_path> [--sha <sha>|--latest-main]`（基于 cacheinfo，<1s 完成）。
+- **发布自动化**：子模块打 Release Tag 或执行 `workflow_dispatch` 后，会自动调用主仓 Reusable Workflow 并在主仓发起 `auto-bump/*` PR，通过 CI 门禁后人工点击合并。全仓 19 个子仓均已预置 `OMOSTATION_BOT_TOKEN`。
+
 ---
 
 ## 2. 认领流程（照抄命令）

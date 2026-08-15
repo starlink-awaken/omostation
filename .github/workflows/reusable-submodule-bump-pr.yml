@@ -28,6 +28,7 @@ jobs:
       - name: Checkout main repository
         uses: actions/checkout@v4
         with:
+          repository: starlink-awaken/omostation
           token: ${{ secrets.bot_token }}
           fetch-depth: 0
 
