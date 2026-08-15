@@ -146,6 +146,10 @@ Manual stage entries are not optional checks. They represent work that cannot be
 diff-aware verification, observes locks/ledger consistency, records closeout evidence, and releases
 locks in one path.
 
+Vision→BET→retro bind (BET-Y1Q1-T6-02): `start --bet` persists `bet_id` on the run record.
+`ok` closeout and `bet-ledger complete` call `bin/plan/chain-bind-check.py`. Pointers only:
+`redlines.yaml::vision-to-retro-chain`, `docs/architecture/wave-gate-bet-map.md`.
+
 ## 4. Concurrency
 
 Workflow runs create lock records under `.omo/_delivery/agent-workflows/locks`. A lock represents a governance surface, not a process mutex. Agents must treat an existing lock as a stop-and-inspect signal unless the user explicitly authorizes takeover.

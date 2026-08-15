@@ -39,6 +39,7 @@ def _run_workflow(*args: str) -> subprocess.CompletedProcess[str]:
     # 清 VIRTUAL_ENV: CI 里 interface-check 先 cd projects/omo + uv sync 会
     # 残留 VIRTUAL_ENV=projects/omo/.venv, uv run 在根仓跑时告警 → 断言失败.
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    env.setdefault("AGCP_REQUIREMENT_ITERATION_GATE", "0")
     return subprocess.run(
         ["uv", "run", "--with", "pyyaml", "python", str(WORKFLOW_MODULE_PATH), *args],
         cwd=ROOT,
@@ -83,6 +84,7 @@ def _write_affected_receipt(
 
 def _run_layer_index(*args: str) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    env.setdefault("AGCP_REQUIREMENT_ITERATION_GATE", "0")
     return subprocess.run(
         ["uv", "run", "--with", "pyyaml", "python", str(LAYER_INDEX_SCRIPT), *args],
         cwd=ROOT,
@@ -95,6 +97,7 @@ def _run_layer_index(*args: str) -> subprocess.CompletedProcess[str]:
 
 def _run_doc_ssot(*args: str) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    env.setdefault("AGCP_REQUIREMENT_ITERATION_GATE", "0")
     return subprocess.run(
         ["uv", "run", "--with", "pyyaml", "python", str(DOC_SSOT_SCRIPT), *args],
         cwd=ROOT,
