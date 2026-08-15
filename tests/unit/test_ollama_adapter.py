@@ -105,7 +105,7 @@ def test_constructor_rejects_invalid_probe_and_conflicting_http_injection() -> N
 
     with pytest.raises(ValueError):
         OllamaAdapter(backend_id="ollama", probe_model_id="../model")
-    client = httpx.AsyncClient()
+    client = httpx.AsyncClient(trust_env=False)
     try:
         with pytest.raises(ValueError):
             OllamaAdapter(

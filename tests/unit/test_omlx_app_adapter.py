@@ -74,7 +74,7 @@ async def test_injected_client_is_used_and_not_closed_by_adapter() -> None:
             json={"choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]},
         )
 
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler), trust_env=False)
     adapter = OmlxAppAdapter(
         backend_id="mbp-omlx",
         base_url="http://omlx.invalid",
@@ -112,7 +112,7 @@ def test_adapter_rejects_invalid_base_url_and_ambiguous_http_injection() -> None
     with pytest.raises(ValueError, match="http"):
         OmlxAppAdapter(backend_id="mbp-omlx", base_url="file:///tmp/socket")
 
-    client = httpx.AsyncClient()
+    client = httpx.AsyncClient(trust_env=False)
     transport = httpx.MockTransport(lambda _request: httpx.Response(200))
     with pytest.raises(ValueError, match="mutually exclusive"):
         OmlxAppAdapter(

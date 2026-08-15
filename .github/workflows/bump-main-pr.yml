@@ -1,0 +1,21 @@
+name: Submodule Bump Main PR
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: 'Target commit SHA (leave empty for latest main)'
+        required: false
+        default: ''
+
+jobs:
+  trigger-bump:
+    uses: starlink-awaken/omostation/.github/workflows/reusable-submodule-bump-pr.yml@main
+    with:
+      submodule_path: projects/omlxc
+      target_sha: ${{ github.event.inputs.target_sha }}
+      release_tag: ${{ github.event.release.tag_name }}
+    secrets:
+      bot_token: ${{ secrets.OMOSTATION_BOT_TOKEN }}

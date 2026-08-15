@@ -1118,7 +1118,7 @@ def test_load_options_are_positive_and_bounded() -> None:
 
 @pytest.mark.asyncio
 async def test_constructor_rejects_unsafe_optional_inputs() -> None:
-    client = httpx.AsyncClient()
+    client = httpx.AsyncClient(trust_env=False)
     with pytest.raises(ValueError, match="mutually exclusive"):
         LmStudioAdapter(
             backend_id="lm",
@@ -1147,7 +1147,7 @@ async def test_adapter_closes_only_its_owned_http_client() -> None:
     await owned.aclose()
     assert owned._client.is_closed is True
 
-    client = httpx.AsyncClient()
+    client = httpx.AsyncClient(trust_env=False)
     borrowed = LmStudioAdapter(
         backend_id="borrowed",
         base_url="http://node.invalid:1234",
