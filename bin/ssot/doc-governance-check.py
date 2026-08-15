@@ -27,6 +27,7 @@ DEFAULT_EXCLUDES = (
     "docs/generated/",
     ".omo/_delivery/",
     "runtime/",
+    "docs/superpowers/specs/templates/",  # 模板目录: 占位符 frontmatter 非真实文档
 )
 
 
