@@ -21,6 +21,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -605,6 +606,30 @@ def cmd_gate(data: dict, args) -> int:
     return 0
 
 
+def _is_spec_binding_required(bet: dict) -> bool:
+    """判断 L2/L3 bet 是否需要 spec 绑定（2026-09-01 起强制）。"""
+    from datetime import datetime
+    started_at = bet.get("started_at")
+    if not started_at:
+        return False
+    try:
+        start_date = datetime.fromisoformat(started_at).date()
+        cutoff = datetime(2026, 9, 1).date()
+        if start_date < cutoff:
+            return False
+    except (ValueError, TypeError):
+        return False
+    risk_level = bet.get("risk_level", "L1")
+    status = bet.get("status", "")
+    # L2/L3 + in_progress/review/done → 必须有 spec 绑定
+    return risk_level in ("L2", "L3") and status in ("in_progress", "review", "done")
+
+
+def _file_sha256(path: Path) -> str:
+    """计算文件的 SHA256 哈希。"""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def cmd_lint(data: dict, args) -> int:
     """台账自检：ID 唯一、依赖存在、轨道/窗口/状态合法、必填字段。"""
     errs: list[str] = []
@@ -639,6 +664,32 @@ def cmd_lint(data: dict, args) -> int:
                         f"{b['id']}.{key}[{i}]: 应为字符串却是 {type(item).__name__} "
                         f"— 多半是未加引号的冒号，请写成 \"...: ...\""
                     )
+        # PR-A: L2/L3 spec 绑定强制检查（2026-09-01 起强制）
+        spec_check_required = _is_spec_binding_required(b)
+        if spec_check_required:
+            specs = b.get("accepted_specifications") or []
+            if not specs:
+                errs.append(f"{b['id']}.accepted_specifications: L2/L3 bet 必须绑定 spec（2026-09-01 起强制）")
+            else:
+                for idx, spec in enumerate(specs):
+                    spec_ref = spec.get("spec_ref", "")
+                    content_digest = spec.get("content_digest", "")
+                    if not spec_ref:
+                        errs.append(f"{b['id']}.accepted_specifications[{idx}]: 缺少 spec_ref")
+                        continue
+                    if not content_digest:
+                        errs.append(f"{b['id']}.accepted_specifications[{idx}]: 缺少 content_digest")
+                        continue
+                    spec_path = WS / "docs" / "superpowers" / "specs" / spec_ref
+                    if not spec_path.exists():
+                        errs.append(f"{b['id']}.accepted_specifications[{idx}]: spec 文件不存在 {spec_ref}")
+                        continue
+                    actual_digest = _file_sha256(spec_path)
+                    if actual_digest != content_digest:
+                        errs.append(
+                            f"{b['id']}.accepted_specifications[{idx}]: digest 不匹配 "
+                            f"(声明: {content_digest[:16]}... 实际: {actual_digest[:16]}...)"
+                        )
     if errs:
         for e in errs:
             print(f"ERROR {e}")
