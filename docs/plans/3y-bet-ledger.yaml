@@ -3269,7 +3269,8 @@ bets:
   - 跨主机同步
   done_when:
   - 探测深度修正 (~/Library/Mail/V10/ 递归最新 mtime 或等价深探测)
-  - 信号产生时回写 signal-sources.yaml 的 last_signal_at + health
+  - 信号产生时落盘真实 last_signal_at (运行时面 signal-signals.json, freshness 优先消费;
+    registry 属治理面 daemon 不可 ad-hoc 写 — 实现比原措辞更合规)
   - state 丢失场景下不重复上报 (或 state 路径迁出易失区)
   - 修复后首 24h apple_mail_inbox 有真实新信号落盘且注册表同步
   verify:
@@ -4215,7 +4216,9 @@ bets:
   title: 复盘制度落地四件套 — 防重犯机制固化
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-15
+  note: 'PR #1524 (verify diff 基线 + err rotate + AGENT-BRIEF 三节); retro 齐; D2 前置①已满足'
   origin: 'SESSION-RETROSPECTIVE-20260814-15.md 六大失败模式 → 四个制度缺口'
   goal: >-
     会话复盘确认六类失败各有制度缺口承接。四件套: (1) verify 提交前 diff 校验
@@ -4393,7 +4396,9 @@ bets:
   title: surface 口径修正 — numstat 净值列, 剥离重写对称噪音
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-15
+  note: 'PR #1525 (numstat 净值三口径); 实测修正审计: gbrain 165K/165K 净+7, 真实增长+145K; retro 齐'
   goal: >-
     surface 指标对重写型变更失真 (gbrain +468K/-468K 净 0 被计为 +468K 增长)。
     给 bet-ledger.py surface 子命令加 numstat 净值列, 区分「出生/膨胀/重写噪音」三种形态,
