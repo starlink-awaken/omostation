@@ -818,9 +818,10 @@ def test_claim_rejects_dummy_nonexistent_and_tampered_receipts(tmp_path: Path) -
         assert "receipt file does not exist" in rejected.stderr
 
     receipt = _write_affected_receipt(tmp_path, "workspace-root")
-    payload = json.loads(receipt.read_text())
+    receipt_path = ROOT / receipt
+    payload = json.loads(receipt_path.read_text())
     payload["affected_projects"] = []
-    receipt.write_text(json.dumps(payload), encoding="utf-8")
+    receipt_path.write_text(json.dumps(payload), encoding="utf-8")
     tampered = _run_workflow(
         "--registry",
         str(registry),
