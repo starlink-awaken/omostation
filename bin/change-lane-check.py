@@ -74,6 +74,8 @@ def classify(path: str, submodules: set[str]) -> str:
         ".agents/skills/workflow-silence-detection/SKILL.md",
         "bin/agent-workflow.py",
         "bin/compass_radar.py",
+        "bin/omo-status",
+        "bin/omo-top",
         "bin/cockpit-readiness.py",
         "bin/dashboard-readiness-summary.py",
         "bin/dashboard-ui-render.py",

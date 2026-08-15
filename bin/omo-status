@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# bin/omo-status — Multi-Agent Swarm 全景协作监控快照
+#
+# 用法:
+#   bin/omo-status              # 打印 4 象限 Rich 彩色综合诊断大盘
+#   bin/omo-status --json       # 导出结构化 JSON 供脚本集成
+#   bin/omo-status --probe-remote # 探测远端 19 子仓 SHA 指针
+# ==============================================================================
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export WORKSPACE_ROOT="$REPO_ROOT"
+
+exec uv run --project "$REPO_ROOT/projects/cockpit" python -m cockpit.tui.swarm_cli "$@"
