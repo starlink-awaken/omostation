@@ -16,13 +16,11 @@ worktree-janitor.py — PR-C worktree 三条件安全清理
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Tuple
 
 
 @dataclass
@@ -85,8 +83,7 @@ def list_worktrees(root_repo: Path) -> list[WorktreeInfo]:
         elif current_path and line.startswith("branch "):
             branch = line[len("branch "):].strip()
             # refs/heads/work/xxx -> work/xxx
-            if branch.startswith("refs/heads/"):
-                branch = branch[len("refs/heads/"):]
+            branch = branch.removeprefix("refs/heads/")
             session = current_path.name[len("ws-"):]
             mtime = get_file_mtime(current_path)
             worktrees.append(
@@ -97,7 +94,7 @@ def list_worktrees(root_repo: Path) -> list[WorktreeInfo]:
     return worktrees
 
 
-def check_claim_inactive(root_repo: Path, session: str) -> Tuple[bool, str]:
+def check_claim_inactive(root_repo: Path, session: str) -> tuple[bool, str]:
     """
     条件1：无活跃 claim
     - claim 文件不存在
@@ -121,12 +118,12 @@ def check_claim_inactive(root_repo: Path, session: str) -> Tuple[bool, str]:
             if status == "active":
                 return False, f"active run (status={status})"
         return True, "inactive claim"
-    except (json.JSONDecodeError, IOError):
+    except (OSError, json.JSONDecodeError):
         # 读取失败，保守保留
         return False, "claim file unreadable"
 
 
-def check_no_unpushed_changes(wt_info: WorktreeInfo) -> Tuple[bool, str]:
+def check_no_unpushed_changes(wt_info: WorktreeInfo) -> tuple[bool, str]:
     """
     条件2：无未推送变更
     - git status --porcelain 为空
@@ -139,7 +136,6 @@ def check_no_unpushed_changes(wt_info: WorktreeInfo) -> Tuple[bool, str]:
         return False, f"dirty ({len(status_output.splitlines())} files)"
 
     # 2.2 检查远程是否存在该分支
-    branch_ref = f"refs/heads/{wt_info.branch}"
     ls_remote = run_git(wt_info.path, "ls-remote", "--heads", "origin", wt_info.branch)
     if ls_remote:
         # 远程存在，检查本地是否已 push
@@ -153,7 +149,7 @@ def check_no_unpushed_changes(wt_info: WorktreeInfo) -> Tuple[bool, str]:
         return True, "remote deleted"
 
 
-def check_branch_merged_or_deleted(wt_info: WorktreeInfo, root_repo: Path) -> Tuple[bool, str]:
+def check_branch_merged_or_deleted(wt_info: WorktreeInfo, root_repo: Path) -> tuple[bool, str]:
     """
     条件3：分支已 merge 或已删
     - git branch --merged origin/main 包含该分支
@@ -178,7 +174,7 @@ def check_branch_merged_or_deleted(wt_info: WorktreeInfo, root_repo: Path) -> Tu
     return False, "not merged"
 
 
-def judge_worktree(wt_info: WorktreeInfo, root_repo: Path, min_age_hours: float = 24.0) -> Tuple[bool, str]:
+def judge_worktree(wt_info: WorktreeInfo, root_repo: Path, min_age_hours: float = 24.0) -> tuple[bool, str]:
     """
     判定 worktree 是否可清理
 
@@ -234,7 +230,7 @@ def remove_worktree(wt_info: WorktreeInfo, root_repo: Path) -> bool:
             return False
 
         return True
-    except Exception as e:
+    except OSError as e:
         print(f"  ❌ 清理异常: {e}", file=sys.stderr)
         return False
 
@@ -297,7 +293,7 @@ def main():
                 print(f"    ✅ {wt.path}")
             else:
                 failed += 1
-                print(f"    ❌ 清理失败")
+                print("    ❌ 清理失败")
 
         if failed > 0:
             sys.exit(1)
