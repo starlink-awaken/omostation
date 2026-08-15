@@ -9,14 +9,15 @@ import subprocess
 import time
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "gac-worktree.sh"
 CORE = ROOT / "lib" / "pasw-core.sh"
 SUBMODULES = ("modules/alpha", "modules/beta")
 
 
-def _git(path: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+def _git(
+    path: Path, *args: str, check: bool = True
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["git", "-C", str(path), *args],
         capture_output=True,
@@ -49,13 +50,27 @@ def _make_parent_with_two_submodules(
         _init_repo(child)
         subprocess.run(
             [
-                "git", "-C", str(parent), "-c", "protocol.file.allow=always",
-                "submodule", "add", "-q", str(child), submodule_path,
+                "git",
+                "-C",
+                str(parent),
+                "-c",
+                "protocol.file.allow=always",
+                "submodule",
+                "add",
+                "-q",
+                str(child),
+                submodule_path,
             ],
             check=True,
         )
     _git(parent, "commit", "-q", "-am", "add two submodules")
-    _git(parent, "remote", "add", "origin", "https://github.com/starlink-awaken/omostation.git")
+    _git(
+        parent,
+        "remote",
+        "add",
+        "origin",
+        "https://github.com/starlink-awaken/omostation.git",
+    )
     _git(parent, "update-ref", "refs/remotes/origin/main", "HEAD")
     return parent
 
@@ -72,7 +87,7 @@ def _write_git_wrapper(tmp_path: Path) -> Path:
         '  echo "injected bulk submodule failure" >&2\n'
         "  exit 73\n"
         "fi\n"
-        'if [ "${PASW_FAIL_BETA_ONCE:-}" = "1" ] && [ "$1" = "worktree" ] && [ "$2" = "add" ] && [ "$(basename \"$PWD\")" = "beta" ] && [ ! -e "${PASW_FAILURE_MARKER:?}" ]; then\n'
+        'if [ "${PASW_FAIL_BETA_ONCE:-}" = "1" ] && [ "$1" = "worktree" ] && [ "$2" = "add" ] && [ "$(basename "$PWD")" = "beta" ] && [ ! -e "${PASW_FAILURE_MARKER:?}" ]; then\n'
         '  : > "$PASW_FAILURE_MARKER"\n'
         '  echo "injected beta PASW failure" >&2\n'
         "  exit 74\n"
@@ -281,11 +296,30 @@ def _worktree(tmp_path: Path, session: str) -> Path:
 
 def _init_root_worktree(parent: Path, wt: Path, session: str) -> None:
     subprocess.run(
-        ["git", "-C", str(parent), "worktree", "add", "-b", f"work/{session}", str(wt), "origin/main"],
+        [
+            "git",
+            "-C",
+            str(parent),
+            "worktree",
+            "add",
+            "-b",
+            f"work/{session}",
+            str(wt),
+            "origin/main",
+        ],
         check=True,
     )
     subprocess.run(
-        ["git", "-C", str(wt), "-c", "protocol.file.allow=always", "submodule", "update", "--init"],
+        [
+            "git",
+            "-C",
+            str(wt),
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "update",
+            "--init",
+        ],
         check=True,
     )
 
@@ -300,8 +334,15 @@ def _create_pasw(wt: Path, submodule: str, session: str) -> Path:
     sha = _git(wt / submodule, "rev-parse", "HEAD").stdout.strip()
     subprocess.run(
         [
-            "git", "-C", str(wt / submodule), "worktree", "add", "-b",
-            f"agent/{session}-{Path(submodule).name}", str(pasw), sha,
+            "git",
+            "-C",
+            str(wt / submodule),
+            "worktree",
+            "add",
+            "-b",
+            f"agent/{session}-{Path(submodule).name}",
+            str(pasw),
+            sha,
         ],
         check=True,
     )
@@ -360,7 +401,9 @@ def test_bulk_submodule_init_failure_fails_without_pasw(tmp_path: Path) -> None:
     assert not (_worktree(tmp_path, "bulk-fail") / ".subtrees").exists()
 
 
-def test_complete_claim_registers_matching_pasw_from_non_repo_cwd(tmp_path: Path) -> None:
+def test_complete_claim_registers_matching_pasw_from_non_repo_cwd(
+    tmp_path: Path,
+) -> None:
     parent = _make_parent_with_two_submodules(tmp_path)
 
     result = _run_claim(parent, tmp_path, "complete", cwd=tmp_path / "not-a-repository")
@@ -449,7 +492,9 @@ def test_list_displays_spaced_pasw_worktree(tmp_path: Path) -> None:
     assert f"ws-{session}: alpha space alpha" in listed.stdout
 
 
-def test_retry_repairs_pasw_after_a_partial_worktree_add_failure(tmp_path: Path) -> None:
+def test_retry_repairs_pasw_after_a_partial_worktree_add_failure(
+    tmp_path: Path,
+) -> None:
     parent = _make_parent_with_two_submodules(tmp_path)
     marker = tmp_path / "beta-failure-used"
 
@@ -471,7 +516,9 @@ def test_retry_repairs_pasw_after_a_partial_worktree_add_failure(tmp_path: Path)
     _assert_complete_pasw(parent, wt)
 
 
-def test_skip_submodule_init_is_explicit_root_only_degraded_mode(tmp_path: Path) -> None:
+def test_skip_submodule_init_is_explicit_root_only_degraded_mode(
+    tmp_path: Path,
+) -> None:
     parent = _make_parent_with_two_submodules(tmp_path)
 
     result = _run_claim(
@@ -490,7 +537,9 @@ def test_bump_fast_updates_only_root_index_and_registry_under_two_seconds(
     tmp_path: Path,
 ) -> None:
     parent, _child, old_sha, new_sha = _make_bump_fast_repo(tmp_path)
-    child_head_before = _git(parent / "modules/alpha", "rev-parse", "HEAD").stdout.strip()
+    child_head_before = _git(
+        parent / "modules/alpha", "rev-parse", "HEAD"
+    ).stdout.strip()
 
     result, elapsed = _run_bump_fast(parent, tmp_path, new_sha, "--latest-main")
 
@@ -498,10 +547,12 @@ def test_bump_fast_updates_only_root_index_and_registry_under_two_seconds(
     assert elapsed < 2, f"bump-fast local deterministic path took {elapsed:.3f}s"
     assert _index_sha(parent) == new_sha
     assert old_sha != new_sha
-    assert _git(parent / "modules/alpha", "rev-parse", "HEAD").stdout.strip() == child_head_before
     assert (
-        'version: "2.0.0"'
-        in (parent / "docs/project-registry.yaml").read_text(encoding="utf-8")
+        _git(parent / "modules/alpha", "rev-parse", "HEAD").stdout.strip()
+        == child_head_before
+    )
+    assert 'version: "2.0.0"' in (parent / "docs/project-registry.yaml").read_text(
+        encoding="utf-8"
     )
     assert "不替代 D2/D3" in result.stdout
 
@@ -510,24 +561,26 @@ def test_bump_fast_explicit_unreachable_sha_fails_without_mutation(
     tmp_path: Path,
 ) -> None:
     parent, _child, old_sha, new_sha = _make_bump_fast_repo(tmp_path)
-    registry_before = (parent / "docs/project-registry.yaml").read_text(encoding="utf-8")
+    registry_before = (parent / "docs/project-registry.yaml").read_text(
+        encoding="utf-8"
+    )
     unreachable = "0" * 40
 
-    result, _elapsed = _run_bump_fast(
-        parent, tmp_path, new_sha, "--sha", unreachable
-    )
+    result, _elapsed = _run_bump_fast(parent, tmp_path, new_sha, "--sha", unreachable)
 
     assert result.returncode != 0
     assert "远端 main 不可达" in result.stderr
     assert _index_sha(parent) == old_sha
-    assert (
-        parent / "docs/project-registry.yaml"
-    ).read_text(encoding="utf-8") == registry_before
+    assert (parent / "docs/project-registry.yaml").read_text(
+        encoding="utf-8"
+    ) == registry_before
 
 
 def test_bump_fast_version_lookup_failure_is_fail_closed(tmp_path: Path) -> None:
     parent, _child, old_sha, new_sha = _make_bump_fast_repo(tmp_path)
-    registry_before = (parent / "docs/project-registry.yaml").read_text(encoding="utf-8")
+    registry_before = (parent / "docs/project-registry.yaml").read_text(
+        encoding="utf-8"
+    )
 
     result, _elapsed = _run_bump_fast(
         parent,
@@ -540,9 +593,9 @@ def test_bump_fast_version_lookup_failure_is_fail_closed(tmp_path: Path) -> None
     assert result.returncode != 0
     assert "registry 与指针将保持未变" in result.stderr
     assert _index_sha(parent) == old_sha
-    assert (
-        parent / "docs/project-registry.yaml"
-    ).read_text(encoding="utf-8") == registry_before
+    assert (parent / "docs/project-registry.yaml").read_text(
+        encoding="utf-8"
+    ) == registry_before
 
 
 def test_bump_fast_explicit_current_tip_is_accepted(tmp_path: Path) -> None:
