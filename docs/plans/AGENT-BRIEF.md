@@ -325,6 +325,44 @@ D0 入库: <已 git add 的文件清单>
 
 ---
 
+## 8.5 L3 归并操作规程（T6-01 实证，2026-08-16 四坑入册）
+
+大规模内包（submodule → 目录内包）必须按此清单执行，缺一步都是返工：
+
+### 8.5.1 搬运完整性双校验（gitignore 黑洞坑）
+
+- `git archive` 搬运后，**必须** `git ls-files <新路径>` vs `git ls-tree -r <子仓> HEAD` 对比
+  ——磁盘 `find` 对比全绿 ≠ git 索引完整（`.gitignore` 泛目录规则如 `kos/`、`skills/`
+  以任意深度匹配，曾吞 342 个源码文件，唯一暴露口是 CI capability drift）
+- 嵌套 `.gitmodules` 条目、运行时 db（`*.sqlite`/`*.db`）、`.omc/` 会话、graphify-out
+  一律不入仓（tree 有 ≠ 该进）
+
+### 8.5.2 子模块指针纪律（add -A 吸指针坑）
+
+- **禁止**在 bump-pointer 后再 `git add -A` / `git add projects/<sub>`——会把 checkout
+  旧 HEAD stage 进去，覆盖 update-index 的新值（曾致修复 3 轮「修了又报」）
+- 正确顺序：子仓 `.subtrees/<sub>` commit → push 走 main → `git update-index
+  --cacheinfo 160000,$(git -C .subtrees/<sub> rev-parse HEAD),projects/<sub>` →
+  **commit 前必验** `git ls-tree HEAD projects/<sub>` == subtree HEAD
+- 指针要过 pre-push 的 pointer-drift gate，子仓修复必须**先合进子仓 main**（PR squash
+  或直推），side-branch 指针必被 DIVERGED 拦
+
+### 8.5.3 路径改写三查（sed 自指坑）
+
+批量 sed 后必须复核三类自指文件：①spec/文档里描述「旧→新」的映射文字
+②`.githooks/`、CI workflow 里的路径常量与 PASW 列表 ③`.gitmodules` 条目本体。
+拼接式路径（`Path / "projects" / "kairon"`）sed 字面量改不到，**找常量 SSOT 根**
+（如 `omo_paths.KAIRON_DIR`）一处修全修。
+
+### 8.5.4 双声明源与表面积证据
+
+- BOS 有**双声明源**：`etc/bos-services.yaml` + `resolver/services.py`（POC_SERVICES）
+  + `mcp_gateway.py`（KNOWN_BACKENDS）——改一个漏两个，evidence-smoke 是验收口
+- surface 前后对比用 **numstat 两 commit 差值**（worktree 子模块 checkout 完整度会污染
+  绝对值）；test_loc 是保护量，workflow 先跑基线再动手
+
+---
+
 ## 9. 遇到这些情况停下来问人
 
 - `claim-check` 不过，但你认为应该能领
