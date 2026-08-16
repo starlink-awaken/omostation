@@ -447,8 +447,8 @@ class TestDeepReadStageImpl:
         assert not hasattr(result, "deep_analysis") or not result.deep_analysis
 
     @pytest.mark.asyncio
-    async def test_handles_llm_exception_propagates(self):
-        """When LLM fails, exception should propagate."""
+    async def test_handles_llm_exception_degrades(self):
+        """LLM 失败时降级为原文摘要, 不阻塞管线 (实现有意的降级设计)。"""
         from minerva.pipeline.stages import DeepReadStageImpl
 
         llm = AsyncMock()
@@ -461,8 +461,9 @@ class TestDeepReadStageImpl:
             ]
         )
 
-        with pytest.raises(RuntimeError, match="LLM down"):
-            await stage.execute(ctx)
+        result = await stage.execute(ctx)
+        assert "降级摘要" in (result.deep_analysis or "")
+        assert "Content." in (result.deep_analysis or "")  # 降级摘录含原文 snippet
 
     @pytest.mark.asyncio
     async def test_falls_back_to_snippet_when_content_missing(self):

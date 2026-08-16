@@ -133,9 +133,14 @@ class TestRegistry:
             "polar",
             "applenotes",
             "github",
-            "rss",
             "dingtalk",
             "feishu",
+            # T2-01 感知面扩展 (BET-Y1Q3-T2-01/T2-03): 双邮件源+企微OA+CUA+通用私有
+            "apple_mail",
+            "netease_mailmaster",
+            "seeyon_oa",
+            "cua_browser",
+            "universal_private",
         }
 
     def test_iris_connectors_are_external_resource_providers(self):

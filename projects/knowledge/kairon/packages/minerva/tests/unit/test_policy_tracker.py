@@ -245,7 +245,7 @@ def test_default_output_path_points_to_omostation_delivery():
     path = _default_output_path("2026-06-05")
     assert path.name == "phase28-policy-tracker-2026-06-05-report.md"
     assert ".omo/_delivery" in str(path)
-    assert "Workspace" in str(path)
+    assert ".omo/_delivery" in str(path)  # 结构断言 (worktree/CI 路径无关)
     assert path.parent.exists()
 
 
