@@ -1,4 +1,4 @@
- .PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene worktree-janitor delegation-preflight delegation-alias-check bin-tool-registry-audit bin-tool-registry-audit-strict bin-tool-registry-audit-emit bin-tool-registry-convergence bin-tool-registry-parallel-gaps bin-tool-registry-dependency-risks bin-tool-registry-weekly-governance-report bin-tool-registry-round9 bin-tool-registry-round10 bin-tool-registry-round11 capability-sync capability-check omo-status omo-top
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene worktree-janitor delegation-preflight delegation-alias-check bin-tool-registry-audit bin-tool-registry-audit-strict bin-tool-registry-audit-emit bin-tool-registry-convergence bin-tool-registry-parallel-gaps bin-tool-registry-dependency-risks bin-tool-registry-weekly-governance-report bin-tool-registry-round9 bin-tool-registry-round10 bin-tool-registry-round11 bin-tool-registry-round12 capability-sync capability-check omo-status omo-top
 
 PY := uv run --with pyyaml python
 
@@ -29,6 +29,7 @@ help:
 	@echo "make bin-tool-registry-round9              并行风险 Top10 一键闭环（strict + gaps + dependency + 周报）"
 	@echo "make bin-tool-registry-round10             并行风险 Top10 一键闭环（续一轮）"
 	@echo "make bin-tool-registry-round11             并行风险 Top10 一键闭环（继续下一轮）"
+	@echo "make bin-tool-registry-round12             并行风险 Top10 一键闭环（继续下一轮）"
 scene-feedback:  ## 列出最近的 scene feedback
 	@python3 bin/ssot/scene-feedback-collector.py list --limit 10
 
@@ -286,6 +287,63 @@ x4-check:
 
 x1-x4-check:
 	bash scripts/x1-x4-check.sh
+
+TOOL_REGISTRY_SNAPSHOT ?= artifacts/bin-tool-registry-audit.json
+BIN_TOOL_REGISTRY_MANIFEST ?= docs/operations/bin-scripts-convergence-manifest.json
+TOOL_REGISTRY_SCOPE ?= both
+TOOL_REGISTRY_DEPENDENCY_LIMIT ?= 25
+TOOL_REGISTRY_WEEKLY_ARTIFACT ?= artifacts/bin-tool-registry-weekly-governance-report.json
+
+bin-tool-registry-audit:  ## 扫描 bin 工具调用图与命名债务
+	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)"
+
+bin-tool-registry-audit-emit:  ## 导出 bin 盘点 JSON
+	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --emit
+
+bin-tool-registry-audit-strict:  ## 严格检查（会返回非零）
+	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --strict
+
+bin-tool-registry-convergence:  ## 输出收敛候选（按度中心）
+	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --json | \
+		python3 -c "import json,sys;data=json.load(sys.stdin);print('Top out-degree convergence:');[print(f'  {path}: {outd}') for path,outd in data.get('top_out_degree',[])];print('Top in-degree convergence:');[print(f'  {path}: {ind}') for path,ind in data.get('top_in_degree',[])]"
+
+bin-tool-registry-parallel-gaps:  ## 输出 bin/scripts 并行清单缺口
+	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --json | \
+		python3 -c "import json,sys;data=json.load(sys.stdin);gaps=data.get('findings',{}).get('parallel_manifest_gaps',[]);print(f'parallel manifest gaps: {len(gaps)}');[print(f' - {item.get(\"name\")}: {\", \".join(item.get(\"gap_reasons\", []))} | bin={\", \".join(item.get(\"bin_files\", []))} | scripts={\", \".join(item.get(\"scripts_files\", []))}') for item in sorted(gaps, key=lambda x: x.get(\"name\", \"\"))]"
+
+bin-tool-registry-dependency-risks:  ## 输出依赖风险热点（便于周例会按影响面收敛）
+	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --json | \
+		TOOL_REGISTRY_DEPENDENCY_LIMIT="$(TOOL_REGISTRY_DEPENDENCY_LIMIT)" python3 -c "import json,sys,os;data=json.load(sys.stdin);hs=data.get('findings',{}).get('dependency_hotspots',[]);limit=int(os.environ.get('TOOL_REGISTRY_DEPENDENCY_LIMIT','25'));print(f'dependency hotspots: {len(hs)} (top {limit})');[print(f' - {item.get(\"path\")} score={item.get(\"risk_score\")} in={item.get(\"in_degree\")} out={item.get(\"out_degree\")} managed={item.get(\"managed_parallel\")} parallel={item.get(\"is_parallel_candidate\")} owner={item.get(\"owner_hint\")} action={item.get(\"recommended_action\")} sink={item.get(\"recommended_sink\")} reasons={\", \".join(item.get(\"dependency_gap_reasons\", []))}') for item in sorted(hs, key=lambda x: x.get(\"risk_score\", 0), reverse=True)[:limit]]"
+
+bin-tool-registry-weekly-governance-report:  ## 输出并落盘依赖风险/并行缺口周报（含 owner/action/sink）
+	@TOOL_REGISTRY_DEPENDENCY_LIMIT="$(TOOL_REGISTRY_DEPENDENCY_LIMIT)" \
+		TOOL_REGISTRY_WEEKLY_ARTIFACT="$(TOOL_REGISTRY_WEEKLY_ARTIFACT)" \
+		python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --json | \
+		python3 -c "import json, os, sys; from datetime import datetime, timezone; payload=json.load(sys.stdin); stats=payload.get('stats', {}); findings=payload.get('findings', {}); limit=int(os.environ.get('TOOL_REGISTRY_DEPENDENCY_LIMIT', '25')); artifact=os.environ.get('TOOL_REGISTRY_WEEKLY_ARTIFACT', 'artifacts/bin-tool-registry-weekly-governance-report.json'); gaps=sorted(findings.get('parallel_manifest_gaps', []), key=lambda item: item.get('name', '')); hotspots=sorted(findings.get('dependency_hotspots', []), key=lambda item: (item.get('risk_score', 0), item.get('in_degree', 0) + item.get('out_degree', 0)), reverse=True); os.makedirs(os.path.dirname(artifact), exist_ok=True); open(artifact, 'w', encoding='utf-8').write(json.dumps({'generated_at': datetime.now(tz=timezone.utc).isoformat(), 'scope': payload.get('scope'), 'stats': stats, 'parallel_manifest_gaps_top': gaps[:limit], 'dependency_hotspots_top': hotspots[:limit], 'governance_summary': {'parallel_manifest_gaps_total': len(gaps), 'dependency_hotspots_total': len(hotspots)}}, ensure_ascii=False, indent=2)); print('generated weekly governance report: {}'.format(artifact)); print('parallel manifest gaps: total={} top={}'.format(len(gaps), limit)); [print(' - {}: {}'.format(item.get('name'), ', '.join(item.get('gap_reasons', [])))) for item in gaps[:limit]]; print('dependency hotspots: total={} top={}'.format(len(hotspots), limit)); [print(' - {path}: score={score} in={ind} out={outd} managed={managed} parallel={parallel} owner={owner} action={action} sink={sink}'.format(path=item.get('path'), score=item.get('risk_score'), ind=item.get('in_degree'), outd=item.get('out_degree'), managed=item.get('managed_parallel'), parallel=item.get('is_parallel_candidate'), owner=item.get('owner_hint'), action=item.get('recommended_action'), sink=item.get('recommended_sink'))) for item in hotspots[:limit]]"
+
+bin-tool-registry-round9:  ## 并行风险 Top10 一键闭环（建议默认命令）
+	@$(MAKE) bin-tool-registry-audit-strict TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10
+	@$(MAKE) bin-tool-registry-parallel-gaps TOOL_REGISTRY_SCOPE=both
+	@$(MAKE) bin-tool-registry-dependency-risks TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10
+	@$(MAKE) bin-tool-registry-weekly-governance-report TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10 TOOL_REGISTRY_WEEKLY_ARTIFACT=artifacts/bin-tool-registry-weekly-governance-report-round9.json
+
+bin-tool-registry-round10:  ## 并行风险 Top10 一键闭环（续一轮）
+	@$(MAKE) bin-tool-registry-audit-strict TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10
+	@$(MAKE) bin-tool-registry-parallel-gaps TOOL_REGISTRY_SCOPE=both
+	@$(MAKE) bin-tool-registry-dependency-risks TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10
+	@$(MAKE) bin-tool-registry-weekly-governance-report TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10 TOOL_REGISTRY_WEEKLY_ARTIFACT=artifacts/bin-tool-registry-weekly-governance-report-round10.json
+
+bin-tool-registry-round11:  ## 并行风险 Top10 一键闭环（继续下一轮）
+	@$(MAKE) bin-tool-registry-audit-strict TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10
+	@$(MAKE) bin-tool-registry-parallel-gaps TOOL_REGISTRY_SCOPE=both
+	@$(MAKE) bin-tool-registry-dependency-risks TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10
+	@$(MAKE) bin-tool-registry-weekly-governance-report TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10 TOOL_REGISTRY_WEEKLY_ARTIFACT=artifacts/bin-tool-registry-weekly-governance-report-round11.json
+
+bin-tool-registry-round12:  ## 并行风险 Top10 一键闭环（继续下一轮）
+	@$(MAKE) bin-tool-registry-audit-strict TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10
+	@$(MAKE) bin-tool-registry-parallel-gaps TOOL_REGISTRY_SCOPE=both
+	@$(MAKE) bin-tool-registry-dependency-risks TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10
+	@$(MAKE) bin-tool-registry-weekly-governance-report TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10 TOOL_REGISTRY_WEEKLY_ARTIFACT=artifacts/bin-tool-registry-weekly-governance-report-round12.json
 
 # ── P84 collab dual-track / control experiment ───────────────────────────────
 

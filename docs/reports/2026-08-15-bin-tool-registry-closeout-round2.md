@@ -339,3 +339,36 @@
 #### 下一步（Round 12）
 - 继续固定每轮执行 `make bin-tool-registry-round11`，当依赖风险 Top10 有未纳管 `managed=False` 再回填 manifest；
 - 将 `parallel manifest gaps=0` 与 `strict checks: OK` 作为“机制无回退”的最低通过线。
+
+### Round 12（2026-08-16）：Top10 风险收敛机制常态化（无新增缺口）
+
+#### 已完成
+- 新增 `make bin-tool-registry-round12`，沿用 `round11` 固定链路（`audit-strict`、`parallel-gaps`、`dependency-risks`、`weekly-governance-report`）固化为下一轮可复用入口。
+- `Makefile` 同步恢复 `bin-tool-registry-audit*` 目标链路定义，修复目标块误缺失问题，确保闭环目标可执行并形成长期可复用标准。
+
+#### 本轮执行结果
+- 运行命令：`make bin-tool-registry-round12`
+- 关键指标（与 round11 一致）：
+  - `parallel manifest gaps: 0`
+  - `managed parallel duplicates: 0`
+  - `unmanaged parallel duplicates: 0`
+  - `dependency hotspots: 25`
+  - `strict checks: OK`
+- 周报落盘：`artifacts/bin-tool-registry-weekly-governance-report-round12.json`
+
+#### 结果解读（本轮 Top10）
+- `bin/ssot/bus-usage-report.py`（risk_score 11）
+- `bin/compass_radar.py`（risk_score 7）
+- `bin/submodule-gitlink-check.py`（risk_score 7）
+- `bin/cockpit-readiness.py`（risk_score 7）
+- `bin/mesh/mesh-orphan-cleanup.py`（risk_score 7）
+- `bin/adr/adr-drift-auto-fix.py`（risk_score 7）
+- `bin/adr/next-adr-id.py`（risk_score 7）
+- `bin/adr/adr-drift-apply.py`（risk_score 7）
+- `bin/adr/adr-drift-check.py`（risk_score 7）
+- `bin/adr/adr-coverage.py`（risk_score 7）
+- 所有 Top10 均 `managed=True`，`recommend_action=retain-bin-owner`，且 `parallel=True`，结论是“**不需要新增下沉条目**，继续维持机制巡检。
+
+#### 下一步（Round 13）
+- 每周固定执行 `make bin-tool-registry-round12`，将 `parallel manifest gaps=0`、`managed=False=0` 与 `strict checks: OK` 作为 pass 条件；
+- 若后续出现 `managed=False` 或缺口复发，优先补齐 `docs/operations/bin-scripts-convergence-manifest.json` 或下沉到对应项目 owner。
