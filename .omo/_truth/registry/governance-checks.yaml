@@ -783,7 +783,7 @@ gac:
     name: 测试覆盖检查
     description: '每个非归档 kairon 包至少 1 个 test_*.py (omo_audit 检查 #2)'
     check_type: test_coverage
-    target: projects/kairon/packages/*/tests/
+    target: projects/knowledge/kairon/packages/*/tests/
     executor:
     - omo_audit
     - ci_gate
@@ -911,7 +911,7 @@ gac:
     name: mypy 零错误
     description: kairon mypy 类型检查 0 错误 (类型安全 = 产出质量, X3 价值)
     check_type: value_roi
-    target: projects/kairon (mypy 类型检查)
+    target: projects/knowledge/kairon (mypy 类型检查)
     executor:
     - omo_audit
     - ci_gate

@@ -179,7 +179,7 @@ fi
 ROOT="$(git rev-parse --show-toplevel)"
 for remote_ref in \
   "$ROOT:https://github.com/starlink-awaken/omostation.git" \
-  "$ROOT/projects/gbrain:https://github.com/starlink-awaken/omostation-gbrain.git" \
+  "$ROOT/projects/knowledge/gbrain:https://github.com/starlink-awaken/omostation-gbrain.git" \
   "$ROOT/projects/cockpit:https://github.com/starlink-awaken/omostation-cockpit.git" \
   "$ROOT/projects/agora:https://github.com/starlink-awaken/omostation-agora.git"; do
   # repo_path is everything before the first ':'; expected URL is everything after.

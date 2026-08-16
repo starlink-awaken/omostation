@@ -154,7 +154,7 @@ Phase 0 已完成 contracts、registry、path policy 和 Harness 基础。`Evolu
 
 ### 6.2 Kairon/KOS 是正式 KEMS runtime
 
-`projects/kairon/packages/kos/src/kos/kems/` 覆盖 immutable source manifest、hash/sensitivity/redaction、持久化 run/step、checkpoint、fail-closed runner、evaluation、OCR/model acceptance、adjudication、promotion gate、graph、health 和 recovery。
+`projects/knowledge/kairon/packages/kos/src/kos/kems/` 覆盖 immutable source manifest、hash/sensitivity/redaction、持久化 run/step、checkpoint、fail-closed runner、evaluation、OCR/model acceptance、adjudication、promotion gate、graph、health 和 recovery。
 
 关键约束：raw source 保持在 KEMS 外；OMO adapter 只生成 planned payload；promotion gate 只能返回 `eligible_for_human_approval`，不能自动 promotion。
 
@@ -319,9 +319,9 @@ ECOS/MOF schemas -> l4-kernel compile/Harness -> DomainHealth/Proposal
 - `.omo/_knowledge/decisions/0364-kems-repeated-shadow-promotion-gate.md`
 - `.omo/_knowledge/decisions/0365-architecture-strategy-closeout.md`
 - `.omo/_knowledge/decisions/0372-memory-os-control-plane.md`
-- `projects/kairon/packages/kos/src/kos/kems/pipeline.py`
-- `projects/kairon/packages/kos/src/kos/kems/runner.py`
-- `projects/kairon/packages/kos/src/kos/kems/omo_adapter.py`
+- `projects/knowledge/kairon/packages/kos/src/kos/kems/pipeline.py`
+- `projects/knowledge/kairon/packages/kos/src/kos/kems/runner.py`
+- `projects/knowledge/kairon/packages/kos/src/kos/kems/omo_adapter.py`
 - `projects/cockpit/src/cockpit/web/api_kems.py`
 - `projects/omo/src/omo/omo_ingress_kems.py`
 - `projects/runtime/scripts/kems_production_preflight.py`

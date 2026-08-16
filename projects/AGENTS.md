@@ -39,7 +39,7 @@ Some projects expose Makefile targets. Prefer local documented targets when they
 ### kairon
 
 ```bash
-cd "projects/kairon"
+cd "projects/knowledge/kairon"
 make test-diff
 make lint
 ```
@@ -47,7 +47,7 @@ make lint
 ### gbrain
 
 ```bash
-cd "projects/gbrain"
+cd "projects/knowledge/gbrain"
 bun install
 bun test
 bun run ci:local

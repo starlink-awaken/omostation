@@ -8,14 +8,14 @@ metadata-migrated-at: 2026-07-31
 ---
 # Iris 连接器凭据矩阵
 
-> 配套：`projects/kairon/packages/iris` · 抓取全景见 [external-ingest-callchain.md](./external-ingest-callchain.md)  
+> 配套：`projects/knowledge/kairon/packages/iris` · 抓取全景见 [external-ingest-callchain.md](./external-ingest-callchain.md)  
 > 配置文件：`~/.iris/config.json`（本机路径，勿提交密钥）
 
 ## 盘点方法
 
 ```bash
 # 列表状态（无密钥时 wpsnote 仅 warning，不抛 traceback）
-uv run --directory projects/kairon --project packages/iris iris list
+uv run --directory projects/knowledge/kairon --project packages/iris iris list
 
 # 环境变量是否存在（不打印值）
 for k in IRIS_WPSNOTE_API_KEY IRIS_ZHIHU_COOKIE WEREAD_API_KEY IRIS_WEREAD_API_KEY \

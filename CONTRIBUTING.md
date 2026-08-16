@@ -26,7 +26,7 @@ See [`docs/project-registry.yaml`](docs/project-registry.yaml) for the authorita
 
 ```bash
 # kairon
-cd projects/kairon && uv sync && make test
+cd projects/knowledge/kairon && uv sync && make test
 
 # agora
 cd projects/agora && uv sync && uv run pytest tests/ -q
@@ -35,7 +35,7 @@ cd projects/agora && uv sync && uv run pytest tests/ -q
 cd projects/cockpit && uv sync && uv run pytest src/cockpit/tests/ -q
 
 # gbrain
-cd projects/gbrain && bun install && bun test
+cd projects/knowledge/gbrain && bun install && bun test
 ```
 
 ### Commit Convention
@@ -83,7 +83,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```bash
 # kairon
-cd projects/kairon && uv sync && make test
+cd projects/knowledge/kairon && uv sync && make test
 
 # agora
 cd projects/agora && uv sync && uv run pytest tests/ -q
@@ -92,7 +92,7 @@ cd projects/agora && uv sync && uv run pytest tests/ -q
 cd projects/cockpit && uv sync && uv run pytest src/cockpit/tests/ -q
 
 # gbrain
-cd projects/gbrain && bun install && bun test
+cd projects/knowledge/gbrain && bun install && bun test
 ```
 
 ### 提交规范

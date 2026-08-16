@@ -23,7 +23,7 @@ graph TD
         S_OMLXC["projects/omlxc (算力织网数据面 & CLI)"]
         S_AF["projects/aetherforge (算力网关与蜂群 FastMCP)"]
         S_CK["projects/cockpit / cockpit-ui (大盘与前端)"]
-        S_KOS["projects/kairon / gbrain (记忆与图谱引擎)"]
+        S_KOS["projects/knowledge/kairon / gbrain (记忆与图谱引擎)"]
     end
 
     B -- "Phase-Gate / SSOT 防漂移 / G-DEL 度量" --> Submodules

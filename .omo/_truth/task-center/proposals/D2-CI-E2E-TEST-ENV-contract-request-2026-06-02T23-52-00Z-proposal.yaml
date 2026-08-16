@@ -16,8 +16,8 @@ target:
 changes:
   set:
     deliverables:
-    - projects/kairon/docker/
-    - projects/kairon/Makefile
+    - projects/knowledge/kairon/docker/
+    - projects/knowledge/kairon/Makefile
     - .github/workflows/sharedbrain-kairon-integration.yml
 change_summary: Declare contract deliverables for D2-CI-E2E-TEST-ENV
 impact: Provides explicit write scope so governance overlay can safely advance from

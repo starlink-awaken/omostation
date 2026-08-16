@@ -324,8 +324,8 @@ uv run --with "pyyaml" python "bin/gac/governance-evolution.py" validate --json
 
 ```bash
 bash "tests/integration/run-all.sh"          # root integration suite
-cd "projects/kairon" && make test-diff       # kairon (Python)
-cd "projects/gbrain" && bun test             # gbrain (TypeScript)
+cd "projects/knowledge/kairon" && make test-diff       # kairon (Python)
+cd "projects/knowledge/gbrain" && bun test             # gbrain (TypeScript)
 ```
 
 ### 附加诊断工具
@@ -406,7 +406,7 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR + release + �
 | Documentation only | `make gac-local-gate` and diff review |
 | Root governance docs | `make gac-local-gate` plus `make ssot-guardian` |
 | Python code (generic) | Targeted `uv run pytest` or project Makefile `test` target. 根仓 `tests/` 用 `uv run --with pyyaml --with pytest python -m pytest` (裸 `uv run pytest` 会命中 pipx pytest, 缺 pyyaml) |
-| kairon package | `make test-diff` from `projects/kairon` |
+| kairon package | `make test-diff` from `projects/knowledge/kairon` |
 | gbrain | `bun test` or targeted Bun test |
 | cockpit-ui (TypeScript) | `npm run build` or `bun run build` from `projects/cockpit-ui` |
 | observability (Docker) | `docker compose config -q` from `projects/observability` |

@@ -4,8 +4,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-MOS_COMPOSE="${ROOT}/projects/kairon/packages/mos/docker-compose.yml"
-MINERVA_COMPOSE_DIR="${ROOT}/projects/kairon/packages/minerva/docker"
+MOS_COMPOSE="${ROOT}/projects/knowledge/kairon/packages/mos/docker-compose.yml"
+MINERVA_COMPOSE_DIR="${ROOT}/projects/knowledge/kairon/packages/minerva/docker"
 PASS="${NEO4J_PASSWORD:-changeme}"
 URI="${NEO4J_URI:-bolt://localhost:7687}"
 USER="${NEO4J_USER:-neo4j}"

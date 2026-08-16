@@ -213,7 +213,7 @@ def measure_role_memory_share() -> dict[str, Any]:
             "ran": False,
             "skipped": True,
             "reason": "gbrain node_modules missing; source present",
-            "source": "projects/gbrain/src/core/agent-shared-context.ts",
+            "source": "projects/knowledge/gbrain/src/core/agent-shared-context.ts",
         }
 
     ok = inproc_share and inproc_isolation and cross.get("ok") is True

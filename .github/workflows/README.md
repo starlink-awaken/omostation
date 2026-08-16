@@ -43,7 +43,7 @@
 | `agora-ci.yml` | push + PR | `projects/agora/**` | Agora (I0) |
 | `cockpit-ci.yml` | push + PR | `projects/cockpit/**` | Cockpit (L3) |
 | `ecos-ci.yml` | push + PR | `projects/ecos/**` | eCOS (L0) |
-| `kairon-ci.yml` | push + PR | `projects/kairon/**` | kairon (L2) |
+| `kairon-ci.yml` | push + PR | `projects/knowledge/kairon/**` | kairon (L2) |
 | `metaos-ci.yml` | push + PR | `projects/metaos/**` | metaos (L2) |
 | `family-hub-ci.yml` | push + PR | `projects/family-hub/**` | family-hub (X) |
 | `observability-ci.yml` | push + PR | `projects/observability/**` | observability (X) |

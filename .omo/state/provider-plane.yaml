@@ -6,11 +6,11 @@ standard_env_contract:
   - LLM_API_KEY
   - LLM_MODEL
   consumers:
-  - projects/gbrain
-  - projects/kairon/packages/minerva
-  - projects/kairon/packages/ssot
-  - projects/kairon/packages/ontoderive
-  - projects/kairon/packages/metaos
+  - projects/knowledge/gbrain
+  - projects/knowledge/kairon/packages/minerva
+  - projects/knowledge/kairon/packages/ssot
+  - projects/knowledge/kairon/packages/ontoderive
+  - projects/knowledge/kairon/packages/metaos
 selected_provider:
   provider_id: a150bd78-35f6-4e63-8654-9f8e8fac1d15
   app_type: claude

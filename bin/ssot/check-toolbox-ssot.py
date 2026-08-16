@@ -62,7 +62,7 @@ def get_ssot_values() -> dict:
 
     # 1. 工具数
     try:
-        data = json.loads((WORKSPACE / "projects/kairon/packages/forge/tools-registry.json").read_text())
+        data = json.loads((WORKSPACE / "projects/knowledge/kairon/packages/forge/tools-registry.json").read_text())
         values["tools_count"] = len(data.get("tools", []))
     except Exception:
         values["tools_count"] = None

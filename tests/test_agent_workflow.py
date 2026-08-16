@@ -862,7 +862,7 @@ def test_claim_rejects_receipt_missing_claimed_project(tmp_path: Path) -> None:
         "claim",
         run_id,
         "--path",
-        "projects/gbrain/src/gbrain/api.py",
+        "projects/knowledge/gbrain/src/gbrain/api.py",
         "--affected-receipt",
         str(receipt),
         "--json",
@@ -876,7 +876,7 @@ def test_claim_accepts_cross_project_receipt_and_deprecated_path_alias(
     tmp_path: Path,
 ) -> None:
     registry = _write_control_plane_registry(tmp_path)
-    receipt = _write_affected_receipt(tmp_path, "gbrain", "omo")
+    receipt = _write_affected_receipt(tmp_path, "knowledge", "omo")
     start = _run_workflow(
         "--registry",
         str(registry),
@@ -896,7 +896,7 @@ def test_claim_accepts_cross_project_receipt_and_deprecated_path_alias(
         "claim",
         run_id,
         "--path",
-        "projects/gbrain/src/gbrain/api.py",
+        "projects/knowledge/gbrain/src/gbrain/api.py",
         "--path",
         "projects/omo/src/omo/workflow/cli.py",
         "--affected-hash",

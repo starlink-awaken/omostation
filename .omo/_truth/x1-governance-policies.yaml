@@ -158,7 +158,7 @@ policies:
       E402 import order) 走 omo governance ingress-task broker + 验证。
     scope:
       - projects/*/src/*/*.py
-      - projects/kairon/packages/*/src/*/*.py
+      - projects/knowledge/kairon/packages/*/src/*/*.py
       - projects/omo/src/omo/omo_audit.py (governance_check_lint)
     audit_requirements:
       - source: projects/omo/src/omo/omo_audit.py:governance_check_lint

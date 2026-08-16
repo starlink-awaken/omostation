@@ -19,7 +19,7 @@ captured-at: 2026-08-11T14:34:10+08:00
 最终边界如下：
 
 - Documents 只保留数据、资料、信息、知识、文档、领域宪法、声明式契约、人工决策、可审计证据，以及明确标记为非权威且可重建的文档投影。
-- KEMS 数据模型、ingest、评估、图、恢复与 promotion gate 统一归 `projects/kairon/packages/kos/src/kos/kems/`。
+- KEMS 数据模型、ingest、评估、图、恢复与 promotion gate 统一归 `projects/knowledge/kairon/packages/kos/src/kos/kems/`。
 - 任务状态、审批、证据与派发统一归 OMO；执行脊柱统一归 Workflow Mesh；调度、状态、缓存与运行适配统一归 Runtime。
 - Cockpit 是唯一人机入口；l4-kernel 只拥有内容契约、路径策略、编译与 T0—T8 Harness。
 - 家庭应用合并进现有 `projects/family-hub`，不再保留第二个家庭应用工程。

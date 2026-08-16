@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        [omo, model-driven, l4-kernel, aetherforge, bus-foundation]
+        pkg: [omo, model-driven, l4-kernel, aetherforge, bus-foundation]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

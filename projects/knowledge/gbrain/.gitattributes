@@ -1,0 +1,43 @@
+# ── 文本文件行尾规范化 ──
+* text=auto eol=lf
+
+# ── TypeScript / JavaScript ──
+*.ts text diff=typescript
+*.tsx text diff=typescript
+*.js text
+*.jsx text
+*.mjs text
+*.cjs text
+*.css text
+*.scss text
+*.html text diff=html
+*.json text
+
+# ── Shell ──
+*.sh text eol=lf
+
+# ── 文档 ──
+*.md text diff=markdown
+
+# ── 配置 ──
+*.yaml text
+*.yml text
+*.toml text
+
+# ── Git 文件 ──
+.gitignore text
+.gitattributes text
+
+# ── 二进制（禁止 diff） ──
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+
+# ── Lock 文件 ──
+bun.lock linguist-generated

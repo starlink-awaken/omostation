@@ -7,10 +7,10 @@ entries:
 - projects/cockpit/web/compat.py:3000
 - projects/cockpit/web/compat.py:7450
 - projects/ecos/src/ecos/ssot/mof/m1/runtime_layer/RUNTIME-CRON-SERVICE.yaml:7450
-- projects/kairon/INTERFACE.yaml:8765
-- projects/kairon/INTERFACE.yaml:8766
-- projects/kairon/packages/codeanalyze/src/codeanalyze/commands/serve_cmd.py:8765
-- projects/kairon/packages/codeanalyze/src/codeanalyze/mcp.py:8765
-- projects/kairon/packages/codeanalyze/src/codeanalyze/tools_template.py:8765
-- projects/kairon/packages/minerva/src/minerva/cli.py:8765
-- projects/kairon/packages/ontoderive/engine/cli.py:8080
+- projects/knowledge/kairon/INTERFACE.yaml:8765
+- projects/knowledge/kairon/INTERFACE.yaml:8766
+- projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/commands/serve_cmd.py:8765
+- projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/mcp.py:8765
+- projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/tools_template.py:8765
+- projects/knowledge/kairon/packages/minerva/src/minerva/cli.py:8765
+- projects/knowledge/kairon/packages/ontoderive/engine/cli.py:8080

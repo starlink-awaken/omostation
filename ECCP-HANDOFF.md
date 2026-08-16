@@ -147,7 +147,7 @@ projects/omo/tests/test_workflow_dispatch.py        # consume 单测 (iris fast 
 bin/ssot/external-resource-catalog.py               # N1 catalog (跨项目扫 iris)
 bin/ssot/gen-scene-card-lineage.py                  # N8 scene-card lineage
 docs/scene-cards/document-review.yaml               # N1 scene (lifecycle: proposal_only)
-projects/kairon/packages/iris/src/iris/base.py      # BaseConnector 契约
-projects/kairon/packages/iris/src/iris/connectors/  # 20 connector (rss 退役)
+projects/knowledge/kairon/packages/iris/src/iris/base.py      # BaseConnector 契约
+projects/knowledge/kairon/packages/iris/src/iris/connectors/  # 20 connector (rss 退役)
 .omo/standards/external-connection-fabric.md        # fabric 标准 (红线)
 ```

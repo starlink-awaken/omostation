@@ -77,7 +77,7 @@ tracks:
     scope: 信号源注册 / iris 轮询 / 去重幂等 / 健康可见降级
     primary_write_surfaces:
     - .omo/_truth/registry/signal-sources.yaml
-    - projects/kairon/packages/iris/**
+    - projects/knowledge/kairon/packages/iris/**
     - projects/agora/**
     pasw_required: true
     default_workflow: external-adapter-sync
@@ -86,7 +86,7 @@ tracks:
     title: 认知面 / 心智模型
     scope: MOS agent_belief 三表 / SceneWatcher 有状态化 / 自主性阶梯 / 跨场景学习
     primary_write_surfaces:
-    - projects/kairon/packages/mos/**
+    - projects/knowledge/kairon/packages/mos/**
     - projects/omo/src/omo/scenewatcher.py
     - projects/omo/src/omo/model_router.py
     pasw_required: false
@@ -172,7 +172,7 @@ concurrency:
   - - T4-OUTCOME
     - T8-SURFACE
   pasw_isolated_subs:
-  - projects/gbrain
+  - projects/knowledge/gbrain
   - projects/cockpit
   - projects/agora
   claim_protocol:
@@ -3347,7 +3347,9 @@ bets:
   title: gbrain + kairon 归并为 knowledge (不可逆点)
   appetite: 6 weeks
   priority: P0
-  status: candidate
+  status: in_progress
+  implemented_at: 2026-08-16
+  awaiting: 'human_gate (L3 归并批准; 实施细节与停审理由见 retro BET-Y1Q3-T6-01)' 
   goal: 三年规划中最大一处减法 — 消除知识层双头。以「去重的 src 行数」计量, 测试不动
   non_goals:
   - 新增检索能力
@@ -4884,12 +4886,12 @@ bets:
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error
-  - cmd: cd projects/gbrain && bun test
+  - cmd: cd projects/knowledge/gbrain && bun test
     expect: 全绿
   workflow: bet-execution
   underlying_workflow: project-code-change
   write_surfaces:
-  - projects/gbrain/src/**
+  - projects/knowledge/gbrain/src/**
   pasw_required: true
   depends_on: []
   risk_level: L2

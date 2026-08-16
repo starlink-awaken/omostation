@@ -64,7 +64,7 @@ Agent / Skill
 
 ## 4. 交付物
 
-- **包**: `projects/kairon/packages/mos`
+- **包**: `projects/knowledge/kairon/packages/mos`
 - **入口**: cockpit CLI/HTTP/UI · Agora `bos://memory/mos/*`
 - **运维**: `bin/memory-os-env.sh` · `bin/memory-os-neo4j-up.sh` · `make memory-os-*`
 - **SSOT**: `memory-os.yaml` · `memory-rbac.yaml` · `memory-os-ops.md` · port 7474/7687
@@ -100,7 +100,7 @@ Agent / Skill
 ## 8. 冷启动与帮助
 
 ```bash
-git submodule update --init projects/kairon projects/cockpit projects/agora
+git submodule update --init projects/knowledge/kairon projects/cockpit projects/agora
 cp docs/operations/memory-os.env.example config/memory-os.env
 source bin/memory-os-env.sh
 bash bin/memory-os-neo4j-up.sh
@@ -118,7 +118,7 @@ cockpit bos resolve bos://memory/mos/status
 | 本机 Neo4j | `docs/operations/memory-os-neo4j-local.md` |
 | Phase 10 复盘 | `docs/operations/memory-os-phase10-retro.md` |
 | Agent skill | `.agents/skills/memory-recall/SKILL.md` |
-| 包 README | `projects/kairon/packages/mos/README.md` |
+| 包 README | `projects/knowledge/kairon/packages/mos/README.md` |
 | 机器 SSOT | `.omo/_truth/registry/memory-os.yaml` |
 
 权威入口：ADR-0372 · `memory-os.yaml` · `memory-os-ops.md` · `docs/architecture/memory-os.md`。

@@ -36,7 +36,7 @@ from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 OMO_SRC = WORKSPACE / "projects/omo/src"
-KAIRON = WORKSPACE / "projects/kairon"
+KAIRON = WORKSPACE / "projects/knowledge/kairon"
 
 
 def _load_mesh():

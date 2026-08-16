@@ -24,7 +24,7 @@ from pathlib import Path
 
 STABLE = {
     "projects/bus-foundation",
-    "projects/kairon",
+    "projects/knowledge/kairon",
     "projects/l4-kernel",
     "projects/omo-debt",
 }
@@ -47,7 +47,7 @@ DORMANT = {
     "projects/family-hub",
     "projects/model-driven",
     "projects/observability",
-    "projects/gbrain",
+    "projects/knowledge/gbrain",
 }
 
 EXTRA = {

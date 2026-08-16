@@ -63,7 +63,7 @@ IMPORT_OK=0
 IMPORT_TOTAL=0
 for pkg in eidos kos kronos minerva ontoderive codeanalyze iris forge health_profile; do
   IMPORT_TOTAL=$((IMPORT_TOTAL+1))
-  if RESULT=$(cd "$ROOT/projects/kairon" && uv run python3 -c "import $pkg; print('ok')" 2>&1) && echo "$RESULT" | grep -q "^ok$"; then
+  if RESULT=$(cd "$ROOT/projects/knowledge/kairon" && uv run python3 -c "import $pkg; print('ok')" 2>&1) && echo "$RESULT" | grep -q "^ok$"; then
     IMPORT_OK=$((IMPORT_OK+1))
   fi
 done
@@ -77,7 +77,7 @@ fi
 # 8. gbrain CLI
 echo ""
 echo "── 4. gbrain — 跳过 (bun CLI 启动较慢) ──"
-echo "  ⏭️  gbrain CLI 跳过 (手动: cd projects/gbrain && bun run src/cli.ts --help)"
+echo "  ⏭️  gbrain CLI 跳过 (手动: cd projects/knowledge/gbrain && bun run src/cli.ts --help)"
 
 # ── 结果 ──
 echo ""

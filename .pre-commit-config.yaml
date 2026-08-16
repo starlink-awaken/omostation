@@ -25,7 +25,7 @@ repos:
         # exclude: kairon 是 submodule, 单独 lint; protocols/ 含故意宽松 YAML
         exclude: |
           (?x)^(
-            projects/kairon/.*\.ya?ml
+            projects/knowledge/kairon/.*\.ya?ml
             | protocols/.*\.ya?ml
             | \.omo/_archive/.*\.ya?ml  # 历史 archive
             )$

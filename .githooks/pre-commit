@@ -91,7 +91,7 @@ fi
 if git rev-parse -q --verify MERGE_HEAD >/dev/null 2>&1; then
   echo "[submodule-guard] ℹ️ merge commit (MERGE_HEAD), 跳过 PASW gitlink 变更检查 (G3/P79, CI 兜底)" >&2
 else
-PASW_ISOLATED="projects/gbrain projects/cockpit projects/agora"
+PASW_ISOLATED="projects/knowledge/gbrain projects/cockpit projects/agora"
 for sub in $PASW_ISOLATED; do
   # 检查是否尝试在 root 直接 stage 子模块 gitlink 变更
   if git diff --cached --name-only | grep -qxF "$sub"; then

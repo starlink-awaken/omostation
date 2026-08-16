@@ -552,7 +552,7 @@ def _load_iris_records(root: Path) -> list[Any]:
     环境装不到 iris → metadata.entry_points() 发现断链. 走 subprocess 跨项目扫,
     修复 iris↔catalog 断链 (N1 document-review 激活卡点的根因).
     """
-    kairon = root / "projects/kairon"
+    kairon = root / "projects/knowledge/kairon"
     if not kairon.exists():
         return []
     code = (

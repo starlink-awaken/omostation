@@ -91,7 +91,7 @@ echo "统计: 待push=$pending 成功=$pushed 失败=$failed 无上游=$noupstre
 # ── PASW: 检测 .subtrees/ 隔离 worktree 内的未推 commit ────────────────
 # PASW 隔离子模块的实际 commit 在 .subtrees/<sub>/ 内, 共享 projects/<sub>/ 保持原状.
 # 本段检测 .subtrees/ 内的未推 commit 并 push, 确保 bump-pointer 后的 SHA 可达.
-PASW_ISOLATED="projects/gbrain projects/cockpit projects/agora"
+PASW_ISOLATED="projects/knowledge/gbrain projects/cockpit projects/agora"
 for sub in $PASW_ISOLATED; do
   sub_name=$(basename "$sub")
   sub_wt=".subtrees/$sub_name"

@@ -24,9 +24,6 @@ jobs:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
 
-      - name: Init c2g submodule
-        run: # c2g 已内包 omo (_vendored, ADR-0412)
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"

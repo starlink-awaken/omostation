@@ -54,7 +54,7 @@
 - **`get_omo_dir` home 干扰** (c2g): `found[-1]` 外层优先遇到 `~/.omo` 误返 home → bet 找不到 `goals/current.yaml`. 修: 遍历时跳过 `Path.home()` 的 `.omo/` (系统级干扰, 非 workspace 候选). 兼顾 test_smoke (workspace 内嵌套→外层优先) + test_bet_id_reuse (workspace+home→排除 home).
 - **P45 frontmatter 破坏 YAML single-document** (c2g): 数据文件被 P45 doc-lifecycle 加 `--- frontmatter ---` → multi-document → `yaml.safe_load` ComposerError. 加 `strip_frontmatter()` helper (`bridge_utils.py`) + `bridge_import.py` L278 用它 (不碰 goals/current.yaml, 尊重 "仅人类可改").
 - **ADR-0051 UNLISTED** (governance): ADR-0051 写了没加 INDEX → governance 99.3 扣分. 补 `decisions/INDEX.md` → 100.0 A+ 满分.
-- **kronos flaky test** (kairon): `test_nonempty_text_returns_result` 依赖 Ollama 外部服务 (Ollama 在跑时走 llm 路径, LLM 生成 title 不确定 → 硬断言 `== "规则提取测试"` 随机 fail, make test-fast Error 1). Mock `extract_with_ollama` 强制 rules 路径 (单元测试隔离外部依赖, 确定性). `make -C projects/kairon test-fast` Exit 0 (16 包全绿).
+- **kronos flaky test** (kairon): `test_nonempty_text_returns_result` 依赖 Ollama 外部服务 (Ollama 在跑时走 llm 路径, LLM 生成 title 不确定 → 硬断言 `== "规则提取测试"` 随机 fail, make test-fast Error 1). Mock `extract_with_ollama` 强制 rules 路径 (单元测试隔离外部依赖, 确定性). `make -C projects/knowledge/kairon test-fast` Exit 0 (16 包全绿).
 
 ### Added (P52-MDRIFT-CLOSURE)
 - **mof-drift v5 终极**: gbrain TODOs unknown 19→0 (`any TODO = planned` 宽松兜底). P44 R0 `DEBT-GBRAIN-55-TODOS` 历史债一次性清零.

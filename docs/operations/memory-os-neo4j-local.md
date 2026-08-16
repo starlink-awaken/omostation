@@ -47,14 +47,14 @@ export NEO4J_URI=bolt://localhost:7687 NEO4J_USER=neo4j NEO4J_PASSWORD=changeme
 ## 路径 A：Docker（MOS 专用 compose）
 
 ```bash
-docker compose -f projects/kairon/packages/mos/docker-compose.yml up -d
+docker compose -f projects/knowledge/kairon/packages/mos/docker-compose.yml up -d
 docker exec mos-neo4j cypher-shell -u neo4j -p changeme 'RETURN 1'
 ```
 
 也可与 minerva 共用：
 
 ```bash
-cd projects/kairon/packages/minerva/docker
+cd projects/knowledge/kairon/packages/minerva/docker
 docker compose --profile full up -d neo4j
 ```
 
@@ -66,7 +66,7 @@ docker compose --profile full up -d neo4j
 2. 仍失败 → Settings → Troubleshoot → Clean / Purge data  
 3. **Podman 替代**（本机可建 `podman machine init mos-neo4j` applehv）：  
    `export DOCKER_HOST=unix://$(podman machine inspect mos-neo4j --format '{{.ConnectionInfo.PodmanSocket.Path}}' 2>/dev/null || true)`  
-   再 `docker compose -f projects/kairon/packages/mos/docker-compose.yml up -d`  
+   再 `docker compose -f projects/knowledge/kairon/packages/mos/docker-compose.yml up -d`  
 4. 或 `bash bin/memory-os-neo4j-up.sh` 自动 **brew fallback**（2026-08-05 验证可用）
 
 > 2026-08-05 实测：Docker Desktop I/O 损坏；Podman machine 可起，但拉 `neo4j:5-community` 遇 registry i/o timeout → 生产写读用 brew 闭环。

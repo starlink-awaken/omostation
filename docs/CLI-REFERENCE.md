@@ -207,7 +207,7 @@
 | `cockpit model-driven` | `model-driven` | 28 |
 | `cockpit agora` | `agora` | 65 |
 | `cockpit family-hub` | `family-hub` | 6 |
-| `cockpit mesh` | `aetherforge` | 15 |
-| `cockpit compute` | `aetherforge` | 15 |
+| `cockpit mesh` | `aetherforge` | 10 |
+| `cockpit compute` | `aetherforge` | 10 |
 
 *由 `bin/cockpit/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*

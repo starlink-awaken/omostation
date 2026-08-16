@@ -1,0 +1,589 @@
+/**
+ * v0.28: `gbrain think` — INTENT → GATHER → SYNTHESIZE → (optional) COMMIT.
+ *
+ * v0.28.0 ships the full pipeline. The Anthropic call is dependency-injected
+ * (MessagesClient interface) so tests can stub it without an API key. Live
+ * runs require ANTHROPIC_API_KEY in the environment.
+ *
+ * --rounds scaffolding: round 1 is the only round actually exercised in
+ * v0.28. Round N+1 fed by gaps from round N is the v0.29 follow-up; the
+ * loop structure is in place so rounds > 1 don't fail — they just re-run
+ * gather + synthesize without specialized gap-filling logic. Use rounds=1
+ * (the default) for production until the gap-fill heuristic ships.
+ *
+ * --save persists a synthesis page + synthesis_evidence rows. --take
+ * appends a take row to the anchor page (requires --anchor). Both are
+ * local-CLI-only; remote (MCP) callers get a `not_implemented` envelope
+ * for those flags per Codex P1 #7.
+ */
+
+import type Anthropic from '@anthropic-ai/sdk';
+import type { BrainEngine, SynthesisEvidenceInput } from '../engine.ts';
+import { runGather, renderPagesBlock, takesHitToTakeForPrompt } from './gather.ts';
+import { renderTakesBlock } from './sanitize.ts';
+import { buildThinkSystemPrompt, buildThinkUserMessage } from './prompt.ts';
+import { resolveCitations, type ParsedCitation } from './cite-render.ts';
+import { resolveModel } from '../model-config.ts';
+import { chat as gatewayChat, type ChatResult } from '../ai/gateway.ts';
+import { resolveRecipe } from '../ai/model-resolver.ts';
+import { AIConfigError } from '../ai/errors.ts';
+import { loadConfig } from '../config.ts';
+
+/** Anthropic Messages client interface — same shape used by subagent.ts so test stubs can be shared. */
+export interface ThinkLLMClient {
+  create(params: Anthropic.MessageCreateParamsNonStreaming, opts?: { signal?: AbortSignal }): Promise<Anthropic.Message>;
+}
+
+export interface RunThinkOpts {
+  question: string;
+  /** Anchor entity slug. Activates the graph stream + entity-focused prompt. */
+  anchor?: string;
+  /** v0.28: rounds=1 is the only path exercised. Round-loop scaffolding is in place. */
+  rounds?: number;
+  /** When true, persist a synthesis page (caller resolves brainDir externally if writing to disk). */
+  save?: boolean;
+  /** When true, append a take row to the anchor page (requires anchor). */
+  take?: boolean;
+  /** Model override (CLI flag). Falls through resolveModel's 6-tier chain. */
+  model?: string;
+  /** Optional time window for temporal questions. */
+  since?: string;
+  until?: string;
+  /** When set, MCP-bound calls forward this to the gather phase (server-side filter). */
+  takesHoldersAllowList?: string[];
+  /** Inject an LLM client (for tests). Defaults to a fresh Anthropic SDK client. */
+  client?: ThinkLLMClient;
+  /** Inject a question-embedding function. When omitted, vector takes search is skipped. */
+  embedQuestion?: (q: string) => Promise<Float32Array | null>;
+  /** Pure-test escape: return synthesized payload without calling any LLM. */
+  stubResponse?: ThinkResponse;
+  /**
+   * v0.36.1.0 (E1, D22) — when true, retrieve the active calibration profile
+   * for the configured holder and inject it into the prompt per D22 placement
+   * (after retrieval, before question). The system prompt also gains
+   * anti-bias rewrite rules.
+   *
+   * Off by default (regression posture). When on but no profile exists,
+   * think falls back to baseline behavior + a NO_CALIBRATION_PROFILE warning.
+   */
+  withCalibration?: boolean;
+  /**
+   * Holder to retrieve the calibration profile for. Default 'garry'. Only
+   * consulted when withCalibration=true.
+   */
+  calibrationHolder?: string;
+}
+
+/** Structured response from the LLM (matches the schema declared in prompt.ts). */
+export interface ThinkResponse {
+  answer: string;
+  citations: Array<{ page_slug: string; row_num: number | null; citation_index?: number }>;
+  gaps: string[];
+}
+
+export interface ThinkResult {
+  question: string;
+  answer: string;
+  citations: ParsedCitation[];
+  gaps: string[];
+  pagesGathered: number;
+  takesGathered: number;
+  graphHits: number;
+  modelUsed: string;
+  rounds: number;
+  warnings: string[];
+  /** Only set when --save was true and the caller persisted a synthesis page. */
+  savedSlug?: string;
+  /** Diagnostics for `--explain` callers (CLI surface for v0.29). */
+  diagnostics: {
+    pagesFromHybrid: number;
+    takesFromKeyword: number;
+    takesFromVector: number;
+    graphHits: number;
+  };
+}
+
+const DEFAULT_MAX_OUTPUT_TOKENS = 4000;
+
+function inferIntent(question: string, anchor?: string): string {
+  if (anchor) return 'entity';
+  const q = question.toLowerCase();
+  if (/\b(when|history|over time|evolved|since|before|after)\b/.test(q)) return 'temporal';
+  if (/\b(meeting|event|happened)\b/.test(q)) return 'event';
+  return 'general';
+}
+
+function tryParseJSON(text: string): unknown {
+  // The model may wrap JSON in code fences. Strip if present.
+  const stripped = text.trim().replace(/^```(?:json)?\s*\n?/, '').replace(/```\s*$/, '');
+  try {
+    return JSON.parse(stripped);
+  } catch {
+    // Fallback: extract the first {...} block. Useful when the model emits prose alongside JSON.
+    const m = stripped.match(/\{[\s\S]*\}/);
+    if (m) {
+      try { return JSON.parse(m[0]); } catch { /* ignore */ }
+    }
+    return null;
+  }
+}
+
+/**
+ * Persist citations into synthesis_evidence. Resolves slugs to page_ids
+ * via the engine. Pages that don't exist in the brain are skipped + warn'd.
+ * Pages without a row_num are page-level citations and are NOT persisted
+ * (synthesis_evidence is a take→synthesis FK; page-level citations live in
+ * the answer body's [slug] markers only).
+ */
+async function persistCitations(
+  engine: BrainEngine,
+  synthesisPageId: number,
+  citations: ParsedCitation[],
+): Promise<{ inserted: number; warnings: string[] }> {
+  const warnings: string[] = [];
+  // Resolve unique slugs to page_ids
+  const slugToPageId = new Map<string, number>();
+  for (const c of citations) {
+    if (c.row_num === null) continue;  // page-level, skip
+    if (slugToPageId.has(c.page_slug)) continue;
+    const rows = await engine.executeRaw<{ id: number }>(
+      `SELECT id FROM pages WHERE slug = $1 LIMIT 1`,
+      [c.page_slug],
+    );
+    if (rows[0]) slugToPageId.set(c.page_slug, rows[0].id);
+  }
+  const evidenceInputs: SynthesisEvidenceInput[] = [];
+  for (const c of citations) {
+    if (c.row_num === null) continue;
+    const pageId = slugToPageId.get(c.page_slug);
+    if (!pageId) {
+      warnings.push(`CITATION_PAGE_NOT_IN_BRAIN: ${c.page_slug}#${c.row_num}`);
+      continue;
+    }
+    evidenceInputs.push({
+      synthesis_page_id: synthesisPageId,
+      take_page_id: pageId,
+      take_row_num: c.row_num,
+      citation_index: c.citation_index,
+    });
+  }
+  if (evidenceInputs.length === 0) return { inserted: 0, warnings };
+  const inserted = await engine.addSynthesisEvidence(evidenceInputs);
+  return { inserted, warnings };
+}
+
+/**
+ * Run the think pipeline. Returns a ThinkResult — caller decides whether
+ * to print, persist as synthesis page, or surface as MCP response.
+ */
+export async function runThink(
+  engine: BrainEngine,
+  opts: RunThinkOpts,
+): Promise<ThinkResult> {
+  const rounds = Math.max(1, opts.rounds ?? 1);
+  const warnings: string[] = [];
+
+  // Resolve the model through the 6-tier chain.
+  const modelUsed = await resolveModel(engine, {
+    cliFlag: opts.model,
+    configKey: 'models.think',
+    tier: 'deep',
+    fallback: 'opus',  // think is the high-stakes synthesis op; opus is the right default
+  });
+
+  // Optional question embedding — caller decides whether to pay the embedder.
+  let questionEmbedding: Float32Array | undefined;
+  if (opts.embedQuestion) {
+    try {
+      const e = await opts.embedQuestion(opts.question);
+      if (e) questionEmbedding = e;
+    } catch (e) {
+      warnings.push(`QUESTION_EMBED_FAILED: ${(e as Error).message}`);
+    }
+  }
+
+  // GATHER
+  const gather = await runGather(engine, {
+    question: opts.question,
+    anchor: opts.anchor,
+    questionEmbedding,
+    takesHoldersAllowList: opts.takesHoldersAllowList,
+  });
+
+  // Render evidence blocks for the prompt
+  const pagesBlock = renderPagesBlock(gather.pages);
+  const takesForPrompt = gather.takes.map(takesHitToTakeForPrompt);
+  const { rendered: takesBlock, sanitizedCount } = renderTakesBlock(takesForPrompt);
+  if (sanitizedCount > 0) {
+    warnings.push(`SANITIZED_${sanitizedCount}_TAKE_CLAIMS`);
+  }
+  const graphBlock = gather.graphSlugs.length > 0
+    ? `<anchor>${opts.anchor}</anchor>\nReachable: ${gather.graphSlugs.slice(0, 30).join(', ')}`
+    : undefined;
+
+  // v0.36.1.0 (E1) — optional calibration profile retrieval. When enabled
+  // and a profile exists, inject it per D22 (after retrieval, before question).
+  // When enabled and no profile, fall back to baseline + warn.
+  let calibrationBlockOpts:
+    | { holder: string; patternStatements: string[]; activeBiasTags: string[]; brier?: number | null }
+    | undefined;
+  if (opts.withCalibration) {
+    try {
+      const { getLatestProfile } = await import('../../commands/calibration.ts');
+      const profile = await getLatestProfile(engine, {
+        holder: opts.calibrationHolder ?? 'garry',
+      });
+      if (profile) {
+        calibrationBlockOpts = {
+          holder: profile.holder,
+          patternStatements: profile.pattern_statements,
+          activeBiasTags: profile.active_bias_tags,
+          brier: profile.brier,
+        };
+      } else {
+        warnings.push('NO_CALIBRATION_PROFILE');
+      }
+    } catch (err) {
+      warnings.push(
+        `CALIBRATION_FETCH_FAILED: ${err instanceof Error ? err.message : 'unknown'}`,
+      );
+    }
+  }
+
+  // SYNTHESIZE
+  const intent = inferIntent(opts.question, opts.anchor);
+  const systemPrompt = buildThinkSystemPrompt({
+    intent,
+    ...(opts.anchor !== undefined ? { anchor: opts.anchor } : {}),
+    ...(opts.since !== undefined ? { since: opts.since } : {}),
+    ...(opts.until !== undefined ? { until: opts.until } : {}),
+    willSave: opts.save,
+    withCalibration: !!calibrationBlockOpts,
+  });
+  const userMessage = buildThinkUserMessage({
+    question: opts.question,
+    pagesBlock,
+    takesBlock,
+    ...(graphBlock !== undefined ? { graphBlock } : {}),
+    ...(calibrationBlockOpts !== undefined ? { calibration: calibrationBlockOpts } : {}),
+  });
+
+  let response: ThinkResponse;
+  if (opts.stubResponse) {
+    response = opts.stubResponse;
+  } else {
+    // Build a ThinkLLMClient. Three sources, in priority order:
+    //   1. opts.client (test injection — preserved as test seam)
+    //   2. Gateway adapter (routes through gateway.chat() — picks up
+    //      anthropic_api_key from gbrain config OR env, gateway rate-leases,
+    //      retry, prompt caching, the canonical seam per CLAUDE.md)
+    //   3. Graceful fallback ("no LLM available" stub) — when gateway is
+    //      unconfigured AND no env var is set, return without throwing.
+    //
+    // Pre-v0.36, this code path constructed `new Anthropic()` directly.
+    // That bypassed gateway config (gbrain config set anthropic_api_key)
+    // because the Anthropic SDK only reads process.env.ANTHROPIC_API_KEY.
+    // Closes #952 (think over MCP returns "no LLM available").
+    const client = opts.client ?? await tryBuildGatewayClient(modelUsed);
+    if (!client) {
+      warnings.push('NO_ANTHROPIC_API_KEY');
+      // Degrade gracefully: return the gather without synthesis. Better than throwing.
+      return {
+        question: opts.question,
+        answer: '(no LLM available — set ANTHROPIC_API_KEY or pass `client`)',
+        citations: [],
+        gaps: ['no LLM available; gather succeeded but synthesis skipped'],
+        pagesGathered: gather.pages.length,
+        takesGathered: gather.takes.length,
+        graphHits: gather.graphSlugs.length,
+        modelUsed,
+        rounds: 0,
+        warnings,
+        diagnostics: {
+          pagesFromHybrid: gather.diagnostics.pagesFromHybrid,
+          takesFromKeyword: gather.diagnostics.takesFromKeyword,
+          takesFromVector: gather.diagnostics.takesFromVector,
+          graphHits: gather.diagnostics.graphHits,
+        },
+      };
+    }
+    const result = await client.create({
+      model: modelUsed,
+      max_tokens: DEFAULT_MAX_OUTPUT_TOKENS,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMessage }],
+    });
+    const block = result.content.find(b => b.type === 'text');
+    const text = block && 'text' in block ? block.text : '';
+    const parsed = tryParseJSON(text);
+    if (!parsed || typeof parsed !== 'object') {
+      warnings.push('LLM_OUTPUT_NOT_JSON');
+      response = { answer: text, citations: [], gaps: [] };
+    } else {
+      const r = parsed as Partial<ThinkResponse>;
+      response = {
+        answer: typeof r.answer === 'string' ? r.answer : '',
+        citations: Array.isArray(r.citations) ? (r.citations as ThinkResponse['citations']) : [],
+        gaps: Array.isArray(r.gaps) ? (r.gaps as string[]).filter(g => typeof g === 'string') : [],
+      };
+    }
+  }
+
+  // Resolve citations: prefer structured, fall back to inline-marker regex scan.
+  const resolved = resolveCitations(response.citations, response.answer);
+  if (resolved.warnings.length > 0) {
+    for (const w of resolved.warnings) warnings.push(w);
+  }
+
+  // Round-loop scaffolding (rounds > 1 currently re-runs without gap-driven retrieval).
+  // The loop is in place so the v0.29 gap-fill heuristic doesn't change the call site.
+  for (let r = 1; r < rounds; r++) {
+    warnings.push(`ROUNDS_GT_1_NOT_GAP_DRIVEN_IN_V028`);
+    break;  // v0.28: single-pass only
+  }
+
+  return {
+    question: opts.question,
+    answer: response.answer,
+    citations: resolved.citations,
+    gaps: response.gaps,
+    pagesGathered: gather.pages.length,
+    takesGathered: gather.takes.length,
+    graphHits: gather.graphSlugs.length,
+    modelUsed,
+    rounds: 1,
+    warnings,
+    diagnostics: {
+      pagesFromHybrid: gather.diagnostics.pagesFromHybrid,
+      takesFromKeyword: gather.diagnostics.takesFromKeyword,
+      takesFromVector: gather.diagnostics.takesFromVector,
+      graphHits: gather.diagnostics.graphHits,
+    },
+  };
+}
+
+/**
+ * Persist a synthesis page + its evidence. Returns the saved slug.
+ * Synthesis pages are written under `synthesis/<slugified-question>-<date>.md`.
+ */
+export async function persistSynthesis(
+  engine: BrainEngine,
+  result: ThinkResult,
+): Promise<{ slug: string; evidenceInserted: number; warnings: string[] }> {
+  const today = new Date().toISOString().slice(0, 10);
+  const slugSafe = result.question
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]+/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .slice(0, 60) || 'untitled';
+  const slug = `synthesis/${slugSafe}-${today}`;
+
+  // Build the markdown body
+  const body = [
+    `# ${result.question}`,
+    '',
+    result.answer,
+    '',
+    result.gaps.length > 0 ? '## Gaps\n\n' + result.gaps.map(g => `- ${g}`).join('\n') : '',
+  ].filter(Boolean).join('\n');
+
+  const page = await engine.putPage(slug, {
+    title: result.question.slice(0, 200),
+    type: 'synthesis',
+    compiled_truth: body,
+    frontmatter: {
+      type: 'synthesis',
+      question: result.question,
+      model: result.modelUsed,
+      date: today,
+      pages_gathered: result.pagesGathered,
+      takes_gathered: result.takesGathered,
+    },
+  });
+
+  const persisted = await persistCitations(engine, page.id, result.citations);
+  return { slug, evidenceInserted: persisted.inserted, warnings: persisted.warnings };
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Gateway adapter for #952 (think over MCP returns "no LLM available").
+// ─────────────────────────────────────────────────────────────────
+// Pre-v0.36, runThink instantiated `new Anthropic()` directly and read
+// ANTHROPIC_API_KEY from process.env. Claude Desktop's stdio MCP launch
+// doesn't inherit shell env, so `gbrain config set anthropic_api_key sk-...`
+// (which writes to ~/.gbrain/config.json) never reached the SDK and every
+// MCP think call degraded to "no LLM available."
+//
+// The adapter routes through gateway.chat() — the canonical seam per
+// CLAUDE.md. Gateway reads the API key from gbrain config OR env, picks
+// up prompt caching, rate-leases, retry, and the test seam
+// (__setChatTransportForTests) that v0.31.12 already established.
+//
+// Per plan-eng-review D10 (cross-model tension with codex C7+C8+C9+C10),
+// the adapter implements four fixes:
+//   1. Drop the new Anthropic() direct path entirely — always route through gateway
+//   2. Real availability check via try/catch around resolveRecipe + assertion
+//      (NOT the false-positive `getChatModel()` truthy check)
+//   3. Model-id resolution: handle both bare (`claude-opus-4-7`) and
+//      provider-prefixed (`anthropic:claude-opus-4-7`) shapes
+//   4. Response-shape conversion: ChatResult → Anthropic.Message
+//
+// `opts.client` injection path is preserved (test seam — see ThinkLLMClient).
+// `opts.stubResponse` path is preserved (pure-test escape).
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Try to build a gateway-backed ThinkLLMClient for the given model.
+ * Returns null when the gateway cannot resolve a usable chat provider for
+ * this model (missing API key for the resolved provider, unknown provider,
+ * touchpoint not supported, etc.). Caller falls through to the graceful
+ * "no LLM available" stub on null.
+ */
+async function tryBuildGatewayClient(modelUsed: string): Promise<ThinkLLMClient | null> {
+  // Normalize: ensure provider:model shape. resolveModel returns bare
+  // anthropic ids (e.g. `claude-opus-4-7`); gateway.chat needs `anthropic:...`.
+  const modelStr = modelUsed.includes(':') ? modelUsed : `anthropic:${modelUsed}`;
+
+  // Availability probe: resolveRecipe throws on unknown provider; assertTouchpoint
+  // throws if the resolved recipe doesn't support chat. Both are AIConfigError.
+  let providerId: string;
+  try {
+    const { parsed } = resolveRecipe(modelStr);
+    providerId = parsed.providerId;
+  } catch (e) {
+    if (e instanceof AIConfigError) return null;
+    throw e;
+  }
+
+  // API-key availability probe. The gateway lazily checks keys inside
+  // instantiateChat at first .chat() call and throws AIConfigError on miss.
+  // Pre-checking here preserves the legacy "NO_ANTHROPIC_API_KEY" warning
+  // signal AND avoids paying for a wasted gateway call when the user clearly
+  // has no key configured. Reads BOTH the gbrain config file (`anthropic_api_key`
+  // set via `gbrain config set`) AND the process env, matching gateway's
+  // own loadConfig precedence.
+  if (providerId === 'anthropic' && !hasAnthropicKey()) return null;
+
+  return {
+    create: async (params): Promise<Anthropic.Message> => {
+      // Build ChatOpts from Anthropic.MessageCreateParamsNonStreaming.
+      const messages = params.messages.map(m => ({
+        role: m.role,
+        content: typeof m.content === 'string'
+          ? m.content
+          : (Array.isArray(m.content) ? m.content.map(b => 'text' in b ? b.text : '').join('') : ''),
+      }));
+      const system = typeof params.system === 'string'
+        ? params.system
+        : (Array.isArray(params.system) ? params.system.map(b => 'text' in b ? b.text : '').join('') : undefined);
+
+      let result: ChatResult;
+      try {
+        result = await gatewayChat({
+          model: modelStr,
+          system,
+          messages,
+          maxTokens: params.max_tokens,
+        });
+      } catch (e) {
+        // AIConfigError at chat time = missing API key for resolved provider.
+        // Surface as a sentinel "no LLM available"-shaped Message so the
+        // existing JSON-parse path produces the graceful degradation answer.
+        if (e instanceof AIConfigError) {
+          return buildGracefulMessage(modelStr) as unknown as Anthropic.Message;
+        }
+        throw e;
+      }
+      return chatResultToMessage(result, modelStr) as unknown as Anthropic.Message;
+    },
+  };
+}
+
+/**
+ * Convert gateway's `ChatResult` into an Anthropic-Message-shaped object.
+ * The caller (`runThink`) parses `result.content[0].text` as JSON; the
+ * other fields (usage, stop_reason) are returned with best-effort mapping
+ * for downstream telemetry compat.
+ */
+function chatResultToMessage(result: ChatResult, modelStr: string): {
+  id: string;
+  type: 'message';
+  role: 'assistant';
+  model: string;
+  content: Array<{ type: 'text'; text: string }>;
+  usage: { input_tokens: number; output_tokens: number };
+  stop_reason: 'end_turn' | 'max_tokens' | 'tool_use' | 'stop_sequence';
+} {
+  return {
+    id: '',
+    type: 'message',
+    role: 'assistant',
+    model: modelStr,
+    content: [{ type: 'text', text: result.text }],
+    usage: {
+      input_tokens: result.usage.input_tokens,
+      output_tokens: result.usage.output_tokens,
+    },
+    stop_reason: mapStopReason(result.stopReason),
+  };
+}
+
+function hasAnthropicKey(): boolean {
+  if (process.env.ANTHROPIC_API_KEY) return true;
+  try {
+    const cfg = loadConfig();
+    if (cfg?.anthropic_api_key) return true;
+  } catch {
+    // loadConfig may throw on first-run installs; treat as no key available.
+  }
+  return false;
+}
+
+function mapStopReason(s: ChatResult['stopReason']): 'end_turn' | 'max_tokens' | 'tool_use' | 'stop_sequence' {
+  switch (s) {
+    case 'end': return 'end_turn';
+    case 'length': return 'max_tokens';
+    case 'tool_calls': return 'tool_use';
+    // 'refusal', 'content_filter', 'other' → end_turn (no Anthropic equivalent)
+    default: return 'end_turn';
+  }
+}
+
+/**
+ * Sentinel Message returned when gateway.chat throws AIConfigError (typically
+ * missing API key for the resolved provider). The caller's JSON parser will
+ * fail on this text, fall through to `LLM_OUTPUT_NOT_JSON`, and surface the
+ * sentinel as the answer — matches the legacy graceful-degradation shape.
+ */
+function buildGracefulMessage(modelStr: string): {
+  id: string;
+  type: 'message';
+  role: 'assistant';
+  model: string;
+  content: Array<{ type: 'text'; text: string }>;
+  usage: { input_tokens: number; output_tokens: number };
+  stop_reason: 'end_turn';
+} {
+  return {
+    id: '',
+    type: 'message',
+    role: 'assistant',
+    model: modelStr,
+    content: [{ type: 'text', text: '(no LLM available — set anthropic_api_key via gbrain config or ANTHROPIC_API_KEY env)' }],
+    usage: { input_tokens: 0, output_tokens: 0 },
+    stop_reason: 'end_turn',
+  };
+}
+
+// Test-only exports for the adapter helpers. The functions live at module
+// scope (not inside runThink) so they can be unit-tested directly. Naming
+// follows the `__` prefix convention already established by
+// `__setChatTransportForTests` in gateway.ts.
+export const __thinkAdapter = {
+  tryBuildGatewayClient,
+  chatResultToMessage,
+  mapStopReason,
+  buildGracefulMessage,
+  hasAnthropicKey,
+};

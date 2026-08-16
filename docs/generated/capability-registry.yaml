@@ -8,7 +8,7 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 573
+  mcp_tools: 565
   bos_services: 223
   bos_domains: 17
   cli_commands: 138
@@ -46,7 +46,7 @@ mcp_servers:
 - id: kos
   name: KOS Knowledge Retrieval
   layer: L2
-  file: projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py
+  file: projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py
   transport: stdio
   exists: true
   tools:
@@ -98,7 +98,7 @@ mcp_servers:
 - id: kos-stdio
   name: KOS (stdio JSON-RPC, legacy)
   layer: L2
-  file: projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py
+  file: projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py
   transport: stdio
   exists: true
   tools:
@@ -405,21 +405,16 @@ mcp_servers:
   exists: true
   tools:
   - forge_cost_report
-  - forge_fabric_compact
-  - forge_fabric_inspect
-  - forge_fabric_vram
-  - forge_fabric_warm
   - forge_generate
   - forge_generate_mesh
   - forge_health_check
   - forge_list_nodes
   - forge_mesh_status
-  - forge_swarm_run
   - forge_triage
   - forge_triage_batch
   - forge_triage_consensus
   - forge_triage_status
-  tool_count: 15
+  tool_count: 10
 - id: aetherforge-gateway
   name: AetherForge LLM Gateway
   layer: X
@@ -496,12 +491,9 @@ mcp_servers:
   layer: X
   file: projects/c2g/src/c2g/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - c2g_bet
-  - c2g_gc
-  - c2g_radar
-  tool_count: 3
+  exists: false
+  tools: []
+  tool_count: 0
 - id: family-hub
   name: Family Hub
   layer: X
@@ -577,7 +569,7 @@ mcp_servers:
 - id: iris
   name: Iris
   layer: L2
-  file: projects/kairon/packages/iris/src/iris/mcp_server.py
+  file: projects/knowledge/kairon/packages/iris/src/iris/mcp_server.py
   transport: stdio
   exists: true
   tools:
@@ -593,7 +585,7 @@ mcp_servers:
 - id: sophia
   name: Sophia Research Paradigm
   layer: L2
-  file: projects/kairon/packages/sophia/src/sophia/server/mcp_server.py
+  file: projects/knowledge/kairon/packages/sophia/src/sophia/server/mcp_server.py
   transport: stdio
   exists: true
   tools:
@@ -609,7 +601,7 @@ mcp_servers:
 - id: kronos
   name: Kronos
   layer: L2
-  file: projects/kairon/packages/kronos/src/kronos/mcp_server.py
+  file: projects/knowledge/kairon/packages/kronos/src/kronos/mcp_server.py
   transport: stdio
   exists: true
   tools:
@@ -633,7 +625,7 @@ mcp_servers:
 - id: minerva
   name: Minerva
   layer: L2
-  file: projects/kairon/packages/minerva/src/minerva/mcp_server/server.py
+  file: projects/knowledge/kairon/packages/minerva/src/minerva/mcp_server/server.py
   transport: stdio
   exists: true
   tools:
@@ -649,7 +641,7 @@ mcp_servers:
 - id: codeanalyze
   name: CodeAnalyze
   layer: L2
-  file: projects/kairon/packages/codeanalyze/src/codeanalyze/mcp.py
+  file: projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/mcp.py
   transport: stdio
   exists: true
   tools:
@@ -682,7 +674,7 @@ mcp_servers:
 - id: forge
   name: Forge
   layer: L2
-  file: projects/kairon/packages/forge/src/mcp_server.py
+  file: projects/knowledge/kairon/packages/forge/src/mcp_server.py
   transport: stdio
   exists: true
   tools:
@@ -697,7 +689,7 @@ mcp_servers:
 - id: ontoderive
   name: OntoDerive
   layer: L2
-  file: projects/kairon/packages/ontoderive/src/ontoderive/mcp_server.py
+  file: projects/knowledge/kairon/packages/ontoderive/src/ontoderive/mcp_server.py
   transport: stdio
   exists: true
   tools:
@@ -712,7 +704,7 @@ mcp_servers:
 - id: toolforge
   name: ToolForge
   layer: L2
-  file: projects/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py
+  file: projects/knowledge/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py
   transport: stdio
   exists: true
   tools:
@@ -725,7 +717,7 @@ mcp_servers:
 - id: gbrain
   name: gbrain Knowledge DB
   layer: L2
-  file: projects/gbrain/src/core/operations/exports.ts
+  file: projects/knowledge/gbrain/src/core/operations/exports.ts
   transport: stdio
   exists: true
   tools:

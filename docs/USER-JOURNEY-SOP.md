@@ -568,7 +568,7 @@ steps:
 
 ## 相关文档
 - docs/FUNCTIONAL-CAPABILITY-MAP.md
-- projects/kairon/README.md
+- projects/knowledge/kairon/README.md
 ```
 
 ### 4.4 治理检查 SOP

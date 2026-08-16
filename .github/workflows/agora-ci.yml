@@ -32,7 +32,7 @@ jobs:
             [ -d "projects/$d" ] || MISSING="$MISSING $d"
           done
           for d in kos eidos minerva core-models; do
-            [ -d "projects/kairon/packages/$d" ] || MISSING="$MISSING kairon/packages/$d"
+            [ -d "projects/knowledge/kairon/packages/$d" ] || MISSING="$MISSING kairon/packages/$d"
           done
           if [ -n "$MISSING" ]; then
             echo "❌ 缺失 sibling 依赖目录:$MISSING"
@@ -42,7 +42,7 @@ jobs:
           fi
           echo "✅ 依赖可达性预检通过"
       - name: Install dependencies
-        # P41-W1 fix: skip [kairon] extra — projects/kairon is a separate repo (.gitignore'd)
+        # P41-W1 fix: skip [kairon] extra — projects/knowledge/kairon is a separate repo (.gitignore'd)
         run: cd projects/agora && uv sync --no-extra kairon
       - name: Run tests
         run: cd projects/agora && uv run pytest tests/ --ignore=tests/e2e -q
