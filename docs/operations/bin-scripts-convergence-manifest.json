@@ -660,6 +660,186 @@
         "decision_round": "round7",
         "due_date": "2026-09-01"
       }
+    },
+    {
+      "name": "check_doc_claims",
+      "bin": "bin/mof/check-doc-claims.py",
+      "scripts": "scripts/bin/mof/check-doc-claims.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "mof",
+      "note": "Round 8 backlog: priority hotspot to close duplicate gap first. Sink=scripts/mof. Due=2026-09-08",
+      "evidence": {
+        "active_files": [
+          "bin/mof/check-doc-claims.py",
+          "scripts/bin/mof/check-doc-claims.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round8",
+        "due_date": "2026-09-08"
+      }
+    },
+    {
+      "name": "gen_dependency_baseline",
+      "bin": "bin/mof/gen-dependency-baseline.py",
+      "scripts": "scripts/bin/mof/gen-dependency-baseline.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "mof",
+      "note": "Round 8 backlog: priority hotspot to close duplicate gap first. Sink=scripts/mof. Due=2026-09-08",
+      "evidence": {
+        "active_files": [
+          "bin/mof/gen-dependency-baseline.py",
+          "scripts/bin/mof/gen-dependency-baseline.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round8",
+        "due_date": "2026-09-08"
+      }
+    },
+    {
+      "name": "drift_history_insight",
+      "bin": "bin/gac/drift-history-insight.py",
+      "scripts": "scripts/bin/gac/drift-history-insight.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 8 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-08",
+      "evidence": {
+        "active_files": [
+          "bin/gac/drift-history-insight.py",
+          "scripts/bin/gac/drift-history-insight.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round8",
+        "due_date": "2026-09-08"
+      }
+    },
+    {
+      "name": "gac_hygiene_check",
+      "bin": "bin/gac/gac-hygiene-check.py",
+      "scripts": "scripts/bin/gac/gac-hygiene-check.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 8 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-08",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-hygiene-check.py",
+          "scripts/bin/gac/gac-hygiene-check.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round8",
+        "due_date": "2026-09-08"
+      }
+    },
+    {
+      "name": "governance_history_insight",
+      "bin": "bin/gac/governance-history-insight.py",
+      "scripts": "scripts/bin/gac/governance-history-insight.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 8 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-08",
+      "evidence": {
+        "active_files": [
+          "bin/gac/governance-history-insight.py",
+          "scripts/bin/gac/governance-history-insight.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round8",
+        "due_date": "2026-09-08"
+      }
+    },
+    {
+      "name": "m2_ssot_inventory",
+      "bin": "bin/mof/m2-ssot-inventory.py",
+      "scripts": "scripts/bin/mof/m2-ssot-inventory.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "mof",
+      "note": "Round 8 backlog: priority hotspot to close duplicate gap first. Sink=scripts/mof. Due=2026-09-08",
+      "evidence": {
+        "active_files": [
+          "bin/mof/m2-ssot-inventory.py",
+          "scripts/bin/mof/m2-ssot-inventory.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round8",
+        "due_date": "2026-09-08"
+      }
+    },
+    {
+      "name": "gen_project_registry",
+      "bin": "bin/mof/gen-project-registry.py",
+      "scripts": "scripts/bin/mof/gen-project-registry.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "mof",
+      "note": "Round 8 backlog: priority hotspot to close duplicate gap first. Sink=scripts/mof. Due=2026-09-08",
+      "evidence": {
+        "active_files": [
+          "bin/mof/gen-project-registry.py",
+          "scripts/bin/mof/gen-project-registry.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round8",
+        "due_date": "2026-09-08"
+      }
+    },
+    {
+      "name": "rule_history_insight",
+      "bin": "bin/gac/rule-history-insight.py",
+      "scripts": "scripts/bin/gac/rule-history-insight.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 8 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-08",
+      "evidence": {
+        "active_files": [
+          "bin/gac/rule-history-insight.py",
+          "scripts/bin/gac/rule-history-insight.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round8",
+        "due_date": "2026-09-08"
+      }
+    },
+    {
+      "name": "mof_bootstrap",
+      "bin": "bin/mof/mof-bootstrap.py",
+      "scripts": "scripts/bin/mof/mof-bootstrap.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "mof",
+      "note": "Round 8 backlog: priority hotspot to close duplicate gap first. Sink=scripts/mof. Due=2026-09-08",
+      "evidence": {
+        "active_files": [
+          "bin/mof/mof-bootstrap.py",
+          "scripts/bin/mof/mof-bootstrap.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round8",
+        "due_date": "2026-09-08"
+      }
+    },
+    {
+      "name": "mof_m2_coverage",
+      "bin": "bin/mof/mof-m2-coverage.py",
+      "scripts": "scripts/bin/mof/mof-m2-coverage.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "mof",
+      "note": "Round 8 backlog: priority hotspot to close duplicate gap first. Sink=scripts/mof. Due=2026-09-08",
+      "evidence": {
+        "active_files": [
+          "bin/mof/mof-m2-coverage.py",
+          "scripts/bin/mof/mof-m2-coverage.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round8",
+        "due_date": "2026-09-08"
+      }
     }
   ]
 }

@@ -197,3 +197,54 @@
 #### 下一步（Round 8 建议）
 - 固化 `ARTIFACTS` 周报作为每周 gate 的输入，按 `decision_round` 做“并行缺口回填 → action 收敛 → 下沉到子项目”三段闭环。
 - 把 owner/action/sink 从清单与周报联通到子项目/能力 owner 的看板，按期逐步消化 `unmanaged_parallel_candidates`。
+
+### 九、Round 8（2026-08-16）：依赖热点 Top10 继续并行缺口收敛
+
+#### 已完成
+- 从 `make bin-tool-registry-dependency-risks` 上一轮 Top 10 里提取并回填 10 条 `parallel=True` 高影响节点到清单：
+  - `bin/mof/mof-bootstrap.py` → `scripts/bin/mof/mof-bootstrap.py`（owner=mof）
+  - `bin/mof/mof-m2-coverage.py` → `scripts/bin/mof/mof-m2-coverage.py`（owner=mof）
+  - `bin/mof/check-doc-claims.py` → `scripts/bin/mof/check-doc-claims.py`（owner=mof）
+  - `bin/mof/gen-project-registry.py` → `scripts/bin/mof/gen-project-registry.py`（owner=mof）
+  - `bin/mof/m2-ssot-inventory.py` → `scripts/bin/mof/m2-ssot-inventory.py`（owner=mof）
+  - `bin/mof/gen-dependency-baseline.py` → `scripts/bin/mof/gen-dependency-baseline.py`（owner=mof）
+  - `bin/gac/rule-history-insight.py` → `scripts/bin/gac/rule-history-insight.py`（owner=gac）
+  - `bin/gac/gac-hygiene-check.py` → `scripts/bin/gac/gac-hygiene-check.py`（owner=gac）
+  - `bin/gac/governance-history-insight.py` → `scripts/bin/gac/governance-history-insight.py`（owner=gac）
+  - `bin/gac/drift-history-insight.py` → `scripts/bin/gac/drift-history-insight.py`（owner=gac）
+- 所有 10 条补齐到 `docs/operations/bin-scripts-convergence-manifest.json`：
+  - `status: managed`
+  - `action: close-duplicate-gap-first`
+  - `risk_score: 15`
+  - `due_date: 2026-09-08`
+  - `decision_round: round8`
+
+#### 验证结果
+- `make bin-tool-registry-audit-strict`
+  - `parallel manifest gaps: 163`（较 Round7 下降 10）
+  - `dependency hotspots: 25`
+  - `managed parallel duplicates: 0`
+  - `unmanaged parallel duplicates: 0`
+  - `strict checks: OK`
+- `make bin-tool-registry-weekly-governance-report`
+  - 输出落盘：`artifacts/bin-tool-registry-weekly-governance-report.json`
+  - 本地快照文件：`artifacts/bin-tool-registry-audit-round8.json`
+- `make bin-tool-registry-parallel-gaps`
+  - 当前 `parallel manifest gaps: 163`
+- `make bin-tool-registry-dependency-risks`
+  - 当前 Top 10 按风险未被管理（`managed=False`）：
+    - `bin/gac/gac-gc.py`
+    - `bin/gac/dim-weight.py`
+    - `bin/gac/x2-rule-add.py`
+    - `bin/gac/x2-freshness-check.py`
+    - `bin/gac/x2-rule-lint.py`
+    - `bin/gac/governance-alert-dispatch.py`
+    - `bin/gac/auto-merge-lane-policy.py`
+    - `bin/gac/omo-state-write-guard.py`
+    - `bin/gac/p0-event-listener.py`
+    - `bin/gac/omo-acl-ops-window.sh`
+
+#### 下一步（Round 9）
+- 继续每周按 `make bin-tool-registry-dependency-risks` 选 Top10 做闭环；
+- 强制要求每个 `parallel=True` 条目必须在 7 个工作日内有 `owner/action/sink` 记录（优先 `managed`）；
+- 将 `TOOL_REGISTRY_DEPENDENCY_LIMIT` 在周例会设置为 10，形成可预期交付节奏。
