@@ -41,6 +41,7 @@ $$\text{FinalScore}(p) = \text{BaseScore}(p) \times M_{\text{affinity}}(p) \time
 | `bos://compute/aetherforge/fabric` | `stdio / omlxc` | 采集集群温控、模型架构、两级缓存等全网状态 |
 | `bos://compute/aetherforge/triage` | `stdio / omlxc` | 评估输入 Prompt 的意图复杂度分级 |
 | `bos://compute/aetherforge/vram` | `stdio / omlxc` | 计算指定模型在指定 Token 长度下的 KV Cache 显存 |
+| `bos://compute/aetherforge/warm` | `stdio / omlxc` | 预热常用 System Prompt 前缀以实现 0ms TTFT |
 | `bos://compute/aetherforge/infer` | `stdio / aetherforge` | 通过 AetherForge Gateway (:9290) 触发实际推理 |
 
 ### 3.2 常用 CLI 诊断命令
@@ -52,14 +53,18 @@ make omlxc-fabric
 omlxc fabric inspect
 omlxc fabric inspect --json
 
-# 3. 实时意图复杂度分诊
+# 3. 预热系统公共前缀缓存 (0ms TTFT)
+omlxc fabric warm
+cockpit mesh warm --model coding
+
+# 4. 实时意图复杂度分诊
 omlxc fabric triage "Design a lock-free queue to prevent ABA problem"
 
-# 4. 显存动态增长预算评估 (模型名 + Token数)
+# 5. 显存动态增长预算评估 (模型名 + Token数)
 omlxc fabric vram coding 32768
 omlxc fabric vram qwen-72b 65536
 
-# 5. 通过 Cockpit 统一转发
+# 6. 通过 Cockpit 统一转发
 cockpit mesh fabric
 cockpit mesh triage "Fix typo in variable"
 cockpit mesh vram coding 32768
@@ -68,6 +73,7 @@ cockpit mesh vram coding 32768
 ### 3.3 Agora MCP 工具接口
 智能体可通过 Agora MCP Server 调用以下标准工具：
 - `fabric_inspect()` ➔ 获取当前集群物理状态 JSON。
+- `fabric_warm_prefixes(model_id)` ➔ 触发指定模型的前缀缓存预热。
 - `fabric_triage(prompt)` ➔ 获取 `{"tier": "reasoning", "confidence": 0.85, ...}`。
 - `fabric_vram_budget(model_id, context_tokens)` ➔ 获取 `{"kv_cache_mb": 8448.0, "total_estimated_vram_mb": 25948.0, ...}`。
 
@@ -75,6 +81,6 @@ cockpit mesh vram coding 32768
 
 ## 4. 防御性操作规则与最佳实践 (Best Practices)
 
-1. **防 OOM 原则**：在发起大于 $16\text{k}$ Token 的大长文推理前，**必须**先调用 `fabric_vram_budget` 或 `omlxc fabric vram` 进行显存预算判定。
+1. **防 OOM 原则**：在发起大于 $16\text{k}$ Token 的大长文推理前，**必须**先调用 `fabric_vram_budget` 或 `omlxc fabric vram` 进行显存预算判定。若返回 `compaction_advised=True`，应先触发 `bos://memory/mos/consolidate` 压缩上下文。
 2. **防饿死原则**：批量跑分、文档嵌入等重型任务必须声明 `priority="p2_batch"`，避免阻塞人类开发者的即时代码补全。
 3. **单向门禁原则**：不得绕过 AetherForge / omlxcd 直接通过原始端口调用底层 backend，所有调度必须经过统一数据面。

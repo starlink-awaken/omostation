@@ -33,23 +33,33 @@
   - `HEAVY`：笔记本节点（MBP）自动降权 $\times 0.5$，非交互任务自动溢流至 Mac mini。
   - `TRAPPING` / 电池 $<15\%$：硬惩罚 $\times 0.1$，禁止大模型重载推理。
 
-### 阶段 2：任务分发前意图分诊与 VRAM 预算
+### 阶段 2：系统公共前缀预热 (Prefix Cache Warming)
+- **执行频率**：集群节点上线、新模型加载后、Agent 重启时。
+- **操作指令**：
+  ```bash
+  # 预热核心治理规则与系统 Prompt (0ms TTFT)
+  omlxc fabric warm --model coding
+  cockpit mesh warm --model coding
+  ```
+- **判定标准**：`warmed_count >= 3`，预热命中率达到 100%，消除后续 Agent 交互的首字冷启动开销。
+
+### 阶段 3：任务分发前意图分诊与 VRAM 预算自愈
 - **操作指令**：
   ```bash
   # 分析提示词复杂度
   omlxc fabric triage "重构数据面调度器并证明死锁自由"
   # 输出: Tier: REASONING | Confidence: 85%
 
-  # 预估 32k 上下文显存
+  # 预估 32k 上下文显存与压缩建议
   omlxc fabric vram coding 32768
   # 输出: KV Cache: 8,448.0 MB | Total Est. VRAM: 25,948.0 MB
   ```
 - **调度准则**：
   - `FAST` ➔ 引导至 Mac mini 2B~4B 极速模型（100+ TPS）。
   - `REASONING` ➔ 锁定 MBP 27B~70B 深度思考模型。
-  - 显存超限（超出节点安全水位 85%）➔ 提前拦截或分块执行，杜绝中途 OOM 崩溃。
+  - **显存预警与自愈**：当显存超出安全水位（85%）时，返回 `compaction_advised=True` 及 `max_safe_tokens`。上层智能体自动调用 `bos://memory/mos/consolidate` 滑动压缩历史对话，保障长程会话永不中断。
 
-### 阶段 3：基准跑分与性能漂移检测
+### 阶段 4：基准跑分与性能漂移检测
 - **执行频率**：模型权重更新后、macOS 系统升级后、闲时自动巡检。
 - **操作指令**：
   ```bash
@@ -65,8 +75,9 @@
 
 | 场景 | 调用方式 | 示例 |
 | :--- | :--- | :--- |
-| **CLI (人类交互)** | `omlxc fabric ...` / `make omlxc-fabric` | `omlxc fabric inspect` |
-| **Cockpit (统一网关)** | `cockpit mesh ...` | `cockpit mesh fabric` |
-| **BOS URI (总线)** | `bos://compute/aetherforge/fabric` | `resolve_bos_uri("bos://compute/aetherforge/fabric")` |
-| **Agora MCP (Agent)** | MCP Tools | `fabric_inspect()`, `fabric_vram_budget(...)` |
+| **CLI (人类交互)** | `omlxc fabric ...` / `make omlxc-fabric` | `omlxc fabric inspect`, `omlxc fabric warm` |
+| **Cockpit (统一网关)** | `cockpit mesh ...` | `cockpit mesh fabric`, `cockpit mesh warm` |
+| **BOS URI (总线)** | `bos://compute/aetherforge/*` | `bos://compute/aetherforge/warm` |
+| **Agora MCP (Agent)** | MCP Tools | `fabric_inspect()`, `fabric_warm_prefixes()`, `fabric_vram_budget(...)` |
 | **OpenAI 兼容接口** | `http://127.0.0.1:9290/v1` | `POST /v1/chat/completions` |
+| **Cockpit Web REST** | `http://127.0.0.1:8080/api/governance/compute/*` | `GET /api/governance/compute/fabric` |
