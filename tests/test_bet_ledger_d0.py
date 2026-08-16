@@ -160,3 +160,57 @@ def test_complete_accepts_index_pinned_submodule_surface(
 
     assert rc == 0
     assert "status: done" in ledger.read_text(encoding="utf-8")
+
+
+def test_verify_execute_fails_when_command_exits_nonzero(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(BET_LEDGER, "WS", tmp_path)
+    data = {
+        "bets": [
+            {
+                "id": "BET-TEST",
+                "title": "verify exit",
+                "done_when": [],
+                "verify": [
+                    {
+                        "cmd": "python3 -c 'raise SystemExit(7)'",
+                        "expect": "exit 0",
+                    }
+                ],
+                "write_surfaces": [],
+            }
+        ]
+    }
+    rc = BET_LEDGER.cmd_verify(
+        data, SimpleNamespace(bet_id="BET-TEST", execute=True)
+    )
+    assert rc == 1
+
+
+def test_verify_execute_passes_when_command_exits_zero(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(BET_LEDGER, "WS", tmp_path)
+    data = {
+        "bets": [
+            {
+                "id": "BET-TEST",
+                "title": "verify exit",
+                "done_when": [],
+                "verify": [
+                    {
+                        "cmd": "python3 -c 'raise SystemExit(0)'",
+                        "expect": "exit 0",
+                    }
+                ],
+                "write_surfaces": [],
+            }
+        ]
+    }
+    rc = BET_LEDGER.cmd_verify(
+        data, SimpleNamespace(bet_id="BET-TEST", execute=True)
+    )
+    assert rc == 0
