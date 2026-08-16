@@ -65,6 +65,16 @@ Where:
 | :--- | :--- | :--- |
 | `omlxc fabric inspect` | Rich / JSON | Cluster thermal pressure, triage capability, registered architectures, cache hit rates |
 | `omlxc fabric triage "<prompt>"` | Rich / JSON | Zero-latency AST complexity classification (`FAST` / `STANDARD` / `REASONING`) |
-| `omlxc fabric vram <model> <tokens>` | Rich / JSON | Pre-emptive KV Cache memory footprint calculation and headroom admission |
+| `omlxc fabric vram <model> <tokens>` | Rich / JSON | Pre-emptive KV Cache memory footprint, headroom admission & compaction advisory |
+| `omlxc fabric warm [--model <name>]` | Rich / JSON | Pre-warm high-frequency system prompt prefixes into cache registry (0ms TTFT) |
 | `omlxc routes plan <model>` | Rich / JSON | Explain exact multi-factor scoring formula for any model request |
 | `omlxc doctor` | Rich / CLI | Verify database, launchd daemon, config, and node socket reachability |
+
+---
+
+## 5. Resilient Context Compaction & Sliding Windows
+
+When a continuous multi-turn autonomous Agent session expands toward hardware memory limits:
+1. `VRAMBudgetEstimator.check_headroom_admission` detects safe threshold breaches ($>85\%$ headroom).
+2. It returns `compaction_advised=True`, `max_safe_tokens`, and `recommended_compaction_ratio`.
+3. The upstream gateway or Agent invokes `bos://memory/mos/consolidate` or slides historical context into structural memory entities, ensuring long-running agents never crash from OOM.
