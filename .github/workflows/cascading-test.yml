@@ -21,6 +21,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          ignore-nothing-to-cache: true
       - run: pip install pyyaml
       - name: Determine changed files
         id: changed-files
