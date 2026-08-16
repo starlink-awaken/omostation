@@ -3385,7 +3385,9 @@ bets:
   title: 知识场景召回被引用率上线
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-16
+  done_note: 'knowledge-funnel 管道双侧上线 (omo 快照 + cockpit /api/outcomes 端点), citation_rate 自动计算, 实测 live。月度基线自 08-16 累计, 09-16 复核。'
   goal: 用一条指标暴露世界模型的真实检索质量
   non_goals:
   - 提升检索质量本身
