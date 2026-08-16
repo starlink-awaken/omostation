@@ -34,7 +34,9 @@ jobs:
           for file in $CHANGED; do
             if [[ $file == projects/* ]]; then
               proj=$(echo $file | cut -d'/' -f2)
-              PROJECTS="$PROJECTS $proj"
+              # ADR-0412 (2026-08-16): 子模块删除后 gitlink 仍出现在 diff —
+              # 目录已不存在(或非目录)的 project 不传给 affected-graph (严格 fail-closed 语义保留)
+              [[ -d "projects/$proj" ]] && PROJECTS="$PROJECTS $proj"
             fi
           done
           

@@ -1784,7 +1784,9 @@ bets:
   title: omo-debt + c2g 并入 omo
   appetite: 2 weeks
   priority: P1
-  status: candidate
+  status: in_progress
+  implemented_at: 2026-08-16
+  awaiting: 'human_gate (L3 归并批准; 实施细节与停审理由见 retro BET-Y1Q2-T1-01)'
   goal: 减少子模块数量与指针漂移面, 归并同属治理面的三个仓
   non_goals:
   - 重写业务逻辑
@@ -1819,7 +1821,9 @@ bets:
   title: model-driven 去留判定
   appetite: 1 week
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-16
+  done_note: 'ADR-0412: 接入主链保留独立子仓 (cockpit 适配器 8 符号真实消费+MOF/CI 依赖; 降库/归档证据不足)。判定依据=实测调用链。'
   goal: 判定 M0 是否在 Mesh 主链上有必经位置, 终结"横切但不在链上"的模糊状态
   non_goals:
   - 立即执行归并(视判定结果)

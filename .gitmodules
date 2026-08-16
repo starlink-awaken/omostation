@@ -37,9 +37,6 @@
 [submodule "projects/omo"]
 	path = projects/omo
 	url = https://github.com/starlink-awaken/omostation-omo.git
-[submodule "projects/omo-debt"]
-	path = projects/omo-debt
-	url = https://github.com/starlink-awaken/omo-debt.git
 [submodule "projects/aetherforge"]
 	path = projects/aetherforge
 	url = https://github.com/starlink-awaken/omostation-aetherforge.git
@@ -47,9 +44,6 @@
 [submodule "projects/bus-foundation"]
 	path = projects/bus-foundation
 	url = https://github.com/starlink-awaken/omostation-bus-foundation.git
-[submodule "projects/c2g"]
-	path = projects/c2g
-	url = https://github.com/starlink-awaken/omostation-c2g.git
 [submodule "projects/observability"]
 	path = projects/observability
 	url = https://github.com/starlink-awaken/omostation-observability.git

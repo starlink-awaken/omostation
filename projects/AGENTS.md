@@ -76,7 +76,7 @@ bun run lint
 
 - [`../AGENTS.md`](../AGENTS.md)
 - [`omo/CLAUDE.md`](omo/CLAUDE.md)
-- [`c2g/CLAUDE.md`](c2g/CLAUDE.md)
+- omo 内包 c2g (_vendored, ADR-0412)
 
 Runtime projections such as workspace health, governance-data, and `BRIEF.md` refresh through:
 

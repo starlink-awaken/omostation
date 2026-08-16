@@ -38,10 +38,10 @@ internal_integrations:
     authority: strategy_ingress
     owner: strategy-team
     ssot_rule: Strategy and external specs enter governed work through C2G/OMO planned task materialization.
-    pitch_bet: uv run --project projects/c2g c2g bet <pitch.md>
+    pitch_bet: uv run --project projects/omo python -m omo._vendored.c2g.cli bet <pitch.md>  # ADR-0412 内包
     cockpit_entry: uv run --project projects/cockpit cockpit compass bet <pitch.md>
     gate_binding: c2g-bet-help
-    health_command: [uv, run, --project, projects/c2g, c2g, bet, --help]
+    health_command: [uv, run, --project, projects/omo, python, -m, omo._vendored.c2g.cli, bet, --help]  # ADR-0412 内包
     health_required: true
   cockpit:
     status: integrated
@@ -482,7 +482,7 @@ doctor_checks:
   - id: c2g-bet-help
     description: C2G pitch-to-task ingress command is available.
     required: true
-    command: [uv, run, --project, projects/c2g, c2g, bet, --help]
+    command: [uv, run, --project, projects/omo, python, -m, omo._vendored.c2g.cli, bet, --help]  # ADR-0412 内包
   - id: omo-bridge-help
     description: OMO bridge compatibility path for BMAD/OpenSpec is available.
     required: true
@@ -553,8 +553,8 @@ diff_checks:
       - .omo/pitches/**
       - .omo/tasks/planned/**
       - runtime/omo/_delivery/ingress/**
-      - projects/c2g/**
       - projects/omo/**
+      - projects/omo/src/omo/_vendored/c2g/**
       - runtime/sandbox/**
     command: [uv, run, --with, pyyaml, python, bin/gac/gac-validate.py, --gate]
   - id: agent-workflow-tests
@@ -951,7 +951,7 @@ workflows:
         - .omo/**
         - spaces/**
         - projects/omo/**
-        - projects/c2g/**
+        - projects/omo/src/omo/_vendored/c2g/**
       write:
         - .omo/**
         - spaces/**

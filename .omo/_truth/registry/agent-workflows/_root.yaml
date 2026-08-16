@@ -43,15 +43,17 @@ internal_integrations:
     owner: strategy-team
     ssot_rule: Strategy and external specs enter governed work through C2G/OMO planned
       task materialization.
-    pitch_bet: uv run --project projects/c2g c2g bet <pitch.md>
+    pitch_bet: uv run --project projects/omo python -m omo._vendored.c2g.cli bet <pitch.md>  # ADR-0412 内包
     cockpit_entry: uv run --project projects/cockpit cockpit compass bet <pitch.md>
     gate_binding: c2g-bet-help
     health_command:
     - uv
     - run
     - --project
-    - projects/c2g
-    - c2g
+    - projects/omo
+    - python
+    - -m
+    - omo._vendored.c2g.cli
     - bet
     - --help
     health_required: true
@@ -504,8 +506,10 @@ doctor_checks:
   - uv
   - run
   - --project
-  - projects/c2g
-  - c2g
+  - projects/omo
+  - python
+  - -m
+  - omo._vendored.c2g.cli
   - bet
   - --help
 - id: omo-bridge-help

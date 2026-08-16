@@ -1343,7 +1343,7 @@ def collect_supervised_codex(
             "--source",
             "auto",
             "--limit",
-            "200",
+            os.environ.get("ORCA_TERMINAL_READ_LIMIT", "800"),  # SR-06 gap-4: 200 截断误伤长输出
             "--json",
         ),
         timeout_seconds=15.0,
