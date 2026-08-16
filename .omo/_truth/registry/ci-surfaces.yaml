@@ -747,6 +747,19 @@ surfaces:
     status: active
     note: 治理闭环端到端验证 (真实场景)
 
+  - id: bin-gac-documents-domain-jobs-py
+    tool: bin/gac/documents_domain_jobs.py
+    workflow: phase-gate-enforce.yml
+    gate: true
+    triggers: [push, pull_request]
+    status: active
+  - id: bin-gac-gac-worktree-sh-bumpfast
+    tool: bin/gac/gac-worktree.sh
+    workflow: reusable-submodule-bump-pr.yml
+    gate: false
+    triggers: [workflow_call]
+    status: active
+
 workflow_triggers:
   - workflow: agora-ci.yml
     triggers: [per_pr, push]

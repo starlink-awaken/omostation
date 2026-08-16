@@ -4305,7 +4305,9 @@ bets:
   title: cockpit Phase 4 清理债务 — cockpit_mcp.py 残留 import + 子模块指针漂移
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-16
+  done_note: '四条 done_when 实测过: 生产零残留(守护断言保留)/l4bridge 5 处降级全清(-30 行)/指针零漂移/六模块 rc=0。cockpit 子仓 l4bridge commit 已推。retro 附证据表。'
   goal: 完成 cockpit Phase 4 清理：清理 cockpit_mcp.py 残留 import，同步 audit worktree 子模块指针，修复
     L4 bridge 全系列失效
   non_goals:
