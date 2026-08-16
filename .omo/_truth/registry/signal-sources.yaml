@@ -26,7 +26,10 @@ sources:
   - id: netease_mailmaster_inbox
     description: 网易邮箱大师收件箱 — 工作邮件信号入口
     transport: local_filesystem
-    path: "~/Library/Containers/com.netease.mailmaster/"
+    # T2-01 (2026-08-16 修正): 容器真名 com.netease.macmail (mailmaster 注册永不匹配);
+    # 真实数据在 Application Support/data/ (app.db + 三账户目录, 08-14 活跃)
+    path: "~/Library/Containers/com.netease.macmail/Data/Library/Application Support/data/"
+    probe_depth: 2  # data/<account>/ 两层之下的库文件变更
     poll_interval: 300s
     dedup_window: 24h
     idempotency_key: message_id

@@ -3415,10 +3415,12 @@ bets:
   title: 感知面第二根管子 (文件夹 / 日历)
   appetite: 1 week
   priority: P1
-  status: candidate
-  reopened_at: 2026-08-12
-  reopen_reason: 2026-08-12 复核发现原 verify 只统计注册项数量，无法证明第二源存在真实信号或每周 >=10； 当前 inbox_folder
-    health=unknown 且 last_signal_at=null。登记不等于运行，故撤回 done，等待真实运行证据。
+  status: done
+  done_at: 2026-08-16
+  done_note: >-
+    真因修复: 容器真名 com.netease.macmail (注册表误写 mailmaster 永不匹配, 08-12 reopen
+    的根因)。netease 首条真实信号 2026-08-16T08:00Z, 双邮件源 healthy, 抽象零特判
+    (probe_depth 通用配置), 守护测试固化。retro 附对照表。
   goal: 降低单一信号源风险, 验证 signal-sources 抽象对第二类源成立
   non_goals:
   - 第三/四根管子(属 Y2Q4)
@@ -3446,9 +3448,12 @@ bets:
   title: 信号落盘管道修复 — 探测深度 + health 回写 + state 防御
   appetite: 3 days
   priority: P0
-  status: in_progress
-  started_at: 2026-08-15
-  pr: '#1521'
+  status: done
+  done_at: 2026-08-16
+  done_note: >-
+    24h 落盘窗口达标: 08-15 14:26 部署 → 08-16 08:00 信号持续跨日 (launchd log 456 条
+    apple_mail 记录); health 持续 healthy; 附加 netease 源同轮修复 (双源 08:00Z 同步)。
+    retro 追记附证据链。
   diagnosed_at: 2026-08-15
   diagnosis: >-
     只读诊断结论 (证据链 E1-E5): 层1 探测面太浅 — _hash_path 只探 ~/Library/Mail/ 顶层,
@@ -4307,7 +4312,9 @@ bets:
   title: cockpit Phase 4 清理债务 — cockpit_mcp.py 残留 import + 子模块指针漂移
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-16
+  done_note: '四条 done_when 实测过: 生产零残留(守护断言保留)/l4bridge 5 处降级全清(-30 行)/指针零漂移/六模块 rc=0。cockpit 子仓 l4bridge commit 已推。retro 附证据表。'
   goal: 完成 cockpit Phase 4 清理：清理 cockpit_mcp.py 残留 import，同步 audit worktree 子模块指针，修复
     L4 bridge 全系列失效
   non_goals:
@@ -4364,6 +4371,46 @@ bets:
   risk_level: L2
   human_gate: false
   circuit_breaker: 清理范围超出 3 天 appetite → 先完成 Agora BOS 迁移路径，剩余残留下个 bet
+  retro: required
+- id: BET-Y1Q3-T5-04
+  track: T5-ORCH
+  window: Y1Q3
+  title: SR-06 四缺口修复 — supervised loop 生产健壮性
+  appetite: 2 days
+  priority: P1
+  status: done
+  done_at: 2026-08-16
+  origin: 'T1-18 retro Q3 四产品缺口转正 (SR-06 六轮 canary 实证发现)'
+  goal: >-
+    SR-06 演练挖出的四个 fail-closed 误伤点修复: (1) admission TTL 过期 × mesh 幂等 = execute
+    重试死锁; (2) worker completion report 空 filesModified 致 collect 误拒; (3) gitignore
+    区越界写对 verify 不可见; (4) supervisor terminal fallback 200 行截断误伤长输出。
+  non_goals:
+  - 改变 fail-closed 语义 (只修误伤路径)
+  - A2A/ACP 层改动
+  done_when:
+  - AdmissionRenewed 事件 + renew_admission (dispatched 自环续期, 终态拒绝)
+  - prompt 契约强制非空 filesModified 条目
+  - collect 补 untracked 扫描 (.omo/workers/runs 除外)
+  - terminal read limit 环境变量化 (默认 800)
+  verify:
+  - cmd: cd projects/omo && uv run python -m pytest tests/test_sr06_gap_fixes.py -q
+    expect: 5 passed
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/workflow_mesh.py
+  - projects/omo/src/omo/workflow_dispatch.py
+  - projects/omo/src/omo/omo_worker_dispatch.py
+  - projects/omo/src/omo/blueprint_control.py
+  - projects/omo/tests/test_sr06_gap_fixes.py
+  - bin/gac/orca-codex-supervisor.py
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-18
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: mesh 状态机语义冲突 → 回退单事件方案
   retro: required
 - id: BET-Y1Q3-T6-03
   track: T6-SUBTRACT
