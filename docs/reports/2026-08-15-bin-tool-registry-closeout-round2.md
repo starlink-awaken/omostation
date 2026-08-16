@@ -118,3 +118,32 @@
 2. 对 `managed=False` 的并行候选先闭环：`parallel manifest gap` 补录或显式分流到子项目 owner；
 3. 在下一轮把依赖热点输出扩展为“建议下沉目标”（当前脚本仅输出影响面节点，未引入子项目映射模型）；
 4. 长期机制：每次新增脚本时强制更新并行清单，结合 `make bin-tool-registry-dependency-risks` 与 `make bin-tool-registry-parallel-gaps` 双门禁。
+
+### 七、Round 6（2026-08-16）：依赖热点下沉建议固化
+
+#### 已完成
+- 在 `bin/tool-registry-audit.py` 对 `dependency_hotspots` 增加“治理可执行建议”字段：
+  - `owner_hint`（基于 manifest / 路径推断）；
+  - `recommended_action`（如 `close-duplicate-gap-first` / `keep-or-review-by-team`）；
+  - `recommended_sink`（如 `scripts/<owner>` 或 `bin`）；
+  - `normalized_name` 修复为循环内局部变量避免“复用污染”导致全量同名问题；
+- `scripts/bin` 与 `bin` 并行缺口输出链路保持不变，但在 `bin-tool-registry-dependency-risks` 中新增输出：
+  - owner / action / sink 字段；
+  - 便于直接生成“下沉清单”与周会工单。
+
+#### 本轮关键结果（`TOOL_REGISTRY_SCOPE=both`）
+- `total_scripts: 796`
+- `parallel_candidates: 215`
+- `parallel_manifest_gaps: 183`
+- `dependency hotspots: 25`（默认 Top 25）
+- `managed parallel duplicates: 0`
+- `unmanaged parallel duplicates: 0`
+- 示例 Top 5 建议：
+  - `bin/ssot/bus-usage-report.py => owner=ssot action=close-duplicate-gap-first sink=scripts/ssot`
+  - `bin/submodule-gitlink-check.py => owner=governance action=close-duplicate-gap-first sink=scripts/governance`
+  - `bin/cockpit-readiness.py => owner=governance action=close-duplicate-gap-first sink=scripts/governance`
+
+#### 下一步路线（Round 7）
+1. 优先清理 `parallel=True` 的 Top 10，并同步将结果回填 `docs/operations/bin-scripts-convergence-manifest.json`；
+2. 对 `recommended_sink` 不为 `bin` 的高风险节点建立 `owner` 与 `动作截止日`；
+3. 将 `dependency_hotspots` 建议字段接入每周门禁报表（CI 可选输出到 artifacts，形成证据）。
