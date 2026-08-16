@@ -244,7 +244,44 @@
     - `bin/gac/p0-event-listener.py`
     - `bin/gac/omo-acl-ops-window.sh`
 
-#### 下一步（Round 9）
-- 继续每周按 `make bin-tool-registry-dependency-risks` 选 Top10 做闭环；
-- 强制要求每个 `parallel=True` 条目必须在 7 个工作日内有 `owner/action/sink` 记录（优先 `managed`）；
-- 将 `TOOL_REGISTRY_DEPENDENCY_LIMIT` 在周例会设置为 10，形成可预期交付节奏。
+### 十、Round 9（2026-08-16）：Top10 漂移后的本轮闭环
+
+#### 已完成
+- 复盘 Round8 以来 `make bin-tool-registry-dependency-risks` 漂移的 Top10，确认仍有 `managed=False` 变更项；
+- 将本次 Top10（执行时点）中已重复出现且具备稳定 owner 的 10 条入 `docs/operations/bin-scripts-convergence-manifest.json`：
+  - `bin/gac/alert-aggregator.py`
+  - `bin/gac/gac-bootstrap.py`
+  - `bin/gac/gac-mof-validate.py`
+  - `bin/gac/m1-closeout-report.py`
+  - `bin/gac/state-freshness-check.py`
+  - `bin/gac/gac-coverage-lint.py`
+  - `bin/gac/event-loop-lint.py`
+  - `bin/gac/kos-seed-import.py`
+  - `bin/gac/phase-gate-check.py`
+  - `bin/gac/alert-mock-p0-notify.py`
+- 为可执行闭环，补齐 Makefile：
+  - `.PHONY` 增加 `bin-tool-registry-round9`
+  - `make bin-tool-registry-round9` 作为 strict + 并行缺口 + 依赖热点 + 周报的一键闭环。
+- 本轮执行链路：`make bin-tool-registry-round9`
+  - `parallel gaps: 143`
+  - `dependency hotspots: 25`
+  - `managed parallel duplicates: 0`
+  - `unmanaged parallel duplicates: 0`
+  - `strict checks: OK`
+  - 周报产物：`artifacts/bin-tool-registry-weekly-governance-report-round9.json`
+- Top10 快照（执行时点，仍可能受清单回填导致漂移）：
+  - `bin/collab/adv-fail-report.py`
+  - `bin/collab/recommend_mode.py`
+  - `bin/collab/export-dualtrack.py`
+  - `bin/collab/bos-stdio-inventory.py`
+  - `bin/ssot/doc-ssot-lint.py`
+  - `bin/ssot/check-boundary.py`
+  - `bin/ssot/ts-file-analyze.py`
+  - `bin/ssot/god-module-13-error-list.py`
+  - `bin/ssot/check-toolbox-ssot.py`
+  - `bin/ssot/venv-yaml-check.py`
+
+#### 下一步（Round 10）
+- 继续按 `make bin-tool-registry-dependency-risks` 固定 `TOOL_REGISTRY_DEPENDENCY_LIMIT=10`，优先处理当前 `managed=False` Top10：
+  - 本轮待纳管清单建议优先 `collab` + `ssot` 下沉脚本与 `action=close-duplicate-gap-first` / `fill-parallel-manifest` 条目。
+- 建议将 Round9 中新增 `bin-tool-registry-round9` 目标纳入每周例会固定验证项，形成 `audit → closeout → 下一轮` 的循环。
