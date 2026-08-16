@@ -100,8 +100,11 @@ class TestGraphRAG(unittest.TestCase):
         from kos.ontology.schema import init_schema
 
         try:
-            # graphrag 查询走 retrievalDatabase — schema 建同库
-            init_schema(get_connection(get_artifact_path("retrievalDatabase")))
+            # 用 GraphRAG 实例自身的连接 init (与被测对象 100% 同源, 免路径解析分叉)
+            from kos.graphrag import GraphRAG
+
+            with GraphRAG() as rag:
+                init_schema(rag.conn)
         except Exception:
             pass  # 已初始化或环境不支持时跳过
     """Test the GraphRAG class."""

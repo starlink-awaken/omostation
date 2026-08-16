@@ -102,7 +102,7 @@ typecheck-report:
 
 # Typecheck regression gate: 卡增量不卡存量 (CI 友好, baseline 见 mypy-baseline.yaml)
 typecheck-gate:
-	@uv run python scripts/mypy_report.py --baseline mypy-baseline.yaml
+	@uv run --with pyyaml python scripts/mypy_report.py --baseline mypy-baseline.yaml
 
 # 刷新 baseline (修了真错误后降数; mypy 版本漂移误报时同样刷新)
 typecheck-gate-update:

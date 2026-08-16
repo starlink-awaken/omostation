@@ -119,7 +119,11 @@ class TestOntologyEvolution(unittest.TestCase):
         from kos.ontology.schema import init_schema
 
         try:
-            init_schema(get_connection(get_artifact_path("retrievalDatabase")))
+            # 用 OntologyEvolution 同源 GraphRAG 连接 init (免路径解析分叉)
+            from kos.graphrag import GraphRAG
+
+            with GraphRAG() as rag:
+                init_schema(rag.conn)
         except Exception:
             pass  # 已初始化或环境不支持时跳过
     """Test the OntologyEvolution class."""
