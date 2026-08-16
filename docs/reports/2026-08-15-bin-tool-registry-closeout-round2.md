@@ -147,3 +147,53 @@
 1. 优先清理 `parallel=True` 的 Top 10，并同步将结果回填 `docs/operations/bin-scripts-convergence-manifest.json`；
 2. 对 `recommended_sink` 不为 `bin` 的高风险节点建立 `owner` 与 `动作截止日`；
 3. 将 `dependency_hotspots` 建议字段接入每周门禁报表（CI 可选输出到 artifacts，形成证据）。
+
+### 八、Round 7（2026-08-16）：依赖风险与周报机制沉淀
+
+#### 已完成
+- 在 `docs/operations/bin-scripts-convergence-manifest.json` 中补齐 Round7 回填清单（10 条）：
+  - `bin/ssot/bus-usage-report.py` (owner=ssot)
+  - `bin/submodule-gitlink-check.py` (owner=governance)
+  - `bin/cockpit-readiness.py` (owner=governance)
+  - `bin/mesh/mesh-orphan-cleanup.py` (owner=mesh)
+  - `bin/adr/adr-drift-auto-fix.py`
+  - `bin/adr/next-adr-id.py`
+  - `bin/adr/adr-drift-apply.py`
+  - `bin/adr/adr-drift-check.py`
+  - `bin/adr/adr-trend-insight.py`
+  - `bin/adr/adr-drift-classify.py`
+- 全部标记 `status: managed`，`action: close-duplicate-gap-first`，`due_date: 2026-09-01`，并回填 `risk_score` / `decision_round` / `evidence.active_files`。
+- `Makefile` 增加并固定了周报治理链路目标：
+  - `bin-tool-registry-weekly-governance-report`
+  - 目标默认输出 `artifacts/bin-tool-registry-weekly-governance-report.json`
+- 清理并修正 `bin-tool-registry-dependency-risks` 目标缩进与脚本参数一致性。
+
+#### 验证结果（本轮执行）
+- `make bin-tool-registry-audit-strict`
+  - `total_scripts: 796`
+  - `parallel_candidates: 215`
+  - `parallel_manifest_gaps: 173`
+  - `dependency hotspots: 25`
+  - `strict checks: OK`
+- `make bin-tool-registry-dependency-risks`
+  - `dependency hotspots: 25 (top 25)`
+  - 当前 TOP 10（按 risk 降序）：
+    - `bin/mof/mof-bootstrap.py`
+    - `bin/mof/mof-m2-coverage.py`
+    - `bin/mof/check-doc-claims.py`
+    - `bin/mof/gen-project-registry.py`
+    - `bin/mof/m2-ssot-inventory.py`
+    - `bin/mof/gen-dependency-baseline.py`
+    - `bin/gac/rule-history-insight.py`
+    - `bin/gac/gac-hygiene-check.py`
+    - `bin/gac/governance-history-insight.py`
+    - `bin/gac/drift-history-insight.py`
+- `make bin-tool-registry-weekly-governance-report`
+  - 成功落盘：`artifacts/bin-tool-registry-weekly-governance-report.json`
+  - 本次快照统计与上方一致（total_scripts 796 / managed parallel 0 / unmanaged parallel 0）。
+- `make bin-tool-registry-parallel-gaps`
+  - `parallel manifest gaps: 173`
+
+#### 下一步（Round 8 建议）
+- 固化 `ARTIFACTS` 周报作为每周 gate 的输入，按 `decision_round` 做“并行缺口回填 → action 收敛 → 下沉到子项目”三段闭环。
+- 把 owner/action/sink 从清单与周报联通到子项目/能力 owner 的看板，按期逐步消化 `unmanaged_parallel_candidates`。
