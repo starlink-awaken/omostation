@@ -1,0 +1,267 @@
+{
+  "generated_at": "2026-08-16T03:47:42.244188+00:00",
+  "scope": null,
+  "stats": {
+    "total_scripts": 796,
+    "by_type": {
+      "python": 725,
+      "shell": 69,
+      "other": 2
+    },
+    "missing_shebang": 0,
+    "non_snake": 667,
+    "duplicate_names": 277,
+    "high_conflict_duplicates": 0,
+    "managed_parallel_duplicates": 0,
+    "unmanaged_parallel_duplicates": 0,
+    "parallel_candidates": 213,
+    "parallel_manifest_gaps": 0,
+    "unmanaged_parallel_candidates": 0,
+    "dependency_hotspots": 25,
+    "mirrored_script_duplicates": 274,
+    "mirror_adjustments": 266,
+    "edges": 231,
+    "shim_count": 278,
+    "archive_count": 87,
+    "doc_count": 0
+  },
+  "parallel_manifest_gaps_top": [],
+  "dependency_hotspots_top": [
+    {
+      "path": "bin/ssot/bus-usage-report.py",
+      "normalized_name": "bus_usage_report",
+      "in_degree": 4,
+      "out_degree": 1,
+      "risk_score": 11,
+      "hotspot_impact": 5,
+      "callers": [
+        "bin/_archive/dormant_adapter.py",
+        "bin/ssot/bus-usage-report.py",
+        "scripts/bin/ssot/PACKS/dormant-adapter/src/dormant_adapter.py",
+        "scripts/bin/ssot/bus-usage-report.py"
+      ],
+      "callees": [
+        "bin/ssot/bus-usage-report.py"
+      ],
+      "is_parallel_candidate": true,
+      "dependency_gap_reasons": [
+        "managed_parallel_candidate"
+      ],
+      "managed_parallel": true,
+      "owner_hint": "ssot",
+      "recommended_action": "retain-bin-owner",
+      "recommended_sink": "bin"
+    },
+    {
+      "path": "bin/compass_radar.py",
+      "normalized_name": "compass_radar",
+      "in_degree": 2,
+      "out_degree": 1,
+      "risk_score": 7,
+      "hotspot_impact": 3,
+      "callers": [
+        "bin/compass_radar.py",
+        "scripts/bin/compass_radar.py"
+      ],
+      "callees": [
+        "bin/compass_radar.py"
+      ],
+      "is_parallel_candidate": true,
+      "dependency_gap_reasons": [
+        "managed_parallel_candidate"
+      ],
+      "managed_parallel": true,
+      "owner_hint": "governance",
+      "recommended_action": "retain-bin-owner",
+      "recommended_sink": "bin"
+    },
+    {
+      "path": "bin/submodule-gitlink-check.py",
+      "normalized_name": "submodule_gitlink_check",
+      "in_degree": 2,
+      "out_degree": 1,
+      "risk_score": 7,
+      "hotspot_impact": 3,
+      "callers": [
+        "bin/submodule-gitlink-check.py",
+        "scripts/bin/submodule-gitlink-check.py"
+      ],
+      "callees": [
+        "bin/submodule-gitlink-check.py"
+      ],
+      "is_parallel_candidate": true,
+      "dependency_gap_reasons": [
+        "managed_parallel_candidate"
+      ],
+      "managed_parallel": true,
+      "owner_hint": "governance",
+      "recommended_action": "retain-bin-owner",
+      "recommended_sink": "bin"
+    },
+    {
+      "path": "bin/cockpit-readiness.py",
+      "normalized_name": "cockpit_readiness",
+      "in_degree": 2,
+      "out_degree": 1,
+      "risk_score": 7,
+      "hotspot_impact": 3,
+      "callers": [
+        "bin/cockpit-readiness.py",
+        "scripts/bin/cockpit-readiness.py"
+      ],
+      "callees": [
+        "bin/cockpit-readiness.py"
+      ],
+      "is_parallel_candidate": true,
+      "dependency_gap_reasons": [
+        "managed_parallel_candidate"
+      ],
+      "managed_parallel": true,
+      "owner_hint": "governance",
+      "recommended_action": "retain-bin-owner",
+      "recommended_sink": "bin"
+    },
+    {
+      "path": "bin/mesh/mesh-orphan-cleanup.py",
+      "normalized_name": "mesh_orphan_cleanup",
+      "in_degree": 2,
+      "out_degree": 1,
+      "risk_score": 7,
+      "hotspot_impact": 3,
+      "callers": [
+        "bin/mesh/mesh-orphan-cleanup.py",
+        "scripts/bin/mesh/mesh-orphan-cleanup.py"
+      ],
+      "callees": [
+        "bin/mesh/mesh-orphan-cleanup.py"
+      ],
+      "is_parallel_candidate": true,
+      "dependency_gap_reasons": [
+        "managed_parallel_candidate"
+      ],
+      "managed_parallel": true,
+      "owner_hint": "mesh",
+      "recommended_action": "retain-bin-owner",
+      "recommended_sink": "bin"
+    },
+    {
+      "path": "bin/adr/adr-drift-auto-fix.py",
+      "normalized_name": "adr_drift_auto_fix",
+      "in_degree": 2,
+      "out_degree": 1,
+      "risk_score": 7,
+      "hotspot_impact": 3,
+      "callers": [
+        "bin/adr/adr-drift-auto-fix.py",
+        "scripts/bin/adr/adr-drift-auto-fix.py"
+      ],
+      "callees": [
+        "bin/adr/adr-drift-auto-fix.py"
+      ],
+      "is_parallel_candidate": true,
+      "dependency_gap_reasons": [
+        "managed_parallel_candidate"
+      ],
+      "managed_parallel": true,
+      "owner_hint": "adr",
+      "recommended_action": "retain-bin-owner",
+      "recommended_sink": "bin"
+    },
+    {
+      "path": "bin/adr/next-adr-id.py",
+      "normalized_name": "next_adr_id",
+      "in_degree": 2,
+      "out_degree": 1,
+      "risk_score": 7,
+      "hotspot_impact": 3,
+      "callers": [
+        "bin/adr/next-adr-id.py",
+        "scripts/bin/adr/next-adr-id.py"
+      ],
+      "callees": [
+        "bin/adr/next-adr-id.py"
+      ],
+      "is_parallel_candidate": true,
+      "dependency_gap_reasons": [
+        "managed_parallel_candidate"
+      ],
+      "managed_parallel": true,
+      "owner_hint": "adr",
+      "recommended_action": "retain-bin-owner",
+      "recommended_sink": "bin"
+    },
+    {
+      "path": "bin/adr/adr-drift-apply.py",
+      "normalized_name": "adr_drift_apply",
+      "in_degree": 2,
+      "out_degree": 1,
+      "risk_score": 7,
+      "hotspot_impact": 3,
+      "callers": [
+        "bin/adr/adr-drift-apply.py",
+        "scripts/bin/adr/adr-drift-apply.py"
+      ],
+      "callees": [
+        "bin/adr/adr-drift-apply.py"
+      ],
+      "is_parallel_candidate": true,
+      "dependency_gap_reasons": [
+        "managed_parallel_candidate"
+      ],
+      "managed_parallel": true,
+      "owner_hint": "adr",
+      "recommended_action": "retain-bin-owner",
+      "recommended_sink": "bin"
+    },
+    {
+      "path": "bin/adr/adr-drift-check.py",
+      "normalized_name": "adr_drift_check",
+      "in_degree": 2,
+      "out_degree": 1,
+      "risk_score": 7,
+      "hotspot_impact": 3,
+      "callers": [
+        "bin/adr/adr-drift-check.py",
+        "scripts/bin/adr/adr-drift-check.py"
+      ],
+      "callees": [
+        "bin/adr/adr-drift-check.py"
+      ],
+      "is_parallel_candidate": true,
+      "dependency_gap_reasons": [
+        "managed_parallel_candidate"
+      ],
+      "managed_parallel": true,
+      "owner_hint": "adr",
+      "recommended_action": "retain-bin-owner",
+      "recommended_sink": "bin"
+    },
+    {
+      "path": "bin/adr/adr-coverage.py",
+      "normalized_name": "adr_coverage",
+      "in_degree": 2,
+      "out_degree": 1,
+      "risk_score": 7,
+      "hotspot_impact": 3,
+      "callers": [
+        "bin/adr/adr-coverage.py",
+        "scripts/bin/adr/adr-coverage.py"
+      ],
+      "callees": [
+        "bin/adr/adr-coverage.py"
+      ],
+      "is_parallel_candidate": true,
+      "dependency_gap_reasons": [
+        "managed_parallel_candidate"
+      ],
+      "managed_parallel": true,
+      "owner_hint": "governance",
+      "recommended_action": "retain-bin-owner",
+      "recommended_sink": "bin"
+    }
+  ],
+  "governance_summary": {
+    "parallel_manifest_gaps_total": 0,
+    "dependency_hotspots_total": 25
+  }
+}
