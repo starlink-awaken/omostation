@@ -274,6 +274,9 @@ omo-top:  ## Multi-Agent Swarm 4 象限实时互动大盘 (Textual 1.x)
 swarm-activity:  ## 多 agent 实时活动面板
 	python3 bin/gac/swarm-activity-dashboard.py
 
+swarm-prune:  ## 清理僵尸 Agent 锁与临时状态
+	python3 bin/gac/swarm-prune-zombies.py --apply
+
 observability-events:  ## 统一事件面: emit/search/trace
 	$(PY) bin/ssot/observability-events.py $(OBS_CMD)
 
