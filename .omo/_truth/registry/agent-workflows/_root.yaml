@@ -504,8 +504,10 @@ doctor_checks:
   - uv
   - run
   - --project
-  - projects/c2g
-  - c2g
+  - projects/omo
+  - python
+  - -m
+  - omo._vendored.c2g.cli
   - bet
   - --help
 - id: omo-bridge-help
