@@ -44,3 +44,20 @@
 2. 制定 `duplicate_conflicts` 的治理白名单阈值与到期窗口，纳入 ADR。
 3. 把 `non_snake`（418）分层：按脚本用途定义强制/建议清单，先覆盖治理核心脚本。
 4. 把收敛候选（hub 出入度）纳入技术债 dashboard，按季度收敛。
+
+## 四、Round 3：scripts/bin 并行能力收敛（兼容层机制化）
+
+### 已完成
+- 在 `bin/tool-registry-audit.py` 增加受控并行能力清单机制，新增参数：
+  - `--parallel-manifest`（默认 `docs/operations/bin-scripts-convergence-manifest.json`）
+  - strict 与 `--json` 共同生效：`--json` 下仍返回 strict 的真实退出码
+  - 在 `stats` 中新增 `managed_parallel_duplicates`、`unmanaged_parallel_duplicates`
+  - `findings` 中新增受控/未受控并行对照清单
+- Makefile 里将 `bin-tool-registry-*` 目标加入统一清单参数透传，并默认扫描范围 `both`。
+- 新增受控并行清单：`docs/operations/bin-scripts-convergence-manifest.json`（31 条，全部标记为 `managed`）。
+- `scripts/bin/README.md` 收敛为“兼容层职责说明”，主实现归口到 `bin/`。
+
+### 目标效果
+- `bin-tool-registry-audit-strict` 在扫描 `both` 时，仅将清单外并行高置信重复作为阻断项。
+- `scripts/bin` 作为兼容入口有明确治理边界，减少未来重复能力无序扩散。
+- 为子项目/域固化留出落点：`scripts/bin` 不承载新能力，能力若与子项目强绑定应下沉子项目。
