@@ -26,7 +26,7 @@ const require = createRequire(import.meta.url);
 // Try multiple locations (gbrain/ecos/aetherforge/...)
 function loadTypescript() {
   for (const p of [
-    'projects/gbrain/node_modules/typescript',
+    'projects/knowledge/gbrain/node_modules/typescript',
     '/opt/homebrew/lib/node_modules/typescript',
   ]) {
     try { return require(p); } catch (e) { /* try next */ }

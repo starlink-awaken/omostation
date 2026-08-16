@@ -211,8 +211,8 @@ adapters:
   gbrain_dream:
     status: production_engine
     default: orchestration_only
-    module: projects/gbrain/src/commands/dream.ts
-    cycle: projects/gbrain/src/core/cycle.ts
+    module: projects/knowledge/gbrain/src/commands/dream.ts
+    cycle: projects/knowledge/gbrain/src/core/cycle.ts
     production_ready: true
     notes:
     - MOS consolidate must orchestrate, not reimplement

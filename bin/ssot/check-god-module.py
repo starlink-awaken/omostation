@@ -32,10 +32,10 @@ ERROR_THRESHOLD = 1500  # error: 单文件超此报红 (--strict 时 exit 1)
 # 见 .omo/_knowledge/audits/f7114aba-gbrain-srp-plan.md + memory [[check-god-module-mechanism]].
 # 已达标 3/7 (cycle/serve-http/migrate, PR#109/#110/#111). 剩 4 暂豁, 多会话推进.
 EXEMPT_ERRORS = {
-    "projects/gbrain/src/core/ai/gateway.ts",       # 2895L: 状态对象化 (71 处引用) + 核心 1610L 提取, P3
-    "projects/gbrain/src/commands/doctor.ts",        # 4825L: runDoctor 单函数 2330L inline 重构, P4 极高
-    "projects/gbrain/src/core/postgres-engine.ts",   # 4514L: 双引擎 DRY 逐方法对比 SQL (unnest+JOIN), P4
-    "projects/gbrain/src/core/pglite-engine.ts",     # 4509L: 双引擎 DRY (同 postgres, 手动 $N), P4
+    "projects/knowledge/gbrain/src/core/ai/gateway.ts",       # 2895L: 状态对象化 (71 处引用) + 核心 1610L 提取, P3
+    "projects/knowledge/gbrain/src/commands/doctor.ts",        # 4825L: runDoctor 单函数 2330L inline 重构, P4 极高
+    "projects/knowledge/gbrain/src/core/postgres-engine.ts",   # 4514L: 双引擎 DRY 逐方法对比 SQL (unnest+JOIN), P4
+    "projects/knowledge/gbrain/src/core/pglite-engine.ts",     # 4509L: 双引擎 DRY (同 postgres, 手动 $N), P4
 }
 
 # 扫描范围 + 排除 (避免噪音: 生成代码/测试快照/旧码)

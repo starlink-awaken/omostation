@@ -29,7 +29,7 @@ related:
 | src LOC | 164,176 (ts) | ~118,000 (15 packages) |
 | 测试 | test/ 154,680 (718 test files) | tests/ + 各包 (311 files) |
 | 结构 | 单包 `src/{core,commands,mcp,eval,types}` | `packages/{kos,minerva,ontoderive,eidos,iris,forge,codeanalyze,kronos,mos,core-models,sophia,...}` |
-| BOS 集成 | `bun run projects/gbrain/src/cli.ts serve` (3 service) | `uv run --directory projects/kairon --package <p>` (path filter 数十处) |
+| BOS 集成 | `bun run projects/knowledge/gbrain/src/cli.ts serve` (3 service) | `uv run --directory projects/kairon --package <p>` (path filter 数十处) |
 | 交互方式 | — | MOS 经 subprocess/HTTP 调 gbrain（`mos/adapters/live_backends.py`，ADR-0372），**非 import** |
 | 子仓状态 | 指针 e2ec4e166 == 远端，无未推送 | 指针 0a31da635 == 远端 HEAD，无未推送 |
 | Makefile | （根仓无专项目标） | kairon-test/lint/build 6 目标 |

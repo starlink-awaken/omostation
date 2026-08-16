@@ -47,7 +47,7 @@ DORMANT = {
     "projects/family-hub",
     "projects/model-driven",
     "projects/observability",
-    "projects/gbrain",
+    "projects/knowledge/gbrain",
 }
 
 EXTRA = {

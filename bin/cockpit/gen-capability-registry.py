@@ -73,7 +73,7 @@ _KNOWN_MCP_SERVERS: list[dict] = [
     {"id": "forge", "name": "Forge", "layer": "L2", "file": "projects/kairon/packages/forge/src/mcp_server.py", "transport": "stdio"},
     {"id": "ontoderive", "name": "OntoDerive", "layer": "L2", "file": "projects/kairon/packages/ontoderive/src/ontoderive/mcp_server.py", "transport": "stdio"},
     {"id": "toolforge", "name": "ToolForge", "layer": "L2", "file": "projects/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py", "transport": "stdio"},
-    {"id": "gbrain", "name": "gbrain Knowledge DB", "layer": "L2", "file": "projects/gbrain/src/core/operations/exports.ts", "transport": "stdio", "entry": "projects/gbrain/src/mcp-entry.ts", "note": "工具从 operations 数组动态生成"},
+    {"id": "gbrain", "name": "gbrain Knowledge DB", "layer": "L2", "file": "projects/knowledge/gbrain/src/core/operations/exports.ts", "transport": "stdio", "entry": "projects/knowledge/gbrain/src/mcp-entry.ts", "note": "工具从 operations 数组动态生成"},
 ]
 
 # Python @mcp.tool() / @mcp.tool(name="x") / register 函数调用模式

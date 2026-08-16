@@ -18,7 +18,7 @@ layers:
 
   L2:
     name: "引擎层"
-    projects: ["kairon", "gbrain", "omo", "metaos", "omo-debt", "family-hub"]
+    projects: ["kairon", "omo", "metaos", "omo-debt", "family-hub", "knowledge"]
     description: "知识引擎、治理中枢、知识数据库等"
 
   L3:

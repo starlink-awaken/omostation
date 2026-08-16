@@ -62,11 +62,11 @@ fi
 # 3. Run Gbrain Tests (TypeScript)
 TOTAL=$((TOTAL + 1))
 echo "▸ gbrain (TypeScript + bun)"
-if run_with_timeout bash -c "cd '$ROOT/projects/gbrain' && bun test > /dev/null 2>&1"; then
+if run_with_timeout bash -c "cd '$ROOT/projects/knowledge/gbrain' && bun test > /dev/null 2>&1"; then
   PASS=$((PASS + 1))
   echo "  ✅ gbrain Bun Test Suite"
 else
-  echo "  ⚠️  gbrain Bun Test Suite Failed (Check 'cd projects/gbrain && bun test' for details)"
+  echo "  ⚠️  gbrain Bun Test Suite Failed (Check 'cd projects/knowledge/gbrain && bun test' for details)"
 fi
 
 # 4. Runtime E2E Health Check (Python)

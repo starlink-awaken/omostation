@@ -22,7 +22,7 @@ affected_roots:
 - projects/cockpit-ui
 - projects/ecos
 - projects/family-hub
-- projects/gbrain
+- projects/knowledge/gbrain
 - projects/kairon
 - projects/l4-kernel
 - projects/metaos
@@ -43,7 +43,7 @@ affected_roots:
 - projects/cockpit-ui
 - projects/ecos
 - projects/family-hub
-- projects/gbrain
+- projects/knowledge/gbrain
 - projects/kairon
 - projects/l4-kernel
 - projects/metaos
@@ -73,7 +73,7 @@ mitigation_refs:
 - cd projects/cockpit-ui && git checkout main && git pull && cd ../.. && git add projects/cockpit-ui
 - cd projects/ecos && git checkout main && git pull && cd ../.. && git add projects/ecos
 - cd projects/family-hub && git checkout main && git pull && cd ../.. && git add projects/family-hub
-- cd projects/gbrain && git checkout main && git pull && cd ../.. && git add projects/gbrain
+- cd projects/knowledge/gbrain && git checkout main && git pull && cd ../.. && git add projects/knowledge/gbrain
 - cd projects/kairon && git checkout main && git pull && cd ../.. && git add projects/kairon
 - cd projects/l4-kernel && git checkout main && git pull && cd ../.. && git add projects/l4-kernel
 - cd projects/metaos && git checkout main && git pull && cd ../.. && git add projects/metaos
@@ -109,9 +109,9 @@ description: "Submodule gitlink drift detected: 21 issue(s).\n\n- projects/aethe
   \ origin=334aa933791f)\n  Fix: cd projects/ecos && git checkout main && git pull\
   \ && cd ../.. && git add projects/ecos\n- projects/family-hub: DIVERGED (gitlink=7f33335f25b5,\
   \ origin=334aa933791f)\n  Fix: cd projects/family-hub && git checkout main && git\
-  \ pull && cd ../.. && git add projects/family-hub\n- projects/gbrain: DIVERGED (gitlink=5f855c5ce8f7,\
-  \ origin=334aa933791f)\n  Fix: cd projects/gbrain && git checkout main && git pull\
-  \ && cd ../.. && git add projects/gbrain\n- projects/kairon: DIVERGED (gitlink=e9adff15e4db,\
+  \ pull && cd ../.. && git add projects/family-hub\n- projects/knowledge/gbrain: DIVERGED (gitlink=5f855c5ce8f7,\
+  \ origin=334aa933791f)\n  Fix: cd projects/knowledge/gbrain && git checkout main && git pull\
+  \ && cd ../.. && git add projects/knowledge/gbrain\n- projects/kairon: DIVERGED (gitlink=e9adff15e4db,\
   \ origin=334aa933791f)\n  Fix: cd projects/kairon && git checkout main && git pull\
   \ && cd ../.. && git add projects/kairon\n- projects/l4-kernel: DIVERGED (gitlink=cdab5c6c40ef,\
   \ origin=334aa933791f)\n  Fix: cd projects/l4-kernel && git checkout main && git\

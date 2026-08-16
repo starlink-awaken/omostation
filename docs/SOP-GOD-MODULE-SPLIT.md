@@ -20,7 +20,7 @@ metadata-migrated-at: 2026-07-31
 
 ## 1. 当前 God Module 清单 (实测 2026-07-07)
 
-按 `wc -l` 实测, `projects/gbrain/src/core/` 下:
+按 `wc -l` 实测, `projects/knowledge/gbrain/src/core/` 下:
 
 | 排名 | 文件 | 行数 | 状态 |
 |:---:|------|---:|:---:|
@@ -73,7 +73,7 @@ metadata-migrated-at: 2026-07-31
   - god module 内容已开始被 omo / cockpit 直接 import
 行动:
   - 抽到独立 `@gbrain/<concern>` 包
-  - 走 projects/gbrain monorepo workspace split
+  - 走 projects/knowledge/gbrain monorepo workspace split
 约束:
   - 必须在 P72 closed-loop 协议下, 每独立包一个 PR
 ```

@@ -134,7 +134,7 @@ gates:
     fail_closed: true
     claimed_submodules: from_root_gitmodules
     precommit_gitlink_guard:
-      - projects/gbrain
+      - projects/knowledge/gbrain
       - projects/cockpit
       - projects/agora
     ttl_hours: 24

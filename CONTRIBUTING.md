@@ -35,7 +35,7 @@ cd projects/agora && uv sync && uv run pytest tests/ -q
 cd projects/cockpit && uv sync && uv run pytest src/cockpit/tests/ -q
 
 # gbrain
-cd projects/gbrain && bun install && bun test
+cd projects/knowledge/gbrain && bun install && bun test
 ```
 
 ### Commit Convention
@@ -92,7 +92,7 @@ cd projects/agora && uv sync && uv run pytest tests/ -q
 cd projects/cockpit && uv sync && uv run pytest src/cockpit/tests/ -q
 
 # gbrain
-cd projects/gbrain && bun install && bun test
+cd projects/knowledge/gbrain && bun install && bun test
 ```
 
 ### 提交规范

@@ -19,7 +19,7 @@ workspace:
 layers:
   L0: "协议层 (ecos)"
   L1: "运行时 (runtime / omlxc)"
-  L2: "引擎面 (kairon / gbrain / omo / metaos)"
+  L2: "引擎面 (knowledge{gbrain,kairon} / omo / metaos)"
   L3: "入口层 (cockpit 控制面; cockpit-ui 表现面, layer=L3)"
   L4: "自我层 (l4-kernel)"
   I0: "织层 (agora)"
@@ -93,13 +93,15 @@ projects:
       embedding_model: "BAAI/bge-small-zh-v1.5"
       vector_dim: 512
 
-  gbrain:
+  knowledge:
     layer: "L2"
-    stack: "TypeScript (bun)"
-    version: "0.39.0.0"
-    build_backend: "bun"
-    role: "Postgres 知识数据库"
-    src_dir: "src/"
+    role: "知识工程复合体 · gbrain(Postgres RAG) + kairon(python 引擎 monorepo) (BET-Y1Q3-T6-01)"
+    gbrain:
+        stack: "TypeScript (bun)"
+        version: "0.39.0.0"
+        build_backend: "bun"
+        role: "Postgres 知识数据库"
+        src_dir: "src/"
 
   omo:
     layer: "L2"
@@ -365,7 +367,6 @@ submodule_policy:
     - projects/family-hub
     - projects/model-driven
     - projects/observability
-    - projects/gbrain
   tolerance_days: 30
 
 # ── Metadata ──

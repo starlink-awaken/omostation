@@ -8,7 +8,7 @@ owners:
   governance_root: .omo
   capability_roots:
     - projects/_archived/SharedBrain-original
-    - projects/gbrain
+    - projects/knowledge/gbrain
     - projects/runtime
     - projects/kairon
 roots:
@@ -18,7 +18,7 @@ roots:
   runtime: runtime
 routing:
   default_project: projects/_archived/SharedBrain-original
-  knowledge_project: projects/gbrain
+  knowledge_project: projects/knowledge/gbrain
   runtime_project: projects/runtime
 policy_refs:
   - .omo/_knowledge/design/plans/archive/phase9-program-plan.md

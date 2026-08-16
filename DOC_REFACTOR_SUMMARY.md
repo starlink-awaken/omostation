@@ -42,7 +42,7 @@
 - `projects/bus-foundation/`
 - `projects/omo-debt/`
 - `projects/family-hub/`
-- `projects/gbrain/`
+- `projects/knowledge/gbrain/`
 - `projects/observability/`
 
 每个项目更新了：
