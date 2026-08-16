@@ -8,7 +8,7 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 568
+  mcp_tools: 571
   bos_services: 223
   bos_domains: 17
   cli_commands: 138
@@ -405,6 +405,9 @@ mcp_servers:
   exists: true
   tools:
   - forge_cost_report
+  - forge_fabric_inspect
+  - forge_fabric_vram
+  - forge_fabric_warm
   - forge_generate
   - forge_generate_mesh
   - forge_health_check
@@ -414,7 +417,7 @@ mcp_servers:
   - forge_triage_batch
   - forge_triage_consensus
   - forge_triage_status
-  tool_count: 10
+  tool_count: 13
 - id: aetherforge-gateway
   name: AetherForge LLM Gateway
   layer: X
