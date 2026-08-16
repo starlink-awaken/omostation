@@ -15,11 +15,7 @@ def cmd_context(_args: Namespace) -> int:
     """显示 workspace 完整上下文 (Phase / CARDS / 约束 / 引导)。"""
     console = _get_console()
 
-    try:
-        ctx = governance_context.workspace_context()
-    except Exception as e:  # defensive fallback
-        _get_err().print(f"[red]❌ workspace_context 调用失败: {e}[/]")
-        return 1
+    ctx = governance_context.workspace_context()
 
     # Phase
     console.print(
@@ -53,11 +49,7 @@ def cmd_domains(_args: Namespace) -> int:
     """列出 L4 所有域及其状态。"""
     console = _get_console()
 
-    try:
-        result = governance_context.domains_list()
-    except Exception as e:  # defensive fallback
-        _get_err().print(f"[red]❌ domains_list 失败: {e}[/]")
-        return 1
+    result = governance_context.domains_list()
 
     if not result["available"]:
         _get_err().print(f"[red]❌ domains_list 不可用: {result.get('error', 'unknown error')}[/]")
@@ -267,17 +259,13 @@ def cmd_skill(args: Namespace) -> int:
         _get_err().print(f"[red]❌ 技能未找到: SKILL-SCHEDULED-{skill_name}.yaml[/]")
         return 1
 
-    try:
-        import yaml
+    import yaml
 
-        skill_def = yaml.safe_load(skill_file.read_text(encoding="utf-8"))
-        desc = skill_def.get("description", skill_def.get("name", skill_name))
-        console.print(f"  [dim]描述: {desc}[/]")
-        console.print("  [green]✓ 技能已调度 (由 cron_service 执行)[/]")
-        return 0
-    except Exception as e:  # defensive fallback
-        _get_err().print(f"[red]❌ 技能执行失败: {e}[/]")
-        return 1
+    skill_def = yaml.safe_load(skill_file.read_text(encoding="utf-8"))
+    desc = skill_def.get("description", skill_def.get("name", skill_name))
+    console.print(f"  [dim]描述: {desc}[/]")
+    console.print("  [green]✓ 技能已调度 (由 cron_service 执行)[/]")
+    return 0
 
 
 def cmd_cards(args: Namespace) -> int:
@@ -286,11 +274,7 @@ def cmd_cards(args: Namespace) -> int:
 
     if getattr(args, "check", False):
         card_id = getattr(args, "card_id", "") or ""
-        try:
-            result = governance_context.cards_check(card_id=card_id)
-        except Exception as e:  # defensive fallback
-            _get_err().print(f"[red]❌ cards_check 失败: {e}[/]")
-            return 1
+        result = governance_context.cards_check(card_id=card_id)
 
         if result["compliant"]:
             console.print("[bold green]✅ 合规[/]")
@@ -301,11 +285,7 @@ def cmd_cards(args: Namespace) -> int:
         console.print(f"\n[dim]OMO exit={result['returncode']} · scope={result['scope']}[/]")
         return int(result["returncode"])
 
-    try:
-        result = governance_context.cards_status()
-    except Exception as e:  # defensive fallback
-        _get_err().print(f"[red]❌ cards_status 失败: {e}[/]")
-        return 1
+    result = governance_context.cards_status()
 
     if not result["available"]:
         _get_err().print(f"[red]❌ cards_status 不可用: {result.get('error', 'unknown error')}[/]")
