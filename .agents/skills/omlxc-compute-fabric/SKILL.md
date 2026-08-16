@@ -64,7 +64,10 @@ omlxc fabric triage "Design a lock-free queue to prevent ABA problem"
 omlxc fabric vram coding 32768
 omlxc fabric vram qwen-72b 65536
 
-# 6. 通过 Cockpit 统一转发
+# 6. 上下文滑动蒸馏与显存自愈模拟
+omlxc fabric compact --model coding --tokens 32768 --available-mb 4096
+
+# 7. 通过 Cockpit 统一转发
 cockpit mesh fabric
 cockpit mesh triage "Fix typo in variable"
 cockpit mesh vram coding 32768
@@ -81,11 +84,14 @@ cockpit mesh vram coding 32768
   - `forge_fabric_inspect()` ➔ 采集异构节点温控、模型架构与两级缓存状态。
   - `forge_fabric_warm(model_id)` ➔ 预热常用系统 Prompt 前缀以实现 0ms TTFT。
   - `forge_fabric_vram(model_id, context_tokens)` ➔ 计算模型动态 KV Cache 显存预算与准入/压缩建议。
+  - `forge_fabric_compact(model, tokens, available_mb)` ➔ 评估 KV 显存预算并模拟滑动上下文蒸馏压缩自愈。
+  - `forge_swarm_run(goal)` ➔ 调度 AetherForge Swarm 多智能体有向图工作流执行任务。
 
 ---
 
 ## 4. 防御性操作规则与最佳实践 (Best Practices)
 
-1. **防 OOM 原则**：在发起大于 $16\text{k}$ Token 的大长文推理前，**必须**先调用 `fabric_vram_budget` 或 `omlxc fabric vram` 进行显存预算判定。若返回 `compaction_advised=True`，应先触发 `bos://memory/mos/consolidate` 压缩上下文。
+1. **防 OOM 原则**：在发起大于 $16\text{k}$ Token 的大长文推理前，**必须**先调用 `fabric_vram_budget` 或 `omlxc fabric vram` 进行显存预算判定。若返回 `compaction_advised=True`，可调用 `forge_fabric_compact` 或执行滑动上下文蒸馏，保障任务安全执行。
 2. **防饿死原则**：批量跑分、文档嵌入等重型任务必须声明 `priority="p2_batch"`，避免阻塞人类开发者的即时代码补全。
 3. **单向门禁原则**：不得绕过 AetherForge / omlxcd 直接通过原始端口调用底层 backend，所有调度必须经过统一数据面。
+
