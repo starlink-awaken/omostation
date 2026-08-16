@@ -370,11 +370,11 @@ def test_4_check_strict_all_pass(verbose: bool = False) -> tuple[bool, str]:
         "uv", "run", "--with", "pyyaml", "python",
         "bin/mof/mof-bootstrap.py", "all", "--verbose",
     ], cwd=WS, timeout=60)
-    lines = [l for l in out.splitlines() if "check_" in l and ("err" in l)]
+    lines = [line for line in out.splitlines() if "check_" in line and ("err" in line)]
     if rc != 0:
         return False, f"4-check strict 失败 (rc={rc}): {out[:200]}"
     # 全部 check 都 0 err
-    all_zero = all("0 err" in l for l in lines)
+    all_zero = all("0 err" in line for line in lines)
     if not all_zero:
         return False, f"非 0 err lines: {lines}"
     return True, f"4-check 全 0 err ({len(lines)} checks)"
@@ -693,7 +693,7 @@ def test_r4a_no_mcptool_placeholders(verbose: bool = False) -> tuple[bool, str]:
         'projects/ecos/src/ecos/ssot/tools/mof-validate.py',
     ], timeout=180)
     # 找不到 "MCPTOOL.*缺少必填属性" 即可
-    bad_lines = [l for l in out.splitlines() if 'MCPTOOL' in l and ('缺少' in l or '❌' in l)]
+    bad_lines = [line for line in out.splitlines() if 'MCPTOOL' in line and ('缺少' in line or '❌' in line)]
     if bad_lines:
         return False, f'{len(bad_lines)} MCPTOOL 误报: {bad_lines[0][:80]}'
     # 校验 pass rate
@@ -798,7 +798,7 @@ def test_r5d_adr_0149_accepted(verbose: bool = False) -> tuple[bool, str]:
     content3 = idx.read_text()
     if '| 0149 |' not in content3:
         return False, 'INDEX 缺 0149'
-    lines = [l for l in content3.splitlines() if l.startswith('| 0149 ')]
+    lines = [line for line in content3.splitlines() if line.startswith('| 0149 ')]
     if not lines or 'ACCEPTED' not in lines[0]:
         return False, '0149 不是 ACCEPTED'
     return True, 'ADR-0149 ACCEPTED 已入 INDEX'

@@ -9,7 +9,9 @@ Usage:
   python3 bin/ssot/mail_daemon.py --run --interval 1800
 """
 from __future__ import annotations
-import argparse, json, sys
+import argparse
+import json
+import sys
 from pathlib import Path
 from typing import Any
 sys.path.insert(0, str(Path(__file__).parent))
