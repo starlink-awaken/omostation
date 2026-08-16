@@ -3,25 +3,25 @@ Domain KEMS — 领域知识工程引擎
 统一基类 + OCR + KEMS 流水线 + 配置管理 + 域控制器
 """
 from .base import BaseController, BaseExtractor, BasePredictor
-from .ocr_engine import OCREngine
-from .kems_pipeline import KEMPipeline
 from .config import DomainConfig
 from .domain_controllers import (
+    ContractLawController,
     HealthCommissionController,
     LandPlanningController,
     TransformationCenterController,
-    ContractLawController,
 )
+from .kems_pipeline import KEMPipeline
+from .ocr_engine import OCREngine
 
 __all__ = [
     "BaseController",
     "BaseExtractor",
     "BasePredictor",
-    "OCREngine",
-    "KEMPipeline",
+    "ContractLawController",
     "DomainConfig",
     "HealthCommissionController",
+    "KEMPipeline",
     "LandPlanningController",
+    "OCREngine",
     "TransformationCenterController",
-    "ContractLawController",
 ]

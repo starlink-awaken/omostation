@@ -114,8 +114,6 @@ class TestOntologyEvolution(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # CI 干净环境无 kos_relations 表 (本地运行态掩盖) — schema 自初始化
-        from kos._default_workspace_config import get_artifact_path
-        from kos.db import get_connection
         from kos.ontology.schema import init_schema
 
         try:
@@ -140,10 +138,9 @@ class TestOntologyEvolution(unittest.TestCase):
         self.assertIsNotNone(evo)
 
     def test_get_stats(self):
-        from kos.ontology.evolution import OntologyEvolution
-
         # 干净环境无实体数据 (本地运行态掩盖) — 先种子一条保证统计非零
         from kos.graphrag import get_connection
+        from kos.ontology.evolution import OntologyEvolution
 
         conn = get_connection(None)
         conn.execute(

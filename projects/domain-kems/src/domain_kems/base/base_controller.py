@@ -2,10 +2,9 @@
 BaseController — 统一控制器基类
 所有域控制器继承此类，复用信号扫描、状态聚合、健康检查能力
 """
-from pathlib import Path
-from datetime import datetime
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional
+from datetime import datetime
+from pathlib import Path
 
 
 class BaseController(ABC):
@@ -13,14 +12,14 @@ class BaseController(ABC):
 
     ROOT: Path = Path(".")
 
-    def __init__(self, domain_root: Path, config: Optional[Dict] = None):
+    def __init__(self, domain_root: Path, config: dict | None = None):
         self.domain_root = Path(domain_root)
         self.root = self.domain_root
         self.config = config or {}
         self._signals_cache = None
         self._freshness_cache = None
 
-    def scan_signals(self) -> List[dict]:
+    def scan_signals(self) -> list[dict]:
         """扫描域信号"""
         if self._signals_cache is not None:
             return self._signals_cache
@@ -39,7 +38,7 @@ class BaseController(ABC):
         self._signals_cache = signals
         return signals
 
-    def check_freshness(self, days: int = 90) -> List[dict]:
+    def check_freshness(self, days: int = 90) -> list[dict]:
         """检查过期文档"""
         if self._freshness_cache is not None:
             return self._freshness_cache
@@ -64,7 +63,7 @@ class BaseController(ABC):
         self._freshness_cache = stale
         return stale
 
-    def health_check(self) -> Dict:
+    def health_check(self) -> dict:
         """健康检查"""
         controllers = ["sensors.md", "control-rules.md", "executor-rules.md", "l4-kernel.md"]
         result = {}
@@ -74,7 +73,7 @@ class BaseController(ABC):
         all_present = all(c["exists"] for c in result.values())
         return {"status": "healthy" if all_present else "degraded", "controllers": result}
 
-    def aggregate_state(self) -> Dict:
+    def aggregate_state(self) -> dict:
         """聚合域状态"""
         return {
             "domain": self.domain_root.name,
@@ -84,7 +83,7 @@ class BaseController(ABC):
             "health": self.health_check(),
         }
 
-    def _check_controllers(self) -> Dict:
+    def _check_controllers(self) -> dict:
         """检查控制器文件"""
         required = ["sensors.md", "control-rules.md", "executor-rules.md", "l4-kernel.md"]
         result = {}
@@ -94,9 +93,8 @@ class BaseController(ABC):
         return result
 
     @abstractmethod
-    def domain_specific_scan(self) -> Dict:
+    def domain_specific_scan(self) -> dict:
         """域特有扫描逻辑"""
-        pass
 
     def generate_report(self) -> dict:
         """生成域控制报告"""
