@@ -134,10 +134,10 @@ packages = ["src/agora"]
 packages = ["src/agora"]
 
 [tool.uv.sources]
-kos = { path = "../../knowledge/kairon/packages/kos", editable = true }
+kos = { path = "../knowledge/kairon/packages/kos", editable = true }
 bus-foundation = { path = "../bus-foundation" }
-eidos = { path = "../../knowledge/kairon/packages/eidos", editable = true }
-minerva = { path = "../../knowledge/kairon/packages/minerva", editable = true }
-core-models = { path = "../../knowledge/kairon/packages/core-models", editable = true }
+eidos = { path = "../knowledge/kairon/packages/eidos", editable = true }
+minerva = { path = "../knowledge/kairon/packages/minerva", editable = true }
+core-models = { path = "../knowledge/kairon/packages/core-models", editable = true }
 ecos = { path = "../ecos" }
 metaos = { path = "../metaos", editable = true }
