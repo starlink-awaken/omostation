@@ -95,11 +95,13 @@ class TestGraphRAG(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # CI 干净环境无 kos_relations 表 (本地运行态掩盖) — schema 自初始化
-        from kos.graphrag import get_connection
+        from kos._default_workspace_config import get_artifact_path
+        from kos.db import get_connection
         from kos.ontology.schema import init_schema
 
         try:
-            init_schema(get_connection(None))
+            # graphrag 查询走 retrievalDatabase — schema 建同库
+            init_schema(get_connection(get_artifact_path("retrievalDatabase")))
         except Exception:
             pass  # 已初始化或环境不支持时跳过
     """Test the GraphRAG class."""
