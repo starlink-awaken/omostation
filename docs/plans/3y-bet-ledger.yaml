@@ -4902,7 +4902,8 @@ bets:
   title: aetherforge 双副本指针同步 + 算力路由双 owner 收敛决策
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-16
   goal: 同步 agora 内嵌 aetherforge 副本指针到根项目最新（b9a299f→905195b），产出算力路由双 owner（aetherforge vs gac-mesh-router）收敛决策报告，落地单一 owner
   non_goals:
   - 实现 mesh 路由新功能
