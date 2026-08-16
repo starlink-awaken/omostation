@@ -1,4 +1,4 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene worktree-janitor delegation-preflight delegation-alias-check bin-tool-registry-audit bin-tool-registry-audit-strict bin-tool-registry-audit-emit bin-tool-registry-convergence bin-tool-registry-parallel-gaps bin-tool-registry-dependency-risks bin-tool-registry-weekly-governance-report bin-tool-registry-round9 bin-tool-registry-round10 bin-tool-registry-round11 bin-tool-registry-round12 capability-sync capability-check omo-status omo-top
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene worktree-janitor delegation-preflight delegation-alias-check bin-tool-registry-audit bin-tool-registry-audit-strict bin-tool-registry-audit-emit bin-tool-registry-convergence bin-tool-registry-parallel-gaps bin-tool-registry-dependency-risks bin-tool-registry-weekly-governance-report bin-tool-registry-round9 bin-tool-registry-round10 bin-tool-registry-round11 bin-tool-registry-round12 bin-tool-registry-round13 capability-sync capability-check omo-status omo-top
 
 PY := uv run --with pyyaml python
 
@@ -30,6 +30,7 @@ help:
 	@echo "make bin-tool-registry-round10             并行风险 Top10 一键闭环（续一轮）"
 	@echo "make bin-tool-registry-round11             并行风险 Top10 一键闭环（继续下一轮）"
 	@echo "make bin-tool-registry-round12             并行风险 Top10 一键闭环（继续下一轮）"
+	@echo "make bin-tool-registry-round13             并行风险 Top10 一键闭环（继续下一轮）"
 scene-feedback:  ## 列出最近的 scene feedback
 	@python3 bin/ssot/scene-feedback-collector.py list --limit 10
 
@@ -344,6 +345,12 @@ bin-tool-registry-round12:  ## 并行风险 Top10 一键闭环（继续下一轮
 	@$(MAKE) bin-tool-registry-parallel-gaps TOOL_REGISTRY_SCOPE=both
 	@$(MAKE) bin-tool-registry-dependency-risks TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10
 	@$(MAKE) bin-tool-registry-weekly-governance-report TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10 TOOL_REGISTRY_WEEKLY_ARTIFACT=artifacts/bin-tool-registry-weekly-governance-report-round12.json
+
+bin-tool-registry-round13:  ## 并行风险 Top10 一键闭环（继续下一轮）
+	@$(MAKE) bin-tool-registry-audit-strict TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10
+	@$(MAKE) bin-tool-registry-parallel-gaps TOOL_REGISTRY_SCOPE=both
+	@$(MAKE) bin-tool-registry-dependency-risks TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10
+	@$(MAKE) bin-tool-registry-weekly-governance-report TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10 TOOL_REGISTRY_WEEKLY_ARTIFACT=artifacts/bin-tool-registry-weekly-governance-report-round13.json
 
 # ── P84 collab dual-track / control experiment ───────────────────────────────
 
