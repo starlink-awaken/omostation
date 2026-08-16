@@ -34,6 +34,10 @@ class RbacDeniedError(PermissionError):
     """Raised when an action is not allowed for the resolved role."""
 
 
+# Backward-compat alias: test_phase6_neo4j_rbac.py 等历史引用用短名 (T6-01 断测修复)
+RbacDenied = RbacDeniedError
+
+
 def _policy_path() -> Path | None:
     env = os.environ.get("MOS_RBAC_PATH")
     if env:
