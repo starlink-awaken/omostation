@@ -500,3 +500,5 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0408: G-1 Swarm Readiness Gate Close — six SR direct evidence — **ACCEPTED** | 2026-08-11 | G-1 swarm readiness closeout | 0408-g1-swarm-readiness-gate-close.md
 - ADR-0409: Documents capability routes converge on Workspace owners — **ACCEPTED** | 2026-08-13 | Documents capability ownership | 0409-documents-capability-route-owner-convergence.md
 - ADR-0410: 三年战略主线归属 — Plan supersede Panorama — **ACCEPTED** | 2026-08-15 | Strategy mainline | 0410-strategy-mainline-plan-supersedes-panorama.md
+- ADR-0411: 算力路由双 Owner 收敛决策 — AetherForge 单一所有权 — **ACCEPTED** | 2026-08-16 | Compute routing convergence | 0411-aetherforge-mesh-router-owner-decision.md
+- ADR-0412: model-driven (M0) 定位判定 — 接入主链 (保留独立子仓) — **ACCEPTED** | 2026-08-16 | Model-driven disposition | 0412-model-driven-disposition.md
