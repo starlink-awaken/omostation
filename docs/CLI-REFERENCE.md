@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **134** 个命令 (含子命令)。按场景分组如下。
+共 **138** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -133,6 +133,7 @@
 | `cockpit events-watch` | 实时监听 SSE 事件流简便入口 |
 | `cockpit export` | 导出契约封套 |
 | `cockpit export-research` | 将研究对象导出为 WorkspaceObject JSON |
+| `cockpit fabric` | 检查 omlxc 智能算力织网 (温控/分诊/显存/缓存) |
 | `cockpit facts-audit` | 审计 Documents 文档域 facts 文件 |
 | `cockpit facts-validation` | 读取 Runtime Facts 审计回执 |
 | `cockpit forget` | 遗忘传播 |
@@ -181,11 +182,14 @@
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
 | `cockpit swarm` | 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
 | `cockpit topics` | 列出已注册 topic |
+| `cockpit triage` | 分析 Prompt 意图复杂度分级 |
 | `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
 | `cockpit types` | 查看已注册的数据类型 |
 | `cockpit up` | 启动观测栈 |
 | `cockpit url` | 打印 Langfuse Web URL |
 | `cockpit validate` | 验证 Workspace 契约 |
+| `cockpit vram` | 计算模型动态 KV Cache 显存预算 |
+| `cockpit warm` | 预热系统 Prompt 前缀缓存以实现 0ms TTFT |
 | `cockpit watch` | 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher) |
 | `cockpit write` | 双轨写入 (+ Neo4j FACT 若配置) |
 

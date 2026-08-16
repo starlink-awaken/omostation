@@ -17,7 +17,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
       - run: pip install pyyaml
       - name: Determine changed files
         id: changed-files
@@ -55,14 +58,23 @@ jobs:
             echo "affected=" >> $GITHUB_OUTPUT
             exit 0
           fi
-          AFFECTED=$(python3 bin/gac/affected-graph.py --changed-projects "${PROJECTS[@]}" --json)
+          python3 bin/gac/affected-graph.py --changed-projects "${PROJECTS[@]}" --json > /tmp/affected.json
+          AFFECTED=$(python3 -c "import json; print(' '.join(json.load(open('/tmp/affected.json')).get('affected_projects', [])))")
           echo "Affected projects: $AFFECTED"
           echo "affected=$AFFECTED" >> $GITHUB_OUTPUT
 
       - name: Trigger downstream tests
         if: steps.graph.outputs.affected != ''
         run: |
-          echo "Cascading Testing triggered for: ${{ steps.graph.outputs.affected }}"
-          # Here we would invoke matrix testing or downstream test scripts
-          # for each affected project.
-          # e.g., make test-projects PROJECTS="${{ steps.graph.outputs.affected }}"
+          echo "Cascading testing triggered for: ${{ steps.graph.outputs.affected }}"
+          for proj in ${{ steps.graph.outputs.affected }}; do
+            if [ -d "projects/$proj/tests" ] && [ -f "projects/$proj/pyproject.toml" ]; then
+              echo "──────────────────────────────────────────────"
+              echo "🧪 Testing affected project: projects/$proj"
+              echo "──────────────────────────────────────────────"
+              (cd "projects/$proj" && uv sync --quiet && uv run pytest -q --ignore=tests/e2e --ignore=tests/integration) || {
+                echo "❌ Cascading test failed in projects/$proj"
+                exit 1
+              }
+            fi
+          done

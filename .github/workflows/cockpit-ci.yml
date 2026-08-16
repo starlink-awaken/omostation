@@ -20,6 +20,9 @@ jobs:
           python-version: "3.13"
       - name: Set up uv
         uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "projects/cockpit/pyproject.toml"
       - name: Install dependencies
         # recursive checkout 已拉 runtime/aetherforge/l4-kernel 子模块 → uv sync 装全 workspace (含 fastapi)
         run: cd projects/cockpit && uv sync

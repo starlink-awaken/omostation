@@ -1,6 +1,6 @@
 ---
 name: fix-bos-contract
-description: Use when user says "fix this BOS contract error" / "帮我修复 BOS 契约错误" / "mof contract-lint failed". Triggers on keywords: fix-bos-contract, BOS 契约, contract error, mof contract-lint failed. End-to-end workflow: diagnose → impact analysis → propose edit → validate → commit. Phase 3 (P110+).
+description: "Use when user says 'fix this BOS contract error' / '帮我修复 BOS 契约错误' / 'mof contract-lint failed'. Triggers on keywords: fix-bos-contract, BOS 契约, contract error, mof contract-lint failed. End-to-end workflow: diagnose → impact analysis → propose edit → validate → commit. Phase 3 (P110+)."
 ---
 
 # fix-bos-contract — Intent-Driven Development for BOS Contracts

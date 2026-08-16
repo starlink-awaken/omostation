@@ -314,6 +314,13 @@ surfaces:
     gate: true
     triggers: []
     status: active
+  - id: bin-ssot-check-agent-skills-py
+    tool: bin/ssot/check-agent-skills.py
+    workflow: ci-lint.yml
+    gate: true
+    triggers: [manual, per_pr, push]
+    status: active
+    note: 校验 .agents/skills/*/SKILL.md YAML frontmatter 格式与契约
   - id: bin-ssot-check-cockpit-ui-dist-py
     tool: bin/ssot/check-cockpit-ui-dist.py
     workflow: (none)
@@ -761,6 +768,12 @@ surfaces:
     status: active
 
 workflow_triggers:
+  - workflow: aetherforge-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/aetherforge-ci.yml
+    - projects/aetherforge/**
   - workflow: agora-ci.yml
     triggers: [per_pr, push]
     path_filtered: true
@@ -773,22 +786,33 @@ workflow_triggers:
   - workflow: audit-rollout-monthly.yml
     triggers: [manual, scheduled]
     path_filtered: false
+  - workflow: bulk-deletion-guard.yml
+    triggers: [per_pr, push]
+    path_filtered: false
   - workflow: c2g-gc-weekly.yml
     triggers: [manual, scheduled]
     path_filtered: false
   - workflow: c2g-radar-daily.yml
     triggers: [manual, scheduled]
     path_filtered: false
+  - workflow: cascading-test.yml
+    triggers: [per_pr, push]
+    path_filtered: false
   - workflow: ci-lint.yml
     triggers: [per_pr, push, scheduled]
     path_filtered: true
     paths:
+    - .agents/**
     - .github/workflows/**
     - .pre-commit-config.yaml
     - bin/cockpit/**
+    - bin/ssot/check-agent-skills.py
     - docs/generated/capability-registry.yaml
+    - docs/local-compute/**
+    - projects/aetherforge/**
     - projects/agora/etc/bos-services.yaml
     - projects/cockpit/src/cockpit/cli.py
+    - projects/omlxc/**
     - scripts/**
   - workflow: ci-python-coverage.yml
     triggers: [per_pr, push]
@@ -798,10 +822,8 @@ workflow_triggers:
     - projects/*/pyproject.toml
     - projects/aetherforge/**
     - projects/bus-foundation/**
-    - projects/c2g/**
     - projects/l4-kernel/**
     - projects/model-driven/**
-    - projects/omo-debt/**
     - projects/omo/**
   - workflow: cockpit-ci.yml
     triggers: [per_pr, push]
@@ -809,6 +831,12 @@ workflow_triggers:
     paths:
     - .github/workflows/cockpit-ci.yml
     - projects/cockpit/**
+  - workflow: cockpit-ui-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/cockpit-ui-ci.yml
+    - projects/cockpit-ui/**
   - workflow: config-check.yml
     triggers: [push]
     path_filtered: true
@@ -842,6 +870,9 @@ workflow_triggers:
   - workflow: gac-gate.yml
     triggers: [manual, per_pr, push]
     path_filtered: false
+  - workflow: gac-maintenance.yml
+    triggers: [scheduled]
+    path_filtered: false
   - workflow: governance-check.yml
     triggers: [per_pr, push, scheduled]
     path_filtered: true
@@ -861,8 +892,6 @@ workflow_triggers:
     - projects/*/src/**
     - projects/ecos/scripts/contract_gatekeeper.py
     - projects/omo/tests/**
-    - scripts/check-*.py
-    - scripts/opc_*.py
   - workflow: integration.yml
     triggers: [per_pr, push]
     path_filtered: true
@@ -900,6 +929,12 @@ workflow_triggers:
     paths:
     - .github/workflows/observability-ci.yml
     - projects/observability/**
+  - workflow: omlxc-ci.yml
+    triggers: [per_pr, push]
+    path_filtered: true
+    paths:
+    - .github/workflows/omlxc-ci.yml
+    - projects/omlxc/**
   - workflow: omo-autopilot.yml
     triggers: [manual, scheduled]
     path_filtered: false
@@ -933,10 +968,18 @@ workflow_triggers:
     paths:
     - .github/workflows/quality.yml
     - .pre-commit-config.yaml
+    - projects/aetherforge/src/**
     - projects/agora/src/**
     - projects/cockpit/src/**
     - projects/ecos/src/**
+    - projects/omlxc/src/**
     - projects/omo/src/**
+  - workflow: repo-health-daily.yml
+    triggers: [scheduled]
+    path_filtered: false
+  - workflow: reusable-submodule-bump-pr.yml
+    triggers: [callable]
+    path_filtered: false
   - workflow: state-goals-enforce.yml
     triggers: [per_pr, push]
     path_filtered: false
