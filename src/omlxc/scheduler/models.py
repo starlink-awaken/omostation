@@ -21,6 +21,7 @@ class RejectionCode(StrEnum):
     MEMORY = "memory_denied"
     NO_CAPACITY = "no_capacity"
     LOCAL_SECURITY = "local_security_denied"
+    CIRCUIT_OPEN = "circuit_open"
 
 
 class RouteFailureCode(StrEnum):
@@ -73,6 +74,7 @@ class PlacementSnapshot:
     available_concurrency: int | None
     local: bool
     security_allowed: bool
+    circuit_open: bool = False
 
     def __post_init__(self) -> None:
         if any(

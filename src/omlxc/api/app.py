@@ -418,6 +418,22 @@ def create_app(
     async def metrics(request: Request) -> JSONResponse:
         return _success(request, await _require_control(control).metrics_summary())
 
+    @app.get("/api/v1/benchmarks")
+    async def list_benchmarks(
+        request: Request,
+        model_id: str | None = None,
+        limit: Annotated[int, Query(ge=1, le=MAX_PAGE_SIZE)] = 50,
+    ) -> JSONResponse:
+        service = _require_control(control)
+        records = await service.list_benchmarks(model_id=model_id, limit=limit)
+        return _success(request, records)
+
+    @app.post("/api/v1/models/{model_id:path}/benchmark")
+    async def benchmark_model(request: Request, model_id: str) -> JSONResponse:
+        service = _require_control(control)
+        record = await service.benchmark_model(model_id)
+        return _success(request, record)
+
     @app.get("/api/v1/events")
     async def event_stream(
         request: Request,

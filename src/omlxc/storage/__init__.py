@@ -3,6 +3,7 @@
 from .database import SQLiteRuntimeStore
 from .jobs import JobConflictError, RunningRecoveryPolicy, StoredJob
 from .models import (
+    BenchmarkRunRecord,
     ConfigRevisionConflictError,
     ConfigRevisionRecord,
     ConfigRevisionWrite,
@@ -19,6 +20,7 @@ from .models import (
 )
 
 __all__ = [
+    "BenchmarkRunRecord",
     "DailyMetricAggregate",
     "ConfigRevisionConflictError",
     "ConfigRevisionRecord",

@@ -10,7 +10,7 @@ from omlxc.domain import Job, ModelSpec, Node, NodeDiagnosticReport, RouteDecisi
 from omlxc.domain.protocols import ChatRequest, EmbeddingRequest, StreamEvent
 from omlxc.events import EventSubscription
 from omlxc.scheduler import RouteFailure
-from omlxc.storage import DurableEventRecord
+from omlxc.storage import BenchmarkRunRecord, DurableEventRecord
 
 
 class ControlService(Protocol):
@@ -39,6 +39,12 @@ class ControlService(Protocol):
     async def cancel_job(self, job_id: str) -> Job | None: ...
 
     async def metrics_summary(self) -> Mapping[str, object]: ...
+
+    async def list_benchmarks(
+        self, *, model_id: str | None = None, limit: int = 50
+    ) -> tuple[BenchmarkRunRecord, ...]: ...
+
+    async def benchmark_model(self, model_id: str) -> BenchmarkRunRecord: ...
 
 
 class InferenceService(Protocol):

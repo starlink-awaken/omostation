@@ -103,3 +103,17 @@ class ConfigRevisionWrite:
 @dataclass(frozen=True, slots=True)
 class ConfigRevisionRecord(ConfigRevisionWrite):
     sequence: int
+
+
+@dataclass(frozen=True, slots=True)
+class BenchmarkRunRecord:
+    run_id: str
+    model_id: str
+    placement_id: str
+    node_id: str
+    cold_load_ms: float | None
+    warm_load_ms: float | None
+    ttft_ms: float
+    tps: float
+    vram_used_mb: int | None
+    tested_at: datetime

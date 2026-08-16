@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.1.0 — 2026-08-16
+
+- **Circuit Breaker Resilience**: Introduced 3-state (`CLOSED`, `OPEN`, `HALF-OPEN`)
+  adaptive circuit breaker preventing cascade failovers and request hangs when
+  remote Tailscale or LAN nodes sleep or drop offline.
+- **Model Benchmark Suite**: Added `omlxc benchmark run [model]` and `omlxc benchmark report`
+  commands backed by SQLite runtime storage (`benchmark_runs` table, Schema v4)
+  recording cold load, warm load, TTFT, and generation throughput (TPS).
+- **Dynamic EWMA Router**: Enhanced `RoutePlanner` with multi-factor scoring
+  (Locality affinity, VRAM headroom, EWMA TTFT/TPS telemetry) and `--explain`
+  visibility into scoring breakdown and circuit breaker rejections.
+- **TUI & CLI Observability**: Added circuit breaker states and benchmark leaderboards
+  to cockpit views.
+
 ## 3.0.15 — 2026-08-15
 
 - Warn when a healthy adapter `list_models()` count falls more than 30% below

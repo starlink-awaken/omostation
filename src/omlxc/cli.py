@@ -105,6 +105,7 @@ models_app = typer.Typer(help="Inspect and control daemon model placements.")
 routes_app = typer.Typer(help="Explain local physical placement decisions.")
 jobs_app = typer.Typer(help="Inspect and control durable daemon jobs.")
 metrics_app = typer.Typer(help="Inspect local runtime metrics.")
+benchmark_app = typer.Typer(help="Benchmark local model latency and generation throughput.")
 config_app = typer.Typer(help="Validate or migrate versioned configuration.")
 daemon_app = typer.Typer(help="Inspect or plan the private launchd service.")
 
@@ -114,6 +115,7 @@ for name, group in (
     ("routes", routes_app),
     ("jobs", jobs_app),
     ("metrics", metrics_app),
+    ("benchmark", benchmark_app),
     ("config", config_app),
     ("daemon", daemon_app),
 ):
@@ -697,8 +699,13 @@ def routes_plan(
     context_tokens: Annotated[int, typer.Option("--context-tokens", min=0)] = 0,
     capability: Annotated[list[str] | None, typer.Option("--capability")] = None,
     thinking: Annotated[bool, typer.Option("--thinking")] = False,
+    explain: Annotated[
+        bool,
+        typer.Option("--explain", help="Show scoring breakdown and rejections."),
+    ] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
+    del explain
     capabilities = cast(list[JsonValue], list(capability or ()))
     body: dict[str, JsonValue] = {
         "model_id": model_id,
@@ -734,6 +741,37 @@ def routes_pin(
     del model_id, placement_id
     _require_r1("pin route", yes=yes, json_output=json_output)
     _unsupported("routes pin", json_output=json_output)
+
+
+@benchmark_app.command("run")
+def benchmark_run(
+    model_id: Annotated[str | None, typer.Argument()] = None,
+    all_models: Annotated[bool, typer.Option("--all")] = False,
+    quick: Annotated[bool, typer.Option("--quick")] = False,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    target_model = model_id or "coding"
+    del all_models, quick
+    _execute(
+        lambda client: client.benchmark_model(target_model),
+        json_output=json_output,
+        renderer=_render_benchmark_result,
+        error_context=ErrorContext.GENERAL,
+    )
+
+
+@benchmark_app.command("report")
+def benchmark_report(
+    model_id: Annotated[str | None, typer.Option("--model")] = None,
+    limit: Annotated[int, typer.Option("--limit", min=1, max=100)] = 20,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    _execute(
+        lambda client: client.benchmark_report(model_id=model_id, limit=limit),
+        json_output=json_output,
+        renderer=_render_benchmark_report,
+        error_context=ErrorContext.GENERAL,
+    )
 
 
 @jobs_app.command("list")
@@ -1320,10 +1358,124 @@ def _render_route(data: JsonValue | None) -> str:
     grid.add_row("SELECTED", f"[bold cyan]{selected}[/bold cyan]")
     grid.add_row("FALLBACK", f"[dim]{fallback_text}[/dim]")
 
+    scores = mapping.get("candidate_scores")
+    if isinstance(scores, dict) and scores:
+        grid.add_row("", "")
+        grid.add_row("SCORES", "")
+        for pid, sc in scores.items():
+            sc_val = f"{float(sc):.3f}" if isinstance(sc, (int, float)) else str(sc)
+            prefix = "[bold green]●[/bold green]" if pid == selected else "[dim]○[/dim]"
+            grid.add_row(f"  {prefix} {pid}", f"[bold cyan]{sc_val}[/bold cyan]")
+
+    rejected = mapping.get("rejected")
+    if isinstance(rejected, dict) and rejected:
+        grid.add_row("", "")
+        grid.add_row("REJECTED", "")
+        for pid, reason in rejected.items():
+            grid.add_row(f"  [red]✖[/red] {pid}", f"[dim red]{reason}[/dim red]")
+
+    explanation = mapping.get("explanation")
+    if explanation:
+        grid.add_row("", "")
+        grid.add_row("EXPLANATION", f"[dim]{explanation}[/dim]")
+
     _console.print(
         Panel(
             grid,
             title="[bold]Route Plan[/bold]",
+            border_style="#1a4d80",
+            expand=False,
+        )
+    )
+    return ""
+
+
+def _render_benchmark_result(data: JsonValue | None) -> str:
+    mapping = _mapping(data)
+    model_id = _text(mapping.get("model_id"))
+    placement_id = _text(mapping.get("placement_id"))
+    node_id = _text(mapping.get("node_id"))
+    ttft_ms = mapping.get("ttft_ms")
+    tps = mapping.get("tps")
+    cold_load_ms = mapping.get("cold_load_ms")
+    warm_load_ms = mapping.get("warm_load_ms")
+
+    grid = Table.grid(padding=(0, 2))
+    grid.add_column(style="#5a7a9a bold")
+    grid.add_column()
+    grid.add_row("MODEL", f"[bold cyan]{model_id}[/bold cyan]")
+    grid.add_row("PLACEMENT", f"{placement_id} [dim]({node_id})[/dim]")
+    grid.add_row("TTFT", f"[bold green]{ttft_ms} ms[/bold green]")
+    grid.add_row("THROUGHPUT", f"[bold cyan]{tps} tok/s[/bold cyan]")
+    if cold_load_ms is not None:
+        grid.add_row("COLD LOAD", f"{cold_load_ms} ms")
+    if warm_load_ms is not None:
+        grid.add_row("WARM LOAD", f"{warm_load_ms} ms")
+
+    _console.print(
+        Panel(
+            grid,
+            title="[bold]⚡ Benchmark Result[/bold]",
+            border_style="#1a4d80",
+            expand=False,
+        )
+    )
+    return ""
+
+
+def _render_benchmark_report(data: JsonValue | None) -> str:
+    if isinstance(data, list):
+        items = cast(list[dict[str, JsonValue]], data)
+    elif isinstance(data, dict):
+        raw_items = data.get("items")
+        if isinstance(raw_items, list):
+            items = cast(list[dict[str, JsonValue]], raw_items)
+        else:
+            items = [data]
+    else:
+        items = []
+
+    if not items:
+        _console.print(
+            "[dim]No benchmark runs recorded yet. Run `omlxc benchmark run` first.[/dim]"
+        )
+        return ""
+
+    table = Table(
+        box=box.SIMPLE_HEAVY,
+        show_header=True,
+        header_style="#5a7a9a bold",
+        border_style="#1a3d60",
+    )
+    table.add_column("MODEL ID", style="bold")
+    table.add_column("PLACEMENT", style="dim")
+    table.add_column("NODE")
+    table.add_column("TTFT (ms)", justify="right", style="bold green")
+    table.add_column("TPS (tok/s)", justify="right", style="bold cyan")
+    table.add_column("TESTED AT", justify="right", style="dim")
+
+    for item in items:
+        m = _mapping(item)
+        tested_at = _text(m.get("tested_at"))
+        if "T" in tested_at:
+            tested_at = tested_at.split("T")[1][:8]
+        ttft = m.get("ttft_ms", 0)
+        tps = m.get("tps", 0)
+        ttft_str = f"{float(ttft):.1f}" if isinstance(ttft, (int, float)) else str(ttft)
+        tps_str = f"{float(tps):.1f}" if isinstance(tps, (int, float)) else str(tps)
+        table.add_row(
+            _text(m.get("model_id")),
+            _text(m.get("placement_id")),
+            _text(m.get("node_id")),
+            ttft_str,
+            tps_str,
+            tested_at,
+        )
+
+    _console.print(
+        Panel(
+            table,
+            title="[bold]📊 Benchmark Leaderboard[/bold]",
             border_style="#1a4d80",
             expand=False,
         )

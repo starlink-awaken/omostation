@@ -131,6 +131,17 @@ class DaemonClient:
     async def metrics(self) -> DaemonEnvelope:
         return await self._request("GET", "/api/v1/metrics/summary")
 
+    async def benchmark_model(self, model_id: str) -> DaemonEnvelope:
+        return await self._request("POST", f"/api/v1/models/{quote(model_id, safe='')}/benchmark")
+
+    async def benchmark_report(
+        self, *, model_id: str | None = None, limit: int = 50
+    ) -> DaemonEnvelope:
+        params: dict[str, str | int] = {"limit": limit}
+        if model_id is not None:
+            params["model_id"] = model_id
+        return await self._request("GET", "/api/v1/benchmarks", params=params)
+
     async def openai_models(self) -> tuple[str, ...]:
         """Run the read-only OpenAI compatibility smoke endpoint."""
         request_id = self._new_request_id()

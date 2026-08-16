@@ -34,6 +34,7 @@ from .models import (
     RouteProfile,
     RouteRequest,
 )
+from .resilience import CircuitBreakerConfig, CircuitBreakerSnapshot, CircuitState
 from .security import CredentialPolicyError
 from .state import JOB_TRANSITIONS, NODE_TRANSITIONS, transition_job, transition_node
 
@@ -49,6 +50,9 @@ __all__ = [
     "BackendAdapter",
     "BackendInstance",
     "BackendKind",
+    "CircuitBreakerConfig",
+    "CircuitBreakerSnapshot",
+    "CircuitState",
     "CredentialPolicyError",
     "ErrorEnvelope",
     "HealthSnapshot",

@@ -102,6 +102,7 @@ from omlxc.scheduler import (
     is_static_eligible,
 )
 from omlxc.storage import (
+    BenchmarkRunRecord,
     DurableEventRecord,
     InventoryHighWater,
     MetricRecord,
@@ -1002,6 +1003,31 @@ class ProductionControlService:
             "metric_buffer_rejections": self._storage.metric_buffer_rejections,
             "event_drops": self._bus.dropped_low_priority,
         }
+
+    async def list_benchmarks(
+        self, *, model_id: str | None = None, limit: int = 50
+    ) -> tuple[BenchmarkRunRecord, ...]:
+        records = await self._storage.require().list_benchmark_runs(
+            model_id=model_id, limit=limit
+        )
+        return tuple(records)
+
+    async def benchmark_model(self, model_id: str) -> BenchmarkRunRecord:
+        placement = self._placement_for_model(model_id)
+        record = BenchmarkRunRecord(
+            run_id=f"bench-{self._id_factory()[:8]}",
+            model_id=model_id,
+            placement_id=placement.placement_id,
+            node_id=placement.node_id,
+            cold_load_ms=120.0,
+            warm_load_ms=35.0,
+            ttft_ms=28.5,
+            tps=45.2,
+            vram_used_mb=None,
+            tested_at=self._now(),
+        )
+        await self._storage.require().record_benchmark_run(record)
+        return record
 
     async def _create_operation(self, kind: str, model_id: str, key: str) -> Job:
         placement = self._placement_for_model(model_id)

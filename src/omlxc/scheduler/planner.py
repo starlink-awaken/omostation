@@ -87,6 +87,8 @@ class RoutePlanner:
 
     @staticmethod
     def evaluate(request: RouteRequest, placement: PlacementSnapshot) -> RejectionCode | None:
+        if placement.circuit_open:
+            return RejectionCode.CIRCUIT_OPEN
         if placement.model_id != request.model_id:
             return RejectionCode.MODEL
         if not placement.authorized:

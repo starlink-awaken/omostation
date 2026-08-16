@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import math
 import time
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
@@ -38,6 +39,7 @@ from omlxc.scheduler import (
 )
 
 from .capacity import CapacityCoordinator
+from .circuit_breaker import CircuitBreakerRegistry
 from .models import (
     ChatExecution,
     EmbeddingExecution,
@@ -72,6 +74,7 @@ class DataPlaneOrchestrator:
         load_target: Callable[[PlacementSnapshot], PlacementTarget] | None = None,
         telemetry: TelemetrySink | None = None,
         telemetry_error_sink: Callable[[str], None] | None = None,
+        circuit_breakers: CircuitBreakerRegistry | None = None,
     ) -> None:
         self._planner = planner
         self._snapshot_provider = snapshot_provider
@@ -83,6 +86,7 @@ class DataPlaneOrchestrator:
         self._telemetry = telemetry
         self._telemetry_error_sink = telemetry_error_sink
         self._telemetry_failure_count = 0
+        self._circuit_breakers = circuit_breakers
 
     @property
     def telemetry_failure_count(self) -> int:
@@ -107,7 +111,19 @@ class DataPlaneOrchestrator:
     async def _chat_unobserved(
         self, route_request: RouteRequest, request: ChatRequest, *, deadline: float
     ) -> ChatExecution:
-        snapshots = self._snapshot_provider()
+        raw_snapshots = self._snapshot_provider()
+        if self._circuit_breakers is not None:
+            now = self._monotonic()
+            snapshots = tuple(
+                dataclasses.replace(
+                    s,
+                    circuit_open=not self._circuit_breakers.is_available(s.placement_id, now=now),
+                )
+                for s in raw_snapshots
+            )
+        else:
+            snapshots = raw_snapshots
+
         plan = self._planner.plan(route_request, snapshots)
         await self._record_plan(plan)
         failure = self._plan_error(plan)
@@ -141,6 +157,8 @@ class DataPlaneOrchestrator:
             try:
                 result = await self._chat_once(placement, request, end)
             except TimeoutError:
+                if self._circuit_breakers is not None:
+                    self._circuit_breakers.record_failure(placement_id, now=self._monotonic())
                 if self._remaining(end) > 0:
                     continue
                 return ChatExecution(
@@ -152,6 +170,8 @@ class DataPlaneOrchestrator:
                     error=self._timeout_error(),
                 )
             except Exception:
+                if self._circuit_breakers is not None:
+                    self._circuit_breakers.record_failure(placement_id, now=self._monotonic())
                 return ChatExecution(
                     request.request_id,
                     request.model,
@@ -165,6 +185,8 @@ class DataPlaneOrchestrator:
                     ),
                 )
             if result.success:
+                if self._circuit_breakers is not None:
+                    self._circuit_breakers.record_success(placement_id, now=self._monotonic())
                 return ChatExecution(
                     request.request_id,
                     request.model,
@@ -176,6 +198,8 @@ class DataPlaneOrchestrator:
                     profile=route_request.profile,
                 )
             assert result.error is not None
+            if self._circuit_breakers is not None:
+                self._circuit_breakers.record_failure(placement_id, now=self._monotonic())
             if not self._can_failover(result.error):
                 return ChatExecution(
                     request.request_id,

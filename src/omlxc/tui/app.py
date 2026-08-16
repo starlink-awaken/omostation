@@ -79,6 +79,9 @@ STATE_ICONS: dict[str, tuple[str, str]] = {
     "degraded": ("◑", "yellow"),
     "offline": ("○", "bright_black"),
     "stale": ("◌", "bright_black"),
+    "circuit_open": ("⚡", "red"),
+    "half_open": ("⟳", "yellow"),
+    "closed": ("●", "green"),
     "unknown": ("·", "bright_black"),
 }
 

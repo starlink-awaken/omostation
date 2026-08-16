@@ -1,6 +1,8 @@
 """Unified local inference data plane."""
 
+from .benchmark import BenchmarkRunner
 from .capacity import CapacityCoordinator
+from .circuit_breaker import CircuitBreaker, CircuitBreakerRegistry
 from .models import (
     AdapterBinding,
     ChatExecution,
@@ -20,9 +22,12 @@ from .telemetry import BoundRouteTelemetry, RouteTelemetryRecorder, TelemetrySin
 __all__ = [
     "AdapterBinding",
     "AdapterRegistry",
+    "BenchmarkRunner",
     "BoundRouteTelemetry",
     "CapacityCoordinator",
     "ChatExecution",
+    "CircuitBreaker",
+    "CircuitBreakerRegistry",
     "DataPlaneOrchestrator",
     "EmbeddingExecution",
     "ExecutionError",

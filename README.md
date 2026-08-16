@@ -81,6 +81,21 @@ omlxc models unload local/model-id --yes --json
 omlxc jobs cancel job-id --yes --json
 ```
 
+## Model Benchmark & Resilience
+
+Measure latency (cold/warm load, TTFT) and generation throughput (TPS) across local and remote nodes:
+
+```bash
+# Run a benchmark for a specific model or default
+omlxc benchmark run coding
+
+# View persisted benchmark leaderboard
+omlxc benchmark report
+
+# Explain dynamic EWMA route scoring and circuit breaker states
+omlxc routes plan coding --explain
+```
+
 The TUI uses `g`, `/`, `:`, `r`, `?`, `q`, and `Esc`. It keeps the last snapshot
 visible as `STALE` while reconnecting and degrades its layout below `80x24`.
 

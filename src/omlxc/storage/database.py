@@ -22,6 +22,7 @@ from omlxc.domain import Job, JobState, RiskLevel, transition_job
 
 from .jobs import JobConflictError, RunningRecoveryPolicy, StoredJob
 from .models import (
+    BenchmarkRunRecord,
     ConfigRevisionConflictError,
     ConfigRevisionRecord,
     ConfigRevisionWrite,
@@ -37,7 +38,7 @@ from .models import (
     UnsupportedSchemaError,
 )
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 MAX_PAGE_SIZE = 500
 _T = TypeVar("_T")
 _REQUIRED_COLUMNS: dict[str, tuple[str, ...]] = {
@@ -67,6 +68,18 @@ _REQUIRED_COLUMNS: dict[str, tuple[str, ...]] = {
         "success",
         "error_code",
         "phase",
+    ),
+    "benchmark_runs": (
+        "run_id",
+        "model_id",
+        "placement_id",
+        "node_id",
+        "cold_load_ms",
+        "warm_load_ms",
+        "ttft_ms",
+        "tps",
+        "vram_used_mb",
+        "tested_at",
     ),
     "jobs": (
         "job_id",
@@ -126,6 +139,7 @@ _REQUIRED_COLUMNS: dict[str, tuple[str, ...]] = {
 _REQUIRED_INDEXES: dict[str, tuple[str, ...]] = {
     "health_latest_idx": ("resource_kind", "resource_id", "observed_at", "sequence"),
     "request_metrics_observed_idx": ("observed_at",),
+    "benchmark_placement_idx": ("placement_id", "tested_at"),
 }
 _REQUIRED_COLUMN_SPECS: dict[str, tuple[tuple[str, str, int, str | None, int, int], ...]] = {
     "health_snapshots": (
@@ -154,6 +168,18 @@ _REQUIRED_COLUMN_SPECS: dict[str, tuple[tuple[str, str, int, str | None, int, in
         ("success", "INTEGER", 1, None, 0, 0),
         ("error_code", "TEXT", 0, None, 0, 0),
         ("phase", "TEXT", 0, None, 0, 0),
+    ),
+    "benchmark_runs": (
+        ("run_id", "TEXT", 0, None, 1, 0),
+        ("model_id", "TEXT", 1, None, 0, 0),
+        ("placement_id", "TEXT", 1, None, 0, 0),
+        ("node_id", "TEXT", 1, None, 0, 0),
+        ("cold_load_ms", "REAL", 0, None, 0, 0),
+        ("warm_load_ms", "REAL", 0, None, 0, 0),
+        ("ttft_ms", "REAL", 1, None, 0, 0),
+        ("tps", "REAL", 1, None, 0, 0),
+        ("vram_used_mb", "INTEGER", 0, None, 0, 0),
+        ("tested_at", "TEXT", 1, None, 0, 0),
     ),
     "jobs": (
         ("job_id", "TEXT", 0, None, 1, 0),
@@ -216,6 +242,11 @@ _REQUIRED_INDEX_PROPERTIES: dict[str, tuple[str, bool, tuple[str, ...]]] = {
         "request_metrics",
         False,
         _REQUIRED_INDEXES["request_metrics_observed_idx"],
+    ),
+    "benchmark_placement_idx": (
+        "benchmark_runs",
+        False,
+        _REQUIRED_INDEXES["benchmark_placement_idx"],
     ),
 }
 _REQUIRED_UNIQUE_COLUMNS: dict[str, frozenset[tuple[str, ...]]] = {
@@ -335,6 +366,27 @@ _V3_TABLE_SQL = {
     )""",
 }
 _V3_SCHEMA_SQL = ";\n".join((*_V3_TABLE_SQL.values(), *_V1_INDEX_SQL.values()))
+_V4_TABLE_SQL = {
+    **_V3_TABLE_SQL,
+    "benchmark_runs": """CREATE TABLE benchmark_runs (
+        run_id TEXT PRIMARY KEY,
+        model_id TEXT NOT NULL,
+        placement_id TEXT NOT NULL,
+        node_id TEXT NOT NULL,
+        cold_load_ms REAL,
+        warm_load_ms REAL,
+        ttft_ms REAL NOT NULL,
+        tps REAL NOT NULL,
+        vram_used_mb INTEGER,
+        tested_at TEXT NOT NULL
+    )""",
+}
+_V4_INDEX_SQL = {
+    **_V1_INDEX_SQL,
+    "benchmark_placement_idx": """CREATE INDEX benchmark_placement_idx
+        ON benchmark_runs(placement_id, tested_at DESC)""",
+}
+_V4_SCHEMA_SQL = ";\n".join((*_V4_TABLE_SQL.values(), *_V4_INDEX_SQL.values()))
 _SENSITIVE_TEXT = re.compile(
     r"(?:authorization\s*:|bearer\s+\S+|api[_-]?key|password|secret|token\s*[=:])",
     re.I,
@@ -1399,6 +1451,79 @@ class SQLiteRuntimeStore:
             raise asyncio.CancelledError
         return result
 
+    async def record_benchmark_run(self, record: BenchmarkRunRecord) -> None:
+        async def operation(connection: aiosqlite.Connection) -> None:
+            await connection.execute(
+                """
+                INSERT INTO benchmark_runs
+                    (run_id, model_id, placement_id, node_id,
+                     cold_load_ms, warm_load_ms, ttft_ms, tps, vram_used_mb, tested_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    record.run_id,
+                    record.model_id,
+                    record.placement_id,
+                    record.node_id,
+                    record.cold_load_ms,
+                    record.warm_load_ms,
+                    record.ttft_ms,
+                    record.tps,
+                    record.vram_used_mb,
+                    record.tested_at.isoformat(),
+                ),
+            )
+
+        await self._write(operation)
+
+    async def list_benchmark_runs(
+        self,
+        *,
+        model_id: str | None = None,
+        placement_id: str | None = None,
+        limit: int = 50,
+    ) -> list[BenchmarkRunRecord]:
+        reader = self._require_reader()
+        query = (
+            "SELECT run_id, model_id, placement_id, node_id, "
+            "cold_load_ms, warm_load_ms, ttft_ms, tps, vram_used_mb, tested_at "
+            "FROM benchmark_runs"
+        )
+        params: list[Any] = []
+        conditions: list[str] = []
+        if model_id is not None:
+            conditions.append("model_id = ?")
+            params.append(model_id)
+        if placement_id is not None:
+            conditions.append("placement_id = ?")
+            params.append(placement_id)
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        query += " ORDER BY tested_at DESC LIMIT ?"
+        params.append(min(limit, MAX_PAGE_SIZE))
+
+        cursor = await reader.execute(query, tuple(params))
+        rows = await cursor.fetchall()
+        await cursor.close()
+
+        records: list[BenchmarkRunRecord] = []
+        for r in rows:
+            records.append(
+                BenchmarkRunRecord(
+                    run_id=str(r[0]),
+                    model_id=str(r[1]),
+                    placement_id=str(r[2]),
+                    node_id=str(r[3]),
+                    cold_load_ms=float(r[4]) if r[4] is not None else None,
+                    warm_load_ms=float(r[5]) if r[5] is not None else None,
+                    ttft_ms=float(r[6]),
+                    tps=float(r[7]),
+                    vram_used_mb=int(r[8]) if r[8] is not None else None,
+                    tested_at=datetime.fromisoformat(str(r[9])),
+                )
+            )
+        return records
+
     async def _close_impl(self) -> int:
         if self._closed:
             return 0
@@ -1489,7 +1614,7 @@ async def _migrate(connection: aiosqlite.Connection) -> None:
         return
     if version == 0:
         await connection.executescript(
-            f"BEGIN IMMEDIATE;\n{_V3_SCHEMA_SQL};\nPRAGMA user_version = 3;\nCOMMIT;"
+            f"BEGIN IMMEDIATE;\n{_V4_SCHEMA_SQL};\nPRAGMA user_version = 4;\nCOMMIT;"
         )
         return
     if version == 1:
@@ -1507,6 +1632,13 @@ async def _migrate(connection: aiosqlite.Connection) -> None:
         await connection.executescript(
             f"BEGIN IMMEDIATE;\n{_V3_TABLE_SQL['inventory_high_water']};\n"
             "PRAGMA user_version = 3;\nCOMMIT;"
+        )
+        version = 3
+    if version == 3:
+        await connection.executescript(
+            f"BEGIN IMMEDIATE;\n{_V4_TABLE_SQL['benchmark_runs']};\n"
+            f"{_V4_INDEX_SQL['benchmark_placement_idx']};\n"
+            "PRAGMA user_version = 4;\nCOMMIT;"
         )
         return
     raise UnsupportedSchemaError("database schema migration path is unavailable")
@@ -1612,8 +1744,8 @@ async def _validate_schema(connection: aiosqlite.Connection) -> None:
         raise aiosqlite.DatabaseError("SQLite foreign key invariant failed")
 
     expected_objects = {
-        **{("table", name): sql for name, sql in _V3_TABLE_SQL.items()},
-        **{("index", name): sql for name, sql in _V1_INDEX_SQL.items()},
+        **{("table", name): sql for name, sql in _V4_TABLE_SQL.items()},
+        **{("index", name): sql for name, sql in _V4_INDEX_SQL.items()},
     }
     cursor = await connection.execute(
         "SELECT type, name, sql FROM sqlite_master "
