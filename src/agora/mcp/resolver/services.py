@@ -1391,6 +1391,24 @@ _FALLBACK_SERVICES: list[BosService] = [
         ],
         description="omlxc VRAM Budget 动态 KV Cache 显存预算与准入判定端点",
     ),
+    BosService(
+        uri="bos://compute/aetherforge/warm",
+        domain="compute",
+        package="aetherforge",
+        action="warm",
+        transport="stdio",
+        command=[
+            "uv",
+            "run",
+            "--directory",
+            "projects/omlxc",
+            "omlxc",
+            "fabric",
+            "warm",
+            "--json",
+        ],
+        description="omlxc System Prefix Warmer 系统前缀缓存预热端点",
+    ),
 ]
 
 # ── POC_SERVICES: YAML 驱动加载器 ──────────────────────────

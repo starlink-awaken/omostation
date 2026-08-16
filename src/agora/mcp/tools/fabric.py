@@ -102,3 +102,38 @@ def fabric_vram_budget(model_id: str, context_tokens: int) -> dict:
         )
     except Exception as exc:
         return _error(f"fabric_vram_budget_error: {exc}")
+
+
+@mcp.tool()
+def fabric_warm_prefixes(model_id: str = "coding") -> dict:
+    """预热系统 Prompt 前缀缓存以实现 0ms TTFT (首字无延迟响应).
+
+    Args:
+        model_id: 目标模型标识符 (默认 coding)
+    """
+    try:
+        proc = subprocess.run(
+            [
+                "uv",
+                "run",
+                "omlxc",
+                "fabric",
+                "warm",
+                "--model",
+                model_id,
+                "--json",
+            ],
+            cwd=str(_omlxc_root()),
+            capture_output=True,
+            text=True,
+            timeout=10.0,
+            check=False,
+        )
+        if proc.returncode != 0:
+            return _error(f"omlxc_fabric_warm_failed: {proc.stderr or proc.stdout}")
+        data = json.loads(proc.stdout)
+        return _ok(
+            {"format_version": FORMAT_VERSION, "warm_result": data.get("data", {})}
+        )
+    except Exception as exc:
+        return _error(f"fabric_warm_prefixes_error: {exc}")

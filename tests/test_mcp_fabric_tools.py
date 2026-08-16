@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch, MagicMock
-from agora.mcp.tools.fabric import fabric_inspect, fabric_triage, fabric_vram_budget
+from unittest.mock import MagicMock, patch
+
+from agora.mcp.tools.fabric import (
+    fabric_inspect,
+    fabric_triage,
+    fabric_vram_budget,
+    fabric_warm_prefixes,
+)
 
 
 def test_fabric_inspect_mcp_tool() -> None:
@@ -34,3 +40,13 @@ def test_fabric_vram_budget_mcp_tool() -> None:
         res = fabric_vram_budget("coding", 32768)
         assert res["status"] == "ok"
         assert res["vram_budget"]["kv_cache_mb"] == 8448.0
+
+
+def test_fabric_warm_prefixes_mcp_tool() -> None:
+    fake_stdout = '{"schema_version":"1","data":{"model_id":"coding","warmed_count":3,"estimated_saved_tokens":120}}'
+    mock_proc = MagicMock(returncode=0, stdout=fake_stdout, stderr="")
+
+    with patch("subprocess.run", return_value=mock_proc):
+        res = fabric_warm_prefixes("coding")
+        assert res["status"] == "ok"
+        assert res["warm_result"]["warmed_count"] == 3
