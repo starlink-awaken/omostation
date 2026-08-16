@@ -130,7 +130,7 @@ uv run --with pyyaml python bin/agent-workflow.py claim <run-id> \
 
 `workflow-id` 和 `agent-profile` 在 `claim-check` 的输出里，也在 bet 的 `workflow` 字段和轨道的 `agent_profile_hint` 里。
 
-需求迭代 `start` 必须带 `--bet`（`bet_id` 写入 run，不只写在 objective）。`ok` closeout / `bet-ledger complete` 缺北极星指针、run 绑定或 retro 会 halt。冷启动看 `bootstrap`/`status` 的 `chain:` 行。执行器：`bin/plan/chain-bind-check.py`；红线：`redlines.yaml::vision-to-retro-chain`。对照表：`docs/architecture/wave-gate-bet-map.md`。
+需求迭代 `start` 必须带 `--bet`（根仓 `bin/agent-workflow.py` 与 `omo.workflow.cli` 同一谓词；`bet_id` 写入 run）。`ok` closeout / `bet-ledger complete` 缺北极星指针、run 绑定或 retro 会 halt。冷启动看 `bootstrap`/`status` 的 `chain:` 行：active 显示 BET-ID，已关闭显示 `BET-ID (closed)`，从未绑定显示 `unbound`。执行器：`bin/plan/chain-bind-check.py`；红线：`redlines.yaml::vision-to-retro-chain`（digest：`make gen-agent-redlines`）。对照表：`docs/architecture/wave-gate-bet-map.md`。
 
 **⚠️ 三个实测过的坑（2026-08-14 T1-05A 修复轮补充）**：
 
