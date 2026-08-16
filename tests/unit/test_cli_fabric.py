@@ -47,3 +47,19 @@ def test_cli_fabric_vram_json() -> None:
     assert payload["data"]["model_id"] == "coding"
     assert payload["data"]["context_tokens"] == 32768
     assert payload["data"]["kv_cache_mb"] > 8000.0
+
+
+def test_cli_fabric_warm_json() -> None:
+    result = runner.invoke(app, ["fabric", "warm", "--model", "coding", "--json"])
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["data"]["model_id"] == "coding"
+    assert payload["data"]["warmed_count"] >= 3
+    assert payload["data"]["estimated_saved_tokens"] > 0
+
+
+def test_cli_fabric_warm_human() -> None:
+    result = runner.invoke(app, ["fabric", "warm"])
+    assert result.exit_code == 0
+    assert "System Prefix Warmer" in result.stdout
+    assert "Prefix Cache Ready" in result.stdout

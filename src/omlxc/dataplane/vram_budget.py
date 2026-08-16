@@ -12,6 +12,23 @@ from typing import Final
 
 
 @dataclass(frozen=True, slots=True)
+class HeadroomAdmissionResult:
+    """Result of KV Cache headroom evaluation with compaction advisory."""
+
+    admitted: bool
+    estimated_kv_mb: float
+    reason: str
+    compaction_advised: bool = False
+    max_safe_tokens: int = 0
+    recommended_compaction_ratio: float = 0.0
+
+    def __iter__(self):
+        yield self.admitted
+        yield self.estimated_kv_mb
+        yield self.reason
+
+
+@dataclass(frozen=True, slots=True)
 class ModelArchitectureMeta:
     """Transformer structural dimensions determining KV Cache memory growth."""
 
@@ -95,25 +112,41 @@ class VRAMBudgetEstimator:
         available_node_vram_mb: float,
         safe_headroom_ratio: float = 0.85,
         max_output_tokens: int = 1024,
-    ) -> tuple[bool, float, str]:
+    ) -> HeadroomAdmissionResult:
         """
         Check if request KV Cache fits within available node memory budget.
         
-        Returns (admitted, estimated_kv_mb, reason).
+        Returns HeadroomAdmissionResult with admission decision and compaction advisory.
         """
+        profile = self.get_profile(model_id)
         kv_mb = self.estimate_kv_cache_mb(model_id, context_tokens, max_output_tokens)
         safe_budget_mb = available_node_vram_mb * safe_headroom_ratio
+        
         if kv_mb > safe_budget_mb:
-            return (
-                False,
-                kv_mb,
-                (
+            safe_bytes = safe_budget_mb * 1024.0 * 1024.0
+            max_safe_total_tokens = (
+                int(safe_bytes / profile.bytes_per_token) if profile.bytes_per_token > 0 else 0
+            )
+            max_safe_tokens = max(0, max_safe_total_tokens - max_output_tokens)
+            compaction_ratio = (
+                round(max(0.0, 1.0 - (max_safe_tokens / max(context_tokens, 1))), 4)
+            )
+            return HeadroomAdmissionResult(
+                admitted=False,
+                estimated_kv_mb=kv_mb,
+                reason=(
                     f"estimated KV Cache ({kv_mb} MB) exceeds safe node headroom "
                     f"({safe_budget_mb:.1f} MB out of {available_node_vram_mb:.1f} MB)"
                 ),
+                compaction_advised=True,
+                max_safe_tokens=max_safe_tokens,
+                recommended_compaction_ratio=compaction_ratio,
             )
-        return (
-            True,
-            kv_mb,
-            f"admitted: {kv_mb} MB within safe headroom ({safe_budget_mb:.1f} MB)",
+        return HeadroomAdmissionResult(
+            admitted=True,
+            estimated_kv_mb=kv_mb,
+            reason=f"admitted: {kv_mb} MB within safe headroom ({safe_budget_mb:.1f} MB)",
+            compaction_advised=False,
+            max_safe_tokens=context_tokens,
+            recommended_compaction_ratio=0.0,
         )

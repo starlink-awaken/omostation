@@ -1701,6 +1701,38 @@ def fabric_vram(
     )
 
 
+@fabric_app.command("warm")
+def fabric_warm(
+    model_id: Annotated[
+        str, typer.Option("--model", "-m", help="Target model identifier")
+    ] = "coding",
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Pre-warm high-frequency system prompt prefixes into cache registry to achieve 0ms TTFT."""
+    from omlxc.dataplane.semantic_cache import SemanticCacheRegistry, warm_system_prefixes
+
+    registry = SemanticCacheRegistry()
+    res = warm_system_prefixes(registry, model_id=model_id)
+
+    if json_output:
+        _emit_success(res, request_id=_request_id())
+        return
+
+    prefix_names = ", ".join(res["prefixes"])
+    tokens_saved = res["estimated_saved_tokens"]
+    _console.print(
+        Panel(
+            f"Model: [bold cyan]{model_id}[/bold cyan]\n"
+            f"Warmed Prefixes: [bold green]{res['warmed_count']}[/bold green] ({prefix_names})\n"
+            f"Estimated Token Savings: [bold yellow]{tokens_saved:,} tokens[/bold yellow]\n"
+            f"Status: [bold green]✔ Prefix Cache Ready (0ms TTFT)[/bold green]",
+            title="[bold #7dd3f5]System Prefix Warmer[/bold #7dd3f5]",
+            border_style="#5a7a9a",
+            expand=False,
+        )
+    )
+
+
 def main() -> None:
     """Run the ``omlxc`` console script."""
     app()

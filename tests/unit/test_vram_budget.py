@@ -45,12 +45,15 @@ def test_vram_headroom_admission() -> None:
     assert admitted is True
     assert "admitted" in reason
 
-    # Tiny node with only 4GB free memory -> 8.4GB KV Cache rejected
-    admitted_fail, kv_mb_fail, reason_fail = estimator.check_headroom_admission(
+    # Tiny node with only 4GB free memory -> 8.4GB KV Cache rejected with compaction advice
+    res_fail = estimator.check_headroom_admission(
         "coding",
         context_tokens=32768,
         available_node_vram_mb=4000.0,
         safe_headroom_ratio=0.85,
     )
-    assert admitted_fail is False
-    assert "exceeds safe node headroom" in reason_fail
+    assert res_fail.admitted is False
+    assert res_fail.compaction_advised is True
+    assert 0 < res_fail.max_safe_tokens < 32768
+    assert 0.0 < res_fail.recommended_compaction_ratio <= 1.0
+    assert "exceeds safe node headroom" in res_fail.reason
