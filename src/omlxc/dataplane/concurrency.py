@@ -42,7 +42,7 @@ class ConcurrencyTracker:
             return count
 
     @asynccontextmanager
-    async def track(self, placement_id: str) -> AsyncGenerator[int, None]:
+    async def track(self, placement_id: str) -> AsyncGenerator[int]:
         """Async context manager to safely acquire and release concurrency token."""
         count = self.acquire(placement_id)
         try:
