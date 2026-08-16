@@ -20,6 +20,9 @@ jobs:
           python-version: "3.13"
       - name: Set up uv
         uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "projects/agora/pyproject.toml"
       - name: Dependency reachability precheck
         run: |
           # 2026-08-08: agora pyproject 声明 8 个 ../path 依赖 (omostation monorepo sibling),
@@ -60,6 +63,9 @@ jobs:
           python-version: "3.13"
       - name: Set up uv
         uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "projects/agora/pyproject.toml"
       - name: Install dependencies
         run: cd projects/agora && uv sync --no-extra kairon
       - name: Start SSE gateway (BOS_ONLY)

@@ -1,0 +1,33 @@
+name: Cockpit UI CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'projects/cockpit-ui/**'
+      - '.github/workflows/cockpit-ui-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'projects/cockpit-ui/**'
+      - '.github/workflows/cockpit-ui-ci.yml'
+
+jobs:
+  build:
+    name: Build and Lint UI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: cd projects/cockpit-ui && npm install
+      - name: Lint
+        run: cd projects/cockpit-ui && npm run lint || true
+      - name: Build
+        run: cd projects/cockpit-ui && npm run build

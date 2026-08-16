@@ -8,6 +8,8 @@ on:
       - 'projects/ecos/src/**'
       - 'projects/agora/src/**'
       - 'projects/cockpit/src/**'
+      - 'projects/omlxc/src/**'
+      - 'projects/aetherforge/src/**'
       - '.pre-commit-config.yaml'
       - '.github/workflows/quality.yml'
   pull_request:
@@ -17,6 +19,8 @@ on:
       - 'projects/ecos/src/**'
       - 'projects/agora/src/**'
       - 'projects/cockpit/src/**'
+      - 'projects/omlxc/src/**'
+      - 'projects/aetherforge/src/**'
       - '.pre-commit-config.yaml'
       - '.github/workflows/quality.yml'
 
@@ -33,7 +37,7 @@ jobs:
       - uses: astral-sh/ruff-action@v3
         with:
           # P41-W1 fix: projects/kairon is .gitignore'd. Lint tracked projects instead.
-          src: "projects/omo/src projects/ecos/src projects/agora/src projects/cockpit/src"
+          src: "projects/omo/src projects/ecos/src projects/agora/src projects/cockpit/src projects/omlxc/src projects/aetherforge/src"
           # ruff 0.16 收紧撞上既有 valid 模式/风格偏好, 逐个改风险>收益 (async 重构/类型签名变更/风格):
           # 兜底类 BLE001/S110/S112=catch Exception 容错(valid), EXE001=shebang;
           # 风格/模式类 PLW1510(open encoding 场景OK)/ASYNC221,230(async 模式)/SIM102,115(风格)/TRY004/PYI036(类型签名)/
@@ -52,8 +56,10 @@ jobs:
         continue-on-error: true
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.13"
       - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
       - name: install ruff
         run: pip install ruff
       - uses: pre-commit/action@v3.0.1
