@@ -126,6 +126,60 @@ def is_compatible_shim_policy(entry: dict[str, object] | None) -> bool:
     return "shim" in action or "compat" in action
 
 
+def infer_owner_hint(
+    path: str,
+    manifest_entry: dict[str, object] | None,
+) -> str:
+    manifest_owner = str(manifest_entry.get("owner", "")).strip() if manifest_entry else ""
+    if manifest_owner:
+        return manifest_owner
+    parts = Path(path).parts
+    if len(parts) >= 3 and parts[0] == "bin":
+        return parts[1]
+    if len(parts) >= 4 and parts[0] == "scripts" and parts[1] == "bin":
+        return parts[2]
+    return "governance"
+
+
+def infer_hotspot_recommendation(
+    path: str,
+    is_parallel_candidate: bool,
+    managed_parallel: bool,
+    owner_hint: str,
+) -> tuple[str, str]:
+    if path.startswith("bin/"):
+        if is_parallel_candidate and managed_parallel:
+            return (
+                "retain-bin-owner",
+                "bin",
+            )
+        if is_parallel_candidate and not managed_parallel:
+            return (
+                "close-duplicate-gap-first",
+                f"scripts/{owner_hint}",
+            )
+        return (
+            "keep-or-review-by-team",
+            owner_hint,
+        )
+
+    if path.startswith("scripts/bin/") and is_parallel_candidate:
+        if managed_parallel:
+            return (
+                "keep-as-compat-shim",
+                "bin",
+            )
+        return (
+            "fill-parallel-manifest",
+            f"scripts/{owner_hint}",
+        )
+
+    return (
+        "review-dependency-hotspot",
+        owner_hint,
+    )
+
+
 def _is_archive_path(path: Path) -> bool:
     return "_archive" in path.relative_to(ROOT).parts or "PACKS" in path.relative_to(ROOT).parts
 
@@ -464,6 +518,7 @@ def analyze_dependency_hotspots(
     duplicates: Dict[str, List[str]],
     parallel_candidates: List[Dict[str, object]],
     manifest_gaps: List[Dict[str, object]],
+    parallel_manifest: Dict[str, dict[str, object]],
 ) -> List[Dict[str, object]]:
     """按依赖集中度和并行收敛缺口生成可落地热点顺序。"""
 
@@ -479,7 +534,7 @@ def analyze_dependency_hotspots(
         name: files for name, files in duplicates.items() if len(files) >= 2
     }
 
-    hotspot_candidates: List[Tuple[str, int, int, int, Dict[str, List[str]]]] = []
+    hotspot_candidates: List[Tuple[str, int, int, int, Dict[str, object]]] = []
     path_list = [str(p.relative_to(ROOT)) for p in paths]
     duplicate_path_set = {item for items in duplicates_map.values() for item in items}
     for path in path_list:
@@ -503,7 +558,26 @@ def analyze_dependency_hotspots(
             reasons.append("duplicate_name")
             risk_score += 2
 
-        hotspot_candidates.append((path, in_degree, out_degree, risk_score, {"gap_reasons": reasons}))
+        manifest_entry = parallel_manifest.get(norm_name)
+        owner_hint = infer_owner_hint(path, manifest_entry)
+        is_parallel = norm_name in candidate_by_name
+        managed = bool(candidate_by_name.get(norm_name, {}).get("managed", False)) if is_parallel else False
+        recommendation, sink = infer_hotspot_recommendation(path, is_parallel, managed, owner_hint)
+        hotspot_candidates.append(
+            (
+                path,
+                in_degree,
+                out_degree,
+                risk_score,
+                {
+                    "gap_reasons": reasons,
+                    "owner_hint": owner_hint,
+                    "recommended_action": recommendation,
+                    "recommended_sink": sink,
+                    "managed_parallel": managed,
+                },
+            )
+        )
 
     hotspots = []
     for path, in_degree, out_degree, risk_score, meta in sorted(
@@ -511,20 +585,31 @@ def analyze_dependency_hotspots(
     )[:25]:
         callers = sorted(in_edges.get(path, set()))
         callees = sorted(out_edges.get(path, set()))
-        norm_name = normalize_name(Path(path).name)
+        hotspot_norm_name = normalize_name(Path(path).name)
+        is_parallel = hotspot_norm_name in candidate_by_name
+        candidate_entry = parallel_manifest.get(hotspot_norm_name)
         hotspots.append(
             {
                 "path": path,
-                "normalized_name": norm_name,
+                "normalized_name": hotspot_norm_name,
                 "in_degree": in_degree,
                 "out_degree": out_degree,
                 "risk_score": risk_score,
                 "hotspot_impact": in_degree + out_degree,
                 "callers": callers[:20],
                 "callees": callees[:20],
-                "is_parallel_candidate": norm_name in candidate_by_name,
+                "is_parallel_candidate": is_parallel,
                 "dependency_gap_reasons": meta.get("gap_reasons", []),
-                "managed_parallel": candidate_by_name.get(norm_name, {}).get("managed", False),
+                "managed_parallel": meta.get("managed_parallel", False),
+                "owner_hint": meta.get(
+                    "owner_hint",
+                    infer_owner_hint(path, candidate_entry),
+                ),
+                "recommended_action": meta.get("recommended_action", "review-dependency-hotspot"),
+                "recommended_sink": meta.get(
+                    "recommended_sink",
+                    f"bin/{hotspot_norm_name}",
+                ),
             }
         )
     return hotspots
@@ -577,6 +662,7 @@ def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]
         duplicated,
         parallel_candidates,
         manifest_gaps,
+        parallel_manifest,
     )
 
     convergence = []
@@ -595,11 +681,11 @@ def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]
             "high_conflict_duplicates": len(duplicate_conflicts),
             "managed_parallel_duplicates": len(managed_duplicates),
             "unmanaged_parallel_duplicates": len(unmanaged_duplicates),
-        "parallel_candidates": len(parallel_candidates),
-        "parallel_manifest_gaps": len(manifest_gaps),
-        "unmanaged_parallel_candidates": unmanaged_parallel,
-        "dependency_hotspots": len(dependency_hotspots),
-        "mirrored_script_duplicates": len(mirrored_script_duplicates),
+            "parallel_candidates": len(parallel_candidates),
+            "parallel_manifest_gaps": len(manifest_gaps),
+            "unmanaged_parallel_candidates": unmanaged_parallel,
+            "dependency_hotspots": len(dependency_hotspots),
+            "mirrored_script_duplicates": len(mirrored_script_duplicates),
             "mirror_adjustments": mirror_adjustments,
             "edges": sum(out_degree.values()),
             "shim_count": sum(1 for role in roles.values() if role == "shim"),
