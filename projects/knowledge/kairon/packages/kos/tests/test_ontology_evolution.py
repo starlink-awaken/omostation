@@ -111,6 +111,16 @@ class TestLLMEntityExtractor(unittest.TestCase):
 
 
 class TestOntologyEvolution(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # CI 干净环境无 kos_relations 表 (本地运行态掩盖) — schema 自初始化
+        from kos.graphrag import get_connection
+        from kos.ontology.schema import init_schema
+
+        try:
+            init_schema(get_connection(None))
+        except Exception:
+            pass  # 已初始化或环境不支持时跳过
     """Test the OntologyEvolution class."""
 
     def test_import(self):
@@ -126,6 +136,16 @@ class TestOntologyEvolution(unittest.TestCase):
 
     def test_get_stats(self):
         from kos.ontology.evolution import OntologyEvolution
+
+        # 干净环境无实体数据 (本地运行态掩盖) — 先种子一条保证统计非零
+        from kos.graphrag import get_connection
+
+        conn = get_connection(None)
+        conn.execute(
+            "INSERT OR IGNORE INTO kos_entities (entity_id, entity_type, label) VALUES (?, ?, ?)",
+            ("test:seed-entity", "test", "seed"),
+        )
+        conn.commit()
 
         evo = OntologyEvolution()
         stats = evo.get_stats()
