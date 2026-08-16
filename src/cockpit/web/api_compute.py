@@ -290,6 +290,12 @@ class FabricWarmRequest(BaseModel):
     model_id: str = "coding"
 
 
+class FabricCompactRequest(BaseModel):
+    model_id: str = "coding"
+    tokens: int = 32768
+    available_mb: float = 8192.0
+
+
 @router.get("/api/governance/compute/fabric")
 async def get_compute_fabric():
     """获取 omlxc 算力织网实时全景（温控、分诊分级、显存预算与两级缓存）。"""
@@ -376,3 +382,38 @@ async def compute_fabric_vram(req: FabricVRAMRequest):
         raise HTTPException(status_code=500, detail=f"Fabric vram failed: {r.stderr}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Fabric vram error: {e}")
+
+
+@router.post("/api/governance/compute/fabric/compact")
+async def compute_fabric_compact(req: FabricCompactRequest):
+    """评估 KV Cache 显存预算并模拟滑动上下文蒸馏压缩自愈。"""
+    root = get_workspace_root()
+    if not root:
+        raise HTTPException(status_code=500, detail="Cannot locate workspace root.")
+    omlxc_root = root / "projects" / "omlxc"
+    try:
+        r = subprocess.run(
+            [
+                "uv",
+                "run",
+                "omlxc",
+                "fabric",
+                "compact",
+                "--model",
+                req.model_id,
+                "--tokens",
+                str(req.tokens),
+                "--available-mb",
+                str(req.available_mb),
+                "--json",
+            ],
+            cwd=str(omlxc_root),
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if r.returncode == 0:
+            return json.loads(r.stdout)
+        raise HTTPException(status_code=500, detail=f"Fabric compact failed: {r.stderr}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fabric compact error: {e}")
