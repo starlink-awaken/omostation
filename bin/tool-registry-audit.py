@@ -295,6 +295,86 @@ def active_duplicate_files(files: List[str]) -> List[str]:
     return active
 
 
+def _parallel_gap_reasons(
+    name: str,
+    bin_files: List[str],
+    script_files: List[str],
+    manifest_entry: dict[str, object] | None,
+) -> List[str]:
+    if not manifest_entry:
+        return ["missing_manifest_entry"]
+
+    reasons: List[str] = []
+    status = str(manifest_entry.get("status", ""))
+    if status and not is_managed_parallel_entry(name, manifest_entry):
+        reasons.append("manifest_status_unmanaged")
+
+    manifest_bin = str(manifest_entry.get("bin", "")).strip()
+    manifest_scripts = str(manifest_entry.get("scripts", "")).strip()
+
+    if not manifest_bin:
+        reasons.append("manifest_bin_missing")
+    elif manifest_bin not in bin_files:
+        reasons.append("manifest_bin_mismatch")
+
+    if not manifest_scripts:
+        reasons.append("manifest_scripts_missing")
+    elif manifest_scripts not in script_files:
+        reasons.append("manifest_scripts_mismatch")
+
+    return reasons
+
+
+def analyze_parallel_manifest_gaps(
+    duplicates: Dict[str, List[str]],
+    parallel_manifest: Dict[str, dict[str, object]],
+) -> tuple[List[Dict[str, object]], List[Dict[str, object]], int]:
+    parallel_candidates: List[Dict[str, object]] = []
+    manifest_gaps: List[Dict[str, object]] = []
+    unmanaged_count = 0
+
+    for name, files in sorted(duplicates.items()):
+        bin_files = [f for f in files if f.startswith("bin/") and f.split("/")[1:] and not _is_archive_path((ROOT / f).resolve())]
+        script_files = [f for f in files if f.startswith("scripts/bin/") and f.split("/")[2:] and not _is_archive_path((ROOT / f).resolve())]
+        if not bin_files or not script_files:
+            continue
+        if not active_duplicate_files(bin_files + script_files):
+            continue
+
+        manifest_entry = parallel_manifest.get(name)
+        managed = is_managed_parallel_entry(name, manifest_entry)
+        if not managed:
+            unmanaged_count += 1
+
+        reasons = _parallel_gap_reasons(name, bin_files, script_files, manifest_entry)
+        candidate = {
+            "name": name,
+            "bin_files": sorted(bin_files),
+            "scripts_files": sorted(script_files),
+            "managed": managed,
+            "status": manifest_entry.get("status") if manifest_entry else "missing",
+            "parallel_entry": manifest_entry,
+            "gap_reasons": reasons,
+        }
+        if manifest_entry is not None:
+            candidate["parallel_entry"] = manifest_entry
+        parallel_candidates.append(candidate)
+
+        if reasons:
+            manifest_gaps.append(
+                {
+                    "name": name,
+                    "status": candidate["status"],
+                    "managed": managed,
+                    "bin_files": sorted(bin_files),
+                    "scripts_files": sorted(script_files),
+                    "gap_reasons": reasons,
+                }
+            )
+
+    return parallel_candidates, manifest_gaps, unmanaged_count
+
+
 def mark_cross_tree_mirror_shims(
     duplicates: Dict[str, List[str]],
     roles: Dict[str, str],
@@ -405,6 +485,9 @@ def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]
     roles, mirrored_script_duplicates, mirror_adjustments = mark_cross_tree_mirror_shims(
         duplicated, roles, signatures, parallel_manifest
     )
+    parallel_candidates, manifest_gaps, unmanaged_parallel = analyze_parallel_manifest_gaps(
+        duplicated, parallel_manifest
+    )
     managed_duplicates, unmanaged_duplicates, duplicate_conflicts = classify_duplication_conflicts(
         duplicated, roles, parallel_manifest
     )
@@ -431,6 +514,9 @@ def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]
             "high_conflict_duplicates": len(duplicate_conflicts),
             "managed_parallel_duplicates": len(managed_duplicates),
             "unmanaged_parallel_duplicates": len(unmanaged_duplicates),
+            "parallel_candidates": len(parallel_candidates),
+            "parallel_manifest_gaps": len(manifest_gaps),
+            "unmanaged_parallel_candidates": unmanaged_parallel,
             "mirrored_script_duplicates": len(mirrored_script_duplicates),
             "mirror_adjustments": mirror_adjustments,
             "edges": sum(out_degree.values()),
@@ -445,6 +531,8 @@ def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]
             "mirrored_script_duplicates": mirrored_script_duplicates,
             "managed_parallel_duplicates": managed_duplicates,
             "unmanaged_parallel_duplicates": unmanaged_duplicates,
+            "parallel_candidates": parallel_candidates,
+            "parallel_manifest_gaps": manifest_gaps,
             "duplicate_conflicts": duplicate_conflicts,
             "cycles": cycles[:20],
         },
@@ -514,6 +602,8 @@ def main() -> int:
     print(f"non-snake: {payload['stats']['non_snake']}")
     print(f"duplicate names: {payload['stats']['duplicate_names']}")
     print(f"high-confidence duplicate names: {payload['stats']['high_conflict_duplicates']}")
+    print(f"parallel candidates (bin/scripts overlap): {payload['stats']['parallel_candidates']}")
+    print(f"parallel manifest gaps: {payload['stats']['parallel_manifest_gaps']}")
     print(f"managed parallel duplicates: {payload['stats']['managed_parallel_duplicates']}")
     print(f"unmanaged parallel duplicates: {payload['stats']['unmanaged_parallel_duplicates']}")
     print(
