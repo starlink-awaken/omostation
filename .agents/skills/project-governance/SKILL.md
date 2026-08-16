@@ -45,7 +45,7 @@ uv run --project projects/cockpit cockpit agent
 [`docs/operations/workflow-waiver-template.md`](../../../docs/operations/workflow-waiver-template.md)
 — never invent a waiver.
 
-Chain bind (BET-Y1Q1-T6-02/T6-03): requirement-iteration `start` needs `--bet` on both `bin/agent-workflow.py` and `omo.workflow.cli`. `closeout`/`complete` halt without north-star + run `bet_id` + retro. Perception `chain:` lines: closed bound runs show `BET-ID (closed)`, never a false `missing-bet`. Executor: `bin/plan/chain-bind-check.py`. Redline: `redlines.yaml::vision-to-retro-chain` (also in `docs/generated/agent-redlines.md`).
+Chain bind (BET-Y1Q1-T6-02/T6-03/T6-04): requirement-iteration `start` needs `--bet` on both `bin/agent-workflow.py` and `omo.workflow.cli`. `closeout`/`complete` halt without north-star + run `bet_id` + retro. Perception `chain:` lines pick the latest closed bound run by `updated_at`/`created_at` (not filename order) and show `BET-ID (closed)`, never a false `missing-bet`. `bet-ledger verify --execute` fails when a verify command exits non-zero. Executor: `bin/plan/chain-bind-check.py`. Redline: `redlines.yaml::vision-to-retro-chain` (also in `docs/generated/agent-redlines.md`).
 
 ## Choose A Workflow
 

@@ -193,6 +193,18 @@ def _sh(cmd: str) -> str:
         return ""
 
 
+def _run_verify_cmd(cmd: str) -> tuple[int, str]:
+    """Run a ledger verify command and keep its exit code (unlike `_sh`)."""
+    try:
+        result = subprocess.run(
+            cmd, shell=True, cwd=WS, capture_output=True, text=True, timeout=300
+        )
+    except Exception as exc:
+        return 1, str(exc)
+    text = (result.stdout or "").strip() or (result.stderr or "").strip()
+    return result.returncode, text
+
+
 def _int(s) -> int:
     try:
         return int(str(s).strip().split()[0])
@@ -404,6 +416,7 @@ def cmd_claim_check(data: dict, args) -> int:
 
 def cmd_verify(data: dict, args) -> int:
     b = bet_by_id(data, args.bet_id)
+    rc = 0
     print(f"[{b['id']}] {b['title']}\n")
     print("done_when:")
     for d in b.get("done_when", []):
@@ -413,9 +426,12 @@ def cmd_verify(data: dict, args) -> int:
         cmd, exp = v.get("cmd", ""), v.get("expect", "")
         print(f"  $ {cmd}")
         if args.execute:
-            print(f"    → {_sh(cmd) or '(空)'}")
+            code, out = _run_verify_cmd(cmd)
+            print(f"    → {out or '(空)'}")
+            if code != 0:
+                print(f"    FAIL exit={code}")
+                rc = 1
         print(f"    期望: {exp}")
-    rc = 0
     print("\nD0 (入库才算交付):")
     for p in b.get("write_surfaces", []):
         if "*" in p:
