@@ -219,3 +219,10 @@
 → [运行验证证据](evidence/) — 可重放、脱敏的交付验证回执
 → [T1-18 Codex 人工确认 canary](evidence/t1-18-codex-dogfood-canary.md) — Orca 交互式 Codex 手动批准验证工件
 → [操作 SOP](operations/) — 运维手册、模板、清单
+
+## docs/ 根目录平铺文档
+
+历史专题与顶层参考 (架构/战略/治理/G-DEL 系列等) 平铺于 docs/ 目录下,
+按文件名检索: ARCHITECTURE-*.md, STRATEGY-*.md, GOVERNANCE-*.md,
+G-DEL-*.md, INDEX-MCP.md, CLI-REFERENCE.md, M4-*.md, KEMS-*.md,
+KOS-*.md, SOP-*.md, VISION-ROADMAP.md 等。
