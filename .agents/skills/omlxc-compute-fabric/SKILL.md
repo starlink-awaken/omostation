@@ -70,12 +70,17 @@ cockpit mesh triage "Fix typo in variable"
 cockpit mesh vram coding 32768
 ```
 
-### 3.3 Agora MCP 工具接口
-智能体可通过 Agora MCP Server 调用以下标准工具：
-- `fabric_inspect()` ➔ 获取当前集群物理状态 JSON。
-- `fabric_warm_prefixes(model_id)` ➔ 触发指定模型的前缀缓存预热。
-- `fabric_triage(prompt)` ➔ 获取 `{"tier": "reasoning", "confidence": 0.85, ...}`。
-- `fabric_vram_budget(model_id, context_tokens)` ➔ 获取 `{"kv_cache_mb": 8448.0, "total_estimated_vram_mb": 25948.0, ...}`。
+### 3.3 智能体 MCP 工具接口
+智能体可通过 Agora MCP Server 或 AetherForge MCP Server 调用以下标准工具：
+- **Agora MCP**:
+  - `fabric_inspect()` ➔ 获取当前集群物理状态 JSON。
+  - `fabric_warm_prefixes(model_id)` ➔ 触发指定模型的前缀缓存预热。
+  - `fabric_triage(prompt)` ➔ 获取 `{"tier": "reasoning", "confidence": 0.85, ...}`。
+  - `fabric_vram_budget(model_id, context_tokens)` ➔ 获取 `{"kv_cache_mb": 8448.0, "total_estimated_vram_mb": 25948.0, ...}`。
+- **AetherForge FastMCP**:
+  - `forge_fabric_inspect()` ➔ 采集异构节点温控、模型架构与两级缓存状态。
+  - `forge_fabric_warm(model_id)` ➔ 预热常用系统 Prompt 前缀以实现 0ms TTFT。
+  - `forge_fabric_vram(model_id, context_tokens)` ➔ 计算模型动态 KV Cache 显存预算与准入/压缩建议。
 
 ---
 
