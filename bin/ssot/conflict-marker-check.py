@@ -37,7 +37,7 @@ def _staged_files() -> list[str]:
             timeout=30,
             check=False,
         )
-        return [l for l in r.stdout.splitlines() if l]
+        return [line for line in r.stdout.splitlines() if line]
     except Exception:  # noqa: BLE001 — hook 失败保守放行
         return []
 
@@ -51,10 +51,10 @@ def _has_conflict_marker(path: Path) -> bool:
         text = path.read_text(encoding="utf-8", errors="ignore")
         # 冲突标记必须出现在行首 (排除代码中的字面量)
         lines = text.splitlines()
-        if any(l.startswith(m) for l in lines for m in _MARKERS):
+        if any(line.startswith(m) for line in lines for m in _MARKERS):
             return True
         # 行首恰好 7 个等号 (git 冲突分隔), 更长的纯等号线是 markdown Setext 标题
-        return any(l == _EQ_LINE for l in lines)
+        return any(line == _EQ_LINE for line in lines)
     except Exception:  # noqa: BLE001 — 读取失败跳过
         return False
 

@@ -6,7 +6,9 @@ Usage:
   python3 bin/ssot/doc-generator.py --list
 """
 from __future__ import annotations
-import argparse, json, sys
+import argparse
+import json
+import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from _shared import utc_now

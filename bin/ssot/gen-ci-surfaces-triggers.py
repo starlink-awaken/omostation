@@ -126,8 +126,8 @@ def main() -> int:
     print("--- diff (old → new, 行级) ---")
     old_lines = old_section.strip().splitlines()
     new_lines = new_section.strip().splitlines()
-    added = [l for l in new_lines if l not in old_lines]
-    removed = [l for l in old_lines if l not in new_lines]
+    added = [line for line in new_lines if line not in old_lines]
+    removed = [line for line in old_lines if line not in new_lines]
     print(f"added: {len(added)} lines, removed: {len(removed)} lines")
     if added:
         print("  +" + "\n  +".join(added[:20]))

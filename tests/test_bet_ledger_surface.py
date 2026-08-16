@@ -31,7 +31,9 @@ def test_symmetric_rewrite_net_zero():
         parts = line.split("\t")
         a, d = int(parts[0]), int(parts[1])
         b = pp.setdefault("x", {"add": 0, "del": 0, "sym": 0})
-        b["add"] += a; b["del"] += d; b["sym"] += min(a, d)
+        b["add"] += a
+        b["del"] += d
+        b["sym"] += min(a, d)
     assert pp["x"]["net" if False else "add"] - pp["x"]["del"] == 0
     assert pp["x"]["sym"] == 5100
 
@@ -60,5 +62,7 @@ def test_binary_and_junk_lines_tolerated():
         except ValueError:
             continue
         b = pp.setdefault("y", {"add": 0, "del": 0, "sym": 0})
-        b["add"] += a; b["del"] += d; b["sym"] += min(a, d)
+        b["add"] += a
+        b["del"] += d
+        b["sym"] += min(a, d)
     assert pp["y"]["add"] == 5 and pp["y"]["del"] == 3
