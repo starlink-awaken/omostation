@@ -59,6 +59,48 @@ class ThermalGuard:
     def __init__(self, cache_ttl_seconds: float = DEFAULT_CACHE_TTL_SECONDS) -> None:
         self._cache_ttl_seconds = cache_ttl_seconds
         self._cached_state: NodeEnvironmentalState | None = None
+        self._remote_states: dict[str, NodeEnvironmentalState] = {}
+
+    def update_node_state(
+        self,
+        node_id: str,
+        thermal_level: ThermalPressureLevel,
+        power_source: PowerSource = PowerSource.AC,
+        battery_percent: float | None = None,
+        now: float | None = None,
+    ) -> NodeEnvironmentalState:
+        """Register or update an environmental telemetry report for a remote cluster node."""
+        current_time = time.monotonic() if now is None else now
+        penalty = self.calculate_penalty(thermal_level, power_source, battery_percent)
+        state = NodeEnvironmentalState(
+            thermal_level=thermal_level,
+            power_source=power_source,
+            battery_percent=battery_percent,
+            penalty_multiplier=penalty,
+            recorded_at=current_time,
+        )
+        self._remote_states[node_id] = state
+        return state
+
+    def get_node_state(
+        self, node_id: str, *, is_local: bool = True, now: float | None = None
+    ) -> NodeEnvironmentalState:
+        """Fetch environmental state for a specific local or remote node."""
+        if is_local:
+            return self.probe(now=now)
+        if node_id in self._remote_states:
+            state = self._remote_states[node_id]
+            current_time = time.monotonic() if now is None else now
+            # Remote reports remain valid for up to 60 seconds
+            if (current_time - state.recorded_at) < (self._cache_ttl_seconds * 12.0):
+                return state
+        return NodeEnvironmentalState(
+            thermal_level=ThermalPressureLevel.NOMINAL,
+            power_source=PowerSource.AC,
+            battery_percent=None,
+            penalty_multiplier=1.0,
+            recorded_at=time.monotonic() if now is None else now,
+        )
 
     def calculate_penalty(
         self,

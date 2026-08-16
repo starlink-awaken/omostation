@@ -43,6 +43,16 @@ REASONING_KEYWORDS: Final[tuple[str, ...]] = (
     "proof",
     "deadlock analysis",
     "distributed consensus",
+    "aba problem",
+    "lock-free",
+    "p vs np",
+    "np-hard",
+    "race condition",
+    "memory leak analysis",
+    "type inference engine",
+    "compiler pass",
+    "byzantine fault",
+    "raft consensus",
 )
 
 FAST_KEYWORDS: Final[tuple[str, ...]] = (

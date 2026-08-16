@@ -57,3 +57,13 @@ def test_triage_keywords_and_code_blocks() -> None:
     )
     res3 = classifier.classify(messages=msg3, context_tokens=400)
     assert res3.tier == ComplexityTier.STANDARD
+
+
+def test_triage_short_complex_prompts() -> None:
+    classifier = TriageClassifier()
+
+    # Short prompt (only 35 chars) but contains deep concurrency/algorithm keywords
+    msg = (ChatMessage(role="user", content="Prove the ABA problem in lock-free queue."),)
+    res = classifier.classify(messages=msg, context_tokens=25)
+    # Must be categorized as REASONING rather than FAST
+    assert res.tier == ComplexityTier.REASONING

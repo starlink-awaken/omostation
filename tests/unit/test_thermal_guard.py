@@ -76,3 +76,24 @@ def test_probe_darwin_parsing() -> None:
             assert therm == ThermalPressureLevel.MODERATE
             assert power == PowerSource.BATTERY
             assert batt == 65.0
+
+
+def test_remote_node_state_updates() -> None:
+    guard = ThermalGuard(cache_ttl_seconds=5.0)
+
+    # Remote node reports Heavy thermal
+    guard.update_node_state(
+        node_id="y7000p-rtx4070",
+        thermal_level=ThermalPressureLevel.HEAVY,
+        power_source=PowerSource.AC,
+        now=100.0,
+    )
+
+    state = guard.get_node_state("y7000p-rtx4070", is_local=False, now=110.0)
+    assert state.thermal_level == ThermalPressureLevel.HEAVY
+    assert state.penalty_multiplier == 0.5
+
+    # Remote node heartbeat expires (>60s) -> defaults to Nominal
+    state_expired = guard.get_node_state("y7000p-rtx4070", is_local=False, now=180.0)
+    assert state_expired.thermal_level == ThermalPressureLevel.NOMINAL
+    assert state_expired.penalty_multiplier == 1.0
