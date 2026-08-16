@@ -10,10 +10,10 @@
 | L4 | 自我层 (l4-kernel) | `l4-kernel` |
 | L3 | 入口层 (cockpit 控制面; cockpit-ui 表现面, layer=L3) | `cockpit`, `cockpit-ui` |
 | I0 | 织层 (agora) | `agora` |
-| L2 | 引擎面 (kairon / gbrain / omo / metaos) | `family-hub`, `gbrain`, `kairon`, `metaos`, `omo`, `omo-debt` |
+| L2 | 引擎面 (kairon / gbrain / omo / metaos) | `family-hub`, `gbrain`, `kairon`, `metaos`, `omo` |
 | L1 | 运行时 (runtime / omlxc) | `omlxc`, `runtime` |
 | L0 | 协议层 (ecos) | `ecos`, `mesh-router` |
 | M0 | 横切框架 (model-driven) | `model-driven` |
-| X | 横切扩展 (aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub) | `aetherforge`, `bus-foundation`, `c2g`, `observability` |
+| X | 横切扩展 (aetherforge / bus-foundation / observability / family-hub; c2g+omo-debt 已内包 omo, ADR-0412) | `aetherforge`, `bus-foundation`, `observability` |
 | L1-L3 |  | `toolbox` |
 
