@@ -285,3 +285,57 @@
 - 继续按 `make bin-tool-registry-dependency-risks` 固定 `TOOL_REGISTRY_DEPENDENCY_LIMIT=10`，优先处理当前 `managed=False` Top10：
   - 本轮待纳管清单建议优先 `collab` + `ssot` 下沉脚本与 `action=close-duplicate-gap-first` / `fill-parallel-manifest` 条目。
 - 建议将 Round9 中新增 `bin-tool-registry-round9` 目标纳入每周例会固定验证项，形成 `audit → closeout → 下一轮` 的循环。
+
+### Round 10（2026-08-16）：Top10 漂移后的一键闭环收口
+
+#### 已完成
+- 基于 `make bin-tool-registry-round9`（运行时点）Top10 依赖热点，补齐三组长期高频并行缺口：
+  - `control_experiment`
+  - `git_health_hook`
+  - `physical_recovery`
+- 追加到 `docs/operations/bin-scripts-convergence-manifest.json`，并按本轮机制补齐治理证据：
+  - `control_experiment`（owner=collab）
+  - `git_health_hook`（owner=governance）
+  - `physical_recovery`（owner=delivery）
+- 三条都设为 `status: managed`，`action: close-duplicate-gap-first`，`evidence.decision_round: round10`，`due_date: 2026-09-22`。
+
+#### 本轮执行结果
+- 运行命令：`make bin-tool-registry-round10`
+- 关键指标：
+  - `parallel manifest gaps: 0`（由 3 降到 0）
+  - `managed parallel duplicates: 0`
+  - `unmanaged parallel duplicates: 0`
+  - `dependency hotspots: 25`
+  - `strict checks: OK`
+- 周报落盘：`artifacts/bin-tool-registry-weekly-governance-report-round10.json`
+
+#### 机制固化
+- `Makefile` 新增 `bin-tool-registry-round10`，与 `round9` 命令链路保持一致：`audit-strict`、`parallel-gaps`、`dependency-risks`、`weekly-governance-report`。
+- 通过 manifest 缺口一键回填动作的机制延续了“可复现收敛闭环”，实现每轮只关心 Top10 漂移 + 周报留痕。
+
+#### 下一步（Round 11）
+1. 复用本轮模板每周持续执行：`make bin-tool-registry-round10`（后续可演进为 `make bin-tool-registry-round11`）。
+2. 将本轮 `parallel manifest gaps=0` 与 `unmanaged=0` 作为“该轮闭环通过条件”写入季度回顾模板。
+3. 继续推进 scripts 与 bin 以及子项目固化的长期机制：
+   - 对 `scripts/bin` 逐步仅保留兼容层入口；
+   - 与子项目强相关能力下沉到子项目 owner 与项目脚本目录。
+
+### Round 11（2026-08-16）：并行治理机制持续化（无新缺口巡检）
+
+#### 已完成
+- 将 `make bin-tool-registry-round11` 纳入 Makefile：复用 `round10` 的严格审计链路并落盘 `artifacts/bin-tool-registry-weekly-governance-report-round11.json`，用于“继续下一轮”的固定操作模板。
+- 本轮未新增 `bin/scripts` 并行缺口清单条目，目标聚焦机制稳定性与周报归档；`scripts/bin` 与 bin 侧的并行能力边界保持不变。
+
+#### 本轮执行结果
+- 运行命令：`make bin-tool-registry-round11`
+- 与 `round10` 同口径指标一致，当前为：
+  - `parallel manifest gaps: 0`
+  - `managed parallel duplicates: 0`
+  - `unmanaged parallel duplicates: 0`
+  - `dependency hotspots: 25`
+  - `strict checks: OK`
+- 周报落盘：`artifacts/bin-tool-registry-weekly-governance-report-round11.json`
+
+#### 下一步（Round 12）
+- 继续固定每轮执行 `make bin-tool-registry-round11`，当依赖风险 Top10 有未纳管 `managed=False` 再回填 manifest；
+- 将 `parallel manifest gaps=0` 与 `strict checks: OK` 作为“机制无回退”的最低通过线。
