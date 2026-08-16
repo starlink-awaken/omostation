@@ -82,8 +82,8 @@ agora = { path = "../agora", editable = true }
 omo = { path = "../omo", editable = true }
 l4-kernel = { path = "../l4-kernel", editable = true }
 metaos = { path = "../metaos", editable = true }
-kairon-observability = { path = "../../knowledge/kairon/packages/kairon-observability", editable = true }
-kos = { path = "../../knowledge/kairon/packages/kos", editable = true }
+kairon-observability = { path = "../knowledge/kairon/packages/kairon-observability", editable = true }
+kos = { path = "../knowledge/kairon/packages/kos", editable = true }
 
 [dependency-groups]
 dev = [
@@ -106,6 +106,6 @@ extraPaths = [
   "../ecos/src",
   "../bus-foundation/src",
   "../model-driven/src",
-  "../../knowledge/kairon/packages/kairon-observability/src",
-  "../../knowledge/kairon/packages/kos/src",
+  "../knowledge/kairon/packages/kairon-observability/src",
+  "../knowledge/kairon/packages/kos/src",
 ]
