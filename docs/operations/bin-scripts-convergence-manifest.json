@@ -3333,6 +3333,366 @@
           "scripts/bin/ssot/yaml-validate.py"
         ]
       }
+    },
+    {
+      "name": "gac_gc",
+      "bin": "bin/gac/gac-gc.py",
+      "scripts": "scripts/bin/gac/gac-gc.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-gc.py",
+          "scripts/bin/gac/gac-gc.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "dim_weight",
+      "bin": "bin/gac/dim-weight.py",
+      "scripts": "scripts/bin/gac/dim-weight.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/dim-weight.py",
+          "scripts/bin/gac/dim-weight.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "x2_rule_add",
+      "bin": "bin/gac/x2-rule-add.py",
+      "scripts": "scripts/bin/gac/x2-rule-add.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/x2-rule-add.py",
+          "scripts/bin/gac/x2-rule-add.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "x2_freshness_check",
+      "bin": "bin/gac/x2-freshness-check.py",
+      "scripts": "scripts/bin/gac/x2-freshness-check.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/x2-freshness-check.py",
+          "scripts/bin/gac/x2-freshness-check.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "x2_rule_lint",
+      "bin": "bin/gac/x2-rule-lint.py",
+      "scripts": "scripts/bin/gac/x2-rule-lint.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/x2-rule-lint.py",
+          "scripts/bin/gac/x2-rule-lint.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "governance_alert_dispatch",
+      "bin": "bin/gac/governance-alert-dispatch.py",
+      "scripts": "scripts/bin/gac/governance-alert-dispatch.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/governance-alert-dispatch.py",
+          "scripts/bin/gac/governance-alert-dispatch.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "auto_merge_lane_policy",
+      "bin": "bin/gac/auto-merge-lane-policy.py",
+      "scripts": "scripts/bin/gac/auto-merge-lane-policy.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/auto-merge-lane-policy.py",
+          "scripts/bin/gac/auto-merge-lane-policy.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "omo_state_write_guard",
+      "bin": "bin/gac/omo-state-write-guard.py",
+      "scripts": "scripts/bin/gac/omo-state-write-guard.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/omo-state-write-guard.py",
+          "scripts/bin/gac/omo-state-write-guard.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "p0_event_listener",
+      "bin": "bin/gac/p0-event-listener.py",
+      "scripts": "scripts/bin/gac/p0-event-listener.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/p0-event-listener.py",
+          "scripts/bin/gac/p0-event-listener.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "omo_acl_ops_window",
+      "bin": "bin/gac/omo-acl-ops-window.sh",
+      "scripts": "scripts/bin/gac/omo-acl-ops-window.sh",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/omo-acl-ops-window.sh",
+          "scripts/bin/gac/omo-acl-ops-window.sh"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "alert_aggregator",
+      "bin": "bin/gac/alert-aggregator.py",
+      "scripts": "scripts/bin/gac/alert-aggregator.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/alert-aggregator.py",
+          "scripts/bin/gac/alert-aggregator.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "gac_bootstrap",
+      "bin": "bin/gac/gac-bootstrap.py",
+      "scripts": "scripts/bin/gac/gac-bootstrap.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-bootstrap.py",
+          "scripts/bin/gac/gac-bootstrap.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "gac_mof_validate",
+      "bin": "bin/gac/gac-mof-validate.py",
+      "scripts": "scripts/bin/gac/gac-mof-validate.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-mof-validate.py",
+          "scripts/bin/gac/gac-mof-validate.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "m1_closeout_report",
+      "bin": "bin/gac/m1-closeout-report.py",
+      "scripts": "scripts/bin/gac/m1-closeout-report.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/m1-closeout-report.py",
+          "scripts/bin/gac/m1-closeout-report.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "state_freshness_check",
+      "bin": "bin/gac/state-freshness-check.py",
+      "scripts": "scripts/bin/gac/state-freshness-check.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/state-freshness-check.py",
+          "scripts/bin/gac/state-freshness-check.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "gac_coverage_lint",
+      "bin": "bin/gac/gac-coverage-lint.py",
+      "scripts": "scripts/bin/gac/gac-coverage-lint.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-coverage-lint.py",
+          "scripts/bin/gac/gac-coverage-lint.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "event_loop_lint",
+      "bin": "bin/gac/event-loop-lint.py",
+      "scripts": "scripts/bin/gac/event-loop-lint.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/event-loop-lint.py",
+          "scripts/bin/gac/event-loop-lint.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "kos_seed_import",
+      "bin": "bin/gac/kos-seed-import.py",
+      "scripts": "scripts/bin/gac/kos-seed-import.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/kos-seed-import.py",
+          "scripts/bin/gac/kos-seed-import.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "phase_gate_check",
+      "bin": "bin/gac/phase-gate-check.py",
+      "scripts": "scripts/bin/gac/phase-gate-check.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/phase-gate-check.py",
+          "scripts/bin/gac/phase-gate-check.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
+    },
+    {
+      "name": "alert_mock_p0_notify",
+      "bin": "bin/gac/alert-mock-p0-notify.py",
+      "scripts": "scripts/bin/gac/alert-mock-p0-notify.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "gac",
+      "note": "Round 9 backlog: priority hotspot to close duplicate gap first. Sink=scripts/gac. Due=2026-09-15",
+      "evidence": {
+        "active_files": [
+          "bin/gac/alert-mock-p0-notify.py",
+          "scripts/bin/gac/alert-mock-p0-notify.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round9",
+        "due_date": "2026-09-15"
+      }
     }
   ]
 }
