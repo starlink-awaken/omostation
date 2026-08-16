@@ -81,8 +81,7 @@ def _hash_path(path: str, depth: int = 0) -> str:
                     elif e.is_file(follow_symlinks=False):
                         file_count += 1
                         m = int(e.stat().st_mtime)
-                        if m > max_mtime:
-                            max_mtime = m
+                        max_mtime = max(max_mtime, m)
                 except OSError:
                     continue
         key = f"{max_mtime}:{file_count}"
