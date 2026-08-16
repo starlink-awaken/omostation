@@ -225,7 +225,7 @@ def main() -> int:
     if args.json:
         print(json.dumps(summary, indent=2))
     else:
-        print(f"=== cross-repo-consistency (P77 Phase 4) ===")
+        print("=== cross-repo-consistency (P77 Phase 4) ===")
         print(f"  registered (agora BOS SSOT): {summary['registered']}")
         print(f"  referenced (project code): {summary['referenced']}")
         print(f"  unregistered (referenced but not in SSOT): {summary['unregistered']}")
@@ -268,7 +268,7 @@ def main() -> int:
                     )
         if summary["orphan"] > 0:
             print()
-            print(f"⚠️ orphan URIs (在 SSOT 但无引用, 可能僵尸):")
+            print("⚠️ orphan URIs (在 SSOT 但无引用, 可能僵尸):")
             for u in orphan[:5]:
                 print(f"  - {u}")
 

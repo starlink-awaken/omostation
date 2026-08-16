@@ -169,9 +169,7 @@ def classify_module(path: str, lines: int, analysis: dict | None) -> dict:
         category = "python-ecos"
     elif path.startswith("projects/gbrain/") or "/projects/gbrain/" in path:
         category = "ts-gbrain"
-    elif path.endswith((".ts", ".tsx")):
-        category = "ts-other"
-    elif path.endswith((".js", ".jsx")):
+    elif path.endswith((".ts", ".tsx")) or path.endswith((".js", ".jsx")):
         category = "ts-other"
     else:
         category = "other"
@@ -181,9 +179,7 @@ def classify_module(path: str, lines: int, analysis: dict | None) -> dict:
         difficulty = "unknown"
     elif analysis.get("note", "").startswith("TS 文件"):
         difficulty = "high"  # Need ts-morph tool first
-    elif analysis.get("note", "").startswith("unsupported"):
-        difficulty = "unknown"
-    elif analysis.get("error"):
+    elif analysis.get("note", "").startswith("unsupported") or analysis.get("error"):
         difficulty = "unknown"
     else:
         # Python with valid AST

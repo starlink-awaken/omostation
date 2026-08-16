@@ -31,7 +31,7 @@ import json
 import subprocess
 import sys
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -75,7 +75,7 @@ def seed_workflow_run(
                     只发 Dispatched→Started (需 admission_id 来自 packet).
     """
     step_run_id = f"{run_id}:execute"
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if not skip_seed:
         admission_id = f"{run_id}:admission"
         store.append(
@@ -172,7 +172,7 @@ def record_iris_evidence(
     items,
 ):
     """WorkflowSucceeded + EvidenceRecorded (iris receipt)."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     store.append(
         new_event(
             "WorkflowSucceeded",
@@ -244,7 +244,7 @@ def main() -> int:
 
     store = WorkflowMeshStore(omo_dir)
     run_id = args.run_id or (
-        f"iris-{args.connector}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        f"iris-{args.connector}-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
     )
 
     print(f"🚀 mesh-iris-executor: connector={args.connector} run_id={run_id}")

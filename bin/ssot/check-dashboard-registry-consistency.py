@@ -61,7 +61,7 @@ def main() -> int:
         f"❌ dashboard-registry 不一致: dashboard partial={dash_partial} vs registry partial={reg_partial}"
     )
     print(
-        f"   治本: 看 ISC-50 (两套看板 SSOT 统一 ADR) — dashboard 停更或漂移导致 partial 计数分叉"
+        "   治本: 看 ISC-50 (两套看板 SSOT 统一 ADR) — dashboard 停更或漂移导致 partial 计数分叉"
     )
     return 1
 

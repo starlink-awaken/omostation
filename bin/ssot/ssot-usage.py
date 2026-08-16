@@ -14,7 +14,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from pathlib import Path
 
 
@@ -24,7 +24,7 @@ REGISTRY_DIR = WORKSPACE / ".omo" / "_truth" / "registry"
 
 def file_age_days(path: Path) -> float:
     mtime = os.path.getmtime(path)
-    return (datetime.now(timezone.utc).timestamp() - mtime) / 86400
+    return (datetime.now(UTC).timestamp() - mtime) / 86400
 
 
 def check_sots(max_age_days: float) -> list[dict]:

@@ -17,7 +17,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -26,7 +26,7 @@ DRAFT_DIR = WORKSPACE / ".omo" / "_delivery" / "repair-drafts"
 
 
 def _utc() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
 
 
 def _staged_files() -> list[str]:

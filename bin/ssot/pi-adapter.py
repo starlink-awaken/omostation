@@ -69,7 +69,7 @@ Evaluate and respond with JSON: {{"verdict": "approve|reject|needs_human", "conf
                 "reasoning": result.stdout[-200:],
                 "ts": utc_now(),
             }
-    except Exception as exc:
+    except Exception:
         pass
 
     return {

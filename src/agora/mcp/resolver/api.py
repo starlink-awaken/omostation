@@ -14,6 +14,7 @@ from .services import BOS_URI_DOMAIN_PATTERN, POC_SERVICES, BosService
 
 _log = logging.getLogger(__name__)
 
+
 def _resolve_ws() -> str:
     env = os.environ.get("WORKSPACE_ROOT")
     if env:
@@ -138,9 +139,7 @@ def get_bos_contract_health(yaml_path: str = "") -> dict:
 
     try:
         # Resolve yaml path (relative to workspace root or absolute)
-        repo_root = Path(
-            _resolve_ws()
-        )
+        repo_root = Path(_resolve_ws())
         if yaml_path:
             yaml_full = Path(yaml_path)
             if not yaml_full.is_absolute():

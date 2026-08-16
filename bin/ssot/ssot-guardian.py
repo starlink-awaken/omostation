@@ -35,7 +35,7 @@ import re
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from pathlib import Path
 
 
@@ -49,12 +49,7 @@ TASKS_DIR = OMO_DIR / "tasks"
 
 
 def _utc_now() -> str:
-    return (
-        datetime.now(timezone.utc)
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z")
-    )
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _run(cmd: list[str], *, check: bool = True) -> subprocess.CompletedProcess[str]:

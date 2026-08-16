@@ -76,18 +76,18 @@ def _match_recommendations(
         matched = False
 
         if (
-            trigger == "gate_pass_rate_declining"
-            and features.get("gate_pass_rate", 1.0) < threshold
-        ):
-            matched = True
-        elif (
-            trigger == "check_duration_increasing"
-            and features.get("check_duration_trend", 0) > 500
-        ):
-            matched = True
-        elif (
-            trigger == "stable_healthy"
-            and features.get("gate_pass_rate", 1.0) >= threshold
+            (
+                trigger == "gate_pass_rate_declining"
+                and features.get("gate_pass_rate", 1.0) < threshold
+            )
+            or (
+                trigger == "check_duration_increasing"
+                and features.get("check_duration_trend", 0) > 500
+            )
+            or (
+                trigger == "stable_healthy"
+                and features.get("gate_pass_rate", 1.0) >= threshold
+            )
         ):
             matched = True
         # Future: debt_volume_increasing, anomaly_spike

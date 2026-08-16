@@ -17,13 +17,13 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 from pathlib import Path
 from typing import Any
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _load_engine(workspace_root: Path, filename: str, name: str):
@@ -78,7 +78,7 @@ def generate_weekly_review(workspace_root: Path, weeks: int = 1) -> dict[str, An
     approval = _load_approval(workspace_root)
 
     scenes = inbox.list_scenes(workspace_root)
-    cutoff = datetime.now(timezone.utc) - timedelta(weeks=weeks)
+    cutoff = datetime.now(UTC) - timedelta(weeks=weeks)
 
     # Collect intents within the review period
     total_intents = 0

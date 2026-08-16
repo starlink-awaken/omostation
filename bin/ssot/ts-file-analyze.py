@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 ts-file-analyze.py — P110-D: TS god-module 真实结构分析器 (TypeScript Compiler API)
 

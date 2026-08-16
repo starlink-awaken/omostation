@@ -14,7 +14,7 @@ import argparse
 import importlib.util
 import re
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, UTC
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -29,7 +29,7 @@ SPEC.loader.exec_module(CHECKER)
 
 def _date(value: str | None) -> date:
     if value is None:
-        return datetime.now(timezone.utc).date()
+        return datetime.now(UTC).date()
     return date.fromisoformat(value)
 
 

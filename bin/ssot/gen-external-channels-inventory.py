@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 import subprocess
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -127,7 +127,7 @@ def scan_mesh_proposals() -> list[dict]:
 
 
 def emit_yaml(channels: list[dict]) -> str:
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     totals = {
         "channels": len(channels),
         "exposed": sum(1 for c in channels if c["status"] == "exposed"),

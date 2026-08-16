@@ -104,7 +104,7 @@ def check_promotion() -> dict[str, Any]:
             promotions.append(
                 {
                     "action_type": action_type,
-                    "reason": f"3+ consecutive approvals (rate≥0.8)",
+                    "reason": "3+ consecutive approvals (rate≥0.8)",
                     "from": "graylist",
                     "to": "whitelist",
                 }
@@ -120,7 +120,7 @@ def check_promotion() -> dict[str, Any]:
             demotions.append(
                 {
                     "action_type": action_type,
-                    "reason": f"2+ consecutive rejections (rate<0.5)",
+                    "reason": "2+ consecutive rejections (rate<0.5)",
                     "from": "whitelist",
                     "to": "graylist",
                 }

@@ -9,7 +9,7 @@ import hashlib
 import json
 import subprocess
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, UTC
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -995,7 +995,7 @@ def run(
     no_new_warnings: bool = False,
     today: date | None = None,
 ) -> dict[str, Any]:
-    current_date = today or datetime.now(timezone.utc).date()
+    current_date = today or datetime.now(UTC).date()
     registry_path = REGISTRY_PATH
     if REGISTRY_PATH.is_relative_to(WORKSPACE):
         registry_path = root / REGISTRY_PATH.relative_to(WORKSPACE)
@@ -1111,7 +1111,7 @@ def main(argv: list[str] | None = None) -> int:
             write_warning_baseline(
                 output_path,
                 result["findings"],
-                datetime.now(timezone.utc).date(),
+                datetime.now(UTC).date(),
             )
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         result = {

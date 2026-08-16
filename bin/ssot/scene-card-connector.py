@@ -19,7 +19,7 @@ import json
 import sys
 import time
 from dataclasses import dataclass, asdict, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 from pathlib import Path
 from typing import Any
 
@@ -46,7 +46,7 @@ class ConnectorConfig:
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _new_id(prefix: str) -> str:
@@ -184,13 +184,13 @@ def _import_mbox(
                 else:
                     run.errors.append(f"Item {i}: {result.error}")
             except Exception as e:
-                run.errors.append(f"Item {i}: {str(e)}")
+                run.errors.append(f"Item {i}: {e!s}")
 
         mbox.close()
     except ImportError:
         run.errors.append("mailbox module not available (Python standard library)")
     except Exception as e:
-        run.errors.append(f"MBOX import error: {str(e)}")
+        run.errors.append(f"MBOX import error: {e!s}")
 
     run.completed_at = _now_iso()
     save_run(workspace_root, run)
@@ -234,7 +234,7 @@ def _import_directory(
             else:
                 run.errors.append(f"File {f.name}: {result.error}")
         except Exception as e:
-            run.errors.append(f"File {f.name}: {str(e)}")
+            run.errors.append(f"File {f.name}: {e!s}")
 
     run.completed_at = _now_iso()
     save_run(workspace_root, run)
@@ -276,7 +276,7 @@ def _import_jsonl(
             else:
                 run.errors.append(f"Line: {result.error}")
         except Exception as e:
-            run.errors.append(f"JSON parse error: {str(e)}")
+            run.errors.append(f"JSON parse error: {e!s}")
 
     run.completed_at = _now_iso()
     save_run(workspace_root, run)

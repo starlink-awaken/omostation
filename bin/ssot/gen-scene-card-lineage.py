@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from pathlib import Path
 
 import yaml
@@ -102,7 +102,7 @@ def build_connector_relations(scenes: list[dict]) -> dict[str, list[str]]:
 
 def emit_yaml(scenes: list[dict], candidates: list[dict], relations: dict) -> str:
     """纯字符串拼接输出 YAML (缩进风格匹配谱系图 SSOT 约定)."""
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     pending = sum(1 for s in scenes if str(s["approval_state"]).startswith("pending"))
     active = sum(1 for s in scenes if s["lifecycle"] == "active")
     lines = [

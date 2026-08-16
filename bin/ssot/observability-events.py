@@ -368,7 +368,7 @@ def cmd_adapters(args: argparse.Namespace) -> int:
             off = _adapter_offset(a.get("id", "?"))
             print(
                 f"{a.get('id', '?'):<20} {a.get('channel', '?'):<12} "
-                f"{str(a.get('enabled', True)):<8} {off}"
+                f"{a.get('enabled', True)!s:<8} {off}"
             )
         return 0
     # run

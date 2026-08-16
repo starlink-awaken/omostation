@@ -232,7 +232,7 @@ def main() -> int:
     if args.json:
         print(json.dumps(summary, indent=2))
     else:
-        print(f"=== hardcoded-port-detector (P77 Phase 5) ===")
+        print("=== hardcoded-port-detector (P77 Phase 5) ===")
         print(f"  registered (union ecos+protocols): {summary['registered_total']}")
         print(
             f"  hardcoded distinct ports (in code): {summary['hardcoded_distinct_ports']}"
@@ -250,7 +250,7 @@ def main() -> int:
         )
         print()
         if summary["bare_hardcoded_usages_count"] > 0:
-            print(f"📋 需要迁移的硬编码端口:")
+            print("📋 需要迁移的硬编码端口:")
             for u in bare_hardcoded_usages:
                 if u["count"] > 0:
                     ev = u["env_var"] or "(no env var defined)"
