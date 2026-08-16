@@ -230,19 +230,40 @@ def overdue_retros(workspace: Path) -> list[str]:
     return due
 
 
+CLOSED_RUN_STATUSES = frozenset({"ok", "blocked", "failed"})
+
+
 def perception_fields(workspace: Path) -> dict[str, Any]:
+    """Active bound bets win; else closed bound bets; never a false missing-bet."""
     active_bets: list[str] = []
+    closed_bets: list[str] = []
     for run in iter_run_records(workspace):
-        if run.get("status") == "active" and run.get("bet_id"):
-            active_bets.append(str(run["bet_id"]))
-    bound = active_bets[0] if active_bets else ""
+        bet_id = str(run.get("bet_id") or "").strip()
+        if not bet_id:
+            continue
+        status = str(run.get("status") or "")
+        if status == "active":
+            active_bets.append(bet_id)
+        elif status in CLOSED_RUN_STATUSES:
+            closed_bets.append(bet_id)
+    if active_bets:
+        bound = active_bets[0]
+        bound_state = "active"
+    elif closed_bets:
+        bound = f"{closed_bets[0]} (closed)"
+        bound_state = "closed"
+    else:
+        bound = "unbound"
+        bound_state = "unbound"
     due = overdue_retros(workspace)
     return {
         "north_star": NORTH_STAR_SENTENCE,
         "north_star_ref": NORTH_STAR_REF,
         "north_star_present": north_star_present(workspace),
-        "bound_bet": bound or "missing-bet",
+        "bound_bet": bound,
+        "bound_state": bound_state,
         "bound_bets": active_bets,
+        "closed_bets": closed_bets,
         "overdue_retros": due,
         "overdue_retros_display": ",".join(due) if due else "none",
     }
@@ -250,7 +271,7 @@ def perception_fields(workspace: Path) -> dict[str, Any]:
 
 def print_perception(fields: dict[str, Any]) -> None:
     print(f"chain: north_star={fields.get('north_star', '')}")
-    print(f"chain: bet={fields.get('bound_bet', 'missing-bet')}")
+    print(f"chain: bet={fields.get('bound_bet', 'unbound')}")
     print(f"chain: overdue_retros={fields.get('overdue_retros_display', 'none')}")
 
 

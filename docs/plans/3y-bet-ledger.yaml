@@ -1416,6 +1416,51 @@ bets:
   human_gate: false
   circuit_breaker: 两周无映射草稿 → 保持 pending，不改 status 为 done
   retro: required
+- id: BET-Y1Q1-T6-03
+  track: T6-SUBTRACT
+  window: Y1Q1
+  title: 愿景链感知收口 + start 旁路关闭 + digest 可见
+  appetite: 2 days
+  priority: P0
+  status: done
+  done_at: 2026-08-16
+  goal: 关闭 2026-08-16 验证轮的感知假 missing-bet、omo start 旁路、红线 digest 不可见，不新造第四套台账或 GaC required 规则
+  non_goals:
+  - 重写 bind 谓词
+  - 新增 GaC required 规则
+  - 重写 gac-worktree submit 自动 wip
+  - D3/D5 场景重写
+  - 静默重开 T6-02
+  done_when:
+  - closeout 后 bootstrap/status 不再把已绑定关闭 run 报成 missing-bet
+  - omo.workflow.cli start 无 --bet 与根仓 wrapper 同样 halt，--bet 写入 run.bet_id
+  - gen-agent-redlines 产物含 vision-to-retro-chain 及其 executor
+  - 复盘写明 2026-08-16 各洞 fixed/deferred/blocked
+  verify:
+  - cmd: python3 bin/plan/chain-bind-check.py self-check
+    expect: exit 0
+  - cmd: python3 -c "import pathlib; t=pathlib.Path('docs/generated/agent-redlines.md'); raise SystemExit(0 if t.is_file() and 'vision-to-retro-chain' in t.read_text() else 1)"
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - bin/plan/**
+  - bin/agent-workflow.py
+  - bin/mof/gen-agent-redlines.py
+  - tests/test_chain_bind.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/plans/AGENT-BRIEF.md
+  - AGENTS.md
+  - .agents/skills/bet-execution/**
+  - .agents/skills/project-governance/**
+  - .omo/_knowledge/retros/**
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q1-T6-02
+  risk_level: L3
+  human_gate: false
+  circuit_breaker: 合不进 main 则记 blocker，不把 main 未合报成 done
+  retro: required
 - id: BET-Y1Q2-T6-01
   track: T6-SUBTRACT
   window: Y1Q2
