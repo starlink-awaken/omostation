@@ -150,3 +150,102 @@ class VRAMBudgetEstimator:
             max_safe_tokens=context_tokens,
             recommended_compaction_ratio=0.0,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class CompactionResult:
+    """Outcome of sliding context window distillation."""
+
+    original_tokens: int
+    compacted_tokens: int
+    pruned_tokens: int
+    compression_ratio: float
+    retained_messages_count: int
+    compacted_messages: list[dict[str, str]]
+    distilled_summary: str | None
+
+
+class ContextCompactor:
+    """Sliding-window context compactor with semantic recency preservation."""
+
+    @staticmethod
+    def estimate_tokens(text: str) -> int:
+        """Heuristic token estimator (approx 4 chars/token for code/EN, 1.5 chars for CJK)."""
+        if not text:
+            return 0
+        cjk_chars = sum(1 for ch in text if "\u4e00" <= ch <= "\u9fff")
+        non_cjk_chars = len(text) - cjk_chars
+        return int(cjk_chars / 1.5 + non_cjk_chars / 4.0) + 1
+
+    @classmethod
+    def compact_messages(
+        cls,
+        messages: list[dict[str, str]],
+        target_safe_tokens: int,
+        keep_recent_turns: int = 2,
+    ) -> CompactionResult:
+        """
+        Compact conversation messages into target token budget while preserving recency.
+        """
+        if not messages:
+            return CompactionResult(0, 0, 0, 0.0, 0, [], None)
+
+        total_tokens = sum(cls.estimate_tokens(m.get("content", "")) for m in messages)
+        if total_tokens <= target_safe_tokens or len(messages) <= keep_recent_turns + 1:
+            return CompactionResult(
+                original_tokens=total_tokens,
+                compacted_tokens=total_tokens,
+                pruned_tokens=0,
+                compression_ratio=0.0,
+                retained_messages_count=len(messages),
+                compacted_messages=messages,
+                distilled_summary=None,
+            )
+
+        # 1. Separate system prompt (if first message), recent turns, and middle messages
+        system_msg: dict[str, str] | None = (
+            messages[0] if messages[0].get("role") == "system" else None
+        )
+        body = messages[1:] if system_msg else messages
+        recent_cutoff = max(0, len(body) - keep_recent_turns)
+        middle_msgs = body[:recent_cutoff]
+        recent_msgs = body[recent_cutoff:]
+
+        # 2. Distill middle messages into a structured bullet summary
+        distilled_lines: list[str] = []
+        for msg in middle_msgs:
+            role = msg.get("role", "user")
+            content = msg.get("content", "").strip()
+            snippet = content[:120].replace("\n", " ") + ("..." if len(content) > 120 else "")
+            distilled_lines.append(f"- [{role}]: {snippet}")
+
+        distilled_summary = (
+            "[Auto-Compacted Context Window Summary]\n"
+            + "\n".join(distilled_lines)
+            + "\n[End of Compacted Summary]"
+        )
+
+        compacted_body: list[dict[str, str]] = [
+            {"role": "system", "content": distilled_summary},
+            *recent_msgs,
+        ]
+        compacted_messages: list[dict[str, str]] = (
+            [system_msg, *compacted_body] if system_msg else compacted_body
+        )
+
+        compacted_tokens = sum(
+            cls.estimate_tokens(m.get("content", "")) for m in compacted_messages
+        )
+        pruned_tokens = max(0, total_tokens - compacted_tokens)
+        ratio = round(pruned_tokens / max(total_tokens, 1), 4)
+
+        return CompactionResult(
+            original_tokens=total_tokens,
+            compacted_tokens=compacted_tokens,
+            pruned_tokens=pruned_tokens,
+            compression_ratio=ratio,
+            retained_messages_count=len(compacted_messages),
+            compacted_messages=compacted_messages,
+            distilled_summary=distilled_summary,
+        )
+

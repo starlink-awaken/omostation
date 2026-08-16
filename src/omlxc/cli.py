@@ -1733,6 +1733,93 @@ def fabric_warm(
     )
 
 
+@fabric_app.command("compact")
+def fabric_compact(
+    model_id: Annotated[
+        str, typer.Option("--model", "-m", help="Target model identifier")
+    ] = "coding",
+    context_tokens: Annotated[
+        int, typer.Option("--tokens", "-t", help="Current context token size")
+    ] = 32768,
+    available_mb: Annotated[
+        float, typer.Option("--available-mb", "-a", help="Available node VRAM in MB")
+    ] = 8192.0,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Evaluate context compaction and simulate sliding-window memory self-healing."""
+    from omlxc.dataplane.vram_budget import ContextCompactor, VRAMBudgetEstimator
+
+    estimator = VRAMBudgetEstimator()
+    admission = estimator.check_headroom_admission(
+        model_id=model_id,
+        context_tokens=context_tokens,
+        available_node_vram_mb=available_mb,
+    )
+
+    # Scale simulated message content to match requested context_tokens load
+    chunk = "context details specifications "
+    multiplier = max(1, context_tokens // 4)
+    user_payload = f"Task goal specification with {context_tokens} tokens load: " + (
+        chunk * multiplier
+    )
+    sample_messages = [
+        {"role": "system", "content": "You are a coding assistant with full compute fabric."},
+        {"role": "user", "content": user_payload},
+        {"role": "assistant", "content": "Executing task step 1: initial AST triage."},
+        {"role": "user", "content": "Proceed with step 2 implementation."},
+        {"role": "assistant", "content": "Implemented step 2 with unit tests and type checks."},
+        {"role": "user", "content": "Final verification and benchmark."},
+        {"role": "assistant", "content": "Verification succeeded with 100% pass rate."},
+    ]
+
+    target_tokens = admission.max_safe_tokens if admission.compaction_advised else context_tokens
+    compaction = ContextCompactor.compact_messages(
+        sample_messages,
+        target_safe_tokens=target_tokens,
+    )
+
+    payload = {
+        "model_id": model_id,
+        "admitted": admission.admitted,
+        "estimated_kv_mb": admission.estimated_kv_mb,
+        "compaction_advised": admission.compaction_advised,
+        "max_safe_tokens": admission.max_safe_tokens,
+        "recommended_compaction_ratio": admission.recommended_compaction_ratio,
+        "original_tokens": compaction.original_tokens,
+        "compacted_tokens": compaction.compacted_tokens,
+        "pruned_tokens": compaction.pruned_tokens,
+        "compression_ratio": compaction.compression_ratio,
+        "distilled_summary": compaction.distilled_summary,
+    }
+
+    if json_output:
+        _emit_success(payload, request_id=_request_id())
+        return
+
+    status_str = (
+        "[bold red]Compaction Advised (KV Cache Exceeds Budget)[/bold red]"
+        if admission.compaction_advised
+        else "[bold green]Safe Headroom (No Compaction Needed)[/bold green]"
+    )
+    ratio_pct = compaction.compression_ratio * 100
+    summary_txt = compaction.distilled_summary or "Full context retained intact"
+    _console.print(
+        Panel(
+            f"Model: [bold cyan]{model_id}[/bold cyan] | Context: [bold]{context_tokens:,}[/bold] "
+            f"tokens | Free VRAM: [bold]{available_mb:,.1f}[/bold] MB\n"
+            f"Status: {status_str}\n"
+            f"Max Safe Tokens: [bold yellow]{admission.max_safe_tokens:,}[/bold yellow] tokens\n"
+            f"Compression Ratio: [bold yellow]{ratio_pct:.1f}%[/bold yellow] "
+            f"(Pruned {compaction.pruned_tokens:,} tokens)\n"
+            f"Summary: [dim]{summary_txt}[/dim]",
+            title="[bold #7dd3f5]Context Window Compactor & Memory Self-Healing[/bold #7dd3f5]",
+            border_style="#5a7a9a",
+            expand=False,
+        )
+    )
+
+
+
 def main() -> None:
     """Run the ``omlxc`` console script."""
     app()

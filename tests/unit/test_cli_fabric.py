@@ -58,6 +58,41 @@ def test_cli_fabric_warm_json() -> None:
     assert payload["data"]["estimated_saved_tokens"] > 0
 
 
+def test_cli_fabric_compact_json() -> None:
+    # 32k tokens on 4GB node -> compaction advised
+    result = runner.invoke(
+        app,
+        [
+            "fabric",
+            "compact",
+            "--model",
+            "coding",
+            "--tokens",
+            "32768",
+            "--available-mb",
+            "4096",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["data"]["model_id"] == "coding"
+    assert payload["data"]["compaction_advised"] is True
+    assert payload["data"]["pruned_tokens"] > 0
+    assert payload["data"]["compression_ratio"] > 0.0
+
+
+def test_cli_fabric_compact_human() -> None:
+    result = runner.invoke(
+        app,
+        ["fabric", "compact", "--model", "coding", "--tokens", "32768", "--available-mb", "4096"],
+    )
+    assert result.exit_code == 0
+    assert "Context Window Compactor" in result.stdout
+    assert "Compaction Advised" in result.stdout
+
+
+
 def test_cli_fabric_warm_human() -> None:
     result = runner.invoke(app, ["fabric", "warm"])
     assert result.exit_code == 0

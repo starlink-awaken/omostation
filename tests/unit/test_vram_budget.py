@@ -57,3 +57,34 @@ def test_vram_headroom_admission() -> None:
     assert 0 < res_fail.max_safe_tokens < 32768
     assert 0.0 < res_fail.recommended_compaction_ratio <= 1.0
     assert "exceeds safe node headroom" in res_fail.reason
+
+
+def test_context_compactor_messages() -> None:
+    from omlxc.dataplane.vram_budget import ContextCompactor
+
+    messages = [
+        {"role": "system", "content": "You are a coding assistant."},
+        {"role": "user", "content": "Let's build a distributed cache." + " long details" * 50},
+        {"role": "assistant", "content": "Here is cache design." + " code sample" * 50},
+        {"role": "user", "content": "Let's add LRU eviction policy." + " more specs" * 50},
+        {"role": "assistant", "content": "Added LRU eviction." + " code" * 50},
+        {"role": "user", "content": "Now run the tests."},
+        {"role": "assistant", "content": "All tests passed successfully."},
+    ]
+
+    # Target small token budget (e.g. 150 tokens) -> triggers distillation
+    result = ContextCompactor.compact_messages(
+        messages, target_safe_tokens=150, keep_recent_turns=2
+    )
+
+    assert result.compacted_tokens < result.original_tokens
+    assert result.pruned_tokens > 0
+    assert result.compression_ratio > 0.0
+    assert result.distilled_summary is not None
+    assert "[Auto-Compacted Context Window Summary]" in result.distilled_summary
+    # Recent turns preserved
+    assert result.compacted_messages[-1]["content"] == "All tests passed successfully."
+    assert result.compacted_messages[-2]["content"] == "Now run the tests."
+    # System prompt preserved
+    assert result.compacted_messages[0]["content"] == "You are a coding assistant."
+

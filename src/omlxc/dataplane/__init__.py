@@ -21,7 +21,13 @@ from .semantic_cache import CacheTier, SemanticCacheEntry, SemanticCacheRegistry
 from .telemetry import BoundRouteTelemetry, RouteTelemetryRecorder, TelemetrySink
 from .thermal import NodeEnvironmentalState, PowerSource, ThermalGuard, ThermalPressureLevel
 from .triage import ComplexityTier, TriageClassifier, TriageResult
-from .vram_budget import ModelArchitectureMeta, VRAMBudgetEstimator
+from .vram_budget import (
+    CompactionResult,
+    ContextCompactor,
+    HeadroomAdmissionResult,
+    ModelArchitectureMeta,
+    VRAMBudgetEstimator,
+)
 
 __all__ = [
     "AdapterBinding",
@@ -34,12 +40,15 @@ __all__ = [
     "ChatExecution",
     "CircuitBreaker",
     "CircuitBreakerRegistry",
+    "CompactionResult",
     "ComplexityTier",
     "ConcurrencyTracker",
+    "ContextCompactor",
     "DataPlaneOrchestrator",
     "EmbeddingExecution",
     "ExecutionError",
     "ExecutionErrorCode",
+    "HeadroomAdmissionResult",
     "ModelArchitectureMeta",
     "NodeEnvironmentalState",
     "PowerSource",
