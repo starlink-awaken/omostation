@@ -3628,7 +3628,9 @@ bets:
   title: 真实评测集 v1 (≥200 条)
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-17
+  done_note: '恢复 #1262 (08-09) 被 08-11 台账重铸事故性回退的 done。本轮独立核实: evalset-v1.json 439 条全真实非合成 (PR 960-1261 + kairon 15-62 + adj-0001) >= 200; 三类齐 (positive 403/boundary 30/negative 6); 非合成标注在 source_note + 逐条 synthetic:false。circuit_breaker 未触发 (零合成)。' 
   goal: 用 adjudication 数据构建第一份非合成评测集, 替代自出题自答
   non_goals:
   - 模型训练
