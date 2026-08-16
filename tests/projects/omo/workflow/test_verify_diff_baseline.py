@@ -80,6 +80,76 @@ def test_no_drift_when_all_covered(tmp_path):
     assert rep["ok"] is True and rep["drifted_files"] == []
 
 
+def test_scoped_verify_ignores_unrelated_branch_files(tmp_path):
+    """verify --file must not treat sibling dirty/branch files as drift."""
+    reg = {}
+    p1, p2 = _with_run([{
+        "paths": ["docs/plans/ledger.yaml"],
+        "baseline_commit": "abc123",
+    }], tmp_path)
+    # Unscoped git would return OTHER.yaml; scoped command + filter drop it.
+    fake_diff = "docs/plans/ledger.yaml\ndocs/plans/OTHER.yaml\n"
+    with p1, p2, patch("subprocess.run") as mock:
+        mock.return_value.returncode = 0
+        mock.return_value.stdout = fake_diff
+        rep = diff_baseline_report(
+            reg,
+            "r1",
+            ["docs/plans/ledger.yaml"],
+            scope_to_changed=True,
+        )
+    git_cmd = mock.call_args[0][0]
+    assert "--" in git_cmd
+    assert "docs/plans/ledger.yaml" in git_cmd
+    assert "docs/plans/OTHER.yaml" not in git_cmd
+    assert rep["ok"] is True
+    assert rep["drifted_files"] == []
+
+
+def test_scoped_file_is_excluded_from_drift_by_design(tmp_path):
+    """--file paths are the verify set: drift is sibling files, claim_coverage owns the set itself."""
+    reg = {}
+    p1, p2 = _with_run([{
+        "paths": ["docs/plans/ledger.yaml"],
+        "baseline_commit": "abc123",
+    }], tmp_path)
+    fake_diff = "docs/other.md\n"
+    with p1, p2, patch("subprocess.run") as mock:
+        mock.return_value.returncode = 0
+        mock.return_value.stdout = fake_diff
+        rep = diff_baseline_report(
+            reg,
+            "r1",
+            ["docs/other.md"],
+            scope_to_changed=True,
+        )
+    assert rep["ok"] is True
+    assert rep["drifted_files"] == []
+
+
+def test_unscoped_from_diff_still_flags_sibling_drift(tmp_path):
+    """--from-diff keeps T9-01: unclaimed sibling files are drift."""
+    reg = {}
+    p1, p2 = _with_run([{
+        "paths": ["docs/plans/ledger.yaml"],
+        "baseline_commit": "abc123",
+    }], tmp_path)
+    fake_diff = "docs/plans/ledger.yaml\ndocs/plans/OTHER.yaml\n"
+    with p1, p2, patch("subprocess.run") as mock:
+        mock.return_value.returncode = 0
+        mock.return_value.stdout = fake_diff
+        rep = diff_baseline_report(
+            reg,
+            "r1",
+            ["docs/plans/ledger.yaml"],
+            scope_to_changed=False,
+        )
+    git_cmd = mock.call_args[0][0]
+    assert "--" not in git_cmd
+    assert rep["ok"] is False
+    assert rep["drifted_files"] == ["docs/plans/OTHER.yaml"]
+
+
 def test_git_failure_never_blocks(tmp_path):
     """git 失败不阻塞 (向后兼容)."""
     reg = {}

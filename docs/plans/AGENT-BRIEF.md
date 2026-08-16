@@ -115,7 +115,7 @@ AGENT_ID=<agent-id> \
 
 ```bash
 uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> \
-  --profile <agent-profile> --objective "<BET-ID> <标题>"
+  --profile <agent-profile> --bet <BET-ID> --objective "<BET-ID> <标题>"
 
 # claim 前必须生成可复算 receipt（缺失、篡改、过期或覆盖不全都会拒绝）。
 # 根仓文件（包括 docs/）必须显式加入 workspace-root；projects/<name>/ 路径加入对应项目名：
@@ -129,6 +129,8 @@ uv run --with pyyaml python bin/agent-workflow.py claim <run-id> \
 ```
 
 `workflow-id` 和 `agent-profile` 在 `claim-check` 的输出里，也在 bet 的 `workflow` 字段和轨道的 `agent_profile_hint` 里。
+
+需求迭代 `start` 必须带 `--bet`（`bet_id` 写入 run，不只写在 objective）。`ok` closeout / `bet-ledger complete` 缺北极星指针、run 绑定或 retro 会 halt。冷启动看 `bootstrap`/`status` 的 `chain:` 行。执行器：`bin/plan/chain-bind-check.py`；红线：`redlines.yaml::vision-to-retro-chain`。对照表：`docs/architecture/wave-gate-bet-map.md`。
 
 **⚠️ 三个实测过的坑（2026-08-14 T1-05A 修复轮补充）**：
 

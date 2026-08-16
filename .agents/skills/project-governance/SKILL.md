@@ -35,7 +35,7 @@ uv run --with pyyaml python bin/agent-workflow.py status --json
 uv run --with pyyaml python bin/agent-workflow.py suggest --from-diff --profile <agent-profile>
 # If no diff yet, use list + the routing table below.
 uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> \
-  --profile <agent-profile> --objective "<summary>"
+  --profile <agent-profile> --bet <BET-ID> --objective "<summary>"
 uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <path>
 # or through the L3 entry:
 uv run --project projects/cockpit cockpit agent
@@ -44,6 +44,8 @@ uv run --project projects/cockpit cockpit agent
 **User waiver** (skip workflow): record evidence with
 [`docs/operations/workflow-waiver-template.md`](../../../docs/operations/workflow-waiver-template.md)
 — never invent a waiver.
+
+Chain bind (BET-Y1Q1-T6-02): requirement-iteration `start` needs `--bet`; `closeout`/`complete` halt without north-star + run `bet_id` + retro. Perception is the `chain:` lines on `bootstrap`/`status`. Executor: `bin/plan/chain-bind-check.py`. Redline: `redlines.yaml::vision-to-retro-chain`.
 
 ## Choose A Workflow
 
@@ -137,6 +139,7 @@ For any multi-step task, create a run record before editing:
 uv run --with pyyaml python bin/agent-workflow.py start project-doc-change \
   --actor "${USER:-agent}" \
   --profile governance-agent \
+  --bet <BET-ID> \
   --objective "<short objective>"
 
 uv run --with pyyaml python bin/agent-workflow.py claim "<run-id>" \

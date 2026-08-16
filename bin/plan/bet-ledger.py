@@ -375,6 +375,7 @@ def cmd_claim_check(data: dict, args) -> int:
         print(
             f"  uv run --with pyyaml python bin/agent-workflow.py start {wf} "
             f"--profile {tr.get('agent_profile_hint','engineering-agent')} "
+            f"--bet {b['id']} "
             f'--objective "{b["id"]} {b["title"]}"'
         )
         globs = []
@@ -725,6 +726,24 @@ def cmd_complete(data: dict, args) -> int:
                 rc = 1
         if rc:
             print("[complete] 请先完成 D0 (write_surfaces 全部入库) 或 --force")
+            return 1
+        # Plan→BET→run→retro chain (BET-Y1Q1-T6-02). Same predicate as
+        # bin/plan/chain-bind-check.py — do not reimplement.
+        try:
+            from chain_bind import evaluate_complete
+        except ImportError:
+            sys.path.insert(0, str(Path(__file__).resolve().parent))
+            from chain_bind import evaluate_complete
+        chain = evaluate_complete(b, WS, force=False)
+        if not chain.ok:
+            print(
+                f"[complete] ❌ vision→retro 链未闭合: {', '.join(chain.reasons)}"
+            )
+            print(
+                "[complete] 需要: 绑定 run.bet_id、"
+                "docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md 北极星、"
+                f".omo/_knowledge/retros/{args.bet_id}.md"
+            )
             return 1
 
     # 置 done (写 3y-bet-ledger.yaml, 非 .omo 状态)

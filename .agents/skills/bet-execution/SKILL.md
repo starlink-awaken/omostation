@@ -68,9 +68,9 @@ uv run --with pyyaml python bin/plan/bet-ledger.py show <BET-ID>
 # ① 隔离工作树（强制，防止和其他 agent 互删）
 bash bin/gac/gac-worktree.sh claim <bet-id 小写>
 
-# ② 起 workflow（ADR-0203 红线：先 start 再改文件）
+# ② 起 workflow（ADR-0203：先 start 再改文件；必须 --bet，见 chain-bind-check）
 uv run --with pyyaml python bin/agent-workflow.py start <workflow-id> \
-  --profile <agent-profile> --objective "<BET-ID> <标题>"
+  --profile <agent-profile> --bet <BET-ID> --objective "<BET-ID> <标题>"
 
 # ③ claim 每一个写面
 uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <每个 write_surface>
@@ -78,6 +78,8 @@ uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <每个 
 
 `workflow-id` 与 `agent-profile` 在 `claim-check` 的输出里，也在 bet 的 `workflow` 字段
 和轨道的 `agent_profile_hint` 里。
+
+链门指针：`start --bet` 把 `bet_id` 写入 run；缺北极星/绑定/retro 时 closeout 与 `bet-ledger complete` halt。感知：`bootstrap`/`status` 的 `chain:` 行。执行器 `bin/plan/chain-bind-check.py`，红线 `redlines.yaml::vision-to-retro-chain`，对照 `docs/architecture/wave-gate-bet-map.md`。
 
 ### 执行期纪律
 

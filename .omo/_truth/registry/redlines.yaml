@@ -61,6 +61,13 @@ enforced_red_lines:
     severity: warn
     rule: "adversarial scenario pass rate must not be 100% (全过=自欺)"
     executor: bin/gac/check-adversarial-effectiveness.py
+  - id: vision-to-retro-chain
+    source: BET-Y1Q1-T6-02
+    severity: violation
+    rule: >
+      requirement-iteration start/closeout/complete must bind Plan north-star
+      + ledger bet_id on the run record + retro file; missing link is a halt
+    executor: bin/plan/chain-bind-check.py
 
 acknowledged_gaps:
   - id: gate-cost-budget
