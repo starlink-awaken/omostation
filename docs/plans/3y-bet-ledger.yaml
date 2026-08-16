@@ -2905,8 +2905,13 @@ bets:
   title: Supervised Blueprint control loop and SR-06 rollback
   appetite: 3 days
   priority: P0
-  status: blocked
-  blocked_reason: '战略规划裁定 (2026-08-15): 外部依赖 Codex ACP 未定, Y1 末统一评审处置'
+  status: done
+  done_at: 2026-08-16
+  done_note: >-
+    08-16 解冻 (Codex 经 Orca 已实证) + SR-06 六轮生产链 canary 完成 (G-1 证据包 §6):
+    accept R1/R2 WorkflowVerified; reject R3/R5 StepFailed; R6 补偿全链
+    CompensationStarted→WorkflowRecovered→Closed + 基线恢复实测。4 产品缺口记入
+    retro Q3。蜂群开闸由 G-1 §7 human_gate 单独承接。retro: BET-Y1Q2-T1-18.md。
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md
     spec_version: 1.0.0
