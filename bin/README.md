@@ -12,7 +12,7 @@ last-reviewed: 2026-06-29
 >
 > 设计原则: **入口稳定** (路径不变, 全 repo 引用固化) + **可发现** (按域找, 不 grep).
 
-## 域归类 (12 域)
+## 域归类 (14 域)
 
 ### 1. GaC 治理即代码 (15) — 规则注册 / drift / gate / healthcheck
 规则声明式注册 + 执行器绑定 + drift 检测 + 元治理自检.
@@ -156,6 +156,31 @@ last-reviewed: 2026-06-29
 
 > **已迁移** (2026-07-07): `omo-state-projection-guard.py` → `omo lint projection-guard`, `omo-runtime-stamp-policy.py` → `omo lint stamp-policy`
 > 原脚本保留作为 backward-compat wrapper, 新功能请使用 omo CLI.
+
+### 14. Bin Tool Registry (2, bin/scripts 收敛治理) — 盘点 + 依赖闭环 + 并行收敛
+bin/ 与 scripts/bin/ 同名镜像收敛治理 (bin-master, scripts-compat-shim), round 轮次闭环.
+
+| 入口 | 功能 |
+|:-----|:-----|
+| `make bin-tool-registry-audit` | 扫描 bin 工具调用图与命名债务 (缺省输出 stats) |
+| `make bin-tool-registry-audit-strict` | 严格门禁 (并行用清单托底, 脚本层) |
+| `make bin-tool-registry-audit-emit` | 导出 bin/ scripts/bin 盘点 JSON |
+| `make bin-tool-registry-convergence` | 盘点收敛候选 (高出入度聚类) |
+| `make bin-tool-registry-parallel-gaps` | 输出并行命名缺口 (bin/scripts 现有重名未纳清单) |
+| `make bin-tool-registry-dependency-risks` | 输出依赖风险热点 (出入度 + 并行收敛缺口) |
+| `make bin-tool-registry-weekly-governance-report` | 输出并落盘 依赖风险/并行缺口周报 (owner/action/sink) |
+| `make bin-tool-registry-round9/10/11` | 并行风险 Top10 一键闭环 (strict + gaps + dependency + 周报) |
+
+裸命令:
+```bash
+python3 bin/tool-registry-audit.py --scope both --parallel-manifest docs/operations/bin-scripts-convergence-manifest.json --snapshot artifacts/bin-tool-registry-audit.json
+python3 bin/tool-registry-audit.py --scope both --parallel-manifest ... --json | jq '.findings.parallel_manifest_gaps'
+```
+
+SSOT: `docs/operations/bin-scripts-convergence-manifest.json` (entries: name/bin/scripts/status/action/owner/note/evidence).
+
+> **并行 gap 语义** (2026-08-16 固化): `missing_manifest_entry` = bin/scripts 同名镜像未登记; 内部模块 (`__init__.py` / `_lib.py` / `_*.py`) 由 `_is_internal_module()` 排除, 非命令不计 gap. 5 个多文件条目 (control_experiment / git_health_hook / physical_recovery / submodule_reachability_gate / sync_submodules_push) 是 root-wrapper→ssot 合法模式, 登记 bin 取 ssot 主路径.
+> **并发风险** (2026-08-16): 该域是多 agent 高频并行域, 并发 agent 会把共享 checkout 上 staged 改动直接 commit 成混合 commit (见 memory `feedback_shared_checkout_concurrent_absorb_20260816.md`); 动工前查 `git worktree list` + `agent-workflow status`.
 
 ---
 

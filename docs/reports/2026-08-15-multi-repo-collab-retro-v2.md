@@ -102,8 +102,26 @@ context: >-
 3. E7 退役协议落地前，接手别人工作先跑 `orca terminal list` + `ls ~/agents/` 盘点活资产
 4. 本复盘 §4 决策已挂 MILESTONES-2026Q3Q4.md M2 里程碑，执行时勿再讨论方案本身
 
+## 6.1 08-16 差量补录 — 共享 checkout 并发吸收 staged 工作（E9）
+
+**事故**：bin/scripts convergence 高频轮次域（round8→round13 数小时推进）的并发 agent 在共享 checkout 上执行 `git add -A && git commit`，把**我 staged 的 round9 登记（audit `_is_internal_module` 修复 + manifest 141 镜像对）连同其 round11 工作**打包成一个混合 commit（8ead84ce0），reflog 出现非主动 commit。
+
+**判定**：内容无损 — 我的改动随 8ead84ce0→#1569→#1570→#1573 链合入 main（manifest 233 条），无重复 PR。被吸收 ≠ 失败，但暴露了 §1 P0 判定「主仓仍在被 agent 直接改文件」的持续化——共享 checkout 仍是 agent 的可写面。
+
+**E9 处理范式（已写入 AGENTS.md §1.6.2 / CLAUDE.md §B.3）**：
+1. 发现非主动 commit 不贸然 reset — 先 `git reflog -8` + `git show <sha> --stat` 审查
+2. 验证工作是否已合入 main：`git show origin/main:<path>` 对比
+3. 已合入 → `agent-workflow close <run-id> --status blocked --evidence "..."` 记录，不重复交付
+4. 本地 main 被并发直接 push 成非远端 commit（`rev-list --left-right --count origin/main...main` 分叉）→ **勿 reset --hard**，保留由并发 agent 处理
+
+**给团队的提醒**：
+- 该域（bin/scripts convergence、台账、SSOT）作业前先 `git worktree list` + `agent-workflow status` 查并发 worktree 与 active runs
+- 提交前 `git show origin/main:<path>` 核对 main 最新版，防重复登记
+- 完整范式见 memory `feedback_shared_checkout_concurrent_absorb_20260816.md`
+
 ## 7. Changelog
 
 | 日期 | 变更 |
 |---|---|
 | 2026-08-15 | v1: 五件事落地率审计 + 7 事故差量归因 + E7/E8 新病根 + D2 决策 + 拓扑替代方案对比 |
+| 2026-08-16 | v2.1: §6.1 补录 E9 共享 checkout 并发吸收 staged 工作（8ead84ce0 事件）— 处理范式已固化到 AGENTS.md §1.6.2 / CLAUDE.md §B.3 |
