@@ -41,9 +41,9 @@ def _load_baseline() -> set[str]:
     if not BASELINE_FILE.is_file():
         return set()
     return {
-        line.strip()
+        line.split("#")[0].strip()
         for line in BASELINE_FILE.read_text(encoding="utf-8").splitlines()
-        if line.strip() and not line.startswith("#")
+        if line.split("#")[0].strip()
     }
 
 PR_RE = re.compile(r"#(\d+)\b")

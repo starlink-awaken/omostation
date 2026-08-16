@@ -1,4 +1,6 @@
 ---
+id: ADR-0412
+title: "model-driven (M0) 定位判定 — 接入主链 (保留独立子仓)"
 status: accepted
 lifecycle: contract
 owner: governance-team
