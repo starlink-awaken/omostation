@@ -6,13 +6,12 @@ BOS Router — URI 路由层
 
 import re
 from pathlib import Path
-from typing import Optional
 
 
 class BOSRouter:
     """BOS URI 路由器"""
 
-    def __init__(self, domain_config_path: Optional[Path] = None):
+    def __init__(self, domain_config_path: Path | None = None):
         self._domains = {}
         if domain_config_path and domain_config_path.exists():
             try:
