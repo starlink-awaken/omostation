@@ -226,17 +226,17 @@ BIN_TOOL_REGISTRY_MANIFEST ?= docs/operations/bin-scripts-convergence-manifest.j
 TOOL_REGISTRY_SCOPE ?= both
 
 bin-tool-registry-audit:  ## 扫描 bin 工具调用图与命名债务
-		@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)"
+	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)"
 
 bin-tool-registry-audit-emit:  ## 导出 bin 盘点 JSON
-		@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --emit
+	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --emit
 
 bin-tool-registry-audit-strict:  ## 严格检查（会返回非零）
-		@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --strict
+	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --strict
 
 bin-tool-registry-convergence:  ## 输出收敛候选（按度中心）
-			@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --json | \
-			python3 -c "import json,sys;data=json.load(sys.stdin);print('Top out-degree convergence:');[print(f'  {path}: {outd}') for path,outd in data.get('top_out_degree',[])];print('Top in-degree convergence:');[print(f'  {path}: {ind}') for path,ind in data.get('top_in_degree',[])]"
+	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --json | \
+		python3 -c "import json,sys;data=json.load(sys.stdin);print('Top out-degree convergence:');[print(f'  {path}: {outd}') for path,outd in data.get('top_out_degree',[])];print('Top in-degree convergence:');[print(f'  {path}: {ind}') for path,ind in data.get('top_in_degree',[])]"
 
 scene-feedback:  ## 列出最近的 scene feedback
 	@python3 bin/ssot/scene-feedback-collector.py list --limit 10

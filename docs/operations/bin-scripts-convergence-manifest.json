@@ -347,6 +347,21 @@
       }
     },
     {
+      "name": "gen_agent_redlines",
+      "bin": "bin/mof/gen-agent-redlines.py",
+      "scripts": "scripts/bin/mof/gen-agent-redlines.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/mof/gen-agent-redlines.py",
+          "scripts/bin/mof/gen-agent-redlines.py"
+        ]
+      }
+    },
+    {
       "name": "governance_convergence_lint",
       "bin": "bin/gac/governance-convergence-lint.py",
       "scripts": "scripts/bin/gac/governance-convergence-lint.py",
