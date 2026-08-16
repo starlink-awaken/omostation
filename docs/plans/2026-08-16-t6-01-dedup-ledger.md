@@ -63,9 +63,20 @@ related:
 | doctor | ok=True（cockpit/agora path 深度修正 ../knowledge/kairon 后） |
 | CI (#1600) | Actions 事件消化延迟（平台侧, head 1fcf0e2 runs=0），本地链完备，待恢复 merge |
 
-## 待办（merge 后收口）
+## 待办（merge 后收口）— 2026-08-17 更新
 
-1. 主仓 `bet-ledger.py surface` 真实前后对比 + test_loc ≥ 350,854 核验
-2. `bash tests/integration/run-all.sh` 全量
-3. 回滚 tag 推远端（lane 白名单当前不含 tag push，需 registry 逃生口或人工）
-4. retro 五问 + 台账 T6-01 → in_progress (awaiting human_gate)
+1. ~~主仓 surface 前后对比~~ ✅ **已实测**：
+   - test_loc **454,784 ≥ 基线 350,854**（+103,930）— 保护量守住 ✅
+   - numstat 全生态口径：治理面去重 ≈ 9,475（kairon .omo 9,410 + registry/gitmodules/contract 65）
+     ≈ 去重清单合计 9,433（差 42 = 断测修复净增）— 「src 下降量 == 去重清单」闭环 ✅
+   - 注：worktree surface 绝对值受子模块 checkout 完整度干扰（scripts 嵌套 submodule 污染），
+     真实口径以 numstat (b7530c27 → 30771c289) 前后差为准
+2. `bash tests/integration/run-all.sh` 全量 — 运行中
+3. 回滚 tag 推远端 — lane 白名单不含 tag push，**需人工** `git push origin pre-knowledge-merge-20260816`
+4. ~~retro + 台账停审~~ ✅ 已落（#1600 merged，origin/main 核对 in_progress + awaiting 确认）
+
+### 附：Y1Q4 核实性收口（同 PR）
+
+- T3-01 自主性阶梯 → done（45 tests / rejected 注入降级实测 / evidence 100）
+- T5-01 fork/join → done（三策略 + 7 tests）
+- T7-01 → 保持 candidate（format_check 无裁决数据，circuit_breaker 禁强行放权）
