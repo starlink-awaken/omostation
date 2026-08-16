@@ -53,11 +53,15 @@
   # 预估 32k 上下文显存与压缩建议
   omlxc fabric vram coding 32768
   # 输出: KV Cache: 8,448.0 MB | Total Est. VRAM: 25,948.0 MB
+
+  # 模拟滑动窗口上下文蒸馏与显存自愈
+  omlxc fabric compact --model coding --tokens 32768 --available-mb 4096
+  # 输出: Compaction Advised (35.0% 压缩率，裁剪 10,240 tokens)
   ```
 - **调度准则**：
   - `FAST` ➔ 引导至 Mac mini 2B~4B 极速模型（100+ TPS）。
   - `REASONING` ➔ 锁定 MBP 27B~70B 深度思考模型。
-  - **显存预警与自愈**：当显存超出安全水位（85%）时，返回 `compaction_advised=True` 及 `max_safe_tokens`。上层智能体自动调用 `bos://memory/mos/consolidate` 滑动压缩历史对话，保障长程会话永不中断。
+  - **显存预警与自愈**：当显存超出安全水位（85%）时，返回 `compaction_advised=True` 及 `max_safe_tokens`。上层智能体自动执行上下文滑动蒸馏，保障长程会话永不中断。
 
 ### 阶段 4：基准跑分与性能漂移检测
 - **执行频率**：模型权重更新后、macOS 系统升级后、闲时自动巡检。
@@ -75,11 +79,12 @@
 
 | 场景 | 调用方式 | 示例 |
 | :--- | :--- | :--- |
-| **CLI (人类交互)** | `omlxc fabric ...` / `make omlxc-fabric` | `omlxc fabric inspect`, `omlxc fabric warm` |
+| **CLI (人类交互)** | `omlxc fabric ...` / `make omlxc-fabric` | `omlxc fabric inspect`, `omlxc fabric warm`, `omlxc fabric compact` |
 | **Cockpit (统一网关)** | `cockpit mesh ...` | `cockpit mesh fabric`, `cockpit mesh warm` |
-| **BOS URI (总线)** | `bos://compute/aetherforge/*` | `bos://compute/aetherforge/warm` |
+| **BOS URI (总线)** | `bos://compute/aetherforge/*` | `bos://compute/aetherforge/warm`, `bos://capability/swarm/run` |
 | **Agora MCP (Agent)** | MCP Tools | `fabric_inspect()`, `fabric_warm_prefixes()`, `fabric_vram_budget(...)` |
-| **AetherForge MCP (Swarm)** | FastMCP Tools | `forge_fabric_inspect()`, `forge_fabric_warm()`, `forge_fabric_vram(...)` |
+| **AetherForge MCP (Swarm)** | FastMCP Tools | `forge_fabric_inspect()`, `forge_fabric_warm()`, `forge_fabric_vram()`, `forge_fabric_compact()`, `forge_swarm_run()` |
 | **OpenAI 兼容接口** | `http://127.0.0.1:9290/v1` | `POST /v1/chat/completions` |
-| **Cockpit Web REST** | `http://127.0.0.1:8080/api/governance/compute/*` | `GET /api/governance/compute/fabric` |
-| **Cockpit UI (前端)** | `http://localhost:5173/#/compute` | 算力织网、前缀预热与显存自愈大盘 |
+| **Cockpit Web REST** | `http://127.0.0.1:8080/api/governance/compute/*` | `GET /api/governance/compute/fabric`, `POST /fabric/compact` |
+| **Cockpit UI (前端)** | `http://localhost:5173/#/compute` | 算力织网、前缀预热、显存估算与上下文蒸馏模拟大盘 |
+
