@@ -23,7 +23,7 @@ jobs:
           python-version: "3.13"
       - uses: astral-sh/setup-uv@v4
       - name: uv sync (装配 kairon venv + pytest)
-        run: cd projects/knowledge/kairon && uv sync --quiet
+        run: cd projects/knowledge/kairon && uv sync --quiet --all-groups
       - name: make test-fast (16 包循环 pytest, 对齐原 kairon 仓 CI 语义)
         # 注: 原子仓 CI 只跑指定 kems 文件; 根仓对齐 test-fast 口径
         # (unit only, 排 integration/benchmarks — sqlite schema 类集成测需要
