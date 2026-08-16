@@ -17,8 +17,8 @@ import sys
 def cmd_debt_score(args: argparse.Namespace) -> int:
     """债务评分 — 直接调用 omo-debt Pattern 09 v2.1 算法。"""
     try:
-        from omo_debt.core.scoring import calculate_score_v2
-        from omo_debt.core.stage import StageType
+        from omo._vendored.omo_debt_engine.core.scoring import calculate_score_v2  # ADR-0412 归并
+        from omo._vendored.omo_debt_engine.core.stage import StageType  # ADR-0412 归并
     except ImportError as e:
         print(f"⚠️  omo-debt scoring module not available: {e}", file=sys.stderr)
         print("   Run: uv sync --project projects/cockpit", file=sys.stderr)
