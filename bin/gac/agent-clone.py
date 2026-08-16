@@ -32,6 +32,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import warnings
 
 SCHEMA_MANIFEST = "agent-clone-manifest/v1"
 SCHEMA_CHANGESET = "cross-repo-changeset/v1"
@@ -153,6 +154,92 @@ def submodule_state(
     status_proc = git(sub, "status", "--porcelain")
     clean = status_proc.returncode == 0 and status_proc.stdout.strip() == ""
     return True, head, origin, clean
+
+
+def extract_uv_path_dependencies(repo_root: str) -> list[str]:
+    """Extract local path dependencies from [tool.uv.sources].
+
+    Returns a list of package names that have path dependencies (e.g., ['ecos', 'agora']).
+    Returns empty list if pyproject.toml doesn't exist or has no [tool.uv.sources].
+    """
+    pyproject = os.path.join(repo_root, "pyproject.toml")
+    if not os.path.isfile(pyproject):
+        return []
+
+    try:
+        with open(pyproject, "r", encoding="utf-8") as fh:
+            content = fh.read()
+    except OSError:
+        return []
+
+    # Simple text parsing: find [tool.uv.sources] section and extract package names
+    # Format: package_name = { path = "../xxx", editable = true }
+    in_uv_section = False
+    packages: list[str] = []
+
+    for line in content.splitlines():
+        stripped = line.strip()
+        if stripped == "[tool.uv.sources]":
+            in_uv_section = True
+            continue
+        if in_uv_section:
+            # Exit section when we hit another section header
+            if stripped.startswith("[") and stripped != "[tool.uv.sources]":
+                break
+            # Extract package name: format is "name = { path = ... }"
+            match = re.match(r"^([A-Za-z0-9_-]+)\s*=\s*\{", line)
+            if match:
+                packages.append(match.group(1))
+
+    return packages
+
+
+def reinstall_path_dependencies(clone_root: str) -> tuple[bool, str]:
+    """Reinstall all uv path dependencies to avoid cache staleness (E8 fix).
+
+    E8: 子仓版本号未动但文件变了时 uv 不重装 (2026-08-15 实证),
+    clone 后强制 reinstall 每个 path 依赖.
+
+    Returns (success, message). Never raises -- this is best-effort.
+    """
+    packages = extract_uv_path_dependencies(clone_root)
+    if not packages:
+        return True, "no uv path dependencies found"
+
+    # 检查 uv 是否可用
+    try:
+        proc = subprocess.run(
+            ["uv", "--version"],
+            capture_output=True,
+            text=True,
+            check=False,
+            cwd=clone_root,
+        )
+        if proc.returncode != 0:
+            return False, f"uv not available (exit {proc.returncode})"
+    except FileNotFoundError:
+        return False, "uv command not found"
+
+    # 逐个 reinstall
+    failed = []
+    for pkg in packages:
+        proc = subprocess.run(
+            ["uv", "sync", "--reinstall-package", pkg],
+            capture_output=True,
+            text=True,
+            check=False,
+            cwd=clone_root,
+        )
+        if proc.returncode != 0:
+            failed.append((pkg, proc.stderr.strip() or proc.stdout.strip()))
+
+    if failed:
+        msg = f"uv sync --reinstall-package failed for: {[p for p, _ in failed]}"
+        for pkg, err in failed:
+            msg += f"\n  {pkg}: {err[:100]}"
+        return False, msg
+
+    return True, f"reinstalled {len(packages)} uv path dependencies: {', '.join(packages)}"
 
 
 # ---------------------------------------------------------------------------
@@ -588,6 +675,12 @@ def cmd_create(args: argparse.Namespace) -> dict:
         raise ToolError("clone_failed", "clone was not published", EXIT_POLICY)
     identity_file = identity_path(dest)
 
+    # E8: 子仓版本号未动但文件变了时 uv 不重装 (2026-08-15 实证),
+    # clone 后强制 reinstall 每个 path 依赖。失败不阻塞 create（打印 warning）。
+    reinstall_ok, reinstall_msg = reinstall_path_dependencies(dest)
+    if not reinstall_ok:
+        warnings.warn(f"uv sync --reinstall-package warning: {reinstall_msg}")
+
     return {
         "ok": True,
         "reason": "clone_created",
@@ -598,6 +691,8 @@ def cmd_create(args: argparse.Namespace) -> dict:
         "working_branch": working_branch,
         "submodules_initialized": submodules_initialized,
         "identity_file": identity_file,
+        "reinstall_status": "ok" if reinstall_ok else "warning",
+        "reinstall_message": reinstall_msg,
     }
 
 

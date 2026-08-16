@@ -180,6 +180,42 @@ uv run --with pyyaml python bin/agent-workflow.py claim <run-id> \
 
 改了 status / 台账 / 任何受治理字段后：**当场 `git add + git commit` 到当前 worktree 分支**，然后才允许开新 worktree。verify 的 `diff_baseline` 检查会拦「claim 基线之后冒出来且未被 claim 覆盖的变更」——被拦到就说明你要么漏 claim，要么在别的树改了东西。
 
+### 3.4 Agent 停工交接（E7 — 2026-08-15 补充）
+
+**Agent 停工前必须填写退役交接清单**（E7 根治，防止孤儿资源遗留）。
+
+#### 强制触发条件（任一满足即填写）
+
+- 任务被人类终止 / 预算耗尽暴毙
+- 工作流 verify 失败且决定放弃
+- Bet 完成，需要释放所有资源
+- 切换到另一个 Agent 身份（如 engineering-agent → governance-agent）
+
+#### 填写步骤
+
+1. **使用模板**：`docs/operations/agent-retirement-handoff-template.md`
+2. **填写内容**：
+   - 在途 worktree 清单（路径/分支/状态）
+   - 在途 Orca worker 清单（terminal handle/用途/是否可回收）
+   - 活跃 claim / workflow run 清单
+   - 未推送 commit 位置
+3. **提交方式**：
+   - 作为附件粘贴到 workflow closeout 的 `--evidence`
+   - 或在 PR body 中粘贴（若 workflow 未启用）
+
+#### 接手人协议
+
+- **第一步**：运行模板 §5 的五组命令，盘点遗留资源
+- **孤儿 worker 回收**：超 48h 未活动的 Orca worker 可直接回收
+- **活跃任务转交**：在途 claim / workflow run 必须显式转交或 close
+
+#### 豁免条件（仅以下情况可跳过）
+
+- 纯只读任务（无任何 worktree / worker / claim）
+- 人类明确书面豁免（在 workflow evidence 中标注）
+
+> **违例后果**：停工前未填写 → 后续审计追溯时记入「治理违约」，对应 bet 不予 done。
+
 ---
 
 ## 4. 收尾流程（照抄命令）
