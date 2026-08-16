@@ -62,6 +62,10 @@ def cmd_mesh(args: argparse.Namespace) -> int:
         tokens = str(getattr(args, "tokens", 32768))
         omlxc_root = _workspace_root() / "projects" / "omlxc"
         return subprocess.call(["uv", "run", "omlxc", "fabric", "vram", model, tokens], cwd=str(omlxc_root))
+    if subcmd == "warm":
+        model = getattr(args, "model", "coding")
+        omlxc_root = _workspace_root() / "projects" / "omlxc"
+        return subprocess.call(["uv", "run", "omlxc", "fabric", "warm", "--model", model], cwd=str(omlxc_root))
     if subcmd == "route":
         model = getattr(args, "model", None)
         if not model:

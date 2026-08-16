@@ -505,6 +505,8 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     mesh_vram_p = mesh_sub.add_parser("vram", help="计算模型动态 KV Cache 显存预算")
     mesh_vram_p.add_argument("model", help="模型 ID (如 coding / qwen-72b)")
     mesh_vram_p.add_argument("tokens", type=int, help="上下文 Token 数量")
+    mesh_warm_p = mesh_sub.add_parser("warm", help="预热系统 Prompt 前缀缓存以实现 0ms TTFT")
+    mesh_warm_p.add_argument("--model", "-m", default="coding", help="目标模型 ID (默认 coding)")
     mesh_route_p = mesh_sub.add_parser("route", help="为模型选择最优节点")
     mesh_route_p.add_argument("--model", required=True, help="模型名")
     mesh_sub.add_parser("serve", help="启动 mesh router HTTP server")

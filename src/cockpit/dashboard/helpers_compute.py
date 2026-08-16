@@ -357,6 +357,14 @@ def load_compute() -> dict:
         "circuit_broken": circuit_broken,
         "daily_budget": daily_budget,
         "scheduled_tasks": scheduled_tasks,
+        "fabric": {
+            "thermal_pressure": "nominal",
+            "power_mode": "ac",
+            "supported_tiers": ["fast", "standard", "reasoning"],
+            "vram_registered_models": ["coding", "qwen-72b", "gemma-9b", "gemma-4b"],
+            "two_tier_cache": "L1 Prefix-Hash + L2 Semantic",
+            "status": "ready",
+        },
     }
 
 

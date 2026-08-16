@@ -275,3 +275,104 @@ async def compute_model_action(req: ModelActionRequest):
         raise HTTPException(status_code=504, detail=f"{req.action} 超时(大模型加载较慢)")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"{req.action} 失败: {e}")
+
+
+class FabricTriageRequest(BaseModel):
+    prompt: str
+
+
+class FabricVRAMRequest(BaseModel):
+    model_id: str = "coding"
+    context_tokens: int = 32768
+
+
+class FabricWarmRequest(BaseModel):
+    model_id: str = "coding"
+
+
+@router.get("/api/governance/compute/fabric")
+async def get_compute_fabric():
+    """获取 omlxc 算力织网实时全景（温控、分诊分级、显存预算与两级缓存）。"""
+    root = get_workspace_root()
+    if not root:
+        raise HTTPException(status_code=500, detail="Cannot locate workspace root.")
+    omlxc_root = root / "projects" / "omlxc"
+    try:
+        r = subprocess.run(
+            ["uv", "run", "omlxc", "fabric", "inspect", "--json"],
+            cwd=str(omlxc_root),
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if r.returncode == 0:
+            return json.loads(r.stdout)
+        raise HTTPException(status_code=500, detail=f"Fabric inspect failed: {r.stderr}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fabric error: {e}")
+
+
+@router.post("/api/governance/compute/fabric/warm")
+async def compute_fabric_warm(req: FabricWarmRequest):
+    """预热系统 Prompt 前缀缓存以实现 0ms TTFT。"""
+    root = get_workspace_root()
+    if not root:
+        raise HTTPException(status_code=500, detail="Cannot locate workspace root.")
+    omlxc_root = root / "projects" / "omlxc"
+    try:
+        r = subprocess.run(
+            ["uv", "run", "omlxc", "fabric", "warm", "--model", req.model_id, "--json"],
+            cwd=str(omlxc_root),
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if r.returncode == 0:
+            return json.loads(r.stdout)
+        raise HTTPException(status_code=500, detail=f"Fabric warm failed: {r.stderr}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fabric warm error: {e}")
+
+
+@router.post("/api/governance/compute/fabric/triage")
+async def compute_fabric_triage(req: FabricTriageRequest):
+    """意图复杂度分诊分析。"""
+    root = get_workspace_root()
+    if not root:
+        raise HTTPException(status_code=500, detail="Cannot locate workspace root.")
+    omlxc_root = root / "projects" / "omlxc"
+    try:
+        r = subprocess.run(
+            ["uv", "run", "omlxc", "fabric", "triage", req.prompt, "--json"],
+            cwd=str(omlxc_root),
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if r.returncode == 0:
+            return json.loads(r.stdout)
+        raise HTTPException(status_code=500, detail=f"Fabric triage failed: {r.stderr}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fabric triage error: {e}")
+
+
+@router.post("/api/governance/compute/fabric/vram")
+async def compute_fabric_vram(req: FabricVRAMRequest):
+    """动态 KV Cache 显存预算评估与准入判定。"""
+    root = get_workspace_root()
+    if not root:
+        raise HTTPException(status_code=500, detail="Cannot locate workspace root.")
+    omlxc_root = root / "projects" / "omlxc"
+    try:
+        r = subprocess.run(
+            ["uv", "run", "omlxc", "fabric", "vram", req.model_id, str(req.context_tokens), "--json"],
+            cwd=str(omlxc_root),
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if r.returncode == 0:
+            return json.loads(r.stdout)
+        raise HTTPException(status_code=500, detail=f"Fabric vram failed: {r.stderr}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fabric vram error: {e}")
