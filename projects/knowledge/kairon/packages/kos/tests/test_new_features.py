@@ -95,8 +95,6 @@ class TestGraphRAG(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # CI 干净环境无 kos_relations 表 (本地运行态掩盖) — schema 自初始化
-        from kos._default_workspace_config import get_artifact_path
-        from kos.db import get_connection
         from kos.ontology.schema import init_schema
 
         try:
