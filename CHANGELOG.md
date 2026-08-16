@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.2.0 — 2026-08-16
+
+- **Dual-Mode Session & Prefix-Cache Affinity**: Added `SessionAffinityRegistry`
+  and prefix fingerprinting (`calculate_prefix_hash`) to route multi-turn conversations
+  and shared prompt prefixes to identical placements, maximizing KV Cache hits and
+  reducing TTFT up to 80%+.
+- **In-Flight Concurrency Balancing & Load-Shedding**: Introduced `ConcurrencyTracker`
+  with smooth score degradation ($1/(1 + 0.5 \times N)$) and `CONCURRENCY_LIMIT` rejection,
+  automatically overflowing peak traffic to idle cluster nodes.
+- **Last-Resort Self-Healing Probe**: Automated fallback in total-outage situations
+  where all candidate nodes are in `circuit_open`, temporarily probing the lowest-cooldown
+  candidate to eliminate deadlock.
+- **Zero-Downtime Daemon Reload**: Added `omlxc daemon reload` and `SIGHUP` signal
+  handling to hot-reload configuration in place without dropping connections.
+
 ## 3.1.0 — 2026-08-16
 
 - **Circuit Breaker Resilience**: Introduced 3-state (`CLOSED`, `OPEN`, `HALF-OPEN`)

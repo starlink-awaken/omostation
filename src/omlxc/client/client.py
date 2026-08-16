@@ -142,6 +142,9 @@ class DaemonClient:
             params["model_id"] = model_id
         return await self._request("GET", "/api/v1/benchmarks", params=params)
 
+    async def reload_daemon(self) -> DaemonEnvelope:
+        return await self._request("POST", "/api/v1/daemon/reload")
+
     async def openai_models(self) -> tuple[str, ...]:
         """Run the read-only OpenAI compatibility smoke endpoint."""
         request_id = self._new_request_id()

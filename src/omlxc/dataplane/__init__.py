@@ -1,8 +1,8 @@
-"""Unified local inference data plane."""
-
+from .affinity import AffinityConfig, SessionAffinityRegistry, calculate_prefix_hash
 from .benchmark import BenchmarkRunner
 from .capacity import CapacityCoordinator
 from .circuit_breaker import CircuitBreaker, CircuitBreakerRegistry
+from .concurrency import ConcurrencyTracker
 from .models import (
     AdapterBinding,
     ChatExecution,
@@ -22,12 +22,14 @@ from .telemetry import BoundRouteTelemetry, RouteTelemetryRecorder, TelemetrySin
 __all__ = [
     "AdapterBinding",
     "AdapterRegistry",
+    "AffinityConfig",
     "BenchmarkRunner",
     "BoundRouteTelemetry",
     "CapacityCoordinator",
     "ChatExecution",
     "CircuitBreaker",
     "CircuitBreakerRegistry",
+    "ConcurrencyTracker",
     "DataPlaneOrchestrator",
     "EmbeddingExecution",
     "ExecutionError",
@@ -38,5 +40,7 @@ __all__ = [
     "RerankRequest",
     "RerankResult",
     "RouteTelemetryRecorder",
+    "SessionAffinityRegistry",
     "TelemetrySink",
+    "calculate_prefix_hash",
 ]

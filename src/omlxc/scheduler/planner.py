@@ -45,6 +45,46 @@ class RoutePlanner:
                 rejected[placement.placement_id] = rejection.value
 
         if not accepted:
+            # Check if eligible placements were rejected due to circuit_open (Last-Resort Probe)
+            circuit_open_candidates = [
+                p
+                for p in placements
+                if p.model_id == request.model_id
+                and p.authorized
+                and p.fresh
+                and p.available
+                and p.local
+                and p.security_allowed
+                and p.memory_admitted is True
+                and p.circuit_open
+            ]
+            if circuit_open_candidates:
+                defaults_used: set[str] = set()
+                scored_emergency = [
+                    (p, self._score(p, policy, defaults_used)) for p in circuit_open_candidates
+                ]
+                scored_emergency.sort(key=lambda item: (-item[1], item[0].placement_id))
+                selected_emergency = scored_emergency[0][0].placement_id
+                candidate_ids = (selected_emergency,)
+                scores = {selected_emergency: round(scored_emergency[0][1], 12)}
+                explanation = (
+                    f"profile={request.profile.value}; selected={selected_emergency}; "
+                    f"last_resort_probing=true; fallbacks=0; "
+                    f"defaults={','.join(sorted(defaults_used)) or 'none'}"
+                )
+                return RouteDecision(
+                    request_id=request.request_id,
+                    selected_placement_id=selected_emergency,
+                    candidates=candidate_ids,
+                    candidate_scores=scores,
+                    rejected=rejected,
+                    fallback_chain=candidate_ids,
+                    config_version=policy.config_version,
+                    explanation=explanation,
+                    thinking_authorized=request.profile is RouteProfile.QUALITY
+                    and request.thinking_requested,
+                )
+
             code = (
                 RouteFailureCode.NO_CAPACITY
                 if rejected
@@ -89,6 +129,8 @@ class RoutePlanner:
     def evaluate(request: RouteRequest, placement: PlacementSnapshot) -> RejectionCode | None:
         if placement.circuit_open:
             return RejectionCode.CIRCUIT_OPEN
+        if placement.in_flight >= placement.max_concurrency:
+            return RejectionCode.CONCURRENCY_LIMIT
         if placement.model_id != request.model_id:
             return RejectionCode.MODEL
         if not placement.authorized:
@@ -137,7 +179,7 @@ class RoutePlanner:
             "affinity": affinity,
         }
         weights = policy.weights
-        return sum(
+        base_score = sum(
             (
                 weights.loaded * desirability["loaded"],
                 weights.ttft * desirability["ttft"],
@@ -148,3 +190,6 @@ class RoutePlanner:
                 weights.affinity * desirability["affinity"],
             )
         )
+        affinity_multiplier = max(placement.affinity_bonus, 1.0)
+        concurrency_penalty = 1.0 / (1.0 + 0.5 * max(placement.in_flight, 0))
+        return base_score * affinity_multiplier * concurrency_penalty

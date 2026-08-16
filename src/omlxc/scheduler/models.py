@@ -22,6 +22,7 @@ class RejectionCode(StrEnum):
     NO_CAPACITY = "no_capacity"
     LOCAL_SECURITY = "local_security_denied"
     CIRCUIT_OPEN = "circuit_open"
+    CONCURRENCY_LIMIT = "concurrency_limit"
 
 
 class RouteFailureCode(StrEnum):
@@ -75,6 +76,9 @@ class PlacementSnapshot:
     local: bool
     security_allowed: bool
     circuit_open: bool = False
+    in_flight: int = 0
+    affinity_bonus: float = 1.0
+    max_concurrency: int = 4
 
     def __post_init__(self) -> None:
         if any(

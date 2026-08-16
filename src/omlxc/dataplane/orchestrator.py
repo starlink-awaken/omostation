@@ -38,8 +38,10 @@ from omlxc.scheduler import (
     RoutePlanner,
 )
 
+from .affinity import SessionAffinityRegistry, calculate_prefix_hash
 from .capacity import CapacityCoordinator
 from .circuit_breaker import CircuitBreakerRegistry
+from .concurrency import ConcurrencyTracker
 from .models import (
     ChatExecution,
     EmbeddingExecution,
@@ -75,6 +77,8 @@ class DataPlaneOrchestrator:
         telemetry: TelemetrySink | None = None,
         telemetry_error_sink: Callable[[str], None] | None = None,
         circuit_breakers: CircuitBreakerRegistry | None = None,
+        concurrency: ConcurrencyTracker | None = None,
+        affinity: SessionAffinityRegistry | None = None,
     ) -> None:
         self._planner = planner
         self._snapshot_provider = snapshot_provider
@@ -87,6 +91,8 @@ class DataPlaneOrchestrator:
         self._telemetry_error_sink = telemetry_error_sink
         self._telemetry_failure_count = 0
         self._circuit_breakers = circuit_breakers
+        self._concurrency = concurrency
+        self._affinity = affinity
 
     @property
     def telemetry_failure_count(self) -> int:
@@ -112,17 +118,42 @@ class DataPlaneOrchestrator:
         self, route_request: RouteRequest, request: ChatRequest, *, deadline: float
     ) -> ChatExecution:
         raw_snapshots = self._snapshot_provider()
-        if self._circuit_breakers is not None:
-            now = self._monotonic()
-            snapshots = tuple(
+        now = self._monotonic()
+        prefix_hash = calculate_prefix_hash(request.messages)
+        preferred_session = (
+            self._affinity.get_session_placement(request.request_id, now=now)
+            if self._affinity
+            else None
+        )
+        preferred_prefix = (
+            self._affinity.get_prefix_placement(prefix_hash, now=now)
+            if (self._affinity and prefix_hash)
+            else None
+        )
+
+        snapshots_list: list[PlacementSnapshot] = []
+        for s in raw_snapshots:
+            circuit_open = (
+                not self._circuit_breakers.is_available(s.placement_id, now=now)
+                if self._circuit_breakers
+                else False
+            )
+            in_flight = self._concurrency.get_in_flight(s.placement_id) if self._concurrency else 0
+            affinity_bonus = 1.0
+            if preferred_session == s.placement_id:
+                affinity_bonus = 1.35
+            elif preferred_prefix == s.placement_id:
+                affinity_bonus = 1.15
+
+            snapshots_list.append(
                 dataclasses.replace(
                     s,
-                    circuit_open=not self._circuit_breakers.is_available(s.placement_id, now=now),
+                    circuit_open=circuit_open,
+                    in_flight=in_flight,
+                    affinity_bonus=affinity_bonus,
                 )
-                for s in raw_snapshots
             )
-        else:
-            snapshots = raw_snapshots
+        snapshots = tuple(snapshots_list)
 
         plan = self._planner.plan(route_request, snapshots)
         await self._record_plan(plan)
@@ -154,6 +185,8 @@ class DataPlaneOrchestrator:
                 if rejection is not None:
                     preparation_rejections.append((placement_id, rejection))
                 continue
+            if self._concurrency:
+                self._concurrency.acquire(placement_id)
             try:
                 result = await self._chat_once(placement, request, end)
             except TimeoutError:
@@ -184,9 +217,21 @@ class DataPlaneOrchestrator:
                         reason="backend_call_failed",
                     ),
                 )
+            finally:
+                if self._concurrency:
+                    self._concurrency.release(placement_id)
+
             if result.success:
                 if self._circuit_breakers is not None:
                     self._circuit_breakers.record_success(placement_id, now=self._monotonic())
+                if self._affinity is not None:
+                    self._affinity.record_session_placement(
+                        request.request_id, placement_id, now=self._monotonic()
+                    )
+                    if prefix_hash:
+                        self._affinity.record_prefix_placement(
+                            prefix_hash, placement_id, now=self._monotonic()
+                        )
                 return ChatExecution(
                     request.request_id,
                     request.model,

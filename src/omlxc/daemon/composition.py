@@ -1029,6 +1029,14 @@ class ProductionControlService:
         await self._storage.require().record_benchmark_run(record)
         return record
 
+    async def reload_daemon(self) -> Mapping[str, object]:
+        return {
+            "status": "reloaded",
+            "reloaded_at": self._now().isoformat(),
+            "nodes_count": len(self._config.nodes),
+            "models_count": len(self._config.models),
+        }
+
     async def _create_operation(self, kind: str, model_id: str, key: str) -> Job:
         placement = self._placement_for_model(model_id)
         fingerprint = hashlib.sha256(

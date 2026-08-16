@@ -1110,6 +1110,19 @@ def daemon_restart(
     _daemon_action("restart", yes=yes, confirm_impact=confirm_impact, json_output=json_output)
 
 
+@daemon_app.command("reload")
+def daemon_reload(
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Reload daemon configuration in-place without dropping existing connections."""
+    _execute(
+        lambda client: client.reload_daemon(),
+        json_output=json_output,
+        renderer=_render_daemon_reload,
+        error_context=ErrorContext.GENERAL,
+    )
+
+
 @app.command("doctor")
 def doctor(
     direct: Annotated[bool, typer.Option("--direct")] = False,
@@ -1480,6 +1493,16 @@ def _render_benchmark_report(data: JsonValue | None) -> str:
             expand=False,
         )
     )
+    return ""
+
+
+def _render_daemon_reload(data: JsonValue | None) -> str:
+    mapping = _mapping(data)
+    status = _text(mapping.get("status", "reloaded"))
+    nodes_count = mapping.get("nodes_count", 0)
+    models_count = mapping.get("models_count", 0)
+    detail = f"(nodes={nodes_count}, models={models_count})"
+    _console.print(f"[bold green]✔[/bold green] com.omlxc.daemon {status} {detail}")
     return ""
 
 

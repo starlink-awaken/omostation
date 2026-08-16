@@ -434,6 +434,12 @@ def create_app(
         record = await service.benchmark_model(model_id)
         return _success(request, record)
 
+    @app.post("/api/v1/daemon/reload")
+    async def reload_daemon(request: Request) -> JSONResponse:
+        service = _require_control(control)
+        result = await service.reload_daemon()
+        return _success(request, result)
+
     @app.get("/api/v1/events")
     async def event_stream(
         request: Request,
