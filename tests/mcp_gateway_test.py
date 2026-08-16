@@ -48,7 +48,9 @@ class TestGatewayLifecycle:
         """start_all should create a ProxyManager and return a dict."""
         results = await mcp_gateway.start_all()
         assert isinstance(results, dict)
-        assert len(results) == len(mcp_gateway.KNOWN_BACKENDS)
+        # enabled=False 的 backend 被 start_all 跳过 (本地缺命令等), 不计入
+        expected = [b for b in mcp_gateway.KNOWN_BACKENDS if b.get("enabled", True)]
+        assert len(results) == len(expected)
         assert mcp_gateway._gateway_manager is not None
         await mcp_gateway.stop_all()
 
@@ -68,6 +70,8 @@ class TestGatewayLifecycle:
         """Every KNOWN_BACKENDS entry should have a result entry."""
         results = await mcp_gateway.start_all()
         for backend in mcp_gateway.KNOWN_BACKENDS:
+            if backend.get("enabled", True) is False:
+                continue  # 跳过项无 result 是预期
             name = backend["name"]
             assert name in results, f"Missing result for {name}"
         await mcp_gateway.stop_all()
