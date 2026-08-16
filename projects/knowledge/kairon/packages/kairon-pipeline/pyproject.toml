@@ -32,7 +32,7 @@ dev = [
 packages = ["src/kairon_pipeline"]
 
 [tool.uv.sources]
-bus-foundation = { path = "../../../bus-foundation" }
+bus-foundation = { path = "../../../../bus-foundation" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
