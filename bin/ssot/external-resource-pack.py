@@ -96,7 +96,9 @@ def _load_resource_kinds(root: Path) -> dict[str, set[str]]:
     try:
         import yaml
     except ImportError as exc:
-        raise ExternalResourcePackError("PyYAML is required to read the fabric registry") from exc
+        raise ExternalResourcePackError(
+            "PyYAML is required to read the fabric registry"
+        ) from exc
     try:
         documents = list(yaml.safe_load_all(registry_path.read_text(encoding="utf-8")))
     except (OSError, yaml.YAMLError) as exc:
@@ -260,7 +262,11 @@ def check_external_resource_pack(root: Path, pack: Mapping[str, Any]) -> dict[st
     status = "blocked"
     catalog_preview = None
     if not reasons and parsed is not None:
-        status = "proposal_only" if parsed.mode == "proposal_only" else "ready_for_catalog_preview"
+        status = (
+            "proposal_only"
+            if parsed.mode == "proposal_only"
+            else "ready_for_catalog_preview"
+        )
         catalog_preview = _catalog_preview(pack, parsed, status)
     return {
         "schema": "external-resource-pack-check/v1",
@@ -280,9 +286,15 @@ def check_external_resource_pack(root: Path, pack: Mapping[str, Any]) -> dict[st
             "entry_point": str(extension.get("entry_point") or "").strip() or None,
             "provider_method": extension.get("provider_method"),
             "health_probe": {
-                "method": health_probe.get("method") if isinstance(health_probe, Mapping) else None,
-                "side_effect": health_probe.get("side_effect") if isinstance(health_probe, Mapping) else None,
-                "required": health_probe.get("required") if isinstance(health_probe, Mapping) else None,
+                "method": health_probe.get("method")
+                if isinstance(health_probe, Mapping)
+                else None,
+                "side_effect": health_probe.get("side_effect")
+                if isinstance(health_probe, Mapping)
+                else None,
+                "required": health_probe.get("required")
+                if isinstance(health_probe, Mapping)
+                else None,
             },
         },
         "execution_policy": {
@@ -315,11 +327,17 @@ def _read_pack(path: Path | None) -> Mapping[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
-    parser.add_argument("--input", type=Path, help="JSON/YAML pack manifest; stdin when omitted")
+    parser.add_argument(
+        "--root", type=Path, default=Path(__file__).resolve().parents[2]
+    )
+    parser.add_argument(
+        "--input", type=Path, help="JSON/YAML pack manifest; stdin when omitted"
+    )
     args = parser.parse_args(argv)
     try:
-        payload = check_external_resource_pack(args.root.resolve(), _read_pack(args.input))
+        payload = check_external_resource_pack(
+            args.root.resolve(), _read_pack(args.input)
+        )
     except (ExternalResourcePackError, OSError, ValueError) as exc:
         print(f"external-resource-pack: {exc}", file=sys.stderr)
         return 2

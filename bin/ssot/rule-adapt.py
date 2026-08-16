@@ -33,7 +33,9 @@ def _load_required_rules() -> list[dict[str, Any]]:
     checks = gac.get("rules", [])
     if not isinstance(checks, list):
         return []
-    return [c for c in checks if isinstance(c, dict) and c.get("enforcement") == "required"]
+    return [
+        c for c in checks if isinstance(c, dict) and c.get("enforcement") == "required"
+    ]
 
 
 def _count_violations(rule_id: str) -> int:
@@ -58,28 +60,34 @@ def audit_rules(root: Path | None = None) -> dict[str, Any]:
         rid = str(r.get("id", r.get("check", "?")))
         violations = _count_violations(rid)
         if violations == 0:
-            suggestions.append({
-                "rule_id": rid,
-                "enforcement": "required",
-                "violations": 0,
-                "suggestion": "downgrade_to_warn",
-                "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
-                "summary": str(r.get("summary", r.get("description", "")))[:100],
-            })
+            suggestions.append(
+                {
+                    "rule_id": rid,
+                    "enforcement": "required",
+                    "violations": 0,
+                    "suggestion": "downgrade_to_warn",
+                    "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+                    "summary": str(r.get("summary", r.get("description", "")))[:100],
+                }
+            )
         elif violations < 0:
-            suggestions.append({
-                "rule_id": rid,
-                "enforcement": "required",
-                "violations": -1,
-                "suggestion": "needs_history",
-                "reason": "无违规历史数据, 需先建立审计日志",
-            })
+            suggestions.append(
+                {
+                    "rule_id": rid,
+                    "enforcement": "required",
+                    "violations": -1,
+                    "suggestion": "needs_history",
+                    "reason": "无违规历史数据, 需先建立审计日志",
+                }
+            )
 
     result = {
         "schema": "rule-adapt/v1",
         "generated_at": utc_now(),
         "required_rules": len(rules),
-        "downgrade_suggestions": len([s for s in suggestions if s["suggestion"] == "downgrade_to_warn"]),
+        "downgrade_suggestions": len(
+            [s for s in suggestions if s["suggestion"] == "downgrade_to_warn"]
+        ),
         "suggestions": suggestions,
     }
 
@@ -103,7 +111,9 @@ def _apply_suggestions(suggestions: list[dict], root: Path, *, dry_run: bool) ->
     if not checks_path.exists():
         return {"status": "error", "reason": "governance-checks.yaml not found"}
 
-    downgrade_ids = {s["rule_id"] for s in suggestions if s["suggestion"] == "downgrade_to_warn"}
+    downgrade_ids = {
+        s["rule_id"] for s in suggestions if s["suggestion"] == "downgrade_to_warn"
+    }
     if not downgrade_ids:
         return {"status": "noop", "reason": "no downgrade suggestions to apply"}
 
@@ -117,11 +127,13 @@ def _apply_suggestions(suggestions: list[dict], root: Path, *, dry_run: bool) ->
         # Simple approach: find id line, then find nearest enforcement: required after it
         lines = modified.split("\n")
         for i, line in enumerate(lines):
-            if f'id: {rid}' in line or f'id: "{rid}"' in line:
+            if f"id: {rid}" in line or f'id: "{rid}"' in line:
                 # Search forward for enforcement: required within next 10 lines
                 for j in range(i + 1, min(i + 15, len(lines))):
                     if "enforcement: required" in lines[j]:
-                        lines[j] = lines[j].replace("enforcement: required", "enforcement: advisory")
+                        lines[j] = lines[j].replace(
+                            "enforcement: required", "enforcement: advisory"
+                        )
                         applied.append(rid)
                         break
                 break
@@ -153,18 +165,28 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--root", type=Path, default=ROOT)
-    parser.add_argument("--apply", action="store_true", help="apply downgrade suggestions (T4)")
-    parser.add_argument("--confirm", action="store_true", help="confirm apply (required with --apply for write)")
+    parser.add_argument(
+        "--apply", action="store_true", help="apply downgrade suggestions (T4)"
+    )
+    parser.add_argument(
+        "--confirm",
+        action="store_true",
+        help="confirm apply (required with --apply for write)",
+    )
     args = parser.parse_args(argv)
 
     result = audit_rules(args.root)
 
     if args.apply:
         apply_result = _apply_suggestions(
-            result["suggestions"], args.root, dry_run=not args.confirm,
+            result["suggestions"],
+            args.root,
+            dry_run=not args.confirm,
         )
         if args.json:
-            print(json.dumps(apply_result, ensure_ascii=False, indent=2, sort_keys=True))
+            print(
+                json.dumps(apply_result, ensure_ascii=False, indent=2, sort_keys=True)
+            )
         else:
             print(f"Rule Apply ({'CONFIRM' if args.confirm else 'DRY-RUN'}):")
             print(f"  status: {apply_result['status']}")
@@ -179,8 +201,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     else:
-        print(f"Rule Adapt: {result['required_rules']} required rules, "
-              f"{result['downgrade_suggestions']} downgrade suggestions")
+        print(
+            f"Rule Adapt: {result['required_rules']} required rules, "
+            f"{result['downgrade_suggestions']} downgrade suggestions"
+        )
         for s in result["suggestions"]:
             marker = "🔻" if s["suggestion"] == "downgrade_to_warn" else "❔"
             print(f"  {marker} {s['rule_id']}: {s['suggestion']} ({s['reason'][:50]})")

@@ -182,8 +182,10 @@ def run_loop(*, dry_run: bool = False) -> dict[str, Any]:
         if level == "S3":
             s3_count += 1
             results[idx] = {
-                "item": item_id, "source": item.get("source"),
-                "level": "S3", "action": "report_only",
+                "item": item_id,
+                "source": item.get("source"),
+                "level": "S3",
+                "action": "report_only",
                 "note": f"high-risk action '{action}' requires human decision",
             }
         else:
@@ -209,9 +211,12 @@ def run_loop(*, dry_run: bool = False) -> dict[str, Any]:
                     s2_count += 1
 
                 entry = {
-                    "item": item_id, "source": item.get("source"),
-                    "level": level, "action": action,
-                    "dry_run": dry_run, "verification": result,
+                    "item": item_id,
+                    "source": item.get("source"),
+                    "level": level,
+                    "action": action,
+                    "dry_run": dry_run,
+                    "verification": result,
                 }
                 if level == "S1" and result.get("status") == "passed":
                     entry["disposition"] = "auto_closed"
@@ -229,10 +234,18 @@ def run_loop(*, dry_run: bool = False) -> dict[str, Any]:
         "processed": len(candidates),
         "by_level": {"S1": s1_count, "S2": s2_count, "S3": s3_count},
         "dispositions": {
-            "auto_closed": sum(1 for r in results if r and r.get("disposition") == "auto_closed"),
-            "review_pending": sum(1 for r in results if r and r.get("disposition") == "review_pending"),
-            "kept_open": sum(1 for r in results if r and r.get("disposition") == "kept_open"),
-            "report_only": sum(1 for r in results if r and r.get("action") == "report_only"),
+            "auto_closed": sum(
+                1 for r in results if r and r.get("disposition") == "auto_closed"
+            ),
+            "review_pending": sum(
+                1 for r in results if r and r.get("disposition") == "review_pending"
+            ),
+            "kept_open": sum(
+                1 for r in results if r and r.get("disposition") == "kept_open"
+            ),
+            "report_only": sum(
+                1 for r in results if r and r.get("action") == "report_only"
+            ),
         },
         "results": [r for r in results if r],
     }
@@ -240,7 +253,9 @@ def run_loop(*, dry_run: bool = False) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dry-run", action="store_true", help="preview without executing")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="preview without executing"
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
@@ -250,15 +265,22 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
 
-    print(f"Autoloop: processed {result.get('processed', 0)} items "
-          f"({'DRY-RUN' if result.get('dry_run') else 'LIVE'})")
+    print(
+        f"Autoloop: processed {result.get('processed', 0)} items "
+        f"({'DRY-RUN' if result.get('dry_run') else 'LIVE'})"
+    )
     if result.get("status") == "noop":
         print(f"  {result.get('reason')}")
         return 0
     print(f"  by_level: {result.get('by_level')}")
     print(f"  dispositions: {result.get('dispositions')}")
     for r in result.get("results", []):
-        marker = {"auto_closed": "✅", "review_pending": "👀", "kept_open": "⬜", "report_only": "🚫"}.get(r.get("disposition"), "?")
+        marker = {
+            "auto_closed": "✅",
+            "review_pending": "👀",
+            "kept_open": "⬜",
+            "report_only": "🚫",
+        }.get(r.get("disposition"), "?")
         print(f"  {marker} [{r.get('level')}] {r.get('item')}: {r.get('disposition')}")
 
     return 0

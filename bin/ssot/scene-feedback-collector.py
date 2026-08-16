@@ -69,10 +69,17 @@ def record_feedback(
         finally:
             fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
-    return {"status": "recorded", "scene_id": scene_id, "metric": metric, "value": metric_value}
+    return {
+        "status": "recorded",
+        "scene_id": scene_id,
+        "metric": metric,
+        "value": metric_value,
+    }
 
 
-def list_feedback(root: Path, scene_id: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
+def list_feedback(
+    root: Path, scene_id: str | None = None, limit: int = 20
+) -> list[dict[str, Any]]:
     """List recent feedback entries, optionally filtered by scene_id."""
     log_path = _feedback_log(root)
     if not log_path.exists():
@@ -94,7 +101,9 @@ def list_feedback(root: Path, scene_id: str | None = None, limit: int = 20) -> l
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument(
+        "--root", type=Path, default=Path(__file__).resolve().parents[2]
+    )
 
     sub = parser.add_subparsers(dest="command")
 
@@ -113,8 +122,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if command == "record":
         result = record_feedback(
-            args.root, args.scene_card, args.metric_value,
-            actor=args.actor, notes=args.notes,
+            args.root,
+            args.scene_card,
+            args.metric_value,
+            actor=args.actor,
+            notes=args.notes,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
@@ -126,7 +138,9 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         print(f"Recent feedback ({len(entries)} entries):")
         for e in entries:
-            print(f"  {e['ts'][:19]}  {e['scene_id']:30s}  {e['metric']:40s}  value={e['value']}  by={e['actor']}")
+            print(
+                f"  {e['ts'][:19]}  {e['scene_id']:30s}  {e['metric']:40s}  value={e['value']}  by={e['actor']}"
+            )
         return 0
 
     return 1

@@ -83,7 +83,10 @@ def seed_workflow_run(
                 "WorkflowRequested",
                 run_id,
                 producer="mesh-iris-executor",
-                payload={"capability_refs": [capability], "scene_id": "document-review"},
+                payload={
+                    "capability_refs": [capability],
+                    "scene_id": "document-review",
+                },
             )
         )
         admission = {

@@ -16,6 +16,7 @@
 用法:
   uv run --with pyyaml python bin/ssot/gen-scene-card-lineage.py
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -52,15 +53,17 @@ def scan_scene_cards() -> list[dict]:
             continue
         caps = body.get("capability_refs") or []
         caps = [str(c).strip() for c in caps if c]
-        scenes.append({
-            "scene_id": body["scene_id"],
-            "journey_id": body.get("journey_id", ""),
-            "lifecycle": body.get("lifecycle", "unknown"),
-            "approval_state": body.get("approval_state", "unknown"),
-            "outcome_metric": body.get("outcome_metric", ""),
-            "capability_refs": caps,
-            "source": str(p.relative_to(WORKSPACE)),
-        })
+        scenes.append(
+            {
+                "scene_id": body["scene_id"],
+                "journey_id": body.get("journey_id", ""),
+                "lifecycle": body.get("lifecycle", "unknown"),
+                "approval_state": body.get("approval_state", "unknown"),
+                "outcome_metric": body.get("outcome_metric", ""),
+                "capability_refs": caps,
+                "source": str(p.relative_to(WORKSPACE)),
+            }
+        )
     return scenes
 
 
@@ -73,11 +76,16 @@ def scan_candidates() -> list[dict]:
         body = _load_scene_card_body(p)
         if not body:
             continue
-        candidates.append({
-            "candidate_id": body.get("candidate_id") or body.get("scene_id", p.stem),
-            "proposed_scene_id": body.get("scene_id", body.get("proposed_scene_id", "")),
-            "source": str(p.relative_to(WORKSPACE)),
-        })
+        candidates.append(
+            {
+                "candidate_id": body.get("candidate_id")
+                or body.get("scene_id", p.stem),
+                "proposed_scene_id": body.get(
+                    "scene_id", body.get("proposed_scene_id", "")
+                ),
+                "source": str(p.relative_to(WORKSPACE)),
+            }
+        )
     return candidates
 
 
@@ -157,7 +165,9 @@ def main() -> int:
         f"   funnel: candidates={len(candidates)} scene_cards={len(scenes)} "
         f"pending={pending} active={active}"
     )
-    print(f"   connector_relations: {len(relations)} capabilities, {binding_count} 绑定")
+    print(
+        f"   connector_relations: {len(relations)} capabilities, {binding_count} 绑定"
+    )
     return 0
 
 

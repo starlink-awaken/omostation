@@ -12,6 +12,7 @@
 用法:
   python3 bin/ssot/gen-external-channels-inventory.py
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -21,7 +22,9 @@ from pathlib import Path
 WORKSPACE = Path(__file__).resolve().parents[2]
 KAIRON = WORKSPACE / "projects/kairon"
 RUNTIME_SCRIPTS = WORKSPACE / "projects/runtime/scripts"
-MESH_PROPOSALS = WORKSPACE / ".omo/_knowledge/workflow-mesh/external-resource-pack-proposals"
+MESH_PROPOSALS = (
+    WORKSPACE / ".omo/_knowledge/workflow-mesh/external-resource-pack-proposals"
+)
 OUTPUT = WORKSPACE / ".omo/_truth/registry/external-channels.yaml"
 
 
@@ -41,7 +44,11 @@ def scan_iris_resources() -> list[dict]:
     )
     r = subprocess.run(
         ["uv", "run", "--with", "pyyaml", "python", "-c", code],
-        cwd=KAIRON, capture_output=True, text=True, timeout=180, check=False,
+        cwd=KAIRON,
+        capture_output=True,
+        text=True,
+        timeout=180,
+        check=False,
     )
     channels: list[dict] = []
     for line in r.stdout.splitlines():
@@ -59,15 +66,17 @@ def scan_iris_resources() -> list[dict]:
             health = "unavailable"
         else:
             health = "unknown"
-        channels.append({
-            "id": f"iris:{name}",
-            "kind": "knowledge_source",
-            "provider": "kairon.iris",
-            "connector": target,
-            "entry_point": "external.resources",
-            "health": health,
-            "status": "exposed",
-        })
+        channels.append(
+            {
+                "id": f"iris:{name}",
+                "kind": "knowledge_source",
+                "provider": "kairon.iris",
+                "connector": target,
+                "entry_point": "external.resources",
+                "health": health,
+                "status": "exposed",
+            }
+        )
     return channels
 
 
@@ -83,15 +92,17 @@ def scan_runtime_ingest() -> list[dict]:
         kind = "knowledge_source"
         if "oa" in name:
             kind = "knowledge_source"
-        channels.append({
-            "id": f"ingest:{name}",
-            "kind": kind,
-            "provider": "runtime.scripts",
-            "connector": f"runtime/scripts/{p.name}",
-            "entry_point": None,
-            "health": "pending",
-            "status": "orphan",
-        })
+        channels.append(
+            {
+                "id": f"ingest:{name}",
+                "kind": kind,
+                "provider": "runtime.scripts",
+                "connector": f"runtime/scripts/{p.name}",
+                "entry_point": None,
+                "health": "pending",
+                "status": "orphan",
+            }
+        )
     return channels
 
 
@@ -101,15 +112,17 @@ def scan_mesh_proposals() -> list[dict]:
     if not MESH_PROPOSALS.is_dir():
         return channels
     for p in sorted(MESH_PROPOSALS.glob("*.yaml")):
-        channels.append({
-            "id": f"mesh-proposal:{p.stem}",
-            "kind": "tool_pack",
-            "provider": "mesh.proposal",
-            "connector": str(p.relative_to(WORKSPACE)),
-            "entry_point": "external-resource-pack-proposals",
-            "health": "pending",
-            "status": "proposal",
-        })
+        channels.append(
+            {
+                "id": f"mesh-proposal:{p.stem}",
+                "kind": "tool_pack",
+                "provider": "mesh.proposal",
+                "connector": str(p.relative_to(WORKSPACE)),
+                "entry_point": "external-resource-pack-proposals",
+                "health": "pending",
+                "status": "proposal",
+            }
+        )
     return channels
 
 
@@ -125,12 +138,14 @@ def emit_yaml(channels: list[dict]) -> str:
         "available": sum(1 for c in channels if c.get("health") == "available"),
         "unavailable": sum(1 for c in channels if c.get("health") == "unavailable"),
         "error": sum(1 for c in channels if c.get("health") == "error"),
-        "pending": sum(1 for c in channels if c.get("health") in ("pending", "unknown")),
+        "pending": sum(
+            1 for c in channels if c.get("health") in ("pending", "unknown")
+        ),
         "available_rate": 0.0,
     }
-    health_summary["available_rate"] = round(
-        health_summary["available"] / len(channels) * 100, 1
-    ) if channels else 0.0
+    health_summary["available_rate"] = (
+        round(health_summary["available"] / len(channels) * 100, 1) if channels else 0.0
+    )
     lines = [
         "# External Channels Inventory SSOT (ECCP P0)",
         "# 自动生成, 请勿手动编辑",
@@ -183,9 +198,13 @@ def main() -> int:
     orphan = sum(1 for c in channels if c["status"] == "orphan")
     proposal = sum(1 for c in channels if c["status"] == "proposal")
     print(f"✅ inventory 生成: {OUTPUT.relative_to(WORKSPACE)}")
-    print(f"   channels: {len(channels)} (exposed={exposed}, orphan={orphan}, proposal={proposal})")
+    print(
+        f"   channels: {len(channels)} (exposed={exposed}, orphan={orphan}, proposal={proposal})"
+    )
     if orphan:
-        print(f"   ⚠️ orphan (待 P3 收编): {[c['id'] for c in channels if c['status'] == 'orphan']}")
+        print(
+            f"   ⚠️ orphan (待 P3 收编): {[c['id'] for c in channels if c['status'] == 'orphan']}"
+        )
     return 0
 
 

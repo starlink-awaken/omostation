@@ -49,7 +49,12 @@ TASKS_DIR = OMO_DIR / "tasks"
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def _run(cmd: list[str], *, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -102,7 +107,9 @@ def _count_tasks() -> dict[str, int]:
         counts[sub] = len(list(d.glob("*.yaml"))) if d.exists() else 0
     # Include archived/done as completed tasks
     archived_done = TASKS_DIR / "archived" / "done"
-    archived_count = len(list(archived_done.glob("*.yaml"))) if archived_done.exists() else 0
+    archived_count = (
+        len(list(archived_done.glob("*.yaml"))) if archived_done.exists() else 0
+    )
     counts["done"] += archived_count
     counts["total"] = counts["active"] + counts["planned"] + counts["done"]
     return counts
@@ -301,11 +308,13 @@ def _check_bos_unimplemented() -> dict:
         if not package:
             continue
 
-        # 1. 检查 package 物理目录
+            # 1. 检查 package 物理目录
             pkg_dir = None
             if package:
                 # 优先在 projects/kairon/packages/ 寻找
-                kairon_pkg = WORKSPACE_ROOT / "projects" / "kairon" / "packages" / package
+                kairon_pkg = (
+                    WORKSPACE_ROOT / "projects" / "kairon" / "packages" / package
+                )
                 generic_pkg = WORKSPACE_ROOT / "projects" / package
                 if kairon_pkg.exists():
                     pkg_dir = kairon_pkg
@@ -313,14 +322,18 @@ def _check_bos_unimplemented() -> dict:
                     pkg_dir = generic_pkg
 
             if not pkg_dir:
-                broken.append({
-                    "uri": uri,
-                    "reason": f"Package '{package}' directory not found in workspace",
-                })
+                broken.append(
+                    {
+                        "uri": uri,
+                        "reason": f"Package '{package}' directory not found in workspace",
+                    }
+                )
                 continue
 
             # 2. 检查 action 是否有代码分支支持 (针对 kairon 包的 do_default.py)
-            do_default_py = pkg_dir / "src" / package.replace("-", "_") / "do_default.py"
+            do_default_py = (
+                pkg_dir / "src" / package.replace("-", "_") / "do_default.py"
+            )
             main_py = pkg_dir / "src" / package.replace("-", "_") / "__main__.py"
 
             if do_default_py.exists():
@@ -330,40 +343,46 @@ def _check_bos_unimplemented() -> dict:
                     has_handler = False
                     if main_py.exists():
                         main_code = main_py.read_text(encoding="utf-8")
-                        func_pattern = rf'def\s+do_{action.replace("-", "_")}\s*\('
+                        func_pattern = rf"def\s+do_{action.replace('-', '_')}\s*\("
                         if re.search(func_pattern, main_code):
                             has_handler = True
                     if not has_handler:
-                        broken.append({
-                            "uri": uri,
-                            "reason": f"No code branch found for action '{action}' in do_default.py or __main__.py",
-                        })
+                        broken.append(
+                            {
+                                "uri": uri,
+                                "reason": f"No code branch found for action '{action}' in do_default.py or __main__.py",
+                            }
+                        )
             elif main_py.exists():
                 main_code = main_py.read_text(encoding="utf-8")
-                func_pattern = rf'def\s+do_{action.replace("-", "_")}\s*\('
+                func_pattern = rf"def\s+do_{action.replace('-', '_')}\s*\("
                 if not re.search(func_pattern, main_code):
-                    broken.append({
-                        "uri": uri,
-                        "reason": f"No handler function 'do_{action}' found in __main__.py",
-                    })
+                    broken.append(
+                        {
+                            "uri": uri,
+                            "reason": f"No handler function 'do_{action}' found in __main__.py",
+                        }
+                    )
             else:
                 if s.get("transport") in ("stdio", "mcp_stdio"):
-                    broken.append({
-                        "uri": uri,
-                        "reason": "Entry file do_default.py or __main__.py not found for stdio transport",
-                    })
+                    broken.append(
+                        {
+                            "uri": uri,
+                            "reason": "Entry file do_default.py or __main__.py not found for stdio transport",
+                        }
+                    )
 
-    return {
-        "passed": len(broken) == 0,
-        "broken": broken,
-        "count": len(broken)
-    }
+    return {"passed": len(broken) == 0, "broken": broken, "count": len(broken)}
 
 
 def _check_hygiene() -> dict:
     """CR-HYG-01/02: 工作区卫生 (0字节文件 + 大小写 inode). 复用 gac-hygiene-check (DRY)."""
     result = _run(
-        ["python3", str(WORKSPACE_ROOT / "bin" / "gac" / "gac-hygiene-check.py"), "--json"],
+        [
+            "python3",
+            str(WORKSPACE_ROOT / "bin" / "gac" / "gac-hygiene-check.py"),
+            "--json",
+        ],
         check=False,
     )
     try:

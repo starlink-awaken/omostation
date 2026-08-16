@@ -56,9 +56,7 @@ def validate_scene_card_v2(card: dict[str, Any]) -> dict[str, Any]:
             f"lifecycle '{lifecycle}' is legacy; map to '{LEGACY_LIFECYCLE_MAP[lifecycle]}'"
         )
     elif lifecycle and lifecycle not in VALID_LIFECYCLE_TIERS:
-        errors.append(
-            f"lifecycle '{lifecycle}' not in {VALID_LIFECYCLE_TIERS}"
-        )
+        errors.append(f"lifecycle '{lifecycle}' not in {VALID_LIFECYCLE_TIERS}")
 
     if not card.get("bet"):
         errors.append("required field 'bet' is missing")
@@ -70,7 +68,9 @@ def validate_scene_card_v2(card: dict[str, Any]) -> dict[str, Any]:
         "errors": errors,
         "warnings": warnings,
         "lifecycle": lifecycle,
-        "tier": lifecycle if lifecycle in VALID_LIFECYCLE_TIERS else LEGACY_LIFECYCLE_MAP.get(lifecycle, "unknown"),
+        "tier": lifecycle
+        if lifecycle in VALID_LIFECYCLE_TIERS
+        else LEGACY_LIFECYCLE_MAP.get(lifecycle, "unknown"),
     }
 
 
@@ -128,7 +128,9 @@ def transition_scene_card(
         return {
             "ok": False,
             "error": f"transition {current_tier}→{target_tier} not allowed",
-            "valid_transitions": [f"{a}→{b}" for a, b in VALID_TRANSITIONS if a == current_tier],
+            "valid_transitions": [
+                f"{a}→{b}" for a, b in VALID_TRANSITIONS if a == current_tier
+            ],
         }
 
     if target_tier in ("assisted", "supervised", "routine"):
@@ -156,9 +158,16 @@ def transition_scene_card(
 
     docs[body_idx] = body
     with open(scene_card_path, "w", encoding="utf-8") as f:
-        yaml.dump_all(docs, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        yaml.dump_all(
+            docs, f, default_flow_style=False, allow_unicode=True, sort_keys=False
+        )
 
-    return {"ok": True, "scene_id": body.get("scene_id"), "from": current_tier, "to": target_tier}
+    return {
+        "ok": True,
+        "scene_id": body.get("scene_id"),
+        "from": current_tier,
+        "to": target_tier,
+    }
 
 
 def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
@@ -181,28 +190,47 @@ def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
     checks["preconditions"]["blockers_empty"] = len(blockers) == 0
 
     # Check 2: approval_state must be confirmed
-    checks["preconditions"]["approval_confirmed"] = card.get("approval_state") == "confirmed"
+    checks["preconditions"]["approval_confirmed"] = (
+        card.get("approval_state") == "confirmed"
+    )
 
     # Check 3: run track-specific preflight
     if scene_type == "internal_pipeline":
         preflight_mod = _load_module(
-            root / "bin/ssot/internal-scene-preflight.py", "internal_preflight_for_lifecycle"
+            root / "bin/ssot/internal-scene-preflight.py",
+            "internal_preflight_for_lifecycle",
         )
         preflight = preflight_mod.build_preflight(card, root=root)
-        checks["preconditions"]["preflight_pass"] = preflight["status"] == "ready_for_admission_preview"
+        checks["preconditions"]["preflight_pass"] = (
+            preflight["status"] == "ready_for_admission_preview"
+        )
         checks["preflight_detail"] = {
             "status": preflight["status"],
             "missing_fields": preflight["missing_fields"],
         }
     else:
         # External track: delegate to external-scene-trial for preflight
-        checks["preconditions"]["preflight_pass"] = True  # external track has its own tools
+        checks["preconditions"]["preflight_pass"] = (
+            True  # external track has its own tools
+        )
 
     # Check 4: trial evidence must exist
     if scene_type == "internal_pipeline":
-        trial_log = root / ".omo" / "_knowledge" / "workflow-mesh" / "internal-scene-trials.jsonl"
+        trial_log = (
+            root
+            / ".omo"
+            / "_knowledge"
+            / "workflow-mesh"
+            / "internal-scene-trials.jsonl"
+        )
     else:
-        trial_log = root / ".omo" / "_knowledge" / "workflow-mesh" / "external-scene-trials.jsonl"
+        trial_log = (
+            root
+            / ".omo"
+            / "_knowledge"
+            / "workflow-mesh"
+            / "external-scene-trials.jsonl"
+        )
     checks["preconditions"]["trial_recorded"] = trial_log.exists()
 
     # Aggregate
@@ -213,19 +241,33 @@ def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument(
+        "--root", type=Path, default=Path(__file__).resolve().parents[2]
+    )
     sub = parser.add_subparsers(dest="command")
     check_parser = sub.add_parser("check", help="check readiness (read-only)")
     check_parser.add_argument("--scene-card", type=Path, required=True)
-    validate_parser = sub.add_parser("validate", help="validate v2 schema (5-tier lifecycle + bet/falsifier)")
+    validate_parser = sub.add_parser(
+        "validate", help="validate v2 schema (5-tier lifecycle + bet/falsifier)"
+    )
     validate_parser.add_argument("--scene-card", type=Path)
-    validate_parser.add_argument("--all", action="store_true", help="validate all scene cards in docs/scene-cards/")
-    activate_parser = sub.add_parser("activate", help="activate scene card (requires explicit command)")
+    validate_parser.add_argument(
+        "--all",
+        action="store_true",
+        help="validate all scene cards in docs/scene-cards/",
+    )
+    activate_parser = sub.add_parser(
+        "activate", help="activate scene card (requires explicit command)"
+    )
     activate_parser.add_argument("--scene-card", type=Path, required=True)
     activate_parser.add_argument("--actor", required=True, help="operator name")
-    transition_parser = sub.add_parser("transition", help="transition scene card to a new lifecycle tier")
+    transition_parser = sub.add_parser(
+        "transition", help="transition scene card to a new lifecycle tier"
+    )
     transition_parser.add_argument("--scene-card", type=Path, required=True)
-    transition_parser.add_argument("--tier", required=True, choices=VALID_LIFECYCLE_TIERS, help="target tier")
+    transition_parser.add_argument(
+        "--tier", required=True, choices=VALID_LIFECYCLE_TIERS, help="target tier"
+    )
     transition_parser.add_argument("--actor", required=True, help="operator name")
     args = parser.parse_args(argv)
 
@@ -291,13 +333,17 @@ def main(argv: list[str] | None = None) -> int:
 
         docs[body_idx] = body
         with open(args.scene_card, "w", encoding="utf-8") as f:
-            yaml.dump_all(docs, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+            yaml.dump_all(
+                docs, f, default_flow_style=False, allow_unicode=True, sort_keys=False
+            )
 
         print(f"Activated: {body['scene_id']} by {args.actor}")
         return 0
 
     if command == "transition":
-        result = transition_scene_card(args.scene_card, args.tier, args.actor, root=args.root)
+        result = transition_scene_card(
+            args.scene_card, args.tier, args.actor, root=args.root
+        )
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result["ok"] else 1
 

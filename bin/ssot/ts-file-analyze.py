@@ -31,7 +31,9 @@ from pathlib import Path
 TS_AST_TOOL = Path(__file__).parent / "ts-analyze.mjs"
 
 # P109-C fallback: regex-based estimation
-RE_FUNCTION = re.compile(r"^(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(", re.MULTILINE)
+RE_FUNCTION = re.compile(
+    r"^(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(", re.MULTILINE
+)
 RE_CLASS = re.compile(r"^(?:export\s+)?(?:abstract\s+)?class\s+(\w+)", re.MULTILINE)
 RE_INTERFACE = re.compile(r"^(?:export\s+)?interface\s+(\w+)", re.MULTILINE)
 
@@ -50,7 +52,7 @@ def find_block_end(lines: list[str], start_idx: int) -> int:
             if in_line_comment:
                 break
             if in_block_comment:
-                if ch == "*" and j + 1 < len(line) and line[j+1] == "/":
+                if ch == "*" and j + 1 < len(line) and line[j + 1] == "/":
                     in_block_comment = False
                     j += 2
                     continue
@@ -65,10 +67,10 @@ def find_block_end(lines: list[str], start_idx: int) -> int:
                 j += 1
                 continue
             if ch == "/" and j + 1 < len(line):
-                if line[j+1] == "/":
+                if line[j + 1] == "/":
                     in_line_comment = True
                     break
-                elif line[j+1] == "*":
+                elif line[j + 1] == "*":
                     in_block_comment = True
                     j += 2
                     continue
@@ -97,32 +99,38 @@ def analyze_ts_p109_fallback(path: Path) -> dict:
     interfaces = []
     for m in RE_FUNCTION.finditer(text):
         name = m.group(1)
-        line_no = text[:m.start()].count("\n") + 1
+        line_no = text[: m.start()].count("\n") + 1
         brace_pos = text.find("{", m.end())
         if brace_pos < 0:
             continue
         brace_line = text[:brace_pos].count("\n") + 1
         block_end_line = find_block_end(lines, brace_line - 1) + 1
-        functions.append({"name": name, "lines": block_end_line - line_no + 1, "lineno": line_no})
+        functions.append(
+            {"name": name, "lines": block_end_line - line_no + 1, "lineno": line_no}
+        )
     for m in RE_CLASS.finditer(text):
         name = m.group(1)
-        line_no = text[:m.start()].count("\n") + 1
+        line_no = text[: m.start()].count("\n") + 1
         brace_pos = text.find("{", m.end())
         if brace_pos < 0:
             continue
         brace_line = text[:brace_pos].count("\n") + 1
         block_end_line = find_block_end(lines, brace_line - 1) + 1
-        classes.append({"name": name, "lines": block_end_line - line_no + 1, "lineno": line_no})
+        classes.append(
+            {"name": name, "lines": block_end_line - line_no + 1, "lineno": line_no}
+        )
     for m in RE_INTERFACE.finditer(text):
         name = m.group(1)
-        line_no = text[:m.start()].count("\n") + 1
+        line_no = text[: m.start()].count("\n") + 1
         brace_pos = text.find("{", m.end())
         if brace_pos < 0:
             interfaces.append({"name": name, "lines": 1, "note": "no body"})
             continue
         brace_line = text[:brace_pos].count("\n") + 1
         block_end_line = find_block_end(lines, brace_line - 1) + 1
-        interfaces.append({"name": name, "lines": block_end_line - line_no + 1, "lineno": line_no})
+        interfaces.append(
+            {"name": name, "lines": block_end_line - line_no + 1, "lineno": line_no}
+        )
     functions.sort(key=lambda x: -x["lines"])
     classes.sort(key=lambda x: -x["lines"])
     interfaces.sort(key=lambda x: -x["lines"])
@@ -145,7 +153,9 @@ def analyze_ts_real_ast(path: Path) -> dict | None:
     try:
         result = subprocess.run(
             ["node", str(TS_AST_TOOL), str(path)],
-            capture_output=True, text=True, timeout=30,
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         if result.returncode != 0:
             return None
@@ -164,9 +174,18 @@ def analyze_ts(path: Path) -> dict:
         return {
             "path": real["path"],
             "total_lines": real["total_lines"],
-            "top_functions": [{"name": f["name"], "lines": f["lines"], "lineno": f.get("lineno", 0)} for f in real.get("top_functions", [])],
-            "top_classes": [{"name": c["name"], "lines": c["lines"], "lineno": c.get("lineno", 0)} for c in real.get("top_classes", [])],
-            "top_interfaces": [{"name": i["name"], "lines": i["lines"], "lineno": i.get("lineno", 0)} for i in real.get("top_interfaces", [])],
+            "top_functions": [
+                {"name": f["name"], "lines": f["lines"], "lineno": f.get("lineno", 0)}
+                for f in real.get("top_functions", [])
+            ],
+            "top_classes": [
+                {"name": c["name"], "lines": c["lines"], "lineno": c.get("lineno", 0)}
+                for c in real.get("top_classes", [])
+            ],
+            "top_interfaces": [
+                {"name": i["name"], "lines": i["lines"], "lineno": i.get("lineno", 0)}
+                for i in real.get("top_interfaces", [])
+            ],
             "ast_source": "typescript_compiler_api",
         }
     result = analyze_ts_p109_fallback(path)
@@ -199,8 +218,12 @@ def main() -> int:
             if "error" in r:
                 continue
             top_func = r["top_functions"][0] if r["top_functions"] else None
-            hint = f"top fn: {top_func['name']}({top_func['lines']}L)" if top_func else ""
-            print(f"  {r['total_lines']}L {r['path']}  {hint}  [{r.get('ast_source', '?')}]")
+            hint = (
+                f"top fn: {top_func['name']}({top_func['lines']}L)" if top_func else ""
+            )
+            print(
+                f"  {r['total_lines']}L {r['path']}  {hint}  [{r.get('ast_source', '?')}]"
+            )
         return 0
 
     result = analyze_ts(path)
@@ -211,18 +234,20 @@ def main() -> int:
         print(json.dumps(result, indent=2))
         return 0
 
-    print(f"FILE: {result['path']} ({result['total_lines']}L, ast={result.get('ast_source', '?')})")
+    print(
+        f"FILE: {result['path']} ({result['total_lines']}L, ast={result.get('ast_source', '?')})"
+    )
     if result.get("top_functions"):
         print(f"\nTop {args.top} Functions:")
-        for f in result["top_functions"][:args.top]:
+        for f in result["top_functions"][: args.top]:
             print(f"  {f['name']:40s} L{f['lineno']:4d} ({f['lines']}L)")
     if result.get("top_classes"):
         print(f"\nTop {args.top} Classes:")
-        for c in result["top_classes"][:args.top]:
+        for c in result["top_classes"][: args.top]:
             print(f"  {c['name']:40s} L{c['lineno']:4d} ({c['lines']}L)")
     if result.get("top_interfaces"):
         print(f"\nTop {args.top} Interfaces:")
-        for i in result["top_interfaces"][:args.top]:
+        for i in result["top_interfaces"][: args.top]:
             print(f"  {i['name']:40s} L{i['lineno']:4d} ({i['lines']}L)")
     return 0
 

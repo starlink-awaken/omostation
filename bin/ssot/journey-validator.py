@@ -94,7 +94,9 @@ def validate_journey(spec: dict[str, Any], known_scenes: set[str]) -> dict[str, 
     all_targets = {t for _, t in transition_pairs}
     entry_points = state_names - all_targets
     if not entry_points and state_names:
-        errors.append("no entry point found (all states are transition targets — possible cycle)")
+        errors.append(
+            "no entry point found (all states are transition targets — possible cycle)"
+        )
 
     reachable: set[str] = set()
     queue = list(entry_points) if entry_points else list(state_names)[:1]
@@ -129,7 +131,9 @@ def validate_journey(spec: dict[str, Any], known_scenes: set[str]) -> dict[str, 
         "states": len(state_names),
         "transitions": len(transition_pairs),
         "entry_points": sorted(entry_points),
-        "terminal_states": sorted(name for name in state_names if not state_next.get(name)),
+        "terminal_states": sorted(
+            name for name in state_names if not state_next.get(name)
+        ),
         "errors": errors,
         "warnings": warnings,
     }
@@ -137,8 +141,12 @@ def validate_journey(spec: dict[str, Any], known_scenes: set[str]) -> dict[str, 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
-    parser.add_argument("spec_path", type=Path, nargs="?", help="single spec file (omit for all)")
+    parser.add_argument(
+        "--root", type=Path, default=Path(__file__).resolve().parents[2]
+    )
+    parser.add_argument(
+        "spec_path", type=Path, nargs="?", help="single spec file (omit for all)"
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
@@ -163,7 +171,9 @@ def main(argv: list[str] | None = None) -> int:
             results.append(result)
             if not args.json:
                 status = "✅" if result["valid"] else "❌"
-                print(f"{status} {path.name}: {result['states']} states, {result['transitions']} transitions")
+                print(
+                    f"{status} {path.name}: {result['states']} states, {result['transitions']} transitions"
+                )
                 for e in result["errors"]:
                     print(f"    ERROR: {e}")
                 for w in result["warnings"]:

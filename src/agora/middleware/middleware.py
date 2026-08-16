@@ -219,7 +219,9 @@ try:
                 )
 
                 # Set permit for downstream adapters
-                _permit_hash = _decision.request_hash if _decision else "read_only_exempt"
+                _permit_hash = (
+                    _decision.request_hash if _decision else "read_only_exempt"
+                )
                 _permit_token = set_current_permit(_permit_hash)
 
                 result = await call_next(context)

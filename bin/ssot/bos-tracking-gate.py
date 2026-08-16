@@ -7,6 +7,7 @@
 
 违反任一条件 → exit 1（阻止 commit）
 """
+
 from __future__ import annotations
 
 import sys

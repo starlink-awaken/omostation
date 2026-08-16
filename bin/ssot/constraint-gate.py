@@ -44,19 +44,23 @@ def list_constraints() -> list[dict[str, Any]]:
     """List all constraints from SSOT files."""
     out: list[dict[str, Any]] = []
     for c in _load_checks():
-        out.append({
-            "source": "governance-checks",
-            "id": c.get("id", c.get("name", "?")),
-            "enforcement": c.get("severity", "?") or "?",
-            "summary": (c.get("description", c.get("summary", "")) or "")[:120],
-        })
+        out.append(
+            {
+                "source": "governance-checks",
+                "id": c.get("id", c.get("name", "?")),
+                "enforcement": c.get("severity", "?") or "?",
+                "summary": (c.get("description", c.get("summary", "")) or "")[:120],
+            }
+        )
     for p in _load_policies():
-        out.append({
-            "source": "task-policies",
-            "id": p.get("name", "?"),
-            "enforcement": "required",
-            "summary": (p.get("summary", "") or "")[:120],
-        })
+        out.append(
+            {
+                "source": "task-policies",
+                "id": p.get("name", "?"),
+                "enforcement": "required",
+                "summary": (p.get("summary", "") or "")[:120],
+            }
+        )
     return out
 
 
@@ -133,17 +137,29 @@ def main(argv: list[str] | None = None) -> int:
     if command == "list":
         items = list_constraints()
         if args.json:
-            print(json.dumps({"total": len(items), "constraints": items}, ensure_ascii=False, indent=2))
+            print(
+                json.dumps(
+                    {"total": len(items), "constraints": items},
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
         else:
             print(f"Constraints ({len(items)}):")
             for it in items:
-                print(f"  [{it['enforcement']:8s}] {it['source']:20s} {it['id']}: {it['summary'][:70]}")
+                print(
+                    f"  [{it['enforcement']:8s}] {it['source']:20s} {it['id']}: {it['summary'][:70]}"
+                )
         return 0
 
     if command == "check":
         found = check_by_id(args.check_id)
         if not found:
-            print(json.dumps({"error": f"check {args.check_id} not found"}, ensure_ascii=False))
+            print(
+                json.dumps(
+                    {"error": f"check {args.check_id} not found"}, ensure_ascii=False
+                )
+            )
             return 1
         print(json.dumps(found, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
@@ -153,7 +169,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.json:
             print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         else:
-            print(f"Gate: {result['decision'].upper()} — {result['action_type']}/{result['action_level']}")
+            print(
+                f"Gate: {result['decision'].upper()} — {result['action_type']}/{result['action_level']}"
+            )
             for r in result["red_rules"]:
                 print(f"  🔴 {r}")
             for g_ in result["gray_rules"]:

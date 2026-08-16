@@ -44,6 +44,7 @@ def gather_status() -> dict[str, Any]:
     agents_dir = ROOT / ".omo" / "_truth" / "registry" / "agents"
     if agents_dir.is_dir():
         import yaml
+
         for p in sorted(agents_dir.glob("*.yaml")):
             try:
                 d = yaml.safe_load(p.read_text(encoding="utf-8"))
@@ -57,15 +58,26 @@ def gather_status() -> dict[str, Any]:
     journeys = _count_yaml(ROOT / "docs" / "journey-specs")
 
     # Recent events
-    mesh_events = _load_jsonl(ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "mesh-events.jsonl")
-    outcomes = _load_jsonl(ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "scene-outcomes.jsonl")
-    reflections = _load_jsonl(ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "scene-reflections.jsonl")
+    mesh_events = _load_jsonl(
+        ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "mesh-events.jsonl"
+    )
+    outcomes = _load_jsonl(
+        ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "scene-outcomes.jsonl"
+    )
+    reflections = _load_jsonl(
+        ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "scene-reflections.jsonl"
+    )
 
     # Problems (inline)
     problems = []
     try:
-        r = subprocess.run(["python3", str(ROOT / "bin/ssot/problem-detector.py"), "--json"],
-                           capture_output=True, text=True, timeout=10, check=False)
+        r = subprocess.run(
+            ["python3", str(ROOT / "bin/ssot/problem-detector.py"), "--json"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
         if r.stdout:
             problems = json.loads(r.stdout).get("problems", [])
     except Exception:
@@ -74,8 +86,13 @@ def gather_status() -> dict[str, Any]:
     # Evolution proposals (inline)
     proposals = []
     try:
-        r = subprocess.run(["python3", str(ROOT / "bin/ssot/evolution-agent.py"), "--json"],
-                           capture_output=True, text=True, timeout=10, check=False)
+        r = subprocess.run(
+            ["python3", str(ROOT / "bin/ssot/evolution-agent.py"), "--json"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
         if r.stdout:
             proposals = json.loads(r.stdout).get("proposals", [])
     except Exception:
@@ -83,12 +100,17 @@ def gather_status() -> dict[str, Any]:
 
     return {
         "generated_at": datetime.now(UTC).isoformat(),
-        "agents": agents, "agent_count": len(agents),
-        "scene_cards": cards, "journey_specs": journeys,
-        "mesh_events": len(mesh_events), "outcomes": len(outcomes),
+        "agents": agents,
+        "agent_count": len(agents),
+        "scene_cards": cards,
+        "journey_specs": journeys,
+        "mesh_events": len(mesh_events),
+        "outcomes": len(outcomes),
         "reflections": len(reflections),
-        "problems": problems, "problem_count": len(problems),
-        "proposals": proposals, "proposal_count": len(proposals),
+        "problems": problems,
+        "problem_count": len(problems),
+        "proposals": proposals,
+        "proposal_count": len(proposals),
         "recent_outcomes": outcomes[-5:],
         "recent_mesh_events": mesh_events[-5:],
     }
@@ -97,24 +119,33 @@ def gather_status() -> dict[str, Any]:
 def generate_html(status: dict[str, Any]) -> str:
     """Generate standalone HTML dashboard."""
     agents_html = "".join(
-        f"<tr><td>{a.get('agent_id','?')}</td><td>{a.get('tier','?')}</td>"
-        f"<td>{a.get('status','?')}</td><td>{a.get('version','?')}</td>"
-        f"<td>{a.get('performance',{}).get('trust_score',0.5)}</td>"
-        f"<td>{a.get('identity',{}).get('role','?')}</td></tr>"
+        f"<tr><td>{a.get('agent_id', '?')}</td><td>{a.get('tier', '?')}</td>"
+        f"<td>{a.get('status', '?')}</td><td>{a.get('version', '?')}</td>"
+        f"<td>{a.get('performance', {}).get('trust_score', 0.5)}</td>"
+        f"<td>{a.get('identity', {}).get('role', '?')}</td></tr>"
         for a in status["agents"]
     )
-    problems_html = "".join(
-        f"<li><b>[{p.get('severity','?').upper()}]</b> {p.get('type','?')}: {p.get('detail','')}</li>"
-        for p in status["problems"]
-    ) or "<li>✅ No problems detected</li>"
-    proposals_html = "".join(
-        f"<li><b>[{p.get('level','?')}]</b> {p.get('proposal','')}</li>"
-        for p in status["proposals"]
-    ) or "<li>✅ No proposals</li>"
-    outcomes_html = "".join(
-        f"<li>{o.get('ts','?')[:19]} {o.get('scene_id','?')} → <b>{o.get('adjudication','?')}</b></li>"
-        for o in status["recent_outcomes"]
-    ) or "<li>No outcomes recorded</li>"
+    problems_html = (
+        "".join(
+            f"<li><b>[{p.get('severity', '?').upper()}]</b> {p.get('type', '?')}: {p.get('detail', '')}</li>"
+            for p in status["problems"]
+        )
+        or "<li>✅ No problems detected</li>"
+    )
+    proposals_html = (
+        "".join(
+            f"<li><b>[{p.get('level', '?')}]</b> {p.get('proposal', '')}</li>"
+            for p in status["proposals"]
+        )
+        or "<li>✅ No proposals</li>"
+    )
+    outcomes_html = (
+        "".join(
+            f"<li>{o.get('ts', '?')[:19]} {o.get('scene_id', '?')} → <b>{o.get('adjudication', '?')}</b></li>"
+            for o in status["recent_outcomes"]
+        )
+        or "<li>No outcomes recorded</li>"
+    )
 
     return f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>数字生命体 Dashboard</title>
@@ -153,9 +184,15 @@ li {{ padding: 4px 0; }}
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", default="digital-organism-dashboard.html")
-    parser.add_argument("--watch", action="store_true", help="regenerate periodically (T-C7 实时)")
-    parser.add_argument("--interval", type=int, default=30, help="refresh interval (watch mode)")
-    parser.add_argument("--auto-reload", action="store_true", help="add HTML meta refresh")
+    parser.add_argument(
+        "--watch", action="store_true", help="regenerate periodically (T-C7 实时)"
+    )
+    parser.add_argument(
+        "--interval", type=int, default=30, help="refresh interval (watch mode)"
+    )
+    parser.add_argument(
+        "--auto-reload", action="store_true", help="add HTML meta refresh"
+    )
     args = parser.parse_args(argv)
 
     output_path = ROOT / args.output
@@ -163,7 +200,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.watch:
         import time
 
-        print(f"Dashboard watch mode (interval={args.interval}s). Ctrl+C to stop.", flush=True)
+        print(
+            f"Dashboard watch mode (interval={args.interval}s). Ctrl+C to stop.",
+            flush=True,
+        )
         try:
             while True:
                 _render_dashboard(args, output_path)

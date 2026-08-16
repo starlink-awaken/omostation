@@ -69,12 +69,14 @@ def audit_tools(root: Path) -> dict[str, Any]:
         else:
             dormant_count += 1
 
-        tools.append({
-            "name": name,
-            "lines": line_count,
-            "status": status,
-            "refs": refs,
-        })
+        tools.append(
+            {
+                "name": name,
+                "lines": line_count,
+                "status": status,
+                "refs": refs,
+            }
+        )
 
     return {
         "schema": "tool-usage-audit/v1",
@@ -97,7 +99,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     else:
-        print(f"Tool Usage Audit: {result['total_tools']} tools ({result['active']} active, {result['dormant']} dormant)")
+        print(
+            f"Tool Usage Audit: {result['total_tools']} tools ({result['active']} active, {result['dormant']} dormant)"
+        )
         print()
         print("Dormant tools (no Makefile/CI/script references):")
         for name in result.get("dormant_tools", []):

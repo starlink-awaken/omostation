@@ -23,6 +23,7 @@ enforcement (P0-A 已落地, 2026-07-28 核实):
   定位: BLOCKING (对新违规). 存量 11 条进 baseline grace, 逐条 triage 清零 —
         红线: 严禁往 baseline 塞新违规 (= 重建假绿, 最高级违规).
 """
+
 from __future__ import annotations
 
 import re
@@ -89,12 +90,14 @@ def detect_project(file_path: Path) -> str | None:
     if not parts:
         return None
     first = parts[0]
-    return PROJECT_LAYER.get(first, "X" if first.startswith(("aetherforge", "bus-foundation")) else None)
+    return PROJECT_LAYER.get(
+        first, "X" if first.startswith(("aetherforge", "bus-foundation")) else None
+    )
 
 
 def detect_project_name(file_path: Path) -> str | None:
     """返回所在项目的 dir name (caller 项目名).
-    
+
     Handles nested project dirs: projects/runtime/projects/aetherforge/foo.py → aetherforge
     """
     try:
@@ -165,7 +168,9 @@ def scan_file(file_path: Path) -> list[dict]:
                 if pkg == caller_project:
                     continue
                 target_layer = PROJECT_LAYER.get(pkg)
-                if target_layer and target_layer not in ALLOWED_DIRECTION.get(layer, set()):
+                if target_layer and target_layer not in ALLOWED_DIRECTION.get(
+                    layer, set()
+                ):
                     findings.append(
                         {
                             "file": str(file_path.relative_to(WORKSPACE)),
@@ -183,14 +188,31 @@ def scan_file(file_path: Path) -> list[dict]:
 def scan_workspace(paths: list[Path] | None = None, *, strict: bool = False) -> dict:
     """扫 workspace 全部 .py/.ts 文件."""
     if paths is None:
-        paths = [WORKSPACE / "projects" / p for p in PROJECT_LAYER if (WORKSPACE / "projects" / p).exists()]
+        paths = [
+            WORKSPACE / "projects" / p
+            for p in PROJECT_LAYER
+            if (WORKSPACE / "projects" / p).exists()
+        ]
     all_findings: list[dict] = []
     files_scanned = 0
     for project_dir in paths:
         for ext in ("*.py", "*.ts", "*.tsx"):
             for f in project_dir.rglob(ext):
                 # 跳过测试目录, venv, node_modules, dist
-                if any(part in f.parts for part in ("tests", "scripts", "bin", ".scratch-archive", ".venv", "node_modules", "dist", "build", "__pycache__")):
+                if any(
+                    part in f.parts
+                    for part in (
+                        "tests",
+                        "scripts",
+                        "bin",
+                        ".scratch-archive",
+                        ".venv",
+                        "node_modules",
+                        "dist",
+                        "build",
+                        "__pycache__",
+                    )
+                ):
                     continue
                 # Skip nested project directories (they're scanned with their own project)
                 rel = f.relative_to(project_dir)
@@ -198,7 +220,9 @@ def scan_workspace(paths: list[Path] | None = None, *, strict: bool = False) -> 
                     continue
                 files_scanned += 1
                 all_findings.extend(scan_file(f))
-    by_pair: dict[str, int] = {}  # str key ("L1->L2") — tuple key 不能 JSON 序列化 (P0-A 修)
+    by_pair: dict[
+        str, int
+    ] = {}  # str key ("L1->L2") — tuple key 不能 JSON 序列化 (P0-A 修)
     for f in all_findings:
         key = f"{f['caller_layer']}->{f['callee_layer']}"
         by_pair[key] = by_pair.get(key, 0) + 1
@@ -244,12 +268,23 @@ def main() -> int:
     import argparse
 
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--strict", action="store_true", help="Show all findings (default first 50)")
+    p.add_argument(
+        "--strict", action="store_true", help="Show all findings (default first 50)"
+    )
     p.add_argument("--json", action="store_true", help="JSON output")
-    p.add_argument("--by-layer", action="store_true", help="Summarize by call pair only")
+    p.add_argument(
+        "--by-layer", action="store_true", help="Summarize by call pair only"
+    )
     p.add_argument("--project", help="Scan specific project (e.g. agora)")
-    p.add_argument("--baseline", help="P0-A new-violation blocking: baseline file (file:line signatures, 存量 grace). 新违规 (不在 baseline) 才 fail.")
-    p.add_argument("--files", nargs="*", help="只扫指定文件 (增量, pre-commit 快路径, G1 治 CI >25s 超时). 与 --baseline 配合: changed file 新违规不在 baseline 则 fail.")
+    p.add_argument(
+        "--baseline",
+        help="P0-A new-violation blocking: baseline file (file:line signatures, 存量 grace). 新违规 (不在 baseline) 才 fail.",
+    )
+    p.add_argument(
+        "--files",
+        nargs="*",
+        help="只扫指定文件 (增量, pre-commit 快路径, G1 治 CI >25s 超时). 与 --baseline 配合: changed file 新违规不在 baseline 则 fail.",
+    )
     args = p.parse_args()
 
     if args.files:
@@ -286,6 +321,7 @@ def main() -> int:
 
     if args.json:
         import json
+
         print(json.dumps(result, indent=2, ensure_ascii=False))
     elif args.by_layer:
         print("=== layer-call-direction summary ===")

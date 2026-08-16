@@ -23,6 +23,7 @@
 
 豁免 (LEGACY_OK_URIS): 测试夹具 / docstring 例子 (regex 自识别)。
 """
+
 from __future__ import annotations
 
 import argparse
@@ -44,6 +45,7 @@ LEGACY_OK_URI_FRAGMENTS = {
 
 def load_yaml(p: Path) -> dict | list | None:
     import yaml
+
     if not p.exists():
         return None
     try:
@@ -56,7 +58,7 @@ def load_yaml(p: Path) -> dict | list | None:
 # BOS URI regex — 严格 form: bos://domain/action[/action...] 后面不能跟 [a-z0-9_/-]
 # 防止 bos://memory/kos 匹配 bos://memory/kos/search 的子串
 # 允许可选 trailing / 表示 prefix pattern (e.g. "bos://memory/kos/" = "all under memory/kos")
-BOS_URI_RE = re.compile(r'bos://[a-z][a-z0-9_-]+(?:/[a-z0-9_-]+){1,3}/?(?![a-z0-9_/-])')
+BOS_URI_RE = re.compile(r"bos://[a-z][a-z0-9_-]+(?:/[a-z0-9_-]+){1,3}/?(?![a-z0-9_/-])")
 
 
 def load_agora_registered_uris() -> dict[str, dict]:
@@ -101,7 +103,11 @@ def load_ecos_ports() -> dict[int, str]:
     f = WORKSPACE / "projects" / "ecos" / "port-registry.yaml"
     data = load_yaml(f) or {}
     ports = data.get("ports", {}) if isinstance(data, dict) else {}
-    return {int(k): _strip_yaml_comment(str(v)) for k, v in ports.items() if str(k).isdigit()}
+    return {
+        int(k): _strip_yaml_comment(str(v))
+        for k, v in ports.items()
+        if str(k).isdigit()
+    }
 
 
 def load_protocols_ports() -> dict[int, str]:
@@ -109,7 +115,11 @@ def load_protocols_ports() -> dict[int, str]:
     f = WORKSPACE / "protocols" / "port-registry.yaml"
     data = load_yaml(f) or {}
     ports = data.get("ports", {}) if isinstance(data, dict) else {}
-    return {int(k): _strip_yaml_comment(str(v)) for k, v in ports.items() if str(k).isdigit()}
+    return {
+        int(k): _strip_yaml_comment(str(v))
+        for k, v in ports.items()
+        if str(k).isdigit()
+    }
 
 
 def _strip_yaml_comment(value: str) -> str:
@@ -139,7 +149,9 @@ def find_port_conflicts() -> list[dict]:
                 # P79: 实际是 duplicate (note/description 可不同) — 不算真冲突
                 pass
             else:
-                conflicts.append({"port": p, "type": "conflict", "ecos": e, "protocols": pr})
+                conflicts.append(
+                    {"port": p, "type": "conflict", "ecos": e, "protocols": pr}
+                )
     return conflicts
 
 
@@ -148,6 +160,7 @@ def _port_name(entry) -> str:
     if isinstance(entry, dict):
         return entry.get("name", "")
     return _strip_yaml_comment(str(entry))
+
 
 def is_covered_by_prefix(uri: str, registered: dict[str, dict]) -> bool:
     """检查 uri 是否被某个 prefix-pattern 覆盖 (e.g. 'bos://memory/kos/search' 被 'bos://memory/kos/' 覆盖)."""
@@ -160,8 +173,12 @@ def is_covered_by_prefix(uri: str, registered: dict[str, dict]) -> bool:
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--json", action="store_true", help="JSON output")
-    p.add_argument("--threshold", type=int, default=0,
-                   help="unregistered URI 阈值 (默认 0, 治本后 strict-mode; 调大可放行)")
+    p.add_argument(
+        "--threshold",
+        type=int,
+        default=0,
+        help="unregistered URI 阈值 (默认 0, 治本后 strict-mode; 调大可放行)",
+    )
     args = p.parse_args()
 
     registered = load_agora_registered_uris()
@@ -171,7 +188,8 @@ def main() -> int:
     #    e.g. "bos://analysis/code/" 用作 startswith() 前缀匹配, 不需具体服务
     # 2. 排除被某个注册 prefix pattern 覆盖的 (reverse direction)
     strict_unregistered = sorted(
-        u for u in (referenced - set(registered.keys()))
+        u
+        for u in (referenced - set(registered.keys()))
         if not u.endswith("/") and not is_covered_by_prefix(u, registered)
     )
     unregistered = strict_unregistered
@@ -212,28 +230,42 @@ def main() -> int:
         print(f"  referenced (project code): {summary['referenced']}")
         print(f"  unregistered (referenced but not in SSOT): {summary['unregistered']}")
         print(f"  orphan (in SSOT but not referenced): {summary['orphan']}")
-        print(f"  ports (union ecos+protocols): {summary['ports']} "
-              f"(ecos={summary['port_count_ecos']}, protocols={summary['port_count_protocols']})")
+        print(
+            f"  ports (union ecos+protocols): {summary['ports']} "
+            f"(ecos={summary['port_count_ecos']}, protocols={summary['port_count_protocols']})"
+        )
         if summary["port_conflicts"] > 0:
             print(f"  port conflicts (duplicate+conflict): {summary['port_conflicts']}")
             for c in summary["port_conflicts_list"][:5]:
-                print(f"    port={c['port']} type={c['type']} ecos={c['ecos']!r} protocols={c['protocols']!r}")
+                print(
+                    f"    port={c['port']} type={c['type']} ecos={c['ecos']!r} protocols={c['protocols']!r}"
+                )
         print()
         if summary["unregistered"] > args.threshold:
-            print(f"❌ {summary['unregistered']} unregistered URIs 超过 threshold ({args.threshold})")
+            print(
+                f"❌ {summary['unregistered']} unregistered URIs 超过 threshold ({args.threshold})"
+            )
             for u in unregistered[:10]:
                 print(f"  - {u}")
             if len(unregistered) > 10:
                 print(f"  ... and {len(unregistered) - 10} more")
         else:
-            print(f"✅ unregistered URIs {summary['unregistered']} ≤ threshold {args.threshold}")
+            print(
+                f"✅ unregistered URIs {summary['unregistered']} ≤ threshold {args.threshold}"
+            )
         if summary["port_conflicts"] > 0:
-            real_conflicts = [c for c in summary["port_conflicts_list"] if c["type"] == "conflict"]
+            real_conflicts = [
+                c for c in summary["port_conflicts_list"] if c["type"] == "conflict"
+            ]
             if real_conflicts:
                 print()
-                print(f"❌ {len(real_conflicts)} port conflicts (同号不同名, 修真修真):")
+                print(
+                    f"❌ {len(real_conflicts)} port conflicts (同号不同名, 修真修真):"
+                )
                 for c in real_conflicts[:5]:
-                    print(f"  - port={c['port']}: ecos='{c['ecos']}' vs protocols='{c['protocols']}'")
+                    print(
+                        f"  - port={c['port']}: ecos='{c['ecos']}' vs protocols='{c['protocols']}'"
+                    )
         if summary["orphan"] > 0:
             print()
             print(f"⚠️ orphan URIs (在 SSOT 但无引用, 可能僵尸):")

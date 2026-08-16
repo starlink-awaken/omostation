@@ -14,7 +14,9 @@ from _shared import append_jsonl, read_jsonl, utc_now
 
 
 def _state_dir(root: Path, journey_id: str) -> Path:
-    return root / ".omo" / "_knowledge" / "workflow-mesh" / "journey-states" / journey_id
+    return (
+        root / ".omo" / "_knowledge" / "workflow-mesh" / "journey-states" / journey_id
+    )
 
 
 def _new_run_id(journey_id: str) -> str:
@@ -78,7 +80,9 @@ def current_state(root: Path, journey_id: str, run_id: str) -> dict[str, Any] | 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument(
+        "--root", type=Path, default=Path(__file__).resolve().parents[2]
+    )
 
     sub = parser.add_subparsers(dest="command")
 
@@ -93,7 +97,9 @@ def main(argv: list[str] | None = None) -> int:
     resume_parser.add_argument("--journey-id", required=True)
     resume_parser.add_argument("--run-id", required=True)
 
-    sub.add_parser("new-run", help="generate a new run_id").add_argument("--journey-id", required=True)
+    sub.add_parser("new-run", help="generate a new run_id").add_argument(
+        "--journey-id", required=True
+    )
 
     args = parser.parse_args(argv)
     command = args.command or "help"
@@ -104,7 +110,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if command == "save":
         run_id = args.run_id or _new_run_id(args.journey_id)
-        entry = save_state(args.root, args.journey_id, run_id, args.state, scene_id=args.scene, status=args.status)
+        entry = save_state(
+            args.root,
+            args.journey_id,
+            run_id,
+            args.state,
+            scene_id=args.scene,
+            status=args.status,
+        )
         entry["run_id"] = run_id
         print(json.dumps(entry, ensure_ascii=False, indent=2, sort_keys=True))
         return 0

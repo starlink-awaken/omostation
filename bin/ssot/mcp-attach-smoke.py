@@ -13,6 +13,7 @@ Usage:
   python3 bin/ssot/mcp-attach-smoke.py
   python3 bin/ssot/mcp-attach-smoke.py --json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -139,7 +140,11 @@ def run_smoke() -> dict:
             has_bos = "bos" in (r.stdout or "")
             detail = f"returncode={r.returncode} has_bos={has_bos} (advisory)"
             # always record as pass for gate stability; surface truth in detail
-            add("cockpit_help", True, detail if (r.returncode == 0 and has_bos) else f"degraded {detail}")
+            add(
+                "cockpit_help",
+                True,
+                detail if (r.returncode == 0 and has_bos) else f"degraded {detail}",
+            )
         except Exception as exc:  # noqa: BLE001
             add("cockpit_help", True, f"skipped/error (advisory): {exc}")
     else:
@@ -158,7 +163,9 @@ def run_smoke() -> dict:
     add(
         "minimum_mcp_tools_defined",
         not missing_tools,
-        f"missing={missing_tools}" if missing_tools else f"all {len(MINIMUM_MCP_TOOLS)} found",
+        f"missing={missing_tools}"
+        if missing_tools
+        else f"all {len(MINIMUM_MCP_TOOLS)} found",
     )
 
     return {

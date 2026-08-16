@@ -42,11 +42,19 @@ def generate_reflection(
 
     contract = card.get("reflection_contract", {})
     if not isinstance(contract, dict) or not contract.get("enabled", False):
-        return {"schema": REFLECTION_SCHEMA, "status": "skipped", "detail": "reflection_contract not enabled"}
+        return {
+            "schema": REFLECTION_SCHEMA,
+            "status": "skipped",
+            "detail": "reflection_contract not enabled",
+        }
 
     questions = contract.get("questions", [])
     if not isinstance(questions, list) or not questions:
-        return {"schema": REFLECTION_SCHEMA, "status": "skipped", "detail": "no questions defined"}
+        return {
+            "schema": REFLECTION_SCHEMA,
+            "status": "skipped",
+            "detail": "no questions defined",
+        }
 
     # Build reflection entry
     ts = utc_now()
@@ -66,7 +74,9 @@ def generate_reflection(
     }
 
     # Persist to reflection log
-    log_path = root / ".omo" / "_knowledge" / "workflow-mesh" / "scene-reflections.jsonl"
+    log_path = (
+        root / ".omo" / "_knowledge" / "workflow-mesh" / "scene-reflections.jsonl"
+    )
     append_jsonl(log_path, entry)
 
     entry["status"] = "recorded"
@@ -87,7 +97,10 @@ def _trigger_evolution(root: Path, scene_id: str, execution_status: str) -> bool
     try:
         proc = subprocess.run(
             ["python3", str(root / "bin/ssot/evolution-agent.py"), "--json"],
-            capture_output=True, text=True, timeout=30, check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
         )
         if proc.returncode == 0 and proc.stdout:
             import json as _json
@@ -95,7 +108,13 @@ def _trigger_evolution(root: Path, scene_id: str, execution_status: str) -> bool
             data = _json.loads(proc.stdout)
             n = int(data.get("total_proposals", 0))
             # Record trigger trace
-            trace_path = root / ".omo" / "_knowledge" / "workflow-mesh" / "evolution-triggers.jsonl"
+            trace_path = (
+                root
+                / ".omo"
+                / "_knowledge"
+                / "workflow-mesh"
+                / "evolution-triggers.jsonl"
+            )
             trace_path.parent.mkdir(parents=True, exist_ok=True)
             with open(trace_path, "a", encoding="utf-8") as f:
                 f.write(
@@ -116,9 +135,13 @@ def _trigger_evolution(root: Path, scene_id: str, execution_status: str) -> bool
     return False
 
 
-def list_reflections(root: Path, scene_id: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
+def list_reflections(
+    root: Path, scene_id: str | None = None, limit: int = 20
+) -> list[dict[str, Any]]:
     """List recent reflections, optionally filtered by scene_id."""
-    log_path = root / ".omo" / "_knowledge" / "workflow-mesh" / "scene-reflections.jsonl"
+    log_path = (
+        root / ".omo" / "_knowledge" / "workflow-mesh" / "scene-reflections.jsonl"
+    )
     if not log_path.exists():
         return []
 
@@ -130,7 +153,9 @@ def list_reflections(root: Path, scene_id: str | None = None, limit: int = 20) -
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument(
+        "--root", type=Path, default=Path(__file__).resolve().parents[2]
+    )
 
     sub = parser.add_subparsers(dest="command")
 
@@ -150,9 +175,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if command == "generate":
         result = generate_reflection(
-            args.root, args.scene_card,
-            run_id=args.run_id, execution_status=args.execution_status,
-            output_summary=args.output_summary, actor=args.actor,
+            args.root,
+            args.scene_card,
+            run_id=args.run_id,
+            execution_status=args.execution_status,
+            output_summary=args.output_summary,
+            actor=args.actor,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0 if result.get("status") in ("recorded", "skipped") else 1
@@ -165,7 +193,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Recent reflections ({len(entries)} entries):")
         for e in entries:
             q_count = len(e.get("questions", []))
-            print(f"  {e['ts'][:19]}  {e.get('scene_id','?'):25s}  status={e.get('execution_status','?')}  questions={q_count}  feedforward={e.get('feedforward',False)}")
+            print(
+                f"  {e['ts'][:19]}  {e.get('scene_id', '?'):25s}  status={e.get('execution_status', '?')}  questions={q_count}  feedforward={e.get('feedforward', False)}"
+            )
         return 0
 
     return 1

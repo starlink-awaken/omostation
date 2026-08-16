@@ -114,7 +114,9 @@ def _capabilities(value: Any, field: str) -> list[str]:
 
 
 def _source_digest(scene_card: dict[str, Any]) -> str:
-    canonical = json.dumps(scene_card, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    canonical = json.dumps(
+        scene_card, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
     return f"sha256:{hashlib.sha256(canonical.encode('utf-8')).hexdigest()}"
 
 
@@ -160,7 +162,9 @@ def build_intake(scene_card: dict[str, Any]) -> dict[str, Any]:
 
     source_digest = _source_digest(scene_card)
     safe_scene = _safe_scene_snapshot(scene_card)
-    missing = [field for field in REQUIRED_SCENE_FIELDS if not _text(scene_card.get(field))]
+    missing = [
+        field for field in REQUIRED_SCENE_FIELDS if not _text(scene_card.get(field))
+    ]
     sample_refs = safe_scene["sample_refs"]
     demand_refs = safe_scene["demand_evidence_refs"]
     activation_refs = safe_scene["activation_evidence_refs"]

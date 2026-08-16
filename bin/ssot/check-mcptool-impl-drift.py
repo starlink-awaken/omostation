@@ -14,6 +14,7 @@ rule_id: CR-X4-MCPTOOL-IMPL-DRIFT
     python3 bin/ssot/check-mcptool-impl-drift.py        # 全量扫
     python3 bin/ssot/check-mcptool-impl-drift.py --json  # JSON 输出
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,8 +32,13 @@ MCPTOOL_DIR = REPO / "projects/ecos/src/ecos/ssot/mof/m1/mcptool"
 SERVERS: dict[str, dict] = {
     "COCKPIT": {
         "cmd": [
-            "uv", "run", "--project", str(REPO / "projects/cockpit"),
-            "cockpit", "mcp", "--list-tools",
+            "uv",
+            "run",
+            "--project",
+            str(REPO / "projects/cockpit"),
+            "cockpit",
+            "mcp",
+            "--list-tools",
         ],
         "prefix": "MCPTOOL-COCKPIT-",
     },
@@ -66,7 +72,11 @@ def load_implemented_tools(server: str) -> set[str]:
         if line.startswith("│") and line.count("│") >= 3:
             name = line.split("│")[1].strip()
             # 过滤表头/分隔符/中文 (工具名是 snake_case)
-            if name and name.replace("_", "").replace("-", "").isalnum() and name.islower():
+            if (
+                name
+                and name.replace("_", "").replace("-", "").isalnum()
+                and name.islower()
+            ):
                 tools.add(name)
     return tools
 
@@ -100,17 +110,25 @@ def main() -> int:
         print("=== MCPTOOL 注册 ↔ 实现 drift 检测 ===\n")
         total = 0
         for server, d in drift.items():
-            print(f"【{server}】声明 {d['declared_count']} / 实现 {d['implemented_count']}")
+            print(
+                f"【{server}】声明 {d['declared_count']} / 实现 {d['implemented_count']}"
+            )
             if d["decl_no_impl"]:
-                print(f"  🔴 声明无实现 ({len(d['decl_no_impl'])}): {d['decl_no_impl']}")
+                print(
+                    f"  🔴 声明无实现 ({len(d['decl_no_impl'])}): {d['decl_no_impl']}"
+                )
             if d["impl_no_decl"]:
-                print(f"  🟡 实现无声明 ({len(d['impl_no_decl'])}): {d['impl_no_decl']}")
+                print(
+                    f"  🟡 实现无声明 ({len(d['impl_no_decl'])}): {d['impl_no_decl']}"
+                )
             if not d["decl_no_impl"] and not d["impl_no_decl"]:
                 print("  ✅ 一致")
             total += len(d["decl_no_impl"]) + len(d["impl_no_decl"])
             print()
         print(f"Total: {total} drifts")
-    return 1 if any(d["decl_no_impl"] or d["impl_no_decl"] for d in drift.values()) else 0
+    return (
+        1 if any(d["decl_no_impl"] or d["impl_no_decl"] for d in drift.values()) else 0
+    )
 
 
 if __name__ == "__main__":

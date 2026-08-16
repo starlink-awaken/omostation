@@ -51,6 +51,7 @@ def _now_iso() -> str:
 
 def _new_id(prefix: str) -> str:
     import uuid
+
     return f"{prefix}-{uuid.uuid4().hex[:12]}"
 
 
@@ -66,11 +67,15 @@ def _load_engine(workspace_root: Path, filename: str, name: str):
 
 
 def _load_inbox(workspace_root: Path):
-    return _load_engine(workspace_root, "scene-card-decision-inbox.py", "connector_inbox")
+    return _load_engine(
+        workspace_root, "scene-card-decision-inbox.py", "connector_inbox"
+    )
 
 
 def _load_intake(workspace_root: Path):
-    return _load_engine(workspace_root, "scene-card-intake-pipeline.py", "connector_intake")
+    return _load_engine(
+        workspace_root, "scene-card-intake-pipeline.py", "connector_intake"
+    )
 
 
 # ── Connector storage ──
@@ -99,7 +104,9 @@ def save_run(workspace_root: Path, run: ConnectorRun) -> None:
 
 def list_runs(workspace_root: Path, limit: int = 20) -> list[ConnectorRun]:
     runs = []
-    for f in sorted(_runs_path(workspace_root).glob("run-*.json"), reverse=True)[:limit]:
+    for f in sorted(_runs_path(workspace_root).glob("run-*.json"), reverse=True)[
+        :limit
+    ]:
         data = json.loads(f.read_text())
         runs.append(ConnectorRun(**data))
     return runs
@@ -115,13 +122,19 @@ def load_configs(workspace_root: Path) -> list[ConnectorConfig]:
 
 def save_configs(workspace_root: Path, configs: list[ConnectorConfig]) -> None:
     p = _config_path(workspace_root)
-    p.write_text(json.dumps({"configs": [asdict(c) for c in configs]}, indent=2, ensure_ascii=False))
+    p.write_text(
+        json.dumps(
+            {"configs": [asdict(c) for c in configs]}, indent=2, ensure_ascii=False
+        )
+    )
 
 
 # ── Source-specific importers ──
 
 
-def _import_mbox(workspace_root: Path, mbox_path: Path, scene_id: str, journey_id: str | None = None) -> ConnectorRun:
+def _import_mbox(
+    workspace_root: Path, mbox_path: Path, scene_id: str, journey_id: str | None = None
+) -> ConnectorRun:
     """Import emails from an mbox file."""
     run_id = _new_id("run")
     run = ConnectorRun(run_id=run_id, source="email", started_at=_now_iso())
@@ -136,6 +149,7 @@ def _import_mbox(workspace_root: Path, mbox_path: Path, scene_id: str, journey_i
 
     try:
         import mailbox
+
         mbox = mailbox.mbox(str(mbox_path))
         run.items_found = len(mbox)
 
@@ -148,15 +162,22 @@ def _import_mbox(workspace_root: Path, mbox_path: Path, scene_id: str, journey_i
                 if msg.is_multipart():
                     for part in msg.walk():
                         if part.get_content_type() == "text/plain":
-                            body = part.get_payload(decode=True).decode("utf-8", errors="replace")
+                            body = part.get_payload(decode=True).decode(
+                                "utf-8", errors="replace"
+                            )
                             break
                 else:
-                    body = msg.get_payload(decode=True).decode("utf-8", errors="replace")
+                    body = msg.get_payload(decode=True).decode(
+                        "utf-8", errors="replace"
+                    )
 
                 content = f"Subject: {subject}\n\n{body[:2000]}"
                 result = intake.intake(
-                    workspace_root, source="email", raw_content=content,
-                    scene_id=scene_id, journey_id=journey_id,
+                    workspace_root,
+                    source="email",
+                    raw_content=content,
+                    scene_id=scene_id,
+                    journey_id=journey_id,
                 )
                 if result.ok:
                     run.items_imported += 1
@@ -176,7 +197,9 @@ def _import_mbox(workspace_root: Path, mbox_path: Path, scene_id: str, journey_i
     return run
 
 
-def _import_directory(workspace_root: Path, source_dir: Path, scene_id: str, journey_id: str | None = None) -> ConnectorRun:
+def _import_directory(
+    workspace_root: Path, source_dir: Path, scene_id: str, journey_id: str | None = None
+) -> ConnectorRun:
     """Import files from a directory."""
     run_id = _new_id("run")
     run = ConnectorRun(run_id=run_id, source="file", started_at=_now_iso())
@@ -199,8 +222,12 @@ def _import_directory(workspace_root: Path, source_dir: Path, scene_id: str, jou
         try:
             content = f.read_text(encoding="utf-8", errors="replace")
             result = intake.intake(
-                workspace_root, source="file", raw_content=content[:2000],
-                scene_id=scene_id, journey_id=journey_id, filename=f.name,
+                workspace_root,
+                source="file",
+                raw_content=content[:2000],
+                scene_id=scene_id,
+                journey_id=journey_id,
+                filename=f.name,
             )
             if result.ok:
                 run.items_imported += 1
@@ -214,7 +241,9 @@ def _import_directory(workspace_root: Path, source_dir: Path, scene_id: str, jou
     return run
 
 
-def _import_jsonl(workspace_root: Path, jsonl_path: Path, scene_id: str, journey_id: str | None = None) -> ConnectorRun:
+def _import_jsonl(
+    workspace_root: Path, jsonl_path: Path, scene_id: str, journey_id: str | None = None
+) -> ConnectorRun:
     """Import items from a JSONL file (each line is a JSON object with source/content)."""
     run_id = _new_id("run")
     run = ConnectorRun(run_id=run_id, source="batch", started_at=_now_iso())
@@ -285,8 +314,10 @@ def run_connector(
         return _import_jsonl(workspace_root, source_path_obj, scene_id, journey_id)
     else:
         run = ConnectorRun(
-            run_id=_new_id("run"), source=source,
-            started_at=_now_iso(), completed_at=_now_iso(),
+            run_id=_new_id("run"),
+            source=source,
+            started_at=_now_iso(),
+            completed_at=_now_iso(),
             errors=[f"Unknown source: {source}"],
         )
         save_run(workspace_root, run)

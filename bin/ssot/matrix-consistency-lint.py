@@ -16,6 +16,7 @@ Rules:
 Usage:
   python3 bin/ssot/matrix-consistency-lint.py [--skip-launchd] [--json]
 """
+
 from __future__ import annotations
 
 import json
@@ -25,7 +26,9 @@ import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-MATRIX_PATH = Path(os.environ.get("RUNTIME_HOME", Path.home() / "runtime")) / "matrix.yaml"
+MATRIX_PATH = (
+    Path(os.environ.get("RUNTIME_HOME", Path.home() / "runtime")) / "matrix.yaml"
+)
 PORT_REGISTRY_PATH = WORKSPACE / "protocols" / "port-registry.yaml"
 
 
@@ -62,7 +65,9 @@ def _parse_matrix(path: Path) -> list[dict]:
                 if s.startswith("    - name:"):
                     if current:
                         services.append(current)
-                    current = {"name": s.split('"')[1] if '"' in s else s.split(":")[1].strip()}
+                    current = {
+                        "name": s.split('"')[1] if '"' in s else s.split(":")[1].strip()
+                    }
                     continue
                 if s.startswith("    #"):
                     continue
@@ -72,7 +77,11 @@ def _parse_matrix(path: Path) -> list[dict]:
                         key = key.strip()
                         val_part = val.strip().strip('"')
                         if key:
-                            current[key] = val_part if val_part and val_part.lower() != "null" else None
+                            current[key] = (
+                                val_part
+                                if val_part and val_part.lower() != "null"
+                                else None
+                            )
                     continue
                 if current and s.startswith("        "):
                     continue
@@ -91,6 +100,7 @@ def _load_port_registry() -> dict:
         return {}
     try:
         import yaml
+
         return yaml.safe_load(PORT_REGISTRY_PATH.read_text()) or {}
     except Exception:
         return {}
@@ -98,7 +108,9 @@ def _load_port_registry() -> dict:
 
 def _get_launchd_labels() -> set[str]:
     try:
-        r = subprocess.run(["launchctl", "list"], capture_output=True, text=True, timeout=10)
+        r = subprocess.run(
+            ["launchctl", "list"], capture_output=True, text=True, timeout=10
+        )
         labels = set()
         for line in r.stdout.strip().split("\n")[1:]:
             parts = line.split("\t")
@@ -152,12 +164,22 @@ def lint(skip_launchd: bool = False) -> tuple[list[str], list[str]]:
         if port and str(port) in registered_ports:
             reg_entry = (port_registry.get("ports") or {}).get(str(port), "")
             name_lower = name.lower().replace("-", "").replace("_", "")
-            reg_lower = reg_entry.lower().replace("-", "").replace("_", "").split("#")[0].strip()
+            reg_lower = (
+                reg_entry.lower()
+                .replace("-", "")
+                .replace("_", "")
+                .split("#")[0]
+                .strip()
+            )
             # Check if service name appears in registry entry or vice versa
             if name_lower and reg_lower:
                 if name_lower not in reg_lower and reg_lower[:10] not in name_lower:
                     # Allow known mappings (agora-gateway -> agora-mcp-http, etc.)
-                    if not any(alias in reg_lower for alias in ["agora", "mcp"] if alias in name_lower):
+                    if not any(
+                        alias in reg_lower
+                        for alias in ["agora", "mcp"]
+                        if alias in name_lower
+                    ):
                         warnings.append(
                             f"R4 WARN: '{name}' port {port} registered as '{reg_entry.strip()}' "
                             f"(possible semantic mismatch)"
@@ -190,15 +212,20 @@ def lint(skip_launchd: bool = False) -> tuple[list[str], list[str]]:
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="Matrix SSOT consistency linter")
-    parser.add_argument("--skip-launchd", action="store_true", help="Skip R5 launchd checks (CI mode)")
+    parser.add_argument(
+        "--skip-launchd", action="store_true", help="Skip R5 launchd checks (CI mode)"
+    )
     parser.add_argument("--json", action="store_true", help="Output JSON")
     args = parser.parse_args()
 
     errors, warnings = lint(skip_launchd=args.skip_launchd)
 
     if args.json:
-        print(json.dumps({"errors": errors, "warnings": warnings, "ok": len(errors) == 0}))
+        print(
+            json.dumps({"errors": errors, "warnings": warnings, "ok": len(errors) == 0})
+        )
     else:
         for w in warnings:
             print(w)

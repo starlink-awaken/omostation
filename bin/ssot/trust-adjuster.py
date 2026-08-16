@@ -34,6 +34,7 @@ def _get_manager():
     if OMO_SRC not in sys.path:
         sys.path.insert(0, OMO_SRC)
     from omo.omo_belief import MOSBeliefManager
+
     return MOSBeliefManager(root=ROOT)
 
 
@@ -45,12 +46,18 @@ def show_trust() -> dict[str, Any]:
     if not calibrations:
         return {"trust_level": "cold_start", "calibrations": 0}
 
-    avg_rate = sum(float(c.get("success_rate", 1.0)) for c in calibrations) / len(calibrations)
+    avg_rate = sum(float(c.get("success_rate", 1.0)) for c in calibrations) / len(
+        calibrations
+    )
     recent = calibrations[-5:]
     recent_rate = sum(float(c.get("success_rate", 1.0)) for c in recent) / len(recent)
 
     return {
-        "trust_level": "high" if avg_rate >= 0.8 else "medium" if avg_rate >= 0.5 else "low",
+        "trust_level": "high"
+        if avg_rate >= 0.8
+        else "medium"
+        if avg_rate >= 0.5
+        else "low",
         "total_calibrations": len(calibrations),
         "avg_success_rate": round(avg_rate, 3),
         "recent_success_rate": round(recent_rate, 3),
@@ -58,10 +65,14 @@ def show_trust() -> dict[str, Any]:
     }
 
 
-def record_outcome(outcome: str, *, action_type: str = "autoloop", pr_number: int = 0) -> dict[str, Any]:
+def record_outcome(
+    outcome: str, *, action_type: str = "autoloop", pr_number: int = 0
+) -> dict[str, Any]:
     """Record a PR outcome to Trust calibration."""
     manager = _get_manager()
-    success_rate = 1.0 if outcome == "approved" else 0.0 if outcome == "rejected" else 0.5
+    success_rate = (
+        1.0 if outcome == "approved" else 0.0 if outcome == "rejected" else 0.5
+    )
 
     cc_id = manager.record_capability_calibration(
         capability_ref=f"autoloop:{action_type}",
@@ -85,27 +96,35 @@ def check_promotion() -> dict[str, Any]:
     for item in matrix.get("graylist", []):
         action_type = item.get("action_type", "")
         # Count consecutive approvals for this action
-        action_calibs = [c for c in calibrations if action_type in str(c.get("capability_ref", ""))]
+        action_calibs = [
+            c for c in calibrations if action_type in str(c.get("capability_ref", ""))
+        ]
         recent_3 = action_calibs[-3:] if len(action_calibs) >= 3 else []
         if recent_3 and all(float(c.get("success_rate", 0)) >= 0.8 for c in recent_3):
-            promotions.append({
-                "action_type": action_type,
-                "reason": f"3+ consecutive approvals (rate≥0.8)",
-                "from": "graylist",
-                "to": "whitelist",
-            })
+            promotions.append(
+                {
+                    "action_type": action_type,
+                    "reason": f"3+ consecutive approvals (rate≥0.8)",
+                    "from": "graylist",
+                    "to": "whitelist",
+                }
+            )
 
     for item in matrix.get("whitelist", []):
         action_type = item.get("action_type", "")
-        action_calibs = [c for c in calibrations if action_type in str(c.get("capability_ref", ""))]
+        action_calibs = [
+            c for c in calibrations if action_type in str(c.get("capability_ref", ""))
+        ]
         recent_2 = action_calibs[-2:] if len(action_calibs) >= 2 else []
         if recent_2 and all(float(c.get("success_rate", 0)) < 0.5 for c in recent_2):
-            demotions.append({
-                "action_type": action_type,
-                "reason": f"2+ consecutive rejections (rate<0.5)",
-                "from": "whitelist",
-                "to": "graylist",
-            })
+            demotions.append(
+                {
+                    "action_type": action_type,
+                    "reason": f"2+ consecutive rejections (rate<0.5)",
+                    "from": "whitelist",
+                    "to": "graylist",
+                }
+            )
 
     return {
         "promotions": promotions,
@@ -119,7 +138,9 @@ def check_promotion() -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--show", action="store_true")
-    parser.add_argument("--outcome", choices=["approved", "rejected", "revised"], default=None)
+    parser.add_argument(
+        "--outcome", choices=["approved", "rejected", "revised"], default=None
+    )
     parser.add_argument("--action-type", default="autoloop")
     parser.add_argument("--pr", type=int, default=0)
     parser.add_argument("--check-promotion", action="store_true")
@@ -131,7 +152,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.outcome:
-        result = record_outcome(args.outcome, action_type=args.action_type, pr_number=args.pr)
+        result = record_outcome(
+            args.outcome, action_type=args.action_type, pr_number=args.pr
+        )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
 

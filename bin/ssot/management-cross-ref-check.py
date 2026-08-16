@@ -61,15 +61,23 @@ def scan_management(root: Path) -> dict:
     link_pattern = re.compile(r"\]\(([^)]+\.md)(?:#[^)]*)?\)")
     refs_matrix: dict[tuple[str, str], int] = defaultdict(int)  # (from, to) -> count
     dead_links: list[tuple[Path, str, str]] = []  # (from_file, link, reason)
-    external_links: list[tuple[Path, str]] = []  # (from_file, link) - 跨管理目录引用, 单独统计
-    internal_resolved: list[tuple[Path, str]] = []  # (from_file, resolved_path) 内部解析成功
-    gitignored_links: list[tuple[Path, str]] = []  # (from_file, link) 指向 gitignore 路径
+    external_links: list[
+        tuple[Path, str]
+    ] = []  # (from_file, link) - 跨管理目录引用, 单独统计
+    internal_resolved: list[
+        tuple[Path, str]
+    ] = []  # (from_file, resolved_path) 内部解析成功
+    gitignored_links: list[
+        tuple[Path, str]
+    ] = []  # (from_file, link) 指向 gitignore 路径
 
     # 加载 .gitignore 模式 (P83 R3)
     gitignore_patterns: list[str] = []
     gitignore_path = root / ".gitignore"
     if gitignore_path.exists():
-        for line in gitignore_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        for line in gitignore_path.read_text(
+            encoding="utf-8", errors="ignore"
+        ).splitlines():
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
@@ -78,6 +86,7 @@ def scan_management(root: Path) -> dict:
     def is_gitignored(rel_path: str) -> bool:
         """简单 .gitignore 匹配 (支持前缀/glob 简化)."""
         from fnmatch import fnmatch
+
         for pattern in gitignore_patterns:
             # 保留原始 pattern, 同时处理 '/', '*', '**'
             is_dir_pattern = pattern.endswith("/")
@@ -201,10 +210,14 @@ def scan_management(root: Path) -> dict:
         "refs_matrix": {f"{k[0]}->{k[1]}": v for k, v in refs_matrix.items()},
         "dead_links": [(str(src), link, reason) for src, link, reason in dead_links],
         "dead_links_active": [
-            (str(src), link, reason) for src, link, reason in dead_links if parse_status(src) != "archived"
+            (str(src), link, reason)
+            for src, link, reason in dead_links
+            if parse_status(src) != "archived"
         ],
         "dead_links_archived": [
-            (str(src), link, reason) for src, link, reason in dead_links if parse_status(src) == "archived"
+            (str(src), link, reason)
+            for src, link, reason in dead_links
+            if parse_status(src) == "archived"
         ],
         "external_links": [(str(src), link) for src, link in external_links],
         "gitignored_links": [(str(src), link) for src, link in gitignored_links],
@@ -215,16 +228,18 @@ def scan_management(root: Path) -> dict:
             "external_links": len(external_links),
             "gitignored_links": len(gitignored_links),
             "dead_links": len(dead_links),
-            "dead_links_active": sum(1 for s, _, _ in dead_links if parse_status(s) != "archived"),
-            "dead_links_archived": sum(1 for s, _, _ in dead_links if parse_status(s) == "archived"),
+            "dead_links_active": sum(
+                1 for s, _, _ in dead_links if parse_status(s) != "archived"
+            ),
+            "dead_links_archived": sum(
+                1 for s, _, _ in dead_links if parse_status(s) == "archived"
+            ),
         },
     }
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P81: management 跨文件引用检查"
-    )
+    parser = argparse.ArgumentParser(description="P81: management 跨文件引用检查")
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()
@@ -257,12 +272,16 @@ def main() -> int:
     print(f"🔗 内部引用 (已解析): {totals['internal_resolved']}")
     print(f"🌐 外部引用 (跨域):  {totals['external_links']}")
     print(f"📦 gitignored 引用:   {totals['gitignored_links']}")
-    print(f"❌ 死链 (目标不存在): {totals['dead_links']} = "
-          f"active:{totals['dead_links_active']} + archived:{totals['dead_links_archived']}")
+    print(
+        f"❌ 死链 (目标不存在): {totals['dead_links']} = "
+        f"active:{totals['dead_links_active']} + archived:{totals['dead_links_archived']}"
+    )
     print()
     print("跨子目录引用矩阵:")
     if result["refs_matrix"]:
-        cats = list(result["counts"].keys()) + (["INDEX"] if result["index_present"] else [])
+        cats = list(result["counts"].keys()) + (
+            ["INDEX"] if result["index_present"] else []
+        )
         print(f"  {'':12s}" + "".join(f"{c:>15s}" for c in cats))
         for from_cat in cats:
             row = f"  {from_cat:<12s}"
@@ -281,7 +300,9 @@ def main() -> int:
         if len(result["dead_links_active"]) > 10:
             print(f"  ... 还有 {len(result['dead_links_active']) - 10} 个")
     if result["dead_links_archived"]:
-        print(f"\n📦 死链 (archived 文档, 历史状态, 预期): {len(result['dead_links_archived'])} 个")
+        print(
+            f"\n📦 死链 (archived 文档, 历史状态, 预期): {len(result['dead_links_archived'])} 个"
+        )
         for src, link, reason in result["dead_links_archived"][:5]:
             src_name = Path(src).name if isinstance(src, str) else src.name
             print(f"  {src_name}: {link}")

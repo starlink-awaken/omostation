@@ -58,6 +58,7 @@ from .tools_registry import register_tools as register_registry
 from .tools_proxy import register_tools as register_proxy
 from .tools_governance import register_tools as register_governance
 
+
 def create_server():
     mcp = FastMCP("Agora")
     register_diagnostics(mcp)

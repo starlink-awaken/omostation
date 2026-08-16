@@ -42,11 +42,16 @@ def _load_offset() -> tuple[int, int]:
 
 def _save_offset(line_offset: int, byte_offset: int) -> None:
     OFFSET_FILE.parent.mkdir(parents=True, exist_ok=True)
-    OFFSET_FILE.write_text(json.dumps({
-        "offset": line_offset,
-        "byte_offset": byte_offset,
-        "ts": utc_now(),
-    }), encoding="utf-8")
+    OFFSET_FILE.write_text(
+        json.dumps(
+            {
+                "offset": line_offset,
+                "byte_offset": byte_offset,
+                "ts": utc_now(),
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 def _trace(entry: dict[str, Any]) -> None:
@@ -158,7 +163,10 @@ def main(argv: list[str] | None = None) -> int:
         while True:
             result = consume_once(args.root)
             if result.get("consumed", 0) > 0:
-                print(f"  consumed {result['consumed']}: {result.get('by_action')}", flush=True)
+                print(
+                    f"  consumed {result['consumed']}: {result.get('by_action')}",
+                    flush=True,
+                )
             time.sleep(args.interval)
 
     result = consume_once(args.root)

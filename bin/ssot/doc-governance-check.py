@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate document ownership, lifecycle, freshness, and discoverability."""
+
 from __future__ import annotations
 
 import argparse
@@ -56,7 +57,9 @@ def parse_frontmatter(content: str) -> tuple[dict[str, Any] | None, bool]:
     if not lines or lines[0].strip() != "---":
         return None, False
     try:
-        end = next(index for index in range(1, len(lines)) if lines[index].strip() == "---")
+        end = next(
+            index for index in range(1, len(lines)) if lines[index].strip() == "---"
+        )
     except StopIteration:
         return None, True
     if yaml is None:
@@ -91,7 +94,9 @@ def collect_markdown_files(
             text=True,
             check=False,
         )
-        candidates = [root / line.strip() for line in result.stdout.splitlines() if line.strip()]
+        candidates = [
+            root / line.strip() for line in result.stdout.splitlines() if line.strip()
+        ]
     elif scope == "workspace":
         candidates = list(root.rglob("*.md")) + list(root.rglob("*.markdown"))
     else:
@@ -154,7 +159,9 @@ def _finding(
     }
 
 
-def _severity(registry: dict[str, Any], rule: str, surface: dict[str, Any] | None) -> str:
+def _severity(
+    registry: dict[str, Any], rule: str, surface: dict[str, Any] | None
+) -> str:
     overrides = (surface or {}).get("rules", {})
     if isinstance(overrides, dict) and rule in overrides:
         return str(overrides[rule])
@@ -431,10 +438,16 @@ def evaluate_warning_burndown(
             max_findings = int(checkpoint["max_findings"])
         except (KeyError, TypeError, ValueError):
             result["on_track"] = False
-            result["error"] = "warning_burndown checkpoints require date and max_findings"
+            result["error"] = (
+                "warning_burndown checkpoints require date and max_findings"
+            )
             return result
         parsed.append((checkpoint_date, max_findings))
-    due = [(checkpoint_date, max_findings) for checkpoint_date, max_findings in parsed if checkpoint_date <= today]
+    due = [
+        (checkpoint_date, max_findings)
+        for checkpoint_date, max_findings in parsed
+        if checkpoint_date <= today
+    ]
     if due:
         checkpoint_date, max_findings = due[-1]
         result["current_checkpoint"] = checkpoint_date.isoformat()
@@ -652,8 +665,7 @@ def _baseline_violation_findings(
     for item in baseline["unbaselined"]:
         if "signature" in item:
             evidence = (
-                f"{item['path']} rule={item['rule']} "
-                f"signature={item['signature']}"
+                f"{item['path']} rule={item['rule']} signature={item['signature']}"
             )
         else:
             evidence = f"{item['bucket']} count={item['count']}"
@@ -677,8 +689,7 @@ def _baseline_violation_findings(
                 severity="error",
                 workflow="project-doc-change",
                 evidence=(
-                    f"{item['bucket']} count={item['count']} "
-                    f"max={item['max_findings']}"
+                    f"{item['bucket']} count={item['count']} max={item['max_findings']}"
                 ),
                 message=f"warning exception {item['exception']} has been exceeded",
             )
@@ -812,7 +823,10 @@ def check_file(
                     line=1,
                 )
             )
-        if "lifecycle" in metadata and metadata.get("lifecycle") not in valid_lifecycles:
+        if (
+            "lifecycle" in metadata
+            and metadata.get("lifecycle") not in valid_lifecycles
+        ):
             findings.append(
                 _finding(
                     path=rel,
@@ -922,7 +936,9 @@ def check_file(
                         line=1,
                     )
                 )
-            elif reviewed_date and (today - reviewed_date).days > int(surface.get("review_days", 0)):
+            elif reviewed_date and (today - reviewed_date).days > int(
+                surface.get("review_days", 0)
+            ):
                 findings.append(
                     _finding(
                         path=rel,
@@ -952,7 +968,9 @@ def check_file(
                 )
             )
         else:
-            index_text = index_cache.setdefault(index_path, index_path.read_text(encoding="utf-8", errors="replace"))
+            index_text = index_cache.setdefault(
+                index_path, index_path.read_text(encoding="utf-8", errors="replace")
+            )
             if not _is_discoverable(rel, surface, index_text):
                 findings.append(
                     _finding(
@@ -1028,9 +1046,7 @@ def run(
                 )
             )
     blocking = [
-        finding
-        for finding in findings
-        if finding["severity"] == "error" or strict
+        finding for finding in findings if finding["severity"] == "error" or strict
     ]
     return {
         "ok": not blocking,
@@ -1054,9 +1070,15 @@ def run(
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Document governance ownership/lifecycle checker")
-    parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
-    parser.add_argument("--strict", action="store_true", help="treat warnings as blocking")
+    parser = argparse.ArgumentParser(
+        description="Document governance ownership/lifecycle checker"
+    )
+    parser.add_argument(
+        "--json", action="store_true", help="emit machine-readable JSON"
+    )
+    parser.add_argument(
+        "--strict", action="store_true", help="treat warnings as blocking"
+    )
     parser.add_argument(
         "--no-new-warnings",
         action="store_true",
@@ -1068,7 +1090,12 @@ def main(argv: list[str] | None = None) -> int:
         help="write the current warning signatures to a reviewable YAML file",
     )
     parser.add_argument("--scope", choices=("tracked", "workspace"), default="tracked")
-    parser.add_argument("--files", nargs="*", default=None, help="check only these workspace-relative files")
+    parser.add_argument(
+        "--files",
+        nargs="*",
+        default=None,
+        help="check only these workspace-relative files",
+    )
     args = parser.parse_args(argv)
     try:
         result = run(

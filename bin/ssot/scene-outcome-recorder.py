@@ -94,7 +94,13 @@ def _write_mos_decision_outcome(entry: dict[str, Any]) -> str | None:
         )
         # Trust 校准链: outcome → capability_calibration (控制论反馈闭环)
         adjudication = entry.get("adjudication", "")
-        success_rate = 1.0 if adjudication == "accepted" else 0.0 if adjudication == "rejected" else 0.5
+        success_rate = (
+            1.0
+            if adjudication == "accepted"
+            else 0.0
+            if adjudication == "rejected"
+            else 0.5
+        )
         manager.record_capability_calibration(
             capability_ref=f"scene:{entry.get('scene_id', 'unknown')}",
             success_rate=success_rate,
@@ -123,7 +129,9 @@ def main(argv: list[str] | None = None) -> int:
     rec_parser = sub.add_parser("record", help="record one outcome")
     rec_parser.add_argument("--scene-card", type=Path, required=True)
     rec_parser.add_argument("--run-id", required=True)
-    rec_parser.add_argument("--adjudication", required=True, choices=sorted(VALID_ADJUDICATIONS))
+    rec_parser.add_argument(
+        "--adjudication", required=True, choices=sorted(VALID_ADJUDICATIONS)
+    )
     rec_parser.add_argument("--actor", default="operator")
     rec_parser.add_argument("--notes", default="")
     rec_parser.add_argument("--revision-diff", default="")
@@ -137,8 +145,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if command == "record":
         result = record_outcome(
-            args.scene_card, args.run_id, args.adjudication,
-            actor=args.actor, notes=args.notes, revision_diff=args.revision_diff,
+            args.scene_card,
+            args.run_id,
+            args.adjudication,
+            actor=args.actor,
+            notes=args.notes,
+            revision_diff=args.revision_diff,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
@@ -150,7 +162,9 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         print(f"Recent outcomes ({len(entries)} entries):")
         for e in entries:
-            print(f"  {e['ts'][:19]}  {e.get('scene_id','?'):25s}  {e['adjudication']:10s}  by={e['actor']}")
+            print(
+                f"  {e['ts'][:19]}  {e.get('scene_id', '?'):25s}  {e['adjudication']:10s}  by={e['actor']}"
+            )
         return 0
 
     return 1

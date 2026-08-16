@@ -85,7 +85,13 @@ def validate(root: Path) -> dict[str, Any]:
     for source, targets in graph.items():
         for target in targets:
             if target not in all_ids:
-                missing.append({"from": source, "to": target, "reason": "target scene_id not found"})
+                missing.append(
+                    {
+                        "from": source,
+                        "to": target,
+                        "reason": "target scene_id not found",
+                    }
+                )
 
     # Detect cycles
     cycles = detect_cycles(graph)
@@ -116,7 +122,9 @@ def validate(root: Path) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument(
+        "--root", type=Path, default=Path(__file__).resolve().parents[2]
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
@@ -125,7 +133,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     else:
-        print(f"Scene Chain Validation: {'✅ VALID' if result['valid'] else '❌ ISSUES FOUND'}")
+        print(
+            f"Scene Chain Validation: {'✅ VALID' if result['valid'] else '❌ ISSUES FOUND'}"
+        )
         print(f"  Scenes: {result['total_scenes']}, Edges: {result['total_edges']}")
         print(f"  Sources: {', '.join(result['topology']['sources'])}")
         print(f"  Sinks: {', '.join(result['topology']['sinks'])}")

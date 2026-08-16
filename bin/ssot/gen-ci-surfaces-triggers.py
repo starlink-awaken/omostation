@@ -65,7 +65,9 @@ def parse_workflow_triggers(text: str) -> tuple[list[str], bool, set[str]]:
     return sorted(set(triggers)), path_filtered, paths
 
 
-def render_triggers_entry(workflow: str, triggers: list[str], path_filtered: bool, paths: set[str]) -> list[str]:
+def render_triggers_entry(
+    workflow: str, triggers: list[str], path_filtered: bool, paths: set[str]
+) -> list[str]:
     lines = [f"  - workflow: {workflow}"]
     if triggers:
         lines.append(f"    triggers: [{', '.join(triggers)}]")

@@ -43,7 +43,9 @@ def _new_id(prefix: str) -> str:
 
 def _load_decision_inbox_engine(workspace_root: Path):
     engine_path = workspace_root / "bin" / "ssot" / "scene-card-decision-inbox.py"
-    spec = importlib.util.spec_from_file_location("scene_card_task_bridge", str(engine_path))
+    spec = importlib.util.spec_from_file_location(
+        "scene_card_task_bridge", str(engine_path)
+    )
     if spec is None or spec.loader is None:
         raise ImportError("scene-card-decision-inbox.py is unavailable")
     module = importlib.util.module_from_spec(spec)

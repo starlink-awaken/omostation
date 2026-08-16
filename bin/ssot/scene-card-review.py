@@ -42,7 +42,9 @@ def _load_inbox(workspace_root: Path):
 
 
 def _load_approval(workspace_root: Path):
-    return _load_engine(workspace_root, "scene-card-approval-flow.py", "review_approval")
+    return _load_engine(
+        workspace_root, "scene-card-approval-flow.py", "review_approval"
+    )
 
 
 def _load_connector(workspace_root: Path):
@@ -53,10 +55,10 @@ def _load_connector(workspace_root: Path):
 
 # Estimated time saved per intent by priority
 _TIME_PER_INTENT = {
-    "P0": 15,   # 15 minutes for urgent items
-    "P1": 10,   # 10 minutes for important items
-    "P2": 5,    # 5 minutes for normal items
-    "P3": 3,    # 3 minutes for low priority
+    "P0": 15,  # 15 minutes for urgent items
+    "P1": 10,  # 10 minutes for important items
+    "P2": 5,  # 5 minutes for normal items
+    "P3": 3,  # 3 minutes for low priority
 }
 
 # Accuracy: approved / (approved + rejected)
@@ -188,17 +190,19 @@ def generate_pilot_report(workspace_root: Path) -> dict[str, Any]:
     for scene in scenes:
         for journey in scene.journeys:
             for intent in journey.intents:
-                all_intents.append({
-                    "scene_name": scene.name,
-                    "journey_name": journey.name,
-                    "intent_id": intent.id,
-                    "source": intent.source,
-                    "status": intent.status,
-                    "priority": intent.priority,
-                    "created_at": intent.created_at,
-                    "processed_at": intent.processed_at,
-                    "task_id": intent.task_id,
-                })
+                all_intents.append(
+                    {
+                        "scene_name": scene.name,
+                        "journey_name": journey.name,
+                        "intent_id": intent.id,
+                        "source": intent.source,
+                        "status": intent.status,
+                        "priority": intent.priority,
+                        "created_at": intent.created_at,
+                        "processed_at": intent.processed_at,
+                        "task_id": intent.task_id,
+                    }
+                )
 
     # Weekly breakdown
     weekly_reviews = []
@@ -225,6 +229,8 @@ def generate_pilot_report(workspace_root: Path) -> dict[str, Any]:
             for s in scenes
         ],
         "total_intents": len(all_intents),
-        "intents": sorted(all_intents, key=lambda x: x["created_at"], reverse=True)[:100],
+        "intents": sorted(all_intents, key=lambda x: x["created_at"], reverse=True)[
+            :100
+        ],
         "weekly_reviews": weekly_reviews,
     }

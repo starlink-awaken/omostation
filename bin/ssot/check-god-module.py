@@ -32,10 +32,10 @@ ERROR_THRESHOLD = 1500  # error: 单文件超此报红 (--strict 时 exit 1)
 # 见 .omo/_knowledge/audits/f7114aba-gbrain-srp-plan.md + memory [[check-god-module-mechanism]].
 # 已达标 3/7 (cycle/serve-http/migrate, PR#109/#110/#111). 剩 4 暂豁, 多会话推进.
 EXEMPT_ERRORS = {
-    "projects/gbrain/src/core/ai/gateway.ts",       # 2895L: 状态对象化 (71 处引用) + 核心 1610L 提取, P3
-    "projects/gbrain/src/commands/doctor.ts",        # 4825L: runDoctor 单函数 2330L inline 重构, P4 极高
-    "projects/gbrain/src/core/postgres-engine.ts",   # 4514L: 双引擎 DRY 逐方法对比 SQL (unnest+JOIN), P4
-    "projects/gbrain/src/core/pglite-engine.ts",     # 4509L: 双引擎 DRY (同 postgres, 手动 $N), P4
+    "projects/gbrain/src/core/ai/gateway.ts",  # 2895L: 状态对象化 (71 处引用) + 核心 1610L 提取, P3
+    "projects/gbrain/src/commands/doctor.ts",  # 4825L: runDoctor 单函数 2330L inline 重构, P4 极高
+    "projects/gbrain/src/core/postgres-engine.ts",  # 4514L: 双引擎 DRY 逐方法对比 SQL (unnest+JOIN), P4
+    "projects/gbrain/src/core/pglite-engine.ts",  # 4509L: 双引擎 DRY (同 postgres, 手动 $N), P4
 }
 
 # 扫描范围 + 排除 (避免噪音: 生成代码/测试快照/旧码)
@@ -66,7 +66,9 @@ def _is_excluded(path: Path) -> bool:
     return any(marker in s for marker in EXCLUDE_MARKERS)
 
 
-def scan() -> tuple[list[tuple[str, int]], list[tuple[str, int]], list[tuple[str, int]]]:
+def scan() -> tuple[
+    list[tuple[str, int]], list[tuple[str, int]], list[tuple[str, int]]
+]:
     """扫所有源文件, 返回 (warn_list, error_list, exempt_debt_list), 按行数降序."""
     warn: list[tuple[str, int]] = []
     error: list[tuple[str, int]] = []
@@ -91,7 +93,11 @@ def scan() -> tuple[list[tuple[str, int]], list[tuple[str, int]], list[tuple[str
     return warn, error, exempt_debt
 
 
-def print_report(warn: list[tuple[str, int]], error: list[tuple[str, int]], exempt_debt: list[tuple[str, int]] | None = None) -> None:
+def print_report(
+    warn: list[tuple[str, int]],
+    error: list[tuple[str, int]],
+    exempt_debt: list[tuple[str, int]] | None = None,
+) -> None:
     exempt_debt = exempt_debt if exempt_debt is not None else []
     total = len(warn) + len(error) + len(exempt_debt)
     print("=" * 60)
@@ -105,16 +111,24 @@ def print_report(warn: list[tuple[str, int]], error: list[tuple[str, int]], exem
         for f, n in error:
             print(f"  {n:>5}L  {f}")
     if exempt_debt:
-        print(f"\n🟣 EXEMPT DEBT ({len(exempt_debt)} 文件 > {ERROR_THRESHOLD}L, 暂豁 --strict, 多会话推进):")
+        print(
+            f"\n🟣 EXEMPT DEBT ({len(exempt_debt)} 文件 > {ERROR_THRESHOLD}L, 暂豁 --strict, 多会话推进):"
+        )
         for f, n in exempt_debt:
             print(f"  {n:>5}L  {f}")
-        print("   (F7114ABA Wave 2-3 剩余: 状态对象化/runDoctor 重构/双引擎 DRY, 见 SRP plan)")
+        print(
+            "   (F7114ABA Wave 2-3 剩余: 状态对象化/runDoctor 重构/双引擎 DRY, 见 SRP plan)"
+        )
     if warn:
         print(f"\n🟡 WARN ({len(warn)} 文件 > {WARN_THRESHOLD}L):")
         for f, n in warn:
             print(f"  {n:>5}L  {f}")
-    print(f"\n总计: {total} 文件超阈值 (warn {len(warn)} + error {len(error)} + exempt_debt {len(exempt_debt)})")
-    print("治法: 用 omo-srp-refactor skill 渐进拆 (纯函数先 → 核心后, 每步 import+test)")
+    print(
+        f"\n总计: {total} 文件超阈值 (warn {len(warn)} + error {len(error)} + exempt_debt {len(exempt_debt)})"
+    )
+    print(
+        "治法: 用 omo-srp-refactor skill 渐进拆 (纯函数先 → 核心后, 每步 import+test)"
+    )
 
 
 def main() -> int:

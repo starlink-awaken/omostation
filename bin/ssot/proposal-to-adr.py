@@ -38,7 +38,11 @@ def _next_adr_id() -> str:
     """Get next ADR number from bin/adr/next-adr-id.py."""
     try:
         result = subprocess.run(
-            ["python3", str(NEXT_ADR_TOOL)], capture_output=True, text=True, timeout=5, check=False,
+            ["python3", str(NEXT_ADR_TOOL)],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
         )
         return result.stdout.strip() or "ADR-0401"
     except Exception:
@@ -51,7 +55,16 @@ def _generate_adr_draft(adr_id: str, proposal: dict) -> str:
     proposals = proposal.get("proposals", [])
 
     # Pick the highest-priority proposal for the ADR title
-    best = max(proposals, key=lambda p: {"P0": 4, "P1": 3, "P2": 2, "P3": 1}.get(p.get("priority", str(p.get("level", "P3"))), 0)) if proposals else {}
+    best = (
+        max(
+            proposals,
+            key=lambda p: {"P0": 4, "P1": 3, "P2": 2, "P3": 1}.get(
+                p.get("priority", str(p.get("level", "P3"))), 0
+            ),
+        )
+        if proposals
+        else {}
+    )
 
     title = best.get("proposal", "Evolution proposal")[:120]
     source = best.get("source", "unknown")

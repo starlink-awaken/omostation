@@ -78,7 +78,16 @@ def fabric_vram_budget(model_id: str, context_tokens: int) -> dict:
     """
     try:
         proc = subprocess.run(
-            ["uv", "run", "omlxc", "fabric", "vram", model_id, str(context_tokens), "--json"],
+            [
+                "uv",
+                "run",
+                "omlxc",
+                "fabric",
+                "vram",
+                model_id,
+                str(context_tokens),
+                "--json",
+            ],
             cwd=str(_omlxc_root()),
             capture_output=True,
             text=True,
@@ -88,6 +97,8 @@ def fabric_vram_budget(model_id: str, context_tokens: int) -> dict:
         if proc.returncode != 0:
             return _error(f"omlxc_fabric_vram_failed: {proc.stderr or proc.stdout}")
         data = json.loads(proc.stdout)
-        return _ok({"format_version": FORMAT_VERSION, "vram_budget": data.get("data", {})})
+        return _ok(
+            {"format_version": FORMAT_VERSION, "vram_budget": data.get("data", {})}
+        )
     except Exception as exc:
         return _error(f"fabric_vram_budget_error: {exc}")

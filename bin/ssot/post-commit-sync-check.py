@@ -14,6 +14,7 @@
 
 返回: 0 = 无需同步 / 已同步; 1 = 同步后产生 diff (提示提交).
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -94,8 +95,12 @@ def main() -> int:
         return 0  # 失败不阻塞 commit
 
     if _has_doc_drift():
-        print("[sync-check] ⚠️ 派生文档已更新 (capability-registry/CLI-REFERENCE/INDEX-MCP)")
-        print("[sync-check] 请随下次 commit 提交这些派生文档 (CI check-docs-drift 依赖)")
+        print(
+            "[sync-check] ⚠️ 派生文档已更新 (capability-registry/CLI-REFERENCE/INDEX-MCP)"
+        )
+        print(
+            "[sync-check] 请随下次 commit 提交这些派生文档 (CI check-docs-drift 依赖)"
+        )
         return 1
     print("[sync-check] ✅ 派生文档无漂移")
     return 0

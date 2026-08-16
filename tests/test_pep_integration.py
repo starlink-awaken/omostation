@@ -16,7 +16,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import pytest
 
-from ecos.ssot.mof.generated.control.mof_control_models import ActionReceipt, PolicyDecision
+from ecos.ssot.mof.generated.control.mof_control_models import (
+    ActionReceipt,
+    PolicyDecision,
+)
 
 from agora.mcp.policy_enforcement import (
     PEPDenied,
@@ -150,17 +153,41 @@ def _inject_provider(monkeypatch, provider):
 class TestRequestHash:
     def test_covers_all_fields(self):
         """Hash must cover uri/tool/operation/caller/arguments/payload."""
-        h1 = compute_request_hash(uri="bos://a/b/c", tool_name="t", operation="read",
-                                  caller_id="u1", arguments={"x": 1}, payload={"y": 2})
-        h2 = compute_request_hash(uri="bos://a/b/c", tool_name="t", operation="read",
-                                  caller_id="u1", arguments={"x": 1}, payload={"y": 2})
+        h1 = compute_request_hash(
+            uri="bos://a/b/c",
+            tool_name="t",
+            operation="read",
+            caller_id="u1",
+            arguments={"x": 1},
+            payload={"y": 2},
+        )
+        h2 = compute_request_hash(
+            uri="bos://a/b/c",
+            tool_name="t",
+            operation="read",
+            caller_id="u1",
+            arguments={"x": 1},
+            payload={"y": 2},
+        )
         assert h1 == h2
 
     def test_different_payload_different_hash(self):
-        h1 = compute_request_hash(uri="bos://a/b/c", tool_name="t", operation="read",
-                                  caller_id="u1", arguments={}, payload={"v": 1})
-        h2 = compute_request_hash(uri="bos://a/b/c", tool_name="t", operation="read",
-                                  caller_id="u1", arguments={}, payload={"v": 2})
+        h1 = compute_request_hash(
+            uri="bos://a/b/c",
+            tool_name="t",
+            operation="read",
+            caller_id="u1",
+            arguments={},
+            payload={"v": 1},
+        )
+        h2 = compute_request_hash(
+            uri="bos://a/b/c",
+            tool_name="t",
+            operation="read",
+            caller_id="u1",
+            arguments={},
+            payload={"v": 2},
+        )
         assert h1 != h2
 
     def test_different_arguments_different_hash(self):
@@ -203,7 +230,9 @@ class TestMissingProviderDeny:
         """Rule 1: effectful with no provider → deny."""
         _inject_provider(monkeypatch, None)
         with pytest.raises(PEPDenied) as exc_info:
-            enforce(uri="bos://test/data", tool_name="mutate_resource", operation="write")
+            enforce(
+                uri="bos://test/data", tool_name="mutate_resource", operation="write"
+            )
         assert "pdp_unavailable" in exc_info.value.reason
 
     def test_unknown_no_provider_denies(self, monkeypatch):
@@ -231,7 +260,9 @@ class TestDenyDecision:
         _inject_provider(monkeypatch, fake)
 
         with pytest.raises(PEPDenied) as exc_info:
-            enforce(uri="bos://test/data", tool_name="mutate_resource", operation="write")
+            enforce(
+                uri="bos://test/data", tool_name="mutate_resource", operation="write"
+            )
         assert "policy_denied" in exc_info.value.reason
         assert fake.start_calls == 0  # no receipt started
 
@@ -247,7 +278,9 @@ class TestStartedWriteFailure:
         _inject_provider(monkeypatch, fake)
 
         with pytest.raises(PEPDenied) as exc_info:
-            enforce(uri="bos://test/data", tool_name="mutate_resource", operation="write")
+            enforce(
+                uri="bos://test/data", tool_name="mutate_resource", operation="write"
+            )
         assert "ledger_unavailable" in exc_info.value.reason
         # evaluate was called but start failed
         assert fake.evaluate_calls == 1
@@ -305,10 +338,13 @@ class TestPayloadChangeReject:
             h = request.get("request_hash", "")
             d = _make_decision(h)
             return d.model_copy(update={"request_hash": "tampered12345"})
+
         fake.evaluate = tampered_eval
 
         with pytest.raises(PEPDenied) as exc_info:
-            enforce(uri="bos://test/data", tool_name="mutate_resource", operation="write")
+            enforce(
+                uri="bos://test/data", tool_name="mutate_resource", operation="write"
+            )
         assert "hash_mismatch" in exc_info.value.reason
 
     def test_payload_change_changes_top_level_hash(self, monkeypatch):
@@ -321,17 +357,22 @@ class TestPayloadChangeReject:
             captured_hashes.append(request.get("request_hash", ""))
             h = request.get("request_hash", "")
             return _make_decision(h)
+
         fake.evaluate = capturing_eval
 
         # First call with payload A — succeeds
         d1, r1 = enforce(
-            uri="bos://test/data", tool_name="mutate_resource", operation="write",
+            uri="bos://test/data",
+            tool_name="mutate_resource",
+            operation="write",
             payload={"value": 1},
         )
         # Second call with payload B — different hash, should still succeed
         # (provider returns allow for the new hash)
         d2, r2 = enforce(
-            uri="bos://test/data", tool_name="mutate_resource", operation="write",
+            uri="bos://test/data",
+            tool_name="mutate_resource",
+            operation="write",
             payload={"value": 2},
         )
         # The two request_hashes must differ
@@ -351,15 +392,24 @@ class TestPayloadChangeReject:
             if not stale_hash:
                 stale_hash.append(h)
             return _make_decision(stale_hash[0])
+
         fake.evaluate = stale_eval
 
         # First call — succeeds (hash matches)
-        enforce(uri="bos://t/d", tool_name="mutate_resource", operation="write",
-                payload={"v": 1})
+        enforce(
+            uri="bos://t/d",
+            tool_name="mutate_resource",
+            operation="write",
+            payload={"v": 1},
+        )
         # Second call with different payload — stale hash → mismatch → deny
         with pytest.raises(PEPDenied) as exc_info:
-            enforce(uri="bos://t/d", tool_name="mutate_resource", operation="write",
-                    payload={"v": 2})
+            enforce(
+                uri="bos://t/d",
+                tool_name="mutate_resource",
+                operation="write",
+                payload={"v": 2},
+            )
         assert "hash_mismatch" in exc_info.value.reason
 
 

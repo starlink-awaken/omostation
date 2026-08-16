@@ -15,6 +15,10 @@ def test_governance_events_defined():
 
 def test_publish_governance_event():
     bus = EventBus(storage_path="/tmp/agora-events-test.jsonl")
-    bus.subscribe(service="ecos", pattern="governance.*", callback_url="http://localhost:1/hook")
-    event_id = bus.publish(event_type="governance.constraint.changed", payload={"id": "X1-C04"})
+    bus.subscribe(
+        service="ecos", pattern="governance.*", callback_url="http://localhost:1/hook"
+    )
+    event_id = bus.publish(
+        event_type="governance.constraint.changed", payload={"id": "X1-C04"}
+    )
     assert event_id.startswith("evt_") or len(event_id) > 0

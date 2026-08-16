@@ -275,9 +275,7 @@ class TestBOSMetricsREDPrometheus:
     def test_record_success_does_not_inc_errors(self, monkeypatch):
         """成功调用只计 counter + latency, 不计 errors. (T9-02)"""
         fake = FakePromMetrics()
-        monkeypatch.setattr(
-            "agora.mcp.bos_metrics._get_prom_metrics", fake.call
-        )
+        monkeypatch.setattr("agora.mcp.bos_metrics._get_prom_metrics", fake.call)
         m = BOSMetrics()
         m.record("bos://memory/kos/search", success=True, latency_ms=42)
         assert fake.counter.inc_count == 1
@@ -287,9 +285,7 @@ class TestBOSMetricsREDPrometheus:
     def test_record_failure_incs_errors(self, monkeypatch):
         """失败调用应递增 bos_errors_total 计数器. (T9-02)"""
         fake = FakePromMetrics()
-        monkeypatch.setattr(
-            "agora.mcp.bos_metrics._get_prom_metrics", fake.call
-        )
+        monkeypatch.setattr("agora.mcp.bos_metrics._get_prom_metrics", fake.call)
         m = BOSMetrics()
         m.record("bos://memory/kos/search", success=False, latency_ms=100)
         assert fake.counter.inc_count == 1
@@ -299,9 +295,7 @@ class TestBOSMetricsREDPrometheus:
     def test_mixed_calls_error_rate_signal(self, monkeypatch):
         """混合调用: errors 只随失败增长, 供错误率 = errors/calls 计算. (T9-02)"""
         fake = FakePromMetrics()
-        monkeypatch.setattr(
-            "agora.mcp.bos_metrics._get_prom_metrics", fake.call
-        )
+        monkeypatch.setattr("agora.mcp.bos_metrics._get_prom_metrics", fake.call)
         m = BOSMetrics()
         for _ in range(3):
             m.record("bos://test/svc", success=True, latency_ms=10)

@@ -11,6 +11,7 @@ Usage:
   python3 bin/ssot/write-owner-repair-draft.py --from-audit-exit --commit
   python3 bin/ssot/write-owner-repair-draft.py --message "..." --files a b
 """
+
 from __future__ import annotations
 
 import argparse
@@ -41,7 +42,11 @@ def _staged_files() -> list[str]:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--from-audit-exit", action="store_true", help="use staged files as repair targets")
+    p.add_argument(
+        "--from-audit-exit",
+        action="store_true",
+        help="use staged files as repair targets",
+    )
     p.add_argument("--message", default="", help="optional extra note")
     p.add_argument("--files", nargs="*", default=[], help="explicit files")
     p.add_argument(

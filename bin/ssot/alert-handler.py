@@ -94,7 +94,9 @@ def evaluate_once(root: Path | None = None) -> dict[str, Any]:
         if condition == "fail" and fail_count > 0:
             fired.append(_emit(rule, f"{fail_count} recent check failures"))
         elif condition == "warn" and fail_count > 3:
-            fired.append(_emit(rule, f"warning threshold exceeded ({fail_count} failures)"))
+            fired.append(
+                _emit(rule, f"warning threshold exceeded ({fail_count} failures)")
+            )
         # critical dimension rules fire on any failure
 
     return {
@@ -109,13 +111,15 @@ def evaluate_once(root: Path | None = None) -> dict[str, Any]:
 def list_rules() -> list[dict[str, Any]]:
     out = []
     for r in _load_rules():
-        out.append({
-            "id": r.get("id"),
-            "dimension": r.get("dimension"),
-            "severity": r.get("severity"),
-            "condition": r.get("condition"),
-            "enabled": r.get("enabled", True),
-        })
+        out.append(
+            {
+                "id": r.get("id"),
+                "dimension": r.get("dimension"),
+                "severity": r.get("severity"),
+                "condition": r.get("condition"),
+                "enabled": r.get("enabled", True),
+            }
+        )
     return out
 
 
@@ -131,7 +135,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "list":
         for r in list_rules():
-            print(f"  [{r['severity']:8s}] {r['dimension']:4s} {r['id']}: cond={r['condition']}")
+            print(
+                f"  [{r['severity']:8s}] {r['dimension']:4s} {r['id']}: cond={r['condition']}"
+            )
         return 0
 
     if args.watch:
@@ -139,7 +145,10 @@ def main(argv: list[str] | None = None) -> int:
         while True:
             result = evaluate_once(args.root)
             if result["alerts_fired"] > 0:
-                print(f"  ⚠️ {result['alerts_fired']} alerts fired: {result['fired_rule_ids']}", flush=True)
+                print(
+                    f"  ⚠️ {result['alerts_fired']} alerts fired: {result['fired_rule_ids']}",
+                    flush=True,
+                )
             time.sleep(args.interval)
 
     result = evaluate_once(args.root)

@@ -75,7 +75,9 @@ def scan_workflows() -> list[dict]:
             triggers.add("scheduled")
         if "workflow_dispatch" in text:
             triggers.add("manual")
-        has_list = "on: [push, pull_request]" in text or "on: [push,pull_request]" in text
+        has_list = (
+            "on: [push, pull_request]" in text or "on: [push,pull_request]" in text
+        )
         has_push = bool(re.search(r"^\s+push:\s*$", text, re.MULTILINE))
         has_pp = bool(re.search(r"^\s+pull_request:\s*$", text, re.MULTILINE))
         if has_list:
@@ -91,7 +93,9 @@ def scan_workflows() -> list[dict]:
 
         issues = []
         if has_list:
-            issues.append("stale-regex: on: [push,pull_request] pattern should have been removed in E-4")
+            issues.append(
+                "stale-regex: on: [push,pull_request] pattern should have been removed in E-4"
+            )
         if (
             name not in UNPATHED_DESIGN_EXEMPT
             and "per_pr" in triggers
@@ -104,18 +108,22 @@ def scan_workflows() -> list[dict]:
             and total_steps > 0
             and coe_count / total_steps > 0.5
         ):
-            issues.append(f"high-continue-on-error: {coe_count}/{total_steps} steps ({coe_count/total_steps:.0%})")
+            issues.append(
+                f"high-continue-on-error: {coe_count}/{total_steps} steps ({coe_count / total_steps:.0%})"
+            )
         if triggers == {"manual"} and name not in MANUAL_INTENT_EXEMPT:
             issues.append("idle-workflow: only workflow_dispatch, never auto-runs")
 
-        results.append({
-            "file": name,
-            "triggers": sorted(triggers),
-            "path_filtered": path_filtered,
-            "continue_on_error": coe_count,
-            "total_steps": total_steps,
-            "issues": issues,
-        })
+        results.append(
+            {
+                "file": name,
+                "triggers": sorted(triggers),
+                "path_filtered": path_filtered,
+                "continue_on_error": coe_count,
+                "total_steps": total_steps,
+                "issues": issues,
+            }
+        )
     return results
 
 
@@ -126,7 +134,17 @@ def main() -> int:
     results = scan_workflows()
     total_issues = sum(len(r["issues"]) for r in results)
     if args.json:
-        print(json.dumps({"workflows": len(results), "total_issues": total_issues, "data": results}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "workflows": len(results),
+                    "total_issues": total_issues,
+                    "data": results,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 1 if total_issues > 0 else 0
     print(f"scanned {len(results)} workflows; {total_issues} issues found\n")
     for r in results:

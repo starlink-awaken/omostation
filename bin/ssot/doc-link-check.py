@@ -5,6 +5,7 @@ This intentionally scans the small, agent-facing documentation surface instead
 of every historical note under .omo/. The goal is to keep the runnable contract
 clean without turning archived knowledge into noisy gate failures.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -157,8 +158,12 @@ def run_files(paths: list[str]) -> dict[str, object]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Check local links in agent-facing Markdown docs")
-    parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+    parser = argparse.ArgumentParser(
+        description="Check local links in agent-facing Markdown docs"
+    )
+    parser.add_argument(
+        "--json", action="store_true", help="Emit machine-readable JSON"
+    )
     parser.add_argument(
         "--files",
         nargs="*",

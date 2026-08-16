@@ -19,9 +19,7 @@ from typing import Any
 
 from _shared import ROOT, load_yaml, read_jsonl, utc_now
 
-CONFIG_PATH = (
-    ROOT / ".omo" / "_truth" / "registry" / "predictive-governance.yaml"
-)
+CONFIG_PATH = ROOT / ".omo" / "_truth" / "registry" / "predictive-governance.yaml"
 METRICS_PATH = ROOT / ".omo" / "state" / "metrics-store.jsonl"
 
 
@@ -38,10 +36,8 @@ def _aggregate(entries: list[dict[str, Any]], window: int) -> dict[str, float]:
     from collections import defaultdict
 
     # Bucket by day
-    daily: dict[str, dict[str, list]] = defaultdict(
-        lambda: {"ok": [], "durations": []}
-    )
-    for e in entries[-max(window * 10, 100):]:
+    daily: dict[str, dict[str, list]] = defaultdict(lambda: {"ok": [], "durations": []})
+    for e in entries[-max(window * 10, 100) :]:
         day = str(e.get("timestamp", ""))[:10]
         daily[day]["ok"].append(bool(e.get("ok", False)))
         daily[day]["durations"].append(float(e.get("duration_ms", 0)))
@@ -76,9 +72,7 @@ def _match_recommendations(
     out: list[dict[str, Any]] = []
     for rec in recs:
         trigger = rec.get("trigger", "")
-        threshold = float(
-            config.get("model", {}).get("confidence_threshold", 0.7)
-        )
+        threshold = float(config.get("model", {}).get("confidence_threshold", 0.7))
         matched = False
 
         if (
@@ -100,18 +94,17 @@ def _match_recommendations(
         # require external data sources
 
         if matched:
-            out.append({
-                "trigger": trigger,
-                "priority": rec.get("priority", "P3"),
-                "action": rec.get("action", ""),
-                "template": (
-                    rec.get("template", "")[:150]
-                    if rec.get("template") else ""
-                ),
-                "matched_features": {
-                    k: round(v, 3) for k, v in features.items()
-                },
-            })
+            out.append(
+                {
+                    "trigger": trigger,
+                    "priority": rec.get("priority", "P3"),
+                    "action": rec.get("action", ""),
+                    "template": (
+                        rec.get("template", "")[:150] if rec.get("template") else ""
+                    ),
+                    "matched_features": {k: round(v, 3) for k, v in features.items()},
+                }
+            )
     return out
 
 
@@ -119,9 +112,7 @@ def generate_recommendations(root: Path | None = None) -> dict[str, Any]:
     root = root or ROOT
     config = _load_config()
     entries = _load_metrics()
-    features = _aggregate(
-        entries, int(config.get("model", {}).get("window", 7) or 7)
-    )
+    features = _aggregate(entries, int(config.get("model", {}).get("window", 7) or 7))
     recs = _match_recommendations(features, config)
 
     return {
@@ -151,10 +142,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(f"  features: {result['features']}")
         for r in result["recommendations"]:
-            print(
-                f"  [{r['priority']}] {r['action']} "
-                f"— trigger: {r['trigger']}"
-            )
+            print(f"  [{r['priority']}] {r['action']} — trigger: {r['trigger']}")
         if not result["recommendations"]:
             print("  ✅ No recommendations needed (system healthy).")
     return 0

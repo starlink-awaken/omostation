@@ -168,7 +168,9 @@ def _scene_card_check(scene_card: dict[str, Any]) -> dict[str, Any]:
     if schema is not None and schema != SCENE_CARD_SCHEMA:
         raise PreflightInputError(f"scene card must use {SCENE_CARD_SCHEMA}")
 
-    missing = [field for field in REQUIRED_SCENE_FIELDS if not _text(scene_card.get(field))]
+    missing = [
+        field for field in REQUIRED_SCENE_FIELDS if not _text(scene_card.get(field))
+    ]
     sample_refs = _refs(scene_card.get("sample_refs", []), "scene_card.sample_refs")
     demand_refs = _refs(
         scene_card.get("demand_evidence_refs", []),

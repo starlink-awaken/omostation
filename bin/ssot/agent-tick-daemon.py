@@ -59,30 +59,46 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--once", action="store_true", help="run single tick and exit")
     parser.add_argument("--run", action="store_true", help="run continuously (default)")
-    parser.add_argument("--interval", type=int, default=60, help="tick interval seconds")
-    parser.add_argument("--max-ticks", type=int, default=None, help="stop after N ticks")
+    parser.add_argument(
+        "--interval", type=int, default=60, help="tick interval seconds"
+    )
+    parser.add_argument(
+        "--max-ticks", type=int, default=None, help="stop after N ticks"
+    )
     args = parser.parse_args(argv)
 
     if args.once:
         result = run_once()
-        print(json.dumps({
-            "mode": "once",
-            "agent_count": result.get("agent_count"),
-            "ok_count": result.get("ok_count"),
-            "failed_count": result.get("failed_count"),
-            "results": result.get("results"),
-        }, ensure_ascii=False, indent=2, sort_keys=True))
+        print(
+            json.dumps(
+                {
+                    "mode": "once",
+                    "agent_count": result.get("agent_count"),
+                    "ok_count": result.get("ok_count"),
+                    "failed_count": result.get("failed_count"),
+                    "results": result.get("results"),
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+        )
         return 0
 
-    print(f"Agent Tick Daemon running (interval={args.interval}s, "
-          f"max_ticks={args.max_ticks or '∞'}). Ctrl+C to stop.", flush=True)
+    print(
+        f"Agent Tick Daemon running (interval={args.interval}s, "
+        f"max_ticks={args.max_ticks or '∞'}). Ctrl+C to stop.",
+        flush=True,
+    )
     ticks = 0
     try:
         while True:
             ticks += 1
             result = run_once()
-            print(f"  [{ticks}] tick: {result.get('ok_count')}/{result.get('agent_count')} ok",
-                  flush=True)
+            print(
+                f"  [{ticks}] tick: {result.get('ok_count')}/{result.get('agent_count')} ok",
+                flush=True,
+            )
             if args.max_ticks and ticks >= args.max_ticks:
                 print(f"Reached max_ticks={args.max_ticks}. Stopping.")
                 break

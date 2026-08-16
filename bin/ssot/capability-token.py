@@ -18,7 +18,13 @@ from typing import Any
 
 TOKEN_SCHEMA = "capability-token/v1"
 DEFAULT_TTL_MINUTES = 30
-VALID_SCOPES = {"ci-read", "workflow-read", "evidence-write", "config-read", "state-read"}
+VALID_SCOPES = {
+    "ci-read",
+    "workflow-read",
+    "evidence-write",
+    "config-read",
+    "state-read",
+}
 
 
 def _load_scene_card(path: Path) -> dict[str, Any]:
@@ -63,7 +69,9 @@ def generate_token(
     now = datetime.now(UTC)
     expires = now + timedelta(minutes=ttl_minutes)
     token_id = secrets.token_urlsafe(16)
-    token_hash = hashlib.sha256(f"{scene_id}:{token_id}:{now.isoformat()}".encode()).hexdigest()[:24]
+    token_hash = hashlib.sha256(
+        f"{scene_id}:{token_id}:{now.isoformat()}".encode()
+    ).hexdigest()[:24]
 
     return {
         "schema": TOKEN_SCHEMA,
@@ -97,21 +105,31 @@ def verify_token(token: dict[str, Any]) -> dict[str, Any]:
         return {"valid": False, "reason": "invalid expires_at format"}
     if datetime.now(UTC) > expires:
         return {"valid": False, "reason": "expired", "expired_at": expires_str}
-    return {"valid": True, "scene_id": token.get("scene_id"), "scopes": token.get("scopes", [])}
+    return {
+        "valid": True,
+        "scene_id": token.get("scene_id"),
+        "scopes": token.get("scopes", []),
+    }
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument(
+        "--root", type=Path, default=Path(__file__).resolve().parents[2]
+    )
 
     sub = parser.add_subparsers(dest="command")
 
     gen_parser = sub.add_parser("generate", help="generate a capability token")
     gen_parser.add_argument("--scene-card", type=Path, required=True)
     gen_parser.add_argument("--actor", default="agent")
-    gen_parser.add_argument("--ttl", type=int, default=DEFAULT_TTL_MINUTES, help="TTL in minutes")
+    gen_parser.add_argument(
+        "--ttl", type=int, default=DEFAULT_TTL_MINUTES, help="TTL in minutes"
+    )
 
-    verify_parser = sub.add_parser("verify", help="verify a token from stdin or --token-file")
+    verify_parser = sub.add_parser(
+        "verify", help="verify a token from stdin or --token-file"
+    )
     verify_parser.add_argument("--token-file", type=Path)
 
     args = parser.parse_args(argv)

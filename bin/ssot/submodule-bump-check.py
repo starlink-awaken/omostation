@@ -6,6 +6,7 @@
 当某个 submodule 内部 commit 推进, 但主仓根 commit 没跟, 此工具报 stale.
 CI gate 会 fail.
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -86,7 +87,9 @@ def main() -> int:
         actual = submodule_actual(path)
         if pin != actual:
             stale.append((path, pin, actual))
-            print(f"  ❌ {path}: pin={pin[:8] if pin else '?'} actual={actual[:8] if actual else '?'}")
+            print(
+                f"  ❌ {path}: pin={pin[:8] if pin else '?'} actual={actual[:8] if actual else '?'}"
+            )
         else:
             print(f"  ✅ {path}: {pin[:8] if pin else '?'}")
     print()
@@ -95,7 +98,9 @@ def main() -> int:
         print("\nstale submodules need bump in main repo:")
         for path, pin, actual in stale:
             print(f"  {path}: pin={pin} actual={actual}")
-            print(f"    fix: git add {path} && git commit -m 'chore(submodule): bump {path}'")
+            print(
+                f"    fix: git add {path} && git commit -m 'chore(submodule): bump {path}'"
+            )
     return 0 if not stale else 1
 
 

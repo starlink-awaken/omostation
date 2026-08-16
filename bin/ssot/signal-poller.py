@@ -87,9 +87,9 @@ def poll_once(root: Path | None = None) -> list[dict[str, Any]]:
             current_hash = _hash_path(path)
             last_hash = state.get(source_id)
 
-            if (
-                current_hash != last_hash
-                and current_hash not in ("unreachable", "error")
+            if current_hash != last_hash and current_hash not in (
+                "unreachable",
+                "error",
             ):
                 trigger = {
                     "ts": utc_now(),
@@ -171,9 +171,18 @@ def _auto_trigger(triggers: list[dict[str, Any]], root: Path) -> list[str]:
             continue
         try:
             subprocess.run(
-                ["python3", str(root / "bin/ssot/journey-runner.py"),
-                 "run", "--journey", journey_id, "--live"],
-                timeout=120, capture_output=True, text=True, check=False,
+                [
+                    "python3",
+                    str(root / "bin/ssot/journey-runner.py"),
+                    "run",
+                    "--journey",
+                    journey_id,
+                    "--live",
+                ],
+                timeout=120,
+                capture_output=True,
+                text=True,
+                check=False,
             )
             triggered.append(f"{source_id} → {journey_id}")
         except Exception as exc:
@@ -183,31 +192,27 @@ def _auto_trigger(triggers: list[dict[str, Any]], root: Path) -> list[str]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--watch", action="store_true", help="continuous polling mode")
     parser.add_argument(
-        "--watch", action="store_true", help="continuous polling mode"
-    )
-    parser.add_argument(
-        "--interval", type=int, default=300,
+        "--interval",
+        type=int,
+        default=300,
         help="poll interval in seconds (watch mode)",
     )
     parser.add_argument(
-        "--auto-trigger", action="store_true",
+        "--auto-trigger",
+        action="store_true",
         help="auto-start journeys on signal detection",
     )
     args = parser.parse_args(argv)
 
     if args.watch:
-        auto_info = (
-            f"interval={args.interval}s, "
-            f"auto-trigger={args.auto_trigger}"
-        )
+        auto_info = f"interval={args.interval}s, auto-trigger={args.auto_trigger}"
         print(f"Watching signal sources ({auto_info})...", flush=True)
         while True:
             triggers = poll_once()
             for t in triggers:
-                print(
-                    json.dumps(t, ensure_ascii=False), flush=True
-                )
+                print(json.dumps(t, ensure_ascii=False), flush=True)
             if triggers and args.auto_trigger:
                 fired = _auto_trigger(triggers, ROOT)
                 for f in fired:

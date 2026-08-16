@@ -112,7 +112,9 @@ def _goal_inventory(goals: dict[str, Any]) -> dict[str, Any]:
 
 def _scene_inventory(root: Path) -> dict[str, Any]:
     """Reuse the candidate collector so the gate has one candidate definition."""
-    spec = importlib.util.spec_from_file_location("scene_card_candidates", _SCENE_CANDIDATES_PATH)
+    spec = importlib.util.spec_from_file_location(
+        "scene_card_candidates", _SCENE_CANDIDATES_PATH
+    )
     if spec is None or spec.loader is None:
         raise CoherenceInputError("scene-card candidate collector cannot be loaded")
     module = importlib.util.module_from_spec(spec)
@@ -153,7 +155,9 @@ def _scene_inventory(root: Path) -> dict[str, Any]:
     }
 
 
-def _stored_count_mismatches(state: dict[str, Any], counts: dict[str, int]) -> list[str]:
+def _stored_count_mismatches(
+    state: dict[str, Any], counts: dict[str, int]
+) -> list[str]:
     expected = {
         "active_tasks": counts["active"],
         "planned_tasks": counts["planned"],
@@ -192,8 +196,14 @@ def build_report(root: Path) -> dict[str, Any]:
         computed_flags.append("active_goals_without_active_tasks")
     if counts["active"] > 0 and execution_mode == "waiting-for-scenario/next-bet":
         computed_flags.append("execution_mode_mismatch:active_tasks_present")
-    if counts["active"] == 0 and not goal_inventory["active_goal_ids"] and execution_mode != "waiting-for-scenario/next-bet":
-        computed_flags.append("execution_mode_mismatch:expected=waiting-for-scenario/next-bet")
+    if (
+        counts["active"] == 0
+        and not goal_inventory["active_goal_ids"]
+        and execution_mode != "waiting-for-scenario/next-bet"
+    ):
+        computed_flags.append(
+            "execution_mode_mismatch:expected=waiting-for-scenario/next-bet"
+        )
     computed_flags.extend(_stored_count_mismatches(state, counts))
 
     stored_flags = state.get("divergence_flags") or []
@@ -205,7 +215,9 @@ def build_report(root: Path) -> dict[str, Any]:
         warnings.append("divergence_flags_snapshot_mismatch")
 
     stale_active = goal_inventory["stale_completed_active_goal_ids"]
-    warnings.extend(f"goal_status_stale_completed:{goal_id}" for goal_id in stale_active)
+    warnings.extend(
+        f"goal_status_stale_completed:{goal_id}" for goal_id in stale_active
+    )
 
     scene = _scene_inventory(root)
     waiting = counts["active"] == 0 and not goal_inventory["active_goal_ids"]
@@ -242,7 +254,12 @@ def build_report(root: Path) -> dict[str, Any]:
             "counts": counts,
             "stored_counts": {
                 field: state.get(field)
-                for field in ("active_tasks", "planned_tasks", "completed_tasks", "total_tasks")
+                for field in (
+                    "active_tasks",
+                    "planned_tasks",
+                    "completed_tasks",
+                    "total_tasks",
+                )
             },
             "active_goal_ids": goal_inventory["active_goal_ids"],
             "gated_goal_ids": goal_inventory["gated_goal_ids"],
@@ -264,8 +281,12 @@ def build_report(root: Path) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
-    parser.add_argument("--json", action="store_true", help="emit the complete projection")
+    parser.add_argument(
+        "--root", type=Path, default=Path(__file__).resolve().parents[2]
+    )
+    parser.add_argument(
+        "--json", action="store_true", help="emit the complete projection"
+    )
     args = parser.parse_args(argv)
     try:
         report = build_report(args.root)

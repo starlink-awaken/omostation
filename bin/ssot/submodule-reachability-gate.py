@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Verify that root gitlinks point to commits reachable from submodule remotes."""
+
 from __future__ import annotations
 
 import argparse
@@ -20,15 +21,28 @@ for _env in ("GIT_DIR", "GIT_WORK_TREE", "GIT_QUARANTINE_PATH"):
     os.environ.pop(_env, None)
 
 
-def run(cmd: list[str], *, cwd: Path = WORKSPACE, check: bool = False) -> subprocess.CompletedProcess[str]:
+def run(
+    cmd: list[str], *, cwd: Path = WORKSPACE, check: bool = False
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=check)
 
 
 def submodule_paths() -> list[str]:
-    result = run(["git", "config", "--file", ".gitmodules", "--get-regexp", r"^submodule\..*\.path$"])
+    result = run(
+        [
+            "git",
+            "config",
+            "--file",
+            ".gitmodules",
+            "--get-regexp",
+            r"^submodule\..*\.path$",
+        ]
+    )
     if result.returncode != 0:
         return []
-    return [line.split(maxsplit=1)[1] for line in result.stdout.splitlines() if line.strip()]
+    return [
+        line.split(maxsplit=1)[1] for line in result.stdout.splitlines() if line.strip()
+    ]
 
 
 def changed_submodule_paths(base: str) -> set[str]:
@@ -39,7 +53,9 @@ def changed_submodule_paths(base: str) -> set[str]:
     实际变更的 gitlink; CI full checkout 仍是全量最终守门员.
     .gitmodules 自身变化视为结构变更 → 回退全量检查 (防御).
     """
-    result = run(["git", "diff", "--name-only", base, "HEAD", "--", ".gitmodules", "projects/*"])
+    result = run(
+        ["git", "diff", "--name-only", base, "HEAD", "--", ".gitmodules", "projects/*"]
+    )
     if result.returncode != 0:
         return set()
     changed = {line.strip() for line in result.stdout.splitlines() if line.strip()}
@@ -78,9 +94,7 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
     # 治本 #907 35+ iteration: partial worktree reachability gate false-positive 死路
     # (init 子模块超时 10min, escape hatch 不覆盖 reachability).
     # 安全网: CI (full checkout, 子模块全 init) 跑同一 gate 正常验证, 是最终守门员.
-    init_check = run(
-        ["git", "rev-parse", "--is-inside-work-tree"], cwd=submodule_dir
-    )
+    init_check = run(["git", "rev-parse", "--is-inside-work-tree"], cwd=submodule_dir)
     # stdout 检查覆盖失败 (空) + false 两种非 init 情况, returncode 冗余
     if init_check.stdout.strip() != "true":
         return (
@@ -95,14 +109,23 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
         # 单 heads refspec (heads→remotes/origin/*, 不覆盖本地 checked-out refs/heads/main).
         # 配合 unshallow (C 层) 拿全 main 历史 — unshallow 后 heads refs 已含所有可达 SHA.
         refspec = "+refs/heads/*:refs/remotes/origin/*"
-        shallow_res = run(["git", "rev-parse", "--is-shallow-repository"], cwd=submodule_dir)
+        shallow_res = run(
+            ["git", "rev-parse", "--is-shallow-repository"], cwd=submodule_dir
+        )
         is_shallow = shallow_res.stdout.strip() == "true"
         if is_shallow:
-            fetch_result = run(["git", "fetch", "--quiet", "--unshallow", "origin", refspec], cwd=submodule_dir)
+            fetch_result = run(
+                ["git", "fetch", "--quiet", "--unshallow", "origin", refspec],
+                cwd=submodule_dir,
+            )
             if fetch_result.returncode != 0:
-                fetch_result = run(["git", "fetch", "--quiet", "origin", refspec], cwd=submodule_dir)
+                fetch_result = run(
+                    ["git", "fetch", "--quiet", "origin", refspec], cwd=submodule_dir
+                )
         else:
-            fetch_result = run(["git", "fetch", "--quiet", "origin", refspec], cwd=submodule_dir)
+            fetch_result = run(
+                ["git", "fetch", "--quiet", "origin", refspec], cwd=submodule_dir
+            )
         if fetch_result.returncode != 0:
             return False, f"fetch failed: {fetch_result.stderr.strip()}"
 
@@ -118,7 +141,11 @@ def remote_contains(path: str, sha: str, *, fetch: bool) -> tuple[bool, str]:
 
 
 def check(
-    source: str, *, fetch: bool, skip_paths: set[str] | None = None, only_paths: set[str] | None = None
+    source: str,
+    *,
+    fetch: bool,
+    skip_paths: set[str] | None = None,
+    only_paths: set[str] | None = None,
 ) -> dict[str, object]:
     findings: list[dict[str, object]] = []
     checked = 0
@@ -144,7 +171,14 @@ def check(
             continue
         sha = gitlink_sha(path, source)
         if sha is None:
-            findings.append({"path": path, "sha": None, "ok": False, "reason": f"no {source} gitlink"})
+            findings.append(
+                {
+                    "path": path,
+                    "sha": None,
+                    "ok": False,
+                    "reason": f"no {source} gitlink",
+                }
+            )
             continue
         checked += 1
         ok, detail = remote_contains(path, sha, fetch=fetch)
@@ -162,12 +196,27 @@ def check(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Verify submodule gitlinks are reachable from origin")
-    parser.add_argument("--source", choices=("head", "index", "worktree"), default="head")
-    parser.add_argument("--fetch", action="store_true", help="Fetch origin branches before checking")
-    parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
-    parser.add_argument("--skip", nargs="*", default=[], help="Submodule paths to skip (known false positives)")
-    parser.add_argument("--skip-file", type=str, help="File with submodule paths to skip (one per line)")
+    parser = argparse.ArgumentParser(
+        description="Verify submodule gitlinks are reachable from origin"
+    )
+    parser.add_argument(
+        "--source", choices=("head", "index", "worktree"), default="head"
+    )
+    parser.add_argument(
+        "--fetch", action="store_true", help="Fetch origin branches before checking"
+    )
+    parser.add_argument(
+        "--json", action="store_true", help="Emit machine-readable JSON"
+    )
+    parser.add_argument(
+        "--skip",
+        nargs="*",
+        default=[],
+        help="Submodule paths to skip (known false positives)",
+    )
+    parser.add_argument(
+        "--skip-file", type=str, help="File with submodule paths to skip (one per line)"
+    )
     parser.add_argument(
         "--changed-from",
         type=str,
@@ -192,7 +241,8 @@ def main() -> int:
         skip_file = Path(args.skip_file)
         if skip_file.exists():
             skip_paths.update(
-                line.strip() for line in skip_file.read_text().splitlines()
+                line.strip()
+                for line in skip_file.read_text().splitlines()
                 if line.strip() and not line.strip().startswith("#")
             )
 
@@ -200,12 +250,16 @@ def main() -> int:
     if args.changed_from:
         only_paths = changed_submodule_paths(args.changed_from)
 
-    report = check(args.source, fetch=args.fetch, skip_paths=skip_paths, only_paths=only_paths)
+    report = check(
+        args.source, fetch=args.fetch, skip_paths=skip_paths, only_paths=only_paths
+    )
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     elif report["ok"]:
         skip_msg = f", skipped={report['skipped']}" if report["skipped"] else ""
-        print(f"submodule-reachability: PASS ({report['checked']} gitlinks, source={args.source}{skip_msg})")
+        print(
+            f"submodule-reachability: PASS ({report['checked']} gitlinks, source={args.source}{skip_msg})"
+        )
     else:
         for item in report["failures"]:
             print(f"{item['path']}: {item['sha'] or '-'} unreachable: {item['reason']}")

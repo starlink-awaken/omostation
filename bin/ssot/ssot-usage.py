@@ -46,23 +46,37 @@ def check_sots(max_age_days: float) -> list[dict]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true")
-    parser.add_argument("--max-age", type=str, default="30d", help="超过 N 天未修改 = stale")
+    parser.add_argument(
+        "--max-age", type=str, default="30d", help="超过 N 天未修改 = stale"
+    )
     args = parser.parse_args()
 
     unit = args.max_age[-1]
     n = int(args.max_age[:-1])
-    max_age = n * (1 if unit == "d" else (1/24 if unit == "h" else 1))
+    max_age = n * (1 if unit == "d" else (1 / 24 if unit == "h" else 1))
 
     findings = check_sots(max_age)
     stale_count = sum(1 for f in findings if f["stale"])
 
     if args.json:
-        print(json.dumps({"max_age_days": max_age, "stale_count": stale_count, "files": findings}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "max_age_days": max_age,
+                    "stale_count": stale_count,
+                    "files": findings,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 1 if stale_count > 0 else 0
 
     print(f"SSOT usage: {len(findings)} files in {REGISTRY_DIR.name}/")
     if stale_count:
-        print(f"\n⚠️  {stale_count} file(s) older than {args.max_age} (可能需审核/删除):")
+        print(
+            f"\n⚠️  {stale_count} file(s) older than {args.max_age} (可能需审核/删除):"
+        )
         for f in findings:
             if f["stale"]:
                 print(f"  ⚠️  {f['file']:50} {f['age_days']:.0f}d old")

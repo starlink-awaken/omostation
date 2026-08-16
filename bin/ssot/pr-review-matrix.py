@@ -29,7 +29,9 @@ from typing import Any
 
 from _shared import ROOT, load_yaml, utc_now
 
-PERMISSION_MATRIX = ROOT / ".omo" / "_truth" / "registry" / "action-permission-matrix.yaml"
+PERMISSION_MATRIX = (
+    ROOT / ".omo" / "_truth" / "registry" / "action-permission-matrix.yaml"
+)
 REDLINES = ROOT / ".omo" / "_truth" / "registry" / "redlines.yaml"
 ARCHITECTURE = ROOT / "ARCHITECTURE.md"
 TASK_POLICIES = ROOT / ".omo" / "_truth" / "registry" / "task-policies.yaml"
@@ -52,6 +54,7 @@ class ReviewVerdict:
 def _load_diff(path: Path) -> str:
     if path == Path("-"):
         import sys
+
         return sys.stdin.read()
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
@@ -60,8 +63,18 @@ def _get_pr_diff(pr_number: int) -> str:
     """Fetch PR diff via gh CLI."""
     try:
         result = subprocess.run(
-            ["gh", "pr", "diff", str(pr_number), "--repo", "starlink-awaken/omostation"],
-            capture_output=True, text=True, timeout=30, check=False,
+            [
+                "gh",
+                "pr",
+                "diff",
+                str(pr_number),
+                "--repo",
+                "starlink-awaken/omostation",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
         )
         return result.stdout if result.returncode == 0 else ""
     except Exception:
@@ -69,6 +82,7 @@ def _get_pr_diff(pr_number: int) -> str:
 
 
 # ── Reviewer Agents ──────────────────────────────────────────────
+
 
 def review_risk(diff: str) -> ReviewVerdict:
     """风控审查: 检查diff是否触发redline规则."""
@@ -93,7 +107,15 @@ def review_risk(diff: str) -> ReviewVerdict:
 
 def review_security(diff: str) -> ReviewVerdict:
     """安全审查: 检查写面权限和敏感操作."""
-    sensitive_patterns = ["rm -rf", "DELETE FROM", "drop table", "chmod 777", "eval(", "exec(", "os.system"]
+    sensitive_patterns = [
+        "rm -rf",
+        "DELETE FROM",
+        "drop table",
+        "chmod 777",
+        "eval(",
+        "exec(",
+        "os.system",
+    ]
     for pat in sensitive_patterns:
         if pat in diff:
             return ReviewVerdict("security", "reject", 0.7, f"检测到敏感操作: {pat}")
@@ -103,10 +125,16 @@ def review_security(diff: str) -> ReviewVerdict:
 def review_architecture(diff: str) -> ReviewVerdict:
     """架构审查: 检查分层违规."""
     # Simple heuristic: check for cross-layer imports
-    cross_layer = ["from omo import", "from runtime import omo", "from cockpit import omo"]
+    cross_layer = [
+        "from omo import",
+        "from runtime import omo",
+        "from cockpit import omo",
+    ]
     for pat in cross_layer:
         if pat in diff:
-            return ReviewVerdict("architecture", "needs_human", 0.6, f"可能的跨层引用: {pat}")
+            return ReviewVerdict(
+                "architecture", "needs_human", 0.6, f"可能的跨层引用: {pat}"
+            )
     return ReviewVerdict("architecture", "approve", 0.75, "无分层违规")
 
 
@@ -127,11 +155,15 @@ def review_function(diff: str) -> ReviewVerdict:
     if "scene_id" in diff and "reflection_contract" not in diff:
         # Adding scene without reflection → flag
         if "+scene_id:" in diff and "reflection_contract" not in diff:
-            return ReviewVerdict("function", "needs_human", 0.6, "新增scene card缺reflection_contract")
+            return ReviewVerdict(
+                "function", "needs_human", 0.6, "新增scene card缺reflection_contract"
+            )
     return ReviewVerdict("function", "approve", 0.8, "功能完整性检查通过")
 
 
-def review_mental_model(diff: str, other_verdicts: list[ReviewVerdict]) -> ReviewVerdict:
+def review_mental_model(
+    diff: str, other_verdicts: list[ReviewVerdict]
+) -> ReviewVerdict:
     """心智模型审查: 综合其他维度 + TELOS对齐."""
     # Load TELOS context
     telos_goals = ""
@@ -150,20 +182,43 @@ def review_mental_model(diff: str, other_verdicts: list[ReviewVerdict]) -> Revie
     auto_merge_min = float(thresholds.get("auto_merge_min_confidence", 0.8))
 
     if any_reject:
-        return ReviewVerdict("mental_model", "reject", 0.9, "其他维度有reject→心智模型否决")
+        return ReviewVerdict(
+            "mental_model", "reject", 0.9, "其他维度有reject→心智模型否决"
+        )
     if any_needs_human:
-        return ReviewVerdict("mental_model", "needs_human", 0.5, "其他维度有needs_human→提级人审")
+        return ReviewVerdict(
+            "mental_model", "needs_human", 0.5, "其他维度有needs_human→提级人审"
+        )
 
     # All approve → check TELOS alignment
-    avg_confidence = sum(v.confidence for v in other_verdicts) / len(other_verdicts) if other_verdicts else 0.8
-    aligned = "goals" in telos_goals.lower() or "自主" in telos_goals or avg_confidence >= auto_merge_min
+    avg_confidence = (
+        sum(v.confidence for v in other_verdicts) / len(other_verdicts)
+        if other_verdicts
+        else 0.8
+    )
+    aligned = (
+        "goals" in telos_goals.lower()
+        or "自主" in telos_goals
+        or avg_confidence >= auto_merge_min
+    )
 
     if aligned and avg_confidence >= auto_merge_min:
-        return ReviewVerdict("mental_model", "approve", avg_confidence, f"TELOS对齐+置信度{avg_confidence:.2f}≥{auto_merge_min}")
-    return ReviewVerdict("mental_model", "needs_human", avg_confidence, f"置信度{avg_confidence:.2f}不足或TELOS对齐不确定")
+        return ReviewVerdict(
+            "mental_model",
+            "approve",
+            avg_confidence,
+            f"TELOS对齐+置信度{avg_confidence:.2f}≥{auto_merge_min}",
+        )
+    return ReviewVerdict(
+        "mental_model",
+        "needs_human",
+        avg_confidence,
+        f"置信度{avg_confidence:.2f}不足或TELOS对齐不确定",
+    )
 
 
 # ── Matrix Orchestration ─────────────────────────────────────────
+
 
 def review_diff(diff: str) -> dict[str, Any]:
     """Run all 6 reviewers + mental model → produce final verdict."""
@@ -185,7 +240,9 @@ def review_diff(diff: str) -> dict[str, Any]:
     # Final decision
     all_verdicts = [v.verdict for v in verdicts]
     matrix = load_yaml(PERMISSION_MATRIX)
-    auto_merge_min = float(matrix.get("trust_thresholds", {}).get("auto_merge_min_confidence", 0.8))
+    auto_merge_min = float(
+        matrix.get("trust_thresholds", {}).get("auto_merge_min_confidence", 0.8)
+    )
 
     if "reject" in all_verdicts:
         decision = "blocked"
@@ -217,7 +274,9 @@ def review_diff(diff: str) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--diff", type=Path, default=None, help="diff file path (or - for stdin)")
+    parser.add_argument(
+        "--diff", type=Path, default=None, help="diff file path (or - for stdin)"
+    )
     parser.add_argument("--pr", type=int, default=None, help="GitHub PR number")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
@@ -238,10 +297,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     else:
-        print(f"PR Review Matrix: {result['decision'].upper()} (confidence={result['confidence']:.2f})")
+        print(
+            f"PR Review Matrix: {result['decision'].upper()} (confidence={result['confidence']:.2f})"
+        )
         for v in result["verdicts"]:
-            marker = {"approve": "✅", "reject": "❌", "needs_human": "⚠️"}.get(v["verdict"], "?")
-            print(f"  {marker} {v['dimension']:15s} {v['verdict']:12s} conf={v['confidence']:.2f} {v['reasoning'][:60]}")
+            marker = {"approve": "✅", "reject": "❌", "needs_human": "⚠️"}.get(
+                v["verdict"], "?"
+            )
+            print(
+                f"  {marker} {v['dimension']:15s} {v['verdict']:12s} conf={v['confidence']:.2f} {v['reasoning'][:60]}"
+            )
         if result["auto_merge_eligible"]:
             print("\n🚀 Auto-merge eligible (all approve + confidence sufficient)")
     return 0

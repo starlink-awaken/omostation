@@ -45,15 +45,41 @@ _IMPORT_BUS_RE = [
 ]
 
 _CALL_RE = [
-    re.compile(r"\b(bus|bus_event|bus_control|bus_data|bus_adapter)\.\s*(publish|subscribe|emit|submit_task|schedule_callback|ack|nack|outbox_emit|schedule)\s*\("),
+    re.compile(
+        r"\b(bus|bus_event|bus_control|bus_data|bus_adapter)\.\s*(publish|subscribe|emit|submit_task|schedule_callback|ack|nack|outbox_emit|schedule)\s*\("
+    ),
     re.compile(r"\b_(bus_publish|emit_event|emit|bus_emit|publish_event)\s*\("),
     re.compile(r"\b(publish|subscribe|schedule)\s*\(\s*[^)]*BusEnvelope"),
-    re.compile(r"@\s*(bus_event|bus_control|bus_data)\.\s*(publish|subscribe|schedule_callback)"),
+    re.compile(
+        r"@\s*(bus_event|bus_control|bus_data)\.\s*(publish|subscribe|schedule_callback)"
+    ),
     re.compile(r"BusEnvelope\s*\(.*topic\s*="),
 ]
 
-_SKIP_DIRS = {"tests", "test", "docs", "doc", "examples", "benchmarks", "__pycache__", ".venv", "node_modules", "build", "dist"}
-_SKIP_BASENAMES = ("test_", "conftest", "setup", "README", "CHANGELOG", "AGENTS", "CLAUDE", "ARCHITECTURE", "Makefile")
+_SKIP_DIRS = {
+    "tests",
+    "test",
+    "docs",
+    "doc",
+    "examples",
+    "benchmarks",
+    "__pycache__",
+    ".venv",
+    "node_modules",
+    "build",
+    "dist",
+}
+_SKIP_BASENAMES = (
+    "test_",
+    "conftest",
+    "setup",
+    "README",
+    "CHANGELOG",
+    "AGENTS",
+    "CLAUDE",
+    "ARCHITECTURE",
+    "Makefile",
+)
 
 
 def _file_has_bus_import(text: str) -> bool:
@@ -167,7 +193,10 @@ def _discover_consumers(projects_dir: Path) -> list[Path]:
         if is_nested:
             continue
         # Skip the library itself
-        if project_root.name == "bus-foundation" and (project_root / "src" / "bus_foundation").exists():
+        if (
+            project_root.name == "bus-foundation"
+            and (project_root / "src" / "bus_foundation").exists()
+        ):
             continue
         projects.append(project_root)
     return projects
@@ -200,7 +229,9 @@ def main() -> int:
 
     projects = _discover_consumers(projects_dir)
     if not projects:
-        print(f"ERROR: no consumer projects found under {projects_dir}", file=sys.stderr)
+        print(
+            f"ERROR: no consumer projects found under {projects_dir}", file=sys.stderr
+        )
         return 2
 
     reports = [scan_consumer(p) for p in projects]
@@ -219,16 +250,22 @@ def main() -> int:
     if args.json:
         print(json.dumps(summary, indent=2))
     else:
-        print(f"bus-foundation consumer scan ({len(consumers)} projects, {len(active)} active, {len(dormant)} dormant)")
+        print(
+            f"bus-foundation consumer scan ({len(consumers)} projects, {len(active)} active, {len(dormant)} dormant)"
+        )
         print("=" * 80)
         for r in consumers:
             status = "ACTIVE" if r["production_calls"] > 0 else "DORMANT"
-            print(f"  [{status}] {r['project']:20s}  {r['production_calls']:3d} call site(s)")
+            print(
+                f"  [{status}] {r['project']:20s}  {r['production_calls']:3d} call site(s)"
+            )
             for site in r["call_sites"][:3]:
                 print(f"           {site['file']}  {site['line']}")
         print("=" * 80)
         if dormant:
-            print(f"\nWARNING: {len(dormant)} consumer(s) declare bus-foundation but have NO production calls:")
+            print(
+                f"\nWARNING: {len(dormant)} consumer(s) declare bus-foundation but have NO production calls:"
+            )
             for r in dormant:
                 print(f"  - {r['project']}: declares dep, no production code uses it")
             print("\nThis is the P71 class-A 'declaration without execution' trap.")

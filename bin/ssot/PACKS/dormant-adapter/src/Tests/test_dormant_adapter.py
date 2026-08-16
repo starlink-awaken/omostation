@@ -22,7 +22,8 @@ SCRIPT = REPO_ROOT / "bin" / "ssot" / "bus-usage-report.py"
 def test_no_projects_dir_is_error(tmp_path: Path) -> None:
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(tmp_path)],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 2
     assert "does not exist" in result.stderr
@@ -44,7 +45,8 @@ def test_active_consumer_is_detected(tmp_path: Path) -> None:
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(tmp_path), "--json"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 0, f"unexpected fail: {result.stderr}"
     data = json.loads(result.stdout)
@@ -71,7 +73,8 @@ def test_dormant_consumer_is_flagged(tmp_path: Path) -> None:
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(tmp_path)],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 1
     assert "DORMANT" in result.stdout or "dormant" in result.stdout.lower()
@@ -94,7 +97,8 @@ def test_test_only_usage_does_not_count(tmp_path: Path) -> None:
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(tmp_path)],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 1
 
@@ -114,7 +118,8 @@ def test_nested_package_layout_is_supported(tmp_path: Path) -> None:
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(tmp_path), "--json"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 0, f"stderr={result.stderr!r}"
     data = json.loads(result.stdout)
@@ -144,7 +149,8 @@ def test_bus_foundation_library_itself_is_skipped(tmp_path: Path) -> None:
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(tmp_path), "--json"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     data = json.loads(result.stdout)
     projects_found = {r["project"] for r in data["reports"]}

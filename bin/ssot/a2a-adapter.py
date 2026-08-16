@@ -38,16 +38,18 @@ def discover_agents() -> list[dict]:
         if data.get("schema") != "digital_agent/v2":
             continue
         identity = data.get("identity", {})
-        cards.append({
-            "@type": "AgentCard",
-            "id": data.get("id"),
-            "name": data.get("display_name", data.get("id")),
-            "description": data.get("description", ""),
-            "role": identity.get("role"),
-            "capabilities": identity.get("capabilities", []),
-            "bos_uri": f"bos://a2a/agent/{data.get('id')}",
-            "knowledge_sources": data.get("knowledge_sources", []),
-        })
+        cards.append(
+            {
+                "@type": "AgentCard",
+                "id": data.get("id"),
+                "name": data.get("display_name", data.get("id")),
+                "description": data.get("description", ""),
+                "role": identity.get("role"),
+                "capabilities": identity.get("capabilities", []),
+                "bos_uri": f"bos://a2a/agent/{data.get('id')}",
+                "knowledge_sources": data.get("knowledge_sources", []),
+            }
+        )
     return cards
 
 
@@ -57,14 +59,26 @@ def publish_cards() -> dict:
     cards = discover_agents()
     for card in cards:
         path = CARD_DIR / f"{card['id']}.json"
-        path.write_text(json.dumps(card, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+        path.write_text(
+            json.dumps(card, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
     # Also write index
     index_path = CARD_DIR / "index.json"
-    index_path.write_text(json.dumps({"agents": cards, "count": len(cards), "updated": utc_now()}, ensure_ascii=False, indent=2), encoding="utf-8")
+    index_path.write_text(
+        json.dumps(
+            {"agents": cards, "count": len(cards), "updated": utc_now()},
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     return {"published": len(cards), "dir": str(CARD_DIR.relative_to(ROOT))}
 
 
-def send_message(to_agent: str, msg_type: str, payload: dict, *, from_agent: str = "external") -> dict:
+def send_message(
+    to_agent: str, msg_type: str, payload: dict, *, from_agent: str = "external"
+) -> dict:
     """Send a message to an agent via file-based queue."""
     msg = {
         "ts": utc_now(),
@@ -104,7 +118,9 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(f"A2A Discovery: {len(cards)} agents")
             for c in cards:
-                print(f"  {c['id']:25s} role={c['role']:10s} caps={c['capabilities'][:3]}")
+                print(
+                    f"  {c['id']:25s} role={c['role']:10s} caps={c['capabilities'][:3]}"
+                )
         return 0
 
     if args.publish_cards:

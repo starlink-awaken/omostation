@@ -66,7 +66,11 @@ def _verify_evidence_ref(root: Path, ref: str) -> dict[str, Any]:
     """Verify an evidence ref points to a real merged PR."""
     match = EVIDENCE_PR_PATTERN.search(ref)
     if not match:
-        return {"ref": ref, "status": "unknown_format", "detail": "not evidence://github/pr/<N>"}
+        return {
+            "ref": ref,
+            "status": "unknown_format",
+            "detail": "not evidence://github/pr/<N>",
+        }
     pr_num = match.group(1)
     try:
         result = subprocess.run(
@@ -78,29 +82,51 @@ def _verify_evidence_ref(root: Path, ref: str) -> dict[str, Any]:
             check=False,
         )
         if result.stdout.strip():
-            return {"ref": ref, "status": "verified", "pr": pr_num, "detail": result.stdout.strip().split("\n")[0][:80]}
-        return {"ref": ref, "status": "missing", "pr": pr_num, "detail": f"PR #{pr_num} not found in git log"}
+            return {
+                "ref": ref,
+                "status": "verified",
+                "pr": pr_num,
+                "detail": result.stdout.strip().split("\n")[0][:80],
+            }
+        return {
+            "ref": ref,
+            "status": "missing",
+            "pr": pr_num,
+            "detail": f"PR #{pr_num} not found in git log",
+        }
     except (OSError, subprocess.SubprocessError) as exc:
         return {"ref": ref, "status": "error", "pr": pr_num, "detail": str(exc)[:100]}
 
 
-def _verify_internal_permission(scene_card: dict[str, Any], root: Path) -> dict[str, Any]:
+def _verify_internal_permission(
+    scene_card: dict[str, Any], root: Path
+) -> dict[str, Any]:
     """Verify permission_ref uses internal RBAC format with scope."""
     perm_ref = _text(scene_card.get("permission_ref"))
     scope = scene_card.get("permission_scope", [])
     if not perm_ref:
         return {"status": "missing", "detail": "permission_ref is empty"}
     if not perm_ref.startswith(INTERNAL_PERMISSION_PREFIX):
-        return {"status": "invalid_format", "detail": f"expected {INTERNAL_PERMISSION_PREFIX} prefix"}
+        return {
+            "status": "invalid_format",
+            "detail": f"expected {INTERNAL_PERMISSION_PREFIX} prefix",
+        }
     if not isinstance(scope, list) or not scope:
-        return {"status": "missing_scope", "detail": "permission_scope is empty or not a list"}
+        return {
+            "status": "missing_scope",
+            "detail": "permission_scope is empty or not a list",
+        }
     # Validate scope names against controlled vocabulary
     vocab = _load_scope_vocabulary(root)
     if vocab:
         valid_names = {item["name"] for item in vocab}
         unknown = [s for s in scope if s not in valid_names]
         if unknown:
-            return {"status": "invalid_scope", "detail": f"unknown scope(s): {unknown}", "valid_names": sorted(valid_names)}
+            return {
+                "status": "invalid_scope",
+                "detail": f"unknown scope(s): {unknown}",
+                "valid_names": sorted(valid_names),
+            }
     return {"status": "valid", "scope": scope}
 
 
@@ -111,6 +137,7 @@ def _load_scope_vocabulary(root: Path) -> list[dict[str, str]] | None:
         return None
     try:
         import yaml
+
         data = yaml.safe_load(vocab_path.read_text(encoding="utf-8"))
         if isinstance(data, dict):
             return data.get("internal_pipeline", [])
@@ -125,10 +152,22 @@ def _scene_card_check(scene_card: dict[str, Any]) -> dict[str, Any]:
 
     # Basic field presence check (same as external preflight)
     required_fields = (
-        "scene_id", "journey_id", "goal", "trigger", "input_contract",
-        "result_contract", "outcome_metric", "consumer", "approver", "owner",
-        "failure_cost", "data_classification", "data_scope", "operator",
-        "permission_ref", "rollback_plan",
+        "scene_id",
+        "journey_id",
+        "goal",
+        "trigger",
+        "input_contract",
+        "result_contract",
+        "outcome_metric",
+        "consumer",
+        "approver",
+        "owner",
+        "failure_cost",
+        "data_classification",
+        "data_scope",
+        "operator",
+        "permission_ref",
+        "rollback_plan",
     )
     for field in required_fields:
         if not _text(scene_card.get(field)):
@@ -159,46 +198,60 @@ def _scene_card_check(scene_card: dict[str, Any]) -> dict[str, Any]:
     return {
         "missing_fields": sorted(set(missing)),
         "sample_ref_count": len(sample_refs) if isinstance(sample_refs, list) else 0,
-        "activation_evidence_ref_count": len(activation_refs) if isinstance(activation_refs, list) else 0,
-        "required_capabilities": required_capabilities if isinstance(required_capabilities, list) else [],
+        "activation_evidence_ref_count": len(activation_refs)
+        if isinstance(activation_refs, list)
+        else 0,
+        "required_capabilities": required_capabilities
+        if isinstance(required_capabilities, list)
+        else [],
         "scene_type": scene_type,
     }
 
 
-def _capability_checks(required_capabilities: list[str], root: Path) -> list[dict[str, Any]]:
+def _capability_checks(
+    required_capabilities: list[str], root: Path
+) -> list[dict[str, Any]]:
     """Check each required capability against make targets."""
     checks: list[dict[str, Any]] = []
     for capability in required_capabilities:
         if not capability.startswith(CAPABILITY_PREFIX):
-            checks.append({
-                "capability": capability,
-                "status": "invalid_format",
-                "detail": f"expected {CAPABILITY_PREFIX} prefix",
-            })
+            checks.append(
+                {
+                    "capability": capability,
+                    "status": "invalid_format",
+                    "detail": f"expected {CAPABILITY_PREFIX} prefix",
+                }
+            )
             continue
-        name = capability[len(CAPABILITY_PREFIX):]
+        name = capability[len(CAPABILITY_PREFIX) :]
         if _check_make_target(root, name):
-            checks.append({
-                "capability": capability,
-                "make_target": name,
-                "status": "available",
-            })
+            checks.append(
+                {
+                    "capability": capability,
+                    "make_target": name,
+                    "status": "available",
+                }
+            )
         else:
             prefix_match = _check_make_target_prefix(root, name)
             if prefix_match:
-                checks.append({
-                    "capability": capability,
-                    "make_target": prefix_match,
-                    "status": "available",
-                    "detail": f"prefix match: {name} → {prefix_match}",
-                })
+                checks.append(
+                    {
+                        "capability": capability,
+                        "make_target": prefix_match,
+                        "status": "available",
+                        "detail": f"prefix match: {name} → {prefix_match}",
+                    }
+                )
             else:
-                checks.append({
-                    "capability": capability,
-                    "make_target": name,
-                    "status": "unavailable",
-                    "detail": f"make target '{name}' not found in Makefile",
-                })
+                checks.append(
+                    {
+                        "capability": capability,
+                        "make_target": name,
+                        "status": "unavailable",
+                        "detail": f"make target '{name}' not found in Makefile",
+                    }
+                )
     return checks
 
 
@@ -222,13 +275,18 @@ def build_preflight(
     sample_refs = scene_card.get("sample_refs", [])
     evidence_checks = [_verify_evidence_ref(root, ref) for ref in sample_refs]
     activation_refs = scene_card.get("activation_evidence_refs", [])
-    activation_evidence_checks = [_verify_evidence_ref(root, ref) for ref in activation_refs]
+    activation_evidence_checks = [
+        _verify_evidence_ref(root, ref) for ref in activation_refs
+    ]
 
     permission_check = _verify_internal_permission(scene_card, root)
 
     # Aggregate missing
     missing = list(scene_check["missing_fields"])
-    if any(c["status"] == "unavailable" or c["status"] == "invalid_format" for c in capability_checks):
+    if any(
+        c["status"] == "unavailable" or c["status"] == "invalid_format"
+        for c in capability_checks
+    ):
         missing.append("internal_capability_availability")
     if any(e["status"] == "missing" for e in evidence_checks):
         missing.append("sample_evidence_verification")
@@ -273,7 +331,9 @@ def build_preflight(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument(
+        "--root", type=Path, default=Path(__file__).resolve().parents[2]
+    )
     parser.add_argument("--scene-card", type=Path, required=True)
     args = parser.parse_args(argv)
 

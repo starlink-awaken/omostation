@@ -77,14 +77,18 @@ def _rotate_one(path: Path, keep: int, dry_run: bool) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--max-bytes", type=int, default=5 * 1024 * 1024, help="轮转阈值 (默认 5MB)")
+    parser.add_argument(
+        "--max-bytes", type=int, default=5 * 1024 * 1024, help="轮转阈值 (默认 5MB)"
+    )
     parser.add_argument("--keep", type=int, default=3, help="保留份数 (默认 3)")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     candidates = _candidate_files()
     over = [p for p in candidates if p.stat().st_size > args.max_bytes]
-    print(f"log-rotate: {len(candidates)} candidate(s), {len(over)} over {args.max_bytes} bytes")
+    print(
+        f"log-rotate: {len(candidates)} candidate(s), {len(over)} over {args.max_bytes} bytes"
+    )
     rotated = 0
     for p in over:
         print(f"  rotate: {p} ({p.stat().st_size} bytes)")

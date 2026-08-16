@@ -7,6 +7,7 @@
 # verifier: pytest tests/test_doc_governance_migrate.py
 # ---
 """Apply reviewable document-governance metadata migrations."""
+
 from __future__ import annotations
 
 import argparse
@@ -41,7 +42,15 @@ def _default_metadata(
     lifecycle = str(surface.get("lifecycle", "contract"))
     status = "active"
     if lifecycle == "history" or parts.intersection(
-        {"archive", "audits", "audit", "closeout", "reports", "retrospectives", "reviews"}
+        {
+            "archive",
+            "audits",
+            "audit",
+            "closeout",
+            "reports",
+            "retrospectives",
+            "reviews",
+        }
     ):
         status = "archived"
         lifecycle = "history"
@@ -110,9 +119,7 @@ def _add_missing_scalars(
                 additions.append("review-state: content-reviewed")
             current["review-state"] = "content-reviewed"
         if "content-reviewed-at" not in current:
-            additions.append(
-                f"content-reviewed-at: {migration_date.isoformat()}"
-            )
+            additions.append(f"content-reviewed-at: {migration_date.isoformat()}")
             current["content-reviewed-at"] = migration_date.isoformat()
     elif current.get("review-state") == "content-reviewed":
         return content, False

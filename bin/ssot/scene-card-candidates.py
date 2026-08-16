@@ -134,7 +134,9 @@ def _from_seed(root: Path, path: Path, seed: dict[str, Any]) -> SceneCardCandida
     )
 
 
-def _from_scenario(root: Path, path: Path, scenario: dict[str, Any]) -> SceneCardCandidate:
+def _from_scenario(
+    root: Path, path: Path, scenario: dict[str, Any]
+) -> SceneCardCandidate:
     scenario_id = _text(scenario.get("id"), "scenario.id")
     description = _text(scenario.get("description"), "scenario.description")
     capabilities = _refs(scenario.get("capabilities"), "scenario.capabilities")

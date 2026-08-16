@@ -113,6 +113,7 @@ def main() -> int:
     current = (
         json.loads(REGISTRY.read_text(encoding="utf-8")) if REGISTRY.exists() else []
     )
+
     # Compare without registered_at noise
     def _canon(rows: list[dict]) -> list[dict]:
         out = []

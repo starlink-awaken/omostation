@@ -20,7 +20,10 @@ from datetime import datetime, timezone
 def gh_api(path: str) -> dict:
     proc = subprocess.run(
         ["gh", "api", "-X", "GET", path],
-        capture_output=True, text=True, check=False, timeout=30,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
     )
     if proc.returncode != 0 or not proc.stdout.strip():
         return {}
@@ -29,8 +32,17 @@ def gh_api(path: str) -> dict:
 
 def delete_run(run_id: int) -> bool:
     proc = subprocess.run(
-        ["gh", "api", "-X", "DELETE", f"repos/starlink-awaken/omostation/actions/runs/{run_id}"],
-        capture_output=True, text=True, check=False, timeout=30,
+        [
+            "gh",
+            "api",
+            "-X",
+            "DELETE",
+            f"repos/starlink-awaken/omostation/actions/runs/{run_id}",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
     )
     return proc.returncode == 0
 
@@ -39,7 +51,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--keep", type=int, default=5000, help="保留最近 N 个 runs")
     parser.add_argument("--apply", action="store_true", help="真实删除")
-    parser.add_argument("--start-page", type=int, default=301, help="从第几页开始删 (每页100 runs)")
+    parser.add_argument(
+        "--start-page", type=int, default=301, help="从第几页开始删 (每页100 runs)"
+    )
     parser.add_argument("--max-pages", type=int, default=500, help="最多扫几页")
     args = parser.parse_args()
 
@@ -52,7 +66,9 @@ def main() -> int:
     consecutive_fail = 0
 
     for page in range(args.start_page, args.start_page + args.max_pages):
-        data = gh_api(f"repos/starlink-awaken/omostation/actions/runs?per_page=100&page={page}")
+        data = gh_api(
+            f"repos/starlink-awaken/omostation/actions/runs?per_page=100&page={page}"
+        )
         runs = data.get("workflow_runs", [])
         if not runs:
             break
@@ -74,7 +90,9 @@ def main() -> int:
         if consecutive_fail >= 5:
             break
 
-    print(f"prune complete: deleted={deleted} errors={errors} scanned_pages={page - args.start_page + 1}")
+    print(
+        f"prune complete: deleted={deleted} errors={errors} scanned_pages={page - args.start_page + 1}"
+    )
     return 0
 
 

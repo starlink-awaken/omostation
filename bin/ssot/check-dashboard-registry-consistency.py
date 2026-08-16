@@ -7,6 +7,7 @@ lifecycle_state=partial 的 item 数. 不一致 → 看板停更或漂移 (ISC-5
 用法:
   python bin/ssot/check-dashboard-registry-consistency.py   # 不一致 exit 1
 """
+
 from __future__ import annotations
 
 import sys
@@ -23,7 +24,12 @@ def _load_yaml_aware(path: Path) -> dict:
         return {}
     try:
         import yaml  # noqa: PLC0415
-        docs = [d for d in yaml.safe_load_all(path.read_text(encoding="utf-8")) if isinstance(d, dict)]
+
+        docs = [
+            d
+            for d in yaml.safe_load_all(path.read_text(encoding="utf-8"))
+            if isinstance(d, dict)
+        ]
         return docs[-1] if docs else {}
     except Exception:  # noqa: BLE001
         return {}
@@ -43,15 +49,20 @@ def main() -> int:
     # registry 端: lifecycle_state=partial 的 item 数
     items = reg.get("items") or []
     reg_partial = sum(
-        1 for it in items
+        1
+        for it in items
         if isinstance(it, dict) and it.get("lifecycle_state") == "partial"
     )
 
     if dash_partial == reg_partial:
         print(f"✅ dashboard-registry consistency: partial={dash_partial} (一致)")
         return 0
-    print(f"❌ dashboard-registry 不一致: dashboard partial={dash_partial} vs registry partial={reg_partial}")
-    print(f"   治本: 看 ISC-50 (两套看板 SSOT 统一 ADR) — dashboard 停更或漂移导致 partial 计数分叉")
+    print(
+        f"❌ dashboard-registry 不一致: dashboard partial={dash_partial} vs registry partial={reg_partial}"
+    )
+    print(
+        f"   治本: 看 ISC-50 (两套看板 SSOT 统一 ADR) — dashboard 停更或漂移导致 partial 计数分叉"
+    )
     return 1
 
 
