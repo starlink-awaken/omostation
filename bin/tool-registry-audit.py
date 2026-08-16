@@ -457,6 +457,79 @@ def classify_duplication_conflicts(
     return managed_high_conflicts, unmanaged_high_conflicts, high_conflicts
 
 
+def analyze_dependency_hotspots(
+    paths: List[Path],
+    out_edges: Dict[str, Set[str]],
+    in_edges: Dict[str, Set[str]],
+    duplicates: Dict[str, List[str]],
+    parallel_candidates: List[Dict[str, object]],
+    manifest_gaps: List[Dict[str, object]],
+) -> List[Dict[str, object]]:
+    """按依赖集中度和并行收敛缺口生成可落地热点顺序。"""
+
+    candidate_by_name: Dict[str, Dict[str, object]] = {
+        str(item.get("name", "")).strip(): item for item in parallel_candidates
+    }
+    gaps_by_name: Dict[str, List[str]] = {
+        str(item.get("name", "")).strip(): list(item.get("gap_reasons", []))
+        for item in manifest_gaps
+    }
+
+    duplicates_map: Dict[str, List[str]] = {
+        name: files for name, files in duplicates.items() if len(files) >= 2
+    }
+
+    hotspot_candidates: List[Tuple[str, int, int, int, Dict[str, List[str]]]] = []
+    path_list = [str(p.relative_to(ROOT)) for p in paths]
+    duplicate_path_set = {item for items in duplicates_map.values() for item in items}
+    for path in path_list:
+        out_degree = len(out_edges.get(path, set()))
+        in_degree = len(in_edges.get(path, set()))
+        risk_score = (out_degree * 3) + (in_degree * 2)
+        if risk_score < 4 and path not in duplicate_path_set:
+            continue
+
+        norm_name = normalize_name(Path(path).name)
+        reasons = gaps_by_name.get(norm_name, [])
+        if norm_name in candidate_by_name:
+            reasons = list(reasons)
+            gap_status = candidate_by_name[norm_name].get("managed")
+            if gap_status is False:
+                risk_score += 8
+                reasons.append("unmanaged_parallel_candidate")
+            else:
+                reasons.append("managed_parallel_candidate")
+        elif path in duplicate_path_set:
+            reasons.append("duplicate_name")
+            risk_score += 2
+
+        hotspot_candidates.append((path, in_degree, out_degree, risk_score, {"gap_reasons": reasons}))
+
+    hotspots = []
+    for path, in_degree, out_degree, risk_score, meta in sorted(
+        hotspot_candidates, key=lambda x: (x[3], x[1] + x[2]), reverse=True
+    )[:25]:
+        callers = sorted(in_edges.get(path, set()))
+        callees = sorted(out_edges.get(path, set()))
+        norm_name = normalize_name(Path(path).name)
+        hotspots.append(
+            {
+                "path": path,
+                "normalized_name": norm_name,
+                "in_degree": in_degree,
+                "out_degree": out_degree,
+                "risk_score": risk_score,
+                "hotspot_impact": in_degree + out_degree,
+                "callers": callers[:20],
+                "callees": callees[:20],
+                "is_parallel_candidate": norm_name in candidate_by_name,
+                "dependency_gap_reasons": meta.get("gap_reasons", []),
+                "managed_parallel": candidate_by_name.get(norm_name, {}).get("managed", False),
+            }
+        )
+    return hotspots
+
+
 def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]) -> Dict:
     types: Counter[str] = Counter()
     duplicates: defaultdict[str, List[str]] = defaultdict(list)
@@ -497,6 +570,14 @@ def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]
     cycles = filter_cycles(detect_cycles(out_edges))
     top_out = sorted(out_degree.items(), key=lambda i: i[1], reverse=True)[:10]
     top_in = sorted(in_degree.items(), key=lambda i: i[1], reverse=True)[:10]
+    dependency_hotspots = analyze_dependency_hotspots(
+        paths,
+        out_edges,
+        in_edges,
+        duplicated,
+        parallel_candidates,
+        manifest_gaps,
+    )
 
     convergence = []
     for node, outd in top_out:
@@ -514,10 +595,11 @@ def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]
             "high_conflict_duplicates": len(duplicate_conflicts),
             "managed_parallel_duplicates": len(managed_duplicates),
             "unmanaged_parallel_duplicates": len(unmanaged_duplicates),
-            "parallel_candidates": len(parallel_candidates),
-            "parallel_manifest_gaps": len(manifest_gaps),
-            "unmanaged_parallel_candidates": unmanaged_parallel,
-            "mirrored_script_duplicates": len(mirrored_script_duplicates),
+        "parallel_candidates": len(parallel_candidates),
+        "parallel_manifest_gaps": len(manifest_gaps),
+        "unmanaged_parallel_candidates": unmanaged_parallel,
+        "dependency_hotspots": len(dependency_hotspots),
+        "mirrored_script_duplicates": len(mirrored_script_duplicates),
             "mirror_adjustments": mirror_adjustments,
             "edges": sum(out_degree.values()),
             "shim_count": sum(1 for role in roles.values() if role == "shim"),
@@ -533,6 +615,7 @@ def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]
             "unmanaged_parallel_duplicates": unmanaged_duplicates,
             "parallel_candidates": parallel_candidates,
             "parallel_manifest_gaps": manifest_gaps,
+            "dependency_hotspots": dependency_hotspots,
             "duplicate_conflicts": duplicate_conflicts,
             "cycles": cycles[:20],
         },
@@ -606,6 +689,7 @@ def main() -> int:
     print(f"parallel manifest gaps: {payload['stats']['parallel_manifest_gaps']}")
     print(f"managed parallel duplicates: {payload['stats']['managed_parallel_duplicates']}")
     print(f"unmanaged parallel duplicates: {payload['stats']['unmanaged_parallel_duplicates']}")
+    print(f"dependency hotspots: {len(payload['findings']['dependency_hotspots'])}")
     print(
         "mirrored script duplicates: "
         f"{payload['stats']['mirrored_script_duplicates']} "
