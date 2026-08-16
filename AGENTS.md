@@ -16,6 +16,10 @@ Before editing:
 6. For multi-file or high-risk changes, explain the edit surface before applying patches.
 7. **B.D.S.K. Virtual Board & Compute Deliberation** — For high-risk architectural changes, trade-offs, or local LLM/edge compute integration, refer to [`.agents/skills/bdsk-virtual-board/SKILL.md`](.agents/skills/bdsk-virtual-board/SKILL.md) to invoke the 4-Corner (`@Builder`/`@Devil`/`@Sage`/`@Keeper`) consensus engine (Mode-A/B). All local/edge LLM inference MUST route through **AetherForge + omlxc v3.4.0 (`bos://compute/aetherforge/infer`)** with 0ms TTFT system prefix caching, dynamic VRAM budgeting & compaction advisory, thermal guard penalty, and FastMCP fabric tools (`make fabric-inspect`, `make fabric-warm`, `make fabric-vram`, `make fabric-bench`).
 8. **Multi-Agent Observability** — Run `make omo-status` for a <0.2s Rich Panel status snapshot (Agent heartbeats, locks, submodules, BETs), and `make omo-top` for the real-time Textual 1.x control plane.
+9. **MOF Dynamic Constraint Governance (ADR-0190)** — All Agent actions (tool calls, code edits, command execution, and file writing) are dynamically inspected and governed by the MOF L0 Dynamic Constraint Engine in real-time (<0.2ms latency).
+   - **Proactive Context Synthesis**: System prompt dynamically receives `<mof_architecture_guardrails>` for the active domain/layer.
+   - **One-Shot Self-Healing**: Violations return structured diagnostic envelopes containing `suggested_patch` code recipes.
+   - **CLI & FastMCP Tools**: Use `ecos-constraint explain <rule_id>`, `ecos-constraint audit`, `ecos-constraint eval`, `ecos-constraint drift`, or FastMCP `runtime_governance_preflight` / `runtime_governance_guardrails` / `runtime_governance_explain`.
 
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
 
