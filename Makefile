@@ -19,9 +19,9 @@ help:
 	@echo ""
 	@echo "=== 架构检查 ==="
 	@echo "make check-layers      分层依赖检查 (docs/layer-contract.yaml)"
-	@echo "make bin-tool-registry-audit             扫描 bin 工具目录（依赖闭环/命名债务）"
-	@echo "make bin-tool-registry-audit-strict       扫描并启用严格门禁"
-	@echo "make bin-tool-registry-audit-emit         导出 bin 盘点 JSON"
+	@echo "make bin-tool-registry-audit             扫描 bin 与 scripts/bin 工具目录（依赖闭环/命名债务）"
+	@echo "make bin-tool-registry-audit-strict       扫描并启用严格门禁（脚本层并行用清单托底）"
+	@echo "make bin-tool-registry-audit-emit         导出 bin/ scripts/bin 盘点 JSON"
 	@echo "make bin-tool-registry-convergence         盘点收敛候选（高出入度聚类）"
 	@echo "make ssot-status       SSOT 变更状态检查"
 	@echo "make evidence-smoke    BOS 声明/执行 + feedback 全量 smoke (ADR-0219)"
@@ -222,19 +222,21 @@ tool-audit:  ## 审计 bin/ssot/ 工具使用情况 (标记 dormant)
 	@python3 bin/ssot/tool-usage-audit.py
 
 TOOL_REGISTRY_SNAPSHOT ?= artifacts/bin-tool-registry-audit.json
+BIN_TOOL_REGISTRY_MANIFEST ?= docs/operations/bin-scripts-convergence-manifest.json
+TOOL_REGISTRY_SCOPE ?= both
 
 bin-tool-registry-audit:  ## 扫描 bin 工具调用图与命名债务
-	@python3 bin/tool-registry-audit.py --snapshot "$(TOOL_REGISTRY_SNAPSHOT)"
+		@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)"
 
 bin-tool-registry-audit-emit:  ## 导出 bin 盘点 JSON
-	@python3 bin/tool-registry-audit.py --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --emit
+		@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --emit
 
 bin-tool-registry-audit-strict:  ## 严格检查（会返回非零）
-	@python3 bin/tool-registry-audit.py --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --strict
+		@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --strict
 
 bin-tool-registry-convergence:  ## 输出收敛候选（按度中心）
-		@python3 bin/tool-registry-audit.py --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --json | \
-		python3 -c "import json,sys;data=json.load(sys.stdin);print('Top out-degree convergence:');[print(f'  {path}: {outd}') for path,outd in data.get('top_out_degree',[])];print('Top in-degree convergence:');[print(f'  {path}: {ind}') for path,ind in data.get('top_in_degree',[])]"
+			@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --json | \
+			python3 -c "import json,sys;data=json.load(sys.stdin);print('Top out-degree convergence:');[print(f'  {path}: {outd}') for path,outd in data.get('top_out_degree',[])];print('Top in-degree convergence:');[print(f'  {path}: {ind}') for path,ind in data.get('top_in_degree',[])]"
 
 scene-feedback:  ## 列出最近的 scene feedback
 	@python3 bin/ssot/scene-feedback-collector.py list --limit 10

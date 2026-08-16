@@ -1,0 +1,470 @@
+{
+  "generated_at": "2026-08-15T13:31:48.394393Z",
+  "entries": [
+    {
+      "name": "adr_coverage",
+      "bin": "bin/adr/adr-coverage.py",
+      "scripts": "scripts/bin/adr/adr-coverage.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/adr/adr-coverage.py",
+          "scripts/bin/adr/adr-coverage.py"
+        ]
+      }
+    },
+    {
+      "name": "agent_workflow",
+      "bin": "bin/agent-workflow.py",
+      "scripts": "scripts/bin/agent-workflow.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/agent-workflow.py",
+          "scripts/bin/agent-workflow.py"
+        ]
+      }
+    },
+    {
+      "name": "change_lane_check",
+      "bin": "bin/change-lane-check.py",
+      "scripts": "scripts/bin/change-lane-check.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/change-lane-check.py",
+          "scripts/bin/change-lane-check.py"
+        ]
+      }
+    },
+    {
+      "name": "check_governance_ratio",
+      "bin": "bin/gac/check-governance-ratio.py",
+      "scripts": "scripts/bin/gac/check-governance-ratio.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/check-governance-ratio.py",
+          "scripts/bin/gac/check-governance-ratio.py"
+        ]
+      }
+    },
+    {
+      "name": "check_mof_capabilities_drift",
+      "bin": "bin/mof/check-mof-capabilities-drift.py",
+      "scripts": "scripts/bin/mof/check-mof-capabilities-drift.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/mof/check-mof-capabilities-drift.py",
+          "scripts/bin/mof/check-mof-capabilities-drift.py"
+        ]
+      }
+    },
+    {
+      "name": "check_work_landed",
+      "bin": "bin/gac/check-work-landed.py",
+      "scripts": "scripts/bin/gac/check-work-landed.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/check-work-landed.py",
+          "scripts/bin/gac/check-work-landed.py"
+        ]
+      }
+    },
+    {
+      "name": "compass_radar",
+      "bin": "bin/compass_radar.py",
+      "scripts": "scripts/bin/compass_radar.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/compass_radar.py",
+          "scripts/bin/compass_radar.py"
+        ]
+      }
+    },
+    {
+      "name": "ecos_link",
+      "bin": "bin/mof/ecos-link",
+      "scripts": "scripts/bin/mof/ecos-link",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/mof/ecos-link",
+          "scripts/bin/mof/ecos-link"
+        ]
+      }
+    },
+    {
+      "name": "evidence_smoke",
+      "bin": "bin/gac/evidence-smoke.py",
+      "scripts": "scripts/bin/gac/evidence-smoke.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/evidence-smoke.py",
+          "scripts/bin/gac/evidence-smoke.py"
+        ]
+      }
+    },
+    {
+      "name": "gac_daemon",
+      "bin": "bin/gac/gac-daemon.py",
+      "scripts": "scripts/bin/gac/gac-daemon.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-daemon.py",
+          "scripts/bin/gac/gac-daemon.py"
+        ]
+      }
+    },
+    {
+      "name": "gac_drift",
+      "bin": "bin/gac/gac-drift.py",
+      "scripts": "scripts/bin/gac/gac-drift.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-drift.py",
+          "scripts/bin/gac/gac-drift.py"
+        ]
+      }
+    },
+    {
+      "name": "gac_executor",
+      "bin": "bin/gac/gac-executor.py",
+      "scripts": "scripts/bin/gac/gac-executor.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-executor.py",
+          "scripts/bin/gac/gac-executor.py"
+        ]
+      }
+    },
+    {
+      "name": "gac_healthcheck",
+      "bin": "bin/gac/gac-healthcheck.py",
+      "scripts": "scripts/bin/gac/gac-healthcheck.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-healthcheck.py",
+          "scripts/bin/gac/gac-healthcheck.py"
+        ]
+      }
+    },
+    {
+      "name": "gac_ingest_legacy",
+      "bin": "bin/gac/gac-ingest-legacy.py",
+      "scripts": "scripts/bin/gac/gac-ingest-legacy.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-ingest-legacy.py",
+          "scripts/bin/gac/gac-ingest-legacy.py"
+        ]
+      }
+    },
+    {
+      "name": "gac_local_gate",
+      "bin": "bin/gac/gac-local-gate.py",
+      "scripts": "scripts/bin/gac/gac-local-gate.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-local-gate.py",
+          "scripts/bin/gac/gac-local-gate.py"
+        ]
+      }
+    },
+    {
+      "name": "gac_m1_sync",
+      "bin": "bin/gac/gac-m1-sync.py",
+      "scripts": "scripts/bin/gac/gac-m1-sync.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-m1-sync.py",
+          "scripts/bin/gac/gac-m1-sync.py"
+        ]
+      }
+    },
+    {
+      "name": "gac_validate",
+      "bin": "bin/gac/gac-validate.py",
+      "scripts": "scripts/bin/gac/gac-validate.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-validate.py",
+          "scripts/bin/gac/gac-validate.py"
+        ]
+      }
+    },
+    {
+      "name": "gac_worktree",
+      "bin": "bin/gac/gac-worktree.sh",
+      "scripts": "scripts/bin/gac/gac-worktree.sh",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-worktree.sh",
+          "scripts/bin/gac/gac-worktree.sh"
+        ]
+      }
+    },
+    {
+      "name": "gac_worktree_cleanup",
+      "bin": "bin/gac/gac-worktree-cleanup.sh",
+      "scripts": "scripts/bin/gac/gac-worktree-cleanup.sh",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-worktree-cleanup.sh",
+          "scripts/bin/gac/gac-worktree-cleanup.sh"
+        ]
+      }
+    },
+    {
+      "name": "gac_worktree_prune",
+      "bin": "bin/gac/gac-worktree-prune.sh",
+      "scripts": "scripts/bin/gac/gac-worktree-prune.sh",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/gac-worktree-prune.sh",
+          "scripts/bin/gac/gac-worktree-prune.sh"
+        ]
+      }
+    },
+    {
+      "name": "gen_capability_registry",
+      "bin": "bin/cockpit/gen-capability-registry.py",
+      "scripts": "scripts/bin/cockpit/gen-capability-registry.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/cockpit/gen-capability-registry.py",
+          "scripts/bin/cockpit/gen-capability-registry.py"
+        ]
+      }
+    },
+    {
+      "name": "gen_service_configs",
+      "bin": "bin/mof/gen-service-configs.py",
+      "scripts": "scripts/bin/mof/gen-service-configs.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/mof/gen-service-configs.py",
+          "scripts/bin/mof/gen-service-configs.py"
+        ]
+      }
+    },
+    {
+      "name": "generate_brief",
+      "bin": "bin/mof/generate-brief.py",
+      "scripts": "scripts/bin/mof/generate-brief.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/mof/generate-brief.py",
+          "scripts/bin/mof/generate-brief.py"
+        ]
+      }
+    },
+    {
+      "name": "governance_convergence_lint",
+      "bin": "bin/gac/governance-convergence-lint.py",
+      "scripts": "scripts/bin/gac/governance-convergence-lint.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/governance-convergence-lint.py",
+          "scripts/bin/gac/governance-convergence-lint.py"
+        ]
+      }
+    },
+    {
+      "name": "governance_dashboard",
+      "bin": "bin/gac/governance-dashboard.py",
+      "scripts": "scripts/bin/gac/governance-dashboard.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/governance-dashboard.py",
+          "scripts/bin/gac/governance-dashboard.py"
+        ]
+      }
+    },
+    {
+      "name": "governance_evolution",
+      "bin": "bin/gac/governance-evolution.py",
+      "scripts": "scripts/bin/gac/governance-evolution.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/governance-evolution.py",
+          "scripts/bin/gac/governance-evolution.py"
+        ]
+      }
+    },
+    {
+      "name": "install_watch_agent",
+      "bin": "bin/gac/install-watch-agent.py",
+      "scripts": "scripts/bin/gac/install-watch-agent.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/install-watch-agent.py",
+          "scripts/bin/gac/install-watch-agent.py"
+        ]
+      }
+    },
+    {
+      "name": "knowledge_foundry_cron",
+      "bin": "bin/gac/knowledge-foundry-cron.py",
+      "scripts": "scripts/bin/gac/knowledge-foundry-cron.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/knowledge-foundry-cron.py",
+          "scripts/bin/gac/knowledge-foundry-cron.py"
+        ]
+      }
+    },
+    {
+      "name": "swarm_discipline",
+      "bin": "bin/gac/swarm_discipline.py",
+      "scripts": "scripts/bin/gac/swarm_discipline.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/swarm_discipline.py",
+          "scripts/bin/gac/swarm_discipline.py"
+        ]
+      }
+    },
+    {
+      "name": "swarm_discipline_cli",
+      "bin": "bin/gac/swarm-discipline-cli.py",
+      "scripts": "scripts/bin/gac/swarm-discipline-cli.py",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/swarm-discipline-cli.py",
+          "scripts/bin/gac/swarm-discipline-cli.py"
+        ]
+      }
+    },
+    {
+      "name": "swarm_git",
+      "bin": "bin/gac/swarm-git",
+      "scripts": "scripts/bin/gac/swarm-git",
+      "status": "managed",
+      "action": "bin-master, scripts-compat-shim",
+      "owner": "governance",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "evidence": {
+        "active_files": [
+          "bin/gac/swarm-git",
+          "scripts/bin/gac/swarm-git"
+        ]
+      }
+    }
+  ]
+}

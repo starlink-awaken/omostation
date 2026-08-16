@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import hashlib
 import re
 import stat
 from collections import Counter, defaultdict
@@ -21,7 +22,10 @@ from typing import Dict, List, Set, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
 BIN_DIR = ROOT / "bin"
+SCRIPTS_BIN_DIR = ROOT / "scripts" / "bin"
 SCRIPT_SUFFIXES = {".py", ".sh", ".bash", ".zsh"}
+WRAPPER_HINTS = ("Compatibility wrapper", "CLI alias")
+DEFAULT_PARALLEL_MANIFEST = ROOT / "docs/operations/bin-scripts-convergence-manifest.json"
 
 
 CALL_RE = re.compile(
@@ -62,6 +66,8 @@ def is_candidate_script(path: Path) -> bool:
     if not path.is_file():
         return False
     suffix = path.suffix.lower()
+    if suffix == ".md":
+        return False
     if suffix in SCRIPT_SUFFIXES:
         return True
     if is_executable(path) and read_shebang(path):
@@ -69,10 +75,89 @@ def is_candidate_script(path: Path) -> bool:
     return False
 
 
+def file_signature(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def load_parallel_manifest(path: Path) -> dict[str, dict[str, object]]:
+    if not path.is_file():
+        return {}
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    entries = raw.get("entries") if isinstance(raw, dict) else None
+    if not isinstance(entries, list):
+        return {}
+    manifest: dict[str, dict[str, object]] = {}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        name = str(entry.get("name", "")).strip()
+        if not name:
+            continue
+        manifest[normalize_name(name)] = {
+            "status": entry.get("status"),
+            "bin": entry.get("bin"),
+            "scripts": entry.get("scripts"),
+            "action": entry.get("action", "pending"),
+            "owner": entry.get("owner", "governance"),
+            "note": entry.get("note", ""),
+            "evidence": entry.get("evidence"),
+        }
+    return manifest
+
+
+def is_managed_parallel_entry(name: str, manifest_entry: dict[str, object] | None) -> bool:
+    if not manifest_entry:
+        return False
+    status = str(manifest_entry.get("status", "")).strip().lower()
+    return status in {"", "managed", "active", "accepted", "approved", "stable"}
+
+
+def is_compatible_shim_policy(entry: dict[str, object] | None) -> bool:
+    if not entry:
+        return False
+    action = str(entry.get("action", "")).lower()
+    return "shim" in action or "compat" in action
+
+
+def _is_archive_path(path: Path) -> bool:
+    return "_archive" in path.relative_to(ROOT).parts or "PACKS" in path.relative_to(ROOT).parts
+
+
+def _is_shim(path: Path, text: str) -> bool:
+    if not text:
+        return False
+    if "Compatibility wrapper" in text:
+        return True
+    if "CLI alias" in text:
+        return True
+    if path.suffix in {".sh", ".bash", ".zsh"} and "exec " in text:
+        return True
+    return False
+
+
+def script_role(path: Path) -> str:
+    if _is_archive_path(path):
+        return "archive"
+    if path.suffix == ".md":
+        return "doc"
+    try:
+        with path.open("r", encoding="utf-8", errors="ignore") as f:
+            text = f.read(4096)
+    except OSError:
+        text = ""
+    return "shim" if _is_shim(path, text) else "implementation"
+
+
 def script_tier(path: Path) -> str:
     rel_parts = path.relative_to(ROOT).parts
-    parts = set(rel_parts)
-    if "_archive" in parts:
+    if _is_archive_path(path):
         return "archive"
     if len(rel_parts) > 1 and rel_parts[1] == "ssot":
         return "ssot"
@@ -89,17 +174,23 @@ def normalize_name(name: str) -> str:
     return re.sub(r"[-]+", "_", stem.lower())
 
 
-def list_bin_files() -> List[Path]:
+def list_bin_files(scope: str = "bin") -> List[Path]:
     files = []
-    for path in BIN_DIR.rglob("*"):
-        rel = path.relative_to(BIN_DIR)
-        if rel.parts and rel.parts[0] in {".git", "__pycache__"}:
-            continue
-        if not path.is_file():
-            continue
-        if not is_candidate_script(path):
-            continue
-        files.append(path)
+    roots = []
+    if scope in {"bin", "both"} and BIN_DIR.is_dir():
+        roots.append(BIN_DIR)
+    if scope in {"scripts", "both"} and SCRIPTS_BIN_DIR.is_dir():
+        roots.append(SCRIPTS_BIN_DIR)
+    for base in roots:
+        for path in base.rglob("*"):
+            rel = path.relative_to(base)
+            if rel.parts and rel.parts[0] in {".git", "__pycache__"}:
+                continue
+            if not path.is_file():
+                continue
+            if not is_candidate_script(path):
+                continue
+            files.append(path)
     return files
 
 
@@ -204,11 +295,66 @@ def active_duplicate_files(files: List[str]) -> List[str]:
     return active
 
 
-def classify_duplication_conflicts(duplicates: Dict[str, List[str]]) -> Tuple[Dict[str, List[str]], List[Dict[str, object]]]:
+def mark_cross_tree_mirror_shims(
+    duplicates: Dict[str, List[str]],
+    roles: Dict[str, str],
+    signatures: Dict[str, str],
+    parallel_manifest: Dict[str, dict[str, object]],
+) -> tuple[Dict[str, str], List[str], int]:
+    mirrored: List[str] = []
+    adjusted = 0
+    for name, files in duplicates.items():
+        manifest_entry = parallel_manifest.get(name)
+        if manifest_entry and is_managed_parallel_entry(name, manifest_entry) and is_compatible_shim_policy(manifest_entry):
+            script_files = [f for f in files if f.startswith("scripts/bin/")]
+            if not script_files:
+                continue
+            for f in script_files:
+                if roles.get(f) == "archive":
+                    continue
+                if roles.get(f) != "shim":
+                    roles[f] = "shim"
+                    adjusted += 1
+            mirrored.append(name)
+            continue
+        sig_groups: Dict[str, List[str]] = defaultdict(list)
+        for rel in files:
+            sig = signatures.get(rel)
+            if sig:
+                sig_groups[sig].append(rel)
+        for rels in sig_groups.values():
+            if len(rels) < 2:
+                continue
+            script_files = [f for f in rels if f.startswith("scripts/bin/")]
+            bin_files = [f for f in rels if f.startswith("bin/")]
+            if not script_files or not bin_files:
+                continue
+            # 同名脚本在 bin 与 scripts 同步复制时，默认保留 bin 为主动实现，scripts 标为 shim。
+            for f in script_files:
+                if roles.get(f) == "archive":
+                    continue
+                if roles.get(f) != "shim":
+                    roles[f] = "shim"
+                    adjusted += 1
+            mirrored.append(name)
+    # 去重，保留每个重复名一次
+    return roles, sorted(set(mirrored)), adjusted
+
+
+def classify_duplication_conflicts(
+    duplicates: Dict[str, List[str]],
+    roles: Dict[str, str],
+    parallel_manifest: Dict[str, dict[str, object]],
+) -> Tuple[List[Dict[str, object]], List[Dict[str, object]], List[Dict[str, object]]]:
     high_conflicts: List[Dict[str, object]] = []
+    managed_high_conflicts: List[Dict[str, object]] = []
+    unmanaged_high_conflicts: List[Dict[str, object]] = []
     for name, files in sorted(duplicates.items()):
         active_files = active_duplicate_files(files)
         if len(active_files) < 2:
+            continue
+        impl_files = [f for f in active_files if roles.get(f) == "implementation"]
+        if len(impl_files) <= 1:
             continue
         active_exts = {Path(file).suffix.lower() for file in active_files}
         if len(active_exts) > 1 and len(active_files) == 2:
@@ -217,16 +363,25 @@ def classify_duplication_conflicts(duplicates: Dict[str, List[str]]) -> Tuple[Di
             {
                 "name": name,
                 "active_files": sorted(active_files),
+                "roles": {file: roles.get(file, "implementation") for file in active_files},
                 "exts": sorted(active_exts),
                 "file_count": len(active_files),
+                "parallel_entry": parallel_manifest.get(name),
+                "managed": is_managed_parallel_entry(name, parallel_manifest.get(name)),
             }
         )
-    return duplicates, high_conflicts
+        if is_managed_parallel_entry(name, parallel_manifest.get(name)):
+            managed_high_conflicts.append(high_conflicts[-1])
+        else:
+            unmanaged_high_conflicts.append(high_conflicts[-1])
+    return managed_high_conflicts, unmanaged_high_conflicts, high_conflicts
 
 
-def summarize(paths: List[Path]) -> Dict:
+def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]) -> Dict:
     types: Counter[str] = Counter()
     duplicates: defaultdict[str, List[str]] = defaultdict(list)
+    roles: Dict[str, str] = {}
+    signatures: Dict[str, str] = {}
     missing_shebang: List[str] = []
     non_snake: List[str] = []
     for path in paths:
@@ -238,13 +393,21 @@ def summarize(paths: List[Path]) -> Dict:
         name = path.name
         norm = normalize_name(name)
         duplicates[norm].append(rel)
+        roles[rel] = script_role(path)
+        signatures[rel] = file_signature(path)
         if not snake_case(Path(name).stem):
             non_snake.append(rel)
 
     duplicated = {
         name: files for name, files in duplicates.items() if len(files) > 1
     }
-    duplicate_scopes, duplicate_conflicts = classify_duplication_conflicts(duplicated)
+    duplicate_scopes = {name: sorted(files) for name, files in duplicated.items()}
+    roles, mirrored_script_duplicates, mirror_adjustments = mark_cross_tree_mirror_shims(
+        duplicated, roles, signatures, parallel_manifest
+    )
+    managed_duplicates, unmanaged_duplicates, duplicate_conflicts = classify_duplication_conflicts(
+        duplicated, roles, parallel_manifest
+    )
     out_edges, in_edges = build_graph(paths)
     out_degree = {k: len(v) for k, v in out_edges.items()}
     in_degree = {k: len(v) for k, v in in_edges.items()}
@@ -266,12 +429,22 @@ def summarize(paths: List[Path]) -> Dict:
             "non_snake": len(non_snake),
             "duplicate_names": len(duplicated),
             "high_conflict_duplicates": len(duplicate_conflicts),
+            "managed_parallel_duplicates": len(managed_duplicates),
+            "unmanaged_parallel_duplicates": len(unmanaged_duplicates),
+            "mirrored_script_duplicates": len(mirrored_script_duplicates),
+            "mirror_adjustments": mirror_adjustments,
             "edges": sum(out_degree.values()),
+            "shim_count": sum(1 for role in roles.values() if role == "shim"),
+            "archive_count": sum(1 for role in roles.values() if role == "archive"),
+            "doc_count": sum(1 for role in roles.values() if role == "doc"),
         },
         "findings": {
             "missing_shebang": sorted(missing_shebang),
             "non_snake": sorted(non_snake),
             "duplicate_names": duplicate_scopes,
+            "mirrored_script_duplicates": mirrored_script_duplicates,
+            "managed_parallel_duplicates": managed_duplicates,
+            "unmanaged_parallel_duplicates": unmanaged_duplicates,
             "duplicate_conflicts": duplicate_conflicts,
             "cycles": cycles[:20],
         },
@@ -291,8 +464,10 @@ def strict_checks(summary: Dict) -> List[str]:
     errors = []
     if summary["stats"]["missing_shebang"] > 0:
         errors.append(f"executable scripts missing shebang: {summary['stats']['missing_shebang']}")
-    if summary["stats"]["high_conflict_duplicates"] > 0:
-        errors.append(f"high-confidence duplicate normalized script names: {summary['stats']['high_conflict_duplicates']}")
+    if summary["stats"]["unmanaged_parallel_duplicates"] > 0:
+        errors.append(
+            f"unmanaged high-confidence duplicate normalized script names: {summary['stats']['unmanaged_parallel_duplicates']}"
+        )
     if summary["findings"]["cycles"]:
         errors.append(f"script cycle detected: {len(summary['findings']['cycles'])}")
     return errors
@@ -304,16 +479,33 @@ def main() -> int:
     parser.add_argument("--emit", action="store_true")
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument(
+        "--parallel-manifest",
+        default=str(DEFAULT_PARALLEL_MANIFEST),
+        help="manage duplicate policy for bin/scripts parity",
+    )
+    parser.add_argument(
+        "--scope",
+        choices=("bin", "scripts", "both"),
+        default="bin",
+        help="scan directory scope: bin, scripts, or both",
+    )
     args = parser.parse_args()
 
-    files = list_bin_files()
-    payload = summarize(files)
+    files = list_bin_files(args.scope)
+    payload = summarize(files, load_parallel_manifest(Path(args.parallel_manifest)))
     payload["snapshot"] = str((ROOT / args.snapshot).resolve())
+    strict_errors: List[str] = []
+    if args.strict:
+        strict_errors = strict_checks(payload)
+        payload["strict"] = {"enabled": True, "passed": not bool(strict_errors), "errors": strict_errors}
+    else:
+        payload["strict"] = {"enabled": False, "passed": True, "errors": []}
     if args.emit:
         emit_json(ROOT / args.snapshot, payload)
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
-        return 0
+        return 2 if args.strict and strict_errors else 0
 
     print("== Bin Tool Registry Audit ==")
     print(f"total: {payload['stats']['total_scripts']}")
@@ -322,14 +514,24 @@ def main() -> int:
     print(f"non-snake: {payload['stats']['non_snake']}")
     print(f"duplicate names: {payload['stats']['duplicate_names']}")
     print(f"high-confidence duplicate names: {payload['stats']['high_conflict_duplicates']}")
+    print(f"managed parallel duplicates: {payload['stats']['managed_parallel_duplicates']}")
+    print(f"unmanaged parallel duplicates: {payload['stats']['unmanaged_parallel_duplicates']}")
+    print(
+        "mirrored script duplicates: "
+        f"{payload['stats']['mirrored_script_duplicates']} "
+        f"(roles adjusted: {payload['stats']['mirror_adjustments']})"
+    )
     print(f"cycles: {len(payload['findings']['cycles'])}")
+    print(
+        "shim / archive / doc: "
+        f"{payload['stats']['shim_count']} / {payload['stats']['archive_count']} / {payload['stats']['doc_count']}"
+    )
     print("top out-degree:", payload["top_out_degree"][:3])
     print("top in-degree:", payload["top_in_degree"][:3])
     if args.strict:
-        errors = strict_checks(payload)
-        if errors:
+        if strict_errors:
             print("STRICT FAIL:")
-            for item in errors:
+            for item in strict_errors:
                 print(f" - {item}")
             return 2
         print("strict checks: OK")
