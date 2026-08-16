@@ -46,8 +46,13 @@ from .config import (
     render_toml,
     write_config_atomic,
 )
+from .dataplane.semantic_cache import SemanticCacheRegistry
+from .dataplane.thermal import ThermalGuard
+from .dataplane.triage import TriageClassifier
+from .dataplane.vram_budget import VRAMBudgetEstimator
 from .diagnostics import run_direct_doctor
 from .domain import EXIT_CONFIG, ErrorEnvelope, error_exit_code
+from .domain.protocols import ChatMessage
 from .service import (
     LaunchdController,
     LaunchdFailure,
@@ -108,6 +113,7 @@ metrics_app = typer.Typer(help="Inspect local runtime metrics.")
 benchmark_app = typer.Typer(help="Benchmark local model latency and generation throughput.")
 config_app = typer.Typer(help="Validate or migrate versioned configuration.")
 daemon_app = typer.Typer(help="Inspect or plan the private launchd service.")
+fabric_app = typer.Typer(help="Inspect Compute Fabric governance, triage, and VRAM budget.")
 
 for name, group in (
     ("nodes", nodes_app),
@@ -118,6 +124,7 @@ for name, group in (
     ("benchmark", benchmark_app),
     ("config", config_app),
     ("daemon", daemon_app),
+    ("fabric", fabric_app),
 ):
     app.add_typer(group, name=name)
 
@@ -1548,6 +1555,150 @@ def _render_status(data: JsonValue | None) -> str:
         )
     )
     return ""
+
+
+@fabric_app.command("inspect")
+def fabric_inspect(
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Inspect Compute Fabric thermal status, triage capability, and memory estimators."""
+    guard = ThermalGuard()
+    state = guard.probe()
+    estimator = VRAMBudgetEstimator()
+    cache = SemanticCacheRegistry()
+
+    payload = {
+        "thermal_pressure": state.thermal_level.value,
+        "power_source": state.power_source.value,
+        "battery_percent": state.battery_percent,
+        "penalty_multiplier": state.penalty_multiplier,
+        "supported_tiers": ["fast", "standard", "reasoning"],
+        "known_arch_profiles": list(estimator.registered_models),
+        "cache_stats": cache.get_stats(),
+    }
+
+    if json_output:
+        _emit_success(payload, request_id=_request_id())
+        return
+
+    grid = Table.grid(expand=True)
+    grid.add_column()
+    grid.add_column(justify="right")
+    grid.add_row(
+        f"[bold cyan]Thermal Guard[/bold cyan]: {state.thermal_level.value.upper()}",
+        f"power: {state.power_source.value} (penalty: {state.penalty_multiplier:.2f}x)",
+    )
+    grid.add_row(
+        (
+            "[bold cyan]Semantic Triage[/bold cyan]: "
+            "FAST (2B~4B) | STANDARD (9B~14B) | REASONING (27B~70B)"
+        ),
+        "zero-latency AST classifier",
+    )
+    grid.add_row(
+        (
+            "[bold cyan]VRAM Estimator[/bold cyan]: "
+            f"{len(estimator.registered_models)} architectures registered"
+        ),
+        "dynamic KV cache budgeting",
+    )
+    grid.add_row(
+        "[bold cyan]Two-Tier Cache[/bold cyan]: L1 Prefix-Hash + L2 Semantic Invariant",
+        "LRU capacity bounded",
+    )
+
+    _console.print(
+        Panel(
+            grid,
+            title="[bold #7dd3f5]omlxc Compute Fabric[/bold #7dd3f5]",
+            border_style="#5a7a9a",
+            expand=False,
+        )
+    )
+
+
+@fabric_app.command("triage")
+def fabric_triage(
+    prompt: Annotated[str, typer.Argument(help="Prompt text to classify")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Classify prompt complexity tier (FAST / STANDARD / REASONING)."""
+    classifier = TriageClassifier()
+    msg = (ChatMessage(role="user", content=prompt),)
+    # Estimate token count as words * 1.3
+    est_tokens = int(len(prompt.split()) * 1.3)
+    result = classifier.classify(messages=msg, context_tokens=est_tokens)
+
+    payload = {
+        "tier": result.tier.value,
+        "confidence": result.confidence,
+        "reason": result.reason,
+        "heuristic_matched": result.heuristic_matched,
+        "estimated_tokens": est_tokens,
+    }
+
+    if json_output:
+        _emit_success(payload, request_id=_request_id())
+        return
+
+    if result.tier.value == "fast":
+        color = "green"
+    elif result.tier.value == "standard":
+        color = "yellow"
+    else:
+        color = "magenta"
+
+    _console.print(
+        Panel(
+            f"Tier: [bold {color}]{result.tier.value.upper()}[/bold {color}]\n"
+            f"Confidence: [cyan]{result.confidence * 100:.0f}%[/cyan]\n"
+            f"Reason: [dim]{result.reason}[/dim]",
+            title="[bold #7dd3f5]Intent Triage Result[/bold #7dd3f5]",
+            border_style="#5a7a9a",
+            expand=False,
+        )
+    )
+
+
+@fabric_app.command("vram")
+def fabric_vram(
+    model_id: Annotated[str, typer.Argument(help="Model identifier")],
+    tokens: Annotated[int, typer.Argument(help="Context tokens count")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Estimate dynamic KV Cache and total VRAM footprint for a given context length."""
+    estimator = VRAMBudgetEstimator()
+    kv_mb = estimator.estimate_kv_cache_mb(model_id, tokens)
+    total_mb = estimator.estimate_total_vram_mb(model_id, tokens)
+    profile = estimator.get_profile(model_id)
+
+    payload = {
+        "model_id": model_id,
+        "context_tokens": tokens,
+        "kv_cache_mb": kv_mb,
+        "weights_vram_mb": profile.weights_vram_mb,
+        "total_estimated_vram_mb": total_mb,
+        "bytes_per_token": profile.bytes_per_token,
+    }
+
+    if json_output:
+        _emit_success(payload, request_id=_request_id())
+        return
+
+    arch_info = f"({profile.num_layers}L / {profile.num_kv_heads}KV / {profile.head_dim}D)"
+    ctx_info = f"{tokens:,} tokens ({profile.bytes_per_token:,} bytes/token)"
+    _console.print(
+        Panel(
+            f"Model: [bold cyan]{model_id}[/bold cyan] {arch_info}\n"
+            f"Context: [bold]{ctx_info}[/bold]\n"
+            f"KV Cache: [bold yellow]{kv_mb:,.1f} MB[/bold yellow]\n"
+            f"Base Weights: [dim]{profile.weights_vram_mb:,.1f} MB[/dim]\n"
+            f"Total Est. VRAM: [bold green]{total_mb:,.1f} MB[/bold green]",
+            title="[bold #7dd3f5]VRAM Budget Estimation[/bold #7dd3f5]",
+            border_style="#5a7a9a",
+            expand=False,
+        )
+    )
 
 
 def main() -> None:

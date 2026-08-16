@@ -53,7 +53,7 @@ def test_project_metadata_declares_the_v3_package_and_console_scripts() -> None:
     lock = tomllib.loads((REPOSITORY_ROOT / "uv.lock").read_text(encoding="utf-8"))
     locked_package = next(package for package in lock["package"] if package["name"] == "omlxc")
 
-    assert metadata["project"]["version"] == __version__ == locked_package["version"] == "3.3.0"
+    assert metadata["project"]["version"] == __version__ == locked_package["version"] == "3.4.0"
     assert metadata["project"]["requires-python"] == ">=3.13,<3.14"
     assert metadata["project"]["scripts"] == {
         "omlxc": "omlxc.cli:main",

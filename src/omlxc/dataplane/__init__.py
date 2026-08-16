@@ -17,9 +17,11 @@ from .models import (
 )
 from .orchestrator import DataPlaneOrchestrator
 from .registry import AdapterRegistry
+from .semantic_cache import CacheTier, SemanticCacheEntry, SemanticCacheRegistry
 from .telemetry import BoundRouteTelemetry, RouteTelemetryRecorder, TelemetrySink
 from .thermal import NodeEnvironmentalState, PowerSource, ThermalGuard, ThermalPressureLevel
 from .triage import ComplexityTier, TriageClassifier, TriageResult
+from .vram_budget import ModelArchitectureMeta, VRAMBudgetEstimator
 
 __all__ = [
     "AdapterBinding",
@@ -27,6 +29,7 @@ __all__ = [
     "AffinityConfig",
     "BenchmarkRunner",
     "BoundRouteTelemetry",
+    "CacheTier",
     "CapacityCoordinator",
     "ChatExecution",
     "CircuitBreaker",
@@ -37,6 +40,7 @@ __all__ = [
     "EmbeddingExecution",
     "ExecutionError",
     "ExecutionErrorCode",
+    "ModelArchitectureMeta",
     "NodeEnvironmentalState",
     "PowerSource",
     "RankedItem",
@@ -45,11 +49,14 @@ __all__ = [
     "RerankRequest",
     "RerankResult",
     "RouteTelemetryRecorder",
+    "SemanticCacheEntry",
+    "SemanticCacheRegistry",
     "SessionAffinityRegistry",
     "TelemetrySink",
     "ThermalGuard",
     "ThermalPressureLevel",
     "TriageClassifier",
     "TriageResult",
+    "VRAMBudgetEstimator",
     "calculate_prefix_hash",
 ]

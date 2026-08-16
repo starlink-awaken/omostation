@@ -1,6 +1,6 @@
 # omlxc
 
-`omlxc` is a private local compute hub. Version `3.3.0` provides a persistent
+`omlxc` is a private local compute hub. Version `3.4.0` provides a persistent
 `omlxcd` control/data plane, a typed Unix-socket client, a scriptable Typer CLI,
 and a keyboard-first Textual cockpit. Development and tests do not alter existing
 local services, contact real hardware, or replace the stable
@@ -27,6 +27,9 @@ omlxc nodes list
 omlxc nodes diagnose node-id --json
 omlxc models list
 omlxc routes plan local/model-id --profile interactive --json
+omlxc fabric inspect
+omlxc fabric triage "Design a lock-free queue to prevent ABA problem"
+omlxc fabric vram coding 32768
 omlxc jobs watch --output ndjson
 omlxc metrics show
 omlxc daemon status
