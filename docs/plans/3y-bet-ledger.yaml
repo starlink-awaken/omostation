@@ -4369,7 +4369,9 @@ bets:
   title: mof-deepen 测试面补齐 — 10 模块最小触达验证
   appetite: 2 days
   priority: P2
-  status: candidate
+  status: done
+  done_at: 2026-08-16
+  done_note: '10 模块 smoke 测试交付 (#1574, tests/test_mof_deepen_smoke.py); subagent 挂死于收口前, 主会话接管净收口 (剥离并发产物污染)。'
   goal: 为 575843deb 无主落账的 10 个 mof-deepen 模块补齐最小测试面, 降低 1444 行零测试功能面的运行风险
   non_goals:
   - 重构模块实现逻辑
