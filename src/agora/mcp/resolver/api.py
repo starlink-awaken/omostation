@@ -14,7 +14,18 @@ from .services import BOS_URI_DOMAIN_PATTERN, POC_SERVICES, BosService
 
 _log = logging.getLogger(__name__)
 
-_WS = os.environ.get("WORKSPACE_ROOT") or str(Path.home() / "Workspace")
+def _resolve_ws() -> str:
+    env = os.environ.get("WORKSPACE_ROOT")
+    if env:
+        return env
+    here = Path(__file__).resolve()
+    for ancestor in here.parents:
+        if (ancestor / "projects" / "agora").is_dir():
+            return str(ancestor)
+    return str(Path.home() / "Workspace")
+
+
+_WS = _resolve_ws()
 
 
 def _run_sync_with_timeout(func: Any, timeout: float) -> Any:
@@ -128,7 +139,7 @@ def get_bos_contract_health(yaml_path: str = "") -> dict:
     try:
         # Resolve yaml path (relative to workspace root or absolute)
         repo_root = Path(
-            os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
+            _resolve_ws()
         )
         if yaml_path:
             yaml_full = Path(yaml_path)

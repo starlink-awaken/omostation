@@ -15,7 +15,18 @@ _log = logging.getLogger(__name__)
 
 
 def _workspace_root() -> Path:
-    return Path(os.environ.get("WORKSPACE_ROOT", Path.home() / "Workspace"))
+    """workspace 根: WORKSPACE_ROOT env 优先, 否则从本文件向上爬 (projects/agora marker)。
+
+    CI 环境无 ~/Workspace (home=/home/runner) — 旧默认值在 CI 必然 FileNotFoundError。
+    """
+    env = os.environ.get("WORKSPACE_ROOT")
+    if env:
+        return Path(env)
+    here = Path(__file__).resolve()
+    for ancestor in here.parents:
+        if (ancestor / "projects" / "agora").is_dir():
+            return ancestor
+    return Path.home() / "Workspace"  # 兜底: 本地开发布局
 
 
 @dataclass
