@@ -14,7 +14,7 @@ import json
 import os
 from urllib import request as urlrequest
 
-OMLXC_GATEWAY_URL = os.environ.get("OMLXC_GATEWAY_URL", "http://127.0.0.1:9000/v1")
+OMLXC_GATEWAY_URL = os.environ.get("OMLXC_GATEWAY_URL", "http://127.0.0.1:9290/v1")
 OLLAMA_API = os.environ.get("OLLAMA_API", "http://localhost:11434")
 DEFAULT_GATEWAY_MODEL = os.environ.get("LLM_ROUTER_GATEWAY_MODEL", "coder-fast")
 # ollama 降级兜底: north-mini-code-1.0:mlx-nvfp4 实测正常 (gemma4:31b-mlx 返回空响应, 已弃用)

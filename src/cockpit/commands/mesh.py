@@ -50,6 +50,18 @@ def cmd_mesh(args: argparse.Namespace) -> int:
         except Exception as exc:
             console.print(f"[red]获取状态失败: {exc}[/red]")
             return 1
+    if subcmd == "fabric":
+        omlxc_root = _workspace_root() / "projects" / "omlxc"
+        return subprocess.call(["uv", "run", "omlxc", "fabric", "inspect"], cwd=str(omlxc_root))
+    if subcmd == "triage":
+        prompt = getattr(args, "prompt", "")
+        omlxc_root = _workspace_root() / "projects" / "omlxc"
+        return subprocess.call(["uv", "run", "omlxc", "fabric", "triage", prompt], cwd=str(omlxc_root))
+    if subcmd == "vram":
+        model = getattr(args, "model", "coding")
+        tokens = str(getattr(args, "tokens", 32768))
+        omlxc_root = _workspace_root() / "projects" / "omlxc"
+        return subprocess.call(["uv", "run", "omlxc", "fabric", "vram", model, tokens], cwd=str(omlxc_root))
     if subcmd == "route":
         model = getattr(args, "model", None)
         if not model:
@@ -70,5 +82,5 @@ def cmd_mesh(args: argparse.Namespace) -> int:
         return 1
 
     console.print("[red]未知 mesh 子命令[/red]")
-    console.print("可用: nodes, status, route --model <MODEL>, serve")
+    console.print("可用: nodes, status, fabric, triage <PROMPT>, vram <MODEL> <TOKENS>, route --model <MODEL>, serve")
     return 1
