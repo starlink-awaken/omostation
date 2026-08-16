@@ -667,6 +667,13 @@ class TestHealthWatch:
 class TestBuildServiceConfigHttp:
     """Test _build_service_config with HTTP endpoint support."""
 
+    @pytest.fixture(autouse=True)
+    def _alive_endpoints(self, monkeypatch):
+        # CI 无本地 8080 服务 — 探活 mock 为真, 测配置构建而非网络可达
+        from agora.mcp_registry import lifecycle as _lc
+
+        monkeypatch.setattr(_lc, "_http_endpoint_alive", lambda *a, **k: True)
+
     def test_http_endpoint_from_tool(self):
         """Tool with top-level mcp_endpoint should produce HTTP config."""
         tool = _make_tool(
