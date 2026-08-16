@@ -1,4 +1,4 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene worktree-janitor delegation-preflight delegation-alias-check bin-tool-registry-audit bin-tool-registry-audit-strict bin-tool-registry-audit-emit bin-tool-registry-convergence capability-sync capability-check omo-status omo-top
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene worktree-janitor delegation-preflight delegation-alias-check bin-tool-registry-audit bin-tool-registry-audit-strict bin-tool-registry-audit-emit bin-tool-registry-convergence bin-tool-registry-parallel-gaps capability-sync capability-check omo-status omo-top
 
 PY := uv run --with pyyaml python
 
@@ -23,6 +23,7 @@ help:
 	@echo "make bin-tool-registry-audit-strict       扫描并启用严格门禁（脚本层并行用清单托底）"
 	@echo "make bin-tool-registry-audit-emit         导出 bin/ scripts/bin 盘点 JSON"
 	@echo "make bin-tool-registry-convergence         盘点收敛候选（高出入度聚类）"
+	@echo "make bin-tool-registry-parallel-gaps      输出并行命名缺口（bin/scripts 现有重名未纳清单）"
 	@echo "make ssot-status       SSOT 变更状态检查"
 	@echo "make evidence-smoke    BOS 声明/执行 + feedback 全量 smoke (ADR-0219)"
 	@echo "make ssot-log          SSOT 审计日志查看"
@@ -237,6 +238,10 @@ bin-tool-registry-audit-strict:  ## 严格检查（会返回非零）
 bin-tool-registry-convergence:  ## 输出收敛候选（按度中心）
 	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --json | \
 		python3 -c "import json,sys;data=json.load(sys.stdin);print('Top out-degree convergence:');[print(f'  {path}: {outd}') for path,outd in data.get('top_out_degree',[])];print('Top in-degree convergence:');[print(f'  {path}: {ind}') for path,ind in data.get('top_in_degree',[])]"
+
+bin-tool-registry-parallel-gaps:  ## 输出 bin/scripts 并行清单缺口
+	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --json | \
+		python3 -c "import json,sys;data=json.load(sys.stdin);gaps=data.get('findings',{}).get('parallel_manifest_gaps',[]);print(f'parallel manifest gaps: {len(gaps)}');[print(f' - {item.get(\"name\")}: {\", \".join(item.get(\"gap_reasons\", []))} | bin={\", \".join(item.get(\"bin_files\", []))} | scripts={\", \".join(item.get(\"scripts_files\", []))}') for item in sorted(gaps, key=lambda x: x.get(\"name\", \"\"))]"
 
 scene-feedback:  ## 列出最近的 scene feedback
 	@python3 bin/ssot/scene-feedback-collector.py list --limit 10

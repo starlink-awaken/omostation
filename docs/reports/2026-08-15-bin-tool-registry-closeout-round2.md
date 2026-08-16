@@ -61,3 +61,31 @@
 - `bin-tool-registry-audit-strict` 在扫描 `both` 时，仅将清单外并行高置信重复作为阻断项。
 - `scripts/bin` 作为兼容入口有明确治理边界，减少未来重复能力无序扩散。
 - 为子项目/域固化留出落点：`scripts/bin` 不承载新能力，能力若与子项目强绑定应下沉子项目。
+
+## 五、Round 4（2026-08-16）：并行清单缺口机制化闭环
+
+### 已完成
+- 在 `bin/tool-registry-audit.py` 增加并行清单缺口分析：
+  - 新增并行重名候选 `parallel_candidates`
+  - 新增并行清单缺口 `parallel_manifest_gaps`
+  - 统计新增 `parallel_manifest_gaps`、`unmanaged_parallel_candidates`
+  - 每项缺口带 `gap_reasons`，首发版本为 `missing_manifest_entry`
+- Makefile 新增命令入口：
+  - `make bin-tool-registry-parallel-gaps`（输出并行清单缺口明细）
+  - 帮助信息新增 `parallel-gaps` 入口
+- 快照落地：
+  - `artifacts/bin-tool-registry-audit-round4.json`
+
+### 结果（`TOOL_REGISTRY_SCOPE=both`）
+- `total_scripts: 796`
+- `duplicate_names: 277`
+- `parallel_candidates: 215`
+- `parallel_manifest_gaps: 183`
+- 缺口命中原因：全部为 `missing_manifest_entry`（未加入清单）
+
+### 下一步路线
+1. 以 `make bin-tool-registry-parallel-gaps` 作为周固定期输入，按 15–30 个缺口一批消化。
+2. 每批处理必须同步产出：
+   - manifest 补齐记录（或明确下沉子项目 owner）
+   - `make bin-tool-registry-audit --scope both` 与 `make bin-tool-registry-parallel-gaps` 的差异快照
+3. 验证指标目标：每轮 `parallel_manifest_gaps` 下降，`mirror_adjustments` 和 `managed/Unmanaged` 变化可控。
