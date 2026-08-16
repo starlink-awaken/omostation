@@ -1,7 +1,7 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-28
+last-reviewed: 2026-08-16
 version: 1
 items_dir: .omo/debt/items
 dashboard_ref: .omo/debt/dashboard/current.yaml
@@ -21,7 +21,10 @@ seed_items:
 - .omo/debt/items/HEALTH_SCORE_FORMULA.yaml
 - .omo/debt/items/TEST_COVERAGE.yaml
 - .omo/debt/items/DOC_CLAIMS_SCOPE.yaml
-# 能力缺口台账 (Phase B/C/D 收敛)
+- .omo/debt/items/D-1.yaml
+- .omo/debt/items/D-2.yaml
+- .omo/debt/items/D-3.yaml
+- .omo/debt/items/D-4.yaml
 gap_items_dir: .omo/debt/gap-items
 gap_registry: .omo/debt/gap-registry.yaml
 gap_seed_items:

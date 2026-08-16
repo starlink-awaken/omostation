@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 91
+  total_bets: 108
   windows:
   - Y1Q1
   - Y1Q2
@@ -4806,4 +4806,132 @@ bets:
   human_gate: true
   circuit_breaker: 超 appetite×1.5，或 GitHub token/secret 配置卡住超过 1 天 → 停下汇报，由人类决定继续配置还是换更简单的触发方式（比如
     cron 轮询代替 webhook）
+  retro: required
+- id: BET-Y1Q3-T1-05
+  track: T1-TRUTH
+  window: Y1Q3
+  title: agora BOS 声明/执行鸿沟治理 — 29 unimplemented 排期/废弃 + CS-10 违约收敛
+  appetite: 1 week
+  priority: P0
+  status: candidate
+  goal: 对 agora bos-services.yaml 中 29 个 unimplemented 服务逐个判定（真需要→建落地排期并绑定 BET；不需要→标 deprecate/移除）；补 2 个缺 status 服务；决策 CS-10 cross_references.realized_by 违约（补齐 or 修订范围）；5 个 i0_route:pending 服务给接线计划或明确搁置
+  non_goals:
+  - 实现 29 个 unimplemented 服务的完整功能（工作量超 1 week appetite，各服务实现在各自 BET）
+  - 删除 unimplemented 声明（保留诚实声明，ADR-0181 机制）
+  evidence:
+    E1_unimplemented_growth:
+      description: unimplemented 从 7/31 的 4 个增至 8/16 的 29 个（+25），iris/agt/forge/agent-runtime 系列多为规划未落地
+      count: 29
+    E2_cs10_violation:
+      description: CS-10 约束要求 BOS 路由带 cross_references.realized_by，223 服务中仅 13 个满足（210 违约）
+      violation_rate: 94%
+    E3_missing_status:
+      description: 2 个服务缺 status 字段：bos://capability/cockpit/mcp-server、bos://omo/debt
+      services:
+      - bos://capability/cockpit/mcp-server
+      - bos://omo/debt
+    E4_pending_route:
+      description: 5 个服务 i0_route:pending（bos://ecos/events、bos://ecos/workflow 等）协议已定义织层未接线
+  done_when:
+  - 29 个 unimplemented 全部有归属：排期绑定 BET 或标 deprecate/移除
+  - 2 个缺 status 服务已补 status
+  - CS-10 违约决策完成：补齐 cross_references 或修订 CS-10 范围（产出决策记录）
+  - 5 个 pending i0_route 服务有接线计划或明确搁置记录
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: 本条目 0 error
+  - cmd: python3 -c "import yaml; d=yaml.safe_load(open('projects/agora/etc/bos-services.yaml')); print(len([s for s in d.get('services',[]) if s.get('status')=='unimplemented']))"
+    expect: unimplemented 计数 <= 29 且有归属记录
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/agora/etc/bos-services.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: true
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 29 项判定超 1 week → 先完成排序/废弃类，剩余排期类交下轮
+  retro: required
+- id: BET-Y1Q3-T6-04
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: gbrain god-module 4 大文件 SRP 拆分（合计 ~16K 行）
+  appetite: 2 weeks
+  priority: P0
+  status: candidate
+  goal: 把 gbrain 4 个 >2800L 文件拆分为职责清晰的多个文件，让 omo lint god-module 回归全绿：doctor.ts (4825L) + postgres-engine.ts (4514L) + pglite-engine.ts (4509L) + ai/gateway.ts (2895L)
+  non_goals:
+  - 修改 god-module 阈值 (L0 锁定)
+  - 加 allowlist (与减法方向矛盾)
+  - 改动引擎行为（纯 SRP 拆分，保持兼容）
+  evidence:
+    E1_god_modules:
+      description: 4 个文件超阈值，核心 4 个 >2800L
+      files:
+        doctor.ts: 4825
+        postgres-engine.ts: 4514
+        pglite-engine.ts: 4509
+        ai/gateway.ts: 2895
+    E2_precedent:
+      description: T6-10 已拆 agora/external_connections.py (1663L) + cockpit/cli.py (1533L)，omo lint god-module GATE PASS；本 bet 复用该模式
+  done_when:
+  - 4 个 >2800L 文件拆分至全部 <=1500L
+  - omo lint god-module GATE PASS（若未覆盖 TS 则补充检查）
+  - gbrain 测试全绿（bun test）
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: 本条目 0 error
+  - cmd: cd projects/gbrain && bun test
+    expect: 全绿
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/gbrain/src/**
+  pasw_required: true
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 4 文件拆不完 → 先拆 doctor.ts + gateway.ts（最高影响），engine 2 个下轮
+  retro: required
+- id: BET-Y1Q3-T1-06
+  track: T1-TRUTH
+  window: Y1Q3
+  title: aetherforge 双副本指针同步 + 算力路由双 owner 收敛决策
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 同步 agora 内嵌 aetherforge 副本指针到根项目最新（b9a299f→905195b），产出算力路由双 owner（aetherforge vs gac-mesh-router）收敛决策报告，落地单一 owner
+  non_goals:
+  - 实现 mesh 路由新功能
+  - 迁移 agora BOS 到 aetherforge（仅收敛 owner 声明）
+  evidence:
+    E1_dual_owner:
+      description: aetherforge (算力网关) 与 bin/gac/gac-mesh-router.py (独立 mesh 流式路由, 7437 端口) 职责重叠
+      aetherforge: 活跃 08-15 #37
+      gac_mesh_router: bin/gac/gac-mesh-router.py HTTP server port 7437
+    E2_pointer_drift:
+      description: agora 内嵌 aetherforge submodule 副本停在 b9a299f (08-08)，落后根项目 905195b (08-15)
+      agora_copy: b9a299f
+      root: 905195b
+  done_when:
+  - agora 内嵌 aetherforge 指针已同步到根项目最新
+  - 双 owner 收敛决策报告产出（选单一 owner，含理由与影响面）
+  - 决策已落地：注册表/文档更新声明单一 owner
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: 本条目 0 error
+  - cmd: git -C projects/agora ls-tree HEAD aetherforge
+    expect: 指针 = 905195b
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/agora/.gitmodules
+  - docs/project-registry.yaml
+  - docs/operations/bin-scripts-convergence-manifest.json
+  pasw_required: true
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 决策需人工 → 先完成指针同步，owner 决策产报告待评审
   retro: required
