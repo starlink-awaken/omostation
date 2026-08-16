@@ -91,3 +91,26 @@ def test_api_compute_fabric_vram() -> None:
         assert resp.status_code == 200
         payload = resp.json()
         assert payload["data"]["kv_cache_mb"] == 8448.0
+
+
+def test_api_compute_fabric_compact() -> None:
+    fake_data = {
+        "schema_version": "1",
+        "data": {
+            "model_id": "coding",
+            "compaction_advised": True,
+            "compression_ratio": 0.32,
+            "pruned_tokens": 8192,
+        },
+    }
+    mock_proc = MagicMock(returncode=0, stdout=json.dumps(fake_data), stderr="")
+
+    with patch("subprocess.run", return_value=mock_proc):
+        resp = client.post(
+            "/api/governance/compute/fabric/compact",
+            json={"model_id": "coding", "tokens": 32768, "available_mb": 4096.0},
+        )
+        assert resp.status_code == 200
+        payload = resp.json()
+        assert payload["data"]["compaction_advised"] is True
+        assert payload["data"]["compression_ratio"] == 0.32

@@ -8,8 +8,8 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 134 |
-| MCP 工具 | 568 |
+| CLI 命令 (含子命令) | 138 |
+| MCP 工具 | 571 |
 | MCP 服务器 | 27 |
 | BOS 服务 | 223 |
 | BOS 域 | 17 |
@@ -32,7 +32,7 @@
 | `omo` | L2 | 22 | stdio | `projects/omo/src/omo/mcp_server.py` |
 | `kronos` | L2 | 16 | stdio | `projects/kairon/packages/kronos/src/kronos/mcp_server.py` |
 | `agent-runtime` | L3 | 14 | stdio | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
-| `aetherforge` | X | 10 | stdio | `projects/aetherforge/src/aetherforge/mcp_server.py` |
+| `aetherforge` | X | 13 | stdio | `projects/aetherforge/src/aetherforge/mcp_server.py` |
 | `ecos-ssot` | L0 | 9 | stdio | `projects/ecos/src/ecos/l0/ssot/mcp_server.py` |
 | `iris` | L2 | 8 | stdio | `projects/kairon/packages/iris/src/iris/mcp_server.py` |
 | `sophia` | L2 | 8 | stdio | `projects/kairon/packages/sophia/src/sophia/server/mcp_server.py` |
@@ -119,6 +119,7 @@
 | `cockpit events-watch` | 实时监听 SSE 事件流简便入口 |
 | `cockpit export` | 导出契约封套 |
 | `cockpit export-research` | 将研究对象导出为 WorkspaceObject JSON |
+| `cockpit fabric` | 检查 omlxc 智能算力织网 (温控/分诊/显存/缓存) |
 | `cockpit facts-audit` | 审计 Documents 文档域 facts 文件 |
 | `cockpit facts-validation` | 读取 Runtime Facts 审计回执 |
 | `cockpit family-hub` | 家庭数字枢纽入口 |
@@ -197,6 +198,7 @@
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
 | `cockpit swarm` | 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
 | `cockpit topics` | 列出已注册 topic |
+| `cockpit triage` | 分析 Prompt 意图复杂度分级 |
 | `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
 | `cockpit types` | 查看已注册的数据类型 |
 | `cockpit up` | 启动观测栈 |
@@ -204,6 +206,8 @@
 | `cockpit validate` | 验证 Workspace 契约 |
 | `cockpit vault` | 搜索 L4 Vault 知识库 |
 | `cockpit version` | 版本信息 |
+| `cockpit vram` | 计算模型动态 KV Cache 显存预算 |
+| `cockpit warm` | 预热系统 Prompt 前缀缓存以实现 0ms TTFT |
 | `cockpit watch` | 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher) |
 | `cockpit wave2` | 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON) |
 | `cockpit workflow` | BOS workflow 相关 |
