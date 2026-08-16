@@ -286,3 +286,75 @@ def test_perception_fields_include_north_star() -> None:
     assert "bound_bet" in fields
     assert "overdue_retros" in fields
     assert fields["north_star_present"] is True
+    assert fields["bound_bet"] != "missing-bet"
+
+
+def test_perception_closed_bound_run_is_not_missing_bet(tmp_path: Path) -> None:
+    runs = tmp_path / ".omo" / "_delivery" / "agent-workflows" / "runs"
+    runs.mkdir(parents=True)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "STRATEGY-3YEAR-PLAN-2026H2-2029.md").write_text(
+        NORTH + "\n", encoding="utf-8"
+    )
+    (runs / "closed.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "run_id": "closed-1",
+                "status": "ok",
+                "bet_id": "BET-Y1Q1-T6-03",
+            }
+        ),
+        encoding="utf-8",
+    )
+    fields = BIND.perception_fields(tmp_path)
+    assert fields["bound_state"] == "closed"
+    assert fields["bound_bet"] == "BET-Y1Q1-T6-03 (closed)"
+    assert "missing-bet" not in fields["bound_bet"]
+
+
+def test_omo_cli_start_requires_bet_same_as_wrapper() -> None:
+    env_on = {"AGCP_REQUIREMENT_ITERATION_GATE": "1", "PYTHONPATH": str(ROOT / "projects/omo/src")}
+    blocked = _run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "from omo.workflow.cli import main; "
+                "raise SystemExit(main(['start','project-doc-change',"
+                "'--profile','docs-agent','--objective','no bet',"
+                "'--dry-run','--json']))"
+            ),
+        ],
+        env=env_on,
+    )
+    assert blocked.returncode != 0, blocked.stdout + blocked.stderr
+    assert "missing_bet_id" in blocked.stderr or "missing_bet_id" in blocked.stdout
+
+    started = _run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "from omo.workflow.cli import main; "
+                "raise SystemExit(main(['start','project-doc-change',"
+                "'--profile','docs-agent','--bet','BET-Y1Q1-T6-03',"
+                "'--objective','persist','--dry-run','--json']))"
+            ),
+        ],
+        env=env_on,
+    )
+    assert started.returncode == 0, started.stderr
+    record = json.loads(started.stdout)
+    assert record.get("bet_id") == "BET-Y1Q1-T6-03"
+
+
+def test_gen_agent_redlines_includes_vision_to_retro(tmp_path: Path) -> None:
+    out = tmp_path / "agent-redlines.md"
+    result = _run(
+        [sys.executable, str(ROOT / "bin/mof/gen-agent-redlines.py"), str(out)],
+        cwd=ROOT,
+    )
+    assert result.returncode == 0, result.stderr
+    text = out.read_text(encoding="utf-8")
+    assert "vision-to-retro-chain" in text
+    assert "bin/plan/chain-bind-check.py" in text

@@ -64,9 +64,37 @@ def main():
             L.append(f"- `{r.get('id','?')}`: {r.get('name','?')} ({r.get('check_type','?')})")
         L.append("")
 
+    redlines_path = ".omo/_truth/registry/redlines.yaml"
+    chain_rows = []
+    if os.path.isfile(redlines_path):
+        rl = yaml.safe_load(open(redlines_path)) or {}
+        chain_rows = list(rl.get("enforced_red_lines") or [])
+    L += [
+        "## 📎 链红线 (`redlines.yaml::enforced_red_lines` — 非 GaC required 规则)",
+        "",
+        "> 与上表 GaC 规则同源 digest，避免 agent 只读本文件时看不见愿景→复盘硬门。",
+        "",
+    ]
+    if chain_rows:
+        L += [
+            "| ID | severity | executor |",
+            "|----|----------|----------|",
+        ]
+        for row in chain_rows:
+            L.append(
+                f"| `{row.get('id', '?')}` | {row.get('severity', '?')} | "
+                f"`{row.get('executor', '')}` |"
+            )
+        L.append("")
+    else:
+        L += ["(no enforced_red_lines)", ""]
+
     os.makedirs(os.path.dirname(OUTPUT) or ".", exist_ok=True)
     open(OUTPUT, "w").write("\n".join(L))  # audit-exempt: non-atomic-write (generated docs)
-    print(f"✅ {OUTPUT}: {len(red)} red + {len(gray)} gray = {len(rules)} total")
+    print(
+        f"✅ {OUTPUT}: {len(red)} red + {len(gray)} gray = {len(rules)} gac; "
+        f"{len(chain_rows)} redlines.yaml rows"
+    )
 
 
 if __name__ == "__main__":
