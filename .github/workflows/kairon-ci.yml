@@ -41,9 +41,8 @@ jobs:
         with:
           python-version: "3.13"
       - uses: astral-sh/setup-uv@v4
-      - name: install pyyaml (mypy_report.py 依赖)
-        run: pip install pyyaml
       - name: make typecheck-gate (卡增量不卡存量)
         # 存量 1245 errors (见 projects/knowledge/kairon/mypy-baseline.yaml); CI 卡回归 (新错误致红).
         # mypy 版本漂移致误报时: cd projects/knowledge/kairon && make typecheck-gate-update 刷新 baseline.
-        run: cd projects/knowledge/kairon && make typecheck-gate
+        # mypy_report.py import yaml — 用 uv --with 注入 (pip install 不进 uv env)
+        run: cd projects/knowledge/kairon && uv run --with pyyaml make typecheck-gate
