@@ -127,3 +127,19 @@ def test_state_loss_no_false_repeat_with_stable_hash(tmp_path):
     assert len(t3) == 1
     t4 = poller.poll_once()     # 自愈后再 poll: 零触发
     assert t4 == [], "state 重建后不应持续假信号"
+
+
+def test_netease_real_container_path_registered():
+    """T2-01 (2026-08-16): netease 容器真名 com.netease.macmail — 注册表路径必须指向真实数据面.
+
+    事故: 原注册 com.netease.mailmaster (不存在) 导致源永久 unreachable 两天。
+    守护: 注册路径改回错误名时此测试 FAIL。
+    """
+    from pathlib import Path
+
+    import yaml
+    reg = Path(".omo/_truth/registry/signal-sources.yaml")
+    docs = [d for d in yaml.safe_load_all(reg.read_text(encoding="utf-8")) if d]
+    src = next(s for s in docs[0]["sources"] if s["id"] == "netease_mailmaster_inbox")
+    assert "com.netease.macmail" in src["path"], f"netease 路径回退: {src['path']}"
+    assert src.get("probe_depth"), "netease 需要 probe_depth (深库文件探测)"
