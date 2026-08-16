@@ -3413,10 +3413,12 @@ bets:
   title: 感知面第二根管子 (文件夹 / 日历)
   appetite: 1 week
   priority: P1
-  status: candidate
-  reopened_at: 2026-08-12
-  reopen_reason: 2026-08-12 复核发现原 verify 只统计注册项数量，无法证明第二源存在真实信号或每周 >=10； 当前 inbox_folder
-    health=unknown 且 last_signal_at=null。登记不等于运行，故撤回 done，等待真实运行证据。
+  status: done
+  done_at: 2026-08-16
+  done_note: >-
+    真因修复: 容器真名 com.netease.macmail (注册表误写 mailmaster 永不匹配, 08-12 reopen
+    的根因)。netease 首条真实信号 2026-08-16T08:00Z, 双邮件源 healthy, 抽象零特判
+    (probe_depth 通用配置), 守护测试固化。retro 附对照表。
   goal: 降低单一信号源风险, 验证 signal-sources 抽象对第二类源成立
   non_goals:
   - 第三/四根管子(属 Y2Q4)
@@ -3444,9 +3446,12 @@ bets:
   title: 信号落盘管道修复 — 探测深度 + health 回写 + state 防御
   appetite: 3 days
   priority: P0
-  status: in_progress
-  started_at: 2026-08-15
-  pr: '#1521'
+  status: done
+  done_at: 2026-08-16
+  done_note: >-
+    24h 落盘窗口达标: 08-15 14:26 部署 → 08-16 08:00 信号持续跨日 (launchd log 456 条
+    apple_mail 记录); health 持续 healthy; 附加 netease 源同轮修复 (双源 08:00Z 同步)。
+    retro 追记附证据链。
   diagnosed_at: 2026-08-15
   diagnosis: >-
     只读诊断结论 (证据链 E1-E5): 层1 探测面太浅 — _hash_path 只探 ~/Library/Mail/ 顶层,
