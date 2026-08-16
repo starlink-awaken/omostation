@@ -64,7 +64,7 @@ __all__ = [
 
 # ── 路径常量 (保持向后兼容) ────────────────────────────
 _WS = os.environ.get("WORKSPACE_ROOT") or str(Path.home() / "Workspace")
-KAIRON_ROOT = Path(_WS) / "projects" / "kairon"
+KAIRON_ROOT = Path(_WS) / "projects" / "knowledge" / "kairon"
 METAOS_ROOT = Path(_WS) / "projects" / "metaos"
 OMOSTATION_ROOT = Path(_WS)
 
