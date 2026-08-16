@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 108
+  total_bets: 112
   windows:
   - Y1Q1
   - Y1Q2
@@ -4936,4 +4936,178 @@ bets:
   risk_level: L2
   human_gate: false
   circuit_breaker: 决策需人工 → 先完成指针同步，owner 决策产报告待评审
+  retro: required
+- id: BET-Y1Q3-T6-05
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: 治理工具自净闭环 — 脚本减法配额制度化 + 孤儿清理
+  appetite: 1 week
+  priority: P0
+  status: candidate
+  goal: 把 T6-05 减法配额（rule_baseline 机制）从 GaC 规则扩展到 bin/ 脚本本身：新增脚本须同时归档/删除一个；清理 ~30 个真孤儿脚本（零引用零接线）；gate 链冗余（71 实际 vs 140 SSOT 定义）收敛到单一事实源
+  non_goals:
+  - 限制代码行数增长（不同机制）
+  - 删除一次性分析工具（移入 _archive/ 可追溯，非删除）
+  - 改动实际生效的 71 个 gate 行为（只收敛定义层冗余）
+  evidence:
+    E1_script_growth:
+      description: 两周新增 246 脚本（89% 落 gac/ssot），仅删 19 → 净增 227；减法配额未覆盖 bin/ 脚本
+      added: 246
+      deleted: 19
+    E2_orphans:
+      description: gac 68/149 业务零引用（47 未接 CI）、ssot 49/152 零引用（45 未接 CI）→ ~30 真孤儿
+      gac_orphan_rate: 46%
+      ssot_orphan_rate: 32%
+    E3_gate_redundancy:
+      description: 71 实际 gate vs 140 SSOT 定义 vs 99 Makefile target 三层叠加
+      actual_gates: 71
+      ssot_definitions: 140
+      makefile_targets: 99
+  done_when:
+  - 脚本新增配额生效：新增 bin/ 脚本的 PR 须同时归档/删除一个（沿用 T6-05 机制扩展到脚本）
+  - ~30 个真孤儿脚本已清理（移 _archive/ 或删除，含引用核验）
+  - gate 链冗余收敛：140 SSOT 定义与实际执行 gate 对齐（消除 2 倍冗余）
+  - bin 脚本总数较基线下降或持平（净增 227 的反向验证）
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: 本条目 0 error
+  - cmd: python3 bin/ssot/bin-scripts-overlap-scan.py --dry-run
+    expect: 孤儿清单输出且数量 < 基线
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - bin/**
+  - .omo/_truth/registry/governance-checks.yaml
+  - Makefile
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T6-05
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 误删有效脚本率 > 20% → 降为 shadow 观察 1 周再删
+  retro: required
+- id: BET-Y1Q3-T1-07
+  track: T1-TRUTH
+  window: Y1Q3
+  title: T1-05 clone 迁移量产 — 从 pilot 推进到全员独立 clone
+  appetite: 2 weeks
+  priority: P0
+  status: candidate
+  goal: 把 T1-05 独立 clone 迁移从 writer_clone_gate_pilot 推进到全员量产：所有写入型 agent 迁移到 ~/agents/<id>/ws 独立 clone，共享 checkout 降级为集成点；达成后可退役 D2/D3/D5/PASW 部分机制
+  non_goals:
+  - 退役全部并发治理（迁移期 D2/D3/D5 继续生效）
+  - 人类终端迁移（human 保留共享 checkout）
+  evidence:
+    E1_clone_stagnation:
+      description: ~/agents/ 23 目录仅 1 个真实 clone（coordination-daemon），phase 仍 writer_clone_gate_pilot；迁移停滞
+      real_clones: 1
+      total_agent_dirs: 23
+    E2_orphan_recovery_storm:
+      description: 两周 89 个 orphan-recovery tag（40% 全部 tag），08-09 单日 40 个恢复风暴；提交脱离分支是最大摩擦点
+      orphan_tags: 89
+      peak_day: 40
+    E3_conflict_events:
+      description: 126 冲突事件（118 unclaimed_write + 7 escape_hatch_abuse），峰值与提交峰值周同步
+      total_conflicts: 126
+      unclaimed_write: 118
+  done_when:
+  - 写入型 agent 全部使用独立 clone（agent-clone.py guard --require-clone 放行率 100%）
+  - 跨仓变更走 cross-repo-changeset/v1 回放
+  - 迁移期验证通过：合并后观察窗确认无新 orphan-recovery 事件
+  - 全员迁移证据成立后可启动 D2/D3/D5 退役评估
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: 本条目 0 error
+  - cmd: ls ~/agents/ | wc -l
+    expect: 真实 clone 数显著 > 1
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/agent-clone.py
+  - .omo/_truth/registry/swarm-coordination.yaml
+  - docs/reports/2026-08-06-multi-agent-git-topology.md
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q1-T1-05
+  risk_level: L3
+  human_gate: true
+  circuit_breaker: 迁移中并发事故率上升 → 回退到 worktree 模式并复盘
+  retro: required
+- id: BET-Y1Q3-T6-06
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: 文档治理减负 — 0 违规后停止扩面转纯维护
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: doc-ssot-lint 已达 0 违规（184 文件），停止继续扩面（新增 lint 规则/文档要求），转纯维护模式；doc 类提交量砍半（两周 217 条 doc 提交）
+  non_goals:
+  - 删除现有文档 SSOT 机制（保留已生效治理）
+  - 降低 doc-ssot-lint 门禁严格度（维持 0 违规状态）
+  evidence:
+    E1_zero_violations:
+      description: doc-ssot-lint 184 文件 0 违规/0 冲突；doc-governance-check 1748 文件 PASS
+      violations: 0
+      files_scanned: 184
+    E2_doc_submit_ratio:
+      description: 两周 217 条 doc 类提交（15%）；documents 域 33 提交是主线之一，扩面持续
+      doc_commits: 217
+      ratio: 15%
+  done_when:
+  - 明确"文档治理维护模式"边界：仅修复漂移不新增规则
+  - doc 类提交占比从 15% 降至 ~8%（砍半）
+  - 无新增 doc-ssot-lint 规则扩面（基线锁定）
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: 本条目 0 error
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: ok=true 且无新增规则
+  workflow: bet-execution
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - .omo/_truth/registry/x2-freshness-rules.yaml
+  - bin/ssot/doc-ssot-lint.py
+  pasw_required: false
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 文档漂移回升 > 5 违规 → 恢复扩面评估
+  retro: required
+- id: BET-Y1Q3-T3-04
+  track: T3-COGNI
+  window: Y1Q3
+  title: 业务能力 bet 补位 — Y1Q3 首个业务型落地（感知/认知选一）
+  appetite: 2 weeks
+  priority: P1
+  status: candidate
+  goal: 从治理/文档域转向真实业务能力落地：感知面第二根管子（T2-01 文件夹/日历已 candidate）或自主性阶梯判据（Y1Q4-T3-01）中选一，在 Y1Q3 内完成首个业务型 bet 交付
+  non_goals:
+  - 同时做多个业务 bet（聚焦单点）
+  - 新增治理工具（本 bet 是业务补位）
+  evidence:
+    E1_business_ratio:
+      description: 两周实际业务能力仅 23%（且多为治理配套），真业务个位数（Neo4j/knowledge-funnel/fabric）；BET done 71 全是债务治理型
+      business_ratio: 23%
+      real_business_commits: 个位数
+    E2_y1q4_gap:
+      description: Y1Q4 起 0 业务 bet，新增 bet 全为债务治理型
+      y1q4_business_bets: 0
+  done_when:
+  - 选定业务方向（感知 or 认知）并完成 BET claim
+  - 业务 bet 交付有真实用户可见产出（非治理工具）
+  - 台账 Y1Q3 业务型 done +1
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: 本条目 0 error
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py status
+    expect: 业务型 bet done 数增加
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  depends_on: []
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 业务方向未定 → 先按 T2-01（感知面文件夹）推进
   retro: required
