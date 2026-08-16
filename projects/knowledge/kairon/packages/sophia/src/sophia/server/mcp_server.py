@@ -60,19 +60,16 @@ class _LLMClient:
 
 
 def _get_llm_client() -> _LLMClient | None:
-    """Lazy-init AsyncOpenAI client, cached for server lifetime."""
+    """Lazy-init AsyncOpenAI client via AetherForge proxy."""
     global _llm_client_instance
     if _llm_client_instance is None:
-        api_key = os.environ.get("DEEPSEEK_API_KEY")
-        if api_key:
-            from openai import AsyncOpenAI
+        api_key = os.environ.get("AETHERFORGE_KEY", "local")
+        base_url = os.environ.get("AETHERFORGE_URL", "http://127.0.0.1:9290/v1")
+        from openai import AsyncOpenAI
 
-            _llm_client_instance = _LLMClient(
-                AsyncOpenAI(
-                api_key=api_key or _local_gateway_key(),
-                base_url=os.environ.get("LLM_GATEWAY_URL", "http://100.96.126.35:4000/v1"),
-            ),
-            )
+        _llm_client_instance = _LLMClient(
+            AsyncOpenAI(api_key=api_key, base_url=base_url),
+        )
     return _llm_client_instance
 
 

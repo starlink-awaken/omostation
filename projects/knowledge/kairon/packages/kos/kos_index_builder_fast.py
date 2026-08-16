@@ -20,7 +20,7 @@ from pathlib import Path
 from kos.config import get_artifact_path
 
 # Configuration
-EMBED_URL = "http://100.96.126.35:4000/v1/embeddings"
+EMBED_URL = "http://127.0.0.1:8183/v1/embeddings"
 EMBED_MODEL = "embed"
 EMBED_KEY = "sk-omlx-admin"
 BATCH_SIZE = 128  # texts per API call

@@ -6,7 +6,6 @@ import argparse
 import asyncio
 import os
 import sys
-from pathlib import Path
 from typing import Any
 
 import httpx
@@ -146,7 +145,7 @@ async def _run_research(args: Any) -> int:
         )
     elif os.environ.get("DEEPSEEK_API_KEY"):
         cloud_llm = OpenAICompatibleClient(
-            base_url="https://api.deepseek.com",
+            base_url=os.environ.get("AETHERFORGE_URL", "http://127.0.0.1:9290/v1"),
             api_key=os.environ["DEEPSEEK_API_KEY"],
             model="deepseek-v4-pro",
             timeout=180,

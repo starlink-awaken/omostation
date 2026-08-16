@@ -9,13 +9,15 @@
 
 from __future__ import annotations
 
-import json
-import urllib.request
+import sys
+import time
 from dataclasses import dataclass
-from urllib.request import urlopen as _urlopen
+from pathlib import Path
 
-GATEWAY_URL = "http://100.96.126.35:4000/v1/chat/completions"
-GATEWAY_KEY = "sk-omlx-admin"
+# Bridge import — unified AetherForge LLM entry (replaces hardcoded HTTP URL)
+_AF_SRC = str(Path(__file__).resolve().parents[5] / "aetherforge" / "src")
+if _AF_SRC not in sys.path:
+    sys.path.insert(0, _AF_SRC)
 
 TRIAGE_PROMPT = """你是信息分诊助手。判断: 丢弃 / 沉淀 / 提醒 三选一。
 
@@ -46,6 +48,8 @@ class TriageFilterResult:
 def triage_filter(text: str, timeout: float = 10.0) -> TriageFilterResult:
     """对文本进行分诊过滤.
 
+    Uses AetherForge bridge for unified LLM routing (no hardcoded URLs).
+
     Args:
         text: 待过滤文本
         timeout: 超时秒数
@@ -53,33 +57,16 @@ def triage_filter(text: str, timeout: float = 10.0) -> TriageFilterResult:
     Returns:
         TriageFilterResult: 过滤结果
     """
-    payload = json.dumps(
-        {
-            "model": "triage",
-            "messages": [{"role": "user", "content": TRIAGE_PROMPT.format(text=text)}],
-            "max_tokens": 20,
-            "temperature": 0,
-            "extra_body": {"reasoning_effort": "none"},
-        }
-    ).encode()
-
-    req = urllib.request.Request(
-        GATEWAY_URL,
-        data=payload,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {GATEWAY_KEY}",
-        },
-    )
-
-    import time
-
     t0 = time.time()
     try:
-        with _urlopen(req, timeout=timeout) as resp:  # noqa: S310
-            d = json.loads(resp.read())
+        from aetherforge.bridge import llm_generate
+        result = llm_generate(
+            TRIAGE_PROMPT.format(text=text),
+            model="mythos-fast",
+            timeout=timeout,
+        )
         latency = time.time() - t0
-        content = d["choices"][0]["message"]["content"].strip()
+        content = (result.get("content") or "").strip()
 
         verdict = None
         for v in ("丢弃", "沉淀", "提醒"):

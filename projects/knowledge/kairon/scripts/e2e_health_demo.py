@@ -47,7 +47,7 @@ def make_default_llm() -> LLMClient | None:
 
     if os.environ.get("DEEPSEEK_API_KEY"):
         return OpenAICompatibleClient(
-            base_url="https://api.deepseek.com/v1",
+            base_url=os.environ.get("AETHERFORGE_URL", "http://127.0.0.1:9290/v1"),
             api_key=os.environ["DEEPSEEK_API_KEY"],
             model="deepseek-chat",
             timeout=30,
