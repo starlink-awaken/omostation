@@ -34,19 +34,19 @@ KNOWN_BACKENDS: list[dict] = [
         "name": "eidos",
         "mcp_endpoint": "",
         "command": "uv",
-        "args": ["run", "--package", "eidos", "python", "-m", "eidos.mcp_server"],
+        "args": ["run", "--directory", "projects/knowledge/kairon", "--package", "eidos", "python", "-m", "eidos.mcp_server"],
     },
     {
         "name": "iris",
         "mcp_endpoint": "",
         "command": "uv",
-        "args": ["run", "--package", "iris", "python", "-m", "iris.mcp_server"],
+        "args": ["run", "--directory", "projects/knowledge/kairon", "--package", "iris", "python", "-m", "iris.mcp_server"],
     },
     {
         "name": "kronos",
         "mcp_endpoint": "",
         "command": "uv",
-        "args": ["run", "--package", "kronos", "python", "-m", "kronos.mcp_server"],
+        "args": ["run", "--directory", "projects/knowledge/kairon", "--package", "kronos", "python", "-m", "kronos.mcp_server"],
     },
     # !! metaos 独立 MCP 入口已关闭 (2026-06-22) !!
     # 原因: 入口收敛 — metaos 编排能力已通过 bos://ecos/workflow 经 Agora 路由
@@ -59,6 +59,8 @@ KNOWN_BACKENDS: list[dict] = [
         "command": "uv",
         "args": [
             "run",
+            "--directory",
+            "projects/knowledge/kairon",
             "--package",
             "minerva",
             "python",
@@ -72,6 +74,8 @@ KNOWN_BACKENDS: list[dict] = [
         "command": "uv",
         "args": [
             "run",
+            "--directory",
+            "projects/knowledge/kairon",
             "--package",
             "sophia",
             "python",
@@ -109,7 +113,7 @@ KNOWN_BACKENDS: list[dict] = [
         "name": "codeanalyze",
         "mcp_endpoint": "",
         "command": "uv",
-        "args": ["run", "--package", "codeanalyze", "python", "-m", "codeanalyze.mcp"],
+        "args": ["run", "--directory", "projects/knowledge/kairon", "--package", "codeanalyze", "python", "-m", "codeanalyze.mcp"],
     },
     {
         "name": "sot-bridge-persona",
@@ -130,13 +134,13 @@ KNOWN_BACKENDS: list[dict] = [
         "mcp_endpoint": "",
         "enabled": False,  # 本地不可用 (forge 项目缺失), 完整环境改回 True
         "command": "uv",
-        "args": ["run", "--package", "forge", "python", "-m", "forge.mcp_server"],
+        "args": ["run", "--directory", "projects/knowledge/kairon", "--package", "forge", "python", "-m", "forge.mcp_server"],
     },
     {
         "name": "gbrain",
         "mcp_endpoint": "",
         "command": "bun",
-        "args": ["run", "--cwd", "projects/gbrain", "src/cli.ts", "serve"],
+        "args": ["run", "--cwd", "projects/knowledge/gbrain", "src/cli.ts", "serve"],
     },
     {
         "name": "c2g",
@@ -145,10 +149,10 @@ KNOWN_BACKENDS: list[dict] = [
         "args": [
             "run",
             "--directory",
-            "projects/c2g",
+            "projects/omo",
             "python",
             "-m",
-            "c2g.mcp_server",
+            "omo._vendored.c2g.mcp_server",
         ],
         "description": "C2G 战略需求引擎 MCP",
     },
