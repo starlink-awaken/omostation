@@ -27,11 +27,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - name: Install yamllint
-        run: pip install yamllint pyyaml
+      - name: Install dependencies
+        run: pip install yamllint pyyaml pytest
       - name: Validate YAML syntax
         run: yamllint projects/runtime/protocols/
-      - name: Validate L0-registry.yaml
-        run: python3 scripts/validate_protocol_registry.py
+      - name: Validate Protocol Registry Hygiene
+        run: python3 -m pytest projects/runtime/tests/test_protocol_registry_hygiene.py
       - name: List protocols
         run: python3 -m pip install -e projects/runtime/ && python3 -m runtime protocol list
