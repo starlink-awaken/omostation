@@ -8,7 +8,7 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 571
+  mcp_tools: 565
   bos_services: 223
   bos_domains: 17
   cli_commands: 138
@@ -405,9 +405,6 @@ mcp_servers:
   exists: true
   tools:
   - forge_cost_report
-  - forge_fabric_inspect
-  - forge_fabric_vram
-  - forge_fabric_warm
   - forge_generate
   - forge_generate_mesh
   - forge_health_check
@@ -417,7 +414,7 @@ mcp_servers:
   - forge_triage_batch
   - forge_triage_consensus
   - forge_triage_status
-  tool_count: 13
+  tool_count: 10
 - id: aetherforge-gateway
   name: AetherForge LLM Gateway
   layer: X
@@ -494,12 +491,9 @@ mcp_servers:
   layer: X
   file: projects/c2g/src/c2g/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - c2g_bet
-  - c2g_gc
-  - c2g_radar
-  tool_count: 3
+  exists: false
+  tools: []
+  tool_count: 0
 - id: family-hub
   name: Family Hub
   layer: X
@@ -723,7 +717,7 @@ mcp_servers:
 - id: gbrain
   name: gbrain Knowledge DB
   layer: L2
-  file: projects/gbrain/src/core/operations/exports.ts
+  file: projects/knowledge/gbrain/src/core/operations/exports.ts
   transport: stdio
   exists: true
   tools:

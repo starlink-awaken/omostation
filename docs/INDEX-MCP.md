@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-全生态共 **27** 个 MCP 服务器, **571** 个工具。
+全生态共 **27** 个 MCP 服务器, **565** 个工具。
 
 | 服务器 | 层 | 工具数 | 传输 | 端口 | 源文件 |
 |--------|-----|--------|------|------|--------|
@@ -29,11 +29,11 @@
 | `l4-kernel` | L4 | 47 | stdio/http/sse | http:7455, sse:7456 | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `model-driven` | M0 | 28 | stdio | — | `projects/model-driven/src/model_driven/mcp_server.py` |
 | `model-driven-fastmcp` | M0 | 2 | stdio | — | `projects/model-driven/src/model_driven/fastmcp_server.py` |
-| `aetherforge` | X | 13 | stdio | — | `projects/aetherforge/src/aetherforge/mcp_server.py` |
+| `aetherforge` | X | 10 | stdio | — | `projects/aetherforge/src/aetherforge/mcp_server.py` |
 | `aetherforge-mesh` | X | 6 | stdio | — | `projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py` |
 | `family-hub` | X | 6 | stdio | — | `projects/family-hub/mcp_server.py` |
 | `aetherforge-gateway` | X | 3 | stdio | — | `projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py` |
-| `c2g` | X | 3 | stdio | — | `projects/c2g/src/c2g/mcp_server.py` |
+| `c2g` | X | 0 | stdio | — | `projects/c2g/src/c2g/mcp_server.py` |
 
 ## 工具清单
 
@@ -93,9 +93,9 @@
 
 `cards_check`, `cards_status`, `chat`, `domain_context`, `domain_controller_shadow_status`, `domain_facts_audit`, `domain_facts_validation_status`, `domain_model_freshness_status`, `domain_project_status`, `domain_sanyi_status_consistency_status`, `domains_list`, `kems_status`, `run_task`, `workspace_context`
 
-### aetherforge (13 tools)
+### aetherforge (10 tools)
 
-`forge_cost_report`, `forge_fabric_inspect`, `forge_fabric_vram`, `forge_fabric_warm`, `forge_generate`, `forge_generate_mesh`, `forge_health_check`, `forge_list_nodes`, `forge_mesh_status`, `forge_triage`, `forge_triage_batch`, `forge_triage_consensus`, `forge_triage_status`
+`forge_cost_report`, `forge_generate`, `forge_generate_mesh`, `forge_health_check`, `forge_list_nodes`, `forge_mesh_status`, `forge_triage`, `forge_triage_batch`, `forge_triage_consensus`, `forge_triage_status`
 
 ### ecos-ssot (9 tools)
 
@@ -136,10 +136,6 @@
 ### aetherforge-gateway (3 tools)
 
 `gateway_generate`, `gateway_health`, `llm_generate`
-
-### c2g (3 tools)
-
-`c2g_bet`, `c2g_gc`, `c2g_radar`
 
 ### model-driven-fastmcp (2 tools)
 
