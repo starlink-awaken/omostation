@@ -1422,7 +1422,8 @@ bets:
   title: 愿景链感知收口 + start 旁路关闭 + digest 可见
   appetite: 2 days
   priority: P0
-  status: in_progress
+  status: done
+  done_at: 2026-08-16
   goal: 关闭 2026-08-16 验证轮的感知假 missing-bet、omo start 旁路、红线 digest 不可见，不新造第四套台账或 GaC required 规则
   non_goals:
   - 重写 bind 谓词
@@ -1453,7 +1454,6 @@ bets:
   - .agents/skills/bet-execution/**
   - .agents/skills/project-governance/**
   - .omo/_knowledge/retros/**
-  - docs/generated/agent-redlines.md
   pasw_required: true
   depends_on:
   - BET-Y1Q1-T6-02
