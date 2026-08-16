@@ -1,10 +1,11 @@
 """
 BaseExtractor — 统一知识提取基类
 """
-import re
-from abc import ABC
-from datetime import datetime
 from pathlib import Path
+from datetime import datetime
+from abc import ABC, abstractmethod
+from typing import Dict, List
+import re
 
 
 class BaseExtractor(ABC):
@@ -21,7 +22,7 @@ class BaseExtractor(ABC):
     def __init__(self, domain_root: Path):
         self.domain_root = Path(domain_root)
 
-    def extract_entities(self, text: str) -> dict[str, list[str]]:
+    def extract_entities(self, text: str) -> Dict[str, List[str]]:
         entities = {}
         for etype, pattern in self.PATTERNS.items():
             matches = re.findall(pattern, text)
@@ -40,7 +41,7 @@ class BaseExtractor(ABC):
             "extracted_at": datetime.now().isoformat(),
         }
 
-    def extract_from_ocr(self, ocr_dir: Path = None) -> list[dict]:
+    def extract_from_ocr(self, ocr_dir: Path = None) -> List[dict]:
         if ocr_dir is None:
             ocr_dir = self.domain_root / "_ocr_text"
         if not ocr_dir.exists():
@@ -58,7 +59,7 @@ class BaseExtractor(ABC):
                 results.append({"source": txt_file.stem, "error": str(e)})
         return results
 
-    def classify_domain(self, text: str, domain_keywords: dict[str, list[str]]) -> list[str]:
+    def classify_domain(self, text: str, domain_keywords: Dict[str, List[str]]) -> List[str]:
         scores = {}
         for domain, keywords in domain_keywords.items():
             score = sum(1 for kw in keywords if kw in text)

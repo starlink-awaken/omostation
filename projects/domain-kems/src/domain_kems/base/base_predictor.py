@@ -1,8 +1,9 @@
 """
 BasePredictor — 统一预测器基类
 """
-from datetime import datetime
 from pathlib import Path
+from datetime import datetime
+from typing import Dict, List
 
 
 class BasePredictor:
@@ -13,7 +14,7 @@ class BasePredictor:
         self.root = self.domain_root
         self._model = None
 
-    def detect_stale_docs(self, days: int = 90) -> list[dict]:
+    def detect_stale_docs(self, days: int = 90) -> List[dict]:
         stale = []
         knowledge_dir = self.root / "_knowledge"
         if not knowledge_dir.exists():
@@ -31,7 +32,7 @@ class BasePredictor:
         stale.sort(key=lambda x: -x["days_old"])
         return stale
 
-    def detect_orphan_files(self) -> list[dict]:
+    def detect_orphan_files(self) -> List[dict]:
         orphans = []
         knowledge_dir = self.root / "_knowledge"
         if not knowledge_dir.exists():

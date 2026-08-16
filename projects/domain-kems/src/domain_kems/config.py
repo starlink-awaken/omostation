@@ -4,8 +4,10 @@ Config — 统一配置管理
 三层优先级：环境变量 > 配置文件 > 默认值
 """
 
-import os
 from pathlib import Path
+from typing import Dict, Optional
+import os
+import json
 
 
 class DomainConfig:
@@ -39,7 +41,7 @@ class DomainConfig:
         },
     }
 
-    def __init__(self, config_path: Path | None = None):
+    def __init__(self, config_path: Optional[Path] = None):
         self.config_path = config_path or Path.home() / ".domain" / "config.yaml"
         self._config = self._load()
 
@@ -68,25 +70,25 @@ class DomainConfig:
 
         return config
 
-    def get_domain(self, name: str) -> dict | None:
+    def get_domain(self, name: str) -> Optional[dict]:
         """获取域配置"""
         return self._config.get("domains", {}).get(name)
 
-    def get_path(self, name: str) -> Path | None:
+    def get_path(self, name: str) -> Optional[Path]:
         """获取域路径"""
         domain = self.get_domain(name)
         if domain:
             return Path(domain["path"]).expanduser()
         return None
 
-    def get_bos_uri(self, name: str) -> str | None:
+    def get_bos_uri(self, name: str) -> Optional[str]:
         """获取域 BOS URI"""
         domain = self.get_domain(name)
         if domain:
             return domain.get("bos_uri")
         return None
 
-    def list_domains(self) -> dict[str, dict]:
+    def list_domains(self) -> Dict[str, dict]:
         """列出所有域"""
         return self._config.get("domains", {})
 

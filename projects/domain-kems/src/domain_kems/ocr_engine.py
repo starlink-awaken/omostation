@@ -5,10 +5,11 @@ OCR Engine — 统一 OCR 引擎
 支持批量处理、损坏文件跳过、已处理文件跳过。
 """
 
+import fitz
 import subprocess
 from pathlib import Path
-
-import fitz
+from datetime import datetime
+from typing import List, Dict, Optional
 
 
 class OCREngine:
@@ -58,7 +59,7 @@ class OCREngine:
         except Exception as e:
             return {"file": name, "error": str(e), "status": "error"}
 
-    def batch_process(self, domain_id: str | None = None) -> list[dict]:
+    def batch_process(self, domain_id: Optional[str] = None) -> List[dict]:
         """批量处理域内所有 PDF"""
         results = []
         pdfs = sorted(self.domain_root.rglob("*.pdf"))

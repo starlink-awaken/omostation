@@ -4,6 +4,7 @@
 从 ~/.config/domain/config.yaml 加载域配置
 """
 
+from pathlib import Path
 from domain_kems import BaseController, DomainConfig
 
 
