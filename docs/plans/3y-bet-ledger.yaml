@@ -4370,6 +4370,46 @@ bets:
   human_gate: false
   circuit_breaker: 清理范围超出 3 天 appetite → 先完成 Agora BOS 迁移路径，剩余残留下个 bet
   retro: required
+- id: BET-Y1Q3-T5-04
+  track: T5-ORCH
+  window: Y1Q3
+  title: SR-06 四缺口修复 — supervised loop 生产健壮性
+  appetite: 2 days
+  priority: P1
+  status: done
+  done_at: 2026-08-16
+  origin: 'T1-18 retro Q3 四产品缺口转正 (SR-06 六轮 canary 实证发现)'
+  goal: >-
+    SR-06 演练挖出的四个 fail-closed 误伤点修复: (1) admission TTL 过期 × mesh 幂等 = execute
+    重试死锁; (2) worker completion report 空 filesModified 致 collect 误拒; (3) gitignore
+    区越界写对 verify 不可见; (4) supervisor terminal fallback 200 行截断误伤长输出。
+  non_goals:
+  - 改变 fail-closed 语义 (只修误伤路径)
+  - A2A/ACP 层改动
+  done_when:
+  - AdmissionRenewed 事件 + renew_admission (dispatched 自环续期, 终态拒绝)
+  - prompt 契约强制非空 filesModified 条目
+  - collect 补 untracked 扫描 (.omo/workers/runs 除外)
+  - terminal read limit 环境变量化 (默认 800)
+  verify:
+  - cmd: cd projects/omo && uv run python -m pytest tests/test_sr06_gap_fixes.py -q
+    expect: 5 passed
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/workflow_mesh.py
+  - projects/omo/src/omo/workflow_dispatch.py
+  - projects/omo/src/omo/omo_worker_dispatch.py
+  - projects/omo/src/omo/blueprint_control.py
+  - projects/omo/tests/test_sr06_gap_fixes.py
+  - bin/gac/orca-codex-supervisor.py
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q2-T1-18
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: mesh 状态机语义冲突 → 回退单事件方案
+  retro: required
 - id: BET-Y1Q3-T6-03
   track: T6-SUBTRACT
   window: Y1Q3
