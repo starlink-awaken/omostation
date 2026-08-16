@@ -24,7 +24,7 @@ layers:
   L4: "自我层 (l4-kernel)"
   I0: "织层 (agora)"
   M0: "横切框架 (model-driven)"
-  X:  "横切扩展 (aetherforge / c2g / bus-foundation / omo-debt / observability / family-hub)"
+  X:  "横切扩展 (aetherforge / bus-foundation / observability / family-hub; c2g+omo-debt 已内包 omo, ADR-0412)"
 
 projects:
   # mesh-router 不是独立 git 仓 — 实现 = bin/gac/gac-mesh-router.py (HTTP server on port 7437)
@@ -206,15 +206,6 @@ projects:
     role: "能力与算力框架 (gateway/mesh/swarm)"
     src_dir: "src/"
 
-  c2g:
-    layer: "X"
-    stack: "Python (uv)"
-    python: ">=3.13"
-    build_backend: "uv_build"
-    version: "0.1.0"
-    role: "战略需求引擎 (V2P → C2G)"
-    src_dir: "src/"
-
   bus-foundation:
     layer: "X"
     stack: "Python (uv, pytest)"
@@ -224,14 +215,6 @@ projects:
     role: "Omni-Bus (Data/Event/Control)"
     src_dir: "src/"
 
-  omo-debt:
-    layer: "L2"
-    stack: "Python (uv, pytest)"
-    python: ">=3.13"
-    build_backend: "hatchling"
-    version: "1.0.0"
-    role: "技术债务评分 CLI"
-    src_dir: "src/"
 
   observability:
     layer: "X"
@@ -367,7 +350,6 @@ submodule_policy:
     - projects/bus-foundation
     - projects/kairon
     - projects/l4-kernel
-    - projects/omo-debt
   feature:
     - projects/cockpit       # codex/cockpit-instance-contract
     - projects/metaos        # work/adr-0181-scheme-c

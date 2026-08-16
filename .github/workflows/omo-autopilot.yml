@@ -23,7 +23,7 @@ jobs:
       - name: Install OMO Tools
         run: |
           uv tool install --force ./projects/omo
-          uv tool install --force ./projects/omo-debt
+          uv tool install --force ./projects/omo  # omo-debt 内包 (ADR-0412)
           
       - name: 1. Perception (Sense Debt)
         run: |

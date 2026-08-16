@@ -6,8 +6,6 @@ on:
     branches: [main]
     paths:
       - 'projects/omo/**'
-      - 'projects/omo-debt/**'
-      - 'projects/c2g/**'
       - 'projects/model-driven/**'
       - 'projects/l4-kernel/**'
       - 'projects/aetherforge/**'
@@ -17,8 +15,6 @@ on:
   pull_request:
     paths:
       - 'projects/omo/**'
-      - 'projects/omo-debt/**'
-      - 'projects/c2g/**'
       - 'projects/model-driven/**'
       - 'projects/l4-kernel/**'
       - 'projects/aetherforge/**'
@@ -31,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pkg: [omo, omo-debt, c2g, model-driven, l4-kernel, aetherforge, bus-foundation]
+        [omo, model-driven, l4-kernel, aetherforge, bus-foundation]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
