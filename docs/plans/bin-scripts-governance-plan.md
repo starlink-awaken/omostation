@@ -1,6 +1,6 @@
 # bin/ 与 scripts/ 收敛治理实施计划
 
-- 状态：实施中（第一波非破坏性治理）
+- 状态：Wave 2 已实施并固化基线（第一波非破坏性治理完成）
 - 日期：2026-08-16
 - 范围：主仓库 `bin/`、`scripts/` 与 `docs/operations/bin-scripts-convergence-manifest.json`
 - 负责人：governance
@@ -93,8 +93,8 @@ python3 bin/tool-registry-audit.py --scope both \
 - [x] 完成全量审计扫描并生成快照。
 - [x] 确认 manifest 顶层结构与 action 语义。
 - [x] 创建本治理计划文档。
-- [ ] 验证本计划变更通过 agent workflow。
-- [ ] closeout 后提交 PR 并合并。
+- [x] 验证本计划变更通过 agent workflow。
+- [x] closeout 后提交 PR 并合并。
 
 风险控制：
 
@@ -106,8 +106,8 @@ python3 bin/tool-registry-audit.py --scope both \
 ## 6. 后续治理批次
 
 1. **命名治理**：分批将非 snake_case 脚本迁移为 snake_case，同步 manifest 和调用方。
-2. **shim 清理**：对 236 个 shim 候选逐批确认调用链，确认无引用后移除。
-3. **archive 治理**：对 87 个 archive 候选确认历史价值，归档到明确目录或删除。
+2. **shim 清理**：对 235 个 shim 候选逐批确认调用链，确认无引用后移除。
+3. **archive 治理**：对 90 个 archive 候选确认历史价值，归档到明确目录或删除。
 4. **重复合并**：对 mirrored duplicate / parallel candidate 按能力合并到 `bin/` 主实现。
 5. **CI 固化**：把 manifest + audit 纳入常态化门禁，防止新增重复和漂移。
 6. **子项目下沉**：把根仓中属于子项目能力的工具逐步下沉到对应子项目，根仓只保留统一入口。
