@@ -87,8 +87,9 @@ data/驾驶舱/documents.db
 # ---------------------------------------------------------------------------
 # 4. KOS 运行时目录
 #    KOS_HOME 指向根 kos/，其中 manifest + sqlite + captures 是运行时状态。
+# 锚定根目录: projects/knowledge/kairon/packages/kos 是源码 (T6-01 内包) 不可 ignore。
 # ---------------------------------------------------------------------------
-kos/
+/kos/
 
 # ---------------------------------------------------------------------------
 # 5. 生成文档与缓存
@@ -154,7 +155,7 @@ _archived/
 
 bets.json
 tasks.json
-skills/
+/skills/
 !.agents/skills/
 .mimocode/
 !.mimocode/commands/
