@@ -729,6 +729,7 @@ bets:
   appetite: 2 weeks
   priority: P0
   status: in_progress
+  awaiting: 'human_gate 确认存量清单 (窗口提前指令: 08-21 锚点转终审 check, 实现证据已满: 6 agents/0 stale/70 claims/shadow events 81 write_ok, daemon SIGTERM 已修复, 见 retro 增补)' 
   goal: 在 T1-05 拓扑改造铺开之前, 建立不依赖共享物理 checkout 的运行时协调层 (~/agents/_shared/runtime/coordination.sqlite3,
     WAL), 承接任务认领/agent 心跳/ 跨 agent 消息, 使 D2/D3 文件锁在 T1-05 D3 阶段可被安全退役而非静默失效
   analysis_doc: docs/reports/2026-08-14-shared-runtime-coordination-gap.md

@@ -141,3 +141,16 @@ claim, token 不变; 挂点侧无需改 (返回既有 Claim 自然走 write_ok �
 
 代码修复: 仅 runbook (维护 SOP + 2 行故障速查固化上述坑), 零代码改动 —
 问题在部署面不在代码面. 文档先行, 后续若断流复发再考虑 cron 自愈/告警.
+
+
+## 2026-08-17 增补 — daemon SIGTERM 事件 + 窗口提前指令下的状态
+
+- **daemon 故障与修复**: launchd agent-tick-daemon 被 SIGTERM 杀 (exit -15, KeepAlive
+  竟未拉起), agent_health 一度无新心跳。处置: bootout + bootstrap 重挂 (PID 23551,
+  exit 0), `--once` 手动 tick 验证 6 agents 全 ok 落库。无数据丢失 (claims/shadow_events
+  完好), 属 launchd 层瞬时故障非代码缺陷。
+- **当前快照 (2026-08-17T23:2xZ)**: agents 6 / stale 0 / claims 70 (active 61+released);
+  shadow_events: write_ok 81, backup_ok 3, mirror_drift 4, token_missing_legacy 55。
+- **窗口提前实施指令下**: 实现+运行证据已满 (08-14 起持续), done_when 机器可验项全过
+  (DB/concurrency/fencing/schema 四套 verify 见 bet)。剩余唯一: human_gate 确认存量清单
+  后置 done — 按红线保留, 08-21 锚点转为终审 check 而非阻塞。
