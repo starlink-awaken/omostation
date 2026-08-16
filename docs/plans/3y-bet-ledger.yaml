@@ -2963,9 +2963,12 @@ bets:
   title: 工程交付 dogfood 开 shadow
   appetite: 1 week
   priority: P0
-  status: done
-  done_at: 2026-08-15
-  note: '核实性补登 (2026-08-15): dogfood shadow 轮 #1517 retro + #1518 status merge 证据齐, 主仓台账曾漏登'
+  status: in_progress
+  corrected_at: 2026-08-16
+  correction_note: >-
+    2026-08-16 纠偏 (交接手册 §8 直查证据): MOS total_decision_outcomes=0, 周产 gate 0/20 FAIL,
+    完整窗口至 2026-08-19 未满 — 08-15 补登依据 (PR merge) ≠ done_when 依据 (周产>=20),
+    属 T3-01 同型失误。回退 in_progress, 保留原窗口锚点 08-19 不重置。治理通报面 (已通报)。
   goal: 建立高频低风险的 decision_outcome 样本源, PR 评审意见即天然 human_verdict
   non_goals:
   - 计入 X3 价值指标
