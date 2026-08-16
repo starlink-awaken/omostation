@@ -1,4 +1,4 @@
-.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene worktree-janitor delegation-preflight delegation-alias-check bin-tool-registry-audit bin-tool-registry-audit-strict bin-tool-registry-audit-emit bin-tool-registry-convergence bin-tool-registry-parallel-gaps bin-tool-registry-dependency-risks bin-tool-registry-weekly-governance-report bin-tool-registry-scripts-necessity bin-tool-registry-round9 bin-tool-registry-round10 bin-tool-registry-round11 bin-tool-registry-round12 bin-tool-registry-round13 capability-sync capability-check omo-status omo-top
+.PHONY: help ci-local ci-local-fast kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint agent-workflow-lint agent-workflow-doctor agent-workflow-observe agent-workflow-adapters agent-workflow-integrations agent-workflow-bootstrap agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflows project-layer-index domain-m1-alignment toolbox-ssot-check gac-local-gate dir-hygiene governance-release-gate submodule-pointer-transaction governance-check governance-verify governance-audit governance-dashboard debt-check debt-audit debt-leaderboard governance-data governance-query doc-lint evidence-smoke x1-check x2-check x3-check x4-check x1-x4-check install-hooks pasw-cleanup pasw-status mesh-orphan-cleanup mesh-orphan-cleanup-apply adr-claim mof-bootstrap m4-health m4-health-compare registry-drift state-sync state-sync-dry doc-ssot-lint ssot-guardian gac-healthcheck swarm-activity gac-drift gac-validate agent-workflow-status memory-os-check memory-os-env memory-os-up memory-os-smoke memory-os-asof-seed worktree-prune worktree-guard worktree-cleanup worktree-audit worktree-hygiene worktree-janitor delegation-preflight delegation-alias-check bin-tool-registry-audit bin-tool-registry-audit-strict bin-tool-registry-audit-emit bin-tool-registry-convergence bin-tool-registry-parallel-gaps bin-tool-registry-dependency-risks bin-tool-registry-weekly-governance-report bin-tool-registry-scripts-necessity bin-tool-registry-close-duplicate-batch bin-tool-registry-close-duplicate-exec bin-tool-registry-round9 bin-tool-registry-round10 bin-tool-registry-round11 bin-tool-registry-round12 bin-tool-registry-round13 capability-sync capability-check omo-status omo-top
 
 PY := uv run --with pyyaml python
 
@@ -27,6 +27,8 @@ help:
 	@echo "make bin-tool-registry-dependency-risks    输出依赖风险热点（出入度 + 并行收敛缺口）"
 	@echo "make bin-tool-registry-weekly-governance-report   输出并落盘 依赖风险/并行缺口周报（含 owner/action/sink）"
 	@echo "make bin-tool-registry-scripts-necessity   生成 scripts 兼容层必要性快照与固化建议（报告 + JSON）"
+	@echo "make bin-tool-registry-close-duplicate-batch  输出 close-duplicate-gap-first 执行清单（支持 round/owner 筛选）"
+	@echo "make bin-tool-registry-close-duplicate-exec   执行 close-duplicate-gap-first（默认 dry-run）"
 	@echo "make bin-tool-registry-round9              并行风险 Top10 一键闭环（strict + gaps + dependency + 周报）"
 	@echo "make bin-tool-registry-round10             并行风险 Top10 一键闭环（续一轮）"
 	@echo "make bin-tool-registry-round11             并行风险 Top10 一键闭环（继续下一轮）"
@@ -297,6 +299,13 @@ TOOL_REGISTRY_DEPENDENCY_LIMIT ?= 25
 TOOL_REGISTRY_WEEKLY_ARTIFACT ?= artifacts/bin-tool-registry-weekly-governance-report.json
 BIN_TOOL_REGISTRY_NECESSITY_REPORT ?= docs/operations/bin-scripts-necessity-report.md
 BIN_TOOL_REGISTRY_NECESSITY_SUMMARY ?= docs/operations/bin-scripts-necessity-summary.json
+BIN_TOOL_REGISTRY_CLOSE_DUP_ROUND ?= all
+BIN_TOOL_REGISTRY_CLOSE_DUP_OWNER ?=
+BIN_TOOL_REGISTRY_CLOSE_DUP_BATCH ?= docs/operations/bin-scripts-close-duplicate-batch.md
+BIN_TOOL_REGISTRY_CLOSE_DUP_BATCH_JSON ?= artifacts/bin-scripts-close-duplicate-batch.json
+BIN_TOOL_REGISTRY_CLOSE_DUP_EXEC_REPORT ?= docs/operations/bin-scripts-close-duplicate-exec.md
+BIN_TOOL_REGISTRY_CLOSE_DUP_EXEC_JSON ?= artifacts/bin-scripts-close-duplicate-exec.json
+BIN_TOOL_REGISTRY_CLOSE_DUP_APPLY ?=
 
 bin-tool-registry-audit:  ## 扫描 bin 工具调用图与命名债务
 	@python3 bin/tool-registry-audit.py --scope "$(TOOL_REGISTRY_SCOPE)" --parallel-manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)"
@@ -332,6 +341,28 @@ bin-tool-registry-scripts-necessity:  ## 生成 scripts 兼容层必要性快照
 	@python3 bin/generate-bin-scripts-necessity.py --manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" --snapshot "$(TOOL_REGISTRY_SNAPSHOT)" --output "$(BIN_TOOL_REGISTRY_NECESSITY_REPORT)" --json "$(BIN_TOOL_REGISTRY_NECESSITY_SUMMARY)"
 	@echo "generated $(BIN_TOOL_REGISTRY_NECESSITY_REPORT)"
 	@echo "generated $(BIN_TOOL_REGISTRY_NECESSITY_SUMMARY)"
+
+bin-tool-registry-close-duplicate-batch:  ## 输出 close-duplicate-gap-first 执行清单（支持 round/owner 筛选）
+	@python3 bin/generate-bin-scripts-close-duplicate-batch.py \
+		--manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" \
+		--round "$(BIN_TOOL_REGISTRY_CLOSE_DUP_ROUND)" \
+		--owner "$(BIN_TOOL_REGISTRY_CLOSE_DUP_OWNER)" \
+		--output "$(BIN_TOOL_REGISTRY_CLOSE_DUP_BATCH)" \
+		--json "$(BIN_TOOL_REGISTRY_CLOSE_DUP_BATCH_JSON)"
+
+bin-tool-registry-close-duplicate-exec:  ## 执行 close-duplicate-gap-first（默认 dry-run）
+	@if [ "$(BIN_TOOL_REGISTRY_CLOSE_DUP_APPLY)" = "1" ]; then \
+		APPLY="--apply"; \
+	else \
+		APPLY=""; \
+	fi; \
+	python3 bin/execute-bin-scripts-close-duplicate.py \
+		--manifest "$(BIN_TOOL_REGISTRY_MANIFEST)" \
+		--round "$(BIN_TOOL_REGISTRY_CLOSE_DUP_ROUND)" \
+		--owner "$(BIN_TOOL_REGISTRY_CLOSE_DUP_OWNER)" \
+		--output "$(BIN_TOOL_REGISTRY_CLOSE_DUP_EXEC_REPORT)" \
+		--json "$(BIN_TOOL_REGISTRY_CLOSE_DUP_EXEC_JSON)" \
+		$$APPLY
 
 bin-tool-registry-round9:  ## 并行风险 Top10 一键闭环（建议默认命令）
 	@$(MAKE) bin-tool-registry-audit-strict TOOL_REGISTRY_SCOPE=both TOOL_REGISTRY_DEPENDENCY_LIMIT=10
@@ -535,3 +566,17 @@ machine-config-lint:  ## 检查写机器级配置的脚本集合有无未审阅�
 .PHONY: swarm-prune
 swarm-prune:
 	python3 bin/gac/swarm-prune-zombies.py --apply
+
+# ── omlxc 本地算力控制面 (v3.1.0) ──────────────────────────
+.PHONY: omlxc-test omlxc-lint omlxc-benchmark
+omlxc-test:  ## 运行 omlxc 全量测试套件 (pytest)
+	@echo "── 运行 omlxc 测试 ───────────────────────────────────"
+	cd projects/omlxc && uv run pytest -q
+
+omlxc-lint:  ## 运行 omlxc ruff + pyright 严格类型检查
+	@echo "── 运行 omlxc 门禁 ───────────────────────────────────"
+	cd projects/omlxc && uv run ruff check . && uv run pyright
+
+omlxc-benchmark:  ## 查看本地模型基准测试大盘 (omlxc benchmark report)
+	@echo "── 本地模型基准测试榜单 ──────────────────────────────"
+	cd projects/omlxc && uv run omlxc benchmark report

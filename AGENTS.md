@@ -14,7 +14,7 @@ Before editing:
 4. **需求迭代强制 Workflow（ADR-0203）** — see §1.6. Run `bootstrap` → `status` → `start` → `claim` **before** any requirement delivery edit. Prompt-only execution is non-compliant.
 5. For governed state, use OMO/C2G brokers instead of direct `.omo` writes.
 6. For multi-file or high-risk changes, explain the edit surface before applying patches.
-7. **B.D.S.K. Virtual Board & Compute Deliberation** — For high-risk architectural changes, trade-offs, or local LLM/edge compute integration, refer to [`.agents/skills/bdsk-virtual-board/SKILL.md`](.agents/skills/bdsk-virtual-board/SKILL.md) to invoke the 4-Corner (`@Builder`/`@Devil`/`@Sage`/`@Keeper`) consensus engine (Mode-A/B). All local/edge LLM inference MUST route through **AetherForge + omlxc (`bos://compute/aetherforge/infer`)**.
+7. **B.D.S.K. Virtual Board & Compute Deliberation** — For high-risk architectural changes, trade-offs, or local LLM/edge compute integration, refer to [`.agents/skills/bdsk-virtual-board/SKILL.md`](.agents/skills/bdsk-virtual-board/SKILL.md) to invoke the 4-Corner (`@Builder`/`@Devil`/`@Sage`/`@Keeper`) consensus engine (Mode-A/B). All local/edge LLM inference MUST route through **AetherForge + omlxc v3.1.0 (`bos://compute/aetherforge/infer`)** with automated 3-state circuit breaking, dynamic EWMA routing, and SQLite benchmark telemetry (`make omlxc-benchmark`, `omlxc routes plan <model> --explain`).
 8. **Multi-Agent Observability** — Run `bin/omo-status` (or `make omo-status`) for a <0.2s Rich Panel status snapshot (Agent heartbeats, locks, submodules, BETs), and `bin/omo-top` (or `make omo-top`) for the real-time Textual 1.x control plane.
 
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
@@ -137,6 +137,8 @@ D1–D5 管的是「并发写不打架」，D0 管的是「产物不消失」。
 **D0 铁律**：交付物必须走 `git add` → `commit` → **`tag`**（或推独立远端分支）。仅 commit 不算持久化。
 
 **共享主树只读 (T1-00)**：所有 agent 必须在 `gac-worktree claim` 出的隔离树 (`work/*` 分支) 内工作。共享 main worktree 对 agent **只读** — `git clean -fd` / `reset --hard` / `stash -u` / `rebase` 在 hook 层要求 `SWARM_ESCAPE_ID`。raw `git --no-verify` 被 `bin/gac/git-shim` 拦截，强制走 `bin/gac/swarm-git`。僵尸锁自动清理: `agent-workflow prune-locks`。
+
+> **共享 checkout 并发吸收 staged 工作 (2026-08-16 实证)**：高频并发域（bin/scripts convergence、台账、SSOT 文件）的并发 agent 会**把共享 checkout 工作树上的全部 staged 改动直接 `add -A && commit` 成混合 commit**（即使未 claim 该路径），reflog 会出现非主动 commit。处理范式：① 不贸然 reset — 先 `git reflog -8` + `git show <sha> --stat` 审查内容；② 验证工作是否已被合入 main（`git show origin/main:<path>` 对比）；③ 已合入则 `agent-workflow close <run-id> --status blocked --evidence "..."` 记录，不重复交付；④ 若本地 main 被并发直接 push 成非远端 commit（`git rev-list --left-right --count origin/main...main` 分叉），**勿 reset --hard**，保留由并发 agent 处理。详见 memory `feedback_shared_checkout_concurrent_absorb_20260816.md`。
 
 ```bash
 git ls-files --error-unmatch <file>          # 入库检查
