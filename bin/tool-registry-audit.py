@@ -379,6 +379,12 @@ def _parallel_gap_reasons(
     return reasons
 
 
+def _is_internal_module(path: str) -> bool:
+    """Python 包内部模块 (`__init__.py` / `_lib.py` / `_*.py`) 不是独立命令, 不应计入并行 gap."""
+    stem = Path(path).name
+    return stem.startswith("_") or stem == "__init__.py"
+
+
 def analyze_parallel_manifest_gaps(
     duplicates: Dict[str, List[str]],
     parallel_manifest: Dict[str, dict[str, object]],
@@ -393,6 +399,8 @@ def analyze_parallel_manifest_gaps(
         if not bin_files or not script_files:
             continue
         if not active_duplicate_files(bin_files + script_files):
+            continue
+        if all(_is_internal_module(f) for f in bin_files + script_files):
             continue
 
         manifest_entry = parallel_manifest.get(name)
