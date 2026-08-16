@@ -79,7 +79,7 @@ uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <每个 
 `workflow-id` 与 `agent-profile` 在 `claim-check` 的输出里，也在 bet 的 `workflow` 字段
 和轨道的 `agent_profile_hint` 里。
 
-链门指针：`start --bet` 把 `bet_id` 写入 run（wrapper 与 omo CLI 同一谓词）；缺北极星/绑定/retro 时 closeout 与 `bet-ledger complete` halt。感知：`bootstrap`/`status` 的 `chain:` 行（关闭 run 显示 `BET-ID (closed)`）。执行器 `bin/plan/chain-bind-check.py`，红线 `redlines.yaml::vision-to-retro-chain`（见 `docs/generated/agent-redlines.md`），对照 `docs/architecture/wave-gate-bet-map.md`。
+链门指针：`start --bet` 把 `bet_id` 写入 run（wrapper 与 omo CLI 同一谓词）；缺北极星/绑定/retro 时 closeout 与 `bet-ledger complete` halt。感知：`bootstrap`/`status` 的 `chain:` 行取**最近**关闭绑定（`updated_at`/`created_at`，不是文件名第一），显示 `BET-ID (closed)`。`bet-ledger verify --execute` 看命令退出码。执行器 `bin/plan/chain-bind-check.py`，红线 `redlines.yaml::vision-to-retro-chain`（见 `docs/generated/agent-redlines.md`），对照 `docs/architecture/wave-gate-bet-map.md`。
 
 ### 执行期纪律
 
