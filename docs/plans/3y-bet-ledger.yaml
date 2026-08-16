@@ -3347,7 +3347,9 @@ bets:
   title: gbrain + kairon 归并为 knowledge (不可逆点)
   appetite: 6 weeks
   priority: P0
-  status: candidate
+  status: in_progress
+  implemented_at: 2026-08-16
+  awaiting: 'human_gate (L3 归并批准; 实施细节与停审理由见 retro BET-Y1Q3-T6-01)' 
   goal: 三年规划中最大一处减法 — 消除知识层双头。以「去重的 src 行数」计量, 测试不动
   non_goals:
   - 新增检索能力
