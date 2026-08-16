@@ -53,7 +53,7 @@ sync-submodules-push.sh           # 仅 push (原有行为)
 ```python
 # 新增: 检查 .subtrees/ 状态
 PASW_SUBTREE_DIR = ".subtrees"
-PASW_ISOLATED_SUBS = ["projects/gbrain", "projects/cockpit", "projects/agora"]
+PASW_ISOLATED_SUBS = ["projects/knowledge/gbrain", "projects/cockpit", "projects/agora"]
 
 def check_pasw_drift(sub_name: str) -> dict:
     """检查 .subtrees/<sub> 的漂移状态"""

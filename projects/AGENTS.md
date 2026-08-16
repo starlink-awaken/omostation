@@ -47,7 +47,7 @@ make lint
 ### gbrain
 
 ```bash
-cd "projects/gbrain"
+cd "projects/knowledge/gbrain"
 bun install
 bun test
 bun run ci:local

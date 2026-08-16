@@ -172,7 +172,7 @@ concurrency:
   - - T4-OUTCOME
     - T8-SURFACE
   pasw_isolated_subs:
-  - projects/gbrain
+  - projects/knowledge/gbrain
   - projects/cockpit
   - projects/agora
   claim_protocol:
@@ -4884,12 +4884,12 @@ bets:
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error
-  - cmd: cd projects/gbrain && bun test
+  - cmd: cd projects/knowledge/gbrain && bun test
     expect: 全绿
   workflow: bet-execution
   underlying_workflow: project-code-change
   write_surfaces:
-  - projects/gbrain/src/**
+  - projects/knowledge/gbrain/src/**
   pasw_required: true
   depends_on: []
   risk_level: L2

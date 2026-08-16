@@ -63,7 +63,7 @@ entries:
   type: project-health
   evidence_refs:
   - projects/kairon/README.md
-  - projects/gbrain/README.md
+  - projects/knowledge/gbrain/README.md
   - projects/_archived/agentmesh/src/index.ts
   - projects/_archived/SharedBrain-original/README.md
   verification: Core project layer is represented in Phase 15 dashboard and user-value

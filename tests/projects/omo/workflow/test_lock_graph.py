@@ -8,7 +8,7 @@ def test_generate_lock_graph_snapshot(tmp_path, monkeypatch):
     # create mock locks
     locks_dir = tmp_path / "_delivery" / "agent-workflows" / "locks"
     locks_dir.mkdir(parents=True)
-    (locks_dir / "projects=gbrain").write_text('{"run_id": "r1", "paths": ["projects/gbrain"]}')
+    (locks_dir / "projects=gbrain").write_text('{"run_id": "r1", "paths": ["projects/knowledge/gbrain"]}')
     
     generate_lock_graph_snapshot()
     

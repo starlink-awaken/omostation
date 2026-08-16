@@ -52,7 +52,7 @@ embedded:
     desc: "L2 知识引擎面"
 
   gbrain:
-    path: projects/gbrain
+    path: projects/knowledge/gbrain
     status: active
     type: typescript
     tech: bun, Postgres

@@ -77,7 +77,7 @@ fi
 # 8. gbrain CLI
 echo ""
 echo "── 4. gbrain — 跳过 (bun CLI 启动较慢) ──"
-echo "  ⏭️  gbrain CLI 跳过 (手动: cd projects/gbrain && bun run src/cli.ts --help)"
+echo "  ⏭️  gbrain CLI 跳过 (手动: cd projects/knowledge/gbrain && bun run src/cli.ts --help)"
 
 # ── 结果 ──
 echo ""

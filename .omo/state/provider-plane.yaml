@@ -6,7 +6,7 @@ standard_env_contract:
   - LLM_API_KEY
   - LLM_MODEL
   consumers:
-  - projects/gbrain
+  - projects/knowledge/gbrain
   - projects/kairon/packages/minerva
   - projects/kairon/packages/ssot
   - projects/kairon/packages/ontoderive

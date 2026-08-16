@@ -243,7 +243,7 @@ python3 bin/ssot/scene-outcome-recorder.py record --scene-card <path> --run-id <
 ```bash
 bash "tests/integration/run-all.sh"          # root integration suite
 cd "projects/kairon" && make test-diff        # kairon (Python) — changed-surface tests
-cd "projects/gbrain" && bun test              # gbrain (TypeScript)
+cd "projects/knowledge/gbrain" && bun test              # gbrain (TypeScript)
 ```
 
 Run a single test with each framework's native filter (see the target project's `AGENTS.md` for project-specific targets):

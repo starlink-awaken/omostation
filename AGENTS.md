@@ -325,7 +325,7 @@ uv run --with "pyyaml" python "bin/gac/governance-evolution.py" validate --json
 ```bash
 bash "tests/integration/run-all.sh"          # root integration suite
 cd "projects/kairon" && make test-diff       # kairon (Python)
-cd "projects/gbrain" && bun test             # gbrain (TypeScript)
+cd "projects/knowledge/gbrain" && bun test             # gbrain (TypeScript)
 ```
 
 ### 附加诊断工具

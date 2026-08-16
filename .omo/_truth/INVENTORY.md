@@ -38,7 +38,7 @@ last-reviewed: 2026-06-29
 - `projects/cockpit/` — L3 唯一人类 CLI / Web 入口
 - `projects/agora/` — I0 MCP Hub / BOS 路由
 - `projects/kairon/` — L2 知识引擎面
-- `projects/gbrain/` — L2 知识数据库
+- `projects/knowledge/gbrain/` — L2 知识数据库
 - `projects/omo/` — L2 治理内核
 - `projects/metaos/` — L2 编排引擎
 - `projects/runtime/` — L1 运行时

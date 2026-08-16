@@ -12,7 +12,7 @@
 | `ecos-integration` | L0 | 26 | stdio | — | `projects/ecos/src/ecos/services/integration/mcp_server.py` |
 | `ecos-ssot` | L0 | 9 | stdio | — | `projects/ecos/src/ecos/l0/ssot/mcp_server.py` |
 | `runtime` | L1 | 28 | stdio | — | `projects/runtime/src/runtime/mcp_server.py` |
-| `gbrain` | L2 | 75 | stdio | — | `projects/gbrain/src/core/operations/exports.ts` |
+| `gbrain` | L2 | 75 | stdio | — | `projects/knowledge/gbrain/src/core/operations/exports.ts` |
 | `kos` | L2 | 44 | stdio | — | `projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `kos-stdio` | L2 | 44 | stdio | — | `projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `codeanalyze` | L2 | 25 | stdio | — | `projects/kairon/packages/codeanalyze/src/codeanalyze/mcp.py` |

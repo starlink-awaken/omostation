@@ -61,7 +61,7 @@ make gac-local-gate      #  Full governance-as-code gate
 
 # Run project tests
 cd projects/kairon && make test-diff
-cd projects/gbrain && bun test
+cd projects/knowledge/gbrain && bun test
 ```
 
 ### Governance Tools
@@ -148,7 +148,7 @@ make gac-local-gate      #  全量治理-as-Code 门禁
 
 # 项目测试
 cd projects/kairon && make test-diff
-cd projects/gbrain && bun test
+cd projects/knowledge/gbrain && bun test
 ```
 
 ### 治理工具

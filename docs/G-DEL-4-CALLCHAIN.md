@@ -28,7 +28,7 @@ KOS documents (canonical_path=gbrain://shared-context/...)
 检索命中 → 后续 agent / cockpit 可引用 key
 ```
 
-gbrain 侧同源实现：`projects/gbrain/src/core/agent-shared-context.ts`（同可见性规则）。  
+gbrain 侧同源实现：`projects/knowledge/gbrain/src/core/agent-shared-context.ts`（同可见性规则）。  
 cockpit MCP 工具：`shared_context_write` / `shared_context_read` / `shared_context_list`
 （实现：`projects/cockpit/.../scripts/cockpit_mcp.py`，底层复用 `bin/delivery/shared_context_store.py`）。
 
