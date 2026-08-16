@@ -55,12 +55,13 @@ related:
 
 | 验证 | 结果 |
 |------|------|
-| gbrain bun test | 7377 pass / 388 fail / 563 skip（基线对照跑中，见 §基线） |
+| gbrain bun test | 内包后 7377 pass / 388 fail vs **原仓基线 7388 pass / 389 fail** — fail 数持平（环境性测试），内包零新增失败 |
 | kairon 16 包 pytest | **全绿 FAIL=0**（含修复后 kos/minerva/iris/mos） |
 | evidence-smoke | **100/100, 鸿沟 0, resolve 1.0** |
 | gac-local-gate | 44 checks PASS |
 | tree-vs-disk 搬运完整性 | gbrain 1770/1770 · kairon 1454/1454 零差异 |
-| CI (#1600) | Actions 平台停摆中（全库 14:07Z 后零 run），本地链完备，待恢复 merge |
+| doctor | ok=True（cockpit/agora path 深度修正 ../knowledge/kairon 后） |
+| CI (#1600) | Actions 事件消化延迟（平台侧, head 1fcf0e2 runs=0），本地链完备，待恢复 merge |
 
 ## 待办（merge 后收口）
 
