@@ -566,3 +566,17 @@ machine-config-lint:  ## 检查写机器级配置的脚本集合有无未审阅�
 .PHONY: swarm-prune
 swarm-prune:
 	python3 bin/gac/swarm-prune-zombies.py --apply
+
+# ── omlxc 本地算力控制面 (v3.1.0) ──────────────────────────
+.PHONY: omlxc-test omlxc-lint omlxc-benchmark
+omlxc-test:  ## 运行 omlxc 全量测试套件 (pytest)
+	@echo "── 运行 omlxc 测试 ───────────────────────────────────"
+	cd projects/omlxc && uv run pytest -q
+
+omlxc-lint:  ## 运行 omlxc ruff + pyright 严格类型检查
+	@echo "── 运行 omlxc 门禁 ───────────────────────────────────"
+	cd projects/omlxc && uv run ruff check . && uv run pyright
+
+omlxc-benchmark:  ## 查看本地模型基准测试大盘 (omlxc benchmark report)
+	@echo "── 本地模型基准测试榜单 ──────────────────────────────"
+	cd projects/omlxc && uv run omlxc benchmark report
