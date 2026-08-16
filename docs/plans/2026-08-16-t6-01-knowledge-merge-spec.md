@@ -29,7 +29,7 @@ related:
 | src LOC | 164,176 (ts) | ~118,000 (15 packages) |
 | 测试 | test/ 154,680 (718 test files) | tests/ + 各包 (311 files) |
 | 结构 | 单包 `src/{core,commands,mcp,eval,types}` | `packages/{kos,minerva,ontoderive,eidos,iris,forge,codeanalyze,kronos,mos,core-models,sophia,...}` |
-| BOS 集成 | `bun run projects/knowledge/gbrain/src/cli.ts serve` (3 service) | `uv run --directory projects/kairon --package <p>` (path filter 数十处) |
+| BOS 集成 | `bun run projects/knowledge/gbrain/src/cli.ts serve` (3 service) | `uv run --directory projects/knowledge/kairon --package <p>` (path filter 数十处) |
 | 交互方式 | — | MOS 经 subprocess/HTTP 调 gbrain（`mos/adapters/live_backends.py`，ADR-0372），**非 import** |
 | 子仓状态 | 指针 e2ec4e166 == 远端，无未推送 | 指针 0a31da635 == 远端 HEAD，无未推送 |
 | Makefile | （根仓无专项目标） | kairon-test/lint/build 6 目标 |
@@ -52,17 +52,17 @@ projects/knowledge/
 ├── README.md            # knowledge 项目说明（合并双头叙述）
 ├── gbrain/              # 原 projects/gbrain 内容原样（bun/ts）
 │   ├── src/ test/ package.json ...
-├── kairon/              # 原 projects/kairon 内容原样（python/uv monorepo）
+├── kairon/              # 原 projects/knowledge/kairon 内容原样（python/uv monorepo）
 │   ├── packages/ src/ tests/ pyproject.toml ...
 ```
 
-- `.gitmodules`：`projects/gbrain`、`projects/kairon` 两条目删除
+- `.gitmodules`：`projects/gbrain`、`projects/knowledge/kairon` 两条目删除
 - `docs/project-registry.yaml`：`kairon:`、`gbrain:` 两条目合并为 `knowledge:`（保留各自
   stack/layers 元数据子结构）
 - `docs/layer-contract.yaml`：L2 projects 列表 `kairon, gbrain` → `knowledge`；内部依赖条目
   path 重写
 - `projects/agora/etc/bos-services.yaml`：所有 `projects/gbrain` → `projects/knowledge/gbrain`，
-  `projects/kairon` → `projects/knowledge/kairon`
+  `projects/knowledge/kairon` → `projects/knowledge/kairon`
 - 根仓 `Makefile` kairon-* 目标 path 重写
 - 全仓引用（bin/、docs/、tests/、spaces/、protocols/）path 重写
 - 回滚 tag：`pre-knowledge-merge-20260816` 打在归并第一个子 PR 合入前的 main
@@ -105,7 +105,7 @@ projects/knowledge/
 | 风险 | 对策 |
 |------|------|
 | BOS path filter 漏改 → 服务 unreachable | 全仓 rg 逐条重写 + bos-services config 校验 + memory-os-check 实跑 |
-| 根仓 tests 硬编码 projects/kairon | PR-3 全仓引用重写覆盖 tests/ |
+| 根仓 tests 硬编码 projects/knowledge/kairon | PR-3 全仓引用重写覆盖 tests/ |
 | submodule-guard 拦指针 | 内包即删 gitlink，无指针操作 |
 | .subtrees/ 残留 | PR-4 清 .subtrees/{gbrain,kairon} |
 | 并发 agent 引用旧路径 | 每 PR merge 后主仓立即拉 main；submit 前先 rebase 隔离树 |

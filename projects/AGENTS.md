@@ -39,7 +39,7 @@ Some projects expose Makefile targets. Prefer local documented targets when they
 ### kairon
 
 ```bash
-cd "projects/kairon"
+cd "projects/knowledge/kairon"
 make test-diff
 make lint
 ```

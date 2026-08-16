@@ -8,7 +8,7 @@ owners:
   governance_root: .omo
   capability_roots:
     - projects/l4-kernel
-    - projects/kairon
+    - projects/knowledge/kairon
     - projects/knowledge/gbrain
 roots:
   governance: .omo

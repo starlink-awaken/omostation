@@ -24,7 +24,7 @@ from pathlib import Path
 
 STABLE = {
     "projects/bus-foundation",
-    "projects/kairon",
+    "projects/knowledge/kairon",
     "projects/l4-kernel",
     "projects/omo-debt",
 }

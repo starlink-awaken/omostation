@@ -62,7 +62,7 @@ def test_personal_space_manifest_is_single_owner_and_portable() -> None:
     assert manifest["owners"]["governance_root"] == ".omo"
     assert manifest["owners"]["capability_roots"] == [
         "projects/l4-kernel",
-        "projects/kairon",
+        "projects/knowledge/kairon",
         "projects/knowledge/gbrain",
     ]
     assert manifest["roots"]["knowledge"] == "../Documents"

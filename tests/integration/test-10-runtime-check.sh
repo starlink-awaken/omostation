@@ -10,7 +10,7 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 echo "▸ KOS self domain..."
 python3 -c "
 import os, sys
-sys.path.insert(0, '${ROOT}/projects/kairon/packages/kos/src')
+sys.path.insert(0, '${ROOT}/projects/knowledge/kairon/packages/kos/src')
 from kos.self.api import get_profile
 print('  ✅ KOS self import OK')
 " 2>&1 || echo "  ⚠️  KOS self import failed"
@@ -19,7 +19,7 @@ print('  ✅ KOS self import OK')
 echo "▸ KOS collab domain..."
 python3 -c "
 import os, sys
-sys.path.insert(0, '${ROOT}/projects/kairon/packages/kos/src')
+sys.path.insert(0, '${ROOT}/projects/knowledge/kairon/packages/kos/src')
 from kos.collab.api import create_task
 print('  ✅ KOS collab import OK')
 " 2>&1 || echo "  ⚠️  KOS collab import failed"
@@ -28,7 +28,7 @@ print('  ✅ KOS collab import OK')
 echo "▸ SharedBrain identity_bridge..."
 python3 -c "
 import os, sys
-sys.path.insert(0, '${ROOT}/projects/kairon/packages/sharedbrain-bridge/src')
+sys.path.insert(0, '${ROOT}/projects/knowledge/kairon/packages/sharedbrain-bridge/src')
 from sharedbrain_bridge.nucleus.interfaces.identity_bridge import map_role_to_identity
 id = map_role_to_identity('test-agent')
 print(f'  ✅ identity_bridge OK: {id.id}')

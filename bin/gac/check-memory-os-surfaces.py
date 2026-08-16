@@ -29,7 +29,7 @@ REQUIRED_PATHS = [
     "bin/memory-os-asof-seed.sh",
     "bin/gac/check-memory-os-surfaces.py",
     ".agents/skills/memory-recall/SKILL.md",
-    "projects/kairon/packages/mos/pyproject.toml",
+    "projects/knowledge/kairon/packages/mos/pyproject.toml",
     "projects/cockpit/src/cockpit/commands/help_map.py",
     "projects/cockpit/src/cockpit/tests/test_help_discover_ssot.py",
     "projects/cockpit/src/cockpit/tests/test_status_memory_os_line.py",

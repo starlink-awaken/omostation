@@ -63,7 +63,7 @@ IMPORT_OK=0
 IMPORT_TOTAL=0
 for pkg in eidos kos kronos minerva ontoderive codeanalyze iris forge health_profile; do
   IMPORT_TOTAL=$((IMPORT_TOTAL+1))
-  if RESULT=$(cd "$ROOT/projects/kairon" && uv run python3 -c "import $pkg; print('ok')" 2>&1) && echo "$RESULT" | grep -q "^ok$"; then
+  if RESULT=$(cd "$ROOT/projects/knowledge/kairon" && uv run python3 -c "import $pkg; print('ok')" 2>&1) && echo "$RESULT" | grep -q "^ok$"; then
     IMPORT_OK=$((IMPORT_OK+1))
   fi
 done

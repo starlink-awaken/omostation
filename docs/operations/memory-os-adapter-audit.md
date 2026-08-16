@@ -18,7 +18,7 @@ related:
 
 | 组件 | 路径 | 行量级 | 生产判定 | 调用方 |
 |------|------|--------|----------|--------|
-| Mem0Adapter | `projects/kairon/packages/kos/src/kos/adapters/mem0_adapter.py` | ~85 | **retired-experimental** (T3-03) | 零代码引用 (2026-08-16 全仓确认); 替代: mos mem0_shadow (default OFF) |
+| Mem0Adapter | `projects/knowledge/kairon/packages/kos/src/kos/adapters/mem0_adapter.py` | ~85 | **retired-experimental** (T3-03) | 零代码引用 (2026-08-16 全仓确认); 替代: mos mem0_shadow (default OFF) |
 | MemThetaAdapter | `.../kos/adapters/memtheta_adapter.py` | ~146 | **retired-experimental** (T3-03) | 零代码引用; partial_simulation 状态已从 memory-os.yaml 移除 |
 | graphiti-core | minerva optional extra | n/a | **optional_tier2** | minerva config `graphiti:`（研究路径） |
 | gbrain dream/cycle | `projects/knowledge/gbrain/src/commands/dream.ts` + `core/cycle.ts` | 大型 | **production_engine** | CLI/cron/autopilot |
@@ -121,7 +121,7 @@ lint → backlinks → sync → synthesize → extract → extract_facts → …
 
 ```bash
 # 适配器不得在 import 时抛硬错
-uv run --directory projects/kairon python -c "from kos.adapters.mem0_adapter import Mem0Adapter; print(Mem0Adapter().enabled)"
+uv run --directory projects/knowledge/kairon python -c "from kos.adapters.mem0_adapter import Mem0Adapter; print(Mem0Adapter().enabled)"
 
 # 事件域（迁移后）
 rg -n 'bos://brain/events/card_updated' projects/cockpit --glob '*.py'   # expect 0 after cleanup

@@ -876,7 +876,7 @@ def test_claim_accepts_cross_project_receipt_and_deprecated_path_alias(
     tmp_path: Path,
 ) -> None:
     registry = _write_control_plane_registry(tmp_path)
-    receipt = _write_affected_receipt(tmp_path, "gbrain", "omo")
+    receipt = _write_affected_receipt(tmp_path, "knowledge", "omo")
     start = _run_workflow(
         "--registry",
         str(registry),

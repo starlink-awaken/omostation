@@ -8,12 +8,12 @@ metadata-migrated-at: 2026-07-31
 ---
 # Minerva 本地运行（SearXNG + 研究）
 
-> 配套：`projects/kairon/packages/minerva` · 抓取全景见 [external-ingest-callchain.md](./external-ingest-callchain.md)
+> 配套：`projects/knowledge/kairon/packages/minerva` · 抓取全景见 [external-ingest-callchain.md](./external-ingest-callchain.md)
 
 ## 一键起搜索后端
 
 ```bash
-cd projects/kairon/packages/minerva/docker
+cd projects/knowledge/kairon/packages/minerva/docker
 docker compose up -d searxng
 # 或双文件任选：docker compose -f docker-compose.yaml up -d searxng
 
@@ -27,14 +27,14 @@ curl -sf "http://localhost:8080/search?q=test&format=json" | head -c 120
 ## 健康检查
 
 ```bash
-uv run --directory projects/kairon python -m minerva.cli check
+uv run --directory projects/knowledge/kairon python -m minerva.cli check
 # 期望：Ollama ✅ · SearXNG ✅ · API keys 按本机配置
 ```
 
 ## 快速研究
 
 ```bash
-uv run --directory projects/kairon python -m minerva.cli research "主题" --level L0
+uv run --directory projects/knowledge/kairon python -m minerva.cli research "主题" --level L0
 # 或产品入口
 uv run --directory projects/cockpit python -m cockpit research "主题"
 ```
@@ -44,7 +44,7 @@ uv run --directory projects/cockpit python -m cockpit research "主题"
 ## 可选：Neo4j（L2+ 图）
 
 ```bash
-cd projects/kairon/packages/minerva/docker
+cd projects/knowledge/kairon/packages/minerva/docker
 docker compose --profile full up -d neo4j
 
 # 默认密码 changeme（与 healthcheck 一致）

@@ -10,7 +10,7 @@ owners:
     - projects/_archived/SharedBrain-original
     - projects/knowledge/gbrain
     - projects/runtime
-    - projects/kairon
+    - projects/knowledge/kairon
 roots:
   governance: .omo
   spaces: spaces

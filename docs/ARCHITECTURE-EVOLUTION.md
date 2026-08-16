@@ -40,7 +40,7 @@ eCOS 架构沿以下稳定向量演进（方向由 [`ARCHITECTURE.md`](../ARCHIT
 |---------|-------|--------------|--------|------|------|
 | [`agora`](../projects/agora/BOUNDARY.md) | I0 | BOUNDARY | MCP Hub / BOS URI 路由 / 反向代理 | ecos, runtime | kairon, gbrain, omo, metaos, runtime, l4-kernel, cockpit |
 | [`cockpit`](../projects/cockpit/BOUNDARY.md) | L3 | BOUNDARY | CLI / Web / MCP 客户端 | agora, omo | agora, omo |
-| [`kairon`](../projects/kairon/BOUNDARY.md) | L2 | BOUNDARY | 引擎（minerva/kos/eidos/iris/ontoderive） | gbrain, ecos | gbrain |
+| [`kairon`](../projects/knowledge/kairon/BOUNDARY.md) | L2 | BOUNDARY | 引擎（minerva/kos/eidos/iris/ontoderive） | gbrain, ecos | gbrain |
 | [`gbrain`](../projects/knowledge/gbrain/BOUNDARY.md) | L2 | BOUNDARY | 记忆 / 向量存储 / memu | kairon, runtime | kairon |
 | [`omo`](../projects/omo/BOUNDARY.md) | L2 | BOUNDARY | 治理内核 / broker / lint / audit | ecos | .omo state plane |
 | [`metaos`](../projects/metaos/BOUNDARY.md) | L2 | BOUNDARY | 元操作系统 / 调度 | ecos, runtime | runtime |

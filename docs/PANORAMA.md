@@ -321,7 +321,7 @@ script / wrapper / cron
 |:--|:--|:--|
 | agora | I0 | [ARCHITECTURE.md](../projects/agora/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/agora/CALLCHAIN.md) · [BOUNDARY.md](../projects/agora/BOUNDARY.md) |
 | cockpit | L3 | [ARCHITECTURE.md](../projects/cockpit/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/cockpit/CALLCHAIN.md) · [BOUNDARY.md](../projects/cockpit/BOUNDARY.md) |
-| kairon | L2 | [ARCHITECTURE.md](../projects/kairon/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/kairon/CALLCHAIN.md) · [BOUNDARY.md](../projects/kairon/BOUNDARY.md) |
+| kairon | L2 | [ARCHITECTURE.md](../projects/knowledge/kairon/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/knowledge/kairon/CALLCHAIN.md) · [BOUNDARY.md](../projects/knowledge/kairon/BOUNDARY.md) |
 | gbrain | L2 | [ARCHITECTURE.md](../projects/knowledge/gbrain/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/knowledge/gbrain/CALLCHAIN.md) · [BOUNDARY.md](../projects/knowledge/gbrain/BOUNDARY.md) |
 | omo | L2 | [ARCHITECTURE.md](../projects/omo/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/omo/CALLCHAIN.md) · [BOUNDARY.md](../projects/omo/BOUNDARY.md) |
 | metaos | L2 | [ARCHITECTURE.md](../projects/metaos/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/metaos/CALLCHAIN.md) · [BOUNDARY.md](../projects/metaos/BOUNDARY.md) |

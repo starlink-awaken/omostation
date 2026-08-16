@@ -64,9 +64,9 @@ def test_python_dash_m_regex_matches_module_names():
     cases = {
         "uv run python -m ontoderive.mcp_server": "ontoderive.mcp_server",
         "python3 -m eidos.cli validate": "eidos.cli",
-        "uv run --directory projects/kairon python -m minerva.mcp_server.server": "minerva.mcp_server.server",
+        "uv run --directory projects/knowledge/kairon python -m minerva.mcp_server.server": "minerva.mcp_server.server",
         "uv run bun run cli.ts": None,
-        "uv run --directory projects/kairon codeanalyze serve": None,
+        "uv run --directory projects/knowledge/kairon codeanalyze serve": None,
     }
     for cmd, expected in cases.items():
         match = PYTHON_DASH_M_RE.search(cmd)

@@ -38,7 +38,7 @@ entry surfaces -> routing mesh -> engines/runtime/protocol -> governed state and
 |------|------|----------|
 | L4 | 自我层 / 纯文档上下文 | [`l4-kernel`](../projects/l4-kernel/ARCHITECTURE.md) |
 | L3 | 入口层（CLI / MCP / Web） | [`cockpit`](../projects/cockpit/ARCHITECTURE.md) |
-| L2 | 内核（治理 / 引擎 / 记忆） | [`omo`](../projects/omo/ARCHITECTURE.md) · [`kairon`](../projects/kairon/ARCHITECTURE.md) · [`gbrain`](../projects/knowledge/gbrain/ARCHITECTURE.md) · [`metaos`](../projects/metaos/ARCHITECTURE.md) |
+| L2 | 内核（治理 / 引擎 / 记忆） | [`omo`](../projects/omo/ARCHITECTURE.md) · [`kairon`](../projects/knowledge/kairon/ARCHITECTURE.md) · [`gbrain`](../projects/knowledge/gbrain/ARCHITECTURE.md) · [`metaos`](../projects/metaos/ARCHITECTURE.md) |
 | L1 | 运行时（健康 / 调度 / KEI） | [`runtime`](../projects/runtime/ARCHITECTURE.md) |
 | L0 | 协议（MOF / M1 节点 / M2 类型 / 工具链） | [`ecos`](../projects/ecos/ARCHITECTURE.md) |
 | I0 | 织层（MCP Hub / BOS 路由） | [`agora`](../projects/agora/ARCHITECTURE.md) |

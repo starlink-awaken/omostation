@@ -36,7 +36,7 @@ jobs:
         continue-on-error: true
       - uses: astral-sh/ruff-action@v3
         with:
-          # P41-W1 fix: projects/kairon is .gitignore'd. Lint tracked projects instead.
+          # P41-W1 fix: projects/knowledge/kairon is .gitignore'd. Lint tracked projects instead.
           src: "projects/omo/src projects/ecos/src projects/agora/src projects/cockpit/src projects/omlxc/src projects/aetherforge/src"
           # ruff 0.16 收紧撞上既有 valid 模式/风格偏好, 逐个改风险>收益 (async 重构/类型签名变更/风格):
           # 兜底类 BLE001/S110/S112=catch Exception 容错(valid), EXE001=shebang;

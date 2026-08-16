@@ -332,8 +332,8 @@ evaluation:
     direct_admission_write: forbidden
     repeated_shadow_gate:
       schema: kems.model-promotion-gate.v1
-      builder: projects/kairon/packages/kos/src/kos/kems/promotion_gate.py::build_model_promotion_gate
-      cli: projects/kairon/scripts/kems_model_promotion_gate.py
+      builder: projects/knowledge/kairon/packages/kos/src/kos/kems/promotion_gate.py::build_model_promotion_gate
+      cli: projects/knowledge/kairon/scripts/kems_model_promotion_gate.py
       required_evidence: [manifest_binding, repeated_shadow_reports, aggregate_metrics]
       minimum_default_runs: 2
       minimum_default_observations: 1
@@ -353,8 +353,8 @@ scene_activation_gate:
     - no_owner
     - no_permission_boundary
 bindings:
-  source_adapters: projects/kairon/packages/iris
-  method_compiler: projects/kairon/packages/sophia
+  source_adapters: projects/knowledge/kairon/packages/iris
+  method_compiler: projects/knowledge/kairon/packages/sophia
   capability_router: projects/agora/src/agora/external_connections.py
   workflow_execution: docs/WORKFLOW-MESH-IMPLEMENTATION.md
   governance: projects/omo

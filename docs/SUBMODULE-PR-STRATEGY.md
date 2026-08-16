@@ -48,10 +48,10 @@ bash bin/gac/gac-worktree.sh claim fix-kairon-bug
 cd ../ws-fix-kairon-bug
 
 # 2. init 要改的子模块 (worktree 默认不 init, Phase 1 实证)
-git submodule update --init projects/kairon
+git submodule update --init projects/knowledge/kairon
 
 # 3. 子模块切 main 分支 (init 后默认 detached HEAD)
-cd projects/kairon && git checkout main
+cd projects/knowledge/kairon && git checkout main
 
 # 4. 改子模块 + commit (子模块 .git 数据共享主仓)
 # ... 改文件 ...
@@ -59,7 +59,7 @@ git add -A && git commit -m "fix(kairon): ..."
 
 # 5. 回主仓 worktree, bump pointer + commit
 cd ../..
-git add projects/kairon  # bump pointer
+git add projects/knowledge/kairon  # bump pointer
 git commit -m "chore: bump kairon — fix-kairon-bug"
 
 # 6. submit (push 主仓 work/<session> → pre-push 触发 sync-submodules → 子模块 direct push origin/main)

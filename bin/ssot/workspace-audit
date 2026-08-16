@@ -257,7 +257,7 @@ def dim_ssot() -> dict[str, Any]:
 def dim_gitlink() -> dict[str, Any]:
     """对每个子项目跑 git rev-list, 算 ahead/behind vs origin/main."""
     submodules = [
-        "projects/agora", "projects/cockpit", "projects/ecos", "projects/kairon",
+        "projects/agora", "projects/cockpit", "projects/ecos", "projects/knowledge/kairon",
         "projects/metaos", "projects/omo", "projects/runtime",
     ]
     statuses: list[dict[str, Any]] = []

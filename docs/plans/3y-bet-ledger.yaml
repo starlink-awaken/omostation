@@ -77,7 +77,7 @@ tracks:
     scope: 信号源注册 / iris 轮询 / 去重幂等 / 健康可见降级
     primary_write_surfaces:
     - .omo/_truth/registry/signal-sources.yaml
-    - projects/kairon/packages/iris/**
+    - projects/knowledge/kairon/packages/iris/**
     - projects/agora/**
     pasw_required: true
     default_workflow: external-adapter-sync
@@ -86,7 +86,7 @@ tracks:
     title: 认知面 / 心智模型
     scope: MOS agent_belief 三表 / SceneWatcher 有状态化 / 自主性阶梯 / 跨场景学习
     primary_write_surfaces:
-    - projects/kairon/packages/mos/**
+    - projects/knowledge/kairon/packages/mos/**
     - projects/omo/src/omo/scenewatcher.py
     - projects/omo/src/omo/model_router.py
     pasw_required: false

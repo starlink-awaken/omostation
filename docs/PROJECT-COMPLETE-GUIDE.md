@@ -227,7 +227,7 @@ bash tests/integration/run-all.sh
 ### 7.2 项目级检查
 
 ```bash
-cd projects/kairon && make test-diff
+cd projects/knowledge/kairon && make test-diff
 cd projects/knowledge/gbrain && bun test
 cd projects/omo && uv run pytest tests/ -q
 cd projects/runtime && uv run pytest tests/ -q

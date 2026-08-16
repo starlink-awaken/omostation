@@ -242,7 +242,7 @@ python3 bin/ssot/scene-outcome-recorder.py record --scene-card <path> --run-id <
 
 ```bash
 bash "tests/integration/run-all.sh"          # root integration suite
-cd "projects/kairon" && make test-diff        # kairon (Python) — changed-surface tests
+cd "projects/knowledge/kairon" && make test-diff        # kairon (Python) — changed-surface tests
 cd "projects/knowledge/gbrain" && bun test              # gbrain (TypeScript)
 ```
 

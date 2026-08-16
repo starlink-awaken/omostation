@@ -103,7 +103,7 @@ def test_mcptool_count_clean():
 def test_projects_capabilities_entrypoint_drift_detected(tmp_path):
     """注入死 entrypoint → 检出 (metaos 拆迁遗留: kairon.metaos 死路径复现)."""
     findings = drift.check_projects_capabilities_entrypoints(
-        [{"id": "kairon.metaos", "entrypoint": "projects/kairon/packages/metaos"}],
+        [{"id": "kairon.metaos", "entrypoint": "projects/knowledge/kairon/packages/metaos"}],
         repo=tmp_path,
     )
     assert len(findings) == 1

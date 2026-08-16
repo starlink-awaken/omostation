@@ -1,0 +1,36 @@
+========================================================================
+Kairon 版本一致性检查 — /Users/xiamingxing/Workspace/projects/kairon/packages
+总计 26 个包
+========================================================================
+
+✗ agent-runtime              pyproject: 0.1.0            __init__: N/A              (src/ 中无 __version__)
+✗ agora                      pyproject: 2.0.0            __init__: 1.2.0            ⚠ MISMATCH
+✓ codeanalyze                pyproject: 0.3.0            __init__: 0.3.0          
+✗ core-models                pyproject: 0.1.0            __init__: N/A              (src/ 中无 __version__)
+✓ cron-service               pyproject: 1.0.0            __init__: 1.0.0          
+✗ ecos                       pyproject: 0.6.0            __init__: N/A              (src/ 中无 __version__)
+✓ eidos                      pyproject: 0.1.0            __init__: 0.1.0          
+✗ engine-core                pyproject: 0.1.0            __init__: N/A              (src/ 中无 __version__)
+✗ eu-pricing                 pyproject: 0.1.0            __init__: N/A              (src/ 中无 __version__)
+✗ forge                      pyproject: 1.3.0            __init__: N/A              (src/ 中无 __version__)
+✓ iris                       pyproject: 0.1.0            __init__: 0.1.0          
+✓ kairon-assistant           pyproject: 1.0.0            __init__: 1.0.0          
+✓ kairon-voice               pyproject: 1.0.0            __init__: 1.0.0          
+✗ kaironcloud-billing        pyproject: 0.1.0            __init__: N/A              (src/ 中无 __version__)
+✗ kos                        pyproject: 2.0.0            __init__: N/A              (src/ 中无 __version__)
+✓ kronos                     pyproject: 0.5.0            __init__: 0.5.0          
+✗ llm-gateway                pyproject: 0.1.0            __init__: N/A              (src/ 中无 __version__)
+✓ metaos                     pyproject: 7.1.0            __init__: 7.1.0          
+✗ minerva                    pyproject: 0.11.0           __init__: 0.1.0            ⚠ MISMATCH
+✗ ontoderive                 pyproject: 3.6.4            __init__: N/A              (src/ 中无 __version__)
+✗ shared-lib                 pyproject: 0.1.0            __init__: N/A              (src/ 中无 __version__)
+✗ sharedbrain-bridge         pyproject: 0.1.0            __init__: N/A              (src/ 中无 __version__)
+✗ sophia                     pyproject: 0.2.1            __init__: N/A              (src/ 中无 __version__)
+✗ ssot                       pyproject: 1.0.0            __init__: N/A              (src/ 中无 __version__)
+✗ symphony-protocol          pyproject: 0.1.0            __init__: N/A              (src/ 中无 __version__)
+✗ wksp                       pyproject: 0.2.0            __init__: N/A              (src/ 中无 __version__)
+
+========================================================================
+结果: 26 检查, 2 不一致, 0 跳过
+状态: ❌ 未通过
+========================================================================

@@ -1,0 +1,19 @@
+# Kairon Ruff 配置
+#
+# 引用根级 pyproject.toml 配置，此处仅记录本地覆盖规则（如有）
+#
+# 根级配置（projects/kairon/pyproject.toml）:
+#   target-version = "py313"
+#   line-length = 120
+#   lint.select = ["E", "F", "W", "I", "N", "UP", "S", "PLE", "RUF100"]
+#   format.quote-style = "double"
+#   format.indent-width = 4
+#
+# 除非需要 kairon 专属规则覆盖，否则直接使用根级配置。
+# 如需本地覆盖，取消注释并按需修改下方内容：
+
+# [tool.ruff]
+# line-length = 120
+
+# [tool.ruff.lint]
+# extend-select = ["PERF"]

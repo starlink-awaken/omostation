@@ -52,11 +52,11 @@ done
 # 2. Run Kairon Monorepo Tests (Python)
 TOTAL=$((TOTAL + 1))
 echo "▸ Kairon Monorepo (Python 3.14 + uv)"
-if run_with_timeout bash -c "cd '$ROOT/projects/kairon' && make test-fast > /dev/null 2>&1"; then
+if run_with_timeout bash -c "cd '$ROOT/projects/knowledge/kairon' && make test-fast > /dev/null 2>&1"; then
   PASS=$((PASS + 1))
   echo "  ✅ Kairon Pytest Suite (31 Packages)"
 else
-  echo "  ⚠️  Kairon Pytest Suite Failed (Check 'cd projects/kairon && make test' for details)"
+  echo "  ⚠️  Kairon Pytest Suite Failed (Check 'cd projects/knowledge/kairon && make test' for details)"
 fi
 
 # 3. Run Gbrain Tests (TypeScript)

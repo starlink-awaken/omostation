@@ -31,8 +31,8 @@ clis:
   entrypoint: kos-infra/kos
   description: Workspace CLI entrypoint for kos
 - name: kos-cli
-  entrypoint: projects/kairon/packages/kos/kos-cli.py
+  entrypoint: projects/knowledge/kairon/packages/kos/kos-cli.py
   description: Workspace CLI entrypoint for kos-cli
 - name: kairon-cli
-  entrypoint: projects/kairon/packages/kos/kairon-cli.py
+  entrypoint: projects/knowledge/kairon/packages/kos/kairon-cli.py
   description: Workspace CLI entrypoint for kairon-cli

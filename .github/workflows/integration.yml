@@ -27,6 +27,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Run tracked-project integration tests
-        # P41-W1 fix: projects/kairon is .gitignore'd. Run integration tests for projects tracked in monorepo.
+        # P41-W1 fix: projects/knowledge/kairon is .gitignore'd. Run integration tests for projects tracked in monorepo.
         run: |
           cd projects/omo && uv sync && uv run pytest tests/integration/ -q --ignore=tests/integration/test_runtime_e2e.py

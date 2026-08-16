@@ -48,8 +48,8 @@ OUTPUT_YAML = WORKSPACE / "docs" / "generated" / "capability-registry.yaml"
 # 避免 glob 漫无目的扫描, 用显式清单更稳 (KISS)
 _KNOWN_MCP_SERVERS: list[dict] = [
     {"id": "omo", "name": "OMO Agent OS Kernel", "layer": "L2", "file": "projects/omo/src/omo/mcp_server.py", "transport": "stdio"},
-    {"id": "kos", "name": "KOS Knowledge Retrieval", "layer": "L2", "file": "projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py", "transport": "stdio"},
-    {"id": "kos-stdio", "name": "KOS (stdio JSON-RPC, legacy)", "layer": "L2", "file": "projects/kairon/packages/kos/src/kos/mcp/fastmcp_app.py", "transport": "stdio", "note": "kos-stdio 与 kos 共享同一套 44 工具, 仅传输层不同"},
+    {"id": "kos", "name": "KOS Knowledge Retrieval", "layer": "L2", "file": "projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py", "transport": "stdio"},
+    {"id": "kos-stdio", "name": "KOS (stdio JSON-RPC, legacy)", "layer": "L2", "file": "projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py", "transport": "stdio", "note": "kos-stdio 与 kos 共享同一套 44 工具, 仅传输层不同"},
     {"id": "l4-kernel", "name": "L4 Self-Layer Kernel", "layer": "L4", "file": "projects/l4-kernel/src/l4_kernel/mcp_server.py", "transport": "stdio/http/sse", "ports": {"http": 7455, "sse": 7456}},
     {"id": "agora", "name": "Agora Service Convergence Hub", "layer": "I0", "file": "projects/agora/src/agora/server/mcp.py", "transport": "stdio/sse", "extra_glob": "projects/agora/src/agora/server/tools_*.py"},
     {"id": "ecos", "name": "eCOS SSOT Kernel", "layer": "L0", "file": "projects/ecos/src/ecos/mcp_server.py", "transport": "stdio"},
@@ -65,14 +65,14 @@ _KNOWN_MCP_SERVERS: list[dict] = [
     {"id": "family-hub", "name": "Family Hub", "layer": "X", "file": "projects/family-hub/mcp_server.py", "transport": "stdio"},
     {"id": "agent-runtime", "name": "Cockpit Agent Runtime", "layer": "L3", "file": "projects/cockpit/src/cockpit/agent_runtime_mcp_server.py", "transport": "stdio"},
     {"id": "runtime", "name": "eCOS Runtime Services", "layer": "L1", "file": "projects/runtime/src/runtime/mcp_server.py", "transport": "stdio", "note": "L1 运行时 MCP, health/failover/push 入口"},
-    {"id": "iris", "name": "Iris", "layer": "L2", "file": "projects/kairon/packages/iris/src/iris/mcp_server.py", "transport": "stdio"},
-    {"id": "sophia", "name": "Sophia Research Paradigm", "layer": "L2", "file": "projects/kairon/packages/sophia/src/sophia/server/mcp_server.py", "transport": "stdio"},
-    {"id": "kronos", "name": "Kronos", "layer": "L2", "file": "projects/kairon/packages/kronos/src/kronos/mcp_server.py", "transport": "stdio"},
-    {"id": "minerva", "name": "Minerva", "layer": "L2", "file": "projects/kairon/packages/minerva/src/minerva/mcp_server/server.py", "transport": "stdio"},
-    {"id": "codeanalyze", "name": "CodeAnalyze", "layer": "L2", "file": "projects/kairon/packages/codeanalyze/src/codeanalyze/mcp.py", "transport": "stdio"},
-    {"id": "forge", "name": "Forge", "layer": "L2", "file": "projects/kairon/packages/forge/src/mcp_server.py", "transport": "stdio"},
-    {"id": "ontoderive", "name": "OntoDerive", "layer": "L2", "file": "projects/kairon/packages/ontoderive/src/ontoderive/mcp_server.py", "transport": "stdio"},
-    {"id": "toolforge", "name": "ToolForge", "layer": "L2", "file": "projects/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py", "transport": "stdio"},
+    {"id": "iris", "name": "Iris", "layer": "L2", "file": "projects/knowledge/kairon/packages/iris/src/iris/mcp_server.py", "transport": "stdio"},
+    {"id": "sophia", "name": "Sophia Research Paradigm", "layer": "L2", "file": "projects/knowledge/kairon/packages/sophia/src/sophia/server/mcp_server.py", "transport": "stdio"},
+    {"id": "kronos", "name": "Kronos", "layer": "L2", "file": "projects/knowledge/kairon/packages/kronos/src/kronos/mcp_server.py", "transport": "stdio"},
+    {"id": "minerva", "name": "Minerva", "layer": "L2", "file": "projects/knowledge/kairon/packages/minerva/src/minerva/mcp_server/server.py", "transport": "stdio"},
+    {"id": "codeanalyze", "name": "CodeAnalyze", "layer": "L2", "file": "projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/mcp.py", "transport": "stdio"},
+    {"id": "forge", "name": "Forge", "layer": "L2", "file": "projects/knowledge/kairon/packages/forge/src/mcp_server.py", "transport": "stdio"},
+    {"id": "ontoderive", "name": "OntoDerive", "layer": "L2", "file": "projects/knowledge/kairon/packages/ontoderive/src/ontoderive/mcp_server.py", "transport": "stdio"},
+    {"id": "toolforge", "name": "ToolForge", "layer": "L2", "file": "projects/knowledge/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py", "transport": "stdio"},
     {"id": "gbrain", "name": "gbrain Knowledge DB", "layer": "L2", "file": "projects/knowledge/gbrain/src/core/operations/exports.ts", "transport": "stdio", "entry": "projects/knowledge/gbrain/src/mcp-entry.ts", "note": "工具从 operations 数组动态生成"},
 ]
 

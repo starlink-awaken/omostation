@@ -45,7 +45,7 @@ embedded:
     desc: "I0 织层 / MCP Hub"
 
   kairon:
-    path: projects/kairon
+    path: projects/knowledge/kairon
     status: active
     type: python-monorepo
     tech: uv, ruff, pytest

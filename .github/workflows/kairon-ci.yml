@@ -3,10 +3,10 @@ name: kairon-ci
 on:
   push:
     branches: [main]
-    paths: ['projects/kairon/**', '.github/workflows/kairon-ci.yml']
+    paths: ['projects/knowledge/kairon/**', '.github/workflows/kairon-ci.yml']
   pull_request:
     branches: [main]
-    paths: ['projects/kairon/**', '.github/workflows/kairon-ci.yml']
+    paths: ['projects/knowledge/kairon/**', '.github/workflows/kairon-ci.yml']
 
 jobs:
   test:
@@ -24,7 +24,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
       - name: make test (16 包循环 pytest)
         # 注: kairon 是大 monorepo, make test 可能慢 (~分钟级).
-        run: cd projects/kairon && make test
+        run: cd projects/knowledge/kairon && make test
 
   typecheck-gate:
     name: kairon mypy regression gate (DEBT-CI-MYPY-STRICT)
@@ -40,6 +40,6 @@ jobs:
           python-version: "3.13"
       - uses: astral-sh/setup-uv@v4
       - name: make typecheck-gate (卡增量不卡存量)
-        # 存量 1245 errors (见 projects/kairon/mypy-baseline.yaml); CI 卡回归 (新错误致红).
-        # mypy 版本漂移致误报时: cd projects/kairon && make typecheck-gate-update 刷新 baseline.
-        run: cd projects/kairon && make typecheck-gate
+        # 存量 1245 errors (见 projects/knowledge/kairon/mypy-baseline.yaml); CI 卡回归 (新错误致红).
+        # mypy 版本漂移致误报时: cd projects/knowledge/kairon && make typecheck-gate-update 刷新 baseline.
+        run: cd projects/knowledge/kairon && make typecheck-gate

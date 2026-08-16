@@ -6,7 +6,7 @@
 (frontmatter 覆盖率 / ADR 数量 / 文档规模), 验证框架包可移植性。
 
 用法:
-    python3 bin/ssot/project_health_check.py --project projects/kairon
+    python3 bin/ssot/project_health_check.py --project projects/knowledge/kairon
 """
 
 import argparse
@@ -57,7 +57,7 @@ def health_snapshot(project_dir: str) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--project", required=True, help="项目相对路径 (如 projects/kairon)")
+    ap.add_argument("--project", required=True, help="项目相对路径 (如 projects/knowledge/kairon)")
     ap.add_argument("--json", action="store_true", help="JSON 输出")
     args = ap.parse_args()
     root = Path(__file__).resolve().parents[2] / args.project

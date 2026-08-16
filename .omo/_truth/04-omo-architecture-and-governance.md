@@ -30,7 +30,7 @@ graph TD
 
     subgraph K0_Data["数据面 (K0 Data Plane) - 纯状态"]
         F[.omo/ (Workspace 级全局状态)]
-        G[projects/kairon/.omo/ (子联邦级状态)]
+        G[projects/knowledge/kairon/.omo/ (子联邦级状态)]
     end
 
     OMO_Theory -.指导.-> K1_Engines

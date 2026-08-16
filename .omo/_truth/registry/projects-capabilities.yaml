@@ -8,7 +8,7 @@ capabilities:
 - id: kairon.codeanalyze
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/codeanalyze
+  entrypoint: projects/knowledge/kairon/packages/codeanalyze
   lifecycle: active
   metadata:
     description: 'Kairon package capability: codeanalyze'
@@ -20,11 +20,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/codeanalyze
+    source: projects/knowledge/kairon/packages/codeanalyze
 - id: kairon.core-models
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/core-models
+  entrypoint: projects/knowledge/kairon/packages/core-models
   lifecycle: active
   metadata:
     description: 'Kairon package capability: core-models'
@@ -36,11 +36,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/core-models
+    source: projects/knowledge/kairon/packages/core-models
 - id: kairon.eidos
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/eidos
+  entrypoint: projects/knowledge/kairon/packages/eidos
   lifecycle: active
   metadata:
     description: 'Kairon package capability: eidos'
@@ -52,11 +52,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/eidos
+    source: projects/knowledge/kairon/packages/eidos
 - id: kairon.forge
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/forge
+  entrypoint: projects/knowledge/kairon/packages/forge
   lifecycle: active
   metadata:
     description: 'Kairon package capability: forge'
@@ -68,11 +68,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/forge
+    source: projects/knowledge/kairon/packages/forge
 - id: kairon.iris
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/iris
+  entrypoint: projects/knowledge/kairon/packages/iris
   lifecycle: active
   metadata:
     description: 'Kairon package capability: iris'
@@ -84,11 +84,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/iris
+    source: projects/knowledge/kairon/packages/iris
 - id: kairon.kos
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/kos
+  entrypoint: projects/knowledge/kairon/packages/kos
   lifecycle: active
   metadata:
     description: 'Kairon package capability: kos'
@@ -100,11 +100,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/kos
+    source: projects/knowledge/kairon/packages/kos
 - id: kairon.kronos
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/kronos
+  entrypoint: projects/knowledge/kairon/packages/kronos
   lifecycle: active
   metadata:
     description: 'Kairon package capability: kronos'
@@ -116,11 +116,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/kronos
+    source: projects/knowledge/kairon/packages/kronos
 - id: kairon.minerva
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/minerva
+  entrypoint: projects/knowledge/kairon/packages/minerva
   lifecycle: active
   metadata:
     description: 'Kairon package capability: minerva'
@@ -132,11 +132,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/minerva
+    source: projects/knowledge/kairon/packages/minerva
 - id: kairon.ontoderive
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/ontoderive
+  entrypoint: projects/knowledge/kairon/packages/ontoderive
   lifecycle: active
   metadata:
     description: 'Kairon package capability: ontoderive'
@@ -148,11 +148,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/ontoderive
+    source: projects/knowledge/kairon/packages/ontoderive
 - id: kairon.sophia
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/sophia
+  entrypoint: projects/knowledge/kairon/packages/sophia
   lifecycle: active
   metadata:
     description: 'Kairon package capability: sophia'
@@ -164,7 +164,7 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/sophia
+    source: projects/knowledge/kairon/packages/sophia
 - id: project.gbrain
   type: capability
   protocol: local

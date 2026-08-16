@@ -60,7 +60,7 @@ make ssot-status         #  SSOT file change tracking
 make gac-local-gate      #  Full governance-as-code gate
 
 # Run project tests
-cd projects/kairon && make test-diff
+cd projects/knowledge/kairon && make test-diff
 cd projects/knowledge/gbrain && bun test
 ```
 
@@ -147,7 +147,7 @@ make ssot-status         #  SSOT 变更追踪
 make gac-local-gate      #  全量治理-as-Code 门禁
 
 # 项目测试
-cd projects/kairon && make test-diff
+cd projects/knowledge/kairon && make test-diff
 cd projects/knowledge/gbrain && bun test
 ```
 
