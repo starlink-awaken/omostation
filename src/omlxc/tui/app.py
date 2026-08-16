@@ -402,8 +402,19 @@ class RoutesPage(Static):
 
     def refresh_data(self, policy: str) -> None:
         self.update(
-            f"[#5a7a9a]Policy[/#5a7a9a]  [cyan]{policy}[/cyan]\n\n"
-            "[bright_black]Physical placement is resolved by omlxcd.[/bright_black]"
+            f"[#5a7a9a]Active Policy:[/#5a7a9a]  [cyan]{policy}[/cyan]\n\n"
+            "[bold #7dd3f5]⟡  Compute Fabric v3.3.0 Features:[/bold #7dd3f5]\n"
+            "  [green]●[/green] [bold]Dual-Mode Affinity:[/bold] "
+            "Session LRU (15m) + Prefix SHA-256 (1.35x/1.15x)\n"
+            "  [green]●[/green] [bold]Concurrency Shedding:[/bold] "
+            "Penalty [dim]1/(1+0.5N)[/dim] + Max Cap Spillover\n"
+            "  [green]●[/green] [bold]Thermal & Battery Guard:[/bold] "
+            "Hardware Penalty (0.5x) & Battery AC Guard\n"
+            "  [green]●[/green] [bold]Fast Triage Gate:[/bold] "
+            "Heuristic Tiering (Fast / Standard / Reasoning)\n"
+            "  [green]●[/green] [bold]Circuit Breaker:[/bold] "
+            "3-State FSM + Last-Resort Emergency Probing\n\n"
+            "[bright_black]Placements and probes managed by omlxcd.[/bright_black]"
         )
 
 

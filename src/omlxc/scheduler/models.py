@@ -79,6 +79,8 @@ class PlacementSnapshot:
     in_flight: int = 0
     affinity_bonus: float = 1.0
     max_concurrency: int = 4
+    thermal_penalty: float = 1.0
+    tier: str = "standard"
 
     def __post_init__(self) -> None:
         if any(

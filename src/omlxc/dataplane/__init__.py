@@ -18,6 +18,8 @@ from .models import (
 from .orchestrator import DataPlaneOrchestrator
 from .registry import AdapterRegistry
 from .telemetry import BoundRouteTelemetry, RouteTelemetryRecorder, TelemetrySink
+from .thermal import NodeEnvironmentalState, PowerSource, ThermalGuard, ThermalPressureLevel
+from .triage import ComplexityTier, TriageClassifier, TriageResult
 
 __all__ = [
     "AdapterBinding",
@@ -29,11 +31,14 @@ __all__ = [
     "ChatExecution",
     "CircuitBreaker",
     "CircuitBreakerRegistry",
+    "ComplexityTier",
     "ConcurrencyTracker",
     "DataPlaneOrchestrator",
     "EmbeddingExecution",
     "ExecutionError",
     "ExecutionErrorCode",
+    "NodeEnvironmentalState",
+    "PowerSource",
     "RankedItem",
     "RerankExecution",
     "Reranker",
@@ -42,5 +47,9 @@ __all__ = [
     "RouteTelemetryRecorder",
     "SessionAffinityRegistry",
     "TelemetrySink",
+    "ThermalGuard",
+    "ThermalPressureLevel",
+    "TriageClassifier",
+    "TriageResult",
     "calculate_prefix_hash",
 ]

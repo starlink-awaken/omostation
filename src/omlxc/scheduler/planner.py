@@ -192,4 +192,5 @@ class RoutePlanner:
         )
         affinity_multiplier = max(placement.affinity_bonus, 1.0)
         concurrency_penalty = 1.0 / (1.0 + 0.5 * max(placement.in_flight, 0))
-        return base_score * affinity_multiplier * concurrency_penalty
+        thermal_multiplier = max(min(placement.thermal_penalty, 1.0), 0.0)
+        return base_score * affinity_multiplier * concurrency_penalty * thermal_multiplier

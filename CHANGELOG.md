@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.3.0 — 2026-08-16
+
+- **Hardware Thermal & Battery-Aware Protection**: Added `ThermalGuard` probe
+  collecting macOS `pmset -g therm/batt` and OS environmental state, applying
+  0.5x~0.1x score penalties during heavy thermal pressure or low battery to
+  prevent CPU/GPU thermal throttling and battery exhaustion.
+- **Fast Triage Gate & Intent Complexity Tiering**: Introduced `TriageClassifier`
+  and `ComplexityTier` (FAST / STANDARD / REASONING) analyzing request structure
+  and token size to route lightweight queries to secondary nodes and reserve
+  primary capacity for deep reasoning models.
+- **Benchmark Performance Drift Detection**: Added `PerformanceDriftDetector`
+  evaluating benchmark history to detect silent throughput regressions (>25% drop).
+- **Cockpit Observability Enhancement**: Enhanced TUI `RoutesPage` and `OverviewPage`
+  with comprehensive Compute Fabric v3.3.0 indicators.
+
 ## 3.2.0 — 2026-08-16
 
 - **Dual-Mode Session & Prefix-Cache Affinity**: Added `SessionAffinityRegistry`
