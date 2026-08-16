@@ -567,8 +567,8 @@ machine-config-lint:  ## 检查写机器级配置的脚本集合有无未审阅�
 swarm-prune:
 	python3 bin/gac/swarm-prune-zombies.py --apply
 
-# ── omlxc 本地算力控制面 (v3.1.0) ──────────────────────────
-.PHONY: omlxc-test omlxc-lint omlxc-benchmark
+# ── omlxc 本地算力织网控制面 (v3.4.0) ──────────────────────────
+.PHONY: omlxc-test omlxc-lint omlxc-benchmark omlxc-fabric
 omlxc-test:  ## 运行 omlxc 全量测试套件 (pytest)
 	@echo "── 运行 omlxc 测试 ───────────────────────────────────"
 	cd projects/omlxc && uv run pytest -q
@@ -580,3 +580,7 @@ omlxc-lint:  ## 运行 omlxc ruff + pyright 严格类型检查
 omlxc-benchmark:  ## 查看本地模型基准测试大盘 (omlxc benchmark report)
 	@echo "── 本地模型基准测试榜单 ──────────────────────────────"
 	cd projects/omlxc && uv run omlxc benchmark report
+
+omlxc-fabric:  ## 检查本地算力织网状态 (温控/语义分诊/显存预算/两级缓存)
+	@echo "── omlxc 算力织网全景诊断 ────────────────────────────"
+	cd projects/omlxc && uv run omlxc fabric inspect
