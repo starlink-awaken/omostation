@@ -21,7 +21,7 @@ dependencies = [
     "uvicorn[standard]>=0.49.0",
     "agora>=3.0.0",
     "omo",
-    "omo-debt",
+    "omo",  # ADR-0412: omo-debt 引擎内包 omo._vendored
     "l4-kernel",
     "model-driven",
     "metaos",
@@ -80,7 +80,6 @@ quote-style = "double"
 #     和 adapters/runtime.py 的优雅降级支撑。
 agora = { path = "../agora", editable = true }
 omo = { path = "../omo", editable = true }
-omo-debt = { path = "../omo-debt", editable = true }
 l4-kernel = { path = "../l4-kernel", editable = true }
 metaos = { path = "../metaos", editable = true }
 kairon-observability = { path = "../kairon/packages/kairon-observability", editable = true }
@@ -100,7 +99,7 @@ dev = [
 extraPaths = [
   "../agora/src",
   "../omo/src",
-  "../omo-debt/src",
+  "../omo/src",
   "../l4-kernel/src",
   "../metaos/src",
   "../runtime/src",
