@@ -18,13 +18,15 @@ related:
 
 | 组件 | 路径 | 行量级 | 生产判定 | 调用方 |
 |------|------|--------|----------|--------|
-| Mem0Adapter | `projects/kairon/packages/kos/src/kos/adapters/mem0_adapter.py` | ~85 | **stub_optional** | `kos/ingest/__init__.py` dual-write try/except |
-| MemThetaAdapter | `.../kos/adapters/memtheta_adapter.py` | ~146 | **partial_simulation** | `kos/memory_card.py::save_card` |
+| Mem0Adapter | `projects/kairon/packages/kos/src/kos/adapters/mem0_adapter.py` | ~85 | **retired-experimental** (T3-03) | 零代码引用 (2026-08-16 全仓确认); 替代: mos mem0_shadow (default OFF) |
+| MemThetaAdapter | `.../kos/adapters/memtheta_adapter.py` | ~146 | **retired-experimental** (T3-03) | 零代码引用; partial_simulation 状态已从 memory-os.yaml 移除 |
 | graphiti-core | minerva optional extra | n/a | **optional_tier2** | minerva config `graphiti:`（研究路径） |
 | gbrain dream/cycle | `projects/gbrain/src/commands/dream.ts` + `core/cycle.ts` | 大型 | **production_engine** | CLI/cron/autopilot |
 | card events | cockpit `api_knowledge` + `knowledge_indexer` | n/a | **live 但越域** | emit/subscribe `bos://brain/events/card_updated` |
 
-## 2. Mem0Adapter 审计
+## 2. Mem0Adapter 审计 (T3-03: 已退役标记)
+
+> **2026-08-16 退役确认**: kos 包 `mem0_adapter.py` / `memtheta_adapter.py` 全仓零代码引用 (ingest/__init__.py 与 memory_card.py 的调用已在早前轮次移除)。保留文件仅为审计存证, 标记 experimental + 默认不加载。活替代为 `mos/adapters/mem0_shadow.py` (ADR-0372 Phase 2, `MOS_MEM0` 默认 OFF)。
 
 ### 行为
 

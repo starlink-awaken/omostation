@@ -3317,7 +3317,9 @@ bets:
   title: 退役 mem0 / memtheta 仿真适配器
   appetite: 1 week
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-16
+  done_note: '核实性收口: partial_simulation 已移除 + mem0/memtheta 零引用确认 + shadow 默认 OFF; 审计文档退役标记 (retired-experimental)。retro 附证据表。'
   goal: 消除 partial_simulation / stub_optional 这类"看起来接了实际没接"的适配器
   non_goals:
   - 替换为其他第三方记忆库
