@@ -119,7 +119,7 @@ class DiscoveryEngine:
         for ancestor in [cwd] + list(cwd.parents):
             # 新布局: eCOS v6 5+4+1+1 architecture
             if (ancestor / "projects" / "agora").is_dir() and (
-                ancestor / "projects" / "kairon"
+                ancestor / "projects" / "knowledge" / "kairon"
             ).is_dir():
                 return str(ancestor)
             # monorepo 结构优先（packages/*/agora）
@@ -148,12 +148,12 @@ class DiscoveryEngine:
                     proj_dir = self.root / "projects" / proj_name
                     venv_bin = proj_dir / ".venv" / "bin"
                 elif (
-                    self.root / "projects" / "kairon" / "packages" / proj_name
+                    self.root / "projects" / "knowledge" / "kairon" / "packages" / proj_name
                 ).is_dir():
                     proj_dir = (
-                        self.root / "projects" / "kairon" / "packages" / proj_name
+                        self.root / "projects" / "knowledge" / "kairon" / "packages" / proj_name
                     )
-                    venv_bin = self.root / "projects" / "kairon" / ".venv" / "bin"
+                    venv_bin = self.root / "projects" / "knowledge" / "kairon" / ".venv" / "bin"
 
             # 2. Fallbacks for old structures
             if not proj_dir.is_dir():
@@ -194,8 +194,8 @@ class DiscoveryEngine:
         search_dirs = [self.root]
         if (self.root / "projects").is_dir():
             search_dirs.append(self.root / "projects")
-            if (self.root / "projects" / "kairon" / "packages").is_dir():
-                search_dirs.append(self.root / "projects" / "kairon" / "packages")
+            if (self.root / "projects" / "knowledge" / "kairon" / "packages").is_dir():
+                search_dirs.append(self.root / "projects" / "knowledge" / "kairon" / "packages")
 
         for search_dir in search_dirs:
             for project_dir in search_dir.iterdir():

@@ -10,7 +10,7 @@ class TestDiscoveryEngine:
         root = engine._find_workspace()
         root_path = Path(root)
         assert (root_path / "projects" / "agora").is_dir()
-        assert (root_path / "projects" / "kairon").is_dir()
+        assert (root_path / "projects" / "knowledge" / "kairon").is_dir()
 
     def test_scan_known_projects(self):
         engine = DiscoveryEngine()
