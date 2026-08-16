@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15T13:31:48.394393Z",
+  "generated_at": "2026-08-16T00:00:00Z",
   "entries": [
     {
       "name": "adr_coverage",
@@ -479,6 +479,186 @@
           "bin/gac/swarm-git",
           "scripts/bin/gac/swarm-git"
         ]
+      }
+    },
+    {
+      "name": "bus_usage_report",
+      "bin": "bin/ssot/bus-usage-report.py",
+      "scripts": "scripts/bin/ssot/bus-usage-report.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "ssot",
+      "note": "Round 7 backlog: priority hotspot to close duplicate gap first. Sink=scripts/ssot. Due=2026-09-01",
+      "evidence": {
+        "active_files": [
+          "bin/ssot/bus-usage-report.py",
+          "scripts/bin/ssot/bus-usage-report.py"
+        ],
+        "risk_score": 19,
+        "decision_round": "round7",
+        "due_date": "2026-09-01"
+      }
+    },
+    {
+      "name": "submodule_gitlink_check",
+      "bin": "bin/submodule-gitlink-check.py",
+      "scripts": "scripts/bin/submodule-gitlink-check.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "governance",
+      "note": "Round 7 backlog: priority hotspot to close duplicate gap first. Sink=scripts/governance. Due=2026-09-01",
+      "evidence": {
+        "active_files": [
+          "bin/submodule-gitlink-check.py",
+          "scripts/bin/submodule-gitlink-check.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round7",
+        "due_date": "2026-09-01"
+      }
+    },
+    {
+      "name": "cockpit_readiness",
+      "bin": "bin/cockpit-readiness.py",
+      "scripts": "scripts/bin/cockpit-readiness.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "governance",
+      "note": "Round 7 backlog: priority hotspot to close duplicate gap first. Sink=scripts/governance. Due=2026-09-01",
+      "evidence": {
+        "active_files": [
+          "bin/cockpit-readiness.py",
+          "scripts/bin/cockpit-readiness.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round7",
+        "due_date": "2026-09-01"
+      }
+    },
+    {
+      "name": "mesh_orphan_cleanup",
+      "bin": "bin/mesh/mesh-orphan-cleanup.py",
+      "scripts": "scripts/bin/mesh/mesh-orphan-cleanup.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "mesh",
+      "note": "Round 7 backlog: priority hotspot to close duplicate gap first. Sink=scripts/mesh. Due=2026-09-01",
+      "evidence": {
+        "active_files": [
+          "bin/mesh/mesh-orphan-cleanup.py",
+          "scripts/bin/mesh/mesh-orphan-cleanup.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round7",
+        "due_date": "2026-09-01"
+      }
+    },
+    {
+      "name": "adr_drift_auto_fix",
+      "bin": "bin/adr/adr-drift-auto-fix.py",
+      "scripts": "scripts/bin/adr/adr-drift-auto-fix.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "adr",
+      "note": "Round 7 backlog: priority hotspot to close duplicate gap first. Sink=scripts/adr. Due=2026-09-01",
+      "evidence": {
+        "active_files": [
+          "bin/adr/adr-drift-auto-fix.py",
+          "scripts/bin/adr/adr-drift-auto-fix.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round7",
+        "due_date": "2026-09-01"
+      }
+    },
+    {
+      "name": "next_adr_id",
+      "bin": "bin/adr/next-adr-id.py",
+      "scripts": "scripts/bin/adr/next-adr-id.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "adr",
+      "note": "Round 7 backlog: priority hotspot to close duplicate gap first. Sink=scripts/adr. Due=2026-09-01",
+      "evidence": {
+        "active_files": [
+          "bin/adr/next-adr-id.py",
+          "scripts/bin/adr/next-adr-id.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round7",
+        "due_date": "2026-09-01"
+      }
+    },
+    {
+      "name": "adr_drift_apply",
+      "bin": "bin/adr/adr-drift-apply.py",
+      "scripts": "scripts/bin/adr/adr-drift-apply.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "adr",
+      "note": "Round 7 backlog: priority hotspot to close duplicate gap first. Sink=scripts/adr. Due=2026-09-01",
+      "evidence": {
+        "active_files": [
+          "bin/adr/adr-drift-apply.py",
+          "scripts/bin/adr/adr-drift-apply.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round7",
+        "due_date": "2026-09-01"
+      }
+    },
+    {
+      "name": "adr_drift_check",
+      "bin": "bin/adr/adr-drift-check.py",
+      "scripts": "scripts/bin/adr/adr-drift-check.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "adr",
+      "note": "Round 7 backlog: priority hotspot to close duplicate gap first. Sink=scripts/adr. Due=2026-09-01",
+      "evidence": {
+        "active_files": [
+          "bin/adr/adr-drift-check.py",
+          "scripts/bin/adr/adr-drift-check.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round7",
+        "due_date": "2026-09-01"
+      }
+    },
+    {
+      "name": "adr_trend_insight",
+      "bin": "bin/adr/adr-trend-insight.py",
+      "scripts": "scripts/bin/adr/adr-trend-insight.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "adr",
+      "note": "Round 7 backlog: priority hotspot to close duplicate gap first. Sink=scripts/adr. Due=2026-09-01",
+      "evidence": {
+        "active_files": [
+          "bin/adr/adr-trend-insight.py",
+          "scripts/bin/adr/adr-trend-insight.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round7",
+        "due_date": "2026-09-01"
+      }
+    },
+    {
+      "name": "adr_drift_classify",
+      "bin": "bin/adr/adr-drift-classify.py",
+      "scripts": "scripts/bin/adr/adr-drift-classify.py",
+      "status": "managed",
+      "action": "close-duplicate-gap-first",
+      "owner": "adr",
+      "note": "Round 7 backlog: priority hotspot to close duplicate gap first. Sink=scripts/adr. Due=2026-09-01",
+      "evidence": {
+        "active_files": [
+          "bin/adr/adr-drift-classify.py",
+          "scripts/bin/adr/adr-drift-classify.py"
+        ],
+        "risk_score": 15,
+        "decision_round": "round7",
+        "due_date": "2026-09-01"
       }
     }
   ]
