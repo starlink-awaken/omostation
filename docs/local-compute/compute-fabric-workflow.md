@@ -79,5 +79,7 @@
 | **Cockpit (统一网关)** | `cockpit mesh ...` | `cockpit mesh fabric`, `cockpit mesh warm` |
 | **BOS URI (总线)** | `bos://compute/aetherforge/*` | `bos://compute/aetherforge/warm` |
 | **Agora MCP (Agent)** | MCP Tools | `fabric_inspect()`, `fabric_warm_prefixes()`, `fabric_vram_budget(...)` |
+| **AetherForge MCP (Swarm)** | FastMCP Tools | `forge_fabric_inspect()`, `forge_fabric_warm()`, `forge_fabric_vram(...)` |
 | **OpenAI 兼容接口** | `http://127.0.0.1:9290/v1` | `POST /v1/chat/completions` |
 | **Cockpit Web REST** | `http://127.0.0.1:8080/api/governance/compute/*` | `GET /api/governance/compute/fabric` |
+| **Cockpit UI (前端)** | `http://localhost:5173/#/compute` | 算力织网、前缀预热与显存自愈大盘 |
