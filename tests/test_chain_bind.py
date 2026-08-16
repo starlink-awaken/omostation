@@ -312,6 +312,45 @@ def test_perception_closed_bound_run_is_not_missing_bet(tmp_path: Path) -> None:
     assert "missing-bet" not in fields["bound_bet"]
 
 
+def test_perception_prefers_latest_closed_bound_run(tmp_path: Path) -> None:
+    """Filename sort would pick T6-02; recency must pick T6-03."""
+    runs = tmp_path / ".omo" / "_delivery" / "agent-workflows" / "runs"
+    runs.mkdir(parents=True)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "STRATEGY-3YEAR-PLAN-2026H2-2029.md").write_text(
+        NORTH + "\n", encoding="utf-8"
+    )
+    (runs / "aaa-older.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "run_id": "aaa-older",
+                "status": "ok",
+                "bet_id": "BET-Y1Q1-T6-02",
+                "updated_at": "2026-08-15T12:00:00Z",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (runs / "zzz-newer.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "run_id": "zzz-newer",
+                "status": "blocked",
+                "bet_id": "BET-Y1Q1-T6-03",
+                "updated_at": "2026-08-16T01:27:36Z",
+            }
+        ),
+        encoding="utf-8",
+    )
+    fields = BIND.perception_fields(tmp_path)
+    assert fields["bound_state"] == "closed"
+    assert fields["bound_bet"] == "BET-Y1Q1-T6-03 (closed)"
+    assert fields["closed_bets"][0] == "BET-Y1Q1-T6-03"
+    assert BIND.run_recency_key(
+        {"updated_at": "2026-08-16T01:27:36Z"}
+    ) > BIND.run_recency_key({"updated_at": "2026-08-15T12:00:00Z"})
+
+
 def test_omo_cli_start_requires_bet_same_as_wrapper() -> None:
     env_on = {"AGCP_REQUIREMENT_ITERATION_GATE": "1", "PYTHONPATH": str(ROOT / "projects/omo/src")}
     blocked = _run(

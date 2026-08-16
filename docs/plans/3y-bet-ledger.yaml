@@ -1374,6 +1374,7 @@ bets:
   priority: P1
   status: done
   done_at: 2026-08-15
+  pr: '#1547'
   goal: 产出 Wave/Gate 与 BET 对照表，并把 Plan→BET→workflow→closeout→retro 做成可 halt 的同一条谓词
   non_goals:
   - 新造第四套 ID 或 compass/chain-card 面板
@@ -1424,6 +1425,7 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-16
+  pr: '#1555'
   goal: 关闭 2026-08-16 验证轮的感知假 missing-bet、omo start 旁路、红线 digest 不可见，不新造第四套台账或 GaC required 规则
   non_goals:
   - 重写 bind 谓词
@@ -1439,7 +1441,7 @@ bets:
   verify:
   - cmd: python3 bin/plan/chain-bind-check.py self-check
     expect: exit 0
-  - cmd: python3 -c "import pathlib; t=pathlib.Path('docs/generated/agent-redlines.md'); raise SystemExit(0 if t.is_file() and 'vision-to-retro-chain' in t.read_text() else 1)"
+  - cmd: python3 -c "from pathlib import Path; t=Path('.omo/_truth/registry/redlines.yaml').read_text(); g=Path('bin/mof/gen-agent-redlines.py').read_text(); raise SystemExit(0 if 'vision-to-retro-chain' in t and 'redlines.yaml' in g else 1)"
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: governance-state-mutation
@@ -1460,6 +1462,53 @@ bets:
   risk_level: L3
   human_gate: false
   circuit_breaker: 合不进 main 则记 blocker，不把 main 未合报成 done
+  retro: required
+- id: BET-Y1Q1-T6-04
+  track: T6-SUBTRACT
+  window: Y1Q1
+  title: 感知取最近关闭 bet + 复盘落地记账 + verify 退出码诚实
+  appetite: 1 day
+  priority: P0
+  status: done
+  done_at: 2026-08-16
+  started_at: 2026-08-16
+  goal: 关闭 2026-08-16 验证复盘留下的感知排序、过期复盘、ledger verify 假绿，不重开 T6-02/T6-03
+  non_goals:
+  - 重写 bind 谓词
+  - 新增 GaC required 规则
+  - 重写 gac-worktree submit 自动 wip
+  - D3/D5 场景重写
+  - 静默重开 T6-02 或 T6-03
+  done_when:
+  - perception_fields 在多条关闭绑定时取最近 updated_at/created_at，bootstrap/status 不再先报文件名第一
+  - "T6-03 复盘与指针不再写 #1555 blocked，记录 squash 82f42e31d"
+  - bet-ledger verify --execute 在 verify 命令非 0 时自身非 0
+  - T6-03/T6-04 verify 命令不依赖 gitignore 的 docs/generated/agent-redlines.md
+  verify:
+  - cmd: python3 bin/plan/chain-bind-check.py self-check
+    expect: exit 0
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_chain_bind.py tests/test_bet_ledger_d0.py -q
+    expect: exit 0
+  - cmd: python3 -c "from pathlib import Path; t=Path('.omo/_knowledge/retros/BET-Y1Q1-T6-03.md').read_text(); raise SystemExit(0 if '82f42e31d' in t and 'branch protection 挡住' not in t and 'MERGEABLE' not in t else 1)"
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - bin/plan/**
+  - tests/test_chain_bind.py
+  - tests/test_bet_ledger_d0.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/plans/AGENT-BRIEF.md
+  - AGENTS.md
+  - .agents/skills/bet-execution/**
+  - .agents/skills/project-governance/**
+  - .omo/_knowledge/retros/**
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q1-T6-03
+  risk_level: L3
+  human_gate: false
+  circuit_breaker: 一天内合不进 main 则记 blocker，不把过期复盘留在 main
   retro: required
 - id: BET-Y1Q2-T6-01
   track: T6-SUBTRACT

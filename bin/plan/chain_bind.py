@@ -233,24 +233,43 @@ def overdue_retros(workspace: Path) -> list[str]:
 CLOSED_RUN_STATUSES = frozenset({"ok", "blocked", "failed"})
 
 
+def run_recency_key(run: dict[str, Any]) -> str:
+    """ISO timestamps and run_id sort lexicographically; latest wins."""
+    return str(
+        run.get("updated_at")
+        or run.get("closed_at")
+        or run.get("created_at")
+        or run.get("run_id")
+        or ""
+    )
+
+
+def _bet_id_of(run: dict[str, Any]) -> str:
+    return str(run.get("bet_id") or "").strip()
+
+
 def perception_fields(workspace: Path) -> dict[str, Any]:
-    """Active bound bets win; else closed bound bets; never a false missing-bet."""
-    active_bets: list[str] = []
-    closed_bets: list[str] = []
+    """Active bound bets win; else latest closed bound run; never a false missing-bet."""
+    active_runs: list[dict[str, Any]] = []
+    closed_runs: list[dict[str, Any]] = []
     for run in iter_run_records(workspace):
-        bet_id = str(run.get("bet_id") or "").strip()
-        if not bet_id:
+        if not _bet_id_of(run):
             continue
         status = str(run.get("status") or "")
         if status == "active":
-            active_bets.append(bet_id)
+            active_runs.append(run)
         elif status in CLOSED_RUN_STATUSES:
-            closed_bets.append(bet_id)
-    if active_bets:
-        bound = active_bets[0]
+            closed_runs.append(run)
+    active_bets = [_bet_id_of(r) for r in active_runs]
+    closed_bets = [
+        _bet_id_of(r)
+        for r in sorted(closed_runs, key=run_recency_key, reverse=True)
+    ]
+    if active_runs:
+        bound = _bet_id_of(max(active_runs, key=run_recency_key))
         bound_state = "active"
-    elif closed_bets:
-        bound = f"{closed_bets[0]} (closed)"
+    elif closed_runs:
+        bound = f"{_bet_id_of(max(closed_runs, key=run_recency_key))} (closed)"
         bound_state = "closed"
     else:
         bound = "unbound"

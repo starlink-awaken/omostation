@@ -34,7 +34,7 @@ Project-specific instructions override this guide only within that project and o
 
 **窄豁免**：纯只读问答；`observer-audit`；用户书面明确 waiver（须写入 closeout 证据，模板见 [`docs/operations/workflow-waiver-template.md`](docs/operations/workflow-waiver-template.md)）。
 
-愿景→落地→复盘硬门（BET-Y1Q1-T6-02/T6-03）：`start --bet` 把 `bet_id` 写入 run（根仓 wrapper **与** `omo.workflow.cli start` 同一谓词）。`closeout`/`complete` 缺北极星/绑定/retro 会 halt。感知看 `bootstrap`/`status` 的 `chain:` 行——已关闭的绑定显示 `BET-ID (closed)`，不是 `missing-bet`。执行器 [`bin/plan/chain-bind-check.py`](bin/plan/chain-bind-check.py)，红线 `redlines.yaml::vision-to-retro-chain`（也出现在 `docs/generated/agent-redlines.md`），对照 [`docs/architecture/wave-gate-bet-map.md`](docs/architecture/wave-gate-bet-map.md)。
+愿景→落地→复盘硬门（BET-Y1Q1-T6-02/T6-03/T6-04）：`start --bet` 把 `bet_id` 写入 run（根仓 wrapper **与** `omo.workflow.cli start` 同一谓词）。`closeout`/`complete` 缺北极星/绑定/retro 会 halt。感知看 `bootstrap`/`status` 的 `chain:` 行——关闭绑定取**最近** `updated_at`/`created_at` 的 run，显示 `BET-ID (closed)`，不是 `missing-bet`，也不是文件名第一。执行器 [`bin/plan/chain-bind-check.py`](bin/plan/chain-bind-check.py)，红线 `redlines.yaml::vision-to-retro-chain`（也出现在 `docs/generated/agent-redlines.md`），对照 [`docs/architecture/wave-gate-bet-map.md`](docs/architecture/wave-gate-bet-map.md)。
 
 **可执行闸门（ADR-0204）**：`compliance` / `status` 对 **已 stage** 的需求面路径检查是否存在 active run；无 run → **halt**（exit 1）。仅 unstaged dirty → warn。旁路：`AGCP_REQUIREMENT_ITERATION_GATE=0`（须用户授权并写入 waiver 证据）。
 
