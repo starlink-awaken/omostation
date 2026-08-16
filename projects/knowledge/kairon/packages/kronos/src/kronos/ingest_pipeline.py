@@ -72,7 +72,7 @@ def ingest_url(url: str) -> dict[str, Any]:
     strategy = _pick_fetch_strategy(url)
     logger.info(f"抓取策略: {strategy} for {url[:60]}")
     try:
-        from kronos.fetch_router import build_jina_plan, _try_jina_reader, _try_native_http
+        from kronos.fetch_router import _try_jina_reader, _try_native_http, build_jina_plan
 
         # 先探测抓取策略
         try:
@@ -82,7 +82,7 @@ def ingest_url(url: str) -> dict[str, Any]:
                 content = _try_native_http(url, timeout=30)
             if not content and plan:
                 logger.info("Jina/native 均失败, 尝试 scrapling")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"fetch_router 探测失败: {exc}")
             content = _try_native_http(url, timeout=30)
 
@@ -96,7 +96,7 @@ def ingest_url(url: str) -> dict[str, Any]:
         text = re.sub(r"\s+", " ", text).strip()[:20000]
         title = url.split("/")[-1][:60] or url
         return _to_kos(text, title, {"source": "url", "url": url})
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"URL 摄取失败: {exc}")
         return {"ingested": None, "type": "url", "url": url, "error": str(exc)}
 
@@ -144,7 +144,7 @@ def _to_kos(text: str, title: str, metadata: dict[str, Any]) -> dict[str, Any]:
         result = kos_ingest(text, title=final_title)
         result["metadata"] = metadata
         return result
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(f"kos 入库失败 (降级跳过): {exc}")
         return {"ingested": None, "type": metadata.get("source", "text"), "title": title, "error": str(exc)}
 

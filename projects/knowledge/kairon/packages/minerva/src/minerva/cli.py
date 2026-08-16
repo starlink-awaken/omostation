@@ -355,7 +355,7 @@ async def _run_research(args: Any) -> int:
                 },
                 role="agent",
             )
-            print(f"  [blue]↳ 研究记忆写入 mos: ✓[/blue]")
+            print("  [blue]↳ 研究记忆写入 mos: ✓[/blue]")
         except Exception as _mos_exc:
             # 降级: mos 不可用时静默跳过
             print(f"  [yellow]↳ 研究记忆 mos 跳过: {_mos_exc}[/yellow]")

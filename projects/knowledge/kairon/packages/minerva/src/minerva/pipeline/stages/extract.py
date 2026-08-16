@@ -105,7 +105,7 @@ class DeepReadStageImpl(IPipelineStage):
         )
         try:
             analysis = await self._llm.generate(self._prompt.format(query=ctx.query, documents=docs_text[:8000]))
-        except Exception as exc:  # noqa: BLE001 - LLM 超时/不可用时降级为原文摘要, 不阻塞管线
+        except Exception as exc:
             import logging
 
             logging.getLogger("minerva.deep_read").warning(f"deep_read LLM 调用失败 (降级): {exc}")

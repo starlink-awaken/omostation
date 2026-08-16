@@ -20,16 +20,16 @@ __all__ = [
 # agent_belief 三表 (ADR-0396 Keystone) — 可选导入, MOS未配置时不阻断
 try:
     from mos.agent_belief import (
-        WorldSnapshot,
         CapabilityCalibration,
         DecisionOutcome,
-        write_world_snapshot,
-        write_capability_calibration,
-        write_decision_outcome,
-        recall_world_snapshot,
+        WorldSnapshot,
         recall_capability_calibration,
         recall_decision_outcome,
+        recall_world_snapshot,
         update_trust_from_outcome,
+        write_capability_calibration,
+        write_decision_outcome,
+        write_world_snapshot,
     )
     __all__ += [
         "WorldSnapshot",
