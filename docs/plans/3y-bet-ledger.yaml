@@ -3283,7 +3283,9 @@ bets:
   title: Neo4j 生产启用
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: in_progress
+  implemented_at: 2026-08-16
+  awaiting: 'human_gate (L2 Neo4j 生产启用批准; 三 done_when 实证与停审理由见 retro BET-Y1Q3-T3-02)'
   goal: 让 temporal_fact / entity_relation 走真实图路径, 结束 off_until_NEO4J_URI 状态
   non_goals:
   - graphiti 全量接入
