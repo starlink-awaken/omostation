@@ -229,7 +229,6 @@ def _record_rule_violations(errors: list[str]) -> None:
     rule_errors = [e for e in errors if e.split(":", 1)[0].strip().startswith("CR-")]
     if not rule_errors:
         return
-    import datetime
     import json
 
     path = WORKSPACE / ".omo" / "_knowledge" / "rule-violations.jsonl"

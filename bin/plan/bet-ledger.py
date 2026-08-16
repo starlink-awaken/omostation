@@ -600,7 +600,9 @@ def cmd_surface(data: dict, args) -> int:
             for proj, b in sorted(per_proj.items(), key=lambda kv: -(kv[1]["add"] + kv[1]["del"]))[:10]:
                 net = b["add"] - b["del"]
                 print(f"{proj:<16}{b['add']:>12,}{b['del']:>12,}{net:>+12,}{b['sym']:>12,}")
-                tot_a += b["add"]; tot_d += b["del"]; tot_s += b["sym"]
+                tot_a += b["add"]
+                tot_d += b["del"]
+                tot_s += b["sym"]
             print("-" * 64)
             print(f"{'合计':<16}{tot_a:>12,}{tot_d:>12,}{tot_a - tot_d:>+12,}{tot_s:>12,}")
             print("   净值 = add - del; 重写噪音 = 逐文件 min(add,del) 聚合 (对称改写, 净贡献≈0)")
