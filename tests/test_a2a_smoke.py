@@ -16,7 +16,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastmcp import FastMCP
-from metaos.a2a.task_manager import TaskManager
+
+# metaos 是 optional 依赖 (admission extra): cascading CI 的裸 uv sync 不装 → 跳过本模块。
+# 与 test_forge_loader.py 的 importorskip 模式对齐 (kairon/forge 先例)。
+pytest.importorskip(
+    "metaos.a2a.task_manager",
+    reason="metaos 不可用 (admission optional extra, 非 agora 核心依赖)",
+)
+from metaos.a2a.task_manager import TaskManager  # noqa: E402
 
 
 async def _tool_names(mcp: FastMCP) -> set[str]:

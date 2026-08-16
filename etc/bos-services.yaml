@@ -4,7 +4,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - kos.cli
@@ -32,7 +32,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - eidos.mcp_server
@@ -49,7 +49,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - ontoderive.mcp_server
@@ -66,7 +66,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - minerva.mcp_server.server
@@ -83,7 +83,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - kronos.mcp_server
@@ -100,7 +100,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - iris.mcp_server
@@ -117,7 +117,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - sophia.server.mcp_server
@@ -134,7 +134,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - forge.mcp_server
@@ -219,10 +219,10 @@ services:
   - uv
   - run
   - --directory
-  - projects/c2g
+  - projects/omo
   - python
   - -m
-  - c2g.mcp_server
+  - omo._vendored.c2g.mcp_server
   action: mcp-server
   command: *id013
   description: C2G MCP Server (HTTP proxy mode)
@@ -281,7 +281,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - kos.cli
@@ -297,7 +297,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - kos.cli
@@ -313,7 +313,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - kronos.cli
@@ -329,7 +329,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - kronos.cli
@@ -622,7 +622,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - eidos.cli
@@ -638,7 +638,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - minerva.cli
@@ -654,7 +654,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - minerva.cli
@@ -670,7 +670,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - minerva.cli
@@ -686,7 +686,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - ontoderive.cli
@@ -702,7 +702,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - ontoderive.cli
@@ -718,7 +718,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - ontoderive.cli
@@ -734,7 +734,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - ontoderive
@@ -752,7 +752,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - ontoderive
@@ -770,7 +770,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - ontoderive.toolforge.mcp_server
@@ -785,7 +785,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - ontoderive.toolforge.mcp_server
@@ -800,7 +800,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - ontoderive.toolforge.mcp_server
@@ -815,7 +815,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - codeanalyze.cli
@@ -831,7 +831,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - codeanalyze.cli
@@ -847,7 +847,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - codeanalyze.cli
@@ -863,7 +863,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - iris.cli
@@ -879,7 +879,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - iris.cli
@@ -895,7 +895,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - iris.cli
@@ -911,7 +911,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - core_models.cli
@@ -927,7 +927,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - core_models.cli
@@ -943,7 +943,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - health_profile.cli
@@ -959,7 +959,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - health_profile.cli
@@ -1029,7 +1029,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - forge.cli
@@ -1045,7 +1045,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - forge.cli
@@ -1061,7 +1061,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - forge.cli
@@ -1077,7 +1077,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - forge.cli
@@ -1093,7 +1093,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - forge.cli
@@ -1345,7 +1345,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - minerva
@@ -1363,7 +1363,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - minerva
@@ -1381,7 +1381,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - codeanalyze
@@ -1399,7 +1399,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - codeanalyze
@@ -1417,7 +1417,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - iris
@@ -1435,7 +1435,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - iris
@@ -1453,7 +1453,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - iris
@@ -1471,7 +1471,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - health_profile
@@ -1489,7 +1489,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - health_profile
@@ -1507,7 +1507,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - forge
@@ -1525,7 +1525,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - forge
@@ -1543,7 +1543,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - forge
@@ -1561,7 +1561,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - forge
@@ -1579,7 +1579,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - kronos
@@ -1597,7 +1597,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - kronos
@@ -1677,7 +1677,7 @@ services:
   command:
   - bun
   - run
-  - projects/gbrain/src/cli.ts
+  - projects/knowledge/gbrain/src/cli.ts
   - serve
   description: gbrain 知识库全文搜索 (高性能 Postgres)
   domain: memory
@@ -1689,7 +1689,7 @@ services:
   command:
   - bun
   - run
-  - projects/gbrain/src/cli.ts
+  - projects/knowledge/gbrain/src/cli.ts
   - serve
   description: gbrain 知识库结构化查询
   domain: memory
@@ -1701,7 +1701,7 @@ services:
   command:
   - bun
   - run
-  - projects/gbrain/src/cli.ts
+  - projects/knowledge/gbrain/src/cli.ts
   - serve
   description: gbrain 知识库增量同步
   domain: memory
@@ -1714,7 +1714,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - --package
   - mos
   - --with
@@ -1741,7 +1741,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - --package
   - mos
   - --with
@@ -1768,7 +1768,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - --package
   - mos
   - --with
@@ -1794,7 +1794,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - --package
   - mos
   - --with
@@ -1819,7 +1819,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - --package
   - mos
   - --with
@@ -1842,7 +1842,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - --package
   - mos
   - --with
@@ -1952,7 +1952,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - eidos.cli
@@ -1968,7 +1968,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - kos.cli
@@ -1984,7 +1984,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - ontoderive.cli
@@ -2000,7 +2000,7 @@ services:
   - uv
   - run
   - --directory
-  - projects/kairon
+  - projects/knowledge/kairon
   - python
   - -m
   - eidos.cli
