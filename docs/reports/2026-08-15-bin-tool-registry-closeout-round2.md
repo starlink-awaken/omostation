@@ -89,3 +89,32 @@
    - manifest 补齐记录（或明确下沉子项目 owner）
    - `make bin-tool-registry-audit --scope both` 与 `make bin-tool-registry-parallel-gaps` 的差异快照
 3. 验证指标目标：每轮 `parallel_manifest_gaps` 下降，`mirror_adjustments` 和 `managed/Unmanaged` 变化可控。
+
+### 六、Round 5（2026-08-16）：依赖风险分析能力固化
+
+#### 已完成
+- 在 `bin/tool-registry-audit.py` 增加依赖热点分析能力：
+  - 按出/入度计算风险分值（`risk_score = out_degree*3 + in_degree*2`）；
+  - 结合并行收敛清单缺口，将“未托管并行 + 关键依赖链”提权到统一清单；
+  - 在审计结果 `findings` 增加 `dependency_hotspots`，`stats` 补充 `dependency_hotspots` 行为口径（通过 `len(hotspots)` 输出）。
+- Makefile 新增固定执行入口：
+  - `make bin-tool-registry-dependency-risks`（支持 `TOOL_REGISTRY_DEPENDENCY_LIMIT` 上限）；
+  - help 列表同步展示；
+  - 便于把“依赖优先级”和“并行缺口”同框处理。
+- 新增一轮快照：
+  - `artifacts/bin-tool-registry-audit-round5.json`（本地演示文件）。
+
+#### 本轮关键结果（`TOOL_REGISTRY_SCOPE=both`）
+- `total_scripts: 796`
+- `parallel_candidates: 215`
+- `parallel_manifest_gaps: 183`
+- `dependency hotspots: 25`（默认 Top 25）
+- `managed parallel duplicates: 0`
+- `unmanaged parallel duplicates: 0`
+- `strict checks: OK`
+
+#### 下一步动作
+1. 每周将 `make bin-tool-registry-dependency-risks` 纳入运维巡检，按 `risk_score` 一口气消化 Top N；
+2. 对 `managed=False` 的并行候选先闭环：`parallel manifest gap` 补录或显式分流到子项目 owner；
+3. 在下一轮把依赖热点输出扩展为“建议下沉目标”（当前脚本仅输出影响面节点，未引入子项目映射模型）；
+4. 长期机制：每次新增脚本时强制更新并行清单，结合 `make bin-tool-registry-dependency-risks` 与 `make bin-tool-registry-parallel-gaps` 双门禁。
