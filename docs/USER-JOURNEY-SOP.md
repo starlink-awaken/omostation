@@ -1,11 +1,10 @@
 ---
-status: stale
+status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-15
-review-state: stale-unlinked-to-scene-cards
-metadata-migrated-at: 2026-07-31
-stale-reason: 2026-06-12 SOP; zero cross-refs to docs/scene-cards or journey-specs
+last-reviewed: 2026-08-17
+review-state: content-reviewed-20260817
+review-note: 2026-06-12 内容主体保留 (旅程设计 SOP 仍有效), 补 scene-cards/journey-specs 交叉引用 (T6-07 r3)
 ---
 # eCOS v6 用户旅程设计 + Workflow SOP
 
@@ -796,4 +795,14 @@ steps:
 
 ---
 
-*版本: 1.0.0 · 更新: 2026-06-12*
+---
+
+## 关联: 场景卡与 Journey 体系 (2026-08-17 补)
+
+本文档的旅程设计思想已演进为运行体系:
+
+- **场景卡** (`docs/scene-cards/`) — 9 张卡, 五档生命周期 (draft→shadow→assisted→active→autonomous), 双轨准入
+- **Journey 规格** (`docs/journey-specs/`) — 状态机化执行, `bin/ssot/journey-runner.py` 驱动, 支持 parallel fork/join (BET-Y1Q4-T5-01)
+- 新场景开发请走场景卡流程, 本 SOP 保留为设计参考与用户旅程分析基础
+
+*版本: 1.1.0 · 更新: 2026-08-17 (交叉引用补齐, T6-07 r3)*

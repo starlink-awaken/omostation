@@ -6,7 +6,7 @@ owner: 夏明星
 created: 2026-07-15
 updated: 2026-08-15
 lifecycle: contract
-last-reviewed: 2026-08-15
+last-reviewed: 2026-08-17
 review-state: plan-mainline-adr-0410
 note: >
   从愿景、战略、ADR、执行任务到运行证据的一页导航。动态事实必须读取对应 SSOT，
@@ -49,6 +49,11 @@ note: >
 | 战略收敛决策 | [`../.omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md`](../.omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md) | ACCEPTED |
 | 协作优先、物理多机延后 | [`../.omo/_knowledge/decisions/0247-strategic-pivot-collab-first-physical-deferred.md`](../.omo/_knowledge/decisions/0247-strategic-pivot-collab-first-physical-deferred.md) | ACCEPTED |
 | 交付诚实看板 | [`G-DEL-PHASE2-BOARD.md`](G-DEL-PHASE2-BOARD.md) | active |
+| 三年执行台账 (SSOT) | [`plans/3y-bet-ledger.yaml`](plans/3y-bet-ledger.yaml) | ssot（112+ bet） |
+| Agent 执行指令 | [`plans/AGENT-BRIEF.md`](plans/AGENT-BRIEF.md) | contract（含 §8.5 L3 归并规程） |
+| 里程碑节拍 | [`plans/MILESTONES-2026Q3Q4.md`](plans/MILESTONES-2026Q3Q4.md) | active |
+| gbrain+kairon 归并决策 | [`../.omo/_knowledge/decisions/0413-gbrain-kairon-merge-disposition.md`](../.omo/_knowledge/decisions/0413-gbrain-kairon-merge-disposition.md) | PROPOSED (T6-01 实施已完, 待人类确认) |
+| 物理多机张力澄清 | [`../.omo/_knowledge/decisions/0414-physical-multihost-tension-resolution.md`](../.omo/_knowledge/decisions/0414-physical-multihost-tension-resolution.md) | PROPOSED |
 
 ## 动态事实
 

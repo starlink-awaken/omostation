@@ -1,19 +1,22 @@
 ---
-status: stale
+status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-15
-review-state: stale-internal-contradiction
-metadata-migrated-at: 2026-07-31
-implemented-variant: SYSTEM-INDEX.md pointer file
-stale-reason: header claims 1 pointer file implemented; body still specifies a multi-file generator
+last-reviewed: 2026-08-17
+review-state: content-reviewed-20260817
+implemented-variant: SYSTEM-INDEX.md + 4 专题 INDEX-*.md (全部实测存在)
+review-note: 2026-08-17 矛盾解除 — "1 件已实施 vs 5 文件方案"实测为两者皆实施
 ---
 # 系统索引体系设计方案 — 全景调研 + 架构设计
 
-> 调研日期: 2026-07-03 | 实施: 2026-07-03
-> 状态: **已实施**（最终方案：1 个纯指针文件，0 个新数据源）
+> 调研日期: 2026-07-03 | 实施修订: 2026-08-17 (T6-07 r3 内容级重读)
+> 状态: **已实施**（实际落地 5 件，非头部原称的 1 件）
 > 覆盖范围: Workspace 根 + 17 项目 + .omo + runtime + protocols + 所有 agent 配置
-> 最终产出: `SYSTEM-INDEX.md`（~80 行，纯指针，不复制数据）
+> 实际产出（2026-08-17 实测全部存在）:
+>   - `SYSTEM-INDEX.md` — 顶层导航指针（正文详述的方案）
+>   - `INDEX-PROJECTS.md` / `INDEX-TOOLS.md` / `INDEX-KNOWLEDGE.md` / `INDEX-AGENTS.md` — 四个专题索引
+> 原头部"1 个纯指针文件"与正文 5 文件方案的矛盾，实测结论：**两者都被实施**，
+> 正文方案并非仅是未落地的设计稿。下文保留为设计过程记录。
 
 ---
 

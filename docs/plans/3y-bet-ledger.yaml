@@ -4877,8 +4877,15 @@ bets:
   title: 战略收敛 r3 剩余件 — D3 决策补档 + D5 ADR + 6 文档重读 + chain-bind 旁路诚实化
   appetite: 1 week
   priority: P1
-  status: in_progress
+  status: done
+  done_at: 2026-08-17
   implemented_at: 2026-08-17
+  done_note: >-
+    ADR-0413 归并决策补档 (PROPOSED) + ADR-0414 物理多机张力澄清 (PROPOSED,
+    amends 0225/0226) + 6 文档内容级重读 (域数 9→16 订正等, 见 retro 明细表)
+    + chain-bind 旁路核查 (真缺口收窄为 omo cli exit 0 静默, 留专项未静默)。
+    打假三条: D3 实已实施(授权链时点差) / registry 计数前轮已修 / INDEX 矛盾
+    实为双方案皆落地。ADR ACCEPTED 等人类确认 (红线)。
   goal: 战略-治理收敛总纲第三轮派工收尾 (AGENT-BRIEF-STRATEGY-CONVERGENCE-REMAINDER.md)
   non_goals:
   - 重开 gbrain+kairon 合并分析 (T6-01 已实施, 本轮只补决策 ADR 档案)
