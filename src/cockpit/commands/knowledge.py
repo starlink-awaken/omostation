@@ -60,7 +60,7 @@ def _kos_port_conflict() -> str | None:
 
 
 def cmd_knowledge_search(args: argparse.Namespace) -> int:
-    """cockpit knowledge search <query> — KOS 语义搜索."""
+    """cockpit knowledge search <query> — KOS & 知识复合体双擎混合检索."""
     query = getattr(args, "query", None)
     if not query:
         _get_err().print('[red]❌ 请提供搜索词: cockpit knowledge search "借调政策"[/red]')
@@ -68,32 +68,61 @@ def cmd_knowledge_search(args: argparse.Namespace) -> int:
 
     console = _get_console()
     limit = getattr(args, "limit", 5)
+    results: list[dict] = []
+    source_tag = "KOS HTTP"
 
-    if not _kos_available():
-        console.print(f"[yellow]⚠️  KOS 服务未在线 ({KOS_API_URL})[/yellow]")
-        console.print("[dim]   启动: cd projects/knowledge/kairon/packages/kos && uv run kos serve[/dim]")
-        console.print(f'[dim]   或降级使用: cockpit search "{query}"[/dim]')
-        return 1
+    # 1. 尝试 KOS REST API (在线模式)
+    if _kos_available():
+        import urllib.parse
 
-    import urllib.parse
+        encoded = urllib.parse.quote(query)
+        url = f"{KOS_API_URL}/api/v1/search?q={encoded}&mode=hybrid&limit={limit}"
+        try:
+            with _safe_urlopen(url, timeout=10.0) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                results = data.get("results") or data.get("documents") or []
+        except Exception:
+            results = []
 
-    encoded = urllib.parse.quote(query)
-    url = f"{KOS_API_URL}/api/v1/search?q={encoded}&mode=hybrid&limit={limit}"
-    try:
-        with _safe_urlopen(url, timeout=30.0) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-    except (URLError, OSError, json.JSONDecodeError) as exc:
-        _get_err().print(f"[red]❌ KOS 搜索失败: {exc}[/red]")
-        return 1
+    # 2. 离线/直连模式: 自动走 UnifiedKnowledgeRetriever
+    if not results:
+        try:
+            import sys
+            from pathlib import Path
 
-    results = data.get("results") or data.get("documents") or []
+            # Auto-locate workspace projects/knowledge/src
+            # __file__ = projects/cockpit/src/cockpit/commands/knowledge.py
+            # parents[3] = projects/cockpit, parents[4] = projects
+            ws_knowledge_src = Path(__file__).resolve().parents[4] / "knowledge" / "src"
+            if ws_knowledge_src.exists() and str(ws_knowledge_src) not in sys.path:
+                sys.path.insert(0, str(ws_knowledge_src))
+
+            from knowledge.retrieval import UnifiedKnowledgeRetriever
+
+            retriever = UnifiedKnowledgeRetriever()
+            retrieved = retriever.retrieve(query, limit=limit)
+            source_tag = "Unified Hybrid (Local Engine)"
+            results = [
+                {
+                    "title": r.title,
+                    "score": r.score,
+                    "source": f"{r.source} [{r.zone}]",
+                    "snippet": r.snippet,
+                    "doc_id": r.doc_id,
+                }
+                for r in retrieved
+            ]
+        except Exception as exc:
+            _get_err().print(f"[yellow]⚠️ 本地知识引擎回退提示: {exc}[/yellow]")
+
     if not results:
         console.print(f'[yellow]🔍 未找到与 "{query}" 相关的知识[/yellow]')
         return 0
 
     console.print(
         _panel(
-            f"[bold cyan]📚 KOS 知识搜索 · {len(results)} 条结果[/bold cyan]\n[dim]查询: {query}[/]",
+            f"[bold cyan]📚 知识复合体搜索 · {len(results)} 条结果[/bold cyan]\n"
+            f"[dim]查询: {query}  ·  引擎: {source_tag}[/]",
             "cyan",
         )
     )
@@ -105,13 +134,13 @@ def cmd_knowledge_search(args: argparse.Namespace) -> int:
     table.add_column("#", style="dim", width=3)
     table.add_column("标题", style="bold", no_wrap=False)
     table.add_column("相关度", style="green", width=8)
-    table.add_column("来源", style="dim", no_wrap=False)
+    table.add_column("来源与域", style="dim", no_wrap=False)
 
     for i, r in enumerate(results, 1):
         title = r.get("title") or r.get("doc_id") or "未知"
         score = r.get("score") or r.get("similarity") or 0
         source = r.get("source") or r.get("path") or ""
-        score_pct = f"{float(score) * 100:.0f}%" if isinstance(score, (int, float)) else "—"
+        score_pct = f"{float(score) * 100:.0f}%" if isinstance(score, (int, float)) and score <= 1.0 else f"{score:.2f}"
         table.add_row(str(i), str(title)[:60], score_pct, str(source)[:40])
     console.print(table)
     return 0
