@@ -1,0 +1,46 @@
+# 启发式推理规则 (R10-R14) — YAML声明式
+
+- id: R10
+  name: influence_analysis
+  type: influence_analysis
+  category: induction
+  description: 找出被最多推论引用的前提事实
+  premises: ["has_reference_count"]
+  conclusion_template: "最具影响力的前提: {top_influencers}"
+  confidence: 0.80
+
+- id: R11
+  name: redundancy_warning
+  type: redundancy_warning
+  category: induction
+  description: 多条推论结论高度相似, 可能存在冗余
+  premises: ["similar_conclusions >= 2"]
+  conclusion_template: "推论'{a}'和'{b}'结论相似({sim:.0%}), 可能存在冗余"
+  confidence: 0.65
+
+- id: R12
+  name: coverage_analysis
+  type: coverage
+  category: induction
+  description: 事实被推论引用的覆盖率
+  premises: ["fact_references_count"]
+  conclusion_template: "事实覆盖率: {covered}/{total}被引用({pct:.0f}%), 未被引用: {uncovered}"
+  confidence: 0.70
+
+- id: R13
+  name: disjunctive_syllogism
+  type: disjunctive_syllogism
+  category: deduction
+  description: A或B结构检测 — 共享前提但结论方向不同
+  premises: ["shared_premises >= 2", "divergent_conclusions"]
+  conclusion_template: "推论'{a}'和'{b}'共享前提但结论方向不同, 可能存在排中结构"
+  confidence: 0.70
+
+- id: R14
+  name: hypothetical_syllogism
+  type: hypothetical_syllogism
+  category: deduction
+  description: IF-THEN链 — INF-A→INF-B→INF-C
+  premises: ["inference_chain_length >= 2"]
+  conclusion_template: "假言链: {inf_a}→{inf_b}→{inf_c}, 推导深度{depth}"
+  confidence: 0.75

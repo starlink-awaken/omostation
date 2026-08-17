@@ -25,7 +25,7 @@ metadata-migrated-at: 2026-07-31
   │                 └─ cockpit research 存储
   │
   ├─ cockpit kairon kronos fetch <url>  # 显式摄取 CLI
-  │     └─ projects/kairon/packages/kronos
+  │     └─ projects/knowledge/kairon/packages/kronos
   │
   ├─ cockpit kairon minerva research …  # 多源搜索研究
   │     └─ SearXNG / Metaso / Exa / Scholar / arXiv / DDG
@@ -76,8 +76,8 @@ metadata-migrated-at: 2026-07-31
 
 ```bash
 # Kronos 路由计划 + 真抓取
-uv run --directory projects/kairon python -m kronos.cli route https://example.com
-uv run --directory projects/kairon python -m kronos.cli fetch https://example.com
+uv run --directory projects/knowledge/kairon python -m kronos.cli route https://example.com
+uv run --directory projects/knowledge/kairon python -m kronos.cli fetch https://example.com
 # 期望: native_http 成功，标题 Example Domain
 
 # cockpit 入口（修复后应含 kronos）
@@ -85,11 +85,11 @@ uv run --directory projects/cockpit python -m cockpit kairon kronos tools
 uv run --directory projects/cockpit python -m cockpit import https://example.com
 
 # Iris 连接器清单
-uv run --directory projects/kairon python -m iris.cli list
+uv run --directory projects/knowledge/kairon python -m iris.cli list
 # 本机实证: applenotes/github/wechat/zhihu 可用；WPS Note 401；多数需凭据
 
 # Minerva 健康
-uv run --directory projects/kairon python -m minerva.cli check
+uv run --directory projects/knowledge/kairon python -m minerva.cli check
 # 本机: Ollama ✅ · SearXNG ⚠️ · Neo4j ⚠️ · API keys 4/4
 
 # ToolBox media-crawler 入口（需 playwright）
@@ -133,7 +133,7 @@ test -f "${TOOLBOX_ROOT:-$HOME/ToolBox}/skills/last30days-skill/skills/last30day
 
 | 组件 | 命令 | 状态 |
 |------|------|------|
-| SearXNG | `cd projects/kairon/packages/minerva/docker && docker compose up -d searxng` | `minerva-searxng` **healthy**（wget spider `/`） |
+| SearXNG | `cd projects/knowledge/kairon/packages/minerva/docker && docker compose up -d searxng` | `minerva-searxng` **healthy**（wget spider `/`） |
 | Neo4j | `docker compose --profile full up -d neo4j` | `minerva-neo4j` **healthy**；默认密码 `changeme`；`minerva check` 5/5 |
 | media-crawler venv | 项目根 `.venv` + playwright | 启动 OK；**真爬**需有效登录（见 G7） |
 | iris | `iris list` | local_files/obsidian/applenotes/github 绿；见 [iris-credentials-matrix.md](./iris-credentials-matrix.md) |

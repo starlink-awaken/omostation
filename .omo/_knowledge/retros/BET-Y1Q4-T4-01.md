@@ -39,3 +39,16 @@ last-reviewed: 2026-08-09
 3. **三类标注**: positive (merged) / negative (closed-unmerged) / boundary (小改被拒或大改通过)。
 4. **来源可追溯**: 每条 source 字段 (github://.../pull/N / adjudication://ID), synthetic=false。
 5. **待办**: 若需更多负例, 扩展到其他 repo (kairon/cockpit/agora) 的 closed-unmerged PR; 可接入评测框架 (deepeval 等) 消费。
+
+
+## 2026-08-17 增补 — 事故性回退发现与恢复 (窗口提前实施指令)
+
+- **发现**: git 考古证实 #1262 (08-09) 已置 done, 但 08-11 起所有台账 commit 中
+  T4-01 均为 candidate — 08-10/11 台账重铸 (W2-01 sovereignty 系列写入期) 事故性
+  回退, 无回退理由记录。资产 (evalset-v1.json) 一直在 main 未受影响。
+- **本轮独立核实** (不信旧结论, 重新实测): 439 条 / synthetic 全 false /
+  verdict 分布 403+30+6 / 来源 PR 960-1261 + kairon 15-62 + adj-0001 /
+  source_note 明示非合成。done_when 三条全过, circuit_breaker 未触发。
+- **处置**: 恢复 done + 本增补留痕。教训入账: 台账批量重铸时 done 状态丢失
+  无 gate 拦截 — 与批次 1「干完活不落账」对称的「落了账被洗掉」, 台账对账
+  机制 (定期 git 考古 vs 当前状态) 值得立制度。

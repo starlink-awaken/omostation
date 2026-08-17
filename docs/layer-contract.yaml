@@ -18,7 +18,7 @@ layers:
 
   L2:
     name: "引擎层"
-    projects: ["kairon", "gbrain", "omo", "metaos", "omo-debt", "family-hub"]
+    projects: ["omo", "metaos", "omo-debt", "family-hub", "knowledge"]
     description: "知识引擎、治理中枢、知识数据库等"
 
   L3:
@@ -109,7 +109,7 @@ exceptions:
     files:
       - "projects/omo/src/omo/omo_governance_surfaces.py"
   - project: "omo"
-    depends_on: "kairon"
+    depends_on: "knowledge"
     reason: "ADR-0217: omo release 单测引用 kairon (test-only)"
     files:
       - "projects/omo/tests/unit/test_release.py"
@@ -124,10 +124,10 @@ exceptions:
     files:
       - "projects/runtime/scripts/check_stale_debts.py"
       - "projects/runtime/src/runtime/adapters/omo.py"
-  - project: "kairon"
+  - project: "knowledge"
     depends_on: "agora"
     reason: "ADR-0217: kairon e2e/forge/integration 调 agora (test + market + importorskip 跨包集成)"
     files:
-      - "projects/kairon/tests/test_e2e_agora.py"
-      - "projects/kairon/tests/test_integration_cross_package.py"
-      - "projects/kairon/packages/forge/src/forge/market.py"
+      - "projects/knowledge/kairon/tests/test_e2e_agora.py"
+      - "projects/knowledge/kairon/tests/test_integration_cross_package.py"
+      - "projects/knowledge/kairon/packages/forge/src/forge/market.py"

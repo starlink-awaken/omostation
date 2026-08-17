@@ -8,7 +8,7 @@ capabilities:
 - id: kairon.codeanalyze
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/codeanalyze
+  entrypoint: projects/knowledge/kairon/packages/codeanalyze
   lifecycle: active
   metadata:
     description: 'Kairon package capability: codeanalyze'
@@ -20,11 +20,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/codeanalyze
+    source: projects/knowledge/kairon/packages/codeanalyze
 - id: kairon.core-models
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/core-models
+  entrypoint: projects/knowledge/kairon/packages/core-models
   lifecycle: active
   metadata:
     description: 'Kairon package capability: core-models'
@@ -36,11 +36,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/core-models
+    source: projects/knowledge/kairon/packages/core-models
 - id: kairon.eidos
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/eidos
+  entrypoint: projects/knowledge/kairon/packages/eidos
   lifecycle: active
   metadata:
     description: 'Kairon package capability: eidos'
@@ -52,11 +52,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/eidos
+    source: projects/knowledge/kairon/packages/eidos
 - id: kairon.forge
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/forge
+  entrypoint: projects/knowledge/kairon/packages/forge
   lifecycle: active
   metadata:
     description: 'Kairon package capability: forge'
@@ -68,11 +68,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/forge
+    source: projects/knowledge/kairon/packages/forge
 - id: kairon.iris
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/iris
+  entrypoint: projects/knowledge/kairon/packages/iris
   lifecycle: active
   metadata:
     description: 'Kairon package capability: iris'
@@ -84,11 +84,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/iris
+    source: projects/knowledge/kairon/packages/iris
 - id: kairon.kos
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/kos
+  entrypoint: projects/knowledge/kairon/packages/kos
   lifecycle: active
   metadata:
     description: 'Kairon package capability: kos'
@@ -100,11 +100,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/kos
+    source: projects/knowledge/kairon/packages/kos
 - id: kairon.kronos
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/kronos
+  entrypoint: projects/knowledge/kairon/packages/kronos
   lifecycle: active
   metadata:
     description: 'Kairon package capability: kronos'
@@ -116,11 +116,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/kronos
+    source: projects/knowledge/kairon/packages/kronos
 - id: kairon.minerva
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/minerva
+  entrypoint: projects/knowledge/kairon/packages/minerva
   lifecycle: active
   metadata:
     description: 'Kairon package capability: minerva'
@@ -132,11 +132,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/minerva
+    source: projects/knowledge/kairon/packages/minerva
 - id: kairon.ontoderive
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/ontoderive
+  entrypoint: projects/knowledge/kairon/packages/ontoderive
   lifecycle: active
   metadata:
     description: 'Kairon package capability: ontoderive'
@@ -148,11 +148,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/ontoderive
+    source: projects/knowledge/kairon/packages/ontoderive
 - id: kairon.sophia
   type: package
   protocol: local
-  entrypoint: projects/kairon/packages/sophia
+  entrypoint: projects/knowledge/kairon/packages/sophia
   lifecycle: active
   metadata:
     description: 'Kairon package capability: sophia'
@@ -164,11 +164,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/kairon/packages/sophia
+    source: projects/knowledge/kairon/packages/sophia
 - id: project.gbrain
   type: capability
   protocol: local
-  entrypoint: projects/gbrain
+  entrypoint: projects/knowledge/gbrain
   lifecycle: active
   metadata:
     description: 'Workspace project capability: gbrain'
@@ -178,11 +178,11 @@ capabilities:
     - gbrain
     scenario_tags:
     - workspace-governance
-    source: projects/gbrain
+    source: projects/knowledge/gbrain
 - id: gbrain.docs
   type: capability
   protocol: local
-  entrypoint: projects/gbrain/docs
+  entrypoint: projects/knowledge/gbrain/docs
   lifecycle: active
   metadata:
     description: 'gbrain component capability: docs'
@@ -194,11 +194,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/gbrain/docs
+    source: projects/knowledge/gbrain/docs
 - id: gbrain.evals
   type: capability
   protocol: local
-  entrypoint: projects/gbrain/evals
+  entrypoint: projects/knowledge/gbrain/evals
   lifecycle: active
   metadata:
     description: 'gbrain component capability: evals'
@@ -210,11 +210,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/gbrain/evals
+    source: projects/knowledge/gbrain/evals
 - id: gbrain.examples
   type: capability
   protocol: local
-  entrypoint: projects/gbrain/examples
+  entrypoint: projects/knowledge/gbrain/examples
   lifecycle: active
   metadata:
     description: 'gbrain component capability: examples'
@@ -226,11 +226,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/gbrain/examples
+    source: projects/knowledge/gbrain/examples
 - id: gbrain.recipes
   type: capability
   protocol: local
-  entrypoint: projects/gbrain/recipes
+  entrypoint: projects/knowledge/gbrain/recipes
   lifecycle: active
   metadata:
     description: 'gbrain component capability: recipes'
@@ -242,11 +242,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/gbrain/recipes
+    source: projects/knowledge/gbrain/recipes
 - id: gbrain.scripts
   type: capability
   protocol: local
-  entrypoint: projects/gbrain/scripts
+  entrypoint: projects/knowledge/gbrain/scripts
   lifecycle: active
   metadata:
     description: 'gbrain component capability: scripts'
@@ -258,11 +258,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/gbrain/scripts
+    source: projects/knowledge/gbrain/scripts
 - id: gbrain.skills
   type: capability
   protocol: local
-  entrypoint: projects/gbrain/skills
+  entrypoint: projects/knowledge/gbrain/skills
   lifecycle: active
   metadata:
     description: 'gbrain component capability: skills'
@@ -274,11 +274,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/gbrain/skills
+    source: projects/knowledge/gbrain/skills
 - id: gbrain.src
   type: capability
   protocol: local
-  entrypoint: projects/gbrain/src
+  entrypoint: projects/knowledge/gbrain/src
   lifecycle: active
   metadata:
     description: 'gbrain component capability: src'
@@ -290,11 +290,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/gbrain/src
+    source: projects/knowledge/gbrain/src
 - id: gbrain.templates
   type: capability
   protocol: local
-  entrypoint: projects/gbrain/templates
+  entrypoint: projects/knowledge/gbrain/templates
   lifecycle: active
   metadata:
     description: 'gbrain component capability: templates'
@@ -306,11 +306,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/gbrain/templates
+    source: projects/knowledge/gbrain/templates
 - id: gbrain.test
   type: capability
   protocol: local
-  entrypoint: projects/gbrain/test
+  entrypoint: projects/knowledge/gbrain/test
   lifecycle: active
   metadata:
     description: 'gbrain component capability: test'
@@ -322,11 +322,11 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/gbrain/test
+    source: projects/knowledge/gbrain/test
 - id: gbrain.tests
   type: capability
   protocol: local
-  entrypoint: projects/gbrain/tests
+  entrypoint: projects/knowledge/gbrain/tests
   lifecycle: active
   metadata:
     description: 'gbrain component capability: tests'
@@ -338,4 +338,4 @@ capabilities:
     scenario_tags:
     - research-pipeline
     - workspace-governance
-    source: projects/gbrain/tests
+    source: projects/knowledge/gbrain/tests

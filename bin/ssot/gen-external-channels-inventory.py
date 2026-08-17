@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-KAIRON = WORKSPACE / "projects/kairon"
+KAIRON = WORKSPACE / "projects/knowledge/kairon"
 RUNTIME_SCRIPTS = WORKSPACE / "projects/runtime/scripts"
 MESH_PROPOSALS = WORKSPACE / ".omo/_knowledge/workflow-mesh/external-resource-pack-proposals"
 OUTPUT = WORKSPACE / ".omo/_truth/registry/external-channels.yaml"

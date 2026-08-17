@@ -2,7 +2,7 @@
 """pre-commit 冲突标记检测 — 防止未解决 git 冲突被提交.
 
 背景: 并发 agent merge 冲突未解决就提交 (如 SUBMODULE_DRIFT.yaml 含
-<<<<<<< HEAD) 会污染 main, 导致 check-yaml/派生文档 CI 失败.
+"<<< HEAD" 冲突段) 会污染 main, 导致 check-yaml/派生文档 CI 失败.
 
 本脚本: pre-commit 调用, 扫描 staged 文本文件是否含冲突标记.
 含则阻断 (exit 1), 提示解决冲突.
@@ -20,7 +20,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
-_MARKERS = ("<<<<<<<", ">>>>>>>", "=======")
+# git 冲突标记的 ======= 固定 7 字符; markdown Setext 标题下划线通常更长
+# (CHANGELOG/docs 常见 ============ 行), 仅 7 字符纯等号行才判冲突 (T6-01 误报修复)
+_MARKERS = ("<<<<<<<", ">>>>>>>")
+_EQ_LINE = "=" * 7
 
 
 def _staged_files() -> list[str]:
@@ -34,7 +37,7 @@ def _staged_files() -> list[str]:
             timeout=30,
             check=False,
         )
-        return [l for l in r.stdout.splitlines() if l]
+        return [line for line in r.stdout.splitlines() if line]
     except Exception:  # noqa: BLE001 — hook 失败保守放行
         return []
 
@@ -48,7 +51,10 @@ def _has_conflict_marker(path: Path) -> bool:
         text = path.read_text(encoding="utf-8", errors="ignore")
         # 冲突标记必须出现在行首 (排除代码中的字面量)
         lines = text.splitlines()
-        return any(l.startswith(m) for l in lines for m in _MARKERS)
+        if any(line.startswith(m) for line in lines for m in _MARKERS):
+            return True
+        # 行首恰好 7 个等号 (git 冲突分隔), 更长的纯等号线是 markdown Setext 标题
+        return any(line == _EQ_LINE for line in lines)
     except Exception:  # noqa: BLE001 — 读取失败跳过
         return False
 

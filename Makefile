@@ -151,19 +151,19 @@ test-cockpit:  ## 运行 cockpit 测试
 
 test-kairon: kairon-test
 kairon-test:  ## 运行 kairon 全部测试
-	cd projects/kairon && make test
+	cd projects/knowledge/kairon && make test
 
 kairon-test-fast:
-	cd projects/kairon && make test-fast
+	cd projects/knowledge/kairon && make test-fast
 
 kairon-test-diff:
-	cd projects/kairon && make test-diff
+	cd projects/knowledge/kairon && make test-diff
 
 kairon-test-e2e:
-	cd projects/kairon && make test-e2e
+	cd projects/knowledge/kairon && make test-e2e
 
 kairon-build:
-	cd projects/kairon && uv sync
+	cd projects/knowledge/kairon && uv sync
 
 lint-all: omlxc-lint kairon-lint  ## 运行全仓 Lint
 
@@ -172,7 +172,7 @@ omlxc-lint:  ## 运行 omlxc ruff + pyright 严格类型检查
 	cd projects/omlxc && uv run ruff check . && uv run pyright
 
 kairon-lint:
-	cd projects/kairon && ruff check packages/
+	cd projects/knowledge/kairon && ruff check packages/
 
 # ── 📚 SSOT 注册表与文档同步 (SSOT & Registry) ──────────────────────────────────
 

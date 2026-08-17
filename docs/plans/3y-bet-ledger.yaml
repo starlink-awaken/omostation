@@ -77,7 +77,7 @@ tracks:
     scope: 信号源注册 / iris 轮询 / 去重幂等 / 健康可见降级
     primary_write_surfaces:
     - .omo/_truth/registry/signal-sources.yaml
-    - projects/kairon/packages/iris/**
+    - projects/knowledge/kairon/packages/iris/**
     - projects/agora/**
     pasw_required: true
     default_workflow: external-adapter-sync
@@ -86,7 +86,7 @@ tracks:
     title: 认知面 / 心智模型
     scope: MOS agent_belief 三表 / SceneWatcher 有状态化 / 自主性阶梯 / 跨场景学习
     primary_write_surfaces:
-    - projects/kairon/packages/mos/**
+    - projects/knowledge/kairon/packages/mos/**
     - projects/omo/src/omo/scenewatcher.py
     - projects/omo/src/omo/model_router.py
     pasw_required: false
@@ -172,7 +172,7 @@ concurrency:
   - - T4-OUTCOME
     - T8-SURFACE
   pasw_isolated_subs:
-  - projects/gbrain
+  - projects/knowledge/gbrain
   - projects/cockpit
   - projects/agora
   claim_protocol:
@@ -729,6 +729,7 @@ bets:
   appetite: 2 weeks
   priority: P0
   status: in_progress
+  awaiting: 'human_gate 确认存量清单 (窗口提前指令: 08-21 锚点转终审 check, 实现证据已满: 6 agents/0 stale/70 claims/shadow events 81 write_ok, daemon SIGTERM 已修复, 见 retro 增补)' 
   goal: 在 T1-05 拓扑改造铺开之前, 建立不依赖共享物理 checkout 的运行时协调层 (~/agents/_shared/runtime/coordination.sqlite3,
     WAL), 承接任务认领/agent 心跳/ 跨 agent 消息, 使 D2/D3 文件锁在 T1-05 D3 阶段可被安全退役而非静默失效
   analysis_doc: docs/reports/2026-08-14-shared-runtime-coordination-gap.md
@@ -3089,7 +3090,14 @@ bets:
   title: 工程交付 dogfood 开 shadow
   appetite: 1 week
   priority: P0
-  status: in_progress
+  status: done
+  done_at: 2026-08-17
+  done_note: >-
+    窗口提前实施指令收口: dogfood-collector.py 管道建成 (#1625),
+    周产 100 条真实 decision_outcome (merge_event verdict, 幂等),
+    gate 100>=20 PASS; lifecycle=shadow 保持; 永不计入 X3 双标注
+    (scene card notes + outcome.notes). 08-19 锚点转后续验证 check
+    (连续满产复核), 不再阻塞。08-16 纠偏记录见 correction_note。
   corrected_at: 2026-08-16
   correction_note: >-
     2026-08-16 纠偏 (交接手册 §8 直查证据): MOS total_decision_outcomes=0, 周产 gate 0/20 FAIL,
@@ -3347,7 +3355,9 @@ bets:
   title: gbrain + kairon 归并为 knowledge (不可逆点)
   appetite: 6 weeks
   priority: P0
-  status: candidate
+  status: in_progress
+  implemented_at: 2026-08-16
+  awaiting: 'human_gate (L3 归并批准; 实施细节与停审理由见 retro BET-Y1Q3-T6-01)' 
   goal: 三年规划中最大一处减法 — 消除知识层双头。以「去重的 src 行数」计量, 测试不动
   non_goals:
   - 新增检索能力
@@ -3502,7 +3512,9 @@ bets:
   title: 自主性阶梯 L0-L3 判据实现
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-17
+  done_note: '核实性收口: 批次1实施+retro已落(08-09), 本轮独立实测 done_when 全过 (45 tests / rejected即降L0实测 / evidence 100 / OMO事件机制在), 零新代码' 
   goal: 把放权从"人拍脑袋"变成"数据触发", 同时实现自动降级
   non_goals:
   - 实际放权某个场景(属 T7-01)
@@ -3561,7 +3573,9 @@ bets:
   title: 并行会签 fork/join
   appetite: 2 weeks
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-17
+  done_note: '核实性收口: fork/join 在 journey-runner L490-522 + 三策略(all/majority/any, unknown兜底all) + 7 tests passed, retro 已落' 
   goal: 支持公文多方意见合并, 编排从 linear 走向真实业务形状
   non_goals:
   - 任意 DAG
@@ -3621,7 +3635,9 @@ bets:
   title: 真实评测集 v1 (≥200 条)
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-17
+  done_note: '恢复 #1262 (08-09) 被 08-11 台账重铸事故性回退的 done。本轮独立核实: evalset-v1.json 439 条全真实非合成 (PR 960-1261 + kairon 15-62 + adj-0001) >= 200; 三类齐 (positive 403/boundary 30/negative 6); 非合成标注在 source_note + 逐条 synthetic:false。circuit_breaker 未触发 (零合成)。' 
   goal: 用 adjudication 数据构建第一份非合成评测集, 替代自出题自答
   non_goals:
   - 模型训练
@@ -4884,12 +4900,12 @@ bets:
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error
-  - cmd: cd projects/gbrain && bun test
+  - cmd: cd projects/knowledge/gbrain && bun test
     expect: 全绿
   workflow: bet-execution
   underlying_workflow: project-code-change
   write_surfaces:
-  - projects/gbrain/src/**
+  - projects/knowledge/gbrain/src/**
   pasw_required: true
   depends_on: []
   risk_level: L2

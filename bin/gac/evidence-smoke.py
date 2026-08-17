@@ -227,7 +227,7 @@ def _write_health_score_evidence(score: float) -> tuple[bool, str]:
 def _check_stdio(command: list[str], svc_package: str = "") -> tuple[bool, str]:
     """stdio/mcp_stdio: 检查 --directory 存在 + -m module 可定位.
 
-    command 形如 ['uv','run','--directory','projects/kairon','python','-m','kos.cli','search']
+    command 形如 ['uv','run','--directory','projects/knowledge/kairon','python','-m','kos.cli','search']
     """
     # 路径 0: host_cli / ToolBox 外挂 — bash -lc 调本机 TOOLBOX_ROOT
     # (media-crawler / last30days / open-montage 等 capability host 入口).

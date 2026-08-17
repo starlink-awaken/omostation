@@ -5,10 +5,9 @@ KEMS Pipeline — 统一知识工程流水线
 提供 extract → fuse → index 三阶段能力。
 """
 
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, List
 import json
+from datetime import datetime
+from pathlib import Path
 
 
 class KEMPipeline:
@@ -104,7 +103,7 @@ class KEMPipeline:
 
         return fusion_report
 
-    def _get_domain_keywords(self) -> Dict[str, List[str]]:
+    def _get_domain_keywords(self) -> dict[str, list[str]]:
         """获取域关键词（可扩展）"""
         return {
             "信息化建设": ["机房", "网络", "服务器", "数据库", "系统平台"],

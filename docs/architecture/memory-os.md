@@ -142,7 +142,7 @@ MOS 增加：统一 agent 默认召回、对话记忆、巩固与遗忘；事件
 | 冒烟 | `make memory-os-smoke` · `make memory-os-asof-seed`（as_of 对照） |
 | 冷启动 | `cockpit agent-onboard` · `cockpit quickstart`（含 Memory OS 步骤） |
 
-实现：`projects/kairon/packages/mos` · 史诗复盘：`docs/operations/memory-os-epic-retro.md` · 运维：`.omo/standards/memory-os-ops.md`
+实现：`projects/knowledge/kairon/packages/mos` · 史诗复盘：`docs/operations/memory-os-epic-retro.md` · 运维：`.omo/standards/memory-os-ops.md`
 ## 11. 相关入口
 
 - Agent skill: `.agents/skills/memory-recall/SKILL.md`

@@ -106,7 +106,7 @@ def _registered_worktrees() -> list[dict[str, str]]:
 
 def _worktree_status(path: Path) -> tuple[int, str]:
     out = _run(["git", "status", "--short"], cwd=path)
-    dirty = len([l for l in out.stdout.splitlines() if l.strip()])
+    dirty = len([line for line in out.stdout.splitlines() if line.strip()])
     upstream_out = _run(["git", "rev-parse", "--abbrev-ref", "HEAD@{upstream}"], cwd=path)
     upstream = upstream_out.stdout.strip() if upstream_out.returncode == 0 else "none"
     return dirty, upstream
@@ -199,7 +199,7 @@ def _unregistered_dir_info(path: Path) -> UnregisteredDirInfo:
         branch_out = _run(["git", "branch", "--show-current"], cwd=path)
         branch = branch_out.stdout.strip() if branch_out.returncode == 0 else ""
         status_out = _run(["git", "status", "--short"], cwd=path)
-        dirty = len([l for l in status_out.stdout.splitlines() if l.strip()])
+        dirty = len([line for line in status_out.stdout.splitlines() if line.strip()])
 
     if file_count == 0:
         category = "empty_abandoned"

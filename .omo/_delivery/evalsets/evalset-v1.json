@@ -1468,7 +1468,7 @@
     {
       "id": "pr-62",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/62",
+      "source": "github://projects/knowledge/kairon/pull/62",
       "synthetic": false,
       "features": {
         "title": "feat(iris): OA-write + Bank connector (P4-T5+T6) — Phase 4 COMPLETE",
@@ -1482,7 +1482,7 @@
     {
       "id": "pr-61",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/61",
+      "source": "github://projects/knowledge/kairon/pull/61",
       "synthetic": false,
       "features": {
         "title": "feat(mos): agent_belief三表 (ADR-0396 Keystone)",
@@ -1496,7 +1496,7 @@
     {
       "id": "pr-60",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/60",
+      "source": "github://projects/knowledge/kairon/pull/60",
       "synthetic": false,
       "features": {
         "title": "retire(iris): N10 rss 连接器退役 (blogwatcher-cli 依赖缺失)",
@@ -1510,7 +1510,7 @@
     {
       "id": "pr-59",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/59",
+      "source": "github://projects/knowledge/kairon/pull/59",
       "synthetic": false,
       "features": {
         "title": "feat(iris): N5 netease+seeyon list 能力 (zlib/CDP 收编)",
@@ -1524,7 +1524,7 @@
     {
       "id": "pr-58",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/58",
+      "source": "github://projects/knowledge/kairon/pull/58",
       "synthetic": false,
       "features": {
         "title": "feat(iris): N4 universal_private connector (360° 本地源)",
@@ -1538,7 +1538,7 @@
     {
       "id": "pr-57",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/57",
+      "source": "github://projects/knowledge/kairon/pull/57",
       "synthetic": false,
       "features": {
         "title": "feat(iris): P3 收编邮箱/OA/浏览器 external.resources (16→20)",
@@ -1552,7 +1552,7 @@
     {
       "id": "pr-56",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/56",
+      "source": "github://projects/knowledge/kairon/pull/56",
       "synthetic": false,
       "features": {
         "title": "feat: expose Iris resources to external fabric discovery",
@@ -1566,7 +1566,7 @@
     {
       "id": "pr-55",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/55",
+      "source": "github://projects/knowledge/kairon/pull/55",
       "synthetic": false,
       "features": {
         "title": "feat(kems): add redacted annotation handoff packet",
@@ -1580,7 +1580,7 @@
     {
       "id": "pr-54",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/54",
+      "source": "github://projects/knowledge/kairon/pull/54",
       "synthetic": false,
       "features": {
         "title": "docs(kems): document unified model evaluation flow",
@@ -1594,7 +1594,7 @@
     {
       "id": "pr-53",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/53",
+      "source": "github://projects/knowledge/kairon/pull/53",
       "synthetic": false,
       "features": {
         "title": "feat(kems): unify model evaluation and recording",
@@ -1608,7 +1608,7 @@
     {
       "id": "pr-52",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/52",
+      "source": "github://projects/knowledge/kairon/pull/52",
       "synthetic": false,
       "features": {
         "title": "feat(kems): add model acceptance recorder",
@@ -1622,7 +1622,7 @@
     {
       "id": "pr-51",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/51",
+      "source": "github://projects/knowledge/kairon/pull/51",
       "synthetic": false,
       "features": {
         "title": "docs(kems): add adjudication operator runbook",
@@ -1636,7 +1636,7 @@
     {
       "id": "pr-50",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/50",
+      "source": "github://projects/knowledge/kairon/pull/50",
       "synthetic": false,
       "features": {
         "title": "feat(kems): add adjudication operator cli",
@@ -1650,7 +1650,7 @@
     {
       "id": "pr-49",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/49",
+      "source": "github://projects/knowledge/kairon/pull/49",
       "synthetic": false,
       "features": {
         "title": "feat(kems): sync controlled sources into adjudication queue",
@@ -1664,7 +1664,7 @@
     {
       "id": "pr-48",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/48",
+      "source": "github://projects/knowledge/kairon/pull/48",
       "synthetic": false,
       "features": {
         "title": "feat(kems): build eval manifest from adjudication database",
@@ -1678,7 +1678,7 @@
     {
       "id": "pr-47",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/47",
+      "source": "github://projects/knowledge/kairon/pull/47",
       "synthetic": false,
       "features": {
         "title": "fix(kems): default queue to versioned review scenario",
@@ -1692,7 +1692,7 @@
     {
       "id": "pr-46",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/46",
+      "source": "github://projects/knowledge/kairon/pull/46",
       "synthetic": false,
       "features": {
         "title": "feat(kems): expose versioned annotation schema",
@@ -1706,7 +1706,7 @@
     {
       "id": "pr-45",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/45",
+      "source": "github://projects/knowledge/kairon/pull/45",
       "synthetic": false,
       "features": {
         "title": "feat(kems): enforce private source annotation schema",
@@ -1720,7 +1720,7 @@
     {
       "id": "pr-44",
       "verdict": "boundary",
-      "source": "github://projects/kairon/pull/44",
+      "source": "github://projects/knowledge/kairon/pull/44",
       "synthetic": false,
       "features": {
         "title": "feat(kems): add manifest-bound candidate predictor",
@@ -1734,7 +1734,7 @@
     {
       "id": "pr-43",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/43",
+      "source": "github://projects/knowledge/kairon/pull/43",
       "synthetic": false,
       "features": {
         "title": "fix(kems): allow second independent annotator claim",
@@ -1748,7 +1748,7 @@
     {
       "id": "pr-42",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/42",
+      "source": "github://projects/knowledge/kairon/pull/42",
       "synthetic": false,
       "features": {
         "title": "feat(kems): require dual annotation before adjudication",
@@ -1762,7 +1762,7 @@
     {
       "id": "pr-41",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/41",
+      "source": "github://projects/knowledge/kairon/pull/41",
       "synthetic": false,
       "features": {
         "title": "feat(kems): bind model acceptance to evaluation manifest",
@@ -1776,7 +1776,7 @@
     {
       "id": "pr-40",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/40",
+      "source": "github://projects/knowledge/kairon/pull/40",
       "synthetic": false,
       "features": {
         "title": "feat(kems): persist model acceptance evaluations",
@@ -1790,7 +1790,7 @@
     {
       "id": "pr-39",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/39",
+      "source": "github://projects/knowledge/kairon/pull/39",
       "synthetic": false,
       "features": {
         "title": "fix(kems): make adjudication claims mutually exclusive",
@@ -1804,7 +1804,7 @@
     {
       "id": "pr-38",
       "verdict": "boundary",
-      "source": "github://projects/kairon/pull/38",
+      "source": "github://projects/knowledge/kairon/pull/38",
       "synthetic": false,
       "features": {
         "title": "feat(kems): persist human adjudication queue",
@@ -1818,7 +1818,7 @@
     {
       "id": "pr-37",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/37",
+      "source": "github://projects/knowledge/kairon/pull/37",
       "synthetic": false,
       "features": {
         "title": "feat(kems): add redacted model acceptance evaluator",
@@ -1832,7 +1832,7 @@
     {
       "id": "pr-36",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/36",
+      "source": "github://projects/knowledge/kairon/pull/36",
       "synthetic": false,
       "features": {
         "title": "feat(kems): add redacted adjudication queue builder",
@@ -1846,7 +1846,7 @@
     {
       "id": "pr-35",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/35",
+      "source": "github://projects/knowledge/kairon/pull/35",
       "synthetic": false,
       "features": {
         "title": "fix(kems): support system Python eval manifest builds",
@@ -1860,7 +1860,7 @@
     {
       "id": "pr-34",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/34",
+      "source": "github://projects/knowledge/kairon/pull/34",
       "synthetic": false,
       "features": {
         "title": "feat(kems): harden adjudicated eval manifest builder",
@@ -1874,7 +1874,7 @@
     {
       "id": "pr-33",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/33",
+      "source": "github://projects/knowledge/kairon/pull/33",
       "synthetic": false,
       "features": {
         "title": "fix(kos): support system Python datetime in graph store",
@@ -1888,7 +1888,7 @@
     {
       "id": "pr-32",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/32",
+      "source": "github://projects/knowledge/kairon/pull/32",
       "synthetic": false,
       "features": {
         "title": "feat(kems): add graph rollback and forecast persistence",
@@ -1902,7 +1902,7 @@
     {
       "id": "pr-31",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/31",
+      "source": "github://projects/knowledge/kairon/pull/31",
       "synthetic": false,
       "features": {
         "title": "feat(kems): add adjudicated eval manifest intake",
@@ -1916,7 +1916,7 @@
     {
       "id": "pr-30",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/30",
+      "source": "github://projects/knowledge/kairon/pull/30",
       "synthetic": false,
       "features": {
         "title": "feat(kems): persist OCR quality review queue",
@@ -1930,7 +1930,7 @@
     {
       "id": "pr-29",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/29",
+      "source": "github://projects/knowledge/kairon/pull/29",
       "synthetic": false,
       "features": {
         "title": "feat(kems): add shadow-only forecast contract",
@@ -1944,7 +1944,7 @@
     {
       "id": "pr-28",
       "verdict": "boundary",
-      "source": "github://projects/kairon/pull/28",
+      "source": "github://projects/knowledge/kairon/pull/28",
       "synthetic": false,
       "features": {
         "title": "feat(kems): persist redacted evaluation datasets",
@@ -1958,7 +1958,7 @@
     {
       "id": "pr-27",
       "verdict": "boundary",
-      "source": "github://projects/kairon/pull/27",
+      "source": "github://projects/knowledge/kairon/pull/27",
       "synthetic": false,
       "features": {
         "title": "feat(kems): add OMO adapter and persisted evaluation datasets",
@@ -1972,7 +1972,7 @@
     {
       "id": "pr-26",
       "verdict": "boundary",
-      "source": "github://projects/kairon/pull/26",
+      "source": "github://projects/knowledge/kairon/pull/26",
       "synthetic": false,
       "features": {
         "title": "feat(kems): persist evidence-backed graph and pipeline runs",
@@ -1986,7 +1986,7 @@
     {
       "id": "pr-25",
       "verdict": "boundary",
-      "source": "github://projects/kairon/pull/25",
+      "source": "github://projects/knowledge/kairon/pull/25",
       "synthetic": false,
       "features": {
         "title": "feat(kos): add KEMS OCR quality and evaluation contracts",
@@ -2000,7 +2000,7 @@
     {
       "id": "pr-24",
       "verdict": "boundary",
-      "source": "github://projects/kairon/pull/24",
+      "source": "github://projects/knowledge/kairon/pull/24",
       "synthetic": false,
       "features": {
         "title": "feat(kos): complete KEMS follow-up capabilities",
@@ -2014,7 +2014,7 @@
     {
       "id": "pr-23",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/23",
+      "source": "github://projects/knowledge/kairon/pull/23",
       "synthetic": false,
       "features": {
         "title": "feat(kos): add KEMS policy analysis baseline",
@@ -2028,7 +2028,7 @@
     {
       "id": "pr-22",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/22",
+      "source": "github://projects/knowledge/kairon/pull/22",
       "synthetic": false,
       "features": {
         "title": "Replace broken CLI tests with public surface coverage",
@@ -2042,7 +2042,7 @@
     {
       "id": "pr-21",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/21",
+      "source": "github://projects/knowledge/kairon/pull/21",
       "synthetic": false,
       "features": {
         "title": "Fix ProgressInfo slots to match core step consumers",
@@ -2056,7 +2056,7 @@
     {
       "id": "pr-20",
       "verdict": "boundary",
-      "source": "github://projects/kairon/pull/20",
+      "source": "github://projects/knowledge/kairon/pull/20",
       "synthetic": false,
       "features": {
         "title": "Add Minerva pipeline and triage e2e coverage",
@@ -2070,7 +2070,7 @@
     {
       "id": "pr-19",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/19",
+      "source": "github://projects/knowledge/kairon/pull/19",
       "synthetic": false,
       "features": {
         "title": "Harden OntoDerive pipeline dataclasses with slots and invariants",
@@ -2084,7 +2084,7 @@
     {
       "id": "pr-18",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/18",
+      "source": "github://projects/knowledge/kairon/pull/18",
       "synthetic": false,
       "features": {
         "title": "Wire OntoDerive derive() to validation+evolution pipeline",
@@ -2098,7 +2098,7 @@
     {
       "id": "pr-17",
       "verdict": "boundary",
-      "source": "github://projects/kairon/pull/17",
+      "source": "github://projects/knowledge/kairon/pull/17",
       "synthetic": false,
       "features": {
         "title": "Expose ToolForge MCP and fix dev mcp config",
@@ -2112,7 +2112,7 @@
     {
       "id": "pr-16",
       "verdict": "positive",
-      "source": "github://projects/kairon/pull/16",
+      "source": "github://projects/knowledge/kairon/pull/16",
       "synthetic": false,
       "features": {
         "title": "Document Kairon validation pipeline contract",
@@ -2126,7 +2126,7 @@
     {
       "id": "pr-15",
       "verdict": "boundary",
-      "source": "github://projects/kairon/pull/15",
+      "source": "github://projects/knowledge/kairon/pull/15",
       "synthetic": false,
       "features": {
         "title": "Restore ontoderive validation pipeline coverage",

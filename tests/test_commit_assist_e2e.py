@@ -77,7 +77,7 @@ def test_heuristic_subject_omo():
 
 def test_heuristic_subject_projects():
     """projects/* → refactor(submodule)"""
-    stat_lines = [" projects/kairon/src/lib.py | 10 ++++"]
+    stat_lines = [" projects/knowledge/kairon/src/lib.py | 10 ++++"]
     scope, subject = heuristic_subject("\n".join(stat_lines))
     assert scope == "refactor(submodule)", f"expected refactor(submodule), got {scope}"
 

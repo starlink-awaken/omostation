@@ -143,7 +143,7 @@ Schema field:  snake_case                                  e.g. "domain_id", "so
 | `convergence.yaml` | ✅ 全部 | ❌ 只读 | governance 独写 | 必须通过 coordinator |
 | `.omo/standards/*.md` | ✅ 全部 | ✅ 审阅后 | governance agent | coordinator 收口 |
 | `.omo/summaries/*.md` | ✅ 全部 | ✅ 任何 agent | 写后告知 coordinator | 独立写 |
-| `projects/kairon/packages/*/` | ✅ 全部 | ✅ 代码变更 | assigned developer | PR/CI |
+| `projects/knowledge/kairon/packages/*/` | ✅ 全部 | ✅ 代码变更 | assigned developer | PR/CI |
 | KOS index | ✅ 查询 | ❌ 只读通过 MCP | indexer 独写 | L2 human approval |
 | `~/.omostation/audit/` | ❌ 专有 | ✅ audit 系统 | auditor 独写 | 追加写 |
 
@@ -170,7 +170,7 @@ Schema field:  snake_case                                  e.g. "domain_id", "so
 
 ### 5.1 从旧 SSOT（v0.x）迁移
 
-Phase 1 的 ssot 包 (`projects/kairon/packages/ssot/domains/*.yaml`) 已有 7 个 domain 的 schema 骨架文件。当前 schema 文档是对这些骨架的治理层补充，不冲突。
+Phase 1 的 ssot 包 (`projects/knowledge/kairon/packages/ssot/domains/*.yaml`) 已有 7 个 domain 的 schema 骨架文件。当前 schema 文档是对这些骨架的治理层补充，不冲突。
 
 迁移建议：
 

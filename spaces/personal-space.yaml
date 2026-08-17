@@ -8,8 +8,8 @@ owners:
   governance_root: .omo
   capability_roots:
     - projects/l4-kernel
-    - projects/kairon
-    - projects/gbrain
+    - projects/knowledge/kairon
+    - projects/knowledge/gbrain
 roots:
   governance: .omo
   spaces: spaces
@@ -18,7 +18,7 @@ roots:
   knowledge: ../Documents
 routing:
   default_project: projects/l4-kernel
-  knowledge_project: projects/gbrain
+  knowledge_project: projects/knowledge/gbrain
   runtime_project: projects/runtime
 policy_refs:
   - spaces/personal-space-identity-admission.yaml

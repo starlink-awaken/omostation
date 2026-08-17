@@ -19,7 +19,7 @@ workspace:
 layers:
   L0: "协议层 (ecos)"
   L1: "运行时 (runtime / omlxc)"
-  L2: "引擎面 (kairon / gbrain / omo / metaos)"
+  L2: "引擎面 (knowledge{gbrain,kairon} / omo / metaos)"
   L3: "入口层 (cockpit 控制面; cockpit-ui 表现面, layer=L3)"
   L4: "自我层 (l4-kernel)"
   I0: "织层 (agora)"
@@ -52,54 +52,55 @@ projects:
     bos_services: 223  # live yaml 2026-08-15 (active 191/unimplemented 29/deprecated 1/other 2)
     src_dir: "src/agora/"
 
-  kairon:
+  # (kairon 已并入 knowledge — BET-Y1Q3-T6-01; 元数据移至 knowledge.kairon)
+  knowledge:
     layer: "L2"
-    stack: "Python (uv, pytest)"
-    python: ">=3.13"
-    build_backend: "hatchling"
-    version: "1.0.0"
-    role: "知识引擎 monorepo"
-    src_dir: "src/"
-    packages: 16                 # ls packages/*/ | wc -l
-    package_list:
-      - codeanalyze
-      - core-models
-      - eidos
-      - forge
-      - health-profile
-      - iris
-      - kairon-lib-events
-      - kairon-observability
-      - kairon-pipeline
-      - kairon-plugin-sdk
-      - kairon-utils
-      - kos
-      - kronos
-      - minerva
-      - ontoderive
-      - sophia
-    kos_details:
-      role: "知识检索系统 (KOS)"
-      rest_api: "http://localhost:8766"
-      endpoints: 9
-      modules:
-        - graphrag_engine (LLM推理)
-        - ontology/auto_builder (自动本体)
-        - search/ranker (排序学习)
-        - monitoring (可观测性)
-        - agent/client (Agent SDK)
-        - web/app (REST API)
-      mcp_tools: 25
-      embedding_model: "BAAI/bge-small-zh-v1.5"
-      vector_dim: 512
-
-  gbrain:
-    layer: "L2"
-    stack: "TypeScript (bun)"
-    version: "0.39.0.0"
-    build_backend: "bun"
-    role: "Postgres 知识数据库"
-    src_dir: "src/"
+    role: "知识工程复合体 · gbrain(Postgres RAG) + kairon(python 引擎 monorepo) (BET-Y1Q3-T6-01)"
+    gbrain:
+        stack: "TypeScript (bun)"
+        version: "0.39.0.0"
+        build_backend: "bun"
+        role: "Postgres 知识数据库"
+        src_dir: "src/"
+    kairon:
+        stack: "Python (uv, pytest)"
+        python: ">=3.13"
+        build_backend: "hatchling"
+        version: "1.0.0"
+        role: "知识引擎 monorepo"
+        src_dir: "src/"
+        packages: 16                 # ls packages/*/ | wc -l
+        package_list:
+            - codeanalyze
+            - core-models
+            - eidos
+            - forge
+            - health-profile
+            - iris
+            - kairon-lib-events
+            - kairon-observability
+            - kairon-pipeline
+            - kairon-plugin-sdk
+            - kairon-utils
+            - kos
+            - kronos
+            - minerva
+            - ontoderive
+            - sophia
+        kos_details:
+            role: "知识检索系统 (KOS)"
+            rest_api: "http://localhost:8766"
+            endpoints: 9
+            modules:
+                - graphrag_engine (LLM推理)
+                - ontology/auto_builder (自动本体)
+                - search/ranker (排序学习)
+                - monitoring (可观测性)
+                - agent/client (Agent SDK)
+                - web/app (REST API)
+            mcp_tools: 25
+            embedding_model: "BAAI/bge-small-zh-v1.5"
+            vector_dim: 512
 
   omo:
     layer: "L2"
@@ -348,7 +349,7 @@ archived:
 submodule_policy:
   stable:
     - projects/bus-foundation
-    - projects/kairon
+    - projects/knowledge/kairon
     - projects/l4-kernel
   feature:
     - projects/cockpit       # codex/cockpit-instance-contract
@@ -365,7 +366,6 @@ submodule_policy:
     - projects/family-hub
     - projects/model-driven
     - projects/observability
-    - projects/gbrain
   tolerance_days: 30
 
 # ── Metadata ──

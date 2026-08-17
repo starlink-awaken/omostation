@@ -5,7 +5,7 @@ on:
     tags:
       - 'v*'
     paths:
-      - 'projects/kairon/packages/*/pyproject.toml'
+      - 'projects/knowledge/kairon/packages/*/pyproject.toml'
   workflow_dispatch:
     inputs:
       package:
@@ -53,12 +53,12 @@ jobs:
         run: pip install build twine
       - name: Build package
         run: |
-          cd projects/kairon/packages/${{ matrix.package }}
+          cd projects/knowledge/kairon/packages/${{ matrix.package }}
           python -m build
       - name: Publish to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
-          cd projects/kairon/packages/${{ matrix.package }}
+          cd projects/knowledge/kairon/packages/${{ matrix.package }}
           twine upload dist/*

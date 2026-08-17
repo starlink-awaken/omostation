@@ -37,7 +37,8 @@ def test_dynamic_workflow_execution_mocked():
         ]
     }
 
-    dummy_handler = lambda params: {"passed": True, "summary": "health_check: ✅"}
+    def dummy_handler(params):
+        return {"passed": True, "summary": "health_check: ✅"}
 
     # Preset the expected decision sequence from LLM
     mock_response_1 = MagicMock()
@@ -166,7 +167,8 @@ def test_real_llm_planning_flow():
         }
     }
 
-    dummy_handler = lambda params: {"passed": True, "summary": "health_check: ✅"}
+    def dummy_handler(params):
+        return {"passed": True, "summary": "health_check: ✅"}
 
     with patch("ecos.workflow.actions.resolve_action", return_value=dummy_handler):
         from ecos.workflow.dynamic_backend import execute

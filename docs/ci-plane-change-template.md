@@ -18,7 +18,7 @@ Examples:
 All commits in this PR **must** include submodule pointer changes in the commit message body when applicable:
 
 ```
-Submodule pointers: projects/agora=<sha>, projects/cockpit=<sha>, projects/gbrain=<sha>
+Submodule pointers: projects/agora=<sha>, projects/cockpit=<sha>, projects/knowledge/gbrain=<sha>
 ```
 
 If no submodule pointers were changed, include:

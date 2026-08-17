@@ -33,9 +33,12 @@
 
 完成判据:
 - T1-05 D2 完成（多 agent 独立 clone 迁移）+ D3 删三层旧纪律
-- T6-01 归并落地（gbrain+kairon→knowledge, 不可逆点, appetite 6 周需尽早启动）
+- ~~T6-01 归并落地（gbrain+kairon→knowledge, 不可逆点, appetite 6 周需尽早启动）~~
+  ✅ **2026-08-16 提前落地**（#1600 merged, 原 6 周 appetite 压缩 1 天; L3 停审
+  awaiting human_gate; 去重 ~9.4K 行; 四坑入册 AGENT-BRIEF §8.5）
 - Y1Q3 窗口待办清偿（口径以台账实时 status 为准）
 - T2-03 done 后 T2-02 观察窗口重起算满 7 天
+- 附: Y1Q4-T3-01/T5-01 已核实性收口 done (2026-08-17, #1622)
 
 ### M3 门评审（~2026-10-08）
 

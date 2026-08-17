@@ -144,7 +144,7 @@ def check_projects_capabilities_entrypoints(
     """projects-capabilities.yaml 每个 capability entrypoint 必须存在 (死条目检出).
 
     治 metaos 拆迁遗留等: entrypoint 指向已删目录 (kairon.metaos →
-    projects/kairon/packages/metaos, metaos 2026-06-06 拆到 projects/metaos).
+    projects/knowledge/kairon/packages/metaos, metaos 2026-06-06 拆到 projects/metaos).
     通用扫所有 capability, 非仅 metaos — 一扇门覆盖整个 registry.
     """
     findings: list[dict] = []

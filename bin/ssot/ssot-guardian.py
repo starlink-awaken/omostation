@@ -304,7 +304,7 @@ def _check_bos_unimplemented() -> dict:
         # 1. 检查 package 物理目录
             pkg_dir = None
             if package:
-                # 优先在 projects/kairon/packages/ 寻找
+                # 优先在 projects/knowledge/kairon/packages/ 寻找
                 kairon_pkg = WORKSPACE_ROOT / "projects" / "kairon" / "packages" / package
                 generic_pkg = WORKSPACE_ROOT / "projects" / package
                 if kairon_pkg.exists():

@@ -18,7 +18,7 @@ last-reviewed: 2026-06-22
 ```yaml
 deliverables:
   - ".omo/_knowledge/management/decision-p30-architecture-final.md"
-  - "projects/kairon/packages/protocols-layer/src/protocols_layer/__init__.py"
+  - "projects/knowledge/kairon/packages/protocols-layer/src/protocols_layer/__init__.py"
   - "projects/omo/src/omo/omo_bos.py"
   - "scripts/release.sh"
   - "VERSION"

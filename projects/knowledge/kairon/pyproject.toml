@@ -1,0 +1,235 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kairon"
+version = "1.0.0"
+description = "Kairon — Knowledge & Research Operating Stack: ontology, research, MCP ecosystem"
+license = {text = "MIT"}
+requires-python = ">=3.13"
+authors = [
+    {name = "Workspace Team"},
+]
+maintainers = [
+    {name = "starlink-awaken"},
+]
+keywords = ["knowledge-engineering", "MCP", "research", "ontology", "agent", "LLM"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+readme = "README.md"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/starlink-awaken/omostation"
+Repository = "https://github.com/starlink-awaken/kairon"
+Documentation = "https://github.com/starlink-awaken/kairon/tree/main/docs"
+Changelog = "https://github.com/starlink-awaken/kairon/blob/main/CHANGELOG.md"
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+core-models = { workspace = true }
+codeanalyze = { workspace = true }
+kronos = { workspace = true }
+eidos = { workspace = true }
+minerva = { workspace = true }
+
+ontoderive = { workspace = true }
+forge = { workspace = true }
+kos = { workspace = true }
+iris = { workspace = true }
+kairon-utils = { workspace = true }
+kairon-plugin-sdk = { workspace = true }
+kairon-observability = { workspace = true }
+kairon-pipeline = { workspace = true }
+health-profile = { workspace = true }
+mos = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["packages/*/tests"]
+minversion = "7.0"
+addopts = "-v --tb=short -q --ignore=tests/scripts --import-mode=importlib"
+
+[tool.coverage.run]
+source = ["packages"]
+omit = ["packages/*/tests/*"]
+
+[tool.coverage.report]
+# Realistic threshold post-2026-07-26 cleanup (4 PR 删 70 0-ref module):
+# - 之前: ~19% 实际 / 70% 声明 (declarative, no CI gate)
+# - 现在: 期望 ~25% 实际 (70 files deleted = denominator smaller)
+# - 目标: 50% via incremental test additions in 2026-Q3
+fail_under = 25
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "S", "PLE", "RUF100"]
+ignore = ["S101", "S603", "S607", "S108", "S110", "S314", "S608", "E402", "E501", "SIM115", "N813", "UP047"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kairon"]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.1.0",
+]
+
+[tool.mypy]
+python_version = "3.13"
+ignore_missing_imports = true
+explicit_package_bases = true
+no_implicit_optional = false
+warn_unused_ignores = false
+show_error_codes = true
+disable_error_code = ["annotation-unchecked", "import-not-found", "import-untyped", "no-redef"]
+exclude = ["tests/", "test_.*\\.py", "packages/minerva/", "packages/sophia/"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+
+[[tool.mypy.overrides]]
+module = ["kairon_lib_events.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["health_profile.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["kairon_pipeline.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["kairon_plugin_sdk.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["kairon_utils.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["kairon_observability.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["core_models.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["ontoderive.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["kronos.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["sophia.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["iris.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["codeanalyze.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["eidos.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["forge.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["kos.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["minerva.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true

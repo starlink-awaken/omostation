@@ -8,7 +8,7 @@ def test_claim_run_requires_receipt(tmp_path):
             {},
             "run123",
             "test_actor",
-            ["projects/gbrain"],
+            ["projects/knowledge/gbrain"],
             [],
             False,
             affected_receipt=None,

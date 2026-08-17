@@ -4,7 +4,7 @@
 任务: TASK-26348641 (P0 自反馈闭环: governance停摆/mypy假绿无报警)
       + L0:CR-ENG-MYPY-TRUTH-01 (mypy 验证必须 MYPYPATH=src, 禁裸 mypy 假绿).
 
-委托 projects/kairon 的 mypy_report.py 作为真相计算器 (该工具已经按包
+委托 projects/knowledge/kairon 的 mypy_report.py 作为真相计算器 (该工具已经按包
 跑 MYPYPATH=src mypy src 收集 errors). 本 shim 只做两件事:
 
   1. 强制 MYPYPATH=src 注入到子进程环境 (防假绿)

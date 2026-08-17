@@ -14,7 +14,7 @@ Documents 是内容主权面，只持有数据、资料、信息、知识、文�
 
 KEMS 运行能力归 Workspace：
 
-- KEMS 数据模型、图存储、检索与验证：`projects/kairon/packages/kos/src/kos/kems/`
+- KEMS 数据模型、图存储、检索与验证：`projects/knowledge/kairon/packages/kos/src/kos/kems/`
 - 执行授权与编排：OMO + Workflow Mesh
 - 运行适配、调度、状态、缓存和派生物：`projects/runtime/`
 - 人类入口：Cockpit

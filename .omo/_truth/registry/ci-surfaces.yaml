@@ -842,7 +842,7 @@ workflow_triggers:
     path_filtered: true
     paths:
     - projects/agora/src/agora-services.json
-    - projects/kairon/packages/agora/agora-services.json
+    - projects/knowledge/kairon/packages/agora/agora-services.json
   - workflow: constraint-validation.yml
     triggers: [per_pr]
     path_filtered: false
@@ -907,7 +907,7 @@ workflow_triggers:
     path_filtered: true
     paths:
     - .github/workflows/kairon-ci.yml
-    - projects/kairon/**
+    - projects/knowledge/kairon/**
   - workflow: meta-model-check.yml
     triggers: [per_pr, push]
     path_filtered: true
@@ -958,7 +958,7 @@ workflow_triggers:
     triggers: [manual, push]
     path_filtered: true
     paths:
-    - projects/kairon/packages/*/pyproject.toml
+    - projects/knowledge/kairon/packages/*/pyproject.toml
   - workflow: pyright-sweep.yml
     triggers: [manual]
     path_filtered: false
