@@ -246,6 +246,7 @@ services:
   domain: capability
   uri: bos://capability/cockpit/mcp-server
   transport: stdio
+  status: active
 - action: rest-api
   description: KOS REST API v1 (9 endpoints)
   domain: memory
@@ -991,9 +992,10 @@ services:
   description: Agent Runtime 执行入口
   domain: capability
   package: agent-runtime
-  status: unimplemented
+  status: active
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/execute
+  note: 'BET-Y1Q3-T1-05: 服务实现存在 (runtime.mcp_server), 修正为 active'
 - action: list-tools
   command:
   - uv
@@ -1006,9 +1008,10 @@ services:
   description: Agent Runtime 工具列表
   domain: capability
   package: agent-runtime
-  status: unimplemented
+  status: active
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/list-tools
+  note: 'BET-Y1Q3-T1-05: 服务实现存在 (runtime.mcp_server), 修正为 active'
 - action: status
   command:
   - uv
@@ -1021,9 +1024,10 @@ services:
   description: Agent Runtime 状态
   domain: capability
   package: agent-runtime
-  status: unimplemented
+  status: active
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/status
+  note: 'BET-Y1Q3-T1-05: 服务实现存在 (runtime.mcp_server), 修正为 active'
 - action: agent-list
   command:
   - uv
@@ -1037,9 +1041,10 @@ services:
   description: Forge 集市 Agent 列表
   domain: capability
   package: forge
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://capability/forge/agent-list
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: agent-install
   command:
   - uv
@@ -1053,9 +1058,10 @@ services:
   description: Forge 集市 Agent 安装
   domain: capability
   package: forge
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://capability/forge/agent-install
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: registry
   command:
   - uv
@@ -1069,9 +1075,10 @@ services:
   description: Forge 注册表查询
   domain: capability
   package: forge
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://capability/forge/registry
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: publish
   command:
   - uv
@@ -1085,9 +1092,10 @@ services:
   description: Forge 发布入口
   domain: capability
   package: forge
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://capability/forge/publish
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: lint
   command:
   - uv
@@ -1101,9 +1109,10 @@ services:
   description: Forge Lint 检查
   domain: capability
   package: forge
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://capability/forge/lint
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: run
   description: AetherForge Swarm 多智能体任务工作流运行接口 (internal 进程内反射直调)
   domain: capability
@@ -1427,9 +1436,10 @@ services:
   description: '[UNIMPLEMENTED] Iris 连接 (POC stdio)'
   domain: analysis
   package: iris
-  status: unimplemented
+  status: deprecated
   transport: mcp_stdio
   uri: bos://analysis/iris/connect
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: transform
   command:
   - uv
@@ -1445,9 +1455,10 @@ services:
   description: '[UNIMPLEMENTED] Iris 数据转换 (POC stdio)'
   domain: analysis
   package: iris
-  status: unimplemented
+  status: deprecated
   transport: mcp_stdio
   uri: bos://analysis/iris/transform
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: validate
   command:
   - uv
@@ -1463,9 +1474,10 @@ services:
   description: '[UNIMPLEMENTED] Iris 数据校验 (POC stdio)'
   domain: analysis
   package: iris
-  status: unimplemented
+  status: deprecated
   transport: mcp_stdio
   uri: bos://analysis/iris/validate
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: summary
   command:
   - uv
@@ -1517,9 +1529,10 @@ services:
   description: '[POC] Forge 工具发现 (POC stdio)'
   domain: capability
   package: forge
-  status: unimplemented
+  status: deprecated
   transport: mcp_stdio
   uri: bos://capability/forge/discover
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: exec-tool
   command:
   - uv
@@ -1535,9 +1548,10 @@ services:
   description: '[POC] Forge 工具执行 (POC stdio)'
   domain: capability
   package: forge
-  status: unimplemented
+  status: deprecated
   transport: mcp_stdio
   uri: bos://capability/forge/exec-tool
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: list-tools
   command:
   - uv
@@ -1553,9 +1567,10 @@ services:
   description: '[POC] Forge 工具列表 (POC stdio)'
   domain: capability
   package: forge
-  status: unimplemented
+  status: deprecated
   transport: mcp_stdio
   uri: bos://capability/forge/list-tools
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: register-tool
   command:
   - uv
@@ -1571,9 +1586,10 @@ services:
   description: '[POC] Forge 工具注册 (POC stdio)'
   domain: capability
   package: forge
-  status: unimplemented
+  status: deprecated
   transport: mcp_stdio
   uri: bos://capability/forge/register-tool
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: query
   command:
   - uv
@@ -1899,9 +1915,10 @@ services:
   description: Agent 交互式对话接口
   domain: capability
   package: agent-runtime
-  status: unimplemented
+  status: active
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/chat
+  note: 'BET-Y1Q3-T1-05: 服务实现存在 (runtime.mcp_server), 修正为 active'
 - action: run-task
   command:
   - uv
@@ -1914,9 +1931,10 @@ services:
   description: Agent 任务执行接口
   domain: capability
   package: agent-runtime
-  status: unimplemented
+  status: active
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/run-task
+  note: 'BET-Y1Q3-T1-05: 服务实现存在 (runtime.mcp_server), 修正为 active'
 - action: task-status
   command:
   - uv
@@ -1929,9 +1947,10 @@ services:
   description: Agent 任务状态查询
   domain: capability
   package: agent-runtime
-  status: unimplemented
+  status: active
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/task-status
+  note: 'BET-Y1Q3-T1-05: 服务实现存在 (runtime.mcp_server), 修正为 active'
 - action: agent-list
   command:
   - uv
@@ -1944,9 +1963,10 @@ services:
   description: 列出所有可用 Agent 实例
   domain: capability
   package: agent-runtime
-  status: unimplemented
+  status: active
   transport: mcp_stdio
   uri: bos://capability/agent-runtime/agent-list
+  note: 'BET-Y1Q3-T1-05: 服务实现存在 (runtime.mcp_server), 修正为 active'
 - action: validate
   command:
   - uv
@@ -2634,6 +2654,7 @@ services:
   package: omo
   transport: inline
   uri: bos://omo/debt
+  status: active
 - action: tasks/active
   description: OMO 任务控制台与活跃任务展示
   domain: omo
@@ -2832,86 +2853,96 @@ services:
   description: AGT 策略评估与合规检查引擎 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://governance/agt/policy
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: trust
   command:
   - agent-governance-toolkit
   description: AGT 信任评分与身份验证服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://capability/agt/trust
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: sandbox
   command:
   - agent-governance-toolkit
   description: AGT 沙箱隔离与权限控制服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://capability/agt/sandbox
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: sre
   command:
   - agent-governance-toolkit
   description: AGT SRE 监控与健康检查服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://capability/agt/sre
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: mcp-security
   command:
   - agent-governance-toolkit
   description: AGT MCP 安全审计与权限检查服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://capability/agt/mcp-security
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: marketplace
   command:
   - agent-governance-toolkit
   description: AGT 能力市场与发现服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://capability/agt/marketplace
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: lightning
   command:
   - agent-governance-toolkit
   description: AGT Lightning 快速通道与缓存服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://capability/agt/lightning
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: hypervisor
   command:
   - agent-governance-toolkit
   description: AGT Hypervisor 审计哈希链与完整性验证服务 (Agent Governance Toolkit)
   domain: governance
   package: agt
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://governance/agt/hypervisor
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: inbox
   description: Apple Mail 收件箱信号采集 (BET-Y1Q1-T2-01 感知面)
   domain: perception
   package: apple_mail
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://perception/apple_mail/inbox
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - action: signal_health
   description: 信号源健康探测与降级报告
   domain: perception
   package: signal_monitor
-  status: unimplemented
+  status: deprecated
   transport: stdio
   uri: bos://perception/signal_monitor/health
+  note: 'BET-Y1Q3-T1-05: 无实现, 标 deprecated (声明诚实, 不堆积 unimplemented)'
 - domain: mof
   package: mof
   action: io
