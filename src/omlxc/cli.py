@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
+import time
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Annotated, Any, Never, cast
@@ -1779,6 +1780,93 @@ def fabric_compact(
             f"(Pruned {compaction.pruned_tokens:,} tokens)\n"
             f"Summary: [dim]{summary_txt}[/dim]",
             title="[bold #7dd3f5]Context Window Compactor & Memory Self-Healing[/bold #7dd3f5]",
+            border_style="#5a7a9a",
+            expand=False,
+        )
+    )
+
+
+@fabric_app.command("snapshot")
+def fabric_snapshot(
+    action: Annotated[str, typer.Argument(help="Action: list | create | warm")] = "list",
+    model: Annotated[str, typer.Option("--model", "-m", help="Target model ID")] = "qwen2.5-coder:14b",
+    name: Annotated[str | None, typer.Option("--name", "-n", help="Snapshot identifier")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Manage binary KV Cache snapshots and zero-overhead pre-warming states (ADR-0197)."""
+    from omlxc.dataplane.kv_snapshot import KVCacheSnapshotStore
+
+    store = KVCacheSnapshotStore()
+
+    if action == "list":
+        snapshots = store.list_snapshots(model_id=model if model != "all" else None)
+        payload = {"snapshots_count": len(snapshots), "snapshots": [s.to_dict() for s in snapshots]}
+        if json_output:
+            _emit_success(payload, request_id=_request_id())
+            return
+
+        table = Table(title="[bold #7dd3f5]KV Cache Binary Snapshot Store (0ms TTFT)[/bold #7dd3f5]", border_style="#5a7a9a")
+        table.add_column("SNAPSHOT ID", style="bold cyan")
+        table.add_column("MODEL", style="dim")
+        table.add_column("TOKENS", justify="right")
+        table.add_column("SIZE (MB)", justify="right")
+        table.add_column("STATUS", justify="center")
+
+        for s in snapshots:
+            size_mb = f"{s.size_bytes / (1024 * 1024):.1f}"
+            status = "[green]● WARM[/green]" if s.is_warm else "[yellow]○ COLD[/yellow]"
+            table.add_row(s.snapshot_id, s.model_id, f"{s.token_count:,}", size_mb, status)
+
+        _console.print(table)
+        return
+
+    if action == "create":
+        snap_id = name or f"custom-snap-{int(time.time())}"
+        rec = store.create_snapshot(snap_id, model_id=model, prefix_text="System Prompt & Policy Constraints Header")
+        if json_output:
+            _emit_success(rec.to_dict(), request_id=_request_id())
+            return
+        _console.print(f"[bold green]✔ Snapshot created & cached:[/bold green] [cyan]{rec.snapshot_id}[/cyan] ({rec.token_count} tokens)")
+        return
+
+    if action == "warm":
+        snap_id = name or "mof-governance-v3"
+        ok = store.warm_snapshot(snap_id)
+        if json_output:
+            _emit_success({"snapshot_id": snap_id, "warmed": ok}, request_id=_request_id())
+            return
+        if ok:
+            _console.print(f"[bold green]✔ Snapshot state pre-warmed into GPU memory:[/bold green] [cyan]{snap_id}[/cyan]")
+        else:
+            _console.print(f"[bold red]✖ Failed to warm snapshot:[/bold red] {snap_id}")
+        return
+
+
+@fabric_app.command("speculative-eval")
+def fabric_speculative_eval(
+    prompt: Annotated[str, typer.Argument(help="Task prompt or query to evaluate")],
+    domain: Annotated[str, typer.Option("--domain", "-d", help="Domain context")] = "general",
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Evaluate local-first speculative execution vs cloud frontier cascading (ADR-0197)."""
+    from omlxc.dataplane.speculative import SpeculativeRouter
+
+    router = SpeculativeRouter()
+    decision = router.evaluate(prompt=prompt, domain=domain)
+
+    if json_output:
+        _emit_success(decision.to_dict(), request_id=_request_id())
+        return
+
+    tier_color = "green" if decision.target_tier == "local" else ("yellow" if decision.target_tier == "hybrid-speculative" else "cyan")
+    _console.print(
+        Panel(
+            f"Target Tier: [bold {tier_color}]{decision.target_tier.upper()}[/bold {tier_color}]\n"
+            f"Recommended Model: [bold cyan]{decision.recommended_model}[/bold cyan]\n"
+            f"Draft Speculative Model: [dim]{decision.draft_model or 'None (Single-pass)'}[/dim]\n"
+            f"Estimated Speedup: [bold yellow]{decision.estimated_speedup_ratio}x[/bold yellow]\n"
+            f"Routing Rationale: [dim]{decision.reasoning}[/dim]",
+            title="[bold #7dd3f5]Speculative Execution & Hybrid Routing Engine[/bold #7dd3f5]",
             border_style="#5a7a9a",
             expand=False,
         )
