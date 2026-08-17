@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-全生态共 **27** 个 MCP 服务器, **565** 个工具。
+全生态共 **27** 个 MCP 服务器, **587** 个工具。
 
 | 服务器 | 层 | 工具数 | 传输 | 端口 | 源文件 |
 |--------|-----|--------|------|------|--------|
@@ -11,7 +11,7 @@
 | `ecos` | L0 | 28 | stdio | — | `projects/ecos/src/ecos/mcp_server.py` |
 | `ecos-integration` | L0 | 26 | stdio | — | `projects/ecos/src/ecos/services/integration/mcp_server.py` |
 | `ecos-ssot` | L0 | 9 | stdio | — | `projects/ecos/src/ecos/l0/ssot/mcp_server.py` |
-| `runtime` | L1 | 28 | stdio | — | `projects/runtime/src/runtime/mcp_server.py` |
+| `runtime` | L1 | 42 | stdio | — | `projects/runtime/src/runtime/mcp_server.py` |
 | `gbrain` | L2 | 75 | stdio | — | `projects/knowledge/gbrain/src/core/operations/exports.ts` |
 | `kos` | L2 | 44 | stdio | — | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `kos-stdio` | L2 | 44 | stdio | — | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
@@ -29,11 +29,11 @@
 | `l4-kernel` | L4 | 47 | stdio/http/sse | http:7455, sse:7456 | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `model-driven` | M0 | 28 | stdio | — | `projects/model-driven/src/model_driven/mcp_server.py` |
 | `model-driven-fastmcp` | M0 | 2 | stdio | — | `projects/model-driven/src/model_driven/fastmcp_server.py` |
-| `aetherforge` | X | 10 | stdio | — | `projects/aetherforge/src/aetherforge/mcp_server.py` |
+| `aetherforge` | X | 15 | stdio | — | `projects/aetherforge/src/aetherforge/mcp_server.py` |
 | `aetherforge-mesh` | X | 6 | stdio | — | `projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py` |
 | `family-hub` | X | 6 | stdio | — | `projects/family-hub/mcp_server.py` |
 | `aetherforge-gateway` | X | 3 | stdio | — | `projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py` |
-| `c2g` | X | 0 | stdio | — | `projects/c2g/src/c2g/mcp_server.py` |
+| `c2g` | X | 3 | stdio | — | `projects/c2g/src/c2g/mcp_server.py` |
 
 ## 工具清单
 
@@ -57,6 +57,10 @@
 
 `build_context`, `check_subscription`, `collab.add_artifact`, `collab.claim_subtask`, `collab.create_task`, `collab.get_task`, `collab.list_tasks`, `collab.update_task`, `consensus.create`, `consensus.get`, `consensus.list_expired`, `consensus.renew`, `consensus.trace`, `cross_domain_sync`, `db_vacuum`, `entity_explore`, `fact_check`, `full_sync`, `get_entity`, `get_entity_timeline`, `get_knowledge`, `get_stats`, `get_system_status`, `graph_search`, `knowledge_ask`, `list_domains`, `mcp_market_discover`, `memory_stats`, `ontology_graph`, `ontology_rebuild`, `research_now`, `research_pipeline`, `run_indexer`, `search_entity`, `search_knowledge`, `self.get_current_role`, `self.get_profile`, `self.get_vision_summary`, `semantic_scholar`, `semantic_search`, `subscribe_topic`, `sync_gbrain`, `verify_claim`, `viz_render`
 
+### runtime (46 tools)
+
+`handle_agent_chat`, `handle_agent_execute`, `handle_agent_list`, `handle_agent_list_tools`, `handle_agent_run_task`, `handle_agent_status`, `handle_agent_task_status`, `handle_brief`, `handle_documents_audit`, `handle_documents_guardrails`, `handle_domain_compliance_audit`, `handle_governance_explain`, `handle_governance_guardrails`, `handle_governance_preflight`, `handle_health`, `handle_kv_get`, `handle_matrix_list`, `handle_ontology`, `handle_pitfall_check`, `handle_protocol_get`, `handle_protocol_list`, `runtime_agent_chat`, `runtime_agent_execute`, `runtime_agent_list`, `runtime_agent_list_tools`, `runtime_agent_run_task`, `runtime_agent_status`, `runtime_agent_task_status`, `runtime_brief`, `runtime_cartridge_inspect`, `runtime_cartridge_list`, `runtime_documents_audit`, `runtime_documents_guardrails`, `runtime_domain_compliance_audit`, `runtime_governance_explain`, `runtime_governance_guardrails`, `runtime_governance_preflight`, `runtime_health`, `runtime_intent_compile`, `runtime_kv_get`, `runtime_matrix_list`, `runtime_ontology_get`, `runtime_pitfall_check`, `runtime_protocol_get`, `runtime_protocol_list`, `runtime_shadow_challenge`
+
 ### ecos (28 tools)
 
 `domain_list`, `domain_read`, `domain_resolve`, `domain_search`, `domain_stats`, `domain_tree`, `domain_validate`, `ecos_brief`, `ecos_health`, `ssot_check`, `ssot_compile`, `ssot_derive`, `ssot_evolve`, `ssot_extract`, `ssot_stats`, `ssot_sync`, `workflow_actions`, `workflow_backends`, `workflow_cache_invalidate`, `workflow_cache_status`, `workflow_circuit_breaker_reset`, `workflow_circuit_breaker_status`, `workflow_list`, `workflow_logs`, `workflow_run`, `workflow_show`, `workflow_test`, `workflow_validate`
@@ -64,10 +68,6 @@
 ### model-driven (28 tools)
 
 `adr-create`, `adr-list`, `audit-record`, `collab-assign`, `collab-create`, `collab-status`, `cross-stage-check`, `debt-register`, `lifecycle-advance`, `lifecycle-blockers`, `lifecycle-create`, `lifecycle-dashboard`, `lifecycle-status`, `model-execute`, `model-tools`, `okr-create`, `okr-progress`, `spec-create`, `spec-list`, `ssot-drift-check`, `task-create`, `trigger-dashboard`, `trigger-derive`, `trigger-drift`, `trigger-heal`, `trigger-list`, `trigger-status`, `value-roi`
-
-### runtime (28 tools)
-
-`handle_agent_chat`, `handle_agent_execute`, `handle_agent_list`, `handle_agent_list_tools`, `handle_agent_run_task`, `handle_agent_status`, `handle_agent_task_status`, `handle_brief`, `handle_health`, `handle_kv_get`, `handle_matrix_list`, `handle_ontology`, `handle_protocol_get`, `handle_protocol_list`, `runtime_agent_chat`, `runtime_agent_execute`, `runtime_agent_list`, `runtime_agent_list_tools`, `runtime_agent_run_task`, `runtime_agent_status`, `runtime_agent_task_status`, `runtime_brief`, `runtime_health`, `runtime_kv_get`, `runtime_matrix_list`, `runtime_ontology_get`, `runtime_protocol_get`, `runtime_protocol_list`
 
 ### ecos-integration (26 tools)
 
@@ -89,13 +89,13 @@
 
 `cloakbrowser`, `eidos`, `kos`, `kronos`, `kronos_browser_fetch`, `kronos_extract`, `kronos_fetch`, `kronos_insight`, `kronos_pipelines`, `kronos_plan`, `kronos_route`, `kronos_status`, `kronos_tools`, `ollama`, `vault`, `wps_note`
 
+### aetherforge (15 tools)
+
+`forge_cost_report`, `forge_fabric_compact`, `forge_fabric_inspect`, `forge_fabric_vram`, `forge_fabric_warm`, `forge_generate`, `forge_generate_mesh`, `forge_health_check`, `forge_list_nodes`, `forge_mesh_status`, `forge_swarm_run`, `forge_triage`, `forge_triage_batch`, `forge_triage_consensus`, `forge_triage_status`
+
 ### agent-runtime (14 tools)
 
 `cards_check`, `cards_status`, `chat`, `domain_context`, `domain_controller_shadow_status`, `domain_facts_audit`, `domain_facts_validation_status`, `domain_model_freshness_status`, `domain_project_status`, `domain_sanyi_status_consistency_status`, `domains_list`, `kems_status`, `run_task`, `workspace_context`
-
-### aetherforge (10 tools)
-
-`forge_cost_report`, `forge_generate`, `forge_generate_mesh`, `forge_health_check`, `forge_list_nodes`, `forge_mesh_status`, `forge_triage`, `forge_triage_batch`, `forge_triage_consensus`, `forge_triage_status`
 
 ### ecos-ssot (9 tools)
 
@@ -136,6 +136,10 @@
 ### aetherforge-gateway (3 tools)
 
 `gateway_generate`, `gateway_health`, `llm_generate`
+
+### c2g (3 tools)
+
+`c2g_bet`, `c2g_gc`, `c2g_radar`
 
 ### model-driven-fastmcp (2 tools)
 

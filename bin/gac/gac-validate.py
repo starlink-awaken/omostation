@@ -173,6 +173,41 @@ def _check_subtraction_quota(path: Path, current_rules: int) -> list[str]:
     return []
 
 
+def _check_script_quota(path: Path = REGISTRY) -> list[str]:
+    """BET-Y1Q3-T6-05: bin/ 活跃脚本减法配额 — 新增脚本须同时归档/删除一个."""
+    try:
+        import yaml
+
+        docs = [d for d in yaml.safe_load_all(path.read_text(encoding="utf-8")) if d]
+        if not docs:
+            return []
+        main = docs[-1]
+        gac = main.get("gac", {}) if isinstance(main, dict) else {}
+        quota = gac.get("subtraction_quota", {}) if isinstance(gac, dict) else {}
+        baseline = int(quota.get("script_baseline", 0) or 0)
+        if baseline <= 0:
+            return []
+        root = Path(__file__).resolve().parents[2] / "bin"
+        if not root.is_dir():
+            return []
+        active = [
+            p
+            for p in root.rglob("*")
+            if p.is_file()
+            and p.suffix in (".py", ".sh")
+            and "_archive" not in p.parts
+            and "__pycache__" not in p.parts
+        ]
+        if len(active) > baseline:
+            return [
+                f"subtraction-quota: bin/ 活跃脚本 {len(active)} 超基线 {baseline} "
+                "(新增脚本须同时归档/删除一个, BET-Y1Q3-T6-05)"
+            ]
+    except Exception:  # defensive: quota 检查失败不阻塞
+        return []
+    return []
+
+
 def validate(path: Path = REGISTRY) -> tuple[int, list[str], list[str]]:
     """主校验. 返回 (exit_code, errors, warnings)."""
     errors: list[str] = []
@@ -294,6 +329,14 @@ def main() -> int:
         errors = list(errors) + quota_errors
         print(f"\n❌ 减法配额违规 ({len(quota_errors)}):")
         for e in quota_errors:
+            print(f"  - {e}")
+
+    # BET-Y1Q3-T6-05: bin/ 脚本减法配额 (新增脚本须归档/删除一个)
+    script_quota_errors = _check_script_quota(REGISTRY)
+    if script_quota_errors:
+        errors = list(errors) + script_quota_errors
+        print(f"\n❌ 脚本减法配额违规 ({len(script_quota_errors)}):")
+        for e in script_quota_errors:
             print(f"  - {e}")
 
     if errors:

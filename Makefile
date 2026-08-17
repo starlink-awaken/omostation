@@ -56,6 +56,11 @@ help:
 	@echo "  make hygiene-worktree       审计与自动清理冗余/过期 Worktree"
 	@echo "  make hygiene-dir            检查根工作区未追踪文件与目录卫生"
 	@echo ""
+	@echo "\033[1;33m⚡️ 混沌对抗与事实大盘 (Chaos & Truth Canvas / ADR-0194):\033[0m"
+	@echo "  make chaos-drill            执行 4 项全域混沌注入与红蓝对抗演练"
+	@echo "  make chaos-drill-strict     严格模式执行混沌演练 (失败返回非 0)"
+	@echo "  make canvas-serve           启动 Dual-Plane Truth Canvas Web 事实大盘 (http://127.0.0.1:8765)"
+	@echo ""
 	@echo "\033[1;33m👁️ 智能体可观测与大盘 (Multi-Agent Observability):\033[0m"
 	@echo "  make omo-status             Multi-Agent Swarm 秒级全景 Rich Panel 快照"
 	@echo "  make omo-top                Multi-Agent Swarm 4 象限互动大盘"
@@ -436,3 +441,13 @@ mesh-orphan-cleanup:
 
 mesh-orphan-cleanup-apply:
 	python3 bin/mesh/mesh-orphan-cleanup.py --apply
+
+chaos-drill:  ## 运行全域混沌注入与红蓝对抗演练 (ADR-0194)
+	@echo "── 全域混沌注入与红蓝对抗演练 ────────────────────────────"
+	python3 bin/ssot/chaos-governance-drill.py
+
+chaos-drill-strict:  ## 严格模式运行全域混沌演练 (发现未通过项即失败)
+	python3 bin/ssot/chaos-governance-drill.py --strict
+
+canvas-serve:  ## 启动 Dual-Plane Truth Canvas Web 事实大盘 (ADR-0194)
+	uv run --project projects/ecos ecos-constraint facts serve --port 8765
