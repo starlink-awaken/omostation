@@ -387,15 +387,19 @@ class HybridSearchEngine:
 
         k=60 避免对低排名结果的过度奖励。
         """
-        k = 60
-        scores: dict[str, float] = {}
-        docs: dict[str, dict] = {}
-
+        # 动态自适应权重调节 (Adaptive Weights per Query Characteristics)
         weights = {
             "keyword": 1.0,
-            "semantic": 1.2,  # 语义结果给予轻微加权
-            "graph": 0.8,  # 图谱结果作为补充
+            "semantic": 1.2,  # 语义结果基础加权
+            "graph": 0.8,  # 图谱结果基础补充
         }
+
+        # 如果匹配到领域实体或长尾复杂中文查询，动态强化图谱与关键词权重
+        if plan.get("needs_graph") and plan.get("is_chinese"):
+            weights["graph"] = 1.15
+            weights["keyword"] = 1.10
+        elif plan.get("complexity", 1) >= 2:
+            weights["semantic"] = 1.35
 
         for source, source_results in results.items():
             weight = weights.get(source, 1.0)
