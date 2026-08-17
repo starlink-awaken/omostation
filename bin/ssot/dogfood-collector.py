@@ -4,10 +4,8 @@
 数据管道: 已 merge PR → decision_outcome/v1 (MOS agent_belief namespace)。
 
 verdict 语义 (场景定义, PR 评审即天然 human_verdict):
-  - squash merge 到 main        → human_verdict = accepted
-  - review APPROVE              → accepted (如有)
-  - closed unmerged             → rejected (有明确评论拒绝时)
-  - 其余 (open / draft)         → 不采集
+  - squash merge 到 main → human_verdict = accepted
+  - 其余 (open / draft / closed-unmerged) → 不采集 (仅 merge_event 视为 accepted)
 
 每周 ≥ 20 条 = BET-Y1Q2-T7-01 done_when 第 2 项。
 本场景产出永不计入 X3 价值指标 (non_goal, 场景卡已标注)。
@@ -23,18 +21,16 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+from _shared import append_jsonl, read_jsonl, utc_now
+
 ROOT = Path(__file__).resolve().parents[2]
-STORE = ROOT / ".omo" / "state" / "dogfood-decision-outcomes.jsonl"
+STORE = ROOT / ".omo" / "_delivery" / "outcomes" / "dogfood-decision-outcomes.jsonl"
 
 # 场景标识 — engineering-delivery-dogfood (BET-Y1Q2-T7-01)
 SCENE_ID = "engineering-delivery-dogfood"
-
-
-def _utc_now() -> str:
-    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def _run(cmd: list[str]) -> str:
@@ -68,7 +64,7 @@ def collect_merged_prs(since_spec: str) -> list[dict]:
             "--search",
             f"merged:>={iso}",
             "--json",
-            "number,title,mergedAt,additions,deletions,files",
+            "number,title,mergedAt,additions,deletions,changedFiles",
         ]
     )
     if not out:
@@ -78,15 +74,11 @@ def collect_merged_prs(since_spec: str) -> list[dict]:
 
 
 def _known_pr_numbers() -> set[int]:
-    if not STORE.exists():
-        return set()
-    known = set()
-    for line in STORE.read_text(encoding="utf-8").splitlines():
-        try:
-            known.add(json.loads(line)["payload"]["pr_number"])
-        except (json.JSONDecodeError, KeyError):
-            continue
-    return known
+    return {
+        entry["payload"]["pr_number"]
+        for entry in read_jsonl(STORE)
+        if "payload" in entry and "pr_number" in entry["payload"]
+    }
 
 
 def collect(since_spec: str, min_weekly: int) -> int:
@@ -94,11 +86,11 @@ def collect(since_spec: str, min_weekly: int) -> int:
     known = _known_pr_numbers()
     fresh = [p for p in prs if p["number"] not in known]
     STORE.parent.mkdir(parents=True, exist_ok=True)
-    now = _utc_now()
-    written = 0
-    with STORE.open("a", encoding="utf-8") as fh:
-        for p in fresh:
-            outcome = {
+    now = utc_now()
+    for p in fresh:
+        append_jsonl(
+            STORE,
+            {
                 "schema": "decision_outcome/v1",
                 "namespace": "agent_belief",
                 "scene_id": SCENE_ID,
@@ -110,16 +102,15 @@ def collect(since_spec: str, min_weekly: int) -> int:
                     "verdict_source": "merge_event",
                     "merged_at": p.get("mergedAt"),
                     "diff_size": {"additions": p.get("additions"), "deletions": p.get("deletions")},
-                    "files_changed": len(p.get("files") or []),
+                    "files_changed": p.get("changedFiles") or 0,
                 },
                 "recorded_at": now,
                 "notes": "dogfood shadow — 永不计入 X3 价值指标 (BET-Y1Q2-T7-01 non_goal)",
-            }
-            fh.write(json.dumps(outcome, ensure_ascii=False) + "\n")
-            written += 1
-    total = len(known) + written
+            },
+        )
+    total = len(known) + len(fresh)
     week = len(prs)
-    print(f"dogfood: 新增 {written} 条 (去重后), 窗口内 merged PR {week} 个, 累计 {total} 条")
+    print(f"dogfood: 新增 {len(fresh)} 条 (去重后), 窗口内 merged PR {week} 个, 累计 {total} 条")
     gate = week >= min_weekly
     print(f"周产 gate (>= {min_weekly}/周): {'PASS ✅' if gate else 'FAIL ⏳ (窗口未满, 继续观察)'}")
     return 0 if gate else 1

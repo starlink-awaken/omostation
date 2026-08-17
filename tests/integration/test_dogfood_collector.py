@@ -5,24 +5,37 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import UTC
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "bin" / "ssot"))
-
 import importlib.util  # noqa: E402
-from datetime import UTC
 
 import pytest  # noqa: E402
+
+
+def _pr(n: int) -> dict:
+    """Minimal merged-PR fixture."""
+    return {
+        "number": n,
+        "title": f"pr-{n}",
+        "mergedAt": "2026-08-16T00:00:00Z",
+        "additions": 1,
+        "deletions": 1,
+        "changedFiles": 1,
+    }
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "bin" / "ssot"))
 
 _spec = importlib.util.spec_from_file_location(
     "dogfood_collector", Path(__file__).resolve().parents[2] / "bin" / "ssot" / "dogfood-collector.py"
 )
+assert _spec is not None and _spec.loader is not None
 dc = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(dc)
 
 
 def test_parse_since_units():
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     now = datetime.now(UTC)
     assert (now - dc._parse_since("7d")).days >= 6
@@ -40,20 +53,7 @@ def test_outcome_schema(tmp_path, monkeypatch):
     """写入的每条 outcome 满足 decision_outcome/v1 契约关键字段."""
     store = tmp_path / "store.jsonl"
     monkeypatch.setattr(dc, "STORE", store)
-    monkeypatch.setattr(
-        dc,
-        "collect_merged_prs",
-        lambda s: [
-            {
-                "number": 1,
-                "title": "t",
-                "mergedAt": "2026-08-16T00:00:00Z",
-                "additions": 10,
-                "deletions": 2,
-                "files": [],
-            },
-        ],
-    )
+    monkeypatch.setattr(dc, "collect_merged_prs", lambda s: [_pr(1)])
     dc.collect("7d", min_weekly=1)
     line = json.loads(store.read_text().splitlines()[0])
     assert line["schema"] == "decision_outcome/v1"
@@ -68,10 +68,7 @@ def test_idempotent_by_pr_number(tmp_path, monkeypatch):
     """同 PR 复采不重复写 (幂等)."""
     store = tmp_path / "store.jsonl"
     monkeypatch.setattr(dc, "STORE", store)
-    prs = [
-        {"number": 42, "title": "x", "mergedAt": "2026-08-16T00:00:00Z", "additions": 1, "deletions": 1, "files": []}
-    ]
-    monkeypatch.setattr(dc, "collect_merged_prs", lambda s: prs)
+    monkeypatch.setattr(dc, "collect_merged_prs", lambda s: [_pr(42)])
     dc.collect("7d", min_weekly=1)
     dc.collect("7d", min_weekly=1)  # 第二轮同 PR
     n = len(store.read_text().splitlines())
@@ -82,14 +79,7 @@ def test_weekly_gate_threshold(tmp_path, monkeypatch, capsys):
     """gate 语义: 窗口 PR 数 < min → exit 1 (FAIL), >= min → exit 0 (PASS)."""
     store = tmp_path / "store.jsonl"
     monkeypatch.setattr(dc, "STORE", store)
-    monkeypatch.setattr(
-        dc,
-        "collect_merged_prs",
-        lambda s: [
-            {"number": i, "title": "x", "mergedAt": "2026-08-16T00:00:00Z", "additions": 1, "deletions": 1, "files": []}
-            for i in range(3)
-        ],
-    )
+    monkeypatch.setattr(dc, "collect_merged_prs", lambda s: [_pr(i) for i in range(3)])
     assert dc.collect("7d", min_weekly=20) == 1  # 3 < 20 FAIL
     assert dc.collect("7d", min_weekly=2) == 0  # 3 >= 2 PASS
 
