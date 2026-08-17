@@ -73,7 +73,19 @@ jobs:
               echo "──────────────────────────────────────────────"
               echo "🧪 Testing affected project: projects/$proj"
               echo "──────────────────────────────────────────────"
-              (cd "projects/$proj" && uv sync --quiet && uv run pytest -q --ignore=tests/e2e --ignore=tests/integration) || {
+              TEST_HOME="$RUNNER_TEMP/cascading-home/$proj"
+              mkdir -p "$TEST_HOME"
+              (
+                cd "projects/$proj" &&
+                HOME="$TEST_HOME" \
+                XDG_CONFIG_HOME="$TEST_HOME/.config" \
+                XDG_CACHE_HOME="$TEST_HOME/.cache" \
+                uv sync --quiet &&
+                HOME="$TEST_HOME" \
+                XDG_CONFIG_HOME="$TEST_HOME/.config" \
+                XDG_CACHE_HOME="$TEST_HOME/.cache" \
+                uv run pytest -q --ignore=tests/e2e --ignore=tests/integration
+              ) || {
                 echo "❌ Cascading test failed in projects/$proj"
                 exit 1
               }
