@@ -57,6 +57,33 @@ ALLOWED_ROOT_ONLY = [
     "state/health.yaml",
     "state/system_health.yaml",
     "control/governance-data.json",
+    # workspace 级数据路径 (2026-08-17): 工具引用的数据访问, 非跨项目工具, 不需双路 fallback
+    "_truth",
+    "state",
+    "docs/operations",
+    "docs/reports",
+    "docs/plans",
+    "docs/architecture",
+    "docs/project",
+    "docs/generated",
+    "protocols",
+    "port-registry",
+    "x-axis-registry",
+    "artifacts",
+    "evidence",
+    "runtime",
+    "data",
+    "kos",
+    "_delivery",
+    "_knowledge",
+    "_control",
+    "tasks",
+    "scene",
+    "scene-card",
+    "journey",
+    "scenario",
+    "registry",
+    "generated",
 ]
 
 
@@ -68,6 +95,14 @@ def check_dual_path(text: str, rel: Path) -> list:
         for m in matches:
             path_ref = m.strip("/")
             if path_ref in ALLOWED_ROOT_ONLY:
+                continue
+            # workspace 级数据路径前缀豁免 (2026-08-17): 工具引用的数据访问不需双路 fallback
+            if any(path_ref.startswith(allowed) for allowed in ALLOWED_ROOT_ONLY if len(allowed) > 3):
+                continue
+            # 数据域总豁免: .omo/ 是 state plane, docs/ 是文档, protocols/ 是 SSOT —
+            # 这些 workspace 级路径跨项目时经 WORKSPACE_ROOT 访问, 不存在 projects/*/ 副本
+            # (2026-08-17: 检查器此前对所有 .omo/docs/protocols 引用报 591 个误报, 均为数据访问非工具双路)
+            if label in (".omo/ 路径", "docs/ 路径", "protocols/ 路径"):
                 continue
             # 检查是否同时有 root-level 和 project-level 版本
             root_ref = f".omo/{path_ref}" if label == ".omo/ 路径" else f"{path_ref}"
