@@ -24,6 +24,10 @@ Before editing:
    - **Plane Separation Law**: `Documents` stores pure domain truth, SOPs, facts (`_entities/facts/`), and attachments. Prohibits executable scripts (`E-DOC-001` / `X4-C15`) and runtime dependency/cache directories (`E-DOC-002` / `X4-C16`). `Workspace` stores code, CLIs, MCP servers, daemons, and CI gates.
    - **Cockpit Documents Gateways**: Multi-client IDEs (Zed, Cursor, Codex, Claude Desktop) mount isolated, read-only/append-safe Documents MCP services with explicit domain scoping.
    - **CLI & FastMCP Tools**: `ecos-constraint documents audit [path]`, `ecos-constraint documents guardrail [--domain <dom>]`, `ecos-constraint documents sync-clients`, and FastMCP `runtime_documents_guardrails` / `runtime_documents_audit`.
+11. **Domain Agent Truth Extraction & Weekly Hygiene Patrol (ADR-0192)** — Structured domain fact schemas, long-running agent compute self-healing, and 6-pillar automated governance patrol.
+    - **Domain Truth SSOT**: All business facts reside in `_entities/facts/*.yaml` (Weijian & Transfer projects) with 14-day freshness SLA (`E-DOC-004`).
+    - **Compute Fabric Self-Healing**: 0ms TTFT prefix pre-warming (`make fabric-warm`) + ContextCompactor sliding-window distillation preserving recent turns under memory limits.
+    - **Automated Hygiene Patrol**: Run `make hygiene-patrol` (or `ecos-constraint patrol`) for multi-domain drift, documents cleanliness, facts schema, IDE sync, and compute health checks.
 
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
 
