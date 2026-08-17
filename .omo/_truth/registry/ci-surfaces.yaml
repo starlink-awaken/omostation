@@ -194,6 +194,22 @@ surfaces:
     gate: false
     triggers: [manual, per_pr, push, scheduled]
     status: active
+  - id: bin-ssot-root-directory-governance-scan-py
+    tool: bin/ssot/root-directory-governance-scan.py
+    workflow: gac-gate.yml
+    also_in: [governance-check.yml]
+    gate: true
+    triggers: [per_pr, push, scheduled]
+    status: active
+    note: Root-owned guard for untracked or unregistered root shadow surfaces.
+  - id: bin-ssot-bin-scripts-convergence-audit-py
+    tool: bin/ssot/bin-scripts-convergence-audit.py
+    workflow: gac-gate.yml
+    also_in: [governance-check.yml]
+    gate: true
+    triggers: [per_pr, push, scheduled]
+    status: active
+    note: Manifest/execution parity guard for bin/scripts convergence.
   - id: bin-gac-gac-mesh-router-py
     tool: bin/gac/gac-mesh-router.py
     workflow: (none)

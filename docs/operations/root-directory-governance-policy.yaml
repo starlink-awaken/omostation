@@ -1,0 +1,29 @@
+version: 1
+scope: workspace-root
+
+# Root directories that are ignored by Git but are legitimate runtime,
+# cache, generated, or local-machine surfaces. Any other ignored root
+# directory is treated as an unregistered shadow surface.
+allowed_ignored_dirs:
+  - .codebase-memory
+  - .pytest_cache
+  - .ruff_cache
+  - .serena
+  - .venv
+  - .worktrees
+  - .subtrees
+  - agent-runtime
+  - artifacts
+  - archive-*
+  - config
+  - data
+  - kos
+  - locks
+  - runtime
+  - scratch
+  - spaces
+
+rules:
+  untracked_non_ignored: fail
+  ignored_not_registered: fail
+  tracked_missing_governance_entry: warn

@@ -306,6 +306,21 @@ DEFAULT_POLICY = {
 POLICY = load_sgf_policy() or DEFAULT_POLICY
 GATES_LIST = list(POLICY.get("gates", DEFAULT_POLICY["gates"]))
 
+# Root-owned convergence and root-directory guards are intentionally appended outside
+# the ecos submodule policy so a submodule update cannot silently remove them.
+for _root_gate in (
+    {
+        "id": "root-directory-governance",
+        "command": ["bin/ssot/root-directory-governance-scan.py", "--check", "--json"],
+    },
+    {
+        "id": "bin-scripts-convergence-audit",
+        "command": ["bin/ssot/bin-scripts-convergence-audit.py", "--check", "--json"],
+    },
+):
+    if not any(gate.get("id") == _root_gate["id"] for gate in GATES_LIST):
+        GATES_LIST.append(_root_gate)
+
 # Root-owned document governance is intentionally appended outside the ecos
 # submodule policy so a submodule update cannot silently remove the gate.
 if not any(gate.get("id") == "doc-governance" for gate in GATES_LIST):
