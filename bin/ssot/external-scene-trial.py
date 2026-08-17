@@ -96,8 +96,7 @@ def _trial_plan(plan: Mapping[str, Any], scene_card: Mapping[str, Any]) -> dict[
     if metric_result["direction"] not in {"increase", "decrease", "target", "binary"}:
         raise SceneTrialInputError("metric.direction is unsupported")
     if metric_result["target"] is not None and (
-        isinstance(metric_result["target"], bool)
-        or not isinstance(metric_result["target"], (int, float))
+        isinstance(metric_result["target"], bool) or not isinstance(metric_result["target"], (int, float))
     ):
         raise SceneTrialInputError("metric.target must be numeric")
     minimum_samples = sample_plan.get("minimum_samples")
@@ -117,11 +116,12 @@ def _trial_plan(plan: Mapping[str, Any], scene_card: Mapping[str, Any]) -> dict[
             plan.get("preflight_ref") or f"ref://external-scene-trial/preflight/{_digest(plan)[:24]}",
             "preflight_ref",
         ),
-        "catalog_observation_id": _text(
-            plan.get("catalog_observation_id"), "catalog_observation_id", max_length=240
-        ),
+        "catalog_observation_id": _text(plan.get("catalog_observation_id"), "catalog_observation_id", max_length=240),
         "metric": metric_result,
-        "sample_plan": {"minimum_samples": minimum_samples, "window_seconds": window_seconds},
+        "sample_plan": {
+            "minimum_samples": minimum_samples,
+            "window_seconds": window_seconds,
+        },
         "rollback_ref": _opaque(plan.get("rollback_ref"), "rollback_ref"),
     }
 
@@ -138,7 +138,8 @@ def build_scene_trial(
 ) -> dict[str, Any]:
     intake_module = _load_module(root / "bin/ssot/scene-card-intake.py", "scene_card_intake_for_trial")
     preflight_module = _load_module(
-        root / "bin/ssot/external-activation-preflight.py", "external_preflight_for_trial"
+        root / "bin/ssot/external-activation-preflight.py",
+        "external_preflight_for_trial",
     )
     intake = intake_module.build_intake(dict(scene_card))
     preflight = preflight_module.build_preflight(dict(scene_card), dict(catalog), now=now)
@@ -204,7 +205,12 @@ def build_scene_trial(
             "activation_attempted": False,
         },
     }
-    return {"schema": "external-scene-trial-result/v1", "status": "proposal_only", "trial": trial, "preflight": preflight}
+    return {
+        "schema": "external-scene-trial-result/v1",
+        "status": "proposal_only",
+        "trial": trial,
+        "preflight": preflight,
+    }
 
 
 def _run_omo(root: Path, payload: Mapping[str, Any]) -> dict[str, Any]:
@@ -212,7 +218,14 @@ def _run_omo(root: Path, payload: Mapping[str, Any]) -> dict[str, Any]:
     omo_src = str(root / "projects/omo/src")
     environment["PYTHONPATH"] = f"{omo_src}{os.pathsep}{environment.get('PYTHONPATH', '')}".rstrip(os.pathsep)
     completed = subprocess.run(
-        [sys.executable, "-m", "omo.cli", "external-resources", "record-scene-trial", "--stdin"],
+        [
+            sys.executable,
+            "-m",
+            "omo.cli",
+            "external-resources",
+            "record-scene-trial",
+            "--stdin",
+        ],
         cwd=root,
         env=environment,
         input=json.dumps(payload, ensure_ascii=False, sort_keys=True),

@@ -53,12 +53,14 @@ def load_adrs(decisions_dir: Path) -> list[dict]:
         except Exception:
             fm = {}
 
-        adrs.append({
-            "number": number,
-            "file": f.name,
-            "status": fm.get("status", "unknown"),
-            "lifecycle": fm.get("lifecycle", "unknown"),
-        })
+        adrs.append(
+            {
+                "number": number,
+                "file": f.name,
+                "status": fm.get("status", "unknown"),
+                "lifecycle": fm.get("lifecycle", "unknown"),
+            }
+        )
     return adrs
 
 
@@ -152,6 +154,7 @@ def main() -> int:
 
     # 先跑 adr-drift-check
     import subprocess
+
     drift_bin = root / "bin" / "adr" / "adr-drift-check.py"
     if not drift_bin.exists():
         print(f"❌ {drift_bin} 不存在")
@@ -159,7 +162,10 @@ def main() -> int:
 
     r = subprocess.run(
         ["python3", str(drift_bin), "--json"],
-        cwd=str(root), capture_output=True, text=True, timeout=60,
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     if r.returncode not in (0, 1):  # 工具允许 exit 0/1
         print(f"❌ adr-drift-check 失败: {r.stderr[:200]}")

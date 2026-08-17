@@ -5,22 +5,34 @@ Usage:
   python3 bin/ssot/doc-generator.py --template forward_notice --context '{"title":"转发通知"}'
   python3 bin/ssot/doc-generator.py --list
 """
+
 from __future__ import annotations
+
 import argparse
 import json
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent))
-from _shared import utc_now
 from _llm_helper import llm_ask
+from _shared import utc_now
 
 DRAFTS_DIR = Path.home() / "Documents" / "@工作文档" / "卫健委" / "_drafts"
-TEMPLATES = {"forward_notice": "转发上级通知", "data_collection": "数据收集表格", "summary_report": "汇总报告", "meeting_notice": "会议通知", "work_plan": "工作计划"}
+TEMPLATES = {
+    "forward_notice": "转发上级通知",
+    "data_collection": "数据收集表格",
+    "summary_report": "汇总报告",
+    "meeting_notice": "会议通知",
+    "work_plan": "工作计划",
+}
 
 
 def generate_doc(template: str, context: dict) -> str:
     desc = TEMPLATES.get(template, template)
-    response = llm_ask(f"你是卫健委公文写作助手。根据以下信息生成{desc}草稿(Markdown格式,含标题/主送/正文/落款):\n{json.dumps(context, ensure_ascii=False)[:500]}", timeout=60.0)
+    response = llm_ask(
+        f"你是卫健委公文写作助手。根据以下信息生成{desc}草稿(Markdown格式,含标题/主送/正文/落款):\n{json.dumps(context, ensure_ascii=False)[:500]}",
+        timeout=60.0,
+    )
     return response or f"# {desc} (生成失败)"
 
 

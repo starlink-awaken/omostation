@@ -11,7 +11,7 @@
 
 import sys
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -28,6 +28,7 @@ def main() -> int:
 
     try:
         import yaml
+
         text = GOV_PATH.read_text(encoding="utf-8")
         docs = list(yaml.safe_load_all(text))
         gac = None
@@ -74,7 +75,7 @@ def main() -> int:
         issues.append(f"CI 步骤 {ci_steps} < 预期最小值 {min_expected} (active={len(active)})")
 
     # 5. 过期 draft
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for r in draft:
         created = r.get("created_at")
         if created and isinstance(created, str):

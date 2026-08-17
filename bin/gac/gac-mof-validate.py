@@ -23,17 +23,7 @@ import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-M2 = (
-    WORKSPACE
-    / "projects"
-    / "ecos"
-    / "src"
-    / "ecos"
-    / "ssot"
-    / "mof"
-    / "m2"
-    / "gac_rule.yaml"
-)
+M2 = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m2" / "gac_rule.yaml"
 REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
 
 
@@ -104,9 +94,7 @@ def validate_rule_m2(rule: dict, m2_fields: dict, idx: int) -> list[str]:
             if item_values and isinstance(val, list):
                 for v in val:
                     if v not in item_values:
-                        errors.append(
-                            f"{rid}: {fname} item '{v}' 不在 M2 item_values {item_values}"
-                        )
+                        errors.append(f"{rid}: {fname} item '{v}' 不在 M2 item_values {item_values}")
         elif ftype == "string":
             pattern = fspec.get("pattern")
             if pattern and not re.match(pattern, str(val)):

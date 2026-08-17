@@ -24,7 +24,7 @@ class EidosAdapter:
 
     def _check_eidos(self) -> bool:
         try:
-            import eidos  # noqa: F401
+            import eidos
 
             return True
         except ImportError:

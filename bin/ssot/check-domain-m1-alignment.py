@@ -13,6 +13,7 @@ Exit codes:
     0 - aligned (or warnings only)
     1 - misalignment detected (--strict only)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,6 +23,7 @@ from pathlib import Path
 
 try:
     import yaml
+
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
@@ -91,19 +93,23 @@ def check_alignment() -> dict:
             m1 = load_yaml(f)
             if "layer" in m1:
                 layers.add(str(m1["layer"]))
-        aligned.append({
-            "id": pid,
-            "registry_layer": proj_layer,
-            "m1_layers": sorted(layers),
-            "m1_paths": [str(f.relative_to(WORKSPACE)) for f in m1_files],
-        })
+        aligned.append(
+            {
+                "id": pid,
+                "registry_layer": proj_layer,
+                "m1_layers": sorted(layers),
+                "m1_paths": [str(f.relative_to(WORKSPACE)) for f in m1_files],
+            }
+        )
         # Check layer drift
         if proj_layer and layers and proj_layer not in layers:
-            layer_drift.append({
-                "id": pid,
-                "registry": proj_layer,
-                "m1": sorted(layers),
-            })
+            layer_drift.append(
+                {
+                    "id": pid,
+                    "registry": proj_layer,
+                    "m1": sorted(layers),
+                }
+            )
 
     return {
         "m1_type_counts": m1_types,

@@ -12,6 +12,7 @@ Usage:
   python3 bin/delivery/shared-context-cli.py retrieve-kos --query collab.handoff \\
     --db kos/kos-index.sqlite
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,7 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from shared_context_store import (  # noqa: E402
+from shared_context_store import (
     FileSharedContextStore,
     default_store_root,
     kos_retrieve,

@@ -4,6 +4,7 @@
   复用 case ≥3: write/read 跨 agent / readers 限定可见 / list_visible 聚合
   隔离: scope 边界 (scope-a 不串 scope-b) + readers 隔离 + writer 永可见
 """
+
 from __future__ import annotations
 
 import sys
@@ -12,7 +13,7 @@ from pathlib import Path
 _DELIVERY = Path(__file__).resolve().parent.parent / "bin" / "delivery"
 sys.path.insert(0, str(_DELIVERY))
 
-from shared_context_store import FileSharedContextStore  # noqa: E402
+from shared_context_store import FileSharedContextStore
 
 
 def test_reuse1_cross_agent_write_read(tmp_path):

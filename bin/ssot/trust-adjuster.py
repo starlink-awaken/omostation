@@ -21,7 +21,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from pathlib import Path
 from typing import Any
 
 from _shared import ROOT, load_yaml
@@ -34,6 +33,7 @@ def _get_manager():
     if OMO_SRC not in sys.path:
         sys.path.insert(0, OMO_SRC)
     from omo.omo_belief import MOSBeliefManager
+
     return MOSBeliefManager(root=ROOT)
 
 
@@ -88,24 +88,28 @@ def check_promotion() -> dict[str, Any]:
         action_calibs = [c for c in calibrations if action_type in str(c.get("capability_ref", ""))]
         recent_3 = action_calibs[-3:] if len(action_calibs) >= 3 else []
         if recent_3 and all(float(c.get("success_rate", 0)) >= 0.8 for c in recent_3):
-            promotions.append({
-                "action_type": action_type,
-                "reason": f"3+ consecutive approvals (rate≥0.8)",
-                "from": "graylist",
-                "to": "whitelist",
-            })
+            promotions.append(
+                {
+                    "action_type": action_type,
+                    "reason": "3+ consecutive approvals (rate≥0.8)",
+                    "from": "graylist",
+                    "to": "whitelist",
+                }
+            )
 
     for item in matrix.get("whitelist", []):
         action_type = item.get("action_type", "")
         action_calibs = [c for c in calibrations if action_type in str(c.get("capability_ref", ""))]
         recent_2 = action_calibs[-2:] if len(action_calibs) >= 2 else []
         if recent_2 and all(float(c.get("success_rate", 0)) < 0.5 for c in recent_2):
-            demotions.append({
-                "action_type": action_type,
-                "reason": f"2+ consecutive rejections (rate<0.5)",
-                "from": "whitelist",
-                "to": "graylist",
-            })
+            demotions.append(
+                {
+                    "action_type": action_type,
+                    "reason": "2+ consecutive rejections (rate<0.5)",
+                    "from": "whitelist",
+                    "to": "graylist",
+                }
+            )
 
     return {
         "promotions": promotions,

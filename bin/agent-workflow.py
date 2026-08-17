@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Executable agent workflow runner for project-level governance."""
+
 from __future__ import annotations
 
 import sys
@@ -11,107 +12,9 @@ sys.path.insert(0, str(WORKSPACE / "projects/omo/src"))
 
 from omo.workflow import (
     WORKSPACE,
-    REGISTRY_PATH,
-    AGENT_CLIS_PATH,
-    AGORA_BOS_REGISTRY_PATH,
-    AGCP_MOF_WORKFLOW_PATH,
-    AGCP_MOF_BOSROUTE_PATH,
-    AGCP_BOS_ROUTES,
-    MOF_MODEL_PATH_PATTERN,
-    MOF_DIFF_CHECK_IDS,
-    ADAPTER_AUTHORITIES,
-    INTEGRATION_AUTHORITIES,
-    CLAIM_POLICY_MODES,
-    RUN_UPDATE_LOCK_TIMEOUT_SECONDS,
-    WorkflowError,
-    SafeFormatDict,
-    utc_now,
     load_registry,
-    is_default_registry_path,
-    load_yaml_document_with,
-    workflow_by_id,
-    workflow_roles,
-    validate_agent_profile,
-    context_from_args,
-    substitute,
-    command_display,
-    normalize_repo_path,
-    changed_files_from_git,
-    path_matches,
-    display_path,
-    run_state_dir,
-    lock_state_dir,
-    ledger_path,
-    workflow_rows,
-    agent_rows,
-    integration_rows,
-    adapter_rows,
-    diff_check_rows,
-    validate_command,
-    agcp_drift_findings,
-    agcp_drift_check,
-    lint_registry,
-    print_lint,
-    workflow_plan,
-    print_plan,
-    run_stage,
-    sanitize_lock_name,
-    run_update_lock,
-    append_ledger_event,
-    acquire_locks,
-    release_locks,
-    prune_stale_locks,
-    scan_locks,
-    run_file_for,
-    start_run,
-    spawn_run,
-    trace_attribution,
-    read_run,
-    write_run,
-    claim_run,
-    close_run,
-    closeout_run,
-    run_check_command,
-    normalize_claim_mode,
-    claim_policy,
-    claimed_paths,
-    claim_covers_path,
-    claim_coverage_report,
-    build_verify_report,
-    print_verify_report,
-    parse_utc_timestamp,
-    build_observe_report,
-    observe,
-    ledger_events,
-    p74_solidification_report,
-    compliance_report,
-    print_compliance_report,
-    last_ledger_event,
-    staged_lane_report,
-    recommended_next,
-    build_status_report,
-    print_status_report,
-    run_doctor_check,
-    build_doctor_report,
-    print_doctor_report,
-    doctor,
-    health_summary,
-    check_summary,
-    suggest_workflows,
-    _profile_hint,
-    suggest_command,
-    select_diff_checks,
-    list_workflows,
-    list_agents,
-    list_integrations,
-    list_adapters,
-    handoff_markdown,
-    bootstrap_report,
-    print_bootstrap_report,
-    build_parser,
     main,
 )
-
 from omo.workflow import cli as _wf_cli
 from omo.workflow import diagnostics as _wf_diag
 from omo.workflow import info as _wf_info
@@ -120,8 +23,7 @@ from omo.workflow import lifecycle as _wf_life
 _PLAN_DIR = WORKSPACE / "bin" / "plan"
 if str(_PLAN_DIR) not in sys.path:
     sys.path.insert(0, str(_PLAN_DIR))
-import chain_bind  # noqa: E402
-
+import chain_bind
 
 _PENDING_BET = ""
 _ORIG_START = _wf_life.start_run
@@ -278,13 +180,11 @@ def wrapped_main(argv: list[str] | None = None) -> int:
         verdict = chain_bind.start_requires_bet(workflow_id, bet_id)
         if not verdict.ok:
             print(
-                "agent-workflow: requirement-iteration start requires "
-                f"--bet <BET-ID> ({', '.join(verdict.reasons)})",
+                f"agent-workflow: requirement-iteration start requires --bet <BET-ID> ({', '.join(verdict.reasons)})",
                 file=sys.stderr,
             )
             print(
-                "  exempt: observer-audit, or "
-                f"{chain_bind.GATE_ENV}=0 recorded waiver",
+                f"  exempt: observer-audit, or {chain_bind.GATE_ENV}=0 recorded waiver",
                 file=sys.stderr,
             )
             return 1
@@ -300,8 +200,7 @@ def wrapped_main(argv: list[str] | None = None) -> int:
                 verdict = chain_bind.evaluate_closeout(payload, WORKSPACE, status=status)
                 if not verdict.ok:
                     print(
-                        "agent-workflow: closeout blocked by vision→retro chain "
-                        f"({', '.join(verdict.reasons)})",
+                        f"agent-workflow: closeout blocked by vision→retro chain ({', '.join(verdict.reasons)})",
                         file=sys.stderr,
                     )
                     print(

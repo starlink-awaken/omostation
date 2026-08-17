@@ -153,7 +153,7 @@ def _try_web_search(query: str, timeout: int = 10) -> list[dict]:
 # ═══════════════════════════════════════════════════
 
 
-from kronos.fetcher.browser import _try_cloakbrowser, _try_playwright  # type: ignore[import-not-found]  # noqa
+from kronos.fetcher.browser import _try_cloakbrowser, _try_playwright  # type: ignore[import-not-found]
 
 
 def _extract_title(html: str) -> str:

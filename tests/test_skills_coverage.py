@@ -7,6 +7,7 @@ TestSkill 策略 (P73 truth-driven, 非 LLM 对比避免 API 成本):
 
 首批: ci-red-triage (P75). 后续可扩其他 skill.
 """
+
 from __future__ import annotations
 
 import sys
@@ -59,7 +60,7 @@ def test_ci_red_triage_coverage() -> None:
     assert "p75" in content.lower(), "缺 P75 pattern 引用"
 
     print("✅ ci-red-triage skill coverage PASS:")
-    print(f"   6 层分类 + 7 陷阱 + 4 工具 + 真假区分 + 3 合并条件 + 决策树 + 反模式 + pattern 引用")
+    print("   6 层分类 + 7 陷阱 + 4 工具 + 真假区分 + 3 合并条件 + 决策树 + 反模式 + pattern 引用")
 
 
 def main() -> int:

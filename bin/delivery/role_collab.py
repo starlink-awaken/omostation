@@ -3,13 +3,14 @@
 Implements G-DEL.2a message handshake; measures collab completion rate > 95%
 (BET-664e3). Not multi-host.
 """
+
 from __future__ import annotations
 
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
-
+from typing import Any
 
 MessageHandler = Callable[["CollabMessage"], None]
 
@@ -169,7 +170,7 @@ def measure_collab_completion_rate(*, n_runs: int = 200, inject_fail_every: int 
         if r.completed:
             ok += 1
     rate = ok / n_runs if n_runs else 0.0
-    from caliber import stamp_non_physical_goal  # noqa: PLC0415
+    from caliber import stamp_non_physical_goal
 
     return stamp_non_physical_goal(
         {

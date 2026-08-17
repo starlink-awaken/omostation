@@ -123,8 +123,7 @@ def render_index(rows: list[dict]) -> str:
     for row in rows:
         ratio = row["suppression_ratio"]
         lines.append(
-            f"| {row['date']} | [{row['rel_path']}]({row['rel_path']}) | "
-            f"{row['total_errors']} | {ratio:.3f} |"
+            f"| {row['date']} | [{row['rel_path']}]({row['rel_path']}) | {row['total_errors']} | {ratio:.3f} |"
         )
     lines.append(FOOTER.rstrip())
     return "\n".join(lines).rstrip() + "\n"

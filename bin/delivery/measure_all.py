@@ -4,6 +4,7 @@
 Default harness is in-process multi-node simulation (ADR-0225).
 Official G-DEL.1/3 meets_gate requires physical_multi_host — sim cannot pass it.
 """
+
 from __future__ import annotations
 
 import json
@@ -13,12 +14,12 @@ from pathlib import Path
 # allow running as script from bin/delivery
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from caliber import ENV_CLASS_SIM  # noqa: E402
-from scheduler import measure_schedule_success_rate  # noqa: E402
-from role_collab import measure_collab_completion_rate  # noqa: E402
-from state_sync import measure_sync_latency  # noqa: E402
-from emergence import measure_emergence_accuracy  # noqa: E402
-from role_memory import measure_role_memory_share  # noqa: E402
+from caliber import ENV_CLASS_SIM
+from emergence import measure_emergence_accuracy
+from role_collab import measure_collab_completion_rate
+from role_memory import measure_role_memory_share
+from scheduler import measure_schedule_success_rate
+from state_sync import measure_sync_latency
 
 
 def main() -> int:
@@ -40,24 +41,17 @@ def main() -> int:
     # Force G-DEL.1 sim stamp to reflect BLOCKED (cannot official-pass with 0 hosts)
     g1 = report["g_del_1"]
     g1["gate_status"] = "BLOCKED"
-    g1["blocked_reason"] = (
-        "sim harness only; reachable_physical_hosts known < 4 (ADR-0226 fail-closed)"
-    )
+    g1["blocked_reason"] = "sim harness only; reachable_physical_hosts known < 4 (ADR-0226 fail-closed)"
     g1["min_physical_hosts"] = 4
 
     physical_keys = ("g_del_1", "g_del_3")
     local_keys = ("g_del_2b", "g_del_4", "g_del_5b")
     report["all_sim_harness_pass"] = all(
-        report[k].get("meets_sim_harness")
-        for k in ("g_del_1", "g_del_2b", "g_del_3", "g_del_4", "g_del_5b")
+        report[k].get("meets_sim_harness") for k in ("g_del_1", "g_del_2b", "g_del_3", "g_del_4", "g_del_5b")
     )
-    report["all_physical_gates_pass"] = all(
-        report[k].get("meets_physical_gate") for k in physical_keys
-    )
+    report["all_physical_gates_pass"] = all(report[k].get("meets_physical_gate") for k in physical_keys)
     report["all_local_gates_pass"] = all(report[k].get("meets_gate") for k in local_keys)
-    report["all_gates_pass"] = (
-        report["all_physical_gates_pass"] and report["all_local_gates_pass"]
-    )
+    report["all_gates_pass"] = report["all_physical_gates_pass"] and report["all_local_gates_pass"]
     print(json.dumps(report, indent=2, ensure_ascii=False))
     if not report["all_sim_harness_pass"]:
         return 1

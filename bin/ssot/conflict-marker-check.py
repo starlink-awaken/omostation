@@ -12,6 +12,7 @@
 
 返回: 0 = 无冲突标记; 1 = 检测到 (阻断).
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -38,7 +39,7 @@ def _staged_files() -> list[str]:
             check=False,
         )
         return [line for line in r.stdout.splitlines() if line]
-    except Exception:  # noqa: BLE001 — hook 失败保守放行
+    except Exception:
         return []
 
 
@@ -55,7 +56,7 @@ def _has_conflict_marker(path: Path) -> bool:
             return True
         # 行首恰好 7 个等号 (git 冲突分隔), 更长的纯等号线是 markdown Setext 标题
         return any(line == _EQ_LINE for line in lines)
-    except Exception:  # noqa: BLE001 — 读取失败跳过
+    except Exception:
         return False
 
 

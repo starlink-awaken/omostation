@@ -1,4 +1,5 @@
 """Physical multi-host mesh — real TCP nodes on localhost (count as 1 machine)."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -6,8 +7,6 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 DELIVERY = ROOT / "bin" / "delivery"

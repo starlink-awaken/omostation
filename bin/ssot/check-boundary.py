@@ -82,8 +82,7 @@ def main() -> int:
         return 0
     print(f"❌ BOUNDARY FAIL: {reason}", file=sys.stderr)
     print(
-        f"   禁止建/补实现 '{package}' — {project} CLAUDE.md 明确历史别名. "
-        f"正确做法: 删 BOS 声明 (同 sharedbrain).",
+        f"   禁止建/补实现 '{package}' — {project} CLAUDE.md 明确历史别名. 正确做法: 删 BOS 声明 (同 sharedbrain).",
         file=sys.stderr,
     )
     return 1

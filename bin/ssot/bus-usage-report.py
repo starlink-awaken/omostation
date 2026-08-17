@@ -45,15 +45,39 @@ _IMPORT_BUS_RE = [
 ]
 
 _CALL_RE = [
-    re.compile(r"\b(bus|bus_event|bus_control|bus_data|bus_adapter)\.\s*(publish|subscribe|emit|submit_task|schedule_callback|ack|nack|outbox_emit|schedule)\s*\("),
+    re.compile(
+        r"\b(bus|bus_event|bus_control|bus_data|bus_adapter)\.\s*(publish|subscribe|emit|submit_task|schedule_callback|ack|nack|outbox_emit|schedule)\s*\("
+    ),
     re.compile(r"\b_(bus_publish|emit_event|emit|bus_emit|publish_event)\s*\("),
     re.compile(r"\b(publish|subscribe|schedule)\s*\(\s*[^)]*BusEnvelope"),
     re.compile(r"@\s*(bus_event|bus_control|bus_data)\.\s*(publish|subscribe|schedule_callback)"),
     re.compile(r"BusEnvelope\s*\(.*topic\s*="),
 ]
 
-_SKIP_DIRS = {"tests", "test", "docs", "doc", "examples", "benchmarks", "__pycache__", ".venv", "node_modules", "build", "dist"}
-_SKIP_BASENAMES = ("test_", "conftest", "setup", "README", "CHANGELOG", "AGENTS", "CLAUDE", "ARCHITECTURE", "Makefile")
+_SKIP_DIRS = {
+    "tests",
+    "test",
+    "docs",
+    "doc",
+    "examples",
+    "benchmarks",
+    "__pycache__",
+    ".venv",
+    "node_modules",
+    "build",
+    "dist",
+}
+_SKIP_BASENAMES = (
+    "test_",
+    "conftest",
+    "setup",
+    "README",
+    "CHANGELOG",
+    "AGENTS",
+    "CLAUDE",
+    "ARCHITECTURE",
+    "Makefile",
+)
 
 
 def _file_has_bus_import(text: str) -> bool:

@@ -4,6 +4,7 @@
 TCP JSON-lines protocol. Supports multi-request per connection (keep-alive)
 until client closes, for sub-100ms sync measurement on LAN.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -49,9 +50,7 @@ class NodeState:
                 candidates = [
                     a
                     for a in self.agents.values()
-                    if a["role_id"] == role
-                    and a["healthy"]
-                    and a["inflight"] < a["capacity"]
+                    if a["role_id"] == role and a["healthy"] and a["inflight"] < a["capacity"]
                 ]
                 if not candidates:
                     self.tasks_fail += 1

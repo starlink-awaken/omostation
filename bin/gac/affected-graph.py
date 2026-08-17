@@ -24,9 +24,7 @@ class AffectedGraphError(ValueError):
 
 
 def canonical_json(payload: dict[str, Any]) -> str:
-    return json.dumps(
-        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    )
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 def load_layer_contract(workspace_root: Path) -> tuple[dict[str, Any], bytes]:
@@ -48,9 +46,7 @@ def get_project_layers(layer_contract: dict[str, Any]) -> dict[str, str]:
     return project_layers
 
 
-def build_dependency_graph(
-    layer_contract: dict[str, Any], project_layers: dict[str, str]
-) -> dict[str, set[str]]:
+def build_dependency_graph(layer_contract: dict[str, Any], project_layers: dict[str, str]) -> dict[str, set[str]]:
     graph = {project: set() for project in project_layers}
     downstream_layers = {layer: set() for layer in layer_contract.get("layers", {})}
     rules = layer_contract.get("dependency_rules", {}).get("allowed_directions", [])
@@ -61,9 +57,7 @@ def build_dependency_graph(
     for upstream_project, upstream_layer in project_layers.items():
         for downstream_layer in downstream_layers.get(upstream_layer, set()):
             graph[upstream_project].update(
-                project
-                for project, layer in project_layers.items()
-                if layer == downstream_layer
+                project for project, layer in project_layers.items() if layer == downstream_layer
             )
     return graph
 
@@ -79,9 +73,7 @@ def calculate_affected(
         raise AffectedGraphError("unknown project(s): " + ", ".join(sorted(unknown)))
     graph = build_dependency_graph(layer_contract, project_layers)
     affected = set(changed_projects)
-    queue = [
-        project for project in changed_projects if project != WORKSPACE_ROOT_PROJECT
-    ]
+    queue = [project for project in changed_projects if project != WORKSPACE_ROOT_PROJECT]
     while queue:
         current = queue.pop(0)
         for downstream in graph[current]:
@@ -91,9 +83,7 @@ def calculate_affected(
     return sorted(affected)
 
 
-def create_receipt(
-    changed_projects: list[str], workspace_root: str | Path
-) -> dict[str, Any]:
+def create_receipt(changed_projects: list[str], workspace_root: str | Path) -> dict[str, Any]:
     workspace = Path(workspace_root).resolve()
     changed = sorted(set(changed_projects))
     if not changed:
@@ -111,9 +101,7 @@ def create_receipt(
     }
 
 
-def write_receipt_exclusive(
-    output: str | Path, workspace_root: str | Path, serialized: str
-) -> Path:
+def write_receipt_exclusive(output: str | Path, workspace_root: str | Path, serialized: str) -> Path:
     workspace = Path(workspace_root).resolve()
     output_ref = str(output)
     relative = Path(output_ref)
@@ -124,9 +112,7 @@ def write_receipt_exclusive(
         or any(part in {"", ".", ".."} for part in relative.parts)
         or relative.as_posix() != output_ref
     ):
-        raise AffectedGraphError(
-            "receipt output must be canonical workspace-relative"
-        )
+        raise AffectedGraphError("receipt output must be canonical workspace-relative")
     candidate = (workspace / relative).absolute()
 
     current = workspace

@@ -32,7 +32,11 @@ def _run_cli(script: str, *args: str) -> tuple[int, str, str]:
     """Run a bin/ssot/ script via subprocess, return (exit_code, stdout, stderr)."""
     cmd = [sys.executable, os.path.join(SCRIPT_DIR, script)] + list(args)
     proc = subprocess.run(
-        cmd, capture_output=True, text=True, timeout=30, check=False,
+        cmd,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
     )
     return proc.returncode, proc.stdout, proc.stderr
 
@@ -46,11 +50,13 @@ class TestFreshHealthySynthetic:
     def test_fresh_source_is_healthy(self):
         """Source with signal 60s ago, poll_interval=300s → healthy."""
         fresh_ts = (NOW - timedelta(seconds=60)).isoformat().replace("+00:00", "Z")
-        sources = [{
-            "id": "fresh_src",
-            "poll_interval": "300s",
-            "last_signal_at": fresh_ts,
-        }]
+        sources = [
+            {
+                "id": "fresh_src",
+                "poll_interval": "300s",
+                "last_signal_at": fresh_ts,
+            }
+        ]
         state = {"fresh_src": "abcdef0123456789"}
         projections = project_all_health(now=NOW, sources=sources, poller_state=state)
         assert len(projections) == 1
@@ -66,11 +72,13 @@ class TestStaleDegradedSynthetic:
     def test_stale_source_is_degraded(self):
         """Source with signal 1h ago, poll_interval=300s → degraded (stale)."""
         stale_ts = (NOW - timedelta(hours=1)).isoformat().replace("+00:00", "Z")
-        sources = [{
-            "id": "stale_src",
-            "poll_interval": "300s",
-            "last_signal_at": stale_ts,
-        }]
+        sources = [
+            {
+                "id": "stale_src",
+                "poll_interval": "300s",
+                "last_signal_at": stale_ts,
+            }
+        ]
         state = {"stale_src": "validhash123456"}
         projections = project_all_health(now=NOW, sources=sources, poller_state=state)
         assert len(projections) == 1
@@ -80,11 +88,13 @@ class TestStaleDegradedSynthetic:
     def test_apple_mail_inbox_stale_is_degraded(self):
         """Simulate apple_mail_inbox with 3-day-old evidence → degraded."""
         stale_ts = (NOW - timedelta(days=3)).isoformat().replace("+00:00", "Z")
-        sources = [{
-            "id": "apple_mail_inbox",
-            "poll_interval": "300s",
-            "last_signal_at": stale_ts,
-        }]
+        sources = [
+            {
+                "id": "apple_mail_inbox",
+                "poll_interval": "300s",
+                "last_signal_at": stale_ts,
+            }
+        ]
         state = {"apple_mail_inbox": "0ae1a238669fccc8"}
         projections = project_all_health(now=NOW, sources=sources, poller_state=state)
         assert projections[0].status == "degraded"

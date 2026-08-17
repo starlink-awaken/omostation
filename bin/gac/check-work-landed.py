@@ -15,6 +15,7 @@ History: this gate is the executable form of STRAT-P82 / STRAT-P85
 G1.1 — the recurring "成果做完必须落 main" red line that the human
 eye has missed twice already.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,7 +23,7 @@ import json
 import re
 import subprocess
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +46,7 @@ def _load_baseline() -> set[str]:
         for line in BASELINE_FILE.read_text(encoding="utf-8").splitlines()
         if line.split("#")[0].strip()
     }
+
 
 PR_RE = re.compile(r"#(\d+)\b")
 SHA_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
@@ -72,6 +74,7 @@ def _read_run(path: Path) -> dict[str, Any] | None:
 def yaml_safe_load(text: str) -> dict[str, Any] | None:
     try:
         import yaml
+
         return yaml.safe_load(text)
     except Exception as exc:  # K3: 不静默
         print(f"[warn] yaml_safe_load: {exc}", file=sys.stderr)
@@ -87,9 +90,7 @@ def _extract_landing_refs(run: dict[str, Any]) -> set[str]:
     with SHA regex and produces false-positive unlanded refs).
     """
     refs: set[str] = set()
-    blob = " ".join(
-        str(run.get(k, "")) for k in ("evidence", "objective", "summary", "result")
-    )
+    blob = " ".join(str(run.get(k, "")) for k in ("evidence", "objective", "summary", "result"))
     for m in PR_RE.findall(blob):
         refs.add(f"pr:{m}")
     for m in SHA_RE.findall(blob):
@@ -204,7 +205,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.dump_baseline:
         if not RUNS_DIR.is_dir():
             return 0
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         cutoff = now - timedelta(days=args.window_days)
         for path in sorted(RUNS_DIR.glob("*.yaml")):
             run = _read_run(path)
@@ -220,10 +221,16 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if not RUNS_DIR.is_dir():
-        print(json.dumps({"ok": True, "summary": {"closed": 0}, "findings": []}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"ok": True, "summary": {"closed": 0}, "findings": []},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 0
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     cutoff = now - timedelta(days=args.window_days)
 
     findings: list[dict[str, Any]] = []
@@ -245,13 +252,15 @@ def main(argv: list[str] | None = None) -> int:
                 age = now - ts
                 kind = "blocking" if age >= BLOCK_AFTER else "warn" if age >= WARN_AFTER else "ok"
                 if kind != "ok":
-                    findings.append({
-                        "id": run.get("run_id"),
-                        "kind": f"no_evidence_ref:{kind}",
-                        "age_days": age.total_seconds() / 86400,
-                        "claimed_paths": [],
-                        "missing_paths": [],
-                    })
+                    findings.append(
+                        {
+                            "id": run.get("run_id"),
+                            "kind": f"no_evidence_ref:{kind}",
+                            "age_days": age.total_seconds() / 86400,
+                            "claimed_paths": [],
+                            "missing_paths": [],
+                        }
+                    )
                     # M2 baseline: 存量 blocking 降级 warn (grace 清单)
                     run_id = run.get("run_id") or path.stem
                     if kind == "blocking" and run_id in baseline:
@@ -274,13 +283,15 @@ def main(argv: list[str] | None = None) -> int:
         kind = "blocking" if age >= BLOCK_AFTER else "warn" if age >= WARN_AFTER else "ok"
         if kind == "ok":
             continue
-        findings.append({
-            "id": run.get("run_id") or path.stem,
-            "kind": f"missing_landing:{kind}",
-            "age_days": age.total_seconds() / 86400,
-            "claimed_refs": sorted(refs),
-            "unlanded_refs": sorted(unlanded),
-        })
+        findings.append(
+            {
+                "id": run.get("run_id") or path.stem,
+                "kind": f"missing_landing:{kind}",
+                "age_days": age.total_seconds() / 86400,
+                "claimed_refs": sorted(refs),
+                "unlanded_refs": sorted(unlanded),
+            }
+        )
         # M2 baseline: 存量 blocking 降级 warn (grace 清单)
         run_id = run.get("run_id") or path.stem
         if kind == "blocking" and run_id in baseline:
@@ -302,9 +313,7 @@ def main(argv: list[str] | None = None) -> int:
             f"blocking={summary['blocking']}"
         )
         for f in findings:
-            extra = (
-                f["unlanded_refs"] if "unlanded_refs" in f else f.get("claimed_paths", [])
-            )
+            extra = f["unlanded_refs"] if "unlanded_refs" in f else f.get("claimed_paths", [])
             print(f"  - {f['id']} [{f['kind']}] age={f['age_days']:.1f}d refs={extra}")
     return 0 if ok else 1
 

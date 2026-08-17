@@ -144,10 +144,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     else:
-        print(f"Vision Audit: {result['implemented']}/{result['pillars_found']} pillars "
-              f"implemented (coverage {result['coverage_rate']:.0%})")
-        print(f"  Bet 进度: {result['bet_progress'].get('done')}/{result['bet_progress'].get('total')} "
-              f"done ({result['bet_progress'].get('done_rate', 0):.0%})")
+        print(
+            f"Vision Audit: {result['implemented']}/{result['pillars_found']} pillars "
+            f"implemented (coverage {result['coverage_rate']:.0%})"
+        )
+        print(
+            f"  Bet 进度: {result['bet_progress'].get('done')}/{result['bet_progress'].get('total')} "
+            f"done ({result['bet_progress'].get('done_rate', 0):.0%})"
+        )
         for a in result["detail"]:
             marker = "✅" if a["coverage"] == "implemented" else "⬜"
             print(f"  {marker} {a['pillar']}: {a['implementation_signals'] or 'GAP'}")

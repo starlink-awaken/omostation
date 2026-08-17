@@ -6,6 +6,7 @@
 当某个 submodule 内部 commit 推进, 但主仓根 commit 没跟, 此工具报 stale.
 CI gate 会 fail.
 """
+
 from __future__ import annotations
 
 import subprocess

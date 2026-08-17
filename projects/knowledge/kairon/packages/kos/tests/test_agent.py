@@ -21,7 +21,7 @@ def _gbrain_available() -> bool:
             "http://localhost:3131/health",
             method="GET",
         )
-        with urllib.request.urlopen(req, timeout=2.0) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=2.0) as resp:
             return resp.status == 200
     except Exception:
         return False

@@ -68,6 +68,7 @@ def llm_enhance(summary: str, endpoint: str | None = None) -> str:
         return summary
     try:
         import urllib.request
+
         payload = json.dumps({"text": summary}).encode("utf-8")
         req = urllib.request.Request(
             endpoint,
@@ -85,7 +86,11 @@ def llm_enhance(summary: str, endpoint: str | None = None) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Governance Summarizer")
     parser.add_argument("--report", required=True, help="Path to gate report JSON")
-    parser.add_argument("--llm-endpoint", default="", help="Optional LLM endpoint for summary enhancement")
+    parser.add_argument(
+        "--llm-endpoint",
+        default="",
+        help="Optional LLM endpoint for summary enhancement",
+    )
     args = parser.parse_args()
 
     report_path = Path(args.report)

@@ -27,9 +27,7 @@ def _cleanup_affected_graph_receipts():
 
 
 def _load_module_from_source(path: Path, name: str):
-    module = importlib.util.module_from_spec(
-        importlib.util.spec_from_loader(name, loader=None)
-    )
+    module = importlib.util.module_from_spec(importlib.util.spec_from_loader(name, loader=None))
     module.__dict__["__file__"] = str(path)
     exec(compile(path.read_text(encoding="utf-8"), str(path), "exec"), module.__dict__)
     return module
@@ -50,9 +48,7 @@ def _run_workflow(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _write_affected_receipt(
-    tmp_path: Path, *changed_projects: str, name: str = "affected-receipt.json"
-) -> Path:
+def _write_affected_receipt(tmp_path: Path, *changed_projects: str, name: str = "affected-receipt.json") -> Path:
     del tmp_path, name
     receipt_ref = Path(".omo/evidence") / f"pytest-affected-{uuid.uuid4().hex}.json"
     output = ROOT / receipt_ref
@@ -471,13 +467,9 @@ workflows:
     assert result.returncode == 1
     report = json.loads(result.stdout)
     assert "internal_integrations.loose-integration: missing status" in report["errors"]
-    assert (
-        "internal_integrations.loose-integration: missing authority" in report["errors"]
-    )
+    assert "internal_integrations.loose-integration: missing authority" in report["errors"]
     assert "internal_integrations.loose-integration: missing owner" in report["errors"]
-    assert (
-        "internal_integrations.loose-integration: missing ssot_rule" in report["errors"]
-    )
+    assert "internal_integrations.loose-integration: missing ssot_rule" in report["errors"]
 
 
 def test_start_run_dry_run_does_not_write_state() -> None:
@@ -538,10 +530,7 @@ def test_start_run_rejects_profile_outside_workflow_roles() -> None:
     )
 
     assert result.returncode == 2
-    assert (
-        "agent profile docs-agent cannot run workflow project-code-change"
-        in result.stderr
-    )
+    assert "agent profile docs-agent cannot run workflow project-code-change" in result.stderr
 
 
 def test_run_execute_requires_profile_for_governed_workflow() -> None:
@@ -995,9 +984,7 @@ def test_concurrent_claims_preserve_run_record(tmp_path: Path) -> None:
         for path in ("README.md", "docs/README.md")
     ]
     processes = [
-        subprocess.Popen(
-            command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-        )
+        subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         for command in commands
     ]
     results = [process.communicate(timeout=60) for process in processes]
@@ -1113,9 +1100,7 @@ def test_verify_blocks_required_claim_tier(tmp_path: Path) -> None:
     assert blocked.returncode == 1
     blocked_report = json.loads(blocked.stdout)
     assert blocked_report["ok"] is False
-    assert blocked_report["claim_coverage"]["missing_required_files"] == [
-        "bin/agent-workflow.py"
-    ]
+    assert blocked_report["claim_coverage"]["missing_required_files"] == ["bin/agent-workflow.py"]
     assert blocked_report["claim_coverage"]["missing_advisory_files"] == []
 
     claim = _run_workflow(
@@ -1318,9 +1303,7 @@ def test_closeout_verifies_observes_closes_and_compliance_passes(
     assert report["run"]["released_locks"]
     assert not list((tmp_path / "locks").glob("*.lock.yaml"))
 
-    compliance = _run_workflow(
-        "--registry", str(registry), "compliance", run_id, "--json"
-    )
+    compliance = _run_workflow("--registry", str(registry), "compliance", run_id, "--json")
     assert compliance.returncode == 0, compliance.stderr
     compliance_report = json.loads(compliance.stdout)
     assert compliance_report["decision"] == "continue"
@@ -1346,9 +1329,7 @@ def test_compliance_accepts_legacy_close_event_after_verify(tmp_path: Path) -> N
     assert start.returncode == 0, start.stderr
     run_id = json.loads(start.stdout)["run_id"]
 
-    verify = _run_workflow(
-        "--registry", str(registry), "verify", run_id, "--file", "README.md", "--json"
-    )
+    verify = _run_workflow("--registry", str(registry), "verify", run_id, "--file", "README.md", "--json")
     assert verify.returncode == 0, verify.stderr
 
     close = _run_workflow(
@@ -1364,9 +1345,7 @@ def test_compliance_accepts_legacy_close_event_after_verify(tmp_path: Path) -> N
     )
     assert close.returncode == 0, close.stderr
 
-    compliance = _run_workflow(
-        "--registry", str(registry), "compliance", run_id, "--json"
-    )
+    compliance = _run_workflow("--registry", str(registry), "compliance", run_id, "--json")
 
     assert compliance.returncode == 0, compliance.stderr
     compliance_report = json.loads(compliance.stdout)
@@ -1442,34 +1421,17 @@ def test_change_lane_knows_agent_workflow_files() -> None:
     assert module.classify("bin/compass_radar.py", set()) == "governance_code"
     assert module.classify("bin/ssot/doc-ssot-lint.py", set()) == "governance_code"
     assert module.classify("bin/mof/generate-brief.py", set()) == "governance_code"
-    assert (
-        module.classify("bin/gac/governance-evolution.py", set()) == "governance_code"
-    )
+    assert module.classify("bin/gac/governance-evolution.py", set()) == "governance_code"
     assert module.classify("bin/gac/state-stale-emit.py", set()) == "governance_code"
     assert module.classify("bin/README.md", set()) == "docs"
+    assert module.classify("projects/cockpit/src/cockpit/commands/governance.py", set()) == "governance_code"
     assert (
-        module.classify("projects/cockpit/src/cockpit/commands/governance.py", set())
-        == "governance_code"
+        module.classify("projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py", set()) == "governance_code"
     )
-    assert (
-        module.classify(
-            "projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py", set()
-        )
-        == "governance_code"
-    )
-    assert (
-        module.classify("tests/test_governance_evolution.py", set())
-        == "governance_code"
-    )
+    assert module.classify("tests/test_governance_evolution.py", set()) == "governance_code"
     assert module.classify("bin/mof/project-layer-index.py", set()) == "governance_code"
-    assert (
-        module.classify(".omo/_truth/registry/agent-workflows.yaml", set())
-        == "governance_code"
-    )
-    assert (
-        module.classify(".agents/skills/project-governance/SKILL.md", set())
-        == "governance_code"
-    )
+    assert module.classify(".omo/_truth/registry/agent-workflows.yaml", set()) == "governance_code"
+    assert module.classify(".agents/skills/project-governance/SKILL.md", set()) == "governance_code"
     assert module.classify("docs/generated/project-layer-index.md", set()) == "docs"
 
 
@@ -1530,9 +1492,7 @@ def test_gac_gate_can_scope_change_lane_to_files(monkeypatch) -> None:
         "bin/agent-workflow.py",
     ]
 
-    monkeypatch.setenv(
-        "AGENT_WORKFLOW_MATCHED_FILES", json.dumps(["bin/gac/gac-local-gate.py"])
-    )
+    monkeypatch.setenv("AGENT_WORKFLOW_MATCHED_FILES", json.dumps(["bin/gac/gac-local-gate.py"]))
     assert module.scoped_change_lane_command() == [
         "bin/change-lane-check.py",
         "--file",
@@ -1560,9 +1520,7 @@ def test_status_command_exposes_agcp_control_plane_fields() -> None:
 def _load_workflow_core():
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location(
-        "workflow_core_p0", ROOT / "projects/omo/src/omo/workflow/core.py"
-    )
+    spec = importlib.util.spec_from_file_location("workflow_core_p0", ROOT / "projects/omo/src/omo/workflow/core.py")
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -1579,9 +1537,7 @@ def test_load_registry_supports_split_directory(tmp_path, monkeypatch) -> None:
     (registry_dir / "workflows").mkdir(parents=True)
     (registry_dir / "profiles").mkdir()
     (registry_dir / "adapters").mkdir()
-    (registry_dir / "_root.yaml").write_text(
-        "version: 1\nclaim_policy:\n  mode: advisory\n", encoding="utf-8"
-    )
+    (registry_dir / "_root.yaml").write_text("version: 1\nclaim_policy:\n  mode: advisory\n", encoding="utf-8")
     (registry_dir / "workflows" / "project-code-change.yaml").write_text(
         "id: project-code-change\nrun_frequency: on_demand\nsurfaces:\n  write: [code]\n",
         encoding="utf-8",
@@ -1590,9 +1546,7 @@ def test_load_registry_supports_split_directory(tmp_path, monkeypatch) -> None:
         "agent_profiles:\n  docs-agent:\n    allowed_workflows: [project-doc-change]\n",
         encoding="utf-8",
     )
-    (registry_dir / "adapters" / "gstack.yaml").write_text(
-        "gstack:\n  status: optional_adapter\n", encoding="utf-8"
-    )
+    (registry_dir / "adapters" / "gstack.yaml").write_text("gstack:\n  status: optional_adapter\n", encoding="utf-8")
 
     registry = load_registry(registry_dir)
     assert registry["claim_policy"]["mode"] == "advisory"

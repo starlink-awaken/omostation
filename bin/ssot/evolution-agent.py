@@ -108,9 +108,7 @@ def _fetch_rss(url: str, limit: int = 5) -> list[dict[str, str]]:
     import xml.etree.ElementTree as ET
 
     try:
-        req = urllib.request.Request(
-            url, headers={"User-Agent": "ecos-evolution-agent/1.0"}
-        )
+        req = urllib.request.Request(url, headers={"User-Agent": "ecos-evolution-agent/1.0"})
         with urllib.request.urlopen(req, timeout=8) as resp:
             raw = resp.read(200000)  # cap 200KB
         root = ET.fromstring(raw)
@@ -244,9 +242,7 @@ def _persist_proposals(result: dict[str, Any]) -> str | None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--deep", action="store_true", help="include external research scan"
-    )
+    parser.add_argument("--deep", action="store_true", help="include external research scan")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
@@ -258,13 +254,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     else:
-        print(
-            f"Evolution Agent: {result['total_proposals']} proposals ({result['by_level']})"
-        )
+        print(f"Evolution Agent: {result['total_proposals']} proposals ({result['by_level']})")
         for p in result["proposals"]:
-            print(
-                f"  [{p.get('level', '?'):3s}] [{p.get('severity', '?'):6s}] {p['proposal']}"
-            )
+            print(f"  [{p.get('level', '?'):3s}] [{p.get('severity', '?'):6s}] {p['proposal']}")
         if persisted:
             print(f"  📄 persisted: {persisted}")
         if not result["proposals"]:

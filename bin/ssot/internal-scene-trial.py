@@ -96,8 +96,7 @@ def _trial_plan(plan: Mapping[str, Any], scene_card: Mapping[str, Any]) -> dict[
     if metric_result["direction"] not in {"increase", "decrease", "target", "binary"}:
         raise SceneTrialInputError("metric.direction is unsupported")
     if metric_result["target"] is not None and (
-        isinstance(metric_result["target"], bool)
-        or not isinstance(metric_result["target"], (int, float))
+        isinstance(metric_result["target"], bool) or not isinstance(metric_result["target"], (int, float))
     ):
         raise SceneTrialInputError("metric.target must be numeric")
     minimum_samples = sample_plan.get("minimum_samples")
@@ -117,11 +116,12 @@ def _trial_plan(plan: Mapping[str, Any], scene_card: Mapping[str, Any]) -> dict[
             plan.get("preflight_ref") or f"ref://internal-scene-trial/preflight/{_digest(plan)[:24]}",
             "preflight_ref",
         ),
-        "catalog_observation_id": _text(
-            plan.get("catalog_observation_id"), "catalog_observation_id", max_length=240
-        ),
+        "catalog_observation_id": _text(plan.get("catalog_observation_id"), "catalog_observation_id", max_length=240),
         "metric": metric_result,
-        "sample_plan": {"minimum_samples": minimum_samples, "window_seconds": window_seconds},
+        "sample_plan": {
+            "minimum_samples": minimum_samples,
+            "window_seconds": window_seconds,
+        },
         "rollback_ref": _opaque(plan.get("rollback_ref"), "rollback_ref"),
     }
 
@@ -137,9 +137,7 @@ def build_scene_trial(
 ) -> dict[str, Any]:
     # Load intake + internal preflight
     intake_module = _load_module(root / "bin/ssot/scene-card-intake.py", "scene_card_intake_for_internal_trial")
-    preflight_module = _load_module(
-        root / "bin/ssot/internal-scene-preflight.py", "internal_preflight_for_trial"
-    )
+    preflight_module = _load_module(root / "bin/ssot/internal-scene-preflight.py", "internal_preflight_for_trial")
     intake = intake_module.build_intake(dict(scene_card))
     preflight = preflight_module.build_preflight(dict(scene_card), root=root, now=now)
     if intake["status"] == "blocked" or preflight["status"] == "blocked":
@@ -204,7 +202,12 @@ def build_scene_trial(
             "activation_attempted": False,
         },
     }
-    return {"schema": "internal-scene-trial-result/v1", "status": "proposal_only", "trial": trial, "preflight": preflight}
+    return {
+        "schema": "internal-scene-trial-result/v1",
+        "status": "proposal_only",
+        "trial": trial,
+        "preflight": preflight,
+    }
 
 
 def _run_omo(root: Path, payload: Mapping[str, Any]) -> dict[str, Any]:
@@ -241,7 +244,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--scene-card", type=Path, required=True)
-    parser.add_argument("--catalog", type=Path, required=False, help="(ignored for internal track, kept for CLI compat)")
+    parser.add_argument(
+        "--catalog",
+        type=Path,
+        required=False,
+        help="(ignored for internal track, kept for CLI compat)",
+    )
     parser.add_argument("--trial-plan", type=Path, required=True)
     parser.add_argument("--record", action="store_true", help="persist through the OMO broker")
     parser.add_argument("--actor", default="scene-trial")

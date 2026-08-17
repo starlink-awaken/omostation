@@ -18,9 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _load_lifecycle():
-    spec = importlib.util.spec_from_file_location(
-        "scene_card_lifecycle", ROOT / "bin/ssot/scene-card-lifecycle.py"
-    )
+    spec = importlib.util.spec_from_file_location("scene_card_lifecycle", ROOT / "bin/ssot/scene-card-lifecycle.py")
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -65,14 +63,15 @@ def _write_scene_card(path: Path, **overrides: object) -> None:
     card.update(overrides)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        "---\ntitle: Test Scene Card\nstatus: active\n---\n"
-        + json.dumps(card, ensure_ascii=False, indent=2),
+        "---\ntitle: Test Scene Card\nstatus: active\n---\n" + json.dumps(card, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
 
 class TestSceneCardLifecycleHonestGate:
-    def test_check_preflight_error_is_json_and_nonzero(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_check_preflight_error_is_json_and_nonzero(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         card_path = tmp_path / "scene-card.yaml"
         _write_scene_card(card_path, scene_type="internal_pipeline")
         ret = lifecycle_mod.main(["--root", str(tmp_path), "check", "--scene-card", str(card_path)])

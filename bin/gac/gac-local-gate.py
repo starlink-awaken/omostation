@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run the local Governance-as-Code gate used by hooks and CI, driven by SGF-v1 metadata policy."""
+
 from __future__ import annotations
 
 import argparse
@@ -9,10 +10,13 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 REGISTRY_PATH = WORKSPACE / ".omo/_truth/registry/agent-workflows.yaml"
-SGF_POLICY_YAML = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
+SGF_POLICY_YAML = (
+    WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
+)
 
 
 def load_sgf_policy() -> dict:
@@ -20,35 +24,94 @@ def load_sgf_policy() -> dict:
     if SGF_POLICY_YAML.is_file():
         try:
             import yaml
+
             return yaml.safe_load(SGF_POLICY_YAML.read_text(encoding="utf-8")) or {}
         except Exception as e:
-            print(f"[WARN] Failed to load sgf-policy.yaml: {e}. Falling back to default policy.", file=sys.stderr)
+            print(
+                f"[WARN] Failed to load sgf-policy.yaml: {e}. Falling back to default policy.",
+                file=sys.stderr,
+            )
     return {}
 
 
 # 默认降级策略 (防止 yaml 丢失崩溃)
 DEFAULT_POLICY = {
-    "settings": {
-        "output": {"terminal_mode": "slim"}
-    },
+    "settings": {"output": {"terminal_mode": "slim"}},
     "gates": [
         {"id": "gac-validate", "command": ["bin/gac/gac-validate.py", "--gate"]},
         {"id": "gac-drift", "command": ["bin/gac/gac-drift.py"]},
-        {"id": "write-owner-audit", "command": ["bin/ssot/write-owner-audit.py", "--staged"]},
-        {"id": "install-watch-agent", "command": ["bin/gac/install-watch-agent.py"], "ci_skip": True},
+        {
+            "id": "write-owner-audit",
+            "command": ["bin/ssot/write-owner-audit.py", "--staged"],
+        },
+        {
+            "id": "install-watch-agent",
+            "command": ["bin/gac/install-watch-agent.py"],
+            "ci_skip": True,
+        },
         {"id": "test-mcp-kos", "command": ["bin/ssot/test-mcp-kos.py"]},
-        {"id": "check-cockpit-ui-dist", "command": ["bin/ssot/check-cockpit-ui-dist.py"]},
+        {
+            "id": "check-cockpit-ui-dist",
+            "command": ["bin/ssot/check-cockpit-ui-dist.py"],
+        },
         {"id": "agent-workflow-lint", "command": ["bin/agent-workflow.py", "lint"]},
-        {"id": "agent-workflow-integrations", "command": ["bin/agent-workflow.py", "integrations"]},
-        {"id": "agent-workflow-adapters", "command": ["bin/agent-workflow.py", "adapters"]},
-        {"id": "agent-workflow-bootstrap", "command": ["bin/agent-workflow.py", "bootstrap", "--skip-health"]},
-        {"id": "agent-workflow-verify-plan", "command": ["bin/agent-workflow.py", "verify", "--file", "bin/agent-workflow.py"], "agent_workflow_only": True},
-        {"id": "agent-workflow-compliance", "command": ["bin/agent-workflow.py", "compliance"], "agent_workflow_only": True},
-        {"id": "agent-workflow-doctor", "command": ["bin/agent-workflow.py", "doctor"], "ci_skip": True, "agent_workflow_only": True},
-        {"id": "agent-workflow-observe", "command": ["bin/agent-workflow.py", "observe"]},
-        {"id": "governance-evolution", "command": ["bin/gac/governance-evolution.py", "validate", "--json"]},
-        {"id": "mof-schema-validate", "command": ["projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py", "--json"], "ci_skip": True, "agent_workflow_only": True},
-        {"id": "mof-state-bridge", "command": ["projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py", "--json"]},
+        {
+            "id": "agent-workflow-integrations",
+            "command": ["bin/agent-workflow.py", "integrations"],
+        },
+        {
+            "id": "agent-workflow-adapters",
+            "command": ["bin/agent-workflow.py", "adapters"],
+        },
+        {
+            "id": "agent-workflow-bootstrap",
+            "command": ["bin/agent-workflow.py", "bootstrap", "--skip-health"],
+        },
+        {
+            "id": "agent-workflow-verify-plan",
+            "command": [
+                "bin/agent-workflow.py",
+                "verify",
+                "--file",
+                "bin/agent-workflow.py",
+            ],
+            "agent_workflow_only": True,
+        },
+        {
+            "id": "agent-workflow-compliance",
+            "command": ["bin/agent-workflow.py", "compliance"],
+            "agent_workflow_only": True,
+        },
+        {
+            "id": "agent-workflow-doctor",
+            "command": ["bin/agent-workflow.py", "doctor"],
+            "ci_skip": True,
+            "agent_workflow_only": True,
+        },
+        {
+            "id": "agent-workflow-observe",
+            "command": ["bin/agent-workflow.py", "observe"],
+        },
+        {
+            "id": "governance-evolution",
+            "command": ["bin/gac/governance-evolution.py", "validate", "--json"],
+        },
+        {
+            "id": "mof-schema-validate",
+            "command": [
+                "projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py",
+                "--json",
+            ],
+            "ci_skip": True,
+            "agent_workflow_only": True,
+        },
+        {
+            "id": "mof-state-bridge",
+            "command": [
+                "projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py",
+                "--json",
+            ],
+        },
         {"id": "mof-drift", "command": ["bin/mof/mof-drift"]},
         {"id": "m4-bootstrap-reflex", "command": ["bin/mof/mof-bootstrap.py", "all"]},
         {"id": "doc-ssot-lint", "command": ["bin/ssot/doc-ssot-lint.py"]},
@@ -56,60 +119,146 @@ DEFAULT_POLICY = {
             "id": "doc-governance",
             "command": ["bin/ssot/doc-governance-check.py", "--no-new-warnings"],
         },
-        {"id": "project-layer-index", "command": ["bin/mof/project-layer-index.py", "--check"], "ci_only": True},
+        {
+            "id": "project-layer-index",
+            "command": ["bin/mof/project-layer-index.py", "--check"],
+            "ci_only": True,
+        },
         {"id": "doc-ssot-snapshots", "command": ["bin/ssot/doc-governance-check.py"]},
         {"id": "doc-link-check", "command": ["bin/ssot/doc-link-check.py"]},
-        {"id": "change-lane-check", "command": ["bin/change-lane-check.py", "--staged"]},
-        {"id": "dependency-baseline-drift", "command": ["bin/mof/gen-dependency-baseline.py", "--check"], "ci_only": True},
-        {"id": "matrix-consistency", "command": ["bin/ssot/matrix-consistency-lint.py", "--skip-launchd"], "ci_skip": True},
-        {"id": "governance-semantic-gate", "command": ["bin/gac/governance-semantic-gate.py", "--json"]},
+        {
+            "id": "change-lane-check",
+            "command": ["bin/change-lane-check.py", "--staged"],
+        },
+        {
+            "id": "dependency-baseline-drift",
+            "command": ["bin/mof/gen-dependency-baseline.py", "--check"],
+            "ci_only": True,
+        },
+        {
+            "id": "matrix-consistency",
+            "command": ["bin/ssot/matrix-consistency-lint.py", "--skip-launchd"],
+            "ci_skip": True,
+        },
+        {
+            "id": "governance-semantic-gate",
+            "command": ["bin/gac/governance-semantic-gate.py", "--json"],
+        },
         {"id": "adr-coverage", "command": ["bin/adr/adr-coverage.py", "--json"]},
         # ADR-0373 (C5): sweep history drift gate (CR-SWEEP-INDEX-AUTO)
         {"id": "sweep-index-check", "command": ["bin/sweep/sweep_index.py", "--check"]},
-        {"id": "state-freshness-check", "command": ["bin/gac/state-freshness-check.py", "--json"]},
+        {
+            "id": "state-freshness-check",
+            "command": ["bin/gac/state-freshness-check.py", "--json"],
+        },
         {
             "id": "current-state-coherence",
             "command": ["bin/ssot/current-state-coherence.py", "--json"],
         },
-        {"id": "check-dashboard-registry-consistency", "command": ["bin/ssot/check-dashboard-registry-consistency.py"]},
+        {
+            "id": "check-dashboard-registry-consistency",
+            "command": ["bin/ssot/check-dashboard-registry-consistency.py"],
+        },
         {"id": "check-toolbox-ssot", "command": ["bin/ssot/check-toolbox-ssot.py"]},
-        {"id": "check-domain-m1-alignment", "command": ["bin/ssot/check-domain-m1-alignment.py"]},
+        {
+            "id": "check-domain-m1-alignment",
+            "command": ["bin/ssot/check-domain-m1-alignment.py"],
+        },
         {"id": "test-gac-engine", "command": ["bin/ssot/test-gac-engine.py"]},
-        {"id": "service-config-validate", "command": ["bin/mof/gen-service-configs.py", "--validate"]},
-        {"id": "service-config-drift", "command": ["bin/mof/gen-service-configs.py", "--check"], "ci_skip": True},
+        {
+            "id": "service-config-validate",
+            "command": ["bin/mof/gen-service-configs.py", "--validate"],
+        },
+        {
+            "id": "service-config-drift",
+            "command": ["bin/mof/gen-service-configs.py", "--check"],
+            "ci_skip": True,
+        },
         {"id": "bdsk-shadow-sandbox", "command": ["bin/gac/bdsk-shadow-sandbox.py"]},
-        {"id": "gac-mesh-router-check", "command": ["bin/gac/gac-mesh-router.py", "--check"]},
-        {"id": "gac-consensus-inject-check", "command": ["bin/gac/gac-consensus-inject.py", "--check"]},
-        {"id": "gac-compute-onboard-check", "command": ["bin/gac/gac-compute-onboard.py", "--check"]},
+        {
+            "id": "gac-mesh-router-check",
+            "command": ["bin/gac/gac-mesh-router.py", "--check"],
+        },
+        {
+            "id": "gac-consensus-inject-check",
+            "command": ["bin/gac/gac-consensus-inject.py", "--check"],
+        },
+        {
+            "id": "gac-compute-onboard-check",
+            "command": ["bin/gac/gac-compute-onboard.py", "--check"],
+        },
         # P44 测试覆盖门禁: 每个 Python 项目必须有 tests/
         {"id": "test-coverage-check", "command": ["bin/gac/test-coverage-check.py"]},
         # P45 债务完整性门禁: seed_items 全部存在且非空
         {"id": "debt-integrity-check", "command": ["bin/gac/debt-integrity-check.py"]},
         # P45 W1 OMO state write guard: 检测 system.yaml 多写冲突 + 写权限违规
-        {"id": "omo-state-write-guard", "command": ["bin/gac/omo-state-write-guard.py"]},
+        {
+            "id": "omo-state-write-guard",
+            "command": ["bin/gac/omo-state-write-guard.py"],
+        },
         # P45 W1 BRIEF.md protect: 检测 BRIEF.md 是否被外部覆盖
         {"id": "brief-protect", "command": ["bin/mof/generate-brief.py", "--protect"]},
         # P85 G1+G2: redline executability wiring. The redline registry
         # at .omo/_truth/registry/redlines.yaml points to these gates;
         # adding/removing rows there is the safe edit surface.
-        {"id": "check-severity-registry", "command": ["bin/gac/check-severity-registry.py"]},
-        {"id": "check-submodule-rewind", "command": ["bin/gac/check-submodule-rewind.py"]},
-        {"id": "check-work-landed", "command": ["bin/gac/check-work-landed.py"], "timeout": 45},
-        {"id": "check-governance-ratio", "command": ["bin/gac/check-governance-ratio.py"]},
-        {"id": "check-redline-coverage", "command": ["bin/gac/check-redline-coverage.py"]},
+        {
+            "id": "check-severity-registry",
+            "command": ["bin/gac/check-severity-registry.py"],
+        },
+        {
+            "id": "check-submodule-rewind",
+            "command": ["bin/gac/check-submodule-rewind.py"],
+        },
+        {
+            "id": "check-work-landed",
+            "command": ["bin/gac/check-work-landed.py"],
+            "timeout": 45,
+        },
+        {
+            "id": "check-governance-ratio",
+            "command": ["bin/gac/check-governance-ratio.py"],
+        },
+        {
+            "id": "check-redline-coverage",
+            "command": ["bin/gac/check-redline-coverage.py"],
+        },
         # P85 G2.2: workorder schema is warn-only by default; promote
         # to --strict in CI after the grace period (G2 follow-up).
-        {"id": "check-workorder-schema", "command": ["bin/gac/check-workorder-schema.py"]},
+        {
+            "id": "check-workorder-schema",
+            "command": ["bin/gac/check-workorder-schema.py"],
+        },
         # P85 G3: P84 dual-track守护. Three checks enforcing the
         # dual-track isolation contract (P84 §0).
-        {"id": "check-dual-track-purity", "command": ["bin/gac/check-dual-track-purity.py"]},
+        {
+            "id": "check-dual-track-purity",
+            "command": ["bin/gac/check-dual-track-purity.py"],
+        },
         {"id": "check-silent-loss", "command": ["bin/gac/check-silent-loss.py"]},
-        {"id": "check-adversarial-effectiveness", "command": ["bin/gac/check-adversarial-effectiveness.py"]},
-        {"id": "check-evidence-honest-closure", "command": ["bin/gac/check-evidence-honest-closure.py"]},
-        {"id": "check-gateway-status-doc", "command": ["bin/gac/check-gateway-status-doc.py"]},
-        {"id": "check-foundry-deck-coverage", "command": ["bin/gac/check-foundry-deck-coverage.py"]},
-        {"id": "check-evidence-freshness", "command": ["bin/gac/check-evidence-freshness.py"]},
-        {"id": "check-governance-trend", "command": ["bin/gac/check-governance-trend.py"]},
+        {
+            "id": "check-adversarial-effectiveness",
+            "command": ["bin/gac/check-adversarial-effectiveness.py"],
+        },
+        {
+            "id": "check-evidence-honest-closure",
+            "command": ["bin/gac/check-evidence-honest-closure.py"],
+        },
+        {
+            "id": "check-gateway-status-doc",
+            "command": ["bin/gac/check-gateway-status-doc.py"],
+        },
+        {
+            "id": "check-foundry-deck-coverage",
+            "command": ["bin/gac/check-foundry-deck-coverage.py"],
+        },
+        {
+            "id": "check-evidence-freshness",
+            "command": ["bin/gac/check-evidence-freshness.py"],
+        },
+        {
+            "id": "check-governance-trend",
+            "command": ["bin/gac/check-governance-trend.py"],
+        },
         # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
         # Catches the P71 class-A "declaration without execution" trap.
         {"id": "bus-usage-report", "command": ["bin/ssot/bus-usage-report.py"]},
@@ -118,10 +267,18 @@ DEFAULT_POLICY = {
         # P7x-bus-foundation-rollout follow-up: real cross-process ZMQ e2e.
         # Spawns 2 subprocesses + uses TCP sockets (~2-5s). ci_only=True so
         # pre-commit skips the cost; CI strict runs it.
-        {"id": "bus-e2e-harness", "command": ["bin/ssot/bus-e2e-harness.py", "--count", "30", "--json"], "ci_only": True},
+        {
+            "id": "bus-e2e-harness",
+            "command": ["bin/ssot/bus-e2e-harness.py", "--count", "30", "--json"],
+            "ci_only": True,
+        },
         # Short-term improvement: INDEX 自动更新检查 (CI strict 跑, pre-commit 跳过)
         # 检测 docs/INDEX-*.md 是否与真实内容漂移
-        {"id": "check-index-drift", "command": ["bin/ssot/check-index-drift.py"], "ci_only": True},
+        {
+            "id": "check-index-drift",
+            "command": ["bin/ssot/check-index-drift.py"],
+            "ci_only": True,
+        },
         # P0-A + G2 (2026-07-28): 三锁接线. 均为 BLOCKING (不在 SOFT_CHECKS, exit!=0 → gate [FAIL]).
         #   layer-call-direction: new-violation blocking (baseline 存量 11 grace, 已实现 L213-229;
         #     G1 --files 增量快路径, pre-commit <1s, CI strict 全量 ~3s).
@@ -129,10 +286,20 @@ DEFAULT_POLICY = {
         #   doc-claims: exit 1 on findings (scope=all 17 projects, 当前 0 findings).
         # 定位 SSOT: governance-checks.yaml (CR-X4-LAYER-CALL / CR-X4-REGISTRY-DRIFT / CR-X4-DOC-CLAIMS).
         # 旧注释 "exit=0 只报告不阻断 / 需另加 baseline" 已废 (baseline L213-229 早已实现, G2 核实).
-        {"id": "mof-capabilities-drift-check", "command": ["bin/mof/check-mof-capabilities-drift.py"]},
+        {
+            "id": "mof-capabilities-drift-check",
+            "command": ["bin/mof/check-mof-capabilities-drift.py"],
+        },
         {"id": "doc-claims-check", "command": ["bin/mof/check-doc-claims.py"]},
-        {"id": "layer-call-direction-check", "command": ["bin/ssot/check-layer-call-direction.py", "--baseline", ".omo/_truth/registry/layer-call-baseline.txt"]}
-    ]
+        {
+            "id": "layer-call-direction-check",
+            "command": [
+                "bin/ssot/check-layer-call-direction.py",
+                "--baseline",
+                ".omo/_truth/registry/layer-call-baseline.txt",
+            ],
+        },
+    ],
 }
 
 # 动态读取并组装策略
@@ -197,9 +364,9 @@ _CHECK_TIMEOUTS = {g["id"]: g.get("timeout", 15) for g in GATES_LIST}
 # SOFT checks: finding_topics 仍输出, 但不翻转 gate (门禁降噪)
 SOFT_CHECKS = {
     "governance-semantic-gate",  # evolution/release_ready 是软信号, 非门禁阻断
-    "brief-protect",            # BRIEF.md protect 提示手工修改, 非门禁阻断
-    "current-state-coherence",   # 运行态动态推导软信号
-    "ci-surfaces-check",         # CI Surface 重叠软警告
+    "brief-protect",  # BRIEF.md protect 提示手工修改, 非门禁阻断
+    "current-state-coherence",  # 运行态动态推导软信号
+    "ci-surfaces-check",  # CI Surface 重叠软警告
 }
 
 
@@ -212,7 +379,10 @@ def staged_files_git() -> list[str]:
     """git diff --cached 读 staged 文件."""
     result = subprocess.run(
         ["git", "diff", "--cached", "--name-only"],
-        cwd=WORKSPACE, capture_output=True, text=True, check=False,
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
@@ -302,7 +472,7 @@ def scoped_change_lane_command(
 def scoped_doc_link_command(scope: str, files: list[str] | None, run_id: str, strict: bool) -> list[str] | None:
     if strict:
         return ["bin/ssot/doc-link-check.py"]
-    
+
     staged = staged_files_git()
     md_files = [f for f in staged if f.endswith(".md")]
     if not md_files:
@@ -341,6 +511,7 @@ def change_lane_files_for_scope(scope: str, files: list[str] | None, run_id: str
         if run_file.is_file():
             try:
                 import yaml
+
                 run_data = yaml.safe_load(run_file.read_text(encoding="utf-8")) or {}
                 return run_data.get("claim_policy", {}).get("files", [])
             except Exception:
@@ -430,17 +601,22 @@ RISK_AWARE_CHECKS: set[str] = {
     "omo-state-write-guard",
     "brief-protect",
     "check-severity-registry",
-    "check-work-landed",
-    "check-governance-ratio",
-    "check-redline-coverage",
-    "check-workorder-schema",
 }
 
 
 def _adaptive_threshold(metrics_file: Path, check: str, window: int = 50) -> int | None:
     try:
         proc = subprocess.run(
-            [sys.executable, str(WORKSPACE / "bin" / "gac" / "adaptive-gate.py"), "--check", check, "--window", str(window), "--file", str(metrics_file)],
+            [
+                sys.executable,
+                str(WORKSPACE / "bin" / "gac" / "adaptive-gate.py"),
+                "--check",
+                check,
+                "--window",
+                str(window),
+                "--file",
+                str(metrics_file),
+            ],
             capture_output=True,
             text=True,
             cwd=WORKSPACE,
@@ -622,48 +798,56 @@ def run_agt_policy_engine() -> list[dict[str, object]]:
             timeout=5,
         )
         if proc.returncode == 0:
-            results.append({
-                "name": "agt-policy-engine",
-                "ok": True,
-                "command": ["agora", "resolve", "bos://governance/agt/policy"],
-                "stdout": "AGT Policy Engine backend active",
-                "stderr": "",
-                "duration_ms": 0,
-            })
+            results.append(
+                {
+                    "name": "agt-policy-engine",
+                    "ok": True,
+                    "command": ["agora", "resolve", "bos://governance/agt/policy"],
+                    "stdout": "AGT Policy Engine backend active",
+                    "stderr": "",
+                    "duration_ms": 0,
+                }
+            )
         else:
-            results.append({
+            results.append(
+                {
+                    "name": "agt-policy-engine",
+                    "ok": False,
+                    "command": ["agora", "resolve", "bos://governance/agt/policy"],
+                    "stdout": "",
+                    "stderr": proc.stderr or "AGT policy engine unavailable",
+                    "duration_ms": 0,
+                }
+            )
+    except FileNotFoundError:
+        results.append(
+            {
                 "name": "agt-policy-engine",
                 "ok": False,
                 "command": ["agora", "resolve", "bos://governance/agt/policy"],
                 "stdout": "",
-                "stderr": proc.stderr or "AGT policy engine unavailable",
+                "stderr": "AGT policy engine unavailable (agora CLI not found)",
                 "duration_ms": 0,
-            })
-    except FileNotFoundError:
-        results.append({
-            "name": "agt-policy-engine",
-            "ok": False,
-            "command": ["agora", "resolve", "bos://governance/agt/policy"],
-            "stdout": "",
-            "stderr": "AGT policy engine unavailable (agora CLI not found)",
-            "duration_ms": 0,
-        })
+            }
+        )
     except subprocess.TimeoutExpired:
-        results.append({
-            "name": "agt-policy-engine",
-            "ok": False,
-            "command": ["agora", "resolve", "bos://governance/agt/policy"],
-            "stdout": "",
-            "stderr": "AGT policy engine timeout",
-            "duration_ms": 5000,
-        })
+        results.append(
+            {
+                "name": "agt-policy-engine",
+                "ok": False,
+                "command": ["agora", "resolve", "bos://governance/agt/policy"],
+                "stdout": "",
+                "stderr": "AGT policy engine timeout",
+                "duration_ms": 5000,
+            }
+        )
     return results
 
 
 def print_human(report: dict[str, object], verbose: bool = False) -> None:
     output_cfg = POLICY.get("settings", {}).get("output", {})
     terminal_mode = output_cfg.get("terminal_mode", "slim")
-    
+
     checks_list: list[dict] = report["checks"]  # type: ignore[assignment]
     change_lane: list[str] = report["change_lane_files"]  # type: ignore[assignment]
     is_ok: bool = report["ok"]  # type: ignore[assignment]
@@ -699,10 +883,7 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
         print(f"finding_topics={len(topics)}")
         for topic in topics:
             t = topic if isinstance(topic, dict) else {}
-            print(
-                f"  [{str(t.get('severity', 'info')).upper()}] "
-                f"{t.get('topic')}: {t.get('summary')}"
-            )
+            print(f"  [{str(t.get('severity', 'info')).upper()}] {t.get('topic')}: {t.get('summary')}")
     if BROKEN_CHECKS:
         print(f"  ⚠️  {len(BROKEN_CHECKS)} broken/known-unavailable checks skipped (use --strict to include)")
     hard_raw = report.get("hard_fails")
@@ -731,27 +912,54 @@ def _emit_gate_events(is_ok: bool, hard_raw: Any, soft_raw: Any) -> None:
     if not events_script.exists():
         return
     import json as _json
+
     try:
         if not is_ok and isinstance(hard_raw, list):
             for r in hard_raw[:5]:
                 name = r.get("name") if isinstance(r, dict) else str(r)
                 payload = _json.dumps({"check": name, "gate": "gac-local-gate"}, ensure_ascii=False)
                 subprocess.run(
-                    [sys.executable, str(events_script), "emit",
-                     "--domain", "governance", "--type", "governance:gate_failed",
-                     "--severity", "critical", "--source", "gac-local-gate",
-                     "--payload", payload],
-                    capture_output=True, check=False, timeout=30,
+                    [
+                        sys.executable,
+                        str(events_script),
+                        "emit",
+                        "--domain",
+                        "governance",
+                        "--type",
+                        "governance:gate_failed",
+                        "--severity",
+                        "critical",
+                        "--source",
+                        "gac-local-gate",
+                        "--payload",
+                        payload,
+                    ],
+                    capture_output=True,
+                    check=False,
+                    timeout=30,
                 )
         else:
             subprocess.run(
-                [sys.executable, str(events_script), "emit",
-                 "--domain", "governance", "--type", "governance:gate_passed",
-                 "--severity", "info", "--source", "gac-local-gate",
-                 "--payload", '{"gate": "gac-local-gate"}'],
-                capture_output=True, check=False, timeout=30,
+                [
+                    sys.executable,
+                    str(events_script),
+                    "emit",
+                    "--domain",
+                    "governance",
+                    "--type",
+                    "governance:gate_passed",
+                    "--severity",
+                    "info",
+                    "--source",
+                    "gac-local-gate",
+                    "--payload",
+                    '{"gate": "gac-local-gate"}',
+                ],
+                capture_output=True,
+                check=False,
+                timeout=30,
             )
-    except Exception:  # noqa: BLE001  # 非阻断
+    except Exception:  # 非阻断
         pass
 
 
@@ -852,28 +1060,70 @@ def main() -> int:
     parser.add_argument("--run-id", default="", help="Run id for --scope run")
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     parser.add_argument("--strict", action="store_true", help="跑全套 (CI 用)")
-    parser.add_argument("--verbose", action="store_true", help="Print passing gate details under slim mode")
-    parser.add_argument("--agt-backend", action="store_true", help="Use AGT Policy Engine as GaC rule execution backend")
-    parser.add_argument("--metrics", action="store_true", help="Record check results to metrics-store.jsonl")
-    parser.add_argument("--adaptive", action="store_true", help="Enable adaptive threshold adjustment for supported checks")
-    parser.add_argument("--risk-profile", choices=["low", "medium", "high"], help="Risk-aware gate filtering")
-    parser.add_argument("--summarize", action="store_true", help="Generate Markdown summary of gate report")
-    parser.add_argument("--alert", action="store_true", help="Run anomaly detection on metrics-store.jsonl after gate")
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print passing gate details under slim mode",
+    )
+    parser.add_argument(
+        "--agt-backend",
+        action="store_true",
+        help="Use AGT Policy Engine as GaC rule execution backend",
+    )
+    parser.add_argument(
+        "--metrics",
+        action="store_true",
+        help="Record check results to metrics-store.jsonl",
+    )
+    parser.add_argument(
+        "--adaptive",
+        action="store_true",
+        help="Enable adaptive threshold adjustment for supported checks",
+    )
+    parser.add_argument(
+        "--risk-profile",
+        choices=["low", "medium", "high"],
+        help="Risk-aware gate filtering",
+    )
+    parser.add_argument(
+        "--summarize",
+        action="store_true",
+        help="Generate Markdown summary of gate report",
+    )
+    parser.add_argument(
+        "--alert",
+        action="store_true",
+        help="Run anomaly detection on metrics-store.jsonl after gate",
+    )
     args = parser.parse_args()
 
     try:
-        report = run_gate(args.scope, args.file, args.run_id, args.strict, args.agt_backend, args.adaptive, args.risk_profile)
+        report = run_gate(
+            args.scope,
+            args.file,
+            args.run_id,
+            args.strict,
+            args.agt_backend,
+            args.adaptive,
+            args.risk_profile,
+        )
     except ValueError as exc:
         parser.error(str(exc))
 
     if args.summarize:
         try:
             import tempfile
+
             with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp:
                 json.dump(report, tmp, ensure_ascii=False, indent=2)
                 tmp_path = tmp.name
             proc = subprocess.run(
-                [sys.executable, str(WORKSPACE / "bin" / "gac" / "governance-summarizer.py"), "--report", tmp_path],
+                [
+                    sys.executable,
+                    str(WORKSPACE / "bin" / "gac" / "governance-summarizer.py"),
+                    "--report",
+                    tmp_path,
+                ],
                 capture_output=True,
                 text=True,
                 cwd=WORKSPACE,

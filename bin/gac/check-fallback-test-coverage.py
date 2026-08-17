@@ -9,7 +9,14 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-TEST_FALLBACK_MARKERS = ["fallback", "retry", "backup", "resilience", "circuit_breaker", "timeout"]
+TEST_FALLBACK_MARKERS = [
+    "fallback",
+    "retry",
+    "backup",
+    "resilience",
+    "circuit_breaker",
+    "timeout",
+]
 
 
 def main() -> int:

@@ -58,9 +58,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
                 "space_ref": "personal-space",
                 "status": "active",
                 "path_base": "registry_file_parent",
-                "manifests": [
-                    {"id": "creative", "path": os.path.relpath(manifest, registry_dir)}
-                ],
+                "manifests": [{"id": "creative", "path": os.path.relpath(manifest, registry_dir)}],
             },
             allow_unicode=True,
             sort_keys=False,
@@ -71,9 +69,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
     project.write_text(
         yaml.safe_dump(
             {
-                "domain_registry": {
-                    "documents_relative_ref": "@公共/_control/L4-DOMAIN-REGISTRY.yaml"
-                },
+                "domain_registry": {"documents_relative_ref": "@公共/_control/L4-DOMAIN-REGISTRY.yaml"},
                 "runtime_jobs": [
                     {
                         "id": "creative-manifest-check",
@@ -133,9 +129,7 @@ def _run(
 def _owner(tmp_path: Path, exit_code: int = 0) -> Path:
     path = tmp_path / f"l4-owner-{exit_code}"
     path.write_text(
-        "#!/bin/sh\n"
-        f"printf '%s\\n' '{{\"ok\": {str(exit_code == 0).lower()}}}'\n"
-        f"exit {exit_code}\n",
+        f"#!/bin/sh\nprintf '%s\\n' '{{\"ok\": {str(exit_code == 0).lower()}}}'\nexit {exit_code}\n",
         encoding="utf-8",
     )
     path.chmod(0o755)
@@ -175,9 +169,7 @@ def test_owner_job_rejects_facts_audit_binding_before_execution(tmp_path: Path) 
     facts_root = documents / "@工作文档" / "卫健委"
     facts_root.mkdir(parents=True)
     facts_manifest = facts_root / "DOMAIN.yaml"
-    manifest_payload = yaml.safe_load(
-        (documents / "@创意创作" / "DOMAIN.yaml").read_text(encoding="utf-8")
-    )
+    manifest_payload = yaml.safe_load((documents / "@创意创作" / "DOMAIN.yaml").read_text(encoding="utf-8"))
     manifest_payload.update({"id": "work-weijian", "display_name": "@工作文档/卫健委"})
     facts_manifest.write_text(
         yaml.safe_dump(manifest_payload, allow_unicode=True, sort_keys=False),
@@ -261,10 +253,5 @@ def test_owner_job_preserves_nonzero_owner_result_and_receipt(tmp_path: Path) ->
     payload = json.loads(result.stdout)
     assert payload["status"] == "failed"
     assert payload["exit_code"] == 7
-    assert (
-        json.loads(Path(payload["evidence_path"]).read_text(encoding="utf-8"))[
-            "exit_code"
-        ]
-        == 7
-    )
+    assert json.loads(Path(payload["evidence_path"]).read_text(encoding="utf-8"))["exit_code"] == 7
     assert _tree_digest(documents) == before

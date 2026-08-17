@@ -196,9 +196,7 @@ def test_install_refuses_settings_symlink(tmp_path: Path) -> None:
     result = _run(tmp_path, "install", settings_path=settings)
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        f"settings must be a regular file: {settings}"
-    ]
+    assert json.loads(result.stdout)["errors"] == [f"settings must be a regular file: {settings}"]
 
 
 def test_missing_workspace_agents_gateway_fails_closed(tmp_path: Path) -> None:
@@ -250,9 +248,7 @@ def test_check_does_not_create_missing_config(tmp_path: Path) -> None:
 
 
 def test_required_phase_gate_covers_zcode_config_and_tests() -> None:
-    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(
-        encoding="utf-8"
-    )
+    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(encoding="utf-8")
 
     assert "bin/gac/documents-zcode-config.py" in workflow
     assert "tests/test_documents_zcode_config.py" in workflow

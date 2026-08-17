@@ -24,16 +24,12 @@ TOOLS = [
 
 def _project_registry(tmp_path: Path) -> tuple[Path, Path]:
     workspace = tmp_path / "workspace"
-    registry = (
-        workspace / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
-    )
+    registry = workspace / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
     registry.parent.mkdir(parents=True)
     checker = workspace / "bin" / "gac" / "documents-chatgpt-tunnel.py"
     checker.parent.mkdir(parents=True)
     checker.write_text("# fixture checker\n", encoding="utf-8")
-    entrypoint = (
-        workspace / "projects" / "cockpit" / ".venv" / "bin" / "cockpit-documents-mcp"
-    )
+    entrypoint = workspace / "projects" / "cockpit" / ".venv" / "bin" / "cockpit-documents-mcp"
     entrypoint.parent.mkdir(parents=True)
     entrypoint.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
     entrypoint.chmod(0o755)
@@ -205,9 +201,7 @@ def test_check_reports_ready_without_emitting_credentials(tmp_path: Path) -> Non
     }
     assert api_key not in result.stdout
     assert tunnel_id not in result.stdout
-    assert doctor_log.read_text(encoding="utf-8").strip() == (
-        "doctor --profile documents-readonly --explain"
-    )
+    assert doctor_log.read_text(encoding="utf-8").strip() == ("doctor --profile documents-readonly --explain")
 
 
 def test_check_fails_closed_when_tunnel_doctor_fails(tmp_path: Path) -> None:
@@ -281,9 +275,7 @@ def test_render_rejects_symlinked_authority_files(tmp_path: Path) -> None:
 
 def test_workspace_registry_declares_bounded_tunnel_contract() -> None:
     raw = yaml.safe_load(
-        (
-            ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
-        ).read_text(encoding="utf-8")
+        (ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml").read_text(encoding="utf-8")
     )
 
     assert raw["clients"]["chatgpt_web"]["tunnel_contract"] == {
@@ -301,9 +293,7 @@ def test_workspace_registry_declares_bounded_tunnel_contract() -> None:
 
 def test_model_freshness_tool_is_in_bounded_tunnel_profile(tmp_path: Path) -> None:
     raw = yaml.safe_load(
-        (
-            ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
-        ).read_text(encoding="utf-8")
+        (ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml").read_text(encoding="utf-8")
     )
     registry, _ = _project_registry(tmp_path)
     registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
@@ -327,9 +317,7 @@ def test_model_freshness_tool_is_in_bounded_tunnel_profile(tmp_path: Path) -> No
 
     assert result.returncode == 0, result.stdout
     rendered_tools = json.loads(result.stdout)["allowed_tools"]
-    assert rendered_tools == raw["profiles"]["content-domain"][
-        "allowed_workspace_tools"
-    ]
+    assert rendered_tools == raw["profiles"]["content-domain"]["allowed_workspace_tools"]
     assert "domain_model_freshness_status" in rendered_tools
     assert "domain_model_freshness_status" in raw["workspace_mcp"]["read_tools"]
     assert raw["clients"]["chatgpt_web"]["requires_developer_mode"] is True
@@ -337,9 +325,7 @@ def test_model_freshness_tool_is_in_bounded_tunnel_profile(tmp_path: Path) -> No
 
 def test_sanyi_status_tool_aligns_global_profile_and_tunnel(tmp_path: Path) -> None:
     raw = yaml.safe_load(
-        (
-            ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
-        ).read_text(encoding="utf-8")
+        (ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml").read_text(encoding="utf-8")
     )
     registry, _ = _project_registry(tmp_path)
     registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
@@ -368,9 +354,7 @@ def test_sanyi_status_tool_aligns_global_profile_and_tunnel(tmp_path: Path) -> N
 
 
 def test_required_phase_gate_covers_root_tunnel_contract() -> None:
-    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(
-        encoding="utf-8"
-    )
+    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(encoding="utf-8")
 
     for required in (
         "bin/gac/documents-chatgpt-tunnel.py",

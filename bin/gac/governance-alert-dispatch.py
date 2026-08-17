@@ -27,6 +27,7 @@ condition evaluator (按数据源可用性渐进注册):
   python bin/gac/governance-alert-dispatch.py                # 求值 + 命中调 omo event emit
   python bin/gac/governance-alert-dispatch.py --self-test    # 人为低阈值验证 emit 链路
 """
+
 from __future__ import annotations
 
 import argparse
@@ -57,14 +58,15 @@ def _load_yaml(path: Path) -> dict | None:
     if not path.is_file():
         return None
     try:
-        import yaml  # noqa: PLC0415
+        import yaml
+
         docs = list(yaml.safe_load_all(path.read_text(encoding="utf-8")))
         body: dict | None = None
         for d in docs:
             if isinstance(d, dict):
                 body = d  # 取最后一个 dict (正文); frontmatter 被覆盖
         return body
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"⚠️  load {path} failed: {e}", file=sys.stderr)
         return None
 
@@ -87,18 +89,20 @@ def _load_alert_rules(path: Path) -> list[dict]:
     if not m:
         print(f"⚠️  {path} 未找到 'rules:' 段", file=sys.stderr)
         return []
-    rules_section = text[m.start():]
+    rules_section = text[m.start() :]
     try:
-        import yaml  # noqa: PLC0415
+        import yaml
+
         data = yaml.safe_load(rules_section)
         return (data or {}).get("rules") or []
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"⚠️  {path} rules 段解析失败: {e}", file=sys.stderr)
         return []
 
 
 # ── condition evaluators ────────────────────────────────────────────────
 # 每个 evaluator 返回 (current_value, hit: bool) 或 (None, False) 表示 unsupported.
+
 
 def _eval_debt_weight(op: str, rhs: float, _ws: Path) -> tuple[object, str]:
     """debt_weight < X → system.yaml::debt_weight (顶层)."""
@@ -125,7 +129,8 @@ def _eval_critical_count(op: str, rhs: float, _ws: Path) -> tuple[object, str]:
     if not isinstance(items, list):
         return (0, "miss" if not _apply_op(0, op, rhs) else "hit")
     crit = sum(
-        1 for it in items
+        1
+        for it in items
         if isinstance(it, dict)
         and it.get("severity") == "critical"
         and it.get("resolved") is not True
@@ -139,23 +144,24 @@ def _eval_missing_githooks(op: str, rhs: float, ws: Path) -> tuple[object, str]:
     hooks_dir = ws / ".git" / "hooks"
     if not hooks_dir.is_dir():
         # worktree 兼容: .git 可能是文件 (gitdir 指针), 用 git rev-parse 找真实 git common dir
-        import subprocess  # noqa: PLC0415
+        import subprocess
+
         try:
             result = subprocess.run(
                 ["git", "rev-parse", "--git-common-dir"],
-                capture_output=True, text=True, cwd=str(ws), timeout=5,
+                capture_output=True,
+                text=True,
+                cwd=str(ws),
+                timeout=5,
             )
             if result.returncode == 0:
                 common_dir = Path(result.stdout.strip())
                 hooks_dir = common_dir / "hooks"
-        except Exception:  # noqa: BLE001
+        except Exception:
             pass
     if not hooks_dir.is_dir():
         return (0, "miss")  # 非 git 仓库 → miss (不报 unsupported, TASK-236A991C)
-    present = [
-        f for f in hooks_dir.iterdir()
-        if f.is_file() and not f.name.endswith(".sample")
-    ]
+    present = [f for f in hooks_dir.iterdir() if f.is_file() and not f.name.endswith(".sample")]
     # 期望 pre-commit / pre-push 至少存在
     expected = {"pre-commit", "pre-push"}
     missing = expected - {f.name for f in present}
@@ -171,15 +177,16 @@ def _eval_overdue_approval(op: str, rhs: float, ws: Path) -> tuple[object, str]:
     planned_dir = ws / ".omo" / "tasks" / "planned"
     if not planned_dir.is_dir():
         return (0, "miss")
-    import yaml  # noqa: PLC0415
-    from datetime import datetime, timedelta, timezone  # noqa: PLC0415
+    from datetime import datetime, timedelta, timezone
 
-    cutoff = datetime.now(timezone.utc) - timedelta(days=14)
+    import yaml
+
+    cutoff = datetime.now(UTC) - timedelta(days=14)
     overdue = 0
     for tf in planned_dir.glob("*.yaml"):
         try:
             data = yaml.safe_load(tf.read_text(encoding="utf-8")) or {}
-        except Exception:  # noqa: BLE001
+        except Exception:
             continue
         if data.get("priority") != "P1" or data.get("approval_ref"):
             continue
@@ -190,7 +197,7 @@ def _eval_overdue_approval(op: str, rhs: float, ws: Path) -> tuple[object, str]:
             created_dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
             if created_dt < cutoff:
                 overdue += 1
-        except Exception:  # noqa: BLE001
+        except Exception:
             continue
     return (overdue, _apply_op(overdue, op, rhs))
 
@@ -245,9 +252,14 @@ def evaluate_rule(rule: dict, ws: Path) -> dict:
     cond_str = rule.get("condition", "")
 
     result = {
-        "id": rid, "dimension": dimension, "severity": severity,
-        "condition": cond_str, "enabled": enabled,
-        "status": "error", "current": None, "note": "",
+        "id": rid,
+        "dimension": dimension,
+        "severity": severity,
+        "condition": cond_str,
+        "enabled": enabled,
+        "status": "error",
+        "current": None,
+        "note": "",
     }
 
     if not enabled:
@@ -299,15 +311,24 @@ def emit_alert(rule_result: dict, dry_run: bool) -> bool:
         return True
     try:
         subprocess.run(
-            ["omo", "event", "emit",
-             "--type", "governance_alert_dispatched",
-             "--source", "governance-alert-dispatch",
-             "--payload", json.dumps(payload, ensure_ascii=False)],
-            timeout=10, capture_output=True, check=False,
+            [
+                "omo",
+                "event",
+                "emit",
+                "--type",
+                "governance_alert_dispatched",
+                "--source",
+                "governance-alert-dispatch",
+                "--payload",
+                json.dumps(payload, ensure_ascii=False),
+            ],
+            timeout=10,
+            capture_output=True,
+            check=False,
         )
         print(f"   📤 emitted: governance_alert_dispatched (rule={rule_result['id']})")
         return True
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"   ❌ emit failed: {e}", file=sys.stderr)
         return False
 
@@ -361,7 +382,9 @@ def main() -> int:
             errors.append(r)
 
     print()
-    print(f"📊 求值汇总: {len(hits)} hit / {len(misses)} miss / {len(unsupported)} unsupported / {len(disabled)} disabled / {len(errors)} error")
+    print(
+        f"📊 求值汇总: {len(hits)} hit / {len(misses)} miss / {len(unsupported)} unsupported / {len(disabled)} disabled / {len(errors)} error"
+    )
 
     if unsupported:
         print(f"\n⚠️  {len(unsupported)} 条 rule 无 evaluator (ISC-6 alert-coverage lint 应覆盖):")

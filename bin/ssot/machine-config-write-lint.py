@@ -32,7 +32,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]   # 本脚本只读仓内, 反推正确
+ROOT = Path(__file__).resolve().parents[2]  # 本脚本只读仓内, 反推正确
 SCAN = ["bin"]
 
 MACHINE = re.compile(r"Library/LaunchAgents|Library/LaunchDaemons|crontab|\.local/(?:bin|state|share)")
@@ -45,12 +45,9 @@ WRITE = re.compile(
 # 已审阅名单 —— 值是"为什么它是安全的 / 它的现状"。
 # 新脚本进入集合时不在这里, 就会被拦下要求审阅。
 REVIEWED: dict[str, str] = {
-    "bin/mof/gen-service-configs.py":
-        "已加固: WORKSPACE 锚定规范检出 + ~ 展开 + 未知 interpreter 报错 + 写前校验路径存在",
-    "bin/svc/service_view.py":
-        "分工正确: LaunchAgents 用绝对 HOME, 仓内 SSOT 才用派生根",
-    "bin/gac/install-watch-agent.py":
-        "已加固: WORKSPACE=canonical_root(), 从 worktree 跑也执行规范检出的生成器",
+    "bin/mof/gen-service-configs.py": "已加固: WORKSPACE 锚定规范检出 + ~ 展开 + 未知 interpreter 报错 + 写前校验路径存在",
+    "bin/svc/service_view.py": "分工正确: LaunchAgents 用绝对 HOME, 仓内 SSOT 才用派生根",
+    "bin/gac/install-watch-agent.py": "已加固: WORKSPACE=canonical_root(), 从 worktree 跑也执行规范检出的生成器",
     "bin/ssot/machine-config-write-lint.py": "本文件",
 }
 
@@ -92,9 +89,18 @@ def main() -> int:
     gone = [f for f in REVIEWED if f not in current and f != "bin/ssot/machine-config-write-lint.py"]
 
     if args.json:
-        print(json.dumps({"ok": not newcomers, "current": current,
-                          "newcomers": newcomers, "stale_entries": gone},
-                         ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "ok": not newcomers,
+                    "current": current,
+                    "newcomers": newcomers,
+                    "stale_entries": gone,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 0 if not newcomers else 1
 
     if gone:
@@ -103,7 +109,10 @@ def main() -> int:
         print(f"machine-config-write-lint: PASS ({len(current)} 个脚本, 均已审阅)")
         return 0
 
-    print(f"machine-config-write-lint: FAIL ({len(newcomers)} 个未审阅)\n", file=sys.stderr)
+    print(
+        f"machine-config-write-lint: FAIL ({len(newcomers)} 个未审阅)\n",
+        file=sys.stderr,
+    )
     for f in newcomers:
         print(f"  {f}", file=sys.stderr)
     print(

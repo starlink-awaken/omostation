@@ -3,8 +3,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = REPO_ROOT / "bin" / "gac" / "check-submodule-rewind.py"
 
@@ -61,6 +59,7 @@ class TestBasicFunctionality:
     def test_tolerance_layer_regression(self):
         import importlib.util
         import inspect
+
         spec = importlib.util.spec_from_file_location(
             "check_submodule_rewind",
             REPO_ROOT / "bin" / "gac" / "check-submodule-rewind.py",

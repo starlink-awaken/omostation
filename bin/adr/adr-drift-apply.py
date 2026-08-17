@@ -19,9 +19,7 @@ from pathlib import Path
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P94 ADR drift apply (touch SUBDIR_MISSING)"
-    )
+    parser = argparse.ArgumentParser(description="P94 ADR drift apply (touch SUBDIR_MISSING)")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     parser.add_argument("--dry-run", action="store_true", help="干跑 (不 touch)")
     args = parser.parse_args()

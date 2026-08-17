@@ -42,11 +42,19 @@ def generate_reflection(
 
     contract = card.get("reflection_contract", {})
     if not isinstance(contract, dict) or not contract.get("enabled", False):
-        return {"schema": REFLECTION_SCHEMA, "status": "skipped", "detail": "reflection_contract not enabled"}
+        return {
+            "schema": REFLECTION_SCHEMA,
+            "status": "skipped",
+            "detail": "reflection_contract not enabled",
+        }
 
     questions = contract.get("questions", [])
     if not isinstance(questions, list) or not questions:
-        return {"schema": REFLECTION_SCHEMA, "status": "skipped", "detail": "no questions defined"}
+        return {
+            "schema": REFLECTION_SCHEMA,
+            "status": "skipped",
+            "detail": "no questions defined",
+        }
 
     # Build reflection entry
     ts = utc_now()
@@ -87,7 +95,10 @@ def _trigger_evolution(root: Path, scene_id: str, execution_status: str) -> bool
     try:
         proc = subprocess.run(
             ["python3", str(root / "bin/ssot/evolution-agent.py"), "--json"],
-            capture_output=True, text=True, timeout=30, check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
         )
         if proc.returncode == 0 and proc.stdout:
             import json as _json
@@ -150,9 +161,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if command == "generate":
         result = generate_reflection(
-            args.root, args.scene_card,
-            run_id=args.run_id, execution_status=args.execution_status,
-            output_summary=args.output_summary, actor=args.actor,
+            args.root,
+            args.scene_card,
+            run_id=args.run_id,
+            execution_status=args.execution_status,
+            output_summary=args.output_summary,
+            actor=args.actor,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0 if result.get("status") in ("recorded", "skipped") else 1
@@ -165,7 +179,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Recent reflections ({len(entries)} entries):")
         for e in entries:
             q_count = len(e.get("questions", []))
-            print(f"  {e['ts'][:19]}  {e.get('scene_id','?'):25s}  status={e.get('execution_status','?')}  questions={q_count}  feedforward={e.get('feedforward',False)}")
+            print(
+                f"  {e['ts'][:19]}  {e.get('scene_id', '?'):25s}  status={e.get('execution_status', '?')}  questions={q_count}  feedforward={e.get('feedforward', False)}"
+            )
         return 0
 
     return 1

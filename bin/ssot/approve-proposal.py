@@ -16,7 +16,6 @@ import argparse
 import json
 import sys
 from datetime import UTC, datetime
-from pathlib import Path
 
 from _shared import ROOT
 
@@ -85,9 +84,7 @@ def approve(prop_id: str) -> None:
     # 标记原始提案为 approved
     for p in data.get("proposals", []):
         p["status"] = "approved"
-    source.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8"
-    )
+    source.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
     print(f"✅ Approved {prop_id} → {approved_path.relative_to(ROOT)}")
 
 
@@ -101,9 +98,7 @@ def reject(prop_id: str) -> None:
     data = json.loads(source.read_text(encoding="utf-8"))
     for p in data.get("proposals", []):
         p["status"] = "rejected"
-    source.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8"
-    )
+    source.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
     print(f"❌ Rejected {prop_id}")
 
 

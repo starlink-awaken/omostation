@@ -15,9 +15,7 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_REGISTRY = (
-    ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
-)
+DEFAULT_REGISTRY = ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
 DEFAULT_SETTINGS = Path.home() / ".config" / "zed" / "settings.json"
 
 
@@ -40,10 +38,7 @@ def _workspace_root(project_registry: Path) -> Path:
         or parent.parent.name != "_truth"
         or parent.parent.parent.name != ".omo"
     ):
-        raise ProfileError(
-            "project registry must be Workspace .omo/_truth/registry/"
-            "documents-domain-projects.yaml"
-        )
+        raise ProfileError("project registry must be Workspace .omo/_truth/registry/documents-domain-projects.yaml")
     return parent.parents[2].resolve(strict=True)
 
 
@@ -62,9 +57,7 @@ def _load_contract(project_registry: Path) -> ProfileContract:
         raise ProfileError("workspace_mcp must be a mapping")
     if not isinstance(clients, dict) or not isinstance(clients.get("zed"), dict):
         raise ProfileError("clients.zed must be a mapping")
-    if not isinstance(profiles, dict) or not isinstance(
-        profiles.get("content-domain"), dict
-    ):
+    if not isinstance(profiles, dict) or not isinstance(profiles.get("content-domain"), dict):
         raise ProfileError("profiles.content-domain must be a mapping")
 
     contract = clients["zed"].get("profile_contract")
@@ -84,51 +77,29 @@ def _load_contract(project_registry: Path) -> ProfileContract:
     if not isinstance(server, str) or not server:
         raise ProfileError("workspace_mcp.server must be non-empty")
     if contract.get("exclusive_mcp_server") != server:
-        raise ProfileError(
-            "clients.zed.profile_contract.exclusive_mcp_server must match "
-            "workspace_mcp.server"
-        )
+        raise ProfileError("clients.zed.profile_contract.exclusive_mcp_server must match workspace_mcp.server")
 
     generator_ref = contract.get("generator_ref")
     if not isinstance(generator_ref, str) or not generator_ref:
-        raise ProfileError(
-            "clients.zed.profile_contract.generator_ref must be a "
-            "Workspace-relative file"
-        )
+        raise ProfileError("clients.zed.profile_contract.generator_ref must be a Workspace-relative file")
     candidate = Path(generator_ref)
     if candidate.is_absolute() or ".." in candidate.parts or "://" in generator_ref:
-        raise ProfileError(
-            "clients.zed.profile_contract.generator_ref must be a "
-            "Workspace-relative file"
-        )
+        raise ProfileError("clients.zed.profile_contract.generator_ref must be a Workspace-relative file")
     workspace = _workspace_root(project_registry)
     try:
         generator = (workspace / candidate).resolve(strict=True)
     except OSError as exc:
-        raise ProfileError(
-            f"clients.zed.profile_contract.generator_ref is unavailable: {generator_ref}"
-        ) from exc
+        raise ProfileError(f"clients.zed.profile_contract.generator_ref is unavailable: {generator_ref}") from exc
     if not generator.is_relative_to(workspace) or not generator.is_file():
-        raise ProfileError(
-            "clients.zed.profile_contract.generator_ref must be a "
-            "Workspace-relative file"
-        )
+        raise ProfileError("clients.zed.profile_contract.generator_ref must be a Workspace-relative file")
 
     profile = profiles["content-domain"]
     tools = profile.get("allowed_workspace_tools")
-    if (
-        not isinstance(tools, list)
-        or not tools
-        or not all(isinstance(item, str) and item for item in tools)
-    ):
-        raise ProfileError(
-            "profiles.content-domain.allowed_workspace_tools must be a non-empty string list"
-        )
+    if not isinstance(tools, list) or not tools or not all(isinstance(item, str) and item for item in tools):
+        raise ProfileError("profiles.content-domain.allowed_workspace_tools must be a non-empty string list")
     exposed_tools = workspace_mcp.get("read_tools")
     if not isinstance(exposed_tools, list) or not set(tools).issubset(exposed_tools):
-        raise ProfileError(
-            "profiles.content-domain.allowed_workspace_tools must be exposed by workspace_mcp"
-        )
+        raise ProfileError("profiles.content-domain.allowed_workspace_tools must be exposed by workspace_mcp")
     return ProfileContract(
         profile_id=contract["name"],
         server=server,
@@ -166,21 +137,14 @@ def _validate_cockpit(settings: dict[str, Any], server: str) -> None:
 
 
 def _projection(contract: ProfileContract) -> dict[str, Any]:
-    permissions = {
-        f"mcp:{contract.server}:{tool}": {"default": "allow"}
-        for tool in contract.allowed_tools
-    }
+    permissions = {f"mcp:{contract.server}:{tool}": {"default": "allow"} for tool in contract.allowed_tools}
     return {
         "profile_id": contract.profile_id,
         "profile": {
             "name": contract.profile_id.title(),
             "tools": {},
             "enable_all_context_servers": False,
-            "context_servers": {
-                contract.server: {
-                    "tools": {tool: True for tool in contract.allowed_tools}
-                }
-            },
+            "context_servers": {contract.server: {"tools": {tool: True for tool in contract.allowed_tools}}},
         },
         "tool_permissions": permissions,
     }
@@ -193,31 +157,20 @@ def _agent_settings(settings: dict[str, Any]) -> dict[str, Any]:
     return agent
 
 
-def _check_projection(
-    settings: dict[str, Any], projection: dict[str, Any]
-) -> list[str]:
+def _check_projection(settings: dict[str, Any], projection: dict[str, Any]) -> list[str]:
     agent = settings.get("agent")
     if not isinstance(agent, dict):
         return ["agent must be a mapping"]
     profile_id = projection["profile_id"]
     profiles = agent.get("profiles")
     errors: list[str] = []
-    if (
-        not isinstance(profiles, dict)
-        or profiles.get(profile_id) != projection["profile"]
-    ):
-        errors.append(
-            f"agent.profiles.{profile_id} does not match the Workspace contract"
-        )
+    if not isinstance(profiles, dict) or profiles.get(profile_id) != projection["profile"]:
+        errors.append(f"agent.profiles.{profile_id} does not match the Workspace contract")
     tool_permissions = agent.get("tool_permissions")
-    tools = (
-        tool_permissions.get("tools") if isinstance(tool_permissions, dict) else None
-    )
+    tools = tool_permissions.get("tools") if isinstance(tool_permissions, dict) else None
     for key, expected in projection["tool_permissions"].items():
         if not isinstance(tools, dict) or tools.get(key) != expected:
-            errors.append(
-                f"agent.tool_permissions.tools.{key} does not match the Workspace contract"
-            )
+            errors.append(f"agent.tool_permissions.tools.{key} does not match the Workspace contract")
     return errors
 
 
@@ -266,14 +219,9 @@ def _is_prior_managed_projection(
 
     expected_permissions = projection["tool_permissions"]
     expected_current_permissions = {
-        f"mcp:{server}:{tool}": expected_permissions[f"mcp:{server}:{tool}"]
-        for tool in current_tool_names
+        f"mcp:{server}:{tool}": expected_permissions[f"mcp:{server}:{tool}"] for tool in current_tool_names
     }
-    managed_permissions = {
-        key: value
-        for key, value in current_permissions.items()
-        if key.startswith(f"mcp:{server}:")
-    }
+    managed_permissions = {key: value for key, value in current_permissions.items() if key.startswith(f"mcp:{server}:")}
     return managed_permissions == expected_current_permissions
 
 
@@ -296,15 +244,11 @@ def _install_projection(settings: dict[str, Any], projection: dict[str, Any]) ->
         and current_profile != projection["profile"]
         and not _is_prior_managed_projection(current_profile, projection, tools)
     ):
-        raise ProfileError(
-            f"agent.profiles.{profile_id} already exists with different content"
-        )
+        raise ProfileError(f"agent.profiles.{profile_id} already exists with different content")
     for key, expected in projection["tool_permissions"].items():
         current = tools.get(key)
         if current is not None and current != expected:
-            raise ProfileError(
-                f"agent.tool_permissions.tools.{key} conflicts with the Workspace contract"
-            )
+            raise ProfileError(f"agent.tool_permissions.tools.{key} conflicts with the Workspace contract")
 
     changed = current_profile != projection["profile"]
     if changed:
@@ -340,9 +284,7 @@ def _atomic_write(path: Path, settings: dict[str, Any]) -> None:
             Path(temporary).unlink(missing_ok=True)
 
 
-def _envelope(
-    ok: bool, *, status: str, settings_path: Path, errors: list[str] | None = None
-) -> dict[str, Any]:
+def _envelope(ok: bool, *, status: str, settings_path: Path, errors: list[str] | None = None) -> dict[str, Any]:
     return {
         "ok": ok,
         "status": status,

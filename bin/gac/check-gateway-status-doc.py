@@ -4,6 +4,7 @@
 Scans gateway configuration files and checks that unreachable/down
 gateways have corresponding documentation.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -45,7 +46,9 @@ def main(argv: list[str] | None = None) -> int:
             entries = data.get(key, {}) or {}
             if isinstance(entries, list):
                 for e in entries:
-                    if isinstance(e, dict) and any(k in str(e.get("uri", "")) or k in str(e.get("name", "")) for k in ("gateway", "llm")):
+                    if isinstance(e, dict) and any(
+                        k in str(e.get("uri", "")) or k in str(e.get("name", "")) for k in ("gateway", "llm")
+                    ):
                         gateways.append(e)
             elif isinstance(entries, dict):
                 for name, info in entries.items():
@@ -58,7 +61,16 @@ def main(argv: list[str] | None = None) -> int:
 
     if not gateways:
         if args.json:
-            print(json.dumps({"ok": True, "gateways_checked": 0, "unreachable": 0, "violations": []}))
+            print(
+                json.dumps(
+                    {
+                        "ok": True,
+                        "gateways_checked": 0,
+                        "unreachable": 0,
+                        "violations": [],
+                    }
+                )
+            )
         else:
             print("check-gateway-status-doc: PASS (no gateways configured)")
         return 0
@@ -72,7 +84,11 @@ def main(argv: list[str] | None = None) -> int:
             gw_name = gw.get("name") or gw.get("uri") or "unknown"
             # Check for documentation
             doc_found = False
-            for doc_dir in [WORKSPACE / "docs" / "operations", WORKSPACE / "docs" / "gateway", WORKSPACE / ".omo" / "_knowledge"]:
+            for doc_dir in [
+                WORKSPACE / "docs" / "operations",
+                WORKSPACE / "docs" / "gateway",
+                WORKSPACE / ".omo" / "_knowledge",
+            ]:
                 if doc_dir.exists():
                     for doc_file in doc_dir.rglob("*.md"):
                         content = doc_file.read_text(encoding="utf-8", errors="ignore")
@@ -84,9 +100,21 @@ def main(argv: list[str] | None = None) -> int:
 
     ok = len(violations) == 0
     if args.json:
-        print(json.dumps({"ok": ok, "gateways_checked": len(gateways), "unreachable": unreachable_count, "violations": violations}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "ok": ok,
+                    "gateways_checked": len(gateways),
+                    "unreachable": unreachable_count,
+                    "violations": violations,
+                },
+                indent=2,
+            )
+        )
     else:
-        print(f"check-gateway-status-doc: {'PASS' if ok else 'FAIL'} ({len(gateways)} gateways, {unreachable_count} unreachable, {len(violations)} undocumented)")
+        print(
+            f"check-gateway-status-doc: {'PASS' if ok else 'FAIL'} ({len(gateways)} gateways, {unreachable_count} unreachable, {len(violations)} undocumented)"
+        )
         for v in violations:
             print(f"  VIOLATION: {v['gateway']} is {v['status']} but undocumented")
 

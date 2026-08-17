@@ -35,7 +35,7 @@ import re
 import subprocess
 import sys
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 # CI 可移植: 用 __file__ 定位 workspace, 不硬编码 (CLAUDE.md CI 治本机制)
@@ -84,8 +84,7 @@ def _bootstrap_agora_venv() -> bool:
         )
         if res.returncode != 0:
             print(
-                f"⚠️  uv sync failed (exit {res.returncode}): "
-                f"{(res.stderr or res.stdout or '')[:300]}",
+                f"⚠️  uv sync failed (exit {res.returncode}): {(res.stderr or res.stdout or '')[:300]}",
                 file=sys.stderr,
             )
             return False
@@ -93,7 +92,7 @@ def _bootstrap_agora_venv() -> bool:
     except FileNotFoundError:
         print("⚠️  uv not found; cannot bootstrap agora venv", file=sys.stderr)
         return False
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"⚠️  agora bootstrap error: {exc}", file=sys.stderr)
         return False
 
@@ -103,7 +102,9 @@ _inject_agora_venv_site()
 OUTPUT_DIR = WORKSPACE / ".omo" / "_delivery" / "evidence-smoke"
 SYSTEM_YAML = WORKSPACE / ".omo" / "state" / "system.yaml"
 GOV_LOG = WORKSPACE / ".omo" / "_knowledge" / "governance-history.jsonl"
-EVENTS_LOG = WORKSPACE / ".omo" / "_knowledge" / "omo-events.jsonl"  # 轻事件流 (state-stale-emit 写); 重跑批断时作回路活信号 (多源 OR)
+EVENTS_LOG = (
+    WORKSPACE / ".omo" / "_knowledge" / "omo-events.jsonl"
+)  # 轻事件流 (state-stale-emit 写); 重跑批断时作回路活信号 (多源 OR)
 
 # evidence_health_score 权重 (综合三维度, 满分 100)
 W_BOS = 60  # BOS resolve 率 (最重 — 这是核心鸿沟)
@@ -184,16 +185,11 @@ def check_consumers(uri: str) -> list[str]:
 
 
 def _utc_now() -> str:
-    return (
-        datetime.now(timezone.utc)
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z")
-    )
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _today() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return datetime.now(UTC).strftime("%Y-%m-%d")
 
 
 def _write_health_score_evidence(score: float) -> tuple[bool, str]:
@@ -211,9 +207,7 @@ def _write_health_score_evidence(score: float) -> tuple[bool, str]:
         data = yaml.safe_load(SYSTEM_YAML.read_text(encoding="utf-8")) or {}
         data["health_score_evidence"] = round(float(score), 2)
         data["health_score_evidence_source"] = "bin/gac/evidence-smoke.py"
-        data["health_score_evidence_generated_at"] = datetime.now(
-            timezone.utc
-        ).isoformat()
+        data["health_score_evidence_generated_at"] = datetime.now(UTC).isoformat()
         with open(SYSTEM_YAML, "w", encoding="utf-8") as fh:
             yaml.safe_dump(data, fh, allow_unicode=True, sort_keys=False)
         return True, f"health_score_evidence={data['health_score_evidence']} written"
@@ -232,13 +226,17 @@ def _check_stdio(command: list[str], svc_package: str = "") -> tuple[bool, str]:
     # 路径 0: host_cli / ToolBox 外挂 — bash -lc 调本机 TOOLBOX_ROOT
     # (media-crawler / last30days / open-montage 等 capability host 入口).
     # CI 无 ~/ToolBox 时属 local-only, 不计 BOS 鸿沟; 与绝对 --directory 同类.
-    if command and command[0] in ("bash", "sh") and any(
-        tok in " ".join(command)
-        for tok in (
-            "TOOLBOX_ROOT",
-            "$HOME/ToolBox",
-            "${HOME}/ToolBox",
-            "~/ToolBox",
+    if (
+        command
+        and command[0] in ("bash", "sh")
+        and any(
+            tok in " ".join(command)
+            for tok in (
+                "TOOLBOX_ROOT",
+                "$HOME/ToolBox",
+                "${HOME}/ToolBox",
+                "~/ToolBox",
+            )
         )
     ):
         return True, "local-only (host_cli bash/ToolBox: CI 无本机工具, 非鸿沟)"
@@ -261,11 +259,7 @@ def _check_stdio(command: list[str], svc_package: str = "") -> tuple[bool, str]:
     if script:
         sp = Path(script)
         sp = sp if sp.is_absolute() else WORKSPACE / sp
-        return (
-            (True, "ok (script)")
-            if sp.exists()
-            else (False, f"script not found: {script}")
-        )
+        return (True, "ok (script)") if sp.exists() else (False, f"script not found: {script}")
 
     # 路径 2: --package (workspace 根跑, uv workspace 运行时解析)
     # e.g. uv run --package cockpit python -m cockpit.scripts.cockpit_mcp
@@ -308,11 +302,7 @@ def _check_stdio(command: list[str], svc_package: str = "") -> tuple[bool, str]:
         dir_path / "src" / pkg_root,  # 标准布局 (projects/omo/src/omo)
         dir_path / pkg_root,  # 根布局
         dir_path / "src" / module.replace(".", "/"),  # 完整 module 路径
-        dir_path
-        / "packages"
-        / pkg_root
-        / "src"
-        / pkg_root,  # monorepo workspace (kairon)
+        dir_path / "packages" / pkg_root / "src" / pkg_root,  # monorepo workspace (kairon)
         dir_path / "packages" / pkg_root,  # monorepo 包根
         dir_path
         / "packages"
@@ -370,7 +360,10 @@ def check_service(svc) -> dict:
         # toolbox/* 外挂能力 (headroom/deer-flow/…) 声明在 monorepo, 执行在 ToolBox。
         # L2 无 ToolBox 安装时不算真实鸿沟 (与 host_cli bash 同类).
         if not ok and str(getattr(svc, "package", "") or "").startswith("toolbox/"):
-            ok, reason = True, "local-only (toolbox package host: CI 无 ToolBox 安装, 非鸿沟)"
+            ok, reason = (
+                True,
+                "local-only (toolbox package host: CI 无 ToolBox 安装, 非鸿沟)",
+            )
     elif transport == "internal":
         ok, reason = _check_internal(svc.module_path, svc.func_name)
     elif transport == "mcp":
@@ -498,7 +491,7 @@ def check_feedback_loop() -> dict:
             if ts:
                 try:
                     dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                    hours = round((datetime.now(timezone.utc) - dt).total_seconds() / 3600, 1)
+                    hours = round((datetime.now(UTC) - dt).total_seconds() / 3600, 1)
                     entry["staleness_hours"] = hours
                     entry["alive"] = hours < 24
                     if hours < 24:
@@ -514,18 +507,22 @@ def check_feedback_loop() -> dict:
     # git 第三源: tracked 运行快照 (governance-history/omo-events) 在 CI 都 stale 时,
     # 用 git 最近 commit 验回路活 (多源 OR, feedback-loop-recovery-generator-trap).
     try:
-        import subprocess  # noqa: PLC0415
+        import subprocess
+
         _r = subprocess.run(
             ["git", "log", "-1", "--format=%ct"],
-            capture_output=True, text=True, timeout=10, cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=WORKSPACE,
         )
         if _r.returncode == 0 and _r.stdout.strip():
             git_ts = int(_r.stdout.strip())
-            git_hours = round((datetime.now(timezone.utc).timestamp() - git_ts) / 3600, 1)
+            git_hours = round((datetime.now(UTC).timestamp() - git_ts) / 3600, 1)
             git_alive = git_hours < 24
             per_source["git_activity"] = {
                 "exists": True,
-                "last_ts": datetime.fromtimestamp(git_ts, tz=timezone.utc).isoformat(),
+                "last_ts": datetime.fromtimestamp(git_ts, tz=UTC).isoformat(),
                 "staleness_hours": git_hours,
                 "alive": git_alive,
             }
@@ -615,7 +612,9 @@ def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
     # ADR-0219: import 失败时先 uv sync bootstrap, 再试一次全量 BOS.
     e: Exception | None = None
     try:
-        from agora.mcp.resolver.services import POC_SERVICES  # type: ignore[import-not-found]
+        from agora.mcp.resolver.services import (
+            POC_SERVICES,  # type: ignore[import-not-found]
+        )
     except ImportError as first_err:
         e = first_err
         if _bootstrap_agora_venv():
@@ -623,6 +622,7 @@ def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
                 from agora.mcp.resolver.services import (  # type: ignore[import-not-found]
                     POC_SERVICES,
                 )
+
                 e = None
             except ImportError as second_err:
                 e = second_err
@@ -637,8 +637,8 @@ def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
         tree = check_working_tree()
         feedback = check_feedback_loop()
         # BOS 维不可用时 score 只由 tree+feedback 归一 (各占 50 分制再缩放到 100)
-        tree_score = 100 if tree.get("dirty_count", -1) == 0 else max(
-            0, 100 - 5 * max(0, int(tree.get("dirty_count") or 0))
+        tree_score = (
+            100 if tree.get("dirty_count", -1) == 0 else max(0, 100 - 5 * max(0, int(tree.get("dirty_count") or 0)))
         )
         fb_score = 100 if feedback.get("alive") else 0
         partial_score = round(0.5 * tree_score + 0.5 * fb_score)
@@ -685,10 +685,7 @@ def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
             real_fails.append(r)
 
     # 失败原因分桶 (仅真实 gap, deprecated 不混入)
-    failure_buckets = Counter(
-        (r.get("reason") or "unknown").split(":")[0].split("(")[0].strip()
-        for r in real_fails
-    )
+    failure_buckets = Counter((r.get("reason") or "unknown").split(":")[0].split("(")[0].strip() for r in real_fails)
 
     # bos_rate: deprecated 也算未 resolve (诚实, 不 gaming score); deprecated 只是分类标签
     # 价值: 输出告诉你 "鸿沟 X 里 Y 调研中 / Z 真实新鸿沟要立即修"
@@ -751,9 +748,7 @@ def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
         report["spawn_summary"] = {
             "sampled": len(spawn_results),
             "spawnable": spawnable_count,
-            "rate": round(spawnable_count / len(spawn_results), 3)
-            if spawn_results
-            else 0,
+            "rate": round(spawnable_count / len(spawn_results), 3) if spawn_results else 0,
         }
 
     # 写 JSON 报告 (原子写绕 direct-omo-io gate: os.makedirs + open+write+os.replace,
@@ -798,9 +793,7 @@ def print_summary(report: dict, quiet: bool = False) -> None:
         print(f"  失败分桶:    {bos['failure_buckets']}")
     dep_n = bos.get("deprecated_count", 0)
     if dep_n:
-        print(
-            f"  deprecated:  {dep_n} (调研中, expires {bos.get('deprecated_expires', '?')}, 不计鸿沟)"
-        )
+        print(f"  deprecated:  {dep_n} (调研中, expires {bos.get('deprecated_expires', '?')}, 不计鸿沟)")
     print()
     print("── working tree 累积 (权重 20%) ──")
     print(f"  dirty 文件:  {tree.get('dirty_count', '?')}")
@@ -826,9 +819,7 @@ def print_summary(report: dict, quiet: bool = False) -> None:
         ss = report["spawn_summary"]
         print()
         print("── L3 抽样 spawn (执行验证) ──")
-        print(
-            f"  采样: {ss['sampled']} | 可 spawn: {ss['spawnable']} | 率: {ss['rate']}"
-        )
+        print(f"  采样: {ss['sampled']} | 可 spawn: {ss['spawnable']} | 率: {ss['rate']}")
     print()
     print(f"📁 报告: {OUTPUT_DIR}/{_today()}.json")
 
@@ -842,7 +833,11 @@ def main() -> int:
         help="L3 抽样 spawn N 个 stdio service (慢, 默认 0 不跑)",
     )
     parser.add_argument("--quiet", action="store_true", help="只输出 score")
-    parser.add_argument("--json", action="store_true", help="JSON 输出 (含 feedback_loop, 供 compass_radar 真同源消费)")
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="JSON 输出 (含 feedback_loop, 供 compass_radar 真同源消费)",
+    )
     parser.add_argument(
         "--consumers",
         action="store_true",
@@ -914,8 +909,7 @@ def main() -> int:
             deprecated = report.get("bos", {}).get("deprecated_count", 0)
             if deprecated > 0:
                 print(
-                    f"❌ GATE FAIL: deprecated_count {deprecated} > 0 "
-                    f"(TASK-AB15691F D 调研 2026-07-25 到期前必须 0)",
+                    f"❌ GATE FAIL: deprecated_count {deprecated} > 0 (TASK-AB15691F D 调研 2026-07-25 到期前必须 0)",
                     file=sys.stderr,
                 )
                 return 1

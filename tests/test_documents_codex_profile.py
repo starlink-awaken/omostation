@@ -189,19 +189,13 @@ def test_render_is_cockpit_only_and_disables_only_user_local_skills(
     assert result.returncode == 0, result.stderr
     assert "[mcp_servers.cockpit]" in result.stdout
     assert 'default_tools_approval_mode = "approve"' in result.stdout
-    assert (
-        'enabled_tools = ["cards_check", "cards_status", "domain_context", '
-        '"workspace_context"]'
-    ) in result.stdout
+    assert ('enabled_tools = ["cards_check", "cards_status", "domain_context", "workspace_context"]') in result.stdout
     assert "[mcp_servers.gitnexus]\nenabled = false" in result.stdout
     assert "[mcp_servers.web-reader]\nenabled = false" in result.stdout
     assert str(tmp_path / "user-skills" / "valid" / "SKILL.md") in result.stdout
     assert str(tmp_path / "user-skills" / "broken" / "SKILL.md") in result.stdout
     assert str(tmp_path / "plugins" / "documents" / "SKILL.md") not in result.stdout
-    assert (
-        str(tmp_path / "user-skills" / ".system" / "system-skill" / "SKILL.md")
-        not in result.stdout
-    )
+    assert str(tmp_path / "user-skills" / ".system" / "system-skill" / "SKILL.md") not in result.stdout
 
 
 def test_install_then_check_detects_profile_drift(tmp_path: Path) -> None:
@@ -234,9 +228,7 @@ def test_install_refuses_to_overwrite_existing_profile(tmp_path: Path) -> None:
 
     assert result.returncode == 1
     assert profile_path.read_text(encoding="utf-8") == "caller owned\n"
-    assert json.loads(result.stdout)["errors"] == [
-        f"profile already exists with different content: {profile_path}"
-    ]
+    assert json.loads(result.stdout)["errors"] == [f"profile already exists with different content: {profile_path}"]
 
 
 def test_install_refreshes_a_stale_generated_profile(tmp_path: Path) -> None:
@@ -288,15 +280,11 @@ def test_missing_cockpit_server_fails_closed(tmp_path: Path) -> None:
     result = _run(tmp_path, "render", mcp_servers=("gitnexus",))
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "required Codex MCP server is missing: cockpit"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["required Codex MCP server is missing: cockpit"]
 
 
 def test_required_phase_gate_covers_profile_generator_and_tests() -> None:
-    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(
-        encoding="utf-8"
-    )
+    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(encoding="utf-8")
 
     assert "bin/gac/documents-codex-profile.py" in workflow
     assert "tests/test_documents_codex_profile.py" in workflow

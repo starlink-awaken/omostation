@@ -8,6 +8,7 @@ whitespace) so ADR file refs sit in their own table cell.
 Spans the ommostation workspace, not kairon, so we load by absolute
 path rather than relying on sys.path.
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -15,7 +16,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 
 WORKSPACE = Path(__file__).resolve().parents[1]
 OMO_AUDIT = WORKSPACE / "projects" / "omo" / "src" / "omo" / "omo_audit.py"
@@ -61,6 +61,7 @@ def test_adr_links_handcrafted():
     )
     import shutil
     import tempfile
+
     tmpdir = Path(tempfile.mkdtemp())
     try:
         decisions = tmpdir / "decisions"
@@ -71,11 +72,11 @@ def test_adr_links_handcrafted():
         idx.write_text(snippet)
         # DECISIONS_DIR is a module-level Path; we override it for the test.
         original = mod.DECISIONS_DIR
-        setattr(mod, "DECISIONS_DIR", decisions)
+        mod.DECISIONS_DIR = decisions
         try:
             result = mod.governance_check_adr_links()
         finally:
-            setattr(mod, "DECISIONS_DIR", original)
+            mod.DECISIONS_DIR = original
         details_str = " ".join(result.details)
         assert "2026-07-24.md" not in details_str
         assert "2026-07-06.md" not in details_str

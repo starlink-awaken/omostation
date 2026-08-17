@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 import time
-from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -131,7 +130,6 @@ def gate_to_rules_mapping() -> dict[str, list[str]]:
 
     Returns mapping of gate IDs to the script paths they execute.
     """
-    import ast
     import re
 
     gate_file = WORKSPACE_ROOT / "bin" / "gac" / "gac-local-gate.py"

@@ -132,10 +132,13 @@ class SeeyonOAConnector(BaseConnector):
                 except ImportError:
                     return None
                 async with websockets.connect(ws_url) as ws:
-                    msg = _json.dumps({
-                        "id": 1, "method": "Runtime.evaluate",
-                        "params": {"expression": expression, "returnByValue": True},
-                    })
+                    msg = _json.dumps(
+                        {
+                            "id": 1,
+                            "method": "Runtime.evaluate",
+                            "params": {"expression": expression, "returnByValue": True},
+                        }
+                    )
                     await ws.send(msg)
                     resp = _json.loads(await ws.recv())
                     return resp.get("result", {}).get("result", {}).get("value")
@@ -179,4 +182,3 @@ class SeeyonOAConnector(BaseConnector):
             if self._cdp_evaluate(js) is not None:
                 filled += 1
         return {"status": "filled", "fields_filled": filled, "total": len(form_data)}
-

@@ -103,9 +103,9 @@ class LiveKosSearchBackend:
     def _http_get(self, url: str, params: dict[str, str]) -> Any:
         qs = urllib.parse.urlencode(params)
         full = f"{url}?{qs}" if qs else url
-        req = urllib.request.Request(full, headers={"Accept": "application/json"}, method="GET")  # noqa: S310
+        req = urllib.request.Request(full, headers={"Accept": "application/json"}, method="GET")
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout_sec) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=self.timeout_sec) as resp:
                 body = resp.read().decode("utf-8", errors="replace")
         except urllib.error.URLError as exc:
             self.last_error = f"kos_unreachable:{exc}"

@@ -110,7 +110,9 @@ def _safe_version_argv(provider: Mapping[str, Any]) -> list[str] | None:
 
 
 def _probe_version(
-    provider: Mapping[str, Any], runner: Callable[[list[str], float], subprocess.CompletedProcess[str]], timeout: float
+    provider: Mapping[str, Any],
+    runner: Callable[[list[str], float], subprocess.CompletedProcess[str]],
+    timeout: float,
 ) -> dict[str, str]:
     argv = _safe_version_argv(provider)
     if argv is None:
@@ -190,7 +192,10 @@ def _project_quota_windows(usage: Mapping[str, Any]) -> dict[str, dict[str, Any]
 
 def _sanitize_quota(payload: object, provider_name: str, now: datetime, max_age_seconds: int) -> dict[str, Any]:
     rows = payload if isinstance(payload, list) else [payload]
-    row = next((item for item in rows if isinstance(item, dict) and item.get("provider") == provider_name), None)
+    row = next(
+        (item for item in rows if isinstance(item, dict) and item.get("provider") == provider_name),
+        None,
+    )
     if row is None:
         return {"state": "unknown", "reason": "malformed"}
     usage = row.get("usage")
@@ -227,7 +232,9 @@ def _observe_quota(
     if argv is None:
         return {"state": "unknown", "reason": "unsafe_argv"}
     configured_age = observation.get("max_age_seconds", DEFAULT_QUOTA_MAX_AGE_SECONDS)
-    max_age_seconds = configured_age if isinstance(configured_age, int) and configured_age >= 0 else DEFAULT_QUOTA_MAX_AGE_SECONDS
+    max_age_seconds = (
+        configured_age if isinstance(configured_age, int) and configured_age >= 0 else DEFAULT_QUOTA_MAX_AGE_SECONDS
+    )
     try:
         result = runner(argv, timeout)
     except FileNotFoundError:
@@ -377,13 +384,20 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subcommands = parser.add_subparsers(dest="command", required=True)
     observe = subcommands.add_parser("observe", help="emit a read-only observation manifest")
-    observe.add_argument("--providers", type=Path, default=root / ".omo/_truth/registry/capability-providers.yaml")
+    observe.add_argument(
+        "--providers",
+        type=Path,
+        default=root / ".omo/_truth/registry/capability-providers.yaml",
+    )
     observe.add_argument("--workers", type=Path, default=root / ".omo/_truth/registry/workers.yaml")
     observe.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT_SECONDS)
     observe.add_argument("--json", action="store_true", help="required for machine output compatibility")
     verify = subcommands.add_parser("verify", help="verify a manifest's structure and checksum")
     verify.add_argument("--manifest", type=Path, required=True)
-    verify.add_argument("--expected-digest", help="independent fixed SHA-256 checksum expected for the manifest")
+    verify.add_argument(
+        "--expected-digest",
+        help="independent fixed SHA-256 checksum expected for the manifest",
+    )
     verify.add_argument("--json", action="store_true", help="required for machine output compatibility")
     return parser.parse_args()
 
@@ -404,7 +418,16 @@ def main() -> int:
         print(json.dumps({"valid": False, "errors": ["manifest_unreadable"]}))
         return 2
     errors = verify_manifest(manifest, expected_digest=args.expected_digest)
-    print(json.dumps({"valid": not errors, "checksum": manifest.get("manifest_digest"), "errors": errors}, sort_keys=True))
+    print(
+        json.dumps(
+            {
+                "valid": not errors,
+                "checksum": manifest.get("manifest_digest"),
+                "errors": errors,
+            },
+            sort_keys=True,
+        )
+    )
     return 0 if not errors else 1
 
 

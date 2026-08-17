@@ -20,7 +20,10 @@ def _load_module() -> object:
     spec = importlib.util.spec_from_loader("capability_sync", loader=None)
     module = importlib.util.module_from_spec(spec)
     module.__dict__["__file__"] = str(SCRIPT_PATH)
-    exec(compile(SCRIPT_PATH.read_text(encoding="utf-8"), str(SCRIPT_PATH), "exec"), module.__dict__)
+    exec(
+        compile(SCRIPT_PATH.read_text(encoding="utf-8"), str(SCRIPT_PATH), "exec"),
+        module.__dict__,
+    )
     return module
 
 
@@ -31,7 +34,7 @@ def cap_sync() -> object:
 
 
 @pytest.fixture
-def temp_skill_dir(tmp_path: Path) -> Generator[Path, None, None]:
+def temp_skill_dir(tmp_path: Path) -> Generator[Path]:
     """临时 skills 目录 fixture"""
     skills_dir = tmp_path / "skills"
     skills_dir.mkdir()
@@ -44,11 +47,7 @@ def test_scan_skill_frontmatter_valid(cap_sync, temp_skill_dir: Path) -> None:
     skill1 = temp_skill_dir / "test-skill" / "SKILL.md"
     skill1.parent.mkdir(parents=True, exist_ok=True)
     skill1.write_text(
-        "---\n"
-        "name: test-skill\n"
-        "description: 这是个测试 skill\n"
-        "---\n"
-        "content here",
+        "---\nname: test-skill\ndescription: 这是个测试 skill\n---\ncontent here",
         encoding="utf-8",
     )
 
@@ -191,16 +190,12 @@ def test_find_capabilities_case_insensitive(cap_sync, tmp_path: Path) -> None:
     )
 
     # 测试大写查询
-    results = cap_sync.find_capabilities(
-        cap_sync.load_registry(registry_path), "TEST"
-    )
+    results = cap_sync.find_capabilities(cap_sync.load_registry(registry_path), "TEST")
     assert len(results) == 1
     assert results[0].name == "Test-Skill"
 
     # 测试小写查询
-    results = cap_sync.find_capabilities(
-        cap_sync.load_registry(registry_path), "skill"
-    )
+    results = cap_sync.find_capabilities(cap_sync.load_registry(registry_path), "skill")
     assert len(results) == 1
     assert results[0].name == "Test-Skill"
 
@@ -228,9 +223,7 @@ def test_find_capabilities_query_both_name_and_description(cap_sync, tmp_path: P
         encoding="utf-8",
     )
 
-    results = cap_sync.find_capabilities(
-        cap_sync.load_registry(registry_path), "keyword"
-    )
+    results = cap_sync.find_capabilities(cap_sync.load_registry(registry_path), "keyword")
     assert len(results) == 1
     assert results[0].name == "desc-match"
 
@@ -253,61 +246,41 @@ def test_find_capabilities_no_results(cap_sync, tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    results = cap_sync.find_capabilities(
-        cap_sync.load_registry(registry_path), "nonexistent"
-    )
+    results = cap_sync.find_capabilities(cap_sync.load_registry(registry_path), "nonexistent")
     assert results == []
 
 
 def test_check_drift_no_change(cap_sync) -> None:
     """测试无漂移返回 False"""
-    cap1 = cap_sync.Capability(
-        source="test", name="skill", description="desc", invoke="invoke"
-    )
+    cap1 = cap_sync.Capability(source="test", name="skill", description="desc", invoke="invoke")
     assert cap_sync.check_drift([cap1], [cap1]) is False
 
 
 def test_check_drift_added(cap_sync) -> None:
     """测试新增 capability 返回 True（漂移）"""
-    cap1 = cap_sync.Capability(
-        source="test", name="skill", description="desc", invoke="invoke"
-    )
-    cap2 = cap_sync.Capability(
-        source="test", name="new", description="new", invoke="invoke"
-    )
+    cap1 = cap_sync.Capability(source="test", name="skill", description="desc", invoke="invoke")
+    cap2 = cap_sync.Capability(source="test", name="new", description="new", invoke="invoke")
     assert cap_sync.check_drift([cap1], [cap1, cap2]) is True
 
 
 def test_check_drift_removed(cap_sync) -> None:
     """测试删除 capability 返回 True（漂移）"""
-    cap1 = cap_sync.Capability(
-        source="test", name="skill", description="desc", invoke="invoke"
-    )
-    cap2 = cap_sync.Capability(
-        source="test", name="old", description="old", invoke="invoke"
-    )
+    cap1 = cap_sync.Capability(source="test", name="skill", description="desc", invoke="invoke")
+    cap2 = cap_sync.Capability(source="test", name="old", description="old", invoke="invoke")
     assert cap_sync.check_drift([cap1, cap2], [cap1]) is True
 
 
 def test_check_drift_description_changed(cap_sync) -> None:
     """测试描述变化返回 True（漂移）"""
-    cap1_old = cap_sync.Capability(
-        source="test", name="skill", description="old desc", invoke="invoke"
-    )
-    cap1_new = cap_sync.Capability(
-        source="test", name="skill", description="new desc", invoke="invoke"
-    )
+    cap1_old = cap_sync.Capability(source="test", name="skill", description="old desc", invoke="invoke")
+    cap1_new = cap_sync.Capability(source="test", name="skill", description="new desc", invoke="invoke")
     assert cap_sync.check_drift([cap1_old], [cap1_new]) is True
 
 
 def test_check_drift_invoke_changed(cap_sync) -> None:
     """测试 invoke 变化返回 True（漂移）"""
-    cap1_old = cap_sync.Capability(
-        source="test", name="skill", description="desc", invoke="old invoke"
-    )
-    cap1_new = cap_sync.Capability(
-        source="test", name="skill", description="desc", invoke="new invoke"
-    )
+    cap1_old = cap_sync.Capability(source="test", name="skill", description="desc", invoke="old invoke")
+    cap1_new = cap_sync.Capability(source="test", name="skill", description="desc", invoke="new invoke")
     assert cap_sync.check_drift([cap1_old], [cap1_new]) is True
 
 

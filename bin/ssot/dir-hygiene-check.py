@@ -8,8 +8,7 @@ appear at the workspace root without being accounted for.
 Run: python3 bin/ssot/dir-hygiene-check.py [--json]
 Exit 0 = clean, Exit 1 = violations found.
 """
-import json as _json
-import os
+
 import subprocess
 import sys
 from pathlib import Path
@@ -18,7 +17,8 @@ from pathlib import Path
 def is_tracked(path: str) -> bool:
     r = subprocess.run(
         ["git", "ls-files", "--error-unmatch", path],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     return r.returncode == 0
 
@@ -26,15 +26,14 @@ def is_tracked(path: str) -> bool:
 def is_ignored(path: str) -> bool:
     r = subprocess.run(
         ["git", "check-ignore", path],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     return r.returncode == 0
 
 
 def main() -> int:
-    root = Path(subprocess.check_output(
-        ["git", "rev-parse", "--show-toplevel"], text=True
-    ).strip())
+    root = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip())
 
     violations = []
     for entry in sorted(root.iterdir()):

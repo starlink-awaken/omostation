@@ -50,7 +50,7 @@ def next_rule_id(existing: list[dict], prefix: str = "X2-FRESH") -> str:
         candidate = f"{prefix}-NEW-{n:03d}"
         if candidate not in {r.get("rule_id", "") for r in existing}:
             return candidate
-    return f"{prefix}-NEW-{len(existing)+1:03d}"
+    return f"{prefix}-NEW-{len(existing) + 1:03d}"
 
 
 def validate_rule(rule: dict, root: Path) -> list[str]:
@@ -87,8 +87,7 @@ def add_rule_to_yaml(yaml_path: Path, new_rule: dict) -> int:
     """追加 rule 到 YAML 文件末尾. 简单策略: 追加到文件末尾."""
     if not yaml_path.exists():
         yaml_path.write_text(
-            "---\nstatus: active\nlifecycle: ssot\nowner: governance-team\n"
-            "last-reviewed: 2026-06-25\n---\n\nrules:\n",
+            "---\nstatus: active\nlifecycle: ssot\nowner: governance-team\nlast-reviewed: 2026-06-25\n---\n\nrules:\n",
             encoding="utf-8",
         )
 
@@ -98,7 +97,7 @@ def add_rule_to_yaml(yaml_path: Path, new_rule: dict) -> int:
     fresh = new_rule["freshness"]
     title = new_rule.get("title", rid).replace('"', '\\"')
     new_yaml = (
-        f'  - rule_id: {rid}\n'
+        f"  - rule_id: {rid}\n"
         f'    title: "{title}"\n'
         f"    type: {new_rule.get('type', 'governance_loop_freshness')}\n"
         f"    status: active\n"
@@ -156,8 +155,11 @@ def main() -> int:
     parser.add_argument("--root", default=".", help="workspace root")
     parser.add_argument("--template", action="store_true", help="打印 YAML 模板")
     parser.add_argument("--check", action="store_true", help="仅检查现有规则")
-    parser.add_argument("--non-interactive", action="store_true",
-                        help="非交互 (从 stdin 读 rule_id/title/target/threshold/action)")
+    parser.add_argument(
+        "--non-interactive",
+        action="store_true",
+        help="非交互 (从 stdin 读 rule_id/title/target/threshold/action)",
+    )
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
@@ -254,9 +256,13 @@ def main() -> int:
     print()
     print("🔍 跑 x2-rule-lint 验证...")
     import subprocess
+
     result = subprocess.run(
         ["python3", str(root / "bin/gac/x2-rule-lint.py")],
-        cwd=str(root), capture_output=True, text=True, timeout=30,
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     print(result.stdout)
     if result.returncode != 0:

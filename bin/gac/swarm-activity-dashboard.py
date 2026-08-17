@@ -39,9 +39,22 @@ BRANCH_CLAIMS = WORKSPACE / ".omo/_delivery/branch-claims"
 ADR_CLAIMS = WORKSPACE / ".omo/_delivery/adr-claims"
 CONFLICT_LOG = WORKSPACE / ".omo/_delivery/swarm-conflicts/events.jsonl"
 SUBMODULES = [
-    "agora", "kairon", "cockpit", "gbrain", "omo", "ecos", "metaos",
-    "runtime", "c2g", "model-driven", "l4-kernel", "cockpit-ui",
-    "family-hub", "aetherforge", "bus-foundation", "observability",
+    "agora",
+    "kairon",
+    "cockpit",
+    "gbrain",
+    "omo",
+    "ecos",
+    "metaos",
+    "runtime",
+    "c2g",
+    "model-driven",
+    "l4-kernel",
+    "cockpit-ui",
+    "family-hub",
+    "aetherforge",
+    "bus-foundation",
+    "observability",
     "omo-debt",
 ]
 
@@ -72,9 +85,20 @@ def _active_runs() -> list[dict]:
     """active runs via agent-workflow status --json."""
     try:
         out = subprocess.run(
-            ["uv", "run", "--with", "pyyaml", "python",
-             str(WORKSPACE / "bin/agent-workflow.py"), "status", "--json"],
-            cwd=WORKSPACE, capture_output=True, text=True, timeout=60,
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                str(WORKSPACE / "bin/agent-workflow.py"),
+                "status",
+                "--json",
+            ],
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            timeout=60,
             check=False,
         ).stdout
         import json as _json
@@ -99,14 +123,17 @@ def _locks() -> list[dict]:
             data = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         except (yaml.YAMLError, OSError):
             continue
-        locks.append({
-            "file": f.name,
-            "scope": str(data.get("scope") or f.stem),
-            "run_id": str(data.get("run_id") or ""),
-            "actor": str(data.get("actor") or ""),
-            "expires_at": str(data.get("expires_at") or ""),
-        })
+        locks.append(
+            {
+                "file": f.name,
+                "scope": str(data.get("scope") or f.stem),
+                "run_id": str(data.get("run_id") or ""),
+                "actor": str(data.get("actor") or ""),
+                "expires_at": str(data.get("expires_at") or ""),
+            }
+        )
     return locks
+
 
 def _lock_graph() -> dict:
     """Parse lock-graph.json snapshot."""
@@ -115,6 +142,7 @@ def _lock_graph() -> dict:
         return {}
     try:
         import json
+
         return json.loads(graph_file.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return {}
@@ -122,16 +150,24 @@ def _lock_graph() -> dict:
 
 def _worktrees() -> list[dict]:
     out = subprocess.run(
-        ["git", "worktree", "list"], cwd=WORKSPACE,
-        capture_output=True, text=True, timeout=30,
+        ["git", "worktree", "list"],
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        timeout=30,
         check=False,
     ).stdout
     rows = []
     for line in out.strip().splitlines():
         parts = line.split()
         if len(parts) >= 2:
-            rows.append({"path": parts[0], "ref": parts[1],
-                         "branch": parts[2] if len(parts) > 2 else ""})
+            rows.append(
+                {
+                    "path": parts[0],
+                    "ref": parts[1],
+                    "branch": parts[2] if len(parts) > 2 else "",
+                }
+            )
     return rows
 
 
@@ -148,8 +184,11 @@ def _submodule_dirty() -> list[dict]:
         if not (p / ".git").exists():
             continue
         out = subprocess.run(
-            ["git", "status", "--porcelain"], cwd=p,
-            capture_output=True, text=True, timeout=15,
+            ["git", "status", "--porcelain"],
+            cwd=p,
+            capture_output=True,
+            text=True,
+            timeout=15,
             check=False,
         ).stdout
         count = len([line for line in out.splitlines() if line.strip()])
@@ -176,12 +215,14 @@ def _conflicts(since_hours: int = 24) -> list[dict]:
             except ValueError:
                 pass
             detail = ev.get("detail") or {}
-            conflicts.append({
-                "ts": ts,
-                "kind": ev.get("kind", ""),
-                "branch": detail.get("branch", ""),
-                "paths": detail.get("paths", [])[:3],
-            })
+            conflicts.append(
+                {
+                    "ts": ts,
+                    "kind": ev.get("kind", ""),
+                    "branch": detail.get("branch", ""),
+                    "paths": detail.get("paths", [])[:3],
+                }
+            )
         except (json.JSONDecodeError, ValueError):
             continue
     return conflicts
@@ -234,9 +275,7 @@ def _agora_health() -> dict:
     try:
         import yaml
 
-        port_data = yaml.safe_load(
-            (WORKSPACE / "protocols/port-registry.yaml").read_text()
-        )
+        port_data = yaml.safe_load((WORKSPACE / "protocols/port-registry.yaml").read_text())
         ports = port_data.get("ports", port_data) if isinstance(port_data, dict) else {}
         sse_port = None
         if isinstance(ports, dict):
@@ -291,8 +330,8 @@ def print_text(report: dict) -> None:
     print(f"\n▶ Active runs ({len(runs)}):")
     for r in runs:
         obj = r.get("objective", "")[:70]
-        print(f"  🔄 {r.get('run_id','')[:40]}")
-        print(f"     {r.get('profile',''):12s} {obj}")
+        print(f"  🔄 {r.get('run_id', '')[:40]}")
+        print(f"     {r.get('profile', ''):12s} {obj}")
     for r in report["active_runs"]:
         if r.get("error"):
             print(f"  ⚠️  run 查询失败: {r['error']}")
@@ -303,13 +342,13 @@ def print_text(report: dict) -> None:
     for lk in locks:
         by_run.setdefault(lk["run_id"] or "?", []).append(lk["scope"])
     for run_id, scopes in sorted(by_run.items()):
-        print(f"  {run_id[:40]:42s} {len(scopes)} scopes: {', '.join(scopes[:4])}{'...' if len(scopes)>4 else ''}")
+        print(f"  {run_id[:40]:42s} {len(scopes)} scopes: {', '.join(scopes[:4])}{'...' if len(scopes) > 4 else ''}")
 
     wts = report["worktrees"]
     print(f"\n📁 Worktrees ({len(wts)}):")
     for wt in wts:
         marker = " ← 主工作区" if wt["path"] == str(WORKSPACE) else ""
-        print(f"  {wt['path'].replace(str(WORKSPACE.parent), '~'):48s} {wt.get('branch','')}{marker}")
+        print(f"  {wt['path'].replace(str(WORKSPACE.parent), '~'):48s} {wt.get('branch', '')}{marker}")
 
     print(f"\n🎫 Claims: branch={len(report['branch_claims'])} adr={len(report['adr_claims'])}")
     if report["branch_claims"]:
@@ -331,7 +370,7 @@ def print_text(report: dict) -> None:
         print(f"  🔴 down: {agora['error']}")
     else:
         print(
-            f"  {'🟢' if agora.get('status')=='healthy' else '🟡'} "
+            f"  {'🟢' if agora.get('status') == 'healthy' else '🟡'} "
             f"status={agora.get('status')} "
             f"services={agora.get('services_healthy')}/{agora.get('services_total')} "
             f"proxy_tools={agora.get('proxy_tools')} "
@@ -354,12 +393,13 @@ def print_text(report: dict) -> None:
     conf = report["conflicts_24h"]
     print(f"\n🚨 Swarm conflicts (24h): {len(conf)}")
     for c in conf[:5]:
-        print(f"  {c['ts'][:19]} [{c['kind']}] {c.get('branch','')}: {', '.join(c['paths'][:2])}")
+        print(f"  {c['ts'][:19]} [{c['kind']}] {c.get('branch', '')}: {', '.join(c['paths'][:2])}")
 
     # 读取 Swarm Mesh 实时广播
     try:
         sys.path.insert(0, str(WORKSPACE / "projects" / "agora" / "src"))
         from agora.swarm_mesh import SwarmMeshManager
+
         sm = SwarmMeshManager(root=WORKSPACE)
         msgs = sm.read_channel(channel="all", limit=5)
         nodes = sm._load_nodes()
@@ -369,7 +409,7 @@ def print_text(report: dict) -> None:
             print(f"  🤖 [{n.get('agent_id')}] Role: {n.get('role')} | 工作路径: {paths_str}")
         for m in msgs:
             print(f"  💬 [{m.get('timestamp')[:19]}] {m.get('sender_id')} ➔ {m.get('channel')}: {m.get('content')}")
-    except Exception as e:
+    except Exception:
         pass
     print("=" * 68)
 
@@ -382,8 +422,7 @@ def _rich_layout(report: dict) -> object:
     from rich.text import Text
 
     # ── Active runs panel ──
-    runs_table = Table(show_header=True, header_style="bold cyan",
-                       box=None, expand=True)
+    runs_table = Table(show_header=True, header_style="bold cyan", box=None, expand=True)
     runs_table.add_column("Run ID", style="bold", no_wrap=True)
     runs_table.add_column("Profile")
     runs_table.add_column("Objective", overflow="fold")
@@ -397,24 +436,28 @@ def _rich_layout(report: dict) -> object:
     if not runs:
         runs_table.add_row("(无 active run)", "", "(空闲)")
     runs_panel = Panel(
-        runs_table, title=f"[bold green]▶ Active runs ({len(runs)})[/]",
+        runs_table,
+        title=f"[bold green]▶ Active runs ({len(runs)})[/]",
         border_style="green",
     )
-    
+
     # ── Lock Graph panel ──
     lg = report.get("lock_graph", {}).get("active_runs", {})
     if lg:
         from rich.tree import Tree
+
         tree = Tree("Lock Graph (SSOT)")
         for rid, payload in lg.items():
             run_node = tree.add(f"[bold blue]{rid}[/]")
             for p in payload.get("paths", []):
                 run_node.add(f"[cyan]path:[/] {p}")
-        runs_panel = Group(runs_panel, Panel(tree, title="[bold blue]🌳 Global Lock Graph[/]", border_style="blue"))
+        runs_panel = Group(
+            runs_panel,
+            Panel(tree, title="[bold blue]🌳 Global Lock Graph[/]", border_style="blue"),
+        )
 
     # ── Locks panel ──
-    locks_table = Table(show_header=True, header_style="bold yellow",
-                        box=None, expand=True)
+    locks_table = Table(show_header=True, header_style="bold yellow", box=None, expand=True)
     locks_table.add_column("Run", style="bold")
     locks_table.add_column("Scopes", no_wrap=True)
     by_run: dict[str, list[str]] = {}
@@ -425,7 +468,8 @@ def _rich_layout(report: dict) -> object:
     if not by_run:
         locks_table.add_row("(无锁)", "")
     locks_panel = Panel(
-        locks_table, title=f"[bold yellow]🔒 Locks ({len(report['locks'])})[/]",
+        locks_table,
+        title=f"[bold yellow]🔒 Locks ({len(report['locks'])})[/]",
         border_style="yellow",
     )
 
@@ -434,14 +478,10 @@ def _rich_layout(report: dict) -> object:
     for d in report["submodule_dirty"]:
         color = "red" if d["dirty_count"] >= 10 else "yellow"
         dirty_rows.append(f"[{color}]{d['submodule']}[/] {d['dirty_count']}")
-    dirty_text = Text.from_markup(
-        ", ".join(dirty_rows) if dirty_rows else "(全部干净)"
-    )
+    dirty_text = Text.from_markup(", ".join(dirty_rows) if dirty_rows else "(全部干净)")
     agora = report["agora_health"]
     if agora.get("error"):
-        agora_text = Text.from_markup(
-            f"[red]🩺 agora 🔴 down ({agora.get('port')}): {agora['error']}[/]"
-        )
+        agora_text = Text.from_markup(f"[red]🩺 agora 🔴 down ({agora.get('port')}): {agora['error']}[/]")
     else:
         agora_color = "green" if agora.get("status") == "healthy" else "yellow"
         agora_text = Text.from_markup(
@@ -451,17 +491,13 @@ def _rich_layout(report: dict) -> object:
         )
     conflicts = report["conflicts_24h"]
     conf_text = Text.from_markup(
-        f"[red]🚨 {len(conflicts)} conflicts (24h)[/]"
-        if conflicts else "[green]✅ 无冲突 (24h)[/]"
+        f"[red]🚨 {len(conflicts)} conflicts (24h)[/]" if conflicts else "[green]✅ 无冲突 (24h)[/]"
     )
     for c in conflicts[:3]:
-        conf_text.append(
-            f"\n  {c['ts'][:19]} [{c['kind']}] {c.get('branch','')}"
-        )
+        conf_text.append(f"\n  {c['ts'][:19]} [{c['kind']}] {c.get('branch', '')}")
     status_panel = Panel(
         Group(dirty_text, agora_text, conf_text),
-        title=f"[bold]📦 子模块 dirty ({len(report['submodule_dirty'])}) · "
-              f"事件(1h)={report['events_1h']}[/]",
+        title=f"[bold]📦 子模块 dirty ({len(report['submodule_dirty'])}) · 事件(1h)={report['events_1h']}[/]",
         border_style="magenta",
     )
 
@@ -477,11 +513,13 @@ def _rich_layout(report: dict) -> object:
         border_style="blue",
     )
 
-    header = Text(f"🤖 Swarm Activity — 生成 {report['generated_at'][:19]} "
-                  f"| runs={len(runs)} | locks={len(report['locks'])} "
-                  f"| claims={len(report['branch_claims'])}"
-                  f"(+{len(report['adr_claims'])} adr) "
-                  f"| 按 Ctrl+C 退出")
+    header = Text(
+        f"🤖 Swarm Activity — 生成 {report['generated_at'][:19]} "
+        f"| runs={len(runs)} | locks={len(report['locks'])} "
+        f"| claims={len(report['branch_claims'])}"
+        f"(+{len(report['adr_claims'])} adr) "
+        f"| 按 Ctrl+C 退出"
+    )
     return Group(header, runs_panel, locks_panel, status_panel, wt_panel)
 
 
@@ -515,12 +553,13 @@ def run_tui(refresh_sec: int = 5) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="JSON 输出")
-    parser.add_argument("--watch", type=int, default=0,
-                        help="每隔 N 秒刷新 (0=单次)")
-    parser.add_argument("--tui", action="store_true",
-                        help="Rich TUI 实时模式 (自动刷新, Rich 未装回退 --watch)")
-    parser.add_argument("--refresh", type=int, default=5,
-                        help="TUI/--watch 刷新间隔秒 (默认 5)")
+    parser.add_argument("--watch", type=int, default=0, help="每隔 N 秒刷新 (0=单次)")
+    parser.add_argument(
+        "--tui",
+        action="store_true",
+        help="Rich TUI 实时模式 (自动刷新, Rich 未装回退 --watch)",
+    )
+    parser.add_argument("--refresh", type=int, default=5, help="TUI/--watch 刷新间隔秒 (默认 5)")
     args = parser.parse_args()
 
     if args.tui:

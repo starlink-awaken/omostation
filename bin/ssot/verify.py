@@ -125,10 +125,14 @@ def build_result(checks: list[TaskCheck], mode: str) -> dict:
 
 def print_task_mode(result: dict) -> int:
     """Print output for --mode task (门禁检查风格)."""
-    print(f"Task Verify: {result['verified']}/{result['completed']} completed-verified "
-          f"(验证率 {result['verification_rate']:.0%})")
-    print(f"  completed: {result['completed']}  verified: {result['verified']}  "
-          f"unverified: {result['unverified']}  open: {result['open']}")
+    print(
+        f"Task Verify: {result['verified']}/{result['completed']} completed-verified "
+        f"(验证率 {result['verification_rate']:.0%})"
+    )
+    print(
+        f"  completed: {result['completed']}  verified: {result['verified']}  "
+        f"unverified: {result['unverified']}  open: {result['open']}"
+    )
 
     if result["unverified"]:
         print(f"\n⚠️ RED FLAG -- {result['unverified']} tasks marked completed but NO evidence:")
@@ -147,8 +151,7 @@ def print_task_mode(result: dict) -> int:
 
 def print_gap_mode(result: dict, verbose: bool) -> int:
     """Print output for --mode gap (清零率风格)."""
-    print(f"Gap Verify: {result['resolved']}/{result['total']} resolved "
-          f"(清零率 {result['clearance_rate']:.0%})")
+    print(f"Gap Verify: {result['resolved']}/{result['total']} resolved (清零率 {result['clearance_rate']:.0%})")
     print(f"  open: {result['open']}  by_phase: {result['by_phase']}")
     print(f"  by_priority: {result['by_priority']}")
 
@@ -173,12 +176,15 @@ def print_gap_mode(result: dict, verbose: bool) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=["gap", "task", "all"], default="task",
-                        help="验证模式: gap=清零率, task=门禁, all=全部 (default: task)")
+    parser.add_argument(
+        "--mode",
+        choices=["gap", "task", "all"],
+        default="task",
+        help="验证模式: gap=清零率, task=门禁, all=全部 (default: task)",
+    )
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--verbose", action="store_true", help="每个 gap 明细 (仅 gap/all 模式)")
-    parser.add_argument("--strict", action="store_true",
-                        help="强制跑每个 verification_cmd")
+    parser.add_argument("--strict", action="store_true", help="强制跑每个 verification_cmd")
     parser.add_argument("--root", type=Path, default=None)
     args = parser.parse_args(argv)
 

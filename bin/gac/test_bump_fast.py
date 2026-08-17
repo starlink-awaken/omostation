@@ -3,6 +3,7 @@
 
 用法: python3 bin/gac/test_bump_fast.py
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -19,9 +20,21 @@ def _run(cmd: list[str], cwd: Path, check: bool = True) -> subprocess.CompletedP
 
 def _init_git():
     """配置最小 git 环境 + 允许 file:// 传输（Git 2.38+ 安全策略默认禁止）."""
-    subprocess.run(["git", "config", "--global", "user.email", "test@test"], capture_output=True, check=False)
-    subprocess.run(["git", "config", "--global", "user.name", "test"], capture_output=True, check=False)
-    subprocess.run(["git", "config", "--global", "protocol.file.allow", "always"], capture_output=True, check=False)
+    subprocess.run(
+        ["git", "config", "--global", "user.email", "test@test"],
+        capture_output=True,
+        check=False,
+    )
+    subprocess.run(
+        ["git", "config", "--global", "user.name", "test"],
+        capture_output=True,
+        check=False,
+    )
+    subprocess.run(
+        ["git", "config", "--global", "protocol.file.allow", "always"],
+        capture_output=True,
+        check=False,
+    )
 
 
 def _make_repo_with_submodule(tmp: Path) -> tuple[Path, str]:
@@ -57,7 +70,10 @@ def test_bump_fast_timing():
         root, _ = _make_repo_with_submodule(tmp)
 
         start = time.monotonic()
-        result = _run(["bash", str(SCRIPT), "bump-fast", "projects/sub", "--latest-main"], cwd=root)
+        result = _run(
+            ["bash", str(SCRIPT), "bump-fast", "projects/sub", "--latest-main"],
+            cwd=root,
+        )
         elapsed = time.monotonic() - start
 
         assert result.returncode == 0, f"bump-fast 失败: {result.stderr}"
@@ -72,8 +88,11 @@ def test_bump_fast_fail_closed():
         root, _ = _make_repo_with_submodule(tmp)
 
         fake_sha = "deadbeef" * 5 + "0" * 4  # 40 位不存在 SHA
-        result = _run(["bash", str(SCRIPT), "bump-fast", "projects/sub", "--sha", fake_sha],
-                      cwd=root, check=False)
+        result = _run(
+            ["bash", str(SCRIPT), "bump-fast", "projects/sub", "--sha", fake_sha],
+            cwd=root,
+            check=False,
+        )
         assert result.returncode != 0, "不可达 SHA 应 fail-closed"
         print("fail-closed 拒绝不可达 SHA ✅")
 

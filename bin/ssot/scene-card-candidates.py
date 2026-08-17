@@ -171,9 +171,7 @@ def collect_candidates(
                 raise CandidateInputError(f"unsupported seed schema: {schema}")
             for seed in document.get("candidates", []) or []:
                 if not isinstance(seed, dict):
-                    raise CandidateInputError(
-                        f"candidate seed must be an object: {seed_path}"
-                    )
+                    raise CandidateInputError(f"candidate seed must be an object: {seed_path}")
                 candidates.append(_from_seed(root, seed_path, seed))
 
     if scenario_path.exists():
@@ -186,9 +184,7 @@ def collect_candidates(
     for candidate in candidates:
         existing = by_id.get(candidate.candidate_id)
         if existing and existing != candidate:
-            raise CandidateInputError(
-                f"conflicting candidate definition: {candidate.candidate_id}"
-            )
+            raise CandidateInputError(f"conflicting candidate definition: {candidate.candidate_id}")
         by_id[candidate.candidate_id] = candidate
 
     ordered = [by_id[key] for key in sorted(by_id)]
@@ -208,16 +204,12 @@ def collect_candidates(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--root", type=Path, default=Path(__file__).resolve().parents[2]
-    )
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--seed-file", type=Path, default=None)
     parser.add_argument("--scenario-dir", type=Path, default=None)
     args = parser.parse_args(argv)
     try:
-        payload = collect_candidates(
-            args.root, seed_file=args.seed_file, scenario_dir=args.scenario_dir
-        )
+        payload = collect_candidates(args.root, seed_file=args.seed_file, scenario_dir=args.scenario_dir)
     except CandidateInputError as exc:
         print(f"scene-card-candidates: {exc}", file=sys.stderr)
         return 2

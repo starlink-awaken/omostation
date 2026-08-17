@@ -156,7 +156,7 @@ def phase1() -> int:
 
     # 8. entropy 可用
     try:
-        import entropy  # noqa: F401  # type: ignore[import-not-found]
+        import entropy  # type: ignore[import-not-found]
 
         ok = True
     except ImportError:

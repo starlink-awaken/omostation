@@ -1,11 +1,11 @@
 """G-DEL.4 shared context store + CLI + measure — real entry points."""
+
 from __future__ import annotations
 
 import importlib.util
 import json
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]

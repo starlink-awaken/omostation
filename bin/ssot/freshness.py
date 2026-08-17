@@ -322,23 +322,27 @@ def validate_health_contract(
         static_health = src.get("health", "unknown")
 
         if static_health == "healthy" and proj.status != "healthy":
-            violations.append({
-                "source_id": proj.source_id,
-                "static_health": static_health,
-                "derived_health": proj.status,
-                "severity": "critical",
-                "rule": "health_must_not: healthy requires fresh evidence",
-                "reason": proj.reason,
-            })
+            violations.append(
+                {
+                    "source_id": proj.source_id,
+                    "static_health": static_health,
+                    "derived_health": proj.status,
+                    "severity": "critical",
+                    "rule": "health_must_not: healthy requires fresh evidence",
+                    "reason": proj.reason,
+                }
+            )
         elif static_health != proj.status and static_health != "unknown":
-            violations.append({
-                "source_id": proj.source_id,
-                "static_health": static_health,
-                "derived_health": proj.status,
-                "severity": "warning",
-                "rule": "health_label_drift",
-                "reason": proj.reason,
-            })
+            violations.append(
+                {
+                    "source_id": proj.source_id,
+                    "static_health": static_health,
+                    "derived_health": proj.status,
+                    "severity": "warning",
+                    "rule": "health_label_drift",
+                    "reason": proj.reason,
+                }
+            )
 
     return violations
 
@@ -346,15 +350,19 @@ def validate_health_contract(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--json", action="store_true",
+        "--json",
+        action="store_true",
         help="JSON output (for healthcheck consumption)",
     )
     parser.add_argument(
-        "--source", type=str, default=None,
+        "--source",
+        type=str,
+        default=None,
         help="Show health for a single source",
     )
     parser.add_argument(
-        "--validate", action="store_true",
+        "--validate",
+        action="store_true",
         help="Validate static health labels against derived health",
     )
     args = parser.parse_args(argv)
@@ -372,10 +380,17 @@ def main(argv: list[str] | None = None) -> int:
         sources = data.get("sources", [])
         violations = validate_health_contract(projections, sources)
         if args.json:
-            print(json.dumps({
-                "violations": len(violations),
-                "data": violations,
-            }, ensure_ascii=False, indent=2, sort_keys=True))
+            print(
+                json.dumps(
+                    {
+                        "violations": len(violations),
+                        "data": violations,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
         else:
             if not violations:
                 print("✅ all static health labels match derived health")
@@ -422,8 +437,10 @@ def main(argv: list[str] | None = None) -> int:
         "unreachable": sum(1 for p in projections if p.status == "unreachable"),
         "unknown": sum(1 for p in projections if p.status == "unknown"),
     }
-    print(f"Summary: {summary['healthy']} healthy, {summary['degraded']} degraded, "
-          f"{summary['unreachable']} unreachable, {summary['unknown']} unknown")
+    print(
+        f"Summary: {summary['healthy']} healthy, {summary['degraded']} degraded, "
+        f"{summary['unreachable']} unreachable, {summary['unknown']} unknown"
+    )
 
     # Exit 0: degraded health is not a command error, only real errors return nonzero.
     return 0

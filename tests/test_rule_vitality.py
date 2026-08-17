@@ -9,8 +9,6 @@ Covers:
 from __future__ import annotations
 
 import importlib.util
-import json
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -38,8 +36,20 @@ def tmp_vitality(tmp_path):
 
 class TestRuleVitalityTracker:
     def test_record_and_read(self, tracker, tmp_vitality):
-        tracker.record_vitality("CR-TEST-1", "check-foo", violated=False, enforcement="required", path=tmp_vitality)
-        tracker.record_vitality("CR-TEST-1", "check-foo", violated=True, enforcement="required", path=tmp_vitality)
+        tracker.record_vitality(
+            "CR-TEST-1",
+            "check-foo",
+            violated=False,
+            enforcement="required",
+            path=tmp_vitality,
+        )
+        tracker.record_vitality(
+            "CR-TEST-1",
+            "check-foo",
+            violated=True,
+            enforcement="required",
+            path=tmp_vitality,
+        )
         entries = tracker.read_vitality(tmp_vitality)
         assert len(entries) == 2
         assert entries[0]["rule_id"] == "CR-TEST-1"
@@ -48,7 +58,13 @@ class TestRuleVitalityTracker:
 
     def test_query_vitality(self, tracker, tmp_vitality):
         for i in range(5):
-            tracker.record_vitality("CR-TEST-2", "check-bar", violated=(i == 3), enforcement="advisory", path=tmp_vitality)
+            tracker.record_vitality(
+                "CR-TEST-2",
+                "check-bar",
+                violated=(i == 3),
+                enforcement="advisory",
+                path=tmp_vitality,
+            )
         summary = tracker.query_vitality("CR-TEST-2", window_days=30, path=tmp_vitality)
         assert summary["total_evaluations"] == 5
         assert summary["total_violations"] == 1
@@ -85,6 +101,7 @@ class TestRuleVitalityReport:
     @pytest.fixture(scope="class")
     def report_mod(self):
         import sys
+
         bin_gac = str(ROOT / "bin" / "gac")
         if bin_gac not in sys.path:
             sys.path.insert(0, bin_gac)
@@ -103,7 +120,7 @@ class TestRuleVitalityReport:
         assert "CR-Y" not in rule_ids
 
     def test_suggest_downgrade_min_evaluations_guard(self, report_mod, monkeypatch):
-        monkeypatch.setattr(report_mod, "read_vitality", lambda: [])
+        monkeypatch.setattr(report_mod, "read_vitality", list)
         suggestions = report_mod._suggest_downgrade(window_days=60)
         assert suggestions == []
 
@@ -120,6 +137,7 @@ class TestGateMapping:
 
     def test_mapping_has_required_keys(self):
         import yaml
+
         mapping_path = ROOT / ".omo" / "_truth" / "registry" / "rule-gate-mapping.yaml"
         data = yaml.safe_load(mapping_path.read_text(encoding="utf-8"))
         assert "gate_to_rules" in data
@@ -128,6 +146,7 @@ class TestGateMapping:
 
     def test_mapping_stats_consistent(self):
         import yaml
+
         mapping_path = ROOT / ".omo" / "_truth" / "registry" / "rule-gate-mapping.yaml"
         data = yaml.safe_load(mapping_path.read_text(encoding="utf-8"))
         stats = data["stats"]

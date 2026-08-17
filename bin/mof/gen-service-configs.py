@@ -9,6 +9,7 @@
   python3 bin/mof/gen-service-configs.py --write      # 生成写盘
   python3 bin/mof/gen-service-configs.py --check      # drift 检测 (plist vs services.yaml)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -19,6 +20,7 @@ import sys
 from pathlib import Path
 
 import yaml
+
 
 def _canonical_workspace() -> Path:
     """本工具写的是机器级配置(~/Library/LaunchAgents), 必须锚定规范检出。
@@ -44,6 +46,7 @@ REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "services.yaml"
 
 def _stable_python3() -> str:
     import os
+
     for path in os.environ.get("PATH", "").split(os.pathsep):
         if ".cache/uv" in path or "/.tmp" in path:
             continue
@@ -100,10 +103,10 @@ def _plist_program_args(plist_xml: str) -> list[str]:
     """从生成的 plist XML 里取 ProgramArguments 的字符串项(用于写盘前自检)。"""
     import re
 
-    m = re.search(r"<key>ProgramArguments</key>\s*<array>(.*?)</array>", plist_xml, re.S)
+    m = re.search(r"<key>ProgramArguments</key>\s*<array>(.*?)</array>", plist_xml, re.DOTALL)
     if not m:
         return []
-    return re.findall(r"<string>(.*?)</string>", m.group(1), re.S)
+    return re.findall(r"<string>(.*?)</string>", m.group(1), re.DOTALL)
 
 
 def gen_launchd_plist(svc: dict) -> str:
@@ -127,7 +130,9 @@ def gen_launchd_plist(svc: dict) -> str:
     if res.get("keepalive") == "always":
         keepalive_xml = "    <key>KeepAlive</key>\n    <true/>\n"
     elif res.get("keepalive") == "crashed":
-        keepalive_xml = "    <key>KeepAlive</key>\n    <dict>\n        <key>Crashed</key>\n        <true/>\n    </dict>\n"
+        keepalive_xml = (
+            "    <key>KeepAlive</key>\n    <dict>\n        <key>Crashed</key>\n        <true/>\n    </dict>\n"
+        )
     throttle = res.get("throttle_interval")
     throttle_xml = f"    <key>ThrottleInterval</key>\n    <integer>{throttle}</integer>\n" if throttle else ""
     run_at_load_xml = "    <key>RunAtLoad</key>\n    <true/>\n" if svc.get("run_at_load") else ""
@@ -137,21 +142,28 @@ def gen_launchd_plist(svc: dict) -> str:
     # 2026-08-08 修 entrypoint 时漏了这里, 同一个 bug 换了个字段。
     stdout_xml = (
         f"    <key>StandardOutPath</key>\n    <string>{_resolve_path(out['stdout'])}</string>\n"
-        if out.get("stdout") else ""
+        if out.get("stdout")
+        else ""
     )
     stderr_xml = (
         f"    <key>StandardErrorPath</key>\n    <string>{_resolve_path(out['stderr'])}</string>\n"
-        if out.get("stderr") else ""
+        if out.get("stderr")
+        else ""
     )
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
-        "<plist version=\"1.0\">\n<dict>\n"
+        '<plist version="1.0">\n<dict>\n'
         f"    <key>Label</key>\n    <string>{label}</string>\n"
         "    <key>ProgramArguments</key>\n    <array>\n"
         f"{prog_xml}    </array>\n"
         + (f"    <key>WatchPaths</key>\n    <array>\n{watch_xml}    </array>\n" if watch else "")
-        + env_xml + keepalive_xml + throttle_xml + run_at_load_xml + stdout_xml + stderr_xml
+        + env_xml
+        + keepalive_xml
+        + throttle_xml
+        + run_at_load_xml
+        + stdout_xml
+        + stderr_xml
         + "</dict>\n</plist>\n"
     )
 
@@ -187,7 +199,11 @@ def main() -> int:
                     violations.append(f"{svc.get('id', '?')}: gha 调度缺 schedule_ref")
                 elif not (WORKSPACE / sched_ref).is_file():
                     violations.append(f"{svc.get('id', '?')}: schedule_ref 不存在 {sched_ref}")
-        report = {"ok": not violations, "violation_count": len(violations), "violations": violations}
+        report = {
+            "ok": not violations,
+            "violation_count": len(violations),
+            "violations": violations,
+        }
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0 if report["ok"] else 1
     launchd_dir = Path.home() / "Library" / "LaunchAgents"
@@ -212,16 +228,20 @@ def main() -> int:
 
         # 生成期最后一道: 程序路径不存在就不写。写进去的是"看着已登记、
         # 实际起不来"的 plist, 比不写更糟 —— 出事时没人会去核对路径。
-        missing = [a for a in _plist_program_args(plist)
-                   if a.startswith("/") and not Path(a).exists()]
+        missing = [a for a in _plist_program_args(plist) if a.startswith("/") and not Path(a).exists()]
         if missing:
-            print(f"❌ {svc['label']}: 程序路径不存在 {missing} — 拒绝写入", file=sys.stderr)
+            print(
+                f"❌ {svc['label']}: 程序路径不存在 {missing} — 拒绝写入",
+                file=sys.stderr,
+            )
             bad_services.append(f"{svc['label']}: {missing}")
             continue
 
         if args.write:
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(plist, encoding="utf-8")  # audit-exempt: non-atomic-write (plist 写 ~/Library/LaunchAgents, 非 .omo state plane)
+            target.write_text(
+                plist, encoding="utf-8"
+            )  # audit-exempt: non-atomic-write (plist 写 ~/Library/LaunchAgents, 非 .omo state plane)
             print(f"✅ 生成 {target}")
         elif args.check:
             existing = target.read_text(encoding="utf-8") if target.exists() else ""
@@ -243,7 +263,10 @@ def main() -> int:
         launchd_count = sum(1 for s in services if s.get("scheduler") == "launchd")
         print(f"✅ 0 drift ({launchd_count} launchd services)")
     if bad_services:
-        print(f"\n❌ {len(bad_services)} 个服务未生成(路径/interpreter 有问题):", file=sys.stderr)
+        print(
+            f"\n❌ {len(bad_services)} 个服务未生成(路径/interpreter 有问题):",
+            file=sys.stderr,
+        )
         for b in bad_services:
             print(f"  - {b}", file=sys.stderr)
         return 1

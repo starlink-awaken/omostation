@@ -1,4 +1,5 @@
 """C3 (ADR-0367): adr-frontmatter-backfill idempotency + canonical padding tests."""
+
 from __future__ import annotations
 
 import importlib.util

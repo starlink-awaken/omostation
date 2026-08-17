@@ -19,6 +19,7 @@ from typing import Any
 @dataclass
 class WorldSnapshot:
     """世界快照 — 系统对世界的认知 (world_snapshot 表)."""
+
     domain: str  # work | family | health | finance | education
     key: str  # 认知键, e.g. "卫健委报告格式"
     value: Any  # 认知值, e.g. "三段式: 基本情况/主要做法/存在问题"
@@ -30,6 +31,7 @@ class WorldSnapshot:
 @dataclass
 class CapabilityCalibration:
     """能力校准 — trust score 和性能指标 (capability_calibration 表)."""
+
     action_type: str  # 动作类型, e.g. "forward_notice"
     context_tag: str = ""  # 上下文标签, e.g. "routine" or "novel"
     trust_score: float = 0.5  # 信任分数 0-1
@@ -42,6 +44,7 @@ class CapabilityCalibration:
 @dataclass
 class DecisionOutcome:
     """决策结果 — 历史决策记录 (decision_outcome 表)."""
+
     scene_id: str  # 场景ID
     run_id: str  # journey run ID
     action: str  # 执行的动作
@@ -53,6 +56,7 @@ class DecisionOutcome:
 
 
 # ── Write functions (through MOS infrastructure) ──────────────────
+
 
 def write_world_snapshot(snapshot: WorldSnapshot | dict) -> dict[str, Any]:
     """写入世界快照. 实际持久化通过MOS MemoryOS.write()."""
@@ -80,14 +84,17 @@ def write_decision_outcome(outcome: DecisionOutcome | dict) -> dict[str, Any]:
 
 # ── Recall functions ──────────────────────────────────────────────
 
-def recall_world_snapshot(*, domain: str | None = None, key: str | None = None,
-                          limit: int = 20) -> list[dict[str, Any]]:
+
+def recall_world_snapshot(
+    *, domain: str | None = None, key: str | None = None, limit: int = 20
+) -> list[dict[str, Any]]:
     """查询世界快照. 实际查询通过MOS MemoryOS.recall().
 
     Returns: list of snapshot dicts (empty if MOS not configured).
     """
     try:
         from mos.service import MemoryOS
+
         mos = MemoryOS()
         query = {"namespace": "agent_belief", "schema": "world_snapshot/v1"}
         if domain:
@@ -100,11 +107,11 @@ def recall_world_snapshot(*, domain: str | None = None, key: str | None = None,
         return []
 
 
-def recall_capability_calibration(*, action_type: str | None = None,
-                                  limit: int = 20) -> list[dict[str, Any]]:
+def recall_capability_calibration(*, action_type: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
     """查询能力校准."""
     try:
         from mos.service import MemoryOS
+
         mos = MemoryOS()
         query = {"namespace": "agent_belief", "schema": "capability_calibration/v1"}
         if action_type:
@@ -115,11 +122,11 @@ def recall_capability_calibration(*, action_type: str | None = None,
         return []
 
 
-def recall_decision_outcome(*, scene_id: str | None = None,
-                            limit: int = 20) -> list[dict[str, Any]]:
+def recall_decision_outcome(*, scene_id: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
     """查询决策结果."""
     try:
         from mos.service import MemoryOS
+
         mos = MemoryOS()
         query = {"namespace": "agent_belief", "schema": "decision_outcome/v1"}
         if scene_id:
@@ -131,6 +138,7 @@ def recall_decision_outcome(*, scene_id: str | None = None,
 
 
 # ── Convenience: update trust score from outcome ─────────────────
+
 
 def update_trust_from_outcome(action_type: str, adjudication: str) -> float:
     """根据决策结果更新trust score (贝叶斯更新).

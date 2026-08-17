@@ -14,9 +14,7 @@ SCRIPT = ROOT / "bin" / "gac" / "documents-content-plane-migration-check.py"
 
 
 def _load_module():
-    spec = importlib.util.spec_from_file_location(
-        "documents_content_plane_migration_check", SCRIPT
-    )
+    spec = importlib.util.spec_from_file_location("documents_content_plane_migration_check", SCRIPT)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -52,9 +50,7 @@ def _write_registry(path: Path, families: list[dict] | None = None) -> Path:
         "id": "documents-content-plane-migrations",
         "owner": "governance-team",
         "candidate_kinds": ["runtime", "cache"],
-        "major_surfaces": [
-            item["id"] for item in families if item.get("major_surface")
-        ],
+        "major_surfaces": [item["id"] for item in families if item.get("major_surface")],
         "coverage_samples": [
             {
                 "relative_path": item.pop("sample"),
@@ -65,9 +61,7 @@ def _write_registry(path: Path, families: list[dict] | None = None) -> Path:
         ],
         "families": families,
     }
-    path.write_text(
-        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), encoding="utf-8"
-    )
+    path.write_text(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), encoding="utf-8")
     return path
 
 
@@ -85,13 +79,7 @@ def test_samples_prove_each_family_has_one_non_overlapping_match(tmp_path):
 
 def test_workspace_registry_samples_pass():
     module = _load_module()
-    registry = (
-        ROOT
-        / ".omo"
-        / "_truth"
-        / "registry"
-        / "documents-content-plane-migrations.yaml"
-    )
+    registry = ROOT / ".omo" / "_truth" / "registry" / "documents-content-plane-migrations.yaml"
 
     report = module.check_migrations(registry)
 
@@ -119,13 +107,7 @@ def test_workspace_registry_samples_pass():
 
 def test_workspace_registry_covers_weijian_cleanup_commit_script():
     module = _load_module()
-    registry = (
-        ROOT
-        / ".omo"
-        / "_truth"
-        / "registry"
-        / "documents-content-plane-migrations.yaml"
-    )
+    registry = ROOT / ".omo" / "_truth" / "registry" / "documents-content-plane-migrations.yaml"
 
     report = module.check_migrations(
         registry,
@@ -144,13 +126,7 @@ def test_workspace_registry_covers_weijian_cleanup_commit_script():
 
 def test_workspace_registry_covers_documents_root_client_state_and_build_asset():
     module = _load_module()
-    registry = (
-        ROOT
-        / ".omo"
-        / "_truth"
-        / "registry"
-        / "documents-content-plane-migrations.yaml"
-    )
+    registry = ROOT / ".omo" / "_truth" / "registry" / "documents-content-plane-migrations.yaml"
 
     report = module.check_migrations(
         registry,
@@ -233,10 +209,7 @@ def test_illegal_or_unproven_completion_status_fails(tmp_path):
 
     assert report["ok"] is False
     assert any("unsupported status: done" in error for error in report["errors"])
-    assert (
-        sum("terminal status requires evidence" in error for error in report["errors"])
-        == 2
-    )
+    assert sum("terminal status requires evidence" in error for error in report["errors"]) == 2
 
 
 def test_live_candidates_report_kind_and_family_counts(tmp_path):
@@ -256,9 +229,7 @@ def test_live_candidates_report_kind_and_family_counts(tmp_path):
     assert report["kind_counts"] == {"cache": 1, "runtime": 1}
 
 
-def test_nonempty_documents_root_cannot_succeed_with_zero_audited_artifacts(
-    tmp_path, monkeypatch, capsys
-):
+def test_nonempty_documents_root_cannot_succeed_with_zero_audited_artifacts(tmp_path, monkeypatch, capsys):
     module = _load_module()
     registry = _write_registry(tmp_path / "registry.yaml")
     documents_root = tmp_path / "Documents"
@@ -286,9 +257,7 @@ def test_nonempty_documents_root_cannot_succeed_with_zero_audited_artifacts(
     assert any("audit returned zero artifacts" in error for error in payload["errors"])
 
 
-def test_nonterminal_families_cannot_succeed_when_live_candidates_vanish(
-    tmp_path, monkeypatch, capsys
-):
+def test_nonterminal_families_cannot_succeed_when_live_candidates_vanish(tmp_path, monkeypatch, capsys):
     module = _load_module()
     registry = _write_registry(tmp_path / "registry.yaml")
     documents_root = tmp_path / "Documents"
@@ -316,7 +285,4 @@ def test_nonterminal_families_cannot_succeed_when_live_candidates_vanish(
     payload = json.loads(capsys.readouterr().out)
     assert rc == 1
     assert payload["ok"] is False
-    assert any(
-        "zero migration candidates while non-terminal families remain" in error
-        for error in payload["errors"]
-    )
+    assert any("zero migration candidates while non-terminal families remain" in error for error in payload["errors"])

@@ -9,7 +9,7 @@ PR 交付节奏是 X3 价值流的关键指标. 检查:
 
 import subprocess
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -24,33 +24,46 @@ def run(cmd: list[str]) -> subprocess.CompletedProcess:
 
 def main() -> int:
     # 获取 open PR 列表
-    result = run(["gh", "pr", "list", "--state", "open", "--json", "number,title,createdAt,isDraft,headRefName"])
+    result = run(
+        [
+            "gh",
+            "pr",
+            "list",
+            "--state",
+            "open",
+            "--json",
+            "number,title,createdAt,isDraft,headRefName",
+        ]
+    )
     if result.returncode != 0:
         print("OK 无法获取 PR 列表 (gh 未安装或未登录)")
         return 0
 
     import json
+
     try:
         prs = json.loads(result.stdout)
     except (json.JSONDecodeError, ValueError):
         print("OK 无法解析 PR 列表")
         return 0
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     stale_prs = []
 
     for pr in prs:
-        created = datetime.fromisoformat(pr.get("createdAt", "")).replace(tzinfo=timezone.utc)
+        created = datetime.fromisoformat(pr.get("createdAt", "")).replace(tzinfo=UTC)
         age = now - created
         threshold = STALE_THRESHOLD_DAYS * 2 if pr.get("isDraft") else STALE_THRESHOLD_DAYS
         if age.days > threshold:
-            stale_prs.append({
-                "number": pr["number"],
-                "title": pr["title"][:60],
-                "age_days": age.days,
-                "draft": pr.get("isDraft", False),
-                "branch": pr.get("headRefName", ""),
-            })
+            stale_prs.append(
+                {
+                    "number": pr["number"],
+                    "title": pr["title"][:60],
+                    "age_days": age.days,
+                    "draft": pr.get("isDraft", False),
+                    "branch": pr.get("headRefName", ""),
+                }
+            )
 
     if len(stale_prs) > MAX_STALE:
         print(f"WARN 发现 {len(stale_prs)} 个悬挂 PR (阈值 {MAX_STALE}):")

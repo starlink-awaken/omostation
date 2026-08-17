@@ -9,13 +9,12 @@ Usage:
   python3 bin/gac/bin-orphan-scan.py --json
   python3 bin/gac/bin-orphan-scan.py --archive  # move to bin/_archive/
 """
+
 from __future__ import annotations
 
 import argparse
 import json
-import re
 import shutil
-import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -94,12 +93,14 @@ def scan_orphans() -> list[dict]:
     for s in scripts:
         ref_count = _count_references(s, scripts)
         if ref_count == 0:
-            orphans.append({
-                "path": str(s.relative_to(ROOT)),
-                "name": s.name,
-                "refs": ref_count,
-                "size_bytes": s.stat().st_size,
-            })
+            orphans.append(
+                {
+                    "path": str(s.relative_to(ROOT)),
+                    "name": s.name,
+                    "refs": ref_count,
+                    "size_bytes": s.stat().st_size,
+                }
+            )
     return sorted(orphans, key=lambda x: x["path"])
 
 
@@ -117,16 +118,28 @@ def main() -> int:
         for s in scripts:
             ref_count = _count_references(s, scripts)
             if ref_count <= args.threshold:
-                orphans.append({
-                    "path": str(s.relative_to(ROOT)),
-                    "name": s.name,
-                    "refs": ref_count,
-                    "size_bytes": s.stat().st_size,
-                })
+                orphans.append(
+                    {
+                        "path": str(s.relative_to(ROOT)),
+                        "name": s.name,
+                        "refs": ref_count,
+                        "size_bytes": s.stat().st_size,
+                    }
+                )
         orphans.sort(key=lambda x: x["path"])
 
     if args.json:
-        print(json.dumps({"total_scripts": len(_collect_scripts()), "orphans": len(orphans), "items": orphans}, indent=2, ensure_ascii=False))
+        print(
+            json.dumps(
+                {
+                    "total_scripts": len(_collect_scripts()),
+                    "orphans": len(orphans),
+                    "items": orphans,
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
         return 0
 
     total = len(_collect_scripts())

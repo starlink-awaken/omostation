@@ -4,15 +4,10 @@ from __future__ import annotations
 
 import importlib.util
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
-import pytest
-
-
-_SCRIPT_PATH = (
-    Path(__file__).resolve().parents[2] / "bin" / "gac" / "check-work-landed.py"
-)
+_SCRIPT_PATH = Path(__file__).resolve().parents[2] / "bin" / "gac" / "check-work-landed.py"
 _MODULE_NAME = "bin.check_work_landed"
 _SPEC = importlib.util.spec_from_file_location(_MODULE_NAME, _SCRIPT_PATH)
 _module = importlib.util.module_from_spec(_SPEC)
@@ -76,7 +71,7 @@ def test_parse_ts_returns_none_for_garbage():
 
 
 def _make_run_yaml(run_id: str, status: str, age_days: int, evidence: list[str]) -> dict:
-    ts = (datetime.now(timezone.utc) - timedelta(days=age_days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    ts = (datetime.now(UTC) - timedelta(days=age_days)).strftime("%Y-%m-%dT%H:%M:%SZ")
     return {
         "run_id": run_id,
         "workflow_id": "project-code-change",

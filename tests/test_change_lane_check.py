@@ -4,13 +4,12 @@ Covers:
 - .omo/state/runtime/ path recognition (ADR-0129 MVP canonical projection plane)
 - allowed_for priority: workflow explicit auth overrides hardcoded runtime_snapshot isolation
 """
+
 import importlib.util
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent
-SPEC = importlib.util.spec_from_file_location(
-    "change_lane_check", str(WORKSPACE / "bin" / "change-lane-check.py")
-)
+SPEC = importlib.util.spec_from_file_location("change_lane_check", str(WORKSPACE / "bin" / "change-lane-check.py"))
 clc = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(clc)
 

@@ -16,6 +16,7 @@
 
 Output: exit 0 = 干净; exit 1 = 发现冲突标记 (blocking)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -37,7 +38,10 @@ def _staged_files() -> list[str]:
     try:
         out = subprocess.run(
             ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMRTUXB"],
-            cwd=WORKSPACE, capture_output=True, text=True, check=True,
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            check=True,
         )
         return [f for f in out.stdout.splitlines() if f.strip()]
     except subprocess.CalledProcessError:
@@ -47,7 +51,11 @@ def _staged_files() -> list[str]:
 def _tracked_files() -> list[str]:
     try:
         out = subprocess.run(
-            ["git", "ls-files"], cwd=WORKSPACE, capture_output=True, text=True, check=True,
+            ["git", "ls-files"],
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            check=True,
         )
         return [f for f in out.stdout.splitlines() if f.strip()]
     except subprocess.CalledProcessError:
@@ -58,7 +66,11 @@ def _staged_blob(path: str) -> str | None:
     """读 index blob (staged 内容), 非磁盘 — pre-commit 场景必须读 index."""
     try:
         out = subprocess.run(
-            ["git", "show", f":{path}"], cwd=WORKSPACE, capture_output=True, text=True, check=True,
+            ["git", "show", f":{path}"],
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            check=True,
         )
         return out.stdout
     except subprocess.CalledProcessError:
@@ -95,7 +107,11 @@ def _scan(content: str) -> list[tuple[int, str]]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="检测 git 合并冲突标记防入库")
-    ap.add_argument("--staged", action="store_true", help="扫 staged (默认行为, 兼容 gac-local-gate)")
+    ap.add_argument(
+        "--staged",
+        action="store_true",
+        help="扫 staged (默认行为, 兼容 gac-local-gate)",
+    )
     ap.add_argument("--all", action="store_true", help="扫所有 tracked")
     ap.add_argument("--include-untracked", action="store_true", help="同 --all (兼容)")
     ap.add_argument("--file", action="append", default=[], help="限定文件 (可多次)")
@@ -127,7 +143,10 @@ def main() -> int:
     if args.json:
         print(json.dumps({"ok": not findings, "findings": findings}, ensure_ascii=False))
     elif findings:
-        print(f"❌ check-conflict-markers: {len(findings)} 个文件含 git 冲突标记", file=sys.stderr)
+        print(
+            f"❌ check-conflict-markers: {len(findings)} 个文件含 git 冲突标记",
+            file=sys.stderr,
+        )
         for fnd in findings:
             print(f"  {fnd['file']}:", file=sys.stderr)
             for m in fnd["markers"]:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Audit write ownership of staged files to prevent mysterious rollbacks and manual overwrites."""
+
 import argparse
 import fnmatch
 import json
@@ -17,7 +18,10 @@ def get_git_user() -> str:
     try:
         res = subprocess.run(
             ["git", "config", "user.name"],
-            cwd=WORKSPACE, capture_output=True, text=True, check=False
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         return res.stdout.strip()
     except Exception:
@@ -29,7 +33,10 @@ def get_staged_files() -> list[str]:
     try:
         res = subprocess.run(
             ["git", "diff", "--cached", "--name-only"],
-            cwd=WORKSPACE, capture_output=True, text=True, check=False
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         return [line.strip() for line in res.stdout.splitlines() if line.strip()]
     except Exception:
@@ -40,7 +47,8 @@ def load_owners() -> list[dict]:
     """读取 write-owners.yaml."""
     if not OWNERS_YAML.is_file():
         return []
-    import yaml  # noqa: PLC0415
+    import yaml
+
     try:
         data = yaml.safe_load(OWNERS_YAML.read_text(encoding="utf-8")) or {}
         return data.get("write_owners") or []
@@ -50,7 +58,7 @@ def load_owners() -> list[dict]:
 
 
 def match_path(file_path: str, pattern: str) -> bool:
-    """ fnmatch 路径匹配."""
+    """fnmatch 路径匹配."""
     return fnmatch.fnmatch(file_path, pattern) or fnmatch.fnmatch(file_path, f"*/{pattern}")
 
 
@@ -112,7 +120,7 @@ def main() -> int:
         "ok": len(violations) == 0,
         "current_user": current_user,
         "staged_files_audited": len(staged_files),
-        "violations": violations
+        "violations": violations,
     }
 
     if args.json:
@@ -121,10 +129,16 @@ def main() -> int:
         if report["ok"]:
             print(f"✅ Write-Owner Audit: PASS (Audited {len(staged_files)} files, user={current_user})")
         else:
-            print("🚨 Write-Owner Audit: FAIL (Ownership Violations Detected)", file=sys.stderr)
+            print(
+                "🚨 Write-Owner Audit: FAIL (Ownership Violations Detected)",
+                file=sys.stderr,
+            )
             for v in violations:
                 print(f"   - {v}", file=sys.stderr)
-            print("   Rule: Principal B - Only declared owner can modify state files.", file=sys.stderr)
+            print(
+                "   Rule: Principal B - Only declared owner can modify state files.",
+                file=sys.stderr,
+            )
 
     return 0 if report["ok"] else 1
 

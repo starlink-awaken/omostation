@@ -99,23 +99,21 @@ def scan_workflows() -> list[dict]:
             and "callable" not in triggers
         ):
             issues.append("unpathed-pr: PR workflow without paths filter")
-        if (
-            name not in COE_DESIGN_EXEMPT
-            and total_steps > 0
-            and coe_count / total_steps > 0.5
-        ):
-            issues.append(f"high-continue-on-error: {coe_count}/{total_steps} steps ({coe_count/total_steps:.0%})")
+        if name not in COE_DESIGN_EXEMPT and total_steps > 0 and coe_count / total_steps > 0.5:
+            issues.append(f"high-continue-on-error: {coe_count}/{total_steps} steps ({coe_count / total_steps:.0%})")
         if triggers == {"manual"} and name not in MANUAL_INTENT_EXEMPT:
             issues.append("idle-workflow: only workflow_dispatch, never auto-runs")
 
-        results.append({
-            "file": name,
-            "triggers": sorted(triggers),
-            "path_filtered": path_filtered,
-            "continue_on_error": coe_count,
-            "total_steps": total_steps,
-            "issues": issues,
-        })
+        results.append(
+            {
+                "file": name,
+                "triggers": sorted(triggers),
+                "path_filtered": path_filtered,
+                "continue_on_error": coe_count,
+                "total_steps": total_steps,
+                "issues": issues,
+            }
+        )
     return results
 
 
@@ -126,7 +124,17 @@ def main() -> int:
     results = scan_workflows()
     total_issues = sum(len(r["issues"]) for r in results)
     if args.json:
-        print(json.dumps({"workflows": len(results), "total_issues": total_issues, "data": results}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "workflows": len(results),
+                    "total_issues": total_issues,
+                    "data": results,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 1 if total_issues > 0 else 0
     print(f"scanned {len(results)} workflows; {total_issues} issues found\n")
     for r in results:

@@ -17,7 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -42,7 +42,7 @@ def path_last_modified(root: Path, target: str) -> datetime | None:
     if full.exists():
         try:
             mtime = full.stat().st_mtime
-            return datetime.fromtimestamp(mtime, tz=timezone.utc)
+            return datetime.fromtimestamp(mtime, tz=UTC)
         except Exception:
             return None
     # glob 模式
@@ -53,7 +53,7 @@ def path_last_modified(root: Path, target: str) -> datetime | None:
     latest = max((m.stat().st_mtime for m in matches if m.exists()), default=None)
     if latest is None:
         return None
-    return datetime.fromtimestamp(latest, tz=timezone.utc)
+    return datetime.fromtimestamp(latest, tz=UTC)
 
 
 def check_rule(rule: dict, root: Path, now: datetime, override_days: int | None) -> dict:
@@ -76,9 +76,7 @@ def check_rule(rule: dict, root: Path, now: datetime, override_days: int | None)
             severity = "info"
         elif status == "active" and days_since > threshold:
             triggered = True
-            if action == "escalate":
-                severity = "fail"
-            elif action == "error":
+            if action == "escalate" or action == "error":
                 severity = "fail"
             else:
                 severity = "warn"
@@ -104,7 +102,7 @@ def check_rule(rule: dict, root: Path, now: datetime, override_days: int | None)
 
 def analyze(rules: list[dict], root: Path, override_days: int | None) -> dict:
     """分析所有 rules."""
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=UTC)
     results = [check_rule(r, root, now, override_days) for r in rules]
     triggered = [r for r in results if r["triggered"]]
     by_severity: dict[str, int] = {}
@@ -159,8 +157,10 @@ def main() -> int:
         sev_icon = {"ok": "✓", "info": "ℹ", "warn": "⚠️", "fail": "❌"}.get(r["severity"], "?")
         target_short = r["target"][:50] if r["target"] else "(无 target)"
         days_str = f"{r['days_since']}d" if r["days_since"] is not None else "?"
-        print(f"  {sev_icon} {r['rule_id']:<40s}  threshold={r['threshold_days']:>3d}d  "
-              f"age={days_str:>5s}  action={r['action']}")
+        print(
+            f"  {sev_icon} {r['rule_id']:<40s}  threshold={r['threshold_days']:>3d}d  "
+            f"age={days_str:>5s}  action={r['action']}"
+        )
         print(f"      {r['title']}")
         print(f"      target: {target_short}")
     print()

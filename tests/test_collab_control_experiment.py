@@ -1,4 +1,5 @@
 """P84 K4 control-experiment harness tests."""
+
 from __future__ import annotations
 
 import json
@@ -7,7 +8,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "bin" / "collab"))
-from control_experiment import compare  # noqa: E402
+from control_experiment import compare
 
 
 def test_batch3_runs_and_silent_loss_zero() -> None:

@@ -8,6 +8,7 @@ Covers pure logic paths that do NOT require LLM/network or user mailboxes:
   - deadline_tracker: register_task round-trip with tmp TASKS_FILE
   - doc_generator: generate_doc fallback, save_draft to tmp DRAFTS_DIR
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -74,10 +75,16 @@ def test_risk_to_level_boundaries(risk_engine):
 
 def test_risk_high_risk_score_without_override(risk_engine):
     engine = risk_engine.RiskEngine()
-    d = engine.evaluate(risk_engine.Action(
-        type="delete", target="public", sensitivity="secret",
-        reversibility="permanent", confidence=1.0, domain="personal",
-    ))
+    d = engine.evaluate(
+        risk_engine.Action(
+            type="delete",
+            target="public",
+            sensitivity="secret",
+            reversibility="permanent",
+            confidence=1.0,
+            domain="personal",
+        )
+    )
     assert d.level == "L4"
     assert d.risk_score > 8
 
@@ -133,8 +140,20 @@ def test_record_outcome_updates_trust(risk_engine, tmp_path, monkeypatch):
 
 def test_risk_engine_cli_json(risk_engine):
     proc = subprocess.run(
-        [sys.executable, str(SSOT_DIR / "risk_engine.py"), "--type", "read", "--target", "self", "--json"],
-        cwd=WORKSPACE, capture_output=True, text=True, timeout=60, check=False,
+        [
+            sys.executable,
+            str(SSOT_DIR / "risk_engine.py"),
+            "--type",
+            "read",
+            "--target",
+            "self",
+            "--json",
+        ],
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
     )
     assert proc.returncode == 0
     out = json.loads(proc.stdout)
@@ -204,7 +223,14 @@ def test_generate_briefing_sections(mail_agent, monkeypatch):
     mail = mail_agent.Mail(subject="交数据", sender="leader@x.cn", body="本周五前提交数据")
     briefing = mail_agent.generate_briefing(
         [mail],
-        [{"category": "任务", "priority": "high", "summary": "提交数据", "action_needed": "收集并提交"}],
+        [
+            {
+                "category": "任务",
+                "priority": "high",
+                "summary": "提交数据",
+                "action_needed": "收集并提交",
+            }
+        ],
     )
     assert "##" in briefing
     assert "交数据" in briefing
@@ -220,8 +246,13 @@ def admin_scenes():
 
 def test_admin_scenes_registry(admin_scenes):
     assert set(admin_scenes.ADMIN_SCENES.keys()) == {
-        "admin-inbox", "admin-classify", "admin-forward", "admin-collect",
-        "admin-compile", "admin-review", "admin-submit",
+        "admin-inbox",
+        "admin-classify",
+        "admin-forward",
+        "admin-collect",
+        "admin-compile",
+        "admin-review",
+        "admin-submit",
     }
     for handler in admin_scenes.ADMIN_SCENES.values():
         assert callable(handler)
@@ -230,7 +261,8 @@ def test_admin_scenes_registry(admin_scenes):
 def test_admin_inbox_empty(admin_scenes, monkeypatch):
     """No mails → has_task False, no crash."""
     monkeypatch.setattr(
-        sys.modules["mail_reader"], "read_netease_mail",
+        sys.modules["mail_reader"],
+        "read_netease_mail",
         lambda *a, **k: [],
     )
     result = admin_scenes.dispatch_admin_inbox({}, {"user": "test"})

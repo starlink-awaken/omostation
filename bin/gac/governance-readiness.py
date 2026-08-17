@@ -11,11 +11,11 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
 import sys
-import json
 from pathlib import Path
 
 # 让脚本能导入 projects/omo/src/omo 包, 从而复用 OMO 内核的 write_readiness_snapshot.
@@ -24,7 +24,9 @@ if str(_OMO_SRC) not in sys.path:
     sys.path.insert(0, str(_OMO_SRC))
 
 try:
-    from omo.omo_readiness import write_readiness_snapshot as _omo_write_readiness_snapshot
+    from omo.omo_readiness import (
+        write_readiness_snapshot as _omo_write_readiness_snapshot,
+    )
 
     _HAS_OMO_READINESS = True
 except Exception:  # defensive fallback
@@ -34,9 +36,7 @@ except Exception:  # defensive fallback
 def run(cmd: str, cwd: Path | None = None) -> tuple[int, str]:
     """Run shell command, return (exit_code, stdout+stderr)."""
     try:
-        result = subprocess.run(
-            cmd, shell=True, capture_output=True, text=True, cwd=cwd, timeout=60
-        )
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=cwd, timeout=60)
         return result.returncode, (result.stdout or "") + (result.stderr or "")
     except Exception as e:
         return 1, str(e)
@@ -58,9 +58,7 @@ def score_frontmatter(root: Path) -> tuple[int, int, float]:
             end = content.find("\n---", 4)
             if end > 0:
                 fm = content[4:end]
-                if all(
-                    k in fm for k in ["status", "lifecycle", "owner", "last-reviewed"]
-                ):
+                if all(k in fm for k in ["status", "lifecycle", "owner", "last-reviewed"]):
                     with_fm += 1
     coverage = with_fm / total
     # ≥ 95% = 25 分, < 50% = 0 分, 线性插值
@@ -268,8 +266,14 @@ def main() -> int:
     if os.environ.get("USE_TUNED_WEIGHTS") == "1":
         try:
             from subprocess import run as _run
-            r = _run(["python3", "bin/gac/dim-weight.py", "--format", "json"],
-                      capture_output=True, text=True, cwd=str(root), timeout=30)
+
+            r = _run(
+                ["python3", "bin/gac/dim-weight.py", "--format", "json"],
+                capture_output=True,
+                text=True,
+                cwd=str(root),
+                timeout=30,
+            )
             if r.returncode == 0:
                 dw = json.loads(r.stdout)
                 tuned = dw.get("weights", {})
@@ -279,7 +283,9 @@ def main() -> int:
                 w4 = tuned.get("adr_index", 20)
                 w5 = tuned.get("governance_score", 15)
                 weighted = (s1 * w1 + s2 * w2 + s3 * w3 + s4 * w4 + s5 * w5) / 100
-                print(f"  ⚖️  P80 调优权重: frontmatter={w1} drift_low={w2} commit_closure={w3} adr_index={w4} governance_score={w5}")
+                print(
+                    f"  ⚖️  P80 调优权重: frontmatter={w1} drift_low={w2} commit_closure={w3} adr_index={w4} governance_score={w5}"
+                )
                 print(f"  📊 加权总分: {weighted:.1f} (原始 {total})")
                 total = int(round(weighted))
         except Exception as e:
@@ -289,17 +295,11 @@ def main() -> int:
     print("─" * 70)
     print(f"{'维度':<28s}{'得分':<8s}{'指标':<15s}{'阈值':<15s}")
     print("─" * 70)
-    print(
-        f"{'1. 元数据覆盖 (frontmatter)':<28s}{s1:>3d}/25  {total_doc} 文档    cov={cov:.1%}     ≥95%"
-    )
+    print(f"{'1. 元数据覆盖 (frontmatter)':<28s}{s1:>3d}/25  {total_doc} 文档    cov={cov:.1%}     ≥95%")
     print(f"{'2. 漂移检测 (drift LOW)':<28s}{s2:>3d}/20  drift={drift_low}        ≤5")
-    print(
-        f"{'3. 闭环纪律 (commit closure)':<28s}{s3:>3d}/20  uncommitted={uncommitted}  ≤50"
-    )
+    print(f"{'3. 闭环纪律 (commit closure)':<28s}{s3:>3d}/20  uncommitted={uncommitted}  ≤50")
     print(f"{'4. 决策可追溯 (ADR INDEX)':<28s}{s4:>3d}/20  unlisted={unlisted}     =0")
-    print(
-        f"{'5. 治理评分 (omo governance)':<28s}{s5:>3d}/15  score={gov_score}      =100"
-    )
+    print(f"{'5. 治理评分 (omo governance)':<28s}{s5:>3d}/15  score={gov_score}      =100")
     print("─" * 70)
     print(f"{'总分':<28s}{total:>3d}/100")
     print("=" * 70)

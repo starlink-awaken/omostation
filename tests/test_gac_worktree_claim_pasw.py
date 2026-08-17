@@ -7,7 +7,6 @@ import shutil
 import subprocess
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "gac-worktree.sh"
 CORE = ROOT / "lib" / "pasw-core.sh"
@@ -32,9 +31,7 @@ def _init_repo(path: Path) -> None:
     _git(path, "commit", "-q", "-m", "initial")
 
 
-def _make_parent_with_two_submodules(
-    tmp_path: Path, submodule_paths: tuple[str, ...] = SUBMODULES
-) -> Path:
+def _make_parent_with_two_submodules(tmp_path: Path, submodule_paths: tuple[str, ...] = SUBMODULES) -> Path:
     parent = tmp_path / "parent"
     parent.mkdir()
     _init_repo(parent)
@@ -47,13 +44,27 @@ def _make_parent_with_two_submodules(
         _init_repo(child)
         subprocess.run(
             [
-                "git", "-C", str(parent), "-c", "protocol.file.allow=always",
-                "submodule", "add", "-q", str(child), submodule_path,
+                "git",
+                "-C",
+                str(parent),
+                "-c",
+                "protocol.file.allow=always",
+                "submodule",
+                "add",
+                "-q",
+                str(child),
+                submodule_path,
             ],
             check=True,
         )
     _git(parent, "commit", "-q", "-am", "add two submodules")
-    _git(parent, "remote", "add", "origin", "https://github.com/starlink-awaken/omostation.git")
+    _git(
+        parent,
+        "remote",
+        "add",
+        "origin",
+        "https://github.com/starlink-awaken/omostation.git",
+    )
     _git(parent, "update-ref", "refs/remotes/origin/main", "HEAD")
     return parent
 
@@ -70,7 +81,7 @@ def _write_git_wrapper(tmp_path: Path) -> Path:
         '  echo "injected bulk submodule failure" >&2\n'
         "  exit 73\n"
         "fi\n"
-        'if [ "${PASW_FAIL_BETA_ONCE:-}" = "1" ] && [ "$1" = "worktree" ] && [ "$2" = "add" ] && [ "$(basename \"$PWD\")" = "beta" ] && [ ! -e "${PASW_FAILURE_MARKER:?}" ]; then\n'
+        'if [ "${PASW_FAIL_BETA_ONCE:-}" = "1" ] && [ "$1" = "worktree" ] && [ "$2" = "add" ] && [ "$(basename "$PWD")" = "beta" ] && [ ! -e "${PASW_FAILURE_MARKER:?}" ]; then\n'
         '  : > "$PASW_FAILURE_MARKER"\n'
         '  echo "injected beta PASW failure" >&2\n'
         "  exit 74\n"
@@ -112,9 +123,7 @@ def _run_claim(
     )
 
 
-def _run_release(
-    parent: Path, tmp_path: Path, session: str
-) -> subprocess.CompletedProcess[str]:
+def _run_release(parent: Path, tmp_path: Path, session: str) -> subprocess.CompletedProcess[str]:
     wrapper_dir = _write_git_wrapper(tmp_path)
     env = {
         **os.environ,
@@ -160,11 +169,30 @@ def _worktree(tmp_path: Path, session: str) -> Path:
 
 def _init_root_worktree(parent: Path, wt: Path, session: str) -> None:
     subprocess.run(
-        ["git", "-C", str(parent), "worktree", "add", "-b", f"work/{session}", str(wt), "origin/main"],
+        [
+            "git",
+            "-C",
+            str(parent),
+            "worktree",
+            "add",
+            "-b",
+            f"work/{session}",
+            str(wt),
+            "origin/main",
+        ],
         check=True,
     )
     subprocess.run(
-        ["git", "-C", str(wt), "-c", "protocol.file.allow=always", "submodule", "update", "--init"],
+        [
+            "git",
+            "-C",
+            str(wt),
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "update",
+            "--init",
+        ],
         check=True,
     )
 
@@ -179,17 +207,22 @@ def _create_pasw(wt: Path, submodule: str, session: str) -> Path:
     sha = _git(wt / submodule, "rev-parse", "HEAD").stdout.strip()
     subprocess.run(
         [
-            "git", "-C", str(wt / submodule), "worktree", "add", "-b",
-            f"agent/{session}-{Path(submodule).name}", str(pasw), sha,
+            "git",
+            "-C",
+            str(wt / submodule),
+            "worktree",
+            "add",
+            "-b",
+            f"agent/{session}-{Path(submodule).name}",
+            str(pasw),
+            sha,
         ],
         check=True,
     )
     return pasw
 
 
-def _assert_complete_pasw(
-    parent: Path, wt: Path, submodule_paths: tuple[str, ...] = SUBMODULES
-) -> None:
+def _assert_complete_pasw(parent: Path, wt: Path, submodule_paths: tuple[str, ...] = SUBMODULES) -> None:
     for submodule in submodule_paths:
         pasw = _pasw_path(wt, submodule)
         assert pasw.is_dir(), f"missing PASW worktree: {pasw}"
@@ -231,15 +264,15 @@ def test_partial_pasw_layout_is_repaired_on_claim(tmp_path: Path) -> None:
 def test_bulk_submodule_init_failure_fails_without_pasw(tmp_path: Path) -> None:
     parent = _make_parent_with_two_submodules(tmp_path)
 
-    result = _run_claim(
-        parent, tmp_path, "bulk-fail", extra_env={"PASW_FAIL_SUBMODULE_INIT": "1"}
-    )
+    result = _run_claim(parent, tmp_path, "bulk-fail", extra_env={"PASW_FAIL_SUBMODULE_INIT": "1"})
 
     assert result.returncode != 0
     assert not (_worktree(tmp_path, "bulk-fail") / ".subtrees").exists()
 
 
-def test_complete_claim_registers_matching_pasw_from_non_repo_cwd(tmp_path: Path) -> None:
+def test_complete_claim_registers_matching_pasw_from_non_repo_cwd(
+    tmp_path: Path,
+) -> None:
     parent = _make_parent_with_two_submodules(tmp_path)
 
     result = _run_claim(parent, tmp_path, "complete", cwd=tmp_path / "not-a-repository")
@@ -275,9 +308,7 @@ def test_release_removes_spaced_pasw_worktree_and_registration(tmp_path: Path) -
     wt = _worktree(tmp_path, session)
     pasw = _pasw_path(wt, "modules/space alpha")
     git_dir = _worktree_git_dir(wt / "modules/space alpha")
-    registrations_before = _git(
-        wt / "modules/space alpha", "worktree", "list", "--porcelain"
-    ).stdout
+    registrations_before = _git(wt / "modules/space alpha", "worktree", "list", "--porcelain").stdout
 
     assert claim.returncode == 0, claim.stderr
     assert f"worktree {pasw}" in registrations_before
@@ -328,7 +359,9 @@ def test_list_displays_spaced_pasw_worktree(tmp_path: Path) -> None:
     assert f"ws-{session}: alpha space alpha" in listed.stdout
 
 
-def test_retry_repairs_pasw_after_a_partial_worktree_add_failure(tmp_path: Path) -> None:
+def test_retry_repairs_pasw_after_a_partial_worktree_add_failure(
+    tmp_path: Path,
+) -> None:
     parent = _make_parent_with_two_submodules(tmp_path)
     marker = tmp_path / "beta-failure-used"
 
@@ -350,12 +383,12 @@ def test_retry_repairs_pasw_after_a_partial_worktree_add_failure(tmp_path: Path)
     _assert_complete_pasw(parent, wt)
 
 
-def test_skip_submodule_init_is_explicit_root_only_degraded_mode(tmp_path: Path) -> None:
+def test_skip_submodule_init_is_explicit_root_only_degraded_mode(
+    tmp_path: Path,
+) -> None:
     parent = _make_parent_with_two_submodules(tmp_path)
 
-    result = _run_claim(
-        parent, tmp_path, "fast", extra_env={"SKIP_SUBMODULE_INIT": "1"}
-    )
+    result = _run_claim(parent, tmp_path, "fast", extra_env={"SKIP_SUBMODULE_INIT": "1"})
     wt = _worktree(tmp_path, "fast")
 
     assert result.returncode == 0, result.stderr

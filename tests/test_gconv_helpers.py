@@ -1,4 +1,5 @@
 """Structural tests for G-CONV helpers (foundry gitlink slot, kos seed, repair draft)."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -46,6 +47,7 @@ def test_kos_seed_import_creates_documents(tmp_path):
     count = mod.import_docs(db, [docs / "a.md"])
     assert count >= 1
     import sqlite3
+
     conn = sqlite3.connect(str(db))
     n = conn.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
     conn.close()
@@ -94,8 +96,6 @@ def test_write_owner_audit_blocks_non_system_on_script_owned(monkeypatch, tmp_pa
     monkeypatch.delenv("CI", raising=False)
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     owners = [{"path": ".omo/state/system.yaml", "owner": "script:runtime-scan"}]
-    violations = mod.audit_staged(
-        [".omo/state/system.yaml"], owners, current_user="random-outsider"
-    )
+    violations = mod.audit_staged([".omo/state/system.yaml"], owners, current_user="random-outsider")
     assert violations, "non-system committer must be blocked on script-owned path"
     assert "system.yaml" in violations[0]

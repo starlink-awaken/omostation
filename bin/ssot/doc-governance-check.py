@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate document ownership, lifecycle, freshness, and discoverability."""
+
 from __future__ import annotations
 
 import argparse
@@ -8,7 +9,7 @@ import hashlib
 import json
 import subprocess
 import sys
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -98,11 +99,7 @@ def collect_markdown_files(
     else:
         raise ValueError(f"unsupported scope: {scope}")
 
-    files = {
-        path.resolve()
-        for path in candidates
-        if path.is_file() and not _excluded(_relative(path, root))
-    }
+    files = {path.resolve() for path in candidates if path.is_file() and not _excluded(_relative(path, root))}
     return sorted(files, key=lambda path: _relative(path, root))
 
 
@@ -178,9 +175,7 @@ def validate_registry(
         if not surface_id or surface_id in seen_ids:
             findings.append(
                 _finding(
-                    path=_relative(registry_path, root)
-                    if registry_path.is_relative_to(root)
-                    else str(registry_path),
+                    path=_relative(registry_path, root) if registry_path.is_relative_to(root) else str(registry_path),
                     rule="registry-integrity",
                     surface=None,
                     severity="error",
@@ -208,9 +203,7 @@ def validate_registry(
         if surface.get("lifecycle") not in valid_lifecycles:
             findings.append(
                 _finding(
-                    path=_relative(registry_path, root)
-                    if registry_path.is_relative_to(root)
-                    else str(registry_path),
+                    path=_relative(registry_path, root) if registry_path.is_relative_to(root) else str(registry_path),
                     rule="registry-integrity",
                     surface=None,
                     severity="error",
@@ -387,14 +380,8 @@ def _evaluate_signature_baseline(
             "baseline_file": str(config.get("baseline_file", "")),
             "registered": len(expected),
             "observed": len(observed_records),
-            "unbaselined": [
-                observed_records[signature]
-                for signature in sorted(observed - expected_signatures)
-            ],
-            "retired": [
-                expected[signature]
-                for signature in sorted(expected_signatures - observed)
-            ],
+            "unbaselined": [observed_records[signature] for signature in sorted(observed - expected_signatures)],
+            "retired": [expected[signature] for signature in sorted(expected_signatures - observed)],
         },
         errors,
     )
@@ -495,11 +482,7 @@ def evaluate_warning_baseline(
     entry_ids: set[str] = set()
     entries_by_bucket: dict[str, dict[str, Any]] = {}
     valid_rules = set(registry.get("rules", {}))
-    valid_surfaces = {
-        str(surface.get("id"))
-        for surface in registry.get("surfaces", [])
-        if surface.get("id")
-    }
+    valid_surfaces = {str(surface.get("id")) for surface in registry.get("surfaces", []) if surface.get("id")}
     for index, entry in enumerate(entries, start=1):
         if not isinstance(entry, dict):
             registry_findings.append(
@@ -626,10 +609,7 @@ def evaluate_warning_baseline(
                 )
 
     baseline["ok"] = not (
-        registry_findings
-        or baseline["expired"]
-        or baseline["unbaselined"]
-        or baseline["over_budget"]
+        registry_findings or baseline["expired"] or baseline["unbaselined"] or baseline["over_budget"]
     )
     return baseline, registry_findings
 
@@ -652,10 +632,7 @@ def _baseline_violation_findings(
         )
     for item in baseline["unbaselined"]:
         if "signature" in item:
-            evidence = (
-                f"{item['path']} rule={item['rule']} "
-                f"signature={item['signature']}"
-            )
+            evidence = f"{item['path']} rule={item['rule']} signature={item['signature']}"
         else:
             evidence = f"{item['bucket']} count={item['count']}"
         violations.append(
@@ -677,10 +654,7 @@ def _baseline_violation_findings(
                 surface=None,
                 severity="error",
                 workflow="project-doc-change",
-                evidence=(
-                    f"{item['bucket']} count={item['count']} "
-                    f"max={item['max_findings']}"
-                ),
+                evidence=(f"{item['bucket']} count={item['count']} max={item['max_findings']}"),
                 message=f"warning exception {item['exception']} has been exceeded",
             )
         )
@@ -696,11 +670,7 @@ def write_warning_baseline(
     if yaml is None:
         raise RuntimeError("pyyaml is required")
     records = sorted(
-        (
-            _warning_record(finding)
-            for finding in findings
-            if finding["severity"] == "warning"
-        ),
+        (_warning_record(finding) for finding in findings if finding["severity"] == "warning"),
         key=lambda record: (
             record["path"],
             record["rule"],
@@ -797,9 +767,7 @@ def check_file(
 
         valid_statuses = set(registry.get("metadata", {}).get("valid_statuses", []))
         valid_lifecycles = set(registry.get("metadata", {}).get("valid_lifecycles", []))
-        valid_review_states = set(
-            registry.get("metadata", {}).get("valid_review_states", [])
-        )
+        valid_review_states = set(registry.get("metadata", {}).get("valid_review_states", []))
         if "status" in metadata and metadata.get("status") not in valid_statuses:
             findings.append(
                 _finding(
@@ -978,7 +946,7 @@ def run(
     no_new_warnings: bool = False,
     today: date | None = None,
 ) -> dict[str, Any]:
-    current_date = today or datetime.now(timezone.utc).date()
+    current_date = today or datetime.now(UTC).date()
     registry_path = REGISTRY_PATH
     if REGISTRY_PATH.is_relative_to(WORKSPACE):
         registry_path = root / REGISTRY_PATH.relative_to(WORKSPACE)
@@ -1028,11 +996,7 @@ def run(
                     message="warning debt is behind the registered monthly burn-down target",
                 )
             )
-    blocking = [
-        finding
-        for finding in findings
-        if finding["severity"] == "error" or strict
-    ]
+    blocking = [finding for finding in findings if finding["severity"] == "error" or strict]
     return {
         "ok": not blocking,
         "scope": scope,
@@ -1069,7 +1033,12 @@ def main(argv: list[str] | None = None) -> int:
         help="write the current warning signatures to a reviewable YAML file",
     )
     parser.add_argument("--scope", choices=("tracked", "workspace"), default="tracked")
-    parser.add_argument("--files", nargs="*", default=None, help="check only these workspace-relative files")
+    parser.add_argument(
+        "--files",
+        nargs="*",
+        default=None,
+        help="check only these workspace-relative files",
+    )
     args = parser.parse_args(argv)
     try:
         result = run(
@@ -1085,7 +1054,7 @@ def main(argv: list[str] | None = None) -> int:
             write_warning_baseline(
                 output_path,
                 result["findings"],
-                datetime.now(timezone.utc).date(),
+                datetime.now(UTC).date(),
             )
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         result = {

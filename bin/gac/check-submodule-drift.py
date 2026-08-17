@@ -59,9 +59,7 @@ EXTRA = {
 
 def _run(cmd: list[str], cwd: str | None = None) -> tuple[int, str]:
     try:
-        r = subprocess.run(
-            cmd, capture_output=True, text=True, cwd=cwd, timeout=15
-        )
+        r = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd, timeout=15)
         return r.returncode, r.stdout.strip()
     except (subprocess.TimeoutExpired, FileNotFoundError):
         return 2, ""
@@ -83,25 +81,17 @@ def _check_submodule(root: Path, sm_path: str) -> dict:
     if rc_head != 0:
         return {"path": sm_path, "status": "no_head"}
 
-    rc_origin, origin_main = _run(
-        ["git", "rev-parse", "origin/main"], str(sm_root)
-    )
+    rc_origin, origin_main = _run(["git", "rev-parse", "origin/main"], str(sm_root))
     if rc_origin != 0:
         return {"path": sm_path, "status": "no_origin_main", "head": head[:9]}
 
-    rc_branch, branch = _run(
-        ["git", "rev-parse", "--abbrev-ref", "HEAD"], str(sm_root)
-    )
+    rc_branch, branch = _run(["git", "rev-parse", "--abbrev-ref", "HEAD"], str(sm_root))
 
     aligned = head == origin_main
     ahead = behind = 0
     if not aligned:
-        _, ahead_s = _run(
-            ["git", "rev-list", "--count", f"origin/main..{head}"], str(sm_root)
-        )
-        _, behind_s = _run(
-            ["git", "rev-list", "--count", f"{head}..origin/main"], str(sm_root)
-        )
+        _, ahead_s = _run(["git", "rev-list", "--count", f"origin/main..{head}"], str(sm_root))
+        _, behind_s = _run(["git", "rev-list", "--count", f"{head}..origin/main"], str(sm_root))
         ahead = int(ahead_s) if ahead_s.isdigit() else -1
         behind = int(behind_s) if behind_s.isdigit() else -1
 
@@ -142,20 +132,27 @@ def main() -> int:
 
     results = [_check_submodule(root, sm) for sm in submodules]
 
-    drifted_stable = [r for r in results if r.get("category") in ("stable", "tracking") and r.get("status") == "drifted"]
+    drifted_stable = [
+        r for r in results if r.get("category") in ("stable", "tracking") and r.get("status") == "drifted"
+    ]
     drifted_feature = [r for r in results if r.get("category") == "feature" and r.get("status") == "drifted"]
     drifted_dormant = [r for r in results if r.get("category") == "dormant" and r.get("status") == "drifted"]
 
     json_out = "--json" in sys.argv
     if json_out:
-        print(json.dumps({
-            "total": len(results),
-            "aligned": len([r for r in results if r.get("status") == "aligned"]),
-            "drifted_stable": len(drifted_stable),
-            "drifted_feature": len(drifted_feature),
-            "drifted_dormant": len(drifted_dormant),
-            "details": results,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "total": len(results),
+                    "aligned": len([r for r in results if r.get("status") == "aligned"]),
+                    "drifted_stable": len(drifted_stable),
+                    "drifted_feature": len(drifted_feature),
+                    "drifted_dormant": len(drifted_dormant),
+                    "details": results,
+                },
+                indent=2,
+            )
+        )
     else:
         aligned = [r for r in results if r.get("status") == "aligned"]
         for r in aligned:

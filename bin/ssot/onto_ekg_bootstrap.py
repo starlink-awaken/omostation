@@ -26,9 +26,20 @@ ONTOLOGY = ROOT / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "ontol
 DOC_GLOBS = ("docs/**/*.md", ".omo/_knowledge/**/*.md", ".omo/standards/**/*.md")
 # 高频治理概念关键词（规则式提取的种子词典，从 16 抽象族映射推导）
 SEED_CONCEPTS = (
-    "layer-contract", "bos-uri", "mcp-tool", "agent-workflow", "governance-check",
-    "derived-artifact", "frontmatter", "ssot-registry", "submodule-pointer",
-    "debt-item", "adr", "service-registry", "runtime-projection", "approval-flow",
+    "layer-contract",
+    "bos-uri",
+    "mcp-tool",
+    "agent-workflow",
+    "governance-check",
+    "derived-artifact",
+    "frontmatter",
+    "ssot-registry",
+    "submodule-pointer",
+    "debt-item",
+    "adr",
+    "service-registry",
+    "runtime-projection",
+    "approval-flow",
 )
 
 
@@ -58,9 +69,15 @@ def extract_candidate_concepts(docs: list[dict]) -> list[dict]:
     concepts = []
     for name, count in counter.most_common():
         meta = metas.get(name, {})
-        concepts.append({"name": name, "count": count, "source": sources.get(name, ""),
-                         "dimension": meta.get("dimension", "?"),
-                         "surface": meta.get("surface", "?")})
+        concepts.append(
+            {
+                "name": name,
+                "count": count,
+                "source": sources.get(name, ""),
+                "dimension": meta.get("dimension", "?"),
+                "surface": meta.get("surface", "?"),
+            }
+        )
     return concepts
 
 
@@ -68,8 +85,7 @@ def build_bootstrap_report(concepts: list[dict]) -> str:
     """构建自举报告（Markdown 文本）。"""
     lines = ["# OntoEKG Bootstrap 候选概念", ""]
     for c in concepts:
-        lines.append(f"- {c['name']} (×{c['count']}) — dim={c['dimension']} "
-                     f"surface={c['surface']} src={c['source']}")
+        lines.append(f"- {c['name']} (×{c['count']}) — dim={c['dimension']} surface={c['surface']} src={c['source']}")
     lines.append("")
     lines.append(f"共 {len(concepts)} 个候选概念（规则式提取，LLM 增强待接入 aetherforge）")
     return "\n".join(lines)
@@ -107,8 +123,12 @@ def scan_docs() -> list[dict]:
             if "node_modules" in str(p) or "generated" in str(p):
                 continue
             try:
-                docs.append({"path": str(p.relative_to(ROOT)),
-                             "content": p.read_text(encoding="utf-8", errors="ignore")[:4000]})
+                docs.append(
+                    {
+                        "path": str(p.relative_to(ROOT)),
+                        "content": p.read_text(encoding="utf-8", errors="ignore")[:4000],
+                    }
+                )
             except OSError:
                 continue
     return docs

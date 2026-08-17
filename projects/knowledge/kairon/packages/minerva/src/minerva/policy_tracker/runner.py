@@ -12,7 +12,7 @@ from minerva.policy_tracker.analyzer import analyze_items
 from minerva.policy_tracker.fetcher import fetch_recent
 from minerva.policy_tracker.kos_writer import save_to_kos
 from minerva.policy_tracker.reporter import save_report
-from minerva.policy_tracker.types import PolicyItem  # noqa: F401  re-exported for type hint compat
+from minerva.policy_tracker.types import PolicyItem
 
 logger = logging.getLogger(__name__)
 

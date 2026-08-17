@@ -21,14 +21,13 @@ def get_changed_files() -> list:
     """获取已暂存和未暂存的变更文件列表。"""
     result = subprocess.run(
         ["git", "diff", "--name-only", "--cached"],
-        capture_output=True, text=True, cwd=REPO_ROOT
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
     )
     staged = [f for f in result.stdout.splitlines() if f.strip()]
 
-    result = subprocess.run(
-        ["git", "diff", "--name-only"],
-        capture_output=True, text=True, cwd=REPO_ROOT
-    )
+    result = subprocess.run(["git", "diff", "--name-only"], capture_output=True, text=True, cwd=REPO_ROOT)
     unstaged = [f for f in result.stdout.splitlines() if f.strip()]
 
     return staged, unstaged
@@ -56,8 +55,7 @@ def main() -> int:
     # 同时有 staged 和 unstaged 变更 — 提示增量提交
     if staged and unstaged:
         violations.append(
-            f"  staged {len(staged)} 个文件 + unstaged {len(unstaged)} 个文件 — "
-            "建议先提交已暂存变更, 再处理未暂存变更"
+            f"  staged {len(staged)} 个文件 + unstaged {len(unstaged)} 个文件 — 建议先提交已暂存变更, 再处理未暂存变更"
         )
 
     if violations:

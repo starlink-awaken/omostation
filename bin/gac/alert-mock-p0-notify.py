@@ -18,16 +18,15 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
-
 
 CHANNELS = ["email", "sms", "slack"]
 
 
 def send_mock(root: Path, level: str, message: str, channels: list[str], dry_run: bool = False) -> dict:
     """Mock 发送 P0 通知."""
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(UTC).isoformat()
     notif_log = root / "runtime" / "logs" / "p0-notifications.log"
     results = {}
     for channel in channels:
@@ -60,9 +59,7 @@ def send_mock(root: Path, level: str, message: str, channels: list[str], dry_run
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P72: P0 mock 通知工具 (本地文件, 无外部依赖)"
-    )
+    parser = argparse.ArgumentParser(description="P72: P0 mock 通知工具 (本地文件, 无外部依赖)")
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--level", default="P0", help="告警级别 (默认 P0)")
     parser.add_argument("--message", required=True, help="告警消息")

@@ -18,8 +18,8 @@ import importlib.util
 import json
 import sys
 import uuid
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -38,7 +38,7 @@ class ApprovalReceipt:
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _new_id(prefix: str) -> str:
@@ -97,6 +97,7 @@ def list_receipts(workspace_root: Path) -> list[ApprovalReceipt]:
 
 # ── Review queue ──
 
+
 def get_review_queue(workspace_root: Path) -> list[dict[str, Any]]:
     """Get all intents pending review across all scenes."""
     inbox = _load_inbox(workspace_root)
@@ -108,22 +109,29 @@ def get_review_queue(workspace_root: Path) -> list[dict[str, Any]]:
                 if intent.status == "pending":
                     # Build evidence snapshot
                     evidence = [
-                        {"source": e.source, "action": e.action, "result": e.result, "timestamp": e.timestamp}
+                        {
+                            "source": e.source,
+                            "action": e.action,
+                            "result": e.result,
+                            "timestamp": e.timestamp,
+                        }
                         for e in intent.evidence
                     ]
-                    queue.append({
-                        "intent_id": intent.id,
-                        "scene_id": scene.id,
-                        "scene_name": scene.name,
-                        "journey_id": journey.id,
-                        "journey_name": journey.name,
-                        "source": intent.source,
-                        "raw_content": intent.raw_content[:200],
-                        "priority": intent.priority,
-                        "created_at": intent.created_at,
-                        "evidence": evidence,
-                        "evidence_count": len(evidence),
-                    })
+                    queue.append(
+                        {
+                            "intent_id": intent.id,
+                            "scene_id": scene.id,
+                            "scene_name": scene.name,
+                            "journey_id": journey.id,
+                            "journey_name": journey.name,
+                            "source": intent.source,
+                            "raw_content": intent.raw_content[:200],
+                            "priority": intent.priority,
+                            "created_at": intent.created_at,
+                            "evidence": evidence,
+                            "evidence_count": len(evidence),
+                        }
+                    )
     # Sort by priority (P0 first), then by creation time
     priority_order = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
     queue.sort(key=lambda x: (priority_order.get(x["priority"], 99), x["created_at"]))
@@ -169,6 +177,7 @@ def get_evidence_detail(workspace_root: Path, intent_id: str) -> dict[str, Any] 
 
 # ── Approval actions ──
 
+
 def approve_intent(
     workspace_root: Path,
     intent_id: str,
@@ -188,7 +197,9 @@ def approve_intent(
     # Create task binding
     bridge = _load_bridge(workspace_root)
     binding_result = bridge.approve_intent_and_create_task(
-        workspace_root, intent_id=intent_id, outcome_metric=outcome_metric,
+        workspace_root,
+        intent_id=intent_id,
+        outcome_metric=outcome_metric,
     )
     if not binding_result["ok"]:
         return binding_result
@@ -235,8 +246,10 @@ def reject_intent(
     # Update intent status to rejected
     inbox = _load_inbox(workspace_root)
     intent = inbox.update_intent_status(
-        workspace_root, intent_id=intent_id,
-        new_status="rejected", actor=reviewer,
+        workspace_root,
+        intent_id=intent_id,
+        new_status="rejected",
+        actor=reviewer,
     )
     if intent is None:
         return {"ok": False, "error": f"Intent {intent_id} not found"}

@@ -23,6 +23,7 @@ Exit codes:
   0  report emitted (window_open / pass / fail all exit 0)
   2  fatal (root unreadable)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -30,11 +31,11 @@ import importlib.util
 import json
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
-UTC = timezone.utc
+UTC = UTC
 
 DEFAULT_RATIO_MIN = 0.9
 DEFAULT_ADVERSARIAL = ".omo/_delivery/m1-adversarial/latest.json"
@@ -43,7 +44,7 @@ BAD_ROOTCAUSE = frozenset({"coverage_gap_bypass", "unresolved"})
 OK_ROOTCAUSE = frozenset({"gate_interception", "historical_pre_gate"})
 ISC3_WEIGHT_RE = re.compile(
     r"governance['\"]?\s*:\s*0\.3|0\.3.*0\.5.*0\.2|ISC-3|isc3",
-    re.I,
+    re.IGNORECASE,
 )
 
 
@@ -68,14 +69,14 @@ def _load_yaml(path: Path) -> dict[str, Any]:
     if not path.is_file():
         return {}
     try:
-        import yaml  # noqa: PLC0415
+        import yaml
 
         docs = [d for d in yaml.safe_load_all(path.read_text(encoding="utf-8")) if d]
         if not docs:
             return {}
         last = docs[-1]
         return last if isinstance(last, dict) else {}
-    except Exception:  # noqa: BLE001
+    except Exception:
         return {}
 
 
@@ -175,9 +176,11 @@ def check_g_conv_3_health(ssot_root: Path) -> dict[str, Any]:
     score = system.get("health_score", health.get("health_score"))
     isc3_marker = "isc3" in source.lower() or bool(ISC3_WEIGHT_RE.search(health_raw))
     # Prefer explicit weights in health body comments/fields
-    weights_ok = bool(re.search(r"0\.3", health_raw)) and bool(
-        re.search(r"0\.5", health_raw)
-    ) and bool(re.search(r"0\.2", health_raw))
+    weights_ok = (
+        bool(re.search(r"0\.3", health_raw))
+        and bool(re.search(r"0\.5", health_raw))
+        and bool(re.search(r"0\.2", health_raw))
+    )
     ok = isc3_marker or weights_ok
     return _check(
         "g-conv.3",
@@ -203,7 +206,10 @@ def check_g_conv_4_gitlink(root: Path) -> dict[str, Any]:
         "gitlink_foundry_slot",
         ok,
         hard=True,
-        detail={"foundry_present": foundry.is_file(), "slot_545": "5:45-gitlink-check" in text},
+        detail={
+            "foundry_present": foundry.is_file(),
+            "slot_545": "5:45-gitlink-check" in text,
+        },
     )
 
 
@@ -212,9 +218,7 @@ def check_g_conv_5_write_owner(root: Path) -> dict[str, Any]:
     repair = root / "bin/ssot/write-owner-repair-draft.py"
     pre = root / ".pre-commit-config.yaml"
     pre_txt = pre.read_text(encoding="utf-8") if pre.is_file() else ""
-    ok = wo.is_file() and repair.is_file() and (
-        "write-owner" in pre_txt or "write_owner" in pre_txt
-    )
+    ok = wo.is_file() and repair.is_file() and ("write-owner" in pre_txt or "write_owner" in pre_txt)
     return _check(
         "g-conv.5",
         "single_writer_immune",
@@ -287,9 +291,7 @@ def check_g_conv_7_window(
 
     # Window + events live on ssot_root; orphan scan uses code_root git if same,
     # else ssot_root (where main history / launchd runs).
-    status = sd.conflict_window_status(
-        ssot_root, scan_orphans=scan_orphans, emit_orphans=emit_orphans
-    )
+    status = sd.conflict_window_status(ssot_root, scan_orphans=scan_orphans, emit_orphans=emit_orphans)
     reg = sd.load_registry(code_root)
     gates = reg.get("gates") or {}
     four = {
@@ -345,7 +347,9 @@ def load_adversarial_evidence(path: Path | None) -> dict[str, Any] | None:
     return data
 
 
-def adversarial_path_pass(evidence: dict[str, Any] | None) -> tuple[bool, dict[str, Any]]:
+def adversarial_path_pass(
+    evidence: dict[str, Any] | None,
+) -> tuple[bool, dict[str, Any]]:
     """Return (pass?, detail) for path B four-gate all blocked.
 
     Convention: each gate entry has ``blocked: true`` when abuse was successfully
@@ -361,8 +365,10 @@ def adversarial_path_pass(evidence: dict[str, Any] | None) -> tuple[bool, dict[s
         raw = str(g.get("gate") or g.get("id") or "").strip().upper()
         if not raw:
             continue
-        key = raw if raw in {"D1", "D2", "D3", "D4"} else (
-            f"D{raw[1]}" if raw.startswith("D") and len(raw) > 1 and raw[1].isdigit() else raw
+        key = (
+            raw
+            if raw in {"D1", "D2", "D3", "D4"}
+            else (f"D{raw[1]}" if raw.startswith("D") and len(raw) > 1 and raw[1].isdigit() else raw)
         )
         if key not in {"D1", "D2", "D3", "D4"}:
             # try extract D\d
@@ -420,9 +426,7 @@ def load_conflict_rootcause(
         return None, path
 
 
-def evaluate_rootcause(
-    rootcause: dict[str, Any] | None, conflict_count: int
-) -> dict[str, Any]:
+def evaluate_rootcause(rootcause: dict[str, Any] | None, conflict_count: int) -> dict[str, Any]:
     """ADR-0224: classify whether path B may still pass when count>0."""
     if conflict_count <= 0:
         return {
@@ -459,9 +463,7 @@ def evaluate_rootcause(
         "classes": classes,
         "blocking_classes": blocking,
         "disposition": rootcause.get("disposition"),
-        "reason": None
-        if ok
-        else f"rootcause has blocking classes: {blocking or 'incomplete'}",
+        "reason": None if ok else f"rootcause has blocking classes: {blocking or 'incomplete'}",
     }
 
 
@@ -654,10 +656,7 @@ def main(argv: list[str] | None = None) -> int:
         "--adversarial-evidence",
         type=Path,
         default=None,
-        help=(
-            "path B JSON (default: <ssot>/.omo/_delivery/m1-adversarial/latest.json "
-            "if present)"
-        ),
+        help=("path B JSON (default: <ssot>/.omo/_delivery/m1-adversarial/latest.json if present)"),
     )
     p.add_argument(
         "--conflict-rootcause",

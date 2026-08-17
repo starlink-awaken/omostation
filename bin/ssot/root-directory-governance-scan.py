@@ -17,10 +17,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from datetime import datetime, timezone
-from pathlib import Path
 import subprocess
-
+from datetime import UTC, datetime, timezone
+from pathlib import Path
 
 README_NAMES = {
     "readme.md",
@@ -115,9 +114,7 @@ def rank_and_tag(rows: list[dict[str, object]]) -> list[dict[str, object]]:
 
         if must_action:
             level = "must"
-        elif should_action:
-            level = "should"
-        elif kb >= 500 and not (has_readme and has_agents):
+        elif should_action or kb >= 500 and not (has_readme and has_agents):
             level = "should"
         else:
             level = "ok"
@@ -191,9 +188,7 @@ def render_markdown(rows: list[dict[str, object]], generated_at: str) -> str:
                 miss.append("AGENTS.md")
             if not item["has_readme"]:
                 miss.append("README")
-            lines.append(
-                f"- `{item['path']}`: 文件{item['files']}，缺失 {'/'.join(miss) if miss else '治理入口'}。"
-            )
+            lines.append(f"- `{item['path']}`: 文件{item['files']}，缺失 {'/'.join(miss) if miss else '治理入口'}。")
     else:
         lines.append("")
         lines.append("### 2) 建议（中优先）")
@@ -217,7 +212,7 @@ def main() -> None:
     root = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], cwd=str(root), text=True).strip())
 
     rows = rank_and_tag(scan_root(root, include_untracked=args.include_untracked))
-    generated_at = datetime.now(timezone.utc).isoformat()
+    generated_at = datetime.now(UTC).isoformat()
 
     if args.json:
         payload = {

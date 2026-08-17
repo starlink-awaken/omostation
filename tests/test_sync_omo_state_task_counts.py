@@ -20,8 +20,6 @@ def test_completed_task_count_includes_archived_done_projection(tmp_path: Path) 
     (tasks / "done").mkdir(parents=True)
     (tasks / "archived" / "done").mkdir(parents=True)
     (tasks / "done" / "current.yaml").write_text("id: current\n", encoding="utf-8")
-    (tasks / "archived" / "done" / "historical.yaml").write_text(
-        "id: historical\n", encoding="utf-8"
-    )
+    (tasks / "archived" / "done" / "historical.yaml").write_text("id: historical\n", encoding="utf-8")
 
     assert MODULE._count_completed_tasks(tasks) == 2

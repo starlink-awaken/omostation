@@ -7,13 +7,14 @@
 # verifier: pytest tests/test_doc_governance_migrate.py
 # ---
 """Apply reviewable document-governance metadata migrations."""
+
 from __future__ import annotations
 
 import argparse
 import importlib.util
 import re
 import sys
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -28,7 +29,7 @@ SPEC.loader.exec_module(CHECKER)
 
 def _date(value: str | None) -> date:
     if value is None:
-        return datetime.now(timezone.utc).date()
+        return datetime.now(UTC).date()
     return date.fromisoformat(value)
 
 
@@ -41,7 +42,15 @@ def _default_metadata(
     lifecycle = str(surface.get("lifecycle", "contract"))
     status = "active"
     if lifecycle == "history" or parts.intersection(
-        {"archive", "audits", "audit", "closeout", "reports", "retrospectives", "reviews"}
+        {
+            "archive",
+            "audits",
+            "audit",
+            "closeout",
+            "reports",
+            "retrospectives",
+            "reviews",
+        }
     ):
         status = "archived"
         lifecycle = "history"
@@ -110,9 +119,7 @@ def _add_missing_scalars(
                 additions.append("review-state: content-reviewed")
             current["review-state"] = "content-reviewed"
         if "content-reviewed-at" not in current:
-            additions.append(
-                f"content-reviewed-at: {migration_date.isoformat()}"
-            )
+            additions.append(f"content-reviewed-at: {migration_date.isoformat()}")
             current["content-reviewed-at"] = migration_date.isoformat()
     elif current.get("review-state") == "content-reviewed":
         return content, False
@@ -189,9 +196,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     migration_date = _date(args.migration_date)
-    registry = CHECKER.load_registry(
-        WORKSPACE / ".omo/_truth/registry/document-governance.yaml"
-    )
+    registry = CHECKER.load_registry(WORKSPACE / ".omo/_truth/registry/document-governance.yaml")
     if args.files or args.all:
         files = CHECKER.collect_markdown_files(
             WORKSPACE,
@@ -211,11 +216,7 @@ def main(argv: list[str] | None = None) -> int:
             for finding in current["findings"]
             if finding["rule"] in {"missing_frontmatter", "invalid_metadata"}
         }
-        files = [
-            WORKSPACE / path
-            for path in sorted(eligible)
-            if (WORKSPACE / path).is_file()
-        ]
+        files = [WORKSPACE / path for path in sorted(eligible) if (WORKSPACE / path).is_file()]
     changed = 0
     surfaces: dict[str, int] = {}
     for path in files:

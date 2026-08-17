@@ -14,8 +14,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).resolve().parents[2]  # /Users/xiamingxing/Workspace
 SCRIPT = REPO_ROOT / ".omo" / "_knowledge" / "zones-check.py"
 
@@ -38,7 +36,8 @@ def test_zones_yaml_has_required_zones() -> None:
 def test_list_mode_exits_zero() -> None:
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--list"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 0, result.stderr
     assert "Zone" in result.stdout
@@ -59,7 +58,8 @@ def test_check_mode_exits_zero_against_main() -> None:
     # Easier: just confirm the script can list zones.
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--list"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 0
     assert "internal" in result.stdout  # zone is defined
@@ -78,11 +78,10 @@ def test_block_zone_violation_exits_one() -> None:
     try:
         result = subprocess.run(
             [sys.executable, str(SCRIPT), "--check"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
-        assert result.returncode == 1, (
-            f"expected 1, got {result.returncode}: {result.stdout!r}"
-        )
+        assert result.returncode == 1, f"expected 1, got {result.returncode}: {result.stdout!r}"
         assert "internal" in result.stdout
     finally:
         if target.exists():
@@ -93,9 +92,11 @@ def test_check_json_output_is_valid_json() -> None:
     """--check --json should emit parseable JSON."""
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--check", "--json"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     import json
+
     data = json.loads(result.stdout)
     assert "ok" in data
     assert "files_checked" in data

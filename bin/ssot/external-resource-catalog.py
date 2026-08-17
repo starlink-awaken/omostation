@@ -59,7 +59,11 @@ def _directory_next_step(resource: Mapping[str, Any]) -> str:
     health = resource.get("health")
     health_status = str(health.get("status") or "").strip().lower() if isinstance(health, Mapping) else ""
 
-    if availability in {"unavailable", "stale"} or health_status in {"unhealthy", "unknown", ""}:
+    if availability in {"unavailable", "stale"} or health_status in {
+        "unhealthy",
+        "unknown",
+        "",
+    }:
         return "health_probe"
     if availability == "proposal_only" or mode == "proposal_only":
         return "proposal_or_evaluation"
@@ -132,9 +136,7 @@ def build_external_resource_directory_snapshot(
         resources.append(resource)
         kind_index.setdefault(resource["kind"], []).append(resource_id)
         for capability in capabilities:
-            bucket = capability_index.setdefault(
-                capability, {"resource_ids": [], "available_resource_ids": []}
-            )
+            bucket = capability_index.setdefault(capability, {"resource_ids": [], "available_resource_ids": []})
             bucket["resource_ids"].append(resource_id)
             if availability == "available":
                 bucket["available_resource_ids"].append(resource_id)
@@ -221,11 +223,7 @@ def _connection_plan_item(resource: Mapping[str, Any]) -> dict[str, Any]:
         "scene_card_and_permission_review",
         "activation_review",
     }
-    status = (
-        "ready_for_review"
-        if availability == "available" and next_step in reviewable_steps
-        else "blocked"
-    )
+    status = "ready_for_review" if availability == "available" and next_step in reviewable_steps else "blocked"
     return {
         "resource_id": str(resource.get("id") or ""),
         "kind": str(resource.get("kind") or "unknown"),
@@ -252,17 +250,11 @@ def build_external_resource_connection_plan(
     state.
     """
     if directory.get("schema") != DIRECTORY_SCHEMA:
-        raise ExternalResourceCatalogInputError(
-            "connection plan requires an external-resource directory"
-        )
+        raise ExternalResourceCatalogInputError("connection plan requires an external-resource directory")
     raw_resources = directory.get("resources", [])
     if not isinstance(raw_resources, list):
         raise ExternalResourceCatalogInputError("directory resources must be a list")
-    plan = [
-        _connection_plan_item(item)
-        for item in raw_resources
-        if isinstance(item, Mapping)
-    ]
+    plan = [_connection_plan_item(item) for item in raw_resources if isinstance(item, Mapping)]
     if len(plan) != len(raw_resources):
         raise ExternalResourceCatalogInputError("directory resource must be an object")
     plan.sort(key=lambda item: item["resource_id"])
@@ -282,9 +274,7 @@ def build_external_resource_connection_plan(
         "summary": {
             "resource_count": len(plan),
             "blocked_count": sum(item["status"] == "blocked" for item in plan),
-            "ready_for_review_count": sum(
-                item["status"] == "ready_for_review" for item in plan
-            ),
+            "ready_for_review_count": sum(item["status"] == "ready_for_review" for item in plan),
             "next_step_counts": {
                 step: sum(item["next_step"] == step for item in plan)
                 for step in sorted({item["next_step"] for item in plan})
@@ -309,9 +299,7 @@ def _parse_refresh_time(value: Any, *, field_name: str) -> datetime:
     try:
         parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
     except ValueError as exc:
-        raise ExternalResourceCatalogInputError(
-            f"refresh plan has invalid {field_name}"
-        ) from exc
+        raise ExternalResourceCatalogInputError(f"refresh plan has invalid {field_name}") from exc
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=UTC)
     return parsed.astimezone(UTC)
@@ -330,9 +318,7 @@ def build_external_resource_refresh_plan(
     queues a WorkflowRun, changes admission, or writes OMO state.
     """
     if catalog.get("schema") != SCHEMA:
-        raise ExternalResourceCatalogInputError(
-            "refresh plan requires an external-resource catalog"
-        )
+        raise ExternalResourceCatalogInputError("refresh plan requires an external-resource catalog")
     raw_resources = catalog.get("resources", [])
     if not isinstance(raw_resources, list):
         raise ExternalResourceCatalogInputError("catalog resources must be a list")
@@ -341,13 +327,9 @@ def build_external_resource_refresh_plan(
     if intervals_seconds is not None:
         for kind, interval in intervals_seconds.items():
             if kind not in policy:
-                raise ExternalResourceCatalogInputError(
-                    f"refresh plan has unknown resource kind: {kind}"
-                )
+                raise ExternalResourceCatalogInputError(f"refresh plan has unknown resource kind: {kind}")
             if not isinstance(interval, int) or isinstance(interval, bool) or interval <= 0:
-                raise ExternalResourceCatalogInputError(
-                    f"refresh plan interval must be positive: {kind}"
-                )
+                raise ExternalResourceCatalogInputError(f"refresh plan interval must be positive: {kind}")
             policy[kind] = interval
 
     items: list[dict[str, Any]] = []
@@ -361,15 +343,9 @@ def build_external_resource_refresh_plan(
         interval = policy.get(kind, DEFAULT_REFRESH_INTERVALS_SECONDS["resource_provider"])
         health = item.get("health") if isinstance(item.get("health"), Mapping) else {}
         health_status = str(health.get("status") or "unknown").strip().lower()
-        reason_codes = {
-            str(reason).strip()
-            for reason in item.get("reason_codes", [])
-            if str(reason).strip()
-        }
+        reason_codes = {str(reason).strip() for reason in item.get("reason_codes", []) if str(reason).strip()}
         last_observed_raw = health.get("observed_at") or catalog.get("observed_at")
-        last_observed = _parse_refresh_time(
-            last_observed_raw, field_name="observed_at"
-        )
+        last_observed = _parse_refresh_time(last_observed_raw, field_name="observed_at")
         next_due = last_observed + timedelta(seconds=interval)
         deadline_due = False
         invalid_deadline = False
@@ -378,14 +354,11 @@ def build_external_resource_refresh_plan(
             if not deadline:
                 continue
             try:
-                deadline_due = deadline_due or _parse_refresh_time(
-                    deadline, field_name=field_name
-                ) <= current
+                deadline_due = deadline_due or _parse_refresh_time(deadline, field_name=field_name) <= current
             except ExternalResourceCatalogInputError:
                 invalid_deadline = True
         unhealthy = health_status in {"unknown", "unhealthy"} or any(
-            reason in reason_codes
-            for reason in ("health_stale", "provider_probe_failed")
+            reason in reason_codes for reason in ("health_stale", "provider_probe_failed")
         )
         if unhealthy:
             status = "due"
@@ -401,7 +374,9 @@ def build_external_resource_refresh_plan(
             status = "due"
             priority = "high"
             action = "human_review"
-            reasons = sorted(reason_codes | ({"invalid_descriptor_deadline"} if invalid_deadline else {"descriptor_deadline_due"}))
+            reasons = sorted(
+                reason_codes | ({"invalid_descriptor_deadline"} if invalid_deadline else {"descriptor_deadline_due"})
+            )
         elif current >= next_due:
             status = "due"
             priority = "normal"
@@ -428,7 +403,13 @@ def build_external_resource_refresh_plan(
                 "availability": str(item.get("availability") or "unavailable"),
             }
         )
-    items.sort(key=lambda item: (item["status"] != "due", item["priority"], item["resource_id"]))
+    items.sort(
+        key=lambda item: (
+            item["status"] != "due",
+            item["priority"],
+            item["resource_id"],
+        )
+    )
     catalog_state = dict(catalog)
     catalog_state.pop("observed_at", None)
     catalog_digest = str(catalog.get("catalog_digest") or _canonical_digest(catalog_state))
@@ -476,14 +457,10 @@ def build_external_resource_refresh_plan(
 def _load_agora(root: Path):
     agora_src = root / "projects/agora/src"
     if not agora_src.exists():
-        raise ExternalResourceCatalogInputError(
-            f"Agora source is unavailable: {agora_src}"
-        )
+        raise ExternalResourceCatalogInputError(f"Agora source is unavailable: {agora_src}")
     try:
         module_path = agora_src / "agora/external_connections.py"
-        spec = importlib.util.spec_from_file_location(
-            "agora_external_connections_projection", module_path
-        )
+        spec = importlib.util.spec_from_file_location("agora_external_connections_projection", module_path)
         if spec is None or spec.loader is None:
             raise ImportError("cannot load Agora external connection boundary")
         module = importlib.util.module_from_spec(spec)
@@ -496,9 +473,7 @@ def _load_agora(root: Path):
             module.evaluate_external_resource_catalog_snapshot,
         )
     except (ImportError, OSError) as exc:
-        raise ExternalResourceCatalogInputError(
-            "Agora external connection boundary is unavailable"
-        ) from exc
+        raise ExternalResourceCatalogInputError("Agora external connection boundary is unavailable") from exc
 
 
 def collect_external_resources(
@@ -623,7 +598,13 @@ def _load_iris_records(root: Path) -> list[Any]:
                     entry_point=f"external.resources:{descriptor.get('id', 'iris')}",
                 )
             )
-        except (json.JSONDecodeError, ValueError, KeyError, AttributeError, TypeError) as exc:
+        except (
+            json.JSONDecodeError,
+            ValueError,
+            KeyError,
+            AttributeError,
+            TypeError,
+        ) as exc:
             print(
                 f"external-resource-catalog: iris descriptor skip: {exc}",
                 file=sys.stderr,
@@ -637,13 +618,8 @@ def _load_capability_records(root: Path) -> list[Any]:
     不依赖 agora 已安装 (entry-point 不可见时也能覆盖 BOS 能力目录)。
     """
     try:
-        provider_path = (
-            root
-            / "projects/agora/src/agora/external_resources/capability_provider.py"
-        )
-        spec = importlib.util.spec_from_file_location(
-            "agora_capability_provider_projection", provider_path
-        )
+        provider_path = root / "projects/agora/src/agora/external_resources/capability_provider.py"
+        spec = importlib.util.spec_from_file_location("agora_capability_provider_projection", provider_path)
         if spec is None or spec.loader is None:
             return []
         module = importlib.util.module_from_spec(spec)
@@ -657,9 +633,7 @@ def _load_capability_records(root: Path) -> list[Any]:
             "source": "agora.capability_provider",
         }
         if not descriptor.get("expires_at") and not descriptor.get("review_at"):
-            descriptor["review_at"] = (
-                datetime.now(UTC) + timedelta(days=30)
-            ).isoformat()
+            descriptor["review_at"] = (datetime.now(UTC) + timedelta(days=30)).isoformat()
         # bos 能力目录 = BOS 服务聚合投影, 已 active (agora availability 要求 lifecycle in {active,degraded})
         descriptor["lifecycle"] = "active"
         # 复用 agora external_connections 的 DiscoveryRecord/解析 (已在 _load_agora 注册)
@@ -714,15 +688,11 @@ def _omo_environment(root: Path) -> dict[str, str]:
     environment = os.environ.copy()
     omo_src = str(root / "projects/omo/src")
     existing = environment.get("PYTHONPATH")
-    environment["PYTHONPATH"] = (
-        f"{omo_src}{os.pathsep}{existing}" if existing else omo_src
-    )
+    environment["PYTHONPATH"] = f"{omo_src}{os.pathsep}{existing}" if existing else omo_src
     return environment
 
 
-def _run_omo(
-    root: Path, args: tuple[str, ...], *, input_text: str | None = None
-) -> dict[str, Any]:
+def _run_omo(root: Path, args: tuple[str, ...], *, input_text: str | None = None) -> dict[str, Any]:
     completed = subprocess.run(
         _omo_command(root, *args),
         cwd=root,
@@ -740,13 +710,9 @@ def _run_omo(
     try:
         payload = json.loads(completed.stdout)
     except json.JSONDecodeError as exc:
-        raise ExternalResourceCatalogInputError(
-            "OMO external resource observer returned invalid JSON"
-        ) from exc
+        raise ExternalResourceCatalogInputError("OMO external resource observer returned invalid JSON") from exc
     if not isinstance(payload, dict):
-        raise ExternalResourceCatalogInputError(
-            "OMO external resource observer must return an object"
-        )
+        raise ExternalResourceCatalogInputError("OMO external resource observer must return an object")
     return payload
 
 
@@ -798,10 +764,7 @@ def observe_external_resources(
     if not isinstance(observation, Mapping):
         raise ExternalResourceCatalogInputError("OMO did not return an observation")
     resources = [item for item in catalog.get("resources", []) if isinstance(item, Mapping)]
-    health_statuses = [
-        str((item.get("health") or {}).get("status") or "").strip().lower()
-        for item in resources
-    ]
+    health_statuses = [str((item.get("health") or {}).get("status") or "").strip().lower() for item in resources]
     availability = [str(item.get("availability") or "").strip().lower() for item in resources]
     probe_latencies = [
         float((item.get("health") or {}).get("latency_ms"))
@@ -811,19 +774,12 @@ def observe_external_resources(
     ]
     unavailable_count = sum(value in {"unavailable", "stale"} for value in availability)
     degraded_count = sum(
-        value == "degraded" or health == "degraded"
-        for value, health in zip(availability, health_statuses)
+        value == "degraded" or health == "degraded" for value, health in zip(availability, health_statuses)
     )
     healthy_count = max(0, len(resources) - unavailable_count - degraded_count)
     errors = catalog.get("errors", [])
     error_count = len(errors) if isinstance(errors, list) else 0
-    result_state = (
-        "unavailable"
-        if not resources
-        else "degraded"
-        if error_count or unavailable_count
-        else "succeeded"
-    )
+    result_state = "unavailable" if not resources else "degraded" if error_count or unavailable_count else "succeeded"
     finished_at = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     catalog_digest = str(observation.get("catalog_digest") or "").strip()
     observation_run = _run_omo(
@@ -853,10 +809,7 @@ def observe_external_resources(
                         health in {"unhealthy", ""} or latency is None
                         for health, latency in zip(
                             health_statuses,
-                            [
-                                (item.get("health") or {}).get("latency_ms")
-                                for item in resources
-                            ],
+                            [(item.get("health") or {}).get("latency_ms") for item in resources],
                         )
                     )
                     if probe
@@ -893,9 +846,7 @@ def observe_external_resources(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--root", type=Path, default=Path(__file__).resolve().parents[2]
-    )
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--health-ttl-seconds", type=int, default=900)
     parser.add_argument(
         "--catalog-ttl-seconds",
@@ -939,16 +890,12 @@ def main(argv: list[str] | None = None) -> int:
         help="将所有资源标记为待刷新，仅影响只读计划输出",
     )
     parser.add_argument("--actor", default="external-resource-observer")
-    parser.add_argument(
-        "--source-ref", default="root:external-resource-catalog:observe"
-    )
+    parser.add_argument("--source-ref", default="root:external-resource-catalog:observe")
     parser.add_argument("--run-id", help="稳定的只读观察运行标识，用于重试幂等")
     args = parser.parse_args(argv)
     try:
         if args.observe and (args.directory or args.connection_plan or args.refresh_plan):
-            raise ExternalResourceCatalogInputError(
-                "projection flags cannot be combined with --observe"
-            )
+            raise ExternalResourceCatalogInputError("projection flags cannot be combined with --observe")
         if sum(bool(flag) for flag in (args.directory, args.connection_plan, args.refresh_plan)) > 1:
             raise ExternalResourceCatalogInputError(
                 "--directory/--connection-plan/--refresh-plan are mutually exclusive"
@@ -956,9 +903,7 @@ def main(argv: list[str] | None = None) -> int:
         previous_snapshot = None
         if args.previous_snapshot:
             try:
-                previous_snapshot = json.loads(
-                    args.previous_snapshot.read_text(encoding="utf-8")
-                )
+                previous_snapshot = json.loads(args.previous_snapshot.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError) as exc:
                 raise ExternalResourceCatalogInputError(
                     f"cannot read previous snapshot: {args.previous_snapshot}"
@@ -982,15 +927,15 @@ def main(argv: list[str] | None = None) -> int:
                 probe=not args.no_health_probe,
                 previous_snapshot=previous_snapshot,
             )
-            directory = build_external_resource_directory_snapshot(catalog) if args.directory or args.connection_plan else None
+            directory = (
+                build_external_resource_directory_snapshot(catalog) if args.directory or args.connection_plan else None
+            )
             payload = (
                 build_external_resource_connection_plan(directory)
                 if args.connection_plan and directory is not None
                 else directory
                 if directory is not None
-                else build_external_resource_refresh_plan(
-                    catalog, force=args.force_refresh_plan
-                )
+                else build_external_resource_refresh_plan(catalog, force=args.force_refresh_plan)
                 if args.refresh_plan
                 else catalog
             )

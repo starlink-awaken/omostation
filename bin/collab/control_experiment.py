@@ -11,6 +11,7 @@
 🔴 协作劣于单 → 如实记录 (P84 §F), 不掩盖.
 🔴 构造场景只计能力轨.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,7 +24,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "bin" / "collab"))
-from scenario_lib import load_scenario, run_scenario  # noqa: E402
+from scenario_lib import load_scenario, run_scenario
 
 SCN_DIR = REPO / ".omo" / "_delivery" / "collab-scenarios"
 
@@ -47,14 +48,10 @@ def _select_paths(batch: str) -> list[Path]:
         cat = sc.get("category", "")
         if batch == "batch3":
             # 有冲突: A 类 + 手写 ADV 冲突/认领/串通
-            if cat == "A_conflict" or p.name.startswith(
-                ("ADV07", "ADV11", "ADV13", "A01")
-            ):
+            if cat == "A_conflict" or p.name.startswith(("ADV07", "ADV11", "ADV13", "A01")):
                 out.append(p)
         elif batch == "batch4":
-            if cat == "B_failure_injection" or p.name.startswith(
-                ("ADV09", "ADV17", "B01")
-            ):
+            if cat == "B_failure_injection" or p.name.startswith(("ADV09", "ADV17", "B01")):
                 out.append(p)
         else:
             raise ValueError(f"unknown batch: {batch}")
@@ -120,9 +117,7 @@ def compare(batch: str, workers: int = 4) -> dict:
         raise SystemExit(f"no scenarios for {batch} under {SCN_DIR}")
     single = run_sequential(paths)
     collab = run_parallel(paths, workers=min(workers, len(paths)))
-    speedup = (
-        round(single.wall_s / collab.wall_s, 3) if collab.wall_s > 0 else None
-    )
+    speedup = round(single.wall_s / collab.wall_s, 3) if collab.wall_s > 0 else None
     collab_better = collab.wall_s < single.wall_s
     verdict = "collab_better" if collab_better else "collab_worse_or_tie"
     return {
@@ -132,13 +127,10 @@ def compare(batch: str, workers: int = 4) -> dict:
         "single": asdict(single),
         "collab": asdict(collab),
         "speedup_single_over_collab": speedup,  # >1 = 单更快; <1 = 协作更快
-        "speedup_collab_over_single": (
-            round(single.wall_s / collab.wall_s, 3) if collab.wall_s else None
-        ),
+        "speedup_collab_over_single": (round(single.wall_s / collab.wall_s, 3) if collab.wall_s else None),
         "collab_wall_better": collab_better,
         "verdict": verdict,
-        "silent_loss_ok": single.silent_loss_total == 0
-        and collab.silent_loss_total == 0,
+        "silent_loss_ok": single.silent_loss_total == 0 and collab.silent_loss_total == 0,
         "pass_rate_single": round(single.n_passed / max(single.n_scenarios, 1), 3),
         "pass_rate_collab": round(collab.n_passed / max(collab.n_scenarios, 1), 3),
     }
@@ -171,13 +163,9 @@ def main(argv: list[str] | None = None) -> int:
         mid_s, mid_c = walls_s[1], walls_c[1]
         reports[i]["single"]["wall_s_median3"] = mid_s
         reports[i]["collab"]["wall_s_median3"] = mid_c
-        reports[i]["speedup_collab_over_single_median3"] = (
-            round(mid_s / mid_c, 3) if mid_c > 0 else None
-        )
+        reports[i]["speedup_collab_over_single_median3"] = round(mid_s / mid_c, 3) if mid_c > 0 else None
         reports[i]["collab_wall_better_median3"] = mid_c < mid_s
-        reports[i]["verdict_median3"] = (
-            "collab_better" if mid_c < mid_s else "collab_worse_or_tie"
-        )
+        reports[i]["verdict_median3"] = "collab_better" if mid_c < mid_s else "collab_worse_or_tie"
 
     payload = {"experiments": reports, "schema": "p84-k4-control-v1"}
     text = json.dumps(payload, ensure_ascii=False, indent=2)
@@ -214,8 +202,8 @@ def main(argv: list[str] | None = None) -> int:
             lines += [
                 f"## {title}",
                 "",
-                f"| 模式 | 墙钟中位 (s) | pass | silent_loss |",
-                f"|------|-------------|------|-------------|",
+                "| 模式 | 墙钟中位 (s) | pass | silent_loss |",
+                "|------|-------------|------|-------------|",
                 f"| 协作并行 | {r['collab'].get('wall_s_median3')} | "
                 f"{r['collab']['n_passed']}/{r['collab']['n_scenarios']} | "
                 f"{r['collab']['silent_loss_total']} |",
@@ -223,8 +211,7 @@ def main(argv: list[str] | None = None) -> int:
                 f"{r['single']['n_passed']}/{r['single']['n_scenarios']} | "
                 f"{r['single']['silent_loss_total']} |",
                 "",
-                f"- 加速比 T_single/T_collab ( **>1 协作更快** ): "
-                f"**{r.get('speedup_collab_over_single_median3')}**",
+                f"- 加速比 T_single/T_collab ( **>1 协作更快** ): **{r.get('speedup_collab_over_single_median3')}**",
                 f"- 判定: **{flag}** (`{r.get('verdict_median3')}`)",
                 f"- 场景数: {r['n_paths']} (silent_loss 硬红线 ok={r['silent_loss_ok']})",
                 "",
@@ -264,10 +251,7 @@ def main(argv: list[str] | None = None) -> int:
                     f"{r['single'].get('wall_s_median3')}s — 不掩盖"
                 )
             else:
-                lines.append(
-                    f"- ✅ **{r['batch']} 协作优**: 加速比 "
-                    f"{r.get('speedup_collab_over_single_median3')}"
-                )
+                lines.append(f"- ✅ **{r['batch']} 协作优**: 加速比 {r.get('speedup_collab_over_single_median3')}")
         lines += [
             "",
             "## 对 ADR-0253 的 implication",

@@ -52,6 +52,7 @@ class ReviewVerdict:
 def _load_diff(path: Path) -> str:
     if path == Path("-"):
         import sys
+
         return sys.stdin.read()
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
@@ -60,8 +61,18 @@ def _get_pr_diff(pr_number: int) -> str:
     """Fetch PR diff via gh CLI."""
     try:
         result = subprocess.run(
-            ["gh", "pr", "diff", str(pr_number), "--repo", "starlink-awaken/omostation"],
-            capture_output=True, text=True, timeout=30, check=False,
+            [
+                "gh",
+                "pr",
+                "diff",
+                str(pr_number),
+                "--repo",
+                "starlink-awaken/omostation",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
         )
         return result.stdout if result.returncode == 0 else ""
     except Exception:
@@ -69,6 +80,7 @@ def _get_pr_diff(pr_number: int) -> str:
 
 
 # ── Reviewer Agents ──────────────────────────────────────────────
+
 
 def review_risk(diff: str) -> ReviewVerdict:
     """风控审查: 检查diff是否触发redline规则."""
@@ -93,7 +105,15 @@ def review_risk(diff: str) -> ReviewVerdict:
 
 def review_security(diff: str) -> ReviewVerdict:
     """安全审查: 检查写面权限和敏感操作."""
-    sensitive_patterns = ["rm -rf", "DELETE FROM", "drop table", "chmod 777", "eval(", "exec(", "os.system"]
+    sensitive_patterns = [
+        "rm -rf",
+        "DELETE FROM",
+        "drop table",
+        "chmod 777",
+        "eval(",
+        "exec(",
+        "os.system",
+    ]
     for pat in sensitive_patterns:
         if pat in diff:
             return ReviewVerdict("security", "reject", 0.7, f"检测到敏感操作: {pat}")
@@ -103,7 +123,11 @@ def review_security(diff: str) -> ReviewVerdict:
 def review_architecture(diff: str) -> ReviewVerdict:
     """架构审查: 检查分层违规."""
     # Simple heuristic: check for cross-layer imports
-    cross_layer = ["from omo import", "from runtime import omo", "from cockpit import omo"]
+    cross_layer = [
+        "from omo import",
+        "from runtime import omo",
+        "from cockpit import omo",
+    ]
     for pat in cross_layer:
         if pat in diff:
             return ReviewVerdict("architecture", "needs_human", 0.6, f"可能的跨层引用: {pat}")
@@ -159,11 +183,22 @@ def review_mental_model(diff: str, other_verdicts: list[ReviewVerdict]) -> Revie
     aligned = "goals" in telos_goals.lower() or "自主" in telos_goals or avg_confidence >= auto_merge_min
 
     if aligned and avg_confidence >= auto_merge_min:
-        return ReviewVerdict("mental_model", "approve", avg_confidence, f"TELOS对齐+置信度{avg_confidence:.2f}≥{auto_merge_min}")
-    return ReviewVerdict("mental_model", "needs_human", avg_confidence, f"置信度{avg_confidence:.2f}不足或TELOS对齐不确定")
+        return ReviewVerdict(
+            "mental_model",
+            "approve",
+            avg_confidence,
+            f"TELOS对齐+置信度{avg_confidence:.2f}≥{auto_merge_min}",
+        )
+    return ReviewVerdict(
+        "mental_model",
+        "needs_human",
+        avg_confidence,
+        f"置信度{avg_confidence:.2f}不足或TELOS对齐不确定",
+    )
 
 
 # ── Matrix Orchestration ─────────────────────────────────────────
+
 
 def review_diff(diff: str) -> dict[str, Any]:
     """Run all 6 reviewers + mental model → produce final verdict."""
@@ -241,7 +276,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"PR Review Matrix: {result['decision'].upper()} (confidence={result['confidence']:.2f})")
         for v in result["verdicts"]:
             marker = {"approve": "✅", "reject": "❌", "needs_human": "⚠️"}.get(v["verdict"], "?")
-            print(f"  {marker} {v['dimension']:15s} {v['verdict']:12s} conf={v['confidence']:.2f} {v['reasoning'][:60]}")
+            print(
+                f"  {marker} {v['dimension']:15s} {v['verdict']:12s} conf={v['confidence']:.2f} {v['reasoning'][:60]}"
+            )
         if result["auto_merge_eligible"]:
             print("\n🚀 Auto-merge eligible (all approve + confidence sufficient)")
     return 0

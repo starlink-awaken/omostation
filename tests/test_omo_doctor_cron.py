@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import subprocess
 import sys
 from pathlib import Path
@@ -49,7 +48,11 @@ def test_highlights_extract_logic(tmp_path, monkeypatch):
     assert "red flag" in h["path_acl_detail"]
 
     # error payload when omo missing
-    err = {"error": "projects/omo not initialized", "checks": [], "summary": {"error": 1}}
+    err = {
+        "error": "projects/omo not initialized",
+        "checks": [],
+        "summary": {"error": 1},
+    }
     h2 = mod._extract_highlights(err)
     assert h2["path_acl_status"] == "error"
     assert "not initialized" in h2["path_acl_detail"]

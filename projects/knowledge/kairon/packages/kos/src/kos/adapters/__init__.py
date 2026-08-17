@@ -308,16 +308,16 @@ class SemanticScholarAdapter:
         url = f"{self.BASE}/paper/search"
         params = {"query": query, "limit": limit, "fields": self.DEFAULT_FIELDS}
         url += "?" + urllib.parse.urlencode(params)
-        req = urllib.request.Request(url, headers=self.headers)  # noqa: S310
+        req = urllib.request.Request(url, headers=self.headers)
         try:
-            with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=15) as resp:
                 self._last_call = __import__("time").time()
                 data = json.loads(resp.read())
         except urllib.error.HTTPError as e:
             if e.code == 429:
                 # Retry once after backoff
                 __import__("time").sleep(2.0)
-                with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310
+                with urllib.request.urlopen(req, timeout=15) as resp:
                     data = json.loads(resp.read())
             else:
                 return {"error": f"HTTP {e.code}", "detail": str(e)}

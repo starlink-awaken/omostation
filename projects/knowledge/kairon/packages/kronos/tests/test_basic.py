@@ -42,7 +42,7 @@ class TestKronosImports:
     def test_fetch_router_import(self):
         """Verify fetch_router can be imported."""
         try:
-            from kronos.fetch_router import content_type_label, plan_for_url  # noqa: F401
+            from kronos.fetch_router import content_type_label, plan_for_url
         except ImportError:
             import pytest
 
@@ -51,7 +51,7 @@ class TestKronosImports:
     def test_cli_import(self):
         """Verify CLI module can be imported."""
         try:
-            from kronos.cli import main  # noqa: F401
+            from kronos.cli import main
         except ImportError:
             import pytest
 
@@ -60,7 +60,7 @@ class TestKronosImports:
     def test_dispatcher_import(self):
         """Verify dispatcher can be imported."""
         try:
-            from kronos.dispatcher import dispatch  # noqa: F401
+            from kronos.dispatcher import dispatch
         except ImportError:
             import pytest
 
@@ -174,7 +174,7 @@ class TestKronosExtraImports:
     def test_gateway_client_import(self):
         """Verify gateway_client can be imported."""
         try:
-            from kronos.gateway_client import GatewayClient  # noqa: F401
+            from kronos.gateway_client import GatewayClient
         except ImportError:
             import pytest
 
@@ -183,7 +183,7 @@ class TestKronosExtraImports:
     def test_insight_engine_import(self):
         """Verify insight_engine can be imported."""
         try:
-            from kronos.insight_engine import InsightEngine  # noqa: F401
+            from kronos.insight_engine import InsightEngine
         except ImportError:
             import pytest
 
@@ -192,7 +192,7 @@ class TestKronosExtraImports:
     def test_extractor_import(self):
         """Verify extractor can be imported."""
         try:
-            from kronos.extractor import extract_content  # noqa: F401
+            from kronos.extractor import extract_content
         except ImportError:
             import pytest
 
@@ -201,7 +201,7 @@ class TestKronosExtraImports:
     def test_mcp_server_import(self):
         """Verify mcp_server can be imported."""
         try:
-            from kronos.mcp_server import main as mcp_main  # noqa: F401
+            from kronos.mcp_server import main as mcp_main
         except ImportError:
             import pytest
 

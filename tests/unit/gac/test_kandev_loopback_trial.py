@@ -67,7 +67,17 @@ def test_default_cli_is_dry_run_and_never_starts(tmp_path: Path, monkeypatch: py
         raise AssertionError("default dry run must not start a child")
 
     monkeypatch.setattr(trial.subprocess, "Popen", forbidden)
-    code = trial.main(["run-smoke", "--package-version", "1.2.3", "--home", str(home), "--port", "43123"])
+    code = trial.main(
+        [
+            "run-smoke",
+            "--package-version",
+            "1.2.3",
+            "--home",
+            str(home),
+            "--port",
+            "43123",
+        ]
+    )
 
     assert code == 0
     assert called is False
@@ -110,7 +120,9 @@ def test_macos_system_python_can_run_help_and_dry_run(tmp_path: Path):
     assert json.loads(dry_run.stdout)["mode"] == "dry-run"
 
 
-def test_npx_resolution_and_child_path_are_absolute_and_controlled(monkeypatch: pytest.MonkeyPatch):
+def test_npx_resolution_and_child_path_are_absolute_and_controlled(
+    monkeypatch: pytest.MonkeyPatch,
+):
     monkeypatch.setattr(trial.shutil, "which", lambda _name: "/opt/homebrew/bin/npx")
     assert trial.resolve_npx() == "/opt/homebrew/bin/npx"
     path_entries = trial._controlled_path("/opt/homebrew/bin/npx").split(":")
@@ -270,7 +282,9 @@ def test_timeout_reaps_child_and_never_leaks_raw_output(tmp_path: Path):
     assert "stderr" not in payload and "stdout" not in payload
 
 
-def test_success_emits_canonical_safe_receipt_and_uses_isolated_child_cwd(tmp_path: Path):
+def test_success_emits_canonical_safe_receipt_and_uses_isolated_child_cwd(
+    tmp_path: Path,
+):
     home = safe_home(tmp_path)
     receipt = tmp_path / "success.json"
     child = FakeProcess()
@@ -307,7 +321,14 @@ def test_success_emits_canonical_safe_receipt_and_uses_isolated_child_cwd(tmp_pa
 
     raw = receipt.read_text(encoding="utf-8")
     assert raw == json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
-    assert captured["argv"] == [trial.resolve_npx(), "-y", "kandev@1.2.3", "--headless", "--port", "43123"]
+    assert captured["argv"] == [
+        trial.resolve_npx(),
+        "-y",
+        "kandev@1.2.3",
+        "--headless",
+        "--port",
+        "43123",
+    ]
     assert captured["shell"] is False
     assert captured["cwd"] == str(home)
     environment = captured["env"]
@@ -379,7 +400,13 @@ def test_child_environment_drops_sensitive_parent_variables(tmp_path: Path, monk
     assert "SSH_AUTH_SOCK" not in environment
     assert "AWS_SESSION_TOKEN" not in environment
     assert set(environment).isdisjoint(
-        {"OPENAI_API_KEY", "HTTP_PROXY", "GITHUB_TOKEN", "SSH_AUTH_SOCK", "AWS_SESSION_TOKEN"}
+        {
+            "OPENAI_API_KEY",
+            "HTTP_PROXY",
+            "GITHUB_TOKEN",
+            "SSH_AUTH_SOCK",
+            "AWS_SESSION_TOKEN",
+        }
     )
 
 
@@ -402,14 +429,20 @@ def test_preexisting_listener_is_rejected_before_start(tmp_path: Path):
     assert json.loads(receipt.read_text(encoding="utf-8"))["failure_code"] == "listener_rejected"
 
 
-def test_receipt_path_inside_workspace_user_home_or_trial_home_is_rejected(tmp_path: Path):
+def test_receipt_path_inside_workspace_user_home_or_trial_home_is_rejected(
+    tmp_path: Path,
+):
     home = safe_home(tmp_path)
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     user_home = tmp_path / "user"
     user_home.mkdir()
 
-    for receipt in (workspace / "receipt.json", user_home / "receipt.json", home / "receipt.json"):
+    for receipt in (
+        workspace / "receipt.json",
+        user_home / "receipt.json",
+        home / "receipt.json",
+    ):
         with pytest.raises(trial.TrialError, match="receipt"):
             trial.run_smoke(
                 package_version="1.2.3",
@@ -441,7 +474,10 @@ def test_process_group_is_terminated_then_listener_must_be_released(tmp_path: Pa
             health_probe=lambda *_args: True,
             listener_probe=lambda _port: next(listener_outputs),
             listener_released_probe=lambda _port: False,
-            group_terminator=lambda group, value: (signals.append((group, value)), child.terminate()),
+            group_terminator=lambda group, value: (
+                signals.append((group, value)),
+                child.terminate(),
+            ),
             listener_owner_probe=lambda _output, _process: True,
             process_tree_probe=fake_tree(child),
         )
@@ -469,7 +505,16 @@ def test_group_kill_follows_timeout_when_term_does_not_reap():
             child.terminate()
 
     ticks = itertools.chain([0.0, 16.0], itertools.repeat(16.0))
-    assert trial._reap(child, terminate, tree, monotonic=lambda: next(ticks), sleeper=lambda _seconds: None) is True
+    assert (
+        trial._reap(
+            child,
+            terminate,
+            tree,
+            monotonic=lambda: next(ticks),
+            sleeper=lambda _seconds: None,
+        )
+        is True
+    )
     assert signals == [signal.SIGTERM, signal.SIGTERM, signal.SIGKILL, signal.SIGKILL]
 
 
@@ -591,7 +636,15 @@ time.sleep(60)
         owned_before = trial._owned_processes(parent.pid, trial._default_process_tree_probe())
         assert len(owned_before) >= 3
         assert trial._default_marker_probe(marker)
-        assert trial._reap(parent, trial._default_group_terminator, trial_marker=marker, timeout_seconds=2) is True
+        assert (
+            trial._reap(
+                parent,
+                trial._default_group_terminator,
+                trial_marker=marker,
+                timeout_seconds=2,
+            )
+            is True
+        )
         deadline = time.monotonic() + 2
         while listening() and time.monotonic() < deadline:
             time.sleep(0.02)

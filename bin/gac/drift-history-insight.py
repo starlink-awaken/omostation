@@ -66,21 +66,21 @@ def analyze(reports: list[dict]) -> dict:
         day_reports = by_date[d]
         max_drift = max((r.get("drift_count", 0) for r in day_reports), default=0)
         avg_drift = sum(r.get("drift_count", 0) for r in day_reports) / len(day_reports) if day_reports else 0
-        trend.append({
-            "date": d,
-            "reports": len(day_reports),
-            "max_drift": max_drift,
-            "avg_drift": round(avg_drift, 2),
-        })
+        trend.append(
+            {
+                "date": d,
+                "reports": len(day_reports),
+                "max_drift": max_drift,
+                "avg_drift": round(avg_drift, 2),
+            }
+        )
 
     return {
         "total_reports": len(reports),
         "date_range": f"{min(by_date)} ~ {max(by_date)}" if by_date else "?",
         "kind_distribution": dict(kind_counts),
         "drift_by_kind": dict(drift_by_kind),
-        "persistent_drifts": dict(sorted(
-            persistent_drifts.items(), key=lambda x: -x[1]
-        )[:10]),
+        "persistent_drifts": dict(sorted(persistent_drifts.items(), key=lambda x: -x[1])[:10]),
         "trend": trend,
         "latest_5": [
             {
@@ -108,7 +108,13 @@ def main() -> int:
     if not drift_dir.exists():
         print(f"⚠️ {drift_dir} 不存在 (runtime cache absent, CI fresh checkout), 视为 0 漂移")
         if args.json:
-            print(json.dumps({"drift_count": 0, "reports": [], "note": "runtime cache absent"}, indent=2, ensure_ascii=False))
+            print(
+                json.dumps(
+                    {"drift_count": 0, "reports": [], "note": "runtime cache absent"},
+                    indent=2,
+                    ensure_ascii=False,
+                )
+            )
         return 0
 
     reports = parse_drift_files(drift_dir)
@@ -121,7 +127,13 @@ def main() -> int:
     if "error" in result:
         print(f"❌ {result['error']}")
         if args.json:
-            print(json.dumps({"drift_count": 0, "reports": [], "note": "runtime cache absent"}, indent=2, ensure_ascii=False))
+            print(
+                json.dumps(
+                    {"drift_count": 0, "reports": [], "note": "runtime cache absent"},
+                    indent=2,
+                    ensure_ascii=False,
+                )
+            )
         return 0
 
     print("=" * 60)
@@ -141,7 +153,9 @@ def main() -> int:
     print("📈 趋势 (按日期):")
     for t in result["trend"][-15:]:  # 最近 15 天
         bar = "█" * t["max_drift"] if t["max_drift"] <= 30 else "█" * 30 + "..."
-        print(f"   {t['date']}  reports={t['reports']:>3d}  max={t['max_drift']:>3d}  avg={t['avg_drift']:>5.2f}  {bar}")
+        print(
+            f"   {t['date']}  reports={t['reports']:>3d}  max={t['max_drift']:>3d}  avg={t['avg_drift']:>5.2f}  {bar}"
+        )
     print()
     print("📌 最近 5 个报告:")
     for r in result["latest_5"]:

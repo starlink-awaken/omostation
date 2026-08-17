@@ -98,10 +98,12 @@ def check_drift(adrs: list[tuple[int, Path]], root: Path, known_adr_numbers: set
         # 1. ADR 引用: 编号是否存在 (字符串比较, 保持 4 位)
         for adr_ref in refs["adr_refs"]:
             if adr_ref not in known_adr_numbers:
-                issues.append({
-                    "type": "missing_adr",
-                    "msg": f"ADR-{adr_ref} 不存在",
-                })
+                issues.append(
+                    {
+                        "type": "missing_adr",
+                        "msg": f"ADR-{adr_ref} 不存在",
+                    }
+                )
 
         # 2. 路径引用: 文件或目录是否存在
         for path in refs["path_refs"]:
@@ -120,8 +122,31 @@ def check_drift(adrs: list[tuple[int, Path]], root: Path, known_adr_numbers: set
                 continue
             if not full.exists():
                 # 兼容: 自动补 .md / .yaml / .yml 后缀
-                if not any(path.endswith(ext) for ext in (".md", ".yaml", ".yml", ".py", ".ts", ".tsx", ".js", ".jsx", ".mjs")):
-                    for ext in (".md", ".yaml", ".yml", ".py", ".ts", ".tsx", ".js", ".jsx", ".mjs"):
+                if not any(
+                    path.endswith(ext)
+                    for ext in (
+                        ".md",
+                        ".yaml",
+                        ".yml",
+                        ".py",
+                        ".ts",
+                        ".tsx",
+                        ".js",
+                        ".jsx",
+                        ".mjs",
+                    )
+                ):
+                    for ext in (
+                        ".md",
+                        ".yaml",
+                        ".yml",
+                        ".py",
+                        ".ts",
+                        ".tsx",
+                        ".js",
+                        ".jsx",
+                        ".mjs",
+                    ):
                         if (root / f"{path}{ext}").exists():
                             full = root / f"{path}{ext}"
                             break
@@ -139,19 +164,23 @@ def check_drift(adrs: list[tuple[int, Path]], root: Path, known_adr_numbers: set
                     # 排除运行时产物 (gitignored, 工具跑时才生成, 非源码 drift)
                     if path.startswith((".omo/_delivery/", ".omo/_log/")):
                         continue
-                    issues.append({
-                        "type": "archived_missing" if is_archived else "missing_path",
-                        "msg": f"路径不存在: {path}",
-                    })
+                    issues.append(
+                        {
+                            "type": "archived_missing" if is_archived else "missing_path",
+                            "msg": f"路径不存在: {path}",
+                        }
+                    )
 
-        results.append({
-            "adr_number": n,
-            "file": f.name,
-            "adr_refs": sorted(refs["adr_refs"]),
-            "path_refs": sorted(refs["path_refs"]),
-            "issues": issues,
-            "issue_count": len(issues),
-        })
+        results.append(
+            {
+                "adr_number": n,
+                "file": f.name,
+                "adr_refs": sorted(refs["adr_refs"]),
+                "path_refs": sorted(refs["path_refs"]),
+                "issues": issues,
+                "issue_count": len(issues),
+            }
+        )
         total_issues += len(issues)
 
     by_type: dict[str, int] = defaultdict(int)

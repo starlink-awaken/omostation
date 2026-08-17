@@ -60,6 +60,7 @@ def triage_filter(text: str, timeout: float = 10.0) -> TriageFilterResult:
     t0 = time.time()
     try:
         from aetherforge.bridge import llm_generate
+
         result = llm_generate(
             TRIAGE_PROMPT.format(text=text),
             model="mythos-fast",

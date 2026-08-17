@@ -16,6 +16,7 @@ GaC 治理一切, GaC 自己也要被治 (NORTH-STAR 元治理递归). 本工具
 
 退出码: 0 = GaC 自身完整, 1 = 自举发现 gap
 """
+
 from __future__ import annotations
 
 import json
@@ -50,7 +51,7 @@ def check_tools_alive() -> dict:
         try:
             source = tool.read_text(encoding="utf-8")
             ast.parse(source)  # 语法正确性
-            if '__name__' in source and '__main__' in source:
+            if "__name__" in source and "__main__" in source:
                 alive.append(name)
             else:
                 dead.append(f"{name} (无 __main__ 入口)")
@@ -81,9 +82,7 @@ def check_exec_effective() -> dict:
     """
     rules = load_rules()
     docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
-    valid_executors = set(
-        docs[-1].get("gac", {}).get("schema", {}).get("executor_enum", [])
-    )
+    valid_executors = set(docs[-1].get("gac", {}).get("schema", {}).get("executor_enum", []))
     issues = []
     for r in rules:
         execs = r.get("executor", [])
@@ -108,7 +107,7 @@ def check_schema_self_consistent() -> dict:
     for r in rules:
         for f in required:
             if not r.get(f):
-                issues.append(f"{r.get('id','?')}: 缺 {f}")
+                issues.append(f"{r.get('id', '?')}: 缺 {f}")
         if r.get("dimension") and dim_enum and r["dimension"] not in dim_enum:
             issues.append(f"{r['id']}: dimension 非法")
         if r.get("layer") and layer_enum and r["layer"] not in layer_enum:

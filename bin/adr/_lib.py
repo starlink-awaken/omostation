@@ -4,6 +4,7 @@
 bin/compass_radar.py::_count_adr_renumber_signals 的重复 (/simplify finding a DRY).
 单一真相源: ADR 编号格式 = NNNN- 前缀 (4 位数字).
 """
+
 from __future__ import annotations
 
 import re

@@ -20,6 +20,7 @@
   1 = 有冲突
   2 = 配置错误
 """
+
 from __future__ import annotations
 
 import argparse
@@ -41,7 +42,11 @@ STALE_PATTERNS = [
     (r"eCOS\s*v5", "eCOS v5", "过期架构版本, 应为 eCOS v6"),
     (r"5\+3\+1", "5+3+1", "过期架构命名, 应为 5+4+1+1"),
     (r"7\s*层架构", "7 层架构", "过期架构命名, 应为 5+4+1+1"),
-    (r"Python\s*3\.10\+", "Python 3.10+", "过期 Python 版本, 应为 3.13+ (见 pyproject.toml)"),
+    (
+        r"Python\s*3\.10\+",
+        "Python 3.10+",
+        "过期 Python 版本, 应为 3.13+ (见 pyproject.toml)",
+    ),
 ]
 
 # ── Files to scan ──
@@ -129,7 +134,9 @@ def check_stale_patterns(filepath: Path, content: str, fixes: list) -> list[tupl
                     if "7 层" in label or "7层" in label:
                         new_line = new_line.replace("7 层架构", "5+4+1+1 架构").replace("7层架构", "5+4+1+1 架构")
                     if "3.10+" in label:
-                        new_line = new_line.replace("Python 3.10+", "Python 3.13+").replace("Python >=3.10", "Python >=3.13")
+                        new_line = new_line.replace("Python 3.10+", "Python 3.13+").replace(
+                            "Python >=3.10", "Python >=3.13"
+                        )
                     if new_line != line:
                         fixes.append((filepath, i, line, new_line))
     return findings
@@ -144,19 +151,39 @@ def check_registry_conflicts(filepath: Path, content: str, registry: dict) -> li
     for proj_name, proj_data in projects.items():
         pkg_count = proj_data.get("packages")
         if pkg_count:
-            for match in re.finditer(rf"{proj_name}[^|\n]*?(\d+)\s*(?:包|packages|个包)", content, re.IGNORECASE):
+            for match in re.finditer(
+                rf"{proj_name}[^|\n]*?(\d+)\s*(?:包|packages|个包)",
+                content,
+                re.IGNORECASE,
+            ):
                 found_num = int(match.group(1))
                 if found_num != pkg_count:
                     context_start = max(0, match.start() - 40)
-                    context = content[context_start:match.end() + 40]
-                    if any(kw in context for kw in ["收敛", "从", "历史", "→", "->", "至", "拆出", "归档", "was ", "from "]):
+                    context = content[context_start : match.end() + 40]
+                    if any(
+                        kw in context
+                        for kw in [
+                            "收敛",
+                            "从",
+                            "历史",
+                            "→",
+                            "->",
+                            "至",
+                            "拆出",
+                            "归档",
+                            "was ",
+                            "from ",
+                        ]
+                    ):
                         continue
-                    line_num = content[:match.start()].count("\n") + 1
-                    findings.append((
-                        line_num,
-                        f"{found_num} 包",
-                        f"{proj_name} 包数应为 {pkg_count} (见 project-registry.yaml)"
-                    ))
+                    line_num = content[: match.start()].count("\n") + 1
+                    findings.append(
+                        (
+                            line_num,
+                            f"{found_num} 包",
+                            f"{proj_name} 包数应为 {pkg_count} (见 project-registry.yaml)",
+                        )
+                    )
 
     return findings
 
@@ -166,13 +193,31 @@ def check_semantic_contracts(filepath: Path, content: str) -> list[tuple[int, st
     findings: list[tuple[int, str, str]] = []
     rel = filepath.relative_to(WORKSPACE_ROOT).as_posix()
 
-    if rel in {"CLAUDE.md", "AGENTS.md", "projects/AGENTS.md"} and "agent-workflow.py\" bootstrap" not in content:
-        findings.append((1, "missing bootstrap", "入口文档必须使用 bin/agent-workflow.py bootstrap 作为单入口"))
+    if rel in {"CLAUDE.md", "AGENTS.md", "projects/AGENTS.md"} and 'agent-workflow.py" bootstrap' not in content:
+        findings.append(
+            (
+                1,
+                "missing bootstrap",
+                "入口文档必须使用 bin/agent-workflow.py bootstrap 作为单入口",
+            )
+        )
     if rel in {"CLAUDE.md", "AGENTS.md", "projects/AGENTS.md"}:
-        if "agent-workflow.py\" closeout" not in content:
-            findings.append((1, "missing closeout", "入口文档必须暴露 bin/agent-workflow.py closeout 闭环收尾"))
-        if "agent-workflow.py\" compliance" not in content:
-            findings.append((1, "missing compliance", "入口文档必须暴露 bin/agent-workflow.py compliance 合规审计"))
+        if 'agent-workflow.py" closeout' not in content:
+            findings.append(
+                (
+                    1,
+                    "missing closeout",
+                    "入口文档必须暴露 bin/agent-workflow.py closeout 闭环收尾",
+                )
+            )
+        if 'agent-workflow.py" compliance' not in content:
+            findings.append(
+                (
+                    1,
+                    "missing compliance",
+                    "入口文档必须暴露 bin/agent-workflow.py compliance 合规审计",
+                )
+            )
 
     if rel == "AGENTS.md":
         start_marker = "<!-- GaC-RULES-START -->"
@@ -181,9 +226,21 @@ def check_semantic_contracts(filepath: Path, content: str) -> list[tuple[int, st
             section = content.split(start_marker, 1)[1].split(end_marker, 1)[0]
             if "| 规则 ID |" in section or "#### X1" in section:
                 line_num = content[: content.index(start_marker)].count("\n") + 1
-                findings.append((line_num, "embedded GaC table", "AGENTS.md 只能保留 GaC 指针, 完整表应在 docs/generated/agent-gac-rules.md"))
+                findings.append(
+                    (
+                        line_num,
+                        "embedded GaC table",
+                        "AGENTS.md 只能保留 GaC 指针, 完整表应在 docs/generated/agent-gac-rules.md",
+                    )
+                )
 
-    layer_docs = {"README.md", "AGENTS.md", "ARCHITECTURE.md", "LAYER-INDEX.md", "projects/AGENTS.md"}
+    layer_docs = {
+        "README.md",
+        "AGENTS.md",
+        "ARCHITECTURE.md",
+        "LAYER-INDEX.md",
+        "projects/AGENTS.md",
+    }
     if rel in layer_docs:
         layer_table_patterns = [
             r"(?m)^L4\s+.*->",
@@ -196,7 +253,13 @@ def check_semantic_contracts(filepath: Path, content: str) -> list[tuple[int, st
             match = re.search(pattern, content)
             if match:
                 line_num = content[: match.start()].count("\n") + 1
-                findings.append((line_num, "embedded layer table", "项目分层表必须从 docs/project-registry.yaml 生成到 docs/generated/project-layer-index.md"))
+                findings.append(
+                    (
+                        line_num,
+                        "embedded layer table",
+                        "项目分层表必须从 docs/project-registry.yaml 生成到 docs/generated/project-layer-index.md",
+                    )
+                )
                 break
 
     return findings
@@ -218,7 +281,14 @@ def check_required_generated_artifacts() -> list[tuple[Path, int, str, str]]:
         (GENERATED_LAYER_DIGEST, "project-layer-index.md"),
     ]:
         if not path.exists():
-            findings.append((WORKSPACE_ROOT / "AGENTS.md", 1, label, f"缺少生成物 {path.relative_to(WORKSPACE_ROOT)}"))
+            findings.append(
+                (
+                    WORKSPACE_ROOT / "AGENTS.md",
+                    1,
+                    label,
+                    f"缺少生成物 {path.relative_to(WORKSPACE_ROOT)}",
+                )
+            )
     return findings
 
 
@@ -250,12 +320,14 @@ def check_orphan_docs() -> list[tuple[Path, int, str, str]]:
             md_files = list(subdir.glob("*.md"))
             if md_files:
                 # 报告第一个文件的位置
-                findings.append((
-                    md_files[0],
-                    1,
-                    f"docs/{dirname}/ 目录",
-                    f"目录 '{dirname}/' 下有 {len(md_files)} 个 .md 文件未被 SYSTEM-INDEX.md 引用"
-                ))
+                findings.append(
+                    (
+                        md_files[0],
+                        1,
+                        f"docs/{dirname}/ 目录",
+                        f"目录 '{dirname}/' 下有 {len(md_files)} 个 .md 文件未被 SYSTEM-INDEX.md 引用",
+                    )
+                )
 
     return findings
 
@@ -271,11 +343,20 @@ def check_l0_mapping() -> list[tuple[Path, int, str, str]]:
     """
     mapper = WORKSPACE_ROOT / "bin" / "ssot" / "check-doc-l0-mapping.py"
     if not mapper.exists():
-        return [(Path("<l0-mapping>"), 1, "missing tool", "check-doc-l0-mapping.py 不存在, 无法验证 L0/MOF 映射")]
+        return [
+            (
+                Path("<l0-mapping>"),
+                1,
+                "missing tool",
+                "check-doc-l0-mapping.py 不存在, 无法验证 L0/MOF 映射",
+            )
+        ]
     try:
         proc = subprocess.run(
             [sys.executable, str(mapper), "--json"],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
     except subprocess.TimeoutExpired:
         return [(Path("<l0-mapping>"), 1, "timeout", "check-doc-l0-mapping.py 超时 (60s)")]
@@ -284,7 +365,14 @@ def check_l0_mapping() -> list[tuple[Path, int, str, str]]:
     try:
         payload = json.loads(proc.stdout)
     except json.JSONDecodeError:
-        return [(Path("<l0-mapping>"), 1, "parse error", proc.stderr[-200:] or "无法解析 check-doc-l0-mapping JSON 输出")]
+        return [
+            (
+                Path("<l0-mapping>"),
+                1,
+                "parse error",
+                proc.stderr[-200:] or "无法解析 check-doc-l0-mapping JSON 输出",
+            )
+        ]
     findings = []
     for err in payload.get("errors", []):
         findings.append((Path("<l0-mapping>"), 1, "L0/MOF 映射", err))
@@ -344,7 +432,9 @@ def run_lint(fix: bool = False, single_file: str | None = None, as_json: bool = 
                 if old_line in content:
                     content = content.replace(old_line, new_line, 1)
                     applied += 1
-            filepath.write_text(content, encoding="utf-8")  # audit-exempt: non-atomic-write (--fix 自动修复 markdown, 非 .omo state plane)
+            filepath.write_text(
+                content, encoding="utf-8"
+            )  # audit-exempt: non-atomic-write (--fix 自动修复 markdown, 非 .omo state plane)
         if not as_json:
             print(f"已自动修复 {applied} 处")
 

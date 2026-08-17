@@ -14,6 +14,7 @@ rule_id: CR-X4-MCPTOOL-IMPL-DRIFT
     python3 bin/ssot/check-mcptool-impl-drift.py        # 全量扫
     python3 bin/ssot/check-mcptool-impl-drift.py --json  # JSON 输出
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,8 +32,13 @@ MCPTOOL_DIR = REPO / "projects/ecos/src/ecos/ssot/mof/m1/mcptool"
 SERVERS: dict[str, dict] = {
     "COCKPIT": {
         "cmd": [
-            "uv", "run", "--project", str(REPO / "projects/cockpit"),
-            "cockpit", "mcp", "--list-tools",
+            "uv",
+            "run",
+            "--project",
+            str(REPO / "projects/cockpit"),
+            "cockpit",
+            "mcp",
+            "--list-tools",
         ],
         "prefix": "MCPTOOL-COCKPIT-",
     },
@@ -56,9 +62,7 @@ def load_declared_tools() -> dict[str, set[str]]:
 def load_implemented_tools(server: str) -> set[str]:
     """跑 cockpit mcp --list-tools 解析工具名 (执行面)."""
     cmd = SERVERS[server]["cmd"]
-    result = subprocess.run(
-        cmd, capture_output=True, text=True, cwd=str(REPO), timeout=60
-    )
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(REPO), timeout=60)
     tools: set[str] = set()
     for line in result.stdout.splitlines():
         line = line.strip()

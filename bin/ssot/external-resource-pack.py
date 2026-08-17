@@ -53,13 +53,9 @@ def _reject_forbidden(value: Any, path: str = "pack") -> None:
         for key, nested in value.items():
             key_text = str(key).lower()
             if key_text in _SECRET_KEYS:
-                raise ExternalResourcePackError(
-                    f"secret field is forbidden: {path}.{key}"
-                )
+                raise ExternalResourcePackError(f"secret field is forbidden: {path}.{key}")
             if key_text in _RAW_CONTENT_KEYS:
-                raise ExternalResourcePackError(
-                    f"raw content field is forbidden: {path}.{key}"
-                )
+                raise ExternalResourcePackError(f"raw content field is forbidden: {path}.{key}")
             _reject_forbidden(nested, f"{path}.{key}")
     elif isinstance(value, list):
         for index, nested in enumerate(value):
@@ -76,12 +72,8 @@ def _text(value: Any, field_name: str) -> str:
 def _load_agora_descriptor_parser(root: Path):
     module_path = root / "projects/agora/src/agora/external_connections.py"
     if not module_path.exists():
-        raise ExternalResourcePackError(
-            f"Agora external connection boundary is unavailable: {module_path}"
-        )
-    spec = importlib.util.spec_from_file_location(
-        "agora_external_connection_pack_parser", module_path
-    )
+        raise ExternalResourcePackError(f"Agora external connection boundary is unavailable: {module_path}")
+    spec = importlib.util.spec_from_file_location("agora_external_connection_pack_parser", module_path)
     if spec is None or spec.loader is None:
         raise ExternalResourcePackError("cannot load Agora descriptor parser")
     module = importlib.util.module_from_spec(spec)
@@ -100,13 +92,9 @@ def _load_resource_kinds(root: Path) -> dict[str, set[str]]:
     try:
         documents = list(yaml.safe_load_all(registry_path.read_text(encoding="utf-8")))
     except (OSError, yaml.YAMLError) as exc:
-        raise ExternalResourcePackError(
-            f"cannot read external fabric registry: {registry_path}"
-        ) from exc
+        raise ExternalResourcePackError(f"cannot read external fabric registry: {registry_path}") from exc
     for document in documents:
-        if isinstance(document, Mapping) and isinstance(
-            document.get("resource_kinds"), Mapping
-        ):
+        if isinstance(document, Mapping) and isinstance(document.get("resource_kinds"), Mapping):
             return {
                 str(kind): set(details.get("allowed_capabilities", []))
                 for kind, details in document["resource_kinds"].items()
@@ -137,9 +125,7 @@ def _safe_descriptor(parsed: Any) -> dict[str, Any]:
     }
 
 
-def _catalog_preview(
-    pack: Mapping[str, Any], parsed: Any, status: str
-) -> dict[str, Any]:
+def _catalog_preview(pack: Mapping[str, Any], parsed: Any, status: str) -> dict[str, Any]:
     """Build a non-observed catalog preview from the validated descriptor.
 
     A manifest is not a discovery result. Keep health and availability explicit

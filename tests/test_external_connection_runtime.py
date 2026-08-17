@@ -69,9 +69,7 @@ def _grant(run_id: str, step_run_id: str) -> dict:
         "expires_at": (NOW + timedelta(hours=1)).isoformat(),
     }
     grant["proof"] = hashlib.sha256(
-        json.dumps(
-            grant, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-        ).encode()
+        json.dumps(grant, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
     return grant
 
@@ -98,11 +96,7 @@ def test_external_receipt_can_close_a_workflow_mesh_evidence_chain(
     grant = _grant(run_id, step_run_id)
     store = WorkflowMeshStore(tmp_path)
     store.append(new_workflow_event("WorkflowRequested", run_id))
-    store.append(
-        new_workflow_event(
-            "WorkflowAdmitted", run_id, payload={"admission": grant, **grant}
-        )
-    )
+    store.append(new_workflow_event("WorkflowAdmitted", run_id, payload={"admission": grant, **grant}))
     store.append(
         new_workflow_event(
             "StepDispatched",
@@ -129,9 +123,7 @@ def test_external_receipt_can_close_a_workflow_mesh_evidence_chain(
 
     snapshot = store.snapshot(run_id)
     assert snapshot["state"] == "verified"
-    assert snapshot["evidence"][f"external:source:mesh-test:{receipt.receipt_id}"][
-        "sha256"
-    ]
+    assert snapshot["evidence"][f"external:source:mesh-test:{receipt.receipt_id}"]["sha256"]
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
@@ -150,9 +142,7 @@ def test_runtime_effect_receipt_can_close_the_same_mesh_run(tmp_path: Path) -> N
     store = WorkflowMeshStore(tmp_path)
 
     runtime = AgentRuntime()
-    runtime._tool_registry = {
-        "lookup": {"fn": lambda query="": {"remote_id": query, "content": "private"}}
-    }
+    runtime._tool_registry = {"lookup": {"fn": lambda query="": {"remote_id": query, "content": "private"}}}
     responses = iter(
         [
             {
@@ -210,7 +200,9 @@ def test_runtime_effect_receipt_can_close_the_same_mesh_run(tmp_path: Path) -> N
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-def test_runtime_compensation_returns_to_running_without_raw_payload(tmp_path: Path) -> None:
+def test_runtime_compensation_returns_to_running_without_raw_payload(
+    tmp_path: Path,
+) -> None:
     from runtime.executor.engine import AgentRuntime
     from runtime.workflow_admission import admission_proof
     from runtime.workflow_effects import WorkflowEffectStore
@@ -223,11 +215,7 @@ def test_runtime_compensation_returns_to_running_without_raw_payload(tmp_path: P
     grant["proof"] = admission_proof(grant)
     store = WorkflowMeshStore(tmp_path / "omo")
     store.append(new_workflow_event("WorkflowRequested", run_id))
-    store.append(
-        new_workflow_event(
-            "WorkflowAdmitted", run_id, payload={"admission": grant, **grant}
-        )
-    )
+    store.append(new_workflow_event("WorkflowAdmitted", run_id, payload={"admission": grant, **grant}))
     store.append(
         new_workflow_event(
             "StepDispatched",

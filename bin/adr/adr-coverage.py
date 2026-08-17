@@ -87,11 +87,12 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
     # 占号中 (adr-claims 存在) 的号不算缺失 — session 在写 ADR (G-CONV.7 D1)
     claims: dict[int, dict] = {}
     try:
-        import sys as _sys  # noqa: PLC0415
+        import sys as _sys
+
         _gac = Path(__file__).resolve().parent.parent / "gac"
         if str(_gac) not in _sys.path:
             _sys.path.insert(0, str(_gac))
-        from swarm_discipline import load_adr_claims  # noqa: PLC0415
+        from swarm_discipline import load_adr_claims
 
         _claims_dir = decisions_dir.parents[2] / ".omo" / "_delivery" / "adr-claims"
         claims = load_adr_claims(_claims_dir)
@@ -122,19 +123,23 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
         status_counts[status] = status_counts.get(status, 0) + 1
         missing = [k for k in REQUIRED_FRONTMATTER if k not in fm]
         if missing:
-            fm_issues.append({
-                "file": f.name,
-                "missing": missing,
-            })
+            fm_issues.append(
+                {
+                    "file": f.name,
+                    "missing": missing,
+                }
+            )
         # C2 (ADR-0367): frontmatter id 必须与文件名 ADR-NNNN 一致 (缺失也算违规)
         file_id = f.name.split("-", 1)[0]  # e.g. "0233" from "0233-xxx.md"
         fm_id = str(fm.get("id", "")).strip()
         if not fm_id or fm_id.upper() != f"ADR-{file_id}":
-            id_mismatches.append({
-                "file": f.name,
-                "id": fm_id or "<missing>",
-                "expected": f"ADR-{file_id}",
-            })
+            id_mismatches.append(
+                {
+                    "file": f.name,
+                    "id": fm_id or "<missing>",
+                    "expected": f"ADR-{file_id}",
+                }
+            )
 
     # INDEX 引用 vs 实际文件
     index_data = parse_index(index_path)
@@ -189,7 +194,8 @@ def main() -> int:
     parser.add_argument("--strict", action="store_true", help="warn 也算 error")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     parser.add_argument(
-        "--layer", action="store_true",
+        "--layer",
+        action="store_true",
         help="输出 active/historical 分层 JSON (供 RAG/onboarding 消费)",
     )
     args = parser.parse_args()
@@ -222,10 +228,7 @@ def main() -> int:
     print(f"🔢 编号范围: {result['min_number']:04d} ~ {result['max_number']:04d}")
     # T6-02 ADR 分层统计 (active 进 RAG/onboarding, historical 不进)
     layer = result.get("layer", {})
-    print(
-        f"📑 分层: active {layer.get('active_count', 0)} | "
-        f"historical {layer.get('historical_count', 0)}"
-    )
+    print(f"📑 分层: active {layer.get('active_count', 0)} | historical {layer.get('historical_count', 0)}")
     if layer.get("historical"):
         hist = layer["historical"]
         print(f"   historical: {', '.join(hist[:10])}" + (" ..." if len(hist) > 10 else ""))
@@ -276,7 +279,18 @@ def main() -> int:
     else:
         print(f"\n⚠️  {issues_count} 个问题需处理")
 
-    return 1 if (result["missing_numbers"] or result["duplicate_numbers"] or result["frontmatter_issues"] or result["id_mismatches"] or result["files_not_in_index"] or result["index_refs_not_in_files"]) else 0
+    return (
+        1
+        if (
+            result["missing_numbers"]
+            or result["duplicate_numbers"]
+            or result["frontmatter_issues"]
+            or result["id_mismatches"]
+            or result["files_not_in_index"]
+            or result["index_refs_not_in_files"]
+        )
+        else 0
+    )
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ Verifies that:
 
 Exit code: 0 when the registry is consistent, 1 otherwise. JSON output to stdout.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,7 +19,6 @@ import sys
 from pathlib import Path
 
 import yaml
-
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 REGISTRY = WORKSPACE / ".omo/_truth/registry/runtime-projections.yaml"

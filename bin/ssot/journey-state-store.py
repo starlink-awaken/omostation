@@ -104,7 +104,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if command == "save":
         run_id = args.run_id or _new_run_id(args.journey_id)
-        entry = save_state(args.root, args.journey_id, run_id, args.state, scene_id=args.scene, status=args.status)
+        entry = save_state(
+            args.root,
+            args.journey_id,
+            run_id,
+            args.state,
+            scene_id=args.scene,
+            status=args.status,
+        )
         entry["run_id"] = run_id
         print(json.dumps(entry, ensure_ascii=False, indent=2, sort_keys=True))
         return 0

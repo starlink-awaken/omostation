@@ -11,6 +11,7 @@ verify the *durable* property of the timer:
    ``ApprovalTimeout`` and the run is projected to ``unavailable``.
 3. The persisted expiry is idempotent across a second restart and scan.
 """
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
@@ -38,18 +39,14 @@ def _grant(run_id: str, step_run_ids: list[str]) -> dict:
         "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
     }
     grant["proof"] = hashlib.sha256(
-        json.dumps(
-            grant, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-        ).encode()
+        json.dumps(grant, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
     return grant
 
 
 def _admit(run_id: str, step_run_ids: list[str]) -> dict:
     grant = _grant(run_id, step_run_ids)
-    return new_workflow_event(
-        "WorkflowAdmitted", run_id, payload={"admission": grant, **grant}
-    )
+    return new_workflow_event("WorkflowAdmitted", run_id, payload={"admission": grant, **grant})
 
 
 def _waiting_approval_run(tmp_path, run_id: str = "it-approval") -> WorkflowMeshStore:

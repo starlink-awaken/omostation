@@ -23,7 +23,7 @@ def build_temporal_backend() -> TemporalShadowAdapter:
     """Return temporal-capable backend; Graphiti only if explicitly enabled + installed."""
     if graphiti_enabled():
         try:
-            import graphiti_core  # noqa: F401
+            import graphiti_core
 
             logger.info("graphiti_core import ok — using TemporalShadow as compatibility facade")
             # Full Graphiti wiring needs Neo4j driver config; keep shadow as current-state store
@@ -50,7 +50,7 @@ def backend_status() -> dict[str, Any]:
 
 def _can_import_graphiti() -> bool:
     try:
-        import graphiti_core  # noqa: F401
+        import graphiti_core
 
         return True
     except Exception:

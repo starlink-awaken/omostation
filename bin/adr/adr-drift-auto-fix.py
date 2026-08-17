@@ -23,9 +23,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-TEMPLATE_PATTERNS = re.compile(
-    r"(YYYYMMDD|HHMM|YYYY-MM-DD|TBD|TODO|FIXME|XXX|<.*?>|\{.*?\})"
-)
+TEMPLATE_PATTERNS = re.compile(r"(YYYYMMDD|HHMM|YYYY-MM-DD|TBD|TODO|FIXME|XXX|<.*?>|\{.*?\})")
 SUBDIR_PARENT_HINT = re.compile(r"src/(.*?)/")  # 找 src/ 父目录
 
 
@@ -144,7 +142,10 @@ def main() -> int:
         return 1
     r = subprocess.run(
         ["python3", str(drift_bin), "--json"],
-        cwd=str(root), capture_output=True, text=True, timeout=60,
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     if r.returncode not in (0, 1):
         print(f"❌ adr-drift-classify 失败: {r.stderr[:200]}")
@@ -159,10 +160,12 @@ def main() -> int:
     classified: list[dict] = []
     for issue in classify_result.get("new_issues", []):
         cls = classify_issue(issue["adr_number"], issue["msg"], root)
-        classified.append({
-            **issue,
-            "classification": cls,
-        })
+        classified.append(
+            {
+                **issue,
+                "classification": cls,
+            }
+        )
 
     # 统计
     by_type = Counter(c["classification"]["type"] for c in classified)

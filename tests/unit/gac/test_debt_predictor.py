@@ -3,8 +3,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = REPO_ROOT / "bin" / "gac" / "debt-predictor.py"
 
@@ -21,11 +19,16 @@ class TestDebtPredictor:
         metrics_file = tmp_path / "metrics-store.jsonl"
         debt_dir = tmp_path / "empty-debt"
         debt_dir.mkdir(parents=True)
-        result = run_predictor([
-            "--threshold", "10",
-            "--metrics-file", str(metrics_file),
-            "--debt-dir", str(debt_dir),
-        ])
+        result = run_predictor(
+            [
+                "--threshold",
+                "10",
+                "--metrics-file",
+                str(metrics_file),
+                "--debt-dir",
+                str(debt_dir),
+            ]
+        )
         assert result.returncode == 0
         data = json.loads(result.stdout)
         assert "error" in data["prediction"]
@@ -34,7 +37,17 @@ class TestDebtPredictor:
         metrics_file = tmp_path / "metrics-store.jsonl"
         for i in range(10):
             with metrics_file.open("a", encoding="utf-8") as f:
-                f.write(json.dumps({"timestamp": f"2026-08-0{i+1}T00:00:00Z", "check": "check-a", "ok": True, "duration_ms": 10}) + "\n")
+                f.write(
+                    json.dumps(
+                        {
+                            "timestamp": f"2026-08-0{i + 1}T00:00:00Z",
+                            "check": "check-a",
+                            "ok": True,
+                            "duration_ms": 10,
+                        }
+                    )
+                    + "\n"
+                )
         result = run_predictor(["--threshold", "100", "--metrics-file", str(metrics_file)])
         assert result.returncode == 0
         data = json.loads(result.stdout)

@@ -14,7 +14,8 @@ import pytest
 # way the bin/ scripts are dispatched in production).
 _MODULE_NAME = "bin.cross_package_api_map"
 _SPEC = importlib.util.spec_from_file_location(
-    _MODULE_NAME, Path(__file__).resolve().parent.parent / "bin" / "cross_package_api_map.py"
+    _MODULE_NAME,
+    Path(__file__).resolve().parent.parent / "bin" / "cross_package_api_map.py",
 )
 _module = importlib.util.module_from_spec(_SPEC)
 sys.modules[_MODULE_NAME] = _module
@@ -51,9 +52,7 @@ def test_kairon_workspace_members_reads_packages_directory(tmp_path: Path):
         (pkg / "pyproject.toml").write_text("[project]\nname='x'\n")
     # Sub-directory without pyproject.toml should be excluded.
     (tmp_path / "packages" / "scratch").mkdir()
-    (tmp_path / "pyproject.toml").write_text(
-        '[tool.uv.workspace]\nmembers = ["packages/*"]\n'
-    )
+    (tmp_path / "pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["packages/*"]\n')
     members = _kairon_workspace_members(tmp_path)
     assert members == {"alpha", "beta", "gamma"}
 
@@ -91,11 +90,7 @@ def test_main_writes_markdown_table(tmp_path: Path):
     text = out.read_text(encoding="utf-8")
     assert text.startswith("# Cross-Package API Map")
     # Every row of the table starts with a pipe and a kairon package.
-    table_rows = [
-        line
-        for line in text.splitlines()
-        if line.startswith("| ") and "---" not in line
-    ]
+    table_rows = [line for line in text.splitlines() if line.startswith("| ") and "---" not in line]
     # The header is the first row after the separator.
     assert table_rows[0].startswith("| Kairon package")
     assert any("ontoderive" in row for row in table_rows)
@@ -107,7 +102,14 @@ def test_main_writes_markdown_table(tmp_path: Path):
 def test_main_missing_registry(tmp_path: Path, capsys):
     from bin.cross_package_api_map import main
 
-    rc = main(["--bos-registry", str(tmp_path / "nope.yaml"), "--out", str(tmp_path / "out.md")])
+    rc = main(
+        [
+            "--bos-registry",
+            str(tmp_path / "nope.yaml"),
+            "--out",
+            str(tmp_path / "out.md"),
+        ]
+    )
     assert rc == 1
     err = capsys.readouterr().err
     assert "bos registry not found" in err

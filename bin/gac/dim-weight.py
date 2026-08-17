@@ -45,11 +45,7 @@ def load_snapshots(root: Path) -> list[dict]:
                         continue
                     try:
                         rec = json.loads(line)
-                        if (
-                            isinstance(rec, dict)
-                            and "score" in rec
-                            and "dimensions" in rec
-                        ):
+                        if isinstance(rec, dict) and "score" in rec and "dimensions" in rec:
                             snaps.append(rec)
                     except Exception:
                         pass
@@ -136,8 +132,7 @@ def compute_weights(snaps):
         else:
             score = correlation
         # 防止过小
-        if score < 0.01:
-            score = 0.01
+        score = max(score, 0.01)
         analysis[dim] = {
             "p90_p10_range": round(p90_p10_range, 3),
             "max_min_range": round(max_min_range, 3),
@@ -156,9 +151,7 @@ def compute_weights(snaps):
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P71: 维度权重动态调整 (基于历史快照反推)"
-    )
+    parser = argparse.ArgumentParser(description="P71: 维度权重动态调整 (基于历史快照反推)")
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--format", choices=["text", "json"], default="text")
     parser.add_argument("--reset", action="store_true", help="强制使用默认权重")
@@ -203,8 +196,8 @@ def main() -> int:
         if isinstance(analysis, dict) and "note" not in analysis:
             print("--- 各维度分析 ---")
             for dim, info in analysis.items():
-                p_range = info.get('p90_p10_range', 0)
-                m_range = info.get('max_min_range', 0)
+                p_range = info.get("p90_p10_range", 0)
+                m_range = info.get("max_min_range", 0)
                 print(
                     f"  {dim}: p90_p10={p_range} max_min={m_range} "
                     f"correlation={info['correlation']} score={info['score']}"

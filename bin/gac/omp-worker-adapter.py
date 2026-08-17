@@ -18,7 +18,7 @@ import time
 import urllib.request
 import uuid
 from collections.abc import Callable, Sequence
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -54,7 +54,7 @@ def digest_bytes(value: bytes) -> str:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _is_within(path: Path, root: Path) -> bool:
@@ -105,11 +105,7 @@ def _system_temp_roots() -> tuple[Path, ...]:
 
 def validate_receipt_path(receipt_path: Path | str, *, user_home: Path) -> Path:
     receipt = Path(receipt_path).expanduser().resolve()
-    if (
-        receipt.exists()
-        or not receipt.parent.is_dir()
-        or _is_within(receipt, user_home.resolve())
-    ):
+    if receipt.exists() or not receipt.parent.is_dir() or _is_within(receipt, user_home.resolve()):
         raise AdapterError("unsafe_receipt")
     if not any(_is_within(receipt, root) for root in _system_temp_roots()):
         raise AdapterError("unsafe_receipt")
@@ -161,12 +157,7 @@ def _resolve_keychain_api_key(reference: str) -> str:
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise AdapterError("credential_unavailable") from exc
     api_key = completed.stdout.strip()
-    if (
-        completed.returncode != 0
-        or not api_key
-        or len(api_key) > 4096
-        or "\x00" in api_key
-    ):
+    if completed.returncode != 0 or not api_key or len(api_key) > 4096 or "\x00" in api_key:
         raise AdapterError("credential_unavailable")
     return api_key
 
@@ -190,9 +181,7 @@ def _audited_model(provider: dict[str, Any]) -> dict[str, Any] | None:
         or any(not isinstance(item, str) or not item for item in inputs)
     ):
         return None
-    if not isinstance(model.get("reasoning"), bool) or not isinstance(
-        model.get("supportsTools"), bool
-    ):
+    if not isinstance(model.get("reasoning"), bool) or not isinstance(model.get("supportsTools"), bool):
         return None
     return model
 
@@ -245,9 +234,7 @@ def _load_authoritative_provider(config_root: Path) -> dict[str, Any]:
     if _yaml is None:
         raise AdapterError("models_config_rejected")
     try:
-        source_data = _yaml.safe_load(
-            (config_root / "models.yml").read_text(encoding="utf-8")
-        )
+        source_data = _yaml.safe_load((config_root / "models.yml").read_text(encoding="utf-8"))
         provider = source_data["providers"][PROVIDER]
     except Exception as exc:
         raise AdapterError("models_config_rejected") from exc
@@ -341,9 +328,7 @@ def _tree_digest(root: Path) -> str:
     return digest_bytes(json.dumps(entries, separators=(",", ":")).encode("utf-8"))
 
 
-def _minimal_environment(
-    trial_dir: Path, marker: str, *, api_key: str
-) -> dict[str, str]:
+def _minimal_environment(trial_dir: Path, marker: str, *, api_key: str) -> dict[str, str]:
     locale = os.environ.get("LC_ALL") or os.environ.get("LANG") or "C.UTF-8"
     isolated_home = trial_dir / "home"
     agent_dir = trial_dir / "agent"
@@ -399,12 +384,7 @@ def _default_marker_probe(marker: str) -> dict[int, int] | None:
     found: dict[int, int] = {}
     for line in completed.stdout.splitlines():
         parts = line.split(maxsplit=2)
-        if (
-            len(parts) == 3
-            and parts[0].isdigit()
-            and parts[1].isdigit()
-            and token.search(parts[2])
-        ):
+        if len(parts) == 3 and parts[0].isdigit() and parts[1].isdigit() and token.search(parts[2]):
             found[int(parts[0])] = int(parts[1])
     return found
 
@@ -434,7 +414,7 @@ def _reap(
     def probe() -> dict[int, int] | None:
         try:
             return marker_probe(marker)
-        except Exception:  # noqa: BLE001 - probe failure is explicit and fail-closed
+        except Exception:
             return None
 
     initial = probe()
@@ -464,9 +444,7 @@ def _reap(
         if leaked is None:
             return False
         if leaked:
-            for group in sorted(
-                {group for group in leaked.values() if safe_group(group)}
-            ):
+            for group in sorted({group for group in leaked.values() if safe_group(group)}):
                 group_terminator(group, signal.SIGKILL)
             time.sleep(0.05)
     final = probe()
@@ -548,14 +526,8 @@ def run_worker(
             "mode": "dry-run",
             "tools_enabled": False,
         }
-    home = (
-        Path.home() if user_home is None else Path(user_home).expanduser()
-    ).resolve()
-    receipt_file = (
-        validate_receipt_path(receipt_path, user_home=home)
-        if receipt_path is not None
-        else None
-    )
+    home = (Path.home() if user_home is None else Path(user_home).expanduser()).resolve()
+    receipt_file = validate_receipt_path(receipt_path, user_home=home) if receipt_path is not None else None
     config_root = validate_config_root(home)
     marker = f"OMO_OMP_TRIAL_ID={uuid.uuid4()}"
     started_at = _utc_now()
@@ -629,7 +601,7 @@ def run_worker(
         receipt["output_digest"] = digest_bytes(output.encode("utf-8"))
     except AdapterError as exc:
         error_code = exc.code
-    except Exception:  # noqa: BLE001 - keep dependency text and secrets out of errors
+    except Exception:
         error_code = "adapter_failed"
     finally:
         if process is not None:
@@ -645,7 +617,7 @@ def run_worker(
         else:
             try:
                 residual = marker_probe(marker)
-            except Exception:  # noqa: BLE001 - probe failure must fail closed
+            except Exception:
                 residual = None
             receipt["checks"]["child_reaped"] = residual == {}
         if before_config != _tree_digest(config_root) and error_code is None:
@@ -683,9 +655,7 @@ def run_worker(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    run = commands.add_parser(
-        "run", help="dry-run by default; --execute performs one bounded call"
-    )
+    run = commands.add_parser("run", help="dry-run by default; --execute performs one bounded call")
     run.add_argument("--prompt", required=True)
     run.add_argument("--execute", action="store_true")
     run.add_argument("--receipt")
@@ -716,11 +686,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.execute:
         sys.stdout.write(result["output"])
     else:
-        print(
-            json.dumps(
-                result, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-            )
-        )
+        print(json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
     return 0
 
 

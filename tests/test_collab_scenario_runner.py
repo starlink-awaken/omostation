@@ -5,13 +5,14 @@
 - verdict 机器可读: JSON 可序列化
 - 四大类覆盖 + silent_loss 红线判定存在 + 全样例可跑
 """
+
 import json
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "bin" / "collab"))
-from scenario_lib import load_scenario, run_scenario  # noqa: E402
+from scenario_lib import load_scenario, run_scenario
 
 SCN_DIR = REPO / ".omo" / "_delivery" / "collab-scenarios"
 
@@ -43,17 +44,19 @@ def test_four_categories_covered() -> None:
     for p in sorted(SCN_DIR.glob("*.yaml")):
         sc = load_scenario(p)
         cats.add(sc["category"])
-    assert cats == {"A_conflict", "B_failure_injection", "C_decomposition", "D_reuse_pair"}
+    assert cats == {
+        "A_conflict",
+        "B_failure_injection",
+        "C_decomposition",
+        "D_reuse_pair",
+    }
 
 
 def test_silent_loss_redline_present() -> None:
     """所有样例须含 silent_loss 红线判定 (P84 硬红线 = 0)."""
     for p in sorted(SCN_DIR.glob("*.yaml")):
         sc = load_scenario(p)
-        has_silent = any(
-            "silent" in c["criterion"].lower() or "loss" in c["criterion"].lower()
-            for c in sc["verdict"]
-        )
+        has_silent = any("silent" in c["criterion"].lower() or "loss" in c["criterion"].lower() for c in sc["verdict"])
         assert has_silent, f"{p.name}: 缺 silent_loss 红线判定"
 
 
@@ -90,9 +93,7 @@ def test_adversarial_at_least_3_fail() -> None:
         r = run_scenario(sc)
         results.append((sc["id"], r.passed))
     failed = [sid for sid, ok in results if not ok]
-    assert len(failed) >= 3, (
-        f"对抗场景仅 {len(failed)} 个失败 (<3), 对抗性不足须加强: {results}"
-    )
+    assert len(failed) >= 3, f"对抗场景仅 {len(failed)} 个失败 (<3), 对抗性不足须加强: {results}"
 
 
 def test_cclass_detectors_pass() -> None:
@@ -116,10 +117,7 @@ def test_wave6_adv252729_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave6 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave6 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave7_adv313335_detectors_pass() -> None:
@@ -131,10 +129,7 @@ def test_wave7_adv313335_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave7 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave7 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave8_adv373941_detectors_pass() -> None:
@@ -146,10 +141,7 @@ def test_wave8_adv373941_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave8 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave8 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave9_adv434547_detectors_pass() -> None:
@@ -161,10 +153,7 @@ def test_wave9_adv434547_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave9 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave9 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave10_adv495153_detectors_pass() -> None:
@@ -176,10 +165,7 @@ def test_wave10_adv495153_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave10 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave10 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave11_adv555759_detectors_pass() -> None:
@@ -191,10 +177,7 @@ def test_wave11_adv555759_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave11 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave11 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave12_adv616365_detectors_pass() -> None:
@@ -206,10 +189,7 @@ def test_wave12_adv616365_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave12 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave12 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave13_adv676971_detectors_pass() -> None:
@@ -221,10 +201,7 @@ def test_wave13_adv676971_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave13 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave13 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave14_adv737577_detectors_pass() -> None:
@@ -236,10 +213,7 @@ def test_wave14_adv737577_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave14 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave14 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave15_adv798183_detectors_pass() -> None:
@@ -251,10 +225,7 @@ def test_wave15_adv798183_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave15 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave15 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave16_adv858789_detectors_pass() -> None:
@@ -266,10 +237,7 @@ def test_wave16_adv858789_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave16 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave16 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave17_adv919395_detectors_pass() -> None:
@@ -281,10 +249,7 @@ def test_wave17_adv919395_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave17 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave17 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave18_adv9799101_detectors_pass() -> None:
@@ -296,10 +261,7 @@ def test_wave18_adv9799101_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave18 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave18 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave19_adv103105107_detectors_pass() -> None:
@@ -311,10 +273,7 @@ def test_wave19_adv103105107_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave19 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave19 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave20_adv109111113_detectors_pass() -> None:
@@ -326,10 +285,7 @@ def test_wave20_adv109111113_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave20 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave20 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave21_adv115117119_detectors_pass() -> None:
@@ -341,10 +297,7 @@ def test_wave21_adv115117119_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave21 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave21 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave22_adv121123125_detectors_pass() -> None:
@@ -356,10 +309,7 @@ def test_wave22_adv121123125_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave22 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave22 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave23_adv127129131_detectors_pass() -> None:
@@ -371,10 +321,7 @@ def test_wave23_adv127129131_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave23 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave23 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave24_adv133135137_detectors_pass() -> None:
@@ -386,10 +333,7 @@ def test_wave24_adv133135137_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave24 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave24 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave25_adv139141143_detectors_pass() -> None:
@@ -401,10 +345,7 @@ def test_wave25_adv139141143_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave25 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave25 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave26_adv145147149_detectors_pass() -> None:
@@ -416,10 +357,7 @@ def test_wave26_adv145147149_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave26 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave26 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave27_adv151153155_detectors_pass() -> None:
@@ -431,10 +369,7 @@ def test_wave27_adv151153155_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave27 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave27 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave28_adv157159161_detectors_pass() -> None:
@@ -446,10 +381,7 @@ def test_wave28_adv157159161_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave28 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave28 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave29_adv163165167_detectors_pass() -> None:
@@ -461,10 +393,7 @@ def test_wave29_adv163165167_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave29 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave29 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave30_adv169171173_detectors_pass() -> None:
@@ -476,10 +405,7 @@ def test_wave30_adv169171173_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave30 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave30 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave31_adv175177179_detectors_pass() -> None:
@@ -491,10 +417,7 @@ def test_wave31_adv175177179_detectors_pass() -> None:
     ):
         sc = load_scenario(SCN_DIR / name)
         r = run_scenario(sc)
-        assert r.passed, (
-            f"{name} should pass after wave31 detectors: "
-            f"{[c.name for c in r.criteria if not c.passed]}"
-        )
+        assert r.passed, f"{name} should pass after wave31 detectors: {[c.name for c in r.criteria if not c.passed]}"
 
 
 def test_wave31_hard_adv_still_fail() -> None:

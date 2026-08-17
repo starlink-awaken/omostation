@@ -36,9 +36,7 @@ def main() -> int:
             try:
                 cv, pv = float(current[k]), float(previous[k])
                 if pv > 0 and cv < pv * 0.9:
-                    findings.append(
-                        f"{k}: {pv} -> {cv} (下降 {((1 - cv / pv) * 100):.0f}%)"
-                    )
+                    findings.append(f"{k}: {pv} -> {cv} (下降 {((1 - cv / pv) * 100):.0f}%)")
             except (ValueError, TypeError):
                 pass
     if findings:

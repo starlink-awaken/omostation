@@ -34,7 +34,7 @@ def _search_stdlib(query: str, max_results: int = 5) -> list[dict]:
     try:
         ctx = ssl.create_default_context()
         req = urllib.request.Request(api_url, headers={"User-Agent": "SharedBrain/1.0"})
-        resp = urllib.request.urlopen(req, timeout=10, context=ctx)  # noqa: S310
+        resp = urllib.request.urlopen(req, timeout=10, context=ctx)
         if resp.status != 200:
             return []
         data = _json.loads(resp.read().decode())

@@ -29,24 +29,43 @@ from _shared import ROOT, utc_now
 # ── 风险因子权重 ──────────────────────────────────────────
 
 ACTION_BASE_RISK = {
-    "read": 1, "classify": 1, "scan": 1,
-    "write": 2, "generate": 2, "draft": 2, "create_doc": 2,
-    "forward": 4, "send_email": 5, "submit": 6,
-    "modify": 5, "archive": 3,
-    "delete": 9, "publish": 8, "modify_permission": 10,
+    "read": 1,
+    "classify": 1,
+    "scan": 1,
+    "write": 2,
+    "generate": 2,
+    "draft": 2,
+    "create_doc": 2,
+    "forward": 4,
+    "send_email": 5,
+    "submit": 6,
+    "modify": 5,
+    "archive": 3,
+    "delete": 9,
+    "publish": 8,
+    "modify_permission": 10,
 }
 
 TARGET_MULTIPLIER = {
-    "self": 0.5, "internal": 0.8, "subordinate": 1.5,
-    "leader": 2.5, "external": 4.0, "public": 5.0,
+    "self": 0.5,
+    "internal": 0.8,
+    "subordinate": 1.5,
+    "leader": 2.5,
+    "external": 4.0,
+    "public": 5.0,
 }
 
 REVERSIBILITY = {
-    "undoable": 0.5, "replaceable": 1.0, "permanent": 2.0,
+    "undoable": 0.5,
+    "replaceable": 1.0,
+    "permanent": 2.0,
 }
 
 SENSITIVITY = {
-    "routine": 1.0, "internal": 1.5, "confidential": 2.5, "secret": 4.0,
+    "routine": 1.0,
+    "internal": 1.5,
+    "confidential": 2.5,
+    "secret": 4.0,
 }
 
 # ── 决策等级 ──────────────────────────────────────────────
@@ -54,15 +73,31 @@ SENSITIVITY = {
 LEVELS = {
     "L0": {"max_risk": 2, "label": "全自动", "requires_human": False},
     "L1": {"max_risk": 4, "label": "自动+通知", "requires_human": False},
-    "L2": {"max_risk": 6, "label": "预览+确认", "requires_human": True, "confirm_type": "one_click"},
-    "L3": {"max_risk": 8, "label": "审阅+批准", "requires_human": True, "confirm_type": "full_review"},
-    "L4": {"max_risk": 99, "label": "禁止", "requires_human": True, "confirm_type": "never"},
+    "L2": {
+        "max_risk": 6,
+        "label": "预览+确认",
+        "requires_human": True,
+        "confirm_type": "one_click",
+    },
+    "L3": {
+        "max_risk": 8,
+        "label": "审阅+批准",
+        "requires_human": True,
+        "confirm_type": "full_review",
+    },
+    "L4": {
+        "max_risk": 99,
+        "label": "禁止",
+        "requires_human": True,
+        "confirm_type": "never",
+    },
 }
 
 
 @dataclass
 class Action:
     """待评估的动作."""
+
     type: str = ""
     target: str = "self"
     content: str = ""
@@ -76,6 +111,7 @@ class Action:
 @dataclass
 class Decision:
     """风险评估结果."""
+
     level: str = "L3"
     risk_score: float = 5.0
     strategy: str = "review"
@@ -120,12 +156,12 @@ def _trust_key(action: Action) -> str:
 DOMAIN_OVERRIDES = {
     "work": {
         "send_email:subordinate": "L2",  # 预览+确认
-        "send_email:leader": "L3",       # 审阅+批准
-        "send_email:external": "L4",     # 禁止自动
-        "submit:superior": "L3",         # 审阅+批准
-        "forward:subordinate": "L2",     # 预览+确认
-        "generate:self": "L0",           # 全自动
-        "read:self": "L0",               # 全自动
+        "send_email:leader": "L3",  # 审阅+批准
+        "send_email:external": "L4",  # 禁止自动
+        "submit:superior": "L3",  # 审阅+批准
+        "forward:subordinate": "L2",  # 预览+确认
+        "generate:self": "L0",  # 全自动
+        "read:self": "L0",  # 全自动
     },
     "family": {"send_email:spouse": "L0", "send_email:child": "L1"},
     "health": {"generate:report": "L0", "send_email:doctor": "L2"},
@@ -196,14 +232,16 @@ class RiskEngine:
                 f"评估以下动作的风险 (0-10分) 并建议决策等级:\n"
                 f"动作类型: {action.type}\n目标: {action.target}\n"
                 f"内容: {action.content[:200]}\n域: {action.domain}\n"
-                f"输出 JSON: {{\"risk_score\": N, \"level\": \"L0-L4\", \"reasoning\": \"...\"}}",
+                f'输出 JSON: {{"risk_score": N, "level": "L0-L4", "reasoning": "..."}}',
                 timeout=20.0,
             )
             if response:
                 import re
+
                 m = re.search(r'\{[^{}]*"risk_score"[^{}]*\}', response)
                 if m:
                     import json
+
                     parsed = json.loads(m.group())
                     return Decision(
                         level=parsed.get("level", "L3"),
@@ -213,7 +251,12 @@ class RiskEngine:
                     )
         except Exception:
             pass
-        return Decision(level="L3", risk_score=7.0, strategy="审阅+批准", reasoning="LLM评估失败, 默认保守")
+        return Decision(
+            level="L3",
+            risk_score=7.0,
+            strategy="审阅+批准",
+            reasoning="LLM评估失败, 默认保守",
+        )
 
     def _risk_to_level(self, risk: float) -> str:
         for level_id, config in LEVELS.items():
@@ -241,8 +284,10 @@ class RiskEngine:
 
 # ── CLI ──────────────────────────────────────────────────
 
+
 def main(argv: list[str] | None = None) -> int:
     import argparse
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--type", required=True, help="action type")
     parser.add_argument("--target", default="self")
@@ -254,26 +299,37 @@ def main(argv: list[str] | None = None) -> int:
 
     engine = RiskEngine()
     action = Action(
-        type=args.type, target=args.target,
-        sensitivity=args.sensitivity, domain=args.domain,
+        type=args.type,
+        target=args.target,
+        sensitivity=args.sensitivity,
+        domain=args.domain,
         confidence=args.confidence,
     )
     decision = engine.evaluate(action)
 
     if args.json:
-        print(json.dumps({
-            "action": args.type, "target": args.target,
-            "level": decision.level, "risk_score": decision.risk_score,
-            "strategy": decision.strategy, "reasoning": decision.reasoning,
-            "trust_adjusted": decision.trust_adjusted,
-        }, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "action": args.type,
+                    "target": args.target,
+                    "level": decision.level,
+                    "risk_score": decision.risk_score,
+                    "strategy": decision.strategy,
+                    "reasoning": decision.reasoning,
+                    "trust_adjusted": decision.trust_adjusted,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         print(f"动作: {args.type} → {args.target}")
         print(f"等级: {decision.level} ({decision.strategy})")
         print(f"风险: {decision.risk_score}")
         print(f"自动执行: {'✅' if decision.can_auto_execute() else '❌'}")
         if decision.trust_adjusted:
-            print(f"⚠️ Trust调整: 等级已根据历史记录动态调整")
+            print("⚠️ Trust调整: 等级已根据历史记录动态调整")
 
     return 0
 

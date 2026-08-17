@@ -8,16 +8,13 @@ BET-Y1Q2-T6-07 落地脚本.
 
 from __future__ import annotations
 
-import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "projects" / "cockpit" / "src"))
-
-from cockpit.commands.bdsk_engine import DynamicBDSKAdjudicator
 
 
 class BDSKShadowSandbox:
@@ -39,9 +36,9 @@ class BDSKShadowSandbox:
         except Exception:
             return ""
 
-    def simulate(self) -> Dict[str, Any]:
+    def simulate(self) -> dict[str, Any]:
         diff_text = self.get_diff_text()
-        findings: List[str] = []
+        findings: list[str] = []
 
         # ⚡️ Devil 隐性风险硬扫描
         if "SWARM_GIT_DEPTH" not in diff_text and "git" in diff_text and "shim" in diff_text:

@@ -30,13 +30,9 @@ _SHELL_COMMAND = re.compile(
     r"^\s*(?:[-*]\s*)?(?:`)?(?:\$\s*)?"
     r"(?:python(?:3)?|bash|sh|zsh|node|bun|uv\s+run|make|npm|env|command|xargs|cd)\b"
 )
-_PROTECTED_PATH = re.compile(
-    r"(?:^|[\s/])(?:_runtime|_control|\.kems/_scripts)(?:/|\b)"
-)
+_PROTECTED_PATH = re.compile(r"(?:^|[\s/])(?:_runtime|_control|\.kems/_scripts)(?:/|\b)")
 _COMMAND_WRAPPER = re.compile(r"\b(?:env|command|xargs)\b")
-_APP_ROOT_EXECUTION = re.compile(
-    r"^\s*(?:\$\s*)?(?:make|npm|bun)\b|(?:^|\s)\./(?:app|src|bin|scripts)(?:/|\b)"
-)
+_APP_ROOT_EXECUTION = re.compile(r"^\s*(?:\$\s*)?(?:make|npm|bun)\b|(?:^|\s)\./(?:app|src|bin|scripts)(?:/|\b)")
 _CHATGPT_WEB_BINDING = {
     "instruction_file": None,
     "mcp_scope": "public_https_or_secure_tunnel",
@@ -117,9 +113,7 @@ def _instructs_documents_local_execution(text: str) -> bool:
         command = " ".join(fragment.splitlines())
         if _APP_ROOT_EXECUTION.search(command):
             return True
-        if _PROTECTED_PATH.search(command) and (
-            _SHELL_COMMAND.match(command) or _COMMAND_WRAPPER.search(command)
-        ):
+        if _PROTECTED_PATH.search(command) and (_SHELL_COMMAND.match(command) or _COMMAND_WRAPPER.search(command)):
             return True
     return False
 
@@ -156,9 +150,7 @@ def _check_gateway_file(path: Path, domain_id: str, domain_root: Path) -> list[s
     return errors
 
 
-def _validate_capability_routes(
-    routes: dict[str, object], project_registry_path: Path
-) -> list[str]:
+def _validate_capability_routes(routes: dict[str, object], project_registry_path: Path) -> list[str]:
     """Validate that executable capabilities resolve to Workspace-owned sources."""
 
     registry_parent = project_registry_path.parent
@@ -168,12 +160,7 @@ def _validate_capability_routes(
         or registry_parent.parent.name != "_truth"
         or registry_parent.parent.parent.name != ".omo"
     ):
-        return [
-            (
-                "project registry must be Workspace .omo/_truth/registry/"
-                "documents-domain-projects.yaml"
-            )
-        ]
+        return [("project registry must be Workspace .omo/_truth/registry/documents-domain-projects.yaml")]
 
     workspace_root = registry_parent.parents[2]
     try:
@@ -191,41 +178,25 @@ def _validate_capability_routes(
             errors.append(f"capability_routes.{route_id} must be a mapping")
             continue
         if route.get("owner") != expected_owner:
-            errors.append(
-                f"capability_routes.{route_id}.owner must be {expected_owner}"
-            )
+            errors.append(f"capability_routes.{route_id}.owner must be {expected_owner}")
 
         registry_ref = route.get("registry_ref")
         if not isinstance(registry_ref, str) or not registry_ref:
-            errors.append(
-                f"capability_routes.{route_id}.registry_ref must be a "
-                "Workspace-relative path"
-            )
+            errors.append(f"capability_routes.{route_id}.registry_ref must be a Workspace-relative path")
             continue
         candidate = Path(registry_ref)
         if candidate.is_absolute() or ".." in candidate.parts or "://" in registry_ref:
-            errors.append(
-                f"capability_routes.{route_id}.registry_ref must be a "
-                "Workspace-relative path"
-            )
+            errors.append(f"capability_routes.{route_id}.registry_ref must be a Workspace-relative path")
             continue
         try:
             resolved = (resolved_workspace / candidate).resolve(strict=True)
         except OSError:
-            errors.append(
-                f"capability_routes.{route_id}.registry_ref is unavailable: "
-                f"{registry_ref}"
-            )
+            errors.append(f"capability_routes.{route_id}.registry_ref is unavailable: {registry_ref}")
             continue
         if not resolved.is_relative_to(resolved_workspace):
-            errors.append(
-                f"capability_routes.{route_id}.registry_ref must be a "
-                "Workspace-relative path"
-            )
+            errors.append(f"capability_routes.{route_id}.registry_ref must be a Workspace-relative path")
         elif expected_kind == "directory" and not resolved.is_dir():
-            errors.append(
-                f"capability_routes.{route_id}.registry_ref must be a directory"
-            )
+            errors.append(f"capability_routes.{route_id}.registry_ref must be a directory")
         elif expected_kind == "file" and not resolved.is_file():
             errors.append(f"capability_routes.{route_id}.registry_ref must be a file")
     return errors
@@ -250,14 +221,9 @@ def _validate_client_profile_contract(
     errors: list[str] = []
     for field, expected in expected_contract.items():
         if contract.get(field) != expected:
-            errors.append(
-                f"clients.{client_id}.profile_contract.{field} must be {expected}"
-            )
+            errors.append(f"clients.{client_id}.profile_contract.{field} must be {expected}")
     if contract.get("exclusive_mcp_server") != workspace_mcp.get("server"):
-        errors.append(
-            f"clients.{client_id}.profile_contract.exclusive_mcp_server must match "
-            "workspace_mcp.server"
-        )
+        errors.append(f"clients.{client_id}.profile_contract.exclusive_mcp_server must match workspace_mcp.server")
 
     errors.extend(
         _validate_client_generator_ref(
@@ -295,10 +261,7 @@ def _validate_zcode_config_contract(
             required = str(expected).lower() if isinstance(expected, bool) else expected
             errors.append(f"clients.zcode.config_contract.{field} must be {required}")
     if contract.get("managed_mcp_server") != workspace_mcp.get("server"):
-        errors.append(
-            "clients.zcode.config_contract.managed_mcp_server must match "
-            "workspace_mcp.server"
-        )
+        errors.append("clients.zcode.config_contract.managed_mcp_server must match workspace_mcp.server")
 
     generator_errors = _validate_client_generator_ref(
         "zcode",
@@ -332,10 +295,7 @@ def _validate_client_generator_ref(
         resolved_generator = (resolved_workspace / candidate).resolve(strict=True)
     except OSError:
         return [f"{prefix} is unavailable: {generator_ref}"]
-    if (
-        not resolved_generator.is_relative_to(resolved_workspace)
-        or not resolved_generator.is_file()
-    ):
+    if not resolved_generator.is_relative_to(resolved_workspace) or not resolved_generator.is_file():
         return [f"{prefix} must be a Workspace-relative file"]
     return []
 
@@ -388,9 +348,7 @@ def check_domain_projects(
         workspace_mcp = {}
         errors.append("workspace_mcp must be a mapping")
     read_tools = workspace_mcp.get("read_tools")
-    if not isinstance(read_tools, list) or not all(
-        isinstance(item, str) and item for item in read_tools
-    ):
+    if not isinstance(read_tools, list) or not all(isinstance(item, str) and item for item in read_tools):
         read_tool_set: set[str] = set()
         errors.append("workspace_mcp.read_tools must be a string list")
     else:
@@ -436,15 +394,11 @@ def check_domain_projects(
             errors.append("clients.chatgpt_web must be a mapping")
         else:
             for field, expected in _CHATGPT_WEB_BINDING.items():
-                if field not in chatgpt_web or not _matches_chatgpt_binding(
-                    chatgpt_web[field], expected
-                ):
+                if field not in chatgpt_web or not _matches_chatgpt_binding(chatgpt_web[field], expected):
                     required = "null" if expected is None else str(expected).lower()
                     errors.append(f"clients.chatgpt_web.{field} must be {required}")
             if chatgpt_web.get("tunnel_contract") != _CHATGPT_TUNNEL_CONTRACT:
-                errors.append(
-                    "clients.chatgpt_web.tunnel_contract must match the Workspace contract"
-                )
+                errors.append("clients.chatgpt_web.tunnel_contract must match the Workspace contract")
         instruction_files = {
             instruction_file
             for client in clients.values()
@@ -453,13 +407,10 @@ def check_domain_projects(
             and instruction_file
         }
         unsafe_gateway_files = sorted(
-            filename
-            for filename in instruction_files
-            if not _is_safe_gateway_filename(filename)
+            filename for filename in instruction_files if not _is_safe_gateway_filename(filename)
         )
         errors.extend(
-            f"clients instruction_file must be a safe filename: {filename}"
-            for filename in unsafe_gateway_files
+            f"clients instruction_file must be a safe filename: {filename}" for filename in unsafe_gateway_files
         )
         gateway_files = sorted(instruction_files - set(unsafe_gateway_files))
 
@@ -468,28 +419,18 @@ def check_domain_projects(
             errors.append(f"profiles.{profile_id} must be a mapping")
             continue
         tools = profile.get("allowed_workspace_tools")
-        if not isinstance(tools, list) or not all(
-            isinstance(item, str) and item for item in tools
-        ):
-            errors.append(
-                f"profiles.{profile_id}.allowed_workspace_tools must be a string list"
-            )
+        if not isinstance(tools, list) or not all(isinstance(item, str) and item for item in tools):
+            errors.append(f"profiles.{profile_id}.allowed_workspace_tools must be a string list")
             continue
         unknown_tools = sorted(set(tools) - read_tool_set)
         if unknown_tools:
-            errors.append(
-                f"profiles.{profile_id} references unknown tools: {', '.join(unknown_tools)}"
-            )
+            errors.append(f"profiles.{profile_id} references unknown tools: {', '.join(unknown_tools)}")
         for field in ("skill_route", "workflow_route"):
             route = profile.get(field)
             if route is not None and route not in routes:
-                errors.append(
-                    f"profiles.{profile_id}.{field} references unknown route: {route}"
-                )
+                errors.append(f"profiles.{profile_id}.{field} references unknown route: {route}")
         if profile.get("execution_policy") != "workspace_only":
-            errors.append(
-                f"profiles.{profile_id}.execution_policy must be workspace_only"
-            )
+            errors.append(f"profiles.{profile_id}.execution_policy must be workspace_only")
 
     domains = raw.get("domains")
     project_ids: list[str] = []
@@ -507,9 +448,7 @@ def check_domain_projects(
                 continue
             project_ids.append(domain_id)
             if profile_id not in profiles:
-                errors.append(
-                    f"domain {domain_id} references unknown profile: {profile_id}"
-                )
+                errors.append(f"domain {domain_id} references unknown profile: {profile_id}")
 
     if len(set(project_ids)) != len(project_ids):
         errors.append("domains contains duplicate ids")
@@ -523,17 +462,10 @@ def check_domain_projects(
     errors.extend(validate_runtime_state(raw.get("runtime_state")))
     errors.extend(validate_runtime_jobs(raw.get("runtime_jobs"), project_ids))
 
-    selected_ids = (
-        project_ids if gateway_domain_ids is None else list(gateway_domain_ids)
-    )
+    selected_ids = project_ids if gateway_domain_ids is None else list(gateway_domain_ids)
     if len(set(selected_ids)) != len(selected_ids):
         errors.append("gateway domains contains duplicate ids")
-    if (
-        selected_ids
-        and isinstance(clients, dict)
-        and not gateway_files
-        and not unsafe_gateway_files
-    ):
+    if selected_ids and isinstance(clients, dict) and not gateway_files and not unsafe_gateway_files:
         errors.append("clients must expose at least one instruction file")
     for domain_id in sorted(set(selected_ids)):
         if domain_id not in manifest_ids or domain_id not in project_ids:
@@ -544,9 +476,7 @@ def check_domain_projects(
             errors.append(f"gateway domain root is unavailable: {domain_id}")
             continue
         for filename in gateway_files:
-            errors.extend(
-                _check_gateway_file(domain_root / filename, domain_id, domain_root)
-            )
+            errors.extend(_check_gateway_file(domain_root / filename, domain_id, domain_root))
 
     report: dict[str, object] = {
         "ok": not errors,
@@ -574,11 +504,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(report, ensure_ascii=False))
     else:
-        print(
-            "documents domain projects: ok"
-            if report["ok"]
-            else "documents domain projects: failed"
-        )
+        print("documents domain projects: ok" if report["ok"] else "documents domain projects: failed")
         for error in report["errors"]:
             print(f"- {error}")
     return 0 if report["ok"] else 1

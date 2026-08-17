@@ -10,6 +10,7 @@
   python3 bin/ssot/mos-dual-stack-consistency.py --query "关键词"    # 指定 query
   python3 bin/ssot/mos-dual-stack-consistency.py --weekly          # 生成周报 (含 8 周滚动)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -56,8 +57,17 @@ def _run_mos_recall(query: str) -> dict:
     """调 MOS recall via cockpit memory CLI (--json)."""
     proc = subprocess.run(
         [
-            "uv", "run", "--project", str(WORKSPACE_ROOT / "projects/cockpit"),
-            "python", "-m", "cockpit.cli", "memory", "recall", query, "--json",
+            "uv",
+            "run",
+            "--project",
+            str(WORKSPACE_ROOT / "projects/cockpit"),
+            "python",
+            "-m",
+            "cockpit.cli",
+            "memory",
+            "recall",
+            query,
+            "--json",
         ],
         capture_output=True,
         text=True,
@@ -68,7 +78,11 @@ def _run_mos_recall(query: str) -> dict:
     try:
         payload = json.loads(proc.stdout or "{}")
     except json.JSONDecodeError:
-        return {"ok": False, "error": proc.stdout[-200:] or proc.stderr[-200:], "hits": []}
+        return {
+            "ok": False,
+            "error": proc.stdout[-200:] or proc.stderr[-200:],
+            "hits": [],
+        }
     hits = payload.get("hits") or []
     return {
         "ok": payload.get("ok", True),
@@ -82,8 +96,15 @@ def _run_kos_search(query: str) -> dict:
     """调 KOS search via cockpit `search` 命令 (降级路径, 返回结果标题/来源)."""
     proc = subprocess.run(
         [
-            "uv", "run", "--project", str(WORKSPACE_ROOT / "projects/cockpit"),
-            "python", "-m", "cockpit.cli", "search", query,
+            "uv",
+            "run",
+            "--project",
+            str(WORKSPACE_ROOT / "projects/cockpit"),
+            "python",
+            "-m",
+            "cockpit.cli",
+            "search",
+            query,
         ],
         capture_output=True,
         text=True,
@@ -99,7 +120,11 @@ def _run_kos_search(query: str) -> dict:
         if not line or line.startswith(skip_prefixes):
             continue
         ids.append(line)
-    return {"ok": proc.returncode == 0 or bool(ids), "count": len(ids), "ids": sorted(set(ids))}
+    return {
+        "ok": proc.returncode == 0 or bool(ids),
+        "count": len(ids),
+        "ids": sorted(set(ids)),
+    }
 
 
 def _jaccard(a: list[str], b: list[str]) -> float:

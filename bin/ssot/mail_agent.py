@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from _shared import ROOT, utc_now
+from _shared import utc_now
 
 sys.path.insert(0, str(Path(__file__).parent))
 from _llm_helper import llm_ask
@@ -34,14 +34,24 @@ def classify_mail(mail: Mail) -> dict[str, Any]:
     )
     response = llm_ask(prompt, timeout=30.0)
     if not response:
-        return {"category": "未分类", "priority": "low", "summary": mail.subject[:60], "action_needed": ""}
+        return {
+            "category": "未分类",
+            "priority": "low",
+            "summary": mail.subject[:60],
+            "action_needed": "",
+        }
     m = re.search(r'\{[^{}]*"category"[^{}]*\}', response)
     if m:
         try:
             return json.loads(m.group())
         except Exception:
             pass
-    return {"category": "未分类", "priority": "low", "summary": response[:100], "action_needed": ""}
+    return {
+        "category": "未分类",
+        "priority": "low",
+        "summary": response[:100],
+        "action_needed": "",
+    }
 
 
 def extract_task(mail: Mail, classification: dict) -> dict[str, Any] | None:
@@ -54,7 +64,7 @@ def extract_task(mail: Mail, classification: dict) -> dict[str, Any] | None:
     response = llm_ask(prompt, timeout=30.0)
     if not response:
         return None
-    m = re.search(r'\{.*\}', response, re.DOTALL)
+    m = re.search(r"\{.*\}", response, re.DOTALL)
     if m:
         try:
             return json.loads(m.group())
@@ -69,7 +79,13 @@ def generate_briefing(mails: list[Mail], classifications: list[dict]) -> str:
     for mail, cls in zip(mails, classifications):
         by_cat.setdefault(cls.get("category", "未分类"), []).append((mail, cls))
 
-    lines = [f"# 📧 邮件日报 — {date_str}", f"", f"> 生成时间: {utc_now()}", f"> 邮件总数: {len(mails)} | 任务: {len(by_cat.get('任务', []))} | 通知: {len(by_cat.get('通知', []))}", f""]
+    lines = [
+        f"# 📧 邮件日报 — {date_str}",
+        "",
+        f"> 生成时间: {utc_now()}",
+        f"> 邮件总数: {len(mails)} | 任务: {len(by_cat.get('任务', []))} | 通知: {len(by_cat.get('通知', []))}",
+        "",
+    ]
 
     for cat, icon in [("任务", "🔴"), ("通知", "📋"), ("参考", "📎"), ("个人", "👤")]:
         items = by_cat.get(cat, [])
@@ -116,7 +132,18 @@ def main(argv: list[str] | None = None) -> int:
     tasks = [t for t in tasks if t]
 
     if args.json:
-        print(json.dumps({"total": len(mails), "classifications": classifications, "tasks": tasks, "scanned_at": utc_now()}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "total": len(mails),
+                    "classifications": classifications,
+                    "tasks": tasks,
+                    "scanned_at": utc_now(),
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         briefing = generate_briefing(mails, classifications)
         INBOX.mkdir(parents=True, exist_ok=True)

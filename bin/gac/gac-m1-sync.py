@@ -30,6 +30,7 @@ M3_PATH = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m
 # 默认 dry-run 仅生成 actions 列表, 真正的 submodule commit 由维护者走 submodule 自己的 PR.
 # GAC_M1_SYNC_WRITE=1 显式声明 "我知道这是跨边界写, 我接受" 才执行实际写.
 import os
+
 M1_WRITE_ENABLED = os.environ.get("GAC_M1_SYNC_WRITE", "0") == "1"
 
 
@@ -68,9 +69,7 @@ def validate_m3_gacrule() -> list[str]:
         findings.append("M3.GacRule 子类型缺失 (P74 规范化要求)")
         return findings
     if gacrule.get("parent") != "GovernanceElement":
-        findings.append(
-            f"M3.GacRule.parent 期望 'GovernanceElement', 实际 '{gacrule.get('parent')}'"
-        )
+        findings.append(f"M3.GacRule.parent 期望 'GovernanceElement', 实际 '{gacrule.get('parent')}'")
     properties = gacrule.get("properties") or {}
     required_fields = {"rule_id", "dimension", "layer", "check_type", "executor"}
     missing = required_fields - set(properties.keys())
@@ -79,7 +78,7 @@ def validate_m3_gacrule() -> list[str]:
     return findings
 
 
-def _tracked_m1_files() -> list[pathlib.Path]:
+def _tracked_m1_files() -> list[Path]:
     """ADR-0376 G8: 列出 root pointer (git HEAD) 中 tracked 的 GAC-RULE-*.yaml.
 
     并发 agent 在 projects/ecos 工作树里临时生成 untracked M1 / 切分支时,
@@ -90,7 +89,15 @@ def _tracked_m1_files() -> list[pathlib.Path]:
 
     try:
         proc = subprocess.run(
-            ["git", "-C", str(WORKSPACE / "projects/ecos"), "ls-tree", "-r", "--name-only", "HEAD"],
+            [
+                "git",
+                "-C",
+                str(WORKSPACE / "projects/ecos"),
+                "ls-tree",
+                "-r",
+                "--name-only",
+                "HEAD",
+            ],
             capture_output=True,
             text=True,
             check=False,
@@ -118,6 +125,7 @@ def load_m1_nodes(tracked: bool = False) -> dict[str, dict]:
     working tree 中的 untracked/分支切换噪声.
     """
     import subprocess
+
     import yaml
 
     nodes = {}
@@ -125,7 +133,13 @@ def load_m1_nodes(tracked: bool = False) -> dict[str, dict]:
         candidates = _tracked_m1_files()
         for f in candidates:
             proc = subprocess.run(
-                ["git", "-C", str(WORKSPACE / "projects/ecos"), "show", f"HEAD:{f.relative_to(WORKSPACE / 'projects/ecos')}"],
+                [
+                    "git",
+                    "-C",
+                    str(WORKSPACE / "projects/ecos"),
+                    "show",
+                    f"HEAD:{f.relative_to(WORKSPACE / 'projects/ecos')}",
+                ],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -202,7 +216,11 @@ def rule_to_m1_yaml(rule: dict) -> str:
             "derived_by": "bin/gac/gac-m1-sync.py",
         },
         "state_history": [
-            {"state": lifecycle, "timestamp": f"{created_at}T00:00:00Z", "reason": "M1 实例由 gac-m1-sync.py 从 registry 派生"},
+            {
+                "state": lifecycle,
+                "timestamp": f"{created_at}T00:00:00Z",
+                "reason": "M1 实例由 gac-m1-sync.py 从 registry 派生",
+            },
         ],
     }
 
@@ -245,8 +263,15 @@ def compute_diff(rules: list[dict], m1_nodes: dict[str, dict]) -> dict:
         m1_props = m1_nodes[rid]["data"].get("properties", {})
         # Include target and source reference so moved paths do not leave stale M1 nodes.
         for field in [
-            "dimension", "layer", "check_type", "executor", "lifecycle", "version",
-            "target", "source_ref", "source_type",
+            "dimension",
+            "layer",
+            "check_type",
+            "executor",
+            "lifecycle",
+            "version",
+            "target",
+            "source_ref",
+            "source_type",
         ]:
             # source_type defaults to native in the projection generator.
             reg_val = rule.get(field, "native") if field == "source_type" else rule.get(field)
@@ -301,20 +326,24 @@ def check_cross_schema_drift(rules: list[dict]) -> dict:
                 # Multi-value field (executor), check each
                 for v in value:
                     if v not in valid_set:
-                        drifts.append({
-                            "id": rid,
-                            "field": field,
-                            "value": v,
-                            "valid_options": sorted(valid_set),
-                        })
+                        drifts.append(
+                            {
+                                "id": rid,
+                                "field": field,
+                                "value": v,
+                                "valid_options": sorted(valid_set),
+                            }
+                        )
             else:
                 if value not in valid_set:
-                    drifts.append({
-                        "id": rid,
-                        "field": field,
-                        "value": value,
-                        "valid_options": sorted(valid_set),
-                    })
+                    drifts.append(
+                        {
+                            "id": rid,
+                            "field": field,
+                            "value": value,
+                            "valid_options": sorted(valid_set),
+                        }
+                    )
 
     return {"drifts": drifts, "checked": len(rules)}
 
@@ -417,9 +446,7 @@ def main() -> int:
     print(f"Registry 规则数: {len(rules)}")
     print(f"M1 实例数: {len(m1_nodes)}")
 
-    total_drift = (
-        len(diff["missing_in_m1"]) + len(diff["orphan_in_m1"]) + len(diff["stale"])
-    )
+    total_drift = len(diff["missing_in_m1"]) + len(diff["orphan_in_m1"]) + len(diff["stale"])
 
     schema_drift_report = check_cross_schema_drift(rules)
     schema_drifts = schema_drift_report.get("drifts", [])
@@ -428,7 +455,9 @@ def main() -> int:
         print(f"\n  ⚠️  Schema enum drift (ADR-0127 Finding 5.1): {len(schema_drifts)} 处")
         for d in schema_drifts[:10]:
             opts = ", ".join(d.get("valid_options", [])[:5])
-            print(f"    - {d['id']}.{d['field']}={d['value']!r} 不在 enum [{opts}{'...' if len(d.get('valid_options', [])) > 5 else ''}]")
+            print(
+                f"    - {d['id']}.{d['field']}={d['value']!r} 不在 enum [{opts}{'...' if len(d.get('valid_options', [])) > 5 else ''}]"
+            )
         if len(schema_drifts) > 10:
             print(f"    ... ({len(schema_drifts) - 10} more)")
 

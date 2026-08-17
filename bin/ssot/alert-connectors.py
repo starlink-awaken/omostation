@@ -33,6 +33,7 @@ EVENTS_SCRIPT = WORKSPACE / "bin" / "ssot" / "observability-events.py"
 def _load_channels() -> list[dict[str, Any]]:
     try:
         import yaml
+
         docs = [d for d in yaml.safe_load_all(CHANNELS_REGISTRY.read_text(encoding="utf-8")) if d]
         return (docs[-1] if docs else {}).get("channels") or []
     except (OSError, ImportError, yaml.YAMLError):
@@ -42,7 +43,7 @@ def _load_channels() -> list[dict[str, Any]]:
 def _resolve_url(url_ref: str) -> str:
     """凭据 opaque 引用 → 环境变量 (fabric secret_policy: credential_ref_only)."""
     if url_ref.startswith("env://"):
-        return os.environ.get(url_ref[len("env://"):], "")
+        return os.environ.get(url_ref[len("env://") :], "")
     return url_ref
 
 
@@ -51,20 +52,35 @@ def _emit_receipt(channel_id: str, provider: str, result_state: str, alert: dict
     if not EVENTS_SCRIPT.exists():
         return
     try:
-        payload = json.dumps({
-            "channel": channel_id, "provider": provider, "result_state": result_state,
-            "alert": alert,
-        }, ensure_ascii=False)
+        payload = json.dumps(
+            {
+                "channel": channel_id,
+                "provider": provider,
+                "result_state": result_state,
+                "alert": alert,
+            },
+            ensure_ascii=False,
+        )
         event_type = "governance:alert_delivered" if result_state == "delivered" else "governance:alert_delivery_failed"
         subprocess_run = [
-            "python3", str(EVENTS_SCRIPT), "emit",
-            "--domain", "governance", "--type", event_type,
-            "--severity", "info" if result_state == "delivered" else "warning",
-            "--source", f"alert-connector:{provider}", "--payload", payload,
+            "python3",
+            str(EVENTS_SCRIPT),
+            "emit",
+            "--domain",
+            "governance",
+            "--type",
+            event_type,
+            "--severity",
+            "info" if result_state == "delivered" else "warning",
+            "--source",
+            f"alert-connector:{provider}",
+            "--payload",
+            payload,
         ]
         import subprocess
+
         subprocess.run(subprocess_run, capture_output=True, check=False, timeout=30)
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
 
 
@@ -90,7 +106,10 @@ class AlertConnector(ABC):
             "protocol": self.protocol,
             "capabilities": list(self.capabilities),
             "data_classification": "internal",
-            "provenance": {"source": "alert-connectors.py", "observed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())},
+            "provenance": {
+                "source": "alert-connectors.py",
+                "observed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            },
             "lifecycle": "active",
             "health": self.health_probe(),
             "owner": self.owner,
@@ -103,8 +122,19 @@ class AlertConnector(ABC):
         """只读探活: 仅检查 URL 已配置 (不发请求)."""
         url = _resolve_url(self.url_ref)
         if not url:
-            return {"status": "unhealthy", "source": "alert-connectors", "observed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "latency_ms": 0, "reason": "url not configured"}
-        return {"status": "healthy", "source": "alert-connectors", "observed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "latency_ms": 0}
+            return {
+                "status": "unhealthy",
+                "source": "alert-connectors",
+                "observed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "latency_ms": 0,
+                "reason": "url not configured",
+            }
+        return {
+            "status": "healthy",
+            "source": "alert-connectors",
+            "observed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "latency_ms": 0,
+        }
 
     @abstractmethod
     def deliver(self, alert: dict[str, Any]) -> dict[str, Any]:
@@ -113,44 +143,74 @@ class AlertConnector(ABC):
     def _post(self, payload: dict[str, Any], timeout: int = 10) -> dict[str, Any]:
         url = _resolve_url(self.url_ref)
         if not url:
-            return {"result_state": "failed", "receipt_id": f"rcpt_{int(time.time())}", "error": "url not configured", "provider": self.provider}
+            return {
+                "result_state": "failed",
+                "receipt_id": f"rcpt_{int(time.time())}",
+                "error": "url not configured",
+                "provider": self.provider,
+            }
         try:
             data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"}, method="POST")
+            req = urllib.request.Request(
+                url,
+                data=data,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 resp.read()
-            return {"result_state": "delivered", "receipt_id": f"rcpt_{int(time.time())}", "provider": self.provider, "http_status": resp.status}
-        except Exception as exc:  # noqa: BLE001
-            return {"result_state": "failed", "receipt_id": f"rcpt_{int(time.time())}", "error": str(exc)[:160], "provider": self.provider}
+            return {
+                "result_state": "delivered",
+                "receipt_id": f"rcpt_{int(time.time())}",
+                "provider": self.provider,
+                "http_status": resp.status,
+            }
+        except Exception as exc:
+            return {
+                "result_state": "failed",
+                "receipt_id": f"rcpt_{int(time.time())}",
+                "error": str(exc)[:160],
+                "provider": self.provider,
+            }
 
 
 class SlackWebhookConnector(AlertConnector):
     provider = "slack"
 
     def deliver(self, alert: dict[str, Any]) -> dict[str, Any]:
-        return self._post({
-            "text": f"[{alert.get('severity', 'info').upper()}] {alert.get('title', 'alert')}\n{alert.get('body', '')}",
-        })
+        return self._post(
+            {
+                "text": f"[{alert.get('severity', 'info').upper()}] {alert.get('title', 'alert')}\n{alert.get('body', '')}",
+            }
+        )
 
 
 class FeishuWebhookConnector(AlertConnector):
     provider = "feishu"
 
     def deliver(self, alert: dict[str, Any]) -> dict[str, Any]:
-        return self._post({
-            "msg_type": "text",
-            "content": {"text": f"[{alert.get('severity', 'info').upper()}] {alert.get('title', 'alert')}\n{alert.get('body', '')}"},
-        })
+        return self._post(
+            {
+                "msg_type": "text",
+                "content": {
+                    "text": f"[{alert.get('severity', 'info').upper()}] {alert.get('title', 'alert')}\n{alert.get('body', '')}"
+                },
+            }
+        )
 
 
 class WeComWebhookConnector(AlertConnector):
     provider = "wecom"
 
     def deliver(self, alert: dict[str, Any]) -> dict[str, Any]:
-        return self._post({
-            "msgtype": "text",
-            "text": {"content": f"[{alert.get('severity', 'info').upper()}] {alert.get('title', 'alert')}\n{alert.get('body', '')}"},
-        })
+        return self._post(
+            {
+                "msgtype": "text",
+                "text": {
+                    "content": f"[{alert.get('severity', 'info').upper()}] {alert.get('title', 'alert')}\n{alert.get('body', '')}"
+                },
+            }
+        )
 
 
 class GenericWebhookConnector(AlertConnector):
@@ -176,7 +236,10 @@ def build_connectors() -> list[AlertConnector]:
             continue
         provider = str(ch.get("provider", "generic"))
         cls = _CONNECTORS.get(provider, GenericWebhookConnector)
-        conn = cls(channel_id=str(ch.get("id", "alert-unknown")), url_ref=str(ch.get("url_ref", "")))
+        conn = cls(
+            channel_id=str(ch.get("id", "alert-unknown")),
+            url_ref=str(ch.get("url_ref", "")),
+        )
         out.append(conn)
     return out
 
@@ -192,15 +255,20 @@ def route_connector(severity: str, domain: str = "governance") -> AlertConnector
         if severity in sev_list and (not dom_list or domain in dom_list):
             provider = str(ch.get("provider", "generic"))
             cls = _CONNECTORS.get(provider, GenericWebhookConnector)
-            return cls(channel_id=str(ch.get("id", "alert-unknown")), url_ref=str(ch.get("url_ref", "")))
+            return cls(
+                channel_id=str(ch.get("id", "alert-unknown")),
+                url_ref=str(ch.get("url_ref", "")),
+            )
     return None
 
 
 def cmd_list() -> int:
     for ch in _load_channels():
         url = _resolve_url(str(ch.get("url_ref", "")))
-        print(f"{ch.get('id', '?'):<20} {ch.get('provider', '?'):<10} "
-              f"routes={ch.get('routes', {})} url_configured={'yes' if url else 'NO'}")
+        print(
+            f"{ch.get('id', '?'):<20} {ch.get('provider', '?'):<10} "
+            f"routes={ch.get('routes', {})} url_configured={'yes' if url else 'NO'}"
+        )
     return 0
 
 
@@ -226,11 +294,16 @@ def cmd_send(args: argparse.Namespace) -> int:
     else:
         conn = route_connector(args.severity, args.domain)
     if conn is None:
-        print(f"❌ no channel for severity={args.severity} domain={args.domain}", file=sys.stderr)
+        print(
+            f"❌ no channel for severity={args.severity} domain={args.domain}",
+            file=sys.stderr,
+        )
         return 1
     receipt = conn.deliver(alert)
-    print(f"  {conn.channel_id} ({conn.provider}): {receipt.get('result_state')} "
-          f"rcpt={receipt.get('receipt_id', '?')} {receipt.get('error', '')}")
+    print(
+        f"  {conn.channel_id} ({conn.provider}): {receipt.get('result_state')} "
+        f"rcpt={receipt.get('receipt_id', '?')} {receipt.get('error', '')}"
+    )
     _emit_receipt(conn.channel_id, conn.provider, receipt.get("result_state", "failed"), alert)
     return 0 if receipt.get("result_state") == "delivered" else 1
 
@@ -242,7 +315,11 @@ def main() -> int:
     sub.add_parser("health").set_defaults(func=lambda _a: cmd_health())
     send = sub.add_parser("send")
     send.add_argument("--channel")
-    send.add_argument("--severity", default="warning", choices=["info", "warning", "degraded", "critical"])
+    send.add_argument(
+        "--severity",
+        default="warning",
+        choices=["info", "warning", "degraded", "critical"],
+    )
     send.add_argument("--domain", default="governance")
     send.add_argument("--title", required=True)
     send.add_argument("--body", default="")

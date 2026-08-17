@@ -46,14 +46,22 @@ def _dispatch_change(action_type: str, target: str | None, worktree: Path) -> di
     if action_type == "rule_downgrade":
         proc = subprocess.run(
             ["python3", "bin/ssot/rule-adapt.py", "--apply", "--confirm", "--json"],
-            capture_output=True, text=True, timeout=30, check=False, cwd=wt_str,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+            cwd=wt_str,
         )
         results["changes"].append(f"rule-adapt --apply: rc={proc.returncode}")
 
     elif action_type == "adr_draft":
         proc = subprocess.run(
             ["python3", "bin/ssot/proposal-to-adr.py"],
-            capture_output=True, text=True, timeout=15, check=False, cwd=wt_str,
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
+            cwd=wt_str,
         )
         results["changes"].append(f"proposal-to-adr: rc={proc.returncode}")
 
@@ -93,7 +101,10 @@ def execute_in_worktree(
     if tier == "blacklist":
         return {"status": "blocked", "reason": f"{action_type} is blacklisted"}
     if tier == "unknown":
-        return {"status": "blocked", "reason": f"{action_type} not in permission matrix"}
+        return {
+            "status": "blocked",
+            "reason": f"{action_type} not in permission matrix",
+        }
 
     if dry_run:
         return {
@@ -108,7 +119,11 @@ def execute_in_worktree(
     session = f"autoloop-{action_type}-{int(time.time())}"
     claim = subprocess.run(
         ["bash", str(GAC_WORKTREE), "claim", session],
-        capture_output=True, text=True, timeout=60, check=False, cwd=str(root),
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+        cwd=str(root),
     )
     if claim.returncode != 0:
         return {"status": "error", "step": "claim", "stderr": claim.stderr[-200:]}
@@ -123,7 +138,11 @@ def execute_in_worktree(
     # 4. Verify (gac-local-gate)
     verify = subprocess.run(
         ["make", "gac-local-gate"],
-        capture_output=True, text=True, timeout=120, check=False, cwd=str(worktree),
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+        cwd=str(worktree),
     )
 
     # 5. Submit PR (only if verify passes)
@@ -131,7 +150,11 @@ def execute_in_worktree(
     if verify.returncode == 0:
         submit = subprocess.run(
             ["bash", str(GAC_WORKTREE), "submit", session],
-            capture_output=True, text=True, timeout=60, check=False, cwd=str(root),
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+            cwd=str(root),
         )
         pr_submitted = submit.returncode == 0
 

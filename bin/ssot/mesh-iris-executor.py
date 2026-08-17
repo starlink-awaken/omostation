@@ -31,7 +31,7 @@ import json
 import subprocess
 import sys
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -75,7 +75,7 @@ def seed_workflow_run(
                     只发 Dispatched→Started (需 admission_id 来自 packet).
     """
     step_run_id = f"{run_id}:execute"
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if not skip_seed:
         admission_id = f"{run_id}:admission"
         store.append(
@@ -83,7 +83,10 @@ def seed_workflow_run(
                 "WorkflowRequested",
                 run_id,
                 producer="mesh-iris-executor",
-                payload={"capability_refs": [capability], "scene_id": "document-review"},
+                payload={
+                    "capability_refs": [capability],
+                    "scene_id": "document-review",
+                },
             )
         )
         admission = {
@@ -169,7 +172,7 @@ def record_iris_evidence(
     items,
 ):
     """WorkflowSucceeded + EvidenceRecorded (iris receipt)."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     store.append(
         new_event(
             "WorkflowSucceeded",
@@ -178,9 +181,7 @@ def record_iris_evidence(
             payload={"step_run_id": step_run_id, "admission_id": admission_id},
         )
     )
-    output_digest = hashlib.sha256(
-        json.dumps([i["id"] for i in items]).encode()
-    ).hexdigest()
+    output_digest = hashlib.sha256(json.dumps([i["id"] for i in items]).encode()).hexdigest()
     receipt = {
         "resource_id": f"iris:{connector}",
         "receipt_id": f"{run_id}:exec",
@@ -203,9 +204,7 @@ def record_iris_evidence(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="mesh worker 执行 iris connector (N1+N9 P0)"
-    )
+    parser = argparse.ArgumentParser(description="mesh worker 执行 iris connector (N1+N9 P0)")
     parser.add_argument(
         "--connector",
         required=True,
@@ -213,9 +212,7 @@ def main() -> int:
     )
     parser.add_argument("--omo-dir", default=".omo", help="omo 目录 (默认 .omo)")
     parser.add_argument("--limit", type=int, default=5, help="list_items limit")
-    parser.add_argument(
-        "--dry-run", action="store_true", help="用临时 omo_dir, 不污染生产"
-    )
+    parser.add_argument("--dry-run", action="store_true", help="用临时 omo_dir, 不污染生产")
     parser.add_argument(
         "--run-id",
         help="复用 packet 的 workflow_run_id (配合 --skip-seed, 不自 seed 新 run)",
@@ -240,9 +237,7 @@ def main() -> int:
         omo_dir = Path(args.omo_dir).resolve()
 
     store = WorkflowMeshStore(omo_dir)
-    run_id = args.run_id or (
-        f"iris-{args.connector}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
-    )
+    run_id = args.run_id or (f"iris-{args.connector}-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}")
 
     print(f"🚀 mesh-iris-executor: connector={args.connector} run_id={run_id}")
     step_run_id, admission_id = seed_workflow_run(
@@ -278,9 +273,7 @@ def main() -> int:
     print("✅ WorkflowSucceeded + EvidenceRecorded")
     print(f"   evidence_id: {result.get('evidence_id')}")
     print(f"   events.jsonl: {len(events_f.read_text().splitlines())} 事件")
-    print(
-        f"   output_digest: {hashlib.sha256(json.dumps([i['id'] for i in items]).encode()).hexdigest()[:16]}..."
-    )
+    print(f"   output_digest: {hashlib.sha256(json.dumps([i['id'] for i in items]).encode()).hexdigest()[:16]}...")
     return 0
 
 

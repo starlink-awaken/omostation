@@ -50,10 +50,15 @@ def missing_concepts(candidates: list[dict], existing: dict) -> list[str]:
 
 def suggestions(missing: list[str]) -> list[dict]:
     """缺口 → 并入建议（generalize 到 ConstraintL0 / Specification）。"""
-    return [{"concept": name, "action": "generalize",
-             "target": "ConstraintL0",
-             "note": f"新增 M2 概念 {name}（generalize 到 ConstraintL0）"}
-            for name in missing]
+    return [
+        {
+            "concept": name,
+            "action": "generalize",
+            "target": "ConstraintL0",
+            "note": f"新增 M2 概念 {name}（generalize 到 ConstraintL0）",
+        }
+        for name in missing
+    ]
 
 
 def reconcile(candidates: list[dict], existing: dict) -> str:
@@ -76,8 +81,10 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="JSON 输出缺口清单")
     args = ap.parse_args()
     if not CANDIDATES.exists():
-        print("[WARN] 候选概念未生成，先跑: python3 bin/ssot/onto_ekg_bootstrap.py --emit",
-              file=sys.stderr)
+        print(
+            "[WARN] 候选概念未生成，先跑: python3 bin/ssot/onto_ekg_bootstrap.py --emit",
+            file=sys.stderr,
+        )
         return 1
     candidates = yaml.safe_load(CANDIDATES.read_text(encoding="utf-8")) or []
     existing = yaml.safe_load(ONTOLOGY.read_text(encoding="utf-8")).get("m2_ontology", {})

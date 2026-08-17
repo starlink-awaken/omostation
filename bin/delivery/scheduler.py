@@ -3,14 +3,16 @@
 Measures schedule success rate: tasks assigned to a healthy agent that can
 complete without fault. Target > 99% (BET-7e074).
 """
+
 from __future__ import annotations
 
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
-from agent_registry import AgentRegistry, AgentRecord
+from agent_registry import AgentRecord, AgentRegistry
 
 
 @dataclass
@@ -43,11 +45,7 @@ class TaskScheduler:
 
     def schedule_one(self, task: Task) -> ScheduleResult:
         t0 = time.perf_counter()
-        candidates = [
-            a
-            for a in self.registry.list_agents(role_id=task.role_id, healthy_only=True)
-            if a.can_accept()
-        ]
+        candidates = [a for a in self.registry.list_agents(role_id=task.role_id, healthy_only=True) if a.can_accept()]
         # least-loaded first
         candidates.sort(key=lambda a: (a.inflight, a.agent_id))
         if not candidates:
@@ -111,14 +109,11 @@ def measure_schedule_success_rate(
         reg.mark_unhealthy(aid)
 
     sched = TaskScheduler(reg)
-    tasks = [
-        Task(task_id=f"t-{k}", role_id="implementer", payload={"k": k})
-        for k in range(n_tasks)
-    ]
+    tasks = [Task(task_id=f"t-{k}", role_id="implementer", payload={"k": k}) for k in range(n_tasks)]
     results = sched.schedule_batch(tasks)
     ok = sum(1 for r in results if r.success)
     rate = ok / n_tasks if n_tasks else 0.0
-    from caliber import stamp_physical_goal  # noqa: PLC0415
+    from caliber import stamp_physical_goal
 
     return stamp_physical_goal(
         {

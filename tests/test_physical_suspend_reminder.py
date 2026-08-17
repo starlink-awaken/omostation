@@ -1,10 +1,11 @@
 """A2 — physical-hosts weekly reaffirmation includes suspend day-count."""
+
 from __future__ import annotations
 
 import importlib.util
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,7 +27,7 @@ def test_suspend_day_count_and_reaffirmation_line():
     gb = _load_generate_brief()
     with tempfile.TemporaryDirectory() as td:
         card = Path(td) / "needs-human-p80-physical-hosts.yaml"
-        created = datetime(2026, 7, 17, tzinfo=timezone.utc)
+        created = datetime(2026, 7, 17, tzinfo=UTC)
         card.write_text(
             "---\n"
             "id: NEEDS-HUMAN-P80-PHYSICAL-HOSTS\n"
@@ -35,7 +36,7 @@ def test_suspend_day_count_and_reaffirmation_line():
             "title: physical hosts\n",
             encoding="utf-8",
         )
-        now = datetime(2026, 7, 24, 12, 0, tzinfo=timezone.utc)
+        now = datetime(2026, 7, 24, 12, 0, tzinfo=UTC)
         days = gb.physical_hosts_suspend_day_count(card, now=now)
         assert days == 7
         line = gb.physical_hosts_weekly_reaffirmation(now=now, card_path=card)

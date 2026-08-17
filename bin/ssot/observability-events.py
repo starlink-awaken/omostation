@@ -19,7 +19,6 @@ import argparse
 import fcntl
 import json
 import os
-import re
 import subprocess
 import sys
 import time
@@ -33,7 +32,15 @@ REGISTRY = ROOT / ".omo" / "_truth" / "registry" / "observability-events.yaml"
 ADAPTER_STATE_DIR = ROOT / ".omo" / "state" / "observability-adapters"
 METRICS_STORE = ROOT / ".omo" / "state" / "metrics-store.jsonl"
 
-VALID_DOMAINS = {"runtime", "governance", "swarm", "perception", "scene", "knowledge", "debt"}
+VALID_DOMAINS = {
+    "runtime",
+    "governance",
+    "swarm",
+    "perception",
+    "scene",
+    "knowledge",
+    "debt",
+}
 VALID_SEVERITIES = {"info", "warning", "degraded", "critical", "recovered"}
 
 
@@ -90,7 +97,10 @@ def append_metrics_store(event: dict[str, Any]) -> None:
             "check": event["type"],
             "ok": event["severity"] not in {"critical", "degraded"},
             "duration_ms": 0,
-            "reason": json.dumps({"domain": event["domain"], "source": event["source"]}, ensure_ascii=False),
+            "reason": json.dumps(
+                {"domain": event["domain"], "source": event["source"]},
+                ensure_ascii=False,
+            ),
         }
         with open(METRICS_STORE, "a", encoding="utf-8") as f:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
@@ -101,10 +111,16 @@ def append_metrics_store(event: dict[str, Any]) -> None:
 # ── 命令实现 ──────────────────────────────────────────────────────────
 def cmd_emit(args: argparse.Namespace) -> int:
     if args.domain not in VALID_DOMAINS:
-        print(f"❌ invalid domain: {args.domain} (valid: {sorted(VALID_DOMAINS)})", file=sys.stderr)
+        print(
+            f"❌ invalid domain: {args.domain} (valid: {sorted(VALID_DOMAINS)})",
+            file=sys.stderr,
+        )
         return 1
     if args.severity not in VALID_SEVERITIES:
-        print(f"❌ invalid severity: {args.severity} (valid: {sorted(VALID_SEVERITIES)})", file=sys.stderr)
+        print(
+            f"❌ invalid severity: {args.severity} (valid: {sorted(VALID_SEVERITIES)})",
+            file=sys.stderr,
+        )
         return 1
     payload: dict[str, Any] = {}
     if args.payload:
@@ -145,10 +161,14 @@ def cmd_search(args: argparse.Namespace) -> int:
         events = [e for e in events if (e.get("ts") or "") >= args.since]
     print(f"Found {len(events)} event(s)")
     for e in events:
-        print(f"  [{e.get('ts', '?')}] {e.get('domain', '?')}:{e.get('type', '?')} "
-              f"sev={e.get('severity', '?')} src={e.get('source', '?')} id={e.get('id', '?')}")
+        print(
+            f"  [{e.get('ts', '?')}] {e.get('domain', '?')}:{e.get('type', '?')} "
+            f"sev={e.get('severity', '?')} src={e.get('source', '?')} id={e.get('id', '?')}"
+        )
         if args.verbose:
-            print(f"      trace_id={e.get('trace_id')} payload={json.dumps(e.get('payload', {}), ensure_ascii=False)[:200]}")
+            print(
+                f"      trace_id={e.get('trace_id')} payload={json.dumps(e.get('payload', {}), ensure_ascii=False)[:200]}"
+            )
     return 0
 
 
@@ -158,8 +178,7 @@ def cmd_trace(args: argparse.Namespace) -> int:
     if not events:
         print(f"no events found for trace_id={args.trace_id}")
         return 1
-    print(f"trace {args.trace_id}: {len(events)} event(s) across "
-          f"{sorted({e.get('domain', '?') for e in events})}")
+    print(f"trace {args.trace_id}: {len(events)} event(s) across {sorted({e.get('domain', '?') for e in events})}")
     for e in sorted(events, key=lambda x: x.get("ts", "")):
         print(f"  [{e.get('ts', '?')}] {e.get('domain')}:{e.get('type')} ({e.get('severity')}) <- {e.get('source')}")
         if args.verbose:
@@ -171,6 +190,7 @@ def cmd_trace(args: argparse.Namespace) -> int:
 def _load_registry() -> dict[str, Any]:
     try:
         import yaml
+
         # Frontmatter'd yaml: safe_load_all 取正文 (最后非 None 文档)
         docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
         return docs[-1] if docs else {}
@@ -191,13 +211,28 @@ def _save_adapter_offset(channel: str, offset: int) -> None:
     (ADAPTER_STATE_DIR / f"{channel}.offset").write_text(str(offset))
 
 
-def _emit_from(channel: str, domain: str, event_type: str, severity: str,
-               source: str, payload: dict[str, Any], trace_id: str | None = None) -> None:
-    append_event({
-        "id": _new_id(), "ts": _utcnow(), "domain": domain, "type": event_type,
-        "severity": severity, "source": source, "trace_id": trace_id,
-        "payload": payload, "schema_version": 1,
-    })
+def _emit_from(
+    channel: str,
+    domain: str,
+    event_type: str,
+    severity: str,
+    source: str,
+    payload: dict[str, Any],
+    trace_id: str | None = None,
+) -> None:
+    append_event(
+        {
+            "id": _new_id(),
+            "ts": _utcnow(),
+            "domain": domain,
+            "type": event_type,
+            "severity": severity,
+            "source": source,
+            "trace_id": trace_id,
+            "payload": payload,
+            "schema_version": 1,
+        }
+    )
 
 
 def _adapt_swarm(channel_cfg: dict[str, Any]) -> int:
@@ -214,11 +249,19 @@ def _adapt_swarm(channel_cfg: dict[str, Any]) -> int:
             rec = json.loads(line)
         except json.JSONDecodeError:
             continue
-        _emit_from("swarm", "swarm", f"swarm:{rec.get('event_type', 'event')}",
-                   "info", rec.get("sender_id", "swarm"),
-                   {"channel": rec.get("channel"), "content": str(rec.get("content", ""))[:200],
-                    "target_agent_id": rec.get("target_agent_id")},
-                   rec.get("trace_id"))
+        _emit_from(
+            "swarm",
+            "swarm",
+            f"swarm:{rec.get('event_type', 'event')}",
+            "info",
+            rec.get("sender_id", "swarm"),
+            {
+                "channel": rec.get("channel"),
+                "content": str(rec.get("content", ""))[:200],
+                "target_agent_id": rec.get("target_agent_id"),
+            },
+            rec.get("trace_id"),
+        )
         emitted += 1
     _save_adapter_offset("swarm_broadcast", len(lines))
     return emitted
@@ -239,10 +282,18 @@ def _adapt_gate(channel_cfg: dict[str, Any]) -> int:
         except json.JSONDecodeError:
             continue
         if rec.get("ok") is False:
-            _emit_from("gate", "governance", "governance:gate_failed",
-                       "critical", "gac-local-gate",
-                       {"check": rec.get("check"), "duration_ms": rec.get("duration_ms"),
-                        "reason": str(rec.get("reason", ""))[:300]})
+            _emit_from(
+                "gate",
+                "governance",
+                "governance:gate_failed",
+                "critical",
+                "gac-local-gate",
+                {
+                    "check": rec.get("check"),
+                    "duration_ms": rec.get("duration_ms"),
+                    "reason": str(rec.get("reason", ""))[:300],
+                },
+            )
             emitted += 1
     _save_adapter_offset("gate_result", len(lines))
     return emitted
@@ -259,8 +310,14 @@ def _adapt_debt(channel_cfg: dict[str, Any]) -> int:
         return 0
     emitted = 0
     for name in names[seen:]:
-        _emit_from("debt", "debt", "debt:opened", "warning", "debt-ledger",
-                   {"debt_id": name.rsplit(".", 1)[0]})
+        _emit_from(
+            "debt",
+            "debt",
+            "debt:opened",
+            "warning",
+            "debt-ledger",
+            {"debt_id": name.rsplit(".", 1)[0]},
+        )
         emitted += 1
     _save_adapter_offset("debt_ledger", len(names))
     return emitted
@@ -273,30 +330,34 @@ def _adapt_health(channel_cfg: dict[str, Any]) -> int:
         return 0
     try:
         import yaml
+
         health = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     except (OSError, ImportError):
         return 0
     score = health.get("health_score")
     if score is None:
         return 0
-    _emit_from("health", "governance", "governance:health_score",
-               "degraded" if (isinstance(score, (int, float)) and score < 70) else "info",
-               "compass_radar",
-               {"health_score": score, "source": health.get("source")})
+    _emit_from(
+        "health",
+        "governance",
+        "governance:health_score",
+        "degraded" if (isinstance(score, (int, float)) and score < 70) else "info",
+        "compass_radar",
+        {"health_score": score, "source": health.get("source")},
+    )
     return 1
 
 
 def cmd_adapters(args: argparse.Namespace) -> int:
     reg = _load_registry()
-    adapters = (reg.get("adapters") or [])
+    adapters = reg.get("adapters") or []
     if args.channel:
         adapters = [a for a in adapters if a.get("id") == args.channel]
     if args.action == "status":
         print(f"{'adapter':<20} {'channel':<12} {'enabled':<8} {'offset':<8}")
         for a in adapters:
             off = _adapter_offset(a.get("id", "?"))
-            print(f"{a.get('id', '?'):<20} {a.get('channel', '?'):<12} "
-                  f"{str(a.get('enabled', True)):<8} {off}")
+            print(f"{a.get('id', '?'):<20} {a.get('channel', '?'):<12} {a.get('enabled', True)!s:<8} {off}")
         return 0
     # run
     total = 0
@@ -354,8 +415,11 @@ def main() -> int:
     adapters.set_defaults(func=cmd_adapters)
 
     notify = sub.add_parser("notify", help="告警到人 — 经 channel 连接器发送 (alert-connectors)")
-    notify.add_argument("--severity", default="warning",
-                        choices=["info", "warning", "degraded", "critical"])
+    notify.add_argument(
+        "--severity",
+        default="warning",
+        choices=["info", "warning", "degraded", "critical"],
+    )
     notify.add_argument("--domain", default="governance")
     notify.add_argument("--channel", help="指定 channel id (默认按 severity/domain 路由)")
     notify.add_argument("--title", required=True)
@@ -372,9 +436,19 @@ def cmd_notify(args: argparse.Namespace) -> int:
     if not connectors.exists():
         print("❌ alert-connectors.py not found", file=sys.stderr)
         return 1
-    cmd = ["python3", str(connectors), "send",
-           "--severity", args.severity, "--domain", args.domain,
-           "--title", args.title, "--body", args.body]
+    cmd = [
+        "python3",
+        str(connectors),
+        "send",
+        "--severity",
+        args.severity,
+        "--domain",
+        args.domain,
+        "--title",
+        args.title,
+        "--body",
+        args.body,
+    ]
     if args.channel:
         cmd += ["--channel", args.channel]
     result = subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=30)

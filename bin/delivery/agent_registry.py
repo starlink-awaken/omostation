@@ -3,6 +3,7 @@
 Not a multi-datacenter product; models N logical nodes each holding agents.
 Used to measure schedule success rate > 99% (BET-7e074).
 """
+
 from __future__ import annotations
 
 import time
@@ -69,9 +70,7 @@ class AgentRegistry:
     def mark_unhealthy(self, agent_id: str) -> None:
         self.heartbeat(agent_id, healthy=False)
 
-    def detect_false_death(
-        self, *, now: float | None = None, stale_after_s: float = 30.0
-    ) -> list[str]:
+    def detect_false_death(self, *, now: float | None = None, stale_after_s: float = 30.0) -> list[str]:
         """Mark agents with stale heartbeats as unhealthy; return agent_ids found dead.
 
         Sim false-death detector for Batch1 C1 (multi-process nodes not required —
@@ -85,9 +84,7 @@ class AgentRegistry:
                 dead.append(aid)
         return dead
 
-    def list_agents(
-        self, *, role_id: str | None = None, healthy_only: bool = False
-    ) -> list[AgentRecord]:
+    def list_agents(self, *, role_id: str | None = None, healthy_only: bool = False) -> list[AgentRecord]:
         out = list(self._agents.values())
         if role_id is not None:
             out = [a for a in out if a.role_id == role_id]

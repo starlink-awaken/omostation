@@ -6,11 +6,9 @@ Owner: governance-team
 Trigger: 新增 ADR / 新增审计 / 新增模式
 """
 
-import os
-from pathlib import Path
 import datetime
 from datetime import UTC
-import re
+from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
 WORKSPACE_ROOT = SCRIPT_DIR.parent.parent
@@ -32,9 +30,10 @@ TEMPLATE_HEADER = """# INDEX-KNOWLEDGE.md — 知识资产统一索引
 
 """
 
+
 def scan_knowledge_dir():
     categories = {}
-    
+
     # Scan decisions (ADRs)
     decisions_dir = KNOWLEDGE_DIR / "decisions"
     if decisions_dir.exists():
@@ -42,7 +41,7 @@ def scan_knowledge_dir():
         for f in sorted(decisions_dir.glob("*.md")):
             if f.is_file():
                 categories["adrs"].append(f.name)
-    
+
     # Scan audits
     audits_dir = KNOWLEDGE_DIR / "audits"
     if audits_dir.exists():
@@ -50,7 +49,7 @@ def scan_knowledge_dir():
         for f in sorted(audits_dir.glob("*.md")):
             if f.is_file():
                 categories["audits"].append(f.name)
-    
+
     # Scan patterns
     patterns_dir = KNOWLEDGE_DIR / "patterns"
     if patterns_dir.exists():
@@ -58,7 +57,7 @@ def scan_knowledge_dir():
         for f in sorted(patterns_dir.glob("*.md")):
             if f.is_file():
                 categories["patterns"].append(f.name)
-    
+
     # Scan other dirs
     other_dirs = ["design", "management", "process", "reference", "summaries"]
     for dir_name in other_dirs:
@@ -68,8 +67,9 @@ def scan_knowledge_dir():
             for f in sorted(dir_path.glob("*.md")):
                 if f.is_file():
                     categories[dir_name].append(f.name)
-    
+
     return categories
+
 
 def generate_overview(categories):
     overview = """## 知识资产概览
@@ -87,6 +87,7 @@ def generate_overview(categories):
 """
     return overview
 
+
 def generate_adr_section(adrs):
     # Group ADRs by prefix
     p7x = []
@@ -96,9 +97,15 @@ def generate_adr_section(adrs):
     arch_series = []
     ops_series = []
     other = []
-    
+
     for adr in adrs:
-        if adr.startswith("015") or adr.startswith("016") or adr.startswith("017") or adr.startswith("018") or adr.startswith("019"):
+        if (
+            adr.startswith("015")
+            or adr.startswith("016")
+            or adr.startswith("017")
+            or adr.startswith("018")
+            or adr.startswith("019")
+        ):
             p7x.append(adr)
         elif adr.startswith("STR-"):
             str_series.append(adr)
@@ -110,7 +117,7 @@ def generate_adr_section(adrs):
             arch_series.append(adr)
         else:
             other.append(adr)
-    
+
     section = """
 ---
 
@@ -123,7 +130,7 @@ def generate_adr_section(adrs):
 """
     for adr in ecos_series[:10]:  # Show first 10
         section += f"| ADR | {adr} | {adr.replace('.md', '')} |\n"
-    
+
     section += """
 ### GaC 治理相关
 
@@ -132,7 +139,7 @@ def generate_adr_section(adrs):
 """
     for adr in gac_series[:10]:
         section += f"| ADR | {adr} | {adr.replace('.md', '')} |\n"
-    
+
     section += """
 ### 架构演进相关
 
@@ -141,7 +148,7 @@ def generate_adr_section(adrs):
 """
     for adr in arch_series[:10]:
         section += f"| ADR | {adr} | {adr.replace('.md', '')} |\n"
-    
+
     section += """
 ### P7x 系列（声明/执行鸿沟）
 
@@ -150,7 +157,7 @@ def generate_adr_section(adrs):
 """
     for adr in sorted(p7x):
         section += f"| ADR | {adr} | {adr.replace('.md', '')} |\n"
-    
+
     section += """
 ### 战略路线图
 
@@ -159,8 +166,9 @@ def generate_adr_section(adrs):
 """
     for adr in sorted(str_series):
         section += f"| ADR | {adr} | {adr.replace('.md', '')} |\n"
-    
+
     return section
+
 
 def generate_audit_section(audits):
     section = """
@@ -181,9 +189,10 @@ def generate_audit_section(audits):
     for audit in key_audits:
         if audit in audits:
             section += f"| {audit.split('-', 4)[-1].replace('.md', '')} | {audit} |\n"
-    
+
     section += f"\n> 共 {len(audits)} 份审计报告，完整清单见 `.omo/_knowledge/audits/`\n"
     return section
+
 
 def generate_patterns_section(patterns):
     section = """
@@ -197,6 +206,7 @@ def generate_patterns_section(patterns):
     for pattern in sorted(patterns):
         section += f"| {pattern.replace('.md', '')} | {pattern} | {pattern.replace('.md', '')} |\n"
     return section
+
 
 def generate_footer():
     return """
@@ -217,22 +227,24 @@ def generate_footer():
 > ADR 完整清单见 `.omo/_knowledge/decisions/INDEX.md`
 """
 
+
 def main():
     generated_at = datetime.datetime.now(UTC).isoformat()
-    
+
     categories = scan_knowledge_dir()
-    
+
     content = TEMPLATE_HEADER.format(generated_at=generated_at)
     content += generate_overview(categories)
     content += generate_adr_section(categories.get("adrs", []))
     content += generate_audit_section(categories.get("audits", []))
     content += generate_patterns_section(categories.get("patterns", []))
     content += generate_footer()
-    
+
     with open(INDEX_FILE, "w") as f:
         f.write(content)
-    
+
     print(f"Generated: {INDEX_FILE}")
+
 
 if __name__ == "__main__":
     main()

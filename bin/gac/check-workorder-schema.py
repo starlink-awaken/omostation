@@ -13,6 +13,7 @@ Skipped:
   - tasks in `closed/`, `archived/`, `done/` (historical)
   - tasks with `status: archived` or `status: closed`
 """
+
 from __future__ import annotations
 
 import argparse
@@ -96,10 +97,12 @@ def main(argv: list[str] | None = None) -> int:
             summary["ok"] += 1
             continue
         summary["non_conforming"] += 1
-        findings.append({
-            "path": str(path.relative_to(WORKSPACE)),
-            "missing_fields": missing,
-        })
+        findings.append(
+            {
+                "path": str(path.relative_to(WORKSPACE)),
+                "missing_fields": missing,
+            }
+        )
 
     # Default: warn-only (exit 0). The standard is new (2026-07-28) and
     # existing workorders pre-date it; blocking them all on day one
@@ -117,10 +120,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
         print(f"check-workorder-schema: {'PASS' if ok else 'FAIL'} (mode={report['mode']})")
-        print(
-            f"  scanned={summary['scanned']} ok={summary['ok']} "
-            f"non_conforming={summary['non_conforming']}"
-        )
+        print(f"  scanned={summary['scanned']} ok={summary['ok']} non_conforming={summary['non_conforming']}")
         for f in findings[:20]:
             print(f"  - {f['path']}: missing {f['missing_fields']}")
     return 0 if ok else 1

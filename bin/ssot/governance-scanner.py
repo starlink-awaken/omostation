@@ -99,7 +99,11 @@ def scan_debt() -> dict[str, Any]:
     _emit_metric("debt.gap_count", len(gap_files))
 
     if total > 50:
-        _emit_alert("high", "debt", f"Debt volume critical: {total} items (debt={len(debt_files)}, gap={len(gap_files)})")
+        _emit_alert(
+            "high",
+            "debt",
+            f"Debt volume critical: {total} items (debt={len(debt_files)}, gap={len(gap_files)})",
+        )
 
     return {"debt_items": len(debt_files), "gap_items": len(gap_files), "total": total}
 
@@ -108,14 +112,16 @@ def scan_agent_heartbeat() -> dict[str, Any]:
     """从心跳 jsonl 分析 agent tick 趋势."""
     beats = _read_jsonl(HEARTBEAT_FILE)
     if not beats:
-        _emit_alert("medium", "agent_health", "No agent heartbeat recorded — daemon may not be running")
+        _emit_alert(
+            "medium",
+            "agent_health",
+            "No agent heartbeat recorded — daemon may not be running",
+        )
         return {"total_ticks": 0}
 
     recent = beats[-20:]  # 最近20次tick
     total = len(beats)
-    ok_rate = sum(b.get("ok_count", 0) for b in recent) / max(
-        sum(b.get("agent_count", 1) for b in recent), 1
-    )
+    ok_rate = sum(b.get("ok_count", 0) for b in recent) / max(sum(b.get("agent_count", 1) for b in recent), 1)
     action_dist = Counter()
     for b in recent:
         for a in b.get("actions", []):
@@ -158,7 +164,8 @@ def scan_mos_health() -> dict[str, Any]:
 
         if len(calibrations) < 5:
             _emit_alert(
-                "medium", "mos",
+                "medium",
+                "mos",
                 f"MOS calibrations low ({len(calibrations)}) — learning loop may not be active",
             )
 
@@ -191,7 +198,11 @@ def scan_a2a_backlog() -> dict[str, Any]:
     _emit_metric("a2a.unresolved_tasks", len(unresolved))
 
     if len(unresolved) > 10:
-        _emit_alert("medium", "a2a", f"A2A backlog growing: {len(unresolved)} unresolved task messages")
+        _emit_alert(
+            "medium",
+            "a2a",
+            f"A2A backlog growing: {len(unresolved)} unresolved task messages",
+        )
 
     return {"total": len(messages), "unresolved": len(unresolved)}
 
@@ -214,7 +225,11 @@ def scan_autonomy() -> dict[str, Any]:
             _emit_metric(f"autonomy.{dim}", val)
 
         if score < 40:
-            _emit_alert("high", "autonomy", f"Autonomy score critical: {score}/100 — system not self-sustaining")
+            _emit_alert(
+                "high",
+                "autonomy",
+                f"Autonomy score critical: {score}/100 — system not self-sustaining",
+            )
 
         return {"score": score, "dimensions": dims}
     except Exception as e:
@@ -278,14 +293,20 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.watch:
-        print(f"Governance Scanner running (interval={args.interval}s). Ctrl+C to stop.", flush=True)
+        print(
+            f"Governance Scanner running (interval={args.interval}s). Ctrl+C to stop.",
+            flush=True,
+        )
         import time
 
         try:
             while True:
                 result = run_scan()
-                print(f"  [{_ts()[:19]}] scan done — debt={result['debt']['total']}, "
-                      f"autonomy={result['autonomy'].get('score', '?')}", flush=True)
+                print(
+                    f"  [{_ts()[:19]}] scan done — debt={result['debt']['total']}, "
+                    f"autonomy={result['autonomy'].get('score', '?')}",
+                    flush=True,
+                )
                 time.sleep(args.interval)
         except KeyboardInterrupt:
             print("\nScanner stopped.")
@@ -295,10 +316,14 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         else:
             print(f"=== Governance Scan {_ts()} ===")
-            print(f"  Debt:     {result['debt']['total']} items ({result['debt']['debt_items']} debt + {result['debt']['gap_items']} gap)")
-            ah = result['agent_health']
+            print(
+                f"  Debt:     {result['debt']['total']} items ({result['debt']['debt_items']} debt + {result['debt']['gap_items']} gap)"
+            )
+            ah = result["agent_health"]
             print(f"  Agents:   {ah.get('total_ticks', 0)} ticks, ok_rate={ah.get('recent_ok_rate', '?')}")
-            print(f"  MOS:      calib={result['mos'].get('calibrations', '?')}, skills={result['mos'].get('skills', '?')}, beliefs={result['mos'].get('beliefs', '?')}")
+            print(
+                f"  MOS:      calib={result['mos'].get('calibrations', '?')}, skills={result['mos'].get('skills', '?')}, beliefs={result['mos'].get('beliefs', '?')}"
+            )
             print(f"  A2A:      {result['a2a']['total']} messages, {result['a2a']['unresolved']} unresolved")
             print(f"  Autonomy: {result['autonomy'].get('score', '?')}/100")
             print(f"  Journeys: {result['journeys'].get('human_holds', 0)} human holds")

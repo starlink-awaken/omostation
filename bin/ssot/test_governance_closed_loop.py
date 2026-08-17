@@ -14,8 +14,13 @@ def test_run_closed_loop_returns_stages():
 
 
 def test_summarize_counts():
-    stages = {"derived": {"constraints": 137}, "index": {"constraints": 135},
-              "owl": {"constraints": 137}, "m0": {"drifts": 2}, "inference": {"findings": 1}}
+    stages = {
+        "derived": {"constraints": 137},
+        "index": {"constraints": 135},
+        "owl": {"constraints": 137},
+        "m0": {"drifts": 2},
+        "inference": {"findings": 1},
+    }
     report = summarize(stages)
     assert "137" in report
     assert "2" in report

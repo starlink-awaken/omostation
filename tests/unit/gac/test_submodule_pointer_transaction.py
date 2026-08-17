@@ -16,20 +16,14 @@ def test_transaction_lock_resolves_the_actual_gitdir() -> None:
 def test_transaction_requires_gitlinks_to_be_on_submodule_main() -> None:
     content = SCRIPT.read_text(encoding="utf-8")
 
-    gate_arg_definitions = [
-        line.strip()
-        for line in content.splitlines()
-        if line.strip().startswith("gate_args=(")
-    ]
+    gate_arg_definitions = [line.strip() for line in content.splitlines() if line.strip().startswith("gate_args=(")]
     assert len(gate_arg_definitions) == 2
     assert all("--require-main" in line for line in gate_arg_definitions)
     assert content.count('submodule-reachability-gate.py" "${gate_args[@]}"') == 2
 
 
 def _git(repo: Path, *args: str) -> str:
-    completed = subprocess.run(
-        ["git", *args], cwd=repo, check=True, capture_output=True, text=True
-    )
+    completed = subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True, text=True)
     return completed.stdout.strip()
 
 
@@ -85,9 +79,7 @@ def _init_transaction_fixture(tmp_path: Path) -> Path:
     _git(repo, "submodule", "deinit", "-f", "--", "projects/cockpit")
 
     (repo / "bin" / "ssot").mkdir(parents=True)
-    (repo / "bin" / "ssot" / "submodule-pointer-transaction.sh").write_bytes(
-        SCRIPT.read_bytes()
-    )
+    (repo / "bin" / "ssot" / "submodule-pointer-transaction.sh").write_bytes(SCRIPT.read_bytes())
     _write_executable(repo / "bin" / "ssot" / "sync-submodules-push.sh", "#!/bin/sh\nexit 0\n")
     _write_executable(
         repo / "bin" / "ssot" / "submodule-reachability-gate.py",
@@ -200,9 +192,7 @@ def test_transaction_query_failure_preserves_index_and_head(tmp_path: Path) -> N
         encoding="utf-8",
     )
     (repo / "tracked.txt").write_text("before\n", encoding="utf-8")
-    (repo / "bin" / "ssot" / "submodule-pointer-transaction.sh").write_bytes(
-        SCRIPT.read_bytes()
-    )
+    (repo / "bin" / "ssot" / "submodule-pointer-transaction.sh").write_bytes(SCRIPT.read_bytes())
     sync = repo / "bin" / "ssot" / "sync-submodules-push.sh"
     sync.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
     gate = repo / "bin" / "ssot" / "submodule-reachability-gate.py"

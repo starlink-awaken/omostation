@@ -131,7 +131,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        import zmq as _zmq_check  # noqa: F401
+        import zmq as _zmq_check
     except ImportError:
         bf_venv = WORKSPACE / "projects" / "bus-foundation" / ".venv" / "bin" / "python"
         if bf_venv.exists():
@@ -161,16 +161,20 @@ def main() -> int:
         print(json.dumps(summary, indent=2))
     else:
         if summary.get("ok"):
-            print(f"PASS: {summary['sent']} sent, {summary['received']} received, "
-                  f"{summary['lost']} lost, {summary['extra']} extra, "
-                  f"{summary['elapsed_s']}s")
+            print(
+                f"PASS: {summary['sent']} sent, {summary['received']} received, "
+                f"{summary['lost']} lost, {summary['extra']} extra, "
+                f"{summary['elapsed_s']}s"
+            )
         else:
             err = summary.get("error", "unknown")
             print(f"FAIL: {err}")
-            print(f"  sent={summary.get('sent', '?')}, "
-                  f"received={summary.get('received', '?')}, "
-                  f"lost={summary.get('lost', '?')}, "
-                  f"extra={summary.get('extra', '?')}")
+            print(
+                f"  sent={summary.get('sent', '?')}, "
+                f"received={summary.get('received', '?')}, "
+                f"lost={summary.get('lost', '?')}, "
+                f"extra={summary.get('extra', '?')}"
+            )
             if "lost_ids" in summary:
                 print(f"  first 5 lost ids: {summary['lost_ids']}")
     return 0 if summary.get("ok") else 1

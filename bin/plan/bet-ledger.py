@@ -18,6 +18,7 @@ Usage:
     python3 bin/plan/bet-ledger.py gate Y1Q1
     python3 bin/plan/bet-ledger.py lint
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,7 +32,10 @@ from pathlib import Path, PurePosixPath
 try:
     import yaml
 except ImportError:  # pragma: no cover
-    print("需要 pyyaml: uv run --with pyyaml python bin/plan/bet-ledger.py ...", file=sys.stderr)
+    print(
+        "需要 pyyaml: uv run --with pyyaml python bin/plan/bet-ledger.py ...",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 WS = Path(__file__).resolve().parents[2]
@@ -52,8 +56,8 @@ BASELINE = {
     "src_files": 3_204,
     "test_files": 1_827,
     "adr_total": 344,
-    "gac_rules": 136,        # 实测 gac.rules；其中 advisory 105 / required 24 / error 2
-    "gac_required": 26,      # required + error —— 会拦人的那部分，才是真成本
+    "gac_rules": 136,  # 实测 gac.rules；其中 advisory 105 / required 24 / error 2
+    "gac_required": 26,  # required + error —— 会拦人的那部分，才是真成本
     "bin_scripts": 310,
     "standards": 53,
     "collab_scenarios": 221,
@@ -65,9 +69,9 @@ BASELINE = {
 #   理由：百分比目标不指向具体冗余，会诱导执行者找最便宜的达标路径（删测试）。
 #   src_loc 只作观察量记账；test_loc 是【保护量】，下降即判定为有害减法。
 Y1_TARGET = {
-    "src_loc": None,          # 不设百分比目标，由具体归并 bet 的去重量累计
-    "test_loc": "不得下降",    # 保护量：低于基线即 D2 违规
-    "gac_required": 0,        # required 规则中「无违规历史」的清零（不是总数降到 80）
+    "src_loc": None,  # 不设百分比目标，由具体归并 bet 的去重量累计
+    "test_loc": "不得下降",  # 保护量：低于基线即 D2 违规
+    "gac_required": 0,  # required 规则中「无违规历史」的清零（不是总数降到 80）
     "bin_scripts": "零调用归档",  # 实测低引用候选约 43 个，含 lib/pytest 假阳性，不设数量
     "adr_total": "只分层不裁剪",  # active/historical 分层即可降低检索面，无需删除
 }
@@ -175,20 +179,14 @@ def _d0_surface_tracked(surface: str, *, ws: Path | None = None) -> tuple[bool, 
         text=True,
         check=False,
     )
-    pin_kind = (
-        "HEAD gitlink"
-        if f"commit {oid}\t{gitlink_path}" in head.stdout
-        else "staged gitlink"
-    )
+    pin_kind = "HEAD gitlink" if f"commit {oid}\t{gitlink_path}" in head.stdout else "staged gitlink"
     return True, f"{pin_kind}: {gitlink_path}@{oid[:12]}"
 
 
 # ── 表面积实测 ────────────────────────────────────────────────
 def _sh(cmd: str) -> str:
     try:
-        return subprocess.run(
-            cmd, shell=True, cwd=WS, capture_output=True, text=True, timeout=300
-        ).stdout.strip()
+        return subprocess.run(cmd, shell=True, cwd=WS, capture_output=True, text=True, timeout=300).stdout.strip()
     except Exception:
         return ""
 
@@ -196,9 +194,7 @@ def _sh(cmd: str) -> str:
 def _run_verify_cmd(cmd: str) -> tuple[int, str]:
     """Run a ledger verify command and keep its exit code (unlike `_sh`)."""
     try:
-        result = subprocess.run(
-            cmd, shell=True, cwd=WS, capture_output=True, text=True, timeout=300
-        )
+        result = subprocess.run(cmd, shell=True, cwd=WS, capture_output=True, text=True, timeout=300)
     except Exception as exc:
         return 1, str(exc)
     text = (result.stdout or "").strip() or (result.stderr or "").strip()
@@ -213,9 +209,7 @@ def _int(s) -> int:
 
 
 # 测试文件判据：目录名 tests?/__tests__/spec，或 test_ 前缀，或 .test./.spec. 后缀
-TEST_PAT = re.compile(
-    r"(^|/)(tests?|__tests__|spec)/|(^|/)test_[^/]*$|\.(test|spec)\.(ts|tsx|py)$"
-)
+TEST_PAT = re.compile(r"(^|/)(tests?|__tests__|spec)/|(^|/)test_[^/]*$|\.(test|spec)\.(ts|tsx|py)$")
 VENDOR_PAT = re.compile(r"node_modules|\.venv|site-packages|/dist/|/build/")
 
 
@@ -226,9 +220,7 @@ def _loc(paths: list[str]) -> int:
         batch = [p for p in paths[i : i + 400] if (WS / p).exists()]
         if not batch:
             continue
-        r = subprocess.run(
-            ["wc", "-l"] + batch, cwd=WS, capture_output=True, text=True
-        )
+        r = subprocess.run(["wc", "-l"] + batch, cwd=WS, capture_output=True, text=True)
         lines = r.stdout.splitlines()
         if len(batch) == 1:
             try:
@@ -252,12 +244,11 @@ def measure_surface() -> dict:
     """
     r = subprocess.run(
         ["git", "ls-files", "--recurse-submodules"],
-        cwd=WS, capture_output=True, text=True,
+        cwd=WS,
+        capture_output=True,
+        text=True,
     )
-    files = [
-        f for f in r.stdout.split("\n")
-        if f.endswith((".py", ".ts", ".tsx")) and not VENDOR_PAT.search(f)
-    ]
+    files = [f for f in r.stdout.split("\n") if f.endswith((".py", ".ts", ".tsx")) and not VENDOR_PAT.search(f)]
     src = [f for f in files if not TEST_PAT.search(f)]
     test = [f for f in files if TEST_PAT.search(f)]
 
@@ -271,9 +262,7 @@ def measure_surface() -> dict:
                     rules = doc["gac"].get("rules") or []
                     gac_total = len(rules)
                     gac_required = sum(
-                        1 for x in rules
-                        if isinstance(x, dict)
-                        and str(x.get("enforcement")) in ("required", "error")
+                        1 for x in rules if isinstance(x, dict) and str(x.get("enforcement")) in ("required", "error")
                     )
         except Exception:
             pass
@@ -286,13 +275,9 @@ def measure_surface() -> dict:
         "adr_total": _int(_sh("ls .omo/_knowledge/decisions/*.md 2>/dev/null | wc -l")),
         "gac_rules": gac_total,
         "gac_required": gac_required,
-        "bin_scripts": _int(
-            _sh(r'find bin -type f \( -name "*.py" -o -name "*.sh" \) | wc -l')
-        ),
+        "bin_scripts": _int(_sh(r'find bin -type f \( -name "*.py" -o -name "*.sh" \) | wc -l')),
         "standards": _int(_sh("ls .omo/standards/ 2>/dev/null | wc -l")),
-        "collab_scenarios": _int(
-            _sh("ls .omo/_delivery/collab-scenarios/ 2>/dev/null | wc -l")
-        ),
+        "collab_scenarios": _int(_sh("ls .omo/_delivery/collab-scenarios/ 2>/dev/null | wc -l")),
     }
 
 
@@ -356,7 +341,7 @@ def cmd_list(data: dict, args) -> int:
         h = "★" if b.get("human_gate") else " "
         print(
             f"{b['id']:24} {b['window']:6} {b['track']:12} "
-            f"{b.get('appetite',''):10} {b.get('status',''):11} {h}  {b['title']}"
+            f"{b.get('appetite', ''):10} {b.get('status', ''):11} {h}  {b['title']}"
         )
     print(f"\n共 {len(rows)} 个 bet（★ = 需 operator/human 到场）")
     return 0
@@ -386,7 +371,7 @@ def cmd_claim_check(data: dict, args) -> int:
         print(f"  bash bin/gac/gac-worktree.sh claim {sess}")
         print(
             f"  uv run --with pyyaml python bin/agent-workflow.py start {wf} "
-            f"--profile {tr.get('agent_profile_hint','engineering-agent')} "
+            f"--profile {tr.get('agent_profile_hint', 'engineering-agent')} "
             f"--bet {b['id']} "
             f'--objective "{b["id"]} {b["title"]}"'
         )
@@ -456,9 +441,7 @@ def cmd_status(data: dict, args) -> int:
     for b in bets:
         s = b.get("status", "candidate")
         by_status[s] = by_status.get(s, 0) + 1
-        by_window.setdefault(b["window"], {})[s] = (
-            by_window.setdefault(b["window"], {}).get(s, 0) + 1
-        )
+        by_window.setdefault(b["window"], {})[s] = by_window.setdefault(b["window"], {}).get(s, 0) + 1
     print("=== 台账总览 ===")
     print(f"总 bet: {len(bets)}")
     for s, n in sorted(by_status.items()):
@@ -469,14 +452,14 @@ def cmd_status(data: dict, args) -> int:
             done = by_window[w].get("done", 0)
             total = sum(by_window[w].values())
             filled = int(20 * done / total) if total else 0
-            print(f"  {w:6} {'█'*filled}{'░'*(20-filled)} {done}/{total}")
+            print(f"  {w:6} {'█' * filled}{'░' * (20 - filled)} {done}/{total}")
     print("\n=== 当前可认领（按窗口排序，优先做靠前窗口）===")
     order = {w: i for i, w in enumerate(data["meta"]["windows"])}
     claimable = [b for b in bets if _claimable(data, b)[0]]
     claimable.sort(key=lambda b: (order.get(b["window"], 99), b["id"]))
     for b in claimable:
         h = "★" if b.get("human_gate") else " "
-        print(f"  {h} {b['window']:6} {b['id']:24} {b.get('appetite',''):<9} {b['title']}")
+        print(f"  {h} {b['window']:6} {b['id']:24} {b.get('appetite', ''):<9} {b['title']}")
     if not claimable:
         print("  （无。检查 depends_on 或并发上限）")
     else:
@@ -521,6 +504,7 @@ def measure_numstat_net(since: str = "2026-08-01") -> dict:
       net = add - del (真实净值)
       symmetric = min(add, del) 按文件聚合后求和 (重写噪音量)
     """
+
     def _parse_numstat(out: str, proj: str, per_project: dict) -> None:
         for line in out.splitlines():
             if "\t" not in line:
@@ -541,9 +525,20 @@ def measure_numstat_net(since: str = "2026-08-01") -> dict:
     per_project: dict[str, dict[str, int]] = {}
     # 主仓 projects/ 路径
     r = subprocess.run(
-        ["git", "log", "--numstat", "--no-renames", f"--since={since}",
-         "--format=", "--", "projects/"],
-        cwd=WS, capture_output=True, text=True, check=False,
+        [
+            "git",
+            "log",
+            "--numstat",
+            "--no-renames",
+            f"--since={since}",
+            "--format=",
+            "--",
+            "projects/",
+        ],
+        cwd=WS,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     _parse_numstat(r.stdout, "_root", per_project)
     # 子模块: 各自 git 历史 (gbrain +468K 重写噪音就藏在子模块历史里)
@@ -551,9 +546,20 @@ def measure_numstat_net(since: str = "2026-08-01") -> dict:
         if not (sub / ".git").exists():
             continue
         rs = subprocess.run(
-            ["git", "log", "--numstat", "--no-renames", f"--since={since}",
-             "--format=", "--", "src/"],
-            cwd=sub, capture_output=True, text=True, check=False,
+            [
+                "git",
+                "log",
+                "--numstat",
+                "--no-renames",
+                f"--since={since}",
+                "--format=",
+                "--",
+                "src/",
+            ],
+            cwd=sub,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         _parse_numstat(rs.stdout, sub.name, per_project)
     return per_project
@@ -606,7 +612,7 @@ def cmd_surface(data: dict, args) -> int:
             print("-" * 64)
             print(f"{'合计':<16}{tot_a:>12,}{tot_d:>12,}{tot_a - tot_d:>+12,}{tot_s:>12,}")
             print("   净值 = add - del; 重写噪音 = 逐文件 min(add,del) 聚合 (对称改写, 净贡献≈0)")
-    except Exception as exc:  # noqa: BLE001 — 净值段是观察增量, 不能挡 surface 主流程
+    except Exception as exc:
         print(f"\n[numstat] 统计跳过: {exc}")
 
     print("\nD2 记账：把上面这几行贴进复盘 Q4。")
@@ -620,7 +626,7 @@ def cmd_gate(data: dict, args) -> int:
     print(f"=== 门 {args.window} ===")
     print(f"问题:     {g['question']}")
     print(f"通过条件: {g['pass']}")
-    print(f"不通过时: {g.get('on_fail','—')}")
+    print(f"不通过时: {g.get('on_fail', '—')}")
     print(f"\n本门为人工判定，结论须写入：{RETRO_DIR.relative_to(WS)}/gates/{args.window}.md")
     return 0
 
@@ -628,6 +634,7 @@ def cmd_gate(data: dict, args) -> int:
 def _is_spec_binding_required(bet: dict) -> bool:
     """判断 L2/L3 bet 是否需要 spec 绑定（2026-09-01 起强制）。"""
     from datetime import datetime
+
     started_at = bet.get("started_at")
     if not started_at:
         return False
@@ -659,8 +666,16 @@ def cmd_lint(data: dict, args) -> int:
     tracks = set(data["tracks"])
     windows = set(data["meta"]["windows"])
     required = [
-        "track", "window", "title", "appetite", "status", "goal",
-        "done_when", "verify", "workflow", "write_surfaces",
+        "track",
+        "window",
+        "title",
+        "appetite",
+        "status",
+        "goal",
+        "done_when",
+        "verify",
+        "workflow",
+        "write_surfaces",
     ]
     for b in data["bets"]:
         for f in required:
@@ -681,7 +696,7 @@ def cmd_lint(data: dict, args) -> int:
                 if not isinstance(item, str):
                     errs.append(
                         f"{b['id']}.{key}[{i}]: 应为字符串却是 {type(item).__name__} "
-                        f"— 多半是未加引号的冒号，请写成 \"...: ...\""
+                        f'— 多半是未加引号的冒号，请写成 "...: ..."'
                     )
         # PR-A: L2/L3 spec 绑定强制检查（2026-09-01 起强制）
         spec_check_required = _is_spec_binding_required(b)
@@ -754,9 +769,7 @@ def cmd_complete(data: dict, args) -> int:
             from chain_bind import evaluate_complete
         chain = evaluate_complete(b, WS, force=False)
         if not chain.ok:
-            print(
-                f"[complete] ❌ vision→retro 链未闭合: {', '.join(chain.reasons)}"
-            )
+            print(f"[complete] ❌ vision→retro 链未闭合: {', '.join(chain.reasons)}")
             print(
                 "[complete] 需要: 绑定 run.bet_id、"
                 "docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md 北极星、"
@@ -767,6 +780,7 @@ def cmd_complete(data: dict, args) -> int:
     # 置 done (写 3y-bet-ledger.yaml, 非 .omo 状态)
     try:
         import datetime
+
         path = LEDGER
         text = path.read_text(encoding="utf-8")
         marker = f"id: {args.bet_id}"
@@ -780,10 +794,10 @@ def cmd_complete(data: dict, args) -> int:
             block_end = len(text)
         block = text[idx:block_end]
         if "status: done" not in block:
-            block_new = block.replace("status: ", "status: done\n  done_at: ",
-                                      1) if "status:" in block else block
+            block_new = block.replace("status: ", "status: done\n  done_at: ", 1) if "status:" in block else block
             # 用更精确替换: status: <old> → status: done (保留 done_at)
             import re
+
             block_new = re.sub(r"status: (\w+)", "status: done", block, count=1)
             block_new = block_new.replace(
                 "status: done",
@@ -794,7 +808,7 @@ def cmd_complete(data: dict, args) -> int:
             path.write_text(text, encoding="utf-8")
         print(f"[complete] ✅ {b['id']} → done")
         return 0
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"[complete] ❌ 写台账失败: {exc}")
         return 1
 

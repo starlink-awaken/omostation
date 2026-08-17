@@ -5,6 +5,7 @@ This intentionally scans the small, agent-facing documentation surface instead
 of every historical note under .omo/. The goal is to keep the runnable contract
 clean without turning archived knowledge into noisy gate failures.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -13,7 +14,6 @@ import re
 import sys
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
-
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 LINK_RE = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
@@ -174,10 +174,7 @@ def main() -> int:
         print(f"doc-link-check: PASS ({result['files_scanned']} files)")
     else:
         for finding in result["findings"]:
-            print(
-                f"{finding['file']}:{finding['line']}: broken link "
-                f"{finding['target']} -> {finding['resolved']}"
-            )
+            print(f"{finding['file']}:{finding['line']}: broken link {finding['target']} -> {finding['resolved']}")
         print(f"doc-link-check: FAIL ({result['broken_links']} broken links)")
     return 0 if result["ok"] else 1
 

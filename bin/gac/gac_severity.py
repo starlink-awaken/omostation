@@ -3,6 +3,7 @@
 executor ∈ {hook_pre_edit, ci_gate} → red (阻塞 merge); 否则 → gray (warn).
 共享给 gac-drift.py + gen-agent-redlines.py, 防 DRY 漂移 (code-review #1).
 """
+
 RED_EXECUTORS = {"hook_pre_edit", "ci_gate"}
 
 

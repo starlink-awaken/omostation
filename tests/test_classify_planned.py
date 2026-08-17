@@ -5,7 +5,6 @@ from pathlib import Path
 
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "bin" / "classify_planned.py"
 
@@ -138,5 +137,8 @@ def test_classify_planned_splits_pending_vs_granted_blocked(monkeypatch, tmp_pat
     assert [entry["task_id"] for entry in result["approval_pending_queue"]] == ["OPT"]
     assert [entry["task_id"] for entry in result["approval_granted_blocked_queue"]] == ["SELF"]
     assert [entry["task_id"] for entry in result["approval_queue"]] == ["OPT"]
-    assert [entry["task_id"] for entry in result["approval_required_backlog"]] == ["OPT", "SELF"]
+    assert [entry["task_id"] for entry in result["approval_required_backlog"]] == [
+        "OPT",
+        "SELF",
+    ]
     assert "python3 scripts/omo/omo_worker.py task approval-queue-status --omo-dir .omo" in result["next_actions"]

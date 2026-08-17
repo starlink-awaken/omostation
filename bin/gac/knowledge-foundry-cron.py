@@ -25,6 +25,7 @@ schedule:
   6:30  port-governance   --P78/P79: hardcoded + catalog health (Foundry v2)
   6:45  memory-os-consolidate --ADR-0372 Phase3: gbrain dream orchestration (default dry-run)
 """
+
 from __future__ import annotations
 
 import json
@@ -32,7 +33,7 @@ import subprocess
 import sys
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -41,7 +42,7 @@ FOUNDRY_DIR = WORKSPACE / "runtime" / "omo" / "_delivery" / "foundry"
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def foundry_run_record(run_id: str, items: list[dict]) -> Path:
@@ -67,7 +68,7 @@ def items_text(items: list[dict]) -> str:
         lines.append(f"    status: {it['status']}")
         lines.append(f"    duration_s: {it.get('duration_s', 0):.2f}")
         if it.get("summary"):
-            lines.append(f"    summary: \"{it['summary'][:120]}\"")
+            lines.append(f'    summary: "{it["summary"][:120]}"')
         lines.append("")
     return "\n".join(lines)
 
@@ -77,9 +78,7 @@ def run_tool(name: str, command: list[str], *, retries: int = 1, timeout: int = 
     t0 = time.time()
     for attempt in range(retries + 1):
         try:
-            result = subprocess.run(
-                command, cwd=WORKSPACE, capture_output=True, text=True, timeout=timeout
-            )
+            result = subprocess.run(command, cwd=WORKSPACE, capture_output=True, text=True, timeout=timeout)
             ok = result.returncode == 0
             return {
                 "id": name,
@@ -91,11 +90,19 @@ def run_tool(name: str, command: list[str], *, retries: int = 1, timeout: int = 
         except subprocess.TimeoutExpired:
             if attempt < retries:
                 continue
-            return {"id": name, "status": "fail", "duration_s": time.time() - t0,
-                    "summary": f"timeout after {retries + 1} attempts"}
-        except Exception as e:  # noqa: BLE001
-            return {"id": name, "status": "fail", "duration_s": time.time() - t0,
-                    "summary": f"exception: {e}"}
+            return {
+                "id": name,
+                "status": "fail",
+                "duration_s": time.time() - t0,
+                "summary": f"timeout after {retries + 1} attempts",
+            }
+        except Exception as e:
+            return {
+                "id": name,
+                "status": "fail",
+                "duration_s": time.time() - t0,
+                "summary": f"exception: {e}",
+            }
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -117,25 +124,48 @@ def main(argv: list[str] | None = None) -> int:
     print("[0:00] omo state sync...")
     omo_result = run_tool(
         "0:00-omo-sync",
-        ["uv", "run", "--project", "projects/omo", "omo", "state", "sync", "--dry-run", "--json"],
-        retries=0, timeout=120,
+        [
+            "uv",
+            "run",
+            "--project",
+            "projects/omo",
+            "omo",
+            "state",
+            "sync",
+            "--dry-run",
+            "--json",
+        ],
+        retries=0,
+        timeout=120,
     )
     # P79: aetherforge 子模块未 init 时 omo 内部依赖 install 失败 — 视为 env gap 而非 fail
     # 实际从 subprocess.run.stderr 是完整文本, 但只截取 200 chars
     # 截断前先检查完整 stderr (避免关键字被截断)
     # 重新获取完整 stderr:
     import subprocess as sp
+
     full_result = sp.run(
-        ["uv", "run", "--project", "projects/omo", "omo", "state", "sync", "--dry-run", "--json"],
-        cwd=WORKSPACE, capture_output=True, text=True, timeout=120,
+        [
+            "uv",
+            "run",
+            "--project",
+            "projects/omo",
+            "omo",
+            "state",
+            "sync",
+            "--dry-run",
+            "--json",
+        ],
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     full_stderr = full_result.stderr or ""
     full_stdout = full_result.stdout or ""
     combined = (omo_result.get("summary") or "") + " " + full_stderr + " " + full_stdout
     if omo_result["status"] == "fail" and (
-        "aetherforge" in combined
-        or "does not appear to be" in combined
-        or "pyproject.toml" in combined
+        "aetherforge" in combined or "does not appear to be" in combined or "pyproject.toml" in combined
     ):
         omo_result["status"] = "ok"
         omo_result["summary"] = "omo sync skipped (aetherforge submodule not init — env gap)"
@@ -144,186 +174,337 @@ def main(argv: list[str] | None = None) -> int:
 
     # 0:30 — agent-workflow compliance
     print("[0:30] agent-workflow compliance...")
-    results.append(run_tool(
-        "0:30-compliance",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "compliance", "--json"],
-        retries=0, timeout=60,
-    ))
+    results.append(
+        run_tool(
+            "0:30-compliance",
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/agent-workflow.py",
+                "compliance",
+                "--json",
+            ],
+            retries=0,
+            timeout=60,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 1:00 — P74 silent_workflow detection
     print("[1:00] P74 silent workflow...")
-    results.append(run_tool(
-        "1:00-p74-silent",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "compliance", "--json"],
-        retries=0, timeout=60,
-    ))
+    results.append(
+        run_tool(
+            "1:00-p74-silent",
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/agent-workflow.py",
+                "compliance",
+                "--json",
+            ],
+            retries=0,
+            timeout=60,
+        )
+    )
     # Drill into .p74_solidification
     p74_summary = "p74 ok"
     try:
         comp = subprocess.run(
-            ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "compliance", "--json"],
-            cwd=WORKSPACE, capture_output=True, text=True, timeout=60,
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/agent-workflow.py",
+                "compliance",
+                "--json",
+            ],
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
         data = json.loads(comp.stdout) if comp.stdout else {}
         p74 = data.get("p74_solidification", {})
         if p74.get("warn_count", 0) > 0:
             p74_summary = f"warn_count={p74['warn_count']} (advisory)"
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         p74_summary = f"parse err: {e}"
     results[-1]["summary"] = p74_summary
     print(f"  -> {results[-1]['status']} ({p74_summary})")
 
     # 2:00 — mof-drift
     print("[2:00] mof-drift...")
-    results.append(run_tool(
-        "2:00-mof-drift",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/mof/mof-drift"],
-        retries=0, timeout=120,
-    ))
+    results.append(
+        run_tool(
+            "2:00-mof-drift",
+            ["uv", "run", "--with", "pyyaml", "python", "bin/mof/mof-drift"],
+            retries=0,
+            timeout=120,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 3:00 — M4 Health Score (file may not exist, fine)
     print("[3:00] M4 health score...")
-    results.append(run_tool(
-        "3:00-m4-health",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/mof/m4-health-score.py", "--emit"],
-        retries=0, timeout=60,
-    ))
+    results.append(
+        run_tool(
+            "3:00-m4-health",
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/mof/m4-health-score.py",
+                "--emit",
+            ],
+            retries=0,
+            timeout=60,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 4:00 — omostation-bootloader
     print("[4:00] bootloader...")
-    results.append(run_tool(
-        "4:00-bootloader",
-        ["uv", "run", "python", "bin/gac/omostation-bootloader.py", "audit"],
-        retries=0, timeout=60,
-    ))
+    results.append(
+        run_tool(
+            "4:00-bootloader",
+            ["uv", "run", "python", "bin/gac/omostation-bootloader.py", "audit"],
+            retries=0,
+            timeout=60,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 5:00 — debt-closed-per-feature
     print("[5:00] debt-closed-per-feature...")
-    results.append(run_tool(
-        "5:00-debt-closed",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/gac/debt-closed-per-feature.py"],
-        retries=0, timeout=60,
-    ))
+    results.append(
+        run_tool(
+            "5:00-debt-closed",
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/gac/debt-closed-per-feature.py",
+            ],
+            retries=0,
+            timeout=60,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 5:30 — submodule-bump-check
     print("[5:30] submodule-bump-check...")
-    results.append(run_tool(
-        "5:30-submodule-bump",
-        ["uv", "run", "python", "bin/ssot/submodule-bump-check.py"],
-        retries=0, timeout=30,
-    ))
+    results.append(
+        run_tool(
+            "5:30-submodule-bump",
+            ["uv", "run", "python", "bin/ssot/submodule-bump-check.py"],
+            retries=0,
+            timeout=30,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 5:45 — G-CONV.4 gitlink drift (submodule-gitlink-check.py exit 1 on drift)
     print("[5:45] submodule-gitlink-check...")
-    results.append(run_tool(
-        "5:45-gitlink-check",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/submodule-gitlink-check.py", "--json"],
-        retries=0, timeout=60,
-    ))
+    results.append(
+        run_tool(
+            "5:45-gitlink-check",
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/submodule-gitlink-check.py",
+                "--json",
+            ],
+            retries=0,
+            timeout=60,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 5:50 — G-CONV.7 / ADR-0220 swarm conflict window (72h M1 observation)
     # Emits window-status JSON to foundry log; does not fail the deck if window_open.
     print("[5:50] swarm-conflict-window...")
-    results.append(run_tool(
-        "5:50-swarm-window",
-        [
-            "uv",
-            "run",
-            "--with",
-            "pyyaml",
-            "python",
-            "bin/gac/swarm-discipline-cli.py",
-            "window-status",
-        ],
-        retries=0,
-        timeout=60,
-    ))
+    results.append(
+        run_tool(
+            "5:50-swarm-window",
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/gac/swarm-discipline-cli.py",
+                "window-status",
+            ],
+            retries=0,
+            timeout=60,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 5:52 — compass_radar 本地刷 health.yaml (E: c2g-radar GHA 去 Commit step 后, 本地产 health 给 BRIEF)
     # 健康治理理想态原则1: health.yaml 是运行时快照 (L1), 走本地 foundry cron, 不 commit main.
     print("[5:52] compass-radar (local health refresh)...")
-    results.append(run_tool(
-        "5:52-compass-radar",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/compass_radar.py"],
-        retries=0, timeout=120,
-    ))
+    results.append(
+        run_tool(
+            "5:52-compass-radar",
+            ["uv", "run", "--with", "pyyaml", "python", "bin/compass_radar.py"],
+            retries=0,
+            timeout=120,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 5:55 — G-CONV ghost executor check (ADR-0220 破自指: 独立于 radar_cron)
     # 扫 services.yaml scheduler:gha 服务的 liveness.signal 新鲜度, 检测连挂/静默 ghost.
     # foundry_cron (独立 launchd daily) 调, 非 radar_cron, 破自指死循环 (GHA 连挂零告警根因).
     print("[5:55] ghost-executor-check...")
-    results.append(run_tool(
-        "5:55-ghost-executor",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/gac/gac-executor.py", "ghost-check", "--json"],
-        retries=0, timeout=60,
-    ))
+    results.append(
+        run_tool(
+            "5:55-ghost-executor",
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/gac/gac-executor.py",
+                "ghost-check",
+                "--json",
+            ],
+            retries=0,
+            timeout=60,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 5:57 — event-loop-check (原则4 闭环回路: emit 必有消费者)
     # 扫 omo-events.jsonl 检测死回路 (emit 了零消费者, 如 state_stale 671 条死回路).
     # omo-events.jsonl gitignored (.omo/_knowledge/*.jsonl), 只主仓/本地有, 故 foundry_cron 跑 (非 CI).
     print("[5:57] event-loop-check...")
-    results.append(run_tool(
-        "5:57-event-loop",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/gac/event-loop-lint.py", "--json", "--alert"],
-        retries=0, timeout=60,
-    ))
+    results.append(
+        run_tool(
+            "5:57-event-loop",
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/gac/event-loop-lint.py",
+                "--json",
+                "--alert",
+            ],
+            retries=0,
+            timeout=60,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 5:58 — gac-coverage-lint (P3 声明即执行覆盖率, ADR-0227 原则2 衍生)
     # 扫 governance-checks rule, 检查有静态 evidence 的 executor (omo_audit/evidence_smoke/foundry_cron) 新鲜度.
     # 治声明面膨胀执行面休眠 (decl-exec-gap). evidence gitignored/本地, 故 foundry_cron 跑.
     print("[5:58] gac-coverage-check...")
-    results.append(run_tool(
-        "5:58-gac-coverage",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/gac/gac-coverage-lint.py", "--json"],
-        retries=0, timeout=60,
-    ))
+    results.append(
+        run_tool(
+            "5:58-gac-coverage",
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/gac/gac-coverage-lint.py",
+                "--json",
+            ],
+            retries=0,
+            timeout=60,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 6:00 — BRIEF generate
     print("[6:00] BRIEF gen...")
-    results.append(run_tool(
-        "6:00-brief",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/mof/generate-brief.py", "--write"],
-        retries=0, timeout=60,
-    ))
+    results.append(
+        run_tool(
+            "6:00-brief",
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/mof/generate-brief.py",
+                "--write",
+            ],
+            retries=0,
+            timeout=60,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 6:30 — Port governance (Foundry v2, P78/P79)
     print("[6:30] port-governance (hardcoded + catalog health)...")
-    results.append(run_tool(
-        "6:30-port-governance",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/decks/port-governance-deck.py"],
-        retries=0, timeout=120,
-    ))
+    results.append(
+        run_tool(
+            "6:30-port-governance",
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/decks/port-governance-deck.py",
+            ],
+            retries=0,
+            timeout=120,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 6:45 — Memory OS consolidate (ADR-0372 Phase 3; default dry-run)
     print("[6:45] memory-os-consolidate (gbrain dream orchestration)...")
-    results.append(run_tool(
-        "6:45-memory-os-consolidate",
-        ["uv", "run", "--with", "pyyaml", "python", "bin/decks/memory-os-consolidate-deck.py"],
-        retries=0, timeout=900,
-    ))
+    results.append(
+        run_tool(
+            "6:45-memory-os-consolidate",
+            [
+                "uv",
+                "run",
+                "--with",
+                "pyyaml",
+                "python",
+                "bin/decks/memory-os-consolidate-deck.py",
+            ],
+            retries=0,
+            timeout=900,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # 7:00 — Git divergence check (ADR-0202 D3)
     print("[7:00] git divergence...")
-    results.append(run_tool(
-        "7:00-git-divergence",
-        ["uv", "run", "python", "bin/gac/git-divergence-check.py"],
-        retries=0, timeout=120,
-    ))
+    results.append(
+        run_tool(
+            "7:00-git-divergence",
+            ["uv", "run", "python", "bin/gac/git-divergence-check.py"],
+            retries=0,
+            timeout=120,
+        )
+    )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
     # Persist run

@@ -153,7 +153,7 @@ def _http_get(base_url: str, path: str, timeout: int = HTTP_TIMEOUT) -> tuple[in
             return resp.status, resp.read(65536), None
     except urllib.error.HTTPError as e:
         return e.code, b"", None
-    except Exception as e:  # noqa: BLE001 - 传输层失败统一转为 error
+    except Exception as e:
         return None, b"", e
 
 
@@ -179,6 +179,7 @@ def _extract_model_ids(body: bytes) -> list[str]:
 
 
 # ---------------------------------------------------------------- checks
+
 
 def check_opencode_config_exists(ctx: SimpleNamespace) -> tuple[str, str]:
     if ctx.load_error:
@@ -285,6 +286,7 @@ CHECK_NAMES = [spec[0] for spec in CHECK_SPECS]
 
 # ---------------------------------------------------------------- rendering
 
+
 def render_text(results: list[dict], base_url: str, config_path: Path) -> str:
     lines = [
         "delegation preflight — subagent 委托基础设施检查",
@@ -304,9 +306,7 @@ def render_text(results: list[dict], base_url: str, config_path: Path) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P2: delegation preflight — 会话启动前检查 subagent 委托基础设施"
-    )
+    parser = argparse.ArgumentParser(description="P2: delegation preflight — 会话启动前检查 subagent 委托基础设施")
     parser.add_argument(
         "--json",
         action="store_true",
@@ -318,9 +318,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--base-url",
-        help="覆盖 provider.omlxc.options.baseURL (默认从 opencode.json 读取; 也可用环境变量 "
-        + BASE_URL_ENV
-        + ")",
+        help="覆盖 provider.omlxc.options.baseURL (默认从 opencode.json 读取; 也可用环境变量 " + BASE_URL_ENV + ")",
     )
     parser.add_argument(
         "--opencode-config",

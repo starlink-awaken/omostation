@@ -14,6 +14,7 @@ Usage:
 
 Exit: 0 when all_physical_gates_pass; 1 when measured but not pass; 2 config error.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -27,14 +28,14 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from caliber import (  # noqa: E402
+from caliber import (
     ENV_CLASS_PHYSICAL,
     MIN_HOSTS_G_DEL_1,
     MIN_HOSTS_G_DEL_3,
     stamp_physical_goal,
 )
-from latency_stats import g_del_3_sim_ok_from_summary, summarize_latencies  # noqa: E402
-from physical_client import Endpoint, Session, parse_hosts, rpc  # noqa: E402
+from latency_stats import g_del_3_sim_ok_from_summary, summarize_latencies
+from physical_client import Endpoint, Session, parse_hosts, rpc
 
 DEFAULT_PORT = 18765
 DEFAULT_N_OPS = 10000  # large-N for trustworthy p99 (min floor 1000)
@@ -168,11 +169,7 @@ def measure_schedule(
 
     rate = ok / n_tasks if n_tasks else 0.0
     latencies.sort()
-    p99 = (
-        latencies[min(len(latencies) - 1, max(0, int(round(0.99 * (len(latencies) - 1)))))]
-        if latencies
-        else 0.0
-    )
+    p99 = latencies[min(len(latencies) - 1, max(0, int(round(0.99 * (len(latencies) - 1)))))] if latencies else 0.0
     return stamp_physical_goal(
         {
             "gate": "G-DEL.1",
@@ -255,11 +252,7 @@ def measure_sync(
                     results = [f.result() for f in as_completed(futs)]
                 elapsed = (time.perf_counter() - t0) * 1000
                 r_get = sessions[reader.node_id].call({"op": "get", "key": key})
-                success = (
-                    all(r.get("ok") for r in results)
-                    and r_get.get("ok")
-                    and r_get.get("value") == val
-                )
+                success = all(r.get("ok") for r in results) and r_get.get("ok") and r_get.get("value") == val
             else:
                 # cross_host_put: time one real peer write (remote host preferred)
                 peer = remotes[i % len(remotes)] if remotes else endpoints[(i + 1) % len(endpoints)]
@@ -293,8 +286,7 @@ def measure_sync(
         )
     elif summary.get("p99_gate_status") == "insufficient_samples":
         note = (
-            f"p99 not definitive: n={measured} < min_n="
-            f"{summary.get('p99_ms_min_n', 1000)}; status=insufficient_samples"
+            f"p99 not definitive: n={measured} < min_n={summary.get('p99_ms_min_n', 1000)}; status=insufficient_samples"
         )
 
     payload: dict[str, Any] = {
@@ -335,7 +327,6 @@ def measure_sync(
     )
 
 
-
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--host", action="append", default=[], help="node_id=host[:port]")
@@ -363,7 +354,10 @@ def main(argv: list[str] | None = None) -> int:
         specs = list(DEFAULT_LAN)
     endpoints = parse_hosts(specs)
     if len(endpoints) < 2:
-        print(json.dumps({"error": "need ≥2 --host endpoints", "got": specs}), file=sys.stderr)
+        print(
+            json.dumps({"error": "need ≥2 --host endpoints", "got": specs}),
+            file=sys.stderr,
+        )
         return 2
 
     physical_hosts = count_physical_machines(endpoints)
@@ -421,7 +415,7 @@ def main(argv: list[str] | None = None) -> int:
         # Environment evidence (hostname/IP/timestamp + link class) for audit
         import socket as _socket
 
-        from network_path import probe_path  # noqa: PLC0415
+        from network_path import probe_path
 
         env_evidence = {
             "controller_hostname": _socket.gethostname(),
@@ -433,10 +427,8 @@ def main(argv: list[str] | None = None) -> int:
             if ep.host not in {"127.0.0.1", "localhost", "::1"}:
                 try:
                     env_evidence["network_paths"].append(probe_path(ep.host))
-                except Exception as exc:  # noqa: BLE001
-                    env_evidence["network_paths"].append(
-                        {"peer_ip": ep.host, "error": str(exc)}
-                    )
+                except Exception as exc:
+                    env_evidence["network_paths"].append({"peer_ip": ep.host, "error": str(exc)})
         for ep in endpoints:
             try:
                 hello = rpc(ep, {"op": "hello"}, timeout=3.0)
@@ -471,9 +463,7 @@ def main(argv: list[str] | None = None) -> int:
             # G-DEL.1 blocked until 4 hosts — do not require it for "sync-only" pass
             "g_del_1_blocked": g1.get("gate_status") == "BLOCKED",
             "g_del_3_physical_pass": bool(g3.get("meets_physical_gate")),
-            "all_physical_gates_pass": bool(
-                g1.get("meets_physical_gate") and g3.get("meets_physical_gate")
-            ),
+            "all_physical_gates_pass": bool(g1.get("meets_physical_gate") and g3.get("meets_physical_gate")),
             "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
         # Exit 0 if G-DEL.3 (open physical gate) passes; G-DEL.1 may remain blocked

@@ -1,11 +1,12 @@
 """Tests for P84 collab mode recommender (ADR-0253/0255)."""
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bin" / "collab"))
-from recommend_mode import recommend  # noqa: E402
+from recommend_mode import recommend
 
 
 def test_independent_batch() -> None:

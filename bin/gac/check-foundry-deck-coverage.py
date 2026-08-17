@@ -18,6 +18,7 @@ Output:
   - exit 0 = all axes have a deck
   - exit 1 = one or more axes are missing a deck
 """
+
 from __future__ import annotations
 
 import argparse
@@ -52,6 +53,7 @@ DOCS_DIR = WORKSPACE / "docs"
 # 1.  Scan ``projects/foundry/decks/``
 # ---------------------------------------------------------------------------
 
+
 def _scan_deck_dir() -> dict[str, list[dict]]:
     """Return {axis: [deck_info, ...]} for per-axis files in the deck directory."""
     axis_re = re.compile(
@@ -69,21 +71,25 @@ def _scan_deck_dir() -> dict[str, list[dict]]:
             m = axis_re.search(child.stem)
             if m:
                 axis = m.group("axis").upper()
-                result.setdefault(axis, []).append({
-                    "source": "deck_dir",
-                    "path": str(child.relative_to(WORKSPACE)),
-                    "filename": child.name,
-                })
+                result.setdefault(axis, []).append(
+                    {
+                        "source": "deck_dir",
+                        "path": str(child.relative_to(WORKSPACE)),
+                        "filename": child.name,
+                    }
+                )
         elif child.is_dir():
             # Check if the directory name itself maps to an axis.
             dm = axis_re.search(child.name)
             if dm:
                 axis = dm.group("axis").upper()
-                result.setdefault(axis, []).append({
-                    "source": "deck_dir",
-                    "path": str(child.relative_to(WORKSPACE)),
-                    "filename": child.name,
-                })
+                result.setdefault(axis, []).append(
+                    {
+                        "source": "deck_dir",
+                        "path": str(child.relative_to(WORKSPACE)),
+                        "filename": child.name,
+                    }
+                )
 
     # Also check for an index file that lists decks.
     index_file = DECK_DIR / "index.yaml"
@@ -96,6 +102,7 @@ def _scan_deck_dir() -> dict[str, list[dict]]:
 # ---------------------------------------------------------------------------
 # 2.  Scan ``.omo/_truth/registry/foundry-decks.yaml``
 # ---------------------------------------------------------------------------
+
 
 def _scan_deck_registry() -> dict[str, list[dict]]:
     """Return {axis: [deck_info, ...]} from the foundry-decks registry."""
@@ -119,11 +126,13 @@ def _scan_deck_registry() -> dict[str, list[dict]]:
             axis = (entry.get("axis") or "").upper().strip()
             if axis not in GOVERNANCE_AXES:
                 continue
-            result.setdefault(axis, []).append({
-                "source": "deck_registry",
-                "deck_id": entry.get("deck_id", "?"),
-                "path": entry.get("path", str(DECK_REGISTRY.relative_to(WORKSPACE))),
-            })
+            result.setdefault(axis, []).append(
+                {
+                    "source": "deck_registry",
+                    "deck_id": entry.get("deck_id", "?"),
+                    "path": entry.get("path", str(DECK_REGISTRY.relative_to(WORKSPACE))),
+                }
+            )
 
     return result
 
@@ -131,6 +140,7 @@ def _scan_deck_registry() -> dict[str, list[dict]]:
 # ---------------------------------------------------------------------------
 # 3.  Scan governance axis YAML files (``.omo/_truth/x[1-4]-*.yaml``)
 # ---------------------------------------------------------------------------
+
 
 def _scan_gov_axis_files() -> dict[str, list[dict]]:
     """Return {axis: [deck_info, ...]} for deck references embedded in axis files."""
@@ -160,17 +170,15 @@ def _scan_gov_axis_files() -> dict[str, list[dict]]:
             continue
 
         # Check for explicit deck references.
-        deck_ref = (
-            doc.get("deck")
-            or doc.get("deck_path")
-            or doc.get("foundry_deck")
-        )
+        deck_ref = doc.get("deck") or doc.get("deck_path") or doc.get("foundry_deck")
         if deck_ref:
-            result.setdefault(axis, []).append({
-                "source": "gov_axis_file",
-                "path": str(fpath.relative_to(WORKSPACE)),
-                "deck_ref": str(deck_ref),
-            })
+            result.setdefault(axis, []).append(
+                {
+                    "source": "gov_axis_file",
+                    "path": str(fpath.relative_to(WORKSPACE)),
+                    "deck_ref": str(deck_ref),
+                }
+            )
 
     return result
 
@@ -178,6 +186,7 @@ def _scan_gov_axis_files() -> dict[str, list[dict]]:
 # ---------------------------------------------------------------------------
 # 4.  Scan ``docs/`` for files referencing "foundry deck" per axis
 # ---------------------------------------------------------------------------
+
 
 def _scan_docs() -> dict[str, list[dict]]:
     """Return {axis: [deck_info, ...]} for docs that reference a foundry deck per axis."""
@@ -210,23 +219,27 @@ def _scan_docs() -> dict[str, list[dict]]:
                 val = fm.get(key)
                 if val and str(val).upper().strip() in GOVERNANCE_AXES:
                     axis = str(val).upper().strip()
-                    result.setdefault(axis, []).append({
-                        "source": "doc_frontmatter",
-                        "path": str(child.relative_to(WORKSPACE)),
-                        "axis": axis,
-                    })
+                    result.setdefault(axis, []).append(
+                        {
+                            "source": "doc_frontmatter",
+                            "path": str(child.relative_to(WORKSPACE)),
+                            "axis": axis,
+                        }
+                    )
                     break
 
         # Check body for axis-specific references.
         for m in axis_re.finditer(text):
             axis = m.group("axis").upper()
             if axis in GOVERNANCE_AXES:
-                result.setdefault(axis, []).append({
-                    "source": "doc_body",
-                    "path": str(child.relative_to(WORKSPACE)),
-                    "axis": axis,
-                    "match": m.group().strip(),
-                })
+                result.setdefault(axis, []).append(
+                    {
+                        "source": "doc_body",
+                        "path": str(child.relative_to(WORKSPACE)),
+                        "axis": axis,
+                        "match": m.group().strip(),
+                    }
+                )
 
     return result
 
@@ -234,6 +247,7 @@ def _scan_docs() -> dict[str, list[dict]]:
 # ---------------------------------------------------------------------------
 # 5.  Scan ``bin/decks/`` for existing deck scripts that may be axis-specific
 # ---------------------------------------------------------------------------
+
 
 def _scan_bin_decks() -> dict[str, list[dict]]:
     """Return {axis: [deck_info, ...]} for deck scripts in bin/decks/."""
@@ -250,11 +264,13 @@ def _scan_bin_decks() -> dict[str, list[dict]]:
         m = axis_re.search(child.stem)
         if m:
             axis = m.group("axis").upper()
-            result.setdefault(axis, []).append({
-                "source": "bin_decks",
-                "path": str(child.relative_to(WORKSPACE)),
-                "filename": child.name,
-            })
+            result.setdefault(axis, []).append(
+                {
+                    "source": "bin_decks",
+                    "path": str(child.relative_to(WORKSPACE)),
+                    "filename": child.name,
+                }
+            )
 
     return result
 
@@ -262,6 +278,7 @@ def _scan_bin_decks() -> dict[str, list[dict]]:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _load_yaml(path: Path) -> dict | list | None:
     """Safely load a YAML file, returning None on failure."""
@@ -305,16 +322,19 @@ def _merge_deck_index(index_file: Path, result: dict[str, list[dict]], source: s
             axis = (entry.get("axis") or "").upper().strip()
             if axis not in GOVERNANCE_AXES:
                 continue
-            result.setdefault(axis, []).append({
-                "source": source,
-                "deck_id": entry.get("deck_id", "?"),
-                "path": entry.get("path", str(index_file.relative_to(WORKSPACE))),
-            })
+            result.setdefault(axis, []).append(
+                {
+                    "source": source,
+                    "deck_id": entry.get("deck_id", "?"),
+                    "path": entry.get("path", str(index_file.relative_to(WORKSPACE))),
+                }
+            )
 
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
@@ -382,16 +402,18 @@ def main(argv: list[str] | None = None) -> int:
 
     # Build human-readable findings for missing axes.
     for axis in missing_axes:
-        report["findings"].append({
-            "kind": "missing_deck",
-            "axis": axis,
-            "message": (
-                f"Governance axis {axis} has no foundry deck definition. "
-                f"Create a deck file in projects/foundry/decks/, "
-                f"register in .omo/_truth/registry/foundry-decks.yaml, "
-                f"or add a deck reference in .omo/_truth/{axis.lower()}-*.yaml."
-            ),
-        })
+        report["findings"].append(
+            {
+                "kind": "missing_deck",
+                "axis": axis,
+                "message": (
+                    f"Governance axis {axis} has no foundry deck definition. "
+                    f"Create a deck file in projects/foundry/decks/, "
+                    f"register in .omo/_truth/registry/foundry-decks.yaml, "
+                    f"or add a deck reference in .omo/_truth/{axis.lower()}-*.yaml."
+                ),
+            }
+        )
 
     # If decks exist, include detail paths.
     if total_deck_count > 0:
@@ -399,11 +421,13 @@ def main(argv: list[str] | None = None) -> int:
         for axis in GOVERNANCE_AXES:
             details = []
             for entry in decks_by_axis.get(axis, []):
-                details.append({
-                    "source": entry.get("source", "?"),
-                    "path": entry.get("path", "?"),
-                    "filename": entry.get("filename", entry.get("deck_id", "?")),
-                })
+                details.append(
+                    {
+                        "source": entry.get("source", "?"),
+                        "path": entry.get("path", "?"),
+                        "filename": entry.get("filename", entry.get("deck_id", "?")),
+                    }
+                )
             if details:
                 report["deck_details"][axis] = details
 

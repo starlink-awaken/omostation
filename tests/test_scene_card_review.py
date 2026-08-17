@@ -42,9 +42,7 @@ def _payload() -> dict[str, object]:
 
 
 def test_pending_receipt_is_manual_and_non_activating() -> None:
-    receipt = MODULE.create_review_receipt(
-        _payload(), candidate_id="scene-candidate:engineering-delivery"
-    )
+    receipt = MODULE.create_review_receipt(_payload(), candidate_id="scene-candidate:engineering-delivery")
 
     assert receipt["schema"] == "scene-card-review/v1"
     assert receipt["status"] == "pending"
@@ -72,7 +70,10 @@ def test_approval_is_blocked_until_scene_card_is_complete() -> None:
 
 
 def test_request_evidence_and_reject_are_reviewable_decisions() -> None:
-    for decision, status in (("request_evidence", "needs_evidence"), ("reject", "rejected")):
+    for decision, status in (
+        ("request_evidence", "needs_evidence"),
+        ("reject", "rejected"),
+    ):
         receipt = MODULE.create_review_receipt(
             _payload(),
             candidate_id="scene-candidate:engineering-delivery",
@@ -89,9 +90,7 @@ def test_invalid_candidate_projection_fails_closed() -> None:
     payload["activation"] = "active"
 
     with pytest.raises(MODULE.ReviewInputError, match="forbid activation"):
-        MODULE.create_review_receipt(
-            payload, candidate_id="scene-candidate:engineering-delivery"
-        )
+        MODULE.create_review_receipt(payload, candidate_id="scene-candidate:engineering-delivery")
 
 
 def test_cli_reads_stdin_and_does_not_write(tmp_path: Path, monkeypatch, capsys) -> None:
@@ -100,12 +99,7 @@ def test_cli_reads_stdin_and_does_not_write(tmp_path: Path, monkeypatch, capsys)
     before = sorted(path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*"))
     monkeypatch.setattr(sys, "stdin", input_file.open(encoding="utf-8"))
 
-    assert (
-        MODULE.main(
-            ["--candidate-id", "scene-candidate:engineering-delivery"]
-        )
-        == 0
-    )
+    assert MODULE.main(["--candidate-id", "scene-candidate:engineering-delivery"]) == 0
     receipt = json.loads(capsys.readouterr().out)
     after = sorted(path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*"))
     assert receipt["status"] == "pending"

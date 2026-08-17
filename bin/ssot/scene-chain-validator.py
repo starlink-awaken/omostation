@@ -85,7 +85,13 @@ def validate(root: Path) -> dict[str, Any]:
     for source, targets in graph.items():
         for target in targets:
             if target not in all_ids:
-                missing.append({"from": source, "to": target, "reason": "target scene_id not found"})
+                missing.append(
+                    {
+                        "from": source,
+                        "to": target,
+                        "reason": "target scene_id not found",
+                    }
+                )
 
     # Detect cycles
     cycles = detect_cycles(graph)

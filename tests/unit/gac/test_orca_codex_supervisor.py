@@ -84,8 +84,7 @@ def _trusted_codex_command(workspace: Path) -> str:
 def _launch_request(argv: tuple[str, ...]) -> dict[str, object]:
     canonical_argv = json.dumps(list(argv), ensure_ascii=False, separators=(",", ":"))
     return {
-        "argv_digest": "sha256:"
-        + hashlib.sha256(canonical_argv.encode("utf-8")).hexdigest(),
+        "argv_digest": "sha256:" + hashlib.sha256(canonical_argv.encode("utf-8")).hexdigest(),
         "authority": "supervisor_request",
         "executed_argv_attested": False,
     }
@@ -95,11 +94,7 @@ def _expected_binding(module, identity: dict[str, str]) -> dict[str, str]:
     workspace = identity["workspace_root"]
     guard = _guard_receipt(workspace, identity["agent_id"])
     return {
-        **{
-            key: value
-            for key, value in identity.items()
-            if key not in {"workspace_root", "agent_id"}
-        },
+        **{key: value for key, value in identity.items() if key not in {"workspace_root", "agent_id"}},
         "clone_agent_id": identity["agent_id"],
         "canonical_root_digest": module._path_digest(workspace),
         "guard_receipt_digest": module._digest_payload(guard),
@@ -111,9 +106,7 @@ def _collect_clone_args(module, identity: dict[str, str]) -> dict[str, str]:
     workspace = identity["workspace_root"]
     return {
         "canonical_root_digest": module._path_digest(workspace),
-        "guard_receipt_digest": module._digest_payload(
-            _guard_receipt(workspace, identity["agent_id"])
-        ),
+        "guard_receipt_digest": module._digest_payload(_guard_receipt(workspace, identity["agent_id"])),
         "orca_worktree_id": _orca_worktree_id(Path(workspace)),
     }
 
@@ -252,9 +245,7 @@ def _completed_task_list_response() -> tuple[int, object, str]:
     )
 
 
-def _identity(
-    tmp_path: Path, prompt: str = "Update the declared documentation fixture."
-) -> dict[str, str]:
+def _identity(tmp_path: Path, prompt: str = "Update the declared documentation fixture.") -> dict[str, str]:
     (tmp_path / "prompts").mkdir(exist_ok=True)
     (tmp_path / ".git").mkdir(exist_ok=True)
     prompt_path = tmp_path / "prompts" / "dogfood.md"
@@ -564,9 +555,7 @@ def test_start_uses_process_scoped_trust_override_after_verified_clone_guard(
     assert receipt["ok"] is True
     command = runner.calls[6]
     assert command[command.index("--command") + 1] == expected_command
-    assert tuple(
-        shlex.split(command[command.index("--command") + 1])
-    ) == _trusted_codex_argv(tmp_path)
+    assert tuple(shlex.split(command[command.index("--command") + 1])) == _trusted_codex_argv(tmp_path)
     trust_override = _trusted_codex_argv(tmp_path)[8]
     assert trust_override.startswith('projects={"')
     assert 'projects."' not in trust_override
@@ -601,12 +590,8 @@ def test_start_round_trips_quote_backslash_and_single_quote_workspace_path(
     assert receipt["launch_request"] == _launch_request(_trusted_codex_argv(workspace))
 
 
-@pytest.mark.parametrize(
-    "control", ["\x00", "\t", "\n", "\x7f"], ids=["nul", "tab", "newline", "del"]
-)
-def test_start_rejects_control_character_workspace_before_orca_calls(
-    tmp_path: Path, control: str
-) -> None:
+@pytest.mark.parametrize("control", ["\x00", "\t", "\n", "\x7f"], ids=["nul", "tab", "newline", "del"])
+def test_start_rejects_control_character_workspace_before_orca_calls(tmp_path: Path, control: str) -> None:
     module = _load_module()
     runner = FakeRunner([])
     if control == "\x00":
@@ -824,9 +809,7 @@ def test_start_rejects_worktree_id_with_nonmatching_suffix_path(tmp_path: Path) 
     assert receipt["ok"] is False
     assert receipt["stage"] == "worktree_show"
     assert receipt["reason"] == "orca_worktree_unavailable"
-    assert runner.calls == [
-        ("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json")
-    ]
+    assert runner.calls == [("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json")]
 
 
 def test_start_rejects_clone_guard_before_any_orca_call(tmp_path: Path) -> None:
@@ -838,9 +821,7 @@ def test_start_rejects_clone_guard_before_any_orca_call(tmp_path: Path) -> None:
         return 1, json.dumps({"ok": False, "reason": "clone_identity_required"}), ""
 
     runner = FakeRunner([])
-    receipt = module.start_supervised_codex(
-        **_identity(tmp_path), runner=runner, guard_runner=rejected_guard
-    )
+    receipt = module.start_supervised_codex(**_identity(tmp_path), runner=runner, guard_runner=rejected_guard)
 
     assert receipt["ok"] is False
     assert receipt["stage"] == "input"
@@ -863,9 +844,7 @@ def test_start_rejects_linked_gitdir_before_clone_guard_or_orca(tmp_path: Path) 
         return 0, "{}", ""
 
     runner = FakeRunner([])
-    receipt = module.start_supervised_codex(
-        **identity, runner=runner, guard_runner=guard_should_not_run
-    )
+    receipt = module.start_supervised_codex(**identity, runner=runner, guard_runner=guard_should_not_run)
 
     assert receipt["reason"] == "workspace_not_independent_clone"
     assert guard_called is False
@@ -1003,9 +982,7 @@ def test_collect_returns_only_digest_after_succeeded_worker_done_and_transcript(
                             "messages": [
                                 {
                                     "role": "assistant",
-                                    "blocks": [
-                                        {"type": "text", "text": "private result"}
-                                    ],
+                                    "blocks": [{"type": "text", "text": "private result"}],
                                 }
                             ]
                         },
@@ -1294,9 +1271,7 @@ def test_collect_rejects_orca_worktree_id_drift_before_terminal_or_worker_read(
     assert receipt["ok"] is False
     assert receipt["stage"] == "worktree_show"
     assert receipt["reason"] == "orca_worktree_drift"
-    assert runner.calls == [
-        ("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json")
-    ]
+    assert runner.calls == [("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json")]
 
 
 def test_collect_rejects_matching_worktree_id_with_nonmatching_suffix_path(
@@ -1378,10 +1353,7 @@ def test_collect_rejects_transcript_without_explicit_nonempty_model_output(
 ) -> None:
     module = _load_module()
     identity = _identity(tmp_path)
-    runner = FakeRunner(
-        _collect_prefix(tmp_path)
-        + [_settled_worker_response(), _transcript_response(messages)]
-    )
+    runner = FakeRunner(_collect_prefix(tmp_path) + [_settled_worker_response(), _transcript_response(messages)])
 
     receipt = module.collect_supervised_codex(
         **identity,
@@ -1497,9 +1469,7 @@ def test_start_accepts_plus_sign_in_dispatch_id(tmp_path: Path) -> None:
         "rparen",
     ],
 )
-def test_start_rejects_shell_dangerous_chars_in_dispatch_id(
-    tmp_path: Path, bad_char: str
-) -> None:
+def test_start_rejects_shell_dangerous_chars_in_dispatch_id(tmp_path: Path, bad_char: str) -> None:
     """Shell-dangerous / path-traversal chars in dispatch ID must still be rejected."""
     module = _load_module()
     runner = FakeRunner([])

@@ -21,9 +21,8 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 
-from _shared import ROOT, append_jsonl, read_jsonl, utc_now, load_yaml
+from _shared import ROOT, append_jsonl, load_yaml, read_jsonl, utc_now
 
 AGENTS_DIR = ROOT / ".omo/_truth/registry/agents"
 MESSAGE_QUEUE = ROOT / ".omo/state/a2a-messages.jsonl"
@@ -38,16 +37,18 @@ def discover_agents() -> list[dict]:
         if data.get("schema") != "digital_agent/v2":
             continue
         identity = data.get("identity", {})
-        cards.append({
-            "@type": "AgentCard",
-            "id": data.get("id"),
-            "name": data.get("display_name", data.get("id")),
-            "description": data.get("description", ""),
-            "role": identity.get("role"),
-            "capabilities": identity.get("capabilities", []),
-            "bos_uri": f"bos://a2a/agent/{data.get('id')}",
-            "knowledge_sources": data.get("knowledge_sources", []),
-        })
+        cards.append(
+            {
+                "@type": "AgentCard",
+                "id": data.get("id"),
+                "name": data.get("display_name", data.get("id")),
+                "description": data.get("description", ""),
+                "role": identity.get("role"),
+                "capabilities": identity.get("capabilities", []),
+                "bos_uri": f"bos://a2a/agent/{data.get('id')}",
+                "knowledge_sources": data.get("knowledge_sources", []),
+            }
+        )
     return cards
 
 
@@ -57,10 +58,20 @@ def publish_cards() -> dict:
     cards = discover_agents()
     for card in cards:
         path = CARD_DIR / f"{card['id']}.json"
-        path.write_text(json.dumps(card, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+        path.write_text(
+            json.dumps(card, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
     # Also write index
     index_path = CARD_DIR / "index.json"
-    index_path.write_text(json.dumps({"agents": cards, "count": len(cards), "updated": utc_now()}, ensure_ascii=False, indent=2), encoding="utf-8")
+    index_path.write_text(
+        json.dumps(
+            {"agents": cards, "count": len(cards), "updated": utc_now()},
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     return {"published": len(cards), "dir": str(CARD_DIR.relative_to(ROOT))}
 
 

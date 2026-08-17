@@ -7,7 +7,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "governance-evolution.py"
 
@@ -142,7 +141,12 @@ def test_governance_evolution_golden_paths_are_machine_readable() -> None:
     assert result.returncode == 0, result.stderr
     paths = json.loads(result.stdout)
     path_ids = {item["id"] for item in paths}
-    assert {"agent-change", "strategy-ingress", "bos-invocation", "release-package-review"} <= path_ids
+    assert {
+        "agent-change",
+        "strategy-ingress",
+        "bos-invocation",
+        "release-package-review",
+    } <= path_ids
 
 
 def test_governance_evolution_packages_are_machine_readable() -> None:
@@ -175,7 +179,11 @@ def test_governance_evolution_packages_accepts_decision_file(tmp_path: Path) -> 
         json.dumps(
             {
                 "decisions": [
-                    {"decision_id": item["decision_id"], "decision": "defer", "notes": "test decision"}
+                    {
+                        "decision_id": item["decision_id"],
+                        "decision": "defer",
+                        "notes": "test decision",
+                    }
                     for item in report["decision_template"]
                 ]
             }
@@ -210,7 +218,9 @@ def test_governance_evolution_packages_writes_decision_template(tmp_path: Path) 
     assert template_text.count("decision: null") == report["decision_count"]
 
 
-def test_governance_evolution_packages_writes_defaulted_decisions(tmp_path: Path) -> None:
+def test_governance_evolution_packages_writes_defaulted_decisions(
+    tmp_path: Path,
+) -> None:
     decision_file = tmp_path / "release-decisions.yaml"
 
     result = _run_evolution(
@@ -241,7 +251,9 @@ def test_governance_evolution_packages_writes_defaulted_decisions(tmp_path: Path
     assert decided_report["decision_summary"]["pending"] == 0
 
 
-def test_governance_evolution_packages_rejects_missing_decision_template_parent(tmp_path: Path) -> None:
+def test_governance_evolution_packages_rejects_missing_decision_template_parent(
+    tmp_path: Path,
+) -> None:
     decision_file = tmp_path / "missing" / "release-decisions.yaml"
 
     result = _run_evolution("packages", "--write-decisions-template", str(decision_file), "--json")
@@ -262,7 +274,9 @@ def _load_governance_evolution():
     return module
 
 
-def test_governance_evolution_packages_require_ready_blocks_pending_decisions(monkeypatch) -> None:
+def test_governance_evolution_packages_require_ready_blocks_pending_decisions(
+    monkeypatch,
+) -> None:
     """ADR-0377 G12: require-ready 在存在 pending decisions 时阻塞.
 
     原实现依赖实时 repo `git status` 恰好存在 pending 项 — 干净树必然失败
@@ -270,9 +284,7 @@ def test_governance_evolution_packages_require_ready_blocks_pending_decisions(mo
     确定性 pending 状态, 直接断言 build_package_report 的阻塞语义.
     """
     module = _load_governance_evolution()
-    monkeypatch.setattr(
-        module, "git_status_lines", lambda: ["?? .omo/tasks/planned/fake-review.yaml"]
-    )
+    monkeypatch.setattr(module, "git_status_lines", lambda: ["?? .omo/tasks/planned/fake-review.yaml"])
     report = module.build_package_report(require_ready=True)
 
     assert report["ok"] is False
@@ -283,7 +295,9 @@ def test_governance_evolution_packages_require_ready_blocks_pending_decisions(mo
     assert report["recommended_next"] == "Complete release decisions before packaging."
 
 
-def test_governance_evolution_packages_require_ready_accepts_complete_decisions(tmp_path: Path) -> None:
+def test_governance_evolution_packages_require_ready_accepts_complete_decisions(
+    tmp_path: Path,
+) -> None:
     result = _run_evolution("packages", "--json")
 
     assert result.returncode == 0, result.stderr
@@ -293,7 +307,11 @@ def test_governance_evolution_packages_require_ready_accepts_complete_decisions(
         json.dumps(
             {
                 "decisions": [
-                    {"decision_id": item["decision_id"], "decision": "exclude", "notes": "ready gate test"}
+                    {
+                        "decision_id": item["decision_id"],
+                        "decision": "exclude",
+                        "notes": "ready gate test",
+                    }
                     for item in report["decision_template"]
                 ]
             }
@@ -307,12 +325,18 @@ def test_governance_evolution_packages_require_ready_accepts_complete_decisions(
     ready_report = json.loads(ready.stdout)
     assert ready_report["ok"] is True
     assert ready_report["release_ready"] is True
-    assert ready_report["release_gate"] == {"required": True, "ok": True, "blocking": False}
+    assert ready_report["release_gate"] == {
+        "required": True,
+        "ok": True,
+        "blocking": False,
+    }
     assert ready_report["decision_summary"]["pending"] == 0
     assert ready_report["decision_summary"]["exclude"] == ready_report["decision_count"]
 
 
-def test_governance_evolution_packages_rejects_invalid_decision_file(tmp_path: Path) -> None:
+def test_governance_evolution_packages_rejects_invalid_decision_file(
+    tmp_path: Path,
+) -> None:
     decision_file = tmp_path / "bad-release-decisions.json"
     decision_file.write_text(
         json.dumps({"decisions": [{"path": "not/in/current/template", "decision": "include"}]}),
@@ -559,7 +583,11 @@ def test_validate_done_initiative_with_closure_passes(monkeypatch) -> None:
                 "title": "Demo",
                 "recommendation": "none",
                 "status": "done",
-                "closure": {"adr": "ADR-0378", "verified": "2026-08-05", "verifier": "governance-team"},
+                "closure": {
+                    "adr": "ADR-0378",
+                    "verified": "2026-08-05",
+                    "verifier": "governance-team",
+                },
                 "progress": 100,
                 "last_evaluated": "2026-08-05",
                 "meadows_level": 5,

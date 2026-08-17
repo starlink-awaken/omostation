@@ -118,9 +118,7 @@ def _close_item(item: dict) -> bool:
         data["closed_by"] = "autoloop-controller"
         data["close_reason"] = "S1 auto-close: verification passed"
         yaml_path.write_text(
-            yaml.dump(
-                data, allow_unicode=True, sort_keys=False, default_flow_style=False
-            ),
+            yaml.dump(data, allow_unicode=True, sort_keys=False, default_flow_style=False),
             encoding="utf-8",
         )
         return True
@@ -174,9 +172,7 @@ def _run_verification(item: dict) -> dict[str, Any]:
             pass
 
     try:
-        proc = subprocess.run(
-            cmd, cwd=ROOT, capture_output=True, text=True, timeout=60, check=False
-        )
+        proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=60, check=False)
         result = {
             "status": "passed" if proc.returncode == 0 else "failed",
             "returncode": proc.returncode,
@@ -287,18 +283,10 @@ def run_loop(*, dry_run: bool = False) -> dict[str, Any]:
         "processed": len(candidates),
         "by_level": {"S1": s1_count, "S2": s2_count, "S3": s3_count},
         "dispositions": {
-            "auto_closed": sum(
-                1 for r in results if r and r.get("disposition") == "auto_closed"
-            ),
-            "review_pending": sum(
-                1 for r in results if r and r.get("disposition") == "review_pending"
-            ),
-            "kept_open": sum(
-                1 for r in results if r and r.get("disposition") == "kept_open"
-            ),
-            "report_only": sum(
-                1 for r in results if r and r.get("action") == "report_only"
-            ),
+            "auto_closed": sum(1 for r in results if r and r.get("disposition") == "auto_closed"),
+            "review_pending": sum(1 for r in results if r and r.get("disposition") == "review_pending"),
+            "kept_open": sum(1 for r in results if r and r.get("disposition") == "kept_open"),
+            "report_only": sum(1 for r in results if r and r.get("action") == "report_only"),
         },
         "results": [r for r in results if r],
     }
@@ -306,9 +294,7 @@ def run_loop(*, dry_run: bool = False) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--dry-run", action="store_true", help="preview without executing"
-    )
+    parser.add_argument("--dry-run", action="store_true", help="preview without executing")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
@@ -318,10 +304,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
 
-    print(
-        f"Autoloop: processed {result.get('processed', 0)} items "
-        f"({'DRY-RUN' if result.get('dry_run') else 'LIVE'})"
-    )
+    print(f"Autoloop: processed {result.get('processed', 0)} items ({'DRY-RUN' if result.get('dry_run') else 'LIVE'})")
     if result.get("status") == "noop":
         print(f"  {result.get('reason')}")
         return 0

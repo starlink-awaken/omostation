@@ -63,10 +63,10 @@ class SharedBrainHealingTrigger:
                 "context": context,
             }
         ).encode()
-        req = Request(f"{self.endpoint}/call", data=payload, method="POST")  # noqa: S310
+        req = Request(f"{self.endpoint}/call", data=payload, method="POST")
         req.add_header("Content-Type", "application/json")
         try:
-            resp = urlopen(req, timeout=self.timeout)  # noqa: S310
+            resp = urlopen(req, timeout=self.timeout)
             data = json.loads(resp.read().decode())
             _log.info("Healing triggered: %s → %s → %s", anomaly_type, organ, command)
             return {"ok": True, "data": data}

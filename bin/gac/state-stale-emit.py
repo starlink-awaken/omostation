@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Emit a state_stale event without refreshing runtime projections directly."""
+
 from __future__ import annotations
 
 import argparse
@@ -7,7 +8,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 

@@ -7,9 +7,9 @@ Verifies that:
 4. mesh_gate_check passes when Mesh store is available
 5. ECOS executor integrates mesh gate in governance pipeline
 """
+
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 
@@ -23,9 +23,10 @@ def test_mesh_gate_importable():
     """mesh_gate module should be importable."""
     from ecos.workflow.mesh_gate import (
         check_mesh_connection,
-        mesh_gate_check,
         is_strict_mode,
+        mesh_gate_check,
     )
+
     assert callable(check_mesh_connection)
     assert callable(mesh_gate_check)
     assert callable(is_strict_mode)

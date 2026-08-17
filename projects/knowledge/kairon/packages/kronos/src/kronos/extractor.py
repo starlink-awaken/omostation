@@ -406,7 +406,9 @@ def call_ollama(prompt: str, model: str | None = None, system_prompt: str | None
     try:
         import httpx
 
-        resp = httpx.post(os.environ.get("OLLAMA_GENERATE_URL", "http://localhost:11434/api/generate"), json=payload, timeout=120)
+        resp = httpx.post(
+            os.environ.get("OLLAMA_GENERATE_URL", "http://localhost:11434/api/generate"), json=payload, timeout=120
+        )
         if resp.status_code != 200:
             return f"[Ollama HTTP {resp.status_code}: {resp.text[:200]}"
         resp_data: dict[str, Any] = resp.json()

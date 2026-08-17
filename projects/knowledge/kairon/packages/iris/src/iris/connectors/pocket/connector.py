@@ -45,7 +45,7 @@ def _pocket_post(endpoint: str, payload: dict[str, Any]) -> dict[str, Any] | Non
     url = f"{POCKET_API_BASE}{endpoint}"
     body = json.dumps(payload).encode("utf-8")
 
-    req = urllib.request.Request(  # noqa: S310
+    req = urllib.request.Request(
         url,
         data=body,
         headers={
@@ -56,7 +56,7 @@ def _pocket_post(endpoint: str, payload: dict[str, Any]) -> dict[str, Any] | Non
     )
 
     try:
-        with urllib.request.urlopen(req, timeout=POCKET_API_TIMEOUT) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=POCKET_API_TIMEOUT) as resp:
             data: dict[str, Any] = json.loads(resp.read().decode("utf-8"))
             if data.get("error"):
                 logger.warning("Pocket API error: %s", data["error"])

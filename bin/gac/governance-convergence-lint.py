@@ -16,12 +16,14 @@ Rules:
 Usage:
   python3 bin/gac/governance-convergence-lint.py [--rule <name>] [--json]
 """
+
 from __future__ import annotations
 
 import json
 import re
 import subprocess
 import sys
+from datetime import UTC
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -161,7 +163,6 @@ LEGACY_CR_IDS = {
     "A2A",
     "BOS-URI",
     "L0-YAML",
-    "CR-IMG-01",
     "M4-HEALTH-SCORE",
     "M4-BOOTSTRAP-REFLEX",
     "M4-SUBMODULE-HYGIENE",
@@ -173,6 +174,7 @@ LEGACY_CR_IDS = {
 def _read_system_yaml() -> dict:
     try:
         import yaml
+
         return yaml.safe_load(SYSTEM_YAML.read_text(encoding="utf-8")) or {}
     except Exception:
         return {}
@@ -207,8 +209,7 @@ def check_score_convergence() -> tuple[list[str], list[str]]:
             )
     elif health_score is not None and evidence_score is None:
         warnings.append(
-            "R-GOV-2 WARN: health_score_evidence field missing from system.yaml "
-            "(run evidence-smoke.py to populate)"
+            "R-GOV-2 WARN: health_score_evidence field missing from system.yaml (run evidence-smoke.py to populate)"
         )
     return errors, warnings
 
@@ -223,13 +224,17 @@ def _git_last_commit_age_hours() -> float | None:
     try:
         import subprocess
         from datetime import datetime, timezone
+
         r = subprocess.run(
             ["git", "log", "-1", "--format=%ct"],
-            capture_output=True, text=True, timeout=10, cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=WORKSPACE,
         )
         if r.returncode == 0 and r.stdout.strip():
             ts = int(r.stdout.strip())
-            now = datetime.now(timezone.utc).timestamp()
+            now = datetime.now(UTC).timestamp()
             return max(0.0, (now - ts) / 3600)
     except Exception:
         pass
@@ -247,9 +252,10 @@ def check_feedback_loop() -> tuple[list[str], list[str]]:
     if last_run:
         try:
             from datetime import datetime, timezone
+
             # Parse ISO format with timezone
             dt = datetime.fromisoformat(last_run.replace("Z", "+00:00"))
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             age_hours = (now - dt).total_seconds() / 3600
             if age_hours > 24:
                 # CI fallback: tracked system.yaml 的 last_run 是 commit 快照 (可能 stale),
@@ -261,13 +267,9 @@ def check_feedback_loop() -> tuple[list[str], list[str]]:
                         f"(tracked 快照), but git active {git_age:.1f}h ago — 回路活着, 降级 WARN"
                     )
                 else:
-                    errors.append(
-                        f"R-GOV-3 ERROR: Governance feedback loop stalled for {age_hours:.1f}h (> 24h)"
-                    )
+                    errors.append(f"R-GOV-3 ERROR: Governance feedback loop stalled for {age_hours:.1f}h (> 24h)")
             elif age_hours > 6:
-                warnings.append(
-                    f"R-GOV-3 WARN: Governance feedback loop last run {age_hours:.1f}h ago (> 6h)"
-                )
+                warnings.append(f"R-GOV-3 WARN: Governance feedback loop last run {age_hours:.1f}h ago (> 6h)")
         except Exception as e:
             warnings.append(f"R-GOV-3 WARN: Cannot parse governance_feedback_last_run '{last_run}': {e}")
     else:
@@ -309,7 +311,10 @@ def check_matrix_consistency() -> tuple[list[str], list[str]]:
     try:
         r = subprocess.run(
             [sys.executable, str(lint_script), "--skip-launchd", "--json"],
-            capture_output=True, text=True, timeout=30, cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=WORKSPACE,
         )
         if r.returncode == 0:
             result = json.loads(r.stdout)
@@ -354,8 +359,12 @@ def lint(rule_filter: str | None = None) -> tuple[list[str], list[str]]:
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="Governance convergence linter (ADR-0121 GCSI)")
-    parser.add_argument("--rule", help="Run specific rule only (registration/score/loop/rules-count/matrix)")
+    parser.add_argument(
+        "--rule",
+        help="Run specific rule only (registration/score/loop/rules-count/matrix)",
+    )
     parser.add_argument("--json", action="store_true", help="Output JSON")
     args = parser.parse_args()
 

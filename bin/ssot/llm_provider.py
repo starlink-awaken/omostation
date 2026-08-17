@@ -12,15 +12,10 @@ OntoEKG 的 LLM 增强层可注入后端。默认 aetherforge（BOS MCP proxy）
 
 import json
 import os
-import subprocess
-import sys
 import urllib.error
 import urllib.request
-from pathlib import Path
 
-AETHERFORGE_URI = os.environ.get(
-    "AETHERFORGE_BOS_URI", "bos://memory/aetherforge/mcp-server"
-)
+AETHERFORGE_URI = os.environ.get("AETHERFORGE_BOS_URI", "bos://memory/aetherforge/mcp-server")
 OMLXC_BASE = os.environ.get("OMLXC_BASE_URL", "http://127.0.0.1:8000/v1")
 OMLXC_MODEL = os.environ.get("OMLXC_MODEL", "GLM-4.7-Flash-MLX-8bit")
 
@@ -87,10 +82,7 @@ def llm_classify(concept: dict, backend: str = "auto") -> str | None:
     name = concept.get("name", "?")
     count = concept.get("count", 0)
     dim = concept.get("dimension", "?")
-    prompt = (
-        f"在模型驱动治理体系中，概念 '{name}'（出现 {count} 次，dimension={dim}）"
-        f"应归类到哪个领域？用一句话回答。"
-    )
+    prompt = f"在模型驱动治理体系中，概念 '{name}'（出现 {count} 次，dimension={dim}）应归类到哪个领域？用一句话回答。"
     if backend == "none":
         return None
     if backend in ("auto", "aetherforge"):

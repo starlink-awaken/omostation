@@ -8,17 +8,20 @@ Usage:
   python3 bin/ssot/mail_daemon.py --once
   python3 bin/ssot/mail_daemon.py --run --interval 1800
 """
+
 from __future__ import annotations
+
 import argparse
 import json
 import sys
 from pathlib import Path
 from typing import Any
+
 sys.path.insert(0, str(Path(__file__).parent))
-from _shared import ROOT, utc_now, append_jsonl
-from mail_reader import read_all
-from mail_agent import classify_mail, extract_task, generate_briefing
+from _shared import ROOT, append_jsonl, utc_now
 from doc_generator import generate_doc, save_draft
+from mail_agent import classify_mail, extract_task, generate_briefing
+from mail_reader import read_all
 
 INBOX = Path.home() / "Documents" / "_inbox"
 HEARTBEAT = ROOT / ".omo" / "state" / "mail-daemon.jsonl"
@@ -50,13 +53,33 @@ def run_cycle() -> dict[str, Any]:
     drafts = 0
     for mail, cls, task in tasks:
         if cls.get("priority") == "high":
-            template_map = {"转发通知": "forward_notice", "收集数据": "data_collection", "提交报告": "summary_report"}
+            template_map = {
+                "转发通知": "forward_notice",
+                "收集数据": "data_collection",
+                "提交报告": "summary_report",
+            }
             template = template_map.get(task.get("task_type", ""), "work_plan")
-            content = generate_doc(template, {"subject": mail.subject, "sender": mail.sender, "body": mail.body[:200], "deadline": task.get("deadline", ""), "task_detail": task})
+            content = generate_doc(
+                template,
+                {
+                    "subject": mail.subject,
+                    "sender": mail.sender,
+                    "body": mail.body[:200],
+                    "deadline": task.get("deadline", ""),
+                    "task_detail": task,
+                },
+            )
             save_draft(template, content)
             drafts += 1
 
-    result = {"ts": ts, "mails": len(mails), "tasks": len(tasks), "drafts": drafts, "briefing": str(briefing_path), "status": "ok"}
+    result = {
+        "ts": ts,
+        "mails": len(mails),
+        "tasks": len(tasks),
+        "drafts": drafts,
+        "briefing": str(briefing_path),
+        "status": "ok",
+    }
     append_jsonl(HEARTBEAT, result)
     return result
 
@@ -78,11 +101,15 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     import time
+
     print(f"Mail Daemon (interval={args.interval}s)", flush=True)
     try:
         while True:
             result = run_cycle()
-            print(f"  [{result['ts'][:19]}] mails={result['mails']} tasks={result['tasks']}", flush=True)
+            print(
+                f"  [{result['ts'][:19]}] mails={result['mails']} tasks={result['tasks']}",
+                flush=True,
+            )
             time.sleep(args.interval)
     except KeyboardInterrupt:
         print("\n停止。")
