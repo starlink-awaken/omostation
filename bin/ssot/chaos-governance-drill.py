@@ -158,6 +158,46 @@ print(vram_ok and compaction_ok and thermal_ok)
     }
 
 
+def run_drill_5_intent_shadow_cartridge_adversarial() -> dict:
+    """Drill 5: Adversarial Intent deconstruction, Shadow red-team loop, and broken Cartridge attack."""
+    script = """
+from ecos.ssot.compiler.intent_compiler import IntentSpecCompiler
+from ecos.ssot.compiler.shadow_challenger import ShadowChallenger
+from ecos.ssot.compiler.domain_cartridge import DomainCartridgeManager
+import tempfile
+from pathlib import Path
+
+# 1. Intent Deconstruction on high-risk prompt
+compiler = IntentSpecCompiler()
+spec = compiler.compile("卫健委核心医疗数据库上云与5000万投资规划")
+intent_ok = spec.detected_domain == "work-weijian" and len(spec.policy_requirements) >= 2
+
+# 2. Shadow Challenger on flawed proposal
+challenger = ShadowChallenger()
+flawed = "# 方案\\n项目总预算 2000 万元，未经专家论证，直接公有云单点部署。"
+report = challenger.challenge_text(flawed, domain="work-weijian", auto_patch=True)
+shadow_ok = (not report.passed) and (report.patched_text is not None) and ("影子红蓝对抗合规补强" in report.patched_text)
+
+# 3. Broken cartridge attack
+mgr = DomainCartridgeManager()
+with tempfile.TemporaryDirectory() as tmpdir:
+    fake_cartridge = Path(tmpdir) / "corrupted_cartridge.yaml"
+    fake_cartridge.write_text("invalid_key: 123\\npolicies: []", encoding="utf-8")
+    valid, errors = mgr.validate_cartridge_file(fake_cartridge)
+    cartridge_ok = (not valid) and len(errors) > 0
+
+print(intent_ok and shadow_ok and cartridge_ok)
+"""
+    rc, out = run_cmd(["uv", "run", "--project", "projects/ecos", "python3", "-c", script])
+    success = rc == 0 and "True" in out
+    return {
+        "drill_name": "Intent Spec, Shadow Challenger & Broken Cartridge Defense",
+        "category": "Cognitive Mesh",
+        "passed": success,
+        "detail": "Intent grounded correctly, Shadow red-team auto-patched flaws, and broken cartridge blocked",
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Unified Governance Chaos & Red-Teaming Drill Suite")
     parser.add_argument("--strict", action="store_true", help="Exit with non-zero on any drill failure")
@@ -171,6 +211,7 @@ def main() -> int:
         run_drill_2_stale_and_corrupt_facts(),
         run_drill_3_policy_red_line_bypass(),
         run_drill_4_compute_vram_and_thermal_chaos(),
+        run_drill_5_intent_shadow_cartridge_adversarial(),
     ]
 
     all_passed = all(d["passed"] for d in drills)

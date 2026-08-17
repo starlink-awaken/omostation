@@ -35,6 +35,10 @@ Before editing:
     - **Truth Canvas Web UI**: Single-command zero-dependency truth portal with safe form writeback (`make canvas-serve` or `ecos-constraint facts serve --port 8765`).
     - **Unified Chaos Drill Suite**: Active mutation test suite (`make chaos-drill` / `make chaos-drill-strict` / `bin/ssot/chaos-governance-drill.py`) verifying boundary intercept, fact corruption/staleness defense, policy red-line block, and compute VRAM/thermal throttling self-healing.
     - **Architecture Pitfalls SSOT**: Structured anti-pattern catalog at `.omo/_knowledge/pitfalls/` and static scanner `ecos-constraint pitfall scan [path]`.
+14. **Intent-to-Spec Compiler (ADR-0195)** — Natural language prompt deconstruction into structured execution DAGs, policy bindings, fact dependencies, and compute budgets (`ecos-constraint intent compile "<prompt>"` / FastMCP `runtime_intent_compile`).
+15. **Shadow Challenger Loop (ADR-0196)** — Multi-perspective adversarial red-team review (Audit, Cyber-security, Tech-transfer) and automatic compliance patch synthesis (`ecos-constraint challenge "<file_or_text>" [--auto-patch]` / FastMCP `runtime_shadow_challenge`).
+16. **Sovereign Hybrid Compute & KV Cache Snapshots (ADR-0197)** — Local-first speculative execution (8B/14B Q4_K_M) with 0ms TTFT binary KV snapshot pre-warming (`omlxc fabric snapshot` / `omlxc fabric speculative-eval`).
+17. **Domain Cartridge Factory (ADR-0198)** — Standardized vertical domain governance package manager for healthcare and tech transfer (`ecos-constraint cartridge list/export/validate` / FastMCP `runtime_cartridge_list`).
 
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
 
