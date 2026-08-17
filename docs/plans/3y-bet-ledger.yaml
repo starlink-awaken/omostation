@@ -4831,7 +4831,8 @@ bets:
   title: agora BOS 声明/执行鸿沟治理 — 29 unimplemented 排期/废弃 + CS-10 违约收敛
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-17
   goal: 对 agora bos-services.yaml 中 29 个 unimplemented 服务逐个判定（真需要→建落地排期并绑定 BET；不需要→标 deprecate/移除）；补 2 个缺 status 服务；决策 CS-10 cross_references.realized_by 违约（补齐 or 修订范围）；5 个 i0_route:pending 服务给接线计划或明确搁置
   non_goals:
   - 实现 29 个 unimplemented 服务的完整功能（工作量超 1 week appetite，各服务实现在各自 BET）
