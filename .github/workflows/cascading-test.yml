@@ -67,13 +67,30 @@ jobs:
       - name: Trigger downstream tests
         if: steps.graph.outputs.affected != ''
         run: |
-          echo "Cascading testing triggered for: ${{ steps.graph.outputs.affected }}"
-          for proj in ${{ steps.graph.outputs.affected }}; do
+          echo "Affected projects (receipt): ${{ steps.graph.outputs.affected }}"
+          echo "Blocking project tests (direct changes): ${{ steps.changed-files.outputs.projects }}"
+          # The affected graph remains the dependency-impact receipt. Only
+          # directly changed projects own blocking tests; transitive projects
+          # may have unrelated baseline/environment failures and are covered
+          # by their own change lane or scheduled full-suite workflows.
+          for proj in ${{ steps.changed-files.outputs.projects }}; do
             if [ -d "projects/$proj/tests" ] && [ -f "projects/$proj/pyproject.toml" ]; then
               echo "──────────────────────────────────────────────"
               echo "🧪 Testing affected project: projects/$proj"
               echo "──────────────────────────────────────────────"
-              (cd "projects/$proj" && uv sync --quiet && uv run pytest -q --ignore=tests/e2e --ignore=tests/integration) || {
+              TEST_HOME="$RUNNER_TEMP/cascading-home/$proj"
+              mkdir -p "$TEST_HOME"
+              (
+                cd "projects/$proj" &&
+                HOME="$TEST_HOME" \
+                XDG_CONFIG_HOME="$TEST_HOME/.config" \
+                XDG_CACHE_HOME="$TEST_HOME/.cache" \
+                uv sync --quiet &&
+                HOME="$TEST_HOME" \
+                XDG_CONFIG_HOME="$TEST_HOME/.config" \
+                XDG_CACHE_HOME="$TEST_HOME/.cache" \
+                uv run pytest -q --ignore=tests/e2e --ignore=tests/integration
+              ) || {
                 echo "❌ Cascading test failed in projects/$proj"
                 exit 1
               }

@@ -8,7 +8,7 @@
 	test-all test-omlxc test-aetherforge test-cockpit test-kairon test-agora test-omo test-ecos lint-all \
 	omlxc-test omlxc-lint kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-lint kairon-build \
 	sync-all-docs sync-capability-registry sync-help-docs check-docs-drift sync-submodules ssot-status ssot-log ssot-sync \
-	hygiene-worktree hygiene-audit hygiene-janitor hygiene-dir dir-hygiene root-directory-governance worktree-guard worktree-prune worktree-cleanup worktree-audit worktree-hygiene worktree-janitor \
+	hygiene-worktree hygiene-audit hygiene-janitor hygiene-dir dir-hygiene root-directory-governance bin-scripts-convergence-audit worktree-guard worktree-prune worktree-cleanup worktree-audit worktree-hygiene worktree-janitor \
 	memory-os-check memory-os-env memory-os-env-export memory-os-up memory-os-smoke memory-os-asof-seed \
 	omo-status omo-top swarm-activity observability-events observability-adapters observability-trace log-rotate \
 	agent-workflows agent-workflow-bootstrap agent-workflow-lint agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-integrations agent-workflow-adapters agent-workflow-status \
@@ -55,6 +55,11 @@ help:
 	@echo "\033[1;33m🧹 工作区与分支卫生 (Hygiene & Janitor):\033[0m"
 	@echo "  make hygiene-worktree       审计与自动清理冗余/过期 Worktree"
 	@echo "  make hygiene-dir            检查根工作区未追踪文件与目录卫生"
+	@echo ""
+	@echo "\033[1;33m⚡️ 混沌对抗与事实大盘 (Chaos & Truth Canvas / ADR-0194):\033[0m"
+	@echo "  make chaos-drill            执行 4 项全域混沌注入与红蓝对抗演练"
+	@echo "  make chaos-drill-strict     严格模式执行混沌演练 (失败返回非 0)"
+	@echo "  make canvas-serve           启动 Dual-Plane Truth Canvas Web 事实大盘 (http://127.0.0.1:8765)"
 	@echo ""
 	@echo "\033[1;33m👁️ 智能体可观测与大盘 (Multi-Agent Observability):\033[0m"
 	@echo "  make omo-status             Multi-Agent Swarm 秒级全景 Rich Panel 快照"
@@ -232,6 +237,9 @@ worktree-janitor:  ## worktree/废弃分支安全清理
 
 root-directory-governance:  ## 根目录治理策略与未登记 shadow surface 门禁
 	$(PY) bin/ssot/root-directory-governance-scan.py --check --json
+
+bin-scripts-convergence-audit:  ## 校验 bin/scripts 收敛清单、证据与实际入口
+	$(PY) bin/ssot/bin-scripts-convergence-audit.py --check --json
 
 hygiene-dir: dir-hygiene
 dir-hygiene: root-directory-governance  ## 检查根目录卫生
@@ -433,3 +441,13 @@ mesh-orphan-cleanup:
 
 mesh-orphan-cleanup-apply:
 	python3 bin/mesh/mesh-orphan-cleanup.py --apply
+
+chaos-drill:  ## 运行全域混沌注入与红蓝对抗演练 (ADR-0194)
+	@echo "── 全域混沌注入与红蓝对抗演练 ────────────────────────────"
+	python3 bin/ssot/chaos-governance-drill.py
+
+chaos-drill-strict:  ## 严格模式运行全域混沌演练 (发现未通过项即失败)
+	python3 bin/ssot/chaos-governance-drill.py --strict
+
+canvas-serve:  ## 启动 Dual-Plane Truth Canvas Web 事实大盘 (ADR-0194)
+	uv run --project projects/ecos ecos-constraint facts serve --port 8765

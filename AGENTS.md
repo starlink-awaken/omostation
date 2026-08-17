@@ -28,6 +28,18 @@ Before editing:
     - **Domain Truth SSOT**: All business facts reside in `_entities/facts/*.yaml` (Weijian & Transfer projects) with 14-day freshness SLA (`E-DOC-004`).
     - **Compute Fabric Self-Healing**: 0ms TTFT prefix pre-warming (`make fabric-warm`) + ContextCompactor sliding-window distillation preserving recent turns under memory limits.
     - **Automated Hygiene Patrol**: Run `make hygiene-patrol` (or `ecos-constraint patrol`) for multi-domain drift, documents cleanliness, facts schema, IDE sync, and compute health checks.
+12. **Domain Policy-as-Code Engine (ADR-0193)** — Formalized regulatory red-line enforcement for Health & Tech Transfer domains.
+    - **Policy Rules**: `E-POL-WJ-001` (Budget >5M requires expert review & Xinchuang hardware/software), `E-POL-WJ-002` (Core clinical data platforms require MLPS Level 3 & interconnectivity standards), `E-POL-TF-001` (Research team reward distribution >= 70%), `E-POL-TF-002` (Industrialization projects recommend TRL >= 6).
+    - **CLI & FastMCP Tools**: `ecos-constraint policy audit <file_or_text>`, `ecos-constraint policy explain <rule_id>`, `ecos-constraint policy list`, and FastMCP `runtime_domain_compliance_audit`.
+13. **Dual-Plane Truth Canvas, Chaos Drills & Architecture Pitfalls (ADR-0194)** — Interactive truth observability, active red-teaming anti-fragility, and pitfall recurrence prevention.
+    - **Truth Canvas Web UI**: Single-command zero-dependency truth portal with safe form writeback (`make canvas-serve` or `ecos-constraint facts serve --port 8765`).
+    - **Unified Chaos Drill Suite**: Active mutation test suite (`make chaos-drill` / `make chaos-drill-strict` / `bin/ssot/chaos-governance-drill.py`) verifying boundary intercept, fact corruption/staleness defense, policy red-line block, and compute VRAM/thermal throttling self-healing.
+    - **Architecture Pitfalls SSOT**: Structured anti-pattern catalog at `.omo/_knowledge/pitfalls/` and static scanner `ecos-constraint pitfall scan [path]`.
+14. **Intent-to-Spec Compiler (ADR-0195)** — Natural language prompt deconstruction into structured execution DAGs, policy bindings, fact dependencies, and compute budgets (`ecos-constraint intent compile "<prompt>"` / FastMCP `runtime_intent_compile`).
+15. **Shadow Challenger Loop (ADR-0196)** — Multi-perspective adversarial red-team review (Audit, Cyber-security, Tech-transfer) and automatic compliance patch synthesis (`ecos-constraint challenge "<file_or_text>" [--auto-patch]` / FastMCP `runtime_shadow_challenge`).
+16. **Sovereign Hybrid Compute & KV Cache Snapshots (ADR-0197)** — Local-first speculative execution (8B/14B Q4_K_M) with 0ms TTFT binary KV snapshot pre-warming (`omlxc fabric snapshot` / `omlxc fabric speculative-eval`).
+17. **Domain Cartridge Factory (ADR-0198)** — Standardized vertical domain governance package manager for healthcare and tech transfer (`ecos-constraint cartridge list/export/validate` / FastMCP `runtime_cartridge_list`).
+18. **Unified BOS URI, Cockpit Suite & Cognitive Workflow (ADR-0199)** — Full-lifecycle integration across Human Terminal (Cockpit CLI: `cockpit intent` / `challenge` / `cartridge` / `fabric`), Agora BOS routing (`bos://governance/*`, `bos://fabric/*`), and First-Class Agent Workflow (`cognitive-governance-delivery.yaml`).
 
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
 

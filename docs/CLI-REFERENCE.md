@@ -53,6 +53,10 @@
 | `cockpit omo` | OMO CLI 委派 (debt/state/governance/lint/...) |
 | `cockpit skill` | 运行 L4 定时技能 |
 | `cockpit ssb` | [DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用 |
+| `cockpit intent` | 🧠 自然语言意图解构与工程规格编译器 (ADR-0195) |
+| `cockpit challenge` | ⚡️ 影子红蓝对抗审查与合规自动补丁 (ADR-0196) |
+| `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊管理 (ADR-0198) |
+| `cockpit fabric` | 🧑‍💻 主权混合算力与 KV 缓存快照预热 (ADR-0197) |
 
 ## 项目入口
 
@@ -207,7 +211,7 @@
 | `cockpit model-driven` | `model-driven` | 28 |
 | `cockpit agora` | `agora` | 65 |
 | `cockpit family-hub` | `family-hub` | 6 |
-| `cockpit mesh` | `aetherforge` | 10 |
-| `cockpit compute` | `aetherforge` | 10 |
+| `cockpit mesh` | `aetherforge` | 15 |
+| `cockpit compute` | `aetherforge` | 15 |
 
 *由 `bin/cockpit/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*
