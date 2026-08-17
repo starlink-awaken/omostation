@@ -17,7 +17,7 @@ def cmd_code_workflow(args: argparse.Namespace) -> int:
         console.print("[red]请指定具体的工作流，如 impact 或 onboarding。[/red]")
         return 1
 
-    kairon_path = _WORKSPACE_ROOT / "projects" / "kairon"
+    kairon_path = _WORKSPACE_ROOT / "projects" / "knowledge" / "kairon"
     if not kairon_path.exists():
         console.print("[red]未找到 kairon 项目目录，无法调用 codeanalyze。[/red]")
         return 1
@@ -44,7 +44,7 @@ def cmd_code_base(args: argparse.Namespace) -> int:
         console.print("[red]请指定具体的代码分析命令。[/red]")
         return 1
 
-    kairon_path = _WORKSPACE_ROOT / "projects" / "kairon"
+    kairon_path = _WORKSPACE_ROOT / "projects" / "knowledge" / "kairon"
     if not kairon_path.exists():
         console.print("[red]未找到 kairon 项目目录，无法调用 codeanalyze。[/red]")
         return 1

@@ -71,7 +71,7 @@ def cmd_knowledge_search(args: argparse.Namespace) -> int:
 
     if not _kos_available():
         console.print(f"[yellow]⚠️  KOS 服务未在线 ({KOS_API_URL})[/yellow]")
-        console.print("[dim]   启动: cd projects/kairon/packages/kos && uv run kos serve[/dim]")
+        console.print("[dim]   启动: cd projects/knowledge/kairon/packages/kos && uv run kos serve[/dim]")
         console.print(f'[dim]   或降级使用: cockpit search "{query}"[/dim]')
         return 1
 
@@ -123,7 +123,7 @@ def cmd_knowledge_status(args: argparse.Namespace) -> int:
 
     if not _kos_available():
         console.print(f"[red]❌ KOS 服务离线 ({KOS_API_URL})[/red]")
-        console.print("[dim]   启动: cd projects/kairon/packages/kos && uv run kos serve[/dim]")
+        console.print("[dim]   启动: cd projects/knowledge/kairon/packages/kos && uv run kos serve[/dim]")
         return 1
 
     try:

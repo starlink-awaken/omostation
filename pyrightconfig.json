@@ -9,8 +9,8 @@
     "../ecos/src",
     "../bus-foundation/src",
     "../model-driven/src",
-    "../kairon/packages/kairon-observability/src",
-    "../kairon/packages/kos/src",
+    "../knowledge/kairon/packages/kairon-observability/src",
+    "../knowledge/kairon/packages/kos/src",
     "src/cockpit"
   ]
 }

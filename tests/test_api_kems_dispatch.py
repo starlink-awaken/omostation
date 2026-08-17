@@ -26,7 +26,7 @@ def test_dispatch_rejects_private_content():
         "/api/kems/tasks/task-1/dispatch",
         json={
             "worker_id": "worker-1",
-            "allowed_write_paths": ["projects/kairon"],
+            "allowed_write_paths": ["projects/knowledge/kairon"],
             "raw_text": "private source",
         },
     )
@@ -54,7 +54,7 @@ def test_dispatch_calls_omo_broker(monkeypatch):
         "/api/kems/tasks/task-1/dispatch",
         json={
             "worker_id": "worker-1",
-            "allowed_write_paths": ["projects/kairon"],
+            "allowed_write_paths": ["projects/knowledge/kairon"],
             "transport": "cli_prompt",
             "prior_evidence": ["evidence-1"],
             "prompt_addendum": ["Run targeted tests"],
@@ -70,6 +70,6 @@ def test_dispatch_calls_omo_broker(monkeypatch):
     }
     assert seen["task_id"] == "task-1"
     assert seen["worker_id"] == "worker-1"
-    assert seen["allowed_write_paths"] == ["projects/kairon"]
+    assert seen["allowed_write_paths"] == ["projects/knowledge/kairon"]
     assert seen["kwargs"]["transport"] == "cli_prompt"
     assert seen["kwargs"]["prior_evidence"] == ["evidence-1"]
