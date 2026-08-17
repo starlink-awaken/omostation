@@ -1,0 +1,730 @@
+{
+  "db_path": "/Users/xiamingxing/agents/_shared/runtime/coordination.sqlite3",
+  "schema_version": 1,
+  "claims": [
+    {
+      "resource_type": "branch",
+      "resource_id": "work/0-01-bin-scripts-convergence",
+      "owner": "0-01-bin-scripts-convergence",
+      "token": 1,
+      "state": "released",
+      "claimed_at": "2026-08-16T01:05:50Z",
+      "expires_at": "2026-08-17T01:35:21Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bet-y1q1-t1-05a",
+      "owner": "bet-y1q1-t1-05a",
+      "token": 1,
+      "state": "released",
+      "claimed_at": "2026-08-14T13:02:22Z",
+      "expires_at": "2026-08-15T13:02:22Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bet-y1q1-t1-05a",
+      "owner": "bet-y1q1-t1-05a",
+      "token": 2,
+      "state": "released",
+      "claimed_at": "2026-08-14T13:02:22Z",
+      "expires_at": "2026-08-15T13:02:22Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bet-y1q1-t1-08",
+      "owner": "bet-y1q1-t1-08",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T02:57:38Z",
+      "expires_at": "2026-08-16T02:57:38Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bet-y1q1-t6-01",
+      "owner": "bet-y1q1-t6-01",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T13:04:54Z",
+      "expires_at": "2026-08-16T13:04:54Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bet-y1q1-t6-02",
+      "owner": "bet-y1q1-t6-02",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T13:31:53Z",
+      "expires_at": "2026-08-16T13:31:53Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bet-y1q2-t1-20",
+      "owner": "bet-y1q2-t1-20",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T03:09:00Z",
+      "expires_at": "2026-08-16T03:09:00Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bet-y1q2-t8-01",
+      "owner": "bet-y1q2-t8-01",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T02:29:43Z",
+      "expires_at": "2026-08-16T02:48:54Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bet-y1q2-t8-01-done",
+      "owner": "bet-y1q2-t8-01-done",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T04:19:39Z",
+      "expires_at": "2026-08-16T04:19:39Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bet-y1q3-t1-01",
+      "owner": "bet-y1q3-t1-01",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T02:39:35Z",
+      "expires_at": "2026-08-16T02:39:35Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bet-y1q3-t1-03",
+      "owner": "bet-y1q3-t1-03",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T10:42:09Z",
+      "expires_at": "2026-08-16T10:42:09Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bet-y1q3-t2-03",
+      "owner": "bet-y1q3-t2-03",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T08:10:05Z",
+      "expires_at": "2026-08-16T09:47:45Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bet-y1q3-t9-01",
+      "owner": "bet-y1q3-t9-01",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T10:02:07Z",
+      "expires_at": "2026-08-16T10:02:07Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bin-scripts-round3",
+      "owner": "bin-scripts-round3",
+      "token": 1,
+      "state": "released",
+      "claimed_at": "2026-08-16T01:54:22Z",
+      "expires_at": "2026-08-17T01:54:22Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bin-scripts-round6",
+      "owner": "bin-scripts-round6",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T02:35:10Z",
+      "expires_at": "2026-08-17T02:35:10Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bin-scripts-round7",
+      "owner": "bin-scripts-round7",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T02:44:52Z",
+      "expires_at": "2026-08-17T02:44:52Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/bin-scripts-wave2",
+      "owner": "bin-scripts-wave2",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T16:05:37Z",
+      "expires_at": "2026-08-17T16:05:37Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/chore-bin-scripts-convergence-round4",
+      "owner": "chore-bin-scripts-convergence-round4",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T02:10:40Z",
+      "expires_at": "2026-08-17T02:10:40Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/chore-bin-scripts-convergence-round5",
+      "owner": "chore-bin-scripts-convergence-round5",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T02:21:43Z",
+      "expires_at": "2026-08-17T02:21:43Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/collab-consolidation-v1",
+      "owner": "collab-consolidation-v1",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T11:45:45Z",
+      "expires_at": "2026-08-16T11:45:45Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/collab-retro-v2",
+      "owner": "collab-retro-v2",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T12:19:00Z",
+      "expires_at": "2026-08-16T12:19:11Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/compute-gitlink-81f2f5f",
+      "owner": "compute-gitlink-81f2f5f",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T12:19:47Z",
+      "expires_at": "2026-08-16T12:19:47Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/e7e8-fixes",
+      "owner": "e7e8-fixes",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T01:21:18Z",
+      "expires_at": "2026-08-17T01:21:18Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/g1-gate-evidence",
+      "owner": "g1-gate-evidence",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T11:57:48Z",
+      "expires_at": "2026-08-16T11:57:48Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/ledger-cleanup",
+      "owner": "ledger-cleanup",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T04:52:11Z",
+      "expires_at": "2026-08-16T04:52:11Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/ledger-closeout-0815",
+      "owner": "ledger-closeout-0815",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T10:53:34Z",
+      "expires_at": "2026-08-16T10:53:34Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/ledger-governance-r2",
+      "owner": "ledger-governance-r2",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T04:16:13Z",
+      "expires_at": "2026-08-16T04:24:35Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/ledger-integrity-20260815",
+      "owner": "ledger-integrity-20260815",
+      "token": 1,
+      "state": "released",
+      "claimed_at": "2026-08-15T02:13:04Z",
+      "expires_at": "2026-08-16T02:13:04Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/ledger-status-fix",
+      "owner": "ledger-status-fix",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T05:39:10Z",
+      "expires_at": "2026-08-16T05:39:10Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/lint-batch",
+      "owner": "lint-batch",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T23:19:30Z",
+      "expires_at": "2026-08-17T23:19:30Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/lint-fix-batch",
+      "owner": "lint-fix-batch",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T23:16:21Z",
+      "expires_at": "2026-08-17T23:16:21Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/omlxc-app-models-cutover-fix",
+      "owner": "omlxc-app-models-cutover-fix",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T06:14:23Z",
+      "expires_at": "2026-08-16T06:14:23Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/omlxc-pointer-3015",
+      "owner": "omlxc-pointer-3015",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T05:21:39Z",
+      "expires_at": "2026-08-16T05:21:39Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/percept-fix",
+      "owner": "percept-fix",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T05:43:06Z",
+      "expires_at": "2026-08-17T05:43:06Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/pointer-update-ab414fbe",
+      "owner": "pointer-update-ab414fbe",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T14:27:54Z",
+      "expires_at": "2026-08-17T14:27:54Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/pr-a-spec-chain",
+      "owner": "pr-a-spec-chain",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T12:11:05Z",
+      "expires_at": "2026-08-16T12:11:05Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/pr-b-capability-sync",
+      "owner": "pr-b-capability-sync",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T12:12:44Z",
+      "expires_at": "2026-08-16T12:12:44Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/pr-c-janitor",
+      "owner": "pr-c-janitor",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T12:14:45Z",
+      "expires_at": "2026-08-16T12:14:45Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/root-directory-governance",
+      "owner": "root-directory-governance",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T18:00:01Z",
+      "expires_at": "2026-08-17T18:00:01Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/round8-bin-scripts-registry-round8",
+      "owner": "round8-bin-scripts-registry-round8",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T02:58:40Z",
+      "expires_at": "2026-08-17T02:58:40Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/round9-bin-scripts-round9",
+      "owner": "round9-bin-scripts-round9",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T03:12:15Z",
+      "expires_at": "2026-08-17T03:12:15Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/scripts-convergence-round",
+      "owner": "scripts-convergence-round",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T04:28:20Z",
+      "expires_at": "2026-08-17T04:28:20Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/scripts-necessity",
+      "owner": "scripts-necessity",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T04:00:19Z",
+      "expires_at": "2026-08-17T04:00:19Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/sess-a",
+      "owner": "sess-a",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-14T15:38:33Z",
+      "expires_at": "2026-08-15T15:38:33Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/session-retro-20260815",
+      "owner": "session-retro-20260815",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T06:02:42Z",
+      "expires_at": "2026-08-16T06:02:42Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/session-update-aliases",
+      "owner": "session-update-aliases",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T02:43:29Z",
+      "expires_at": "2026-08-16T02:43:29Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/sr06-closeout",
+      "owner": "sr06-closeout",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T03:45:32Z",
+      "expires_at": "2026-08-17T03:45:32Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/sr06-gaps",
+      "owner": "sr06-gaps",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T08:10:44Z",
+      "expires_at": "2026-08-17T08:10:44Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/strategy-planning-20260815",
+      "owner": "strategy-planning-20260815",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T06:31:30Z",
+      "expires_at": "2026-08-16T06:31:30Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/submodule-pointer-20260817-final",
+      "owner": "submodule-pointer-20260817-final",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T17:30:04Z",
+      "expires_at": "2026-08-17T17:30:04Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t1-01-cockpit-ssot",
+      "owner": "t1-01-cockpit-ssot",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T03:54:51Z",
+      "expires_at": "2026-08-17T03:56:38Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t1-02-modeldriven",
+      "owner": "t1-02-modeldriven",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T05:05:02Z",
+      "expires_at": "2026-08-17T05:05:02Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t1-02-t1-01-merge",
+      "owner": "t1-02-t1-01-merge",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T09:01:46Z",
+      "expires_at": "2026-08-17T09:01:46Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t1-06-aetherforge",
+      "owner": "t1-06-aetherforge",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T12:43:51Z",
+      "expires_at": "2026-08-17T12:43:51Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t1-08-closeout",
+      "owner": "t1-08-closeout",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T05:19:31Z",
+      "expires_at": "2026-08-16T05:19:31Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t3-02-neo4j",
+      "owner": "t3-02-neo4j",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T11:42:24Z",
+      "expires_at": "2026-08-17T11:42:24Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t3-03-mem0-retire",
+      "owner": "t3-03-mem0-retire",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T11:56:10Z",
+      "expires_at": "2026-08-17T11:56:10Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t6-01-knowledge-merge",
+      "owner": "t6-01-knowledge-merge",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T12:21:24Z",
+      "expires_at": "2026-08-17T12:21:24Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t6-01-ledger-closeout",
+      "owner": "t6-01-ledger-closeout",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T21:13:03Z",
+      "expires_at": "2026-08-17T21:13:03Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t6-01-pr4-verify",
+      "owner": "t6-01-pr4-verify",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T22:27:03Z",
+      "expires_at": "2026-08-17T22:27:03Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t6-02-cockpit",
+      "owner": "t6-02-cockpit",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T05:06:52Z",
+      "expires_at": "2026-08-17T05:06:52Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t6-03-mof-deepen",
+      "owner": "t6-03-mof-deepen",
+      "token": 1,
+      "state": "released",
+      "claimed_at": "2026-08-16T03:54:51Z",
+      "expires_at": "2026-08-17T03:54:51Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t603-closeout",
+      "owner": "t603-closeout",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T04:44:21Z",
+      "expires_at": "2026-08-17T04:44:21Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t7-01-dogfood",
+      "owner": "t7-01-dogfood",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-15T05:28:23Z",
+      "expires_at": "2026-08-16T05:28:23Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t7-01-dogfood-pipeline",
+      "owner": "t7-01-dogfood-pipeline",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T23:20:20Z",
+      "expires_at": "2026-08-17T23:20:20Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t7-01-recall",
+      "owner": "t7-01-recall",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T05:05:02Z",
+      "expires_at": "2026-08-17T05:08:43Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/t701-correction",
+      "owner": "t701-correction",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T01:12:57Z",
+      "expires_at": "2026-08-17T01:12:57Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/y1q4-preflight",
+      "owner": "y1q4-preflight",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T01:21:18Z",
+      "expires_at": "2026-08-17T01:23:03Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/y1q4-t3-autonomy",
+      "owner": "y1q4-t3-autonomy",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T05:12:05Z",
+      "expires_at": "2026-08-17T05:12:05Z"
+    },
+    {
+      "resource_type": "branch",
+      "resource_id": "work/y1q4-t5-forkjoin",
+      "owner": "y1q4-t5-forkjoin",
+      "token": 1,
+      "state": "active",
+      "claimed_at": "2026-08-16T05:10:16Z",
+      "expires_at": "2026-08-17T05:10:16Z"
+    }
+  ],
+  "agent_health": [
+    {
+      "agent_id": "advisor",
+      "last_seen": "2026-08-16T23:24:47Z",
+      "status": "ok",
+      "source": "tick",
+      "stale_after": 900,
+      "runtime_attestation": {
+        "component": "agent-tick-daemon",
+        "code_sha256": "c97cecc4d21cd9d0b7aff47d4015b53b8a3d166e94e0aa1fa4bd8ea9994133d0",
+        "workspace_revision": "4a587b3b8399ec9ba96c50d09f1144311d5b5ed2",
+        "python_version": "3.14.7",
+        "runtime_root_digest": "457bc12d5aac572929739f0f3a83097f33b14b804a27486c82f8feef4c941ed5"
+      }
+    },
+    {
+      "agent_id": "autonomy-assessment",
+      "last_seen": "2026-08-16T23:24:47Z",
+      "status": "ok",
+      "source": "tick",
+      "stale_after": 900,
+      "runtime_attestation": {
+        "component": "agent-tick-daemon",
+        "code_sha256": "c97cecc4d21cd9d0b7aff47d4015b53b8a3d166e94e0aa1fa4bd8ea9994133d0",
+        "workspace_revision": "4a587b3b8399ec9ba96c50d09f1144311d5b5ed2",
+        "python_version": "3.14.7",
+        "runtime_root_digest": "457bc12d5aac572929739f0f3a83097f33b14b804a27486c82f8feef4c941ed5"
+      }
+    },
+    {
+      "agent_id": "governor",
+      "last_seen": "2026-08-16T23:24:47Z",
+      "status": "ok",
+      "source": "tick",
+      "stale_after": 900,
+      "runtime_attestation": {
+        "component": "agent-tick-daemon",
+        "code_sha256": "c97cecc4d21cd9d0b7aff47d4015b53b8a3d166e94e0aa1fa4bd8ea9994133d0",
+        "workspace_revision": "4a587b3b8399ec9ba96c50d09f1144311d5b5ed2",
+        "python_version": "3.14.7",
+        "runtime_root_digest": "457bc12d5aac572929739f0f3a83097f33b14b804a27486c82f8feef4c941ed5"
+      }
+    },
+    {
+      "agent_id": "health-monitor",
+      "last_seen": "2026-08-16T23:24:47Z",
+      "status": "ok",
+      "source": "tick",
+      "stale_after": 900,
+      "runtime_attestation": {
+        "component": "agent-tick-daemon",
+        "code_sha256": "c97cecc4d21cd9d0b7aff47d4015b53b8a3d166e94e0aa1fa4bd8ea9994133d0",
+        "workspace_revision": "4a587b3b8399ec9ba96c50d09f1144311d5b5ed2",
+        "python_version": "3.14.7",
+        "runtime_root_digest": "457bc12d5aac572929739f0f3a83097f33b14b804a27486c82f8feef4c941ed5"
+      }
+    },
+    {
+      "agent_id": "journey-runner",
+      "last_seen": "2026-08-16T23:24:47Z",
+      "status": "ok",
+      "source": "tick",
+      "stale_after": 900,
+      "runtime_attestation": {
+        "component": "agent-tick-daemon",
+        "code_sha256": "c97cecc4d21cd9d0b7aff47d4015b53b8a3d166e94e0aa1fa4bd8ea9994133d0",
+        "workspace_revision": "4a587b3b8399ec9ba96c50d09f1144311d5b5ed2",
+        "python_version": "3.14.7",
+        "runtime_root_digest": "457bc12d5aac572929739f0f3a83097f33b14b804a27486c82f8feef4c941ed5"
+      }
+    },
+    {
+      "agent_id": "knowledge-curator",
+      "last_seen": "2026-08-16T23:24:47Z",
+      "status": "ok",
+      "source": "tick",
+      "stale_after": 900,
+      "runtime_attestation": {
+        "component": "agent-tick-daemon",
+        "code_sha256": "c97cecc4d21cd9d0b7aff47d4015b53b8a3d166e94e0aa1fa4bd8ea9994133d0",
+        "workspace_revision": "4a587b3b8399ec9ba96c50d09f1144311d5b5ed2",
+        "python_version": "3.14.7",
+        "runtime_root_digest": "457bc12d5aac572929739f0f3a83097f33b14b804a27486c82f8feef4c941ed5"
+      }
+    }
+  ],
+  "messages": [],
+  "shadow_events": {
+    "backup_ok": 3,
+    "mirror_drift": 4,
+    "token_missing_legacy": 55,
+    "write_ok": 81
+  },
+  "stale_agents": []
+}
