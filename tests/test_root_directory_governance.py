@@ -53,3 +53,49 @@ def test_allowed_ignored_directory_is_not_blocking() -> None:
     }
 
     assert not module.governance_violation(row)
+
+
+def test_active_worktree_is_not_a_shadow_surface(tmp_path) -> None:
+    module = load_module()
+    entry = tmp_path / "scripts-fix-ci"
+    entry.mkdir()
+    gitdir = tmp_path / "git" / "worktrees" / "scripts-fix-ci"
+    gitdir.mkdir(parents=True)
+    (entry / ".git").write_text(f"gitdir: {gitdir}\n", encoding="utf-8")
+
+    assert module.is_active_worktree(entry)
+    row = {
+        "is_tracked": False,
+        "is_ignored": False,
+        "is_active_worktree": True,
+        "policy_allowed": False,
+    }
+    assert not module.governance_violation(row)
+    assert module.rank_and_tag(
+        [
+            {
+                **row,
+                "files": 1,
+                "kb": 1.0,
+                "has_readme": False,
+                "has_agents": False,
+            }
+        ]
+    )[0]["priority"] == "ok"
+
+
+def test_local_surface_requires_explicit_policy_entry() -> None:
+    module = load_module()
+    policy = {
+        "local_surfaces": {
+            ".crush": {
+                "owner": "workspace-tooling",
+                "class": "client-cache",
+                "lifecycle": "disposable",
+                "reason": "local cache",
+            }
+        }
+    }
+
+    assert module.local_surface_policy(".crush", policy)["lifecycle"] == "disposable"
+    assert module.local_surface_policy(".unknown", policy) is None
