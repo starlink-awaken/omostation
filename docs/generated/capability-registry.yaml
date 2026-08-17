@@ -8,10 +8,10 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 587
-  bos_services: 223
-  bos_domains: 17
-  cli_commands: 138
+  mcp_tools: 595
+  bos_services: 227
+  bos_domains: 18
+  cli_commands: 144
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -553,6 +553,8 @@ mcp_servers:
   - handle_agent_status
   - handle_agent_task_status
   - handle_brief
+  - handle_cartridge_inspect
+  - handle_cartridge_list
   - handle_documents_audit
   - handle_documents_guardrails
   - handle_domain_compliance_audit
@@ -560,12 +562,14 @@ mcp_servers:
   - handle_governance_guardrails
   - handle_governance_preflight
   - handle_health
+  - handle_intent_compile
   - handle_kv_get
   - handle_matrix_list
   - handle_ontology
   - handle_pitfall_check
   - handle_protocol_get
   - handle_protocol_list
+  - handle_shadow_challenge
   - runtime_agent_chat
   - runtime_agent_execute
   - runtime_agent_list
@@ -574,6 +578,8 @@ mcp_servers:
   - runtime_agent_status
   - runtime_agent_task_status
   - runtime_brief
+  - runtime_cartridge_inspect
+  - runtime_cartridge_list
   - runtime_documents_audit
   - runtime_documents_guardrails
   - runtime_domain_compliance_audit
@@ -581,13 +587,15 @@ mcp_servers:
   - runtime_governance_guardrails
   - runtime_governance_preflight
   - runtime_health
+  - runtime_intent_compile
   - runtime_kv_get
   - runtime_matrix_list
   - runtime_ontology_get
   - runtime_pitfall_check
   - runtime_protocol_get
   - runtime_protocol_list
-  tool_count: 42
+  - runtime_shadow_challenge
+  tool_count: 50
 - id: iris
   name: Iris
   layer: L2
@@ -827,8 +835,9 @@ bos_services:
     cockpit: 2
     compute: 3
     ecos: 10
+    fabric: 1
     forge: 1
-    governance: 54
+    governance: 57
     l4-kernel: 1
     memory: 47
     meta: 1
@@ -1205,28 +1214,17 @@ bos_services:
       description: ecos workflow CLI 入口 (ecos/cli/workflow.py)
       transport: stdio
       status: active
+    fabric:
+    - uri: bos://fabric/snapshot/manage
+      description: 主权算力 KV 缓存二进制快照预热 (ADR-0197)
+      transport: stdio
+      status: active
     forge:
     - uri: bos://forge/market/list
       description: agora forge market list — plugin market 查询入口
       transport: inline
       status: active
     governance:
-    - uri: bos://governance/intent/compile
-      description: 意图解构与工程规格编译器 (ADR-0195)
-      transport: stdio
-      status: active
-    - uri: bos://governance/shadow/challenge
-      description: 影子红蓝对抗审查与合规自动打补丁 (ADR-0196)
-      transport: stdio
-      status: active
-    - uri: bos://governance/cartridge/list
-      description: 领域治理卡带列表 (ADR-0198)
-      transport: stdio
-      status: active
-    - uri: bos://fabric/snapshot/manage
-      description: 主权算力 KV 缓存二进制快照预热 (ADR-0197)
-      transport: stdio
-      status: active
     - uri: bos://governance/metaos/decide
       description: MetaOS 决策门控
       transport: stdio
@@ -1441,6 +1439,18 @@ bos_services:
       status: active
     - uri: bos://governance/mof/manage
       description: MOF 能力注册表管理 (查看/验证/更新 mof-capabilities.yaml)
+      transport: stdio
+      status: active
+    - uri: bos://governance/intent/compile
+      description: 意图解构与工程规格编译器 (ADR-0195)
+      transport: stdio
+      status: active
+    - uri: bos://governance/shadow/challenge
+      description: 影子红蓝对抗审查与合规自动补丁 (ADR-0196)
+      transport: stdio
+      status: active
+    - uri: bos://governance/cartridge/list
+      description: 领域治理卡带列表 (ADR-0198)
       transport: stdio
       status: active
     l4-kernel:
@@ -1809,6 +1819,10 @@ cli_commands:
   description: BOS capability 域 / toolbox 外部能力
 - name: cards
   description: 显示 CARDS 卡片状态
+- name: cartridge
+  description: 👁️ 长尾领域治理卡带工坊 (ADR-0198)
+- name: challenge
+  description: ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196)
 - name: channels
   description: 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml
 - name: code
@@ -1899,6 +1913,10 @@ cli_commands:
   description: 刷新 data/_index 元数据
 - name: init
   description: 🚀 初始化向导（同 quickstart）
+- name: inspect
+  description: 查看算力网格健康度与节点状态
+- name: intent
+  description: 🧠 自然语言意图解构与工程规格编译器 (ADR-0195)
 - name: invoke
   description: 调用 capability 服务（执行 BOS YAML command）
 - name: iterate
@@ -1999,6 +2017,10 @@ cli_commands:
   description: stdio JSON-RPC serve mode
 - name: skill
   description: 运行 L4 定时技能
+- name: snapshot
+  description: KV 缓存快照管理与预热
+- name: speculative-eval
+  description: 本地首选投机推演评估
 - name: ssb
   description: '[DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用'
 - name: stats

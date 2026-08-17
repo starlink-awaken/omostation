@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **138** 个命令 (含子命令)。按场景分组如下。
+共 **144** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -53,10 +53,6 @@
 | `cockpit omo` | OMO CLI 委派 (debt/state/governance/lint/...) |
 | `cockpit skill` | 运行 L4 定时技能 |
 | `cockpit ssb` | [DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用 |
-| `cockpit intent` | 🧠 自然语言意图解构与工程规格编译器 (ADR-0195) |
-| `cockpit challenge` | ⚡️ 影子红蓝对抗审查与合规自动补丁 (ADR-0196) |
-| `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊管理 (ADR-0198) |
-| `cockpit fabric` | 🧑‍💻 主权混合算力与 KV 缓存快照预热 (ADR-0197) |
 
 ## 项目入口
 
@@ -127,6 +123,8 @@
 | `cockpit bos-inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
+| `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊 (ADR-0198) |
+| `cockpit challenge` | ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196) |
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
 | `cockpit control` | 控制平面：submit / ack / nack |
@@ -149,6 +147,8 @@
 | `cockpit impact` | 分析符号的变更影响面 |
 | `cockpit inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
 | `cockpit index` | 刷新 data/_index 元数据 |
+| `cockpit inspect` | 查看算力网格健康度与节点状态 |
+| `cockpit intent` | 🧠 自然语言意图解构与工程规格编译器 (ADR-0195) |
 | `cockpit invoke` | 调用 capability 服务（执行 BOS YAML command） |
 | `cockpit journey` | 🗺️ Journey State Graph 状态表达校验器 |
 | `cockpit kems` | 🧬 KEMS 域治理 (domains/status/scan) |
@@ -181,6 +181,8 @@
 | `cockpit scan` | 平面扫描 |
 | `cockpit score` | 评分债务项 |
 | `cockpit serve` | stdio JSON-RPC serve mode |
+| `cockpit snapshot` | KV 缓存快照管理与预热 |
+| `cockpit speculative-eval` | 本地首选投机推演评估 |
 | `cockpit stats` | 索引统计 |
 | `cockpit submit` | 提交控制任务 |
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
