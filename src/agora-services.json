@@ -65,77 +65,13 @@
       "last_health_check": 0.0
     },
     {
-      "name": "mcp-test",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://192.0.2.50:8765",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "test",
-        "mcp"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "rest-test",
-      "description": "",
-      "protocol": "rest",
-      "protocol_config": {
-        "method": "GET"
-      },
-      "mcp_endpoint": "http://192.0.2.51:3000",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "a2a-param-test",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://192.0.2.70:8765",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": {
-        "organization": "TestOrg",
-        "version": "1.0"
-      },
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "list-test",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://192.0.2.60:8765",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
       "name": "minerva",
       "description": "Local-first deep research system — 5 Super Tools (Dropbox Dash pattern)",
       "protocol": "mcp",
       "protocol_config": {},
       "mcp_endpoint": "stdio://minerva",
-      "health_endpoint": "http://localhost:8765/health",
-      "port": 8765,
+      "health_endpoint": "",
+      "port": 0,
       "tags": [
         "research",
         "knowledge",
@@ -525,34 +461,6 @@
       "last_health_check": 0.0
     },
     {
-      "name": "test-monitor-agent",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://127.0.0.1:9099",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "default",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
       "name": "l4-kernel",
       "description": "L4 Domain Kernel — 自我层管理面：27域统一注册 + KEMS六面操作 + 健康聚合",
       "protocol": "mcp",
@@ -567,18 +475,16 @@
       "last_health_check": 0.0
     },
     {
-      "name": "kos",
-      "description": "Hybrid retrieval engine — FTS5 + LanceDB + knowledge graph + GraphRAG",
+      "name": "mcp-test",
+      "description": "",
       "protocol": "mcp",
       "protocol_config": {},
-      "mcp_endpoint": "http://localhost:8765/mcp",
-      "health_endpoint": "http://localhost:8766/health",
-      "port": 8766,
+      "mcp_endpoint": "http://192.0.2.50:8765",
+      "health_endpoint": "",
+      "port": 0,
       "tags": [
-        "retrieval",
-        "knowledge",
-        "graphrag",
-        "search"
+        "test",
+        "mcp"
       ],
       "instances": [],
       "provider_info": null,
@@ -586,14 +492,66 @@
       "last_health_check": 0.0
     },
     {
-      "name": "bad-cfg",
+      "name": "rest-test",
       "description": "",
+      "protocol": "rest",
+      "protocol_config": {
+        "method": "GET"
+      },
+      "mcp_endpoint": "http://192.0.2.51:3000",
+      "health_endpoint": "",
+      "port": 0,
+      "tags": [],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
+    },
+    {
+      "name": "a2a-param-test",
+      "description": "",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "http://192.0.2.70:8765",
+      "health_endpoint": "",
+      "port": 0,
+      "tags": [],
+      "instances": [],
+      "provider_info": {
+        "organization": "TestOrg",
+        "version": "1.0"
+      },
+      "healthy": true,
+      "last_health_check": 0.0
+    },
+    {
+      "name": "list-test",
+      "description": "",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "http://192.0.2.60:8765",
+      "health_endpoint": "",
+      "port": 0,
+      "tags": [],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
+    },
+    {
+      "name": "kos",
+      "description": "Knowledge Operating System — cross-domain search, ontology, and deep research",
       "protocol": "mcp",
       "protocol_config": {},
       "mcp_endpoint": "",
       "health_endpoint": "",
       "port": 0,
-      "tags": [],
+      "tags": [
+        "knowledge",
+        "search",
+        "ontology",
+        "cli"
+      ],
       "instances": [],
       "provider_info": null,
       "healthy": true,

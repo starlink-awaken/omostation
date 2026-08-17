@@ -58,7 +58,7 @@ class DiscoveryEngine:
         },
         "kos": {
             "description": "Hybrid retrieval engine — FTS5 + LanceDB + knowledge graph + GraphRAG",
-            "mcp_endpoint": "http://localhost:8765/mcp",
+            "mcp_endpoint": "stdio://kos",
             "health_port": 8766,
             "health_url": "http://localhost:8766/api/v1/health",
             "tags": ["retrieval", "knowledge", "graphrag", "search"],

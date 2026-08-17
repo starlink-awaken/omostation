@@ -28,7 +28,7 @@ BUILTIN_MARKET: dict[str, dict] = {
         "type": "python",
         "entry": "mcp_server.py",
         "tags": ["research", "llm", "knowledge"],
-        "port": 8765,
+        "port": 0,
     },
     "ontoderive": {
         "name": "ontoderive",
