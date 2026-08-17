@@ -387,6 +387,10 @@ class HybridSearchEngine:
 
         k=60 避免对低排名结果的过度奖励。
         """
+        k = 60
+        scores: dict[str, float] = {}
+        docs: dict[str, dict] = {}
+
         # 动态自适应权重调节 (Adaptive Weights per Query Characteristics)
         weights = {
             "keyword": 1.0,
