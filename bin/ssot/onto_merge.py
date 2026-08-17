@@ -11,7 +11,6 @@
 """
 
 import argparse
-import sys
 from pathlib import Path
 
 import yaml
@@ -87,8 +86,7 @@ def main() -> int:
         print(preview(merges))
         return 0
     merged = apply_merges(ontology, merges)
-    ONTOLOGY.write_text(
-        yaml.safe_dump(merged, allow_unicode=True, sort_keys=False))
+    ONTOLOGY.write_text(yaml.safe_dump(merged, allow_unicode=True, sort_keys=False))
     print(f"[OK] 并入 {len(merges)} 条 generalizations → {ONTOLOGY}")
     return 0
 

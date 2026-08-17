@@ -24,7 +24,6 @@ from typing import Any
 
 import yaml
 
-
 # Match the python module a command runs against. We look for a
 # `python -m <package>.<module>` substring or a direct `<package>`
 # script invocation. This is intentionally narrow so it does not
@@ -58,9 +57,7 @@ def _module_to_package(module: str, workspace: set[str]) -> str | None:
     return None
 
 
-def _services_with_kairon_backend(
-    bos_registry: Path, workspace: set[str]
-) -> list[dict[str, Any]]:
+def _services_with_kairon_backend(bos_registry: Path, workspace: set[str]) -> list[dict[str, Any]]:
     docs = [d for d in yaml.safe_load_all(bos_registry.read_text(encoding="utf-8")) if d]
     services: list[dict[str, Any]] = []
     for d in docs:
@@ -156,10 +153,7 @@ def main(argv: list[str] | None = None) -> int:
     md = _build_markdown(annotated, workspace)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(md, encoding="utf-8")
-    print(
-        f"wrote {args.out} "
-        f"({sum(1 for s in annotated if s['_kairon_pkg'])}/{len(annotated)} routes mapped)"
-    )
+    print(f"wrote {args.out} ({sum(1 for s in annotated if s['_kairon_pkg'])}/{len(annotated)} routes mapped)")
     return 0
 
 

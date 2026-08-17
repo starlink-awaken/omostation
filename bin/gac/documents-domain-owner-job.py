@@ -62,19 +62,13 @@ def _build_job(
         raise ValueError("domain_registry.documents_relative_ref must be non-empty")
     relative_ref = Path(registry_ref)
     if relative_ref.is_absolute() or ".." in relative_ref.parts:
-        raise ValueError(
-            "domain_registry.documents_relative_ref must be relative and non-traversing"
-        )
+        raise ValueError("domain_registry.documents_relative_ref must be relative and non-traversing")
     if (documents / relative_ref).resolve() != domain_registry:
-        raise ValueError(
-            "explicit domain registry does not match the Workspace binding"
-        )
+        raise ValueError("explicit domain registry does not match the Workspace binding")
 
     registry = ManifestRegistry.load(domain_registry)
     manifest_ids = [manifest.id for manifest in registry.list_all()]
-    binding = get_manifest_validation_job(
-        project.get("runtime_jobs"), job_id, manifest_ids
-    )
+    binding = get_manifest_validation_job(project.get("runtime_jobs"), job_id, manifest_ids)
     domain_id = str(binding["domain_id"])
     manifest = registry.get(domain_id)
     if manifest is None:  # pragma: no cover - shared binding validation owns this
@@ -88,9 +82,7 @@ def _build_job(
         job_id=str(binding["id"]),
         reads=(
             _relative_documents_path(domain_registry, documents, "domain registry"),
-            _relative_documents_path(
-                manifest.root / "DOMAIN.yaml", documents, "domain manifest"
-            ),
+            _relative_documents_path(manifest.root / "DOMAIN.yaml", documents, "domain manifest"),
         ),
         writes=(),
         owner=str(binding["owner"]),
@@ -135,10 +127,7 @@ def main(argv: list[str] | None = None) -> int:
             project_registry_path=args.project_registry,
             l4_executable=args.l4_executable,
         )
-        if not args.dry_run and (
-            not args.l4_executable.is_file()
-            or not os.access(args.l4_executable, os.X_OK)
-        ):
+        if not args.dry_run and (not args.l4_executable.is_file() or not os.access(args.l4_executable, os.X_OK)):
             raise ValueError("--l4-executable must be an executable file")
         result = run_job(
             jobs,

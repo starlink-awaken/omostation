@@ -5,21 +5,36 @@ Usage:
   python3 bin/ssot/mail-sender.py --draft --to xx --subject "通知" --body "内容"
   python3 bin/ssot/mail-sender.py --list-drafts
 """
+
 from __future__ import annotations
+
 import argparse
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
+
 from _shared import utc_now
 
 DRAFTS_DIR = Path.home() / "Documents" / "@工作文档" / "卫健委" / "_drafts"
 
 
-def create_draft(to: str, subject: str, body: str, cc: str = "", attachments: list[str] | None = None, from_addr: str = "ws-xxk@bjfsh.gov.cn") -> Path:
+def create_draft(
+    to: str,
+    subject: str,
+    body: str,
+    cc: str = "",
+    attachments: list[str] | None = None,
+    from_addr: str = "ws-xxk@bjfsh.gov.cn",
+) -> Path:
     msg = MIMEMultipart()
-    msg["From"], msg["To"], msg["Subject"], msg["Date"] = from_addr, to, subject, utc_now()
+    msg["From"], msg["To"], msg["Subject"], msg["Date"] = (
+        from_addr,
+        to,
+        subject,
+        utc_now(),
+    )
     if cc:
         msg["Cc"] = cc
     msg.attach(MIMEText(body, "plain", "utf-8"))

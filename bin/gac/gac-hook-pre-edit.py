@@ -132,8 +132,20 @@ def _check_ssot_pointer(rule, rid, rel, content):
         return warnings
     pattern = re.compile(rf"(?<![\[\.]){re.escape(field)}\s*:\s*\d")
     for m in pattern.finditer(content):
-        ctx = content[max(0, m.start() - 40): m.end() + 80]
-        if any(kw in ctx for kw in ["_ref", "见 ", "see ", "指向", "指针", "SSOT", "system.yaml", "示例值"]):
+        ctx = content[max(0, m.start() - 40) : m.end() + 80]
+        if any(
+            kw in ctx
+            for kw in [
+                "_ref",
+                "见 ",
+                "see ",
+                "指向",
+                "指针",
+                "SSOT",
+                "system.yaml",
+                "示例值",
+            ]
+        ):
             continue
         warnings.append(f"GaC {rid}: {rel} 硬编码 {field} 值 (违反 SSOT, 用指针引用)")
     return warnings
@@ -143,12 +155,22 @@ def _check_port_hardcode(rule, rid, rel, content):
     """端口硬编码检查: 禁止在源码中硬编码端口号."""
     warnings = []
     # Match patterns like :7422 or port=7422 (not in comments or env defaults)
-    pattern = re.compile(r'(?<!\w)[:=](\d{4,5})(?!\d)')
+    pattern = re.compile(r"(?<!\w)[:=](\d{4,5})(?!\d)")
     for m in pattern.finditer(content):
         port = int(m.group(1))
         if 1024 < port < 65536:
-            ctx = content[max(0, m.start() - 30): m.end() + 30]
-            if any(kw in ctx.lower() for kw in ["env", "os.environ", "getenv", "default", "registry", "port-registry"]):
+            ctx = content[max(0, m.start() - 30) : m.end() + 30]
+            if any(
+                kw in ctx.lower()
+                for kw in [
+                    "env",
+                    "os.environ",
+                    "getenv",
+                    "default",
+                    "registry",
+                    "port-registry",
+                ]
+            ):
                 continue
             warnings.append(f"GaC {rid}: {rel} 疑似端口硬编码 :{port} (应走 protocols/port-registry.yaml + env)")
     return warnings
@@ -157,9 +179,9 @@ def _check_port_hardcode(rule, rid, rel, content):
 def _check_import_nucleus(rule, rid, rel, content):
     """nucleus import 检查: 禁止顶层 import nucleus."""
     warnings = []
-    pattern = re.compile(r'^from\s+nucleus\b|^import\s+nucleus\b', re.MULTILINE)
+    pattern = re.compile(r"^from\s+nucleus\b|^import\s+nucleus\b", re.MULTILINE)
     for m in pattern.finditer(content):
-        ctx = content[max(0, m.start() - 20): m.end() + 20]
+        ctx = content[max(0, m.start() - 20) : m.end() + 20]
         if "type: ignore" in ctx or "TYPE_CHECKING" in ctx:
             continue
         warnings.append(f"GaC {rid}: {rel} 顶层 import nucleus (已废弃, 改为 lazy import 或移除)")
@@ -178,7 +200,7 @@ def _check_direct_omo_io(rule, rid, rel, content):
 def _check_broad_except(rule, rid, rel, content):
     """broad except 检查: 警告 bare except / except Exception."""
     warnings = []
-    pattern = re.compile(r'except\s*(\s*:|\s+Exception\s*:)', re.MULTILINE)
+    pattern = re.compile(r"except\s*(\s*:|\s+Exception\s*:)", re.MULTILINE)
     count = len(pattern.findall(content))
     if count > 3:
         warnings.append(f"GaC {rid}: {rel} 有 {count} 处 broad except (建议细化异常类型)")
@@ -191,22 +213,45 @@ def _check_yaml_bypass(rel, content):
     memory frontmatter-safe-load-all: P45 frontmatter 化后 safe_load_all 必备, yaml.load 崩.
     """
     warnings = []
-    pattern = re.compile(r'\byaml\.load(?:_all)?\s*\(')  # code-review #2: 覆盖 load_all
+    pattern = re.compile(r"\byaml\.load(?:_all)?\s*\(")  # code-review #2: 覆盖 load_all
     for m in pattern.finditer(content):
-        ctx = content[max(0, m.start()-30):m.end()+40]
-        if any(kw in ctx for kw in ['SafeLoader', 'FullLoader', 'type: ignore', '# yaml.load']):
+        ctx = content[max(0, m.start() - 30) : m.end() + 40]
+        if any(kw in ctx for kw in ["SafeLoader", "FullLoader", "type: ignore", "# yaml.load"]):
             continue
-        warnings.append(f"GaC SEC-YAML-BYPASS: {rel} yaml.load() 不安全 (用 safe_load/safe_load_all, memory frontmatter-safe-load-all)")
+        warnings.append(
+            f"GaC SEC-YAML-BYPASS: {rel} yaml.load() 不安全 (用 safe_load/safe_load_all, memory frontmatter-safe-load-all)"
+        )
     return warnings
 
 
 def _check_sensitive_write(rel, content):
     """sensitive_write 检查 (Wave 3 横向扩展, 内置): 禁止硬编码 password/token/secret/api_key."""
     warnings = []
-    pattern = re.compile(r'\b(password|passwd|token|secret|api_key|apikey|access_key|private_key)\b\s*[:=]\s*["\'][^"\']{4,}["\']', re.IGNORECASE)
+    pattern = re.compile(
+        r'\b(password|passwd|token|secret|api_key|apikey|access_key|private_key)\b\s*[:=]\s*["\'][^"\']{4,}["\']',
+        re.IGNORECASE,
+    )
     for m in pattern.finditer(content):
-        ctx = content[max(0, m.start()-40):m.end()+40].lower()
-        if any(kw in ctx for kw in ['env', 'getenv', 'os.environ', 'example', 'dummy', 'placeholder', 'your_', 'xxx', '***', 'test_', 'fake_', 'mock_', '_from_env', 'config']):
+        ctx = content[max(0, m.start() - 40) : m.end() + 40].lower()
+        if any(
+            kw in ctx
+            for kw in [
+                "env",
+                "getenv",
+                "os.environ",
+                "example",
+                "dummy",
+                "placeholder",
+                "your_",
+                "xxx",
+                "***",
+                "test_",
+                "fake_",
+                "mock_",
+                "_from_env",
+                "config",
+            ]
+        ):
             continue
         warnings.append(f"GaC SEC-SENSITIVE-WRITE: {rel} 疑似硬编码敏感信息 (用 env var / vault, 非 source)")
     return warnings
@@ -229,19 +274,35 @@ def _check_god_module_edit(rel, content):
     warn_th = int(os.environ.get("GAC_GOD_MODULE_WARN", "800"))
     error_th = int(os.environ.get("GAC_GOD_MODULE_ERROR", "1500"))
     if total > error_th:
-        warnings.append(f"GaC GOD-MODULE-EDIT: {rel} 编辑后约 {total} 行 (>{error_th} error, 拆分, memory check-god-module-mechanism)")
+        warnings.append(
+            f"GaC GOD-MODULE-EDIT: {rel} 编辑后约 {total} 行 (>{error_th} error, 拆分, memory check-god-module-mechanism)"
+        )
     elif total > warn_th:
-        warnings.append(f"GaC GOD-MODULE-EDIT: {rel} 编辑后约 {total} 行 (>{warn_th} warn, memory check-god-module-mechanism)")
+        warnings.append(
+            f"GaC GOD-MODULE-EDIT: {rel} 编辑后约 {total} 行 (>{warn_th} warn, memory check-god-module-mechanism)"
+        )
     return warnings
 
 
 def _check_eval_exec(rel, content):
     """eval_exec 检查 (Wave 3 横向扩展, 内置): 禁止 eval()/exec() (不安全)."""
     warnings = []
-    pattern = re.compile(r'(?<!\.)\b(eval|exec)\s*\(')  # code-review #3: 排除 self.eval/obj.exec 方法
+    pattern = re.compile(r"(?<!\.)\b(eval|exec)\s*\(")  # code-review #3: 排除 self.eval/obj.exec 方法
     for m in pattern.finditer(content):
-        ctx = content[max(0, m.start()-30):m.end()+30].lower()
-        if any(kw in ctx for kw in ['ast', 'literal_eval', 'compile', '# eval', '# exec', 'example', 'test_', 'docstring']):
+        ctx = content[max(0, m.start() - 30) : m.end() + 30].lower()
+        if any(
+            kw in ctx
+            for kw in [
+                "ast",
+                "literal_eval",
+                "compile",
+                "# eval",
+                "# exec",
+                "example",
+                "test_",
+                "docstring",
+            ]
+        ):
             continue
         warnings.append(f"GaC SEC-EVAL-EXEC: {rel} 疑似 {m.group(1)}() 不安全 (用 ast.literal_eval 或专门解析)")
     return warnings
@@ -250,7 +311,10 @@ def _check_eval_exec(rel, content):
 def _check_mutable_default(rel, content):
     """mutable_default 检查 (Wave 3 横向扩展, 内置): 函数默认参数用 mutable — Python 高频坑."""
     warnings = []
-    pattern = re.compile(r'def\s+\w+\s*\([^)]*=\s*(\[\]|\{\}|set\(\)|dict\(\)|list\(\)|dict\([^)]*\)|list\([^)]*\))', re.MULTILINE)  # code-review #6: 覆盖嵌套
+    pattern = re.compile(
+        r"def\s+\w+\s*\([^)]*=\s*(\[\]|\{\}|set\(\)|dict\(\)|list\(\)|dict\([^)]*\)|list\([^)]*\))",
+        re.MULTILINE,
+    )  # code-review #6: 覆盖嵌套
     for m in pattern.finditer(content):
         warnings.append(f"GaC PY-MUTABLE-DEFAULT: {rel} 函数默认参数用 mutable {m.group(1)} (用 None + 内部创建)")
     return warnings
@@ -286,7 +350,9 @@ def main() -> int:
     if all_warnings:
         # 宪法 Wave 3 (ADR-0171): GAC_PRE_EDIT_BLOCK=1 启用 blocking (事前拦, exit 2)
         block_mode = os.environ.get("GAC_PRE_EDIT_BLOCK") == "1"
-        prefix = "🚫 GaC SSOT 违规 (blocking, 事前拦 — Wave 3)" if block_mode else "⚠️  GaC SSOT 检查警告 (advisory, 不阻塞)"
+        prefix = (
+            "🚫 GaC SSOT 违规 (blocking, 事前拦 — Wave 3)" if block_mode else "⚠️  GaC SSOT 检查警告 (advisory, 不阻塞)"
+        )
         print(f"{prefix}:", file=sys.stderr)
         for w in all_warnings:
             print(f"  - {w}", file=sys.stderr)

@@ -16,9 +16,7 @@ _BIN_GAC = Path(__file__).resolve().parents[1] / "bin" / "gac"
 
 def _load_crystallizer():
     """skill-crystallizer.py 文件名含连字符, 用 importlib 加载."""
-    spec = importlib.util.spec_from_file_location(
-        "skill_crystallizer", _BIN_GAC / "skill-crystallizer.py"
-    )
+    spec = importlib.util.spec_from_file_location("skill_crystallizer", _BIN_GAC / "skill-crystallizer.py")
     assert spec is not None and spec.loader is not None  # 类型收窄 (Pyright)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
@@ -28,9 +26,7 @@ def _load_crystallizer():
 def _write_beliefs(root: Path, beliefs: list[dict]) -> None:
     p = root / ".omo" / "state" / "agent-beliefs"
     p.mkdir(parents=True, exist_ok=True)
-    (p / "index.yaml").write_text(
-        yaml.safe_dump({"beliefs": beliefs}, allow_unicode=True), encoding="utf-8"
-    )
+    (p / "index.yaml").write_text(yaml.safe_dump({"beliefs": beliefs}, allow_unicode=True), encoding="utf-8")
 
 
 def test_crystallize_2plus_same_topic(tmp_path: Path) -> None:

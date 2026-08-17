@@ -6,10 +6,9 @@ Owner: governance-team
 Trigger: Agent CLI 升级 / 新增 skill / 配置变更
 """
 
-import os
-from pathlib import Path
 import datetime
 from datetime import UTC
+from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
 WORKSPACE_ROOT = SCRIPT_DIR.parent.parent
@@ -30,6 +29,7 @@ TEMPLATE_HEADER = """# INDEX-AGENTS.md — Agent 能力索引
 
 """
 
+
 def _skill_frontmatter(skill_md: Path) -> dict:
     """Parse YAML frontmatter from SKILL.md (name/description)."""
     try:
@@ -43,6 +43,7 @@ def _skill_frontmatter(skill_md: Path) -> dict:
         return {}
     try:
         import yaml
+
         meta = yaml.safe_load(parts[1]) or {}
         return meta if isinstance(meta, dict) else {}
     except Exception:
@@ -61,12 +62,15 @@ def scan_skills():
                 desc = (meta.get("description") or "").strip().replace("\n", " ")
                 if len(desc) > 120:
                     desc = desc[:117] + "..."
-                skills.append({
-                    "id": d.name,
-                    "name": meta.get("name") or d.name,
-                    "description": desc or d.name.replace("-", " "),
-                })
+                skills.append(
+                    {
+                        "id": d.name,
+                        "name": meta.get("name") or d.name,
+                        "description": desc or d.name.replace("-", " "),
+                    }
+                )
     return skills
+
 
 def generate_cli_section():
     return """## 本地 Agent CLI
@@ -80,6 +84,7 @@ def generate_cli_section():
 
 """
 
+
 def generate_skills_section(skills):
     section = """
 ---
@@ -91,7 +96,7 @@ def generate_skills_section(skills):
 | `.agents/skills/` | 项目级 Skills (工作区通用) |
 
 """
-    
+
     if skills:
         section += """
 ---
@@ -117,8 +122,9 @@ def generate_skills_section(skills):
 `external-agent-attach` · `agent-onboarding` · `bos-service-discovery` · `project-governance` · `a2a-coordination`。
 
 """
-    
+
     return section
+
 
 def generate_guide_section():
     return """
@@ -146,6 +152,7 @@ def generate_guide_section():
 
 """
 
+
 def generate_footer():
     return """
 ---
@@ -159,21 +166,23 @@ def generate_footer():
 > Agent 工作流使用见 `bin/agent-workflow.py --help`
 """
 
+
 def main():
     generated_at = datetime.datetime.now(UTC).isoformat()
-    
+
     skills = scan_skills()
-    
+
     content = TEMPLATE_HEADER.format(generated_at=generated_at)
     content += generate_cli_section()
     content += generate_skills_section(skills)
     content += generate_guide_section()
     content += generate_footer()
-    
+
     with open(INDEX_FILE, "w") as f:
         f.write(content)
-    
+
     print(f"Generated: {INDEX_FILE}")
+
 
 if __name__ == "__main__":
     main()

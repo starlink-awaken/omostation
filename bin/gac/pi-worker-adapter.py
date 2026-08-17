@@ -18,7 +18,7 @@ import time
 import urllib.request
 import uuid
 from collections.abc import Callable, Sequence
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -45,7 +45,7 @@ def digest_bytes(value: bytes) -> str:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _is_within(path: Path, root: Path) -> bool:
@@ -81,7 +81,16 @@ def fixed_argv(prompt: str) -> list[str]:
 
 
 def _system_temp_roots() -> tuple[Path, ...]:
-    return tuple(dict.fromkeys(path.resolve() for path in (Path(tempfile.gettempdir()), Path("/tmp"), Path("/private/tmp"))))
+    return tuple(
+        dict.fromkeys(
+            path.resolve()
+            for path in (
+                Path(tempfile.gettempdir()),
+                Path("/tmp"),
+                Path("/private/tmp"),
+            )
+        )
+    )
 
 
 def validate_receipt_path(receipt_path: Path | str, *, user_home: Path) -> Path:
@@ -123,7 +132,10 @@ def _copy_omlxc_provider(user_home: Path, agent_dir: Path) -> None:
         "baseUrl": provider["baseUrl"],
         "models": [{"id": MODEL}],
     }
-    models.write_text(json.dumps({"providers": {PROVIDER: projected_provider}}, separators=(",", ":")), encoding="utf-8")
+    models.write_text(
+        json.dumps({"providers": {PROVIDER: projected_provider}}, separators=(",", ":")),
+        encoding="utf-8",
+    )
     models.chmod(0o600)
     store = agent_dir / "models-store.json"
     store.write_bytes(b"{}")
@@ -146,7 +158,9 @@ def _is_audited_omlxc_provider(provider: object) -> bool:
     if provider.get("api") != "openai-completions" or provider.get("authHeader") is not True:
         return False
     models = provider.get("models")
-    if not isinstance(models, list) or not any(isinstance(model, dict) and model.get("id") == MODEL for model in models):
+    if not isinstance(models, list) or not any(
+        isinstance(model, dict) and model.get("id") == MODEL for model in models
+    ):
         return False
     api_key = provider.get("apiKey")
     if not isinstance(api_key, str) or not api_key.startswith("!"):
@@ -237,7 +251,11 @@ def _default_health_probe() -> dict[str, Any] | None:
 
 
 def _health_is_expected(payload: dict[str, Any] | None) -> bool:
-    return isinstance(payload, dict) and payload.get("status") == "ok" and payload.get("service") == "aetherforge-openai-proxy"
+    return (
+        isinstance(payload, dict)
+        and payload.get("status") == "ok"
+        and payload.get("service") == "aetherforge-openai-proxy"
+    )
 
 
 def _default_marker_probe(marker: str) -> dict[int, int]:
@@ -342,7 +360,11 @@ def run_worker(
 ) -> dict[str, Any]:
     """Execute one bounded worker call; returned model text is intentionally not receipt data."""
     if not execute:
-        return {"command": fixed_argv(prompt), "mode": "dry-run", "tools_enabled": False}
+        return {
+            "command": fixed_argv(prompt),
+            "mode": "dry-run",
+            "tools_enabled": False,
+        }
     if not 1 <= timeout_seconds <= MAX_TIMEOUT_SECONDS:
         raise AdapterError("timeout_rejected")
     home = (Path.home() if user_home is None else Path(user_home).expanduser()).resolve()
@@ -417,7 +439,7 @@ def run_worker(
         receipt["output_digest"] = digest_bytes(output.encode("utf-8"))
     except AdapterError as exc:
         error_code = exc.code
-    except Exception:  # noqa: BLE001 - retain no dependency text or secrets
+    except Exception:
         error_code = "adapter_failed"
     finally:
         if process is not None:
@@ -483,7 +505,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             expect_exact=args.expect_exact,
         )
     except AdapterError as exc:
-        print(json.dumps({"error_code": exc.code, "outcome": "failed"}, separators=(",", ":")), file=sys.stderr)
+        print(
+            json.dumps({"error_code": exc.code, "outcome": "failed"}, separators=(",", ":")),
+            file=sys.stderr,
+        )
         return 2
     if args.execute:
         sys.stdout.write(result["output"])

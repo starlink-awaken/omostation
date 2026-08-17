@@ -13,6 +13,7 @@
 
 DB 路径: 优先 env OMO_COORDINATION_DB; 否则用临时目录 (测试不污染真实共享 DB).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -103,18 +104,12 @@ def suite_concurrency(repeat: int = 20) -> bool:
     )
     conn.commit()
     conn.close()
-    procs = [
-        mp.Process(target=_claim_worker, args=(str(expiry_db), expired_rid, owner, 0.05))
-        for owner in ("a", "b")
-    ]
+    procs = [mp.Process(target=_claim_worker, args=(str(expiry_db), expired_rid, owner, 0.05)) for owner in ("a", "b")]
     for proc in procs:
         proc.start()
     for proc in procs:
         proc.join(timeout=30)
-    expiry_results = [
-        json.loads((expiry_db.parent / f"worker-{owner}.result").read_text())
-        for owner in ("a", "b")
-    ]
+    expiry_results = [json.loads((expiry_db.parent / f"worker-{owner}.result").read_text()) for owner in ("a", "b")]
     expiry_winners = [result for result in expiry_results if result["ok"]]
     assert len(expiry_winners) == 1 and expiry_winners[0]["token"] == 2, expiry_results
     print(f"concurrency: {ok_rounds}/{repeat} rounds → exactly one winner")
@@ -135,9 +130,7 @@ def suite_fencing() -> bool:
     c1_re = cs.claim_resource("branch", rid, owner="a", ttl_hours=2)
     assert c1_re and c1_re.token == 1, f"same-owner 重取应幂等返回 token=1, 实际={c1_re.token if c1_re else None}"
     conn0 = sqlite3.connect(str(cs.db_path()))
-    rows0 = conn0.execute(
-        "SELECT COUNT(*) FROM claims WHERE resource_id=? AND state='active'", (rid,)
-    ).fetchone()[0]
+    rows0 = conn0.execute("SELECT COUNT(*) FROM claims WHERE resource_id=? AND state='active'", (rid,)).fetchone()[0]
     conn0.close()
     assert rows0 == 1, f"same-owner 重取不应新增 active 行, 实际={rows0}"
     assert c1_re.expires_at > c1.expires_at, "same-owner 重取应顺延 TTL"
@@ -178,8 +171,15 @@ def suite_fencing() -> bool:
         [
             sys.executable,
             str(Path(__file__).with_name("swarm-discipline-cli.py")),
-            "token-check", "--resource-type", "branch", "--resource-id", rid,
-            "--owner", "c", "--token", str(c3.token),
+            "token-check",
+            "--resource-type",
+            "branch",
+            "--resource-id",
+            rid,
+            "--owner",
+            "c",
+            "--token",
+            str(c3.token),
         ],
         capture_output=True,
         text=True,
@@ -191,8 +191,15 @@ def suite_fencing() -> bool:
         [
             sys.executable,
             str(Path(__file__).with_name("swarm-discipline-cli.py")),
-            "token-check", "--resource-type", "branch", "--resource-id", rid,
-            "--owner", "intruder", "--token", str(c3.token),
+            "token-check",
+            "--resource-type",
+            "branch",
+            "--resource-id",
+            rid,
+            "--owner",
+            "intruder",
+            "--token",
+            str(c3.token),
         ],
         capture_output=True,
         text=True,
@@ -206,8 +213,16 @@ def suite_fencing() -> bool:
         [
             sys.executable,
             str(Path(__file__).with_name("swarm-discipline-cli.py")),
-            "token-check", "--resource-type", "branch", "--resource-id", rid,
-            "--owner", "legacy", "--token", "0", "--missing-token",
+            "token-check",
+            "--resource-type",
+            "branch",
+            "--resource-id",
+            rid,
+            "--owner",
+            "legacy",
+            "--token",
+            "0",
+            "--missing-token",
         ],
         capture_output=True,
         text=True,
@@ -221,8 +236,15 @@ def suite_fencing() -> bool:
         [
             sys.executable,
             str(Path(__file__).with_name("swarm-discipline-cli.py")),
-            "token-check", "--resource-type", "branch", "--resource-id", "work/mirror-missing",
-            "--owner", "mirror-owner", "--token", "7",
+            "token-check",
+            "--resource-type",
+            "branch",
+            "--resource-id",
+            "work/mirror-missing",
+            "--owner",
+            "mirror-owner",
+            "--token",
+            "7",
         ],
         capture_output=True,
         text=True,
@@ -239,8 +261,16 @@ def suite_fencing() -> bool:
         [
             sys.executable,
             str(Path(__file__).with_name("swarm-discipline-cli.py")),
-            "token-check", "--resource-type", "branch", "--resource-id", "work/broken-mirror",
-            "--owner", "broken-owner", "--token", "0", "--missing-token",
+            "token-check",
+            "--resource-type",
+            "branch",
+            "--resource-id",
+            "work/broken-mirror",
+            "--owner",
+            "broken-owner",
+            "--token",
+            "0",
+            "--missing-token",
         ],
         env=broken_env,
         capture_output=True,
@@ -256,10 +286,7 @@ def suite_fencing() -> bool:
         "SELECT kind, resource_id, detail_json FROM shadow_events "
         "WHERE kind IN ('token_missing_legacy', 'token_stale_rejected')"
     ).fetchall()
-    events = {
-        (row[0], row[1]): json.loads(row[2])
-        for row in event_rows
-    }
+    events = {(row[0], row[1]): json.loads(row[2]) for row in event_rows}
     conn.close()
     legacy_detail = events[("token_missing_legacy", rid)]
     assert legacy_detail["owner"] == "legacy" and legacy_detail["local_token"] == 0
@@ -268,7 +295,7 @@ def suite_fencing() -> bool:
     worktree_script = Path(__file__).with_name("gac-worktree.sh").read_text()
     assert '--owner "$session"' in worktree_script, "submit token-check 必须传 claim owner"
     assert 'if [ -n "$_t05a_token" ]; then' not in worktree_script, "missing token 不得静默跳过"
-    assert '--missing-token' in worktree_script
+    assert "--missing-token" in worktree_script
     assert '--token "${_t05a_token:-0}"' in worktree_script
     print("fencing: 正常/旧 claim missing-token/镜像缺失均进入可审计 shadow verdict")
     return True
@@ -284,8 +311,7 @@ def suite_schema() -> bool:
     conn = sqlite3.connect(str(db))
     journal = conn.execute("PRAGMA journal_mode").fetchone()[0]
     version = conn.execute("PRAGMA user_version").fetchone()[0]
-    tables = {r[0] for r in conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table'")}
+    tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     conn.close()
     assert journal.lower() == "wal", f"journal_mode={journal}"
     assert version == cs.SCHEMA_VERSION
@@ -329,22 +355,12 @@ def suite_runtime() -> bool:
         assert os.environ["WORKSPACE_CODE_ROOT"] == str(daemon.CODE_ROOT)
         daemon._heartbeat({"type": "runtime-root-probe"})
         heartbeat_path = runtime_root / ".omo" / "state" / "agent-tick-daemon.jsonl"
-        assert heartbeat_path.exists(), (
-            "heartbeat 必须写 runtime root，不得写 code root"
-        )
-        heartbeat_entry = json.loads(
-            heartbeat_path.read_text().strip().splitlines()[-1]
-        )
+        assert heartbeat_path.exists(), "heartbeat 必须写 runtime root，不得写 code root"
+        heartbeat_entry = json.loads(heartbeat_path.read_text().strip().splitlines()[-1])
         assert heartbeat_entry["type"] == "runtime-root-probe"
 
-        expected_root_digest = (
-            __import__("hashlib")
-            .sha256(str(runtime_root.resolve()).encode())
-            .hexdigest()
-        )
-        daemon._coordination_heartbeat(
-            {"results": [{"agent_id": "runtime-agent", "ok": True, "action": "noop"}]}
-        )
+        expected_root_digest = __import__("hashlib").sha256(str(runtime_root.resolve()).encode()).hexdigest()
+        daemon._coordination_heartbeat({"results": [{"agent_id": "runtime-agent", "ok": True, "action": "noop"}]})
         observed_root: dict[str, str] = {}
         original_load_omo = daemon._load_omo
         original_coordination_heartbeat = daemon._coordination_heartbeat
@@ -377,9 +393,7 @@ def suite_runtime() -> bool:
             "--porcelain=v2",
             "--ignored=matching",
         ]
-        code_status_before = subprocess.run(
-            code_status_cmd, capture_output=True, text=True, check=True
-        ).stdout
+        code_status_before = subprocess.run(code_status_cmd, capture_output=True, text=True, check=True).stdout
         subprocess_env = os.environ.copy()
         subprocess_env["PYTHONDONTWRITEBYTECODE"] = "1"
         subprocess_env[cs.ENV_DB_PATH] = str(runtime_root / "coordination.sqlite3")
@@ -397,9 +411,7 @@ def suite_runtime() -> bool:
             check=False,
             timeout=120,
         )
-        assert isolated_tick.returncode == 0, (
-            isolated_tick.stdout + isolated_tick.stderr
-        )
+        assert isolated_tick.returncode == 0, isolated_tick.stdout + isolated_tick.stderr
         isolated_result = json.loads(isolated_tick.stdout)
         expected_agent_ids = {
             "health-monitor",
@@ -413,12 +425,8 @@ def suite_runtime() -> bool:
         assert isolated_result["agent_count"] == len(expected_agent_ids)
         assert isolated_result["ok_count"] == len(expected_agent_ids)
         assert isolated_result["failed_count"] == 0
-        assert {item["agent_id"] for item in isolated_result["results"]} == (
-            expected_agent_ids
-        )
-        code_status_after = subprocess.run(
-            code_status_cmd, capture_output=True, text=True, check=True
-        ).stdout
+        assert {item["agent_id"] for item in isolated_result["results"]} == (expected_agent_ids)
+        code_status_after = subprocess.run(code_status_cmd, capture_output=True, text=True, check=True).stdout
         assert code_status_after == code_status_before, (
             "isolated --once must not mutate the code checkout\n"
             f"before={code_status_before!r}\nafter={code_status_after!r}"
@@ -433,9 +441,7 @@ def suite_runtime() -> bool:
         else:
             os.environ["WORKSPACE_CODE_ROOT"] = original_code_root
     conn = sqlite3.connect(str(db))
-    detail_json = conn.execute(
-        "SELECT detail_json FROM agent_health WHERE agent_id='runtime-agent'"
-    ).fetchone()[0]
+    detail_json = conn.execute("SELECT detail_json FROM agent_health WHERE agent_id='runtime-agent'").fetchone()[0]
     conn.close()
     detail = json.loads(detail_json)
     attestation = detail["runtime_attestation"]

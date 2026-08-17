@@ -22,7 +22,7 @@ def check_docling_graph(tool: ToolInfo | None = None) -> dict:
     if tool and not tool.available:
         return {"available": False, "error": "docling-graph not installed"}
     try:
-        import docling_graph  # type: ignore[import-not-found]  # noqa: F401
+        import docling_graph  # type: ignore[import-not-found]
 
         return {"available": True, "version": "installed"}
     except ImportError:
@@ -44,7 +44,7 @@ def convert_to_markdown(file_path: str) -> str | None:
 def extract_knowledge_graph(file_path: str, template_path: str | None = None) -> dict:
     """使用 Docling-Graph 从文档提取知识图谱。"""
     try:
-        from docling_graph import PipelineContext, run_pipeline  # noqa: F401  # type: ignore[reportMissingImports]
+        from docling_graph import PipelineContext, run_pipeline  # type: ignore[reportMissingImports]
 
         config = {
             "source": file_path,

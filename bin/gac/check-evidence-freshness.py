@@ -8,13 +8,14 @@ Output:
   - exit 0 = evidence fresh and healthy
   - exit 1 = report too old, score too low, or generation failed
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -34,9 +35,15 @@ def _latest_report() -> Path | None:
 def _run_evidence_smoke() -> dict:
     """Run evidence-smoke and return the parsed report."""
     result = subprocess.run(
-        [sys.executable, str(WORKSPACE / "bin" / "gac" / "evidence-smoke.py"), "--json"],
+        [
+            sys.executable,
+            str(WORKSPACE / "bin" / "gac" / "evidence-smoke.py"),
+            "--json",
+        ],
         cwd=str(WORKSPACE),
-        capture_output=True, text=True, timeout=60,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     # Parse JSON from stdout (may have non-JSON prefix)
     raw = result.stdout
@@ -54,13 +61,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     report_path = _latest_report()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     violations: list[dict] = []
     score = 0.0
     age_days = -1
 
     if report_path:
-        mtime = datetime.fromtimestamp(report_path.stat().st_mtime, tz=timezone.utc)
+        mtime = datetime.fromtimestamp(report_path.stat().st_mtime, tz=UTC)
         age_days = (now - mtime).days
         try:
             with open(report_path) as f:
@@ -70,15 +77,19 @@ def main(argv: list[str] | None = None) -> int:
             score = 0
 
         if age_days > MAX_AGE.days:
-            violations.append({
-                "type": "stale_report",
-                "detail": f"report age {age_days}d > {MAX_AGE.days}d max",
-            })
+            violations.append(
+                {
+                    "type": "stale_report",
+                    "detail": f"report age {age_days}d > {MAX_AGE.days}d max",
+                }
+            )
         if score < MIN_SCORE:
-            violations.append({
-                "type": "low_score",
-                "detail": f"score {score} < {MIN_SCORE} min",
-            })
+            violations.append(
+                {
+                    "type": "low_score",
+                    "detail": f"score {score} < {MIN_SCORE} min",
+                }
+            )
     else:
         # No report exists — generate one
         report = _run_evidence_smoke()
@@ -90,13 +101,18 @@ def main(argv: list[str] | None = None) -> int:
     ok = len(violations) == 0
 
     if args.json:
-        print(json.dumps({
-            "ok": ok,
-            "score": score,
-            "age_days": age_days,
-            "max_age_days": MAX_AGE.days,
-            "violations": violations,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "ok": ok,
+                    "score": score,
+                    "age_days": age_days,
+                    "max_age_days": MAX_AGE.days,
+                    "violations": violations,
+                },
+                indent=2,
+            )
+        )
     else:
         status = "PASS" if ok else "FAIL"
         print(f"check-evidence-freshness: {status} (score={score}, age={age_days}d)")

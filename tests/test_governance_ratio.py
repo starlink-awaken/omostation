@@ -9,6 +9,7 @@ Validates the _classify() function in check-governance-ratio.py:
 - Governance profiles and workflows still classify correctly
 - Non-governance locks (e.g. .omo/_truth/) still classify as governance
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -35,11 +36,19 @@ class TestClassifyTrackOverride:
     """Explicit track field should always win."""
 
     def test_track_governance(self, mod):
-        evt = {"track": "governance", "agent_profile": "engineering-agent", "workflow_id": "project-code-change"}
+        evt = {
+            "track": "governance",
+            "agent_profile": "engineering-agent",
+            "workflow_id": "project-code-change",
+        }
         assert mod._classify(evt) == "governance"
 
     def test_track_flex(self, mod):
-        evt = {"track": "flex", "agent_profile": "governance-agent", "workflow_id": "governance-state-mutation"}
+        evt = {
+            "track": "flex",
+            "agent_profile": "governance-agent",
+            "workflow_id": "governance-state-mutation",
+        }
         assert mod._classify(evt) == "flex"
 
     def test_track_collaboration(self, mod):
@@ -51,7 +60,10 @@ class TestFlexOverrideWorkflows:
     """project-code-change and project-doc-change should be flex even with governance-agent."""
 
     def test_governance_agent_project_code_change(self, mod):
-        evt = {"agent_profile": "governance-agent", "workflow_id": "project-code-change"}
+        evt = {
+            "agent_profile": "governance-agent",
+            "workflow_id": "project-code-change",
+        }
         assert mod._classify(evt) == "flex"
 
     def test_governance_agent_project_doc_change(self, mod):
@@ -59,7 +71,10 @@ class TestFlexOverrideWorkflows:
         assert mod._classify(evt) == "flex"
 
     def test_engineering_agent_project_code_change(self, mod):
-        evt = {"agent_profile": "engineering-agent", "workflow_id": "project-code-change"}
+        evt = {
+            "agent_profile": "engineering-agent",
+            "workflow_id": "project-code-change",
+        }
         assert mod._classify(evt) == "flex"
 
 
@@ -67,15 +82,24 @@ class TestGovernanceClassification:
     """Governance profiles and workflows should classify as governance."""
 
     def test_governance_agent_governance_state_mutation(self, mod):
-        evt = {"agent_profile": "governance-agent", "workflow_id": "governance-state-mutation"}
+        evt = {
+            "agent_profile": "governance-agent",
+            "workflow_id": "governance-state-mutation",
+        }
         assert mod._classify(evt) == "governance"
 
     def test_release_agent_submodule_pointer_close(self, mod):
-        evt = {"agent_profile": "release-agent", "workflow_id": "submodule-pointer-close"}
+        evt = {
+            "agent_profile": "release-agent",
+            "workflow_id": "submodule-pointer-close",
+        }
         assert mod._classify(evt) == "flex"
 
     def test_gov_agent_submodule_pointer_close_is_flex(self, mod):
-        evt = {"agent_profile": "governance-agent", "workflow_id": "submodule-pointer-close"}
+        evt = {
+            "agent_profile": "governance-agent",
+            "workflow_id": "submodule-pointer-close",
+        }
         assert mod._classify(evt) == "flex"
 
     def test_mof_agent_mof_model_change(self, mod):
@@ -121,7 +145,10 @@ class TestWorkflowLockPrefixExclusion:
         assert mod._classify(evt) == "governance"
 
     def test_no_locks_flex(self, mod):
-        evt = {"agent_profile": "engineering-agent", "workflow_id": "project-code-change"}
+        evt = {
+            "agent_profile": "engineering-agent",
+            "workflow_id": "project-code-change",
+        }
         assert mod._classify(evt) == "flex"
 
 

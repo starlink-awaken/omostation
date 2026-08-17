@@ -3,6 +3,7 @@
 Verifies that scene_binding from External Connection Fabric is propagated
 to Workflow Mesh events.
 """
+
 from __future__ import annotations
 
 

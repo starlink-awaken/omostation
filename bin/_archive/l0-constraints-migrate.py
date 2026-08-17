@@ -46,19 +46,13 @@ from pathlib import Path
 
 import yaml
 
-V1_PATH_DEFAULT = (
-    Path("projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml")
-)
+V1_PATH_DEFAULT = Path("projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml")
 
 # ADR-0137 P1: 把派生面放到源所在的子模块内, 而非主仓根
 # 默认写到 projects/ecos/.omo/_derived/ (源在 ecos 子模块)
-V2_PATH_DEFAULT = (
-    Path("projects/ecos/.omo/_derived/l0-constraints.v2.yaml")
-)
+V2_PATH_DEFAULT = Path("projects/ecos/.omo/_derived/l0-constraints.v2.yaml")
 
-REPORT_PATH_DEFAULT = (
-    Path("docs/M4-report-p1s2-l0-migration.md")
-)
+REPORT_PATH_DEFAULT = Path("docs/M4-report-p1s2-l0-migration.md")
 
 # type → severity 映射 (P1-S2 §3)
 TYPE_TO_SEVERITY = {
@@ -227,9 +221,9 @@ def make_report(v1_entries: list[dict], v2_entries: list[dict], errors: list[str
     sev_hist = Counter(e.get("severity") for e in v2_entries)
     lines: list[str] = []
     lines.append("# L0-constraints v1 → v2 Migration Report\n")
-    lines.append(f"**Date**: 2026-07-06\n")
-    lines.append(f"**ADR**: ADR-0132 P1-S2\n")
-    lines.append(f"**Schema**: `projects/ecos/src/ecos/ssot/mof/m2/constraint_l0.yaml`\n")
+    lines.append("**Date**: 2026-07-06\n")
+    lines.append("**ADR**: ADR-0132 P1-S2\n")
+    lines.append("**Schema**: `projects/ecos/src/ecos/ssot/mof/m2/constraint_l0.yaml`\n")
     lines.append("\n---\n\n")
     lines.append("## Summary\n\n")
     lines.append(f"- v1 条目数: **{len(v1_entries)}**\n")
@@ -241,7 +235,7 @@ def make_report(v1_entries: list[dict], v2_entries: list[dict], errors: list[str
     for t, c in sorted(type_hist.items()):
         sev = TYPE_TO_SEVERITY.get(t, "medium")
         lines.append(f"| `{t}` | `{sev}` | {c} |\n")
-    lines.append(f"\n**合计**:\n\n")
+    lines.append("\n**合计**:\n\n")
     for s, c in sorted(sev_hist.items()):
         lines.append(f"- `{s}`: {c} 条\n")
     if errors:
@@ -249,7 +243,7 @@ def make_report(v1_entries: list[dict], v2_entries: list[dict], errors: list[str
         for err in errors:
             lines.append(f"- ❌ {err}\n")
     else:
-        lines.append("\n## 校验结果\n\n✅ 全部 {n} 条通过 ConstraintL0 schema 校验\n".format(n=len(v2_entries)))
+        lines.append(f"\n## 校验结果\n\n✅ 全部 {len(v2_entries)} 条通过 ConstraintL0 schema 校验\n")
     lines.append("\n## 字段映射详情 (12 字段 v2 形状)\n\n")
     lines.append("| v1 字段 | v2 字段 | 转换 |\n")
     lines.append("|---------|---------|------|\n")

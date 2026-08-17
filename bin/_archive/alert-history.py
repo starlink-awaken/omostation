@@ -19,7 +19,7 @@ import argparse
 import json
 import sys
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -31,7 +31,7 @@ def _load_events(root: Path, days: int, kinds: set[str]) -> list[dict]:
     log_file = root / ".omo" / "_knowledge" / "omo-events.jsonl"
     if not log_file.exists():
         return []
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.now(UTC) - timedelta(days=days)
     records = []
     try:
         with open(log_file, encoding="utf-8") as f:
@@ -81,9 +81,10 @@ def _within_hours(ts: str, hours: int) -> bool:
     if not ts:
         return False
     try:
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta, timezone
+
         rec_dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff = datetime.now(UTC) - timedelta(hours=hours)
         return rec_dt >= cutoff
     except Exception:
         return False
@@ -118,21 +119,15 @@ def analyze_history(records: list[dict], suppressions: list[dict]) -> dict:
     for day, counts in by_day.items():
         critical = counts.get("P0", 0) + counts.get("P1", 0)
         if critical >= 3:
-            peak_days.append(
-                {"day": day, "critical_count": critical, "breakdown": dict(counts)}
-            )
+            peak_days.append({"day": day, "critical_count": critical, "breakdown": dict(counts)})
 
     total = sum(by_level.values())
     suppress_count = len(suppressions)
-    suppression_rate = (
-        suppress_count / (total + suppress_count) if (total + suppress_count) > 0 else 0
-    )
+    suppression_rate = suppress_count / (total + suppress_count) if (total + suppress_count) > 0 else 0
 
     # P71: suppression efficiency (触发 vs 抑制比)
     fired_total = sum(v for k, v in by_cross_level.items() if k.endswith("_fired"))
-    suppressed_total = sum(
-        v for k, v in by_cross_level.items() if k.endswith("_suppressed")
-    )
+    suppressed_total = sum(v for k, v in by_cross_level.items() if k.endswith("_suppressed"))
     efficiency = suppressed_total / fired_total if fired_total > 0 else 0.0
 
     # P74 增: by_level_sup_state (按级别拆分的触发 vs 抑制)
@@ -219,22 +214,24 @@ def detect_anomalies(records: list[dict], suppressions: list[dict]) -> list[dict
             mean_c = sum(counts) / len(counts)
             # 简化标准差 (避免 import statistics)
             var_c = sum((c - mean_c) ** 2 for c in counts) / len(counts)
-            std_c = var_c ** 0.5
+            std_c = var_c**0.5
             if std_c > 0:
                 # 找 z-score > 2 的天
                 for day, c in day_counts.items():
                     z = (c - mean_c) / std_c
                     if z > 2:
-                        anomalies.append({
-                            "type": "statistical_zscore",
-                            "severity": "high",
-                            "day": day,
-                            "count": c,
-                            "z_score": round(z, 2),
-                            "mean": round(mean_c, 2),
-                            "std": round(std_c, 2),
-                            "message": f"📊 {day} 通知数 {c} (z={z:.1f}, mean={mean_c:.1f}, std={std_c:.1f}) 异常高 (>2σ)",
-                        })
+                        anomalies.append(
+                            {
+                                "type": "statistical_zscore",
+                                "severity": "high",
+                                "day": day,
+                                "count": c,
+                                "z_score": round(z, 2),
+                                "mean": round(mean_c, 2),
+                                "std": round(std_c, 2),
+                                "message": f"📊 {day} 通知数 {c} (z={z:.1f}, mean={mean_c:.1f}, std={std_c:.1f}) 异常高 (>2σ)",
+                            }
+                        )
     # 1. sudden_spike: 按小时桶统计
     hour_type: dict[str, int] = {}
     for r in records:
@@ -248,23 +245,27 @@ def detect_anomalies(records: list[dict], suppressions: list[dict]) -> list[dict
     for k, count in hour_type.items():
         if count > 5:
             hour, atype = k.split("|", 1)
-            anomalies.append({
-                "type": "sudden_spike",
-                "severity": "high",
-                "hour": hour,
-                "alert_type": atype,
-                "count": count,
-                "message": f"⚠️  {atype} 在 {hour} 1h 内触发 {count} 次 (> 5 阈值)",
-            })
+            anomalies.append(
+                {
+                    "type": "sudden_spike",
+                    "severity": "high",
+                    "hour": hour,
+                    "alert_type": atype,
+                    "count": count,
+                    "message": f"⚠️  {atype} 在 {hour} 1h 内触发 {count} 次 (> 5 阈值)",
+                }
+            )
     # 2. level_escalation: 7d 内 P0
     for r in records:
         if r.get("level") == "P0":
-            anomalies.append({
-                "type": "level_escalation",
-                "severity": "critical",
-                "timestamp": r.get("timestamp", ""),
-                "message": f"🚨 7d 内 P0 触发: {r.get('level_reason', '?')}",
-            })
+            anomalies.append(
+                {
+                    "type": "level_escalation",
+                    "severity": "critical",
+                    "timestamp": r.get("timestamp", ""),
+                    "message": f"🚨 7d 内 P0 触发: {r.get('level_reason', '?')}",
+                }
+            )
             break  # 只报首个
     # 3. type_concentration
     if records:
@@ -276,23 +277,27 @@ def detect_anomalies(records: list[dict], suppressions: list[dict]) -> list[dict
         if total > 0:
             for t, c in type_counter.items():
                 if c / total > 0.8:
-                    anomalies.append({
-                        "type": "type_concentration",
-                        "severity": "medium",
-                        "alert_type": t,
-                        "percentage": round(c / total * 100, 1),
-                        "message": f"📊 {t} 占 {c / total * 100:.1f}% (> 80% 集中度)",
-                    })
+                    anomalies.append(
+                        {
+                            "type": "type_concentration",
+                            "severity": "medium",
+                            "alert_type": t,
+                            "percentage": round(c / total * 100, 1),
+                            "message": f"📊 {t} 占 {c / total * 100:.1f}% (> 80% 集中度)",
+                        }
+                    )
     # 4. suppression_heavy
     total_suppressions = len(suppressions)
     total_notifications = len(records)
     if total_notifications > 0 and total_suppressions / (total_suppressions + total_notifications) > 0.7:
-        anomalies.append({
-            "type": "suppression_heavy",
-            "severity": "medium",
-            "suppression_rate": round(total_suppressions / (total_suppressions + total_notifications) * 100, 1),
-            "message": f"🔕 抑制率 {total_suppressions / (total_suppressions + total_notifications) * 100:.1f}% (> 70% 阈值)",
-        })
+        anomalies.append(
+            {
+                "type": "suppression_heavy",
+                "severity": "medium",
+                "suppression_rate": round(total_suppressions / (total_suppressions + total_notifications) * 100, 1),
+                "message": f"🔕 抑制率 {total_suppressions / (total_suppressions + total_notifications) * 100:.1f}% (> 70% 阈值)",
+            }
+        )
     return anomalies
 
 
@@ -325,8 +330,8 @@ def main() -> int:
         # P70 增: rich 库颜色 (terminal-friendly)
         try:
             from rich.console import Console
-            from rich.table import Table
             from rich.panel import Panel
+            from rich.table import Table
             from rich.text import Text
 
             console = Console()
@@ -361,11 +366,7 @@ def main() -> int:
             # 按天柱状图 (rich Bar)
             if hist["by_day"]:
                 recent_days = sorted(hist["by_day"].items())[-7:]
-                max_total = (
-                    max(sum(counts.values()) for _, counts in recent_days)
-                    if recent_days
-                    else 1
-                )
+                max_total = max(sum(counts.values()) for _, counts in recent_days) if recent_days else 1
                 from rich.bar import Bar
 
                 bar_table = Table(title="按天 (最近 7d)", show_header=True)
@@ -397,13 +398,13 @@ def main() -> int:
                 )
                 # P78 增: anomalies 显示
                 if hist.get("anomalies"):
-                    console.print(Panel(
-                        "\n".join(
-                            f"  [{a['severity']}] {a['message']}" for a in hist["anomalies"]
-                        ),
-                        title=f"🔍 P78 异常洞察 ({len(hist['anomalies'])} 个)",
-                        border_style="yellow",
-                    ))
+                    console.print(
+                        Panel(
+                            "\n".join(f"  [{a['severity']}] {a['message']}" for a in hist["anomalies"]),
+                            title=f"🔍 P78 异常洞察 ({len(hist['anomalies'])} 个)",
+                            border_style="yellow",
+                        )
+                    )
             output = ""  # rich 自身渲染
         except ImportError:
             # fallback: 纯文本

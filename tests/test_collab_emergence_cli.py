@@ -1,4 +1,5 @@
 """Drive collab_cli + emergence_cli real entry points."""
+
 from __future__ import annotations
 
 import json

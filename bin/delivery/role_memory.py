@@ -6,6 +6,7 @@ Proves:
 3. KOS seed + retrieve of shared-context documents
 4. Optional gbrain TS tests when node_modules present
 """
+
 from __future__ import annotations
 
 import json
@@ -78,7 +79,12 @@ def _cli(args: list[str], *, cwd: Path | None = None) -> dict[str, Any]:
     try:
         data = json.loads(r.stdout or "{}")
     except json.JSONDecodeError:
-        data = {"ok": False, "error": "bad_json", "stdout": (r.stdout or "")[:300], "stderr": (r.stderr or "")[:300]}
+        data = {
+            "ok": False,
+            "error": "bad_json",
+            "stdout": (r.stdout or "")[:300],
+            "stderr": (r.stderr or "")[:300],
+        }
     data["_returncode"] = r.returncode
     return data
 
@@ -148,9 +154,7 @@ def measure_cross_process_handoff(tmp: Path) -> dict[str, Any]:
         ]
     )
     export = _cli([*base, "export-kos", "--scope", scope, "--db", str(db)])
-    hits = _cli(
-        ["retrieve-kos", "--query", "collab.handoff", "--db", str(db)]
-    )
+    hits = _cli(["retrieve-kos", "--query", "collab.handoff", "--db", str(db)])
     share_ok = (
         w.get("ok")
         and r_ok.get("ok")
@@ -220,10 +224,7 @@ def measure_role_memory_share() -> dict[str, Any]:
     return stamp_non_physical_goal(
         {
             "gate": "G-DEL.4",
-            "kpi": (
-                "cross-agent shared context R/W + isolation; "
-                "cross-process CLI handoff; KOS seed/retrieve"
-            ),
+            "kpi": ("cross-agent shared context R/W + isolation; cross-process CLI handoff; KOS seed/retrieve"),
             "env": "file store .omo/_delivery/shared-context + optional gbrain TS",
             "env_class": "in-process_simulation",
             "caliber": "single_repo_gbrain",
@@ -233,9 +234,7 @@ def measure_role_memory_share() -> dict[str, Any]:
             },
             "cross_process": cross,
             "gbrain_test": gbrain_test,
-            "gbrain_source_present": (
-                gbrain / "src/core/agent-shared-context.ts"
-            ).is_file(),
+            "gbrain_source_present": (gbrain / "src/core/agent-shared-context.ts").is_file(),
             "cli": str(CLI.relative_to(ROOT)) if CLI.is_file() else None,
             "callchain": [
                 "agent-A → shared-context-cli write",

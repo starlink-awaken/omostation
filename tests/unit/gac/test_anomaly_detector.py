@@ -3,13 +3,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = REPO_ROOT / "bin" / "gac" / "anomaly-detector.py"
 
 
-def run_detector(args: list[str] | None = None, metrics_content: str | None = None, metrics_file: Path | None = None) -> subprocess.CompletedProcess:
+def run_detector(
+    args: list[str] | None = None,
+    metrics_content: str | None = None,
+    metrics_file: Path | None = None,
+) -> subprocess.CompletedProcess:
     cmd = [sys.executable, str(SCRIPT)]
     if args:
         cmd.extend(args)
@@ -21,8 +23,20 @@ def run_detector(args: list[str] | None = None, metrics_content: str | None = No
 class TestAnomalyDetector:
     def test_no_anomalies_when_stable(self, tmp_path: Path):
         metrics_file = tmp_path / "metrics-store.jsonl"
-        entries = [{"check": f"check-{i}", "duration_ms": 10.0, "timestamp": f"2026-01-01T00:00:{i:02d}Z", "ok": True, "reason": "ok"} for i in range(10)]
-        metrics_file.write_text("".join(json.dumps(e, ensure_ascii=False) + "\n" for e in entries), encoding="utf-8")
+        entries = [
+            {
+                "check": f"check-{i}",
+                "duration_ms": 10.0,
+                "timestamp": f"2026-01-01T00:00:{i:02d}Z",
+                "ok": True,
+                "reason": "ok",
+            }
+            for i in range(10)
+        ]
+        metrics_file.write_text(
+            "".join(json.dumps(e, ensure_ascii=False) + "\n" for e in entries),
+            encoding="utf-8",
+        )
         result = run_detector(["--window", "10", "--z-threshold", "2.0"], metrics_file=metrics_file)
         assert result.returncode == 0
         data = json.loads(result.stdout)
@@ -30,9 +44,29 @@ class TestAnomalyDetector:
 
     def test_detects_spike(self, tmp_path: Path):
         metrics_file = tmp_path / "metrics-store.jsonl"
-        entries = [{"check": "check-x", "duration_ms": 10.0, "timestamp": f"2026-01-01T00:00:{i:02d}Z", "ok": True, "reason": "ok"} for i in range(9)]
-        entries.append({"check": "check-x", "duration_ms": 1000.0, "timestamp": "2026-01-01T00:00:09Z", "ok": True, "reason": "slow"})
-        metrics_file.write_text("".join(json.dumps(e, ensure_ascii=False) + "\n" for e in entries), encoding="utf-8")
+        entries = [
+            {
+                "check": "check-x",
+                "duration_ms": 10.0,
+                "timestamp": f"2026-01-01T00:00:{i:02d}Z",
+                "ok": True,
+                "reason": "ok",
+            }
+            for i in range(9)
+        ]
+        entries.append(
+            {
+                "check": "check-x",
+                "duration_ms": 1000.0,
+                "timestamp": "2026-01-01T00:00:09Z",
+                "ok": True,
+                "reason": "slow",
+            }
+        )
+        metrics_file.write_text(
+            "".join(json.dumps(e, ensure_ascii=False) + "\n" for e in entries),
+            encoding="utf-8",
+        )
         result = run_detector(["--window", "10", "--z-threshold", "2.0"], metrics_file=metrics_file)
         assert result.returncode == 0
         data = json.loads(result.stdout)
@@ -50,8 +84,20 @@ class TestAnomalyDetector:
 
     def test_window_truncation(self, tmp_path: Path):
         metrics_file = tmp_path / "metrics-store.jsonl"
-        entries = [{"check": "check-w", "duration_ms": float(i), "timestamp": f"2026-01-01T00:00:{i:02d}Z", "ok": True, "reason": "ok"} for i in range(20)]
-        metrics_file.write_text("".join(json.dumps(e, ensure_ascii=False) + "\n" for e in entries), encoding="utf-8")
+        entries = [
+            {
+                "check": "check-w",
+                "duration_ms": float(i),
+                "timestamp": f"2026-01-01T00:00:{i:02d}Z",
+                "ok": True,
+                "reason": "ok",
+            }
+            for i in range(20)
+        ]
+        metrics_file.write_text(
+            "".join(json.dumps(e, ensure_ascii=False) + "\n" for e in entries),
+            encoding="utf-8",
+        )
         result = run_detector(["--window", "5"], metrics_file=metrics_file)
         assert result.returncode == 0
         data = json.loads(result.stdout)

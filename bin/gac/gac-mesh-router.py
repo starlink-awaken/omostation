@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # bin/gac/gac-mesh-router.py — omlx 算力网格智能流式路由代理 (GaC-v6 治理标准)
 
-import sys
-import json
-import sqlite3
-import urllib.request
-import urllib.error
-import threading
 import asyncio
-import time
+import json
 import os
-from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+import sqlite3
+import sys
+import threading
+import time
+import urllib.error
+import urllib.request
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -43,12 +43,14 @@ def get_all_compute_nodes() -> list[dict]:
             meta = json.loads(r["metadata"] or "{}")
             ip = meta.get("ip")
             if ip:
-                nodes.append({
-                    "id": r["entity_id"],
-                    "label": r["label"],
-                    "ip": ip,
-                    "hardware": meta.get("hardware", "unknown")
-                })
+                nodes.append(
+                    {
+                        "id": r["entity_id"],
+                        "label": r["label"],
+                        "ip": ip,
+                        "hardware": meta.get("hardware", "unknown"),
+                    }
+                )
     except Exception as e:
         print(f"  ⚠️ [Mesh Router] Failed to query KOS DB: {e}", file=sys.stderr)
     return nodes
@@ -69,7 +71,7 @@ def get_compute_nodes_for_model(model_name: str) -> list[dict]:
                FROM kos_relations r 
                JOIN kos_entities e ON r.source_id = e.entity_id 
                WHERE r.predicate = 'runs_model' AND r.target_id = ?""",
-            (target_concept,)
+            (target_concept,),
         ).fetchall()
         conn.close()
 
@@ -77,12 +79,14 @@ def get_compute_nodes_for_model(model_name: str) -> list[dict]:
             meta = json.loads(r["metadata"] or "{}")
             ip = meta.get("ip")
             if ip:
-                nodes.append({
-                    "id": r["entity_id"],
-                    "label": r["label"],
-                    "ip": ip,
-                    "hardware": meta.get("hardware", "unknown")
-                })
+                nodes.append(
+                    {
+                        "id": r["entity_id"],
+                        "label": r["label"],
+                        "ip": ip,
+                        "hardware": meta.get("hardware", "unknown"),
+                    }
+                )
     except Exception as e:
         print(f"  ⚠️ [Mesh Router] Failed to query KOS DB: {e}", file=sys.stderr)
     return nodes
@@ -92,11 +96,7 @@ def probe_node_alive(ip: str) -> bool:
     """快速探测 IP 节点的 omlx 统一网关是否在线且可访问 (1.5s 探活超时)"""
     url = f"http://{ip}:4000/v1/models"
     try:
-        req = urllib.request.Request(
-            url,
-            headers={"Authorization": "Bearer sk-omlx-admin"},
-            method="GET"
-        )
+        req = urllib.request.Request(url, headers={"Authorization": "Bearer sk-omlx-admin"}, method="GET")
         with urllib.request.urlopen(req, timeout=1.5) as response:
             return response.status == 200
     except Exception:
@@ -106,10 +106,7 @@ def probe_node_alive(ip: str) -> bool:
 async def async_probe_node_port(ip: str) -> bool:
     """使用 asyncio 快速并发探测端口连通性 (1.5s 超时)"""
     try:
-        reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(ip, 4000),
-            timeout=1.5
-        )
+        reader, writer = await asyncio.wait_for(asyncio.open_connection(ip, 4000), timeout=1.5)
         writer.close()
         try:
             await writer.wait_closed()
@@ -144,10 +141,10 @@ def write_alert_report(status_map: dict):
                 "ip": ip,
                 "label": v["label"],
                 "hardware": v["hardware"],
-                "status": "ONLINE" if v["alive"] else "OFFLINE"
+                "status": "ONLINE" if v["alive"] else "OFFLINE",
             }
             for ip, v in status_map.items()
-        ]
+        ],
     }
 
     if status == "RED":
@@ -187,7 +184,7 @@ async def heartbeat_daemon_loop():
                 "alive": alive,
                 "last_check": time.time(),
                 "label": node["label"],
-                "hardware": node["hardware"]
+                "hardware": node["hardware"],
             }
 
         with NODE_STATUS_LOCK:
@@ -199,6 +196,7 @@ async def heartbeat_daemon_loop():
 
 def start_heartbeat_thread():
     """在后台线程中启动 asyncio 事件循环"""
+
     def run():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -223,11 +221,11 @@ class MeshRouterHandler(BaseHTTPRequestHandler):
         self.forward_to_gateway(LOCAL_GATEWAY)
 
     def handle_chat_completions(self):
-        content_length = int(self.headers.get('Content-Length', 0))
+        content_length = int(self.headers.get("Content-Length", 0))
         post_data = self.rfile.read(content_length)
 
         try:
-            req_json = json.loads(post_data.decode('utf-8'))
+            req_json = json.loads(post_data.decode("utf-8"))
             model_name = req_json.get("model", "coder")
         except Exception:
             model_name = "coder"
@@ -247,7 +245,9 @@ class MeshRouterHandler(BaseHTTPRequestHandler):
                 # 若缓存显示在线则直接选择
                 if ip in NODE_STATUS and NODE_STATUS[ip]["alive"]:
                     active_node_ip = ip
-                    print(f"  ✅ [Mesh Router] Routed to ONLINE node '{node['label']}' ({NODE_STATUS[ip]['hardware']}) via cache.")
+                    print(
+                        f"  ✅ [Mesh Router] Routed to ONLINE node '{node['label']}' ({NODE_STATUS[ip]['hardware']}) via cache."
+                    )
                     break
 
         # 3. 决定目标网关 (支持多级 Failover 避险降级)
@@ -260,7 +260,9 @@ class MeshRouterHandler(BaseHTTPRequestHandler):
 
             if not local_alive and cloud_gateway:
                 target_gateway = cloud_gateway
-                print(f"  🚨 [Mesh Router FAILOVER] Local gateway OFFLINE! Redirecting to CLOUD backup API: {target_gateway}")
+                print(
+                    f"  🚨 [Mesh Router FAILOVER] Local gateway OFFLINE! Redirecting to CLOUD backup API: {target_gateway}"
+                )
             else:
                 target_gateway = LOCAL_GATEWAY
                 print(f"  ⚠️ [Mesh Router Fallback] Redirecting to HOST local gateway: {target_gateway}")
@@ -280,12 +282,7 @@ class MeshRouterHandler(BaseHTTPRequestHandler):
 
         method = self.command
         try:
-            req = urllib.request.Request(
-                target_url,
-                data=body_bytes,
-                headers=headers,
-                method=method
-            )
+            req = urllib.request.Request(target_url, data=body_bytes, headers=headers, method=method)
 
             with urllib.request.urlopen(req, timeout=120.0) as upstream_response:
                 self.send_response(upstream_response.status)
@@ -307,7 +304,7 @@ class MeshRouterHandler(BaseHTTPRequestHandler):
         except Exception as e:
             self.send_response(502)
             self.end_headers()
-            self.wfile.write(json.dumps({"error": f"Mesh Router Bad Gateway: {e}"}).encode('utf-8'))
+            self.wfile.write(json.dumps({"error": f"Mesh Router Bad Gateway: {e}"}).encode("utf-8"))
 
 
 def main():
@@ -319,6 +316,7 @@ def main():
         # 2. 检查端口备案
         try:
             import yaml
+
             port_yaml_path = WORKSPACE / "protocols/port-registry.yaml"
             if port_yaml_path.is_file():
                 ports_data = yaml.safe_load(port_yaml_path.read_text(encoding="utf-8")) or {}
@@ -335,7 +333,7 @@ def main():
     # 启动后台异步心跳探测守护线程
     start_heartbeat_thread()
 
-    server_address = ('', PORT)
+    server_address = ("", PORT)
     httpd = ThreadingHTTPServer(server_address, MeshRouterHandler)
     print(f"🚀 [Mesh Router] Active Intelligent proxy listening on port {PORT}...")
     try:

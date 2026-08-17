@@ -24,6 +24,7 @@
     python3 bin/mof/check-mof-capabilities-drift.py --scope metaos
     python3 bin/mof/check-mof-capabilities-drift.py --json      # JSON 输出
 """
+
 from __future__ import annotations
 
 import argparse
@@ -38,9 +39,7 @@ REPO = Path(__file__).resolve().parents[2]
 REGISTRY = REPO / ".omo/_truth/registry/mof-capabilities.yaml"
 M1_DIR = REPO / "projects/ecos/src/ecos/ssot/mof/m1"
 M2_DIR = REPO / "projects/ecos/src/ecos/ssot/mof/m2"
-MCPTOOL_MODEL_DRIVEN = (
-    REPO / "projects/ecos/src/ecos/ssot/mof/m1/mcptool/MCPTOOL-MODEL-DRIVEN.yaml"
-)
+MCPTOOL_MODEL_DRIVEN = REPO / "projects/ecos/src/ecos/ssot/mof/m1/mcptool/MCPTOOL-MODEL-DRIVEN.yaml"
 MCP_SERVER = REPO / "projects/model-driven/src/model_driven/mcp_server.py"
 
 RULE_ID = "CR-X4-MOF-CAPABILITIES-DRIFT"
@@ -138,9 +137,7 @@ def check_mcptool_tool_count(declared: int | None, mcp_code: str) -> list[dict]:
 # ─── metaos registry 检查函数 (纯函数, 接受参数便于注入测试, §J1) ───
 
 
-def check_projects_capabilities_entrypoints(
-    capabilities: list, repo: Path = REPO
-) -> list[dict]:
+def check_projects_capabilities_entrypoints(capabilities: list, repo: Path = REPO) -> list[dict]:
     """projects-capabilities.yaml 每个 capability entrypoint 必须存在 (死条目检出).
 
     治 metaos 拆迁遗留等: entrypoint 指向已删目录 (kairon.metaos →
@@ -166,9 +163,7 @@ def check_projects_capabilities_entrypoints(
     return findings
 
 
-def check_metaos_cli_entrypoint(
-    interface_path: Path = METAOS_INTERFACE, repo: Path = REPO
-) -> list[dict]:
+def check_metaos_cli_entrypoint(interface_path: Path = METAOS_INTERFACE, repo: Path = REPO) -> list[dict]:
     """metaos INTERFACE.yaml cli module (metaos.cli:main) 可达性.
 
     module 形如 'metaos.cli:main' → src/metaos/cli/__init__.py:main.
@@ -231,9 +226,7 @@ def detect_drift() -> dict:
     mcp_findings: list[dict] = []
     if MCPTOOL_MODEL_DRIVEN.exists() and MCP_SERVER.exists():
         data = yaml.safe_load(MCPTOOL_MODEL_DRIVEN.read_text(encoding="utf-8")) or {}
-        mcp_findings = check_mcptool_tool_count(
-            data.get("tool_count"), MCP_SERVER.read_text(encoding="utf-8")
-        )
+        mcp_findings = check_mcptool_tool_count(data.get("tool_count"), MCP_SERVER.read_text(encoding="utf-8"))
     all_findings = path_findings + stat_findings + mcp_findings
     return {
         "rule_id": RULE_ID,
@@ -286,6 +279,7 @@ def _bump_model_stats() -> bool:
     True if a bump happened, False if the file was already in sync.
     """
     import datetime as _dt
+
     import yaml as _yaml
 
     if not REGISTRY.exists():
@@ -310,21 +304,20 @@ def _bump_model_stats() -> bool:
     if not bumps:
         return False
     for key, (old, new) in bumps.items():
-        pattern = re.compile(rf"^(\s*){re.escape(key)}:\s*{re.escape(str(old))}\s*$", re.M)
+        pattern = re.compile(rf"^(\s*){re.escape(key)}:\s*{re.escape(str(old))}\s*$", re.MULTILINE)
         text, n = pattern.subn(rf"\1{key}: {new}", text, count=1)
         if n == 0:
             print(
-                f"::warning::bump-stats: could not find {key}: {old} line in "
-                f"{REGISTRY.relative_to(REPO)}",
+                f"::warning::bump-stats: could not find {key}: {old} line in {REGISTRY.relative_to(REPO)}",
                 file=sys.stderr,
             )
-    today = _dt.datetime.now(tz=_dt.timezone.utc).date().isoformat()
+    today = _dt.datetime.now(tz=_dt.UTC).date().isoformat()
     text = re.sub(
         r"^(\s*)stats_as_of:\s*\"[^\"]*\"\s*$",
         rf'\1stats_as_of: "{today}"',
         text,
         count=1,
-        flags=re.M,
+        flags=re.MULTILINE,
     )
     REGISTRY.write_text(text, encoding="utf-8")
     for key, (old, new) in bumps.items():
@@ -333,9 +326,7 @@ def _bump_model_stats() -> bool:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="注册表 drift 检测 (MOF ADR-0238 + metaos §J1 扩展)"
-    )
+    parser = argparse.ArgumentParser(description="注册表 drift 检测 (MOF ADR-0238 + metaos §J1 扩展)")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     parser.add_argument(
         "--scope",
@@ -365,7 +356,7 @@ def main() -> int:
     if args.bump_stats:
         try:
             bumped = _bump_model_stats()
-        except Exception as exc:  # noqa: BLE001 — keep drift path robust
+        except Exception as exc:
             print(f"::warning::bump-stats failed: {exc}", file=sys.stderr)
             bumped = False
         if bumped:

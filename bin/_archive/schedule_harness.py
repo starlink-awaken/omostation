@@ -5,6 +5,7 @@ Cron-friendly daily entry. Physical switch is config-only via env:
   SCHEDULE_HARNESS_MODE=sim|physical
   SCHEDULE_HARNESS_PHYSICAL_ENDPOINTS=host1:port,host2:port
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,9 +26,7 @@ DEFAULT_OUT = ROOT / ".omo" / "_delivery" / "schedule-harness"
 
 
 def run_sim_batch(*, n_nodes: int = 4, n_tasks: int = 200) -> dict[str, Any]:
-    m = measure_schedule_success_rate(
-        n_nodes=n_nodes, agents_per_node=2, n_tasks=n_tasks
-    )
+    m = measure_schedule_success_rate(n_nodes=n_nodes, agents_per_node=2, n_tasks=n_tasks)
     m["harness"] = "schedule_harness"
     m["mode"] = "sim"
     m["ts"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())

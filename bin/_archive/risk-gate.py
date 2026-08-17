@@ -24,9 +24,16 @@ DAILY_LIMIT = 5000
 FREQUENCY_LIMIT = {"per_recipient_per_day": 3}
 
 
-def assess_risk(*, action_type: str, amount: float = 0, recipient: str = "unknown",
-                reversible: bool = False, novel: bool = False,
-                daily_total: float = 0, frequency_today: int = 0) -> dict[str, Any]:
+def assess_risk(
+    *,
+    action_type: str,
+    amount: float = 0,
+    recipient: str = "unknown",
+    reversible: bool = False,
+    novel: bool = False,
+    daily_total: float = 0,
+    frequency_today: int = 0,
+) -> dict[str, Any]:
     """Assess risk for a proposed C5 action."""
     reasons: list[str] = []
 
@@ -93,13 +100,20 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     if args.recipient == "blacklisted":
-        result = {"decision": "block", "reasons": ["recipient is blacklisted"],
-                  "assessed_at": datetime.now(UTC).isoformat()}
+        result = {
+            "decision": "block",
+            "reasons": ["recipient is blacklisted"],
+            "assessed_at": datetime.now(UTC).isoformat(),
+        }
     else:
         result = assess_risk(
-            action_type=args.action_type, amount=args.amount, recipient=args.recipient,
-            reversible=args.reversible, novel=args.novel,
-            daily_total=args.daily_total, frequency_today=args.frequency_today,
+            action_type=args.action_type,
+            amount=args.amount,
+            recipient=args.recipient,
+            reversible=args.reversible,
+            novel=args.novel,
+            daily_total=args.daily_total,
+            frequency_today=args.frequency_today,
         )
 
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))

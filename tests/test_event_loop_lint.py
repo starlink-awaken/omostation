@@ -5,6 +5,7 @@
 - 低频 emit (< 5) 不判 → exit 0
 - --alert 写 needs-human 卡片 (进 BRIEF Inbox)
 """
+
 import importlib.util
 import json
 import sys

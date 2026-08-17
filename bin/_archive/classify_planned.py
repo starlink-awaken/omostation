@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Read-only planned queue classifier aligned with canonical OMO schema."""
+
 from __future__ import annotations
 
 import argparse
@@ -17,11 +18,8 @@ if str(OMO_SRC) not in sys.path:
 
 from omo.omo_task_schema import validate_task_data  # noqa: E402
 
-
 PLANNED_DIR = WORKSPACE_ROOT / ".omo" / "tasks" / "planned"
-APPROVAL_QUEUE_PATH = (
-    WORKSPACE_ROOT / ".omo" / "workers" / "promotion" / "approval-queue" / "current.yaml"
-)
+APPROVAL_QUEUE_PATH = WORKSPACE_ROOT / ".omo" / "workers" / "promotion" / "approval-queue" / "current.yaml"
 
 
 def load_task(path: Path) -> dict:
@@ -112,7 +110,9 @@ def classify() -> dict[str, Any]:
             entry["approval_status"] = queue_entry.get("approval_status")
             entry["proposal_status"] = queue_entry.get("proposal_status")
             entry["eligible"] = queue_entry.get("eligible")
-            entry["blockers"] = list(queue_entry.get("blockers", [])) if isinstance(queue_entry.get("blockers"), list) else []
+            entry["blockers"] = (
+                list(queue_entry.get("blockers", [])) if isinstance(queue_entry.get("blockers"), list) else []
+            )
             entry["next_action"] = queue_entry.get("next_action", "materialize_queue_status")
 
             result["summary"]["approval_required"] += 1
@@ -142,25 +142,19 @@ def classify() -> dict[str, Any]:
             "python3 scripts/omo/omo_worker.py task normalize-planned --actor <ACTOR> --now <ISO8601> --omo-dir .omo"
         )
     if result["summary"]["approval_required"] > 0:
-        result["next_actions"].append(
-            "python3 scripts/omo/omo_worker.py task approval-queue-status --omo-dir .omo"
-        )
+        result["next_actions"].append("python3 scripts/omo/omo_worker.py task approval-queue-status --omo-dir .omo")
     if result["summary"]["approval_ready_to_promote"] > 0:
         result["next_actions"].append(
             "python3 scripts/omo/omo_worker.py task promote-apply <TASK_ID> --promoted-by <ACTOR> --now <ISO8601> --omo-dir .omo"
         )
     if not result["next_actions"]:
-        result["next_actions"].append(
-            "python3 scripts/omo/omo_worker.py task promotion-readiness --omo-dir .omo"
-        )
+        result["next_actions"].append("python3 scripts/omo/omo_worker.py task promotion-readiness --omo-dir .omo")
 
     return result
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="classify planned tasks against canonical OMO schema (read-only)"
-    )
+    parser = argparse.ArgumentParser(description="classify planned tasks against canonical OMO schema (read-only)")
     parser.add_argument("--json", action="store_true", help="输出 JSON 而不是 YAML")
     args = parser.parse_args(argv)
 

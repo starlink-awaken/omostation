@@ -90,7 +90,7 @@ if __name__ == "__main__":
         try:
             from urllib.request import urlopen
 
-            text = urlopen(args.url).read().decode("utf-8", errors="ignore")  # noqa: S310
+            text = urlopen(args.url).read().decode("utf-8", errors="ignore")
             extractor.extract_from_text(text, source=args.url)
         except Exception as e:
             print(f"[extract] ⚠️ URL提取失败: {e}")

@@ -74,7 +74,16 @@ class TempGitRepo:
         """创建 worktree（模拟 ws-XXX）"""
         wt_path = base.parent / f"ws-{session}"
         subprocess.run(
-            ["git", "-C", str(base), "worktree", "add", "-b", f"work/{session}", str(wt_path)],
+            [
+                "git",
+                "-C",
+                str(base),
+                "worktree",
+                "add",
+                "-b",
+                f"work/{session}",
+                str(wt_path),
+            ],
             check=True,
             capture_output=True,
         )
@@ -133,7 +142,6 @@ def test_repo_setup(temp_repo):
 def test_janitor_runs(temp_repo):
     """测试：janitor 脚本能正常运行"""
     # 获取主仓路径
-    import sys
     from pathlib import Path
 
     repo_root = Path.cwd()
@@ -204,7 +212,9 @@ def test_branch_merge_status(temp_repo):
         capture_output=True,
         text=True,
     )
-    assert "work/test-session" in result.stdout or result.stdout.strip().startswith("* work/test-session"), f"branch should exist, got: {result.stdout}"
+    assert "work/test-session" in result.stdout or result.stdout.strip().startswith("* work/test-session"), (
+        f"branch should exist, got: {result.stdout}"
+    )
 
     # 检查是否已 merge 到 main（刚创建的分支通常未 merge）
     result = subprocess.run(

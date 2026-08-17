@@ -121,8 +121,8 @@ class EidosToBosAdapter:
 
     def _check_agora(self) -> bool:
         try:
-            req = Request(f"{self.mcp_endpoint}/health", method="GET")  # noqa: S310
-            resp = urlopen(req, timeout=2)  # noqa: S310
+            req = Request(f"{self.mcp_endpoint}/health", method="GET")
+            resp = urlopen(req, timeout=2)
             return cast("bool", resp.status == 200)
         except Exception:
             _log.warning("Agora MCP not reachable — using file fallback")
@@ -131,10 +131,10 @@ class EidosToBosAdapter:
     def _mcp_call(self, tool_uri: str, args: dict[str, Any]) -> dict[str, Any]:
         url = f"{self.mcp_endpoint}/call"
         payload = json.dumps({"tool": tool_uri, "args": args}).encode()
-        req = Request(url, data=payload, method="POST")  # noqa: S310
+        req = Request(url, data=payload, method="POST")
         req.add_header("Content-Type", "application/json")
         try:
-            resp = urlopen(req, timeout=10)  # noqa: S310
+            resp = urlopen(req, timeout=10)
             return {"status": resp.status, "body": resp.read().decode()[:500]}
         except Exception as e:
             _log.error(f"MCP call failed: {e}")

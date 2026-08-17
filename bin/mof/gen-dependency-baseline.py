@@ -25,6 +25,7 @@ drift 类型:
   python bin/mof/gen-dependency-baseline.py --check       # 报 drift, 有 drift exit 1 (CI 友好)
   python bin/mof/gen-dependency-baseline.py --dry-run     # 打印推导 baseline
 """
+
 from __future__ import annotations
 
 import argparse
@@ -45,9 +46,9 @@ BASELINE_YAML = WORKSPACE / ".omo" / "_truth" / "registry" / "dependency-baselin
 # 例: "graphiti-core[neo4j]>=0.28", "mem0ai", "httpx[socks]>=0.28.1,<1.0"
 _REQ_RE = re.compile(
     r"^\s*"
-    r"(?P<name>[a-zA-Z0-9][a-zA-Z0-9._-]*)"            # 包名
-    r"(?:\[(?P<extras>[a-zA-Z0-9,_-]+)\])?"            # [extra1,extra2]
-    r"(?P<spec>.*)$"                                    # version spec rest
+    r"(?P<name>[a-zA-Z0-9][a-zA-Z0-9._-]*)"  # 包名
+    r"(?:\[(?P<extras>[a-zA-Z0-9,_-]+)\])?"  # [extra1,extra2]
+    r"(?P<spec>.*)$"  # version spec rest
 )
 _LOWER_RE = re.compile(r">=\s*(?P<v>[0-9][0-9a-zA-Z._-]*)")
 
@@ -92,7 +93,7 @@ def collect_dependencies() -> dict[str, list[tuple[str, str | None, list[str]]]]
         try:
             with p.open("rb") as f:
                 data = tomllib.load(f)
-        except Exception:  # noqa: BLE001
+        except Exception:
             continue
         proj = data.get("project") or {}
         name = proj.get("name")
@@ -162,18 +163,31 @@ def _load_current_baseline() -> dict[str, str]:
 
 def check_drift(derived: dict, current: dict) -> dict:
     """对比 derived baseline 与 current, 返回三类 drift."""
-    missing = []     # pyproject 有, baseline 无
-    stale = []       # baseline 有, pyproject 无
+    missing = []  # pyproject 有, baseline 无
+    stale = []  # baseline 有, pyproject 无
     unconstrained = []  # baseline (none) 但 pyproject 有下限
     mismatched = []  # baseline 下限与 pyproject 推导不一致
 
     for name, info in derived.items():
         if name not in current:
-            missing.append({"name": name, "consumers": info["consumer_count"], "derived_baseline": info["baseline"]})
+            missing.append(
+                {
+                    "name": name,
+                    "consumers": info["consumer_count"],
+                    "derived_baseline": info["baseline"],
+                }
+            )
         else:
             cur = current[name]
             if cur == "(none)" and info["baseline"] != "(none)":
-                unconstrained.append({"name": name, "current": cur, "pyproject_lower": info["baseline"], "consumers": info["consumers"]})
+                unconstrained.append(
+                    {
+                        "name": name,
+                        "current": cur,
+                        "pyproject_lower": info["baseline"],
+                        "consumers": info["consumers"],
+                    }
+                )
             elif cur != "(none)" and info["baseline"] != "(none)" and cur != info["baseline"]:
                 mismatched.append({"name": name, "current": cur, "derived": info["baseline"]})
 
@@ -181,15 +195,28 @@ def check_drift(derived: dict, current: dict) -> dict:
         if name not in derived:
             stale.append({"name": name, "current": cur})
 
-    return {"missing": missing, "stale": stale, "unconstrained": unconstrained, "mismatched": mismatched}
+    return {
+        "missing": missing,
+        "stale": stale,
+        "unconstrained": unconstrained,
+        "mismatched": mismatched,
+    }
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="gen-dependency-baseline: dependency drift 检测 (ISC-15)")
     parser.add_argument("--check", action="store_true", help="对比 baseline 报 drift (exit 1 有 drift)")
     parser.add_argument("--dry-run", action="store_true", help="打印从 pyproject 推导的 baseline")
-    parser.add_argument("--write", action="store_true", help="patch mismatched/unconstrained baseline → derived, 走 omo broker (C2 方案 C: subprocess 调 omo, 不直写)")
-    parser.add_argument("--direct-write", action="store_true", help="直接写入 baseline YAML (不走 omo broker, 用于 worktree submit / CI 自动修复)")
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="patch mismatched/unconstrained baseline → derived, 走 omo broker (C2 方案 C: subprocess 调 omo, 不直写)",
+    )
+    parser.add_argument(
+        "--direct-write",
+        action="store_true",
+        help="直接写入 baseline YAML (不走 omo broker, 用于 worktree submit / CI 自动修复)",
+    )
     args = parser.parse_args()
 
     if not args.check and not args.dry_run and not args.write and not args.direct_write:
@@ -205,7 +232,7 @@ def main() -> int:
         print()
         for name, info in derived.items():
             consumers = ", ".join(info["consumers"][:5])
-            more = f" (+{info['consumer_count']-5})" if info["consumer_count"] > 5 else ""
+            more = f" (+{info['consumer_count'] - 5})" if info["consumer_count"] > 5 else ""
             print(f"  {name:<28} baseline={info['baseline']:<12} consumers=[{consumers}{more}]")
         print(f"\n📊 共 {len(derived)} 个外部依赖")
         return 0
@@ -233,18 +260,33 @@ def main() -> int:
         env = os.environ.copy()
         env["PYTHONPATH"] = str(omo_src)
         cmd = [
-            str(omo_python), "-m", "omo.cli", "baseline", "write",
-            "--patches", patches_json,
-            "--actor", "gen-dependency-baseline",
+            str(omo_python),
+            "-m",
+            "omo.cli",
+            "baseline",
+            "write",
+            "--patches",
+            patches_json,
+            "--actor",
+            "gen-dependency-baseline",
         ]
         print(f"📡 gen --write: 调 omo broker patch {len(targets)} 项 baseline (不直写, 走 broker 合规)")
         for name, new_b in targets.items():
             print(f"   ⬆ {name}: → {new_b}")
-        result = subprocess.run(cmd, cwd=str(WORKSPACE / "projects" / "omo"), env=env, capture_output=True, text=True)
+        result = subprocess.run(
+            cmd,
+            cwd=str(WORKSPACE / "projects" / "omo"),
+            env=env,
+            capture_output=True,
+            text=True,
+        )
         if result.stdout:
             print(result.stdout, end="")
         if result.returncode != 0:
-            print(f"❌ omo baseline write 失败 (rc={result.returncode}):\n{result.stderr}", file=sys.stderr)
+            print(
+                f"❌ omo baseline write 失败 (rc={result.returncode}):\n{result.stderr}",
+                file=sys.stderr,
+            )
             return result.returncode
         return 0
 
@@ -252,6 +294,7 @@ def main() -> int:
         # 直接写入 baseline YAML, 不走 omo broker.
         # 用于 worktree submit / CI 自动修复 (omo venv 不可用时).
         import re
+
         BASELINE_FILE = WORKSPACE / ".omo" / "_truth" / "registry" / "dependency-baseline.yaml"
         current = _load_current_baseline()
         drift = check_drift(derived, current)
@@ -288,8 +331,8 @@ def main() -> int:
                 f"    - name: {name}",
                 f"      baseline: '{baseline}'",
                 f"      reason: 'Consumed by {d['consumers']} project(s)'",
-                f"      consumers:",
-                f"        - (auto-detected)",
+                "      consumers:",
+                "        - (auto-detected)",
             ]
             lines = content.split("\n")
             insert_idx = None
@@ -339,13 +382,15 @@ def main() -> int:
         if drift["unconstrained"]:
             print(f"  ⚠️  UNCONSTRAINED ({len(drift['unconstrained'])}): baseline (none) 但 pyproject 有下限 (C1 实证)")
             for d in drift["unconstrained"]:
-                print(f"     - {d['name']}: baseline={d['current']} → pyproject={d['pyproject_lower']} ({d['consumers']} consumers)")
+                print(
+                    f"     - {d['name']}: baseline={d['current']} → pyproject={d['pyproject_lower']} ({d['consumers']} consumers)"
+                )
         if drift["missing"]:
             print(f"  ⚠️  MISSING ({len(drift['missing'])}): pyproject 有但 baseline 未登记")
             for d in drift["missing"][:10]:
                 print(f"     - {d['name']} (consumers={d['consumers']}, derived={d['derived_baseline']})")
             if len(drift["missing"]) > 10:
-                print(f"     ... 及其他 {len(drift['missing'])-10} 项")
+                print(f"     ... 及其他 {len(drift['missing']) - 10} 项")
         if drift["stale"]:
             print(f"  ⚠️  STALE ({len(drift['stale'])}): baseline 有但 pyproject 无 (依赖已移除)")
             for d in drift["stale"][:10]:
@@ -354,7 +399,9 @@ def main() -> int:
             print(f"  ⚠️  MISMATCHED ({len(drift['mismatched'])}): baseline 与 pyproject 下限不一致")
             for d in drift["mismatched"][:10]:
                 print(f"     - {d['name']}: baseline={d['current']} vs derived={d['derived']}")
-        print("\n修复: python bin/mof/gen-dependency-baseline.py --dry-run → 走 omo broker 写 .omo/_truth/registry/dependency-baseline.yaml")
+        print(
+            "\n修复: python bin/mof/gen-dependency-baseline.py --dry-run → 走 omo broker 写 .omo/_truth/registry/dependency-baseline.yaml"
+        )
         return 1
 
     return 0

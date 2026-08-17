@@ -20,9 +20,7 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_REGISTRY = (
-    ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
-)
+DEFAULT_REGISTRY = ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
 DEFAULT_PROFILE = Path.home() / ".codex" / "documents.config.toml"
 DEFAULT_CODEX = Path("/Applications/ChatGPT.app/Contents/Resources/codex")
 _BARE_TOML_KEY = re.compile(r"^[A-Za-z0-9_-]+$")
@@ -55,10 +53,7 @@ def _workspace_root(project_registry: Path) -> Path:
         or parent.parent.name != "_truth"
         or parent.parent.parent.name != ".omo"
     ):
-        raise ProfileError(
-            "project registry must be Workspace .omo/_truth/registry/"
-            "documents-domain-projects.yaml"
-        )
+        raise ProfileError("project registry must be Workspace .omo/_truth/registry/documents-domain-projects.yaml")
     return parent.parents[2].resolve(strict=True)
 
 
@@ -77,9 +72,7 @@ def _load_contract(project_registry: Path) -> ProfileContract:
         raise ProfileError("workspace_mcp must be a mapping")
     if not isinstance(clients, dict) or not isinstance(clients.get("codex"), dict):
         raise ProfileError("clients.codex must be a mapping")
-    if not isinstance(profiles, dict) or not isinstance(
-        profiles.get("content-domain"), dict
-    ):
+    if not isinstance(profiles, dict) or not isinstance(profiles.get("content-domain"), dict):
         raise ProfileError("profiles.content-domain must be a mapping")
 
     contract = clients["codex"].get("profile_contract")
@@ -93,59 +86,35 @@ def _load_contract(project_registry: Path) -> ProfileContract:
     }
     for field, value in expected.items():
         if contract.get(field) != value:
-            raise ProfileError(
-                f"clients.codex.profile_contract.{field} must be {value}"
-            )
+            raise ProfileError(f"clients.codex.profile_contract.{field} must be {value}")
 
     server = workspace_mcp.get("server")
     if not isinstance(server, str) or not server:
         raise ProfileError("workspace_mcp.server must be non-empty")
     if contract.get("exclusive_mcp_server") != server:
-        raise ProfileError(
-            "clients.codex.profile_contract.exclusive_mcp_server must match "
-            "workspace_mcp.server"
-        )
+        raise ProfileError("clients.codex.profile_contract.exclusive_mcp_server must match workspace_mcp.server")
 
     generator_ref = contract.get("generator_ref")
     if not isinstance(generator_ref, str) or not generator_ref:
-        raise ProfileError(
-            "clients.codex.profile_contract.generator_ref must be a "
-            "Workspace-relative file"
-        )
+        raise ProfileError("clients.codex.profile_contract.generator_ref must be a Workspace-relative file")
     candidate = Path(generator_ref)
     if candidate.is_absolute() or ".." in candidate.parts or "://" in generator_ref:
-        raise ProfileError(
-            "clients.codex.profile_contract.generator_ref must be a "
-            "Workspace-relative file"
-        )
+        raise ProfileError("clients.codex.profile_contract.generator_ref must be a Workspace-relative file")
     workspace = _workspace_root(project_registry)
     try:
         generator = (workspace / candidate).resolve(strict=True)
     except OSError as exc:
-        raise ProfileError(
-            f"clients.codex.profile_contract.generator_ref is unavailable: {generator_ref}"
-        ) from exc
+        raise ProfileError(f"clients.codex.profile_contract.generator_ref is unavailable: {generator_ref}") from exc
     if not generator.is_relative_to(workspace) or not generator.is_file():
-        raise ProfileError(
-            "clients.codex.profile_contract.generator_ref must be a "
-            "Workspace-relative file"
-        )
+        raise ProfileError("clients.codex.profile_contract.generator_ref must be a Workspace-relative file")
 
     profile = profiles["content-domain"]
     tools = profile.get("allowed_workspace_tools")
-    if (
-        not isinstance(tools, list)
-        or not tools
-        or not all(isinstance(item, str) and item for item in tools)
-    ):
-        raise ProfileError(
-            "profiles.content-domain.allowed_workspace_tools must be a non-empty string list"
-        )
+    if not isinstance(tools, list) or not tools or not all(isinstance(item, str) and item for item in tools):
+        raise ProfileError("profiles.content-domain.allowed_workspace_tools must be a non-empty string list")
     exposed_tools = workspace_mcp.get("read_tools")
     if not isinstance(exposed_tools, list) or not set(tools).issubset(exposed_tools):
-        raise ProfileError(
-            "profiles.content-domain.allowed_workspace_tools must be exposed by workspace_mcp"
-        )
+        raise ProfileError("profiles.content-domain.allowed_workspace_tools must be exposed by workspace_mcp")
     return ProfileContract(
         name=contract["name"],
         server=server,
@@ -203,9 +172,7 @@ def _write_message(stream: Any, message: dict[str, Any]) -> None:
     stream.flush()
 
 
-def _read_response(
-    process: subprocess.Popen[str], request_id: int, timeout: float
-) -> dict[str, Any]:
+def _read_response(process: subprocess.Popen[str], request_id: int, timeout: float) -> dict[str, Any]:
     if process.stdout is None:
         raise ProfileError("Codex app-server stdout is unavailable")
     selector = selectors.DefaultSelector()
@@ -290,17 +257,13 @@ def _is_relative_to_root(path_value: str, roots: tuple[Path, ...]) -> bool:
     for root in roots:
         root_candidates = (root.absolute(), root.resolve(strict=False))
         if any(
-            candidate.is_relative_to(root_candidate)
-            for candidate in candidates
-            for root_candidate in root_candidates
+            candidate.is_relative_to(root_candidate) for candidate in candidates for root_candidate in root_candidates
         ):
             return True
     return False
 
 
-def _user_skill_paths(
-    payload: dict[str, Any], roots: tuple[Path, ...]
-) -> tuple[str, ...]:
+def _user_skill_paths(payload: dict[str, Any], roots: tuple[Path, ...]) -> tuple[str, ...]:
     data = payload.get("data")
     if not isinstance(data, list) or len(data) != 1 or not isinstance(data[0], dict):
         raise ProfileError("Codex skills inventory must contain exactly one cwd entry")
@@ -385,9 +348,7 @@ def render_profile(contract: ProfileContract, current: CodexInventory) -> str:
     return "\n".join(lines)
 
 
-def _report(
-    ok: bool, profile_path: Path, current: CodexInventory, errors: list[str]
-) -> None:
+def _report(ok: bool, profile_path: Path, current: CodexInventory, errors: list[str]) -> None:
     print(
         json.dumps(
             {
@@ -414,9 +375,7 @@ def _install(profile_path: Path, expected: str, current: CodexInventory) -> int:
                 False,
                 profile_path,
                 current,
-                [
-                    f"profile must be a regular file owned by the generator: {profile_path}"
-                ],
+                [f"profile must be a regular file owned by the generator: {profile_path}"],
             )
             return 1
         try:
@@ -436,9 +395,7 @@ def _install(profile_path: Path, expected: str, current: CodexInventory) -> int:
             return 1
 
     profile_path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary = tempfile.mkstemp(
-        prefix=f".{profile_path.name}.", dir=profile_path.parent
-    )
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{profile_path.name}.", dir=profile_path.parent)
     temporary_path = Path(temporary)
     try:
         os.fchmod(descriptor, 0o600)

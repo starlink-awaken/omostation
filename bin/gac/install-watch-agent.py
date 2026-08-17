@@ -7,14 +7,15 @@ Plist 单源: 委托 bin/mof/gen-service-configs.py 从 .omo/_truth/registry/ser
 
 职责: gen plist (SSOT) → launchctl reload → 触发首次 state_stale.
 """
+
 import os
 import shutil
-import sys
 import subprocess
+import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
-from repo_root import canonical_root  # noqa: E402
+from repo_root import canonical_root
 
 # 本脚本装的是**机器级**配置(~/Library/LaunchAgents + launchctl load), 必须锚定
 # 规范检出。原实现用 parents[2], 从 worktree 跑就会执行那个 worktree 里的
@@ -36,7 +37,10 @@ def main() -> int:
     gen = WORKSPACE / "bin" / "mof" / "gen-service-configs.py"
     r = subprocess.run(
         [python3, str(gen), "--write"],
-        cwd=WORKSPACE, capture_output=True, text=True, check=False,
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     if r.stdout:
         print(r.stdout.strip())
@@ -46,11 +50,21 @@ def main() -> int:
 
     # 2. launchctl reload (unload 旧 + load 新)
     try:
-        subprocess.run(["launchctl", "unload", str(PLIST_FILE)], capture_output=True, text=True, check=False)
+        subprocess.run(
+            ["launchctl", "unload", str(PLIST_FILE)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
     except Exception:
         pass
     try:
-        res = subprocess.run(["launchctl", "load", str(PLIST_FILE)], capture_output=True, text=True, check=False)
+        res = subprocess.run(
+            ["launchctl", "load", str(PLIST_FILE)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
         if res.returncode == 0:
             print("✅ Successfully loaded watch agent via launchctl!")
         else:
@@ -68,10 +82,14 @@ def main() -> int:
             [
                 python3,
                 str(WORKSPACE / "bin" / "gac" / "state-stale-emit.py"),
-                "--source", "launchd-watch",
-                "--trigger", "install-watch-agent",
-                "--surface", str(registry),
-                "--surface", str(ecos_ssot),
+                "--source",
+                "launchd-watch",
+                "--trigger",
+                "install-watch-agent",
+                "--surface",
+                str(registry),
+                "--surface",
+                str(ecos_ssot),
             ],
             check=False,
         )

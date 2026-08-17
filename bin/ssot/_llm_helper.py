@@ -44,9 +44,7 @@ def _get_gateway():
         return None
 
 
-def llm_ask(
-    question: str, context: dict[str, Any] | None = None, timeout: float = 60.0
-) -> str | None:
+def llm_ask(question: str, context: dict[str, Any] | None = None, timeout: float = 60.0) -> str | None:
     """Ask LLM a question, return plain text response.
 
     Backend 1: AetherForge ModelGateway (omlx local).
@@ -84,7 +82,7 @@ def llm_ask(
                 "max_tokens": 300,
             }
         ).encode()
-        req = urllib.request.Request(  # noqa: S310
+        req = urllib.request.Request(
             "https://open.bigmodel.cn/api/paas/v4/chat/completions",
             data=body,
             headers={
@@ -92,7 +90,7 @@ def llm_ask(
                 "Content-Type": "application/json",
             },
         )
-        with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.loads(resp.read())
             content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
             if content:

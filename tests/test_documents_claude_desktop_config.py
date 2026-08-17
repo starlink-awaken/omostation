@@ -196,9 +196,7 @@ def test_install_refuses_settings_symlink(tmp_path: Path) -> None:
     result = _run(tmp_path, "install", settings_path=settings)
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        f"settings must be a regular file: {settings}"
-    ]
+    assert json.loads(result.stdout)["errors"] == [f"settings must be a regular file: {settings}"]
 
 
 def test_check_does_not_create_missing_config(tmp_path: Path) -> None:
@@ -211,9 +209,7 @@ def test_check_does_not_create_missing_config(tmp_path: Path) -> None:
     assert json.loads(result.stdout)["errors"] == [f"settings unavailable: {settings}"]
 
 
-def test_install_refuses_default_config_while_claude_is_running(
-    tmp_path: Path, monkeypatch, capsys
-) -> None:
+def test_install_refuses_default_config_while_claude_is_running(tmp_path: Path, monkeypatch, capsys) -> None:
     registry, _ = _project_registry(tmp_path)
     domain_registry = _domain_registry(tmp_path)
     settings = _settings(tmp_path)
@@ -244,9 +240,7 @@ def test_install_refuses_default_config_while_claude_is_running(
 
 
 def test_required_phase_gate_covers_claude_config_generator_and_tests() -> None:
-    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(
-        encoding="utf-8"
-    )
+    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(encoding="utf-8")
 
     assert "bin/gac/documents-claude-desktop-config.py" in workflow
     assert "tests/test_documents_claude_desktop_config.py" in workflow

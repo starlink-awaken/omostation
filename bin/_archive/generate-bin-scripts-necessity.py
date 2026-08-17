@@ -7,7 +7,7 @@ import argparse
 import json
 import sys
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 
@@ -108,7 +108,7 @@ def build_report(manifest_entries: list[dict], audit_payload: dict | None) -> st
     lines.append("# scripts 兼容层与并行能力收敛清单（快照）")
     lines.append("")
 
-    generated_at = datetime.now(tz=timezone.utc).isoformat()
+    generated_at = datetime.now(tz=UTC).isoformat()
     lines.append(f"- 生成时间: {generated_at}")
     lines.append("- 清单入口: `docs/operations/bin-scripts-convergence-manifest.json`")
     lines.append(f"- 清单总条目: **{total_entries}**")
@@ -133,7 +133,7 @@ def build_report(manifest_entries: list[dict], audit_payload: dict | None) -> st
     lines.append("- 依据 `(name, bin, scripts, action, owner)` 去重后统计和汇总")
     lines.append("")
     lines.append("## 一、全量分层")
-    lines.append(f"- 按 action 统计:")
+    lines.append("- 按 action 统计:")
     for action, count in sorted(action_counter.items()):
         managed_key = action + ":managed"
         unmanaged_key = action + ":unmanaged"
@@ -147,41 +147,49 @@ def build_report(manifest_entries: list[dict], audit_payload: dict | None) -> st
 
     lines.append("")
     lines.append("## 二、`close-duplicate-gap-first`（优先消化）")
-    lines.append(_as_md_table(
-        [
-            (name, owner, status, action, round_name, due_date, risk, bin_path, scripts_path)
-            for name, owner, status, action, round_name, due_date, risk, bin_path, scripts_path in close_rows
-        ],
-        ["name", "owner", "status", "action", "round", "due", "risk", "bin", "scripts"],
-    ))
+    lines.append(
+        _as_md_table(
+            [
+                (name, owner, status, action, round_name, due_date, risk, bin_path, scripts_path)
+                for name, owner, status, action, round_name, due_date, risk, bin_path, scripts_path in close_rows
+            ],
+            ["name", "owner", "status", "action", "round", "due", "risk", "bin", "scripts"],
+        )
+    )
 
     lines.append("\n## 三、`bin-master, scripts-compat-shim`（兼容入口保留）\n")
     lines.append(f"共 {len(shim_rows)} 条")
-    lines.append(_as_md_table(
-        [
-            (name, owner, status, action, due, bin_path, scripts_path)
-            for name, owner, status, action, _round_name, due, risk, bin_path, scripts_path in shim_rows
-        ],
-        ["name", "owner", "status", "action", "due", "bin", "scripts"],
-    ))
+    lines.append(
+        _as_md_table(
+            [
+                (name, owner, status, action, due, bin_path, scripts_path)
+                for name, owner, status, action, _round_name, due, risk, bin_path, scripts_path in shim_rows
+            ],
+            ["name", "owner", "status", "action", "due", "bin", "scripts"],
+        )
+    )
 
     lines.append("## 四、`bin-ssot-master, root-wrapper, scripts-compat-shim`（SSOT wrapper）\n")
     lines.append(f"共 {len(ssot_rows)} 条")
     if ssot_rows:
-        lines.append(_as_md_table(
-            [
-                (name, owner, status, action, due, bin_path, scripts_path)
-                for name, owner, status, action, _round_name, due, risk, bin_path, scripts_path in ssot_rows
-            ],
-            ["name", "owner", "status", "action", "due", "bin", "scripts"],
-        ))
+        lines.append(
+            _as_md_table(
+                [
+                    (name, owner, status, action, due, bin_path, scripts_path)
+                    for name, owner, status, action, _round_name, due, risk, bin_path, scripts_path in ssot_rows
+                ],
+                ["name", "owner", "status", "action", "due", "bin", "scripts"],
+            )
+        )
 
     lines.append("")
     lines.append("## 五、实施建议")
     lines.append("")
     lines.append("- **阶段策略**：")
     lines.append("  - 第一优先：保持 `close-duplicate-gap-first` 组 manifest 约定不变，按 owner 落地到对应项目或子域。")
-    lines.append("  - 第二优先：每周执行一次 `make bin-tool-registry-scripts-necessity`，复核新增并行缺口并回填 manifest。")
+    lines.append(
+        "  - 第二优先：每周执行一次 `make bin-tool-registry-scripts-necessity`，复核新增并行缺口并回填 manifest。"
+    )
     lines.append("  - 第三优先：对高频调用脚本，确保根 `bin` 与 `scripts/bin` 的 shim 行为一致，并保留兼容入口。")
 
     return "\n".join(lines) + "\n"
@@ -211,11 +219,13 @@ def main() -> int:
 
     if args.json:
         summary = {
-            "generated_at": datetime.now(tz=timezone.utc).isoformat(),
+            "generated_at": datetime.now(tz=UTC).isoformat(),
             "entries": len(entries),
             "close_duplicate": len([e for e in entries if _normalize_action(e) == "close-duplicate-gap-first"]),
             "compat_shim": len([e for e in entries if _normalize_action(e) == "bin-master, scripts-compat-shim"]),
-            "ssot_wrapper": len([e for e in entries if _normalize_action(e) == "bin-ssot-master, root-wrapper, scripts-compat-shim"]),
+            "ssot_wrapper": len(
+                [e for e in entries if _normalize_action(e) == "bin-ssot-master, root-wrapper, scripts-compat-shim"]
+            ),
         }
         json_path = Path(args.json)
         json_path.parent.mkdir(parents=True, exist_ok=True)

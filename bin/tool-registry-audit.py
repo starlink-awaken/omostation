@@ -11,14 +11,12 @@
 from __future__ import annotations
 
 import argparse
-import json
 import hashlib
+import json
 import re
 import stat
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
-
 
 ROOT = Path(__file__).resolve().parents[1]
 BIN_DIR = ROOT / "bin"
@@ -228,7 +226,7 @@ def normalize_name(name: str) -> str:
     return re.sub(r"[-]+", "_", stem.lower())
 
 
-def list_bin_files(scope: str = "bin") -> List[Path]:
+def list_bin_files(scope: str = "bin") -> list[Path]:
     files = []
     roots = []
     if scope in {"bin", "both"} and BIN_DIR.is_dir():
@@ -248,7 +246,7 @@ def list_bin_files(scope: str = "bin") -> List[Path]:
     return files
 
 
-def parse_script_calls(path: Path) -> List[Path]:
+def parse_script_calls(path: Path) -> list[Path]:
     calls = []
     try:
         lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
@@ -279,14 +277,14 @@ def parse_script_calls(path: Path) -> List[Path]:
     return calls
 
 
-def build_graph(paths: List[Path]) -> Tuple[Dict[str, Set[str]], Dict[str, Set[str]]]:
-    out_edges: Dict[str, Set[str]] = defaultdict(set)
-    in_edges: Dict[str, Set[str]] = defaultdict(set)
+def build_graph(paths: list[Path]) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
+    out_edges: dict[str, set[str]] = defaultdict(set)
+    in_edges: dict[str, set[str]] = defaultdict(set)
     path_by_rel = {str(p.relative_to(ROOT)): p for p in paths}
     for path in paths:
         src = str(path.relative_to(ROOT))
         for target in parse_script_calls(path):
-            if not str(target.relative_to(ROOT)) in path_by_rel:
+            if str(target.relative_to(ROOT)) not in path_by_rel:
                 continue
             dst = str(target.relative_to(ROOT))
             out_edges[src].add(dst)
@@ -296,9 +294,9 @@ def build_graph(paths: List[Path]) -> Tuple[Dict[str, Set[str]], Dict[str, Set[s
     return out_edges, in_edges
 
 
-def detect_cycles(out_edges: Dict[str, Set[str]]) -> List[List[str]]:
+def detect_cycles(out_edges: dict[str, set[str]]) -> list[list[str]]:
     # 简化版 DFS cycle 检测；返回部分环路证据
-    cycles: List[List[str]] = []
+    cycles: list[list[str]] = []
     state = {}
     stack = []
 
@@ -329,15 +327,15 @@ def detect_cycles(out_edges: Dict[str, Set[str]]) -> List[List[str]]:
     return uniq
 
 
-def is_self_cycle(cycle: List[str]) -> bool:
+def is_self_cycle(cycle: list[str]) -> bool:
     return len(cycle) == 2 and cycle[0] == cycle[1]
 
 
-def filter_cycles(cycles: List[List[str]]) -> List[List[str]]:
+def filter_cycles(cycles: list[list[str]]) -> list[list[str]]:
     return [cycle for cycle in cycles if not is_self_cycle(cycle)]
 
 
-def active_duplicate_files(files: List[str]) -> List[str]:
+def active_duplicate_files(files: list[str]) -> list[str]:
     active = []
     for f in files:
         try:
@@ -351,14 +349,14 @@ def active_duplicate_files(files: List[str]) -> List[str]:
 
 def _parallel_gap_reasons(
     name: str,
-    bin_files: List[str],
-    script_files: List[str],
+    bin_files: list[str],
+    script_files: list[str],
     manifest_entry: dict[str, object] | None,
-) -> List[str]:
+) -> list[str]:
     if not manifest_entry:
         return ["missing_manifest_entry"]
 
-    reasons: List[str] = []
+    reasons: list[str] = []
     status = str(manifest_entry.get("status", ""))
     if status and not is_managed_parallel_entry(name, manifest_entry):
         reasons.append("manifest_status_unmanaged")
@@ -386,16 +384,22 @@ def _is_internal_module(path: str) -> bool:
 
 
 def analyze_parallel_manifest_gaps(
-    duplicates: Dict[str, List[str]],
-    parallel_manifest: Dict[str, dict[str, object]],
-) -> tuple[List[Dict[str, object]], List[Dict[str, object]], int]:
-    parallel_candidates: List[Dict[str, object]] = []
-    manifest_gaps: List[Dict[str, object]] = []
+    duplicates: dict[str, list[str]],
+    parallel_manifest: dict[str, dict[str, object]],
+) -> tuple[list[dict[str, object]], list[dict[str, object]], int]:
+    parallel_candidates: list[dict[str, object]] = []
+    manifest_gaps: list[dict[str, object]] = []
     unmanaged_count = 0
 
     for name, files in sorted(duplicates.items()):
-        bin_files = [f for f in files if f.startswith("bin/") and f.split("/")[1:] and not _is_archive_path((ROOT / f).resolve())]
-        script_files = [f for f in files if f.startswith("scripts/bin/") and f.split("/")[2:] and not _is_archive_path((ROOT / f).resolve())]
+        bin_files = [
+            f for f in files if f.startswith("bin/") and f.split("/")[1:] and not _is_archive_path((ROOT / f).resolve())
+        ]
+        script_files = [
+            f
+            for f in files
+            if f.startswith("scripts/bin/") and f.split("/")[2:] and not _is_archive_path((ROOT / f).resolve())
+        ]
         if not bin_files or not script_files:
             continue
         if not active_duplicate_files(bin_files + script_files):
@@ -438,16 +442,20 @@ def analyze_parallel_manifest_gaps(
 
 
 def mark_cross_tree_mirror_shims(
-    duplicates: Dict[str, List[str]],
-    roles: Dict[str, str],
-    signatures: Dict[str, str],
-    parallel_manifest: Dict[str, dict[str, object]],
-) -> tuple[Dict[str, str], List[str], int]:
-    mirrored: List[str] = []
+    duplicates: dict[str, list[str]],
+    roles: dict[str, str],
+    signatures: dict[str, str],
+    parallel_manifest: dict[str, dict[str, object]],
+) -> tuple[dict[str, str], list[str], int]:
+    mirrored: list[str] = []
     adjusted = 0
     for name, files in duplicates.items():
         manifest_entry = parallel_manifest.get(name)
-        if manifest_entry and is_managed_parallel_entry(name, manifest_entry) and is_compatible_shim_policy(manifest_entry):
+        if (
+            manifest_entry
+            and is_managed_parallel_entry(name, manifest_entry)
+            and is_compatible_shim_policy(manifest_entry)
+        ):
             script_files = [f for f in files if f.startswith("scripts/bin/")]
             if not script_files:
                 continue
@@ -459,7 +467,7 @@ def mark_cross_tree_mirror_shims(
                     adjusted += 1
             mirrored.append(name)
             continue
-        sig_groups: Dict[str, List[str]] = defaultdict(list)
+        sig_groups: dict[str, list[str]] = defaultdict(list)
         for rel in files:
             sig = signatures.get(rel)
             if sig:
@@ -484,13 +492,13 @@ def mark_cross_tree_mirror_shims(
 
 
 def classify_duplication_conflicts(
-    duplicates: Dict[str, List[str]],
-    roles: Dict[str, str],
-    parallel_manifest: Dict[str, dict[str, object]],
-) -> Tuple[List[Dict[str, object]], List[Dict[str, object]], List[Dict[str, object]]]:
-    high_conflicts: List[Dict[str, object]] = []
-    managed_high_conflicts: List[Dict[str, object]] = []
-    unmanaged_high_conflicts: List[Dict[str, object]] = []
+    duplicates: dict[str, list[str]],
+    roles: dict[str, str],
+    parallel_manifest: dict[str, dict[str, object]],
+) -> tuple[list[dict[str, object]], list[dict[str, object]], list[dict[str, object]]]:
+    high_conflicts: list[dict[str, object]] = []
+    managed_high_conflicts: list[dict[str, object]] = []
+    unmanaged_high_conflicts: list[dict[str, object]] = []
     for name, files in sorted(duplicates.items()):
         active_files = active_duplicate_files(files)
         if len(active_files) < 2:
@@ -520,29 +528,26 @@ def classify_duplication_conflicts(
 
 
 def analyze_dependency_hotspots(
-    paths: List[Path],
-    out_edges: Dict[str, Set[str]],
-    in_edges: Dict[str, Set[str]],
-    duplicates: Dict[str, List[str]],
-    parallel_candidates: List[Dict[str, object]],
-    manifest_gaps: List[Dict[str, object]],
-    parallel_manifest: Dict[str, dict[str, object]],
-) -> List[Dict[str, object]]:
+    paths: list[Path],
+    out_edges: dict[str, set[str]],
+    in_edges: dict[str, set[str]],
+    duplicates: dict[str, list[str]],
+    parallel_candidates: list[dict[str, object]],
+    manifest_gaps: list[dict[str, object]],
+    parallel_manifest: dict[str, dict[str, object]],
+) -> list[dict[str, object]]:
     """按依赖集中度和并行收敛缺口生成可落地热点顺序。"""
 
-    candidate_by_name: Dict[str, Dict[str, object]] = {
+    candidate_by_name: dict[str, dict[str, object]] = {
         str(item.get("name", "")).strip(): item for item in parallel_candidates
     }
-    gaps_by_name: Dict[str, List[str]] = {
-        str(item.get("name", "")).strip(): list(item.get("gap_reasons", []))
-        for item in manifest_gaps
+    gaps_by_name: dict[str, list[str]] = {
+        str(item.get("name", "")).strip(): list(item.get("gap_reasons", [])) for item in manifest_gaps
     }
 
-    duplicates_map: Dict[str, List[str]] = {
-        name: files for name, files in duplicates.items() if len(files) >= 2
-    }
+    duplicates_map: dict[str, list[str]] = {name: files for name, files in duplicates.items() if len(files) >= 2}
 
-    hotspot_candidates: List[Tuple[str, int, int, int, Dict[str, object]]] = []
+    hotspot_candidates: list[tuple[str, int, int, int, dict[str, object]]] = []
     path_list = [str(p.relative_to(ROOT)) for p in paths]
     duplicate_path_set = {item for items in duplicates_map.values() for item in items}
     for path in path_list:
@@ -623,13 +628,13 @@ def analyze_dependency_hotspots(
     return hotspots
 
 
-def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]) -> Dict:
+def summarize(paths: list[Path], parallel_manifest: dict[str, dict[str, object]]) -> dict:
     types: Counter[str] = Counter()
-    duplicates: defaultdict[str, List[str]] = defaultdict(list)
-    roles: Dict[str, str] = {}
-    signatures: Dict[str, str] = {}
-    missing_shebang: List[str] = []
-    non_snake: List[str] = []
+    duplicates: defaultdict[str, list[str]] = defaultdict(list)
+    roles: dict[str, str] = {}
+    signatures: dict[str, str] = {}
+    missing_shebang: list[str] = []
+    non_snake: list[str] = []
     for path in paths:
         rel = str(path.relative_to(ROOT))
         lang = classify(path)
@@ -644,9 +649,7 @@ def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]
         if not snake_case(Path(name).stem):
             non_snake.append(rel)
 
-    duplicated = {
-        name: files for name, files in duplicates.items() if len(files) > 1
-    }
+    duplicated = {name: files for name, files in duplicates.items() if len(files) > 1}
     duplicate_scopes = {name: sorted(files) for name, files in duplicated.items()}
     roles, mirrored_script_duplicates, mirror_adjustments = mark_cross_tree_mirror_shims(
         duplicated, roles, signatures, parallel_manifest
@@ -720,12 +723,12 @@ def summarize(paths: List[Path], parallel_manifest: Dict[str, dict[str, object]]
     }
 
 
-def emit_json(path: Path, payload: Dict) -> None:
+def emit_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def strict_checks(summary: Dict) -> List[str]:
+def strict_checks(summary: dict) -> list[str]:
     errors = []
     if summary["stats"]["missing_shebang"] > 0:
         errors.append(f"executable scripts missing shebang: {summary['stats']['missing_shebang']}")
@@ -760,10 +763,14 @@ def main() -> int:
     files = list_bin_files(args.scope)
     payload = summarize(files, load_parallel_manifest(Path(args.parallel_manifest)))
     payload["snapshot"] = str((ROOT / args.snapshot).resolve())
-    strict_errors: List[str] = []
+    strict_errors: list[str] = []
     if args.strict:
         strict_errors = strict_checks(payload)
-        payload["strict"] = {"enabled": True, "passed": not bool(strict_errors), "errors": strict_errors}
+        payload["strict"] = {
+            "enabled": True,
+            "passed": not bool(strict_errors),
+            "errors": strict_errors,
+        }
     else:
         payload["strict"] = {"enabled": False, "passed": True, "errors": []}
     if args.emit:

@@ -8,6 +8,7 @@
   - .omo/_knowledge/decisions/draft/<NNN>-<title>.md (ADR 草稿)
   - .omo/_delivery/bootloader-output/<timestamp>/ (证据)
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -63,10 +64,10 @@ related: []
 # DRAFT ADR (omostation-bootloader)
 
 ## Source
-{finding.get('source', 'manual')}
+{finding.get("source", "manual")}
 
 ## Summary (1 line)
-{finding.get('summary', 'TBD')}
+{finding.get("summary", "TBD")}
 
 ## TODO: this draft is auto-generated. Fill in:
 - WHY: root cause analysis

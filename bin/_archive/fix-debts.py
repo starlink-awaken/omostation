@@ -14,11 +14,10 @@ Phase 8.2 — 一次性处理 4 个小型债务:
     python3 fix-debts.py --json    # JSON 输出
 """
 
-import json
 import argparse
-from datetime import datetime, timezone
+import json
+from datetime import UTC, datetime, timezone
 from pathlib import Path
-
 
 DOCS = Path.home() / "Documents"
 SCRIPTS = DOCS / "驾驶舱" / "scripts"
@@ -42,12 +41,18 @@ def fix_minerva_audit() -> dict:
     audit_dir.mkdir(parents=True, exist_ok=True)
     log_file = audit_dir / "audit.log"
     if not log_file.exists():
-        log_file.write_text(json.dumps({
-            "created": datetime.now(timezone.utc).isoformat(),
-            "source": "ecos-daemon",
-            "note": "minerva audit log — Phase7 已知缺口，由 ecos-daemon 自动记录",
-            "entries": [],
-        }, ensure_ascii=False, indent=2))
+        log_file.write_text(
+            json.dumps(
+                {
+                    "created": datetime.now(UTC).isoformat(),
+                    "source": "ecos-daemon",
+                    "note": "minerva audit log — Phase7 已知缺口，由 ecos-daemon 自动记录",
+                    "entries": [],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     return {"debt": "DEBT-L2-001", "status": "fixed", "file": str(log_file)}
 
 
@@ -59,20 +64,20 @@ def fix_agora_events() -> dict:
 
     # 追加一条结构化事件标记新格式
     from datetime import datetime
+
     event = {
         "version": "2.0",
         "id": f"evt-upgrade-{datetime.now().strftime('%Y%m%d%H%M%S')}",
         "type": "system.upgrade",
         "source": "fix-debts",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "payload": {"message": "Agora 事件流升级为 v2.0 — 结构化格式"},
         "schema": "ecos://event/v2.0",
     }
     with open(events_file, "a") as f:
         f.write(json.dumps(event, ensure_ascii=False) + "\n")
 
-    return {"debt": "DEBT-I0-001", "status": "fixed", "events_upgraded": True,
-            "file": str(events_file)}
+    return {"debt": "DEBT-I0-001", "status": "fixed", "events_upgraded": True, "file": str(events_file)}
 
 
 def fix_dashboard_trigger() -> dict:
@@ -81,11 +86,17 @@ def fix_dashboard_trigger() -> dict:
     if not state_file.exists():
         return {"debt": "DEBT-L4-002", "status": "note", "detail": "daemon-state 不存在，由 daemon 首次运行时自动创建"}
     import sqlite3
+
     conn = sqlite3.connect(str(state_file))
-    conn.execute("INSERT INTO cycles (started_at, completed_at, exit_code, summary) VALUES (?,?,?,?)",
-                 (datetime.now(timezone.utc).isoformat(),
-                  datetime.now(timezone.utc).isoformat(), 0,
-                  "DEBT-L4-002: DASHBOARD 触发器已集成"))
+    conn.execute(
+        "INSERT INTO cycles (started_at, completed_at, exit_code, summary) VALUES (?,?,?,?)",
+        (
+            datetime.now(UTC).isoformat(),
+            datetime.now(UTC).isoformat(),
+            0,
+            "DEBT-L4-002: DASHBOARD 触发器已集成",
+        ),
+    )
     conn.commit()
     conn.close()
     return {"debt": "DEBT-L4-002", "status": "fixed", "trigger": "daemon cycle auto-update"}
@@ -105,14 +116,19 @@ def fix_mcp_half_life() -> dict:
                     new_lines.append(line)
                     continue
                 if "half_life_days: 365" in line:
-                    new_lines.append(line.replace("half_life_days: 365", "half_life_days: 365  # ⚠️ 协议已超期 437d/365d，建议升级"))
+                    new_lines.append(
+                        line.replace("half_life_days: 365", "half_life_days: 365  # ⚠️ 协议已超期 437d/365d，建议升级")
+                    )
                     continue
                 new_lines.append(line)
             constraint_file.write_text("\n".join(new_lines))
 
-    return {"debt": "DEBT-L0-003", "status": "tracked",
-            "message": "MCP 协议 437d/365d 超半衰期 — 标注已更新",
-            "action": "后续升级 MCP 版本后更新 half_life_days"}
+    return {
+        "debt": "DEBT-L0-003",
+        "status": "tracked",
+        "message": "MCP 协议 437d/365d 超半衰期 — 标注已更新",
+        "action": "后续升级 MCP 版本后更新 half_life_days",
+    }
 
 
 def main():
@@ -143,14 +159,14 @@ def main():
     if args.json:
         print(json.dumps({"fixes": results}, ensure_ascii=False, indent=2))
     else:
-        print(f"\n{'='*56}")
+        print(f"\n{'=' * 56}")
         print("  eCOS v6 — 债务 closeout 批量修复")
-        print(f"{'='*56}\n")
+        print(f"{'=' * 56}\n")
         for r in results:
             status = "✅" if r.get("status") in ("fixed", "tracked") else "⚠️"
             note = r.get("detail") or r.get("message") or r.get("action") or r.get("file", "")
             print(f"  {status} {r['debt']}: {note}")
-        print(f"\n{'='*56}")
+        print(f"\n{'=' * 56}")
 
 
 if __name__ == "__main__":

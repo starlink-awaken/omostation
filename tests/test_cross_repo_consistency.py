@@ -2,19 +2,29 @@
 
 P77 STRAT § 2.1: cross-repo consistency 自动 verifier
 """
+
 import subprocess
 import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(WORKSPACE / 'bin'))
+sys.path.insert(0, str(WORKSPACE / "bin"))
 
 
 def run(args: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(
-        ["uv", "run", "--with", "pyyaml", "python",
-         str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py"), *args],
-        cwd=WORKSPACE, capture_output=True, text=True,
+        [
+            "uv",
+            "run",
+            "--with",
+            "pyyaml",
+            "python",
+            str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py"),
+            *args,
+        ],
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
     )
 
 
@@ -35,16 +45,14 @@ def test_tool_loads_and_runs():
 def test_registered_uri_count_matches_agora_yaml():
     """registered count = agora bos-services.yaml 服务数 (SSOT 真值)."""
     import yaml
+
     yaml_path = WORKSPACE / "projects" / "agora" / "etc" / "bos-services.yaml"
     expected = sum(
-        1 for s in yaml.safe_load(yaml_path.read_text()).get("services", [])
-        if s.get("uri", "").startswith("bos://")
+        1 for s in yaml.safe_load(yaml_path.read_text()).get("services", []) if s.get("uri", "").startswith("bos://")
     )
     r = run(["--json", "--threshold", "100"])
     data = __import__("json").loads(r.stdout)
-    assert data["registered"] == expected, (
-        f"registered={data['registered']}, expected={expected}"
-    )
+    assert data["registered"] == expected, f"registered={data['registered']}, expected={expected}"
 
 
 def test_threshold_low_fail():
@@ -78,10 +86,20 @@ def test_excludes_test_directories():
     r = run(["--json", "--threshold", "100"])
     data = __import__("json").loads(r.stdout)
     full_unreg = __import__("subprocess").run(
-        ["uv", "run", "--with", "pyyaml", "python",
-         str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py"),
-         "--json", "--threshold", "100"],
-        cwd=WORKSPACE, capture_output=True, text=True,
+        [
+            "uv",
+            "run",
+            "--with",
+            "pyyaml",
+            "python",
+            str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py"),
+            "--json",
+            "--threshold",
+            "100",
+        ],
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
     )
     # 无 condition on exact count (动态), 但 unregistered_list 必不含 custom/path
     assert "bos://custom/path" not in data.get("unregistered_list", []), (

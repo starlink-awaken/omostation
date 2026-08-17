@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Verify that root gitlinks point to commits reachable from submodule remotes."""
+
 from __future__ import annotations
 
 import argparse
@@ -24,7 +25,16 @@ def run(cmd: list[str], *, cwd: Path = WORKSPACE, check: bool = False) -> subpro
 
 
 def submodule_paths() -> list[str]:
-    result = run(["git", "config", "--file", ".gitmodules", "--get-regexp", r"^submodule\..*\.path$"])
+    result = run(
+        [
+            "git",
+            "config",
+            "--file",
+            ".gitmodules",
+            "--get-regexp",
+            r"^submodule\..*\.path$",
+        ]
+    )
     if result.returncode != 0:
         return []
     return [line.split(maxsplit=1)[1] for line in result.stdout.splitlines() if line.strip()]
@@ -55,15 +65,16 @@ def gitlink_sha(path: str, source: str) -> str | None:
     return parts[2] if len(parts) >= 3 and parts[0] == "160000" else None
 
 
-def remote_contains(
-    path: str, sha: str, *, fetch: bool, require_main: bool = False
-) -> tuple[bool, str]:
+def remote_contains(path: str, sha: str, *, fetch: bool, require_main: bool = False) -> tuple[bool, str]:
     submodule_dir = WORKSPACE / path
     if not submodule_dir.exists():
         return False, "submodule working tree missing"
     if not (submodule_dir / ".git").exists():
         if require_main:
-            return False, "submodule not initialized; cannot verify origin/main ancestry"
+            return (
+                False,
+                "submodule not initialized; cannot verify origin/main ancestry",
+            )
         return (
             True,
             "submodule not initialized (partial worktree) - CI full checkout will verify",
@@ -73,13 +84,14 @@ def remote_contains(
     # 治本 #907 35+ iteration: partial worktree reachability gate false-positive 死路
     # (init 子模块超时 10min, escape hatch 不覆盖 reachability).
     # 安全网: CI (full checkout, 子模块全 init) 跑同一 gate 正常验证, 是最终守门员.
-    init_check = run(
-        ["git", "rev-parse", "--is-inside-work-tree"], cwd=submodule_dir
-    )
+    init_check = run(["git", "rev-parse", "--is-inside-work-tree"], cwd=submodule_dir)
     # stdout 检查覆盖失败 (空) + false 两种非 init 情况, returncode 冗余
     if init_check.stdout.strip() != "true":
         if require_main:
-            return False, "submodule not initialized; cannot verify origin/main ancestry"
+            return (
+                False,
+                "submodule not initialized; cannot verify origin/main ancestry",
+            )
         return (
             True,
             "submodule not initialized (partial worktree) - CI full checkout will verify",
@@ -95,7 +107,10 @@ def remote_contains(
         shallow_res = run(["git", "rev-parse", "--is-shallow-repository"], cwd=submodule_dir)
         is_shallow = shallow_res.stdout.strip() == "true"
         if is_shallow:
-            fetch_result = run(["git", "fetch", "--quiet", "--unshallow", "origin", refspec], cwd=submodule_dir)
+            fetch_result = run(
+                ["git", "fetch", "--quiet", "--unshallow", "origin", refspec],
+                cwd=submodule_dir,
+            )
             if fetch_result.returncode != 0:
                 fetch_result = run(["git", "fetch", "--quiet", "origin", refspec], cwd=submodule_dir)
         else:
@@ -105,9 +120,7 @@ def remote_contains(
 
     if require_main:
         main_ref = "refs/remotes/origin/main"
-        contains_main = run(
-            ["git", "merge-base", "--is-ancestor", sha, main_ref], cwd=submodule_dir
-        )
+        contains_main = run(["git", "merge-base", "--is-ancestor", sha, main_ref], cwd=submodule_dir)
         if contains_main.returncode == 0:
             return True, main_ref
         if contains_main.returncode != 1:
@@ -116,11 +129,7 @@ def remote_contains(
         return False, f"not contained in {main_ref}"
 
     contains = run(["git", "branch", "-r", "--contains", sha], cwd=submodule_dir)
-    branches = [
-        line.strip()
-        for line in contains.stdout.splitlines()
-        if line.strip() and "origin/HEAD" not in line
-    ]
+    branches = [line.strip() for line in contains.stdout.splitlines() if line.strip() and "origin/HEAD" not in line]
     if branches:
         return True, ", ".join(branches[:3])
     return False, "not contained in fetched origin branches"
@@ -183,12 +192,17 @@ def check(
             continue
         sha = gitlink_sha(path, source)
         if sha is None:
-            findings.append({"path": path, "sha": None, "ok": False, "reason": f"no {source} gitlink"})
+            findings.append(
+                {
+                    "path": path,
+                    "sha": None,
+                    "ok": False,
+                    "reason": f"no {source} gitlink",
+                }
+            )
             continue
         checked += 1
-        ok, detail = remote_contains(
-            path, sha, fetch=fetch, require_main=require_main
-        )
+        ok, detail = remote_contains(path, sha, fetch=fetch, require_main=require_main)
         findings.append({"path": path, "sha": sha, "ok": ok, "reason": detail})
     failures = [item for item in findings if not item["ok"]]
     return {
@@ -214,7 +228,12 @@ def main() -> int:
         "not merely reachable from any origin branch",
     )
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
-    parser.add_argument("--skip", nargs="*", default=[], help="Submodule paths to skip (known false positives)")
+    parser.add_argument(
+        "--skip",
+        nargs="*",
+        default=[],
+        help="Submodule paths to skip (known false positives)",
+    )
     parser.add_argument("--skip-file", type=str, help="File with submodule paths to skip (one per line)")
     parser.add_argument(
         "--changed-from",
@@ -242,7 +261,8 @@ def main() -> int:
         skip_file = Path(args.skip_file)
         if skip_file.exists():
             skip_paths.update(
-                line.strip() for line in skip_file.read_text().splitlines()
+                line.strip()
+                for line in skip_file.read_text().splitlines()
                 if line.strip() and not line.strip().startswith("#")
             )
 
@@ -251,9 +271,7 @@ def main() -> int:
     if args.changed_from:
         only_paths = changed_submodules(args.changed_from, args.source)
         if only_paths is None:
-            sys.stderr.write(
-                f"[reachability] 基线 {args.changed_from} 不可解析, 回退全量校验\n"
-            )
+            sys.stderr.write(f"[reachability] 基线 {args.changed_from} 不可解析, 回退全量校验\n")
             mode = "full (baseline unresolvable)"
         else:
             mode = f"changed-from {args.changed_from}"
@@ -271,10 +289,7 @@ def main() -> int:
     elif report["ok"]:
         skip_msg = f", skipped={report['skipped']}" if report["skipped"] else ""
         mode_msg = f", mode={mode}" if mode != "full" else ""
-        print(
-            f"submodule-reachability: PASS ({report['checked']} gitlinks, "
-            f"source={args.source}{skip_msg}{mode_msg})"
-        )
+        print(f"submodule-reachability: PASS ({report['checked']} gitlinks, source={args.source}{skip_msg}{mode_msg})")
     else:
         for item in report["failures"]:
             print(f"{item['path']}: {item['sha'] or '-'} unreachable: {item['reason']}")

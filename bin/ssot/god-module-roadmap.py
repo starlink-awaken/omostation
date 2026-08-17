@@ -54,27 +54,30 @@ def parse_python(path: Path) -> dict:
                 and isinstance(node.body[0].value, ast.Constant)
                 and isinstance(node.body[0].value.value, str)
             )
-            functions.append({
-                "name": node.name,
-                "lineno": node.lineno,
-                "end_lineno": node.end_lineno,
-                "lines": n_lines,
-                "args": n_args,
-                "is_async": isinstance(node, ast.AsyncFunctionDef),
-                "has_docstring": has_doc,
-            })
+            functions.append(
+                {
+                    "name": node.name,
+                    "lineno": node.lineno,
+                    "end_lineno": node.end_lineno,
+                    "lines": n_lines,
+                    "args": n_args,
+                    "is_async": isinstance(node, ast.AsyncFunctionDef),
+                    "has_docstring": has_doc,
+                }
+            )
         elif isinstance(node, ast.ClassDef):
             n_lines = (node.end_lineno or node.lineno) - node.lineno + 1
-            n_methods = sum(1 for n in node.body
-                            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)))
-            classes.append({
-                "name": node.name,
-                "lineno": node.lineno,
-                "end_lineno": node.end_lineno,
-                "lines": n_lines,
-                "methods": n_methods,
-                "bases": [ast.unparse(b) for b in node.bases],
-            })
+            n_methods = sum(1 for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)))
+            classes.append(
+                {
+                    "name": node.name,
+                    "lineno": node.lineno,
+                    "end_lineno": node.end_lineno,
+                    "lines": n_lines,
+                    "methods": n_methods,
+                    "bases": [ast.unparse(b) for b in node.bases],
+                }
+            )
 
     # imports (递归, 因为 import 可在 try 内)
     imports: list[str] = []
@@ -132,22 +135,26 @@ def parse_typescript(path: Path) -> dict:
             for pat in TS_FUNCTION_PATTERNS:
                 m = pat.match(stripped)
                 if m:
-                    functions.append({
-                        "name": m.group(1),
-                        "lineno": i,
-                        "lines": 0,
-                        "args": stripped.count(",") + 1 if "(" in stripped else 0,
-                    })
+                    functions.append(
+                        {
+                            "name": m.group(1),
+                            "lineno": i,
+                            "lines": 0,
+                            "args": stripped.count(",") + 1 if "(" in stripped else 0,
+                        }
+                    )
                     break
             m = TS_CLASS_PATTERN.match(stripped)
             if m:
-                classes.append({
-                    "name": m.group(1),
-                    "lineno": i,
-                    "lines": 0,
-                    "methods": 0,
-                    "bases": [],
-                })
+                classes.append(
+                    {
+                        "name": m.group(1),
+                        "lineno": i,
+                        "lines": 0,
+                        "methods": 0,
+                        "bases": [],
+                    }
+                )
 
     return {
         "language": "typescript",
@@ -185,13 +192,16 @@ def build_roadmap(structure: dict, top_n: int) -> dict:
         steps.append(f"Step 1: 拆分 imports ({import_count} 个, 可分组: 标准库/第三方/项目内)")
     if classes:
         biggest = max(classes, key=lambda c: c.get("lines", 0))
-        steps.append(f"Step 2: 拆最大类 `{biggest['name']}` ({biggest.get('lines', 0)}L, "
-                     f"{biggest.get('methods', 0)} 方法)")
+        steps.append(
+            f"Step 2: 拆最大类 `{biggest['name']}` ({biggest.get('lines', 0)}L, {biggest.get('methods', 0)} 方法)"
+        )
     if funcs:
         standalone = [f for f in funcs if f.get("lines", 0) > 0 and f["lines"] < 100]
         if standalone:
-            steps.append(f"Step 3: 提取 {len(standalone)} 个小函数到独立模块 "
-                         f"(优先: {', '.join(f['name'] for f in standalone[:3])})")
+            steps.append(
+                f"Step 3: 提取 {len(standalone)} 个小函数到独立模块 "
+                f"(优先: {', '.join(f['name'] for f in standalone[:3])})"
+            )
     steps.append("Step 4: 验证 import + test 通过, 提交并更新 god-module 检测")
     steps.append("Step 5: 循环 Step 1-4 直至 <1500L (error) / <800L (warn)")
 
@@ -253,7 +263,7 @@ def main() -> int:
 
     if roadmap["top_classes"]:
         print("📦 最大的类 (top):")
-        for c in roadmap["top_classes"][:args.top]:
+        for c in roadmap["top_classes"][: args.top]:
             lines = c.get("lines", 0)
             methods = c.get("methods", 0)
             print(f"   {c['name']:<40s} line={c['lineno']:>5d}  lines={lines:>4d}  methods={methods}")
@@ -261,7 +271,7 @@ def main() -> int:
 
     if roadmap["top_functions"]:
         print("🔧 最大的函数 (top):")
-        for f in roadmap["top_functions"][:args.top]:
+        for f in roadmap["top_functions"][: args.top]:
             lines = f.get("lines", 0)
             args_n = f.get("args", 0)
             print(f"   {f['name']:<40s} line={f['lineno']:>5d}  lines={lines:>4d}  args={args_n}")

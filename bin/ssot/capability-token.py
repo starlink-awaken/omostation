@@ -18,7 +18,13 @@ from typing import Any
 
 TOKEN_SCHEMA = "capability-token/v1"
 DEFAULT_TTL_MINUTES = 30
-VALID_SCOPES = {"ci-read", "workflow-read", "evidence-write", "config-read", "state-read"}
+VALID_SCOPES = {
+    "ci-read",
+    "workflow-read",
+    "evidence-write",
+    "config-read",
+    "state-read",
+}
 
 
 def _load_scene_card(path: Path) -> dict[str, Any]:
@@ -97,7 +103,11 @@ def verify_token(token: dict[str, Any]) -> dict[str, Any]:
         return {"valid": False, "reason": "invalid expires_at format"}
     if datetime.now(UTC) > expires:
         return {"valid": False, "reason": "expired", "expired_at": expires_str}
-    return {"valid": True, "scene_id": token.get("scene_id"), "scopes": token.get("scopes", [])}
+    return {
+        "valid": True,
+        "scene_id": token.get("scene_id"),
+        "scopes": token.get("scopes", []),
+    }
 
 
 def main(argv: list[str] | None = None) -> int:

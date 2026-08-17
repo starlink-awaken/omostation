@@ -19,13 +19,14 @@ import json
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 
 @dataclass
 class WorktreeInfo:
     """worktree 信息"""
+
     path: Path
     session: str
     branch: str
@@ -33,7 +34,7 @@ class WorktreeInfo:
 
     def age_hours(self) -> float:
         """age in hours"""
-        now = datetime.now(timezone.utc).timestamp()
+        now = datetime.now(UTC).timestamp()
         return (now - self.mtime) / 3600
 
 
@@ -76,19 +77,17 @@ def list_worktrees(root_repo: Path) -> list[WorktreeInfo]:
         if not line:
             continue
         if line.startswith("worktree "):
-            wt_path = Path(line[len("worktree "):].strip())
+            wt_path = Path(line[len("worktree ") :].strip())
             # 只处理 ws-* 开头的 worktree，且在 parent 目录下
             if wt_path.parent == parent and wt_path.name.startswith("ws-"):
                 current_path = wt_path
         elif current_path and line.startswith("branch "):
-            branch = line[len("branch "):].strip()
+            branch = line[len("branch ") :].strip()
             # refs/heads/work/xxx -> work/xxx
             branch = branch.removeprefix("refs/heads/")
-            session = current_path.name[len("ws-"):]
+            session = current_path.name[len("ws-") :]
             mtime = get_file_mtime(current_path)
-            worktrees.append(
-                WorktreeInfo(path=current_path, session=session, branch=branch, mtime=mtime)
-            )
+            worktrees.append(WorktreeInfo(path=current_path, session=session, branch=branch, mtime=mtime))
             current_path = None
 
     return worktrees
@@ -159,9 +158,7 @@ def check_branch_merged_or_deleted(wt_info: WorktreeInfo, root_repo: Path) -> tu
     ls_remote = run_git(root_repo, "ls-remote", "--heads", "origin", wt_info.branch)
     if not ls_remote:
         # 远程已删，检查 HEAD 是否可达
-        is_ancestor = run_git(
-            wt_info.path, "merge-base", "--is-ancestor", "HEAD", "origin/main"
-        )
+        is_ancestor = run_git(wt_info.path, "merge-base", "--is-ancestor", "HEAD", "origin/main")
         if is_ancestor:
             return True, "deleted and ancestor"
         return False, "deleted but not ancestor"
@@ -201,7 +198,10 @@ def judge_worktree(wt_info: WorktreeInfo, root_repo: Path, min_age_hours: float 
     if not merged_ok:
         return False, f"branch: {merged_reason}"
 
-    return True, f"clean (age={age:.1f}h, claim={claim_reason}, unpushed={unpushed_reason}, merged={merged_reason})"
+    return (
+        True,
+        f"clean (age={age:.1f}h, claim={claim_reason}, unpushed={unpushed_reason}, merged={merged_reason})",
+    )
 
 
 def remove_worktree(wt_info: WorktreeInfo, root_repo: Path) -> bool:
@@ -209,7 +209,15 @@ def remove_worktree(wt_info: WorktreeInfo, root_repo: Path) -> bool:
     try:
         # git worktree remove --force
         result = subprocess.run(
-            ["git", "-C", str(root_repo), "worktree", "remove", "--force", str(wt_info.path)],
+            [
+                "git",
+                "-C",
+                str(root_repo),
+                "worktree",
+                "remove",
+                "--force",
+                str(wt_info.path),
+            ],
             capture_output=True,
             text=True,
             check=False,

@@ -24,6 +24,7 @@ import socket
 import subprocess
 from typing import Any
 
+
 def _repo_root() -> str:
     """本脚本所属的检出根目录 —— 仓库级 SSOT 从这里读。
 
@@ -37,7 +38,7 @@ def _repo_root() -> str:
             return p
         parent = os.path.dirname(p)
         if parent == p:
-            return os.path.expanduser("~/Workspace")   # 兜底
+            return os.path.expanduser("~/Workspace")  # 兜底
         p = parent
 
 
@@ -47,10 +48,20 @@ HOME = os.path.expanduser("~")
 # ── 场景 profile:解决“每次启动找不全” ────────────────────────────────
 PROFILES: dict[str, list[str]] = {
     "minimal": ["com.omlx.gateway", "com.omlx.autostart", "com.omlx.autopilot"],
-    "dev": ["com.omlx.gateway", "com.omlx.autostart", "com.omlx.autopilot",
-            "com.agora.sse", "com.l4.governance.watch", "cockpit-dashboard"],
-    "data": ["docker:observability-db-1", "docker:searxng",
-             "homebrew.mxcl.neo4j", "homebrew.mxcl.postgresql@18"],
+    "dev": [
+        "com.omlx.gateway",
+        "com.omlx.autostart",
+        "com.omlx.autopilot",
+        "com.agora.sse",
+        "com.l4.governance.watch",
+        "cockpit-dashboard",
+    ],
+    "data": [
+        "docker:observability-db-1",
+        "docker:searxng",
+        "homebrew.mxcl.neo4j",
+        "homebrew.mxcl.postgresql@18",
+    ],
 }
 
 # 常驻集(autopilot 要保证活着的)
@@ -68,23 +79,31 @@ NON_WORKSPACE_SERVICES = {
     "homebrew.mxcl.postgresql@18",
 }
 
+
 def _sh(cmd: str, timeout: int = 20) -> str:
     try:
-        return subprocess.run(cmd, shell=True, capture_output=True,
-                              text=True, timeout=timeout, check=False).stdout
+        return subprocess.run(
+            cmd,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        ).stdout
     except (subprocess.SubprocessError, OSError):
-        return ""   # 探活失败视为不可用, 不中断整体采集
+        return ""  # 探活失败视为不可用, 不中断整体采集
 
 
 def _yaml_last_doc(path: str) -> Any:
     """读多文档 YAML(带 front-matter)的正文。"""
     try:
         import yaml
+
         with open(path, encoding="utf-8") as fh:
             docs = [d for d in yaml.safe_load_all(fh) if d]
         return docs[-1] if docs else {}
     except (OSError, ValueError, ImportError):
-        return {}   # 注册表缺失/损坏时降级为空, 不影响其它数据源
+        return {}  # 注册表缺失/损坏时降级为空, 不影响其它数据源
 
 
 def port_open(port: int, host: str = "127.0.0.1", t: float = 0.35) -> bool:
@@ -105,40 +124,48 @@ def collect_launchd() -> list[dict]:
         def pb(key: str, _f: str = f) -> str:
             return _sh(f'/usr/libexec/PlistBuddy -c "Print :{key}" "{_f}" 2>/dev/null').strip()
 
-        out.append({
-            "id": label,
-            "kind": "launchd",
-            "running": bool(re.search(rf"\t{re.escape(label)}$", loaded, re.MULTILINE)),
-            "run_at_load": pb("RunAtLoad") == "true",
-            "interval": pb("StartInterval") or None,
-            "keepalive": bool(pb("KeepAlive")),
-            "program": os.path.basename(pb("ProgramArguments:0") or pb("Program") or ""),
-            "resident": label in RESIDENT,
-            "watch_paths": [x.strip() for x in _sh(
-                f'/usr/libexec/PlistBuddy -c "Print :WatchPaths" "{f}" 2>/dev/null'
-            ).splitlines() if x.strip() and x.strip() not in ("Array {", "}")],
-        })
+        out.append(
+            {
+                "id": label,
+                "kind": "launchd",
+                "running": bool(re.search(rf"\t{re.escape(label)}$", loaded, re.MULTILINE)),
+                "run_at_load": pb("RunAtLoad") == "true",
+                "interval": pb("StartInterval") or None,
+                "keepalive": bool(pb("KeepAlive")),
+                "program": os.path.basename(pb("ProgramArguments:0") or pb("Program") or ""),
+                "resident": label in RESIDENT,
+                "watch_paths": [
+                    x.strip()
+                    for x in _sh(f'/usr/libexec/PlistBuddy -c "Print :WatchPaths" "{f}" 2>/dev/null').splitlines()
+                    if x.strip() and x.strip() not in ("Array {", "}")
+                ],
+            }
+        )
     return out
 
 
 def collect_docker() -> list[dict]:
     out = []
-    raw = _sh('/opt/homebrew/bin/docker ps -a '
-              '--format "{{.Names}}\t{{.Image}}\t{{.Ports}}\t{{.State}}"', 30)
+    raw = _sh(
+        '/opt/homebrew/bin/docker ps -a --format "{{.Names}}\t{{.Image}}\t{{.Ports}}\t{{.State}}"',
+        30,
+    )
     for line in raw.strip().splitlines():
         p = line.split("\t")
         if len(p) < 4:
             continue
         ports = sorted({int(x) for x in re.findall(r":(\d+)->", p[2])})
-        out.append({
-            "id": f"docker:{p[0]}",
-            "kind": "docker",
-            "name": p[0],
-            "image": p[1],
-            "ports": ports,
-            "running": p[3] == "running",
-            "resident": False,
-        })
+        out.append(
+            {
+                "id": f"docker:{p[0]}",
+                "kind": "docker",
+                "name": p[0],
+                "image": p[1],
+                "ports": ports,
+                "running": p[3] == "running",
+                "resident": False,
+            }
+        )
     return out
 
 
@@ -162,7 +189,7 @@ def read_port_registry() -> dict[int, str]:
         try:
             out[int(p)] = v.get("name") if isinstance(v, dict) else str(v)
         except (TypeError, ValueError):
-            continue   # 端口键非整数(注释行等), 跳过
+            continue  # 端口键非整数(注释行等), 跳过
     return out
 
 
@@ -211,11 +238,11 @@ def collect() -> dict[str, Any]:
             continue
         ow = owner.lower()
         if any(ow.startswith(g) for g in GENERIC):
-            continue                       # 通用运行时 → 无法判定, 跳过
+            continue  # 通用运行时 → 无法判定, 跳过
         if any(a in ow for a in ALIAS.get(exp, ())):
-            continue                       # 已知合法别名
+            continue  # 已知合法别名
         if exp.split("-")[0].lower() in ow:
-            continue                       # 名字对得上
+            continue  # 名字对得上
         conflicts.append({"port": p, "registered": exp, "actual": owner})
 
     return {
@@ -248,9 +275,8 @@ def service_action(sid: str, action: str) -> tuple[bool, str]:
     uid = os.getuid()
     if sid.startswith("docker:"):
         name = sid.split(":", 1)[1]
-        cmd = f'/opt/homebrew/bin/docker {"start" if action == "up" else "stop"} {name}'
-        r = subprocess.run(cmd, shell=True, capture_output=True, text=True,
-                           timeout=90, check=False)
+        cmd = f"/opt/homebrew/bin/docker {'start' if action == 'up' else 'stop'} {name}"
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=90, check=False)
         return r.returncode == 0, (r.stdout or r.stderr).strip()[-200:]
     plist = os.path.join(HOME, "Library/LaunchAgents", f"{sid}.plist")
     if not os.path.exists(plist):
@@ -259,8 +285,7 @@ def service_action(sid: str, action: str) -> tuple[bool, str]:
         cmd = f'launchctl bootstrap gui/{uid} "{plist}"'
     else:
         cmd = f"launchctl bootout gui/{uid}/{sid}"
-    r = subprocess.run(cmd, shell=True, capture_output=True, text=True,
-                       timeout=60, check=False)
+    r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=60, check=False)
     ok = r.returncode == 0 or "already" in (r.stderr or "").lower()
     return ok, (r.stdout or r.stderr).strip()[-200:]
 
@@ -313,9 +338,11 @@ def sync_check() -> dict[str, Any]:
                 declared.add(s[k])
     reg_ports = read_port_registry()
     projects_dir = os.path.join(WORKSPACE, "projects")
-    project_names = [p for p in os.listdir(projects_dir)
-                     if os.path.isdir(os.path.join(projects_dir, p))] \
-        if os.path.isdir(projects_dir) else []
+    project_names = (
+        [p for p in os.listdir(projects_dir) if os.path.isdir(os.path.join(projects_dir, p))]
+        if os.path.isdir(projects_dir)
+        else []
+    )
 
     issues: list[dict] = []
     deprecated_kept = 0
@@ -355,17 +382,30 @@ def sync_check() -> dict[str, Any]:
             #  产生 15 条误报; 而那些虚构 endpoint 正是当初被"必须有端点"逼出来的。)
             stdio_backed = tr == "mcp_proxy" and bool(s.get("command"))
             if not ep and not stdio_backed:
-                issues.append({"kind": "B3 未声明端点", "uri": uri,
-                               "detail": "无 http_url/mcp_endpoint"})
+                issues.append(
+                    {
+                        "kind": "B3 未声明端点",
+                        "uri": uri,
+                        "detail": "无 http_url/mcp_endpoint",
+                    }
+                )
             elif ep:
                 m = re.search(r":(\d{2,5})", str(ep))
                 if m and int(m.group(1)) not in reg_ports:
-                    issues.append({"kind": "B3 端点端口未登记", "uri": uri,
-                                   "detail": f":{m.group(1)} 不在 port-registry"})
+                    issues.append(
+                        {
+                            "kind": "B3 端点端口未登记",
+                            "uri": uri,
+                            "detail": f":{m.group(1)} 不在 port-registry",
+                        }
+                    )
 
         pkg = s.get("package") or ""
-        if any(pkg.startswith(x) for x in ("kairon", "gbrain")) \
-                and pkg not in cap_pkgs and pkg.split("-")[0] not in cap_pkgs:
+        if (
+            any(pkg.startswith(x) for x in ("kairon", "gbrain"))
+            and pkg not in cap_pkgs
+            and pkg.split("-")[0] not in cap_pkgs
+        ):
             issues.append({"kind": "B4 kairon/gbrain 包未登记", "uri": uri, "detail": pkg})
 
         if str(s.get("status", "")).lower() in ("deprecated", "inactive", "disabled"):
@@ -389,8 +429,13 @@ def sync_check() -> dict[str, Any]:
         if s["id"] in NON_WORKSPACE_SERVICES:
             continue
         if s["running"] and not (s["id"] in declared or s.get("name") in declared):
-            issues.append({"kind": "S1 在跑但无生命周期声明", "uri": s["id"],
-                           "detail": f"{s['kind']} · 建议登记到 services.yaml"})
+            issues.append(
+                {
+                    "kind": "S1 在跑但无生命周期声明",
+                    "uri": s["id"],
+                    "detail": f"{s['kind']} · 建议登记到 services.yaml",
+                }
+            )
 
     by_kind: dict[str, int] = {}
     for i in issues:
@@ -476,7 +521,7 @@ def probe_health(svc: dict) -> dict[str, Any]:
         if d.get("pid") is None and svc.get("keepalive") and not svc.get("watch_paths"):
             return {"health": "degraded", "reason": "声明常驻但无进程"}
         # 监视路径失效 → watch 永远不触发(真问题, 今天实际发现)
-        for wp in (svc.get("watch_paths") or []):
+        for wp in svc.get("watch_paths") or []:
             if not os.path.exists(wp):
                 return {"health": "degraded", "reason": f"监视路径不存在: {wp}"}
 
@@ -508,7 +553,6 @@ def collect_full() -> dict[str, Any]:
         hc[s["health"]] = hc.get(s["health"], 0) + 1
     v["health_counts"] = hc
     v["degraded"] = [
-        {"id": s["id"], "kind": s["kind"], "reason": s["reason"]}
-        for s in v["services"] if s["health"] == "degraded"
+        {"id": s["id"], "kind": s["kind"], "reason": s["reason"]} for s in v["services"] if s["health"] == "degraded"
     ]
     return v

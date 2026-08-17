@@ -19,7 +19,7 @@ import tempfile
 import uuid
 from collections.abc import Callable, Sequence
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any, Optional, Union
 
@@ -74,7 +74,7 @@ class AdapterError(RuntimeError):
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def digest_text(value: str) -> str:
@@ -82,21 +82,15 @@ def digest_text(value: str) -> str:
 
 
 def _canonical_json(payload: dict[str, Any]) -> str:
-    return json.dumps(
-        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    )
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 def receipt_digest(payload: dict[str, Any]) -> str:
-    projected = {
-        key: value for key, value in payload.items() if key != "receipt_sha256"
-    }
+    projected = {key: value for key, value in payload.items() if key != "receipt_sha256"}
     return digest_text(_canonical_json(projected))
 
 
-def fixed_argv(
-    binary: Union[Path, str], workspace_root: Union[Path, str], prompt: str
-) -> list[str]:
+def fixed_argv(binary: Union[Path, str], workspace_root: Union[Path, str], prompt: str) -> list[str]:
     return [
         str(binary),
         "exec",
@@ -137,11 +131,7 @@ def validate_receipt_path(value: Union[Path, str]) -> Path:
         parent = receipt.parent.resolve(strict=True)
     except OSError as exc:
         raise AdapterError("unsafe_receipt") from exc
-    if (
-        receipt.exists()
-        or not parent.is_dir()
-        or not any(_is_within(receipt, root) for root in _system_temp_roots())
-    ):
+    if receipt.exists() or not parent.is_dir() or not any(_is_within(receipt, root) for root in _system_temp_roots()):
         raise AdapterError("unsafe_receipt")
     return receipt
 
@@ -158,17 +148,11 @@ def validate_workspace(value: Union[Path, str]) -> Path:
         git_dir = root / ".git"
         if not stat.S_ISDIR(os.lstat(git_dir).st_mode):
             raise AdapterError("workspace_not_independent_clone")
-        identity = json.loads(
-            (git_dir / "agent-clone-identity.json").read_text(encoding="utf-8")
-        )
+        identity = json.loads((git_dir / "agent-clone-identity.json").read_text(encoding="utf-8"))
         canonical = Path(identity["canonical_root"]).expanduser().resolve(strict=True)
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
         raise AdapterError("workspace_not_independent_clone") from exc
-    if (
-        identity.get("schema") != "agent-clone-identity/v1"
-        or identity.get("ready") is not True
-        or canonical != root
-    ):
+    if identity.get("schema") != "agent-clone-identity/v1" or identity.get("ready") is not True or canonical != root:
         raise AdapterError("workspace_not_independent_clone")
     return root
 
@@ -310,19 +294,9 @@ def _run_git(
 
 
 def _default_changed_paths_reader(root: Path) -> list[str]:
-    tracked = _run_git(
-        root, ["diff", "--name-only", "-z", "--no-renames", "HEAD"]
-    ).stdout
-    untracked = _run_git(
-        root, ["ls-files", "--others", "--exclude-standard", "-z"]
-    ).stdout
-    return sorted(
-        {
-            value.decode("utf-8", errors="strict")
-            for value in (tracked + untracked).split(b"\0")
-            if value
-        }
-    )
+    tracked = _run_git(root, ["diff", "--name-only", "-z", "--no-renames", "HEAD"]).stdout
+    untracked = _run_git(root, ["ls-files", "--others", "--exclude-standard", "-z"]).stdout
+    return sorted({value.decode("utf-8", errors="strict") for value in (tracked + untracked).split(b"\0") if value})
 
 
 def _path_state(root: Path, relative: str) -> tuple[str, str]:
@@ -347,9 +321,7 @@ def _path_state(root: Path, relative: str) -> tuple[str, str]:
     if stat.S_ISDIR(metadata.st_mode):
         try:
             head = _run_git(path, ["rev-parse", "HEAD"]).stdout
-            status = _run_git(
-                path, ["status", "--porcelain=v2", "-z", "--untracked-files=all"]
-            ).stdout
+            status = _run_git(path, ["status", "--porcelain=v2", "-z", "--untracked-files=all"]).stdout
         except AdapterError:
             return ("directory", "")
         return ("git-directory", digest_text((head + status).hex()))
@@ -420,12 +392,7 @@ def _parse_write_paths(prompt: str) -> list[str]:
             continue
         raw = match.group(1)
         path = Path(raw)
-        if (
-            not raw
-            or path.is_absolute()
-            or ".." in path.parts
-            or path.parts[0] == ".git"
-        ):
+        if not raw or path.is_absolute() or ".." in path.parts or path.parts[0] == ".git":
             raise AdapterError("prompt_contract_invalid")
         normalized = path.as_posix().rstrip("/")
         if normalized in {"", "."}:
@@ -483,15 +450,9 @@ def _execution_clone(root: Path):
 
 
 def _path_allowed(path: str, allowed: Sequence[str]) -> bool:
-    if any(
-        path == forbidden or path.startswith(f"{forbidden}/")
-        for forbidden in FORBIDDEN_WRITE_PATHS
-    ):
+    if any(path == forbidden or path.startswith(f"{forbidden}/") for forbidden in FORBIDDEN_WRITE_PATHS):
         return False
-    return any(
-        path == item.rstrip("/") or (item.endswith("/") and path.startswith(item))
-        for item in allowed
-    )
+    return any(path == item.rstrip("/") or (item.endswith("/") and path.startswith(item)) for item in allowed)
 
 
 def _execution_delta(
@@ -509,11 +470,7 @@ def _execution_delta(
         execution_root,
         ["diff", "--cached", "--name-only", "-z", "--no-renames", "HEAD"],
     ).stdout
-    changed = sorted(
-        value.decode("utf-8", errors="strict")
-        for value in changed_raw.split(b"\0")
-        if value
-    )
+    changed = sorted(value.decode("utf-8", errors="strict") for value in changed_raw.split(b"\0") if value)
     for path in changed:
         head_mode = _run_git(execution_root, ["ls-tree", "HEAD", "--", path]).stdout
         index_mode = _run_git(execution_root, ["ls-files", "-s", "--", path]).stdout
@@ -526,9 +483,7 @@ def _execution_delta(
         if pristine_snapshot.get(path) != current_snapshot.get(path)
     }
     ignored_delta = metadata_delta - set(changed)
-    ignored_delta -= {
-        path for path in ignored_delta if Path(path).parts[0] in {".subtrees", ".venv"}
-    }
+    ignored_delta -= {path for path in ignored_delta if Path(path).parts[0] in {".subtrees", ".venv"}}
     if ignored_delta:
         raise AdapterError("ignored_write_forbidden")
     for path in changed:
@@ -537,9 +492,7 @@ def _execution_delta(
         candidate = execution_root / path
         if candidate.is_symlink():
             raise AdapterError("worker_symlink_forbidden")
-    patch = _run_git(
-        execution_root, ["diff", "--cached", "--binary", "HEAD"], timeout=120
-    ).stdout
+    patch = _run_git(execution_root, ["diff", "--cached", "--binary", "HEAD"], timeout=120).stdout
     return changed, patch, {path: _path_state(execution_root, path) for path in changed}
 
 
@@ -585,9 +538,7 @@ def _apply_delta(
     try:
         _run_git(root, ["apply", "--whitespace=nowarn", "-"], input_bytes=patch)
         applied = True
-        expected = _expected_post_fingerprint(
-            baseline_fingerprint, changed, expected_worker_states
-        )
+        expected = _expected_post_fingerprint(baseline_fingerprint, changed, expected_worker_states)
         if _workspace_fingerprint(root, changed_paths_reader) != expected:
             raise AdapterError("delta_apply_unconfirmed")
     except (AdapterError, OSError) as exc:
@@ -605,10 +556,7 @@ def _apply_delta(
                 )
             except AdapterError as rollback_exc:
                 raise AdapterError("rollback_unconfirmed") from rollback_exc
-            if (
-                _workspace_fingerprint(root, changed_paths_reader)
-                != baseline_fingerprint
-            ):
+            if _workspace_fingerprint(root, changed_paths_reader) != baseline_fingerprint:
                 raise AdapterError("rollback_unconfirmed") from exc
         if isinstance(exc, AdapterError):
             raise
@@ -709,9 +657,7 @@ def run_worker(
     if not 1 <= timeout_seconds <= MAX_TIMEOUT_SECONDS:
         raise AdapterError("worker_timeout")
     root = validate_workspace(workspace_root)
-    receipt_file = (
-        validate_receipt_path(receipt_path) if receipt_path is not None else None
-    )
+    receipt_file = validate_receipt_path(receipt_path) if receipt_path is not None else None
     binary = codex_resolver()
     if binary is None:
         raise AdapterError("codex_unavailable")
@@ -741,13 +687,9 @@ def run_worker(
             provider_review = _provider_review(_timeout_output(exc), timed_out=True)
             if not _terminate_timed_out_process(process, group_probe, group_terminator):
                 raise AdapterError("cleanup_unconfirmed") from exc
-            raise AdapterError(
-                "worker_timeout", provider_review=provider_review
-            ) from exc
+            raise AdapterError("worker_timeout", provider_review=provider_review) from exc
         if group_probe(process.pid):
-            if not _terminate_surviving_group(
-                process.pid, group_probe, group_terminator
-            ):
+            if not _terminate_surviving_group(process.pid, group_probe, group_terminator):
                 raise AdapterError("cleanup_unconfirmed")
             raise AdapterError("process_leaked")
         if process.returncode != 0:
@@ -755,9 +697,7 @@ def run_worker(
         output = _final_assistant_message(stdout)
         provider_review = _provider_review(stdout)
         if provider_review == "human_required":
-            raise AdapterError(
-                "human_approval_required", provider_review=provider_review
-            )
+            raise AdapterError("human_approval_required", provider_review=provider_review)
         if expect_exact is not None and output != expect_exact:
             raise AdapterError("marker_mismatch")
         changed_paths, patch, worker_states = _execution_delta(
@@ -772,9 +712,7 @@ def run_worker(
     receipt: Optional[dict[str, Any]] = None
     staged_receipt: Path | None = None
     if receipt_file is not None:
-        expected_post = _expected_post_fingerprint(
-            baseline_fingerprint, changed_paths, worker_states
-        )
+        expected_post = _expected_post_fingerprint(baseline_fingerprint, changed_paths, worker_states)
         receipt = {
             "baseline_digest": _fingerprint_digest(baseline_fingerprint),
             "boundaries": {
@@ -838,10 +776,7 @@ def run_worker(
                         )
                     except AdapterError as rollback_exc:
                         raise AdapterError("rollback_unconfirmed") from rollback_exc
-                if (
-                    _workspace_fingerprint(root, changed_paths_reader)
-                    != baseline_fingerprint
-                ):
+                if _workspace_fingerprint(root, changed_paths_reader) != baseline_fingerprint:
                     raise AdapterError("rollback_unconfirmed") from exc
                 raise AdapterError("receipt_write_failed") from exc
     finally:

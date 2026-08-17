@@ -90,7 +90,14 @@ def _is_safe_wrapper(path: Path, bin_path: Path) -> bool:
     return False
 
 
-def execute_batch(entries: list[dict[str, Any]], target_round: str, target_owner: str, apply_changes: bool, output: Path, json_path: Path | None) -> dict[str, Any]:
+def execute_batch(
+    entries: list[dict[str, Any]],
+    target_round: str,
+    target_owner: str,
+    apply_changes: bool,
+    output: Path,
+    json_path: Path | None,
+) -> dict[str, Any]:
     selected = [
         item
         for item in entries
@@ -99,7 +106,9 @@ def execute_batch(entries: list[dict[str, Any]], target_round: str, target_owner
         and (not target_owner or str(item.get("owner", "governance")) == target_owner)
     ]
 
-    selected.sort(key=lambda item: (_normalize_round(item), str(item.get("owner", "governance")), str(item.get("name", ""))))
+    selected.sort(
+        key=lambda item: (_normalize_round(item), str(item.get("owner", "governance")), str(item.get("name", "")))
+    )
 
     round_stats: dict[str, int] = defaultdict(int)
     owner_stats: dict[str, int] = defaultdict(int)
@@ -172,7 +181,7 @@ def execute_batch(entries: list[dict[str, Any]], target_round: str, target_owner
     lines.append("# scripts close-duplicate-gap-first 执行计划与结果")
     lines.append("")
     lines.append(f"- 生成时间: {datetime.now().isoformat(timespec='seconds')}")
-    lines.append(f"- 数据源: `docs/operations/bin-scripts-convergence-manifest.json`")
+    lines.append("- 数据源: `docs/operations/bin-scripts-convergence-manifest.json`")
     lines.append(f"- Round 筛选: {target_round}")
     if target_owner:
         lines.append(f"- Owner 筛选: {target_owner}")
@@ -285,7 +294,9 @@ def main() -> int:
     if args.apply:
         removed = result_count.get("removed", 0)
         skipped = summary["entries"] - removed - result_count.get("failed", 0)
-        print(f"entries={summary['entries']} removed={removed} failed={result_count.get('failed', 0)} skipped={skipped}")
+        print(
+            f"entries={summary['entries']} removed={removed} failed={result_count.get('failed', 0)} skipped={skipped}"
+        )
     else:
         ready = result_count.get("ready_remove", 0)
         print(f"entries={summary['entries']} ready_remove={ready} skipped={summary['entries'] - ready}")

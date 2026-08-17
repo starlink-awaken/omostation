@@ -183,9 +183,7 @@ def test_verify_execute_fails_when_command_exits_nonzero(
             }
         ]
     }
-    rc = BET_LEDGER.cmd_verify(
-        data, SimpleNamespace(bet_id="BET-TEST", execute=True)
-    )
+    rc = BET_LEDGER.cmd_verify(data, SimpleNamespace(bet_id="BET-TEST", execute=True))
     assert rc == 1
 
 
@@ -210,7 +208,5 @@ def test_verify_execute_passes_when_command_exits_zero(
             }
         ]
     }
-    rc = BET_LEDGER.cmd_verify(
-        data, SimpleNamespace(bet_id="BET-TEST", execute=True)
-    )
+    rc = BET_LEDGER.cmd_verify(data, SimpleNamespace(bet_id="BET-TEST", execute=True))
     assert rc == 0

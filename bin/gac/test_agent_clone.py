@@ -34,18 +34,18 @@ def git(cwd: Path, *args: str, env: dict | None = None, check: bool = True) -> s
     if env:
         e.update(env)
     proc = subprocess.run(
-        ["git", "-C", str(cwd), *args], capture_output=True, text=True, env=e, check=False
+        ["git", "-C", str(cwd), *args],
+        capture_output=True,
+        text=True,
+        env=e,
+        check=False,
     )
     if check and proc.returncode != 0:
-        raise AssertionError(
-            f"git {' '.join(args)} failed in {cwd} (rc={proc.returncode}):\n{proc.stderr}"
-        )
+        raise AssertionError(f"git {' '.join(args)} failed in {cwd} (rc={proc.returncode}):\n{proc.stderr}")
     return proc
 
 
-def run_cli(
-    *argv: str, env: dict | None = None, check: bool = True
-) -> subprocess.CompletedProcess:
+def run_cli(*argv: str, env: dict | None = None, check: bool = True) -> subprocess.CompletedProcess:
     e = os.environ.copy()
     if env:
         e.update(env)
@@ -53,12 +53,15 @@ def run_cli(
         # never leak an ambient AGENT_ID from the host into guard tests
         e.pop("AGENT_ID", None)
     proc = subprocess.run(
-        [sys.executable, str(TOOL), *argv], capture_output=True, text=True, env=e, check=False
+        [sys.executable, str(TOOL), *argv],
+        capture_output=True,
+        text=True,
+        env=e,
+        check=False,
     )
     if check and proc.returncode != 0:
         raise AssertionError(
-            f"agent-clone {' '.join(argv)} failed (rc={proc.returncode}):\n"
-            f"stdout={proc.stdout}\nstderr={proc.stderr}"
+            f"agent-clone {' '.join(argv)} failed (rc={proc.returncode}):\nstdout={proc.stdout}\nstderr={proc.stderr}"
         )
     return proc
 
@@ -78,14 +81,10 @@ def load_tool_module():
 def sha256_canonical(obj: dict, exclude: str | None = None) -> str:
     if exclude is not None:
         obj = {k: v for k, v in obj.items() if k != exclude}
-    return hashlib.sha256(
-        json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
-def make_source(
-    base: Path, submodule_name: str = "childmod", with_hooks: bool = False
-) -> tuple[Path, Path, Path]:
+def make_source(base: Path, submodule_name: str = "childmod", with_hooks: bool = False) -> tuple[Path, Path, Path]:
     """Build source repo with one submodule and a bare remote.
 
     Returns (source, child, bare).
@@ -102,7 +101,15 @@ def make_source(
     git(src, "init", "-b", "main")
     (src / "README.md").write_text("root\n")
     git(src, "add", "README.md")
-    git(src, "-c", "protocol.file.allow=always", "submodule", "add", str(child), submodule_name)
+    git(
+        src,
+        "-c",
+        "protocol.file.allow=always",
+        "submodule",
+        "add",
+        str(child),
+        submodule_name,
+    )
     if with_hooks:
         (src / ".githooks").mkdir()
         (src / ".githooks" / "pre-commit").write_text("#!/bin/sh\nexit 0\n")
@@ -127,7 +134,15 @@ def make_nested_source(base: Path) -> tuple[Path, Path]:
     outer = base / "outer"
     outer.mkdir()
     src, child, bare = make_source(outer)
-    git(child, "-c", "protocol.file.allow=always", "submodule", "add", str(nested), "grandchild")
+    git(
+        child,
+        "-c",
+        "protocol.file.allow=always",
+        "submodule",
+        "add",
+        str(nested),
+        "grandchild",
+    )
     git(child, "commit", "-m", "add nested")
     git(src / "childmod", "fetch", "origin")
     git(src / "childmod", "checkout", git(child, "rev-parse", "HEAD").stdout.strip())
@@ -139,7 +154,16 @@ def make_nested_source(base: Path) -> tuple[Path, Path]:
 
 def create_clone(tmp: Path, bare: Path, name: str = "clone", **extra: object) -> Path:
     dest = tmp / name
-    argv = ["create", "--json", "--agent-id", "agent-1", "--source", str(bare), "--destination", str(dest)]
+    argv = [
+        "create",
+        "--json",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+    ]
     for flag, value in extra.items():
         argv.append(f"--{flag.replace('_', '-')}")
         if value is not True:
@@ -189,9 +213,7 @@ def test_create_clone_with_submodule_and_no_alternates(tmp_path):
 
     # no persistent alternates anywhere in the clone
     assert not (dest / ".git" / "objects" / "info" / "alternates").exists()
-    assert not (
-        dest / ".git" / "modules" / "childmod" / "objects" / "info" / "alternates"
-    ).exists()
+    assert not (dest / ".git" / "modules" / "childmod" / "objects" / "info" / "alternates").exists()
 
     # cloned independently: removing the source leaves the clone fully functional
     bare_contents = git(tmp_path / "source-bare.git", "rev-parse", "HEAD").stdout.strip()
@@ -211,8 +233,15 @@ def test_create_refuses_existing_path(tmp_path):
     empty = tmp_path / "empty-dir"
     empty.mkdir()
     proc = run_cli(
-        "create", "--agent-id", "agent-1", "--source", str(bare),
-        "--destination", str(empty), "--json", check=False,
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(empty),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "destination_collision"
@@ -246,8 +275,16 @@ def test_create_with_revision(tmp_path):
 
     dest = tmp_path / "clone"
     proc = run_cli(
-        "create", "--agent-id", "agent-1", "--source", str(bare),
-        "--destination", str(dest), "--revision", m1_sha, "--json",
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+        "--revision",
+        m1_sha,
+        "--json",
     )
     assert parse_json(proc)["reason"] == "clone_created"
     assert git(dest, "rev-parse", "HEAD").stdout.strip() == m1_sha
@@ -331,9 +368,7 @@ def test_create_resolves_stale_remote_ref_from_canonical_upstream_without_source
     assert proc.returncode == 0, proc.stderr
     assert git(destination, "rev-parse", "HEAD").stdout.strip() == expected
     assert git(destination, "remote", "get-url", "origin").stdout.strip() == str(bare)
-    identity = json.loads(
-        (destination / ".git" / "agent-clone-identity.json").read_text()
-    )
+    identity = json.loads((destination / ".git" / "agent-clone-identity.json").read_text())
     assert identity["source_url"] == str(bare)
     assert identity["frozen_root_sha"] == expected
     assert git(leaf, "rev-parse", "origin/main").stdout.strip() == stale_leaf_ref
@@ -448,9 +483,7 @@ def test_create_reports_published_clone_when_staging_cleanup_fails(tmp_path, mon
     assert destination.is_dir()
 
 
-def test_create_preserves_cleanup_evidence_for_unexpected_primary_error(
-    tmp_path, monkeypatch
-):
+def test_create_preserves_cleanup_evidence_for_unexpected_primary_error(tmp_path, monkeypatch):
     tool = load_tool_module()
     _src, _child, bare = make_source(tmp_path)
     destination = tmp_path / "unpublished-clone"
@@ -492,7 +525,15 @@ def test_create_submodule_failure_does_not_publish_partial_destination(tmp_path)
     (doomed / "doomed.txt").write_text("doomed\n")
     git(doomed, "add", "doomed.txt")
     git(doomed, "commit", "-m", "doomed")
-    git(src, "-c", "protocol.file.allow=always", "submodule", "add", str(doomed), "z-doomed")
+    git(
+        src,
+        "-c",
+        "protocol.file.allow=always",
+        "submodule",
+        "add",
+        str(doomed),
+        "z-doomed",
+    )
     git(src, "commit", "-m", "add doomed child")
     git(src, "push", "origin", "main")
     shutil.rmtree(doomed)
@@ -520,8 +561,15 @@ def test_create_no_submodules_manifest_uninitialized(tmp_path):
     _src, _child, bare = make_source(tmp_path)
     dest = tmp_path / "clone"
     proc = run_cli(
-        "create", "--agent-id", "agent-1", "--source", str(bare),
-        "--destination", str(dest), "--no-submodules", "--json",
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+        "--no-submodules",
+        "--json",
     )
     assert parse_json(proc)["submodules_initialized"] is False
     m = write_manifest(tmp_path, dest, "m.json")
@@ -537,8 +585,15 @@ def test_invalid_agent_id(tmp_path):
     _src, _child, bare = make_source(tmp_path)
     for bad in ("", "a/b", "..", "has space", "x" * 65):
         proc = run_cli(
-            "create", "--agent-id", bad, "--source", str(bare),
-            "--destination", str(tmp_path / "c"), "--json", check=False,
+            "create",
+            "--agent-id",
+            bad,
+            "--source",
+            str(bare),
+            "--destination",
+            str(tmp_path / "c"),
+            "--json",
+            check=False,
         )
         assert proc.returncode == 2, bad
         assert parse_json(proc)["reason"] == "agent_id_invalid"
@@ -578,8 +633,13 @@ def test_dirty_root_rejected(tmp_path):
     dest = create_clone(tmp_path, bare)
     (dest / "untracked.txt").write_text("x\n")
     proc = run_cli(
-        "manifest", "--clone", str(dest), "--output", str(tmp_path / "m.json"),
-        "--json", check=False,
+        "manifest",
+        "--clone",
+        str(dest),
+        "--output",
+        str(tmp_path / "m.json"),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "root_dirty"
@@ -590,8 +650,13 @@ def test_dirty_child_rejected(tmp_path):
     dest = create_clone(tmp_path, bare)
     (dest / "childmod" / "dirty.txt").write_text("x\n")
     proc = run_cli(
-        "manifest", "--clone", str(dest), "--output", str(tmp_path / "m.json"),
-        "--json", check=False,
+        "manifest",
+        "--clone",
+        str(dest),
+        "--output",
+        str(tmp_path / "m.json"),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "child_dirty"
@@ -659,8 +724,13 @@ def test_origin_drift_rejected(tmp_path):
     manifest = write_manifest(tmp_path, dest, "m.json")
     git(dest, "remote", "set-url", "origin", str(tmp_path / "elsewhere.git"))
     proc = run_cli(
-        "verify", "--clone", str(dest), "--manifest", str(manifest),
-        "--json", check=False,
+        "verify",
+        "--clone",
+        str(dest),
+        "--manifest",
+        str(manifest),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "origin_drift"
@@ -670,10 +740,21 @@ def test_child_origin_drift_rejected(tmp_path):
     _src, _child, bare = make_source(tmp_path)
     dest = create_clone(tmp_path, bare)
     manifest = write_manifest(tmp_path, dest, "m.json")
-    git(dest / "childmod", "remote", "set-url", "origin", str(tmp_path / "child-other.git"))
+    git(
+        dest / "childmod",
+        "remote",
+        "set-url",
+        "origin",
+        str(tmp_path / "child-other.git"),
+    )
     proc = run_cli(
-        "verify", "--clone", str(dest), "--manifest", str(manifest),
-        "--json", check=False,
+        "verify",
+        "--clone",
+        str(dest),
+        "--manifest",
+        str(manifest),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "child_origin_drift"
@@ -710,8 +791,14 @@ def test_changeset_no_change_explicit(tmp_path):
     baseline = write_manifest(tmp_path, dest, "baseline.json")
     out = tmp_path / "cs.json"
     proc = run_cli(
-        "changeset", "--clone", str(dest), "--baseline", str(baseline),
-        "--output", str(out), "--json",
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(out),
+        "--json",
     )
     assert parse_json(proc)["reason"] == "changeset_generated"
     data = json.loads(out.read_text())
@@ -731,8 +818,14 @@ def test_changeset_fast_forward_accepted(tmp_path):
 
     out = tmp_path / "cs.json"
     proc = run_cli(
-        "changeset", "--clone", str(dest), "--baseline", str(baseline),
-        "--output", str(out), "--json",
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(out),
+        "--json",
     )
     assert parse_json(proc)["reason"] == "changeset_generated"
     data = json.loads(out.read_text())
@@ -754,8 +847,15 @@ def test_changeset_rejects_child_head_gitlink_mismatch(tmp_path):
     git(dest, "config", "submodule.childmod.ignore", "all")
 
     proc = run_cli(
-        "changeset", "--clone", str(dest), "--baseline", str(baseline),
-        "--output", str(tmp_path / "cs.json"), "--json", check=False,
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(tmp_path / "cs.json"),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "child_head_gitlink_mismatch"
@@ -774,8 +874,15 @@ def test_changeset_rewind_rejected(tmp_path):
     assert rewound_sha != json.loads(baseline2.read_text())["root_head_sha"]
 
     proc = run_cli(
-        "changeset", "--clone", str(dest), "--baseline", str(baseline2),
-        "--output", str(tmp_path / "cs.json"), "--json", check=False,
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline2),
+        "--output",
+        str(tmp_path / "cs.json"),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "root_rewind_or_diverged"
@@ -795,8 +902,15 @@ def test_changeset_divergence_rejected(tmp_path):
     git(other, "commit", "-m", "x")
 
     proc = run_cli(
-        "changeset", "--clone", str(other), "--baseline", str(baseline),
-        "--output", str(tmp_path / "cs.json"), "--json", check=False,
+        "changeset",
+        "--clone",
+        str(other),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(tmp_path / "cs.json"),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "root_rewind_or_diverged"
@@ -816,8 +930,15 @@ def test_changeset_child_rewind_rejected(tmp_path):
     git(dest, "commit", "-m", "child rewind")
 
     proc = run_cli(
-        "changeset", "--clone", str(dest), "--baseline", str(baseline2),
-        "--output", str(tmp_path / "cs.json"), "--json", check=False,
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline2),
+        "--output",
+        str(tmp_path / "cs.json"),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "child_rewind_or_diverged"
@@ -829,8 +950,15 @@ def test_changeset_dirty_candidate_rejected(tmp_path):
     baseline = write_manifest(tmp_path, dest, "baseline.json")
     (dest / "untracked.txt").write_text("x\n")
     proc = run_cli(
-        "changeset", "--clone", str(dest), "--baseline", str(baseline),
-        "--output", str(tmp_path / "cs.json"), "--json", check=False,
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(tmp_path / "cs.json"),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "candidate_dirty"
@@ -842,8 +970,15 @@ def test_changeset_baseline_digest_validation(tmp_path):
     baseline = write_manifest(tmp_path, dest, "baseline.json")
     tamper_manifest(baseline, lambda d: d.__setitem__("root_head_sha", "0" * 40), recompute=False)
     proc = run_cli(
-        "changeset", "--clone", str(dest), "--baseline", str(baseline),
-        "--output", str(tmp_path / "cs.json"), "--json", check=False,
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(tmp_path / "cs.json"),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "baseline_digest_mismatch"
@@ -862,25 +997,38 @@ def test_guard_states(tmp_path):
 
     # no AGENT_ID: human operation allowed even on the integration root
     proc = run_cli(
-        "guard", "--workspace", str(integration),
-        "--integration-root", str(integration), "--json",
+        "guard",
+        "--workspace",
+        str(integration),
+        "--integration-root",
+        str(integration),
+        "--json",
     )
     out = parse_json(proc)
     assert out["ok"] is True and out["state"] == "human"
 
     # AGENT_ID on the integration root: denied
     proc = run_cli(
-        "guard", "--workspace", str(integration),
-        "--integration-root", str(integration), "--json",
-        env={"AGENT_ID": "agent-1"}, check=False,
+        "guard",
+        "--workspace",
+        str(integration),
+        "--integration-root",
+        str(integration),
+        "--json",
+        env={"AGENT_ID": "agent-1"},
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "agent_on_integration_root"
 
     # matching clone identity: verified clone
     proc = run_cli(
-        "guard", "--workspace", str(dest),
-        "--integration-root", str(integration), "--json",
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(integration),
+        "--json",
         env={"AGENT_ID": "agent-1"},
     )
     out = parse_json(proc)
@@ -888,9 +1036,14 @@ def test_guard_states(tmp_path):
 
     # mismatched clone identity: denied
     proc = run_cli(
-        "guard", "--workspace", str(dest),
-        "--integration-root", str(integration), "--json",
-        env={"AGENT_ID": "other-agent"}, check=False,
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(integration),
+        "--json",
+        env={"AGENT_ID": "other-agent"},
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "clone_identity_mismatch"
@@ -903,8 +1056,12 @@ def test_guard_states(tmp_path):
     git(legacy, "add", "f.txt")
     git(legacy, "commit", "-m", "x")
     proc = run_cli(
-        "guard", "--workspace", str(legacy),
-        "--integration-root", str(integration), "--json",
+        "guard",
+        "--workspace",
+        str(legacy),
+        "--integration-root",
+        str(integration),
+        "--json",
         env={"AGENT_ID": "agent-1"},
     )
     out = parse_json(proc)
@@ -925,24 +1082,40 @@ def test_guard_require_clone_rejects_legacy_worktree(tmp_path):
     git(legacy, "commit", "-m", "x")
 
     proc = run_cli(
-        "guard", "--workspace", str(legacy),
-        "--integration-root", str(integration), "--require-clone", "--json",
-        env={"AGENT_ID": "agent-1"}, check=False,
+        "guard",
+        "--workspace",
+        str(legacy),
+        "--integration-root",
+        str(integration),
+        "--require-clone",
+        "--json",
+        env={"AGENT_ID": "agent-1"},
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "clone_identity_required"
 
     proc = run_cli(
-        "guard", "--workspace", str(dest),
-        "--integration-root", str(integration), "--require-clone", "--json",
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(integration),
+        "--require-clone",
+        "--json",
         env={"AGENT_ID": "agent-1"},
     )
     out = parse_json(proc)
     assert out["ok"] is True and out["state"] == "verified_clone"
 
     proc = run_cli(
-        "guard", "--workspace", str(integration),
-        "--integration-root", str(integration), "--require-clone", "--json",
+        "guard",
+        "--workspace",
+        str(integration),
+        "--integration-root",
+        str(integration),
+        "--require-clone",
+        "--json",
     )
     out = parse_json(proc)
     assert out["ok"] is True and out["state"] == "human"
@@ -967,14 +1140,24 @@ def test_tracked_pre_commit_requires_clone_for_agent_identity(tmp_path):
     env.update(_GIT_ENV)
     env.update({"AGENT_ID": "agent-1", "HOME": str(tmp_path / "alternate-home")})
     proc = subprocess.run(
-        ["bash", str(hook)], cwd=legacy, capture_output=True, text=True, env=env, check=False
+        ["bash", str(hook)],
+        cwd=legacy,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
     )
     assert proc.returncode == 1
     assert "clone_identity_required" in proc.stderr
 
     env.pop("AGENT_ID")
     proc = subprocess.run(
-        ["bash", str(hook)], cwd=legacy, capture_output=True, text=True, env=env, check=False
+        ["bash", str(hook)],
+        cwd=legacy,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
     )
     assert proc.returncode == 0
     assert "human_operation_allowed" in proc.stderr
@@ -1023,8 +1206,15 @@ def test_destination_collision_and_clone_failure(tmp_path):
     occupied.mkdir()
     (occupied / "keep.txt").write_text("x\n")
     proc = run_cli(
-        "create", "--agent-id", "agent-1", "--source", str(bare),
-        "--destination", str(occupied), "--json", check=False,
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(occupied),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "destination_collision"
@@ -1032,8 +1222,15 @@ def test_destination_collision_and_clone_failure(tmp_path):
 
     # clone failure (missing source): fail closed, destination left absent
     proc = run_cli(
-        "create", "--agent-id", "agent-1", "--source", str(tmp_path / "missing"),
-        "--destination", str(tmp_path / "bad"), "--json", check=False,
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(tmp_path / "missing"),
+        "--destination",
+        str(tmp_path / "bad"),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "clone_failed"
@@ -1057,8 +1254,14 @@ def test_paths_with_spaces(tmp_path):
 
     out = base / "cs out.json"
     proc = run_cli(
-        "changeset", "--clone", str(dest), "--baseline", str(m),
-        "--output", str(out), "--json",
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(m),
+        "--output",
+        str(out),
+        "--json",
     )
     assert parse_json(proc)["reason"] == "changeset_generated"
 
@@ -1101,9 +1304,14 @@ def test_hooks_path_drift_rejected(tmp_path):
     assert parse_json(proc)["reason"] == "hooks_path_drift"
 
     proc = run_cli(
-        "guard", "--workspace", str(dest),
-        "--integration-root", str(tmp_path / "integration"), "--json",
-        env={"AGENT_ID": "agent-1"}, check=False,
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--json",
+        env={"AGENT_ID": "agent-1"},
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "clone_identity_mismatch"
@@ -1118,8 +1326,13 @@ def test_identity_not_ready_rejected(tmp_path):
     identity["ready"] = False
     ident_file.write_text(json.dumps(identity, indent=2, sort_keys=True))
     proc = run_cli(
-        "manifest", "--clone", str(dest), "--output", str(tmp_path / "m.json"),
-        "--json", check=False,
+        "manifest",
+        "--clone",
+        str(dest),
+        "--output",
+        str(tmp_path / "m.json"),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "identity_not_ready"
@@ -1149,8 +1362,15 @@ def test_changeset_uninitialized_child_rejected(tmp_path):
     git(clone_b, "fetch", "origin")
     git(clone_b, "merge", "--ff-only", "origin/main")
     proc = run_cli(
-        "changeset", "--clone", str(clone_b), "--baseline", str(baseline),
-        "--output", str(tmp_path / "cs.json"), "--json", check=False,
+        "changeset",
+        "--clone",
+        str(clone_b),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(tmp_path / "cs.json"),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "child_uninitialized"
@@ -1173,8 +1393,15 @@ def test_changeset_unavailable_baseline_child_object_rejected(tmp_path):
     git(child_repo, "gc", "--prune=now", "--quiet")
 
     proc = run_cli(
-        "changeset", "--clone", str(clone_a), "--baseline", str(baseline),
-        "--output", str(tmp_path / "cs.json"), "--json", check=False,
+        "changeset",
+        "--clone",
+        str(clone_a),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(tmp_path / "cs.json"),
+        "--json",
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "child_rewind_or_diverged"
@@ -1186,8 +1413,24 @@ def test_changeset_change_id_deterministic(tmp_path):
     baseline = write_manifest(tmp_path, dest, "baseline.json")
     out1 = tmp_path / "cs1.json"
     out2 = tmp_path / "cs2.json"
-    run_cli("changeset", "--clone", str(dest), "--baseline", str(baseline), "--output", str(out1))
-    run_cli("changeset", "--clone", str(dest), "--baseline", str(baseline), "--output", str(out2))
+    run_cli(
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(out1),
+    )
+    run_cli(
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(out2),
+    )
     assert json.loads(out1.read_text())["change_id"] == json.loads(out2.read_text())["change_id"]
 
 
@@ -1205,9 +1448,14 @@ def test_guard_nested_and_symlink_denied(tmp_path):
     create_clone(nested, bare, name="cl")
 
     proc = run_cli(
-        "guard", "--workspace", str(nested / "cl"),
-        "--integration-root", str(integration), "--json",
-        env={"AGENT_ID": "agent-1"}, check=False,
+        "guard",
+        "--workspace",
+        str(nested / "cl"),
+        "--integration-root",
+        str(integration),
+        "--json",
+        env={"AGENT_ID": "agent-1"},
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "agent_on_integration_root"
@@ -1215,9 +1463,14 @@ def test_guard_nested_and_symlink_denied(tmp_path):
     link = tmp_path / "ws-link"
     os.symlink(integration, link)
     proc = run_cli(
-        "guard", "--workspace", str(link),
-        "--integration-root", str(integration), "--json",
-        env={"AGENT_ID": "agent-1"}, check=False,
+        "guard",
+        "--workspace",
+        str(link),
+        "--integration-root",
+        str(integration),
+        "--json",
+        env={"AGENT_ID": "agent-1"},
+        check=False,
     )
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "agent_on_integration_root"

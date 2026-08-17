@@ -24,6 +24,7 @@ SSOT 真值来源 (运行时探测):
   python3 bin/ssot/check-toolbox-ssot.py --json     # 机器可读
   python3 bin/ssot/check-toolbox-ssot.py --file X   # 单文件
 """
+
 from __future__ import annotations
 
 import argparse
@@ -34,6 +35,7 @@ from pathlib import Path
 
 try:
     import yaml
+
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
@@ -49,7 +51,12 @@ def run(cmd: str, cwd: Path = None) -> str:
     """Run a shell command and return stdout."""
     try:
         r = subprocess.run(
-            cmd, shell=True, capture_output=True, text=True, cwd=cwd or WORKSPACE, timeout=10
+            cmd,
+            shell=True,
+            capture_output=True,
+            text=True,
+            cwd=cwd or WORKSPACE,
+            timeout=10,
         )
         return r.stdout.strip()
     except (subprocess.TimeoutExpired, Exception):
@@ -174,13 +181,37 @@ def check_hardcoded_numbers(ssot: dict) -> list[tuple[str, int, str, str]]:
     # 数字 → SSOT 来源 + 提示
     rules = []
     if ssot.get("tools_count"):
-        rules.append((rf"\b{ssot['tools_count']}\s*(?:工具|个工具)\b", f"{ssot['tools_count']} 工具", "应改为 '$(forge status | grep -c ...)' 或删除硬编码"))
+        rules.append(
+            (
+                rf"\b{ssot['tools_count']}\s*(?:工具|个工具)\b",
+                f"{ssot['tools_count']} 工具",
+                "应改为 '$(forge status | grep -c ...)' 或删除硬编码",
+            )
+        )
     if ssot.get("projects_count"):
-        rules.append((rf"\b{ssot['projects_count']}\s*项目\b", f"{ssot['projects_count']} 项目", "应改为引用 '$(python3 -c ...)' 或 'doc-ssot-.../project-layer-index.md'"))
+        rules.append(
+            (
+                rf"\b{ssot['projects_count']}\s*项目\b",
+                f"{ssot['projects_count']} 项目",
+                "应改为引用 '$(python3 -c ...)' 或 'doc-ssot-.../project-layer-index.md'",
+            )
+        )
     if ssot.get("m1_domain_count"):
-        rules.append((rf"\b{ssot['m1_domain_count']}\s*节点\b", f"{ssot['m1_domain_count']} 节点", "应改为 '$(find .../DOMAIN-*.yaml | wc -l)' 引用"))
+        rules.append(
+            (
+                rf"\b{ssot['m1_domain_count']}\s*节点\b",
+                f"{ssot['m1_domain_count']} 节点",
+                "应改为 '$(find .../DOMAIN-*.yaml | wc -l)' 引用",
+            )
+        )
     if ssot.get("routes_count"):
-        rules.append((rf"\b{ssot['routes_count']}\s*(?:routes)\b", f"{ssot['routes_count']} routes", "应引用 'cat ~/.ecos/bos/routes.json | jq length'"))
+        rules.append(
+            (
+                rf"\b{ssot['routes_count']}\s*(?:routes)\b",
+                f"{ssot['routes_count']} routes",
+                "应引用 'cat ~/.ecos/bos/routes.json | jq length'",
+            )
+        )
 
     for md in TOOLBOX.glob("*.md"):
         if not md.is_file():

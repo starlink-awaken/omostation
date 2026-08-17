@@ -90,7 +90,13 @@ def main() -> int:
 
     findings = scan()
     if args.json:
-        print(json.dumps({"violations": len(findings), "findings": findings}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"violations": len(findings), "findings": findings},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         if not findings:
             print("CR-LLM-GATEWAY-ONLY: OK — 无硬编码直连 ollama/裸端点 (绕过 llm-router)")

@@ -20,7 +20,7 @@ import json
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 
@@ -82,10 +82,18 @@ def process_events(root: Path, since_ts: str = "") -> list[dict]:
                     continue
                 # 触发 P0 mock 通知
                 message = payload.get("level_reason", "P0 触发")
-                subprocess.run([
-                    "python3", str(root / "bin" / "gac" / "alert-mock-p0-notify.py"),
-                    "--message", message, "--all-channels"
-                ], capture_output=True, timeout=10, cwd=str(root))
+                subprocess.run(
+                    [
+                        "python3",
+                        str(root / "bin" / "gac" / "alert-mock-p0-notify.py"),
+                        "--message",
+                        message,
+                        "--all-channels",
+                    ],
+                    capture_output=True,
+                    timeout=10,
+                    cwd=str(root),
+                )
                 processed.append(rec)
     except Exception as e:
         print(f"⚠️  process_events 错误: {e}")
@@ -93,15 +101,16 @@ def process_events(root: Path, since_ts: str = "") -> list[dict]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P74: 事件驱动 P0 检测 (omo event listener)"
-    )
+    parser = argparse.ArgumentParser(description="P74: 事件驱动 P0 检测 (omo event listener)")
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--once", action="store_true", help="单次轮询 (不后台)")
     parser.add_argument("--daemon", action="store_true", help="后台守护 (每 60s 轮询)")
     parser.add_argument("--watch", action="store_true", help="P76: 实时 tail -f 模式")
-    parser.add_argument("--use-watchdog", action="store_true",
-                        help="P81: 用 watchdog (跨平台真实时, 替代 polling)")
+    parser.add_argument(
+        "--use-watchdog",
+        action="store_true",
+        help="P81: 用 watchdog (跨平台真实时, 替代 polling)",
+    )
     parser.add_argument("--interval", type=int, default=60, help="守护间隔 (秒)")
     args = parser.parse_args()
 
@@ -122,8 +131,8 @@ def main() -> int:
     # P81: --use-watchdog 真实时 (替代 polling)
     if args.use_watchdog:
         try:
-            from watchdog.observers import Observer
             from watchdog.events import FileSystemEventHandler
+            from watchdog.observers import Observer
         except ImportError as e:
             print(f"❌ watchdog 未安装: {e}")
             print("  安装: uv pip install watchdog")
@@ -170,9 +179,16 @@ def main() -> int:
                                 if payload.get("level") == "P0":
                                     message = payload.get("level_reason", "P0 触发")
                                     subprocess.run(
-                                        ["python3", str(root / "bin" / "gac" / "alert-mock-p0-notify.py"),
-                                         "--message", message, "--all-channels"],
-                                        capture_output=True, timeout=10, cwd=str(root),
+                                        [
+                                            "python3",
+                                            str(root / "bin" / "gac" / "alert-mock-p0-notify.py"),
+                                            "--message",
+                                            message,
+                                            "--all-channels",
+                                        ],
+                                        capture_output=True,
+                                        timeout=10,
+                                        cwd=str(root),
                                     )
                                     print(f"🚨 [{rec.get('ts', '?')}] P0 → mock 通知已触发: {message}")
                         self.last_pos = cur_pos
@@ -198,7 +214,7 @@ def main() -> int:
         while True:
             processed = process_events(root, last_ts)
             if processed:
-                ts_now = datetime.now(timezone.utc).isoformat()
+                ts_now = datetime.now(UTC).isoformat()
                 print(f"[{ts_now}] 处理 {len(processed)} 个 P0")
                 for rec in processed:
                     print(f"  - {rec.get('ts', '?')} P0")
@@ -244,9 +260,16 @@ def main() -> int:
                                 if payload.get("level") == "P0":
                                     message = payload.get("level_reason", "P0 触发")
                                     subprocess.run(
-                                        ["python3", str(root / "bin" / "gac" / "alert-mock-p0-notify.py"),
-                                         "--message", message, "--all-channels"],
-                                        capture_output=True, timeout=10, cwd=str(root),
+                                        [
+                                            "python3",
+                                            str(root / "bin" / "gac" / "alert-mock-p0-notify.py"),
+                                            "--message",
+                                            message,
+                                            "--all-channels",
+                                        ],
+                                        capture_output=True,
+                                        timeout=10,
+                                        cwd=str(root),
                                     )
                                     print(f"🚨 [{rec.get('ts', '?')}] P0 → mock 通知已触发: {message}")
                         last_pos = cur_pos

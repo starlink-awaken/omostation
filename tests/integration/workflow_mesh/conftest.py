@@ -3,6 +3,7 @@
 Ensures that ECOS and OMO source paths are on sys.path so integration
 tests can import from both submodules without manual path manipulation.
 """
+
 from __future__ import annotations
 
 import sys

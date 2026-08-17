@@ -14,6 +14,7 @@ Output:
   - exit 0 = no silent losses
   - exit 1 = silent loss detected (blocking)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -38,18 +39,22 @@ def _check_dualtrack() -> list[dict]:
     sl = throughput.get("silent_loss")
 
     if sl is None:
-        findings.append({
-            "kind": "missing_field",
-            "source": "collab-dualtrack.yaml",
-            "message": "throughput_track.silent_loss field missing",
-        })
+        findings.append(
+            {
+                "kind": "missing_field",
+                "source": "collab-dualtrack.yaml",
+                "message": "throughput_track.silent_loss field missing",
+            }
+        )
     elif sl != 0:
-        findings.append({
-            "kind": "silent_loss_detected",
-            "source": "collab-dualtrack.yaml",
-            "value": sl,
-            "message": f"throughput_track.silent_loss = {sl} (expected 0, hard red line P84 §0)",
-        })
+        findings.append(
+            {
+                "kind": "silent_loss_detected",
+                "source": "collab-dualtrack.yaml",
+                "value": sl,
+                "message": f"throughput_track.silent_loss = {sl} (expected 0, hard red line P84 §0)",
+            }
+        )
 
     return findings
 
@@ -85,15 +90,17 @@ def _check_workflow_runs() -> list[dict]:
         gap = dispatched - accounted
 
         if gap > 0:
-            findings.append({
-                "kind": "run_silent_loss",
-                "source": run_file.name,
-                "dispatched": dispatched,
-                "completed": completed,
-                "failed": failed,
-                "gap": gap,
-                "message": f"Run {run_file.stem}: {gap} task(s) dispatched but not completed/failed",
-            })
+            findings.append(
+                {
+                    "kind": "run_silent_loss",
+                    "source": run_file.name,
+                    "dispatched": dispatched,
+                    "completed": completed,
+                    "failed": failed,
+                    "gap": gap,
+                    "message": f"Run {run_file.stem}: {gap} task(s) dispatched but not completed/failed",
+                }
+            )
 
     return findings
 

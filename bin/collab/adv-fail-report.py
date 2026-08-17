@@ -8,6 +8,7 @@ Usage:
   python3 bin/collab/adv-fail-report.py --json
   python3 bin/collab/adv-fail-report.py --dir .omo/_delivery/collab-scenarios
 """
+
 from __future__ import annotations
 
 import argparse
@@ -17,7 +18,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from scenario_lib import load_scenario, run_scenario  # noqa: E402
+from scenario_lib import load_scenario, run_scenario
 
 REPO = Path(__file__).resolve().parents[2]
 DEFAULT_DIR = REPO / ".omo" / "_delivery" / "collab-scenarios"
@@ -34,7 +35,7 @@ def collect(dir_path: Path) -> dict:
     for p in paths:
         try:
             sc = load_scenario(p)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             failed.append({"file": p.name, "error": str(e), "adversarial": None})
             continue
         r = run_scenario(sc)
@@ -55,11 +56,7 @@ def collect(dir_path: Path) -> dict:
                 "scenario_id": r.scenario_id,
                 "category": r.category,
                 "failed_criteria": bad,
-                "evidence": [
-                    {"name": c.name, "evidence": c.evidence}
-                    for c in r.criteria
-                    if not c.passed
-                ],
+                "evidence": [{"name": c.name, "evidence": c.evidence} for c in r.criteria if not c.passed],
             }
         )
 
@@ -95,9 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     print("🛡️  P84 对抗场景失败报告 (能力轨, 不计产能轨)")
     print("=" * 60)
     print(
-        f"对抗集: {report['adversarial_total']} | "
-        f"通过 {report['adversarial_passed']} | "
-        f"失败条目 {report['fail_count']}"
+        f"对抗集: {report['adversarial_total']} | 通过 {report['adversarial_passed']} | 失败条目 {report['fail_count']}"
     )
     print("\n失败 criterion 直方图:")
     for name, n in report["criterion_fail_histogram"].items():

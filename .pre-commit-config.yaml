@@ -198,6 +198,7 @@ repos:
         # files 只扫主仓直辖 scripts/+bin/; projects/ 子模块各自跑 "Ruff Linter (tracked projects)",
         # 主仓重复扫子模块会因 ruff 版本差异报假 fail (CI "Found 1 error" 无具体内容).
         files: ^(scripts|bin)/.*\.py$
+        exclude: ^bin/_archive/
         stages: [pre-commit]
         # F841 (unused-variable) 和 F541 (f-string-no-placeholder) 无法自动修复,
         #  持续在代理提交中出现 → 忽略未修复项, pre-commit 不应阻断.

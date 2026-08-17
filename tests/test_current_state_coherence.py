@@ -28,10 +28,7 @@ def _write_fixture(
     (root / "docs").mkdir()
     (root / "docs/scene-cards").mkdir(parents=True)
     (root / "docs/scene-card-candidate-seeds.yaml").write_text(
-        "schema: scene-card-candidate-seeds/v1\n"
-        "candidates:\n"
-        "  - candidate_id: candidate:one\n"
-        "    title: one\n",
+        "schema: scene-card-candidate-seeds/v1\ncandidates:\n  - candidate_id: candidate:one\n    title: one\n",
         encoding="utf-8",
     )
     (omo / "state/system.yaml").write_text(
@@ -50,7 +47,9 @@ def _write_fixture(
     )
 
 
-def test_waiting_state_is_valid_and_scene_activation_stays_blocked(tmp_path: Path) -> None:
+def test_waiting_state_is_valid_and_scene_activation_stays_blocked(
+    tmp_path: Path,
+) -> None:
     _write_fixture(tmp_path, stored_total=0)
 
     report = MODULE.build_report(tmp_path)
@@ -96,7 +95,9 @@ def test_active_task_cannot_use_waiting_mode(tmp_path: Path) -> None:
     assert "execution_mode_mismatch:active_tasks_present" in report["errors"]
 
 
-def test_completed_monitoring_goal_does_not_create_execution_work(tmp_path: Path) -> None:
+def test_completed_monitoring_goal_does_not_create_execution_work(
+    tmp_path: Path,
+) -> None:
     _write_fixture(tmp_path, stored_total=0)
     (tmp_path / ".omo/goals/current.yaml").write_text(
         "---\nstatus: active\n---\n"

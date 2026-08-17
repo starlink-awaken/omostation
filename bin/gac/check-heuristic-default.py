@@ -30,15 +30,11 @@ def main() -> int:
             except Exception:
                 continue
             # 检查是否使用 LLM（有相关 import 或调用）
-            has_llm = any(
-                kw in text.lower() for kw in ["llm", "openai", "anthropic", "aetherforge"]
-            )
+            has_llm = any(kw in text.lower() for kw in ["llm", "openai", "anthropic", "aetherforge"])
             if not has_llm:
                 continue
             # 检查是否有 fallback 或 --no-llm
-            has_fallback = any(
-                kw in text.lower() for kw in ["--no-llm", "no_llm", "fallback", "heuristic"]
-            )
+            has_fallback = any(kw in text.lower() for kw in ["--no-llm", "no_llm", "fallback", "heuristic"])
             if not has_fallback:
                 violations.append(str(rel))
 

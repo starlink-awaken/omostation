@@ -10,8 +10,8 @@ from ontoderive.core.check_theory import (
     check_turing,
 )
 from ontoderive.core.derive import VERSION, OntoDerive
-from ontoderive.core.export import to_html, to_json  # noqa: F401
-from ontoderive.core.export import to_markdown as export_markdown  # noqa: F401
+from ontoderive.core.export import to_html, to_json
+from ontoderive.core.export import to_markdown as export_markdown
 from ontoderive.core.pipeline import (
     CheckStage,
     DerivePipeline,

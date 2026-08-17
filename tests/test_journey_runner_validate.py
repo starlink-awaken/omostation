@@ -6,17 +6,13 @@ import importlib.util
 import sys
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).resolve().parents[1]
 SSOT_DIR = ROOT / "bin" / "ssot"
 
 
 def _load_runner():
     sys.path.insert(0, str(SSOT_DIR))
-    spec = importlib.util.spec_from_file_location(
-        "journey_runner", ROOT / "bin/ssot/journey-runner.py"
-    )
+    spec = importlib.util.spec_from_file_location("journey_runner", ROOT / "bin/ssot/journey-runner.py")
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -56,10 +52,13 @@ class TestJourneyRunnerValidateHonestGate:
 
     def test_invalid_spec_unknown_scene_exits_nonzero(self, tmp_path: Path) -> None:
         spec_path = tmp_path / "journey.yaml"
-        _write_journey_spec(spec_path, states=[
-            {"name": "start", "scene": "nonexistent-scene", "next": ["end"]},
-            {"name": "end", "scene": "nonexistent-scene", "next": []},
-        ])
+        _write_journey_spec(
+            spec_path,
+            states=[
+                {"name": "start", "scene": "nonexistent-scene", "next": ["end"]},
+                {"name": "end", "scene": "nonexistent-scene", "next": []},
+            ],
+        )
         ret = runner_mod.main(["--root", str(ROOT), "validate", str(spec_path)])
         assert ret == 1
 
@@ -71,9 +70,12 @@ class TestJourneyRunnerValidateHonestGate:
 
     def test_invalid_spec_json_output_contains_errors(self, tmp_path: Path) -> None:
         spec_path = tmp_path / "journey.yaml"
-        _write_journey_spec(spec_path, states=[
-            {"name": "start", "scene": "nonexistent-scene", "next": ["end"]},
-            {"name": "end", "scene": "nonexistent-scene", "next": []},
-        ])
+        _write_journey_spec(
+            spec_path,
+            states=[
+                {"name": "start", "scene": "nonexistent-scene", "next": ["end"]},
+                {"name": "end", "scene": "nonexistent-scene", "next": []},
+            ],
+        )
         ret = runner_mod.main(["--root", str(ROOT), "validate", str(spec_path), "--json"])
         assert ret == 1

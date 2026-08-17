@@ -46,20 +46,23 @@ def list_agents() -> list[dict[str, Any]]:
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
             if isinstance(data, dict):
-                agents.append({
-                    "id": data.get("agent_id", path.stem),
-                    "tier": data.get("tier", "?"),
-                    "role": data.get("role", data.get("identity", {}).get("role", "?")),
-                    "status": data.get("status", "active"),
-                    "version": data.get("version", "1.0.0"),
-                })
+                agents.append(
+                    {
+                        "id": data.get("agent_id", path.stem),
+                        "tier": data.get("tier", "?"),
+                        "role": data.get("role", data.get("identity", {}).get("role", "?")),
+                        "status": data.get("status", "active"),
+                        "version": data.get("version", "1.0.0"),
+                    }
+                )
         except Exception:
             continue
     return agents
 
 
-def register_agent(agent_id: str, tier: str, role: str, *,
-                   description: str = "", capabilities: list[str] | None = None) -> dict[str, Any]:
+def register_agent(
+    agent_id: str, tier: str, role: str, *, description: str = "", capabilities: list[str] | None = None
+) -> dict[str, Any]:
     """Register a new agent spec."""
     if tier not in VALID_TIERS:
         raise ValueError(f"tier must be one of {VALID_TIERS}")
@@ -129,8 +132,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if command == "register":
-        result = register_agent(args.id, args.tier, args.role,
-                                description=args.description, capabilities=args.capabilities)
+        result = register_agent(
+            args.id, args.tier, args.role, description=args.description, capabilities=args.capabilities
+        )
         print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
         return 0
 

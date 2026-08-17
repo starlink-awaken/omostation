@@ -8,13 +8,13 @@
 # 4. litellm     ( completions 路由与 API 通达性验证)
 # 5. omlxc       (omlxc 本地推理集群与网关状态审计)
 
-import os
-import sys
 import json
-import subprocess
+import os
 import sqlite3
-import urllib.request
+import subprocess
+import sys
 import urllib.error
+import urllib.request
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -32,7 +32,7 @@ def run_cmd(args: list[str], timeout: float = 5.0) -> str | None:
             stderr=subprocess.PIPE,
             text=True,
             timeout=timeout,
-            cwd=str(WORKSPACE)
+            cwd=str(WORKSPACE),
         )
         if res.returncode == 0:
             return res.stdout.strip()
@@ -63,12 +63,20 @@ def onboard_cc_switch(*, quick: bool = False) -> dict:
         }
 
     if not AF_PROJECT.is_dir():
-        return {"status": "WARN", "reason": f"aetherforge project missing: {AF_PROJECT}"}
+        return {
+            "status": "WARN",
+            "reason": f"aetherforge project missing: {AF_PROJECT}",
+        }
 
     # 调用 AetherForge python API 导入 (full mode only)
     cmd = [
-        "uv", "run", "--project", str(AF_PROJECT), "python", "-c",
-        "from llm_gateway.credentials import import_from_cc_switch; print(import_from_cc_switch())"
+        "uv",
+        "run",
+        "--project",
+        str(AF_PROJECT),
+        "python",
+        "-c",
+        "from llm_gateway.credentials import import_from_cc_switch; print(import_from_cc_switch())",
     ]
     out = run_cmd(cmd, timeout=10.0)
     if out is not None:
@@ -78,9 +86,16 @@ def onboard_cc_switch(*, quick: bool = False) -> dict:
             conn = sqlite3.connect(str(AF_DB))
             total = conn.execute("SELECT count(*) FROM credentials").fetchone()[0]
             conn.close()
-            return {"status": "OK", "imported_this_time": count, "total_credentials": total}
+            return {
+                "status": "OK",
+                "imported_this_time": count,
+                "total_credentials": total,
+            }
         except Exception as e:
-            return {"status": "OK", "message": f"导入已执行，但解析输出失败: {out} ({e})"}
+            return {
+                "status": "OK",
+                "message": f"导入已执行，但解析输出失败: {out} ({e})",
+            }
 
     return {"status": "FAIL", "reason": "调用 AetherForge import API 失败"}
 
@@ -106,7 +121,7 @@ def onboard_codexbar() -> dict:
         "status": "OK",
         "version": ver or "unknown",
         "path": which_bar,
-        "usage_preview": str(usage_data)[:100]
+        "usage_preview": str(usage_data)[:100],
     }
 
 
@@ -124,11 +139,7 @@ def onboard_models() -> dict:
     if models_out:
         model_list = [line.strip() for line in models_out.split("\n") if line.strip()][:5]
 
-    return {
-        "status": "OK",
-        "path": which_models,
-        "top_models": model_list
-    }
+    return {"status": "OK", "path": which_models, "top_models": model_list}
 
 
 def onboard_litellm() -> dict:
@@ -138,20 +149,22 @@ def onboard_litellm() -> dict:
     api_key = "sk-omlx-admin"
 
     # 发送一个极简 prompt
-    payload = json.dumps({
-        "model": "mini-9b",
-        "messages": [{"role": "user", "content": "ping"}],
-        "max_tokens": 5
-    }).encode("utf-8")
+    payload = json.dumps(
+        {
+            "model": "mini-9b",
+            "messages": [{"role": "user", "content": "ping"}],
+            "max_tokens": 5,
+        }
+    ).encode("utf-8")
 
     req = urllib.request.Request(
         gateway_url,
         data=payload,
         headers={
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}"
+            "Authorization": f"Bearer {api_key}",
         },
-        method="POST"
+        method="POST",
     )
 
     try:
@@ -163,7 +176,7 @@ def onboard_litellm() -> dict:
         return {
             "status": "WARN",
             "gateway": gateway_url,
-            "reason": f"AetherForge completions 暂时不可达或超时 (可能是 Ollama 未响应): {e}"
+            "reason": f"AetherForge completions 暂时不可达或超时 (可能是 Ollama 未响应): {e}",
         }
 
 
@@ -174,7 +187,7 @@ def onboard_omlxc() -> dict:
     if not which_omlxc:
         return {
             "status": "WARN",
-            "reason": "omlxc CLI 未在系统 PATH 注册 (omlx 留给 App，推理集群使用 omlxc)"
+            "reason": "omlxc CLI 未在系统 PATH 注册 (omlx 留给 App，推理集群使用 omlxc)",
         }
 
     cluster_info = run_cmd(["omlxc", "cluster"], timeout=8.0)
@@ -205,7 +218,10 @@ def onboard_omlxc() -> dict:
 
     # 物理自愈：对离线从机节点发送 WoL 唤醒信号
     if nodes_down:
-        print(f"⚠️  检测到算力从机离线 {nodes_down}，正在执行物理 WoL 智能唤醒自愈...", file=sys.stderr)
+        print(
+            f"⚠️  检测到算力从机离线 {nodes_down}，正在执行物理 WoL 智能唤醒自愈...",
+            file=sys.stderr,
+        )
         for node in nodes_down:
             run_cmd(["python3", "bin/gac/omlxc-node-wakeup.py", "--node", node], timeout=5.0)
 
@@ -219,7 +235,7 @@ def onboard_omlxc() -> dict:
         "active_services_count": len(active_services),
         "gateway_models": models_route,
         "raw_cluster": cluster_info[:300] + "..." if cluster_info else "",
-        "auto_healed_nodes": nodes_down
+        "auto_healed_nodes": nodes_down,
     }
 
 
@@ -254,6 +270,7 @@ def _fast_check() -> int:
 
 def main() -> int:
     import argparse
+
     parser = argparse.ArgumentParser(description="AetherForge Compute Onboarding Integration Auditor")
     parser.add_argument("--json", action="store_true", help="输出纯 JSON 格式报告")
     parser.add_argument("--check", action="store_true", help="自检模式（轻量 gate 检查）")
@@ -261,7 +278,9 @@ def main() -> int:
 
     is_ci = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
     if args.check and is_ci:
-        print("✅ [Compute Onboard Check] Detected CI environment, skipping physical compute node checks to prevent blocking.")
+        print(
+            "✅ [Compute Onboard Check] Detected CI environment, skipping physical compute node checks to prevent blocking."
+        )
         return 0
 
     # 本地环境缺少算力凭证数据库时跳过，避免在无配置环境阻塞 gate
@@ -289,13 +308,7 @@ def main() -> int:
         if args.json:
             sys.stdout = old_stdout
 
-    report = {
-        "cc-switch": cc,
-        "codexbar": cb,
-        "models": mo,
-        "litellm": lt,
-        "omlxc": ox
-    }
+    report = {"cc-switch": cc, "codexbar": cb, "models": mo, "litellm": lt, "omlxc": ox}
 
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
@@ -312,7 +325,9 @@ def main() -> int:
     print(f"  • codexbar:       [{cb['status']}] {cb.get('version', 'CLI missing')}")
     print(f"  • models:         [{mo['status']}] {len(mo.get('top_models', []))} 模型可发现")
     print(f"  • litellm:        [{lt['status']}] {lt.get('gateway', 'Offline')}")
-    print(f"  • omlxc-cluster:  [{ox['status']}] {ox.get('active_services_count', 0)} 活跃服务 / {len(ox.get('gateway_models', []))} 路由模型")
+    print(
+        f"  • omlxc-cluster:  [{ox['status']}] {ox.get('active_services_count', 0)} 活跃服务 / {len(ox.get('gateway_models', []))} 路由模型"
+    )
     print("" + "═" * 60 + "\n")
 
     # 如果有硬性 block 错误返回 1

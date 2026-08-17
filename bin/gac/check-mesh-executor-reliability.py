@@ -20,7 +20,13 @@ REQUIRED_PATTERNS = {
         "label": "错误处理 (try/except)",
     },
     "timeout_control": {
-        "keywords": ["timeout", "TIMEOUT", "retry", "RETRY", "socket.setdefaulttimeout"],
+        "keywords": [
+            "timeout",
+            "TIMEOUT",
+            "retry",
+            "RETRY",
+            "socket.setdefaulttimeout",
+        ],
         "label": "超时控制 (timeout/retry)",
     },
     "logging": {

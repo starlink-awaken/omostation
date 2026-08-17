@@ -1,4 +1,5 @@
 """Tests for ADR-0223 phase-gate-check (real module)."""
+
 from __future__ import annotations
 
 import importlib.util

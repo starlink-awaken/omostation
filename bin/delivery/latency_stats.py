@@ -4,6 +4,7 @@ p99 requires n ≥ 1000 before it is treated as a definitive KPI value.
 Insufficient samples → ``insufficient_samples`` flags; raw order-stats may still
 be reported under ``raw_*`` for diagnostics but must not drive gate pass.
 """
+
 from __future__ import annotations
 
 from typing import Any

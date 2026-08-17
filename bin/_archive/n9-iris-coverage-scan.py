@@ -8,6 +8,7 @@
   python3 bin/ssot/n9-iris-coverage-scan.py
   python3 bin/ssot/n9-iris-coverage-scan.py --limit 3  # list_items limit
 """
+
 from __future__ import annotations
 
 import argparse
@@ -46,10 +47,14 @@ def main() -> int:
         (omo_dir / "_knowledge" / "workflow-mesh").mkdir(parents=True, exist_ok=True)
         proc = subprocess.run(
             [
-                "python3", str(EXECUTOR),
-                "--connector", conn,
-                "--omo-dir", str(omo_dir),
-                "--limit", str(args.limit),
+                "python3",
+                str(EXECUTOR),
+                "--connector",
+                conn,
+                "--omo-dir",
+                str(omo_dir),
+                "--limit",
+                str(args.limit),
             ],
             cwd=WORKSPACE,
             capture_output=True,

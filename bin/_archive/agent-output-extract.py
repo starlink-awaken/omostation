@@ -14,6 +14,7 @@ Usage:
   python3 bin/collab/agent-output-extract.py <output_file> --full    # 输出全文
   python3 bin/collab/agent-output-extract.py <file1> <file2> ...     # 多文件对比
 """
+
 from __future__ import annotations
 
 import argparse

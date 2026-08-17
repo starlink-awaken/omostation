@@ -81,9 +81,7 @@ def load_opencode_aliases(path: Path) -> list[str]:
         raise TypeError(f"opencode.json 顶层不是 JSON 对象 ({path})")
     provider = data.get("provider")
     if not isinstance(provider, dict) or "omlxc" not in provider:
-        raise KeyError(
-            f"opencode.json 缺少 provider.omlxc 配置块 ({path}) — 无法提取 omlxc 模型别名"
-        )
+        raise KeyError(f"opencode.json 缺少 provider.omlxc 配置块 ({path}) — 无法提取 omlxc 模型别名")
     omlxc = provider["omlxc"]
     if not isinstance(omlxc, dict):
         raise TypeError(f"opencode.json provider.omlxc 不是 JSON 对象 ({path})")
@@ -101,9 +99,7 @@ def load_litellm_model_names(path: Path) -> list[str]:
     if not path.exists():
         raise FileNotFoundError(f"litellm-config.yaml 不存在: {path}")
     if yaml is None:
-        raise RuntimeError(
-            "缺少 pyyaml 依赖 — 请用 `uv run --with pyyaml python bin/delegation-alias-check.py` 运行"
-        )
+        raise RuntimeError("缺少 pyyaml 依赖 — 请用 `uv run --with pyyaml python bin/delegation-alias-check.py` 运行")
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as e:
@@ -159,8 +155,14 @@ def render_text(
         lines.append("SYNCED — opencode 与网关模型别名一致")
     lines.append("")
     for key, title in (
-        ("IN_OPENCODE_ONLY", "IN_OPENCODE_ONLY — opencode 有别名但网关无路由 (routing gap, 请求无处可去)"),
-        ("IN_LITELLM_ONLY", "IN_LITELLM_ONLY — 网关有路由但 opencode 未暴露 (未使用容量)"),
+        (
+            "IN_OPENCODE_ONLY",
+            "IN_OPENCODE_ONLY — opencode 有别名但网关无路由 (routing gap, 请求无处可去)",
+        ),
+        (
+            "IN_LITELLM_ONLY",
+            "IN_LITELLM_ONLY — 网关有路由但 opencode 未暴露 (未使用容量)",
+        ),
         ("IN_BOTH", "IN_BOTH — 已同步"),
     ):
         items = result[key]

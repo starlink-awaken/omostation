@@ -18,7 +18,9 @@ CHECKER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECKER)
 
 
-def test_workspace_scope_excludes_runtime_and_knowledge_documents(tmp_path: Path) -> None:
+def test_workspace_scope_excludes_runtime_and_knowledge_documents(
+    tmp_path: Path,
+) -> None:
     for relative_path in (
         ".omo/active.md",
         ".omo/plans/ignored.md",
@@ -35,7 +37,9 @@ def test_workspace_scope_excludes_runtime_and_knowledge_documents(tmp_path: Path
     assert files == [tmp_path / ".omo/active.md", tmp_path / ".omo/plans/ignored.md"]
 
 
-def test_tracked_scope_uses_git_index_and_applies_same_exclusions(tmp_path: Path) -> None:
+def test_tracked_scope_uses_git_index_and_applies_same_exclusions(
+    tmp_path: Path,
+) -> None:
     for relative_path in (
         ".omo/active.md",
         ".omo/plans/ignored.md",
@@ -48,7 +52,11 @@ def test_tracked_scope_uses_git_index_and_applies_same_exclusions(tmp_path: Path
         path.write_text("# document\n", encoding="utf-8")
 
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "add", ".omo/active.md", ".omo/_knowledge/history.md"], cwd=tmp_path, check=True)
+    subprocess.run(
+        ["git", "add", ".omo/active.md", ".omo/_knowledge/history.md"],
+        cwd=tmp_path,
+        check=True,
+    )
 
     files = CHECKER.collect_markdown_files(tmp_path, scope="tracked")
 

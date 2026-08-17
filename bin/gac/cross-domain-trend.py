@@ -10,7 +10,7 @@ Usage:
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 try:
@@ -24,7 +24,7 @@ DEFAULT_OUTPUT = WORKSPACE / ".omo/state/runtime/cross-domain-trend.json"
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _load_registry(registry_path: Path) -> dict:
@@ -150,7 +150,10 @@ def _fuse_domains(domain_trends: dict[str, dict], weights: dict[str, float]) -> 
         "fused_score": round(fused_score, 3),
         "trend": fused_trend,
         "domains": {
-            d: {"score": round(trend_scores.get(d, 0.0), 3), "trend": domain_trends.get(d, {}).get("trend", "unknown")}
+            d: {
+                "score": round(trend_scores.get(d, 0.0), 3),
+                "trend": domain_trends.get(d, {}).get("trend", "unknown"),
+            }
             for d in domain_trends
         },
     }
@@ -187,7 +190,11 @@ def analyze_cross_domain_trend(registry: dict, window: int = 30) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Cross-Domain Trend Fusion")
-    parser.add_argument("--registry", default=str(DEFAULT_REGISTRY), help="Trend fusion registry YAML path")
+    parser.add_argument(
+        "--registry",
+        default=str(DEFAULT_REGISTRY),
+        help="Trend fusion registry YAML path",
+    )
     parser.add_argument("--window", type=int, default=30, help="Metrics window (days)")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="Output JSON path")
     parser.add_argument("--domain", help="Filter to single domain")

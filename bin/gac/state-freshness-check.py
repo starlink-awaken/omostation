@@ -30,12 +30,13 @@
   0 = 全新鲜 (≥80) 或 有 stale (50-79, 派生快照老化但仍可用, 不 block)
   2 = 有 expired (≤0, >7d, 派生快照不可信, 应 block)
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -50,12 +51,21 @@ STATE_FILES = [
     # governance.jsonl: runtime 产物 (非 tracked), fresh checkout 不存在 → optional
     (".omo/state/governance.jsonl", ("timestamp", "generated_at"), {"optional": True}),
     # debt-dashboard: tracked at _control/debt-dashboard/ (非 gitignored .omo/debt/)
-    (".omo/_control/debt-dashboard/current.yaml", ("generated_at", "last_reconciled_at")),
+    (
+        ".omo/_control/debt-dashboard/current.yaml",
+        ("generated_at", "last_reconciled_at"),
+    ),
     (".omo/_control/governance-data.json", ("generated_at",)),
 ]
 
 # 各文件类型用哪个字段作为 generated_at (JSONL 用首行, YAML 用顶层 key)
-GENERATED_AT_KEYS = ("generated_at", "timestamp", "last_scan", "last_reconciled_at", "registered_at")
+GENERATED_AT_KEYS = (
+    "generated_at",
+    "timestamp",
+    "last_scan",
+    "last_reconciled_at",
+    "registered_at",
+)
 
 # 新鲜度档位
 THRESHOLD_FRESH_HOURS = 1
@@ -71,7 +81,7 @@ def _parse_iso(ts: str) -> datetime | None:
     # Epoch 数字 (system_health.yaml 用)
     if re.fullmatch(r"\d+(\.\d+)?", ts):
         try:
-            return datetime.fromtimestamp(float(ts), tz=timezone.utc)
+            return datetime.fromtimestamp(float(ts), tz=UTC)
         except (ValueError, OSError):
             return None
     # ISO 8601
@@ -127,7 +137,7 @@ def _extract_generated_at(path: Path, keys: tuple[str, ...] = GENERATED_AT_KEYS)
             pass
     # YAML: 顶层
     try:
-        import yaml  # noqa: PLC0415
+        import yaml
 
         for doc in yaml.safe_load_all(content):
             if isinstance(doc, dict):
@@ -142,14 +152,18 @@ def _extract_generated_at(path: Path, keys: tuple[str, ...] = GENERATED_AT_KEYS)
                                 return str(v[k])
                         break
                 break
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
     return None
 
 
-def check_file(path_str: str, now: datetime | None = None, keys: tuple[str, ...] = GENERATED_AT_KEYS) -> dict:
+def check_file(
+    path_str: str,
+    now: datetime | None = None,
+    keys: tuple[str, ...] = GENERATED_AT_KEYS,
+) -> dict:
     """检查单个状态文件的 freshness."""
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
     path = WORKSPACE / path_str
     if not path.is_file():
         return {
@@ -193,7 +207,7 @@ def check_file(path_str: str, now: datetime | None = None, keys: tuple[str, ...]
 
 def run_check(file_filter: str | None = None, now: datetime | None = None) -> dict:
     """运行 freshness 检查, 返回报告."""
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
     targets: list[tuple[str, tuple[str, ...], dict]] = []
     for entry in STATE_FILES:
         path_str = entry[0]
@@ -232,7 +246,9 @@ def run_check(file_filter: str | None = None, now: datetime | None = None) -> di
 def print_human(report: dict) -> None:
     print("═══ State freshness check ═══")
     print(f"now: {report['now']}")
-    print(f"files checked: {report['files_checked']} (missing={report['files_missing']}, stale={report['files_stale']}, expired={report['files_expired']})")
+    print(
+        f"files checked: {report['files_checked']} (missing={report['files_missing']}, stale={report['files_stale']}, expired={report['files_expired']})"
+    )
     print(f"avg score: {report['avg_score']}/100")
     print()
     for r in report["results"]:
@@ -246,7 +262,7 @@ def print_human(report: dict) -> None:
             continue
         age = r.get("age_hours", "?")
         score = r.get("score", 0)
-        print(f"[{status}] {path} — age={age}h score={score} generated_at={r.get('generated_at','?')}")
+        print(f"[{status}] {path} — age={age}h score={score} generated_at={r.get('generated_at', '?')}")
     print()
     print("State freshness: " + ("PASS" if report["ok"] else "FAIL"))
 

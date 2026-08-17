@@ -10,6 +10,7 @@
   python3 scripts/check_health_ssot.py
   pre-commit:  走 .pre-commit-config.yaml 的 local hook
 """
+
 from __future__ import annotations
 
 import argparse
@@ -39,11 +40,15 @@ def _git_last_commit_age_hours(ws: Path) -> float | None:
     health.yaml generated_at 是 tracked 运行快照, CI checkout 拿到上次 commit 的 stale 值.
     用 git 最近 commit 作为回路活性的第二源 (多源 OR), 避免 CI 误判过期.
     """
-    import subprocess  # noqa: PLC0415
+    import subprocess
+
     try:
         r = subprocess.run(
             ["git", "log", "-1", "--format=%ct"],
-            capture_output=True, text=True, timeout=10, cwd=ws,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=ws,
         )
         if r.returncode == 0 and r.stdout.strip():
             ts = int(r.stdout.strip())
@@ -80,7 +85,7 @@ def main() -> int:
         print(f"⚠️  system.yaml 不存在: {system_yaml}", file=sys.stderr)
         return 1
 
-    import yaml  # noqa: PLC0415
+    import yaml
 
     sys_data = yaml.safe_load(system_yaml.read_text(encoding="utf-8"))
     ref = sys_data.get("health_score_ref")
@@ -104,7 +109,7 @@ def main() -> int:
     # 3. health.yaml 可解析?
     try:
         health = yaml.safe_load(ref_path.read_text(encoding="utf-8"))
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         errors.append(f"health.yaml 解析失败: {e}")
         return _report(errors, warnings, args.warn_only)
 
@@ -115,9 +120,7 @@ def main() -> int:
     if sys_score is None or h_score is None:
         errors.append("system.yaml 或 health.yaml 缺 health_score 数值")
     elif sys_score != h_score:
-        errors.append(
-            f"health_score 不一致: system.yaml={sys_score} vs health.yaml={h_score}"
-        )
+        errors.append(f"health_score 不一致: system.yaml={sys_score} vs health.yaml={h_score}")
 
     # 5. 保鲜检查 (健康分必须 24h 内)
     h_gen_dt = _parse_ts(h_gen)
@@ -156,14 +159,14 @@ def main() -> int:
     # 7. 全文档 SSOT 扫描 (CR-ENG-SSOT-POINTER-01)
     # 扫 README/CLAUDE/CHANGELOG 的 health 数字硬编码, 比对 system.yaml.
     # 防失序 (复盘案例: health 曾在 system/CLAUDE/Kim 报告 3 处不同值 77.5/22/67).
-    import re  # noqa: PLC0415
+    import re
 
     doc_files = ["README.md", "CLAUDE.md", "CHANGELOG.md"]
     health_patterns = [
-        r"health-(\d+(?:\.\d+)?)%2F\d+",      # badge: health-NN%2F100
+        r"health-(\d+(?:\.\d+)?)%2F\d+",  # badge: health-NN%2F100
         r"health_score[:\s]+(\d+(?:\.\d+)?)",  # health_score: NN
-        r"健康分[:\s]*(\d+(?:\.\d+)?)/100",   # 健康分 NN/100
-        r"Health[:\s]+(\d+(?:\.\d+)?)/100",   # Health NN/100
+        r"健康分[:\s]*(\d+(?:\.\d+)?)/100",  # 健康分 NN/100
+        r"Health[:\s]+(\d+(?:\.\d+)?)/100",  # Health NN/100
     ]
     for doc_name in doc_files:
         doc_path = ws / doc_name

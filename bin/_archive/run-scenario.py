@@ -8,6 +8,7 @@ Usage:
 
 能力轨专用 (P84 §0): 结果只计能力轨, 绝不计产能轨.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -76,11 +77,7 @@ def main() -> int:
                 print(f"    {cm} {c['name']}: {c['evidence']}")
         print(f"\n📊 合计: {summary['total']} | 通过 {summary['passed']} | 失败 {summary['failed']}")
         adv_total = sum(1 for r in results if "result" in r and r["result"]["adversarial"])
-        adv_fail = sum(
-            1
-            for r in results
-            if "result" in r and r["result"]["adversarial"] and not r["result"]["passed"]
-        )
+        adv_fail = sum(1 for r in results if "result" in r and r["result"]["adversarial"] and not r["result"]["passed"])
         if adv_total:
             pct = adv_total / max(summary["total"], 1) * 100
             print(

@@ -19,7 +19,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WS = Path(__file__).resolve().parents[2]
@@ -30,7 +30,7 @@ MAX_HISTORY = 90
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def _run_doctor() -> tuple[dict, int]:
@@ -83,9 +83,7 @@ def _run_doctor() -> tuple[dict, int]:
             raise ValueError("doctor stdout not a JSON object")
         if not payload.get("checks") and r.returncode != 0:
             # uv/module failure often leaves empty object
-            raise ValueError(
-                (r.stderr or r.stdout or "doctor failed with empty JSON")[:240]
-            )
+            raise ValueError((r.stderr or r.stdout or "doctor failed with empty JSON")[:240])
     except (json.JSONDecodeError, ValueError) as e:
         payload = {
             "generated_at": _now(),
@@ -171,11 +169,7 @@ def compute_path_acl_warn_streak(
         "path_acl_warn_streak": streak,
         "path_acl_alert": alert,
         "path_acl_alert_threshold": 3,
-        "path_acl_alert_reason": (
-            f"path-acl warn for {streak} consecutive doctor runs (≥3)"
-            if alert
-            else ""
-        ),
+        "path_acl_alert_reason": (f"path-acl warn for {streak} consecutive doctor runs (≥3)" if alert else ""),
     }
 
 
@@ -184,9 +178,7 @@ def _write_artifacts(payload: dict, highlights: dict) -> None:
 
     # Streak uses prior history + current status (before appending current line)
     prior = _read_history_rows()
-    streak = compute_path_acl_warn_streak(
-        prior, str(highlights.get("path_acl_status") or "missing")
-    )
+    streak = compute_path_acl_warn_streak(prior, str(highlights.get("path_acl_status") or "missing"))
     highlights = {**highlights, **streak}
 
     snapshot = {

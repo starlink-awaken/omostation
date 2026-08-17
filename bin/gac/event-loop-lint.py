@@ -13,6 +13,7 @@ emit 必有消费者 (emit → consume → 触达 → 决策 任一段断都失�
 
 退出码: 0 = 全 emit 有消费者, 1 = 有死回路
 """
+
 from __future__ import annotations
 
 import json
@@ -58,7 +59,11 @@ def find_consumers(kind: str) -> list[str]:
     try:
         res = subprocess.run(
             ["grep", "-rl", "--include=*.py", kind, *SCAN_DIRS],
-            cwd=WORKSPACE, capture_output=True, text=True, timeout=30, check=False,
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
         )
     except subprocess.TimeoutExpired:
         return []
@@ -108,9 +113,7 @@ def main() -> int:
             "description": "event-loop-lint 检测到 emit 零消费者 (死回路, emit 没人看). 需人工接消费者/触达.",
             "dead_loops": [{"kind": d["kind"], "emit_count": d["emit_count"]} for d in dead_loops],
         }
-        card_path.write_text(
-            yaml.safe_dump(card, allow_unicode=True, sort_keys=False), encoding="utf-8"
-        )
+        card_path.write_text(yaml.safe_dump(card, allow_unicode=True, sort_keys=False), encoding="utf-8")
 
     if as_json:
         print(json.dumps(report, ensure_ascii=False, indent=2))

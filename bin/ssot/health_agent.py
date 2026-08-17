@@ -19,8 +19,8 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
-from _shared import utc_now
 from _llm_helper import llm_ask
+from _shared import utc_now
 
 INBOX = Path.home() / "Documents" / "_inbox"
 HEALTH_KEYWORDS = ["健康巡检", "health", "卫健委", "vault-health", "weijian"]
@@ -49,14 +49,16 @@ def scan_health_reports() -> list[dict[str, Any]]:
             ok_match = re.search(r"正常\s*(\d+)", content)
             ok_count = int(ok_match.group(1)) if ok_match else 0
 
-            reports.append({
-                "file": f.name,
-                "date": f.name[:10] if f.name[0:4].isdigit() else "",
-                "status": status,
-                "warnings": warnings,
-                "ok": ok_count,
-                "summary": content[:200],
-            })
+            reports.append(
+                {
+                    "file": f.name,
+                    "date": f.name[:10] if f.name[0:4].isdigit() else "",
+                    "status": status,
+                    "warnings": warnings,
+                    "ok": ok_count,
+                    "summary": content[:200],
+                }
+            )
         except Exception:
             continue
         if len(reports) >= 10:
@@ -72,18 +74,16 @@ def analyze_trends(reports: list[dict]) -> dict[str, Any]:
     # 准备数据摘要
     summary_lines = []
     for r in reports[:7]:
-        summary_lines.append(
-            f"- {r['date']} {r['status']} 预警:{r['warnings']} 正常:{r['ok']}"
-        )
+        summary_lines.append(f"- {r['date']} {r['status']} 预警:{r['warnings']} 正常:{r['ok']}")
 
     prompt = (
         f"你是系统健康分析助手。以下是最近 {len(reports)} 天的健康巡检数据:\n"
         + "\n".join(summary_lines)
         + "\n\n请分析:\n"
-        f"1. 整体趋势 (好转/稳定/恶化)\n"
-        f"2. 主要风险点\n"
-        f"3. 建议 (一句话)\n"
-        f"输出 JSON: {{\"trend\":\"...\",\"risk\":\"...\",\"advice\":\"...\"}}"
+        "1. 整体趋势 (好转/稳定/恶化)\n"
+        "2. 主要风险点\n"
+        "3. 建议 (一句话)\n"
+        '输出 JSON: {"trend":"...","risk":"...","advice":"..."}'
     )
 
     response = llm_ask(prompt, timeout=30.0)
@@ -148,7 +148,13 @@ def main(argv: list[str] | None = None) -> int:
     analysis = analyze_trends(reports)
 
     if args.json:
-        print(json.dumps({"reports": reports, "analysis": analysis, "scanned_at": utc_now()}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"reports": reports, "analysis": analysis, "scanned_at": utc_now()},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         briefing = generate_health_briefing(reports, analysis)
         INBOX.mkdir(parents=True, exist_ok=True)

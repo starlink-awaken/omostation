@@ -8,16 +8,18 @@
 用法: python3 gen-agent-redlines.py [output_path]
 默认输出: docs/generated/agent-redlines.md
 """
-import yaml
-import sys
+
 import os
+import sys
 from collections import defaultdict
+
+import yaml
 
 REGISTRY = ".omo/_truth/registry/governance-checks.yaml"
 OUTPUT = sys.argv[1] if len(sys.argv) > 1 else "docs/generated/agent-redlines.md"
 # gac_severity.py 在 bin/gac/, 本脚本在 bin/mof/, 需把 bin/gac 加进 path (DRY with bin/gac/gac-drift.py)
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "gac"))
-from gac_severity import derive_severity, RED_EXECUTORS  # noqa: E402  抽取共享 (code-review #1)
+from gac_severity import derive_severity
 
 
 def main():
@@ -32,8 +34,8 @@ def main():
         "# Agent 红线/灰线清单 (宪法 Wave 1)",
         "",
         f"> 自动生成 from `governance-checks.yaml::gac.rules` ({len(rules)} rules). **不要手编辑**.",
-        f"> severity 推导: executor ∈ {{hook_pre_edit, ci_gate}} → 🔴 red (阻塞); 否则 → 🟡 gray (warn).",
-        f"> 重新生成: `python3 bin/mof/gen-agent-redlines.py`",
+        "> severity 推导: executor ∈ {hook_pre_edit, ci_gate} → 🔴 red (阻塞); 否则 → 🟡 gray (warn).",
+        "> 重新生成: `python3 bin/mof/gen-agent-redlines.py`",
         "",
         f"## 🔴 红线 ({len(red)} 条 — 阻塞 merge, agent 必须遵守)",
         "",
@@ -43,14 +45,15 @@ def main():
         by[r.get("dimension", "?")].append(r)
     for dim in sorted(by):
         L += [
-            f"### {dim} ({len(by[dim])})", "",
+            f"### {dim} ({len(by[dim])})",
+            "",
             "| ID | Name | check_type | executor |",
             "|----|------|-----------|----------|",
         ]
         for r in by[dim]:
             L.append(
-                f"| `{r.get('id','?')}` | {r.get('name','?')} | "
-                f"{r.get('check_type','?')} | {','.join(r.get('executor') or [])} |"
+                f"| `{r.get('id', '?')}` | {r.get('name', '?')} | "
+                f"{r.get('check_type', '?')} | {','.join(r.get('executor') or [])} |"
             )
         L.append("")
 
@@ -61,7 +64,7 @@ def main():
     for dim in sorted(byg):
         L += [f"### {dim} ({len(byg[dim])})", ""]
         for r in byg[dim]:
-            L.append(f"- `{r.get('id','?')}`: {r.get('name','?')} ({r.get('check_type','?')})")
+            L.append(f"- `{r.get('id', '?')}`: {r.get('name', '?')} ({r.get('check_type', '?')})")
         L.append("")
 
     redlines_path = ".omo/_truth/registry/redlines.yaml"
@@ -81,20 +84,14 @@ def main():
             "|----|----------|----------|",
         ]
         for row in chain_rows:
-            L.append(
-                f"| `{row.get('id', '?')}` | {row.get('severity', '?')} | "
-                f"`{row.get('executor', '')}` |"
-            )
+            L.append(f"| `{row.get('id', '?')}` | {row.get('severity', '?')} | `{row.get('executor', '')}` |")
         L.append("")
     else:
         L += ["(no enforced_red_lines)", ""]
 
     os.makedirs(os.path.dirname(OUTPUT) or ".", exist_ok=True)
     open(OUTPUT, "w").write("\n".join(L))  # audit-exempt: non-atomic-write (generated docs)
-    print(
-        f"✅ {OUTPUT}: {len(red)} red + {len(gray)} gray = {len(rules)} gac; "
-        f"{len(chain_rows)} redlines.yaml rows"
-    )
+    print(f"✅ {OUTPUT}: {len(red)} red + {len(gray)} gray = {len(rules)} gac; {len(chain_rows)} redlines.yaml rows")
 
 
 if __name__ == "__main__":

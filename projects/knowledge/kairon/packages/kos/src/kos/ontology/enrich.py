@@ -86,9 +86,7 @@ def _enrich_with_local_llm(conn: sqlite3.Connection, now: str) -> int:
     # 1. 快速探测本地 omlx 网关是否在线
     gateway_url = OMLX_CHAT_URL
     try:
-        req = urllib.request.Request(
-            OMLX_MODELS_URL, headers={"Authorization": "Bearer sk-omlx-admin"}, method="GET"
-        )
+        req = urllib.request.Request(OMLX_MODELS_URL, headers={"Authorization": "Bearer sk-omlx-admin"}, method="GET")
         with urllib.request.urlopen(req, timeout=1.0) as response:
             if response.status != 200:
                 return 0

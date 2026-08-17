@@ -13,7 +13,6 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT = Path(__file__).resolve().parents[1]
 CLAIM_SCRIPT = ROOT / "bin" / "gac" / "gac-worktree.sh"
 CLEANUP_SCRIPT = ROOT / "bin" / "gac" / "gac-worktree-cleanup.sh"

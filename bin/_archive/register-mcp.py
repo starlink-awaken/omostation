@@ -5,10 +5,12 @@ Usage:
   python3 bin/gac/register-mcp.py                   # Dry run
   python3 bin/gac/register-mcp.py --apply           # Actually update config.yaml
 """
+
 import os
 import sys
-import yaml
 from pathlib import Path
+
+import yaml
 
 CONFIG_PATH = Path.home() / ".hermes" / "config.yaml"
 

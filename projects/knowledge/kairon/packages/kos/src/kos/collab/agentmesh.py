@@ -39,7 +39,7 @@ def dispatch_to_agentmesh(task_data: dict) -> str | None:
         import urllib.request
 
         data = _json.dumps(task_data).encode()
-        req = urllib.request.Request(  # noqa: S310
+        req = urllib.request.Request(
             f"{AGENTMESH_URL}/v1/tasks",
             data=data,
             headers={
@@ -49,7 +49,7 @@ def dispatch_to_agentmesh(task_data: dict) -> str | None:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=10) as resp:
                 body = _json.loads(resp.read().decode())
                 return cast("str | None", body.get("task_id"))
         except urllib.error.URLError:

@@ -14,7 +14,7 @@ Usage:
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -22,7 +22,7 @@ DEFAULT_METRICS_FILE = WORKSPACE / ".omo" / "state" / "metrics-store.jsonl"
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def append_metric(

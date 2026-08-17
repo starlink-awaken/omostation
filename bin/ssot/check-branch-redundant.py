@@ -8,6 +8,7 @@ Usage:
   python3 bin/ssot/check-branch-redundant.py            # 全量扫 (人读)
   python3 bin/ssot/check-branch-redundant.py --json     # JSON 输出 (agent/cron 用)
 """
+
 import argparse
 import json
 import subprocess
@@ -46,14 +47,16 @@ def assess():
         unique, dup = cherry_count(br)
         last = run(["git", "log", "-1", "--format=%cs", f"origin/work/{br}"]).stdout.strip()
         ahead_out = run(["git", "rev-list", "--count", f"origin/main..origin/work/{br}"]).stdout.strip()
-        results.append({
-            "branch": br,
-            "unique": unique,
-            "dup": dup,
-            "ahead": int(ahead_out) if ahead_out.isdigit() else 0,
-            "last": last,
-            "verdict": "redundant" if unique == 0 else "unique",
-        })
+        results.append(
+            {
+                "branch": br,
+                "unique": unique,
+                "dup": dup,
+                "ahead": int(ahead_out) if ahead_out.isdigit() else 0,
+                "last": last,
+                "verdict": "redundant" if unique == 0 else "unique",
+            }
+        )
     return results
 
 
@@ -64,9 +67,17 @@ def main():
 
     results = assess()
     if args.json:
-        print(json.dumps({"branches": results, "total": len(results),
-                          "redundant": sum(1 for r in results if r["verdict"] == "redundant"),
-                          "unique": sum(1 for r in results if r["verdict"] == "unique")}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "branches": results,
+                    "total": len(results),
+                    "redundant": sum(1 for r in results if r["verdict"] == "redundant"),
+                    "unique": sum(1 for r in results if r["verdict"] == "unique"),
+                },
+                indent=2,
+            )
+        )
         return 0
 
     if not results:
@@ -76,7 +87,7 @@ def main():
     redundant = [r for r in results if r["verdict"] == "redundant"]
     unique = [r for r in results if r["verdict"] == "unique"]
 
-    print(f"=== work/* 分支审计 (vs origin/main, git cherry patch-level) ===")
+    print("=== work/* 分支审计 (vs origin/main, git cherry patch-level) ===")
     print(f"总计 {len(results)} 个: {len(unique)} unique, {len(redundant)} redundant\n")
 
     if redundant:
@@ -89,8 +100,8 @@ def main():
         for r in unique:
             print(f"  work/{r['branch']}: {r['unique']} unique/{r['ahead']} ahead, last={r['last']}")
 
-    print(f"\n💡 redundant 判据: git cherry (patch-level) > grep (word-level, 假阴性)")
-    print(f"   删 redundant: git push origin --delete work/<branch> --no-verify")
+    print("\n💡 redundant 判据: git cherry (patch-level) > grep (word-level, 假阴性)")
+    print("   删 redundant: git push origin --delete work/<branch> --no-verify")
     return 0
 
 

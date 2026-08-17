@@ -35,9 +35,8 @@ import re
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
-
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 OMO_DIR = WORKSPACE_ROOT / ".omo"
@@ -49,7 +48,7 @@ TASKS_DIR = OMO_DIR / "tasks"
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _run(cmd: list[str], *, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -202,9 +201,7 @@ def _check_submodules() -> dict:
         # format: +sha path (ref)
         parts = line[1:].split()
         if len(parts) >= 2:
-            dirty.append(
-                {"sha": parts[0], "path": parts[1], "ref": " ".join(parts[2:])}
-            )
+            dirty.append({"sha": parts[0], "path": parts[1], "ref": " ".join(parts[2:])})
     return {"dirty": dirty, "count": len(dirty)}
 
 
@@ -226,11 +223,7 @@ def _run_omo_lint(subcmd: str) -> subprocess.CompletedProcess[str]:
         check=False,
         env=env,
     )
-    if (
-        result.returncode != 0
-        and "ModuleNotFoundError" in result.stderr
-        and shutil.which("uv")
-    ):
+    if result.returncode != 0 and "ModuleNotFoundError" in result.stderr and shutil.which("uv"):
         # 隔离 worktree 的本地 venv 可能未安装治理依赖；保持同一 lint 规则，临时补齐最小运行时。
         fallback_env = env.copy()
         fallback_env["PYTHONPATH"] = str(OMO_PROJECT_DIR / "src")
@@ -280,7 +273,7 @@ def _check_bos_unimplemented() -> dict:
         return {"passed": True, "note": "bos-services.yaml not found"}
 
     try:
-        with open(yaml_path, "r", encoding="utf-8") as f:
+        with open(yaml_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
     except Exception as e:
         return {"passed": False, "error": f"Failed to parse bos-services.yaml: {e}"}
@@ -301,7 +294,7 @@ def _check_bos_unimplemented() -> dict:
         if not package:
             continue
 
-        # 1. 检查 package 物理目录
+            # 1. 检查 package 物理目录
             pkg_dir = None
             if package:
                 # 优先在 projects/knowledge/kairon/packages/ 寻找
@@ -313,10 +306,12 @@ def _check_bos_unimplemented() -> dict:
                     pkg_dir = generic_pkg
 
             if not pkg_dir:
-                broken.append({
-                    "uri": uri,
-                    "reason": f"Package '{package}' directory not found in workspace",
-                })
+                broken.append(
+                    {
+                        "uri": uri,
+                        "reason": f"Package '{package}' directory not found in workspace",
+                    }
+                )
                 continue
 
             # 2. 检查 action 是否有代码分支支持 (针对 kairon 包的 do_default.py)
@@ -330,40 +325,46 @@ def _check_bos_unimplemented() -> dict:
                     has_handler = False
                     if main_py.exists():
                         main_code = main_py.read_text(encoding="utf-8")
-                        func_pattern = rf'def\s+do_{action.replace("-", "_")}\s*\('
+                        func_pattern = rf"def\s+do_{action.replace('-', '_')}\s*\("
                         if re.search(func_pattern, main_code):
                             has_handler = True
                     if not has_handler:
-                        broken.append({
-                            "uri": uri,
-                            "reason": f"No code branch found for action '{action}' in do_default.py or __main__.py",
-                        })
+                        broken.append(
+                            {
+                                "uri": uri,
+                                "reason": f"No code branch found for action '{action}' in do_default.py or __main__.py",
+                            }
+                        )
             elif main_py.exists():
                 main_code = main_py.read_text(encoding="utf-8")
-                func_pattern = rf'def\s+do_{action.replace("-", "_")}\s*\('
+                func_pattern = rf"def\s+do_{action.replace('-', '_')}\s*\("
                 if not re.search(func_pattern, main_code):
-                    broken.append({
-                        "uri": uri,
-                        "reason": f"No handler function 'do_{action}' found in __main__.py",
-                    })
+                    broken.append(
+                        {
+                            "uri": uri,
+                            "reason": f"No handler function 'do_{action}' found in __main__.py",
+                        }
+                    )
             else:
                 if s.get("transport") in ("stdio", "mcp_stdio"):
-                    broken.append({
-                        "uri": uri,
-                        "reason": "Entry file do_default.py or __main__.py not found for stdio transport",
-                    })
+                    broken.append(
+                        {
+                            "uri": uri,
+                            "reason": "Entry file do_default.py or __main__.py not found for stdio transport",
+                        }
+                    )
 
-    return {
-        "passed": len(broken) == 0,
-        "broken": broken,
-        "count": len(broken)
-    }
+    return {"passed": len(broken) == 0, "broken": broken, "count": len(broken)}
 
 
 def _check_hygiene() -> dict:
     """CR-HYG-01/02: 工作区卫生 (0字节文件 + 大小写 inode). 复用 gac-hygiene-check (DRY)."""
     result = _run(
-        ["python3", str(WORKSPACE_ROOT / "bin" / "gac" / "gac-hygiene-check.py"), "--json"],
+        [
+            "python3",
+            str(WORKSPACE_ROOT / "bin" / "gac" / "gac-hygiene-check.py"),
+            "--json",
+        ],
         check=False,
     )
     try:

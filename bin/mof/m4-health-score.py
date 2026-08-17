@@ -31,9 +31,8 @@ import json
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
-
 
 WS = Path(__file__).resolve().parents[2]
 DERIVED_PATH = WS / "projects/ecos/.omo/_derived/m4-health.json"
@@ -51,10 +50,17 @@ def _git(*args: str, cwd: Path = WS) -> str:
 
 def score_mof_validate() -> tuple[int, int, float]:
     """mof-validate 通过率: 0-60 分"""
-    rc, out, _ = _run([
-        "uv", "run", "--with", "pyyaml", "python",
-        "projects/ecos/src/ecos/ssot/tools/mof-validate.py",
-    ], timeout=180)
+    rc, out, _ = _run(
+        [
+            "uv",
+            "run",
+            "--with",
+            "pyyaml",
+            "python",
+            "projects/ecos/src/ecos/ssot/tools/mof-validate.py",
+        ],
+        timeout=180,
+    )
     for line in out.splitlines():
         if "节点:" in line:
             parts = line.split("|")
@@ -66,10 +72,18 @@ def score_mof_validate() -> tuple[int, int, float]:
 
 def score_4check_strict() -> tuple[bool, float]:
     """5-check strict 全 PASS: 30 分 (check_5 是 Round 3a 新增)"""
-    rc, out, _ = _run([
-        "uv", "run", "--with", "pyyaml", "python",
-        "bin/mof/mof-bootstrap.py", "all",
-    ], timeout=60)
+    rc, out, _ = _run(
+        [
+            "uv",
+            "run",
+            "--with",
+            "pyyaml",
+            "python",
+            "bin/mof/mof-bootstrap.py",
+            "all",
+        ],
+        timeout=60,
+    )
     passed = rc == 0
     return passed, 30.0 if passed else 0.0
 
@@ -77,7 +91,8 @@ def score_4check_strict() -> tuple[bool, float]:
 def score_meta_mapping() -> tuple[bool, float]:
     """8+4+4 映射完整: 5 分"""
     import tempfile
-    code = '''
+
+    code = """
 import sys
 sys.path.insert(0, "projects/ecos/src")
 from ecos.l0.ssot.mof_bridge import M3MetaLoader
@@ -86,8 +101,8 @@ loader = M3MetaLoader.get_instance()
 for mt in MetaType:
     assert loader.meta_type_to_m3(mt) is not None, f"{mt.name} 缺映射"
 print("all 8 mapped")
-'''
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, dir='/tmp') as f:
+"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, dir="/tmp") as f:
         f.write(code)
         tmp = f.name
     try:
@@ -128,6 +143,7 @@ def score_40_tests() -> tuple[int, int, float]:
     if not DERIVED_PATH.exists():
         return 0, 40, 0.0
     import json as _json
+
     data = _json.loads(DERIVED_PATH.read_text())
     bonus = data.get("bonus", {}).get("regression_tests_40", {})
     p = bonus.get("passed", 0)
@@ -137,10 +153,17 @@ def score_40_tests() -> tuple[int, int, float]:
 
 def score_40_tests_live() -> tuple[int, int, float]:
     """实际跑 tests (CLI 单独命令, 不在 compute_health 内嵌)"""
-    rc, out, _ = _run([
-        "uv", "run", "--with", "pyyaml", "python",
-        "tests/integration/m4_metamodel/run_all.py",
-    ], timeout=300)
+    rc, out, _ = _run(
+        [
+            "uv",
+            "run",
+            "--with",
+            "pyyaml",
+            "python",
+            "tests/integration/m4_metamodel/run_all.py",
+        ],
+        timeout=300,
+    )
     m = re.search(r"(\d+)/(\d+) PASS", out)
     if not m:
         return 0, 40, 0.0
@@ -161,7 +184,7 @@ def compute_health() -> dict:
 
     return {
         "version": "1.0.0",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "workspace": str(WS),
         "git_sha": _git("rev-parse", "HEAD"),
         "branch": _git("rev-parse", "--abbrev-ref", "HEAD"),
@@ -199,10 +222,16 @@ def compute_health() -> dict:
         },
         "overall_score": overall,
         "adrs": {
-            "main": ["ADR-0132 (M4 upgrade)", "ADR-0133 (L0 constraints v2)",
-                     "ADR-0134 (M3-meta bridge)", "ADR-0135 (derived plane)",
-                     "ADR-0136 (P5 4-gap closure)", "ADR-0137 (plane relocation)",
-                     "ADR-0138 (MetaElement promotion)", "ADR-0139 (8-stage reject)"],
+            "main": [
+                "ADR-0132 (M4 upgrade)",
+                "ADR-0133 (L0 constraints v2)",
+                "ADR-0134 (M3-meta bridge)",
+                "ADR-0135 (derived plane)",
+                "ADR-0136 (P5 4-gap closure)",
+                "ADR-0137 (plane relocation)",
+                "ADR-0138 (MetaElement promotion)",
+                "ADR-0139 (8-stage reject)",
+            ],
             "closed_when": "overall_score == 100 AND all main ADRs ACCEPTED",
         },
     }
@@ -214,17 +243,25 @@ def print_human(h: dict) -> None:
     print(f"  branch: {h['branch']}  sha: {h['git_sha'][:8]}")
     print(f"  overall: {h['overall_score']}/100")
     print()
-    print(f"  mof-validate:  {m['mof_validate']['passed']}/{m['mof_validate']['total']}"
-          f"  ({m['mof_validate']['rate']}%)  →  {m['mof_validate']['score']}/{m['mof_validate']['weight']}")
-    print(f"  5-check strict: {'PASS' if m['five_check_strict']['all_pass'] else 'FAIL'}"
-          f"  →  {m['five_check_strict']['score']}/{m['five_check_strict']['weight']}")
+    print(
+        f"  mof-validate:  {m['mof_validate']['passed']}/{m['mof_validate']['total']}"
+        f"  ({m['mof_validate']['rate']}%)  →  {m['mof_validate']['score']}/{m['mof_validate']['weight']}"
+    )
+    print(
+        f"  5-check strict: {'PASS' if m['five_check_strict']['all_pass'] else 'FAIL'}"
+        f"  →  {m['five_check_strict']['score']}/{m['five_check_strict']['weight']}"
+    )
     print(f"  meta mapping:   {m['meta_mapping_8x4x4']['score']}/{m['meta_mapping_8x4x4']['weight']}")
-    print(f"  ADR accepted:   {m['adr_accepted_9']['accepted']}/{m['adr_accepted_9']['total']}"
-          f"  →  {m['adr_accepted_9']['score']}/{m['adr_accepted_9']['weight']}")
+    print(
+        f"  ADR accepted:   {m['adr_accepted_9']['accepted']}/{m['adr_accepted_9']['total']}"
+        f"  →  {m['adr_accepted_9']['score']}/{m['adr_accepted_9']['weight']}"
+    )
     print()
     bonus = h["bonus"]
-    print(f"  bonus: regression tests {bonus['regression_tests_40']['passed']}/{bonus['regression_tests_40']['total']}"
-          f"  ({bonus['regression_tests_40']['rate']}%)")
+    print(
+        f"  bonus: regression tests {bonus['regression_tests_40']['passed']}/{bonus['regression_tests_40']['total']}"
+        f"  ({bonus['regression_tests_40']['rate']}%)"
+    )
 
 
 def compare_with_previous(current: dict) -> None:
@@ -256,8 +293,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="输出 JSON 到 stdout")
     parser.add_argument("--emit", action="store_true", help="写派生面 (默认路径)")
     parser.add_argument("--compare", action="store_true", help="与上次派生面对比")
-    parser.add_argument("--with-live-tests", action="store_true",
-                        help="实际跑 40 tests 覆盖 bonus 字段")
+    parser.add_argument("--with-live-tests", action="store_true", help="实际跑 40 tests 覆盖 bonus 字段")
     parser.add_argument("--path", type=Path, default=DERIVED_PATH, help="派生面路径")
     args = parser.parse_args()
 
@@ -267,10 +303,13 @@ def main() -> int:
         DERIVED_PATH.parent.mkdir(parents=True, exist_ok=True)
         seed = {
             "version": "1.0.0",
-            "bonus": {"regression_tests_40": {
-                "passed": live_p, "total": live_t,
-                "rate": round(live_p / live_t * 100, 2) if live_t else 0,
-            }}
+            "bonus": {
+                "regression_tests_40": {
+                    "passed": live_p,
+                    "total": live_t,
+                    "rate": round(live_p / live_t * 100, 2) if live_t else 0,
+                }
+            },
         }
         DERIVED_PATH.write_text(json.dumps(seed, ensure_ascii=False, indent=2))
 

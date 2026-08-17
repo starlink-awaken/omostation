@@ -15,6 +15,7 @@ Output:
   - exit 1 = all adversarial scenarios pass = "adversarial insufficient"
     (blocking per P84: 对抗全过=自欺)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -48,23 +49,26 @@ def _check_dualtrack() -> list[dict]:
 
     if adv_total == 0:
         # No adversarial scenarios at all
-        findings.append({
-            "kind": "no_adversarial_scenarios",
-            "message": "adversarial_total = 0 — no adversarial scenarios exist",
-        })
+        findings.append(
+            {
+                "kind": "no_adversarial_scenarios",
+                "message": "adversarial_total = 0 — no adversarial scenarios exist",
+            }
+        )
         return findings
 
     # All pass = adversarial insufficient
     if adv_failed == 0 or (adv_fail_rate is not None and adv_fail_rate == 0.0):
-        findings.append({
-            "kind": "adversarial_all_pass",
-            "adversarial_total": adv_total,
-            "adversarial_failed": adv_failed,
-            "message": (
-                f"All {adv_total} adversarial scenarios pass — "
-                "adversarial testing is insufficient (P84: 全过=自欺)"
-            ),
-        })
+        findings.append(
+            {
+                "kind": "adversarial_all_pass",
+                "adversarial_total": adv_total,
+                "adversarial_failed": adv_failed,
+                "message": (
+                    f"All {adv_total} adversarial scenarios pass — adversarial testing is insufficient (P84: 全过=自欺)"
+                ),
+            }
+        )
 
     return findings
 
@@ -80,10 +84,12 @@ def _check_scenario_files() -> list[dict]:
     total_adv = len(adv_files) + len(hand_adv)
 
     if total_adv == 0:
-        findings.append({
-            "kind": "no_adversarial_files",
-            "message": "No adversarial scenario files found in collab-scenarios/",
-        })
+        findings.append(
+            {
+                "kind": "no_adversarial_files",
+                "message": "No adversarial scenario files found in collab-scenarios/",
+            }
+        )
 
     return findings
 

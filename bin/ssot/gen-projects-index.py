@@ -6,9 +6,9 @@ Owner: governance-team
 Trigger: 新项目加入 / 项目归档 / 层级变更
 """
 
-import yaml
-import os
 from pathlib import Path
+
+import yaml
 
 SCRIPT_DIR = Path(__file__).parent
 WORKSPACE_ROOT = SCRIPT_DIR.parent.parent
@@ -30,9 +30,11 @@ TEMPLATE_HEADER = """# INDEX-PROJECTS.md — 项目索引
 
 """
 
+
 def load_registry():
     with open(PROJECT_REGISTRY) as f:
         return yaml.safe_load(f)
+
 
 def generate_layer_table(registry):
     layers = {}
@@ -43,7 +45,7 @@ def generate_layer_table(registry):
         if layer not in layers:
             layers[layer] = []
         layers[layer].append(name)
-    
+
     table = "## 按层分类\n\n| 层 | 项目 | 栈 | 入口文档 |\n|----|------|-----|---------|\n"
     for layer in sorted(layers.keys()):
         projects = ", ".join(sorted(layers[layer]))
@@ -56,6 +58,7 @@ def generate_layer_table(registry):
         table += f"| {layer} | {projects} | {stack_str} | 各项目 `AGENTS.md` |\n"
     return table
 
+
 def generate_stack_table(registry):
     stacks = {}
     for name, project in registry["projects"].items():
@@ -65,44 +68,46 @@ def generate_stack_table(registry):
         if stack not in stacks:
             stacks[stack] = []
         stacks[stack].append(name)
-    
+
     table = "\n---\n\n## 按栈分类\n\n| 栈 | 项目 |\n|----|------|\n"
     for stack in sorted(stacks.keys()):
         projects = ", ".join(sorted(stacks[stack]))
         table += f"| {stack} | {projects} |\n"
     return table
 
+
 def generate_project_list(registry):
     python_projects = []
     ts_projects = []
     docker_projects = []
-    
+
     for name, project in registry["projects"].items():
         if name == "mesh-router":
             continue
         stack = project.get("stack", "")
         role = project.get("role", "")
-        
+
         if "Python" in stack:
             python_projects.append((name, project.get("layer", "?"), role))
         elif "TypeScript" in stack:
             ts_projects.append((name, project.get("layer", "?"), role))
         elif "Docker" in stack:
             docker_projects.append((name, project.get("layer", "?"), role))
-    
+
     output = "\n---\n\n## 项目清单\n\n### Python (uv) 项目\n\n| 项目 | 层 | 角色 | AGENTS.md |\n|------|----|------|-----------|\n"
     for name, layer, role in sorted(python_projects):
         output += f"| {name} | {layer} | {role} | ✅ |\n"
-    
+
     output += "\n### TypeScript (bun) 项目\n\n| 项目 | 层 | 角色 | AGENTS.md |\n|------|----|------|-----------|\n"
     for name, layer, role in sorted(ts_projects):
         output += f"| {name} | {layer} | {role} | ✅ |\n"
-    
+
     output += "\n### Docker 项目\n\n| 项目 | 层 | 角色 | AGENTS.md |\n|------|----|------|-----------|\n"
     for name, layer, role in sorted(docker_projects):
         output += f"| {name} | {layer} | {role} | ✅ |\n"
-    
+
     return output
+
 
 def generate_archived_table(registry):
     archived = registry.get("archived", [])
@@ -110,6 +115,7 @@ def generate_archived_table(registry):
     for item in archived:
         table += f"| {item['name']} | {item['merged_into']} | {item.get('note', '')} |\n"
     return table
+
 
 def generate_footer():
     return """
@@ -124,6 +130,7 @@ def generate_footer():
 > 完整的项目元数据请见: `docs/project-registry.yaml`
 """
 
+
 def main():
     import datetime
     from datetime import UTC
@@ -131,18 +138,19 @@ def main():
     generated_at = datetime.datetime.now(UTC).isoformat()
 
     registry = load_registry()
-    
+
     content = TEMPLATE_HEADER.format(generated_at=generated_at)
     content += generate_layer_table(registry)
     content += generate_stack_table(registry)
     content += generate_project_list(registry)
     content += generate_archived_table(registry)
     content += generate_footer()
-    
+
     with open(INDEX_FILE, "w") as f:
         f.write(content)
-    
+
     print(f"Generated: {INDEX_FILE}")
+
 
 if __name__ == "__main__":
     main()

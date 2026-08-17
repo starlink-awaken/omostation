@@ -97,9 +97,7 @@ def test_requested_activation_is_blocked_even_when_card_is_complete() -> None:
 
 def test_cli_is_machine_readable_and_does_not_write(tmp_path: Path, capsys) -> None:
     input_path = tmp_path / "scene-card.json"
-    input_path.write_text(
-        json.dumps(_scene_card(), ensure_ascii=False), encoding="utf-8"
-    )
+    input_path.write_text(json.dumps(_scene_card(), ensure_ascii=False), encoding="utf-8")
     before = sorted(path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*"))
 
     assert MODULE.main(["--input", str(input_path)]) == 0

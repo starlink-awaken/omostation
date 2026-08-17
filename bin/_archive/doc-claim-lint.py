@@ -20,6 +20,7 @@ pattern (基于审计 D1-D6):
   python bin/ssot/doc-claim-lint.py --json         # JSON 输出 (CI 友好)
   python bin/ssot/doc-claim-lint.py --target <f>   # 扫指定文件
 """
+
 from __future__ import annotations
 
 import argparse
@@ -92,15 +93,17 @@ def scan_file(path: Path) -> list[dict]:
                 # 白名单: phase 范围/历史上下文跳过
                 if pat["id"] == "HARDCODED-PHASE" and ALLOW_CONTEXT.search(line):
                     continue
-                findings.append({
-                    "file": str(path.relative_to(WORKSPACE)) if path.is_absolute() else str(path),
-                    "line": lineno,
-                    "column": m.start() + 1,
-                    "pattern_id": pat["id"],
-                    "matched": m.group(0),
-                    "context": line.strip()[:120],
-                    "fix": pat["fix"],
-                })
+                findings.append(
+                    {
+                        "file": str(path.relative_to(WORKSPACE)) if path.is_absolute() else str(path),
+                        "line": lineno,
+                        "column": m.start() + 1,
+                        "pattern_id": pat["id"],
+                        "matched": m.group(0),
+                        "context": line.strip()[:120],
+                        "fix": pat["fix"],
+                    }
+                )
     return findings
 
 
@@ -134,8 +137,8 @@ def main() -> int:
                 rel = it["file"]
                 print(f"     - {rel}:{it['line']} '{it['matched']}' ← {it['context'][:80]}")
             if len(items) > 5:
-                print(f"     ... 及其他 {len(items)-5} 处")
-        print(f"\n治本: 把硬编码声称改为 SSOT 指针 (见 .omo/standards/doc-ssot-contract.md)")
+                print(f"     ... 及其他 {len(items) - 5} 处")
+        print("\n治本: 把硬编码声称改为 SSOT 指针 (见 .omo/standards/doc-ssot-contract.md)")
         return 1
 
     return 1 if all_findings else 0

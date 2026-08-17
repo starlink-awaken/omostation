@@ -22,8 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
-import sys
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 def gh_api(method: str, path: str, retries: int = 3) -> dict:
@@ -57,7 +56,13 @@ def list_runs(page: int = 1, per_page: int = 100, created_before: str = "") -> l
 
 def delete_run(run_id: int) -> bool:
     proc = subprocess.run(
-        ["gh", "api", "-X", "DELETE", f"repos/starlink-awaken/omostation/actions/runs/{run_id}"],
+        [
+            "gh",
+            "api",
+            "-X",
+            "DELETE",
+            f"repos/starlink-awaken/omostation/actions/runs/{run_id}",
+        ],
         capture_output=True,
         text=True,
         check=False,
@@ -69,8 +74,18 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", default=True, help="只预览 (默认)")
     parser.add_argument("--apply", action="store_true", help="真实删除 (需配合 --dry-run 关闭)")
-    parser.add_argument("--before", type=str, default="", help="删除该日期前 (UTC, YYYY-MM-DD) 的 completed runs")
-    parser.add_argument("--keep", type=int, default=0, help="保留最近 N 个 runs, 删除更旧的 completed runs")
+    parser.add_argument(
+        "--before",
+        type=str,
+        default="",
+        help="删除该日期前 (UTC, YYYY-MM-DD) 的 completed runs",
+    )
+    parser.add_argument(
+        "--keep",
+        type=int,
+        default=0,
+        help="保留最近 N 个 runs, 删除更旧的 completed runs",
+    )
     args = parser.parse_args()
 
     if not args.apply:

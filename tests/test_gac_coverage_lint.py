@@ -5,6 +5,7 @@
 - executor evidence 过期 → 休眠 exit 1
 - 无 governance-checks.yaml → 不崩 exit 1
 """
+
 import importlib.util
 import os
 import time

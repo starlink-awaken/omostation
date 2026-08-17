@@ -36,7 +36,12 @@ def _registry(*, index: str = "docs/SYSTEM-INDEX.md") -> dict:
                 "ssot": index,
                 "verifier": "bin/ssot/doc-governance-check.py",
                 "metadata": "frontmatter",
-                "required_frontmatter": ["status", "lifecycle", "owner", "last-reviewed"],
+                "required_frontmatter": [
+                    "status",
+                    "lifecycle",
+                    "owner",
+                    "last-reviewed",
+                ],
                 "review_days": 30,
                 "discoverability": "directory-index",
                 "index": index,
@@ -146,9 +151,7 @@ def test_content_review_state_requires_content_review_date(tmp_path: Path) -> No
         date(2026, 7, 31),
     )
     assert any(
-        finding["rule"] == "invalid_metadata"
-        and "content-reviewed-at" in finding["message"]
-        for finding in result
+        finding["rule"] == "invalid_metadata" and "content-reviewed-at" in finding["message"] for finding in result
     )
 
 

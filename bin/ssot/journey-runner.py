@@ -64,14 +64,30 @@ def _emit_escalation_event(journey_id: str, run_id: str, state: str, limit: int)
     """Emit OMO event when backedge limit exceeded (BET-Y1Q2-T5-02)."""
     try:
         subprocess.run(
-            ["python3", str(ROOT / "projects/omo/src/omo/cli.py"), "event", "emit",
-             "--type", "journey_backedge_escalated",
-             "--source", "journey-runner",
-             "--payload", json.dumps({
-                 "journey_id": journey_id, "run_id": run_id,
-                 "state": state, "backedge_limit": limit,
-             })],
-            capture_output=True, text=True, timeout=10, check=False, cwd=str(ROOT),
+            [
+                "python3",
+                str(ROOT / "projects/omo/src/omo/cli.py"),
+                "event",
+                "emit",
+                "--type",
+                "journey_backedge_escalated",
+                "--source",
+                "journey-runner",
+                "--payload",
+                json.dumps(
+                    {
+                        "journey_id": journey_id,
+                        "run_id": run_id,
+                        "state": state,
+                        "backedge_limit": limit,
+                    }
+                ),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+            cwd=str(ROOT),
         )
     except Exception as exc:
         print(f"[journey-runner] emit failed: {exc}", file=sys.stderr)
@@ -94,6 +110,7 @@ def _find_journey_spec(journey_id: str) -> Path:
 
 
 # ── Journey template support (BET-Y3H1-T5-01) ────────────────────────────────
+
 
 def _render_template(spec: dict) -> dict:
     """If a journey spec references a template, merge it with the spec.
@@ -140,7 +157,15 @@ def _render_template(spec: dict) -> dict:
             merged[section] = spec[section]
     # Extra spec fields (checkpoint, backedge_limit, etc.) pass through.
     for key, val in spec.items():
-        if key not in ("template", "params", "states", "transitions", "schema", "journey_id", "description"):
+        if key not in (
+            "template",
+            "params",
+            "states",
+            "transitions",
+            "schema",
+            "journey_id",
+            "description",
+        ):
             merged[key] = val
     return merged
 
@@ -158,6 +183,7 @@ def _find_scene_card(scene_id: str) -> Path | None:
 
 
 # ── Scene Dispatchers ──────────────────────────────────────────────
+
 
 def _has_real_data(output: dict[str, Any]) -> bool:
     """Detect whether a live dispatch produced real (non-simulated) data.
@@ -186,14 +212,44 @@ def _has_real_data(output: dict[str, Any]) -> bool:
 def dispatch_dry_run(scene_id: str, input_data: dict, token: dict) -> dict[str, Any]:
     """Simulate scene execution without side effects. Outputs match journey spec condition paths."""
     defaults = {
-        "unified-inbox": {"status": "succeeded", "triage": {"needs_review": True, "archived": 0}, "messages": [{"id": "sim-1", "title": "Simulated message"}]},
-        "document-review": {"status": "succeeded", "review": {"status": "succeeded"}, "issues_found": [], "decision": {"action": "execute"}},
-        "engineering-delivery": {"status": "succeeded", "delivery": {"status": "succeeded"}},
-        "knowledge-curation": {"status": "succeeded", "curation": {"indexed": True}, "indexed": True},
-        "meeting-supervision": {"status": "succeeded", "meeting": {"decisions": [{"assignee": "sim"}]}, "decisions": {"count": 1}, "task": {"assignee": "sim"}},
+        "unified-inbox": {
+            "status": "succeeded",
+            "triage": {"needs_review": True, "archived": 0},
+            "messages": [{"id": "sim-1", "title": "Simulated message"}],
+        },
+        "document-review": {
+            "status": "succeeded",
+            "review": {"status": "succeeded"},
+            "issues_found": [],
+            "decision": {"action": "execute"},
+        },
+        "engineering-delivery": {
+            "status": "succeeded",
+            "delivery": {"status": "succeeded"},
+        },
+        "knowledge-curation": {
+            "status": "succeeded",
+            "curation": {"indexed": True},
+            "indexed": True,
+        },
+        "meeting-supervision": {
+            "status": "succeeded",
+            "meeting": {"decisions": [{"assignee": "sim"}]},
+            "decisions": {"count": 1},
+            "task": {"assignee": "sim"},
+        },
         "periodic-reporting": {"status": "succeeded", "report": {"compiled": True}},
-        "project-supervision": {"status": "succeeded", "supervision": {"risk_level": "low"}},
-        "research-pipeline": {"status": "succeeded", "research": {"scope": "simulated"}, "analysis": {"confidence": 0.85}, "sources": {"gathered": 5}, "curation": {"indexed": True}},
+        "project-supervision": {
+            "status": "succeeded",
+            "supervision": {"risk_level": "low"},
+        },
+        "research-pipeline": {
+            "status": "succeeded",
+            "research": {"scope": "simulated"},
+            "analysis": {"confidence": 0.85},
+            "sources": {"gathered": 5},
+            "curation": {"indexed": True},
+        },
         "agora-bos-gateway": {"status": "succeeded"},
     }
     return defaults.get(scene_id, {"status": "succeeded"})
@@ -206,7 +262,10 @@ def dispatch_real_inbox(input_data: dict, token: dict) -> dict[str, Any]:
         try:
             result = subprocess.run(
                 ["iris", "--json", "list", connector, "--limit", "5"],
-                capture_output=True, text=True, timeout=30, check=False,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
             )
             if result.returncode == 0 and result.stdout.strip():
                 items = json.loads(result.stdout)
@@ -233,7 +292,10 @@ def _iris_list(connector: str, limit: int = 5) -> list[dict]:
     try:
         result = subprocess.run(
             ["iris", "--json", "list", connector, "--limit", str(limit)],
-            capture_output=True, text=True, timeout=30, check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
         )
         if result.returncode == 0 and result.stdout.strip():
             items = json.loads(result.stdout)
@@ -286,10 +348,17 @@ def dispatch_real_reporting(input_data: dict, token: dict) -> dict[str, Any]:
     try:
         result = subprocess.run(
             ["git", "log", "--oneline", "--since", "7 days", "--grep", "#[0-9]"],
-            capture_output=True, text=True, timeout=10, check=False,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
             cwd=str(ROOT),
         )
-        prs = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()] if result.returncode == 0 else []
+        prs = (
+            [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
+            if result.returncode == 0
+            else []
+        )
     except Exception:
         prs = []
     return {
@@ -380,12 +449,14 @@ DISPATCHERS: dict[str, Any] = {
 # 注册行政流程 scenes (数字大脑工作域)
 try:
     from admin_scenes import ADMIN_SCENES
+
     DISPATCHERS.update(ADMIN_SCENES)
 except Exception:
     pass
 
 
 # ── Condition Evaluator ────────────────────────────────────────────
+
 
 def _get_nested(obj: dict, path: str) -> Any:
     """Get nested value by dot path: 'triage.needs_review' → obj['triage']['needs_review'].
@@ -438,6 +509,7 @@ def evaluate_condition(condition: str, context: dict) -> bool:
 
 
 # ── Journey Engine ─────────────────────────────────────────────────
+
 
 def run_journey(
     journey_id: str,
@@ -530,8 +602,13 @@ def run_journey(
 
         # Record state entry
         state_store.save_state(
-            ROOT, journey_id, run_id, current_state_name,
-            scene_id=scene_id, status="entered", context=context,
+            ROOT,
+            journey_id,
+            run_id,
+            current_state_name,
+            scene_id=scene_id,
+            status="entered",
+            context=context,
             dry_run=dry_run,
         )
 
@@ -539,9 +616,15 @@ def run_journey(
         checkpoint = state.get("checkpoint")
         if checkpoint and not resume:
             state_store.save_state(
-                ROOT, journey_id, run_id, current_state_name,
-                scene_id=scene_id, status="awaiting_human",
-                context=context, checkpoint=checkpoint, dry_run=dry_run,
+                ROOT,
+                journey_id,
+                run_id,
+                current_state_name,
+                scene_id=scene_id,
+                status="awaiting_human",
+                context=context,
+                checkpoint=checkpoint,
+                dry_run=dry_run,
             )
             print(f"  ⏸️  Checkpoint: {checkpoint.get('require', 'human_review')}")
             print(f"     Resume: python3 bin/ssot/journey-runner.py resume --journey-id {journey_id} --run-id {run_id}")
@@ -590,9 +673,15 @@ def run_journey(
 
         # Record state completion
         state_store.save_state(
-            ROOT, journey_id, run_id, current_state_name,
-            scene_id=scene_id, status="completed", context=context,
-            dry_run=dry_run, data_integrity=data_integrity_flag,
+            ROOT,
+            journey_id,
+            run_id,
+            current_state_name,
+            scene_id=scene_id,
+            status="completed",
+            context=context,
+            dry_run=dry_run,
+            data_integrity=data_integrity_flag,
         )
 
         # Check if terminal (no next states)
@@ -621,14 +710,30 @@ def run_journey(
                     retry_counts[to] = retry_counts.get(to, 0) + 1
                     if retry_counts[to] > effective_limit:
                         state_store.save_state(
-                            ROOT, journey_id, run_id, current_state_name,
-                            scene_id=scene_id, status="human_hold",
-                            context=context, checkpoint={"require": "human_intervention", "reason": "backedge_limit_exceeded"},
+                            ROOT,
+                            journey_id,
+                            run_id,
+                            current_state_name,
+                            scene_id=scene_id,
+                            status="human_hold",
+                            context=context,
+                            checkpoint={
+                                "require": "human_intervention",
+                                "reason": "backedge_limit_exceeded",
+                            },
                             dry_run=dry_run,
                         )
                         _emit_escalation_event(journey_id, run_id, current_state_name, effective_limit)
-                        print(f"  ⛔ Backedge limit ({effective_limit}) exceeded for {to}. Holding for human intervention.")
-                        return {"status": "human_hold", "journey_id": journey_id, "run_id": run_id, "state": current_state_name, "backedge_limit": effective_limit}
+                        print(
+                            f"  ⛔ Backedge limit ({effective_limit}) exceeded for {to}. Holding for human intervention."
+                        )
+                        return {
+                            "status": "human_hold",
+                            "journey_id": journey_id,
+                            "run_id": run_id,
+                            "state": current_state_name,
+                            "backedge_limit": effective_limit,
+                        }
                 break
 
         if not next_state:
@@ -658,8 +763,10 @@ def run_journey(
         try:
             reflection_mod = _load_module(ROOT / "bin/ssot/scene-reflection.py", "scene_reflection")
             reflection_mod.generate_reflection(
-                ROOT, scene_card_path,
-                run_id=run_id, execution_status="succeeded",
+                ROOT,
+                scene_card_path,
+                run_id=run_id,
+                execution_status="succeeded",
                 output_summary=f"Journey {journey_id} completed in {step_count} steps",
             )
             print(f"\n🪞 Reflection generated for {scene_id}")
@@ -719,6 +826,7 @@ def scan_template_usage() -> dict[str, Any]:
 
 # ── Parallel fork/join helpers (BET-Y1Q4-T5-01) ──────────────────────────────
 
+
 def _is_fork_state(state: dict) -> bool:
     return bool(state.get("parallel"))
 
@@ -772,7 +880,9 @@ def main(argv: list[str] | None = None) -> int:
     run_parser.add_argument("--live", action="store_true", help="disable dry-run (real dispatch)")
     run_parser.add_argument("--input", default="{}", help="JSON input data")
     run_parser.add_argument(
-        "--backedge-limit", type=int, default=None,
+        "--backedge-limit",
+        type=int,
+        default=None,
         help=f"max backedge traversals before escalation (default: {DEFAULT_BACKEDGE_LIMIT})",
     )
 
@@ -826,7 +936,9 @@ def main(argv: list[str] | None = None) -> int:
         dry_run = not args.live
         input_data = json.loads(args.input) if args.input else {}
         result = run_journey(
-            args.journey, input_data=input_data, dry_run=dry_run,
+            args.journey,
+            input_data=input_data,
+            dry_run=dry_run,
             backedge_limit=args.backedge_limit,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))

@@ -13,18 +13,18 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # 需要警惕的 auto-apply 模式
 AUTO_APPLY_PATTERNS = [
-    r'git\s+(commit|push)\s+--no-verify',
-    r'git\s+commit\s+-a.*-m\s',
-    r'git\s+push\s+--force',
-    r'subprocess\.run\(\[.*git.*commit',
-    r'os\.system\(.*git.*commit',
+    r"git\s+(commit|push)\s+--no-verify",
+    r"git\s+commit\s+-a.*-m\s",
+    r"git\s+push\s+--force",
+    r"subprocess\.run\(\[.*git.*commit",
+    r"os\.system\(.*git.*commit",
 ]
 
 # 允许的 advisory 模式（建议性，非强制）
 ADVISORY_PATTERNS = [
-    r'print\(.*git\s+commit',
-    r'log.*suggestion',
-    r'review.*before.*commit',
+    r"print\(.*git\s+commit",
+    r"log.*suggestion",
+    r"review.*before.*commit",
 ]
 
 
@@ -35,7 +35,16 @@ def main() -> int:
     for py_file in sorted(REPO_ROOT.rglob("*.py")):
         rel = py_file.relative_to(REPO_ROOT)
         # 跳过无关目录
-        skip_dirs = {".venv", "__pycache__", "node_modules", "build", ".git", "_archived", "tests", "test"}
+        skip_dirs = {
+            ".venv",
+            "__pycache__",
+            "node_modules",
+            "build",
+            ".git",
+            "_archived",
+            "tests",
+            "test",
+        }
         # 也跳过 tests/ 目录
         if "tests" in rel.parts:
             continue
@@ -49,7 +58,7 @@ def main() -> int:
         for pattern in AUTO_APPLY_PATTERNS:
             for m in re.finditer(pattern, text, re.IGNORECASE):
                 # 检查是否在注释或 advisory 上下文中
-                line = text[:m.start()].count("\n") + 1
+                line = text[: m.start()].count("\n") + 1
                 violations.append(f"  {rel}:{line} — {m.group()[:60]}")
                 checked += 1
 

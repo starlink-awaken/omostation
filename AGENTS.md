@@ -20,6 +20,10 @@ Before editing:
    - **Proactive Context Synthesis**: System prompt dynamically receives `<mof_architecture_guardrails>` for the active domain/layer.
    - **One-Shot Self-Healing**: Violations return structured diagnostic envelopes containing `suggested_patch` code recipes.
    - **CLI & FastMCP Tools**: Use `ecos-constraint explain <rule_id>`, `ecos-constraint audit`, `ecos-constraint eval`, `ecos-constraint drift`, or FastMCP `runtime_governance_preflight` / `runtime_governance_guardrails` / `runtime_governance_explain`.
+10. **Workspace × Documents Dual-Plane Governance (ADR-0191)** — Physical and architectural decoupling of Content/Truth (`~/Documents`) and Engineering/Compute (`~/Workspace`).
+   - **Plane Separation Law**: `Documents` stores pure domain truth, SOPs, facts (`_entities/facts/`), and attachments. Prohibits executable scripts (`E-DOC-001` / `X4-C15`) and runtime dependency/cache directories (`E-DOC-002` / `X4-C16`). `Workspace` stores code, CLIs, MCP servers, daemons, and CI gates.
+   - **Cockpit Documents Gateways**: Multi-client IDEs (Zed, Cursor, Codex, Claude Desktop) mount isolated, read-only/append-safe Documents MCP services with explicit domain scoping.
+   - **CLI & FastMCP Tools**: `ecos-constraint documents audit [path]`, `ecos-constraint documents guardrail [--domain <dom>]`, `ecos-constraint documents sync-clients`, and FastMCP `runtime_documents_guardrails` / `runtime_documents_audit`.
 
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
 

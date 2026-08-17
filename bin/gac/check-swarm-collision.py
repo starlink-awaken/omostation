@@ -11,7 +11,6 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
 
 import yaml
 
@@ -25,7 +24,7 @@ def check_swarm_collision() -> int:
         return 0
 
     try:
-        with open(ACTIVE_NODES_PATH, "r", encoding="utf-8") as f:
+        with open(ACTIVE_NODES_PATH, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
             nodes = data.get("nodes", [])
     except Exception:
@@ -37,7 +36,7 @@ def check_swarm_collision() -> int:
 
     # 获取当前 staged 或修改的文件列表
     # 如果处于并发重叠状态，给出 Warning/Fail 检查
-    print(f"═══ Swarm Collision Hard Check ═══")
+    print("═══ Swarm Collision Hard Check ═══")
     print(f"  • 当前 Agent 标识: {current_agent}")
     print(f"  • 检测到在线 Agent 节点数: {len(other_nodes)} 个")
     for n in other_nodes:

@@ -230,7 +230,12 @@ def main() -> int:
             r["fix"] = fix_msg
 
     if args.json:
-        print(json.dumps({"results": results, "diverged": len(diverged), "behind": len(behind)}, indent=2))
+        print(
+            json.dumps(
+                {"results": results, "diverged": len(diverged), "behind": len(behind)},
+                indent=2,
+            )
+        )
     else:
         for r in results:
             status = r["status"]
@@ -262,10 +267,7 @@ def main() -> int:
 
     if diverged:
         if not args.json:
-            print(
-                f"\n  {len(diverged)} DIVERGED - root pointer targets side branch, "
-                "code may be invisible!"
-            )
+            print(f"\n  {len(diverged)} DIVERGED - root pointer targets side branch, code may be invisible!")
             if not args.fix and not args.apply:
                 print("  Run --fix for fix suggestions, --fix --apply to execute")
         return 1
@@ -276,11 +278,7 @@ def main() -> int:
         return 1
 
     if not args.json:
-        print(
-            "\n  ALL ALIGNED"
-            if not behind
-            else f"\n  No divergence ({len(behind)} behind, non-blocking)"
-        )
+        print("\n  ALL ALIGNED" if not behind else f"\n  No divergence ({len(behind)} behind, non-blocking)")
     return 0
 
 

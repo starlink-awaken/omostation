@@ -8,6 +8,7 @@
 - test_prune_safe_no_orphan: 无 orphan 时 prune 安全 (返回 0)
 - test_prune_safe_no_git: 非 git 目录 prune 不崩 (返回 1, 容错)
 """
+
 import shutil
 import subprocess
 import sys

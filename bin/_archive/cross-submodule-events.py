@@ -21,7 +21,6 @@ import time
 from collections import Counter
 from pathlib import Path
 
-
 # kind → 路由 (P80 R2 路由表)
 ROUTES = {
     "governance_alert": "ecos:audit-check",
@@ -55,9 +54,7 @@ def load_events(log: Path) -> list[dict]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P80: 跨子仓 omo event 联动订阅器"
-    )
+    parser = argparse.ArgumentParser(description="P80: 跨子仓 omo event 联动订阅器")
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--kind", help="仅显示指定 kind 事件")
     parser.add_argument("--stats", action="store_true", help="仅统计")

@@ -9,11 +9,12 @@
     python3 bin/ssot/sync-mcptool-impl.py --dry-run  # 预览变更
     python3 bin/ssot/sync-mcptool-impl.py             # 真同步 (写文件)
 """
+
 from __future__ import annotations
 
 import argparse
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -38,8 +39,13 @@ def load_declared() -> dict[str, Path]:
 def load_implemented() -> set[str]:
     """跑 cockpit mcp --list-tools 解析 tool_name."""
     cmd = [
-        "uv", "run", "--project", str(REPO / "projects/cockpit"),
-        "cockpit", "mcp", "--list-tools",
+        "uv",
+        "run",
+        "--project",
+        str(REPO / "projects/cockpit"),
+        "cockpit",
+        "mcp",
+        "--list-tools",
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(REPO), timeout=60)
     tools: set[str] = set()
@@ -55,7 +61,7 @@ def load_implemented() -> set[str]:
 def gen_payload(tool_name: str) -> dict:
     """生成 MCPTOOL yaml 内容 (照 MCPTOOL-COCKPIT-cards_check 模板)."""
     # 单次取 now 避免午夜边界 created 跟 timestamp 错位
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     now_date = now.strftime("%Y-%m-%d")
     now_ts = now.strftime("%Y-%m-%dT00:00:00Z")
     return {

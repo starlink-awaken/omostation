@@ -33,17 +33,17 @@ def constraint_to_owl_class(constraint: dict) -> str:
     name = constraint.get("name", cid).replace("-", "_").replace(".", "_")
     return (
         f'  <owl:Class rdf:about="#{cid}">\n'
-        f'    <rdfs:label>{name}</rdfs:label>\n'
-        f'    <rdfs:comment>{constraint.get("description", "")}</rdfs:comment>\n'
-        f'  </owl:Class>\n'
+        f"    <rdfs:label>{name}</rdfs:label>\n"
+        f"    <rdfs:comment>{constraint.get('description', '')}</rdfs:comment>\n"
+        f"  </owl:Class>\n"
         f'  <owl:Class rdf:about="#ConstraintL0"/>\n'
         f'  <rdfs:subClassOf rdf:resource="#ConstraintL0"/>'
-        if False else
-        f'  <owl:Class rdf:about="#{cid}">\n'
-        f'    <rdfs:label>{name}</rdfs:label>\n'
-        f'    <rdfs:comment>{constraint.get("description", "")}</rdfs:comment>\n'
+        if False
+        else f'  <owl:Class rdf:about="#{cid}">\n'
+        f"    <rdfs:label>{name}</rdfs:label>\n"
+        f"    <rdfs:comment>{constraint.get('description', '')}</rdfs:comment>\n"
         f'    <rdfs:subClassOf rdf:resource="#ConstraintL0"/>\n'
-        f'  </owl:Class>'
+        f"  </owl:Class>"
     )
 
 
@@ -61,8 +61,10 @@ def main() -> int:
     ap.add_argument("--emit", action="store_true", help="写出 OWL 文件")
     args = ap.parse_args()
     if not DERIVED.exists():
-        print(f"[WARN] 派生面未生成，先跑: cd projects/ecos && uv run python3 bin/gen-l0-constraints.py",
-              file=sys.stderr)
+        print(
+            "[WARN] 派生面未生成，先跑: cd projects/ecos && uv run python3 bin/gen-l0-constraints.py",
+            file=sys.stderr,
+        )
         return 1
     derived = yaml.safe_load(DERIVED.read_text(encoding="utf-8"))
     constraints = derived.get("constraints", [])

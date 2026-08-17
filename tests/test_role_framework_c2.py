@@ -3,6 +3,7 @@
 Verifies ADR-0236: multi-round negotiation + conflict resolution +
 task decomposition (role_framework C2 extension).
 """
+
 from __future__ import annotations
 
 import sys
@@ -12,7 +13,7 @@ _DELIVERY = Path(__file__).resolve().parent.parent / "bin" / "delivery"
 if str(_DELIVERY) not in sys.path:
     sys.path.insert(0, str(_DELIVERY))
 
-from role_framework import (  # noqa: E402
+from role_framework import (
     RoleMessage,
     decompose_into_subtasks,
     resolve_message_conflict,

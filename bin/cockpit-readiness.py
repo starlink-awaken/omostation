@@ -40,7 +40,9 @@ def main() -> int:
         description="P65: cockpit readiness wrapper (委派 bin/gac/governance-dashboard.py --readiness-summary)"
     )
     parser.add_argument(
-        "--format", choices=["json", "text"], default="json",
+        "--format",
+        choices=["json", "text"],
+        default="json",
         help="输出格式 (默认 json)",
     )
     parser.add_argument("--output", help="输出文件路径 (默认 stdout)")
@@ -52,7 +54,15 @@ def main() -> int:
         print(f"❌ {bin_tool} 不存在", file=sys.stderr)
         return 1
 
-    cmd = ["python3", str(bin_tool), "--root", str(workspace_root), "--readiness-summary", "--format", args.format]
+    cmd = [
+        "python3",
+        str(bin_tool),
+        "--root",
+        str(workspace_root),
+        "--readiness-summary",
+        "--format",
+        args.format,
+    ]
     if args.output:
         cmd.extend(["--output", args.output])
 

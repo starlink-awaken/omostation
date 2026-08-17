@@ -27,7 +27,11 @@ def _run_lint() -> tuple[int, str]:
     py = str(venv_py) if venv_py.exists() else sys.executable
     result = subprocess.run(
         [py, "-m", "omo.omo_lint", "yaml-bypass"],
-        cwd=ROOT, capture_output=True, text=True, timeout=60, check=False,
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
     )
     return result.returncode, (result.stdout + result.stderr)
 
@@ -61,9 +65,7 @@ class TestYamlBypassInvariant:
             text = path.read_text(encoding="utf-8")
             # Lightweight check: detect R1 (status without lifecycle_state) and
             # R2 (status='resolved' regardless of lifecycle).
-            has_status_line = any(
-                ln.strip().startswith("status:") for ln in text.splitlines()
-            )
+            has_status_line = any(ln.strip().startswith("status:") for ln in text.splitlines())
             has_lifecycle = "lifecycle_state:" in text
             if has_status_line and not has_lifecycle:
                 # R1: 越权
@@ -71,7 +73,6 @@ class TestYamlBypassInvariant:
             for ln in text.splitlines():
                 if "status:" in ln and "resolved" in ln:
                     offenders.append((path.name, "R2", ln.strip()))
-        assert offenders == [], (
-            f"发现 {len(offenders)} 处越权 status 字段:\n"
-            + "\n".join(f"  - {p}: {kind} {msg}" for p, kind, msg in offenders)
+        assert offenders == [], f"发现 {len(offenders)} 处越权 status 字段:\n" + "\n".join(
+            f"  - {p}: {kind} {msg}" for p, kind, msg in offenders
         )

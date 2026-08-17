@@ -39,14 +39,32 @@ def rank_corrections(drifts: list[dict]) -> list[dict]:
     for d in drifts:
         t = d.get("type", "unknown")
         if t == "constraint_count_mismatch":
-            corrections.append({"priority": "high", "type": t, "constraint": d.get("constraint"),
-                                "action": "重新生成派生面（gen-l0-constraints.py）"})
+            corrections.append(
+                {
+                    "priority": "high",
+                    "type": t,
+                    "constraint": d.get("constraint"),
+                    "action": "重新生成派生面（gen-l0-constraints.py）",
+                }
+            )
         elif t == "stage_missing":
-            corrections.append({"priority": "medium", "type": t, "constraint": d.get("constraint"),
-                                "action": f"补 M0 快照 stage {d.get('constraint')}"})
+            corrections.append(
+                {
+                    "priority": "medium",
+                    "type": t,
+                    "constraint": d.get("constraint"),
+                    "action": f"补 M0 快照 stage {d.get('constraint')}",
+                }
+            )
         else:
-            corrections.append({"priority": "low", "type": t, "constraint": d.get("constraint"),
-                                "action": "记录待审（人工确认）"})
+            corrections.append(
+                {
+                    "priority": "low",
+                    "type": t,
+                    "constraint": d.get("constraint"),
+                    "action": "记录待审（人工确认）",
+                }
+            )
     order = {"high": 0, "medium": 1, "low": 2}
     corrections.sort(key=lambda c: order.get(c["priority"], 3))
     return corrections
@@ -63,8 +81,13 @@ def main() -> int:
     drifts = json.loads(path.read_text(encoding="utf-8"))
     summary = analyze_drifts(drifts)
     corrections = rank_corrections(drifts)
-    print(json.dumps({"summary": summary, "corrections": corrections},
-                     ensure_ascii=False, indent=1))
+    print(
+        json.dumps(
+            {"summary": summary, "corrections": corrections},
+            ensure_ascii=False,
+            indent=1,
+        )
+    )
     return 1 if corrections else 0
 
 

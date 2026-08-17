@@ -20,6 +20,7 @@ shadow 语义: 文件锁 (.omo/_delivery/) 仍是权威判定源; 本 store 是�
     import coordination_store as cs
     cs.claim_resource("branch", "work/foo", owner="session-a", ttl_hours=24)
 """
+
 from __future__ import annotations
 
 import calendar
@@ -88,18 +89,14 @@ def _connect(*, automatic_backup: bool = True) -> sqlite3.Connection:
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
         except OSError as exc:
-            raise CoordinationStoreError(
-                f"cannot create coordination db dir: {exc}", db_path=str(path)
-            ) from exc
+            raise CoordinationStoreError(f"cannot create coordination db dir: {exc}", db_path=str(path)) from exc
     try:
         conn = sqlite3.connect(str(path), timeout=5.0, isolation_level=None)
     except sqlite3.Error as exc:
-        raise CoordinationStoreError(
-            f"cannot open coordination db: {exc}", db_path=str(path)
-        ) from exc
+        raise CoordinationStoreError(f"cannot open coordination db: {exc}", db_path=str(path)) from exc
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA busy_timeout = 5000")  # omlxc :1347 同款
-    conn.execute("PRAGMA journal_mode = WAL")   # omlxc :1349 同款
+    conn.execute("PRAGMA journal_mode = WAL")  # omlxc :1349 同款
     conn.execute("PRAGMA synchronous = NORMAL")
     if fresh:
         # 懒初始化兜底: 挂点首次调用可能没走 ensure_ready(); 幂等 DDL + 版本推进
@@ -109,7 +106,10 @@ def _connect(*, automatic_backup: bool = True) -> sqlite3.Connection:
             _backup_with_connection(conn, path, max_age_h=24.0, keep=3)
         except (CoordinationStoreError, OSError, sqlite3.Error) as exc:
             # shadow fallback 不能反噬主操作；显式 --backup 仍会抛错。
-            print(f"[coordination] automatic backup skipped: {exc}", file=__import__("sys").stderr)
+            print(
+                f"[coordination] automatic backup skipped: {exc}",
+                file=__import__("sys").stderr,
+            )
     return conn
 
 
@@ -186,7 +186,16 @@ SCHEMA_V1: dict[str, str] = {
 }
 
 MIGRATIONS: dict[int, list[str]] = {
-    1: [SCHEMA_V1[k] for k in ("claims", "claims_active", "agent_health", "messages", "shadow_events")],
+    1: [
+        SCHEMA_V1[k]
+        for k in (
+            "claims",
+            "claims_active",
+            "agent_health",
+            "messages",
+            "shadow_events",
+        )
+    ],
 }
 
 
@@ -237,8 +246,7 @@ def claim_resource(
             (resource_type, resource_id, now),
         )
         active = conn.execute(
-            "SELECT owner, token, claimed_at FROM claims "
-            "WHERE resource_type=? AND resource_id=? AND state='active'",
+            "SELECT owner, token, claimed_at FROM claims WHERE resource_type=? AND resource_id=? AND state='active'",
             (resource_type, resource_id),
         ).fetchone()
         if active is not None:
@@ -247,22 +255,24 @@ def claim_resource(
                 # 重取 (reused: true), 镜像同语义 — 顺延 TTL 返回既有 claim,
                 # token 不变 (不产生 mirror_drift 噪音, 不使旧 token 失效)
                 conn.execute(
-                    "UPDATE claims SET expires_at=? "
-                    "WHERE resource_type=? AND resource_id=? AND state='active'",
+                    "UPDATE claims SET expires_at=? WHERE resource_type=? AND resource_id=? AND state='active'",
                     (expires_hint, resource_type, resource_id),
                 )
                 conn.execute("COMMIT")
                 return Claim(
-                    resource_type=resource_type, resource_id=resource_id,
-                    owner=owner, token=active["token"],
-                    claimed_at=active["claimed_at"], expires_at=expires_hint,
+                    resource_type=resource_type,
+                    resource_id=resource_id,
+                    owner=owner,
+                    token=active["token"],
+                    claimed_at=active["claimed_at"],
+                    expires_at=expires_hint,
                 )
             conn.execute("ROLLBACK")
             return None
-        token = (conn.execute(
+        token = conn.execute(
             "SELECT COALESCE(MAX(token), 0) + 1 FROM claims WHERE resource_type=? AND resource_id=?",
             (resource_type, resource_id),
-        ).fetchone()[0])
+        ).fetchone()[0]
         conn.execute(
             "INSERT INTO claims (resource_type, resource_id, owner, token, state, claimed_at, expires_at) "
             "VALUES (?, ?, ?, ?, 'active', ?, ?)",
@@ -270,8 +280,12 @@ def claim_resource(
         )
         conn.execute("COMMIT")
         return Claim(
-            resource_type=resource_type, resource_id=resource_id,
-            owner=owner, token=token, claimed_at=now, expires_at=expires_hint,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            owner=owner,
+            token=token,
+            claimed_at=now,
+            expires_at=expires_hint,
         )
     finally:
         conn.close()
@@ -289,9 +303,12 @@ def active_claim(resource_type: str, resource_id: str) -> Claim | None:
         if row is None:
             return None
         return Claim(
-            resource_type=resource_type, resource_id=resource_id,
-            owner=row["owner"], token=row["token"],
-            claimed_at=row["claimed_at"], expires_at=row["expires_at"],
+            resource_type=resource_type,
+            resource_id=resource_id,
+            owner=row["owner"],
+            token=row["token"],
+            claimed_at=row["claimed_at"],
+            expires_at=row["expires_at"],
         )
     finally:
         conn.close()
@@ -303,16 +320,13 @@ def release_resource(resource_type: str, resource_id: str, owner: str, token: in
     try:
         conn.execute("BEGIN IMMEDIATE")
         row = conn.execute(
-            "SELECT id, owner, token FROM claims "
-            "WHERE resource_type=? AND resource_id=? AND state='active'",
+            "SELECT id, owner, token FROM claims WHERE resource_type=? AND resource_id=? AND state='active'",
             (resource_type, resource_id),
         ).fetchone()
         if row is None or row["owner"] != owner or (token is not None and row["token"] != token):
             conn.execute("ROLLBACK")
             return False
-        conn.execute(
-            "UPDATE claims SET state='released' WHERE id=?", (row["id"],)
-        )
+        conn.execute("UPDATE claims SET state='released' WHERE id=?", (row["id"],))
         conn.execute("COMMIT")
         return True
     finally:
@@ -357,11 +371,26 @@ def check_fencing(
         state = latest["state"] if latest is not None else "missing"
         return Verdict(False, f"claim is {state}, not active", current, local_token)
     if active["expires_at"] and active["expires_at"] <= _utc_now():
-        return Verdict(False, f"active claim expired at {active['expires_at']}", current, local_token)
+        return Verdict(
+            False,
+            f"active claim expired at {active['expires_at']}",
+            current,
+            local_token,
+        )
     if active["owner"] != owner:
-        return Verdict(False, f"owner mismatch: active={active['owner']} local={owner}", current, local_token)
+        return Verdict(
+            False,
+            f"owner mismatch: active={active['owner']} local={owner}",
+            current,
+            local_token,
+        )
     if active["token"] != local_token:
-        return Verdict(False, f"token mismatch: active={active['token']} local={local_token}", current, local_token)
+        return Verdict(
+            False,
+            f"token mismatch: active={active['token']} local={local_token}",
+            current,
+            local_token,
+        )
     return Verdict(True, "active owner and token match", current, local_token)
 
 
@@ -377,9 +406,14 @@ def heartbeat(agent_id: str, status: str, source: str = "tick", detail: dict | N
             "VALUES (?, ?, ?, ?, ?, ?) "
             "ON CONFLICT(agent_id) DO UPDATE SET last_seen=excluded.last_seen, "
             "status=excluded.status, source=excluded.source, detail_json=excluded.detail_json",
-            (agent_id, _utc_now(), status, source,
-             json.dumps(detail, ensure_ascii=False) if detail else None,
-             STALE_AFTER_TICKS * 300),  # tick 5min × 3
+            (
+                agent_id,
+                _utc_now(),
+                status,
+                source,
+                json.dumps(detail, ensure_ascii=False) if detail else None,
+                STALE_AFTER_TICKS * 300,
+            ),  # tick 5min × 3
         )
     finally:
         conn.close()
@@ -390,9 +424,7 @@ def stale_agents(now_ts: float | None = None) -> list[dict]:
     now_ts = now_ts if now_ts is not None else time.time()
     conn = _connect()
     try:
-        rows = conn.execute(
-            "SELECT agent_id, last_seen, stale_after FROM agent_health"
-        ).fetchall()
+        rows = conn.execute("SELECT agent_id, last_seen, stale_after FROM agent_health").fetchall()
     finally:
         conn.close()
     out: list[dict] = []
@@ -418,16 +450,23 @@ def emit_shadow_event(
         conn = _connect()
         try:
             conn.execute(
-                "INSERT INTO shadow_events (ts, kind, resource_type, resource_id, detail_json) "
-                "VALUES (?, ?, ?, ?, ?)",
-                (_utc_now(), kind, resource_type, resource_id,
-                 json.dumps(detail, ensure_ascii=False) if detail else None),
+                "INSERT INTO shadow_events (ts, kind, resource_type, resource_id, detail_json) VALUES (?, ?, ?, ?, ?)",
+                (
+                    _utc_now(),
+                    kind,
+                    resource_type,
+                    resource_id,
+                    json.dumps(detail, ensure_ascii=False) if detail else None,
+                ),
             )
             return True
         finally:
             conn.close()
-    except Exception as exc:  # noqa: BLE001 — 观察面尽力而为
-        print(f"[coordination] shadow event drop: {kind}: {exc}", file=__import__('sys').stderr)
+    except Exception as exc:
+        print(
+            f"[coordination] shadow event drop: {kind}: {exc}",
+            file=__import__("sys").stderr,
+        )
         return False
 
 
@@ -484,9 +523,7 @@ def maybe_backup(max_age_h: float = 24.0, keep: int = 3) -> Path | None:
     path = db_path()
     conn = _connect(automatic_backup=False)
     try:
-        return _backup_with_connection(
-            conn, path, max_age_h=max_age_h, keep=keep
-        )
+        return _backup_with_connection(conn, path, max_age_h=max_age_h, keep=keep)
     finally:
         conn.close()
 
@@ -498,14 +535,16 @@ def snapshot() -> dict:
     """只读快照: claims/agent_health/messages + shadow 事件计数."""
     conn = _connect()
     try:
-        claims = [dict(r) for r in conn.execute(
-            "SELECT resource_type, resource_id, owner, token, state, claimed_at, expires_at "
-            "FROM claims ORDER BY resource_type, resource_id"
-        )]
+        claims = [
+            dict(r)
+            for r in conn.execute(
+                "SELECT resource_type, resource_id, owner, token, state, claimed_at, expires_at "
+                "FROM claims ORDER BY resource_type, resource_id"
+            )
+        ]
         health = []
         for row in conn.execute(
-            "SELECT agent_id, last_seen, status, source, stale_after, detail_json "
-            "FROM agent_health ORDER BY agent_id"
+            "SELECT agent_id, last_seen, status, source, stale_after, detail_json FROM agent_health ORDER BY agent_id"
         ):
             item = dict(row)
             detail_raw = item.pop("detail_json", None)
@@ -517,12 +556,13 @@ def snapshot() -> dict:
             if isinstance(attestation, dict):
                 item["runtime_attestation"] = attestation
             health.append(item)
-        messages = [dict(r) for r in conn.execute(
-            "SELECT id, ts, from_agent, to_agent, msg_type, consumed_at FROM messages ORDER BY id DESC LIMIT 20"
-        )]
-        events = {r[0]: r[1] for r in conn.execute(
-            "SELECT kind, COUNT(*) FROM shadow_events GROUP BY kind"
-        )}
+        messages = [
+            dict(r)
+            for r in conn.execute(
+                "SELECT id, ts, from_agent, to_agent, msg_type, consumed_at FROM messages ORDER BY id DESC LIMIT 20"
+            )
+        ]
+        events = {r[0]: r[1] for r in conn.execute("SELECT kind, COUNT(*) FROM shadow_events GROUP BY kind")}
     finally:
         conn.close()
     return {

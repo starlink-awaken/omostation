@@ -6,7 +6,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 PYRIGHT_SCRIPT = ROOT / "bin" / "sweep" / "pyright.py"
 NESTED_WITH_SCRIPT = ROOT / "bin" / "sweep" / "nested-with.py"
@@ -170,9 +169,7 @@ def test_pyright_suppression_gate_passes_clean_run(tmp_path: Path) -> None:
     # 行尾反斜杠续行: 工具必须跳过, 不产生 suppression
     source.write_text("value = missing " + chr(92) + "\n" + "    + 1" + "\n")
     report = tmp_path / "report.json"
-    report.write_text(
-        json.dumps({"generalDiagnostics": [diagnostic(source, 0, "reportUndefinedVariable")]})
-    )
+    report.write_text(json.dumps({"generalDiagnostics": [diagnostic(source, 0, "reportUndefinedVariable")]}))
 
     result = run_pyright(report, "--suppression-gate")
 

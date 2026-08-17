@@ -15,6 +15,7 @@ Usage:
   python3 bin/delivery/emergence_cli.py clear-kill
   python3 bin/delivery/emergence_cli.py measure
 """
+
 from __future__ import annotations
 
 import argparse

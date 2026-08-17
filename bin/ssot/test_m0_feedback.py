@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from m0_feedback import m0_drift
@@ -20,7 +20,11 @@ def test_detect_missing_stage():
 
 
 def test_detect_constraint_count_mismatch():
-    snap = {"snapshot": {"stages": [{"id": s} for s in EXPECTED_STAGES],
-                         "constraint_count": 100}}
+    snap = {
+        "snapshot": {
+            "stages": [{"id": s} for s in EXPECTED_STAGES],
+            "constraint_count": 100,
+        }
+    }
     drifts = m0_drift(snap, derived_count=137)
     assert any(d["type"] == "constraint_count_mismatch" for d in drifts)

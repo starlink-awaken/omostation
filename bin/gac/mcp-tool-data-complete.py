@@ -44,9 +44,7 @@ def _parse_simple_yaml(content: str) -> dict:
             if m:
                 key = m.group(1)
                 val = m.group(2).strip()
-                if val.startswith('"') and val.endswith('"'):
-                    val = val[1:-1]
-                elif val.startswith("'") and val.endswith("'"):
+                if val.startswith('"') and val.endswith('"') or val.startswith("'") and val.endswith("'"):
                     val = val[1:-1]
                 result[key] = val
             continue
@@ -55,9 +53,7 @@ def _parse_simple_yaml(content: str) -> dict:
         if m:
             key = m.group(1)
             val = m.group(2).strip()
-            if val.startswith('"') and val.endswith('"'):
-                val = val[1:-1]
-            elif val.startswith("'") and val.endswith("'"):
+            if val.startswith('"') and val.endswith('"') or val.startswith("'") and val.endswith("'"):
                 val = val[1:-1]
             result[key] = val
     return result
@@ -116,8 +112,12 @@ def _derive_server(mcp_id: str, props: dict) -> str:
     if m:
         return m.group(1).lower()  # COCKPIT → cockpit
     # 4. 特殊映射
-    special = {"GBRAIN": "gbrain", "MODEL-DRIVEN": "model-driven",
-               "L4-KERNEL": "l4-kernel", "FORGE": "forge"}
+    special = {
+        "GBRAIN": "gbrain",
+        "MODEL-DRIVEN": "model-driven",
+        "L4-KERNEL": "l4-kernel",
+        "FORGE": "forge",
+    }
     for prefix, server in special.items():
         if mcp_id.startswith(f"MCPTOOL-{prefix}"):
             return server

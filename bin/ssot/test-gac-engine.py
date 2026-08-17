@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
 """TDD test script for validation of gac-local-gate.py YAML parsing and engine compliance."""
-import os
-import sys
-import yaml
+
 import subprocess
+import sys
 from pathlib import Path
+
+import yaml
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 # bin rationalize: gate lives under bin/gac/ (ADR-0181 era layout)
 GAC_GATE_PY = WORKSPACE / "bin" / "gac" / "gac-local-gate.py"
-SGF_POLICY_YAML = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
+SGF_POLICY_YAML = (
+    WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
+)
 
 
 def main() -> int:
     print("🧪 Running TDD tests for SGF-v1 gac-local-gate.py engine...")
-    
+
     if not GAC_GATE_PY.is_file():
         print(f"❌ Error: gac-local-gate.py not found at: {GAC_GATE_PY}")
         return 1
-        
+
     if not SGF_POLICY_YAML.is_file():
         print(f"❌ Error: sgf-policy.yaml metadata registry not found at: {SGF_POLICY_YAML}")
         return 1
@@ -43,7 +46,7 @@ def main() -> int:
             [sys.executable, str(GAC_GATE_PY), "--help"],
             capture_output=True,
             text=True,
-            check=False
+            check=False,
         )
         if res.returncode != 0:
             print(f"❌ Error: gac-local-gate.py --help execution failed: {res.stderr}")

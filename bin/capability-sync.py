@@ -20,10 +20,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -39,11 +38,12 @@ GENERATED_HEADER: Final = """# GENERATED — 勿手编, make capability-sync 刷
 
 MAX_DESC_LEN: Final = 120
 
+
 # ── 类型定义 ─────────────────────────────────────────────────────────────────────
 class Capability:
     """能力条目"""
 
-    __slots__ = ("id", "source", "name", "description", "invoke")
+    __slots__ = ("description", "id", "invoke", "name", "source")
 
     def __init__(
         self,
@@ -77,6 +77,7 @@ class Capability:
 
 
 # ── 扫描函数 ─────────────────────────────────────────────────────────────────────
+
 
 def scan_skill_frontmatter(skill_dir: Path, source_prefix: str) -> list[Capability]:
     """
@@ -174,7 +175,12 @@ def scan_orca_skills() -> list[Capability]:
                     invoke="orca skills get <name>",
                 )
             )
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, FileNotFoundError, OSError):
+    except (
+        subprocess.TimeoutExpired,
+        json.JSONDecodeError,
+        FileNotFoundError,
+        OSError,
+    ):
         print("[WARN] orca 不可达，跳过 orca 源", file=sys.stderr)
         return capabilities
 
@@ -215,6 +221,7 @@ def scan_mcp_servers(claude_json_path: Path) -> list[Capability]:
 
 # ── 主流程 ───────────────────────────────────────────────────────────────────────
 
+
 def scan_all_sources(workspace_root: Path) -> list[Capability]:
     """
     扫描四个源并合并
@@ -254,10 +261,17 @@ def generate_registry(capabilities: list[Capability], output_path: Path) -> None
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(UTC).isoformat()
     header = GENERATED_HEADER.format(timestamp=timestamp)
 
-    lines = [header, "generated_at:", f'  "{timestamp}"', "generator:", "  capability-sync/v1", "capabilities:"]
+    lines = [
+        header,
+        "generated_at:",
+        f'  "{timestamp}"',
+        "generator:",
+        "  capability-sync/v1",
+        "capabilities:",
+    ]
 
     for cap in sorted(capabilities, key=lambda c: (c.source, c.name.lower())):
         lines.append(f'  - id: "{cap.id}"')
@@ -337,10 +351,7 @@ def check_drift(existing: list[Capability], current: list[Capability]) -> bool:
         key = f"{cap.source}:{cap.name.lower()}"
         if key in existing_dict:
             existing_cap = existing_dict[key]
-            if (
-                cap.description != existing_cap.description
-                or cap.invoke != existing_cap.invoke
-            ):
+            if cap.description != existing_cap.description or cap.invoke != existing_cap.invoke:
                 return True
 
     return False
@@ -351,14 +362,11 @@ def find_capabilities(capabilities: list[Capability], query: str) -> list[Capabi
     模糊查找（name/description 子串，大小写不敏感）
     """
     query_lower = query.lower()
-    return [
-        c
-        for c in capabilities
-        if query_lower in c.name.lower() or query_lower in c.description.lower()
-    ]
+    return [c for c in capabilities if query_lower in c.name.lower() or query_lower in c.description.lower()]
 
 
 # ── CLI 入口 ─────────────────────────────────────────────────────────────────────
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Capability Registry Generator")
@@ -417,7 +425,10 @@ def main() -> int:
         current = scan_all_sources(args.workspace_root)
 
         if check_drift(existing, current):
-            print("❌ 检测到 capability registry 漂移，请运行 make capability-sync 修复", file=sys.stderr)
+            print(
+                "❌ 检测到 capability registry 漂移，请运行 make capability-sync 修复",
+                file=sys.stderr,
+            )
             return 1
         else:
             print("✅ capability registry 无漂移")

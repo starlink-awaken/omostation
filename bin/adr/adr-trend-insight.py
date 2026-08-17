@@ -54,16 +54,18 @@ def load_adrs(decisions_dir: Path) -> list[dict]:
         # 从 commit 历史取首次/最后提交时间
         first_seen, last_seen = _git_dates(f)
 
-        adrs.append({
-            "number": number,
-            "file": f.name,
-            "status": fm.get("status", "unknown"),
-            "lifecycle": fm.get("lifecycle", "unknown"),
-            "last_reviewed": fm.get("last-reviewed", "unknown"),
-            "first_seen": first_seen,
-            "last_seen": last_seen,
-            "lines": content.count("\n") + 1,
-        })
+        adrs.append(
+            {
+                "number": number,
+                "file": f.name,
+                "status": fm.get("status", "unknown"),
+                "lifecycle": fm.get("lifecycle", "unknown"),
+                "last_reviewed": fm.get("last-reviewed", "unknown"),
+                "first_seen": first_seen,
+                "last_seen": last_seen,
+                "lines": content.count("\n") + 1,
+            }
+        )
     return adrs
 
 
@@ -74,13 +76,17 @@ def _git_dates(file_path: Path) -> tuple[str, str]:
         # 首次
         r1 = subprocess.run(
             ["git", "log", "--reverse", "--format=%cI", "--", rel],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         first = r1.stdout.strip().split("\n")[0] if r1.stdout.strip() else "?"
         # 最后
         r2 = subprocess.run(
             ["git", "log", "-1", "--format=%cI", "--", rel],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         last = r2.stdout.strip() if r2.stdout.strip() else "?"
     except Exception:

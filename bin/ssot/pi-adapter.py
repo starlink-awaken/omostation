@@ -15,9 +15,8 @@ import argparse
 import json
 import shutil
 import subprocess
-from pathlib import Path
 
-from _shared import ROOT, utc_now
+from _shared import utc_now
 
 
 def is_pi_available() -> bool:
@@ -49,7 +48,10 @@ Evaluate and respond with JSON: {{"verdict": "approve|reject|needs_human", "conf
     try:
         result = subprocess.run(
             ["pi", "--no-color", "-p", prompt],
-            capture_output=True, text=True, timeout=30, check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
         )
         if result.returncode == 0 and result.stdout:
             # Try to parse PI output as JSON
@@ -59,22 +61,47 @@ Evaluate and respond with JSON: {{"verdict": "approve|reject|needs_human", "conf
                 except json.JSONDecodeError:
                     continue
             # If no JSON found, return raw output
-            return {"status": "evaluated", "verdict": "needs_human", "confidence": 0.6, "reasoning": result.stdout[-200:], "ts": utc_now()}
-    except Exception as exc:
+            return {
+                "status": "evaluated",
+                "verdict": "needs_human",
+                "confidence": 0.6,
+                "reasoning": result.stdout[-200:],
+                "ts": utc_now(),
+            }
+    except Exception:
         pass
 
-    return {"status": "error", "verdict": "needs_human", "confidence": 0.3, "reasoning": "PI evaluation failed", "ts": utc_now()}
+    return {
+        "status": "error",
+        "verdict": "needs_human",
+        "confidence": 0.3,
+        "reasoning": "PI evaluation failed",
+        "ts": utc_now(),
+    }
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="check PI availability")
-    parser.add_argument("--evaluate", default=None, help="JSON with question+context for deep evaluation")
+    parser.add_argument(
+        "--evaluate",
+        default=None,
+        help="JSON with question+context for deep evaluation",
+    )
     args = parser.parse_args(argv)
 
     if args.check:
         available = is_pi_available()
-        print(json.dumps({"pi_available": available, "status": "ready" if available else "not_installed"}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "pi_available": available,
+                    "status": "ready" if available else "not_installed",
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 0 if available else 1
 
     if args.evaluate:

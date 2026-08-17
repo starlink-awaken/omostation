@@ -405,14 +405,14 @@ class WebhookAlertChannel(AlertChannel):
             }
 
             data = json.dumps(payload).encode("utf-8")
-            req = urllib.request.Request(  # noqa: S310
+            req = urllib.request.Request(
                 self.url,
                 data=data,
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
 
-            with urllib.request.urlopen(req, timeout=self.timeout) as response:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=self.timeout) as response:
                 return cast("bool", response.status == 200)
 
         except (OSError, urllib.error.URLError, ValueError, TypeError) as e:  # type: ignore[reportAttributeAccessIssue]

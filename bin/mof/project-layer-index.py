@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate the project layer index digest from docs/project-registry.yaml."""
+
 from __future__ import annotations
 
 import argparse
@@ -8,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 REGISTRY = WORKSPACE / "docs/project-registry.yaml"
@@ -66,7 +66,10 @@ def main() -> int:
         current = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
         expected = digest + "\n"
         if current != expected:
-            print(f"stale generated digest: {OUTPUT.relative_to(WORKSPACE)}", file=sys.stderr)
+            print(
+                f"stale generated digest: {OUTPUT.relative_to(WORKSPACE)}",
+                file=sys.stderr,
+            )
             print("run: python3 bin/mof/project-layer-index.py --write", file=sys.stderr)
             return 1
         print(f"fresh: {OUTPUT.relative_to(WORKSPACE)}")

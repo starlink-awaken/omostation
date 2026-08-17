@@ -19,7 +19,7 @@ import argparse
 import json
 import sys
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -56,8 +56,8 @@ def target_age_days(target: str, root: Path) -> tuple[int | None, datetime | Non
     if full.exists():
         try:
             mtime = full.stat().st_mtime
-            dt = datetime.fromtimestamp(mtime, tz=timezone.utc)
-            days = (datetime.now(tz=timezone.utc) - dt).days
+            dt = datetime.fromtimestamp(mtime, tz=UTC)
+            days = (datetime.now(tz=UTC) - dt).days
             return (days, dt)
         except Exception:
             return (None, None)
@@ -68,20 +68,18 @@ def target_age_days(target: str, root: Path) -> tuple[int | None, datetime | Non
     latest = max((m.stat().st_mtime for m in matches if m.exists()), default=None)
     if latest is None:
         return (None, None)
-    dt = datetime.fromtimestamp(latest, tz=timezone.utc)
-    days = (datetime.now(tz=timezone.utc) - dt).days
+    dt = datetime.fromtimestamp(latest, tz=UTC)
+    days = (datetime.now(tz=UTC) - dt).days
     return (days, dt)
 
 
 def correlate(rules: list[dict], drift_reports: list[dict], root: Path, now: datetime) -> dict:
     """分析每条 X2 rule 的状态 + drift 关联."""
-    now = now or datetime.now(tz=timezone.utc)
+    now = now or datetime.now(tz=UTC)
     rule_analyses = []
 
     # 全 drift 提及计数 (按关键词匹配)
-    drift_text = " ".join(
-        json.dumps(r, ensure_ascii=False) for r in drift_reports
-    )
+    drift_text = " ".join(json.dumps(r, ensure_ascii=False) for r in drift_reports)
 
     for rule in rules:
         rid = rule.get("rule_id", "")
@@ -110,16 +108,18 @@ def correlate(rules: list[dict], drift_reports: list[dict], root: Path, now: dat
         else:
             status = "fresh"
 
-        rule_analyses.append({
-            "rule_id": rid,
-            "target": target,
-            "threshold_days": threshold,
-            "action": action,
-            "age_days": days,
-            "mtime": mtime.isoformat() if mtime else None,
-            "status": status,
-            "drift_keyword_hits": drift_hits,
-        })
+        rule_analyses.append(
+            {
+                "rule_id": rid,
+                "target": target,
+                "threshold_days": threshold,
+                "action": action,
+                "age_days": days,
+                "mtime": mtime.isoformat() if mtime else None,
+                "status": status,
+                "drift_keyword_hits": drift_hits,
+            }
+        )
 
     # 状态统计
     by_status = Counter(a["status"] for a in rule_analyses)
@@ -152,7 +152,7 @@ def main() -> int:
 
     rules = load_rules(root / args.rules)
     drift = parse_drift_files(root / args.drift_dir)
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=UTC)
     result = correlate(rules, drift, root, now)
 
     if args.json:
@@ -177,8 +177,10 @@ def main() -> int:
     print(f"  {'rule_id':<40s} {'status':<10s} {'age':>5s} {'threshold':>9s} {'drift':>5s}")
     for a in result["rules"]:
         age = f"{a['age_days']}d" if a["age_days"] is not None else "?"
-        print(f"  {a['rule_id']:<40s} {a['status']:<10s} {age:>5s} "
-              f"{a['threshold_days']:>8d}d {a['drift_keyword_hits']:>5d}")
+        print(
+            f"  {a['rule_id']:<40s} {a['status']:<10s} {age:>5s} "
+            f"{a['threshold_days']:>8d}d {a['drift_keyword_hits']:>5d}"
+        )
 
     # 建议
     print()

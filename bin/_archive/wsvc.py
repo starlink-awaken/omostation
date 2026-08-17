@@ -53,13 +53,13 @@ def cmd_ls(args) -> int:
         print(f"  {mark} {s['id']:<42} {s['kind']:<8} {' '.join(tags)}{res}{why}")
     print()
     hc = v.get("health_counts", {})
-    print(_c(f"● 健康: {hc.get('healthy',0)} 健康 · "
-             f"{hc.get('degraded',0)} 假活着 · {hc.get('down',0)} 未运行", "b"))
+    print(_c(f"● 健康: {hc.get('healthy', 0)} 健康 · {hc.get('degraded', 0)} 假活着 · {hc.get('down', 0)} 未运行", "b"))
     print(_c("● 统计", "b"))
-    print(f"  launchd {c['launchd_running']}/{c['launchd']} 在跑 · "
-          f"docker {c['docker_running']}/{c['docker']} 在跑")
-    print(f"  BOS 能力 {c['bos_capabilities']} · 代码能力 {c['code_capabilities']} · "
-          f"端口 登记{c['ports_registered']}/在跑{c['ports_live']}")
+    print(f"  launchd {c['launchd_running']}/{c['launchd']} 在跑 · docker {c['docker_running']}/{c['docker']} 在跑")
+    print(
+        f"  BOS 能力 {c['bos_capabilities']} · 代码能力 {c['code_capabilities']} · "
+        f"端口 登记{c['ports_registered']}/在跑{c['ports_live']}"
+    )
     print(_c(f"  profile: {' · '.join(v['profiles'])}   (wsvc profile <名> up)", "d"))
     return 0
 
@@ -122,41 +122,44 @@ def cmd_doctor(args) -> int:
         print(_c("  ✅ 全绿:常驻服务在跑、端口无冲突", "g"))
         return 0
     for kind, detail in issues:
-        print(f"  {_c('⚠️','y')} {kind}: {detail}")
+        print(f"  {_c('⚠️', 'y')} {kind}: {detail}")
     print(_c(f"\n  共 {len(issues)} 项待处理", "y"))
     return 1
-
 
 
 def cmd_adopt(args) -> int:
     """把"在跑但未登记"的端口登记进 port-registry(只登记 workspace 相关的)。"""
     import yaml
+
     v = sv.collect()
     live = v["ports"]["live"]
     undoc = v["ports"]["undocumented"]
     # 只收 workspace 生态的进程, 不碰 WeChat/ClashX 等第三方
     OURS = ("python", "uv", "node", "bun", "com.docke", "lm\\x20stu", "lmlink")
-    cand = [(p, live.get(str(p), "")) for p in undoc
-            if any(live.get(str(p), "").lower().startswith(o) for o in OURS)]
+    cand = [(p, live.get(str(p), "")) for p in undoc if any(live.get(str(p), "").lower().startswith(o) for o in OURS)]
     if not cand:
-        print(_c("没有需要登记的 workspace 端口", "g")); return 0
+        print(_c("没有需要登记的 workspace 端口", "g"))
+        return 0
     print(_c(f"● 待登记 {len(cand)} 个(仅 workspace 生态):", "b"))
     for p, owner in cand:
         print(f"  :{p:<6} {owner}")
     if not args.apply:
-        print(_c("\n预览。确认后: wsvc adopt --apply", "d")); return 0
+        print(_c("\n预览。确认后: wsvc adopt --apply", "d"))
+        return 0
     f = os.path.expanduser("~/Workspace/protocols/port-registry.yaml")
     with open(f) as fh:
         docs = [d for d in yaml.safe_load_all(fh) if d]
     body = docs[-1]
     for p, owner in cand:
         body.setdefault("ports", {})[p] = {
-            "name": f"auto-{owner.lower().replace('\\x20','-')[:20]}-{p}",
-            "transport": "http", "status": "active",
+            "name": f"auto-{owner.lower().replace('\\x20', '-')[:20]}-{p}",
+            "transport": "http",
+            "status": "active",
             "note": f"wsvc adopt 自动登记(实际占用: {owner})",
         }
     import shutil
     import time
+
     shutil.copy2(f, f + ".bak-adopt-" + time.strftime("%H%M%S"))
     with open(f, "w") as fh:
         if len(docs) > 1:
@@ -175,7 +178,7 @@ def cmd_sync(args) -> int:
         print(_c("  ✅ 全绿", "g"))
         return 0
     for kind, n in sorted(r["by_kind"].items()):
-        print(f"  {_c('⚠️','y')} {kind}: {n}")
+        print(f"  {_c('⚠️', 'y')} {kind}: {n}")
     print(_c(f"  (deprecated 保留 {r.get('deprecated_kept', 0)} 条 — 属保留惯例,非问题)", "d"))
     if args.detail:
         print()
@@ -189,8 +192,7 @@ def cmd_sync(args) -> int:
 def cmd_logs(args) -> int:
     """直达服务日志(不用自己找路径)。"""
     v = sv.collect_full()
-    s = next((x for x in v["services"] if x["id"] == args.id or
-              x.get("name") == args.id), None)
+    s = next((x for x in v["services"] if x["id"] == args.id or x.get("name") == args.id), None)
     if not s:
         die_msg = f"找不到服务: {args.id}(wsvc ls 看可用)"
         print(_c(die_msg, "r"))
@@ -212,9 +214,9 @@ def cmd_logs(args) -> int:
         print()
     return 0
 
+
 def main() -> int:
-    ap = argparse.ArgumentParser(
-        prog="wsvc", description="workspace 服务控制面(与 cockpit /api/svc/* 同源)")
+    ap = argparse.ArgumentParser(prog="wsvc", description="workspace 服务控制面(与 cockpit /api/svc/* 同源)")
     sub = ap.add_subparsers(dest="cmd")
     p = sub.add_parser("ls", help="全服务视图(健康+资源)")
     p.add_argument("--profile", help="只看某场景")
@@ -233,11 +235,21 @@ def main() -> int:
     p.add_argument("-n", "--lines", type=int, default=40)
     p = sub.add_parser("sync", help="BOS↔服务↔端口 一致性校验")
     p.add_argument("--detail", action="store_true")
-    p=sub.add_parser("adopt", help="把在跑但未登记的 workspace 端口登记进 registry"); p.add_argument("--apply",action="store_true")
+    p = sub.add_parser("adopt", help="把在跑但未登记的 workspace 端口登记进 registry")
+    p.add_argument("--apply", action="store_true")
     args = ap.parse_args()
 
-    fn = {"ls": cmd_ls, "ports": cmd_ports, "up": cmd_action, "down": cmd_action,
-          "profile": cmd_profile, "doctor": cmd_doctor, "adopt": cmd_adopt, "sync": cmd_sync, "logs": cmd_logs}.get(args.cmd)
+    fn = {
+        "ls": cmd_ls,
+        "ports": cmd_ports,
+        "up": cmd_action,
+        "down": cmd_action,
+        "profile": cmd_profile,
+        "doctor": cmd_doctor,
+        "adopt": cmd_adopt,
+        "sync": cmd_sync,
+        "logs": cmd_logs,
+    }.get(args.cmd)
     if not fn:
         ap.print_help()
         return 0

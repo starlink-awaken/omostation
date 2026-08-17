@@ -33,7 +33,9 @@ def _command(*, returncode: int = 0, stdout: str = "ok", stderr: str = "") -> tu
     return (sys.executable, "-c", source)
 
 
-def test_run_check_preserves_producer_exit_code_and_prefixes_both_streams(tmp_path: Path) -> None:
+def test_run_check_preserves_producer_exit_code_and_prefixes_both_streams(
+    tmp_path: Path,
+) -> None:
     module = _load_module()
     output = io.StringIO()
     check = module.Check(
@@ -50,9 +52,7 @@ def test_run_check_preserves_producer_exit_code_and_prefixes_both_streams(tmp_pa
 
 
 @pytest.mark.parametrize("failed_key", ["gac", "hygiene", "ruff", "html", "yaml"])
-def test_suite_fails_closed_for_each_blocking_producer(
-    failed_key: str, tmp_path: Path
-) -> None:
+def test_suite_fails_closed_for_each_blocking_producer(failed_key: str, tmp_path: Path) -> None:
     module = _load_module()
     output = io.StringIO()
     checks = tuple(
@@ -71,7 +71,9 @@ def test_suite_fails_closed_for_each_blocking_producer(
     assert "全部 blocking checks 通过" not in output.getvalue()
 
 
-def test_suite_reports_green_only_when_every_blocking_check_passes(tmp_path: Path) -> None:
+def test_suite_reports_green_only_when_every_blocking_check_passes(
+    tmp_path: Path,
+) -> None:
     module = _load_module()
     output = io.StringIO()
     checks = (
@@ -85,10 +87,16 @@ def test_suite_reports_green_only_when_every_blocking_check_passes(tmp_path: Pat
     assert output.getvalue().count("✅ ci-local-fast: 全部 blocking checks 通过") == 1
 
 
-def test_ruff_baseline_allows_known_debt_and_reports_resolved_entries(tmp_path: Path) -> None:
+def test_ruff_baseline_allows_known_debt_and_reports_resolved_entries(
+    tmp_path: Path,
+) -> None:
     module = _load_module()
     baseline = {
-        ("projects/omo/src/omo/legacy.py", "F541", "f-string without any placeholders"): 2,
+        (
+            "projects/omo/src/omo/legacy.py",
+            "F541",
+            "f-string without any placeholders",
+        ): 2,
         ("projects/omo/src/omo/fixed.py", "E741", "Ambiguous variable name: `l`"): 1,
     }
     diagnostics = [
@@ -103,10 +111,18 @@ def test_ruff_baseline_allows_known_debt_and_reports_resolved_entries(tmp_path: 
 
     assert comparison.new == {}
     assert comparison.known == {
-        ("projects/omo/src/omo/legacy.py", "F541", "f-string without any placeholders"): 1
+        (
+            "projects/omo/src/omo/legacy.py",
+            "F541",
+            "f-string without any placeholders",
+        ): 1
     }
     assert comparison.resolved == {
-        ("projects/omo/src/omo/legacy.py", "F541", "f-string without any placeholders"): 1,
+        (
+            "projects/omo/src/omo/legacy.py",
+            "F541",
+            "f-string without any placeholders",
+        ): 1,
         ("projects/omo/src/omo/fixed.py", "E741", "Ambiguous variable name: `l`"): 1,
     }
 
@@ -121,9 +137,7 @@ def test_ruff_baseline_rejects_new_diagnostic(tmp_path: Path) -> None:
 
     comparison = module.compare_ruff_diagnostics([diagnostic], {}, root=tmp_path)
 
-    assert comparison.new == {
-        ("projects/omo/src/omo/new.py", "F821", "Undefined name `missing`"): 1
-    }
+    assert comparison.new == {("projects/omo/src/omo/new.py", "F821", "Undefined name `missing`"): 1}
     assert comparison.known == {}
     assert comparison.resolved == {}
 
@@ -151,7 +165,9 @@ diagnostics:
         module._load_ruff_baseline(baseline_path)
 
 
-def test_ruff_baseline_cannot_replace_an_approved_bucket_at_same_cap(tmp_path: Path) -> None:
+def test_ruff_baseline_cannot_replace_an_approved_bucket_at_same_cap(
+    tmp_path: Path,
+) -> None:
     module = _load_module()
     payload = yaml.safe_load(module.BASELINE_PATH.read_text(encoding="utf-8"))
     payload["diagnostics"][0]["path"] = "projects/omo/src/omo/replacement.py"

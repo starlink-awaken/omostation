@@ -14,11 +14,10 @@
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import subprocess
 import sys
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -31,7 +30,11 @@ def _run_evidence_smoke() -> dict:
     """运行 evidence-smoke.py 拿回 JSON 报告 (无副作用模式)."""
     result = subprocess.run(
         [sys.executable, str(EVIDENCE_SMOKE), "--quiet"],
-        cwd=ROOT, capture_output=True, text=True, timeout=120, check=False,
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
     )
     # evidence-smoke 不支持 --json, 走 quiet 模式后从最新 .omo/_delivery 读 JSON
     out_dir = ROOT / ".omo" / "_delivery" / "evidence-smoke"
@@ -56,21 +59,16 @@ class TestNoDeprecatedBosDeclarations:
 
     def test_deprecated_list_empty(self, report):
         # deprecated 列表 (URI + reason) 应为空
-        assert report["deprecated"] == [], (
-            f"deprecated URI 列表非空: {report['deprecated']}"
-        )
+        assert report["deprecated"] == [], f"deprecated URI 列表非空: {report['deprecated']}"
 
     def test_no_real_gap(self, report):
         # 真实鸿沟 = 0 (residuel deprecated 不算 gap)
         assert report["bos"]["gap"] == 0, (
-            f"真实 BOS 鸿沟出现: gap={report['bos']['gap']}, "
-            f"failure_buckets={report['bos'].get('failure_buckets')}"
+            f"真实 BOS 鸿沟出现: gap={report['bos']['gap']}, failure_buckets={report['bos'].get('failure_buckets')}"
         )
 
     def test_resolve_rate_complete(self, report):
-        assert report["bos"]["resolve_rate"] == 1.0, (
-            f"resolve rate 不满 100%: {report['bos']['resolve_rate']}"
-        )
+        assert report["bos"]["resolve_rate"] == 1.0, f"resolve rate 不满 100%: {report['bos']['resolve_rate']}"
 
     def test_declaration_count_matches_yaml(self, report):
         # 100 是 bos-services.yaml 的当前声明数; 若以后变更需同步
@@ -78,6 +76,7 @@ class TestNoDeprecatedBosDeclarations:
         if not bos_yaml.exists():
             pytest.skip("bos-services.yaml not found")
         import re
+
         yaml_count = len(re.findall(r"^\s+- uri:", bos_yaml.read_text(), re.MULTILINE))
         assert report["bos"]["declaration_count"] == yaml_count, (
             f"声明数 {report['bos']['declaration_count']} != yaml 实际 {yaml_count}"
@@ -90,7 +89,11 @@ class TestEvidenceSmokeCli:
     def test_quiet_mode_exits_zero(self):
         result = subprocess.run(
             [sys.executable, str(EVIDENCE_SMOKE), "--quiet"],
-            cwd=ROOT, capture_output=True, text=True, timeout=120, check=False,
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
         )
         assert result.returncode == 0, (
             f"evidence-smoke --quiet failed: rc={result.returncode}\n"
@@ -104,9 +107,7 @@ class TestEvidenceSmokeCli:
         assert expires is not None, "deprecated_expires 缺失"
         # 到期日不应在过去 (任务 2026-07-25 到期)
         exp_date = datetime.fromisoformat(expires).replace(tzinfo=UTC)
-        assert exp_date >= datetime.now(UTC), (
-            f"KNOWN_GAP_EXPIRES 已过 ({expires}), 应清理 KNOWN_GAP_PREFIXES"
-        )
+        assert exp_date >= datetime.now(UTC), f"KNOWN_GAP_EXPIRES 已过 ({expires}), 应清理 KNOWN_GAP_PREFIXES"
 
 
 class TestBosYamlHasNoDeprecatedMarkers:
@@ -117,10 +118,5 @@ class TestBosYamlHasNoDeprecatedMarkers:
         if not yaml_path.exists():
             pytest.skip("bos-services.yaml not found")
         text = yaml_path.read_text(encoding="utf-8")
-        deprecated_lines = [
-            ln for ln in text.splitlines() if "[DEPRECATED]" in ln
-        ]
-        assert deprecated_lines == [], (
-            f"bos-services.yaml 残留 [DEPRECATED] 标记:\n"
-            + "\n".join(deprecated_lines)
-        )
+        deprecated_lines = [ln for ln in text.splitlines() if "[DEPRECATED]" in ln]
+        assert deprecated_lines == [], "bos-services.yaml 残留 [DEPRECATED] 标记:\n" + "\n".join(deprecated_lines)

@@ -16,9 +16,10 @@
 用法:
   uv run --with pyyaml python bin/ssot/gen-scene-card-lineage.py
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -52,15 +53,17 @@ def scan_scene_cards() -> list[dict]:
             continue
         caps = body.get("capability_refs") or []
         caps = [str(c).strip() for c in caps if c]
-        scenes.append({
-            "scene_id": body["scene_id"],
-            "journey_id": body.get("journey_id", ""),
-            "lifecycle": body.get("lifecycle", "unknown"),
-            "approval_state": body.get("approval_state", "unknown"),
-            "outcome_metric": body.get("outcome_metric", ""),
-            "capability_refs": caps,
-            "source": str(p.relative_to(WORKSPACE)),
-        })
+        scenes.append(
+            {
+                "scene_id": body["scene_id"],
+                "journey_id": body.get("journey_id", ""),
+                "lifecycle": body.get("lifecycle", "unknown"),
+                "approval_state": body.get("approval_state", "unknown"),
+                "outcome_metric": body.get("outcome_metric", ""),
+                "capability_refs": caps,
+                "source": str(p.relative_to(WORKSPACE)),
+            }
+        )
     return scenes
 
 
@@ -73,11 +76,13 @@ def scan_candidates() -> list[dict]:
         body = _load_scene_card_body(p)
         if not body:
             continue
-        candidates.append({
-            "candidate_id": body.get("candidate_id") or body.get("scene_id", p.stem),
-            "proposed_scene_id": body.get("scene_id", body.get("proposed_scene_id", "")),
-            "source": str(p.relative_to(WORKSPACE)),
-        })
+        candidates.append(
+            {
+                "candidate_id": body.get("candidate_id") or body.get("scene_id", p.stem),
+                "proposed_scene_id": body.get("scene_id", body.get("proposed_scene_id", "")),
+                "source": str(p.relative_to(WORKSPACE)),
+            }
+        )
     return candidates
 
 
@@ -94,7 +99,7 @@ def build_connector_relations(scenes: list[dict]) -> dict[str, list[str]]:
 
 def emit_yaml(scenes: list[dict], candidates: list[dict], relations: dict) -> str:
     """纯字符串拼接输出 YAML (缩进风格匹配谱系图 SSOT 约定)."""
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     pending = sum(1 for s in scenes if str(s["approval_state"]).startswith("pending"))
     active = sum(1 for s in scenes if s["lifecycle"] == "active")
     lines = [
@@ -153,10 +158,7 @@ def main() -> int:
     active = sum(1 for s in scenes if s["lifecycle"] == "active")
     binding_count = sum(len(v) for v in relations.values())
     print(f"✅ lineage 生成: {OUTPUT.relative_to(WORKSPACE)}")
-    print(
-        f"   funnel: candidates={len(candidates)} scene_cards={len(scenes)} "
-        f"pending={pending} active={active}"
-    )
+    print(f"   funnel: candidates={len(candidates)} scene_cards={len(scenes)} pending={pending} active={active}")
     print(f"   connector_relations: {len(relations)} capabilities, {binding_count} 绑定")
     return 0
 

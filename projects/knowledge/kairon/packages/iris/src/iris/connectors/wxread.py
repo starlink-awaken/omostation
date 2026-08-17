@@ -48,7 +48,7 @@ def _api_call(api_name: str, **params: Any) -> dict | None:
         },
     )
     try:
-        resp = urllib.request.urlopen(req, timeout=15)  # noqa: S310
+        resp = urllib.request.urlopen(req, timeout=15)
         data: dict = json.loads(resp.read())
         if data.get("errcode", 0) != 0:
             logger.warning("WeRead API error [%s]: %s", api_name, data.get("errmsg", ""))

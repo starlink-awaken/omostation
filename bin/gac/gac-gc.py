@@ -43,9 +43,7 @@ def load_rules() -> list[dict]:
     return docs[-1].get("gac", {}).get("rules", [])
 
 
-def find_gc_candidates(
-    rules: list[dict], max_days: int = DEPRECATED_TO_REMOVED_DAYS
-) -> list[dict]:
+def find_gc_candidates(rules: list[dict], max_days: int = DEPRECATED_TO_REMOVED_DAYS) -> list[dict]:
     """找 deprecated 超 max_days 的规则 (待 gc 清理 removed).
 
     deprecated 无 deprecated_at → 标记 (待补字段).
@@ -71,9 +69,7 @@ def find_gc_candidates(
             continue
         age = (today - dd).days
         if age > max_days:
-            candidates.append(
-                {**r, "age_days": age, "reason": f"deprecated {age} 天 > {max_days} 天"}
-            )
+            candidates.append({**r, "age_days": age, "reason": f"deprecated {age} 天 > {max_days} 天"})
     return candidates
 
 
@@ -91,10 +87,7 @@ def main() -> int:
         "lifecycle": dict(lc),
         "deprecated_total": lc.get("deprecated", 0),
         "gc_candidates": len(candidates),
-        "candidates": [
-            {"id": c["id"], "age_days": c.get("age_days"), "reason": c.get("reason")}
-            for c in candidates
-        ],
+        "candidates": [{"id": c["id"], "age_days": c.get("age_days"), "reason": c.get("reason")} for c in candidates],
         "dry_run": dry_run,
         "threshold_days": DEPRECATED_TO_REMOVED_DAYS,
     }
@@ -105,10 +98,7 @@ def main() -> int:
 
     print("=== GaC gc (lifecycle 清理, 机制6, c2g gc 原语) ===")
     print(f"规则数: {len(rules)} | lifecycle: {dict(lc)}")
-    print(
-        f"deprecated: {lc.get('deprecated', 0)} | "
-        f"gc 候选 (超 {DEPRECATED_TO_REMOVED_DAYS} 天): {len(candidates)}"
-    )
+    print(f"deprecated: {lc.get('deprecated', 0)} | gc 候选 (超 {DEPRECATED_TO_REMOVED_DAYS} 天): {len(candidates)}")
 
     if candidates:
         label = "[dry-run] 待清理" if dry_run else "待清理"
@@ -117,10 +107,7 @@ def main() -> int:
             age = f"{c.get('age_days')}天" if c.get("age_days") is not None else "?"
             print(f"  - {c['id']} (deprecated {age}): {c.get('reason')}")
         if not dry_run:
-            print(
-                "\n实际清理: 手动改 governance-checks.yaml lifecycle=removed "
-                "(未来 --apply 自动, 需 omo MCP write)"
-            )
+            print("\n实际清理: 手动改 governance-checks.yaml lifecycle=removed (未来 --apply 自动, 需 omo MCP write)")
     else:
         print("\n✅ 无 gc 候选 (全 active 或 deprecated 未超期)")
 

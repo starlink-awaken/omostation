@@ -57,9 +57,7 @@ def test_json_output():
 def test_fix_dry_run():
     result = _run("--fix")
     assert result.returncode in (0, 1)
-    has_diverged_result = any(
-        line.lstrip().startswith("FAIL ") for line in result.stdout.splitlines()
-    )
+    has_diverged_result = any(line.lstrip().startswith("FAIL ") for line in result.stdout.splitlines())
     if has_diverged_result:
         assert "would fix" in result.stdout or "→" in result.stdout
 
@@ -83,7 +81,9 @@ def test_detects_omo_divergence():
         assert r["status"] in ("DIVERGED", "aligned", "behind")
 
 
-def test_submodule_git_clears_superproject_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_submodule_git_clears_superproject_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Pre-push Git state must not force submodule commands into the root repo."""
     module = _load_module()
     monkeypatch.setenv("GIT_DIR", "/tmp/root.git")

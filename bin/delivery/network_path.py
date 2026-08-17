@@ -3,6 +3,7 @@
 Used by measure_physical to stamp env_evidence with Wi-Fi vs Ethernet so
 G-DEL.3 failures can be attributed to link tail vs protocol.
 """
+
 from __future__ import annotations
 
 import re
@@ -32,10 +33,14 @@ def _iface_for_host(ip: str) -> dict[str, Any]:
             # next data line often has numbers
             pass
     # parse rtt from table line
-    m = re.search(r"rtt,msec.*?(\d+)\s+(\d+)", out, re.S)
+    m = re.search(r"rtt,msec.*?(\d+)\s+(\d+)", out, re.DOTALL)
     if m:
         rtt = int(m.group(1))
-    return {"route_interface": iface, "route_rtt_msec_hint": rtt, "raw_has_route": bool(iface)}
+    return {
+        "route_interface": iface,
+        "route_rtt_msec_hint": rtt,
+        "raw_has_route": bool(iface),
+    }
 
 
 def _classify_iface(iface: str | None) -> str:
@@ -123,7 +128,7 @@ def _remote_iface_status(ssh_host: str) -> dict[str, Any]:
             "ethernet_likely_active": en0.get("status") == "active" and en0.get("inet"),
             "wifi_likely_active": wifi_like.get("status") == "active" and wifi_like.get("inet"),
         }
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return {"ok": False, "error": str(exc)}
 
 

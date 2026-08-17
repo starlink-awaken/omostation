@@ -7,6 +7,7 @@ Usage:
   python3 bin/delivery/collab_cli.py handoff-link --task-ref task-xxx \\
       --writer agent-A --scope bet-b7da
 """
+
 from __future__ import annotations
 
 import argparse
@@ -27,7 +28,7 @@ DEFAULT_HISTORY = ROOT / ".omo" / "_delivery" / "collab"
 
 
 def _history_dir(root: Path | None = None) -> Path:
-    d = (root or DEFAULT_HISTORY)
+    d = root or DEFAULT_HISTORY
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -104,9 +105,7 @@ def cmd_handoff_link(args: argparse.Namespace) -> int:
     if not handshake:
         print(json.dumps({"ok": False, "error": "no_handshake_in_history"}))
         return 1
-    store = FileSharedContextStore(
-        Path(args.context_root) if args.context_root else default_store_root(ROOT)
-    )
+    store = FileSharedContextStore(Path(args.context_root) if args.context_root else default_store_root(ROOT))
     value = json.dumps(
         {
             "task_ref": args.task_ref,

@@ -21,6 +21,7 @@ DECLARED_ONLY_CHECK_TYPES = {"mesh_routing", "memory_rag"}
 
 def load_rules() -> list[dict]:
     import yaml
+
     text = REGISTRY.read_text(encoding="utf-8")
     # strip frontmatter (--- ... ---)
     if text.startswith("---"):
@@ -40,9 +41,15 @@ def main() -> int:
         "total_cr": total,
         "declared_only_count": len(declared_only),
         "gap_rate": round(gap_rate, 4),
-        "declared_only": [{"id": r.get("id"), "check_type": r.get("check_type"),
-                           "executor": r.get("executor"), "target": r.get("target")}
-                          for r in declared_only],
+        "declared_only": [
+            {
+                "id": r.get("id"),
+                "check_type": r.get("check_type"),
+                "executor": r.get("executor"),
+                "target": r.get("target"),
+            }
+            for r in declared_only
+        ],
     }
     if as_json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -56,8 +63,10 @@ def main() -> int:
         if declared_only:
             print("  声明期 CR:")
             for r in declared_only:
-                print(f"    - {r.get('id')}: check_type={r.get('check_type')} "
-                      f"executor={r.get('executor')} target={r.get('target')}")
+                print(
+                    f"    - {r.get('id')}: check_type={r.get('check_type')} "
+                    f"executor={r.get('executor')} target={r.get('target')}"
+                )
         print("═" * 60)
         print("注: 鸿沟率=0 不代表无债 — 仅当 mesh_routing/memory_rag 类 CR 上线后此量化才暴露")
     return 0

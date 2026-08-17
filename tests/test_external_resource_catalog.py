@@ -57,7 +57,9 @@ class _Provider:
         }
 
 
-def test_collects_dynamic_resources_as_read_only_safe_projection(tmp_path: Path) -> None:
+def test_collects_dynamic_resources_as_read_only_safe_projection(
+    tmp_path: Path,
+) -> None:
     before = sorted(path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*"))
 
     payload = MODULE.collect_external_resources(
@@ -135,9 +137,7 @@ def test_builds_capability_directory_with_governed_next_steps() -> None:
     assert directory["schema"] == "external-resource-directory/v1"
     assert directory["activation"] == "forbidden"
     assert directory["provider_invocation"] is False
-    assert directory["capability_index"]["search"]["available_resource_ids"] == [
-        "source:available"
-    ]
+    assert directory["capability_index"]["search"]["available_resource_ids"] == ["source:available"]
     assert directory["capability_index"]["query"]["available_resource_ids"] == []
     assert directory["summary"]["capability_count"] == 5
     assert directory["summary"]["unavailable_count"] == 1
@@ -181,9 +181,7 @@ def test_builds_read_only_connection_plan_with_explicit_evidence_blockers() -> N
         ],
     }
 
-    plan = MODULE.build_external_resource_connection_plan(
-        directory, now=datetime(2026, 8, 2, tzinfo=UTC)
-    )
+    plan = MODULE.build_external_resource_connection_plan(directory, now=datetime(2026, 8, 2, tzinfo=UTC))
 
     assert plan["schema"] == "external-resource-connection-plan/v1"
     assert plan["activation"] == "forbidden"
@@ -241,9 +239,7 @@ def test_builds_read_only_refresh_plan_with_recovery_priority() -> None:
         ],
     }
 
-    plan = MODULE.build_external_resource_refresh_plan(
-        catalog, now=datetime(2026, 8, 3, tzinfo=UTC)
-    )
+    plan = MODULE.build_external_resource_refresh_plan(catalog, now=datetime(2026, 8, 3, tzinfo=UTC))
 
     assert plan["schema"] == "external-resource-refresh-plan/v1"
     assert plan["activation"] == "forbidden"
@@ -285,12 +281,8 @@ def test_refresh_plan_keeps_future_resources_scheduled_and_force_is_projection_o
         ],
     }
 
-    scheduled = MODULE.build_external_resource_refresh_plan(
-        catalog, now=datetime(2026, 8, 2, 1, tzinfo=UTC)
-    )
-    forced = MODULE.build_external_resource_refresh_plan(
-        catalog, now=datetime(2026, 8, 2, 1, tzinfo=UTC), force=True
-    )
+    scheduled = MODULE.build_external_resource_refresh_plan(catalog, now=datetime(2026, 8, 2, 1, tzinfo=UTC))
+    forced = MODULE.build_external_resource_refresh_plan(catalog, now=datetime(2026, 8, 2, 1, tzinfo=UTC), force=True)
 
     assert scheduled["items"][0]["status"] == "scheduled"
     assert forced["items"][0]["status"] == "due"
@@ -475,12 +467,14 @@ def test_empty_catalog_is_unavailable_not_success(monkeypatch) -> None:
                 },
             }
         run_payloads.append(json.loads(input_text or "{}"))
-        return {"ok": True, "status": "recorded", "receipt": {"receipt_id": "run:empty"}}
+        return {
+            "ok": True,
+            "status": "recorded",
+            "receipt": {"receipt_id": "run:empty"},
+        }
 
     monkeypatch.setattr(MODULE, "_run_omo", fake_omo)
     monkeypatch.setattr(MODULE, "_load_capability_records", lambda _root: [])
-    MODULE.observe_external_resources(
-        Path(__file__).parents[1], entry_points=[], now=datetime(2026, 8, 2, tzinfo=UTC)
-    )
+    MODULE.observe_external_resources(Path(__file__).parents[1], entry_points=[], now=datetime(2026, 8, 2, tzinfo=UTC))
 
     assert run_payloads[0]["result_state"] == "unavailable"

@@ -3,7 +3,7 @@
 
 import argparse
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -18,7 +18,7 @@ def decision_checklist_reference() -> str:
 
 
 def get_now_str() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def normalize_brief_content(content: str) -> str:
@@ -54,11 +54,9 @@ def physical_hosts_suspend_day_count(
     Returns None if the card is absent. Day-count is floor of elapsed UTC days
     since created_at (minimum 0).
     """
-    import yaml  # noqa: PLC0415
+    import yaml
 
-    path = card_path or (
-        WORKSPACE / ".omo" / "tasks" / "planned" / f"{PHYSICAL_HOSTS_CARD_STEM}.yaml"
-    )
+    path = card_path or (WORKSPACE / ".omo" / "tasks" / "planned" / f"{PHYSICAL_HOSTS_CARD_STEM}.yaml")
     if not path.is_file():
         return None
     try:
@@ -72,9 +70,9 @@ def physical_hosts_suspend_day_count(
         created_s = str(created).replace("Z", "+00:00")
         created_dt = datetime.fromisoformat(created_s)
         if created_dt.tzinfo is None:
-            created_dt = created_dt.replace(tzinfo=timezone.utc)
-        now_dt = now or datetime.now(timezone.utc)
-        delta = now_dt - created_dt.astimezone(timezone.utc)
+            created_dt = created_dt.replace(tzinfo=UTC)
+        now_dt = now or datetime.now(UTC)
+        delta = now_dt - created_dt.astimezone(UTC)
         return max(0, int(delta.total_seconds() // 86400))
     except Exception:
         return 0
@@ -91,11 +89,9 @@ def physical_hosts_weekly_reaffirmation(
     Emit only when the planned card exists AND needs-human is still true.
     Status-track cards (needs-human: false) stay out of Decision Inbox.
     """
-    import yaml  # noqa: PLC0415
+    import yaml
 
-    path = card_path or (
-        WORKSPACE / ".omo" / "tasks" / "planned" / f"{PHYSICAL_HOSTS_CARD_STEM}.yaml"
-    )
+    path = card_path or (WORKSPACE / ".omo" / "tasks" / "planned" / f"{PHYSICAL_HOSTS_CARD_STEM}.yaml")
     if not path.is_file():
         return None
     try:
@@ -134,7 +130,7 @@ def physical_hosts_weekly_reaffirmation(
 
 def scan_decision_inbox() -> list[dict]:
     """扫描所有的 needs-human 卡片或任务."""
-    import yaml  # noqa: PLC0415
+    import yaml
 
     tasks = []
 
@@ -156,9 +152,7 @@ def scan_decision_inbox() -> list[dict]:
                     tasks.append(
                         {
                             "id": data.get("id") or p.stem,
-                            "title": data.get("title")
-                            or data.get("desc")
-                            or "System task pending human decision",
+                            "title": data.get("title") or data.get("desc") or "System task pending human decision",
                             "path": f".omo/tasks/{p.relative_to(tasks_dir)}",
                             "source": "omo-debt",
                         }
@@ -177,8 +171,7 @@ def scan_decision_inbox() -> list[dict]:
                     tasks.append(
                         {
                             "id": data.get("id") or p.stem,
-                            "title": data.get("title")
-                            or "Workspace item needs human decision",
+                            "title": data.get("title") or "Workspace item needs human decision",
                             "path": f"spaces/{p.relative_to(spaces_dir)}",
                             "source": "space-card",
                         }
@@ -212,9 +205,7 @@ def scan_x3_metrics() -> dict:
     for d in creation_dirs:
         if d.is_dir():
             # 递归统计所有文件 (排除隐藏文件)
-            files = [
-                f for f in d.rglob("*") if f.is_file() and not f.name.startswith(".")
-            ]
+            files = [f for f in d.rglob("*") if f.is_file() and not f.name.startswith(".")]
             metrics["creations"] = len(files)
             break
 
@@ -222,7 +213,7 @@ def scan_x3_metrics() -> dict:
     kos_dir = WORKSPACE / "kos"
     sqlite_db = kos_dir / "kos-index.sqlite"
     if sqlite_db.is_file():
-        import sqlite3  # noqa: PLC0415
+        import sqlite3
 
         try:
             conn = sqlite3.connect(str(sqlite_db))
@@ -235,9 +226,7 @@ def scan_x3_metrics() -> dict:
             conn.close()
         except Exception:
             # 降级降速扫描
-            metrics["knowledge_reuse"] = len(
-                [f for f in kos_dir.rglob("*") if f.is_file()]
-            )
+            metrics["knowledge_reuse"] = len([f for f in kos_dir.rglob("*") if f.is_file()])
     else:
         metrics["knowledge_reuse"] = len([f for f in kos_dir.rglob("*") if f.is_file()])
 
@@ -249,9 +238,9 @@ def run_write_owner_audit() -> list[str]:
     try:
         from write_owner_audit import (
             audit_staged,
-            load_owners,
             get_git_user,
             get_staged_files,
+            load_owners,
         )
 
         owners = load_owners()
@@ -273,7 +262,7 @@ def _render_collab_dashboard() -> list[str]:
     dualtrack_path = WORKSPACE / ".omo" / "state" / "collab-dualtrack.yaml"
     if not dualtrack_path.is_file():
         return []
-    import yaml  # noqa: PLC0415
+    import yaml
 
     try:
         data = yaml.safe_load(dualtrack_path.read_text(encoding="utf-8")) or {}
@@ -312,7 +301,7 @@ def _render_collab_dashboard() -> list[str]:
 
 
 def generate_brief_content() -> str:
-    import yaml  # noqa: PLC0415
+    import yaml
 
     # 读取系统健康分
     health_score = 90
@@ -335,7 +324,7 @@ def generate_brief_content() -> str:
         _bin_dir = str(Path(__file__).resolve().parents[1])
         if _bin_dir not in sys.path:
             sys.path.insert(0, _bin_dir)
-        from compass_radar import collect_runtime_health  # noqa: PLC0415
+        from compass_radar import collect_runtime_health
 
         _ratio, _ = collect_runtime_health(WORKSPACE)
         if _ratio is not None:
@@ -386,9 +375,7 @@ def generate_brief_content() -> str:
             lines.append("")
 
     # S2 (P82): 治理预算约束可见 (ADR-0249)
-    lines.append(
-        "> 📊 **治理预算**: 40/40/20 (治理≤40%/协作≥40%/弹性20%, ADR-0249). 超40%须送卡."
-    )
+    lines.append("> 📊 **治理预算**: 40/40/20 (治理≤40%/协作≥40%/弹性20%, ADR-0249). 超40%须送卡.")
     lines.append("")
 
     # 2. X3 价值仪表 (Value Metrics - WS-5)
@@ -396,22 +383,14 @@ def generate_brief_content() -> str:
     lines.append("")
     lines.append("| 维度 | 度量指标 | 状态 | 物理数据源 |")
     lines.append("|------|----------|------|------------|")
-    lines.append(
-        f"| **创意创作** | 新增发布数: `{x3['creations']}` | 正常 | `@创意创作/_outputs` |"
-    )
-    lines.append(
-        "| **工作交付** | 未接入真实数据源 (BET-Y1Q1-T1-01 废除 mtime 伪指标) | 待接入 | — |"
-    )
-    lines.append(
-        f"| **知识复用** | KOS 索引篇: `{x3['knowledge_reuse']}` | 正常 | `kos/` 篇目 |"
-    )
+    lines.append(f"| **创意创作** | 新增发布数: `{x3['creations']}` | 正常 | `@创意创作/_outputs` |")
+    lines.append("| **工作交付** | 未接入真实数据源 (BET-Y1Q1-T1-01 废除 mtime 伪指标) | 待接入 | — |")
+    lines.append(f"| **知识复用** | KOS 索引篇: `{x3['knowledge_reuse']}` | 正常 | `kos/` 篇目 |")
     # B5: per-role completion/cost rows (pointerized X3)
-    role_metrics_path = (
-        WORKSPACE / ".omo" / "_truth" / "registry" / "x3-role-metrics.yaml"
-    )
+    role_metrics_path = WORKSPACE / ".omo" / "_truth" / "registry" / "x3-role-metrics.yaml"
     if role_metrics_path.is_file():
         try:
-            import yaml as _yaml  # noqa: PLC0415
+            import yaml as _yaml
 
             rm = _yaml.safe_load(role_metrics_path.read_text(encoding="utf-8")) or {}
             roles = rm.get("roles") or {}
@@ -434,9 +413,7 @@ def generate_brief_content() -> str:
     # 当健康分 >= 90 时折叠
     if health_score >= 90:
         lines.append("<details>")
-        lines.append(
-            f"<summary>⚙️ <b>治理健康分详情 (复合 {health_score}/100, 已自动收纳)</b></summary>"
-        )
+        lines.append(f"<summary>⚙️ <b>治理健康分详情 (复合 {health_score}/100, 已自动收纳)</b></summary>")
         lines.append("")
         lines.append(f"- **GAC 异常扣分**: `{gov_anomaly}/100` (无 anomalies)")
         lines.append(f"- **常驻 daemon 在线率**: `{online_ratio:.2%}`")
@@ -457,12 +434,11 @@ def generate_brief_content() -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate BRIEF.md dashboard")
+    parser.add_argument("--write", action="store_true", help="Write content to BRIEF.md")
     parser.add_argument(
-        "--write", action="store_true", help="Write content to BRIEF.md"
-    )
-    parser.add_argument(
-        "--protect", action="store_true",
-        help="Protect mode: fail if BRIEF.md was modified outside of generate-brief.py"
+        "--protect",
+        action="store_true",
+        help="Protect mode: fail if BRIEF.md was modified outside of generate-brief.py",
     )
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     parser.add_argument(
@@ -483,8 +459,14 @@ def main() -> int:
     if args.protect and args.write and BRIEF_MD.exists():
         existing = BRIEF_MD.read_text(encoding="utf-8")
         if "generate-brief.py" not in existing[:200]:
-            print("[protect] ⚠️  BRIEF.md was not generated by generate-brief.py — refusing to overwrite", file=sys.stderr)
-            print("[protect]    Use --write without --protect to force overwrite", file=sys.stderr)
+            print(
+                "[protect] ⚠️  BRIEF.md was not generated by generate-brief.py — refusing to overwrite",
+                file=sys.stderr,
+            )
+            print(
+                "[protect]    Use --write without --protect to force overwrite",
+                file=sys.stderr,
+            )
             return 1
 
     if args.write:
@@ -499,9 +481,7 @@ def main() -> int:
             # (前人已实现该函数 + normalize_brief_content; 仅默认 else 分支仍裸写)
             changed = write_brief_if_changed(content)
             print(
-                f"✅ BRIEF.md 物理生成并刷新: {BRIEF_MD}"
-                if changed
-                else f"ℹ BRIEF.md 语义未变化, 跳过写入: {BRIEF_MD}"
+                f"✅ BRIEF.md 物理生成并刷新: {BRIEF_MD}" if changed else f"ℹ BRIEF.md 语义未变化, 跳过写入: {BRIEF_MD}"
             )
     else:
         print(content)

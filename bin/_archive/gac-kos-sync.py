@@ -2,15 +2,17 @@
 # bin/gac/gac-kos-sync.py — KOS 运行时违规与 OMO 状态同步特权代理 (GaC-v6 治理标准)
 
 import os
-import sys
 import sqlite3
-import yaml
+import sys
 from datetime import datetime
 from pathlib import Path
+
+import yaml
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 db_path = WORKSPACE / "kos/kos-index.sqlite"
 health_yaml_path = WORKSPACE / ".omo/state/health.yaml"
+
 
 def main() -> int:
     if not db_path.is_file() or not health_yaml_path.is_file():
@@ -25,18 +27,20 @@ def main() -> int:
         db_conn.close()
 
         # 2. 读取当前健康状态
-        with open(health_yaml_path, "r", encoding="utf-8") as hf:
+        with open(health_yaml_path, encoding="utf-8") as hf:
             health_data = yaml.safe_load(hf) or {}
 
         # 3. 构造 anomalies 异常
         anomalies = []
         for idx, v in enumerate(violations):
-            anomalies.append({
-                "checker": "kos-layer-dependency",
-                "message": f"Architecture Violation: Low-layer '{v['source_id']}' illegally depends on high-layer '{v['target_id']}'",
-                "severity": "error",
-                "detected_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-            })
+            anomalies.append(
+                {
+                    "checker": "kos-layer-dependency",
+                    "message": f"Architecture Violation: Low-layer '{v['source_id']}' illegally depends on high-layer '{v['target_id']}'",
+                    "severity": "error",
+                    "detected_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                }
+            )
 
         # 每个违规扣除 15 分
         deductions = 15 * len(anomalies)
@@ -50,7 +54,7 @@ def main() -> int:
         # 4. 合规写回健康分 (由于脚本以 gac- 开头，被 contract_gatekeeper 自动豁免)
         with open(health_yaml_path, "w", encoding="utf-8") as hf:
             yaml.safe_dump(health_data, hf, allow_unicode=True)
-            
+
         print(f"📊 KOS Active Loop: Synced {len(anomalies)} violations to OMO health state. New Score: {new_score}")
 
         # 5. 自动导出 Mermaid 全域拓扑图至 docs/generated/kos-ontology-graph.md
@@ -73,7 +77,7 @@ def main() -> int:
             "    classDef node fill:#1f3c3d,stroke:#3e787a,stroke-width:2px,color:#fff;",
             "    classDef axiom fill:#4a3c31,stroke:#8f7b6e,stroke-width:1px,color:#fff;",
             "    classDef concept fill:#3c2b3d,stroke:#77567a,stroke-width:1px,color:#fff;",
-            "    classDef evidence fill:#5c2b2b,stroke:#b85c5c,stroke-width:2px,color:#fff;"
+            "    classDef evidence fill:#5c2b2b,stroke:#b85c5c,stroke-width:2px,color:#fff;",
         ]
 
         link_index = 0
@@ -84,10 +88,10 @@ def main() -> int:
             s = edge["source_id"]
             p = edge["predicate"]
             t = edge["target_id"]
-            
+
             s_type = all_ents.get(s, {}).get("entity_type", "unknown")
             t_type = all_ents.get(t, {}).get("entity_type", "unknown")
-            
+
             rel_key = (s, p, t)
             if rel_key in seen_relations:
                 continue
@@ -95,7 +99,7 @@ def main() -> int:
 
             s_label = all_ents.get(s, {}).get("label", s)
             t_label = all_ents.get(t, {}).get("label", t)
-            
+
             def get_mermaid_node(eid, label, etype):
                 escaped_label = label.replace('"', '\\"')
                 if etype == "Project":
@@ -117,11 +121,11 @@ def main() -> int:
             s_node = get_mermaid_node(s_id, s_label, s_type)
             t_node = get_mermaid_node(t_id, t_label, t_type)
 
-            mermaid_lines.append(f'    {s_node} -->|{p}| {t_node}')
-            
+            mermaid_lines.append(f"    {s_node} -->|{p}| {t_node}")
+
             if p in ("violates_layer_dependency", "has_active_violation"):
                 violation_links.append(link_index)
-            
+
             link_index += 1
 
         for idx in violation_links:
@@ -138,12 +142,13 @@ def main() -> int:
         graph_md_path.parent.mkdir(parents=True, exist_ok=True)
         with open(graph_md_path, "w", encoding="utf-8") as gf:
             gf.write("\n".join(mermaid_lines))
-            
+
         print(f"📈 KOS Map exported successfully: {graph_md_path}")
         return 0
     except Exception as e:
         print(f"❌ KOS Active Loop Sync Failed: {e}", file=sys.stderr)
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

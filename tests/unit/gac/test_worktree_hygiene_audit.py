@@ -1,4 +1,5 @@
 """Unit tests for bin/gac/worktree-hygiene-audit.py."""
+
 from __future__ import annotations
 
 import importlib.util

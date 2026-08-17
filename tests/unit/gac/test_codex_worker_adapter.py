@@ -52,9 +52,7 @@ def real_clone_root(tmp_path: Path) -> Path:
     )
     (root / "README.md").write_text("baseline\n", encoding="utf-8")
     subprocess.run(["git", "-C", str(root), "add", "README.md"], check=True)
-    subprocess.run(
-        ["git", "-C", str(root), "commit", "-q", "-m", "baseline"], check=True
-    )
+    subprocess.run(["git", "-C", str(root), "commit", "-q", "-m", "baseline"], check=True)
     (root / ".git/agent-clone-identity.json").write_text(
         json.dumps(
             {
@@ -94,9 +92,7 @@ def jsonl(message: str = "final answer") -> str:
 
 
 class FakeProcess:
-    def __init__(
-        self, *, stdout: str | None = None, stderr: str = "", returncode: int = 0
-    ) -> None:
+    def __init__(self, *, stdout: str | None = None, stderr: str = "", returncode: int = 0) -> None:
         self.pid = 43210
         self.stdout = jsonl() if stdout is None else stdout
         self.stderr = stderr
@@ -163,9 +159,7 @@ def test_dry_run_is_default_and_returns_only_fixed_command(tmp_path: Path):
     }
 
 
-def test_execute_uses_exact_argv_no_shell_and_scrubbed_environment(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_execute_uses_exact_argv_no_shell_and_scrubbed_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     root = real_clone_root(tmp_path)
     captured: dict[str, object] = {}
     monkeypatch.setenv("OPENAI_API_KEY", "secret")
@@ -193,9 +187,7 @@ def test_execute_uses_exact_argv_no_shell_and_scrubbed_environment(
     argv = captured["argv"]
     assert (
         argv[: argv.index("-C")]
-        == adapter.fixed_argv(
-            Path("/opt/codex/bin/codex"), root, write_prompt("allowed.txt")
-        )[: argv.index("-C")]
+        == adapter.fixed_argv(Path("/opt/codex/bin/codex"), root, write_prompt("allowed.txt"))[: argv.index("-C")]
     )
     execution_root = Path(argv[argv.index("-C") + 1])
     assert execution_root != root
@@ -241,9 +233,7 @@ def test_scrubbed_environment_removes_incomplete_git_config_tuple(
         "codex-cli 0.147.0 extra",
     ],
 )
-def test_invalid_or_unsupported_codex_version_fails_before_launch(
-    tmp_path: Path, version: str
-):
+def test_invalid_or_unsupported_codex_version_fails_before_launch(tmp_path: Path, version: str):
     called = False
 
     def start(*_args, **_kwargs):
@@ -274,9 +264,7 @@ def test_missing_or_non_regular_codex_is_unavailable(tmp_path: Path):
         )
 
 
-@pytest.mark.parametrize(
-    "case", ["missing_identity", "linked_git", "identity_mismatch", "not_ready"]
-)
+@pytest.mark.parametrize("case", ["missing_identity", "linked_git", "identity_mismatch", "not_ready"])
 def test_non_independent_workspace_is_rejected_before_launch(tmp_path: Path, case: str):
     root = clone_root(tmp_path)
     identity = root / ".git/agent-clone-identity.json"
@@ -334,9 +322,7 @@ def test_unknown_jsonl_event_keeps_provider_review_unknown(tmp_path: Path) -> No
     assert "future.provider.event" not in receipt.read_text(encoding="utf-8")
 
 
-@pytest.mark.parametrize(
-    "approval_event_type", ["exec_approval_request", "apply_patch_approval_request"]
-)
+@pytest.mark.parametrize("approval_event_type", ["exec_approval_request", "apply_patch_approval_request"])
 def test_observed_approval_event_fails_closed_without_receipt_or_patch(
     tmp_path: Path, approval_event_type: str
 ) -> None:
@@ -387,23 +373,17 @@ def test_observed_approval_event_fails_closed_without_receipt_or_patch(
         ("", 0, "worker_output_invalid"),
         ("not-json\n", 0, "worker_output_invalid"),
         (
-            json.dumps(
-                {"type": "item.completed", "item": {"type": "command_execution"}}
-            ),
+            json.dumps({"type": "item.completed", "item": {"type": "command_execution"}}),
             0,
             "worker_output_invalid",
         ),
     ],
 )
-def test_nonzero_empty_or_malformed_output_fails_closed(
-    tmp_path: Path, stdout: str, returncode: int, error: str
-):
+def test_nonzero_empty_or_malformed_output_fails_closed(tmp_path: Path, stdout: str, returncode: int, error: str):
     with pytest.raises(adapter.AdapterError, match=error):
         run_success(
             tmp_path,
-            popen_factory=lambda *_args, **_kwargs: FakeProcess(
-                stdout=stdout, returncode=returncode
-            ),
+            popen_factory=lambda *_args, **_kwargs: FakeProcess(stdout=stdout, returncode=returncode),
         )
 
 
@@ -433,9 +413,7 @@ def test_timeout_sends_term_then_kill_and_waits_after_each(tmp_path: Path):
     [
         (json.dumps({"type": "turn.started"}), "timed_out"),
         (
-            json.dumps(
-                {"type": "apply_patch_approval_request", "path": "/private/secret"}
-            ),
+            json.dumps({"type": "apply_patch_approval_request", "path": "/private/secret"}),
             "human_required",
         ),
     ],
@@ -494,9 +472,7 @@ def test_timeout_parent_exit_does_not_hide_surviving_process_group(tmp_path: Pat
 
 def test_unconfirmed_timeout_cleanup_has_stable_failure(tmp_path: Path):
     process = HungProcess()
-    process.wait = lambda timeout=None: (_ for _ in ()).throw(
-        subprocess.TimeoutExpired("codex", timeout)
-    )
+    process.wait = lambda timeout=None: (_ for _ in ()).throw(subprocess.TimeoutExpired("codex", timeout))
 
     with pytest.raises(adapter.AdapterError, match="cleanup_unconfirmed"):
         run_success(
@@ -507,9 +483,7 @@ def test_unconfirmed_timeout_cleanup_has_stable_failure(tmp_path: Path):
         )
 
 
-def test_git_status_failure_is_not_reported_as_no_changed_paths(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_git_status_failure_is_not_reported_as_no_changed_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(
         adapter.subprocess,
         "run",
@@ -522,9 +496,7 @@ def test_git_status_failure_is_not_reported_as_no_changed_paths(
     assert raised.value.code == "git_status_failed"
 
 
-def test_git_status_timeout_is_not_reported_as_no_changed_paths(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_git_status_timeout_is_not_reported_as_no_changed_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     def time_out(*_args, **_kwargs):
         raise subprocess.TimeoutExpired("git status", 10)
 
@@ -553,9 +525,7 @@ def test_surviving_process_group_after_parent_exit_fails_closed(tmp_path: Path):
     assert signals == [(process.pid, signal.SIGTERM)]
 
 
-def test_receipt_is_exclusive_temp_only_canonical_and_redacted(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_receipt_is_exclusive_temp_only_canonical_and_redacted(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     receipt = Path(os.getenv("TMPDIR", "/tmp")) / f"codex-receipt-{tmp_path.name}.json"
     monkeypatch.setenv("PRIVATE_TOKEN", "receipt-secret")
     try:
@@ -563,13 +533,7 @@ def test_receipt_is_exclusive_temp_only_canonical_and_redacted(
         raw = receipt.read_text(encoding="utf-8")
         payload = json.loads(raw)
 
-        assert (
-            raw
-            == json.dumps(
-                payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-            )
-            + "\n"
-        )
+        assert raw == json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
         assert payload["schema"] == "codex-worker-execution/v1"
         assert payload["worker"] == "codex"
         assert payload["status"] == "succeeded"
@@ -610,12 +574,8 @@ def test_receipt_outside_system_temp_is_rejected(tmp_path: Path):
         receipt.unlink(missing_ok=True)
 
 
-def test_receipt_write_failure_is_stable(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
-    receipt = (
-        Path(os.getenv("TMPDIR", "/tmp")) / f"codex-receipt-fail-{tmp_path.name}.json"
-    )
+def test_receipt_write_failure_is_stable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    receipt = Path(os.getenv("TMPDIR", "/tmp")) / f"codex-receipt-fail-{tmp_path.name}.json"
     monkeypatch.setattr(
         adapter,
         "_write_receipt",
@@ -626,9 +586,7 @@ def test_receipt_write_failure_is_stable(
         run_success(tmp_path, receipt_path=receipt)
 
 
-def test_partial_staged_receipt_is_removed(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_partial_staged_receipt_is_removed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     receipt = tmp_path / "receipt.json"
 
     def partial_write(path: Path, _payload) -> None:
@@ -643,19 +601,10 @@ def test_partial_staged_receipt_is_removed(
     assert list(tmp_path.iterdir()) == []
 
 
-def test_cli_exposes_only_bounded_options_and_emits_final_message(
-    monkeypatch: pytest.MonkeyPatch, capsys
-):
-    monkeypatch.setattr(
-        adapter, "run_worker", lambda **_kwargs: {"output": "final\n", "receipt": None}
-    )
+def test_cli_exposes_only_bounded_options_and_emits_final_message(monkeypatch: pytest.MonkeyPatch, capsys):
+    monkeypatch.setattr(adapter, "run_worker", lambda **_kwargs: {"output": "final\n", "receipt": None})
 
-    assert (
-        adapter.main(
-            ["run", "--execute", "--workspace-root", "/clone", "--prompt", "x"]
-        )
-        == 0
-    )
+    assert adapter.main(["run", "--execute", "--workspace-root", "/clone", "--prompt", "x"]) == 0
     assert capsys.readouterr().out == "final\n"
     with pytest.raises(SystemExit):
         adapter.build_parser().parse_args(
@@ -671,9 +620,7 @@ def test_cli_exposes_only_bounded_options_and_emits_final_message(
         )
 
 
-def test_cli_failure_emits_only_safe_provider_review(
-    monkeypatch: pytest.MonkeyPatch, capsys
-) -> None:
+def test_cli_failure_emits_only_safe_provider_review(monkeypatch: pytest.MonkeyPatch, capsys) -> None:
     monkeypatch.setattr(
         adapter,
         "run_worker",
@@ -682,12 +629,7 @@ def test_cli_failure_emits_only_safe_provider_review(
         ),
     )
 
-    assert (
-        adapter.main(
-            ["run", "--execute", "--workspace-root", "/clone", "--prompt", "secret"]
-        )
-        == 2
-    )
+    assert adapter.main(["run", "--execute", "--workspace-root", "/clone", "--prompt", "secret"]) == 2
     assert json.loads(capsys.readouterr().err) == {
         "error_code": "worker_timeout",
         "provider_review": "human_required",
@@ -713,12 +655,7 @@ def test_codex_worker_registry_admits_only_the_interactive_orca_supervisor() -> 
         ],
     }
     assert codex["transports"] == {
-        "cli_prompt": {
-            "command": (
-                '/usr/bin/python3 "{workspace_root}/bin/gac/'
-                'orca-codex-supervisor.py" start'
-            )
-        }
+        "cli_prompt": {"command": ('/usr/bin/python3 "{workspace_root}/bin/gac/orca-codex-supervisor.py" start')}
     }
     assert codex["supervision"] == {
         "controller_approval": "required",
@@ -768,9 +705,7 @@ def test_out_of_scope_execution_is_discarded_without_touching_clone(
 
     def start(argv, **_kwargs):
         execution_root = Path(argv[argv.index("-C") + 1])
-        (execution_root / "forbidden.txt").write_text(
-            "must not land\n", encoding="utf-8"
-        )
+        (execution_root / "forbidden.txt").write_text("must not land\n", encoding="utf-8")
         return FakeProcess(stdout=jsonl("done"))
 
     with pytest.raises(adapter.AdapterError, match="write_scope_violation"):
@@ -811,9 +746,7 @@ def test_execution_commit_or_ignored_write_is_discarded(
         def start(argv, _case=case, **_kwargs):
             execution_root = Path(argv[argv.index("-C") + 1])
             if _case == "commit":
-                (execution_root / "allowed.txt").write_text(
-                    "commit\n", encoding="utf-8"
-                )
+                (execution_root / "allowed.txt").write_text("commit\n", encoding="utf-8")
                 subprocess.run(
                     ["git", "-C", str(execution_root), "add", "allowed.txt"],
                     check=True,
@@ -835,13 +768,9 @@ def test_execution_commit_or_ignored_write_is_discarded(
                     check=True,
                 )
             else:
-                (execution_root / ".gitignore").write_text(
-                    "ignored/\n", encoding="utf-8"
-                )
+                (execution_root / ".gitignore").write_text("ignored/\n", encoding="utf-8")
                 (execution_root / "ignored").mkdir()
-                (execution_root / "ignored/secret.txt").write_text(
-                    "ignored\n", encoding="utf-8"
-                )
+                (execution_root / "ignored/secret.txt").write_text("ignored\n", encoding="utf-8")
             return FakeProcess(stdout=jsonl("done"))
 
         with pytest.raises(
@@ -871,9 +800,7 @@ def test_execution_commit_or_ignored_write_is_discarded(
         assert not (root / "ignored").exists()
 
 
-def test_receipt_publish_failure_rolls_back_applied_patch(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_receipt_publish_failure_rolls_back_applied_patch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = real_clone_root(tmp_path)
     receipt = tmp_path / "receipt.json"
 
@@ -913,17 +840,13 @@ def test_receipt_publish_failure_rolls_back_applied_patch(
     )
 
 
-def test_delta_failure_removes_staged_receipt(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_delta_failure_removes_staged_receipt(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = real_clone_root(tmp_path)
     receipt = tmp_path / "receipt.json"
     monkeypatch.setattr(
         adapter,
         "_apply_delta",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(
-            adapter.AdapterError("delta_apply_unconfirmed")
-        ),
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(adapter.AdapterError("delta_apply_unconfirmed")),
     )
 
     with pytest.raises(adapter.AdapterError, match="delta_apply_unconfirmed"):
@@ -942,9 +865,7 @@ def test_delta_failure_removes_staged_receipt(
     assert not list(tmp_path.glob(".receipt.json.*.tmp"))
 
 
-def test_no_delta_rechecks_original_clone_before_success(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_no_delta_rechecks_original_clone_before_success(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = real_clone_root(tmp_path)
     original_apply = adapter._apply_delta
 
@@ -954,9 +875,7 @@ def test_no_delta_rechecks_original_clone_before_success(
 
     monkeypatch.setattr(adapter, "_apply_delta", mutate_then_apply)
 
-    with pytest.raises(
-        adapter.AdapterError, match="workspace_changed_during_execution"
-    ):
+    with pytest.raises(adapter.AdapterError, match="workspace_changed_during_execution"):
         adapter.run_worker(
             workspace_root=root,
             prompt=write_prompt("allowed.txt"),
@@ -982,9 +901,7 @@ def test_same_path_concurrent_mutation_blocks_apply_without_overwrite(
         allowed.write_text("concurrent\n", encoding="utf-8")
         return FakeProcess(stdout=jsonl("done"))
 
-    with pytest.raises(
-        adapter.AdapterError, match="workspace_changed_during_execution"
-    ):
+    with pytest.raises(adapter.AdapterError, match="workspace_changed_during_execution"):
         adapter.run_worker(
             workspace_root=root,
             prompt=write_prompt("README.md"),
@@ -1004,9 +921,7 @@ def test_real_initialized_submodule_gitlink_change_is_rejected(
     child = tmp_path / "child"
     child.mkdir()
     subprocess.run(["git", "init", "-q", "-b", "main", str(child)], check=True)
-    subprocess.run(
-        ["git", "-C", str(child), "config", "user.name", "Child"], check=True
-    )
+    subprocess.run(["git", "-C", str(child), "config", "user.name", "Child"], check=True)
     subprocess.run(
         ["git", "-C", str(child), "config", "user.email", "child@example.invalid"],
         check=True,
@@ -1035,9 +950,7 @@ def test_real_initialized_submodule_gitlink_change_is_rejected(
     def start(argv, **_kwargs):
         execution_root = Path(argv[argv.index("-C") + 1])
         (execution_root / "vendor/child").mkdir(parents=True, exist_ok=True)
-        subprocess.run(
-            ["git", "-C", str(execution_root), "rm", "-q", "vendor/child"], check=True
-        )
+        subprocess.run(["git", "-C", str(execution_root), "rm", "-q", "vendor/child"], check=True)
         return FakeProcess(stdout=jsonl("done"))
 
     with pytest.raises(adapter.AdapterError, match="worker_gitlink_forbidden"):

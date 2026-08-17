@@ -6,6 +6,7 @@ foundry deck 用法: 每 6h 检测, ahead+behind >= 阈值 (默认 12) 时 exit 
 
 只 fetch root (2s 级); 子模块不逐一 fetch (避免拖慢 cron), 用 --submodules 显式开。
 """
+
 from __future__ import annotations
 
 import argparse
@@ -19,7 +20,12 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 
 def git(*args: str, cwd: Path = WORKSPACE, timeout: int = 60) -> str:
     return subprocess.run(
-        ["git", *args], cwd=cwd, capture_output=True, text=True, timeout=timeout, check=False
+        ["git", *args],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
     ).stdout.strip()
 
 
@@ -63,15 +69,14 @@ def main() -> int:
                     git("fetch", "-q", "origin", cwd=sub, timeout=60)
                     a, b = ahead_behind(sub, "HEAD")
                     report["submodules"][parts[1]] = {"ahead": a, "behind": b}
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     report["submodules"][parts[1]] = {"error": str(e)[:80]}
 
     if args.json:
         print(json.dumps(report, ensure_ascii=False))
     else:
         state = "✅" if report["ok"] else "❌"
-        print(f"{state} root main vs origin/main: ahead {ahead} / behind {behind} "
-              f"(阈值 {args.threshold})")
+        print(f"{state} root main vs origin/main: ahead {ahead} / behind {behind} (阈值 {args.threshold})")
         if not report["ok"]:
             print("  → 分叉正在复利, 尽快调和: 子模块双线合并 → 根仓 merge → worktree+PR")
         for name, s in report["submodules"].items():

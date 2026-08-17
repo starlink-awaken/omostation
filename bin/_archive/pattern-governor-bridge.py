@@ -25,20 +25,24 @@ def scan_patterns() -> list[dict[str, Any]]:
     patterns: list[dict[str, Any]] = []
     try:
         import sys
+
         eidos_src = str(ROOT / "projects" / "kairon" / "packages" / "eidos" / "src")
         if eidos_src not in sys.path:
             sys.path.insert(0, eidos_src)
         from eidos.memory.pattern_miner import PatternMiner
+
         miner = PatternMiner()
         # Try to mine patterns (defensive — may fail if no data)
         results = miner.mine_all() if hasattr(miner, "mine_all") else []
         for r in results if isinstance(results, list) else []:
-            patterns.append({
-                "type": r.get("pattern_type", "unknown"),
-                "description": str(r.get("description", r))[:200],
-                "confidence": r.get("confidence", 0.5),
-                "source": "eidos:pattern_miner",
-            })
+            patterns.append(
+                {
+                    "type": r.get("pattern_type", "unknown"),
+                    "description": str(r.get("description", r))[:200],
+                    "confidence": r.get("confidence", 0.5),
+                    "source": "eidos:pattern_miner",
+                }
+            )
     except Exception:
         pass
     return patterns

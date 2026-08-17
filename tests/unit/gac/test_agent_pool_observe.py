@@ -59,7 +59,10 @@ def write_registry(tmp_path: Path, *, probe: list[str] | None = None, quota: boo
                     "version_probe_timeout_seconds": 5,
                     "quota_probe_timeout_seconds": 5,
                 },
-                "quota_observer": {"executable": "codexbar", "argv_prefix": ["codexbar", "usage"]},
+                "quota_observer": {
+                    "executable": "codexbar",
+                    "argv_prefix": ["codexbar", "usage"],
+                },
                 "compute_plane": {
                     "route_uri": "bos://compute/aetherforge/infer",
                     "health_probe_argv": ["omlxc", "status", "--json"],
@@ -99,7 +102,10 @@ def quota_payload(*, timestamp: datetime = NOW, email: str = "private@example.te
                     "updatedAt": timestamp.isoformat().replace("+00:00", "Z"),
                     "dataConfidence": "high",
                     "primary": {"usedPercent": 25, "resetsAt": "2026-08-13T15:00:00Z"},
-                    "secondary": {"usedPercent": 10, "resetsAt": "2026-08-20T00:00:00Z"},
+                    "secondary": {
+                        "usedPercent": 10,
+                        "resetsAt": "2026-08-20T00:00:00Z",
+                    },
                 },
             }
         ]
@@ -110,7 +116,15 @@ def healthy_responses() -> dict[tuple[str, ...], object]:
     return {
         ("codex", "--version"): completed(["codex", "--version"], "codex 1.2.3\n"),
         (
-            "codexbar", "usage", "--provider", "codex", "--format", "json", "--status", "--no-credits", "--no-color",
+            "codexbar",
+            "usage",
+            "--provider",
+            "codex",
+            "--format",
+            "json",
+            "--status",
+            "--no-credits",
+            "--no-color",
         ): completed(["codexbar"], quota_payload()),
         ("omlxc", "status", "--json"): completed(["omlxc"], '{"status":"ready","identity":"do-not-leak"}'),
     }
@@ -141,7 +155,11 @@ def test_observation_is_read_only_sanitized_and_digest_verifiable(tmp_path):
     [
         (None, "unavailable", "command_missing"),
         (completed(["codex"], rc=7), "unavailable", "probe_nonzero"),
-        (subprocess.TimeoutExpired(["codex", "--version"], 5), "error", "probe_timeout"),
+        (
+            subprocess.TimeoutExpired(["codex", "--version"], 5),
+            "error",
+            "probe_timeout",
+        ),
     ],
 )
 def test_missing_nonzero_and_timeout_are_not_admitted(tmp_path, response, expected_state, expected_reason):
@@ -173,7 +191,17 @@ def test_unsafe_registry_argv_is_rejected_without_execution(tmp_path):
 )
 def test_malformed_or_stale_quota_is_unknown(tmp_path, usage, reason):
     replies = healthy_responses()
-    quota_argv = ("codexbar", "usage", "--provider", "codex", "--format", "json", "--status", "--no-credits", "--no-color")
+    quota_argv = (
+        "codexbar",
+        "usage",
+        "--provider",
+        "codex",
+        "--format",
+        "json",
+        "--status",
+        "--no-credits",
+        "--no-color",
+    )
     replies[quota_argv] = completed(["codexbar"], usage)
     result = observe(tmp_path, Runner(replies))
 
@@ -184,14 +212,27 @@ def test_malformed_or_stale_quota_is_unknown(tmp_path, usage, reason):
     ("mutate", "reason"),
     [
         (lambda payload: payload[0]["usage"].pop("updatedAt"), "timestamp_missing"),
-        (lambda payload: payload[0]["usage"].__setitem__("dataConfidence", "unknown"), "confidence_unknown"),
+        (
+            lambda payload: payload[0]["usage"].__setitem__("dataConfidence", "unknown"),
+            "confidence_unknown",
+        ),
     ],
 )
 def test_quota_without_timestamp_or_with_unknown_confidence_is_unknown(tmp_path, mutate, reason):
     payload = json.loads(quota_payload())
     mutate(payload)
     replies = healthy_responses()
-    quota_argv = ("codexbar", "usage", "--provider", "codex", "--format", "json", "--status", "--no-credits", "--no-color")
+    quota_argv = (
+        "codexbar",
+        "usage",
+        "--provider",
+        "codex",
+        "--format",
+        "json",
+        "--status",
+        "--no-credits",
+        "--no-color",
+    )
     replies[quota_argv] = completed(["codexbar"], json.dumps(payload))
     result = observe(tmp_path, Runner(replies))
 
@@ -201,7 +242,11 @@ def test_quota_without_timestamp_or_with_unknown_confidence_is_unknown(tmp_path,
 @pytest.mark.parametrize(
     ("response", "state", "reason"),
     [
-        (completed(["omlxc"], '{"status":"degraded"}'), "degraded", "reported_degraded"),
+        (
+            completed(["omlxc"], '{"status":"degraded"}'),
+            "degraded",
+            "reported_degraded",
+        ),
         (completed(["omlxc"], "not-json"), "error", "malformed"),
     ],
 )
@@ -241,7 +286,16 @@ def test_verify_cli_requires_fixed_expected_checksum_when_supplied(tmp_path):
     expected_digest = result["manifest_digest"]
     manifest_path = tmp_path / "manifest.json"
     manifest_path.write_text(json.dumps(result), encoding="utf-8")
-    command = [sys.executable, str(TOOL), "verify", "--manifest", str(manifest_path), "--expected-digest", expected_digest, "--json"]
+    command = [
+        sys.executable,
+        str(TOOL),
+        "verify",
+        "--manifest",
+        str(manifest_path),
+        "--expected-digest",
+        expected_digest,
+        "--json",
+    ]
 
     valid = subprocess.run(command, capture_output=True, text=True, check=False)
     assert valid.returncode == 0
@@ -258,7 +312,17 @@ def test_sensitive_nested_quota_window_is_not_projected(tmp_path):
     payload = json.loads(quota_payload())
     payload[0]["usage"]["primary"]["identity"] = {"token": "do-not-project"}
     replies = healthy_responses()
-    quota_argv = ("codexbar", "usage", "--provider", "codex", "--format", "json", "--status", "--no-credits", "--no-color")
+    quota_argv = (
+        "codexbar",
+        "usage",
+        "--provider",
+        "codex",
+        "--format",
+        "json",
+        "--status",
+        "--no-credits",
+        "--no-color",
+    )
     replies[quota_argv] = completed(["codexbar"], json.dumps(payload))
     result = observe(tmp_path, Runner(replies))
 
@@ -298,7 +362,16 @@ def test_real_registry_only_uses_observation_contract_and_never_admits_candidate
                 return completed(
                     argv,
                     json.dumps(
-                        [{"provider": provider, "usage": {"updatedAt": "2026-08-13T12:00:00Z", "dataConfidence": "high", "primary": {"usedPercent": 1}}}]
+                        [
+                            {
+                                "provider": provider,
+                                "usage": {
+                                    "updatedAt": "2026-08-13T12:00:00Z",
+                                    "dataConfidence": "high",
+                                    "primary": {"usedPercent": 1},
+                                },
+                            }
+                        ]
                     ),
                 )
             return completed(argv, f"{argv[0]} 1.0\n")
@@ -308,7 +381,9 @@ def test_real_registry_only_uses_observation_contract_and_never_admits_candidate
 
     assert len(result["agents"]) == 12
     assert {agent["provider_id"] for agent in result["agents"]} <= providers.keys()
-    expected_version_calls = [tuple(providers[worker["provider_ref"]]["version_probe_argv"]) for worker in external_workers]
+    expected_version_calls = [
+        tuple(providers[worker["provider_ref"]]["version_probe_argv"]) for worker in external_workers
+    ]
     for argv in expected_version_calls:
         assert runner.calls.count(argv) == 1
 
@@ -333,5 +408,7 @@ def test_real_registry_only_uses_observation_contract_and_never_admits_candidate
     assert not any(call == tuple(provider["launch_argv"]) for call in runner.calls for provider in providers.values())
     declared = [worker for worker in external_workers if worker["enabled"] is False]
     declared_ids = {worker["id"] for worker in declared}
-    assert all(agent["admission_state"] == "declared" for agent in result["agents"] if agent["worker_id"] in declared_ids)
+    assert all(
+        agent["admission_state"] == "declared" for agent in result["agents"] if agent["worker_id"] in declared_ids
+    )
     assert next(agent for agent in result["agents"] if agent["worker_id"] == "kilo")["admission_state"] == "declared"

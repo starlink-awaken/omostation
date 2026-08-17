@@ -86,11 +86,16 @@ def main() -> int:
 
     error_count = sum(len(items) for items in by_file.values())
     suppressed_diagnostics = line_suppressions + sum(
-        sum(1 for item in items if (item.get("rule") or DEFAULT_RULE) in {
-            line.split("=", 1)[0].removeprefix("# pyright: ")
-            for line in Path(path).read_text().splitlines()
-            if line.startswith("# pyright:")
-        })
+        sum(
+            1
+            for item in items
+            if (item.get("rule") or DEFAULT_RULE)
+            in {
+                line.split("=", 1)[0].removeprefix("# pyright: ")
+                for line in Path(path).read_text().splitlines()
+                if line.startswith("# pyright:")
+            }
+        )
         for path, items in by_file.items()
         if Path(path).is_file()
     )
@@ -99,9 +104,7 @@ def main() -> int:
         f"errors={error_count} files={changed} line_suppressions={line_suppressions} "
         f"file_suppressions={file_suppressions} suppression_ratio={suppression_ratio:.3f}"
     )
-    if args.suppression_gate and (
-        file_suppressions >= 3 or suppression_ratio > 0.6
-    ):
+    if args.suppression_gate and (file_suppressions >= 3 or suppression_ratio > 0.6):
         print(
             "❌ suppression gate: "
             f"file_suppressions={file_suppressions} (>=3) 或 "

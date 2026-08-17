@@ -6,6 +6,7 @@ Usage:
     python3 bin/mesh/mesh-orphan-cleanup.py --apply     # close all orphans
     python3 bin/mesh/mesh-orphan-cleanup.py --json      # JSON output
 """
+
 from __future__ import annotations
 
 import argparse
@@ -16,8 +17,8 @@ from pathlib import Path
 WORKSPACE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(WORKSPACE / "projects" / "omo" / "src"))
 
-from omo.workflow_mesh import WorkflowMeshStore, project_workflow_run
 from omo.workflow.mesh_agent_events import emit_workflow_mesh_event
+from omo.workflow_mesh import WorkflowMeshStore, project_workflow_run
 
 
 def find_orphans(store):
@@ -28,19 +29,23 @@ def find_orphans(store):
         try:
             snapshot = project_workflow_run(events, rid)
             if snapshot["state"] not in ("closed",) and snapshot["event_count"] > 0:
-                orphans.append({
-                    "run_id": rid,
-                    "state": snapshot["state"],
-                    "event_count": snapshot["event_count"],
-                    "last_event_type": snapshot.get("last_event_type"),
-                })
+                orphans.append(
+                    {
+                        "run_id": rid,
+                        "state": snapshot["state"],
+                        "event_count": snapshot["event_count"],
+                        "last_event_type": snapshot.get("last_event_type"),
+                    }
+                )
         except Exception:
-            orphans.append({
-                "run_id": rid,
-                "state": "error",
-                "event_count": 0,
-                "last_event_type": None,
-            })
+            orphans.append(
+                {
+                    "run_id": rid,
+                    "state": "error",
+                    "event_count": 0,
+                    "last_event_type": None,
+                }
+            )
     return orphans
 
 

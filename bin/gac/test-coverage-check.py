@@ -5,6 +5,7 @@ Exit 1 if:
   1. A Python project has `src/` but no `tests/` dir
   2. A Python project has `tests/` but no `test_*.py` files
 """
+
 from __future__ import annotations
 
 import sys
@@ -17,9 +18,9 @@ MIN_TESTS_PER_PROJECT = 1
 EXEMPT = {
     "cockpit-ui",  # TypeScript/Bun
     "family-hub",  # config only
-    "l4-kernel",   # system layer
-    "omo-debt",    # debt data, not code
-    "gbrain",      # TypeScript/Bun (uses test/ dir)
+    "l4-kernel",  # system layer
+    "omo-debt",  # debt data, not code
+    "gbrain",  # TypeScript/Bun (uses test/ dir)
 }
 
 # Projects with non-standard test directory
@@ -52,10 +53,7 @@ def main() -> int:
 
         test_files = list(test_dir.rglob("test_*.py"))
         if len(test_files) < MIN_TESTS_PER_PROJECT:
-            errors.append(
-                f"  ⚠️  {name}: tests/ has {len(test_files)} test file(s), "
-                f"minimum {MIN_TESTS_PER_PROJECT}"
-            )
+            errors.append(f"  ⚠️  {name}: tests/ has {len(test_files)} test file(s), minimum {MIN_TESTS_PER_PROJECT}")
 
     if errors:
         print(f"[TEST-COVERAGE] ❌ {len(errors)} 个项目测试覆盖不足:")

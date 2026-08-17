@@ -2,6 +2,7 @@
 
 Target: sync latency < 100ms (BET-3e602). Measures p50/p95/p99 of put→visible rounds.
 """
+
 from __future__ import annotations
 
 import time
@@ -61,13 +62,15 @@ def measure_sync_latency(
         lat = cluster.put(writer, f"k-{i}", {"i": i, "t": time.time()})
         samples.append(lat)
     samples.sort()
+
     def pct(p: float) -> float:
         if not samples:
             return 0.0
         idx = min(len(samples) - 1, max(0, int(round((p / 100.0) * (len(samples) - 1)))))
         return samples[idx]
+
     p50, p95, p99 = pct(50), pct(95), pct(99)
-    from caliber import stamp_physical_goal  # noqa: PLC0415
+    from caliber import stamp_physical_goal
 
     return stamp_physical_goal(
         {

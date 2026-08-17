@@ -4,6 +4,7 @@ Respects ADR-0221: hard scope limits + human intervention. Accuracy measured on
 labeled fixture set; kill-switch blocks write-side effects.
 Target: accuracy > 80% and kill-switch effective (BET-8c7c).
 """
+
 from __future__ import annotations
 
 import os
@@ -79,7 +80,9 @@ class EmergenceDetector:
         return True
 
 
-def measure_emergence_accuracy(fixtures: list[EmergenceEvent] | None = None) -> dict[str, Any]:
+def measure_emergence_accuracy(
+    fixtures: list[EmergenceEvent] | None = None,
+) -> dict[str, Any]:
     fixtures = fixtures or _default_fixtures()
     det = EmergenceDetector(KillSwitch(enabled=True))
     correct = 0
@@ -98,7 +101,7 @@ def measure_emergence_accuracy(fixtures: list[EmergenceEvent] | None = None) -> 
     det3.kill.kill()
     write_still_blocked = det3.try_write_side_effect("x2", "y") is False
 
-    from caliber import stamp_non_physical_goal  # noqa: PLC0415
+    from caliber import stamp_non_physical_goal
 
     ok = acc > 0.80 and killed_blocks_detect and write_blocked
     return stamp_non_physical_goal(

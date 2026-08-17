@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 # ── YAML ─────────────────────────────────────────────────────────────
 
+
 def load_yaml(path: Path) -> dict[str, Any]:
     """Load a YAML file, gracefully handling multi-doc. Returns {} if missing or empty.
 
@@ -45,12 +46,14 @@ def load_yaml(path: Path) -> dict[str, Any]:
     body = docs[-1]
     if not isinstance(body, dict):
         import warnings
+
         warnings.warn(f"YAML root is not a dict in {path}, returning empty dict", stacklevel=2)
         return {}
     return body
 
 
 # ── JSONL I/O ────────────────────────────────────────────────────────
+
 
 def append_jsonl(path: Path, entry: dict[str, Any]) -> None:
     """Append one JSON object as a JSONL line with fcntl locking (cross-process safe)."""
@@ -81,6 +84,7 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 # ── Time ─────────────────────────────────────────────────────────────
 
+
 def utc_now() -> str:
     """Return current UTC time as ISO-8601 with Z suffix, second precision.
 
@@ -93,6 +97,7 @@ def utc_now() -> str:
 
 
 # ── Verification helpers ─────────────────────────────────────────────
+
 
 def check_evidence(data: dict, root: Path) -> tuple[int, bool]:
     """Check whether evidence_refs point to existing files.
@@ -127,9 +132,7 @@ def is_runnable_cmd(cmd: str) -> bool:
     return True
 
 
-def run_verification(
-    cmd: str, root: Path, *, timeout: int = 30
-) -> tuple[bool | None, str | None]:
+def run_verification(cmd: str, root: Path, *, timeout: int = 30) -> tuple[bool | None, str | None]:
     """Run a verification command via subprocess.
 
     Returns (passed_or_None, error_tail_or_None).  The command is run
@@ -138,8 +141,13 @@ def run_verification(
     """
     try:
         proc = subprocess.run(
-            cmd, shell=True, cwd=root, capture_output=True, text=True,
-            timeout=timeout, check=False,
+            cmd,
+            shell=True,
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
         )
         return proc.returncode == 0, (proc.stderr[-300:] if proc.returncode != 0 else None)
     except Exception as exc:

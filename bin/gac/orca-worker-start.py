@@ -64,13 +64,9 @@ def _parse_orca_response(
     try:
         payload = json.loads(stdout)
     except (json.JSONDecodeError, TypeError):
-        return None, _failure(
-            "orca_response_invalid", stage, terminal_handle=terminal_handle
-        )
+        return None, _failure("orca_response_invalid", stage, terminal_handle=terminal_handle)
     if not isinstance(payload, dict):
-        return None, _failure(
-            "orca_response_invalid", stage, terminal_handle=terminal_handle
-        )
+        return None, _failure("orca_response_invalid", stage, terminal_handle=terminal_handle)
     if returncode != 0 or payload.get("ok") is not True:
         return None, _failure(
             {
@@ -85,9 +81,7 @@ def _parse_orca_response(
         )
     result = payload.get("result")
     if not isinstance(result, dict):
-        return None, _failure(
-            "orca_response_invalid", stage, terminal_handle=terminal_handle
-        )
+        return None, _failure("orca_response_invalid", stage, terminal_handle=terminal_handle)
     return result, None
 
 
@@ -105,12 +99,8 @@ def start_crush_worker(
     if help_rc != 0 or "--yolo" not in help_stdout:
         return _failure("crush_yolo_flag_unsupported", "agent_preflight")
 
-    status_rc, status_stdout, _status_stderr = runner(
-        ("orca", "status", "--json"), 10.0
-    )
-    status, failure = _parse_orca_response(
-        status_rc, status_stdout, stage="runtime_preflight"
-    )
+    status_rc, status_stdout, _status_stderr = runner(("orca", "status", "--json"), 10.0)
+    status, failure = _parse_orca_response(status_rc, status_stdout, stage="runtime_preflight")
     if failure:
         return failure
     assert status is not None
@@ -138,9 +128,7 @@ def start_crush_worker(
         "--json",
     )
     create_rc, create_stdout, _create_stderr = runner(create_command, 30.0)
-    created, failure = _parse_orca_response(
-        create_rc, create_stdout, stage="terminal_create"
-    )
+    created, failure = _parse_orca_response(create_rc, create_stdout, stage="terminal_create")
     if failure:
         return failure
     assert created is not None
@@ -161,12 +149,8 @@ def start_crush_worker(
         str(timeout_ms),
         "--json",
     )
-    wait_rc, wait_stdout, _wait_stderr = runner(
-        wait_command, max(10.0, timeout_ms / 1000 + 5.0)
-    )
-    waited, failure = _parse_orca_response(
-        wait_rc, wait_stdout, stage="tui_idle", terminal_handle=handle
-    )
+    wait_rc, wait_stdout, _wait_stderr = runner(wait_command, max(10.0, timeout_ms / 1000 + 5.0))
+    waited, failure = _parse_orca_response(wait_rc, wait_stdout, stage="tui_idle", terminal_handle=handle)
     if failure:
         return failure
     assert waited is not None
@@ -188,9 +172,7 @@ def start_crush_worker(
         "--json",
     )
     show_rc, show_stdout, _show_stderr = runner(show_command, 10.0)
-    shown, failure = _parse_orca_response(
-        show_rc, show_stdout, stage="process_identity", terminal_handle=handle
-    )
+    shown, failure = _parse_orca_response(show_rc, show_stdout, stage="process_identity", terminal_handle=handle)
     if failure:
         return failure
     assert shown is not None
@@ -203,9 +185,7 @@ def start_crush_worker(
         or not isinstance(preview, str)
         or "yolo mode!" not in preview.lower()
     ):
-        return _failure(
-            "crush_tui_not_verified", "process_identity", terminal_handle=handle
-        )
+        return _failure("crush_tui_not_verified", "process_identity", terminal_handle=handle)
 
     dispatch_parts: list[str] = [
         "orca",
@@ -223,9 +203,7 @@ def start_crush_worker(
     dispatch_parts.extend(("--inject", "--json"))
     dispatch_command = tuple(dispatch_parts)
     dispatch_rc, dispatch_stdout, _dispatch_stderr = runner(dispatch_command, 30.0)
-    dispatched, failure = _parse_orca_response(
-        dispatch_rc, dispatch_stdout, stage="dispatch", terminal_handle=handle
-    )
+    dispatched, failure = _parse_orca_response(dispatch_rc, dispatch_stdout, stage="dispatch", terminal_handle=handle)
     if failure:
         return failure
     assert dispatched is not None
@@ -250,9 +228,7 @@ def start_crush_worker(
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Start a supervised Crush worker only after its Orca TUI is ready."
-    )
+    parser = argparse.ArgumentParser(description="Start a supervised Crush worker only after its Orca TUI is ready.")
     parser.add_argument("--task", required=True, dest="task_id")
     parser.add_argument("--worktree", required=True)
     parser.add_argument("--coordinator-handle", required=True)

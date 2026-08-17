@@ -18,7 +18,9 @@ def main() -> int:
     # 检查 1: 未推送的子模块指针 (超前指针)
     result = subprocess.run(
         ["git", "submodule", "status"],
-        capture_output=True, text=True, cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
     )
     for line in result.stdout.splitlines():
         line = line.strip()
@@ -33,7 +35,9 @@ def main() -> int:
     # 检查 2: 子模块指针变更但无子模块 commit 消息
     result = subprocess.run(
         ["git", "diff", "--cached", "--name-only"],
-        capture_output=True, text=True, cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
     )
     for line in result.stdout.splitlines():
         line = line.strip()

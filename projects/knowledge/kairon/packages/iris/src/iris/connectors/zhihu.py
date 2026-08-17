@@ -66,8 +66,8 @@ class ZhihuConnector(BaseConnector):
             }
             if self._cookie:
                 headers["Cookie"] = self._cookie
-            req = urllib.request.Request(url, headers=headers)  # noqa: S310
-            resp = urllib.request.urlopen(req, timeout=15)  # noqa: S310
+            req = urllib.request.Request(url, headers=headers)
+            resp = urllib.request.urlopen(req, timeout=15)
             return cast("str", resp.read().decode("utf-8", errors="replace"))
         except Exception as e:
             logger.debug("Direct HTTP fetch failed: %s", e)
@@ -123,7 +123,7 @@ class ZhihuConnector(BaseConnector):
         try:
             import urllib.request
 
-            resp = urllib.request.urlopen(f"{ZHIHU_HOST}/robots.txt", timeout=5)  # noqa: S310
+            resp = urllib.request.urlopen(f"{ZHIHU_HOST}/robots.txt", timeout=5)
             return cast("bool", resp.status == 200)
         except Exception:
             return False

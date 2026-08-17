@@ -116,14 +116,16 @@ def main() -> int:
         if len(changed) > 10:
             print(f"... 还有 {len(changed) - 10} 个")
         print(
-            f"changed={len(changed)} skipped_no_frontmatter={len(skipped)} "
-            f"dry_run={args.dry_run} strict={args.strict}"
+            f"changed={len(changed)} skipped_no_frontmatter={len(skipped)} dry_run={args.dry_run} strict={args.strict}"
         )
 
     if args.strict and changed:
         # D3 (ADR-0373): CI 入口必须 exit 1 — 等价于阻断 gate
         if not args.json:
-            print(f"❌ --strict: {len(changed)} 个 ADR 缺 id, 请先跑 backfill", file=sys.stderr)
+            print(
+                f"❌ --strict: {len(changed)} 个 ADR 缺 id, 请先跑 backfill",
+                file=sys.stderr,
+            )
         return 1
     return 0
 

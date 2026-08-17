@@ -27,13 +27,14 @@ event-loop-lint grep "state_stale" 在 bin/+projects/omo/src/ 判定消费者;
 
 退出码: 0 = 跳过或 sync 成功; 非 0 = sync 失败.
 """
+
 from __future__ import annotations
 
 import argparse
 import fcntl
 import json
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -59,7 +60,7 @@ def has_fresh_stale(within_s: int) -> tuple[bool, int]:
     """
     if not EVENTS.is_file():
         return False, 0
-    cutoff = datetime.now(timezone.utc).timestamp() - within_s
+    cutoff = datetime.now(UTC).timestamp() - within_s
     total = 0
     fresh = False
     try:
@@ -91,8 +92,11 @@ def run_sync(timeout: int = 120) -> tuple[int, str]:
         try:
             res = subprocess.run(
                 ["uv", "run", "--project", "projects/omo", "omo", "state", "sync"],
-                cwd=WORKSPACE, capture_output=True, text=True,
-                timeout=timeout, check=False,
+                cwd=WORKSPACE,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                check=False,
             )
             out = (res.stdout + res.stderr).strip()
             return res.returncode, out
@@ -104,22 +108,37 @@ def emit_complete(changed: bool) -> None:
     """emit state_sync_complete (ADR-0128 §5.2.3 事件契约). 失败静默 (不阻塞主流程)."""
     payload = json.dumps(
         {"changed": changed, "consumer": "state-stale-consume.py"},
-        ensure_ascii=False, sort_keys=True,
+        ensure_ascii=False,
+        sort_keys=True,
     )
     subprocess.run(
-        ["uv", "run", "--project", "projects/omo", "omo", "event", "emit",
-         "--type", "state_sync_complete", "--source", "state-stale-consume",
-         "--payload", payload],
-        cwd=WORKSPACE, capture_output=True, text=True, timeout=30, check=False,
+        [
+            "uv",
+            "run",
+            "--project",
+            "projects/omo",
+            "omo",
+            "event",
+            "emit",
+            "--type",
+            "state_sync_complete",
+            "--source",
+            "state-stale-consume",
+            "--payload",
+            payload,
+        ],
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
     )
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Consume state_stale events → omo state sync")
-    parser.add_argument("--within", type=int, default=300,
-                        help="仅当近 N 秒内有 state_stale 事件才 sync (默认 300)")
-    parser.add_argument("--force", action="store_true",
-                        help="无视新鲜度, 强制 sync 一次")
+    parser.add_argument("--within", type=int, default=300, help="仅当近 N 秒内有 state_stale 事件才 sync (默认 300)")
+    parser.add_argument("--force", action="store_true", help="无视新鲜度, 强制 sync 一次")
     parser.add_argument("--quiet", action="store_true", help="静默")
     args = parser.parse_args()
 

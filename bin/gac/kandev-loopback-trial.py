@@ -21,7 +21,7 @@ import time
 import urllib.request
 import uuid
 from collections.abc import Callable, Sequence
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -86,7 +86,14 @@ def resolve_npx() -> str:
 
 def _controlled_path(npx_path: str) -> str:
     """Keep the executable directory and system paths, never a user-agent PATH."""
-    paths = [str(Path(npx_path).absolute().parent), "/usr/bin", "/bin", "/usr/sbin", "/sbin", "/opt/homebrew/bin"]
+    paths = [
+        str(Path(npx_path).absolute().parent),
+        "/usr/bin",
+        "/bin",
+        "/usr/sbin",
+        "/sbin",
+        "/opt/homebrew/bin",
+    ]
     return ":".join(dict.fromkeys(paths))
 
 
@@ -227,7 +234,11 @@ def _minimal_environment(home: Path, npx_path: str, trial_marker: str) -> dict[s
 
 
 def validate_receipt_path(
-    receipt_path: Path | str, *, workspace_root: Path | str, user_home: Path | str, trial_home: Path | str
+    receipt_path: Path | str,
+    *,
+    workspace_root: Path | str,
+    user_home: Path | str,
+    trial_home: Path | str,
 ) -> Path:
     """Keep receipts out of mutable workspace, user config, and trial state."""
     receipt = Path(receipt_path).expanduser().resolve()
@@ -321,13 +332,21 @@ def _reap(
                 process.wait(timeout=timeout_seconds)
         descendants = set(owned).difference({process.pid})
         if _wait_for_owned_exit(
-            descendants, process_tree_probe, monotonic=monotonic, sleeper=sleeper, timeout_seconds=timeout_seconds
+            descendants,
+            process_tree_probe,
+            monotonic=monotonic,
+            sleeper=sleeper,
+            timeout_seconds=timeout_seconds,
         ) and not (trial_marker and marker_probe(trial_marker)):
             return True
         for group in groups:
             group_terminator(group, signal.SIGKILL)
         return _wait_for_owned_exit(
-            descendants, process_tree_probe, monotonic=monotonic, sleeper=sleeper, timeout_seconds=timeout_seconds
+            descendants,
+            process_tree_probe,
+            monotonic=monotonic,
+            sleeper=sleeper,
+            timeout_seconds=timeout_seconds,
         ) and not (trial_marker and marker_probe(trial_marker))
     except (OSError, TrialError, subprocess.SubprocessError):
         return False
@@ -338,7 +357,10 @@ def _home_digest(home: Path) -> str:
 
 
 def _write_receipt(path: Path, receipt: dict[str, Any]) -> None:
-    path.write_text(json.dumps(receipt, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(receipt, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _failure_code(error: BaseException) -> str:
@@ -355,11 +377,14 @@ def _failure_code(error: BaseException) -> str:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _merge_owned_snapshot(
-    snapshot: dict[int, tuple[int, int]], root_pid: int, process_tree_probe: Callable[[], str], trial_marker: str,
+    snapshot: dict[int, tuple[int, int]],
+    root_pid: int,
+    process_tree_probe: Callable[[], str],
+    trial_marker: str,
     marker_probe: Callable[[str], dict[int, tuple[int, int]]],
 ) -> None:
     snapshot.update(_owned_processes(root_pid, process_tree_probe()))
@@ -393,7 +418,9 @@ def run_smoke(
     if not 0 < startup_timeout_seconds <= MAX_TIMEOUT_SECONDS:
         raise TrialError(f"startup timeout must be greater than zero and at most {int(MAX_TIMEOUT_SECONDS)} seconds")
     if not 0 < cleanup_timeout_seconds <= MAX_CLEANUP_GRACE_SECONDS:
-        raise TrialError(f"cleanup timeout must be greater than zero and at most {int(MAX_CLEANUP_GRACE_SECONDS)} seconds")
+        raise TrialError(
+            f"cleanup timeout must be greater than zero and at most {int(MAX_CLEANUP_GRACE_SECONDS)} seconds"
+        )
 
     receipt_file: Path | None = None
     process: Any | None = None
@@ -432,7 +459,10 @@ def run_smoke(
         command[0] = npx_path
         trial_home = validate_trial_home(home, workspace_root=workspace_root, user_home=user_home)
         receipt_file = validate_receipt_path(
-            receipt_path, workspace_root=workspace_root, user_home=user_home, trial_home=trial_home
+            receipt_path,
+            workspace_root=workspace_root,
+            user_home=user_home,
+            trial_home=trial_home,
         )
         receipt["home_digest"] = _home_digest(trial_home)
         if listener_probe(port).strip():
@@ -449,7 +479,13 @@ def run_smoke(
                 stderr=subprocess.DEVNULL,
             )
             owned_snapshot = {}
-            _merge_owned_snapshot(owned_snapshot, process.pid, process_tree_probe, trial_marker, marker_probe)
+            _merge_owned_snapshot(
+                owned_snapshot,
+                process.pid,
+                process_tree_probe,
+                trial_marker,
+                marker_probe,
+            )
         except OSError as exc:
             raise TrialError("trial process failed to start") from exc
 
@@ -457,7 +493,13 @@ def run_smoke(
         while True:
             # Preserve the last trustworthy descendant set even if the
             # launcher exits after it has moved the backend to another PGID.
-            _merge_owned_snapshot(owned_snapshot, process.pid, process_tree_probe, trial_marker, marker_probe)
+            _merge_owned_snapshot(
+                owned_snapshot,
+                process.pid,
+                process_tree_probe,
+                trial_marker,
+                marker_probe,
+            )
             if health_probe(port):
                 receipt["checks"]["health"] = True
                 break
@@ -475,7 +517,7 @@ def run_smoke(
         receipt["outcome"] = "succeeded"
     except TrialError as exc:
         error = exc
-    except Exception as exc:  # noqa: BLE001 - fail closed without persisting dependency error text
+    except Exception as exc:
         error = TrialError("trial execution failed")
         error.__cause__ = exc
     finally:
@@ -523,7 +565,12 @@ def _plan(args: argparse.Namespace) -> dict[str, Any]:
     command = build_command(args.package_version, args.port)
     command[0] = resolve_npx()
     return {
-        "assertions": {"agent_spawned": False, "model_called": False, "task_created": False, "workspace_written": False},
+        "assertions": {
+            "agent_spawned": False,
+            "model_called": False,
+            "task_created": False,
+            "workspace_written": False,
+        },
         "command": command,
         "home_digest": _home_digest(home),
         "mode": "dry-run",
@@ -539,9 +586,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     command = parser.add_subparsers(dest="command", required=True)
     smoke = command.add_parser("run-smoke", help="print a plan unless --execute is explicitly supplied")
-    smoke.add_argument("--execute", action="store_true", help="start the isolated, bounded local smoke trial")
-    smoke.add_argument("--package-version", required=True, help="exact Kandev npm version; latest/ranges are rejected")
-    smoke.add_argument("--home", required=True, help="empty, explicit directory outside Workspace and user home")
+    smoke.add_argument(
+        "--execute",
+        action="store_true",
+        help="start the isolated, bounded local smoke trial",
+    )
+    smoke.add_argument(
+        "--package-version",
+        required=True,
+        help="exact Kandev npm version; latest/ranges are rejected",
+    )
+    smoke.add_argument(
+        "--home",
+        required=True,
+        help="empty, explicit directory outside Workspace and user home",
+    )
     smoke.add_argument("--port", required=True, type=int, help="local trial port")
     smoke.add_argument("--receipt", help="required with --execute; canonical redacted JSON output path")
     smoke.add_argument("--workspace-root", default=Path.cwd(), help=argparse.SUPPRESS)
@@ -555,7 +614,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         if not args.execute:
-            print(json.dumps(_plan(args), ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+            print(
+                json.dumps(
+                    _plan(args),
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+            )
             return 0
         if not args.receipt:
             raise TrialError("--receipt is required with --execute")

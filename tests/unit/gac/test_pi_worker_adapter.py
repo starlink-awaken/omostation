@@ -24,7 +24,13 @@ SPEC.loader.exec_module(adapter)
 
 
 class FakeProcess:
-    def __init__(self, *, stdout: str = "reasoned answer\n", stderr: str = "", returncode: int = 0) -> None:
+    def __init__(
+        self,
+        *,
+        stdout: str = "reasoned answer\n",
+        stderr: str = "",
+        returncode: int = 0,
+    ) -> None:
         self.pid = 43210
         self.stdout = stdout
         self.stderr = stderr
@@ -101,11 +107,7 @@ def no_marker(_marker: str) -> dict[int, int]:
 def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
     registry_path = SCRIPT.parents[2] / ".omo" / "_truth" / "registry" / "workers.yaml"
     documents = list(yaml.safe_load_all(registry_path.read_text(encoding="utf-8")))
-    registry = next(
-        document
-        for document in documents
-        if isinstance(document, dict) and "workers" in document
-    )
+    registry = next(document for document in documents if isinstance(document, dict) and "workers" in document)
     workers = {worker["id"]: worker for worker in registry["workers"]}
     pi = workers["pi"]
 
@@ -128,15 +130,10 @@ def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
     admitted_worker_ids = {
         worker_id
         for worker_id, worker in workers.items()
-        if worker.get("enabled") is True
-        and worker.get("admission_state") == "admitted"
+        if worker.get("enabled") is True and worker.get("admission_state") == "admitted"
     }
     assert admitted_worker_ids == {"codebuddy", "reasonix", "pi", "oh-my-pi"}
-    candidates = {
-        worker_id: worker
-        for worker_id, worker in workers.items()
-        if worker_id not in admitted_worker_ids
-    }
+    candidates = {worker_id: worker for worker_id, worker in workers.items() if worker_id not in admitted_worker_ids}
     assert candidates
     for candidate in candidates.values():
         assert candidate["enabled"] is False
@@ -224,7 +221,10 @@ def test_provider_projection_strips_unknown_and_non_coding_model_fields(tmp_path
         tmp_path,
         provider_overrides={
             "unknown_provider_setting": "must-not-cross-boundary",
-            "models": [{"id": "coding", "unknown_model_setting": "must-not-cross-boundary"}, {"id": "other"}],
+            "models": [
+                {"id": "coding", "unknown_model_setting": "must-not-cross-boundary"},
+                {"id": "other"},
+            ],
         },
     )
     adapter._copy_omlxc_provider(home, destination)
@@ -270,8 +270,13 @@ def test_execute_uses_fixed_argv_shell_false_and_scrubbed_environment(tmp_path: 
     assert captured["start_new_session"] is True
     env = captured["env"]
     assert env["PATH"] == "/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin"
-    assert any(adapter._is_within(Path(env["PI_CODING_AGENT_DIR"]).resolve(), root) for root in adapter._system_temp_roots())
-    assert any(adapter._is_within(Path(env["PI_CODING_AGENT_SESSION_DIR"]).resolve(), root) for root in adapter._system_temp_roots())
+    assert any(
+        adapter._is_within(Path(env["PI_CODING_AGENT_DIR"]).resolve(), root) for root in adapter._system_temp_roots()
+    )
+    assert any(
+        adapter._is_within(Path(env["PI_CODING_AGENT_SESSION_DIR"]).resolve(), root)
+        for root in adapter._system_temp_roots()
+    )
     assert env["HOME"] == str(home)
     assert "OPENAI_API_KEY" not in env and "HTTP_PROXY" not in env
     assert "GITHUB_TOKEN" not in env and "SSH_AUTH_SOCK" not in env
@@ -303,7 +308,9 @@ def test_health_identity_mismatch_fails_closed_without_starting_process(tmp_path
     assert payload["error_code"] == "health_rejected"
 
 
-def test_success_writes_model_text_only_to_stdout_and_keeps_receipt_redacted(tmp_path: Path):
+def test_success_writes_model_text_only_to_stdout_and_keeps_receipt_redacted(
+    tmp_path: Path,
+):
     receipt = safe_receipt(tmp_path)
     model_text = "the private answer from model\n"
     result = adapter.run_worker(
@@ -345,8 +352,14 @@ def test_transport_can_run_without_persisting_an_adapter_receipt(tmp_path: Path)
     assert result["receipt"] is None
 
 
-def test_cli_forwards_successful_model_text_to_stdout(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]):
-    monkeypatch.setattr(adapter, "run_worker", lambda **_kwargs: {"output": "model text\n", "receipt": {}})
+def test_cli_forwards_successful_model_text_to_stdout(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+):
+    monkeypatch.setattr(
+        adapter,
+        "run_worker",
+        lambda **_kwargs: {"output": "model text\n", "receipt": {}},
+    )
 
     assert adapter.main(["run", "--prompt", "x", "--execute", "--receipt", "/tmp/unused.json"]) == 0
     assert capsys.readouterr().out == "model text\n"
@@ -617,10 +630,17 @@ def test_unsafe_or_overwrite_receipt_path_is_rejected(tmp_path: Path, existing: 
         receipt.write_text("existing", encoding="utf-8")
 
     with pytest.raises(adapter.AdapterError, match="unsafe_receipt"):
-        adapter.run_worker(prompt="x", execute=True, receipt_path=receipt, user_home=user_pi_home(tmp_path))
+        adapter.run_worker(
+            prompt="x",
+            execute=True,
+            receipt_path=receipt,
+            user_home=user_pi_home(tmp_path),
+        )
 
 
-def test_exact_marker_mismatch_fails_closed_and_never_persists_stderr_secret(tmp_path: Path):
+def test_exact_marker_mismatch_fails_closed_and_never_persists_stderr_secret(
+    tmp_path: Path,
+):
     receipt = safe_receipt(tmp_path)
     secret = "stderr-super-secret"
 
@@ -641,7 +661,11 @@ def test_exact_marker_mismatch_fails_closed_and_never_persists_stderr_secret(tmp
 
 
 def test_receipt_write_failure_is_a_stable_error_without_raw_exception(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(adapter, "_write_receipt", lambda *_args: (_ for _ in ()).throw(OSError("secret write path")))
+    monkeypatch.setattr(
+        adapter,
+        "_write_receipt",
+        lambda *_args: (_ for _ in ()).throw(OSError("secret write path")),
+    )
 
     with pytest.raises(adapter.AdapterError, match="receipt_write_failed"):
         adapter.run_worker(

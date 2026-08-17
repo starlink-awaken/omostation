@@ -15,7 +15,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -137,8 +136,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if command == "record":
         result = record_outcome(
-            args.scene_card, args.run_id, args.adjudication,
-            actor=args.actor, notes=args.notes, revision_diff=args.revision_diff,
+            args.scene_card,
+            args.run_id,
+            args.adjudication,
+            actor=args.actor,
+            notes=args.notes,
+            revision_diff=args.revision_diff,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
@@ -150,7 +153,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         print(f"Recent outcomes ({len(entries)} entries):")
         for e in entries:
-            print(f"  {e['ts'][:19]}  {e.get('scene_id','?'):25s}  {e['adjudication']:10s}  by={e['actor']}")
+            print(f"  {e['ts'][:19]}  {e.get('scene_id', '?'):25s}  {e['adjudication']:10s}  by={e['actor']}")
         return 0
 
     return 1

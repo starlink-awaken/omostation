@@ -40,13 +40,41 @@ def test_evalset_has_three_classes(monkeypatch):
     # 用假数据构造, 确保三类齐全
     monkeypatch.setattr(gen, "PR_HARVEST", Path("/nonexistent/pr.jsonl"))
     monkeypatch.setattr(gen, "ADJUDICATIONS", Path("/nonexistent/adj.jsonl"))
-    monkeypatch.setattr(gen, "_fetch_closed_unmerged", lambda repo: [
-        {"number": 1, "title": "closed", "state": "closed", "closed_at": "x", "user": {"login": "a"}}
-    ])
-    monkeypatch.setattr(gen, "_fetch_merged", lambda repo, max_pages: [
-        {"number": 100, "title": "m1", "merged_at": "x", "user": {"login": "a"}, "additions": 10, "deletions": 2},
-        {"number": 101, "title": "m2", "merged_at": "x", "user": {"login": "a"}, "additions": 400, "deletions": 0},
-    ])
+    monkeypatch.setattr(
+        gen,
+        "_fetch_closed_unmerged",
+        lambda repo: [
+            {
+                "number": 1,
+                "title": "closed",
+                "state": "closed",
+                "closed_at": "x",
+                "user": {"login": "a"},
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        gen,
+        "_fetch_merged",
+        lambda repo, max_pages: [
+            {
+                "number": 100,
+                "title": "m1",
+                "merged_at": "x",
+                "user": {"login": "a"},
+                "additions": 10,
+                "deletions": 2,
+            },
+            {
+                "number": 101,
+                "title": "m2",
+                "merged_at": "x",
+                "user": {"login": "a"},
+                "additions": 400,
+                "deletions": 0,
+            },
+        ],
+    )
     evalset = gen._build_evalset()
     classes = set(evalset["distribution"])
     assert {"positive", "negative", "boundary"} <= classes

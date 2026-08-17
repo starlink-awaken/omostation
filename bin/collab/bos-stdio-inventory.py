@@ -10,6 +10,7 @@ Usage:
   python3 bin/collab/bos-stdio-inventory.py --target-ratio 0.65
   python3 bin/collab/bos-stdio-inventory.py --migrate-candidates --limit 15
 """
+
 from __future__ import annotations
 
 import argparse
@@ -44,9 +45,7 @@ def _candidate_score(svc: dict) -> tuple[int, str]:
     pkg = str(svc.get("package") or "")
     uri = str(svc.get("uri") or "")
     # in-tree python -m modules are better internal candidates
-    if isinstance(cmd, list) and any(
-        x in {"-m", "python", "python3", "uv"} for x in (str(c) for c in cmd)
-    ):
+    if isinstance(cmd, list) and any(x in {"-m", "python", "python3", "uv"} for x in (str(c) for c in cmd)):
         score += 2
         reasons.append("python_module_cmd")
     if pkg and not pkg.endswith("-mcp"):
@@ -85,9 +84,7 @@ def migrate_candidates(path: Path, limit: int) -> list[dict]:
                 "score": score,
                 "reason": reason,
                 "suggested_target": (
-                    "internal"
-                    if "module_path" in reason or "python_module_cmd" in reason
-                    else "mcp_proxy+mcp_tool"
+                    "internal" if "module_path" in reason or "python_module_cmd" in reason else "mcp_proxy+mcp_tool"
                 ),
                 "command": s.get("command"),
             }
@@ -168,18 +165,13 @@ def main(argv: list[str] | None = None) -> int:
     for t, n in rep["transport_histogram"].items():
         print(f"  {t:16} {n}")
     print("by domain (top stdio-ish):")
-    ranked = sorted(
-        rep["by_domain"].items(), key=lambda kv: (-kv[1]["stdio_ish"], kv[0])
-    )
+    ranked = sorted(rep["by_domain"].items(), key=lambda kv: (-kv[1]["stdio_ish"], kv[0]))
     for d, b in ranked[:12]:
         print(f"  {d:16} stdio_ish={b['stdio_ish']:3}/{b['total']:<3} ratio={b['ratio']}")
     if args.migrate_candidates:
         print(f"\nmigrate candidates (top {args.limit}, heuristic only):")
         for i, c in enumerate(rep.get("migrate_candidates") or [], 1):
-            print(
-                f"  {i:2}. score={c['score']} → {c['suggested_target']:18}  "
-                f"{c['uri']}  ({c['reason']})"
-            )
+            print(f"  {i:2}. score={c['score']} → {c['suggested_target']:18}  {c['uri']}  ({c['reason']})")
         print(f"  note: {rep.get('migrate_note')}")
     print(f"\n{rep['redline_note']}")
     return 0 if rep["meets_target"] else 1

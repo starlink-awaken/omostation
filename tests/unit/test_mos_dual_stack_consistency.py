@@ -87,7 +87,13 @@ def test_write_report_creates_file(tmp_path, monkeypatch):
 
 def test_render_weekly_has_scroll_and_disclaimer():
     history = [
-        {"week": "2026-W32", "consistency_ratio": 0.875, "consistent_count": 7, "queries_count": 8, "results": []},
+        {
+            "week": "2026-W32",
+            "consistency_ratio": 0.875,
+            "consistent_count": 7,
+            "queries_count": 8,
+            "results": [],
+        },
     ]
     text = mdc._render_weekly(history)
     assert "8 周滚动" in text

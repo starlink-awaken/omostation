@@ -26,21 +26,17 @@ from pathlib import Path
 WORKSPACE = Path(__file__).resolve().parents[2]
 CI_SURFACES = WORKSPACE / ".omo" / "_truth" / "registry" / "ci-surfaces.yaml"
 WORKFLOWS_DIR = WORKSPACE / ".github" / "workflows"
-SGF_POLICY = (
-    WORKSPACE
-    / "projects"
-    / "ecos"
-    / "src"
-    / "ecos"
-    / "ssot"
-    / "mof"
-    / "m1"
-    / "governance"
-    / "sgf-policy.yaml"
-)
+SGF_POLICY = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
 
 # check 类工具路径前缀 (非 check 的 util/install/setup 不算 CI 检查面)
-CHECK_PREFIX = ("scripts/check-", "bin/gac/", "bin/ssot/", "bin/mof/", "bin/adr/", "bin/sweep/")
+CHECK_PREFIX = (
+    "scripts/check-",
+    "bin/gac/",
+    "bin/ssot/",
+    "bin/mof/",
+    "bin/adr/",
+    "bin/sweep/",
+)
 
 # 已知故意 double-trigger 豁免 (无 main 分支限制但确有意义的) — 默认空, 只允许显式登记
 DOUBLE_TRIGGER_EXEMPT = set()
@@ -84,7 +80,8 @@ def _discover_wiring() -> dict[str, dict]:
         text = wf.read_text(encoding="utf-8", errors="ignore")
         name = wf.name
         for m in re.finditer(
-            r"(python3|python|uv run[^|]*|bash)\s+((?:bin|scripts)/[\w./-]+\.(?:py|sh))", text
+            r"(python3|python|uv run[^|]*|bash)\s+((?:bin|scripts)/[\w./-]+\.(?:py|sh))",
+            text,
         ):
             tool = m.group(2)
             entry = tools.setdefault(tool, {"workflows": [], "gate": False})
@@ -101,7 +98,6 @@ def _discover_wiring() -> dict[str, dict]:
 
 def _is_check_tool(tool: str) -> bool:
     return tool.startswith(CHECK_PREFIX)
-
 
 
 def check_workflow_trigger_drift(registry: dict, workflow_dir: Path) -> list[str]:
@@ -171,14 +167,8 @@ def check_ci_surfaces() -> dict:
 
     registry = _load_yaml(CI_SURFACES)
     surfaces = registry.get("surfaces") or []
-    registered_tools = {
-        str(s.get("tool") or ""): s for s in surfaces if isinstance(s, dict) and s.get("tool")
-    }
-    orphan_registered = {
-        str(s.get("tool"))
-        for s in surfaces
-        if isinstance(s, dict) and s.get("status") == "orphan"
-    }
+    registered_tools = {str(s.get("tool") or ""): s for s in surfaces if isinstance(s, dict) and s.get("tool")}
+    orphan_registered = {str(s.get("tool")) for s in surfaces if isinstance(s, dict) and s.get("status") == "orphan"}
 
     wiring = _discover_wiring()
 
@@ -191,7 +181,9 @@ def check_ci_surfaces() -> dict:
         if meta["gate"]:
             errors.append(f"gate-parity: sgf-policy gate 引用了未登记的检查工具 {tool} (CR-CI-SURFACE-SSOT)")
         else:
-            errors.append(f"unregistered-check: workflow {','.join(meta['workflows'])} 执行了未登记的检查 {tool} (CR-CI-SURFACE-SSOT)")
+            errors.append(
+                f"unregistered-check: workflow {','.join(meta['workflows'])} 执行了未登记的检查 {tool} (CR-CI-SURFACE-SSOT)"
+            )
 
     # 2.5 E-5: workflow 触发/path-filter 登记 drift (workflow_triggers section)
     warnings.extend(check_workflow_trigger_drift(registry, WORKFLOWS_DIR))
@@ -267,15 +259,17 @@ def fix_ci_surfaces() -> dict:
             continue
         if tool in registered_tools:
             continue
-        surfaces.append({
-            "id": _tool_id(tool),
-            "tool": tool,
-            "workflow": meta["workflows"][0] if meta["workflows"] else "(none)",
-            "gate": meta["gate"],
-            "triggers": [],
-            "status": "active",
-            "note": "auto-registered by check-ci-surfaces.py --fix",
-        })
+        surfaces.append(
+            {
+                "id": _tool_id(tool),
+                "tool": tool,
+                "workflow": meta["workflows"][0] if meta["workflows"] else "(none)",
+                "gate": meta["gate"],
+                "triggers": [],
+                "status": "active",
+                "note": "auto-registered by check-ci-surfaces.py --fix",
+            }
+        )
         added_surfaces += 1
 
     for wf in sorted(WORKFLOWS_DIR.glob("*.yml")):
@@ -290,14 +284,18 @@ def fix_ci_surfaces() -> dict:
             triggers.append("scheduled")
         if "workflow_dispatch" in text:
             triggers.append("manual")
-        if re.search(r"^\s+push:\s*$", text, re.M):
+        if re.search(r"^\s+push:\s*$", text, re.MULTILINE):
             triggers.append("push")
-        if re.search(r"^\s+pull_request:\s*$", text, re.M):
+        if re.search(r"^\s+pull_request:\s*$", text, re.MULTILINE):
             triggers.append("per_pr")
-        path_filtered = bool(re.search(r"^\s+paths:\s*$", text, re.M))
-        entry: dict = {"workflow": name, "triggers": triggers, "path_filtered": path_filtered}
+        path_filtered = bool(re.search(r"^\s+paths:\s*$", text, re.MULTILINE))
+        entry: dict = {
+            "workflow": name,
+            "triggers": triggers,
+            "path_filtered": path_filtered,
+        }
         if path_filtered:
-            paths_re = re.compile(r"^\s+paths:\s*$((?:\n\s+- [^\n]+)*)", re.M)
+            paths_re = re.compile(r"^\s+paths:\s*$((?:\n\s+- [^\n]+)*)", re.MULTILINE)
             paths = []
             for m in paths_re.finditer(text):
                 for line in m.group(1).split("\n"):
@@ -315,7 +313,13 @@ def fix_ci_surfaces() -> dict:
         registry["surfaces"] = surfaces
         registry["workflow_triggers"] = wf_triggers
         with open(CI_SURFACES, "w", encoding="utf-8") as f:
-            yaml.dump(registry, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+            yaml.dump(
+                registry,
+                f,
+                default_flow_style=False,
+                allow_unicode=True,
+                sort_keys=False,
+            )
 
     return {"added_surfaces": added_surfaces, "added_wf_triggers": added_wf_triggers}
 
@@ -329,6 +333,7 @@ def main() -> int:
         result = fix_ci_surfaces()
         if json_mode:
             import json
+
             print(json.dumps(result, ensure_ascii=False, indent=2))
         else:
             print(f"fix: +{result['added_surfaces']} surfaces, +{result['added_wf_triggers']} workflow_triggers")
@@ -349,7 +354,9 @@ def main() -> int:
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 1 if report["errors"] else 0
     print("=== CI 平面可观测性 (check-ci-surfaces.py, ADR-0379) ===")
-    print(f"SSOT: ci-surfaces.yaml | surfaces={report['surfaces']} wired={report['wired_tools']} orphan_registered={report['orphan_registered']}")
+    print(
+        f"SSOT: ci-surfaces.yaml | surfaces={report['surfaces']} wired={report['wired_tools']} orphan_registered={report['orphan_registered']}"
+    )
     for e in report["errors"]:
         print(f"  ❌ {e}")
     for w in report["warnings"]:

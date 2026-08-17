@@ -10,6 +10,7 @@
 照搬 baseline 模式 (M2 check-work-landed): 标准化 > 逐个打补丁.
 静态 schema 检查, 自身 <0.1s (不读 git, 不跑 subprocess).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,9 +21,7 @@ from pathlib import Path
 import yaml
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-SGF_POLICY = (
-    WORKSPACE / "projects/ecos/src/ecos/ssot/mof/m1/governance/sgf-policy.yaml"
-)
+SGF_POLICY = WORKSPACE / "projects/ecos/src/ecos/ssot/mof/m1/governance/sgf-policy.yaml"
 BASELINE_FILE = WORKSPACE / ".omo/_truth/registry/baseline-perf-budget.txt"
 PRECOMMIT_BUDGET_S = 2
 
@@ -30,9 +29,7 @@ PRECOMMIT_BUDGET_S = 2
 def _load_gates() -> list[dict]:
     if not SGF_POLICY.is_file():
         return []
-    data = yaml.load(
-        SGF_POLICY.read_text(encoding="utf-8"), Loader=yaml.CSafeLoader
-    ) or {}
+    data = yaml.load(SGF_POLICY.read_text(encoding="utf-8"), Loader=yaml.CSafeLoader) or {}
     return data.get("gates") or []
 
 
@@ -86,26 +83,32 @@ def main(argv: list[str] | None = None) -> int:
         budget = g.get("perf_budget_s")
         if budget is None:
             if gid in baseline and not args.strict:
-                findings.append({
-                    "id": gid,
-                    "kind": "missing_grace",
-                    "message": "no perf_budget_s (baseline grace, 存量不追溯)",
-                })
+                findings.append(
+                    {
+                        "id": gid,
+                        "kind": "missing_grace",
+                        "message": "no perf_budget_s (baseline grace, 存量不追溯)",
+                    }
+                )
                 summary["warn"] += 1
             else:
-                findings.append({
-                    "id": gid,
-                    "kind": "missing",
-                    "message": "gate 缺 perf_budget_s 声明 (新 check 必须声明, 见 gac-check-perf-budget.md §4)",
-                })
+                findings.append(
+                    {
+                        "id": gid,
+                        "kind": "missing",
+                        "message": "gate 缺 perf_budget_s 声明 (新 check 必须声明, 见 gac-check-perf-budget.md §4)",
+                    }
+                )
                 summary["fail"] += 1
         elif budget > PRECOMMIT_BUDGET_S:
-            findings.append({
-                "id": gid,
-                "kind": "over_budget",
-                "perf_budget_s": budget,
-                "message": f"perf_budget_s={budget} > {PRECOMMIT_BUDGET_S} 但未标 ci_only (>2s 必须 ci_only)",
-            })
+            findings.append(
+                {
+                    "id": gid,
+                    "kind": "over_budget",
+                    "perf_budget_s": budget,
+                    "message": f"perf_budget_s={budget} > {PRECOMMIT_BUDGET_S} 但未标 ci_only (>2s 必须 ci_only)",
+                }
+            )
             summary["fail"] += 1
         else:
             summary["passed"] += 1
@@ -117,8 +120,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(f"check-perf-budget: {'PASS' if ok else 'FAIL'}")
         print(
-            f"  checked={summary['checked']} passed={summary['passed']} "
-            f"warn={summary['warn']} fail={summary['fail']}"
+            f"  checked={summary['checked']} passed={summary['passed']} warn={summary['warn']} fail={summary['fail']}"
         )
         for f in findings:
             print(f"  - {f['id']} [{f['kind']}] {f.get('message', '')}")

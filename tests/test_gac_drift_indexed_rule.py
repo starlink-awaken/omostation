@@ -15,7 +15,6 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT = Path(__file__).resolve().parents[1]
 GAC_DRIFT = ROOT / "bin" / "gac" / "gac-drift.py"
 
@@ -36,6 +35,7 @@ def gd():
     top level, so we need to ensure `bin/gac/` is on path before loading.
     """
     import sys
+
     bin_gac = str(ROOT / "bin" / "gac")
     if bin_gac not in sys.path:
         sys.path.insert(0, bin_gac)
@@ -84,9 +84,7 @@ def test_non_ssot_rule_still_fails_when_id_missing_from_content(gd, tmp_path) ->
         "source_ref": f"{fake_ssot}::rules",
     }
     drifts = gd.check_indexed_drift(rule)
-    assert any("未找到" in d for d in drifts), (
-        f"expected drift, got: {drifts}"
-    )
+    assert any("未找到" in d for d in drifts), f"expected drift, got: {drifts}"
 
 
 def test_indexed_rule_fails_when_file_missing(gd) -> None:

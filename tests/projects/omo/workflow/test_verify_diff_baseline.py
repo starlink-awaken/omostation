@@ -5,6 +5,7 @@
 
 不真实化 run 文件: 直接测 diff_baseline_report 的分支逻辑 (构造 payload)。
 """
+
 from __future__ import annotations
 
 import sys
@@ -28,10 +29,12 @@ def _with_run(claims: list[dict], tmp_path: Path):
     from unittest.mock import patch
 
     import omo.workflow.lifecycle as lif
+
     _run_file(tmp_path, claims)
     payload = {"run_id": "r1", "status": "active", "workflow_id": "w", "claims": claims}
-    return patch.object(lif, "run_file_for", return_value=tmp_path / "r1.yaml"), \
-           patch.object(lif, "read_run", return_value=(tmp_path / "r1.yaml", payload))
+    return patch.object(lif, "run_file_for", return_value=tmp_path / "r1.yaml"), patch.object(
+        lif, "read_run", return_value=(tmp_path / "r1.yaml", payload)
+    )
 
 
 def test_no_run_id_skips():
@@ -44,16 +47,23 @@ def test_legacy_claim_without_baseline_skips(tmp_path):
     p1, p2 = _with_run([{"paths": ["docs/a.md"]}], tmp_path)
     with p1, p2:
         rep = diff_baseline_report(reg, "r1", [])
-    assert rep["ok"] is True and "baseline_commit" in rep["reason"] or rep["reason"] == "no baseline_commit (legacy claim)"
+    assert (
+        rep["ok"] is True and "baseline_commit" in rep["reason"] or rep["reason"] == "no baseline_commit (legacy claim)"
+    )
 
 
 def test_drift_detected_and_fails(tmp_path):
     """claim 后有变更绕过 claim → drifted 非空 → ok=False (核心防线)."""
     reg = {}
-    p1, p2 = _with_run([{
-        "paths": ["docs/plans/ledger.yaml"],
-        "baseline_commit": "abc123",
-    }], tmp_path)
+    p1, p2 = _with_run(
+        [
+            {
+                "paths": ["docs/plans/ledger.yaml"],
+                "baseline_commit": "abc123",
+            }
+        ],
+        tmp_path,
+    )
     fake_diff = "docs/plans/ledger.yaml\ndocs/plans/OTHER.yaml\n"  # OTHER 未被 claim
     with p1, p2, patch("subprocess.run") as mock:
         mock.return_value.returncode = 0
@@ -68,10 +78,15 @@ def test_drift_detected_and_fails(tmp_path):
 def test_no_drift_when_all_covered(tmp_path):
     """claim 后变更全部在 claim 覆盖内 → ok=True."""
     reg = {}
-    p1, p2 = _with_run([{
-        "paths": ["docs/plans/"],
-        "baseline_commit": "abc123",
-    }], tmp_path)
+    p1, p2 = _with_run(
+        [
+            {
+                "paths": ["docs/plans/"],
+                "baseline_commit": "abc123",
+            }
+        ],
+        tmp_path,
+    )
     fake_diff = "docs/plans/ledger.yaml\n"
     with p1, p2, patch("subprocess.run") as mock:
         mock.return_value.returncode = 0
@@ -83,10 +98,15 @@ def test_no_drift_when_all_covered(tmp_path):
 def test_scoped_verify_ignores_unrelated_branch_files(tmp_path):
     """verify --file must not treat sibling dirty/branch files as drift."""
     reg = {}
-    p1, p2 = _with_run([{
-        "paths": ["docs/plans/ledger.yaml"],
-        "baseline_commit": "abc123",
-    }], tmp_path)
+    p1, p2 = _with_run(
+        [
+            {
+                "paths": ["docs/plans/ledger.yaml"],
+                "baseline_commit": "abc123",
+            }
+        ],
+        tmp_path,
+    )
     # Unscoped git would return OTHER.yaml; scoped command + filter drop it.
     fake_diff = "docs/plans/ledger.yaml\ndocs/plans/OTHER.yaml\n"
     with p1, p2, patch("subprocess.run") as mock:
@@ -109,10 +129,15 @@ def test_scoped_verify_ignores_unrelated_branch_files(tmp_path):
 def test_scoped_file_is_excluded_from_drift_by_design(tmp_path):
     """--file paths are the verify set: drift is sibling files, claim_coverage owns the set itself."""
     reg = {}
-    p1, p2 = _with_run([{
-        "paths": ["docs/plans/ledger.yaml"],
-        "baseline_commit": "abc123",
-    }], tmp_path)
+    p1, p2 = _with_run(
+        [
+            {
+                "paths": ["docs/plans/ledger.yaml"],
+                "baseline_commit": "abc123",
+            }
+        ],
+        tmp_path,
+    )
     fake_diff = "docs/other.md\n"
     with p1, p2, patch("subprocess.run") as mock:
         mock.return_value.returncode = 0
@@ -130,10 +155,15 @@ def test_scoped_file_is_excluded_from_drift_by_design(tmp_path):
 def test_unscoped_from_diff_still_flags_sibling_drift(tmp_path):
     """--from-diff keeps T9-01: unclaimed sibling files are drift."""
     reg = {}
-    p1, p2 = _with_run([{
-        "paths": ["docs/plans/ledger.yaml"],
-        "baseline_commit": "abc123",
-    }], tmp_path)
+    p1, p2 = _with_run(
+        [
+            {
+                "paths": ["docs/plans/ledger.yaml"],
+                "baseline_commit": "abc123",
+            }
+        ],
+        tmp_path,
+    )
     fake_diff = "docs/plans/ledger.yaml\ndocs/plans/OTHER.yaml\n"
     with p1, p2, patch("subprocess.run") as mock:
         mock.return_value.returncode = 0

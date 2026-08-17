@@ -14,6 +14,7 @@ auto-merge 候选 (auto-PR ISA F3 lane 白名单):
 
 退出码: 0 = auto (可 auto-merge) / 1 = manual (需人工)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -38,8 +39,8 @@ LANE_POLICY: dict[str, str] = {
     "submodule_pointer": "auto",
     "governance_code": "auto",
     "other": "auto",
-    "governance_state": "manual",   # .omo/ 治理状态, 不可逆, 人工
-    "runtime_snapshot": "manual",   # runtime/ 运行时快照, 敏感, 人工
+    "governance_state": "manual",  # .omo/ 治理状态, 不可逆, 人工
+    "runtime_snapshot": "manual",  # runtime/ 运行时快照, 敏感, 人工
 }
 
 # 架构文件强制 manual (即使 docs lane, 5+4+1 架构变更 ISC-20 不可 auto)
@@ -89,8 +90,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.staged:
         import subprocess
+
         result = subprocess.run(
-            ["git", "diff", "--cached", "--name-only"], capture_output=True, text=True, check=False
+            ["git", "diff", "--cached", "--name-only"],
+            capture_output=True,
+            text=True,
+            check=False,
         )
         paths = [line.strip() for line in result.stdout.splitlines() if line.strip()]
     else:

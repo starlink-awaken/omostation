@@ -24,9 +24,16 @@ def _detect_health_anomalies() -> list[dict[str, Any]]:
     problems: list[dict[str, Any]] = []
     health_yaml = ROOT / ".omo" / "state" / "system_health.yaml"
     if not health_yaml.exists():
-        return [{"type": "missing_health_snapshot", "severity": "medium", "detail": "system_health.yaml not found"}]
+        return [
+            {
+                "type": "missing_health_snapshot",
+                "severity": "medium",
+                "detail": "system_health.yaml not found",
+            }
+        ]
     try:
         import yaml
+
         data = yaml.safe_load(health_yaml.read_text(encoding="utf-8")) or {}
         services = data.get("services", {})
         if not isinstance(services, dict):
@@ -36,8 +43,14 @@ def _detect_health_anomalies() -> list[dict[str, Any]]:
                 continue
             hc = str(info.get("health_check", "")).strip()
             if hc and not (hc.startswith("healthy") or hc == "scheduled"):
-                problems.append({"type": "unhealthy_service", "severity": "high",
-                                 "service": name, "health_check": hc})
+                problems.append(
+                    {
+                        "type": "unhealthy_service",
+                        "severity": "high",
+                        "service": name,
+                        "health_check": hc,
+                    }
+                )
     except Exception:
         pass
     return problems
@@ -49,14 +62,23 @@ def _detect_dormant_tools() -> list[dict[str, Any]]:
     try:
         result = subprocess.run(
             ["python3", str(ROOT / "bin/ssot/tool-usage-audit.py"), "--json"],
-            capture_output=True, text=True, timeout=10, check=False,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
         )
         if result.returncode == 0:
             data = json.loads(result.stdout)
             dormant = data.get("dormant", 0)
             if dormant > 15:
-                problems.append({"type": "excessive_dormant_tools", "severity": "low",
-                                 "count": dormant, "detail": f"{dormant} dormant tools need evaluation"})
+                problems.append(
+                    {
+                        "type": "excessive_dormant_tools",
+                        "severity": "low",
+                        "count": dormant,
+                        "detail": f"{dormant} dormant tools need evaluation",
+                    }
+                )
     except Exception:
         pass
     return problems
@@ -70,8 +92,14 @@ def _detect_scene_card_issues() -> list[dict[str, Any]]:
         return [{"type": "missing_scene_cards_dir", "severity": "high"}]
     cards = list(cards_dir.glob("*.yaml"))
     if len(cards) < 9:
-        problems.append({"type": "insufficient_scene_cards", "severity": "medium",
-                         "count": len(cards), "expected": "≥9"})
+        problems.append(
+            {
+                "type": "insufficient_scene_cards",
+                "severity": "medium",
+                "count": len(cards),
+                "expected": "≥9",
+            }
+        )
     return problems
 
 
@@ -100,8 +128,7 @@ def scan_all() -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true")
-    parser.add_argument("--once", action="store_true",
-                        help="write last-run state (launchd/cron 调度用)")
+    parser.add_argument("--once", action="store_true", help="write last-run state (launchd/cron 调度用)")
     args = parser.parse_args(argv)
 
     result = scan_all()

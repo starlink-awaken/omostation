@@ -5,6 +5,7 @@ or i0_route. Skips services that are explicitly unimplemented or deprecated.
 Also fixes the misclassified bos://governance/protocols-layer/trigger
 (deprecated → unimplemented, since kairon has no protocols_layer package).
 """
+
 from __future__ import annotations
 
 import sys

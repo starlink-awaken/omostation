@@ -12,11 +12,11 @@ Scans both `git worktree list` (registered worktrees) and the filesystem
 Output: exit 0 = audit completed and no unsafe state remains (when --fail-on-unsafe);
         exit 1 = error or unsafe state detected.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -33,12 +33,8 @@ STALE_DAYS = 2
 # Filenames that are safe to drop in an abandoned worktree dir.
 SAFE_LOG_PATTERNS = ("watch_stderr.log", "watch_stdout.log")
 
-UNSAFE_WORKTREE_CATEGORIES = frozenset(
-    {"merged_with_dirty", "stale_dirty", "stale_clean"}
-)
-UNSAFE_DIR_CATEGORIES = frozenset(
-    {"dirty_repo", "small_clean_repo", "needs_review"}
-)
+UNSAFE_WORKTREE_CATEGORIES = frozenset({"merged_with_dirty", "stale_dirty", "stale_clean"})
+UNSAFE_DIR_CATEGORIES = frozenset({"dirty_repo", "small_clean_repo", "needs_review"})
 AUTO_DIR_CATEGORIES = frozenset({"empty_abandoned", "log_only_abandoned"})
 
 
@@ -204,11 +200,7 @@ def _unregistered_dir_info(path: Path) -> UnregisteredDirInfo:
     if file_count == 0:
         category = "empty_abandoned"
         reason = "empty unregistered directory"
-    elif file_count > 0 and all(
-        p.name in SAFE_LOG_PATTERNS
-        for p in path.rglob("*")
-        if p.is_file()
-    ):
+    elif file_count > 0 and all(p.name in SAFE_LOG_PATTERNS for p in path.rglob("*") if p.is_file()):
         category = "log_only_abandoned"
         reason = "only contains runtime log files"
     elif is_git and dirty == 0 and file_count < 10:

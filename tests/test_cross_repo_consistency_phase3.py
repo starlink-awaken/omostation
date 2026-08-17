@@ -2,20 +2,30 @@
 
 P77 STRAT § 2 Phase 3 目标: unregistered=0, threshold=0, 升 hard.
 """
+
 import re
 import subprocess
 import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(WORKSPACE / 'bin'))
+sys.path.insert(0, str(WORKSPACE / "bin"))
 
 
 def run(args: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(
-        ["uv", "run", "--with", "pyyaml", "python",
-         str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py"), *args],
-        cwd=WORKSPACE, capture_output=True, text=True,
+        [
+            "uv",
+            "run",
+            "--with",
+            "pyyaml",
+            "python",
+            str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py"),
+            *args,
+        ],
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
     )
 
 
@@ -48,10 +58,10 @@ def test_unregistered_is_zero():
     """Phase 3 治本完成: 实际运行 unregistered 必须 = 0 (硬性 success)"""
     r = run(["--json"])
     import json
+
     data = json.loads(r.stdout)
     assert data["unregistered"] == 0, (
-        f"unregistered should be 0, got {data['unregistered']}: "
-        f"{data.get('unregistered_list', [])[:5]}"
+        f"unregistered should be 0, got {data['unregistered']}: {data.get('unregistered_list', [])[:5]}"
     )
 
 
@@ -65,6 +75,7 @@ def test_agora_registered_143():
     """Phase 3 补登 26 unregistered 后, agora SSOT 应有 143 个服务 (117 + 26)."""
     r = run(["--json"])
     import json
+
     data = json.loads(r.stdout)
     assert data["registered"] >= 143, f"registered should be ≥143, got {data['registered']}"
 
@@ -88,6 +99,7 @@ def test_threshold_explicit_low_fails():
 def test_principle_cross_repo_remediation():
     """P77-3 治本: 17 unregistered 全补登 SSOT. 抽检 3 个新增 URI."""
     import yaml
+
     yaml_path = WORKSPACE / "projects" / "agora" / "etc" / "bos-services.yaml"
     services = yaml.safe_load(yaml_path.read_text()).get("services", [])
     uris = {s["uri"] for s in services}

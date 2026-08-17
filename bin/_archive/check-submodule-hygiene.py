@@ -56,14 +56,19 @@ def check_submodule_dirty() -> list[dict]:
         rc2, out2, _ = _run(["git", "-C", sub_path, "status", "--porcelain"])
         if rc2 == 0 and out2.strip():
             # 提取 untracked + modified 文件
-            files = [line.split(maxsplit=1)[1] if len(line.split(maxsplit=1)) > 1 else line
-                     for line in out2.strip().splitlines() if line.strip()]
-            findings.append({
-                "type": "submodule-dirty",
-                "submodule": sub_path,
-                "files": files[:5],  # 最多 5 个
-                "n_files": len(files),
-            })
+            files = [
+                line.split(maxsplit=1)[1] if len(line.split(maxsplit=1)) > 1 else line
+                for line in out2.strip().splitlines()
+                if line.strip()
+            ]
+            findings.append(
+                {
+                    "type": "submodule-dirty",
+                    "submodule": sub_path,
+                    "files": files[:5],  # 最多 5 个
+                    "n_files": len(files),
+                }
+            )
     return findings
 
 
@@ -79,11 +84,13 @@ def check_tracked_derived() -> list[dict]:
         rc, _, _ = _run(["git", "ls-files", "--error-unmatch", dp])
         if rc == 0:
             # 被 tracked
-            findings.append({
-                "type": "tracked-derived",
-                "path": dp,
-                "fix": "在 .gitignore 加 gitignore 规则",
-            })
+            findings.append(
+                {
+                    "type": "tracked-derived",
+                    "path": dp,
+                    "fix": "在 .gitignore 加 gitignore 规则",
+                }
+            )
     return findings
 
 
@@ -116,13 +123,15 @@ def check_submodule_pointer_stale() -> list[dict]:
         m_sha = main_map.get(path)
         l_sha = local_map.get(path)
         if m_sha and l_sha and m_sha != l_sha:
-            findings.append({
-                "type": "submodule-pointer-stale",
-                "submodule": path,
-                "main_sha": m_sha,
-                "local_sha": l_sha,
-                "fix": "git submodule update --init <path>",
-            })
+            findings.append(
+                {
+                    "type": "submodule-pointer-stale",
+                    "submodule": path,
+                    "main_sha": m_sha,
+                    "local_sha": l_sha,
+                    "fix": "git submodule update --init <path>",
+                }
+            )
     return findings
 
 
@@ -142,12 +151,19 @@ def main() -> int:
         by_type.setdefault(f["type"], []).append(f)
 
     if args.json:
-        print(json.dumps({
-            "ws": str(WS),
-            "n_findings": len(findings),
-            "by_type": {k: len(v) for k, v in by_type.items()},
-            "findings": findings,
-        }, ensure_ascii=False, indent=2, default=str))
+        print(
+            json.dumps(
+                {
+                    "ws": str(WS),
+                    "n_findings": len(findings),
+                    "by_type": {k: len(v) for k, v in by_type.items()},
+                    "findings": findings,
+                },
+                ensure_ascii=False,
+                indent=2,
+                default=str,
+            )
+        )
         return 0 if not findings or not args.strict else 1
 
     print(f"# Submodule Hygiene Check (ws={WS})")

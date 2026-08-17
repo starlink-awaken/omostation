@@ -135,9 +135,7 @@ def gitlinks(repo_root: str) -> dict[str, str]:
     return links
 
 
-def submodule_state(
-    repo_root: str, rel_path: str
-) -> tuple[bool, str | None, str | None, bool]:
+def submodule_state(repo_root: str, rel_path: str) -> tuple[bool, str | None, str | None, bool]:
     """Return (initialized, child_head, child_origin, clean) for a submodule."""
     sub = os.path.join(repo_root, rel_path)
     # git clone leaves an empty placeholder dir for uninitialized submodules;
@@ -167,7 +165,7 @@ def extract_uv_path_dependencies(repo_root: str) -> list[str]:
         return []
 
     try:
-        with open(pyproject, "r", encoding="utf-8") as fh:
+        with open(pyproject, encoding="utf-8") as fh:
             content = fh.read()
     except OSError:
         return []
@@ -239,7 +237,10 @@ def reinstall_path_dependencies(clone_root: str) -> tuple[bool, str]:
             msg += f"\n  {pkg}: {err[:100]}"
         return False, msg
 
-    return True, f"reinstalled {len(packages)} uv path dependencies: {', '.join(packages)}"
+    return (
+        True,
+        f"reinstalled {len(packages)} uv path dependencies: {', '.join(packages)}",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -262,12 +263,10 @@ def read_identity(repo_root: str, required: bool = True) -> dict | None:
             )
         return None
     try:
-        with open(path, "r", encoding="utf-8") as fh:
+        with open(path, encoding="utf-8") as fh:
             data = json.load(fh)
     except (OSError, json.JSONDecodeError) as exc:
-        raise ToolError(
-            "identity_invalid", f"cannot read clone identity {path}: {exc}", EXIT_POLICY
-        ) from exc
+        raise ToolError("identity_invalid", f"cannot read clone identity {path}: {exc}", EXIT_POLICY) from exc
     if data.get("schema") != SCHEMA_IDENTITY:
         raise ToolError(
             "identity_invalid",
@@ -372,11 +371,7 @@ def resolve_upstream_branch(source_url: str, branch: str) -> tuple[str, str]:
     matches = []
     for line in resolved.stdout.splitlines():
         parts = line.split("\t", 1)
-        if (
-            len(parts) == 2
-            and parts[1] == ref
-            and re.fullmatch(r"[0-9a-fA-F]{40,64}", parts[0])
-        ):
+        if len(parts) == 2 and parts[1] == ref and re.fullmatch(r"[0-9a-fA-F]{40,64}", parts[0]):
             matches.append(parts[0].lower())
     if len(matches) != 1:
         raise ToolError(
@@ -476,25 +471,18 @@ def cmd_create(args: argparse.Namespace) -> dict:
         if revision:
             remote_branch = origin_branch_name(revision)
             if remote_branch is not None:
-                revision, source_revision_ref = resolve_upstream_branch(
-                    source_url, remote_branch
-                )
+                revision, source_revision_ref = resolve_upstream_branch(source_url, remote_branch)
                 revision_fetch_url = source_url
             else:
-                resolved = git(
-                    source, "rev-parse", "--verify", f"{revision}^{{commit}}"
-                )
+                resolved = git(source, "rev-parse", "--verify", f"{revision}^{{commit}}")
                 if resolved.returncode != 0:
                     raise ToolError(
                         "revision_checkout_failed",
-                        f"cannot resolve revision {revision} in source: "
-                        f"{resolved.stderr.strip()}",
+                        f"cannot resolve revision {revision} in source: {resolved.stderr.strip()}",
                         EXIT_POLICY,
                     )
                 revision = resolved.stdout.strip()
-                symbolic = git(
-                    source, "rev-parse", "--symbolic-full-name", source_revision_ref
-                )
+                symbolic = git(source, "rev-parse", "--symbolic-full-name", source_revision_ref)
                 if symbolic.returncode == 0 and symbolic.stdout.strip():
                     source_revision_ref = symbolic.stdout.strip()
 
@@ -505,9 +493,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
             f"destination parent does not exist: {destination_parent}",
             EXIT_POLICY,
         )
-    staging_root = tempfile.mkdtemp(
-        prefix=f".{os.path.basename(dest)}.agent-clone-", dir=destination_parent
-    )
+    staging_root = tempfile.mkdtemp(prefix=f".{os.path.basename(dest)}.agent-clone-", dir=destination_parent)
     staging_clone = os.path.join(staging_root, "workspace")
     published = False
 
@@ -529,9 +515,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
             )
 
         # Fail closed if a clone still emitted an alternates pointer.
-        alt = os.path.join(
-            git_common_dir(staging_clone), "objects", "info", "alternates"
-        )
+        alt = os.path.join(git_common_dir(staging_clone), "objects", "info", "alternates")
         if os.path.exists(alt) and os.path.getsize(alt) > 0:
             raise ToolError(
                 "alternates_emitted",
@@ -552,8 +536,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
                 if fetch.returncode != 0:
                     raise ToolError(
                         "revision_checkout_failed",
-                        f"cannot fetch source revision {source_revision_ref}: "
-                        f"{fetch.stderr.strip()}",
+                        f"cannot fetch source revision {source_revision_ref}: {fetch.stderr.strip()}",
                         EXIT_POLICY,
                     )
             proc = git(staging_clone, "checkout", revision)
@@ -601,9 +584,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
                     EXIT_POLICY,
                 )
             for path, pinned_sha in gitlinks(staging_clone).items():
-                initialized, child_head, _origin, clean = submodule_state(
-                    staging_clone, path
-                )
+                initialized, child_head, _origin, clean = submodule_state(staging_clone, path)
                 if not initialized or child_head != pinned_sha or not clean:
                     raise ToolError(
                         "submodule_init_incomplete",
@@ -637,7 +618,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
         published = True
     except ToolError as exc:
         failure = exc
-    except Exception as exc:  # noqa: BLE001 - preserve cleanup evidence
+    except Exception as exc:
         failure = ToolError(
             "internal_error",
             f"{type(exc).__name__}: {exc}",
@@ -719,9 +700,7 @@ def build_manifest(repo_root: str) -> dict:
 
     root_status = git(repo_root, "status", "--porcelain")
     if root_status.returncode != 0:
-        raise ToolError(
-            "not_a_repository", root_status.stderr.strip(), EXIT_POLICY
-        )
+        raise ToolError("not_a_repository", root_status.stderr.strip(), EXIT_POLICY)
 
     links = gitlinks(repo_root)
     entries = []
@@ -744,9 +723,7 @@ def build_manifest(repo_root: str) -> dict:
             }
         )
     if root_status.stdout.strip():
-        raise ToolError(
-            "root_dirty", "root repository has uncommitted changes", EXIT_POLICY
-        )
+        raise ToolError("root_dirty", "root repository has uncommitted changes", EXIT_POLICY)
 
     branch, detached = branch_state(repo_root)
     hooks_proc = git(repo_root, "config", "--get", "core.hooksPath")
@@ -762,9 +739,7 @@ def build_manifest(repo_root: str) -> dict:
         "hooks_path": hooks_path,
         "repositories": entries,
     }
-    manifest["manifest_digest"] = canonical_digest(
-        manifest, exclude_field="manifest_digest"
-    )
+    manifest["manifest_digest"] = canonical_digest(manifest, exclude_field="manifest_digest")
     return manifest
 
 
@@ -792,7 +767,7 @@ def cmd_manifest(args: argparse.Namespace) -> dict:
 
 def cmd_verify(args: argparse.Namespace) -> dict:
     try:
-        with open(args.manifest, "r", encoding="utf-8") as fh:
+        with open(args.manifest, encoding="utf-8") as fh:
             manifest = json.load(fh)
     except (OSError, json.JSONDecodeError) as exc:
         raise ToolError(
@@ -817,12 +792,12 @@ def cmd_verify(args: argparse.Namespace) -> dict:
 
     identity = read_identity(args.clone)
     if identity.get("ready") is not True:
-        raise ToolError(
-            "identity_mismatch", "stored identity is not marked ready", EXIT_POLICY
-        )
+        raise ToolError("identity_mismatch", "stored identity is not marked ready", EXIT_POLICY)
     if identity["agent_id"] != manifest.get("agent_id"):
         raise ToolError(
-            "identity_mismatch", "identity agent_id does not match manifest", EXIT_POLICY
+            "identity_mismatch",
+            "identity agent_id does not match manifest",
+            EXIT_POLICY,
         )
     if identity["canonical_root"] != manifest.get("canonical_root"):
         raise ToolError(
@@ -898,7 +873,10 @@ def cmd_verify(args: argparse.Namespace) -> dict:
             EXIT_POLICY,
         )
 
-    checks = [{"check": "root_sha", "pass": True}, {"check": "root_clean", "pass": True}]
+    checks = [
+        {"check": "root_sha", "pass": True},
+        {"check": "root_clean", "pass": True},
+    ]
     for entry in manifest.get("repositories", []):
         path = entry["path"]
         initialized, child_head, child_origin, clean = submodule_state(args.clone, path)
@@ -922,9 +900,7 @@ def cmd_verify(args: argparse.Namespace) -> dict:
                     EXIT_POLICY,
                 )
             if not clean:
-                raise ToolError(
-                    "child_dirty", f"submodule {path} is dirty", EXIT_POLICY
-                )
+                raise ToolError("child_dirty", f"submodule {path} is dirty", EXIT_POLICY)
             checks.append({"check": "child_head", "path": path, "pass": True})
         elif initialized:
             raise ToolError(
@@ -949,7 +925,7 @@ def cmd_verify(args: argparse.Namespace) -> dict:
 
 def load_baseline(baseline_path: str) -> dict:
     try:
-        with open(baseline_path, "r", encoding="utf-8") as fh:
+        with open(baseline_path, encoding="utf-8") as fh:
             manifest = json.load(fh)
     except (OSError, json.JSONDecodeError) as exc:
         raise ToolError(
@@ -983,18 +959,14 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
 
     root_status = git(args.clone, "status", "--porcelain")
     if root_status.returncode != 0:
-        raise ToolError(
-            "candidate_not_a_repository", root_status.stderr.strip(), EXIT_POLICY
-        )
+        raise ToolError("candidate_not_a_repository", root_status.stderr.strip(), EXIT_POLICY)
     if root_status.stdout.strip():
         raise ToolError("candidate_dirty", "candidate clone root is dirty", EXIT_POLICY)
     links = gitlinks(args.clone)
     for path in links:
         initialized, _head, _origin, clean = submodule_state(args.clone, path)
         if initialized and not clean:
-            raise ToolError(
-                "candidate_dirty", f"candidate submodule {path} is dirty", EXIT_POLICY
-            )
+            raise ToolError("candidate_dirty", f"candidate submodule {path} is dirty", EXIT_POLICY)
 
     root_base = baseline["root_head_sha"]
     root_candidate = root_head(args.clone)
@@ -1257,7 +1229,7 @@ def main(argv: list[str] | None = None) -> int:
             getattr(args, "json", False),
         )
         return exc.exit_code
-    except Exception as exc:  # noqa: BLE001 - last-resort structured failure
+    except Exception as exc:
         out = {
             "ok": False,
             "reason": "internal_error",

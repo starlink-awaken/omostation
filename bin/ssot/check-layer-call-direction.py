@@ -23,6 +23,7 @@ enforcement (P0-A 已落地, 2026-07-28 核实):
   定位: BLOCKING (对新违规). 存量 11 条进 baseline grace, 逐条 triage 清零 —
         红线: 严禁往 baseline 塞新违规 (= 重建假绿, 最高级违规).
 """
+
 from __future__ import annotations
 
 import re
@@ -94,7 +95,7 @@ def detect_project(file_path: Path) -> str | None:
 
 def detect_project_name(file_path: Path) -> str | None:
     """返回所在项目的 dir name (caller 项目名).
-    
+
     Handles nested project dirs: projects/runtime/projects/aetherforge/foo.py → aetherforge
     """
     try:
@@ -190,7 +191,20 @@ def scan_workspace(paths: list[Path] | None = None, *, strict: bool = False) -> 
         for ext in ("*.py", "*.ts", "*.tsx"):
             for f in project_dir.rglob(ext):
                 # 跳过测试目录, venv, node_modules, dist
-                if any(part in f.parts for part in ("tests", "scripts", "bin", ".scratch-archive", ".venv", "node_modules", "dist", "build", "__pycache__")):
+                if any(
+                    part in f.parts
+                    for part in (
+                        "tests",
+                        "scripts",
+                        "bin",
+                        ".scratch-archive",
+                        ".venv",
+                        "node_modules",
+                        "dist",
+                        "build",
+                        "__pycache__",
+                    )
+                ):
                     continue
                 # Skip nested project directories (they're scanned with their own project)
                 rel = f.relative_to(project_dir)
@@ -248,8 +262,15 @@ def main() -> int:
     p.add_argument("--json", action="store_true", help="JSON output")
     p.add_argument("--by-layer", action="store_true", help="Summarize by call pair only")
     p.add_argument("--project", help="Scan specific project (e.g. agora)")
-    p.add_argument("--baseline", help="P0-A new-violation blocking: baseline file (file:line signatures, 存量 grace). 新违规 (不在 baseline) 才 fail.")
-    p.add_argument("--files", nargs="*", help="只扫指定文件 (增量, pre-commit 快路径, G1 治 CI >25s 超时). 与 --baseline 配合: changed file 新违规不在 baseline 则 fail.")
+    p.add_argument(
+        "--baseline",
+        help="P0-A new-violation blocking: baseline file (file:line signatures, 存量 grace). 新违规 (不在 baseline) 才 fail.",
+    )
+    p.add_argument(
+        "--files",
+        nargs="*",
+        help="只扫指定文件 (增量, pre-commit 快路径, G1 治 CI >25s 超时). 与 --baseline 配合: changed file 新违规不在 baseline 则 fail.",
+    )
     args = p.parse_args()
 
     if args.files:
@@ -286,6 +307,7 @@ def main() -> int:
 
     if args.json:
         import json
+
         print(json.dumps(result, indent=2, ensure_ascii=False))
     elif args.by_layer:
         print("=== layer-call-direction summary ===")

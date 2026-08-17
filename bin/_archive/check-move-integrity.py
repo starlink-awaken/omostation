@@ -7,6 +7,7 @@
 
 纯本地 git diff --cached, <1s。exit 1 = 拦截。
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -17,7 +18,9 @@ from pathlib import Path
 def staged_name_status() -> list[tuple[str, str]]:
     out = subprocess.run(
         ["git", "diff", "--cached", "--name-status", "-M"],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     ).stdout
     entries: list[tuple[str, str]] = []
     for line in out.splitlines():
@@ -31,14 +34,14 @@ def staged_size(path: str) -> int:
     """暂存区 blob 大小 (非工作树)。"""
     out = subprocess.run(
         ["git", "ls-files", "-s", "--", path],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     ).stdout.split()
     if len(out) < 2:
         return -1
     blob = out[1]
-    cat = subprocess.run(
-        ["git", "cat-file", "-s", blob], capture_output=True, text=True, check=False
-    )
+    cat = subprocess.run(["git", "cat-file", "-s", blob], capture_output=True, text=True, check=False)
     try:
         return int(cat.stdout.strip())
     except ValueError:

@@ -2,8 +2,8 @@
 
 P77 STRAT § 4 沉淀原则形式化 (principle-formalization-with-context).
 """
+
 import re
-import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[1]

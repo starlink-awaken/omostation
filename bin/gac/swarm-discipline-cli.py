@@ -12,6 +12,7 @@ Usage:
   swarm-discipline-cli.py window-status
   swarm-discipline-cli.py inventory
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,7 +23,7 @@ from pathlib import Path
 
 # allow running as script
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import swarm_discipline as sd  # noqa: E402
+import swarm_discipline as sd
 
 
 def root_from_cwd() -> Path:
@@ -42,9 +43,7 @@ def root_from_cwd() -> Path:
 
 def cmd_adr_claim(args: argparse.Namespace) -> int:
     root = root_from_cwd()
-    ok, result = sd.acquire_adr_claim(
-        root, args.session, number=args.number
-    )
+    ok, result = sd.acquire_adr_claim(root, args.session, number=args.number)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if ok else 1
 
@@ -72,18 +71,14 @@ def cmd_branch_check(args: argparse.Namespace) -> int:
 
 def cmd_branch_release(args: argparse.Namespace) -> int:
     root = root_from_cwd()
-    done = sd.release_branch_lock(
-        root, args.session, purge_orphans=not args.no_purge_orphans
-    )
+    done = sd.release_branch_lock(root, args.session, purge_orphans=not args.no_purge_orphans)
     print(json.dumps({"released": done, "session": args.session}, indent=2))
     return 0
 
 
 def cmd_claim_gc(args: argparse.Namespace) -> int:
     root = root_from_cwd()
-    result = sd.claim_gc(
-        root, ttl_hours=args.ttl_hours, dry_run=args.dry_run
-    )
+    result = sd.claim_gc(root, ttl_hours=args.ttl_hours, dry_run=args.dry_run)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 
@@ -141,9 +136,7 @@ def cmd_git_argv_check(args: argparse.Namespace) -> int:
                 "ok": ok,
                 "reason": reason,
                 "has_no_verify": sd.argv_has_no_verify(argv),
-                "flag": sd.no_verify_flag_for_argv(argv)
-                if sd.argv_has_no_verify(argv)
-                else None,
+                "flag": sd.no_verify_flag_for_argv(argv) if sd.argv_has_no_verify(argv) else None,
             },
             indent=2,
         )
@@ -188,23 +181,21 @@ def cmd_status(args: argparse.Namespace) -> int:
         )
     print(f"\n── Agent Health ({len(snap['agent_health'])}) ───────────")
     for h in snap["agent_health"]:
-        stale_mark = " [STALE]" if any(
-            s["agent_id"] == h["agent_id"] for s in snap["stale_agents"]
-        ) else ""
+        stale_mark = " [STALE]" if any(s["agent_id"] == h["agent_id"] for s in snap["stale_agents"]) else ""
         attestation = h.get("runtime_attestation") or {}
         runtime = (
             f"rev={str(attestation.get('workspace_revision', ''))[:12]} "
             f"code={str(attestation.get('code_sha256', ''))[:12]}"
-            if attestation else "runtime=unattested"
+            if attestation
+            else "runtime=unattested"
         )
         print(
-            f"  {h['agent_id']:<24} {h['status']:<5} src={h['source']} "
-            f"last_seen={h['last_seen']} {runtime}{stale_mark}"
+            f"  {h['agent_id']:<24} {h['status']:<5} src={h['source']} last_seen={h['last_seen']} {runtime}{stale_mark}"
         )
     print(f"\n── Messages ({len(snap['messages'])}) ──────────────────")
     for m in snap["messages"]:
         print(f"  #{m['id']} {m['ts']} {m['from_agent']} → {m['to_agent']} ({m['msg_type']})")
-    print(f"\n── Shadow Events ─────────────────────────────────────")
+    print("\n── Shadow Events ─────────────────────────────────────")
     if snap["shadow_events"]:
         for kind, n in sorted(snap["shadow_events"].items()):
             print(f"  {kind}: {n}")
@@ -247,9 +238,7 @@ def cmd_token_check(args: argparse.Namespace) -> int:
         return 0
 
     try:
-        verdict = cs.check_fencing(
-            args.resource_type, args.resource_id, args.owner, args.token
-        )
+        verdict = cs.check_fencing(args.resource_type, args.resource_id, args.owner, args.token)
     except (cs.CoordinationStoreError, sqlite3.Error) as exc:
         # fail-closed: DB 打不开/版本超前 → exit 2, submit 挂点据此停
         print(
@@ -267,7 +256,8 @@ def cmd_token_check(args: argparse.Namespace) -> int:
         # shadow: 只记录, 不阻断 (warning 阶段改 exit 1)
         recorded = cs.emit_shadow_event(
             "token_stale_rejected",
-            args.resource_type, args.resource_id,
+            args.resource_type,
+            args.resource_id,
             {
                 "owner": args.owner,
                 "local_token": args.token,
@@ -298,9 +288,7 @@ def cmd_inventory(_args: argparse.Namespace) -> int:
             }
             for k, v in (reg.get("gates") or {}).items()
         },
-        "escape_exemptions": [
-            x.get("id") for x in (reg.get("escape_hatch_exemptions") or [])
-        ],
+        "escape_exemptions": [x.get("id") for x in (reg.get("escape_hatch_exemptions") or [])],
         "cli": "bin/gac/swarm-discipline-cli.py",
         "core": "bin/gac/swarm_discipline.py",
     }
@@ -335,17 +323,19 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("branch-release")
     s.add_argument("--session", required=True)
     s.add_argument(
-        "--purge-orphans", action="store_true", default=True,
+        "--purge-orphans",
+        action="store_true",
+        default=True,
         help="B3 (ADR-0367): 顺带删除分支已不存在的孤儿 claim (默认开)",
     )
     s.add_argument("--no-purge-orphans", action="store_true", help="关闭孤儿清理")
     s.set_defaults(func=cmd_branch_release)
 
-    s = sub.add_parser(
-        "claim-gc", help="GC 过期 claim (branch/agent/adr, D1)"
-    )
+    s = sub.add_parser("claim-gc", help="GC 过期 claim (branch/agent/adr, D1)")
     s.add_argument(
-        "--ttl-hours", type=int, default=168,
+        "--ttl-hours",
+        type=int,
+        default=168,
         help="TTL 小时 (默认 168=7天, claim 是长期占位)",
     )
     s.add_argument("--dry-run", action="store_true")

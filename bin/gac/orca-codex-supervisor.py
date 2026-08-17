@@ -30,9 +30,7 @@ Runner = Callable[[Command, float], tuple[int, str, str]]
 GuardRunner = Callable[[Command, float, str], tuple[int, str, str]]
 
 
-def _subprocess_runner(
-    command: Command, timeout_seconds: float
-) -> tuple[int, str, str]:
+def _subprocess_runner(command: Command, timeout_seconds: float) -> tuple[int, str, str]:
     try:
         completed = subprocess.run(
             command,
@@ -51,9 +49,7 @@ def _subprocess_runner(
     return completed.returncode, completed.stdout, completed.stderr
 
 
-def _subprocess_guard_runner(
-    command: Command, timeout_seconds: float, agent_id: str
-) -> tuple[int, str, str]:
+def _subprocess_guard_runner(command: Command, timeout_seconds: float, agent_id: str) -> tuple[int, str, str]:
     environment = os.environ.copy()
     environment["AGENT_ID"] = agent_id
     try:
@@ -76,15 +72,11 @@ def _subprocess_guard_runner(
 
 
 def _canonical_json(payload: dict[str, Any]) -> str:
-    return json.dumps(
-        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    )
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 def _digest_payload(payload: dict[str, Any]) -> str:
-    return (
-        "sha256:" + hashlib.sha256(_canonical_json(payload).encode("utf-8")).hexdigest()
-    )
+    return "sha256:" + hashlib.sha256(_canonical_json(payload).encode("utf-8")).hexdigest()
 
 
 def _valid_identity(value: str) -> bool:
@@ -136,9 +128,7 @@ def _binding(
     return values
 
 
-def _read_prompt(
-    *, workspace_root: str, prompt_ref: str, prompt_digest: str
-) -> tuple[str | None, str | None]:
+def _read_prompt(*, workspace_root: str, prompt_ref: str, prompt_digest: str) -> tuple[str | None, str | None]:
     raw_ref = Path(prompt_ref)
     if (
         not prompt_ref
@@ -182,9 +172,7 @@ def _clone_guard(
     root = Path(workspace_root)
     try:
         git_dir = root / ".git"
-        if stat.S_ISLNK(os.lstat(git_dir).st_mode) or not stat.S_ISDIR(
-            os.lstat(git_dir).st_mode
-        ):
+        if stat.S_ISLNK(os.lstat(git_dir).st_mode) or not stat.S_ISDIR(os.lstat(git_dir).st_mode):
             return None, "workspace_not_independent_clone"
     except OSError:
         return None, "workspace_not_independent_clone"
@@ -275,9 +263,7 @@ def _has_model_output(messages: list[object]) -> bool:
 def _has_terminal_model_output(lines: list[object]) -> bool:
     if not lines or not all(isinstance(line, str) for line in lines):
         return False
-    completion_seen = any(
-        "Worked for " in line and line.lstrip().startswith(("─", "━")) for line in lines
-    )
+    completion_seen = any("Worked for " in line and line.lstrip().startswith(("─", "━")) for line in lines)
     tool_prefixes = (
         "• Ran ",
         "• Edited ",
@@ -286,9 +272,7 @@ def _has_terminal_model_output(lines: list[object]) -> bool:
         "• Searched ",
         "• Called ",
     )
-    model_output_seen = any(
-        line.startswith("• ") and not line.startswith(tool_prefixes) for line in lines
-    )
+    model_output_seen = any(line.startswith("• ") and not line.startswith(tool_prefixes) for line in lines)
     return completion_seen and model_output_seen
 
 
@@ -317,11 +301,7 @@ def _task_completion(
     tasks = result.get("tasks")
     if not isinstance(tasks, list):
         return None
-    matching = [
-        task
-        for task in tasks
-        if isinstance(task, dict) and task.get("id") == orca_task_id
-    ]
+    matching = [task for task in tasks if isinstance(task, dict) and task.get("id") == orca_task_id]
     if len(matching) != 1:
         return None
     task = matching[0]
@@ -335,9 +315,7 @@ def _task_completion(
         completion = json.loads(raw_completion)
     except (TypeError, json.JSONDecodeError):
         return None
-    files_modified = (
-        completion.get("filesModified") if isinstance(completion, dict) else None
-    )
+    files_modified = completion.get("filesModified") if isinstance(completion, dict) else None
     if (
         not isinstance(completion, dict)
         or completion.get("provenance") != "worker_report"
@@ -385,9 +363,7 @@ def _worker_failure_context(
             orca_dispatch_id=dispatch_id,
             terminal_handle=terminal_handle,
         )
-        if isinstance(reported_run_id, str)
-        and isinstance(dispatch_id, str)
-        and isinstance(task_id, str)
+        if isinstance(reported_run_id, str) and isinstance(dispatch_id, str) and isinstance(task_id, str)
         else None
     )
     resources = list(residual_resources)
@@ -403,9 +379,7 @@ def _worker_failure_context(
     return worker_orca, resources
 
 
-def _has_worker_effect(
-    effects: object, *, kind: str, terminal_handle: str, **expected: str
-) -> bool:
+def _has_worker_effect(effects: object, *, kind: str, terminal_handle: str, **expected: str) -> bool:
     return isinstance(effects, list) and any(
         isinstance(effect, dict)
         and effect.get("kind") == kind
@@ -427,10 +401,7 @@ def _ready_worker_orca(
     reported_task_id = result.get("taskId")
     dispatch_id = result.get("dispatchId")
     mutation = result.get("mutation")
-    if not all(
-        isinstance(value, str)
-        for value in (reported_run_id, reported_task_id, dispatch_id)
-    ):
+    if not all(isinstance(value, str) for value in (reported_run_id, reported_task_id, dispatch_id)):
         return None
     orca = _orca_refs(
         orca_run_id=reported_run_id,
@@ -447,10 +418,7 @@ def _ready_worker_orca(
         or not isinstance(mutation, dict)
         or not isinstance(mutation.get("requestId"), str)
         or not _valid_identity(mutation["requestId"])
-        or (
-            expected_request_id is not None
-            and mutation["requestId"] != expected_request_id
-        )
+        or (expected_request_id is not None and mutation["requestId"] != expected_request_id)
         or not _has_worker_effect(
             result.get("effects"),
             kind="terminal",
@@ -485,11 +453,7 @@ def _failure(
         "reason": reason,
         "binding": binding or {},
         "residual_resources": (
-            residual_resources
-            if residual_resources is not None
-            else [orca["terminal_handle"]]
-            if orca
-            else []
+            residual_resources if residual_resources is not None else [orca["terminal_handle"]] if orca else []
         ),
     }
     if orca:
@@ -507,8 +471,7 @@ def _response(
     reason: str,
     orca: dict[str, str] | None = None,
     residual_resources: list[str] | None = None,
-    failure_context: Callable[[dict[str, Any]], tuple[dict[str, str] | None, list[str]]]
-    | None = None,
+    failure_context: Callable[[dict[str, Any]], tuple[dict[str, str] | None, list[str]]] | None = None,
 ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
     returncode, stdout, _stderr = runner(command, timeout_seconds)
     try:
@@ -574,9 +537,7 @@ def start_supervised_codex(
     if not _valid_identity(agent_id):
         return _failure(binding=binding, stage="input", reason="agent_id_invalid")
     if idempotency_key is not None and not _valid_identity(idempotency_key):
-        return _failure(
-            binding=binding, stage="input", reason="idempotency_key_invalid"
-        )
+        return _failure(binding=binding, stage="input", reason="idempotency_key_invalid")
     if timeout_ms <= 0:
         return _failure(binding=binding, stage="input", reason="timeout_invalid")
     prompt, prompt_error = _read_prompt(
@@ -612,9 +573,7 @@ def start_supervised_codex(
     retry_requests: dict[str, str] = {}
     if idempotency_key is not None:
         for stage in ("run-create", "task-create", "worker-start"):
-            retry_requests[stage] = hashlib.sha256(
-                f"{idempotency_key}\n{stage}".encode()
-            ).hexdigest()
+            retry_requests[stage] = hashlib.sha256(f"{idempotency_key}\n{stage}".encode()).hexdigest()
 
     def retry_request(stage: str) -> tuple[str, ...]:
         value = retry_requests.get(stage)
@@ -640,9 +599,7 @@ def start_supervised_codex(
     assert shown_worktree is not None
     orca_worktree_id = _worktree_id(shown_worktree, workspace_root=resolved_workspace)
     if orca_worktree_id is None:
-        return _failure(
-            binding=binding, stage="worktree_show", reason="orca_worktree_unavailable"
-        )
+        return _failure(binding=binding, stage="worktree_show", reason="orca_worktree_unavailable")
     binding["orca_worktree_id"] = orca_worktree_id
 
     status, failure = _response(
@@ -664,20 +621,14 @@ def start_supervised_codex(
         or not isinstance(runtime, dict)
         or runtime.get("state") != "ready"
     ):
-        return _failure(
-            binding=binding, stage="status", reason="orca_runtime_not_ready"
-        )
+        return _failure(binding=binding, stage="status", reason="orca_runtime_not_ready")
 
     def coordinator_failure_context(
         result: dict[str, Any],
     ) -> tuple[dict[str, str] | None, list[str]]:
         terminal = result.get("terminal")
         handle = terminal.get("handle") if isinstance(terminal, dict) else None
-        resources = (
-            [f"orca:terminal:{handle}"]
-            if isinstance(handle, str) and _valid_identity(handle)
-            else []
-        )
+        resources = [f"orca:terminal:{handle}"] if isinstance(handle, str) and _valid_identity(handle) else []
         return None, resources
 
     created_coordinator, failure = _response(
@@ -701,9 +652,7 @@ def start_supervised_codex(
     if failure:
         return failure
     coordinator = created_coordinator.get("terminal") if created_coordinator else None
-    coordinator_handle = (
-        coordinator.get("handle") if isinstance(coordinator, dict) else None
-    )
+    coordinator_handle = coordinator.get("handle") if isinstance(coordinator, dict) else None
     if (
         not isinstance(coordinator_handle, str)
         or not _valid_identity(coordinator_handle)
@@ -715,8 +664,7 @@ def start_supervised_codex(
             reason="orca_response_invalid",
             residual_resources=(
                 [f"orca:terminal:{coordinator_handle}"]
-                if isinstance(coordinator_handle, str)
-                and _valid_identity(coordinator_handle)
+                if isinstance(coordinator_handle, str) and _valid_identity(coordinator_handle)
                 else []
             ),
         )
@@ -740,9 +688,7 @@ def start_supervised_codex(
     )
     if failure:
         return failure
-    shown_terminal = (
-        shown_coordinator.get("terminal") if shown_coordinator is not None else None
-    )
+    shown_terminal = shown_coordinator.get("terminal") if shown_coordinator is not None else None
     if (
         not isinstance(shown_terminal, dict)
         or shown_terminal.get("handle") != coordinator_handle
@@ -758,9 +704,7 @@ def start_supervised_codex(
             residual_resources=coordinator_residuals,
         )
 
-    objective = "supervised-codex:{workflow_run_id}:{omo_task_id}:{packet_id}:{omo_dispatch_id}".format(
-        **binding
-    )
+    objective = "supervised-codex:{workflow_run_id}:{omo_task_id}:{packet_id}:{omo_dispatch_id}".format(**binding)
     created_run, failure = _response(
         runner,
         (
@@ -828,11 +772,7 @@ def start_supervised_codex(
     task = created_task.get("task")
     orca_task_id = task.get("id") if isinstance(task, dict) else None
     task_run_id = task.get("run_id") if isinstance(task, dict) else None
-    if (
-        not isinstance(orca_task_id, str)
-        or not _valid_identity(orca_task_id)
-        or task_run_id != orca_run_id
-    ):
+    if not isinstance(orca_task_id, str) or not _valid_identity(orca_task_id) or task_run_id != orca_run_id:
         return _failure(
             binding=binding,
             stage="task_create",
@@ -1036,8 +976,7 @@ def start_supervised_codex(
     }
     if idempotency_key is not None:
         receipt["idempotency"] = {
-            "transaction_key_digest": "sha256:"
-            + hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest(),
+            "transaction_key_digest": "sha256:" + hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest(),
             "stage_retry_requests": retry_requests,
         }
     return receipt
@@ -1081,18 +1020,14 @@ def collect_supervised_codex(
         terminal_handle=terminal_handle,
     )
     if binding is None or orca is None:
-        return _failure(
-            binding=binding, stage="input", reason="identity_invalid", orca=orca
-        )
+        return _failure(binding=binding, stage="input", reason="identity_invalid", orca=orca)
     if (
         not _valid_identity(agent_id)
         or not SHA256_RE.fullmatch(canonical_root_digest)
         or not SHA256_RE.fullmatch(guard_receipt_digest)
         or not _valid_worktree_id(orca_worktree_id)
     ):
-        return _failure(
-            binding=binding, stage="input", reason="identity_invalid", orca=orca
-        )
+        return _failure(binding=binding, stage="input", reason="identity_invalid", orca=orca)
     _prompt, prompt_error = _read_prompt(
         workspace_root=workspace_root,
         prompt_ref=prompt_ref,
@@ -1104,9 +1039,7 @@ def collect_supervised_codex(
     try:
         resolved_workspace = str(Path(workspace_root).resolve(strict=True))
     except OSError:
-        return _failure(
-            binding=binding, stage="input", reason="workspace_root_unsafe", orca=orca
-        )
+        return _failure(binding=binding, stage="input", reason="workspace_root_unsafe", orca=orca)
     clone_binding, clone_error = _clone_guard(
         workspace_root=resolved_workspace,
         agent_id=agent_id,
@@ -1119,9 +1052,7 @@ def collect_supervised_codex(
         clone_binding["canonical_root_digest"] != canonical_root_digest
         or clone_binding["guard_receipt_digest"] != guard_receipt_digest
     ):
-        return _failure(
-            binding=binding, stage="input", reason="clone_guard_drift", orca=orca
-        )
+        return _failure(binding=binding, stage="input", reason="clone_guard_drift", orca=orca)
     binding.update(clone_binding)
     binding["orca_worktree_id"] = orca_worktree_id
 
@@ -1144,10 +1075,7 @@ def collect_supervised_codex(
     if failure:
         return failure
     assert shown_worktree is not None
-    if (
-        _worktree_id(shown_worktree, workspace_root=resolved_workspace)
-        != orca_worktree_id
-    ):
+    if _worktree_id(shown_worktree, workspace_root=resolved_workspace) != orca_worktree_id:
         return _failure(
             binding=binding,
             stage="worktree_show",
@@ -1254,17 +1182,12 @@ def collect_supervised_codex(
         transcript_payload_raw = None
     transcript = (
         transcript_payload_raw.get("result")
-        if isinstance(transcript_payload_raw, dict)
-        and transcript_payload_raw.get("ok") is True
+        if isinstance(transcript_payload_raw, dict) and transcript_payload_raw.get("ok") is True
         else None
     )
     if returncode == 0 and isinstance(transcript, dict):
         transcript_payload = transcript.get("transcript")
-        messages = (
-            transcript_payload.get("messages")
-            if isinstance(transcript_payload, dict)
-            else None
-        )
+        messages = transcript_payload.get("messages") if isinstance(transcript_payload, dict) else None
         if (
             transcript.get("source") != "transcript"
             or not isinstance(messages, list)
@@ -1358,9 +1281,7 @@ def collect_supervised_codex(
     terminal_evidence = terminal_output.get("terminal")
     source_identity = terminal_output.get("sourceIdentity")
     status = terminal_output.get("status")
-    tail = (
-        terminal_evidence.get("tail") if isinstance(terminal_evidence, dict) else None
-    )
+    tail = terminal_evidence.get("tail") if isinstance(terminal_evidence, dict) else None
     if (
         terminal_output.get("source") != "terminal"
         or terminal_output.get("fallbackReason") != "session_not_reported"
@@ -1392,8 +1313,7 @@ def collect_supervised_codex(
         "fallback_reason": "session_not_reported",
         "model_output_digest": _digest_payload(terminal_output),
         "completion_receipt_digest": _digest_payload(completion),
-        "source_identity_digest": "sha256:"
-        + hashlib.sha256(source_identity.encode("utf-8")).hexdigest(),
+        "source_identity_digest": "sha256:" + hashlib.sha256(source_identity.encode("utf-8")).hexdigest(),
     }
 
 

@@ -1,0 +1,57 @@
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 4,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-08-17T02:13:56.910940+00:00",
+  "internal_proposals": 3,
+  "mode": "standard",
+  "proposals": [
+    {
+      "action": "create_debt_task",
+      "level": "S2",
+      "proposal": "Address: unhealthy_service",
+      "severity": "high",
+      "source": "problem_detector",
+      "type": "unhealthy_service"
+    },
+    {
+      "action": "create_debt_task",
+      "level": "S2",
+      "proposal": "Address: unhealthy_service",
+      "severity": "high",
+      "source": "problem_detector",
+      "type": "unhealthy_service"
+    },
+    {
+      "action": "create_scene_cards",
+      "level": "S2",
+      "proposal": "Only 9 scene cards — consider adding more domain coverage",
+      "severity": "medium",
+      "source": "scene_coverage",
+      "type": "insufficient_cards"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S3",
+      "proposal": "[hacker_news] AGI-64 Brings Sierra Adventures to the Commodore 64",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S2",
+      "proposal": "[hacker_news] Rhombus 1.1 is now available",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 5
+}

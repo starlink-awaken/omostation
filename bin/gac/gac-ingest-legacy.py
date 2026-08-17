@@ -19,6 +19,7 @@ GaC 成为全域规则索引层 (统一执行入口 + drift 检测), 原有规�
 
 退出码: 0 = 成功, 1 = 已全部 ingest (无新条目)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -59,10 +60,16 @@ LEGACY_SOURCES = [
     {
         "file": "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml",
         "sections": [
-            "constraints", "protocol_registry", "trigger_constraints",
-            "opc_cadence_constraints", "mof_schema_validate_constraints",
-            "c2g_v3_constraints", "c2g_v4_constraints", "omni_bus_constraints",
-            "debt_constraints", "governance_closure_constraints",
+            "constraints",
+            "protocol_registry",
+            "trigger_constraints",
+            "opc_cadence_constraints",
+            "mof_schema_validate_constraints",
+            "c2g_v3_constraints",
+            "c2g_v4_constraints",
+            "omni_bus_constraints",
+            "debt_constraints",
+            "governance_closure_constraints",
         ],
         "id_key": "id",
         "dimension": None,  # 从 item.dimension 动态读 (L0 跨 X1-X4)
@@ -153,9 +160,8 @@ def check_drift() -> dict:
         ref = str(rule.get("source_ref") or "")
         path_part = ref.split("::")[0]
         # 只检查指向 legacy 源目录树 (_truth/ 或 projects/ecos/.../L0-constraints) 的规则
-        is_legacy_tree = (
-            path_part.startswith(".omo/_truth/x")
-            or path_part.startswith("projects/ecos/src/ecos/ssot/registry/")
+        is_legacy_tree = path_part.startswith(".omo/_truth/x") or path_part.startswith(
+            "projects/ecos/src/ecos/ssot/registry/"
         )
         if is_legacy_tree and not (WORKSPACE / path_part).exists():
             ghost.append(rule.get("id", path_part))
@@ -190,7 +196,7 @@ def update_relates() -> int:
         rest = content[block_start:]
         block_end_rel = re.search(r"\n    - id:|\n  [a-z][a-z_]*:", rest)
         block_end = block_start + (block_end_rel.start() if block_end_rel else len(rest))
-        block = content[m.start():block_end]
+        block = content[m.start() : block_end]
         if "relates_to" in block:
             continue  # 已有 relates_to 跳过
         sr_match = re.search(r"(      source_ref: [^\n]+\n)", block)
@@ -278,8 +284,16 @@ def append_to_registry(new_entries: list[dict]) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description="收敛 X1-X4 + L0 原有规则到 GaC indexed 层 (动态)")
     parser.add_argument("--write", action="store_true", help="append indexed 到 governance-checks.yaml")
-    parser.add_argument("--check", action="store_true", help="drift 检测 (源 vs GaC indexed 差异, 动态收敛核心)")
-    parser.add_argument("--update-relates", action="store_true", help="补已有 indexed 的 relates_to (gap3 回填)")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="drift 检测 (源 vs GaC indexed 差异, 动态收敛核心)",
+    )
+    parser.add_argument(
+        "--update-relates",
+        action="store_true",
+        help="补已有 indexed 的 relates_to (gap3 回填)",
+    )
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()
 

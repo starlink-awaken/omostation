@@ -78,6 +78,7 @@ def scan_management(root: Path) -> dict:
     def is_gitignored(rel_path: str) -> bool:
         """简单 .gitignore 匹配 (支持前缀/glob 简化)."""
         from fnmatch import fnmatch
+
         for pattern in gitignore_patterns:
             # 保留原始 pattern, 同时处理 '/', '*', '**'
             is_dir_pattern = pattern.endswith("/")
@@ -222,9 +223,7 @@ def scan_management(root: Path) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P81: management 跨文件引用检查"
-    )
+    parser = argparse.ArgumentParser(description="P81: management 跨文件引用检查")
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()
@@ -257,8 +256,10 @@ def main() -> int:
     print(f"🔗 内部引用 (已解析): {totals['internal_resolved']}")
     print(f"🌐 外部引用 (跨域):  {totals['external_links']}")
     print(f"📦 gitignored 引用:   {totals['gitignored_links']}")
-    print(f"❌ 死链 (目标不存在): {totals['dead_links']} = "
-          f"active:{totals['dead_links_active']} + archived:{totals['dead_links_archived']}")
+    print(
+        f"❌ 死链 (目标不存在): {totals['dead_links']} = "
+        f"active:{totals['dead_links_active']} + archived:{totals['dead_links_archived']}"
+    )
     print()
     print("跨子目录引用矩阵:")
     if result["refs_matrix"]:

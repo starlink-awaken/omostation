@@ -26,8 +26,8 @@ class DingTalkConnector(BaseConnector):
             return {"error": "DINGTALK_WEBHOOK_URL not set"}
         data = json.dumps({"msgtype": "text", "text": {"content": message[:2000]}}).encode()
         try:
-            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})  # noqa: S310
-            with urllib.request.urlopen(req, timeout=10) as r:  # noqa: S310
+            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=10) as r:
                 return cast("dict[Any, Any]", json.loads(r.read()))
         except Exception as e:
             return {"error": str(e)}

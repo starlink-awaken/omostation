@@ -19,6 +19,7 @@ def main() -> int:
 
     try:
         import yaml
+
         data = yaml.safe_load(BOS_PATH.read_text(encoding="utf-8"))
     except Exception as e:
         print(f"WARN 无法读取 BOS 注册表: {e}")

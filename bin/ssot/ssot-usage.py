@@ -13,10 +13,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
-
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 REGISTRY_DIR = WORKSPACE / ".omo" / "_truth" / "registry"
@@ -24,7 +22,7 @@ REGISTRY_DIR = WORKSPACE / ".omo" / "_truth" / "registry"
 
 def file_age_days(path: Path) -> float:
     mtime = os.path.getmtime(path)
-    return (datetime.now(timezone.utc).timestamp() - mtime) / 86400
+    return (datetime.now(UTC).timestamp() - mtime) / 86400
 
 
 def check_sots(max_age_days: float) -> list[dict]:
@@ -51,13 +49,23 @@ def main() -> int:
 
     unit = args.max_age[-1]
     n = int(args.max_age[:-1])
-    max_age = n * (1 if unit == "d" else (1/24 if unit == "h" else 1))
+    max_age = n * (1 if unit == "d" else (1 / 24 if unit == "h" else 1))
 
     findings = check_sots(max_age)
     stale_count = sum(1 for f in findings if f["stale"])
 
     if args.json:
-        print(json.dumps({"max_age_days": max_age, "stale_count": stale_count, "files": findings}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "max_age_days": max_age,
+                    "stale_count": stale_count,
+                    "files": findings,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 1 if stale_count > 0 else 0
 
     print(f"SSOT usage: {len(findings)} files in {REGISTRY_DIR.name}/")

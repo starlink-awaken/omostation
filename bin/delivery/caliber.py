@@ -4,6 +4,7 @@ Physical multi-host is the official gate for G-DEL.1 / G-DEL.3.
 In-process simulation may only claim meets_sim_harness.
 G-DEL.1 requires ≥4 physical hosts for official pass (fail-closed when blocked).
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -45,9 +46,7 @@ def classify_env(env: str | None, env_class: str | None = None) -> str:
 
 
 def is_simulation(metric: dict[str, Any]) -> bool:
-    return (
-        classify_env(metric.get("env"), metric.get("env_class")) == ENV_CLASS_SIM
-    )
+    return classify_env(metric.get("env"), metric.get("env_class")) == ENV_CLASS_SIM
 
 
 def min_hosts_for_gate(gate: str | None) -> int:
@@ -71,23 +70,15 @@ def stamp_physical_goal(
     result["env_class"] = env_class
     result["meets_sim_harness"] = bool(sim_ok)
     result["physical_hosts"] = int(physical_hosts)
-    need = min_hosts if min_hosts is not None else min_hosts_for_gate(
-        str(result.get("gate") or "")
-    )
+    need = min_hosts if min_hosts is not None else min_hosts_for_gate(str(result.get("gate") or ""))
     result["min_physical_hosts"] = int(need)
     if need > physical_hosts:
         result["gate_status"] = "BLOCKED"
-        result["blocked_reason"] = (
-            f"physical_hosts={physical_hosts} < min_physical_hosts={need}"
-        )
+        result["blocked_reason"] = f"physical_hosts={physical_hosts} < min_physical_hosts={need}"
     else:
         result["gate_status"] = "OPEN"
         result.pop("blocked_reason", None)
-    physical_ok = (
-        env_class == ENV_CLASS_PHYSICAL
-        and physical_hosts >= need
-        and bool(sim_ok)
-    )
+    physical_ok = env_class == ENV_CLASS_PHYSICAL and physical_hosts >= need and bool(sim_ok)
     result["meets_physical_gate"] = physical_ok
     # Official ADR-0210/0225/0226 gate
     result["meets_gate"] = physical_ok

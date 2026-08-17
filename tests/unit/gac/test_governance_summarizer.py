@@ -3,8 +3,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = REPO_ROOT / "bin" / "gac" / "governance-summarizer.py"
 
@@ -41,12 +39,21 @@ class TestGovernanceSummarizer:
             "scope": "staged",
             "checks": [
                 {"name": "check-a", "ok": True, "duration_ms": 10},
-                {"name": "check-b", "ok": False, "stderr": "error details", "stdout": ""},
+                {
+                    "name": "check-b",
+                    "ok": False,
+                    "stderr": "error details",
+                    "stdout": "",
+                },
             ],
             "hard_fails": [{"name": "check-b", "stderr": "error details", "stdout": ""}],
             "soft_warns": [],
             "finding_topics": [
-                {"severity": "error", "topic": "test-topic", "summary": "something broke"}
+                {
+                    "severity": "error",
+                    "topic": "test-topic",
+                    "summary": "something broke",
+                }
             ],
             "change_lane_files": [],
         }
@@ -69,7 +76,15 @@ class TestGovernanceSummarizer:
         assert result.returncode == 1
 
     def test_llm_endpoint_ignored_on_failure(self, tmp_path: Path):
-        report = {"ok": True, "scope": "staged", "checks": [], "hard_fails": [], "soft_warns": [], "finding_topics": [], "change_lane_files": []}
+        report = {
+            "ok": True,
+            "scope": "staged",
+            "checks": [],
+            "hard_fails": [],
+            "soft_warns": [],
+            "finding_topics": [],
+            "change_lane_files": [],
+        }
         report_file = tmp_path / "report.json"
         report_file.write_text(json.dumps(report), encoding="utf-8")
         result = run_summarizer(["--report", str(report_file), "--llm-endpoint", "http://localhost:9999"])

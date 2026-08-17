@@ -39,9 +39,7 @@ def run_surfaces(workflow: str, cwd: Path = WORKSPACE) -> dict:
     selected = [
         s
         for s in surfaces
-        if isinstance(s, dict)
-        and s.get("workflow") == workflow
-        and s.get("status", "active") != "orphan"
+        if isinstance(s, dict) and s.get("workflow") == workflow and s.get("status", "active") != "orphan"
     ]
     results = []
     failures = 0
@@ -53,7 +51,12 @@ def run_surfaces(workflow: str, cwd: Path = WORKSPACE) -> dict:
         cmd += [str(a) for a in (surface.get("args") or [])]
         try:
             proc = subprocess.run(
-                cmd, cwd=str(cwd), capture_output=True, text=True, check=False, timeout=300
+                cmd,
+                cwd=str(cwd),
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=300,
             )
         except subprocess.TimeoutExpired:
             results.append({"tool": tool, "ok": False, "detail": "timeout (>300s)"})

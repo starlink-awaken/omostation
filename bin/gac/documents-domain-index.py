@@ -69,9 +69,7 @@ def replace_projection(index_path: Path, projection: str) -> None:
     before, remainder = text.split(begin, 1)
     _existing, after = remainder.split(end, 1)
     if begin == LEGACY_BEGIN:
-        index_path.write_text(
-            MIGRATED_HEADER + projection + MIGRATED_FOOTER, encoding="utf-8"
-        )
+        index_path.write_text(MIGRATED_HEADER + projection + MIGRATED_FOOTER, encoding="utf-8")
         return
     index_path.write_text(before + projection + after, encoding="utf-8")
 

@@ -41,7 +41,7 @@ class TestRuleLoader:
     def test_load_yaml_with_pyyaml(self, tmp_path):
         """使用 pyyaml 加载 YAML 规则 (如果 pyyaml 可用)"""
         try:
-            import yaml  # noqa
+            import yaml
         except ImportError:
             pytest.skip("pyyaml not available")
 

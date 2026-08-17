@@ -18,6 +18,7 @@ P3 (FS 沙箱) 最小 POC: unix socket daemon, write API 替代直写.
 
 POC 验证: 经 daemon 写文件 + 原子写 (mkstemp + os.replace) + 客户端/daemon 通信.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -88,7 +89,11 @@ def _send(req: dict) -> dict:
 
 GOVERNANCE_EVENT_HANDLERS = {
     "constraint.changed": ["python3", "bin/ssot/consumer_index.py"],
-    "derived.regenerated": ["python3", "projects/ecos/bin/gen-l0-constraints.py", "--validate"],
+    "derived.regenerated": [
+        "python3",
+        "projects/ecos/bin/gen-l0-constraints.py",
+        "--validate",
+    ],
     "m0.drift_detected": ["python3", "bin/ssot/m0_feedback.py"],
 }
 

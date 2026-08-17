@@ -142,9 +142,7 @@ def _safe_scene_snapshot(scene_card: dict[str, Any]) -> dict[str, Any]:
     required_capabilities = scene_card.get("required_capabilities")
     if required_capabilities is None:
         required_capabilities = scene_card.get("capability_refs", [])
-    snapshot["required_capabilities"] = _capabilities(
-        required_capabilities, "scene_card.required_capabilities"
-    )
+    snapshot["required_capabilities"] = _capabilities(required_capabilities, "scene_card.required_capabilities")
     return snapshot
 
 
@@ -180,11 +178,7 @@ def build_intake(scene_card: dict[str, Any]) -> dict[str, Any]:
 
     missing = sorted(set(missing))
     status = "blocked" if missing else "proposal_only"
-    next_action = (
-        "complete_scene_card_and_resubmit"
-        if missing
-        else "run_external_activation_preflight"
-    )
+    next_action = "complete_scene_card_and_resubmit" if missing else "run_external_activation_preflight"
     return {
         "schema": SCHEMA,
         "mode": "proposal_only_intake",

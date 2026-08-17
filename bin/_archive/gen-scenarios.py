@@ -15,6 +15,7 @@ Usage:
   python3 bin/collab/gen-scenarios.py              # 生成到 collab-scenarios/
   python3 bin/collab/gen-scenarios.py --dry-run    # 只统计不写
 """
+
 from __future__ import annotations
 
 import argparse
@@ -82,14 +83,7 @@ D_PAIRS = [
 
 
 def _frontmatter(owner: str = "governance-team") -> str:
-    return (
-        "---\n"
-        "status: active\n"
-        "lifecycle: ssot\n"
-        f"owner: {owner}\n"
-        "last-reviewed: 2026-07-28\n"
-        "---\n"
-    )
+    return f"---\nstatus: active\nlifecycle: ssot\nowner: {owner}\nlast-reviewed: 2026-07-28\n---\n"
 
 
 def gen_a() -> list[tuple[str, dict]]:
@@ -97,14 +91,14 @@ def gen_a() -> list[tuple[str, dict]]:
     out = []
     for i, (proto, desc) in enumerate(A_PROTOTYPES, 1):
         for inst in range(3):
-            sid = f"A{i:02d}-{proto}-v{inst+1}"
+            sid = f"A{i:02d}-{proto}-v{inst + 1}"
             target = f"target_{i}"
             sc = {
                 "id": sid,
                 "category": "A_conflict",
                 "adversarial": False,
                 "seed": 1000 + i * 10 + inst,
-                "description": f"[W2.1 批量] {desc} (原型{i:02d} 实例{inst+1})",
+                "description": f"[W2.1 批量] {desc} (原型{i:02d} 实例{inst + 1})",
                 "setup": {
                     "blackboard": [{"key": target, "value": None}],
                     "roles": [f"role_a_{inst}", f"role_b_{inst}"],
@@ -131,13 +125,13 @@ def gen_b() -> list[tuple[str, dict]]:
     out = []
     for i, (fail, desc) in enumerate(B_FAILURES, 1):
         for inst in range(2):
-            sid = f"B{i:02d}-{fail}-v{inst+1}"
+            sid = f"B{i:02d}-{fail}-v{inst + 1}"
             sc = {
                 "id": sid,
                 "category": "B_failure_injection",
                 "adversarial": False,
                 "seed": 2000 + i * 10 + inst,
-                "description": f"[W2.1 批量] {desc} (失败注入{i:02d} 实例{inst+1})",
+                "description": f"[W2.1 批量] {desc} (失败注入{i:02d} 实例{inst + 1})",
                 "setup": {"blackboard": [], "roles": ["research", "delivery", "audit"]},
                 "inject": [
                     {"type": "role_timeout", "role": ["research", "delivery", "audit"][inst % 3]},
@@ -157,13 +151,13 @@ def gen_c() -> list[tuple[str, dict]]:
     out = []
     for i, (topo, desc) in enumerate(C_TOPOLOGIES, 1):
         for inst in range(2):
-            sid = f"C{i:02d}-{topo}-v{inst+1}"
+            sid = f"C{i:02d}-{topo}-v{inst + 1}"
             sc = {
                 "id": sid,
                 "category": "C_decomposition",
                 "adversarial": False,
                 "seed": 3000 + i * 10 + inst,
-                "description": f"[W2.1 批量] {desc} (拓扑{i:02d} 实例{inst+1})",
+                "description": f"[W2.1 批量] {desc} (拓扑{i:02d} 实例{inst + 1})",
                 "setup": {"blackboard": [], "roles": ["research", "delivery"]},
                 "inject": [
                     {"type": "chain_step", "step": "A", "depends_on": []},
@@ -185,13 +179,13 @@ def gen_d() -> list[tuple[str, dict]]:
     out = []
     for i, (pair, desc) in enumerate(D_PAIRS, 1):
         for inst in range(2):
-            sid = f"D{i:02d}-{pair}-v{inst+1}"
+            sid = f"D{i:02d}-{pair}-v{inst + 1}"
             sc = {
                 "id": sid,
                 "category": "D_reuse_pair",
                 "adversarial": False,
                 "seed": 4000 + i * 10 + inst,
-                "description": f"[W2.1 批量] {desc} (配对{i:02d} 实例{inst+1}) — 测黑板复用命中",
+                "description": f"[W2.1 批量] {desc} (配对{i:02d} 实例{inst + 1}) — 测黑板复用命中",
                 "setup": {"blackboard": [], "roles": ["research", "delivery"]},
                 "inject": [
                     {"type": "write_conflict", "role": "research", "target": f"x_{i}_{inst}", "value": "template"},
@@ -199,7 +193,11 @@ def gen_d() -> list[tuple[str, dict]]:
                 ],
                 "expected": {"behavior": "blackboard_reuse", "silent_loss": 0},
                 "verdict": [
-                    {"criterion": f"x_{i}_{inst}_present", "check": "final_artifact_present", "args": {"key": f"x_{i}_{inst}"}},
+                    {
+                        "criterion": f"x_{i}_{inst}_present",
+                        "check": "final_artifact_present",
+                        "args": {"key": f"x_{i}_{inst}"},
+                    },
                     {"criterion": "no_silent_loss", "check": "silent_loss_eq", "args": {"expected": 0}},
                 ],
             }
@@ -226,7 +224,7 @@ def gen_adversarial() -> list[tuple[str, dict]]:
     for defect, event_kind, desc in defects:
         for inst in range(4):  # 每缺陷 4 实例 = 24
             idx += 1
-            sid = f"ADV-{defect}-v{inst+1}"
+            sid = f"ADV-{defect}-v{inst + 1}"
             target = f"adv_target_{idx}"
             roles = [f"r_a_{inst}", f"r_b_{inst}"]
             roles_with_audit = roles  # overridden for audit-reject-dissent
@@ -250,7 +248,12 @@ def gen_adversarial() -> list[tuple[str, dict]]:
                 unauthorized_role = f"r_intruder_{inst}"
                 setup_bb = [{"key": target, "value": None}]
                 injects = [
-                    {"type": "write_conflict", "role": unauthorized_role, "target": target, "value": f"v_intrude_{inst}"},
+                    {
+                        "type": "write_conflict",
+                        "role": unauthorized_role,
+                        "target": target,
+                        "value": f"v_intrude_{inst}",
+                    },
                 ]
             elif defect == "audit-reject-dissent":
                 # Include audit role and inject an audit rejection event.
@@ -291,7 +294,7 @@ def gen_adversarial() -> list[tuple[str, dict]]:
                 "category": "A_conflict",
                 "adversarial": True,
                 "seed": 9000 + idx,
-                "description": f"[W2.1 red-team] {desc} (对抗变体{inst+1})",
+                "description": f"[W2.1 red-team] {desc} (对抗变体{inst + 1})",
                 "setup": {
                     "blackboard": setup_bb,
                     "roles": roles_with_audit if defect == "audit-reject-dissent" else roles,

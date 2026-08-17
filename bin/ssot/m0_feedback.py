@@ -13,7 +13,6 @@
     python3 bin/ssot/m0_feedback.py
 """
 
-import sys
 from pathlib import Path
 
 import yaml
@@ -37,18 +36,30 @@ def m0_drift(snapshot: dict, derived_count: int, expected_stages: tuple = EXPECT
     stage_ids = {s.get("id") for s in stages if isinstance(s, dict)}
     for s in expected_stages:
         if s not in stage_ids:
-            drifts.append({"type": "stage_missing", "constraint": s,
-                           "detail": f"M0 缺 stage {s}（声明存在）"})
+            drifts.append(
+                {
+                    "type": "stage_missing",
+                    "constraint": s,
+                    "detail": f"M0 缺 stage {s}（声明存在）",
+                }
+            )
     snap_count = snapshot.get("snapshot", {}).get("constraint_count")
     if snap_count is not None and snap_count != derived_count:
-        drifts.append({"type": "constraint_count_mismatch", "constraint": "constraint_count",
-                       "detail": f"M0={snap_count} vs derived={derived_count}"})
+        drifts.append(
+            {
+                "type": "constraint_count_mismatch",
+                "constraint": "constraint_count",
+                "detail": f"M0={snap_count} vs derived={derived_count}",
+            }
+        )
     return drifts
 
 
 def main() -> int:
     if not M0_SNAP.exists():
-        print("[WARN] M0 snapshot 未生成，先跑: cd projects/ecos && uv run python3 -m ecos.ssot.mof.m0.mof_driven --emit")
+        print(
+            "[WARN] M0 snapshot 未生成，先跑: cd projects/ecos && uv run python3 -m ecos.ssot.mof.m0.mof_driven --emit"
+        )
         return 1
     snap = yaml.safe_load(M0_SNAP.read_text(encoding="utf-8"))
     derived_count = len(yaml.safe_load(DERIVED.read_text(encoding="utf-8")).get("constraints", []))

@@ -16,11 +16,12 @@ Usage:
     python3 bin/plan/bet-to-task.py --apply --prune    # 并删除台账里已不存在的 bet 卡
     python3 bin/plan/bet-to-task.py --check            # 只报漂移，非 0 退出
 """
+
 from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 try:
@@ -125,7 +126,7 @@ def dump(task: dict) -> str:
     header = (
         "# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改\n"
         "# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply\n"
-        f"# generated_at: {datetime.now(timezone.utc).replace(microsecond=0).isoformat()}\n"
+        f"# generated_at: {datetime.now(UTC).replace(microsecond=0).isoformat()}\n"
     )
     return header + yaml.safe_dump(task, allow_unicode=True, sort_keys=False)
 
@@ -176,9 +177,18 @@ def main() -> int:
         else:
             old = yaml.safe_load(have[bid].read_text(encoding="utf-8")) or {}
             # 忽略执行期字段的差异，只比投影字段
-            keep = ("assigned_to", "dispatch_id", "run_ref", "approval_ref",
-                    "review_ref", "started_at", "completed_at", "blocked_by",
-                    "retry_count", "status")
+            keep = (
+                "assigned_to",
+                "dispatch_id",
+                "run_ref",
+                "approval_ref",
+                "review_ref",
+                "started_at",
+                "completed_at",
+                "blocked_by",
+                "retry_count",
+                "status",
+            )
             merged = dict(task)
             for k in keep:
                 if k in old:
@@ -196,7 +206,7 @@ def main() -> int:
     for bid, p, _ in to_create[:8]:
         print(f"  + {bid}  → {p.relative_to(WS)}")
     if len(to_create) > 8:
-        print(f"  … 另 {len(to_create)-8} 个")
+        print(f"  … 另 {len(to_create) - 8} 个")
     for bid, p, _ in to_update[:8]:
         print(f"  ~ {bid}")
     for bid, p in to_delete[:8]:
@@ -220,10 +230,12 @@ def main() -> int:
         for _, p in to_delete:
             p.unlink()
 
-    print(f"\n已写入 {len(to_create)+len(to_update)} 个，删除 {len(to_delete) if args.prune else 0} 个")
+    print(f"\n已写入 {len(to_create) + len(to_update)} 个，删除 {len(to_delete) if args.prune else 0} 个")
     print("⚠ planned/ 只是 backlog。晋升到 active/ 走:")
     print("   python3 scripts/omo_worker.py task promote-eval <TASK_ID> --omo-dir .omo")
-    print("   python3 scripts/omo_worker.py task promote-apply <TASK_ID> --promoted-by <ACTOR> --now <ISO8601> --omo-dir .omo")
+    print(
+        "   python3 scripts/omo_worker.py task promote-apply <TASK_ID> --promoted-by <ACTOR> --now <ISO8601> --omo-dir .omo"
+    )
     return 0
 
 

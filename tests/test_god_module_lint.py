@@ -12,9 +12,6 @@
 from __future__ import annotations
 
 import importlib.util
-import json
-import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -62,10 +59,7 @@ class TestCheckGodModule:
         assert "error_files" in report
         assert isinstance(report["error_files"], list)
         # 不变量: 阈值常量稳定 (防有人悄悄调低阈值逃避)
-        assert all(
-            loc > godmod.ERROR_LOC
-            for path, loc in report["error_files"]
-        )
+        assert all(loc > godmod.ERROR_LOC for path, loc in report["error_files"])
 
     def test_excluded_dirs_not_scanned(self, godmod, tmp_path):
         # 在 tmp_path 创建大量假测试文件, 验证 EXCLUDE_DIR_PARTS 生效
@@ -74,9 +68,7 @@ class TestCheckGodModule:
         fake.write_text("\n".join(["# line"] * 2000))  # 2000L, 超阈值
         report = godmod.check_god_module(str(tmp_path))
         # 假文件在 tests/test_ 路径下 → 应被排除
-        assert report["error_files"] == [], (
-            f"tests/ 应被排除, 但扫到: {report['error_files']}"
-        )
+        assert report["error_files"] == [], f"tests/ 应被排除, 但扫到: {report['error_files']}"
 
     def test_allowlist_excludes_named_files(self, godmod, tmp_path):
         # 创建超阈值文件, 加 ALLOWLIST, 验证不报错
@@ -89,9 +81,9 @@ class TestCheckGodModule:
         try:
             report = godmod.check_god_module(str(tmp_path))
             # huge.py 在 allowlist → 不报 error
-            assert all(
-                "huge.py" not in str(path) for path, _ in report["error_files"]
-            ), f"allowlisted file 仍报错: {report['error_files']}"
+            assert all("huge.py" not in str(path) for path, _ in report["error_files"]), (
+                f"allowlisted file 仍报错: {report['error_files']}"
+            )
         finally:
             godmod.GOD_MODULE_ALLOWLIST = original
 
@@ -99,15 +91,13 @@ class TestCheckGodModule:
 class TestCmdLintExitCode:
     def test_cmd_lint_exits_nonzero_when_errors(self, godmod):
         # workspace 真有 >800L 文件 → cmd_lint 应 exit 1 (gate fail)
-        import io
         import contextlib
+        import io
+
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             rc = godmod.cmd_lint_god_module(str(godmod.WORKSPACE_ROOT))
-        assert rc == 1, (
-            f"workspace 现有 24 个 >800L 文件, gate 应 fail (rc=1), 实得 {rc}.\n"
-            f"output:\n{buf.getvalue()}"
-        )
+        assert rc == 1, f"workspace 现有 24 个 >800L 文件, gate 应 fail (rc=1), 实得 {rc}.\noutput:\n{buf.getvalue()}"
 
     def test_cmd_lint_exits_zero_for_clean_workspace(self, godmod, tmp_path):
         # 临时干净 workspace → gate pass

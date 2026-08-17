@@ -114,12 +114,12 @@ def create_consensus(
 
     try:
         ops_url = os.environ.get("HERMES_OPS_URL", "http://localhost:9800")
-        req = urllib.request.Request(  # noqa: S310
+        req = urllib.request.Request(
             f"{ops_url}/event",
             data=json.dumps({"type": "CONSENSUS_CREATED", "payload": {"entity_id": entity_id}}).encode(),
             headers={"Content-Type": "application/json"},
         )
-        urllib.request.urlopen(req, timeout=2)  # noqa: S310
+        urllib.request.urlopen(req, timeout=2)
     except Exception:
         pass
     return _row_to_dict(row)

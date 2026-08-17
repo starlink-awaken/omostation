@@ -4,6 +4,7 @@ Drives real shipped entry points:
 - bin/collab/scenario_lib.run_scenario
 - bin/gac/check-scenario-growth.main
 """
+
 from __future__ import annotations
 
 import shutil
@@ -12,13 +13,11 @@ import sys
 import tempfile
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).resolve().parents[1]
 SCN = ROOT / ".omo/_delivery/collab-scenarios"
 sys.path.insert(0, str(ROOT / "bin/collab"))
 
-from scenario_lib import load_scenario, run_scenario  # noqa: E402
+from scenario_lib import load_scenario, run_scenario
 
 DESIGNED = [
     "ADV01-circular-dependency.yaml",
@@ -62,8 +61,7 @@ def test_scenario_growth_blocks_new_adv_without_evidence() -> None:
         (lib / "scenario_lib.py").write_text("# stub\n", encoding="utf-8")
         # new ADV without evidence (number > default irrelevant; not in baseline)
         (scen / "ADV999-stop-gate-probe.yaml").write_text(
-            "id: ADV999-stop-gate-probe\nadversarial: true\n"
-            "description: probe\ninject: []\nverdict: []\n",
+            "id: ADV999-stop-gate-probe\nadversarial: true\ndescription: probe\ninject: []\nverdict: []\n",
             encoding="utf-8",
         )
         # copy gate script from repo

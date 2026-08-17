@@ -2,6 +2,7 @@
 
 Supports one-shot RPC and persistent Session connections for low-latency measure.
 """
+
 from __future__ import annotations
 
 import json
@@ -48,9 +49,7 @@ class Session:
     def open(self) -> None:
         if self._sock is not None:
             return
-        sock = socket.create_connection(
-            (self.endpoint.host, self.endpoint.port), timeout=self.timeout
-        )
+        sock = socket.create_connection((self.endpoint.host, self.endpoint.port), timeout=self.timeout)
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self._sock = sock
         self._file_r = sock.makefile("rb")

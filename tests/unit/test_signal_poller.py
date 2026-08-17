@@ -7,6 +7,7 @@
 - freshness 消费: 运行时信号时间戳优先于注册期死值
 - state 防御: state 丢失后重放不会把旧信号当新信号重复上报 (hash 不同才触发)
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -70,10 +71,14 @@ def test_poll_records_signals_file(tmp_path):
     box = tmp_path / "box"
     box.mkdir()
     (box / "a.txt").write_text("hello")
-    sources = [{
-        "id": "src_test", "transport": "local_filesystem",
-        "path": str(box), "bos_uri": "bos://perception/test",
-    }]
+    sources = [
+        {
+            "id": "src_test",
+            "transport": "local_filesystem",
+            "path": str(box),
+            "bos_uri": "bos://perception/test",
+        }
+    ]
     poller = _poller_with_state(tmp_path, sources, state=None)
     triggers = poller.poll_once()
     assert len(triggers) == 1, "首 poll 应产生信号 (无历史 state)"
@@ -89,10 +94,14 @@ def test_freshness_prefers_runtime_signal_ts(tmp_path):
     now = datetime.now(UTC)
     runtime_ts = (now - timedelta(minutes=1)).isoformat().replace("+00:00", "Z")
     stale_reg_ts = "2026-08-07T23:45:22Z"  # 注册期死值
-    sources = [{
-        "id": "src_rt", "transport": "local_filesystem", "poll_interval": "300s",
-        "last_signal_at": stale_reg_ts,
-    }]
+    sources = [
+        {
+            "id": "src_rt",
+            "transport": "local_filesystem",
+            "poll_interval": "300s",
+            "last_signal_at": stale_reg_ts,
+        }
+    ]
     poller_state = {"src_rt": "abc123"}  # 可达
     signals = {"src_rt": runtime_ts}
 
@@ -105,7 +114,7 @@ def test_freshness_prefers_runtime_signal_ts(tmp_path):
 
 
 def test_state_loss_no_false_repeat_with_stable_hash(tmp_path):
-    """state 丢失防御: state 清空后, 同 hash 目录不会因 signals 文件已记录而重复上报? 
+    """state 丢失防御: state 清空后, 同 hash 目录不会因 signals 文件已记录而重复上报?
 
     语义澄清 (circuit_breaker 前裁定): state 丢失 → last_hash=None → 当前 hash≠None
     必然触发一次重复上报 (重建 state 所需)。防御目标是: 该重复上报仍如实落盘
@@ -114,18 +123,22 @@ def test_state_loss_no_false_repeat_with_stable_hash(tmp_path):
     box = tmp_path / "box"
     box.mkdir()
     (box / "a.txt").write_text("hello")
-    sources = [{
-        "id": "src_d", "transport": "local_filesystem",
-        "path": str(box), "bos_uri": "bos://perception/test",
-    }]
+    sources = [
+        {
+            "id": "src_d",
+            "transport": "local_filesystem",
+            "path": str(box),
+            "bos_uri": "bos://perception/test",
+        }
+    ]
     poller = _poller_with_state(tmp_path, sources, state=None)
-    poller.poll_once()          # 首次: 触发 + 落 state + 落 signals
-    t2 = poller.poll_once()     # 第二次: state 在, 无变化 → 零触发
+    poller.poll_once()  # 首次: 触发 + 落 state + 落 signals
+    t2 = poller.poll_once()  # 第二次: state 在, 无变化 → 零触发
     assert t2 == [], "state 存在时同 hash 不应重复触发"
     poller.STATE_FILE.unlink()  # 模拟 state 丢失
-    t3 = poller.poll_once()     # 重建: 恰一次触发 (预期行为, 落盘后自愈)
+    t3 = poller.poll_once()  # 重建: 恰一次触发 (预期行为, 落盘后自愈)
     assert len(t3) == 1
-    t4 = poller.poll_once()     # 自愈后再 poll: 零触发
+    t4 = poller.poll_once()  # 自愈后再 poll: 零触发
     assert t4 == [], "state 重建后不应持续假信号"
 
 
@@ -138,6 +151,7 @@ def test_netease_real_container_path_registered():
     from pathlib import Path
 
     import yaml
+
     reg = Path(".omo/_truth/registry/signal-sources.yaml")
     docs = [d for d in yaml.safe_load_all(reg.read_text(encoding="utf-8")) if d]
     src = next(s for s in docs[0]["sources"] if s["id"] == "netease_mailmaster_inbox")

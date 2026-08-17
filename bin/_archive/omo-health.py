@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import yaml
-from pathlib import Path
 import os
+from pathlib import Path
+
+import yaml
 
 WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[2])))
 WORKSPACE = WORKSPACE_ROOT
@@ -11,15 +12,17 @@ HEALTH_YAML = WORKSPACE / ".omo/state/system_health.yaml"
 DEBT_DIR = WORKSPACE / ".omo/debt/items"
 SYSTEM_YAML = WORKSPACE / ".omo/state/system.yaml"
 
+
 def print_header(title):
-    print(f"\n{'='*50}\n{title}\n{'='*50}")
+    print(f"\n{'=' * 50}\n{title}\n{'=' * 50}")
+
 
 def render_dashboard():
     print_header("👁️  KEEPER DASHBOARD (eCOS v6.0)")
-    
+
     # 1. System Phase & Freeze Status
     try:
-        with open(SYSTEM_YAML, "r") as f:
+        with open(SYSTEM_YAML) as f:
             sys_data = yaml.safe_load(f)
             freeze = sys_data.get("governance", {}).get("code_freeze", False)
             print(f"System State: {'❄️  L0-L3 CODE FREEZE ACTIVE' if freeze else '🔥 DEVELOPMENT ACTIVE'}")
@@ -30,7 +33,7 @@ def render_dashboard():
     print_header("🩺 L1: Runtime Health Matrix")
     try:
         if HEALTH_YAML.exists():
-            with open(HEALTH_YAML, "r") as f:
+            with open(HEALTH_YAML) as f:
                 health = yaml.safe_load(f)
                 score = health.get("score", 0)
                 status = health.get("status", "unknown")
@@ -48,7 +51,7 @@ def render_dashboard():
     try:
         if DEBT_DIR.exists():
             for debt_file in DEBT_DIR.glob("*.yaml"):
-                with open(debt_file, "r") as f:
+                with open(debt_file) as f:
                     debt = yaml.safe_load(f)
                     if debt.get("resolved", False):
                         resolved += 1
@@ -60,6 +63,7 @@ def render_dashboard():
         print(f"Error reading debt ledger: {e}")
 
     print("\nUse this dashboard to monitor physical reality rather than theoretical design.\n")
+
 
 if __name__ == "__main__":
     render_dashboard()
