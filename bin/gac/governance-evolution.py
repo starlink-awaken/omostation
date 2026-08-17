@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate and inspect the systemic governance evolution roadmap."""
+
 from __future__ import annotations
 
 import argparse
@@ -12,7 +13,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 REGISTRY_PATH = WORKSPACE / ".omo/_truth/registry/governance-evolution-roadmap.yaml"
@@ -234,8 +234,6 @@ def validate_command_list(command: Any, prefix: str) -> list[str]:
     return []
 
 
-
-
 def _collect_convergence_provenance_errors(seen_ids: set[str], initiatives: list) -> list[str]:
     """ADR-0374 G4: extractable convergence_provenance symmetry check.
 
@@ -264,14 +262,12 @@ def _collect_convergence_provenance_errors(seen_ids: set[str], initiatives: list
     for child, parent in _sup_to_sub.items():
         if not _sub_to_sup.get(parent):
             errors.append(
-                f"{child}: convergence_provenance.supersedes={parent} "
-                f"but {parent} has no superseded_by pointing back"
+                f"{child}: convergence_provenance.supersedes={parent} but {parent} has no superseded_by pointing back"
             )
     for child, parent in _sub_to_sup.items():
         if not _sup_to_sub.get(parent):
             errors.append(
-                f"{child}: convergence_provenance.superseded_by={parent} "
-                f"but {parent} has no supersedes pointing back"
+                f"{child}: convergence_provenance.superseded_by={parent} but {parent} has no supersedes pointing back"
             )
     for child, parent in _sup_to_sub.items():
         if parent not in seen_ids:
@@ -317,9 +313,7 @@ def validate_roadmap(registry: dict[str, Any]) -> tuple[list[str], list[str]]:
             errors.append(f"{initiative_id or prefix}: status must be one of {sorted(VALID_INITIATIVE_STATUS)}")
         # ADR-0378 G15: done 必须带 closure 证据 (防"已交付但仍标 active/无记录"回潮)
         if status == "done" and not initiative.get("closure"):
-            errors.append(
-                f"{initiative_id or prefix}: status done 必须带 closure (adr/verified/verifier) 证据"
-            )
+            errors.append(f"{initiative_id or prefix}: status done 必须带 closure (adr/verified/verifier) 证据")
         level = initiative.get("meadows_level")
         if not isinstance(level, int) or level < 1 or level > 12:
             errors.append(f"{initiative_id or prefix}: meadows_level must be an integer from 1 to 12")
@@ -362,11 +356,15 @@ def validate_roadmap(registry: dict[str, Any]) -> tuple[list[str], list[str]]:
             elif row_id in ids:
                 errors.append(f"{prefix}: duplicate id {row_id}")
             ids.add(row_id)
-            required = ("capability", "entry", "ssot", "verifier") if section == "capability_traces" else (
-                "title",
-                "owner",
-                "steps",
-                "verifier",
+            required = (
+                ("capability", "entry", "ssot", "verifier")
+                if section == "capability_traces"
+                else (
+                    "title",
+                    "owner",
+                    "steps",
+                    "verifier",
+                )
             )
             for field in required:
                 if not row.get(field):
@@ -454,39 +452,99 @@ def parse_status_line(line: str) -> tuple[str, str]:
 
 def classify_release_package(path: str) -> tuple[str, str]:
     if path == "BRIEF.md":
-        return "runtime-or-control-output", "review evidence/control output before including in a release package"
-    if path.startswith((
-        ".omo/_control/", ".omo/_delivery/agent-workflows/", ".omo/state/",
-        "runtime/omo/_control/", "runtime/omo/_delivery/agent-workflows/", "runtime/omo/state/",
-    )):
-        return "runtime-or-control-output", "review evidence/control output before including in a release package"
-    if path.startswith((".omo/_knowledge/", ".omo/change-log/", "runtime/omo/_knowledge/", "runtime/omo/change-log/")):
-        return "governance-history-evidence", "review as governance evidence/history, not executable control logic"
+        return (
+            "runtime-or-control-output",
+            "review evidence/control output before including in a release package",
+        )
+    if path.startswith(
+        (
+            ".omo/_control/",
+            ".omo/_delivery/agent-workflows/",
+            ".omo/state/",
+            "runtime/omo/_control/",
+            "runtime/omo/_delivery/agent-workflows/",
+            "runtime/omo/state/",
+        )
+    ):
+        return (
+            "runtime-or-control-output",
+            "review evidence/control output before including in a release package",
+        )
+    if path.startswith(
+        (
+            ".omo/_knowledge/",
+            ".omo/change-log/",
+            "runtime/omo/_knowledge/",
+            "runtime/omo/change-log/",
+        )
+    ):
+        return (
+            "governance-history-evidence",
+            "review as governance evidence/history, not executable control logic",
+        )
     if path.startswith((".omo/tasks/", "runtime/omo/tasks/")):
-        return "governance-task-lifecycle", "review OMO task lifecycle state and registry effects"
+        return (
+            "governance-task-lifecycle",
+            "review OMO task lifecycle state and registry effects",
+        )
     if path.endswith("-audit-report.md"):
-        return "governance-audit-report", "review root audit report placement and release intent"
+        return (
+            "governance-audit-report",
+            "review root audit report placement and release intent",
+        )
     if path.startswith(".c2g_data/"):
-        return "strategy-ingress-artifact", "review strategy ingress/task lifecycle before release"
+        return (
+            "strategy-ingress-artifact",
+            "review strategy ingress/task lifecycle before release",
+        )
     if path.startswith("_archived/"):
-        return "archived-artifact", "review archive deletion or migration intent before release"
+        return (
+            "archived-artifact",
+            "review archive deletion or migration intent before release",
+        )
     if path.startswith("data/"):
-        return "data-output", "keep user/runtime data out of governance release packages unless explicitly required"
+        return (
+            "data-output",
+            "keep user/runtime data out of governance release packages unless explicitly required",
+        )
     if path.startswith("runtime/"):
-        return "runtime-or-control-output", "review evidence/control output before including in a release package"
-    if path.startswith((
-        ".omo/_truth/registry/", ".omo/_truth/goals/", ".omo/goals/", ".omo/standards/",
-        "runtime/omo/_truth/registry/", "runtime/omo/_truth/goals/", "runtime/omo/goals/", "runtime/omo/standards/",
-    )):
-        return "governance-truth-and-standards", "review with AGCP claim coverage and SSOT checks"
+        return (
+            "runtime-or-control-output",
+            "review evidence/control output before including in a release package",
+        )
+    if path.startswith(
+        (
+            ".omo/_truth/registry/",
+            ".omo/_truth/goals/",
+            ".omo/goals/",
+            ".omo/standards/",
+            "runtime/omo/_truth/registry/",
+            "runtime/omo/_truth/goals/",
+            "runtime/omo/goals/",
+            "runtime/omo/standards/",
+        )
+    ):
+        return (
+            "governance-truth-and-standards",
+            "review with AGCP claim coverage and SSOT checks",
+        )
     if path.startswith("ecos/src/ecos/ssot/mof/") or path.startswith("projects/ecos/src/ecos/ssot/mof/"):
-        return "mof-model-registry", "review MOF schema/state bridge and model drift checks"
+        return (
+            "mof-model-registry",
+            "review MOF schema/state bridge and model drift checks",
+        )
     if path in {".env.example", ".gitignore", "pyproject.toml"} or path.startswith(
         ("config/", ".github/workflows/", ".githooks/")
     ):
-        return "workspace-config", "review workspace configuration examples and machine identity boundaries"
+        return (
+            "workspace-config",
+            "review workspace configuration examples and machine identity boundaries",
+        )
     if path.startswith(".agents/skills/") or path.startswith("bin/") or path.startswith("tests/") or path == "Makefile":
-        return "governance-control-plane", "ship with focused tests and make gac-local-gate"
+        return (
+            "governance-control-plane",
+            "ship with focused tests and make gac-local-gate",
+        )
     if path in {"AGENTS.md", "CLAUDE.md", "README.md"} or path.startswith("docs/"):
         return "governance-docs", "ship with doc-ssot-lint and doc-link-check"
     if path == "projects/AGENTS.md" or (
@@ -500,7 +558,9 @@ def classify_release_package(path: str) -> tuple[str, str]:
     return "unknown", "inspect manually before release"
 
 
-def release_review_findings(packages: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+def release_review_findings(
+    packages: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
     unknown_paths = packages.get("unknown", {}).get("paths", [])
     if unknown_paths:
@@ -534,8 +594,6 @@ def release_review_findings(packages: dict[str, dict[str, Any]]) -> list[dict[st
     return findings
 
 
-
-
 def agent_workflow_claim_command(path: str) -> list[str]:
     return [
         "uv",
@@ -549,6 +607,7 @@ def agent_workflow_claim_command(path: str) -> list[str]:
         "--path",
         path,
     ]
+
 
 def release_review_plan(findings: list[dict[str, Any]]) -> list[dict[str, Any]]:
     batches: dict[str, dict[str, Any]] = {}
@@ -692,14 +751,26 @@ def apply_release_decisions(
         if target is None and path:
             target = by_path.get(path)
         if not key:
-            invalid.append({"index": index, "reason": "missing decision_id or path", "record": record})
+            invalid.append(
+                {
+                    "index": index,
+                    "reason": "missing decision_id or path",
+                    "record": record,
+                }
+            )
             continue
         if key in seen_keys:
             invalid.append({"index": index, "reason": "duplicate decision", "key": key})
             continue
         seen_keys.add(key)
         if target is None:
-            invalid.append({"index": index, "reason": "decision target not in current template", "key": key})
+            invalid.append(
+                {
+                    "index": index,
+                    "reason": "decision target not in current template",
+                    "key": key,
+                }
+            )
             continue
         decision = record.get("decision")
         if decision not in ALLOWED_RELEASE_DECISIONS:
@@ -761,12 +832,12 @@ def release_decision_template_records(
 
 
 def write_release_decision_template(
-    decision_template: list[dict[str, Any]], output_path: str, default_decision: str = ""
+    decision_template: list[dict[str, Any]],
+    output_path: str,
+    default_decision: str = "",
 ) -> str:
     if default_decision and default_decision not in ALLOWED_RELEASE_DECISIONS:
-        raise RoadmapError(
-            "release decision default must be one of: " + ", ".join(ALLOWED_RELEASE_DECISIONS)
-        )
+        raise RoadmapError("release decision default must be one of: " + ", ".join(ALLOWED_RELEASE_DECISIONS))
     decision_path = Path(output_path)
     if not decision_path.is_absolute():
         decision_path = WORKSPACE / decision_path
@@ -812,11 +883,7 @@ def build_package_report(
         bucket = packages.setdefault(package, {"count": 0, "paths": [], "recommendation": recommendation})
         bucket["count"] += 1
         bucket["paths"].append(path)
-    ordered_packages = [
-        {"id": package, **packages[package]}
-        for package in PACKAGE_ORDER
-        if package in packages
-    ]
+    ordered_packages = [{"id": package, **packages[package]} for package in PACKAGE_ORDER if package in packages]
     unknown_count = packages.get("unknown", {}).get("count", 0)
     review_findings = release_review_findings(packages)
     review_plan = release_review_plan(review_findings)
@@ -837,9 +904,7 @@ def build_package_report(
         )
     # ADR-0377 G12: invalid 决策记录 = 决策数据不可信 → release 不可 ready.
     # 旧逻辑 `not review_findings or ...` 在无 findings 时短路 True, 吞掉 invalid.
-    release_ready = decision_summary["invalid"] == 0 and (
-        not review_findings or decision_summary["ready"]
-    )
+    release_ready = decision_summary["invalid"] == 0 and (not review_findings or decision_summary["ready"])
     release_gate = {
         "required": require_ready,
         "ok": release_ready,
@@ -872,7 +937,9 @@ def build_package_report(
         "release_order": [item["id"] for item in ordered_packages],
         "packages": ordered_packages,
         "entries": entries,
-        "recommended_next": "Review unknown package entries before release." if unknown_count else (
+        "recommended_next": "Review unknown package entries before release."
+        if unknown_count
+        else (
             "Fix invalid release decision records."
             if decision_summary["invalid"]
             else (

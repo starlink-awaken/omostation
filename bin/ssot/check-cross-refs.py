@@ -99,7 +99,12 @@ def resolve_link(source: Path, link: str, root: Path) -> Path | None:
     if link.startswith((".omo/", "docs/", "scripts/", "bin/", "tests/")):
         # 跳过 scripts/omo_*.py / scripts/omc_*.py / scripts/omo/*.py 引用
         # (脚本已从 scripts/ 迁到 bin/, 治根 F-3 ADR-0122 S1 2026-07-02)
-        if link.startswith("scripts/omo_") or link.startswith("scripts/omc_") or link.startswith("scripts/omo/") or link == "scripts/omo_rules.py":
+        if (
+            link.startswith("scripts/omo_")
+            or link.startswith("scripts/omc_")
+            or link.startswith("scripts/omo/")
+            or link == "scripts/omo_rules.py"
+        ):
             return None
         candidate = (root / link).resolve()
         return candidate
@@ -149,7 +154,10 @@ def check_file(file: Path, root: Path) -> list[tuple[str, str]]:
     if rel.parent == Path(".omo") and rel.name in ("INDEX.md", "DOC-LIFECYCLE.md"):
         return []
     # 跳过 .omo/_control/INDEX.md / .omo/_truth/INDEX.md / .omo/_truth/INVENTORY.md (旧索引, 引用已迁移)
-    if rel.name in ("INDEX.md", "INVENTORY.md") and rel.parent in (Path(".omo/_control"), Path(".omo/_truth")):
+    if rel.name in ("INDEX.md", "INVENTORY.md") and rel.parent in (
+        Path(".omo/_control"),
+        Path(".omo/_truth"),
+    ):
         return []
     # 跳过 .omo/_archive/.md (历史快照文件本身)
     if rel.parent == Path(".omo/_archive"):
@@ -207,11 +215,7 @@ def _tracked_markdown_files(root: Path) -> list[Path]:
     except (OSError, subprocess.CalledProcessError) as exc:
         raise RuntimeError("tracked scope requires a Git worktree") from exc
 
-    paths = [
-        root / raw_path.decode("utf-8")
-        for raw_path in result.stdout.split(b"\0")
-        if raw_path
-    ]
+    paths = [root / raw_path.decode("utf-8") for raw_path in result.stdout.split(b"\0") if raw_path]
     return sorted(path for path in paths if _is_scan_candidate(path, root))
 
 
@@ -220,11 +224,7 @@ def collect_markdown_files(root: Path, *, scope: str) -> list[Path]:
     if scope == "tracked":
         return _tracked_markdown_files(root)
     if scope == "workspace":
-        return sorted(
-            path
-            for path in (root / ".omo").rglob("*.md")
-            if _is_scan_candidate(path, root)
-        )
+        return sorted(path for path in (root / ".omo").rglob("*.md") if _is_scan_candidate(path, root))
     raise ValueError(f"unsupported scope: {scope}")
 
 

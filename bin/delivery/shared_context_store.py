@@ -7,6 +7,7 @@ Contract mirrors gbrain AgentSharedContextStore visibility rules:
 - empty readers list ⇒ shared to all agents in scope
 - non-empty readers ⇒ only writer + listed readers
 """
+
 from __future__ import annotations
 
 import json
@@ -107,9 +108,7 @@ class FileSharedContextStore:
             tags=list(data.get("tags") or []),
         )
 
-    def read(
-        self, reader: str, key: str, *, scope: str = "default"
-    ) -> SharedContextRecord | None:
+    def read(self, reader: str, key: str, *, scope: str = "default") -> SharedContextRecord | None:
         if not reader or not reader.strip():
             raise ValueError("reader required")
         rec = self._load(self._key_path(scope, key))
@@ -229,8 +228,6 @@ def kos_retrieve(db_path: Path, query: str, *, limit: int = 5) -> list[dict[str,
             """,
             (q, q, q, limit),
         ).fetchall()
-        return [
-            {"path": r[0], "title": r[1], "preview": (r[2] or "")[:200]} for r in rows
-        ]
+        return [{"path": r[0], "title": r[1], "preview": (r[2] or "")[:200]} for r in rows]
     finally:
         conn.close()

@@ -29,10 +29,11 @@ TEMPLATE_HEADER = """# INDEX-TOOLS.md — 治理工具统一目录
 
 """
 
+
 def scan_bin_directory():
     bin_dir = WORKSPACE_ROOT / "bin"
     tools = {}
-    
+
     # Scan gac/
     gac_dir = bin_dir / "gac"
     if gac_dir.exists():
@@ -40,7 +41,7 @@ def scan_bin_directory():
         for f in sorted(gac_dir.glob("*.py")):
             if f.is_file():
                 tools["gac"].append(f.name)
-    
+
     # Scan adr/
     adr_dir = bin_dir / "adr"
     if adr_dir.exists():
@@ -48,7 +49,7 @@ def scan_bin_directory():
         for f in sorted(adr_dir.glob("*.py")):
             if f.is_file():
                 tools["adr"].append(f.name)
-    
+
     # Scan ssot/
     ssot_dir = bin_dir / "ssot"
     if ssot_dir.exists():
@@ -56,7 +57,7 @@ def scan_bin_directory():
         for f in sorted(ssot_dir.glob("*.py")):
             if f.is_file():
                 tools["ssot"].append(f.name)
-    
+
     # Scan mof/
     mof_dir = bin_dir / "mof"
     if mof_dir.exists():
@@ -64,13 +65,13 @@ def scan_bin_directory():
         for f in sorted(mof_dir.glob("*.py")):
             if f.is_file():
                 tools["mof"].append(f.name)
-    
+
     # Scan root bin/
     tools["root"] = []
     for f in sorted(bin_dir.glob("*.py")):
         if f.is_file():
             tools["root"].append(f.name)
-    
+
     return tools
 
 
@@ -80,6 +81,7 @@ def scan_cockpit_commands():
     if not cli.is_file():
         return []
     import re
+
     text = cli.read_text(encoding="utf-8", errors="ignore")
     names = re.findall(r'sub\.add_parser\(\s*"([a-z0-9\-]+)"', text)
     seen = set()
@@ -99,6 +101,7 @@ def scan_skills():
             if d.is_dir() and (d / "SKILL.md").exists():
                 skills.append(d.name)
     return skills
+
 
 def generate_gac_tools():
     return """## 工具分类目录
@@ -125,6 +128,7 @@ def generate_gac_tools():
 
 """
 
+
 def generate_adr_tools():
     return """### 2. ADR 治理 (bin/adr/)
 
@@ -138,6 +142,7 @@ def generate_adr_tools():
 | adr-trend-insight.py | drift 趋势洞察 | `python3 bin/adr/adr-trend-insight.py` |
 
 """
+
 
 def generate_ssot_tools():
     return """### 3. SSOT 守护 (bin/ssot/)
@@ -189,6 +194,7 @@ def generate_ssot_tools():
 
 """
 
+
 def generate_mof_tools():
     return """### 4. MOF 工具 (bin/mof/)
 
@@ -197,6 +203,7 @@ def generate_mof_tools():
 | mof-m2-coverage.py | M2 覆盖率 | `python3 bin/mof/mof-m2-coverage.py` |
 
 """
+
 
 def generate_root_tools():
     return """### 5. 根目录高频工具
@@ -212,6 +219,7 @@ def generate_root_tools():
 
 """
 
+
 def generate_p74_section():
     return """### 6. P74 Solidification (工作流沉默治理)
 
@@ -223,6 +231,7 @@ def generate_p74_section():
 | agent-workflow.py compliance | workflow 沉默检测 | CR-P74-WORKFLOW-SILENCE |
 
 """
+
 
 def generate_cockpit_section(commands: list) -> str:
     section = """
@@ -240,8 +249,7 @@ def generate_cockpit_section(commands: list) -> str:
         section += f"| `{c}` | `uv run --project projects/cockpit cockpit {c} --help` |\n"
     section += f"\n**合计**: {len(commands)} 个顶层命令\n"
     section += (
-        "\n关键通道：`bos` · `bos list --all` · `channels` · `kems` · "
-        "`agent-onboard` · `mcp` · `agent-workflow`\n"
+        "\n关键通道：`bos` · `bos list --all` · `channels` · `kems` · `agent-onboard` · `mcp` · `agent-workflow`\n"
     )
     return section
 
@@ -259,6 +267,7 @@ def generate_skills_section(skills):
         section += f"| {skill} | {skill.replace('-', ' ')} |\n"
     return section
 
+
 def generate_footer():
     return """
 ---
@@ -272,12 +281,13 @@ def generate_footer():
 > 通用开发命令请见根 `AGENTS.md` §5
 """
 
+
 def main():
     generated_at = datetime.datetime.now(UTC).isoformat()
-    
+
     skills = scan_skills()
     cockpit_cmds = scan_cockpit_commands()
-    
+
     content = TEMPLATE_HEADER.format(generated_at=generated_at)
     content += generate_cockpit_section(cockpit_cmds)
     content += generate_gac_tools()
@@ -288,11 +298,12 @@ def main():
     content += generate_p74_section()
     content += generate_skills_section(skills)
     content += generate_footer()
-    
+
     with open(INDEX_FILE, "w") as f:
         f.write(content)
-    
+
     print(f"Generated: {INDEX_FILE} (cockpit_cmds={len(cockpit_cmds)} skills={len(skills)})")
+
 
 if __name__ == "__main__":
     main()

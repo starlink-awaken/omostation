@@ -152,9 +152,7 @@ def test_write_migrates_the_legacy_generated_block(tmp_path: Path) -> None:
 
 
 def test_required_phase_gate_covers_registry_index_projection() -> None:
-    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(
-        encoding="utf-8"
-    )
+    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(encoding="utf-8")
 
     assert "bin/gac/documents-domain-index.py" in workflow
     assert "tests/test_documents_domain_index.py" in workflow

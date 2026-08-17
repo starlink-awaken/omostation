@@ -4,6 +4,7 @@
 Strategy: when a node is marked unhealthy, migrate inflight tasks to healthy
 nodes via AgentRegistry + TaskScheduler. Ready for physical hosts once restored.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -50,9 +51,7 @@ def run_drill(*, dry_run: bool = True, n_nodes: int = 4) -> dict[str, Any]:
         )
 
     unhealthy = [a.agent_id for a in reg.list_agents() if not a.healthy]
-    healthy_nodes = sorted(
-        {a.node_id for a in reg.list_agents(healthy_only=True)}
-    )
+    healthy_nodes = sorted({a.node_id for a in reg.list_agents(healthy_only=True)})
     migrated_ok = all(x["success"] and x["node_id"] != "node-0" for x in results)
 
     return {

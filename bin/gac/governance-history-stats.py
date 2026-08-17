@@ -20,7 +20,7 @@ import argparse
 import json
 import sys
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -96,16 +96,18 @@ def grade_transitions(by_d: dict[str, list[dict]]) -> list[dict]:
         total = sum(grades.values())
         if total == 0:
             continue
-        transitions.append({
-            "date": date,
-            "total": total,
-            "a_plus_pct": round(grades.get("A+", 0) / total * 100, 1),
-            "a_pct": round(grades.get("A", 0) / total * 100, 1),
-            "b_pct": round(grades.get("B", 0) / total * 100, 1),
-            "c_pct": round(grades.get("C", 0) / total * 100, 1),
-            "d_pct": round(grades.get("D", 0) / total * 100, 1),
-            "f_pct": round(grades.get("F", 0) / total * 100, 1),
-        })
+        transitions.append(
+            {
+                "date": date,
+                "total": total,
+                "a_plus_pct": round(grades.get("A+", 0) / total * 100, 1),
+                "a_pct": round(grades.get("A", 0) / total * 100, 1),
+                "b_pct": round(grades.get("B", 0) / total * 100, 1),
+                "c_pct": round(grades.get("C", 0) / total * 100, 1),
+                "d_pct": round(grades.get("D", 0) / total * 100, 1),
+                "f_pct": round(grades.get("F", 0) / total * 100, 1),
+            }
+        )
     return transitions
 
 
@@ -128,7 +130,7 @@ def main() -> int:
         return 1
 
     # 按日期过滤最近 N 天
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=UTC)
     cutoff = now - timedelta(days=args.days)
     recent_entries = []
     for e in entries:
@@ -189,15 +191,17 @@ def main() -> int:
         print("🔄 对比分析 (前 N/2 vs 后 N/2):")
         print(f"   前半: count={compare['first_half']['count']:>3d}  avg={compare['first_half']['avg_score']:>5.1f}")
         print(f"   后半: count={compare['second_half']['count']:>3d}  avg={compare['second_half']['avg_score']:>5.1f}")
-        sign = "+" if compare['delta'] > 0 else ""
+        sign = "+" if compare["delta"] > 0 else ""
         print(f"   delta: {sign}{compare['delta']:>5.1f}")
         print()
     if transitions:
         print("📅 Grade 比例变迁:")
         print(f"  {'日期':<12s}  {'A+':>6s}  {'A':>6s}  {'B':>6s}  {'C':>6s}  {'D':>6s}  {'F':>6s}")
         for t in transitions[-15:]:
-            print(f"  {t['date']:<12s}  {t['a_plus_pct']:>5.1f}%  {t['a_pct']:>5.1f}%  "
-                  f"{t['b_pct']:>5.1f}%  {t['c_pct']:>5.1f}%  {t['d_pct']:>5.1f}%  {t['f_pct']:>5.1f}%")
+            print(
+                f"  {t['date']:<12s}  {t['a_plus_pct']:>5.1f}%  {t['a_pct']:>5.1f}%  "
+                f"{t['b_pct']:>5.1f}%  {t['c_pct']:>5.1f}%  {t['d_pct']:>5.1f}%  {t['f_pct']:>5.1f}%"
+            )
     print()
     if cat_trend:
         print("🔧 类别趋势 (按 check category):")

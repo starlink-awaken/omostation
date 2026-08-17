@@ -23,6 +23,7 @@
 
 豁免 (LEGACY_OK_PORTS): 外部标准 / 工具端口 (otel 4318 / vite 5173 / lm-studio 1234)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -37,29 +38,30 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 # 外部标准 / 工具端口 (允许硬编码, 不算 unregistered)
 # rationale: 这些是行业标准或外部服务, 不归我们 SSOT 管
 LEGACY_OK_PORTS = {
-    1234,    # LM Studio (本地 LLM)
-    3000,    # family-hub dashboard (外部仓)
-    3001,    # family-hub api (外部仓)
-    4318,    # OpenTelemetry OTLP (行业标准)
-    5173,    # Vite dev server (工具默认)
+    1234,  # LM Studio (本地 LLM)
+    3000,  # family-hub dashboard (外部仓)
+    3001,  # family-hub api (外部仓)
+    4318,  # OpenTelemetry OTLP (行业标准)
+    5173,  # Vite dev server (工具默认)
 }
 
 
 # 检测模式: port-context (4-5 digit number)
 # 严格定义: PORT = NNNN / port=NNNN / --port NNNN / host:port[/path]
 PORT_PATTERNS = [
-    (re.compile(r'\bPORT\s*=\s*(\d{4,5})\b'), "PORT = NNNN"),
-    (re.compile(r'\bport\s*[=:]\s*(\d{4,5})\b'), "port=NNNN"),
-    (re.compile(r'--port[=\s]+(\d{4,5})\b'), "--port NNNN"),
-    (re.compile(r'://[^/]+:(\d{4,5})(?:[/\b]|$)'), "host:port"),
-    (re.compile(r'\blocalhost:(\d{4,5})\b'), "localhost:port"),
-    (re.compile(r'\b127\.0\.0\.1:(\d{4,5})\b'), "127.0.0.1:port"),
-    (re.compile(r'\b0\.0\.0\.0:(\d{4,5})\b'), "0.0.0.0:port"),
+    (re.compile(r"\bPORT\s*=\s*(\d{4,5})\b"), "PORT = NNNN"),
+    (re.compile(r"\bport\s*[=:]\s*(\d{4,5})\b"), "port=NNNN"),
+    (re.compile(r"--port[=\s]+(\d{4,5})\b"), "--port NNNN"),
+    (re.compile(r"://[^/]+:(\d{4,5})(?:[/\b]|$)"), "host:port"),
+    (re.compile(r"\blocalhost:(\d{4,5})\b"), "localhost:port"),
+    (re.compile(r"\b127\.0\.0\.1:(\d{4,5})\b"), "127.0.0.1:port"),
+    (re.compile(r"\b0\.0\.0\.0:(\d{4,5})\b"), "0.0.0.0:port"),
 ]
 
 
 def load_yaml(p: Path):
     import yaml
+
     if not p.exists():
         return None
     try:
@@ -131,28 +133,32 @@ def collect_hardcoded_ports() -> dict[int, list[dict]]:
                     port = int(m.group(1))
                     if not (1000 < port < 65536):
                         continue
-                    line_no = text[:m.start()].count("\n") + 1
+                    line_no = text[: m.start()].count("\n") + 1
                     # 检查是否是 env var fallback (os.environ.get("X", "PORT"))
                     line_start = max(0, m.start() - 120)
                     line_end = min(len(text), m.end() + 30)
                     context = text[line_start:line_end]
                     is_env_fallback = "os.environ.get(" in context or "os.environ.get (" in context
-                    found.setdefault(port, []).append({
-                        "file": str(f.relative_to(WORKSPACE)),
-                        "line": line_no,
-                        "pattern": pat_name,
-                        "env_fallback": is_env_fallback,
-                    })
+                    found.setdefault(port, []).append(
+                        {
+                            "file": str(f.relative_to(WORKSPACE)),
+                            "line": line_no,
+                            "pattern": pat_name,
+                            "env_fallback": is_env_fallback,
+                        }
+                    )
     return found
 
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--json", action="store_true", help="JSON output")
-    p.add_argument("--threshold", type=int, default=0,
-                   help="unregistered port 阈值 (默认 0, hard)")
-    p.add_argument("--env-var-check", action="store_true",
-                   help="env-only 端口检查: 标记需要 env var 的 bare 硬编码")
+    p.add_argument("--threshold", type=int, default=0, help="unregistered port 阈值 (默认 0, hard)")
+    p.add_argument(
+        "--env-var-check",
+        action="store_true",
+        help="env-only 端口检查: 标记需要 env var 的 bare 硬编码",
+    )
     args = p.parse_args()
 
     registered = load_registered_ports()
@@ -163,8 +169,7 @@ def main() -> int:
     unregistered_ports = set(hardcoded.keys()) - registered - LEGACY_OK_PORTS
     # 按代码使用数排序
     unregistered_list = sorted(
-        [{"port": port, "count": len(hardcoded[port]), "sites": hardcoded[port][:5]}
-         for port in unregistered_ports],
+        [{"port": port, "count": len(hardcoded[port]), "sites": hardcoded[port][:5]} for port in unregistered_ports],
         key=lambda x: -x["count"],
     )
 
@@ -214,7 +219,7 @@ def main() -> int:
     if args.json:
         print(json.dumps(summary, indent=2))
     else:
-        print(f"=== hardcoded-port-detector (P77 Phase 5) ===")
+        print("=== hardcoded-port-detector (P77 Phase 5) ===")
         print(f"  registered (union ecos+protocols): {summary['registered_total']}")
         print(f"  hardcoded distinct ports (in code): {summary['hardcoded_distinct_ports']}")
         print(f"  unregistered (hardcoded but NOT in SSOT): {summary['unregistered']}")
@@ -224,7 +229,7 @@ def main() -> int:
         print(f"  legacy usages (external/standard, 豁免): {summary['legacy_usages_count']}")
         print()
         if summary["bare_hardcoded_usages_count"] > 0:
-            print(f"📋 需要迁移的硬编码端口:")
+            print("📋 需要迁移的硬编码端口:")
             for u in bare_hardcoded_usages:
                 if u["count"] > 0:
                     ev = u["env_var"] or "(no env var defined)"

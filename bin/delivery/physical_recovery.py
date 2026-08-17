@@ -7,6 +7,7 @@ One command path after hosts return:
 Never claims meets_physical_gate=true from dry-run or sim. Physical pass requires
 real measure_physical + human confirm (workorder §F).
 """
+
 from __future__ import annotations
 
 import argparse

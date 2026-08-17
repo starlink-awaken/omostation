@@ -129,16 +129,10 @@ def _scene_inventory(root: Path) -> dict[str, Any]:
             cards.append({"path": path.relative_to(root).as_posix(), **body})
 
     active_cards = [
-        card
-        for card in cards
-        if card.get("activation") in {"active", "admitted"}
-        or card.get("lifecycle") == "active"
+        card for card in cards if card.get("activation") in {"active", "admitted"} or card.get("lifecycle") == "active"
     ]
     proposal_cards = [
-        card
-        for card in cards
-        if card.get("activation") == "forbidden"
-        or card.get("lifecycle") == "proposal_only"
+        card for card in cards if card.get("activation") == "forbidden" or card.get("lifecycle") == "proposal_only"
     ]
     activation_allowed = bool(active_cards)
     return {
@@ -192,7 +186,11 @@ def build_report(root: Path) -> dict[str, Any]:
         computed_flags.append("active_goals_without_active_tasks")
     if counts["active"] > 0 and execution_mode == "waiting-for-scenario/next-bet":
         computed_flags.append("execution_mode_mismatch:active_tasks_present")
-    if counts["active"] == 0 and not goal_inventory["active_goal_ids"] and execution_mode != "waiting-for-scenario/next-bet":
+    if (
+        counts["active"] == 0
+        and not goal_inventory["active_goal_ids"]
+        and execution_mode != "waiting-for-scenario/next-bet"
+    ):
         computed_flags.append("execution_mode_mismatch:expected=waiting-for-scenario/next-bet")
     computed_flags.extend(_stored_count_mismatches(state, counts))
 
@@ -242,7 +240,12 @@ def build_report(root: Path) -> dict[str, Any]:
             "counts": counts,
             "stored_counts": {
                 field: state.get(field)
-                for field in ("active_tasks", "planned_tasks", "completed_tasks", "total_tasks")
+                for field in (
+                    "active_tasks",
+                    "planned_tasks",
+                    "completed_tasks",
+                    "total_tasks",
+                )
             },
             "active_goal_ids": goal_inventory["active_goal_ids"],
             "gated_goal_ids": goal_inventory["gated_goal_ids"],

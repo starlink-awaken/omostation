@@ -62,8 +62,7 @@ def test_unregistered_check_detected(cs, tmp_path) -> None:
     _write(tmp_path / "ci-surfaces.yaml", "version: 1\nsurfaces: []\n")
     _write(
         tmp_path / "workflows" / "test.yml",
-        "on: [push, pull_request]\n"
-        "jobs:\n  t:\n    steps:\n      - run: python3 scripts/check-foo.py\n",
+        "on: [push, pull_request]\njobs:\n  t:\n    steps:\n      - run: python3 scripts/check-foo.py\n",
     )
     report = cs.check_ci_surfaces()
     assert any("unregistered-check" in e for e in report["errors"]), report["errors"]
@@ -74,7 +73,7 @@ def test_gate_parity_detected(cs, tmp_path) -> None:
     _write(tmp_path / "ci-surfaces.yaml", "version: 1\nsurfaces: []\n")
     _write(
         tmp_path / "sgf-policy.yaml",
-        "gates:\n  - id: foo\n    command: [\"bin/gac/check-unknown.py\"]\n",
+        'gates:\n  - id: foo\n    command: ["bin/gac/check-unknown.py"]\n',
     )
     report = cs.check_ci_surfaces()
     assert any("gate-parity" in e for e in report["errors"]), report["errors"]
@@ -165,7 +164,7 @@ def test_trigger_paths_drift_detected(cs, tmp_path) -> None:
     """E-5 full: workflow paths 与实际登记不符 → trigger-drift warn."""
     _write(
         tmp_path / "ci-surfaces.yaml",
-        "version: 1\nworkflow_triggers:\n  - workflow: a.yml\n    triggers: [push]\n    path_filtered: true\n    paths: [\".github/workflows/**\"]\n",
+        'version: 1\nworkflow_triggers:\n  - workflow: a.yml\n    triggers: [push]\n    path_filtered: true\n    paths: [".github/workflows/**"]\n',
     )
     _write(
         tmp_path / "workflows" / "a.yml",
@@ -179,7 +178,7 @@ def test_trigger_paths_match_clean(cs, tmp_path) -> None:
     """E-5 full: paths 登记与实际一致 → 无 warn."""
     _write(
         tmp_path / "ci-surfaces.yaml",
-        "version: 1\nworkflow_triggers:\n  - workflow: a.yml\n    triggers: [push]\n    path_filtered: true\n    paths: [\"docs/**\"]\n",
+        'version: 1\nworkflow_triggers:\n  - workflow: a.yml\n    triggers: [push]\n    path_filtered: true\n    paths: ["docs/**"]\n',
     )
     _write(
         tmp_path / "workflows" / "a.yml",
@@ -193,9 +192,7 @@ def test_gate_effectiveness_module_loads():
     """ADR-0384 B1: gate-effectiveness 工具可导入并产出 JSON."""
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location(
-        "gate_effectiveness_test", ROOT / "bin/gac/gate-effectiveness.py"
-    )
+    spec = importlib.util.spec_from_file_location("gate_effectiveness_test", ROOT / "bin/gac/gate-effectiveness.py")
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -206,7 +203,12 @@ def test_gate_effectiveness_module_loads():
                 "timestamp": "2026-08-01T00:00:00Z",
                 "checks": [
                     {"category": "lint", "name": "ruff", "score": 90, "severity": "ok"},
-                    {"category": "lint", "name": "ruff", "score": 70, "severity": "warn"},
+                    {
+                        "category": "lint",
+                        "name": "ruff",
+                        "score": 70,
+                        "severity": "warn",
+                    },
                 ],
             }
         ]
@@ -222,9 +224,7 @@ def test_ssot_usage_module_loads():
     """ADR-0385 B2: ssot-usage 模块可导入并产出结果."""
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location(
-        "ssot_usage_test", ROOT / "bin/ssot/ssot-usage.py"
-    )
+    spec = importlib.util.spec_from_file_location("ssot_usage_test", ROOT / "bin/ssot/ssot-usage.py")
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)

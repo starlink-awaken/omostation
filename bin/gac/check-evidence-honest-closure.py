@@ -4,6 +4,7 @@
 Scans `.omo/_delivery/agent-workflows/runs/` for YAML files and checks
 that each closed run (status: ok or status: closed) has evidence entries.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -53,9 +54,11 @@ def main(argv: list[str] | None = None) -> int:
         closeout_evidence = closeout.get("evidence", []) or []
         closeout_paths = closeout.get("evidence_paths", []) or []
 
-        all_evidence = (evidence if isinstance(evidence, list) else []) + \
-                       (closeout_evidence if isinstance(closeout_evidence, list) else []) + \
-                       (closeout_paths if isinstance(closeout_paths, list) else [])
+        all_evidence = (
+            (evidence if isinstance(evidence, list) else [])
+            + (closeout_evidence if isinstance(closeout_evidence, list) else [])
+            + (closeout_paths if isinstance(closeout_paths, list) else [])
+        )
 
         if not all_evidence:
             violations.append({"run": f.stem, "path": str(f)})
@@ -72,7 +75,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps({"ok": ok, "summary": summary, "findings": violations}, indent=2))
     else:
-        print(f"check-evidence-honest-closure: {'PASS' if ok else 'FAIL'} ({checked} runs, {len(violations)} violations, {total_evidence} evidence entries)")
+        print(
+            f"check-evidence-honest-closure: {'PASS' if ok else 'FAIL'} ({checked} runs, {len(violations)} violations, {total_evidence} evidence entries)"
+        )
         for v in violations:
             print(f"  VIOLATION: {v['run']} has no evidence")
 

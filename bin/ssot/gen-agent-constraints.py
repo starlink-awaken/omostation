@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 
 from _shared import ROOT, load_yaml
 
@@ -43,12 +42,14 @@ def gen_constraint_gate_rules(agents: list[dict]) -> list[dict]:
         aid = agent.get("id", "?")
         constraints = agent.get("constraints", {})
         for binding in constraints.get("governance_bindings", []):
-            rules.append({
-                "agent_id": aid,
-                "check_id": binding.get("check_id", ""),
-                "enforcement": binding.get("enforcement", "advisory"),
-                "violation_action": binding.get("violation_action", "warn"),
-            })
+            rules.append(
+                {
+                    "agent_id": aid,
+                    "check_id": binding.get("check_id", ""),
+                    "enforcement": binding.get("enforcement", "advisory"),
+                    "violation_action": binding.get("violation_action", "warn"),
+                }
+            )
     return rules
 
 
@@ -58,11 +59,13 @@ def gen_permission_entries(agents: list[dict]) -> list[dict]:
     for agent in agents:
         constraints = agent.get("constraints", {})
         tier = constraints.get("action_tier", "graylist")
-        entries.append({
-            "agent_id": agent.get("id"),
-            "action_tier": tier,
-            "capabilities": agent.get("identity", {}).get("capabilities", []),
-        })
+        entries.append(
+            {
+                "agent_id": agent.get("id"),
+                "action_tier": tier,
+                "capabilities": agent.get("identity", {}).get("capabilities", []),
+            }
+        )
     return entries
 
 
@@ -71,17 +74,19 @@ def gen_agent_cards(agents: list[dict]) -> list[dict]:
     cards = []
     for agent in agents:
         identity = agent.get("identity", {})
-        cards.append({
-            "@type": "AgentCard",
-            "id": agent.get("id"),
-            "name": agent.get("display_name", agent.get("id")),
-            "description": agent.get("description", ""),
-            "role": identity.get("role"),
-            "capabilities": identity.get("capabilities", []),
-            "knowledge_sources": agent.get("knowledge_sources", []),
-            "supervised_by": agent.get("constraints", {}).get("relationships", {}).get("supervised_by", []),
-            "bos_uri": f"bos://agent/{agent.get('id')}",
-        })
+        cards.append(
+            {
+                "@type": "AgentCard",
+                "id": agent.get("id"),
+                "name": agent.get("display_name", agent.get("id")),
+                "description": agent.get("description", ""),
+                "role": identity.get("role"),
+                "capabilities": identity.get("capabilities", []),
+                "knowledge_sources": agent.get("knowledge_sources", []),
+                "supervised_by": agent.get("constraints", {}).get("relationships", {}).get("supervised_by", []),
+                "bos_uri": f"bos://agent/{agent.get('id')}",
+            }
+        )
     return cards
 
 
@@ -180,7 +185,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  permission_entries: {len(result['permission_entries'])}")
         print(f"  agent_cards: {len(result['agent_cards'])}")
         print(f"  review_dimensions: {result['review_dimensions']}")
-        print(f"  validation: {'✅ passed' if result['validation_passed'] else '❌ ' + str(len(result['validation_issues'])) + ' issues'}")
+        print(
+            f"  validation: {'✅ passed' if result['validation_passed'] else '❌ ' + str(len(result['validation_issues'])) + ' issues'}"
+        )
     return 0
 
 

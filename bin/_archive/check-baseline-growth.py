@@ -9,6 +9,7 @@ Z2 根因: 第四次门被绕过, 每次换地方. 共同点: 门守代码, 没�
 
 baseline-baseline.txt (元 baseline): 记录各 baseline 文件当前行数 (Z2 冻结点).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -30,11 +31,7 @@ BASELINE_FILES = [
 def _count_lines(f: Path) -> int:
     if not f.is_file():
         return 0
-    return sum(
-        1
-        for line in f.read_text(encoding="utf-8").splitlines()
-        if line.strip() and not line.startswith("#")
-    )
+    return sum(1 for line in f.read_text(encoding="utf-8").splitlines() if line.strip() and not line.startswith("#"))
 
 
 def _load_meta() -> dict[str, int]:
@@ -80,21 +77,25 @@ def main(argv: list[str] | None = None) -> int:
     for f, n in current.items():
         summary["checked"] += 1
         if f not in meta:
-            findings.append({
-                "file": f,
-                "kind": "no_meta",
-                "current": n,
-                "message": "无元 baseline 记录 (跑 --dump-meta 生成 baseline-baseline.txt)",
-            })
+            findings.append(
+                {
+                    "file": f,
+                    "kind": "no_meta",
+                    "current": n,
+                    "message": "无元 baseline 记录 (跑 --dump-meta 生成 baseline-baseline.txt)",
+                }
+            )
             summary["blocking"] += 1
         elif n > meta[f]:
-            findings.append({
-                "file": f,
-                "kind": "baseline_grew",
-                "current": n,
-                "meta": meta[f],
-                "message": f"baseline 扩大 {meta[f]}→{n} (Z2: 门配置受保护, 须人类批准)",
-            })
+            findings.append(
+                {
+                    "file": f,
+                    "kind": "baseline_grew",
+                    "current": n,
+                    "meta": meta[f],
+                    "message": f"baseline 扩大 {meta[f]}→{n} (Z2: 门配置受保护, 须人类批准)",
+                }
+            )
             summary["blocking"] += 1
         else:
             summary["passed"] += 1
@@ -105,10 +106,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
         print(f"check-baseline-growth: {'PASS' if ok else 'FAIL'}")
-        print(
-            f"  checked={summary['checked']} passed={summary['passed']} "
-            f"blocking={summary['blocking']}"
-        )
+        print(f"  checked={summary['checked']} passed={summary['passed']} blocking={summary['blocking']}")
         for fnd in findings:
             print(f"  - {fnd['file']} [{fnd['kind']}] {fnd.get('message', '')}")
     return 0 if ok else 1

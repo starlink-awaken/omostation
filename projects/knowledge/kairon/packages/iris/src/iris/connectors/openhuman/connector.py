@@ -77,13 +77,13 @@ class OpenHumanConnector(BaseConnector):
             "params": params or {},
             "id": 1,
         }
-        req = urllib.request.Request(  # noqa: S310
+        req = urllib.request.Request(
             f"{OH_URL}/rpc",
             data=json.dumps(payload).encode(),
             headers={"Content-Type": "application/json"},
         )
         try:
-            with urllib.request.urlopen(req, timeout=CONNECTION_TIMEOUT) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=CONNECTION_TIMEOUT) as resp:
                 return cast("dict[str, Any]", json.loads(resp.read().decode()))
         except json.JSONDecodeError as e:
             return {"error": f"Invalid JSON response: {e}"}

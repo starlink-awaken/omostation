@@ -76,15 +76,11 @@ def validate_rule(rule: dict, idx: int) -> list[str]:
 
     # enum 校验
     if rule["dimension"] not in DIMENSION_ENUM:
-        errors.append(
-            f"{rid}: dimension '{rule['dimension']}' 不在 {sorted(DIMENSION_ENUM)}"
-        )
+        errors.append(f"{rid}: dimension '{rule['dimension']}' 不在 {sorted(DIMENSION_ENUM)}")
     if rule["layer"] not in LAYER_ENUM:
         errors.append(f"{rid}: layer '{rule['layer']}' 不在 {sorted(LAYER_ENUM)}")
     if rule["lifecycle"] not in LIFECYCLE_ENUM:
-        errors.append(
-            f"{rid}: lifecycle '{rule['lifecycle']}' 不在 {sorted(LIFECYCLE_ENUM)}"
-        )
+        errors.append(f"{rid}: lifecycle '{rule['lifecycle']}' 不在 {sorted(LIFECYCLE_ENUM)}")
 
     # source_type 校验 (收敛: native=GaC SSOT, indexed=原真策略 SSOT, GaC 执行索引)
     source_type = rule.get("source_type", "native")  # 默认 native (向后兼容已有 13 条)
@@ -122,9 +118,7 @@ def detect_conflicts(rules: list[dict]) -> list[str]:
         unrelated = [r for r in group if "relates_to" not in r]
         if len(unrelated) > 1:
             ids = [r["id"] for r in unrelated]
-            warnings.append(
-                f"潜在矛盾: {dim}/{ct} @ {target} 有 {len(unrelated)} 条无 relates_to {ids} (人工确认)"
-            )
+            warnings.append(f"潜在矛盾: {dim}/{ct} @ {target} 有 {len(unrelated)} 条无 relates_to {ids} (人工确认)")
 
     return warnings
 
@@ -151,9 +145,7 @@ def check_lifecycle_timeliness(rules: list[dict], draft_days: int = 7) -> list[s
             continue
         age = (today - cd).days
         if age > draft_days:
-            warnings.append(
-                f"{r['id']}: draft 超 {age} 天 (>{draft_days} 天 draft_to_active), 待 radar 验证激活"
-            )
+            warnings.append(f"{r['id']}: draft 超 {age} 天 (>{draft_days} 天 draft_to_active), 待 radar 验证激活")
     return warnings
 
 
@@ -175,10 +167,7 @@ def _check_subtraction_quota(path: Path, current_rules: int) -> list[str]:
         if baseline <= 0:
             return []
         if current_rules > baseline:
-            return [
-                f"subtraction-quota: 规则数 {current_rules} 超基线 {baseline} "
-                f"(增 1 必须删 1, BET-Y1Q2-T6-05)"
-            ]
+            return [f"subtraction-quota: 规则数 {current_rules} 超基线 {baseline} (增 1 必须删 1, BET-Y1Q2-T6-05)"]
     except Exception:  # defensive: quota 检查失败不阻塞
         return []
     return []
@@ -244,7 +233,7 @@ def _record_rule_violations(errors: list[str]) -> None:
                     "source": "gac-validate",
                 }
                 f.write(json.dumps(rec, ensure_ascii=False) + "\n")
-    except Exception:  # noqa: BLE001 — 记录失败不影响主流程
+    except Exception:
         pass
 
 
@@ -294,9 +283,7 @@ def main() -> int:
     if lc.get("draft", 0) > 0:
         print(f"⚠️  {lc['draft']} 条 draft 规则待 radar 验证激活 (机制 6: draft→active)")
     if lc.get("deprecated", 0) > 0:
-        print(
-            f"⚠️  {lc['deprecated']} 条 deprecated 规则待 gc 清理 (机制 6: deprecated→removed)"
-        )
+        print(f"⚠️  {lc['deprecated']} 条 deprecated 规则待 gc 清理 (机制 6: deprecated→removed)")
 
     print(f"dimension 覆盖: {dict(dims)}")
     print(f"layer 覆盖: {dict(layers)}")

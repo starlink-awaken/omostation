@@ -95,9 +95,7 @@ def user_omp_home(
         json_provider = dict(provider)
         json_provider.update(json_overrides or {})
         (config / "models.json").write_text(
-            json.dumps(
-                {"providers": {"omlxc": json_provider, "other": {"apiKey": "secret"}}}
-            ),
+            json.dumps({"providers": {"omlxc": json_provider, "other": {"apiKey": "secret"}}}),
             encoding="utf-8",
         )
     (config / "settings.json").write_text("{}", encoding="utf-8")
@@ -119,10 +117,7 @@ def _provider_yaml(provider: dict[str, object]) -> str:
     for key, value in provider.items():
         if isinstance(value, dict):
             lines.append(f"    {key}:")
-            lines.extend(
-                f"      {child_key}: {_yaml_scalar(child_value)}"
-                for child_key, child_value in value.items()
-            )
+            lines.extend(f"      {child_key}: {_yaml_scalar(child_value)}" for child_key, child_value in value.items())
         elif isinstance(value, list):
             lines.append(f"    {key}:")
             for item in value:
@@ -132,14 +127,9 @@ def _provider_yaml(provider: dict[str, object]) -> str:
                 for child_key, child_value in list(item.items())[1:]:
                     if isinstance(child_value, list):
                         lines.append(f"        {child_key}:")
-                        lines.extend(
-                            f"          - {_yaml_scalar(member)}"
-                            for member in child_value
-                        )
+                        lines.extend(f"          - {_yaml_scalar(member)}" for member in child_value)
                     else:
-                        lines.append(
-                            f"        {child_key}: {_yaml_scalar(child_value)}"
-                        )
+                        lines.append(f"        {child_key}: {_yaml_scalar(child_value)}")
         else:
             lines.append(f"    {key}: {_yaml_scalar(value)}")
     return "\n".join(lines) + "\n"
@@ -157,9 +147,7 @@ def safe_receipt(tmp_path: Path) -> Path:
     return tmp_path / "receipt.json"
 
 
-def test_dry_run_is_fixed_no_tools_and_never_starts_process(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_dry_run_is_fixed_no_tools_and_never_starts_process(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     def forbidden(*_args, **_kwargs):
         raise AssertionError("dry-run must not start a process or probe health")
 
@@ -234,9 +222,7 @@ def test_symlinked_user_config_root_is_rejected_before_launch(tmp_path: Path) ->
         {"compat": {"unknown": True}},
     ],
 )
-def test_provider_must_be_audited_local_aetherforge_config(
-    tmp_path: Path, overrides: dict[str, object]
-) -> None:
+def test_provider_must_be_audited_local_aetherforge_config(tmp_path: Path, overrides: dict[str, object]) -> None:
     with pytest.raises(adapter.AdapterError, match="models_config_rejected"):
         adapter._copy_omlxc_provider(
             user_omp_home(tmp_path, provider_overrides=overrides),
@@ -299,16 +285,12 @@ def test_models_json_audited_drift_from_authoritative_yaml_is_rejected(
 
 
 @pytest.mark.parametrize("service", ["omlxc", "aetherforge", "other-service"])
-def test_keychain_reference_requires_exact_aetherforge_gateway_service(
-    tmp_path: Path, service: str
-) -> None:
+def test_keychain_reference_requires_exact_aetherforge_gateway_service(tmp_path: Path, service: str) -> None:
     with pytest.raises(adapter.AdapterError, match="models_config_rejected"):
         adapter._copy_omlxc_provider(
             user_omp_home(
                 tmp_path,
-                provider_overrides={
-                    "apiKey": (f"!security find-generic-password -s {service} -w")
-                },
+                provider_overrides={"apiKey": (f"!security find-generic-password -s {service} -w")},
             ),
             tmp_path / "isolated",
             api_key_resolver=lambda _command: "temporary-api-key",
@@ -348,9 +330,7 @@ def test_exact_aetherforge_env_identity_is_accepted_and_projected_as_trial_env(
         "!security  find-generic-password -s aetherforge-gateway -w",
     ],
 )
-def test_other_environment_or_literal_credential_identity_is_rejected(
-    tmp_path: Path, identity: str
-) -> None:
+def test_other_environment_or_literal_credential_identity_is_rejected(tmp_path: Path, identity: str) -> None:
     with pytest.raises(adapter.AdapterError, match="models_config_rejected"):
         adapter._copy_omlxc_provider(
             user_omp_home(tmp_path, provider_overrides={"apiKey": identity}),
@@ -487,9 +467,7 @@ def test_health_identity_mismatch_fails_before_process_start(tmp_path: Path) -> 
         (FakeProcess(stdout=" \n"), "empty_output"),
     ],
 )
-def test_worker_process_failure_is_stable(
-    tmp_path: Path, process: FakeProcess, error_code: str
-) -> None:
+def test_worker_process_failure_is_stable(tmp_path: Path, process: FakeProcess, error_code: str) -> None:
     with pytest.raises(adapter.AdapterError, match=error_code):
         adapter.run_worker(
             prompt="x",
@@ -522,9 +500,7 @@ def test_worker_launch_failure_is_stable(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("timeout_seconds", [0, 121])
 @pytest.mark.parametrize("execute", [False, True])
-def test_worker_timeout_must_stay_in_admitted_range(
-    tmp_path: Path, timeout_seconds: int, execute: bool
-) -> None:
+def test_worker_timeout_must_stay_in_admitted_range(tmp_path: Path, timeout_seconds: int, execute: bool) -> None:
     with pytest.raises(adapter.AdapterError, match="timeout_rejected"):
         adapter.run_worker(
             prompt="x",
@@ -595,9 +571,7 @@ def test_transport_can_run_without_adapter_receipt(tmp_path: Path) -> None:
         prompt="transport",
         execute=True,
         user_home=user_omp_home(tmp_path),
-        popen_factory=lambda *_args, **_kwargs: FakeProcess(
-            stdout="transport result\n"
-        ),
+        popen_factory=lambda *_args, **_kwargs: FakeProcess(stdout="transport result\n"),
         health_probe=healthy,
         marker_probe=no_marker,
         version_reader=lambda: "16.1.16",
@@ -735,9 +709,7 @@ def test_user_omp_config_drift_is_fail_closed(tmp_path: Path) -> None:
 
     class Mutating(FakeProcess):
         def communicate(self, timeout=None):
-            (home / ".omp" / "agent" / "settings.json").write_text(
-                "changed", encoding="utf-8"
-            )
+            (home / ".omp" / "agent" / "settings.json").write_text("changed", encoding="utf-8")
             return super().communicate(timeout)
 
     with pytest.raises(adapter.AdapterError, match="config_drift"):
@@ -806,9 +778,7 @@ def test_trial_allows_ephemeral_omp_sqlite_state_then_removes_it(
     assert result["receipt"]["checks"]["temp_removed"] is True
 
 
-def test_failed_trial_removal_is_cleanup_unconfirmed(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_failed_trial_removal_is_cleanup_unconfirmed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     created: list[Path] = []
 
     def leave_trial(path: Path, **_kwargs) -> None:
@@ -835,11 +805,7 @@ def test_failed_trial_removal_is_cleanup_unconfirmed(
 
 @pytest.mark.parametrize("existing", [False, True])
 def test_unsafe_or_existing_receipt_is_rejected(tmp_path: Path, existing: bool) -> None:
-    receipt = (
-        safe_receipt(tmp_path)
-        if existing
-        else Path.cwd() / f"unsafe-omp-receipt-{tmp_path.name}.json"
-    )
+    receipt = safe_receipt(tmp_path) if existing else Path.cwd() / f"unsafe-omp-receipt-{tmp_path.name}.json"
     if existing:
         receipt.write_text("existing", encoding="utf-8")
 
@@ -863,9 +829,7 @@ def test_output_mismatch_never_persists_stderr_secret(tmp_path: Path) -> None:
             receipt_path=receipt,
             expect_exact="expected",
             user_home=user_omp_home(tmp_path),
-            popen_factory=lambda *_args, **_kwargs: FakeProcess(
-                stdout="wrong\n", stderr=secret
-            ),
+            popen_factory=lambda *_args, **_kwargs: FakeProcess(stdout="wrong\n", stderr=secret),
             health_probe=healthy,
             marker_probe=no_marker,
             version_reader=lambda: "16.1.16",
@@ -878,9 +842,7 @@ def test_output_mismatch_never_persists_stderr_secret(tmp_path: Path) -> None:
 def test_version_reader_accepts_only_pinned_bun_omp(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        adapter, "_binary_digest", lambda _path: adapter.EXPECTED_OMP_SHA256
-    )
+    monkeypatch.setattr(adapter, "_binary_digest", lambda _path: adapter.EXPECTED_OMP_SHA256)
     monkeypatch.setattr(
         adapter.subprocess,
         "run",
@@ -905,9 +867,7 @@ def test_version_reader_accepts_only_pinned_bun_omp(
         ("omp/16.1.16", "0" * 64),
     ],
 )
-def test_version_or_sha_drift_is_rejected(
-    version: str, digest: str, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_version_or_sha_drift_is_rejected(version: str, digest: str, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(adapter, "_binary_digest", lambda _path: digest)
     monkeypatch.setattr(
         adapter.subprocess,
@@ -934,9 +894,7 @@ def test_keychain_reference_is_resolved_shell_free_in_parent(
     monkeypatch.setattr(adapter.subprocess, "run", run)
 
     assert (
-        adapter._resolve_keychain_api_key(
-            "!security find-generic-password -s aetherforge-gateway -w"
-        )
+        adapter._resolve_keychain_api_key("!security find-generic-password -s aetherforge-gateway -w")
         == "temporary-key"
     )
     assert captured["argv"] == [
@@ -956,14 +914,10 @@ def test_exact_aetherforge_env_identity_reads_parent_secret_without_subprocess(
     monkeypatch.setattr(
         adapter.subprocess,
         "run",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(
-            AssertionError("present env secret must not invoke Keychain")
-        ),
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("present env secret must not invoke Keychain")),
     )
 
-    assert (
-        adapter._resolve_keychain_api_key("AETHERFORGE_API_KEY") == "parent-env-secret"
-    )
+    assert adapter._resolve_keychain_api_key("AETHERFORGE_API_KEY") == "parent-env-secret"
 
 
 def test_missing_aetherforge_env_identity_falls_back_to_fixed_keychain(
@@ -975,9 +929,7 @@ def test_missing_aetherforge_env_identity_falls_back_to_fixed_keychain(
     def run(argv, **kwargs):
         captured["argv"] = argv
         captured.update(kwargs)
-        return subprocess.CompletedProcess(
-            argv, 0, stdout="keychain-secret\n", stderr=""
-        )
+        return subprocess.CompletedProcess(argv, 0, stdout="keychain-secret\n", stderr="")
 
     monkeypatch.setattr(adapter.subprocess, "run", run)
 
@@ -1004,15 +956,11 @@ def test_keychain_nonzero_or_empty_is_credential_unavailable(
     monkeypatch.setattr(
         adapter.subprocess,
         "run",
-        lambda argv, **_kwargs: subprocess.CompletedProcess(
-            argv, returncode, stdout=stdout, stderr=""
-        ),
+        lambda argv, **_kwargs: subprocess.CompletedProcess(argv, returncode, stdout=stdout, stderr=""),
     )
 
     with pytest.raises(adapter.AdapterError, match="credential_unavailable"):
-        adapter._resolve_keychain_api_key(
-            "!security find-generic-password -s aetherforge-gateway -w"
-        )
+        adapter._resolve_keychain_api_key("!security find-generic-password -s aetherforge-gateway -w")
 
 
 def test_keychain_launch_failure_is_credential_unavailable(
@@ -1024,9 +972,7 @@ def test_keychain_launch_failure_is_credential_unavailable(
     monkeypatch.setattr(adapter.subprocess, "run", fail)
 
     with pytest.raises(adapter.AdapterError, match="credential_unavailable"):
-        adapter._resolve_keychain_api_key(
-            "!security find-generic-password -s aetherforge-gateway -w"
-        )
+        adapter._resolve_keychain_api_key("!security find-generic-password -s aetherforge-gateway -w")
 
 
 def test_cli_only_forwards_successful_model_text(

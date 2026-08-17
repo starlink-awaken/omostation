@@ -105,15 +105,19 @@ def analyze(entries: list[dict], window: str) -> dict:
     for k in sorted_keys[:5][::-1]:
         scores = score_by_window[k]
         grades = grade_by_window[k]
-        recent.append({
-            "window": k,
-            "count": len(by_window[k]),
-            "avg_score": round(sum(scores) / len(scores), 2) if scores else 0.0,
-            "min_score": min(scores) if scores else 0.0,
-            "max_score": max(scores) if scores else 0.0,
-            "grades": dict(grades),
-            "avg_watchlist": round(sum(watchlist_by_window[k]) / len(watchlist_by_window[k]), 2) if watchlist_by_window[k] else 0,
-        })
+        recent.append(
+            {
+                "window": k,
+                "count": len(by_window[k]),
+                "avg_score": round(sum(scores) / len(scores), 2) if scores else 0.0,
+                "min_score": min(scores) if scores else 0.0,
+                "max_score": max(scores) if scores else 0.0,
+                "grades": dict(grades),
+                "avg_watchlist": round(sum(watchlist_by_window[k]) / len(watchlist_by_window[k]), 2)
+                if watchlist_by_window[k]
+                else 0,
+            }
+        )
 
     # 趋势检测: 最近 3 窗口 vs 之前 3 窗口
     trend_signal = "stable"
@@ -172,10 +176,12 @@ def render_markdown(result: dict) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="P88: governance trend report")
-    parser.add_argument("--file", default=".omo/_knowledge/governance-history.jsonl",
-                        help="governance history jsonl")
-    parser.add_argument("--window", choices=WINDOWS, default="weekly",
-                        help="时间窗口")
+    parser.add_argument(
+        "--file",
+        default=".omo/_knowledge/governance-history.jsonl",
+        help="governance history jsonl",
+    )
+    parser.add_argument("--window", choices=WINDOWS, default="weekly", help="时间窗口")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     parser.add_argument("--markdown", action="store_true", help="Markdown 报告")
     args = parser.parse_args()
@@ -209,9 +215,11 @@ def main() -> int:
     print("最近 5 窗口:")
     for r in result["recent"]:
         grades_str = " ".join(f"{g}:{c}" for g, c in sorted(r["grades"].items()))
-        print(f"  {r['window']:<12s}  count={r['count']:>3d}  "
-              f"avg={r['avg_score']:.1f}  min={r['min_score']:.1f}  "
-              f"max={r['max_score']:.1f}  watchlist={r['avg_watchlist']:.2f}")
+        print(
+            f"  {r['window']:<12s}  count={r['count']:>3d}  "
+            f"avg={r['avg_score']:.1f}  min={r['min_score']:.1f}  "
+            f"max={r['max_score']:.1f}  watchlist={r['avg_watchlist']:.2f}"
+        )
         print(f"    grades: {grades_str}")
     print()
     if result["top_failing_checks"]:

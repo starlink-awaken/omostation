@@ -39,15 +39,20 @@ def main() -> int:
             lines = text.splitlines()
             for i, line in enumerate(lines, 1):
                 lower = line.lower()
-                if any(kw in lower for kw in ["external_agent", "external-agent", "agent_url", "webhook_url", "remote_agent"]):
+                if any(
+                    kw in lower
+                    for kw in [
+                        "external_agent",
+                        "external-agent",
+                        "agent_url",
+                        "webhook_url",
+                        "remote_agent",
+                    ]
+                ):
                     # 检查是否有审计链配置
-                    audit_found = any(
-                        kw in lower for kw in ["audit", "trail", "log", "ingress"]
-                    )
+                    audit_found = any(kw in lower for kw in ["audit", "trail", "log", "ingress"])
                     if not audit_found:
-                        violations.append(
-                            f"  {rel}:{i} — 外部 agent 配置 '{line.strip()[:60]}' 缺少审计链"
-                        )
+                        violations.append(f"  {rel}:{i} — 外部 agent 配置 '{line.strip()[:60]}' 缺少审计链")
 
     if violations:
         print(f"WARN 发现 {len(violations)} 处外部 agent 配置缺少审计链:")

@@ -33,7 +33,10 @@ def test_connector(connector: str) -> dict[str, Any]:
     try:
         result = subprocess.run(
             ["iris", "--json", "list", connector, "--limit", "1"],
-            capture_output=True, text=True, timeout=30, check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
         )
         if result.returncode == 0 and result.stdout.strip():
             items = json.loads(result.stdout)
@@ -71,7 +74,7 @@ def main(argv: list[str] | None = None) -> int:
             failed += 1
             print(f"  ❌ {c:25s} {r['status']}: {r.get('detail', '')}")
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"Results: {passed} passed, {failed} failed, {len(results)} total")
 
     if failed == 0:

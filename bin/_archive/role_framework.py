@@ -3,6 +3,7 @@
 Maps engineering / governance / audit onto capability sets and collab message
 boundaries (G-DEL.2a contract). Process-local only.
 """
+
 from __future__ import annotations
 
 import time
@@ -204,26 +205,18 @@ class RoleProtocolBus:
             if spec is None:
                 raise ValueError(f"unknown from_role: {msg.from_role}")
             if msg.type not in spec.can_send:
-                raise PermissionError(
-                    f"role {msg.from_role} cannot send type={msg.type}"
-                )
+                raise PermissionError(f"role {msg.from_role} cannot send type={msg.type}")
             if msg.to_role:
                 to_spec = ROLE_CATALOG.get(msg.to_role)
                 if to_spec is None:
                     raise ValueError(f"unknown to_role: {msg.to_role}")
                 if msg.type not in to_spec.can_recv:
-                    raise PermissionError(
-                        f"role {msg.to_role} cannot recv type={msg.type}"
-                    )
+                    raise PermissionError(f"role {msg.to_role} cannot recv type={msg.type}")
         self.history.append(msg)
         for filt, handler in self._subs:
             if filt["type"] and filt["type"] != msg.type:
                 continue
-            if (
-                filt["role_id"]
-                and msg.to_role is not None
-                and filt["role_id"] != msg.to_role
-            ):
+            if filt["role_id"] and msg.to_role is not None and filt["role_id"] != msg.to_role:
                 continue
             handler(msg)
 
@@ -388,9 +381,7 @@ def run_three_role_handshake(
     return result
 
 
-def measure_three_role_batch(
-    *, n_tasks: int = 30, inject_fail_every: int = 0
-) -> dict[str, Any]:
+def measure_three_role_batch(*, n_tasks: int = 30, inject_fail_every: int = 0) -> dict[str, Any]:
     """G-DEL.2b-style batch measure for 3 first-ship roles.
 
     Note: ``meets_gate`` from ``stamp_non_physical_goal`` means *process-local*
@@ -456,8 +447,7 @@ def run_backlog_collab(
         "task_id": task_id,
         "task_path": task_path,
         "title": title or task_id,
-        "work_summary": work_summary
-        or f"3-role collab review on backlog item {task_id}",
+        "work_summary": work_summary or f"3-role collab review on backlog item {task_id}",
         "artifacts": [task_path],
     }
 
@@ -579,9 +569,7 @@ def resolve_message_conflict(messages: list[RoleMessage]) -> RoleMessage | None:
         return None
     return max(
         messages,
-        key=lambda m: _CONFLICT_PRECEDENCE.index(m.from_role)
-        if m.from_role in _CONFLICT_PRECEDENCE
-        else -1,
+        key=lambda m: _CONFLICT_PRECEDENCE.index(m.from_role) if m.from_role in _CONFLICT_PRECEDENCE else -1,
     )
 
 
@@ -649,78 +637,126 @@ def run_five_role_handshake(
 
     def on_research_request(m: RoleMessage) -> None:
         steps.append("research_request")
-        bus.publish(RoleMessage(
-            id=uuid.uuid4().hex, type="research_result",
-            from_agent=res.agent_id, from_role=ROLE_RESEARCH, to_role=ROLE_GOVERNANCE,
-            task_ref=task_ref, payload={"findings": "research synthesized"},
-            correlation_id=m.id,
-        ))
+        bus.publish(
+            RoleMessage(
+                id=uuid.uuid4().hex,
+                type="research_result",
+                from_agent=res.agent_id,
+                from_role=ROLE_RESEARCH,
+                to_role=ROLE_GOVERNANCE,
+                task_ref=task_ref,
+                payload={"findings": "research synthesized"},
+                correlation_id=m.id,
+            )
+        )
 
     def on_research_result(m: RoleMessage) -> None:
         steps.append("research_result")
-        bus.publish(RoleMessage(
-            id=uuid.uuid4().hex, type="delivery_request",
-            from_agent=gov.agent_id, from_role=ROLE_GOVERNANCE, to_role=ROLE_DELIVERY,
-            task_ref=task_ref, payload={"deliverable": "x3 projection"},
-            correlation_id=m.id,
-        ))
+        bus.publish(
+            RoleMessage(
+                id=uuid.uuid4().hex,
+                type="delivery_request",
+                from_agent=gov.agent_id,
+                from_role=ROLE_GOVERNANCE,
+                to_role=ROLE_DELIVERY,
+                task_ref=task_ref,
+                payload={"deliverable": "x3 projection"},
+                correlation_id=m.id,
+            )
+        )
 
     def on_delivery_request(m: RoleMessage) -> None:
         steps.append("delivery_request")
-        bus.publish(RoleMessage(
-            id=uuid.uuid4().hex, type="delivery_registered",
-            from_agent=dly.agent_id, from_role=ROLE_DELIVERY, to_role=ROLE_GOVERNANCE,
-            task_ref=task_ref, payload={"registered": True},
-            correlation_id=m.id,
-        ))
+        bus.publish(
+            RoleMessage(
+                id=uuid.uuid4().hex,
+                type="delivery_registered",
+                from_agent=dly.agent_id,
+                from_role=ROLE_DELIVERY,
+                to_role=ROLE_GOVERNANCE,
+                task_ref=task_ref,
+                payload={"registered": True},
+                correlation_id=m.id,
+            )
+        )
 
     def on_delivery_registered(m: RoleMessage) -> None:
         steps.append("delivery_registered")
-        bus.publish(RoleMessage(
-            id=uuid.uuid4().hex, type="assign",
-            from_agent=gov.agent_id, from_role=ROLE_GOVERNANCE, to_role=ROLE_ENGINEERING,
-            task_ref=task_ref, payload={"kpi": "five-role"},
-            correlation_id=m.id,
-        ))
+        bus.publish(
+            RoleMessage(
+                id=uuid.uuid4().hex,
+                type="assign",
+                from_agent=gov.agent_id,
+                from_role=ROLE_GOVERNANCE,
+                to_role=ROLE_ENGINEERING,
+                task_ref=task_ref,
+                payload={"kpi": "five-role"},
+                correlation_id=m.id,
+            )
+        )
 
     def on_assign(m: RoleMessage) -> None:
         steps.append("assign")
-        bus.publish(RoleMessage(
-            id=uuid.uuid4().hex, type="claim_ack",
-            from_agent=eng.agent_id, from_role=ROLE_ENGINEERING, to_role=ROLE_GOVERNANCE,
-            task_ref=task_ref, payload={"claimed": True},
-            correlation_id=m.id,
-        ))
+        bus.publish(
+            RoleMessage(
+                id=uuid.uuid4().hex,
+                type="claim_ack",
+                from_agent=eng.agent_id,
+                from_role=ROLE_ENGINEERING,
+                to_role=ROLE_GOVERNANCE,
+                task_ref=task_ref,
+                payload={"claimed": True},
+                correlation_id=m.id,
+            )
+        )
 
     def on_claim_ack(m: RoleMessage) -> None:
         steps.append("claim_ack")
-        bus.publish(RoleMessage(
-            id=uuid.uuid4().hex, type="handoff",
-            from_agent=eng.agent_id, from_role=ROLE_ENGINEERING, to_role=ROLE_AUDIT,
-            task_ref=task_ref, payload={"evidence": "implemented"},
-            correlation_id=m.id,
-        ))
+        bus.publish(
+            RoleMessage(
+                id=uuid.uuid4().hex,
+                type="handoff",
+                from_agent=eng.agent_id,
+                from_role=ROLE_ENGINEERING,
+                to_role=ROLE_AUDIT,
+                task_ref=task_ref,
+                payload={"evidence": "implemented"},
+                correlation_id=m.id,
+            )
+        )
 
     def on_handoff(m: RoleMessage) -> None:
         steps.append("handoff")
         ok = not fail_verify
         state["verify"] = ok
-        bus.publish(RoleMessage(
-            id=uuid.uuid4().hex, type="verify_result",
-            from_agent=aud.agent_id, from_role=ROLE_AUDIT, to_role=ROLE_GOVERNANCE,
-            task_ref=task_ref, payload={"pass": ok},
-            correlation_id=m.id,
-        ))
+        bus.publish(
+            RoleMessage(
+                id=uuid.uuid4().hex,
+                type="verify_result",
+                from_agent=aud.agent_id,
+                from_role=ROLE_AUDIT,
+                to_role=ROLE_GOVERNANCE,
+                task_ref=task_ref,
+                payload={"pass": ok},
+                correlation_id=m.id,
+            )
+        )
 
     def on_verify(m: RoleMessage) -> None:
         steps.append("verify_result")
         if m.payload.get("pass"):
-            bus.publish(RoleMessage(
-                id=uuid.uuid4().hex, type="complete",
-                from_agent=gov.agent_id, from_role=ROLE_GOVERNANCE, to_role=None,
-                task_ref=task_ref, payload={"closed": True},
-                correlation_id=m.id,
-            ))
+            bus.publish(
+                RoleMessage(
+                    id=uuid.uuid4().hex,
+                    type="complete",
+                    from_agent=gov.agent_id,
+                    from_role=ROLE_GOVERNANCE,
+                    to_role=None,
+                    task_ref=task_ref,
+                    payload={"closed": True},
+                    correlation_id=m.id,
+                )
+            )
             steps.append("complete")
 
     bus.subscribe(on_research_request, type="research_request")
@@ -733,11 +769,17 @@ def run_five_role_handshake(
     bus.subscribe(on_verify, type="verify_result")
 
     # kick: governance dispatch research
-    bus.publish(RoleMessage(
-        id=uuid.uuid4().hex, type="research_request",
-        from_agent=gov.agent_id, from_role=ROLE_GOVERNANCE, to_role=ROLE_RESEARCH,
-        task_ref=task_ref, payload={"query": "research needed"},
-    ))
+    bus.publish(
+        RoleMessage(
+            id=uuid.uuid4().hex,
+            type="research_request",
+            from_agent=gov.agent_id,
+            from_role=ROLE_GOVERNANCE,
+            to_role=ROLE_RESEARCH,
+            task_ref=task_ref,
+            payload={"query": "research needed"},
+        )
+    )
 
     completed = "complete" in steps and state.get("verify") is True
     return {
@@ -751,9 +793,7 @@ def run_five_role_handshake(
     }
 
 
-def measure_five_role_batch(
-    *, n_tasks: int = 15, inject_fail_every: int = 0
-) -> dict[str, Any]:
+def measure_five_role_batch(*, n_tasks: int = 15, inject_fail_every: int = 0) -> dict[str, Any]:
     """C1 5 角色协作批次测量 (G-DEL.2b 5-role 口径, ADR-0235 扩容验证).
 
     5 角色 (engineering/governance/audit/research/delivery) dispatch 流批次.
@@ -769,9 +809,7 @@ def measure_five_role_batch(
         r = run_five_role_handshake(fail_verify=fail)
         if r["completed"]:
             ok += 1
-        trails.append(
-            {"task_ref": r["task_ref"], "completed": r["completed"], "steps": r["steps"]}
-        )
+        trails.append({"task_ref": r["task_ref"], "completed": r["completed"], "steps": r["steps"]})
     rate = ok / n_tasks if n_tasks else 0.0
     stamped = stamp_non_physical_goal(
         {

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Compatibility wrapper — SSOT: bin/ssot/submodule-reachability-gate.py."""
+
 from __future__ import annotations
 
 import runpy

@@ -17,7 +17,6 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "gac-ingest-legacy.py"
 
@@ -68,13 +67,19 @@ def test_container_rule_covers_file(gil, monkeypatch, tmp_path) -> None:
     full = tmp_path / src_file
     full.parent.mkdir(parents=True, exist_ok=True)
     full.write_text("policies:\n- policy_id: X1-C01\n", encoding="utf-8")
-    monkeypatch.setattr(gil, "LEGACY_SOURCES", [{
-        "file": src_file,
-        "sections": ["policies"],
-        "id_key": "policy_id",
-        "dimension": "X1",
-        "layer": "meta",
-    }])
+    monkeypatch.setattr(
+        gil,
+        "LEGACY_SOURCES",
+        [
+            {
+                "file": src_file,
+                "sections": ["policies"],
+                "id_key": "policy_id",
+                "dimension": "X1",
+                "layer": "meta",
+            }
+        ],
+    )
 
     fake_registry = tmp_path / "registry.yaml"
     fake_registry.write_text(
@@ -98,13 +103,19 @@ def test_missing_container_rule_flags_source(gil, monkeypatch, tmp_path) -> None
     full = tmp_path / src_file
     full.parent.mkdir(parents=True, exist_ok=True)
     full.write_text("rules:\n- rule_id: X2-FRESH-ADR-DRIFT\n", encoding="utf-8")
-    monkeypatch.setattr(gil, "LEGACY_SOURCES", [{
-        "file": src_file,
-        "sections": ["rules"],
-        "id_key": "rule_id",
-        "dimension": "X2",
-        "layer": "meta",
-    }])
+    monkeypatch.setattr(
+        gil,
+        "LEGACY_SOURCES",
+        [
+            {
+                "file": src_file,
+                "sections": ["rules"],
+                "id_key": "rule_id",
+                "dimension": "X2",
+                "layer": "meta",
+            }
+        ],
+    )
 
     fake_registry = tmp_path / "registry.yaml"
     # No indexed rule covers src_file
@@ -123,13 +134,19 @@ def test_ghost_container_for_deleted_source(gil, monkeypatch, tmp_path) -> None:
     """G5 unit: indexed rule points at a legacy file that no longer exists → ghost."""
     monkeypatch.setattr(gil, "WORKSPACE", tmp_path)
     deleted_path = ".omo/_truth/x4-gone.yaml"  # does NOT exist under tmp WORKSPACE
-    monkeypatch.setattr(gil, "LEGACY_SOURCES", [{
-        "file": deleted_path,
-        "sections": ["rules"],
-        "id_key": "rule_id",
-        "dimension": "X4",
-        "layer": "meta",
-    }])
+    monkeypatch.setattr(
+        gil,
+        "LEGACY_SOURCES",
+        [
+            {
+                "file": deleted_path,
+                "sections": ["rules"],
+                "id_key": "rule_id",
+                "dimension": "X4",
+                "layer": "meta",
+            }
+        ],
+    )
 
     fake_registry = tmp_path / "registry.yaml"
     fake_registry.write_text(

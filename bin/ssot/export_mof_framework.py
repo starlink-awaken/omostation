@@ -10,8 +10,8 @@
 """
 
 import argparse
-import sys
 import shutil
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -43,8 +43,14 @@ def collect_assets() -> list[dict]:
             p = ROOT / rel
             if not p.exists():
                 continue
-            assets.append({"layer": layer.split("_")[0], "name": p.name,
-                           "rel": rel, "size": p.stat().st_size})
+            assets.append(
+                {
+                    "layer": layer.split("_")[0],
+                    "name": p.name,
+                    "rel": rel,
+                    "size": p.stat().st_size,
+                }
+            )
     return assets
 
 
@@ -53,9 +59,13 @@ def build_manifest(assets: list[dict]) -> dict:
     layers = {}
     for a in assets:
         layers[a["layer"]] = layers.get(a["layer"], 0) + 1
-    return {"framework": "mof-governance", "version": "1.0.0",
-            "exported_at": datetime.utcnow().isoformat(timespec="seconds"),
-            "total_assets": len(assets), "layers": layers}
+    return {
+        "framework": "mof-governance",
+        "version": "1.0.0",
+        "exported_at": datetime.utcnow().isoformat(timespec="seconds"),
+        "total_assets": len(assets),
+        "layers": layers,
+    }
 
 
 def export_framework(assets: list[dict], dest: str) -> dict:
@@ -72,15 +82,13 @@ def export_framework(assets: list[dict], dest: str) -> dict:
         copied.append(str(rel_dest))
     manifest = build_manifest(assets)
     manifest["files"] = copied
-    (dest_dir / "manifest.yaml").write_text(
-        yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False))
+    (dest_dir / "manifest.yaml").write_text(yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False))
     return manifest
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--dest", default="docs/templates/mof-governance",
-                    help="框架包输出目录")
+    ap.add_argument("--dest", default="docs/templates/mof-governance", help="框架包输出目录")
     ap.add_argument("--dry-run", action="store_true", help="只打印清单")
     args = ap.parse_args()
     assets = collect_assets()

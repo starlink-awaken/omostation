@@ -105,6 +105,7 @@ class TestGraphRAG(unittest.TestCase):
                 init_schema(rag.conn)
         except Exception:
             pass  # 已初始化或环境不支持时跳过
+
     """Test the GraphRAG class."""
 
     def test_import(self):

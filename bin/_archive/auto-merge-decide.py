@@ -22,6 +22,7 @@ F6 (2026-07-02): ISC-33 不自合 (第三道红线) + --pr 真集成 (gh pr chec
   python3 bin/gac/auto-merge-decide.py --pr <num>                                       # 查真 PR (gh)
   python3 bin/gac/auto-merge-decide.py --json <...>                                     # 机器可读
 """
+
 from __future__ import annotations
 
 import argparse
@@ -40,10 +41,17 @@ lane_decide = _mod.decide
 # ISC-33: 已知 GitHub bot author (这些 author 开的 PR 强制 manual, 防自合链)
 # login 后缀 "[bot]" 通用判定 + 已知 bot 名兜底
 _BOT_AUTHORS = {
-    "github-actions", "github-actions[bot]",
-    "dependabot", "dependabot[bot]",
-    "renovate", "renovate[bot]",
-    "imgbot", "mergify", "allcontributors", "netlify", "vercel",
+    "github-actions",
+    "github-actions[bot]",
+    "dependabot",
+    "dependabot[bot]",
+    "renovate",
+    "renovate[bot]",
+    "imgbot",
+    "mergify",
+    "allcontributors",
+    "netlify",
+    "vercel",
 }
 
 
@@ -64,9 +72,12 @@ def _check_gac_gate_ci(num):
     多个同名 gac-gate job (push/pr 各一) 全 SUCCESS 才绿.
     """
     import subprocess
+
     result = subprocess.run(
         ["gh", "pr", "checks", str(num), "--json", "name,state"],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     if result.returncode != 0 or not result.stdout.strip():
         return (False, False)
@@ -148,9 +159,12 @@ def _check_pr(num):
     author: gh pr view author.login (ISC-33 bot 判定).
     """
     import subprocess
+
     result = subprocess.run(
         ["gh", "pr", "view", str(num), "--json", "files,reviewDecision,state,author"],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     if result.returncode != 0:
         return {"error": f"gh pr view 失败: {result.stderr.strip()}", "num": num}

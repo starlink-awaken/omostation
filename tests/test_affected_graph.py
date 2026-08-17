@@ -64,9 +64,7 @@ def test_projects_omo_receipt_is_stable_and_recomputable(tmp_path: Path) -> None
     first = module.create_receipt(["omo"], workspace)
     second = module.create_receipt(["omo"], workspace)
     unsigned = {key: value for key, value in first.items() if key != "receipt_hash"}
-    canonical = json.dumps(
-        unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    )
+    canonical = json.dumps(unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
     assert first == second
     assert first["affected_projects"] == ["cockpit", "omo"]

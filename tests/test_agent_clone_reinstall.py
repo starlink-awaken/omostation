@@ -6,7 +6,6 @@
 
 import os
 import subprocess
-import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -15,6 +14,7 @@ import pytest
 # 动态导入 agent_clone（从 bin/gac/ 目录）
 def _import_agent_clone():
     import importlib.util
+
     bin_path = os.path.join(os.path.dirname(__file__), "..", "bin", "gac", "agent-clone.py")
     spec = importlib.util.spec_from_file_location("agent_clone", bin_path)
     module = importlib.util.module_from_spec(spec)
@@ -73,7 +73,13 @@ ecos = { path = "../ecos" }
 l4-kernel = { path = "../l4-kernel" }
 """)
         result = agent_clone.extract_uv_path_dependencies(str(tmp_path))
-        assert set(result) == {"aetherforge", "agora", "bus-foundation", "ecos", "l4-kernel"}
+        assert set(result) == {
+            "aetherforge",
+            "agora",
+            "bus-foundation",
+            "ecos",
+            "l4-kernel",
+        }
 
     def test_uv_section_end_detection(self, tmp_path):
         """验证离开 [tool.uv.sources] 后停止解析。"""
@@ -152,6 +158,7 @@ agora = { path = "../agora" }
 """)
 
         with patch.object(subprocess, "run") as mock_run:
+
             def side_effect(*args, **kwargs):
                 cmd = args[0]
                 if cmd[0] == "uv" and cmd[1] == "--version":

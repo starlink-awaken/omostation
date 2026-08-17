@@ -76,17 +76,18 @@ def analyze(entries: list[dict], days: int | None = None) -> dict:
         scores.append((ts, score))
         watchlist_counts.append((ts, watchlist))
         if score != 100.0:
-            non_100.append({
-                "timestamp": ts,
-                "date": date,
-                "score": score,
-                "grade": grade,
-                "watchlist": watchlist,
-                "failing_checks": [
-                    c.get("name") for c in e.get("checks", [])
-                    if c.get("severity") in ("warn", "fail")
-                ],
-            })
+            non_100.append(
+                {
+                    "timestamp": ts,
+                    "date": date,
+                    "score": score,
+                    "grade": grade,
+                    "watchlist": watchlist,
+                    "failing_checks": [
+                        c.get("name") for c in e.get("checks", []) if c.get("severity") in ("warn", "fail")
+                    ],
+                }
+            )
 
     # 排序日期
     dates_sorted = sorted(by_date_grade.keys())
@@ -119,16 +120,14 @@ def analyze(entries: list[dict], days: int | None = None) -> dict:
             "grade": last_entry.get("grade"),
         },
         "a_plus_rate": round(a_plus_rate, 1),
-        "grade_distribution": dict(Counter(
-            g for c in by_date_grade.values() for g in c.elements()
-        )),
+        "grade_distribution": dict(Counter(g for c in by_date_grade.values() for g in c.elements())),
         "by_date": {d: dict(c) for d, c in by_date_grade.items()},
         "non_100_count": len(non_100),
         "non_100_sample": non_100[:10],  # 最近 10 个非 100
         "watchlist_max": max((w for _, w in watchlist_counts), default=0),
-        "watchlist_avg": round(
-            sum(w for _, w in watchlist_counts) / len(watchlist_counts), 2
-        ) if watchlist_counts else 0,
+        "watchlist_avg": round(sum(w for _, w in watchlist_counts) / len(watchlist_counts), 2)
+        if watchlist_counts
+        else 0,
     }
 
 

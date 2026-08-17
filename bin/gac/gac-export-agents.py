@@ -4,6 +4,7 @@
 T1.1: AGENTS.md GaC 段导出 (GaC Stage 1 执行绑定)
 读取注册表 → 生成完整规则 digest → AGENTS.md 只保留 SSOT 指针
 """
+
 from __future__ import annotations
 
 import sys
@@ -62,7 +63,12 @@ def load_source_descriptions():
                     if not isinstance(item, dict):
                         continue
                     rid = item.get("id", "") or item.get("rule_id", "") or item.get("policy_id", "")
-                    desc = item.get("description", "") or item.get("title", "") or item.get("name", "") or item.get("desc", "")
+                    desc = (
+                        item.get("description", "")
+                        or item.get("title", "")
+                        or item.get("name", "")
+                        or item.get("desc", "")
+                    )
                     if rid and desc:
                         source_map[rid] = desc
 
@@ -87,14 +93,21 @@ def export_full_markdown(rules):
     lines.append("")
     lines.append("> SSOT: `.omo/_truth/registry/governance-checks.yaml::gac.rules`")
     lines.append("> 校验: `python3 bin/gac/gac-validate.py --gate` | 漂移: `python3 bin/gac/gac-drift.py`")
-    lines.append("> legacy_index 规则描述从 source_ref 源文件拉取 (x1-policies / x2-freshness / x4-consistency / L0-constraints)")
+    lines.append(
+        "> legacy_index 规则描述从 source_ref 源文件拉取 (x1-policies / x2-freshness / x4-consistency / L0-constraints)"
+    )
     lines.append("")
 
     for dim in ["X1", "X2", "X3", "X4"]:
         dim_rules = by_dim.get(dim, [])
         if not dim_rules:
             continue
-        dim_names = {"X1": "X1 审计", "X2": "X2 抗熵", "X3": "X3 价值", "X4": "X4 一致性"}
+        dim_names = {
+            "X1": "X1 审计",
+            "X2": "X2 抗熵",
+            "X3": "X3 价值",
+            "X4": "X4 一致性",
+        }
         lines.append(f"#### {dim_names.get(dim, dim)} ({len(dim_rules)} 条)")
         lines.append("")
         lines.append("| 规则 ID | 层 | 检查类型 | 描述 |")

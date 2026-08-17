@@ -28,9 +28,8 @@ import json
 import math
 import sys
 from collections import Counter
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
-
 
 HISTORY = Path(".omo/_knowledge/governance-history.jsonl")
 
@@ -42,7 +41,7 @@ def load_events(history: Path, since: str | None = None) -> list[dict]:
     if since:
         unit = since[-1]
         n = int(since[:-1])
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         cutoff = now - (timedelta(days=n) if unit == "d" else timedelta(hours=n))
     events = []
     for line in history.read_text(encoding="utf-8").splitlines():
@@ -69,7 +68,7 @@ def build_check_stats(events: list[dict]) -> list[dict]:
     by_check: dict[str, dict] = {}
     for e in events:
         ts = e.get("timestamp", "")
-        for c in (e.get("checks") or []):
+        for c in e.get("checks") or []:
             name = c.get("name", "?")
             sev = c.get("severity", "ok")
             stats = by_check.setdefault(
@@ -129,8 +128,7 @@ def build_check_stats(events: list[dict]) -> list[dict]:
 
 def print_table(stats: list[dict]) -> None:
     print(
-        f"{'check':30} {'verdict':8} {'n':>5} {'fires':>5} {'rate':>6} "
-        f"{'distinct':>9} {'score':>7} {'last_fired':>22}"
+        f"{'check':30} {'verdict':8} {'n':>5} {'fires':>5} {'rate':>6} {'distinct':>9} {'score':>7} {'last_fired':>22}"
     )
     print("-" * 100)
     for s in stats:

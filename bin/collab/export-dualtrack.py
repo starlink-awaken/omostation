@@ -10,18 +10,19 @@ Usage:
   python3 bin/collab/export-dualtrack.py           # 写 YAML + stdout JSON
   python3 bin/collab/export-dualtrack.py --quiet   # 只写 YAML
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from scenario_lib import load_scenario, run_scenario  # noqa: E402
+from scenario_lib import load_scenario, run_scenario
 
 REPO = Path(__file__).resolve().parents[2]
 SCN_DIR = REPO / ".omo" / "_delivery" / "collab-scenarios"
@@ -32,9 +33,7 @@ OUT_YAML = REPO / ".omo" / "state" / "collab-dualtrack.yaml"
 # P86 C 波 / human-delegated D2 / ADR-0287 — 月真实任务目标 (旧 30→45→60 作废)
 W3_DONE_TARGET = 15
 # planned 中不计入 "active backlog" 的终态 (仍进 planned_total 透明度字段)
-INACTIVE_PLANNED_STATUS = frozenset(
-    {"archived", "done", "closed", "cancelled", "deferred"}
-)
+INACTIVE_PLANNED_STATUS = frozenset({"archived", "done", "closed", "cancelled", "deferred"})
 
 
 def export_capability_track() -> dict:
@@ -67,9 +66,7 @@ def export_capability_track() -> dict:
         "conflict_resolution_success_rate": (
             round(conflict_resolved / len(conflict_scenarios), 3) if conflict_scenarios else None
         ),
-        "avg_resolution_rounds": (
-            round(sum(s["resolution_rounds"] for s in scenarios) / total, 2) if total else 0
-        ),
+        "avg_resolution_rounds": (round(sum(s["resolution_rounds"] for s in scenarios) / total, 2) if total else 0),
     }
 
 
@@ -94,13 +91,28 @@ def export_throughput_track() -> dict:
     不计产能轨 (P84 §0 构造场景不计产能). 旧版报 103/98.1% 含 67% 污染, 去污后真实.
     """
     import re
+
     SELFPROD_PATTERNS = [
-        r"adv", r"detector", r"harden", r"scenario", r"collab", r"synthesize",
-        r"wave", r"boundary", r"dual.?track", r"rejudg", r"harness", r"falsif",
-        r"p84", r"p86", r"conflict", r"resolution",
+        r"adv",
+        r"detector",
+        r"harden",
+        r"scenario",
+        r"collab",
+        r"synthesize",
+        r"wave",
+        r"boundary",
+        r"dual.?track",
+        r"rejudg",
+        r"harness",
+        r"falsif",
+        r"p84",
+        r"p86",
+        r"conflict",
+        r"resolution",
     ]
+
     def _is_selfprod(name: str) -> bool:
-        return any(re.search(p, name, re.I) for p in SELFPROD_PATTERNS)
+        return any(re.search(p, name, re.IGNORECASE) for p in SELFPROD_PATTERNS)
 
     raw_done = sorted(TASKS_DONE.glob("*.yaml")) if TASKS_DONE.exists() else []
     selfprod_done = [f for f in raw_done if _is_selfprod(f.stem)]
@@ -115,7 +127,7 @@ def export_throughput_track() -> dict:
     for f in done_files:
         try:
             d = _parse_task_yaml(f)
-        except Exception:  # noqa: BLE001
+        except Exception:
             silent_loss += 1  # 解析失败 = 潜在静默丢失 (硬红线)
             continue
         if d.get("status") != "done" or not d.get("completed_at"):
@@ -131,7 +143,7 @@ def export_throughput_track() -> dict:
     for f in planned_files:
         try:
             d = _parse_task_yaml(f)
-        except Exception:  # noqa: BLE001
+        except Exception:
             active_planned += 1  # 解析失败按 active 计, 避免低估 backlog
             continue
         st = str(d.get("status") or "pending").lower()
@@ -171,22 +183,16 @@ def main() -> int:
     )
     args = ap.parse_args()
 
-    cap = (
-        {"skipped": True, "reason": "--throughput-only"}
-        if args.throughput_only
-        else export_capability_track()
-    )
+    cap = {"skipped": True, "reason": "--throughput-only"} if args.throughput_only else export_capability_track()
     out = {
-        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "schema": "p84-dualtrack-v1",
         "capability_track": cap,
         "throughput_track": export_throughput_track(),
         "redline_note": "两轨数据源独立, 禁止合并; 构造场景计产能轨=最高级违规 (P84 §0)",
     }
     OUT_YAML.parent.mkdir(parents=True, exist_ok=True)
-    OUT_YAML.write_text(
-        yaml.safe_dump(out, allow_unicode=True, sort_keys=False), encoding="utf-8"
-    )
+    OUT_YAML.write_text(yaml.safe_dump(out, allow_unicode=True, sort_keys=False), encoding="utf-8")
     if not args.quiet:
         print(json.dumps(out, ensure_ascii=False, indent=2))
     return 0

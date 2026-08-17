@@ -7,6 +7,7 @@
 
 违反任一条件 → exit 1（阻止 commit）
 """
+
 from __future__ import annotations
 
 import sys
@@ -50,17 +51,13 @@ def main() -> int:
     unknown = tracked_uris - unimplemented_uris
     if unknown:
         for uri in sorted(unknown):
-            errors.append(
-                f"  ⚠️  '{uri}' 在 bos-unimplemented.yaml 中但 bos-services.yaml 未标记 [UNIMPLEMENTED]"
-            )
+            errors.append(f"  ⚠️  '{uri}' 在 bos-unimplemented.yaml 中但 bos-services.yaml 未标记 [UNIMPLEMENTED]")
 
     # 检查 2: bos-services.yaml 标记了 [UNIMPLEMENTED] 但追踪文件未登记
     missing = unimplemented_uris - tracked_uris
     if missing:
         for uri in sorted(missing):
-            errors.append(
-                f"  ⚠️  '{uri}' 标记 [UNIMPLEMENTED] 但未在 bos-unimplemented.yaml 登记"
-            )
+            errors.append(f"  ⚠️  '{uri}' 标记 [UNIMPLEMENTED] 但未在 bos-unimplemented.yaml 登记")
 
     if errors:
         print(f"[BOS-TRACKING] ❌ {len(errors)} 个 BOS 追踪问题:")
@@ -70,10 +67,7 @@ def main() -> int:
         return 1
 
     count = len(unimplemented_uris)
-    print(
-        f"[BOS-TRACKING] ✅ BOS 追踪一致 — {len(tracked_uris)} 未实现, "
-        f"{len(services.get('services', []))} 活动"
-    )
+    print(f"[BOS-TRACKING] ✅ BOS 追踪一致 — {len(tracked_uris)} 未实现, {len(services.get('services', []))} 活动")
     return 0
 
 

@@ -15,6 +15,7 @@
 用法:
   python bin/ssot/gbrain-todo-scan.py
 """
+
 from __future__ import annotations
 
 import re
@@ -74,7 +75,9 @@ def main() -> int:
         for s in samples.get(cat, [])[:2]:
             print(f"    - {s}")
     print()
-    print(f"治本: version_bound + follow_up + pending_host 是真实待办 (可 ingress 进 omo debt registry); deferred_shipped 是历史记录")
+    print(
+        "治本: version_bound + follow_up + pending_host 是真实待办 (可 ingress 进 omo debt registry); deferred_shipped 是历史记录"
+    )
     return 0
 
 

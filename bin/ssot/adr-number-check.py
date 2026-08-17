@@ -36,7 +36,7 @@ def check_adr_numbers(decisions_dir: Path) -> int:
         return 1
 
     max_num = max(numbers) if numbers else "0000"
-    print(f"adr-number-check: OK ({len(numbers)} ADRs, latest={max_num}, next available={int(max_num)+1:04d})")
+    print(f"adr-number-check: OK ({len(numbers)} ADRs, latest={max_num}, next available={int(max_num) + 1:04d})")
     return 0
 
 

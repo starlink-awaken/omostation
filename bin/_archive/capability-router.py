@@ -49,8 +49,12 @@ def route(*, required_capabilities: list[str], max_cost: str = "high") -> dict[s
         candidates.append(p)
 
     if not candidates:
-        return {"selected": None, "reason": "no provider matches all requirements",
-                "required": required_capabilities, "available": [p["id"] for p in providers]}
+        return {
+            "selected": None,
+            "reason": "no provider matches all requirements",
+            "required": required_capabilities,
+            "available": [p["id"] for p in providers],
+        }
 
     # Rank: lowest cost wins (ties broken by more capabilities)
     candidates.sort(key=lambda p: (COST_RANK.get(p.get("cost", "high"), 3), -len(p.get("capabilities", []))))
@@ -84,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
         providers = load_providers()
         print(f"Registered providers ({len(providers)}):")
         for p in providers:
-            print(f"  {p['id']:15s} cost={p.get('cost','?'):8s} caps={p.get('capabilities',[])}")
+            print(f"  {p['id']:15s} cost={p.get('cost', '?'):8s} caps={p.get('capabilities', [])}")
         return 0
 
     if args.command == "route":

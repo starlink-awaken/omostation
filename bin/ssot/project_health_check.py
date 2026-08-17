@@ -13,20 +13,24 @@ import argparse
 import sys
 from pathlib import Path
 
-
 _EXCLUDE_DIRS = {
-    ".venv", "venv", "node_modules", "dist", "build", "__pycache__",
-    ".tox", ".pytest_cache", ".mypy_cache", ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "dist",
+    "build",
+    "__pycache__",
+    ".tox",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".git",
 }
 
 
 def frontmatter_coverage(project_dir: str) -> dict:
     """统计项目 frontmatter 覆盖率（排除依赖/构建目录噪音）。"""
     root = Path(project_dir)
-    md_files = [
-        p for p in root.rglob("*.md")
-        if not any(part in _EXCLUDE_DIRS for part in p.parts)
-    ]
+    md_files = [p for p in root.rglob("*.md") if not any(part in _EXCLUDE_DIRS for part in p.parts)]
     total = len(md_files)
     with_fm = 0
     for f in md_files:
@@ -44,8 +48,11 @@ def health_snapshot(project_dir: str) -> dict:
     """项目治理健康快照：frontmatter + ADR 数量 + 文档规模。"""
     root = Path(project_dir)
     frontmatter = frontmatter_coverage(project_dir)
-    adr_files = list((root / ".omo" / "_knowledge" / "decisions").glob("*.md")) \
-        if (root / ".omo" / "_knowledge" / "decisions").exists() else []
+    adr_files = (
+        list((root / ".omo" / "_knowledge" / "decisions").glob("*.md"))
+        if (root / ".omo" / "_knowledge" / "decisions").exists()
+        else []
+    )
     return {
         "frontmatter": frontmatter,
         "adr_count": len(adr_files),

@@ -4,6 +4,7 @@
 Validates all .github/workflows/*.yml and protocols/*.yaml files.
 Exits 1 on any parse error.
 """
+
 from __future__ import annotations
 
 import glob

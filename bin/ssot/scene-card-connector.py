@@ -17,9 +17,8 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
-import time
-from dataclasses import dataclass, asdict, field
-from datetime import datetime, timedelta, timezone
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -46,11 +45,12 @@ class ConnectorConfig:
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _new_id(prefix: str) -> str:
     import uuid
+
     return f"{prefix}-{uuid.uuid4().hex[:12]}"
 
 
@@ -136,6 +136,7 @@ def _import_mbox(workspace_root: Path, mbox_path: Path, scene_id: str, journey_i
 
     try:
         import mailbox
+
         mbox = mailbox.mbox(str(mbox_path))
         run.items_found = len(mbox)
 
@@ -155,28 +156,33 @@ def _import_mbox(workspace_root: Path, mbox_path: Path, scene_id: str, journey_i
 
                 content = f"Subject: {subject}\n\n{body[:2000]}"
                 result = intake.intake(
-                    workspace_root, source="email", raw_content=content,
-                    scene_id=scene_id, journey_id=journey_id,
+                    workspace_root,
+                    source="email",
+                    raw_content=content,
+                    scene_id=scene_id,
+                    journey_id=journey_id,
                 )
                 if result.ok:
                     run.items_imported += 1
                 else:
                     run.errors.append(f"Item {i}: {result.error}")
             except Exception as e:
-                run.errors.append(f"Item {i}: {str(e)}")
+                run.errors.append(f"Item {i}: {e!s}")
 
         mbox.close()
     except ImportError:
         run.errors.append("mailbox module not available (Python standard library)")
     except Exception as e:
-        run.errors.append(f"MBOX import error: {str(e)}")
+        run.errors.append(f"MBOX import error: {e!s}")
 
     run.completed_at = _now_iso()
     save_run(workspace_root, run)
     return run
 
 
-def _import_directory(workspace_root: Path, source_dir: Path, scene_id: str, journey_id: str | None = None) -> ConnectorRun:
+def _import_directory(
+    workspace_root: Path, source_dir: Path, scene_id: str, journey_id: str | None = None
+) -> ConnectorRun:
     """Import files from a directory."""
     run_id = _new_id("run")
     run = ConnectorRun(run_id=run_id, source="file", started_at=_now_iso())
@@ -199,15 +205,19 @@ def _import_directory(workspace_root: Path, source_dir: Path, scene_id: str, jou
         try:
             content = f.read_text(encoding="utf-8", errors="replace")
             result = intake.intake(
-                workspace_root, source="file", raw_content=content[:2000],
-                scene_id=scene_id, journey_id=journey_id, filename=f.name,
+                workspace_root,
+                source="file",
+                raw_content=content[:2000],
+                scene_id=scene_id,
+                journey_id=journey_id,
+                filename=f.name,
             )
             if result.ok:
                 run.items_imported += 1
             else:
                 run.errors.append(f"File {f.name}: {result.error}")
         except Exception as e:
-            run.errors.append(f"File {f.name}: {str(e)}")
+            run.errors.append(f"File {f.name}: {e!s}")
 
     run.completed_at = _now_iso()
     save_run(workspace_root, run)
@@ -247,7 +257,7 @@ def _import_jsonl(workspace_root: Path, jsonl_path: Path, scene_id: str, journey
             else:
                 run.errors.append(f"Line: {result.error}")
         except Exception as e:
-            run.errors.append(f"JSON parse error: {str(e)}")
+            run.errors.append(f"JSON parse error: {e!s}")
 
     run.completed_at = _now_iso()
     save_run(workspace_root, run)
@@ -285,8 +295,10 @@ def run_connector(
         return _import_jsonl(workspace_root, source_path_obj, scene_id, journey_id)
     else:
         run = ConnectorRun(
-            run_id=_new_id("run"), source=source,
-            started_at=_now_iso(), completed_at=_now_iso(),
+            run_id=_new_id("run"),
+            source=source,
+            started_at=_now_iso(),
+            completed_at=_now_iso(),
             errors=[f"Unknown source: {source}"],
         )
         save_run(workspace_root, run)

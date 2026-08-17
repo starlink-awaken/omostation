@@ -95,7 +95,9 @@ def _as_table(rows: list[tuple[str, ...]]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def emit_batch(entries: list[dict[str, Any]], target_round: str, target_owner: str, output: Path, json_path: Path | None) -> dict[str, Any]:
+def emit_batch(
+    entries: list[dict[str, Any]], target_round: str, target_owner: str, output: Path, json_path: Path | None
+) -> dict[str, Any]:
     selected = [
         item
         for item in entries
@@ -104,7 +106,14 @@ def emit_batch(entries: list[dict[str, Any]], target_round: str, target_owner: s
         and (not target_owner or str(item.get("owner", "governance")) == target_owner)
     ]
 
-    selected.sort(key=lambda item: (_normalize_round(item), _parse_due(_normalize_due(item)), -_normalize_risk(item), str(item.get("name", ""))))
+    selected.sort(
+        key=lambda item: (
+            _normalize_round(item),
+            _parse_due(_normalize_due(item)),
+            -_normalize_risk(item),
+            str(item.get("name", "")),
+        )
+    )
 
     round_stats: dict[str, int] = defaultdict(int)
     owner_stats: dict[str, int] = defaultdict(int)

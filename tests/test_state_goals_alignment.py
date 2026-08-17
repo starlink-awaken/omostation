@@ -4,7 +4,6 @@ import importlib.util
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 SPEC = importlib.util.spec_from_file_location(
@@ -28,8 +27,7 @@ def _configure(tmp_path: Path, *, phase: int, wave: str, mode: str, active_tasks
         encoding="utf-8",
     )
     (omo_dir / "goals/current.yaml").write_text(
-        f"---\nstatus: active\n---\nphase: {phase}\n"
-        f"current_wave: {wave}\nexecution_mode: {mode}\ngoals: []\n",
+        f"---\nstatus: active\n---\nphase: {phase}\ncurrent_wave: {wave}\nexecution_mode: {mode}\ngoals: []\n",
         encoding="utf-8",
     )
     MODULE.OMO_DIR = omo_dir

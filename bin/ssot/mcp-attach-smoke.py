@@ -13,6 +13,7 @@ Usage:
   python3 bin/ssot/mcp-attach-smoke.py
   python3 bin/ssot/mcp-attach-smoke.py --json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -69,7 +70,7 @@ def run_smoke() -> dict:
 
     try:
         services = _load_bos_services()
-    except Exception as exc:  # noqa: BLE001 — smoke surface
+    except Exception as exc:
         add("bos_yaml_parse", False, str(exc))
         return {
             "ok": False,
@@ -87,11 +88,7 @@ def run_smoke() -> dict:
         add(f"bos_domain_{d}", d in domains, f"domains_sample={sorted(domains)[:12]}")
 
     # Routable filter mirrors agora bos_registry (exclude unimplemented + default deprecated)
-    routable = [
-        s
-        for s in services
-        if (s.get("status") or "active") not in ("unimplemented", "deprecated")
-    ]
+    routable = [s for s in services if (s.get("status") or "active") not in ("unimplemented", "deprecated")]
     add(
         "bos_routable_non_empty",
         len(routable) >= 1,
@@ -108,7 +105,7 @@ def run_smoke() -> dict:
             True,
             f"POC_SERVICES={len(POC_SERVICES)}",
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         add(
             "agora_poc_services_import",
             True,
@@ -139,8 +136,12 @@ def run_smoke() -> dict:
             has_bos = "bos" in (r.stdout or "")
             detail = f"returncode={r.returncode} has_bos={has_bos} (advisory)"
             # always record as pass for gate stability; surface truth in detail
-            add("cockpit_help", True, detail if (r.returncode == 0 and has_bos) else f"degraded {detail}")
-        except Exception as exc:  # noqa: BLE001
+            add(
+                "cockpit_help",
+                True,
+                detail if (r.returncode == 0 and has_bos) else f"degraded {detail}",
+            )
+        except Exception as exc:
             add("cockpit_help", True, f"skipped/error (advisory): {exc}")
     else:
         add("cockpit_help", True, "skipped (uv not on PATH)")

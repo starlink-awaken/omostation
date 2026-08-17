@@ -6,7 +6,7 @@ from typing import Any
 def is_available() -> bool:
     """Check if notebooklm-py is installed."""
     try:
-        import notebooklm  # noqa: F401  # type: ignore[reportMissingImports]
+        import notebooklm  # type: ignore[reportMissingImports]
 
         return True
     except ImportError:

@@ -22,7 +22,16 @@ DUAL_PATH_PATTERNS = [
 ]
 
 # 跳过的路径
-SKIP_DIRS = {".venv", "__pycache__", "node_modules", "build", ".git", "_archived", "tests", "test"}
+SKIP_DIRS = {
+    ".venv",
+    "__pycache__",
+    "node_modules",
+    "build",
+    ".git",
+    "_archived",
+    "tests",
+    "test",
+}
 
 # 允许的仅 root-level 路径模式 (如 CLAUDE.md, AGENTS.md 等根文件)
 ALLOWED_ROOT_ONLY = [

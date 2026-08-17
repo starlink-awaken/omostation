@@ -1,4 +1,5 @@
 """G-CONV.7 / ADR-0220: unit tests drive real swarm_discipline helpers."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -55,13 +56,9 @@ def test_d1_adr_claim_atomic_and_second_session_blocked(tmp_path):
 def test_d1_adr_write_requires_claim(tmp_path):
     m = _load()
     (tmp_path / ".omo/_truth/registry").mkdir(parents=True)
-    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
-        "version: 1\n", encoding="utf-8"
-    )
+    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text("version: 1\n", encoding="utf-8")
     (tmp_path / ".omo/_knowledge/decisions").mkdir(parents=True)
-    ok, reason = m.check_adr_write_authorized(
-        tmp_path, ".omo/_knowledge/decisions/0099-new.md", "s1"
-    )
+    ok, reason = m.check_adr_write_authorized(tmp_path, ".omo/_knowledge/decisions/0099-new.md", "s1")
     assert not ok
     assert "claim" in reason.lower()
 
@@ -70,9 +67,7 @@ def test_d1_empty_session_cannot_use_foreign_claim(tmp_path):
     """Skeptic: empty session must not inherit holder claim."""
     m = _load()
     (tmp_path / ".omo/_truth/registry").mkdir(parents=True)
-    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
-        "version: 1\n", encoding="utf-8"
-    )
+    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text("version: 1\n", encoding="utf-8")
     (tmp_path / ".omo/_knowledge/decisions").mkdir(parents=True)
     ok, r = m.acquire_adr_claim(tmp_path, "owner-sess")
     assert ok
@@ -84,12 +79,11 @@ def test_d1_empty_session_cannot_use_foreign_claim(tmp_path):
     ok_match, _ = m.check_adr_write_authorized(tmp_path, path, "owner-sess")
     assert ok_match
 
+
 def test_d2_branch_occupancy_blocks_second_session(tmp_path):
     m = _load()
     (tmp_path / ".omo/_truth/registry").mkdir(parents=True)
-    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
-        "version: 1\n", encoding="utf-8"
-    )
+    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text("version: 1\n", encoding="utf-8")
     ok1, r1 = m.acquire_branch_lock(tmp_path, "sess-a", "work/sess-a")
     assert ok1, r1
     ok2, r2 = m.acquire_branch_lock(tmp_path, "sess-b", "work/sess-a")
@@ -153,9 +147,7 @@ escape_hatch_exemptions:
         escape_id="submodule-reachability-partial-worktree",
     )
     assert ok2
-    ok3, _ = m.check_escape_hatch(
-        tmp_path, flag="ci_local_skip", escape_id="not-a-real-id"
-    )
+    ok3, _ = m.check_escape_hatch(tmp_path, flag="ci_local_skip", escape_id="not-a-real-id")
     assert not ok3
 
 
@@ -175,9 +167,7 @@ escape_hatch_exemptions:
     )
     ok, _ = m.check_git_argv_escape(tmp_path, ["commit", "-m", "x"], None)
     assert ok  # no --no-verify
-    ok2, reason = m.check_git_argv_escape(
-        tmp_path, ["commit", "--no-verify", "-m", "x"], None
-    )
+    ok2, reason = m.check_git_argv_escape(tmp_path, ["commit", "--no-verify", "-m", "x"], None)
     assert not ok2
     ok3, _ = m.check_git_argv_escape(
         tmp_path,
@@ -185,6 +175,7 @@ escape_hatch_exemptions:
         "write-owner-repair-draft",
     )
     assert ok3
+
 
 def test_conflict_window_status_open_until_72h(tmp_path):
     m = _load()
@@ -208,12 +199,11 @@ def test_conflict_window_status_open_until_72h(tmp_path):
 def test_scan_orphan_commits_dedupes_and_shapes(tmp_path):
     m = _load()
     (tmp_path / ".omo/_truth/registry").mkdir(parents=True)
-    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
-        "version: 1\n", encoding="utf-8"
-    )
+    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text("version: 1\n", encoding="utf-8")
     # no git repo → empty list, must not raise
     hits = m.scan_orphan_commits(tmp_path, None, emit=False)
     assert hits == []
+
 
 def test_wired_entrypoints_reference_gates():
     """Structural: real entrypoints call into swarm discipline (no orphan registry)."""
@@ -235,6 +225,7 @@ def test_wired_entrypoints_reference_gates():
     assert "5:50-swarm-window" in foundry
     assert "window-status" in foundry
 
+
 def test_d3_real_pre_commit_hook_blocks_unclaimed_main(tmp_path):
     """Drive real git commit through installed .githooks/pre-commit (install-hooks path)."""
     import os
@@ -245,9 +236,7 @@ def test_d3_real_pre_commit_hook_blocks_unclaimed_main(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
     subprocess.run(["git", "init", "-b", "main"], cwd=repo, check=True, capture_output=True)
-    subprocess.run(
-        ["git", "config", "user.email", "t@example.com"], cwd=repo, check=True
-    )
+    subprocess.run(["git", "config", "user.email", "t@example.com"], cwd=repo, check=True)
     subprocess.run(["git", "config", "user.name", "t"], cwd=repo, check=True)
 
     # Minimal tree: hooks + swarm CLI + registry + core module
@@ -256,7 +245,8 @@ def test_d3_real_pre_commit_hook_blocks_unclaimed_main(tmp_path):
     (repo / ".githooks").mkdir()
     shutil.copy(ROOT / "bin/gac/swarm_discipline.py", repo / "bin/gac/swarm_discipline.py")
     shutil.copy(
-        ROOT / "bin/gac/swarm-discipline-cli.py", repo / "bin/gac/swarm-discipline-cli.py"
+        ROOT / "bin/gac/swarm-discipline-cli.py",
+        repo / "bin/gac/swarm-discipline-cli.py",
     )
     (repo / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
         textwrap.dedent(
@@ -298,9 +288,7 @@ def test_d3_real_pre_commit_hook_blocks_unclaimed_main(tmp_path):
     (repo / "README.md").write_text("init\n", encoding="utf-8")
     subprocess.run(["git", "add", "README.md"], cwd=repo, check=True)
     os.chmod(hooks / "pre-commit", 0o644)  # disable
-    subprocess.run(
-        ["git", "commit", "-m", "init"], cwd=repo, check=True, capture_output=True
-    )
+    subprocess.run(["git", "commit", "-m", "init"], cwd=repo, check=True, capture_output=True)
     os.chmod(hooks / "pre-commit", 0o755)  # re-enable install-hooks path
 
     (repo / "docs").mkdir()
@@ -327,6 +315,7 @@ def test_d3_real_pre_commit_hook_blocks_unclaimed_main(tmp_path):
     )
     assert r2.returncode == 0, r2.stdout + r2.stderr
 
+
 def test_b3_branch_release_purges_orphan_claims(tmp_path):
     """B3 (ADR-0367): branch-release 兜底删除分支已不存在的孤儿 claim."""
     m = _load()
@@ -334,7 +323,10 @@ def test_b3_branch_release_purges_orphan_claims(tmp_path):
     subprocess.run(["git", "init", "-q", "-b", "main", str(tmp_path)], check=True)
     subprocess.run(["git", "-C", str(tmp_path), "config", "user.email", "it@test"], check=True)
     subprocess.run(["git", "-C", str(tmp_path), "config", "user.name", "it"], check=True)
-    subprocess.run(["git", "-C", str(tmp_path), "commit", "--allow-empty", "-q", "-m", "init"], check=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "--allow-empty", "-q", "-m", "init"],
+        check=True,
+    )
     subprocess.run(["git", "-C", str(tmp_path), "checkout", "-q", "-b", "work/alive"], check=True)
 
     (tmp_path / ".omo/_truth/registry").mkdir(parents=True)
@@ -345,14 +337,13 @@ def test_b3_branch_release_purges_orphan_claims(tmp_path):
     claims_dir = tmp_path / ".omo/_delivery/branch-claims"
     claims_dir.mkdir(parents=True)
     (claims_dir / "alive-session.json").write_text(
-        json.dumps({"branch": "work/alive", "session": "alive-session"}), encoding="utf-8"
+        json.dumps({"branch": "work/alive", "session": "alive-session"}),
+        encoding="utf-8",
     )
     (claims_dir / "dead-session.json").write_text(
         json.dumps({"branch": "work/dead", "session": "dead-session"}), encoding="utf-8"
     )
-    (claims_dir / "no-branch.json").write_text(
-        json.dumps({"session": "no-branch"}), encoding="utf-8"
-    )
+    (claims_dir / "no-branch.json").write_text(json.dumps({"session": "no-branch"}), encoding="utf-8")
 
     m.release_branch_lock(tmp_path, "alive-session", purge_orphans=True)
 

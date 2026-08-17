@@ -5,6 +5,7 @@ This gate consumes machine JSON from the existing governance tools and applies
 one shared ok/blocking contract. It prevents "command exited 0, but JSON said
 ok=false" drift from becoming invisible to local/CI gates.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -14,7 +15,6 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
-
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 
@@ -148,7 +148,15 @@ def _evaluate(
 def run_gate(*, release: bool = False) -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
 
-    definitions: list[tuple[str, list[str], Callable[[dict[str, Any]], tuple[bool, list[str]]], str, bool]] = [
+    definitions: list[
+        tuple[
+            str,
+            list[str],
+            Callable[[dict[str, Any]], tuple[bool, list[str]]],
+            str,
+            bool,
+        ]
+    ] = [
         # GaC 声明/执行鸿沟 (TASK-A367B061): 129 rules 缺 executor → gac-bootstrap/executor 报 ok=false.
         # 短期降 non-blocking (GaC 半成品非 CI 阻断事由, 补 executor 是长期专项); 长期补 129 executor 后恢复 blocking.
         (
@@ -216,9 +224,7 @@ def run_gate(*, release: bool = False) -> dict[str, Any]:
 
     for check_id, command, evaluator, severity, blocking in definitions:
         raw = _run_json(check_id, command)
-        checks.append(
-            _evaluate(raw, evaluator, severity=severity, blocking=blocking)
-        )
+        checks.append(_evaluate(raw, evaluator, severity=severity, blocking=blocking))
 
     blocking_failures = [item for item in checks if item["blocking"] and not item["ok"]]
     warnings = [item for item in checks if not item["blocking"] and not item["ok"]]
@@ -249,7 +255,11 @@ def print_human(report: dict[str, Any]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run unified governance semantic checks")
-    parser.add_argument("--release", action="store_true", help="Block on release readiness and active runs")
+    parser.add_argument(
+        "--release",
+        action="store_true",
+        help="Block on release readiness and active runs",
+    )
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     args = parser.parse_args()
 

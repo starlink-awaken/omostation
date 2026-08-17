@@ -1,4 +1,5 @@
 """Batch2 C1 — physical recovery dry-run must never claim physical gate."""
+
 from __future__ import annotations
 
 import importlib.util

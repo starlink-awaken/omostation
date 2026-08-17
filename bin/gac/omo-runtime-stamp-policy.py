@@ -12,6 +12,7 @@ Mirrors git's gitignore semantics including `**` directory globs and directory
 patterns ending with `/`. Negation patterns (`!pattern`) are tracked but not
 currently needed; kept in the signature for future use.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,7 +22,6 @@ import sys
 from pathlib import Path
 
 import yaml
-
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 RUNTIME_DIR = WORKSPACE / "runtime"
@@ -157,7 +157,12 @@ def _match_segments(pat: list[str], path: list[str]) -> bool:
     return _match_segments(tail, path[1:])
 
 
-def is_allowed(rel_path: str, ignore_patterns: list[str], projection_paths: set[str], tracked: set[str]) -> bool:
+def is_allowed(
+    rel_path: str,
+    ignore_patterns: list[str],
+    projection_paths: set[str],
+    tracked: set[str],
+) -> bool:
     for allowed in ALLOW_PATHS:
         if _match(allowed, rel_path):
             return True
@@ -212,9 +217,7 @@ def main() -> int:
         sys.stdout.write("\n")
     else:
         status = "OK" if report["ok"] else "FAIL"
-        print(
-            f"[{status}] omo-runtime-stamp-policy: {len(orphans)} orphan file(s) under runtime/"
-        )
+        print(f"[{status}] omo-runtime-stamp-policy: {len(orphans)} orphan file(s) under runtime/")
         for orphan in orphans:
             print(f"  - {orphan['path']} ({orphan['size']} bytes)")
 

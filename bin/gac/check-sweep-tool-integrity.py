@@ -25,8 +25,9 @@ def main() -> int:
         rel = f.relative_to(REPO_ROOT)
         name = f.stem
         # 检查是否有对应的测试文件
-        test_files = list(REPO_ROOT.rglob(f"tests/test_sweep_{name}.py")) + \
-                     list(REPO_ROOT.rglob(f"tests/test_{name}.py"))
+        test_files = list(REPO_ROOT.rglob(f"tests/test_sweep_{name}.py")) + list(
+            REPO_ROOT.rglob(f"tests/test_{name}.py")
+        )
         if not test_files:
             # 跳过 __init__.py 和 README
             if name != "__init__":

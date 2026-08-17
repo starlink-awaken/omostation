@@ -26,13 +26,14 @@ Exit:
   - 0: ok (<=40%) or warn-only (35..40%)
   - 1: blocking (>40% with no human-approval run)
 """
+
 from __future__ import annotations
 
 import argparse
 import collections
 import json
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -43,7 +44,7 @@ GOVERNANCE_CEILING = 0.40
 WARN_THRESHOLD = 0.35
 # P85: ADR-0249 治理占比 40% 上限 2026-08-01 起生效, 不溯及历史 85 run.
 # (禁止放宽 40% 阈值消警; 仅缩窗口起点, 阈值不变; 8/1 前 run 不计数)
-ENFORCED_FROM = datetime(2026, 8, 1, tzinfo=timezone.utc)
+ENFORCED_FROM = datetime(2026, 8, 1, tzinfo=UTC)
 
 GOVERNANCE_PROFILES = {
     "governance-agent",
@@ -152,11 +153,10 @@ def main(argv: list[str] | None = None) -> int:
             print("check-governance-ratio: PASS (no ledger)")
         return 0
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     cutoff = now - timedelta(days=args.window_days)
     # P85: 8/1 起生效, 不溯及历史 85 run (cutoff 不早于 ENFORCED_FROM)
-    if cutoff < ENFORCED_FROM:
-        cutoff = ENFORCED_FROM
+    cutoff = max(cutoff, ENFORCED_FROM)
 
     events: list[dict] = []
     for line in LEDGER.read_text(encoding="utf-8").splitlines():
@@ -183,12 +183,14 @@ def main(argv: list[str] | None = None) -> int:
         kind = _classify(evt)
         buckets[kind] += 1
         if kind == "governance":
-            governance_runs.append({
-                "run_id": evt.get("run_id"),
-                "ts": evt.get("ts"),
-                "agent_profile": evt.get("agent_profile"),
-                "workflow_id": evt.get("workflow_id"),
-            })
+            governance_runs.append(
+                {
+                    "run_id": evt.get("run_id"),
+                    "ts": evt.get("ts"),
+                    "agent_profile": evt.get("agent_profile"),
+                    "workflow_id": evt.get("workflow_id"),
+                }
+            )
 
     total = sum(buckets.values())
     ratio = (buckets["governance"] / total) if total else 0.0
@@ -198,10 +200,7 @@ def main(argv: list[str] | None = None) -> int:
     # sample (>= MIN_RUNS); otherwise surface as warn-only.
     MIN_RUNS = 10
 
-    has_human_approval = any(
-        (evt.get("objective") or "").startswith("[human]")
-        for evt in starts
-    )
+    has_human_approval = any((evt.get("objective") or "").startswith("[human]") for evt in starts)
     if total < MIN_RUNS:
         ok = True
         level = "warn"

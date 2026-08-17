@@ -15,13 +15,13 @@ from __future__ import annotations
 
 import json
 import uuid
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 # ── Data types ──
+
 
 @dataclass
 class StructuredContent:
@@ -81,8 +81,9 @@ class SceneCard:
 
 # ── Helpers ──
 
+
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _new_id(prefix: str) -> str:
@@ -99,6 +100,7 @@ def _dictify(obj: Any) -> Any:
 
 
 # ── Storage ──
+
 
 def _inbox_path(workspace_root: Path) -> Path:
     p = workspace_root / ".omo" / "_inbox"
@@ -128,28 +130,32 @@ def _scene_from_dict(data: dict) -> SceneCard:
             if sd := ind.get("structured"):
                 structured = StructuredContent(**sd)
             evidence = [EvidenceRecord(**e) for e in ind.get("evidence", [])]
-            intents.append(IntentCard(
-                id=ind.get("id", ""),
-                journey_id=ind.get("journey_id", ""),
-                source=ind.get("source", "manual"),
-                raw_content=ind.get("raw_content", ""),
-                structured=structured,
-                status=ind.get("status", "pending"),
-                priority=ind.get("priority", "P3"),
-                task_id=ind.get("task_id"),
-                created_at=ind.get("created_at", ""),
-                processed_at=ind.get("processed_at"),
-                evidence=evidence,
-            ))
-        journeys.append(JourneyCard(
-            id=jd.get("id", ""),
-            scene_id=jd.get("scene_id", ""),
-            name=jd.get("name", ""),
-            status=jd.get("status", "proposed"),
-            created_at=jd.get("created_at", ""),
-            completed_at=jd.get("completed_at"),
-            intents=intents,
-        ))
+            intents.append(
+                IntentCard(
+                    id=ind.get("id", ""),
+                    journey_id=ind.get("journey_id", ""),
+                    source=ind.get("source", "manual"),
+                    raw_content=ind.get("raw_content", ""),
+                    structured=structured,
+                    status=ind.get("status", "pending"),
+                    priority=ind.get("priority", "P3"),
+                    task_id=ind.get("task_id"),
+                    created_at=ind.get("created_at", ""),
+                    processed_at=ind.get("processed_at"),
+                    evidence=evidence,
+                )
+            )
+        journeys.append(
+            JourneyCard(
+                id=jd.get("id", ""),
+                scene_id=jd.get("scene_id", ""),
+                name=jd.get("name", ""),
+                status=jd.get("status", "proposed"),
+                created_at=jd.get("created_at", ""),
+                completed_at=jd.get("completed_at"),
+                intents=intents,
+            )
+        )
     return SceneCard(
         id=data.get("id", ""),
         name=data.get("name", ""),
@@ -176,6 +182,7 @@ def list_scenes(workspace_root: Path) -> list[SceneCard]:
 
 
 # ── Core operations ──
+
 
 def create_scene(
     workspace_root: Path,
@@ -238,12 +245,14 @@ def add_intent(
         status="pending",
         priority=priority,
         created_at=_now_iso(),
-        evidence=[EvidenceRecord(
-            source=source,
-            action="ingested",
-            result="intent_created",
-            timestamp=_now_iso(),
-        )],
+        evidence=[
+            EvidenceRecord(
+                source=source,
+                action="ingested",
+                result="intent_created",
+                timestamp=_now_iso(),
+            )
+        ],
     )
     journey.intents.append(intent)
     save_scene(workspace_root, scene)
@@ -286,13 +295,15 @@ def update_intent_status(
                     intent.processed_at = _now_iso()
                     if task_id:
                         intent.task_id = task_id
-                    intent.evidence.append(EvidenceRecord(
-                        source="decision_inbox",
-                        action="status_update",
-                        result=f"{new_status}",
-                        timestamp=_now_iso(),
-                        actor=actor,
-                    ))
+                    intent.evidence.append(
+                        EvidenceRecord(
+                            source="decision_inbox",
+                            action="status_update",
+                            result=f"{new_status}",
+                            timestamp=_now_iso(),
+                            actor=actor,
+                        )
+                    )
                     save_scene(workspace_root, scene)
                     return intent
     return None

@@ -118,13 +118,15 @@ def _zero_violations_report(
         if violations:
             continue
 
-        results.append({
-            "rule_id": rid,
-            "evaluations": len(relevant),
-            "window_days": window_days,
-            "last_eval": relevant[-1].get("timestamp", ""),
-            "enforcement": relevant[-1].get("enforcement", ""),
-        })
+        results.append(
+            {
+                "rule_id": rid,
+                "evaluations": len(relevant),
+                "window_days": window_days,
+                "last_eval": relevant[-1].get("timestamp", ""),
+                "enforcement": relevant[-1].get("enforcement", ""),
+            }
+        )
 
     return results
 
@@ -192,15 +194,17 @@ def _suggest_downgrade(window_days: int) -> list[dict[str, Any]]:
         else:
             new_enforcement = "inactive"
 
-        suggestions.append({
-            "rule_id": rid,
-            "current_enforcement": enforcement,
-            "suggested_enforcement": new_enforcement,
-            "evaluations": len(relevant),
-            "span_days": span_days,
-            "violations": len(violations),
-            "gate_checks": sorted({e.get("gate_check", "") for e in relevant}),
-        })
+        suggestions.append(
+            {
+                "rule_id": rid,
+                "current_enforcement": enforcement,
+                "suggested_enforcement": new_enforcement,
+                "evaluations": len(relevant),
+                "span_days": span_days,
+                "violations": len(violations),
+                "gate_checks": sorted({e.get("gate_check", "") for e in relevant}),
+            }
+        )
 
     suggestions.sort(key=lambda s: s["evaluations"], reverse=True)
     return suggestions
@@ -222,8 +226,7 @@ def _apply_downgrade(proposals_path: Path) -> list[dict[str, Any]]:
     recent = _count_recent_downgrades(7)
     if recent >= MAX_DOWNGRADES_PER_WEEK:
         print(
-            f"Rate limit: {recent}/{MAX_DOWNGRADES_PER_WEEK} downgrades this week. "
-            f"Refusing to apply more.",
+            f"Rate limit: {recent}/{MAX_DOWNGRADES_PER_WEEK} downgrades this week. Refusing to apply more.",
             file=sys.stderr,
         )
         return []
@@ -265,11 +268,13 @@ def _apply_downgrade(proposals_path: Path) -> list[dict[str, Any]]:
         if "downgraded_from" not in rule:
             rule["downgraded_from"] = old_enc
         rule["downgraded_at"] = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-        applied.append({
-            "rule_id": rid,
-            "old_enforcement": old_enc,
-            "new_enforcement": new_enc,
-        })
+        applied.append(
+            {
+                "rule_id": rid,
+                "old_enforcement": old_enc,
+                "new_enforcement": new_enc,
+            }
+        )
 
     if applied:
         import yaml as _yaml
@@ -280,10 +285,16 @@ def _apply_downgrade(proposals_path: Path) -> list[dict[str, Any]]:
         DOWNGRADE_LOG.parent.mkdir(parents=True, exist_ok=True)
         with DOWNGRADE_LOG.open("a", encoding="utf-8") as f:
             for a in applied:
-                f.write(json.dumps({
-                    **a,
-                    "timestamp": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-                }, sort_keys=True) + "\n")
+                f.write(
+                    json.dumps(
+                        {
+                            **a,
+                            "timestamp": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+                        },
+                        sort_keys=True,
+                    )
+                    + "\n"
+                )
 
     return applied
 

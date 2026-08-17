@@ -15,16 +15,15 @@ Engine: bin/ssot/scene-card-intake-pipeline.py
 
 from __future__ import annotations
 
-import json
 import re
 import uuid
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone
+from dataclasses import dataclass, field
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 # ── Data types ──
+
 
 @dataclass
 class EnrichedContent:
@@ -51,8 +50,9 @@ class IntakeResult:
 
 # ── Helpers ──
 
+
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _new_id(prefix: str) -> str:
@@ -60,6 +60,7 @@ def _new_id(prefix: str) -> str:
 
 
 # ── Source extractors ──
+
 
 def _extract_email(raw: str) -> EnrichedContent:
     """Extract structured content from email text."""
@@ -180,7 +181,17 @@ def _extract_manual(raw: str) -> EnrichedContent:
 # ── Priority/deadline detection ──
 
 _PRIORITY_KEYWORDS = {
-    "P0": {"紧急", "urgent", "critical", "立即", "immediately", "asap", "事故", "故障", "危机"},
+    "P0": {
+        "紧急",
+        "urgent",
+        "critical",
+        "立即",
+        "immediately",
+        "asap",
+        "事故",
+        "故障",
+        "危机",
+    },
     "P1": {"重要", "important", "high", "高优先级", "今天", "today", "截止"},
     "P2": {"一般", "medium", "normal", "本周", "this week", "尽快"},
 }
@@ -215,6 +226,7 @@ def _detect_deadline(text: str) -> str | None:
 
 # ── Knowledge enrichment (lightweight) ──
 
+
 def _enrich_with_knowledge(content: EnrichedContent, kos_dir: Path | None = None) -> EnrichedContent:
     """Enrich content with knowledge from KOS index.
 
@@ -224,10 +236,38 @@ def _enrich_with_knowledge(content: EnrichedContent, kos_dir: Path | None = None
     text = f"{content.title} {content.description}".lower()
 
     knowledge_tags = {
-        "技术": ["deploy", "release", "bug", "fix", "pr", "merge", "代码", "部署", "上线"],
+        "技术": [
+            "deploy",
+            "release",
+            "bug",
+            "fix",
+            "pr",
+            "merge",
+            "代码",
+            "部署",
+            "上线",
+        ],
         "管理": ["meeting", "review", "plan", "report", "会议", "评审", "计划", "报告"],
-        "客户": ["customer", "client", "user", "feedback", "客户", "用户", "反馈", "投诉"],
-        "财务": ["invoice", "budget", "cost", "payment", "发票", "预算", "费用", "付款"],
+        "客户": [
+            "customer",
+            "client",
+            "user",
+            "feedback",
+            "客户",
+            "用户",
+            "反馈",
+            "投诉",
+        ],
+        "财务": [
+            "invoice",
+            "budget",
+            "cost",
+            "payment",
+            "发票",
+            "预算",
+            "费用",
+            "付款",
+        ],
         "人事": ["hire", "onboard", "leave", "请假", "招聘", "入职", "离职"],
     }
 

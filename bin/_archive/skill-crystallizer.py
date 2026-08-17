@@ -29,20 +29,20 @@ class SkillCrystallizer:
         self.beliefs_path = BELIEFS_PATH
         self.skills_dir = SKILLS_DIR
 
-    def _load_beliefs(self) -> List[Dict[str, Any]]:
+    def _load_beliefs(self) -> list[dict[str, Any]]:
         if not self.beliefs_path.exists():
             return []
         try:
-            with open(self.beliefs_path, "r", encoding="utf-8") as f:
+            with open(self.beliefs_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
                 return data.get("beliefs", [])
         except Exception:
             return []
 
-    def scan_and_crystallize(self) -> Dict[str, Any]:
+    def scan_and_crystallize(self) -> dict[str, Any]:
         """扫描踩坑记录并结晶 Skill"""
         beliefs = self._load_beliefs()
-        grouped: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+        grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
 
         for b in beliefs:
             topic = b.get("topic", "general")
@@ -63,7 +63,9 @@ class SkillCrystallizer:
                     content = self._generate_skill_md(topic, b_list)
                     with open(skill_file, "w", encoding="utf-8") as sf:
                         sf.write(content)
-                    crystallized_skills.append({"topic": topic, "count": len(b_list), "file": str(skill_file.relative_to(self.root))})
+                    crystallized_skills.append(
+                        {"topic": topic, "count": len(b_list), "file": str(skill_file.relative_to(self.root))}
+                    )
                 else:
                     skipped_topics.append({"topic": topic, "reason": "Skill 已存在", "count": len(b_list)})
             else:
@@ -77,28 +79,28 @@ class SkillCrystallizer:
             "skipped_topics": skipped_topics,
         }
 
-    def _generate_skill_md(self, topic: str, b_list: List[Dict[str, Any]]) -> str:
+    def _generate_skill_md(self, topic: str, b_list: list[dict[str, Any]]) -> str:
         lines = []
-        lines.append(f"---")
+        lines.append("---")
         lines.append(f"name: {topic}")
         lines.append(f"description: SEMA 自动结晶技能包 — 基于 {len(b_list)} 条 MOS 物理踩坑信念反向萃取")
-        lines.append(f"category: SEMA-Crystallized-Skill")
-        lines.append(f"---")
-        lines.append(f"")
+        lines.append("category: SEMA-Crystallized-Skill")
+        lines.append("---")
+        lines.append("")
         lines.append(f"# 🛡️ 技能包: {topic}")
-        lines.append(f"")
-        lines.append(f"> 本 Skill 由 SEMA (Self-Evolving Multi-Agent) 自动结晶引擎基于 Agent 踩坑经验生成。")
-        lines.append(f"")
-        lines.append(f"## 1. 💡 历史踩坑与避坑指南 (Lessons & Pitfalls)")
-        lines.append(f"")
+        lines.append("")
+        lines.append("> 本 Skill 由 SEMA (Self-Evolving Multi-Agent) 自动结晶引擎基于 Agent 踩坑经验生成。")
+        lines.append("")
+        lines.append("## 1. 💡 历史踩坑与避坑指南 (Lessons & Pitfalls)")
+        lines.append("")
         for idx, b in enumerate(b_list, 1):
             lines.append(f"### 踩坑纪录 #{idx}: {b.get('id', 'N/A')}")
             lines.append(f"* **信念陈述**: {b.get('belief_text', 'N/A')}")
             lines.append(f"* **常见坑点**: {b.get('pitfall', 'N/A')}")
             lines.append(f"* **推荐解法**: {b.get('solution', 'N/A')}")
-            lines.append(f"")
-        lines.append(f"## 2. ⚡️ 标准执行流程 (Standard Workflow)")
-        lines.append(f"1. 遵循 `make gac-local-gate` 42 Checks 100% ALL GREEN PASS 门禁。")
+            lines.append("")
+        lines.append("## 2. ⚡️ 标准执行流程 (Standard Workflow)")
+        lines.append("1. 遵循 `make gac-local-gate` 42 Checks 100% ALL GREEN PASS 门禁。")
         lines.append(f"2. 针对 `{topic}` 相关变更，强制走物理隔离工作区。")
         return "\n".join(lines)
 

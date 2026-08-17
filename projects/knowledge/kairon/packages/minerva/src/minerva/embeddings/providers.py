@@ -301,7 +301,7 @@ class LocalEmbeddingProvider(BaseEmbeddingProvider):
             ImportError: 未安装 sentence-transformers
         """
         try:
-            from sentence_transformers import SentenceTransformer  # noqa: F401
+            from sentence_transformers import SentenceTransformer
         except ImportError as e:
             raise ImportError(
                 "sentence-transformers is required for LocalEmbeddingProvider. "

@@ -11,6 +11,7 @@ Gates:
   D3 shared worktree claim-before-write
   D4 escape-hatch allowlist
 """
+
 from __future__ import annotations
 
 import fcntl
@@ -19,11 +20,11 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-UTC = timezone.utc
+UTC = UTC
 
 DEFAULT_REGISTRY = ".omo/_truth/registry/swarm-coordination.yaml"
 ADR_FILE_RE = re.compile(r"^\.omo/_knowledge/decisions/(\d{4})-.*\.md$")
@@ -44,11 +45,11 @@ def load_registry(root: Path) -> dict[str, Any]:
     if not path.is_file():
         return {"version": 0, "escape_hatch_exemptions": [], "delivery": {}}
     try:
-        import yaml  # noqa: PLC0415
+        import yaml
 
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         return data if isinstance(data, dict) else {}
-    except Exception:  # noqa: BLE001
+    except Exception:
         return {"version": 0, "escape_hatch_exemptions": [], "delivery": {}}
 
 
@@ -66,9 +67,7 @@ def emit_conflict_event(
     session: str = "",
 ) -> Path:
     """Append a structured conflict event for the 72h observation window."""
-    events = delivery_path(
-        root, "conflict_events", ".omo/_delivery/swarm-conflicts/events.jsonl"
-    )
+    events = delivery_path(root, "conflict_events", ".omo/_delivery/swarm-conflicts/events.jsonl")
     events.parent.mkdir(parents=True, exist_ok=True)
     rec = {
         "ts": _utc_iso(),
@@ -84,9 +83,7 @@ def emit_conflict_event(
 # ── D1 ADR atomic claim ──────────────────────────────────────────────
 
 
-def list_existing_adr_numbers(
-    decisions_dir: Path, *, include_remote: bool = True
-) -> set[int]:
+def list_existing_adr_numbers(decisions_dir: Path, *, include_remote: bool = True) -> set[int]:
     """ADRs on disk (+ optionally origin/main tree) so stale bases still see
     concurrently-merged ADRs and cannot double-allocate a number."""
     nums: set[int] = set()
@@ -231,9 +228,7 @@ def check_adr_write_authorized(
     # existing file on disk (edit) is allowed
     if (decisions / Path(rel_path).name).is_file():
         return True, "existing_adr_edit"
-    claims = load_adr_claims(
-        delivery_path(root, "adr_claims_dir", ".omo/_delivery/adr-claims")
-    )
+    claims = load_adr_claims(delivery_path(root, "adr_claims_dir", ".omo/_delivery/adr-claims"))
     holder = claims.get(number)
     if holder is None:
         emit_conflict_event(
@@ -242,7 +237,10 @@ def check_adr_write_authorized(
             {"number": number, "path": rel_path, "reason": "no_claim"},
             session=session or "",
         )
-        return False, f"ADR-{number:04d} write requires prior claim (next-adr-id --claim)"
+        return (
+            False,
+            f"ADR-{number:04d} write requires prior claim (next-adr-id --claim)",
+        )
     # D1 fail-closed: empty/missing session must NOT inherit a foreign claim
     sess = (session or "").strip()
     if not sess:
@@ -273,10 +271,7 @@ def check_adr_write_authorized(
             },
             session=sess,
         )
-        return False, (
-            f"ADR-{number:04d} claimed by session={holder.get('session')}, "
-            f"not {sess}"
-        )
+        return False, (f"ADR-{number:04d} claimed by session={holder.get('session')}, not {sess}")
     return True, "claim_ok"
 
 
@@ -321,27 +316,31 @@ def _shadow_mirror_claim(branch: str, session: str, *, release: bool = False) ->
             # 不翻转文件锁判定 (shadow 阶段文件锁说了算)
             existing = cs.active_claim("branch", branch)
             cs.emit_shadow_event(
-                "mirror_drift", "branch", branch,
-                {"holder": existing.owner if existing else "unknown",
-                 "session": session},
+                "mirror_drift",
+                "branch",
+                branch,
+                {
+                    "holder": existing.owner if existing else "unknown",
+                    "session": session,
+                },
             )
             if existing:
                 out["token"] = existing.token  # 复用既有 claim 的 token, 防误报 stale
         else:
             cs.emit_shadow_event("write_ok", "branch", branch, {"token": claim.token})
             out["token"] = claim.token
-    except Exception as exc:  # noqa: BLE001 — shadow 镜像永不反噬主流程
+    except Exception as exc:
         try:
             _here = str(Path(__file__).resolve().parent)
             if _here not in sys.path:
                 sys.path.insert(0, _here)
             import coordination_store as cs
+
             cs.emit_shadow_event("write_fail", "branch", branch, {"error": str(exc)})
         except Exception:
             pass
         print(
-            f"[swarm-shadow] mirror {'release' if release else 'claim'} failed "
-            f"for {branch}: {exc}",
+            f"[swarm-shadow] mirror {'release' if release else 'claim'} failed for {branch}: {exc}",
             file=sys.stderr,
         )
     return out
@@ -358,9 +357,7 @@ def acquire_branch_lock(
     branch = branch or f"work/{session}"
     if not BRANCH_RE.match(branch):
         return False, {"error": f"invalid branch name: {branch}"}
-    claims_dir = delivery_path(
-        root, "branch_claims_dir", ".omo/_delivery/branch-claims"
-    )
+    claims_dir = delivery_path(root, "branch_claims_dir", ".omo/_delivery/branch-claims")
     claims_dir.mkdir(parents=True, exist_ok=True)
     lock_path = claims_dir / ".lock"
     with lock_path.open("a+", encoding="utf-8") as lock_fh:
@@ -403,12 +400,8 @@ def acquire_branch_lock(
         }
 
 
-def check_branch_available(
-    root: Path, branch: str, session: str
-) -> tuple[bool, str]:
-    claims = load_branch_claims(
-        delivery_path(root, "branch_claims_dir", ".omo/_delivery/branch-claims")
-    )
+def check_branch_available(root: Path, branch: str, session: str) -> tuple[bool, str]:
+    claims = load_branch_claims(delivery_path(root, "branch_claims_dir", ".omo/_delivery/branch-claims"))
     holder = claims.get(branch)
     if holder is None:
         return True, "free"
@@ -417,18 +410,14 @@ def check_branch_available(
     return False, f"occupied by {holder.get('session')}"
 
 
-def release_branch_lock(
-    root: Path, session: str, purge_orphans: bool = False
-) -> bool:
+def release_branch_lock(root: Path, session: str, purge_orphans: bool = False) -> bool:
     """释放 session 的 branch claim.
 
     B3 (ADR-0367): purge_orphans=True 时顺带清理孤儿 claim —
     分支已不存在 (本地/远端 refs 均无) 的 claim 文件直接删除,
     防止 session 异常退出后 claim 永久残留 (G-CONV.7 D2).
     """
-    claims_dir = delivery_path(
-        root, "branch_claims_dir", ".omo/_delivery/branch-claims"
-    )
+    claims_dir = delivery_path(root, "branch_claims_dir", ".omo/_delivery/branch-claims")
     path = claims_dir / f"{session}.json"
     if path.is_file():
         try:
@@ -455,9 +444,19 @@ def _branch_exists_locally(root: Path, branch: str) -> bool:
     """branch 是否仍存在于本地或远端 refs (for-each-ref, 无网络调用)."""
     try:
         r = subprocess.run(
-            ["git", "-C", str(root), "for-each-ref", "--format=%(refname:short)",
-             "refs/heads", "refs/remotes"],
-            capture_output=True, text=True, check=False, timeout=10,
+            [
+                "git",
+                "-C",
+                str(root),
+                "for-each-ref",
+                "--format=%(refname:short)",
+                "refs/heads",
+                "refs/remotes",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=10,
         )
         refs = set(r.stdout.splitlines())
     except Exception:
@@ -470,15 +469,31 @@ def _branch_has_open_pr(root: Path, branch: str) -> bool:
     try:
         repo = subprocess.run(
             ["git", "-C", str(root), "config", "--get", "remote.origin.url"],
-            capture_output=True, text=True, check=False,
+            capture_output=True,
+            text=True,
+            check=False,
         ).stdout.strip()
         repo = re.sub(r".*github.com[:/]", "", repo).replace(".git", "").strip()
         if not repo:
             return False
         r = subprocess.run(
-            ["gh", "pr", "list", "--repo", repo, "--head", branch,
-             "--state", "open", "--json", "number"],
-            capture_output=True, text=True, check=False, timeout=15,
+            [
+                "gh",
+                "pr",
+                "list",
+                "--repo",
+                repo,
+                "--head",
+                branch,
+                "--state",
+                "open",
+                "--json",
+                "number",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=15,
         )
         out = r.stdout.strip()
         return bool(out and out != "[]")
@@ -486,9 +501,7 @@ def _branch_has_open_pr(root: Path, branch: str) -> bool:
         return False
 
 
-def claim_gc(
-    root: Path, ttl_hours: int = 168, dry_run: bool = False
-) -> dict[str, Any]:
+def claim_gc(root: Path, ttl_hours: int = 168, dry_run: bool = False) -> dict[str, Any]:
     """GC 过期 claim 文件 (branch-claims + agent-claims + adr-claims).
 
     D1 (2026-08-04): claim 有 acquire/release 但无 auto-expire, 长期累积垃圾
@@ -509,15 +522,21 @@ def claim_gc(
     result: dict[str, Any] = {"reclaimed": [], "skipped": [], "errors": []}
 
     claim_sources = [
-        ("branch-claims",
-         delivery_path(root, "branch_claims_dir", ".omo/_delivery/branch-claims"),
-         ".json"),
-        ("agent-claims",
-         delivery_path(root, "agent_claims_dir", ".omo/_delivery/agent-claims"),
-         ".yaml"),
-        ("adr-claims",
-         delivery_path(root, "adr_claims_dir", ".omo/_delivery/adr-claims"),
-         ".json"),
+        (
+            "branch-claims",
+            delivery_path(root, "branch_claims_dir", ".omo/_delivery/branch-claims"),
+            ".json",
+        ),
+        (
+            "agent-claims",
+            delivery_path(root, "agent_claims_dir", ".omo/_delivery/agent-claims"),
+            ".yaml",
+        ),
+        (
+            "adr-claims",
+            delivery_path(root, "adr_claims_dir", ".omo/_delivery/adr-claims"),
+            ".json",
+        ),
     ]
 
     for kind, claims_dir, ext in claim_sources:
@@ -548,18 +567,14 @@ def claim_gc(
                     result["skipped"].append(f"{label}: 无时间戳")
                     continue
                 try:
-                    ts = datetime.fromisoformat(
-                        ts_field.replace("Z", "+00:00")
-                    ).timestamp()
+                    ts = datetime.fromisoformat(ts_field.replace("Z", "+00:00")).timestamp()
                 except (ValueError, TypeError):
                     result["skipped"].append(f"{label}: 时间戳无法解析 ({ts_field})")
                     continue
 
                 age_seconds = now - ts
                 if age_seconds < ttl_seconds:
-                    result["skipped"].append(
-                        f"{label}: 未过期 ({int(age_seconds / 3600)}h)"
-                    )
+                    result["skipped"].append(f"{label}: 未过期 ({int(age_seconds / 3600)}h)")
                     continue
 
                 age_hours = int(age_seconds / 3600)
@@ -608,10 +623,10 @@ def active_workflow_claimed_paths(root: Path) -> list[str]:
     paths: list[str] = []
     for path in sorted(runs_dir.glob("*.yaml"), reverse=True)[:40]:
         try:
-            import yaml  # noqa: PLC0415
+            import yaml
 
             data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        except Exception:  # noqa: BLE001
+        except Exception:
             continue
         if not isinstance(data, dict):
             continue
@@ -644,7 +659,7 @@ def path_covered_by_claim(claimed: list[str], changed: str) -> bool:
 
 
 def path_matches_allow_globs(path: str, globs: list[str]) -> bool:
-    import fnmatch  # noqa: PLC0415
+    import fnmatch
 
     path = path.replace("\\", "/").lstrip("./")
     for g in globs:
@@ -684,16 +699,12 @@ def check_shared_worktree_writes(
             continue
         # D1 ADR special case
         if ADR_FILE_RE.match(rel):
-            ok, reason = check_adr_write_authorized(
-                root, rel, os.environ.get("AGENT_WORKFLOW_SESSION") or ""
-            )
+            ok, reason = check_adr_write_authorized(root, rel, os.environ.get("AGENT_WORKFLOW_SESSION") or "")
             if ok:
                 continue
             violations.append(f"{rel}: {reason}")
             continue
-        violations.append(
-            f"{rel}: unclaimed write on shared worktree (branch={branch or 'unknown'})"
-        )
+        violations.append(f"{rel}: unclaimed write on shared worktree (branch={branch or 'unknown'})")
     if violations:
         emit_conflict_event(
             root,
@@ -737,9 +748,7 @@ def check_escape_hatch(
         allow = [str(a).lower().replace("-", "_") for a in (item.get("allow") or [])]
         if flag in allow:
             # record legitimate use
-            log_dir = delivery_path(
-                root, "escape_log_dir", ".omo/_delivery/swarm-escape"
-            )
+            log_dir = delivery_path(root, "escape_log_dir", ".omo/_delivery/swarm-escape")
             log_dir.mkdir(parents=True, exist_ok=True)
             rec = {
                 "ts": _utc_iso(),
@@ -814,9 +823,7 @@ def check_git_argv_escape(
 
 
 def start_conflict_window(root: Path) -> dict[str, Any]:
-    path = delivery_path(
-        root, "conflict_window", ".omo/_delivery/swarm-conflicts/window.json"
-    )
+    path = delivery_path(root, "conflict_window", ".omo/_delivery/swarm-conflicts/window.json")
     path.parent.mkdir(parents=True, exist_ok=True)
     reg = load_registry(root)
     hours = int((reg.get("observation") or {}).get("window_hours") or 72)
@@ -834,9 +841,7 @@ def start_conflict_window(root: Path) -> dict[str, Any]:
 
 
 def read_conflict_events(root: Path, since_iso: str | None = None) -> list[dict]:
-    events_path = delivery_path(
-        root, "conflict_events", ".omo/_delivery/swarm-conflicts/events.jsonl"
-    )
+    events_path = delivery_path(root, "conflict_events", ".omo/_delivery/swarm-conflicts/events.jsonl")
     if not events_path.is_file():
         return []
     since = None
@@ -905,10 +910,7 @@ def scan_orphan_commits(
             return ""
 
     # (1) unpushed on local main
-    unpushed = _git(
-        ["log", "origin/main..main", "--first-parent", "--no-merges", "--format=%H\t%s"]
-        + since_arg
-    )
+    unpushed = _git(["log", "origin/main..main", "--first-parent", "--no-merges", "--format=%H\t%s"] + since_arg)
     for line in unpushed.splitlines():
         if not line.strip() or "\t" not in line:
             continue
@@ -979,9 +981,7 @@ def conflict_window_status(
     scan_orphans: bool = True,
     emit_orphans: bool = False,
 ) -> dict[str, Any]:
-    path = delivery_path(
-        root, "conflict_window", ".omo/_delivery/swarm-conflicts/window.json"
-    )
+    path = delivery_path(root, "conflict_window", ".omo/_delivery/swarm-conflicts/window.json")
     if not path.is_file():
         return {
             "window_start": None,
@@ -1034,7 +1034,12 @@ def conflict_window_status(
 def main_probe() -> int:
     """Minimal self-check when executed as script."""
     root = Path(__file__).resolve().parents[2]
-    print(json.dumps({"root": str(root), "registry": load_registry(root).get("version")}, indent=2))
+    print(
+        json.dumps(
+            {"root": str(root), "registry": load_registry(root).get("version")},
+            indent=2,
+        )
+    )
     return 0
 
 

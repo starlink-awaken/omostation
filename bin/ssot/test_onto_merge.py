@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from onto_merge import build_merges, existing_children, preview, apply_merges
+from onto_merge import apply_merges, build_merges, preview
 
 
 def test_build_merges_skips_existing():
@@ -17,8 +17,12 @@ def test_build_merges_skips_existing():
 def test_merge_has_m3_parent():
     merges = build_merges(set())
     for m in merges:
-        assert m["parent"] in ("DescriptiveElement", "BehavioralElement",
-                               "GovernanceElement", "StructuralElement")
+        assert m["parent"] in (
+            "DescriptiveElement",
+            "BehavioralElement",
+            "GovernanceElement",
+            "StructuralElement",
+        )
 
 
 def test_preview_lists_count():

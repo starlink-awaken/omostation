@@ -31,7 +31,7 @@ def main() -> int:
     scope = match.group(1).strip()
 
     # 无效范围检查
-    invalid_scopes = {"", ".", "./", "src", "projects", ".", "..."}
+    invalid_scopes = {"", ".", "./", "src", "projects", "..."}
     if scope in invalid_scopes:
         print(f"FAIL ruff scope 为无界值 '{scope}', 可能包含全仓")
         return 1

@@ -3,6 +3,7 @@
 验证 D2 卡评估通过协作管线 (3角色 orchestrator→implementer→verifier) 执行,
 非单 agent 直做. workorder C2: ≥8 任务协作完成.
 """
+
 from __future__ import annotations
 
 import sys
@@ -11,9 +12,9 @@ from pathlib import Path
 _DELIVERY = Path(__file__).resolve().parent.parent / "bin" / "delivery"
 sys.path.insert(0, str(_DELIVERY))
 
-from collab_round3_d2 import (  # noqa: E402
-    run_d2_triage_via_collab,
+from collab_round3_d2 import (
     run_d2_batch_via_collab,
+    run_d2_triage_via_collab,
 )
 
 

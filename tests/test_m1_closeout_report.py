@@ -1,9 +1,11 @@
 """M1 closeout report — T+72 / adversarial / rootcause rejudge (ADR-0210/0220/0222/0224)."""
+
 from __future__ import annotations
 
 import importlib.util
 import json
 import textwrap
+from datetime import UTC
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -56,12 +58,8 @@ def _seed_minimal_green(tmp_path: Path, *, with_window: bool = True) -> None:
     )
     (tmp_path / "bin/gac/kos-seed-import.py").write_text("# kos seed\n", encoding="utf-8")
     (tmp_path / "bin/ssot/write-owner-repair-draft.py").write_text("# repair\n", encoding="utf-8")
-    (tmp_path / ".omo/_truth/registry/write-owners.yaml").write_text(
-        "version: 1\nowners: {}\n", encoding="utf-8"
-    )
-    (tmp_path / ".pre-commit-config.yaml").write_text(
-        "repos: []\n# write-owner-audit\n", encoding="utf-8"
-    )
+    (tmp_path / ".omo/_truth/registry/write-owners.yaml").write_text("version: 1\nowners: {}\n", encoding="utf-8")
+    (tmp_path / ".pre-commit-config.yaml").write_text("repos: []\n# write-owner-audit\n", encoding="utf-8")
     (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
         textwrap.dedent(
             """
@@ -104,9 +102,7 @@ def _seed_minimal_green(tmp_path: Path, *, with_window: bool = True) -> None:
     )
 
     if with_window:
-        m = importlib.util.spec_from_file_location(
-            "sd", tmp_path / "bin/gac/swarm_discipline.py"
-        )
+        m = importlib.util.spec_from_file_location("sd", tmp_path / "bin/gac/swarm_discipline.py")
         mod = importlib.util.module_from_spec(m)  # type: ignore[arg-type]
         assert m and m.loader
         m.loader.exec_module(mod)
@@ -150,14 +146,11 @@ def test_pass_only_after_72h_and_zero_conflicts(tmp_path: Path):
     # backdate window start by 73h
     from datetime import datetime, timedelta, timezone
 
-    start = datetime.now(timezone.utc) - timedelta(hours=73)
+    start = datetime.now(UTC) - timedelta(hours=73)
     win = {
         "window_start": start.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "window_hours": 72,
-        "window_end_target": (start + timedelta(hours=72))
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z"),
+        "window_end_target": (start + timedelta(hours=72)).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "gate": "g-conv.7",
         "adr": "0220",
     }
@@ -181,7 +174,11 @@ def test_adversarial_path_pass_before_72h(tmp_path: Path):
     adv = {
         "m1_adversarial_verdict": "pass",
         "generated_at": "2026-07-18T10:00:00Z",
-        "summary": {"all_blocked": True, "passed": ["D1", "D2", "D3", "D4"], "failed": []},
+        "summary": {
+            "all_blocked": True,
+            "passed": ["D1", "D2", "D3", "D4"],
+            "failed": [],
+        },
         "gates": [
             {"gate": "D1", "blocked": True},
             {"gate": "D2", "blocked": True},
@@ -192,9 +189,7 @@ def test_adversarial_path_pass_before_72h(tmp_path: Path):
     adv_path = tmp_path / ".omo/_delivery/m1-adversarial/latest.json"
     adv_path.parent.mkdir(parents=True, exist_ok=True)
     adv_path.write_text(json.dumps(adv) + "\n", encoding="utf-8")
-    report = mod.build_report(
-        tmp_path, scan_orphans=False, adversarial_evidence=adv_path
-    )
+    report = mod.build_report(tmp_path, scan_orphans=False, adversarial_evidence=adv_path)
     assert report["m1_verdict"] == "pass"
     assert report["phase2_recommend"] is True
     assert report["evidence_path"] == "adversarial"
@@ -215,9 +210,7 @@ def test_adversarial_missing_gate_keeps_window_open(tmp_path: Path):
     }
     adv_path = tmp_path / "adv.json"
     adv_path.write_text(json.dumps(adv), encoding="utf-8")
-    report = mod.build_report(
-        tmp_path, scan_orphans=False, adversarial_evidence=adv_path
-    )
+    report = mod.build_report(tmp_path, scan_orphans=False, adversarial_evidence=adv_path)
     assert report["m1_verdict"] == "window_open"
     assert report["phase2_recommend"] is False
     assert report.get("evidence_path") is None
@@ -228,14 +221,12 @@ def test_fail_when_conflicts_after_window(tmp_path: Path):
     mod = _load()
     from datetime import datetime, timedelta, timezone
 
-    start = datetime.now(timezone.utc) - timedelta(hours=73)
+    start = datetime.now(UTC) - timedelta(hours=73)
     win = {
         "window_start": start.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "window_hours": 72,
     }
-    (tmp_path / ".omo/_delivery/swarm-conflicts/window.json").write_text(
-        json.dumps(win) + "\n", encoding="utf-8"
-    )
+    (tmp_path / ".omo/_delivery/swarm-conflicts/window.json").write_text(json.dumps(win) + "\n", encoding="utf-8")
     # inject conflict via swarm helper
     import importlib.util as iu
 
@@ -255,13 +246,11 @@ def test_hard_fail_ratio_blocks_pass(tmp_path: Path):
     _seed_minimal_green(tmp_path, with_window=True)
     from datetime import datetime, timedelta, timezone
 
-    start = datetime.now(timezone.utc) - timedelta(hours=73)
+    start = datetime.now(UTC) - timedelta(hours=73)
     (tmp_path / ".omo/_delivery/swarm-conflicts/window.json").write_text(
         json.dumps(
             {
-                "window_start": start.replace(microsecond=0)
-                .isoformat()
-                .replace("+00:00", "Z"),
+                "window_start": start.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
                 "window_hours": 72,
             }
         )
@@ -269,8 +258,7 @@ def test_hard_fail_ratio_blocks_pass(tmp_path: Path):
         encoding="utf-8",
     )
     (tmp_path / ".omo/state/system.yaml").write_text(
-        "health_score: 70\nhealth_score_source: compass_radar_composite_isc3\n"
-        "service_online_ratio: 0.5\n",
+        "health_score: 70\nhealth_score_source: compass_radar_composite_isc3\nservice_online_ratio: 0.5\n",
         encoding="utf-8",
     )
     mod = _load()
@@ -320,7 +308,11 @@ def _four_gate_adv() -> dict:
     return {
         "m1_adversarial_verdict": "pass",
         "generated_at": "2026-07-18T10:00:00Z",
-        "summary": {"all_blocked": True, "passed": ["D1", "D2", "D3", "D4"], "failed": []},
+        "summary": {
+            "all_blocked": True,
+            "passed": ["D1", "D2", "D3", "D4"],
+            "failed": [],
+        },
         "gates": [
             {"gate": "D1", "blocked": True},
             {"gate": "D2", "blocked": True},
@@ -348,9 +340,7 @@ def test_adversarial_with_conflicts_without_rootcause_fails(tmp_path: Path):
     adv_path = tmp_path / ".omo/_delivery/m1-adversarial/latest.json"
     adv_path.parent.mkdir(parents=True, exist_ok=True)
     adv_path.write_text(json.dumps(_four_gate_adv()) + "\n", encoding="utf-8")
-    report = mod.build_report(
-        tmp_path, scan_orphans=False, adversarial_evidence=adv_path
-    )
+    report = mod.build_report(tmp_path, scan_orphans=False, adversarial_evidence=adv_path)
     assert report["window"]["conflict_count"] >= 1
     assert report["adversarial"]["all_blocked"] is True
     assert report["m1_verdict"] == "fail"
@@ -431,8 +421,7 @@ def test_ssot_root_splits_live_window_from_code(tmp_path: Path):
     (live / ".omo/state").mkdir(parents=True)
     (live / ".omo/_delivery/swarm-conflicts").mkdir(parents=True)
     (live / ".omo/state/system.yaml").write_text(
-        "health_score: 70\nhealth_score_source: compass_radar_composite_isc3\n"
-        "service_online_ratio: 1.0\n",
+        "health_score: 70\nhealth_score_source: compass_radar_composite_isc3\nservice_online_ratio: 1.0\n",
         encoding="utf-8",
     )
     (live / ".omo/state/health.yaml").write_text(

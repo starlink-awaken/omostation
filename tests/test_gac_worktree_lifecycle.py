@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 CLAIM_SCRIPT = ROOT / "bin" / "gac" / "gac-worktree.sh"
 CLEANUP_SCRIPT = ROOT / "bin" / "gac" / "gac-worktree-cleanup.sh"
@@ -27,7 +26,7 @@ def test_cleanup_skips_worktree_during_claim_initialization() -> None:
     marker_check = 'if [ -f "$claim_in_progress" ]; then'
     removal = 'git worktree remove "$wt_path"'
 
-    assert 'session=${wt_name#ws-}' in source
+    assert "session=${wt_name#ws-}" in source
     assert marker_check in source
     assert source.index(marker_check) < source.index(removal)
     assert "claim 初始化进行中, 跳过" in source

@@ -18,6 +18,7 @@ Scope: limited to the three primary meta-decl locks referenced in
 the P85 spec (drift, doc-claims, layer-call-direction). The full
 49-check survey is a Q4 (G4.2) deliverable.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -33,16 +34,7 @@ import yaml
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 SGF_POLICY_YAML = (
-    WORKSPACE
-    / "projects"
-    / "ecos"
-    / "src"
-    / "ecos"
-    / "ssot"
-    / "mof"
-    / "m1"
-    / "governance"
-    / "sgf-policy.yaml"
+    WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
 )
 PRIMARY_LOCKS = {"gac-drift", "doc-claims-check", "layer-call-direction-check"}
 CACHE_TTL = 3600  # 1 hour
@@ -59,10 +51,14 @@ def _resolve_command(gate: dict) -> list[str] | None:
     cmd = gate.get("command") or []
     if not cmd:
         return None
-    return [WORKSPACE / c if not os.path.isabs(c) and not c.startswith("-") else c
-            if not os.path.isabs(c) and c[0] != "-"
-            else c
-            for c in cmd]
+    return [
+        WORKSPACE / c
+        if not os.path.isabs(c) and not c.startswith("-")
+        else c
+        if not os.path.isabs(c) and c[0] != "-"
+        else c
+        for c in cmd
+    ]
 
 
 def _run_check(command: list[str]) -> int:
@@ -104,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
         "--full",
         action="store_true",
         help="Run each check subprocess to compare exit code against "
-             "declared severity (slow; uses cache). Default: static validation only.",
+        "declared severity (slow; uses cache). Default: static validation only.",
     )
     parser.add_argument(
         "--ttl",
@@ -134,21 +130,25 @@ def main(argv: list[str] | None = None) -> int:
     for lock_id in sorted(PRIMARY_LOCKS):
         gate = gates_by_id.get(lock_id)
         if gate is None:
-            findings.append({
-                "id": lock_id,
-                "kind": "missing",
-                "message": f"primary lock {lock_id!r} not declared in sgf-policy.yaml",
-            })
+            findings.append(
+                {
+                    "id": lock_id,
+                    "kind": "missing",
+                    "message": f"primary lock {lock_id!r} not declared in sgf-policy.yaml",
+                }
+            )
             summary["mismatched"] += 1
             continue
 
         cmd = _resolve_command(gate)
         if not cmd:
-            findings.append({
-                "id": lock_id,
-                "kind": "no_command",
-                "message": f"primary lock {lock_id!r} has no command",
-            })
+            findings.append(
+                {
+                    "id": lock_id,
+                    "kind": "no_command",
+                    "message": f"primary lock {lock_id!r} has no command",
+                }
+            )
             summary["mismatched"] += 1
             continue
 
@@ -159,12 +159,14 @@ def main(argv: list[str] | None = None) -> int:
             # Static validation: just verify severity is a known label
             # and the command file exists. No subprocess calls.
             if declared not in ("informational", "warn", "blocking"):
-                findings.append({
-                    "id": lock_id,
-                    "kind": "unknown_severity",
-                    "declared": declared,
-                    "message": f"unknown severity label {declared!r}",
-                })
+                findings.append(
+                    {
+                        "id": lock_id,
+                        "kind": "unknown_severity",
+                        "declared": declared,
+                        "message": f"unknown severity label {declared!r}",
+                    }
+                )
                 summary["mismatched"] += 1
             else:
                 summary["passed"] += 1
@@ -183,23 +185,27 @@ def main(argv: list[str] | None = None) -> int:
             continue
         bucket_order = {"informational": 0, "warn": 1, "blocking": 2}
         if observed not in bucket_order or declared not in bucket_order:
-            findings.append({
-                "id": lock_id,
-                "kind": "unknown_severity",
-                "declared": declared,
-                "observed": observed,
-                "message": f"declared={declared!r} observed={observed!r}",
-            })
+            findings.append(
+                {
+                    "id": lock_id,
+                    "kind": "unknown_severity",
+                    "declared": declared,
+                    "observed": observed,
+                    "message": f"declared={declared!r} observed={observed!r}",
+                }
+            )
             summary["mismatched"] += 1
             continue
         if bucket_order[declared] != bucket_order[observed]:
-            findings.append({
-                "id": lock_id,
-                "kind": "decl_exec_gap",
-                "declared": declared,
-                "observed": observed,
-                "message": f"severity drift: declared {declared!r} but exit code suggests {observed!r}",
-            })
+            findings.append(
+                {
+                    "id": lock_id,
+                    "kind": "decl_exec_gap",
+                    "declared": declared,
+                    "observed": observed,
+                    "message": f"severity drift: declared {declared!r} but exit code suggests {observed!r}",
+                }
+            )
             summary["mismatched"] += 1
         else:
             summary["passed"] += 1
@@ -225,7 +231,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"check-severity-registry: {'PASS' if ok else 'FAIL'} ({report['mode']})")
         print(f"  checked={summary['checked']} passed={summary['passed']} mismatched={summary['mismatched']}")
         for f in findings:
-            print(f"  - {f['id']}: {f.get('kind', '?')} declared={f.get('declared','-')}")
+            print(f"  - {f['id']}: {f.get('kind', '?')} declared={f.get('declared', '-')}")
             print(f"    {f.get('message', '')}")
     return 0 if ok else 1
 

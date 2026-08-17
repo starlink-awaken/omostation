@@ -1,4 +1,5 @@
 """Batch1 B1/B3/C1/C3 — drive real role_framework, registry, failover, memory."""
+
 from __future__ import annotations
 
 import importlib.util

@@ -33,15 +33,9 @@ OMO_SRC = CODE_ROOT / "projects" / "omo" / "src"
 
 def _configure_runtime_workspace(configured: str | Path | None) -> Path:
     """Bind runtime reads/writes to one explicit workspace, separate from code root."""
-    configured_value = (
-        configured
-        if configured is not None
-        else os.environ.get("WORKSPACE_ROOT", str(CODE_ROOT))
-    )
+    configured_value = configured if configured is not None else os.environ.get("WORKSPACE_ROOT", str(CODE_ROOT))
     expanded = os.path.expanduser(os.fspath(configured_value))
-    if not os.path.isabs(expanded) or any(
-        component in {".", ".."} for component in expanded.split(os.sep)
-    ):
+    if not os.path.isabs(expanded) or any(component in {".", ".."} for component in expanded.split(os.sep)):
         raise ValueError(f"runtime workspace path must be canonical: {expanded}")
     absolute_raw = Path(expanded)
     if any(part.is_symlink() for part in (absolute_raw, *absolute_raw.parents)):
@@ -51,9 +45,7 @@ def _configure_runtime_workspace(configured: str | Path | None) -> Path:
     except (FileNotFoundError, OSError) as exc:
         raise ValueError(f"runtime workspace is unavailable: {absolute_raw}") from exc
     if not workspace.is_dir() or not (workspace / ".omo").is_dir():
-        raise ValueError(
-            f"runtime workspace must contain a .omo directory: {workspace}"
-        )
+        raise ValueError(f"runtime workspace must contain a .omo directory: {workspace}")
     os.environ["WORKSPACE_CODE_ROOT"] = str(CODE_ROOT)
     os.environ["WORKSPACE_ROOT"] = str(workspace)
     return workspace
@@ -106,7 +98,7 @@ def _coordination_heartbeat(result: dict[str, Any]) -> None:
                     "runtime_attestation": runtime_attestation,
                 },
             )
-    except Exception as exc:  # noqa: BLE001 — shadow 镜像不反噬主流程
+    except Exception as exc:
         print(f"[tick-coordination] heartbeat mirror failed: {exc}", file=sys.stderr)
 
 
@@ -170,24 +162,35 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.once:
         result = run_once()
-        print(json.dumps({
-            "mode": "once",
-            "agent_count": result.get("agent_count"),
-            "ok_count": result.get("ok_count"),
-            "failed_count": result.get("failed_count"),
-            "results": result.get("results"),
-        }, ensure_ascii=False, indent=2, sort_keys=True))
+        print(
+            json.dumps(
+                {
+                    "mode": "once",
+                    "agent_count": result.get("agent_count"),
+                    "ok_count": result.get("ok_count"),
+                    "failed_count": result.get("failed_count"),
+                    "results": result.get("results"),
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+        )
         return 0
 
-    print(f"Agent Tick Daemon running (interval={args.interval}s, "
-          f"max_ticks={args.max_ticks or '∞'}). Ctrl+C to stop.", flush=True)
+    print(
+        f"Agent Tick Daemon running (interval={args.interval}s, max_ticks={args.max_ticks or '∞'}). Ctrl+C to stop.",
+        flush=True,
+    )
     ticks = 0
     try:
         while True:
             ticks += 1
             result = run_once()
-            print(f"  [{ticks}] tick: {result.get('ok_count')}/{result.get('agent_count')} ok",
-                  flush=True)
+            print(
+                f"  [{ticks}] tick: {result.get('ok_count')}/{result.get('agent_count')} ok",
+                flush=True,
+            )
             if args.max_ticks and ticks >= args.max_ticks:
                 print(f"Reached max_ticks={args.max_ticks}. Stopping.")
                 break

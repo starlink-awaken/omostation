@@ -111,9 +111,7 @@ def _validate_catalog(catalog: dict[str, Any]) -> list[dict[str, Any]]:
     return [resource for resource in resources if isinstance(resource, dict)]
 
 
-def _catalog_freshness(
-    catalog: dict[str, Any], *, now: datetime | None = None
-) -> dict[str, Any]:
+def _catalog_freshness(catalog: dict[str, Any], *, now: datetime | None = None) -> dict[str, Any]:
     """Classify the catalog snapshot itself, separately from provider health."""
     observed_at = _text(catalog.get("observed_at"))
     raw_ttl = catalog.get("catalog_ttl_seconds", DEFAULT_CATALOG_TTL_SECONDS)
@@ -195,9 +193,7 @@ def _scene_card_check(scene_card: dict[str, Any]) -> dict[str, Any]:
     required_capabilities = scene_card.get("required_capabilities")
     if required_capabilities is None:
         required_capabilities = scene_card.get("capability_refs", [])
-    required_capabilities = _refs(
-        required_capabilities, "scene_card.required_capabilities"
-    )
+    required_capabilities = _refs(required_capabilities, "scene_card.required_capabilities")
     if not required_capabilities:
         missing.append("required_capabilities")
     if scene_card.get("activation") not in {None, "forbidden"}:
@@ -214,45 +210,25 @@ def _scene_card_check(scene_card: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _capability_checks(
-    required_capabilities: list[str], resources: list[dict[str, Any]]
-) -> list[dict[str, Any]]:
+def _capability_checks(required_capabilities: list[str], resources: list[dict[str, Any]]) -> list[dict[str, Any]]:
     checks: list[dict[str, Any]] = []
     for capability in required_capabilities:
-        matches = [
-            resource
-            for resource in resources
-            if capability in resource.get("capabilities", [])
-        ]
+        matches = [resource for resource in resources if capability in resource.get("capabilities", [])]
         safe_matches = [
             {
                 "resource_id": str(resource.get("id", "")),
                 "availability": str(resource.get("availability", "unavailable")),
                 "lifecycle": str(resource.get("lifecycle", "unknown")),
-                "reason_codes": sorted(
-                    str(reason) for reason in resource.get("reason_codes", [])
-                ),
+                "reason_codes": sorted(str(reason) for reason in resource.get("reason_codes", [])),
             }
             for resource in matches
         ]
-        executable = [
-            item
-            for item in safe_matches
-            if item["availability"] in {"available", "degraded"}
-        ]
-        proposal = [
-            item for item in safe_matches if item["availability"] == "proposal_only"
-        ]
+        executable = [item for item in safe_matches if item["availability"] in {"available", "degraded"}]
+        proposal = [item for item in safe_matches if item["availability"] == "proposal_only"]
         checks.append(
             {
                 "capability": capability,
-                "status": (
-                    "available"
-                    if executable
-                    else "proposal_only"
-                    if proposal
-                    else "unavailable"
-                ),
+                "status": ("available" if executable else "proposal_only" if proposal else "unavailable"),
                 "candidates": safe_matches,
             }
         )
@@ -269,17 +245,13 @@ def build_preflight(
     resources = _validate_catalog(catalog)
     catalog_freshness = _catalog_freshness(catalog, now=now)
     scene_check = _scene_card_check(scene_card)
-    capability_checks = _capability_checks(
-        scene_check["required_capabilities"], resources
-    )
+    capability_checks = _capability_checks(scene_check["required_capabilities"], resources)
     missing = list(scene_check["missing_fields"])
     if any(check["status"] == "unavailable" for check in capability_checks):
         missing.append("catalog_capability_availability")
     if catalog_freshness["status"] != "fresh":
         missing.append("catalog_freshness")
-    proposal_only = any(
-        check["status"] == "proposal_only" for check in capability_checks
-    )
+    proposal_only = any(check["status"] == "proposal_only" for check in capability_checks)
     if missing:
         status = "blocked"
         next_action = "complete_scene_card_and_refresh_catalog"

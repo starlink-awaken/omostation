@@ -10,7 +10,7 @@ Usage:
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 try:
@@ -25,7 +25,7 @@ DEFAULT_OUTPUT = WORKSPACE / ".omo/state/runtime/predictive-governance.json"
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _load_registry(registry_path: Path) -> dict:
@@ -96,43 +96,53 @@ def _generate_recommendations(predictions: dict, registry: dict) -> list[dict]:
     current = predictions.get("current", 0.0)
 
     if trend == "declining" and current < 0.7:
-        recs.append({
-            "action": "review_recent_changes",
-            "priority": "P0",
-            "reason": f"gate pass rate declining (current={current:.1%}, slope={slope:.4f})",
-            "confidence": 0.85,
-        })
+        recs.append(
+            {
+                "action": "review_recent_changes",
+                "priority": "P0",
+                "reason": f"gate pass rate declining (current={current:.1%}, slope={slope:.4f})",
+                "confidence": 0.85,
+            }
+        )
     elif trend == "declining":
-        recs.append({
-            "action": "review_recent_changes",
-            "priority": "P1",
-            "reason": f"gate pass rate declining (current={current:.1%})",
-            "confidence": 0.7,
-        })
+        recs.append(
+            {
+                "action": "review_recent_changes",
+                "priority": "P1",
+                "reason": f"gate pass rate declining (current={current:.1%})",
+                "confidence": 0.7,
+            }
+        )
     elif trend == "improving":
-        recs.append({
-            "action": "maintain_current_practices",
-            "priority": "P3",
-            "reason": "governance metrics improving",
-            "confidence": 0.8,
-        })
+        recs.append(
+            {
+                "action": "maintain_current_practices",
+                "priority": "P3",
+                "reason": "governance metrics improving",
+                "confidence": 0.8,
+            }
+        )
     else:
-        recs.append({
-            "action": "maintain_current_practices",
-            "priority": "P3",
-            "reason": "governance metrics stable",
-            "confidence": 0.6,
-        })
+        recs.append(
+            {
+                "action": "maintain_current_practices",
+                "priority": "P3",
+                "reason": "governance metrics stable",
+                "confidence": 0.6,
+            }
+        )
 
     for rule in rec_rules:
         trigger = rule.get("trigger", "")
         if trigger == "check_duration_increasing" and slope > 0.01:
-            recs.append({
-                "action": rule.get("action", ""),
-                "priority": rule.get("priority", "P2"),
-                "reason": rule.get("template", "").format(value=f"{slope * 1000:.1f}ms/day"),
-                "confidence": 0.7,
-            })
+            recs.append(
+                {
+                    "action": rule.get("action", ""),
+                    "priority": rule.get("priority", "P2"),
+                    "reason": rule.get("template", "").format(value=f"{slope * 1000:.1f}ms/day"),
+                    "confidence": 0.7,
+                }
+            )
 
     return recs
 
@@ -141,7 +151,11 @@ def _simulate_threshold(metrics_file: Path, check: str, threshold: int, window: 
     entries = _load_metrics(metrics_file, window=window * 2)
     check_entries = [e for e in entries if e.get("check") == check]
     if not check_entries:
-        return {"error": f"no data for check '{check}'", "check": check, "simulated_threshold": threshold}
+        return {
+            "error": f"no data for check '{check}'",
+            "check": check,
+            "simulated_threshold": threshold,
+        }
 
     recent = check_entries[-window:] if len(check_entries) >= window else check_entries
     fail_count = sum(1 for e in recent if e.get("ok") is False)
@@ -174,7 +188,10 @@ def generate_prediction(registry: dict, metrics_file: Path) -> dict:
     pass_rates = _daily_pass_rates(metrics)
     values = [pass_rates[d] for d in sorted(pass_rates.keys())]
     if len(values) < min_history:
-        return {"error": f"insufficient_history: {len(values)} < {min_history}", "values": values}
+        return {
+            "error": f"insufficient_history: {len(values)} < {min_history}",
+            "values": values,
+        }
 
     prediction = _linear_prediction(values)
     recommendations = _generate_recommendations(prediction, registry)
@@ -187,7 +204,11 @@ def generate_prediction(registry: dict, metrics_file: Path) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Predictive Governance")
-    parser.add_argument("--registry", default=str(DEFAULT_REGISTRY), help="Predictive governance registry YAML")
+    parser.add_argument(
+        "--registry",
+        default=str(DEFAULT_REGISTRY),
+        help="Predictive governance registry YAML",
+    )
     parser.add_argument("--metrics-file", default=str(DEFAULT_METRICS), help="Metrics JSONL path")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="Output JSON path")
     parser.add_argument("--simulate-threshold", type=int, help="Simulate threshold value for a check")

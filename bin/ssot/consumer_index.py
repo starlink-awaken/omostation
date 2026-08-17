@@ -25,10 +25,16 @@ FAMILIES_MAP = {
     "分层边界": ("X1", ["CR-LAYER", "CR-BOUNDARY", "CR-HARDCODED"]),
     "跨仓契约": ("X1", ["CR-CROSS", "CR-INTERFACE", "CR-CONTRACT"]),
     "提交纪律": ("X1", ["CR-COMMIT", "CR-CHANGELANE", "CR-PR", "CR-REVIEW"]),
-    "SSOT/漂移": ("X4", ["CR-SSOT", "CR-DRIFT", "CR-SYNC", "CR-POINTER", "CR-SUBMODULE"]),
+    "SSOT/漂移": (
+        "X4",
+        ["CR-SSOT", "CR-DRIFT", "CR-SYNC", "CR-POINTER", "CR-SUBMODULE"],
+    ),
     "元治理": ("X4", ["CR-META", "CR-RULE", "CR-EXECUTOR", "CR-GATE", "CR-BOOTSTRAP"]),
     "基线/证据": ("X4", ["CR-BASELINE", "CR-EVIDENCE", "CR-AUDIT", "CR-CLAIM"]),
-    "流程/Agent": ("X3", ["CR-P74", "CR-P76", "CR-P77", "CR-P79", "CR-WORKFLOW", "CR-AGENT"]),
+    "流程/Agent": (
+        "X3",
+        ["CR-P74", "CR-P76", "CR-P77", "CR-P79", "CR-WORKFLOW", "CR-AGENT"],
+    ),
     "债务/交付": ("X3", ["CR-DEBT", "CR-REDLINE", "CR-CADENCE", "CR-DELIVERY"]),
     "健康度/可观测": ("X2", ["CR-HEALTH", "CR-SCORE", "CR-METRIC", "CR-UPTIME"]),
     "代码卫生": ("X2", ["CR-GOD", "CR-ORPHAN", "CR-DEAD", "CR-MODULE"]),

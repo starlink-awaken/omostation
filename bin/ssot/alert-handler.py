@@ -17,7 +17,6 @@ import argparse
 import json
 import os
 import time
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -109,13 +108,15 @@ def evaluate_once(root: Path | None = None) -> dict[str, Any]:
 def list_rules() -> list[dict[str, Any]]:
     out = []
     for r in _load_rules():
-        out.append({
-            "id": r.get("id"),
-            "dimension": r.get("dimension"),
-            "severity": r.get("severity"),
-            "condition": r.get("condition"),
-            "enabled": r.get("enabled", True),
-        })
+        out.append(
+            {
+                "id": r.get("id"),
+                "dimension": r.get("dimension"),
+                "severity": r.get("severity"),
+                "condition": r.get("condition"),
+                "enabled": r.get("enabled", True),
+            }
+        )
     return out
 
 
@@ -139,7 +140,10 @@ def main(argv: list[str] | None = None) -> int:
         while True:
             result = evaluate_once(args.root)
             if result["alerts_fired"] > 0:
-                print(f"  ⚠️ {result['alerts_fired']} alerts fired: {result['fired_rule_ids']}", flush=True)
+                print(
+                    f"  ⚠️ {result['alerts_fired']} alerts fired: {result['fired_rule_ids']}",
+                    flush=True,
+                )
             time.sleep(args.interval)
 
     result = evaluate_once(args.root)

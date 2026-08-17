@@ -2,10 +2,9 @@
 
 P77 STRAT § 2 Phase 5 入口: 跨仓 port-registry 一致性 (P77-4) 完成后, 转向硬编码扫描.
 """
+
 import json
-import re
 import subprocess
-import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[1]
@@ -13,9 +12,18 @@ WORKSPACE = Path(__file__).resolve().parents[1]
 
 def run(args: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(
-        ["uv", "run", "--with", "pyyaml", "python",
-         str(WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py"), *args],
-        cwd=WORKSPACE, capture_output=True, text=True,
+        [
+            "uv",
+            "run",
+            "--with",
+            "pyyaml",
+            "python",
+            str(WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py"),
+            *args,
+        ],
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
     )
 
 
@@ -85,9 +93,7 @@ def test_registered_total_ge_32():
     """Phase 5 补登 4 port 后, SSOT union 应 ≥ 32 (P77-4 收口 28 + 4 new)."""
     r = run(["--json"])
     data = json.loads(r.stdout)
-    assert data["registered_total"] >= 32, (
-        f"registered should be ≥32, got {data['registered_total']}"
-    )
+    assert data["registered_total"] >= 32, f"registered should be ≥32, got {data['registered_total']}"
 
 
 def test_principle_p77_5_hardcoded_port():
@@ -104,9 +110,7 @@ def test_principle_legacy_external_allowlist():
     text = (WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py").read_text()
     assert "LEGACY_OK_PORTS" in text, "LEGACY_OK_PORTS dict must exist"
     # 每行应有注释说明豁免理由
-    assert "LM Studio" in text or "otel" in text.lower(), (
-        "LEGACY_OK_PORTS should have rationale comments"
-    )
+    assert "LM Studio" in text or "otel" in text.lower(), "LEGACY_OK_PORTS should have rationale comments"
 
 
 def test_threshold_explicit_negative_fails():

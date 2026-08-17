@@ -12,12 +12,13 @@ Output:
   - exit 0 = all metrics within range
   - exit 1 = one or more metrics violated
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
@@ -31,7 +32,7 @@ def _parse_date(date_str: str) -> datetime | None:
     if not date_str or not isinstance(date_str, str):
         return None
     try:
-        return datetime.fromisoformat(date_str).replace(tzinfo=timezone.utc)
+        return datetime.fromisoformat(date_str).replace(tzinfo=UTC)
     except (ValueError, TypeError):
         return None
 
@@ -70,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
     freeze: dict = gac.get("freeze") or {}
     max_rules: int = int(freeze.get("max_rules", 0)) if freeze.get("active") else 0
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     draft_max_age = timedelta(days=90)
 
     # ── Counters ──
@@ -114,50 +115,58 @@ def main(argv: list[str] | None = None) -> int:
     freeze_ok = True
     if max_rules > 0 and active_count > max_rules:
         freeze_ok = False
-        violations.append({
-            "kind": "freeze_exceeded",
-            "metric": "active_rule_count",
-            "value": active_count,
-            "limit": max_rules,
-            "message": f"active rule count {active_count} exceeds freeze limit {max_rules}",
-        })
+        violations.append(
+            {
+                "kind": "freeze_exceeded",
+                "metric": "active_rule_count",
+                "value": active_count,
+                "limit": max_rules,
+                "message": f"active rule count {active_count} exceeds freeze limit {max_rules}",
+            }
+        )
 
     # 2. ADR coverage
     adr_ok = len(no_adr_rules) == 0
     if not adr_ok:
-        violations.append({
-            "kind": "missing_adr",
-            "metric": "adr_coverage",
-            "value": len(no_adr_rules),
-            "total_active": active_count,
-            "message": f"{len(no_adr_rules)} active rule(s) have no ADR reference",
-            "rule_ids": [r.get("id", "?") for r in no_adr_rules],
-        })
+        violations.append(
+            {
+                "kind": "missing_adr",
+                "metric": "adr_coverage",
+                "value": len(no_adr_rules),
+                "total_active": active_count,
+                "message": f"{len(no_adr_rules)} active rule(s) have no ADR reference",
+                "rule_ids": [r.get("id", "?") for r in no_adr_rules],
+            }
+        )
 
     # 3. Dimension balance: X2/X4 ratio > 0.4
     x2x4_ratio = x2_count / x4_count if x4_count > 0 else 0.0
     balance_ok = x2x4_ratio > 0.4
     if not balance_ok:
-        violations.append({
-            "kind": "dimension_imbalance",
-            "metric": "x2_x4_ratio",
-            "value": round(x2x4_ratio, 3),
-            "threshold": 0.4,
-            "x2_count": x2_count,
-            "x4_count": x4_count,
-            "message": f"X2/X4 ratio {x2x4_ratio:.3f} is below 0.4 (X2={x2_count}, X4={x4_count})",
-        })
+        violations.append(
+            {
+                "kind": "dimension_imbalance",
+                "metric": "x2_x4_ratio",
+                "value": round(x2x4_ratio, 3),
+                "threshold": 0.4,
+                "x2_count": x2_count,
+                "x4_count": x4_count,
+                "message": f"X2/X4 ratio {x2x4_ratio:.3f} is below 0.4 (X2={x2_count}, X4={x4_count})",
+            }
+        )
 
     # 4. Stale draft rules (> 90 days)
     stale_ok = len(stale_draft_rules) == 0
     if not stale_ok:
-        violations.append({
-            "kind": "stale_draft",
-            "metric": "stale_draft_count",
-            "value": len(stale_draft_rules),
-            "message": f"{len(stale_draft_rules)} draft rule(s) older than 90 days",
-            "rule_ids": [r.get("id", "?") for r in stale_draft_rules],
-        })
+        violations.append(
+            {
+                "kind": "stale_draft",
+                "metric": "stale_draft_count",
+                "value": len(stale_draft_rules),
+                "message": f"{len(stale_draft_rules)} draft rule(s) older than 90 days",
+                "rule_ids": [r.get("id", "?") for r in stale_draft_rules],
+            }
+        )
 
     # ── Summary ──
     ok = len(violations) == 0

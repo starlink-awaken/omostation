@@ -22,7 +22,7 @@ import argparse
 import json
 import shutil
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -62,7 +62,7 @@ def apply_moves(moves: list[tuple[Path, Path]]) -> list[dict]:
             for child in src.iterdir():
                 target = dest / child.name
                 if target.exists():
-                    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+                    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
                     target = dest / f"{child.name}.merged-{stamp}"
                 shutil.move(str(child), str(target))
             try:
@@ -103,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     summary: dict = {
-        "ts": datetime.now(timezone.utc).isoformat(),
+        "ts": datetime.now(UTC).isoformat(),
         "tasks_root": str(TASKS),
         "cold_root": str(COLD),
         "cold_root_tracked": True,
@@ -164,9 +164,7 @@ def main(argv: list[str] | None = None) -> int:
             summary["after_active"] = count_yaml(TASKS, exclude_archived=True)
             summary["meets_active_target"] = summary["after_active"] < args.target_max
         else:
-            summary["meets_active_target"] = (
-                before_active - planned_files
-            ) < args.target_max
+            summary["meets_active_target"] = (before_active - planned_files) < args.target_max
 
     if args.json:
         print(json.dumps(summary, indent=2, ensure_ascii=False))

@@ -11,10 +11,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
-
 
 KNOWN_SUFFIX = {
     ".py",
@@ -108,7 +107,12 @@ def to_dict(item: Item) -> dict[str, object]:
     }
 
 
-def render_markdown(merged: list[str], only_bin: list[str], only_scripts: list[str], diff: list[tuple[str, str, str]]) -> str:
+def render_markdown(
+    merged: list[str],
+    only_bin: list[str],
+    only_scripts: list[str],
+    diff: list[tuple[str, str, str]],
+) -> str:
     lines = [
         "# bin/scripts 能力重叠扫描",
         "",
@@ -134,7 +138,9 @@ def render_markdown(merged: list[str], only_bin: list[str], only_scripts: list[s
 
     lines.extend(["", "## 收敛建议"])
     if merged:
-        lines.append("- 将完全一致项统一迁移到 `bin/` 作为主入口，并保留 scripts 子项目引用为薄 wrapper（如仍有兼容需求）。")
+        lines.append(
+            "- 将完全一致项统一迁移到 `bin/` 作为主入口，并保留 scripts 子项目引用为薄 wrapper（如仍有兼容需求）。"
+        )
     else:
         lines.append("- 当前不存在可立即收敛项，先补齐 wrappers 与引用关系后再分批归并。")
 

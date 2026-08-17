@@ -7,10 +7,10 @@ Usage:
 """
 
 import argparse
-import os
 import json
+import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -19,7 +19,7 @@ DEFAULT_ALERT_CONFIG = WORKSPACE / ".omo/_truth/registry/governance-alerts.yaml"
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _load_anomalies(anomaly_file: Path, window: int = 20) -> list[dict]:
@@ -37,6 +37,7 @@ def _load_config(config_path: Path) -> dict:
         return {}
     try:
         import yaml
+
         return yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
     except Exception:
         return {}
@@ -63,8 +64,14 @@ def _route_webhook(alert: dict, config: dict) -> None:
         return
     try:
         import urllib.request
+
         payload = json.dumps({"ts": now_iso(), **alert}).encode("utf-8")
-        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
         with urllib.request.urlopen(req, timeout=webhook_cfg.get("timeout", 10)) as resp:
             resp.read()
     except Exception:
@@ -79,6 +86,7 @@ def _route_email(alert: dict, config: dict) -> None:
     try:
         import smtplib
         from email.mime.text import MIMEText
+
         subject = f"[Governance Alert] {alert.get('check', 'unknown')}"
         body = json.dumps(alert, ensure_ascii=False, indent=2)
         msg = MIMEText(body)
@@ -118,22 +126,41 @@ def _route_notify(alert: dict) -> None:
         return
     try:
         import subprocess
+
         title = str(alert.get("check") or alert.get("event") or alert.get("type") or "governance-alert")
-        body = json.dumps({k: v for k, v in alert.items() if k not in {"severity", "level"}},
-                          ensure_ascii=False)[:300]
+        body = json.dumps(
+            {k: v for k, v in alert.items() if k not in {"severity", "level"}},
+            ensure_ascii=False,
+        )[:300]
         subprocess.run(
-            ["python3", str(events_script), "notify",
-             "--severity", severity, "--domain", "governance",
-             "--title", f"[alert-router] {title}", "--body", body],
-            capture_output=True, check=False, timeout=30,
+            [
+                "python3",
+                str(events_script),
+                "notify",
+                "--severity",
+                severity,
+                "--domain",
+                "governance",
+                "--title",
+                f"[alert-router] {title}",
+                "--body",
+                body,
+            ],
+            capture_output=True,
+            check=False,
+            timeout=30,
         )
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Alert Router")
-    parser.add_argument("--anomaly-file", default=str(DEFAULT_ANOMALY_FILE), help="Anomaly events JSONL path")
+    parser.add_argument(
+        "--anomaly-file",
+        default=str(DEFAULT_ANOMALY_FILE),
+        help="Anomaly events JSONL path",
+    )
     parser.add_argument("--config", default=str(DEFAULT_ALERT_CONFIG), help="Alert config YAML path")
     parser.add_argument("--window", type=int, default=20, help="Recent anomaly window")
     parser.add_argument("--dry-run", action="store_true", help="Print alerts without routing")

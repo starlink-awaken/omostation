@@ -11,6 +11,7 @@
 
 原则: P77-7 environment-variable-preferred — 优先用 env var, 而非字面量.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -26,18 +27,19 @@ WORKSPACE = Path(__file__).resolve().parents[1]
 LEGACY_OK_PORTS = {1234, 3000, 3001, 4318, 5173}
 
 PORT_PATTERNS = [
-    (re.compile(r'\bPORT\s*=\s*(\d{4,5})\b'), "PORT = NNNN"),
-    (re.compile(r'\bport\s*[=:]\s*(\d{4,5})\b'), "port=NNNN"),
-    (re.compile(r'--port[=\s]+(\d{4,5})\b'), "--port NNNN"),
-    (re.compile(r'://[^/]+:(\d{4,5})(?:[/\b]|$)'), "host:port"),
-    (re.compile(r'\blocalhost:(\d{4,5})\b'), "localhost:port"),
-    (re.compile(r'\b127\.0\.0\.1:(\d{4,5})\b'), "127.0.0.1:port"),
-    (re.compile(r'\b0\.0\.0\.0:(\d{4,5})\b'), "0.0.0.0:port"),
+    (re.compile(r"\bPORT\s*=\s*(\d{4,5})\b"), "PORT = NNNN"),
+    (re.compile(r"\bport\s*[=:]\s*(\d{4,5})\b"), "port=NNNN"),
+    (re.compile(r"--port[=\s]+(\d{4,5})\b"), "--port NNNN"),
+    (re.compile(r"://[^/]+:(\d{4,5})(?:[/\b]|$)"), "host:port"),
+    (re.compile(r"\blocalhost:(\d{4,5})\b"), "localhost:port"),
+    (re.compile(r"\b127\.0\.0\.1:(\d{4,5})\b"), "127.0.0.1:port"),
+    (re.compile(r"\b0\.0\.0\.0:(\d{4,5})\b"), "0.0.0.0:port"),
 ]
 
 
 def load_yaml(p: Path):
     import yaml
+
     if not p.exists():
         return None
     try:
@@ -98,13 +100,15 @@ def collect_hardcoded(root: Path) -> dict[int, list[dict]]:
                         continue
                     if not (1000 < port < 65536):
                         continue
-                    line_no = text[:m.start()].count("\n") + 1
-                    found.setdefault(port, []).append({
-                        "file": str(f.relative_to(WORKSPACE)),
-                        "line": line_no,
-                        "pattern": pat_name,
-                        "snippet": text[max(0, m.start()-20):m.end()+20].replace("\n", "↵"),
-                    })
+                    line_no = text[: m.start()].count("\n") + 1
+                    found.setdefault(port, []).append(
+                        {
+                            "file": str(f.relative_to(WORKSPACE)),
+                            "line": line_no,
+                            "pattern": pat_name,
+                            "snippet": text[max(0, m.start() - 20) : m.end() + 20].replace("\n", "↵"),
+                        }
+                    )
     return found
 
 
@@ -136,13 +140,15 @@ def main() -> int:
     for port in sorted(hardcoded.keys()):
         info = registry.get(port, {})
         env_var = info.get("env_var") if info else None
-        findings.append({
-            "port": port,
-            "name": info.get("name", "(unregistered)"),
-            "env_var": env_var,
-            "count": len(hardcoded[port]),
-            "sites": hardcoded[port][:3],
-        })
+        findings.append(
+            {
+                "port": port,
+                "name": info.get("name", "(unregistered)"),
+                "env_var": env_var,
+                "count": len(hardcoded[port]),
+                "sites": hardcoded[port][:3],
+            }
+        )
 
     # 根仓库硬编码扫描 (bin/, .githooks/, Makefile, .env)
     root_hardcoded = find_root_hardcoded()
@@ -150,13 +156,15 @@ def main() -> int:
     for port in sorted(root_hardcoded.keys()):
         info = registry.get(port, {})
         env_var = info.get("env_var") if info else None
-        root_findings.append({
-            "port": port,
-            "name": info.get("name", "(unregistered)"),
-            "env_var": env_var,
-            "count": len(root_hardcoded[port]),
-            "sites": root_hardcoded[port],
-        })
+        root_findings.append(
+            {
+                "port": port,
+                "name": info.get("name", "(unregistered)"),
+                "env_var": env_var,
+                "count": len(root_hardcoded[port]),
+                "sites": root_hardcoded[port],
+            }
+        )
 
     summary = {
         "total_ports_in_code": len(findings),
@@ -177,10 +185,10 @@ def main() -> int:
     print()
     print("── Root repo hardcoded ports ──")
     for rf in root_findings:
-        status = f"✅ {rf['env_var']}" if rf['env_var'] else "⚠️ no env var"
-        for s in rf['sites']:
+        status = f"✅ {rf['env_var']}" if rf["env_var"] else "⚠️ no env var"
+        for s in rf["sites"]:
             print(f"  {rf['port']:>5}  {s['file']}:{s['line']}  ({status})  {s['pattern']}")
-            repl = env_var_replacement(rf['port'], rf['env_var'], s.get('snippet', '')) if rf['env_var'] else None
+            repl = env_var_replacement(rf["port"], rf["env_var"], s.get("snippet", "")) if rf["env_var"] else None
             if repl:
                 print(f"       → {repl}")
 
@@ -212,14 +220,16 @@ def find_root_hardcoded() -> dict[int, list[dict]]:
                         continue
                     if not (1000 < port < 65536):
                         continue
-                    line_no = text[:m.start()].count("\n") + 1
-                    ctx = text[max(0, m.start()-30):m.end()+30].replace("\n", "↵")
-                    found.setdefault(port, []).append({
-                        "file": str(f.relative_to(WORKSPACE)),
-                        "line": line_no,
-                        "pattern": pat_name,
-                        "snippet": ctx,
-                    })
+                    line_no = text[: m.start()].count("\n") + 1
+                    ctx = text[max(0, m.start() - 30) : m.end() + 30].replace("\n", "↵")
+                    found.setdefault(port, []).append(
+                        {
+                            "file": str(f.relative_to(WORKSPACE)),
+                            "line": line_no,
+                            "pattern": pat_name,
+                            "snippet": ctx,
+                        }
+                    )
     return found
 
 

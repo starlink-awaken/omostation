@@ -17,6 +17,7 @@ rule_id: CR-X4-DOC-CLAIMS
     python3 bin/mof/check-doc-claims.py --project projects/metaos
     python3 bin/mof/check-doc-claims.py --project projects/metaos --json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -40,11 +41,7 @@ def check_interface_tests_has_pointer(interface_text: str) -> list[dict]:
     findings: list[dict] = []
     for i, line in enumerate(interface_text.splitlines(), 1):
         stripped = line.strip()
-        if (
-            stripped.startswith("tests:")
-            and stripped[6:].strip()
-            and "#" not in stripped
-        ):
+        if stripped.startswith("tests:") and stripped[6:].strip() and "#" not in stripped:
             findings.append(
                 {
                     "check": "interface_tests_bare_number",
@@ -78,15 +75,11 @@ def detect_doc_claim_drift(project_dir: Path) -> dict:
     findings: list[dict] = []
     interface = project_dir / "INTERFACE.yaml"
     if interface.exists():
-        findings += check_interface_tests_has_pointer(
-            interface.read_text(encoding="utf-8")
-        )
+        findings += check_interface_tests_has_pointer(interface.read_text(encoding="utf-8"))
     for md_name in ("AGENTS.md", "CLAUDE.md"):
         md = project_dir / md_name
         if md.exists():
-            findings += check_no_bare_pass_claim(
-                md.read_text(encoding="utf-8"), md_name
-            )
+            findings += check_no_bare_pass_claim(md.read_text(encoding="utf-8"), md_name)
     try:
         proj_rel = str(project_dir.resolve().relative_to(REPO))
     except ValueError:
@@ -110,9 +103,7 @@ def _scan_all_projects() -> dict:
     for proj_dir in sorted((REPO / "projects").iterdir()):
         if not proj_dir.is_dir():
             continue
-        has_target = any(
-            (proj_dir / f).exists() for f in ("INTERFACE.yaml", "AGENTS.md", "CLAUDE.md")
-        )
+        has_target = any((proj_dir / f).exists() for f in ("INTERFACE.yaml", "AGENTS.md", "CLAUDE.md"))
         if not has_target:
             continue
         projects_scanned += 1
@@ -130,9 +121,7 @@ def _scan_all_projects() -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="文档测试宣称失真防复发门 (P0-5; scope=all P0-A 2026-07-28)"
-    )
+    parser = argparse.ArgumentParser(description="文档测试宣称失真防复发门 (P0-5; scope=all P0-A 2026-07-28)")
     parser.add_argument(
         "--project",
         default="all",

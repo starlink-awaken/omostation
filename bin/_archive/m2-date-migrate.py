@@ -33,9 +33,9 @@ M2_DIR = WS / "projects/ecos/src/ecos/ssot/mof/m2"
 DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
-def find_date_only_schemas() -> list[Tuple[Path, str]]:
+def find_date_only_schemas() -> list[tuple[Path, str]]:
     """扫描 m2/*.yaml, 返回 (path, current_date_str)"""
-    results: list[Tuple[Path, str]] = []
+    results: list[tuple[Path, str]] = []
     for f in sorted(M2_DIR.glob("*.yaml")):
         if f.name == "m2_base_schema.yaml":
             continue
@@ -65,7 +65,7 @@ def migrate_file(path: Path, current_date: str, apply: bool = False) -> bool:
     content = path.read_text()
     new_content = re.sub(
         rf"created:\s*['\"]{re.escape(current_date)}['\"]",
-        f'created: \'{new_value}\'',
+        f"created: '{new_value}'",
         content,
     )
     if content == new_content:
@@ -101,7 +101,9 @@ def main() -> int:
         if migrate_file(path, current, apply=args.apply):
             changed += 1
 
-    print(f"\n{'已应用' if args.apply else 'DRY-RUN, 待 --apply'}: {changed}/{len(schemas)} 个 schema {'已改' if args.apply else '待改'}")
+    print(
+        f"\n{'已应用' if args.apply else 'DRY-RUN, 待 --apply'}: {changed}/{len(schemas)} 个 schema {'已改' if args.apply else '待改'}"
+    )
 
     if not args.apply:
         print("\n推荐:")

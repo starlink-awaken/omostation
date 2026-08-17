@@ -101,9 +101,7 @@ def test_ready_preflight_is_non_activating():
 
 
 def test_missing_scene_card_evidence_is_blocked():
-    result = MODULE.build_preflight(
-        _scene(sample_refs=[], activation_evidence_refs=[]), _catalog()
-    )
+    result = MODULE.build_preflight(_scene(sample_refs=[], activation_evidence_refs=[]), _catalog())
 
     assert result["status"] == "blocked"
     assert "sample_refs:3-10" in result["missing_fields"]
@@ -111,9 +109,7 @@ def test_missing_scene_card_evidence_is_blocked():
 
 
 def test_proposal_only_capability_never_becomes_executable():
-    result = MODULE.build_preflight(
-        _scene(), _catalog(summarize_availability="proposal_only")
-    )
+    result = MODULE.build_preflight(_scene(), _catalog(summarize_availability="proposal_only"))
 
     assert result["status"] == "proposal_only"
     assert result["next_action"] == "replace_proposal_only_capabilities_before_admission"
@@ -158,9 +154,7 @@ def test_unavailable_capability_is_explicitly_blocked():
 
 
 def test_requested_activation_or_non_proposal_lifecycle_is_blocked():
-    result = MODULE.build_preflight(
-        _scene(activation="active", lifecycle="active"), _catalog()
-    )
+    result = MODULE.build_preflight(_scene(activation="active", lifecycle="active"), _catalog())
 
     assert result["status"] == "blocked"
     assert "activation_must_be_forbidden" in result["missing_fields"]
@@ -175,14 +169,10 @@ def test_wrong_scene_card_schema_fails_closed():
 
 def test_raw_content_and_non_opaque_refs_fail_closed():
     with pytest.raises(MODULE.PreflightInputError, match="forbidden field"):
-        MODULE.build_preflight(
-            _scene(raw_content="private body"), _catalog()
-        )
+        MODULE.build_preflight(_scene(raw_content="private body"), _catalog())
 
     with pytest.raises(MODULE.PreflightInputError, match="opaque references"):
-        MODULE.build_preflight(
-            _scene(sample_refs=["https://example.test/raw"] * 3), _catalog()
-        )
+        MODULE.build_preflight(_scene(sample_refs=["https://example.test/raw"] * 3), _catalog())
 
 
 def test_cli_writes_only_stdout(tmp_path: Path, capsys):
@@ -191,9 +181,10 @@ def test_cli_writes_only_stdout(tmp_path: Path, capsys):
     scene_path.write_text(json.dumps(_scene()), encoding="utf-8")
     catalog_path.write_text(json.dumps(_catalog()), encoding="utf-8")
 
-    assert MODULE.main(
-        ["--scene-card", str(scene_path), "--catalog", str(catalog_path)]
-    ) == 0
+    assert MODULE.main(["--scene-card", str(scene_path), "--catalog", str(catalog_path)]) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["status"] == "ready_for_admission_preview"
-    assert sorted(path.name for path in tmp_path.iterdir()) == ["catalog.json", "scene.json"]
+    assert sorted(path.name for path in tmp_path.iterdir()) == [
+        "catalog.json",
+        "scene.json",
+    ]

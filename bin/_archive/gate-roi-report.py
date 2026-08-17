@@ -33,7 +33,7 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 HISTORY = Path(".omo/_knowledge/governance-history.jsonl")
@@ -63,7 +63,7 @@ def load_events(history: Path, since: str | None = None) -> list[dict]:
     if since:
         unit = since[-1]
         n = int(since[:-1])
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         cutoff = now - (timedelta(days=n) if unit == "d" else timedelta(hours=n))
     events = []
     for line in history.read_text(encoding="utf-8").splitlines():
@@ -86,14 +86,14 @@ def load_events(history: Path, since: str | None = None) -> list[dict]:
 
 
 def build_report(events: list[dict], trend_days: int = TREND_WINDOW) -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     cutoff = (now - timedelta(days=trend_days)).isoformat()
 
     by_check: dict[str, dict] = {}
     for e in events:
         ts = e.get("timestamp", "")
         is_recent = bool(ts and ts >= cutoff)
-        for c in (e.get("checks") or []):
+        for c in e.get("checks") or []:
             name = c.get("name", "?")
             sev = c.get("severity", "ok")
             st = by_check.setdefault(
@@ -188,9 +188,11 @@ def render_markdown(report: dict) -> str:
     L = []
     L.append("# Gate ROI 季度治理价值报告")
     L.append("")
-    L.append(f"> 数据源: governance-history.jsonl | 事件数: {report['events_loaded']} | "
-             f"趋势窗口: 近 {report['trend_window_days']} 天 | "
-             f"估算总节省: **{report['total_est_hours_saved']} 小时**")
+    L.append(
+        f"> 数据源: governance-history.jsonl | 事件数: {report['events_loaded']} | "
+        f"趋势窗口: 近 {report['trend_window_days']} 天 | "
+        f"估算总节省: **{report['total_est_hours_saved']} 小时**"
+    )
     L.append("")
     L.append("## 各 Gate 价值表")
     L.append("")
@@ -208,9 +210,13 @@ def render_markdown(report: dict) -> str:
         if g["verdict"] == "RETIRE":
             L.append(f"- **RETIRE {g['name']}**: {g['total']} 样本 0 次拦截 → 装饰性 gate, 删除或并入其它 gate")
         elif g["verdict"] == "NOISY":
-            L.append(f"- **NOISY {g['name']}**: {g['fires']} warn / 0 fail, 30d fire {g['fire_rate_30d']:.0%} → 降级 warn→info 或聚合去噪")
+            L.append(
+                f"- **NOISY {g['name']}**: {g['fires']} warn / 0 fail, 30d fire {g['fire_rate_30d']:.0%} → 降级 warn→info 或聚合去噪"
+            )
         elif g["verdict"] == "PRUNE":
-            L.append(f"- **PRUNE {g['name']}**: 30d fire {g['fire_rate_30d']:.0%} < 全期 {g['fire_rate_all']:.0%} → 衰减, 降频或合并")
+            L.append(
+                f"- **PRUNE {g['name']}**: 30d fire {g['fire_rate_30d']:.0%} < 全期 {g['fire_rate_all']:.0%} → 衰减, 降频或合并"
+            )
         elif g["verdict"] == "KEEP" and g["fail_fires"] > 0:
             L.append(f"- **KEEP {g['name']}**: {g['fail_fires']} 次 fail 拦截 (真价值) → 保留并纳入决策看板")
     L.append("")
@@ -219,8 +225,10 @@ def render_markdown(report: dict) -> str:
 
 
 def print_table(report: dict) -> None:
-    print(f"loaded {report['events_loaded']} events; 估算总节省 {report['total_est_hours_saved']}h "
-          f"(近{report['trend_window_days']}d 窗口)\n")
+    print(
+        f"loaded {report['events_loaded']} events; 估算总节省 {report['total_est_hours_saved']}h "
+        f"(近{report['trend_window_days']}d 窗口)\n"
+    )
     print(f"{'gate':22} {'verdict':7} {'n':>4} {'fires':>5} {'fail':>4} {'rate30d':>7} {'trend':>5} {'est_h':>5}")
     print("-" * 72)
     for g in report["gates"]:
@@ -238,7 +246,9 @@ def print_table(report: dict) -> None:
             elif g["verdict"] == "NOISY":
                 print(f"  - NOISY  {g['name']}: {g['fires']} warn/0 fail → 降级去噪")
             elif g["verdict"] == "PRUNE":
-                print(f"  - PRUNE  {g['name']}: 30d {g['fire_rate_30d']:.0%} < 全期 {g['fire_rate_all']:.0%} → 降频/合并")
+                print(
+                    f"  - PRUNE  {g['name']}: 30d {g['fire_rate_30d']:.0%} < 全期 {g['fire_rate_all']:.0%} → 降频/合并"
+                )
             elif g["verdict"] == "KEEP" and g["fail_fires"] > 0:
                 print(f"  - KEEP   {g['name']}: {g['fail_fires']} fail 拦截 → 保留")
 

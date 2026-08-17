@@ -73,7 +73,12 @@ def test_valid_pack_is_ready_for_catalog_preview_without_activation() -> None:
 
 def test_method_pack_remains_proposal_only() -> None:
     pack = _pack()
-    pack["descriptor"] = dict(pack["descriptor"], kind="method_pack", capabilities=["discover", "explain"], mode="proposal_only")
+    pack["descriptor"] = dict(
+        pack["descriptor"],
+        kind="method_pack",
+        capabilities=["discover", "explain"],
+        mode="proposal_only",
+    )
 
     result = MODULE.check_external_resource_pack(ROOT, pack)
 
@@ -85,7 +90,10 @@ def test_method_pack_remains_proposal_only() -> None:
 
 def test_invalid_extension_and_capability_are_blocked() -> None:
     pack = _pack()
-    pack["extension"] = dict(pack["extension"], health_probe={"method": "invoke", "side_effect": "write", "required": False})
+    pack["extension"] = dict(
+        pack["extension"],
+        health_probe={"method": "invoke", "side_effect": "write", "required": False},
+    )
     pack["descriptor"] = dict(pack["descriptor"], capabilities=["delete"])
 
     result = MODULE.check_external_resource_pack(ROOT, pack)

@@ -4,6 +4,7 @@
 Pure functions over run/ledger/retro/north-star so tests need no live swarm.
 No fourth tracker: reuses Plan §0.3, 3y-bet-ledger, agent-workflow runs, retros.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -235,13 +236,7 @@ CLOSED_RUN_STATUSES = frozenset({"ok", "blocked", "failed"})
 
 def run_recency_key(run: dict[str, Any]) -> str:
     """ISO timestamps and run_id sort lexicographically; latest wins."""
-    return str(
-        run.get("updated_at")
-        or run.get("closed_at")
-        or run.get("created_at")
-        or run.get("run_id")
-        or ""
-    )
+    return str(run.get("updated_at") or run.get("closed_at") or run.get("created_at") or run.get("run_id") or "")
 
 
 def _bet_id_of(run: dict[str, Any]) -> str:
@@ -261,10 +256,7 @@ def perception_fields(workspace: Path) -> dict[str, Any]:
         elif status in CLOSED_RUN_STATUSES:
             closed_runs.append(run)
     active_bets = [_bet_id_of(r) for r in active_runs]
-    closed_bets = [
-        _bet_id_of(r)
-        for r in sorted(closed_runs, key=run_recency_key, reverse=True)
-    ]
+    closed_bets = [_bet_id_of(r) for r in sorted(closed_runs, key=run_recency_key, reverse=True)]
     if active_runs:
         bound = _bet_id_of(max(active_runs, key=run_recency_key))
         bound_state = "active"

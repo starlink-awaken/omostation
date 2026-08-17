@@ -12,6 +12,7 @@
     0: PR 描述非空或非 PR 事件
     1: PR 描述为空
 """
+
 from __future__ import annotations
 
 import json
@@ -38,13 +39,9 @@ def main() -> int:
     pr_title = (event.get("pull_request") or {}).get("title") or ""
 
     if not pr_body.strip():
-        print(
-            "[check-pr-description] ❌ PR 描述为空 — 请添加变更动机与验证说明"
-        )
+        print("[check-pr-description] ❌ PR 描述为空 — 请添加变更动机与验证说明")
         print(f"  PR 标题: {pr_title[:80]}")
-        print(
-            "  建议: 在 PR 描述中说明 what/why/how, 以及本地验证结果"
-        )
+        print("  建议: 在 PR 描述中说明 what/why/how, 以及本地验证结果")
         return 1
 
     print(f"[check-pr-description] ✅ PR 描述非空 ({len(pr_body.strip())} 字符)")

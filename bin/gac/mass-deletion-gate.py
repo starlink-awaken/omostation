@@ -54,7 +54,17 @@ def counts_range(base: str, head: str, cwd: str | None) -> tuple[int, int, list[
 
 
 def submodule_paths(cwd: str | None) -> list[str]:
-    out = run(["git", "config", "--file", ".gitmodules", "--get-regexp", r"^submodule\..*\.path$"], cwd)
+    out = run(
+        [
+            "git",
+            "config",
+            "--file",
+            ".gitmodules",
+            "--get-regexp",
+            r"^submodule\..*\.path$",
+        ],
+        cwd,
+    )
     return [ln.split(maxsplit=1)[1] for ln in out.splitlines() if ln.strip()]
 
 
@@ -99,10 +109,14 @@ def _sub_repos(root: str, path: str) -> list[str]:
 def tree_size(root: str, path: str, sha: str) -> int | None:
     """子模块某 commit 的文件数; 所有候选仓库都读不到则 None(不误判)。"""
     for repo in _sub_repos(root, path):
-        ok = subprocess.run(
-            ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
-            cwd=repo, capture_output=True,
-        ).returncode == 0
+        ok = (
+            subprocess.run(
+                ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+                cwd=repo,
+                capture_output=True,
+            ).returncode
+            == 0
+        )
         if ok:
             return len(run(["git", "ls-tree", "-r", sha, "--name-only"], repo).splitlines())
     return None
@@ -127,8 +141,7 @@ def check_submodule_bumps(base: str, head: str, cwd: str | None, ratio: float) -
             findings.append(f"{p}: gitlink 指向空仓 commit {new[:10]} (原 {o} 文件 → 0)")
         elif (o - n) / o >= ratio:
             findings.append(
-                f"{p}: gitlink 指向的 commit 文件数骤降 {o} → {n} "
-                f"(-{(o - n) / o:.0%}) {old[:10]}→{new[:10]}"
+                f"{p}: gitlink 指向的 commit 文件数骤降 {o} → {n} (-{(o - n) / o:.0%}) {old[:10]}→{new[:10]}"
             )
     return findings
 
@@ -143,7 +156,10 @@ def verdict(dels: int, total: int, abs_floor: int, ratio: float) -> tuple[bool, 
     if pct >= 0.9:
         return True, f"删除占比 {pct:.0%} ({dels}/{total}) — 超过 90% 阈值"
     if dels >= abs_floor and pct >= ratio:
-        return True, f"删除 {dels} 个文件, 占跟踪文件 {pct:.0%} — 超过 {abs_floor} 个且 {ratio:.0%} 双阈值"
+        return (
+            True,
+            f"删除 {dels} 个文件, 占跟踪文件 {pct:.0%} — 超过 {abs_floor} 个且 {ratio:.0%} 双阈值",
+        )
     return False, ""
 
 
@@ -154,8 +170,11 @@ def main() -> int:
     ap.add_argument("--cwd", help="在指定仓库目录检查")
     ap.add_argument("--abs-floor", type=int, default=30)
     ap.add_argument("--ratio", type=float, default=0.5)
-    ap.add_argument("--submodules", action="store_true",
-                    help="额外检查 gitlink 是否被指向被清空的子模块 commit")
+    ap.add_argument(
+        "--submodules",
+        action="store_true",
+        help="额外检查 gitlink 是否被指向被清空的子模块 commit",
+    )
     ap.add_argument("--allow", action="store_true", help="仅告警不拦截")
     args = ap.parse_args()
 
@@ -179,7 +198,10 @@ def main() -> int:
     if sub_findings and not blocked:
         allow = args.allow or os.environ.get("MASS_DELETION_OK") == "1"
         icon = "⚠️ " if allow else "🛑"
-        print(f"\n{icon} mass-deletion-gate: 子模块 gitlink 指向缩水的 commit", file=sys.stderr)
+        print(
+            f"\n{icon} mass-deletion-gate: 子模块 gitlink 指向缩水的 commit",
+            file=sys.stderr,
+        )
         for s in sub_findings:
             print(f"   - {s}", file=sys.stderr)
         if allow:
@@ -201,7 +223,10 @@ def main() -> int:
     if dels > len(sample):
         print(f"   ... 另有 {dels - len(sample)} 个", file=sys.stderr)
     if allow:
-        print("   已通过 MASS_DELETION_OK=1 放行 — 请确认这确实是有意为之。\n", file=sys.stderr)
+        print(
+            "   已通过 MASS_DELETION_OK=1 放行 — 请确认这确实是有意为之。\n",
+            file=sys.stderr,
+        )
         return 0
     print(
         "\n   这通常意味着工作树被清空 (rm -rf / 子模块未 init / partial worktree),\n"

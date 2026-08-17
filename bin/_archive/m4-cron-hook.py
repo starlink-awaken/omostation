@@ -29,10 +29,9 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
-
 
 WS = Path(__file__).resolve().parents[2]
 DERIVED_HEALTH = WS / "projects/ecos/.omo/_derived/m4-health.json"
@@ -43,7 +42,7 @@ OMOCRON_HOOK_MARK = "M4_HOOK_MARK"
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _load_health() -> dict | None:
@@ -117,10 +116,8 @@ def format_for_omo(entry: dict) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--sync", action="store_true",
-                        help="写 .omo/_derived/m4-cron-log.json (默认开)")
-    parser.add_argument("--trigger", default="",
-                        help="触发源 (manual/cron/test), 缺省从 $OPC_TRIGGER 推断")
+    parser.add_argument("--sync", action="store_true", help="写 .omo/_derived/m4-cron-log.json (默认开)")
+    parser.add_argument("--trigger", default="", help="触发源 (manual/cron/test), 缺省从 $OPC_TRIGGER 推断")
     args = parser.parse_args()
 
     entry = run_hook(sync=args.sync, trigger=args.trigger)
@@ -133,8 +130,7 @@ def main() -> int:
         print(json.dumps(entry, ensure_ascii=False, default=str))
 
     if not entry["health_loaded"]:
-        print("# (警告: m4-health.json 不存在, hook 仅记录空 entry)",
-              file=sys.stderr)
+        print("# (警告: m4-health.json 不存在, hook 仅记录空 entry)", file=sys.stderr)
         # 不返回 1 (避免破坏 OMO cron 链)
         return 0
 

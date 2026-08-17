@@ -47,49 +47,215 @@ OUTPUT_YAML = WORKSPACE / "docs" / "generated" / "capability-registry.yaml"
 # 已知的 MCP server 文件 (layer, transport, ports)
 # 避免 glob 漫无目的扫描, 用显式清单更稳 (KISS)
 _KNOWN_MCP_SERVERS: list[dict] = [
-    {"id": "omo", "name": "OMO Agent OS Kernel", "layer": "L2", "file": "projects/omo/src/omo/mcp_server.py", "transport": "stdio"},
-    {"id": "kos", "name": "KOS Knowledge Retrieval", "layer": "L2", "file": "projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py", "transport": "stdio"},
-    {"id": "kos-stdio", "name": "KOS (stdio JSON-RPC, legacy)", "layer": "L2", "file": "projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py", "transport": "stdio", "note": "kos-stdio 与 kos 共享同一套 44 工具, 仅传输层不同"},
-    {"id": "l4-kernel", "name": "L4 Self-Layer Kernel", "layer": "L4", "file": "projects/l4-kernel/src/l4_kernel/mcp_server.py", "transport": "stdio/http/sse", "ports": {"http": 7455, "sse": 7456}},
-    {"id": "agora", "name": "Agora Service Convergence Hub", "layer": "I0", "file": "projects/agora/src/agora/server/mcp.py", "transport": "stdio/sse", "extra_glob": "projects/agora/src/agora/server/tools_*.py"},
-    {"id": "ecos", "name": "eCOS SSOT Kernel", "layer": "L0", "file": "projects/ecos/src/ecos/mcp_server.py", "transport": "stdio"},
-    {"id": "ecos-ssot", "name": "eCOS L0 SSOT", "layer": "L0", "file": "projects/ecos/src/ecos/l0/ssot/mcp_server.py", "transport": "stdio"},
-    {"id": "ecos-integration", "name": "eCOS Integration", "layer": "L0", "file": "projects/ecos/src/ecos/services/integration/mcp_server.py", "transport": "stdio"},
-    {"id": "metaos", "name": "MetaOS Orchestration", "layer": "L2", "file": "projects/metaos/src/metaos/mcp_server.py", "transport": "stdio"},
-    {"id": "aetherforge", "name": "AetherForge Compute", "layer": "X", "file": "projects/aetherforge/src/aetherforge/mcp_server.py", "transport": "stdio"},
-    {"id": "aetherforge-gateway", "name": "AetherForge LLM Gateway", "layer": "X", "file": "projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py", "transport": "stdio", "note": "FastMCP(llm-gateway), 模型调度/路由网关"},
-    {"id": "aetherforge-mesh", "name": "AetherForge Compute Mesh", "layer": "X", "file": "projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py", "transport": "stdio", "note": "计算网格 API, provider 协商"},
-    {"id": "model-driven", "name": "Model-Driven Lifecycle", "layer": "M0", "file": "projects/model-driven/src/model_driven/mcp_server.py", "transport": "stdio"},
-    {"id": "model-driven-fastmcp", "name": "Model-Driven FastMCP", "layer": "M0", "file": "projects/model-driven/src/model_driven/fastmcp_server.py", "transport": "stdio"},
-    {"id": "c2g", "name": "C2G Strategy Compass", "layer": "X", "file": "projects/c2g/src/c2g/mcp_server.py", "transport": "stdio"},
-    {"id": "family-hub", "name": "Family Hub", "layer": "X", "file": "projects/family-hub/mcp_server.py", "transport": "stdio"},
-    {"id": "agent-runtime", "name": "Cockpit Agent Runtime", "layer": "L3", "file": "projects/cockpit/src/cockpit/agent_runtime_mcp_server.py", "transport": "stdio"},
-    {"id": "runtime", "name": "eCOS Runtime Services", "layer": "L1", "file": "projects/runtime/src/runtime/mcp_server.py", "transport": "stdio", "note": "L1 运行时 MCP, health/failover/push 入口"},
-    {"id": "iris", "name": "Iris", "layer": "L2", "file": "projects/knowledge/kairon/packages/iris/src/iris/mcp_server.py", "transport": "stdio"},
-    {"id": "sophia", "name": "Sophia Research Paradigm", "layer": "L2", "file": "projects/knowledge/kairon/packages/sophia/src/sophia/server/mcp_server.py", "transport": "stdio"},
-    {"id": "kronos", "name": "Kronos", "layer": "L2", "file": "projects/knowledge/kairon/packages/kronos/src/kronos/mcp_server.py", "transport": "stdio"},
-    {"id": "minerva", "name": "Minerva", "layer": "L2", "file": "projects/knowledge/kairon/packages/minerva/src/minerva/mcp_server/server.py", "transport": "stdio"},
-    {"id": "codeanalyze", "name": "CodeAnalyze", "layer": "L2", "file": "projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/mcp.py", "transport": "stdio"},
-    {"id": "forge", "name": "Forge", "layer": "L2", "file": "projects/knowledge/kairon/packages/forge/src/mcp_server.py", "transport": "stdio"},
-    {"id": "ontoderive", "name": "OntoDerive", "layer": "L2", "file": "projects/knowledge/kairon/packages/ontoderive/src/ontoderive/mcp_server.py", "transport": "stdio"},
-    {"id": "toolforge", "name": "ToolForge", "layer": "L2", "file": "projects/knowledge/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py", "transport": "stdio"},
-    {"id": "gbrain", "name": "gbrain Knowledge DB", "layer": "L2", "file": "projects/knowledge/gbrain/src/core/operations/exports.ts", "transport": "stdio", "entry": "projects/knowledge/gbrain/src/mcp-entry.ts", "note": "工具从 operations 数组动态生成"},
+    {
+        "id": "omo",
+        "name": "OMO Agent OS Kernel",
+        "layer": "L2",
+        "file": "projects/omo/src/omo/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "kos",
+        "name": "KOS Knowledge Retrieval",
+        "layer": "L2",
+        "file": "projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "kos-stdio",
+        "name": "KOS (stdio JSON-RPC, legacy)",
+        "layer": "L2",
+        "file": "projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py",
+        "transport": "stdio",
+        "note": "kos-stdio 与 kos 共享同一套 44 工具, 仅传输层不同",
+    },
+    {
+        "id": "l4-kernel",
+        "name": "L4 Self-Layer Kernel",
+        "layer": "L4",
+        "file": "projects/l4-kernel/src/l4_kernel/mcp_server.py",
+        "transport": "stdio/http/sse",
+        "ports": {"http": 7455, "sse": 7456},
+    },
+    {
+        "id": "agora",
+        "name": "Agora Service Convergence Hub",
+        "layer": "I0",
+        "file": "projects/agora/src/agora/server/mcp.py",
+        "transport": "stdio/sse",
+        "extra_glob": "projects/agora/src/agora/server/tools_*.py",
+    },
+    {
+        "id": "ecos",
+        "name": "eCOS SSOT Kernel",
+        "layer": "L0",
+        "file": "projects/ecos/src/ecos/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "ecos-ssot",
+        "name": "eCOS L0 SSOT",
+        "layer": "L0",
+        "file": "projects/ecos/src/ecos/l0/ssot/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "ecos-integration",
+        "name": "eCOS Integration",
+        "layer": "L0",
+        "file": "projects/ecos/src/ecos/services/integration/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "metaos",
+        "name": "MetaOS Orchestration",
+        "layer": "L2",
+        "file": "projects/metaos/src/metaos/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "aetherforge",
+        "name": "AetherForge Compute",
+        "layer": "X",
+        "file": "projects/aetherforge/src/aetherforge/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "aetherforge-gateway",
+        "name": "AetherForge LLM Gateway",
+        "layer": "X",
+        "file": "projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py",
+        "transport": "stdio",
+        "note": "FastMCP(llm-gateway), 模型调度/路由网关",
+    },
+    {
+        "id": "aetherforge-mesh",
+        "name": "AetherForge Compute Mesh",
+        "layer": "X",
+        "file": "projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py",
+        "transport": "stdio",
+        "note": "计算网格 API, provider 协商",
+    },
+    {
+        "id": "model-driven",
+        "name": "Model-Driven Lifecycle",
+        "layer": "M0",
+        "file": "projects/model-driven/src/model_driven/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "model-driven-fastmcp",
+        "name": "Model-Driven FastMCP",
+        "layer": "M0",
+        "file": "projects/model-driven/src/model_driven/fastmcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "c2g",
+        "name": "C2G Strategy Compass",
+        "layer": "X",
+        "file": "projects/c2g/src/c2g/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "family-hub",
+        "name": "Family Hub",
+        "layer": "X",
+        "file": "projects/family-hub/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "agent-runtime",
+        "name": "Cockpit Agent Runtime",
+        "layer": "L3",
+        "file": "projects/cockpit/src/cockpit/agent_runtime_mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "runtime",
+        "name": "eCOS Runtime Services",
+        "layer": "L1",
+        "file": "projects/runtime/src/runtime/mcp_server.py",
+        "transport": "stdio",
+        "note": "L1 运行时 MCP, health/failover/push 入口",
+    },
+    {
+        "id": "iris",
+        "name": "Iris",
+        "layer": "L2",
+        "file": "projects/knowledge/kairon/packages/iris/src/iris/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "sophia",
+        "name": "Sophia Research Paradigm",
+        "layer": "L2",
+        "file": "projects/knowledge/kairon/packages/sophia/src/sophia/server/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "kronos",
+        "name": "Kronos",
+        "layer": "L2",
+        "file": "projects/knowledge/kairon/packages/kronos/src/kronos/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "minerva",
+        "name": "Minerva",
+        "layer": "L2",
+        "file": "projects/knowledge/kairon/packages/minerva/src/minerva/mcp_server/server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "codeanalyze",
+        "name": "CodeAnalyze",
+        "layer": "L2",
+        "file": "projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/mcp.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "forge",
+        "name": "Forge",
+        "layer": "L2",
+        "file": "projects/knowledge/kairon/packages/forge/src/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "ontoderive",
+        "name": "OntoDerive",
+        "layer": "L2",
+        "file": "projects/knowledge/kairon/packages/ontoderive/src/ontoderive/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "toolforge",
+        "name": "ToolForge",
+        "layer": "L2",
+        "file": "projects/knowledge/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py",
+        "transport": "stdio",
+    },
+    {
+        "id": "gbrain",
+        "name": "gbrain Knowledge DB",
+        "layer": "L2",
+        "file": "projects/knowledge/gbrain/src/core/operations/exports.ts",
+        "transport": "stdio",
+        "entry": "projects/knowledge/gbrain/src/mcp-entry.ts",
+        "note": "工具从 operations 数组动态生成",
+    },
 ]
 
 # Python @mcp.tool() / @mcp.tool(name="x") / register 函数调用模式
 _RE_PY_TOOL_DECORATOR = re.compile(
     r'@(?:mcp|server|app|self|_mcp)\.tool\s*\(\s*(?:name\s*=\s*["\']([^"\']+)["\'])?\s*\)'
 )
-_RE_PY_TOOL_CALL = re.compile(
-    r'\.(?:tool|register_tool)\s*\(\s*(?:name\s*=\s*)?["\']([a-zA-Z0-9_.\-]+)["\']'
-)
+_RE_PY_TOOL_CALL = re.compile(r'\.(?:tool|register_tool)\s*\(\s*(?:name\s*=\s*)?["\']([a-zA-Z0-9_.\-]+)["\']')
 # metaos 风格 @_h("name") / model-driven self._register_tool("name", ...)
 _RE_RAW_HANDLER = re.compile(r'@_h\s*\(\s*["\']([a-zA-Z0-9_.\-]+)["\']')
-_RE_REGISTER_TOOL = re.compile(
-    r'(?:self\.)?_?register_?(?:default_)?tool\s*\(\s*["\']([a-zA-Z0-9_.\-]+)["\']'
-)
+_RE_REGISTER_TOOL = re.compile(r'(?:self\.)?_?register_?(?:default_)?tool\s*\(\s*["\']([a-zA-Z0-9_.\-]+)["\']')
 # l4-kernel TOOLS dict / TOOLS = {...}
-_RE_TOOLS_KEYS = re.compile(r'TOOLS\s*[:=]\s*\{')
+_RE_TOOLS_KEYS = re.compile(r"TOOLS\s*[:=]\s*\{")
 # TS: server.tool("name", ...)
 _RE_TS_TOOL = re.compile(r'\.tool\s*\(\s*["\']([a-zA-Z0-9_.\-]+)["\']')
 
@@ -135,15 +301,13 @@ def _extract_tools_from_python(file_path: Path) -> list[str]:
         try:
             tree = ast.parse(content)
             for node in ast.walk(tree):
-                if isinstance(node, ast.Assign) and any(
-                    isinstance(t, ast.Name) and t.id == "TOOLS" for t in node.targets
-                ) and isinstance(node.value, ast.Dict):
+                if (
+                    isinstance(node, ast.Assign)
+                    and any(isinstance(t, ast.Name) and t.id == "TOOLS" for t in node.targets)
+                    and isinstance(node.value, ast.Dict)
+                ):
                     for key in node.value.keys:
-                        if (
-                            isinstance(key, ast.Constant)
-                            and isinstance(key.value, str)
-                            and key.value not in seen
-                        ):
+                        if isinstance(key, ast.Constant) and isinstance(key.value, str) and key.value not in seen:
                             seen.add(key.value)
                             tools.append(key.value)
         except SyntaxError:
@@ -155,7 +319,7 @@ def _extract_tools_from_python(file_path: Path) -> list[str]:
     # 必须把 def 捕获并入 @xxx.tool() 同一分支。
     if not tools:
         for m in re.finditer(
-            r'@(?:mcp|server|app|self|_mcp)\.tool\s*\([^)]*\)\s*\n\s*(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)',
+            r"@(?:mcp|server|app|self|_mcp)\.tool\s*\([^)]*\)\s*\n\s*(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)",
             content,
         ):
             name = m.group(1)
@@ -164,7 +328,7 @@ def _extract_tools_from_python(file_path: Path) -> list[str]:
                 tools.append(name)
         # 单独处理 @_tool() 模式
         for m in re.finditer(
-            r'@_tool\s*\(\s*\)\s*\n\s*(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)',
+            r"@_tool\s*\(\s*\)\s*\n\s*(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)",
             content,
         ):
             name = m.group(1)
@@ -187,7 +351,7 @@ def _extract_tools_from_python(file_path: Path) -> list[str]:
             tools.append(name)
 
     # 策略 7: ecos-integration def handle_xxx(args) handler 函数
-    for m in re.finditer(r'def\s+(handle_[a-zA-Z0-9_]+)\s*\(', content):
+    for m in re.finditer(r"def\s+(handle_[a-zA-Z0-9_]+)\s*\(", content):
         name = m.group(1)
         if name not in seen:
             seen.add(name)
@@ -214,7 +378,7 @@ def _extract_tools_from_typescript(file_path: Path) -> list[str]:
     if "operations" in content and "import" in content:
         # 从 import 语句提取
         for m in re.finditer(r'import\s*\{([^}]+)\}\s*from\s*"', content):
-            for name in re.findall(r'[a-z_][a-zA-Z0-9_]*', m.group(1)):
+            for name in re.findall(r"[a-z_][a-zA-Z0-9_]*", m.group(1)):
                 if name not in seen:
                     seen.add(name)
                     tools.append(name)
@@ -268,6 +432,7 @@ def scan_mcp_servers() -> tuple[list[dict], int]:
 
 
 # ── BOS services 扫描 ─────────────────────────────────────────
+
 
 def scan_bos_services() -> tuple[dict[str, list[dict]], int]:
     """从 bos-services.yaml 提取所有服务, 按 domain 分组."""
@@ -335,6 +500,7 @@ def scan_cli_commands() -> list[dict]:
 
 # ── 主流程 ─────────────────────────────────────────────────────
 
+
 def build_registry() -> dict:
     servers, total_tools = scan_mcp_servers()
     bos_domains, total_bos = scan_bos_services()
@@ -374,7 +540,13 @@ def write_yaml(registry: dict) -> Path:
         f"# 生成器: bin/cockpit/gen-capability-registry.py\n"
         f"# 生成时间: {registry['generated_at']}\n\n"
     )
-    body = yaml.dump(registry, allow_unicode=True, sort_keys=False, default_flow_style=False, width=120)
+    body = yaml.dump(
+        registry,
+        allow_unicode=True,
+        sort_keys=False,
+        default_flow_style=False,
+        width=120,
+    )
     new_content = header + body
 
     # 时间戳稳定: 若已存在文件且仅时间戳不同, 保留旧文件避免假漂移
@@ -423,7 +595,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="能力注册表生成器")
     parser.add_argument("--json", action="store_true", help="输出 JSON 到 stdout (不写文件)")
     parser.add_argument("--quiet", action="store_true", help="静默模式")
-    parser.add_argument("--verify", action="store_true", help="运行时内省校验 (对比静态 vs 实际 MCP 工具)")
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="运行时内省校验 (对比静态 vs 实际 MCP 工具)",
+    )
     args = parser.parse_args()
 
     registry = build_registry()

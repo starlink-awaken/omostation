@@ -7,12 +7,12 @@ Usage:
 
 Exit 0 always (advisory). JSON on --json.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import re
-import sys
 from pathlib import Path
 
 # 路由表 (SSOT 叙述: .omo/standards/collab-mode-routing.md · ADR-0253/0255)
@@ -50,12 +50,15 @@ RULES: list[tuple[str, str, str]] = [
 ]
 
 HINTS = [
-    (re.compile(r"as_of|批量|parallel|独立|无共享|interface", re.I), "independent_batch"),
-    (re.compile(r"归因|分析|审查|triage|分类", re.I), "simple_analysis"),
-    (re.compile(r"微任务|cpu|场景库|scenario.?batch", re.I), "micro_cpu"),
-    (re.compile(r"冲突|divergence|double.?claim|争抢", re.I), "conflict"),
-    (re.compile(r"超时|失败|timeout|fail|注入", re.I), "failure_inject"),
-    (re.compile(r"依赖|链式|A→B|pipeline", re.I), "dependency_chain"),
+    (
+        re.compile(r"as_of|批量|parallel|独立|无共享|interface", re.IGNORECASE),
+        "independent_batch",
+    ),
+    (re.compile(r"归因|分析|审查|triage|分类", re.IGNORECASE), "simple_analysis"),
+    (re.compile(r"微任务|cpu|场景库|scenario.?batch", re.IGNORECASE), "micro_cpu"),
+    (re.compile(r"冲突|divergence|double.?claim|争抢", re.IGNORECASE), "conflict"),
+    (re.compile(r"超时|失败|timeout|fail|注入", re.IGNORECASE), "failure_inject"),
+    (re.compile(r"依赖|链式|A→B|pipeline", re.IGNORECASE), "dependency_chain"),
 ]
 
 
@@ -120,10 +123,7 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(rows, ensure_ascii=False, indent=2))
         else:
             for r in rows:
-                print(
-                    f"{r['recommended_mode']:28}  type={r['task_type']:20}  "
-                    f"desc={r['describe'][:60]}"
-                )
+                print(f"{r['recommended_mode']:28}  type={r['task_type']:20}  desc={r['describe'][:60]}")
         return 0
     rec = recommend(args.task_type, args.describe)
     if args.json:

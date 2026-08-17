@@ -6,6 +6,7 @@ Verifies that:
 3. dispatch_admitted_workflow does not double-emit StepDispatched
 4. Legacy dispatch snapshot shows dispatched state with worker context
 """
+
 from __future__ import annotations
 
 import sys
@@ -60,9 +61,7 @@ def _setup_task(tmp_path: Path) -> None:
         "deliverables": ["docs/result.md"],
         "test_plan": ["pytest"],
     }
-    (task_dir / "TASK-P2-1.yaml").write_text(
-        yaml.safe_dump(task, sort_keys=False), encoding="utf-8"
-    )
+    (task_dir / "TASK-P2-1.yaml").write_text(yaml.safe_dump(task, sort_keys=False), encoding="utf-8")
 
 
 def test_legacy_dispatch_emits_mesh_events(tmp_path):
@@ -136,9 +135,7 @@ def test_mesh_aware_dispatch_emits_step_dispatched(tmp_path):
     )
 
     store = WorkflowMeshStore(tmp_path / ".omo")
-    step_dispatched = [
-        e for e in store.events() if e["event_type"] == "StepDispatched"
-    ]
+    step_dispatched = [e for e in store.events() if e["event_type"] == "StepDispatched"]
     assert len(step_dispatched) == 1
     assert step_dispatched[0]["workflow_run_id"] == "run-p2-mesh"
 
@@ -172,7 +169,5 @@ def test_dispatch_admitted_no_double_step_dispatched(tmp_path):
     )
 
     store = WorkflowMeshStore(tmp_path / ".omo")
-    step_dispatched = [
-        e for e in store.events() if e["event_type"] == "StepDispatched"
-    ]
+    step_dispatched = [e for e in store.events() if e["event_type"] == "StepDispatched"]
     assert len(step_dispatched) == 1

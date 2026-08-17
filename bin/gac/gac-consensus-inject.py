@@ -3,14 +3,14 @@
 # Phase A (2026-07-03): 升级为 RAG Top-2 按需注入，替代全量追加模式
 # 降低 CLAUDE.md Token 膨胀，实现 Epigenetic Memory 按需激活
 
-import sys
-import sqlite3
-import re
+import datetime
 import json
 import math
-import datetime
-import urllib.request
+import re
+import sqlite3
+import sys
 import urllib.error
+import urllib.request
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -26,8 +26,9 @@ TOP_K = 2  # 每次只注入最相关的 Top-2 Consensus，极限节省 Token
 
 def local_tfidf_similarity(query: str, doc: str) -> float:
     """Pure-Python TF-IDF 余弦相似度 — 无下载 embed 模型时的高质量 Fallback"""
+
     def tokenize(text: str) -> list[str]:
-        return re.findall(r'[\w\u4e00-\u9fff]+', text.lower())
+        return re.findall(r"[\w\u4e00-\u9fff]+", text.lower())
 
     def tf(tokens: list[str]) -> dict[str, float]:
         freq: dict[str, float] = {}
@@ -79,7 +80,9 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
     return dot / (norm_a * norm_b)
 
 
-def get_or_build_consensus_vector(conn: sqlite3.Connection, entity_id: str, label: str, source_file: str) -> list[float] | None:
+def get_or_build_consensus_vector(
+    conn: sqlite3.Connection, entity_id: str, label: str, source_file: str
+) -> list[float] | None:
     """从缓存表读取或重新计算 Consensus 向量"""
     # 确保向量缓存表存在
     conn.execute("""
@@ -92,10 +95,7 @@ def get_or_build_consensus_vector(conn: sqlite3.Connection, entity_id: str, labe
     conn.commit()
 
     # 读取缓存
-    row = conn.execute(
-        "SELECT vector_json FROM consensus_vectors WHERE entity_id = ?",
-        (entity_id,)
-    ).fetchone()
+    row = conn.execute("SELECT vector_json FROM consensus_vectors WHERE entity_id = ?", (entity_id,)).fetchone()
     if row:
         return json.loads(row[0])
 
@@ -112,7 +112,7 @@ def get_or_build_consensus_vector(conn: sqlite3.Connection, entity_id: str, labe
     if vec:
         conn.execute(
             "INSERT OR REPLACE INTO consensus_vectors (entity_id, vector_json, updated_at) VALUES (?, ?, ?)",
-            (entity_id, json.dumps(vec), datetime.datetime.now().isoformat())
+            (entity_id, json.dumps(vec), datetime.datetime.now().isoformat()),
         )
         conn.commit()
 
@@ -122,7 +122,7 @@ def get_or_build_consensus_vector(conn: sqlite3.Connection, entity_id: str, labe
 def extract_clean_description(md_path: Path) -> str:
     """提取 markdown 中剔除 frontmatter 和一级标题后的纯文本简介"""
     try:
-        with open(md_path, "r", encoding="utf-8") as f:
+        with open(md_path, encoding="utf-8") as f:
             content = f.read()
         content = re.sub(r"^---\s*\n.*?\n---\s*\n", "", content, flags=re.DOTALL)
         lines = content.split("\n")
@@ -188,9 +188,7 @@ def _select_consensus_entities(conn: sqlite3.Connection, *, full: bool) -> list:
             return conn.execute(
                 "SELECT entity_id, label, source_file FROM kos_entities WHERE entity_type='Consensus'"
             ).fetchall()
-        return conn.execute(
-            "SELECT entity_id FROM kos_entities WHERE entity_type='Consensus'"
-        ).fetchall()
+        return conn.execute("SELECT entity_id FROM kos_entities WHERE entity_type='Consensus'").fetchall()
     # Fallback when column still absent (pre-migration)
     if full:
         return conn.execute(
@@ -249,9 +247,11 @@ def main() -> int:
         task_context = ""
         try:
             import subprocess
+
             staged = subprocess.check_output(
                 ["git", "diff", "--name-only", "--cached"],
-                cwd=str(WORKSPACE), text=True
+                cwd=str(WORKSPACE),
+                text=True,
             ).strip()
             task_context += staged + "\n"
         except Exception:
@@ -261,10 +261,8 @@ def main() -> int:
         if not task_context.strip():
             try:
                 import subprocess
-                changed = subprocess.check_output(
-                    ["git", "diff", "--name-only"],
-                    cwd=str(WORKSPACE), text=True
-                ).strip()
+
+                changed = subprocess.check_output(["git", "diff", "--name-only"], cwd=str(WORKSPACE), text=True).strip()
                 task_context += changed
             except Exception:
                 pass
@@ -340,7 +338,7 @@ def main() -> int:
             consensus_lines.append("")
 
         # 5. 读取当前 CLAUDE.md 并替换/追加基因章节
-        with open(claude_md_path, "r", encoding="utf-8") as f:
+        with open(claude_md_path, encoding="utf-8") as f:
             claude_content = f.read()
 
         split_token = "## 🧬 Onboarding Consensus"

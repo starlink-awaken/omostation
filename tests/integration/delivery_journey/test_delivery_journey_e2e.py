@@ -4,10 +4,9 @@ Validates PENDING, RUNNING, VERIFIED, MERGED states and UNAVAILABLE degradation
 without generating real production mutations.
 """
 
-import os
 import sys
-import pytest
 from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -17,14 +16,14 @@ cockpit_src = root_dir / "projects" / "cockpit" / "src"
 if str(cockpit_src) not in sys.path:
     sys.path.insert(0, str(cockpit_src))
 
-from cockpit.delivery_journey import build_delivery_journey_projection, DeliveryStage
+from cockpit.delivery_journey import build_delivery_journey_projection
 from cockpit.web.api_delivery_journey import router
 
 
 def test_e2e_fixture_four_states_transitions():
     """Verify state transitions across PENDING -> RUNNING -> VERIFIED -> MERGED."""
     fixtures_order = ["PENDING", "RUNNING", "VERIFIED", "MERGED"]
-    
+
     for fixture_name in fixtures_order:
         data = build_delivery_journey_projection(fixture_state=fixture_name)
         assert data.id == f"fixture-{fixture_name.lower()}-101" or "fixture-" in data.id
@@ -35,11 +34,26 @@ def test_e2e_fixture_four_states_transitions():
         assert data.scene_binding["journey_id"] == "intent-to-evidence"
 
         # Ensure all 7 stages exist
-        for k in ["intent", "task", "run", "worktree", "verification", "pr", "evidence"]:
+        for k in [
+            "intent",
+            "task",
+            "run",
+            "worktree",
+            "verification",
+            "pr",
+            "evidence",
+        ]:
             assert k in data.stages
             stage = data.stages[k]
             assert stage["name"] == k
-            assert stage["status"] in ["verified", "running", "pending", "failed", "merged", "open"]
+            assert stage["status"] in [
+                "verified",
+                "running",
+                "pending",
+                "failed",
+                "merged",
+                "open",
+            ]
 
 
 def test_e2e_fixture_pending_properties():
@@ -65,7 +79,7 @@ def test_e2e_fixture_unavailable_degradation():
     data = build_delivery_journey_projection(fixture_state="UNAVAILABLE")
     assert data.status == "unavailable"
     assert "Unavailable" in data.title
-    
+
     for k, stage in data.stages.items():
         assert stage["status"] == "unavailable"
         assert "Unavailable" in stage["title"] or "降级" in stage["title"]

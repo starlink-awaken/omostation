@@ -28,15 +28,24 @@ def form_swarm(goal: str, members: list[str], *, deadline: str = "") -> dict[str
     ts = datetime.now(UTC).isoformat()
     swarm_id = f"swarm-{hashlib.sha256(f'{goal}:{ts}'.encode()).hexdigest()[:8]}"
     spec = {
-        "swarm_id": swarm_id, "schema": "swarm/v1", "status": "forming",
-        "goal": goal, "members": members, "coordinator": members[0] if members else "",
-        "formed_at": ts, "deadline": deadline,
-        "shared_context": {}, "tasks": [], "decisions": [],
+        "swarm_id": swarm_id,
+        "schema": "swarm/v1",
+        "status": "forming",
+        "goal": goal,
+        "members": members,
+        "coordinator": members[0] if members else "",
+        "formed_at": ts,
+        "deadline": deadline,
+        "shared_context": {},
+        "tasks": [],
+        "decisions": [],
     }
     SWARM_DIR.mkdir(parents=True, exist_ok=True)
     import yaml
+
     (SWARM_DIR / f"{swarm_id}.yaml").write_text(
-        yaml.dump(spec, default_flow_style=False, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        yaml.dump(spec, default_flow_style=False, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
     spec["action"] = "formed"
     return spec
 
@@ -44,6 +53,7 @@ def form_swarm(goal: str, members: list[str], *, deadline: str = "") -> dict[str
 def list_swarms() -> list[dict[str, Any]]:
     """List all swarms."""
     import yaml
+
     if not SWARM_DIR.is_dir():
         return []
     result = []
@@ -51,8 +61,14 @@ def list_swarms() -> list[dict[str, Any]]:
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
             if isinstance(data, dict):
-                result.append({"swarm_id": data.get("swarm_id", path.stem), "status": data.get("status", "?"),
-                               "goal": data.get("goal", "?")[:50], "members": data.get("members", [])})
+                result.append(
+                    {
+                        "swarm_id": data.get("swarm_id", path.stem),
+                        "status": data.get("status", "?"),
+                        "goal": data.get("goal", "?")[:50],
+                        "members": data.get("members", []),
+                    }
+                )
         except Exception:
             continue
     return result
@@ -61,6 +77,7 @@ def list_swarms() -> list[dict[str, Any]]:
 def dissolve_swarm(swarm_id: str, reason: str = "") -> dict[str, Any]:
     """Dissolve a swarm."""
     import yaml
+
     path = SWARM_DIR / f"{swarm_id}.yaml"
     if not path.exists():
         return {"error": f"swarm {swarm_id} not found"}

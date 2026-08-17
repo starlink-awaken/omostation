@@ -17,16 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SYNC_SCRIPT = ROOT / "bin" / "gac" / "gac-m1-sync.py"
 POLLUTION = (
-    ROOT
-    / "projects"
-    / "ecos"
-    / "src"
-    / "ecos"
-    / "ssot"
-    / "mof"
-    / "m1"
-    / "governance"
-    / "GAC-RULE-BRAND-NEW.yaml"
+    ROOT / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "GAC-RULE-BRAND-NEW.yaml"
 )
 
 FIXTURE = """\
@@ -50,9 +41,7 @@ def _run_sync(tracked: bool) -> dict:
     cmd = ["python3", str(SYNC_SCRIPT), "--json"]
     if tracked:
         cmd.append("--tracked")
-    proc = subprocess.run(
-        cmd, cwd=str(ROOT), capture_output=True, text=True, check=False, timeout=120
-    )
+    proc = subprocess.run(cmd, cwd=str(ROOT), capture_output=True, text=True, check=False, timeout=120)
     assert proc.returncode == 0, proc.stderr
     return json.loads(proc.stdout)
 
@@ -80,9 +69,7 @@ def test_tracked_mode_ignores_untracked_pollution() -> None:
         POLLUTION.write_text(FIXTURE, encoding="utf-8")
         result = _run_sync(tracked=True)
         orphans = result["diff"]["orphan_in_m1"]
-        assert "BRAND-NEW" not in orphans, (
-            f"tracked 模式不应看到 untracked BRAND-NEW, 实际 orphans={orphans}"
-        )
+        assert "BRAND-NEW" not in orphans, f"tracked 模式不应看到 untracked BRAND-NEW, 实际 orphans={orphans}"
         assert orphans == [], f"tracked 模式应零 orphan, 实际={orphans}"
     finally:
         _cleanup()

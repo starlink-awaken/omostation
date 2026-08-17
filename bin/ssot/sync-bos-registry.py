@@ -15,7 +15,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -24,9 +23,7 @@ import yaml
 WORKSPACE = Path(__file__).resolve().parents[2]
 BOS_YAML = WORKSPACE / "projects/agora/etc/bos-services.yaml"
 REGISTRY = WORKSPACE / ".omo/_knowledge/bos-registry.json"
-CLASSIC_DOMAINS = frozenset(
-    {"memory", "governance", "analysis", "persona", "capability"}
-)
+CLASSIC_DOMAINS = frozenset({"memory", "governance", "analysis", "persona", "capability"})
 KEEP_STATUS = frozenset({"active", "unimplemented"})
 # omo smoke / BOS CLI validate 4-segment kebab (package) + optional underscore action
 _OMO_URI = re.compile(
@@ -110,9 +107,8 @@ def main() -> int:
     data = yaml.safe_load(BOS_YAML.read_text(encoding="utf-8")) or {}
     services = data.get("services") or []
     fresh = build_registry(services)
-    current = (
-        json.loads(REGISTRY.read_text(encoding="utf-8")) if REGISTRY.exists() else []
-    )
+    current = json.loads(REGISTRY.read_text(encoding="utf-8")) if REGISTRY.exists() else []
+
     # Compare without registered_at noise
     def _canon(rows: list[dict]) -> list[dict]:
         out = []
@@ -123,10 +119,7 @@ def main() -> int:
         return out
 
     drifted = _canon(current) != _canon(fresh)
-    print(
-        f"bos-registry: live={len(fresh)} file={len(current)} "
-        f"drift={'YES' if drifted else 'no'}"
-    )
+    print(f"bos-registry: live={len(fresh)} file={len(current)} drift={'YES' if drifted else 'no'}")
     if args.check and drifted:
         print(
             "FAIL: .omo/_knowledge/bos-registry.json out of sync with bos-services.yaml\n"

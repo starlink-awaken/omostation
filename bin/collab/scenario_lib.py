@@ -12,6 +12,7 @@ W2.2 闭环 (ADR-0254):
 
 红线 (P84 §0): 构造场景只进能力轨, 绝不计产能轨.
 """
+
 from __future__ import annotations
 
 import random
@@ -51,10 +52,7 @@ class ScenarioResult:
             "adversarial": self.adversarial,
             "seed": self.seed,
             "passed": self.passed,
-            "criteria": [
-                {"name": c.name, "passed": c.passed, "evidence": c.evidence}
-                for c in self.criteria
-            ],
+            "criteria": [{"name": c.name, "passed": c.passed, "evidence": c.evidence} for c in self.criteria],
             "events": self.events,
             "resolution_rounds": self.resolution_rounds,
             "silent_loss": self.silent_loss,
@@ -227,10 +225,7 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     events.extend(_synthesize_http_request_smuggling(events))
     events.extend(_synthesize_jwt_kid_injection(events))
 
-    criteria = [
-        _eval_criterion(c, events, blackboard, resolution_rounds, silent_loss)
-        for c in scenario["verdict"]
-    ]
+    criteria = [_eval_criterion(c, events, blackboard, resolution_rounds, silent_loss) for c in scenario["verdict"]]
     passed = all(c.passed for c in criteria)
     return ScenarioResult(
         scenario_id=scenario["id"],
@@ -245,9 +240,7 @@ def run_scenario(scenario: dict) -> ScenarioResult:
     )
 
 
-def _handle_write(
-    board: dict, inj: dict, ts: int, authorized: set[str]
-) -> list[dict]:
+def _handle_write(board: dict, inj: dict, ts: int, authorized: set[str]) -> list[dict]:
     """写产物 / 认领.
 
     W2.2:
@@ -394,10 +387,7 @@ def _handle_audit_reject(inj: dict, ts: int, authorized: set[str]) -> dict:
 def _synthesize_partial_failure(events: list[dict]) -> list[dict]:
     """部分成功 + 部分失败 → partial_failure_handled (降级而非静默)."""
     has_success = any(e.get("kind") in {"write", "chain_step_done"} for e in events)
-    has_fail = any(
-        e.get("kind") in {"role_timeout", "subtask_fail", "broken_chain_detected"}
-        for e in events
-    )
+    has_fail = any(e.get("kind") in {"role_timeout", "subtask_fail", "broken_chain_detected"} for e in events)
     # 双写冲突中「一赢一负」亦视为部分失败路径 (GEN-ADV partial 仅双写)
     has_conflict = any(e.get("kind") == "conflict_detected" for e in events)
     has_double = any(e.get("kind") == "double_claim_detected" for e in events)
@@ -428,10 +418,7 @@ def _synthesize_starvation(board: dict, events: list[dict]) -> list[dict]:
         )
         # ≥3 角色争抢, 或 ≥2 角色且已发生冲突轮次 (GEN 双写也算饿死风险)
         if len(uniq) >= 3 or (len(uniq) >= 2 and conflicts >= 1):
-            if not any(
-                e.get("kind") == "starvation_resolved" and e.get("target") == key
-                for e in events
-            ):
+            if not any(e.get("kind") == "starvation_resolved" and e.get("target") == key for e in events):
                 # 公平: 轮询最后写者获批, 其余排队 (显式 resolved, 非静默)
                 out.append(
                     {
@@ -495,12 +482,8 @@ def _synthesize_priority_inversion(events: list[dict], roles: list[str]) -> list
     """低优持锁 + 高优超时 → priority_inversion_detected (ADV15)."""
     if any(e.get("kind") == "priority_inversion_detected" for e in events):
         return []
-    writers = [
-        e for e in events if e.get("kind") == "write" and e.get("role")
-    ]
-    timeouts = [
-        e for e in events if e.get("kind") == "role_timeout" and e.get("role")
-    ]
+    writers = [e for e in events if e.get("kind") == "write" and e.get("role")]
+    timeouts = [e for e in events if e.get("kind") == "role_timeout" and e.get("role")]
     if not writers or not timeouts:
         return []
     for w in writers:
@@ -585,11 +568,7 @@ def _synthesize_byzantine_quorum(events: list[dict], board: dict) -> list[dict]:
     out: list[dict] = []
     for target, val_map in by_target.items():
         # normalize unique roles per value
-        counts = {
-            v: list(dict.fromkeys(roles))
-            for v, roles in val_map.items()
-            if v is not None
-        }
+        counts = {v: list(dict.fromkeys(roles)) for v, roles in val_map.items() if v is not None}
         if len(counts) < 2:
             continue
         ranked = sorted(counts.items(), key=lambda kv: -len(kv[1]))
@@ -607,9 +586,7 @@ def _synthesize_byzantine_quorum(events: list[dict], board: dict) -> list[dict]:
                 "majority_value": maj_val,
                 "majority_roles": maj_roles,
                 "majority_size": len(maj_roles),
-                "minority": [
-                    {"value": v, "roles": r, "size": len(r)} for v, r in minority
-                ],
+                "minority": [{"value": v, "roles": r, "size": len(r)} for v, r in minority],
                 "policy": "require_supermajority_or_abort",
             }
         )
@@ -642,9 +619,7 @@ def _synthesize_replay_attack(events: list[dict], board: dict) -> list[dict]:
                     "ts": max(g.get("ts") or 0 for g in group),
                     "target": target,
                     "value": value,
-                    "roles": list(
-                        dict.fromkeys(str(g.get("role")) for g in group)
-                    ),
+                    "roles": list(dict.fromkeys(str(g.get("role")) for g in group)),
                     "reason": "identical_value_multi_write",
                 }
             ]
@@ -709,11 +684,7 @@ def _synthesize_split_brain(events: list[dict]) -> list[dict]:
     """分区脑裂: 权威 key 分歧写 + 两侧 timeout → split_brain_detected (ADV25)."""
     if any(e.get("kind") == "split_brain_detected" for e in events):
         return []
-    conflicts = [
-        e
-        for e in events
-        if e.get("kind") in {"conflict_detected", "double_claim_detected"}
-    ]
+    conflicts = [e for e in events if e.get("kind") in {"conflict_detected", "double_claim_detected"}]
     timeouts = [e for e in events if e.get("kind") == "role_timeout"]
     if not conflicts or len(timeouts) < 2:
         return []
@@ -764,9 +735,7 @@ def _synthesize_identity_spoof(events: list[dict]) -> list[dict]:
             ]
         # role name spoofs audit but may still be "authorized" if in roles
         role = str(e.get("role") or "")
-        if "attack" in role.lower() or (
-            "audit" in role.lower() and role.lower() not in {"audit", "auditor"}
-        ):
+        if "attack" in role.lower() or ("audit" in role.lower() and role.lower() not in {"audit", "auditor"}):
             return [
                 {
                     "kind": "identity_spoof_detected",
@@ -780,18 +749,12 @@ def _synthesize_identity_spoof(events: list[dict]) -> list[dict]:
     return []
 
 
-def _synthesize_supply_chain_tamper(
-    events: list[dict], scenario: dict, board: dict
-) -> list[dict]:
+def _synthesize_supply_chain_tamper(events: list[dict], scenario: dict, board: dict) -> list[dict]:
     """链步骤使用依赖后依赖被改写 → supply_chain_tamper_detected (ADV29)."""
     if any(e.get("kind") == "supply_chain_tamper_detected" for e in events):
         return []
     # map inject chain_step deps
-    chain_injects = [
-        inj
-        for inj in scenario.get("inject") or []
-        if inj.get("type") == "chain_step"
-    ]
+    chain_injects = [inj for inj in scenario.get("inject") or [] if inj.get("type") == "chain_step"]
     if not chain_injects:
         return []
     # chronological events: if chain_step_done for step S, then later conflict on dep of S
@@ -855,11 +818,7 @@ def _synthesize_sybil_flood(events: list[dict], board: dict) -> list[dict]:
             continue
         by_target.setdefault(target, {}).setdefault(val, []).append(role)
     for target, val_map in by_target.items():
-        counts = {
-            v: list(dict.fromkeys(roles))
-            for v, roles in val_map.items()
-            if v is not None
-        }
+        counts = {v: list(dict.fromkeys(roles)) for v, roles in val_map.items() if v is not None}
         if not counts:
             continue
         ranked = sorted(counts.items(), key=lambda kv: -len(kv[1]))
@@ -938,21 +897,12 @@ def _synthesize_quorum_eclipse(events: list[dict], roles: list[str]) -> list[dic
     """关键角色超时后其余角色仍形成伪法定人数 → quorum_eclipse_detected (ADV35)."""
     if any(e.get("kind") == "quorum_eclipse_detected" for e in events):
         return []
-    timeouts = [
-        str(e.get("role"))
-        for e in events
-        if e.get("kind") == "role_timeout" and e.get("role")
-    ]
+    timeouts = [str(e.get("role")) for e in events if e.get("kind") == "role_timeout" and e.get("role")]
     if not timeouts:
         return []
     # critical-like roles: name contains critical / leader / primary / coordinator
     critical_to = [
-        r
-        for r in timeouts
-        if any(
-            k in r.lower()
-            for k in ("critical", "leader", "primary", "coord", "chief")
-        )
+        r for r in timeouts if any(k in r.lower() for k in ("critical", "leader", "primary", "coord", "chief"))
     ]
     if not critical_to:
         # also: timed-out role was in setup roles and ≥3 others write same value after
@@ -960,9 +910,7 @@ def _synthesize_quorum_eclipse(events: list[dict], roles: list[str]) -> list[dic
     timed = set(critical_to)
     # after any critical timeout ts, count majority writes
     timeout_ts = min(
-        int(e.get("ts") or 0)
-        for e in events
-        if e.get("kind") == "role_timeout" and str(e.get("role")) in timed
+        int(e.get("ts") or 0) for e in events if e.get("kind") == "role_timeout" and str(e.get("role")) in timed
     )
     by_tv: dict[tuple[str, object], list[str]] = {}
     for e in events:
@@ -998,7 +946,7 @@ def _extract_ts_number(val: object) -> int | None:
         return None
     import re
 
-    m = re.search(r"ts\s*=\s*(\d+)", str(val), re.I)
+    m = re.search(r"ts\s*=\s*(\d+)", str(val), re.IGNORECASE)
     return int(m.group(1)) if m else None
 
 
@@ -1117,11 +1065,7 @@ def _synthesize_double_spend(events: list[dict], board: dict) -> list[dict]:
 
     for target, pairs in by_target.items():
         # distinct non-unspent values from ≥2 roles
-        spent = [
-            (v, r)
-            for v, r in pairs
-            if v is not None and "unspent" not in str(v).lower()
-        ]
+        spent = [(v, r) for v, r in pairs if v is not None and "unspent" not in str(v).lower()]
         values = list(dict.fromkeys(v for v, _ in spent))
         roles = list(dict.fromkeys(r for _, r in spent if r))
         if len(values) >= 2 and len(roles) >= 2:
@@ -1226,9 +1170,7 @@ def _synthesize_censorship_gap(events: list[dict]) -> list[dict]:
                 e.get("value"),
             )
     timeouts = {
-        str(e.get("role")): int(e.get("ts") or 0)
-        for e in events
-        if e.get("kind") == "role_timeout" and e.get("role")
+        str(e.get("role")): int(e.get("ts") or 0) for e in events if e.get("kind") == "role_timeout" and e.get("role")
     }
     for e in events:
         if e.get("kind") not in {"conflict_detected", "double_claim_detected", "write"}:
@@ -1293,9 +1235,7 @@ def _synthesize_vote_buying(events: list[dict]) -> list[dict]:
             if ts < b_ts:
                 continue
             # ballot changed after bribe; voter != buyer; value references buyer or buyer_choice
-            if role and role != buyer and (
-                "buyer" in val or buyer.lower() in val or "choice" in val
-            ):
+            if role and role != buyer and ("buyer" in val or buyer.lower() in val or "choice" in val):
                 return [
                     {
                         "kind": "vote_buying_detected",
@@ -1430,12 +1370,7 @@ def _synthesize_front_running(events: list[dict]) -> list[dict]:
         role = str(e.get("role") or "")
         val = str(e.get("new") if "new" in e else e.get("value") or "").lower()
         ts = int(e.get("ts") or 0)
-        sniper_like = (
-            "snipe" in role.lower()
-            or "snipe" in val
-            or "fill" in val
-            or "front" in val
-        )
+        sniper_like = "snipe" in role.lower() or "snipe" in val or "fill" in val or "front" in val
         book_touch = any(k in target for k in ("order", "book", "pending", "market"))
         if not (sniper_like or book_touch):
             continue
@@ -1463,9 +1398,7 @@ def _synthesize_griefing_abort(events: list[dict]) -> list[dict]:
     if any(e.get("kind") == "griefing_abort_detected" for e in events):
         return []
     timeouts = {
-        str(e.get("role")): int(e.get("ts") or 0)
-        for e in events
-        if e.get("kind") == "role_timeout" and e.get("role")
+        str(e.get("role")): int(e.get("ts") or 0) for e in events if e.get("kind") == "role_timeout" and e.get("role")
     }
     if not timeouts:
         return []
@@ -1476,14 +1409,18 @@ def _synthesize_griefing_abort(events: list[dict]) -> list[dict]:
         role = str(e.get("role") or "")
         val = e.get("new") if "new" in e else e.get("value")
         ts = int(e.get("ts") or 0)
-        wipe = str(val or "").lower() in {
-            "wiped",
-            "null",
-            "empty",
-            "deleted",
-            "cleared",
-            "",
-        } or val is None
+        wipe = (
+            str(val or "").lower()
+            in {
+                "wiped",
+                "null",
+                "empty",
+                "deleted",
+                "cleared",
+                "",
+            }
+            or val is None
+        )
         # griefer is not the timed-out worker; acts after worker timeout
         for worker, t_to in timeouts.items():
             if role == worker:
@@ -1518,9 +1455,7 @@ def _synthesize_oracle_manipulation(events: list[dict]) -> list[dict]:
         ts = int(e.get("ts") or 0)
         role = str(e.get("role") or "")
         if "settle" in target or "settlement" in target:
-            settlements.append(
-                (ts, e.get("new") if "new" in e else e.get("value"), role)
-            )
+            settlements.append((ts, e.get("new") if "new" in e else e.get("value"), role))
         if not ("oracle" in target or "price" in target):
             continue
         if e.get("kind") in {"conflict_detected", "double_claim_detected"}:
@@ -1548,13 +1483,8 @@ def _synthesize_oracle_manipulation(events: list[dict]) -> list[dict]:
             continue
         settled = any(st >= t1 for st, _, _ in settlements)
         # settlement value may embed the spike price
-        settled = settled or any(
-            str(p1) in str(sv) for _st, sv, _ in settlements
-        )
-        recovered = any(
-            j > i + 1 and p0 > 0 and abs(nums[j][1] - p0) / p0 < 0.25
-            for j in range(i + 2, len(nums))
-        )
+        settled = settled or any(str(p1) in str(sv) for _st, sv, _ in settlements)
+        recovered = any(j > i + 1 and p0 > 0 and abs(nums[j][1] - p0) / p0 < 0.25 for j in range(i + 2, len(nums)))
         if settled or recovered or drop_ratio >= 0.9:
             return [
                 {
@@ -1612,8 +1542,7 @@ def _synthesize_sandwich_attack(events: list[dict]) -> list[dict]:
                 profit = "profit" in k2.lower() or "extract" in str(v2).lower()
                 # later profit write also counts as closing sandwich
                 has_profit = any(
-                    r == r0 and ("profit" in kt.lower() or "extract" in str(vv).lower())
-                    for _tt, r, kt, vv in acts[j:]
+                    r == r0 and ("profit" in kt.lower() or "extract" in str(vv).lower()) for _tt, r, kt, vv in acts[j:]
                 )
                 if back_price or profit or has_profit:
                     return [
@@ -1666,13 +1595,10 @@ def _synthesize_reentrancy(events: list[dict]) -> list[dict]:
                 nums.append(float(str(v).strip()))
             except (TypeError, ValueError):
                 pass
-        decreasing = len(nums) >= 2 and any(
-            nums[i] > nums[i + 1] for i in range(len(nums) - 1)
-        )
+        decreasing = len(nums) >= 2 and any(nums[i] > nums[i + 1] for i in range(len(nums) - 1))
         multi = len(hits) >= 2
         has_wd = any(
-            role == wr or "twice" in str(wv).lower() or "reenter" in str(wv).lower()
-            for _t, wr, wv in withdraws
+            role == wr or "twice" in str(wv).lower() or "reenter" in str(wv).lower() for _t, wr, wv in withdraws
         ) or any("withdraw" in str(h[1]).lower() for h in hits)
         if multi and (decreasing or has_wd or len(hits) >= 2):
             # require withdraw log OR clear decreasing
@@ -1777,21 +1703,14 @@ def _synthesize_flash_loan_attack(events: list[dict]) -> list[dict]:
         by_role.setdefault(role, []).append((ts, tgt, val))
     for role, seq in by_role.items():
         has_borrow = any(
-            "borrow" in t.lower() or "flash" in t.lower() or "borrow" in str(v).lower()
-            for _ts, t, v in seq
+            "borrow" in t.lower() or "flash" in t.lower() or "borrow" in str(v).lower() for _ts, t, v in seq
         )
-        has_repay = any(
-            "repay" in t.lower() or "repay" in str(v).lower() for _ts, t, v in seq
-        )
+        has_repay = any("repay" in t.lower() or "repay" in str(v).lower() for _ts, t, v in seq)
         has_manip = any(
-            "price" in t.lower()
-            or "manipul" in str(v).lower()
-            or "oracle" in t.lower()
-            for _ts, t, v in seq
+            "price" in t.lower() or "manipul" in str(v).lower() or "oracle" in t.lower() for _ts, t, v in seq
         )
         has_profit = any(
-            "profit" in t.lower() or "profit" in str(v).lower() or "arb" in str(v).lower()
-            for _ts, t, v in seq
+            "profit" in t.lower() or "profit" in str(v).lower() or "arb" in str(v).lower() for _ts, t, v in seq
         )
         if has_borrow and has_repay and (has_manip or has_profit):
             return [
@@ -1827,9 +1746,7 @@ def _synthesize_governance_capture(events: list[dict]) -> list[dict]:
             vote_moves.append((ts, role, val))
         elif "proposal" in target and "result" not in target:
             proposals.append((ts, role, val))
-        elif "proposal_result" in target or (
-            "result" in target and "proposal" in target
-        ):
+        elif "proposal_result" in target or ("result" in target and "proposal" in target):
             results.append((ts, role, val))
         elif "proposal" in target:
             proposals.append((ts, role, val))
@@ -1855,18 +1772,10 @@ def _synthesize_governance_capture(events: list[dict]) -> list[dict]:
                             spike = True
         # malicious proposal + passed
         mal = any(
-            r == role
-            and (
-                "drain" in str(v).lower()
-                or "malicious" in str(v).lower()
-                or "attack" in str(v).lower()
-            )
+            r == role and ("drain" in str(v).lower() or "malicious" in str(v).lower() or "attack" in str(v).lower())
             for _t, r, v in proposals
         ) or any("malicious" in str(p[2]).lower() or "drain" in str(p[2]).lower() for p in proposals)
-        passed = any(
-            "pass" in str(v).lower() or "approved" in str(v).lower()
-            for _t, _r, v in results
-        )
+        passed = any("pass" in str(v).lower() or "approved" in str(v).lower() for _t, _r, v in results)
         if (spike or len(role_votes) >= 2) and (mal or proposals) and (passed or results):
             return [
                 {
@@ -1887,8 +1796,7 @@ def _synthesize_governance_capture(events: list[dict]) -> list[dict]:
                 "ts": max(
                     (e.get("ts") or 0)
                     for e in events
-                    if e.get("kind")
-                    in {"write", "conflict_detected", "double_claim_detected"}
+                    if e.get("kind") in {"write", "conflict_detected", "double_claim_detected"}
                 ),
                 "vote_moves": len(vote_moves),
                 "proposals": len(proposals),
@@ -1923,9 +1831,7 @@ def _synthesize_cross_domain_replay(events: list[dict], board: dict) -> list[dic
         role = str(e.get("role") or "")
         if "domain" not in tl and "exec" not in tl and "sig" not in tl and "msg" not in tl:
             continue
-        tag = "a" if ("_a" in tl or "domain_a" in tl) else (
-            "b" if ("_b" in tl or "domain_b" in tl) else "x"
-        )
+        tag = "a" if ("_a" in tl or "domain_a" in tl) else ("b" if ("_b" in tl or "domain_b" in tl) else "x")
         domain_payloads.setdefault(val, []).append((tag, role))
     for val, tags in domain_payloads.items():
         if val is None:
@@ -1934,13 +1840,9 @@ def _synthesize_cross_domain_replay(events: list[dict], board: dict) -> list[dic
         roles = {r for _t, r in tags if r}
         # same payload across domains OR repeated exec on domain_b
         multi_domain = len(domains) >= 2
-        multi_exec = sum(1 for t, _r in tags if t == "b") >= 2 or sum(
-            1 for t, _r in tags if "exec" in t
-        ) >= 2
+        multi_exec = sum(1 for t, _r in tags if t == "b") >= 2 or sum(1 for t, _r in tags if "exec" in t) >= 2
         # also: board domain_a + writes domain_b same value twice (replay_attack also fires)
-        if multi_domain or (
-            any(t == "a" for t, _ in tags) and sum(1 for t, _ in tags if t == "b") >= 1
-        ):
+        if multi_domain or (any(t == "a" for t, _ in tags) and sum(1 for t, _ in tags if t == "b") >= 1):
             if multi_domain or multi_exec or len(tags) >= 2:
                 return [
                     {
@@ -2193,14 +2095,7 @@ def _synthesize_wash_trade(events: list[dict]) -> list[dict]:
         ts = int(e.get("ts") or 0)
         if not target:
             continue
-        is_trade = (
-            "sold" in vs
-            or "sell" in vs
-            or "buy" in vs
-            or "price" in vs
-            or "nft" in target
-            or "wash" in vs
-        )
+        is_trade = "sold" in vs or "sell" in vs or "buy" in vs or "price" in vs or "nft" in target or "wash" in vs
         if is_trade:
             trades.setdefault(target, []).append((ts, role, vs))
     for target, seq in trades.items():
@@ -2328,11 +2223,7 @@ def _synthesize_infinite_mint(events: list[dict]) -> list[dict]:
     rising = len(nums) >= 2 and nums[-1] > nums[0]
     multi_mint = len(supply_writes) >= 2 or len(mint_gains) >= 1
     if rising and multi_mint:
-        ts_max = max(
-            [t for t, _r, _v in supply_writes]
-            + [t for t, _r, _v in mint_gains]
-            + [0]
-        )
+        ts_max = max([t for t, _r, _v in supply_writes] + [t for t, _r, _v in mint_gains] + [0])
         return [
             {
                 "kind": "infinite_mint_detected",
@@ -2896,7 +2787,7 @@ def _synthesize_liquidity_migration_trap(events: list[dict]) -> list[dict]:
         if "migrate" in target or "migrate" in vs:
             migrate_notice = True
             role = r or role
-        if "old_pool" in target or ( "pool" in target and "old" in target):
+        if "old_pool" in target or ("pool" in target and "old" in target):
             if vs in {"0", "0.0", "liq_0"} or "liq_0" in vs:
                 old_drained = True
                 role = r or role
@@ -3055,9 +2946,7 @@ def _synthesize_governance_timelock_bypass(events: list[dict]) -> list[dict]:
         if "emergency" in target or "grant_self" in vs or "emergency" in vs:
             emergency = True
             role = r or role
-        if "skip_delay" in vs or "execute_now" in vs or (
-            "timelock" in target and ("skip" in vs or "now" in vs)
-        ):
+        if "skip_delay" in vs or "execute_now" in vs or ("timelock" in target and ("skip" in vs or "now" in vs)):
             skip_delay = True
             role = r or role
         if "malicious" in vs or "system_param" in target:
@@ -4093,14 +3982,8 @@ def _synthesize_session_fixation(events: list[dict]) -> list[dict]:
         if "hijack" in target or "act_as" in vs:
             hijack = True
             role = r or role
-    fixed = (
-        preauth_sid is not None
-        and sid_after_login is not None
-        and preauth_sid == sid_after_login
-    )
-    if (fixed or (preauth_sid and login_ok and "preauth" in (sid_after_login or preauth_sid))) and (
-        hijack or login_ok
-    ):
+    fixed = preauth_sid is not None and sid_after_login is not None and preauth_sid == sid_after_login
+    if (fixed or (preauth_sid and login_ok and "preauth" in (sid_after_login or preauth_sid))) and (hijack or login_ok):
         return [
             {
                 "kind": "session_fixation_detected",

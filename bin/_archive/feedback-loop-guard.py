@@ -122,14 +122,32 @@ def _emit_event(kind: str, payload: dict) -> bool:
     py = OMO_VENV if OMO_VENV.exists() else None
     cmd = []
     if py:
-        cmd = [str(py), "-m", "omo.omo_event", "emit", "--type", kind, "--source",
-               "feedback-loop-guard", "--payload", json.dumps(payload, ensure_ascii=False)]
+        cmd = [
+            str(py),
+            "-m",
+            "omo.omo_event",
+            "emit",
+            "--type",
+            kind,
+            "--source",
+            "feedback-loop-guard",
+            "--payload",
+            json.dumps(payload, ensure_ascii=False),
+        ]
     else:
-        cmd = ["omo", "event", "emit", "--type", kind, "--source",
-               "feedback-loop-guard", "--payload", json.dumps(payload, ensure_ascii=False)]
+        cmd = [
+            "omo",
+            "event",
+            "emit",
+            "--type",
+            kind,
+            "--source",
+            "feedback-loop-guard",
+            "--payload",
+            json.dumps(payload, ensure_ascii=False),
+        ]
     try:
-        result = subprocess.run(cmd, cwd=WORKSPACE_ROOT, capture_output=True, text=True,
-                                timeout=20, check=False)
+        result = subprocess.run(cmd, cwd=WORKSPACE_ROOT, capture_output=True, text=True, timeout=20, check=False)
     except (subprocess.TimeoutExpired, FileNotFoundError):
         return False
     return result.returncode == 0
@@ -144,8 +162,7 @@ def check_all() -> dict:
     gov_mtime_age = _file_age_hours(GOV_LOG)
     gov_last_ts = _log_last_entry_ts(GOV_LOG)
     gov_entry_age = _age_hours_from_ts(gov_last_ts) if gov_last_ts else None
-    gov_breached = (gov_entry_age is not None
-                    and gov_entry_age > GOV_STALENESS_HOURS)
+    gov_breached = gov_entry_age is not None and gov_entry_age > GOV_STALENESS_HOURS
     dimensions["governance_history"] = {
         "path": str(GOV_LOG.relative_to(WORKSPACE_ROOT)),
         "exists": GOV_LOG.exists(),
@@ -160,8 +177,7 @@ def check_all() -> dict:
     ingress_mtime_age = _file_age_hours(INGRESS_LOG)
     ingress_last_ts = _log_last_entry_ts(INGRESS_LOG)
     ingress_entry_age = _age_hours_from_ts(ingress_last_ts) if ingress_last_ts else None
-    ingress_breached = (ingress_entry_age is not None
-                        and ingress_entry_age > INGRESS_STALENESS_HOURS)
+    ingress_breached = ingress_entry_age is not None and ingress_entry_age > INGRESS_STALENESS_HOURS
     dimensions["ingress_audit"] = {
         "path": str(INGRESS_LOG.relative_to(WORKSPACE_ROOT)),
         "exists": INGRESS_LOG.exists(),
@@ -205,8 +221,7 @@ def check_all() -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="自反馈回路存活监控")
-    parser.add_argument("--check", action="store_true",
-                        help="只检查, 不 emit escalation (cron 友好退出码)")
+    parser.add_argument("--check", action="store_true", help="只检查, 不 emit escalation (cron 友好退出码)")
     parser.add_argument("--json", action="store_true", help="输出 JSON 报告")
     parser.add_argument("--dry-run", action="store_true", help="dry-run, 不 emit")
     args = parser.parse_args(argv)

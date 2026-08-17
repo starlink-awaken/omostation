@@ -42,8 +42,7 @@ def query_family(family: str, index: dict) -> dict:
 
 
 def query_rules(rule_prefix: str, index: dict) -> dict:
-    constraints = [cid for cid, c in index.items()
-                   if any(r.lower().startswith(rule_prefix.lower()) for r in c)]
+    constraints = [cid for cid, c in index.items() if any(r.lower().startswith(rule_prefix.lower()) for r in c)]
     return {"rule_prefix": rule_prefix, "constraints": constraints}
 
 
@@ -59,7 +58,10 @@ def main() -> int:
         return 2
     index = load_index()
     if not index:
-        print("[WARN] consumer-index 未生成，先跑: python3 bin/ssot/consumer_index.py", file=sys.stderr)
+        print(
+            "[WARN] consumer-index 未生成，先跑: python3 bin/ssot/consumer_index.py",
+            file=sys.stderr,
+        )
         return 1
     if args.constraint:
         result = query_constraint(args.constraint, index)

@@ -3,15 +3,17 @@
 Checks all eCOS layers from L0 to L4 + I0 fabric.
 Exits 0 if all checks pass, 1 if any fail.
 """
+
 from __future__ import annotations
+
 import socket
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 
 def _utc_now():
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _probe(host, port, timeout=3):
@@ -64,7 +66,11 @@ def check_all():
     services = []
     # 2026-07-03 修(r2, 首次修复曾被回滚): Agora 主入口 7422→7431 —
     # port-registry.yaml 标注 7422 为 env-only (默认不监听), SSE Main 7431 为常驻端口
-    for name, port in [("Agora Hub", 7431), ("Cron Service", 7450), ("Cockpit API", 8090)]:
+    for name, port in [
+        ("Agora Hub", 7431),
+        ("Cron Service", 7450),
+        ("Cockpit API", 8090),
+    ]:
         ok = _probe("127.0.0.1", port)
         services.append(_fmt(ok, f"{name} :{port}"))
     # runtime-mcp is stdio-based, no port probe needed
@@ -87,9 +93,7 @@ def check_all():
 
         ledger = load_debt_ledger(omo_path)
         closed = sum(1 for i in ledger.items if i.lifecycle_state == "closed")
-        results.append(
-            _fmt(True, f"Debt ledger: {len(ledger.items)} items, {closed} closed")
-        )
+        results.append(_fmt(True, f"Debt ledger: {len(ledger.items)} items, {closed} closed"))
     except Exception as e:
         results.append(_fmt(False, f"Debt ledger: {e}"))
 

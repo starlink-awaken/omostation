@@ -20,6 +20,7 @@ Exit:
   1  blocked (phase not unlocked or caliber violation)
   2  config error
 """
+
 from __future__ import annotations
 
 import argparse
@@ -169,9 +170,7 @@ def check_metrics_caliber(
         if not isinstance(pg, dict):
             continue
         keys = list(pg.get("metric_keys") or [])
-        only_fields = list(
-            pg.get("physical_only_true_fields") or ["meets_physical_gate", "meets_gate"]
-        )
+        only_fields = list(pg.get("physical_only_true_fields") or ["meets_physical_gate", "meets_gate"])
         min_hosts = int(pg.get("min_physical_hosts") or 2)
         gate_status = str(pg.get("status") or "OPEN").upper()
         for mk in keys:
@@ -197,10 +196,7 @@ def check_metrics_caliber(
                                 "field": field,
                                 "env": metric.get("env"),
                                 "env_class": metric.get("env_class"),
-                                "message": (
-                                    f"{mk}.{field}=true under simulation env; "
-                                    f"physical-only field (ADR-0225)"
-                                ),
+                                "message": (f"{mk}.{field}=true under simulation env; physical-only field (ADR-0225)"),
                             }
                         )
 
@@ -249,10 +245,7 @@ def check_metrics_caliber(
         or "inprocess" in top_class
         or (
             not top_class
-            and any(
-                isinstance(report.get(k), dict) and _metric_env_is_sim(report[k])
-                for k in ("g_del_1", "g_del_3")
-            )
+            and any(isinstance(report.get(k), dict) and _metric_env_is_sim(report[k]) for k in ("g_del_1", "g_del_3"))
         )
     )
     if top_is_sim:
@@ -408,9 +401,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     ap.add_argument(
         "--pr",
-        default=os.environ.get("PHASE_ESCAPE_PR")
-        or os.environ.get("GITHUB_PR_NUMBER")
-        or "",
+        default=os.environ.get("PHASE_ESCAPE_PR") or os.environ.get("GITHUB_PR_NUMBER") or "",
     )
     args = ap.parse_args(argv)
     root = (args.root or Path(__file__).resolve().parents[2]).resolve()

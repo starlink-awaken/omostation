@@ -4,6 +4,7 @@
 Verifies that all seed_items referenced in debt.yaml actually exist on disk.
 Exit 1 if any file is missing.
 """
+
 from __future__ import annotations
 
 import sys

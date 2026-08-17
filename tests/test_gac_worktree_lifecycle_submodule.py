@@ -20,10 +20,13 @@ SCRIPT = ROOT / "bin" / "gac" / "gac-worktree.sh"
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
+
 def _git(path: Path, *args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["git", "-C", str(path), *args],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     )
 
 
@@ -52,8 +55,18 @@ def _make_parent_with_submodule(tmp_path: Path) -> tuple[Path, Path]:
     _git(parent, "add", "tracked.txt")
     # protocol.file.allow=always: needed for local submodule URLs (CVE-2022-39253 mitigation)
     subprocess.run(
-        ["git", "-C", str(parent), "-c", "protocol.file.allow=always",
-         "submodule", "add", "-q", str(child), "lib-sub"],
+        [
+            "git",
+            "-C",
+            str(parent),
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "add",
+            "-q",
+            str(child),
+            "lib-sub",
+        ],
         check=True,
     )
     _git(parent, "commit", "-q", "-m", "add submodule")
@@ -67,8 +80,16 @@ def _make_worktree(parent: Path, wt_path: Path, branch: str = "wt-branch") -> No
         check=True,
     )
     subprocess.run(
-        ["git", "-C", str(wt_path), "-c", "protocol.file.allow=always",
-         "submodule", "update", "--init"],
+        [
+            "git",
+            "-C",
+            str(wt_path),
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "update",
+            "--init",
+        ],
         check=True,
     )
 
@@ -78,7 +99,16 @@ def _make_pasw_worktree(wt_path: Path, branch: str) -> Path:
     pasw = wt_path / ".subtrees" / "lib-sub"
     pasw.parent.mkdir()
     subprocess.run(
-        ["git", "-C", str(wt_path / "lib-sub"), "worktree", "add", "-b", branch, str(pasw)],
+        [
+            "git",
+            "-C",
+            str(wt_path / "lib-sub"),
+            "worktree",
+            "add",
+            "-b",
+            branch,
+            str(pasw),
+        ],
         check=True,
     )
     return pasw
@@ -117,12 +147,7 @@ def _write_failing_git_wrapper(tmp_path: Path, condition: str, message: str) -> 
     wrapper_dir = tmp_path / "git-wrapper"
     wrapper_dir.mkdir(parents=True)
     (wrapper_dir / "git").write_text(
-        "#!/bin/sh\n"
-        f"if {condition}; then\n"
-        f"  echo '{message}' >&2\n"
-        "  exit 73\n"
-        "fi\n"
-        f'exec "{real_git}" "$@"\n'
+        f'#!/bin/sh\nif {condition}; then\n  echo \'{message}\' >&2\n  exit 73\nfi\nexec "{real_git}" "$@"\n'
     )
     (wrapper_dir / "git").chmod(0o755)
     return wrapper_dir
@@ -132,8 +157,9 @@ def _extract_verify_function() -> str:
     """Pull verify_clean_for_force_removal() source from gac-worktree.sh."""
     source = SCRIPT.read_text()
     match = re.search(
-        r'(verify_clean_for_force_removal\(\)\s*\{.*?\n\})',
-        source, re.DOTALL,
+        r"(verify_clean_for_force_removal\(\)\s*\{.*?\n\})",
+        source,
+        re.DOTALL,
     )
     assert match, "verify_clean_for_force_removal not found in gac-worktree.sh"
     return match.group(1)
@@ -154,11 +180,14 @@ def _run_verify(wt_path: Path, tmp_path: Path) -> subprocess.CompletedProcess[st
     script_file.write_text(script)
     return subprocess.run(
         ["bash", str(script_file)],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     )
 
 
 # ── Static tests ─────────────────────────────────────────────────────────────
+
 
 def test_script_has_verify_function() -> None:
     source = SCRIPT.read_text()
@@ -167,7 +196,7 @@ def test_script_has_verify_function() -> None:
 
 def test_release_uses_force_with_verify() -> None:
     source = SCRIPT.read_text()
-    release_section = source[source.index("  release)"):source.index("  merge)")]
+    release_section = source[source.index("  release)") : source.index("  merge)")]
     assert "verify_clean_for_force_removal" in release_section
     assert "git worktree remove --force" in release_section
     # Must NOT have plain (non-force) remove in release
@@ -176,7 +205,7 @@ def test_release_uses_force_with_verify() -> None:
 
 def test_merge_uses_force_with_verify() -> None:
     source = SCRIPT.read_text()
-    merge_section = source[source.index("  merge)"):]
+    merge_section = source[source.index("  merge)") :]
     assert "verify_clean_for_force_removal" in merge_section
     assert "git worktree remove --force" in merge_section
 
@@ -185,19 +214,22 @@ def test_verified_pasw_removal_has_no_rm_fallback() -> None:
     """The release-only PASW remover must fail rather than delete files itself."""
     source = SCRIPT.read_text()
     helper = source[source.index("remove_verified_pasw()") : source.index('case "$cmd" in')]
-    assert "git -C \"$wt/$sub\" worktree remove --force \"$pasw_wt\"" in helper
+    assert 'git -C "$wt/$sub" worktree remove --force "$pasw_wt"' in helper
     assert "rm -rf" not in helper
 
 
 def test_script_bash_syntax_ok() -> None:
     result = subprocess.run(
         ["bash", "-n", str(SCRIPT)],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     assert result.returncode == 0, result.stderr
 
 
 # ── Dynamic tests: reproduce the bug ─────────────────────────────────────────
+
 
 def test_plain_remove_fails_on_initialized_submodule(tmp_path: Path) -> None:
     """Reproduce the bug: plain git worktree remove returns non-zero (128)
@@ -208,7 +240,9 @@ def test_plain_remove_fails_on_initialized_submodule(tmp_path: Path) -> None:
 
     result = subprocess.run(
         ["git", "-C", str(parent), "worktree", "remove", str(wt)],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     assert result.returncode != 0, (
         "Expected plain remove to fail on worktree with initialized submodule; "
@@ -231,13 +265,16 @@ def test_force_remove_succeeds_on_clean(tmp_path: Path) -> None:
 
     result = subprocess.run(
         ["git", "-C", str(parent), "worktree", "remove", "--force", str(wt)],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     assert result.returncode == 0, result.stderr
     assert not wt.exists()
 
 
 # ── Dynamic tests: verify_clean_for_force_removal ────────────────────────────
+
 
 def test_verify_succeeds_on_clean_worktree(tmp_path: Path) -> None:
     """Verify function returns 0 for clean worktree + initialized submodule."""
@@ -315,6 +352,7 @@ def test_verify_fails_on_modified_submodule_not_staged(tmp_path: Path) -> None:
 
 # ── Dynamic tests: full clean cycle (verify + force) ─────────────────────────
 
+
 def test_clean_cycle_verify_then_force_remove(tmp_path: Path) -> None:
     """End-to-end: verify passes, then --force remove succeeds and worktree is gone."""
     parent, _ = _make_parent_with_submodule(tmp_path)
@@ -328,7 +366,9 @@ def test_clean_cycle_verify_then_force_remove(tmp_path: Path) -> None:
     # Step 2: --force remove (should succeed because verified clean)
     remove_result = subprocess.run(
         ["git", "-C", str(parent), "worktree", "remove", "--force", str(wt)],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     assert remove_result.returncode == 0, remove_result.stderr
     assert not wt.exists()
@@ -352,6 +392,7 @@ def test_dirty_submodule_refuses_and_remains(tmp_path: Path) -> None:
 
 # ── Dynamic tests: actual release entry point ───────────────────────────────
 
+
 def test_release_removes_clean_initialized_submodule_and_pasw(tmp_path: Path) -> None:
     """release accepts clean ordinary/PASW child worktrees and removes the root."""
     parent, _ = _make_parent_with_submodule(tmp_path)
@@ -368,7 +409,9 @@ def test_release_removes_clean_initialized_submodule_and_pasw(tmp_path: Path) ->
     assert not pasw.exists()
 
 
-def test_release_refuses_dirty_or_untracked_submodule_and_keeps_worktree(tmp_path: Path) -> None:
+def test_release_refuses_dirty_or_untracked_submodule_and_keeps_worktree(
+    tmp_path: Path,
+) -> None:
     """release must not reach --force when ordinary and PASW children are dirty."""
     parent, _ = _make_parent_with_submodule(tmp_path)
     session = "refuse-release"
@@ -419,8 +462,7 @@ def test_release_refuses_when_root_status_probe_fails(tmp_path: Path) -> None:
     _make_worktree(parent, wt, branch="wt-root-status-failure")
     wrapper_dir = _write_failing_git_wrapper(
         tmp_path,
-        f'[ "$1" = "-C" ] && [ "$2" = "{wt}" ] && '
-        '[ "$3" = "status" ] && [ "$4" = "--porcelain" ]',
+        f'[ "$1" = "-C" ] && [ "$2" = "{wt}" ] && [ "$3" = "status" ] && [ "$4" = "--porcelain" ]',
         "simulated root status failure",
     )
 
@@ -431,7 +473,9 @@ def test_release_refuses_when_root_status_probe_fails(tmp_path: Path) -> None:
     assert wt.exists()
 
 
-def test_release_refuses_when_submodule_enumeration_or_status_probe_fails(tmp_path: Path) -> None:
+def test_release_refuses_when_submodule_enumeration_or_status_probe_fails(
+    tmp_path: Path,
+) -> None:
     """Failed submodule enumeration/status probes must preserve the root worktree."""
     parent, _ = _make_parent_with_submodule(tmp_path)
     for suffix, condition, expected in (

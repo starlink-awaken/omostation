@@ -51,44 +51,54 @@ def lint_rules(rules: list[dict], root: Path) -> list[dict]:
         # 必填字段
         for field in REQUIRED_FIELDS:
             if not rule.get(field):
-                issues.append({
-                    "rule_id": rid,
-                    "severity": "error",
-                    "msg": f"missing required field: {field}",
-                })
+                issues.append(
+                    {
+                        "rule_id": rid,
+                        "severity": "error",
+                        "msg": f"missing required field: {field}",
+                    }
+                )
 
         # freshness 子字段
         fresh = rule.get("freshness", {})
         if not isinstance(fresh, dict):
-            issues.append({
-                "rule_id": rid,
-                "severity": "error",
-                "msg": "freshness 字段必须是 dict",
-            })
+            issues.append(
+                {
+                    "rule_id": rid,
+                    "severity": "error",
+                    "msg": "freshness 字段必须是 dict",
+                }
+            )
         else:
             for f in REQUIRED_FRESHNESS:
                 if f not in fresh:
-                    issues.append({
-                        "rule_id": rid,
-                        "severity": "error",
-                        "msg": f"missing freshness.{f}",
-                    })
+                    issues.append(
+                        {
+                            "rule_id": rid,
+                            "severity": "error",
+                            "msg": f"missing freshness.{f}",
+                        }
+                    )
             # threshold_days 正整数
             td = fresh.get("threshold_days")
             if not isinstance(td, int) or td <= 0:
-                issues.append({
-                    "rule_id": rid,
-                    "severity": "error",
-                    "msg": f"freshness.threshold_days 必须是正整数, 当前 {td!r}",
-                })
+                issues.append(
+                    {
+                        "rule_id": rid,
+                        "severity": "error",
+                        "msg": f"freshness.threshold_days 必须是正整数, 当前 {td!r}",
+                    }
+                )
             # action 合法
             action = fresh.get("action")
             if action not in VALID_ACTIONS:
-                issues.append({
-                    "rule_id": rid,
-                    "severity": "error",
-                    "msg": f"freshness.action 必须是 {VALID_ACTIONS}, 当前 {action!r}",
-                })
+                issues.append(
+                    {
+                        "rule_id": rid,
+                        "severity": "error",
+                        "msg": f"freshness.action 必须是 {VALID_ACTIONS}, 当前 {action!r}",
+                    }
+                )
 
         # target glob 至少匹配一个文件/目录
         target = rule.get("target", "")
@@ -97,28 +107,34 @@ def lint_rules(rules: list[dict], root: Path) -> list[dict]:
             if not matches:
                 # archived 项目豁免
                 if not rule.get("archived", False):
-                    issues.append({
-                        "rule_id": rid,
-                        "severity": "warn",
-                        "msg": f"target glob '{target}' 0 匹配",
-                    })
+                    issues.append(
+                        {
+                            "rule_id": rid,
+                            "severity": "warn",
+                            "msg": f"target glob '{target}' 0 匹配",
+                        }
+                    )
 
         # rule_id 格式 X2-FRESH-XXX
         if rid and not re.match(r"^X2-FRESH-[A-Z0-9-]+$", rid):
-            issues.append({
-                "rule_id": rid,
-                "severity": "warn",
-                "msg": f"rule_id 格式应为 X2-FRESH-XXX, 当前 {rid!r}",
-            })
+            issues.append(
+                {
+                    "rule_id": rid,
+                    "severity": "warn",
+                    "msg": f"rule_id 格式应为 X2-FRESH-XXX, 当前 {rid!r}",
+                }
+            )
 
     # rule_id 重复
     for rid, count in seen_ids.items():
         if count > 1:
-            issues.append({
-                "rule_id": rid,
-                "severity": "error",
-                "msg": f"rule_id 重复 {count} 次",
-            })
+            issues.append(
+                {
+                    "rule_id": rid,
+                    "severity": "error",
+                    "msg": f"rule_id 重复 {count} 次",
+                }
+            )
 
     return issues
 
@@ -149,12 +165,19 @@ def main() -> int:
 
     if args.json:
         import json
-        print(json.dumps({
-            "total_rules": len(rules),
-            "issue_count": len(issues),
-            "by_severity": dict(Counter(i["severity"] for i in issues)),
-            "issues": issues,
-        }, indent=2, ensure_ascii=False))
+
+        print(
+            json.dumps(
+                {
+                    "total_rules": len(rules),
+                    "issue_count": len(issues),
+                    "by_severity": dict(Counter(i["severity"] for i in issues)),
+                    "issues": issues,
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
         return 0
 
     print("=" * 60)

@@ -7,7 +7,6 @@ P77-2-3 (rule-per-principle): 每个原则应对应一条 GaC rule (enforcement 
 输出: 未落地原则计数 (exit 0 = advisory, 仅报告).
 """
 
-import re
 import sys
 from pathlib import Path
 

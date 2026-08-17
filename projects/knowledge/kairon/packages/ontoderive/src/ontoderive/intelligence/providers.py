@@ -141,12 +141,12 @@ class LocalProvider(BaseProvider):
         if system:
             payload["system_prompt"] = system
         try:
-            req = urllib.request.Request(  # noqa: S310
+            req = urllib.request.Request(
                 self.base_url or os.environ.get("ONTODERIVE_LLM_URL", "http://localhost:11434"),
                 data=json.dumps(payload).encode(),
                 headers={"Content-Type": "application/json"},
             )
-            with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=15) as resp:
                 data = json.loads(resp.read())
             for item in data.get("output", []):
                 if item.get("type") == "message":
@@ -201,8 +201,8 @@ def detect_backend() -> tuple[str, str]:
     # 2) 本地API
     url = os.environ.get("ONTODERIVE_LLM_URL", "http://localhost:11434")
     try:
-        req = urllib.request.Request(url, method="GET")  # noqa: S310
-        with urllib.request.urlopen(req, timeout=3):  # noqa: S310
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req, timeout=3):
             return "local", ""
     except OSError:
         pass
@@ -218,6 +218,6 @@ def detect_backend() -> tuple[str, str]:
 # ── 向后兼容 ──────────────────────────────────────────
 # 新代码优先使用 llm-gateway；若独立 CLI 环境没有安装该包，则回退到本地抽象基类。
 try:
-    from llm_gateway import provider  # noqa: F401  # type: ignore[reportMissingImports]
+    from llm_gateway import provider  # type: ignore[reportMissingImports]
 except ImportError:
     pass

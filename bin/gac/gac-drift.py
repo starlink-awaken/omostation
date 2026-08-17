@@ -48,8 +48,9 @@ EXECUTOR_ENUM = {
 
 # severity 推导 (宪法 Wave 2, ADR-0171): 抽取共享 bin/gac/gac_severity.py (code-review #1 DRY)
 import sys as _sys
+
 _sys.path.insert(0, str(WORKSPACE / "bin"))
-from gac_severity import derive_severity, RED_EXECUTORS  # noqa: E402
+from gac_severity import derive_severity
 
 
 def load_gac_rules(path: Path) -> list[dict]:
@@ -91,9 +92,7 @@ def check_executor_valid(rule: dict) -> list[str]:
     drifts: list[str] = []
     for ex in rule.get("executor", []):
         if ex not in EXECUTOR_ENUM:
-            drifts.append(
-                f"{rule['id']}: executor '{ex}' 不在已知通道 {sorted(EXECUTOR_ENUM)}"
-            )
+            drifts.append(f"{rule['id']}: executor '{ex}' 不在已知通道 {sorted(EXECUTOR_ENUM)}")
     return drifts
 
 
@@ -211,14 +210,9 @@ def check_indexed_drift(rule: dict) -> list[str]:
     # ADR-0374: legacy_index 规则 (id 形如 CR-*-SSOT) 自身就是 SSOT 索引名,
     # 不是源文件中的某条具体 rule. 因此 source_ref 存在 + 可解析 即视为对齐.
     # 老逻辑: rule_id in content (literal string match) — 对索引规则永远 False.
-    is_ssot_index_rule = (
-        rule_id.endswith("-SSOT")
-        or rule.get("check_type") == "legacy_index"
-    )
+    is_ssot_index_rule = rule_id.endswith("-SSOT") or rule.get("check_type") == "legacy_index"
     if rule_id and rule_id not in content and not is_ssot_index_rule:
-        drifts.append(
-            f"{rule['id']}: 规则 ID 在 source_ref ({ref_path_str}) 中未找到 — 可能已重命名或删除"
-        )
+        drifts.append(f"{rule['id']}: 规则 ID 在 source_ref ({ref_path_str}) 中未找到 — 可能已重命名或删除")
 
     return drifts
 
@@ -234,9 +228,7 @@ def _record_drift_vitality(
     if not tracker_path.exists():
         return
     try:
-        spec = importlib.util.spec_from_file_location(
-            "rule_vitality_tracker", str(tracker_path)
-        )
+        spec = importlib.util.spec_from_file_location("rule_vitality_tracker", str(tracker_path))
         if spec is None or spec.loader is None:
             return
         tracker = importlib.util.module_from_spec(spec)
@@ -317,13 +309,15 @@ def main() -> int:
     print(f"规则数: {len(rules)}")
 
     if all_drifts:
-        print(f"\n⚠️  发现 {len(all_drifts)} 处 drift (🔴 red: {len(red_drifts)} blocking, 🟡 gray: {len(gray_drifts)} warn-only):")
+        print(
+            f"\n⚠️  发现 {len(all_drifts)} 处 drift (🔴 red: {len(red_drifts)} blocking, 🟡 gray: {len(gray_drifts)} warn-only):"
+        )
         if red_drifts:
-            print(f"  🔴 red rule drift (优先修, 阻塞规则声明失效):")
+            print("  🔴 red rule drift (优先修, 阻塞规则声明失效):")
             for d in red_drifts:
                 print(f"    - {d}")
         if gray_drifts:
-            print(f"  🟡 gray rule drift (审计规则声明失效):")
+            print("  🟡 gray rule drift (审计规则声明失效):")
             for d in gray_drifts:
                 print(f"    - {d}")
     else:

@@ -24,7 +24,9 @@ def _extract_summary(filepath: Path, max_lines: int = 5) -> str:
     """Extract first few meaningful lines from a TELOS file as summary."""
     try:
         lines = filepath.read_text(encoding="utf-8").strip().split("\n")
-        meaningful = [l.strip() for l in lines if l.strip() and not l.startswith("#") and not l.startswith("---")][:max_lines]
+        meaningful = [l.strip() for l in lines if l.strip() and not l.startswith("#") and not l.startswith("---")][
+            :max_lines
+        ]
         return " | ".join(meaningful)[:300]
     except Exception:
         return ""

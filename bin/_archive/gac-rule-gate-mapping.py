@@ -65,9 +65,7 @@ def _load_gate_ids() -> dict[str, list[str]]:
     return result
 
 
-def _build_mapping(
-    rules: list[dict], gates: dict[str, list[str]]
-) -> dict[str, list[str]]:
+def _build_mapping(rules: list[dict], gates: dict[str, list[str]]) -> dict[str, list[str]]:
     """Map rule_id → [gate_check_ids] by matching source_ref to gate commands."""
     rule_to_gates: dict[str, list[str]] = {}
 
@@ -141,7 +139,7 @@ def main() -> int:
         print(f"  Active required/error unmapped: {len(active_unmapped)}")
         print(f"Gates: {len(gates)} total, {len(inverse)} with rule mappings")
         if active_unmapped:
-            print(f"\nActive required/error unmapped rules:")
+            print("\nActive required/error unmapped rules:")
             for rid in active_unmapped[:20]:
                 print(f"  - {rid}")
         return 0

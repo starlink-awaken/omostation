@@ -12,8 +12,9 @@ Usage:
 from __future__ import annotations
 
 import sys
-import yaml
 from pathlib import Path
+
+import yaml
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 SYSTEM_YAML = WORKSPACE / ".omo" / "state" / "system.yaml"
@@ -21,6 +22,7 @@ WRITE_OWNERS_YAML = WORKSPACE / ".omo" / "_truth" / "registry" / "write-owners.y
 
 
 # ── Check 1: Duplicate top-level keys ──
+
 
 def check_duplicate_keys() -> list[dict]:
     """Scan system.yaml for duplicate top-level keys (multi-writer conflict)."""
@@ -41,17 +43,20 @@ def check_duplicate_keys() -> list[dict]:
 
     for key, lines in sorted(seen.items()):
         if len(lines) > 1:
-            findings.append({
-                "check": "duplicate-key",
-                "key": key,
-                "occurrences": len(lines),
-                "lines": lines,
-                "message": f"Key '{key}' appears {len(lines)} times (lines {lines}) — multi-writer conflict risk",
-            })
+            findings.append(
+                {
+                    "check": "duplicate-key",
+                    "key": key,
+                    "occurrences": len(lines),
+                    "lines": lines,
+                    "message": f"Key '{key}' appears {len(lines)} times (lines {lines}) — multi-writer conflict risk",
+                }
+            )
     return findings
 
 
 # ── Check 2: Write-owner protocol — detect unauthorized writers ──
+
 
 def load_write_owners() -> dict:
     """Load write-owners.yaml, return {path: {field: owner}}."""
@@ -77,22 +82,28 @@ def check_unauthorized_writes() -> list[dict]:
     # Check for unstaged deletions of protected paths via git status
     r = subprocess.run(
         ["git", "status", "--short", "--", ".omo/debt/"],
-        capture_output=True, text=True, cwd=WORKSPACE, timeout=5,
+        capture_output=True,
+        text=True,
+        cwd=WORKSPACE,
+        timeout=5,
     )
     for line in r.stdout.splitlines():
         line = line.strip()
         if line.startswith("D ") or line.startswith(" D"):
-            findings.append({
-                "check": "unauthorized-delete",
-                "path": line[2:].strip() or ".omo/debt/",
-                "message": f"Protected path has unstaged deletion: {line} — only omo-debt system should modify .omo/debt/",
-            })
+            findings.append(
+                {
+                    "check": "unauthorized-delete",
+                    "path": line[2:].strip() or ".omo/debt/",
+                    "message": f"Protected path has unstaged deletion: {line} — only omo-debt system should modify .omo/debt/",
+                }
+            )
             break  # one finding per directory is enough
 
     return findings
 
 
 # ── Main ──
+
 
 def main() -> int:
     findings = []

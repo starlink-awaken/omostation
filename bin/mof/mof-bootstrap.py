@@ -22,7 +22,6 @@ import argparse
 import json
 import re
 import sys
-from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -165,14 +164,27 @@ def check_4(ws: Path, verbose: bool = False) -> tuple[bool, list[str]]:
     errors: list[str] = []
     known_suffixes = {
         # MetaType (8 类)
-        "DOMAIN", "FACT", "INFERENCE", "STATE", "DOCUMENT",
-        "CONSTRAINT", "PROCESSOR", "RELATION",
+        "DOMAIN",
+        "FACT",
+        "INFERENCE",
+        "STATE",
+        "DOCUMENT",
+        "CONSTRAINT",
+        "PROCESSOR",
+        "RELATION",
         # MetaRelationType (4 类)
-        "STRUCT", "DERIVE", "BEHAVIOR", "JUSTIFY",
+        "STRUCT",
+        "DERIVE",
+        "BEHAVIOR",
+        "JUSTIFY",
         # MetaConstraint (4 类)
-        "TYPE_PURITY", "REL_DIRECTION", "PROC_INPUT", "SELF_REF_BOUND",
+        "TYPE_PURITY",
+        "REL_DIRECTION",
+        "PROC_INPUT",
+        "SELF_REF_BOUND",
         # Confidence (4 类)
-        "FACT", "INFERENCE", "HYPOTHESIS", "ESTIMATED",
+        "HYPOTHESIS",
+        "ESTIMATED",
     }
     for eid, impl in implements:
         suffix = impl.split(".")[-1]
@@ -228,7 +240,13 @@ def check_5(ws: Path, verbose: bool = False) -> tuple[bool, list[str]]:
         if body is None:
             # fallback: snake_case body
             for k, v in data.items():
-                if k in ("m2_type", "version", "created", "introduced_by", "description"):
+                if k in (
+                    "m2_type",
+                    "version",
+                    "created",
+                    "introduced_by",
+                    "description",
+                ):
                     continue
                 if isinstance(v, dict) and "m3_parent" in v:
                     body = v
@@ -251,8 +269,12 @@ def check_5(ws: Path, verbose: bool = False) -> tuple[bool, list[str]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("check", nargs="?", default="all",
-                        choices=["check_1", "check_2", "check_3", "check_4", "check_5", "all"])
+    parser.add_argument(
+        "check",
+        nargs="?",
+        default="all",
+        choices=["check_1", "check_2", "check_3", "check_4", "check_5", "all"],
+    )
     parser.add_argument("--ws", type=Path, default=Path())
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--verbose", "-v", action="store_true")
@@ -271,10 +293,13 @@ def main() -> int:
         results = {name: func() for name, func in funcs.items()}
         ok = all(r[0] for r in results.values())
         if args.json:
-            print(json.dumps({
-                name: {"ok": r[0], "errors": r[1]}
-                for name, r in results.items()
-            }, ensure_ascii=False, indent=2))
+            print(
+                json.dumps(
+                    {name: {"ok": r[0], "errors": r[1]} for name, r in results.items()},
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
         else:
             print(f"M4 自反校验汇总 (ws={ws}):")
             for name, r in results.items():
@@ -283,12 +308,18 @@ def main() -> int:
                 for e in r[1][:3]:
                     print(f"     {e}")
                 if len(r[1]) > 3:
-                    print(f"     ... ({len(r[1])-3} more)")
+                    print(f"     ... ({len(r[1]) - 3} more)")
         return 0 if ok else 1
 
     ok, errors = funcs[args.check]()
     if args.json:
-        print(json.dumps({"check": args.check, "ok": ok, "errors": errors}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"check": args.check, "ok": ok, "errors": errors},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         marker = "✓" if ok else "✗"
         print(f"{marker} {args.check}: {'PASS' if ok else 'FAIL'}")

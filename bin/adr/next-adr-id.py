@@ -10,6 +10,7 @@ Usage:
   python3 bin/adr/next-adr-id.py --session enforce-0203 --claim
   python3 bin/adr/next-adr-id.py --json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "bin" / "gac"))
-import swarm_discipline as sd  # noqa: E402
+import swarm_discipline as sd
 
 
 def main() -> int:
@@ -53,9 +54,7 @@ def main() -> int:
         pass
 
     existing = sd.list_existing_adr_numbers(ROOT / ".omo" / "_knowledge" / "decisions")
-    claimed = sd.load_adr_claims(
-        sd.delivery_path(ROOT, "adr_claims_dir", ".omo/_delivery/adr-claims")
-    )
+    claimed = sd.load_adr_claims(sd.delivery_path(ROOT, "adr_claims_dir", ".omo/_delivery/adr-claims"))
 
     if args.claim:
         if not args.session:

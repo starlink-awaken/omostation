@@ -50,7 +50,7 @@ def detect_anomalies(entries: list[dict], z_threshold: float = 2.0) -> list[dict
         return []
     mean = sum(durations) / len(durations)
     variance = sum((d - mean) ** 2 for d in durations) / len(durations)
-    std = variance ** 0.5
+    std = variance**0.5
     if std < 1e-9:
         return []
     anomalies = []
@@ -60,14 +60,16 @@ def detect_anomalies(entries: list[dict], z_threshold: float = 2.0) -> list[dict
         z = (dur - mean) / std
         ewma_z = (ewma[idx] - mean) / std if idx < len(ewma) else z
         if abs(z) >= z_threshold or abs(ewma_z) >= z_threshold:
-            anomalies.append({
-                "index": idx,
-                "timestamp": e.get("timestamp"),
-                "duration_ms": dur,
-                "z": round(z, 3),
-                "ewma_z": round(ewma_z, 3),
-                "reason": e.get("reason") or "",
-            })
+            anomalies.append(
+                {
+                    "index": idx,
+                    "timestamp": e.get("timestamp"),
+                    "duration_ms": dur,
+                    "z": round(z, 3),
+                    "ewma_z": round(ewma_z, 3),
+                    "reason": e.get("reason") or "",
+                }
+            )
     return anomalies
 
 
@@ -78,7 +80,7 @@ def recommend_threshold(entries: list[dict], min_threshold: int = 3) -> dict:
     durations = [float(e.get("duration_ms") or 0) for e in entries if isinstance(e.get("duration_ms"), (int, float))]
     mean = sum(durations) / len(durations) if durations else 0.0
     variance = sum((d - mean) ** 2 for d in durations) / len(durations) if durations else 0.0
-    std = variance ** 0.5
+    std = variance**0.5
     recommended = int(max(min_threshold, mean + 2 * std))
     return {
         "check": entries[0].get("check") if entries else "",
@@ -112,7 +114,11 @@ def main() -> int:
     parser.add_argument("--file", default=str(DEFAULT_METRICS_FILE), help="Metrics JSONL path")
     parser.add_argument("--check", default="", help="Check name for single-check mode")
     parser.add_argument("--window", type=int, default=50, help="Sliding window size")
-    parser.add_argument("--anomalies", action="store_true", help="Show anomalies instead of threshold recommendation")
+    parser.add_argument(
+        "--anomalies",
+        action="store_true",
+        help="Show anomalies instead of threshold recommendation",
+    )
     parser.add_argument("--summary", action="store_true", help="Summarize all checks")
     args = parser.parse_args()
     metrics_file = Path(args.file)

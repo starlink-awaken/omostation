@@ -15,15 +15,14 @@ Engine: bin/ssot/scene-card-review.py
 from __future__ import annotations
 
 import importlib.util
-import json
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _load_engine(workspace_root: Path, filename: str, name: str):
@@ -53,10 +52,10 @@ def _load_connector(workspace_root: Path):
 
 # Estimated time saved per intent by priority
 _TIME_PER_INTENT = {
-    "P0": 15,   # 15 minutes for urgent items
-    "P1": 10,   # 10 minutes for important items
-    "P2": 5,    # 5 minutes for normal items
-    "P3": 3,    # 3 minutes for low priority
+    "P0": 15,  # 15 minutes for urgent items
+    "P1": 10,  # 10 minutes for important items
+    "P2": 5,  # 5 minutes for normal items
+    "P3": 3,  # 3 minutes for low priority
 }
 
 # Accuracy: approved / (approved + rejected)
@@ -76,7 +75,7 @@ def generate_weekly_review(workspace_root: Path, weeks: int = 1) -> dict[str, An
     approval = _load_approval(workspace_root)
 
     scenes = inbox.list_scenes(workspace_root)
-    cutoff = datetime.now(timezone.utc) - timedelta(weeks=weeks)
+    cutoff = datetime.now(UTC) - timedelta(weeks=weeks)
 
     # Collect intents within the review period
     total_intents = 0
@@ -188,17 +187,19 @@ def generate_pilot_report(workspace_root: Path) -> dict[str, Any]:
     for scene in scenes:
         for journey in scene.journeys:
             for intent in journey.intents:
-                all_intents.append({
-                    "scene_name": scene.name,
-                    "journey_name": journey.name,
-                    "intent_id": intent.id,
-                    "source": intent.source,
-                    "status": intent.status,
-                    "priority": intent.priority,
-                    "created_at": intent.created_at,
-                    "processed_at": intent.processed_at,
-                    "task_id": intent.task_id,
-                })
+                all_intents.append(
+                    {
+                        "scene_name": scene.name,
+                        "journey_name": journey.name,
+                        "intent_id": intent.id,
+                        "source": intent.source,
+                        "status": intent.status,
+                        "priority": intent.priority,
+                        "created_at": intent.created_at,
+                        "processed_at": intent.processed_at,
+                        "task_id": intent.task_id,
+                    }
+                )
 
     # Weekly breakdown
     weekly_reviews = []

@@ -107,9 +107,7 @@ def is_descendant_or_equal(
         None,
     )
     if default_branch is None:
-        default_branch = _git_in_submodule(
-            "symbolic-ref", "refs/remotes/origin/HEAD", submodule_dir=submodule_dir
-        )
+        default_branch = _git_in_submodule("symbolic-ref", "refs/remotes/origin/HEAD", submodule_dir=submodule_dir)
         if default_branch:
             default_branch = default_branch.rsplit("/", 1)[-1] or "main"
         else:
@@ -118,7 +116,13 @@ def is_descendant_or_equal(
 
     for ref in (default_branch, "HEAD"):
         result = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", ancestor_candidate, descendant_candidate],
+            [
+                "git",
+                "merge-base",
+                "--is-ancestor",
+                ancestor_candidate,
+                descendant_candidate,
+            ],
             cwd=submodule_dir,
             capture_output=True,
             text=True,
@@ -135,14 +139,23 @@ def is_descendant_or_equal(
     )
     if all_commit_refs is None:
         all_commit_refs = _git_in_submodule(
-            "for-each-ref", "--format=%(refname)", "refs/heads/", "refs/remotes/",
+            "for-each-ref",
+            "--format=%(refname)",
+            "refs/heads/",
+            "refs/remotes/",
             submodule_dir=submodule_dir,
         )
         is_descendant_or_equal._all_commit_refs_cache = all_commit_refs
 
     for ref in all_commit_refs.splitlines():
         result = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", ancestor_candidate, descendant_candidate],
+            [
+                "git",
+                "merge-base",
+                "--is-ancestor",
+                ancestor_candidate,
+                descendant_candidate,
+            ],
             cwd=submodule_dir,
             capture_output=True,
             text=True,
@@ -166,9 +179,7 @@ def is_descendant_or_equal(
     # 4) Feature-branch rebase: ancestor was removed from branch history but the
     #    submodule is now on a non-default branch at descendant. Allow it rather than
     #    blocking every feature-branch rebase.
-    head_ref = _git_in_submodule(
-        "symbolic-ref", "--quiet", "HEAD", submodule_dir=submodule_dir
-    )
+    head_ref = _git_in_submodule("symbolic-ref", "--quiet", "HEAD", submodule_dir=submodule_dir)
     head_branch = head_ref.rsplit("/", 1)[-1] if head_ref else ""
     if head_branch and head_branch not in (default_branch, "main", "master"):
         return True, f"feature-branch:{head_branch}"
@@ -176,7 +187,10 @@ def is_descendant_or_equal(
     # 5) Detached-HEAD branch switch: if descendant is the tip of any branch ref,
     #    treat as acceptable even if ancestor is not in that branch's history.
     descendant_tip_of = _git_in_submodule(
-        "for-each-ref", "--format=%(objectname)", "refs/heads/", "refs/remotes/",
+        "for-each-ref",
+        "--format=%(objectname)",
+        "refs/heads/",
+        "refs/remotes/",
         submodule_dir=submodule_dir,
     )
     if any(tip.startswith(descendant_candidate) for tip in descendant_tip_of.splitlines()):
@@ -187,9 +201,7 @@ def is_descendant_or_equal(
 
 def format_violation(path: str, current_sha: str, previous_sha: str, reason: str) -> str:
     return (
-        f"  {path} — 子模块指针方向非法: "
-        f"当前 {current_sha[:12]} 不是上一次指针 {previous_sha[:12]} 的后代 "
-        f"({reason})"
+        f"  {path} — 子模块指针方向非法: 当前 {current_sha[:12]} 不是上一次指针 {previous_sha[:12]} 的后代 ({reason})"
     )
 
 
@@ -197,7 +209,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="CR-SUBMODULE-REWIND check")
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
     parser.add_argument("--verbose", action="store_true", help="Show tolerance layer details")
-    parser.add_argument("--warn-threshold", type=int, default=3, help="WARN if same tolerance layer triggers N+ times (default: 3)")
+    parser.add_argument(
+        "--warn-threshold",
+        type=int,
+        default=3,
+        help="WARN if same tolerance layer triggers N+ times (default: 3)",
+    )
     args = parser.parse_args()
 
     violations: list[dict] = []
@@ -242,8 +259,7 @@ def main() -> int:
         output = {
             "ok": len(violations) == 0,
             "violations": [
-                format_violation(v["path"], v["current_sha"], v["previous_sha"], v["reason"])
-                for v in violations
+                format_violation(v["path"], v["current_sha"], v["previous_sha"], v["reason"]) for v in violations
             ],
             "details": details,
             "warns": warns,

@@ -12,10 +12,11 @@
 用法:
   python3 bin/ssot/gen-external-channels-inventory.py
 """
+
 from __future__ import annotations
 
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -41,7 +42,11 @@ def scan_iris_resources() -> list[dict]:
     )
     r = subprocess.run(
         ["uv", "run", "--with", "pyyaml", "python", "-c", code],
-        cwd=KAIRON, capture_output=True, text=True, timeout=180, check=False,
+        cwd=KAIRON,
+        capture_output=True,
+        text=True,
+        timeout=180,
+        check=False,
     )
     channels: list[dict] = []
     for line in r.stdout.splitlines():
@@ -59,15 +64,17 @@ def scan_iris_resources() -> list[dict]:
             health = "unavailable"
         else:
             health = "unknown"
-        channels.append({
-            "id": f"iris:{name}",
-            "kind": "knowledge_source",
-            "provider": "kairon.iris",
-            "connector": target,
-            "entry_point": "external.resources",
-            "health": health,
-            "status": "exposed",
-        })
+        channels.append(
+            {
+                "id": f"iris:{name}",
+                "kind": "knowledge_source",
+                "provider": "kairon.iris",
+                "connector": target,
+                "entry_point": "external.resources",
+                "health": health,
+                "status": "exposed",
+            }
+        )
     return channels
 
 
@@ -83,15 +90,17 @@ def scan_runtime_ingest() -> list[dict]:
         kind = "knowledge_source"
         if "oa" in name:
             kind = "knowledge_source"
-        channels.append({
-            "id": f"ingest:{name}",
-            "kind": kind,
-            "provider": "runtime.scripts",
-            "connector": f"runtime/scripts/{p.name}",
-            "entry_point": None,
-            "health": "pending",
-            "status": "orphan",
-        })
+        channels.append(
+            {
+                "id": f"ingest:{name}",
+                "kind": kind,
+                "provider": "runtime.scripts",
+                "connector": f"runtime/scripts/{p.name}",
+                "entry_point": None,
+                "health": "pending",
+                "status": "orphan",
+            }
+        )
     return channels
 
 
@@ -101,20 +110,22 @@ def scan_mesh_proposals() -> list[dict]:
     if not MESH_PROPOSALS.is_dir():
         return channels
     for p in sorted(MESH_PROPOSALS.glob("*.yaml")):
-        channels.append({
-            "id": f"mesh-proposal:{p.stem}",
-            "kind": "tool_pack",
-            "provider": "mesh.proposal",
-            "connector": str(p.relative_to(WORKSPACE)),
-            "entry_point": "external-resource-pack-proposals",
-            "health": "pending",
-            "status": "proposal",
-        })
+        channels.append(
+            {
+                "id": f"mesh-proposal:{p.stem}",
+                "kind": "tool_pack",
+                "provider": "mesh.proposal",
+                "connector": str(p.relative_to(WORKSPACE)),
+                "entry_point": "external-resource-pack-proposals",
+                "health": "pending",
+                "status": "proposal",
+            }
+        )
     return channels
 
 
 def emit_yaml(channels: list[dict]) -> str:
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     totals = {
         "channels": len(channels),
         "exposed": sum(1 for c in channels if c["status"] == "exposed"),
@@ -128,9 +139,7 @@ def emit_yaml(channels: list[dict]) -> str:
         "pending": sum(1 for c in channels if c.get("health") in ("pending", "unknown")),
         "available_rate": 0.0,
     }
-    health_summary["available_rate"] = round(
-        health_summary["available"] / len(channels) * 100, 1
-    ) if channels else 0.0
+    health_summary["available_rate"] = round(health_summary["available"] / len(channels) * 100, 1) if channels else 0.0
     lines = [
         "# External Channels Inventory SSOT (ECCP P0)",
         "# 自动生成, 请勿手动编辑",

@@ -22,21 +22,42 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-
 CATEGORY_RULES = {
     "workflows": [
-        "audit", "closeout", "hardening", "triage",
-        "migration", "playbook", "optimization",
-        "bet-", "review", "report", "final-state",
-        "phase", "snapshot", "blueprint", "complete-plan",
+        "audit",
+        "closeout",
+        "hardening",
+        "triage",
+        "migration",
+        "playbook",
+        "optimization",
+        "bet-",
+        "review",
+        "report",
+        "final-state",
+        "phase",
+        "snapshot",
+        "blueprint",
+        "complete-plan",
     ],
     "playbooks": [
-        "append-only-log", "schemas", "ssot", "manifest",
-        "defensive", "replay", "node", "mvp",
+        "append-only-log",
+        "schemas",
+        "ssot",
+        "manifest",
+        "defensive",
+        "replay",
+        "node",
+        "mvp",
     ],
     "guides": [
-        "architecture", "explainer", "analysis",
-        "deep", "layer", "modeling", "intro",
+        "architecture",
+        "explainer",
+        "analysis",
+        "deep",
+        "layer",
+        "modeling",
+        "intro",
     ],
 }
 
@@ -74,9 +95,7 @@ def add_category(path: Path, dry_run: bool = False) -> tuple[bool, str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P75: management/ 142 拆分 (frontmatter 分类)"
-    )
+    parser = argparse.ArgumentParser(description="P75: management/ 142 拆分 (frontmatter 分类)")
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--stats", action="store_true", help="仅统计")
     parser.add_argument("--dry-run", action="store_true", help="dry-run, 不写")

@@ -15,15 +15,11 @@ from typing import Any
 import yaml
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-DEFAULT_PROJECT_REGISTRY = (
-    WORKSPACE / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
-)
+DEFAULT_PROJECT_REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
 DEFAULT_DOMAIN_REGISTRY = Path(
     os.environ.get(
         "L4_DOMAIN_REGISTRY",
-        str(
-            Path.home() / "Documents" / "@公共" / "_control" / "L4-DOMAIN-REGISTRY.yaml"
-        ),
+        str(Path.home() / "Documents" / "@公共" / "_control" / "L4-DOMAIN-REGISTRY.yaml"),
     )
 )
 EXPECTED_TOOLS = [
@@ -85,15 +81,11 @@ def _plan(project_registry: Path, domain_registry: Path) -> dict[str, Any]:
         _mapping(raw.get("clients"), "clients").get("chatgpt_web"),
         "clients.chatgpt_web",
     )
-    contract = _mapping(
-        client.get("tunnel_contract"), "clients.chatgpt_web.tunnel_contract"
-    )
+    contract = _mapping(client.get("tunnel_contract"), "clients.chatgpt_web.tunnel_contract")
     profiles = _mapping(raw.get("profiles"), "profiles")
     profile_id = contract.get("tool_profile")
     if not isinstance(profile_id, str) or not profile_id:
-        raise ContractError(
-            "clients.chatgpt_web.tunnel_contract.tool_profile must be a string"
-        )
+        raise ContractError("clients.chatgpt_web.tunnel_contract.tool_profile must be a string")
     profile = _mapping(profiles.get(profile_id), f"profiles.{profile_id}")
     allowed_tools = profile.get("allowed_workspace_tools")
     if allowed_tools != EXPECTED_TOOLS:
@@ -101,9 +93,7 @@ def _plan(project_registry: Path, domain_registry: Path) -> dict[str, Any]:
             f"profiles.{profile_id}.allowed_workspace_tools must match the bounded Documents read tools"
         )
     if profile.get("execution_policy") != "workspace_only":
-        raise ContractError(
-            f"profiles.{profile_id}.execution_policy must be workspace_only"
-        )
+        raise ContractError(f"profiles.{profile_id}.execution_policy must be workspace_only")
     expected_contract = {
         "owner": "workspace",
         "checker_ref": "bin/gac/documents-chatgpt-tunnel.py",
@@ -115,21 +105,12 @@ def _plan(project_registry: Path, domain_registry: Path) -> dict[str, Any]:
         "api_key_env": "CONTROL_PLANE_API_KEY",
     }
     if contract != expected_contract:
-        raise ContractError(
-            "clients.chatgpt_web.tunnel_contract does not match the Workspace contract"
-        )
+        raise ContractError("clients.chatgpt_web.tunnel_contract does not match the Workspace contract")
     workspace = _workspace_root(project_registry)
     checker = workspace / str(contract["checker_ref"])
     _regular_file(checker, "tunnel checker")
     _regular_file(domain_registry, "domain registry")
-    entrypoint = (
-        workspace
-        / "projects"
-        / "cockpit"
-        / ".venv"
-        / "bin"
-        / str(contract["local_entrypoint"])
-    )
+    entrypoint = workspace / "projects" / "cockpit" / ".venv" / "bin" / str(contract["local_entrypoint"])
     _regular_executable(entrypoint, "Documents MCP entrypoint")
     return {
         "ok": True,
@@ -192,9 +173,7 @@ def _check(plan: dict[str, Any], tunnel_client: Path | None) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("render", "check"))
-    parser.add_argument(
-        "--project-registry", type=Path, default=DEFAULT_PROJECT_REGISTRY
-    )
+    parser.add_argument("--project-registry", type=Path, default=DEFAULT_PROJECT_REGISTRY)
     parser.add_argument("--domain-registry", type=Path, default=DEFAULT_DOMAIN_REGISTRY)
     parser.add_argument("--tunnel-client", type=Path)
     args = parser.parse_args(argv)

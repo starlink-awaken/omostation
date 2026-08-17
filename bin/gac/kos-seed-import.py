@@ -11,6 +11,7 @@ Usage:
   python3 bin/gac/kos-seed-import.py --prefer-new --limit 2000 \\
     --root ~/Documents/@工作文档 --root ~/Documents/@驾驶舱
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,7 +19,7 @@ import hashlib
 import os
 import sqlite3
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -38,7 +39,7 @@ DEFAULT_VAULTS = (
 
 
 def _utc() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _doc_id(path: Path) -> str:
@@ -225,8 +226,7 @@ def main(argv: list[str] | None = None) -> int:
         action="append",
         type=Path,
         default=None,
-        help="extra root to scan (repeatable). When set, only these roots + "
-        "workspace docs (unless --roots-only)",
+        help="extra root to scan (repeatable). When set, only these roots + workspace docs (unless --roots-only)",
     )
     ap.add_argument(
         "--roots-only",

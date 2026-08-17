@@ -10,7 +10,7 @@ Usage:
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -19,7 +19,7 @@ DEFAULT_ANOMALY_FILE = WORKSPACE / ".omo" / "state" / "anomaly-events.jsonl"
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _load_metrics(metrics_file: Path, check: str | None = None, window: int = 50) -> list[dict]:
@@ -51,7 +51,7 @@ def detect_anomalies(entries: list[dict], z_threshold: float = 2.0) -> list[dict
         return []
     mean = sum(durations) / len(durations)
     variance = sum((d - mean) ** 2 for d in durations) / len(durations)
-    std = variance ** 0.5
+    std = variance**0.5
     if std < 1e-9:
         return []
     anomalies = []
@@ -61,16 +61,18 @@ def detect_anomalies(entries: list[dict], z_threshold: float = 2.0) -> list[dict
         z = (dur - mean) / std
         ewma_z = (ewma[idx] - mean) / std if idx < len(ewma) else z
         if abs(z) >= z_threshold or abs(ewma_z) >= z_threshold:
-            anomalies.append({
-                "index": idx,
-                "timestamp": e.get("timestamp"),
-                "check": e.get("check"),
-                "duration_ms": dur,
-                "z": round(z, 3),
-                "ewma_z": round(ewma_z, 3),
-                "reason": e.get("reason") or "",
-                "ok": e.get("ok"),
-            })
+            anomalies.append(
+                {
+                    "index": idx,
+                    "timestamp": e.get("timestamp"),
+                    "check": e.get("check"),
+                    "duration_ms": dur,
+                    "z": round(z, 3),
+                    "ewma_z": round(ewma_z, 3),
+                    "reason": e.get("reason") or "",
+                    "ok": e.get("ok"),
+                }
+            )
     return anomalies
 
 
@@ -94,7 +96,11 @@ def append_anomaly_events(anomaly_file: Path, anomalies: list[dict]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Anomaly Detector")
     parser.add_argument("--metrics-file", default=str(DEFAULT_METRICS_FILE), help="Metrics JSONL path")
-    parser.add_argument("--anomaly-file", default=str(DEFAULT_ANOMALY_FILE), help="Anomaly events JSONL path")
+    parser.add_argument(
+        "--anomaly-file",
+        default=str(DEFAULT_ANOMALY_FILE),
+        help="Anomaly events JSONL path",
+    )
     parser.add_argument("--window", type=int, default=50, help="Sliding window size")
     parser.add_argument("--z-threshold", type=float, default=2.0, help="Z-score threshold for anomaly")
     parser.add_argument("--check", help="Filter by check name")

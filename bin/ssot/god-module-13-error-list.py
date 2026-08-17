@@ -40,7 +40,10 @@ def list_god_modules(root: Path) -> list[dict]:
     """读取 check-god-module.py 输出."""
     r = subprocess.run(
         ["python3", str(root / "bin" / "ssot" / "check-god-module.py"), "--strict"],
-        cwd=str(root), capture_output=True, text=True, timeout=30,
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     modules: list[dict] = []
     for line in r.stdout.splitlines():
@@ -83,10 +86,18 @@ def analyze_py(path: Path) -> dict:
 def analyze_ts(path: Path) -> dict:
     """P109-C: 调用 bin/ssot/ts-file-analyze.py 分析 TS 文件."""
     import subprocess
+
     try:
         r = subprocess.run(
-            ["python3", str(Path(__file__).parent / "ts-file-analyze.py"), str(path), "--json"],
-            capture_output=True, text=True, timeout=30,
+            [
+                "python3",
+                str(Path(__file__).parent / "ts-file-analyze.py"),
+                str(path),
+                "--json",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         if r.returncode != 0:
             return {"note": f"ts-file-analyze failed: {r.stderr[:200]}"}
@@ -129,6 +140,7 @@ def make_plan(mod: dict, root: Path) -> dict:
 # P109-B 智能化扩展
 # ============================================================
 
+
 def classify_module(path: str, lines: int, analysis: dict | None) -> dict:
     """P109-B 智能归类: 按文件类型/拆解难度/ROI 分级.
 
@@ -147,9 +159,7 @@ def classify_module(path: str, lines: int, analysis: dict | None) -> dict:
         category = "python-ecos"
     elif path.startswith("projects/knowledge/gbrain/") or "/projects/knowledge/gbrain/" in path:
         category = "ts-gbrain"
-    elif path.endswith((".ts", ".tsx")):
-        category = "ts-other"
-    elif path.endswith((".js", ".jsx")):
+    elif path.endswith((".ts", ".tsx")) or path.endswith((".js", ".jsx")):
         category = "ts-other"
     else:
         category = "other"
@@ -159,18 +169,13 @@ def classify_module(path: str, lines: int, analysis: dict | None) -> dict:
         difficulty = "unknown"
     elif analysis.get("note", "").startswith("TS 文件"):
         difficulty = "high"  # Need ts-morph tool first
-    elif analysis.get("note", "").startswith("unsupported"):
-        difficulty = "unknown"
-    elif analysis.get("error"):
+    elif analysis.get("note", "").startswith("unsupported") or analysis.get("error"):
         difficulty = "unknown"
     else:
         # Python with valid AST
         top_funcs = analysis.get("top_functions", [])
         top_classes = analysis.get("top_classes", [])
-        max_unit = max(
-            [f["lines"] for f in top_funcs] + [0] +
-            [c["lines"] for c in top_classes] + [0]
-        )
+        max_unit = max([f["lines"] for f in top_funcs] + [0] + [c["lines"] for c in top_classes] + [0])
         if max_unit > 300:
             difficulty = "high"  # God-functions inside
         elif max_unit > 150:
@@ -231,9 +236,9 @@ def suggest_modules(path: str, lines: int, analysis: dict | None) -> list[dict]:
         # Determine child module name
         # Extract semantic: _check_X → X, _mutation_surface_registry_snapshot → mutation_surface.snapshot
         if func_name.startswith("_check_"):
-            child_name = func_name[len("_check_"):]
+            child_name = func_name[len("_check_") :]
         elif func_name.startswith("cmd_"):
-            child_name = func_name[len("cmd_"):]
+            child_name = func_name[len("cmd_") :]
         else:
             child_name = func_name.lstrip("_")
         child_module = f"omo_{path_basename}_{child_name}"
@@ -241,15 +246,17 @@ def suggest_modules(path: str, lines: int, analysis: dict | None) -> list[dict]:
 
         cumulative_reduction += func_lines
         rationale = f"P104-P108 模式: 拆 {func_name}({func_lines}L) → {child_module}.py"
-        suggestions.append({
-            "phase": phase,
-            "child_module": child_module,
-            "split_function": func_name,
-            "split_lines": func_lines,
-            "cumulative_reduction": cumulative_reduction,
-            "resulting_lines": lines - cumulative_reduction,
-            "rationale": rationale,
-        })
+        suggestions.append(
+            {
+                "phase": phase,
+                "child_module": child_module,
+                "split_function": func_name,
+                "split_lines": func_lines,
+                "cumulative_reduction": cumulative_reduction,
+                "resulting_lines": lines - cumulative_reduction,
+                "rationale": rationale,
+            }
+        )
     return suggestions
 
 
@@ -272,16 +279,18 @@ def make_roadmap(errors: list[dict]) -> list[dict]:
     step = 1
     for c in classified[:8]:  # Top 8 god-modules
         cls = c["classification"]
-        roadmap.append({
-            "step": step,
-            "phase": f"P{109 + step}",
-            "target": c["path"],
-            "current_lines": c["lines"],
-            "category": cls["category"],
-            "difficulty": cls["difficulty"],
-            "roi": cls["roi"],
-            "rationale": cls["rationale"],
-        })
+        roadmap.append(
+            {
+                "step": step,
+                "phase": f"P{109 + step}",
+                "target": c["path"],
+                "current_lines": c["lines"],
+                "category": cls["category"],
+                "difficulty": cls["difficulty"],
+                "roi": cls["roi"],
+                "rationale": cls["rationale"],
+            }
+        )
         step += 1
     return roadmap
 
@@ -290,12 +299,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="P94 R2 + P109-B: god-module 13 error list")
     parser.add_argument("--root", default=".")
     parser.add_argument("--json", action="store_true")
-    parser.add_argument("--auto-classify", action="store_true",
-                        help="P109-B: 按 category/difficulty/ROI 智能归类")
-    parser.add_argument("--suggest-modules", action="store_true",
-                        help="P109-B: 基于 P104-P108 模式建议子模块拆分路径")
-    parser.add_argument("--roadmap", action="store_true",
-                        help="P109-B: 输出 4-步 roadmap (按 ROI 排序)")
+    parser.add_argument(
+        "--auto-classify",
+        action="store_true",
+        help="P109-B: 按 category/difficulty/ROI 智能归类",
+    )
+    parser.add_argument(
+        "--suggest-modules",
+        action="store_true",
+        help="P109-B: 基于 P104-P108 模式建议子模块拆分路径",
+    )
+    parser.add_argument("--roadmap", action="store_true", help="P109-B: 输出 4-步 roadmap (按 ROI 排序)")
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
@@ -312,11 +326,17 @@ def main() -> int:
         m["analysis"] = plans[i].get("analysis")
 
     if args.json:
-        print(json.dumps({
-            "total_errors": len(errors),
-            "total_warns": len(modules) - len(errors),
-            "plans": plans,
-        }, indent=2, ensure_ascii=False))
+        print(
+            json.dumps(
+                {
+                    "total_errors": len(errors),
+                    "total_warns": len(modules) - len(errors),
+                    "plans": plans,
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
         return 0
 
     # P109-B: roadmap mode

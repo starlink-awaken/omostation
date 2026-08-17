@@ -69,7 +69,12 @@ def record_feedback(
         finally:
             fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
-    return {"status": "recorded", "scene_id": scene_id, "metric": metric, "value": metric_value}
+    return {
+        "status": "recorded",
+        "scene_id": scene_id,
+        "metric": metric,
+        "value": metric_value,
+    }
 
 
 def list_feedback(root: Path, scene_id: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
@@ -113,8 +118,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if command == "record":
         result = record_feedback(
-            args.root, args.scene_card, args.metric_value,
-            actor=args.actor, notes=args.notes,
+            args.root,
+            args.scene_card,
+            args.metric_value,
+            actor=args.actor,
+            notes=args.notes,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0

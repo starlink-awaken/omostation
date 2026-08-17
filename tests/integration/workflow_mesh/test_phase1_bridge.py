@@ -8,6 +8,7 @@ Verifies that:
 5. Graceful degradation when OMO is not available
 6. ECOS executor uses default sink automatically
 """
+
 from __future__ import annotations
 
 import sys
@@ -25,10 +26,11 @@ for source in (
 def test_ecos_default_mesh_sink_importable():
     """ECOS default_mesh_sink module should be importable."""
     from ecos.workflow.default_mesh_sink import (
-        get_default_mesh_sink,
-        default_mesh_sink,
         _find_omo_root,
+        default_mesh_sink,
+        get_default_mesh_sink,
     )
+
     assert callable(get_default_mesh_sink)
     assert callable(default_mesh_sink)
     assert callable(_find_omo_root)
@@ -37,16 +39,18 @@ def test_ecos_default_mesh_sink_importable():
 def test_omo_mesh_agent_events_importable():
     """OMO mesh_agent_events module should be importable."""
     from omo.workflow.mesh_agent_events import (
-        emit_workflow_mesh_event,
         _run_mesh_sink,
+        emit_workflow_mesh_event,
     )
+
     assert callable(emit_workflow_mesh_event)
     assert callable(_run_mesh_sink)
 
 
 def test_lifecycle_has_mesh_bridge():
     """Lifecycle module should import mesh bridge without errors."""
-    from omo.workflow.lifecycle import start_run, closeout_run
+    from omo.workflow.lifecycle import closeout_run, start_run
+
     assert callable(start_run)
     assert callable(closeout_run)
 

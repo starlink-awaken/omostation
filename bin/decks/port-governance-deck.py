@@ -6,12 +6,12 @@
 - 检测 deprecated 端口使用
 - 输出 metrics 到 runtime/omo/_delivery/foundry/
 """
+
 from __future__ import annotations
 
-import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -41,26 +41,42 @@ def run_check(label: str, cmd: list[str]) -> dict:
 
 
 def main() -> int:
-    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     checks = []
 
     # Deck 1: hardcoded ports
-    checks.append(run_check(
-        "hardcoded-ports",
-        [sys.executable, str(WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py")],
-    ))
+    checks.append(
+        run_check(
+            "hardcoded-ports",
+            [
+                sys.executable,
+                str(WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py"),
+            ],
+        )
+    )
 
     # Deck 2: env-var check (env-only ports)
-    checks.append(run_check(
-        "env-var-check",
-        [sys.executable, str(WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py"), "--env-var-check"],
-    ))
+    checks.append(
+        run_check(
+            "env-var-check",
+            [
+                sys.executable,
+                str(WORKSPACE / "bin" / "ssot" / "check-hardcoded-ports.py"),
+                "--env-var-check",
+            ],
+        )
+    )
 
     # Deck 3: cross-repo consistency (P79: now ok=0 unregistered + 0 real conflicts)
-    checks.append(run_check(
-        "cross-repo-consistency",
-        [sys.executable, str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py")],
-    ))
+    checks.append(
+        run_check(
+            "cross-repo-consistency",
+            [
+                sys.executable,
+                str(WORKSPACE / "bin" / "ssot" / "check-cross-repo-consistency.py"),
+            ],
+        )
+    )
     # 容忍 cross-repo 的 port conflicts (note/description 差异) — 仅 unregistered 是真 fail
     for c in checks:
         if c["label"] == "cross-repo-consistency" and c["returncode"] == 0:
@@ -72,6 +88,7 @@ def main() -> int:
     catalog = WORKSPACE / ".omo" / "standards" / "p76-principles.md"
     gac = WORKSPACE / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
     import re
+
     principle_count = len(set(re.findall(r"\b(P\d+-\d+-\d+|P\d+-\d+)\b", catalog.read_text())))
     gac_rule_count = gac.read_text().count("- id: CR-") if gac.exists() else 0
 
@@ -80,7 +97,7 @@ def main() -> int:
         "timestamp": run_id,
         "decks": [
             {
-                "name": f"port-governance-{i+1}",
+                "name": f"port-governance-{i + 1}",
                 "check": c["label"],
                 "ok": c["ok"],
                 "detail": c["summary"],
@@ -98,6 +115,7 @@ def main() -> int:
     # Write to runtime
     report = RUNTIME_DIR / f"port-governance-{run_id}.yaml"
     import yaml
+
     report.write_text(yaml.dump(result, default_flow_style=False, allow_unicode=True))
 
     # Print summary

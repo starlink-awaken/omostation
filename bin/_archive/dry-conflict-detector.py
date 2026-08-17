@@ -9,6 +9,7 @@ P79 / #907 教训: PR merge CONFLICTING 时, 可能是 PR 改动被 base 取代 
   python3 bin/gac/dry-conflict-detector.py --base origin/main --head HEAD
   python3 bin/gac/dry-conflict-detector.py --base main --head work/my-pr
 """
+
 from __future__ import annotations
 
 import argparse
@@ -88,9 +89,7 @@ def main() -> int:
         conflict_files.append(f)
         for sym in new_symbols_in_head(args.base, args.head, f, cwd):
             if symbol_in_base(args.base, sym, cwd):
-                dry_findings.append(
-                    f"{f}: 符号 '{sym}' PR 新增但 base 也有 (DRY 候选, 考虑丢弃 PR 改动取 base)"
-                )
+                dry_findings.append(f"{f}: 符号 '{sym}' PR 新增但 base 也有 (DRY 候选, 考虑丢弃 PR 改动取 base)")
 
     print(f"=== DRY 冲突检测 (base={args.base} head={args.head}) ===")
     print(f"PR 改动文件: {len(files)}, 双方都改: {len(conflict_files)}")

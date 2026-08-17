@@ -38,14 +38,15 @@ def load_registry() -> dict:
 
 # ── CAPABILITY-MAP.md ──────────────────────────────────────────
 
+
 def gen_capability_map(reg: dict) -> str:
     t = reg["totals"]
     lines = [
         "# Cockpit 能力地图",
         "",
         f"> 自动生成于 {reg['generated_at']} | 版本 {reg['version']}",
-        f"> 源: `docs/generated/capability-registry.yaml` | 请勿手动编辑",
-        f"> 生成器: `bin/cockpit/gen-help-docs.py`",
+        "> 源: `docs/generated/capability-registry.yaml` | 请勿手动编辑",
+        "> 生成器: `bin/cockpit/gen-help-docs.py`",
         "",
         "## 概览",
         "",
@@ -93,11 +94,63 @@ def gen_capability_map(reg: dict) -> str:
 
 # 顶层命令归类 (用于 CLI-REFERENCE 分组)
 _CMD_CATEGORIES: dict[str, list[str]] = {
-    "研究": ["research", "import", "search", "vault", "daily", "discover", "dossier", "timeline"],
-    "系统与状态": ["status", "health", "readiness", "product-health", "dashboard", "demo", "version", "brief", "context"],
-    "治理": ["governance", "gac", "omo", "debt", "audit", "contracts", "ssb", "mof", "cards", "domains", "skill"],
-    "项目入口": ["agora", "kairon", "gbrain", "model-driven", "runtime", "bus", "observe", "family-hub", "mesh", "compute"],
-    "工作流与 Agent": ["workflow", "agent", "agent-workflow", "agent-runtime", "iterate", "compass", "wave2", "monitor", "events"],
+    "研究": [
+        "research",
+        "import",
+        "search",
+        "vault",
+        "daily",
+        "discover",
+        "dossier",
+        "timeline",
+    ],
+    "系统与状态": [
+        "status",
+        "health",
+        "readiness",
+        "product-health",
+        "dashboard",
+        "demo",
+        "version",
+        "brief",
+        "context",
+    ],
+    "治理": [
+        "governance",
+        "gac",
+        "omo",
+        "debt",
+        "audit",
+        "contracts",
+        "ssb",
+        "mof",
+        "cards",
+        "domains",
+        "skill",
+    ],
+    "项目入口": [
+        "agora",
+        "kairon",
+        "gbrain",
+        "model-driven",
+        "runtime",
+        "bus",
+        "observe",
+        "family-hub",
+        "mesh",
+        "compute",
+    ],
+    "工作流与 Agent": [
+        "workflow",
+        "agent",
+        "agent-workflow",
+        "agent-runtime",
+        "iterate",
+        "compass",
+        "wave2",
+        "monitor",
+        "events",
+    ],
     "BOS 与 MCP": ["bos", "mcp"],
     "知识与大脑": ["brain", "code", "data"],
     "生活场景": ["gongwen", "finance", "scenario", "profile"],
@@ -117,7 +170,7 @@ def gen_cli_reference(reg: dict) -> str:
         "# Cockpit CLI 命令参考",
         "",
         f"> 自动生成于 {reg['generated_at']}",
-        f"> 源: `docs/generated/capability-registry.yaml`",
+        "> 源: `docs/generated/capability-registry.yaml`",
         "",
         f"共 **{reg['totals']['cli_commands']}** 个命令 (含子命令)。按场景分组如下。",
         "",
@@ -129,7 +182,18 @@ def gen_cli_reference(reg: dict) -> str:
         cat = _categorize(cmd["name"])
         by_cat.setdefault(cat, []).append(cmd)
 
-    for cat in ["入门", "研究", "系统与状态", "治理", "项目入口", "工作流与 Agent", "BOS 与 MCP", "知识与大脑", "生活场景", "其他"]:
+    for cat in [
+        "入门",
+        "研究",
+        "系统与状态",
+        "治理",
+        "项目入口",
+        "工作流与 Agent",
+        "BOS 与 MCP",
+        "知识与大脑",
+        "生活场景",
+        "其他",
+    ]:
         cmds = by_cat.get(cat, [])
         if not cmds:
             continue
@@ -151,9 +215,14 @@ def gen_cli_reference(reg: dict) -> str:
     lines.append("| CLI 命令 | MCP 服务器 | 工具数 |")
     lines.append("|----------|-----------|--------|")
     cli_to_mcp = {
-        "omo": "omo", "kairon": "kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive",
-        "gbrain": "gbrain", "model-driven": "model-driven", "agora": "agora",
-        "family-hub": "family-hub", "mesh": "aetherforge", "compute": "aetherforge",
+        "omo": "omo",
+        "kairon": "kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive",
+        "gbrain": "gbrain",
+        "model-driven": "model-driven",
+        "agora": "agora",
+        "family-hub": "family-hub",
+        "mesh": "aetherforge",
+        "compute": "aetherforge",
     }
     srv_map = {s["id"]: s["tool_count"] for s in reg["mcp_servers"]}
     for cli_cmd, mcp_ids in cli_to_mcp.items():
@@ -166,12 +235,13 @@ def gen_cli_reference(reg: dict) -> str:
 
 # ── INDEX-MCP.md ───────────────────────────────────────────────
 
+
 def gen_mcp_index(reg: dict) -> str:
     lines = [
         "# MCP 服务器索引",
         "",
         f"> 自动生成于 {reg['generated_at']}",
-        f"> 源: `docs/generated/capability-registry.yaml`",
+        "> 源: `docs/generated/capability-registry.yaml`",
         "",
         f"全生态共 **{reg['totals']['mcp_servers']}** 个 MCP 服务器, **{reg['totals']['mcp_tools']}** 个工具。",
         "",

@@ -3,6 +3,7 @@
 用 CollabBus (orchestrator→implementer→verifier) 协作评估 D2 卡清理决策,
 非单 agent 直做. workorder C2: 协作管线跑真实任务 (D2/R1), 轨迹入 audits.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -60,14 +61,24 @@ def run_d2_triage_via_collab(card_id: str, recommendation: str) -> dict[str, Any
     def on_claim(m: CollabMessage) -> None:
         trail.append("claim_ack")
         bus.publish(
-            _msg("handoff", "impl-1", "implementer", "verifier", task_ref, {"recommendation": recommendation}, cid=m.correlation_id)
+            _msg(
+                "handoff",
+                "impl-1",
+                "implementer",
+                "verifier",
+                task_ref,
+                {"recommendation": recommendation},
+                cid=m.correlation_id,
+            )
         )
 
     def on_handoff(m: CollabMessage) -> None:
         trail.append("handoff")
         ok = recommendation in ("keep", "close", "defer")
         verdict["verified"] = ok
-        bus.publish(_msg("verify_result", "ver-1", "verifier", "orchestrator", task_ref, {"pass": ok}, cid=m.correlation_id))
+        bus.publish(
+            _msg("verify_result", "ver-1", "verifier", "orchestrator", task_ref, {"pass": ok}, cid=m.correlation_id)
+        )
 
     def on_verify(m: CollabMessage) -> None:
         trail.append("verify_result")

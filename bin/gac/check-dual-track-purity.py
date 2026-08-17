@@ -17,6 +17,7 @@ Output:
   - exit 0 = tracks are pure
   - exit 1 = contamination detected (blocking)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -44,42 +45,56 @@ SCENARIO_LEAK_PATTERNS = [
 def _check_dualtrack_yaml() -> list[dict]:
     findings: list[dict] = []
     if not DUALTRACK_YAML.is_file():
-        findings.append({
-            "kind": "missing_file",
-            "file": str(DUALTRACK_YAML),
-            "message": "collab-dualtrack.yaml not found",
-        })
+        findings.append(
+            {
+                "kind": "missing_file",
+                "file": str(DUALTRACK_YAML),
+                "message": "collab-dualtrack.yaml not found",
+            }
+        )
         return findings
 
     data = yaml.safe_load(DUALTRACK_YAML.read_text(encoding="utf-8")) or {}
     throughput = data.get("throughput_track") or {}
 
     # Check 1: throughput_track should not have scenario-specific fields
-    for key in ("scenario_total", "scenario_passed", "adversarial_total",
-                "adversarial_failed", "adversarial_fail_rate",
-                "conflict_resolution_success_rate", "avg_resolution_rounds"):
+    for key in (
+        "scenario_total",
+        "scenario_passed",
+        "adversarial_total",
+        "adversarial_failed",
+        "adversarial_fail_rate",
+        "conflict_resolution_success_rate",
+        "avg_resolution_rounds",
+    ):
         if key in throughput:
-            findings.append({
-                "kind": "throughput_contamination",
-                "field": key,
-                "message": f"throughput_track contains scenario field '{key}' — belongs in capability_track only",
-            })
+            findings.append(
+                {
+                    "kind": "throughput_contamination",
+                    "field": key,
+                    "message": f"throughput_track contains scenario field '{key}' — belongs in capability_track only",
+                }
+            )
 
     # Check 2: throughput data_source should not reference scenarios
     ds = str(throughput.get("data_source", ""))
     if "scenario" in ds.lower() or "构造场景" in ds:
-        findings.append({
-            "kind": "datasource_contamination",
-            "field": "data_source",
-            "message": f"throughput_track.data_source references scenarios: {ds!r}",
-        })
+        findings.append(
+            {
+                "kind": "datasource_contamination",
+                "field": "data_source",
+                "message": f"throughput_track.data_source references scenarios: {ds!r}",
+            }
+        )
 
     # Check 3: silent_loss must exist (G3.2 cross-check)
     if "silent_loss" not in throughput:
-        findings.append({
-            "kind": "missing_silent_loss",
-            "message": "throughput_track.silent_loss field missing — cannot verify zero silent loss",
-        })
+        findings.append(
+            {
+                "kind": "missing_silent_loss",
+                "message": "throughput_track.silent_loss field missing — cannot verify zero silent loss",
+            }
+        )
 
     return findings
 
@@ -95,7 +110,8 @@ def _check_brief_throughput() -> list[dict]:
     # Find the throughput section (### 📦 产能轨 to next ## or end)
     tp_match = re.search(
         r"(###\s*📦\s*产能轨.*?)(?=\n##\s|\Z)",
-        content, re.DOTALL,
+        content,
+        re.DOTALL,
     )
     if not tp_match:
         # No throughput section — not a purity issue, just missing
@@ -106,11 +122,13 @@ def _check_brief_throughput() -> list[dict]:
     for pat in SCENARIO_LEAK_PATTERNS:
         m = pat.search(tp_section)
         if m:
-            findings.append({
-                "kind": "brief_throughput_leak",
-                "match": m.group(0),
-                "message": f"BRIEF.md throughput section contains scenario reference: {m.group(0)!r}",
-            })
+            findings.append(
+                {
+                    "kind": "brief_throughput_leak",
+                    "match": m.group(0),
+                    "message": f"BRIEF.md throughput section contains scenario reference: {m.group(0)!r}",
+                }
+            )
 
     return findings
 

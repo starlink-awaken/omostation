@@ -6,6 +6,7 @@
 - digest 不匹配 → error
 - 老 bet（无 started_at 或早于 2026-09-01）→ 不强制
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -15,9 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-_spec = importlib.util.spec_from_file_location(
-    "bet_ledger", ROOT / "bin/plan/bet-ledger.py"
-)
+_spec = importlib.util.spec_from_file_location("bet_ledger", ROOT / "bin/plan/bet-ledger.py")
 bl = importlib.util.module_from_spec(_spec)
 sys.modules["bet_ledger"] = bl
 _spec.loader.exec_module(bl)
@@ -165,7 +164,11 @@ def test_file_sha256_returns_hash():
 def test_cmd_lint_catches_missing_spec():
     """cmd_lint 检测 L3 bet 缺少 spec 绑定。"""
     data = {
-        "meta": {"status_enum": ["candidate", "in_progress", "review", "done"], "windows": ["Y1Q1"], "tracks": ["T1"]},
+        "meta": {
+            "status_enum": ["candidate", "in_progress", "review", "done"],
+            "windows": ["Y1Q1"],
+            "tracks": ["T1"],
+        },
         "tracks": ["T1"],
         "bets": [
             {
@@ -200,7 +203,11 @@ def test_cmd_lint_passes_with_valid_spec():
 
     try:
         data = {
-            "meta": {"status_enum": ["candidate", "in_progress", "review", "done"], "windows": ["Y1Q1"], "tracks": ["T1"]},
+            "meta": {
+                "status_enum": ["candidate", "in_progress", "review", "done"],
+                "windows": ["Y1Q1"],
+                "tracks": ["T1"],
+            },
             "tracks": ["T1"],
             "bets": [
                 {
@@ -218,7 +225,10 @@ def test_cmd_lint_passes_with_valid_spec():
                     "workflow": "generic",
                     "write_surfaces": ["docs/"],
                     "accepted_specifications": [
-                        {"spec_ref": "_TEMP_TEST_SPEC.md", "content_digest": spec_digest}
+                        {
+                            "spec_ref": "_TEMP_TEST_SPEC.md",
+                            "content_digest": spec_digest,
+                        }
                     ],
                 }
             ],

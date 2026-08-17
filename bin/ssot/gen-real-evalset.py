@@ -12,6 +12,7 @@
   python3 bin/ssot/gen-real-evalset.py --json    # 输出 JSON
   python3 bin/ssot/gen-real-evalset.py --count   # 统计
 """
+
 from __future__ import annotations
 
 import argparse
@@ -177,10 +178,11 @@ def _fetch_closed_unmerged(repo: str, per_page: int = 100) -> list[dict]:
 
     proc = subprocess.run(
         [
-            "gh", "api",
+            "gh",
+            "api",
             f"repos/{repo}/pulls?state=closed&per_page={per_page}",
             "--jq",
-            '[.[] | select(.merged_at == null) | {number, title, state, closed_at, user}]',
+            "[.[] | select(.merged_at == null) | {number, title, state, closed_at, user}]",
         ],
         capture_output=True,
         text=True,
@@ -203,10 +205,11 @@ def _fetch_merged(repo: str, max_pages: int = 3) -> list[dict]:
     for page in range(1, max_pages + 1):
         proc = subprocess.run(
             [
-                "gh", "api",
+                "gh",
+                "api",
                 f"repos/{repo}/pulls?state=closed&per_page=100&page={page}",
                 "--jq",
-                '[.[] | select(.merged_at != null) | {number, title, merged_at, user, additions, deletions}]',
+                "[.[] | select(.merged_at != null) | {number, title, merged_at, user, additions, deletions}]",
             ],
             capture_output=True,
             text=True,
@@ -244,10 +247,13 @@ def main() -> int:
         _write(EVALSET_DIR / args.output, evalset)
 
     if args.json:
-        print(json.dumps(
-            {k: v for k, v in evalset.items() if k != "items"},
-            ensure_ascii=False, indent=2,
-        ))
+        print(
+            json.dumps(
+                {k: v for k, v in evalset.items() if k != "items"},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 0
     if args.count:
         print(f"total={evalset['count']} distribution={evalset['distribution']}")

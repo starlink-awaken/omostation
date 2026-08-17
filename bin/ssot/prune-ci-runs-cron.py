@@ -13,14 +13,15 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
-import sys
-from datetime import datetime, timezone
 
 
 def gh_api(path: str) -> dict:
     proc = subprocess.run(
         ["gh", "api", "-X", "GET", path],
-        capture_output=True, text=True, check=False, timeout=30,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
     )
     if proc.returncode != 0 or not proc.stdout.strip():
         return {}
@@ -29,8 +30,17 @@ def gh_api(path: str) -> dict:
 
 def delete_run(run_id: int) -> bool:
     proc = subprocess.run(
-        ["gh", "api", "-X", "DELETE", f"repos/starlink-awaken/omostation/actions/runs/{run_id}"],
-        capture_output=True, text=True, check=False, timeout=30,
+        [
+            "gh",
+            "api",
+            "-X",
+            "DELETE",
+            f"repos/starlink-awaken/omostation/actions/runs/{run_id}",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
     )
     return proc.returncode == 0
 

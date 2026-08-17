@@ -81,7 +81,8 @@ def main() -> int:
     parser.add_argument("--max-bytes", type=int, default=5 * 1024 * 1024, help="轮转阈值 (默认 5MB)")
     parser.add_argument("--keep", type=int, default=3, help="保留份数 (默认 3)")
     parser.add_argument(
-        "--daily", action="store_true",
+        "--daily",
+        action="store_true",
         help="按天轮转模式: 跨天 (mtime 非今日) 的日志即使未超阈值也轮转 (T9-01 ②)",
     )
     parser.add_argument("--dry-run", action="store_true")
@@ -92,8 +93,10 @@ def main() -> int:
     if args.daily:
         today = time.strftime("%Y-%m-%d", time.localtime())
         stale_daily = [
-            p for p in candidates
-            if p not in over and p.stat().st_size > 0
+            p
+            for p in candidates
+            if p not in over
+            and p.stat().st_size > 0
             and time.strftime("%Y-%m-%d", time.localtime(p.stat().st_mtime)) != today
         ]
         over = over + stale_daily

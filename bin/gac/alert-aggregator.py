@@ -19,7 +19,7 @@ import argparse
 import json
 import sys
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 
@@ -28,7 +28,7 @@ def load_alerts(root: Path, window_hours: int = 24) -> list[dict]:
     log_file = root / ".omo" / "_log" / "readiness-alerts.jsonl"
     if not log_file.exists():
         return []
-    cutoff = datetime.now(timezone.utc).timestamp() - window_hours * 3600
+    cutoff = datetime.now(UTC).timestamp() - window_hours * 3600
     alerts = []
     try:
         with open(log_file, encoding="utf-8") as f:
@@ -74,11 +74,13 @@ def aggregate(alerts: list[dict], storm_threshold: int = 3, total_threshold: int
     for alert in alerts:
         for a in alert.get("alerts", []):
             atype = a.get("type", "unknown")
-            by_type[atype].append({
-                "severity": a.get("severity", "low"),
-                "message": a.get("message", ""),
-                "ts": alert.get("timestamp", ""),
-            })
+            by_type[atype].append(
+                {
+                    "severity": a.get("severity", "low"),
+                    "message": a.get("message", ""),
+                    "ts": alert.get("timestamp", ""),
+                }
+            )
 
     # 按小时分组
     for alert in alerts:
@@ -100,12 +102,14 @@ def aggregate(alerts: list[dict], storm_threshold: int = 3, total_threshold: int
                 hour_buckets[hour] += 1
         for hour, count in hour_buckets.items():
             if count > storm_threshold:
-                storm_warnings.append({
-                    "type": atype,
-                    "hour": hour,
-                    "count": count,
-                    "message": f"⚠️  {atype} 在 {hour} 触发 {count} 次, 告警风暴",
-                })
+                storm_warnings.append(
+                    {
+                        "type": atype,
+                        "hour": hour,
+                        "count": count,
+                        "message": f"⚠️  {atype} 在 {hour} 触发 {count} 次, 告警风暴",
+                    }
+                )
 
     total = sum(len(items) for items in by_type.values())
 
@@ -135,9 +139,7 @@ def aggregate(alerts: list[dict], storm_threshold: int = 3, total_threshold: int
         "by_type_detail": dict(by_type),
         "by_hour": dict(sorted(by_hour.items())),
         "storm_warnings": storm_warnings,
-        "alert_count_per_type": dict(Counter(
-            item["type"] for alert in alerts for item in alert.get("alerts", [])
-        )),
+        "alert_count_per_type": dict(Counter(item["type"] for alert in alerts for item in alert.get("alerts", []))),
         "level": level,
         "level_reason": level_reason,
         "thresholds": {
@@ -167,8 +169,9 @@ def is_suppressed(root: Path, level: str, suppression_minutes: int) -> tuple[boo
     if not notif_log.exists():
         return False, None
     import json as _json
-    from datetime import datetime, timezone, timedelta
-    cutoff = datetime.now(timezone.utc) - timedelta(minutes=suppression_minutes)
+    from datetime import datetime, timedelta
+
+    cutoff = datetime.now(UTC) - timedelta(minutes=suppression_minutes)
     current_rank = LEVEL_RANK.get(level, 3)
     try:
         with open(notif_log, encoding="utf-8") as f:
@@ -194,8 +197,7 @@ def is_suppressed(root: Path, level: str, suppression_minutes: int) -> tuple[boo
     return False, None
 
 
-def emit_notification(root: Path, agg: dict, window_hours: int,
-                     suppression_minutes: int = 60) -> int:
+def emit_notification(root: Path, agg: dict, window_hours: int, suppression_minutes: int = 60) -> int:
     """P66 增: 主动通知 — 告警风暴时调 omo event emit.
 
     触发条件 (P67 级别判定):
@@ -212,7 +214,7 @@ def emit_notification(root: Path, agg: dict, window_hours: int,
 
     # P68 抑制检查
     suppressed, prev_record = is_suppressed(root, level, suppression_minutes)
-    now_iso = datetime.now(timezone.utc).isoformat()
+    now_iso = datetime.now(UTC).isoformat()
     if suppressed:
         # P69: 抑制记录走 OMO event log, 不再直接写 .omo/_log/
         suppress_payload = {
@@ -253,32 +255,48 @@ def _emit_event(kind: str, payload: dict) -> None:
 
     try:
         _run(
-            ["omo", "event", "emit",
-             "--type", kind,
-             "--source", "alert-aggregator",
-             "--payload", _json.dumps(payload, ensure_ascii=False)],
-            timeout=10, capture_output=True,
+            [
+                "omo",
+                "event",
+                "emit",
+                "--type",
+                kind,
+                "--source",
+                "alert-aggregator",
+                "--payload",
+                _json.dumps(payload, ensure_ascii=False),
+            ],
+            timeout=10,
+            capture_output=True,
         )
     except Exception:
         pass
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P65: 告警聚合 — 避免 alert storm"
-    )
+    parser = argparse.ArgumentParser(description="P65: 告警聚合 — 避免 alert storm")
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--window", type=int, default=24, help="时间窗口 (小时, 默认 24)")
-    parser.add_argument("--storm-threshold", type=int, default=3,
-                        help="P67: 风暴检测阈值 (同 1h 内同类型, 默认 3)")
-    parser.add_argument("--total-threshold", type=int, default=5,
-                        help="P67: 总告警阈值 (默认 5)")
+    parser.add_argument(
+        "--storm-threshold",
+        type=int,
+        default=3,
+        help="P67: 风暴检测阈值 (同 1h 内同类型, 默认 3)",
+    )
+    parser.add_argument("--total-threshold", type=int, default=5, help="P67: 总告警阈值 (默认 5)")
     parser.add_argument("--format", choices=["json", "text"], default="text")
     parser.add_argument("--output", help="输出文件")
-    parser.add_argument("--notify", action="store_true",
-                        help="P66: 告警时调 omo event emit + 写 alert-notifications.jsonl")
-    parser.add_argument("--suppression-minutes", type=int, default=60,
-                        help="P68: 同级别告警抑制时间窗 (分钟, 默认 60)")
+    parser.add_argument(
+        "--notify",
+        action="store_true",
+        help="P66: 告警时调 omo event emit + 写 alert-notifications.jsonl",
+    )
+    parser.add_argument(
+        "--suppression-minutes",
+        type=int,
+        default=60,
+        help="P68: 同级别告警抑制时间窗 (分钟, 默认 60)",
+    )
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
@@ -290,11 +308,15 @@ def main() -> int:
     agg = aggregate(alerts, args.storm_threshold, args.total_threshold)
 
     if args.format == "json":
-        output = json.dumps({
-            "window_hours": args.window,
-            "alert_records": len(alerts),
-            **agg,
-        }, indent=2, ensure_ascii=False)
+        output = json.dumps(
+            {
+                "window_hours": args.window,
+                "alert_records": len(alerts),
+                **agg,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
     else:
         lines = [
             "=" * 60,

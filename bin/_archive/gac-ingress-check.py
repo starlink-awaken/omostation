@@ -5,13 +5,13 @@
 
 from __future__ import annotations
 
-import sys
-import sqlite3
 import json
 import re
-import urllib.request
-import urllib.error
 import select
+import sqlite3
+import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -66,9 +66,7 @@ def get_kos_entities() -> list[dict]:
     try:
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
-        rows = conn.execute(
-            "SELECT entity_id, label, entity_type FROM kos_entities LIMIT 500"
-        ).fetchall()
+        rows = conn.execute("SELECT entity_id, label, entity_type FROM kos_entities LIMIT 500").fetchall()
         conn.close()
         return [dict(r) for r in rows]
     except Exception:
@@ -127,11 +125,13 @@ def llm_dependency_analysis(pitch_text: str, kos_summary: str) -> str:
 
 只输出 JSON，不要其他文字。"""
 
-        payload = json.dumps({
-            "model": ANALYSIS_MODEL,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.1,
-        }).encode("utf-8")
+        payload = json.dumps(
+            {
+                "model": ANALYSIS_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.1,
+            }
+        ).encode("utf-8")
         req = urllib.request.Request(
             f"{OMLX_GATEWAY}/v1/chat/completions",
             data=payload,
@@ -160,28 +160,30 @@ def run_check(pitch_text: str, verbose: bool = True) -> dict[str, Any]:
     found_ports = extract_ports_from_text(pitch_text)
     for p in found_ports:
         if p in registered_ports:
-            issues.append({
-                "type": "PORT_CONFLICT",
-                "severity": "CRITICAL",
-                "detail": f"端口 {p} 已被 '{registered_ports[p]}' 占用 (port-registry.yaml)",
-            })
+            issues.append(
+                {
+                    "type": "PORT_CONFLICT",
+                    "severity": "CRITICAL",
+                    "detail": f"端口 {p} 已被 '{registered_ports[p]}' 占用 (port-registry.yaml)",
+                }
+            )
 
     # === 检查 2: 服务名冲突检测 ===
     registered_services = get_registered_services()
     found_services = extract_service_names_from_text(pitch_text)
     for svc in found_services:
         if svc.lower() in {s.lower() for s in registered_services}:
-            warnings.append({
-                "type": "SERVICE_NAME_COLLISION",
-                "severity": "WARNING",
-                "detail": f"服务名 '{svc}' 与已有项目重名 (project-registry.yaml)，请确认是否为迭代而非新建",
-            })
+            warnings.append(
+                {
+                    "type": "SERVICE_NAME_COLLISION",
+                    "severity": "WARNING",
+                    "detail": f"服务名 '{svc}' 与已有项目重名 (project-registry.yaml)，请确认是否为迭代而非新建",
+                }
+            )
 
     # === 检查 3: KOS LLM 语义冲突分析 ===
     kos_entities = get_kos_entities()
-    kos_summary = "\n".join(
-        f"- [{e['entity_type']}] {e['label']}" for e in kos_entities[:30]
-    )
+    kos_summary = "\n".join(f"- [{e['entity_type']}] {e['label']}" for e in kos_entities[:30])
     llm_result_raw = llm_dependency_analysis(pitch_text, kos_summary)
     llm_result: dict[str, Any] = {}
     try:
@@ -242,6 +244,7 @@ def _print_report(result: dict[str, Any]) -> None:
 
 def main() -> int:
     import argparse
+
     parser = argparse.ArgumentParser(description="C2G Ingress pre-check tool")
     parser.add_argument("--pitch", "-p", help="Pitch 文本内容（直接传字符串）")
     parser.add_argument("--file", "-f", help="Pitch 文本文件路径")

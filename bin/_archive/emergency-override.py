@@ -64,16 +64,18 @@ def check_emergencies() -> list[dict[str, Any]]:
                 ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
                 elapsed = (now - ts).total_seconds() / 3600
                 if elapsed > timeout_hours:
-                    emergencies.append({
-                        "journey_id": last.get("journey_id", journey_dir.name),
-                        "run_id": run_file.stem,
-                        "state": last.get("state", "?"),
-                        "elapsed_hours": round(elapsed, 1),
-                        "timeout_hours": timeout_hours,
-                        "checkpoint": checkpoint,
-                        "recommended_action": "holding_response",
-                        "constraints": list(SAFE_ACTIONS.keys()),
-                    })
+                    emergencies.append(
+                        {
+                            "journey_id": last.get("journey_id", journey_dir.name),
+                            "run_id": run_file.stem,
+                            "state": last.get("state", "?"),
+                            "elapsed_hours": round(elapsed, 1),
+                            "timeout_hours": timeout_hours,
+                            "checkpoint": checkpoint,
+                            "recommended_action": "holding_response",
+                            "constraints": list(SAFE_ACTIONS.keys()),
+                        }
+                    )
             except Exception:
                 continue
 

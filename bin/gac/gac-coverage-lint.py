@@ -16,11 +16,12 @@ executor → 标准 evidence 映射 (executor 机制的标准产出, 非 ad-hoc)
 
 退出码: 0 = 全静态 evidence executor 活, 1 = 有休眠
 """
+
 from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -37,7 +38,14 @@ EXECUTOR_EVIDENCE = {
 MAX_STALE_HOURS = 48  # evidence 过期阈值 (omo_audit/foundry daily, evidence_smoke gha daily)
 
 # 无静态 evidence (事件/CI/MCP 驱动) - 不检查 (无标准 evidence 文件)
-NO_STATIC_EVIDENCE = {"ci_gate", "hook_pre_edit", "hook_post", "mcp_tool", "gac_local_gate", "radar_cron"}
+NO_STATIC_EVIDENCE = {
+    "ci_gate",
+    "hook_pre_edit",
+    "hook_post",
+    "mcp_tool",
+    "gac_local_gate",
+    "radar_cron",
+}
 
 
 def _evidence_age_hours(path: Path) -> float | None:
@@ -51,7 +59,7 @@ def _evidence_age_hours(path: Path) -> float | None:
         latest = max(p.stat().st_mtime for p in files)
     else:
         latest = path.stat().st_mtime
-    return (datetime.now(timezone.utc).timestamp() - latest) / 3600
+    return (datetime.now(UTC).timestamp() - latest) / 3600
 
 
 def main() -> int:
@@ -105,7 +113,7 @@ def main() -> int:
     print("\nexecutor evidence 健康:")
     for e, h in evidence_health.items():
         status = "✅活" if h["alive"] else "💀休眠"
-        age = f"{h['age_hours']}h" if h['age_hours'] is not None else "缺失"
+        age = f"{h['age_hours']}h" if h["age_hours"] is not None else "缺失"
         print(f"  {status} {e} (规则={executor_rule_count.get(e, 0)}): {age} ≤{MAX_STALE_HOURS}h  {h['path']}")
     print(f"\n无静态 evidence (跳过): {', '.join(sorted(NO_STATIC_EVIDENCE))}")
     if rules_with_stale:

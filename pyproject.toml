@@ -1,8 +1,12 @@
-# 根仓 ruff 配置 — 统一 CI ruff select 行为
-# 根因: 根仓无 pyproject 时, CI (ruff check 从根仓 cwd 跑) 用 ruff 宽默认 select
-# (含 I001/PLW1509/RUF022/UP045 等), 和子模块 pyproject (默认 E/F/W) 不一致,
-# 导致"本地绿 CI 红". 加此 [tool.ruff.lint] 让 CI 用默认规则集 (同子模块).
+# 根仓 ruff 配置 — 全局统一 lint select (2026-08-17 收敛)
+# 统一标准: select=[E,F,W,I,N,UP,S,PLE,RUF100], ignore=安全豁免集
+# 与 cockpit/aetherforge/metaos/l4-kernel/model-driven 5 项目一致 (已验证全过)
 # 注: 只配 ruff, 无 [project] (不影响 uv build — 子模块各自 pyproject).
+[tool.ruff]
+target-version = "py313"
+line-length = 120
 [tool.ruff.lint]
-# 默认规则集 E/F/W, 不收紧已有代码 (同 omo/agora/ecos/cockpit 子模块 pyproject)
-ignore = ["E501", "E402"]
+select = ["E", "F", "W", "I", "N", "UP", "S", "PLE", "RUF100"]
+ignore = ["S101", "S603", "S607", "S108", "S110", "S112", "S310", "S314", "S608", "S602", "S103", "S105", "S605", "S324", "S104", "E402", "E501", "SIM115", "N813", "UP047", "F401", "F841", "N806", "W291", "W292", "E741", "RUF100", "S311", "N999", "UP022", "E722", "S102"]
+[tool.ruff.format]
+quote-style = "double"

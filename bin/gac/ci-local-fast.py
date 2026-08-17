@@ -23,12 +23,32 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 BASELINE_PATH = WORKSPACE / ".omo/_truth/registry/ruff-diagnostics-baseline.yaml"
 RuffKey = tuple[str, str, str]
 RUFF_BASELINE_MAXIMA: dict[RuffKey, int] = {
-    ("projects/omo/src/omo/omo_compass.py", "F541", "f-string without any placeholders"): 17,
-    ("projects/omo/src/omo/omo_crystallizer.py", "E741", "Ambiguous variable name: `l`"): 1,
-    ("projects/omo/src/omo/omo_crystallizer.py", "F541", "f-string without any placeholders"): 2,
-    ("projects/omo/src/omo/omo_project_inspector.py", "F541", "f-string without any placeholders"): 4,
+    (
+        "projects/omo/src/omo/omo_compass.py",
+        "F541",
+        "f-string without any placeholders",
+    ): 17,
+    (
+        "projects/omo/src/omo/omo_crystallizer.py",
+        "E741",
+        "Ambiguous variable name: `l`",
+    ): 1,
+    (
+        "projects/omo/src/omo/omo_crystallizer.py",
+        "F541",
+        "f-string without any placeholders",
+    ): 2,
+    (
+        "projects/omo/src/omo/omo_project_inspector.py",
+        "F541",
+        "f-string without any placeholders",
+    ): 4,
     ("projects/omo/src/omo/scenewatcher.py", "E741", "Ambiguous variable name: `l`"): 1,
-    ("projects/omo/src/omo/scenewatcher.py", "F541", "f-string without any placeholders"): 1,
+    (
+        "projects/omo/src/omo/scenewatcher.py",
+        "F541",
+        "f-string without any placeholders",
+    ): 1,
 }
 RUFF_BASELINE_CAP = sum(RUFF_BASELINE_MAXIMA.values())
 
@@ -84,10 +104,7 @@ def run_suite(checks: tuple[Check, ...], *, cwd: Path, output: TextIO) -> int:
             failures.append((check.key, returncode))
             output.write(f"❌ {check.key}: exit {returncode}\n\n")
         else:
-            output.write(
-                f"⚠️ {check.key}: DEBT/ADVISORY exit {returncode}; "
-                "不计为通过，也不阻断本地提交\n\n"
-            )
+            output.write(f"⚠️ {check.key}: DEBT/ADVISORY exit {returncode}; 不计为通过，也不阻断本地提交\n\n")
 
     if failures:
         summary = ", ".join(f"{key}={returncode}" for key, returncode in failures)
@@ -97,7 +114,9 @@ def run_suite(checks: tuple[Check, ...], *, cwd: Path, output: TextIO) -> int:
     return 0
 
 
-def _load_ruff_baseline(path: Path = BASELINE_PATH) -> tuple[dict[str, Any], Counter[RuffKey]]:
+def _load_ruff_baseline(
+    path: Path = BASELINE_PATH,
+) -> tuple[dict[str, Any], Counter[RuffKey]]:
     try:
         import yaml
     except ImportError as exc:  # pragma: no cover - Make supplies pyyaml
@@ -113,7 +132,11 @@ def _load_ruff_baseline(path: Path = BASELINE_PATH) -> tuple[dict[str, Any], Cou
     for item in payload.get("diagnostics") or []:
         if not isinstance(item, dict):
             raise TypeError("Ruff baseline diagnostics must be mappings")
-        key = (str(item.get("path") or ""), str(item.get("code") or ""), str(item.get("message") or ""))
+        key = (
+            str(item.get("path") or ""),
+            str(item.get("code") or ""),
+            str(item.get("message") or ""),
+        )
         count = item.get("count")
         if not all(key) or not isinstance(count, int) or count < 1:
             raise RuntimeError(f"invalid Ruff baseline diagnostic: {item!r}")
@@ -126,17 +149,13 @@ def _load_ruff_baseline(path: Path = BASELINE_PATH) -> tuple[dict[str, Any], Cou
     if policy.get("captured_diagnostic_count") != sum(baseline.values()):
         raise RuntimeError("Ruff baseline captured_diagnostic_count does not match diagnostics")
     if sum(baseline.values()) > RUFF_BASELINE_CAP:
-        raise RuntimeError(
-            f"Ruff baseline exceeds hard cap {RUFF_BASELINE_CAP}: {sum(baseline.values())}"
-        )
+        raise RuntimeError(f"Ruff baseline exceeds hard cap {RUFF_BASELINE_CAP}: {sum(baseline.values())}")
     for key, count in baseline.items():
         maximum = RUFF_BASELINE_MAXIMA.get(key)
         if maximum is None:
             raise RuntimeError(f"Ruff baseline contains unapproved bucket: {key!r}")
         if count > maximum:
-            raise RuntimeError(
-                f"Ruff baseline bucket exceeds approved maximum {maximum}: {key!r}={count}"
-            )
+            raise RuntimeError(f"Ruff baseline bucket exceeds approved maximum {maximum}: {key!r}={count}")
     return policy, baseline
 
 
@@ -214,10 +233,10 @@ def run_ruff_gate(*, root: Path = WORKSPACE, output: TextIO = sys.stdout) -> int
     known_count = sum(comparison.known.values())
     resolved_count = sum(comparison.resolved.values())
     new_count = sum(comparison.new.values())
-    output.write(
-        f"Ruff regression gate: known_debt={known_count} resolved={resolved_count} new={new_count}\n"
+    output.write(f"Ruff regression gate: known_debt={known_count} resolved={resolved_count} new={new_count}\n")
+    output.writelines(
+        f"NEW {path} {code} x{count}: {message}\n" for (path, code, message), count in sorted(comparison.new.items())
     )
-    output.writelines(f"NEW {path} {code} x{count}: {message}\n" for (path, code, message), count in sorted(comparison.new.items()))
     if resolved_count:
         output.write("INFO: baseline 中已有诊断已消除；后续可收缩 baseline，禁止扩容。\n")
     return 1 if new_count else 0
@@ -272,9 +291,18 @@ def build_checks(*, root: Path = WORKSPACE) -> tuple[Check, ...]:
     script = str(Path(__file__).resolve())
     return (
         Check("gac", "GaC local gate", (python, str(root / "bin/gac/gac-local-gate.py"))),
-        Check("hygiene", "dir-hygiene", (python, str(root / "bin/ssot/dir-hygiene-check.py"))),
+        Check(
+            "hygiene",
+            "dir-hygiene",
+            (python, str(root / "bin/ssot/dir-hygiene-check.py")),
+        ),
         Check("ruff", "Ruff regression gate", (python, script, "--ruff-gate")),
-        Check("ruff-debt", "Ruff full-scope debt report", (python, script, "--ruff-debt"), blocking=False),
+        Check(
+            "ruff-debt",
+            "Ruff full-scope debt report",
+            (python, script, "--ruff-debt"),
+            blocking=False,
+        ),
         Check("html", "HTML entity encoding", (python, script, "--html-entities")),
         Check("yaml", "YAML syntax", (python, str(root / "bin/ssot/yaml-validate.py"))),
     )

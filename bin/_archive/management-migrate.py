@@ -21,7 +21,6 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-
 CATEGORY_DIR = {
     "workflows": "workflows",
     "playbooks": "playbooks",
@@ -79,13 +78,12 @@ def migrate_file(path: Path, dry_run: bool) -> tuple[bool, str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P77: management 144 物理迁移 (按 P75 category)"
-    )
+    parser = argparse.ArgumentParser(description="P77: management 144 物理迁移 (按 P75 category)")
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--dry-run", action="store_true", help="仅统计")
-    parser.add_argument("--category", choices=["workflows", "playbooks", "guides"],
-                        help="仅迁移指定 category (默认全部)")
+    parser.add_argument(
+        "--category", choices=["workflows", "playbooks", "guides"], help="仅迁移指定 category (默认全部)"
+    )
     args = parser.parse_args()
 
     root = Path(args.root).resolve()

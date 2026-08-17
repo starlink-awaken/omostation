@@ -82,14 +82,14 @@ def collect_runtime_health(ws_root: Path) -> tuple[float | None, dict]:
     ISC-3 / G-CONV.3: ratio 仅用 daemon 口径 (非 total services), 与 health.yaml
     service_online_ratio 单源一致; healthy (probe) 计入在线.
     """
-    import yaml  # noqa: PLC0415
+    import yaml
 
     health_yaml = ws_root / ".omo" / "state" / "system_health.yaml"
     if not health_yaml.is_file():
         return (None, {})
     try:
         data = yaml.safe_load(health_yaml.read_text(encoding="utf-8")) or {}
-    except Exception:  # noqa: BLE001
+    except Exception:
         return (None, {})
     services = data.get("services") or {}
     if not services:
@@ -197,7 +197,7 @@ def _count_adr_renumber_signals(ws_root: Path) -> int:
         sys.path.insert(0, str(adr_lib))
     try:
         from _lib import (
-            duplicate_adr_numbers,  # type: ignore[reportMissingImports]  # noqa: PLC0415
+            duplicate_adr_numbers,  # type: ignore[reportMissingImports]
         )
     except ImportError:
         return 0
@@ -212,7 +212,7 @@ def _count_concurrent_conflict_signals(ws_root: Path) -> int:
     旧版数 scope-lock 文件, 不看 run status — 已 close 但 lock 未释放的 run
     仍被误算活跃. 现按 run 文件 status=active 计 distinct 活跃 run.
     """
-    import yaml  # noqa: PLC0415
+    import yaml
 
     runs_dir = ws_root / ".omo" / "_delivery" / "agent-workflows" / "runs"
     active_runs: set[str] = set()
@@ -267,9 +267,7 @@ def collect_governance_execution_surface(ws_root: Path) -> dict:
     }
 
 
-def governance_score_from_execution(
-    anomaly_score: int, surface: dict
-) -> tuple[int, dict]:
+def governance_score_from_execution(anomaly_score: int, surface: dict) -> tuple[int, dict]:
     """Combine anomaly base with execution-surface deductions (G-CONV.3).
 
     score = max(0, anomaly_score − Σ count_i × weight_i)
@@ -308,7 +306,7 @@ def _freshness_score(health_yaml: Path, now_iso: str) -> tuple[int, str]:
     if not health_yaml.is_file():
         return (0, "never-generated")
     try:
-        import yaml  # noqa: PLC0415
+        import yaml
 
         data = yaml.safe_load(health_yaml.read_text(encoding="utf-8")) or {}
         gen = data.get("generated_at")
@@ -317,7 +315,7 @@ def _freshness_score(health_yaml: Path, now_iso: str) -> tuple[int, str]:
         gen_dt = datetime.fromisoformat(gen.replace("Z", "+00:00"))
         now_dt = datetime.fromisoformat(now_iso.replace("Z", "+00:00"))
         age_s = (now_dt - gen_dt).total_seconds()
-    except Exception:  # noqa: BLE001
+    except Exception:
         return (0, "parse-error")
 
     if age_s < 0:
@@ -371,9 +369,7 @@ def _composite_health_score(
         # 阈值 50: 半分线 — 高于 governance 熔断 25 (仍触发 X1 告警) 但不熔断 (留恢复窗口). 治 P5 magic number.
         score = min(score, 50)
         breakdown["feedback_capped"] = True
-        breakdown["feedback_note"] = (
-            "feedback loop dead → capped at 50 (evidence-driven)"
-        )
+        breakdown["feedback_note"] = "feedback loop dead → capped at 50 (evidence-driven)"
     return (score, breakdown)
 
 
@@ -382,7 +378,7 @@ def _local_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
 
     仅在 evidence-smoke 不可用时使用 (ADR-0216), 避免 import/agora 依赖把复合分误封 50.
     """
-    import json  # noqa: PLC0415
+    import json
 
     sources = {
         "governance_history": ws_root / ".omo" / "_knowledge" / "governance-history.jsonl",
@@ -398,11 +394,7 @@ def _local_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
             per_source[name] = entry
             continue
         try:
-            lines = [
-                line
-                for line in path.read_text(encoding="utf-8").splitlines()
-                if line.strip()
-            ]
+            lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
             entry["entry_count"] = len(lines)
             if not lines:
                 per_source[name] = entry
@@ -420,7 +412,7 @@ def _local_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
                 if best_staleness is None or hours < best_staleness:
                     best_staleness = hours
                     best_ts = str(ts)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             entry["error"] = str(exc)[:120]
         per_source[name] = entry
     return (
@@ -441,8 +433,8 @@ def _collect_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
     evidence-smoke 多源 OR (governance-history | omo-events) 是 feedback 判定 SSOT.
     回路断 = governance 无活动 → compass_radar _composite 硬封顶 health (防假绿).
     """
-    import json  # noqa: PLC0415
-    import subprocess  # noqa: PLC0415
+    import json
+    import subprocess
 
     try:
         res = subprocess.run(
@@ -471,7 +463,7 @@ def _collect_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
         alive, fb = _local_feedback_liveness(ws_root)
         fb["fallback_reason"] = "evidence-smoke empty stdout"
         return (alive, fb)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         alive, fb = _local_feedback_liveness(ws_root)
         fb["fallback_reason"] = f"error: {str(e)[:80]}"
         return (alive, fb)
@@ -487,7 +479,7 @@ def run_radar(omo_dir: Path) -> dict:
         sys.path.insert(0, str(c2g_src))
 
     try:
-        from c2g.strategy import (  # type: ignore[reportMissingImports]  # noqa: PLC0415, E402
+        from c2g.strategy import (  # type: ignore[reportMissingImports]
             _check_anomalies,
             _collect_metrics,
             _list_task_files,
@@ -519,13 +511,7 @@ def run_radar(omo_dir: Path) -> dict:
 
     metrics = _collect_metrics(all_files)
     pending_metrics = _collect_metrics(planned_files)
-    warnings = (
-        _check_anomalies(
-            metrics, total, omo_dir=omo_dir, pending_metrics=pending_metrics
-        )
-        if total
-        else []
-    )
+    warnings = _check_anomalies(metrics, total, omo_dir=omo_dir, pending_metrics=pending_metrics) if total else []
     # 分布从 metrics 导出 (避免再调 strategy_audit 重复计算)
     distributions = {
         "priority": dict(metrics["priority"]),
@@ -560,18 +546,14 @@ def render_yaml(report: dict) -> str:
     lines.append(f"# generated_at: {report['generated_at']}")
     lines.append("# source: c2g.strategy (real audit, no mock)")
     lines.append("# range: 0-100, higher = healthier")
-    lines.append(
-        f"# health_score: composite (ISC-3) = {report['health_composite_breakdown']['weights']}"
-    )
+    lines.append(f"# health_score: composite (ISC-3) = {report['health_composite_breakdown']['weights']}")
     lines.append("")
     lines.append("generated_at: " + _yaml_str(report["generated_at"]))
     lines.append("source: " + _yaml_str(report["source"]))
     lines.append("health_score: " + str(report["health_score"]))
     lines.append("governance_anomaly_score: " + str(report["governance_anomaly_score"]))
     lines.append("anomaly_count: " + str(report["anomaly_count"]))
-    lines.append(
-        "service_online_ratio: " + _format_ratio(report.get("service_online_ratio"))
-    )
+    lines.append("service_online_ratio: " + _format_ratio(report.get("service_online_ratio")))
     lines.append("freshness_score: " + str(report["freshness_score"]))
     # feedback 回路存活 (理想态 evidence-driven, 防假绿, 见 _composite_health_score 硬门槛)
     fb = report.get("feedback_liveness") or {}
@@ -663,7 +645,7 @@ def _normalize_health_yaml(payload: str) -> str:
 
 
 def _normalize_system_yaml(payload: str) -> str:
-    import yaml  # noqa: PLC0415
+    import yaml
 
     data = yaml.safe_load(payload) or {}
     if isinstance(data, dict):
@@ -697,6 +679,7 @@ def _observability_event_anomalies(ws_root: Path) -> tuple[int, dict[str, Any]]:
         return (0, {})
     try:
         from datetime import timedelta
+
         cutoff = (datetime.now(UTC) - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%S")
         count = 0
         by_type: dict[str, int] = {}
@@ -707,6 +690,7 @@ def _observability_event_anomalies(ws_root: Path) -> tuple[int, dict[str, Any]]:
                     continue
                 try:
                     import json
+
                     e = json.loads(line)
                 except json.JSONDecodeError:
                     continue
@@ -717,13 +701,11 @@ def _observability_event_anomalies(ws_root: Path) -> tuple[int, dict[str, Any]]:
                     t = str(e.get("type", "unknown"))
                     by_type[t] = by_type.get(t, 0) + 1
         return (count, {"window_24h": count, "by_type": by_type})
-    except Exception:  # noqa: BLE001  # 非阻断
+    except Exception:  # 非阻断
         return (0, {})
 
 
-def build_health_projection(
-    omo_dir: Path, output: Path
-) -> tuple[dict[str, Any], dict[str, Any], str]:
+def build_health_projection(omo_dir: Path, output: Path) -> tuple[dict[str, Any], dict[str, Any], str]:
     """Build health.yaml content inputs without writing projection files."""
     ws_root = omo_dir.parent
     report = run_radar(omo_dir)
@@ -741,9 +723,7 @@ def build_health_projection(
     anomaly_base = _health_score_from_anomalies(report["anomaly_count"])
     # G-CONV.3: governance sub-score = anomaly base − execution-surface penalties
     gov_surface = collect_governance_execution_surface(ws_root)
-    governance_anomaly_score, gov_detail = governance_score_from_execution(
-        anomaly_base, gov_surface
-    )
+    governance_anomaly_score, gov_detail = governance_score_from_execution(anomaly_base, gov_surface)
     report["governance_anomaly_score"] = governance_anomaly_score
     report["governance_execution_surface"] = gov_detail
 
@@ -770,9 +750,7 @@ def build_health_projection(
     return report, runtime_summary, age_desc
 
 
-def build_system_projection_updates(
-    workspace_root: Path, report: dict[str, Any]
-) -> dict[str, Any]:
+def build_system_projection_updates(workspace_root: Path, report: dict[str, Any]) -> dict[str, Any]:
     """Build the whitelisted system.yaml projection fields for health sync.
 
     G-CONV.3 single-source: top-level service_online_ratio and
@@ -786,11 +764,7 @@ def build_system_projection_updates(
         ratio2, runtime_summary = collect_runtime_health(workspace_root)
         if service_online_ratio is None:
             service_online_ratio = ratio2
-    ratio_rounded = (
-        round(float(service_online_ratio), 4)
-        if service_online_ratio is not None
-        else None
-    )
+    ratio_rounded = round(float(service_online_ratio), 4) if service_online_ratio is not None else None
     updates: dict[str, Any] = {
         "health_score": int(report["health_score"]),
         "governance_anomaly_score": int(report["governance_anomaly_score"]),
@@ -802,18 +776,10 @@ def build_system_projection_updates(
     if ratio_rounded is not None or runtime_summary:
         updates["runtime_health_summary"] = {
             "online_services": int(
-                runtime_summary.get("online_daemons")
-                or runtime_summary.get("online_services")
-                or 0
+                runtime_summary.get("online_daemons") or runtime_summary.get("online_services") or 0
             ),
-            "total_services": int(
-                runtime_summary.get("total_daemons")
-                or runtime_summary.get("total_services")
-                or 0
-            ),
-            "ratio": ratio_rounded
-            if ratio_rounded is not None
-            else runtime_summary.get("ratio"),
+            "total_services": int(runtime_summary.get("total_daemons") or runtime_summary.get("total_services") or 0),
+            "ratio": ratio_rounded if ratio_rounded is not None else runtime_summary.get("ratio"),
             "health_score": int(report["health_score"]),
             "last_scan": report.get("generated_at"),
             "source": "compass_radar_isc3_daemon_ratio",
@@ -829,20 +795,23 @@ def build_system_projection_updates(
 def _collect_mesh_health(workspace_root: Path) -> dict[str, Any] | None:
     """Collect Workflow Mesh health snapshot via protocol-based discovery."""
     try:
-        import importlib
         omo_src = workspace_root / "projects" / "omo" / "src"
         if str(omo_src) not in sys.path:
             sys.path.insert(0, str(omo_src))
         from omo.workflow_mesh import WorkflowMeshStore
+
         store = WorkflowMeshStore(workspace_root / ".omo")
         events = store.events()
-        from datetime import datetime, UTC, timedelta
+        from datetime import UTC, datetime
+
         now = datetime.now(UTC)
         events_last_hour = sum(
-            1 for e in events
-            if (now - datetime.fromisoformat(
-                e.get("occurred_at", "2000-01-01T00:00:00Z").replace("Z", "+00:00")
-            )).total_seconds() < 3600
+            1
+            for e in events
+            if (
+                now - datetime.fromisoformat(e.get("occurred_at", "2000-01-01T00:00:00Z").replace("Z", "+00:00"))
+            ).total_seconds()
+            < 3600
         )
         producers = {e.get("producer", "") for e in events}
         last_event_age = None
@@ -861,9 +830,7 @@ def _collect_mesh_health(workspace_root: Path) -> dict[str, Any] | None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="compass-radar: 调 c2g 真审计 + 写 health SSOT"
-    )
+    parser = argparse.ArgumentParser(description="compass-radar: 调 c2g 真审计 + 写 health SSOT")
     parser.add_argument(
         "--omo-dir",
         type=Path,
@@ -903,21 +870,13 @@ def main() -> int:
     print()
     print("📊 治理健康分 (ISC-3 复合):")
     print(f"   health_score (composite): {report['health_score']}/100")
-    print(
-        f"   governance_anomaly_score: {governance_anomaly_score}/100 (anomalies={report['anomaly_count']})"
-    )
-    ratio_str = (
-        f"{service_online_ratio:.2%}"
-        if service_online_ratio is not None
-        else "unavailable"
-    )
+    print(f"   governance_anomaly_score: {governance_anomaly_score}/100 (anomalies={report['anomaly_count']})")
+    ratio_str = f"{service_online_ratio:.2%}" if service_online_ratio is not None else "unavailable"
     print(
         f"   service_online_ratio:     {ratio_str}  (online={runtime_summary.get('online_services')}/{runtime_summary.get('total_services')})"
     )
     print(f"   freshness_score:          {fresh_score}/100 ({age_desc})")
-    print(
-        f"   total:                    {report['total_tasks']} ({report['done']} done + {report['planned']} planned)"
-    )
+    print(f"   total:                    {report['total_tasks']} ({report['done']} done + {report['planned']} planned)")
     if report["anomalies"]:
         print("🚨 异常告警:")
         for w in report["anomalies"]:
@@ -952,7 +911,7 @@ def main() -> int:
 
     # 自动触发 BRIEF.md 生成 (WS-4 + WS-5)
     try:
-        import subprocess  # noqa: PLC0415
+        import subprocess
 
         res = subprocess.run(
             [
@@ -990,7 +949,7 @@ def sync_system_yaml(
 
     ISC-3: top-level ratio 与 runtime_health_summary.ratio 同口径 (daemon 去假阳性).
     """
-    import yaml  # noqa: PLC0415
+    import yaml
 
     system_yaml = ws_root / ".omo" / "state" / "system.yaml"
     if not system_yaml.is_file():
@@ -1010,9 +969,7 @@ def sync_system_yaml(
             },
         )
         data.update(updates)
-        payload = yaml.dump(
-            data, allow_unicode=True, sort_keys=False, default_flow_style=False
-        )
+        payload = yaml.dump(data, allow_unicode=True, sort_keys=False, default_flow_style=False)
         changed = _write_text_if_changed(
             system_yaml,
             payload,
@@ -1024,7 +981,7 @@ def sync_system_yaml(
             )
         else:
             print("ℹ system.yaml 语义未变化, 跳过写入")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"⚠️  system.yaml 同步失败: {e}")
 
 

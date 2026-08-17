@@ -14,6 +14,7 @@ CR-HYG-02: 大小写 inode 一致 (防 APFS case-insensitive plan/Plans 混淆)
   0 = 通过 (0 卫生问题)
   1 = 有卫生问题 (0 字节文件 / 大小写冲突)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -29,10 +30,21 @@ SKIP_SUFFIXES = {".lock", ".lockfile", ".pid"}
 
 # 排除目录 (降级全扫时的噪声过滤; git tracked 模式不需要)
 EXCLUDE_DIRS = {
-    ".git", ".venv", "venv", "node_modules", "__pycache__",
-    ".mypy_cache", ".ruff_cache", ".pytest_cache", ".tox",
-    ".eggs", "dist", "build", ".omc",  # .omc 是运行时 cache (报告债务②), 非源文件
-    "_archived", "archive",
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "__pycache__",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".pytest_cache",
+    ".tox",
+    ".eggs",
+    "dist",
+    "build",
+    ".omc",  # .omc 是运行时 cache (报告债务②), 非源文件
+    "_archived",
+    "archive",
 }
 
 
@@ -47,11 +59,14 @@ def is_excluded(path: Path) -> bool:
 def git_tracked_files() -> set[str] | None:
     """返回 git tracked 文件集合 (失败返回 None, 调用方降级全扫)."""
     import subprocess
+
     try:
         result = subprocess.run(
             ["git", "ls-files"],
             cwd=WORKSPACE_ROOT,
-            capture_output=True, text=True, timeout=30,
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         if result.returncode == 0:
             return set(result.stdout.splitlines())

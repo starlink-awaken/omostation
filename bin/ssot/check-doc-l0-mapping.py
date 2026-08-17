@@ -113,7 +113,14 @@ def main():
         # v2 派生文件为 gitignored 本地生成物 (ADR-0129 投影面, 生成器已归档),
         # CI 全新检出无此文件 → 回退 v1 源做规则 1/2 值域校验; 规则 3/4 (v2 专属) 跳过.
         v1_path = os.path.join(
-            ROOT, "projects", "ecos", "src", "ecos", "ssot", "registry", "L0-constraints.yaml"
+            ROOT,
+            "projects",
+            "ecos",
+            "src",
+            "ecos",
+            "ssot",
+            "registry",
+            "L0-constraints.yaml",
         )
         l0 = parse_l0(v1_path)
         if l0 is None:

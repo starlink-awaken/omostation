@@ -10,8 +10,8 @@
 """
 
 import argparse
-import sys
 import subprocess
+import sys
 from pathlib import Path
 
 import yaml
@@ -31,8 +31,12 @@ TOOL_PY = {
 
 def _run_tool(name: str, args: list[str]) -> tuple[int, str]:
     tool, cwd = TOOL_PY[name]
-    proc = subprocess.run([sys.executable, str(cwd / tool), *args],
-                          capture_output=True, text=True, timeout=120)
+    proc = subprocess.run(
+        [sys.executable, str(cwd / tool), *args],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
     return proc.returncode, proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
 
 
@@ -44,8 +48,10 @@ def run_closed_loop() -> dict:
     """
     stages = {}
     derived = yaml.safe_load(DERIVED.read_text(encoding="utf-8"))
-    stages["derived"] = {"constraints": len(derived.get("constraints", [])),
-                         "ok": DERIVED.exists()}
+    stages["derived"] = {
+        "constraints": len(derived.get("constraints", [])),
+        "ok": DERIVED.exists(),
+    }
     rc, last = _run_tool("consumer_index", [])
     stages["index"] = {"ok": rc in (0, 1), "note": last}
     rc, last = _run_tool("inference", [])
@@ -88,10 +94,18 @@ def main() -> int:
         gen = ROOT / "projects" / "ecos" / "bin" / "gen-l0-constraints.py"
         if gen.exists():
             print(f"[WARN] 派生面缺失, 自动生成: {gen}", file=sys.stderr)
-            rc = subprocess.run([sys.executable, str(gen)], cwd=str(ROOT / "projects" / "ecos"),
-                                capture_output=True, text=True, timeout=180)
+            rc = subprocess.run(
+                [sys.executable, str(gen)],
+                cwd=str(ROOT / "projects" / "ecos"),
+                capture_output=True,
+                text=True,
+                timeout=180,
+            )
             if rc.returncode != 0 or not DERIVED.exists():
-                print(f"[FAIL] 派生面生成失败: {DERIVED}\n{rc.stdout[-500:]}\n{rc.stderr[-500:]}", file=sys.stderr)
+                print(
+                    f"[FAIL] 派生面生成失败: {DERIVED}\n{rc.stdout[-500:]}\n{rc.stderr[-500:]}",
+                    file=sys.stderr,
+                )
                 return 1
         else:
             print(f"[FAIL] 派生面缺失且生成器不存在: {DERIVED}", file=sys.stderr)

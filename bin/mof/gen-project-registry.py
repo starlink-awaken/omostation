@@ -18,6 +18,7 @@ doc-ssot-lint 只覆盖 registry → markdown; 本工具覆盖 代码 → regist
   0 = 无 drift
   1 = 有 drift (registry 与 pyproject.toml 不一致)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -104,9 +105,7 @@ def run_check(as_json: bool = False) -> int:
     if drifts:
         print(f"❌ 检测到 {len(drifts)} 项 registry drift (vs pyproject.toml):\n")
         for d in drifts:
-            print(
-                f"  {d['project']}.{d['field']}: registry={d['registry']} → 实际={d['actual']}"
-            )
+            print(f"  {d['project']}.{d['field']}: registry={d['registry']} → 实际={d['actual']}")
         print()
         print("修复: python3 bin/mof/gen-project-registry.py --write")
         return 1
@@ -160,9 +159,7 @@ def write_fixes(drifts: list[dict]) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="registry vs 实际代码 drift 检测 (doc-ssot 第4步)"
-    )
+    parser = argparse.ArgumentParser(description="registry vs 实际代码 drift 检测 (doc-ssot 第4步)")
     parser.add_argument("--write", action="store_true", help="修复 registry drift")
     parser.add_argument("--json", action="store_true", help="机器可读 JSON")
     args = parser.parse_args()

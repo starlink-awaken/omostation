@@ -30,6 +30,7 @@ VALID_STATUSES = {"active", "idle", "deprecated", "retired"}
 
 def _load(agent_id: str) -> dict[str, Any] | None:
     import yaml
+
     path = AGENTS_DIR / f"{agent_id}.yaml"
     if not path.exists():
         return None
@@ -38,6 +39,7 @@ def _load(agent_id: str) -> dict[str, Any] | None:
 
 def _save(agent_id: str, data: dict[str, Any]) -> None:
     import yaml
+
     AGENTS_DIR.mkdir(parents=True, exist_ok=True)
     (AGENTS_DIR / f"{agent_id}.yaml").write_text(
         yaml.dump(data, default_flow_style=False, allow_unicode=True, sort_keys=False),
@@ -53,8 +55,11 @@ def spawn(agent_id: str, tier: str, role: str, **kwargs) -> dict[str, Any]:
     if existing and existing.get("status") == "active":
         return {"error": f"agent {agent_id} already active"}
     spec = {
-        "agent_id": agent_id, "schema": "digital-agent/v1", "tier": tier,
-        "status": "active", "version": "1.0.0",
+        "agent_id": agent_id,
+        "schema": "digital-agent/v1",
+        "tier": tier,
+        "status": "active",
+        "version": "1.0.0",
         "created_at": datetime.now(UTC).isoformat(),
         "identity": {"role": role, "description": kwargs.get("description", "")},
         "capabilities": kwargs.get("capabilities", []),
@@ -100,6 +105,7 @@ def bump_version(agent_id: str, changelog: str = "") -> dict[str, Any]:
 def status() -> list[dict[str, Any]]:
     """Show lifecycle status of all agents."""
     import yaml
+
     if not AGENTS_DIR.is_dir():
         return []
     result = []
@@ -107,14 +113,16 @@ def status() -> list[dict[str, Any]]:
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
             if isinstance(data, dict):
-                result.append({
-                    "id": data.get("agent_id", path.stem),
-                    "status": data.get("status", "?"),
-                    "tier": data.get("tier", "?"),
-                    "version": data.get("version", "?"),
-                    "role": data.get("identity", {}).get("role", "?"),
-                    "executions": data.get("performance", {}).get("total_executions", 0),
-                })
+                result.append(
+                    {
+                        "id": data.get("agent_id", path.stem),
+                        "status": data.get("status", "?"),
+                        "tier": data.get("tier", "?"),
+                        "version": data.get("version", "?"),
+                        "role": data.get("identity", {}).get("role", "?"),
+                        "executions": data.get("performance", {}).get("total_executions", 0),
+                    }
+                )
         except Exception:
             continue
     return result
@@ -145,8 +153,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "spawn":
-        result = spawn(args.id, args.tier, args.role, description=args.description,
-                       capabilities=args.capabilities, born_from=args.born_from)
+        result = spawn(
+            args.id,
+            args.tier,
+            args.role,
+            description=args.description,
+            capabilities=args.capabilities,
+            born_from=args.born_from,
+        )
     elif args.command == "retire":
         result = retire(args.id, args.reason)
     elif args.command == "version":

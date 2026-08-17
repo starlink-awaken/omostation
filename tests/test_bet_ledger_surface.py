@@ -6,6 +6,7 @@
 - 净增文件 → net > 0
 - '-' 行 (二进制) 不炸
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -14,9 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-_spec = importlib.util.spec_from_file_location(
-    "bet_ledger", ROOT / "bin/plan/bet-ledger.py"
-)
+_spec = importlib.util.spec_from_file_location("bet_ledger", ROOT / "bin/plan/bet-ledger.py")
 bl = importlib.util.module_from_spec(_spec)
 sys.modules["bet_ledger"] = bl
 _spec.loader.exec_module(bl)
@@ -43,8 +42,7 @@ def test_measure_numstat_net_returns_dict():
     result = measure_numstat_net()
     assert isinstance(result, dict)
     # 2026-08 以来 gbrain/omo 至少有提交记录 (若全空说明 git log 坏了)
-    assert any(k in result for k in ("gbrain", "omo", "_root")), \
-        f"expected known projects in {list(result)[:5]}"
+    assert any(k in result for k in ("gbrain", "omo", "_root")), f"expected known projects in {list(result)[:5]}"
 
 
 def test_binary_and_junk_lines_tolerated():

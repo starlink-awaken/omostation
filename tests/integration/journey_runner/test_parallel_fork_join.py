@@ -5,6 +5,7 @@ Covered:
 - join 状态按策略汇聚 (all / majority / any)
 - 线性 journey 不受影响 (回归)
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -29,10 +30,7 @@ def _run_parallel_spec(tmp_path, strategy: str, branches: int) -> dict:
             "scene": "unified-inbox",
             "parallel": {"branches": branch_names},
         },
-        *[
-            {"name": b, "scene": "document-review", "next": ["join_point"]}
-            for b in branch_names
-        ],
+        *[{"name": b, "scene": "document-review", "next": ["join_point"]} for b in branch_names],
         {
             "name": "join_point",
             "scene": "document-review",
@@ -41,9 +39,9 @@ def _run_parallel_spec(tmp_path, strategy: str, branches: int) -> dict:
         },
         {"name": "approved", "scene": "engineering-delivery", "next": []},
     ]
-    transitions = [
-        {"from": b, "to": "join_point", "condition": "always"} for b in branch_names
-    ] + [{"from": "join_point", "to": "approved", "condition": "always"}]
+    transitions = [{"from": b, "to": "join_point", "condition": "always"} for b in branch_names] + [
+        {"from": "join_point", "to": "approved", "condition": "always"}
+    ]
     spec = {
         "schema": "journey-spec/v1",
         "journey_id": f"parallel-{strategy}",

@@ -23,7 +23,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -34,7 +34,7 @@ SCENE_ID = "engineering-delivery-dogfood"
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def _run(cmd: list[str]) -> str:
@@ -48,17 +48,29 @@ def _run(cmd: list[str]) -> str:
 def _parse_since(spec: str) -> datetime:
     n, unit = int(spec[:-1]), spec[-1]
     delta = {"d": timedelta(days=n), "h": timedelta(hours=n), "w": timedelta(weeks=n)}[unit]
-    return datetime.now(timezone.utc) - delta
+    return datetime.now(UTC) - delta
 
 
 def collect_merged_prs(since_spec: str) -> list[dict]:
     since = _parse_since(since_spec)
     iso = since.strftime("%Y-%m-%dT%H:%M:%SZ")
-    out = _run([
-        "gh", "pr", "list", "--repo", "starlink-awaken/omostation",
-        "--state", "merged", "--limit", "100", "--search", f"merged:>={iso}",
-        "--json", "number,title,mergedAt,additions,deletions,files",
-    ])
+    out = _run(
+        [
+            "gh",
+            "pr",
+            "list",
+            "--repo",
+            "starlink-awaken/omostation",
+            "--state",
+            "merged",
+            "--limit",
+            "100",
+            "--search",
+            f"merged:>={iso}",
+            "--json",
+            "number,title,mergedAt,additions,deletions,files",
+        ]
+    )
     if not out:
         return []
     prs = json.loads(out)

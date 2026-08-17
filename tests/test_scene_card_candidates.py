@@ -51,7 +51,9 @@ failure_policy: fail-closed
     )
 
 
-def test_collects_strategy_and_scenario_candidates_without_activation(tmp_path: Path) -> None:
+def test_collects_strategy_and_scenario_candidates_without_activation(
+    tmp_path: Path,
+) -> None:
     _write_inputs(tmp_path)
 
     payload = MODULE.collect_candidates(tmp_path)
@@ -107,9 +109,7 @@ def test_unsupported_seed_schema_fails_closed(tmp_path: Path) -> None:
         MODULE.collect_candidates(tmp_path)
 
 
-def test_cli_output_is_machine_readable_and_does_not_write_state(
-    tmp_path: Path, capsys
-) -> None:
+def test_cli_output_is_machine_readable_and_does_not_write_state(tmp_path: Path, capsys) -> None:
     _write_inputs(tmp_path)
     before = sorted(path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*"))
 

@@ -26,12 +26,13 @@ executor 实际映射:
 
 退出码: 0 = 全 executor 存在, 1 = 有 missing executor
 """
+
 from __future__ import annotations
 
 import json
 import sys
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -51,8 +52,12 @@ EXECUTOR_PRESENCE: dict[str, list[str]] = {
     "evidence_smoke": ["bin/gac/evidence-smoke.py"],
     "radar_cron": ["bin/gac/gac-drift.py"],
     "gc_cron": ["bin/gac/gac-gc.py"],
-    "gac_local_gate": ["bin/gac/gac-local-gate.py"],  # F-14 (2026-07-03): gac-local-gate 工具作为执行通道, 3 规则已声明 (CR-X2-GOVERNANCE-SEMANTIC-GATE / CR-L0-MATRIX-PORT-CONSISTENCY / CR-L0-MATRIX-LAUNCHD-COVERAGE)
-    "foundry_cron": ["bin/gac/knowledge-foundry-cron.py"],  # 破自指 (ADR-0220): 独立 launchd daily, ghost executor 检测由它跑 (非 radar_cron=被检测对象自己)
+    "gac_local_gate": [
+        "bin/gac/gac-local-gate.py"
+    ],  # F-14 (2026-07-03): gac-local-gate 工具作为执行通道, 3 规则已声明 (CR-X2-GOVERNANCE-SEMANTIC-GATE / CR-L0-MATRIX-PORT-CONSISTENCY / CR-L0-MATRIX-LAUNCHD-COVERAGE)
+    "foundry_cron": [
+        "bin/gac/knowledge-foundry-cron.py"
+    ],  # 破自指 (ADR-0220): 独立 launchd daily, ghost executor 检测由它跑 (非 radar_cron=被检测对象自己)
     "hook_post": [],  # 声明占位, 无独立文件 (hook_post 是 PostToolUse 事件, 非文件)
     # ADR-0373 C5: sweep_index.py 是 CR-SWEEP-INDEX-AUTO 的执行通道.
     # 该 executor 名为 `sweep_index_cli` (与 `bin/sweep/sweep_index.py` 形成 1:1 映射);
@@ -104,7 +109,11 @@ def run_check(as_json: bool = False) -> int:
             declared_executors.add(e)
             if e not in executor_status:
                 exists, detail = check_executor_presence(e)
-                executor_status[e] = {"exists": exists, "detail": detail, "rule_count": 0}
+                executor_status[e] = {
+                    "exists": exists,
+                    "detail": detail,
+                    "rule_count": 0,
+                }
             executor_status[e]["rule_count"] += 1
             if not executor_status[e]["exists"]:
                 rule_issues.append({"rule": r.get("id", "?"), "executor": e})
@@ -120,7 +129,11 @@ def run_check(as_json: bool = False) -> int:
         "rules_total": len(rules),
         "declared_executors": sorted(declared_executors),
         "executor_presence": {
-            e: {"exists": s["exists"], "detail": s["detail"], "rule_count": s["rule_count"]}
+            e: {
+                "exists": s["exists"],
+                "detail": s["detail"],
+                "rule_count": s["rule_count"],
+            }
             for e, s in sorted(executor_status.items())
         },
         "missing_executors": missing_executors,
@@ -160,11 +173,16 @@ def check_executor_evidence() -> dict:
     不依赖 radar_cron (被检测对象自己), 破自指死循环.
     """
     if not SERVICES_REGISTRY.is_file():
-        return {"checked_total": 0, "alive": 0, "ghosts": [], "ok": True,
-                "error": "services.yaml missing"}
+        return {
+            "checked_total": 0,
+            "alive": 0,
+            "ghosts": [],
+            "ok": True,
+            "error": "services.yaml missing",
+        }
     docs = [d for d in yaml.safe_load_all(SERVICES_REGISTRY.read_text(encoding="utf-8")) if d]
     services = docs[-1].get("services", []) if docs else []
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     alive: list[dict] = []
     ghosts: list[dict] = []
     for svc in services:
@@ -177,20 +195,25 @@ def check_executor_evidence() -> dict:
         max_stale = liveness.get("max_stale_hours", 24)
         sig_rel = signal.split("::")[0]
         sig_path = WORKSPACE / sig_rel
-        entry: dict = {"id": svc.get("id"), "signal": signal, "max_stale_hours": max_stale}
+        entry: dict = {
+            "id": svc.get("id"),
+            "signal": signal,
+            "max_stale_hours": max_stale,
+        }
         # 目录 signal (如 evidence-smoke/) 取最新文件 mtime; 文件 signal 直接 mtime
         if sig_path.is_dir():
             files = sorted(
                 [p for p in sig_path.glob("*") if p.is_file()],
-                key=lambda p: p.stat().st_mtime, reverse=True,
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
             )
             if not files:
                 entry.update(status="ghost", reason=f"signal dir empty: {sig_rel}")
                 ghosts.append(entry)
                 continue
-            mtime = datetime.fromtimestamp(files[0].stat().st_mtime, tz=timezone.utc)
+            mtime = datetime.fromtimestamp(files[0].stat().st_mtime, tz=UTC)
         elif sig_path.is_file():
-            mtime = datetime.fromtimestamp(sig_path.stat().st_mtime, tz=timezone.utc)
+            mtime = datetime.fromtimestamp(sig_path.stat().st_mtime, tz=UTC)
         else:
             entry.update(status="ghost", reason=f"signal missing: {sig_rel}")
             ghosts.append(entry)
@@ -250,9 +273,17 @@ def run_executors(as_json: bool = False) -> int:
                 "rules_covered": exec_rule_count.get(executor, 0),
             }
         except subprocess.TimeoutExpired:
-            results[executor] = {"ok": False, "error": "timeout 120s", "rules_covered": exec_rule_count.get(executor, 0)}
+            results[executor] = {
+                "ok": False,
+                "error": "timeout 120s",
+                "rules_covered": exec_rule_count.get(executor, 0),
+            }
         except (subprocess.SubprocessError, OSError) as e:
-            results[executor] = {"ok": False, "error": str(e), "rules_covered": exec_rule_count.get(executor, 0)}
+            results[executor] = {
+                "ok": False,
+                "error": str(e),
+                "rules_covered": exec_rule_count.get(executor, 0),
+            }
 
     all_ok = all(r.get("ok") for r in results.values())
 

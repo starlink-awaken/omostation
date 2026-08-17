@@ -107,7 +107,10 @@ def check_adr_consistency() -> int:
                 "AGENTS.md",
             ]
         ]
-        + [str(WORKSPACE / "bin/gac/gac-validate.py"), str(WORKSPACE / "bin/gac/gac-drift.py")],
+        + [
+            str(WORKSPACE / "bin/gac/gac-validate.py"),
+            str(WORKSPACE / "bin/gac/gac-drift.py"),
+        ],
         capture_output=True,
         text=True,
     )
@@ -141,11 +144,7 @@ def check_m2_type() -> dict:
 
 def healthcheck() -> dict:
     """主健康检查. 返回报告 dict."""
-    report: dict = {
-        "timestamp": subprocess.check_output(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"])
-        .decode()
-        .strip()
-    }
+    report: dict = {"timestamp": subprocess.check_output(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"]).decode().strip()}
 
     # 1. 核心文件
     ok_files, missing = check_files()
@@ -318,9 +317,7 @@ def healthcheck() -> dict:
         m1_json = {}
     m1_diff = m1_json.get("diff", {})
     m1_drift = (
-        len(m1_diff.get("missing_in_m1", []))
-        + len(m1_diff.get("orphan_in_m1", []))
-        + len(m1_diff.get("stale", []))
+        len(m1_diff.get("missing_in_m1", [])) + len(m1_diff.get("orphan_in_m1", [])) + len(m1_diff.get("stale", []))
     )
     report["m1_instance_drift"] = {
         "ok": m1_drift == 0,
@@ -392,17 +389,12 @@ def print_report(report: dict) -> None:
     # 文件
     f = report["files"]
     status = "✅" if not f["missing"] else "❌"
-    print(
-        f"▶ 核心文件: {status} {f['ok']}/{f['total']}"
-        + (f" (缺: {f['missing']})" if f["missing"] else "")
-    )
+    print(f"▶ 核心文件: {status} {f['ok']}/{f['total']}" + (f" (缺: {f['missing']})" if f["missing"] else ""))
 
     # validate
     v = report["validate"]
     status = "✅" if v["ok"] else "❌"
-    print(
-        f"▶ gac-validate (机制2/5/6): {status} rules={v['rules']} errors={v['errors']} warnings={v['warnings']}"
-    )
+    print(f"▶ gac-validate (机制2/5/6): {status} rules={v['rules']} errors={v['errors']} warnings={v['warnings']}")
 
     # drift
     d = report["drift"]
@@ -415,9 +407,7 @@ def print_report(report: dict) -> None:
     # 覆盖
     c = report["coverage"]
     dim_status = "✅" if c["dimension_complete"] else "❌"
-    print(
-        f"▶ 覆盖: {c['rules']} 规则 | dimension {dim_status} {c['dimension']} | layer {c['layer']}"
-    )
+    print(f"▶ 覆盖: {c['rules']} 规则 | dimension {dim_status} {c['dimension']} | layer {c['layer']}")
 
     # ADR
     adr_status = "✅" if report["adr_residue_0104"] == 0 else "❌"
@@ -427,7 +417,7 @@ def print_report(report: dict) -> None:
     m = report["m2_type"]
     if m.get("ok"):
         print(
-            f"▶ GacRule M2 (机制7): ✅ fields={m['fields']} 状态机={m['states']} 机制={m['mechanisms']} drift={m.get('drift_check','?')}"
+            f"▶ GacRule M2 (机制7): ✅ fields={m['fields']} 状态机={m['states']} 机制={m['mechanisms']} drift={m.get('drift_check', '?')}"
         )
     else:
         print(f"▶ GacRule M2 (机制7): ❌ {m.get('error', 'drift FAIL')}")
@@ -435,9 +425,7 @@ def print_report(report: dict) -> None:
     # doc-ssot (CR-X4-DOC-SSOT)
     ds = report["doc_ssot"]
     ds_status = "✅" if ds["ok"] else "❌"
-    print(
-        f"▶ doc-ssot (CR-X4-DOC-SSOT): {ds_status} 扫描={ds['files_scanned']} 冲突={ds['conflicts']}"
-    )
+    print(f"▶ doc-ssot (CR-X4-DOC-SSOT): {ds_status} 扫描={ds['files_scanned']} 冲突={ds['conflicts']}")
 
     snap = report["doc_snapshots"]
     snap_status = "✅" if snap["ok"] else "❌"
@@ -445,9 +433,7 @@ def print_report(report: dict) -> None:
 
     links = report["doc_links"]
     link_status = "✅" if links["ok"] else "❌"
-    print(
-        f"▶ doc-links (入口文档链接): {link_status} 扫描={links['files_scanned']} 死链={links['broken_links']}"
-    )
+    print(f"▶ doc-links (入口文档链接): {link_status} 扫描={links['files_scanned']} 死链={links['broken_links']}")
 
     reach = report["submodule_reachability"]
     reach_status = "✅" if reach["ok"] else "❌"
@@ -458,16 +444,12 @@ def print_report(report: dict) -> None:
     # hygiene (CR-HYG-01/02)
     h = report["hygiene"]
     h_status = "✅" if h["ok"] else "❌"
-    print(
-        f"▶ hygiene (CR-HYG-01/02): {h_status} 0字节={h['zero_byte']} 大小写冲突={h['case_conflicts']}"
-    )
+    print(f"▶ hygiene (CR-HYG-01/02): {h_status} 0字节={h['zero_byte']} 大小写冲突={h['case_conflicts']}")
 
     # registry drift (代码→registry SSOT 链)
     gr = report["registry_drift"]
     gr_status = "✅" if gr["ok"] else "❌"
-    print(
-        f"▶ registry-drift (代码→SSOT): {gr_status} 扫描={gr['projects_scanned']} drift={gr['drift_count']}"
-    )
+    print(f"▶ registry-drift (代码→SSOT): {gr_status} 扫描={gr['projects_scanned']} drift={gr['drift_count']}")
 
     # legacy drift (动态收敛: X1-X4+L0 源 vs GaC indexed)
     lg = report["legacy_drift"]

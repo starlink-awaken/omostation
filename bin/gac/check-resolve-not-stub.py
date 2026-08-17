@@ -12,7 +12,16 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # 跳过目录
-SKIP_DIRS = {".venv", "__pycache__", "node_modules", "build", ".git", "_archived", "tests", "test"}
+SKIP_DIRS = {
+    ".venv",
+    "__pycache__",
+    "node_modules",
+    "build",
+    ".git",
+    "_archived",
+    "tests",
+    "test",
+}
 # 治理代码路径 — 这些路径中的 TODO/FIXME 需要被标记
 GOVERNED_PATTERNS = [
     re.compile(r"bin/gac/"),
@@ -73,7 +82,7 @@ def main() -> int:
 
         for pattern, label in STUB_PATTERNS:
             for m in pattern.finditer(text):
-                line_num = text[:m.start()].count("\n") + 1
+                line_num = text[: m.start()].count("\n") + 1
                 violations.append(f"  {rel}:{line_num} — {label}: {m.group()[:80]}")
 
     if zero_byte_files:

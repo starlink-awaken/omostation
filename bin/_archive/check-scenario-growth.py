@@ -13,6 +13,7 @@ baseline 模式 (照搬 check-work-landed M2):
   - 生成: python3 bin/gac/check-scenario-growth.py --dump-baseline > baseline-scenario-growth.txt
   - 存量无证据 ADV 进 grace, 新增无证据 → blocking
 """
+
 from __future__ import annotations
 
 import argparse
@@ -73,6 +74,7 @@ def _load_baseline() -> set[str]:
 def _adv_number(path: Path) -> int | None:
     """从文件名解析 ADV 编号 (ADV25-xxx → 25)."""
     import re
+
     m = re.search(r"ADV(\d+)", path.name)
     return int(m.group(1)) if m else None
 
@@ -82,6 +84,7 @@ def _count_detectors() -> int:
     if not SCENARIO_LIB.is_file():
         return 0
     import re
+
     txt = SCENARIO_LIB.read_text(encoding="utf-8")
     return len(re.findall(r"^def _(?:synthesize|handle)_\w+", txt, re.MULTILINE))
 
@@ -144,29 +147,35 @@ def main(argv: list[str] | None = None) -> int:
         if n is not None and n > ADV_CAP:
             aid = (sc or {}).get("id") or p.stem
             if aid in baseline:
-                findings.append({
-                    "id": p.name,
-                    "kind": "adv_cap_grace",
-                    "message": f"ADV 编号 {n} > 上限 {ADV_CAP} (baseline grace, 存量不追溯, W2)",
-                })
+                findings.append(
+                    {
+                        "id": p.name,
+                        "kind": "adv_cap_grace",
+                        "message": f"ADV 编号 {n} > 上限 {ADV_CAP} (baseline grace, 存量不追溯, W2)",
+                    }
+                )
                 summary["warn"] += 1
             else:
-                findings.append({
-                    "id": p.name,
-                    "kind": "adv_cap_exceeded",
-                    "message": f"ADV 编号 {n} > 上限 {ADV_CAP} (T2 锁死: 新增须人类批准)",
-                })
+                findings.append(
+                    {
+                        "id": p.name,
+                        "kind": "adv_cap_exceeded",
+                        "message": f"ADV 编号 {n} > 上限 {ADV_CAP} (T2 锁死: 新增须人类批准)",
+                    }
+                )
                 summary["blocking"] += 1
 
     # T2: detector 增长门 (scenario_lib _synthesize_*/_handle_* 超 baseline → blocking)
     detector_n = _count_detectors()
     detector_baseline = _load_detector_baseline()
     if detector_baseline and detector_n > detector_baseline:
-        findings.append({
-            "id": f"scenario_lib detectors: {detector_n} > baseline {detector_baseline}",
-            "kind": "detector_growth_blocking",
-            "message": f"detector 数 {detector_n} 超 baseline {detector_baseline} (T2: W14 detector 形态也拦, 新增须人类派单)",
-        })
+        findings.append(
+            {
+                "id": f"scenario_lib detectors: {detector_n} > baseline {detector_baseline}",
+                "kind": "detector_growth_blocking",
+                "message": f"detector 数 {detector_n} 超 baseline {detector_baseline} (T2: W14 detector 形态也拦, 新增须人类派单)",
+            }
+        )
         summary["blocking"] += 1
 
     for p, sc in advs:
@@ -181,18 +190,22 @@ def main(argv: list[str] | None = None) -> int:
         # W2 baseline 标准: 存量 grace 永远 warn (不阻断, 不论 strict), 新增 (非 baseline) blocking
         # (旧版 strict 把 baseline 也 blocking = 存量锁死新门, 违 W2 "按 baseline 标准处理存量")
         if aid in baseline:
-            findings.append({
-                "id": aid,
-                "kind": "no_evidence_grace",
-                "message": "无 real_occurrence_evidence (baseline grace, 存量不追溯)",
-            })
+            findings.append(
+                {
+                    "id": aid,
+                    "kind": "no_evidence_grace",
+                    "message": "无 real_occurrence_evidence (baseline grace, 存量不追溯)",
+                }
+            )
             summary["warn"] += 1
         else:
-            findings.append({
-                "id": aid,
-                "kind": "no_evidence_blocking",
-                "message": "新增 ADV 无 real_occurrence_evidence (R2 门: 须真实发生证据才进, Q1 终止条件)",
-            })
+            findings.append(
+                {
+                    "id": aid,
+                    "kind": "no_evidence_blocking",
+                    "message": "新增 ADV 无 real_occurrence_evidence (R2 门: 须真实发生证据才进, Q1 终止条件)",
+                }
+            )
             summary["blocking"] += 1
 
     ok = summary["blocking"] == 0

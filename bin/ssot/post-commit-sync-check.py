@@ -14,6 +14,7 @@
 
 返回: 0 = 无需同步 / 已同步; 1 = 同步后产生 diff (提示提交).
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -39,7 +40,7 @@ def _changed_gitlinks() -> list[str]:
         )
         changed = r.stdout.splitlines()
         return [s for s in SYNC_SUBMODULES if s in changed]
-    except Exception:  # noqa: BLE001 — hook 失败不影响 commit
+    except Exception:
         return []
 
 
@@ -55,7 +56,7 @@ def _run_sync_all_docs() -> tuple[bool, str]:
             check=False,
         )
         return r.returncode == 0, (r.stdout or r.stderr)[-400:]
-    except Exception as exc:  # noqa: BLE001 — hook 失败不影响 commit
+    except Exception as exc:
         return False, str(exc)
 
 
@@ -77,7 +78,7 @@ def _has_doc_drift() -> bool:
             check=False,
         )
         return bool(r.stdout.strip())
-    except Exception:  # noqa: BLE001 — hook 失败不影响 commit
+    except Exception:
         return False
 
 
@@ -98,7 +99,7 @@ def _validate_generation() -> bool:
         totals = data.get("totals", {}) if isinstance(data, dict) else {}
         keys = ("mcp_servers", "mcp_tools", "bos_services")
         return all(int(totals.get(k, 0)) > 0 for k in keys)
-    except Exception:  # noqa: BLE001 — 校验失败保守返回 False
+    except Exception:
         return False
 
 

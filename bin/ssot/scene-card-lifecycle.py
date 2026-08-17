@@ -52,13 +52,9 @@ def validate_scene_card_v2(card: dict[str, Any]) -> dict[str, Any]:
 
     lifecycle = card.get("lifecycle", "")
     if lifecycle in LEGACY_LIFECYCLE_MAP:
-        warnings.append(
-            f"lifecycle '{lifecycle}' is legacy; map to '{LEGACY_LIFECYCLE_MAP[lifecycle]}'"
-        )
+        warnings.append(f"lifecycle '{lifecycle}' is legacy; map to '{LEGACY_LIFECYCLE_MAP[lifecycle]}'")
     elif lifecycle and lifecycle not in VALID_LIFECYCLE_TIERS:
-        errors.append(
-            f"lifecycle '{lifecycle}' not in {VALID_LIFECYCLE_TIERS}"
-        )
+        errors.append(f"lifecycle '{lifecycle}' not in {VALID_LIFECYCLE_TIERS}")
 
     if not card.get("bet"):
         errors.append("required field 'bet' is missing")
@@ -150,15 +146,18 @@ def transition_scene_card(
 
     if "notes" not in body:
         body["notes"] = []
-    body["notes"].append(
-        f"Transitioned {current_tier}→{target_tier} at {datetime.now(UTC).isoformat()} by {actor}"
-    )
+    body["notes"].append(f"Transitioned {current_tier}→{target_tier} at {datetime.now(UTC).isoformat()} by {actor}")
 
     docs[body_idx] = body
     with open(scene_card_path, "w", encoding="utf-8") as f:
         yaml.dump_all(docs, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
 
-    return {"ok": True, "scene_id": body.get("scene_id"), "from": current_tier, "to": target_tier}
+    return {
+        "ok": True,
+        "scene_id": body.get("scene_id"),
+        "from": current_tier,
+        "to": target_tier,
+    }
 
 
 def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
@@ -186,7 +185,8 @@ def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
     # Check 3: run track-specific preflight
     if scene_type == "internal_pipeline":
         preflight_mod = _load_module(
-            root / "bin/ssot/internal-scene-preflight.py", "internal_preflight_for_lifecycle"
+            root / "bin/ssot/internal-scene-preflight.py",
+            "internal_preflight_for_lifecycle",
         )
         preflight = preflight_mod.build_preflight(card, root=root)
         checks["preconditions"]["preflight_pass"] = preflight["status"] == "ready_for_admission_preview"
@@ -219,7 +219,11 @@ def main(argv: list[str] | None = None) -> int:
     check_parser.add_argument("--scene-card", type=Path, required=True)
     validate_parser = sub.add_parser("validate", help="validate v2 schema (5-tier lifecycle + bet/falsifier)")
     validate_parser.add_argument("--scene-card", type=Path)
-    validate_parser.add_argument("--all", action="store_true", help="validate all scene cards in docs/scene-cards/")
+    validate_parser.add_argument(
+        "--all",
+        action="store_true",
+        help="validate all scene cards in docs/scene-cards/",
+    )
     activate_parser = sub.add_parser("activate", help="activate scene card (requires explicit command)")
     activate_parser.add_argument("--scene-card", type=Path, required=True)
     activate_parser.add_argument("--actor", required=True, help="operator name")

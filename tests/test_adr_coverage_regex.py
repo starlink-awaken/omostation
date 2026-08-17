@@ -6,6 +6,7 @@ inside INDEX.md table date columns, causing false-positive "INDEX 引用不存�
 Fix: anchor pattern to table column boundaries (| or whitespace) so 4-digit
 date-like strings inside table cells are not extracted as ADR filenames.
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -13,7 +14,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 
 SCRIPT = Path(__file__).resolve().parents[1] / "bin" / "adr" / "adr-coverage.py"
 
@@ -39,9 +39,7 @@ def test_parse_index_real_index_no_date_false_positive(adr_coverage):
     if not index_path.exists():
         pytest.skip("INDEX.md not present in this checkout")
     data = adr_coverage.parse_index(index_path)
-    assert "2026-07-24.md" not in data["adrs"], (
-        "regex regression: 2026-07-24.md matched as ADR file from date column"
-    )
+    assert "2026-07-24.md" not in data["adrs"], "regex regression: 2026-07-24.md matched as ADR file from date column"
 
 
 def test_parse_index_real_index_has_0146_ref(adr_coverage):
@@ -70,6 +68,7 @@ def test_parse_index_handcrafted_minimal():
 def _parse_text(mod, text: str):
     """Wrap parse_index to accept string instead of path."""
     import tempfile
+
     with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False) as fh:
         fh.write(text)
         path = Path(fh.name)

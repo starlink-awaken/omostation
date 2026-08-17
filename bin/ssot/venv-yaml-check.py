@@ -35,8 +35,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="P96: venv 依赖一致性检查")
     parser.add_argument("--check", action="store_true", help="仅检查, 不 install")
     parser.add_argument("--list", action="store_true", help="列出所有依赖")
-    parser.add_argument("--venv", default="projects/knowledge/kairon",
-                        help="venv 目录 (用于 uv pip install)")
+    parser.add_argument(
+        "--venv",
+        default="projects/knowledge/kairon",
+        help="venv 目录 (用于 uv pip install)",
+    )
     args = parser.parse_args()
 
     if args.list:
@@ -61,7 +64,9 @@ def main() -> int:
     print(f"🔧 自动 install 到 {args.venv} ...")
     r = subprocess.run(
         ["uv", "pip", "install", *missing, "--directory", args.venv],
-        capture_output=True, text=True, timeout=120,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     if r.returncode != 0:
         print(f"❌ install 失败: {r.stderr[:300]}")

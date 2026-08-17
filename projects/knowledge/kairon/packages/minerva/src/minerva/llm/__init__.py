@@ -1,7 +1,7 @@
 """Minerva LLM client module."""
 
 from minerva.llm.client import (
-    OpenAICompatibleClient as _OriginalOpenAICompatibleClient,  # noqa: F401
+    OpenAICompatibleClient as _OriginalOpenAICompatibleClient,
 )
 
 __all__ = ["OpenAICompatibleClient"]

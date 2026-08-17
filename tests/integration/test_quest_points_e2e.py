@@ -5,6 +5,7 @@ Validates the full E2E loop:
 2. REST API Quest completion, OMO task promotion to done, and event emission.
 3. eCOS Event listener matching and point calculation workflow SQLite execution.
 """
+
 from __future__ import annotations
 
 import sqlite3
@@ -21,17 +22,13 @@ sys.path.insert(0, str(WORKSPACE_ROOT / "projects" / "bus-foundation" / "src"))
 
 # 强行清除已加载的 ecos 缓存以防 sys.modules 错配
 import sys
+
 for mod in list(sys.modules.keys()):
     if mod == "ecos" or mod.startswith("ecos."):
         del sys.modules[mod]
 
-import ecos
-import ecos.workflow.event_listener
-import ecos.workflow.executor
-import ecos.workflow.actions
-
-from fastapi.testclient import TestClient
 from cockpit.dashboard_server import app
+from fastapi.testclient import TestClient
 
 
 def test_quest_e2e_flow():
@@ -45,7 +42,7 @@ def test_quest_e2e_flow():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
-    
+
     # 找到 "child" (宝宝) 初始的 points
     initial_wisdom = 0
     initial_responsibility = 0
@@ -61,8 +58,8 @@ def test_quest_e2e_flow():
             "title": "测试每日打扫",
             "q_type": "responsibility",
             "reward": 20,
-            "assignee": "child"
-        }
+            "assignee": "child",
+        },
     )
     assert response.status_code == 200
     create_res = response.json()
@@ -82,7 +79,7 @@ def test_quest_e2e_flow():
         complete_res = response.json()
         assert complete_res["status"] == "ok"
         assert complete_res["event_published"] is True
-        
+
         # 验证 OMO 任务已被 complete
         done_task_file = WORKSPACE_ROOT / ".omo" / "tasks" / "done" / f"{task_id}.yaml"
         assert not task_file.exists() or done_task_file.exists()
@@ -99,7 +96,7 @@ def test_quest_e2e_flow():
 
     # 4. 模拟 eCOS Event Listener 接收该事件，并拉起工作流清算
     from ecos.workflow.event_listener import execute_matched
-    
+
     # 构造事件
     event = {
         "bos_uri": "QuestCompleted",
@@ -109,10 +106,10 @@ def test_quest_e2e_flow():
             "task_id": task_id,
             "assignee": "child",
             "reward": 20,
-            "type": "responsibility"
-        }
+            "type": "responsibility",
+        },
     }
-    
+
     results = execute_matched(event)
     assert len(results) >= 1
     # 确认工作流没有失败的步骤
@@ -125,7 +122,7 @@ def test_quest_e2e_flow():
     cursor = conn.cursor()
     cursor.execute("SELECT responsibilityPoints FROM profiles WHERE role = 'child'")
     final_responsibility = cursor.fetchone()[0]
-    
+
     cursor.execute("SELECT completed FROM quests WHERE id = ?", (quest_id,))
     quest_completed_status = cursor.fetchone()[0]
     conn.close()

@@ -13,9 +13,7 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_REGISTRY = (
-    ROOT / ".omo" / "_truth" / "registry" / "documents-content-plane-migrations.yaml"
-)
+DEFAULT_REGISTRY = ROOT / ".omo" / "_truth" / "registry" / "documents-content-plane-migrations.yaml"
 
 _KINDS = {"runtime", "cache"}
 _DISPOSITIONS = {"content_archive", "delegate", "migrate", "relocate", "retire"}
@@ -37,20 +35,13 @@ _EVIDENCE_FIELDS = {
 
 
 def _string_list(value: object) -> bool:
-    return (
-        isinstance(value, list)
-        and bool(value)
-        and all(isinstance(item, str) and item for item in value)
-    )
+    return isinstance(value, list) and bool(value) and all(isinstance(item, str) and item for item in value)
 
 
 def _safe_globs(value: object) -> bool:
     if not _string_list(value):
         return False
-    return all(
-        not pattern.startswith("/") and ".." not in Path(pattern).parts
-        for pattern in value
-    )
+    return all(not pattern.startswith("/") and ".." not in Path(pattern).parts for pattern in value)
 
 
 def _load_registry(path: Path) -> tuple[dict[str, Any] | None, list[str]]:
@@ -96,9 +87,7 @@ def _validate_registry(
         prefix = f"family {family_id}"
         ids.append(family_id)
         if not _safe_globs(item.get("source_globs")):
-            errors.append(
-                f"{prefix} source_globs must be safe non-empty relative patterns"
-            )
+            errors.append(f"{prefix} source_globs must be safe non-empty relative patterns")
         excludes = item.get("exclude_globs", [])
         if excludes and not _safe_globs(excludes):
             errors.append(f"{prefix} exclude_globs must be safe relative patterns")
@@ -106,24 +95,17 @@ def _validate_registry(
         if not _string_list(kinds) or not set(kinds).issubset(_KINDS):
             errors.append(f"{prefix} artifact_kind must use runtime/cache")
         if item.get("disposition") not in _DISPOSITIONS:
-            errors.append(
-                f"{prefix} has unsupported disposition: {item.get('disposition')}"
-            )
+            errors.append(f"{prefix} has unsupported disposition: {item.get('disposition')}")
         if not isinstance(item.get("owner"), str) or not item["owner"].strip():
             errors.append(f"{prefix} owner must be non-empty")
-        if (
-            not isinstance(item.get("replacement"), str)
-            or not item["replacement"].strip()
-        ):
+        if not isinstance(item.get("replacement"), str) or not item["replacement"].strip():
             errors.append(f"{prefix} replacement must be non-empty")
         if not _string_list(item.get("consumer_refs")):
             errors.append(f"{prefix} consumer_refs must be a non-empty string list")
         if not isinstance(item.get("rollback"), str) or not item["rollback"].strip():
             errors.append(f"{prefix} rollback must be non-empty")
         if item.get("confirmation_gate") not in _CONFIRMATION_GATES:
-            errors.append(
-                f"{prefix} has unsupported confirmation_gate: {item.get('confirmation_gate')}"
-            )
+            errors.append(f"{prefix} has unsupported confirmation_gate: {item.get('confirmation_gate')}")
         status = item.get("status")
         if status not in _STATUSES:
             errors.append(f"{prefix} has unsupported status: {status}")
@@ -132,15 +114,10 @@ def _validate_registry(
             evidence_complete = (
                 isinstance(evidence, dict)
                 and _EVIDENCE_FIELDS.issubset(evidence)
-                and all(
-                    isinstance(evidence[field], str) and evidence[field].strip()
-                    for field in _EVIDENCE_FIELDS
-                )
+                and all(isinstance(evidence[field], str) and evidence[field].strip() for field in _EVIDENCE_FIELDS)
             )
             if not evidence_complete:
-                errors.append(
-                    f"{prefix} terminal status requires evidence: {', '.join(sorted(_EVIDENCE_FIELDS))}"
-                )
+                errors.append(f"{prefix} terminal status requires evidence: {', '.join(sorted(_EVIDENCE_FIELDS))}")
         families.append(item)
 
     if len(ids) != len(set(ids)):
@@ -154,16 +131,12 @@ def _validate_registry(
         major_set = set(major_surfaces)
         if len(major_set) != len(major_surfaces):
             errors.append("major_surfaces contains duplicate ids")
-    flagged_major = {
-        item["id"] for item in families if item.get("major_surface") is True
-    }
+    flagged_major = {item["id"] for item in families if item.get("major_surface") is True}
     if major_set != flagged_major:
         errors.append("major_surfaces must equal families marked major_surface")
     unknown_major = sorted(major_set - set(ids))
     if unknown_major:
-        errors.append(
-            f"major_surfaces references unknown families: {', '.join(unknown_major)}"
-        )
+        errors.append(f"major_surfaces references unknown families: {', '.join(unknown_major)}")
 
     samples_raw = raw.get("coverage_samples")
     samples: list[dict[str, str]] = []
@@ -177,31 +150,20 @@ def _validate_registry(
             path = sample.get("relative_path")
             kind = sample.get("kind")
             family_id = sample.get("family")
-            if (
-                not isinstance(path, str)
-                or not path
-                or path.startswith("/")
-                or ".." in Path(path).parts
-            ):
-                errors.append(
-                    f"coverage_samples[{index}].relative_path must be safe and relative"
-                )
+            if not isinstance(path, str) or not path or path.startswith("/") or ".." in Path(path).parts:
+                errors.append(f"coverage_samples[{index}].relative_path must be safe and relative")
                 continue
             if kind not in _KINDS:
                 errors.append(f"coverage_samples[{index}].kind must be runtime/cache")
                 continue
             if family_id not in ids:
-                errors.append(
-                    f"coverage_samples[{index}] references unknown family: {family_id}"
-                )
+                errors.append(f"coverage_samples[{index}] references unknown family: {family_id}")
                 continue
             samples.append({"relative_path": path, "kind": kind, "family": family_id})
     sampled_families = {sample["family"] for sample in samples}
     missing_samples = sorted(set(ids) - sampled_families)
     if missing_samples:
-        errors.append(
-            f"families missing coverage samples: {', '.join(missing_samples)}"
-        )
+        errors.append(f"families missing coverage samples: {', '.join(missing_samples)}")
 
     return families, samples, errors
 
@@ -210,13 +172,9 @@ def _matches(candidate: dict[str, str], family: dict[str, Any]) -> bool:
     if candidate["kind"] not in family.get("artifact_kind", []):
         return False
     path = candidate["relative_path"]
-    if not any(
-        fnmatchcase(path, pattern) for pattern in family.get("source_globs", [])
-    ):
+    if not any(fnmatchcase(path, pattern) for pattern in family.get("source_globs", [])):
         return False
-    return not any(
-        fnmatchcase(path, pattern) for pattern in family.get("exclude_globs", [])
-    )
+    return not any(fnmatchcase(path, pattern) for pattern in family.get("exclude_globs", []))
 
 
 def _coverage(
@@ -244,9 +202,7 @@ def _coverage(
         if not matched:
             zero_matches.append(f"zero matches: {path} ({kind})")
         elif len(matched) > 1:
-            multiple_matches.append(
-                f"multiple matches: {path} ({kind}) -> {', '.join(matched)}"
-            )
+            multiple_matches.append(f"multiple matches: {path} ({kind}) -> {', '.join(matched)}")
         else:
             family_counts[matched[0]] += 1
     return (
@@ -278,10 +234,7 @@ def check_migrations(
     families, samples, validation_errors = _validate_registry(raw)
     errors.extend(validation_errors)
 
-    sample_candidates = [
-        {"relative_path": sample["relative_path"], "kind": sample["kind"]}
-        for sample in samples
-    ]
+    sample_candidates = [{"relative_path": sample["relative_path"], "kind": sample["kind"]} for sample in samples]
     _, _, sample_zero, sample_multiple = _coverage(sample_candidates, families)
     errors.extend(f"sample {message}" for message in sample_zero)
     errors.extend(f"sample {message}" for message in sample_multiple)
@@ -294,14 +247,8 @@ def check_migrations(
 
     mode = "live" if candidates is not None else "samples"
     checked = candidates if candidates is not None else sample_candidates
-    family_counts, kind_counts, zero_matches, multiple_matches = _coverage(
-        checked, families
-    )
-    non_terminal_families = [
-        family["id"]
-        for family in families
-        if family.get("status") not in _TERMINAL_STATUSES
-    ]
+    family_counts, kind_counts, zero_matches, multiple_matches = _coverage(checked, families)
+    non_terminal_families = [family["id"] for family in families if family.get("status") not in _TERMINAL_STATUSES]
     errors.extend(zero_matches[:50])
     errors.extend(multiple_matches[:50])
     if len(zero_matches) > 50:
@@ -334,9 +281,7 @@ def _audit_candidates(
 
     report = audit_content_plane(documents_root)
     candidates = [
-        {"relative_path": item.relative_path, "kind": item.kind}
-        for item in report.artifacts
-        if item.kind in _KINDS
+        {"relative_path": item.relative_path, "kind": item.kind} for item in report.artifacts if item.kind in _KINDS
     ]
     return candidates, {
         "artifact_count": len(report.artifacts),
@@ -359,9 +304,7 @@ def main(argv: list[str] | None = None) -> int:
             report["audit"] = audit
             if audit["artifact_count"] == 0 and any(documents_root.iterdir()):
                 report["ok"] = False
-                report["errors"].append(
-                    f"audit returned zero artifacts for non-empty Documents root: {documents_root}"
-                )
+                report["errors"].append(f"audit returned zero artifacts for non-empty Documents root: {documents_root}")
             if not candidates and report["non_terminal_families"]:
                 report["ok"] = False
                 report["errors"].append(
@@ -370,7 +313,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
         else:
             report = check_migrations(args.registry.resolve())
-    except Exception as exc:  # noqa: BLE001 - stable CLI boundary for owner/audit failures
+    except Exception as exc:
         report = {
             "ok": False,
             "mode": "unavailable",
@@ -383,11 +326,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(report, ensure_ascii=False))
     else:
-        print(
-            "documents migrations: ok"
-            if report["ok"]
-            else "documents migrations: failed"
-        )
+        print("documents migrations: ok" if report["ok"] else "documents migrations: failed")
         print(f"mode={report['mode']} candidates={report['candidate_count']}")
         for error in report["errors"]:
             print(f"- {error}")

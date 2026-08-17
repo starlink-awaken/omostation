@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 from typing import Any
 
 from _shared import ROOT, load_yaml
@@ -44,19 +43,23 @@ def list_constraints() -> list[dict[str, Any]]:
     """List all constraints from SSOT files."""
     out: list[dict[str, Any]] = []
     for c in _load_checks():
-        out.append({
-            "source": "governance-checks",
-            "id": c.get("id", c.get("name", "?")),
-            "enforcement": c.get("severity", "?") or "?",
-            "summary": (c.get("description", c.get("summary", "")) or "")[:120],
-        })
+        out.append(
+            {
+                "source": "governance-checks",
+                "id": c.get("id", c.get("name", "?")),
+                "enforcement": c.get("severity", "?") or "?",
+                "summary": (c.get("description", c.get("summary", "")) or "")[:120],
+            }
+        )
     for p in _load_policies():
-        out.append({
-            "source": "task-policies",
-            "id": p.get("name", "?"),
-            "enforcement": "required",
-            "summary": (p.get("summary", "") or "")[:120],
-        })
+        out.append(
+            {
+                "source": "task-policies",
+                "id": p.get("name", "?"),
+                "enforcement": "required",
+                "summary": (p.get("summary", "") or "")[:120],
+            }
+        )
     return out
 
 
@@ -133,7 +136,13 @@ def main(argv: list[str] | None = None) -> int:
     if command == "list":
         items = list_constraints()
         if args.json:
-            print(json.dumps({"total": len(items), "constraints": items}, ensure_ascii=False, indent=2))
+            print(
+                json.dumps(
+                    {"total": len(items), "constraints": items},
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
         else:
             print(f"Constraints ({len(items)}):")
             for it in items:

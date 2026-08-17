@@ -4,13 +4,13 @@
 Orchestrates `mos consolidate --dry-run` by default for safe cron; set
 MOS_CONSOLIDATE_LIVE=1 to run without dry-run.
 """
+
 from __future__ import annotations
 
 import json
 import os
 import subprocess
-import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -19,7 +19,7 @@ RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def main() -> int:
-    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     live = (os.environ.get("MOS_CONSOLIDATE_LIVE") or "").strip() in {"1", "true", "on"}
     cmd = [
         "uv",

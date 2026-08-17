@@ -5,6 +5,7 @@ Exit 1 on missing --bet (requirement-iteration start), missing binding,
 missing north-star pointer, or missing retro. Used as redlines.yaml executor
 and as the shared CLI for closeout / bet-ledger complete.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -16,7 +17,7 @@ _HERE = Path(__file__).resolve().parent
 if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 
-import chain_bind  # noqa: E402
+import chain_bind
 
 
 def _workspace() -> Path:
@@ -97,9 +98,7 @@ def cmd_self_check(_args: argparse.Namespace) -> int:
         ),
         (
             "start-with-bet",
-            chain_bind.start_requires_bet(
-                "governance-state-mutation", "BET-Y1Q1-T6-02"
-            ),
+            chain_bind.start_requires_bet("governance-state-mutation", "BET-Y1Q1-T6-02"),
             True,
         ),
         (

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Guard against mixing unrelated change lanes in one commit."""
+
 from __future__ import annotations
 
 import argparse
@@ -8,7 +9,6 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-
 
 WORKSPACE = Path(__file__).resolve().parents[1]
 ALLOWED_COMBOS = [
@@ -26,7 +26,16 @@ def run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
 
 
 def submodule_paths() -> set[str]:
-    result = run(["git", "config", "--file", ".gitmodules", "--get-regexp", r"^submodule\..*\.path$"])
+    result = run(
+        [
+            "git",
+            "config",
+            "--file",
+            ".gitmodules",
+            "--get-regexp",
+            r"^submodule\..*\.path$",
+        ]
+    )
     if result.returncode != 0:
         return set()
     return {line.split(maxsplit=1)[1] for line in result.stdout.splitlines() if line.strip()}
@@ -42,11 +51,14 @@ def changed_paths(staged: bool, files: list[str] | None = None) -> list[str]:
 
 def load_governance_lanes() -> dict[str, str]:
     """读取 sgf-policy.yaml，构建文件路径 -> lane 的映射白名单"""
-    yaml_path = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
+    yaml_path = (
+        WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
+    )
     mapping = {}
     if yaml_path.is_file():
         try:
             import yaml
+
             data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
             for gate in data.get("gates", []):
                 cmd_parts = gate.get("command", [])
@@ -110,7 +122,8 @@ def classify(path: str, submodules: set[str]) -> str:
     if path.startswith(".omo/"):
         return "governance_state"
     if path.endswith(".md") and (
-        path in {
+        path
+        in {
             "AGENTS.md",
             "CLAUDE.md",
             "GOVERNANCE.md",
@@ -128,7 +141,8 @@ def classify(path: str, submodules: set[str]) -> str:
         return "docs"
     if (
         path.startswith("bin/gac")
-        or path in {
+        or path
+        in {
             "bin/ssot/ssot-guardian.py",
             "bin/ssot/doc-ssot-lint.py",
             "bin/ssot/sync-submodules-push.sh",
@@ -139,7 +153,12 @@ def classify(path: str, submodules: set[str]) -> str:
             "bin/ssot/doc-link-check.py",
         }
         or path.startswith(".githooks/")
-        or path in {".pre-commit-config.yaml", ".github/workflows/gac-gate.yml", ".github/workflows/governance-check.yml"}
+        or path
+        in {
+            ".pre-commit-config.yaml",
+            ".github/workflows/gac-gate.yml",
+            ".github/workflows/governance-check.yml",
+        }
     ):
         return "governance_code"
     if path in {".gitmodules", "Makefile"} or path.startswith(".github/workflows/"):
@@ -207,8 +226,18 @@ def check(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check staged or unstaged change lanes")
     parser.add_argument("--staged", action="store_true", help="Check staged changes")
-    parser.add_argument("--file", action="append", default=[], help="Check an explicit changed file path")
-    parser.add_argument("--allow-lane", action="append", default=[], help="Allow an explicit lane for this check")
+    parser.add_argument(
+        "--file",
+        action="append",
+        default=[],
+        help="Check an explicit changed file path",
+    )
+    parser.add_argument(
+        "--allow-lane",
+        action="append",
+        default=[],
+        help="Allow an explicit lane for this check",
+    )
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     parser.add_argument("--advisory", action="store_true", help="Always exit 0")
     args = parser.parse_args()

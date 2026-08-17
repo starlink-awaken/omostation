@@ -86,9 +86,7 @@ def test_agt_bosroutes_have_valid_uris() -> None:
 
 
 def test_agt_bos_services_registered() -> None:
-    data = yaml.safe_load(
-        (ROOT / "projects/agora/etc/bos-services.yaml").read_text(encoding="utf-8")
-    )
+    data = yaml.safe_load((ROOT / "projects/agora/etc/bos-services.yaml").read_text(encoding="utf-8"))
     services = data.get("services", [])
     agt_uris = {
         "bos://governance/agt/policy",

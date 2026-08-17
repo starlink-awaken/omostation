@@ -20,6 +20,5 @@ def test_auto_backend_degrades_to_none_when_down(monkeypatch):
 
 def test_aetherforge_backend_returns_none_when_down(monkeypatch):
     monkeypatch.setenv("AGORA_BASE_URL", "http://127.0.0.1:1")
-    note = llm_classify({"name": "adr", "count": 10, "dimension": "X3"},
-                        backend="aetherforge")
+    note = llm_classify({"name": "adr", "count": 10, "dimension": "X3"}, backend="aetherforge")
     assert note is None

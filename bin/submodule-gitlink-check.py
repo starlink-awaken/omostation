@@ -75,31 +75,40 @@ def main() -> int:
 
         if prefix == "+":
             wt_head = _git(["rev-parse", "HEAD"], cwd=str(Path(root) / sm_path))
-            drift.append({
-                "path": sm_path,
-                "gitlink": sha[:8],
-                "worktree_head": (wt_head or "?")[:8],
-                "issue": "drift",
-                "fix": f"git submodule update --init {sm_path}",
-            })
+            drift.append(
+                {
+                    "path": sm_path,
+                    "gitlink": sha[:8],
+                    "worktree_head": (wt_head or "?")[:8],
+                    "issue": "drift",
+                    "fix": f"git submodule update --init {sm_path}",
+                }
+            )
         elif prefix == "-":
-            drift.append({
-                "path": sm_path,
-                "issue": "uninitialized",
-                "fix": f"git submodule update --init {sm_path}",
-            })
+            drift.append(
+                {
+                    "path": sm_path,
+                    "issue": "uninitialized",
+                    "fix": f"git submodule update --init {sm_path}",
+                }
+            )
         elif prefix == "U":
-            drift.append({
-                "path": sm_path,
-                "issue": "merge_conflict",
-                "fix": f"手动解 {sm_path} 冲突后 git add",
-            })
+            drift.append(
+                {
+                    "path": sm_path,
+                    "issue": "merge_conflict",
+                    "fix": f"手动解 {sm_path} 冲突后 git add",
+                }
+            )
 
     if as_json:
-        print(json.dumps(
-            {"drift_count": len(drift), "drifts": drift},
-            ensure_ascii=False, indent=2,
-        ))
+        print(
+            json.dumps(
+                {"drift_count": len(drift), "drifts": drift},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     elif drift:
         print(f"⚠️ {len(drift)} 个 submodule gitlink 异常:")
         for d in drift:

@@ -8,7 +8,6 @@ from typing import Any
 
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SPACES = ROOT / "spaces"
 
@@ -91,7 +90,10 @@ def test_personal_space_admission_is_default_deny_with_readonly_agent() -> None:
         "knowledge.propose",
         "knowledge.approve",
     }
-    assert bindings["l4-readonly-membership"] == {"knowledge.read", "knowledge.validate"}
+    assert bindings["l4-readonly-membership"] == {
+        "knowledge.read",
+        "knowledge.validate",
+    }
     assert identity["admission"]["default_mode"] == "explicit_grant_required"
 
     actions = set(taxonomy["actions"])

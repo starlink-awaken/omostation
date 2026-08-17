@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from export_mof_framework import collect_assets, build_manifest, export_framework
+from export_mof_framework import build_manifest, collect_assets, export_framework
 
 
 def test_collect_assets_finds_mof():

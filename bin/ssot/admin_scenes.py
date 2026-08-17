@@ -22,13 +22,12 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
-from _shared import ROOT, utc_now
 
 
 def dispatch_admin_inbox(input_data: dict, token: dict) -> dict[str, Any]:
     """State: received → 读邮件 + LLM分类."""
-    from mail_reader import read_netease_mail
     from mail_agent import classify_mail
+    from mail_reader import read_netease_mail
 
     # 读最近工作邮件
     mails = read_netease_mail("work", limit=5, unread_only=True)
@@ -42,7 +41,15 @@ def dispatch_admin_inbox(input_data: dict, token: dict) -> dict[str, Any]:
     classified = []
     for m in mails[:3]:
         cls = classify_mail(m)
-        classified.append({"subject": m.subject, "sender": m.sender, "category": cls.get("category"), "priority": cls.get("priority"), "summary": cls.get("summary", "")})
+        classified.append(
+            {
+                "subject": m.subject,
+                "sender": m.sender,
+                "category": cls.get("category"),
+                "priority": cls.get("priority"),
+                "summary": cls.get("summary", ""),
+            }
+        )
 
     has_task = any(c["category"] == "任务" for c in classified)
 
@@ -64,7 +71,11 @@ def dispatch_admin_classify(input_data: dict, token: dict) -> dict[str, Any]:
         subject = mails[0].get("subject", "")
 
     if not subject:
-        return {"status": "succeeded", "requires_forwarding": False, "task_type": "none"}
+        return {
+            "status": "succeeded",
+            "requires_forwarding": False,
+            "task_type": "none",
+        }
 
     # LLM 任务分解
     response = llm_ask(
@@ -74,10 +85,16 @@ def dispatch_admin_classify(input_data: dict, token: dict) -> dict[str, Any]:
         timeout=30.0,
     )
 
-    result = {"requires_forwarding": True, "task_type": "转发通知", "deadline": "", "target": ""}
+    result = {
+        "requires_forwarding": True,
+        "task_type": "转发通知",
+        "deadline": "",
+        "target": "",
+    }
     if response:
         import re
-        m = re.search(r'\{.*\}', response, re.DOTALL)
+
+        m = re.search(r"\{.*\}", response, re.DOTALL)
         if m:
             try:
                 result = json.loads(m.group())
@@ -90,7 +107,6 @@ def dispatch_admin_classify(input_data: dict, token: dict) -> dict[str, Any]:
 def dispatch_admin_forward(input_data: dict, token: dict) -> dict[str, Any]:
     """State: forwarding → 生成转发通知 + 表格 + 邮件草稿."""
     from doc_generator import generate_doc, save_draft
-    from mail_sender import create_draft
 
     subject = input_data.get("latest_subject", "工作任务")
     target = input_data.get("target", "各相关单位")
@@ -98,7 +114,8 @@ def dispatch_admin_forward(input_data: dict, token: dict) -> dict[str, Any]:
 
     # risk check
     try:
-        from risk_engine import RiskEngine, Action
+        from risk_engine import Action, RiskEngine
+
         engine = RiskEngine()
         decision = engine.evaluate(Action(type="forward", target="subordinate", domain="work"))
         if decision.is_forbidden():
@@ -107,7 +124,12 @@ def dispatch_admin_forward(input_data: dict, token: dict) -> dict[str, Any]:
         pass
 
     # 生成转发通知草稿
-    context = {"title": subject, "target": target, "deadline": deadline, "source_subject": subject}
+    context = {
+        "title": subject,
+        "target": target,
+        "deadline": deadline,
+        "source_subject": subject,
+    }
     notice = generate_doc("forward_notice", context)
     notice_path = save_draft("forward_notice", notice)
 
@@ -127,7 +149,8 @@ def dispatch_admin_forward(input_data: dict, token: dict) -> dict[str, Any]:
 def dispatch_admin_collect(input_data: dict, token: dict) -> dict[str, Any]:
     """State: collecting → 注册截止追踪 + 检查回复."""
     try:
-        from deadline_tracker import register_task, load_tasks
+        from deadline_tracker import register_task
+
         subject = input_data.get("latest_subject", "工作任务")
         deadline = input_data.get("deadline", "")
         target = input_data.get("target", "")
@@ -141,7 +164,12 @@ def dispatch_admin_collect(input_data: dict, token: dict) -> dict[str, Any]:
             "awaiting_replies": True,
         }
     except Exception as e:
-        return {"status": "succeeded", "deadline_registered": False, "error": str(e)[:100], "awaiting_replies": True}
+        return {
+            "status": "succeeded",
+            "deadline_registered": False,
+            "error": str(e)[:100],
+            "awaiting_replies": True,
+        }
 
 
 def dispatch_admin_compile(input_data: dict, token: dict) -> dict[str, Any]:
@@ -176,7 +204,8 @@ def dispatch_admin_review(input_data: dict, token: dict) -> dict[str, Any]:
 
     # risk check: 发给领导 = L3
     try:
-        from risk_engine import RiskEngine, Action
+        from risk_engine import Action, RiskEngine
+
         engine = RiskEngine()
         decision = engine.evaluate(Action(type="send_email", target="leader", domain="work"))
         if decision.is_forbidden():
@@ -206,7 +235,8 @@ def dispatch_admin_submit(input_data: dict, token: dict) -> dict[str, Any]:
 
     # risk check: 提交上级 = L3
     try:
-        from risk_engine import RiskEngine, Action
+        from risk_engine import Action, RiskEngine
+
         engine = RiskEngine()
         decision = engine.evaluate(Action(type="submit", target="superior", domain="work"))
         if decision.is_forbidden():
@@ -222,7 +252,8 @@ def dispatch_admin_submit(input_data: dict, token: dict) -> dict[str, Any]:
 
     # 记录 trust outcome
     try:
-        from risk_engine import RiskEngine, Action
+        from risk_engine import Action, RiskEngine
+
         engine = RiskEngine()
         engine.record_outcome(Action(type="submit", target="superior"), True)
     except Exception:

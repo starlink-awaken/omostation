@@ -141,7 +141,7 @@ def main() -> int:
     archived_pct = 100 * archived / total_with_fm if total_with_fm else 0
     print(f"  • status active: {active_pct:.1f}% ({active})")
     print(f"  • status archived: {archived_pct:.1f}% ({archived})")
-    print(f"  • status deprecated: {100*deprecated/total_with_fm:.1f}% ({deprecated})")
+    print(f"  • status deprecated: {100 * deprecated / total_with_fm:.1f}% ({deprecated})")
 
     # SSOT/contract 占比
     critical = ssot + contract + pattern

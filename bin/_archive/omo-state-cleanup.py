@@ -26,7 +26,6 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-
 # ── 已知派生面路径 (ADR-0128 + ADR-0129 + M4 Phase 1.2 产出的) ──
 DERIVED_PATHS = [
     # ADR-0128 投影面
@@ -99,30 +98,37 @@ def audit(ws: Path) -> dict:
     audit_results = []
     for dp in DERIVED_PATHS:
         is_ignored = _git_check_ignore(ws, dp)
-        audit_results.append({
-            "path": dp,
-            "expected_gitignored": True,
-            "currently_gitignored": is_ignored,
-            "ok": is_ignored,
-        })
+        audit_results.append(
+            {
+                "path": dp,
+                "expected_gitignored": True,
+                "currently_gitignored": is_ignored,
+                "ok": is_ignored,
+            }
+        )
 
     # 2. 检查 must-be-tracked 不应该被 ignore
     must_results = []
     for tp in MUST_BE_TRACKED_PATHS:
         is_ignored = _git_check_ignore(ws, tp)
-        must_results.append({
-            "path": tp,
-            "expected_tracked": True,
-            "currently_gitignored": is_ignored,
-            "ok": not is_ignored,
-        })
+        must_results.append(
+            {
+                "path": tp,
+                "expected_tracked": True,
+                "currently_gitignored": is_ignored,
+                "ok": not is_ignored,
+            }
+        )
 
     # 3. 工作树非 gitignored 派生文件 (泄漏检查)
     leak_results = []
     try:
         out = subprocess.run(
             ["git", "status", "--ignored", "--porcelain"],
-            cwd=ws, capture_output=True, text=True, timeout=30,
+            cwd=ws,
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         for line in out.stdout.splitlines():
             if line.startswith("?? "):
@@ -155,7 +161,10 @@ def _git_check_ignore(ws: Path, rel_path_str: str) -> bool:
     try:
         out = subprocess.run(
             ["git", "check-ignore", "-q", rel_path_str],
-            cwd=ws, capture_output=True, text=True, timeout=10,
+            cwd=ws,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         return out.returncode == 0
     except Exception:
@@ -166,7 +175,10 @@ def status(ws: Path) -> str:
     """输出当前派生面状态 (人类可读)."""
     out = subprocess.run(
         ["git", "status", "--ignored", "--short"],
-        cwd=ws, capture_output=True, text=True, timeout=30,
+        cwd=ws,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     return out.stdout
 
@@ -218,7 +230,7 @@ def main() -> int:
         print(f"⚠️ 以下 {len(missing)} 派生面缺 gitignore 规则 (建议追加):")
         for r in missing:
             print(f"  + {r['path']}")
-        print(f"\n复制到 .gitignore 即可. 不在本脚本自动写入(防止非预期变更).")
+        print("\n复制到 .gitignore 即可. 不在本脚本自动写入(防止非预期变更).")
         return 1
 
 

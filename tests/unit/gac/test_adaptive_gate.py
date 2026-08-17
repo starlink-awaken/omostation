@@ -70,7 +70,17 @@ class TestAdaptiveGate:
                 capture_output=True,
                 text=True,
             )
-        result = run_adaptive(["--check", "check-b", "--window", "10", "--anomalies", "--file", str(metrics_file)])
+        result = run_adaptive(
+            [
+                "--check",
+                "check-b",
+                "--window",
+                "10",
+                "--anomalies",
+                "--file",
+                str(metrics_file),
+            ]
+        )
         assert result.returncode == 0
         data = json.loads(result.stdout)
         assert len(data["anomalies"]) >= 1

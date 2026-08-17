@@ -22,6 +22,7 @@ RISK_ORDER = ("low", "medium", "high")
 def _staged_files_git() -> list[str]:
     try:
         import subprocess
+
         result = subprocess.run(
             ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
             cwd=WORKSPACE,

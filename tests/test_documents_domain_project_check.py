@@ -51,9 +51,7 @@ def _domain_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
     entries = []
     for domain_id in domain_ids:
         manifest = _manifest(tmp_path / "documents" / domain_id, domain_id)
-        entries.append(
-            {"id": domain_id, "path": os.path.relpath(manifest, registry_dir)}
-        )
+        entries.append({"id": domain_id, "path": os.path.relpath(manifest, registry_dir)})
     path = registry_dir / "L4-DOMAIN-REGISTRY.yaml"
     path.write_text(
         yaml.safe_dump(
@@ -210,10 +208,7 @@ def _project_registry(tmp_path: Path, domain_ids: list[str]) -> Path:
                     "environment_override": "OMOSTATION_RUNTIME_STATE_ROOT",
                     "default_home_relative": ".local/state/omostation/runtime",
                 },
-                "domains": [
-                    {"id": domain_id, "profile": "content-domain"}
-                    for domain_id in domain_ids
-                ],
+                "domains": [{"id": domain_id, "profile": "content-domain"} for domain_id in domain_ids],
                 "runtime_jobs": [
                     {
                         "id": "creative-manifest-check",
@@ -336,11 +331,7 @@ def _run(
             str(domain_registry),
             "--project-registry",
             str(project_registry),
-            *[
-                argument
-                for domain_id in gateway_domain_ids or ()
-                for argument in ("--gateway-domain", domain_id)
-            ],
+            *[argument for domain_id in gateway_domain_ids or () for argument in ("--gateway-domain", domain_id)],
             "--json",
         ],
         cwd=ROOT,
@@ -384,9 +375,7 @@ def test_workspace_binding_declares_weijian_runtime_facts_validation() -> None:
     """The configured Cockpit tool consumes Runtime's bounded audit receipt."""
 
     registry = yaml.safe_load(
-        (
-            ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
-        ).read_text(encoding="utf-8")
+        (ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml").read_text(encoding="utf-8")
     )
 
     assert registry["runtime_state"] == {
@@ -394,11 +383,7 @@ def test_workspace_binding_declares_weijian_runtime_facts_validation() -> None:
         "environment_override": "OMOSTATION_RUNTIME_STATE_ROOT",
         "default_home_relative": ".local/state/omostation/runtime",
     }
-    job = next(
-        job
-        for job in registry["runtime_jobs"]
-        if job["id"] == "documents-weijian-facts-audit"
-    )
+    job = next(job for job in registry["runtime_jobs"] if job["id"] == "documents-weijian-facts-audit")
     assert job == {
         "id": "documents-weijian-facts-audit",
         "domain_id": "work-weijian",
@@ -413,63 +398,33 @@ def test_workspace_binding_declares_weijian_runtime_facts_validation() -> None:
         "fail_closed": True,
     }
     assert "domain_facts_validation_status" in registry["workspace_mcp"]["read_tools"]
-    assert (
-        "domain_facts_validation_status"
-        in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
-    )
-    shadow_job = next(
-        job
-        for job in registry["runtime_jobs"]
-        if job["id"] == "documents-weijian-controller-shadow"
-    )
+    assert "domain_facts_validation_status" in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
+    shadow_job = next(job for job in registry["runtime_jobs"] if job["id"] == "documents-weijian-controller-shadow")
     assert shadow_job == _weijian_controller_shadow_job()
     assert "domain_controller_shadow_status" in registry["workspace_mcp"]["read_tools"]
-    assert (
-        "domain_controller_shadow_status"
-        in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
-    )
+    assert "domain_controller_shadow_status" in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
 
 
 def test_workspace_binding_declares_weijian_model_freshness_owner() -> None:
     registry = yaml.safe_load(
-        (
-            ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
-        ).read_text(encoding="utf-8")
+        (ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml").read_text(encoding="utf-8")
     )
 
-    jobs = [
-        job
-        for job in registry["runtime_jobs"]
-        if job["id"] == "documents-weijian-model-freshness"
-    ]
+    jobs = [job for job in registry["runtime_jobs"] if job["id"] == "documents-weijian-model-freshness"]
     assert jobs == [_weijian_model_freshness_job()]
     assert "domain_model_freshness_status" in registry["workspace_mcp"]["read_tools"]
-    assert (
-        "domain_model_freshness_status"
-        in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
-    )
+    assert "domain_model_freshness_status" in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
 
 
 def test_workspace_binding_declares_weijian_sanyi_status_owner() -> None:
     registry = yaml.safe_load(
-        (
-            ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
-        ).read_text(encoding="utf-8")
+        (ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml").read_text(encoding="utf-8")
     )
 
-    jobs = [
-        job
-        for job in registry["runtime_jobs"]
-        if job["id"] == "documents-weijian-sanyi-status-audit"
-    ]
+    jobs = [job for job in registry["runtime_jobs"] if job["id"] == "documents-weijian-sanyi-status-audit"]
     assert jobs == [_weijian_sanyi_status_job()]
-    assert "domain_sanyi_status_consistency_status" in registry["workspace_mcp"][
-        "read_tools"
-    ]
-    assert (
-        "domain_sanyi_status_consistency_status"
-        in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
-    )
+    assert "domain_sanyi_status_consistency_status" in registry["workspace_mcp"]["read_tools"]
+    assert "domain_sanyi_status_consistency_status" in registry["profiles"]["content-domain"]["allowed_workspace_tools"]
 
 
 @pytest.mark.parametrize(
@@ -497,9 +452,7 @@ def test_workspace_binding_declares_weijian_sanyi_status_owner() -> None:
         ),
     ],
 )
-def test_codex_profile_contract_fails_closed(
-    tmp_path: Path, field: str, value: str, expected: str
-) -> None:
+def test_codex_profile_contract_fails_closed(tmp_path: Path, field: str, value: str, expected: str) -> None:
     domain_registry = _domain_registry(tmp_path, ["vault"])
     project_registry = _project_registry(tmp_path, ["vault"])
     raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
@@ -516,9 +469,7 @@ def test_codex_profile_generator_must_be_workspace_relative(tmp_path: Path) -> N
     domain_registry = _domain_registry(tmp_path, ["vault"])
     project_registry = _project_registry(tmp_path, ["vault"])
     raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
-    raw["clients"]["codex"]["profile_contract"]["generator_ref"] = (
-        "../Documents/profile.py"
-    )
+    raw["clients"]["codex"]["profile_contract"]["generator_ref"] = "../Documents/profile.py"
     project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
 
     result = _run(domain_registry, project_registry)
@@ -550,9 +501,7 @@ def test_codex_profile_generator_must_be_workspace_relative(tmp_path: Path) -> N
         ),
     ],
 )
-def test_zed_profile_contract_fails_closed(
-    tmp_path: Path, field: str, value: str, expected: str
-) -> None:
+def test_zed_profile_contract_fails_closed(tmp_path: Path, field: str, value: str, expected: str) -> None:
     domain_registry = _domain_registry(tmp_path, ["vault"])
     project_registry = _project_registry(tmp_path, ["vault"])
     raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
@@ -569,9 +518,7 @@ def test_zed_profile_generator_must_be_workspace_relative(tmp_path: Path) -> Non
     domain_registry = _domain_registry(tmp_path, ["vault"])
     project_registry = _project_registry(tmp_path, ["vault"])
     raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
-    raw["clients"]["zed"]["profile_contract"]["generator_ref"] = (
-        "../Documents/profile.py"
-    )
+    raw["clients"]["zed"]["profile_contract"]["generator_ref"] = "../Documents/profile.py"
     project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
 
     result = _run(domain_registry, project_registry)
@@ -608,9 +555,7 @@ def test_zed_profile_generator_must_be_workspace_relative(tmp_path: Path) -> Non
         ),
     ],
 )
-def test_zcode_config_contract_fails_closed(
-    tmp_path: Path, field: str, value: object, expected: str
-) -> None:
+def test_zcode_config_contract_fails_closed(tmp_path: Path, field: str, value: object, expected: str) -> None:
     domain_registry = _domain_registry(tmp_path, ["vault"])
     project_registry = _project_registry(tmp_path, ["vault"])
     raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
@@ -627,9 +572,7 @@ def test_zcode_config_generator_must_be_workspace_relative(tmp_path: Path) -> No
     domain_registry = _domain_registry(tmp_path, ["vault"])
     project_registry = _project_registry(tmp_path, ["vault"])
     raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
-    raw["clients"]["zcode"]["config_contract"]["generator_ref"] = (
-        "../Documents/config.py"
-    )
+    raw["clients"]["zcode"]["config_contract"]["generator_ref"] = "../Documents/config.py"
     project_registry.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
 
     result = _run(domain_registry, project_registry)
@@ -651,9 +594,7 @@ def test_zcode_config_generator_must_be_workspace_relative(tmp_path: Path) -> No
         ("mcp_scope", "workspace", "clients.zcode.mcp_scope must be user"),
     ],
 )
-def test_zcode_client_binding_fails_closed(
-    tmp_path: Path, field: str, value: str, expected: str
-) -> None:
+def test_zcode_client_binding_fails_closed(tmp_path: Path, field: str, value: str, expected: str) -> None:
     domain_registry = _domain_registry(tmp_path, ["vault"])
     project_registry = _project_registry(tmp_path, ["vault"])
     raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
@@ -759,9 +700,7 @@ def test_chatgpt_web_tunnel_contract_is_required(tmp_path: Path) -> None:
         "nested/AGENTS.md",
     ],
 )
-def test_client_instruction_file_must_be_a_safe_filename(
-    tmp_path: Path, instruction_file: str
-) -> None:
+def test_client_instruction_file_must_be_a_safe_filename(tmp_path: Path, instruction_file: str) -> None:
     domain_registry = _domain_registry(tmp_path, ["vault"])
     project_registry = _project_registry(tmp_path, ["vault"])
     raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
@@ -796,9 +735,7 @@ def test_gateway_file_must_not_be_a_symlink(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "vault/AGENTS.md must not be a symlink"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["vault/AGENTS.md must not be a symlink"]
 
 
 def test_default_gateway_check_fails_if_registered_projection_is_missing(
@@ -850,9 +787,7 @@ def test_runtime_jobs_must_be_a_non_empty_list(tmp_path: Path) -> None:
     result = _run(domain_registry, project_registry)
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "runtime_jobs must be a non-empty list"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["runtime_jobs must be a non-empty list"]
 
 
 def test_runtime_facts_audit_job_contract_passes(tmp_path: Path) -> None:
@@ -1071,9 +1006,7 @@ def test_runtime_facts_audit_job_contract_fails_closed(
         ),
     ],
 )
-def test_runtime_job_contract_fails_closed(
-    field: str, value: object, expected: str, tmp_path: Path
-) -> None:
+def test_runtime_job_contract_fails_closed(field: str, value: object, expected: str, tmp_path: Path) -> None:
     domain_registry = _domain_registry(tmp_path, ["creative"])
     project_registry = _project_registry(tmp_path, ["creative"])
     raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
@@ -1093,9 +1026,7 @@ def test_project_registry_must_cover_each_manifest_exactly_once(tmp_path: Path) 
     result = _run(domain_registry, project_registry)
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "domains missing manifest ids: shared"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["domains missing manifest ids: shared"]
 
 
 def test_domain_profile_reference_must_exist(tmp_path: Path) -> None:
@@ -1108,9 +1039,7 @@ def test_domain_profile_reference_must_exist(tmp_path: Path) -> None:
     result = _run(domain_registry, project_registry)
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "domain vault references unknown profile: missing-profile"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["domain vault references unknown profile: missing-profile"]
 
 
 def test_profile_tools_must_be_exposed_by_workspace_mcp(tmp_path: Path) -> None:
@@ -1123,9 +1052,7 @@ def test_profile_tools_must_be_exposed_by_workspace_mcp(tmp_path: Path) -> None:
     result = _run(domain_registry, project_registry)
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "profiles.content-domain references unknown tools: invented_tool"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["profiles.content-domain references unknown tools: invented_tool"]
 
 
 def test_profile_capability_routes_must_exist(tmp_path: Path) -> None:
@@ -1151,9 +1078,7 @@ def test_profile_capability_routes_must_exist(tmp_path: Path) -> None:
         "../Documents/@公共/_control/SKILL-INDEX.md",
     ],
 )
-def test_capability_routes_must_use_workspace_relative_paths(
-    tmp_path: Path, invalid_ref: str
-) -> None:
+def test_capability_routes_must_use_workspace_relative_paths(tmp_path: Path, invalid_ref: str) -> None:
     domain_registry = _domain_registry(tmp_path, ["vault"])
     project_registry = _project_registry(tmp_path, ["vault"])
     raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
@@ -1193,9 +1118,7 @@ def test_capability_route_owner_must_match_workspace_authority(tmp_path: Path) -
     result = _run(domain_registry, project_registry)
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "capability_routes.skills.owner must be workspace-skills"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["capability_routes.skills.owner must be workspace-skills"]
 
 
 def test_domain_execution_must_remain_workspace_owned(tmp_path: Path) -> None:
@@ -1208,9 +1131,7 @@ def test_domain_execution_must_remain_workspace_owned(tmp_path: Path) -> None:
     result = _run(domain_registry, project_registry)
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "profiles.content-domain.execution_policy must be workspace_only"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["profiles.content-domain.execution_policy must be workspace_only"]
 
 
 def test_selected_domain_gateways_are_thin_ssot_projections(tmp_path: Path) -> None:
@@ -1284,9 +1205,7 @@ def test_gateway_rejects_documents_local_execution_instructions(tmp_path: Path) 
     result = _run(domain_registry, project_registry, ("vault",))
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "vault/CLAUDE.md instructs Documents-local execution"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["vault/CLAUDE.md instructs Documents-local execution"]
 
 
 @pytest.mark.parametrize(
@@ -1300,9 +1219,7 @@ def test_gateway_rejects_documents_local_execution_instructions(tmp_path: Path) 
         "```sh\nxargs python3 _control/x.py\n```",
     ],
 )
-def test_gateway_rejects_common_documents_local_execution_forms(
-    tmp_path: Path, instruction: str
-) -> None:
+def test_gateway_rejects_common_documents_local_execution_forms(tmp_path: Path, instruction: str) -> None:
     domain_registry = _domain_registry(tmp_path, ["vault"])
     project_registry = _project_registry(tmp_path, ["vault"])
     domain_root = tmp_path / "documents" / "vault"
@@ -1316,9 +1233,7 @@ def test_gateway_rejects_common_documents_local_execution_forms(
     result = _run(domain_registry, project_registry, ("vault",))
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "vault/CLAUDE.md instructs Documents-local execution"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["vault/CLAUDE.md instructs Documents-local execution"]
 
 
 def test_gateway_allows_non_executable_prohibition_statement(tmp_path: Path) -> None:
@@ -1328,8 +1243,7 @@ def test_gateway_allows_non_executable_prohibition_statement(tmp_path: Path) -> 
     _write_gateways(domain_root, "vault")
     claude = domain_root / "CLAUDE.md"
     claude.write_text(
-        claude.read_text(encoding="utf-8")
-        + "\n不要执行或引导执行 Documents 内 `_runtime`、`_control` 脚本。\n",
+        claude.read_text(encoding="utf-8") + "\n不要执行或引导执行 Documents 内 `_runtime`、`_control` 脚本。\n",
         encoding="utf-8",
     )
 

@@ -8,22 +8,19 @@ P77 STRAT § 2 Phase 6: commit-assist 当前实现 (bin/commit-assist.py) 的
 - integration: temp git repo + staged diff → run script → verify output
 - tier verification: aetherforge → ollama → heuristic fallback chain
 """
+
 from __future__ import annotations
 
 import importlib
 import importlib.util
-import os
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[1]
 
 # import bin/commit-assist.py (文件名含 - 不能直接 import)
-_SPEC = importlib.util.spec_from_file_location(
-    "commit_assist", str(WORKSPACE / "bin" / "commit-assist.py")
-)
+_SPEC = importlib.util.spec_from_file_location("commit_assist", str(WORKSPACE / "bin" / "commit-assist.py"))
 assert _SPEC is not None, "cannot load bin/commit-assist.py"
 _COMMIT_ASSIST = importlib.util.module_from_spec(_SPEC)
 assert _SPEC.loader is not None
@@ -38,6 +35,7 @@ AETHERFORGE_MODEL = _COMMIT_ASSIST.AETHERFORGE_MODEL
 
 
 # ── unit: heuristic_subject ──
+
 
 def test_heuristic_subject_gac():
     """governance-checks.yaml → feat(gac)"""
@@ -98,6 +96,7 @@ def test_heuristic_subject_no_pipe():
 
 # ── unit: clean_suggestion ──
 
+
 def test_clean_suggestion_noop():
     """already clean → unchanged"""
     result = clean_suggestion("feat(gac): add CR-FOO rule\n\nWHY: test\n")
@@ -120,6 +119,7 @@ def test_clean_suggestion_fence_lang():
 
 # ── unit: 72-char subject truncation ──
 
+
 def test_subject_72_char_truncation():
     """simulate the 72-char hard gate logic"""
     long_subject = "x" * 80
@@ -141,6 +141,7 @@ def test_subject_under_72_unchanged():
 
 # ── unit: heuristic_subject ctype format ──
 
+
 def test_heuristic_ctype_includes_scope():
     """non-empty stat: ctype contains scope in parens"""
     stat_lines = [" .omo/_truth/registry/governance-checks.yaml | 2 +-"]
@@ -151,6 +152,7 @@ def test_heuristic_ctype_includes_scope():
 
 
 # ── unit: CONVENTIONAL_TYPES ──
+
 
 def test_conventional_types_11():
     """11 types in CONVENTIONAL_TYPES (standard conventional commits)"""
@@ -163,12 +165,16 @@ def test_conventional_types_11():
 
 # ── integration: dry-run pipeline ──
 
+
 def test_no_llm_dry_run_runs():
     """--no-llm + --dry-run: script can be invoked without crashing"""
     script = WORKSPACE / "bin" / "commit-assist.py"
     result = subprocess.run(
         [sys.executable, str(script), "--no-llm", "--dry-run"],
-        cwd=WORKSPACE, capture_output=True, text=True, timeout=30,
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     # exit 1 is expected (no staged changes in worktree)
     # but should not crash with traceback or import error
@@ -181,13 +187,17 @@ def test_empty_staged_diff():
     script = WORKSPACE / "bin" / "commit-assist.py"
     result = subprocess.run(
         [sys.executable, str(script), "--no-llm", "--dry-run"],
-        cwd=WORKSPACE, capture_output=True, text=True, timeout=30,
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     assert result.returncode == 1, f"expected 1, got {result.returncode}"
     assert "无 staged" in result.stdout
 
 
 # ── tier: graceful fallback ──
+
 
 def test_aetherforge_unreachable_graceful():
     """aetherforge gateway unreachable -> returns None (not crash)"""

@@ -23,39 +23,121 @@ from __future__ import annotations
 
 import argparse
 import json
+import statistics
 import subprocess
 import sys
-import statistics
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 # 工具注册表: (id, 描述, 默认参数列表)
 TOOL_REGISTRY: list[tuple[str, str, str, list[str]]] = [
     # (id, 描述, bin_path, args)
-    ("governance-history", "P83 governance 评分历史", "bin/gac/governance-history-insight.py", []),
+    (
+        "governance-history",
+        "P83 governance 评分历史",
+        "bin/gac/governance-history-insight.py",
+        [],
+    ),
     ("drift-history", "P83 drift 漂移历史", "bin/gac/drift-history-insight.py", []),
     ("x2-freshness", "P84 X2 freshness 11 规则", "bin/gac/x2-freshness-check.py", []),
     ("x2-rule-lint", "P85 X2 rule schema lint", "bin/gac/x2-rule-lint.py", []),
-    ("x2-rule-add", "P87 X2 rule 交互式添加 (template 模式)", "bin/gac/x2-rule-add.py", ["--template"]),
+    (
+        "x2-rule-add",
+        "P87 X2 rule 交互式添加 (template 模式)",
+        "bin/gac/x2-rule-add.py",
+        ["--template"],
+    ),
     ("adr-coverage", "P85 ADR 治理健康度", "bin/adr/adr-coverage.py", []),
-    ("mof-m2-coverage", "P84 M2 schema coverage 修正版", "bin/mof/mof-m2-coverage.py", []),
-    ("management-cross-ref", "P82+P83 management 跨文件引用", "bin/ssot/management-cross-ref-check.py", ["."]),
-    ("god-module-roadmap", "P87 god-module refactor (示例文件)", "bin/ssot/god-module-roadmap.py",
-     ["projects/omo/src/omo/omo_lint.py", "--top", "3"]),
-    ("governance-trend-report", "P88 governance 趋势 (weekly 窗口)", "bin/gac/governance-trend-report.py",
-     ["--window", "weekly"]),
-    ("rule-history-insight", "P89 X2 rule 状态洞察", "bin/gac/rule-history-insight.py", []),
-    ("adr-drift-check", "P89 ADR 引用 drift (信息性, 全量扫描)", "bin/adr/adr-drift-check.py", []),
-    ("adr-drift-classify", "P90 ADR drift 归类 (历史 vs 新增)", "bin/adr/adr-drift-classify.py", []),
-    ("governance-history-stats", "P91 gov history 深化 (30 天 + 类别趋势)", "bin/gac/governance-history-stats.py",
-     ["--days", "30"]),
-    ("adr-trend-insight", "P92 ADR 趋势 (phase 分布 + 提交历史)", "bin/adr/adr-trend-insight.py", []),
-    ("adr-drift-auto-fix", "P93 ADR drift 自动归类 (TEMPLATE/SUBDIR/TYPO/REAL)", "bin/adr/adr-drift-auto-fix.py", []),
-    ("adr-drift-apply", "P94 ADR drift 应用 (touch SUBDIR_MISSING)", "bin/adr/adr-drift-apply.py", []),
-    ("god-module-13-list", "P94 god-module 13 error 清单 (24252L excess)", "bin/ssot/god-module-13-error-list.py", []),
-    ("venv-yaml-check", "P96 venv 依赖一致性检查 (pyyaml 等)", "bin/ssot/venv-yaml-check.py", []),
-    ("governance-summary", "GaC 治理摘要 (规则数/维度/ADR/CI)", "bin/gac/governance-summary.py", ["--json"]),
-    ("evidence-smoke", "BOS 声明/执行鸿沟 (证据驱动 smoke)", "bin/gac/evidence-smoke.py", ["--json"]),
+    (
+        "mof-m2-coverage",
+        "P84 M2 schema coverage 修正版",
+        "bin/mof/mof-m2-coverage.py",
+        [],
+    ),
+    (
+        "management-cross-ref",
+        "P82+P83 management 跨文件引用",
+        "bin/ssot/management-cross-ref-check.py",
+        ["."],
+    ),
+    (
+        "god-module-roadmap",
+        "P87 god-module refactor (示例文件)",
+        "bin/ssot/god-module-roadmap.py",
+        ["projects/omo/src/omo/omo_lint.py", "--top", "3"],
+    ),
+    (
+        "governance-trend-report",
+        "P88 governance 趋势 (weekly 窗口)",
+        "bin/gac/governance-trend-report.py",
+        ["--window", "weekly"],
+    ),
+    (
+        "rule-history-insight",
+        "P89 X2 rule 状态洞察",
+        "bin/gac/rule-history-insight.py",
+        [],
+    ),
+    (
+        "adr-drift-check",
+        "P89 ADR 引用 drift (信息性, 全量扫描)",
+        "bin/adr/adr-drift-check.py",
+        [],
+    ),
+    (
+        "adr-drift-classify",
+        "P90 ADR drift 归类 (历史 vs 新增)",
+        "bin/adr/adr-drift-classify.py",
+        [],
+    ),
+    (
+        "governance-history-stats",
+        "P91 gov history 深化 (30 天 + 类别趋势)",
+        "bin/gac/governance-history-stats.py",
+        ["--days", "30"],
+    ),
+    (
+        "adr-trend-insight",
+        "P92 ADR 趋势 (phase 分布 + 提交历史)",
+        "bin/adr/adr-trend-insight.py",
+        [],
+    ),
+    (
+        "adr-drift-auto-fix",
+        "P93 ADR drift 自动归类 (TEMPLATE/SUBDIR/TYPO/REAL)",
+        "bin/adr/adr-drift-auto-fix.py",
+        [],
+    ),
+    (
+        "adr-drift-apply",
+        "P94 ADR drift 应用 (touch SUBDIR_MISSING)",
+        "bin/adr/adr-drift-apply.py",
+        [],
+    ),
+    (
+        "god-module-13-list",
+        "P94 god-module 13 error 清单 (24252L excess)",
+        "bin/ssot/god-module-13-error-list.py",
+        [],
+    ),
+    (
+        "venv-yaml-check",
+        "P96 venv 依赖一致性检查 (pyyaml 等)",
+        "bin/ssot/venv-yaml-check.py",
+        [],
+    ),
+    (
+        "governance-summary",
+        "GaC 治理摘要 (规则数/维度/ADR/CI)",
+        "bin/gac/governance-summary.py",
+        ["--json"],
+    ),
+    (
+        "evidence-smoke",
+        "BOS 声明/执行鸿沟 (证据驱动 smoke)",
+        "bin/gac/evidence-smoke.py",
+        ["--json"],
+    ),
 ]
 
 
@@ -95,6 +177,7 @@ def run_tool(workspace: Path, tool_id: str, bin_path: str, args: list[str]) -> d
 # ADR-0115 Phase 4 续: 完全内联的代码段
 # ==========================================
 
+
 def load_snapshots(root: Path, max_n: int = 30) -> list[dict]:
     """加载最近 N 个 readiness 快照."""
     log_dir = root / ".omo" / "_log"
@@ -113,12 +196,17 @@ def load_snapshots(root: Path, max_n: int = 30) -> list[dict]:
 
 def build_summary(snaps: list[dict], root: Path) -> dict:
     """构建 dashboard 摘要."""
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     if not snaps:
         return {
             "generated_at": now,
             "workspace_root": str(root),
-            "summary_card": {"score": 0, "grade": "无数据", "trend": "no_data", "alerts": []},
+            "summary_card": {
+                "score": 0,
+                "grade": "无数据",
+                "trend": "no_data",
+                "alerts": [],
+            },
             "dimensions_card": {},
             "alerts_card": load_alerts_card(root),
             "history_card": [],
@@ -153,32 +241,38 @@ def build_summary(snaps: list[dict], root: Path) -> dict:
     for i in range(1, len(scores)):
         delta = scores[i] - scores[i - 1]
         if delta < -5:
-            alerts.append({
-                "type": "sudden_drop",
-                "severity": "high",
-                "from": scores[i - 1],
-                "to": scores[i],
-                "delta": delta,
-                "from_ts": snaps[i - 1].get("timestamp"),
-                "to_ts": snaps[i].get("timestamp"),
-            })
+            alerts.append(
+                {
+                    "type": "sudden_drop",
+                    "severity": "high",
+                    "from": scores[i - 1],
+                    "to": scores[i],
+                    "delta": delta,
+                    "from_ts": snaps[i - 1].get("timestamp"),
+                    "to_ts": snaps[i].get("timestamp"),
+                }
+            )
     # 2. stdev 波动
     stdev = statistics.stdev(scores) if len(scores) > 1 else 0
     if stdev > 3:
-        alerts.append({
-            "type": "high_volatility",
-            "severity": "medium",
-            "stdev": round(stdev, 2),
-            "samples": len(scores),
-        })
+        alerts.append(
+            {
+                "type": "high_volatility",
+                "severity": "medium",
+                "stdev": round(stdev, 2),
+                "samples": len(scores),
+            }
+        )
     # 3. mean < 90
     mean = statistics.mean(scores)
     if mean < 90:
-        alerts.append({
-            "type": "low_mean",
-            "severity": "high",
-            "mean": round(mean, 1),
-        })
+        alerts.append(
+            {
+                "type": "low_mean",
+                "severity": "high",
+                "mean": round(mean, 1),
+            }
+        )
 
     # summary_card
     summary_card = {
@@ -232,9 +326,10 @@ def build_summary(snaps: list[dict], root: Path) -> dict:
 def load_alerts_card(root: Path, hours: int = 24) -> dict:
     """告警卡片数据 — 24h 通知 + 抑制统计."""
     from datetime import timedelta
+
     notif_log = root / ".omo" / "_log" / "alert-notifications.jsonl"
     supp_log = root / ".omo" / "_log" / "alert-suppressions.jsonl"
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    cutoff = datetime.now(UTC) - timedelta(hours=hours)
 
     def load_recent(path: Path) -> list[dict]:
         records = []
@@ -301,7 +396,9 @@ def _cmd_readiness_summary(workspace: Path, fmt: str = "json", output_file: str 
         ac = summary["alerts_card"]
         lines.append("")
         lines.append("--- 告警 (24h) ---")
-        lines.append(f"  通知: {ac['notifications']}  抑制: {ac['suppressions']}  抑制率: {ac['suppression_rate'] * 100:.1f}%")
+        lines.append(
+            f"  通知: {ac['notifications']}  抑制: {ac['suppressions']}  抑制率: {ac['suppression_rate'] * 100:.1f}%"
+        )
         if ac["by_level"]:
             levels = " ".join(f"{k}={v}" for k, v in sorted(ac["by_level"].items()))
             lines.append(f"  按级别: {levels}")
@@ -340,21 +437,23 @@ def render_html(data: dict) -> str:
         dim_rows += f"""
         <tr>
             <td><strong>{name}</strong></td>
-            <td>{d.get('score', 0)}/{d.get('max', '?')}</td>
+            <td>{d.get("score", 0)}/{d.get("max", "?")}</td>
             <td>{pct:.1f}%</td>
-            <td>metric={d.get('metric', '?')}</td>
+            <td>metric={d.get("metric", "?")}</td>
             <td><div class="bar"><div class="bar-fill" style="width:{pct}%;background:{bar_color}"></div></div></td>
         </tr>"""
 
     history_rows = ""
     for h in hc:
-        history_rows += f"<tr><td>{h.get('timestamp', '?')}</td><td>{h.get('score', '?')}</td><td>{h.get('grade', '?')}</td></tr>"
+        history_rows += (
+            f"<tr><td>{h.get('timestamp', '?')}</td><td>{h.get('score', '?')}</td><td>{h.get('grade', '?')}</td></tr>"
+        )
 
     alert_info = f"""
     <div class="card">
         <h2>告警 (24h)</h2>
-        <p><strong>通知:</strong> {ac.get('notifications', 0)} | <strong>抑制:</strong> {ac.get('suppressions', 0)} | <strong>抑制率:</strong> {ac.get('suppression_rate', 0) * 100:.1f}%</p>
-        {f"<p>{ac.get('level_reason', '')}</p>" if ac.get('level_reason') else ''}
+        <p><strong>通知:</strong> {ac.get("notifications", 0)} | <strong>抑制:</strong> {ac.get("suppressions", 0)} | <strong>抑制率:</strong> {ac.get("suppression_rate", 0) * 100:.1f}%</p>
+        {f"<p>{ac.get('level_reason', '')}</p>" if ac.get("level_reason") else ""}
     </div>"""
 
     return f"""<!DOCTYPE html>
@@ -381,7 +480,7 @@ def render_html(data: dict) -> str:
 <body>
 <div class="container">
   <h1>📊 governance readiness</h1>
-  <p class="meta">趋势: {sc.get('trend', '?')} | 快照数: {sc.get('snapshot_count', 0)} | 最后: {sc.get('last_update', '?')}</p>
+  <p class="meta">趋势: {sc.get("trend", "?")} | 快照数: {sc.get("snapshot_count", 0)} | 最后: {sc.get("last_update", "?")}</p>
   <div class="grid">
     <div class="card">
       <h2>总分</h2>
@@ -429,7 +528,11 @@ def _cmd_ui_render(workspace: Path, output_html: str | None = None, open_browser
 def run_healthcheck(workspace: Path) -> dict:
     """跑 gac-healthcheck --json, 返回报告."""
     r = subprocess.run(
-        [sys.executable, str(workspace / "bin" / "gac" / "gac-healthcheck.py"), "--json"],
+        [
+            sys.executable,
+            str(workspace / "bin" / "gac" / "gac-healthcheck.py"),
+            "--json",
+        ],
         capture_output=True,
         text=True,
         cwd=str(workspace),
@@ -453,12 +556,8 @@ def generate_gac_html(report: dict) -> str:
     m2 = report.get("m2_type", {})
     files = report.get("files", {})
 
-    dim_tags = "".join(
-        f'<span class="tag">{d}</span><b>{n}</b> ' for d, n in dims.items()
-    )
-    layer_tags = "".join(
-        f'<span class="tag">{layer}</span><b>{n}</b> ' for layer, n in layers.items()
-    )
+    dim_tags = "".join(f'<span class="tag">{d}</span><b>{n}</b> ' for d, n in dims.items())
+    layer_tags = "".join(f'<span class="tag">{layer}</span><b>{n}</b> ' for layer, n in layers.items())
     drift_closed = " (闭环归零)" if drift.get("drift_count", 1) == 0 else ""
 
     return f"""<!DOCTYPE html>
@@ -538,7 +637,12 @@ b {{ color: #2c3e50; }}
 </body></html>"""
 
 
-def _cmd_gac_html(workspace: Path, output_html: str | None, open_browser: bool, output_json: bool = False) -> int:
+def _cmd_gac_html(
+    workspace: Path,
+    output_html: str | None,
+    open_browser: bool,
+    output_json: bool = False,
+) -> int:
     """ADR-0115 Phase 4 续: 完全内联 bin/gac-dashboard.py."""
     report = run_healthcheck(workspace)
 
@@ -601,14 +705,16 @@ def _aggregate_metrics(entries: list[dict]) -> dict:
         fail_count = sum(1 for i in items if i.get("ok") is False)
         durations = [float(i.get("duration_ms") or 0) for i in items if isinstance(i.get("duration_ms"), (int, float))]
         avg_duration = sum(durations) / len(durations) if durations else 0.0
-        checks.append({
-            "check": check,
-            "count": len(items),
-            "ok_count": ok_count,
-            "fail_count": fail_count,
-            "pass_rate": round(ok_count / len(items), 3) if items else 0.0,
-            "avg_duration_ms": round(avg_duration, 1),
-        })
+        checks.append(
+            {
+                "check": check,
+                "count": len(items),
+                "ok_count": ok_count,
+                "fail_count": fail_count,
+                "pass_rate": round(ok_count / len(items), 3) if items else 0.0,
+                "avg_duration_ms": round(avg_duration, 1),
+            }
+        )
 
     total = len(entries)
     ok_total = sum(1 for e in entries if e.get("ok") is True)
@@ -649,17 +755,19 @@ def _render_metrics_html(data: dict) -> str:
         bar_color = "#10b981" if pct >= 95 else "#f59e0b" if pct >= 80 else "#ef4444"
         rows += f"""
         <tr>
-            <td><strong>{c.get('check', '?')}</strong></td>
-            <td>{c.get('count', 0)}</td>
-            <td>{c.get('ok_count', 0)}/{c.get('fail_count', 0)}</td>
+            <td><strong>{c.get("check", "?")}</strong></td>
+            <td>{c.get("count", 0)}</td>
+            <td>{c.get("ok_count", 0)}/{c.get("fail_count", 0)}</td>
             <td>{pct:.1f}%</td>
-            <td>{c.get('avg_duration_ms', 0):.1f} ms</td>
+            <td>{c.get("avg_duration_ms", 0):.1f} ms</td>
             <td><div class="bar"><div class="bar-fill" style="width:{pct}%;background:{bar_color}"></div></div></td>
         </tr>"""
 
     history_rows = ""
     for day, v in ts.items():
-        history_rows += f"<tr><td>{day}</td><td>{v.get('count', 0)}</td><td>{v.get('pass_rate', 0) * 100:.1f}%</td></tr>"
+        history_rows += (
+            f"<tr><td>{day}</td><td>{v.get('count', 0)}</td><td>{v.get('pass_rate', 0) * 100:.1f}%</td></tr>"
+        )
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -685,12 +793,12 @@ def _render_metrics_html(data: dict) -> str:
 <body>
 <div class="container">
   <h1>📊 Governance Metrics</h1>
-  <p class="meta">Generated at {data.get('generated_at', '?')} | Entries: {data.get('total_entries', 0)} | Pass rate: {data.get('overall_pass_rate', 0) * 100:.1f}%</p>
+  <p class="meta">Generated at {data.get("generated_at", "?")} | Entries: {data.get("total_entries", 0)} | Pass rate: {data.get("overall_pass_rate", 0) * 100:.1f}%</p>
   <div class="grid">
     <div class="card">
       <h2>Overall</h2>
-      <div class="big">{data.get('overall_pass_rate', 0) * 100:.1f}%</div>
-      <p>Pass rate across {data.get('total_entries', 0)} entries</p>
+      <div class="big">{data.get("overall_pass_rate", 0) * 100:.1f}%</div>
+      <p>Pass rate across {data.get("total_entries", 0)} entries</p>
     </div>
     <div class="card">
       <h2>Per-Check</h2>
@@ -709,7 +817,7 @@ def _render_metrics_html(data: dict) -> str:
 def _cmd_metrics_dashboard(workspace: Path, metrics_file: Path, output: str | None = None, fmt: str = "json") -> int:
     entries = _load_metrics(metrics_file)
     data = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "total_entries": len(entries),
         "overall_pass_rate": 0.0,
         "checks": [],
@@ -747,27 +855,44 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="P86: governance dashboard")
     parser.root_default = "."
     parser.add_argument("--root", default=".", help="workspace root")
-    parser.add_argument("--tools", default=None,
-                        help="逗号分隔的 tool id 子集 (默认全部)")
+    parser.add_argument("--tools", default=None, help="逗号分隔的 tool id 子集 (默认全部)")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     # ADR-0115 Phase 4 (partial): 2 合并的 dashboard 子命令
-    parser.add_argument("--readiness-summary", action="store_true",
-                        help="合并 dashboard-readiness-summary 功能")
+    parser.add_argument(
+        "--readiness-summary",
+        action="store_true",
+        help="合并 dashboard-readiness-summary 功能",
+    )
     # 新增对 format 和 output 的处理, 保持对 cockpit-readiness 的兼容
-    parser.add_argument("--format", choices=["json", "text"], default="json",
-                        help="readiness-summary 输出格式")
+    parser.add_argument(
+        "--format",
+        choices=["json", "text"],
+        default="json",
+        help="readiness-summary 输出格式",
+    )
     parser.add_argument("--output", help="readiness-summary / ui-render / gac-html 输出到指定文件")
-    parser.add_argument("--ui-render", action="store_true",
-                        help="合并 dashboard-ui-render 功能, 输出到 HTML 文件 (配合 --output / stdout)")
+    parser.add_argument(
+        "--ui-render",
+        action="store_true",
+        help="合并 dashboard-ui-render 功能, 输出到 HTML 文件 (配合 --output / stdout)",
+    )
     # ADR-0115 Phase 4 续: 合并 gac-dashboard
-    parser.add_argument("--gac-html", action="store_true",
-                        help="合并 gac-dashboard 功能, 输出到 HTML 文件 (配合 --output / stdout)")
-    parser.add_argument("--gac-open", action="store_true",
-                        help="合并 gac-dashboard 功能, 生成 + 浏览器打开")
-    parser.add_argument("--metrics-dashboard", action="store_true",
-                        help="Phase 7: 从 metrics-store.jsonl 生成指标仪表盘")
-    parser.add_argument("--metrics-file", default="",
-                        help="Metrics JSONL 路径 (Phase 7)")
+    parser.add_argument(
+        "--gac-html",
+        action="store_true",
+        help="合并 gac-dashboard 功能, 输出到 HTML 文件 (配合 --output / stdout)",
+    )
+    parser.add_argument(
+        "--gac-open",
+        action="store_true",
+        help="合并 gac-dashboard 功能, 生成 + 浏览器打开",
+    )
+    parser.add_argument(
+        "--metrics-dashboard",
+        action="store_true",
+        help="Phase 7: 从 metrics-store.jsonl 生成指标仪表盘",
+    )
+    parser.add_argument("--metrics-file", default="", help="Metrics JSONL 路径 (Phase 7)")
     args = parser.parse_args()
 
     workspace = Path(args.root).resolve()
@@ -786,23 +911,26 @@ def main() -> int:
     # ADR-0115 Phase 4 续: 合并 gac-dashboard 子命令
     if args.gac_html or args.gac_open:
         # 如果有 --json 则输出 json
-        return _cmd_gac_html(workspace, output_html=args.output, open_browser=args.gac_open, output_json=args.json)
+        return _cmd_gac_html(
+            workspace,
+            output_html=args.output,
+            open_browser=args.gac_open,
+            output_json=args.json,
+        )
 
     # Phase 7: 指标仪表盘
     if args.metrics_dashboard:
         fmt = "html" if args.output and args.output.endswith(".html") else "json"
-        metrics_path = Path(args.metrics_file) if args.metrics_file else workspace / ".omo" / "state" / "metrics-store.jsonl"
+        metrics_path = (
+            Path(args.metrics_file) if args.metrics_file else workspace / ".omo" / "state" / "metrics-store.jsonl"
+        )
         return _cmd_metrics_dashboard(workspace, metrics_path, output=args.output, fmt=fmt)
 
     # 默认: 原 P86 仪表盘 (调用 19 个治理工具)
 
     # 选择工具
     selected = set(args.tools.split(",")) if args.tools else None
-    tools_to_run = [
-        (tid, desc, bp, a)
-        for tid, desc, bp, a in TOOL_REGISTRY
-        if selected is None or tid in selected
-    ]
+    tools_to_run = [(tid, desc, bp, a) for tid, desc, bp, a in TOOL_REGISTRY if selected is None or tid in selected]
 
     print("=" * 60)
     print("📊 P86 governance dashboard")

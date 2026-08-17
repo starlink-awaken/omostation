@@ -14,10 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 def main() -> int:
     # 检查是否有未提交的子模块变更
-    result = subprocess.run(
-        ["git", "submodule", "status"],
-        capture_output=True, text=True, cwd=REPO_ROOT
-    )
+    result = subprocess.run(["git", "submodule", "status"], capture_output=True, text=True, cwd=REPO_ROOT)
     violations = []
     for line in result.stdout.splitlines():
         line = line.strip()

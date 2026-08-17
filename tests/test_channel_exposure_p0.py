@@ -1,4 +1,5 @@
 """Tests for P0–P2 channel exposure helpers (attach smoke + bos list filter helpers)."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -34,9 +35,7 @@ def test_bos_yaml_unimplemented_filtered_from_routable():
     svcs = next(d["services"] for d in docs if isinstance(d, dict) and "services" in d)
     unimplemented = [s for s in svcs if s.get("status") == "unimplemented"]
     assert len(unimplemented) >= 8  # AGT pack
-    routable = [
-        s for s in svcs if (s.get("status") or "active") not in ("unimplemented", "deprecated")
-    ]
+    routable = [s for s in svcs if (s.get("status") or "active") not in ("unimplemented", "deprecated")]
     assert all(s.get("status") != "unimplemented" for s in routable)
     # AGT uris must not be routable
     agt_uris = {s.get("uri") for s in unimplemented if "agt" in (s.get("uri") or "")}
@@ -59,7 +58,16 @@ def test_gen_capability_registry_build_has_channels():
         import subprocess
 
         import yaml
-        subprocess.run(["python3", str(ROOT / "bin/cockpit/gen-capability-registry.py"), "--quiet"], check=True, cwd=ROOT)
+
+        subprocess.run(
+            [
+                "python3",
+                str(ROOT / "bin/cockpit/gen-capability-registry.py"),
+                "--quiet",
+            ],
+            check=True,
+            cwd=ROOT,
+        )
         reg = yaml.safe_load((ROOT / "docs/generated/capability-registry.yaml").read_text())
     # flexible totals key layout
     totals = reg.get("totals") or reg.get("summary") or reg
@@ -107,8 +115,11 @@ def test_cockpit_channels_module_importable():
         ROOT / ".subtrees/cockpit/src/cockpit/cli.py",
         ROOT / "projects/cockpit/src/cockpit/cli.py",
     ]
-    cli_path = next((c for c in cli_candidates if c.is_file() and '"channels"' in c.read_text()), None)
+    cli_path = next(
+        (c for c in cli_candidates if c.is_file() and '"channels"' in c.read_text()),
+        None,
+    )
     assert cli_path is not None, "cli.py with channels registration not found"
     cli = cli_path.read_text()
     assert '"channels"' in cli
-    assert "dest=\"all\"" in cli or 'dest="all"' in cli or "--all" in cli
+    assert 'dest="all"' in cli or 'dest="all"' in cli or "--all" in cli

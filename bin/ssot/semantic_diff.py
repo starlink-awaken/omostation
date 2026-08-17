@@ -26,19 +26,34 @@ def semantic_diff(old: dict, new: dict) -> list[dict]:
     new_c = {c["id"]: c for c in new.get("constraints", [])}
     diffs: list[dict] = []
     for cid in sorted(set(new_c) - set(old_c)):
-        diffs.append({"type": "added", "constraint_id": cid,
-                      "severity": new_c[cid].get("severity", "medium"),
-                      "impact_families": [new_c[cid].get("dimension", "?")]})
+        diffs.append(
+            {
+                "type": "added",
+                "constraint_id": cid,
+                "severity": new_c[cid].get("severity", "medium"),
+                "impact_families": [new_c[cid].get("dimension", "?")],
+            }
+        )
     for cid in sorted(set(old_c) - set(new_c)):
-        diffs.append({"type": "removed", "constraint_id": cid,
-                      "severity": old_c[cid].get("severity", "medium"),
-                      "impact_families": [old_c[cid].get("dimension", "?")]})
+        diffs.append(
+            {
+                "type": "removed",
+                "constraint_id": cid,
+                "severity": old_c[cid].get("severity", "medium"),
+                "impact_families": [old_c[cid].get("dimension", "?")],
+            }
+        )
     for cid in sorted(set(old_c) & set(new_c)):
         o, n = old_c[cid], new_c[cid]
         if o.get("severity") != n.get("severity") or o.get("dimension") != n.get("dimension"):
-            diffs.append({"type": "changed", "constraint_id": cid,
-                          "severity": n.get("severity", "medium"),
-                          "impact_families": [n.get("dimension", "?")]})
+            diffs.append(
+                {
+                    "type": "changed",
+                    "constraint_id": cid,
+                    "severity": n.get("severity", "medium"),
+                    "impact_families": [n.get("dimension", "?")],
+                }
+            )
     return diffs
 
 

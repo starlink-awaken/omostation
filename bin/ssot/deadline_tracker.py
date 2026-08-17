@@ -16,13 +16,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
-from _shared import ROOT, utc_now, append_jsonl
-from mail_reader import read_netease_mail, Mail
+from _shared import ROOT, append_jsonl, utc_now
+from mail_reader import Mail, read_netease_mail
 
 DRAFTS_DIR = Path.home() / "Documents" / "@工作文档" / "卫健委" / "_drafts"
 INBOX = Path.home() / "Documents" / "_inbox"
@@ -49,15 +49,17 @@ def save_tasks(tasks: list[dict[str, Any]]) -> None:
 def register_task(subject: str, deadline: str, target: str, task_type: str) -> None:
     """注册新任务到追踪列表."""
     tasks = load_tasks()
-    tasks.append({
-        "subject": subject,
-        "deadline": deadline,
-        "target": target,
-        "task_type": task_type,
-        "registered_at": utc_now(),
-        "status": "pending",  # pending → replied → compiled
-        "replies": [],
-    })
+    tasks.append(
+        {
+            "subject": subject,
+            "deadline": deadline,
+            "target": target,
+            "task_type": task_type,
+            "registered_at": utc_now(),
+            "status": "pending",  # pending → replied → compiled
+            "replies": [],
+        }
+    )
     save_tasks(tasks)
 
 
@@ -79,7 +81,7 @@ def check_deadlines() -> dict[str, Any]:
     if not tasks:
         return {"ts": ts, "checked": 0, "alerts": []}
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     alerts = []
 
     for task in tasks:
@@ -91,12 +93,14 @@ def check_deadlines() -> dict[str, Any]:
         if replies:
             task["status"] = "replied"
             task["replies"] = [{"subject": r.subject, "sender": r.sender, "date": r.date} for r in replies]
-            alerts.append({
-                "task": task["subject"][:40],
-                "type": "reply_received",
-                "detail": f"收到 {len(replies)} 条回复",
-                "severity": "info",
-            })
+            alerts.append(
+                {
+                    "task": task["subject"][:40],
+                    "type": "reply_received",
+                    "detail": f"收到 {len(replies)} 条回复",
+                    "severity": "info",
+                }
+            )
 
         # 检查截止时间
         deadline_str = task.get("deadline", "")
@@ -107,19 +111,23 @@ def check_deadlines() -> dict[str, Any]:
                 hours_left = time_left.total_seconds() / 3600
 
                 if hours_left < 0:
-                    alerts.append({
-                        "task": task["subject"][:40],
-                        "type": "overdue",
-                        "detail": f"已超时 {abs(hours_left):.0f} 小时",
-                        "severity": "critical",
-                    })
+                    alerts.append(
+                        {
+                            "task": task["subject"][:40],
+                            "type": "overdue",
+                            "detail": f"已超时 {abs(hours_left):.0f} 小时",
+                            "severity": "critical",
+                        }
+                    )
                 elif hours_left < 24:
-                    alerts.append({
-                        "task": task["subject"][:40],
-                        "type": "approaching",
-                        "detail": f"剩余 {hours_left:.0f} 小时",
-                        "severity": "high",
-                    })
+                    alerts.append(
+                        {
+                            "task": task["subject"][:40],
+                            "type": "approaching",
+                            "detail": f"剩余 {hours_left:.0f} 小时",
+                            "severity": "high",
+                        }
+                    )
             except Exception:
                 pass
 

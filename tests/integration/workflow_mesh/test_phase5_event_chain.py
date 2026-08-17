@@ -4,12 +4,8 @@ Verifies that emit_workflow_mesh_event produces valid state machine
 transitions for all terminal states (succeeded, failed, cancelled),
 and that the full event chain is visible in the Mesh store.
 """
+
 from __future__ import annotations
-
-import sys
-from pathlib import Path
-
-import pytest
 
 
 def test_event_chain_succeeded(tmp_path):
@@ -24,7 +20,12 @@ def test_event_chain_succeeded(tmp_path):
     r1 = emit_workflow_mesh_event("AgentWorkflowStarted", run_id, {"task": "test"}, workspace=tmp_path)
     assert r1 is True
 
-    r2 = emit_workflow_mesh_event("AgentWorkflowClosed", run_id, {"status": "succeeded", "ok": True}, workspace=tmp_path)
+    r2 = emit_workflow_mesh_event(
+        "AgentWorkflowClosed",
+        run_id,
+        {"status": "succeeded", "ok": True},
+        workspace=tmp_path,
+    )
     assert r2 is True
 
     store = WorkflowMeshStore(omo_dir)
@@ -52,7 +53,12 @@ def test_event_chain_failed(tmp_path):
     r1 = emit_workflow_mesh_event("AgentWorkflowStarted", run_id, {"task": "test"}, workspace=tmp_path)
     assert r1 is True
 
-    r2 = emit_workflow_mesh_event("AgentWorkflowClosed", run_id, {"status": "failed", "ok": False}, workspace=tmp_path)
+    r2 = emit_workflow_mesh_event(
+        "AgentWorkflowClosed",
+        run_id,
+        {"status": "failed", "ok": False},
+        workspace=tmp_path,
+    )
     assert r2 is True
 
     store = WorkflowMeshStore(omo_dir)
@@ -80,7 +86,12 @@ def test_event_chain_cancelled(tmp_path):
     r1 = emit_workflow_mesh_event("AgentWorkflowStarted", run_id, {"task": "test"}, workspace=tmp_path)
     assert r1 is True
 
-    r2 = emit_workflow_mesh_event("AgentWorkflowClosed", run_id, {"status": "cancelled", "ok": False}, workspace=tmp_path)
+    r2 = emit_workflow_mesh_event(
+        "AgentWorkflowClosed",
+        run_id,
+        {"status": "cancelled", "ok": False},
+        workspace=tmp_path,
+    )
     assert r2 is True
 
     store = WorkflowMeshStore(omo_dir)
@@ -103,10 +114,20 @@ def test_event_chain_idempotency(tmp_path):
 
     run_id = "chain-test-idem-001"
     emit_workflow_mesh_event("AgentWorkflowStarted", run_id, {"task": "test"}, workspace=tmp_path)
-    emit_workflow_mesh_event("AgentWorkflowClosed", run_id, {"status": "succeeded", "ok": True}, workspace=tmp_path)
+    emit_workflow_mesh_event(
+        "AgentWorkflowClosed",
+        run_id,
+        {"status": "succeeded", "ok": True},
+        workspace=tmp_path,
+    )
 
     # Second close should be silently dropped (idempotency key or terminal state)
-    r2 = emit_workflow_mesh_event("AgentWorkflowClosed", run_id, {"status": "succeeded", "ok": True}, workspace=tmp_path)
+    r2 = emit_workflow_mesh_event(
+        "AgentWorkflowClosed",
+        run_id,
+        {"status": "succeeded", "ok": True},
+        workspace=tmp_path,
+    )
     # Returns False because run is already terminal/closed
     assert r2 is False
 
@@ -126,10 +147,16 @@ def test_mesh_health_snapshot_after_chain(tmp_path):
 
     run_id = "health-test-001"
     emit_workflow_mesh_event("AgentWorkflowStarted", run_id, {"task": "test"}, workspace=tmp_path)
-    emit_workflow_mesh_event("AgentWorkflowClosed", run_id, {"status": "succeeded", "ok": True}, workspace=tmp_path)
+    emit_workflow_mesh_event(
+        "AgentWorkflowClosed",
+        run_id,
+        {"status": "succeeded", "ok": True},
+        workspace=tmp_path,
+    )
 
     # Verify events are readable
     from omo.workflow_mesh import WorkflowMeshStore
+
     store = WorkflowMeshStore(omo_dir)
     events = store.events()
     assert len(events) >= 6
@@ -144,10 +171,26 @@ def test_scene_binding_propagated_in_close(tmp_path):
     omo_dir = tmp_path / ".omo"
     (omo_dir / "_knowledge" / "workflow-mesh").mkdir(parents=True, exist_ok=True)
 
-    scene = {"scene_id": "test-scene", "journey_id": "journey-1", "outcome_metric": "accuracy"}
+    scene = {
+        "scene_id": "test-scene",
+        "journey_id": "journey-1",
+        "outcome_metric": "accuracy",
+    }
     run_id = "scene-test-001"
-    emit_workflow_mesh_event("AgentWorkflowStarted", run_id, {"task": "test"}, workspace=tmp_path, scene_binding=scene)
-    emit_workflow_mesh_event("AgentWorkflowClosed", run_id, {"status": "succeeded", "ok": True}, workspace=tmp_path, scene_binding=scene)
+    emit_workflow_mesh_event(
+        "AgentWorkflowStarted",
+        run_id,
+        {"task": "test"},
+        workspace=tmp_path,
+        scene_binding=scene,
+    )
+    emit_workflow_mesh_event(
+        "AgentWorkflowClosed",
+        run_id,
+        {"status": "succeeded", "ok": True},
+        workspace=tmp_path,
+        scene_binding=scene,
+    )
 
     store = WorkflowMeshStore(omo_dir)
     events = store.events()

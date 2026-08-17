@@ -51,8 +51,7 @@ _CONTROLLER_SHADOW_READS = [
 ]
 _CONTROLLER_SHADOW_SCHEMA = "runtime.documents-controller-shadow.evidence.v2"
 _CONTROLLER_SHADOW_EVIDENCE_PATH = (
-    "control/evidence/documents-weijian-controller-shadow/"
-    "documents-weijian-controller-shadow.json"
+    "control/evidence/documents-weijian-controller-shadow/documents-weijian-controller-shadow.json"
 )
 _MODEL_FRESHNESS_JOB_ID = "documents-weijian-model-freshness"
 _MODEL_FRESHNESS_READS = [
@@ -61,8 +60,7 @@ _MODEL_FRESHNESS_READS = [
 ]
 _MODEL_FRESHNESS_SCHEMA = "runtime.documents-model-freshness.evidence.v1"
 _MODEL_FRESHNESS_EVIDENCE_PATH = (
-    "control/evidence/documents-weijian-model-freshness/"
-    "documents-weijian-model-freshness.json"
+    "control/evidence/documents-weijian-model-freshness/documents-weijian-model-freshness.json"
 )
 _SANYI_STATUS_JOB_ID = "documents-weijian-sanyi-status-audit"
 _SANYI_STATUS_READS = [
@@ -72,8 +70,7 @@ _SANYI_STATUS_READS = [
 _SANYI_STATUS_SCOPE_ENTITY_IDS = ["proj-syld", "proj-jingbao", "proj-emr-quality"]
 _SANYI_STATUS_SCHEMA = "runtime.documents-sanyi-status-consistency.evidence.v1"
 _SANYI_STATUS_EVIDENCE_PATH = (
-    "control/evidence/documents-weijian-sanyi-status-audit/"
-    "documents-weijian-sanyi-status-audit.json"
+    "control/evidence/documents-weijian-sanyi-status-audit/documents-weijian-sanyi-status-audit.json"
 )
 
 
@@ -110,11 +107,7 @@ def _validate_common_job_fields(
     if value.get("schedule") != "manual":
         errors.append(f"runtime job {label} schedule must be manual")
     timeout = value.get("timeout_seconds")
-    if (
-        isinstance(timeout, bool)
-        or not isinstance(timeout, (int, float))
-        or timeout <= 0
-    ):
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or timeout <= 0:
         errors.append(f"runtime job {label} timeout_seconds must be positive")
     if value.get("writes") != []:
         errors.append(f"runtime job {label} must not declare Documents writes")
@@ -128,25 +121,17 @@ def _validate_manifest_job(value: dict[str, object], label: str) -> list[str]:
     unknown_fields = sorted(set(value) - _MANIFEST_JOB_FIELDS)
     missing_fields = sorted(_MANIFEST_JOB_FIELDS - set(value))
     if unknown_fields:
-        errors.append(
-            f"runtime job {label} has unknown fields: {', '.join(unknown_fields)}"
-        )
+        errors.append(f"runtime job {label} has unknown fields: {', '.join(unknown_fields)}")
     if missing_fields:
-        errors.append(
-            f"runtime job {label} is missing fields: {', '.join(missing_fields)}"
-        )
+        errors.append(f"runtime job {label} is missing fields: {', '.join(missing_fields)}")
     if value.get("owner") != "l4-kernel":
         errors.append(f"runtime job {label} owner must be l4-kernel")
     if value.get("action") != "validate_manifest":
         errors.append(f"runtime job {label} action must be validate_manifest")
     if value.get("reads") != ["domain_registry", "registered_manifests"]:
-        errors.append(
-            f"runtime job {label} reads must be domain_registry and registered_manifests"
-        )
+        errors.append(f"runtime job {label} reads must be domain_registry and registered_manifests")
     if not _safe_relative_path(value.get("evidence_path")):
-        errors.append(
-            f"runtime job {label} evidence_path must be relative and non-traversing"
-        )
+        errors.append(f"runtime job {label} evidence_path must be relative and non-traversing")
     return errors
 
 
@@ -155,33 +140,21 @@ def _validate_facts_audit_job(value: dict[str, object], label: str) -> list[str]
     unknown_fields = sorted(set(value) - _FACTS_AUDIT_JOB_FIELDS)
     missing_fields = sorted(_FACTS_AUDIT_JOB_FIELDS - set(value))
     if unknown_fields:
-        errors.append(
-            f"runtime facts job {label} has unknown fields: {', '.join(unknown_fields)}"
-        )
+        errors.append(f"runtime facts job {label} has unknown fields: {', '.join(unknown_fields)}")
     if missing_fields:
-        errors.append(
-            f"runtime facts job {label} is missing fields: {', '.join(missing_fields)}"
-        )
+        errors.append(f"runtime facts job {label} is missing fields: {', '.join(missing_fields)}")
     if value.get("owner") != "runtime-facts":
         errors.append(f"runtime facts job {label} owner must be runtime-facts")
     if value.get("action") != "audit_structured_facts":
-        errors.append(
-            f"runtime facts job {label} action must be audit_structured_facts"
-        )
+        errors.append(f"runtime facts job {label} action must be audit_structured_facts")
     if value.get("domain_id") != "work-weijian":
         errors.append(f"runtime facts job {label} domain_id must be work-weijian")
     if value.get("reads") != _FACTS_AUDIT_READS:
-        errors.append(
-            f"runtime facts job {label} reads must be @工作文档/卫健委/_entities/facts"
-        )
+        errors.append(f"runtime facts job {label} reads must be @工作文档/卫健委/_entities/facts")
     if not _safe_relative_path(value.get("evidence_relative_path")):
-        errors.append(
-            f"runtime facts job {label} evidence_relative_path must be relative and non-traversing"
-        )
+        errors.append(f"runtime facts job {label} evidence_relative_path must be relative and non-traversing")
     if value.get("evidence_schema") != _FACTS_AUDIT_SCHEMA:
-        errors.append(
-            f"runtime facts job {label} evidence_schema must be {_FACTS_AUDIT_SCHEMA}"
-        )
+        errors.append(f"runtime facts job {label} evidence_schema must be {_FACTS_AUDIT_SCHEMA}")
     return errors
 
 
@@ -190,86 +163,52 @@ def _validate_controller_shadow_job(value: dict[str, object], label: str) -> lis
     unknown_fields = sorted(set(value) - _FACTS_AUDIT_JOB_FIELDS)
     missing_fields = sorted(_FACTS_AUDIT_JOB_FIELDS - set(value))
     if unknown_fields:
-        errors.append(
-            f"runtime controller shadow job {label} has unknown fields: {', '.join(unknown_fields)}"
-        )
+        errors.append(f"runtime controller shadow job {label} has unknown fields: {', '.join(unknown_fields)}")
     if missing_fields:
-        errors.append(
-            f"runtime controller shadow job {label} is missing fields: {', '.join(missing_fields)}"
-        )
+        errors.append(f"runtime controller shadow job {label} is missing fields: {', '.join(missing_fields)}")
     if value.get("owner") != "runtime-control":
-        errors.append(
-            f"runtime controller shadow job {label} owner must be runtime-control"
-        )
+        errors.append(f"runtime controller shadow job {label} owner must be runtime-control")
     if value.get("action") != "shadow_legacy_controller":
-        errors.append(
-            f"runtime controller shadow job {label} action must be shadow_legacy_controller"
-        )
+        errors.append(f"runtime controller shadow job {label} action must be shadow_legacy_controller")
     if value.get("domain_id") != "work-weijian":
-        errors.append(
-            f"runtime controller shadow job {label} domain_id must be work-weijian"
-        )
+        errors.append(f"runtime controller shadow job {label} domain_id must be work-weijian")
     if value.get("reads") != _CONTROLLER_SHADOW_READS:
-        errors.append(
-            f"runtime controller shadow job {label} reads must declare the six legacy controller planes"
-        )
+        errors.append(f"runtime controller shadow job {label} reads must declare the six legacy controller planes")
     if value.get("evidence_relative_path") != _CONTROLLER_SHADOW_EVIDENCE_PATH:
         errors.append(
             f"runtime controller shadow job {label} evidence_relative_path must be {_CONTROLLER_SHADOW_EVIDENCE_PATH}"
         )
     if value.get("evidence_schema") != _CONTROLLER_SHADOW_SCHEMA:
-        errors.append(
-            f"runtime controller shadow job {label} evidence_schema must be {_CONTROLLER_SHADOW_SCHEMA}"
-        )
+        errors.append(f"runtime controller shadow job {label} evidence_schema must be {_CONTROLLER_SHADOW_SCHEMA}")
     return errors
 
 
-def _validate_model_freshness_job(
-    value: dict[str, object], label: str
-) -> list[str]:
+def _validate_model_freshness_job(value: dict[str, object], label: str) -> list[str]:
     errors: list[str] = []
     unknown_fields = sorted(set(value) - _FACTS_AUDIT_JOB_FIELDS)
     missing_fields = sorted(_FACTS_AUDIT_JOB_FIELDS - set(value))
     if unknown_fields:
-        errors.append(
-            f"runtime model freshness job {label} has unknown fields: {', '.join(unknown_fields)}"
-        )
+        errors.append(f"runtime model freshness job {label} has unknown fields: {', '.join(unknown_fields)}")
     if missing_fields:
-        errors.append(
-            f"runtime model freshness job {label} is missing fields: {', '.join(missing_fields)}"
-        )
+        errors.append(f"runtime model freshness job {label} is missing fields: {', '.join(missing_fields)}")
     if value.get("id") != _MODEL_FRESHNESS_JOB_ID:
-        errors.append(
-            f"runtime model freshness job {label} id must be {_MODEL_FRESHNESS_JOB_ID}"
-        )
+        errors.append(f"runtime model freshness job {label} id must be {_MODEL_FRESHNESS_JOB_ID}")
     if value.get("owner") != "runtime-control":
-        errors.append(
-            f"runtime model freshness job {label} owner must be runtime-control"
-        )
+        errors.append(f"runtime model freshness job {label} owner must be runtime-control")
     if value.get("action") != "audit_model_freshness":
-        errors.append(
-            f"runtime model freshness job {label} action must be audit_model_freshness"
-        )
+        errors.append(f"runtime model freshness job {label} action must be audit_model_freshness")
     if value.get("domain_id") != "work-weijian":
-        errors.append(
-            f"runtime model freshness job {label} domain_id must be work-weijian"
-        )
+        errors.append(f"runtime model freshness job {label} domain_id must be work-weijian")
     if value.get("timeout_seconds") != 30:
-        errors.append(
-            f"runtime model freshness job {label} timeout_seconds must be 30"
-        )
+        errors.append(f"runtime model freshness job {label} timeout_seconds must be 30")
     if value.get("reads") != _MODEL_FRESHNESS_READS:
-        errors.append(
-            f"runtime model freshness job {label} reads must declare facts.md and models"
-        )
+        errors.append(f"runtime model freshness job {label} reads must declare facts.md and models")
     if value.get("evidence_relative_path") != _MODEL_FRESHNESS_EVIDENCE_PATH:
         errors.append(
             f"runtime model freshness job {label} evidence_relative_path must be {_MODEL_FRESHNESS_EVIDENCE_PATH}"
         )
     if value.get("evidence_schema") != _MODEL_FRESHNESS_SCHEMA:
-        errors.append(
-            f"runtime model freshness job {label} evidence_schema must be {_MODEL_FRESHNESS_SCHEMA}"
-        )
+        errors.append(f"runtime model freshness job {label} evidence_schema must be {_MODEL_FRESHNESS_SCHEMA}")
     return errors
 
 
@@ -278,33 +217,19 @@ def _validate_sanyi_status_job(value: dict[str, object], label: str) -> list[str
     unknown_fields = sorted(set(value) - _SANYI_STATUS_JOB_FIELDS)
     missing_fields = sorted(_SANYI_STATUS_JOB_FIELDS - set(value))
     if unknown_fields:
-        errors.append(
-            f"runtime sanyi status consistency job {label} has unknown fields: {', '.join(unknown_fields)}"
-        )
+        errors.append(f"runtime sanyi status consistency job {label} has unknown fields: {', '.join(unknown_fields)}")
     if missing_fields:
-        errors.append(
-            f"runtime sanyi status consistency job {label} is missing fields: {', '.join(missing_fields)}"
-        )
+        errors.append(f"runtime sanyi status consistency job {label} is missing fields: {', '.join(missing_fields)}")
     if value.get("id") != _SANYI_STATUS_JOB_ID:
-        errors.append(
-            f"runtime sanyi status consistency job {label} id must be {_SANYI_STATUS_JOB_ID}"
-        )
+        errors.append(f"runtime sanyi status consistency job {label} id must be {_SANYI_STATUS_JOB_ID}")
     if value.get("owner") != "runtime-control":
-        errors.append(
-            f"runtime sanyi status consistency job {label} owner must be runtime-control"
-        )
+        errors.append(f"runtime sanyi status consistency job {label} owner must be runtime-control")
     if value.get("action") != "audit_sanyi_status_consistency":
-        errors.append(
-            f"runtime sanyi status consistency job {label} action must be audit_sanyi_status_consistency"
-        )
+        errors.append(f"runtime sanyi status consistency job {label} action must be audit_sanyi_status_consistency")
     if value.get("domain_id") != "work-weijian":
-        errors.append(
-            f"runtime sanyi status consistency job {label} domain_id must be work-weijian"
-        )
+        errors.append(f"runtime sanyi status consistency job {label} domain_id must be work-weijian")
     if value.get("timeout_seconds") != 30:
-        errors.append(
-            f"runtime sanyi status consistency job {label} timeout_seconds must be 30"
-        )
+        errors.append(f"runtime sanyi status consistency job {label} timeout_seconds must be 30")
     if value.get("reads") != _SANYI_STATUS_READS:
         errors.append(
             f"runtime sanyi status consistency job {label} reads must declare the dashboard and progress facts"
@@ -318,9 +243,7 @@ def _validate_sanyi_status_job(value: dict[str, object], label: str) -> list[str
             f"runtime sanyi status consistency job {label} evidence_relative_path must be {_SANYI_STATUS_EVIDENCE_PATH}"
         )
     if value.get("evidence_schema") != _SANYI_STATUS_SCHEMA:
-        errors.append(
-            f"runtime sanyi status consistency job {label} evidence_schema must be {_SANYI_STATUS_SCHEMA}"
-        )
+        errors.append(f"runtime sanyi status consistency job {label} evidence_schema must be {_SANYI_STATUS_SCHEMA}")
     return errors
 
 
@@ -355,38 +278,22 @@ def validate_runtime_jobs(raw: object, domain_ids: Sequence[str]) -> list[str]:
         if not isinstance(value, dict):
             errors.append(f"runtime_jobs[{index}] must be a mapping")
             continue
-        label, common_errors = _validate_common_job_fields(
-            value, index, known_domains, seen
-        )
+        label, common_errors = _validate_common_job_fields(value, index, known_domains, seen)
         errors.extend(common_errors)
-        if (
-            value.get("id") == _SANYI_STATUS_JOB_ID
-            or value.get("action") == "audit_sanyi_status_consistency"
-        ):
+        if value.get("id") == _SANYI_STATUS_JOB_ID or value.get("action") == "audit_sanyi_status_consistency":
             errors.extend(_validate_sanyi_status_job(value, label))
-        elif (
-            value.get("id") == _MODEL_FRESHNESS_JOB_ID
-            or value.get("action") == "audit_model_freshness"
-        ):
+        elif value.get("id") == _MODEL_FRESHNESS_JOB_ID or value.get("action") == "audit_model_freshness":
             errors.extend(_validate_model_freshness_job(value, label))
-        elif (
-            value.get("owner") == "runtime-facts"
-            or value.get("action") == "audit_structured_facts"
-        ):
+        elif value.get("owner") == "runtime-facts" or value.get("action") == "audit_structured_facts":
             errors.extend(_validate_facts_audit_job(value, label))
-        elif (
-            value.get("owner") == "runtime-control"
-            or value.get("action") == "shadow_legacy_controller"
-        ):
+        elif value.get("owner") == "runtime-control" or value.get("action") == "shadow_legacy_controller":
             errors.extend(_validate_controller_shadow_job(value, label))
         else:
             errors.extend(_validate_manifest_job(value, label))
     return errors
 
 
-def get_runtime_job(
-    raw: object, job_id: str, domain_ids: Sequence[str]
-) -> Mapping[str, Any]:
+def get_runtime_job(raw: object, job_id: str, domain_ids: Sequence[str]) -> Mapping[str, Any]:
     """Return one validated job from a validated binding registry."""
 
     errors = validate_runtime_jobs(raw, domain_ids)
@@ -399,9 +306,7 @@ def get_runtime_job(
     return matches[0]
 
 
-def get_manifest_validation_job(
-    raw: object, job_id: str, domain_ids: Sequence[str]
-) -> Mapping[str, Any]:
+def get_manifest_validation_job(raw: object, job_id: str, domain_ids: Sequence[str]) -> Mapping[str, Any]:
     """Return a L4 manifest-validation job for the legacy owner command only."""
 
     job = get_runtime_job(raw, job_id, domain_ids)

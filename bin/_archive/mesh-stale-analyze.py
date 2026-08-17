@@ -9,6 +9,7 @@
 
 用法: python3 bin/ssot/mesh-stale-analyze.py
 """
+
 import sys
 from collections import Counter
 from pathlib import Path
@@ -60,7 +61,7 @@ def main() -> int:
 
     if stale:
         producers = Counter(p for _, _, p in stale)
-        print(f"\n=== stale run producer 分布 ===")
+        print("\n=== stale run producer 分布 ===")
         for p, c in producers.most_common(10):
             print(f"  {p}: {c}")
 
@@ -68,13 +69,13 @@ def main() -> int:
         has_task = sum(1 for _, payload, _ in stale if payload.get("task_id"))
         print(f"\nstale 中有 task_id 的: {has_task}/{len(stale)}")
 
-        print(f"\n=== stale run 样本 (前 5) ===")
+        print("\n=== stale run 样本 (前 5) ===")
         for rid, payload, producer in stale[:5]:
             keys = sorted(payload.keys())
             print(f"  {rid}: producer={producer}, task_id={payload.get('task_id')}, keys={keys[:6]}")
 
     if fresh:
-        print(f"\n=== fresh run 样本 (前 3) ===")
+        print("\n=== fresh run 样本 (前 3) ===")
         for rid, payload, producer in fresh[:3]:
             print(f"  {rid}: producer={producer}, caps={payload.get('required_capabilities')}")
 

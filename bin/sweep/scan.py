@@ -127,7 +127,10 @@ def run_pyright(project: Path) -> dict:
         check=False,
     )
     if result.returncode not in (0, 1):
-        return {"ok": False, "error": f"pyright exit={result.returncode}: {result.stderr[:300]}"}
+        return {
+            "ok": False,
+            "error": f"pyright exit={result.returncode}: {result.stderr[:300]}",
+        }
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError:
@@ -215,7 +218,7 @@ def main() -> int:
         projects = diff_projects(args.origin)
     else:
         projects = discover_projects()
-    date = args.date or _dt.datetime.now(tz=_dt.timezone.utc).date().isoformat()
+    date = args.date or _dt.datetime.now(tz=_dt.UTC).date().isoformat()
 
     results = {}
     aggregate: Counter[str] = Counter()

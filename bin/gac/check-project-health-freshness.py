@@ -22,6 +22,7 @@ def main() -> int:
 
     try:
         import yaml
+
         data = yaml.safe_load(SYSTEM_YAML.read_text(encoding="utf-8"))
     except Exception as e:
         print(f"WARN 无法读取 system.yaml: {e}")

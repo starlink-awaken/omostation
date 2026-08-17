@@ -12,6 +12,7 @@ exit 1 if > 0 — 倒逼补 evaluator (元根因 1: 声明 vs 执行器一致性
   python bin/ssot/check-alert-coverage.py        # 报告 uncovered, 有则 exit 1
   python bin/ssot/check-alert-coverage.py --json  # JSON 输出
 """
+
 from __future__ import annotations
 
 import argparse
@@ -72,20 +73,32 @@ def main() -> int:
     coverage_pct = round(effective_covered / total * 100) if total else 0
 
     if args.json:
-        print(json.dumps({
-            "total": total, "covered": covered, "uncovered": len(uncovered),
-            "coverage_pct": coverage_pct,
-            "uncovered_rules": [{"id": r["id"], "condition": r["condition"], "note": r["note"]} for r in uncovered],
-        }, indent=2, ensure_ascii=False))
+        print(
+            json.dumps(
+                {
+                    "total": total,
+                    "covered": covered,
+                    "uncovered": len(uncovered),
+                    "coverage_pct": coverage_pct,
+                    "uncovered_rules": [
+                        {"id": r["id"], "condition": r["condition"], "note": r["note"]} for r in uncovered
+                    ],
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
     else:
         if not uncovered:
             extra = f" (+{known_unsupported} 已知永久 unsupported)" if known_unsupported else ""
             print(f"✅ alert-coverage: {covered}/{total} rules 有 evaluator (coverage {coverage_pct}%{extra})")
         else:
-            print(f"❌ alert-coverage: {len(uncovered)}/{total} rules 无 evaluator (coverage {coverage_pct}%, ISC-6 检测):")
+            print(
+                f"❌ alert-coverage: {len(uncovered)}/{total} rules 无 evaluator (coverage {coverage_pct}%, ISC-6 检测):"
+            )
             for r in uncovered:
                 print(f"  - {r['id']} ({r['condition']!r}): {r['note']}")
-            print(f"\n治本: 为上述 condition 补 evaluator (governance-alert-dispatch.py EVALUATORS dict)")
+            print("\n治本: 为上述 condition 补 evaluator (governance-alert-dispatch.py EVALUATORS dict)")
 
     return 1 if uncovered else 0
 

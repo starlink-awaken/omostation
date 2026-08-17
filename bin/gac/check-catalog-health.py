@@ -19,6 +19,7 @@ def main() -> int:
 
     try:
         import yaml
+
         text = GOV_PATH.read_text(encoding="utf-8")
         docs = list(yaml.safe_load_all(text))
         # governance-checks.yaml 是多文档 yaml, 取第一个文档的 gac.rules
@@ -39,12 +40,16 @@ def main() -> int:
     freeze = gac.get("gac", {}).get("freeze", {})
     max_rules = freeze.get("max_rules", "N/A")
 
-    print(f"GaC catalog health:")
+    print("GaC catalog health:")
     print(f"  Active rules: {len(active)}")
     print(f"  Draft rules: {len(draft)}")
     print(f"  Total rules: {len(rules)}")
     print(f"  Freeze max: {max_rules}")
-    print(f"  Utilization: {len(rules)}/{max_rules} = {len(rules)/max_rules*100:.0f}%" if max_rules != "N/A" else f"  Freeze max: {max_rules}")
+    print(
+        f"  Utilization: {len(rules)}/{max_rules} = {len(rules) / max_rules * 100:.0f}%"
+        if max_rules != "N/A"
+        else f"  Freeze max: {max_rules}"
+    )
     print("OK catalog 健康指标可读")
     return 0
 

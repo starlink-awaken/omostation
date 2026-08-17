@@ -23,7 +23,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 GRAPHIFY_BIN = "/Users/xiamingxing/.local/share/uv/tools/graphifyy/bin/graphify"
 OLD_GRAPH = ".omo/_knowledge/design/plans/graphify-out/graph.json"
 
@@ -62,13 +61,10 @@ def run_extract(root: Path) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P75: graphify 本地扫描 wrapper (替代 P29 旧 graph)"
-    )
+    parser = argparse.ArgumentParser(description="P75: graphify 本地扫描 wrapper (替代 P29 旧 graph)")
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--output-only", action="store_true", help="只输出统计")
-    parser.add_argument("--report-only", action="store_true",
-                        help="P77: 仅读旧 graph.json 输出报告 (无需 API key)")
+    parser.add_argument("--report-only", action="store_true", help="P77: 仅读旧 graph.json 输出报告 (无需 API key)")
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
@@ -134,14 +130,14 @@ def main() -> int:
     if not args.output_only:
         print("🚀 运行 graphify extract...")
         print(f"returncode: {result['returncode']}")
-        if result.get('stdout'):
+        if result.get("stdout"):
             print("--- stdout ---")
-            print(result['stdout'][:500])
-        if result.get('stderr'):
+            print(result["stdout"][:500])
+        if result.get("stderr"):
             print("--- stderr ---")
-            print(result['stderr'][:500])
+            print(result["stderr"][:500])
 
-    return result['returncode']
+    return result["returncode"]
 
 
 if __name__ == "__main__":

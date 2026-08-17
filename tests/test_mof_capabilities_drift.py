@@ -3,6 +3,7 @@
 验证 CR-X4-MOF-CAPABILITIES-DRIFT: 注入三类漂移 (path/stat/mcptool_count) 均被检出,
 干净状态全绿. 守"注册面零漂移"北极星 (plan §3).
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -10,9 +11,7 @@ from pathlib import Path
 
 # 连字符文件名无法直接 import, 用 importlib 动态加载
 _BIN = Path(__file__).resolve().parent.parent / "bin" / "mof"
-_spec = importlib.util.spec_from_file_location(
-    "mof_drift", _BIN / "check-mof-capabilities-drift.py"
-)
+_spec = importlib.util.spec_from_file_location("mof_drift", _BIN / "check-mof-capabilities-drift.py")
 assert _spec is not None and _spec.loader is not None, "无法加载 drift 模块"
 drift = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(drift)
@@ -33,9 +32,7 @@ def test_clean_current_registry_no_drift():
 
 def test_stat_drift_detected():
     """故意注入 m1_nodes=999 (实际 1419) → 检出 1 项."""
-    findings = drift.check_model_stats(
-        {"m1_nodes": 999, "m2_schemas": 55}, actual_m1=1419, actual_m2=55
-    )
+    findings = drift.check_model_stats({"m1_nodes": 999, "m2_schemas": 55}, actual_m1=1419, actual_m2=55)
     assert len(findings) == 1
     assert findings[0]["stat"] == "m1_nodes"
     assert findings[0]["declared"] == 999
@@ -44,9 +41,7 @@ def test_stat_drift_detected():
 
 def test_stat_clean_no_drift():
     """正确 stats → 无漂移."""
-    findings = drift.check_model_stats(
-        {"m1_nodes": 1419, "m2_schemas": 55}, actual_m1=1419, actual_m2=55
-    )
+    findings = drift.check_model_stats({"m1_nodes": 1419, "m2_schemas": 55}, actual_m1=1419, actual_m2=55)
     assert findings == []
 
 
@@ -55,9 +50,7 @@ def test_stat_clean_no_drift():
 
 def test_path_drift_detected(tmp_path):
     """故意注入幽灵 path → 检出 (bin/mof-* 旧路径漂移复现)."""
-    findings = drift.check_tool_paths(
-        {"ghost-tool": {"path": "nonexistent/ghost"}}, repo=tmp_path
-    )
+    findings = drift.check_tool_paths({"ghost-tool": {"path": "nonexistent/ghost"}}, repo=tmp_path)
     assert len(findings) == 1
     assert findings[0]["tool"] == "ghost-tool"
     assert findings[0]["declared_path"] == "nonexistent/ghost"
@@ -69,9 +62,7 @@ def test_path_exists_no_drift(tmp_path):
     real = tmp_path / "bin" / "mof" / "mof-io"
     real.parent.mkdir(parents=True)
     real.write_text("x")
-    findings = drift.check_tool_paths(
-        {"mof-io": {"path": "bin/mof/mof-io"}}, repo=tmp_path
-    )
+    findings = drift.check_tool_paths({"mof-io": {"path": "bin/mof/mof-io"}}, repo=tmp_path)
     assert findings == []
 
 
@@ -80,9 +71,7 @@ def test_path_exists_no_drift(tmp_path):
 
 def test_mcptool_count_drift_detected():
     """故意注入 tool_count=41 (代码实际 2) → 检出 (P0-4 漂移复现)."""
-    findings = drift.check_mcptool_tool_count(
-        declared=41, mcp_code="self._register_tool()\nself._register_tool()"
-    )
+    findings = drift.check_mcptool_tool_count(declared=41, mcp_code="self._register_tool()\nself._register_tool()")
     assert len(findings) == 1
     assert findings[0]["declared"] == 41
     assert findings[0]["actual"] == 2
@@ -91,9 +80,7 @@ def test_mcptool_count_drift_detected():
 
 def test_mcptool_count_clean():
     """正确 tool_count → 无漂移."""
-    findings = drift.check_mcptool_tool_count(
-        declared=2, mcp_code="self._register_tool()\nself._register_tool()"
-    )
+    findings = drift.check_mcptool_tool_count(declared=2, mcp_code="self._register_tool()\nself._register_tool()")
     assert findings == []
 
 
@@ -103,7 +90,12 @@ def test_mcptool_count_clean():
 def test_projects_capabilities_entrypoint_drift_detected(tmp_path):
     """注入死 entrypoint → 检出 (metaos 拆迁遗留: kairon.metaos 死路径复现)."""
     findings = drift.check_projects_capabilities_entrypoints(
-        [{"id": "kairon.metaos", "entrypoint": "projects/knowledge/kairon/packages/metaos"}],
+        [
+            {
+                "id": "kairon.metaos",
+                "entrypoint": "projects/knowledge/kairon/packages/metaos",
+            }
+        ],
         repo=tmp_path,
     )
     assert len(findings) == 1
@@ -166,14 +158,8 @@ def test_detect_metaos_known_kairon_drift():
     维护契约: 若 kairon.metaos 已修(projects-capabilities 重生/退役), 删此测试.
     """
     result = drift.detect_metaos_registry_drift()
-    cap_ids = {
-        f["capability"]
-        for f in result["findings"]
-        if f.get("check") == "capability_entrypoint_missing"
-    }
-    assert "kairon.metaos" in cap_ids, (
-        f"应检出 kairon.metaos 死路径, 实际 findings: {result['findings'][:3]}"
-    )
+    cap_ids = {f["capability"] for f in result["findings"] if f.get("check") == "capability_entrypoint_missing"}
+    assert "kairon.metaos" in cap_ids, f"应检出 kairon.metaos 死路径, 实际 findings: {result['findings'][:3]}"
 
 
 def test_detect_all_drift_aggregates_two_scopes():

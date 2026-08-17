@@ -2,17 +2,37 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from onto_reconcile import reconcile, missing_concepts, suggestions
+from onto_reconcile import missing_concepts, reconcile, suggestions
 
 
 def test_missing_concepts_detects_gap():
     candidates = [
-        {"name": "adr", "count": 641, "source": "docs", "dimension": "X3", "surface": "L3"},
-        {"name": "agent-workflow", "count": 88, "source": ".omo", "dimension": "X3", "surface": "L3"},
-        {"name": "layer-contract", "count": 12, "source": "docs", "dimension": "X1", "surface": "L3"},
+        {
+            "name": "adr",
+            "count": 641,
+            "source": "docs",
+            "dimension": "X3",
+            "surface": "L3",
+        },
+        {
+            "name": "agent-workflow",
+            "count": 88,
+            "source": ".omo",
+            "dimension": "X3",
+            "surface": "L3",
+        },
+        {
+            "name": "layer-contract",
+            "count": 12,
+            "source": "docs",
+            "dimension": "X1",
+            "surface": "L3",
+        },
     ]
-    existing = {"equivalences": [{"left": "layer-contract", "right": "layer-contract.yaml"}],
-                "generalizations": []}
+    existing = {
+        "equivalences": [{"left": "layer-contract", "right": "layer-contract.yaml"}],
+        "generalizations": [],
+    }
     missing = missing_concepts(candidates, existing)
     assert "adr" in missing
     assert "agent-workflow" in missing

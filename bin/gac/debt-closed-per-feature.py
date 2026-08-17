@@ -9,9 +9,9 @@ governance score 真正与开发节奏挂钩.
   - .omo/_knowledge/audits/*.md       (closeout evidence)
   - 近期 git log commits               (feature deliveries)
 """
+
 from __future__ import annotations
 
-import json
 import re
 import subprocess
 import sys
@@ -45,6 +45,7 @@ def load_debt_items() -> dict[str, list[dict]]:
 
 def debt_count_in_dir(items_dir: Path, state: str) -> int:
     import yaml
+
     n = 0
     if not items_dir.exists():
         return 0
@@ -82,8 +83,16 @@ def debt_closed_count(days: int = 30) -> int:
     since_arg = f"--since={days} days ago"
     try:
         result = subprocess.run(
-            ["git", "log", since_arg, "--diff-filter=AM", "--pretty=format:", "--name-only",
-             "--", items_dir_rel],
+            [
+                "git",
+                "log",
+                since_arg,
+                "--diff-filter=AM",
+                "--pretty=format:",
+                "--name-only",
+                "--",
+                items_dir_rel,
+            ],
             cwd=WORKSPACE,
             capture_output=True,
             text=True,
@@ -91,8 +100,12 @@ def debt_closed_count(days: int = 30) -> int:
         )
     except Exception:
         return 0
-    debt_changes = set(filter(lambda p: p.endswith(".yaml") and "/items/" in p,
-                              filter(None, result.stdout.splitlines())))
+    debt_changes = set(
+        filter(
+            lambda p: p.endswith(".yaml") and "/items/" in p,
+            filter(None, result.stdout.splitlines()),
+        )
+    )
     return len(debt_changes)
 
 

@@ -20,7 +20,6 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-
 # 关注的核心子仓
 KEY_SUBMODULES = ["ecos", "agora", "cockpit", "omo", "runtime", "scripts"]
 
@@ -30,7 +29,10 @@ def run_git(args: list[str], cwd: Path | None = None) -> tuple[int, str]:
     try:
         result = subprocess.run(
             ["git"] + args,
-            capture_output=True, text=True, cwd=cwd, timeout=30,
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+            timeout=30,
         )
         return result.returncode, (result.stdout + result.stderr).strip()
     except Exception as e:
@@ -70,9 +72,7 @@ def check_submodule(root: Path, name: str) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="P78: 跨子仓联动检查 (ecos/agora/cockpit/omo/runtime/scripts)"
-    )
+    parser = argparse.ArgumentParser(description="P78: 跨子仓联动检查 (ecos/agora/cockpit/omo/runtime/scripts)")
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     parser.add_argument("--module", help="仅检查指定子仓")
@@ -136,7 +136,9 @@ def main() -> int:
         print(f"{info['name']:<12s}{status:<12s}{info['behind']:<6d}{info['ahead']:<6d}{current} {subject[:30]}")
     print("-" * 70)
     print()
-    print(f"📊 汇总: 健康 {summary['healthy']} / 落后 {summary['behind']} / 未提交 {summary['dirty']} / 错误 {summary['error']} / 不存在 {summary['missing']}")
+    print(
+        f"📊 汇总: 健康 {summary['healthy']} / 落后 {summary['behind']} / 未提交 {summary['dirty']} / 错误 {summary['error']} / 不存在 {summary['missing']}"
+    )
     return 0
 
 

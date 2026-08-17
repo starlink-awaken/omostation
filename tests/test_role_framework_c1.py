@@ -3,6 +3,7 @@
 Verifies ADR-0235: 5 roles (3 first-ship + 2 second-wave) instantiate,
 isolate, and enforce capability/message boundaries (eval 页 design).
 """
+
 from __future__ import annotations
 
 import sys
@@ -14,7 +15,7 @@ _DELIVERY = Path(__file__).resolve().parent.parent / "bin" / "delivery"
 if str(_DELIVERY) not in sys.path:
     sys.path.insert(0, str(_DELIVERY))
 
-from role_framework import (  # noqa: E402
+from role_framework import (
     ALL_ROLES,
     FIRST_SHIP_ROLES,
     LEGACY_ROLE_MAP,

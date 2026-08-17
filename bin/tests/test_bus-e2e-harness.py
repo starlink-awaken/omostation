@@ -19,7 +19,8 @@ SCRIPT = REPO_ROOT / "bin" / "ssot" / "bus-e2e-harness.py"
 def test_help_prints_usage() -> None:
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--help"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 0
     assert "bus-e2e-harness" in result.stdout
@@ -31,26 +32,33 @@ def test_help_succeeds_regardless_of_zmq_availability() -> None:
     """--help must succeed even if pyzmq isn't installed in current Python."""
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--help"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 0
 
 
 def _has_zmq() -> bool:
-    return subprocess.run(
-        [sys.executable, "-c", "import zmq"],
-        capture_output=True,
-    ).returncode == 0
+    return (
+        subprocess.run(
+            [sys.executable, "-c", "import zmq"],
+            capture_output=True,
+        ).returncode
+        == 0
+    )
 
 
 def test_real_harness_passes_50_messages() -> None:
     """End-to-end: harness must report PASS for 50 messages with 0 loss."""
     if not _has_zmq():
         import pytest
+
         pytest.skip("pyzmq not installed in this Python")
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--count", "50", "--json"],
-        capture_output=True, text=True, timeout=60,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     assert result.returncode == 0, f"harness failed: stderr={result.stderr!r}"
     data = json.loads(result.stdout)
@@ -65,10 +73,13 @@ def test_real_harness_preserves_message_ids() -> None:
     """Every sent envelope id must be received exactly once (no dup, no loss)."""
     if not _has_zmq():
         import pytest
+
         pytest.skip("pyzmq not installed in this Python")
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--count", "30", "--json"],
-        capture_output=True, text=True, timeout=60,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     assert result.returncode == 0
     data = json.loads(result.stdout)

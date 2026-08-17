@@ -11,6 +11,7 @@ Usage:
   python3 bin/mof/m2-ssot-inventory.py --json
   python3 bin/mof/m2-ssot-inventory.py --batch-size 8
 """
+
 from __future__ import annotations
 
 import argparse
@@ -28,7 +29,7 @@ DEFAULT_MD = REPO / "projects" / "model-driven"
 def _load_schema(path: Path) -> dict:
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return {"file": path.name, "error": str(e)}
     if not isinstance(data, dict):
         return {"file": path.name, "error": "not a mapping"}
@@ -80,16 +81,11 @@ def inventory(m2_dir: Path, batch_size: int, model_driven: Path | None) -> dict:
         "with_state_machine": sum(1 for s in ok if s.get("has_state_machine")),
         "batch_size": batch_size,
         "batch_count": len(batches),
-        "batches": [
-            {"batch_index": i + 1, "files": b, "count": len(b)}
-            for i, b in enumerate(batches)
-        ],
+        "batches": [{"batch_index": i + 1, "files": b, "count": len(b)} for i, b in enumerate(batches)],
         "schemas": ok + err,
         "model_driven_candidates": md_py[:80],
         "model_driven_candidate_count": len(md_py),
-        "next_action": (
-            "Pick batch_index=1 for first PR; keep generation path DO-NOT-EDIT + 溯源指针"
-        ),
+        "next_action": ("Pick batch_index=1 for first PR; keep generation path DO-NOT-EDIT + 溯源指针"),
     }
 
 
@@ -134,14 +130,11 @@ def main(argv: list[str] | None = None) -> int:
             "count": chosen["count"],
             "ssot": rep["ssot"],
             "next_action": (
-                "Implement generation path DO-NOT-EDIT + 溯源指针; "
-                "do not edit m2 yaml semantics in this plan file"
+                "Implement generation path DO-NOT-EDIT + 溯源指针; do not edit m2 yaml semantics in this plan file"
             ),
             "redline": "不碰 LifecycleStage 8 阶段枚举; 不改 m3.yaml 字段语义 (P52)",
         }
-        out_path = args.emit_path or (
-            REPO / ".omo" / "state" / f"m2-ssot-batch-{idx}.yaml"
-        )
+        out_path = args.emit_path or (REPO / ".omo" / "state" / f"m2-ssot-batch-{idx}.yaml")
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(
             yaml.safe_dump(plan, allow_unicode=True, sort_keys=False),

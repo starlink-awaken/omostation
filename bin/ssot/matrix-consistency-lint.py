@@ -16,6 +16,7 @@ Rules:
 Usage:
   python3 bin/ssot/matrix-consistency-lint.py [--skip-launchd] [--json]
 """
+
 from __future__ import annotations
 
 import json
@@ -91,6 +92,7 @@ def _load_port_registry() -> dict:
         return {}
     try:
         import yaml
+
         return yaml.safe_load(PORT_REGISTRY_PATH.read_text()) or {}
     except Exception:
         return {}
@@ -136,9 +138,7 @@ def lint(skip_launchd: bool = False) -> tuple[list[str], list[str]]:
         # R2: port must be in port-registry.yaml
         if port:
             if str(port) not in registered_ports:
-                warnings.append(
-                    f"R2 WARN: '{name}' port {port} not found in port-registry.yaml"
-                )
+                warnings.append(f"R2 WARN: '{name}' port {port} not found in port-registry.yaml")
 
         # R3: non-daemon types should not have port (unless health_url implies HTTP)
         if svc_type in ("scheduled", "integrated", "mcp", "cli") and port:
@@ -176,9 +176,7 @@ def lint(skip_launchd: bool = False) -> tuple[list[str], list[str]]:
                 label = svc.get("launchd_label")
                 if label and label not in launchd_labels:
                     if svc_type in ("daemon", "service", "server"):
-                        errors.append(
-                            f"R5 ERROR: '{name}' launchd_label '{label}' not found in launchctl list"
-                        )
+                        errors.append(f"R5 ERROR: '{name}' launchd_label '{label}' not found in launchctl list")
                     else:
                         warnings.append(
                             f"R5 WARN: '{name}' launchd_label '{label}' not found in launchctl list "
@@ -190,6 +188,7 @@ def lint(skip_launchd: bool = False) -> tuple[list[str], list[str]]:
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="Matrix SSOT consistency linter")
     parser.add_argument("--skip-launchd", action="store_true", help="Skip R5 launchd checks (CI mode)")
     parser.add_argument("--json", action="store_true", help="Output JSON")

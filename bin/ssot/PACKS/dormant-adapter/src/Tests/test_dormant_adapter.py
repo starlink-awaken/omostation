@@ -22,7 +22,8 @@ SCRIPT = REPO_ROOT / "bin" / "ssot" / "bus-usage-report.py"
 def test_no_projects_dir_is_error(tmp_path: Path) -> None:
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(tmp_path)],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 2
     assert "does not exist" in result.stderr
@@ -31,9 +32,7 @@ def test_no_projects_dir_is_error(tmp_path: Path) -> None:
 def test_active_consumer_is_detected(tmp_path: Path) -> None:
     proj = tmp_path / "projects" / "demo-project"
     proj.mkdir(parents=True)
-    (proj / "pyproject.toml").write_text(
-        '[project]\nname = "demo-project"\ndependencies = ["bus-foundation"]\n'
-    )
+    (proj / "pyproject.toml").write_text('[project]\nname = "demo-project"\ndependencies = ["bus-foundation"]\n')
     src = proj / "src" / "demo_project"
     src.mkdir(parents=True)
     (src / "__init__.py").write_text("")
@@ -44,7 +43,8 @@ def test_active_consumer_is_detected(tmp_path: Path) -> None:
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(tmp_path), "--json"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 0, f"unexpected fail: {result.stderr}"
     data = json.loads(result.stdout)
@@ -57,9 +57,7 @@ def test_active_consumer_is_detected(tmp_path: Path) -> None:
 def test_dormant_consumer_is_flagged(tmp_path: Path) -> None:
     proj = tmp_path / "projects" / "lazy-project"
     proj.mkdir(parents=True)
-    (proj / "pyproject.toml").write_text(
-        '[project]\nname = "lazy-project"\ndependencies = ["bus-foundation"]\n'
-    )
+    (proj / "pyproject.toml").write_text('[project]\nname = "lazy-project"\ndependencies = ["bus-foundation"]\n')
     src = proj / "src" / "lazy_project"
     src.mkdir(parents=True)
     (src / "__init__.py").write_text("")
@@ -71,7 +69,8 @@ def test_dormant_consumer_is_flagged(tmp_path: Path) -> None:
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(tmp_path)],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 1
     assert "DORMANT" in result.stdout or "dormant" in result.stdout.lower()
@@ -80,21 +79,19 @@ def test_dormant_consumer_is_flagged(tmp_path: Path) -> None:
 def test_test_only_usage_does_not_count(tmp_path: Path) -> None:
     proj = tmp_path / "projects" / "test-only-project"
     proj.mkdir(parents=True)
-    (proj / "pyproject.toml").write_text(
-        '[project]\nname = "test-only-project"\ndependencies = ["bus-foundation"]\n'
-    )
+    (proj / "pyproject.toml").write_text('[project]\nname = "test-only-project"\ndependencies = ["bus-foundation"]\n')
     src = proj / "src" / "test_only_project"
     src.mkdir(parents=True)
     (src / "__init__.py").write_text("# no bus usage here\n")
     tests = proj / "tests"
     tests.mkdir()
     (tests / "test_main.py").write_text(
-        "from bus_foundation.facade import event as bus_event\n"
-        "bus_event.publish(topic='test:thing', payload={})\n"
+        "from bus_foundation.facade import event as bus_event\nbus_event.publish(topic='test:thing', payload={})\n"
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(tmp_path)],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 1
 
@@ -102,19 +99,16 @@ def test_test_only_usage_does_not_count(tmp_path: Path) -> None:
 def test_nested_package_layout_is_supported(tmp_path: Path) -> None:
     monorepo = tmp_path / "projects" / "aetherforge" / "packages" / "swarm"
     monorepo.mkdir(parents=True)
-    (monorepo / "pyproject.toml").write_text(
-        '[project]\nname = "swarm"\ndependencies = ["bus-foundation"]\n'
-    )
+    (monorepo / "pyproject.toml").write_text('[project]\nname = "swarm"\ndependencies = ["bus-foundation"]\n')
     src = monorepo / "src" / "swarm"
     src.mkdir(parents=True)
     (src / "_compat.py").write_text(
-        "from bus_foundation import publish\n\n"
-        "def _bus_publish(topic, payload):\n"
-        "    return publish(topic, payload)\n"
+        "from bus_foundation import publish\n\ndef _bus_publish(topic, payload):\n    return publish(topic, payload)\n"
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(tmp_path), "--json"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 0, f"stderr={result.stderr!r}"
     data = json.loads(result.stdout)
@@ -125,26 +119,22 @@ def test_nested_package_layout_is_supported(tmp_path: Path) -> None:
 def test_bus_foundation_library_itself_is_skipped(tmp_path: Path) -> None:
     bf = tmp_path / "projects" / "bus-foundation"
     bf.mkdir(parents=True)
-    (bf / "pyproject.toml").write_text(
-        '[project]\nname = "bus-foundation"\ndependencies = []\n'
-    )
+    (bf / "pyproject.toml").write_text('[project]\nname = "bus-foundation"\ndependencies = []\n')
     bf_src = bf / "src" / "bus_foundation"
     bf_src.mkdir(parents=True)
     (bf_src / "__init__.py").write_text("")
     real = tmp_path / "projects" / "real-consumer"
     real.mkdir(parents=True)
-    (real / "pyproject.toml").write_text(
-        '[project]\nname = "real-consumer"\ndependencies = ["bus-foundation"]\n'
-    )
+    (real / "pyproject.toml").write_text('[project]\nname = "real-consumer"\ndependencies = ["bus-foundation"]\n')
     src = real / "src" / "real_consumer"
     src.mkdir(parents=True)
     (src / "main.py").write_text(
-        "from bus_foundation.facade import event as bus_event\n"
-        "bus_event.publish(topic='demo:x', payload={})\n"
+        "from bus_foundation.facade import event as bus_event\nbus_event.publish(topic='demo:x', payload={})\n"
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(tmp_path), "--json"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     data = json.loads(result.stdout)
     projects_found = {r["project"] for r in data["reports"]}

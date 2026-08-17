@@ -10,11 +10,12 @@ SSOT:
   uv run python "bin/delivery/x3-auto-distribute.py" --dry-run    # 仅预览
   uv run python "bin/delivery/x3-auto-distribute.py"             # 执行分发
 """
+
 from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 PLANNED_DIR = Path(".omo/tasks/planned")
@@ -31,11 +32,13 @@ def scan_planned() -> list[dict]:
         # 跳过 needs-human 分类的任务
         if "classification: needs_human" in content or "needs-human: true" in content:
             continue
-        tasks.append({
-            "path": str(f),
-            "id": f.stem,
-            "title": _extract_title(content),
-        })
+        tasks.append(
+            {
+                "path": str(f),
+                "id": f.stem,
+                "title": _extract_title(content),
+            }
+        )
     return tasks
 
 
@@ -50,7 +53,7 @@ def _extract_title(content: str) -> str:
 def emit_x3_event(task_id: str, status: str, title: str = "") -> None:
     """写入 X3 交付事件到 events.jsonl."""
     event = {
-        "ts": datetime.now(timezone.utc).isoformat(),
+        "ts": datetime.now(UTC).isoformat(),
         "kind": "x3_delivery",
         "task_id": task_id,
         "title": title,
@@ -71,12 +74,8 @@ def distribute(task: dict) -> bool:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="X3 自动交付分发器 — 扫描 planned 任务并自动分发"
-    )
-    parser.add_argument(
-        "--dry-run", action="store_true", help="仅预览不执行"
-    )
+    parser = argparse.ArgumentParser(description="X3 自动交付分发器 — 扫描 planned 任务并自动分发")
+    parser.add_argument("--dry-run", action="store_true", help="仅预览不执行")
     args = parser.parse_args()
 
     tasks = scan_planned()

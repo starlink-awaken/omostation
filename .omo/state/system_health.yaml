@@ -1,74 +1,75 @@
-last_scan: 1786067836.647767
+last_scan: 1786930067.178247
 services:
   agora-gateway:
     health_check: healthy (probe)
     name: agora-gateway
     runtime:
       exit_code: 113
-      last_healthy_seconds: 48930
+      last_healthy_seconds: 911161
       status: unrecoverable
       unrecoverable_reason: persistent failure >1800s despite self-heal (deterministic
         fault)
-    timestamp: 1786067836.647767
+    timestamp: 1786930067.178247
     type: daemon
   agora-sse:
-    health_check: healthy
+    health_check: unreachable
     name: agora-sse
-    port_listening: true
+    port_listening: false
     runtime:
-      freshness_seconds: 86
-      last_healthy_seconds: 0
-      pid: '71273'
-      status: running
-      uptime_seconds: 46458
-    timestamp: 1786067836.647767
+      exit_code: '512'
+      last_healthy_seconds: 395753
+      status: unrecoverable
+      unrecoverable_reason: persistent failure >1800s despite self-heal (deterministic
+        fault)
+    timestamp: 1786930067.178247
     type: daemon
   cron-service:
-    health_check: healthy
+    health_check: unreachable
     name: cron-service
-    port_listening: true
+    port_listening: false
     runtime:
-      freshness_seconds: 86
-      last_healthy_seconds: 0
-      pid: '1399'
-      status: running
-      uptime_seconds: 595634
-    timestamp: 1786067836.647767
+      exit_code: 113
+      last_healthy_seconds: 839513
+      status: unrecoverable
+      unrecoverable_reason: persistent failure >1800s despite self-heal (deterministic
+        fault)
+    timestamp: 1786930067.178247
     type: daemon
   gbrain:
     name: gbrain
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1786067836.647767
+    timestamp: 1786930067.178247
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
       status: scheduled
-    timestamp: 1786067836.647767
+    timestamp: 1786930067.178247
     type: scheduled
   kos:
     name: kos
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1786067836.647767
+    timestamp: 1786930067.178247
     type: integrated
   ollama:
     health_check: healthy
     name: ollama
     port_listening: true
     runtime:
+      exit_code: 113
       last_healthy_seconds: 0
-      status: idle
-    timestamp: 1786067836.647767
+      status: BACKOFF
+    timestamp: 1786930067.178247
     type: daemon
   runtime-mcp:
     name: runtime-mcp
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1786067836.647767
+    timestamp: 1786930067.178247
     type: mcp

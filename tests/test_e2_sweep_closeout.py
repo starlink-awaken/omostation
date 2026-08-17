@@ -22,7 +22,6 @@ subprocess + lifecycle slow hooks) is covered by the manual smoke and CI.
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import os
 import subprocess
@@ -31,17 +30,10 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT = Path(__file__).resolve().parents[1]
 LIFECYCLE_PATH = ROOT / "projects" / "omo" / "src" / "omo" / "workflow" / "lifecycle.py"
 INDEX_PATH = ROOT / ".omo" / "_knowledge" / "sweeps" / "INDEX.md"
-EVENTS_PATH = (
-    ROOT
-    / ".omo"
-    / "_delivery"
-    / "agent-workflows"
-    / "events.jsonl"
-)
+EVENTS_PATH = ROOT / ".omo" / "_delivery" / "agent-workflows" / "events.jsonl"
 
 
 def _events_tail(token: str, max_lines: int = 200) -> list[dict]:

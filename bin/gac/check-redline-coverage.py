@@ -15,6 +15,7 @@ Output:
   - exit 0 = registry clean
   - exit 1 = some row violates the contract
 """
+
 from __future__ import annotations
 
 import argparse
@@ -60,32 +61,38 @@ def main(argv: list[str] | None = None) -> int:
         summary["enforced_highest"] += 1
         executor = (row.get("executor") or "").strip()
         if not executor:
-            findings.append({
-                "kind": "highest_without_executor",
-                "id": row.get("id"),
-                "message": "highest-severity red line has no executor script",
-            })
+            findings.append(
+                {
+                    "kind": "highest_without_executor",
+                    "id": row.get("id"),
+                    "message": "highest-severity red line has no executor script",
+                }
+            )
             continue
         # executor is a relative path; resolve against the workspace.
         exe_path = WORKSPACE / executor
         if not exe_path.is_file():
-            findings.append({
-                "kind": "executor_missing",
-                "id": row.get("id"),
-                "executor": executor,
-                "message": f"executor script {executor!r} does not exist",
-            })
+            findings.append(
+                {
+                    "kind": "executor_missing",
+                    "id": row.get("id"),
+                    "executor": executor,
+                    "message": f"executor script {executor!r} does not exist",
+                }
+            )
 
     for row in gaps:
         if row.get("severity") != "highest":
             continue
         summary["gap_highest"] += 1
-        findings.append({
-            "kind": "highest_left_unenforced",
-            "id": row.get("id"),
-            "gap_reason": row.get("gap_reason"),
-            "message": "highest-severity line is in the gap column — register an executor",
-        })
+        findings.append(
+            {
+                "kind": "highest_left_unenforced",
+                "id": row.get("id"),
+                "gap_reason": row.get("gap_reason"),
+                "message": "highest-severity line is in the gap column — register an executor",
+            }
+        )
 
     ok = not findings
     report = {"ok": ok, "summary": summary, "findings": findings}

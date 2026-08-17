@@ -39,9 +39,7 @@ def _project_registry(tmp_path: Path, *, tools: tuple[str, ...] = TOOLS) -> Path
                         }
                     }
                 },
-                "profiles": {
-                    "content-domain": {"allowed_workspace_tools": list(tools)}
-                },
+                "profiles": {"content-domain": {"allowed_workspace_tools": list(tools)}},
             },
             sort_keys=False,
         ),
@@ -126,9 +124,7 @@ def test_render_contains_only_cockpit_read_tools(tmp_path: Path) -> None:
     assert json.loads(result.stdout) == {
         "profile_id": "documents",
         "profile": _expected_profile(),
-        "tool_permissions": {
-            f"mcp:cockpit:{tool}": {"default": "allow"} for tool in TOOLS
-        },
+        "tool_permissions": {f"mcp:cockpit:{tool}": {"default": "allow"} for tool in TOOLS},
     }
 
 
@@ -145,9 +141,7 @@ def test_install_preserves_unrelated_settings_and_is_idempotent(tmp_path: Path) 
     assert installed["theme"] == before["theme"]
     assert installed["context_servers"] == before["context_servers"]
     assert installed["agent"]["tool_permissions"]["default"] == "confirm"
-    assert installed["agent"]["tool_permissions"]["tools"]["move_path"] == {
-        "default": "allow"
-    }
+    assert installed["agent"]["tool_permissions"]["tools"]["move_path"] == {"default": "allow"}
     assert installed["agent"]["profiles"]["documents"] == _expected_profile()
     assert settings_path.stat().st_mode & 0o777 == 0o600
     assert json.loads(first.stdout)["status"] == "installed"
@@ -170,9 +164,7 @@ def test_install_migrates_a_prior_generated_profile_for_an_expanded_contract(
 
     assert result.returncode == 0, result.stderr
     settings = json.loads(settings_path.read_text(encoding="utf-8"))
-    assert settings["agent"]["profiles"]["documents"] == _expected_profile(
-        tools=expanded_tools
-    )
+    assert settings["agent"]["profiles"]["documents"] == _expected_profile(tools=expanded_tools)
     assert settings["agent"]["tool_permissions"]["tools"] == {
         "move_path": {"default": "allow"},
         **{f"mcp:cockpit:{tool}": {"default": "allow"} for tool in expanded_tools},
@@ -187,9 +179,7 @@ def test_install_refuses_documents_profile_with_custom_cockpit_tool_subset(
     expanded_tools = (*TOOLS, "domain_model_freshness_status")
     assert _run(tmp_path, "install", settings_path=settings_path).returncode == 0
     settings = json.loads(settings_path.read_text(encoding="utf-8"))
-    settings["agent"]["profiles"]["documents"]["context_servers"]["cockpit"]["tools"][
-        "domain_context"
-    ] = False
+    settings["agent"]["profiles"]["documents"]["context_servers"]["cockpit"]["tools"]["domain_context"] = False
     settings_path.write_text(json.dumps(settings), encoding="utf-8")
 
     result = _run(
@@ -200,9 +190,7 @@ def test_install_refuses_documents_profile_with_custom_cockpit_tool_subset(
     )
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "agent.profiles.documents already exists with different content"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["agent.profiles.documents already exists with different content"]
     assert json.loads(settings_path.read_text(encoding="utf-8")) == settings
 
 
@@ -216,9 +204,7 @@ def test_check_detects_profile_drift(tmp_path: Path) -> None:
     result = _run(tmp_path, "check", settings_path=settings_path)
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "agent.profiles.documents does not match the Workspace contract"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["agent.profiles.documents does not match the Workspace contract"]
 
 
 def test_install_refuses_caller_owned_profile(tmp_path: Path) -> None:
@@ -230,9 +216,7 @@ def test_install_refuses_caller_owned_profile(tmp_path: Path) -> None:
     result = _run(tmp_path, "install", settings_path=settings_path)
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "agent.profiles.documents already exists with different content"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["agent.profiles.documents already exists with different content"]
     assert json.loads(settings_path.read_text(encoding="utf-8")) == settings
 
 
@@ -253,16 +237,12 @@ def test_install_refuses_conflicting_tool_permission(tmp_path: Path) -> None:
 
 
 def test_missing_or_disabled_cockpit_server_fails_closed(tmp_path: Path) -> None:
-    settings_path = _settings(
-        tmp_path, cockpit={"command": "cockpit-mcp", "enabled": False}
-    )
+    settings_path = _settings(tmp_path, cockpit={"command": "cockpit-mcp", "enabled": False})
 
     result = _run(tmp_path, "render", settings_path=settings_path)
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        "context_servers.cockpit.enabled must be true"
-    ]
+    assert json.loads(result.stdout)["errors"] == ["context_servers.cockpit.enabled must be true"]
 
 
 def test_install_refuses_settings_symlink(tmp_path: Path) -> None:
@@ -273,15 +253,11 @@ def test_install_refuses_settings_symlink(tmp_path: Path) -> None:
     result = _run(tmp_path, "install", settings_path=settings_path)
 
     assert result.returncode == 1
-    assert json.loads(result.stdout)["errors"] == [
-        f"settings must be a regular file: {settings_path}"
-    ]
+    assert json.loads(result.stdout)["errors"] == [f"settings must be a regular file: {settings_path}"]
 
 
 def test_required_phase_gate_covers_zed_profile_generator_and_tests() -> None:
-    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(
-        encoding="utf-8"
-    )
+    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(encoding="utf-8")
 
     assert "bin/gac/documents-zed-profile.py" in workflow
     assert "tests/test_documents_zed_profile.py" in workflow
