@@ -51,6 +51,28 @@ routes:
     qps: 5
     cache_ttl: 10
 
+  # V2 认知治理与意图/影子对抗域 (ADR-0195, ADR-0196, ADR-0198)
+  - prefix: "bos://governance/intent/"
+    qps: 20
+    cache_ttl: 15
+    pricing: {input_rate_per_m: 0.10, output_rate_per_m: 0.30}
+  - prefix: "bos://governance/shadow/"
+    qps: 15
+    cache_ttl: 15
+    pricing: {input_rate_per_m: 0.15, output_rate_per_m: 0.40}
+  - prefix: "bos://governance/cartridge/"
+    qps: 30
+    cache_ttl: 120
+    pricing: {input_rate_per_m: 0.05, output_rate_per_m: 0.10}
+
+  # 主权算力网络与快照域 (ADR-0197)
+  - prefix: "bos://fabric/snapshot/"
+    qps: 30
+    cache_ttl: 60
+  - prefix: "bos://fabric/speculative/"
+    qps: 20
+    cache_ttl: 15
+
 # ── 配额 (遗留-3: per-caller 每日成本上限, USD) ────────────────
 # 由 mcp/bos_quota.py QuotaChecker 读取, 与 routes 一并热加载。
 quotas:

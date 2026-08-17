@@ -200,7 +200,49 @@ services:
       - om_render: {description: "渲染视频", args: {script: string, format: string}}
       - om_status: {description: "查看渲染状态", args: {job_id: string}}
 
+  - name: ecos-intent-compiler
+    description: 意图解构与工程规格编译器 (ADR-0195)
+    mcp_url: "stdio://python -m runtime.mcp_server"
+    health_url: "cli://ecos-constraint intent compile --help"
+    tags: [governance, intent, compiler, sage]
+    tools:
+      - runtime_intent_compile: {description: "编译模糊意图为Policy/Fact/DAG规格", args: {prompt: string, domain: string}}
+
+  - name: ecos-shadow-challenger
+    description: 影子红蓝对抗审查与合规自动补丁引擎 (ADR-0196)
+    mcp_url: "stdio://python -m runtime.mcp_server"
+    health_url: "cli://ecos-constraint challenge --help"
+    tags: [governance, red-team, security, audit, devil]
+    tools:
+      - runtime_shadow_challenge: {description: "红蓝对抗审议与自动补丁", args: {text_or_file: string, domain: string, auto_patch: bool}}
+
+  - name: ecos-domain-cartridge-factory
+    description: 长尾领域治理卡带工坊与包管理器 (ADR-0198)
+    mcp_url: "stdio://python -m runtime.mcp_server"
+    health_url: "cli://ecos-constraint cartridge list"
+    tags: [governance, cartridge, healthcare, transfer, keeper]
+    tools:
+      - runtime_cartridge_list: {description: "列出已注册卡带", args: {}}
+      - runtime_cartridge_inspect: {description: "深度查看卡带规约与SOP", args: {cartridge_id: string}}
+
+  - name: omlxc-sovereign-fabric
+    description: 主权混合算力与0ms TTFT快照引擎 (ADR-0197)
+    mcp_url: "stdio://omlxc"
+    health_url: "cli://omlxc fabric inspect"
+    tags: [compute, fabric, kv-cache, speculative, builder]
+    tools:
+      - fabric_snapshot: {description: "KV缓存快照管理与预热", args: {action: string, name: string}}
+      - fabric_speculative: {description: "本地首选投机推演评估", args: {prompt: string, domain: string}}
+
 pipelines:
+  cognitive-governance-pipeline:
+    description: "V2 认知治理全流程: 意图解构 → 主权算力投机 → 领域卡带装载 → 影子对抗打补丁"
+    stages:
+      - {service: ecos-intent-compiler, tool: runtime_intent_compile}
+      - {service: omlxc-sovereign-fabric, tool: fabric_speculative}
+      - {service: ecos-domain-cartridge-factory, tool: runtime_cartridge_list}
+      - {service: ecos-shadow-challenger, tool: runtime_shadow_challenge}
+
   match-derive:
     description: 工具匹配 → 事实推导
     stages:
