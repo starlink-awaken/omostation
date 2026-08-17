@@ -220,6 +220,13 @@
 → [T1-18 Codex 人工确认 canary](evidence/t1-18-codex-dogfood-canary.md) — Orca 交互式 Codex 手动批准验证工件
 → [操作 SOP](operations/) — 运维手册、模板、清单
 
+## docs/ 专题子目录
+
+-→ [ADR 镜像](adr/) — `docs/adr/` ADR 决策镜像 (同 .omo/_knowledge/decisions)
+-→ [交付证据](evidence/) — `docs/evidence/` bet 级验证回执
+-→ [治理文档](governance/) — `docs/governance/` 治理架构与 bin/scripts 规划
+-→ [superpowers 计划](superpowers/plans/) — `docs/superpowers/plans/` 增强工作流计划
+-→ [superpowers 规格](superpowers/specs/) — `docs/superpowers/specs/` 增强工作流设计规格
 ## docs/ 根目录平铺文档
 
 历史专题与顶层参考 (架构/战略/治理/G-DEL 系列等) 平铺于 docs/ 目录下,
