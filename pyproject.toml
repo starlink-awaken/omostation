@@ -69,7 +69,7 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-exclude = ["*.yaml", "*.yml"]
+exclude = ["*.yaml", "*.yml", "projects/*"]
 
 [tool.ruff.lint]
 # agora BOS hub 模式: 大量模块 import 前需 sys.path/path setup 注入
@@ -115,6 +115,8 @@ ignore = [
 # __init__.py 重导出 + tool registry 用 import * (F403 误报)
 "src/agora/**/__init__.py" = ["F403"]
 "src/agora/mcp_tools.py" = ["F403"]
+# bin/ssot 是主仓共享工具的 agora 副本 (非 agora 门禁范围), 忽略风格类
+"bin/ssot/**" = ["F841", "PIE810", "SIM103", "SIM118", "FURB162", "ISC004", "S112", "S310", "N806", "S102", "RUF013"]
 
 [build-system]
 requires = ["hatchling"]
