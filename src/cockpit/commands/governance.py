@@ -179,12 +179,36 @@ def cmd_governance(args: argparse.Namespace) -> int:
     if subcmd == "evolution":
         workspace_root = resolve_workspace_root()
         return _run_governance_evolution(args.extra_args or [], workspace_root)
-    if subcmd == "verify":
-        workspace_root = resolve_workspace_root()
-        return _run_omo_verify(workspace_root)
     if subcmd == "rhythm":
         workspace_root = resolve_workspace_root()
         return _run_operating_rhythm(args.extra_args or [], workspace_root)
+    if subcmd == "intent":
+        from .intent import cmd_intent
+
+        dummy_ns = argparse.Namespace(prompt=args.extra_args or [], domain=None, json=False)
+        return cmd_intent(dummy_ns)
+    if subcmd == "challenge":
+        from .challenge import cmd_challenge
+
+        target = args.extra_args[0] if args.extra_args else ""
+        dummy_ns = argparse.Namespace(target=target, domain=None, auto_patch=True, strict=False, json=False)
+        return cmd_challenge(dummy_ns)
+    if subcmd == "cartridge":
+        from .cartridge import cmd_cartridge
+
+        action = args.extra_args[0] if args.extra_args else "list"
+        dummy_ns = argparse.Namespace(action=action, cartridge_id=None, output=None, file_path=None)
+        return cmd_cartridge(dummy_ns)
+    if subcmd in ("patrol", "patrol-strict"):
+        workspace_root = resolve_workspace_root()
+        strict = ["--strict"] if "strict" in subcmd else []
+        cmd = ["python3", str(workspace_root / "bin" / "ssot" / "weekly-hygiene-patrol.py"), *strict]
+        return subprocess.run(cmd, cwd=str(workspace_root)).returncode
+    if subcmd in ("chaos", "chaos-drill", "chaos-strict"):
+        workspace_root = resolve_workspace_root()
+        strict = ["--strict"] if "strict" in subcmd else []
+        cmd = ["python3", str(workspace_root / "bin" / "ssot" / "chaos-governance-drill.py"), *strict]
+        return subprocess.run(cmd, cwd=str(workspace_root)).returncode
     script_name = f"arcnode-{subcmd}"
     script = shutil.which(script_name)
     if not script:

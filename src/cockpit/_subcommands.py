@@ -900,3 +900,39 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     c2g_sub = c2g_p.add_subparsers(dest="c2g_command")
     c2g_sub.add_parser("status", help="全局状态 (radar)")
     c2g_sub.add_parser("pipeline", help="pipeline 概览")
+
+    # ── V2 认知治理与意图编译器 (ADR-0195) ───────────────────────────
+    intent_p = sub.add_parser("intent", help="🧠 自然语言意图解构与工程规格编译器 (ADR-0195)")
+    intent_p.add_argument("prompt", nargs="+", help="自然语言意图或需求描述")
+    intent_p.add_argument("--domain", help="显式指定领域 (work-weijian, work-transfer, engineering)")
+    intent_p.add_argument("--json", action="store_true", help="以 JSON 格式输出")
+
+    # ── V2 影子红蓝对抗审查与自动打补丁 (ADR-0196) ─────────────────────
+    chall_p = sub.add_parser("challenge", help="⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196)")
+    chall_p.add_argument("target", help="待审查的方案文件路径或文本")
+    chall_p.add_argument("--domain", help="显式指定领域")
+    chall_p.add_argument("--auto-patch", action="store_true", help="自动合成合规增强段落")
+    chall_p.add_argument("--strict", action="store_true", help="存在任何违规时非零退出")
+    chall_p.add_argument("--json", action="store_true", help="以 JSON 格式输出")
+
+    # ── V2 长尾领域治理卡带工坊 (ADR-0198) ─────────────────────────
+    cart_p = sub.add_parser("cartridge", help="👁️ 长尾领域治理卡带工坊 (ADR-0198)")
+    cart_sub = cart_p.add_subparsers(dest="action")
+    cart_sub.add_parser("list", help="列出已注册卡带")
+    cart_exp = cart_sub.add_parser("export", help="导出指定卡带")
+    cart_exp.add_argument("cartridge_id", help="卡带ID (e.g. cartridge-weijian-v1)")
+    cart_exp.add_argument("--output", help="导出文件路径")
+    cart_val = cart_sub.add_parser("validate", help="校验卡带文件规范")
+    cart_val.add_argument("file_path", help="卡带 YAML 文件路径")
+
+    # ── V2 主权算力网络与 0ms TTFT 快照 (ADR-0197) ─────────────────
+    fab_p = sub.add_parser("fabric", help="🧑‍💻 主权混合算力与 KV 缓存快照 (ADR-0197)")
+    fab_sub = fab_p.add_subparsers(dest="action")
+    fab_sub.add_parser("inspect", help="查看算力网格健康度与节点状态")
+    fab_snap = fab_sub.add_parser("snapshot", help="KV 缓存快照管理与预热")
+    fab_snap.add_argument("snapshot_action", nargs="?", default="list", choices=["list", "create", "warm"])
+    fab_snap.add_argument("--name", help="快照名称")
+    fab_snap.add_argument("--model", help="模型名称")
+    fab_eval = fab_sub.add_parser("speculative-eval", help="本地首选投机推演评估")
+    fab_eval.add_argument("prompt", help="任务提示词")
+    fab_eval.add_argument("--domain", help="领域标识")
