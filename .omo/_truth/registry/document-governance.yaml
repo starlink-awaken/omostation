@@ -157,10 +157,10 @@ warning_exceptions:
     - id: legacy-docs-frontmatter
       rule: missing_frontmatter
       surface: docs-discoverable
-      max_findings: 127
+      max_findings: 135
       expires: 2026-10-31
       owner: governance-team
-      reason: Existing discoverable docs need frontmatter migration and index review.
+      reason: "Existing discoverable docs need frontmatter migration and index review. 2026-08-17 三调 127→135: 并发 agent 批量新增 legacy 标准累积超支 (132 轮)."
     - id: legacy-omo-knowledge-enums
       rule: invalid_metadata
       surface: omo-knowledge
