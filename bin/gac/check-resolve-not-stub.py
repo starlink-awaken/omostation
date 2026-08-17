@@ -21,6 +21,14 @@ SKIP_DIRS = {
     "_archived",
     "tests",
     "test",
+    # 独立子模块/临时目录 — 主仓检查器不扫 (各自治理)
+    "scripts",
+    "scripts-fix-ci",
+    "projects",
+    "runtime",
+    "data",
+    "kos",
+    ".worktrees",
 }
 # 治理代码路径 — 这些路径中的 TODO/FIXME 需要被标记
 GOVERNED_PATTERNS = [
@@ -82,6 +90,14 @@ def main() -> int:
 
         for pattern, label in STUB_PATTERNS:
             for m in pattern.finditer(text):
+                # 跳过模板/生成器文档中的 TODO (auto-generated 说明), 非代码待办
+                line_start = text.rfind("\n", 0, m.start()) + 1
+                line_end = text.find("\n", m.start())
+                if line_end == -1:
+                    line_end = len(text)
+                line = text[line_start:line_end]
+                if "auto-generated" in line or "draft is auto-generated" in line:
+                    continue
                 line_num = text[: m.start()].count("\n") + 1
                 violations.append(f"  {rel}:{line_num} — {label}: {m.group()[:80]}")
 

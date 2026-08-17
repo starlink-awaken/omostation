@@ -73,7 +73,10 @@ def llm_ask(question: str, context: dict[str, Any] | None = None, timeout: float
         except Exception:
             pass
 
-    # Backend 2: GLM cloud (key embedded, proven working)
+    # Backend 2: GLM cloud (ZHIPU_API_KEY 环境变量, 未配置则跳过)
+    glm_key = os.environ.get("ZHIPU_API_KEY", "").strip()
+    if not glm_key:
+        return None
     try:
         body = json.dumps(
             {
@@ -86,7 +89,7 @@ def llm_ask(question: str, context: dict[str, Any] | None = None, timeout: float
             "https://open.bigmodel.cn/api/paas/v4/chat/completions",
             data=body,
             headers={
-                "Authorization": "Bearer db6c1d03aadf4853b361448ee235fd14.aWIjxBcAyAO7i1ct",
+                "Authorization": f"Bearer {glm_key}",
                 "Content-Type": "application/json",
             },
         )

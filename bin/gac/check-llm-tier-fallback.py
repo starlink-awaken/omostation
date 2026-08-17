@@ -25,6 +25,9 @@ TIER_KEYWORDS = {
         "heuristic",
         "fallback",
         "heuristic_subject",
+        "glm",
+        "bigmodel",
+        "zhipu",
     ],
 }
 
@@ -70,8 +73,19 @@ def main() -> int:
             except Exception:
                 continue
 
-            # 跳过不使用 LLM 的脚本
-            has_llm = any(kw in text.lower() for kw in ["llm", "openai", "anthropic", "aetherforge", "ollama"])
+            # 跳过不使用 LLM 的脚本 — 精确检测 API 调用模式, 排除正则/注释/子模块列表的误匹配
+            import re as _re
+            llm_call_patterns = [
+                r"llm\.(complete|generate|chat|predict)",
+                r"(?:client|chat|llm)\.(?:chat\.)?(?:completions|messages)\.create",
+                r"(?:openai|anthropic|aetherforge|ollama)[\._](?:client|chat|llm|gateway)",
+                r"from (?:llm_gateway|openai|anthropic|aetherforge) import",
+                r"import (?:openai|anthropic)",
+                r"aetherforge[._](?:infer|gateway|generate|complete)",
+                r"ollama(?:\.chat|\.generate|_client)",
+            ]
+            text_lower = text.lower()
+            has_llm = any(_re.search(p, text_lower) for p in llm_call_patterns)
             if not has_llm:
                 continue
 

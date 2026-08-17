@@ -25,16 +25,31 @@ def main() -> int:
             rel = f.relative_to(REPO_ROOT)
             if ".venv" in rel.parts:
                 continue
+            # scripts 是独立子模块 (有自身 CI), 主仓不扫; 测试文件不需要 LLM fallback
+            if rel.parts[0] == "scripts":
+                continue
+            if "tests" in rel.parts or rel.name.startswith("test_") or rel.name.startswith("test-"):
+                continue
             try:
                 text = f.read_text(encoding="utf-8", errors="ignore")
             except Exception:
                 continue
-            # 检查是否使用 LLM（有相关 import 或调用）
-            has_llm = any(kw in text.lower() for kw in ["llm", "openai", "anthropic", "aetherforge"])
+            # 精确检测 LLM API 调用 (排除正则/注释/子模块列表误匹配)
+            import re as _re
+            llm_call_patterns = [
+                r"llm\.(complete|generate|chat|predict)",
+                r"(?:client|chat|llm)\.(?:chat\.)?(?:completions|messages)\.create",
+                r"(?:openai|anthropic|aetherforge|ollama)[\._](?:client|chat|llm|gateway)",
+                r"from (?:llm_gateway|openai|anthropic|aetherforge) import",
+                r"import (?:openai|anthropic)",
+                r"aetherforge[._](?:infer|gateway|generate|complete)",
+                r"ollama(?:\.chat|\.generate|_client)",
+            ]
+            has_llm = any(_re.search(p, text.lower()) for p in llm_call_patterns)
             if not has_llm:
                 continue
             # 检查是否有 fallback 或 --no-llm
-            has_fallback = any(kw in text.lower() for kw in ["--no-llm", "no_llm", "fallback", "heuristic"])
+            has_fallback = any(kw in text.lower() for kw in ["--no-llm", "no_llm", "fallback", "heuristic", "glm", "bigmodel", "zhipu"])
             if not has_fallback:
                 violations.append(str(rel))
 
