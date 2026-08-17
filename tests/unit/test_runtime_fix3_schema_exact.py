@@ -38,13 +38,9 @@ def _damage_schema(database: Path, damage: str) -> None:
     elif damage == "extra-index":
         connection.execute("CREATE INDEX unexpected_route_idx ON route_audits(request_id)")
     elif damage == "extra-unique-index":
-        connection.execute(
-            "CREATE UNIQUE INDEX unexpected_route_unique ON route_audits(config_revision)"
-        )
+        connection.execute("CREATE UNIQUE INDEX unexpected_route_unique ON route_audits(config_revision)")
     elif damage == "extra-view":
-        connection.execute(
-            "CREATE VIEW unexpected_health_view AS SELECT resource_id FROM health_snapshots"
-        )
+        connection.execute("CREATE VIEW unexpected_health_view AS SELECT resource_id FROM health_snapshots")
     else:
         raise AssertionError(f"unknown test damage: {damage}")
     connection.commit()
@@ -62,17 +58,13 @@ def _damage_schema(database: Path, damage: str) -> None:
         "extra-view",
     ],
 )
-async def test_v1_schema_requires_exact_definitions_and_registered_objects_only(
-    tmp_path: Path, damage: str
-) -> None:
+async def test_v1_schema_requires_exact_definitions_and_registered_objects_only(tmp_path: Path, damage: str) -> None:
     database = tmp_path / f"{damage}.db"
     created = await SQLiteRuntimeStore.open(database)
     await created.close()
     _damage_schema(database, damage)
 
-    store = await SQLiteRuntimeStore.open(
-        database, quarantine_suffix_factory=lambda: "exact-schema"
-    )
+    store = await SQLiteRuntimeStore.open(database, quarantine_suffix_factory=lambda: "exact-schema")
     try:
         assert store.degraded
         assert not database.exists()

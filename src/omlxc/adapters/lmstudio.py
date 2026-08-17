@@ -392,9 +392,7 @@ class LmStudioAdapter:
                 for marker in ("unknown command", "unknown option", "not recognized", "unsupported")
             )
             raise AdapterFailure.from_detail(
-                code=(
-                    AdapterErrorCode.UNSUPPORTED if unsupported else AdapterErrorCode.BAD_RESPONSE
-                ),
+                code=(AdapterErrorCode.UNSUPPORTED if unsupported else AdapterErrorCode.BAD_RESPONSE),
                 message=(
                     "LM Studio CLI version does not support this command"
                     if unsupported
@@ -517,16 +515,12 @@ class LmStudioAdapter:
                     ),
                     parallel=(
                         parallel
-                        if isinstance(parallel, int)
-                        and not isinstance(parallel, bool)
-                        and parallel > 0
+                        if isinstance(parallel, int) and not isinstance(parallel, bool) and parallel > 0
                         else None
                     ),
                     ttl_seconds=(
                         int(ttl_ms / 1000)
-                        if isinstance(ttl_ms, (int, float))
-                        and not isinstance(ttl_ms, bool)
-                        and ttl_ms > 0
+                        if isinstance(ttl_ms, (int, float)) and not isinstance(ttl_ms, bool) and ttl_ms > 0
                         else None
                     ),
                 )
@@ -631,9 +625,7 @@ class LmStudioAdapter:
         control_only_ids: list[str] = []
         if control_rows is not None:
             for row in control_rows:
-                matched_ids = [
-                    http_id for http_id in http_ids if http_id in {row.model_id, row.identifier}
-                ]
+                matched_ids = [http_id for http_id in http_ids if http_id in {row.model_id, row.identifier}]
                 if len(matched_ids) > 1:
                     control_rows = None
                     control_error = AdapterError(
@@ -662,19 +654,13 @@ class LmStudioAdapter:
                     else ModelRuntimeState.AVAILABLE
                 ),
                 loaded=(None if control_rows is None else model_id in control_by_model),
-                context_limit=(
-                    control_by_model[model_id].context_length
-                    if model_id in control_by_model
-                    else None
-                ),
+                context_limit=(control_by_model[model_id].context_length if model_id in control_by_model else None),
             )
             for model_id in all_ids
         )
         return models, control_error, control_rows is not None, control_by_model
 
-    async def load_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def load_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         return await self._change_model_state(
             model_id,
             load=True,
@@ -682,9 +668,7 @@ class LmStudioAdapter:
             options=self._load_options,
         )
 
-    async def unload_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def unload_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         return await self._change_model_state(
             model_id,
             load=False,
@@ -702,9 +686,7 @@ class LmStudioAdapter:
         return LifecycleResult(
             model_id=model_id,
             status=(
-                OperationStatus.UNSUPPORTED
-                if error.code is AdapterErrorCode.UNSUPPORTED
-                else OperationStatus.FAILED
+                OperationStatus.UNSUPPORTED if error.code is AdapterErrorCode.UNSUPPORTED else OperationStatus.FAILED
             ),
             changed=False,
             idempotency_key=idempotency_key,
@@ -766,23 +748,15 @@ class LmStudioAdapter:
             )
 
         arguments = (
-            self._load_arguments(model_id, options)
-            if load
-            else ("unload", control_by_model[model_id].identifier)
+            self._load_arguments(model_id, options) if load else ("unload", control_by_model[model_id].identifier)
         )
         try:
             await self._run_control(arguments, timeout=300.0)
             verified, verify_error, _, _ = await self._list_models_with_control()
         except AdapterFailure as failure:
             return self._lifecycle_failure(model_id, failure.error, idempotency_key=idempotency_key)
-        verified_model = next(
-            (candidate for candidate in verified if candidate.id == model_id), None
-        )
-        if (
-            verified_model is None
-            or verified_model.loaded is None
-            or verified_model.loaded is not load
-        ):
+        verified_model = next((candidate for candidate in verified if candidate.id == model_id), None)
+        if verified_model is None or verified_model.loaded is None or verified_model.loaded is not load:
             return self._lifecycle_failure(
                 model_id,
                 verify_error
@@ -912,9 +886,7 @@ class LmStudioAdapter:
                 unloaded_control_known,
                 unloaded_by_model,
             ) = await self._list_models_with_control()
-            unloaded_model = next(
-                (candidate for candidate in unloaded_models if candidate.id == model_id), None
-            )
+            unloaded_model = next((candidate for candidate in unloaded_models if candidate.id == model_id), None)
             if (
                 not unloaded_control_known
                 or unloaded_model is None
@@ -951,9 +923,7 @@ class LmStudioAdapter:
                     ),
                 )
             return self._tune_failure(request, failure.error)
-        loaded_model = next(
-            (candidate for candidate in loaded_models if candidate.id == model_id), None
-        )
+        loaded_model = next((candidate for candidate in loaded_models if candidate.id == model_id), None)
         verified = loaded_by_model.get(model_id)
         if (
             not loaded_control_known
@@ -989,9 +959,7 @@ class LmStudioAdapter:
             scope=request.scope,
             model_id=request.model_id,
             status=(
-                OperationStatus.UNSUPPORTED
-                if error.code is AdapterErrorCode.UNSUPPORTED
-                else OperationStatus.FAILED
+                OperationStatus.UNSUPPORTED if error.code is AdapterErrorCode.UNSUPPORTED else OperationStatus.FAILED
             ),
             idempotency_key=request.idempotency_key,
             error=error,
@@ -1016,9 +984,7 @@ class LmStudioAdapter:
     async def chat(self, request: ChatRequest) -> ChatResult:
         endpoint = "/v1/chat/completions"
         try:
-            response = await self._send(
-                "POST", endpoint, payload=self._chat_payload(request, stream=False)
-            )
+            response = await self._send("POST", endpoint, payload=self._chat_payload(request, stream=False))
             if not response.is_success:
                 raise self._http_error(response, endpoint=endpoint)
             document = self._json_object(response, endpoint=endpoint)
@@ -1109,9 +1075,7 @@ class LmStudioAdapter:
     async def embed(self, request: EmbeddingRequest) -> EmbeddingResult:
         endpoint = "/v1/embeddings"
         try:
-            response = await self._send(
-                "POST", endpoint, payload={"model": request.model, "input": request.input}
-            )
+            response = await self._send("POST", endpoint, payload={"model": request.model, "input": request.input})
             if not response.is_success:
                 raise self._http_error(response, endpoint=endpoint)
             document = self._json_object(response, endpoint=endpoint)
@@ -1147,8 +1111,7 @@ class LmStudioAdapter:
             item = _mapping(raw)
             vector = _list(item.get("embedding")) if item is not None else None
             if vector is None or not all(
-                isinstance(number, (int, float)) and not isinstance(number, bool)
-                for number in vector
+                isinstance(number, (int, float)) and not isinstance(number, bool) for number in vector
             ):
                 raise AdapterFailure.from_detail(
                     code=AdapterErrorCode.BAD_RESPONSE,
@@ -1183,14 +1146,12 @@ class LmStudioAdapter:
                     async for chunk in response.aiter_bytes():
                         for data in decoder.feed(chunk):
                             saw_data = True
-                            events, emitted_content, complete, finish_reason = (
-                                self._stream_frame_events(
-                                    request_id=request.request_id,
-                                    data=data,
-                                    reasoning_filter=reasoning_filter,
-                                    emitted_content=emitted_content,
-                                    finish_reason=finish_reason,
-                                )
+                            events, emitted_content, complete, finish_reason = self._stream_frame_events(
+                                request_id=request.request_id,
+                                data=data,
+                                reasoning_filter=reasoning_filter,
+                                emitted_content=emitted_content,
+                                finish_reason=finish_reason,
                             )
                             for event in events:
                                 yield event
@@ -1250,9 +1211,7 @@ class LmStudioAdapter:
                     message="LM Studio stream was interrupted",
                     retryable=not emitted_content,
                     emitted_content=emitted_content,
-                    phase=(
-                        StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
-                    ),
+                    phase=(StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT),
                 ),
                 emitted_content=emitted_content,
             )
@@ -1260,11 +1219,7 @@ class LmStudioAdapter:
         yield self._stream_error(
             request.request_id,
             AdapterError(
-                code=(
-                    AdapterErrorCode.STREAM_INTERRUPTED
-                    if saw_data
-                    else AdapterErrorCode.BAD_RESPONSE
-                ),
+                code=(AdapterErrorCode.STREAM_INTERRUPTED if saw_data else AdapterErrorCode.BAD_RESPONSE),
                 message=(
                     "LM Studio stream ended before completion"
                     if saw_data
@@ -1272,9 +1227,7 @@ class LmStudioAdapter:
                 ),
                 retryable=not emitted_content,
                 emitted_content=emitted_content,
-                phase=(
-                    StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
-                ),
+                phase=(StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT),
             ),
             emitted_content=emitted_content,
         )
@@ -1369,9 +1322,7 @@ class LmStudioAdapter:
                     request_id=request_id,
                     usage=usage,
                     emitted_content=emitted_content,
-                    phase=(
-                        StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
-                    ),
+                    phase=(StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT),
                 )
             )
         try:
@@ -1419,9 +1370,7 @@ class LmStudioAdapter:
         delta = _mapping(choice.get("delta")) if choice is not None else None
         content = delta.get("content") if delta is not None else ""
         try:
-            tool_calls = parse_tool_call_deltas(
-                delta.get("tool_calls") if delta is not None else None
-            )
+            tool_calls = parse_tool_call_deltas(delta.get("tool_calls") if delta is not None else None)
         except ValueError as exc:
             raise AdapterFailure.from_detail(
                 code=AdapterErrorCode.BAD_RESPONSE,
@@ -1439,9 +1388,7 @@ class LmStudioAdapter:
         )
 
     @staticmethod
-    def _stream_error(
-        request_id: str, error: AdapterError, *, emitted_content: bool
-    ) -> StreamEvent:
+    def _stream_error(request_id: str, error: AdapterError, *, emitted_content: bool) -> StreamEvent:
         phase = StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
         normalized = error.model_copy(update={"emitted_content": emitted_content, "phase": phase})
         return StreamEvent(

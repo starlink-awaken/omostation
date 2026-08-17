@@ -128,9 +128,7 @@ async def test_high_priority_event_is_durable_before_publish_and_cursor_replays(
     assert sequence == 1
     assert await subscriber.receive() == event
     replay = await store.replay_durable_events(after_sequence=0, limit=50)
-    assert [(item.sequence, item.event_id, item.kind) for item in replay] == [
-        (1, "job-event-1", "job.running")
-    ]
+    assert [(item.sequence, item.event_id, item.kind) for item in replay] == [(1, "job-event-1", "job.running")]
     await subscriber.close()
     await bus.close()
     await store.close()

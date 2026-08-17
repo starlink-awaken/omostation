@@ -32,9 +32,7 @@ def test_sections_are_deterministic_color_free_and_bounded() -> None:
         )
     )
 
-    assert rendered == (
-        "State\n  Daemon: ready\n  Degraded: no\n\nNext\n  omlxc models list\n  omlxc jobs list"
-    )
+    assert rendered == ("State\n  Daemon: ready\n  Degraded: no\n\nNext\n  omlxc models list\n  omlxc jobs list")
     assert "\x1b[" not in rendered
 
 
@@ -188,9 +186,9 @@ def test_error_context_uses_static_command_overrides(
         context=context,
     )
 
-    assert [
-        line.removeprefix("Next: ") for line in rendered.splitlines() if line.startswith("Next: ")
-    ] == list(commands)
+    assert [line.removeprefix("Next: ") for line in rendered.splitlines() if line.startswith("Next: ")] == list(
+        commands
+    )
 
 
 def test_error_guidance_ignores_all_untrusted_remote_fields() -> None:
@@ -224,9 +222,7 @@ def test_error_guidance_ignores_all_untrusted_remote_fields() -> None:
 
 
 def test_unknown_error_uses_e900_guidance_but_retains_safe_actual_code() -> None:
-    rendered = render_error(
-        RemoteError(code="E777", message="ignored", retryable=False), request_id="req-safe"
-    )
+    rendered = render_error(RemoteError(code="E777", message="ignored", retryable=False), request_id="req-safe")
 
     assert rendered == (
         "ERROR E777 · Internal client error\n"
@@ -239,9 +235,7 @@ def test_unknown_error_uses_e900_guidance_but_retains_safe_actual_code() -> None
 def test_unknown_noncanonical_error_code_uses_safe_e900_heading() -> None:
     hostile_code = "E777\x1b[31mhttps://x/y"
 
-    rendered = render_error(
-        RemoteError(code=hostile_code, message="ignored", retryable=False), request_id="req-safe"
-    )
+    rendered = render_error(RemoteError(code=hostile_code, message="ignored", retryable=False), request_id="req-safe")
 
     assert rendered == (
         "ERROR E900 · Internal client error\n"
@@ -255,9 +249,7 @@ def test_unknown_noncanonical_error_code_uses_safe_e900_heading() -> None:
 
 @pytest.mark.parametrize("request_id", ("req\u009b[31m", "r" * (MAX_REQUEST_ID_LENGTH + 1)))
 def test_error_uses_unavailable_for_invalid_request_id(request_id: str) -> None:
-    rendered = render_error(
-        RemoteError(code="E200", message="ignored", retryable=False), request_id=request_id
-    )
+    rendered = render_error(RemoteError(code="E200", message="ignored", retryable=False), request_id=request_id)
 
     assert rendered == (
         "ERROR E200 · Daemon unavailable\n"
@@ -302,9 +294,7 @@ def test_status_sections_render_only_typed_healthy_health_values(data: dict[str,
 
 
 def test_status_sections_render_degraded_commands_without_querying_jobs() -> None:
-    rendered = render_sections(
-        status_sections({"status": "not-ready", "degraded": True, "policy": "strict"})
-    )
+    rendered = render_sections(status_sections({"status": "not-ready", "degraded": True, "policy": "strict"}))
 
     assert rendered == (
         "WARNING · Daemon is running in degraded mode\n"
@@ -322,9 +312,7 @@ def test_status_sections_render_degraded_commands_without_querying_jobs() -> Non
 def test_status_sections_ignore_hostile_policy_and_use_interactive() -> None:
     hostile_policy = "\x1b[31mhttps://daemon.invalid/private/path"
 
-    rendered = render_sections(
-        status_sections({"status": "ready", "degraded": False, "policy": hostile_policy})
-    )
+    rendered = render_sections(status_sections({"status": "ready", "degraded": False, "policy": hostile_policy}))
 
     assert "  Policy: interactive\n" in rendered
     for forbidden in ("\x1b", "https://", "/private", "/path", "daemon.invalid"):

@@ -39,13 +39,9 @@ class CapacityCoordinator:
         monotonic: Callable[[], float],
     ) -> AsyncGenerator[None]:
         limiters = (
-            self._placements.setdefault(
-                placement.placement_id, anyio.CapacityLimiter(self._per_placement)
-            ),
+            self._placements.setdefault(placement.placement_id, anyio.CapacityLimiter(self._per_placement)),
             self._nodes.setdefault(placement.node_id, anyio.CapacityLimiter(self._per_node)),
-            self._backends.setdefault(
-                placement.backend_id, anyio.CapacityLimiter(self._per_backend)
-            ),
+            self._backends.setdefault(placement.backend_id, anyio.CapacityLimiter(self._per_backend)),
             self._global,
         )
         acquired: list[anyio.CapacityLimiter] = []

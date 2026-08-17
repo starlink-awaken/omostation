@@ -47,9 +47,7 @@ class AgentProtocolService:
             profile=RouteProfile.INTERACTIVE,
         )
 
-    def stream_chat(
-        self, route: object, request: ChatRequest, *, deadline: float
-    ) -> AsyncIterator[StreamEvent]:
+    def stream_chat(self, route: object, request: ChatRequest, *, deadline: float) -> AsyncIterator[StreamEvent]:
         del route, deadline
         self.requests.append(request)
 
@@ -314,11 +312,7 @@ async def test_openai_nonstream_and_stream_preserve_typed_tool_calls() -> None:
         "content": "",
         "tool_calls": [tool_call.model_dump(mode="json")],
     }
-    data = [
-        json.loads(line.removeprefix("data: "))
-        for line in stream.text.splitlines()
-        if line.startswith("data: {")
-    ]
+    data = [json.loads(line.removeprefix("data: ")) for line in stream.text.splitlines() if line.startswith("data: {")]
     assert data[0]["choices"][0]["delta"]["tool_calls"][0]["function"]["name"] == "read"
     assert data[1]["choices"][0]["delta"]["tool_calls"][0]["function"]["arguments"] == 'README.md"}'
     assert data[2]["choices"][0]["finish_reason"] == "tool_calls"

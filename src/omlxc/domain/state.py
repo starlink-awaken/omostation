@@ -10,15 +10,9 @@ from .models import JobState, NodeState
 NODE_TRANSITIONS: Mapping[NodeState, frozenset[NodeState]] = MappingProxyType(
     {
         NodeState.UNKNOWN: frozenset({NodeState.PROBING}),
-        NodeState.PROBING: frozenset(
-            {NodeState.HEALTHY, NodeState.DEGRADED, NodeState.UNREACHABLE}
-        ),
-        NodeState.HEALTHY: frozenset(
-            {NodeState.PROBING, NodeState.DEGRADED, NodeState.UNREACHABLE}
-        ),
-        NodeState.DEGRADED: frozenset(
-            {NodeState.PROBING, NodeState.HEALTHY, NodeState.UNREACHABLE}
-        ),
+        NodeState.PROBING: frozenset({NodeState.HEALTHY, NodeState.DEGRADED, NodeState.UNREACHABLE}),
+        NodeState.HEALTHY: frozenset({NodeState.PROBING, NodeState.DEGRADED, NodeState.UNREACHABLE}),
+        NodeState.DEGRADED: frozenset({NodeState.PROBING, NodeState.HEALTHY, NodeState.UNREACHABLE}),
         NodeState.UNREACHABLE: frozenset({NodeState.RECOVERING}),
         NodeState.RECOVERING: frozenset({NodeState.PROBING, NodeState.UNREACHABLE}),
     }

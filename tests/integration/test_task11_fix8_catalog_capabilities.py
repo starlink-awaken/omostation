@@ -61,11 +61,7 @@ class CapabilityBackend:
         self.backend_capabilities = backend_capabilities
         self.model_capabilities = dict(model_capabilities)
         self.states = {
-            model_id: (
-                initial_states[model_id]
-                if initial_states is not None
-                else ModelRuntimeState.AVAILABLE
-            )
+            model_id: (initial_states[model_id] if initial_states is not None else ModelRuntimeState.AVAILABLE)
             for model_id in model_capabilities
         }
         self.generation_ready = generation_ready
@@ -102,9 +98,7 @@ class CapabilityBackend:
             for model_id, capabilities in sorted(self.model_capabilities.items())
         )
 
-    async def load_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def load_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         self.load_calls += 1
         if self.complete_load and self.load_status is OperationStatus.SUCCEEDED:
             self.states[model_id] = ModelRuntimeState.LOADED
@@ -123,9 +117,7 @@ class CapabilityBackend:
             ),
         )
 
-    async def unload_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def unload_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         self.states[model_id] = ModelRuntimeState.AVAILABLE
         return LifecycleResult(
             model_id=model_id,
@@ -286,9 +278,7 @@ async def test_empty_runtime_capabilities_use_role_seed_without_backend_broadcas
         "chat",
         "streaming",
     }
-    assert set(cast(list[str], _model(models.json(), "local/embed")["capabilities"])) == {
-        "embedding"
-    }
+    assert set(cast(list[str], _model(models.json(), "local/embed")["capabilities"])) == {"embedding"}
     assert chat_embedding.status_code == 409
     assert chat_embedding.json()["error"]["partial_result"]["rejected"] == {
         "chat-broad": "capability_missing",
@@ -322,18 +312,14 @@ async def test_nonempty_runtime_capabilities_replace_seed_and_respect_transport_
     )
     backend = CapabilityBackend(
         "backend",
-        backend_capabilities=frozenset(
-            {AdapterCapability.CHAT, AdapterCapability.EMBEDDING, AdapterCapability.TUNING}
-        ),
+        backend_capabilities=frozenset({AdapterCapability.CHAT, AdapterCapability.EMBEDDING, AdapterCapability.TUNING}),
         model_capabilities={
             "physical/model": frozenset(
                 {AdapterCapability.EMBEDDING, AdapterCapability.VISION, AdapterCapability.TUNING}
             )
         },
     )
-    composition = build_production_daemon(
-        config, adapters={"backend": cast(BackendAdapter, backend)}
-    )
+    composition = build_production_daemon(config, adapters={"backend": cast(BackendAdapter, backend)})
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
     try:
@@ -354,9 +340,7 @@ async def test_nonempty_runtime_capabilities_replace_seed_and_respect_transport_
     finally:
         await server.stop()
 
-    assert set(cast(list[str], _model(models.json(), "local/model")["capabilities"])) == {
-        "embedding"
-    }
+    assert set(cast(list[str], _model(models.json(), "local/model")["capabilities"])) == {"embedding"}
     assert embedding.status_code == 200
     assert chat.status_code == 409
     assert vision.status_code == 409
@@ -397,9 +381,7 @@ async def test_same_model_multi_backend_capabilities_remain_independent_and_dete
     chat = CapabilityBackend(
         "chat",
         backend_capabilities=frozenset({AdapterCapability.CHAT}),
-        model_capabilities={
-            "physical/chat": frozenset({AdapterCapability.CHAT, AdapterCapability.VISION})
-        },
+        model_capabilities={"physical/chat": frozenset({AdapterCapability.CHAT, AdapterCapability.VISION})},
     )
     composition = build_production_daemon(
         config,
@@ -484,9 +466,7 @@ async def test_loaded_mixed_modalities_apply_generation_readiness_per_placement(
         initial_states={model_id: ModelRuntimeState.LOADED for model_id in runtime_capabilities},
         generation_ready=False,
     )
-    composition = build_production_daemon(
-        config, adapters={"backend": cast(BackendAdapter, backend)}
-    )
+    composition = build_production_daemon(config, adapters={"backend": cast(BackendAdapter, backend)})
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
     try:
@@ -524,15 +504,9 @@ async def test_loaded_mixed_modalities_apply_generation_readiness_per_placement(
     finally:
         await server.stop()
 
-    embed_state = cast(
-        list[dict[str, object]], _model(models.json(), "local/embed")["placement_states"]
-    )[0]
-    chat_state = cast(
-        list[dict[str, object]], _model(models.json(), "local/chat")["placement_states"]
-    )[0]
-    vision_state = cast(
-        list[dict[str, object]], _model(models.json(), "local/vision")["placement_states"]
-    )[0]
+    embed_state = cast(list[dict[str, object]], _model(models.json(), "local/embed")["placement_states"])[0]
+    chat_state = cast(list[dict[str, object]], _model(models.json(), "local/chat")["placement_states"])[0]
+    vision_state = cast(list[dict[str, object]], _model(models.json(), "local/vision")["placement_states"])[0]
     assert embed_state["available"] is embed_state["ready"] is True
     assert chat_state["available"] is chat_state["ready"] is False
     assert vision_state["available"] is vision_state["ready"] is False
@@ -563,9 +537,7 @@ async def test_cold_embedding_load_requires_physical_postverify_before_exactly_o
     config = _config(
         short_root,
         backend_ids=("backend",),
-        models=(
-            ModelConfig(id="local/embed", category="retrieval", role="embedding", engine="omlx"),
-        ),
+        models=(ModelConfig(id="local/embed", category="retrieval", role="embedding", engine="omlx"),),
         placements=(
             PlacementConfig(
                 id="embedding-placement",
@@ -585,9 +557,7 @@ async def test_cold_embedding_load_requires_physical_postverify_before_exactly_o
         complete_load=complete_load,
         load_status=load_status,
     )
-    composition = build_production_daemon(
-        config, adapters={"backend": cast(BackendAdapter, backend)}
-    )
+    composition = build_production_daemon(config, adapters={"backend": cast(BackendAdapter, backend)})
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
     try:
@@ -601,9 +571,7 @@ async def test_cold_embedding_load_requires_physical_postverify_before_exactly_o
     finally:
         await server.stop()
 
-    state = cast(list[dict[str, object]], _model(models.json(), "local/embed")["placement_states"])[
-        0
-    ]
+    state = cast(list[dict[str, object]], _model(models.json(), "local/embed")["placement_states"])[0]
     assert response.status_code == expected_status
     assert backend.load_calls == 1
     assert backend.embed_calls == expected_embed_calls
@@ -628,9 +596,7 @@ async def test_embedding_scheduler_blockers_remain_fail_closed(
     config = _config(
         short_root,
         backend_ids=("backend",),
-        models=(
-            ModelConfig(id="local/embed", category="retrieval", role="embedding", engine="omlx"),
-        ),
+        models=(ModelConfig(id="local/embed", category="retrieval", role="embedding", engine="omlx"),),
         placements=(
             PlacementConfig(
                 id="embedding-placement",
@@ -692,9 +658,7 @@ async def test_embedding_scheduler_blockers_remain_fail_closed(
     finally:
         await server.stop()
 
-    state = cast(list[dict[str, object]], _model(models.json(), "local/embed")["placement_states"])[
-        0
-    ]
+    state = cast(list[dict[str, object]], _model(models.json(), "local/embed")["placement_states"])[0]
     assert response.status_code == 409
     assert state["ready"] is False
     assert backend.load_calls == backend.embed_calls == 0

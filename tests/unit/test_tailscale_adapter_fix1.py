@@ -131,9 +131,7 @@ def test_trusted_executable_rejects_symlink_and_symlink_ancestor(tmp_path: Path)
             )
 
 
-def test_trusted_executable_rejects_untrusted_owner(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_trusted_executable_rejects_untrusted_owner(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     executable = _executable(tmp_path)
     owner = executable.stat().st_uid
     if owner == 0:
@@ -297,9 +295,7 @@ async def test_snapshot_records_utc_observation_and_ttl_boundary(tmp_path: Path)
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("current", [110.0001, 99.9999])
-async def test_expired_or_rolled_back_monotonic_clock_is_typed_stale(
-    tmp_path: Path, current: float
-) -> None:
+async def test_expired_or_rolled_back_monotonic_clock_is_typed_stale(tmp_path: Path, current: float) -> None:
     executable = _executable(tmp_path)
     monotonic = [100.0]
     adapter = TailscaleAdapter(

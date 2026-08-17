@@ -236,11 +236,7 @@ class OmlxAppAdapter:
         raw_version = status.get("version")
         protocol_version = raw_version if isinstance(raw_version, str) else None
         version = _semver_core(protocol_version) if protocol_version is not None else None
-        if (
-            raw_status != "ok"
-            or version is None
-            or not (self._minimum_version <= version < self._maximum_version)
-        ):
+        if raw_status != "ok" or version is None or not (self._minimum_version <= version < self._maximum_version):
             return self._incompatible_snapshot(
                 observed_at=observed_at,
                 http_status=status_response.status_code,
@@ -380,19 +376,13 @@ class OmlxAppAdapter:
             )
         return tuple(models)
 
-    async def load_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def load_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         return await self._change_model_state(model_id, load=True, idempotency_key=idempotency_key)
 
-    async def unload_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def unload_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         return await self._change_model_state(model_id, load=False, idempotency_key=idempotency_key)
 
-    async def _change_model_state(
-        self, model_id: str, *, load: bool, idempotency_key: str | None
-    ) -> LifecycleResult:
+    async def _change_model_state(self, model_id: str, *, load: bool, idempotency_key: str | None) -> LifecycleResult:
         models = await self.list_models()
         model = next((item for item in models if item.id == model_id), None)
         if model is None:
@@ -461,9 +451,7 @@ class OmlxAppAdapter:
             write_method = "POST"
             current_response = await self._send("GET", read_endpoint)
             current = (
-                self._json_object(current_response, endpoint=read_endpoint)
-                if current_response.is_success
-                else None
+                self._json_object(current_response, endpoint=read_endpoint) if current_response.is_success else None
             )
         else:
             read_endpoint = "/admin/api/models"
@@ -523,9 +511,7 @@ class OmlxAppAdapter:
 
         headers = {"Idempotency-Key": request.idempotency_key} if request.idempotency_key else None
         try:
-            response = await self._send(
-                write_method, write_endpoint, payload=changes, headers=headers
-            )
+            response = await self._send(write_method, write_endpoint, payload=changes, headers=headers)
             if not response.is_success:
                 raise self._http_error(response, endpoint=write_endpoint)
         except AdapterFailure as failure:
@@ -544,9 +530,7 @@ class OmlxAppAdapter:
             scope=request.scope,
             model_id=request.model_id,
             status=(
-                OperationStatus.UNSUPPORTED
-                if error.code is AdapterErrorCode.UNSUPPORTED
-                else OperationStatus.FAILED
+                OperationStatus.UNSUPPORTED if error.code is AdapterErrorCode.UNSUPPORTED else OperationStatus.FAILED
             ),
             idempotency_key=request.idempotency_key,
             error=error,
@@ -572,9 +556,7 @@ class OmlxAppAdapter:
     async def chat(self, request: ChatRequest) -> ChatResult:
         endpoint = "/v1/chat/completions"
         try:
-            response = await self._send(
-                "POST", endpoint, payload=self._chat_payload(request, stream=False)
-            )
+            response = await self._send("POST", endpoint, payload=self._chat_payload(request, stream=False))
             if not response.is_success:
                 raise self._http_error(response, endpoint=endpoint)
             document = self._json_object(response, endpoint=endpoint)
@@ -722,8 +704,7 @@ class OmlxAppAdapter:
             raw_vector = item.get("embedding")
             typed_vector = _object_list(raw_vector)
             if typed_vector is None or not all(
-                isinstance(number, (int, float)) and not isinstance(number, bool)
-                for number in typed_vector
+                isinstance(number, (int, float)) and not isinstance(number, bool) for number in typed_vector
             ):
                 raise AdapterFailure.from_detail(
                     code=AdapterErrorCode.BAD_RESPONSE,
@@ -760,14 +741,12 @@ class OmlxAppAdapter:
                         frames = decoder.feed(chunk)
                         for data in frames:
                             saw_data = True
-                            events, emitted_content, completed, finish_reason = (
-                                self._stream_frame_events(
-                                    request_id=request.request_id,
-                                    data=data,
-                                    reasoning_filter=reasoning_filter,
-                                    emitted_content=emitted_content,
-                                    finish_reason=finish_reason,
-                                )
+                            events, emitted_content, completed, finish_reason = self._stream_frame_events(
+                                request_id=request.request_id,
+                                data=data,
+                                reasoning_filter=reasoning_filter,
+                                emitted_content=emitted_content,
+                                finish_reason=finish_reason,
                             )
                             for event in events:
                                 yield event
@@ -822,30 +801,20 @@ class OmlxAppAdapter:
                 message="oMLX App stream was interrupted",
                 retryable=not emitted_content,
                 emitted_content=emitted_content,
-                phase=(
-                    StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
-                ),
+                phase=(StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT),
             )
             yield self._stream_error(request.request_id, error, emitted_content=emitted_content)
             return
 
         if not completed:
             error = AdapterError(
-                code=(
-                    AdapterErrorCode.STREAM_INTERRUPTED
-                    if saw_data
-                    else AdapterErrorCode.BAD_RESPONSE
-                ),
+                code=(AdapterErrorCode.STREAM_INTERRUPTED if saw_data else AdapterErrorCode.BAD_RESPONSE),
                 message=(
-                    "oMLX App stream ended before completion"
-                    if saw_data
-                    else "oMLX App stream returned an empty body"
+                    "oMLX App stream ended before completion" if saw_data else "oMLX App stream returned an empty body"
                 ),
                 retryable=not emitted_content,
                 emitted_content=emitted_content,
-                phase=(
-                    StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
-                ),
+                phase=(StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT),
             )
             yield self._stream_error(request.request_id, error, emitted_content=emitted_content)
 
@@ -929,9 +898,7 @@ class OmlxAppAdapter:
                     request_id=request_id,
                     usage=usage,
                     emitted_content=emitted_content,
-                    phase=(
-                        StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
-                    ),
+                    phase=(StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT),
                 )
             )
         try:
@@ -984,9 +951,7 @@ class OmlxAppAdapter:
         delta = _object_mapping(choice.get("delta"))
         content = delta.get("content") if delta is not None else ""
         try:
-            tool_calls = parse_tool_call_deltas(
-                delta.get("tool_calls") if delta is not None else None
-            )
+            tool_calls = parse_tool_call_deltas(delta.get("tool_calls") if delta is not None else None)
         except ValueError as exc:
             raise AdapterFailure.from_detail(
                 code=AdapterErrorCode.BAD_RESPONSE,
@@ -1004,9 +969,7 @@ class OmlxAppAdapter:
         )
 
     @staticmethod
-    def _stream_error(
-        request_id: str, error: AdapterError, *, emitted_content: bool
-    ) -> StreamEvent:
+    def _stream_error(request_id: str, error: AdapterError, *, emitted_content: bool) -> StreamEvent:
         phase = StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
         normalized = error.model_copy(update={"emitted_content": emitted_content, "phase": phase})
         return StreamEvent(

@@ -132,9 +132,7 @@ class CircuitBreakerRegistry:
     def get_or_create(self, target_id: str) -> CircuitBreaker:
         with self._lock:
             if target_id not in self._breakers:
-                self._breakers[target_id] = CircuitBreaker(
-                    target_id=target_id, config=self.default_config
-                )
+                self._breakers[target_id] = CircuitBreaker(target_id=target_id, config=self.default_config)
             return self._breakers[target_id]
 
     def is_available(self, target_id: str, now: float | None = None) -> bool:

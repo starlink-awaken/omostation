@@ -250,9 +250,7 @@ async def test_chat_tools_use_native_schema_and_normalize_tool_call_arguments() 
             json={
                 "message": {
                     "content": "",
-                    "tool_calls": [
-                        {"function": {"name": "read", "arguments": {"path": "README.md"}}}
-                    ],
+                    "tool_calls": [{"function": {"name": "read", "arguments": {"path": "README.md"}}}],
                 },
                 "done": True,
                 "done_reason": "stop",
@@ -265,11 +263,7 @@ async def test_chat_tools_use_native_schema_and_normalize_tool_call_arguments() 
     request = _request().model_copy(
         update={
             "tools": (
-                ChatTool(
-                    function=ChatToolFunction(
-                        name="read", parameters={"type": "object", "properties": {}}
-                    )
-                ),
+                ChatTool(function=ChatToolFunction(name="read", parameters={"type": "object", "properties": {}})),
             ),
             "tool_choice": "auto",
         }
@@ -337,11 +331,7 @@ async def test_chat_rejects_remote_image_without_issuing_http_request() -> None:
         messages=(
             ChatMessage(
                 role="user",
-                content=(
-                    ImageContentBlock(
-                        image_url=ImageURL(url="https://metadata.invalid/latest/token")
-                    ),
-                ),
+                content=(ImageContentBlock(image_url=ImageURL(url="https://metadata.invalid/latest/token")),),
             ),
         ),
     )
@@ -374,9 +364,7 @@ async def test_unclosed_reasoning_fails_closed() -> None:
 @pytest.mark.parametrize("status", [404, 405, 501])
 async def test_embed_current_endpoint_maps_unsupported_statuses(status: int) -> None:
     adapter = _adapter(lambda request: httpx.Response(status, content=b"secret"))
-    result = await adapter.embed(
-        EmbeddingRequest(request_id="embed", model="embed:latest", input="hello")
-    )
+    result = await adapter.embed(EmbeddingRequest(request_id="embed", model="embed:latest", input="hello"))
 
     assert result.status is OperationStatus.UNSUPPORTED
     assert result.error is not None
@@ -602,8 +590,7 @@ async def test_stream_handles_chunked_utf8_blank_lines_tail_and_closes_resource(
 async def test_stream_unclosed_reasoning_and_eof_without_done_fail_closed() -> None:
     bodies = iter(
         [
-            b'{"message":{"content":"visible<think>secret"},"done":false}\n'
-            b'{"message":{"content":""},"done":true}\n',
+            b'{"message":{"content":"visible<think>secret"},"done":false}\n{"message":{"content":""},"done":true}\n',
             b'{"message":{"content":"visible"},"done":false}\n',
         ]
     )

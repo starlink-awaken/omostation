@@ -131,9 +131,7 @@ def _snapshot(pid: str, backend: str, affinity: float) -> PlacementSnapshot:
     )
 
 
-def _orchestrator(
-    first: StreamAdapter, second: StreamAdapter, clock: object | None = None
-) -> DataPlaneOrchestrator:
+def _orchestrator(first: StreamAdapter, second: StreamAdapter, clock: object | None = None) -> DataPlaneOrchestrator:
     return DataPlaneOrchestrator(
         planner=RoutePlanner(default_policies()),
         snapshot_provider=lambda: (_snapshot("a", "b1", 1), _snapshot("b", "b2", 0)),
@@ -172,9 +170,9 @@ async def test_pre_content_error_fails_over_and_closes_iterators_with_unique_don
     )
     events = [
         event
-        async for event in _orchestrator(
-            StreamAdapter(first_stream), StreamAdapter(second_stream)
-        ).stream_chat(_route(), _chat(), deadline=10)
+        async for event in _orchestrator(StreamAdapter(first_stream), StreamAdapter(second_stream)).stream_chat(
+            _route(), _chat(), deadline=10
+        )
     ]
 
     assert [event.kind for event in events] == [StreamEventKind.CONTENT, StreamEventKind.DONE]
@@ -189,9 +187,7 @@ async def test_post_content_error_is_returned_without_replay() -> None:
             _event(StreamEventKind.ERROR, retryable=True, emitted=True),
         )
     )
-    second = StreamAdapter(
-        ClosingStream((_event(StreamEventKind.CONTENT, content="replay", emitted=True),))
-    )
+    second = StreamAdapter(ClosingStream((_event(StreamEventKind.CONTENT, content="replay", emitted=True),)))
     events = [
         event
         async for event in _orchestrator(StreamAdapter(first_stream), second).stream_chat(
@@ -199,9 +195,7 @@ async def test_post_content_error_is_returned_without_replay() -> None:
         )
     ]
 
-    assert [event.content for event in events if event.kind is StreamEventKind.CONTENT] == [
-        "partial"
-    ]
+    assert [event.content for event in events if event.kind is StreamEventKind.CONTENT] == ["partial"]
     assert events[-1].kind is StreamEventKind.ERROR
     assert events[-1].emitted_content
     assert events[-1].phase is StreamPhase.AFTER_CONTENT
@@ -229,10 +223,7 @@ async def test_adapter_cannot_inject_prepare_rejections_into_stream_boundary() -
     first = StreamAdapter(ClosingStream((adapter_error,)))
     second = StreamAdapter(ClosingStream((_event(StreamEventKind.DONE),)))
 
-    events = [
-        event
-        async for event in _orchestrator(first, second).stream_chat(_route(), _chat(), deadline=10)
-    ]
+    events = [event async for event in _orchestrator(first, second).stream_chat(_route(), _chat(), deadline=10)]
 
     assert len(events) == 1
     assert events[0].kind is StreamEventKind.ERROR
@@ -247,9 +238,7 @@ async def test_deadline_exhaustion_does_not_start_next_candidate() -> None:
     second = StreamAdapter(ClosingStream((_event(StreamEventKind.DONE),)))
     events = [
         event
-        async for event in _orchestrator(first, second, lambda: next(times)).stream_chat(
-            _route(), _chat(), deadline=10
-        )
+        async for event in _orchestrator(first, second, lambda: next(times)).stream_chat(_route(), _chat(), deadline=10)
     ]
 
     assert events[-1].kind is StreamEventKind.ERROR
@@ -264,9 +253,9 @@ async def test_transport_exception_before_content_fails_over_without_escaping() 
     second_stream = ClosingStream((_event(StreamEventKind.DONE),))
     events = [
         event
-        async for event in _orchestrator(
-            StreamAdapter(first_stream), StreamAdapter(second_stream)
-        ).stream_chat(_route(), _chat(), deadline=10)
+        async for event in _orchestrator(StreamAdapter(first_stream), StreamAdapter(second_stream)).stream_chat(
+            _route(), _chat(), deadline=10
+        )
     ]
 
     assert [event.kind for event in events] == [StreamEventKind.DONE]
@@ -278,9 +267,9 @@ async def test_usage_and_done_are_emitted_at_most_once() -> None:
     stream = ClosingStream((_usage(), _usage(), _event(StreamEventKind.DONE)))
     events = [
         event
-        async for event in _orchestrator(
-            StreamAdapter(stream), StreamAdapter(ClosingStream(()))
-        ).stream_chat(_route(), _chat(), deadline=10)
+        async for event in _orchestrator(StreamAdapter(stream), StreamAdapter(ClosingStream(()))).stream_chat(
+            _route(), _chat(), deadline=10
+        )
     ]
 
     assert [event.kind for event in events] == [

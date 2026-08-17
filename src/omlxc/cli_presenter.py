@@ -194,8 +194,7 @@ def render_sections(sections: tuple[HumanSection, ...]) -> str:
             raise ValueError("sections are invalid")
         validated_sections.append(section)
     return "\n\n".join(
-        "\n".join((section.title, *(f"  {line}" for line in section.lines)))
-        for section in validated_sections
+        "\n".join((section.title, *(f"  {line}" for line in section.lines))) for section in validated_sections
     )
 
 
@@ -266,9 +265,7 @@ def status_sections(data: object) -> tuple[HumanSection, HumanSection]:
         "Jobs: not checked by status",
     )
     commands = (
-        ("omlxc models list", "omlxc jobs list")
-        if healthy
-        else ("omlxc doctor", "omlxc nodes list", "omlxc jobs list")
+        ("omlxc models list", "omlxc jobs list") if healthy else ("omlxc doctor", "omlxc nodes list", "omlxc jobs list")
     )
     title = "OK · Daemon ready" if healthy else "WARNING · Daemon is running in degraded mode"
     return HumanSection(title, facts), HumanSection("Next", commands)

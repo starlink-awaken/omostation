@@ -139,12 +139,8 @@ def test_scenario_1_multi_turn_session_prefix_affinity() -> None:
     affinity_reg = SessionAffinityRegistry(AffinityConfig(session_ttl_seconds=900.0))
     planner = RoutePlanner(default_policies())
 
-    sys_prompt = ChatMessage(
-        role="system", content="You are OpenCode specialized in Python AST refactoring."
-    )
-    user_turn1 = ChatMessage(
-        role="user", content="Refactor the dependency injection layer in async Python."
-    )
+    sys_prompt = ChatMessage(role="system", content="You are OpenCode specialized in Python AST refactoring.")
+    user_turn1 = ChatMessage(role="user", content="Refactor the dependency injection layer in async Python.")
     prefix_hash = calculate_prefix_hash((sys_prompt, user_turn1))
     assert prefix_hash is not None
 
@@ -219,10 +215,7 @@ async def test_scenario_2_multi_agent_burst_spillover() -> None:
     snapshots_capped = _build_cluster_snapshots(mbp_in_flight=4, mini_in_flight=0)
     decision_capped = planner.plan(req_spillover, snapshots_capped)
     assert decision_capped.selected_placement_id == "coding--mac-mini-m4-24g-lm_studio"
-    assert (
-        decision_capped.rejected.get("coding--mbp-m5-max-128g-omlx-app")
-        == RejectionCode.CONCURRENCY_LIMIT.value
-    )
+    assert decision_capped.rejected.get("coding--mbp-m5-max-128g-omlx-app") == RejectionCode.CONCURRENCY_LIMIT.value
 
 
 def test_scenario_3_tailscale_isolation_and_last_resort_probe() -> None:

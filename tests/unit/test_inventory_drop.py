@@ -89,9 +89,7 @@ class InventoryBackend:
             for model_id in self.ids
         )
 
-    async def load_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def load_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         return LifecycleResult(
             model_id=model_id,
             status=OperationStatus.SUCCEEDED,
@@ -99,9 +97,7 @@ class InventoryBackend:
             idempotency_key=idempotency_key,
         )
 
-    async def unload_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def unload_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         return LifecycleResult(
             model_id=model_id,
             status=OperationStatus.SUCCEEDED,

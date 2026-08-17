@@ -40,8 +40,7 @@ class RouteTelemetryRecorder:
     async def record_route(self, store: TelemetryStore, plan: RoutePlan) -> None:
         if isinstance(plan, RouteDecision):
             candidates = tuple(
-                f"{placement_id}@{plan.candidate_scores[placement_id]:.12f}"
-                for placement_id in plan.candidates
+                f"{placement_id}@{plan.candidate_scores[placement_id]:.12f}" for placement_id in plan.candidates
             )
             selected = plan.selected_placement_id
         else:
@@ -68,9 +67,7 @@ class RouteTelemetryRecorder:
         error_code: str | None = None,
         phase: str | None = None,
     ) -> bool:
-        return store.accept_metric(
-            MetricRecord(request_id, self._now(), latency_ms, success, error_code, phase)
-        )
+        return store.accept_metric(MetricRecord(request_id, self._now(), latency_ms, success, error_code, phase))
 
 
 class BoundRouteTelemetry:

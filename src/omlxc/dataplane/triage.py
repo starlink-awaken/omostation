@@ -109,8 +109,7 @@ class TriageClassifier:
             )
 
         if model_hint and any(
-            hint in model_hint.lower()
-            for hint in ("deepseek-r1", "reasoner", "o1", "o3", "thought")
+            hint in model_hint.lower() for hint in ("deepseek-r1", "reasoner", "o1", "o3", "thought")
         ):
             return TriageResult(
                 tier=ComplexityTier.REASONING,
@@ -122,10 +121,7 @@ class TriageClassifier:
         if context_tokens >= self._reasoning_token_threshold:
             return TriageResult(
                 tier=ComplexityTier.REASONING,
-                reason=(
-                    f"large context tokens ({context_tokens} >= "
-                    f"{self._reasoning_token_threshold})"
-                ),
+                reason=(f"large context tokens ({context_tokens} >= {self._reasoning_token_threshold})"),
                 confidence=0.9,
             )
 
@@ -159,10 +155,7 @@ class TriageClassifier:
             if (
                 context_tokens <= self._fast_token_threshold
                 and len(messages) <= 2
-                and (
-                    any(kw in last_lower for kw in FAST_KEYWORDS)
-                    or (len(last_user_msg) <= 80 and code_blocks == 0)
-                )
+                and (any(kw in last_lower for kw in FAST_KEYWORDS) or (len(last_user_msg) <= 80 and code_blocks == 0))
             ):
                 return TriageResult(
                     tier=ComplexityTier.FAST,

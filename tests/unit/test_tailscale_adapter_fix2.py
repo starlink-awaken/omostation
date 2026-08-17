@@ -114,9 +114,7 @@ def test_constructor_rejects_group_or_world_writable_ancestor(tmp_path: Path, mo
         )
 
 
-def test_constructor_accepts_root_owned_sticky_temp_ancestor(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_constructor_accepts_root_owned_sticky_temp_ancestor(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     parent = tmp_path / "trusted-bin"
     executable = _executable(parent)
     real_lstat = Path.lstat
@@ -171,9 +169,7 @@ def test_constructor_rejects_untrusted_ancestor_metadata(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("target", ["executable", "ancestor"])
-async def test_constructor_fingerprint_rejects_path_replacement_before_refresh(
-    tmp_path: Path, target: str
-) -> None:
+async def test_constructor_fingerprint_rejects_path_replacement_before_refresh(tmp_path: Path, target: str) -> None:
     parent = tmp_path / "trusted-bin"
     executable = _executable(parent)
     calls: list[tuple[str, ...]] = []
@@ -235,9 +231,7 @@ async def test_second_pre_spawn_fingerprint_check_rejects_post_validation_drift(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("failure", [OSError("fake spawn"), "not-json"])
-async def test_first_refresh_failure_marks_authorization_stale(
-    tmp_path: Path, failure: object
-) -> None:
+async def test_first_refresh_failure_marks_authorization_stale(tmp_path: Path, failure: object) -> None:
     adapter = TailscaleAdapter(
         policies=(_policy(),),
         tailscale_executable=_executable(tmp_path / "trusted-bin"),

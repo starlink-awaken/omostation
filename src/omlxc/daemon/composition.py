@@ -227,9 +227,7 @@ class StorageHandle:
 
 
 class SnapshotCatalog:
-    def __init__(
-        self, snapshots: tuple[PlacementSnapshot, ...], *, now: Callable[[], datetime]
-    ) -> None:
+    def __init__(self, snapshots: tuple[PlacementSnapshot, ...], *, now: Callable[[], datetime]) -> None:
         self._snapshots = {snapshot.placement_id: snapshot for snapshot in snapshots}
         observed_at = now()
         self._observed_at = {snapshot.placement_id: observed_at for snapshot in snapshots}
@@ -324,9 +322,7 @@ class CatalogProbe:
         await self._refresh_backends(self._config.backends, task_name="omlxcd-tailscale-probe")
 
     async def refresh_backend(self, backend_id: str) -> None:
-        await self._refresh_backends(
-            (self._backends[backend_id],), task_name="omlxcd-tailscale-write-probe"
-        )
+        await self._refresh_backends((self._backends[backend_id],), task_name="omlxcd-tailscale-write-probe")
 
     async def refresh_node(self, node_id: str) -> bool:
         if node_id not in self._nodes:
@@ -337,14 +333,10 @@ class CatalogProbe:
         )
         return True
 
-    async def _refresh_backends(
-        self, backends: tuple[BackendConfig, ...], *, task_name: str
-    ) -> None:
+    async def _refresh_backends(self, backends: tuple[BackendConfig, ...], *, task_name: str) -> None:
         async with self._refresh_lock:
             authorization = (
-                asyncio.create_task(self._refresh_tailscale(), name=task_name)
-                if self._tailscale is not None
-                else None
+                asyncio.create_task(self._refresh_tailscale(), name=task_name) if self._tailscale is not None else None
             )
             await asyncio.gather(
                 *(self._probe_backend(backend, authorization) for backend in backends),
@@ -358,9 +350,7 @@ class CatalogProbe:
         async with asyncio.timeout(self._timeout):
             await self._tailscale.snapshot()
 
-    async def _probe_backend(
-        self, backend: BackendConfig, authorization: asyncio.Task[None] | None
-    ) -> None:
+    async def _probe_backend(self, backend: BackendConfig, authorization: asyncio.Task[None] | None) -> None:
         try:
             async with asyncio.timeout(self._timeout):
                 authorized, local = await self._authorize(backend, authorization)
@@ -390,9 +380,7 @@ class CatalogProbe:
             self._fail_stale(backend.id, authorized=authorized, local=local)
             self._diagnostics[backend.id] = NodeDiagnosticCode.PROBE_FAILED
 
-    async def _authorize(
-        self, backend: BackendConfig, authorization: asyncio.Task[None] | None
-    ) -> tuple[bool, bool]:
+    async def _authorize(self, backend: BackendConfig, authorization: asyncio.Task[None] | None) -> tuple[bool, bool]:
         if is_loopback_url(backend.base_url):
             return True, True
         node = self._nodes[backend.node_id]
@@ -400,13 +388,8 @@ class CatalogProbe:
             return False, False
         await authorization
         self._tailscale.authorize_http(backend.node_id, backend.base_url)
-        if (
-            backend.kind in {BackendKind.LM_STUDIO, BackendKind.LM_LINK}
-            and backend.control_endpoint is not None
-        ):
-            authorized_ssh = self._tailscale.authorize_ssh(
-                backend.node_id, backend.control_endpoint
-            )
+        if backend.kind in {BackendKind.LM_STUDIO, BackendKind.LM_LINK} and backend.control_endpoint is not None:
+            authorized_ssh = self._tailscale.authorize_ssh(backend.node_id, backend.control_endpoint)
             if authorized_ssh.target != backend.control_endpoint:
                 raise PermissionError("SSH control endpoint is not canonical")
         return True, True
@@ -439,9 +422,7 @@ class CatalogProbe:
             )
             loaded = model is not None and model.state is ModelRuntimeState.LOADED
             saw_model = saw_model or model is not None
-            saw_known_model = saw_known_model or (
-                model is not None and model.state is not ModelRuntimeState.UNKNOWN
-            )
+            saw_known_model = saw_known_model or (model is not None and model.state is not ModelRuntimeState.UNKNOWN)
             generation_blocked = generation_blocked or (
                 loaded
                 and not capability.generation_ready
@@ -455,9 +436,7 @@ class CatalogProbe:
                 and model is not None
                 and model.state is not ModelRuntimeState.UNKNOWN
                 and (
-                    not loaded
-                    or capability.generation_ready
-                    or capabilities.isdisjoint(_GENERATION_MODEL_CAPABILITIES)
+                    not loaded or capability.generation_ready or capabilities.isdisjoint(_GENERATION_MODEL_CAPABILITIES)
                 )
             )
             loadable_any = loadable_any or loadable
@@ -644,13 +623,9 @@ class ProductionPlacementOperator:
         self._adapters = dict(adapters)
         self._catalog = catalog
         self._probe = probe
-        self._backend_by_placement = {
-            placement.id: placement.backend_id for placement in config.placements
-        }
+        self._backend_by_placement = {placement.id: placement.backend_id for placement in config.placements}
 
-    async def fresh_for_write(
-        self, target: PlacementTarget, *, action: PlacementWriteAction
-    ) -> bool:
+    async def fresh_for_write(self, target: PlacementTarget, *, action: PlacementWriteAction) -> bool:
         snapshot = self._catalog.get_one(target.id)
         if action is PlacementWriteAction.LOAD:
             return is_static_eligible(snapshot)
@@ -679,15 +654,11 @@ class ProductionPlacementOperator:
 
     async def load(self, target: PlacementTarget, *, idempotency_key: str) -> LifecycleResult:
         backend_id = self._backend_by_placement[target.id]
-        return await self._adapters[backend_id].load_model(
-            target.model_id, idempotency_key=idempotency_key
-        )
+        return await self._adapters[backend_id].load_model(target.model_id, idempotency_key=idempotency_key)
 
     async def unload(self, target: PlacementTarget, *, idempotency_key: str) -> LifecycleResult:
         backend_id = self._backend_by_placement[target.id]
-        return await self._adapters[backend_id].unload_model(
-            target.model_id, idempotency_key=idempotency_key
-        )
+        return await self._adapters[backend_id].unload_model(target.model_id, idempotency_key=idempotency_key)
 
 
 class ProductionEventService:
@@ -695,12 +666,8 @@ class ProductionEventService:
         self._storage = storage
         self._bus = bus
 
-    async def replay_events(
-        self, *, after_sequence: int, limit: int
-    ) -> tuple[DurableEventRecord, ...]:
-        return await self._storage.require().replay_durable_events(
-            after_sequence=after_sequence, limit=limit
-        )
+    async def replay_events(self, *, after_sequence: int, limit: int) -> tuple[DurableEventRecord, ...]:
+        return await self._storage.require().replay_durable_events(after_sequence=after_sequence, limit=limit)
 
     def subscribe_events(self) -> EventSubscription:
         return self._bus.subscribe()
@@ -728,33 +695,23 @@ class ProductionInferenceService:
     async def list_openai_models(self) -> tuple[str, ...]:
         return self._normalized_model_ids()
 
-    async def chat(
-        self, route: RouteRequest, request: ChatRequest, *, deadline: float
-    ) -> ChatExecution:
+    async def chat(self, route: RouteRequest, request: ChatRequest, *, deadline: float) -> ChatExecution:
         return await self._orchestrator.chat(route, request, deadline=deadline)
 
-    def stream_chat(
-        self, route: RouteRequest, request: ChatRequest, *, deadline: float
-    ) -> AsyncIterator[StreamEvent]:
+    def stream_chat(self, route: RouteRequest, request: ChatRequest, *, deadline: float) -> AsyncIterator[StreamEvent]:
         return self._orchestrator.stream_chat(route, request, deadline=deadline)
 
-    async def embed(
-        self, route: RouteRequest, request: EmbeddingRequest, *, deadline: float
-    ) -> EmbeddingExecution:
+    async def embed(self, route: RouteRequest, request: EmbeddingRequest, *, deadline: float) -> EmbeddingExecution:
         return await self._orchestrator.embed(route, request, deadline=deadline)
 
-    async def rerank(
-        self, *, request_id: str, query: str, documents: tuple[str, ...]
-    ) -> RerankExecution:
+    async def rerank(self, *, request_id: str, query: str, documents: tuple[str, ...]) -> RerankExecution:
         if self._reranker is None:
             return RerankExecution(
                 request_id,
                 (),
                 ExecutionError(ExecutionErrorCode.UNSUPPORTED, False, reason="reranker_unset"),
             )
-        return await self._orchestrator.rerank(
-            self._reranker, RerankRequest(request_id, query, documents)
-        )
+        return await self._orchestrator.rerank(self._reranker, RerankRequest(request_id, query, documents))
 
 
 class ProductionControlService:
@@ -844,18 +801,14 @@ class ProductionControlService:
         node = next((item for item in self._config.nodes if item.id == node_id), None)
         if node is None or not await self._probe.refresh_node(node_id):
             return None
-        snapshots = tuple(
-            snapshot for snapshot in self._catalog.get() if snapshot.node_id == node.id
-        )
+        snapshots = tuple(snapshot for snapshot in self._catalog.get() if snapshot.node_id == node.id)
         return self._node_view(node, snapshots)
 
     async def diagnose_node(self, node_id: str) -> NodeDiagnosticReport | None:
         node = next((item for item in self._config.nodes if item.id == node_id), None)
         if node is None:
             return None
-        snapshots = tuple(
-            snapshot for snapshot in self._catalog.get() if snapshot.node_id == node.id
-        )
+        snapshots = tuple(snapshot for snapshot in self._catalog.get() if snapshot.node_id == node.id)
         return NodeDiagnosticReport(
             node=self._node_view(node, snapshots),
             outcomes=self._probe.diagnostics_for_node(node.id),
@@ -883,13 +836,7 @@ class ProductionControlService:
 
     def _node_view(self, node: NodeConfig, snapshots: tuple[PlacementSnapshot, ...]) -> Node:
         runtime = self._runtime_summary(snapshots)
-        state = (
-            NodeState.HEALTHY
-            if runtime.ready is True
-            else NodeState.DEGRADED
-            if snapshots
-            else NodeState.UNKNOWN
-        )
+        state = NodeState.HEALTHY if runtime.ready is True else NodeState.DEGRADED if snapshots else NodeState.UNKNOWN
         return Node(
             id=node.id,
             display_name=node.display_name,
@@ -897,9 +844,7 @@ class ProductionControlService:
             # Catalog views expose runtime health, never configured network identity.
             tailscale_identity=None,
             memory_gb=node.memory_gb,
-            capabilities=frozenset(
-                capability for snapshot in snapshots for capability in snapshot.capabilities
-            ),
+            capabilities=frozenset(capability for snapshot in snapshots for capability in snapshot.capabilities),
             health=HealthSnapshot(
                 state=state,
                 observed_at=runtime.last_observed_at or self._now(),
@@ -914,9 +859,7 @@ class ProductionControlService:
             last_observed_at=runtime.last_observed_at,
         )
 
-    def _model_view(
-        self, model: ModelConfig, snapshots: tuple[PlacementSnapshot, ...]
-    ) -> ModelSpec:
+    def _model_view(self, model: ModelConfig, snapshots: tuple[PlacementSnapshot, ...]) -> ModelSpec:
         runtime = self._runtime_summary(snapshots)
         states = tuple(
             PlacementRuntimeStatus(
@@ -939,9 +882,7 @@ class ProductionControlService:
             role=model.role,
             reasoning=model.reasoning,
             aliases=frozenset(model.aliases),
-            capabilities=frozenset(
-                capability for snapshot in snapshots for capability in snapshot.capabilities
-            ),
+            capabilities=frozenset(capability for snapshot in snapshots for capability in snapshot.capabilities),
             placement_states=states,
             fresh=runtime.fresh,
             authorized=runtime.authorized,
@@ -960,9 +901,7 @@ class ProductionControlService:
             available=any(item.available for item in snapshots),
             loaded=any(item.loaded for item in snapshots),
             ready=any(_runtime_ready(item) for item in snapshots),
-            last_observed_at=max(
-                self._catalog.observed_at(item.placement_id) for item in snapshots
-            ),
+            last_observed_at=max(self._catalog.observed_at(item.placement_id) for item in snapshots),
         )
 
     async def plan_route(self, request: RouteRequest) -> RouteDecision | RouteFailure:
@@ -1004,12 +943,8 @@ class ProductionControlService:
             "event_drops": self._bus.dropped_low_priority,
         }
 
-    async def list_benchmarks(
-        self, *, model_id: str | None = None, limit: int = 50
-    ) -> tuple[BenchmarkRunRecord, ...]:
-        records = await self._storage.require().list_benchmark_runs(
-            model_id=model_id, limit=limit
-        )
+    async def list_benchmarks(self, *, model_id: str | None = None, limit: int = 50) -> tuple[BenchmarkRunRecord, ...]:
+        records = await self._storage.require().list_benchmark_runs(model_id=model_id, limit=limit)
         return tuple(records)
 
     async def benchmark_model(self, model_id: str) -> BenchmarkRunRecord:
@@ -1040,9 +975,7 @@ class ProductionControlService:
     async def _create_operation(self, kind: str, model_id: str, key: str) -> Job:
         placement = self._placement_for_model(model_id)
         fingerprint = hashlib.sha256(
-            json.dumps(
-                {"kind": kind, "model_id": model_id}, separators=(",", ":"), sort_keys=True
-            ).encode()
+            json.dumps({"kind": kind, "model_id": model_id}, separators=(",", ":"), sort_keys=True).encode()
         ).hexdigest()
         now = self._now()
         created = await self._storage.require().create_job(
@@ -1090,11 +1023,7 @@ class ProductionControlService:
             )
             placement = self._placement_from_reference(planning.rollback_reference)
             target = self._target_factory(placement)
-            operation = (
-                self._coordinator.ensure_loaded
-                if job.kind == "load"
-                else self._coordinator.ensure_unloaded
-            )
+            operation = self._coordinator.ensure_loaded if job.kind == "load" else self._coordinator.ensure_unloaded
             async with asyncio.timeout(self._worker_timeout):
                 outcome = await operation(target)
             await self._finish(job, outcome)
@@ -1138,9 +1067,7 @@ class ProductionControlService:
             OperationStatus.SUCCEEDED,
             OperationStatus.UNCHANGED,
         }
-        succeeded = (
-            outcome.authorized and outcome.actual_loaded is desired_loaded and result_succeeded
-        )
+        succeeded = outcome.authorized and outcome.actual_loaded is desired_loaded and result_succeeded
         await self._storage.require().transition_job(
             job.id,
             JobState.SUCCEEDED if succeeded else JobState.FAILED,
@@ -1160,9 +1087,7 @@ class ProductionControlService:
 
     def _placement_for_model(self, model_id: str) -> PlacementSnapshot:
         canonical_model_id = self._normalized_model_id(model_id)
-        candidates = [
-            item for item in self._catalog.get() if item.model_id == canonical_model_id
-        ]
+        candidates = [item for item in self._catalog.get() if item.model_id == canonical_model_id]
         if not candidates:
             raise KeyError("model has no configured placement")
         return candidates[0]
@@ -1225,13 +1150,9 @@ def build_production_daemon(
 ) -> ProductionComposition:
     """Build the real daemon graph without starting network or model operations."""
     clock = now or (lambda: datetime.now(UTC))
-    configured_tailscale = (
-        tailscale if tailscale is not None else build_configured_tailscale(config)
-    )
+    configured_tailscale = tailscale if tailscale is not None else build_configured_tailscale(config)
     bindings = (
-        dict(adapters)
-        if adapters is not None
-        else build_configured_adapters(config, tailscale=configured_tailscale)
+        dict(adapters) if adapters is not None else build_configured_adapters(config, tailscale=configured_tailscale)
     )
     model_aliases = _model_aliases(config)
     catalog = SnapshotCatalog(snapshots or _configured_snapshots(config), now=clock)
@@ -1278,9 +1199,7 @@ def build_production_daemon(
             planner=planner,
             snapshot_provider=catalog.get,
             registry=AdapterRegistry(
-                tuple(
-                    AdapterBinding(backend_id, adapter) for backend_id, adapter in bindings.items()
-                )
+                tuple(AdapterBinding(backend_id, adapter) for backend_id, adapter in bindings.items())
             ),
             capacity=CapacityCoordinator(global_limit=8, per_node=4, per_backend=4),
             loader=coordinator,
@@ -1316,10 +1235,7 @@ def build_configured_adapters(
     *,
     tailscale: TailscaleAdapter | None = None,
 ) -> dict[str, BackendAdapter]:
-    return {
-        backend.id: build_configured_adapter(backend, tailscale=tailscale)
-        for backend in config.backends
-    }
+    return {backend.id: build_configured_adapter(backend, tailscale=tailscale) for backend in config.backends}
 
 
 def build_configured_adapter(

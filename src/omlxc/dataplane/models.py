@@ -141,6 +141,5 @@ def validate_vectors(vectors: tuple[tuple[float, ...], ...], *, expected_count: 
         return False
     dimension = len(vectors[0])
     return dimension > 0 and all(
-        len(vector) == dimension and all(math.isfinite(value) for value in vector)
-        for vector in vectors
+        len(vector) == dimension and all(math.isfinite(value) for value in vector) for vector in vectors
     )

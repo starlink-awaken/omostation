@@ -38,9 +38,7 @@ def test_default_config_path_reuses_private_xdg_compatibility_config_when_needed
     compatibility_path.chmod(0o600)
 
     monkeypatch.setattr(loading_module, "default_config_directory", lambda: platform_directory)
-    monkeypatch.setattr(
-        loading_module, "_xdg_compatibility_config_path", lambda: compatibility_path
-    )
+    monkeypatch.setattr(loading_module, "_xdg_compatibility_config_path", lambda: compatibility_path)
     monkeypatch.setattr(loading_module.sys, "platform", "darwin")
 
     assert loading_module.default_config_path() == compatibility_path
@@ -57,9 +55,7 @@ def test_default_config_path_prefers_existing_platform_config_over_xdg_compatibi
         path.chmod(0o600)
 
     monkeypatch.setattr(loading_module, "default_config_directory", lambda: platform_path.parent)
-    monkeypatch.setattr(
-        loading_module, "_xdg_compatibility_config_path", lambda: compatibility_path
-    )
+    monkeypatch.setattr(loading_module, "_xdg_compatibility_config_path", lambda: compatibility_path)
 
     assert loading_module.default_config_path() == platform_path
 
@@ -74,9 +70,7 @@ def test_default_config_path_never_uses_macos_compatibility_path_on_linux(
     compatibility_path.chmod(0o600)
 
     monkeypatch.setattr(loading_module, "default_config_directory", lambda: platform_path.parent)
-    monkeypatch.setattr(
-        loading_module, "_xdg_compatibility_config_path", lambda: compatibility_path
-    )
+    monkeypatch.setattr(loading_module, "_xdg_compatibility_config_path", lambda: compatibility_path)
     monkeypatch.setattr(loading_module.sys, "platform", "linux")
 
     assert loading_module.default_config_path() == platform_path
@@ -101,9 +95,7 @@ def test_default_config_path_rejects_unsafe_xdg_compatibility_config(
         compatibility_path.chmod(mode)
 
     monkeypatch.setattr(loading_module, "default_config_directory", lambda: platform_directory)
-    monkeypatch.setattr(
-        loading_module, "_xdg_compatibility_config_path", lambda: compatibility_path
-    )
+    monkeypatch.setattr(loading_module, "_xdg_compatibility_config_path", lambda: compatibility_path)
     monkeypatch.setattr(loading_module.sys, "platform", "darwin")
 
     assert loading_module.default_config_path() == platform_directory / "config.toml"
@@ -155,9 +147,7 @@ def test_nested_environment_values_keep_toml_types(tmp_path: Path) -> None:
         {"OMLXC_STORAGE_RETENTION_DAYS": "31"},
     ],
 )
-def test_invalid_or_unknown_environment_fails_closed(
-    tmp_path: Path, environment: dict[str, str]
-) -> None:
+def test_invalid_or_unknown_environment_fails_closed(tmp_path: Path, environment: dict[str, str]) -> None:
     with pytest.raises(ConfigError):
         load_config(None, env=environment, base_directory=tmp_path)
 
@@ -373,9 +363,7 @@ def test_override_injection_cannot_bypass_nested_list_credential_validation(
         load_config(
             None,
             env={},
-            overrides={
-                "policies": {"thinking_settings": {"nested": [{"clientSecrets": plaintext}]}}
-            },
+            overrides={"policies": {"thinking_settings": {"nested": [{"clientSecrets": plaintext}]}}},
             base_directory=tmp_path,
         )
 
@@ -422,9 +410,7 @@ routingKey = "interactive"
         f"keychain://service/{'a' * 129}",
     ],
 )
-def test_loader_rejects_noncanonical_keychain_references(
-    tmp_path: Path, invalid_reference: str
-) -> None:
+def test_loader_rejects_noncanonical_keychain_references(tmp_path: Path, invalid_reference: str) -> None:
     config_path = tmp_path / "config.toml"
     config_path.write_text(
         f"""
@@ -479,10 +465,7 @@ credential_ref = "{valid_reference}"
         encoding="utf-8",
     )
 
-    assert (
-        load_config(config_path, env={}, base_directory=tmp_path).backends[0].credential_ref
-        == valid_reference
-    )
+    assert load_config(config_path, env={}, base_directory=tmp_path).backends[0].credential_ref == valid_reference
 
 
 def test_direct_app_config_credential_rejection_raises_safe_domain_error(

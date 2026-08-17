@@ -9,9 +9,7 @@ from typing import Final
 MAX_GUIDE_TRANSITIONS: Final = 8
 MAX_GUIDE_IDENTIFIER_LENGTH: Final = 256
 _INVALID_GUIDE_INPUT: Final = "guide input is invalid"
-_PUBLIC_IDENTIFIER_CHARACTERS: Final = frozenset(
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._:@/-"
-)
+_PUBLIC_IDENTIFIER_CHARACTERS: Final = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._:@/-")
 
 
 class GuideState(StrEnum):
@@ -67,9 +65,7 @@ _GOAL_CHOICES: Final = (
     GuideChoice("2", "Find an available model", GuideState.COMPLETE, GuideOperation.MODELS),
     GuideChoice("3", "Explain a route decision", GuideState.ROUTE_MODEL),
     GuideChoice("4", "Inspect a running job", GuideState.JOB_ID),
-    GuideChoice(
-        "5", "Troubleshoot a daemon problem", GuideState.COMPLETE, GuideOperation.DAEMON_HEALTH
-    ),
+    GuideChoice("5", "Troubleshoot a daemon problem", GuideState.COMPLETE, GuideOperation.DAEMON_HEALTH),
     GuideChoice("6", "Learn safe model lifecycle commands", GuideState.LIFECYCLE_MODEL),
 )
 

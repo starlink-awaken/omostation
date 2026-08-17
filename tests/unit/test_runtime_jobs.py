@@ -30,9 +30,7 @@ async def test_job_idempotency_returns_same_job_and_rejects_payload_conflict(
     from omlxc.storage import JobConflictError, SQLiteRuntimeStore
 
     store = await SQLiteRuntimeStore.open(tmp_path / "state.db")
-    first = await store.create_job(
-        _job(), idempotency_key="load-a", payload_fingerprint="sha256:aaa"
-    )
+    first = await store.create_job(_job(), idempotency_key="load-a", payload_fingerprint="sha256:aaa")
     duplicate = await store.create_job(
         _job(job_id="job-other"),
         idempotency_key="load-a",
@@ -100,9 +98,7 @@ async def test_restart_recovers_only_nonterminal_jobs_by_explicit_operation_poli
     store = await SQLiteRuntimeStore.open(database)
     await store.create_job(_job(), idempotency_key="load-a", payload_fingerprint="sha256:a")
     at = datetime(2026, 8, 11, 9, tzinfo=UTC)
-    await store.transition_job(
-        "job-1", JobState.PLANNING, progress=0.1, observed_at=at, event_id="plan"
-    )
+    await store.transition_job("job-1", JobState.PLANNING, progress=0.1, observed_at=at, event_id="plan")
     await store.transition_job(
         "job-1",
         JobState.RUNNING,
@@ -117,8 +113,6 @@ async def test_restart_recovers_only_nonterminal_jobs_by_explicit_operation_poli
         {"placement.load": RunningRecoveryPolicy.REQUEUE},
         observed_at=at + timedelta(seconds=2),
     )
-    assert [(job.id, job.state, job.attempt) for job in recovered] == [
-        ("job-1", JobState.PENDING, 1)
-    ]
+    assert [(job.id, job.state, job.attempt) for job in recovered] == [("job-1", JobState.PENDING, 1)]
     assert await reopened.recover_jobs({}, observed_at=at + timedelta(seconds=3)) == ()
     await reopened.close()

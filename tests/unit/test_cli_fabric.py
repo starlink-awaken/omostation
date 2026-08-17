@@ -92,7 +92,6 @@ def test_cli_fabric_compact_human() -> None:
     assert "Compaction Advised" in result.stdout
 
 
-
 def test_cli_fabric_warm_human() -> None:
     result = runner.invoke(app, ["fabric", "warm"])
     assert result.exit_code == 0

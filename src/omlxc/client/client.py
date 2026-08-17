@@ -86,9 +86,7 @@ class DaemonClient:
         return await self._request("GET", "/api/v1/health")
 
     async def nodes(self, *, after: str | None = None, limit: int = 100) -> DaemonEnvelope:
-        return await self._request(
-            "GET", "/api/v1/nodes", params=_page_params(after=after, limit=limit)
-        )
+        return await self._request("GET", "/api/v1/nodes", params=_page_params(after=after, limit=limit))
 
     async def probe_node(self, node_id: str) -> DaemonEnvelope:
         return await self._request("POST", f"/api/v1/nodes/{quote(node_id, safe='')}/probe")
@@ -97,17 +95,13 @@ class DaemonClient:
         return await self._request("GET", f"/api/v1/nodes/{quote(node_id, safe='')}/diagnostics")
 
     async def models(self, *, after: str | None = None, limit: int = 100) -> DaemonEnvelope:
-        return await self._request(
-            "GET", "/api/v1/models", params=_page_params(after=after, limit=limit)
-        )
+        return await self._request("GET", "/api/v1/models", params=_page_params(after=after, limit=limit))
 
     async def resolve_model(self, alias: str) -> DaemonEnvelope:
         return await self._request("GET", f"/api/v1/models/resolve/{quote(alias, safe='')}")
 
     async def jobs(self, *, after: str | None = None, limit: int = 100) -> DaemonEnvelope:
-        return await self._request(
-            "GET", "/api/v1/jobs", params=_page_params(after=after, limit=limit)
-        )
+        return await self._request("GET", "/api/v1/jobs", params=_page_params(after=after, limit=limit))
 
     async def job(self, job_id: str) -> DaemonEnvelope:
         return await self._request("GET", f"/api/v1/jobs/{quote(job_id, safe='')}")
@@ -115,14 +109,10 @@ class DaemonClient:
     async def plan_route(self, body: Mapping[str, JsonValue]) -> DaemonEnvelope:
         return await self._request("POST", "/api/v1/routes/plan", json=dict(body))
 
-    async def load_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> DaemonEnvelope:
+    async def load_model(self, model_id: str, *, idempotency_key: str | None = None) -> DaemonEnvelope:
         return await self._model_operation("load", model_id, idempotency_key)
 
-    async def unload_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> DaemonEnvelope:
+    async def unload_model(self, model_id: str, *, idempotency_key: str | None = None) -> DaemonEnvelope:
         return await self._model_operation("unload", model_id, idempotency_key)
 
     async def cancel_job(self, job_id: str) -> DaemonEnvelope:
@@ -134,9 +124,7 @@ class DaemonClient:
     async def benchmark_model(self, model_id: str) -> DaemonEnvelope:
         return await self._request("POST", f"/api/v1/models/{quote(model_id, safe='')}/benchmark")
 
-    async def benchmark_report(
-        self, *, model_id: str | None = None, limit: int = 50
-    ) -> DaemonEnvelope:
+    async def benchmark_report(self, *, model_id: str | None = None, limit: int = 50) -> DaemonEnvelope:
         params: dict[str, str | int] = {"limit": limit}
         if model_id is not None:
             params["model_id"] = model_id
@@ -208,9 +196,7 @@ class DaemonClient:
         except httpx.RequestError as exc:
             raise _unavailable(request_id) from exc
 
-    async def _model_operation(
-        self, operation: str, model_id: str, key: str | None
-    ) -> DaemonEnvelope:
+    async def _model_operation(self, operation: str, model_id: str, key: str | None) -> DaemonEnvelope:
         identifier = key or self._idempotency_key(operation)
         return await self._request(
             "POST",

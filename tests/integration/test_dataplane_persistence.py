@@ -154,18 +154,14 @@ async def test_orchestrator_persists_route_and_terminal_metric_across_restart(
         )
         result = await orchestrator.chat(route, chat, deadline=10)
         assert result.success
-        embedding_route = route.model_copy(
-            update={"required_capabilities": frozenset({"embedding"})}
-        )
+        embedding_route = route.model_copy(update={"required_capabilities": frozenset({"embedding"})})
         embedding = await orchestrator.embed(
             embedding_route,
             EmbeddingRequest(request_id="req-embed", model="public/model", input="one"),
             deadline=10,
         )
         assert embedding.error is None
-        streaming_route = route.model_copy(
-            update={"required_capabilities": frozenset({"chat", "streaming"})}
-        )
+        streaming_route = route.model_copy(update={"required_capabilities": frozenset({"chat", "streaming"})})
         stream = [
             event
             async for event in orchestrator.stream_chat(

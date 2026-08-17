@@ -153,9 +153,7 @@ def test_migration_keeps_explicit_context_separate_from_output_budget(tmp_path: 
     model["params"]["max_tokens"] = 2048
     model["params"]["max_context_window"] = 16_384
 
-    migrated = migrate_legacy_json(
-        _write_legacy(tmp_path / "models.json", data), base_directory=tmp_path
-    )
+    migrated = migrate_legacy_json(_write_legacy(tmp_path / "models.json", data), base_directory=tmp_path)
 
     assert migrated.models[0].parameters["max_tokens"] == 2048
     assert migrated.placements[0].context_limit == 16_384
@@ -166,12 +164,8 @@ def test_migrated_node_ids_do_not_change_when_addresses_change(tmp_path: Path) -
     second_data = json.loads(json.dumps(first_data))
     second_data["cluster"]["nodes"][0]["host"] = "replacement.example.invalid"
     second_data["engine_policy"]["nodes"]["pool-0"]["host"] = "replacement.example.invalid"
-    first = migrate_legacy_json(
-        _write_legacy(tmp_path / "first.json", first_data), base_directory=tmp_path
-    )
-    second = migrate_legacy_json(
-        _write_legacy(tmp_path / "second.json", second_data), base_directory=tmp_path
-    )
+    first = migrate_legacy_json(_write_legacy(tmp_path / "first.json", first_data), base_directory=tmp_path)
+    second = migrate_legacy_json(_write_legacy(tmp_path / "second.json", second_data), base_directory=tmp_path)
 
     assert tuple(node.id for node in first.nodes) == tuple(node.id for node in second.nodes)
     assert first.nodes[0].addresses != second.nodes[0].addresses
@@ -224,9 +218,7 @@ def test_unmapped_legacy_fields_are_retained_as_safe_extensions(tmp_path: Path) 
     data["active_root"] = "/legacy/control-root"
     data["custom_operational"] = {"mode": "legacy", "attempts": 3}
 
-    migrated = migrate_legacy_json(
-        _write_legacy(tmp_path / "extensions.json", data), base_directory=tmp_path
-    )
+    migrated = migrate_legacy_json(_write_legacy(tmp_path / "extensions.json", data), base_directory=tmp_path)
 
     assert migrated.legacy_extensions["active_root"] == "/legacy/control-root"
     assert migrated.legacy_extensions["custom_operational"] == {
@@ -290,9 +282,7 @@ def test_plaintext_secrets_in_legacy_extensions_fail_closed(tmp_path: Path) -> N
         "passwords",
     ],
 )
-def test_all_canonical_credential_key_spellings_reject_plaintext(
-    tmp_path: Path, credential_key: str
-) -> None:
+def test_all_canonical_credential_key_spellings_reject_plaintext(tmp_path: Path, credential_key: str) -> None:
     data = _sanitized_legacy_config()
     data["custom_operational"] = {"nested": [{credential_key: "synthetic-do-not-copy"}]}
 
@@ -324,9 +314,7 @@ def test_all_canonical_credential_key_spellings_reject_plaintext(
         f"keychain://service/{'a' * 129}",
     ],
 )
-def test_credential_fields_reject_malformed_keychain_references(
-    tmp_path: Path, invalid_reference: str
-) -> None:
+def test_credential_fields_reject_malformed_keychain_references(tmp_path: Path, invalid_reference: str) -> None:
     data = _sanitized_legacy_config()
     data["custom_operational"] = {"accessToken": invalid_reference}
 
@@ -341,13 +329,9 @@ def test_valid_keychain_references_survive_nested_legacy_extensions(tmp_path: Pa
     data = _sanitized_legacy_config()
     data["custom_operational"] = {"credentials": "keychain://omlxc/legacy-backend"}
 
-    migrated = migrate_legacy_json(
-        _write_legacy(tmp_path / "valid-keychain.json", data), base_directory=tmp_path
-    )
+    migrated = migrate_legacy_json(_write_legacy(tmp_path / "valid-keychain.json", data), base_directory=tmp_path)
 
-    assert migrated.legacy_extensions["custom_operational"] == {
-        "credentials": "keychain://omlxc/legacy-backend"
-    }
+    assert migrated.legacy_extensions["custom_operational"] == {"credentials": "keychain://omlxc/legacy-backend"}
 
 
 def test_noncredential_words_are_not_false_positives(tmp_path: Path) -> None:
@@ -360,9 +344,7 @@ def test_noncredential_words_are_not_false_positives(tmp_path: Path) -> None:
         "routingKey": "interactive",
     }
 
-    migrated = migrate_legacy_json(
-        _write_legacy(tmp_path / "noncredentials.json", data), base_directory=tmp_path
-    )
+    migrated = migrate_legacy_json(_write_legacy(tmp_path / "noncredentials.json", data), base_directory=tmp_path)
 
     assert migrated.legacy_extensions["custom_operational"] == {
         "monkey": "banana",
@@ -403,10 +385,7 @@ def test_repository_legacy_json_migrates_read_only_with_expected_counts(tmp_path
         key: value for key, value in legacy["fallback_ollama"].items() if not key.startswith("_")
     }
     assert len(migrated.policies.remote_resident) == len(legacy["autopilot"]["remote_resident"])
-    assert (
-        migrated.policies.thinking_settings["legacy_request_defaults"]
-        == legacy["omlx_app"]["request_defaults"]
-    )
+    assert migrated.policies.thinking_settings["legacy_request_defaults"] == legacy["omlx_app"]["request_defaults"]
 
 
 def test_atomic_write_sets_private_mode_and_snapshots_existing_target(tmp_path: Path) -> None:

@@ -246,9 +246,7 @@ async def test_vision_reuses_typed_message_without_fetching_or_rewriting_url() -
         messages=(
             ChatMessage(
                 role="user",
-                content=(
-                    ImageContentBlock(image_url=ImageURL(url="https://images.invalid/a.png")),
-                ),
+                content=(ImageContentBlock(image_url=ImageURL(url="https://images.invalid/a.png")),),
             ),
         ),
     )
@@ -579,9 +577,7 @@ async def test_prepare_failure_preserves_ordered_typed_rejection_without_adapter
     assert result.error is not None
     assert result.error.code in {ExecutionErrorCode.NO_CANDIDATE, ExecutionErrorCode.NO_CAPACITY}
     safe_id = (
-        placement_id
-        if "/" not in placement_id
-        else f"opaque:{hashlib.sha256(placement_id.encode()).hexdigest()[:12]}"
+        placement_id if "/" not in placement_id else f"opaque:{hashlib.sha256(placement_id.encode()).hexdigest()[:12]}"
     )
     assert result.error.prepare_rejections == ((safe_id, rejection),)
     assert placement_id == safe_id or placement_id not in repr(result.error)
@@ -615,9 +611,7 @@ async def test_prepare_failure_preserves_ordered_typed_rejection_without_adapter
 
 
 @pytest.mark.asyncio
-async def test_prepare_rejection_is_consistent_for_embedding_and_stream_without_adapter_call() -> (
-    None
-):
+async def test_prepare_rejection_is_consistent_for_embedding_and_stream_without_adapter_call() -> None:
     adapter = FakeAdapter(chats=[_success()])
     unloaded = _snapshot("p", "b", "n", loaded=False)
     orchestrator = _orchestrator((unloaded,), (AdapterBinding("b", adapter),))
@@ -627,9 +621,7 @@ async def test_prepare_rejection_is_consistent_for_embedding_and_stream_without_
         EmbeddingRequest(request_id="req", model="public/model", input="one"),
         deadline=10,
     )
-    stream = [
-        event async for event in orchestrator.stream_chat(_route_request(), _chat(), deadline=10)
-    ]
+    stream = [event async for event in orchestrator.stream_chat(_route_request(), _chat(), deadline=10)]
 
     assert embedding.error is not None
     assert embedding.error.prepare_rejections == (("p", RejectionCode.UNAVAILABLE),)

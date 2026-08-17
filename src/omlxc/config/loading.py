@@ -138,9 +138,7 @@ def _deep_merge(base: Mapping[str, Any], overlay: Mapping[str, Any]) -> dict[str
     for key, value in overlay.items():
         current = result.get(key)
         if isinstance(current, Mapping) and isinstance(value, Mapping):
-            result[key] = _deep_merge(
-                cast(Mapping[str, Any], current), cast(Mapping[str, Any], value)
-            )
+            result[key] = _deep_merge(cast(Mapping[str, Any], current), cast(Mapping[str, Any], value))
         else:
             result[key] = deepcopy(value)
     return result
@@ -153,9 +151,7 @@ def _environment_overrides(environment: Mapping[str, str]) -> dict[str, Any]:
             continue
         nested = name.removeprefix("OMLXC_")
         if not nested or "__" not in nested:
-            raise ConfigError(
-                "OMLXC_ environment keys must use double underscores between nested keys"
-            )
+            raise ConfigError("OMLXC_ environment keys must use double underscores between nested keys")
         parts = [part.lower() for part in nested.split("__")]
         if any(not part for part in parts):
             raise ConfigError("OMLXC_ environment key contains an empty segment")
@@ -180,9 +176,7 @@ def _decode_legacy_extensions(values: dict[str, Any]) -> dict[str, Any]:
     if "legacy_extensions_json" not in values:
         return values
     if "legacy_extensions" in values:
-        raise ConfigError(
-            "configuration cannot contain both legacy_extensions and legacy_extensions_json"
-        )
+        raise ConfigError("configuration cannot contain both legacy_extensions and legacy_extensions_json")
     encoded = values.pop("legacy_extensions_json")
     if not isinstance(encoded, str):
         raise ConfigError("legacy_extensions_json must be a JSON string")

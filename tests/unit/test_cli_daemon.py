@@ -28,9 +28,7 @@ runner = CliRunner()
 
 
 def _envelope(data: object, request_id: str = "req-cli-1") -> DaemonEnvelope:
-    return DaemonEnvelope.model_validate(
-        {"schema_version": 1, "request_id": request_id, "data": data}
-    )
+    return DaemonEnvelope.model_validate({"schema_version": 1, "request_id": request_id, "data": data})
 
 
 class FakeClient:
@@ -117,15 +115,11 @@ class FakeClient:
             }
         )
 
-    async def load_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> DaemonEnvelope:
+    async def load_model(self, model_id: str, *, idempotency_key: str | None = None) -> DaemonEnvelope:
         self.calls.append(("load", model_id, idempotency_key))
         return _envelope({"id": "job-load", "state": "pending", "kind": "load"})
 
-    async def unload_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> DaemonEnvelope:
+    async def unload_model(self, model_id: str, *, idempotency_key: str | None = None) -> DaemonEnvelope:
         self.calls.append(("unload", model_id, idempotency_key))
         return _envelope({"id": "job-unload", "state": "pending", "kind": "unload"})
 
@@ -170,15 +164,11 @@ class GuideTripwireClient(FakeClient):
         self._forbidden(after, limit)
         raise AssertionError("unreachable")
 
-    async def load_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> DaemonEnvelope:
+    async def load_model(self, model_id: str, *, idempotency_key: str | None = None) -> DaemonEnvelope:
         self._forbidden(model_id, idempotency_key)
         raise AssertionError("unreachable")
 
-    async def unload_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> DaemonEnvelope:
+    async def unload_model(self, model_id: str, *, idempotency_key: str | None = None) -> DaemonEnvelope:
         self._forbidden(model_id, idempotency_key)
         raise AssertionError("unreachable")
 
@@ -219,10 +209,7 @@ class PagedClient(FakeClient):
     async def models(self, *, after: str | None = None, limit: int = 100) -> DaemonEnvelope:
         self.calls.append(("models", after, limit))
         start = 0 if after is None else int(after.removeprefix("model-")) + 1
-        items = [
-            {"id": f"model-{index:03d}", "role": "chat"}
-            for index in range(start, min(start + limit, 101))
-        ]
+        items = [{"id": f"model-{index:03d}", "role": "chat"} for index in range(start, min(start + limit, 101))]
         return _envelope(
             {
                 "items": items,
@@ -793,8 +780,7 @@ def test_status_json_malformed_health_remains_original_envelope(
 
     assert result.exit_code == 0
     assert result.stdout == (
-        '{"schema_version":1,"request_id":"req-cli-1",'
-        '"data":["https://backend/private/path","prompt body"]}\n'
+        '{"schema_version":1,"request_id":"req-cli-1","data":["https://backend/private/path","prompt body"]}\n'
     )
     assert result.stderr == ""
     assert client.calls == [("health",)]
@@ -936,9 +922,7 @@ def test_r1_noninteractive_requires_yes_before_mutation(fake_client: FakeClient)
     assert json.loads(accepted.stdout)["data"]["id"] == "job-load"
 
 
-def test_r1_interactive_refusal_is_typed_safety_error(
-    fake_client: FakeClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_r1_interactive_refusal_is_typed_safety_error(fake_client: FakeClient, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(cli_module, "_stdio_is_tty", lambda: True)
 
     refused = runner.invoke(app, ["models", "unload", "local/model-a"], input="n\n")

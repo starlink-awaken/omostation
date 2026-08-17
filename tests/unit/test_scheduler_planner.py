@@ -58,13 +58,8 @@ def _placement(placement_id: str, **updates: object) -> PlacementSnapshot:
 def test_profiles_are_validated_and_drive_different_priorities() -> None:
     policies = default_policies()
     assert set(policies) == set(RouteProfile)
-    assert (
-        policies[RouteProfile.INTERACTIVE].weights.ttft > policies[RouteProfile.BATCH].weights.ttft
-    )
-    assert (
-        policies[RouteProfile.BATCH].weights.throughput
-        > policies[RouteProfile.INTERACTIVE].weights.throughput
-    )
+    assert policies[RouteProfile.INTERACTIVE].weights.ttft > policies[RouteProfile.BATCH].weights.ttft
+    assert policies[RouteProfile.BATCH].weights.throughput > policies[RouteProfile.INTERACTIVE].weights.throughput
 
 
 def test_filter_order_rejections_and_local_only_are_deterministic() -> None:
@@ -119,9 +114,7 @@ def test_scoring_covers_required_dimensions_and_ties_by_placement_id() -> None:
 
 
 def test_unknown_critical_values_fail_closed_and_performance_defaults_are_explicit() -> None:
-    rejected = RoutePlanner(default_policies()).plan(
-        _request(), (_placement("unknown", available_concurrency=None),)
-    )
+    rejected = RoutePlanner(default_policies()).plan(_request(), (_placement("unknown", available_concurrency=None),))
     assert isinstance(rejected, RouteFailure)
     assert rejected.code is RouteFailureCode.NO_CAPACITY
 
@@ -147,9 +140,7 @@ def test_non_finite_and_out_of_range_snapshot_values_are_rejected() -> None:
 
 
 def test_duplicate_placement_ids_fail_closed_before_scoring() -> None:
-    result = RoutePlanner(default_policies()).plan(
-        _request(), (_placement("duplicate"), _placement("duplicate"))
-    )
+    result = RoutePlanner(default_policies()).plan(_request(), (_placement("duplicate"), _placement("duplicate")))
     assert isinstance(result, RouteFailure)
     assert result.code is RouteFailureCode.INVALID_SNAPSHOT
 
@@ -172,9 +163,7 @@ def test_health_rejections_are_stable_and_distinguish_the_failed_gate(
 
 
 def test_static_memory_unknown_is_not_reported_ready_or_routable() -> None:
-    result = RoutePlanner(default_policies()).plan(
-        _request(), (_placement("unknown-memory", memory_admitted=None),)
-    )
+    result = RoutePlanner(default_policies()).plan(_request(), (_placement("unknown-memory", memory_admitted=None),))
 
     assert isinstance(result, RouteFailure)
     assert result.rejected == {"unknown-memory": RejectionCode.MEMORY.value}

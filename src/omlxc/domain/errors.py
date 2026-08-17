@@ -62,15 +62,11 @@ class ErrorEnvelope(DomainModel):
 
     @field_validator("partial_result")
     @classmethod
-    def freeze_partial_result(
-        cls, value: Mapping[str, JsonValue] | None
-    ) -> Mapping[str, JsonValue] | None:
+    def freeze_partial_result(cls, value: Mapping[str, JsonValue] | None) -> Mapping[str, JsonValue] | None:
         return None if value is None else cast(Mapping[str, JsonValue], freeze_mapping(value))
 
     @field_serializer("partial_result")
-    def serialize_partial_result(
-        self, value: Mapping[str, JsonValue] | None
-    ) -> dict[str, JsonValue] | None:
+    def serialize_partial_result(self, value: Mapping[str, JsonValue] | None) -> dict[str, JsonValue] | None:
         if value is None:
             return None
         thawed = thaw_json(cast(FrozenDict, value))

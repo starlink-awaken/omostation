@@ -12,9 +12,7 @@ from omlxc.storage import SQLiteRuntimeStore, StorageDegradedError
 
 def _rewrite_schema(database: Path, table_or_index: str, old: str, new: str) -> None:
     connection = sqlite3.connect(database)
-    row = connection.execute(
-        "SELECT sql FROM sqlite_master WHERE name = ?", (table_or_index,)
-    ).fetchone()
+    row = connection.execute("SELECT sql FROM sqlite_master WHERE name = ?", (table_or_index,)).fetchone()
     assert row is not None and old in str(row[0])
     version = int(connection.execute("PRAGMA schema_version").fetchone()[0])
     connection.execute("PRAGMA writable_schema = ON")
@@ -56,9 +54,7 @@ async def test_schema_metadata_or_constraint_drift_is_quarantined(
     await store.close()
     _rewrite_schema(database, object_name, old, new)
 
-    degraded = await SQLiteRuntimeStore.open(
-        database, quarantine_suffix_factory=lambda: "schema-invariant"
-    )
+    degraded = await SQLiteRuntimeStore.open(database, quarantine_suffix_factory=lambda: "schema-invariant")
     try:
         assert degraded.degraded
         assert not database.exists()
@@ -118,9 +114,7 @@ def _seed_all_persistent_values(database: Path) -> None:
         ("config_revisions", "observed_at"),
     ],
 )
-async def test_open_quarantines_each_noncanonical_persistent_timestamp(
-    tmp_path: Path, table: str, column: str
-) -> None:
+async def test_open_quarantines_each_noncanonical_persistent_timestamp(tmp_path: Path, table: str, column: str) -> None:
     database = tmp_path / f"{table}-{column}.db"
     store = await SQLiteRuntimeStore.open(database)
     await store.close()
@@ -130,9 +124,7 @@ async def test_open_quarantines_each_noncanonical_persistent_timestamp(
     connection.commit()
     connection.close()
 
-    degraded = await SQLiteRuntimeStore.open(
-        database, quarantine_suffix_factory=lambda: "bad-value"
-    )
+    degraded = await SQLiteRuntimeStore.open(database, quarantine_suffix_factory=lambda: "bad-value")
     try:
         assert degraded.degraded
         assert not database.exists()
@@ -150,9 +142,7 @@ async def test_open_quarantines_each_noncanonical_persistent_timestamp(
         ("config_revisions", "config_json", "oversize"),
     ],
 )
-async def test_open_quarantines_unsafe_persistent_json(
-    tmp_path: Path, table: str, column: str, damage: str
-) -> None:
+async def test_open_quarantines_unsafe_persistent_json(tmp_path: Path, table: str, column: str, damage: str) -> None:
     database = tmp_path / f"json-{table}-{column}.db"
     store = await SQLiteRuntimeStore.open(database)
     await store.close()
@@ -185,9 +175,7 @@ async def test_open_quarantines_config_fingerprint_mismatch(tmp_path: Path) -> N
     connection.commit()
     connection.close()
 
-    degraded = await SQLiteRuntimeStore.open(
-        database, quarantine_suffix_factory=lambda: "bad-fingerprint"
-    )
+    degraded = await SQLiteRuntimeStore.open(database, quarantine_suffix_factory=lambda: "bad-fingerprint")
     try:
         assert degraded.degraded
         assert not database.exists()
@@ -240,9 +228,7 @@ async def test_read_conversion_failure_is_content_free_storage_error(tmp_path: P
         "aggregate-day",
     ],
 )
-async def test_every_repository_read_maps_conversion_failure_to_fixed_error(
-    tmp_path: Path, case: str
-) -> None:
+async def test_every_repository_read_maps_conversion_failure_to_fixed_error(tmp_path: Path, case: str) -> None:
     database = tmp_path / f"read-{case}.db"
     created = await SQLiteRuntimeStore.open(database)
     await created.close()

@@ -127,9 +127,7 @@ class CapabilitySnapshot(DomainModel):
     def validate_readiness_implications(self) -> CapabilitySnapshot:
         if self.observed_at.tzinfo is None or self.observed_at.utcoffset() is None:
             raise ValueError("observed_at must be timezone-aware")
-        if self.generation_ready and not (
-            self.reachable and self.compatible and self.model_available
-        ):
+        if self.generation_ready and not (self.reachable and self.compatible and self.model_available):
             raise ValueError("generation_ready requires reachability, compatibility, and a model")
         return self
 
@@ -250,9 +248,7 @@ ToolChoice = Literal["auto", "none", "required"] | ChatToolChoice
 
 
 class ToolFunctionDelta(DomainModel):
-    name: str | None = Field(
-        default=None, min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_-]+$"
-    )
+    name: str | None = Field(default=None, min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
     arguments: str | None = Field(default=None, max_length=262_144)
 
     @model_validator(mode="after")
@@ -264,9 +260,7 @@ class ToolFunctionDelta(DomainModel):
 
 class ToolCallDelta(DomainModel):
     index: int = Field(ge=0, le=127)
-    id: str | None = Field(
-        default=None, min_length=1, max_length=256, pattern=r"^[A-Za-z0-9._:-]+$"
-    )
+    id: str | None = Field(default=None, min_length=1, max_length=256, pattern=r"^[A-Za-z0-9._:-]+$")
     type: Literal["function"] | None = None
     function: ToolFunctionDelta | None = None
 
@@ -281,9 +275,7 @@ class ChatMessage(DomainModel):
     role: Literal["system", "user", "assistant", "tool"]
     content: str | tuple[ChatContentBlock, ...] | None
     tool_calls: tuple[ChatToolCall, ...] = Field(default=(), max_length=128)
-    tool_call_id: str | None = Field(
-        default=None, min_length=1, max_length=256, pattern=r"^[A-Za-z0-9._:-]+$"
-    )
+    tool_call_id: str | None = Field(default=None, min_length=1, max_length=256, pattern=r"^[A-Za-z0-9._:-]+$")
 
     @model_validator(mode="after")
     def validate_role_fields(self) -> ChatMessage:
@@ -460,10 +452,7 @@ class StreamEvent(DomainModel):
         if self.kind is StreamEventKind.ERROR:
             if self.error is None:
                 raise ValueError("stream error events require an error")
-            if (
-                self.error.emitted_content is not self.emitted_content
-                or self.error.phase is not self.phase
-            ):
+            if self.error.emitted_content is not self.emitted_content or self.error.phase is not self.phase:
                 raise ValueError("stream error replay state must match the event")
         elif self.error is not None:
             raise ValueError("non-error stream events cannot include an error")
@@ -475,15 +464,11 @@ class StreamEvent(DomainModel):
             raise ValueError("prepare rejections require a pre-content stream error")
 
         if self.kind is StreamEventKind.CONTENT and (
-            not self.content
-            or not self.emitted_content
-            or self.phase is not StreamPhase.AFTER_CONTENT
+            not self.content or not self.emitted_content or self.phase is not StreamPhase.AFTER_CONTENT
         ):
             raise ValueError("content events require emitted content and after-content phase")
         if self.kind is StreamEventKind.TOOL_CALL and (
-            not self.tool_calls
-            or not self.emitted_content
-            or self.phase is not StreamPhase.AFTER_CONTENT
+            not self.tool_calls or not self.emitted_content or self.phase is not StreamPhase.AFTER_CONTENT
         ):
             raise ValueError("tool call events require deltas and after-content phase")
         if self.kind is not StreamEventKind.TOOL_CALL and self.tool_calls:
@@ -501,13 +486,9 @@ class BackendAdapter(Protocol):
 
     async def list_models(self) -> tuple[ModelRuntime, ...]: ...
 
-    async def load_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult: ...
+    async def load_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult: ...
 
-    async def unload_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult: ...
+    async def unload_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult: ...
 
     async def tune(self, request: TuneRequest) -> TuneResult: ...
 

@@ -49,9 +49,7 @@ class SessionAffinityRegistry:
         self._sessions.move_to_end(session_id)
         return placement_id
 
-    def record_session_placement(
-        self, session_id: str, placement_id: str, now: float | None = None
-    ) -> None:
+    def record_session_placement(self, session_id: str, placement_id: str, now: float | None = None) -> None:
         """Record or refresh session affinity."""
         ts = now if now is not None else time.monotonic()
         if session_id in self._sessions:
@@ -73,9 +71,7 @@ class SessionAffinityRegistry:
         self._prefixes.move_to_end(prefix_hash)
         return placement_id
 
-    def record_prefix_placement(
-        self, prefix_hash: str, placement_id: str, now: float | None = None
-    ) -> None:
+    def record_prefix_placement(self, prefix_hash: str, placement_id: str, now: float | None = None) -> None:
         """Record or refresh prefix affinity."""
         ts = now if now is not None else time.monotonic()
         if prefix_hash in self._prefixes:

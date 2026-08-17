@@ -44,16 +44,12 @@ async def test_same_placement_is_serialized_and_cancelled_waiter_releases_every_
     second_entered = asyncio.Event()
 
     async def first() -> None:
-        async with coordinator.acquire(
-            placement, deadline=time.monotonic() + 10, monotonic=time.monotonic
-        ):
+        async with coordinator.acquire(placement, deadline=time.monotonic() + 10, monotonic=time.monotonic):
             first_entered.set()
             await release_first.wait()
 
     async def second() -> None:
-        async with coordinator.acquire(
-            placement, deadline=time.monotonic() + 10, monotonic=time.monotonic
-        ):
+        async with coordinator.acquire(placement, deadline=time.monotonic() + 10, monotonic=time.monotonic):
             second_entered.set()
 
     first_task = asyncio.create_task(first())
@@ -82,9 +78,7 @@ async def test_different_nodes_and_backends_can_execute_in_parallel() -> None:
 
     async def run(placement: PlacementSnapshot) -> None:
         nonlocal active, maximum
-        async with coordinator.acquire(
-            placement, deadline=time.monotonic() + 10, monotonic=time.monotonic
-        ):
+        async with coordinator.acquire(placement, deadline=time.monotonic() + 10, monotonic=time.monotonic):
             active += 1
             maximum = max(maximum, active)
             if active == 2:

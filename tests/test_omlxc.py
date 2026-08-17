@@ -131,11 +131,7 @@ def test_remote_lmstudio_policy_avoids_day_long_residency_and_gpu_oom():
     assert "-c 8192" in y7000p["lms_args"]
     assert "--parallel 1" in y7000p["lms_args"]
 
-    ollama = next(
-        entry
-        for entry in remotes
-        if entry["host"] == "100.99.210.78" and entry["engine"] == "ollama"
-    )
+    ollama = next(entry for entry in remotes if entry["host"] == "100.99.210.78" and entry["engine"] == "ollama")
     assert ollama["keep_alive_sec"] == 3600
     assert ollama["model"] == "qwen3.5:9b"
     oversized = {"google/gemma-4-26b-a4b-qat", "qwen/qwen3.6-27b", "qwen3.8-27b-mlx"}
@@ -670,9 +666,7 @@ def test_apply_app_tuning_writes_only_changed_fields(monkeypatch):
     monkeypatch.setattr(
         cli,
         "_http_json",
-        lambda url, payload=None, method=None, **_kwargs: (
-            calls.append((url, payload, method)) or {}
-        ),
+        lambda url, payload=None, method=None, **_kwargs: calls.append((url, payload, method)) or {},
     )
     current = {
         "global": {"max_concurrent_requests": 1, "chunked_prefill": False},

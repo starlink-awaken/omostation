@@ -391,9 +391,7 @@ class TailscaleAdapter:
         rendered_host = f"[{canonical_host}]" if is_v6 else canonical_host
         return AuthorizedSshTarget(node_id=node_id, target=f"{user}@{rendered_host}")
 
-    def _authorization_context(
-        self, node_id: str
-    ) -> tuple[TailscaleNodePolicy, TailscaleNodeSnapshot]:
+    def _authorization_context(self, node_id: str) -> tuple[TailscaleNodePolicy, TailscaleNodeSnapshot]:
         snapshot = self._snapshot
         refresh_monotonic = self._snapshot_monotonic
         if self._authorization_freshness is _AuthorizationFreshness.UNKNOWN:
@@ -591,9 +589,7 @@ def _authorized_snapshot(node_id: str, peer: _Peer) -> TailscaleNodeSnapshot:
     )
 
 
-def _authorize_host(
-    host: str, policy: TailscaleNodePolicy, peer: TailscaleNodeSnapshot
-) -> tuple[str, bool]:
+def _authorize_host(host: str, policy: TailscaleNodePolicy, peer: TailscaleNodeSnapshot) -> tuple[str, bool]:
     if host.lower() == "localhost":
         raise TailscaleFailure(TailscaleErrorCode.ENDPOINT_NOT_ALLOWED)
     try:
@@ -644,9 +640,7 @@ def _validate_trusted_executable(path: object) -> _TrustedExecutable:
     try:
         for candidate in (path.parent, *path.parent.parents):
             metadata = candidate.lstat()
-            root_owned_sticky_directory = metadata.st_uid == 0 and bool(
-                metadata.st_mode & stat.S_ISVTX
-            )
+            root_owned_sticky_directory = metadata.st_uid == 0 and bool(metadata.st_mode & stat.S_ISVTX)
             if (
                 stat.S_ISLNK(metadata.st_mode)
                 or not stat.S_ISDIR(metadata.st_mode)

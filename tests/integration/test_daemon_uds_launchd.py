@@ -74,9 +74,7 @@ class FakeEvents:
             resource_id=None,
         )
 
-    async def replay_events(
-        self, *, after_sequence: int, limit: int
-    ) -> tuple[DurableEventRecord, ...]:
+    async def replay_events(self, *, after_sequence: int, limit: int) -> tuple[DurableEventRecord, ...]:
         self.replayed_after.append(after_sequence)
         return (self.record,) if after_sequence < 1 else ()
 
@@ -182,9 +180,7 @@ async def test_hung_lifespan_times_out_and_releases_server_resources() -> None:
 
 
 @pytest.mark.parametrize("startup_timeout", [0.0, -1.0, float("inf"), float("nan")])
-def test_startup_timeout_must_be_finite_and_positive(
-    startup_timeout: float, tmp_path: Path
-) -> None:
+def test_startup_timeout_must_be_finite_and_positive(startup_timeout: float, tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="startup timeout must be finite and positive"):
         DaemonServer(
             create_app(control=HealthControl()),
@@ -281,8 +277,7 @@ def test_daemon_explicit_config_survives_missing_xdg_and_reports_identity(
             f'[daemon]\nsocket_path = "{tmp_path / "omlxcd.sock"}"\n'
             f'[storage]\ndatabase_path = "{tmp_path / "state.db"}"\n'
             + "".join(
-                f'[[nodes]]\nid = "node-{index}"\n'
-                f'display_name = "Node {index}"\nplatform = "macos"\n'
+                f'[[nodes]]\nid = "node-{index}"\ndisplay_name = "Node {index}"\nplatform = "macos"\n'
                 for index in range(3)
             )
         ),

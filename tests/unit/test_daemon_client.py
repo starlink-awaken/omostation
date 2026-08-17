@@ -78,9 +78,7 @@ async def test_client_probes_one_url_escaped_node_over_the_daemon_socket() -> No
         seen.append(request)
         return _json_response(request, data={"id": "node-a", "fresh": True, "ready": True})
 
-    async with api.DaemonClient(
-        Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)
-    ) as client:
+    async with api.DaemonClient(Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)) as client:
         envelope = await client.probe_node("node-a")
 
     assert envelope.data == {"id": "node-a", "fresh": True, "ready": True}
@@ -100,9 +98,7 @@ async def test_client_reads_node_diagnostics_without_triggering_a_probe() -> Non
             data={"node": {"id": "node-a"}, "outcomes": [{"code": "probe_failed", "count": 1}]},
         )
 
-    async with api.DaemonClient(
-        Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)
-    ) as client:
+    async with api.DaemonClient(Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)) as client:
         envelope = await client.node_diagnostics("node-a")
 
     assert envelope.data == {
@@ -126,9 +122,7 @@ async def test_client_reads_node_diagnostics_without_triggering_a_probe() -> Non
         ("E900", 10),
     ],
 )
-async def test_client_maps_typed_daemon_errors_to_public_exit_codes(
-    code: str, expected_exit: int
-) -> None:
+async def test_client_maps_typed_daemon_errors_to_public_exit_codes(code: str, expected_exit: int) -> None:
     api = _client_api()
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -138,9 +132,7 @@ async def test_client_maps_typed_daemon_errors_to_public_exit_codes(
             status=503,
         )
 
-    async with api.DaemonClient(
-        Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)
-    ) as client:
+    async with api.DaemonClient(Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)) as client:
         with pytest.raises(api.DaemonClientError) as caught:
             await client.health()
 
@@ -168,9 +160,7 @@ async def test_client_fails_closed_on_malformed_responses(failure: str) -> None:
             json=payload,
         )
 
-    async with api.DaemonClient(
-        Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)
-    ) as client:
+    async with api.DaemonClient(Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)) as client:
         with pytest.raises(api.DaemonClientError) as caught:
             await client.health()
 
@@ -194,9 +184,7 @@ async def test_client_maps_socket_and_timeout_failures_without_leaking_detail(
     def handler(request: httpx.Request) -> httpx.Response:
         raise exception_factory(request)
 
-    async with api.DaemonClient(
-        Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)
-    ) as client:
+    async with api.DaemonClient(Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)) as client:
         with pytest.raises(api.DaemonClientError) as caught:
             await client.health()
 
@@ -222,9 +210,7 @@ async def test_openai_model_smoke_is_typed_and_maps_daemon_envelope_errors() -> 
             },
         )
 
-    async with api.DaemonClient(
-        Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(success)
-    ) as client:
+    async with api.DaemonClient(Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(success)) as client:
         assert await client.openai_models() == ("local/model-a",)
 
     def unavailable(request: httpx.Request) -> httpx.Response:
@@ -234,9 +220,7 @@ async def test_openai_model_smoke_is_typed_and_maps_daemon_envelope_errors() -> 
             status=503,
         )
 
-    async with api.DaemonClient(
-        Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(unavailable)
-    ) as client:
+    async with api.DaemonClient(Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(unavailable)) as client:
         with pytest.raises(api.DaemonClientError) as caught:
             await client.openai_models()
 
@@ -295,9 +279,7 @@ async def test_event_stream_decodes_split_ndjson_adds_request_id_and_closes() ->
             stream=stream,
         )
 
-    async with api.DaemonClient(
-        Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)
-    ) as client:
+    async with api.DaemonClient(Path("/unused/omlxcd.sock"), transport=httpx.MockTransport(handler)) as client:
         iterator = client.stream_events(after=3)
         events = [await anext(iterator), await anext(iterator)]
         await iterator.aclose()

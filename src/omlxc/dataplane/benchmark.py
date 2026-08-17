@@ -59,11 +59,7 @@ class BenchmarkRunner:
 
         t_end = time.monotonic()
         total_time_ms = max((t_end - t_start) * 1000.0, 1.0)
-        ttft_ms = (
-            max((first_token_time - t_start) * 1000.0, 1.0)
-            if first_token_time is not None
-            else total_time_ms
-        )
+        ttft_ms = max((first_token_time - t_start) * 1000.0, 1.0) if first_token_time is not None else total_time_ms
 
         decode_time_s = max(t_end - (first_token_time or t_start), 0.001)
         tps = max(token_count / decode_time_s, 1.0) if token_count > 0 else 0.0

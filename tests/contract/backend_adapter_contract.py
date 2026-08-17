@@ -100,9 +100,7 @@ class BackendAdapterContract:
     async def test_embedding_reports_unsupported_as_a_typed_result(self) -> None:
         harness = self.make_harness(ContractScenario.EMBEDDING_UNSUPPORTED)
 
-        result = await harness.adapter.embed(
-            EmbeddingRequest(request_id="req-embed", model="model-a", input="hello")
-        )
+        result = await harness.adapter.embed(EmbeddingRequest(request_id="req-embed", model="model-a", input="hello"))
 
         assert result.status is OperationStatus.UNSUPPORTED
         assert result.error is not None

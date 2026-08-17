@@ -223,10 +223,7 @@ class OverviewPage(Static):
 
     def refresh_data(self, snapshot: CockpitSnapshot, conn: str, last_update: str) -> None:
         status = str(snapshot.health.get("status", "unknown"))
-        active = sum(
-            item.get("state") in {"pending", "planning", "running", "cancelling"}
-            for item in snapshot.jobs
-        )
+        active = sum(item.get("state") in {"pending", "planning", "running", "cancelling"} for item in snapshot.jobs)
         sym, color = STATE_ICONS.get(status.lower(), ("·", "bright_black"))
         self.query_one("#ov-daemon", Label).update(f"[{color}]{sym}  {status}[/{color}]")
         daemon_card = self.query_one("#ov-daemon").parent
@@ -610,9 +607,7 @@ class CockpitApp(App[None]):
         if not reconnect_delays or any(delay <= 0 for delay in reconnect_delays):
             raise ValueError("reconnect delays must be positive")
         selected_socket = socket_path or Path("/tmp/omlxc/omlxcd.sock")
-        self._client_factory: ClientFactory = client_factory or (
-            lambda: DaemonClient(selected_socket)
-        )
+        self._client_factory: ClientFactory = client_factory or (lambda: DaemonClient(selected_socket))
         self._reconnect_delays = reconnect_delays
         self.snapshot = CockpitSnapshot()
         self.connection_state = "CONNECTING"
@@ -770,9 +765,7 @@ class CockpitApp(App[None]):
                 else:
                     result = await client.cancel_job(mutation.resource_id)
                 data = _object(result.data)
-                self._event_log.append(
-                    f"command accepted: {mutation.action} job={data.get('id', '-')}"
-                )
+                self._event_log.append(f"command accepted: {mutation.action} job={data.get('id', '-')}")
                 await self._load_snapshot(client)
         except asyncio.CancelledError:
             raise
@@ -880,9 +873,7 @@ class CockpitApp(App[None]):
             self.snapshot = _snapshot_with(self.snapshot, models=models)
             return
         if family == "job":
-            identifier = (
-                event.job_id or event.resource_id or _event_identifier(payload, "job_id", "id")
-            )
+            identifier = event.job_id or event.resource_id or _event_identifier(payload, "job_id", "id")
             if identifier is None:
                 return
             changes = dict(payload)
@@ -927,13 +918,10 @@ class CockpitApp(App[None]):
             conn_markup = f"[bright_black]{sym} CONNECTING…[/bright_black]"
 
         active_jobs = sum(
-            item.get("state") in {"pending", "planning", "running", "cancelling"}
-            for item in self.snapshot.jobs
+            item.get("state") in {"pending", "planning", "running", "cancelling"} for item in self.snapshot.jobs
         )
         badge_text = (
-            f"{conn_markup}"
-            f"  [bright_black]policy {self.policy}[/bright_black]"
-            f"  [yellow]jobs {active_jobs}[/yellow]"
+            f"{conn_markup}  [bright_black]policy {self.policy}[/bright_black]  [yellow]jobs {active_jobs}[/yellow]"
             if active_jobs
             else f"{conn_markup}  [bright_black]policy {self.policy}[/bright_black]"
         )
@@ -1028,13 +1016,7 @@ def _merged_item(
     current_health = dict(cast(JsonObject, existing)) if isinstance(existing, dict) else {}
     current_health.update(health_update)
     merged["health"] = current_health
-    merged.update(
-        {
-            key: value
-            for key, value in changes.items()
-            if key not in ignored | health_keys | {"health"}
-        }
-    )
+    merged.update({key: value for key, value in changes.items() if key not in ignored | health_keys | {"health"}})
     return merged
 
 

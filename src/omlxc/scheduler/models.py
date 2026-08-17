@@ -31,9 +31,7 @@ class RouteFailureCode(StrEnum):
     INVALID_SNAPSHOT = "invalid_snapshot"
 
 
-def _validate_optional_number(
-    name: str, value: float | None, *, minimum: float, maximum: float | None = None
-) -> None:
+def _validate_optional_number(name: str, value: float | None, *, minimum: float, maximum: float | None = None) -> None:
     if value is None:
         return
     if not math.isfinite(value) or value < minimum or (maximum is not None and value > maximum):

@@ -42,9 +42,7 @@ def test_goal_choices_have_exact_order_labels_and_transitions() -> None:
         GuideChoice("2", "Find an available model", GuideState.COMPLETE, GuideOperation.MODELS),
         GuideChoice("3", "Explain a route decision", GuideState.ROUTE_MODEL),
         GuideChoice("4", "Inspect a running job", GuideState.JOB_ID),
-        GuideChoice(
-            "5", "Troubleshoot a daemon problem", GuideState.COMPLETE, GuideOperation.DAEMON_HEALTH
-        ),
+        GuideChoice("5", "Troubleshoot a daemon problem", GuideState.COMPLETE, GuideOperation.DAEMON_HEALTH),
         GuideChoice("6", "Learn safe model lifecycle commands", GuideState.LIFECYCLE_MODEL),
     )
 
@@ -84,9 +82,7 @@ def test_identifier_transitions_return_validated_requests(
 ) -> None:
     transition = advance(state, identifier)
 
-    assert transition == GuideTransition(
-        GuideState.COMPLETE, GuideRequest(operation, identifier.strip())
-    )
+    assert transition == GuideTransition(GuideState.COMPLETE, GuideRequest(operation, identifier.strip()))
 
 
 @pytest.mark.parametrize("value", ("", " " * 3, "x" * 257, "7", "../../../private"))

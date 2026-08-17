@@ -304,7 +304,7 @@ async def test_periodic_metric_flush_recovers_after_one_write_failure_without_lo
     )
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
-    store = composition.control._storage.require()  # noqa: SLF001
+    store = composition.control._storage.require()
     original_flush = store.flush_metrics
     attempts = 0
 
@@ -353,9 +353,7 @@ async def test_metric_capacity_threshold_wakes_long_interval_flush_without_drops
     config = _config(short_root)
     original_open = SQLiteRuntimeStore.open.__func__
 
-    async def open_small_buffer(
-        cls: type[SQLiteRuntimeStore], path: Path, **kwargs: object
-    ) -> SQLiteRuntimeStore:
+    async def open_small_buffer(cls: type[SQLiteRuntimeStore], path: Path, **kwargs: object) -> SQLiteRuntimeStore:
         return await original_open(cls, path, metric_buffer_capacity=2, **kwargs)
 
     monkeypatch.setattr(SQLiteRuntimeStore, "open", classmethod(open_small_buffer))
@@ -411,7 +409,7 @@ async def test_metric_buffer_rejection_is_visible_in_control_summary(
     )
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
-    store = composition.control._storage.require()  # noqa: SLF001
+    store = composition.control._storage.require()
     monkeypatch.setattr(store, "accept_metric", lambda _metric: False)
     try:
         async with await _client(config.daemon.socket_path) as client:
@@ -442,7 +440,7 @@ async def test_empty_periodic_metric_flush_is_bounded_and_stops_with_runtime(
     )
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
-    store = composition.control._storage.require()  # noqa: SLF001
+    store = composition.control._storage.require()
     original_flush = store.flush_metrics
     calls = 0
 
@@ -555,9 +553,10 @@ async def test_storage_handle_two_start_close_cycles_share_each_close_exactly_on
     assert close_calls == 1
     assert storage.task_settled
     with closing_resource(sqlite3.connect(config.storage.database_path)) as connection:
-        assert connection.execute(
-            "SELECT request_id FROM request_metrics ORDER BY sequence"
-        ).fetchall() == [("metric.cycle-one",), ("metric.cycle-two",)]
+        assert connection.execute("SELECT request_id FROM request_metrics ORDER BY sequence").fetchall() == [
+            ("metric.cycle-one",),
+            ("metric.cycle-two",),
+        ]
 
 
 @pytest.mark.asyncio
@@ -629,12 +628,8 @@ async def test_production_stream_owner_closes_once_and_releases_capacity_after_d
 
     assert composition.runtime.task_settled
     with closing_resource(sqlite3.connect(config.storage.database_path)) as connection:
-        terminal = connection.execute(
-            "SELECT request_id, success FROM request_metrics ORDER BY sequence"
-        ).fetchall()
-        route_ids = connection.execute(
-            "SELECT request_id FROM route_audits ORDER BY sequence"
-        ).fetchall()
+        terminal = connection.execute("SELECT request_id, success FROM request_metrics ORDER BY sequence").fetchall()
+        route_ids = connection.execute("SELECT request_id FROM route_audits ORDER BY sequence").fetchall()
     assert terminal == [
         ("fix10.done", 1),
         ("fix10.after-done", 1),
@@ -705,9 +700,7 @@ async def test_production_chat_embed_stream_and_error_telemetry_is_restart_safe_
     ]
     assert metric_count == 4
     with closing_resource(sqlite3.connect(config.storage.database_path)) as connection:
-        terminal = connection.execute(
-            "SELECT request_id, success FROM request_metrics ORDER BY sequence"
-        ).fetchall()
+        terminal = connection.execute("SELECT request_id, success FROM request_metrics ORDER BY sequence").fetchall()
     assert terminal == [
         ("fix10.chat", 1),
         ("fix10.embed", 1),

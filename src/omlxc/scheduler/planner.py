@@ -22,9 +22,7 @@ class RoutePlanner:
             raise ValueError("all route profiles require a policy")
         self._policies = dict(policies)
 
-    def plan(
-        self, request: RouteRequest, placements: Sequence[PlacementSnapshot]
-    ) -> RouteDecision | RouteFailure:
+    def plan(self, request: RouteRequest, placements: Sequence[PlacementSnapshot]) -> RouteDecision | RouteFailure:
         policy = self._policies[request.profile]
         placement_ids = tuple(placement.placement_id for placement in placements)
         if len(set(placement_ids)) != len(placement_ids):
@@ -60,9 +58,7 @@ class RoutePlanner:
             ]
             if circuit_open_candidates:
                 defaults_used: set[str] = set()
-                scored_emergency = [
-                    (p, self._score(p, policy, defaults_used)) for p in circuit_open_candidates
-                ]
+                scored_emergency = [(p, self._score(p, policy, defaults_used)) for p in circuit_open_candidates]
                 scored_emergency.sort(key=lambda item: (-item[1], item[0].placement_id))
                 selected_emergency = scored_emergency[0][0].placement_id
                 candidate_ids = (selected_emergency,)
@@ -81,14 +77,12 @@ class RoutePlanner:
                     fallback_chain=candidate_ids,
                     config_version=policy.config_version,
                     explanation=explanation,
-                    thinking_authorized=request.profile is RouteProfile.QUALITY
-                    and request.thinking_requested,
+                    thinking_authorized=request.profile is RouteProfile.QUALITY and request.thinking_requested,
                 )
 
             code = (
                 RouteFailureCode.NO_CAPACITY
-                if rejected
-                and all(value == RejectionCode.NO_CAPACITY.value for value in rejected.values())
+                if rejected and all(value == RejectionCode.NO_CAPACITY.value for value in rejected.values())
                 else RouteFailureCode.NO_CANDIDATE
             )
             return RouteFailure(
@@ -100,9 +94,7 @@ class RoutePlanner:
             )
 
         defaults_used: set[str] = set()
-        scored = [
-            (placement, self._score(placement, policy, defaults_used)) for placement in accepted
-        ]
+        scored = [(placement, self._score(placement, policy, defaults_used)) for placement in accepted]
         scored.sort(key=lambda item: (-item[1], item[0].placement_id))
         candidate_ids = tuple(item[0].placement_id for item in scored)
         scores = {item.placement_id: round(score, 12) for item, score in scored}
@@ -121,8 +113,7 @@ class RoutePlanner:
             fallback_chain=candidate_ids,
             config_version=policy.config_version,
             explanation=explanation,
-            thinking_authorized=request.profile is RouteProfile.QUALITY
-            and request.thinking_requested,
+            thinking_authorized=request.profile is RouteProfile.QUALITY and request.thinking_requested,
         )
 
     @staticmethod

@@ -35,26 +35,18 @@ def test_triage_keywords_and_code_blocks() -> None:
     classifier = TriageClassifier()
 
     # Keyword match: refactor architecture
-    msg1 = (
-        ChatMessage(role="user", content="Please refactor architecture of the data plane."),
-    )
+    msg1 = (ChatMessage(role="user", content="Please refactor architecture of the data plane."),)
     res1 = classifier.classify(messages=msg1, context_tokens=500)
     assert res1.tier == ComplexityTier.REASONING
 
     # Multiple code blocks
-    content_multi_code = (
-        "Review these:\n```python\na=1\n```\n```python\nb=2\n```\n```python\nc=3\n```"
-    )
+    content_multi_code = "Review these:\n```python\na=1\n```\n```python\nb=2\n```\n```python\nc=3\n```"
     msg2 = (ChatMessage(role="user", content=content_multi_code),)
     res2 = classifier.classify(messages=msg2, context_tokens=800)
     assert res2.tier == ComplexityTier.REASONING
 
     # Standard fallback
-    msg3 = (
-        ChatMessage(
-            role="user", content="Write a python function to fetch weather data from API."
-        ),
-    )
+    msg3 = (ChatMessage(role="user", content="Write a python function to fetch weather data from API."),)
     res3 = classifier.classify(messages=msg3, context_tokens=400)
     assert res3.tier == ComplexityTier.STANDARD
 

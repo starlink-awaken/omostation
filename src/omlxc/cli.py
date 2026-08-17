@@ -138,9 +138,7 @@ _client_factory: ClientFactory = DaemonClient
 _socket_override: Path | None = None
 
 
-def _launchd_controller(
-    home: Path | None = None, config_path: Path | None = None
-) -> LaunchdController:
+def _launchd_controller(home: Path | None = None, config_path: Path | None = None) -> LaunchdController:
     selected_config = (config_path or default_config_path()).expanduser()
     return LaunchdController(
         LaunchdPaths.for_home(home or Path.home()),
@@ -371,13 +369,9 @@ def _require_r2(
     _emit_r2_plan(action, impact=impact, rollback=rollback, json_output=json_output)
     if _stdio_is_tty():
         if not typer.confirm("Proceed with the service-impacting action?"):
-            _fail_local(
-                "E700", f"impact confirmation refused for {action}", json_output=json_output
-            )
+            _fail_local("E700", f"impact confirmation refused for {action}", json_output=json_output)
         if not typer.confirm("Confirm the rollback point is understood?"):
-            _fail_local(
-                "E700", f"rollback confirmation refused for {action}", json_output=json_output
-            )
+            _fail_local("E700", f"rollback confirmation refused for {action}", json_output=json_output)
         return
     if not yes or not confirm_impact:
         _fail_local(
@@ -516,9 +510,7 @@ def guide() -> None:
         except (Abort, EOFError, KeyboardInterrupt):
             _fail_local("E100", "guide cancelled", json_output=False, context=ErrorContext.GUIDE)
         except ValueError:
-            _fail_local(
-                "E100", "guide input is invalid", json_output=False, context=ErrorContext.GUIDE
-            )
+            _fail_local("E100", "guide input is invalid", json_output=False, context=ErrorContext.GUIDE)
 
         state = transition.next_state
         request = transition.request
@@ -528,19 +520,13 @@ def guide() -> None:
             try:
                 typer.echo(render_lifecycle_help(_guide_argument(request)))
             except ValueError:
-                _fail_local(
-                    "E100", "guide input is invalid", json_output=False, context=ErrorContext.GUIDE
-                )
+                _fail_local("E100", "guide input is invalid", json_output=False, context=ErrorContext.GUIDE)
             return
 
         guide_request = request
         try:
             envelope = asyncio.run(
-                _call_daemon(
-                    lambda client, guide_request=guide_request: _guide_operation(
-                        client, guide_request
-                    )
-                )
+                _call_daemon(lambda client, guide_request=guide_request: _guide_operation(client, guide_request))
             )
         except DaemonClientError as exc:
             _emit_client_failure(exc, json_output=False, context=ErrorContext.GUIDE)
@@ -1247,9 +1233,7 @@ def _render_items(data: JsonValue | None, columns: Sequence[str]) -> str:
 
 
 async def _selected_node(client: DaemonClient, identifier: str) -> DaemonEnvelope:
-    return await _select_from_pages(
-        lambda after: client.nodes(after=after, limit=100), identifier, "node"
-    )
+    return await _select_from_pages(lambda after: client.nodes(after=after, limit=100), identifier, "node")
 
 
 async def _selected_model(client: DaemonClient, identifier: str) -> DaemonEnvelope:
@@ -1456,9 +1440,7 @@ def _render_benchmark_report(data: JsonValue | None) -> str:
         items = []
 
     if not items:
-        _console.print(
-            "[dim]No benchmark runs recorded yet. Run `omlxc benchmark run` first.[/dim]"
-        )
+        _console.print("[dim]No benchmark runs recorded yet. Run `omlxc benchmark run` first.[/dim]")
         return ""
 
     table = Table(
@@ -1589,17 +1571,11 @@ def fabric_inspect(
         f"power: {state.power_source.value} (penalty: {state.penalty_multiplier:.2f}x)",
     )
     grid.add_row(
-        (
-            "[bold cyan]Semantic Triage[/bold cyan]: "
-            "FAST (2B~4B) | STANDARD (9B~14B) | REASONING (27B~70B)"
-        ),
+        ("[bold cyan]Semantic Triage[/bold cyan]: FAST (2B~4B) | STANDARD (9B~14B) | REASONING (27B~70B)"),
         "zero-latency AST classifier",
     )
     grid.add_row(
-        (
-            "[bold cyan]VRAM Estimator[/bold cyan]: "
-            f"{len(estimator.registered_models)} architectures registered"
-        ),
+        (f"[bold cyan]VRAM Estimator[/bold cyan]: {len(estimator.registered_models)} architectures registered"),
         "dynamic KV cache budgeting",
     )
     grid.add_row(
@@ -1703,9 +1679,7 @@ def fabric_vram(
 
 @fabric_app.command("warm")
 def fabric_warm(
-    model_id: Annotated[
-        str, typer.Option("--model", "-m", help="Target model identifier")
-    ] = "coding",
+    model_id: Annotated[str, typer.Option("--model", "-m", help="Target model identifier")] = "coding",
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     """Pre-warm high-frequency system prompt prefixes into cache registry to achieve 0ms TTFT."""
@@ -1735,15 +1709,9 @@ def fabric_warm(
 
 @fabric_app.command("compact")
 def fabric_compact(
-    model_id: Annotated[
-        str, typer.Option("--model", "-m", help="Target model identifier")
-    ] = "coding",
-    context_tokens: Annotated[
-        int, typer.Option("--tokens", "-t", help="Current context token size")
-    ] = 32768,
-    available_mb: Annotated[
-        float, typer.Option("--available-mb", "-a", help="Available node VRAM in MB")
-    ] = 8192.0,
+    model_id: Annotated[str, typer.Option("--model", "-m", help="Target model identifier")] = "coding",
+    context_tokens: Annotated[int, typer.Option("--tokens", "-t", help="Current context token size")] = 32768,
+    available_mb: Annotated[float, typer.Option("--available-mb", "-a", help="Available node VRAM in MB")] = 8192.0,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     """Evaluate context compaction and simulate sliding-window memory self-healing."""
@@ -1759,9 +1727,7 @@ def fabric_compact(
     # Scale simulated message content to match requested context_tokens load
     chunk = "context details specifications "
     multiplier = max(1, context_tokens // 4)
-    user_payload = f"Task goal specification with {context_tokens} tokens load: " + (
-        chunk * multiplier
-    )
+    user_payload = f"Task goal specification with {context_tokens} tokens load: " + (chunk * multiplier)
     sample_messages = [
         {"role": "system", "content": "You are a coding assistant with full compute fabric."},
         {"role": "user", "content": user_payload},
@@ -1817,7 +1783,6 @@ def fabric_compact(
             expand=False,
         )
     )
-
 
 
 def main() -> None:

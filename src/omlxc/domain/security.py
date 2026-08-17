@@ -49,9 +49,7 @@ class CredentialPolicyError(Exception):
 def canonical_key_words(key: str) -> tuple[str, ...]:
     separated_acronyms = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", key)
     separated_words = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", separated_acronyms)
-    return tuple(
-        part for part in re.sub(r"[^A-Za-z0-9]+", "_", separated_words).lower().split("_") if part
-    )
+    return tuple(part for part in re.sub(r"[^A-Za-z0-9]+", "_", separated_words).lower().split("_") if part)
 
 
 def is_credential_key(key: str) -> bool:
@@ -65,8 +63,7 @@ def is_credential_key(key: str) -> bool:
     if joined.endswith("s") and joined[:-1] in _CREDENTIAL_COMPOUNDS:
         return True
     return any(
-        joined.endswith(suffix)
-        and joined[: -len(suffix)] in (_CREDENTIAL_WORDS | _CREDENTIAL_COMPOUNDS)
+        joined.endswith(suffix) and joined[: -len(suffix)] in (_CREDENTIAL_WORDS | _CREDENTIAL_COMPOUNDS)
         for suffix in _CREDENTIAL_SUFFIXES
     )
 
@@ -81,18 +78,10 @@ def has_embedded_url_auth(value: str) -> bool:
 
 def validate_keychain_only(value: object, *, key: str | None = None) -> None:
     """Reject recursively nested plaintext authentication material."""
-    if (
-        key is not None
-        and is_credential_key(key)
-        and not (isinstance(value, str) and is_keychain_reference(value))
-    ):
-        raise CredentialPolicyError(
-            "plaintext authentication material must use a valid Keychain reference"
-        )
+    if key is not None and is_credential_key(key) and not (isinstance(value, str) and is_keychain_reference(value)):
+        raise CredentialPolicyError("plaintext authentication material must use a valid Keychain reference")
     if isinstance(value, str) and has_embedded_url_auth(value):
-        raise CredentialPolicyError(
-            "address authentication material must use a valid Keychain reference"
-        )
+        raise CredentialPolicyError("address authentication material must use a valid Keychain reference")
     if isinstance(value, Mapping):
         mapping = cast(Mapping[object, object], value)
         for child_key, child in mapping.items():

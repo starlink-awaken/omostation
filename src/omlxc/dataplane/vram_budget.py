@@ -115,22 +115,18 @@ class VRAMBudgetEstimator:
     ) -> HeadroomAdmissionResult:
         """
         Check if request KV Cache fits within available node memory budget.
-        
+
         Returns HeadroomAdmissionResult with admission decision and compaction advisory.
         """
         profile = self.get_profile(model_id)
         kv_mb = self.estimate_kv_cache_mb(model_id, context_tokens, max_output_tokens)
         safe_budget_mb = available_node_vram_mb * safe_headroom_ratio
-        
+
         if kv_mb > safe_budget_mb:
             safe_bytes = safe_budget_mb * 1024.0 * 1024.0
-            max_safe_total_tokens = (
-                int(safe_bytes / profile.bytes_per_token) if profile.bytes_per_token > 0 else 0
-            )
+            max_safe_total_tokens = int(safe_bytes / profile.bytes_per_token) if profile.bytes_per_token > 0 else 0
             max_safe_tokens = max(0, max_safe_total_tokens - max_output_tokens)
-            compaction_ratio = (
-                round(max(0.0, 1.0 - (max_safe_tokens / max(context_tokens, 1))), 4)
-            )
+            compaction_ratio = round(max(0.0, 1.0 - (max_safe_tokens / max(context_tokens, 1))), 4)
             return HeadroomAdmissionResult(
                 admitted=False,
                 estimated_kv_mb=kv_mb,
@@ -203,9 +199,7 @@ class ContextCompactor:
             )
 
         # 1. Separate system prompt (if first message), recent turns, and middle messages
-        system_msg: dict[str, str] | None = (
-            messages[0] if messages[0].get("role") == "system" else None
-        )
+        system_msg: dict[str, str] | None = messages[0] if messages[0].get("role") == "system" else None
         body = messages[1:] if system_msg else messages
         recent_cutoff = max(0, len(body) - keep_recent_turns)
         middle_msgs = body[:recent_cutoff]
@@ -220,22 +214,16 @@ class ContextCompactor:
             distilled_lines.append(f"- [{role}]: {snippet}")
 
         distilled_summary = (
-            "[Auto-Compacted Context Window Summary]\n"
-            + "\n".join(distilled_lines)
-            + "\n[End of Compacted Summary]"
+            "[Auto-Compacted Context Window Summary]\n" + "\n".join(distilled_lines) + "\n[End of Compacted Summary]"
         )
 
         compacted_body: list[dict[str, str]] = [
             {"role": "system", "content": distilled_summary},
             *recent_msgs,
         ]
-        compacted_messages: list[dict[str, str]] = (
-            [system_msg, *compacted_body] if system_msg else compacted_body
-        )
+        compacted_messages: list[dict[str, str]] = [system_msg, *compacted_body] if system_msg else compacted_body
 
-        compacted_tokens = sum(
-            cls.estimate_tokens(m.get("content", "")) for m in compacted_messages
-        )
+        compacted_tokens = sum(cls.estimate_tokens(m.get("content", "")) for m in compacted_messages)
         pruned_tokens = max(0, total_tokens - compacted_tokens)
         ratio = round(pruned_tokens / max(total_tokens, 1), 4)
 
@@ -248,4 +236,3 @@ class ContextCompactor:
             compacted_messages=compacted_messages,
             distilled_summary=distilled_summary,
         )
-

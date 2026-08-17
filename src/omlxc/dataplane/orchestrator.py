@@ -98,9 +98,7 @@ class DataPlaneOrchestrator:
     def telemetry_failure_count(self) -> int:
         return self._telemetry_failure_count
 
-    async def chat(
-        self, route_request: RouteRequest, request: ChatRequest, *, deadline: float
-    ) -> ChatExecution:
+    async def chat(self, route_request: RouteRequest, request: ChatRequest, *, deadline: float) -> ChatExecution:
         if self._telemetry is None:
             return await self._chat_unobserved(route_request, request, deadline=deadline)
         started = self._monotonic()
@@ -121,22 +119,16 @@ class DataPlaneOrchestrator:
         now = self._monotonic()
         prefix_hash = calculate_prefix_hash(request.messages)
         preferred_session = (
-            self._affinity.get_session_placement(request.request_id, now=now)
-            if self._affinity
-            else None
+            self._affinity.get_session_placement(request.request_id, now=now) if self._affinity else None
         )
         preferred_prefix = (
-            self._affinity.get_prefix_placement(prefix_hash, now=now)
-            if (self._affinity and prefix_hash)
-            else None
+            self._affinity.get_prefix_placement(prefix_hash, now=now) if (self._affinity and prefix_hash) else None
         )
 
         snapshots_list: list[PlacementSnapshot] = []
         for s in raw_snapshots:
             circuit_open = (
-                not self._circuit_breakers.is_available(s.placement_id, now=now)
-                if self._circuit_breakers
-                else False
+                not self._circuit_breakers.is_available(s.placement_id, now=now) if self._circuit_breakers else False
             )
             in_flight = self._concurrency.get_in_flight(s.placement_id) if self._concurrency else 0
             affinity_bonus = 1.0
@@ -225,13 +217,9 @@ class DataPlaneOrchestrator:
                 if self._circuit_breakers is not None:
                     self._circuit_breakers.record_success(placement_id, now=self._monotonic())
                 if self._affinity is not None:
-                    self._affinity.record_session_placement(
-                        request.request_id, placement_id, now=self._monotonic()
-                    )
+                    self._affinity.record_session_placement(request.request_id, placement_id, now=self._monotonic())
                     if prefix_hash:
-                        self._affinity.record_prefix_placement(
-                            prefix_hash, placement_id, now=self._monotonic()
-                        )
+                        self._affinity.record_prefix_placement(prefix_hash, placement_id, now=self._monotonic())
                 return ChatExecution(
                     request.request_id,
                     request.model,
@@ -284,9 +272,7 @@ class DataPlaneOrchestrator:
             ),
         )
 
-    async def _chat_once(
-        self, placement: PlacementSnapshot, request: ChatRequest, deadline: float
-    ) -> ChatResult:
+    async def _chat_once(self, placement: PlacementSnapshot, request: ChatRequest, deadline: float) -> ChatResult:
         adapter = self._registry.resolve(placement)
         backend_request = request.model_copy(update={"model": placement.backend_model_id})
         async with self._capacity.acquire(placement, deadline=deadline, monotonic=self._monotonic):
@@ -337,9 +323,7 @@ class DataPlaneOrchestrator:
             adapter = self._registry.resolve(placement)
             backend_request = request.model_copy(update={"model": placement.backend_model_id})
             try:
-                async with self._capacity.acquire(
-                    placement, deadline=end, monotonic=self._monotonic
-                ):
+                async with self._capacity.acquire(placement, deadline=end, monotonic=self._monotonic):
                     remaining = self._remaining(end)
                     if remaining <= 0:
                         raise TimeoutError
@@ -436,9 +420,7 @@ class DataPlaneOrchestrator:
             finally:
                 if not success and terminal_code is None:
                     terminal_code = AdapterErrorCode.STREAM_INTERRUPTED.value
-                    terminal_phase = (
-                        StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
-                    )
+                    terminal_phase = StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
                 self._record_metric(
                     request.request_id,
                     started,
@@ -485,9 +467,7 @@ class DataPlaneOrchestrator:
             retry = False
             iterator: AsyncIterator[StreamEvent] | None = None
             try:
-                async with self._capacity.acquire(
-                    placement, deadline=end, monotonic=self._monotonic
-                ):
+                async with self._capacity.acquire(placement, deadline=end, monotonic=self._monotonic):
                     iterator = adapter.stream_chat(backend_request)
                     async for event in iterator:
                         if self._remaining(end) <= 0:
@@ -578,9 +558,7 @@ class DataPlaneOrchestrator:
                     reason="reranker_call_failed",
                 ),
             )
-        if len(result.scores) != len(request.documents) or any(
-            not math.isfinite(score) for score in result.scores
-        ):
+        if len(result.scores) != len(request.documents) or any(not math.isfinite(score) for score in result.scores):
             return RerankExecution(
                 request.request_id,
                 (),
@@ -588,9 +566,7 @@ class DataPlaneOrchestrator:
             )
         items = tuple(
             RankedItem(index, score)
-            for index, score in sorted(
-                enumerate(result.scores), key=lambda item: (-item[1], item[0])
-            )
+            for index, score in sorted(enumerate(result.scores), key=lambda item: (-item[1], item[0]))
         )
         return RerankExecution(
             request.request_id,
@@ -711,8 +687,7 @@ class DataPlaneOrchestrator:
     def _preparation_error(rejections: list[RejectionCode]) -> ExecutionErrorCode:
         return (
             ExecutionErrorCode.NO_CAPACITY
-            if rejections
-            and all(rejection is RejectionCode.NO_CAPACITY for rejection in rejections)
+            if rejections and all(rejection is RejectionCode.NO_CAPACITY for rejection in rejections)
             else ExecutionErrorCode.NO_CANDIDATE
         )
 

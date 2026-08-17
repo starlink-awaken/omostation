@@ -55,17 +55,13 @@ class FakePlacementOperator:
             self.entered.set()
             await self.release.wait()
         self.loaded.add(target.id)
-        return LifecycleResult(
-            model_id=target.model_id, status=OperationStatus.SUCCEEDED, changed=True
-        )
+        return LifecycleResult(model_id=target.model_id, status=OperationStatus.SUCCEEDED, changed=True)
 
     async def unload(self, target: Any, *, idempotency_key: str) -> LifecycleResult:
         del idempotency_key
         self.unload_calls.append(target.id)
         self.loaded.discard(target.id)
-        return LifecycleResult(
-            model_id=target.model_id, status=OperationStatus.SUCCEEDED, changed=True
-        )
+        return LifecycleResult(model_id=target.model_id, status=OperationStatus.SUCCEEDED, changed=True)
 
 
 def _target(**changes: Any) -> Any:

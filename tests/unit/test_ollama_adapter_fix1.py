@@ -40,9 +40,7 @@ def _adapter(handler: Handler, **kwargs: object) -> OllamaAdapter:
     )
 
 
-def _chat_request(
-    *, model: str = "model:latest", messages: tuple[ChatMessage, ...] | None = None
-) -> ChatRequest:
+def _chat_request(*, model: str = "model:latest", messages: tuple[ChatMessage, ...] | None = None) -> ChatRequest:
     return ChatRequest(
         request_id="fix1-chat",
         model=model,
@@ -153,9 +151,7 @@ async def test_pin_tuning_is_unsupported_and_never_writes(settings: TuneSettings
         return httpx.Response(500)
 
     adapter = _adapter(handler)
-    result = await adapter.tune(
-        TuneRequest(scope=TuneScope.MODEL, model_id="model:latest", settings=settings)
-    )
+    result = await adapter.tune(TuneRequest(scope=TuneScope.MODEL, model_id="model:latest", settings=settings))
 
     assert result.status is OperationStatus.UNSUPPORTED
     assert result.error is not None
@@ -182,9 +178,7 @@ async def test_nonstream_response_body_limit_is_output_limit_and_closes_stream()
     stream = ChunkStream((body,))
     adapter = _adapter(lambda request: httpx.Response(200, stream=stream), max_response_bytes=32)
 
-    result = await adapter.embed(
-        EmbeddingRequest(request_id="bounded", model="embed:latest", input="hello")
-    )
+    result = await adapter.embed(EmbeddingRequest(request_id="bounded", model="embed:latest", input="hello"))
 
     assert result.status is OperationStatus.FAILED
     assert result.error is not None
@@ -237,18 +231,10 @@ async def test_embedding_request_count_dimension_total_and_bool_are_bounded() ->
         max_embedding_dimension=2,
         max_embedding_scalars=3,
     )
-    too_many = await adapter.embed(
-        EmbeddingRequest(request_id="count", model="embed:latest", input=("a", "b", "c"))
-    )
-    too_wide = await adapter.embed(
-        EmbeddingRequest(request_id="dim", model="embed:latest", input="a")
-    )
-    too_many_scalars = await adapter.embed(
-        EmbeddingRequest(request_id="total", model="embed:latest", input=("a", "b"))
-    )
-    boolean = await adapter.embed(
-        EmbeddingRequest(request_id="bool", model="embed:latest", input="a")
-    )
+    too_many = await adapter.embed(EmbeddingRequest(request_id="count", model="embed:latest", input=("a", "b", "c")))
+    too_wide = await adapter.embed(EmbeddingRequest(request_id="dim", model="embed:latest", input="a"))
+    too_many_scalars = await adapter.embed(EmbeddingRequest(request_id="total", model="embed:latest", input=("a", "b")))
+    boolean = await adapter.embed(EmbeddingRequest(request_id="bool", model="embed:latest", input="a"))
 
     assert too_many.error is not None
     assert too_many.error.code is AdapterErrorCode.OUTPUT_LIMIT
@@ -264,11 +250,7 @@ async def test_embedding_request_count_dimension_total_and_bool_are_bounded() ->
 def _image_message(payloads: tuple[bytes, ...]) -> tuple[ChatMessage, ...]:
     blocks: list[TextContentBlock | ImageContentBlock] = [TextContentBlock(text="describe")]
     blocks.extend(
-        ImageContentBlock(
-            image_url=ImageURL(
-                url="data:image/png;base64," + base64.b64encode(payload).decode("ascii")
-            )
-        )
+        ImageContentBlock(image_url=ImageURL(url="data:image/png;base64," + base64.b64encode(payload).decode("ascii")))
         for payload in payloads
     )
     return (ChatMessage(role="user", content=tuple(blocks)),)
@@ -373,20 +355,12 @@ async def test_generation_probe_is_not_ready_when_thinking_is_observed() -> None
         if request.url.path == "/api/tags":
             return httpx.Response(
                 200,
-                json={
-                    "models": [
-                        {"name": "model:latest", "model": "model:latest", "digest": "sha256:a"}
-                    ]
-                },
+                json={"models": [{"name": "model:latest", "model": "model:latest", "digest": "sha256:a"}]},
             )
         if request.url.path == "/api/ps":
             return httpx.Response(
                 200,
-                json={
-                    "models": [
-                        {"name": "model:latest", "model": "model:latest", "digest": "sha256:a"}
-                    ]
-                },
+                json={"models": [{"name": "model:latest", "model": "model:latest", "digest": "sha256:a"}]},
             )
         return httpx.Response(200, json=_terminal(content="<think>hidden</think>O"))
 
@@ -437,9 +411,7 @@ async def test_generation_probe_is_not_ready_when_thinking_is_observed() -> None
 async def test_stream_terminal_requires_message_content_usage_and_done_reason(
     terminal: dict[str, object],
 ) -> None:
-    adapter = _adapter(
-        lambda request: httpx.Response(200, content=json.dumps(terminal).encode() + b"\n")
-    )
+    adapter = _adapter(lambda request: httpx.Response(200, content=json.dumps(terminal).encode() + b"\n"))
 
     events = [event async for event in adapter.stream_chat(_chat_request())]
 

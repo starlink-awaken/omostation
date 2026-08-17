@@ -133,9 +133,7 @@ async def test_health_envelope_and_valid_client_request_id(
     transport: httpx.ASGITransport,
 ) -> None:
     async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
-        response = await client.get(
-            "/api/v1/health", headers={"X-OMLXC-Request-ID": "client.req-1"}
-        )
+        response = await client.get("/api/v1/health", headers={"X-OMLXC-Request-ID": "client.req-1"})
 
     assert response.status_code == 200
     assert response.headers["X-OMLXC-Request-ID"] == "client.req-1"
@@ -151,9 +149,7 @@ async def test_invalid_request_id_and_validation_errors_are_sanitized(
     transport: httpx.ASGITransport,
 ) -> None:
     async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
-        invalid_id = await client.get(
-            "/api/v1/health", headers={"X-OMLXC-Request-ID": "bad secret\nvalue"}
-        )
+        invalid_id = await client.get("/api/v1/health", headers={"X-OMLXC-Request-ID": "bad secret\nvalue"})
         invalid_body = await client.post(
             "/api/v1/routes/plan",
             json={"model_id": "", "prompt": "must-not-echo", "unknown": "api_key=bad"},

@@ -16,10 +16,7 @@ def is_inventory_cliff(baseline: int, current: int) -> bool:
         raise ValueError("inventory counts must be non-negative")
     if baseline == 0:
         return False
-    return (
-        current * INVENTORY_DROP_REMAINING_DENOMINATOR
-        < baseline * INVENTORY_DROP_REMAINING_NUMERATOR
-    )
+    return current * INVENTORY_DROP_REMAINING_DENOMINATOR < baseline * INVENTORY_DROP_REMAINING_NUMERATOR
 
 
 def inventory_count(models: Iterable[object]) -> int:

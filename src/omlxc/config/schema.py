@@ -83,9 +83,7 @@ class TailscaleNodePolicyConfig(ConfigModel):
     def normalize_dns(cls, value: str) -> str:
         normalized = value.rstrip(".").lower()
         labels = normalized.split(".")
-        if len(labels) < 2 or any(
-            not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label) for label in labels
-        ):
+        if len(labels) < 2 or any(not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label) for label in labels):
             raise ValueError("invalid Tailscale MagicDNS name")
         return normalized
 
@@ -188,9 +186,7 @@ class BackendConfig(ConfigModel):
     def validate_lm_control_pair(self) -> Self:
         if self.kind in {BackendKind.LM_STUDIO, BackendKind.LM_LINK}:
             if (self.control_endpoint is None) != (self.known_hosts_file is None):
-                raise ValueError(
-                    "LM control_endpoint and known_hosts_file must be configured together"
-                )
+                raise ValueError("LM control_endpoint and known_hosts_file must be configured together")
         elif self.known_hosts_file is not None:
             raise ValueError("known_hosts_file is only valid for LM backends")
         return self
@@ -333,6 +329,4 @@ def _unique_ids(kind: str, values: Sequence[_Identified]) -> set[str]:
 
 def _require_keychain_for_url_auth(value: str) -> None:
     if has_embedded_url_auth(value):
-        raise CredentialPolicyError(
-            "URL authentication material must use a valid Keychain reference"
-        )
+        raise CredentialPolicyError("URL authentication material must use a valid Keychain reference")

@@ -145,10 +145,7 @@ class OllamaAdapter:
             raise ValueError("base_url must be an origin root without query or fragment")
         if probe_model_id is not None and not _valid_model_id(probe_model_id):
             raise ValueError("probe_model_id is invalid")
-        if (
-            type(keep_alive_seconds) is not int
-            or not 1 <= keep_alive_seconds <= MAX_KEEP_ALIVE_SECONDS
-        ):
+        if type(keep_alive_seconds) is not int or not 1 <= keep_alive_seconds <= MAX_KEEP_ALIVE_SECONDS:
             raise ValueError("keep_alive_seconds must be an integer from 1 to 86400")
         if client is not None and transport is not None:
             raise ValueError("client and transport are mutually exclusive")
@@ -288,9 +285,7 @@ class OllamaAdapter:
         unsupported = response.status_code in _UNSUPPORTED_STATUSES
         return AdapterFailure.from_detail(
             code=(AdapterErrorCode.UNSUPPORTED if unsupported else AdapterErrorCode.BAD_RESPONSE),
-            message=(
-                "Ollama endpoint is unsupported" if unsupported else "Ollama returned an HTTP error"
-            ),
+            message=("Ollama endpoint is unsupported" if unsupported else "Ollama returned an HTTP error"),
             detail={},
             retryable=response.status_code >= 500,
             http_status=response.status_code,
@@ -375,9 +370,7 @@ class OllamaAdapter:
             errors=tuple(errors),
         )
 
-    def _incompatible(
-        self, observed_at: datetime, status: int, version: str | None = None
-    ) -> CapabilitySnapshot:
+    def _incompatible(self, observed_at: datetime, status: int, version: str | None = None) -> CapabilitySnapshot:
         return CapabilitySnapshot(
             backend_id=self._backend_id,
             reachable=True,
@@ -400,10 +393,7 @@ class OllamaAdapter:
         try:
             running = await self._inventory("/api/ps")
         except AdapterFailure:
-            return tuple(
-                ModelRuntime(id=item.model_id, state=ModelRuntimeState.UNKNOWN, loaded=None)
-                for item in tags
-            )
+            return tuple(ModelRuntime(id=item.model_id, state=ModelRuntimeState.UNKNOWN, loaded=None) for item in tags)
         return self._merge_inventory(tags, running)
 
     async def _inventory(self, endpoint: str) -> tuple[_Identity, ...]:
@@ -436,18 +426,14 @@ class OllamaAdapter:
             model_id = raw_model if isinstance(raw_model, str) else cast(str, raw_name)
             digest_value = item.get("digest")
             digest = digest_value if isinstance(digest_value, str) and digest_value else None
-            if aliases_seen.intersection(aliases) or (
-                digest is not None and digest in digests_seen
-            ):
+            if aliases_seen.intersection(aliases) or (digest is not None and digest in digests_seen):
                 raise self._identity_failure(endpoint)
             aliases_seen.update(aliases)
             if digest is not None:
                 digests_seen.add(digest)
             context = item.get("context_length")
             context_limit = (
-                context
-                if isinstance(context, int) and not isinstance(context, bool) and context > 0
-                else None
+                context if isinstance(context, int) and not isinstance(context, bool) and context > 0 else None
             )
             identities.append(
                 _Identity(
@@ -468,9 +454,7 @@ class OllamaAdapter:
             endpoint=endpoint,
         )
 
-    def _merge_inventory(
-        self, tags: tuple[_Identity, ...], running: tuple[_Identity, ...]
-    ) -> tuple[ModelRuntime, ...]:
+    def _merge_inventory(self, tags: tuple[_Identity, ...], running: tuple[_Identity, ...]) -> tuple[ModelRuntime, ...]:
         alias_owner: dict[str, int] = {}
         digest_owner: dict[str, int] = {}
         for index, item in enumerate(tags):
@@ -499,11 +483,7 @@ class OllamaAdapter:
             else:
                 if any(
                     item.aliases.intersection(extra.aliases)
-                    or (
-                        item.digest is not None
-                        and extra.digest is not None
-                        and item.digest == extra.digest
-                    )
+                    or (item.digest is not None and extra.digest is not None and item.digest == extra.digest)
                     for extra in extras
                 ):
                     raise self._identity_failure("/api/ps")
@@ -511,11 +491,7 @@ class OllamaAdapter:
         models = [
             ModelRuntime(
                 id=item.model_id,
-                state=(
-                    ModelRuntimeState.LOADED
-                    if index in loaded_indices
-                    else ModelRuntimeState.AVAILABLE
-                ),
+                state=(ModelRuntimeState.LOADED if index in loaded_indices else ModelRuntimeState.AVAILABLE),
                 loaded=index in loaded_indices,
                 context_limit=item.context_limit,
             )
@@ -532,19 +508,13 @@ class OllamaAdapter:
         )
         return tuple(models)
 
-    async def load_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def load_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         return await self._change_model_state(model_id, load=True, idempotency_key=idempotency_key)
 
-    async def unload_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def unload_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         return await self._change_model_state(model_id, load=False, idempotency_key=idempotency_key)
 
-    async def _change_model_state(
-        self, model_id: str, *, load: bool, idempotency_key: str | None
-    ) -> LifecycleResult:
+    async def _change_model_state(self, model_id: str, *, load: bool, idempotency_key: str | None) -> LifecycleResult:
         if not _valid_model_id(model_id):
             return self._lifecycle_failure(
                 model_id,
@@ -634,15 +604,11 @@ class OllamaAdapter:
         )
 
     @staticmethod
-    def _lifecycle_failure(
-        model_id: str, idempotency_key: str | None, error: AdapterError
-    ) -> LifecycleResult:
+    def _lifecycle_failure(model_id: str, idempotency_key: str | None, error: AdapterError) -> LifecycleResult:
         return LifecycleResult(
             model_id=model_id,
             status=(
-                OperationStatus.UNSUPPORTED
-                if error.code is AdapterErrorCode.UNSUPPORTED
-                else OperationStatus.FAILED
+                OperationStatus.UNSUPPORTED if error.code is AdapterErrorCode.UNSUPPORTED else OperationStatus.FAILED
             ),
             changed=False,
             idempotency_key=idempotency_key,
@@ -677,11 +643,7 @@ class OllamaAdapter:
                 ),
             )
         ttl = values.get("ttl_seconds")
-        if (
-            isinstance(ttl, bool)
-            or not isinstance(ttl, int)
-            or not 1 <= ttl <= MAX_KEEP_ALIVE_SECONDS
-        ):
+        if isinstance(ttl, bool) or not isinstance(ttl, int) or not 1 <= ttl <= MAX_KEEP_ALIVE_SECONDS:
             return self._tune_failure(
                 request,
                 AdapterError(
@@ -747,9 +709,7 @@ class OllamaAdapter:
             scope=request.scope,
             model_id=request.model_id,
             status=(
-                OperationStatus.UNSUPPORTED
-                if error.code is AdapterErrorCode.UNSUPPORTED
-                else OperationStatus.FAILED
+                OperationStatus.UNSUPPORTED if error.code is AdapterErrorCode.UNSUPPORTED else OperationStatus.FAILED
             ),
             idempotency_key=request.idempotency_key,
             error=error,
@@ -762,9 +722,7 @@ class OllamaAdapter:
                 "content": message.content or "",
             }
             if message.tool_calls:
-                message_payload["tool_calls"] = [
-                    call.model_dump(mode="json") for call in message.tool_calls
-                ]
+                message_payload["tool_calls"] = [call.model_dump(mode="json") for call in message.tool_calls]
             if message.tool_call_id is not None:
                 message_payload["tool_call_id"] = message.tool_call_id
             return message_payload
@@ -833,9 +791,7 @@ class OllamaAdapter:
         budget = _ImageBudget()
         payload: dict[str, object] = {
             "model": request.model,
-            "messages": [
-                self._message_payload(message, budget=budget) for message in request.messages
-            ],
+            "messages": [self._message_payload(message, budget=budget) for message in request.messages],
             "stream": stream,
             "think": False,
             "options": {
@@ -885,9 +841,7 @@ class OllamaAdapter:
                     detail={},
                 )
             try:
-                tool_calls = parse_ollama_tool_calls(
-                    message.get("tool_calls") if message is not None else None
-                )
+                tool_calls = parse_ollama_tool_calls(message.get("tool_calls") if message is not None else None)
             except ValueError as exc:
                 raise AdapterFailure.from_detail(
                     code=AdapterErrorCode.BAD_RESPONSE,
@@ -921,9 +875,7 @@ class OllamaAdapter:
         return safe + remaining, reasoning_filter.saw_reasoning, unclosed
 
     @staticmethod
-    def _reject_observable_thinking(
-        document: Mapping[str, object], message: Mapping[str, object] | None
-    ) -> None:
+    def _reject_observable_thinking(document: Mapping[str, object], message: Mapping[str, object] | None) -> None:
         for container in (document, message):
             if container is None or "thinking" not in container:
                 continue
@@ -968,11 +920,7 @@ class OllamaAdapter:
     def _usage(document: Mapping[str, object]) -> TokenUsage:
         def count(key: str) -> int:
             value = document.get(key, 0)
-            return (
-                value
-                if isinstance(value, int) and not isinstance(value, bool) and value >= 0
-                else 0
-            )
+            return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else 0
 
         prompt = count("prompt_eval_count")
         completion = count("eval_count")
@@ -1005,9 +953,7 @@ class OllamaAdapter:
                 ),
             )
         try:
-            response = await self._send(
-                "POST", endpoint, payload={"model": request.model, "input": request.input}
-            )
+            response = await self._send("POST", endpoint, payload={"model": request.model, "input": request.input})
             if not response.is_success:
                 raise self._http_error(response, endpoint=endpoint)
             document = self._json_object(response, endpoint=endpoint)
@@ -1029,9 +975,7 @@ class OllamaAdapter:
             usage=self._usage(document),
         )
 
-    def _parse_embeddings(
-        self, document: Mapping[str, object], *, expected: int
-    ) -> tuple[tuple[float, ...], ...]:
+    def _parse_embeddings(self, document: Mapping[str, object], *, expected: int) -> tuple[tuple[float, ...], ...]:
         raw_vectors = _list(document.get("embeddings"))
         if raw_vectors is None or len(raw_vectors) != expected:
             raise AdapterFailure.from_detail(
@@ -1065,11 +1009,7 @@ class OllamaAdapter:
                 )
             numbers: list[float] = []
             for value in vector:
-                if (
-                    isinstance(value, bool)
-                    or not isinstance(value, (int, float))
-                    or not math.isfinite(value)
-                ):
+                if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
                     raise AdapterFailure.from_detail(
                         code=AdapterErrorCode.BAD_RESPONSE,
                         message="Ollama embedding vector is invalid",
@@ -1151,11 +1091,7 @@ class OllamaAdapter:
                                 emitted_content=True,
                                 phase=StreamPhase.AFTER_CONTENT,
                             )
-                        phase = (
-                            StreamPhase.AFTER_CONTENT
-                            if emitted_content
-                            else StreamPhase.BEFORE_CONTENT
-                        )
+                        phase = StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
                         yield StreamEvent(
                             kind=StreamEventKind.USAGE,
                             request_id=request.request_id,
@@ -1219,15 +1155,9 @@ class OllamaAdapter:
         yield self._stream_error(
             request.request_id,
             AdapterError(
-                code=(
-                    AdapterErrorCode.STREAM_INTERRUPTED
-                    if saw_document
-                    else AdapterErrorCode.BAD_RESPONSE
-                ),
+                code=(AdapterErrorCode.STREAM_INTERRUPTED if saw_document else AdapterErrorCode.BAD_RESPONSE),
                 message=(
-                    "Ollama stream ended before completion"
-                    if saw_document
-                    else "Ollama stream returned an empty body"
+                    "Ollama stream ended before completion" if saw_document else "Ollama stream returned an empty body"
                 ),
                 retryable=not emitted_content,
             ),
@@ -1335,9 +1265,7 @@ class OllamaAdapter:
                     tuple(
                         [
                             *events,
-                            self._stream_error(
-                                request_id, failure.error, emitted_content=emitted_content
-                            ),
+                            self._stream_error(request_id, failure.error, emitted_content=emitted_content),
                         ]
                     ),
                     emitted_content,
@@ -1345,9 +1273,7 @@ class OllamaAdapter:
                     True,
                 )
             try:
-                tool_calls = parse_ollama_tool_calls(
-                    message.get("tool_calls") if message is not None else None
-                )
+                tool_calls = parse_ollama_tool_calls(message.get("tool_calls") if message is not None else None)
             except ValueError:
                 error = AdapterError(
                     code=AdapterErrorCode.BAD_RESPONSE,
@@ -1394,9 +1320,7 @@ class OllamaAdapter:
                         tuple(
                             [
                                 *events,
-                                self._stream_error(
-                                    request_id, error, emitted_content=emitted_content
-                                ),
+                                self._stream_error(request_id, error, emitted_content=emitted_content),
                             ]
                         ),
                         emitted_content,
@@ -1480,9 +1404,7 @@ class OllamaAdapter:
         return tuple(events), emitted_content, terminal, False
 
     @staticmethod
-    def _stream_error(
-        request_id: str, error: AdapterError, *, emitted_content: bool
-    ) -> StreamEvent:
+    def _stream_error(request_id: str, error: AdapterError, *, emitted_content: bool) -> StreamEvent:
         phase = StreamPhase.AFTER_CONTENT if emitted_content else StreamPhase.BEFORE_CONTENT
         normalized = error.model_copy(update={"emitted_content": emitted_content, "phase": phase})
         return StreamEvent(

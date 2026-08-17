@@ -88,13 +88,9 @@ async def test_route_and_config_repository_validation_fails_closed(tmp_path: Pat
     store = await SQLiteRuntimeStore.open(tmp_path / "state.db")
     now = datetime(2026, 8, 11, 12, tzinfo=UTC)
     with pytest.raises(ValueError, match="timezone"):
-        await store.append_route_audit(
-            RouteAuditWrite("req", datetime(2026, 8, 11), None, (), {}, "config-1")
-        )
+        await store.append_route_audit(RouteAuditWrite("req", datetime(2026, 8, 11), None, (), {}, "config-1"))
     with pytest.raises(ValueError, match="size"):
-        await store.append_route_audit(
-            RouteAuditWrite("req", now, None, (), {"x": "y" * (70 * 1024)}, "config-1")
-        )
+        await store.append_route_audit(RouteAuditWrite("req", now, None, (), {"x": "y" * (70 * 1024)}, "config-1"))
     with pytest.raises(ValueError, match="rollback"):
         await store.save_config_revision(
             ConfigRevisionWrite(

@@ -57,9 +57,7 @@ def migrate_legacy_json(source: Path, *, base_directory: Path | None = None) -> 
     address_to_node = {address: node.id for node in nodes for address in node.addresses}
     local_node_id = _local_node_id(legacy, nodes)
     backends = _migrate_backends(legacy, legacy_nodes, nodes, local_node_id)
-    app_backend_id = next(
-        backend.id for backend in backends if backend.kind is BackendKind.OMLX_APP
-    )
+    app_backend_id = next(backend.id for backend in backends if backend.kind is BackendKind.OMLX_APP)
     legacy_models = _mapping(legacy.get("models"), "models")
     resident = tuple(
         str(item)
@@ -95,9 +93,7 @@ def migrate_legacy_json(source: Path, *, base_directory: Path | None = None) -> 
     )
 
 
-def build_migration_plan(
-    source: Path, *, target: Path, base_directory: Path | None = None
-) -> MigrationPlan:
+def build_migration_plan(source: Path, *, target: Path, base_directory: Path | None = None) -> MigrationPlan:
     config = migrate_legacy_json(source, base_directory=base_directory)
     return MigrationPlan(
         source_schema="legacy-models-json-v2",
@@ -144,18 +140,12 @@ def _migrate_nodes(values: list[object]) -> tuple[NodeConfig, ...]:
     slugs = [_slug(name) for name in names]
     collision_counts = {slug: slugs.count(slug) for slug in set(slugs)}
     identifiers = [
-        (
-            f"{slug}-{sha256(canonical.encode('utf-8')).hexdigest()[:12]}"
-            if collision_counts[slug] > 1
-            else slug
-        )
+        (f"{slug}-{sha256(canonical.encode('utf-8')).hexdigest()[:12]}" if collision_counts[slug] > 1 else slug)
         for slug, canonical in zip(slugs, canonical_names, strict=True)
     ]
     if len(identifiers) != len(set(identifiers)):
         raise ConfigError("deterministic legacy node id collision")
-    return tuple(
-        _migrate_node(item, index, node_id=identifiers[index]) for index, item in enumerate(parsed)
-    )
+    return tuple(_migrate_node(item, index, node_id=identifiers[index]) for index, item in enumerate(parsed))
 
 
 def _migrate_node(value: object, index: int, *, node_id: str) -> NodeConfig:
@@ -220,9 +210,7 @@ def _migrate_model(model_id: str, value: Mapping[str, Any]) -> ModelConfig:
         reasoning=bool(value.get("reasoning", False)),
         parameters=dict(parameters),
         note=str(value["note"]) if value.get("note") is not None else None,
-        requires_pip=(
-            str(value["requires_pip"]) if value.get("requires_pip") is not None else None
-        ),
+        requires_pip=(str(value["requires_pip"]) if value.get("requires_pip") is not None else None),
     )
 
 
@@ -260,41 +248,31 @@ def _migrate_placement(
     )
 
 
-def _migrate_policies(
-    legacy: Mapping[str, Any], address_to_node: Mapping[str, str]
-) -> PoliciesConfig:
+def _migrate_policies(legacy: Mapping[str, Any], address_to_node: Mapping[str, str]) -> PoliciesConfig:
     autopilot = _mapping(legacy.get("autopilot"), "autopilot")
     app = _mapping(legacy.get("omlx_app"), "omlx_app")
     request_defaults = _mapping(app.get("request_defaults", {}), "request_defaults")
     remote_values = _sequence(autopilot.get("remote_resident", []), "remote_resident")
-    remote = tuple(
-        _migrate_remote_resident(value, index, address_to_node)
-        for index, value in enumerate(remote_values)
-    )
+    remote = tuple(_migrate_remote_resident(value, index, address_to_node) for index, value in enumerate(remote_values))
     presets = _mapping(legacy.get("presets", {}), "presets")
     return PoliciesConfig(
         default_profile=RouteProfile.INTERACTIVE,
         thinking_enabled=False,
         memory_free_percent_floor=_optional_float(autopilot.get("mem_free_pct_floor")),
         idle_ttl_seconds=_optional_int(autopilot.get("idle_ttl_sec")),
-        resident_models=tuple(
-            str(item) for item in _sequence(autopilot.get("resident", []), "resident")
-        ),
+        resident_models=tuple(str(item) for item in _sequence(autopilot.get("resident", []), "resident")),
         remote_resident=remote,
         fallbacks=_string_mapping(legacy.get("fallback", {}), "fallback"),
         ollama_fallbacks=_string_mapping(legacy.get("fallback_ollama", {}), "fallback_ollama"),
         presets={
-            str(key): tuple(str(item) for item in _sequence(value, f"presets.{key}"))
-            for key, value in presets.items()
+            str(key): tuple(str(item) for item in _sequence(value, f"presets.{key}")) for key, value in presets.items()
         },
         sampling_defaults=dict(_mapping(legacy.get("defaults", {}), "defaults")),
         thinking_settings={"legacy_request_defaults": dict(request_defaults)},
     )
 
 
-def _migrate_remote_resident(
-    value: object, index: int, address_to_node: Mapping[str, str]
-) -> RemoteResidentConfig:
+def _migrate_remote_resident(value: object, index: int, address_to_node: Mapping[str, str]) -> RemoteResidentConfig:
     item = _mapping(value, f"remote_resident[{index}]")
     address = _required_string(item.get("host"), "remote resident address")
     node_id = address_to_node.get(address)
@@ -415,9 +393,7 @@ def _legacy_extensions(legacy: Mapping[str, Any]) -> dict[str, JsonValue]:
         "fallback_ollama",
         "presets",
     }
-    extensions: dict[str, Any] = {
-        str(key): value for key, value in legacy.items() if key not in consumed_root
-    }
+    extensions: dict[str, Any] = {str(key): value for key, value in legacy.items() if key not in consumed_root}
     cluster = _mapping(legacy.get("cluster"), "cluster")
     cluster_metadata = {key: value for key, value in cluster.items() if key != "nodes"}
     if cluster_metadata:
@@ -437,9 +413,7 @@ def _legacy_extensions(legacy: Mapping[str, Any]) -> dict[str, JsonValue]:
     if autopilot_metadata:
         extensions["autopilot_metadata"] = autopilot_metadata
     app = _mapping(legacy.get("omlx_app"), "omlx_app")
-    app_metadata = {
-        key: value for key, value in app.items() if key not in {"base_url", "request_defaults"}
-    }
+    app_metadata = {key: value for key, value in app.items() if key not in {"base_url", "request_defaults"}}
     if app_metadata:
         extensions["omlx_app_metadata"] = app_metadata
     engine_policy = _mapping(legacy.get("engine_policy", {}), "engine_policy")

@@ -72,9 +72,7 @@ class FakeBackendAdapter:
             ),
         )
 
-    async def load_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def load_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         return LifecycleResult(
             model_id=model_id,
             status=OperationStatus.UNCHANGED,
@@ -82,9 +80,7 @@ class FakeBackendAdapter:
             idempotency_key=idempotency_key,
         )
 
-    async def unload_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def unload_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         return LifecycleResult(
             model_id=model_id,
             status=OperationStatus.UNSUPPORTED,

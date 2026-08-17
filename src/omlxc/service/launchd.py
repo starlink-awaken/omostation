@@ -188,9 +188,7 @@ class LaunchdController:
 def build_launchd_plan(paths: LaunchdPaths, config_path: Path) -> LaunchdPlan:
     validated_config = _require_private_config(config_path)
     try:
-        identity = config_identity(
-            load_config(validated_config, env={}, base_directory=validated_config.parent)
-        )
+        identity = config_identity(load_config(validated_config, env={}, base_directory=validated_config.parent))
     except ConfigError:
         raise LaunchdFailure("E100", "daemon configuration is invalid") from None
     payload: dict[str, object] = {

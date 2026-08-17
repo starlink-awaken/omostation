@@ -88,9 +88,7 @@ class LimitedFastAPI(FastAPI):
             if not replaced and message["type"] == "http.response.start":
                 replaced = True
                 request_id = _scope_request_id(scope)
-                response = _error_response(
-                    request_id, 413, "E100", "request body exceeds the size limit"
-                )
+                response = _error_response(request_id, 413, "E100", "request body exceeds the size limit")
                 await response(scope, receive, send)
 
         await super().__call__(scope, limited_receive, limited_send)
@@ -112,9 +110,7 @@ class OpenAIChatMessage(ApiModel):
     role: Literal["system", "user", "assistant", "tool"]
     content: str | tuple[ChatContentBlock, ...] | None = None
     tool_calls: tuple[ChatToolCall, ...] = Field(default=(), max_length=128)
-    tool_call_id: str | None = Field(
-        default=None, min_length=1, max_length=256, pattern=r"^[A-Za-z0-9._:-]+$"
-    )
+    tool_call_id: str | None = Field(default=None, min_length=1, max_length=256, pattern=r"^[A-Za-z0-9._:-]+$")
 
     @model_validator(mode="after")
     def validate_role_fields(self) -> OpenAIChatMessage:
@@ -157,9 +153,7 @@ class OpenAIChatBody(ApiModel):
 
     @field_validator("messages")
     @classmethod
-    def bound_message_text(
-        cls, value: tuple[OpenAIChatMessage, ...]
-    ) -> tuple[OpenAIChatMessage, ...]:
+    def bound_message_text(cls, value: tuple[OpenAIChatMessage, ...]) -> tuple[OpenAIChatMessage, ...]:
         total = 0
         for message in value:
             if message.content is None:
@@ -182,13 +176,9 @@ class OpenAIChatBody(ApiModel):
                 characters += len(message.content)
             else:
                 characters += sum(
-                    len(block.text) if block.type == "text" else len(block.image_url.url)
-                    for block in message.content
+                    len(block.text) if block.type == "text" else len(block.image_url.url) for block in message.content
                 )
-            characters += sum(
-                len(call.function.name) + len(call.function.arguments)
-                for call in message.tool_calls
-            )
+            characters += sum(len(call.function.name) + len(call.function.arguments) for call in message.tool_calls)
         characters += sum(len(tool.model_dump_json()) for tool in self.tools)
         return (characters + 3) // 4
 
@@ -261,9 +251,7 @@ def create_app(
             if content_length is not None:
                 try:
                     if int(content_length) > MAX_BODY_BYTES:
-                        return _error_response(
-                            request_id, 413, "E100", "request body exceeds the size limit"
-                        )
+                        return _error_response(request_id, 413, "E100", "request body exceeds the size limit")
                 except ValueError:
                     return _error_response(request_id, 400, "E100", "invalid content length")
         try:
@@ -363,16 +351,12 @@ def create_app(
     async def load_model(
         request: Request,
         model_id: str,
-        idempotency_key: Annotated[
-            str, Header(alias="Idempotency-Key", min_length=1, max_length=128)
-        ],
+        idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=128)],
     ) -> JSONResponse:
         service = _require_control(control)
         normalized_model_id = await _route_model_id(model_id, control=service)
         try:
-            loaded = await service.load_model(
-                normalized_model_id, idempotency_key=idempotency_key
-            )
+            loaded = await service.load_model(normalized_model_id, idempotency_key=idempotency_key)
         except KeyError as exc:
             if exc.args != ("model has no configured placement",):
                 raise
@@ -387,16 +371,12 @@ def create_app(
     async def unload_model(
         request: Request,
         model_id: str,
-        idempotency_key: Annotated[
-            str, Header(alias="Idempotency-Key", min_length=1, max_length=128)
-        ],
+        idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=128)],
     ) -> JSONResponse:
         service = _require_control(control)
         normalized_model_id = await _route_model_id(model_id, control=service)
         try:
-            unloaded = await service.unload_model(
-                normalized_model_id, idempotency_key=idempotency_key
-            )
+            unloaded = await service.unload_model(normalized_model_id, idempotency_key=idempotency_key)
         except KeyError as exc:
             if exc.args != ("model has no configured placement",):
                 raise
@@ -453,9 +433,7 @@ def create_app(
             try:
                 cursor = after
                 while True:
-                    records = await service.replay_events(
-                        after_sequence=cursor, limit=MAX_PAGE_SIZE
-                    )
+                    records = await service.replay_events(after_sequence=cursor, limit=MAX_PAGE_SIZE)
                     if not records:
                         break
                     for record in records:
@@ -482,10 +460,7 @@ def create_app(
         return JSONResponse(
             {
                 "object": "list",
-                "data": [
-                    {"id": identifier, "object": "model", "owned_by": "omlxc"}
-                    for identifier in identifiers
-                ],
+                "data": [{"id": identifier, "object": "model", "owned_by": "omlxc"} for identifier in identifiers],
             }
         )
 
@@ -495,9 +470,7 @@ def create_app(
         if body.thinking or body.reasoning:
             return _openai_error(request_id, 400, "unsupported_feature")
         service = _require_inference(inference)
-        model_id = await _route_model_id(
-            body.model, control=_require_control_or_none(control)
-        )
+        model_id = await _route_model_id(body.model, control=_require_control_or_none(control))
         route = RouteRequest(
             request_id=request_id,
             model_id=model_id,
@@ -587,9 +560,7 @@ def create_app(
     async def embeddings(request: Request, body: OpenAIEmbeddingBody) -> JSONResponse:
         request_id = _request_id(request)
         service = _require_inference(inference)
-        model_id = await _route_model_id(
-            body.model, control=_require_control_or_none(control)
-        )
+        model_id = await _route_model_id(body.model, control=_require_control_or_none(control))
         route = RouteRequest(
             request_id=request_id,
             model_id=model_id,
@@ -597,9 +568,7 @@ def create_app(
             required_capabilities=frozenset({"embedding"}),
             context_tokens=0,
         )
-        embedding_request = EmbeddingRequest(
-            request_id=request_id, model=model_id, input=body.input
-        )
+        embedding_request = EmbeddingRequest(request_id=request_id, model=model_id, input=body.input)
         execution = await service.embed(route, embedding_request, deadline=body.timeout_seconds)
         if execution.error is not None:
             return _execution_error(request_id, execution.error)
@@ -844,9 +813,7 @@ async def _route_model_id(model_id: str, *, control: ControlService | None) -> s
     return resolved.id
 
 
-async def _route_request(
-    request_id: str, body: RoutePlanBody, *, control: ControlService
-) -> RouteRequest:
+async def _route_request(request_id: str, body: RoutePlanBody, *, control: ControlService) -> RouteRequest:
     return RouteRequest(
         request_id=request_id,
         model_id=await _route_model_id(body.model_id, control=control),
@@ -922,10 +889,7 @@ def _sse_event(request_id: str, model: str, event: StreamEvent) -> bytes:
                 {
                     "index": 0,
                     "delta": {
-                        "tool_calls": [
-                            call.model_dump(mode="json", exclude_none=True)
-                            for call in event.tool_calls
-                        ]
+                        "tool_calls": [call.model_dump(mode="json", exclude_none=True) for call in event.tool_calls]
                     },
                     "finish_reason": None,
                 }
@@ -958,8 +922,7 @@ def _prepare_rejection_partial_result(
 def _stream_prepare_rejection_partial_result(event: StreamEvent) -> Mapping[str, object]:
     return {
         "prepare_rejections": [
-            {"placement_id": item.placement_id, "reason": item.reason.value}
-            for item in event.prepare_rejections
+            {"placement_id": item.placement_id, "reason": item.reason.value} for item in event.prepare_rejections
         ]
     }
 

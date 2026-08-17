@@ -35,15 +35,9 @@ async def test_default_http_client_ignores_ambient_socks_proxy(
 @pytest.mark.parametrize(
     "factory",
     [
-        lambda transport: OmlxAppAdapter(
-            backend_id="local", base_url="http://127.0.0.1:1", transport=transport
-        ),
-        lambda transport: LmStudioAdapter(
-            backend_id="local", base_url="http://127.0.0.1:1", transport=transport
-        ),
-        lambda transport: OllamaAdapter(
-            backend_id="local", base_url="http://127.0.0.1:1", transport=transport
-        ),
+        lambda transport: OmlxAppAdapter(backend_id="local", base_url="http://127.0.0.1:1", transport=transport),
+        lambda transport: LmStudioAdapter(backend_id="local", base_url="http://127.0.0.1:1", transport=transport),
+        lambda transport: OllamaAdapter(backend_id="local", base_url="http://127.0.0.1:1", transport=transport),
     ],
 )
 async def test_local_mock_transport_remains_direct_with_ambient_proxy(

@@ -54,9 +54,7 @@ class FakeBackend:
         if self.block:
             await asyncio.Event().wait()
 
-    async def load_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def load_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         self.operations.append(("load", model_id, idempotency_key))
         await self._maybe_block()
         self.loaded = True
@@ -67,9 +65,7 @@ class FakeBackend:
             idempotency_key=idempotency_key,
         )
 
-    async def unload_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def unload_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         self.operations.append(("unload", model_id, idempotency_key))
         await self._maybe_block()
         self.loaded = False
@@ -91,9 +87,7 @@ class FakeBackend:
             model_available=True,
             generation_ready=self.loaded,
             observed_at=datetime.now(UTC),
-            capabilities=frozenset(
-                {AdapterCapability.CHAT, AdapterCapability.EMBEDDING, AdapterCapability.STREAMING}
-            ),
+            capabilities=frozenset({AdapterCapability.CHAT, AdapterCapability.EMBEDDING, AdapterCapability.STREAMING}),
         )
 
     async def list_models(self) -> tuple[ModelRuntime, ...]:
@@ -231,8 +225,7 @@ async def _wait_for_job_state(
             return response
         if time.monotonic() >= deadline:
             pytest.fail(
-                f"job {job_id!r} did not reach {expected!r} within {timeout_seconds}s "
-                f"(last_state={last_state!r})"
+                f"job {job_id!r} did not reach {expected!r} within {timeout_seconds}s (last_state={last_state!r})"
             )
         await asyncio.sleep(0.01)
 
@@ -416,11 +409,7 @@ async def test_production_discovery_periodically_recovers_a_failed_backend() -> 
     with tempfile.TemporaryDirectory(prefix="omlxc-fix2-refresh-", dir="/tmp") as directory:
         root = Path(directory)
         config = _config(root).model_copy(
-            update={
-                "daemon": DaemonConfig(
-                    socket_path=root / "omlxcd.sock", probe_interval_seconds=0.01
-                )
-            }
+            update={"daemon": DaemonConfig(socket_path=root / "omlxcd.sock", probe_interval_seconds=0.01)}
         )
         backend = DiscoveringBackend(backend_id="backend", fail=True)
         composition = build_production_daemon(config, adapters={"backend": backend})
@@ -675,9 +664,7 @@ async def test_route_failure_and_catalog_views_are_typed_and_observable(tmp_path
     assert model["authorized"] is True
     assert model["loaded"] is True
     assert model["ready"] is True
-    assert [
-        (item["placement_id"], item["context_limit"]) for item in model["placement_states"]
-    ] == [
+    assert [(item["placement_id"], item["context_limit"]) for item in model["placement_states"]] == [
         ("placement", 8192),
         ("placement-b", 2048),
     ]

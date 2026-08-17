@@ -47,9 +47,7 @@ def tools_payload(request: object) -> dict[str, object]:
     if tools:
         payload["tools"] = [tool.model_dump(mode="json") for tool in tools]
     if choice is not None:
-        payload["tool_choice"] = (
-            choice if isinstance(choice, str) else choice.model_dump(mode="json")
-        )
+        payload["tool_choice"] = choice if isinstance(choice, str) else choice.model_dump(mode="json")
     return payload
 
 

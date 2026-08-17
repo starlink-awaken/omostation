@@ -25,9 +25,7 @@ def test_vram_estimator_calculation() -> None:
     kv_mb = estimator.estimate_kv_cache_mb("coding", context_tokens=32768, max_output_tokens=1024)
     assert 8000.0 < kv_mb < 9000.0
 
-    total_mb = estimator.estimate_total_vram_mb(
-        "coding", context_tokens=32768, max_output_tokens=1024
-    )
+    total_mb = estimator.estimate_total_vram_mb("coding", context_tokens=32768, max_output_tokens=1024)
     # 17.5GB weights + ~8.4GB KV Cache = ~25.9GB
     assert 25000.0 < total_mb < 27000.0
 
@@ -73,9 +71,7 @@ def test_context_compactor_messages() -> None:
     ]
 
     # Target small token budget (e.g. 150 tokens) -> triggers distillation
-    result = ContextCompactor.compact_messages(
-        messages, target_safe_tokens=150, keep_recent_turns=2
-    )
+    result = ContextCompactor.compact_messages(messages, target_safe_tokens=150, keep_recent_turns=2)
 
     assert result.compacted_tokens < result.original_tokens
     assert result.pruned_tokens > 0
@@ -87,4 +83,3 @@ def test_context_compactor_messages() -> None:
     assert result.compacted_messages[-2]["content"] == "Now run the tests."
     # System prompt preserved
     assert result.compacted_messages[0]["content"] == "You are a coding assistant."
-

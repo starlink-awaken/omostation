@@ -64,12 +64,8 @@ def test_probe_darwin_parsing() -> None:
     guard = ThermalGuard()
 
     with patch("shutil.which", return_value="/usr/bin/pmset"):
-        therm_mock = MagicMock(
-            returncode=0, stdout="Note: Thermal pressure level: Moderate\n"
-        )
-        batt_mock = MagicMock(
-            returncode=0, stdout="Now drawing from 'Battery Power'\n -InternalBattery-0 65%\n"
-        )
+        therm_mock = MagicMock(returncode=0, stdout="Note: Thermal pressure level: Moderate\n")
+        batt_mock = MagicMock(returncode=0, stdout="Now drawing from 'Battery Power'\n -InternalBattery-0 65%\n")
 
         with patch("subprocess.run", side_effect=[therm_mock, batt_mock]):
             therm, power, batt = guard._probe_darwin()

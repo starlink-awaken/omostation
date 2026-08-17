@@ -95,12 +95,8 @@ async def test_v2_schema_migrates_to_inventory_high_water(tmp_path: Path) -> Non
     store = await storage.SQLiteRuntimeStore.open(database)
     assert await store.schema_version() == 4
     observed = datetime(2026, 8, 15, 4, tzinfo=UTC)
-    await store.save_inventory_high_water(
-        storage.InventoryHighWater("node", "backend", 10, observed)
-    )
-    assert await store.list_inventory_high_water() == (
-        storage.InventoryHighWater("node", "backend", 10, observed),
-    )
+    await store.save_inventory_high_water(storage.InventoryHighWater("node", "backend", 10, observed))
+    assert await store.list_inventory_high_water() == (storage.InventoryHighWater("node", "backend", 10, observed),)
     await store.close()
 
 
@@ -193,18 +189,12 @@ async def test_close_flushes_all_accepted_metrics_and_rejects_writes_after_close
     database = tmp_path / "state.db"
     storage = _storage()
     store = await storage.SQLiteRuntimeStore.open(database, metric_buffer_capacity=1)
-    assert store.accept_metric(
-        storage.MetricRecord("req-1", datetime(2026, 8, 11, 12, tzinfo=UTC), 4.0, True)
-    )
-    assert not store.accept_metric(
-        storage.MetricRecord("req-2", datetime(2026, 8, 11, 12, tzinfo=UTC), 5.0, True)
-    )
+    assert store.accept_metric(storage.MetricRecord("req-1", datetime(2026, 8, 11, 12, tzinfo=UTC), 4.0, True))
+    assert not store.accept_metric(storage.MetricRecord("req-2", datetime(2026, 8, 11, 12, tzinfo=UTC), 5.0, True))
     assert await store.close() == 1
 
     reopened = await storage.SQLiteRuntimeStore.open(database)
     assert await reopened.metric_count() == 1
     await reopened.close()
     with pytest.raises(storage.StorageDegradedError):
-        store.accept_metric(
-            storage.MetricRecord("req-3", datetime(2026, 8, 11, 12, tzinfo=UTC), 6.0, True)
-        )
+        store.accept_metric(storage.MetricRecord("req-3", datetime(2026, 8, 11, 12, tzinfo=UTC), 6.0, True))

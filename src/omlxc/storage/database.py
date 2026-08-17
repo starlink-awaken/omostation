@@ -337,9 +337,7 @@ _V1_TABLE_SQL: dict[str, str] = {
 _V1_INDEX_SQL: dict[str, str] = {
     "health_latest_idx": """CREATE INDEX health_latest_idx
         ON health_snapshots(resource_kind, resource_id, observed_at DESC, sequence DESC)""",
-    "request_metrics_observed_idx": (
-        "CREATE INDEX request_metrics_observed_idx ON request_metrics(observed_at)"
-    ),
+    "request_metrics_observed_idx": ("CREATE INDEX request_metrics_observed_idx ON request_metrics(observed_at)"),
 }
 _V1_SCHEMA_SQL = ";\n".join((*_V1_TABLE_SQL.values(), *_V1_INDEX_SQL.values()))
 _V2_TABLE_SQL = {
@@ -447,9 +445,7 @@ class SQLiteRuntimeStore:
         self._path = path
         self._writer = writer
         self._reader = reader
-        self._queue: asyncio.Queue[_WriteRequest | None] = asyncio.Queue(
-            maxsize=writer_queue_capacity
-        )
+        self._queue: asyncio.Queue[_WriteRequest | None] = asyncio.Queue(maxsize=writer_queue_capacity)
         self._submission_lock = asyncio.Lock()
         self._metric_capacity = metric_buffer_capacity
         self._metrics: list[MetricRecord] = []
@@ -461,9 +457,7 @@ class SQLiteRuntimeStore:
         self._metric_flush_task: asyncio.Task[int] | None = None
         self._close_task: asyncio.Task[int] | None = None
         self._actor = (
-            asyncio.create_task(self._writer_loop(), name="omlxc-sqlite-writer")
-            if writer is not None
-            else None
+            asyncio.create_task(self._writer_loop(), name="omlxc-sqlite-writer") if writer is not None else None
         )
 
     @classmethod
@@ -744,12 +738,8 @@ class SQLiteRuntimeStore:
             _bounded_text(reason, "route rejection reason", reject_sensitive=True)
         if record.selected_placement_id is not None:
             _bounded_text(record.selected_placement_id, "selected placement")
-        candidate_json = json.dumps(
-            list(record.candidates), ensure_ascii=True, separators=(",", ":")
-        )
-        rejection_json = json.dumps(
-            dict(record.rejections), ensure_ascii=True, separators=(",", ":"), sort_keys=True
-        )
+        candidate_json = json.dumps(list(record.candidates), ensure_ascii=True, separators=(",", ":"))
+        rejection_json = json.dumps(dict(record.rejections), ensure_ascii=True, separators=(",", ":"), sort_keys=True)
         if len(candidate_json.encode()) + len(rejection_json.encode()) > _MAX_REPOSITORY_JSON_BYTES:
             raise ValueError("route audit JSON size exceeds the limit")
 
@@ -784,9 +774,7 @@ class SQLiteRuntimeStore:
 
         return await self._write(operation)
 
-    async def list_route_audits(
-        self, *, after_sequence: int, limit: int = 100
-    ) -> tuple[RouteAuditRecord, ...]:
+    async def list_route_audits(self, *, after_sequence: int, limit: int = 100) -> tuple[RouteAuditRecord, ...]:
         _validate_page(after_sequence, limit)
         cursor = await self._require_reader().execute(
             """
@@ -827,9 +815,7 @@ class SQLiteRuntimeStore:
                     sequence=existing.sequence,
                 )
                 if existing != requested:
-                    raise ConfigRevisionConflictError(
-                        "config revision ID conflicts with existing immutable content"
-                    )
+                    raise ConfigRevisionConflictError("config revision ID conflicts with existing immutable content")
                 return existing
             inserted = await connection.execute(
                 """
@@ -869,9 +855,7 @@ class SQLiteRuntimeStore:
         await cursor.close()
         return _config_revision_record(row) if row is not None else None
 
-    async def list_config_revisions(
-        self, *, after_sequence: int, limit: int = 100
-    ) -> tuple[ConfigRevisionRecord, ...]:
+    async def list_config_revisions(self, *, after_sequence: int, limit: int = 100) -> tuple[ConfigRevisionRecord, ...]:
         _validate_page(after_sequence, limit)
         cursor = await self._require_reader().execute(
             """
@@ -953,9 +937,7 @@ class SQLiteRuntimeStore:
         await cursor.close()
         return int(row[0]) if row else 0
 
-    async def list_metrics(
-        self, *, after_sequence: int, limit: int = 100
-    ) -> tuple[MetricRecord, ...]:
+    async def list_metrics(self, *, after_sequence: int, limit: int = 100) -> tuple[MetricRecord, ...]:
         _validate_page(after_sequence, limit)
         cursor = await self._require_reader().execute(
             """
@@ -1004,9 +986,7 @@ class SQLiteRuntimeStore:
                 """,
                 (cutoff_text,),
             )
-            cursor = await connection.execute(
-                "DELETE FROM request_metrics WHERE observed_at < ?", (cutoff_text,)
-            )
+            cursor = await connection.execute("DELETE FROM request_metrics WHERE observed_at < ?", (cutoff_text,))
             return max(cursor.rowcount, 0)
 
         return await self._write(operation)
@@ -1107,9 +1087,7 @@ class SQLiteRuntimeStore:
                 except (TypeError, ValueError, UnicodeError):
                     raise _stored_value_error() from None
                 if actual != expected:
-                    raise EventConflictError(
-                        "durable event ID conflicts with existing immutable content"
-                    )
+                    raise EventConflictError("durable event ID conflicts with existing immutable content")
                 return int(row[0])
             if cursor.lastrowid is None:
                 raise StorageDegradedError("durable event sequence is unavailable")
@@ -1131,17 +1109,13 @@ class SQLiteRuntimeStore:
 
         async def operation(connection: aiosqlite.Connection) -> StoredJob:
             if idempotency_key is not None:
-                cursor = await connection.execute(
-                    "SELECT * FROM jobs WHERE idempotency_key = ?", (idempotency_key,)
-                )
+                cursor = await connection.execute("SELECT * FROM jobs WHERE idempotency_key = ?", (idempotency_key,))
                 existing = await cursor.fetchone()
                 await cursor.close()
                 if existing is not None:
                     stored = _stored_job(existing)
                     if stored.payload_fingerprint != payload_fingerprint or stored.kind != job.kind:
-                        raise JobConflictError(
-                            "idempotency key payload conflicts with existing Job"
-                        )
+                        raise JobConflictError("idempotency key payload conflicts with existing Job")
                     return stored
             try:
                 await connection.execute(
@@ -1194,16 +1168,12 @@ class SQLiteRuntimeStore:
         return await self._write(operation)
 
     async def get_job(self, job_id: str) -> StoredJob | None:
-        cursor = await self._require_reader().execute(
-            "SELECT * FROM jobs WHERE job_id = ?", (job_id,)
-        )
+        cursor = await self._require_reader().execute("SELECT * FROM jobs WHERE job_id = ?", (job_id,))
         row = await cursor.fetchone()
         await cursor.close()
         return _stored_job(row) if row is not None else None
 
-    async def list_jobs(
-        self, *, after_job_id: str | None = None, limit: int = 100
-    ) -> tuple[StoredJob, ...]:
+    async def list_jobs(self, *, after_job_id: str | None = None, limit: int = 100) -> tuple[StoredJob, ...]:
         if limit < 1 or limit > MAX_PAGE_SIZE:
             raise ValueError("job page size is invalid")
         cursor = await self._require_reader().execute(
@@ -1244,9 +1214,7 @@ class SQLiteRuntimeStore:
             transition_job(current.state, target)
             if progress < current.progress:
                 raise ValueError("Job progress must be monotonic")
-            reference = (
-                rollback_reference if rollback_reference is not None else current.rollback_reference
-            )
+            reference = rollback_reference if rollback_reference is not None else current.rollback_reference
             await connection.execute(
                 """
                 UPDATE jobs SET state = ?, progress = ?, updated_at = ?,
@@ -1280,9 +1248,7 @@ class SQLiteRuntimeStore:
 
         return await self._write(operation)
 
-    async def request_job_cancel(
-        self, job_id: str, *, observed_at: datetime, event_id: str
-    ) -> StoredJob:
+    async def request_job_cancel(self, job_id: str, *, observed_at: datetime, event_id: str) -> StoredJob:
         timestamp = _utc_text(observed_at)
 
         async def operation(connection: aiosqlite.Connection) -> StoredJob:
@@ -1397,9 +1363,7 @@ class SQLiteRuntimeStore:
                     progress=current.progress,
                     observed_at=observed_at,
                 )
-                refreshed = await connection.execute(
-                    "SELECT * FROM jobs WHERE job_id = ?", (current.id,)
-                )
+                refreshed = await connection.execute("SELECT * FROM jobs WHERE job_id = ?", (current.id,))
                 refreshed_row = await refreshed.fetchone()
                 await refreshed.close()
                 if refreshed_row is not None:
@@ -1410,9 +1374,7 @@ class SQLiteRuntimeStore:
         self._recovery_complete = True
         return recovered
 
-    async def replay_durable_events(
-        self, *, after_sequence: int, limit: int = 100
-    ) -> tuple[DurableEventRecord, ...]:
+    async def replay_durable_events(self, *, after_sequence: int, limit: int = 100) -> tuple[DurableEventRecord, ...]:
         if after_sequence < 0 or limit < 1 or limit > MAX_PAGE_SIZE:
             raise ValueError("durable event cursor or page size is invalid")
         cursor = await self._require_reader().execute(
@@ -1613,9 +1575,7 @@ async def _migrate(connection: aiosqlite.Connection) -> None:
     if version == SCHEMA_VERSION:
         return
     if version == 0:
-        await connection.executescript(
-            f"BEGIN IMMEDIATE;\n{_V4_SCHEMA_SQL};\nPRAGMA user_version = 4;\nCOMMIT;"
-        )
+        await connection.executescript(f"BEGIN IMMEDIATE;\n{_V4_SCHEMA_SQL};\nPRAGMA user_version = 4;\nCOMMIT;")
         return
     if version == 1:
         await connection.executescript(
@@ -1630,8 +1590,7 @@ async def _migrate(connection: aiosqlite.Connection) -> None:
         version = 2
     if version == 2:
         await connection.executescript(
-            f"BEGIN IMMEDIATE;\n{_V3_TABLE_SQL['inventory_high_water']};\n"
-            "PRAGMA user_version = 3;\nCOMMIT;"
+            f"BEGIN IMMEDIATE;\n{_V3_TABLE_SQL['inventory_high_water']};\nPRAGMA user_version = 3;\nCOMMIT;"
         )
         version = 3
     if version == 3:
@@ -1661,8 +1620,7 @@ async def _validate_schema(connection: aiosqlite.Connection) -> None:
         raise aiosqlite.DatabaseError("SQLite required table invariant failed")
     for table, expected in _REQUIRED_COLUMN_SPECS.items():
         cursor = await connection.execute(
-            'SELECT name, type, "notnull", dflt_value, pk, hidden '
-            "FROM pragma_table_xinfo(?) ORDER BY cid",
+            'SELECT name, type, "notnull", dflt_value, pk, hidden FROM pragma_table_xinfo(?) ORDER BY cid',
             (table,),
         )
         actual = tuple(
@@ -1680,9 +1638,7 @@ async def _validate_schema(connection: aiosqlite.Connection) -> None:
         if actual != expected:
             raise aiosqlite.DatabaseError("SQLite column metadata invariant failed")
 
-    unique_columns: dict[str, set[tuple[str, ...]]] = {
-        table: set() for table in _REQUIRED_UNIQUE_COLUMNS
-    }
+    unique_columns: dict[str, set[tuple[str, ...]]] = {table: set() for table in _REQUIRED_UNIQUE_COLUMNS}
     for table in _REQUIRED_COLUMNS:
         cursor = await connection.execute(
             'SELECT name, "unique", origin, partial FROM pragma_index_list(?) ORDER BY seq',
@@ -1713,15 +1669,10 @@ async def _validate_schema(connection: aiosqlite.Connection) -> None:
                     raise aiosqlite.DatabaseError("SQLite named index invariant failed")
             if is_unique and table in unique_columns:
                 unique_columns[table].add(columns)
-    if any(
-        unique_columns[table] != set(expected)
-        for table, expected in _REQUIRED_UNIQUE_COLUMNS.items()
-    ):
+    if any(unique_columns[table] != set(expected) for table, expected in _REQUIRED_UNIQUE_COLUMNS.items()):
         raise aiosqlite.DatabaseError("SQLite uniqueness invariant failed")
     for index in _REQUIRED_INDEX_PROPERTIES:
-        cursor = await connection.execute(
-            "SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = ?", (index,)
-        )
+        cursor = await connection.execute("SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = ?", (index,))
         present = await cursor.fetchone()
         await cursor.close()
         if present is None:
@@ -1748,8 +1699,7 @@ async def _validate_schema(connection: aiosqlite.Connection) -> None:
         **{("index", name): sql for name, sql in _V4_INDEX_SQL.items()},
     }
     cursor = await connection.execute(
-        "SELECT type, name, sql FROM sqlite_master "
-        "WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name"
+        "SELECT type, name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name"
     )
     actual_objects = {(str(row[0]), str(row[1])): str(row[2]) for row in await cursor.fetchall()}
     await cursor.close()
@@ -1801,9 +1751,7 @@ async def _validate_persisted_values(connection: aiosqlite.Connection) -> None:
     finally:
         await metric_cursor.close()
 
-    route_cursor = await connection.execute(
-        "SELECT candidate_json, rejection_json FROM route_audits"
-    )
+    route_cursor = await connection.execute("SELECT candidate_json, rejection_json FROM route_audits")
     try:
         async for row in route_cursor:
             _decode_route_json(str(row[0]), str(row[1]))
@@ -1827,9 +1775,7 @@ async def _validate_persisted_values(connection: aiosqlite.Connection) -> None:
         finally:
             await cursor.close()
 
-    fingerprint_cursor = await connection.execute(
-        "SELECT config_json, fingerprint FROM config_revisions"
-    )
+    fingerprint_cursor = await connection.execute("SELECT config_json, fingerprint FROM config_revisions")
     try:
         async for row in fingerprint_cursor:
             if str(row[1]) != _config_fingerprint(str(row[0])):
@@ -1924,26 +1870,17 @@ def _validate_config_revision(revision: ConfigRevisionWrite) -> None:
     if not _FINGERPRINT.fullmatch(revision.fingerprint):
         raise ValueError("config revision fingerprint is invalid")
     reference = revision.rollback_reference
-    if reference is not None and (
-        not _ROLLBACK_REFERENCE.fullmatch(reference) or _SENSITIVE_TEXT.search(reference)
-    ):
+    if reference is not None and (not _ROLLBACK_REFERENCE.fullmatch(reference) or _SENSITIVE_TEXT.search(reference)):
         raise ValueError("config rollback reference is invalid")
 
 
 def _decode_route_json(
     candidates_json: str, rejections_json: str
 ) -> tuple[tuple[str, ...], MappingProxyType[str, str]]:
-    if (
-        len(candidates_json.encode("utf-8")) + len(rejections_json.encode("utf-8"))
-        > _MAX_REPOSITORY_JSON_BYTES
-    ):
+    if len(candidates_json.encode("utf-8")) + len(rejections_json.encode("utf-8")) > _MAX_REPOSITORY_JSON_BYTES:
         raise ValueError("route JSON size exceeds the limit")
-    candidates_document = cast(
-        object, json.loads(candidates_json, parse_constant=_reject_nonfinite_json)
-    )
-    rejections_document = cast(
-        object, json.loads(rejections_json, parse_constant=_reject_nonfinite_json)
-    )
+    candidates_document = cast(object, json.loads(candidates_json, parse_constant=_reject_nonfinite_json))
+    rejections_document = cast(object, json.loads(rejections_json, parse_constant=_reject_nonfinite_json))
     if not isinstance(candidates_document, list):
         raise ValueError("route candidates are invalid")
     candidates_raw = cast(list[object], candidates_document)
@@ -1952,18 +1889,12 @@ def _decode_route_json(
     if not isinstance(rejections_document, dict):
         raise ValueError("route rejections are invalid")
     rejections_raw = cast(dict[object, object], rejections_document)
-    if not all(
-        isinstance(key, str) and isinstance(value, str) for key, value in rejections_raw.items()
-    ):
+    if not all(isinstance(key, str) and isinstance(value, str) for key, value in rejections_raw.items()):
         raise ValueError("route rejections are invalid")
     candidates = tuple(cast(str, item) for item in candidates_raw)
-    rejections = MappingProxyType(
-        {cast(str, key): cast(str, value) for key, value in rejections_raw.items()}
-    )
+    rejections = MappingProxyType({cast(str, key): cast(str, value) for key, value in rejections_raw.items()})
     canonical_candidates = json.dumps(list(candidates), ensure_ascii=True, separators=(",", ":"))
-    canonical_rejections = json.dumps(
-        dict(rejections), ensure_ascii=True, separators=(",", ":"), sort_keys=True
-    )
+    canonical_rejections = json.dumps(dict(rejections), ensure_ascii=True, separators=(",", ":"), sort_keys=True)
     if canonical_candidates != candidates_json or canonical_rejections != rejections_json:
         raise ValueError("route JSON is not canonical")
     return candidates, rejections

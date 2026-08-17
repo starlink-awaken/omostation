@@ -42,15 +42,11 @@ async def test_corrupt_wal_asset_group_moves_to_private_quarantine(tmp_path: Pat
 
 
 @pytest.mark.asyncio
-async def test_quarantine_fsyncs_private_directory_and_parent(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+async def test_quarantine_fsyncs_private_directory_and_parent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     primary = tmp_path / "state.db"
     _write_asset(primary, b"bad primary")
     fsynced: list[Path] = []
-    monkeypatch.setattr(
-        database_module, "_fsync_path", lambda path: fsynced.append(path), raising=False
-    )
+    monkeypatch.setattr(database_module, "_fsync_path", lambda path: fsynced.append(path), raising=False)
     store = await SQLiteRuntimeStore.open(primary, quarantine_suffix_factory=lambda: "fsync")
     try:
         assert store.degraded
@@ -67,8 +63,6 @@ async def test_orphan_sidecar_starts_quarantine_instead_of_fake_primary(tmp_path
     try:
         assert store.degraded
         assert not primary.exists()
-        assert (
-            tmp_path / "state.db.corrupt-orphan" / "state.db-wal"
-        ).read_bytes() == b"orphan only"
+        assert (tmp_path / "state.db.corrupt-orphan" / "state.db-wal").read_bytes() == b"orphan only"
     finally:
         await store.close()

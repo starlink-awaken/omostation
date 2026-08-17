@@ -291,9 +291,7 @@ async def test_lifecycle_refuses_to_write_when_loaded_state_is_unknown(operation
 
 
 def test_vision_accepts_openai_image_blocks_and_rejects_unsafe_shapes() -> None:
-    image = ImageContentBlock(
-        image_url=ImageURL(url="data:image/png;base64,aGVsbG8=", detail="low")
-    )
+    image = ImageContentBlock(image_url=ImageURL(url="data:image/png;base64,aGVsbG8=", detail="low"))
     message = ChatMessage(
         role="user",
         content=(TextContentBlock(text="describe"), image),
@@ -461,9 +459,7 @@ async def test_tune_is_idempotent_and_uses_observed_global_and_model_routes() ->
 
 @pytest.mark.asyncio
 async def test_tune_unsupported_endpoint_returns_typed_result() -> None:
-    adapter = make_adapter(
-        httpx.MockTransport(lambda _request: httpx.Response(404, json={"detail": "missing"}))
-    )
+    adapter = make_adapter(httpx.MockTransport(lambda _request: httpx.Response(404, json={"detail": "missing"})))
 
     result = await adapter.tune(  # type: ignore[attr-defined]
         TuneRequest(scope=TuneScope.GLOBAL, settings=TuneSettings(max_tokens=64))
@@ -625,9 +621,7 @@ class TrackingChunkStream(httpx.AsyncByteStream):
 
 @pytest.mark.asyncio
 async def test_stream_http_error_is_typed_before_any_content() -> None:
-    adapter = make_adapter(
-        httpx.MockTransport(lambda _request: httpx.Response(503, json={"detail": "down"}))
-    )
+    adapter = make_adapter(httpx.MockTransport(lambda _request: httpx.Response(503, json={"detail": "down"})))
 
     events = [event async for event in adapter.stream_chat(chat_request())]  # type: ignore[attr-defined]
 
@@ -748,11 +742,8 @@ async def test_sse_framing_supports_multiline_data_comments_fields_and_crlf() ->
 @pytest.mark.asyncio
 async def test_stream_preserves_finish_reason_from_empty_terminal_frame() -> None:
     body = (
-        sse_content_frame("partial")
-        + 'data: {"usage":{"prompt_tokens":2,"completion_tokens":1,"total_tokens":3},'
-        '"choices":[]}\n\n'
-        + 'data: {"choices":[{"delta":{},"finish_reason":"length"}]}\n\n'
-        + "data: [DONE]\n\n"
+        sse_content_frame("partial") + 'data: {"usage":{"prompt_tokens":2,"completion_tokens":1,"total_tokens":3},'
+        '"choices":[]}\n\n' + 'data: {"choices":[{"delta":{},"finish_reason":"length"}]}\n\n' + "data: [DONE]\n\n"
     )
     adapter = make_adapter(httpx.MockTransport(lambda _request: httpx.Response(200, content=body)))
 
@@ -770,9 +761,7 @@ async def test_stream_preserves_finish_reason_from_empty_terminal_frame() -> Non
 async def test_sse_framing_decodes_utf8_split_across_byte_chunks() -> None:
     body = ('data: {"choices":[{"delta":{"content":"你好"}}]}\n\ndata: [DONE]\n\n').encode()
     split_at = body.index("你".encode()) + 1
-    stream = TrackingChunkStream(
-        (body[:split_at], body[split_at : split_at + 1], body[split_at + 1 :])
-    )
+    stream = TrackingChunkStream((body[:split_at], body[split_at : split_at + 1], body[split_at + 1 :]))
     adapter = make_adapter(httpx.MockTransport(lambda _request: httpx.Response(200, stream=stream)))
 
     events = [event async for event in adapter.stream_chat(chat_request())]  # type: ignore[attr-defined]

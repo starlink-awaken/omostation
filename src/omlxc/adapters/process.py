@@ -47,9 +47,7 @@ def decode_process_output(payload: bytes) -> str:
             except UnicodeDecodeError:
                 if len(payload) % 2 != 0 or b"\x00" not in payload:
                     raise
-                encoding = (
-                    "utf-16-le" if payload[1::2].count(0) >= payload[::2].count(0) else "utf-16-be"
-                )
+                encoding = "utf-16-le" if payload[1::2].count(0) >= payload[::2].count(0) else "utf-16-be"
                 decoded = payload.decode(encoding, errors="strict")
     except UnicodeDecodeError:
         raise ProcessOutputDecodeError("process output encoding is unsupported") from None
@@ -84,9 +82,7 @@ async def _read_bounded(stream: asyncio.StreamReader, output_limit: int) -> byte
             raise ProcessOutputLimitError
 
 
-async def _kill_reap_and_cleanup(
-    process: asyncio.subprocess.Process, tasks: tuple[asyncio.Task[object], ...]
-) -> None:
+async def _kill_reap_and_cleanup(process: asyncio.subprocess.Process, tasks: tuple[asyncio.Task[object], ...]) -> None:
     with suppress(ProcessLookupError):
         process.kill()
     for task in tasks:
@@ -127,9 +123,7 @@ async def default_process_runner(
         (stdout_task, stderr_task, wait_task),
     )
     try:
-        stdout, stderr, _ = await asyncio.wait_for(
-            asyncio.gather(stdout_task, stderr_task, wait_task), timeout=timeout
-        )
+        stdout, stderr, _ = await asyncio.wait_for(asyncio.gather(stdout_task, stderr_task, wait_task), timeout=timeout)
     except BaseException:
         await _kill_reap_and_cleanup(process, tasks)
         raise

@@ -32,15 +32,11 @@ app = typer.Typer(
 @app.callback()
 def command(
     config: Annotated[Path | None, typer.Option("--config")] = None,
-    check: Annotated[
-        bool, typer.Option("--check", help="Validate startup without binding.")
-    ] = False,
+    check: Annotated[bool, typer.Option("--check", help="Validate startup without binding.")] = False,
 ) -> None:
     """Load daemon configuration, then validate or serve it."""
     try:
-        selected_config = require_private_config_path(
-            default_config_path() if config is None else config
-        )
+        selected_config = require_private_config_path(default_config_path() if config is None else config)
         loaded = load_config(selected_config, base_directory=selected_config.parent)
     except ConfigError:
         typer.echo(
@@ -73,9 +69,7 @@ def command(
         asyncio.run(_serve(server))
     except (OSError, RuntimeError):
         typer.echo(
-            json.dumps(
-                {"schema_version": 1, "error": {"code": "E900", "message": "daemon startup failed"}}
-            ),
+            json.dumps({"schema_version": 1, "error": {"code": "E900", "message": "daemon startup failed"}}),
             err=True,
         )
         raise typer.Exit(EXIT_INTERNAL) from None

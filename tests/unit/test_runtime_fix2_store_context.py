@@ -63,9 +63,7 @@ async def test_anyio_cancel_scope_waits_for_blocked_writer_before_context_exits(
         commit_entered.set()
         await allow_commit.wait()
 
-    store = await SQLiteRuntimeStore.open(
-        tmp_path / "cancel-scope.db", before_writer_commit=before_writer_commit
-    )
+    store = await SQLiteRuntimeStore.open(tmp_path / "cancel-scope.db", before_writer_commit=before_writer_commit)
 
     async def owner() -> None:
         with anyio.CancelScope() as scope:
@@ -99,9 +97,7 @@ async def test_anyio_cancel_scope_waits_for_blocked_writer_before_context_exits(
         assert store.writer_task_settled
         assert await store.close() == 1
         pending_storage_tasks = {
-            task.get_name()
-            for task in asyncio.all_tasks()
-            if not task.done() and task.get_name().startswith("omlxc-")
+            task.get_name() for task in asyncio.all_tasks() if not task.done() and task.get_name().startswith("omlxc-")
         }
         assert pending_storage_tasks == set()
     finally:

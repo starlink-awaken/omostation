@@ -43,7 +43,7 @@ def compute_priority_multiplier(
 ) -> float:
     """
     Compute score multiplier based on request priority and node utilization.
-    
+
     Protects interactive headroom and throttles background batch tasks during high load.
     """
     available_slots = max(max_concurrency - in_flight, 0)

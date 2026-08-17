@@ -213,9 +213,7 @@ def test_invalid_sensitive_policy_input_is_hidden_from_validation_rendering() ->
         ({"allowed_ssh_users": frozenset({"-oProxyCommand=id"})}, "SSH user"),
     ],
 )
-def test_policy_requires_strong_identity_and_safe_endpoint_constraints(
-    changes: dict[str, object], match: str
-) -> None:
+def test_policy_requires_strong_identity_and_safe_endpoint_constraints(changes: dict[str, object], match: str) -> None:
     with pytest.raises(ValidationError, match=match):
         _policy(**changes)
 
@@ -324,12 +322,8 @@ async def test_self_cannot_impersonate_a_peer() -> None:
     ],
 )
 async def test_partial_policy_identity_match_is_typed_identity_drift(peer: object) -> None:
-    key = (
-        _OTHER_KEY if isinstance(peer, dict) and peer.get("PublicKey") == _OTHER_KEY else _PEER_KEY
-    )
-    adapter = _adapter(
-        policies=(_policy(),), process_runner=_runner_for(_document(peer=peer, peer_key=key))
-    )
+    key = _OTHER_KEY if isinstance(peer, dict) and peer.get("PublicKey") == _OTHER_KEY else _PEER_KEY
+    adapter = _adapter(policies=(_policy(),), process_runner=_runner_for(_document(peer=peer, peer_key=key)))
 
     with pytest.raises(TailscaleFailure) as captured:
         await adapter.snapshot()
@@ -340,9 +334,7 @@ async def test_partial_policy_identity_match_is_typed_identity_drift(peer: objec
 @pytest.mark.asyncio
 async def test_peer_and_policy_multiplicity_fail_closed_without_first_match() -> None:
     duplicate_policy = _policy(node_id="node-b")
-    adapter = _adapter(
-        policies=(_policy(), duplicate_policy), process_runner=_runner_for(_document())
-    )
+    adapter = _adapter(policies=(_policy(), duplicate_policy), process_runner=_runner_for(_document()))
 
     with pytest.raises(TailscaleFailure) as captured:
         await adapter.snapshot()
@@ -360,9 +352,7 @@ async def test_peer_and_policy_multiplicity_fail_closed_without_first_match() ->
         (RuntimeError("status-secret"), TailscaleErrorCode.PROCESS),
     ],
 )
-async def test_process_failures_are_typed_without_echoing_status(
-    failure: Exception, code: TailscaleErrorCode
-) -> None:
+async def test_process_failures_are_typed_without_echoing_status(failure: Exception, code: TailscaleErrorCode) -> None:
     async def runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
         del argv, timeout
         raise failure

@@ -72,9 +72,7 @@ class TestLmStudioContract(BackendAdapterContract):
                 if scenario is ContractScenario.STREAM_BREAK_AFTER_CONTENT:
                     return httpx.Response(
                         200,
-                        stream=BrokenSSEStream(
-                            b'data: {"choices":[{"delta":{"content":"hello"}}]}\n\n'
-                        ),
+                        stream=BrokenSSEStream(b'data: {"choices":[{"delta":{"content":"hello"}}]}\n\n'),
                     )
                 if scenario is ContractScenario.REASONING_RESPONSE:
                     return httpx.Response(

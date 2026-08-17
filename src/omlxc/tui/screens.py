@@ -109,10 +109,7 @@ class CommandScreen(ModalScreen[str | None]):
     def compose(self) -> ComposeResult:
         yield Vertical(
             Static("[bold #7dd3f5]⟡  命令面板[/bold #7dd3f5]"),
-            Static(
-                "[#5a7a9a]查询直接执行；[/#5a7a9a]"
-                "[yellow]R1/R2[/yellow] [#5a7a9a]操作必须经过确认门。[/#5a7a9a]"
-            ),
+            Static("[#5a7a9a]查询直接执行；[/#5a7a9a][yellow]R1/R2[/yellow] [#5a7a9a]操作必须经过确认门。[/#5a7a9a]"),
             Input(placeholder="例如：load local/model  或  cancel job-id", id="command-input"),
         )
 

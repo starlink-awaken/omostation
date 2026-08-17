@@ -123,7 +123,7 @@ class SemanticCacheRegistry:
     ) -> tuple[str | None, CacheTier | None]:
         """
         Query L1 (exact prefix) or L2 (normalized semantic fingerprint).
-        
+
         Returns (response_content, tier_hit).
         """
         current_time = time.monotonic() if now is None else now
@@ -182,9 +182,7 @@ class SemanticCacheRegistry:
     def get_stats(self) -> dict[str, float | int]:
         """Fetch real-time cache efficiency metrics."""
         total_queries = self._l1_hits + self._l2_hits + self._misses
-        hit_rate = (
-            (self._l1_hits + self._l2_hits) / total_queries if total_queries > 0 else 0.0
-        )
+        hit_rate = (self._l1_hits + self._l2_hits) / total_queries if total_queries > 0 else 0.0
         return {
             "total_entries": len(self._entries),
             "l1_exact_hits": self._l1_hits,

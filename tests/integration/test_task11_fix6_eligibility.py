@@ -80,9 +80,7 @@ class ColdBackend:
             compatible=True,
             model_available=self.state is not ModelRuntimeState.UNKNOWN,
             generation_ready=loaded and self.reachable,
-            observed_at=(
-                datetime(2020, 1, 1, tzinfo=UTC) if self.stale_probe else datetime.now(UTC)
-            ),
+            observed_at=(datetime(2020, 1, 1, tzinfo=UTC) if self.stale_probe else datetime.now(UTC)),
             capabilities=frozenset(
                 {
                     AdapterCapability.CHAT,
@@ -108,9 +106,7 @@ class ColdBackend:
             ),
         )
 
-    async def load_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def load_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         self.events.append("load")
         self.load_calls += 1
         self.load_started.set()
@@ -133,9 +129,7 @@ class ColdBackend:
             ),
         )
 
-    async def unload_model(
-        self, model_id: str, *, idempotency_key: str | None = None
-    ) -> LifecycleResult:
+    async def unload_model(self, model_id: str, *, idempotency_key: str | None = None) -> LifecycleResult:
         self.events.append("unload")
         self.unload_calls += 1
         self.state = ModelRuntimeState.AVAILABLE
@@ -247,9 +241,7 @@ async def test_cold_available_production_uds_plans_loads_postverifies_and_infers
 ) -> None:
     config = _config(short_root)
     backend = ColdBackend()
-    composition = build_production_daemon(
-        config, adapters={"backend": cast(BackendAdapter, backend)}
-    )
+    composition = build_production_daemon(config, adapters={"backend": cast(BackendAdapter, backend)})
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
     try:
@@ -287,12 +279,8 @@ async def test_cold_available_production_uds_plans_loads_postverifies_and_infers
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("case", ["unknown", "memory", "authorization"])
-async def test_ineligible_production_catalog_never_attempts_load(
-    short_root: Path, case: str
-) -> None:
-    backend = ColdBackend(
-        state=ModelRuntimeState.UNKNOWN if case == "unknown" else ModelRuntimeState.AVAILABLE
-    )
+async def test_ineligible_production_catalog_never_attempts_load(short_root: Path, case: str) -> None:
+    backend = ColdBackend(state=ModelRuntimeState.UNKNOWN if case == "unknown" else ModelRuntimeState.AVAILABLE)
     config = _config(
         short_root,
         placement_memory_gb=None if case == "memory" else 2.0,
@@ -334,9 +322,7 @@ async def test_successful_lifecycle_without_fresh_loaded_postverify_is_not_optim
 ) -> None:
     config = _config(short_root)
     backend = ColdBackend(complete_load=False)
-    composition = build_production_daemon(
-        config, adapters={"backend": cast(BackendAdapter, backend)}
-    )
+    composition = build_production_daemon(config, adapters={"backend": cast(BackendAdapter, backend)})
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
     try:
@@ -365,9 +351,7 @@ async def test_unsupported_lifecycle_never_infers_even_if_postprobe_claims_loade
 ) -> None:
     config = _config(short_root)
     backend = ColdBackend(load_status=OperationStatus.UNSUPPORTED)
-    composition = build_production_daemon(
-        config, adapters={"backend": cast(BackendAdapter, backend)}
-    )
+    composition = build_production_daemon(config, adapters={"backend": cast(BackendAdapter, backend)})
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
     try:
@@ -391,9 +375,7 @@ async def test_unsupported_lifecycle_never_infers_even_if_postprobe_claims_loade
 async def test_explicit_job_and_inference_share_placement_singleflight(short_root: Path) -> None:
     config = _config(short_root)
     backend = ColdBackend(block_load=True)
-    composition = build_production_daemon(
-        config, adapters={"backend": cast(BackendAdapter, backend)}
-    )
+    composition = build_production_daemon(config, adapters={"backend": cast(BackendAdapter, backend)})
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
     try:
@@ -431,9 +413,7 @@ async def test_loaded_memory_denied_job_still_physically_unloads_and_postverifie
 ) -> None:
     config = _config(short_root, node_memory_gb=1)
     backend = ColdBackend(state=ModelRuntimeState.LOADED)
-    composition = build_production_daemon(
-        config, adapters={"backend": cast(BackendAdapter, backend)}
-    )
+    composition = build_production_daemon(config, adapters={"backend": cast(BackendAdapter, backend)})
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
     try:
@@ -457,9 +437,7 @@ async def test_loaded_memory_denied_job_still_physically_unloads_and_postverifie
 async def test_loaded_unavailable_backend_never_receives_unload_write(short_root: Path) -> None:
     config = _config(short_root)
     backend = ColdBackend(state=ModelRuntimeState.LOADED, reachable=False)
-    composition = build_production_daemon(
-        config, adapters={"backend": cast(BackendAdapter, backend)}
-    )
+    composition = build_production_daemon(config, adapters={"backend": cast(BackendAdapter, backend)})
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
     try:
@@ -479,9 +457,7 @@ async def test_loaded_unavailable_backend_never_receives_unload_write(short_root
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("case", ["stale", "authorization"])
-async def test_unload_probe_failure_never_becomes_false_noop_success(
-    short_root: Path, case: str
-) -> None:
+async def test_unload_probe_failure_never_becomes_false_noop_success(short_root: Path, case: str) -> None:
     config = _config(short_root, remote=case == "authorization")
     backend = ColdBackend(state=ModelRuntimeState.LOADED, stale_probe=case == "stale")
     composition = build_production_daemon(
@@ -509,9 +485,7 @@ async def test_unload_probe_failure_never_becomes_false_noop_success(
 async def test_load_memory_denied_never_calls_adapter_and_job_fails(short_root: Path) -> None:
     config = _config(short_root, node_memory_gb=1)
     backend = ColdBackend()
-    composition = build_production_daemon(
-        config, adapters={"backend": cast(BackendAdapter, backend)}
-    )
+    composition = build_production_daemon(config, adapters={"backend": cast(BackendAdapter, backend)})
     server = DaemonServer(composition.app, socket_path=config.daemon.socket_path)
     await server.start()
     try:

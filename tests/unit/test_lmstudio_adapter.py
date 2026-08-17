@@ -105,9 +105,7 @@ def _known_hosts(tmp_path: Path) -> Path:
     return path
 
 
-def _models_transport(
-    *, chat_content: str = "visible", model_id: str = "model-a"
-) -> httpx.MockTransport:
+def _models_transport(*, chat_content: str = "visible", model_id: str = "model-a") -> httpx.MockTransport:
     async def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/v1/models":
             return httpx.Response(200, json={"data": [{"id": model_id}]})
@@ -155,9 +153,7 @@ def test_ssh_target_rejects_option_port_and_command_injection(tmp_path: Path, ta
     ["-model", "model name", "model\nname", "../model", "model/../other", "model;id"],
 )
 @pytest.mark.asyncio
-async def test_model_identifier_rejects_shell_option_and_traversal(
-    tmp_path: Path, model_id: str
-) -> None:
+async def test_model_identifier_rejects_shell_option_and_traversal(tmp_path: Path, model_id: str) -> None:
     adapter = LmStudioAdapter(
         backend_id="lm",
         base_url="http://node.invalid:1234",
@@ -223,9 +219,7 @@ def test_known_hosts_must_be_absolute_regular_and_private(tmp_path: Path) -> Non
         )
 
 
-def test_known_hosts_requires_current_owner_and_private_parent(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_known_hosts_requires_current_owner_and_private_parent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     owned = _known_hosts(tmp_path)
     monkeypatch.setattr(os, "geteuid", lambda: os.stat(owned).st_uid + 1)
     with pytest.raises(ValueError, match="owner"):
@@ -271,9 +265,7 @@ def test_known_hosts_rejects_symlink_in_any_path_component(tmp_path: Path) -> No
     ("platform", "executable"),
     [(LmsPlatform.MACOS, "lms"), (LmsPlatform.WINDOWS, "lms.exe")],
 )
-async def test_ps_uses_exact_hardened_ssh_argv(
-    tmp_path: Path, platform: LmsPlatform, executable: str
-) -> None:
+async def test_ps_uses_exact_hardened_ssh_argv(tmp_path: Path, platform: LmsPlatform, executable: str) -> None:
     calls: list[tuple[tuple[str, ...], float]] = []
 
     async def runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
@@ -356,9 +348,7 @@ async def test_bad_ps_output_preserves_unknown_runtime_state(tmp_path: Path, std
         {"data": [{"modelKey": "model-a", "identifier": "model-a"}]},
     ],
 )
-async def test_ps_accepts_list_and_single_allowlisted_wrapper(
-    tmp_path: Path, payload: object
-) -> None:
+async def test_ps_accepts_list_and_single_allowlisted_wrapper(tmp_path: Path, payload: object) -> None:
     async def runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
         del argv, timeout
         return ProcessOutput(0, json.dumps(payload), "")
@@ -387,9 +377,7 @@ async def test_ps_accepts_list_and_single_allowlisted_wrapper(
         {"data": None},
     ],
 )
-async def test_ps_rejects_ambiguous_unknown_or_nonlist_wrapper(
-    tmp_path: Path, payload: object
-) -> None:
+async def test_ps_rejects_ambiguous_unknown_or_nonlist_wrapper(tmp_path: Path, payload: object) -> None:
     async def runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
         del argv, timeout
         return ProcessOutput(0, json.dumps(payload), "")
@@ -839,14 +827,8 @@ async def test_tune_rejects_unknown_fields_without_running_control(tmp_path: Pat
 @pytest.mark.asyncio
 async def test_tune_uses_confirmed_unload_load_and_verifies(tmp_path: Path) -> None:
     calls: list[tuple[str, ...]] = []
-    current = (
-        '[{"modelKey":"model-a","identifier":"model-a",'
-        '"contextLength":4096,"parallel":2,"ttlMs":60000}]'
-    )
-    desired = (
-        '[{"modelKey":"model-a","identifier":"model-a",'
-        '"contextLength":8192,"parallel":2,"ttlMs":120000}]'
-    )
+    current = '[{"modelKey":"model-a","identifier":"model-a","contextLength":4096,"parallel":2,"ttlMs":60000}]'
+    desired = '[{"modelKey":"model-a","identifier":"model-a","contextLength":8192,"parallel":2,"ttlMs":120000}]'
     outputs = iter(
         [
             ProcessOutput(0, current, ""),
@@ -904,12 +886,10 @@ async def test_tune_uses_canonical_http_identifier_and_control_source(
 ) -> None:
     calls: list[tuple[str, ...]] = []
     current = (
-        '[{"modelKey":"source-model","identifier":"public-model",'
-        '"contextLength":4096,"parallel":2,"ttlMs":60000}]'
+        '[{"modelKey":"source-model","identifier":"public-model","contextLength":4096,"parallel":2,"ttlMs":60000}]'
     )
     desired = (
-        '[{"modelKey":"source-model","identifier":"public-model",'
-        '"contextLength":8192,"parallel":2,"ttlMs":60000}]'
+        '[{"modelKey":"source-model","identifier":"public-model","contextLength":8192,"parallel":2,"ttlMs":60000}]'
     )
     outputs = iter(
         [
@@ -968,8 +948,7 @@ async def test_tune_canonical_unload_verification_failure_does_not_load(
 ) -> None:
     calls: list[tuple[str, ...]] = []
     current = (
-        '[{"modelKey":"source-model","identifier":"public-model",'
-        '"contextLength":4096,"parallel":2,"ttlMs":60000}]'
+        '[{"modelKey":"source-model","identifier":"public-model","contextLength":4096,"parallel":2,"ttlMs":60000}]'
     )
     outputs = iter(
         [
@@ -1015,8 +994,7 @@ async def test_tune_canonical_load_verification_failure_is_partial(
 ) -> None:
     calls: list[tuple[str, ...]] = []
     current = (
-        '[{"modelKey":"source-model","identifier":"public-model",'
-        '"contextLength":4096,"parallel":2,"ttlMs":60000}]'
+        '[{"modelKey":"source-model","identifier":"public-model","contextLength":4096,"parallel":2,"ttlMs":60000}]'
     )
     outputs = iter(
         [
@@ -1062,10 +1040,7 @@ async def test_tune_reports_partial_failure_after_verified_unload_then_load_fail
     tmp_path: Path,
 ) -> None:
     calls: list[tuple[str, ...]] = []
-    current = (
-        '[{"modelKey":"model-a","identifier":"model-a",'
-        '"contextLength":4096,"parallel":2,"ttlMs":60000}]'
-    )
+    current = '[{"modelKey":"model-a","identifier":"model-a","contextLength":4096,"parallel":2,"ttlMs":60000}]'
     outputs = iter(
         [
             ProcessOutput(0, current, ""),
@@ -1282,9 +1257,7 @@ async def test_default_process_runner_cancellation_kills_reaps_and_cleans_reader
         return process
 
     monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
-    task = asyncio.create_task(
-        lmstudio_module._default_process_runner(("ssh",), 10.0, output_limit=8)
-    )
+    task = asyncio.create_task(lmstudio_module._default_process_runner(("ssh",), 10.0, output_limit=8))
     await process.stdout.started.wait()
     await process.stderr.started.wait()
 
@@ -1563,9 +1536,7 @@ async def test_runtime_known_hosts_drift_and_malformed_control_item_fail_closed(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("failure", [OSError("missing ssh"), RuntimeError("runner drift")])
-async def test_process_start_and_runner_failures_preserve_unknown(
-    tmp_path: Path, failure: Exception
-) -> None:
+async def test_process_start_and_runner_failures_preserve_unknown(tmp_path: Path, failure: Exception) -> None:
     async def runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
         del argv, timeout
         raise failure

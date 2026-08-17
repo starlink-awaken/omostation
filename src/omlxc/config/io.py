@@ -43,10 +43,7 @@ class AtomicRollbackError(AtomicWriteError):
         rollback_error: OSError,
     ) -> None:
         super().__init__(operation_stage, operation_error)
-        self.args = (
-            f"atomic write failed during {operation_stage}; "
-            f"rollback failed during {rollback_stage}",
-        )
+        self.args = (f"atomic write failed during {operation_stage}; rollback failed during {rollback_stage}",)
         self.operation_stage = operation_stage
         self.operation_error = operation_error
         self.rollback_stage = rollback_stage
@@ -86,9 +83,7 @@ def write_config_atomic(
     directory_sync = fsync_directory or _fsync_directory
     original_exists = target.exists()
     original_mode = stat.S_IMODE(target.stat().st_mode) if original_exists else None
-    file_descriptor, temporary_name = tempfile.mkstemp(
-        prefix=f".{target.name}.", suffix=".tmp", dir=target.parent
-    )
+    file_descriptor, temporary_name = tempfile.mkstemp(prefix=f".{target.name}.", suffix=".tmp", dir=target.parent)
     temporary_path = Path(temporary_name)
     snapshot_path: Path | None = None
     stage = "chmod"
@@ -185,8 +180,7 @@ def _target_matches_original(
         return False
     try:
         return (
-            target.read_bytes() == snapshot_path.read_bytes()
-            and stat.S_IMODE(target.stat().st_mode) == original_mode
+            target.read_bytes() == snapshot_path.read_bytes() and stat.S_IMODE(target.stat().st_mode) == original_mode
         )
     except OSError:
         return False

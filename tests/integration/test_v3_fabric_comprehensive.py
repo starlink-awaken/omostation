@@ -234,9 +234,7 @@ def test_fabric_last_resort_probing_and_drift_detection() -> None:
         for _ in range(3):
             b.record_failure(now=10.0)
 
-    snapshots_broken = _create_cluster_placements(
-        mbp_circuit_open=True, mini_circuit_open=True
-    )
+    snapshots_broken = _create_cluster_placements(mbp_circuit_open=True, mini_circuit_open=True)
     req = RouteRequest(
         request_id="emergency-probe",
         model_id="coding",
@@ -253,12 +251,8 @@ def test_fabric_last_resort_probing_and_drift_detection() -> None:
     # Test drift detector
     now = datetime.now(UTC)
     records = [
-        BenchmarkRunRecord(
-            "r1", "qwen-27b", mbp_id, "mbp", 100.0, 20.0, 20.0, 58.0, None, now - timedelta(days=2)
-        ),
-        BenchmarkRunRecord(
-            "r2", "qwen-27b", mbp_id, "mbp", 100.0, 20.0, 20.0, 56.0, None, now - timedelta(days=1)
-        ),
+        BenchmarkRunRecord("r1", "qwen-27b", mbp_id, "mbp", 100.0, 20.0, 20.0, 58.0, None, now - timedelta(days=2)),
+        BenchmarkRunRecord("r2", "qwen-27b", mbp_id, "mbp", 100.0, 20.0, 20.0, 56.0, None, now - timedelta(days=1)),
         BenchmarkRunRecord("r3", "qwen-27b", mbp_id, "mbp", 100.0, 20.0, 35.0, 35.0, None, now),
     ]
     detector = PerformanceDriftDetector(drift_threshold=0.25)

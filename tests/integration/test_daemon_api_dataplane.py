@@ -113,16 +113,12 @@ class FakeInferenceService:
             profile=self.final_profile,
         )
 
-    def stream_chat(
-        self, route: object, request: ChatRequest, *, deadline: float
-    ) -> AsyncIterator[StreamEvent]:
+    def stream_chat(self, route: object, request: ChatRequest, *, deadline: float) -> AsyncIterator[StreamEvent]:
         assert deadline > 0
         self.chat_requests.append(request)
         return self.stream
 
-    async def embed(
-        self, route: object, request: EmbeddingRequest, *, deadline: float
-    ) -> EmbeddingExecution:
+    async def embed(self, route: object, request: EmbeddingRequest, *, deadline: float) -> EmbeddingExecution:
         self.embedding_requests.append(request)
         count = 1 if isinstance(request.input, str) else len(request.input)
         return EmbeddingExecution(
@@ -135,15 +131,11 @@ class FakeInferenceService:
             profile=self.final_profile,
         )
 
-    async def rerank(
-        self, *, request_id: str, query: str, documents: tuple[str, ...]
-    ) -> RerankExecution:
+    async def rerank(self, *, request_id: str, query: str, documents: tuple[str, ...]) -> RerankExecution:
         del query
         return RerankExecution(
             request_id,
-            tuple(
-                RankedItem(index=index, score=1.0 - index / 10) for index in range(len(documents))
-            ),
+            tuple(RankedItem(index=index, score=1.0 - index / 10) for index in range(len(documents))),
             placement_id=self.final_placement_id,
             backend_id=self.final_backend_id,
             profile=self.final_profile,
@@ -251,9 +243,7 @@ async def test_sse_prefetches_final_failover_metadata_and_emits_unique_done(
 async def test_openai_endpoints_resolve_aliases_to_canonical_model_when_control_enabled(
     inference: FakeInferenceService,
 ) -> None:
-    transport = httpx.ASGITransport(
-        app=create_app(control=FakeControlService(), inference=inference)
-    )
+    transport = httpx.ASGITransport(app=create_app(control=FakeControlService(), inference=inference))
     async with httpx.AsyncClient(transport=transport, base_url="http://omlxc") as client:
         chat = await client.post(
             "/openai/v1/chat/completions",
@@ -370,9 +360,7 @@ async def test_post_token_stream_error_is_structured_without_replay(
 
     assert "partial" in response.text
     assert '"type":"stream_error"' in response.text
-    chunks = [
-        json.loads(line[6:]) for line in response.text.splitlines() if line.startswith("data: ")
-    ]
+    chunks = [json.loads(line[6:]) for line in response.text.splitlines() if line.startswith("data: ")]
     assert chunks[-1]["error"]["partial_result"] == {
         "error_code": "stream_interrupted",
         "phase": "after_content",
@@ -380,13 +368,7 @@ async def test_post_token_stream_error_is_structured_without_replay(
     }
     assert "secret backend detail" not in response.text
     assert "[DONE]" not in response.text
-    assert (
-        sum(
-            chunk.get("choices", [{}])[0].get("delta", {}).get("content") == "partial"
-            for chunk in chunks
-        )
-        == 1
-    )
+    assert sum(chunk.get("choices", [{}])[0].get("delta", {}).get("content") == "partial" for chunk in chunks) == 1
     assert inference.stream.closed
 
 
@@ -526,9 +508,7 @@ async def test_openai_errors_are_sanitized_and_request_bodies_are_bounded(
 async def test_prepare_rejections_are_ordered_typed_and_sanitized(
     transport: httpx.ASGITransport, inference: FakeInferenceService
 ) -> None:
-    async def rejected_chat(
-        route: object, request: ChatRequest, *, deadline: float
-    ) -> ChatExecution:
+    async def rejected_chat(route: object, request: ChatRequest, *, deadline: float) -> ChatExecution:
         del route, deadline
         return ChatExecution(
             request_id=request.request_id,
@@ -570,9 +550,7 @@ async def test_prepare_rejection_api_uses_stable_opaque_id_for_unsafe_config_id(
     unsafe_id = "node/private/model"
     expected_id = f"opaque:{hashlib.sha256(unsafe_id.encode()).hexdigest()[:12]}"
 
-    async def rejected_chat(
-        route: object, request: ChatRequest, *, deadline: float
-    ) -> ChatExecution:
+    async def rejected_chat(route: object, request: ChatRequest, *, deadline: float) -> ChatExecution:
         del route, deadline
         return ChatExecution(
             request_id=request.request_id,
@@ -605,9 +583,7 @@ async def test_prepare_rejection_api_uses_stable_opaque_id_for_unsafe_config_id(
 async def test_incomplete_success_metadata_fails_closed_without_route_headers(
     transport: httpx.ASGITransport, inference: FakeInferenceService
 ) -> None:
-    async def incomplete_chat(
-        route: object, request: ChatRequest, *, deadline: float
-    ) -> ChatExecution:
+    async def incomplete_chat(route: object, request: ChatRequest, *, deadline: float) -> ChatExecution:
         del route, deadline
         return ChatExecution(
             request_id=request.request_id,

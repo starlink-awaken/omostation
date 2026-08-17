@@ -89,9 +89,7 @@ class TestOllamaContract(BackendAdapterContract):
                 if scenario is ContractScenario.STREAM_BREAK_AFTER_CONTENT:
                     return httpx.Response(
                         200,
-                        stream=BrokenNDJSONStream(
-                            b'{"message":{"content":"hello"},"done":false}\n'
-                        ),
+                        stream=BrokenNDJSONStream(b'{"message":{"content":"hello"},"done":false}\n'),
                     )
                 if scenario is ContractScenario.REASONING_RESPONSE:
                     return httpx.Response(

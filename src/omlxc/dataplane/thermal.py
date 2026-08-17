@@ -110,31 +110,21 @@ class ThermalGuard:
     ) -> float:
         """Compute score multiplier according to thermal and power conditions."""
         if thermal_level == ThermalPressureLevel.TRAPPING or (
-            power_source == PowerSource.BATTERY
-            and battery_percent is not None
-            and battery_percent < 15.0
+            power_source == PowerSource.BATTERY and battery_percent is not None and battery_percent < 15.0
         ):
             return 0.1
         if thermal_level == ThermalPressureLevel.HEAVY or (
-            power_source == PowerSource.BATTERY
-            and battery_percent is not None
-            and battery_percent < 50.0
+            power_source == PowerSource.BATTERY and battery_percent is not None and battery_percent < 50.0
         ):
             return 0.5
-        if (
-            thermal_level == ThermalPressureLevel.MODERATE
-            or power_source == PowerSource.BATTERY
-        ):
+        if thermal_level == ThermalPressureLevel.MODERATE or power_source == PowerSource.BATTERY:
             return 0.7
         return 1.0
 
     def probe(self, now: float | None = None) -> NodeEnvironmentalState:
         """Fetch current hardware environmental snapshot (cached if recent)."""
         current_time = time.monotonic() if now is None else now
-        if (
-            self._cached_state is not None
-            and (current_time - self._cached_state.recorded_at) < self._cache_ttl_seconds
-        ):
+        if self._cached_state is not None and (current_time - self._cached_state.recorded_at) < self._cache_ttl_seconds:
             return self._cached_state
 
         thermal_level, power_source, battery_percent = self._probe_os()

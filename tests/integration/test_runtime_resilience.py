@@ -34,9 +34,7 @@ async def test_corrupt_database_is_quarantined_without_creating_fake_primary(
 ) -> None:
     database = tmp_path / "state.db"
     database.write_bytes(b"not a sqlite database; api_key=must-not-appear")
-    store = await SQLiteRuntimeStore.open(
-        database, quarantine_suffix_factory=lambda: "deterministic"
-    )
+    store = await SQLiteRuntimeStore.open(database, quarantine_suffix_factory=lambda: "deterministic")
     assert store.degraded
     assert not database.exists()
     quarantine = tmp_path / "state.db.corrupt-deterministic"
@@ -55,9 +53,7 @@ async def test_writer_close_restart_flushes_accepted_metrics(tmp_path: Path) -> 
     database = tmp_path / "state.db"
     store = await SQLiteRuntimeStore.open(database)
     for index in range(20):
-        assert store.accept_metric(
-            MetricRecord(f"req-{index}", datetime(2026, 8, 11, tzinfo=UTC), float(index), True)
-        )
+        assert store.accept_metric(MetricRecord(f"req-{index}", datetime(2026, 8, 11, tzinfo=UTC), float(index), True))
     assert await store.close() == 20
     reopened = await SQLiteRuntimeStore.open(database)
     assert await reopened.metric_count() == 20
@@ -93,15 +89,11 @@ class IsolatedOperator:
     async def load(self, target: PlacementTarget, *, idempotency_key: str) -> LifecycleResult:
         del idempotency_key
         self.loaded.add(target.id)
-        return LifecycleResult(
-            model_id=target.model_id, status=OperationStatus.SUCCEEDED, changed=True
-        )
+        return LifecycleResult(model_id=target.model_id, status=OperationStatus.SUCCEEDED, changed=True)
 
     async def unload(self, target: PlacementTarget, *, idempotency_key: str) -> LifecycleResult:
         del idempotency_key
-        return LifecycleResult(
-            model_id=target.model_id, status=OperationStatus.UNCHANGED, changed=False
-        )
+        return LifecycleResult(model_id=target.model_id, status=OperationStatus.UNCHANGED, changed=False)
 
 
 @pytest.mark.asyncio

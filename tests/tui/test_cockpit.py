@@ -18,9 +18,7 @@ def _tui_api():  # type: ignore[no-untyped-def]
 
 
 def _envelope(data: object, request_id: str) -> DaemonEnvelope:
-    return DaemonEnvelope.model_validate(
-        {"schema_version": 1, "request_id": request_id, "data": data}
-    )
+    return DaemonEnvelope.model_validate({"schema_version": 1, "request_id": request_id, "data": data})
 
 
 class CockpitClient:

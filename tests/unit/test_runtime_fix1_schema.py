@@ -38,9 +38,7 @@ async def test_v1_schema_or_logical_damage_is_quarantined_degraded(
         connection.commit()
         connection.close()
 
-    store = await SQLiteRuntimeStore.open(
-        database, quarantine_suffix_factory=lambda: "schema-damage"
-    )
+    store = await SQLiteRuntimeStore.open(database, quarantine_suffix_factory=lambda: "schema-damage")
     assert store.degraded
     assert not database.exists()
     assert (tmp_path / f"{damage}.db.corrupt-schema-damage").exists()
@@ -56,8 +54,6 @@ async def test_higher_user_version_fails_closed_without_quarantine(tmp_path: Pat
     connection.close()
 
     with pytest.raises(UnsupportedSchemaError):
-        await SQLiteRuntimeStore.open(
-            database, quarantine_suffix_factory=lambda: "must-not-quarantine"
-        )
+        await SQLiteRuntimeStore.open(database, quarantine_suffix_factory=lambda: "must-not-quarantine")
     assert database.exists()
     assert not (tmp_path / "future.db.corrupt-must-not-quarantine").exists()

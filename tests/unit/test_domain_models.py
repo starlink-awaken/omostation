@@ -189,9 +189,7 @@ def test_domain_entities_are_strict_frozen_and_json_serializable() -> None:
         (NodeState.RECOVERING, NodeState.PROBING),
     ],
 )
-def test_node_state_machine_accepts_declared_transitions(
-    current: NodeState, target: NodeState
-) -> None:
+def test_node_state_machine_accepts_declared_transitions(current: NodeState, target: NodeState) -> None:
     assert transition_node(current, target) is target
 
 
@@ -213,9 +211,7 @@ def test_node_state_machine_fails_closed_on_illegal_transition() -> None:
         (JobState.CANCELLING, JobState.CANCELLED),
     ],
 )
-def test_job_state_machine_accepts_declared_transitions(
-    current: JobState, target: JobState
-) -> None:
+def test_job_state_machine_accepts_declared_transitions(current: JobState, target: JobState) -> None:
     assert transition_job(current, target) is target
 
 
@@ -227,15 +223,9 @@ def test_job_state_machine_fails_closed_on_illegal_transition() -> None:
 def test_node_transition_table_exhaustively_accepts_only_declared_edges() -> None:
     expected = {
         NodeState.UNKNOWN: frozenset({NodeState.PROBING}),
-        NodeState.PROBING: frozenset(
-            {NodeState.HEALTHY, NodeState.DEGRADED, NodeState.UNREACHABLE}
-        ),
-        NodeState.HEALTHY: frozenset(
-            {NodeState.PROBING, NodeState.DEGRADED, NodeState.UNREACHABLE}
-        ),
-        NodeState.DEGRADED: frozenset(
-            {NodeState.PROBING, NodeState.HEALTHY, NodeState.UNREACHABLE}
-        ),
+        NodeState.PROBING: frozenset({NodeState.HEALTHY, NodeState.DEGRADED, NodeState.UNREACHABLE}),
+        NodeState.HEALTHY: frozenset({NodeState.PROBING, NodeState.DEGRADED, NodeState.UNREACHABLE}),
+        NodeState.DEGRADED: frozenset({NodeState.PROBING, NodeState.HEALTHY, NodeState.UNREACHABLE}),
         NodeState.UNREACHABLE: frozenset({NodeState.RECOVERING}),
         NodeState.RECOVERING: frozenset({NodeState.PROBING, NodeState.UNREACHABLE}),
     }
@@ -357,9 +347,7 @@ def test_public_domain_containers_are_recursively_immutable_and_json_round_trip(
         code="E500",
         message="partial result",
         request_id=request.request_id,
-        partial_result={
-            "details": {"attempts": [{"placement": "placement-a", "reasons": ["capacity"]}]}
-        },
+        partial_result={"details": {"attempts": [{"placement": "placement-a", "reasons": ["capacity"]}]}},
     )
 
     assert error.partial_result is not None

@@ -39,8 +39,7 @@ class RecordingRunner:
 
 def _private_config(path: Path, *, nodes: int = 0) -> Path:
     node_blocks = "\n".join(
-        f'[[nodes]]\nid = "node-{index}"\ndisplay_name = "Node {index}"\nplatform = "macos"'
-        for index in range(nodes)
+        f'[[nodes]]\nid = "node-{index}"\ndisplay_name = "Node {index}"\nplatform = "macos"' for index in range(nodes)
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -303,9 +302,7 @@ def test_tailscale_schema_round_trip_and_security_policy(tmp_path: Path) -> None
     assert restored.nodes[0].tailscale.allowed_http_ports == (1234, 11434)
 
 
-def test_user_config_loader_reads_default_file_when_present(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_user_config_loader_reads_default_file_when_present(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     import omlxc.config.loading as loading_module
 
     target = tmp_path / "config.toml"
@@ -341,9 +338,7 @@ def test_lm_remote_control_config_requires_known_hosts_pair(tmp_path: Path) -> N
     assert backend.lms_platform == "windows"
 
 
-def test_production_lm_factory_passes_remote_control_fields(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_production_lm_factory_passes_remote_control_fields(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     import omlxc.daemon.composition as composition_module
 
     captured: dict[str, object] = {}

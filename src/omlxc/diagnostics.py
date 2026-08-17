@@ -23,9 +23,7 @@ async def run_direct_doctor(config: AppConfig) -> dict[str, Any]:
     checks: list[dict[str, object]] = [{"name": "config", "ok": True}]
     paths = LaunchdPaths.for_home(Path.home())
     checks.append(_private_path_check("launchd_plist", paths.plist_path, expected_mode=0o600))
-    checks.append(
-        _private_path_check("daemon_socket", config.daemon.socket_path, expected_mode=0o600)
-    )
+    checks.append(_private_path_check("daemon_socket", config.daemon.socket_path, expected_mode=0o600))
 
     tailscale = build_configured_tailscale(config)
     if config.tailscale is not None:
