@@ -8,7 +8,7 @@
 	test-all test-omlxc test-aetherforge test-cockpit test-kairon test-agora test-omo test-ecos lint-all \
 	omlxc-test omlxc-lint kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-lint kairon-build \
 	sync-all-docs sync-capability-registry sync-help-docs check-docs-drift sync-submodules ssot-status ssot-log ssot-sync \
-	hygiene-worktree hygiene-audit hygiene-janitor hygiene-dir dir-hygiene root-directory-governance worktree-guard worktree-prune worktree-cleanup worktree-audit worktree-hygiene worktree-janitor \
+	hygiene-worktree hygiene-audit hygiene-janitor hygiene-dir dir-hygiene root-directory-governance bin-scripts-convergence-audit worktree-guard worktree-prune worktree-cleanup worktree-audit worktree-hygiene worktree-janitor \
 	memory-os-check memory-os-env memory-os-env-export memory-os-up memory-os-smoke memory-os-asof-seed \
 	omo-status omo-top swarm-activity observability-events observability-adapters observability-trace log-rotate \
 	agent-workflows agent-workflow-bootstrap agent-workflow-lint agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-integrations agent-workflow-adapters agent-workflow-status \
@@ -237,6 +237,9 @@ worktree-janitor:  ## worktree/废弃分支安全清理
 
 root-directory-governance:  ## 根目录治理策略与未登记 shadow surface 门禁
 	$(PY) bin/ssot/root-directory-governance-scan.py --check --json
+
+bin-scripts-convergence-audit:  ## 校验 bin/scripts 收敛清单、证据与实际入口
+	$(PY) bin/ssot/bin-scripts-convergence-audit.py --check --json
 
 hygiene-dir: dir-hygiene
 dir-hygiene: root-directory-governance  ## 检查根目录卫生
