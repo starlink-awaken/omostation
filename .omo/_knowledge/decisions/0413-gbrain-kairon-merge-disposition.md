@@ -1,7 +1,7 @@
 ---
 title: gbrain + kairon 归并为 knowledge — 决策补档
 adr_id: '0413'
-status: PROPOSED
+status: ACCEPTED
 date: 2026-08-17
 deciders:
   - 夏明星 (最终确认 pending)
@@ -21,10 +21,8 @@ session: strategy-convergence-r3
 
 ## 状态
 
-**PROPOSED** — 实施已完成（#1600 merged），决策档案本 ADR 补档。按派工指令
-（AGENT-BRIEF-STRATEGY-CONVERGENCE-REMAINDER.md §1），最终 ACCEPTED 需夏明星
-本人确认。台账 BET-Y1Q3-T6-01 保持 in_progress / awaiting human_gate 与本 ADR
-状态一致。
+**ACCEPTED** — 2026-08-17 夏明星会话批准（"ABCE 都批准"）。实施 #1600 已 merged，
+台账 BET-Y1Q3-T6-01 同日置 done，回滚 tag pre-knowledge-merge-20260816 已推远端。
 
 ## WHY（为什么归并）
 

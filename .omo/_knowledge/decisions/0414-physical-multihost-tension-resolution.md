@@ -1,7 +1,7 @@
 ---
 title: ADR-0247 与 ADR-0225/0226 物理多机张力 — 关系澄清
 adr_id: '0414'
-status: PROPOSED
+status: ACCEPTED
 date: 2026-08-17
 deciders:
   - 夏明星 (最终确认 pending)
@@ -21,8 +21,7 @@ session: strategy-convergence-r3
 
 ## 状态
 
-**PROPOSED**（本 ADR 涉及验收标准语义, 按 r3 派工指令建议等人类确认后
-ACCEPTED）。
+**ACCEPTED** — 2026-08-17 夏明星会话批准（"ABCE 都批准"，方案 a）。
 
 ## 张力陈述（事实）
 

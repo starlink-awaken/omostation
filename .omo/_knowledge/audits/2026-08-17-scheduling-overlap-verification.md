@@ -56,3 +56,12 @@ scanner 状态），无相互覆盖路径。**建议：保留，无需合并**�
 | 三重审计 | 保留（职责正交） | 无需动作 |
 | mof-drift 路径断 | 修路径或删行 | 人类 |
 | dashboard 断流 11 天 | 删 cron 行（scanner 已覆盖） | 人类 |
+
+
+## 处置落地 (2026-08-17 同日, 用户批准 F1/G1 + 备份留档)
+
+| 项 | 决策 | 执行 |
+|---|---|---|
+| dashboard 幽灵 cron | **F1 删行** | ✅ crontab 已删 (改前快照: crontab-snapshot-pre-f1g1-20260817.txt) |
+| mof-drift 路径 | **G1 修正** | ✅ crontab 行改 `bin/mof/mof-drift`, 周一巡检恢复 |
+| 三重审计 | 保留 | 无动作 |

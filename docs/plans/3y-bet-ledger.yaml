@@ -1785,9 +1785,12 @@ bets:
   title: omo-debt + c2g 并入 omo
   appetite: 2 weeks
   priority: P1
-  status: in_progress
+  status: done
+  done_at: 2026-08-17
+  done_note: >-
+    human_gate 批准 (2026-08-17 会话指令 ABCE 都批准)。#1589 merged;
+    ADR-0412 判定档 + omo._vendored 内包 + 全消费方改道实证。
   implemented_at: 2026-08-16
-  awaiting: 'human_gate (L3 归并批准; 实施细节与停审理由见 retro BET-Y1Q2-T1-01)'
   goal: 减少子模块数量与指针漂移面, 归并同属治理面的三个仓
   non_goals:
   - 重写业务逻辑
@@ -3291,9 +3294,12 @@ bets:
   title: Neo4j 生产启用
   appetite: 1 week
   priority: P0
-  status: in_progress
+  status: done
+  done_at: 2026-08-17
+  done_note: >-
+    human_gate 批准 (2026-08-17 会话指令 ABCE 都批准)。#1594 merged;
+    NEO4J 第一优先路由 + bolt 降级可见 + test_phase7 5/5; mos-neo4j 容器运行中。
   implemented_at: 2026-08-16
-  awaiting: 'human_gate (L2 Neo4j 生产启用批准; 三 done_when 实证与停审理由见 retro BET-Y1Q3-T3-02)'
   goal: 让 temporal_fact / entity_relation 走真实图路径, 结束 off_until_NEO4J_URI 状态
   non_goals:
   - graphiti 全量接入

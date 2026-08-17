@@ -5,6 +5,7 @@ lifecycle: decision
 owner: 夏明星
 last-reviewed: 2026-07-26
 related:
+  - 0414-physical-multihost-tension-resolution.md
   - 0210-three-year-strategy-execution-convergence.md
   - 0228-physical-hosts-failclosed.md
   - 0235-c1-role-directory.md

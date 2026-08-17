@@ -5,6 +5,7 @@ lifecycle: decision
 owner: 架构师
 last-reviewed: 2026-07-19
 related:
+  - 0414-physical-multihost-tension-resolution.md
   - 0210-three-year-strategy-execution-convergence.md
   - 0225-g-del-physical-multihost-gate-caliber.md
 supersedes: []

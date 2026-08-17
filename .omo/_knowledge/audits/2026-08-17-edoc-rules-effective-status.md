@@ -50,3 +50,9 @@ ADR-0191 的 `Diagnostic Envelope` 修复建议机制同样零实现
    （建议一次脚本承载 001/002/003 三条静态检查，004 复用 freshness 语义，005 走 CI drift 检查）
 2. 若决定不接线：ADR-0191 §2.2 标注 `status: DESIGN-ONLY (not enforced)`，消除歧义
 3. 撞号问题：`docs/adr/` 与 `.omo/_knowledge/decisions/` 的 ADR-0190 各指不同物，建议 ADR 索引加目录前缀消歧
+
+
+## 处置 (2026-08-17 同日, 用户批准 H2)
+
+H2 已执行: ADR-0191 §2.2 双镜像 (docs/adr + docs/governance) 均已标注
+DESIGN-ONLY (not enforced)。接线 (H1) 留待下轮排期。
