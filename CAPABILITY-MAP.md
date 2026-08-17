@@ -8,31 +8,31 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 138 |
-| MCP 工具 | 571 |
+| CLI 命令 (含子命令) | 144 |
+| MCP 工具 | 595 |
 | MCP 服务器 | 27 |
-| BOS 服务 | 223 |
-| BOS 域 | 17 |
+| BOS 服务 | 227 |
+| BOS 域 | 18 |
 
 ## MCP 服务器清单
 
 | 服务器 | 层 | 工具数 | 传输 | 文件 |
 |--------|-----|--------|------|------|
-| `gbrain` | L2 | 75 | stdio | `projects/gbrain/src/core/operations/exports.ts` |
+| `gbrain` | L2 | 75 | stdio | `projects/knowledge/gbrain/src/core/operations/exports.ts` |
 | `agora` | I0 | 65 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
+| `runtime` | L1 | 50 | stdio | `projects/runtime/src/runtime/mcp_server.py` |
 | `l4-kernel` | L4 | 47 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `kos` | L2 | 44 | stdio | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `kos-stdio` | L2 | 44 | stdio | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `ecos` | L0 | 28 | stdio | `projects/ecos/src/ecos/mcp_server.py` |
 | `model-driven` | M0 | 28 | stdio | `projects/model-driven/src/model_driven/mcp_server.py` |
-| `runtime` | L1 | 28 | stdio | `projects/runtime/src/runtime/mcp_server.py` |
 | `ecos-integration` | L0 | 26 | stdio | `projects/ecos/src/ecos/services/integration/mcp_server.py` |
 | `codeanalyze` | L2 | 25 | stdio | `projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/mcp.py` |
 | `metaos` | L2 | 24 | stdio | `projects/metaos/src/metaos/mcp_server.py` |
 | `omo` | L2 | 22 | stdio | `projects/omo/src/omo/mcp_server.py` |
 | `kronos` | L2 | 16 | stdio | `projects/knowledge/kairon/packages/kronos/src/kronos/mcp_server.py` |
+| `aetherforge` | X | 15 | stdio | `projects/aetherforge/src/aetherforge/mcp_server.py` |
 | `agent-runtime` | L3 | 14 | stdio | `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py` |
-| `aetherforge` | X | 13 | stdio | `projects/aetherforge/src/aetherforge/mcp_server.py` |
 | `ecos-ssot` | L0 | 9 | stdio | `projects/ecos/src/ecos/l0/ssot/mcp_server.py` |
 | `iris` | L2 | 8 | stdio | `projects/knowledge/kairon/packages/iris/src/iris/mcp_server.py` |
 | `sophia` | L2 | 8 | stdio | `projects/knowledge/kairon/packages/sophia/src/sophia/server/mcp_server.py` |
@@ -56,8 +56,9 @@
 | `cockpit` | 2 |
 | `compute` | 3 |
 | `ecos` | 10 |
+| `fabric` | 1 |
 | `forge` | 1 |
-| `governance` | 54 |
+| `governance` | 57 |
 | `l4-kernel` | 1 |
 | `memory` | 47 |
 | `meta` | 1 |
@@ -96,6 +97,8 @@
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
 | `cockpit cards` | 显示 CARDS 卡片状态 |
+| `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊 (ADR-0198) |
+| `cockpit challenge` | ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196) |
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit code` | 代码库分析与审查 (基于 codeanalyze) |
 | `cockpit compass` | 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理) |
@@ -141,6 +144,8 @@
 | `cockpit inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
 | `cockpit index` | 刷新 data/_index 元数据 |
 | `cockpit init` | 🚀 初始化向导（同 quickstart） |
+| `cockpit inspect` | 查看算力网格健康度与节点状态 |
+| `cockpit intent` | 🧠 自然语言意图解构与工程规格编译器 (ADR-0195) |
 | `cockpit invoke` | 调用 capability 服务（执行 BOS YAML command） |
 | `cockpit iterate` | ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行) |
 | `cockpit journey` | 🗺️ Journey State Graph 状态表达校验器 |
@@ -191,6 +196,8 @@
 | `cockpit search` | 全文搜 CARDS |
 | `cockpit serve` | stdio JSON-RPC serve mode |
 | `cockpit skill` | 运行 L4 定时技能 |
+| `cockpit snapshot` | KV 缓存快照管理与预热 |
+| `cockpit speculative-eval` | 本地首选投机推演评估 |
 | `cockpit ssb` | [DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用 |
 | `cockpit stats` | 索引统计 |
 | `cockpit status` | 系统健康 |
