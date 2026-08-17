@@ -8,7 +8,7 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 565
+  mcp_tools: 583
   bos_services: 223
   bos_domains: 17
   cli_commands: 138
@@ -405,16 +405,21 @@ mcp_servers:
   exists: true
   tools:
   - forge_cost_report
+  - forge_fabric_compact
+  - forge_fabric_inspect
+  - forge_fabric_vram
+  - forge_fabric_warm
   - forge_generate
   - forge_generate_mesh
   - forge_health_check
   - forge_list_nodes
   - forge_mesh_status
+  - forge_swarm_run
   - forge_triage
   - forge_triage_batch
   - forge_triage_consensus
   - forge_triage_status
-  tool_count: 10
+  tool_count: 15
 - id: aetherforge-gateway
   name: AetherForge LLM Gateway
   layer: X
@@ -491,9 +496,12 @@ mcp_servers:
   layer: X
   file: projects/c2g/src/c2g/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - c2g_bet
+  - c2g_gc
+  - c2g_radar
+  tool_count: 3
 - id: family-hub
   name: Family Hub
   layer: X
@@ -545,6 +553,11 @@ mcp_servers:
   - handle_agent_status
   - handle_agent_task_status
   - handle_brief
+  - handle_documents_audit
+  - handle_documents_guardrails
+  - handle_governance_explain
+  - handle_governance_guardrails
+  - handle_governance_preflight
   - handle_health
   - handle_kv_get
   - handle_matrix_list
@@ -559,13 +572,18 @@ mcp_servers:
   - runtime_agent_status
   - runtime_agent_task_status
   - runtime_brief
+  - runtime_documents_audit
+  - runtime_documents_guardrails
+  - runtime_governance_explain
+  - runtime_governance_guardrails
+  - runtime_governance_preflight
   - runtime_health
   - runtime_kv_get
   - runtime_matrix_list
   - runtime_ontology_get
   - runtime_protocol_get
   - runtime_protocol_list
-  tool_count: 28
+  tool_count: 38
 - id: iris
   name: Iris
   layer: L2
