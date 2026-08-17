@@ -15,8 +15,29 @@ if KAIRON_PACKAGES.exists():
             if pkg_src not in sys.path:
                 sys.path.insert(0, pkg_src)
 
+from knowledge.models import (
+    KnowledgeDocument,
+    KnowledgeEntity,
+    KnowledgeRelation,
+    RetrievalResult,
+    SyncEvent,
+)
+from knowledge.adapter import BaseKnowledgeAdapter, AdapterHealth
+from knowledge.retrieval import UnifiedKnowledgeRetriever
+
 __version__ = "1.0.0"
-__all__ = ["KnowledgeComplex", "get_knowledge_facade"]
+__all__ = [
+    "KnowledgeComplex",
+    "get_knowledge_facade",
+    "KnowledgeDocument",
+    "KnowledgeEntity",
+    "KnowledgeRelation",
+    "RetrievalResult",
+    "SyncEvent",
+    "BaseKnowledgeAdapter",
+    "AdapterHealth",
+    "UnifiedKnowledgeRetriever",
+]
 
 
 class KnowledgeComplex:
@@ -25,6 +46,7 @@ class KnowledgeComplex:
     def __init__(self) -> None:
         self.kairon_root = KAIRON_PACKAGES
         self.gbrain_root = Path(__file__).resolve().parent.parent.parent / "gbrain"
+        self._retriever = UnifiedKnowledgeRetriever()
 
     def status(self) -> dict[str, Any]:
         """获取复合体双擎健康状态."""
@@ -42,6 +64,10 @@ class KnowledgeComplex:
                 },
             },
         }
+
+    def search(self, query: str, domain: str = "common", limit: int = 10) -> list[RetrievalResult]:
+        """统一混合检索快捷入口."""
+        return self._retriever.retrieve(query, domain=domain, limit=limit)
 
 
 def get_knowledge_facade() -> KnowledgeComplex:
