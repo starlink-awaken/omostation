@@ -39,6 +39,7 @@ Before editing:
 15. **Shadow Challenger Loop (ADR-0196)** — Multi-perspective adversarial red-team review (Audit, Cyber-security, Tech-transfer) and automatic compliance patch synthesis (`ecos-constraint challenge "<file_or_text>" [--auto-patch]` / FastMCP `runtime_shadow_challenge`).
 16. **Sovereign Hybrid Compute & KV Cache Snapshots (ADR-0197)** — Local-first speculative execution (8B/14B Q4_K_M) with 0ms TTFT binary KV snapshot pre-warming (`omlxc fabric snapshot` / `omlxc fabric speculative-eval`).
 17. **Domain Cartridge Factory (ADR-0198)** — Standardized vertical domain governance package manager for healthcare and tech transfer (`ecos-constraint cartridge list/export/validate` / FastMCP `runtime_cartridge_list`).
+18. **Unified BOS URI, Cockpit Suite & Cognitive Workflow (ADR-0199)** — Full-lifecycle integration across Human Terminal (Cockpit CLI: `cockpit intent` / `challenge` / `cartridge` / `fabric`), Agora BOS routing (`bos://governance/*`, `bos://fabric/*`), and First-Class Agent Workflow (`cognitive-governance-delivery.yaml`).
 
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
 
