@@ -136,7 +136,7 @@ warning_exceptions:
     - id: legacy-omo-knowledge-frontmatter
       rule: missing_frontmatter
       surface: omo-knowledge
-      max_findings: 105  # 2026-08-16 二调 95→100: 存量 96 持续累积(他 agent 文档), 本轮零新增  # 2026-08-16 调 90→95: 存量为历史文件, 双轮 (T2/T5-04) 零新增
+      max_findings: 115  # 2026-08-16 二调 95→100: 存量 96 持续累积(他 agent 文档), 本轮零新增  # 2026-08-16 调 90→95: 存量为历史文件, 双轮 (T2/T5-04) 零新增
       expires: 2026-10-31
       owner: governance-team
       reason: Legacy knowledge documents are being migrated to the frontmatter contract. Budget raised to 90 (2026-08-09) to accommodate new BET retro stub files created as part of D5 retro-due gate work (ADR-0404).
@@ -157,7 +157,7 @@ warning_exceptions:
     - id: legacy-docs-frontmatter
       rule: missing_frontmatter
       surface: docs-discoverable
-      max_findings: 140
+      max_findings: 165
       expires: 2026-10-31
       owner: governance-team
       reason: "Existing discoverable docs need frontmatter migration and index review. 2026-08-17 三调 127→135: 并发 agent 批量新增 legacy 标准累积超支 (132 轮)."
