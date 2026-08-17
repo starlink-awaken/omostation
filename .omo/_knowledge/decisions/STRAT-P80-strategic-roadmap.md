@@ -13,6 +13,8 @@ related:
 supersedes: []
 ---
 
+> 📋 **处置 (2026-08-17 分类, 推演文档 §4 分支B)**: SUPERSEDED — M1 提前与收敛期精神已由 ADR-0410 主线 + T 系执行覆盖
+
 # STRAT-P80: 收敛期收尾 — M1 提前打绿 + 兑现期底座前置
 
 > **For agentic workers**: 本文档为 **PROPOSED** 状态战略路线图，覆盖 2026-08 ~ 2026-10。

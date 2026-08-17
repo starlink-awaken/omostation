@@ -9,6 +9,8 @@ agent_workflow_run: 20260715T074610Z-governance-audit-d0d7c3c6
 supersedes: []
 ---
 
+> 📋 **处置 (2026-08-17 分类, 推演文档 §4 分支B)**: SUPERSEDED — 元凶定位与重编号已由后续 T6 系列实践覆盖, 04xx 连续编号已成事实
+
 # ADR-0209 — ledger events.jsonl trim 元凶未定位 + SSOT 编号虚标反思
 
 - **Status**: PROPOSED

@@ -14,6 +14,8 @@ related:
   - ../../standards/agent-workflow-contract.md
 ---
 
+> 📋 **处置 (2026-08-17 分类, 推演文档 §4 分支B)**: 保持 PROPOSED — 仍相关 (质量扫描规模化持续议题, 留待 Y1Q4/Q2 排期)
+
 # ADR-0367: Python 质量扫描基础设施规模化路线图
 
 ## 背景
