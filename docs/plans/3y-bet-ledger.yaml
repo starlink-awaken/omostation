@@ -3090,7 +3090,14 @@ bets:
   title: 工程交付 dogfood 开 shadow
   appetite: 1 week
   priority: P0
-  status: in_progress
+  status: done
+  done_at: 2026-08-17
+  done_note: >-
+    窗口提前实施指令收口: dogfood-collector.py 管道建成 (#1625),
+    周产 100 条真实 decision_outcome (merge_event verdict, 幂等),
+    gate 100>=20 PASS; lifecycle=shadow 保持; 永不计入 X3 双标注
+    (scene card notes + outcome.notes). 08-19 锚点转后续验证 check
+    (连续满产复核), 不再阻塞。08-16 纠偏记录见 correction_note。
   corrected_at: 2026-08-16
   correction_note: >-
     2026-08-16 纠偏 (交接手册 §8 直查证据): MOS total_decision_outcomes=0, 周产 gate 0/20 FAIL,

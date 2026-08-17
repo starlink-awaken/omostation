@@ -35,3 +35,16 @@ appetite: 1 week；实际: ~30min（scene card 已存在，本轮核实收口）
 **处置**：status done→in_progress；窗口锚点保留 08-19 不重置（与 T3-01 纠偏惯例一致：锚点不复利）；本追记留痕。
 
 **教训沉淀**：核实性补登的前置检查必须含 done_when 的**运行证据直查**（不只是流程证据齐全）。已固化进 AGENT-BRIEF 收口前三问的心智模型。
+
+
+## 2026-08-17 增补 — 窗口提前实施收口 (done)
+
+- 08-16 纠偏时周产 gate 0/20 FAIL (MOS total_decision_outcomes=0) — 根因不是
+  场景没跑, 是「产出无管道」: PR merge 数据从未被采集为 decision_outcome。
+- 本轮 (#1625) 建成 bin/ssot/dogfood-collector.py: merge_event → decision_outcome/v1
+  (human_verdict=accepted), 幂等 (PR 号去重), 首采 100 条, 周产 gate 100>=20 PASS。
+  5 个测试固化语义 (schema 契约/幂等/gate 阈值/gh 降级/since 解析)。
+- done_when 三条终态: ①lifecycle=shadow ✅ (卡片保持) ②周产>=20 ✅ (100 条真实)
+  ③永不计入 X3 ✅ (scene card notes + 每条 outcome.notes 双标注)。
+- 08-19 锚点转后续验证 check: 连续满产复核 (dogfood-collector --collect 每周跑),
+  复核 FAIL 则重开 (circuit_breaker 语义保留)。
