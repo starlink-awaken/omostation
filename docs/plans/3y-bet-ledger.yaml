@@ -5040,7 +5040,8 @@ bets:
   title: 治理工具自净闭环 — 脚本减法配额制度化 + 孤儿清理
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-17
   goal: 把 T6-05 减法配额（rule_baseline 机制）从 GaC 规则扩展到 bin/ 脚本本身：新增脚本须同时归档/删除一个；清理 ~30 个真孤儿脚本（零引用零接线）；gate 链冗余（71 实际 vs 140 SSOT 定义）收敛到单一事实源
   non_goals:
   - 限制代码行数增长（不同机制）
