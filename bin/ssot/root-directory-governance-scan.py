@@ -61,8 +61,35 @@ def allowed_ignored_dir(name: str, policy: dict[str, object]) -> bool:
     return any(fnmatch.fnmatch(name, str(pattern)) for pattern in allowed)
 
 
+def is_active_worktree(entry: Path) -> bool:
+    """Return True only for a valid linked Git worktree directory."""
+    git_marker = entry / ".git"
+    if not git_marker.is_file():
+        return False
+    try:
+        marker = git_marker.read_text(encoding="utf-8").strip()
+    except OSError:
+        return False
+    if not marker.startswith("gitdir:"):
+        return False
+    gitdir = Path(marker.split(":", 1)[1].strip())
+    if not gitdir.is_absolute():
+        gitdir = (entry / gitdir).resolve()
+    return gitdir.is_dir()
+
+
+def local_surface_policy(name: str, policy: dict[str, object]) -> dict[str, object] | None:
+    surfaces = policy.get("local_surfaces", {})
+    if not isinstance(surfaces, dict):
+        return None
+    value = surfaces.get(name)
+    return value if isinstance(value, dict) else None
+
+
 def governance_violation(row: dict[str, object]) -> bool:
     if bool(row["is_tracked"]):
+        return False
+    if bool(row.get("is_active_worktree")):
         return False
     if not bool(row["is_ignored"]):
         return True
@@ -116,6 +143,8 @@ def scan_root(
 
         tracked = is_tracked_dir(entry)
         ignored = is_ignored_dir(entry)
+        active_worktree = is_active_worktree(entry)
+        surface_policy = local_surface_policy(entry.name, policy)
         if not include_untracked and not tracked:
             continue
 
@@ -133,11 +162,16 @@ def scan_root(
             "has_agents": has_agents,
             "is_tracked": tracked,
             "is_ignored": ignored,
-            "policy_allowed": allowed_ignored_dir(entry.name, policy),
+            "is_active_worktree": active_worktree,
+            "policy_allowed": allowed_ignored_dir(entry.name, policy)
+            or surface_policy is not None,
+            "surface_policy": surface_policy or {},
             "is_submodule": is_submodule(entry),
         }
         row["violation"] = governance_violation(row)
-        if tracked:
+        if active_worktree:
+            row["disposition"] = "active-worktree"
+        elif tracked:
             row["disposition"] = "tracked"
         elif ignored and row["policy_allowed"]:
             row["disposition"] = "allowed-ignored"
@@ -155,6 +189,7 @@ def rank_and_tag(rows: list[dict[str, object]]) -> list[dict[str, object]]:
         kb = float(row["kb"])
         has_readme = bool(row["has_readme"])
         has_agents = bool(row["has_agents"])
+        active_worktree = bool(row.get("is_active_worktree"))
         violation = bool(row.get("violation", governance_violation(row)))
         row["violation"] = violation
 
@@ -162,12 +197,16 @@ def rank_and_tag(rows: list[dict[str, object]]) -> list[dict[str, object]]:
         must_action = violation
         should_action = False
 
-        if file_count >= 100 and needs_governance:
+        if active_worktree:
+            needs_governance = False
+            must_action = False
+            should_action = False
+        elif file_count >= 100 and needs_governance:
             must_action = True
         elif not has_readme or not has_agents:
             should_action = True
 
-        if kb >= 1024 and not has_agents:
+        if kb >= 1024 and not has_agents and not active_worktree:
             must_action = True
 
         if must_action:
