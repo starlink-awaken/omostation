@@ -59,6 +59,12 @@ def main() -> int:
             rel = f.relative_to(REPO_ROOT)
             if ".venv" in rel.parts or "__pycache__" in rel.parts:
                 continue
+            # scripts 是独立子模块 (有自身 CI), 其 bin/projects/tests 内容由 scripts 仓治理 — 主仓不扫
+            if rel.parts[0] == "scripts":
+                continue
+            # 排除测试文件 — 测试不需要 LLM fallback
+            if "tests" in rel.parts or rel.name.startswith("test_") or rel.name.startswith("test-"):
+                continue
             try:
                 text = f.read_text(encoding="utf-8", errors="ignore")
             except Exception:
