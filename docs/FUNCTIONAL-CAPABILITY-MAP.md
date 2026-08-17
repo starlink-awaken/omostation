@@ -2,8 +2,8 @@
 status: stale
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-15
-review-state: stale-needs-content-review
+last-reviewed: 2026-08-17
+review-state: content-reviewed-20260817
 metadata-migrated-at: 2026-07-31
 stale-reason: >
   "5 缺口全修复" snapshot is 2026-06-28. BOS domain count in §11 must follow
@@ -316,15 +316,26 @@ Web/API  → cockpit HTTP :port (见 port-registry.yaml) → /api/* (services/co
 
 | BOS 域 | 前端项目 | 核心能力 |
 |--------|---------|---------|
-| `bos://memory/` | kos, kronos, gbrain, sot-bridge | 记忆与事实源 |
+| `bos://memory/` | kos, kronos, gbrain(knowledge), sot-bridge | 记忆与事实源 |
 | `bos://governance/` | omo, metaos, eidos, cockpit | 治理与律法 |
 | `bos://analysis/` | ontoderive, minerva, codeanalyze | 认知与推演 |
 | `bos://persona/` | sot-bridge | 人格与心智 |
-| `bos://capability/` | aetherforge, runtime, bus | 能力与生态 |
+| `bos://capability/` | aetherforge, runtime, bus, forge | 能力与生态 |
 | `bos://meta/` | ecos, model-driven | 元治理 |
 | `bos://omo/` | omo (内省) | OMO 自有 |
 | `bos://swarm/` | agora (蜂群) | 蜂群协调 |
 | `bos://system/` | ecos, runtime | 系统级 |
+| `bos://agora/` | agora | 织层自省 (I0 自有服务) |
+| `bos://cockpit/` | cockpit | 入口层控制面 |
+| `bos://compute/` | omlx, aetherforge | 本地算力织物 |
+| `bos://ecos/` | ecos | 协议层自省 |
+| `bos://forge/` | forge (knowledge/kairon) | 工具市场 |
+| `bos://mof/` | ecos (mof) | M0/M4 元对象设施 |
+| `bos://perception/` | iris, signal-poller | 感知面信号源 |
+
+> 注: 域清单以 `bos-services.yaml` 实测为准 (2026-08-17: 16 域 / 223 服务)。
+> ARCHITECTURE.md 的"5 规范域"是**叙事分层**口径 (memory/governance/analysis/capability/meta
+> 为一级域), 其余域为项目自省/专用域 — 两个口径并存不矛盾, 本文以实测全量为准。
 
 ---
 

@@ -4871,6 +4871,48 @@ bets:
   human_gate: false
   circuit_breaker: 29 项判定超 1 week → 先完成排序/废弃类，剩余排期类交下轮
   retro: required
+- id: BET-Y1Q1-T6-07
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: 战略收敛 r3 剩余件 — D3 决策补档 + D5 ADR + 6 文档重读 + chain-bind 旁路诚实化
+  appetite: 1 week
+  priority: P1
+  status: done
+  done_at: 2026-08-17
+  implemented_at: 2026-08-17
+  done_note: >-
+    ADR-0413 归并决策补档 (PROPOSED) + ADR-0414 物理多机张力澄清 (PROPOSED,
+    amends 0225/0226) + 6 文档内容级重读 (域数 9→16 订正等, 见 retro 明细表)
+    + chain-bind 旁路核查 (真缺口收窄为 omo cli exit 0 静默, 留专项未静默)。
+    打假三条: D3 实已实施(授权链时点差) / registry 计数前轮已修 / INDEX 矛盾
+    实为双方案皆落地。ADR ACCEPTED 等人类确认 (红线)。
+  goal: 战略-治理收敛总纲第三轮派工收尾 (AGENT-BRIEF-STRATEGY-CONVERGENCE-REMAINDER.md)
+  non_goals:
+  - 重开 gbrain+kairon 合并分析 (T6-01 已实施, 本轮只补决策 ADR 档案)
+  - 替人类拍板 D3 终审 (ADR 置 PROPOSED, ACCEPTED 等人类确认)
+  done_when:
+  - ADR-0413 gbrain+kairon 归并决策补档 (PROPOSED)
+  - ADR-0414 物理多机张力 (0247 vs 0225/0226) 关系澄清
+  - 6 份 metadata-only 文档真实重读并落 retro 逐条判断
+  - omo 底层 CLI start 拒绝时 exit 1 + 显式 stderr (旁路诚实化)
+  - 'missing-bet 误报修正: 已关闭 run 不再显示为 missing (perception 扫描范围)'
+  - 'D0 补充条款: tag 必须验证已推 origin 才算完成 (写入 AGENT-BRIEF)'
+  verify:
+  - cmd: ls .omo/_knowledge/decisions/ | grep -cE '0413|0414'
+    expect: '2'
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_knowledge/decisions/**
+  - docs/**
+  - .omo/_knowledge/retros/**
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q1-T6-02
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 6 文档重读超 5 天 → 只做 3 份引用最广的, 其余登记为待办
+  retro: required
 - id: BET-Y1Q3-T6-04
   track: T6-SUBTRACT
   window: Y1Q3
