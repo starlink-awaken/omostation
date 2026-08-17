@@ -170,6 +170,8 @@ bin/ 与 scripts/bin/ 同名镜像收敛治理 (bin-master, scripts-compat-shim)
 | `make bin-tool-registry-dependency-risks` | 输出依赖风险热点 (出入度 + 并行收敛缺口) |
 | `make bin-tool-registry-weekly-governance-report` | 输出并落盘 依赖风险/并行缺口周报 (owner/action/sink) |
 | `make bin-tool-registry-round9/10/11` | 并行风险 Top10 一键闭环 (strict + gaps + dependency + 周报) |
+| `python3 bin/ssot/bin-scripts-convergence-audit.py --check` | 校验 manifest、执行证据和实际 bin/scripts 文件三层一致性 |
+| `python3 bin/ssot/root-directory-governance-scan.py --check` | 校验根目录 tracked/ignored/policy disposition，阻断未登记 shadow surface |
 
 裸命令:
 ```bash
@@ -178,6 +180,9 @@ python3 bin/tool-registry-audit.py --scope both --parallel-manifest ... --json |
 ```
 
 SSOT: `docs/operations/bin-scripts-convergence-manifest.json` (entries: name/bin/scripts/status/action/owner/note/evidence).
+
+根目录治理策略 SSOT: `docs/operations/root-directory-governance-policy.yaml`。
+两项审计已接入 `gac-local-gate` 与 `ci-surfaces.yaml`，不再依赖人工记忆或单次报告。
 
 > **并行 gap 语义** (2026-08-16 固化): `missing_manifest_entry` = bin/scripts 同名镜像未登记; 内部模块 (`__init__.py` / `_lib.py` / `_*.py`) 由 `_is_internal_module()` 排除, 非命令不计 gap. 5 个多文件条目 (control_experiment / git_health_hook / physical_recovery / submodule_reachability_gate / sync_submodules_push) 是 root-wrapper→ssot 合法模式, 登记 bin 取 ssot 主路径.
 > **并发风险** (2026-08-16): 该域是多 agent 高频并行域, 并发 agent 会把共享 checkout 上 staged 改动直接 commit 成混合 commit (见 memory `feedback_shared_checkout_concurrent_absorb_20260816.md`); 动工前查 `git worktree list` + `agent-workflow status`.

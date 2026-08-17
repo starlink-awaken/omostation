@@ -1,39 +1,53 @@
+---
+status: active
+lifecycle: contract
+owner: runtime-team
+last-reviewed: 2026-08-17
+review-state: generated-report
+---
+
 # 主仓目录治理表面扫描
 
-- 生成时间: 2026-08-16T05:03:26.775806+00:00
-- 目录总数: 21
-- 必做治理项: 0
-- 建议治理项: 0
+- 生成时间: 2026-08-17T03:19:47.885982+00:00
+- 目录总数: 24
+- 必做治理项: 1
+- 建议治理项: 3
+- 目录卫生违规: 0
 
 ## 一、目录级体检
-| 目录 | 文件数 | 子目录数 | 大小(KB) | AGENTS.md | README | tracked | submodule | 优先级 |
-| --- | ---: | ---: | ---: | --- | --- | --- | --- | --- |
-| projects | 211828 | 27753 | 5880372.31 | ✅ | ✅ | ✅ | - | ok |
-| scripts | 16694 | 2236 | 495124.24 | ✅ | ✅ | ✅ | ✅ | ok |
-| data | 6215 | 17 | 991970.54 | ✅ | ✅ | ✅ | - | ok |
-| .omo | 4468 | 253 | 53397.28 | ✅ | ✅ | ✅ | - | ok |
-| .kilo | 3450 | 229 | 53867.29 | ✅ | ✅ | ✅ | - | ok |
-| runtime | 672 | 35 | 4287.37 | ✅ | ✅ | ✅ | - | ok |
-| bin | 595 | 34 | 5120.73 | ✅ | ✅ | ✅ | - | ok |
-| docs | 283 | 20 | 3066.21 | ✅ | ✅ | ✅ | - | ok |
-| tests | 191 | 33 | 1282.88 | ✅ | ✅ | ✅ | - | ok |
-| .github | 50 | 2 | 111.35 | ✅ | ✅ | ✅ | - | ok |
-| .agents | 31 | 25 | 138.47 | ✅ | ✅ | ✅ | - | ok |
-| spaces | 28 | 2 | 26.58 | ✅ | ✅ | ✅ | - | ok |
-| tools | 11 | 3 | 13.83 | ✅ | ✅ | ✅ | - | ok |
-| protocols | 7 | 0 | 33.47 | ✅ | ✅ | ✅ | - | ok |
-| Plans | 6 | 0 | 32.74 | ✅ | ✅ | ✅ | - | ok |
-| .githooks | 6 | 0 | 23.78 | ✅ | ✅ | ✅ | - | ok |
-| .mimocode | 6 | 1 | 10.83 | ✅ | ✅ | ✅ | - | ok |
-| artifacts | 4 | 0 | 25.43 | ✅ | ✅ | ✅ | - | ok |
-| locks | 4 | 0 | 0.71 | ✅ | ✅ | ✅ | - | ok |
-| lib | 3 | 0 | 6.47 | ✅ | ✅ | ✅ | - | ok |
-| evidence | 3 | 0 | 3.96 | ✅ | ✅ | ✅ | - | ok |
+| 目录 | 文件数 | 子目录数 | 大小(KB) | AGENTS.md | README | tracked | ignored | policy | disposition | 优先级 |
+| --- | ---: | ---: | ---: | --- | --- | --- | --- | --- | --- | --- |
+| projects | 8595 | 1087 | 113339.26 | yes | yes | yes | no | no | tracked | ok |
+| .omo | 3440 | 204 | 14177.80 | yes | yes | yes | no | no | tracked | ok |
+| scripts | 3040 | 282 | 15945.64 | yes | yes | yes | no | no | tracked | ok |
+| bin | 537 | 21 | 4155.51 | yes | yes | yes | no | no | tracked | ok |
+| docs | 292 | 22 | 2732.86 | yes | yes | yes | no | no | tracked | ok |
+| tests | 177 | 15 | 1120.85 | yes | yes | yes | no | no | tracked | ok |
+| .github | 53 | 2 | 117.53 | yes | yes | yes | no | no | tracked | ok |
+| runtime | 36 | 6 | 45.43 | yes | yes | yes | no | yes | tracked | ok |
+| .agents | 32 | 26 | 144.03 | yes | yes | yes | no | no | tracked | ok |
+| spaces | 28 | 2 | 26.65 | yes | yes | yes | no | yes | tracked | ok |
+| .venv | 20 | 5 | 50981.38 | no | no | no | yes | yes | allowed-ignored | must |
+| data | 12 | 6 | 10.15 | yes | yes | yes | no | yes | tracked | ok |
+| tools | 11 | 3 | 13.83 | yes | yes | yes | no | no | tracked | ok |
+| artifacts | 7 | 0 | 414.06 | yes | yes | yes | no | yes | tracked | ok |
+| protocols | 7 | 0 | 33.54 | yes | yes | yes | no | no | tracked | ok |
+| Plans | 6 | 0 | 32.74 | yes | yes | yes | no | no | tracked | ok |
+| .githooks | 6 | 0 | 23.80 | yes | yes | yes | no | no | tracked | ok |
+| .serena | 5 | 3 | 243.35 | no | no | no | yes | yes | allowed-ignored | should |
+| .pytest_cache | 5 | 2 | 0.89 | no | yes | no | yes | yes | allowed-ignored | should |
+| .kilo | 4 | 1 | 4.64 | yes | yes | yes | no | no | tracked | ok |
+| locks | 4 | 0 | 0.71 | yes | yes | yes | no | yes | tracked | ok |
+| lib | 3 | 0 | 6.47 | yes | yes | yes | no | no | tracked | ok |
+| evidence | 3 | 0 | 3.96 | yes | yes | yes | no | no | tracked | ok |
+| .mimocode | 2 | 1 | 5.90 | no | no | yes | no | no | tracked | should |
 
 ## 二、治理优先级
 
 ### 1) 必做（高优先）
-- 当前无必做项。
+- `.venv`: 文件20，问题 AGENTS.md/README。
 
 ### 2) 建议（中优先）
-- 当前无建议项。
+- `.serena`: 文件5，缺失 AGENTS.md/README。
+- `.pytest_cache`: 文件5，缺失 AGENTS.md。
+- `.mimocode`: 文件2，缺失 AGENTS.md/README。

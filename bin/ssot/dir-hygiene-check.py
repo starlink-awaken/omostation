@@ -9,6 +9,7 @@ Run: python3 bin/ssot/dir-hygiene-check.py [--json]
 Exit 0 = clean, Exit 1 = violations found.
 """
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -34,30 +35,37 @@ def is_ignored(path: str) -> bool:
 
 def main() -> int:
     root = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip())
+    scanner = root / "bin/ssot/root-directory-governance-scan.py"
+    result = subprocess.run(
+        [sys.executable, str(scanner), "--json", "--check"],
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.stdout:
+        try:
+            payload = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            print(result.stdout, end="")
+            return result.returncode
+    else:
+        payload = {"stats": {}, "rows": []}
 
-    violations = []
-    for entry in sorted(root.iterdir()):
-        name = entry.name
-        if name.startswith(".git"):
-            continue
-        if not entry.is_dir():
-            continue
-
-        tracked = is_tracked(str(entry) + "/")
-        ignored = is_ignored(str(entry) + "/")
-
-        if not tracked and not ignored:
-            violations.append(name)
+    violations = [row for row in payload.get("rows", []) if row.get("violation")]
+    if "--json" in sys.argv:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return 1 if violations else 0
 
     if not violations:
-        print("dir-hygiene: PASS (all root directories tracked or ignored)")
+        print("dir-hygiene: PASS (root directories satisfy governance policy)")
         return 0
 
-    print(f"dir-hygiene: FAIL ({len(violations)} untracked non-ignored dir(s))")
-    for v in violations:
-        print(f"  ?? {v}/")
+    print(f"dir-hygiene: FAIL ({len(violations)} root directory violation(s))")
+    for row in violations:
+        print(f"  ?? {row['path']}/ ({row['disposition']})")
     print()
-    print("Either git add these directories, or add patterns to .gitignore.")
+    print("Register the directory in the root governance policy, or remove/track the shadow surface.")
     return 1
 
 
