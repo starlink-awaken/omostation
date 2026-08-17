@@ -49,6 +49,11 @@ def main() -> int:
             rel = f.relative_to(REPO_ROOT)
             if ".venv" in rel.parts or "__pycache__" in rel.parts:
                 continue
+            # scripts 是独立子模块 (有自身 CI), 主仓不扫; 测试文件不需要可靠性模式
+            if rel.parts[0] == "scripts":
+                continue
+            if "tests" in rel.parts or rel.name.startswith("test_"):
+                continue
 
             # 只检查名字包含 mesh/executor/iris 的脚本
             name = f.name.lower()
