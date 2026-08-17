@@ -240,6 +240,22 @@ worktree-guard:  ## 检查 worktree 数量上限
 worktree-prune:  ## 清理已合并/冗余 worktree
 	bash bin/gac/gac-worktree-prune.sh --apply
 
+hygiene-patrol:  ## 执行全域六支柱周度治理自动化巡检 (ADR-0192)
+	@echo "── 全域周度治理自动化巡检 ────────────────────────────"
+	python3 bin/ssot/weekly-hygiene-patrol.py
+
+hygiene-patrol-strict:  ## 全域治理严格模式巡检 (存在任何违规/漂移时非0退出)
+	@echo "── 全域严格治理巡检 (Strict Gate) ───────────────────"
+	python3 bin/ssot/weekly-hygiene-patrol.py --strict
+
+sync-documents-clients:  ## 同步生成多客户端 Documents MCP 隔离挂载配置
+	@echo "── 同步多客户端 Documents MCP 挂载配置 ───────────────"
+	uv run --project projects/ecos ecos-constraint documents sync-clients --mode install
+
+validate-domain-facts:  ## 校验领域事实真源 Schema 与 14 天保鲜期 (ADR-0192)
+	@echo "── 校验领域事实真源 Schema 与保鲜度 ─────────────────"
+	uv run --project projects/ecos ecos-constraint facts validate
+
 worktree-cleanup:  ## 回收 TTL 过期 worktree
 	bash bin/gac/gac-worktree.sh cleanup
 
