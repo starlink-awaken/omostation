@@ -1,3 +1,9 @@
+---
+status: draft
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # T1-04 年度门重基线 — 决策摘要
 
 > 目的: 供决策者快速拍板。完整论证见 `docs/plans/annual-gate-rebaseline-2026Q4.md` + `docs/adr/ADR-0200`。

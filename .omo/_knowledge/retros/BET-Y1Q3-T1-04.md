@@ -1,7 +1,7 @@
 ---
 id: BET-Y1Q3-T1-04
 type: retro
-status: completed
+status: archived
 date: 2026-08-18
 bet_id: BET-Y1Q3-T1-04
 north_star_ref: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
@@ -10,6 +10,9 @@ related:
   - ADR-0200
   - docs/plans/annual-gate-rebaseline-2026Q4.md
   - docs/plans/annual-gate-decision-summary-2026Q4.md
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-18
 ---
 
 # BET-Y1Q3-T1-04 Retro: Y1Q4 年度门修订评审 — code_loc 重基线
