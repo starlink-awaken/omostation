@@ -292,6 +292,12 @@ clone-integrate:  ## 推送分支 + PR (dry-run)
 clone-retire:  ## 清理 clone
 	python3 bin/gac/clone-lifecycle.py retire --destination "$(HOME)/agents/$(AGENT_ID)/ws"
 
+clone-onboard:  ## D2: 为活跃 agent 自动创建 clone (dry-run)
+	python3 bin/gac/agent-clone-onboard.py
+
+clone-onboard-apply:  ## D2: 真正创建 clone
+	python3 bin/gac/agent-clone-onboard.py --apply
+
 # ── 🧠 Memory OS (记忆中枢) ───────────────────────────────────────────────────
 
 memory-os-check:  ## Memory OS 门禁
