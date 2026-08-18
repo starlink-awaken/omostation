@@ -32,6 +32,12 @@
   - 跨域访问必须经由 `bos://{domain_id}/{resource}` 统一路由，严禁使用相对路径或绝对路径直读直写。
 
 ### 2.2 MOF 动态约束规则扩展 (E-DOC 规则集)
+
+> ⚠️ **DESIGN-ONLY (not enforced)** — 2026-08-17 实测核实: E-DOC/ln-001~005 五条
+> 规则仅存在于本 ADR 文本, MOF 规则引擎 (governance-checks registry) / CI /
+> Agent Preflight 均无对应实现 (ln-005 部分除外: 生成工具存在但无强制门禁)。
+> 证据见 `.omo/_knowledge/audits/2026-08-17-edoc-rules-effective-status.md`。
+> 接线与否待人类排期 (T6-08 移交项 H, 决策 H2=标 DESIGN-ONLY 已执行)。
 在 MOF L0 元模型中正式注册并编译以下核心架构红线：
 
 1. **`E-DOC-001` [REQUIRED] (X4)**：禁止在 `Documents` 领域目录下直接创建可执行脚本文件（`.py`, `.sh`, `.bash`, `.js`, `.ts`, `.rb`, `.go`）。
