@@ -1,0 +1,126 @@
+title: Knowledge Ingest Scene Card (知识入库 — assisted 第二场景)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-18
+related:
+- ../../.omo/standards/external-connection-fabric.md
+- ../../.omo/_truth/registry/external-channels.yaml
+- ../knowledge-curation.yaml
+---
+schema: scene-card/v2
+scene_type: internal_pipeline
+lifecycle: assisted
+activation: allowed
+approval_state: confirmed
+lifecycle_gate:
+  target: routine
+  blocking_bet: BET-Y2Q2-T7-01
+  protocol: docs/operations/knowledge-ingest-outcome-tracking.md
+  thresholds:
+    min_samples: 30
+    min_calibration: 0.60
+    min_recall_citation_rate: 0.25
+    rollback_evidence: required
+  measured_2026_08_18:
+    samples: 0
+    calibration: null
+    recall_citation_rate: null
+    rollback_tested: false
+  status: assisted_active_collecting_evidence
+  rationale: 第二场景升 assisted — 验证放权机制从 document-review 到 knowledge-ingest 的可复制性
+approval:
+  confirmed_by: xiamingxing (business-governance approver)
+  confirmed_at: 2026-08-18 18:00:00+00:00
+  basis:
+  - document-review 场景已走通 assisted 准入流程 (mesh 6 事件链验证 + 双源 healthy)
+  - knowledge-curation shadow 期已验证连接器可用性 (iris:wpsnote + iris:obsidian 17K+15.7K 实现)
+  - 知识入库是知识循环的入口 — 放权价值高于单点场景
+scene_id: knowledge-ingest
+journey_id: capture-to-curated-entry
+goal: 将多场景产出的知识片段 (PR merge/公文审查/会议/调研) 自动结构化为可检索的知识条目, 在人工复核下入库
+trigger: 上游场景完成事件 (scene.completed) 产出可沉淀知识片段
+input_contract: 知识片段引用 (evidence:// 或 vault://redacted/), 含来源场景、上下文标签、原始产出引用
+result_contract: 结构化知识条目 (标题/标签/摘要/全文引用/关联项) + 检索索引更新 + 入库审计记录
+outcome_metric: recall_citation_rate / calibration / ingest_cycle_minutes
+consumer: knowledge-curation-scene / research-pipeline / engineering-delivery
+approver: business-governance
+owner: xiamingxing
+failure_cost: 知识流失 / 入库错误导致检索污染 / 重复劳动
+data_classification: internal
+data_scope: redacted-knowledge-references-ingest-metadata-and-curation-audit
+operator: knowledge-ingest-agent-with-human-review
+permission_ref: permission://scene/knowledge-ingest
+capability_refs:
+- iris:wpsnote
+- iris:obsidian
+- bos://memory/kos/mcp-server
+channel_binding:
+  knowledge_source:
+  - iris:wpsnote
+  - iris:obsidian
+rollback_plan: revert-to-shadow-keep-curation-manual
+sample_refs:
+- vault://redacted/knowledge-ingest/sample-1
+- vault://redacted/knowledge-ingest/sample-2
+opportunity_window: 持续知识管理窗口 (每项工作完成后均可触发入库)
+external_resource_policy: admission_controlled
+activation_blockers:
+- calibration_below_0.6
+- recall_citation_rate_below_0.25
+- human_review_backlog_exceeds_48h
+bet: BET-Y2Q2-T7-01
+falsifier: 若 assisted 连续 30 天 recall_citation_rate < 0.25 或 calibration < 0.6, 则回退 shadow
+notes:
+- '2026-08-18: 第二场景升 assisted. 验证放权机制可复制性 (document-review → knowledge-ingest).'
+- 'assisted 含义: 自动执行入库 + 索引更新, 人工复核抽检 (每日 backlog 清零).'
+- '与 knowledge-curation 关系: curation 是知识循环枢纽 (shadow, 观察), ingest 是入口 (assisted, 放权).'
+- '连接器复用: iris:wpsnote + iris:obsidian 已在 curation shadow 期验证, 直接继承.'
+input_schema:
+  type: object
+  required:
+  - knowledge_fragment_ref
+  - source_scene
+  properties:
+    knowledge_fragment_ref:
+      type: string
+      pattern: ^(evidence|vault)://
+    source_scene:
+      type: string
+      description: 产出此知识片段的上游场景
+    context_tags:
+      type: array
+      description: 上下文标签
+output_schema:
+  type: object
+  required:
+  - status
+  - knowledge_entry_ref
+  properties:
+    status:
+      type: string
+      enum:
+      - succeeded
+      - failed
+      - needs_human
+    knowledge_entry_ref:
+      type: string
+      pattern: ^(evidence|vault)://
+    indexed:
+      type: boolean
+      description: 是否已建立检索索引
+reflection_contract:
+  enabled: true
+  trigger: on_completion
+  questions:
+  - 知识条目是否充分捕获了原始上下文?
+  - 标签和分类是否准确?
+  - 入库速度是否满足 < 5 分钟 SLA?
+  - 这条知识未来最可能在什么场景被检索?
+  feedforward: true
+event_subscription:
+  bus: omo-event-bus
+  triggers:
+  - event: scene.completed
+    filter: source_scene in ['engineering-delivery', 'document-review', 'research-pipeline', 'meeting-supervision']
+    action: ingest_fragment

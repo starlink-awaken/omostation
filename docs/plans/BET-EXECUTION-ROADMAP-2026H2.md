@@ -7,7 +7,7 @@
 > upstream: `.omo/_truth/registry/bet-ledger`（`docs/plans/3y-bet-ledger.yaml`）
 > created_at: 2026-08-18
 
-**剩余 bet 总览**：2 in_progress（T1-05A 已收口 ✅，T1-07 在跑）+ 1 blocked（Y1Q2-T1-19）+ 20 candidate = **23 项待推进**。
+**剩余 bet 总览**：1 in_progress（T1-07 在跑）+ 1 blocked（Y1Q2-T1-19）+ 16 candidate = **17 项待推进**（Tier 1 三网关 + IntentModel 已收口）。
 
 ---
 
@@ -56,12 +56,14 @@
 | BET | 状态 | 产出 |
 |-----|------|------|
 | BET-Y1Q1-T1-05A | ✅ done | coordination.sqlite3 + 测试全 PASS + cron + runbook |
-| BET-Y2Q4-T1-01 | 🔶 in_progress | — |
-| BET-Y3H2-T1-02 | 🔶 in_progress | — |
-| BET-Y3H2-T1-01 | 🔶 in_progress | — |
-| BET-Y2Q1-T3-02 | 待认领 | — |
-| BET-Y3H1-T6-01 | 待认领 | — |
-| 其余 17 项 | candidate | — |
+| BET-Y2Q4-T1-01 | ✅ done | ADR-0416: 愿景暂未被证伪，先建度量 |
+| BET-Y3H2-T1-02 | ✅ done | ADR-0417: 中期校准，S1/S2 度量缺失为最高风险 |
+| BET-Y3H2-T1-01 | ✅ done | ADR-0418: 对外扩展默认不做，3 条件重开 |
+| BET-Y2Q1-T3-02 | ✅ done | IntentModel + Prioritizer (src/agora/intent/), 9 tests PASS |
+| BET-Y2Q1-T3-01 | 🔶 in_progress | world_snapshot delta_from_previous |
+| BET-Y2Q1-T3-03 | 待认领 | — |
+| BET-Y2Q2-T7-01 | 待认领 | — |
+| 其余 13 项 | candidate | — |
 
 ---
 

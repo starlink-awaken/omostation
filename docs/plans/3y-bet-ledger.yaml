@@ -3776,7 +3776,7 @@ bets:
   title: 世界模型 world_snapshot 全量 + delta
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 让 Agent 能回答"和上次比变了什么"
   non_goals:
   - 预测未来状态
@@ -3798,6 +3798,8 @@ bets:
   human_gate: false
   circuit_breaker: 超 3 周 → 只做单场景 snapshot
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'delta_from_previous (omo_belief.py): 字段级 diff (added/removed/changed/unchanged); 6 tests PASS'
 - id: BET-Y2Q1-T3-02
   track: T3-COGNI
   window: Y2Q1
@@ -3835,7 +3837,7 @@ bets:
   title: Agent 据心智模型决策 (脱离纯阈值)
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: SceneWatcher 从反射弧变为有状态心智 — 决策依赖历史与上下文
   non_goals:
   - 自主放权
@@ -3858,13 +3860,15 @@ bets:
   human_gate: false
   circuit_breaker: 决策质量下降 → 回退纯阈值, 记 ADR
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'MentalModel (mental_model.py): world/self/intent 三模型注入 SceneWatcher; 同一 confidence 在不同 calibration 下产生不同决策; 10 tests PASS'
 - id: BET-Y2Q2-T7-01
   track: T7-SCENE
   window: Y2Q2
   title: 知识入库场景升 assisted
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 第二个场景进入受审执行, 验证放权机制的可复制性
   non_goals:
   - 自动发布
@@ -3886,6 +3890,8 @@ bets:
   human_gate: true
   circuit_breaker: 未达标 → 保持 shadow
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'knowledge-ingest.yaml (v2): lifecycle=assisted 第二场景; calibration/recall 运行时指标收集状态 (assisted_active_collecting_evidence)'
 - id: BET-Y2Q2-T7-02
   track: T7-SCENE
   window: Y2Q2
