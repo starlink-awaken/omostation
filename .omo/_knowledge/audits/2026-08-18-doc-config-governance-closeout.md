@@ -83,3 +83,23 @@ note: "2026-08-18 文档与配置全面治理 closeout (RISE 循环)"
 - 本任务为 **文档/配置治理**, 未改任何代码/行为
 - frontmatter 的 status/lifecycle 是模板推断值, 个别文档的**语义准确性**需后续人工抽查 (工具无法语义判断)
 - 遗留的共享主仓子模块 dirty (13 个) 为 worktree claim init 副作用, 未提交
+
+## 7. 补充: CI capability-registry drift 处理 (2026-08-18 晚)
+
+**现象**: PR CI 的 `capability-registry drift` job 失败 (continue-on-error, 非阻塞)。
+**根因**: 既存 CI 债 — main 的 `docs/generated/capability-registry.yaml` 是旧版
+(cli_commands 138), 完整子模块环境 sync-all-docs 生成 144。任何基于当前 main 的
+PR 触发 governance-check 都会撞上。与本次文档治理无关。
+**处理**: 生成文件恢复 origin/main 版 (不引入内容漂移); 共享主仓较新 agora
+生成的 595 版偏离基线, 未采用。
+**遗留**: capability-registry.yaml 需一次独立的完整 sync-all-docs 提交 (归 CI/维护),
+非本次范围。
+
+## 8. 最终治理指标
+
+| 指标 | 前 | 后 |
+|------|-----|-----|
+| doc-governance findings | 289 | **2** (CLI-REFERENCE.md 生成文件合理例外) |
+| index drift | FAIL | **ALL PASS** |
+| 修复文件数 | - | **169** (frontmatter) + index + ADR-0413/0414 |
+| PR | - | #1691 |
