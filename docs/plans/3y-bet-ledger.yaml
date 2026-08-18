@@ -3700,7 +3700,8 @@ bets:
   title: Y1 表面积盘点与年度门
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-18
   goal: 对 Y1 的可持有性目标做一次不可回避的实测判定
   non_goals:
   - 补救未达标项(属下一窗口)
@@ -3710,6 +3711,18 @@ bets:
       原设计: 代码 ≤69万 / ADR ≤120 / GaC ≤80 —— 三个数字均为拍定, 无依据
       废除理由: 百分比与数量目标不指向具体冗余, 会诱导执行者找最便宜的达标路径; 实测两处可被有害优化 —— 删测试(占33%)、建删 PASW worktree(占旧基线33%)
       新口径: 逐项「已识别冗余是否清零」+ 保护量是否守住, 而非总量是否达标
+    E15_surface_audit:
+      description: Y1 表面积盘点完成 — 9 项 done_when 核对, 报告见 .omo/_knowledge/retros/gates/Y1-surface-audit.md
+      report: .omo/_knowledge/retros/gates/Y1-surface-audit.md
+      audit_date: 2026-08-18
+      key_findings:
+        test_loc_protected: 未下降 (+90K)
+        adr_protected: 380 未减少
+        knowledge_merge: T6-01 done, 去重 9,433 行
+        aetherforge: T6-01 done, 清零
+        bin_scripts_zero_call: 43 已移除, findings=0
+        dormant_observability: 0 commit since 08-01, 退役待决策
+        dormant_family_hub: 4 commit since 08-01, 保留观察
   done_when:
   - '实测并记录: src_loc / test_loc / gac_required / bin_scripts / adr 分层状态'
   - ① 知识层归并的去重清单是否全部执行
