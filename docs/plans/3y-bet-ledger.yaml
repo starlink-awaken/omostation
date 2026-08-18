@@ -5162,6 +5162,13 @@ bets:
         verify: ok
         guard_verified_clone: ok
         changeset_generated: ok
+    E5_clone_migration:
+      description: 迁移完成 — 13 个 WS+GIT agent clone 全部 verified_clone (guard --require-clone 放行率 100%); 修复 3 identity_mismatch (blueprint-director/t1-05-topology-v2/t1-18-r1d) + 2 identity_required (claude/documents-weijian-facts-owner); pre-commit hook 端到端验证通过
+      migrated_at: 2026-08-18
+      verified_clones: 13
+      fixed_mismatch: 3
+      fixed_identity_required: 2
+      pre_commit_e2e: pass
     E1_clone_stagnation:
       description: ~/agents/ 23 目录仅 1 个真实 clone（coordination-daemon），phase 仍 writer_clone_gate_pilot；迁移停滞
       real_clones: 1
