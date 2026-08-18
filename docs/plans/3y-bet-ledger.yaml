@@ -3986,7 +3986,7 @@ bets:
   title: 漂移监控与自动降级
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 让放权后的能力退化能被自动发现并回收权限
   non_goals:
   - 自动重训模型
@@ -4006,6 +4006,8 @@ bets:
   - BET-Y1Q4-T3-01
   risk_level: L2
   human_gate: false
+  done_at: '2026-08-18'
+  done_evidence: 'DriftMonitor (drift_monitor.py): 滑动窗口 calibration 监控 + 自动降级 + 人工回升; 9 tests PASS'
   circuit_breaker: 误降级率 > 10% → 放宽窗口
   retro: required
 - id: BET-Y2Q3-T6-01
