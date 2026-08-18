@@ -5138,7 +5138,8 @@ bets:
   title: 文档治理减负 — 0 违规后停止扩面转纯维护
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-17
   goal: doc-ssot-lint 已达 0 违规（184 文件），停止继续扩面（新增 lint 规则/文档要求），转纯维护模式；doc 类提交量砍半（两周 217 条 doc 提交）
   non_goals:
   - 删除现有文档 SSOT 机制（保留已生效治理）
@@ -5152,10 +5153,19 @@ bets:
       description: 两周 217 条 doc 类提交（15%）；documents 域 33 提交是主线之一，扩面持续
       doc_commits: 217
       ratio: 15%
+    E3_maintenance_mode:
+      description: 维护模式声明已落地 (.omo/standards/doc-ssot-contract.md §维护模式)，done_when #1 达成 (PR #1651)
+      status: done
   done_when:
   - 明确"文档治理维护模式"边界：仅修复漂移不新增规则
-  - doc 类提交占比从 15% 降至 ~8%（砍半）
+  - doc 类提交占比从 15% 降至 ~8%（砍半）(观察型指标，需真实提交量积累后验证)
   - 无新增 doc-ssot-lint 规则扩面（基线锁定）
+  progress:
+    done_when_met:
+    - '1: 维护模式边界已明确 (PR #1651)'
+    - '3: 无新增规则扩面 (基线锁定)'
+    pending_when:
+    - '2: doc 提交占比 15% → ~8%，观察中'
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error
