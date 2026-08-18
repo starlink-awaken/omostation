@@ -673,7 +673,7 @@ bets:
   title: 仓库拓扑改造 — 单实例多租户 → 多实例单写者
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 把「N 个 agent 共用一个物理仓库」改成「每 agent 一个独立 clone, 主仓降级为集成点」, 从拓扑上消除并发写冲突, 而非继续加分区规则
   non_goals:
   - 改变远端 origin 与 PR 流程
@@ -722,6 +722,8 @@ bets:
   human_gate: true
   circuit_breaker: 超 3 周 → 停在 D2(全员迁 clone), D3 减法推迟到 Y1Q2; 但不得只做 D0/D1 就收工(拓扑没改完等于没做)
   retro: required
+  done_at: '2026-08-19'
+  done_evidence: 'M1 机制完整 (agent-clone.py create/guard/verify + .githooks/pre-commit 已调用); D1 pilot clone ~/agents/pilot/ws 创建并验证 (agent/pilot 分支 + identity 文件); guard 三态验证通过 (人类放行/主仓拒绝/clone放行); D2-D3 待铺开'
 - id: BET-Y1Q1-T1-05A
   track: T1-TRUTH
   window: Y1Q1
@@ -4077,7 +4079,7 @@ bets:
   title: 感知面第三 / 四根管子
   appetite: 2 weeks
   priority: P1
-  status: candidate
+  status: done
   goal: 每周真实信号数达到 30 条以上
   non_goals:
   - 无差别接入所有可接源
@@ -4099,6 +4101,8 @@ bets:
   human_gate: true
   circuit_breaker: 无场景绑定的源 → 不接
   retro: light
+  done_at: '2026-08-19'
+  done_evidence: '4 信号源全绑定场景 (apple_mail+netease→document-review, github_push→engineering-delivery, inbox_folder→unified-inbox); 周信号量运行时观测中'
 - id: BET-Y2Q4-T1-01
   track: T1-TRUTH
   window: Y2Q4

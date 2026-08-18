@@ -8,6 +8,7 @@ description: >
 sources:
   - id: apple_mail_inbox
     description: Apple Mail 收件箱 — 个人邮件信号入口
+    scene_binding: document-review
     transport: local_filesystem
     path: "~/Library/Mail/"
     probe_depth: 3  # T2-03: 顶层 mtime 半年不动, 深探 V10/<UUID>/<mbox>/ 之下 (见 bet diagnosis)
@@ -25,6 +26,7 @@ sources:
 
   - id: netease_mailmaster_inbox
     description: 网易邮箱大师收件箱 — 工作邮件信号入口
+    scene_binding: document-review
     transport: local_filesystem
     # T2-01 (2026-08-16 修正): 容器真名 com.netease.macmail (mailmaster 注册永不匹配);
     # 真实数据在 Application Support/data/ (app.db + 三账户目录, 08-14 活跃)
@@ -44,6 +46,7 @@ sources:
 
   - id: github_push
     description: GitHub push event — 代码变更信号入口
+    scene_binding: engineering-delivery
     transport: webhook
     poll_interval: 60s
     dedup_window: 1h
@@ -59,6 +62,7 @@ sources:
 
   - id: inbox_folder
     description: 感知文件夹 — 投放文件即信号 (第二根管子, BET-Y1Q3-T2-01)
+    scene_binding: unified-inbox
     transport: local_filesystem
     path: "~/Documents/@感知信号"
     poll_interval: 60s
@@ -89,6 +93,7 @@ schema_contract:
     - failure_policy
     - health
     - bos_uri
+    - scene_binding
   health_must_not:
     - value: healthy
       when: "last_signal_at is null or older than 2x poll_interval"
