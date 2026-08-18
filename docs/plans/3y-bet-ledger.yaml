@@ -3898,7 +3898,7 @@ bets:
   title: 中试平台 / 政策申报场景 draft → shadow
   appetite: 3 weeks
   priority: P1
-  status: candidate
+  status: done
   goal: 把两个 skill 骨架实装为真实场景, 验证抽象对长流程业务成立
   non_goals:
   - assisted 及以上
@@ -3922,6 +3922,8 @@ bets:
   human_gate: false
   circuit_breaker: DAG 又成同构克隆 → 说明抽象有问题, 先修抽象
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'v2 场景卡 5 张 (knowledge-ingest/assisted + meeting-supervision + research-pipeline + periodic-reporting + project-supervision)'
 - id: BET-Y2Q2-T8-01
   track: T8-SURFACE
   window: Y2Q2
