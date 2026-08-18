@@ -837,8 +837,13 @@ class TestEdgeCases:
 
         assert ok is True
 
-        # Dispatch
-        result = asyncio.run(pm.dispatch("kos.ping", {}))
+        # Dispatch — PEP (BET-Y1Q2-T1-06) fail-closed for effectful tools;
+        # this test exercises connection lifecycle, not permit policy,
+        # so bypass the adapter-side permit check.
+        with patch(
+            "agora.mcp.policy_enforcement.verify_permit", return_value=None
+        ):
+            result = asyncio.run(pm.dispatch("kos.ping", {}))
         assert "error" not in result.get("status", "")
 
         # Release

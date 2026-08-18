@@ -475,6 +475,25 @@
       "last_health_check": 0.0
     },
     {
+      "name": "kos",
+      "description": "Knowledge Operating System — cross-domain search, ontology, and deep research",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "",
+      "health_endpoint": "",
+      "port": 0,
+      "tags": [
+        "knowledge",
+        "search",
+        "ontology",
+        "cli"
+      ],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
+    },
+    {
       "name": "mcp-test",
       "description": "",
       "protocol": "mcp",
@@ -533,25 +552,6 @@
       "health_endpoint": "",
       "port": 0,
       "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "kos",
-      "description": "Knowledge Operating System — cross-domain search, ontology, and deep research",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "knowledge",
-        "search",
-        "ontology",
-        "cli"
-      ],
       "instances": [],
       "provider_info": null,
       "healthy": true,

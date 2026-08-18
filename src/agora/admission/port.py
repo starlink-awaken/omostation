@@ -156,7 +156,23 @@ def evaluate_admission(request: dict[str, Any]) -> dict[str, Any]:
     """Public SPI entry: evaluate admission request.
 
     Never raises ImportError for missing metaos — returns structured result.
+
+    degraded mode short-circuits to admitted even when a provider is bound:
+    it is an explicit local-dev/test opt-in (set by tests/conftest.py
+    ``allow_local_route_registration``), overriding the provider's policy.
     """
+    if _missing_mode() == "degraded":
+        return {
+            "status": "admitted",
+            "reasons": [
+                (
+                    "[SPI] degraded admit, explicit local-dev opt-in "
+                    "(AGORA_ADMISSION_MODE=degraded); provider bypassed."
+                )
+            ],
+            "provider": None,
+            "degraded": True,
+        }
     provider = get_admission_provider()
     if provider is None:
         mode = _missing_mode()

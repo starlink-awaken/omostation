@@ -17,6 +17,30 @@ _log = logging.getLogger(__name__)
 
 _STDIO_TIMEOUT_DEFAULT = 10.0
 _MAX_STRUCTURED_STDOUT_BYTES = 64 * 1024
+
+
+def _workspace_root() -> str | None:
+    """Workspace root for stdio subprocess cwd.
+
+    BosService commands carry *workspace-relative* paths (e.g.
+    ``uv run --directory projects/omo ...``); spawning them from any
+    other cwd (agora checkout, arbitrary test dir) breaks resolution.
+    Prefer WORKSPACE_ROOT env, else walk up from this file to the
+    directory containing ``projects/``.
+    """
+    import os
+    from pathlib import Path
+
+    env = os.environ.get("WORKSPACE_ROOT")
+    if env and (Path(env) / "projects").is_dir():
+        return env
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        if (parent / "projects" / "omo").is_dir() and (
+            parent / "projects" / "agora"
+        ).is_dir():
+            return str(parent)
+    return None
 _MAX_STRUCTURED_ITEMS = 100
 _MAX_STRUCTURED_DEPTH = 8
 _SENSITIVE_KEY_PARTS = (
@@ -65,7 +89,12 @@ def _redact_structured_value(value: Any, *, depth: int = 0) -> Any:
 
 
 def _parse_structured_stdout(stdout: str) -> Any | None:
-    """仅解析有界 JSON；非结构化或过大输出不进入错误 envelope。"""
+    """仅解析有界 JSON；非结构化或过大输出不进入错误 envelope。
+
+    uv/toolchain 前缀噪声 (如 VIRTUAL_ENV mismatch warning) 可能与
+    应用 JSON 混在同一流 — 先整段尝试, 再退化为提取最后一个完整
+    JSON 对象/数组块 (balanced-brace scan)。
+    """
     raw = stdout.strip()
     if (
         not raw
@@ -73,10 +102,41 @@ def _parse_structured_stdout(stdout: str) -> Any | None:
     ):
         return None
     try:
-        parsed = json.loads(raw)
+        return _redact_structured_value(json.loads(raw))
     except (json.JSONDecodeError, RecursionError):
-        return None
-    return _redact_structured_value(parsed)
+        pass
+    # 从尾部提取最后一个 balanced JSON 块 (跳过前缀噪声行)
+    for start in range(len(raw)):
+        if raw[start] not in "{[":
+            continue
+        depth = 0
+        in_str = False
+        esc = False
+        for i in range(start, len(raw)):
+            ch = raw[i]
+            if esc:
+                esc = False
+                continue
+            if ch == "\\":
+                esc = True
+                continue
+            if ch == '"':
+                in_str = not in_str
+                continue
+            if in_str:
+                continue
+            if ch in "{[":
+                depth += 1
+            elif ch in "}]":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return _redact_structured_value(
+                            json.loads(raw[start : i + 1])
+                        )
+                    except (json.JSONDecodeError, RecursionError):
+                        break  # 此起点无有效块, 换下一个 '{[' 起点
+    return None
 
 
 class _McpStdioSession:
@@ -240,22 +300,37 @@ class StdioAdapter:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                cwd=_workspace_root(),
             )
             pid = proc.pid
             request = json.dumps(self._build_stdio_request(args, kwargs))
             stdout, _stderr = proc.communicate(input=request, timeout=self.timeout)
             if proc.returncode != 0:
                 structured = _parse_structured_stdout(stdout)
-                error = "subprocess_exit_nonzero"
-                if isinstance(structured, dict) and "error" in structured:
-                    error = structured["error"]
+                # --agora 应用层失败 (如 duplicate_event) 可能走 stderr
+                # (omo CLI 侧输出通道不稳定), 两边都尝试结构化解析。
+                if not isinstance(structured, dict):
+                    structured = _parse_structured_stdout(_stderr or "")
                 result = {
                     "status": "error",
-                    "error": error,
+                    "error": "subprocess_exit_nonzero",
                     "exit_code": proc.returncode,
                     "pid": pid,
                     "alive_at_spawn": True,
                 }
+                if isinstance(structured, dict):
+                    # 旧契约: 顶层 {"error": {...}} 时解包 inner dict 为
+                    # result["error"] (保留 nested details 供 redaction 消费)。
+                    inner = structured.get("error")
+                    result["error"] = inner if isinstance(inner, dict) else structured
+                    # reason 摘要 (如 duplicate_event) 便于顶层消费方子串判断。
+                    reason = (
+                        structured.get("reason")
+                        or (inner.get("reason") if isinstance(inner, dict) else None)
+                        or (inner.get("code") if isinstance(inner, dict) else None)
+                    )
+                    if reason:
+                        result["reason"] = str(reason)
                 if structured is not None:
                     result["result"] = structured
                 return result
@@ -263,6 +338,16 @@ class StdioAdapter:
                 result = json.loads(stdout)
             except json.JSONDecodeError:
                 result = {"raw": stdout}
+            # --agora 协议: 应用层失败 (如 duplicate_event) 以
+            # {"ok": false, "reason": ...} + exit 0 表达 — 映射为 error。
+            if isinstance(result, dict) and result.get("ok") is False:
+                return {
+                    "status": "error",
+                    "error": str(result.get("reason") or "app_level_failure"),
+                    "pid": pid,
+                    "alive_at_spawn": True,
+                    "result": result,
+                }
             return {
                 "status": "ok",
                 "result": result,
@@ -316,6 +401,7 @@ class StdioAdapter:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                cwd=_workspace_root(),
             )
             pid = proc.pid
             session = _McpStdioSession(proc, self.timeout)

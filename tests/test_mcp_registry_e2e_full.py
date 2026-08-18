@@ -567,16 +567,31 @@ class TestServiceConfigBuilding:
     """Service config building from catalog entries."""
 
     def test_http_endpoint(self):
-        """HTTP mcp_endpoint produces HTTP transport config."""
-        tool = {
-            "name": "http-tool",
-            "mcp_endpoint": "http://localhost:8080/mcp",
-            "metadata": {},
-        }
-        config = LifecycleManager._build_service_config(tool)
-        assert config is not None
-        assert config["mcp_endpoint"] == "http://localhost:8080/mcp"
-        assert "command" not in config
+        """HTTP mcp_endpoint on a live port produces HTTP transport config.
+
+        _build_service_config probes the endpoint (TCP connect) to
+        distinguish fabricated ports from real services; a dead port
+        falls back to stdio. Bind a throwaway listener so the HTTP
+        path is actually exercised.
+        """
+        import socket
+
+        srv = socket.socket()
+        srv.bind(("127.0.0.1", 0))
+        srv.listen(1)
+        port = srv.getsockname()[1]
+        try:
+            tool = {
+                "name": "http-tool",
+                "mcp_endpoint": f"http://localhost:{port}/mcp",
+                "metadata": {},
+            }
+            config = LifecycleManager._build_service_config(tool)
+            assert config is not None
+            assert config["mcp_endpoint"] == f"http://localhost:{port}/mcp"
+            assert "command" not in config
+        finally:
+            srv.close()
 
     def test_metadata_command(self):
         """metadata.command produces stdio config with explicit command."""

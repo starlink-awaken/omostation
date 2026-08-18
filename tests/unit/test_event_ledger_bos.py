@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import tempfile
 from pathlib import Path
 
@@ -156,7 +157,9 @@ def test_duplicate_write_fails(tmp_path):
     assert invoke_stdio(LEDGER_URIS["append"], **kwargs)["status"] == "ok"
     r2 = invoke_stdio(LEDGER_URIS["append"], **kwargs)
     assert r2["status"] == "error"
-    assert "duplicate" in r2["error"].lower()
+    # adapter 在 exit!=0 时解包 --agora 结构化错误: 顶层 reason 摘要
+    # (如 duplicate_event), nested payload 在 result["error"] dict。
+    assert "duplicate" in r2.get("reason", json.dumps(r2.get("error", {}))).lower()
 
 
 def test_malformed_payload_fails(tmp_path):

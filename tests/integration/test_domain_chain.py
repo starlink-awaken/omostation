@@ -253,12 +253,16 @@ def test_chain_steps_respect_transport_modes():
 
 
 def test_w1_gap_5_uris_all_registered():
-    """W1 验证: P35-W0 GAP 5 条 URI 全部在 POC_SERVICES 注册."""
+    """W1 验证: P35-W0 GAP 仍在线的 URI 在 POC_SERVICES 注册.
+
+    2026-08 契约更新 (BET-Y1Q3-T1-05 声明诚实化 + forge 工具下线):
+    - bos://persona/sharedbrain-bridge/recall-entity 已从注册表移除
+    - bos://capability/forge/exec-tool / list-tools 已标 deprecated
+      (deprecated 不进 POC_SERVICES, 见 _load_from_yaml_with_diagnostics)
+    仍需在线的 2 条: health-profile/alert + omo/inspect。
+    """
     spec_uris = [
-        "bos://persona/sharedbrain-bridge/recall-entity",
         "bos://persona/health-profile/alert",
-        "bos://capability/forge/exec-tool",
-        "bos://capability/forge/list-tools",
         "bos://governance/omo/inspect",
     ]
     missing = [
@@ -267,7 +271,7 @@ def test_w1_gap_5_uris_all_registered():
         if normalize_bos_uri(u) not in [s.uri for s in POC_SERVICES]
     ]
     assert not missing, f"P36-W1 GAP 补失败, 仍缺: {missing}"
-    print("\nP36-W1 GAP 全补: 5/5 URI 已注册")
+    print("\nP36-W1 在线 URI 全注册: 2/2")
 
 
 # ── P36-W1 11/11 总结 ────────────────────────────────
