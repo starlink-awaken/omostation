@@ -88,13 +88,15 @@ GROUPS: list[tuple[str, str, list[CmdRow]]] = [
         ],
     ),
     (
-        "🧠 认知操作系统与主权治理 (V2.0 ADR-0195~0199)",
+        "🧠 认知操作系统与主权治理 (V3.0 ADR-0200~0203)",
         "bright_cyan",
         [
             CmdRow("intent", "🧠 意图解构与工程规格编译器 (ADR-0195)", 'cockpit intent "卫健委立项方案"'),
             CmdRow("challenge", "⚡️ 影子红蓝对抗审查与自动打补丁 (ADR-0196)", "cockpit challenge 方案.md --auto-patch"),
-            CmdRow("cartridge", "👁️ 长尾领域治理卡带工坊 (ADR-0198)", "cockpit cartridge list"),
-            CmdRow("fabric", "🧑‍💻 主权混合算力与0ms TTFT快照 (ADR-0197)", "cockpit fabric snapshot list"),
+            CmdRow("memory-distill", "🧠 记忆自蒸馏与冲突自愈 (ADR-0200)", "cockpit memory-distill --auto-apply"),
+            CmdRow("audit-ledger", "⚡️ 密码学级 Merkle 审计账本 (ADR-0201)", "cockpit audit-ledger status"),
+            CmdRow("fabric-mesh", "🧑‍💻 局域网边缘算力漫游网格 (ADR-0202)", "cockpit fabric-mesh list"),
+            CmdRow("cartridge", "👁️ 领域卡带打包与沙箱运行 (ADR-0203)", "cockpit cartridge list"),
         ],
     ),
     (
