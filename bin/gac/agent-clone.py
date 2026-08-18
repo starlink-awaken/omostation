@@ -698,10 +698,6 @@ def build_manifest(repo_root: str) -> dict:
             EXIT_POLICY,
         )
 
-    root_status = git(repo_root, "status", "--porcelain")
-    if root_status.returncode != 0:
-        raise ToolError("not_a_repository", root_status.stderr.strip(), EXIT_POLICY)
-
     links = gitlinks(repo_root)
     entries = []
     for path in sorted(links):
@@ -722,7 +718,18 @@ def build_manifest(repo_root: str) -> dict:
                 "clean": clean,
             }
         )
-    if root_status.stdout.strip():
+    root_status = git(repo_root, "status", "--porcelain")
+    if root_status.returncode != 0:
+        raise ToolError("not_a_repository", root_status.stderr.strip(), EXIT_POLICY)
+
+    # root_dirty 忽略 untracked 的孤儿仓库目录 (?? dir/, 主仓未登记 gitlink 的
+    # 独立仓库如 c2g/gbrain/kairon), 但 untracked 单文件 (?? file.txt) 仍视为
+    # dirty — 那是意外残留, 不是合法拓扑 (BET-Y1Q3-T1-07).
+    tracked_changes = [
+        line for line in root_status.stdout.splitlines()
+        if line.strip() and not (line.startswith("?? ") and line.rstrip().endswith("/"))
+    ]
+    if tracked_changes:
         raise ToolError("root_dirty", "root repository has uncommitted changes", EXIT_POLICY)
 
     branch, detached = branch_state(repo_root)
@@ -843,7 +850,12 @@ def cmd_verify(args: argparse.Namespace) -> dict:
     root_status = git(args.clone, "status", "--porcelain")
     if root_status.returncode != 0:
         raise ToolError("root_dirty", "cannot check root cleanliness", EXIT_POLICY)
-    if root_status.stdout.strip():
+    # 忽略 untracked 孤儿仓库目录 (?? dir/), 文件型 untracked 仍拒绝 (BET-Y1Q3-T1-07).
+    tracked_changes = [
+        line for line in root_status.stdout.splitlines()
+        if line.strip() and not (line.startswith("?? ") and line.rstrip().endswith("/"))
+    ]
+    if tracked_changes:
         raise ToolError("root_dirty", "root repository is dirty", EXIT_POLICY)
 
     hooks_proc = git(args.clone, "config", "--get", "core.hooksPath")
