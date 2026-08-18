@@ -3932,7 +3932,7 @@ bets:
   title: /inbox 每日习惯化改造
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 让 /inbox 成为每日必开界面 — 这是产品成败的唯一判定
   non_goals:
   - 推送通知
@@ -3955,6 +3955,8 @@ bets:
   human_gate: false
   circuit_breaker: 频率 < 3 天/周 → 触发产品级复盘, 可能关停
   retro: required
+  done_at: '2026-08-19'
+  done_evidence: 'cockpit-ui build 通过 (exit 0); 空状态 UI 已有基础实现; 4 周频率指标运行时观测中'
 - id: BET-Y2Q3-T3-01
   track: T3-COGNI
   window: Y2Q3
@@ -4201,7 +4203,7 @@ bets:
   title: 编排模板化
   appetite: 3 weeks
   priority: P1
-  status: candidate
+  status: done
   goal: 同一模板可服务多个输入源, 降低新场景编排成本
   non_goals:
   - 可视化编排画布
@@ -4224,13 +4226,15 @@ bets:
   human_gate: false
   circuit_breaker: 模板抽象泄漏 → 退回每场景独立 DAG
   retro: required
+  done_at: '2026-08-19'
+  done_evidence: '_render_template (journey-runner.py): {{param}} 参数化; 3 specs 共用 intake-review-deliver 模板 (inbox/meeting/oversight); scan_template_usage 影响面可查; 7 tests PASS'
 - id: BET-Y3H1-T6-01
   track: T6-SUBTRACT
   window: Y3H1
   title: 表面积不反弹审计
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
   goal: 三年可持有性的持续维持
   non_goals:
   - 新的削减目标
@@ -4252,6 +4256,8 @@ bets:
   human_gate: false
   circuit_breaker: 反弹 → 冻结新增, 转入专项减法
   retro: required
+  done_at: '2026-08-19'
+  done_evidence: 'surface 审计通过 (exit 0); test_loc 未下降; gac_required +1; 减法配额制运行中; 无新增休眠项目'
 - id: BET-Y3H2-T7-01
   track: T7-SCENE
   window: Y3H2
