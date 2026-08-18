@@ -8,10 +8,10 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 580
-  bos_services: 223
-  bos_domains: 17
-  cli_commands: 138
+  mcp_tools: 595
+  bos_services: 227
+  bos_domains: 18
+  cli_commands: 144
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -496,9 +496,12 @@ mcp_servers:
   layer: X
   file: projects/c2g/src/c2g/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - c2g_bet
+  - c2g_gc
+  - c2g_radar
+  tool_count: 3
 - id: family-hub
   name: Family Hub
   layer: X
@@ -550,17 +553,23 @@ mcp_servers:
   - handle_agent_status
   - handle_agent_task_status
   - handle_brief
+  - handle_cartridge_inspect
+  - handle_cartridge_list
   - handle_documents_audit
   - handle_documents_guardrails
+  - handle_domain_compliance_audit
   - handle_governance_explain
   - handle_governance_guardrails
   - handle_governance_preflight
   - handle_health
+  - handle_intent_compile
   - handle_kv_get
   - handle_matrix_list
   - handle_ontology
+  - handle_pitfall_check
   - handle_protocol_get
   - handle_protocol_list
+  - handle_shadow_challenge
   - runtime_agent_chat
   - runtime_agent_execute
   - runtime_agent_list
@@ -569,18 +578,24 @@ mcp_servers:
   - runtime_agent_status
   - runtime_agent_task_status
   - runtime_brief
+  - runtime_cartridge_inspect
+  - runtime_cartridge_list
   - runtime_documents_audit
   - runtime_documents_guardrails
+  - runtime_domain_compliance_audit
   - runtime_governance_explain
   - runtime_governance_guardrails
   - runtime_governance_preflight
   - runtime_health
+  - runtime_intent_compile
   - runtime_kv_get
   - runtime_matrix_list
   - runtime_ontology_get
+  - runtime_pitfall_check
   - runtime_protocol_get
   - runtime_protocol_list
-  tool_count: 38
+  - runtime_shadow_challenge
+  tool_count: 50
 - id: iris
   name: Iris
   layer: L2
@@ -820,8 +835,9 @@ bos_services:
     cockpit: 2
     compute: 3
     ecos: 10
+    fabric: 1
     forge: 1
-    governance: 54
+    governance: 57
     l4-kernel: 1
     memory: 47
     meta: 1
@@ -933,15 +949,15 @@ bos_services:
     - uri: bos://analysis/iris/connect
       description: '[UNIMPLEMENTED] Iris 连接 (POC stdio)'
       transport: mcp_stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://analysis/iris/transform
       description: '[UNIMPLEMENTED] Iris 数据转换 (POC stdio)'
       transport: mcp_stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://analysis/iris/validate
       description: '[UNIMPLEMENTED] Iris 数据校验 (POC stdio)'
       transport: mcp_stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://analysis/eidos/validate
       description: Eidos 数据模型校验
       transport: stdio
@@ -966,35 +982,35 @@ bos_services:
     - uri: bos://capability/agent-runtime/execute
       description: Agent Runtime 执行入口
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/agent-runtime/list-tools
       description: Agent Runtime 工具列表
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/agent-runtime/status
       description: Agent Runtime 状态
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/forge/agent-list
       description: Forge 集市 Agent 列表
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/forge/agent-install
       description: Forge 集市 Agent 安装
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/forge/registry
       description: Forge 注册表查询
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/forge/publish
       description: Forge 发布入口
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/forge/lint
       description: Forge Lint 检查
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/swarm/run
       description: AetherForge Swarm 多智能体任务工作流运行接口 (internal 进程内反射直调)
       transport: internal
@@ -1014,19 +1030,19 @@ bos_services:
     - uri: bos://capability/forge/discover
       description: '[POC] Forge 工具发现 (POC stdio)'
       transport: mcp_stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/forge/exec-tool
       description: '[POC] Forge 工具执行 (POC stdio)'
       transport: mcp_stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/forge/list-tools
       description: '[POC] Forge 工具列表 (POC stdio)'
       transport: mcp_stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/forge/register-tool
       description: '[POC] Forge 工具注册 (POC stdio)'
       transport: mcp_stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/bus/data
       description: Omni-Bus 数据面路由 (日志/遥测)
       transport: internal
@@ -1042,19 +1058,19 @@ bos_services:
     - uri: bos://capability/agent-runtime/chat
       description: Agent 交互式对话接口
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/agent-runtime/run-task
       description: Agent 任务执行接口
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/agent-runtime/task-status
       description: Agent 任务状态查询
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/agent-runtime/agent-list
       description: 列出所有可用 Agent 实例
       transport: mcp_stdio
-      status: unimplemented
+      status: active
     - uri: bos://capability/wps-office-mcp/invoke
       description: WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents 业务文件读写
       transport: stdio
@@ -1114,27 +1130,27 @@ bos_services:
     - uri: bos://capability/agt/trust
       description: AGT 信任评分与身份验证服务 (Agent Governance Toolkit)
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/agt/sandbox
       description: AGT 沙箱隔离与权限控制服务 (Agent Governance Toolkit)
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/agt/sre
       description: AGT SRE 监控与健康检查服务 (Agent Governance Toolkit)
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/agt/mcp-security
       description: AGT MCP 安全审计与权限检查服务 (Agent Governance Toolkit)
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/agt/marketplace
       description: AGT 能力市场与发现服务 (Agent Governance Toolkit)
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://capability/agt/lightning
       description: AGT Lightning 快速通道与缓存服务 (Agent Governance Toolkit)
       transport: stdio
-      status: unimplemented
+      status: deprecated
     cockpit:
     - uri: bos://cockpit/tools/cards_status
       description: cockpit cards_status 工具 — mof_agora_hook 路由表入口
@@ -1196,6 +1212,11 @@ bos_services:
       status: active
     - uri: bos://ecos/workflow
       description: ecos workflow CLI 入口 (ecos/cli/workflow.py)
+      transport: stdio
+      status: active
+    fabric:
+    - uri: bos://fabric/snapshot/manage
+      description: 主权算力 KV 缓存二进制快照预热 (ADR-0197)
       transport: stdio
       status: active
     forge:
@@ -1355,11 +1376,11 @@ bos_services:
     - uri: bos://governance/agt/policy
       description: AGT 策略评估与合规检查引擎 (Agent Governance Toolkit)
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://governance/agt/hypervisor
       description: AGT Hypervisor 审计哈希链与完整性验证服务 (Agent Governance Toolkit)
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://governance/mof/io
       description: 模型导入/导出 (JSON)
       transport: stdio
@@ -1418,6 +1439,18 @@ bos_services:
       status: active
     - uri: bos://governance/mof/manage
       description: MOF 能力注册表管理 (查看/验证/更新 mof-capabilities.yaml)
+      transport: stdio
+      status: active
+    - uri: bos://governance/intent/compile
+      description: 意图解构与工程规格编译器 (ADR-0195)
+      transport: stdio
+      status: active
+    - uri: bos://governance/shadow/challenge
+      description: 影子红蓝对抗审查与合规自动补丁 (ADR-0196)
+      transport: stdio
+      status: active
+    - uri: bos://governance/cartridge/list
+      description: 领域治理卡带列表 (ADR-0198)
       transport: stdio
       status: active
     l4-kernel:
@@ -1640,11 +1673,11 @@ bos_services:
     - uri: bos://perception/apple_mail/inbox
       description: Apple Mail 收件箱信号采集 (BET-Y1Q1-T2-01 感知面)
       transport: stdio
-      status: unimplemented
+      status: deprecated
     - uri: bos://perception/signal_monitor/health
       description: 信号源健康探测与降级报告
       transport: stdio
-      status: unimplemented
+      status: deprecated
     persona:
     - uri: bos://persona/core-models/schema
       description: Core Models Schema 查询
@@ -1786,6 +1819,10 @@ cli_commands:
   description: BOS capability 域 / toolbox 外部能力
 - name: cards
   description: 显示 CARDS 卡片状态
+- name: cartridge
+  description: 👁️ 长尾领域治理卡带工坊 (ADR-0198)
+- name: challenge
+  description: ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196)
 - name: channels
   description: 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml
 - name: code
@@ -1876,6 +1913,10 @@ cli_commands:
   description: 刷新 data/_index 元数据
 - name: init
   description: 🚀 初始化向导（同 quickstart）
+- name: inspect
+  description: 查看算力网格健康度与节点状态
+- name: intent
+  description: 🧠 自然语言意图解构与工程规格编译器 (ADR-0195)
 - name: invoke
   description: 调用 capability 服务（执行 BOS YAML command）
 - name: iterate
@@ -1976,6 +2017,10 @@ cli_commands:
   description: stdio JSON-RPC serve mode
 - name: skill
   description: 运行 L4 定时技能
+- name: snapshot
+  description: KV 缓存快照管理与预热
+- name: speculative-eval
+  description: 本地首选投机推演评估
 - name: ssb
   description: '[DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用'
 - name: stats
