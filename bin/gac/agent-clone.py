@@ -972,7 +972,12 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
     root_status = git(args.clone, "status", "--porcelain")
     if root_status.returncode != 0:
         raise ToolError("candidate_not_a_repository", root_status.stderr.strip(), EXIT_POLICY)
-    if root_status.stdout.strip():
+    # 忽略 untracked 孤儿仓库目录 (?? dir/), 文件型 untracked 仍视为 dirty (BET-Y1Q3-T1-07).
+    tracked_changes = [
+        line for line in root_status.stdout.splitlines()
+        if line.strip() and not (line.startswith("?? ") and line.rstrip().endswith("/"))
+    ]
+    if tracked_changes:
         raise ToolError("candidate_dirty", "candidate clone root is dirty", EXIT_POLICY)
     links = gitlinks(args.clone)
     for path in links:
