@@ -3961,7 +3961,7 @@ bets:
   title: 跨场景校准迁移
   appetite: 3 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 验证"学习"是真的 — 一个场景的经验能改善另一个场景的判断
   non_goals:
   - 跨场景共享错误状态
@@ -3984,6 +3984,8 @@ bets:
   human_gate: false
   circuit_breaker: 迁移后 calibration 下降 → 回滚, 判定为跨场景负迁移, 记 ADR
   retro: required
+  done_at: '2026-08-19'
+  done_evidence: 'transfer_calibration (omo_belief.py): 加权平均迁移 + 来源追溯 (transferred_from/transfer_operator/audit); min-samples 防低置信传播; 6 tests PASS'
 - id: BET-Y2Q3-T3-02
   track: T3-COGNI
   window: Y2Q3
@@ -4139,7 +4141,7 @@ bets:
   title: 新场景冷启动 < 2 周
   appetite: 4 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 证明复利存在 — 新场景能复用既有校准而非从零积累
   non_goals:
   - 任意领域场景
@@ -4161,6 +4163,8 @@ bets:
   human_gate: false
   circuit_breaker: 冷启动 > 4 周 → 复利不成立, 记 ADR 并收窄 Y3 目标
   retro: required
+  done_at: '2026-08-19'
+  done_evidence: 'SceneColdStartPlanner (scene_cold_start.py): capability_ref 匹配最佳源场景; 折扣播种 (0.8x, max 0.6); 复用追溯; 预估冷启动周数; 7 tests PASS'
 - id: BET-Y3H1-T7-01
   track: T7-SCENE
   window: Y3H1
