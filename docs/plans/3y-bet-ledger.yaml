@@ -3558,7 +3558,15 @@ bets:
   title: 公文场景 format_check 升 L2
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-18
+  done_note: >-
+    PR #1694 完成 (outcome 协议 + rollback 实测 + lifecycle_gate)。
+    circuit_breaker 守门: calibration=1.00 (≥0.6 ✓) 但 document-review
+    专属 outcome 样本=0 (<30), 维持 lifecycle=shadow (不升 assisted)。
+    交付: docs/operations/document-review-outcome-tracking.md (30-sample
+    校准协议) + scene-card lifecycle_gate (blocked_until_threshold_met)。
+    升 L2 待门槛达标后由独立 bet 推进。human_gate 批准 (用户 2026-08-18)。
   goal: 三年内第一次真实放权 — 系统可自动做格式修正, 人类事后可撤销
   non_goals:
   - 生成草案放权
@@ -3583,6 +3591,14 @@ bets:
   human_gate: true
   circuit_breaker: calibration 未达 0.6 → 保持 L1, 不得强行放权
   retro: required
+  pr_number: 1694
+  merge_sha: 13fe148247
+  gatekeeping:
+    lifecycle: shadow (maintained)
+    threshold_samples: 30
+    current_samples: 0
+    calibration_overall: 1.00
+    next_bet: 待 30 次 outcome 累积后独立推进 lifecycle=shadow → assisted
 - id: BET-Y1Q4-T5-01
   track: T5-ORCH
   window: Y1Q4
