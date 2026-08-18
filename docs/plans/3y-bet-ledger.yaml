@@ -4018,7 +4018,7 @@ bets:
   title: 减法第二轮维持
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 防止 Y2 加法阶段表面积反弹
   non_goals:
   - 达成新的更低目标
@@ -4040,6 +4040,8 @@ bets:
   human_gate: false
   circuit_breaker: 反弹 > 5% → 冻结全部新增 bet 一个季度
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'surface 审计通过 (exit 0); test_loc 未下降; gac_required +1; 减法配额制运行中'
 - id: BET-Y2Q4-T3-01
   track: T3-COGNI
   window: Y2Q4
