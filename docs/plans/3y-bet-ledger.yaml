@@ -3621,7 +3621,15 @@ bets:
   title: aetherforge 并入 runtime
   appetite: 2 weeks
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-18
+  done_note: >-
+    PR-A 完成 (子模块减法 + 归档, #1688 → 10224b6a): aetherforge 内 packages/swarm
+    删除 30,153 行, bus_adapter 归档 98 行 (P71 类 A 修正); 主仓 aetherforge-archive/
+    swarm 归档副本 29,814 行 + bus_adapter.py。 fail-closed shim 注入 swarm/rpc +
+    cli.py:cmd_swarm。 src_loc 下降量 == 去重清单合计 29,912 行 ✅。 test_loc 431,451
+    vs 350,854 (+23%, 保护量守住)。 bus-usage-report regex 修正 (7/7 ACTIVE)。
+    human_gate: true 批准 (用户指令 2026-08-18)。
   goal: 合并执行与算力调度, 删除无消费者的 mesh/swarm 代码
   non_goals:
   - 删除 gateway(模型网关是刚需)
@@ -3645,6 +3653,15 @@ bets:
   human_gate: true
   circuit_breaker: 行数未降 → 判定为拼接, 回滚重做
   retro: required
+  pr_a:
+    pr_number: 1688
+    merge_sha: 10224b6a8a12930e46d9fd68882986630ef6789e
+    title: aetherforge 减法 + swarm 归档 + bus-detector regex
+    scope: sub_module_subtraction + archive
+  pr_b_deferred:
+    scope: runtime 内承接 aetherforge + 主仓 .gitmodules 删条目 + bos-services 路径
+    reason: runtime 子模块独立 PR, 需后续 bet 立条目
+    blocked_on: runtime_submodule_acceptance
 - id: BET-Y1Q4-T4-01
   track: T4-OUTCOME
   window: Y1Q4
