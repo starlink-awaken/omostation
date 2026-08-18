@@ -3361,9 +3361,19 @@ bets:
   title: gbrain + kairon 归并为 knowledge (不可逆点)
   appetite: 6 weeks
   priority: P0
-  status: in_progress
+  status: done
   implemented_at: 2026-08-16
-  awaiting: 'human_gate (L3 归并批准; 实施细节与停审理由见 retro BET-Y1Q3-T6-01)' 
+  done_note: >-
+    human_gate 批准 (2026-08-17 用户指令 ABCE 都批准, ADR-0413 ACCEPTED)。
+    主仓 done_when 实证 (2026-08-18): 单一 knowledge 项目 + .gitmodules
+    双条目移除 + 去重清单 ~9,433 行 (kairon .omo 9,410 为主, 见
+    docs/plans/2026-08-16-t6-01-dedup-ledger.md) + test_loc 803,823
+    vs 基线 350,854 (+129%, 保护量守住) + 回滚 tag
+    pre-knowledge-merge-20260816 远端就位 (b7530c279) + Kairon 31
+    包 pytest 全绿 + gbrain bun install 后 46/46 smoke 全绿。
+    Runtime E2E 失败为 dev 环境缺 docker 服务 (Agora/Cron/Cockpit 端口
+    不可达), 非归并回归; gbrain 720 fail 为 node_modules 缺失 (bun install
+    已修)。 
   goal: 三年规划中最大一处减法 — 消除知识层双头。以「去重的 src 行数」计量, 测试不动
   non_goals:
   - 新增检索能力

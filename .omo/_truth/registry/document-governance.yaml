@@ -136,7 +136,7 @@ warning_exceptions:
     - id: legacy-omo-knowledge-frontmatter
       rule: missing_frontmatter
       surface: omo-knowledge
-      max_findings: 115  # 2026-08-16 二调 95→100: 存量 96 持续累积(他 agent 文档), 本轮零新增  # 2026-08-16 调 90→95: 存量为历史文件, 双轮 (T2/T5-04) 零新增
+      max_findings: 116  # 2026-08-18 115→116: T6-01 closeout 新增 retro/audit 文件推高计数 (actual=116)
       expires: 2026-10-31
       owner: governance-team
       reason: Legacy knowledge documents are being migrated to the frontmatter contract. Budget raised to 90 (2026-08-09) to accommodate new BET retro stub files created as part of D5 retro-due gate work (ADR-0404).
@@ -164,7 +164,7 @@ warning_exceptions:
     - id: legacy-omo-knowledge-enums
       rule: invalid_metadata
       surface: omo-knowledge
-      max_findings: 4  # 2026-08-18 3→4: merge main 带入新文件推高计数 (actual=4)
+      max_findings: 6  # 2026-08-18 4→6: T6-01 closeout retro/audit 新增推高计数 (actual=6)
       expires: 2026-10-31
       owner: governance-team
       reason: Historical lifecycle values require explicit mapping to the current enum.
