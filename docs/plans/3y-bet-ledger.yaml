@@ -4632,7 +4632,8 @@ bets:
   title: Y1Q4 年度门修订评审 — code_loc 重基线 (human_gate)
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-18
   goal: >-
     Y1Q4 门 code_loc <= 690000 按 Y1 初基线制定, 未纳入 gbrain 重写噪音与新项目出生两变量,
     当前实测 src_loc 与门值缺口约 -58%。刻舟求剑的门会诱导第二个 T3-01 式谎报。
@@ -4640,10 +4641,22 @@ bets:
   non_goals:
   - agent 自行修改门值 (必须人类拍板)
   - 顺带修改其他窗口门
+  evidence:
+    E1_rebaseline_proposal:
+      description: 重基线提案已产出 (docs/plans/annual-gate-rebaseline-2026Q4.md), 三情景量化论证完整
+      file: docs/plans/annual-gate-rebaseline-2026Q4.md
+      recommendation: 情景 B (调门到 1,100,000) + 净值口径门检
+      created: 2026-08-18
   done_when:
   - "重基线提案文档产出 (三种情景: 守原门/调门/拆门为分项目门)"
   - 每种情景附 T1-03 净值口径的量化论证
   - 人类明确批示后按批示更新 annual_gates 并留 ADR
+  progress:
+    done_when_met:
+    - '1: 提案文档产出 (annual-gate-rebaseline-2026Q4.md)'
+    - '2: 三情景均附净值口径量化 (实测 src_loc 1,663,966 / 净增长 ~+145K / gbrain 重写净 +360)'
+    pending_when:
+    - '3: 人类批示后更新 annual_gates + ADR (待拍板)'
   verify:
   - cmd: test -f docs/plans/annual-gate-rebaseline-2026Q4.md
     expect: exit 0
