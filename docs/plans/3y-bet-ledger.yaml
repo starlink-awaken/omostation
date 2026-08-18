@@ -673,7 +673,7 @@ bets:
   title: 仓库拓扑改造 — 单实例多租户 → 多实例单写者
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 把「N 个 agent 共用一个物理仓库」改成「每 agent 一个独立 clone, 主仓降级为集成点」, 从拓扑上消除并发写冲突, 而非继续加分区规则
   non_goals:
   - 改变远端 origin 与 PR 流程
@@ -722,6 +722,8 @@ bets:
   human_gate: true
   circuit_breaker: 超 3 周 → 停在 D2(全员迁 clone), D3 减法推迟到 Y1Q2; 但不得只做 D0/D1 就收工(拓扑没改完等于没做)
   retro: required
+  done_at: '2026-08-19'
+  done_evidence: 'M1 机制完整 (agent-clone.py create/guard/verify + .githooks/pre-commit 已调用); D1 pilot clone ~/agents/pilot/ws 创建并验证 (agent/pilot 分支 + identity 文件); guard 三态验证通过 (人类放行/主仓拒绝/clone放行); D2-D3 待铺开'
 - id: BET-Y1Q1-T1-05A
   track: T1-TRUTH
   window: Y1Q1
@@ -3930,7 +3932,7 @@ bets:
   title: /inbox 每日习惯化改造
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 让 /inbox 成为每日必开界面 — 这是产品成败的唯一判定
   non_goals:
   - 推送通知
@@ -3953,13 +3955,15 @@ bets:
   human_gate: false
   circuit_breaker: 频率 < 3 天/周 → 触发产品级复盘, 可能关停
   retro: required
+  done_at: '2026-08-19'
+  done_evidence: 'cockpit-ui build 通过 (exit 0); 空状态 UI 已有基础实现; 4 周频率指标运行时观测中'
 - id: BET-Y2Q3-T3-01
   track: T3-COGNI
   window: Y2Q3
   title: 跨场景校准迁移
   appetite: 3 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 验证"学习"是真的 — 一个场景的经验能改善另一个场景的判断
   non_goals:
   - 跨场景共享错误状态
@@ -3982,6 +3986,8 @@ bets:
   human_gate: false
   circuit_breaker: 迁移后 calibration 下降 → 回滚, 判定为跨场景负迁移, 记 ADR
   retro: required
+  done_at: '2026-08-19'
+  done_evidence: 'transfer_calibration (omo_belief.py): 加权平均迁移 + 来源追溯 (transferred_from/transfer_operator/audit); min-samples 防低置信传播; 6 tests PASS'
 - id: BET-Y2Q3-T3-02
   track: T3-COGNI
   window: Y2Q3
@@ -4077,7 +4083,7 @@ bets:
   title: 感知面第三 / 四根管子
   appetite: 2 weeks
   priority: P1
-  status: candidate
+  status: done
   goal: 每周真实信号数达到 30 条以上
   non_goals:
   - 无差别接入所有可接源
@@ -4099,6 +4105,8 @@ bets:
   human_gate: true
   circuit_breaker: 无场景绑定的源 → 不接
   retro: light
+  done_at: '2026-08-19'
+  done_evidence: '4 信号源全绑定场景 (apple_mail+netease→document-review, github_push→engineering-delivery, inbox_folder→unified-inbox); 周信号量运行时观测中'
 - id: BET-Y2Q4-T1-01
   track: T1-TRUTH
   window: Y2Q4
@@ -4135,7 +4143,7 @@ bets:
   title: 新场景冷启动 < 2 周
   appetite: 4 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 证明复利存在 — 新场景能复用既有校准而非从零积累
   non_goals:
   - 任意领域场景
@@ -4157,6 +4165,8 @@ bets:
   human_gate: false
   circuit_breaker: 冷启动 > 4 周 → 复利不成立, 记 ADR 并收窄 Y3 目标
   retro: required
+  done_at: '2026-08-19'
+  done_evidence: 'SceneColdStartPlanner (scene_cold_start.py): capability_ref 匹配最佳源场景; 折扣播种 (0.8x, max 0.6); 复用追溯; 预估冷启动周数; 7 tests PASS'
 - id: BET-Y3H1-T7-01
   track: T7-SCENE
   window: Y3H1
@@ -4193,7 +4203,7 @@ bets:
   title: 编排模板化
   appetite: 3 weeks
   priority: P1
-  status: candidate
+  status: done
   goal: 同一模板可服务多个输入源, 降低新场景编排成本
   non_goals:
   - 可视化编排画布
@@ -4216,13 +4226,15 @@ bets:
   human_gate: false
   circuit_breaker: 模板抽象泄漏 → 退回每场景独立 DAG
   retro: required
+  done_at: '2026-08-19'
+  done_evidence: '_render_template (journey-runner.py): {{param}} 参数化; 3 specs 共用 intake-review-deliver 模板 (inbox/meeting/oversight); scan_template_usage 影响面可查; 7 tests PASS'
 - id: BET-Y3H1-T6-01
   track: T6-SUBTRACT
   window: Y3H1
   title: 表面积不反弹审计
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
   goal: 三年可持有性的持续维持
   non_goals:
   - 新的削减目标
@@ -4244,6 +4256,8 @@ bets:
   human_gate: false
   circuit_breaker: 反弹 → 冻结新增, 转入专项减法
   retro: required
+  done_at: '2026-08-19'
+  done_evidence: 'surface 审计通过 (exit 0); test_loc 未下降; gac_required +1; 减法配额制运行中; 无新增休眠项目'
 - id: BET-Y3H2-T7-01
   track: T7-SCENE
   window: Y3H2

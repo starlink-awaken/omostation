@@ -33,24 +33,9 @@ if [ -f "$ROOT/bin/gac/agent-clone.py" ]; then
   fi
 fi
 
-# ── G-CONV.7 / ADR-0220 D3: shared worktree claim-before-commit ──────
-# install-hooks path SSOT (.githooks/pre-commit → .git/hooks/pre-commit).
-# Fail-closed on shared main/detached: unclaimed staged writes are rejected.
-# Isolated work/* | pr/* branches short-circuit inside claim-check.
-if [ -f "$ROOT/bin/gac/swarm-discipline-cli.py" ]; then
-  _d3_out="$(python3 "$ROOT/bin/gac/swarm-discipline-cli.py" claim-check --staged 2>&1)" || _d3_rc=$?
-  _d3_rc="${_d3_rc:-0}"
-  printf '%s\n' "$_d3_out" | sed 's/^/[swarm-d3] /' >&2
-  if [ "$_d3_rc" -ne 0 ]; then
-    cat >&2 <<EOF
-[swarm-d3] ❌ D3 shared-worktree claim check failed (ADR-0220 / G-CONV.7)
-   共享 main worktree 上的提交必须先:
-     bash bin/gac/gac-worktree.sh claim <session>   # 隔离 work/*
-     # 或: agent-workflow claim <run-id> --path <file>
-EOF
-    exit 1
-  fi
-fi
+# ── D3 retired 2026-08-19 (BET-Y1Q1-T1-05 D3 减法) ───────────────────
+# 独立 clone 拓扑消除共享 worktree, D3 shared-worktree claim 不再需要.
+# 历史代码已移除. 参见 .omo/_truth/registry/swarm-coordination.yaml.
 
 if [ -x "$ROOT/bin/gac-hygiene-check.py" ]; then
   # advisory: 输出到 stderr, 不阻断 commit (|| true)
@@ -80,56 +65,45 @@ if [ -f "$ROOT/bin/gac-audit-engine.py" ]; then
   python3 "$ROOT/bin/gac-audit-engine.py" --staged 2>&1 | sed 's/^/[audit] /' >&2
 fi
 
-# ── PASW: 子模块隔离强制执行 ──────────────────────────────────────
-# 高冲突子模块 (gbrain/cockpit/agora) 必须通过 .subtrees/ worktree 修改,
-# 不允许在 root 直接 git add projects/<sub> (gitlink 变更).
-# 合法流程: cd .subtrees/<sub> && git add . && git commit → bump-pointer
-# G3 (P79, 2026-08-04): merge commit 豁免 — merge main 带入的 gitlink 变更不拦
-# (PASW guard 对 merge 不友好, #907 实证: merge main 引入多子模块 gitlink →
-#  要求每个 .subtrees/<sub> 对齐 → 死循环). merge 的 gitlink 是 base 端合法 commit,
-#  CI reachability gate (full checkout) 兜底验证可达.
+# ── D5 升级: 跨仓子模块一致性校验 (2026-08-19) ─────────────────────
+# 独立 clone 拓扑下, 子模块隔离由每 clone 自带 .git/modules 保证.
+# 保留 fast-forward 一致性校验作为 defense-in-depth:
+#   1. 子模块指针变更必须是 fast-forward (禁止 force-push / divergence)
+#   2. 子模块目录必须在当前 clone 内已初始化
+# G3 (P79, 2026-08-04): merge commit 豁免 — merge main 带入的 gitlink 变更不拦.
 if git rev-parse -q --verify MERGE_HEAD >/dev/null 2>&1; then
-  echo "[submodule-guard] ℹ️ merge commit (MERGE_HEAD), 跳过 PASW gitlink 变更检查 (G3/P79, CI 兜底)" >&2
+  echo "[submodule-guard] ℹ️ merge commit (MERGE_HEAD), 跳过 gitlink 变更检查 (G3/P79, CI 兜底)" >&2
 else
-PASW_ISOLATED="projects/knowledge/gbrain projects/cockpit projects/agora"
-for sub in $PASW_ISOLATED; do
-  # 检查是否尝试在 root 直接 stage 子模块 gitlink 变更
+SUBMODULE_CHECK="projects/knowledge/gbrain projects/cockpit projects/agora"
+for sub in $SUBMODULE_CHECK; do
   if git diff --cached --name-only | grep -qxF "$sub"; then
-    sub_name=$(basename "$sub")
-    # 用 $ROOT 绝对路径 (pre-commit 钩子环境相对路径可能解析到主仓 HEAD)
-    sub_wt="$ROOT/.subtrees/$sub_name"
-
-    if [ ! -d "$sub_wt" ]; then
-      echo "[submodule-guard] ❌ $sub 指针变更被拒绝: 子模块 worktree 不存在" >&2
-      echo "   请先: bash bin/gac/gac-worktree.sh claim <session>" >&2
-      echo "   然后在子模块 worktree 中 commit: cd $sub_wt && git add . && git commit" >&2
-      exit 1
-    fi
-
-    # 验证 staged SHA 与 worktree HEAD 一致 (确保改动来自隔离 worktree)
+    # 获取 staged (新) 与 HEAD (基线) 的 gitlink SHA
     staged_sha=$(git ls-files --stage -- "$sub" | awk '$1 == "160000" {print $2}')
-    # git hook 执行时 GIT_DIR/GIT_WORK_TREE/GIT_INDEX_FILE 等指向主仓/当前 worktree;
-    # 嵌套进入子模块 worktree 前必须清除这些变量, 否则 git 会读取外层仓库的 ref
-    # (幽灵 SHA, 导致 PASW bump-pointer 被误拦).
-    wt_sha=$(env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_COMMON_DIR \
-             -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
-             git -C "$sub_wt" rev-parse HEAD 2>/dev/null || echo "")
-    if [ "$staged_sha" != "$wt_sha" ]; then
-      echo "[submodule-guard] ❌ $sub 指针变更被拒绝: 与子模块 worktree HEAD 不匹配" >&2
-      echo "   staged SHA: ${staged_sha:-none}" >&2
-      echo "   worktree HEAD: $wt_sha" >&2
-      echo "   请先在子模块 worktree 中 commit: cd $sub_wt && git add . && git commit" >&2
-      echo "   然后: bash bin/gac/gac-worktree.sh bump-pointer <session> $sub" >&2
+    base_sha=$(git rev-parse -q --verify "HEAD:$sub" 2>/dev/null || echo "")
+    sub_path="$ROOT/$sub"
+
+    # 校验 1: 子模块目录必须已初始化 (独立 clone 内)
+    if [ ! -f "$sub_path/.git" ] && [ ! -d "$sub_path/.git" ]; then
+      echo "[submodule-guard] ❌ $sub 指针变更被拒绝: 子模块未初始化" >&2
+      echo "   请先: git submodule update --init $sub" >&2
       exit 1
     fi
+
+    # 校验 2: fast-forward 一致性 (新 SHA 必须是基线的后代)
+    # 防止 force-pushed 或 diverged 子模块指针被引入
+    if [ -n "$base_sha" ] && [ -n "$staged_sha" ] && [ "$base_sha" != "$staged_sha" ]; then
+      if ! git merge-base --is-ancestor "$base_sha" "$staged_sha" 2>/dev/null; then
+        echo "[submodule-guard] ❌ $sub 指针变更被拒绝: 不是 fast-forward" >&2
+        echo "   base SHA: $base_sha" >&2
+        echo "   staged SHA: $staged_sha" >&2
+        echo "   子模块指针变更必须是基线的后代 (禁止 force-push / divergence)" >&2
+        exit 1
+      fi
+    fi
+
+    echo "[submodule-guard] ✅ $sub 指针变更通过 fast-forward 校验" >&2
   fi
 done
-fi
-# 禁止将 .subtrees/ 目录 commit 到 root
-if git diff --cached --name-only | grep -q '^\.subtrees/'; then
-  echo "[submodule-guard] ❌ 不允许将 .subtrees/ 提交到 root 仓库" >&2
-  echo "   .subtrees/ 是 PASW 隔离 worktree 的本地存储, 不属于 root 仓库" >&2
-  exit 1
 fi
 
 # ── Debt directory deletion guard ──

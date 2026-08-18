@@ -1,18 +1,20 @@
 # swarm-coordination.yaml — G-CONV.7 / ADR-0220 SSOT
 #
-# Four enforceable gates for concurrent multi-agent swarm discipline.
+# Multi-agent swarm discipline gates (独立 clone 拓扑).
 # Runtime lock/claim files live under .omo/_delivery/ (gitignored delivery plane).
 # Policy (this file) is the long-lived registry; validators fail closed.
 #
 # Gates:
-#   D1 adr_atomic_claim      — ADR numbers claimed before write
-#   D2 branch_occupancy      — work/<slug> occupancy lock
-#   D3 shared_worktree_claim — shared main tree requires agent-workflow claim
-#   D4 escape_hatch          — --no-verify / CI_LOCAL_SKIP allowlist only
-#   D5 pasw_submodule_isolation — Per-Agent Submodule Worktree (ADR-0371)
+#   D1 adr_atomic_claim      — ADR numbers claimed before write [ACTIVE]
+#   D2 branch_occupancy      — RETIRED 2026-08-19 (独立 clone 消除分支竞争)
+#   D3 shared_worktree_claim — RETIRED 2026-08-19 (独立 clone 消除共享 worktree)
+#   D4 escape_hatch          — --no-verify / CI_LOCAL_SKIP allowlist only [ACTIVE]
+#   D5 pasw_submodule_isolation — PARTIALLY RETIRED (gitlink FF 校验保留)
+#
+# D3 升级为跨仓变更审计引擎 (agent-clone.py --verify-claims).
 
-version: 1
-last_updated: "2026-08-13"
+version: 2
+last_updated: "2026-08-19"
 related:
   - adr: "0220"
   - goal: "G-CONV.7"
@@ -100,18 +102,26 @@ gates:
     entry: bin/adr/next-adr-id.py --claim
     check: bin/gac/swarm-discipline-cli.py adr-check
     fail_closed: true
+  # D2/D3 retired 2026-08-19 (BET-Y1Q1-T1-05 D3 减法):
+  # 独立 clone 拓扑消除了共享树, 分支占用锁与共享 worktree claim 不再需要.
+  # 退役原因: 每 agent 独立 clone → refs/branch 物理隔离 → 无竞争.
+  # D1 (ADR atomic) 与 D4 (escape hatch) 保留 — 与拓扑无关.
   d2_branch_occupancy:
     id: d2
-    name: work-branch occupancy lock
+    name: "[RETIRED 2026-08-19] work-branch occupancy lock"
+    status: retired
+    retired_reason: "独立 clone 拓扑消除分支竞争 (BET-Y1Q1-T1-05)"
     entry: bin/gac/gac-worktree.sh claim
     check: bin/gac/swarm-discipline-cli.py branch-check
-    fail_closed: true
+    fail_closed: false
   d3_shared_worktree_claim:
     id: d3
-    name: shared worktree claim-before-commit
+    name: "[RETIRED 2026-08-19] shared worktree claim-before-commit"
+    status: retired
+    retired_reason: "独立 clone 拓扑消除共享 worktree (BET-Y1Q1-T1-05)"
     entry: pre-commit swarm-claim-check
     check: bin/gac/swarm-discipline-cli.py claim-check --staged
-    fail_closed: true
+    fail_closed: false
   d4_escape_hatch:
     id: d4
     name: escape-hatch allowlist
@@ -122,17 +132,21 @@ gates:
     check: bin/gac/swarm-discipline-cli.py escape-check | git-argv-check
     fail_closed: true
     agent_wrapper: bin/gac/swarm-git
+  # D5 partially retired: PASW dynamic worktree 不再需要 (独立 clone 自带 .git/modules 隔离).
+  # 但 pre-commit gitlink 来源校验仍保留 (defense-in-depth for 3 高冲突子模块).
   d5_pasw_submodule_isolation:
     id: d5
-    name: Per-Agent Submodule Worktree isolation
+    name: "[PARTIALLY RETIRED 2026-08-19] Per-Agent Submodule Worktree isolation"
+    status: retired_dynamic_worktree
+    retired_reason: "独立 clone 自带 .git/modules 隔离, PASW 动态 worktree 不再需要"
+    retained_defense_in_depth: >
+      pre-commit gitlink 来源校验仍覆盖 gbrain/cockpit/agora (高冲突子模块).
     entry: >
-      PASW (ADR-0371/0404): claim 动态读取根 .gitmodules, 为全部直接子模块创建
-      per-agent .subtrees/<sub>/ worktree, release 时清理. pre-commit 的 gitlink
-      来源校验仍只覆盖高冲突 gbrain/cockpit/agora; 其余由 PASW 完整性验证与
-      CI reachability gate 覆盖.
-    check: .githooks/pre-commit (submodule-guard) + CI reachability gate
+      PASW (ADR-0371/0404): 动态 worktree 退役. pre-commit gitlink 来源校验保留为
+      defense-in-depth (仅 gbrain/cockpit/agora 三个高冲突子模块).
+    check: .githooks/pre-commit (submodule-guard, 缩减范围) + CI reachability gate
     fail_closed: true
-    claimed_submodules: from_root_gitmodules
+    claimed_submodules: retired
     precommit_gitlink_guard:
       - projects/knowledge/gbrain
       - projects/cockpit

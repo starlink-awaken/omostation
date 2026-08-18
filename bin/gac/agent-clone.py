@@ -33,6 +33,7 @@ import subprocess
 import sys
 import tempfile
 import warnings
+from pathlib import Path
 
 SCHEMA_MANIFEST = "agent-clone-manifest/v1"
 SCHEMA_CHANGESET = "cross-repo-changeset/v1"
@@ -966,6 +967,35 @@ def is_ancestor(repo_root: str, ancestor: str, descendant: str) -> bool:
     return proc.returncode == 0
 
 
+def _verify_changeset_claims(clone_root: str, changes: list[dict[str, Any]]) -> dict[str, Any]:
+    """D3 升级: 跨仓变更审计 — 校验子模块变更在 agent claim 范围内.
+
+    从 agent-workflow runs 加载活跃 claim, 验证每个变更路径被 claim 覆盖.
+    未被覆盖的路径标记为 scope_creep (范围蔓延).
+    """
+    result: dict[str, Any] = {
+        "enabled": True,
+        "claimed_paths": [],
+        "checked": [],
+        "violations": [],
+        "all_covered": True,
+    }
+    try:
+        from swarm_discipline import active_workflow_claimed_paths, path_covered_by_claim
+        claimed = active_workflow_claimed_paths(Path(clone_root))
+        result["claimed_paths"] = claimed
+        for change in changes:
+            path = change.get("path", "")
+            result["checked"].append(path)
+            if not path_covered_by_claim(claimed, path):
+                result["violations"].append(path)
+        result["all_covered"] = len(result["violations"]) == 0
+    except ImportError:
+        result["enabled"] = False
+        result["reason"] = "swarm_discipline not available"
+    return result
+
+
 def cmd_changeset(args: argparse.Namespace) -> dict:
     baseline = load_baseline(args.baseline)
 
@@ -1043,6 +1073,11 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
     except ToolError:
         identity = None
 
+    # D3 升级: 跨仓变更审计 — 校验变更路径在 agent claim 范围内
+    claim_verification = None
+    if getattr(args, "verify_claims", False):
+        claim_verification = _verify_changeset_claims(args.clone, changes)
+
     no_change = root_base == root_candidate and not changes
     changeset = {
         "schema": SCHEMA_CHANGESET,
@@ -1052,6 +1087,7 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
         "root_candidate_sha": root_candidate,
         "changes": changes,
         "no_change": no_change,
+        "claim_verification": claim_verification,
     }
     changeset["change_id"] = canonical_digest(
         {
@@ -1200,6 +1236,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--clone", required=True)
     p.add_argument("--baseline", required=True)
     p.add_argument("--output", required=True)
+    p.add_argument(
+        "--verify-claims",
+        action="store_true",
+        help="D3 跨仓变更审计: 校验变更路径在 agent claim 范围内",
+    )
     p.set_defaults(func=cmd_changeset)
 
     p = sub.add_parser("guard")
