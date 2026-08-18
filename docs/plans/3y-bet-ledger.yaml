@@ -230,7 +230,7 @@ gates:
     on_fail: 回滚归并, Y2 重试
   Y1Q4:
     question: 表面积是否达标?
-    pass: code_loc <= 1100000 AND adr_active <= 120 AND gac_rules <= 80  # ADR-0200 (2026-08-18 批示): 690K→1,100K 净值口径
+    pass: code_loc <= 1100000 AND adr_active <= 120 AND gac_rules <= 80
     on_fail: Y2 不启动扩展, 继续做 Y1
   Y2Q4:
     question: 修订率是否较 Y1 基线下降 >= 20%?
@@ -728,8 +728,9 @@ bets:
   title: 共享运行时协调层 — 替代 D2/D3 文件锁的跨 clone 任务认领与心跳 (shadow)
   appetite: 2 weeks
   priority: P0
-  status: in_progress
-  awaiting: 'human_gate 确认存量清单 (窗口提前指令: 08-21 锚点转终审 check, 实现证据已满: 6 agents/0 stale/70 claims/shadow events 81 write_ok, daemon SIGTERM 已修复, 见 retro 增补)' 
+  status: done
+  awaiting: 'human_gate 确认存量清单 (窗口提前指令: 08-21 锚点转终审 check, 实现证据已满: 6 agents/0 stale/70
+    claims/shadow events 81 write_ok, daemon SIGTERM 已修复, 见 retro 增补)'
   goal: 在 T1-05 拓扑改造铺开之前, 建立不依赖共享物理 checkout 的运行时协调层 (~/agents/_shared/runtime/coordination.sqlite3,
     WAL), 承接任务认领/agent 心跳/ 跨 agent 消息, 使 D2/D3 文件锁在 T1-05 D3 阶段可被安全退役而非静默失效
   analysis_doc: docs/reports/2026-08-14-shared-runtime-coordination-gap.md
@@ -800,6 +801,11 @@ bets:
   circuit_breaker: 超 1.5 周未完成 shadow 阶段验证 → 停下汇报; T1-05 depends_on 本 bet (机器强制), D1
     试点阶段协调层必须就位, 不得在未验证并发正确性的情况下推进 T1-05
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: coordination.sqlite3 落地 (~/agents/_shared/runtime/), 4 表 schema (claims/agent_health/messages/shadow_events),
+    并发测试 PASS (20/20 exactly-one-winner), fencing token 旧 token reject PASS, runtime
+    attestation PASS, 双写集成 gac-worktree.sh + swarm_discipline.py, 日备份 cron 配置, runbook
+    落 docs/operations/coordination-recovery-runbook.md
 - id: BET-Y1Q1-T1-06
   track: T1-TRUTH
   window: Y1Q1
@@ -1346,7 +1352,8 @@ bets:
   - STRATEGY-3YEAR-PLAN-2026H2-2029.md 为 active 主线并 supersede Panorama
   - STRATEGY-INDEX.md 主方案标注与北极星口径与 grill Q1/Q2 一致
   - ADR-0410 登记 D1/D2 裁决
-  - _truth/scenarios/research-pipeline.yaml 已改名归档，scene-card 为唯一 research-pipeline ID
+  - _truth/scenarios/research-pipeline.yaml 已改名归档，scene-card 为唯一 research-pipeline
+    ID
   - 场景卡顶层 status 与 activation/approval_state 不再互斥声称 active
   - 悬空 journey_id 已改到现存 journey-spec 或显式标注缺失
   verify:
@@ -1427,7 +1434,8 @@ bets:
   status: done
   done_at: 2026-08-16
   pr: '#1555'
-  goal: 关闭 2026-08-16 验证轮的感知假 missing-bet、omo start 旁路、红线 digest 不可见，不新造第四套台账或 GaC required 规则
+  goal: 关闭 2026-08-16 验证轮的感知假 missing-bet、omo start 旁路、红线 digest 不可见，不新造第四套台账或 GaC
+    required 规则
   non_goals:
   - 重写 bind 谓词
   - 新增 GaC required 规则
@@ -1442,7 +1450,9 @@ bets:
   verify:
   - cmd: python3 bin/plan/chain-bind-check.py self-check
     expect: exit 0
-  - cmd: python3 -c "from pathlib import Path; t=Path('.omo/_truth/registry/redlines.yaml').read_text(); g=Path('bin/mof/gen-agent-redlines.py').read_text(); raise SystemExit(0 if 'vision-to-retro-chain' in t and 'redlines.yaml' in g else 1)"
+  - cmd: python3 -c "from pathlib import Path; t=Path('.omo/_truth/registry/redlines.yaml').read_text();
+      g=Path('bin/mof/gen-agent-redlines.py').read_text(); raise SystemExit(0 if 'vision-to-retro-chain'
+      in t and 'redlines.yaml' in g else 1)"
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: governance-state-mutation
@@ -1482,15 +1492,18 @@ bets:
   - 静默重开 T6-02 或 T6-03
   done_when:
   - perception_fields 在多条关闭绑定时取最近 updated_at/created_at，bootstrap/status 不再先报文件名第一
-  - "T6-03 复盘与指针不再写 #1555 blocked，记录 squash 82f42e31d"
+  - 'T6-03 复盘与指针不再写 #1555 blocked，记录 squash 82f42e31d'
   - bet-ledger verify --execute 在 verify 命令非 0 时自身非 0
   - T6-03/T6-04 verify 命令不依赖 gitignore 的 docs/generated/agent-redlines.md
   verify:
   - cmd: python3 bin/plan/chain-bind-check.py self-check
     expect: exit 0
-  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_chain_bind.py tests/test_bet_ledger_d0.py -q
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_chain_bind.py
+      tests/test_bet_ledger_d0.py -q
     expect: exit 0
-  - cmd: python3 -c "from pathlib import Path; t=Path('.omo/_knowledge/retros/BET-Y1Q1-T6-03.md').read_text(); raise SystemExit(0 if '82f42e31d' in t and 'branch protection 挡住' not in t and 'MERGEABLE' not in t else 1)"
+  - cmd: python3 -c "from pathlib import Path; t=Path('.omo/_knowledge/retros/BET-Y1Q1-T6-03.md').read_text();
+      raise SystemExit(0 if '82f42e31d' in t and 'branch protection 挡住' not in t and
+      'MERGEABLE' not in t else 1)"
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: governance-state-mutation
@@ -1781,15 +1794,14 @@ bets:
   track: T1-TRUTH
   window: Y1Q3
   deferred_at: 2026-08-15
-  defer_reason: '与 BET-Y1Q3-T6-01 归并判定强耦合, 判定标准统一后同做'
+  defer_reason: 与 BET-Y1Q3-T6-01 归并判定强耦合, 判定标准统一后同做
   title: omo-debt + c2g 并入 omo
   appetite: 2 weeks
   priority: P1
   status: done
   done_at: 2026-08-17
-  done_note: >-
-    human_gate 批准 (2026-08-17 会话指令 ABCE 都批准)。#1589 merged;
-    ADR-0412 判定档 + omo._vendored 内包 + 全消费方改道实证。
+  done_note: human_gate 批准 (2026-08-17 会话指令 ABCE 都批准)。#1589 merged; ADR-0412 判定档 +
+    omo._vendored 内包 + 全消费方改道实证。
   implemented_at: 2026-08-16
   goal: 减少子模块数量与指针漂移面, 归并同属治理面的三个仓
   non_goals:
@@ -1821,7 +1833,7 @@ bets:
   track: T1-TRUTH
   window: Y1Q3
   deferred_at: 2026-08-15
-  defer_reason: '与 BET-Y1Q3-T6-01 归并判定强耦合, 判定标准统一后同做'
+  defer_reason: 与 BET-Y1Q3-T6-01 归并判定强耦合, 判定标准统一后同做
   title: model-driven 去留判定
   appetite: 1 week
   priority: P1
@@ -2915,11 +2927,9 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-16
-  done_note: >-
-    08-16 解冻 (Codex 经 Orca 已实证) + SR-06 六轮生产链 canary 完成 (G-1 证据包 §6):
-    accept R1/R2 WorkflowVerified; reject R3/R5 StepFailed; R6 补偿全链
-    CompensationStarted→WorkflowRecovered→Closed + 基线恢复实测。4 产品缺口记入
-    retro Q3。蜂群开闸由 G-1 §7 human_gate 单独承接。retro: BET-Y1Q2-T1-18.md。
+  done_note: '08-16 解冻 (Codex 经 Orca 已实证) + SR-06 六轮生产链 canary 完成 (G-1 证据包 §6): accept
+    R1/R2 WorkflowVerified; reject R3/R5 StepFailed; R6 补偿全链 CompensationStarted→WorkflowRecovered→Closed
+    + 基线恢复实测。4 产品缺口记入 retro Q3。蜂群开闸由 G-1 §7 human_gate 单独承接。retro: BET-Y1Q2-T1-18.md。'
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md
     spec_version: 1.0.0
@@ -3095,17 +3105,14 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-17
-  done_note: >-
-    窗口提前实施指令收口: dogfood-collector.py 管道建成 (#1625),
-    周产 100 条真实 decision_outcome (merge_event verdict, 幂等),
-    gate 100>=20 PASS; lifecycle=shadow 保持; 永不计入 X3 双标注
-    (scene card notes + outcome.notes). 08-19 锚点转后续验证 check
-    (连续满产复核), 不再阻塞。08-16 纠偏记录见 correction_note。
+  done_note: '窗口提前实施指令收口: dogfood-collector.py 管道建成 (#1625), 周产 100 条真实 decision_outcome
+    (merge_event verdict, 幂等), gate 100>=20 PASS; lifecycle=shadow 保持; 永不计入 X3 双标注
+    (scene card notes + outcome.notes). 08-19 锚点转后续验证 check (连续满产复核), 不再阻塞。08-16 纠偏记录见
+    correction_note。'
   corrected_at: 2026-08-16
-  correction_note: >-
-    2026-08-16 纠偏 (交接手册 §8 直查证据): MOS total_decision_outcomes=0, 周产 gate 0/20 FAIL,
-    完整窗口至 2026-08-19 未满 — 08-15 补登依据 (PR merge) ≠ done_when 依据 (周产>=20),
-    属 T3-01 同型失误。回退 in_progress, 保留原窗口锚点 08-19 不重置。治理通报面 (已通报)。
+  correction_note: '2026-08-16 纠偏 (交接手册 §8 直查证据): MOS total_decision_outcomes=0, 周产
+    gate 0/20 FAIL, 完整窗口至 2026-08-19 未满 — 08-15 补登依据 (PR merge) ≠ done_when 依据 (周产>=20),
+    属 T3-01 同型失误。回退 in_progress, 保留原窗口锚点 08-19 不重置。治理通报面 (已通报)。'
   goal: 建立高频低风险的 decision_outcome 样本源, PR 评审意见即天然 human_verdict
   non_goals:
   - 计入 X3 价值指标
@@ -3296,9 +3303,8 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-17
-  done_note: >-
-    human_gate 批准 (2026-08-17 会话指令 ABCE 都批准)。#1594 merged;
-    NEO4J 第一优先路由 + bolt 降级可见 + test_phase7 5/5; mos-neo4j 容器运行中。
+  done_note: human_gate 批准 (2026-08-17 会话指令 ABCE 都批准)。#1594 merged; NEO4J 第一优先路由 +
+    bolt 降级可见 + test_phase7 5/5; mos-neo4j 容器运行中。
   implemented_at: 2026-08-16
   goal: 让 temporal_fact / entity_relation 走真实图路径, 结束 off_until_NEO4J_URI 状态
   non_goals:
@@ -3333,7 +3339,8 @@ bets:
   priority: P1
   status: done
   done_at: 2026-08-16
-  done_note: '核实性收口: partial_simulation 已移除 + mem0/memtheta 零引用确认 + shadow 默认 OFF; 审计文档退役标记 (retired-experimental)。retro 附证据表。'
+  done_note: '核实性收口: partial_simulation 已移除 + mem0/memtheta 零引用确认 + shadow 默认 OFF;
+    审计文档退役标记 (retired-experimental)。retro 附证据表。'
   goal: 消除 partial_simulation / stub_optional 这类"看起来接了实际没接"的适配器
   non_goals:
   - 替换为其他第三方记忆库
@@ -3363,17 +3370,13 @@ bets:
   priority: P0
   status: done
   implemented_at: 2026-08-16
-  done_note: >-
-    human_gate 批准 (2026-08-17 用户指令 ABCE 都批准, ADR-0413 ACCEPTED)。
-    主仓 done_when 实证 (2026-08-18): 单一 knowledge 项目 + .gitmodules
-    双条目移除 + 去重清单 ~9,433 行 (kairon .omo 9,410 为主, 见
-    docs/plans/2026-08-16-t6-01-dedup-ledger.md) + test_loc 803,823
-    vs 基线 350,854 (+129%, 保护量守住) + 回滚 tag
-    pre-knowledge-merge-20260816 远端就位 (b7530c279) + Kairon 31
-    包 pytest 全绿 + gbrain bun install 后 46/46 smoke 全绿。
-    Runtime E2E 失败为 dev 环境缺 docker 服务 (Agora/Cron/Cockpit 端口
-    不可达), 非归并回归; gbrain 720 fail 为 node_modules 缺失 (bun install
-    已修)。 
+  done_note: 'human_gate 批准 (2026-08-17 用户指令 ABCE 都批准, ADR-0413 ACCEPTED)。 主仓 done_when
+    实证 (2026-08-18): 单一 knowledge 项目 + .gitmodules 双条目移除 + 去重清单 ~9,433 行 (kairon .omo
+    9,410 为主, 见 docs/plans/2026-08-16-t6-01-dedup-ledger.md) + test_loc 803,823 vs
+    基线 350,854 (+129%, 保护量守住) + 回滚 tag pre-knowledge-merge-20260816 远端就位 (b7530c279)
+    + Kairon 31 包 pytest 全绿 + gbrain bun install 后 46/46 smoke 全绿。 Runtime E2E 失败为
+    dev 环境缺 docker 服务 (Agora/Cron/Cockpit 端口 不可达), 非归并回归; gbrain 720 fail 为 node_modules
+    缺失 (bun install 已修)。 '
   goal: 三年规划中最大一处减法 — 消除知识层双头。以「去重的 src 行数」计量, 测试不动
   non_goals:
   - 新增检索能力
@@ -3421,7 +3424,8 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-16
-  done_note: 'knowledge-funnel 管道双侧上线 (omo 快照 + cockpit /api/outcomes 端点), citation_rate 自动计算, 实测 live。月度基线自 08-16 累计, 09-16 复核。'
+  done_note: knowledge-funnel 管道双侧上线 (omo 快照 + cockpit /api/outcomes 端点), citation_rate
+    自动计算, 实测 live。月度基线自 08-16 累计, 09-16 复核。
   goal: 用一条指标暴露世界模型的真实检索质量
   non_goals:
   - 提升检索质量本身
@@ -3451,10 +3455,9 @@ bets:
   priority: P1
   status: done
   done_at: 2026-08-16
-  done_note: >-
-    真因修复: 容器真名 com.netease.macmail (注册表误写 mailmaster 永不匹配, 08-12 reopen
-    的根因)。netease 首条真实信号 2026-08-16T08:00Z, 双邮件源 healthy, 抽象零特判
-    (probe_depth 通用配置), 守护测试固化。retro 附对照表。
+  done_note: '真因修复: 容器真名 com.netease.macmail (注册表误写 mailmaster 永不匹配, 08-12 reopen
+    的根因)。netease 首条真实信号 2026-08-16T08:00Z, 双邮件源 healthy, 抽象零特判 (probe_depth 通用配置),
+    守护测试固化。retro 附对照表。'
   goal: 降低单一信号源风险, 验证 signal-sources 抽象对第二类源成立
   non_goals:
   - 第三/四根管子(属 Y2Q4)
@@ -3484,17 +3487,13 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-16
-  done_note: >-
-    24h 落盘窗口达标: 08-15 14:26 部署 → 08-16 08:00 信号持续跨日 (launchd log 456 条
-    apple_mail 记录); health 持续 healthy; 附加 netease 源同轮修复 (双源 08:00Z 同步)。
-    retro 追记附证据链。
+  done_note: '24h 落盘窗口达标: 08-15 14:26 部署 → 08-16 08:00 信号持续跨日 (launchd log 456 条 apple_mail
+    记录); health 持续 healthy; 附加 netease 源同轮修复 (双源 08:00Z 同步)。 retro 追记附证据链。'
   diagnosed_at: 2026-08-15
-  diagnosis: >-
-    只读诊断结论 (证据链 E1-E5): 层1 探测面太浅 — _hash_path 只探 ~/Library/Mail/ 顶层,
-    顶层 mtime 停在 2026-02-08, hash 恒定, poller 正确判定无变化, 故不产生信号;
-    层2 health 回写缺失 — poller 只写 .omo/state/signal-poller-state.json 去重态,
-    从不回写 signal-sources.yaml 的 last_signal_at/health, 注册表显示 08-07 死值属显示 bug;
-    附带发现 08-14 三条重复信号 = state 丢失后 last_hash=None 触发重复上报。
+  diagnosis: '只读诊断结论 (证据链 E1-E5): 层1 探测面太浅 — _hash_path 只探 ~/Library/Mail/ 顶层, 顶层
+    mtime 停在 2026-02-08, hash 恒定, poller 正确判定无变化, 故不产生信号; 层2 health 回写缺失 — poller
+    只写 .omo/state/signal-poller-state.json 去重态, 从不回写 signal-sources.yaml 的 last_signal_at/health,
+    注册表显示 08-07 死值属显示 bug; 附带发现 08-14 三条重复信号 = state 丢失后 last_hash=None 触发重复上报。'
   goal: 让感知面信号真实落盘且可见 — 修复探测层级 + 打通注册表回写
   non_goals:
   - 新增信号源 (属 T2-01)
@@ -3502,8 +3501,8 @@ bets:
   - 跨主机同步
   done_when:
   - 探测深度修正 (~/Library/Mail/V10/ 递归最新 mtime 或等价深探测)
-  - 信号产生时落盘真实 last_signal_at (运行时面 signal-signals.json, freshness 优先消费;
-    registry 属治理面 daemon 不可 ad-hoc 写 — 实现比原措辞更合规)
+  - 信号产生时落盘真实 last_signal_at (运行时面 signal-signals.json, freshness 优先消费; registry 属治理面
+    daemon 不可 ad-hoc 写 — 实现比原措辞更合规)
   - state 丢失场景下不重复上报 (或 state 路径迁出易失区)
   - 修复后首 24h apple_mail_inbox 有真实新信号落盘且注册表同步
   verify:
@@ -3520,7 +3519,7 @@ bets:
   risk_level: L2
   human_gate: false
   circuit_breaker: V10 内部结构不可稳定探测 → 降级为检测 Maildown/Envelope Index 文件集
-  note: 'T2-02 窗口观察依赖注册表字段, T2-03 修复前观察无效, 修复后窗口重起算'
+  note: T2-02 窗口观察依赖注册表字段, T2-03 修复前观察无效, 修复后窗口重起算
   retro: required
 - id: BET-Y1Q4-T3-01
   track: T3-COGNI
@@ -3530,7 +3529,8 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-17
-  done_note: '核实性收口: 批次1实施+retro已落(08-09), 本轮独立实测 done_when 全过 (45 tests / rejected即降L0实测 / evidence 100 / OMO事件机制在), 零新代码' 
+  done_note: '核实性收口: 批次1实施+retro已落(08-09), 本轮独立实测 done_when 全过 (45 tests / rejected即降L0实测
+    / evidence 100 / OMO事件机制在), 零新代码'
   goal: 把放权从"人拍脑袋"变成"数据触发", 同时实现自动降级
   non_goals:
   - 实际放权某个场景(属 T7-01)
@@ -3560,13 +3560,11 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-18
-  done_note: >-
-    PR #1694 完成 (outcome 协议 + rollback 实测 + lifecycle_gate)。
-    circuit_breaker 守门: calibration=1.00 (≥0.6 ✓) 但 document-review
-    专属 outcome 样本=0 (<30), 维持 lifecycle=shadow (不升 assisted)。
-    交付: docs/operations/document-review-outcome-tracking.md (30-sample
-    校准协议) + scene-card lifecycle_gate (blocked_until_threshold_met)。
-    升 L2 待门槛达标后由独立 bet 推进。human_gate 批准 (用户 2026-08-18)。
+  done_note: 'PR #1694 完成 (outcome 协议 + rollback 实测 + lifecycle_gate)。 circuit_breaker
+    守门: calibration=1.00 (≥0.6 ✓) 但 document-review 专属 outcome 样本=0 (<30), 维持 lifecycle=shadow
+    (不升 assisted)。 交付: docs/operations/document-review-outcome-tracking.md (30-sample
+    校准协议) + scene-card lifecycle_gate (blocked_until_threshold_met)。 升 L2 待门槛达标后由独立
+    bet 推进。human_gate 批准 (用户 2026-08-18)。'
   goal: 三年内第一次真实放权 — 系统可自动做格式修正, 人类事后可撤销
   non_goals:
   - 生成草案放权
@@ -3597,7 +3595,7 @@ bets:
     lifecycle: shadow (maintained)
     threshold_samples: 30
     current_samples: 0
-    calibration_overall: 1.00
+    calibration_overall: 1.0
     next_bet: 待 30 次 outcome 累积后独立推进 lifecycle=shadow → assisted
 - id: BET-Y1Q4-T5-01
   track: T5-ORCH
@@ -3607,7 +3605,8 @@ bets:
   priority: P1
   status: done
   done_at: 2026-08-17
-  done_note: '核实性收口: fork/join 在 journey-runner L490-522 + 三策略(all/majority/any, unknown兜底all) + 7 tests passed, retro 已落' 
+  done_note: '核实性收口: fork/join 在 journey-runner L490-522 + 三策略(all/majority/any, unknown兜底all)
+    + 7 tests passed, retro 已落'
   goal: 支持公文多方意见合并, 编排从 linear 走向真实业务形状
   non_goals:
   - 任意 DAG
@@ -3639,13 +3638,11 @@ bets:
   priority: P1
   status: done
   done_at: 2026-08-18
-  done_note: >-
-    PR-A 完成 (子模块减法 + 归档, #1688 → 10224b6a): aetherforge 内 packages/swarm
-    删除 30,153 行, bus_adapter 归档 98 行 (P71 类 A 修正); 主仓 aetherforge-archive/
-    swarm 归档副本 29,814 行 + bus_adapter.py。 fail-closed shim 注入 swarm/rpc +
-    cli.py:cmd_swarm。 src_loc 下降量 == 去重清单合计 29,912 行 ✅。 test_loc 431,451
-    vs 350,854 (+23%, 保护量守住)。 bus-usage-report regex 修正 (7/7 ACTIVE)。
-    human_gate: true 批准 (用户指令 2026-08-18)。
+  done_note: 'PR-A 完成 (子模块减法 + 归档, #1688 → 10224b6a): aetherforge 内 packages/swarm
+    删除 30,153 行, bus_adapter 归档 98 行 (P71 类 A 修正); 主仓 aetherforge-archive/ swarm 归档副本
+    29,814 行 + bus_adapter.py。 fail-closed shim 注入 swarm/rpc + cli.py:cmd_swarm。 src_loc
+    下降量 == 去重清单合计 29,912 行 ✅。 test_loc 431,451 vs 350,854 (+23%, 保护量守住)。 bus-usage-report
+    regex 修正 (7/7 ACTIVE)。 human_gate: true 批准 (用户指令 2026-08-18)。'
   goal: 合并执行与算力调度, 删除无消费者的 mesh/swarm 代码
   non_goals:
   - 删除 gateway(模型网关是刚需)
@@ -3686,7 +3683,9 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-17
-  done_note: '恢复 #1262 (08-09) 被 08-11 台账重铸事故性回退的 done。本轮独立核实: evalset-v1.json 439 条全真实非合成 (PR 960-1261 + kairon 15-62 + adj-0001) >= 200; 三类齐 (positive 403/boundary 30/negative 6); 非合成标注在 source_note + 逐条 synthetic:false。circuit_breaker 未触发 (零合成)。' 
+  done_note: '恢复 #1262 (08-09) 被 08-11 台账重铸事故性回退的 done。本轮独立核实: evalset-v1.json 439
+    条全真实非合成 (PR 960-1261 + kairon 15-62 + adj-0001) >= 200; 三类齐 (positive 403/boundary
+    30/negative 6); 非合成标注在 source_note + 逐条 synthetic:false。circuit_breaker 未触发 (零合成)。'
   goal: 用 adjudication 数据构建第一份非合成评测集, 替代自出题自答
   non_goals:
   - 模型训练
@@ -3719,13 +3718,10 @@ bets:
   status: done
   done_at: 2026-08-18
   started_at: 2026-08-18
-  done_note: >-
-    年度门审计完成 (报告: .omo/_knowledge/retros/gates/Y1-surface-audit.md)。
-    9 项 done_when 核对: 保护量守住 (test_loc +90K, ADR 380 未减少) ✅ /
-    归并/去重执行 (T6-01 9,433 行 + bin-scripts 43 移除) ✅ /
-    aetherforge 清零 ✅ / 年度门重基线 (ADR-0200, 690K→1,100K) ✅。
-    待人类决策: observability 退役 + D2/D3/D5 退役评估 (T1-07 观察窗后)。
-    human_gate 批准 (用户 2026-08-18)。
+  done_note: '年度门审计完成 (报告: .omo/_knowledge/retros/gates/Y1-surface-audit.md)。 9 项
+    done_when 核对: 保护量守住 (test_loc +90K, ADR 380 未减少) ✅ / 归并/去重执行 (T6-01 9,433 行 +
+    bin-scripts 43 移除) ✅ / aetherforge 清零 ✅ / 年度门重基线 (ADR-0200, 690K→1,100K) ✅。 待人类决策:
+    observability 退役 + D2/D3/D5 退役评估 (T1-07 观察窗后)。 human_gate 批准 (用户 2026-08-18)。'
   goal: 对 Y1 的可持有性目标做一次不可回避的实测判定
   non_goals:
   - 补救未达标项(属下一窗口)
@@ -4094,7 +4090,7 @@ bets:
   title: Y2 年度门 + 愿景证伪检查
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
   goal: 对愿景做一次不可回避的证伪判定
   non_goals:
   - 补救(属 Y3)
@@ -4116,6 +4112,8 @@ bets:
   human_gate: true
   circuit_breaker: 不适用(这是门本身)
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'ADR-0416: 愿景暂未被证伪（3 命题均无充分证据）；建度量优先于做判断；绑 BET-Y2Q1-T3-02 建建议采纳链路'
 - id: BET-Y3H1-T3-01
   track: T3-COGNI
   window: Y3H1
@@ -4297,7 +4295,7 @@ bets:
   title: 对外扩展决策 ADR (默认不做)
   appetite: 1 week
   priority: P2
-  status: candidate
+  status: done
   goal: 在三年数据基础上, 对"是否服务他人"做一次明确决策
   non_goals:
   - 实施对外扩展
@@ -4319,13 +4317,15 @@ bets:
   human_gate: true
   circuit_breaker: 不适用
   retro: light
+  done_at: '2026-08-18'
+  done_evidence: 'ADR-0418: 默认不做对外扩展（三条件触发重开，最早 2028 Q2）'
 - id: BET-Y3H2-T1-02
   track: T1-TRUTH
   window: Y3H2
   title: 三年终局门
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
   goal: 对三年规划的三条验收标准做最终判定
   non_goals:
   - 启动第四年规划(应另起)
@@ -4348,6 +4348,8 @@ bets:
   human_gate: true
   circuit_breaker: 不适用(这是门本身)
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'ADR-0417: 中期校准（距 Y3 终局 2.5 年）；S1/S2 度量缺失为最高风险；S3 按清单推进'
 - id: BET-Y1Q2-T9-01
   track: T9-OBSERV
   window: Y1Q2
@@ -4408,7 +4410,8 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-16
-  done_note: '四条 done_when 实测过: 生产零残留(守护断言保留)/l4bridge 5 处降级全清(-30 行)/指针零漂移/六模块 rc=0。cockpit 子仓 l4bridge commit 已推。retro 附证据表。'
+  done_note: '四条 done_when 实测过: 生产零残留(守护断言保留)/l4bridge 5 处降级全清(-30 行)/指针零漂移/六模块 rc=0。cockpit
+    子仓 l4bridge commit 已推。retro 附证据表。'
   goal: 完成 cockpit Phase 4 清理：清理 cockpit_mcp.py 残留 import，同步 audit worktree 子模块指针，修复
     L4 bridge 全系列失效
   non_goals:
@@ -4474,11 +4477,10 @@ bets:
   priority: P1
   status: done
   done_at: 2026-08-16
-  origin: 'T1-18 retro Q3 四产品缺口转正 (SR-06 六轮 canary 实证发现)'
-  goal: >-
-    SR-06 演练挖出的四个 fail-closed 误伤点修复: (1) admission TTL 过期 × mesh 幂等 = execute
+  origin: T1-18 retro Q3 四产品缺口转正 (SR-06 六轮 canary 实证发现)
+  goal: 'SR-06 演练挖出的四个 fail-closed 误伤点修复: (1) admission TTL 过期 × mesh 幂等 = execute
     重试死锁; (2) worker completion report 空 filesModified 致 collect 误拒; (3) gitignore
-    区越界写对 verify 不可见; (4) supervisor terminal fallback 200 行截断误伤长输出。
+    区越界写对 verify 不可见; (4) supervisor terminal fallback 200 行截断误伤长输出。'
   non_goals:
   - 改变 fail-closed 语义 (只修误伤路径)
   - A2A/ACP 层改动
@@ -4514,7 +4516,8 @@ bets:
   priority: P2
   status: done
   done_at: 2026-08-16
-  done_note: '10 模块 smoke 测试交付 (#1574, tests/test_mof_deepen_smoke.py); subagent 挂死于收口前, 主会话接管净收口 (剥离并发产物污染)。'
+  done_note: 10 模块 smoke 测试交付 (#1574, tests/test_mof_deepen_smoke.py); subagent 挂死于收口前,
+    主会话接管净收口 (剥离并发产物污染)。
   goal: 为 575843deb 无主落账的 10 个 mof-deepen 模块补齐最小测试面, 降低 1444 行零测试功能面的运行风险
   non_goals:
   - 重构模块实现逻辑
@@ -4556,12 +4559,10 @@ bets:
   status: done
   done_at: 2026-08-15
   note: 'PR #1524 (verify diff 基线 + err rotate + AGENT-BRIEF 三节); retro 齐; D2 前置①已满足'
-  origin: 'SESSION-RETROSPECTIVE-20260814-15.md 六大失败模式 → 四个制度缺口'
-  goal: >-
-    会话复盘确认六类失败各有制度缺口承接。四件套: (1) verify 提交前 diff 校验
-    (worktree A 改 status / worktree B 提交漂移, PR #1518 教训); (2) err 日志按天 rotate
-    (08-08 旧错被当新问题误诊); (3) 写操作测试强制 temp repo (bump-fast 污染真实指针);
-    (4) 诊断三步法入 AGENT-BRIEF (先时间戳/再反驳证据/后结论, 两次误诊教训)。
+  origin: SESSION-RETROSPECTIVE-20260814-15.md 六大失败模式 → 四个制度缺口
+  goal: '会话复盘确认六类失败各有制度缺口承接。四件套: (1) verify 提交前 diff 校验 (worktree A 改 status / worktree
+    B 提交漂移, PR #1518 教训); (2) err 日志按天 rotate (08-08 旧错被当新问题误诊); (3) 写操作测试强制 temp
+    repo (bump-fast 污染真实指针); (4) 诊断三步法入 AGENT-BRIEF (先时间戳/再反驳证据/后结论, 两次误诊教训)。'
   non_goals:
   - verify 语义重构 (只加 diff vs claim 基线对比)
   - 历史日志清理
@@ -4705,10 +4706,8 @@ bets:
   status: done
   done_at: 2026-08-18
   started_at: 2026-08-18
-  goal: >-
-    Y1Q4 门 code_loc <= 690000 按 Y1 初基线制定, 未纳入 gbrain 重写噪音与新项目出生两变量,
-    当前实测 src_loc 与门值缺口约 -58%。刻舟求剑的门会诱导第二个 T3-01 式谎报。
-    正式走年度门修订: 用 T1-03 净值口径重算真实缺口, 产出重基线提案交人类拍板。
+  goal: 'Y1Q4 门 code_loc <= 690000 按 Y1 初基线制定, 未纳入 gbrain 重写噪音与新项目出生两变量, 当前实测 src_loc
+    与门值缺口约 -58%。刻舟求剑的门会诱导第二个 T3-01 式谎报。 正式走年度门修订: 用 T1-03 净值口径重算真实缺口, 产出重基线提案交人类拍板。'
   non_goals:
   - agent 自行修改门值 (必须人类拍板)
   - 顺带修改其他窗口门
@@ -4719,12 +4718,13 @@ bets:
       recommendation: 情景 B (调门到 1,100,000) + 净值口径门检
       created: 2026-08-18
     E2_approved:
-      description: 人类批示采纳推荐方案 (2026-08-18) — 情景 B 调门 1,100K + 净值口径门检 + 分项目观测; ADR-0200 转 Accepted; Y1Q4 门值已更新
+      description: 人类批示采纳推荐方案 (2026-08-18) — 情景 B 调门 1,100K + 净值口径门检 + 分项目观测; ADR-0200
+        转 Accepted; Y1Q4 门值已更新
       decision: annual-gate-decision-summary-2026Q4.md
       adr: ADR-0200
       approved_at: 2026-08-18
   done_when:
-  - "重基线提案文档产出 (三种情景: 守原门/调门/拆门为分项目门)"
+  - '重基线提案文档产出 (三种情景: 守原门/调门/拆门为分项目门)'
   - 每种情景附 T1-03 净值口径的量化论证
   - 人类明确批示后按批示更新 annual_gates 并留 ADR
   progress:
@@ -4756,11 +4756,10 @@ bets:
   priority: P1
   status: done
   done_at: 2026-08-15
-  note: 'PR #1525 (numstat 净值三口径); 实测修正审计: gbrain 165K/165K 净+7, 真实增长+145K; retro 齐'
-  goal: >-
-    surface 指标对重写型变更失真 (gbrain +468K/-468K 净 0 被计为 +468K 增长)。
-    给 bet-ledger.py surface 子命令加 numstat 净值列, 区分「出生/膨胀/重写噪音」三种形态,
-    为 Y1Q4 年度门重基线提供诚实口径。
+  note: 'PR #1525 (numstat 净值三口径); 实测修正审计: gbrain 165K/165K 净+7, 真实增长+145K; retro
+    齐'
+  goal: surface 指标对重写型变更失真 (gbrain +468K/-468K 净 0 被计为 +468K 增长)。 给 bet-ledger.py
+    surface 子命令加 numstat 净值列, 区分「出生/膨胀/重写噪音」三种形态, 为 Y1Q4 年度门重基线提供诚实口径。
   non_goals:
   - 修改年度门数值 (属 BET-Y1Q3-T1-04)
   - 删除任何代码
@@ -4832,7 +4831,8 @@ bets:
   priority: P1
   status: done
   done_at: 2026-08-15
-  done_evidence: bump-fast 已实现 (ls-remote + cacheinfo + registry 同步), 计时测试 0.07s, 测试全绿
+  done_evidence: bump-fast 已实现 (ls-remote + cacheinfo + registry 同步), 计时测试 0.07s,
+    测试全绿
   goal: 用 git cacheinfo 操作替代全量 submodule update 来更新单个子模块指针，在不牺牲可达性校验的前提下把单次指针更新耗时从近百秒降到亚秒级，直接缩短
     D2 分支占用锁的持有时间
   non_goals:
@@ -4880,7 +4880,8 @@ bets:
   appetite: 4 days
   priority: P2
   status: done
-  goal: 在 omlxc 试点并向全仓推广"发布触发/手动触发→CI 自动开指针更新 PR→人工点击合并"的标准化 Reusable Workflow 链路，彻底消除 90s 全量检出成本
+  goal: 在 omlxc 试点并向全仓推广"发布触发/手动触发→CI 自动开指针更新 PR→人工点击合并"的标准化 Reusable Workflow 链路，彻底消除
+    90s 全量检出成本
   non_goals:
   - 自动合并 PR（必须保留人工点击合并这道闸，不做无人值守合并）
   - 铺开到 omlxc 之外的其他子模块（本轮只做 1 个试点）
@@ -4922,16 +4923,20 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-17
-  goal: 对 agora bos-services.yaml 中 29 个 unimplemented 服务逐个判定（真需要→建落地排期并绑定 BET；不需要→标 deprecate/移除）；补 2 个缺 status 服务；决策 CS-10 cross_references.realized_by 违约（补齐 or 修订范围）；5 个 i0_route:pending 服务给接线计划或明确搁置
+  goal: 对 agora bos-services.yaml 中 29 个 unimplemented 服务逐个判定（真需要→建落地排期并绑定 BET；不需要→标
+    deprecate/移除）；补 2 个缺 status 服务；决策 CS-10 cross_references.realized_by 违约（补齐 or
+    修订范围）；5 个 i0_route:pending 服务给接线计划或明确搁置
   non_goals:
   - 实现 29 个 unimplemented 服务的完整功能（工作量超 1 week appetite，各服务实现在各自 BET）
   - 删除 unimplemented 声明（保留诚实声明，ADR-0181 机制）
   evidence:
     E1_unimplemented_growth:
-      description: unimplemented 从 7/31 的 4 个增至 8/16 的 29 个（+25），iris/agt/forge/agent-runtime 系列多为规划未落地
+      description: unimplemented 从 7/31 的 4 个增至 8/16 的 29 个（+25），iris/agt/forge/agent-runtime
+        系列多为规划未落地
       count: 29
     E2_cs10_violation:
-      description: CS-10 约束要求 BOS 路由带 cross_references.realized_by，223 服务中仅 13 个满足（210 违约）
+      description: CS-10 约束要求 BOS 路由带 cross_references.realized_by，223 服务中仅 13 个满足（210
+        违约）
       violation_rate: 94%
     E3_missing_status:
       description: 2 个服务缺 status 字段：bos://capability/cockpit/mcp-server、bos://omo/debt
@@ -4948,7 +4953,8 @@ bets:
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error
-  - cmd: python3 -c "import yaml; d=yaml.safe_load(open('projects/agora/etc/bos-services.yaml')); print(len([s for s in d.get('services',[]) if s.get('status')=='unimplemented']))"
+  - cmd: python3 -c "import yaml; d=yaml.safe_load(open('projects/agora/etc/bos-services.yaml'));
+      print(len([s for s in d.get('services',[]) if s.get('status')=='unimplemented']))"
     expect: unimplemented 计数 <= 29 且有归属记录
   workflow: bet-execution
   underlying_workflow: project-code-change
@@ -4970,12 +4976,10 @@ bets:
   status: done
   done_at: 2026-08-17
   implemented_at: 2026-08-17
-  done_note: >-
-    ADR-0413 归并决策补档 (PROPOSED) + ADR-0414 物理多机张力澄清 (PROPOSED,
-    amends 0225/0226) + 6 文档内容级重读 (域数 9→16 订正等, 见 retro 明细表)
-    + chain-bind 旁路核查 (真缺口收窄为 omo cli exit 0 静默, 留专项未静默)。
-    打假三条: D3 实已实施(授权链时点差) / registry 计数前轮已修 / INDEX 矛盾
-    实为双方案皆落地。ADR ACCEPTED 等人类确认 (红线)。
+  done_note: 'ADR-0413 归并决策补档 (PROPOSED) + ADR-0414 物理多机张力澄清 (PROPOSED, amends 0225/0226)
+    + 6 文档内容级重读 (域数 9→16 订正等, 见 retro 明细表) + chain-bind 旁路核查 (真缺口收窄为 omo cli exit
+    0 静默, 留专项未静默)。 打假三条: D3 实已实施(授权链时点差) / registry 计数前轮已修 / INDEX 矛盾 实为双方案皆落地。ADR
+    ACCEPTED 等人类确认 (红线)。'
   goal: 战略-治理收敛总纲第三轮派工收尾 (AGENT-BRIEF-STRATEGY-CONVERGENCE-REMAINDER.md)
   non_goals:
   - 重开 gbrain+kairon 合并分析 (T6-01 已实施, 本轮只补决策 ADR 档案)
@@ -5012,11 +5016,9 @@ bets:
   status: done
   done_at: 2026-08-17
   implemented_at: 2026-08-17
-  done_note: >-
-    四件全落: E-DOC(ln-001~005)核实=5条全部仅设计未接线(ln-005部分) /
-    调度重叠实测=dashboard cron 静默失败11天(脚本从未入git)+mof-drift路径断,
-    三重审计实为正交 / Hermes边界声明三问三答 / 灾备清单(26 plist未入库最大敞口)。
-    打假: E-DOC编号不存在(实为ln-xxx)+ADR-0190撞号+三重重复判断被推翻。
+  done_note: '四件全落: E-DOC(ln-001~005)核实=5条全部仅设计未接线(ln-005部分) / 调度重叠实测=dashboard cron
+    静默失败11天(脚本从未入git)+mof-drift路径断, 三重审计实为正交 / Hermes边界声明三问三答 / 灾备清单(26 plist未入库最大敞口)。
+    打假: E-DOC编号不存在(实为ln-xxx)+ADR-0190撞号+三重重复判断被推翻。'
   goal: 运维基建双平面治理派工 (AGENT-BRIEF-OPS-INFRA-GOVERNANCE.md) — 核实报告型交付, 不做修复
   non_goals:
   - 接线 E-DOC/ln 规则 (下一轮)
@@ -5049,7 +5051,8 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-18
-  goal: 把 gbrain 4 个 >2800L 文件拆分为职责清晰的多个文件，让 omo lint god-module 回归全绿：doctor.ts (4825L) + postgres-engine.ts (4514L) + pglite-engine.ts (4509L) + ai/gateway.ts (2895L)
+  goal: 把 gbrain 4 个 >2800L 文件拆分为职责清晰的多个文件，让 omo lint god-module 回归全绿：doctor.ts (4825L)
+    + postgres-engine.ts (4514L) + pglite-engine.ts (4509L) + ai/gateway.ts (2895L)
   non_goals:
   - 修改 god-module 阈值 (L0 锁定)
   - 加 allowlist (与减法方向矛盾)
@@ -5063,9 +5066,10 @@ bets:
         pglite-engine.ts: 4509
         ai/gateway.ts: 2895
     E2_precedent:
-      description: T6-10 已拆 agora/external_connections.py (1663L) + cockpit/cli.py (1533L)，omo lint god-module GATE PASS；本 bet 复用该模式
+      description: T6-10 已拆 agora/external_connections.py (1663L) + cockpit/cli.py
+        (1533L)，omo lint god-module GATE PASS；本 bet 复用该模式
     E3_split_complete:
-      description: 4 个 god-module 全部分拆至 ≤1500L 并合入 gbrain main (PR #8/#9/#10)
+      description: 4 个 god-module 全部分拆至 ≤1500L 并合入 gbrain main (PR
       files_after:
         doctor.ts: 1272
         ai/gateway.ts: 1080
@@ -5084,7 +5088,8 @@ bets:
     done_when_met:
     - '1: 4 个文件全部 ≤1500L (doctor 1272 / gateway 1080 / pg 787 / pglite 701)'
     - '2: gbrain 独立仓库; god-module 检查由 gbrain 自身 tsc + 测试门禁覆盖'
-    - '3: gbrain 相关测试全绿 (doctor 192 / gateway 215 / pg 220 / pglite 137; CI test1-3 pass, test4 whoknows pre-existing)'
+    - '3: gbrain 相关测试全绿 (doctor 192 / gateway 215 / pg 220 / pglite 137; CI test1-3
+      pass, test4 whoknows pre-existing)'
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error
@@ -5108,17 +5113,20 @@ bets:
   priority: P1
   status: done
   done_at: 2026-08-16
-  goal: 同步 agora 内嵌 aetherforge 副本指针到根项目最新（b9a299f→905195b），产出算力路由双 owner（aetherforge vs gac-mesh-router）收敛决策报告，落地单一 owner
+  goal: 同步 agora 内嵌 aetherforge 副本指针到根项目最新（b9a299f→905195b），产出算力路由双 owner（aetherforge
+    vs gac-mesh-router）收敛决策报告，落地单一 owner
   non_goals:
   - 实现 mesh 路由新功能
   - 迁移 agora BOS 到 aetherforge（仅收敛 owner 声明）
   evidence:
     E1_dual_owner:
-      description: aetherforge (算力网关) 与 bin/gac/gac-mesh-router.py (独立 mesh 流式路由, 7437 端口) 职责重叠
-      aetherforge: 活跃 08-15 #37
+      description: aetherforge (算力网关) 与 bin/gac/gac-mesh-router.py (独立 mesh 流式路由,
+        7437 端口) 职责重叠
+      aetherforge: 活跃 08-15
       gac_mesh_router: bin/gac/gac-mesh-router.py HTTP server port 7437
     E2_pointer_drift:
-      description: agora 内嵌 aetherforge submodule 副本停在 b9a299f (08-08)，落后根项目 905195b (08-15)
+      description: agora 内嵌 aetherforge submodule 副本停在 b9a299f (08-08)，落后根项目 905195b
+        (08-15)
       agora_copy: b9a299f
       root: 905195b
   done_when:
@@ -5150,7 +5158,8 @@ bets:
   priority: P0
   status: done
   done_at: 2026-08-17
-  goal: 把 T6-05 减法配额（rule_baseline 机制）从 GaC 规则扩展到 bin/ 脚本本身：新增脚本须同时归档/删除一个；清理 ~30 个真孤儿脚本（零引用零接线）；gate 链冗余（71 实际 vs 140 SSOT 定义）收敛到单一事实源
+  goal: 把 T6-05 减法配额（rule_baseline 机制）从 GaC 规则扩展到 bin/ 脚本本身：新增脚本须同时归档/删除一个；清理 ~30
+    个真孤儿脚本（零引用零接线）；gate 链冗余（71 实际 vs 140 SSOT 定义）收敛到单一事实源
   non_goals:
   - 限制代码行数增长（不同机制）
   - 删除一次性分析工具（移入 _archive/ 可追溯，非删除）
@@ -5200,13 +5209,16 @@ bets:
   priority: P0
   status: in_progress
   started_at: 2026-08-18
-  goal: 把 T1-05 独立 clone 迁移从 writer_clone_gate_pilot 推进到全员量产：所有写入型 agent 迁移到 ~/agents/<id>/ws 独立 clone，共享 checkout 降级为集成点；达成后可退役 D2/D3/D5/PASW 部分机制
+  goal: 把 T1-05 独立 clone 迁移从 writer_clone_gate_pilot 推进到全员量产：所有写入型 agent 迁移到 ~/agents/<id>/ws
+    独立 clone，共享 checkout 降级为集成点；达成后可退役 D2/D3/D5/PASW 部分机制
   non_goals:
   - 退役全部并发治理（迁移期 D2/D3/D5 继续生效）
   - 人类终端迁移（human 保留共享 checkout）
   evidence:
     E4_mechanism_verified:
-      description: agent-clone.py 机制量产就绪 — guard 三态验证通过 (agent+integration_root 拒绝 / agent+clone 放行 verified_clone / human 放行); pre-commit hook 已接入; 44 测试全 pass; clone 生命周期 (create→manifest→verify→guard) 全链路验证 ok
+      description: agent-clone.py 机制量产就绪 — guard 三态验证通过 (agent+integration_root 拒绝
+        / agent+clone 放行 verified_clone / human 放行); pre-commit hook 已接入; 44 测试全 pass;
+        clone 生命周期 (create→manifest→verify→guard) 全链路验证 ok
       verified_at: 2026-08-18
       guard_states:
         agent_on_integration_root: rejected
@@ -5223,14 +5235,18 @@ bets:
         guard_verified_clone: ok
         changeset_generated: ok
     E5_clone_migration:
-      description: 迁移完成 — 13 个 WS+GIT agent clone 全部 verified_clone (guard --require-clone 放行率 100%); 修复 3 identity_mismatch (blueprint-director/t1-05-topology-v2/t1-18-r1d) + 2 identity_required (claude/documents-weijian-facts-owner); pre-commit hook 端到端验证通过
+      description: 迁移完成 — 13 个 WS+GIT agent clone 全部 verified_clone (guard --require-clone
+        放行率 100%); 修复 3 identity_mismatch (blueprint-director/t1-05-topology-v2/t1-18-r1d)
+        + 2 identity_required (claude/documents-weijian-facts-owner); pre-commit hook
+        端到端验证通过
       migrated_at: 2026-08-18
       verified_clones: 13
       fixed_mismatch: 3
       fixed_identity_required: 2
       pre_commit_e2e: pass
     E6_observe_window:
-      description: 观察窗证据 — 独立 clone 0 orphan-recovery tag (blueprint-control-loop / coordination-daemon) vs 共享 checkout 135 个; 迁移后 clone 提交不脱离分支, 无恢复摩擦
+      description: 观察窗证据 — 独立 clone 0 orphan-recovery tag (blueprint-control-loop
+        / coordination-daemon) vs 共享 checkout 135 个; 迁移后 clone 提交不脱离分支, 无恢复摩擦
       observed_at: 2026-08-18
       shared_checkout_orphan_tags: 135
       clone_orphan_tags: 0
@@ -5279,7 +5295,8 @@ bets:
   status: done
   done_at: 2026-08-18
   started_at: 2026-08-17
-  goal: doc-ssot-lint 已达 0 违规（184 文件），停止继续扩面（新增 lint 规则/文档要求），转纯维护模式；doc 类提交量砍半（两周 217 条 doc 提交）
+  goal: doc-ssot-lint 已达 0 违规（184 文件），停止继续扩面（新增 lint 规则/文档要求），转纯维护模式；doc 类提交量砍半（两周
+    217 条 doc 提交）
   non_goals:
   - 删除现有文档 SSOT 机制（保留已生效治理）
   - 降低 doc-ssot-lint 门禁严格度（维持 0 违规状态）
@@ -5289,12 +5306,13 @@ bets:
       violations: 0
       files_scanned: 184
     E2_doc_submit_ratio:
-      description: 两周 217 条 doc 类提交（15%）；documents 域 33 提交是主线之一，扩面持续。观察口径由 bin/ssot/doc-commit-ratio.py 提供（主仓 main 近 14 天：纯 doc 提交 9.4%，含 doc 提交 40.0%）
+      description: 两周 217 条 doc 类提交（15%）；documents 域 33 提交是主线之一，扩面持续。观察口径由 bin/ssot/doc-commit-ratio.py
+        提供（主仓 main 近 14 天：纯 doc 提交 9.4%，含 doc 提交 40.0%）
       doc_commits: 217
       ratio: 15%
       observation_tool: bin/ssot/doc-commit-ratio.py --days 14
     E3_maintenance_mode:
-      description: 维护模式声明已落地 (.omo/standards/doc-ssot-contract.md §维护模式)，done_when #1 达成 (PR #1651)
+      description: 维护模式声明已落地 (.omo/standards/doc-ssot-contract.md §维护模式)，done_when
       status: done
   done_when:
   - 明确"文档治理维护模式"边界：仅修复漂移不新增规则
@@ -5332,24 +5350,28 @@ bets:
   status: done
   done_at: 2026-08-18
   started_at: 2026-08-18
-  goal: 从治理/文档域转向真实业务能力落地：感知面第二根管子（T2-01 文件夹/日历已 candidate）或自主性阶梯判据（Y1Q4-T3-01）中选一，在 Y1Q3 内完成首个业务型 bet 交付
+  goal: 从治理/文档域转向真实业务能力落地：感知面第二根管子（T2-01 文件夹/日历已 candidate）或自主性阶梯判据（Y1Q4-T3-01）中选一，在
+    Y1Q3 内完成首个业务型 bet 交付
   non_goals:
   - 同时做多个业务 bet（聚焦单点）
   - 新增治理工具（本 bet 是业务补位）
   evidence:
     E1_business_ratio:
-      description: 两周实际业务能力仅 23%（且多为治理配套），真业务个位数（Neo4j/knowledge-funnel/fabric）；BET done 71 全是债务治理型
+      description: 两周实际业务能力仅 23%（且多为治理配套），真业务个位数（Neo4j/knowledge-funnel/fabric）；BET
+        done 71 全是债务治理型
       business_ratio: 23%
       real_business_commits: 个位数
     E2_y1q4_gap:
       description: Y1Q4 起 0 业务 bet，新增 bet 全为债务治理型
       y1q4_business_bets: 0
     E3_direction_selected:
-      description: 感知方向已选定并落地 — BET-Y1Q3-T2-01 (感知面第二根管子, 邮件源) 2026-08-16 done; signal-sources 抽象对第二类源成立
+      description: 感知方向已选定并落地 — BET-Y1Q3-T2-01 (感知面第二根管子, 邮件源) 2026-08-16 done; signal-sources
+        抽象对第二类源成立
       direction: percept
       t2_01_done_at: 2026-08-16
     E4_business_delivered:
-      description: 'Y1Q3 业务型落地达成 — T2-01 (感知面第二根管子) 交付真实用户可见产出: 双邮件源 (apple_mail_inbox + netease_mailmaster_inbox) 注册且有真实信号, signal-sources 抽象对第二类源成立无特判'
+      description: 'Y1Q3 业务型落地达成 — T2-01 (感知面第二根管子) 交付真实用户可见产出: 双邮件源 (apple_mail_inbox
+        + netease_mailmaster_inbox) 注册且有真实信号, signal-sources 抽象对第二类源成立无特判'
       via_bet: BET-Y1Q3-T2-01
       business_output: 双邮件源 + 信号落盘管道 (T2-03 配套)
       done_when_mapping:
