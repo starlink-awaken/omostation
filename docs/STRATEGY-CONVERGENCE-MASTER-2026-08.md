@@ -5,7 +5,7 @@ type: strategy-convergence-master
 owner: 夏明星 (人类主权) · Claude (协作起草)
 created: 2026-08-15
 adopted: 2026-08-15
-lifecycle: contract
+lifecycle: entry
 grill_locks:
   D1: plan-mainline-supersede-panorama
   D2: plan-one-sentence-north-star
@@ -47,6 +47,7 @@ builds-on:
 execution_ledger: docs/plans/3Y-BET-LEDGER.md（不变更，本纲要不覆盖其数据）
 does_not_change: 任何仓库文件（本文件在云端沙箱生成，未对 /Users/xiamingxing/Workspace 做任何写操作）
 review-state: draft-for-human-decision
+last-reviewed: 2026-08-18
 ---
 
 # 0. 这份文档是什么 / 不是什么 / 如何生效

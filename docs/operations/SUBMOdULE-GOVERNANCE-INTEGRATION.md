@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # Submodule 治理整合方案（2026-08-08）
 
 > 基于 2026-08-08 会话的完整问题链（agora CI 双通道、reachability gate 全局冻结、

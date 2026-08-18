@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: index
+lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-06-29
 note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 active"
@@ -502,3 +502,5 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0410: 三年战略主线归属 — Plan supersede Panorama — **ACCEPTED** | 2026-08-15 | Strategy mainline | 0410-strategy-mainline-plan-supersedes-panorama.md
 - ADR-0411: 算力路由双 Owner 收敛决策 — AetherForge 单一所有权 — **ACCEPTED** | 2026-08-16 | Compute routing convergence | 0411-aetherforge-mesh-router-owner-decision.md
 - ADR-0412: model-driven (M0) 定位判定 — 接入主链 (保留独立子仓) — **ACCEPTED** | 2026-08-16 | Model-driven disposition | 0412-model-driven-disposition.md
+- ADR-0413: gbrain + kairon 归并为 knowledge — 决策补档 — **ACCEPTED** | 2026-08-17 | strategy-convergence-r3 | 0413-gbrain-kairon-merge-disposition.md
+- ADR-0414: ADR-0247 与 ADR-0225/0226 物理多机张力 — 关系澄清 — **ACCEPTED** | 2026-08-17 | strategy-convergence-r3 | 0414-physical-multihost-tension-resolution.md

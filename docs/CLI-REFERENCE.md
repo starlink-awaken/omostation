@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # Cockpit CLI 命令参考
 
 > 自动生成于 1970-01-01T00:00:00Z

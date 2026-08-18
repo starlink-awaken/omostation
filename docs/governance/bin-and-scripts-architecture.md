@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # 🏛️ Monorepo 脚本与工具治理架构规范 (bin/ & scripts/ & Makefile)
 
 ---

@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # scripts close-duplicate-gap-first 执行清单
 
 - 生成时间: 2026-08-16T12:23:12

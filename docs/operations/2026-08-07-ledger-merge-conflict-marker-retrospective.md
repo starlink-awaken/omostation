@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # 2026-08-07 合流接手 + 冲突标记 gate 落地 — 复盘
 
 > 类型: retro (经验积累) | 关联: PR #1070 (合流), PR #1075 (gate), BET-Y1Q1-T1-00/T1-06/T1-07

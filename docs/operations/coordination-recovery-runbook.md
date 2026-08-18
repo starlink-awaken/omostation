@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # Coordination Layer Recovery Runbook — BET-Y1Q1-T1-05A
 
 > 适用对象: 共享运行时协调层 `~/agents/_shared/runtime/coordination.sqlite3`

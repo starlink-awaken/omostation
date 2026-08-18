@@ -7,7 +7,7 @@ created: 2026-07-15
 updated: 2026-08-15
 horizon: 2026H2-2029
 version: v2.3
-lifecycle: archived
+lifecycle: entry
 last-reviewed: 2026-08-15
 review-state: superseded-by-plan
 superseded-by: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md

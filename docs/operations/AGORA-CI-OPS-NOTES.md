@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # Agora CI 运维经验（2026-08-08 会话沉淀）
 
 > 本文沉淀 2026-08-08 会话中关于 agora 仓库 CI 的完整调查结论与修复记录，供后续运维复用，避免重复调查。

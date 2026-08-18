@@ -7,6 +7,7 @@ created: 2026-08-17
 last-reviewed: 2026-08-17
 related:
   - docs/OPS-INFRA-GOVERNANCE-LONGTERM-BLUEPRINT-2026-08.md
+lifecycle: contract
 ---
 
 # Hermes 治理边界声明

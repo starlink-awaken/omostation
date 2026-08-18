@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # BET-Y1Q2-T2-01 复盘：本地真实信号进入个人 Episode
 
 > 日期：2026-08-12

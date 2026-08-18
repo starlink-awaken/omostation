@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # ADR-0191: Workspace × Documents 全域双平面架构与长期治理体系
 
 - **Status**: Accepted

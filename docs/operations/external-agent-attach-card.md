@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # External Agent Attach Card — Minimum Path
 
 > **Purpose**: one-page attach guide for Claude Code / Codex / Cursor / custom MCP hosts.  

@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # 建议方向方案与规划 (grill-me 成果) 2026-08-07
 
 > 经 grill-me 逐项访谈确认的设计决策。范围: ADR 重编号 / active_goals 根治 /

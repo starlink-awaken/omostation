@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # Partial Worktree Push 操作规范 (G2)
 
 > **来源**: P79 pattern · #907 35+ iteration 实证 · 2026-08-04

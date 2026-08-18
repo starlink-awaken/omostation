@@ -7,6 +7,7 @@ lifecycle: contract
 related:
   - docs/reports/2026-08-15-multi-repo-collab-retro-v2.md (E7)
   - .omo/standards/agent-workflow-contract.md
+last-reviewed: 2026-08-18
 ---
 
 # Agent 退役交接模板（E7 根治）

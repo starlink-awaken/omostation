@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # BET-Y1Q1-T1-05 阶段复盘 — 独立 writer clone 硬门
 
 > 日期：2026-08-13  

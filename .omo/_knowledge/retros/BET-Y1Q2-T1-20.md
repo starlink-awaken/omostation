@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # BET-Y1Q2-T1-20 复盘 — 子模块指针自动化 PR 流水线试点与全仓推广
 
 ## Q1 实际耗时 vs appetite？

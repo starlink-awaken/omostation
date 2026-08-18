@@ -1,8 +1,11 @@
 ---
+id: ADR-0414
 title: ADR-0247 与 ADR-0225/0226 物理多机张力 — 关系澄清
-adr_id: '0414'
-status: ACCEPTED
-date: 2026-08-17
+status: accepted
+lifecycle: contract
+owner: governance-team
+created: 2026-08-17
+last-reviewed: 2026-08-18
 deciders:
   - 夏明星 (最终确认 pending)
   - governance-agent (起草)

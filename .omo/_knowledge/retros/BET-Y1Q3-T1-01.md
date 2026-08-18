@@ -7,6 +7,8 @@ created: 2026-08-16
 context: >-
   立账时的三处漂移 (catalog 缺 4 命令/help_map 缺 5/ssb+model-driven 裸注册) 在本收口轮
   实测全部已修复 — 由并发 cockpit PR 完成。核实性收口, 无新代码。
+lifecycle: history
+last-reviewed: 2026-08-18
 ---
 
 # BET-Y1Q3-T1-01 复盘 (核实性收口)

@@ -1,13 +1,16 @@
 ---
 id: BET-Y1Q3-T3-04
 type: retro
-status: completed
+status: archived
 date: 2026-08-18
 bet_id: BET-Y1Q3-T3-04
 north_star_ref: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
 related:
   - BET-Y1Q3-T2-01
   - BET-Y1Q3-T2-03
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-18
 ---
 
 # BET-Y1Q3-T3-04 Retro: 业务能力 bet 补位

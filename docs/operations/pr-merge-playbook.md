@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # PR 合并 Playbook — omostation workspace
 
 > 基于 2026-08-02 能力全景覆盖工作的实战复盘。

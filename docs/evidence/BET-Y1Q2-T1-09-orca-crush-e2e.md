@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # BET-Y1Q2-T1-09 Orca + Crush 脱敏 E2E 回执
 
 验证时间：2026-08-12（Asia/Shanghai）

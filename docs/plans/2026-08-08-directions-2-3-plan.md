@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # 方向 2+3 方案规划 (2026-08-08)
 
 > 覆盖: ② 能力市场采购授权记录 / ③ BET 推进恢复。

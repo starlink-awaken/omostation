@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # scripts 兼容层与并行能力收敛清单（快照）
 
 - 生成时间: 2026-08-16T03:59:47.605263+00:00

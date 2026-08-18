@@ -1,7 +1,7 @@
 ---
 id: BET-Y1Q3-T6-04
 type: retro
-status: completed
+status: archived
 date: 2026-08-18
 bet_id: BET-Y1Q3-T6-04
 north_star_ref: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
@@ -16,6 +16,9 @@ gbrain_merge_commits:
   - afef89e8
 scope:
   - gbrain src
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-18
 ---
 
 # BET-Y1Q3-T6-04 Retro: gbrain god-module SRP 拆分

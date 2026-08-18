@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: retrospective
+lifecycle: contract
 owner: governance-agent
 last-reviewed: 2026-08-08
 session-span: 2026-08-07 ~ 2026-08-08
