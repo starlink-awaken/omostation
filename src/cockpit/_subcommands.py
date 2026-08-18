@@ -159,6 +159,11 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     data_gc_p.add_argument("--max-age-hours", type=float, default=24.0, help="TTL 小时数（默认 24）")
     data_gc_p.add_argument("--json", action="store_true", help="以 JSON 输出清理结果")
 
+    # ── ADR-0200~0202 记忆/审计/算力 (stub, 待实现) ───────────
+    sub.add_parser("memory-distill", help="记忆自蒸馏与冲突自愈 (ADR-0200)")
+    sub.add_parser("audit-ledger", help="密码学级 Merkle 审计账本 (ADR-0201)")
+    sub.add_parser("fabric-mesh", help="局域网边缘算力漫游网格 (ADR-0202)")
+
     # ── contracts ─────────────────────────────────────────────
     contracts_p = sub.add_parser("contracts", help="契约验证")
     contracts_sub = contracts_p.add_subparsers(dest="contracts_command", parser_class=workspace_parser)
