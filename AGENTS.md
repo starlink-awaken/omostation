@@ -228,6 +228,19 @@ python3 bin/gac/clone-lifecycle.py integrate --clone "$HOME/agents/<id>/ws" \
 python3 bin/gac/clone-lifecycle.py retire --destination "$HOME/agents/<id>/ws"
 ```
 
+**D2 阶段: 自动入列 (2026-08-19)**：为活跃 agent 批量创建 clone：
+
+```bash
+# 检测活跃 agent + 创建缺失 clone (dry-run)
+python3 bin/gac/agent-clone-onboard.py
+
+# 真正创建
+python3 bin/gac/agent-clone-onboard.py --apply
+
+# 仅处理指定 agent
+python3 bin/gac/agent-clone-onboard.py --agent-id <id> --apply
+```
+
 ```bash
 # 底层命令 (仍可直接使用)
 python3 bin/gac/agent-clone.py create --agent-id <id> \
