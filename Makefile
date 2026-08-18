@@ -270,6 +270,28 @@ validate-domain-facts:  ## 校验领域事实真源 Schema 与 14 天保鲜期 (
 worktree-cleanup:  ## 回收 TTL 过期 worktree
 	bash bin/gac/gac-worktree.sh cleanup
 
+# ── 🧬 Clone Lifecycle (独立 clone 生命周期管道) ──────────────────────────────
+
+clone-onboard:  ## 为新 agent 创建 clone + 基线
+	python3 bin/gac/clone-lifecycle.py onboard --agent-id $(AGENT_ID) \
+	  --destination "$(HOME)/agents/$(AGENT_ID)/ws"
+
+clone-snapshot:  ## 为当前 clone 生成基线 manifest
+	python3 bin/gac/clone-lifecycle.py snapshot --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
+	  --output "$(HOME)/agents/$(AGENT_ID)/baseline.json"
+
+clone-changeset:  ## 生成跨仓变更集 + claim 校验
+	python3 bin/gac/clone-lifecycle.py changeset --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
+	  --baseline "$(HOME)/agents/$(AGENT_ID)/baseline.json" \
+	  --output "$(HOME)/agents/$(AGENT_ID)/changeset.json" --verify-claims
+
+clone-integrate:  ## 推送分支 + PR (dry-run)
+	python3 bin/gac/clone-lifecycle.py integrate --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
+	  --agent-id $(AGENT_ID) --dry-run
+
+clone-retire:  ## 清理 clone
+	python3 bin/gac/clone-lifecycle.py retire --destination "$(HOME)/agents/$(AGENT_ID)/ws"
+
 # ── 🧠 Memory OS (记忆中枢) ───────────────────────────────────────────────────
 
 memory-os-check:  ## Memory OS 门禁

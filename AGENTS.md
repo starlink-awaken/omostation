@@ -204,7 +204,32 @@ identity 的 linked worktree（包括 Orca 创建的普通 worktree）拒绝，�
 writer cell。Orca 只作为终端/worker transport，写入任务应把已有独立 clone 注册为
 repo，不得把 Orca linked worktree 当成独立 clone 的替代品。
 
+**clone-lifecycle 自动化管道 (2026-08-19)**：全生命周期一键操作：
+
 ```bash
+# 1. 为新 agent 创建 clone + 基线
+python3 bin/gac/clone-lifecycle.py onboard --agent-id <id> \
+  --destination "$HOME/agents/<id>/ws"
+
+# 2. 工作中快照基线
+python3 bin/gac/clone-lifecycle.py snapshot --clone "$HOME/agents/<id>/ws" \
+  --output "$HOME/agents/<id>/baseline.json"
+
+# 3. 生成变更集 + claim 校验
+python3 bin/gac/clone-lifecycle.py changeset --clone "$HOME/agents/<id>/ws" \
+  --baseline "$HOME/agents/<id>/baseline.json" \
+  --output "$HOME/agents/<id>/changeset.json" --verify-claims
+
+# 4. 推送 + PR (dry-run 默认)
+python3 bin/gac/clone-lifecycle.py integrate --clone "$HOME/agents/<id>/ws" \
+  --agent-id <id> --dry-run
+
+# 5. 清理
+python3 bin/gac/clone-lifecycle.py retire --destination "$HOME/agents/<id>/ws"
+```
+
+```bash
+# 底层命令 (仍可直接使用)
 python3 bin/gac/agent-clone.py create --agent-id <id> \
   --source <origin-url-or-path> --destination "$HOME/agents/<id>/ws" --json
 python3 bin/gac/agent-clone.py manifest --clone "$HOME/agents/<id>/ws" \
