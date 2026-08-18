@@ -888,7 +888,7 @@ def test_claim_accepts_cross_project_receipt_and_deprecated_path_alias(
         "projects/knowledge/gbrain/src/gbrain/api.py",
         "--path",
         "projects/omo/src/omo/workflow/cli.py",
-        "--affected-hash",
+        "--affected-receipt",
         str(receipt),
         "--json",
     )
