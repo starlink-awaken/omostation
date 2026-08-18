@@ -24,8 +24,13 @@ from knowledge.models import (
 )
 from knowledge.adapter import BaseKnowledgeAdapter, AdapterHealth
 from knowledge.retrieval import UnifiedKnowledgeRetriever
+from knowledge.distillation import (
+    ConflictResolver,
+    ConflictResolutionProposal,
+    MemoryDistillationEngine,
+)
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __all__ = [
     "KnowledgeComplex",
     "get_knowledge_facade",
@@ -37,6 +42,9 @@ __all__ = [
     "BaseKnowledgeAdapter",
     "AdapterHealth",
     "UnifiedKnowledgeRetriever",
+    "ConflictResolver",
+    "ConflictResolutionProposal",
+    "MemoryDistillationEngine",
 ]
 
 
@@ -68,6 +76,12 @@ class KnowledgeComplex:
     def search(self, query: str, domain: str = "common", limit: int = 10) -> list[RetrievalResult]:
         """统一混合检索快捷入口."""
         return self._retriever.retrieve(query, domain=domain, limit=limit)
+
+    def distill(self, documents: list[KnowledgeDocument] | None = None, auto_apply: bool = False) -> dict[str, Any]:
+        """统一记忆与知识自蒸馏."""
+        engine = MemoryDistillationEngine()
+        docs = documents or []
+        return engine.distill_documents(docs, auto_apply=auto_apply)
 
 
 def get_knowledge_facade() -> KnowledgeComplex:
