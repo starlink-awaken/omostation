@@ -5196,9 +5196,10 @@ bets:
       violations: 0
       files_scanned: 184
     E2_doc_submit_ratio:
-      description: 两周 217 条 doc 类提交（15%）；documents 域 33 提交是主线之一，扩面持续
+      description: 两周 217 条 doc 类提交（15%）；documents 域 33 提交是主线之一，扩面持续。观察口径由 bin/ssot/doc-commit-ratio.py 提供（主仓 main 近 14 天：纯 doc 提交 9.4%，含 doc 提交 40.0%）
       doc_commits: 217
       ratio: 15%
+      observation_tool: bin/ssot/doc-commit-ratio.py --days 14
     E3_maintenance_mode:
       description: 维护模式声明已落地 (.omo/standards/doc-ssot-contract.md §维护模式)，done_when #1 达成 (PR #1651)
       status: done
@@ -5220,7 +5221,8 @@ bets:
   workflow: bet-execution
   underlying_workflow: project-doc-change
   write_surfaces:
-  - .omo/_truth/registry/x2-freshness-rules.yaml
+  - .omo/_truth/x2-freshness-rules.yaml
+  - bin/ssot/doc-commit-ratio.py
   - bin/ssot/doc-ssot-lint.py
   pasw_required: false
   depends_on: []
