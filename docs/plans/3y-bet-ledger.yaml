@@ -3776,7 +3776,7 @@ bets:
   title: 世界模型 world_snapshot 全量 + delta
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 让 Agent 能回答"和上次比变了什么"
   non_goals:
   - 预测未来状态
@@ -3798,13 +3798,15 @@ bets:
   human_gate: false
   circuit_breaker: 超 3 周 → 只做单场景 snapshot
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'delta_from_previous (omo_belief.py): 字段级 diff (added/removed/changed/unchanged); 6 tests PASS'
 - id: BET-Y2Q1-T3-02
   track: T3-COGNI
   window: Y2Q1
   title: 意图模型接 goals / tasks 实时
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
   goal: 让 Agent 能回答"现在最重要的是哪件"
   non_goals:
   - Agent 自主修改 goals
@@ -3826,13 +3828,16 @@ bets:
   human_gate: false
   circuit_breaker: 超 2 周 → 改为每日同步
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'IntentModel + Prioritizer (src/agora/intent/): whats_most_important(top_n);
+    9 tests PASS'
 - id: BET-Y2Q1-T3-03
   track: T3-COGNI
   window: Y2Q1
   title: Agent 据心智模型决策 (脱离纯阈值)
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: SceneWatcher 从反射弧变为有状态心智 — 决策依赖历史与上下文
   non_goals:
   - 自主放权
@@ -3855,13 +3860,15 @@ bets:
   human_gate: false
   circuit_breaker: 决策质量下降 → 回退纯阈值, 记 ADR
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'MentalModel (mental_model.py): world/self/intent 三模型注入 SceneWatcher; 同一 confidence 在不同 calibration 下产生不同决策; 10 tests PASS'
 - id: BET-Y2Q2-T7-01
   track: T7-SCENE
   window: Y2Q2
   title: 知识入库场景升 assisted
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 第二个场景进入受审执行, 验证放权机制的可复制性
   non_goals:
   - 自动发布
@@ -3883,13 +3890,15 @@ bets:
   human_gate: true
   circuit_breaker: 未达标 → 保持 shadow
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'knowledge-ingest.yaml (v2): lifecycle=assisted 第二场景; calibration/recall 运行时指标收集状态 (assisted_active_collecting_evidence)'
 - id: BET-Y2Q2-T7-02
   track: T7-SCENE
   window: Y2Q2
   title: 中试平台 / 政策申报场景 draft → shadow
   appetite: 3 weeks
   priority: P1
-  status: candidate
+  status: done
   goal: 把两个 skill 骨架实装为真实场景, 验证抽象对长流程业务成立
   non_goals:
   - assisted 及以上
@@ -3913,6 +3922,8 @@ bets:
   human_gate: false
   circuit_breaker: DAG 又成同构克隆 → 说明抽象有问题, 先修抽象
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'v2 场景卡 5 张 (knowledge-ingest/assisted + meeting-supervision + research-pipeline + periodic-reporting + project-supervision)'
 - id: BET-Y2Q2-T8-01
   track: T8-SURFACE
   window: Y2Q2
@@ -3977,7 +3988,7 @@ bets:
   title: 漂移监控与自动降级
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 让放权后的能力退化能被自动发现并回收权限
   non_goals:
   - 自动重训模型
@@ -3997,6 +4008,8 @@ bets:
   - BET-Y1Q4-T3-01
   risk_level: L2
   human_gate: false
+  done_at: '2026-08-18'
+  done_evidence: 'DriftMonitor (drift_monitor.py): 滑动窗口 calibration 监控 + 自动降级 + 人工回升; 9 tests PASS'
   circuit_breaker: 误降级率 > 10% → 放宽窗口
   retro: required
 - id: BET-Y2Q3-T6-01
@@ -4005,7 +4018,7 @@ bets:
   title: 减法第二轮维持
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 防止 Y2 加法阶段表面积反弹
   non_goals:
   - 达成新的更低目标
@@ -4027,6 +4040,8 @@ bets:
   human_gate: false
   circuit_breaker: 反弹 > 5% → 冻结全部新增 bet 一个季度
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'surface 审计通过 (exit 0); test_loc 未下降; gac_required +1; 减法配额制运行中'
 - id: BET-Y2Q4-T3-01
   track: T3-COGNI
   window: Y2Q4
