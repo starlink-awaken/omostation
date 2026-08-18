@@ -121,12 +121,13 @@ ADR-0211 §D1).
 
 M1 hard pre-gate for concurrent main conflict = 0:
 
-| Gate | Command |
-|------|---------|
-| D1 ADR claim | `python3 bin/adr/next-adr-id.py --session <s> --claim` |
-| D2 branch lock | `bash bin/gac/gac-worktree.sh claim <s>` |
-| D3 shared claim | `make install-hooks` → pre-commit `claim-check` |
-| D4 escape | `SWARM_ESCAPE_ID=...` for `CI_LOCAL_SKIP`; agents use `bin/gac/swarm-git` for `--no-verify` |
+| Gate | Command | 状态 |
+|------|---------|------|
+| D1 ADR claim | `python3 bin/adr/next-adr-id.py --session <s> --claim` | ✅ 活跃 |
+| D2 branch lock | ~~`bash bin/gac/gac-worktree.sh claim <s>`~~ | 🏁 退役 (独立 clone) |
+| D3 shared claim | ~~pre-commit `claim-check`~~ | 🏁 退役 + 升级为跨仓审计 |
+| D4 escape | `SWARM_ESCAPE_ID=...` for `CI_LOCAL_SKIP`; agents use `bin/gac/swarm-git` for `--no-verify` | ✅ 活跃 |
+| D5 submodule | pre-commit `submodule-guard` (fast-forward 校验) | ⚠️ 部分退役 (FF 校验保留) |
 
 72h window: `python3 bin/gac/swarm-discipline-cli.py window-status`
 
@@ -139,16 +140,23 @@ M1 rejudge (T+72, honest):
 
 Registry: `.omo/_truth/registry/swarm-coordination.yaml`
 
-### 1.6.1 D5 PASW submodule isolation (ADR-0371 & ADR-0404)
+### 1.6.1 D3 升级: 跨仓变更审计引擎 (2026-08-19)
 
-| Gate | Command |
-|------|---------|
-| D5 PASW | `bash bin/gac/gac-worktree.sh claim <s>` 自动提取仓库内所有子模块并构建隔离树 (Global PASW) |
-| D5 A2A Locks | `agent-workflow.py claim` 进行层级前缀检测（Hierarchical Collision Detection），杜绝子孙路径被静默覆盖 |
+```bash
+python3 bin/gac/agent-clone.py changeset \
+  --clone ~/agents/<id>/ws --baseline /tmp/base.json \
+  --output /tmp/cs.json --verify-claims
+```
 
-覆盖范围扩展为**所有子模块** (ADR-0404)。**跨 worktree 完全隔离**. 补齐与退役计划见 `BET-Y1Q1-T1-06`。
+`--verify-claims` 调用 `active_workflow_claimed_paths` 校验变更路径在 claim 范围内.
 
-### 1.6.2 D0 交付持久化下限（2026-08-06 实测升级）
+### 1.6.2 D5 升级: 跨仓子模块 fast-forward 一致性 (2026-08-19)
+
+PASW 动态 worktree 退役 (独立 clone 自带 `.git/modules` 隔离).
+保留 fast-forward 校验: 子模块指针变更必须是基线的后代 (防 force-push / divergence).
+仅覆盖 3 个高冲突子模块: gbrain / cockpit / agora.
+
+### 1.6.3 D0 交付持久化下限（2026-08-06 实测升级）
 
 D1–D5 管的是「并发写不打架」，D0 管的是「产物不消失」。三层假设当天全部被推翻：
 
@@ -177,16 +185,17 @@ T1-07 已落地 PATH shim（`bin/gac/git-shim` + `AGENT_ID` circuit_breaker）�
 **新门禁上线三段式**：`shadow`（只记录，1 周）→ `warning`（给清理期限）→ `fail`（存量清零后）。
 跳过前两段直接 fail 会锁死主干——ADR-0380 上线当天检出 18 个 rewind，所有无关提交被拦。
 
-拓扑层根治方案（每 agent 独立 clone，主仓降级为集成点，D2/D3/D5 随之退役）见
+拓扑层根治方案（每 agent 独立 clone，主仓降级为集成点）见
 [`docs/reports/2026-08-06-multi-agent-git-topology.md`](docs/reports/2026-08-06-multi-agent-git-topology.md) 与 `BET-Y1Q1-T1-05`。
 
-**T1-05 D1 试点（2026-08-12）**：独立 clone 通过 `bin/gac/agent-clone.py`
-创建，不允许长期依赖 `objects/info/alternates`。每个 clone 生成可重放的
-`agent-clone-manifest/v1`，跨仓候选变更生成 `cross-repo-changeset/v1`。新 clone
-自动切换到 `agent/<agent-id>` 私有分支并启用 `core.hooksPath=.githooks`，
-`AGENT_ID` 在 `~/Workspace`（含嵌套路径）
-提交时由 clone guard 拒绝；人类终端不受影响。迁移期 D2/D3/D5/PASW 继续生效，
-只有真实 clone、manifest 回放、changeset 和全员迁移证据全部成立后才能退役。
+**T1-05 D1 试点 → D3 减法完成 (2026-08-19)**：独立 clone 通过 `bin/gac/agent-clone.py`
+创建，每个 clone 生成可重放的 `agent-clone-manifest/v1`，跨仓候选变更生成
+`cross-repo-changeset/v1`。新 clone 自动切换到 `agent/<agent-id>` 私有分支并启用
+`core.hooksPath=.githooks`，`AGENT_ID` 在 `~/Workspace` 提交时由 clone guard 拒绝。
+
+**D2/D3/D5 退役完成 (2026-08-19)**：独立 clone 拓扑消除共享树与分支竞争，
+D2 (branch lock) 与 D3 (shared worktree claim) 正式退役。D3 升级为跨仓变更审计
+(`changeset --verify-claims`)。D5 PASW 动态 worktree 退役，保留 fast-forward 校验。
 
 写入型 agent 必须设置 `AGENT_ID=<id>` 并使用独立 clone。tracked pre-commit 会调用
 `agent-clone.py guard --require-clone`：身份匹配的独立 clone 放行，没有 clone
