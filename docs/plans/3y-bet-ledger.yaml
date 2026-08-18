@@ -5136,13 +5136,20 @@ bets:
   - 人类终端迁移（human 保留共享 checkout）
   evidence:
     E4_mechanism_verified:
-      description: agent-clone.py 机制量产就绪 — guard 三态验证通过 (agent+integration_root 拒绝 / agent+clone 放行 verified_clone / human 放行); pre-commit hook 已接入; 44 测试全 pass
+      description: agent-clone.py 机制量产就绪 — guard 三态验证通过 (agent+integration_root 拒绝 / agent+clone 放行 verified_clone / human 放行); pre-commit hook 已接入; 44 测试全 pass; clone 生命周期 (create→manifest→verify→guard) 全链路验证 ok
       verified_at: 2026-08-18
       guard_states:
         agent_on_integration_root: rejected
         agent_on_verified_clone: allowed
         human_no_agent_id: allowed
       tests: 44 passed
+      fixes_merged:
+      - '1673: untrack 19 runtime state files (ADR-0404)'
+      - '1675: root_dirty 忽略孤儿仓库目录 (c2g/gbrain/kairon)'
+      clone_lifecycle_verified:
+        manifest_generate: ok
+        verify: ok
+        guard_verified_clone: ok
     E1_clone_stagnation:
       description: ~/agents/ 23 目录仅 1 个真实 clone（coordination-daemon），phase 仍 writer_clone_gate_pilot；迁移停滞
       real_clones: 1
