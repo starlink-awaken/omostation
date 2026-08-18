@@ -9,6 +9,8 @@ related:
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/decisions/0412-model-driven-disposition.md
   - docs/plans/closeout-submodule-sync-design.md
+lifecycle: plan
+last-reviewed: 2026-08-18
 ---
 
 # T6-01 迁移设计 spec — gbrain + kairon → `projects/knowledge/`

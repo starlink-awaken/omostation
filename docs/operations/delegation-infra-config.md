@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # OpenCode 委托基础设施配置 — delegation-infra-config
 
 > 固化 2026-08-07 委托基础设施（delegation infra）故障修复后的**固定状态**，让修复可存活、可回滚、可复现。

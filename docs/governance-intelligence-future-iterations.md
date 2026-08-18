@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # 治理智能未来迭代 — 全面架构设计与落地路径
 
 > 本文档在 Phase 1-5 已合入 main 的基础上，设计后续迭代的架构方案、融合路径和可执行落地计划。

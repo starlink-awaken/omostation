@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # BET-Y1Q2-T1-10 Agent Pool Observation Evidence
 
 > Scope: trusted single-user local observation and admission preflight. This is

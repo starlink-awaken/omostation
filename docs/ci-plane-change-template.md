@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # CI Plane Change Template
 
 Use this template when creating PRs that modify CI configuration, GaC checks, hooks, or any governance/plane surface.

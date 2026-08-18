@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # bin/scripts 能力重叠扫描
 
 - 重叠脚本: 144

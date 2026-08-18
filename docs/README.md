@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # docs — 文档治理入口
 
 ## 作用

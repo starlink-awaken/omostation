@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # agora 用量计费/配额方案 (遗留-3, 2026-08-07)
 
 > **状态: ✅ 全链路已落地 (2026-08-07, agora 77c8e9c)** — 配额检查器 + 配置 + resolve_bos_uri 接入 + 热加载 + 11 测试; **告警联动**: 超限/预警触发统一告警入口 `agora_alerts.py` (P4) + Prometheus 指标; **P3 能力目录写闭环**: capability_catalog add/retire/save 持久化 + 修复 admit/retire 死代码。本文档保留为设计参考。

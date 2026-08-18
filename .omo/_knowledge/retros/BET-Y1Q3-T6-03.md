@@ -10,6 +10,8 @@ context: >-
   为 575843deb 无主落账的 10 个 mof-deepen 模块补齐最小测试面。
   参考 test_signal_poller.py 的 importlib.util.spec_from_file_location 模式
   处理带连字符的模块文件名。
+lifecycle: history
+last-reviewed: 2026-08-18
 ---
 
 # BET-Y1Q3-T6-03 复盘

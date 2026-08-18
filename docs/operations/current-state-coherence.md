@@ -8,6 +8,7 @@ related:
   - ../../bin/ssot/current-state-coherence.py
   - ../../.omo/_truth/registry/agent-workflows.yaml
   - ../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
+lifecycle: contract
 ---
 
 # Current State Coherence 操作合同

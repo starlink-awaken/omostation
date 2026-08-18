@@ -1,7 +1,7 @@
 ---
 id: BET-Y1Q3-T6-05
 type: retro
-status: completed
+status: archived
 date: 2026-08-17
 run_id: 20260816T180441Z-governance-audit-4b0f33f2
 workflow_id: governance-audit
@@ -15,6 +15,9 @@ merge_commit: ffd56d5ff61e64facfd13875b7d0062f907ecf4a
 scope:
   - bin
   - scripts
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-18
 ---
 
 # BET-Y1Q3-T6-05 Retro: 治理工具自净闭环

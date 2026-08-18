@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # External Adapter Integration Pattern
 
 > SSOT: AGT × eCOS v6 Integration (ADR-0366)  

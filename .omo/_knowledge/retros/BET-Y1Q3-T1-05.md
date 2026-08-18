@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # BET-Y1Q3-T1-05 复盘
 
 > 2026-08-16 · agora BOS 声明/执行鸿沟治理 — 29 unimplemented 排期/废弃 + CS-10 违约收敛 · run 20260816T142748Z-submodule-pointer-close-ab414fbe

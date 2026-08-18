@@ -7,7 +7,7 @@
 > - validation: 与 project-registry.yaml 项目数一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-07-31T08:11:19.564130+00:00
+> - generated_at: 2026-08-18T07:07:09.084624+00:00
 
 ---
 
@@ -17,13 +17,13 @@
 |----|------|-----|---------|
 | I0 | agora | Python (uv, pytest) | 各项目 `AGENTS.md` |
 | L0 | ecos | Python (uv, pytest) | 各项目 `AGENTS.md` |
-| L1 | runtime | Python (uv, pytest) | 各项目 `AGENTS.md` |
+| L1 | omlxc, runtime | Python (uv, pytest) + Python (uv, pytest, Textual) | 各项目 `AGENTS.md` |
 | L1-L3 | toolbox | Multi (TypeScript MCP / JS Skills / Python CLI / Pipeline) | 各项目 `AGENTS.md` |
-| L2 | family-hub, gbrain, kairon, metaos, omo, omo-debt | Python (FastMCP) + Python (uv, pytest) + TypeScript (bun) | 各项目 `AGENTS.md` |
+| L2 | family-hub, knowledge, metaos, omo | ? + Python (FastMCP) + Python (uv, pytest) | 各项目 `AGENTS.md` |
 | L3 | cockpit, cockpit-ui | Python (uv, pytest) + TypeScript (Vite, React) | 各项目 `AGENTS.md` |
 | L4 | l4-kernel | Python (uv, pytest) | 各项目 `AGENTS.md` |
 | M0 | model-driven | Python (uv, pytest) | 各项目 `AGENTS.md` |
-| X | aetherforge, bus-foundation, c2g, observability | Docker + Python (uv) + Python (uv, pytest) | 各项目 `AGENTS.md` |
+| X | aetherforge, bus-foundation, observability | Docker + Python (uv, pytest) | 各项目 `AGENTS.md` |
 
 ---
 
@@ -31,13 +31,13 @@
 
 | 栈 | 项目 |
 |----|------|
+| ? | knowledge |
 | Docker | observability |
 | Multi (TypeScript MCP / JS Skills / Python CLI / Pipeline) | toolbox |
 | Python (FastMCP) | family-hub |
-| Python (uv) | c2g |
-| Python (uv, pytest) | aetherforge, agora, bus-foundation, cockpit, ecos, kairon, l4-kernel, metaos, model-driven, omo, omo-debt, runtime |
+| Python (uv, pytest) | aetherforge, agora, bus-foundation, cockpit, ecos, l4-kernel, metaos, model-driven, omo, runtime |
+| Python (uv, pytest, Textual) | omlxc |
 | TypeScript (Vite, React) | cockpit-ui |
-| TypeScript (bun) | gbrain |
 
 ---
 
@@ -50,16 +50,14 @@
 | aetherforge | X | 能力与算力框架 (gateway/mesh/swarm) | ✅ |
 | agora | I0 | MCP Hub · BOS URI 路由 | ✅ |
 | bus-foundation | X | Omni-Bus (Data/Event/Control) | ✅ |
-| c2g | X | 战略需求引擎 (V2P → C2G) | ✅ |
 | cockpit | L3 | 统一入口 (CLI + MCP + Web) | ✅ |
 | ecos | L0 | SSB 签名链 + MOF 元模型 + L0 约束 | ✅ |
 | family-hub | L2 | 家庭数字枢纽 | ✅ |
-| kairon | L2 | 知识引擎 monorepo | ✅ |
 | l4-kernel | L4 | 自我层管理面 · 域统一注册 · KEMS | ✅ |
 | metaos | L2 | 编排引擎 · 决策门控/免疫/路由 | ✅ |
 | model-driven | M0 | 生命周期横切框架 · M3→M2→M1 桥接 | ✅ |
+| omlxc | L1 | 本地算力运行时 · omlxcd 守护进程、物理放置与算力驾驶舱 | ✅ |
 | omo | L2 | 治理中枢 · Agent OS 内核 | ✅ |
-| omo-debt | L2 | 技术债务评分 CLI | ✅ |
 | runtime | L1 | 运行时 · Matrix/Scheduler/KEI 沙箱 | ✅ |
 | toolbox | L1-L3 | 本地服务入口 — L1 寻址 / L2 分区 / L3 实例 (MCP×5 / Skill×5 / CLI×1 / Pipeline×2) | ✅ |
 
@@ -68,7 +66,6 @@
 | 项目 | 层 | 角色 | AGENTS.md |
 |------|----|------|-----------|
 | cockpit-ui | L3 | Web 控制台 UI (作为 cockpit 前端表现层挂载至/) | ✅ |
-| gbrain | L2 | Postgres 知识数据库 | ✅ |
 
 ### Docker 项目
 

@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # BET-Y1Q2-T7-01 复盘 — 工程交付 dogfood 开 shadow
 
 ## Q1 耗时 vs appetite

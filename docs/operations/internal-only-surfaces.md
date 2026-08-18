@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # Internal-Only Surfaces Policy
 
 > **When NOT to expose a capability as cockpit CLI / Agora MCP / BOS URI.**  

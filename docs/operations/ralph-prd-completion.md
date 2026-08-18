@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # Ralph PRD 完成定义 (G6)
 
 > **来源**: P79 pattern · #907 35+ iteration ralph 催促实证 · 2026-08-04

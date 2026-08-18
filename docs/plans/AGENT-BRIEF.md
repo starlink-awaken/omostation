@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # AGENT-BRIEF — 三年规划台账执行指令
 
 > 给任何一个准备认领 bet 的 agent。**读完本文再动手，不要跳过第 1 节。**

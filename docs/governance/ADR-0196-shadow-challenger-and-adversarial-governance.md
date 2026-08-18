@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # ADR-0196: Shadow Challenger & Red-Team Deliberation Loop
 
 ## Status

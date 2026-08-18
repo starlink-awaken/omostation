@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # 里程碑薄文档 — 2026 Q3/Q4 战术编排
 
 > 类型: 编排层（只放台账放不下的依赖关系与节律约定）

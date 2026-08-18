@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: pattern
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # Agent 架构避坑知识库 (Architecture Pitfalls SSOT)
 
 > **核心原则**：所有经历过的架构隐患、AST 拦截踩坑与误区，必须固化在此知识库中，并通过 `ecos-constraint pitfall scan` 纳入 CI 静态门禁，确保“踩过的坑绝不踩第二遍”。

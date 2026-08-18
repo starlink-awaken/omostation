@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # 🛠️ omlxc Compute Fabric 运维与多 Agent 协作工作流 (Runbook & Workflow)
 
 ## 1. 概述与生命周期模型

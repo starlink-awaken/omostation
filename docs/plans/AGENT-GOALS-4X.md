@@ -12,6 +12,7 @@ related:
 note: >
   与 AGENT-TEMPLATES.md 的区别：那份是「派一个 bet」的单次指令，
   本文是「给一条轨道一个长期目标，agent 自己循环取活」的 goal 模式。
+last-reviewed: 2026-08-18
 ---
 
 # 四 Agent 并行 — Goal 模式

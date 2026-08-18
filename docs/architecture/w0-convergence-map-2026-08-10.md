@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # W0-04 Convergence Map — Legacy Entrances, Duplicate Writers, Consumers, and Retirement Candidates
 
 > **Task**: W0-04 (digital-twin-blueprint-v1.md §25.2)

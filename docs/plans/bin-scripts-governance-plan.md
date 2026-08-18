@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # bin/ 与 scripts/ 收敛治理实施计划
 
 - 状态：Wave 2 已实施并固化基线（第一波非破坏性治理完成）

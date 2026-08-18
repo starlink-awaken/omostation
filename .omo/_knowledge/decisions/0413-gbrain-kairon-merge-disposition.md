@@ -1,8 +1,11 @@
 ---
+id: ADR-0413
 title: gbrain + kairon 归并为 knowledge — 决策补档
-adr_id: '0413'
-status: ACCEPTED
-date: 2026-08-17
+status: accepted
+lifecycle: contract
+owner: governance-team
+created: 2026-08-17
+last-reviewed: 2026-08-18
 deciders:
   - 夏明星 (最终确认 pending)
   - engineering-agent (起草, 依据既有授权链)

@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # ADR-0195: Intent-to-Spec Compiler Architecture
 
 ## Status

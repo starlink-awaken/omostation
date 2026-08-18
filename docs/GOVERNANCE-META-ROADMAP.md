@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # Governance Meta-Roadmap (ADR-0384)
 
 > Published with ADR-0384. Strategy: from "more mechanisms" to "meta-meta governance" — measure and govern the governance system itself.

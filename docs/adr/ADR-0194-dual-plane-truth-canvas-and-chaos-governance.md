@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # ADR-0194: Dual-Plane Truth Canvas 轻量态势看板与全域混沌对抗演练架构
 
 - **状态**: `ACCEPTED`

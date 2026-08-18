@@ -12,6 +12,7 @@ audit: docs/reports/2026-08-06-deep-review-proactive-agent-and-scenario-orchestr
 note: >
   本文是人类视图。机器可读 SSOT 是 docs/plans/3y-bet-ledger.yaml，
   两者不一致时以 YAML 为准，且必须修 YAML 而非改本文。
+last-reviewed: 2026-08-18
 ---
 
 # 三年规划执行台账

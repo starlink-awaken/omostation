@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # 全面审计方案：omostation 多仓库治理健康度（REPO-AUDIT-PLAN）
 
 > 由 2026-08-08/09 会话 grill-me 产出。14 个决策点全部确认。

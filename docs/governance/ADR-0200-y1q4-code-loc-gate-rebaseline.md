@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # ADR-0200: Y1Q4 年度门 code_loc 重基线（净值口径）
 
 ## Status

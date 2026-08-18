@@ -11,6 +11,7 @@ related:
   - ../_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md
   - ../_knowledge/decisions/0320-external-resource-evaluation-and-explainable-selection.md
   - ../_knowledge/decisions/0321-external-resource-selection-evaluation-evidence.md
+lifecycle: contract
 ---
 
 # External Connection Fabric 标准

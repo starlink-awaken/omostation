@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # ADR-0190: MOF 动态约束与 Agent 实时治理体系 (MOF Dynamic Constraint Governance Architecture)
 
 - **状态**: Accepted

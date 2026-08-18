@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: pattern
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # PITFALL-002: 双平面纯净度破坏 (Documents 脚本与依赖污染)
 
 - **条目编号**: `PITFALL-002`

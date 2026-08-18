@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # 子模块漂移治理 — 深度设计方案
 
 > 版本: 2026-08-08  

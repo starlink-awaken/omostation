@@ -1,7 +1,7 @@
 ---
 title: mof-deepen 落账追溯审计 — commit 575843deb (PR #1465)
 type: retro
-status: final
+status: archived
 owner: governance-team
 created: 2026-08-15
 lifecycle: history
@@ -12,6 +12,7 @@ context: >
   人类 2026-08-15 指令: 追溯「数字大脑模块 + 行政流程 scenes」合并 (575843deb,
   work/mof-deepen → main, PR #1465, 10 模块 1444 行) 的记账缺口。本文件只做
   归属判定与事实记录, 不改台账 status, 不新增 bet 条目 (修复决策交人类)。
+last-reviewed: 2026-08-18
 ---
 
 # mof-deepen 落账追溯 — 2026-08-15

@@ -8,6 +8,8 @@ bet: BET-Y1Q3-T6-01
 related:
   - docs/plans/2026-08-16-t6-01-knowledge-merge-spec.md
   - docs/plans/2026-08-16-t6-01-dedup-ledger.md
+lifecycle: history
+last-reviewed: 2026-08-18
 ---
 
 # BET-Y1Q3-T6-01 复盘（五问）— 停审版

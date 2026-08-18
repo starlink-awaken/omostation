@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # BET-Y1Q2-T2-02 复盘：个人 dogfood 操作入口
 
 > 日期：2026-08-12

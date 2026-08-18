@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # Superpowers Spec Registry
 
 本目录存放 `eCOS` 超能力项目的规格说明书（specs），用于约束高风险 bet 的设计和验收。

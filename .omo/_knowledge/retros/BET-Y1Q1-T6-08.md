@@ -7,6 +7,8 @@ created: 2026-08-17
 bet: BET-Y1Q1-T6-08
 related:
   - /Users/xiamingxing/Downloads/AGENT-BRIEF-OPS-INFRA-GOVERNANCE.md
+lifecycle: history
+last-reviewed: 2026-08-18
 ---
 
 # BET-Y1Q1-T6-08 复盘

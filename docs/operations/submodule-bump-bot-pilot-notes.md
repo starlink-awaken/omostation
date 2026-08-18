@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # 子模块指针自动化 PR 运维与标准化指南
 
 本指南记录了 `omostation` 全量子模块自动化更新机制的架构设计与配置说明。

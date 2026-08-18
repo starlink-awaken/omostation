@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-18
+---
 # agora P5-P8 战略深化方案 (2026-08-07)
 
 > 前置: 超长链路验证报告 (docs/reports/2026-08-07-agora-long-chain-scenarios.md)

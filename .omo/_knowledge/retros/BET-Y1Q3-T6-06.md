@@ -1,7 +1,7 @@
 ---
 id: BET-Y1Q3-T6-06
 type: retro
-status: completed
+status: archived
 date: 2026-08-18
 run_id: 20260818T020320Z-bet-execution-182821e7
 workflow_id: bet-execution
@@ -10,6 +10,9 @@ north_star_ref: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
 scope:
   - bin
   - docs/plans
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-08-18
 ---
 
 # BET-Y1Q3-T6-06 Retro: 文档治理减负 — 维护模式
