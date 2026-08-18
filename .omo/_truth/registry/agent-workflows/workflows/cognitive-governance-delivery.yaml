@@ -59,7 +59,7 @@ phases:
         - omlxc
         - fabric
         - inspect
-  execution:
+  execute:
     - id: phase-1-intent-spec
       title: 意图解构与规格编译 (Intent-to-Spec)
       agent: sage-planner
@@ -94,6 +94,10 @@ phases:
       agent: builder-agent
       mode: required
       target_plane: Documents
+      command:
+        - ecos-constraint
+        - draft
+        - "${DRAFT_PATH}"
     - id: phase-5-shadow-challenge
       title: 影子红蓝对抗审查与自动打补丁 (Auto-Patch)
       agent: devil-challenger
@@ -126,3 +130,8 @@ phases:
         - python3
         - bin/ssot/chaos-governance-drill.py
         - --strict
+  closeout:
+    - id: done
+      mode: required
+      command:
+        - echo

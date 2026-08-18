@@ -180,3 +180,35 @@ agent_profiles:
     - submodule_pointer
     closeout_required:
     - run-record
+  sage-planner:
+    purpose: 意图解构与工程规格反编译 (ADR-0195, cognitive-governance-delivery)
+    allowed_workflows:
+    - "*"
+    can_write_lanes:
+    - docs
+    - governance_code
+  builder-agent:
+    purpose: 主权算力投机生成与代码/公文起草 (ADR-0197)
+    allowed_workflows:
+    - "*"
+    can_write_lanes:
+    - docs
+    - code
+    - governance_code
+    - compute_fabric
+  keeper-cartridge:
+    purpose: 领域卡带与 SOP 资产装配 (ADR-0198)
+    allowed_workflows:
+    - "*"
+    can_write_lanes:
+    - docs
+    - governance_code
+    - governance_state
+  devil-challenger:
+    purpose: 审计/等保/法务影子对抗审查与 Auto-Patch (ADR-0196)
+    allowed_workflows:
+    - "*"
+    can_write_lanes:
+    - docs
+    - governance_code
+    - governance_state
