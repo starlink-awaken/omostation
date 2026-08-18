@@ -4671,8 +4671,9 @@ bets:
     done_when_met:
     - '1: 提案文档产出 (annual-gate-rebaseline-2026Q4.md)'
     - '2: 三情景均附净值口径量化 (实测 src_loc 1,663,966 / 净增长 ~+145K / gbrain 重写净 +360)'
+    - '3a: ADR-0200 草案已备 (docs/adr + docs/governance, Proposed 状态, 按推荐情景 B 预写)'
     pending_when:
-    - '3: 人类批示后更新 annual_gates + ADR (待拍板)'
+    - '3b: 人类批示后更新 annual_gates + ADR 转 Accepted (待拍板)'
   verify:
   - cmd: test -f docs/plans/annual-gate-rebaseline-2026Q4.md
     expect: exit 0
