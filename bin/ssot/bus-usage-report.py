@@ -48,7 +48,7 @@ _CALL_RE = [
     re.compile(
         r"\b(bus|bus_event|bus_control|bus_data|bus_adapter)\.\s*(publish|subscribe|emit|submit_task|schedule_callback|ack|nack|outbox_emit|schedule)\s*\("
     ),
-    re.compile(r"\b_(bus_publish|emit_event|emit|bus_emit|publish_event)\s*\("),
+    re.compile(r"\b_(bus_publish\w*|emit_event|emit|bus_emit|publish_event)\s*\("),
     re.compile(r"\b(publish|subscribe|schedule)\s*\(\s*[^)]*BusEnvelope"),
     re.compile(r"@\s*(bus_event|bus_control|bus_data)\.\s*(publish|subscribe|schedule_callback)"),
     re.compile(r"BusEnvelope\s*\(.*topic\s*="),

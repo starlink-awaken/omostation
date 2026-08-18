@@ -24,7 +24,7 @@ layers:
   L4: "自我层 (l4-kernel)"
   I0: "织层 (agora)"
   M0: "横切框架 (model-driven)"
-  X:  "横切扩展 (aetherforge / bus-foundation / observability / family-hub; c2g+omo-debt 已内包 omo, ADR-0412)"
+  X:  "横切扩展 (bus-foundation / observability / family-hub; aetherforge/c2g/omo-debt 已内包 runtime+omo, ADR-0412+T6-01+Y1Q4-T6-01)"
 
 projects:
   # mesh-router 不是独立 git 仓 — 实现 = bin/gac/gac-mesh-router.py (HTTP server on port 7437)
@@ -33,13 +33,13 @@ projects:
     layer: "L0"
     stack: "Python (http/urllib)"
     python: ">=3.13"
-    role: "omlx 算力网格智能路由代理 (deprecated — owner 已收敛至 aetherforge)"
+    role: "omlx 算力网格智能路由代理 (deprecated — owner 已收敛至 aetherforge, 见 BET-Y1Q4-T6-01 aetherforge 已并入 runtime)"
     version: "1.0.0"
     port: 7437
     status: "deprecated"
     physical_location: "bin/gac/gac-mesh-router.py"
     port_registry_ref: "protocols/port-registry.yaml::7437"
-    note: "无独立仓. BET-Y1Q3-T1-06 (2026-08-16) 双 owner 收敛决策: 算力路由单一 owner = aetherforge (BOS 已登记 bos://memory/aetherforge/mcp-server + forge_* tools, 主仓 9 处引用, 活跃), gac-mesh-router 主仓零引用/未接线 → 标 deprecated 保留文件待归档评估, 不删除. 历史 .gitmodules 期望已废弃 (Phase 7.4 决议). 见 ADR-0162 P76 Phase 7."
+    note: "无独立仓. BET-Y1Q3-T1-06 (2026-08-16) 双 owner 收敛决策: 算力路由单一 owner = aetherforge (2026-08-18 已并入 projects/runtime/aetherforge/) (BOS 已登记 bos://memory/aetherforge/mcp-server + forge_* tools, 主仓 9 处引用, 活跃), gac-mesh-router 主仓零引用/未接线 → 标 deprecated 保留文件待归档评估, 不删除. 历史 .gitmodules 期望已废弃 (Phase 7.4 决议). 见 ADR-0162 P76 Phase 7."
 
   # ── Python projects ──
   agora:
@@ -198,14 +198,6 @@ projects:
     role: "生命周期横切框架 · M3→M2→M1 桥接"
     src_dir: "src/"
 
-  aetherforge:
-    layer: "X"
-    stack: "Python (uv, pytest)"
-    python: ">=3.13"
-    build_backend: "hatchling"
-    version: "1.0.0"
-    role: "能力与算力框架 (gateway/mesh/swarm)"
-    src_dir: "src/"
 
   bus-foundation:
     layer: "X"
