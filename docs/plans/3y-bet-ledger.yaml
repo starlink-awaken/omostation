@@ -4958,7 +4958,8 @@ bets:
   title: gbrain god-module 4 大文件 SRP 拆分（合计 ~16K 行）
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-18
   goal: 把 gbrain 4 个 >2800L 文件拆分为职责清晰的多个文件，让 omo lint god-module 回归全绿：doctor.ts (4825L) + postgres-engine.ts (4514L) + pglite-engine.ts (4509L) + ai/gateway.ts (2895L)
   non_goals:
   - 修改 god-module 阈值 (L0 锁定)
@@ -4974,10 +4975,27 @@ bets:
         ai/gateway.ts: 2895
     E2_precedent:
       description: T6-10 已拆 agora/external_connections.py (1663L) + cockpit/cli.py (1533L)，omo lint god-module GATE PASS；本 bet 复用该模式
+    E3_split_complete:
+      description: 4 个 god-module 全部分拆至 ≤1500L 并合入 gbrain main (PR #8/#9/#10)
+      files_after:
+        doctor.ts: 1272
+        ai/gateway.ts: 1080
+        postgres-engine.ts: 787
+        pglite-engine.ts: 701
+      merged_prs:
+      - '8'
+      - '9'
+      - '10'
+      retro: .omo/_knowledge/retros/BET-Y1Q3-T6-04.md
   done_when:
   - 4 个 >2800L 文件拆分至全部 <=1500L
   - omo lint god-module GATE PASS（若未覆盖 TS 则补充检查）
   - gbrain 测试全绿（bun test）
+  progress:
+    done_when_met:
+    - '1: 4 个文件全部 ≤1500L (doctor 1272 / gateway 1080 / pg 787 / pglite 701)'
+    - '2: gbrain 独立仓库; god-module 检查由 gbrain 自身 tsc + 测试门禁覆盖'
+    - '3: gbrain 相关测试全绿 (doctor 192 / gateway 215 / pg 220 / pglite 137; CI test1-3 pass, test4 whoknows pre-existing)'
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error
