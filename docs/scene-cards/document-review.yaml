@@ -13,6 +13,20 @@ schema: scene-card/v2
 lifecycle: shadow
 activation: allowed
 approval_state: confirmed
+lifecycle_gate:
+  target: assisted
+  blocking_bet: BET-Y1Q4-T7-01
+  protocol: docs/operations/document-review-outcome-tracking.md
+  thresholds:
+    min_samples: 30
+    min_calibration: 0.60
+    rollback_evidence: required
+  measured_2026_08_18:
+    samples: 0
+    calibration: null
+    rollback_tested: true
+  status: blocked_until_threshold_met
+  rationale: circuit_breaker 未达标 → 保持 shadow, 不得强行升 L2
 approval:
   confirmed_by: xiamingxing (business-governance approver, 操作员全授权 2026-08-06)
   confirmed_at: 2026-08-06 12:00:00+00:00
