@@ -4632,7 +4632,8 @@ bets:
   title: Y1Q4 年度门修订评审 — code_loc 重基线 (human_gate)
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-18
   goal: >-
     Y1Q4 门 code_loc <= 690000 按 Y1 初基线制定, 未纳入 gbrain 重写噪音与新项目出生两变量,
     当前实测 src_loc 与门值缺口约 -58%。刻舟求剑的门会诱导第二个 T3-01 式谎报。
@@ -4640,10 +4641,22 @@ bets:
   non_goals:
   - agent 自行修改门值 (必须人类拍板)
   - 顺带修改其他窗口门
+  evidence:
+    E1_rebaseline_proposal:
+      description: 重基线提案已产出 (docs/plans/annual-gate-rebaseline-2026Q4.md), 三情景量化论证完整
+      file: docs/plans/annual-gate-rebaseline-2026Q4.md
+      recommendation: 情景 B (调门到 1,100,000) + 净值口径门检
+      created: 2026-08-18
   done_when:
   - "重基线提案文档产出 (三种情景: 守原门/调门/拆门为分项目门)"
   - 每种情景附 T1-03 净值口径的量化论证
   - 人类明确批示后按批示更新 annual_gates 并留 ADR
+  progress:
+    done_when_met:
+    - '1: 提案文档产出 (annual-gate-rebaseline-2026Q4.md)'
+    - '2: 三情景均附净值口径量化 (实测 src_loc 1,663,966 / 净增长 ~+145K / gbrain 重写净 +360)'
+    pending_when:
+    - '3: 人类批示后更新 annual_gates + ADR (待拍板)'
   verify:
   - cmd: test -f docs/plans/annual-gate-rebaseline-2026Q4.md
     expect: exit 0
@@ -5109,12 +5122,21 @@ bets:
   title: T1-05 clone 迁移量产 — 从 pilot 推进到全员独立 clone
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-18
   goal: 把 T1-05 独立 clone 迁移从 writer_clone_gate_pilot 推进到全员量产：所有写入型 agent 迁移到 ~/agents/<id>/ws 独立 clone，共享 checkout 降级为集成点；达成后可退役 D2/D3/D5/PASW 部分机制
   non_goals:
   - 退役全部并发治理（迁移期 D2/D3/D5 继续生效）
   - 人类终端迁移（human 保留共享 checkout）
   evidence:
+    E4_mechanism_verified:
+      description: agent-clone.py 机制量产就绪 — guard 三态验证通过 (agent+integration_root 拒绝 / agent+clone 放行 verified_clone / human 放行); pre-commit hook 已接入; 44 测试全 pass
+      verified_at: 2026-08-18
+      guard_states:
+        agent_on_integration_root: rejected
+        agent_on_verified_clone: allowed
+        human_no_agent_id: allowed
+      tests: 44 passed
     E1_clone_stagnation:
       description: ~/agents/ 23 目录仅 1 个真实 clone（coordination-daemon），phase 仍 writer_clone_gate_pilot；迁移停滞
       real_clones: 1
@@ -5206,7 +5228,8 @@ bets:
   title: 业务能力 bet 补位 — Y1Q3 首个业务型落地（感知/认知选一）
   appetite: 2 weeks
   priority: P1
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-18
   goal: 从治理/文档域转向真实业务能力落地：感知面第二根管子（T2-01 文件夹/日历已 candidate）或自主性阶梯判据（Y1Q4-T3-01）中选一，在 Y1Q3 内完成首个业务型 bet 交付
   non_goals:
   - 同时做多个业务 bet（聚焦单点）
@@ -5219,10 +5242,20 @@ bets:
     E2_y1q4_gap:
       description: Y1Q4 起 0 业务 bet，新增 bet 全为债务治理型
       y1q4_business_bets: 0
+    E3_direction_selected:
+      description: 感知方向已选定并落地 — BET-Y1Q3-T2-01 (感知面第二根管子, 邮件源) 2026-08-16 done; signal-sources 抽象对第二类源成立
+      direction: percept
+      t2_01_done_at: 2026-08-16
   done_when:
   - 选定业务方向（感知 or 认知）并完成 BET claim
   - 业务 bet 交付有真实用户可见产出（非治理工具）
   - 台账 Y1Q3 业务型 done +1
+  progress:
+    done_when_met:
+    - '1: 感知方向已选定 (T2-01 邮件源 done, 2026-08-16)'
+    pending_when:
+    - '2: 业务 bet 真实用户可见产出 (认知/自主性方向待推进或感知面继续深化)'
+    - '3: Y1Q3 业务型 done +1'
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error
