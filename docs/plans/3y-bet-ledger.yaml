@@ -5146,10 +5146,12 @@ bets:
       fixes_merged:
       - '1673: untrack 19 runtime state files (ADR-0404)'
       - '1675: root_dirty 忽略孤儿仓库目录 (c2g/gbrain/kairon)'
+      - '1679: changeset candidate_dirty 忽略孤儿仓库目录'
       clone_lifecycle_verified:
         manifest_generate: ok
         verify: ok
         guard_verified_clone: ok
+        changeset_generated: ok
     E1_clone_stagnation:
       description: ~/agents/ 23 目录仅 1 个真实 clone（coordination-daemon），phase 仍 writer_clone_gate_pilot；迁移停滞
       real_clones: 1
