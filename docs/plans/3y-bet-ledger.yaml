@@ -5191,7 +5191,8 @@ bets:
   title: 文档治理减负 — 0 违规后停止扩面转纯维护
   appetite: 3 days
   priority: P1
-  status: in_progress
+  status: done
+  done_at: 2026-08-18
   started_at: 2026-08-17
   goal: doc-ssot-lint 已达 0 违规（184 文件），停止继续扩面（新增 lint 规则/文档要求），转纯维护模式；doc 类提交量砍半（两周 217 条 doc 提交）
   non_goals:
