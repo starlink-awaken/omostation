@@ -1,7 +1,7 @@
 # ADR-0200: Y1Q4 年度门 code_loc 重基线（净值口径）
 
 ## Status
-Proposed
+Accepted (BET-Y1Q3-T1-04 人类批示, 2026-08-18: 采纳情景 B 调门 1,100K + 净值口径 + 分项目观测)
 
 ## Context
 
