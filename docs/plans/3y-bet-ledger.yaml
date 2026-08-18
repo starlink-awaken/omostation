@@ -3804,7 +3804,7 @@ bets:
   title: 意图模型接 goals / tasks 实时
   appetite: 1 week
   priority: P0
-  status: candidate
+  status: done
   goal: 让 Agent 能回答"现在最重要的是哪件"
   non_goals:
   - Agent 自主修改 goals
@@ -3826,6 +3826,9 @@ bets:
   human_gate: false
   circuit_breaker: 超 2 周 → 改为每日同步
   retro: required
+  done_at: '2026-08-18'
+  done_evidence: 'IntentModel + Prioritizer (src/agora/intent/): whats_most_important(top_n);
+    9 tests PASS'
 - id: BET-Y2Q1-T3-03
   track: T3-COGNI
   window: Y2Q1
