@@ -19,8 +19,7 @@ import json
 import os
 import re
 import subprocess
-import sys
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -294,56 +293,12 @@ def load_branch_claims(claims_dir: Path) -> dict[str, dict[str, Any]]:
 
 
 def _shadow_mirror_claim(branch: str, session: str, *, release: bool = False) -> dict[str, Any]:
-    """D2 文件锁 → 共享 SQLite 双写 (BET-Y1Q1-T1-05A shadow).
+    """D2 shadow mirror — RETIRED 2026-08-19 (BET-Y1Q1-T1-05 D3 减法).
 
-    shadow 语义: 文件锁是权威判定源, 本镜像失败只落 shadow_events,
-    不改变调用方返回值. warning/fail 阶段翻开关时只改处置不改判定.
-    返回 {"token": int} 供 claim 文件持久化 (submit 时 token-check 用).
+    独立 clone 拓扑消除分支竞争, SQLite 双写不再需要.
+    保留函数签名以兼容调用方, 但不再执行任何操作.
     """
-    out: dict[str, Any] = {}
-    try:
-        _here = str(Path(__file__).resolve().parent)
-        if _here not in sys.path:
-            sys.path.insert(0, _here)
-        import coordination_store as cs
-
-        if release:
-            cs.release_resource("branch", branch, owner=session)
-            return out
-        claim = cs.claim_resource("branch", branch, owner=session, ttl_hours=24)
-        if claim is None:
-            # 文件锁判成功但镜像已有 active holder → 观察面记录漂移,
-            # 不翻转文件锁判定 (shadow 阶段文件锁说了算)
-            existing = cs.active_claim("branch", branch)
-            cs.emit_shadow_event(
-                "mirror_drift",
-                "branch",
-                branch,
-                {
-                    "holder": existing.owner if existing else "unknown",
-                    "session": session,
-                },
-            )
-            if existing:
-                out["token"] = existing.token  # 复用既有 claim 的 token, 防误报 stale
-        else:
-            cs.emit_shadow_event("write_ok", "branch", branch, {"token": claim.token})
-            out["token"] = claim.token
-    except Exception as exc:
-        try:
-            _here = str(Path(__file__).resolve().parent)
-            if _here not in sys.path:
-                sys.path.insert(0, _here)
-            import coordination_store as cs
-
-            cs.emit_shadow_event("write_fail", "branch", branch, {"error": str(exc)})
-        except Exception:
-            pass
-        print(
-            f"[swarm-shadow] mirror {'release' if release else 'claim'} failed for {branch}: {exc}",
-            file=sys.stderr,
-        )
-    return out
+    return {}
 
 
 def acquire_branch_lock(
