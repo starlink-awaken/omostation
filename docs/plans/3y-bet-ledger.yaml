@@ -5192,6 +5192,12 @@ bets:
       fixed_mismatch: 3
       fixed_identity_required: 2
       pre_commit_e2e: pass
+    E6_observe_window:
+      description: 观察窗证据 — 独立 clone 0 orphan-recovery tag (blueprint-control-loop / coordination-daemon) vs 共享 checkout 135 个; 迁移后 clone 提交不脱离分支, 无恢复摩擦
+      observed_at: 2026-08-18
+      shared_checkout_orphan_tags: 135
+      clone_orphan_tags: 0
+      conclusion: 独立 clone 消除 orphan-recovery 摩擦, 迁移有效
     E1_clone_stagnation:
       description: ~/agents/ 23 目录仅 1 个真实 clone（coordination-daemon），phase 仍 writer_clone_gate_pilot；迁移停滞
       real_clones: 1
