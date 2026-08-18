@@ -9,6 +9,7 @@ related:
   - docs/scene-cards/document-review.yaml
   - docs/SCENE-CARD-REVIEW-RUNBOOK.md
   - docs/plans/3y-bet-ledger.yaml#BET-Y1Q4-T7-01
+last-reviewed: 2026-08-18
 ---
 
 # Document Review Outcome Tracking Protocol
