@@ -23,6 +23,41 @@ allowed_ignored_dirs:
   - scratch
   - spaces
 
+# Local client/tool surfaces are intentionally ignored, but must remain
+# explicitly named with an owner and lifecycle. A new ignored root must not
+# be hidden by adding a broad wildcard here.
+local_surfaces:
+  .claude:
+    owner: workspace-tooling
+    class: client-metadata
+    lifecycle: local
+    reason: Claude session and client-local metadata
+  .crush:
+    owner: workspace-tooling
+    class: client-cache
+    lifecycle: disposable
+    reason: Crush client cache and local state
+  .idea:
+    owner: workspace-tooling
+    class: client-metadata
+    lifecycle: local
+    reason: IntelliJ project metadata
+  .omc:
+    owner: governance-team
+    class: runtime-state
+    lifecycle: disposable
+    reason: OMC session/runtime state excluded from the root repository
+  .qoder:
+    owner: workspace-tooling
+    class: client-metadata
+    lifecycle: local
+    reason: Qoder client metadata
+  ecos:
+    owner: ecos-team
+    class: compatibility-checkout
+    lifecycle: transient
+    reason: Legacy local checkout surface; canonical code lives in projects/ecos
+
 rules:
   untracked_non_ignored: fail
   ignored_not_registered: fail

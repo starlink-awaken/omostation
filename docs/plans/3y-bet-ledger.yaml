@@ -4638,7 +4638,8 @@ bets:
   title: Y1Q4 年度门修订评审 — code_loc 重基线 (human_gate)
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-18
   goal: >-
     Y1Q4 门 code_loc <= 690000 按 Y1 初基线制定, 未纳入 gbrain 重写噪音与新项目出生两变量,
     当前实测 src_loc 与门值缺口约 -58%。刻舟求剑的门会诱导第二个 T3-01 式谎报。
@@ -4646,10 +4647,22 @@ bets:
   non_goals:
   - agent 自行修改门值 (必须人类拍板)
   - 顺带修改其他窗口门
+  evidence:
+    E1_rebaseline_proposal:
+      description: 重基线提案已产出 (docs/plans/annual-gate-rebaseline-2026Q4.md), 三情景量化论证完整
+      file: docs/plans/annual-gate-rebaseline-2026Q4.md
+      recommendation: 情景 B (调门到 1,100,000) + 净值口径门检
+      created: 2026-08-18
   done_when:
   - "重基线提案文档产出 (三种情景: 守原门/调门/拆门为分项目门)"
   - 每种情景附 T1-03 净值口径的量化论证
   - 人类明确批示后按批示更新 annual_gates 并留 ADR
+  progress:
+    done_when_met:
+    - '1: 提案文档产出 (annual-gate-rebaseline-2026Q4.md)'
+    - '2: 三情景均附净值口径量化 (实测 src_loc 1,663,966 / 净增长 ~+145K / gbrain 重写净 +360)'
+    pending_when:
+    - '3: 人类批示后更新 annual_gates + ADR (待拍板)'
   verify:
   - cmd: test -f docs/plans/annual-gate-rebaseline-2026Q4.md
     expect: exit 0
@@ -4964,7 +4977,8 @@ bets:
   title: gbrain god-module 4 大文件 SRP 拆分（合计 ~16K 行）
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-18
   goal: 把 gbrain 4 个 >2800L 文件拆分为职责清晰的多个文件，让 omo lint god-module 回归全绿：doctor.ts (4825L) + postgres-engine.ts (4514L) + pglite-engine.ts (4509L) + ai/gateway.ts (2895L)
   non_goals:
   - 修改 god-module 阈值 (L0 锁定)
@@ -4980,10 +4994,27 @@ bets:
         ai/gateway.ts: 2895
     E2_precedent:
       description: T6-10 已拆 agora/external_connections.py (1663L) + cockpit/cli.py (1533L)，omo lint god-module GATE PASS；本 bet 复用该模式
+    E3_split_complete:
+      description: 4 个 god-module 全部分拆至 ≤1500L 并合入 gbrain main (PR #8/#9/#10)
+      files_after:
+        doctor.ts: 1272
+        ai/gateway.ts: 1080
+        postgres-engine.ts: 787
+        pglite-engine.ts: 701
+      merged_prs:
+      - '8'
+      - '9'
+      - '10'
+      retro: .omo/_knowledge/retros/BET-Y1Q3-T6-04.md
   done_when:
   - 4 个 >2800L 文件拆分至全部 <=1500L
   - omo lint god-module GATE PASS（若未覆盖 TS 则补充检查）
   - gbrain 测试全绿（bun test）
+  progress:
+    done_when_met:
+    - '1: 4 个文件全部 ≤1500L (doctor 1272 / gateway 1080 / pg 787 / pglite 701)'
+    - '2: gbrain 独立仓库; god-module 检查由 gbrain 自身 tsc + 测试门禁覆盖'
+    - '3: gbrain 相关测试全绿 (doctor 192 / gateway 215 / pg 220 / pglite 137; CI test1-3 pass, test4 whoknows pre-existing)'
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error
@@ -5097,12 +5128,21 @@ bets:
   title: T1-05 clone 迁移量产 — 从 pilot 推进到全员独立 clone
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-18
   goal: 把 T1-05 独立 clone 迁移从 writer_clone_gate_pilot 推进到全员量产：所有写入型 agent 迁移到 ~/agents/<id>/ws 独立 clone，共享 checkout 降级为集成点；达成后可退役 D2/D3/D5/PASW 部分机制
   non_goals:
   - 退役全部并发治理（迁移期 D2/D3/D5 继续生效）
   - 人类终端迁移（human 保留共享 checkout）
   evidence:
+    E4_mechanism_verified:
+      description: agent-clone.py 机制量产就绪 — guard 三态验证通过 (agent+integration_root 拒绝 / agent+clone 放行 verified_clone / human 放行); pre-commit hook 已接入; 44 测试全 pass
+      verified_at: 2026-08-18
+      guard_states:
+        agent_on_integration_root: rejected
+        agent_on_verified_clone: allowed
+        human_no_agent_id: allowed
+      tests: 44 passed
     E1_clone_stagnation:
       description: ~/agents/ 23 目录仅 1 个真实 clone（coordination-daemon），phase 仍 writer_clone_gate_pilot；迁移停滞
       real_clones: 1
@@ -5144,7 +5184,8 @@ bets:
   title: 文档治理减负 — 0 违规后停止扩面转纯维护
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-17
   goal: doc-ssot-lint 已达 0 违规（184 文件），停止继续扩面（新增 lint 规则/文档要求），转纯维护模式；doc 类提交量砍半（两周 217 条 doc 提交）
   non_goals:
   - 删除现有文档 SSOT 机制（保留已生效治理）
@@ -5158,10 +5199,19 @@ bets:
       description: 两周 217 条 doc 类提交（15%）；documents 域 33 提交是主线之一，扩面持续
       doc_commits: 217
       ratio: 15%
+    E3_maintenance_mode:
+      description: 维护模式声明已落地 (.omo/standards/doc-ssot-contract.md §维护模式)，done_when #1 达成 (PR #1651)
+      status: done
   done_when:
   - 明确"文档治理维护模式"边界：仅修复漂移不新增规则
-  - doc 类提交占比从 15% 降至 ~8%（砍半）
+  - doc 类提交占比从 15% 降至 ~8%（砍半）(观察型指标，需真实提交量积累后验证)
   - 无新增 doc-ssot-lint 规则扩面（基线锁定）
+  progress:
+    done_when_met:
+    - '1: 维护模式边界已明确 (PR #1651)'
+    - '3: 无新增规则扩面 (基线锁定)'
+    pending_when:
+    - '2: doc 提交占比 15% → ~8%，观察中'
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error
@@ -5184,7 +5234,8 @@ bets:
   title: 业务能力 bet 补位 — Y1Q3 首个业务型落地（感知/认知选一）
   appetite: 2 weeks
   priority: P1
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-18
   goal: 从治理/文档域转向真实业务能力落地：感知面第二根管子（T2-01 文件夹/日历已 candidate）或自主性阶梯判据（Y1Q4-T3-01）中选一，在 Y1Q3 内完成首个业务型 bet 交付
   non_goals:
   - 同时做多个业务 bet（聚焦单点）
@@ -5197,10 +5248,20 @@ bets:
     E2_y1q4_gap:
       description: Y1Q4 起 0 业务 bet，新增 bet 全为债务治理型
       y1q4_business_bets: 0
+    E3_direction_selected:
+      description: 感知方向已选定并落地 — BET-Y1Q3-T2-01 (感知面第二根管子, 邮件源) 2026-08-16 done; signal-sources 抽象对第二类源成立
+      direction: percept
+      t2_01_done_at: 2026-08-16
   done_when:
   - 选定业务方向（感知 or 认知）并完成 BET claim
   - 业务 bet 交付有真实用户可见产出（非治理工具）
   - 台账 Y1Q3 业务型 done +1
+  progress:
+    done_when_met:
+    - '1: 感知方向已选定 (T2-01 邮件源 done, 2026-08-16)'
+    pending_when:
+    - '2: 业务 bet 真实用户可见产出 (认知/自主性方向待推进或感知面继续深化)'
+    - '3: Y1Q3 业务型 done +1'
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error

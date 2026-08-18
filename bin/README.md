@@ -182,6 +182,7 @@ python3 bin/tool-registry-audit.py --scope both --parallel-manifest ... --json |
 SSOT: `docs/operations/bin-scripts-convergence-manifest.json` (entries: name/bin/scripts/status/action/owner/note/evidence).
 
 根目录治理策略 SSOT: `docs/operations/root-directory-governance-policy.yaml`。
+根目录分类契约: `docs/operations/root-directory-governance-contract.md`。扫描器会识别有效 linked worktree 为 `active-worktree`，本机客户端目录必须通过策略 `local_surfaces` 显式登记；未知 ignored/untracked 目录仍然阻断。
 两项审计已接入 `gac-local-gate` 与 `ci-surfaces.yaml`，不再依赖人工记忆或单次报告。
 
 > **并行 gap 语义** (2026-08-16 固化): `missing_manifest_entry` = bin/scripts 同名镜像未登记; 内部模块 (`__init__.py` / `_lib.py` / `_*.py`) 由 `_is_internal_module()` 排除, 非命令不计 gap. 5 个多文件条目 (control_experiment / git_health_hook / physical_recovery / submodule_reachability_gate / sync_submodules_push) 是 root-wrapper→ssot 合法模式, 登记 bin 取 ssot 主路径.
