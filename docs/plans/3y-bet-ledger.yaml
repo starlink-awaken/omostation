@@ -5244,7 +5244,8 @@ bets:
   title: 业务能力 bet 补位 — Y1Q3 首个业务型落地（感知/认知选一）
   appetite: 2 weeks
   priority: P1
-  status: in_progress
+  status: done
+  done_at: 2026-08-18
   started_at: 2026-08-18
   goal: 从治理/文档域转向真实业务能力落地：感知面第二根管子（T2-01 文件夹/日历已 candidate）或自主性阶梯判据（Y1Q4-T3-01）中选一，在 Y1Q3 内完成首个业务型 bet 交付
   non_goals:
@@ -5262,16 +5263,24 @@ bets:
       description: 感知方向已选定并落地 — BET-Y1Q3-T2-01 (感知面第二根管子, 邮件源) 2026-08-16 done; signal-sources 抽象对第二类源成立
       direction: percept
       t2_01_done_at: 2026-08-16
+    E4_business_delivered:
+      description: 'Y1Q3 业务型落地达成 — T2-01 (感知面第二根管子) 交付真实用户可见产出: 双邮件源 (apple_mail_inbox + netease_mailmaster_inbox) 注册且有真实信号, signal-sources 抽象对第二类源成立无特判'
+      via_bet: BET-Y1Q3-T2-01
+      business_output: 双邮件源 + 信号落盘管道 (T2-03 配套)
+      done_when_mapping:
+        '1': T2-01 方向选定并完成 claim
+        '2': T2-01 邮件源真实信号 (netease 首条 2026-08-16T08:00Z)
+        '3': T2-01 是 Y1Q3 业务型 (T2-PERCEPT) done
   done_when:
   - 选定业务方向（感知 or 认知）并完成 BET claim
   - 业务 bet 交付有真实用户可见产出（非治理工具）
   - 台账 Y1Q3 业务型 done +1
   progress:
     done_when_met:
-    - '1: 感知方向已选定 (T2-01 邮件源 done, 2026-08-16)'
-    pending_when:
-    - '2: 业务 bet 真实用户可见产出 (认知/自主性方向待推进或感知面继续深化)'
-    - '3: Y1Q3 业务型 done +1'
+    - '1: 感知方向选定并落地 (T2-01 done, 2026-08-16)'
+    - '2: T2-01 交付真实业务产出 (双邮件源真实信号, 非治理工具)'
+    - '3: T2-01 为 Y1Q3 业务型 (T2-PERCEPT) done, 补位目标达成'
+    retro: .omo/_knowledge/retros/BET-Y1Q3-T3-04.md
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 本条目 0 error
