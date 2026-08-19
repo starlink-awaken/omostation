@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 112
+  total_bets: 113
   windows:
   - Y1Q1
   - Y1Q2
@@ -5374,6 +5374,85 @@ bets:
   risk_level: L2
   human_gate: false
   circuit_breaker: 文档漂移回升 > 5 违规 → 恢复扩面评估
+  retro: required
+- id: BET-Y1Q3-T6-07
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: 根目录与项目废弃面清理
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 清理根目录未跟踪/临时面、一次性脚本、已计划退役的项目原型，降低表面积与门禁噪音；恢复 root-directory-governance-scan 对 untracked_non_ignored 的绿线
+  non_goals:
+  - 删除仍在活跃维护的项目或子模块
+  - 修改现有治理机制（仅清理废弃文件）
+  - 扩大清理范围到业务代码
+  evidence:
+    E1_deleted_surfaces:
+      description: 已删除未跟踪/临时根目录与一次性脚本
+      surfaces:
+      - archive-1rBrRf/
+      - scripts-fix-ci/
+      - .check_main_impl.sh
+      - .close_and_ci.sh
+      - .diag_1207.sh
+      - .pr1207.sh
+      - .pre_close.sh
+      - .rebuild1207.sh
+      - .rebuild1207b.sh
+      - .rebuild1207c.sh
+      - .retest_main.sh
+      - scratch_dashboard.patch
+      - scratch_dashboard2.patch
+      - scratch_dashboard3.patch
+    E2_retired_projects:
+      description: 已按计划退役 projects/domain-kems/ 等 legacy 原型
+      references:
+      - docs/plans/2026-08-07-workspace-legacy-strategy.md
+      - docs/reports/2026-08-11-workspace-kems-convergence-audit.md
+    E3_governance_scan:
+      description: root-directory-governance-scan.py --check 通过
+  done_when:
+  - 删除 archive-1rBrRf/、scripts-fix-ci/ 等未跟踪临时面
+  - 删除根级 9 个一次性脚本与 3 个 scratch patch
+  - 删除 projects/@驾驶舱/、.scratch-archive/、Workspace/、domain-kems/
+  - root-directory-governance-scan.py --check 通过
+  - gac-local-gate 通过
+  progress:
+    done_when_met: []
+    pending_when: []
+  verify:
+  - cmd: python3 bin/ssot/root-directory-governance-scan.py --check --json
+    expect: 无未登记根目录违规
+  - cmd: make gac-local-gate
+    expect: 全绿 PASS
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - archive-1rBrRf/
+  - scripts-fix-ci/
+  - projects/@驾驶舱/
+  - projects/.scratch-archive/
+  - projects/Workspace/
+  - projects/domain-kems/
+  - .check_main_impl.sh
+  - .close_and_ci.sh
+  - .diag_1207.sh
+  - .pr1207.sh
+  - .pre_close.sh
+  - .rebuild1207.sh
+  - .rebuild1207b.sh
+  - .rebuild1207c.sh
+  - .retest_main.sh
+  - scratch_dashboard.patch
+  - scratch_dashboard2.patch
+  - scratch_dashboard3.patch
+  pasw_required: true
+  depends_on: []
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 发现被清理面有活跃消费者 → 停止并回滚
   retro: required
 - id: BET-Y1Q3-T3-04
   track: T3-COGNI
