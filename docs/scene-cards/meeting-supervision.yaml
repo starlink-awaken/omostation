@@ -1,8 +1,10 @@
 title: Meeting Supervision Scene Card (会议到任务派发与督办)
-status: shadow
+status: active
 type: scene-card
 owner: product-architecture
-last-reviewed: 2026-08-07
+last-reviewed: 2026-08-19
+integrated_via: signal_router (W1-D5)
+trigger: signal_router/meeting-* → meeting-supervision → knowledge-ingest
 related:
 - ./engineering-delivery-dogfood.yaml
 - ../STRATEGY-3YEAR-PANORAMA.md

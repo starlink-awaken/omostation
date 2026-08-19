@@ -1,8 +1,10 @@
 title: Research Pipeline Scene Card (调研管线)
-status: shadow
+status: active
 type: scene-card
 owner: product-architecture
-last-reviewed: 2026-08-07
+last-reviewed: 2026-08-19
+integrated_via: signal_router (W1-D6)
+trigger: signal_router/research-* → research-pipeline → knowledge-ingest
 related:
 - ./knowledge-curation.yaml
 - ../../.omo/_truth/scenarios/research-pipeline-legacy.yaml
