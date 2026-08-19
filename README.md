@@ -91,6 +91,20 @@ cd projects/knowledge/gbrain && bun test
 | [`docs/PANORAMA.md`](docs/PANORAMA.md) | BOS routing and system panorama |
 | [`docs/project-registry.yaml`](docs/project-registry.yaml) | Project metadata SSOT |
 
+### Project Status (2026-08-19)
+
+| Window | Progress | State |
+|--------|----------|-------|
+| **Y1Q1** | 23/23 | ✅ Complete |
+| **Y1Q2** | 37/38 | ⏸ T1-19 blocked (Codex ACP) |
+| **Y1Q3** | 27/27 | ✅ Complete |
+| **Y1Q4** | 6/6 | ✅ Complete |
+| **Y2** | 12/12 | ✅ Complete |
+| **Y3** | 5/8 | 3 candidates pending |
+| **Total** | **110/114** | **96.5% done** |
+
+> 国转中心 / 卫健委相关工作已冻结 (2026-08-19: 用户不再借调国转中心)。
+
 ### License
 
 MIT © [starlink-awaken](https://github.com/starlink-awaken)
@@ -160,6 +174,20 @@ cd projects/knowledge/gbrain && bun test
 | GaC 本地门禁 | `make gac-local-gate` | 全量治理门禁 (validate, drift, lint, AGCP, MOF, SSOT) |
 | Agent 工作流 | `bin/agent-workflow.py` | 工作流生命周期: bootstrap, start, claim, verify, closeout, compliance |
 | API 版本管理 | `/api/version`, `/api/version/history` | Cockpit API 版本管理，FastAPI 中间件 |
+
+### 项目状态 (2026-08-19)
+
+| 窗口 | 进度 | 状态 |
+|------|------|------|
+| **Y1Q1** | 23/23 | ✅ 完成 |
+| **Y1Q2** | 37/38 | ⏸ T1-19 blocked |
+| **Y1Q3** | 27/27 | ✅ 完成 |
+| **Y1Q4** | 6/6 | ✅ 完成 |
+| **Y2** | 12/12 | ✅ 完成 |
+| **Y3** | 4/8 | 2 blocked (国转冻结) + 2 candidates |
+| **总计** | **110/114** | **96.5% done** |
+
+> 国转中心 / 卫健委相关工作已冻结 (2026-08-19: 用户不再借调国转中心)。
 
 ### 文档导航
 
