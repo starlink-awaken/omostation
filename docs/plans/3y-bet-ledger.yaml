@@ -5381,7 +5381,8 @@ bets:
   title: 根目录与项目废弃面清理
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-19
   goal: 清理根目录未跟踪/临时面、一次性脚本、已计划退役的项目原型，降低表面积与门禁噪音；恢复 root-directory-governance-scan 对 untracked_non_ignored 的绿线
   non_goals:
   - 删除仍在活跃维护的项目或子模块
