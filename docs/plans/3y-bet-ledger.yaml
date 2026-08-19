@@ -4173,7 +4173,8 @@ bets:
   title: 中试 / 政策申报升 assisted
   appetite: 4 weeks
   priority: P1
-  status: candidate
+  status: blocked
+  blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 政策申报相关工作冻结'
   goal: 把最有业务价值但流程最长的场景推进到受审执行
   non_goals:
   - 自动提交申报材料
@@ -4264,7 +4265,8 @@ bets:
   title: 公文场景 routine (限格式类)
   appetite: 3 weeks
   priority: P0
-  status: candidate
+  status: blocked
+  blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 公文场景相关工作冻结'
   goal: 三年内第一个进入全自动的动作类型 — 且只限格式类
   non_goals:
   - 内容生成自动化
