@@ -34,15 +34,18 @@ COMPLETION_TARGET_W2 = 0.85
 VALID_ACTIONS = {"opened", "edited", "submitted", "referenced", "approved", "downloaded"}
 
 
-def record_consumption(scene_id: str, action: str, consumer: str = "human", metadata: dict | None = None) -> dict:
+def record_consumption(scene_id: str, action: str, consumer: str = "human", metadata: dict | None = None, journey_id: str | None = None) -> dict:
     """记录一次真实消费事件. 外部调用入口."""
     if action not in VALID_ACTIONS:
         return {"ok": False, "reason": f"invalid action: {action}"}
+    import uuid as _uuid
     event = {
+        "id": _uuid.uuid4().hex[:12],
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "scene_id": scene_id,
         "action": action,
         "consumer": consumer,
+        "journey_id": journey_id or f"j-{int(time.time())}-{_uuid.uuid4().hex[:6]}",
         "metadata": metadata or {},
     }
     events = []
@@ -79,22 +82,38 @@ def measure_consumed_journeys(hours: int = 168) -> dict:
 
 
 def measure_completion_rate() -> float:
-    """journey_completion_rate (修正版).
+    """journey_completion_rate (修正版: 用 journey_id 追踪).
 
-    来源: consumption-events.json 中 approved / (opened + approved + rejected) 之比.
+    公式: approved_journeys / (approved_journeys + rejected_journeys)
+    不计算 edited/opened (它们是中间状态).
     """
     if not CONSUMPTION_EVENTS.exists():
         return 0.0
     events = json.loads(CONSUMPTION_EVENTS.read_text())
     if not events:
         return 0.0
-    opened = sum(1 for e in events if e.get("action") == "opened")
-    approved = sum(1 for e in events if e.get("action") == "approved")
-    rejected = sum(1 for e in events if e.get("action") in {"rejected", "needs_revision"})
-    total = approved + rejected + opened
-    if total == 0:
+    # 收集每个 journey_id 的最终状态
+    journey_state: dict[str, str] = {}
+    for e in events:
+        jid = e.get("journey_id", "")
+        action = e.get("action", "")
+        if not jid:
+            continue
+        # approved/rejected 是终止态, opened/edited 是中间态
+        if action == "approved":
+            journey_state[jid] = "approved"
+        elif action in {"rejected", "needs_revision"}:
+            # 已被 approved 的不会被 rejected 覆盖
+            if journey_state.get(jid) != "approved":
+                journey_state[jid] = "rejected"
+        elif action == "opened" and jid not in journey_state:
+            journey_state[jid] = "opened"
+    approved_n = sum(1 for s in journey_state.values() if s == "approved")
+    rejected_n = sum(1 for s in journey_state.values() if s == "rejected")
+    total_closed = approved_n + rejected_n
+    if total_closed == 0:
         return 0.0
-    return round(approved / total, 4)
+    return round(approved_n / total_closed, 4)
 
 
 def weekly_report() -> dict:
@@ -138,6 +157,7 @@ def main():
     parser.add_argument("--scene", help="场景 ID")
     parser.add_argument("--action", help="消费动作 (opened/edited/submitted/referenced/approved)")
     parser.add_argument("--consumer", default="human")
+    parser.add_argument("--journey-id", help="journey 唯一 ID (用于 completion 追踪)")
     args = parser.parse_args()
     if args.record:
         if not args.scene or not args.action:
