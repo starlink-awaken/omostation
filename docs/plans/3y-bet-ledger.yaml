@@ -5236,8 +5236,13 @@ bets:
   title: T1-05 clone 迁移量产 — 从 pilot 推进到全员独立 clone
   appetite: 2 weeks
   priority: P0
-  status: in_progress
+  status: done
+  done_at: 2026-08-19
   started_at: 2026-08-18
+  done_note: >-
+    克隆迁移量产完成: 13 verified_clone, guard 100% 放行, 44 tests pass,
+    0 orphan-recovery (vs 共享 checkout 135). D2/D3/D5 退役评估待启动。
+    human_gate 批准 (用户 2026-08-19)。
   goal: 把 T1-05 独立 clone 迁移从 writer_clone_gate_pilot 推进到全员量产：所有写入型 agent 迁移到 ~/agents/<id>/ws
     独立 clone，共享 checkout 降级为集成点；达成后可退役 D2/D3/D5/PASW 部分机制
   non_goals:
