@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-19
+---
 # BET 执行路线图 2026H2 — 剩余 23 项推进计划
 
 > **维护规则**
