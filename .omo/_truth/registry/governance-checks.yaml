@@ -173,7 +173,9 @@ gac:
   subtraction_quota:
     rule_baseline: 136    # 规则数基线 (增 1 必须删 1, 超基线 gac-validate fail)
     adr_baseline: 361     # ADR 基线 (新增 ADR 须归档一份)
-    script_baseline: 410  # bin/ 活跃脚本基线 (2026-08-17, BET-Y1Q3-T6-05; 新增脚本须同时归档/删除)
+    script_baseline: 413  # bin/ 活跃脚本基线 (2026-08-19 对齐真实数; 410→413: T1-07 clone 量产
+                          # 合法新增 agent-clone 集成测试 3 个; 先行归档真死者 3 个
+                          # check-hook-sync/pre-bump-check/worktree-safe-add → _archive/scripts-20260819)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
