@@ -19,9 +19,10 @@ sources:
     backoff: exponential
     on_failure: emit_unreachable
   health: healthy
-  last_signal_at: '2026-08-07T23:45:22Z'
+  last_signal_at: '2026-08-19T13:08:52Z'
   registered_at: '2026-08-07T00:00:00Z'
   bos_uri: bos://perception/apple_mail/inbox
+  verified_mbox_count: 27
 - id: netease_mailmaster_inbox
   description: 网易邮箱大师收件箱 — 工作邮件信号入口
   scene_binding: document-review
