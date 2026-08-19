@@ -21,12 +21,12 @@ lifecycle_gate:
     min_samples: 30
     min_calibration: 0.60
     rollback_evidence: required
-  measured_2026_08_18:
+  measured_2026_08_19:
     samples: 0
     calibration: null
     rollback_tested: true
-  status: blocked_until_threshold_met
-  rationale: circuit_breaker 未达标 → 保持 shadow, 不得强行升 L2
+  status: shadow_active_collecting
+  rationale: P1 Shadow 模式启动 2026-08-19, 目标 30 samples + calibration≥0.60
 approval:
   confirmed_by: xiamingxing (business-governance approver, 操作员全授权 2026-08-06)
   confirmed_at: 2026-08-06 12:00:00+00:00
