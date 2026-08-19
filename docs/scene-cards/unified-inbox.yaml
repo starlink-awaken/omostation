@@ -1,8 +1,10 @@
 title: Unified Inbox Scene Card (统一工作收件箱)
-status: shadow
+status: active
 type: scene-card
 owner: product-architecture
-last-reviewed: 2026-08-07
+last-reviewed: 2026-08-19
+integrated_via: signal_router (W1-D2)
+trigger: 4 signal_sources → signal_router → downstream scenes
 related:
 - ./document-review.yaml
 - ../STRATEGY-3YEAR-PANORAMA.md

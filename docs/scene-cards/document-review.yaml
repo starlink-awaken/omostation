@@ -1,8 +1,10 @@
 title: Document Review Scene Card (公文起草与审查)
-status: shadow
+status: active
 type: scene-card
 owner: product-architecture
-last-reviewed: 2026-08-04
+last-reviewed: 2026-08-19
+integrated_via: signal_router (W1-D3)
+trigger: signal_router/review-* → document-review → knowledge-ingest
 related:
 - ./engineering-delivery-dogfood.yaml
 - ../SCENE-CARD-REVIEW-RUNBOOK.md
