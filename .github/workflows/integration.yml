@@ -28,5 +28,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Run tracked-project integration tests
         # P41-W1 fix: projects/knowledge/kairon is .gitignore'd. Run integration tests for projects tracked in monorepo.
+        # Workspace-only omo tests (depend on monorepo layout) run here; they are ignored in omo standalone CI.
         run: |
-          cd projects/omo && uv sync && uv run pytest tests/integration/ -q --ignore=tests/integration/test_runtime_e2e.py
+          cd projects/omo && uv sync && uv run pytest tests/integration/ \
+            tests/test_sr06_gap_fixes.py \
+            tests/unit/test_omo_project_inspector.py \
+            tests/unit/test_workflow_cli_bet_gate.py \
+            -q --ignore=tests/integration/test_runtime_e2e.py
