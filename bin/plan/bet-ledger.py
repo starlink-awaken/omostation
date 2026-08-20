@@ -76,6 +76,18 @@ Y1_TARGET = {
     "adr_total": "只分层不裁剪",  # active/historical 分层即可降低检索面，无需删除
 }
 
+SPEC_BINDING_ENFORCED_STATUSES = frozenset({"candidate", "pending", "in_progress", "review"})
+SPEC_BINDING_GRANDFATHERED_STATUSES = frozenset({"done", "blocked", "failed"})
+SPEC_BINDING_KEYS = frozenset({"spec_ref", "spec_version", "content_digest", "decision_ref"})
+SPEC_REF_PREFIX = "repo://"
+SPEC_ROOT = PurePosixPath("docs/superpowers/specs")
+SEMVER_RE = re.compile(
+    r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
+    r"(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
+)
+SHA256_REF_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+
 
 # ── 载入 ──────────────────────────────────────────────────────
 def load() -> dict:
@@ -632,28 +644,96 @@ def cmd_gate(data: dict, args) -> int:
 
 
 def _is_spec_binding_required(bet: dict) -> bool:
-    """判断 L2/L3 bet 是否需要 spec 绑定（2026-09-01 起强制）。"""
-    from datetime import datetime
+    """Require one accepted binding for every active/startable BET.
 
-    started_at = bet.get("started_at")
-    if not started_at:
-        return False
-    try:
-        start_date = datetime.fromisoformat(started_at).date()
-        cutoff = datetime(2026, 9, 1).date()
-        if start_date < cutoff:
-            return False
-    except (ValueError, TypeError):
-        return False
-    risk_level = bet.get("risk_level", "L1")
-    status = bet.get("status", "")
-    # L2/L3 + in_progress/review/done → 必须有 spec 绑定
-    return risk_level in ("L2", "L3") and status in ("in_progress", "review", "done")
+    The boundary is lifecycle state, not a future date or a risk enum.  Bets
+    already terminal when this rule landed remain readable through the
+    explicit grandfather predicate below; starting a new run always performs
+    canonical validation independently of this lint compatibility boundary.
+    """
+    return str(bet.get("status") or "") in SPEC_BINDING_ENFORCED_STATUSES
+
+
+def _is_historical_spec_grandfathered(bet: dict) -> bool:
+    """Return whether a terminal historical BET is exempt from retrofitting."""
+    return str(bet.get("status") or "") in SPEC_BINDING_GRANDFATHERED_STATUSES
 
 
 def _file_sha256(path: Path) -> str:
     """计算文件的 SHA256 哈希。"""
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def validate_accepted_specification(
+    bet: dict,
+    *,
+    workspace: Path = WS,
+) -> tuple[dict[str, str] | None, list[str]]:
+    """Validate the one canonical SpecificationBinding used by WorkPacket v2."""
+    errors: list[str] = []
+    bet_id = str(bet.get("id") or "")
+    specs = bet.get("accepted_specifications")
+    if not isinstance(specs, list) or len(specs) != 1:
+        return None, ["SPEC_BINDING_REQUIRED: accepted_specifications must contain exactly one binding"]
+    binding = specs[0]
+    if not isinstance(binding, dict):
+        return None, ["SPEC_BINDING_SHAPE: binding must be a mapping"]
+
+    keys = set(binding)
+    if keys != SPEC_BINDING_KEYS:
+        missing = sorted(SPEC_BINDING_KEYS - keys)
+        extra = sorted(keys - SPEC_BINDING_KEYS)
+        errors.append(f"SPEC_BINDING_SHAPE: exact keys required; missing={missing} extra={extra}")
+
+    spec_ref = binding.get("spec_ref")
+    spec_version = binding.get("spec_version")
+    content_digest = binding.get("content_digest")
+    decision_ref = binding.get("decision_ref")
+
+    relative_ref = ""
+    if not isinstance(spec_ref, str) or not spec_ref.startswith(SPEC_REF_PREFIX):
+        errors.append("SPEC_REF_INVALID: spec_ref must use repo://docs/superpowers/specs/<file>")
+    else:
+        relative_ref = spec_ref.removeprefix(SPEC_REF_PREFIX)
+        relative_path = PurePosixPath(relative_ref)
+        if (
+            not relative_ref
+            or relative_path.is_absolute()
+            or ".." in relative_path.parts
+            or relative_path == SPEC_ROOT
+            or not relative_path.is_relative_to(SPEC_ROOT)
+            or relative_path.as_posix() != relative_ref
+        ):
+            errors.append("SPEC_REF_INVALID: spec_ref must be a canonical repo:// path under docs/superpowers/specs/")
+
+    if not isinstance(spec_version, str) or SEMVER_RE.fullmatch(spec_version) is None:
+        errors.append("SPEC_VERSION_INVALID: spec_version must be semver")
+
+    if not isinstance(content_digest, str) or SHA256_REF_RE.fullmatch(content_digest) is None:
+        errors.append("SPEC_DIGEST_INVALID: content_digest must match sha256:<64 lowercase hex>")
+
+    expected_decision = f"decision://accepted/{bet_id}"
+    if decision_ref != expected_decision:
+        errors.append(f"SPEC_DECISION_NOT_ACCEPTED: decision_ref must equal {expected_decision}")
+
+    if relative_ref and not any(error.startswith("SPEC_REF_INVALID") for error in errors):
+        root = workspace.resolve()
+        candidate = (root / relative_ref).resolve()
+        if not candidate.is_relative_to(root):
+            errors.append("SPEC_REF_INVALID: resolved spec path escapes workspace")
+        elif not candidate.is_file():
+            errors.append(f"SPEC_FILE_MISSING: {relative_ref}")
+        elif isinstance(content_digest, str) and SHA256_REF_RE.fullmatch(content_digest):
+            actual_digest = f"sha256:{_file_sha256(candidate)}"
+            if actual_digest != content_digest:
+                errors.append(
+                    "SPEC_DIGEST_MISMATCH: "
+                    f"declared={content_digest[:23]}... actual={actual_digest[:23]}..."
+                )
+
+    if errors:
+        return None, errors
+    return {key: str(binding[key]) for key in sorted(SPEC_BINDING_KEYS)}, []
 
 
 def cmd_lint(data: dict, args) -> int:
@@ -698,32 +778,11 @@ def cmd_lint(data: dict, args) -> int:
                         f"{b['id']}.{key}[{i}]: 应为字符串却是 {type(item).__name__} "
                         f'— 多半是未加引号的冒号，请写成 "...: ..."'
                     )
-        # PR-A: L2/L3 spec 绑定强制检查（2026-09-01 起强制）
-        spec_check_required = _is_spec_binding_required(b)
-        if spec_check_required:
-            specs = b.get("accepted_specifications") or []
-            if not specs:
-                errs.append(f"{b['id']}.accepted_specifications: L2/L3 bet 必须绑定 spec（2026-09-01 起强制）")
-            else:
-                for idx, spec in enumerate(specs):
-                    spec_ref = spec.get("spec_ref", "")
-                    content_digest = spec.get("content_digest", "")
-                    if not spec_ref:
-                        errs.append(f"{b['id']}.accepted_specifications[{idx}]: 缺少 spec_ref")
-                        continue
-                    if not content_digest:
-                        errs.append(f"{b['id']}.accepted_specifications[{idx}]: 缺少 content_digest")
-                        continue
-                    spec_path = WS / "docs" / "superpowers" / "specs" / spec_ref
-                    if not spec_path.exists():
-                        errs.append(f"{b['id']}.accepted_specifications[{idx}]: spec 文件不存在 {spec_ref}")
-                        continue
-                    actual_digest = _file_sha256(spec_path)
-                    if actual_digest != content_digest:
-                        errs.append(
-                            f"{b['id']}.accepted_specifications[{idx}]: digest 不匹配 "
-                            f"(声明: {content_digest[:16]}... 实际: {actual_digest[:16]}...)"
-                        )
+        # Canonical binding is mandatory for every active/startable BET.  Only
+        # terminal historical records are grandfathered; no date/risk bypass.
+        if _is_spec_binding_required(b):
+            _binding, binding_errors = validate_accepted_specification(b)
+            errs.extend(f"{b['id']}.accepted_specifications: {error}" for error in binding_errors)
     if errs:
         for e in errs:
             print(f"ERROR {e}")
