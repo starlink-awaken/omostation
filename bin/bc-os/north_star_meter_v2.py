@@ -42,7 +42,16 @@ _CANONICAL_REPO_SOURCE = "repo://runtime/omo/event-ledger.sqlite3"
 _LOCAL_SOURCE_RE = re.compile(r"^local-ledger:sha256:[0-9a-f]{64}$")
 _TIP_HASH_RE = re.compile(r"^[0-9a-f]{64}$")
 _WEEK_KEY_RE = re.compile(r"^[0-9]{4}-W(?:0[1-9]|[1-4][0-9]|5[0-3])$")
+_ONLY_QUALIFYING_RE = re.compile(r"^only [0-9]+ qualifying week\(s\), need 4 consecutive$")
+_NON_CONSECUTIVE_RE = re.compile(
+    r"^non-consecutive gap between [0-9]{4}-W(?:0[1-9]|[1-4][0-9]|5[0-3]) "
+    r"and [0-9]{4}-W(?:0[1-9]|[1-4][0-9]|5[0-3])$"
+)
+_BELOW_THRESHOLD_RE = re.compile(r"^[0-9]+ week\(s\) below threshold \(need >=3 qualifying episodes each\)$")
 _VERDICTS = ("accept", "edit", "reject", "defer", "ignore")
+_NO_QUALIFYING_GAP = (
+    "no qualifying weeks yet (need >=3 system-accept episodes with complete burden and review<saved per week)"
+)
 
 
 def _canonical(value: Any) -> str:
@@ -148,13 +157,13 @@ def _safe_gate_gaps(value: object) -> list[str]:
             code = "no_episodes_observed"
         elif item == "no weekly samples":
             code = "no_weekly_samples"
-        elif isinstance(item, str) and item.startswith("no qualifying weeks yet"):
+        elif item == _NO_QUALIFYING_GAP:
             code = "no_qualifying_weeks"
-        elif isinstance(item, str) and item.startswith("only "):
+        elif isinstance(item, str) and _ONLY_QUALIFYING_RE.fullmatch(item):
             code = "insufficient_qualifying_weeks"
-        elif isinstance(item, str) and item.startswith("non-consecutive gap between "):
+        elif isinstance(item, str) and _NON_CONSECUTIVE_RE.fullmatch(item):
             code = "non_consecutive_qualifying_weeks"
-        elif isinstance(item, str) and item.endswith(" week(s) below threshold (need >=3 qualifying episodes each)"):
+        elif isinstance(item, str) and _BELOW_THRESHOLD_RE.fullmatch(item):
             code = "below_weekly_threshold"
         else:
             continue

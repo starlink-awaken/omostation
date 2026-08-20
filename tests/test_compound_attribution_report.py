@@ -38,27 +38,27 @@ def _value_snapshot() -> dict:
     }
 
 
-def _verified_value_snapshot(tmp_path, monkeypatch, snapshot=None):
+def _verified_attribution_data(tmp_path, monkeypatch, snapshot=None, bet_summary=None):
     receipt = snapshot or _value_snapshot()
     receipt_path = tmp_path / "receipt.json"
     receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
     db_path = tmp_path / "ledger.sqlite3"
     db_path.write_bytes(b"ledger")
     monkeypatch.setattr(report, "_measure_value_truth", lambda **kwargs: receipt)
-    verified = report.load_verified_value_truth(
-        receipt_path,
+    return report.generate_attribution_data(
+        bet_summary=bet_summary or {"total": 1, "by_status": {"candidate": 1}},
+        value_truth_receipt=receipt_path,
         db_path=db_path,
         principal_id="principal-private",
+        observed_at="2026-08-20T04:30:00Z",
     )
-    assert verified is not None
-    return verified
 
 
 def test_attribution_uses_evidence_inputs_and_marks_unmeasured_claims_unprovable(tmp_path, monkeypatch):
-    data = report.generate_attribution_data(
-        value_truth=_verified_value_snapshot(tmp_path, monkeypatch),
+    data = _verified_attribution_data(
+        tmp_path,
+        monkeypatch,
         bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
-        observed_at="2026-08-20T04:30:00Z",
     )
 
     assert data["schema"] == "compound-attribution-report/v2"
@@ -81,10 +81,10 @@ def test_attribution_uses_evidence_inputs_and_marks_unmeasured_claims_unprovable
 
 
 def test_rendered_report_does_not_restate_legacy_hardcoded_success_claims(tmp_path, monkeypatch):
-    data = report.generate_attribution_data(
-        value_truth=_verified_value_snapshot(tmp_path, monkeypatch),
+    data = _verified_attribution_data(
+        tmp_path,
+        monkeypatch,
         bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
-        observed_at="2026-08-20T04:30:00Z",
     )
 
     rendered = report.render_markdown_report(data)
@@ -99,7 +99,6 @@ def test_rendered_report_does_not_restate_legacy_hardcoded_success_claims(tmp_pa
 
 def test_missing_value_receipt_cannot_generate_a_successful_report():
     data = report.generate_attribution_data(
-        value_truth=None,
         bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
         observed_at="2026-08-20T04:30:00Z",
     )
@@ -115,24 +114,36 @@ def test_public_generator_rejects_syntax_valid_forged_passed_receipt():
     forged["truth_axes"]["personal_value"] = "passed"
     forged["metrics"]["four_week_value_gate"] = "passed"
 
-    data = report.generate_attribution_data(
-        value_truth=forged,
-        bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
-        observed_at="2026-08-20T04:30:00Z",
+    with pytest.raises(TypeError):
+        report.generate_attribution_data(
+            value_truth=forged,
+            bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
+            observed_at="2026-08-20T04:30:00Z",
+        )
+
+
+def test_module_has_no_public_verified_mapping_minter():
+    assert not hasattr(report, "load_verified_value_truth")
+    assert not any(
+        callable(getattr(report, name)) and ("issue" in name or "mint" in name)
+        for name in dir(report)
+        if not name.startswith("_")
     )
 
-    assert data["status"] == "unprovable"
-    assert data["truth_axes"]["operational_proof"] == "unprovable"
-    assert data["truth_axes"]["personal_value"] == "unprovable"
 
-
-def test_malformed_query_digest_cannot_be_used_as_value_evidence():
+def test_malformed_query_digest_cannot_be_used_as_value_evidence(tmp_path):
     malformed = _value_snapshot()
     malformed["source"]["query_digest"] = "sha256:not-a-digest"
+    receipt_path = tmp_path / "receipt.json"
+    receipt_path.write_text(json.dumps(malformed), encoding="utf-8")
+    db_path = tmp_path / "ledger.sqlite3"
+    db_path.write_bytes(b"ledger")
 
     data = report.generate_attribution_data(
-        value_truth=malformed,
         bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
+        value_truth_receipt=receipt_path,
+        db_path=db_path,
+        principal_id="principal-private",
         observed_at="2026-08-20T04:30:00Z",
     )
 
@@ -150,9 +161,16 @@ def test_receipt_must_match_fresh_live_remeasurement(tmp_path, monkeypatch):
     db_path.write_bytes(b"ledger")
 
     monkeypatch.setattr(report, "_measure_value_truth", lambda **kwargs: _value_snapshot())
-    verified = report.load_verified_value_truth(path, db_path=db_path, principal_id="principal-private")
+    data = report.generate_attribution_data(
+        bet_summary={"total": 1, "by_status": {"candidate": 1}},
+        value_truth_receipt=path,
+        db_path=db_path,
+        principal_id="principal-private",
+        observed_at="2026-08-20T04:30:00Z",
+    )
 
-    assert verified is None
+    assert data["status"] == "unprovable"
+    assert data["truth_axes"]["personal_value"] == "unprovable"
 
 
 def test_exact_receipt_is_accepted_only_after_live_remeasurement(tmp_path, monkeypatch):
@@ -163,26 +181,14 @@ def test_exact_receipt_is_accepted_only_after_live_remeasurement(tmp_path, monke
     db_path.write_bytes(b"ledger")
 
     monkeypatch.setattr(report, "_measure_value_truth", lambda **kwargs: _value_snapshot())
-    verified = report.load_verified_value_truth(path, db_path=db_path, principal_id="principal-private")
-
-    assert verified is not None
-    assert not isinstance(verified, dict)
     data = report.generate_attribution_data(
-        value_truth=verified,
         bet_summary={"total": 1, "by_status": {"candidate": 1}},
+        value_truth_receipt=path,
+        db_path=db_path,
+        principal_id="principal-private",
         observed_at="2026-08-20T04:30:00Z",
     )
     assert data["truth_axes"]["personal_value"] == "collecting"
-
-
-def test_verified_evidence_payload_cannot_be_replaced_after_issuance(tmp_path, monkeypatch):
-    verified = _verified_value_snapshot(tmp_path, monkeypatch)
-    forged = _value_snapshot()
-    forged["status"] = "passed"
-    forged["truth_axes"]["personal_value"] = "passed"
-
-    with pytest.raises(AttributeError):
-        verified.payload = forged
 
 
 def test_report_allowlists_value_fields_instead_of_copying_arbitrary_payloads(tmp_path, monkeypatch):
@@ -192,11 +198,7 @@ def test_report_allowlists_value_fields_instead_of_copying_arbitrary_payloads(tm
     snapshot["metrics"]["raw_prompt"] = "sensitive prompt body"
     snapshot["metrics"]["weekly_samples"] = [{"raw_note": "PRIVATE MEDICAL NOTE"}]
 
-    data = report.generate_attribution_data(
-        value_truth=_verified_value_snapshot(tmp_path, monkeypatch, snapshot),
-        bet_summary={"total": 1, "by_status": {"candidate": 1}},
-        observed_at="2026-08-20T04:30:00Z",
-    )
+    data = _verified_attribution_data(tmp_path, monkeypatch, snapshot)
 
     rendered = json.dumps(data, ensure_ascii=False)
     assert "/Users/private" not in rendered

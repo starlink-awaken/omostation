@@ -104,6 +104,7 @@ def test_projection_privacy_normalizes_all_nested_caller_text():
     }
     observation["gate_gaps"] = [
         "no weekly samples",
+        "only /Users/private/forged-gap",
         "/Users/private/medical/gate-gap",
     ]
 

@@ -15,7 +15,6 @@ import importlib.util
 import json
 import os
 import re
-import weakref
 from collections import Counter
 from collections.abc import Mapping
 from datetime import datetime, timezone
@@ -57,7 +56,7 @@ def _valid_value_truth(value: object) -> bool:
 
 
 def _load_value_truth(path: Path | None) -> dict[str, Any] | None:
-    if path is None or not path.is_file():
+    if not isinstance(path, Path) or not path.is_file():
         return None
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
@@ -66,35 +65,6 @@ def _load_value_truth(path: Path | None) -> dict[str, Any] | None:
     if not _valid_value_truth(value):
         return None
     return value
-
-
-def _build_verified_value_boundary() -> tuple[Any, Any]:
-    seal = object()
-    issued = weakref.WeakKeyDictionary()
-
-    class VerifiedValueTruth:
-        __slots__ = ("__weakref__",)
-
-        def __init__(self, token: object) -> None:
-            if token is not seal:
-                raise TypeError("verified_value_truth_private")
-
-    def issue(payload: Mapping[str, Any]) -> object:
-        evidence = VerifiedValueTruth(seal)
-        issued[evidence] = json.dumps(payload, ensure_ascii=False, sort_keys=True)
-        return evidence
-
-    def unwrap(candidate: object) -> dict[str, Any] | None:
-        if type(candidate) is not VerifiedValueTruth:
-            return None
-        payload = issued.get(candidate)
-        return json.loads(payload) if payload is not None else None
-
-    return issue, unwrap
-
-
-_issue_verified_value_truth, _unwrap_verified_value_truth = _build_verified_value_boundary()
-del _build_verified_value_boundary
 
 
 def _measure_value_truth(**kwargs: Any) -> dict[str, Any]:
@@ -106,12 +76,12 @@ def _measure_value_truth(**kwargs: Any) -> dict[str, Any]:
     return module.measure_value_truth(**kwargs)
 
 
-def load_verified_value_truth(
+def _load_verified_value_truth(
     path: Path | None,
     *,
     db_path: Path,
     principal_id: str,
-) -> object | None:
+) -> dict[str, Any] | None:
     """Accept a receipt only when a fresh live measurement reproduces it."""
     candidate = _load_value_truth(path)
     if candidate is None or not principal_id.strip() or not db_path.is_file():
@@ -125,7 +95,7 @@ def load_verified_value_truth(
         return None
     if not _valid_value_truth(fresh):
         return None
-    return _issue_verified_value_truth(fresh) if candidate == fresh else None
+    return fresh if candidate == fresh else None
 
 
 _SOURCE_FIELDS = ("kind", "ref", "event_count", "tip_hash", "query_digest")
@@ -169,16 +139,15 @@ def _load_bet_summary(path: Path) -> dict[str, Any]:
     return {"total": len(bets), "by_status": dict(sorted(statuses.items())), "status": "observed"}
 
 
-def generate_attribution_data(
+def _project_attribution_data(
     *,
-    value_truth: object | None,
+    value_truth: Mapping[str, Any] | None,
     bet_summary: Mapping[str, Any],
     observed_at: str | None = None,
 ) -> dict[str, Any]:
-    """Build a report from explicit evidence inputs; never infer missing data."""
-    verified_value = _unwrap_verified_value_truth(value_truth)
-    valid_value = _valid_value_truth(verified_value)
-    axes = verified_value.get("truth_axes") if valid_value else None
+    """Project already verified internal evidence; never infer missing data."""
+    valid_value = _valid_value_truth(value_truth)
+    axes = value_truth.get("truth_axes") if valid_value else None
     if not isinstance(axes, Mapping):
         axes = {}
     truth_axes = {
@@ -186,7 +155,7 @@ def generate_attribution_data(
         "operational_proof": str(axes.get("operational_proof") or "unprovable"),
         "personal_value": str(axes.get("personal_value") or "unprovable"),
     }
-    overall = "unprovable" if "unprovable" in truth_axes.values() else str(verified_value.get("status") or "unprovable")
+    overall = "unprovable" if "unprovable" in truth_axes.values() else str(value_truth.get("status") or "unprovable")
     return {
         "schema": REPORT_SCHEMA,
         "status": overall,
@@ -202,11 +171,32 @@ def generate_attribution_data(
         },
         "personal_value": {
             "status": truth_axes["personal_value"],
-            "source": _safe_source(verified_value.get("source")) if valid_value else None,
-            "metrics": _allowlist(verified_value.get("metrics"), _METRIC_FIELDS) if valid_value else {},
+            "source": _safe_source(value_truth.get("source")) if valid_value else None,
+            "metrics": _allowlist(value_truth.get("metrics"), _METRIC_FIELDS) if valid_value else {},
         },
         "unproven_claims": {key: {"status": "unprovable", "value": None} for key in UNPROVEN_METRICS},
     }
+
+
+def generate_attribution_data(
+    *,
+    bet_summary: Mapping[str, Any],
+    value_truth_receipt: Path | None = None,
+    db_path: Path = DEFAULT_LEDGER,
+    principal_id: str = "",
+    observed_at: str | None = None,
+) -> dict[str, Any]:
+    """Remeasure a receipt and build the report behind one public boundary."""
+    verified_value = _load_verified_value_truth(
+        value_truth_receipt,
+        db_path=db_path,
+        principal_id=principal_id,
+    )
+    return _project_attribution_data(
+        value_truth=verified_value,
+        bet_summary=bet_summary,
+        observed_at=observed_at,
+    )
 
 
 def render_markdown_report(data: Mapping[str, Any]) -> str:
@@ -275,12 +265,10 @@ def main() -> int:
     args = parser.parse_args()
 
     data = generate_attribution_data(
-        value_truth=load_verified_value_truth(
-            args.value_truth_receipt,
-            db_path=args.db_path,
-            principal_id=args.principal_id,
-        ),
         bet_summary=_load_bet_summary(args.bet_ledger),
+        value_truth_receipt=args.value_truth_receipt,
+        db_path=args.db_path,
+        principal_id=args.principal_id,
     )
     if args.json or args.output is None:
         print(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True))
