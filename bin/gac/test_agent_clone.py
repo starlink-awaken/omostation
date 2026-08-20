@@ -228,6 +228,48 @@ def test_create_initializes_only_root_gitlinks(tmp_path):
     assert not (dest / "childmod" / "grandchild" / ".git").exists()
 
 
+def test_create_initializes_only_requested_submodules(tmp_path):
+    src, _child, bare = make_source(tmp_path)
+    second = tmp_path / "second-child"
+    second.mkdir()
+    git(second, "init", "-b", "main")
+    (second / "second.txt").write_text("second\n")
+    git(second, "add", "second.txt")
+    git(second, "commit", "-m", "second")
+    git(
+        src,
+        "-c",
+        "protocol.file.allow=always",
+        "submodule",
+        "add",
+        str(second),
+        "secondmod",
+    )
+    git(src, "commit", "-m", "add second child")
+    git(src, "push", "origin", "main")
+
+    dest = tmp_path / "selective-clone"
+    proc = run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+        "--submodule",
+        "childmod",
+        "--json",
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    result = parse_json(proc)
+    assert result["initialized_submodules"] == ["childmod"]
+    assert (dest / "childmod" / ".git").exists()
+    assert not (dest / "secondmod" / ".git").exists()
+
+
 def test_create_refuses_existing_path(tmp_path):
     _src, _child, bare = make_source(tmp_path)
     empty = tmp_path / "empty-dir"
@@ -628,6 +670,27 @@ def test_manifest_deterministic_digest_and_verify(tmp_path):
     assert parse_json(proc)["reason"] == "verified"
 
 
+def test_manifest_refuses_to_overwrite_existing_output(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    output = tmp_path / "manifest.json"
+    output.write_text("sentinel\n")
+
+    proc = run_cli(
+        "manifest",
+        "--clone",
+        str(dest),
+        "--output",
+        str(output),
+        "--json",
+        check=False,
+    )
+
+    assert proc.returncode == 1
+    assert parse_json(proc)["reason"] == "output_collision"
+    assert output.read_text() == "sentinel\n"
+
+
 def test_dirty_root_rejected(tmp_path):
     _src, _child, bare = make_source(tmp_path)
     dest = create_clone(tmp_path, bare)
@@ -674,7 +737,7 @@ def test_manifest_tamper_rejected(tmp_path):
     assert parse_json(proc)["reason"] == "manifest_digest_mismatch"
 
     # digest-recomputed tamper of root sha: semantic check fires
-    m = write_manifest(tmp_path, dest, "m.json")
+    m = write_manifest(tmp_path, dest, "semantic-m.json")
     tamper_manifest(m, lambda d: d.__setitem__("root_head_sha", "0" * 40), recompute=True)
     proc = run_cli("verify", "--clone", str(dest), "--manifest", str(m), "--json", check=False)
     assert proc.returncode == 1
@@ -809,6 +872,43 @@ def test_changeset_no_change_explicit(tmp_path):
     assert data["baseline_manifest_digest"] == json.loads(baseline.read_text())["manifest_digest"]
 
 
+def test_changeset_includes_root_files_and_claim_violation_is_nonzero(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    baseline = write_manifest(tmp_path, dest, "baseline.json")
+    (dest / "README.md").write_text("changed root file\n")
+    git(dest, "add", "README.md")
+    git(dest, "commit", "-m", "change root file")
+    output = tmp_path / "changeset.json"
+
+    proc = run_cli(
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(output),
+        "--verify-claims",
+        "--json",
+        check=False,
+    )
+
+    assert proc.returncode == 1
+    assert parse_json(proc)["reason"] == "claim_scope_violation"
+    data = json.loads(output.read_text())
+    assert data["changes"] == [
+        {
+            "ancestry_proven": True,
+            "base_sha": data["changes"][0]["base_sha"],
+            "candidate_sha": data["changes"][0]["candidate_sha"],
+            "kind": "root_file",
+            "path": "README.md",
+        }
+    ]
+    assert data["claim_verification"]["violations"] == ["README.md"]
+
+
 def test_changeset_fast_forward_accepted(tmp_path):
     src, child, bare = make_source(tmp_path)
     dest = create_clone(tmp_path, bare)
@@ -830,10 +930,11 @@ def test_changeset_fast_forward_accepted(tmp_path):
     assert parse_json(proc)["reason"] == "changeset_generated"
     data = json.loads(out.read_text())
     assert data["no_change"] is False
-    assert len(data["changes"]) == 1
-    change = data["changes"][0]
-    assert change["path"] == "childmod"
-    assert change["ancestry_proven"] is True
+    assert {(change["kind"], change["path"]) for change in data["changes"]} == {
+        ("root_file", "README.md"),
+        ("gitlink", "childmod"),
+    }
+    assert all(change["ancestry_proven"] is True for change in data["changes"])
     assert data["root_candidate_sha"] == git(dest, "rev-parse", "HEAD").stdout.strip()
 
 
