@@ -8,6 +8,7 @@
 # ---------------------------------------------------------------------------
 .omo/.omo/
 .omo/_archive/
+.artifacts/
 .omo/_delivery/
 .omo/_log/
 .omo/_knowledge/*.jsonl
