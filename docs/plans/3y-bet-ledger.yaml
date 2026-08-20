@@ -5984,6 +5984,7 @@ bets:
   - projects/knowledge/kairon/pyproject.toml
   - projects/knowledge/kairon/uv.lock
   - projects/knowledge/kairon/packages/eidos/src/eidos/memory/nks_parallel_extractor.py
+  - projects/knowledge/kairon/packages/eidos/src/eidos/vector_backends/lancedb_backend.py
   - projects/knowledge/kairon/packages/forge/pyproject.toml
   - projects/knowledge/kairon/scripts/mypy_report.py
   - projects/knowledge/kairon/tests/scripts/test_mypy_report.py
