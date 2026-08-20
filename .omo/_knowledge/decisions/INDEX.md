@@ -504,3 +504,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0412: model-driven (M0) 定位判定 — 接入主链 (保留独立子仓) — **ACCEPTED** | 2026-08-16 | Model-driven disposition | 0412-model-driven-disposition.md
 - ADR-0413: gbrain + kairon 归并为 knowledge — 决策补档 — **ACCEPTED** | 2026-08-17 | strategy-convergence-r3 | 0413-gbrain-kairon-merge-disposition.md
 - ADR-0414: ADR-0247 与 ADR-0225/0226 物理多机张力 — 关系澄清 — **ACCEPTED** | 2026-08-17 | strategy-convergence-r3 | 0414-physical-multihost-tension-resolution.md
+- ADR-0415: 拒绝 AGT 整体接入，确立能力对齐路线 — **ACCEPTED** | 2026-08-18 | capability-parity | 0415-reject-agt-integration-adopt-capability-parity.md
+- ADR-0416: Y2 年度门 — 愿景证伪判定（BET-Y2Q4-T1-01） — **ACCEPTED** | 2026-08-18 | Y2 gate | 0416-y2-gate-vision-falsification.md
+- ADR-0417: Y3 终局门 — 三年验收标准判定（BET-Y3H2-T1-02） — **ACCEPTED** | 2026-08-18 | Y3 gate | 0417-y3-final-gate.md
+- ADR-0418: 对外扩展决策 — 默认不做（BET-Y3H2-T1-01） — **ACCEPTED** | 2026-08-18 | external expansion | 0418-external-expansion-decision.md

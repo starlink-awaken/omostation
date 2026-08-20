@@ -5469,6 +5469,64 @@ bets:
   human_gate: true
   circuit_breaker: 发现被清理面有活跃消费者 → 停止并回滚
   retro: required
+- id: BET-Y1Q3-T6-08
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: GaC 本地门禁剩余债务清理
+  appetite: 4 hours
+  priority: P1
+  status: done
+  started_at: 2026-08-19
+  done_at: 2026-08-19
+  goal: 清理当前阻塞 make gac-local-gate 的剩余债务：补齐 ADR 索引缺口 4 个，处理 .artifacts/ 未注册导致的 root-directory-governance 失败，恢复全绿
+  non_goals:
+  - 新增治理规则或修改现有规则语义
+  - 扩大清理范围到业务代码或子模块
+  - 处理非 gac-local-gate 直接报告的债务
+  evidence:
+    E1_adr_index:
+      description: ADR 索引缺口 4 个已补齐
+      surfaces:
+      - .omo/_knowledge/decisions/INDEX.md
+    E2_bin_subtraction:
+      description: bin/ 活跃脚本从 416 降至 410，归档 6 个零引用/过时脚本
+      surfaces:
+      - bin/_archive/
+    E3_gac_local_gate:
+      description: make gac-local-gate 全绿 PASS
+    E4_artifacts_registered:
+      description: 临时 receipt 目录 .artifacts/ 已加入 .gitignore 与根目录治理 policy
+      surfaces:
+      - .gitignore
+      - docs/operations/root-directory-governance-policy.yaml
+  done_when:
+  - 4 个未索引 ADR（0415-0418）写入 INDEX.md
+  - make gac-local-gate 全部检查 PASS
+  progress:
+    done_when_met:
+    - '1: 4 个 ADR 索引缺口补齐'
+    - '2: .artifacts/ 目录注册为允许忽略面'
+    - '3: make gac-local-gate 46 checks ALL GREEN'
+    pending_when: []
+  verify:
+  - cmd: uv run --with pyyaml python bin/adr/adr-coverage.py --json
+    expect: files_not_in_index=0
+  - cmd: uv run --with pyyaml python bin/gac/gac-validate.py --gate
+    expect: active_bin_scripts ≤ 410
+  - cmd: make gac-local-gate
+    expect: 全绿 PASS
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/decisions/INDEX.md
+  - bin/_archive/
+  pasw_required: true
+  depends_on: []
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 归档脚本发现活跃调用者 → 停止并回滚
+  retro: required
 - id: BET-Y1Q3-T3-04
   track: T3-COGNI
   window: Y1Q3

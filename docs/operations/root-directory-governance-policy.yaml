@@ -5,6 +5,7 @@ scope: workspace-root
 # cache, generated, or local-machine surfaces. Any other ignored root
 # directory is treated as an unregistered shadow surface.
 allowed_ignored_dirs:
+  - .artifacts
   - .codebase-memory
   - .pytest_cache
   - .ruff_cache
