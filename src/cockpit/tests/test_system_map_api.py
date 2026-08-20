@@ -61,7 +61,17 @@ def _workflow_lifecycle_fixture(project_id: str) -> dict:
     }
 
 
-def test_system_map_builds_workspace_dimensions(monkeypatch):
+def test_system_map_builds_workspace_dimensions(monkeypatch, tmp_path):
+    original_operational_status = api_system_map._project_operational_status
+
+    def isolated_operational_status(project_id, project_data=None, project_path=None):
+        if project_id == "toolbox":
+            missing_storage = tmp_path / "missing-toolbox"
+            isolated_data = {**(project_data or {}), "storage": str(missing_storage)}
+            return original_operational_status(project_id, isolated_data, missing_storage)
+        return original_operational_status(project_id, project_data, project_path)
+
+    monkeypatch.setattr(api_system_map, "_project_operational_status", isolated_operational_status)
     monkeypatch.setattr(api_system_map, "_project_workflow_lifecycle", _workflow_lifecycle_fixture)
     payload = build_system_map()
 
@@ -271,8 +281,14 @@ def test_system_map_builds_workspace_dimensions(monkeypatch):
     assert any("pytest" in command for command in metaos_project["operational"]["commands"])
     toolbox_project = next(project for project in payload["projects"] if project["id"] == "toolbox")
     assert toolbox_project["operational"]["surface_type"] == "external-storage"
+    assert toolbox_project["operational"]["status"] == "missing"
+    assert toolbox_project["operational"]["docs"]["present"] == 0
+    assert toolbox_project["operational"]["docs"]["expected"] == 1
     toolbox_docs = next(check for check in toolbox_project["coverage_checks"] if check["id"] == "project_docs")
-    assert toolbox_docs["status"] == "ready"
+    assert toolbox_docs["status"] == "failed"
+    docs_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "project_docs")
+    assert docs_dimension["failed"] >= 1
+    assert "toolbox" in {item["id"] for item in docs_dimension["attention_projects"]}
     assert cockpit_project["operational"]["next_action"]
     assert cockpit_project["source_refs"]
     assert cockpit_project["source_refs"][0]["source_key"] == "project_registry"
@@ -942,3 +958,42 @@ def test_external_ui_worktree_is_resolved_from_registry_path_env(tmp_path, monke
     assert operational["path_configured"] is True
     assert operational["path_env"] == "COCKPIT_UI_ROOT"
     assert operational["next_action"] == "保持项目注册表与 Cockpit 映射同步。"
+
+
+def test_available_external_storage_keeps_project_docs_ready(tmp_path):
+    storage = tmp_path / "toolbox"
+    storage.mkdir()
+    (storage / "README.md").write_text("# Toolbox\n", encoding="utf-8")
+    (storage / "AGENTS.md").write_text(
+        "## Commands\n```bash\npython -m toolbox\n```\n",
+        encoding="utf-8",
+    )
+    (storage / "pyproject.toml").write_text("[project]\nname = 'toolbox'\n", encoding="utf-8")
+
+    operational = api_system_map._project_operational_status(
+        "toolbox",
+        {"storage": str(storage)},
+        storage,
+    )
+    checks = api_system_map._project_coverage_checks(
+        {
+            "id": "toolbox",
+            "path": str(storage),
+            "coverage": "native",
+            "cockpit_page": "SystemMap",
+            "operational": operational,
+            "runtime": {
+                "status": "not_applicable",
+                "profile": "static",
+                "latest_verification": {},
+            },
+            "source_refs": [{"exists": True}],
+            "actions": [{"id": "copy-project-path"}],
+        }
+    )
+    docs = next(check for check in checks if check["id"] == "project_docs")
+
+    assert operational["status"] == "ready"
+    assert operational["surface_type"] == "external-storage"
+    assert operational["docs"]["present"] >= operational["docs"]["expected"]
+    assert docs["status"] == "ready"
