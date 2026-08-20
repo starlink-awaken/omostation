@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import subprocess
 import sys
 import types
@@ -467,6 +466,8 @@ class TestP34W1StdioProtocol:
         processes_before = dict(get_pool().processes)
 
         if not KAIRON_ROOT.is_dir():
+            from agora.mcp.resolver import adapter as adapter_module
+
             empty_workspace = tmp_path / "empty-workspace"
             (empty_workspace / "projects").mkdir(parents=True)
             missing_kairon = empty_workspace / "projects/knowledge/kairon"
@@ -486,11 +487,19 @@ class TestP34W1StdioProtocol:
                 [str(missing_executable), "-m", "minerva.cli", "research"],
             )
 
-            try:
-                child_before, _ = os.waitpid(-1, os.WNOHANG)
-            except ChildProcessError:
-                child_before = None
-            assert child_before is None
+            original_popen = adapter_module.subprocess.Popen
+            attempted_argv = []
+            successful_spawns = []
+
+            def _transparent_popen(*args, **kwargs):
+                attempted_argv.append(args[0])
+                proc = original_popen(*args, **kwargs)
+                successful_spawns.append({"pid": proc.pid, "argv": proc.args})
+                return proc
+
+            monkeypatch.setattr(
+                adapter_module.subprocess, "Popen", _transparent_popen
+            )
 
         r = invoke_stdio(
             "bos://analysis/minerva/research", "research", {"topic": "test"}
@@ -501,22 +510,15 @@ class TestP34W1StdioProtocol:
             assert r.get("status") in ("ok", "error")
             assert "result" in r or "error" in r
         else:
-            try:
-                child_after, _ = os.waitpid(-1, os.WNOHANG)
-            except ChildProcessError:
-                child_after = None
-
             assert r.get("status") == "error"
             assert "[Errno 2]" in r.get("error", "")
             assert "result" not in r
             assert get_pool().processes == processes_before
-            assert {
-                "process_started": r.get("pid") is not None,
-                "child_waitable_or_running": child_after is not None,
-            } == {
-                "process_started": False,
-                "child_waitable_or_running": False,
-            }
+            assert attempted_argv == [
+                [str(missing_executable), "-m", "minerva.cli", "research"]
+            ]
+            assert r.get("pid") is None
+            assert successful_spawns == []
 
     def test_list_services_includes_fields(self):
         """W1 验证: list_services 含 transport/pid/alive 字段."""
