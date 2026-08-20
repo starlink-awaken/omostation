@@ -5805,6 +5805,58 @@ bets:
   circuit_breaker: 下游读取 runtime 投影失败或 gac 红 → 回滚并改为在 SSOT 中保留静态 schema、计数迁独立运行时文件
   retro: .omo/_knowledge/retros/BET-Y1Q3-T6-12.md
   completed_at: '2026-08-20'
+- id: BET-Y1Q3-T6-13
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: 归档 bin/bc-os/ 无外部引用的 speculative 脚本
+  appetite: 1 hour
+  priority: P2
+  status: in_progress
+  started_at: 2026-08-20
+  goal: 减少 bin/ 活跃脚本表面积，将当前无外部调用、无 CI/Makfile/journey 接入的 3 个 bc-os speculative 脚本归档
+  non_goals:
+  - 不动 evolution_engine / signal_router / north_star_meter_v2 等仍有场景卡/台账引用的脚本
+  - 不修改 roadmap 历史文档中的规划叙述
+  - 不新增替代实现
+  evidence:
+    E1_archived_scripts:
+      description: apple_mail_watcher.py / l3_smart_router.py / lifecycle_changer.py 已移入 bin/_archive/bc-os-20260820/
+      surfaces:
+      - bin/_archive/bc-os-20260820/
+    E2_no_external_refs:
+      description: grep 确认 3 个脚本在 bin/Makefile/scene-cards/journey 中无外部引用
+    E3_gac_local_gate:
+      description: make gac-local-gate 全绿 PASS
+  done_when:
+  - 3 个脚本从 bin/bc-os/ 移入 bin/_archive/bc-os-20260820/
+  - gac-validate active_bin_scripts 不跌出基线（当前 ≤420）
+  - make gac-local-gate 全部检查 PASS
+  progress:
+    done_when_met: []
+    pending_when: []
+  verify:
+  - cmd: test ! -f bin/bc-os/apple_mail_watcher.py && test ! -f bin/bc-os/l3_smart_router.py && test ! -f bin/bc-os/lifecycle_changer.py
+    expect: 退出码 0
+  - cmd: test -f bin/_archive/bc-os-20260820/apple_mail_watcher.py && test -f bin/_archive/bc-os-20260820/l3_smart_router.py && test -f bin/_archive/bc-os-20260820/lifecycle_changer.py
+    expect: 退出码 0
+  - cmd: uv run --with pyyaml python bin/gac/gac-validate.py --gate
+    expect: active_bin_scripts ≤ 420
+  - cmd: make gac-local-gate
+    expect: 全绿 PASS
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - bin/bc-os/apple_mail_watcher.py
+  - bin/bc-os/l3_smart_router.py
+  - bin/bc-os/lifecycle_changer.py
+  - bin/_archive/bc-os-20260820/
+  pasw_required: true
+  depends_on: []
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 归档后发现活跃调用者 → 立即从 archive 恢复并撤回 ledger 条目
+  retro: required
 - id: BET-Y1Q3-T4-01
   track: T4-OUTCOME
   window: Y1Q3
