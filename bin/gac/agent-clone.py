@@ -1028,7 +1028,7 @@ def root_changed_paths(repo_root: str, base: str, candidate: str) -> list[str]:
     proc = git(
         repo_root,
         "diff",
-        "--name-only",
+        "--name-status",
         "-z",
         "--no-renames",
         base,
@@ -1041,7 +1041,23 @@ def root_changed_paths(repo_root: str, base: str, candidate: str) -> list[str]:
             f"cannot enumerate root changes: {proc.stderr.strip()}",
             EXIT_POLICY,
         )
-    return sorted(item for item in proc.stdout.split("\0") if item)
+    fields = [item for item in proc.stdout.split("\0") if item]
+    if len(fields) % 2 != 0:
+        raise ToolError(
+            "root_diff_malformed",
+            "root diff emitted an incomplete name-status record",
+            EXIT_POLICY,
+        )
+    paths: list[str] = []
+    for status, path in zip(fields[::2], fields[1::2]):
+        if not status or status[0] not in {"A", "C", "D", "M", "T", "U", "X", "B"}:
+            raise ToolError(
+                "root_diff_malformed",
+                f"root diff emitted unsupported status {status!r}",
+                EXIT_POLICY,
+            )
+        paths.append(path)
+    return sorted(paths)
 
 
 def object_at_path(repo_root: str, revision: str, path: str) -> str | None:
@@ -1063,8 +1079,13 @@ def _verify_changeset_claims(clone_root: str, changes: list[dict[str, Any]]) -> 
         "all_covered": True,
     }
     try:
+        import yaml
         from swarm_discipline import active_workflow_claimed_paths, path_covered_by_claim
 
+        # active_workflow_claimed_paths is YAML-backed.  Do not turn a missing
+        # parser into a synthetic empty claim set and a misleading verdict.
+        if not hasattr(yaml, "safe_load"):
+            raise ImportError("PyYAML safe_load is unavailable")
         claimed = active_workflow_claimed_paths(Path(clone_root))
         result["claimed_paths"] = claimed
         for change in changes:
@@ -1204,6 +1225,13 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
                 f"changeset contains unclaimed paths: {violations}",
                 EXIT_POLICY,
                 {"output_path": args.output, "violations": violations},
+            )
+        if claim_verification.get("all_covered") is not True:
+            raise ToolError(
+                "claim_verification_incomplete",
+                "claim verification did not prove complete coverage",
+                EXIT_POLICY,
+                {"output_path": args.output},
             )
     return {
         "ok": True,

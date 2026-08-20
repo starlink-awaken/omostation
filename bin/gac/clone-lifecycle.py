@@ -345,9 +345,18 @@ def cmd_changeset(args: argparse.Namespace) -> int:
         if output.is_file():
             print(output.read_text(), file=sys.stderr)
         return EXIT_POLICY
-    # 读取结果
+    # 读取结果；请求 claim 校验时，缺失/禁用/不完整的收据不可推进。
     cs = json.loads(output.read_text())
-    violations = (cs.get("claim_verification") or {}).get("violations", [])
+    claim_verification = cs.get("claim_verification")
+    if args.verify_claims and (
+        not isinstance(claim_verification, dict)
+        or claim_verification.get("enabled") is not True
+        or claim_verification.get("all_covered") is not True
+    ):
+        audit("changeset_claim_verification_unavailable", "missing, disabled, or incomplete receipt")
+        print(json.dumps(cs, indent=2), file=sys.stderr)
+        return EXIT_POLICY
+    violations = (claim_verification or {}).get("violations", [])
     if violations:
         audit("changeset_scope_creep", f"violations={violations}")
         print(json.dumps(cs, indent=2))

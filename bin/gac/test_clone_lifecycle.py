@@ -251,6 +251,34 @@ def test_changeset_claim_violation_is_nonzero_even_if_receipt_exists(tmp_path, m
     assert rc == lc.EXIT_POLICY
 
 
+def test_changeset_missing_or_disabled_claim_verification_is_nonzero(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        lc,
+        "run",
+        lambda cmd, **kwargs: subprocess.CompletedProcess(cmd, 0, "{}", ""),
+    )
+    for name, claim_verification in (
+        ("missing", None),
+        ("disabled", {"enabled": False, "all_covered": True, "violations": []}),
+    ):
+        output = tmp_path / f"{name}.json"
+        payload = {"change_id": "abc", "changes": [{"path": "README.md"}]}
+        if claim_verification is not None:
+            payload["claim_verification"] = claim_verification
+        output.write_text(json.dumps(payload))
+
+        rc = lc.cmd_changeset(
+            argparse.Namespace(
+                clone=str(tmp_path / "clone"),
+                baseline=str(tmp_path / "baseline.json"),
+                output=str(output),
+                verify_claims=True,
+            )
+        )
+
+        assert rc == lc.EXIT_POLICY
+
+
 def test_changeset_audit_reports_persisted_change_count(tmp_path, monkeypatch, capsys):
     output = tmp_path / "cs.json"
     output.write_text(
@@ -258,7 +286,11 @@ def test_changeset_audit_reports_persisted_change_count(tmp_path, monkeypatch, c
             {
                 "change_id": "abc",
                 "changes": [{"path": "README.md"}],
-                "claim_verification": {"violations": [], "all_covered": True},
+                "claim_verification": {
+                    "enabled": True,
+                    "violations": [],
+                    "all_covered": True,
+                },
             }
         )
     )
