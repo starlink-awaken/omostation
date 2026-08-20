@@ -16,8 +16,8 @@ sensitive_capabilities_default: blocked
 
 defaults:
   transport_preference:
-    - cli_prompt
     - acp_stdio
+    - cli_prompt
   knowledge_policy:
     require_task_envelope: true
     require_prompt_contract: true
