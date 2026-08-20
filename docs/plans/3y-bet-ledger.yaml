@@ -3023,12 +3023,13 @@ bets:
   title: Codex ACP stdio permission-broker cutover and cli_prompt retirement
   appetite: 3 days
   priority: P0
-  status: done
-  blocked_reason: '战略规划裁定 (2026-08-15): T1-18 同冻 (强耦合), Y1 末统一评审处置'
+  status: blocked
+  blocked_reason: 'NOT_PROVEN: T1-18 真实完成前置、ACP v1 真实生命周期、权限代理、取消回收、真实 canary、transport cutover 与 live receipt 均未形成完整直接证据。'
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md
     spec_version: 1.0.0
     content_digest: sha256:c2ca365b1ea140da9be3b577617db0b329a059dd06fc43e3232fb5c570f6aba0
+    decision_ref: decision://accepted/BET-Y1Q2-T1-19
   goal: 在不改变 OMO/ECOS 任务、事件和验收真相的前提下，将 Codex 本地 worker 从 Orca/cli_prompt 人工生产路径迁移到固定版本的
     ACP v1 stdio，通过 WorkPacket、verified independent clone、active claim 和 canonical
     argv/path 派生一次性权限决定；真实 canary 与独立验证通过后，退役 Codex 自动 cli_prompt 与 dispatcher 隐式
@@ -3101,10 +3102,16 @@ bets:
     package identity、无法证明 cancel/reap/tree hash、live canary 只能靠 fixture，或三天内不能同时 完成真实
     canary 与 cli_prompt 指名减法时立即停止；保持 T1-18，不声称 ACP ready
   retro: .omo/_knowledge/retros/BET-Y1Q2-T1-19.md
-  completed_at: '2026-08-20'
   progress:
-    done_when_met: *id001
-    pending_when: []
+    done_when_met: []
+    pending_when:
+    - BET-Y1Q2-T1-18 必须先以真实完成证据通过 wait/resume、collect、rollback 与独立验证，不能以 marker、input ack 或自报完成替代。
+    - 固定并验证 ACP v1 与 Codex ACP package/version/digest，真实覆盖 initialize、capability negotiation、session new/load、prompt/update、EOF、timeout 与协议不兼容 fail-closed。
+    - permission broker 必须只对 R0 与满足 verified clone、active claim、WorkPacket、canonical path、无 symlink/gitlink 越界和 argv allowlist 的 R1 返回 allow_once，并实证拒绝未知、越权与 L2+。
+    - cancel/timeout 后必须直接证明 child process group、ACP session 与 lease 全部回收归零，且 transport uncertainty 不触发自动 fallback。
+    - 必须完成真实非 marker Codex ACP R1 canary，产生有效 model output、实际 git delta、逐项 acceptance measurements、CompletionManifest，并由独立 verifier accept。
+    - registry 必须只保留 acp_stdio 自动 transport，完成 cli_prompt retirement，且 dispatcher 与 Orca supervisor 不再存在隐式 cli_prompt 或自动 dispatch/fallback 路径。
+    - '`.omo/evidence/t1-19-acp-live-receipt.json` 必须真实存在，并通过 live=true、fixture=false、independently_verified=true 的可重复校验与 PR checks。'
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
   window: Y1Q2
