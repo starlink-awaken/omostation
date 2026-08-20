@@ -106,11 +106,24 @@
 
 ## ⚠️ 问题模型
 
-| 模型 | 问题 | 建议 |
-|------|------|------|
-| **gemma-4-26b** | TTFT 22712ms (异常) | 模型损坏或量化问题,需重新下载或删除 |
-| **deepseek-v4-flash** | 400 错误 | LM Studio 中未加载,需手动加载 |
-| **mid-local** | TTFT 1264ms | 较慢,考虑替换为 qwen-3.8-27b |
+| 模型 | 问题 | 根因 | 建议 |
+|------|------|------|------|
+| **deepseek-v4-flash** | 400 错误 | **LM Studio 不支持 `deepseek_v4_mtp` 架构** | 删除或等 LM Studio 更新 |
+| **deepseek-v4-pro** | 无法加载 | 同上 (MTP 架构不兼容) | 删除或等 LM Studio 更新 |
+| **gemma-4-26b** | TTFT 22712ms + 中文输出空 | 冷启动慢 + 中文 prompt 格式问题 | 英文可用,中文需调整 prompt |
+| **mid-local** | TTFT 1264ms | 较慢 | 被 qwen-3.8-27b 替代 |
+
+### DeepSeek V4 架构不兼容说明
+
+LM Studio 当前不支持 `deepseek_v4_mtp` 模型架构。三个 DeepSeek 模型都无法加载:
+- `deepseek-v4-pro-mtp-mlx`
+- `deepseek-v4-flash-mtp-mlx`
+- `qwen3.5-9b-deepseek-v4-flash-mtp`
+
+**解决方案:**
+1. **删除这些模型** — 释放 ~100GB 空间
+2. **等 LM Studio 更新** — 未来可能支持
+3. **使用 WARP 运行时** — WARP 支持 DeepSeek V4,但需额外安装
 
 ---
 
