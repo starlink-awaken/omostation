@@ -5951,7 +5951,6 @@ bets:
   - bin/gac/clone-lifecycle.py
   - bin/capability-sync.py
   - bin/cockpit/gen-capability-registry.py
-  - bin/trigger_real_outcome.py
   - .omo/_knowledge/bos-registry.json
   - docs/generated/capability-registry.yaml
   - bin/bc-os/north_star_meter_v2.py
