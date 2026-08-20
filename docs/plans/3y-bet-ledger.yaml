@@ -5981,6 +5981,9 @@ bets:
   - projects/knowledge/gbrain/.context/test-failures.log
   - projects/knowledge/gbrain/.context/test-summary.txt
   - projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/extractors
+  - projects/knowledge/kairon/pyproject.toml
+  - projects/knowledge/kairon/uv.lock
+  - projects/knowledge/kairon/packages/eidos/src/eidos/memory/nks_parallel_extractor.py
   - tests/**
   - .githooks/pre-commit
   - .omo/_truth/registry/workers.yaml
