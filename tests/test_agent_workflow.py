@@ -102,6 +102,20 @@ def _run_workflow(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def _run_root_workflow_strict(*args: str) -> subprocess.CompletedProcess[str]:
+    env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    env["AGCP_REQUIREMENT_ITERATION_GATE"] = "1"
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    return subprocess.run(
+        ["uv", "run", "--with", "pyyaml", "python", str(WORKFLOW_MODULE_PATH), *args],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+
+
 def _run_direct_omo_workflow(*args: str) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
     env["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -527,6 +541,115 @@ def test_direct_omo_parent_start_inherits_exact_bound_packet_without_explicit_be
     child = json.loads(child_start.stdout)
     for key in ("bet_id", "spec_binding", "work_packet", "work_packet_hash"):
         assert child[key] == parent[key]
+
+
+def test_root_wrapper_parent_start_inherits_exact_bound_packet_without_explicit_bet(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+
+    child_start = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--parent-run",
+        parent["run_id"],
+        "--dry-run",
+        "--json",
+    )
+
+    assert child_start.returncode == 0, child_start.stderr
+    child = json.loads(child_start.stdout)
+    for key in ("bet_id", "spec_binding", "work_packet", "work_packet_hash"):
+        assert child[key] == parent[key]
+
+
+def test_root_wrapper_parent_start_rejects_conflicting_bet_before_any_mutation(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+    before = _snapshot_workflow_state(tmp_path)
+
+    child_start = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--parent-run",
+        parent["run_id"],
+        "--bet",
+        "BET-Y1Q2-T1-14",
+        "--json",
+    )
+
+    assert child_start.returncode != 0
+    assert "WORK_PACKET_PARENT_BET_CONFLICT" in child_start.stderr
+    assert _snapshot_workflow_state(tmp_path) == before
+
+
+def test_root_wrapper_parent_start_rejects_legacy_unbound_parent_before_any_mutation(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "observer-audit",
+        "--profile",
+        "observer-agent",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+    before = _snapshot_workflow_state(tmp_path)
+
+    child_start = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--parent-run",
+        parent["run_id"],
+        "--json",
+    )
+
+    assert child_start.returncode != 0
+    assert "WORK_PACKET_PARENT_BINDING_REQUIRED" in child_start.stderr
+    assert _snapshot_workflow_state(tmp_path) == before
 
 
 def test_direct_omo_parent_start_rejects_conflicting_bet_before_any_mutation(

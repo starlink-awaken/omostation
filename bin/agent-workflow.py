@@ -197,6 +197,19 @@ def wrapped_main(argv: list[str] | None = None) -> int:
     if command == "start":
         workflow_id = _positional_after(argv, cmd_at)
         bet_id = _flag(argv, "--bet")
+        parent_run_id = _flag(argv, "--parent-run")
+        if parent_run_id:
+            try:
+                registry_arg = _flag(argv, "--registry")
+                registry = load_registry(Path(registry_arg)) if registry_arg else load_registry()
+                bet_id, _identity, _parent_agent = _wf_life.resolve_parent_delivery_identity(
+                    registry,
+                    parent_run_id,
+                    bet_id,
+                )
+            except WorkflowError as exc:
+                print(f"agent-workflow: {exc}", file=sys.stderr)
+                return 1
         verdict = chain_bind.start_requires_bet(workflow_id, bet_id)
         if not verdict.ok:
             print(
