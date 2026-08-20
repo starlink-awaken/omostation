@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "compound-attribution-report.py"
 SPEC = importlib.util.spec_from_file_location("compound_attribution_report", SCRIPT)
@@ -36,9 +38,25 @@ def _value_snapshot() -> dict:
     }
 
 
-def test_attribution_uses_evidence_inputs_and_marks_unmeasured_claims_unprovable():
+def _verified_value_snapshot(tmp_path, monkeypatch, snapshot=None):
+    receipt = snapshot or _value_snapshot()
+    receipt_path = tmp_path / "receipt.json"
+    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+    db_path = tmp_path / "ledger.sqlite3"
+    db_path.write_bytes(b"ledger")
+    monkeypatch.setattr(report, "_measure_value_truth", lambda **kwargs: receipt)
+    verified = report.load_verified_value_truth(
+        receipt_path,
+        db_path=db_path,
+        principal_id="principal-private",
+    )
+    assert verified is not None
+    return verified
+
+
+def test_attribution_uses_evidence_inputs_and_marks_unmeasured_claims_unprovable(tmp_path, monkeypatch):
     data = report.generate_attribution_data(
-        value_truth=_value_snapshot(),
+        value_truth=_verified_value_snapshot(tmp_path, monkeypatch),
         bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
         observed_at="2026-08-20T04:30:00Z",
     )
@@ -62,9 +80,9 @@ def test_attribution_uses_evidence_inputs_and_marks_unmeasured_claims_unprovable
         assert data["unproven_claims"][key] == {"status": "unprovable", "value": None}
 
 
-def test_rendered_report_does_not_restate_legacy_hardcoded_success_claims():
+def test_rendered_report_does_not_restate_legacy_hardcoded_success_claims(tmp_path, monkeypatch):
     data = report.generate_attribution_data(
-        value_truth=_value_snapshot(),
+        value_truth=_verified_value_snapshot(tmp_path, monkeypatch),
         bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
         observed_at="2026-08-20T04:30:00Z",
     )
@@ -91,6 +109,23 @@ def test_missing_value_receipt_cannot_generate_a_successful_report():
     assert data["status"] == "unprovable"
 
 
+def test_public_generator_rejects_syntax_valid_forged_passed_receipt():
+    forged = _value_snapshot()
+    forged["status"] = "passed"
+    forged["truth_axes"]["personal_value"] = "passed"
+    forged["metrics"]["four_week_value_gate"] = "passed"
+
+    data = report.generate_attribution_data(
+        value_truth=forged,
+        bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
+        observed_at="2026-08-20T04:30:00Z",
+    )
+
+    assert data["status"] == "unprovable"
+    assert data["truth_axes"]["operational_proof"] == "unprovable"
+    assert data["truth_axes"]["personal_value"] == "unprovable"
+
+
 def test_malformed_query_digest_cannot_be_used_as_value_evidence():
     malformed = _value_snapshot()
     malformed["source"]["query_digest"] = "sha256:not-a-digest"
@@ -105,7 +140,7 @@ def test_malformed_query_digest_cannot_be_used_as_value_evidence():
     assert data["truth_axes"]["personal_value"] == "unprovable"
 
 
-def test_receipt_must_match_fresh_live_remeasurement(tmp_path):
+def test_receipt_must_match_fresh_live_remeasurement(tmp_path, monkeypatch):
     receipt = _value_snapshot()
     receipt["truth_axes"]["personal_value"] = "passed"
     receipt["status"] = "passed"
@@ -114,34 +149,43 @@ def test_receipt_must_match_fresh_live_remeasurement(tmp_path):
     db_path = tmp_path / "ledger.sqlite3"
     db_path.write_bytes(b"ledger")
 
-    verified = report.load_verified_value_truth(
-        path,
-        db_path=db_path,
-        principal_id="principal-private",
-        measure=lambda **kwargs: _value_snapshot(),
-    )
+    monkeypatch.setattr(report, "_measure_value_truth", lambda **kwargs: _value_snapshot())
+    verified = report.load_verified_value_truth(path, db_path=db_path, principal_id="principal-private")
 
     assert verified is None
 
 
-def test_exact_receipt_is_accepted_only_after_live_remeasurement(tmp_path):
+def test_exact_receipt_is_accepted_only_after_live_remeasurement(tmp_path, monkeypatch):
     receipt = _value_snapshot()
     path = tmp_path / "receipt.json"
     path.write_text(json.dumps(receipt), encoding="utf-8")
     db_path = tmp_path / "ledger.sqlite3"
     db_path.write_bytes(b"ledger")
 
-    verified = report.load_verified_value_truth(
-        path,
-        db_path=db_path,
-        principal_id="principal-private",
-        measure=lambda **kwargs: _value_snapshot(),
+    monkeypatch.setattr(report, "_measure_value_truth", lambda **kwargs: _value_snapshot())
+    verified = report.load_verified_value_truth(path, db_path=db_path, principal_id="principal-private")
+
+    assert verified is not None
+    assert not isinstance(verified, dict)
+    data = report.generate_attribution_data(
+        value_truth=verified,
+        bet_summary={"total": 1, "by_status": {"candidate": 1}},
+        observed_at="2026-08-20T04:30:00Z",
     )
+    assert data["truth_axes"]["personal_value"] == "collecting"
 
-    assert verified == receipt
+
+def test_verified_evidence_payload_cannot_be_replaced_after_issuance(tmp_path, monkeypatch):
+    verified = _verified_value_snapshot(tmp_path, monkeypatch)
+    forged = _value_snapshot()
+    forged["status"] = "passed"
+    forged["truth_axes"]["personal_value"] = "passed"
+
+    with pytest.raises(AttributeError):
+        verified.payload = forged
 
 
-def test_report_allowlists_value_fields_instead_of_copying_arbitrary_payloads():
+def test_report_allowlists_value_fields_instead_of_copying_arbitrary_payloads(tmp_path, monkeypatch):
     snapshot = _value_snapshot()
     snapshot["source"]["absolute_path"] = "/Users/private/secret.sqlite3"
     snapshot["source"]["integrity"] = {"ok": True, "total": 9, "raw_error": "PRIVATE MEDICAL NOTE"}
@@ -149,7 +193,7 @@ def test_report_allowlists_value_fields_instead_of_copying_arbitrary_payloads():
     snapshot["metrics"]["weekly_samples"] = [{"raw_note": "PRIVATE MEDICAL NOTE"}]
 
     data = report.generate_attribution_data(
-        value_truth=snapshot,
+        value_truth=_verified_value_snapshot(tmp_path, monkeypatch, snapshot),
         bet_summary={"total": 1, "by_status": {"candidate": 1}},
         observed_at="2026-08-20T04:30:00Z",
     )

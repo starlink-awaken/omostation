@@ -89,6 +89,68 @@ def test_projection_is_privacy_safe_and_three_axis_truthful():
     assert "/Users/" not in rendered
 
 
+def test_projection_privacy_normalizes_all_nested_caller_text():
+    observation = _observation()
+    observation["verdict_distribution"] = {
+        "accept": 1,
+        "/Users/private/verdict": 99,
+        "reject": "PRIVATE VERDICT VALUE",
+    }
+    observation["weekly_samples"][0]["raw_note"] = "PRIVATE MEDICAL NOTE"
+    observation["weekly_samples"][0]["verdict_distribution"] = {
+        "accept": 1,
+        "private-verdict-key": 7,
+        "reject": "PRIVATE WEEKLY VERDICT VALUE",
+    }
+    observation["gate_gaps"] = [
+        "no weekly samples",
+        "/Users/private/medical/gate-gap",
+    ]
+
+    snapshot = meter.project_value_truth(
+        principal_id="principal-private",
+        observation=observation,
+        source_facts={
+            "event_count": 9,
+            "tip_hash": "/Users/private/ledger-tip",
+            "integrity": {
+                "ok": True,
+                "total": 9,
+                "raw_error": "PRIVATE INTEGRITY ERROR",
+            },
+        },
+        source_ref="/Users/private/medical/event-ledger.sqlite3",
+        observed_at="/Users/private/observed-at",
+    )
+
+    rendered = json.dumps(snapshot, ensure_ascii=False)
+    assert "/Users/private" not in rendered
+    assert "PRIVATE" not in rendered
+    assert snapshot["observed_at"] == "unavailable"
+    assert snapshot["source"]["ref"].startswith("local-ledger:sha256:")
+    assert snapshot["source"]["tip_hash"] == ""
+    assert snapshot["source"]["integrity"] == {"ok": True, "total": 9}
+    assert snapshot["metrics"]["verdict_distribution"] == {"accept": 1}
+    assert snapshot["metrics"]["gate_gaps"] == ["no_weekly_samples"]
+    assert snapshot["metrics"]["weekly_samples"] == [
+        {
+            "week_key": "2026-W34",
+            "total_episodes": 2,
+            "qualifying_episodes": 1,
+            "system_accept_episodes": 1,
+            "complete_burden_episodes": 2,
+            "review_lt_saved_episodes": 1,
+            "summed_review_seconds": 30.0,
+            "summed_saved_seconds": 90.0,
+            "verdict_distribution": {"accept": 1},
+            "system_evidence_count": 2,
+            "user_evidence_count": 0,
+            "unknown_evidence_count": 0,
+            "gate_met": False,
+        }
+    ]
+
+
 def test_projection_never_promotes_broken_ledger_integrity():
     snapshot = meter.project_value_truth(
         principal_id="principal-private",

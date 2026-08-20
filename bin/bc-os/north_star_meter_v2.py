@@ -19,7 +19,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -36,6 +38,11 @@ DEFAULT_LEDGER = ROOT / "runtime" / "omo" / "event-ledger.sqlite3"
 CONSUMPTION_EVENTS = ROOT / ".omo" / "state" / "consumption-events.json"
 
 SNAPSHOT_SCHEMA = "value-truth-snapshot/v1"
+_CANONICAL_REPO_SOURCE = "repo://runtime/omo/event-ledger.sqlite3"
+_LOCAL_SOURCE_RE = re.compile(r"^local-ledger:sha256:[0-9a-f]{64}$")
+_TIP_HASH_RE = re.compile(r"^[0-9a-f]{64}$")
+_WEEK_KEY_RE = re.compile(r"^[0-9]{4}-W(?:0[1-9]|[1-4][0-9]|5[0-3])$")
+_VERDICTS = ("accept", "edit", "reject", "defer", "ignore")
 
 
 def _canonical(value: Any) -> str:
@@ -58,6 +65,102 @@ def _source_ref(path: Path) -> str:
     except ValueError:
         return f"local-ledger:{_digest(str(resolved))}"
     return f"repo://{relative.as_posix()}"
+
+
+def _safe_source_ref(value: object) -> str:
+    candidate = value if isinstance(value, str) else ""
+    if candidate == _CANONICAL_REPO_SOURCE or _LOCAL_SOURCE_RE.fullmatch(candidate):
+        return candidate
+    return f"local-ledger:{_digest(candidate)}"
+
+
+def _safe_observed_at(value: object) -> str:
+    if not isinstance(value, str):
+        return "unavailable"
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return "unavailable"
+    if parsed.tzinfo is None:
+        return "unavailable"
+    return parsed.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")  # noqa: UP017
+
+
+def _nonnegative_int(value: object) -> int:
+    return value if type(value) is int and value >= 0 else 0
+
+
+def _optional_nonnegative_number(value: object) -> float | None:
+    if type(value) not in (int, float):
+        return None
+    number = float(value)
+    return number if math.isfinite(number) and number >= 0 else None
+
+
+def _safe_verdict_distribution(value: object) -> dict[str, int]:
+    if not isinstance(value, Mapping):
+        return {}
+    return {verdict: count for verdict in _VERDICTS if type(count := value.get(verdict)) is int and count >= 0}
+
+
+def _safe_integrity(value: object) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    projected: dict[str, Any] = {}
+    if type(value.get("ok")) is bool:
+        projected["ok"] = value["ok"]
+    if type(value.get("total")) is int and value["total"] >= 0:
+        projected["total"] = value["total"]
+    if type(value.get("first_bad_sequence")) is int and value["first_bad_sequence"] >= 0:
+        projected["first_bad_sequence"] = value["first_bad_sequence"]
+    return projected
+
+
+def _safe_week(value: object) -> dict[str, Any] | None:
+    if not isinstance(value, Mapping):
+        return None
+    week_key = value.get("week_key")
+    if not isinstance(week_key, str) or _WEEK_KEY_RE.fullmatch(week_key) is None:
+        return None
+    return {
+        "week_key": week_key,
+        "total_episodes": _nonnegative_int(value.get("total_episodes")),
+        "qualifying_episodes": _nonnegative_int(value.get("qualifying_episodes")),
+        "system_accept_episodes": _nonnegative_int(value.get("system_accept_episodes")),
+        "complete_burden_episodes": _nonnegative_int(value.get("complete_burden_episodes")),
+        "review_lt_saved_episodes": _nonnegative_int(value.get("review_lt_saved_episodes")),
+        "summed_review_seconds": _optional_nonnegative_number(value.get("summed_review_seconds")),
+        "summed_saved_seconds": _optional_nonnegative_number(value.get("summed_saved_seconds")),
+        "verdict_distribution": _safe_verdict_distribution(value.get("verdict_distribution")),
+        "system_evidence_count": _nonnegative_int(value.get("system_evidence_count")),
+        "user_evidence_count": _nonnegative_int(value.get("user_evidence_count")),
+        "unknown_evidence_count": _nonnegative_int(value.get("unknown_evidence_count")),
+        "gate_met": value.get("gate_met") is True,
+    }
+
+
+def _safe_gate_gaps(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    projected: list[str] = []
+    for item in value:
+        if item == "no episodes observed":
+            code = "no_episodes_observed"
+        elif item == "no weekly samples":
+            code = "no_weekly_samples"
+        elif isinstance(item, str) and item.startswith("no qualifying weeks yet"):
+            code = "no_qualifying_weeks"
+        elif isinstance(item, str) and item.startswith("only "):
+            code = "insufficient_qualifying_weeks"
+        elif isinstance(item, str) and item.startswith("non-consecutive gap between "):
+            code = "non_consecutive_qualifying_weeks"
+        elif isinstance(item, str) and item.endswith(" week(s) below threshold (need >=3 qualifying episodes each)"):
+            code = "below_weekly_threshold"
+        else:
+            continue
+        if code not in projected:
+            projected.append(code)
+    return projected
 
 
 def _unprovable(reason: str, *, observed_at: str | None = None) -> dict[str, Any]:
@@ -97,12 +200,19 @@ def project_value_truth(
     """Create a privacy-safe, three-axis projection from verified facts."""
     integrity = source_facts.get("integrity")
     integrity_ok = isinstance(integrity, Mapping) and integrity.get("ok") is True
-    principal_ref = _digest({"principal_id": principal_id})
+    principal_ref = _digest({"principal_id": principal_id if isinstance(principal_id, str) else ""})
+    safe_source_ref = _safe_source_ref(source_ref)
+    safe_observed_at = _safe_observed_at(observed_at)
+    safe_integrity = _safe_integrity(integrity)
+    raw_tip_hash = source_facts.get("tip_hash")
+    safe_tip_hash = (
+        raw_tip_hash if isinstance(raw_tip_hash, str) and _TIP_HASH_RE.fullmatch(raw_tip_hash) is not None else ""
+    )
 
     weekly_samples = observation.get("weekly_samples")
     if not isinstance(weekly_samples, list):
         weekly_samples = []
-    safe_weeks = [dict(item) for item in weekly_samples if isinstance(item, Mapping)]
+    safe_weeks = [week for item in weekly_samples if (week := _safe_week(item)) is not None]
     safe_weeks.sort(key=lambda item: str(item.get("week_key") or ""))
     latest = safe_weeks[-1] if safe_weeks else {}
 
@@ -118,34 +228,36 @@ def project_value_truth(
 
     metrics = {
         "current_week": latest.get("week_key"),
-        "current_week_qualifying_outcomes": int(latest.get("qualifying_episodes") or 0),
+        "current_week_qualifying_outcomes": _nonnegative_int(latest.get("qualifying_episodes")),
         "four_week_value_gate": personal_value,
-        "total_episodes": int(observation.get("total_episodes") or 0),
-        "verdict_distribution": dict(observation.get("verdict_distribution") or {}),
-        "system_evidence_count": int(observation.get("system_evidence_count") or 0),
-        "user_evidence_count": int(observation.get("user_evidence_count") or 0),
-        "unknown_evidence_count": int(observation.get("unknown_evidence_count") or 0),
-        "signal_to_verdict_latency_seconds": observation.get("signal_to_verdict_latency_seconds"),
+        "total_episodes": _nonnegative_int(observation.get("total_episodes")),
+        "verdict_distribution": _safe_verdict_distribution(observation.get("verdict_distribution")),
+        "system_evidence_count": _nonnegative_int(observation.get("system_evidence_count")),
+        "user_evidence_count": _nonnegative_int(observation.get("user_evidence_count")),
+        "unknown_evidence_count": _nonnegative_int(observation.get("unknown_evidence_count")),
+        "signal_to_verdict_latency_seconds": _optional_nonnegative_number(
+            observation.get("signal_to_verdict_latency_seconds")
+        ),
         "weekly_samples": safe_weeks,
-        "gate_gaps": list(observation.get("gate_gaps") or []),
+        "gate_gaps": _safe_gate_gaps(observation.get("gate_gaps")),
     }
     digest_payload = {
         "schema": SNAPSHOT_SCHEMA,
         "principal_ref": principal_ref,
-        "source_ref": source_ref,
-        "event_count": int(source_facts.get("event_count") or 0),
-        "tip_hash": str(source_facts.get("tip_hash") or ""),
-        "integrity": dict(integrity) if isinstance(integrity, Mapping) else {},
+        "source_ref": safe_source_ref,
+        "event_count": _nonnegative_int(source_facts.get("event_count")),
+        "tip_hash": safe_tip_hash,
+        "integrity": safe_integrity,
         "metrics": metrics,
     }
     return {
         "schema": SNAPSHOT_SCHEMA,
         "status": status,
-        "observed_at": observed_at,
+        "observed_at": safe_observed_at,
         "principal_ref": principal_ref,
         "source": {
             "kind": "omo_causal_event_ledger",
-            "ref": source_ref,
+            "ref": safe_source_ref,
             "event_count": digest_payload["event_count"],
             "tip_hash": digest_payload["tip_hash"],
             "integrity": digest_payload["integrity"],

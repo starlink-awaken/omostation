@@ -15,6 +15,7 @@ import importlib.util
 import json
 import os
 import re
+import weakref
 from collections import Counter
 from collections.abc import Mapping
 from datetime import datetime, timezone
@@ -67,6 +68,35 @@ def _load_value_truth(path: Path | None) -> dict[str, Any] | None:
     return value
 
 
+def _build_verified_value_boundary() -> tuple[Any, Any]:
+    seal = object()
+    issued = weakref.WeakKeyDictionary()
+
+    class VerifiedValueTruth:
+        __slots__ = ("__weakref__",)
+
+        def __init__(self, token: object) -> None:
+            if token is not seal:
+                raise TypeError("verified_value_truth_private")
+
+    def issue(payload: Mapping[str, Any]) -> object:
+        evidence = VerifiedValueTruth(seal)
+        issued[evidence] = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+        return evidence
+
+    def unwrap(candidate: object) -> dict[str, Any] | None:
+        if type(candidate) is not VerifiedValueTruth:
+            return None
+        payload = issued.get(candidate)
+        return json.loads(payload) if payload is not None else None
+
+    return issue, unwrap
+
+
+_issue_verified_value_truth, _unwrap_verified_value_truth = _build_verified_value_boundary()
+del _build_verified_value_boundary
+
+
 def _measure_value_truth(**kwargs: Any) -> dict[str, Any]:
     spec = importlib.util.spec_from_file_location("north_star_meter_v2_for_attribution", VALUE_METER)
     if spec is None or spec.loader is None:
@@ -81,8 +111,7 @@ def load_verified_value_truth(
     *,
     db_path: Path,
     principal_id: str,
-    measure: Any = None,
-) -> dict[str, Any] | None:
+) -> object | None:
     """Accept a receipt only when a fresh live measurement reproduces it."""
     candidate = _load_value_truth(path)
     if candidate is None or not principal_id.strip() or not db_path.is_file():
@@ -90,14 +119,13 @@ def load_verified_value_truth(
     observed_at = candidate.get("observed_at")
     if not isinstance(observed_at, str) or not observed_at:
         return None
-    measure_fn = measure or _measure_value_truth
     try:
-        fresh = measure_fn(db_path=db_path, principal_id=principal_id, observed_at=observed_at)
+        fresh = _measure_value_truth(db_path=db_path, principal_id=principal_id, observed_at=observed_at)
     except Exception:
         return None
     if not _valid_value_truth(fresh):
         return None
-    return fresh if candidate == fresh else None
+    return _issue_verified_value_truth(fresh) if candidate == fresh else None
 
 
 _SOURCE_FIELDS = ("kind", "ref", "event_count", "tip_hash", "query_digest")
@@ -143,13 +171,14 @@ def _load_bet_summary(path: Path) -> dict[str, Any]:
 
 def generate_attribution_data(
     *,
-    value_truth: Mapping[str, Any] | None,
+    value_truth: object | None,
     bet_summary: Mapping[str, Any],
     observed_at: str | None = None,
 ) -> dict[str, Any]:
     """Build a report from explicit evidence inputs; never infer missing data."""
-    valid_value = _valid_value_truth(value_truth)
-    axes = value_truth.get("truth_axes") if valid_value else None
+    verified_value = _unwrap_verified_value_truth(value_truth)
+    valid_value = _valid_value_truth(verified_value)
+    axes = verified_value.get("truth_axes") if valid_value else None
     if not isinstance(axes, Mapping):
         axes = {}
     truth_axes = {
@@ -157,7 +186,7 @@ def generate_attribution_data(
         "operational_proof": str(axes.get("operational_proof") or "unprovable"),
         "personal_value": str(axes.get("personal_value") or "unprovable"),
     }
-    overall = "unprovable" if "unprovable" in truth_axes.values() else str(value_truth.get("status") or "unprovable")
+    overall = "unprovable" if "unprovable" in truth_axes.values() else str(verified_value.get("status") or "unprovable")
     return {
         "schema": REPORT_SCHEMA,
         "status": overall,
@@ -173,8 +202,8 @@ def generate_attribution_data(
         },
         "personal_value": {
             "status": truth_axes["personal_value"],
-            "source": _safe_source(value_truth.get("source")) if valid_value else None,
-            "metrics": _allowlist(value_truth.get("metrics"), _METRIC_FIELDS) if valid_value else {},
+            "source": _safe_source(verified_value.get("source")) if valid_value else None,
+            "metrics": _allowlist(verified_value.get("metrics"), _METRIC_FIELDS) if valid_value else {},
         },
         "unproven_claims": {key: {"status": "unprovable", "value": None} for key in UNPROVEN_METRICS},
     }
