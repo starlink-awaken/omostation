@@ -6,6 +6,8 @@ submodule) and drives the CLI via subprocess.  No source-string assertions.
 
 from __future__ import annotations
 
+import argparse
+import builtins
 import hashlib
 import importlib.util
 import json
@@ -14,6 +16,8 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 TOOL = Path(__file__).resolve().parents[2] / "bin" / "gac" / "agent-clone.py"
 PRE_COMMIT = Path(__file__).resolve().parents[2] / ".githooks" / "pre-commit"
@@ -879,7 +883,43 @@ def test_changeset_no_change_explicit(tmp_path):
     assert data["baseline_manifest_digest"] == json.loads(baseline.read_text())["manifest_digest"]
 
 
-def test_changeset_includes_root_files_and_claim_violation_is_nonzero(tmp_path):
+def test_changeset_includes_declared_root_only_file(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    baseline = write_manifest(tmp_path, dest, "baseline.json")
+    write_active_claim(dest, "README.md")
+    (dest / "README.md").write_text("changed root file\n")
+    git(dest, "add", "README.md")
+    git(dest, "commit", "-m", "change root file")
+    output = tmp_path / "changeset.json"
+
+    proc = run_cli(
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(output),
+        "--verify-claims",
+        "--json",
+    )
+
+    data = json.loads(output.read_text())
+    assert data["changes"] == [
+        {
+            "ancestry_proven": True,
+            "base_sha": data["changes"][0]["base_sha"],
+            "candidate_sha": data["changes"][0]["candidate_sha"],
+            "kind": "root_file",
+            "path": "README.md",
+        }
+    ]
+    assert data["claim_verification"]["all_covered"] is True
+    assert data["claim_verification"]["violations"] == []
+
+
+def test_changeset_rejects_unclaimed_root_only_file(tmp_path):
     _src, _child, bare = make_source(tmp_path)
     dest = create_clone(tmp_path, bare, no_submodules=True)
     baseline = write_manifest(tmp_path, dest, "baseline.json")
@@ -904,16 +944,60 @@ def test_changeset_includes_root_files_and_claim_violation_is_nonzero(tmp_path):
     assert proc.returncode == 1
     assert parse_json(proc)["reason"] == "claim_scope_violation"
     data = json.loads(output.read_text())
-    assert data["changes"] == [
-        {
-            "ancestry_proven": True,
-            "base_sha": data["changes"][0]["base_sha"],
-            "candidate_sha": data["changes"][0]["candidate_sha"],
-            "kind": "root_file",
-            "path": "README.md",
-        }
+    assert [(change["kind"], change["path"]) for change in data["changes"]] == [
+        ("root_file", "README.md"),
     ]
     assert data["claim_verification"]["violations"] == ["README.md"]
+
+
+def test_changeset_fails_closed_when_claim_checker_is_unavailable(tmp_path, monkeypatch):
+    tool = load_tool_module()
+    _src, _child, bare = make_source(tmp_path)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    baseline = write_manifest(tmp_path, dest, "baseline.json")
+    (dest / "README.md").write_text("changed root file\n")
+    git(dest, "add", "README.md")
+    git(dest, "commit", "-m", "change root file")
+    output = tmp_path / "changeset.json"
+    monkeypatch.setattr(
+        tool,
+        "_verify_changeset_claims",
+        lambda _root, _changes: {"enabled": False, "reason": "checker unavailable"},
+    )
+
+    with pytest.raises(tool.ToolError, match="claim verification could not run"):
+        tool.cmd_changeset(
+            argparse.Namespace(
+                clone=str(dest),
+                baseline=str(baseline),
+                output=str(output),
+                verify_claims=True,
+            )
+        )
+
+    assert json.loads(output.read_text())["claim_verification"]["enabled"] is False
+
+
+def test_changeset_marks_import_error_claim_checker_unavailable(monkeypatch, tmp_path):
+    tool = load_tool_module()
+    real_import = builtins.__import__
+
+    def deny_swarm_discipline(name, *args, **kwargs):
+        if name == "swarm_discipline":
+            raise ImportError("test missing claim checker")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", deny_swarm_discipline)
+    result = tool._verify_changeset_claims(str(tmp_path), [])
+
+    assert result == {
+        "enabled": False,
+        "claimed_paths": [],
+        "checked": [],
+        "violations": [],
+        "all_covered": True,
+        "reason": "swarm_discipline not available",
+    }
 
 
 def test_verify_changeset_binds_current_clone_baseline_head_paths_and_digest(tmp_path):
@@ -1022,6 +1106,7 @@ def test_changeset_fast_forward_accepted(tmp_path):
     src, child, bare = make_source(tmp_path)
     dest = create_clone(tmp_path, bare)
     baseline = write_manifest(tmp_path, dest, "baseline.json")
+    write_active_claim(dest, "README.md", "childmod")
     _new_root = _advance_source(src, child)
     _ff_clone(dest)
 
@@ -1034,6 +1119,7 @@ def test_changeset_fast_forward_accepted(tmp_path):
         str(baseline),
         "--output",
         str(out),
+        "--verify-claims",
         "--json",
     )
     assert parse_json(proc)["reason"] == "changeset_generated"
@@ -1043,8 +1129,40 @@ def test_changeset_fast_forward_accepted(tmp_path):
         ("root_file", "README.md"),
         ("gitlink", "childmod"),
     }
+    assert data["claim_verification"]["checked"] == ["README.md", "childmod"]
+    assert data["claim_verification"]["all_covered"] is True
     assert all(change["ancestry_proven"] is True for change in data["changes"])
     assert data["root_candidate_sha"] == git(dest, "rev-parse", "HEAD").stdout.strip()
+
+
+def test_changeset_checks_deleted_and_renamed_root_paths(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    baseline = write_manifest(tmp_path, dest, "baseline.json")
+    write_active_claim(dest, "README.md", "renamed.md")
+    git(dest, "mv", "README.md", "renamed.md")
+    git(dest, "commit", "-m", "rename root file")
+    output = tmp_path / "changeset.json"
+
+    proc = run_cli(
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(output),
+        "--verify-claims",
+        "--json",
+    )
+
+    assert proc.returncode == 0
+    data = json.loads(output.read_text())
+    assert [(change["kind"], change["path"]) for change in data["changes"]] == [
+        ("root_file", "README.md"),
+        ("root_file", "renamed.md"),
+    ]
+    assert data["claim_verification"]["checked"] == ["README.md", "renamed.md"]
 
 
 def test_changeset_rejects_child_head_gitlink_mismatch(tmp_path):
