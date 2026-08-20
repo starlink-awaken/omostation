@@ -119,7 +119,7 @@ def test_measurement_without_principal_or_ledger_is_unprovable(tmp_path):
     assert not missing.exists()
 
 
-def test_measurement_reads_brokered_personal_outcome_without_mutating_ledger(tmp_path):
+def test_measurement_reads_brokered_personal_outcome_without_mutating_ledger(tmp_path, monkeypatch):
     sys.path[:0] = [str(ROOT / "projects" / "omo" / "src"), str(ROOT / "projects" / "ecos" / "src")]
     from omo.event_ledger.broker import LedgerBroker
 
@@ -183,12 +183,18 @@ def test_measurement_reads_brokered_personal_outcome_without_mutating_ledger(tmp
         )
         before = [(row["sequence"], row["event_hash"]) for row in broker.read()]
 
+    def reject_write_capable_connect(*args, **kwargs):
+        raise AssertionError("measurement must not call the schema-writing LedgerBroker.connect")
+
+    monkeypatch.setattr(LedgerBroker, "connect", reject_write_capable_connect)
+
     snapshot = meter.measure_value_truth(
         db_path=db_path,
         principal_id=principal_id,
         observed_at="2026-08-20T04:30:00Z",
     )
 
+    monkeypatch.undo()
     with LedgerBroker.connect(db_path) as broker:
         after = [(row["sequence"], row["event_hash"]) for row in broker.read()]
     assert after == before

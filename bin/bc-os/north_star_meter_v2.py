@@ -20,7 +20,9 @@ import argparse
 import hashlib
 import json
 import os
+import sqlite3
 import sys
+import threading
 from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
@@ -169,7 +171,21 @@ def _observe_personal_value(db_path: Path, principal_id: str) -> tuple[dict[str,
     from omo.event_ledger.broker import LedgerBroker
     from omo.personal_episode import PersonalEpisodeService
 
-    with LedgerBroker.connect(db_path) as broker:
+    connection = sqlite3.connect(
+        f"{db_path.resolve().as_uri()}?mode=ro",
+        uri=True,
+        check_same_thread=False,
+    )
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA query_only = ON")
+    journal_mode = str(connection.execute("PRAGMA journal_mode").fetchone()[0]).lower()
+    broker = LedgerBroker(
+        db_path,
+        conn=connection,
+        journal_mode=journal_mode,
+        lock=threading.RLock(),
+    )
+    with broker:
         before = broker.read()
         integrity = broker.verify_chain()
         observation = PersonalEpisodeService(broker).observe_principal(principal_id).to_dict()
