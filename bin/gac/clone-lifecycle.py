@@ -94,7 +94,14 @@ def workflow_activity(root: Path) -> tuple[list[str], list[str], list[str]]:
 
 
 def remove_opened_tree_contents(directory_fd: int) -> None:
-    """Remove entries below an already-open directory without re-resolving its path."""
+    """Remove entries below an already-open directory without path escape.
+
+    Retirement already requires a clean clone with zero workflow leases. The
+    threat model therefore excludes an actively hostile same-UID writer, which
+    POSIX cannot lock out from a re-stat/unlink window. Directory identity is
+    FD-bound and non-directories are unlinked without following symlinks, matching
+    the platform's symlink-safe ``rmtree`` boundary.
+    """
     with os.scandir(directory_fd) as entries:
         for entry in entries:
             entry_stat = os.stat(entry.name, dir_fd=directory_fd, follow_symlinks=False)

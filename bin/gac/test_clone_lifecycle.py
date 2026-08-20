@@ -652,6 +652,33 @@ def test_retire_fails_closed_without_fd_bound_delete_support(tmp_path, monkeypat
     assert not list(clone.parent.glob(".ws.retire-quarantine-*"))
 
 
+def test_retire_never_follows_nested_file_replacement_symlink(tmp_path, monkeypatch):
+    clone, _remote, head = make_retirable_clone(tmp_path)
+    external_victim = tmp_path / "external-victim.txt"
+    external_victim.write_text("keep\n")
+    real_unlink = lc.os.unlink
+    injected = False
+
+    def racing_unlink(path, *args, **kwargs):
+        nonlocal injected
+        directory_fd = kwargs.get("dir_fd")
+        if path == "README.md" and directory_fd is not None and not injected:
+            injected = True
+            os.rename(path, "README.retired", src_dir_fd=directory_fd, dst_dir_fd=directory_fd)
+            os.symlink(external_victim, path, dir_fd=directory_fd)
+        return real_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(lc, "run", merged_pr_runner(head))
+    monkeypatch.setattr(lc.os, "unlink", racing_unlink)
+
+    rc = lc.cmd_retire(argparse.Namespace(destination=str(clone)))
+
+    assert injected is True
+    assert rc == lc.EXIT_POLICY
+    assert external_victim.read_text() == "keep\n"
+    assert list(clone.parent.glob(".ws.retire-quarantine-*"))
+
+
 def test_retire_detects_identity_swap_at_quarantine_boundary(tmp_path, monkeypatch):
     clone, _remote, head = make_retirable_clone(tmp_path)
     original = clone.parent / "original-ws"
