@@ -292,13 +292,18 @@ def claim_resource(
 
 
 def active_claim(resource_type: str, resource_id: str) -> Claim | None:
-    """当前 active claim (无则 None). 供复用判定与 status 用."""
+    """当前按时间仍 live 的 active claim (无则 None). 供复用判定与 status 用.
+
+    ``state='active'`` 是持久化状态，不能单独代表运行时活跃；过期行要保留给
+    ``claim_resource()`` 原子回收和审计，但不得重新暴露为可复用的 live claim。
+    """
     conn = _connect()
     try:
         row = conn.execute(
             "SELECT owner, token, claimed_at, expires_at FROM claims "
-            "WHERE resource_type=? AND resource_id=? AND state='active'",
-            (resource_type, resource_id),
+            "WHERE resource_type=? AND resource_id=? AND state='active' "
+            "AND (expires_at IS NULL OR expires_at>?)",
+            (resource_type, resource_id, _utc_now()),
         ).fetchone()
         if row is None:
             return None
@@ -535,6 +540,7 @@ def snapshot() -> dict:
     """只读快照: claims/agent_health/messages + shadow 事件计数."""
     conn = _connect()
     try:
+        now = _utc_now()
         claims = [
             dict(r)
             for r in conn.execute(
@@ -542,6 +548,21 @@ def snapshot() -> dict:
                 "FROM claims ORDER BY resource_type, resource_id"
             )
         ]
+        claim_counts_row = conn.execute(
+            "SELECT "
+            "SUM(CASE WHEN state='active' THEN 1 ELSE 0 END) AS state_active, "
+            "SUM(CASE WHEN state='active' AND expires_at IS NOT NULL AND expires_at<=? "
+            "THEN 1 ELSE 0 END) AS expired_by_time, "
+            "SUM(CASE WHEN state='active' AND (expires_at IS NULL OR expires_at>?) "
+            "THEN 1 ELSE 0 END) AS live_by_time "
+            "FROM claims",
+            (now, now),
+        ).fetchone()
+        claim_counts = {
+            "state_active": int(claim_counts_row["state_active"] or 0),
+            "expired_by_time": int(claim_counts_row["expired_by_time"] or 0),
+            "live_by_time": int(claim_counts_row["live_by_time"] or 0),
+        }
         health = []
         for row in conn.execute(
             "SELECT agent_id, last_seen, status, source, stale_after, detail_json FROM agent_health ORDER BY agent_id"
@@ -569,6 +590,7 @@ def snapshot() -> dict:
         "db_path": str(db_path()),
         "schema_version": SCHEMA_VERSION,
         "claims": claims,
+        "claim_counts": claim_counts,
         "agent_health": health,
         "messages": messages,
         "shadow_events": events,

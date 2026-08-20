@@ -134,6 +134,13 @@ def suite_fencing() -> bool:
     conn0.close()
     assert rows0 == 1, f"same-owner 重取不应新增 active 行, 实际={rows0}"
     assert c1_re.expires_at > c1.expires_at, "same-owner 重取应顺延 TTL"
+    live_snapshot = cs.snapshot()
+    assert live_snapshot["claim_counts"] == {
+        "state_active": 1,
+        "expired_by_time": 0,
+        "live_by_time": 1,
+    }, "未过期 active claim 必须保持 live 兼容语义"
+    assert cs.active_claim("branch", rid) == c1_re, "未过期 active claim 必须仍可读取"
     assert cs.check_fencing("branch", rid, "a", c1.token).ok, "active owner/token 应通过"
     wrong_owner = cs.check_fencing("branch", rid, "intruder", c1.token)
     assert not wrong_owner.ok and "owner" in wrong_owner.reason, "错误 owner 必须 reject"
@@ -155,6 +162,23 @@ def suite_fencing() -> bool:
     )
     conn.commit()
     conn.close()
+    assert cs.active_claim("branch", rid) is None, "state=active 但已过期的 claim 不得作为 live claim 返回"
+    expired_snapshot = cs.snapshot()
+    assert expired_snapshot["claim_counts"] == {
+        "state_active": 1,
+        "expired_by_time": 1,
+        "live_by_time": 0,
+    }, "snapshot 必须区分数据库 active、时间过期与真正 live 的 claim"
+    status = subprocess.run(
+        [sys.executable, str(Path(__file__).with_name("swarm-discipline-cli.py")), "status", "--json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert status.returncode == 0, status.stdout + status.stderr
+    assert json.loads(status.stdout)["claim_counts"] == expired_snapshot["claim_counts"], (
+        "status JSON 必须投影同一组 claim 时间语义"
+    )
     expired = cs.check_fencing("branch", rid, "b", c2.token)
     assert not expired.ok and "expired" in expired.reason, "过期 active token 必须 reject"
     c3 = cs.claim_resource("branch", rid, owner="c", ttl_hours=1)
