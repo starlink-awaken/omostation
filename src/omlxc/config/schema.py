@@ -157,6 +157,7 @@ class BackendConfig(ConfigModel):
     probe_model_id: str | None = None
     known_hosts_file: Path | None = None
     lms_platform: Literal["macos", "windows"] = "macos"
+    probe_timeout_seconds: float = Field(default=10.0, gt=0)
 
     @field_validator("kind", mode="before")
     @classmethod
