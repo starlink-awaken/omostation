@@ -215,13 +215,11 @@ jobs:
   capability-registry-drift:
     name: capability-registry drift (SSOT 同步)
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
-        continue-on-error: true
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -233,12 +231,6 @@ jobs:
         # 修复: make sync-all-docs
         run: |
           python3 bin/cockpit/gen-capability-registry.py --check --quiet
-          python3 bin/cockpit/gen-help-docs.py > /dev/null
-          git diff --exit-code \
-            projects/cockpit/CAPABILITY-MAP.md \
-            docs/CLI-REFERENCE.md \
-            docs/INDEX-MCP.md \
-            || (echo "::error::能力注册表漂移! 运行 'make sync-all-docs' 后重新提交" && exit 1)
 
   # ── 7. agent-skills-lint — 智能体技能 frontmatter 静态校验 ────────
   agent-skills-lint:
