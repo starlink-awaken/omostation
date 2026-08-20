@@ -9,6 +9,7 @@ independent-agent-clone topology.  Subcommands:
   manifest   --clone PATH --output PATH
   verify     --clone PATH --manifest PATH
   changeset  --clone PATH --baseline PATH --output PATH
+  verify-changeset --clone PATH --baseline PATH --changeset PATH --agent-id ID
   guard      --workspace PATH [--integration-root PATH]
 
 Exit contract: 0 = success, 1 = policy/verification failure,
@@ -1177,6 +1178,7 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
     changeset = {
         "schema": SCHEMA_CHANGESET,
         "agent_id": identity["agent_id"] if identity else None,
+        "clone_root": canonical(args.clone),
         "baseline_manifest_digest": baseline["manifest_digest"],
         "root_base_sha": root_base,
         "root_candidate_sha": root_candidate,
@@ -1184,14 +1186,7 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
         "no_change": no_change,
         "claim_verification": claim_verification,
     }
-    changeset["change_id"] = canonical_digest(
-        {
-            "baseline_manifest_digest": changeset["baseline_manifest_digest"],
-            "root_base_sha": root_base,
-            "root_candidate_sha": root_candidate,
-            "changes": changes,
-        }
-    )
+    changeset["change_id"] = canonical_digest(changeset, exclude_field="change_id")
 
     write_json_exclusive(args.output, changeset, "changeset_write_failed")
     if claim_verification is not None:
@@ -1218,6 +1213,106 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
         "change_id": changeset["change_id"],
         "no_change": no_change,
         "changes_count": len(changes),
+    }
+
+
+def cmd_verify_changeset(args: argparse.Namespace) -> dict:
+    """Rebuild and compare a claim-verified changeset against current clone state."""
+    try:
+        with open(args.changeset, encoding="utf-8") as fh:
+            stored = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ToolError(
+            "changeset_unreadable",
+            f"cannot read changeset {args.changeset}: {exc}",
+            EXIT_POLICY,
+        ) from exc
+    if stored.get("schema") != SCHEMA_CHANGESET:
+        raise ToolError(
+            "changeset_schema_mismatch",
+            f"unexpected changeset schema {stored.get('schema')!r}",
+            EXIT_POLICY,
+        )
+    stored_digest = stored.get("change_id")
+    recomputed_digest = canonical_digest(stored, exclude_field="change_id")
+    if stored_digest != recomputed_digest:
+        raise ToolError(
+            "changeset_digest_mismatch",
+            "changeset digest validation failed",
+            EXIT_POLICY,
+        )
+    claims = stored.get("claim_verification")
+    if not isinstance(claims, dict) or claims.get("enabled") is not True:
+        raise ToolError(
+            "changeset_claims_unverified",
+            "changeset was not created with successful --verify-claims",
+            EXIT_POLICY,
+        )
+    if claims.get("all_covered") is not True or claims.get("violations"):
+        raise ToolError(
+            "changeset_claim_scope_violation",
+            "changeset contains unclaimed paths",
+            EXIT_POLICY,
+        )
+    clone_root = canonical(args.clone)
+    identity = read_identity(args.clone)
+    if (
+        identity.get("ready") is not True
+        or identity.get("canonical_root") != clone_root
+        or identity.get("agent_id") != args.agent_id
+    ):
+        raise ToolError(
+            "changeset_agent_mismatch",
+            "ready clone identity does not match requested clone and agent",
+            EXIT_POLICY,
+        )
+    baseline = load_baseline(args.baseline)
+    if baseline.get("agent_id") != args.agent_id or baseline.get("canonical_root") != clone_root:
+        raise ToolError(
+            "changeset_baseline_mismatch",
+            "baseline is not bound to this clone and agent",
+            EXIT_POLICY,
+        )
+    if stored.get("agent_id") != args.agent_id or stored.get("clone_root") != clone_root:
+        raise ToolError(
+            "changeset_clone_mismatch",
+            "changeset is not bound to this clone and agent",
+            EXIT_POLICY,
+        )
+
+    with tempfile.TemporaryDirectory(prefix="agent-clone-verify-") as tmp:
+        output = os.path.join(tmp, "current-changeset.json")
+        cmd_changeset(
+            argparse.Namespace(
+                clone=args.clone,
+                baseline=args.baseline,
+                output=output,
+                verify_claims=True,
+            )
+        )
+        with open(output, encoding="utf-8") as fh:
+            current = json.load(fh)
+    if stored != current:
+        raise ToolError(
+            "changeset_stale",
+            "changeset does not match current baseline, HEAD, paths, objects, or claims",
+            EXIT_POLICY,
+            {
+                "stored_head": stored.get("root_candidate_sha"),
+                "current_head": current.get("root_candidate_sha"),
+                "stored_change_id": stored_digest,
+                "current_change_id": current.get("change_id"),
+            },
+        )
+    return {
+        "ok": True,
+        "reason": "changeset_verified",
+        "clone_root": clone_root,
+        "baseline_manifest_digest": stored["baseline_manifest_digest"],
+        "root_head_sha": stored["root_candidate_sha"],
+        "changed_paths": [change["path"] for change in stored.get("changes", [])],
+        "change_id": stored_digest,
+        "no_change": stored.get("no_change", False),
     }
 
 
@@ -1351,6 +1446,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="D3 跨仓变更审计: 校验变更路径在 agent claim 范围内",
     )
     p.set_defaults(func=cmd_changeset)
+
+    p = sub.add_parser("verify-changeset")
+    add_common(p)
+    p.add_argument("--clone", required=True)
+    p.add_argument("--baseline", required=True)
+    p.add_argument("--changeset", required=True)
+    p.add_argument("--agent-id", required=True)
+    p.set_defaults(func=cmd_verify_changeset)
 
     p = sub.add_parser("guard")
     add_common(p)

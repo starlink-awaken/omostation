@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -35,6 +36,7 @@ AGENT_CLONE = ROOT / "bin" / "gac" / "agent-clone.py"
 EXIT_OK = 0
 EXIT_POLICY = 1
 EXIT_USAGE = 2
+RMTREE_AVOIDS_SYMLINK_ATTACKS = shutil.rmtree.avoids_symlink_attacks
 
 
 def run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
@@ -52,6 +54,81 @@ def reject(action: str, reason: str, message: str, **details: object) -> int:
     audit(f"{action}_blocked", f"reason={reason} message={message}")
     print(json.dumps(payload, sort_keys=True), file=sys.stderr)
     return EXIT_POLICY
+
+
+def github_repo_slug(remote_url: str) -> str | None:
+    """Return an exact owner/repository slug for a GitHub remote."""
+    match = re.fullmatch(
+        r"(?:https?://github\.com/|ssh://git@github\.com/|git@github\.com:)"
+        r"([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?/?",
+        remote_url.strip(),
+    )
+    return f"{match.group(1)}/{match.group(2)}" if match else None
+
+
+def workflow_activity(root: Path) -> tuple[list[str], list[str], list[str]]:
+    workflow_root = root / ".omo" / "_delivery" / "agent-workflows"
+    locks = [str(path) for path in (workflow_root / "locks").glob("*") if path.is_file()]
+    active_runs: list[str] = []
+    errors: list[str] = []
+    for run_file in (workflow_root / "runs").glob("*.yaml"):
+        try:
+            content = run_file.read_text(encoding="utf-8")
+        except OSError:
+            errors.append(str(run_file))
+            continue
+        if re.search(r"(?m)^status:\s*(?:active|in_progress|running|executing)\s*$", content):
+            active_runs.append(str(run_file))
+    return locks, active_runs, errors
+
+
+def quarantine_remove_verified(
+    dest: Path,
+    expected_stat: os.stat_result,
+    expected_head: str,
+) -> tuple[bool, str]:
+    """Atomically isolate the checked inode before recursive deletion."""
+    quarantine = Path(
+        tempfile.mkdtemp(
+            prefix=f".{dest.name}.retire-quarantine-",
+            dir=str(dest.parent),
+        )
+    )
+    payload = quarantine / "payload"
+
+    def restore(message: str) -> tuple[bool, str]:
+        if not os.path.lexists(dest) and os.path.lexists(payload):
+            os.rename(payload, dest)
+            quarantine.rmdir()
+            return False, f"{message}; original path restored"
+        return False, f"{message}; inspect preserved payload at {payload}"
+
+    try:
+        os.rename(dest, payload)
+        moved_stat = payload.lstat()
+        if payload.is_symlink() or not os.path.samestat(expected_stat, moved_stat):
+            return restore("destination changed at quarantine boundary")
+        head = run(["git", "-C", str(payload), "rev-parse", "HEAD"])
+        if head.returncode != 0 or head.stdout.strip() != expected_head:
+            return restore("clone HEAD changed at quarantine boundary")
+        status = run(["git", "-C", str(payload), "status", "--porcelain", "--ignore-submodules=none"])
+        if status.returncode != 0 or status.stdout.strip():
+            return restore("clone became dirty at quarantine boundary")
+        locks, active_runs, state_errors = workflow_activity(payload)
+        if locks or active_runs or state_errors:
+            return restore("workflow lease or lock appeared at quarantine boundary")
+        if not RMTREE_AVOIDS_SYMLINK_ATTACKS:
+            return restore("platform lacks symlink-safe recursive deletion")
+        shutil.rmtree(payload)
+        quarantine.rmdir()
+        return True, str(quarantine)
+    except OSError as exc:
+        if not os.path.lexists(payload):
+            try:
+                quarantine.rmdir()
+            except OSError:
+                pass
+        return False, f"secure retirement failed: {exc}; inspect {quarantine}"
 
 
 def cmd_onboard(args: argparse.Namespace) -> int:
@@ -241,6 +318,14 @@ def cmd_integrate(args: argparse.Namespace) -> int:
         or identity.get("working_branch") != branch
     ):
         return reject("integrate", "identity_mismatch", "clone identity does not match integration request")
+    baseline = getattr(args, "baseline", None)
+    changeset = getattr(args, "changeset", None)
+    if not baseline or not changeset:
+        return reject(
+            "integrate",
+            "verified_changeset_required",
+            "--apply requires --baseline and a current --verify-claims changeset",
+        )
     branch_probe = run(["git", "-C", str(clone), "branch", "--show-current"])
     if branch_probe.returncode != 0 or branch_probe.stdout.strip() != branch:
         return reject(
@@ -251,12 +336,58 @@ def cmd_integrate(args: argparse.Namespace) -> int:
     status = run(["git", "-C", str(clone), "status", "--porcelain", "--ignore-submodules=none"])
     if status.returncode != 0 or status.stdout.strip():
         return reject("integrate", "clone_dirty", "clone must be clean before integration")
+    verified = run(
+        [
+            sys.executable,
+            str(AGENT_CLONE),
+            "verify-changeset",
+            "--clone",
+            str(clone),
+            "--baseline",
+            str(baseline),
+            "--changeset",
+            str(changeset),
+            "--agent-id",
+            agent_id,
+            "--json",
+        ]
+    )
+    if verified.returncode != 0:
+        return reject(
+            "integrate",
+            "changeset_verification_failed",
+            verified.stdout.strip() or verified.stderr.strip() or "changeset verification failed",
+        )
+    try:
+        verification = json.loads(verified.stdout)
+    except json.JSONDecodeError:
+        return reject("integrate", "changeset_verification_invalid", "verifier returned invalid JSON")
+    if verification.get("no_change") is True or not verification.get("changed_paths"):
+        return reject("integrate", "changeset_empty", "integration requires at least one verified changed path")
     head_probe = run(["git", "-C", str(clone), "rev-parse", "HEAD"])
     if head_probe.returncode != 0:
         return reject("integrate", "head_unreadable", "cannot resolve clone HEAD")
     head_sha = head_probe.stdout.strip()
+    if head_sha != verification.get("root_head_sha"):
+        return reject("integrate", "changeset_head_raced", "clone HEAD changed after changeset verification")
+    remote_probe = run(["git", "-C", str(clone), "remote", "get-url", "origin"])
+    if remote_probe.returncode != 0:
+        return reject("integrate", "origin_unreadable", "cannot resolve origin remote")
+    repo_slug = github_repo_slug(remote_probe.stdout)
+    if repo_slug is None:
+        return reject("integrate", "github_repository_unbound", "origin is not an exact GitHub repository URL")
+    owner = repo_slug.split("/", 1)[0]
     # 推送分支
-    r = run(["git", "-C", str(clone), "push", "--set-upstream", "origin", branch])
+    r = run(
+        [
+            "git",
+            "-C",
+            str(clone),
+            "push",
+            "origin",
+            f"{head_sha}:refs/heads/{branch}",
+        ]
+    )
     if r.returncode != 0:
         audit("integrate_failed", f"push rc={r.returncode}")
         return EXIT_POLICY
@@ -266,8 +397,10 @@ def cmd_integrate(args: argparse.Namespace) -> int:
             "gh",
             "pr",
             "list",
+            "--repo",
+            repo_slug,
             "--head",
-            branch,
+            f"{owner}:{branch}",
             "--base",
             base,
             "--state",
@@ -293,10 +426,12 @@ def cmd_integrate(args: argparse.Namespace) -> int:
                 "gh",
                 "pr",
                 "create",
+                "--repo",
+                repo_slug,
                 "--base",
                 base,
                 "--head",
-                branch,
+                f"{owner}:{branch}",
                 "--title",
                 f"fix(gac): harden {agent_id} clone lifecycle",
                 "--body",
@@ -314,6 +449,8 @@ def cmd_integrate(args: argparse.Namespace) -> int:
                 "ok": True,
                 "branch": branch,
                 "head_sha": head_sha,
+                "change_id": verification["change_id"],
+                "repository": repo_slug,
                 "pushed": True,
                 "pr_url": pr_url,
             }
@@ -373,36 +510,37 @@ def cmd_retire(args: argparse.Namespace) -> int:
     if status.returncode != 0 or status.stdout.strip():
         return reject("retire", "clone_dirty", "clone or initialized submodule is dirty")
 
-    workflow_root = dest / ".omo" / "_delivery" / "agent-workflows"
-    locks = [str(path) for path in (workflow_root / "locks").glob("*") if path.is_file()]
-    active_runs: list[str] = []
-    for run_file in (workflow_root / "runs").glob("*.yaml"):
-        try:
-            content = run_file.read_text(encoding="utf-8")
-        except OSError:
-            return reject("retire", "workflow_state_unreadable", str(run_file))
-        if re.search(r"(?m)^status:\s*(?:active|in_progress|running|executing)\s*$", content):
-            active_runs.append(str(run_file))
-    if locks or active_runs:
+    locks, active_runs, state_errors = workflow_activity(dest)
+    if locks or active_runs or state_errors:
         return reject(
             "retire",
             "active_lease_or_lock",
             "workflow leases or locks are still present",
             locks=locks,
             active_runs=active_runs,
+            unreadable=state_errors,
         )
 
     remote = run(["git", "-C", str(dest), "ls-remote", "--exit-code", "--heads", "origin", f"refs/heads/{branch}"])
     remote_head = remote.stdout.split()[0] if remote.returncode == 0 and remote.stdout.split() else ""
     if remote_head != head_sha:
         return reject("retire", "head_not_pushed", f"remote branch does not contain exact HEAD {head_sha}")
+    remote_probe = run(["git", "-C", str(dest), "remote", "get-url", "origin"])
+    if remote_probe.returncode != 0:
+        return reject("retire", "origin_unreadable", "cannot resolve origin remote")
+    repo_slug = github_repo_slug(remote_probe.stdout)
+    if repo_slug is None:
+        return reject("retire", "github_repository_unbound", "origin is not an exact GitHub repository URL")
+    owner = repo_slug.split("/", 1)[0]
     pr_query = run(
         [
             "gh",
             "pr",
             "list",
+            "--repo",
+            repo_slug,
             "--head",
-            branch,
+            f"{owner}:{branch}",
             "--state",
             "merged",
             "--json",
@@ -430,7 +568,9 @@ def cmd_retire(args: argparse.Namespace) -> int:
     final_status = run(["git", "-C", str(dest), "status", "--porcelain", "--ignore-submodules=none"])
     if final_status.returncode != 0 or final_status.stdout.strip():
         return reject("retire", "clone_raced_dirty", "clone changed during retirement checks")
-    shutil.rmtree(dest)
+    removed, removal_detail = quarantine_remove_verified(dest, initial_stat, head_sha)
+    if not removed:
+        return reject("retire", "destination_raced", removal_detail)
     audit("retire_ok", f"removed {dest}")
     print(
         json.dumps(
@@ -484,6 +624,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--clone", required=True)
     sp.add_argument("--agent-id", required=True)
     sp.add_argument("--base", default="main")
+    sp.add_argument("--baseline", help="baseline manifest bound to the verified changeset")
+    sp.add_argument("--changeset", help="current changeset created with --verify-claims")
     integrate_mode = sp.add_mutually_exclusive_group()
     integrate_mode.add_argument("--dry-run", dest="dry_run", action="store_true")
     integrate_mode.add_argument("--apply", dest="dry_run", action="store_false")

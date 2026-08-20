@@ -181,6 +181,13 @@ def write_manifest(tmp: Path, clone: Path, name: str = "manifest.json") -> Path:
     return out
 
 
+def write_active_claim(clone: Path, *paths: str) -> None:
+    runs = clone / ".omo" / "_delivery" / "agent-workflows" / "runs"
+    runs.mkdir(parents=True, exist_ok=True)
+    rendered = "\n".join(f"      - {path}" for path in paths)
+    (runs / "active.yaml").write_text("status: active\nclaims:\n  - paths:\n" + rendered + "\n")
+
+
 def tamper_manifest(path: Path, mutate, recompute: bool = True) -> None:
     data = json.loads(path.read_text())
     mutate(data)
@@ -907,6 +914,108 @@ def test_changeset_includes_root_files_and_claim_violation_is_nonzero(tmp_path):
         }
     ]
     assert data["claim_verification"]["violations"] == ["README.md"]
+
+
+def test_verify_changeset_binds_current_clone_baseline_head_paths_and_digest(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    baseline = write_manifest(tmp_path, dest, "baseline.json")
+    write_active_claim(dest, "README.md")
+    (dest / "README.md").write_text("claimed change\n")
+    git(dest, "add", "README.md")
+    git(dest, "commit", "-m", "claimed change")
+    output = tmp_path / "verified-changeset.json"
+
+    generated = run_cli(
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(output),
+        "--verify-claims",
+        "--json",
+        check=False,
+    )
+    assert generated.returncode == 0, generated.stderr
+    receipt = json.loads(output.read_text())
+    assert receipt["clone_root"] == str(dest.resolve())
+
+    verified = run_cli(
+        "verify-changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--changeset",
+        str(output),
+        "--agent-id",
+        "agent-1",
+        "--json",
+        check=False,
+    )
+    assert verified.returncode == 0, verified.stderr
+    assert parse_json(verified)["change_id"] == receipt["change_id"]
+
+
+def test_verify_changeset_rejects_stale_head_and_tampered_changed_paths(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    baseline = write_manifest(tmp_path, dest, "baseline.json")
+    write_active_claim(dest, "README.md")
+    (dest / "README.md").write_text("claimed change\n")
+    git(dest, "add", "README.md")
+    git(dest, "commit", "-m", "claimed change")
+    output = tmp_path / "verified-changeset.json"
+    run_cli(
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(output),
+        "--verify-claims",
+    )
+
+    tampered = json.loads(output.read_text())
+    tampered["changes"][0]["path"] = "UNCLAIMED.md"
+    tampered["change_id"] = sha256_canonical(tampered, exclude="change_id")
+    tampered_path = tmp_path / "tampered.json"
+    tampered_path.write_text(json.dumps(tampered))
+    rejected = run_cli(
+        "verify-changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--changeset",
+        str(tampered_path),
+        "--agent-id",
+        "agent-1",
+        "--json",
+        check=False,
+    )
+    assert rejected.returncode == 1
+
+    (dest / "README.md").write_text("newer than receipt\n")
+    git(dest, "add", "README.md")
+    git(dest, "commit", "-m", "stale receipt")
+    stale = run_cli(
+        "verify-changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--changeset",
+        str(output),
+        "--agent-id",
+        "agent-1",
+        "--json",
+        check=False,
+    )
+    assert stale.returncode == 1
 
 
 def test_changeset_fast_forward_accepted(tmp_path):
