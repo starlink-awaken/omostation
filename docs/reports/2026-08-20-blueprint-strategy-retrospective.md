@@ -400,3 +400,72 @@ child spec/claim
 > 先让一个真实事项进入系统，形成一个本人愿意接受或明确拒绝的 never-send 候选，并准确记录他改了什么；然后连续观察，再谈 Agent 蜂群、A2A 和自我进化。
 
 这条路径同时满足个人价值、架构收敛、协议清晰、多 Agent 可控、多仓可集成和长期可持有性。
+
+## 16. 2026-08-21 closeout delta
+
+> 本节是对本报告的追加收口，不改写页首 `evidence_cutoff`，也不把本节证据倒灌为
+> 2026-08-20 的历史结论。会漂移的运行事实继续以对应 SSOT、broker 回执和实时命令为准。
+
+### 16.1 三轴终局判定
+
+| 轴 | 收口状态 | 直接判定 |
+|---|---|---|
+| Engineering | `PROVEN` | accepted Spec、WorkPacket 身份链、verified independent clone、canonical changeset/claim coverage、BDSK 路由约束与 Coordination 控制面已经形成可执行机制；工程绿只证明交付链，不替代价值证明。 |
+| Operational | `PARTIAL` | tick 调度已切至受管 LaunchAgent，启动目录、进程参数、协调库完整性、agent heartbeat、attestation 与备份轮转的只读 shadow 证据通过；但 backup cron 仍错误指向共享 Workspace，未完成所有权切换，因此整体运行轴不得标 `PROVEN`。 |
+| Value | `NOT_PROVEN` | `engineering-delivery` 的真实 Human Outcome 仍为 0；测试、合成、`user_provided` 或无法绑定 `human_verdict` 的记录不计入价值门。工程资产、PR、review 与历史 harvest 都不能替代真实 `decision_outcome`。 |
+
+### 16.2 机制收敛结果
+
+本轮已把此前分散的控制能力收敛到同一条身份和证据链：
+
+```text
+accepted Spec
+  -> bound WorkPacket
+  -> verified independent clone
+  -> affected graph + claimed paths
+  -> canonical cross-repo changeset
+  -> BDSK-governed decision
+  -> Coordination collect/verify
+  -> independent receipt
+  -> Human Outcome
+```
+
+- Spec/WorkPacket：执行输入不再只是一段 prompt；规范身份、范围、验收与回执必须绑定。
+- clone/changeset：writer 使用身份匹配的独立 clone；根仓与子仓变更以可校验 changeset 和
+  claim coverage 进入集成面，不能以本地 dirty 或不可达提交冒充交付。
+- BDSK：多视角裁决是决策方法，不是第二任务真相；本地推理必须经 BOS/AetherForge 边界，
+  无真实执行的 fallback 必须标记为未验证。
+- Coordination：tick、collect、verify 与 attestation 已有受管运行面；调度健康与任务完成、
+  价值完成保持分轴，任何 agent 都不能自行把 BET 标为 done。
+
+### 16.3 未完成事实与协议裁决
+
+1. LaunchAgent tick 迁移为 `PASS`，但 backup cron 仍为 `BLOCKED`。在备份命令不再引用共享
+   Workspace、且新的 scheduler owner 有直接回执前，不得宣称调度切换完整完成。
+2. `BET-Y1Q2-T1-19` 的权威复盘结论是 `blocked / NOT_PROVEN`：ACP stdio 尚未成为可重复证明的
+   默认 transport，`cli_prompt` 仍是现实默认或安全兼容路径；不得沿用“已切割/已退役”的旧声明。
+3. ACP 可以继续做受监督 canary 与权限代理验证，但只有默认链、权限、取消/回收和 live receipt
+   同时成立后才允许 cutover。
+4. A2A 保持 `DEFERRED`。它可作为未来跨 agent/节点的 HTTP+JSON transport，但当前不接入生产
+   Golden Slice，也不拥有任务、证据或价值真相。
+
+### 16.4 下一轮唯一 Golden Slice 准入
+
+下一轮不得继续横向铺平台；只允许一条低敏、可由本人裁决的 `engineering-delivery`
+Golden Slice：
+
+1. 一个真实外部信号进入 accepted Spec，并编译为绑定 WorkPacket；
+2. writer 在 verified independent clone 内交付，changeset、claim、PR 与独立验证可重复读取；
+3. Cockpit/Outcome broker 呈现单个候选，用户可 `accept`、`modify` 或 `reject`；
+4. revision 与 `human_verdict` 绑定为真实 `decision_outcome`，MOS 只消费该权威结果；
+5. 完成一次 replay/restore，并证明证据不含正文、凭证或不必要的个人信息。
+
+准入证据缺任一项，三轴不得升级；尤其没有真实 Human Outcome 时，Value 必须保持
+`NOT_PROVEN`。
+
+### 16.5 停线与交接状态
+
+本批次到此进入停线：不启动 A2A 生产接线，不新增 Scene、Dashboard、顶级项目、长期 daemon、
+protocol truth 或自治升级；不以测试样本补价值基线；不自行修改 BET 完成状态。下一轮只有在用户
+明确下令后启动，并先从本报告、`BET-Y1Q3-T4-01` SSOT 与
+`.omo/_knowledge/retros/BET-Y1Q2-T1-19.md` 重新读取当前事实。

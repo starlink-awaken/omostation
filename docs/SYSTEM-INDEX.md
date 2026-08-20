@@ -91,6 +91,10 @@
 
 → [战略体检报告](reports/) — c2g.strategy 周期产出的战略/治理健康周报（详见 `docs/reports/`）
 
+→ [织星架构战略深度复盘](reports/2026-08-20-blueprint-strategy-retrospective.md) — 三轴完成语义、机制收敛、Golden Slice 准入与停线边界
+
+→ [BET-Y1Q2-T1-19 权威复盘](../.omo/_knowledge/retros/BET-Y1Q2-T1-19.md) — Codex ACP 切割的当前事实与未证边界
+
 → [CR08 卫健委三医态势安装态审计复盘](reports/2026-08-14-weijian-sanyi-status-audit-retrospective.md) — 临时隔离源码的只读审计边界与可复核证据
 
 → [执行计划](plans/) — 三年规划执行台账与 agent 执行指令（详见 `docs/plans/`）
