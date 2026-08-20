@@ -1,0 +1,149 @@
+{
+  "coding": {
+    "category": "coding",
+    "ttft_ms": 96.4,
+    "coding_tps": 0,
+    "coding_chars": 1013,
+    "reasoning_chars": 760,
+    "creative_chars": 393
+  },
+  "coding-fast": {
+    "category": "coding",
+    "ttft_ms": 94.9,
+    "coding_tps": 0,
+    "coding_chars": 1001,
+    "reasoning_chars": 742,
+    "creative_chars": 418
+  },
+  "coding-next": {
+    "category": "coding",
+    "ttft_ms": 99.6,
+    "coding_tps": 0,
+    "coding_chars": 1061,
+    "reasoning_chars": 705,
+    "creative_chars": 384
+  },
+  "coder-precise": {
+    "category": "coding",
+    "ttft_ms": 94.4,
+    "coding_tps": 0,
+    "coding_chars": 1054,
+    "reasoning_chars": 729,
+    "creative_chars": 380
+  },
+  "qwen-3.8-27b": {
+    "category": "chat",
+    "ttft_ms": 689.9,
+    "coding_tps": 0,
+    "coding_chars": 732,
+    "reasoning_chars": 647,
+    "creative_chars": 156
+  },
+  "mid-local": {
+    "category": "chat",
+    "ttft_ms": 1264.2,
+    "coding_tps": 0,
+    "coding_chars": 664,
+    "reasoning_chars": 677,
+    "creative_chars": 163
+  },
+  "reasoning": {
+    "category": "reasoning",
+    "ttft_ms": 1243.9,
+    "coding_tps": 0,
+    "coding_chars": 615,
+    "reasoning_chars": 736,
+    "creative_chars": 160
+  },
+  "nemotron-omni": {
+    "category": "reasoning",
+    "ttft_ms": 876.7,
+    "coding_tps": 0,
+    "coding_chars": 588,
+    "reasoning_chars": 847,
+    "creative_chars": 161
+  },
+  "deepseek-v4-flash": {
+    "category": "reasoning",
+    "ttft_ms": null,
+    "coding_tps": 0,
+    "reasoning_chars": 0,
+    "creative_chars": 0
+  },
+  "mythos-fast": {
+    "category": "chat",
+    "ttft_ms": 290.9,
+    "coding_tps": 0,
+    "coding_chars": 1007,
+    "reasoning_chars": 954,
+    "creative_chars": 528
+  },
+  "vision": {
+    "category": "vision",
+    "ttft_ms": 775.0,
+    "coding_tps": 0,
+    "coding_chars": 1138,
+    "reasoning_chars": 836,
+    "creative_chars": 411
+  },
+  "mythos": {
+    "category": "vision",
+    "ttft_ms": 1098.8,
+    "coding_tps": 0,
+    "coding_chars": 1151,
+    "reasoning_chars": 896,
+    "creative_chars": 493
+  },
+  "gemma-4-26b": {
+    "category": "vision",
+    "ttft_ms": 22712.6,
+    "coding_tps": 0,
+    "coding_chars": 1011,
+    "reasoning_chars": 712,
+    "creative_chars": 435
+  },
+  "gemma-4-31b": {
+    "category": "vision",
+    "ttft_ms": 686.3,
+    "coding_tps": 0,
+    "coding_chars": 561,
+    "reasoning_chars": 402,
+    "creative_chars": 187
+  },
+  "gemma-4-e2b": {
+    "category": "vision",
+    "ttft_ms": 85.3,
+    "coding_tps": 0,
+    "coding_chars": 1045,
+    "reasoning_chars": 895,
+    "creative_chars": 454
+  },
+  "ornith-9b": {
+    "category": "vision",
+    "ttft_ms": 113.9,
+    "coding_tps": 0,
+    "coding_chars": 528,
+    "reasoning_chars": 908,
+    "creative_chars": 361
+  },
+  "ornith-35b": {
+    "category": "vision",
+    "ttft_ms": 86.7,
+    "coding_tps": 0,
+    "coding_chars": 663,
+    "reasoning_chars": 452,
+    "creative_chars": 45
+  },
+  "embedding": {
+    "category": "embedding",
+    "skip": true
+  },
+  "embed-bge-m3": {
+    "category": "embedding",
+    "skip": true
+  },
+  "baai-bge-reranker": {
+    "category": "embedding",
+    "skip": true
+  }
+}
