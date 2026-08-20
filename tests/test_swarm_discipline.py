@@ -4,10 +4,151 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import shutil
 import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    """Run an isolated real-git fixture command and retain failure output."""
+    env = os.environ.copy()
+    env.update(
+        {
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_AUTHOR_NAME": "test",
+            "GIT_AUTHOR_EMAIL": "test@example.com",
+            "GIT_COMMITTER_NAME": "test",
+            "GIT_COMMITTER_EMAIL": "test@example.com",
+        }
+    )
+    result = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    if check and result.returncode != 0:
+        raise AssertionError(
+            f"git {' '.join(args)} failed in {repo} (rc={result.returncode}):\n{result.stderr}"
+        )
+    return result
+
+
+def _init_repo(repo: Path) -> None:
+    repo.mkdir(parents=True)
+    _git(repo, "init", "-b", "main")
+    _git(repo, "config", "user.email", "test@example.com")
+    _git(repo, "config", "user.name", "test")
+
+
+def _install_submodule_hook(repo: Path) -> None:
+    hook_source = ROOT / ".githooks" / "pre-commit"
+    hook_dest = repo / ".git" / "hooks" / "pre-commit"
+    hook_dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(hook_source, hook_dest)
+    os.chmod(hook_dest, 0o755)
+
+
+def _child_repo(tmp_path: Path) -> tuple[Path, str, str]:
+    child = tmp_path / "child-repository"
+    _init_repo(child)
+    (child / "payload.txt").write_text("base\n", encoding="utf-8")
+    _git(child, "add", "payload.txt")
+    _git(child, "commit", "-m", "base")
+    base_sha = _git(child, "rev-parse", "HEAD").stdout.strip()
+    (child / "payload.txt").write_text("fast-forward\n", encoding="utf-8")
+    _git(child, "add", "payload.txt")
+    _git(child, "commit", "-m", "fast-forward")
+    advanced_sha = _git(child, "rev-parse", "HEAD").stdout.strip()
+    return child, base_sha, advanced_sha
+
+
+def _root_with_agora_submodule(tmp_path: Path, child: Path, base_sha: str) -> Path:
+    root = tmp_path / "root with spaces"
+    _init_repo(root)
+    (root / "README.md").write_text("root\n", encoding="utf-8")
+    _git(root, "add", "README.md")
+    _git(root, "commit", "-m", "root base")
+    _git(root, "-c", "protocol.file.allow=always", "submodule", "add", str(child), "projects/agora")
+    _git(root / "projects" / "agora", "checkout", base_sha)
+    _git(root, "add", "projects/agora")
+    _git(root, "commit", "-m", "add agora")
+    _install_submodule_hook(root)
+    return root
+
+
+def _stage_gitlink(root: Path, sha: str, *, ref: str = "main") -> None:
+    submodule = root / "projects" / "agora"
+    _git(submodule, "fetch", "origin", ref)
+    _git(submodule, "checkout", sha)
+    _git(root, "add", "projects/agora")
+
+
+def test_submodule_guard_accepts_child_fast_forward_when_root_lacks_child_object(tmp_path):
+    """The root object DB must not reject a valid child-repository fast-forward."""
+    child, base_sha, advanced_sha = _child_repo(tmp_path)
+    root = _root_with_agora_submodule(tmp_path, child, base_sha)
+    _stage_gitlink(root, advanced_sha)
+
+    # A gitlink records the SHA but does not import that child commit object.
+    assert _git(root, "cat-file", "-e", f"{advanced_sha}^{{commit}}", check=False).returncode != 0
+    assert _git(root / "projects" / "agora", "merge-base", "--is-ancestor", base_sha, advanced_sha).returncode == 0
+
+    commit = _git(root, "commit", "-m", "advance agora", check=False)
+    assert commit.returncode == 0, commit.stdout + commit.stderr
+
+
+def test_submodule_guard_rejects_child_divergence(tmp_path):
+    """A child commit from a sibling branch remains a hard failure."""
+    child, base_sha, _advanced_sha = _child_repo(tmp_path)
+    _git(child, "branch", "divergent", base_sha)
+    _git(child, "checkout", "divergent")
+    (child / "payload.txt").write_text("divergent\n", encoding="utf-8")
+    _git(child, "add", "payload.txt")
+    _git(child, "commit", "-m", "divergent")
+    divergent_sha = _git(child, "rev-parse", "HEAD").stdout.strip()
+    _git(child, "checkout", "main")
+    root = _root_with_agora_submodule(tmp_path, child, _advanced_sha)
+    _stage_gitlink(root, divergent_sha, ref="divergent")
+
+    commit = _git(root, "commit", "-m", "diverge agora", check=False)
+    assert commit.returncode != 0
+    assert "不是 fast-forward" in commit.stderr
+
+
+def test_submodule_guard_rejects_missing_child_object(tmp_path):
+    """An initialized child repository with an unknown staged SHA fails closed."""
+    child, base_sha, _advanced_sha = _child_repo(tmp_path)
+    root = _root_with_agora_submodule(tmp_path, child, base_sha)
+    missing_sha = "a" * 40
+    _git(root, "update-index", "--cacheinfo", f"160000,{missing_sha},projects/agora")
+
+    commit = _git(root, "commit", "-m", "missing agora object", check=False)
+    assert commit.returncode != 0
+    assert "不是 fast-forward" in commit.stderr
+
+
+def test_submodule_guard_rejects_uninitialized_child_directory(tmp_path):
+    """A staged gitlink without a checked-out child repository fails closed."""
+    child, base_sha, advanced_sha = _child_repo(tmp_path)
+    root = tmp_path / "uninitialized root"
+    _init_repo(root)
+    (root / "README.md").write_text("root\n", encoding="utf-8")
+    _git(root, "add", "README.md")
+    _git(root, "commit", "-m", "root base")
+    _git(root, "update-index", "--add", "--cacheinfo", f"160000,{base_sha},projects/agora")
+    _git(root, "commit", "-m", "add uninitialized gitlink")
+    _install_submodule_hook(root)
+    _git(root, "update-index", "--cacheinfo", f"160000,{advanced_sha},projects/agora")
+
+    commit = _git(root, "commit", "-m", "advance uninitialized gitlink", check=False)
+    assert commit.returncode != 0
+    assert "子模块未初始化" in commit.stderr
 
 
 def _load():
