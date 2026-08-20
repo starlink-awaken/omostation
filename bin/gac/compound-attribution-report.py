@@ -11,7 +11,9 @@ hit rates, safety results, or integrity claims.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
+import os
 import re
 from collections import Counter
 from collections.abc import Mapping
@@ -22,6 +24,8 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REPORT_SCHEMA = "compound-attribution-report/v2"
 VALUE_SCHEMA = "value-truth-snapshot/v1"
+VALUE_METER = REPO_ROOT / "bin" / "bc-os" / "north_star_meter_v2.py"
+DEFAULT_LEDGER = REPO_ROOT / "runtime" / "omo" / "event-ledger.sqlite3"
 UNPROVEN_METRICS = (
     "parallel_acceleration_ratio",
     "local_tokens_substituted",
@@ -61,6 +65,66 @@ def _load_value_truth(path: Path | None) -> dict[str, Any] | None:
     if not _valid_value_truth(value):
         return None
     return value
+
+
+def _measure_value_truth(**kwargs: Any) -> dict[str, Any]:
+    spec = importlib.util.spec_from_file_location("north_star_meter_v2_for_attribution", VALUE_METER)
+    if spec is None or spec.loader is None:
+        return {}
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.measure_value_truth(**kwargs)
+
+
+def load_verified_value_truth(
+    path: Path | None,
+    *,
+    db_path: Path,
+    principal_id: str,
+    measure: Any = None,
+) -> dict[str, Any] | None:
+    """Accept a receipt only when a fresh live measurement reproduces it."""
+    candidate = _load_value_truth(path)
+    if candidate is None or not principal_id.strip() or not db_path.is_file():
+        return None
+    observed_at = candidate.get("observed_at")
+    if not isinstance(observed_at, str) or not observed_at:
+        return None
+    measure_fn = measure or _measure_value_truth
+    try:
+        fresh = measure_fn(db_path=db_path, principal_id=principal_id, observed_at=observed_at)
+    except Exception:
+        return None
+    if not _valid_value_truth(fresh):
+        return None
+    return fresh if candidate == fresh else None
+
+
+_SOURCE_FIELDS = ("kind", "ref", "event_count", "tip_hash", "query_digest")
+_METRIC_FIELDS = (
+    "current_week",
+    "current_week_qualifying_outcomes",
+    "four_week_value_gate",
+    "total_episodes",
+    "verdict_distribution",
+    "system_evidence_count",
+    "user_evidence_count",
+    "unknown_evidence_count",
+    "signal_to_verdict_latency_seconds",
+)
+
+
+def _allowlist(mapping: object, fields: tuple[str, ...]) -> dict[str, Any]:
+    if not isinstance(mapping, Mapping):
+        return {}
+    return {field: mapping[field] for field in fields if field in mapping}
+
+
+def _safe_source(source: object) -> dict[str, Any]:
+    projected = _allowlist(source, _SOURCE_FIELDS)
+    if isinstance(source, Mapping) and isinstance(source.get("integrity"), Mapping):
+        projected["integrity"] = _allowlist(source["integrity"], ("ok", "total", "first_bad_sequence"))
+    return projected
 
 
 def _load_bet_summary(path: Path) -> dict[str, Any]:
@@ -109,8 +173,8 @@ def generate_attribution_data(
         },
         "personal_value": {
             "status": truth_axes["personal_value"],
-            "source": dict(value_truth.get("source") or {}) if valid_value else None,
-            "metrics": dict(value_truth.get("metrics") or {}) if valid_value else {},
+            "source": _safe_source(value_truth.get("source")) if valid_value else None,
+            "metrics": _allowlist(value_truth.get("metrics"), _METRIC_FIELDS) if valid_value else {},
         },
         "unproven_claims": {key: {"status": "unprovable", "value": None} for key in UNPROVEN_METRICS},
     }
@@ -166,6 +230,8 @@ def render_markdown_report(data: Mapping[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--value-truth-receipt", type=Path)
+    parser.add_argument("--db-path", type=Path, default=DEFAULT_LEDGER)
+    parser.add_argument("--principal-id", default=os.environ.get("OMO_PRINCIPAL_ID", ""))
     parser.add_argument(
         "--bet-ledger",
         type=Path,
@@ -174,16 +240,20 @@ def main() -> int:
     parser.add_argument(
         "--output",
         type=Path,
-        default=REPO_ROOT / "docs" / "reports" / "2026-compound-attribution-report.md",
+        help="explicit Markdown destination; omitted output is JSON on stdout",
     )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
     data = generate_attribution_data(
-        value_truth=_load_value_truth(args.value_truth_receipt),
+        value_truth=load_verified_value_truth(
+            args.value_truth_receipt,
+            db_path=args.db_path,
+            principal_id=args.principal_id,
+        ),
         bet_summary=_load_bet_summary(args.bet_ledger),
     )
-    if args.json:
+    if args.json or args.output is None:
         print(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True))
     else:
         args.output.parent.mkdir(parents=True, exist_ok=True)

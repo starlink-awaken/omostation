@@ -105,6 +105,61 @@ def test_malformed_query_digest_cannot_be_used_as_value_evidence():
     assert data["truth_axes"]["personal_value"] == "unprovable"
 
 
+def test_receipt_must_match_fresh_live_remeasurement(tmp_path):
+    receipt = _value_snapshot()
+    receipt["truth_axes"]["personal_value"] = "passed"
+    receipt["status"] = "passed"
+    path = tmp_path / "receipt.json"
+    path.write_text(json.dumps(receipt), encoding="utf-8")
+    db_path = tmp_path / "ledger.sqlite3"
+    db_path.write_bytes(b"ledger")
+
+    verified = report.load_verified_value_truth(
+        path,
+        db_path=db_path,
+        principal_id="principal-private",
+        measure=lambda **kwargs: _value_snapshot(),
+    )
+
+    assert verified is None
+
+
+def test_exact_receipt_is_accepted_only_after_live_remeasurement(tmp_path):
+    receipt = _value_snapshot()
+    path = tmp_path / "receipt.json"
+    path.write_text(json.dumps(receipt), encoding="utf-8")
+    db_path = tmp_path / "ledger.sqlite3"
+    db_path.write_bytes(b"ledger")
+
+    verified = report.load_verified_value_truth(
+        path,
+        db_path=db_path,
+        principal_id="principal-private",
+        measure=lambda **kwargs: _value_snapshot(),
+    )
+
+    assert verified == receipt
+
+
+def test_report_allowlists_value_fields_instead_of_copying_arbitrary_payloads():
+    snapshot = _value_snapshot()
+    snapshot["source"]["absolute_path"] = "/Users/private/secret.sqlite3"
+    snapshot["source"]["integrity"] = {"ok": True, "total": 9, "raw_error": "PRIVATE MEDICAL NOTE"}
+    snapshot["metrics"]["raw_prompt"] = "sensitive prompt body"
+    snapshot["metrics"]["weekly_samples"] = [{"raw_note": "PRIVATE MEDICAL NOTE"}]
+
+    data = report.generate_attribution_data(
+        value_truth=snapshot,
+        bet_summary={"total": 1, "by_status": {"candidate": 1}},
+        observed_at="2026-08-20T04:30:00Z",
+    )
+
+    rendered = json.dumps(data, ensure_ascii=False)
+    assert "/Users/private" not in rendered
+    assert "sensitive prompt body" not in rendered
+    assert "PRIVATE MEDICAL NOTE" not in rendered
+
+
 def test_cli_keeps_python39_compatible_timezone_imports():
     source = SCRIPT.read_text(encoding="utf-8")
 
@@ -117,3 +172,19 @@ def test_cli_keeps_python39_compatible_timezone_imports():
     )
     assert completed.returncode == 2
     assert json.loads(completed.stdout)["status"] == "unprovable"
+
+
+def test_cli_without_explicit_output_does_not_overwrite_repository_report():
+    report_path = ROOT / "docs" / "reports" / "2026-compound-attribution-report.md"
+    before = report_path.read_bytes()
+
+    completed = subprocess.run(
+        [sys.executable, str(SCRIPT)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 2
+    assert json.loads(completed.stdout)["status"] == "unprovable"
+    assert report_path.read_bytes() == before

@@ -20,9 +20,9 @@ import argparse
 import hashlib
 import json
 import os
-import sqlite3
+import subprocess
 import sys
-import threading
+import tempfile
 from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
@@ -171,25 +171,27 @@ def _observe_personal_value(db_path: Path, principal_id: str) -> tuple[dict[str,
     from omo.event_ledger.broker import LedgerBroker
     from omo.personal_episode import PersonalEpisodeService
 
-    connection = sqlite3.connect(
-        f"{db_path.resolve().as_uri()}?mode=ro",
-        uri=True,
-        check_same_thread=False,
-    )
-    connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA query_only = ON")
-    journal_mode = str(connection.execute("PRAGMA journal_mode").fetchone()[0]).lower()
-    broker = LedgerBroker(
-        db_path,
-        conn=connection,
-        journal_mode=journal_mode,
-        lock=threading.RLock(),
-    )
-    with broker:
-        before = broker.read()
-        integrity = broker.verify_chain()
-        observation = PersonalEpisodeService(broker).observe_principal(principal_id).to_dict()
-        after = broker.read()
+    source_paths = (db_path, Path(str(db_path) + "-wal"), Path(str(db_path) + "-shm"))
+    first_read = {path.name: path.read_bytes() for path in source_paths if path.is_file()}
+    if db_path.name not in first_read:
+        raise RuntimeError("event_ledger_missing")
+
+    with tempfile.TemporaryDirectory(prefix="north-star-ledger-") as temp_dir:
+        snapshot_path = Path(temp_dir) / db_path.name
+        snapshot_path.write_bytes(first_read[db_path.name])
+        wal_name = db_path.name + "-wal"
+        if wal_name in first_read:
+            Path(str(snapshot_path) + "-wal").write_bytes(first_read[wal_name])
+
+        second_read = {path.name: path.read_bytes() for path in source_paths if path.is_file()}
+        if second_read != first_read:
+            raise RuntimeError("ledger_changed_during_snapshot")
+
+        with LedgerBroker.connect(snapshot_path) as broker:
+            before = broker.read()
+            integrity = broker.verify_chain()
+            observation = PersonalEpisodeService(broker).observe_principal(principal_id).to_dict()
+            after = broker.read()
     before_identity = [(row.get("sequence"), row.get("event_hash")) for row in before]
     after_identity = [(row.get("sequence"), row.get("event_hash")) for row in after]
     if before_identity != after_identity:
@@ -265,6 +267,35 @@ def main() -> int:
         result = record_consumption(args.scene or "", args.action or "", args.consumer, journey_id=args.journey_id)
         print(json.dumps(result, ensure_ascii=False, sort_keys=True))
         return 2
+
+    if (
+        sys.version_info < (3, 11)
+        and args.principal_id
+        and args.db_path.is_file()
+        and os.environ.get("NORTH_STAR_OMO_RUNTIME") != "1"
+    ):
+        command = [
+            "uv",
+            "run",
+            "--project",
+            str(ROOT / "projects" / "omo"),
+            "--frozen",
+            "python",
+            str(Path(__file__).resolve()),
+            *sys.argv[1:],
+        ]
+        env = {**os.environ, "NORTH_STAR_OMO_RUNTIME": "1", "PYTHONDONTWRITEBYTECODE": "1"}
+        try:
+            completed = subprocess.run(command, check=False, capture_output=True, text=True, env=env)
+        except (OSError, subprocess.SubprocessError):
+            completed = None
+        if completed is None:
+            report = _unprovable("observer_runtime_unavailable", observed_at=args.observed_at)
+            print(json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True))
+            return 2
+        sys.stdout.write(completed.stdout)
+        sys.stderr.write(completed.stderr)
+        return completed.returncode
 
     report = weekly_report(db_path=args.db_path, principal_id=args.principal_id, observed_at=args.observed_at)
     if args.json:

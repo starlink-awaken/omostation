@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -183,10 +184,15 @@ def test_measurement_reads_brokered_personal_outcome_without_mutating_ledger(tmp
         )
         before = [(row["sequence"], row["event_hash"]) for row in broker.read()]
 
-    def reject_write_capable_connect(*args, **kwargs):
-        raise AssertionError("measurement must not call the schema-writing LedgerBroker.connect")
+    original_connect = LedgerBroker.connect
 
-    monkeypatch.setattr(LedgerBroker, "connect", reject_write_capable_connect)
+    def reject_source_connect(path, *args, **kwargs):
+        assert Path(path).resolve() != db_path.resolve(), (
+            "measurement opened the source through the write-capable broker"
+        )
+        return original_connect(path, *args, **kwargs)
+
+    monkeypatch.setattr(LedgerBroker, "connect", reject_source_connect)
 
     snapshot = meter.measure_value_truth(
         db_path=db_path,
@@ -202,6 +208,85 @@ def test_measurement_reads_brokered_personal_outcome_without_mutating_ledger(tmp
     assert snapshot["truth_axes"]["operational_proof"] == "proven"
     assert snapshot["metrics"]["current_week_qualifying_outcomes"] == 1
     assert snapshot["source"]["event_count"] == 5
+
+
+def test_wal_source_files_are_byte_identical_after_measurement(tmp_path):
+    sys.path[:0] = [str(ROOT / "projects" / "omo" / "src"), str(ROOT / "projects" / "ecos" / "src")]
+    from omo.event_ledger.broker import LedgerBroker
+
+    db_path = tmp_path / "event-ledger.sqlite3"
+    broker = LedgerBroker.connect(db_path)
+    try:
+        broker.append(
+            "SignalObserved.v1",
+            producer="omo-personal-episode",
+            idempotency_key="wal-signal",
+            event_id="wal-signal",
+            principal_id="principal-private",
+            space_id="personal",
+            correlation_id="personal-episode|wal",
+            occurred_at="2026-08-20T04:00:00+00:00",
+            payload={"source_id": "local-files", "signal_id": "wal-signal"},
+        )
+        shm = Path(str(db_path) + "-shm")
+        if shm.exists():
+            shm.unlink()
+        source_paths = tuple(path for path in tmp_path.iterdir() if path.name.startswith(db_path.name))
+        before = {path.name: path.read_bytes() for path in source_paths}
+
+        snapshot = meter.measure_value_truth(
+            db_path=db_path,
+            principal_id="principal-private",
+            observed_at="2026-08-20T04:30:00Z",
+        )
+
+        after_paths = tuple(path for path in tmp_path.iterdir() if path.name.startswith(db_path.name))
+        after = {path.name: path.read_bytes() for path in after_paths}
+        assert snapshot["truth_axes"]["operational_proof"] == "proven"
+        assert after == before
+    finally:
+        broker.close()
+
+
+def test_system_python39_reexecs_in_omo_runtime_for_valid_ledger(tmp_path):
+    system_python = Path("/usr/bin/python3")
+    if not system_python.exists():
+        return
+    sys.path[:0] = [str(ROOT / "projects" / "omo" / "src"), str(ROOT / "projects" / "ecos" / "src")]
+    from omo.event_ledger.broker import LedgerBroker
+
+    db_path = tmp_path / "event-ledger.sqlite3"
+    with LedgerBroker.connect(db_path) as broker:
+        broker.append(
+            "SignalObserved.v1",
+            producer="omo-personal-episode",
+            idempotency_key="python39-signal",
+            event_id="python39-signal",
+            principal_id="principal-private",
+            space_id="personal",
+            correlation_id="personal-episode|python39",
+            occurred_at="2026-08-20T04:00:00+00:00",
+            payload={"source_id": "local-files", "signal_id": "python39-signal"},
+        )
+
+    completed = subprocess.run(
+        [
+            str(system_python),
+            str(SCRIPT),
+            "--db-path",
+            str(db_path),
+            "--principal-id",
+            "principal-private",
+            "--json",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout)["truth_axes"]["operational_proof"] == "proven"
 
 
 def test_cli_keeps_python39_compatible_timezone_imports():
