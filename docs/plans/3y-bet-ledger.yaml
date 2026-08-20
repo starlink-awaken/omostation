@@ -5955,6 +5955,7 @@ bets:
   - bin/plan/bet-ledger.py
   - bin/agent-workflow.py
   - bin/gac/affected-graph.py
+  - bin/gac/gac-hygiene-check.py
   - bin/gac/agent-clone.py
   - bin/gac/clone-lifecycle.py
   - bin/capability-sync.py
@@ -5977,6 +5978,9 @@ bets:
   - projects/agora/tests/test_mcp_server.py
   - projects/agora/tests/unit/test_bos_resolver.py
   - projects/cockpit/src/cockpit/tests/test_bdsk_engine.py
+  - projects/knowledge/gbrain/.context/test-failures.log
+  - projects/knowledge/gbrain/.context/test-summary.txt
+  - projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/extractors
   - tests/**
   - .githooks/pre-commit
   - .omo/_truth/registry/workers.yaml
