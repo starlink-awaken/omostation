@@ -21,6 +21,7 @@ CLI 参考均从本生成器输出的 YAML 派生。
 
 Usage:
     uv run --with pyyaml python bin/cockpit/gen-capability-registry.py
+    uv run --with pyyaml python bin/cockpit/gen-capability-registry.py --check
     uv run --with pyyaml python bin/cockpit/gen-capability-registry.py --json
 """
 
@@ -41,6 +42,9 @@ except ImportError:
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 OUTPUT_YAML = WORKSPACE / "docs" / "generated" / "capability-registry.yaml"
+REGISTRY_SCHEMA = "capability-registry/v1"
+REGISTRY_OWNER = "workspace-capability-governance"
+REGISTRY_WRITER = "bin/cockpit/gen-capability-registry.py"
 
 # ── MCP server 探测 ──────────────────────────────────────────
 
@@ -510,11 +514,14 @@ def build_registry() -> dict:
 
     registry = {
         "version": "1.0.0",
+        "schema": REGISTRY_SCHEMA,
+        "owner": REGISTRY_OWNER,
+        "writer": REGISTRY_WRITER,
         # ADR-0373: use a sentinel timestamp (CI runs) instead of `now()`,
         # otherwise the drift check `git diff --exit-code` always shows
         # the file as drifted even when the content is otherwise identical.
         "generated_at": "1970-01-01T00:00:00Z",
-        "generator": "bin/cockpit/gen-capability-registry.py",
+        "generator": REGISTRY_WRITER,
         "totals": {
             "mcp_servers": len(servers),
             "mcp_tools": total_tools,
@@ -532,12 +539,12 @@ def build_registry() -> dict:
     return registry
 
 
-def write_yaml(registry: dict) -> Path:
-    OUTPUT_YAML.parent.mkdir(parents=True, exist_ok=True)
+def render_yaml(registry: dict) -> str:
+    """Render the canonical deterministic registry representation."""
     header = (
         "# docs/generated/capability-registry.yaml — 全生态能力注册表 SSOT\n"
         "# 自动生成，请勿手动编辑\n"
-        f"# 生成器: bin/cockpit/gen-capability-registry.py\n"
+        f"# 生成器: {REGISTRY_WRITER}\n"
         f"# 生成时间: {registry['generated_at']}\n\n"
     )
     body = yaml.dump(
@@ -547,20 +554,33 @@ def write_yaml(registry: dict) -> Path:
         default_flow_style=False,
         width=120,
     )
-    new_content = header + body
+    return header + body
+
+
+def check_yaml(registry: dict, output_path: Path = OUTPUT_YAML) -> bool:
+    """Return whether the generated file matches without mutating it."""
+    if not output_path.is_file():
+        return False
+    return output_path.read_text(encoding="utf-8") == render_yaml(registry)
+
+
+def write_yaml(registry: dict, output_path: Path = OUTPUT_YAML) -> Path:
+    """Write the registry from the sole canonical writer implementation."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    new_content = render_yaml(registry)
 
     # 时间戳稳定: 若已存在文件且仅时间戳不同, 保留旧文件避免假漂移
-    if OUTPUT_YAML.exists():
-        old_content = OUTPUT_YAML.read_text(encoding="utf-8")
+    if output_path.exists():
+        old_content = output_path.read_text(encoding="utf-8")
         # 将所有 ISO 时间戳 (2026-08-02T10:17:40Z) 替换为占位符后比较
         iso_pattern = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z"
         old_no_ts = re.sub(iso_pattern, "TIMESTAMP", old_content)
         new_no_ts = re.sub(iso_pattern, "TIMESTAMP", new_content)
         if old_no_ts == new_no_ts:
-            return OUTPUT_YAML  # 内容无变化, 不写 (避免时间戳假漂移)
+            return output_path  # 内容无变化, 不写 (避免时间戳假漂移)
 
-    OUTPUT_YAML.write_text(new_content, encoding="utf-8")
-    return OUTPUT_YAML
+    output_path.write_text(new_content, encoding="utf-8")
+    return output_path
 
 
 def verify_runtime(registry: dict) -> int:
@@ -594,7 +614,9 @@ def verify_runtime(registry: dict) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description="能力注册表生成器")
     parser.add_argument("--json", action="store_true", help="输出 JSON 到 stdout (不写文件)")
+    parser.add_argument("--check", action="store_true", help="只读检查生成物漂移")
     parser.add_argument("--quiet", action="store_true", help="静默模式")
+    parser.add_argument("--output", type=Path, default=OUTPUT_YAML, help="registry 目标路径")
     parser.add_argument(
         "--verify",
         action="store_true",
@@ -612,10 +634,25 @@ def main() -> int:
         sys.stdout.write("\n")
         return 0
 
-    out = write_yaml(registry)
+    if args.check:
+        if check_yaml(registry, args.output):
+            if not args.quiet:
+                print(f"✅ 能力注册表无漂移: {args.output}")
+            return 0
+        print(
+            "❌ 能力注册表漂移；运行 make sync-capability-registry 修复",
+            file=sys.stderr,
+        )
+        return 1
+
+    out = write_yaml(registry, args.output)
     t = registry["totals"]
     if not args.quiet:
-        print(f"✅ 能力注册表已生成: {out.relative_to(WORKSPACE)}")
+        try:
+            display_path = out.relative_to(WORKSPACE)
+        except ValueError:
+            display_path = out
+        print(f"✅ 能力注册表已生成: {display_path}")
         print(f"   MCP 服务器: {t['mcp_servers']}  |  MCP 工具: {t['mcp_tools']}")
         print(f"   BOS 服务: {t['bos_services']}  |  BOS 域: {t['bos_domains']}")
         print(f"   CLI 命令: {t['cli_commands']}")

@@ -7,7 +7,7 @@
 	gate-local gate-skills gate-ci-surfaces gate-layers gate-phase gate-reachability gate-mof check-layers gac-local-gate \
 	test-all test-omlxc test-aetherforge test-cockpit test-kairon test-agora test-omo test-ecos lint-all \
 	omlxc-test omlxc-lint kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-lint kairon-build \
-	sync-all-docs sync-capability-registry sync-help-docs check-docs-drift sync-submodules ssot-status ssot-log ssot-sync \
+	sync-all-docs sync-capability-registry check-capability-registry capability-sync capability-check sync-help-docs check-docs-drift sync-submodules ssot-status ssot-log ssot-sync \
 	hygiene-worktree hygiene-audit hygiene-janitor hygiene-dir dir-hygiene root-directory-governance bin-scripts-convergence-audit worktree-guard worktree-prune worktree-cleanup worktree-audit worktree-hygiene worktree-janitor \
 	memory-os-check memory-os-env memory-os-env-export memory-os-up memory-os-smoke memory-os-asof-seed \
 	omo-status omo-top swarm-activity observability-events observability-adapters observability-trace log-rotate \
@@ -183,7 +183,15 @@ kairon-lint:
 
 sync-capability-registry:  ## 生成能力注册表 SSOT (扫描 MCP/BOS/CLI)
 	@echo "── 生成能力注册表 ────────────────────────────────────"
-	python3 bin/cockpit/gen-capability-registry.py
+	$(PY) bin/cockpit/gen-capability-registry.py
+
+check-capability-registry:  ## 只读检查能力注册表漂移（与 CI 同一实现）
+	@echo "── 检查能力注册表漂移 ────────────────────────────────"
+	@$(PY) bin/cockpit/gen-capability-registry.py --check --quiet
+
+capability-sync: sync-capability-registry  ## 兼容入口：薄委托到唯一 registry writer
+
+capability-check: check-capability-registry  ## 兼容入口：薄委托到唯一 drift checker
 
 sync-help-docs: sync-capability-registry  ## 从注册表生成派生文档
 	@echo "── 生成派生文档 ────────────────────────────────────"
@@ -192,10 +200,9 @@ sync-help-docs: sync-capability-registry  ## 从注册表生成派生文档
 sync-all-docs: sync-help-docs  ## 全量文档同步 (注册表 + 所有派生文档)
 	@echo "── 全量文档同步完成 ────────────────────────────────"
 
-check-docs-drift:  ## 检测文档漂移 (CI 门禁)
+check-docs-drift: check-capability-registry  ## 检测文档漂移 (CI 门禁)
 	@echo "── 检测文档漂移 ────────────────────────────────────"
-	@python3 bin/cockpit/gen-capability-registry.py --quiet
-	@python3 bin/cockpit/gen-help-docs.py > /dev/null
+	@$(PY) bin/cockpit/gen-help-docs.py > /dev/null
 	@git diff --exit-code projects/cockpit/CAPABILITY-MAP.md docs/CLI-REFERENCE.md docs/INDEX-MCP.md 2>/dev/null || \
 		(echo "❌ 文档漂移! 运行 make sync-all-docs 修复" && exit 1)
 	@echo "✅ 文档无漂移"
