@@ -6,7 +6,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from importlib import import_module
 from multiprocessing import cpu_count
-from typing import Any, TypeVar, cast
+from typing import Any, Self, TypeVar, cast
 
 from eidos.graph_store import CandidateEntity, CandidateRelation
 
@@ -63,7 +63,7 @@ except ImportError:
         def close(self) -> None:
             pass
 
-        def __enter__(self) -> tqdm:
+        def __enter__(self) -> Self:
             return self
 
         def __exit__(self, *args: Any) -> None:
