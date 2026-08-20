@@ -206,6 +206,24 @@ def test_report_allowlists_value_fields_instead_of_copying_arbitrary_payloads(tm
     assert "PRIVATE MEDICAL NOTE" not in rendered
 
 
+def test_public_observed_at_cannot_leak_caller_text_to_json_or_markdown(monkeypatch):
+    private_text = "/Users/private/medical/PRIVATE NOTE"
+    monkeypatch.setattr(report, "_utc_now", lambda: "2026-08-20T06:00:00Z")
+
+    data = report.generate_attribution_data(
+        bet_summary={"total": 1, "by_status": {"candidate": 1}},
+        observed_at=private_text,
+    )
+    json_output = json.dumps(data, ensure_ascii=False)
+    markdown_output = report.render_markdown_report(data)
+
+    assert data["observed_at"] == "2026-08-20T06:00:00Z"
+    assert private_text not in json_output
+    assert private_text not in markdown_output
+    assert "PRIVATE NOTE" not in json_output
+    assert "PRIVATE NOTE" not in markdown_output
+
+
 def test_cli_keeps_python39_compatible_timezone_imports():
     source = SCRIPT.read_text(encoding="utf-8")
 

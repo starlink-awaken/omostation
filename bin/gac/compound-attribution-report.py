@@ -43,6 +43,18 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")  # noqa: UP017
 
 
+def _safe_observed_at(value: object) -> str:
+    if not isinstance(value, str):
+        return _utc_now()
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return _utc_now()
+    if parsed.tzinfo is None:
+        return _utc_now()
+    return parsed.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")  # noqa: UP017
+
+
 def _valid_value_truth(value: object) -> bool:
     if not isinstance(value, Mapping) or value.get("schema") != VALUE_SCHEMA:
         return False
@@ -159,7 +171,7 @@ def _project_attribution_data(
     return {
         "schema": REPORT_SCHEMA,
         "status": overall,
-        "observed_at": observed_at or _utc_now(),
+        "observed_at": _safe_observed_at(observed_at),
         "truth_axes": truth_axes,
         "engineering": {
             "bets": {
