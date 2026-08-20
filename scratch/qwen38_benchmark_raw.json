@@ -1,0 +1,197 @@
+{
+  "qwen3.8-27b-mlx": {
+    "simple_chinese": {
+      "ok": true,
+      "ttft_ms": 506.8,
+      "total_s": 2.38,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 91,
+      "preview": "用户要求“用一句话介绍量子计算。”需要用中文回答，且只给一句话。需要简洁准确。\n\n\n量子计算是利用量子比特的叠加、纠缠等特性，在某些问题上比经典计算机更高效地处理信息的新型计算方式。"
+    },
+    "code_generation": {
+      "ok": true,
+      "ttft_ms": 450.8,
+      "total_s": 11.41,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 530,
+      "preview": "用户要求用 Python 写一个快速排序函数，包含类型注解和 docstring。需要给出代码，可能包括示例。需要注意“快速排序”通常原地或返回新列表；类型注解可用 List[int] 或 list[int]（Python 3.9+）。可以"
+    },
+    "reasoning": {
+      "ok": true,
+      "ttft_ms": 348.3,
+      "total_s": 11.71,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 838,
+      "preview": "We need answer in Chinese. User asks classic rate problem: pool with inlet fills alone 6h, outlet drains full pool alone"
+    },
+    "tool_use": {
+      "ok": true,
+      "ttft_ms": 442.6,
+      "total_s": 6.65,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 358,
+      "preview": "用户要求调用 get_weather 工具查询北京今天的天气，并指定了严格的 JSON 响应格式。\n我需要生成一个符合该格式的 JSON 对象，包含 tool_call, name 和 arguments (city: \"北京\")。\n不需要"
+    },
+    "long_context": {
+      "ok": true,
+      "ttft_ms": 1309.7,
+      "total_s": 6.86,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 219,
+      "preview": "用户要求用中文将一篇重复句子的文章总结为3个要点。文章内容只有“人工智能正在改变世界”的重复，没有更多细节。需要给出3个要点，可能指出文章核心观点、表达形式/重复强调、缺乏具体论据或可概括为影响广泛。必须用中文简洁回答。\n\n\n1. 文章的核"
+    },
+    "creative": {
+      "ok": true,
+      "ttft_ms": 557.1,
+      "total_s": 12.92,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 330,
+      "preview": "用户要求“写一首关于程序员的五言绝句。”需要用中文回答。任务简单：创作一首五言绝句，四句每句五个字，最好押韵且符合主题。可以写：\n“屏前敲键忙，代码夜未央。Bug忽惊梦，上线喜生光。”\n检查字数：屏前敲键忙（5），代码夜未央（5），Bug忽"
+    },
+    "multilingual": {
+      "ok": true,
+      "ttft_ms": 460.6,
+      "total_s": 6.58,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 479,
+      "preview": "We need answer user's request: \"Translate to English, French, and Japanese: 今天天气很好。\" Need produce translations. Simple. "
+    }
+  },
+  "qwen3.8-27b-mtplx-optimized-quality": {
+    "simple_chinese": {
+      "ok": true,
+      "ttft_ms": 804.1,
+      "total_s": 4.45,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 84,
+      "preview": "用户要求“用一句话介绍量子计算。”需要用中文回答，且只给一句话。需要简洁准确。\n\n\n量子计算是利用量子比特的叠加、纠缠等特性，在某些问题上实现远超经典计算机的计算能力。"
+    },
+    "code_generation": {
+      "ok": true,
+      "ttft_ms": 798.5,
+      "total_s": 21.75,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 1010,
+      "preview": "We need answer in Chinese likely. User asks: 用 Python 写一个快速排序函数，包含类型注解和 docstring。 Need provide code. Now final with con"
+    },
+    "reasoning": {
+      "ok": true,
+      "ttft_ms": 757.9,
+      "total_s": 19.44,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 629,
+      "preview": "We need answer in Chinese. User asks classic rates: inlet fills in 6h, outlet drains full pool in 8h. Both open, how lon"
+    },
+    "tool_use": {
+      "ok": true,
+      "ttft_ms": 863.3,
+      "total_s": 11.18,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 337,
+      "preview": "用户要求调用 get_weather 工具查询北京今天的天气，并指定了严格的 JSON 格式。\n我需要输出一个包含 \"tool_call\" 键的 JSON 对象，其中 \"name\" 为 \"get_weather\"，\"arguments\" 包"
+    },
+    "long_context": {
+      "ok": true,
+      "ttft_ms": 2381.2,
+      "total_s": 12.22,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 241,
+      "preview": "用户要求用中文将一篇重复句子的文章总结为3个要点。文章内容只有一句反复：“人工智能正在改变世界。” 需要提炼主要观点，但只有单一主题。可以用3个要点表达：AI正在改变世界；这种变化是持续/广泛的（由重复强调）；文章未提供具体领域或证据，核心"
+    },
+    "creative": {
+      "ok": true,
+      "ttft_ms": 939.4,
+      "total_s": 17.38,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 275,
+      "preview": "用户要求用中文写一首关于程序员的五言绝句。需要直接给出一首符合五言四句、每句五字的诗，主题程序员。可考虑押韵与意象：代码、屏幕、夜灯、bug、编译等。五言绝句通常四句二十字，尽量押韵（第二、四句）。例如：\n“屏前敲代码，灯下解千疑。忽见编译"
+    },
+    "multilingual": {
+      "ok": true,
+      "ttft_ms": 848.2,
+      "total_s": 5.54,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 252,
+      "preview": "We need to answer user's request: \"Translate to English, French, and Japanese: 今天天气很好。\" Need provide translations. Simpl"
+    }
+  },
+  "qwen3.8-27b-mtplx-optimized-speed": {
+    "simple_chinese": {
+      "ok": true,
+      "ttft_ms": 1817.1,
+      "total_s": 5.29,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 97,
+      "preview": "用户要求“用一句话介绍量子计算。”需要用中文回答，且必须是一句话。先给出简洁定义即可。\n\n\n量子计算是利用量子比特叠加、纠缠等特性，以全新方式处理信息并有望在某些问题上实现指数级加速的计算范式。"
+    },
+    "code_generation": {
+      "ok": true,
+      "ttft_ms": 957.4,
+      "total_s": 16.23,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 568,
+      "preview": "用户要求用 Python 写一个快速排序函数，包含类型注解和 docstring。需要给出简洁但完整的代码示例。可以提供一个标准实现（原地或返回新列表），并说明用法。由于是中文请求，用中文回答。需要确保类型注解正确：List[int] 或 "
+    },
+    "reasoning": {
+      "ok": true,
+      "ttft_ms": 788.0,
+      "total_s": 17.21,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 668,
+      "preview": "We need answer in Chinese. User asks classic rate problem: inlet fills in 6h, outlet empties full pool in 8h. Both open "
+    },
+    "tool_use": {
+      "ok": true,
+      "ttft_ms": 863.5,
+      "total_s": 5.31,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 209,
+      "preview": "用户要求调用 get_weather 工具查询北京今天的天气，并指定了严格的 JSON 响应格式：\n{\"tool_call\": {\"name\": \"get_weather\", \"arguments\": {\"city\": \"北京\"}}}\n\n我"
+    },
+    "long_context": {
+      "ok": true,
+      "ttft_ms": 2432.3,
+      "total_s": 10.98,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 232,
+      "preview": "用户要求用中文总结文章主要观点，并要求3个要点。文章内容是同一句话重复：“人工智能正在改变世界。”需要简洁总结为三个要点，避免冗长。可以指出文章反复强调的核心观点：AI正在改变世界；重复表达突出其重要性和普遍影响；但文章未提供具体领域、机制"
+    },
+    "creative": {
+      "ok": true,
+      "ttft_ms": 1030.1,
+      "total_s": 12.35,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 232,
+      "preview": "用户要求用中文写一首关于程序员的五言绝句。需要直接给出一首符合五言四句、每句五字的诗，并尽量押韵。可构思：屏幕/代码/深夜/调试等意象。五言绝句通常四句，每句五字。押韵可第二、四句同韵。比如：\n“屏前敲代码，夜深灯未眠。除虫千遍后，一笑见晴"
+    },
+    "multilingual": {
+      "ok": true,
+      "ttft_ms": 846.0,
+      "total_s": 9.22,
+      "tokens": 0,
+      "tps": 0,
+      "chars": 496,
+      "preview": "We need to respond to user: \"Translate to English, French, and Japanese: 今天天气很好。\" Need produce translations. Simple. Fin"
+    }
+  }
+}

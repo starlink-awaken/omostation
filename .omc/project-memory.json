@@ -1,0 +1,191 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1787126058232,
+  "projectRoot": "/Users/xiamingxing/Workspace/projects/omlxc",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Python",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "pyproject.toml"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "fastapi",
+        "version": null,
+        "category": "backend"
+      },
+      {
+        "name": "pytest",
+        "version": null,
+        "category": "testing"
+      }
+    ],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "pytest",
+    "lintCommand": "ruff check",
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "bin",
+      "docs",
+      "src",
+      "tests"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "bin": {
+      "path": "bin",
+      "purpose": "Executable scripts",
+      "fileCount": 6,
+      "lastAccessed": 1787126058219,
+      "keyFiles": [
+        "omlx",
+        "omlx-autostart",
+        "omlx-dashboard",
+        "omlx-embed-server",
+        "omlx-gw-guard"
+      ]
+    },
+    "conf": {
+      "path": "conf",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1787126058219,
+      "keyFiles": [
+        "agent-client.md",
+        "launchd-proposal.md",
+        "models.json"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 3,
+      "lastAccessed": 1787126058219,
+      "keyFiles": [
+        "ARCHITECTURE-FABRIC.md",
+        "local-openai-client-integration.md",
+        "model-audit-2026-08-10.md"
+      ]
+    },
+    "models-active": {
+      "path": "models-active",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1787126058220,
+      "keyFiles": []
+    },
+    "scratch": {
+      "path": "scratch",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1787126058220,
+      "keyFiles": []
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1787126058220,
+      "keyFiles": []
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 3,
+      "lastAccessed": 1787126058220,
+      "keyFiles": [
+        "README.md",
+        "conftest.py",
+        "test_omlxc.py"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src/omlxc/daemon/composition.py",
+      "accessCount": 4,
+      "lastAccessed": 1787190756034,
+      "type": "file"
+    },
+    {
+      "path": "src/omlxc/adapters/lmstudio.py",
+      "accessCount": 3,
+      "lastAccessed": 1787189344108,
+      "type": "file"
+    },
+    {
+      "path": "src/omlxc/config/schema.py",
+      "accessCount": 2,
+      "lastAccessed": 1787190712305,
+      "type": "file"
+    },
+    {
+      "path": "AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1787126139676,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 1,
+      "lastAccessed": 1787126140073,
+      "type": "file"
+    },
+    {
+      "path": "scratch/test_qwen38_variants.py",
+      "accessCount": 1,
+      "lastAccessed": 1787126479563,
+      "type": "file"
+    },
+    {
+      "path": "scratch/test_qwen38_variants_v2.py",
+      "accessCount": 1,
+      "lastAccessed": 1787126669667,
+      "type": "file"
+    },
+    {
+      "path": "scratch/benchmark_qwen38.py",
+      "accessCount": 1,
+      "lastAccessed": 1787188577432,
+      "type": "file"
+    },
+    {
+      "path": "scratch/benchmark_qwen38_v3.py",
+      "accessCount": 1,
+      "lastAccessed": 1787188723262,
+      "type": "file"
+    },
+    {
+      "path": "scratch/deep_bench_qwen38.py",
+      "accessCount": 1,
+      "lastAccessed": 1787194816943,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
