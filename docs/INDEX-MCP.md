@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-全生态共 **27** 个 MCP 服务器, **580** 个工具。
+全生态共 **27** 个 MCP 服务器, **595** 个工具。
 
 | 服务器 | 层 | 工具数 | 传输 | 端口 | 源文件 |
 |--------|-----|--------|------|------|--------|
@@ -11,7 +11,7 @@
 | `ecos` | L0 | 28 | stdio | — | `projects/ecos/src/ecos/mcp_server.py` |
 | `ecos-integration` | L0 | 26 | stdio | — | `projects/ecos/src/ecos/services/integration/mcp_server.py` |
 | `ecos-ssot` | L0 | 9 | stdio | — | `projects/ecos/src/ecos/l0/ssot/mcp_server.py` |
-| `runtime` | L1 | 38 | stdio | — | `projects/runtime/src/runtime/mcp_server.py` |
+| `runtime` | L1 | 50 | stdio | — | `projects/runtime/src/runtime/mcp_server.py` |
 | `gbrain` | L2 | 75 | stdio | — | `projects/knowledge/gbrain/src/core/operations/exports.ts` |
 | `kos` | L2 | 44 | stdio | — | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `kos-stdio` | L2 | 44 | stdio | — | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
@@ -33,7 +33,7 @@
 | `aetherforge-mesh` | X | 6 | stdio | — | `projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py` |
 | `family-hub` | X | 6 | stdio | — | `projects/family-hub/mcp_server.py` |
 | `aetherforge-gateway` | X | 3 | stdio | — | `projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py` |
-| `c2g` | X | 0 | stdio | — | `projects/c2g/src/c2g/mcp_server.py` |
+| `c2g` | X | 3 | stdio | — | `projects/c2g/src/c2g/mcp_server.py` |
 
 ## 工具清单
 
@@ -44,6 +44,10 @@
 ### agora (65 tools)
 
 `a2a_cancel_task`, `a2a_get_task`, `a2a_list_tasks`, `a2a_send_task`, `add_route`, `agora_capability_discover`, `agora_execute`, `audit_query`, `audit_stats`, `bos_reload_routes`, `create_api_key`, `debt_auto_seed_tool`, `entropy_cleanup_tool`, `get_agent_card`, `get_event_log`, `get_state_transitions`, `health_check`, `lifecycle_load_all`, `lifecycle_start_watch`, `lifecycle_status`, `lifecycle_stop_watch`, `lifecycle_unload_all`, `list_agent_cards`, `list_api_keys`, `list_routes`, `list_services`, `proxy_add_service`, `proxy_arch_health`, `proxy_backend_health`, `proxy_connect`, `proxy_governance_status`, `proxy_list_tools`, `proxy_omo_debt`, `publish_event`, `python`, `register_push_notification`, `register_service`, `registry_find_agent_tool`, `registry_health_tool`, `registry_heartbeat_tool`, `registry_list_agents_tool`, `registry_list_tasks_tool`, `registry_register_agent_tool`, `registry_submit_task_tool`, `repo_discover`, `repo_install`, `repo_load`, `repo_pipeline`, `repo_search`, `repo_status`, `repo_unload`, `revoke_api_key`, `route_call`, `subscribe_event`, `swarm_nodes`, `swarm_resolve`, `swarm_status`, `workflow_capability_health`, `workspace_audit_gitlink`, `workspace_audit_governance`, `workspace_audit_lint`, `workspace_audit_ops`, `workspace_audit_radar`, `workspace_audit_run`, `workspace_audit_ssot`
+
+### runtime (50 tools)
+
+`handle_agent_chat`, `handle_agent_execute`, `handle_agent_list`, `handle_agent_list_tools`, `handle_agent_run_task`, `handle_agent_status`, `handle_agent_task_status`, `handle_brief`, `handle_cartridge_inspect`, `handle_cartridge_list`, `handle_documents_audit`, `handle_documents_guardrails`, `handle_domain_compliance_audit`, `handle_governance_explain`, `handle_governance_guardrails`, `handle_governance_preflight`, `handle_health`, `handle_intent_compile`, `handle_kv_get`, `handle_matrix_list`, `handle_ontology`, `handle_pitfall_check`, `handle_protocol_get`, `handle_protocol_list`, `handle_shadow_challenge`, `runtime_agent_chat`, `runtime_agent_execute`, `runtime_agent_list`, `runtime_agent_list_tools`, `runtime_agent_run_task`, `runtime_agent_status`, `runtime_agent_task_status`, `runtime_brief`, `runtime_cartridge_inspect`, `runtime_cartridge_list`, `runtime_documents_audit`, `runtime_documents_guardrails`, `runtime_domain_compliance_audit`, `runtime_governance_explain`, `runtime_governance_guardrails`, `runtime_governance_preflight`, `runtime_health`, `runtime_intent_compile`, `runtime_kv_get`, `runtime_matrix_list`, `runtime_ontology_get`, `runtime_pitfall_check`, `runtime_protocol_get`, `runtime_protocol_list`, `runtime_shadow_challenge`
 
 ### l4-kernel (47 tools)
 
@@ -56,10 +60,6 @@
 ### kos-stdio (44 tools)
 
 `build_context`, `check_subscription`, `collab.add_artifact`, `collab.claim_subtask`, `collab.create_task`, `collab.get_task`, `collab.list_tasks`, `collab.update_task`, `consensus.create`, `consensus.get`, `consensus.list_expired`, `consensus.renew`, `consensus.trace`, `cross_domain_sync`, `db_vacuum`, `entity_explore`, `fact_check`, `full_sync`, `get_entity`, `get_entity_timeline`, `get_knowledge`, `get_stats`, `get_system_status`, `graph_search`, `knowledge_ask`, `list_domains`, `mcp_market_discover`, `memory_stats`, `ontology_graph`, `ontology_rebuild`, `research_now`, `research_pipeline`, `run_indexer`, `search_entity`, `search_knowledge`, `self.get_current_role`, `self.get_profile`, `self.get_vision_summary`, `semantic_scholar`, `semantic_search`, `subscribe_topic`, `sync_gbrain`, `verify_claim`, `viz_render`
-
-### runtime (38 tools)
-
-`handle_agent_chat`, `handle_agent_execute`, `handle_agent_list`, `handle_agent_list_tools`, `handle_agent_run_task`, `handle_agent_status`, `handle_agent_task_status`, `handle_brief`, `handle_documents_audit`, `handle_documents_guardrails`, `handle_governance_explain`, `handle_governance_guardrails`, `handle_governance_preflight`, `handle_health`, `handle_kv_get`, `handle_matrix_list`, `handle_ontology`, `handle_protocol_get`, `handle_protocol_list`, `runtime_agent_chat`, `runtime_agent_execute`, `runtime_agent_list`, `runtime_agent_list_tools`, `runtime_agent_run_task`, `runtime_agent_status`, `runtime_agent_task_status`, `runtime_brief`, `runtime_documents_audit`, `runtime_documents_guardrails`, `runtime_governance_explain`, `runtime_governance_guardrails`, `runtime_governance_preflight`, `runtime_health`, `runtime_kv_get`, `runtime_matrix_list`, `runtime_ontology_get`, `runtime_protocol_get`, `runtime_protocol_list`
 
 ### ecos (28 tools)
 
@@ -136,6 +136,10 @@
 ### aetherforge-gateway (3 tools)
 
 `gateway_generate`, `gateway_health`, `llm_generate`
+
+### c2g (3 tools)
+
+`c2g_bet`, `c2g_gc`, `c2g_radar`
 
 ### model-driven-fastmcp (2 tools)
 
