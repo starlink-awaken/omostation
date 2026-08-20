@@ -77,6 +77,13 @@ projections:
     generator: predictive-governance.py
     lane: runtime_snapshot
 
+  memory_os:
+    description: MOS agent belief registry runtime projection (as_of, table counts)
+    canonical: runtime/omo/_truth/registry/memory-os.yaml
+    legacy: .omo/_truth/registry/memory-os.yaml
+    generator: MOSBeliefManager._update_registry_summary
+    lane: runtime_snapshot
+
   # Future: move system.yaml projection fields here.
   # system_projection:
   #   description: Recomputable fields extracted from system.yaml
