@@ -232,10 +232,9 @@ jobs:
         # 若 MCP/BOS/CLI 源变了但注册表没重新生成 → 漂移, 失败
         # 修复: make sync-all-docs
         run: |
-          python3 bin/cockpit/gen-capability-registry.py --quiet
+          python3 bin/cockpit/gen-capability-registry.py --check --quiet
           python3 bin/cockpit/gen-help-docs.py > /dev/null
           git diff --exit-code \
-            docs/generated/capability-registry.yaml \
             projects/cockpit/CAPABILITY-MAP.md \
             docs/CLI-REFERENCE.md \
             docs/INDEX-MCP.md \
