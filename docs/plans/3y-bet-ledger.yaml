@@ -5712,3 +5712,54 @@ bets:
   human_gate: true
   circuit_breaker: skill 内容未经审核 → 改为 gitignore 而非跟踪
   retro: required
+- id: BET-Y1Q3-T6-11
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: 同步 stale 子模块 pointer 到 origin/main
+  appetite: 2 hours
+  priority: P2
+  status: active
+  started_at: 2026-08-20
+  goal: 将 projects/ecos、projects/omo、scripts 三个 stale 子模块指针同步到 origin/main 最新 commit，消除 behind-reachable 状态，验证本地门禁不受影响
+  non_goals:
+  - 修改子模块内部代码
+  - 新增业务功能
+  - 处理非 pointer 类子模块问题
+  evidence:
+    E1_submodule_sync:
+      description: 三个子模块指针已更新到 origin/main
+      surfaces:
+      - projects/ecos
+      - projects/omo
+      - scripts
+    E2_no_divergence:
+      description: check-submodule-pointer-drift.py 报告无 divergence
+    E3_gac_local_gate:
+      description: make gac-local-gate 全绿 PASS
+  done_when:
+  - projects/ecos 指针指向 origin/main (2329e36)
+  - projects/omo 指针指向 origin/main (9641b57)
+  - scripts 指针指向 origin/main (d2e1f8f)
+  - check-submodule-pointer-drift.py 无 divergence
+  - make gac-local-gate 全部检查 PASS
+  progress:
+    done_when_met: []
+    pending_when: []
+  verify:
+  - cmd: python3 bin/gac/check-submodule-pointer-drift.py
+    expect: 0 DIVERGED, 0 behind
+  - cmd: make gac-local-gate
+    expect: 全绿 PASS
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - projects/ecos
+  - projects/omo
+  - scripts
+  pasw_required: true
+  depends_on: []
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 同步后 gac-local-gate 失败 → 回滚 pointer
+  retro: required
