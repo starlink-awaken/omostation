@@ -154,6 +154,14 @@ def _isolated_workflow_registry(tmp_path: Path) -> Path:
     return registry
 
 
+def _snapshot_workflow_state(tmp_path: Path) -> dict[str, bytes]:
+    return {
+        path.relative_to(tmp_path).as_posix(): path.read_bytes()
+        for path in sorted(tmp_path.rglob("*"))
+        if path.is_file()
+    }
+
+
 def _write_affected_receipt(tmp_path: Path, *changed_projects: str, name: str = "affected-receipt.json") -> Path:
     del tmp_path, name
     receipt_ref = Path(".omo/evidence") / f"pytest-affected-{uuid.uuid4().hex}.json"
@@ -482,6 +490,114 @@ def test_direct_omo_spawn_inherits_parent_packet_and_rejects_out_of_scope_before
     assert child_path.read_bytes() == before_run
     assert {path: path.read_bytes() for path in lock_paths} == before_locks
     assert ledger.read_bytes() == before_ledger
+
+
+def test_direct_omo_parent_start_inherits_exact_bound_packet_without_explicit_bet(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+
+    child_start = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--parent-run",
+        parent["run_id"],
+        "--dry-run",
+        "--json",
+    )
+
+    assert child_start.returncode == 0, child_start.stderr
+    child = json.loads(child_start.stdout)
+    for key in ("bet_id", "spec_binding", "work_packet", "work_packet_hash"):
+        assert child[key] == parent[key]
+
+
+def test_direct_omo_parent_start_rejects_conflicting_bet_before_any_mutation(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+    before = _snapshot_workflow_state(tmp_path)
+
+    child_start = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--parent-run",
+        parent["run_id"],
+        "--bet",
+        "BET-Y1Q2-T1-14",
+        "--json",
+    )
+
+    assert child_start.returncode == 2
+    assert "WORK_PACKET_PARENT_BET_CONFLICT" in child_start.stderr
+    assert _snapshot_workflow_state(tmp_path) == before
+
+
+def test_direct_omo_spawn_rejects_legacy_unbound_parent_before_any_mutation(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "observer-audit",
+        "--profile",
+        "observer-agent",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+    before = _snapshot_workflow_state(tmp_path)
+
+    spawned = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "spawn",
+        parent["run_id"],
+        "observer-audit",
+        "--profile",
+        "observer-agent",
+        "--json",
+    )
+
+    assert spawned.returncode == 2
+    assert "WORK_PACKET_PARENT_BINDING_REQUIRED" in spawned.stderr
+    assert _snapshot_workflow_state(tmp_path) == before
 
 
 def test_legacy_readonly_workflow_start_remains_compatible() -> None:
