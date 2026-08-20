@@ -1,13 +1,13 @@
 ---
-status: active
+status: retired
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-20
 ---
 # Coordination Layer Recovery Runbook — BET-Y1Q1-T1-05A
 
 > 适用对象: 共享运行时协调层 `~/agents/_shared/runtime/coordination.sqlite3`
-> 状态: shadow 灰度 (D2/D3 文件锁仍是权威判定源; 本 DB 挂了不影响现有纪律)
+> 状态: **退役** (BET-Y1Q3-T1-06, 2026-08-20) — 独立部署 clone 已退役, 备份与 daemon 全部改指权威 Workspace
 > Owner: BET-Y1Q1-T1-05A · 详细分析: `docs/reports/2026-08-14-shared-runtime-coordination-gap.md`
 
 ## 1. 这层挂了会发生什么 (shadow 阶段)
@@ -69,14 +69,15 @@ python3 bin/gac/swarm-discipline-cli.py status
 
 ### 4.1 Tick daemon：代码根与运行态根必须分离
 
-daemon 代码必须从 main 对齐、保持 clean 的独立部署 clone 加载；`.omo`、MOS、journey
-和 heartbeat 仍只写权威 Workspace。禁止再让 LaunchAgent 直接执行一个落后且 dirty 的
-共享 checkout，也禁止把部署 clone 自己的 `.omo` 变成第二运行真相。daemon 会在导入
-OMO 前设置 `WORKSPACE_CODE_ROOT`；JourneyRunner 读取运行态 journey 数据时仍使用
-`WORKSPACE_ROOT`，执行 `journey-runner.py` 时只使用代码根。
+> 2026-08-20 (BET-Y1Q3-T1-06): 独立部署 clone `~/agents/coordination-daemon/ws` 已退役。
+> 代码根与运行态根统一为权威 Workspace; 旧的只读 clone 不再维护, 备份 cron 已改指 Workspace。
+
+daemon 代码从 main 对齐的 Workspace 加载；`.omo`、MOS、journey 和 heartbeat 只写权威
+Workspace。daemon 会在导入 OMO 前设置 `WORKSPACE_CODE_ROOT`；JourneyRunner 读取运行态
+journey 数据时仍使用 `WORKSPACE_ROOT`，执行 `journey-runner.py` 时只使用代码根。
 
 ```bash
-CODE_ROOT="$HOME/agents/coordination-daemon/ws"
+CODE_ROOT="$HOME/Workspace"
 RUNTIME_ROOT="$HOME/Workspace"
 
 # 发布前单次受控验证：代码从 CODE_ROOT 加载，运行态写 RUNTIME_ROOT
@@ -88,7 +89,7 @@ LaunchAgent 的 `ProgramArguments` 必须使用同一绑定：
 
 ```text
 /opt/homebrew/bin/python3
-$HOME/agents/coordination-daemon/ws/bin/ssot/agent-tick-daemon.py
+$HOME/Workspace/bin/ssot/agent-tick-daemon.py
 --run
 --interval
 300
@@ -97,19 +98,17 @@ $HOME/Workspace
 ```
 
 并在 plist 的 `EnvironmentVariables` 设置 `PYTHONDONTWRITEBYTECODE=1`，防止运行进程
-向只读部署 clone 写 `__pycache__`。
+向只读部署目录写 `__pycache__`。
 
 切换后以 `swarm-discipline-cli.py status --json` 的 `workspace_revision`、
 `code_sha256` 和 `runtime_root_digest` 为准；至少观察三个 5min 心跳周期。只看到进程存在
 或 LaunchAgent loaded 不算部署成功。
 
-**部署 clone 维护 SOP**（2026-08-15 ops 轮补充，实测踩坑后固化）：
-
-main 每次合并协调层相关变更后，部署 clone 不会自愈更新——需要手动同步并重启：
+**部署同步 SOP**（2026-08-15 ops 轮补充，实测踩坑后固化；2026-08-20 改为 Workspace 同步）：
 
 ```bash
-CODE_ROOT="$HOME/agents/coordination-daemon/ws"
-# 1. 同步 (必须 ff-only; 若无法 ff 说明部署分支被污染, 停下排查, 不要强推)
+CODE_ROOT="$HOME/Workspace"
+# 1. 同步 (必须 ff-only; 若无法 ff 说明本地分支被污染, 停下排查, 不要强推)
 git -C "$CODE_ROOT" fetch origin main && git -C "$CODE_ROOT" merge --ff-only origin/main
 # 2. 重启加载新代码 (常驻进程不重启就还在跑旧代码)
 launchctl kickstart -k "gui/$(id -u)/com.omostation.agent-tick-daemon"
@@ -124,8 +123,8 @@ python3 "$CODE_ROOT/bin/gac/swarm-discipline-cli.py" status --json | head -5
 1. **crontab 日备 (主)** — 机器本地配置不进 git, 新机器要手工装:
 
 ```cron
-# 协调层日备 (BET-Y1Q1-T1-05A): integrity + backup + 轮转
-30 8 * * * cd "$HOME/agents/coordination-daemon/ws" && python3 bin/gac/coordination_store.py --backup >> "$HOME/Workspace/runtime/logs/coordination-backup.log" 2>&1
+# 协调层日备 (BET-Y1Q1-T1-05A; 2026-08-20 改指 Workspace): integrity + backup + 轮转
+30 8 * * * cd "$HOME/Workspace" && python3 bin/gac/coordination_store.py --backup >> "$HOME/Workspace/runtime/logs/coordination-backup.log" 2>&1
 ```
 
 2. **24h 时间戳兜底 (自动)** — 任何 store 访问若发现
@@ -147,6 +146,6 @@ python3 "$CODE_ROOT/bin/gac/swarm-discipline-cli.py" status --json | head -5
 | `unable to open database file` | 目录权限/只读 FS | `ls -ld ~/agents/_shared/runtime/` 查权限 |
 | submit 停在 "fail-closed (T1-05A)" | token-check exit 2 = DB 打不开 | 走 §2 → §3; 或 `SWARM_ESCAPE_ID=emergency-human-hotfix` 人工放行 |
 | `write_fail` 事件暴涨 | DB 所在盘满 / busy 超时 | `df -h` 检查盘; WAL 模式下偶发 busy 是正常 |
-| 备份静默断流（`.bak.1` mtime 超 24h 且 backup_ok 停更） | cron 指向的代码根停在 feature 分支/缺 store 文件（2026-08-15 实测: 主仓 checkout 被 human 切到 feature 分支, `coordination_store.py` 不在工作树） | `tail runtime/logs/coordination-backup.log` 确认; cron cd 路径改指部署 clone `~/agents/coordination-daemon/ws`（§4.2 条目已是正确写法）; 手动 `--backup` 验证 |
+| 备份静默断流（`.bak.1` mtime 超 24h 且 backup_ok 停更） | cron 指向的代码根停在 feature 分支/缺 store 文件（2026-08-15 实测: 主仓 checkout 被 human 切到 feature 分支, `coordination_store.py` 不在工作树） | `tail runtime/logs/coordination-backup.log` 确认; cron cd 路径指向 `~/Workspace`（§4.2 条目）; 手动 `--backup` 验证 |
 | 心跳 code_sha256 落后 origin/main | 部署 clone 无自动更新机制 | 走 §4.1 维护 SOP: fetch + ff-only + kickstart + 三心跳观察 |
 
