@@ -515,6 +515,19 @@ def test_retire_removes_only_clean_pushed_merged_unleased_clone(tmp_path, monkey
     assert "agent/agent-1" in pr_call
 
 
+def test_retire_allows_exact_merged_pr_after_remote_branch_deleted(tmp_path, monkeypatch):
+    clone, _remote, head = make_retirable_clone(tmp_path)
+    git(clone, "push", "origin", "--delete", "agent/agent-1")
+    calls: list[list[str]] = []
+    monkeypatch.setattr(lc, "run", merged_pr_runner(head, calls))
+
+    rc = lc.cmd_retire(argparse.Namespace(destination=str(clone)))
+
+    assert rc == lc.EXIT_OK
+    assert not clone.exists()
+    assert any(cmd[:3] == ["gh", "pr", "list"] for cmd in calls)
+
+
 def test_retire_rejects_dirty_or_unpushed_clone(tmp_path, monkeypatch):
     clone, _remote, head = make_retirable_clone(tmp_path)
     monkeypatch.setattr(lc, "run", merged_pr_runner(head))

@@ -534,10 +534,6 @@ def cmd_retire(args: argparse.Namespace) -> int:
             unreadable=state_errors,
         )
 
-    remote = run(["git", "-C", str(dest), "ls-remote", "--exit-code", "--heads", "origin", f"refs/heads/{branch}"])
-    remote_head = remote.stdout.split()[0] if remote.returncode == 0 and remote.stdout.split() else ""
-    if remote_head != head_sha:
-        return reject("retire", "head_not_pushed", f"remote branch does not contain exact HEAD {head_sha}")
     remote_probe = run(["git", "-C", str(dest), "remote", "get-url", "origin"])
     if remote_probe.returncode != 0:
         return reject("retire", "origin_unreadable", "cannot resolve origin remote")
@@ -545,6 +541,20 @@ def cmd_retire(args: argparse.Namespace) -> int:
     if repo_slug is None:
         return reject("retire", "github_repository_unbound", "origin is not an exact GitHub repository URL")
     owner = repo_slug.split("/", 1)[0]
+    remote_ref = f"refs/heads/{branch}"
+    remote = run(["git", "-C", str(dest), "ls-remote", "--exit-code", "--heads", "origin", remote_ref])
+    remote_lines = [line.split() for line in remote.stdout.splitlines() if line.strip()]
+    if remote.returncode == 0:
+        if len(remote_lines) != 1 or len(remote_lines[0]) != 2 or remote_lines[0][1] != remote_ref:
+            return reject("retire", "remote_ref_invalid", "remote branch query returned an ambiguous result")
+        if remote_lines[0][0] != head_sha:
+            return reject(
+                "retire",
+                "head_not_pushed",
+                f"surviving remote branch contradicts clone HEAD {head_sha}",
+            )
+    elif remote.returncode != 2 or remote_lines:
+        return reject("retire", "remote_query_failed", remote.stderr.strip() or "cannot query remote branch")
     pr_query = run(
         [
             "gh",
