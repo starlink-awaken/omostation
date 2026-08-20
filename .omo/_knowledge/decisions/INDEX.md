@@ -508,3 +508,6 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0416: Y2 年度门 — 愿景证伪判定（BET-Y2Q4-T1-01） — **ACCEPTED** | 2026-08-18 | Y2 gate | 0416-y2-gate-vision-falsification.md
 - ADR-0417: Y3 终局门 — 三年验收标准判定（BET-Y3H2-T1-02） — **ACCEPTED** | 2026-08-18 | Y3 gate | 0417-y3-final-gate.md
 - ADR-0418: 对外扩展决策 — 默认不做（BET-Y3H2-T1-01） — **ACCEPTED** | 2026-08-18 | external expansion | 0418-external-expansion-decision.md
+- ADR-0419: 从基建转向业务 — knowledge-ingest shadow 落地 + 信号源修复 — **ACCEPTED** | 2026-08-19 | business workflow | 0419-business-workflow-implementation-plan.md
+- ADR-0420: BCOS evolution engine 占位决策 — **ACCEPTED** | 2026-08-20 | bcos evolution | 0420-bcos-evolution-engine.md
+- ADR-0421: BCOS 2 周落地复盘 (W1 执行+知识, W2 治理+进化) — **ACCEPTED** | 2026-08-19 | bcos retrospective | 0421-bcos-2week-retro.md

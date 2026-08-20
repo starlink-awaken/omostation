@@ -1,9 +1,11 @@
 ---
 title: "ADR-0419: 从基建转向业务 — knowledge-ingest  shadow 落地 + 信号源修复"
 status: accepted
+lifecycle: contract
 type: adr
 owner: governance-team
 date: 2026-08-19
+last-reviewed: 2026-08-20
 tags: [business, knowledge-ingest, shadow-mode, signal-sources]
 supersedes: []
 related:

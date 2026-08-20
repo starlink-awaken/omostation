@@ -1,9 +1,11 @@
 ---
 title: "ADR-0421: BCOS 2 周落地复盘 (W1 执行+知识, W2 治理+进化)"
 status: accepted
+lifecycle: retrospective
 type: retrospective
 owner: governance-team
 date: 2026-08-19
+last-reviewed: 2026-08-20
 tags: [bcos, retrospective, 2-week]
 supersedes: []
 related:
