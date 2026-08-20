@@ -33,7 +33,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[5]
 _OMO_SRC = _REPO_ROOT / "projects" / "omo" / "src"
 if str(_OMO_SRC) not in sys.path:
     sys.path.insert(0, str(_OMO_SRC))
-_IRIS_SRC = _REPO_ROOT / "projects" / "kairon" / "packages" / "iris" / "src"
+_IRIS_SRC = _REPO_ROOT / "projects" / "knowledge" / "kairon" / "packages" / "iris" / "src"
 if str(_IRIS_SRC) not in sys.path:
     sys.path.insert(0, str(_IRIS_SRC))
 

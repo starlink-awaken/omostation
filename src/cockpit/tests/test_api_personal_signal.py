@@ -32,6 +32,13 @@ def _app() -> FastAPI:
     return app
 
 
+def test_personal_signal_uses_the_workspace_iris_source() -> None:
+    """Keep Cockpit's optional Iris import aligned with the root topology."""
+    assert api_workflow_mesh_operations._IRIS_SRC == (
+        api_workflow_mesh_operations._REPO_ROOT / "projects" / "knowledge" / "kairon" / "packages" / "iris" / "src"
+    )
+
+
 def _configure_runtime(monkeypatch, tmp_path: Path) -> tuple[Path, Path, Path]:
     """Point the server at a throwaway ledger, signal dir and draft dir."""
     ledger_path = tmp_path / "event-ledger.sqlite3"

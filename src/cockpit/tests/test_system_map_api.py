@@ -141,12 +141,19 @@ def test_system_map_builds_workspace_dimensions(monkeypatch):
     assert all(item["domains"] for item in page_maturity["items"])
     assert any(item["page_id"] == "SystemMap" for item in page_maturity["items"])
     maturity_by_page = {item["page_id"]: item for item in page_maturity["items"]}
+    projects_by_id = {project["id"]: project for project in payload["projects"]}
     assert "runtime" in maturity_by_page["Home"]["projects"]
     assert "ecos" in maturity_by_page["Protocol"]["projects"]
     assert "observability" in maturity_by_page["Topology"]["projects"]
     assert "family-hub" in maturity_by_page["QuestBoard"]["projects"]
     assert "compute-routing" in maturity_by_page["Compute"]["usage_paths"]
-    assert "gbrain" in maturity_by_page["GBrainAdmin"]["projects"]
+    # The root project registry folds gbrain into the `knowledge` compound.
+    # SystemMap must not manufacture a retired standalone project merely
+    # because GBrainAdmin remains a valid operator page.
+    assert "gbrain" not in projects_by_id
+    assert "gbrain" in projects_by_id["knowledge"]["role"].lower()
+    assert maturity_by_page["GBrainAdmin"]["projects"] == []
+    assert {"capability-1", "capability-2"} <= set(maturity_by_page["GBrainAdmin"]["domains"])
     assert payload["project_focus"]["summary"]["needs_action"] >= 1
     needs_action_queue = next(queue for queue in payload["project_focus"]["queues"] if queue["id"] == "needs-action")
     assert needs_action_queue["top_projects"]
@@ -163,12 +170,12 @@ def test_system_map_builds_workspace_dimensions(monkeypatch):
         registry_dimension["ready"] + registry_dimension["warning"] + registry_dimension["failed"]
         == coverage["summary"]["projects"]
     )
-    assert registry_dimension["attention_projects"] == [
+    assert {item["id"] for item in registry_dimension["attention_projects"]} == {
         project["id"]
         for project in payload["projects"]
         if next(check for check in project["coverage_checks"] if check["id"] == "registry_contract")["status"]
         != "ready"
-    ]
+    }
     runtime_dimension = next(item for item in coverage["dimension_summary"] if item["id"] == "runtime_probe")
     runtime_attention_ids = {item["id"] for item in runtime_dimension["attention_projects"]}
     assert runtime_dimension["attention_count"] == len(runtime_dimension["attention_projects"])
@@ -344,7 +351,6 @@ def test_stopped_runtime_projects_expose_documented_start_actions():
         "mesh-router": "gac-mesh-router.py",
         "ecos": "ecos.services.events_sse serve",
         "l4-kernel": "l4_kernel.mcp_server --sse",
-        "aetherforge": "docker compose up -d",
         "observability": "docker compose up -d",
     }
     for project_id, fragment in expected_commands.items():
@@ -354,6 +360,8 @@ def test_stopped_runtime_projects_expose_documented_start_actions():
         assert action["risk"] == "medium"
 
     assert not any(action["id"] == "copy-start-command" for action in projects["bus-foundation"]["actions"])
+    # AetherForge is no longer a standalone project in the root registry.
+    assert "aetherforge" not in projects
 
 
 def test_runtime_probe_command_is_successful_when_no_ports_are_listening():
@@ -369,10 +377,11 @@ def test_system_map_conflict_diagnostics_clear_after_port_alignment():
     payload = build_system_map()
     projects = {project["id"]: project for project in payload["projects"]}
 
-    for project_id in ("ecos", "aetherforge"):
+    for project_id in ("ecos",):
         project = projects[project_id]
         assert project["runtime"]["port_conflicts"] == []
         assert all(not port.get("conflict_projects") for port in project["runtime"]["ports"])
+    assert "aetherforge" not in projects
 
 
 def test_bus_foundation_metrics_is_optional_embedded_runtime():

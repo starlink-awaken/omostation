@@ -176,6 +176,9 @@ def cmd_governance(args: argparse.Namespace) -> int:
         # omo governance 默认即 audit/report 报告，不接收 "report" 子命令
         workspace_root = resolve_workspace_root()
         return _run_omo_governance([], workspace_root)
+    if subcmd == "verify":
+        workspace_root = resolve_workspace_root()
+        return _run_omo_verify(workspace_root)
     if subcmd == "evolution":
         workspace_root = resolve_workspace_root()
         return _run_governance_evolution(args.extra_args or [], workspace_root)

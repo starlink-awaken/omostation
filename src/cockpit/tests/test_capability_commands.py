@@ -40,10 +40,12 @@ class TestKnowledgeCommand:
     @patch("cockpit.commands.knowledge._kos_available", return_value=False)
     @patch("cockpit.commands.knowledge._kos_port_conflict", return_value="端口被非 KOS 服务占用")
     def test_search_kos_offline_graceful(self, mock_conflict, mock_avail, capsys):
-        """KOS 离线时 search 不崩溃, 返回 1 + 提示."""
+        """KOS 离线时 search 走本地检索回退并保持可用."""
         args = argparse.Namespace(knowledge_command="search", query="测试", limit=5)
         rc = knowledge.cmd_knowledge(args)
-        assert rc == 1
+        assert rc == 0
+        output = capsys.readouterr().out
+        assert "Unified Hybrid" in output or "未找到" in output
 
     def test_kos_port_conflict_detection(self):
         """端口冲突诊断: 非 KOS 响应应被识别."""
