@@ -5951,6 +5951,8 @@ bets:
   - bin/gac/clone-lifecycle.py
   - bin/capability-sync.py
   - bin/cockpit/gen-capability-registry.py
+  - .omo/_knowledge/bos-registry.json
+  - docs/generated/capability-registry.yaml
   - bin/bc-os/north_star_meter_v2.py
   - bin/gac/compound-attribution-report.py
   - bin/gac/bdsk-shadow-sandbox.py
