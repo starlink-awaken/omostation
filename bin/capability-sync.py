@@ -29,6 +29,11 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REGISTRY = ROOT / "docs" / "generated" / "capability-registry.yaml"
 CANONICAL_GENERATOR = ROOT / "bin" / "cockpit" / "gen-capability-registry.py"
 SUPPORTED_SCHEMA_MAJOR = 1
+CANONICAL_REGISTRY_METADATA = {
+    "schema": "capability-registry/v1",
+    "owner": "workspace-capability-governance",
+    "writer": "bin/cockpit/gen-capability-registry.py",
+}
 
 
 class RegistryError(ValueError):
@@ -66,6 +71,14 @@ def load_registry(path: Path) -> dict[str, Any]:
     if major != SUPPORTED_SCHEMA_MAJOR:
         raise RegistryError("registry_schema_unsupported")
 
+    metadata_keys = set(CANONICAL_REGISTRY_METADATA)
+    supplied_metadata = metadata_keys.intersection(data)
+    if supplied_metadata and supplied_metadata != metadata_keys:
+        raise RegistryError("registry_metadata_incomplete")
+    for key, expected in CANONICAL_REGISTRY_METADATA.items():
+        if supplied_metadata and data.get(key) != expected:
+            raise RegistryError(f"registry_{key}_invalid")
+
     canonical_shape = all(key in data for key in ("mcp_servers", "bos_services", "cli_commands"))
     legacy_shape = isinstance(data.get("capabilities"), list)
     if not canonical_shape and not legacy_shape:
@@ -101,6 +114,8 @@ def build_capability_index(registry: Mapping[str, Any]) -> dict[str, list[dict[s
 
     for raw_server in registry.get("mcp_servers", []) or []:
         if not isinstance(raw_server, dict):
+            continue
+        if "exists" in raw_server and raw_server.get("exists") is not True:
             continue
         server_id = str(raw_server.get("id") or "")
         server_name = str(raw_server.get("name") or server_id)
@@ -195,9 +210,7 @@ def resolve_capability(
         matches = []
         for entries in index.values():
             for entry in entries:
-                haystack = " ".join(
-                    (str(entry["id"]), str(entry["name"]), str(entry["description"]))
-                ).casefold()
+                haystack = " ".join((str(entry["id"]), str(entry["name"]), str(entry["description"]))).casefold()
                 if needle in haystack:
                     matches.append(entry)
 

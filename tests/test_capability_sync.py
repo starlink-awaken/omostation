@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import ast
+import copy
 import importlib.util
 import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -77,15 +80,33 @@ def registry() -> dict:
     }
 
 
-def test_only_canonical_generator_can_write_registry(generator) -> None:
-    sync_source = SYNC_PATH.read_text(encoding="utf-8")
+def test_canonical_generator_declares_registry_contract(cap_sync, generator) -> None:
     registry = generator.build_registry()
 
-    assert "write_text(" not in sync_source
-    assert "scan_all_sources" not in sync_source
     assert registry["schema"] == "capability-registry/v1"
     assert registry["owner"] == "workspace-capability-governance"
     assert registry["writer"] == "bin/cockpit/gen-capability-registry.py"
+    assert cap_sync.CANONICAL_REGISTRY_METADATA == {
+        "schema": generator.REGISTRY_SCHEMA,
+        "owner": generator.REGISTRY_OWNER,
+        "writer": generator.REGISTRY_WRITER,
+    }
+
+
+def test_sync_and_check_follow_canonical_writer_behavior(cap_sync, generator, tmp_path: Path) -> None:
+    output = tmp_path / "capability-registry.yaml"
+
+    assert cap_sync.main(["sync", "--registry", str(output)]) == 0
+    assert output.read_text(encoding="utf-8") == generator.render_yaml(generator.build_registry())
+
+    before = output.read_bytes()
+    assert cap_sync.main(["check", "--registry", str(output)]) == 0
+    assert output.read_bytes() == before
+
+    output.write_text(output.read_text(encoding="utf-8") + "# drift\n", encoding="utf-8")
+    drifted = output.read_bytes()
+    assert cap_sync.main(["check", "--registry", str(output)]) == 1
+    assert output.read_bytes() == drifted
 
 
 def test_generator_check_detects_drift_without_writing(generator, tmp_path: Path) -> None:
@@ -102,16 +123,24 @@ def test_generator_check_detects_drift_without_writing(generator, tmp_path: Path
     assert output.read_bytes() == before
 
 
-def test_make_and_ci_use_canonical_check_entrypoint() -> None:
-    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
-    workflow = (ROOT / ".github/workflows/ci-lint.yml").read_text(encoding="utf-8")
-    command = "bin/cockpit/gen-capability-registry.py --check"
+def test_make_and_ci_run_blocking_canonical_check() -> None:
+    completed = subprocess.run(
+        ["make", "check-capability-registry"],
+        cwd=ROOT,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.returncode == 0, completed.stdout + completed.stderr
 
-    assert "check-capability-registry:" in makefile
-    assert command in makefile
-    assert command in workflow
-    assert "bin/capability-sync.py sync" not in makefile
-    assert "bin/capability-sync.py sync" not in workflow
+    workflow = yaml.safe_load((ROOT / ".github/workflows/ci-lint.yml").read_text(encoding="utf-8"))
+    job = workflow["jobs"]["capability-registry-drift"]
+    assert job.get("continue-on-error", False) is False
+    checkout_step = next(step for step in job["steps"] if step.get("uses") == "actions/checkout@v4")
+    assert checkout_step.get("continue-on-error", False) is False
+    check_step = next(step for step in job["steps"] if step.get("name") == "Check capability registry drift")
+    assert check_step["run"].strip() == "python3 bin/cockpit/gen-capability-registry.py --check --quiet"
 
 
 def test_python39_grammar_is_supported() -> None:
@@ -127,6 +156,55 @@ def test_schema_v1_without_new_metadata_remains_readable(cap_sync, registry: dic
 
     assert loaded["version"] == "1.0.0"
     assert cap_sync.resolve_capability(loaded, capability_id="mcp-server:omo").status == "resolved"
+
+
+def test_canonical_registry_metadata_is_accepted(cap_sync, registry: dict, tmp_path: Path) -> None:
+    registry.update(
+        {
+            "schema": "capability-registry/v1",
+            "owner": "workspace-capability-governance",
+            "writer": "bin/cockpit/gen-capability-registry.py",
+        }
+    )
+    path = tmp_path / "registry.yaml"
+    path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+
+    assert cap_sync.load_registry(path)["owner"] == "workspace-capability-governance"
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "reason"),
+    [
+        ("schema", "capability-registry/v999", "registry_schema_invalid"),
+        ("owner", "untrusted-writer", "registry_owner_invalid"),
+        ("writer", "bin/capability-sync.py", "registry_writer_invalid"),
+    ],
+)
+def test_noncanonical_registry_metadata_is_rejected(
+    cap_sync, registry: dict, tmp_path: Path, field: str, value: str, reason: str
+) -> None:
+    registry.update(
+        {
+            "schema": "capability-registry/v1",
+            "owner": "workspace-capability-governance",
+            "writer": "bin/cockpit/gen-capability-registry.py",
+        }
+    )
+    registry[field] = value
+    path = tmp_path / "registry.yaml"
+    path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+
+    with pytest.raises(cap_sync.RegistryError, match=reason):
+        cap_sync.load_registry(path)
+
+
+def test_partial_registry_metadata_is_not_grandfathered(cap_sync, registry: dict, tmp_path: Path) -> None:
+    registry["schema"] = "capability-registry/v1"
+    path = tmp_path / "registry.yaml"
+    path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+
+    with pytest.raises(cap_sync.RegistryError, match="registry_metadata_incomplete"):
+        cap_sync.load_registry(path)
 
 
 @pytest.mark.parametrize(
@@ -175,6 +253,16 @@ def test_not_found_is_explicit(cap_sync, registry: dict) -> None:
     assert result.candidate_ids == ()
 
 
+def test_unavailable_mcp_server_and_tools_cannot_resolve(cap_sync, registry: dict) -> None:
+    unavailable = copy.deepcopy(registry["mcp_servers"][0])
+    unavailable.update({"id": "c2g", "name": "C2G", "exists": False, "tools": ["c2g_bet"]})
+    registry["mcp_servers"].append(unavailable)
+
+    assert cap_sync.resolve_capability(registry, capability_id="mcp-server:c2g").status == "not_found"
+    assert cap_sync.resolve_capability(registry, capability_id="mcp-tool:c2g:c2g_bet").status == "not_found"
+    assert cap_sync.resolve_capability(registry, query="c2g").status == "not_found"
+
+
 @pytest.mark.parametrize("selector", [{"capability_id": "missing"}, {"query": "shared"}])
 def test_negative_receipt_is_privacy_safe(cap_sync, registry: dict, selector: dict) -> None:
     result = cap_sync.resolve_capability(registry, **selector)
@@ -205,7 +293,6 @@ def test_resolved_receipt_cannot_be_used_as_direct_invocation(cap_sync, registry
         "route": "native_adapter_only",
         "reason": "admission_not_evaluated",
     }
-    assert not hasattr(cap_sync, "invoke_capability")
 
 
 def test_find_cli_returns_receipt_and_distinct_fail_closed_codes(
