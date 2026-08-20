@@ -26,7 +26,9 @@ def _empty(root: Path, relative: str) -> Path:
 
 
 @pytest.mark.parametrize("marker", ["pkg/__init__.py", "pkg/py.typed", "pkg/.gitkeep"])
-def test_legal_empty_markers_are_not_hygiene_findings(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, marker: str) -> None:
+def test_legal_empty_markers_are_not_hygiene_findings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, marker: str
+) -> None:
     monkeypatch.setattr(hygiene, "WORKSPACE_ROOT", tmp_path)
     _empty(tmp_path, marker)
 
@@ -73,11 +75,15 @@ def test_existing_tracked_directory_symlink_is_not_a_missing_file(
 def test_tracked_file_listing_excludes_gitlinks_without_quoting_unicode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    # Keep the NUL-delimited fixture split: collapsing adjacent literals would
+    # make `\0` consume the following octal-looking path prefix.
+    # fmt: off
     output = (
         "100644 deadbeef 0\tplain.txt\0"
         "160000 deadbeef 0\tprojects/submodule\0"
         "100644 deadbeef 0\tdocs/中文.md\0"
     )
+    # fmt: on
 
     def fake_run(*args: object, **kwargs: object) -> SimpleNamespace:
         assert args[0] == ["git", "ls-files", "--stage", "-z"]
