@@ -202,7 +202,10 @@ def cmd_changeset(args: argparse.Namespace) -> int:
         audit("changeset_scope_creep", f"violations={violations}")
         print(json.dumps(cs, indent=2))
         return EXIT_POLICY
-    audit("changeset_ok", f"change_id={cs.get('change_id', '?')[:12]} changes={cs.get('changes_count', 0)}")
+    audit(
+        "changeset_ok",
+        f"change_id={cs.get('change_id', '?')[:12]} changes={len(cs.get('changes', []))}",
+    )
     print(json.dumps(cs, indent=2))
     return EXIT_OK
 

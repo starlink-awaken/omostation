@@ -196,6 +196,36 @@ def test_changeset_claim_violation_is_nonzero_even_if_receipt_exists(tmp_path, m
     assert rc == lc.EXIT_POLICY
 
 
+def test_changeset_audit_reports_persisted_change_count(tmp_path, monkeypatch, capsys):
+    output = tmp_path / "cs.json"
+    output.write_text(
+        json.dumps(
+            {
+                "change_id": "abc",
+                "changes": [{"path": "README.md"}],
+                "claim_verification": {"violations": [], "all_covered": True},
+            }
+        )
+    )
+    monkeypatch.setattr(
+        lc,
+        "run",
+        lambda cmd, **kwargs: subprocess.CompletedProcess(cmd, 0, "{}", ""),
+    )
+
+    rc = lc.cmd_changeset(
+        argparse.Namespace(
+            clone=str(tmp_path / "clone"),
+            baseline=str(tmp_path / "baseline.json"),
+            output=str(output),
+            verify_claims=True,
+        )
+    )
+
+    assert rc == lc.EXIT_OK
+    assert "changes=1" in capsys.readouterr().err
+
+
 def test_integrate_dry_run(tmp_path, capsys):
     """integrate dry-run 不实际推送."""
     pilot = Path.home() / "agents" / "pilot" / "ws"
