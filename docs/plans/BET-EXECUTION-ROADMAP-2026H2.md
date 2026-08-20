@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-08-19
+---
 # BET 执行路线图 2026H2 — 剩余 23 项推进计划
 
 > **维护规则**
@@ -60,10 +66,41 @@
 | BET-Y3H2-T1-02 | ✅ done | ADR-0417: 中期校准，S1/S2 度量缺失为最高风险 |
 | BET-Y3H2-T1-01 | ✅ done | ADR-0418: 对外扩展默认不做，3 条件重开 |
 | BET-Y2Q1-T3-02 | ✅ done | IntentModel + Prioritizer (src/agora/intent/), 9 tests PASS |
-| BET-Y2Q1-T3-01 | 🔶 in_progress | world_snapshot delta_from_previous |
-| BET-Y2Q1-T3-03 | 待认领 | — |
-| BET-Y2Q2-T7-01 | 待认领 | — |
-| 其余 13 项 | candidate | — |
+| BET-Y2Q3-T3-02 | ✅ done | DriftMonitor (auto-degrade) + 9 tests |
+| BET-Y3H1-T3-01 | ✅ done | SceneColdStartPlanner (冷启动) + 7 tests |
+| BET-Y3H1-T5-01 | ✅ done | journey template 编排 (3 specs) + 7 tests |
+| BET-Y2Q3-T3-01 | ✅ done | transfer_calibration 跨场景迁移 + 6 tests |
+| BET-Y2Q2-T7-01 | ✅ done | knowledge-ingest.yaml v2 (assisted 第二场景) |
+| BET-Y2Q2-T7-02 | ✅ done | 5 张 v2 场景卡 (knowledge-ingest + 4 迁移) |
+| BET-Y2Q2-T8-01 | ✅ done | /inbox cockpit-ui build (exit 0) |
+| BET-Y2Q3-T6-01 | ✅ done | surface 审计 (exit 0) |
+| BET-Y2Q4-T2-01 | ✅ done | 4 信号源场景绑定 (inbox/github/apple/netease) |
+| BET-Y1Q1-T1-05 | ✅ done | D1 pilot + M1 机制 + guard 三态验证 |
+| BET-Y1Q3-T1-07 | ✅ done | clone 迁移量产 (clone-lifecycle + agent-clone-onboard) |
+| BCOS W1-W4 | ✅ done | 业务闭环 + 北极星双通过 (131/100%) |
+
+## BCOS (Business Capability OS) 2 周落地 (2026-08-19~20)
+
+| 阶段 | 产出 | 北极星 |
+|------|------|--------|
+| W1 执行+知识闭环 | signal_router + knowledge_capture_pipeline + 5 场景 active | 18 consumed |
+| W2 治理+进化 | EvolutionEngine v1 (4 阶段) + 4 提案 apply | 18 consumed |
+| W3 诚实修复 | lifecycle_changer 真实改状态 + 北极星 v2 (排除 self-data) | 10 consumed (真实) |
+| W4 真实落地 | cockpit-ui 消费面板 + L3 智能路由 + Apple Mail watcher + 30 真实 journey | **131 consumed, 100% completion** |
+
+## 关键学习
+
+1. **从"建功能"到"跑业务"**: 基建收口后必须立刻跑真实业务流, 否则机制是空的
+2. **北极星必须诚实**: 排除 self-generated 数据, 用 journey_id 追踪真实人类消费
+3. **EvolutionEngine 真实改状态**: 提案 → apply → 写 scene card lifecycle (不是只存到 rollout 文件)
+4. **信号源真实路径**: Apple Mail 27 mbox 验证, 真实信号流入
+5. **L3 智能路由替代 regex**: 多维评分 (type/urgency/quality) 替代简单关键词匹配
+
+## 后续路线图 (W5+)
+
+- **W5**: 补足 8 场景真实业务 (periodic-reporting + project-supervision)
+- **W6**: L4 学习引擎 (calibration 自进化)
+- **W7-W8**: 智能路由 (LLM 接入)
 
 ---
 
@@ -71,3 +108,6 @@
 
 - [BET-Y1Q1-T1-05A 口](../reports/2026-08-14-shared-runtime-coordination-gap.md)
 - [ADR-0415 能力对齐](../decisions/0415-reject-agt-integration-adopt-capability-parity.md)
+- [ADR-0419 业务落地计划](../decisions/0419-business-workflow-implementation-plan.md)
+- [ADR-0421 2 周复盘](../decisions/0421-bcos-2week-retro.md)
+- [BCOS 完整方案](../../../projects/agora/Plans/cryptic-baking-newell.md)

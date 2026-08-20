@@ -1,13 +1,3 @@
-title: Knowledge Ingest Scene Card (知识入库 — assisted 第二场景)
-status: active
-type: scene-card
-owner: product-architecture
-last-reviewed: 2026-08-18
-related:
-- ../../.omo/standards/external-connection-fabric.md
-- ../../.omo/_truth/registry/external-channels.yaml
-- ../knowledge-curation.yaml
----
 schema: scene-card/v2
 scene_type: internal_pipeline
 lifecycle: assisted
@@ -19,7 +9,7 @@ lifecycle_gate:
   protocol: docs/operations/knowledge-ingest-outcome-tracking.md
   thresholds:
     min_samples: 30
-    min_calibration: 0.60
+    min_calibration: 0.6
     min_recall_citation_rate: 0.25
     rollback_evidence: required
   measured_2026_08_18:
@@ -27,7 +17,7 @@ lifecycle_gate:
     calibration: null
     recall_citation_rate: null
     rollback_tested: false
-  status: assisted_active_collecting_evidence
+  status: applied_by_evolution_engine
   rationale: 第二场景升 assisted — 验证放权机制从 document-review 到 knowledge-ingest 的可复制性
 approval:
   confirmed_by: xiamingxing (business-governance approver)
@@ -70,7 +60,8 @@ activation_blockers:
 - recall_citation_rate_below_0.25
 - human_review_backlog_exceeds_48h
 bet: BET-Y2Q2-T7-01
-falsifier: 若 assisted 连续 30 天 recall_citation_rate < 0.25 或 calibration < 0.6, 则回退 shadow
+falsifier: 若 assisted 连续 30 天 recall_citation_rate < 0.25 或 calibration < 0.6, 则回退
+  shadow
 notes:
 - '2026-08-18: 第二场景升 assisted. 验证放权机制可复制性 (document-review → knowledge-ingest).'
 - 'assisted 含义: 自动执行入库 + 索引更新, 人工复核抽检 (每日 backlog 清零).'
@@ -122,5 +113,10 @@ event_subscription:
   bus: omo-event-bus
   triggers:
   - event: scene.completed
-    filter: source_scene in ['engineering-delivery', 'document-review', 'research-pipeline', 'meeting-supervision']
+    filter: source_scene in ['engineering-delivery', 'document-review', 'research-pipeline',
+      'meeting-supervision']
     action: ingest_fragment
+evolution_triggered: true
+evolution_auto_score: true
+last_modified_by: evolution_engine
+last_modified_at: '2026-08-19T13:00:41Z'

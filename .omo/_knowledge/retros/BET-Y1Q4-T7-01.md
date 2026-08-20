@@ -8,6 +8,8 @@ bet: BET-Y1Q4-T7-01
 related:
   - docs/operations/document-review-outcome-tracking.md
   - docs/scene-cards/document-review.yaml
+lifecycle: history
+last-reviewed: 2026-08-19
 ---
 
 # BET-Y1Q4-T7-01 复盘（五问）— 守门版

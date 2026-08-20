@@ -1,14 +1,3 @@
-title: Document Review Scene Card (公文起草与审查)
-status: shadow
-type: scene-card
-owner: product-architecture
-last-reviewed: 2026-08-04
-related:
-- ./engineering-delivery-dogfood.yaml
-- ../SCENE-CARD-REVIEW-RUNBOOK.md
-- ../../.omo/standards/external-connection-fabric.md
-- ../../.omo/_truth/registry/external-channels.yaml
----
 schema: scene-card/v2
 lifecycle: shadow
 activation: allowed
@@ -19,14 +8,14 @@ lifecycle_gate:
   protocol: docs/operations/document-review-outcome-tracking.md
   thresholds:
     min_samples: 30
-    min_calibration: 0.60
+    min_calibration: 0.6
     rollback_evidence: required
-  measured_2026_08_18:
+  measured_2026_08_19:
     samples: 0
     calibration: null
     rollback_tested: true
-  status: blocked_until_threshold_met
-  rationale: circuit_breaker 未达标 → 保持 shadow, 不得强行升 L2
+  status: applied_by_evolution_engine
+  rationale: P1 Shadow 模式启动 2026-08-19, 目标 30 samples + calibration≥0.60
 approval:
   confirmed_by: xiamingxing (business-governance approver, 操作员全授权 2026-08-06)
   confirmed_at: 2026-08-06 12:00:00+00:00
@@ -145,3 +134,7 @@ journey:
     to: human_hold
     condition: check_failed
     description: 格式检查失败时交人工处理
+evolution_triggered: true
+evolution_auto_score: true
+last_modified_by: evolution_engine
+last_modified_at: '2026-08-19T13:00:41Z'

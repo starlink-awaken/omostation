@@ -1,12 +1,3 @@
-title: Research Pipeline Scene Card (调研管线)
-status: shadow
-type: scene-card
-owner: product-architecture
-last-reviewed: 2026-08-07
-related:
-- ./knowledge-curation.yaml
-- ../../.omo/_truth/scenarios/research-pipeline-legacy.yaml
----
 schema: scene-card/v2
 scene_type: external_resource
 lifecycle: shadow
@@ -58,11 +49,16 @@ notes:
 bet: BET-Y1Q1-T3-01
 falsifier: 若 shadow 期间无研究报告被自动汇编，则场景无价值，回退 draft
 activation_blockers: []
-
 reflection_contract:
   enabled: true
   trigger: on_completion
   questions:
-    - "执行过程是否按预期流转？"
-    - "产出质量是否达标？"
-    - "是否有可复用的经验沉淀？"
+  - 执行过程是否按预期流转？
+  - 产出质量是否达标？
+  - 是否有可复用的经验沉淀？
+evolution_triggered: true
+evolution_auto_score: true
+last_modified_by: evolution_engine
+last_modified_at: '2026-08-19T13:00:41Z'
+lifecycle_gate:
+  status: applied_by_evolution_engine
