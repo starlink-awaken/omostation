@@ -145,6 +145,12 @@
       "type": "file"
     },
     {
+      "path": "scratch/benchmark_leaderboard.md",
+      "accessCount": 2,
+      "lastAccessed": 1787211682633,
+      "type": "file"
+    },
+    {
       "path": "AGENTS.md",
       "accessCount": 1,
       "lastAccessed": 1787126139676,
@@ -184,6 +190,18 @@
       "path": "scratch/deep_bench_qwen38.py",
       "accessCount": 1,
       "lastAccessed": 1787194816943,
+      "type": "file"
+    },
+    {
+      "path": "scratch/full_benchmark.py",
+      "accessCount": 1,
+      "lastAccessed": 1787210240783,
+      "type": "file"
+    },
+    {
+      "path": "scratch/full_benchmark_raw.json",
+      "accessCount": 1,
+      "lastAccessed": 1787211308418,
       "type": "file"
     }
   ],

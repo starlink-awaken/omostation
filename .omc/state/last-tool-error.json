@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /Users/xiamingxing/Workspace/projects/omlxc\\necho \\\"=== 验证无 DeepSeek 残留 ===\\\"\\nrtk grep -n \\\"deepseek\\\" ~/.config/omlxc/config.toml || echo \\\"✅ 无残留\\\"\\necho \\\"\\\"\\necho \\\"=== validate ===...",
+  "error": "Exit code 1\n=== 验证无 DeepSeek 残留 ===\n✅ 无残留\n\n=== validate ===\n✔  config valid  schema_version=1\n\n=== restart ===\n│ Rollback: Restore the previous service/config snapshot.                      │\n╰──────────────────────────────────────────────────────────────────────────────╯\n✔ com.omlxc.daemon restart succeeded\n\n=== 最终模型数 ===\nTraceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n    import json,sys;d=json.load(sys.stdin);print(f'  {len(d[\"data\"][\"items\"])} 模型')\n                 ...",
+  "timestamp": "2026-08-20T07:44:27.347Z",
+  "retry_count": 1
+}
