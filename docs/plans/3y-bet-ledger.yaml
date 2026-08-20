@@ -5665,8 +5665,9 @@ bets:
   title: SEMA 结晶 skill 入仓与台账修复
   appetite: 1 hour
   priority: P2
-  status: active
+  status: done
   started_at: 2026-08-20
+  done_at: 2026-08-20
   goal: 将 SEMA 自动结晶的 workflow:governance-state-mutation skill 纳入版本跟踪，修复 T6-09 verify 目标与基线不一致
   non_goals:
   - 修改 skill 内容或生成逻辑
@@ -5688,7 +5689,10 @@ bets:
   - T6-09 verify 目标与 script_baseline 一致（420）
   - make gac-local-gate 全部检查 PASS
   progress:
-    done_when_met: []
+    done_when_met:
+    - '1: workflow:governance-state-mutation skill 已 git add'
+    - '2: T6-09 verify 目标修正为 active_bin_scripts ≤ 420'
+    - '3: make gac-local-gate 46 checks ALL GREEN'
     pending_when: []
   verify:
   - cmd: git ls-files --error-unmatch .agents/skills/workflow:governance-state-mutation/SKILL.md
