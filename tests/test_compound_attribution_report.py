@@ -1,0 +1,119 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPT = ROOT / "bin" / "gac" / "compound-attribution-report.py"
+SPEC = importlib.util.spec_from_file_location("compound_attribution_report", SCRIPT)
+assert SPEC is not None and SPEC.loader is not None
+report = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(report)
+
+
+def _value_snapshot() -> dict:
+    return {
+        "schema": "value-truth-snapshot/v1",
+        "status": "collecting",
+        "observed_at": "2026-08-20T04:30:00Z",
+        "source": {
+            "ref": "repo://runtime/omo/event-ledger.sqlite3",
+            "query_digest": f"sha256:{'a' * 64}",
+            "event_count": 9,
+        },
+        "truth_axes": {
+            "engineering_delivery": "not_measured",
+            "operational_proof": "proven",
+            "personal_value": "collecting",
+        },
+        "metrics": {
+            "current_week_qualifying_outcomes": 1,
+            "four_week_value_gate": "collecting",
+        },
+    }
+
+
+def test_attribution_uses_evidence_inputs_and_marks_unmeasured_claims_unprovable():
+    data = report.generate_attribution_data(
+        value_truth=_value_snapshot(),
+        bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
+        observed_at="2026-08-20T04:30:00Z",
+    )
+
+    assert data["schema"] == "compound-attribution-report/v2"
+    assert data["truth_axes"]["personal_value"] == "collecting"
+    assert data["engineering"]["bets"] == {
+        "total": 120,
+        "by_status": {"done": 119, "candidate": 1},
+        "source": "repo://docs/plans/3y-bet-ledger.yaml",
+    }
+    for key in (
+        "parallel_acceleration_ratio",
+        "local_tokens_substituted",
+        "commercial_cost_saved_usd",
+        "ttft_speedup_ratio",
+        "chaos_interception_rate",
+        "regulatory_violations",
+        "merkle_integrity",
+    ):
+        assert data["unproven_claims"][key] == {"status": "unprovable", "value": None}
+
+
+def test_rendered_report_does_not_restate_legacy_hardcoded_success_claims():
+    data = report.generate_attribution_data(
+        value_truth=_value_snapshot(),
+        bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
+        observed_at="2026-08-20T04:30:00Z",
+    )
+
+    rendered = report.render_markdown_report(data)
+
+    assert "个人价值轴: **collecting**" in rendered
+    assert "0ms" not in rendered
+    assert "12.4x" not in rendered
+    assert "485,000,000" not in rendered
+    assert "100.0% 清盘" not in rendered
+    assert "UNPROVABLE" in rendered
+
+
+def test_missing_value_receipt_cannot_generate_a_successful_report():
+    data = report.generate_attribution_data(
+        value_truth=None,
+        bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
+        observed_at="2026-08-20T04:30:00Z",
+    )
+
+    assert data["truth_axes"]["operational_proof"] == "unprovable"
+    assert data["truth_axes"]["personal_value"] == "unprovable"
+    assert data["status"] == "unprovable"
+
+
+def test_malformed_query_digest_cannot_be_used_as_value_evidence():
+    malformed = _value_snapshot()
+    malformed["source"]["query_digest"] = "sha256:not-a-digest"
+
+    data = report.generate_attribution_data(
+        value_truth=malformed,
+        bet_summary={"total": 120, "by_status": {"done": 119, "candidate": 1}},
+        observed_at="2026-08-20T04:30:00Z",
+    )
+
+    assert data["status"] == "unprovable"
+    assert data["truth_axes"]["personal_value"] == "unprovable"
+
+
+def test_cli_keeps_python39_compatible_timezone_imports():
+    source = SCRIPT.read_text(encoding="utf-8")
+
+    assert "from datetime import UTC" not in source
+    completed = subprocess.run(
+        [sys.executable, str(SCRIPT), "--json"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.returncode == 2
+    assert json.loads(completed.stdout)["status"] == "unprovable"
