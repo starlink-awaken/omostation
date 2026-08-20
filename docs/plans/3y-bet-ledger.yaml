@@ -5957,6 +5957,8 @@ bets:
   - bin/gac/compound-attribution-report.py
   - bin/gac/bdsk-shadow-sandbox.py
   - projects/cockpit/src/cockpit/commands/bdsk_engine.py
+  - projects/agora/tests/test_mcp_server.py
+  - projects/agora/tests/unit/test_bos_resolver.py
   - tests/**
   - .githooks/pre-commit
   - .omo/_truth/registry/workers.yaml
