@@ -5811,7 +5811,8 @@ bets:
   title: 归档 bin/bc-os/ 无外部引用的 speculative 脚本
   appetite: 1 hour
   priority: P2
-  status: in_progress
+  status: done
+  done_at: 2026-08-20
   started_at: 2026-08-20
   goal: 减少 bin/ 活跃脚本表面积，将当前无外部调用、无 CI/Makfile/journey 接入的 3 个 bc-os speculative 脚本归档
   non_goals:
