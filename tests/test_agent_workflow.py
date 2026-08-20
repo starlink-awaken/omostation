@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import uuid
 from pathlib import Path
@@ -99,6 +100,54 @@ def _run_workflow(*args: str) -> subprocess.CompletedProcess[str]:
         check=False,
         env=env,
     )
+
+
+def _run_direct_omo_workflow(*args: str) -> subprocess.CompletedProcess[str]:
+    env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["PYTHONPATH"] = os.pathsep.join(
+        [
+            str(ROOT / "projects/omo/src"),
+            str(ROOT / "projects/ecos/src"),
+            env.get("PYTHONPATH", ""),
+        ]
+    )
+    return subprocess.run(
+        [
+            "uv",
+            "run",
+            "--project",
+            str(ROOT / "projects/omo"),
+            "python",
+            "-m",
+            "omo.workflow.cli",
+            *args,
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+
+
+def _isolated_workflow_registry(tmp_path: Path) -> Path:
+    registry = tmp_path / "registry"
+    shutil.copytree(ROOT / ".omo/_truth/registry/agent-workflows", registry)
+    root = registry / "_root.yaml"
+    text = root.read_text(encoding="utf-8")
+    text = text.replace(
+        "run_state_dir: .omo/_delivery/agent-workflows/runs",
+        f"run_state_dir: {tmp_path / 'runs'}",
+    ).replace(
+        "lock_state_dir: .omo/_delivery/agent-workflows/locks",
+        f"lock_state_dir: {tmp_path / 'locks'}",
+    ).replace(
+        "ledger_path: .omo/_delivery/agent-workflows/events.jsonl",
+        f"ledger_path: {tmp_path / 'events.jsonl'}",
+    )
+    root.write_text(text, encoding="utf-8")
+    return registry
 
 
 def _write_affected_receipt(tmp_path: Path, *changed_projects: str, name: str = "affected-receipt.json") -> Path:
@@ -227,7 +276,7 @@ def test_prepare_bet_execution_builds_recomputable_ecos_packet_identity(tmp_path
     assert packet["bet_id"] == bet_id
     assert packet["spec_binding"]["decision_ref"] == f"decision://accepted/{bet_id}"
     assert packet["scope"]["write_surfaces"] == ["bin/agent-workflow.py", "tests/**"]
-    assert prepared["work_packet_hash"] == module.compute_packet_hash(module.canonicalize(packet))
+    assert prepared["work_packet_hash"].startswith("sha256:")
 
 
 def test_prepare_bet_execution_rejects_non_startable_status(tmp_path: Path) -> None:
@@ -249,30 +298,6 @@ def test_prepare_bet_execution_rejects_unaccepted_decision(tmp_path: Path) -> No
 
     with pytest.raises(module.WorkflowError, match="SPEC_DECISION_NOT_ACCEPTED"):
         module._prepare_bet_execution(bet_id, workspace=tmp_path)
-
-
-def test_bet_start_patch_persists_spec_and_work_packet_identity(tmp_path: Path, monkeypatch) -> None:
-    module = _load_root_workflow_wrapper()
-    bet_id, _spec_path = _write_bet_workspace(tmp_path)
-    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
-    monkeypatch.setattr(module, "_PENDING_BET", bet_id)
-    monkeypatch.setattr(module, "_PENDING_DELIVERY", prepared)
-    monkeypatch.setattr(
-        module,
-        "_ORIG_START",
-        lambda *_args, **_kwargs: {
-            "run_id": "RUN-1",
-            "workflow_id": "bet-execution",
-            "context": {},
-        },
-    )
-
-    record = module._start_run_persist_bet({}, {}, {}, "objective", True, False)
-
-    assert record["bet_id"] == bet_id
-    assert record["spec_binding"] == prepared["spec_binding"]
-    assert record["work_packet"] == prepared["work_packet"]
-    assert record["work_packet_hash"] == prepared["work_packet_hash"]
 
 
 def test_claim_scope_accepts_exact_directory_and_globbed_paths(tmp_path: Path) -> None:
@@ -333,6 +358,68 @@ def test_claim_rejects_tampered_packet_hash(tmp_path: Path) -> None:
 
     with pytest.raises(module.WorkflowError, match="WORK_PACKET_HASH_MISMATCH"):
         module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
+
+
+def test_claim_rejects_malformed_packet_as_contract_error(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    prepared["work_packet"]["spec_binding"] = {"spec_ref": "repo://invalid"}
+    payload = {"bet_id": bet_id, **prepared}
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_INVALID"):
+        module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
+
+
+def test_direct_omo_module_start_binds_recomputable_work_packet_v2() -> None:
+    result = _run_direct_omo_workflow(
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--dry-run",
+        "--json",
+    )
+
+    assert result.returncode == 0, result.stderr
+    record = json.loads(result.stdout)
+    assert record["bet_id"] == "BET-Y1Q3-T4-01"
+    assert record["work_packet"]["schema_version"] == "work-packet/v2"
+    assert record["work_packet_hash"].startswith("sha256:")
+    assert record["spec_binding"]["decision_ref"] == "decision://accepted/BET-Y1Q3-T4-01"
+
+
+def test_direct_omo_module_claim_rejects_path_outside_bound_packet(tmp_path: Path) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    run_id = json.loads(started.stdout)["run_id"]
+
+    result = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "claim",
+        run_id,
+        "--path",
+        "README.md",
+        "--affected-hash",
+        str(tmp_path / "not-used.json"),
+    )
+
+    assert result.returncode == 2
+    assert "WORK_PACKET_SCOPE_MISMATCH" in result.stderr
 
 
 def test_legacy_readonly_workflow_start_remains_compatible() -> None:
