@@ -173,7 +173,13 @@ def cmd_status(args: argparse.Namespace) -> int:
     # 人类可读三段式
     print(f" Coordination Layer ({snap['db_path']})")
     print(f" schema v{snap['schema_version']}")
-    print(f"\n── Claims ({len(snap['claims'])}) ──────────────────────")
+    claim_counts = snap["claim_counts"]
+    print(
+        "\n── Claims "
+        f"(total={len(snap['claims'])} state_active={claim_counts['state_active']} "
+        f"expired_by_time={claim_counts['expired_by_time']} live_by_time={claim_counts['live_by_time']}) "
+        "──────────────────────"
+    )
     for c in snap["claims"]:
         print(
             f"  {c['state']:<8} {c['resource_type']}/{c['resource_id']} "
