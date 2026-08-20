@@ -148,7 +148,7 @@ class LanceDBBackend(VectorStoreBackend):
         """
         model = self._get_model()
         vector = model.encode(text)
-        return vector.tolist()
+        return cast(list[float], vector.tolist())
 
     # ------------------------------------------------------------------
     # CRUD operations

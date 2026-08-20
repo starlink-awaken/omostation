@@ -22,6 +22,10 @@ jobs:
         with:
           python-version: "3.13"
       - uses: astral-sh/setup-uv@v4
+      - name: Install and verify ripgrep
+        run: |
+          sudo apt-get install -y ripgrep
+          rg --version
       - name: uv sync (装配 kairon venv + pytest)
         run: cd projects/knowledge/kairon && uv sync --quiet --all-groups
       - name: make test-fast (16 包循环 pytest, 对齐原 kairon 仓 CI 语义)

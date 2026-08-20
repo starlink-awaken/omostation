@@ -343,5 +343,7 @@ warn_return_any = true
 
 [dependency-groups]
 dev = [
+    "fastmcp>=3.4.2",
     "mypy>=2.1.0",
+    "pytest>=8.0.0",
 ]
