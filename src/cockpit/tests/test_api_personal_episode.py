@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -102,7 +103,8 @@ def test_personal_episode_real_ledger_to_local_draft_to_feedback(monkeypatch, tm
     assert "evidence_uri" not in executed_body
     artifacts = list(draft_dir.glob("*.json"))
     assert len(artifacts) == 1
-    evidence_uri = artifacts[0].resolve().as_uri()
+    candidate_digest = hashlib.sha256(artifacts[0].read_bytes()).hexdigest()
+    evidence_uri = f"evidence://personal-draft/sha256:{candidate_digest}"
     artifact = json.loads(artifacts[0].read_text(encoding="utf-8"))
     assert artifact == {
         "title": "Commitment follow-up draft",
@@ -145,7 +147,49 @@ def test_personal_episode_real_ledger_to_local_draft_to_feedback(monkeypatch, tm
         assert evidence_rows[0]["evidence_uri"] == evidence_uri
         assert evidence_rows[0]["output_origin"] == "user_provided"
         assert evidence_rows[0]["action_id"].startswith("action:personal-")
+        rows = broker.read(episode_id=episode_id)
+        serialized_rows = json.dumps(rows)
+        assert str(tmp_path) not in serialized_rows
+        assert "file://" not in serialized_rows
+        outcome_payload = next(
+            json.loads(row["payload_json"]) for row in rows if row["event_type"] == "Outcome.Human.v1"
+        )
+        assert outcome_payload["outcome_feedback_schema"] == "outcome-feedback/v1"
+        assert outcome_payload["revision_receipt"] == {
+            "schema": "revision-receipt/v1",
+            "candidate_ref": evidence_uri,
+            "revision_digest": f"sha256:{candidate_digest}",
+            "changed_fields": [],
+        }
         assert broker.verify_chain()["ok"] is True
+    finally:
+        broker.close()
+
+
+def test_feedback_edit_without_revision_receipt_fails_closed(monkeypatch, tmp_path):
+    ledger_path, _ = _configure_real_local_runtime(monkeypatch, tmp_path)
+    client = TestClient(_app())
+    episode_id = _full_flow_episode(client, ledger_path)
+
+    broker = LedgerBroker.connect(ledger_path)
+    count_before = broker.count()
+    broker.close()
+
+    feedback = client.post(
+        "/api/workflow-mesh/personal-episode/feedback",
+        json={
+            "episode_id": episode_id,
+            "principal_id": "principal:alice",
+            "verdict": "edit",
+        },
+    )
+
+    assert feedback.status_code == 409
+    assert feedback.json()["error"] == "revision_receipt_required"
+    broker = LedgerBroker.connect(ledger_path)
+    try:
+        assert broker.count() == count_before
+        assert not [row for row in broker.read(episode_id=episode_id) if row["event_type"] == "Outcome.Human.v1"]
     finally:
         broker.close()
 
@@ -253,12 +297,11 @@ def test_feedback_id_revisions_are_idempotent_and_latest_is_effective(monkeypatc
             for row in broker.read(episode_id=episode_id)
             if row["event_type"] == "Outcome.Human.v1"
         ]
+        raw_ids = [f"feedback:http-00{index}" for index in range(1, 5)]
         assert [payload["feedback_id"] for payload in outcome_payloads] == [
-            "feedback:http-001",
-            "feedback:http-002",
-            "feedback:http-003",
-            "feedback:http-004",
+            f"feedback://sha256:{hashlib.sha256(value.encode()).hexdigest()}" for value in raw_ids
         ]
+        assert all(value not in json.dumps(outcome_payloads) for value in raw_ids)
     finally:
         broker.close()
 
@@ -293,6 +336,37 @@ def test_feedback_id_invalid_value_fails_closed_without_write(monkeypatch, tmp_p
     )
 
     assert response.status_code == 409
+    broker = LedgerBroker.connect(ledger_path)
+    try:
+        assert broker.count() == count_before
+    finally:
+        broker.close()
+
+
+def test_feedback_id_conflicting_replay_returns_409_without_write(monkeypatch, tmp_path):
+    ledger_path, _ = _configure_real_local_runtime(monkeypatch, tmp_path)
+    client = TestClient(_app())
+    episode_id = _full_flow_episode(client, ledger_path)
+    request = {
+        "episode_id": episode_id,
+        "principal_id": "principal:alice",
+        "feedback_id": "feedback:http-conflict",
+        "verdict": "accept",
+        "review_duration_seconds": 10,
+        "estimated_time_saved_seconds": 100,
+    }
+    first = client.post("/api/workflow-mesh/personal-episode/feedback", json=request)
+
+    broker = LedgerBroker.connect(ledger_path)
+    count_before = broker.count()
+    broker.close()
+    conflicting = client.post(
+        "/api/workflow-mesh/personal-episode/feedback",
+        json={**request, "verdict": "reject"},
+    )
+
+    assert first.status_code == 200
+    assert conflicting.status_code == 409
     broker = LedgerBroker.connect(ledger_path)
     try:
         assert broker.count() == count_before
@@ -777,7 +851,8 @@ def test_personal_execute_system_draft_from_snapshot(monkeypatch, tmp_path):
             if row["event_type"] == "Evidence.LocalDraft.v1"
         ]
         assert len(evidence_rows) == 1
-        assert evidence_rows[0]["evidence_uri"] == artifacts[0].resolve().as_uri()
+        digest = hashlib.sha256(artifacts[0].read_bytes()).hexdigest()
+        assert evidence_rows[0]["evidence_uri"] == f"evidence://personal-draft/sha256:{digest}"
         assert evidence_rows[0]["output_origin"] == "system"
         assert evidence_rows[0]["action_id"].startswith("action:personal-")
     finally:

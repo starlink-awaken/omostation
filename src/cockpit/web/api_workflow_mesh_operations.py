@@ -509,6 +509,12 @@ def _write_local_draft(context: Any, draft: dict[str, str], output_origin: str =
     return target
 
 
+def _personal_draft_evidence_ref(artifact: Path) -> str:
+    """Return a stable opaque reference without exposing the local artifact path."""
+    digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+    return f"evidence://personal-draft/sha256:{digest}"
+
+
 _DRAFT_FIELDS = frozenset({"title", "context", "deadline", "next_action"})
 
 
@@ -1051,7 +1057,7 @@ if router:
                     payload=draft,
                 )
                 artifact = _write_local_draft(context, draft, output_origin=output_origin)
-                evidence_uri = artifact.resolve().as_uri()
+                evidence_uri = _personal_draft_evidence_ref(artifact)
                 complete(decision, receipt, succeeded=True, result={"evidence_uri": evidence_uri})
                 terminal_confirmed = True
                 service.record_evidence(context, evidence_uri, output_origin=output_origin)
@@ -1094,6 +1100,8 @@ if router:
                     "verdict",
                     "review_duration_seconds",
                     "estimated_time_saved_seconds",
+                    "revision_digest",
+                    "changed_fields",
                 },
             )
             review_duration = _optional_burden(body, "review_duration_seconds")
@@ -1103,12 +1111,18 @@ if router:
                 context = service.reload_execution_context(
                     _required_text(body, "episode_id"), _required_text(body, "principal_id")
                 )
+                revision_kwargs: dict[str, Any] = {}
+                if "revision_digest" in body:
+                    revision_kwargs["revision_digest"] = _required_text(body, "revision_digest")
+                if "changed_fields" in body:
+                    revision_kwargs["changed_fields"] = body["changed_fields"]
                 sequence = service.record_outcome(
                     context,
                     _required_text(body, "verdict"),
                     feedback_id=feedback_id,
                     review_duration_seconds=review_duration,
                     estimated_time_saved_seconds=estimated_saved,
+                    **revision_kwargs,
                 )
         except (PersonalEpisodeError, OSError, TypeError, ValueError) as exc:
             _logger.info("personal_episode_feedback_blocked: %s", type(exc).__name__)

@@ -428,6 +428,13 @@ def _personal_feedback(rest: list[str]) -> int:
     parser.add_argument("--verdict", required=True, choices=["accept", "edit", "reject", "defer", "ignore"])
     parser.add_argument("--review-duration-seconds", type=float, default=None)
     parser.add_argument("--estimated-time-saved-seconds", type=float, default=None)
+    parser.add_argument("--revision-digest", default=None)
+    parser.add_argument(
+        "--changed-field",
+        action="append",
+        choices=["title", "context", "deadline", "next_action"],
+        default=None,
+    )
     args = parser.parse_args(rest)
     console = _get_console()
     for field, value in (
@@ -448,6 +455,10 @@ def _personal_feedback(rest: list[str]) -> int:
         payload["estimated_time_saved_seconds"] = args.estimated_time_saved_seconds
     if args.feedback_id is not None:
         payload["feedback_id"] = args.feedback_id
+    if args.revision_digest is not None:
+        payload["revision_digest"] = args.revision_digest
+    if args.changed_field is not None:
+        payload["changed_fields"] = args.changed_field
     try:
         status, body = _api_post(
             "/api/workflow-mesh/personal-episode/feedback",

@@ -10,6 +10,7 @@ configuration and the HTTP transport.
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import sys
 import threading
@@ -349,6 +350,49 @@ def test_cli_personal_feedback_with_metrics(cli_http, monkeypatch):
     assert rc == 0
 
 
+def test_cli_personal_edit_records_privacy_safe_revision_receipt(cli_http, monkeypatch):
+    episode_id = _cli_full_flow_to_episode(cli_http, monkeypatch)
+    revision_digest = f"sha256:{'b' * 64}"
+
+    rc = _run_cli(
+        monkeypatch,
+        "workflow",
+        "mesh",
+        "personal",
+        "feedback",
+        "--episode-id",
+        episode_id,
+        "--feedback-id",
+        "feedback:cli-edit",
+        "--verdict",
+        "edit",
+        "--revision-digest",
+        revision_digest,
+        "--changed-field",
+        "context",
+    )
+
+    assert rc == 0
+    broker = LedgerBroker.connect(cli_http["ledger_path"])
+    try:
+        payload = next(
+            json.loads(row["payload_json"])
+            for row in broker.read(episode_id=episode_id)
+            if row["event_type"] == "Outcome.Human.v1"
+        )
+        receipt = payload["revision_receipt"]
+        assert payload["outcome_feedback_schema"] == "outcome-feedback/v1"
+        assert receipt["schema"] == "revision-receipt/v1"
+        assert receipt["candidate_ref"].startswith("evidence://personal-draft/sha256:")
+        assert receipt["revision_digest"] == revision_digest
+        assert receipt["changed_fields"] == ["context"]
+        serialized = json.dumps(payload)
+        assert "file://" not in serialized
+        assert "/Users/" not in serialized
+    finally:
+        broker.close()
+
+
 def test_cli_personal_feedback_id_supports_revisions(cli_http, monkeypatch):
     """CLI threads stable feedback IDs through replay and later revisions."""
     episode_id = _cli_full_flow_to_episode(cli_http, monkeypatch)
@@ -392,12 +436,11 @@ def test_cli_personal_feedback_id_supports_revisions(cli_http, monkeypatch):
             for row in broker.read(episode_id=episode_id)
             if row["event_type"] == "Outcome.Human.v1"
         ]
+        raw_ids = [f"feedback:cli-00{index}" for index in range(1, 5)]
         assert [payload["feedback_id"] for payload in payloads] == [
-            "feedback:cli-001",
-            "feedback:cli-002",
-            "feedback:cli-003",
-            "feedback:cli-004",
+            f"feedback://sha256:{hashlib.sha256(value.encode()).hexdigest()}" for value in raw_ids
         ]
+        assert all(value not in json.dumps(payloads) for value in raw_ids)
         assert payloads[-1]["review_duration_seconds"] == 45
         assert payloads[-1]["estimated_time_saved_seconds"] == 240
     finally:
