@@ -1,7 +1,10 @@
 """Tests for Agora MCP Server tools — direct function imports."""
 
 import asyncio
+from pathlib import Path
 
+from agora.core.registry import ServiceRegistry
+from agora.core.router import Router
 from agora.server.tools_diagnostics import check_health
 from agora.server.tools_registry import (
     add_route,
@@ -111,12 +114,28 @@ class TestHealthCheck:
 
 
 class TestRoutes:
-    def test_add_and_list_routes(self):
+    def test_add_and_list_routes(self, monkeypatch, tmp_path):
+        canonical_routes = (
+            Path(__file__).resolve().parents[1] / "src" / "agora-routes.json"
+        )
+        canonical_before = canonical_routes.read_bytes()
+        isolated_registry = ServiceRegistry(
+            storage_path=str(tmp_path / "agora-services.json")
+        )
+        isolated_router = Router(
+            isolated_registry,
+            routes_path=str(tmp_path / "agora-routes.json"),
+        )
+        monkeypatch.setattr(
+            "agora.server.tools_registry._get_router", lambda: isolated_router
+        )
+
         add_route("test.tool", "test-svc")
         routes = list_routes()
         assert "data" in routes
         assert "test.tool" in routes["data"]
         assert routes["data"]["test.tool"] == "test-svc"
+        assert canonical_routes.read_bytes() == canonical_before
 
 
 class TestEventBus:
