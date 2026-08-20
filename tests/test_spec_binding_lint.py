@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+from argparse import Namespace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,10 +68,21 @@ def test_candidate_requires_spec_without_date_or_risk_bypass() -> None:
 
 
 def test_historical_terminal_bet_is_explicitly_grandfathered() -> None:
-    historical = _bet(status="done", risk_level="L3")
+    historical = next(
+        bet
+        for bet in bl.load()["bets"]
+        if bet["id"] == "BET-Y1Q2-T6-07"
+    )
 
     assert bl._is_spec_binding_required(historical) is False
-    assert bl._is_historical_spec_grandfathered(historical) is True
+    assert bl._is_historical_spec_grandfathered(historical, workspace=ROOT) is True
+
+
+def test_new_terminal_bet_cannot_self_grandfather_with_cutoff_date() -> None:
+    newly_constructed = _bet(status="done", risk_level="L3")
+    newly_constructed["done_at"] = bl.SPEC_BINDING_GRANDFATHER_CUTOFF
+
+    assert bl._is_historical_spec_grandfathered(newly_constructed, workspace=ROOT) is False
 
 
 def test_canonical_binding_validates(tmp_path: Path) -> None:
@@ -142,16 +154,21 @@ def test_lint_fails_for_active_bet_without_binding(capsys) -> None:
     assert "SPEC_BINDING_REQUIRED" in capsys.readouterr().out
 
 
-def test_lint_grandfathers_historical_done_bet_with_legacy_binding(capsys) -> None:
-    historical = _bet(status="done", risk_level="L3")
-    historical["accepted_specifications"] = [
-        {
-            "spec_ref": "legacy.md",
-            "content_digest": "legacy",
-        }
-    ]
+def test_lint_rejects_newly_constructed_done_bet_without_binding(capsys) -> None:
+    newly_constructed = _bet(status="done", risk_level="L3")
+    newly_constructed["done_at"] = bl.SPEC_BINDING_GRANDFATHER_CUTOFF
 
-    rc = bl.cmd_lint(_lint_data(historical), type("Args", (), {})())
+    rc = bl.cmd_lint(_lint_data(newly_constructed), type("Args", (), {})())
 
-    assert rc == 0
-    assert "OK" in capsys.readouterr().out
+    assert rc == 1
+    assert "SPEC_BINDING_REQUIRED" in capsys.readouterr().out
+
+
+def test_complete_rejects_unbound_nonterminal_bet_even_with_force(capsys) -> None:
+    rc = bl.cmd_complete(
+        _lint_data(_bet(status="candidate")),
+        Namespace(bet_id="BET-TEST", force=True),
+    )
+
+    assert rc == 1
+    assert "SPEC_BINDING_REQUIRED" in capsys.readouterr().out
