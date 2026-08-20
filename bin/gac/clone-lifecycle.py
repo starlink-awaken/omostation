@@ -400,13 +400,13 @@ def cmd_integrate(args: argparse.Namespace) -> int:
             "--repo",
             repo_slug,
             "--head",
-            f"{owner}:{branch}",
+            branch,
             "--base",
             base,
             "--state",
             "open",
             "--json",
-            "url",
+            "url,headRefName,headRefOid,headRepositoryOwner",
             "--limit",
             "1",
         ],
@@ -418,8 +418,21 @@ def cmd_integrate(args: argparse.Namespace) -> int:
         prs = json.loads(existing.stdout or "[]")
     except json.JSONDecodeError:
         return reject("integrate", "pr_query_invalid", "gh pr list returned invalid JSON")
-    if prs:
-        pr_url = prs[0].get("url", "")
+    matching_prs = [
+        pr
+        for pr in prs
+        if pr.get("headRefName") == branch
+        and (pr.get("headRepositoryOwner") or {}).get("login") == owner
+        and pr.get("headRefOid") == head_sha
+    ]
+    if prs and not matching_prs:
+        return reject(
+            "integrate",
+            "pr_identity_mismatch",
+            "open PR candidates do not match exact repository owner, branch, and verified HEAD",
+        )
+    if matching_prs:
+        pr_url = matching_prs[0].get("url", "")
     else:
         created = run(
             [
@@ -540,11 +553,11 @@ def cmd_retire(args: argparse.Namespace) -> int:
             "--repo",
             repo_slug,
             "--head",
-            f"{owner}:{branch}",
+            branch,
             "--state",
             "merged",
             "--json",
-            "number,url,headRefOid",
+            "number,url,headRefOid,headRefName,headRepositoryOwner",
             "--limit",
             "100",
         ],
@@ -556,7 +569,13 @@ def cmd_retire(args: argparse.Namespace) -> int:
         merged_prs = json.loads(pr_query.stdout or "[]")
     except json.JSONDecodeError:
         return reject("retire", "pr_query_invalid", "gh pr list returned invalid JSON")
-    matching_prs = [pr for pr in merged_prs if pr.get("headRefOid") == head_sha]
+    matching_prs = [
+        pr
+        for pr in merged_prs
+        if pr.get("headRefOid") == head_sha
+        and pr.get("headRefName") == branch
+        and (pr.get("headRepositoryOwner") or {}).get("login") == owner
+    ]
     if not matching_prs:
         return reject("retire", "pr_not_merged", "no merged PR matches clone HEAD")
 

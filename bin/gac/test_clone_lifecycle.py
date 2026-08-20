@@ -129,7 +129,15 @@ def merged_pr_runner(head: str, calls: list[list[str]] | None = None):
                 "",
             )
         if cmd[:3] == ["gh", "pr", "list"]:
-            payload = [{"number": 7, "url": "https://example.test/pr/7", "headRefOid": head}]
+            payload = [
+                {
+                    "number": 7,
+                    "url": "https://example.test/pr/7",
+                    "headRefOid": head,
+                    "headRefName": "agent/agent-1",
+                    "headRepositoryOwner": {"login": "owner"},
+                }
+            ]
             return subprocess.CompletedProcess(cmd, 0, json.dumps(payload), "")
         return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
 
@@ -325,7 +333,48 @@ def test_integrate_apply_is_reachable_and_creates_pr(tmp_path, monkeypatch, caps
     assert result["pr_url"] == "https://example.test/pr/8"
     assert any(cmd[:3] == ["gh", "pr", "create"] for cmd in calls)
     assert all("owner/repository" in cmd for cmd in calls if cmd[:3] in (["gh", "pr", "list"], ["gh", "pr", "create"]))
-    assert any("owner:agent/agent-1" in cmd for cmd in calls if cmd[:3] == ["gh", "pr", "list"])
+    assert any("agent/agent-1" in cmd for cmd in calls if cmd[:3] == ["gh", "pr", "list"])
+
+
+def test_integrate_reuses_only_exact_owner_branch_and_head_pr(tmp_path, monkeypatch, capsys):
+    clone, _remote, _initial_head = make_retirable_clone(tmp_path)
+    baseline, changeset, head = make_verified_changeset(tmp_path, clone)
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        calls.append(cmd)
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:6] == ["remote", "get-url", "origin"]:
+            return subprocess.CompletedProcess(cmd, 0, "git@github.com:owner/repository.git\n", "")
+        if cmd[:3] == ["gh", "pr", "list"]:
+            payload = [
+                {
+                    "url": "https://example.test/pr/8",
+                    "headRefName": "agent/agent-1",
+                    "headRefOid": head,
+                    "headRepositoryOwner": {"login": "owner"},
+                }
+            ]
+            return subprocess.CompletedProcess(cmd, 0, json.dumps(payload), "")
+        if cmd[:3] == ["gh", "pr", "create"]:
+            raise AssertionError("exact existing PR must be reused")
+        return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    rc = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            dry_run=False,
+            base="main",
+            baseline=str(baseline),
+            changeset=str(changeset),
+        )
+    )
+
+    assert rc == lc.EXIT_OK
+    assert json.loads(capsys.readouterr().out)["pr_url"] == "https://example.test/pr/8"
+    pr_call = next(cmd for cmd in calls if cmd[:3] == ["gh", "pr", "list"])
+    assert pr_call[pr_call.index("--head") + 1] == "agent/agent-1"
 
 
 def test_integrate_apply_requires_current_verified_changeset_before_push(tmp_path, monkeypatch):
@@ -463,7 +512,7 @@ def test_retire_removes_only_clean_pushed_merged_unleased_clone(tmp_path, monkey
     assert not list(clone.parent.glob(".ws.retire-quarantine-*"))
     pr_call = next(cmd for cmd in calls if cmd[:3] == ["gh", "pr", "list"])
     assert ["--repo", "owner/repository"] == pr_call[pr_call.index("--repo") : pr_call.index("--repo") + 2]
-    assert "owner:agent/agent-1" in pr_call
+    assert "agent/agent-1" in pr_call
 
 
 def test_retire_rejects_dirty_or_unpushed_clone(tmp_path, monkeypatch):
