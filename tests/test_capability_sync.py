@@ -1,313 +1,224 @@
-"""Test capability-sync.py — 四源扫描生成器测试"""
+"""Contract tests for the single capability registry spine."""
 
 from __future__ import annotations
 
+import ast
 import importlib.util
+import json
+import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pytest
-
-if TYPE_CHECKING:
-    from collections.abc import Generator
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = ROOT / "bin" / "capability-sync.py"
+SYNC_PATH = ROOT / "bin" / "capability-sync.py"
+GENERATOR_PATH = ROOT / "bin" / "cockpit" / "gen-capability-registry.py"
 
 
-def _load_module() -> object:
-    """加载 capability-sync 模块（带连字符，用 importlib）"""
-    spec = importlib.util.spec_from_loader("capability_sync", loader=None)
+def _load(name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
-    module.__dict__["__file__"] = str(SCRIPT_PATH)
-    exec(
-        compile(SCRIPT_PATH.read_text(encoding="utf-8"), str(SCRIPT_PATH), "exec"),
-        module.__dict__,
-    )
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
     return module
 
 
-@pytest.fixture(scope="session")
-def cap_sync() -> object:
-    """缓存加载的模块"""
-    return _load_module()
+@pytest.fixture(scope="module")
+def cap_sync():
+    return _load("capability_sync_contract", SYNC_PATH)
+
+
+@pytest.fixture(scope="module")
+def generator():
+    return _load("capability_registry_generator", GENERATOR_PATH)
 
 
 @pytest.fixture
-def temp_skill_dir(tmp_path: Path) -> Generator[Path]:
-    """临时 skills 目录 fixture"""
-    skills_dir = tmp_path / "skills"
-    skills_dir.mkdir()
-    yield skills_dir
+def registry() -> dict:
+    return {
+        "version": "1.0.0",
+        "generated_at": "1970-01-01T00:00:00Z",
+        "generator": "bin/cockpit/gen-capability-registry.py",
+        "totals": {
+            "mcp_servers": 1,
+            "mcp_tools": 2,
+            "bos_services": 1,
+            "bos_domains": 1,
+            "cli_commands": 1,
+        },
+        "mcp_servers": [
+            {
+                "id": "omo",
+                "name": "OMO",
+                "layer": "L2",
+                "file": "projects/omo/src/omo/mcp_server.py",
+                "transport": "stdio",
+                "exists": True,
+                "tools": ["status", "shared"],
+                "tool_count": 2,
+            }
+        ],
+        "bos_services": {
+            "_domain_counts": {"governance": 1},
+            "domains": {
+                "governance": [
+                    {
+                        "uri": "bos://governance/shared",
+                        "description": "shared governance service",
+                        "transport": "in-process",
+                        "status": "active",
+                    }
+                ]
+            },
+        },
+        "cli_commands": [{"name": "status", "description": "show status"}],
+    }
 
 
-def test_scan_skill_frontmatter_valid(cap_sync, temp_skill_dir: Path) -> None:
-    """测试扫描有效 SKILL.md frontmatter"""
-    # 写入测试 skill
-    skill1 = temp_skill_dir / "test-skill" / "SKILL.md"
-    skill1.parent.mkdir(parents=True, exist_ok=True)
-    skill1.write_text(
-        "---\nname: test-skill\ndescription: 这是个测试 skill\n---\ncontent here",
-        encoding="utf-8",
+def test_only_canonical_generator_can_write_registry(generator) -> None:
+    sync_source = SYNC_PATH.read_text(encoding="utf-8")
+    registry = generator.build_registry()
+
+    assert "write_text(" not in sync_source
+    assert "scan_all_sources" not in sync_source
+    assert registry["schema"] == "capability-registry/v1"
+    assert registry["owner"] == "workspace-capability-governance"
+    assert registry["writer"] == "bin/cockpit/gen-capability-registry.py"
+
+
+def test_generator_check_detects_drift_without_writing(generator, tmp_path: Path) -> None:
+    registry = generator.build_registry()
+    output = tmp_path / "capability-registry.yaml"
+    expected = generator.render_yaml(registry)
+    output.write_text(expected, encoding="utf-8")
+
+    assert generator.check_yaml(registry, output) is True
+    output.write_text(expected + "# drift\n", encoding="utf-8")
+    before = output.read_bytes()
+
+    assert generator.check_yaml(registry, output) is False
+    assert output.read_bytes() == before
+
+
+def test_make_and_ci_use_canonical_check_entrypoint() -> None:
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+    workflow = (ROOT / ".github/workflows/ci-lint.yml").read_text(encoding="utf-8")
+    command = "bin/cockpit/gen-capability-registry.py --check"
+
+    assert "check-capability-registry:" in makefile
+    assert command in makefile
+    assert command in workflow
+    assert "bin/capability-sync.py sync" not in makefile
+    assert "bin/capability-sync.py sync" not in workflow
+
+
+def test_python39_grammar_is_supported() -> None:
+    for path in (SYNC_PATH, GENERATOR_PATH):
+        ast.parse(path.read_text(encoding="utf-8"), filename=str(path), feature_version=(3, 9))
+
+
+def test_schema_v1_without_new_metadata_remains_readable(cap_sync, registry: dict, tmp_path: Path) -> None:
+    path = tmp_path / "registry.yaml"
+    path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+
+    loaded = cap_sync.load_registry(path)
+
+    assert loaded["version"] == "1.0.0"
+    assert cap_sync.resolve_capability(loaded, capability_id="mcp-server:omo").status == "resolved"
+
+
+@pytest.mark.parametrize(
+    ("capability_id", "kind", "adapter"),
+    [
+        ("mcp-server:omo", "mcp_server", "mcp_native"),
+        ("mcp-tool:omo:status", "mcp_tool", "mcp_native"),
+        ("bos-service:bos://governance/shared", "bos_service", "bos_native"),
+        ("cli-command:status", "cli_command", "cockpit_native"),
+    ],
+)
+def test_find_resolves_only_exact_ids(cap_sync, registry: dict, capability_id: str, kind: str, adapter: str) -> None:
+    result = cap_sync.resolve_capability(registry, capability_id=capability_id)
+
+    assert result.status == "resolved"
+    assert result.capability["id"] == capability_id
+    assert result.capability["kind"] == kind
+    assert result.capability["adapter"]["kind"] == adapter
+
+
+def test_query_rejects_ambiguity_instead_of_first_match(cap_sync, registry: dict) -> None:
+    result = cap_sync.resolve_capability(registry, query="shared")
+
+    assert result.status == "ambiguous"
+    assert result.capability is None
+    assert result.candidate_ids == (
+        "bos-service:bos://governance/shared",
+        "mcp-tool:omo:shared",
     )
 
-    capabilities = cap_sync.scan_skill_frontmatter(temp_skill_dir, "test-source")
-    assert len(capabilities) == 1
-    assert capabilities[0].name == "test-skill"
-    assert capabilities[0].source == "test-source"
-    assert "测试 skill" in capabilities[0].description
-    assert capabilities[0].invoke == "Skill 工具 /test-skill"
+
+def test_duplicate_exact_id_is_ambiguous(cap_sync, registry: dict) -> None:
+    registry["mcp_servers"].append(dict(registry["mcp_servers"][0]))
+
+    result = cap_sync.resolve_capability(registry, capability_id="mcp-server:omo")
+
+    assert result.status == "ambiguous"
+    assert result.capability is None
 
 
-def test_scan_skill_frontmatter_multiple(cap_sync, temp_skill_dir: Path) -> None:
-    """测试扫描多个 skills"""
-    # 写入多个 skills
-    for i in range(3):
-        skill = temp_skill_dir / f"skill-{i}" / "SKILL.md"
-        skill.parent.mkdir(parents=True, exist_ok=True)
-        skill.write_text(
-            f"---\nname: skill-{i}\ndescription: 描述 {i}\n---\n",
-            encoding="utf-8",
-        )
+def test_not_found_is_explicit(cap_sync, registry: dict) -> None:
+    result = cap_sync.resolve_capability(registry, capability_id="mcp-tool:omo:missing")
 
-    capabilities = cap_sync.scan_skill_frontmatter(temp_skill_dir, "test")
-    assert len(capabilities) == 3
-    names = {c.name for c in capabilities}
-    assert names == {"skill-0", "skill-1", "skill-2"}
+    assert result.status == "not_found"
+    assert result.capability is None
+    assert result.candidate_ids == ()
 
 
-def test_scan_skill_frontmatter_malformed(cap_sync, temp_skill_dir: Path) -> None:
-    """测试容忍坏 frontmatter 文件不崩"""
-    # 正常 skill
-    good_skill = temp_skill_dir / "good" / "SKILL.md"
-    good_skill.parent.mkdir(parents=True, exist_ok=True)
-    good_skill.write_text("---\nname: good\n---\n", encoding="utf-8")
+@pytest.mark.parametrize("selector", [{"capability_id": "missing"}, {"query": "shared"}])
+def test_negative_receipt_is_privacy_safe(cap_sync, registry: dict, selector: dict) -> None:
+    result = cap_sync.resolve_capability(registry, **selector)
+    receipt = cap_sync.build_resolution_receipt(result, b"registry-content", selector)
+    encoded = json.dumps(receipt, ensure_ascii=False, sort_keys=True)
 
-    # 坏 skill（无 frontmatter）
-    bad_skill1 = temp_skill_dir / "bad1" / "SKILL.md"
-    bad_skill1.parent.mkdir(parents=True, exist_ok=True)
-    bad_skill1.write_text("no frontmatter here", encoding="utf-8")
-
-    # 坏 skill（只有开头的 ---）
-    bad_skill2 = temp_skill_dir / "bad2" / "SKILL.md"
-    bad_skill2.parent.mkdir(parents=True, exist_ok=True)
-    bad_skill2.write_text("---\nonly start", encoding="utf-8")
-
-    capabilities = cap_sync.scan_skill_frontmatter(temp_skill_dir, "test")
-    assert len(capabilities) == 1
-    assert capabilities[0].name == "good"
+    assert receipt["schema"] == "capability-resolution-receipt/v1"
+    assert receipt["status"] in {"not_found", "ambiguous"}
+    assert receipt["admission"] == {"required": True, "decision": "not_evaluated"}
+    assert receipt["invocation"]["allowed"] is False
+    assert receipt["invocation"]["route"] == "native_adapter_only"
+    assert "missing" not in encoded
+    assert "shared" not in encoded
+    assert "prompt" not in encoded
+    assert "environment" not in encoded
+    assert str(ROOT) not in encoded
 
 
-def test_scan_skill_frontmatter_empty_name(cap_sync, temp_skill_dir: Path) -> None:
-    """测试跳过空 name 的 skill"""
-    skill = temp_skill_dir / "empty" / "SKILL.md"
-    skill.parent.mkdir(parents=True, exist_ok=True)
-    skill.write_text("---\nname: \ndescription: desc\n---\n", encoding="utf-8")
+def test_resolved_receipt_cannot_be_used_as_direct_invocation(cap_sync, registry: dict) -> None:
+    selector = {"capability_id": "mcp-tool:omo:status"}
+    result = cap_sync.resolve_capability(registry, **selector)
+    receipt = cap_sync.build_resolution_receipt(result, b"registry-content", selector)
 
-    capabilities = cap_sync.scan_skill_frontmatter(temp_skill_dir, "test")
-    assert len(capabilities) == 0
-
-
-def test_scan_skill_frontmatter_description_truncate(cap_sync, temp_skill_dir: Path) -> None:
-    """测试描述截断（MAX_DESC_LEN=120）"""
-    long_desc = "x" * 200
-    skill = temp_skill_dir / "long" / "SKILL.md"
-    skill.parent.mkdir(parents=True, exist_ok=True)
-    skill.write_text(
-        f"---\nname: long\ndescription: {long_desc}\n---\n",
-        encoding="utf-8",
-    )
-
-    capabilities = cap_sync.scan_skill_frontmatter(temp_skill_dir, "test")
-    assert len(capabilities) == 1
-    assert len(capabilities[0].description) == 120  # MAX_DESC_LEN
-    assert capabilities[0].description.endswith("...")
+    assert receipt["capability_id"] == "mcp-tool:omo:status"
+    assert receipt["adapter"] == {"kind": "mcp_native", "target": "omo/status"}
+    assert receipt["invocation"] == {
+        "allowed": False,
+        "route": "native_adapter_only",
+        "reason": "admission_not_evaluated",
+    }
+    assert not hasattr(cap_sync, "invoke_capability")
 
 
-def test_scan_skill_frontmatter_missing_dir(cap_sync, tmp_path: Path) -> None:
-    """测试不存在的目录返回空列表"""
-    missing = tmp_path / "nonexistent"
-    capabilities = cap_sync.scan_skill_frontmatter(missing, "test")
-    assert capabilities == []
+def test_find_cli_returns_receipt_and_distinct_fail_closed_codes(
+    cap_sync, registry: dict, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "registry.yaml"
+    path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
 
+    assert cap_sync.main(["find", "--id", "mcp-tool:omo:status", "--registry", str(path)]) == 0
+    assert json.loads(capsys.readouterr().out)["status"] == "resolved"
 
-def test_capability_truncate(cap_sync) -> None:
-    """测试 Capability._truncate 方法"""
-    cap_class = cap_sync.Capability
+    assert cap_sync.main(["find", "--id", "missing", "--registry", str(path)]) == 2
+    assert json.loads(capsys.readouterr().out)["status"] == "not_found"
 
-    # 短文本不截断
-    cap = cap_class(source="test", name="test", description="short", invoke="invoke")
-    assert cap.description == "short"
-
-    # 长文本截断
-    long_text = "x" * 200
-    cap = cap_class(source="test", name="test", description=long_text, invoke="invoke")
-    assert len(cap.description) == 120  # MAX_DESC_LEN
-    assert cap.description.endswith("...")
-
-
-def test_capability_as_dict(cap_sync) -> None:
-    """测试 Capability.as_dict 方法"""
-    cap_class = cap_sync.Capability
-    cap = cap_class(
-        source="test-source",
-        name="Test Skill",
-        description="测试描述",
-        invoke="Skill 工具 /test",
-    )
-
-    result = cap.as_dict()
-    assert result["source"] == "test-source"
-    assert result["name"] == "Test Skill"
-    assert result["description"] == "测试描述"
-    assert result["invoke"] == "Skill 工具 /test"
-    assert "id" in result
-    assert result["id"] == "test-source:test-skill"
-
-
-def test_find_capabilities_case_insensitive(cap_sync, tmp_path: Path) -> None:
-    """测试 find 大小写不敏感"""
-    # 写入临时 registry
-    registry_path = tmp_path / "capability-registry.yaml"
-    registry_path.write_text(
-        "# GENERATED\n"
-        "generated_at:\n"
-        '  "2026-08-15T00:00:00+00:00"\n'
-        "generator:\n"
-        "  capability-sync/v1\n"
-        "capabilities:\n"
-        '  - id: "test:Test-Skill"\n'
-        "    source: test\n"
-        '    name: "Test-Skill"\n'
-        '    description: "测试 Skill 大小写"\n'
-        '    invoke: "invoke"\n'
-        '  - id: "test:another"\n'
-        "    source: test\n"
-        '    name: "another"\n'
-        '    description: "另一个"\n'
-        '    invoke: "invoke"\n',
-        encoding="utf-8",
-    )
-
-    # 测试大写查询
-    results = cap_sync.find_capabilities(cap_sync.load_registry(registry_path), "TEST")
-    assert len(results) == 1
-    assert results[0].name == "Test-Skill"
-
-    # 测试小写查询
-    results = cap_sync.find_capabilities(cap_sync.load_registry(registry_path), "skill")
-    assert len(results) == 1
-    assert results[0].name == "Test-Skill"
-
-
-def test_find_capabilities_query_both_name_and_description(cap_sync, tmp_path: Path) -> None:
-    """测试查询匹配 name 和 description"""
-    registry_path = tmp_path / "capability-registry.yaml"
-    registry_path.write_text(
-        "# GENERATED\n"
-        "generated_at:\n"
-        '  "2026-08-15T00:00:00+00:00"\n'
-        "generator:\n"
-        "  capability-sync/v1\n"
-        "capabilities:\n"
-        '  - id: "test:name-match"\n'
-        "    source: test\n"
-        '    name: "name-match"\n'
-        '    description: "desc"\n'
-        '    invoke: "invoke"\n'
-        '  - id: "test:desc-match"\n'
-        "    source: test\n"
-        '    name: "desc-match"\n'
-        '    description: "keyword in description"\n'
-        '    invoke: "invoke"\n',
-        encoding="utf-8",
-    )
-
-    results = cap_sync.find_capabilities(cap_sync.load_registry(registry_path), "keyword")
-    assert len(results) == 1
-    assert results[0].name == "desc-match"
-
-
-def test_find_capabilities_no_results(cap_sync, tmp_path: Path) -> None:
-    """测试无结果返回空列表"""
-    registry_path = tmp_path / "capability-registry.yaml"
-    registry_path.write_text(
-        "# GENERATED\n"
-        "generated_at:\n"
-        '  "2026-08-15T00:00:00+00:00"\n'
-        "generator:\n"
-        "  capability-sync/v1\n"
-        "capabilities:\n"
-        '  - id: "test:skill"\n'
-        "    source: test\n"
-        '    name: "skill"\n'
-        '    description: "desc"\n'
-        '    invoke: "invoke"\n',
-        encoding="utf-8",
-    )
-
-    results = cap_sync.find_capabilities(cap_sync.load_registry(registry_path), "nonexistent")
-    assert results == []
-
-
-def test_check_drift_no_change(cap_sync) -> None:
-    """测试无漂移返回 False"""
-    cap1 = cap_sync.Capability(source="test", name="skill", description="desc", invoke="invoke")
-    assert cap_sync.check_drift([cap1], [cap1]) is False
-
-
-def test_check_drift_added(cap_sync) -> None:
-    """测试新增 capability 返回 True（漂移）"""
-    cap1 = cap_sync.Capability(source="test", name="skill", description="desc", invoke="invoke")
-    cap2 = cap_sync.Capability(source="test", name="new", description="new", invoke="invoke")
-    assert cap_sync.check_drift([cap1], [cap1, cap2]) is True
-
-
-def test_check_drift_removed(cap_sync) -> None:
-    """测试删除 capability 返回 True（漂移）"""
-    cap1 = cap_sync.Capability(source="test", name="skill", description="desc", invoke="invoke")
-    cap2 = cap_sync.Capability(source="test", name="old", description="old", invoke="invoke")
-    assert cap_sync.check_drift([cap1, cap2], [cap1]) is True
-
-
-def test_check_drift_description_changed(cap_sync) -> None:
-    """测试描述变化返回 True（漂移）"""
-    cap1_old = cap_sync.Capability(source="test", name="skill", description="old desc", invoke="invoke")
-    cap1_new = cap_sync.Capability(source="test", name="skill", description="new desc", invoke="invoke")
-    assert cap_sync.check_drift([cap1_old], [cap1_new]) is True
-
-
-def test_check_drift_invoke_changed(cap_sync) -> None:
-    """测试 invoke 变化返回 True（漂移）"""
-    cap1_old = cap_sync.Capability(source="test", name="skill", description="desc", invoke="old invoke")
-    cap1_new = cap_sync.Capability(source="test", name="skill", description="desc", invoke="new invoke")
-    assert cap_sync.check_drift([cap1_old], [cap1_new]) is True
-
-
-def test_scan_all_sources_dedup(cap_sync, tmp_path: Path) -> None:
-    """测试四源合并去重（按 source:name）"""
-    # 创建临时 skills
-    skills_dir = tmp_path / "skills"
-    skills_dir.mkdir()
-    skill = skills_dir / "test" / "SKILL.md"
-    skill.parent.mkdir(parents=True, exist_ok=True)
-    skill.write_text("---\nname: test\n---\n", encoding="utf-8")
-
-    capabilities = cap_sync.scan_all_sources(tmp_path)
-
-    # 去重检查（同一个 name 不应重复）
-    names = [f"{c.source}:{c.name}" for c in capabilities]
-    assert len(names) == len(set(names))
-
-
-def test_load_registry_empty_file(cap_sync, tmp_path: Path) -> None:
-    """测试加载空文件返回空列表"""
-    empty_file = tmp_path / "empty.yaml"
-    empty_file.write_text("", encoding="utf-8")
-    assert cap_sync.load_registry(empty_file) == []
-
-
-def test_load_registry_missing_file(cap_sync, tmp_path: Path) -> None:
-    """测试加载不存在的文件返回空列表"""
-    missing = tmp_path / "nonexistent.yaml"
-    assert cap_sync.load_registry(missing) == []
+    assert cap_sync.main(["find", "--query", "shared", "--registry", str(path)]) == 3
+    assert json.loads(capsys.readouterr().out)["status"] == "ambiguous"
