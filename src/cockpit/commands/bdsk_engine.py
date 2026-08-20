@@ -110,8 +110,6 @@ class DynamicBDSKAdjudicator:
             return _not_proven("invalid_persona_response")
         if payload.get("proof_state") != "proven":
             code = payload.get("error_code")
-            return _not_proven(
-                code if isinstance(code, str) else "persona_evaluation_not_proven"
-            )
+            return _not_proven(code if isinstance(code, str) else "persona_evaluation_not_proven")
         proved = _proved_view(payload)
         return proved if proved is not None else _not_proven("invalid_persona_response")

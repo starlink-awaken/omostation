@@ -24,7 +24,7 @@ def cmd_fabric(args: argparse.Namespace) -> int:
             cmd.extend(["--model", args.model])
     elif action == "speculative-eval":
         if not getattr(args, "prompt", None):
-            console.print("[red]❌ 缺少 prompt 参数: cockpit fabric speculative-eval \"<prompt>\"[/]")
+            console.print('[red]❌ 缺少 prompt 参数: cockpit fabric speculative-eval "<prompt>"[/]')
             return 1
         cmd.append(args.prompt)
         if getattr(args, "domain", None):

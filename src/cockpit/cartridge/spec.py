@@ -7,7 +7,7 @@ for distributable, sovereign .cartridge packages.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -24,7 +24,7 @@ class CartridgeManifest:
     intent_patterns: list[str] = field(default_factory=list)
     policy_rules: list[str] = field(default_factory=list)
     required_models: list[str] = field(default_factory=list)
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     manifest_hash: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -54,6 +54,6 @@ class CartridgeManifest:
             intent_patterns=data.get("intent_patterns", []),
             policy_rules=data.get("policy_rules", []),
             required_models=data.get("required_models", []),
-            created_at=data.get("created_at", datetime.now(timezone.utc).isoformat()),
+            created_at=data.get("created_at", datetime.now(UTC).isoformat()),
             manifest_hash=data.get("manifest_hash", ""),
         )

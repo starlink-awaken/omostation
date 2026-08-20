@@ -15,7 +15,7 @@ def cmd_intent(args: argparse.Namespace) -> int:
     console = _get_console()
     prompt = " ".join(args.prompt) if isinstance(args.prompt, list) else str(args.prompt or "")
     if not prompt:
-        console.print("[red]❌ 缺少 prompt 参数: cockpit intent \"<自然语言意图>\"[/]")
+        console.print('[red]❌ 缺少 prompt 参数: cockpit intent "<自然语言意图>"[/]')
         return 1
 
     cmd = ["ecos-constraint", "intent", "compile", prompt]

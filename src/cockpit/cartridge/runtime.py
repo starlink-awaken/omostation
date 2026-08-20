@@ -11,6 +11,7 @@ import tarfile
 import tempfile
 from pathlib import Path
 from typing import Any
+
 from cockpit.cartridge.spec import CartridgeManifest
 
 
@@ -42,7 +43,7 @@ class CartridgeRuntime:
         with tempfile.TemporaryDirectory(prefix="cartridge_exec_") as tmpdir:
             tmppath = Path(tmpdir)
             with tarfile.open(self.cartridge_path, "r:gz") as tar:
-                tar.extractall(path=tmppath)
+                tar.extractall(path=tmppath, filter="data")
 
             # 匹配意图规则
             matched_pattern = next(

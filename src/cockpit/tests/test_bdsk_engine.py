@@ -20,10 +20,7 @@ def _proved_persona_result():
             "verdict": "REVIEW_REQUIRED",
             "risk_score": 38,
             "recommendation": "Human review is required.",
-            "board_reviews": {
-                role: {"opinion": f"{role} evidence"}
-                for role in ("builder", "devil", "sage", "keeper")
-            },
+            "board_reviews": {role: {"opinion": f"{role} evidence"} for role in ("builder", "devil", "sage", "keeper")},
         },
     }
 

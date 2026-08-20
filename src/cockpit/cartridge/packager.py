@@ -11,6 +11,7 @@ import os
 import tarfile
 from pathlib import Path
 from typing import Any
+
 from cockpit.cartridge.spec import CartridgeManifest
 
 
