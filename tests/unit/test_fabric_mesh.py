@@ -1,6 +1,7 @@
 """Unit tests for omlxc Local Edge Mesh & Compute Roaming Router (ADR-0202)."""
 
 import pytest
+
 from omlxc.mesh import MeshDiscoveryEngine, MeshNodeInfo, RoamingComputeRouter
 
 

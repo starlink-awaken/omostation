@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 logger = logging.getLogger("omlxc.mesh")
@@ -25,10 +25,10 @@ class MeshNodeInfo:
     vram_total_gb: float = 32.0
     vram_free_gb: float = 24.0
     thermal_pressure: str = "nominal"  # nominal, fair, serious, critical
-    loaded_models: list[str] = field(default_factory=list)
+    loaded_models: list[str] = field(default_factory=lambda: [])
     active_jobs: int = 0
     latency_ms: float = 1.0
-    last_heartbeat: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    last_heartbeat: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     @property
     def is_throttled(self) -> bool:
