@@ -136,15 +136,19 @@ def _isolated_workflow_registry(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / ".omo/_truth/registry/agent-workflows", registry)
     root = registry / "_root.yaml"
     text = root.read_text(encoding="utf-8")
-    text = text.replace(
-        "run_state_dir: .omo/_delivery/agent-workflows/runs",
-        f"run_state_dir: {tmp_path / 'runs'}",
-    ).replace(
-        "lock_state_dir: .omo/_delivery/agent-workflows/locks",
-        f"lock_state_dir: {tmp_path / 'locks'}",
-    ).replace(
-        "ledger_path: .omo/_delivery/agent-workflows/events.jsonl",
-        f"ledger_path: {tmp_path / 'events.jsonl'}",
+    text = (
+        text.replace(
+            "run_state_dir: .omo/_delivery/agent-workflows/runs",
+            f"run_state_dir: {tmp_path / 'runs'}",
+        )
+        .replace(
+            "lock_state_dir: .omo/_delivery/agent-workflows/locks",
+            f"lock_state_dir: {tmp_path / 'locks'}",
+        )
+        .replace(
+            "ledger_path: .omo/_delivery/agent-workflows/events.jsonl",
+            f"ledger_path: {tmp_path / 'events.jsonl'}",
+        )
     )
     root.write_text(text, encoding="utf-8")
     return registry
@@ -420,6 +424,64 @@ def test_direct_omo_module_claim_rejects_path_outside_bound_packet(tmp_path: Pat
 
     assert result.returncode == 2
     assert "WORK_PACKET_SCOPE_MISMATCH" in result.stderr
+
+
+def test_direct_omo_spawn_inherits_parent_packet_and_rejects_out_of_scope_before_mutation(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+
+    spawned = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "spawn",
+        parent["run_id"],
+        "observer-audit",
+        "--profile",
+        "observer-agent",
+        "--json",
+    )
+    assert spawned.returncode == 0, spawned.stderr
+    child = json.loads(spawned.stdout)
+    for key in ("bet_id", "spec_binding", "work_packet", "work_packet_hash"):
+        assert child[key] == parent[key]
+
+    child_path = Path(child["path"])
+    before_run = child_path.read_bytes()
+    lock_paths = [Path(path) for path in child["locks"]]
+    before_locks = {path: path.read_bytes() for path in lock_paths}
+    ledger = tmp_path / "events.jsonl"
+    before_ledger = ledger.read_bytes()
+
+    claimed = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "claim",
+        child["run_id"],
+        "--path",
+        "README.md",
+        "--affected-hash",
+        str(tmp_path / "not-created.json"),
+    )
+
+    assert claimed.returncode == 2
+    assert "WORK_PACKET_SCOPE_MISMATCH" in claimed.stderr
+    assert child_path.read_bytes() == before_run
+    assert {path: path.read_bytes() for path in lock_paths} == before_locks
+    assert ledger.read_bytes() == before_ledger
 
 
 def test_legacy_readonly_workflow_start_remains_compatible() -> None:
