@@ -1772,7 +1772,7 @@
     "protocol": "internal",
     "transport": "internal",
     "status": "active",
-    "description": "B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关 (Mode-A Debate & ADR 自动落盘存证)",
+    "description": "B.D.S.K. 虚拟董事会评审网关；唯一推理链为 bos://compute/aetherforge/infer，失败返回 not_proven，禁止自动 ADR",
     "registered_at": "2026-08-18T10:12:26.764200+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
