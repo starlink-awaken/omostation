@@ -33,6 +33,59 @@ def _load_module_from_source(path: Path, name: str):
     return module
 
 
+def _load_root_workflow_wrapper():
+    return _load_module_from_source(WORKFLOW_MODULE_PATH, f"agent_workflow_wrapper_{uuid.uuid4().hex}")
+
+
+def _write_bet_workspace(
+    workspace: Path,
+    *,
+    status: str = "candidate",
+    write_surfaces: list[str] | None = None,
+) -> tuple[str, Path]:
+    bet_id = "BET-TEST-SPINE"
+    relative_spec = "docs/superpowers/specs/test-spine.md"
+    spec_path = workspace / relative_spec
+    spec_path.parent.mkdir(parents=True, exist_ok=True)
+    spec_path.write_text("# Frozen specification\n", encoding="utf-8")
+    import hashlib
+
+    digest = hashlib.sha256(spec_path.read_bytes()).hexdigest()
+    ledger_path = workspace / "docs/plans/3y-bet-ledger.yaml"
+    ledger_path.parent.mkdir(parents=True, exist_ok=True)
+    surfaces_yaml = "".join(
+        f"      - {surface}\n" for surface in (write_surfaces or ["bin/agent-workflow.py", "tests/**"])
+    )
+    ledger_path.write_text(
+        f"""bets:
+  - id: {bet_id}
+    status: {status}
+    track: T1-TRUTH
+    window: Y1Q3
+    title: Spec binding spine
+    appetite: 1 day
+    priority: P0
+    risk_level: L2
+    human_gate: true
+    goal: Bind accepted specification to one packet identity
+    non_goals: [No second ledger]
+    done_when: [Canonical binding is enforced]
+    verify:
+      - cmd: python3 -c pass
+        expect: exit 0
+    workflow: bet-execution
+    write_surfaces:
+{surfaces_yaml}    accepted_specifications:
+      - spec_ref: repo://{relative_spec}
+        spec_version: 1.0.0
+        content_digest: sha256:{digest}
+        decision_ref: decision://accepted/{bet_id}
+""",
+        encoding="utf-8",
+    )
+    return bet_id, spec_path
+
+
 def _run_workflow(*args: str) -> subprocess.CompletedProcess[str]:
     # 清 VIRTUAL_ENV: CI 里 interface-check 先 cd projects/omo + uv sync 会
     # 残留 VIRTUAL_ENV=projects/omo/.venv, uv run 在根仓跑时告警 → 断言失败.
@@ -161,6 +214,125 @@ workflows:
         encoding="utf-8",
     )
     return registry
+
+
+def test_prepare_bet_execution_builds_recomputable_ecos_packet_identity(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+
+    packet = prepared["work_packet"]
+    assert packet["schema_version"] == "work-packet/v2"
+    assert packet["bet_id"] == bet_id
+    assert packet["spec_binding"]["decision_ref"] == f"decision://accepted/{bet_id}"
+    assert packet["scope"]["write_surfaces"] == ["bin/agent-workflow.py", "tests/**"]
+    assert prepared["work_packet_hash"] == module.compute_packet_hash(module.canonicalize(packet))
+
+
+def test_prepare_bet_execution_rejects_non_startable_status(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path, status="done")
+
+    with pytest.raises(module.WorkflowError, match="BET_STATUS_NOT_STARTABLE"):
+        module._prepare_bet_execution(bet_id, workspace=tmp_path)
+
+
+def test_prepare_bet_execution_rejects_unaccepted_decision(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    ledger = tmp_path / "docs/plans/3y-bet-ledger.yaml"
+    ledger.write_text(
+        ledger.read_text(encoding="utf-8").replace("decision://accepted/", "decision://proposed/"),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(module.WorkflowError, match="SPEC_DECISION_NOT_ACCEPTED"):
+        module._prepare_bet_execution(bet_id, workspace=tmp_path)
+
+
+def test_bet_start_patch_persists_spec_and_work_packet_identity(tmp_path: Path, monkeypatch) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    monkeypatch.setattr(module, "_PENDING_BET", bet_id)
+    monkeypatch.setattr(module, "_PENDING_DELIVERY", prepared)
+    monkeypatch.setattr(
+        module,
+        "_ORIG_START",
+        lambda *_args, **_kwargs: {
+            "run_id": "RUN-1",
+            "workflow_id": "bet-execution",
+            "context": {},
+        },
+    )
+
+    record = module._start_run_persist_bet({}, {}, {}, "objective", True, False)
+
+    assert record["bet_id"] == bet_id
+    assert record["spec_binding"] == prepared["spec_binding"]
+    assert record["work_packet"] == prepared["work_packet"]
+    assert record["work_packet_hash"] == prepared["work_packet_hash"]
+
+
+def test_claim_scope_accepts_exact_directory_and_globbed_paths(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "projects/omo", "tests/**"],
+    )
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    payload = {"bet_id": bet_id, **prepared}
+
+    module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
+    module._validate_packet_run(payload, ["projects/omo/src/omo/example.py"], workspace=tmp_path)
+    module._validate_packet_run(payload, ["tests/unit/test_example.py"], workspace=tmp_path)
+
+
+def test_claim_scope_rejects_path_outside_packet(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    payload = {"bet_id": bet_id, **prepared}
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_SCOPE_MISMATCH"):
+        module._validate_packet_run(payload, ["docs/unauthorized.md"], workspace=tmp_path)
+
+
+def test_claim_revalidates_spec_digest_after_start(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    payload = {"bet_id": bet_id, **prepared}
+    spec_path.write_text("# Drifted after start\n", encoding="utf-8")
+
+    with pytest.raises(module.WorkflowError, match="SPEC_DIGEST_MISMATCH"):
+        module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
+
+
+def test_claim_rejects_tampered_packet_hash(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    payload = {"bet_id": bet_id, **prepared, "work_packet_hash": "sha256:" + "0" * 64}
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_HASH_MISMATCH"):
+        module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
+
+
+def test_legacy_readonly_workflow_start_remains_compatible() -> None:
+    result = _run_workflow(
+        "start",
+        "observer-audit",
+        "--profile",
+        "observer-agent",
+        "--dry-run",
+        "--json",
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert "work_packet" not in payload
 
 
 def test_agent_workflow_registry_lints() -> None:
