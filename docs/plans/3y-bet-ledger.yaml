@@ -5954,7 +5954,17 @@ bets:
   - bin/bc-os/north_star_meter_v2.py
   - bin/gac/compound-attribution-report.py
   - bin/gac/bdsk-shadow-sandbox.py
+  - .agents/skills/bdsk-virtual-board/SKILL.md
+  - projects/agora/etc/bos-services.yaml
+  - projects/agora/src/agora/mcp/resolver/services.py
+  - projects/agora/src/agora/server/tools_bos/bdsk.py
+  - projects/agora/tests/test_bdsk_aetherforge_smoke.py
+  - projects/agora/tests/test_bdsk_adr_persistence.py
+  - projects/agora/tests/test_bos_inbox_mcp.py
+  - projects/agora
+  - projects/cockpit/src/cockpit/cli.py
   - projects/cockpit/src/cockpit/commands/bdsk_engine.py
+  - projects/cockpit/src/cockpit/tests/test_bdsk_engine.py
   - tests/**
   - .omo/_truth/registry/workers.yaml
   - projects/omo
