@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import uuid
 from pathlib import Path
@@ -33,6 +34,59 @@ def _load_module_from_source(path: Path, name: str):
     return module
 
 
+def _load_root_workflow_wrapper():
+    return _load_module_from_source(WORKFLOW_MODULE_PATH, f"agent_workflow_wrapper_{uuid.uuid4().hex}")
+
+
+def _write_bet_workspace(
+    workspace: Path,
+    *,
+    status: str = "candidate",
+    write_surfaces: list[str] | None = None,
+) -> tuple[str, Path]:
+    bet_id = "BET-TEST-SPINE"
+    relative_spec = "docs/superpowers/specs/test-spine.md"
+    spec_path = workspace / relative_spec
+    spec_path.parent.mkdir(parents=True, exist_ok=True)
+    spec_path.write_text("# Frozen specification\n", encoding="utf-8")
+    import hashlib
+
+    digest = hashlib.sha256(spec_path.read_bytes()).hexdigest()
+    ledger_path = workspace / "docs/plans/3y-bet-ledger.yaml"
+    ledger_path.parent.mkdir(parents=True, exist_ok=True)
+    surfaces_yaml = "".join(
+        f"      - {surface}\n" for surface in (write_surfaces or ["bin/agent-workflow.py", "tests/**"])
+    )
+    ledger_path.write_text(
+        f"""bets:
+  - id: {bet_id}
+    status: {status}
+    track: T1-TRUTH
+    window: Y1Q3
+    title: Spec binding spine
+    appetite: 1 day
+    priority: P0
+    risk_level: L2
+    human_gate: true
+    goal: Bind accepted specification to one packet identity
+    non_goals: [No second ledger]
+    done_when: [Canonical binding is enforced]
+    verify:
+      - cmd: python3 -c pass
+        expect: exit 0
+    workflow: bet-execution
+    write_surfaces:
+{surfaces_yaml}    accepted_specifications:
+      - spec_ref: repo://{relative_spec}
+        spec_version: 1.0.0
+        content_digest: sha256:{digest}
+        decision_ref: decision://accepted/{bet_id}
+""",
+        encoding="utf-8",
+    )
+    return bet_id, spec_path
+
+
 def _run_workflow(*args: str) -> subprocess.CompletedProcess[str]:
     # 清 VIRTUAL_ENV: CI 里 interface-check 先 cd projects/omo + uv sync 会
     # 残留 VIRTUAL_ENV=projects/omo/.venv, uv run 在根仓跑时告警 → 断言失败.
@@ -46,6 +100,80 @@ def _run_workflow(*args: str) -> subprocess.CompletedProcess[str]:
         check=False,
         env=env,
     )
+
+
+def _run_root_workflow_strict(*args: str) -> subprocess.CompletedProcess[str]:
+    env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    env["AGCP_REQUIREMENT_ITERATION_GATE"] = "1"
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    return subprocess.run(
+        ["uv", "run", "--with", "pyyaml", "python", str(WORKFLOW_MODULE_PATH), *args],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+
+
+def _run_direct_omo_workflow(*args: str) -> subprocess.CompletedProcess[str]:
+    env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["PYTHONPATH"] = os.pathsep.join(
+        [
+            str(ROOT / "projects/omo/src"),
+            str(ROOT / "projects/ecos/src"),
+            env.get("PYTHONPATH", ""),
+        ]
+    )
+    return subprocess.run(
+        [
+            "uv",
+            "run",
+            "--project",
+            str(ROOT / "projects/omo"),
+            "python",
+            "-m",
+            "omo.workflow.cli",
+            *args,
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+
+
+def _isolated_workflow_registry(tmp_path: Path) -> Path:
+    registry = tmp_path / "registry"
+    shutil.copytree(ROOT / ".omo/_truth/registry/agent-workflows", registry)
+    root = registry / "_root.yaml"
+    text = root.read_text(encoding="utf-8")
+    text = (
+        text.replace(
+            "run_state_dir: .omo/_delivery/agent-workflows/runs",
+            f"run_state_dir: {tmp_path / 'runs'}",
+        )
+        .replace(
+            "lock_state_dir: .omo/_delivery/agent-workflows/locks",
+            f"lock_state_dir: {tmp_path / 'locks'}",
+        )
+        .replace(
+            "ledger_path: .omo/_delivery/agent-workflows/events.jsonl",
+            f"ledger_path: {tmp_path / 'events.jsonl'}",
+        )
+    )
+    root.write_text(text, encoding="utf-8")
+    return registry
+
+
+def _snapshot_workflow_state(tmp_path: Path) -> dict[str, bytes]:
+    return {
+        path.relative_to(tmp_path).as_posix(): path.read_bytes()
+        for path in sorted(tmp_path.rglob("*"))
+        if path.is_file()
+    }
 
 
 def _write_affected_receipt(tmp_path: Path, *changed_projects: str, name: str = "affected-receipt.json") -> Path:
@@ -161,6 +289,453 @@ workflows:
         encoding="utf-8",
     )
     return registry
+
+
+def test_prepare_bet_execution_builds_recomputable_ecos_packet_identity(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+
+    packet = prepared["work_packet"]
+    assert packet["schema_version"] == "work-packet/v2"
+    assert packet["bet_id"] == bet_id
+    assert packet["spec_binding"]["decision_ref"] == f"decision://accepted/{bet_id}"
+    assert packet["scope"]["write_surfaces"] == ["bin/agent-workflow.py", "tests/**"]
+    assert prepared["work_packet_hash"].startswith("sha256:")
+
+
+def test_prepare_bet_execution_rejects_non_startable_status(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path, status="done")
+
+    with pytest.raises(module.WorkflowError, match="BET_STATUS_NOT_STARTABLE"):
+        module._prepare_bet_execution(bet_id, workspace=tmp_path)
+
+
+def test_prepare_bet_execution_rejects_unaccepted_decision(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    ledger = tmp_path / "docs/plans/3y-bet-ledger.yaml"
+    ledger.write_text(
+        ledger.read_text(encoding="utf-8").replace("decision://accepted/", "decision://proposed/"),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(module.WorkflowError, match="SPEC_DECISION_NOT_ACCEPTED"):
+        module._prepare_bet_execution(bet_id, workspace=tmp_path)
+
+
+def test_claim_scope_accepts_exact_directory_and_globbed_paths(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "projects/omo", "tests/**"],
+    )
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    payload = {"bet_id": bet_id, **prepared}
+
+    module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
+    module._validate_packet_run(payload, ["projects/omo/src/omo/example.py"], workspace=tmp_path)
+    module._validate_packet_run(payload, ["tests/unit/test_example.py"], workspace=tmp_path)
+
+
+def test_claim_scope_rejects_path_outside_packet(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    payload = {"bet_id": bet_id, **prepared}
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_SCOPE_MISMATCH"):
+        module._validate_packet_run(payload, ["docs/unauthorized.md"], workspace=tmp_path)
+
+
+def test_claim_scope_rejects_unmodeled_governance_surface(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    payload = {"bet_id": bet_id, **prepared}
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_SCOPE_MISMATCH"):
+        module._validate_packet_run(
+            payload,
+            [],
+            claimed_surfaces=["governance-state"],
+            workspace=tmp_path,
+        )
+
+
+def test_claim_revalidates_spec_digest_after_start(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    payload = {"bet_id": bet_id, **prepared}
+    spec_path.write_text("# Drifted after start\n", encoding="utf-8")
+
+    with pytest.raises(module.WorkflowError, match="SPEC_DIGEST_MISMATCH"):
+        module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
+
+
+def test_claim_rejects_tampered_packet_hash(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    payload = {"bet_id": bet_id, **prepared, "work_packet_hash": "sha256:" + "0" * 64}
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_HASH_MISMATCH"):
+        module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
+
+
+def test_claim_rejects_malformed_packet_as_contract_error(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    prepared["work_packet"]["spec_binding"] = {"spec_ref": "repo://invalid"}
+    payload = {"bet_id": bet_id, **prepared}
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_INVALID"):
+        module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
+
+
+def test_direct_omo_module_start_binds_recomputable_work_packet_v2() -> None:
+    result = _run_direct_omo_workflow(
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--dry-run",
+        "--json",
+    )
+
+    assert result.returncode == 0, result.stderr
+    record = json.loads(result.stdout)
+    assert record["bet_id"] == "BET-Y1Q3-T4-01"
+    assert record["work_packet"]["schema_version"] == "work-packet/v2"
+    assert record["work_packet_hash"].startswith("sha256:")
+    assert record["spec_binding"]["decision_ref"] == "decision://accepted/BET-Y1Q3-T4-01"
+
+
+def test_direct_omo_module_claim_rejects_path_outside_bound_packet(tmp_path: Path) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    run_id = json.loads(started.stdout)["run_id"]
+
+    result = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "claim",
+        run_id,
+        "--path",
+        "README.md",
+        "--affected-hash",
+        str(tmp_path / "not-used.json"),
+    )
+
+    assert result.returncode == 2
+    assert "WORK_PACKET_SCOPE_MISMATCH" in result.stderr
+
+
+def test_direct_omo_spawn_inherits_parent_packet_and_rejects_out_of_scope_before_mutation(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+
+    spawned = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "spawn",
+        parent["run_id"],
+        "observer-audit",
+        "--profile",
+        "observer-agent",
+        "--json",
+    )
+    assert spawned.returncode == 0, spawned.stderr
+    child = json.loads(spawned.stdout)
+    for key in ("bet_id", "spec_binding", "work_packet", "work_packet_hash"):
+        assert child[key] == parent[key]
+
+    child_path = Path(child["path"])
+    before_run = child_path.read_bytes()
+    lock_paths = [Path(path) for path in child["locks"]]
+    before_locks = {path: path.read_bytes() for path in lock_paths}
+    ledger = tmp_path / "events.jsonl"
+    before_ledger = ledger.read_bytes()
+
+    claimed = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "claim",
+        child["run_id"],
+        "--path",
+        "README.md",
+        "--affected-hash",
+        str(tmp_path / "not-created.json"),
+    )
+
+    assert claimed.returncode == 2
+    assert "WORK_PACKET_SCOPE_MISMATCH" in claimed.stderr
+    assert child_path.read_bytes() == before_run
+    assert {path: path.read_bytes() for path in lock_paths} == before_locks
+    assert ledger.read_bytes() == before_ledger
+
+
+def test_direct_omo_parent_start_inherits_exact_bound_packet_without_explicit_bet(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+
+    child_start = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--parent-run",
+        parent["run_id"],
+        "--dry-run",
+        "--json",
+    )
+
+    assert child_start.returncode == 0, child_start.stderr
+    child = json.loads(child_start.stdout)
+    for key in ("bet_id", "spec_binding", "work_packet", "work_packet_hash"):
+        assert child[key] == parent[key]
+
+
+def test_root_wrapper_parent_start_inherits_exact_bound_packet_without_explicit_bet(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+
+    child_start = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--parent-run",
+        parent["run_id"],
+        "--dry-run",
+        "--json",
+    )
+
+    assert child_start.returncode == 0, child_start.stderr
+    child = json.loads(child_start.stdout)
+    for key in ("bet_id", "spec_binding", "work_packet", "work_packet_hash"):
+        assert child[key] == parent[key]
+
+
+def test_root_wrapper_parent_start_rejects_conflicting_bet_before_any_mutation(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+    before = _snapshot_workflow_state(tmp_path)
+
+    child_start = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--parent-run",
+        parent["run_id"],
+        "--bet",
+        "BET-Y1Q2-T1-14",
+        "--json",
+    )
+
+    assert child_start.returncode != 0
+    assert "WORK_PACKET_PARENT_BET_CONFLICT" in child_start.stderr
+    assert _snapshot_workflow_state(tmp_path) == before
+
+
+def test_root_wrapper_parent_start_rejects_legacy_unbound_parent_before_any_mutation(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "observer-audit",
+        "--profile",
+        "observer-agent",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+    before = _snapshot_workflow_state(tmp_path)
+
+    child_start = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--parent-run",
+        parent["run_id"],
+        "--json",
+    )
+
+    assert child_start.returncode != 0
+    assert "WORK_PACKET_PARENT_BINDING_REQUIRED" in child_start.stderr
+    assert _snapshot_workflow_state(tmp_path) == before
+
+
+def test_direct_omo_parent_start_rejects_conflicting_bet_before_any_mutation(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+    before = _snapshot_workflow_state(tmp_path)
+
+    child_start = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--parent-run",
+        parent["run_id"],
+        "--bet",
+        "BET-Y1Q2-T1-14",
+        "--json",
+    )
+
+    assert child_start.returncode == 2
+    assert "WORK_PACKET_PARENT_BET_CONFLICT" in child_start.stderr
+    assert _snapshot_workflow_state(tmp_path) == before
+
+
+def test_direct_omo_spawn_rejects_legacy_unbound_parent_before_any_mutation(
+    tmp_path: Path,
+) -> None:
+    registry = _isolated_workflow_registry(tmp_path)
+    started = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "start",
+        "observer-audit",
+        "--profile",
+        "observer-agent",
+        "--json",
+    )
+    assert started.returncode == 0, started.stderr
+    parent = json.loads(started.stdout)
+    before = _snapshot_workflow_state(tmp_path)
+
+    spawned = _run_direct_omo_workflow(
+        "--registry",
+        str(registry),
+        "spawn",
+        parent["run_id"],
+        "observer-audit",
+        "--profile",
+        "observer-agent",
+        "--json",
+    )
+
+    assert spawned.returncode == 2
+    assert "WORK_PACKET_PARENT_BINDING_REQUIRED" in spawned.stderr
+    assert _snapshot_workflow_state(tmp_path) == before
+
+
+def test_legacy_readonly_workflow_start_remains_compatible() -> None:
+    result = _run_workflow(
+        "start",
+        "observer-audit",
+        "--profile",
+        "observer-agent",
+        "--dry-run",
+        "--json",
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert "work_packet" not in payload
 
 
 def test_agent_workflow_registry_lints() -> None:

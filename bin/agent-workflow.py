@@ -3,15 +3,20 @@
 
 from __future__ import annotations
 
+import importlib.util
 import sys
 from pathlib import Path
+from types import ModuleType
+from typing import Any
 
 # Resolve workspace and add omo src to PYTHONPATH dynamically
 WORKSPACE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(WORKSPACE / "projects/omo/src"))
+sys.path.insert(0, str(WORKSPACE / "projects/ecos/src"))
 
 from omo.workflow import (
     WORKSPACE,
+    WorkflowError,
     load_registry,
     main,
 )
@@ -25,13 +30,65 @@ if str(_PLAN_DIR) not in sys.path:
     sys.path.insert(0, str(_PLAN_DIR))
 import chain_bind
 
-_PENDING_BET = ""
-_ORIG_START = _wf_life.start_run
 _ORIG_BOOTSTRAP = _wf_info.bootstrap_report
 _ORIG_PRINT_BOOTSTRAP = _wf_info.print_bootstrap_report
 _ORIG_STATUS = _wf_diag.build_status_report
 _ORIG_PRINT_STATUS = _wf_diag.print_status_report
 _ORIG_MAIN = main
+
+_BET_LEDGER_MODULE: ModuleType | None = None
+
+
+def _load_bet_ledger_module() -> ModuleType:
+    """Load the existing ledger contract without creating another authority."""
+    global _BET_LEDGER_MODULE
+    if _BET_LEDGER_MODULE is not None:
+        return _BET_LEDGER_MODULE
+    path = WORKSPACE / "bin/plan/bet-ledger.py"
+    spec = importlib.util.spec_from_file_location("_agent_workflow_bet_ledger", path)
+    if spec is None or spec.loader is None:
+        raise WorkflowError(f"SPEC_BINDING_UNAVAILABLE: cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    _BET_LEDGER_MODULE = module
+    return module
+
+
+def _prepare_bet_execution(
+    bet_id: str,
+    *,
+    workspace: Path = WORKSPACE,
+    require_startable: bool = True,
+) -> dict[str, Any]:
+    ledger_contract = _load_bet_ledger_module()
+    try:
+        return ledger_contract.prepare_bet_execution(
+            bet_id,
+            workspace=workspace,
+            require_startable=require_startable,
+        )
+    except ledger_contract.SpecBindingContractError as exc:
+        raise WorkflowError(str(exc)) from exc
+
+
+def _validate_packet_run(
+    payload: dict[str, Any],
+    claimed_paths: list[str],
+    *,
+    claimed_surfaces: list[str] | None = None,
+    workspace: Path = WORKSPACE,
+) -> None:
+    ledger_contract = _load_bet_ledger_module()
+    try:
+        ledger_contract.validate_work_packet_run(
+            payload,
+            claimed_paths,
+            claimed_surfaces=claimed_surfaces,
+            workspace=workspace,
+        )
+    except ledger_contract.SpecBindingContractError as exc:
+        raise WorkflowError(str(exc)) from exc
 
 
 def _flag(argv: list[str], name: str) -> str:
@@ -97,39 +154,6 @@ def _positional_after(argv: list[str], cmd_index: int) -> str:
     return ""
 
 
-def _start_run_persist_bet(
-    registry,
-    workflow,
-    context,
-    objective,
-    dry_run,
-    force_lock,
-    **kwargs,
-):
-    record = _ORIG_START(
-        registry,
-        workflow,
-        context,
-        objective,
-        dry_run,
-        force_lock,
-        **kwargs,
-    )
-    bet_id = _PENDING_BET or str((context or {}).get("bet_id") or "")
-    if bet_id:
-        chain_bind.persist_bind_on_run(record, bet_id)
-        run_path = record.get("path")
-        if not dry_run and run_path:
-            path = Path(run_path)
-            if not path.is_absolute():
-                path = WORKSPACE / path
-            if path.is_file():
-                payload = dict(record)
-                payload.pop("path", None)
-                chain_bind.write_run_file(path, payload)
-    return record
-
-
 def _bootstrap_with_chain(registry, include_health, include_agcp_drift=True):
     report = _ORIG_BOOTSTRAP(registry, include_health, include_agcp_drift)
     return chain_bind.inject_perception(report, WORKSPACE)
@@ -155,8 +179,6 @@ def _print_status_with_chain(report, as_json):
 
 
 def _install_patches() -> None:
-    _wf_life.start_run = _start_run_persist_bet
-    _wf_cli.start_run = _start_run_persist_bet
     _wf_info.bootstrap_report = _bootstrap_with_chain
     _wf_cli.bootstrap_report = _bootstrap_with_chain
     _wf_info.print_bootstrap_report = _print_bootstrap_with_chain
@@ -169,14 +191,25 @@ def _install_patches() -> None:
 
 def wrapped_main(argv: list[str] | None = None) -> int:
     """Root wrapper: require --bet, persist bet_id, halt unbound ok-closeout."""
-    global _PENDING_BET
     argv = list(sys.argv[1:] if argv is None else argv)
     _install_patches()
     command, cmd_at = _find_command(argv)
     if command == "start":
         workflow_id = _positional_after(argv, cmd_at)
         bet_id = _flag(argv, "--bet")
-        _PENDING_BET = bet_id
+        parent_run_id = _flag(argv, "--parent-run")
+        if parent_run_id:
+            try:
+                registry_arg = _flag(argv, "--registry")
+                registry = load_registry(Path(registry_arg)) if registry_arg else load_registry()
+                bet_id, _identity, _parent_agent = _wf_life.resolve_parent_delivery_identity(
+                    registry,
+                    parent_run_id,
+                    bet_id,
+                )
+            except WorkflowError as exc:
+                print(f"agent-workflow: {exc}", file=sys.stderr)
+                return 1
         verdict = chain_bind.start_requires_bet(workflow_id, bet_id)
         if not verdict.ok:
             print(
@@ -188,6 +221,12 @@ def wrapped_main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 1
+        if bet_id:
+            try:
+                _prepare_bet_execution(bet_id)
+            except WorkflowError as exc:
+                print(f"agent-workflow: {exc}", file=sys.stderr)
+                return 1
     elif command == "closeout":
         run_id = _positional_after(argv, cmd_at)
         status = _flag(argv, "--status") or "ok"
@@ -214,7 +253,6 @@ def wrapped_main(argv: list[str] | None = None) -> int:
         return int(_ORIG_MAIN() or 0)
     finally:
         sys.argv = previous
-        _PENDING_BET = ""
 
 
 if __name__ == "__main__":

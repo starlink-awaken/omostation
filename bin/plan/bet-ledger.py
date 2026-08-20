@@ -22,12 +22,14 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import hashlib
 import json
 import re
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath
+from typing import Any
 
 try:
     import yaml
@@ -75,6 +77,146 @@ Y1_TARGET = {
     "bin_scripts": "零调用归档",  # 实测低引用候选约 43 个，含 lib/pytest 假阳性，不设数量
     "adr_total": "只分层不裁剪",  # active/historical 分层即可降低检索面，无需删除
 }
+
+SPEC_BINDING_ENFORCED_STATUSES = frozenset({"candidate", "pending", "in_progress", "review"})
+SPEC_BINDING_GRANDFATHERED_STATUSES = frozenset({"done", "blocked", "failed"})
+SPEC_BINDING_GRANDFATHER_CUTOFF = "2026-08-20"
+SPEC_BINDING_GRANDFATHER_BASELINE = "42021255f6c2a6e11ac164e65bd6efdeb2db94f5"
+SPEC_BINDING_GRANDFATHER_ALLOWLIST = {
+    "BET-Y1Q1-T1-00": "done",
+    "BET-Y1Q1-T1-01": "done",
+    "BET-Y1Q1-T1-02": "done",
+    "BET-Y1Q1-T1-03": "done",
+    "BET-Y1Q1-T1-04": "done",
+    "BET-Y1Q1-T1-05": "done",
+    "BET-Y1Q1-T1-05A": "done",
+    "BET-Y1Q1-T1-06": "done",
+    "BET-Y1Q1-T1-07": "done",
+    "BET-Y1Q1-T1-08": "done",
+    "BET-Y1Q1-T2-01": "done",
+    "BET-Y1Q1-T2-02": "done",
+    "BET-Y1Q1-T3-01": "done",
+    "BET-Y1Q1-T3-02": "done",
+    "BET-Y1Q1-T4-01": "done",
+    "BET-Y1Q1-T6-01": "done",
+    "BET-Y1Q1-T6-02": "done",
+    "BET-Y1Q1-T6-03": "done",
+    "BET-Y1Q1-T6-04": "done",
+    "BET-Y1Q1-T6-07": "done",
+    "BET-Y1Q1-T6-08": "done",
+    "BET-Y1Q1-T7-01": "done",
+    "BET-Y1Q1-T7-02": "done",
+    "BET-Y1Q1-T7-03": "done",
+    "BET-Y1Q1-T8-01": "done",
+    "BET-Y1Q2-T1-01": "done",
+    "BET-Y1Q2-T1-02": "done",
+    "BET-Y1Q2-T1-03": "done",
+    "BET-Y1Q2-T1-04": "done",
+    "BET-Y1Q2-T1-05": "done",
+    "BET-Y1Q2-T1-06": "done",
+    "BET-Y1Q2-T1-07": "done",
+    "BET-Y1Q2-T1-08": "done",
+    "BET-Y1Q2-T1-09": "done",
+    "BET-Y1Q2-T1-10": "done",
+    "BET-Y1Q2-T1-11": "done",
+    "BET-Y1Q2-T1-12": "done",
+    "BET-Y1Q2-T1-13": "done",
+    "BET-Y1Q2-T1-14": "done",
+    "BET-Y1Q2-T1-15": "done",
+    "BET-Y1Q2-T1-16": "done",
+    "BET-Y1Q2-T1-17": "done",
+    "BET-Y1Q2-T1-18": "done",
+    "BET-Y1Q2-T1-19": "done",
+    "BET-Y1Q2-T1-20": "done",
+    "BET-Y1Q2-T2-01": "done",
+    "BET-Y1Q2-T2-02": "done",
+    "BET-Y1Q2-T4-01": "done",
+    "BET-Y1Q2-T4-02": "done",
+    "BET-Y1Q2-T5-01": "done",
+    "BET-Y1Q2-T5-02": "done",
+    "BET-Y1Q2-T6-01": "done",
+    "BET-Y1Q2-T6-02": "done",
+    "BET-Y1Q2-T6-03": "done",
+    "BET-Y1Q2-T6-04": "done",
+    "BET-Y1Q2-T6-05": "done",
+    "BET-Y1Q2-T6-06": "done",
+    "BET-Y1Q2-T6-07": "done",
+    "BET-Y1Q2-T6-08": "done",
+    "BET-Y1Q2-T6-09": "done",
+    "BET-Y1Q2-T6-10": "done",
+    "BET-Y1Q2-T7-01": "done",
+    "BET-Y1Q2-T8-01": "done",
+    "BET-Y1Q2-T9-01": "done",
+    "BET-Y1Q2-T9-02": "done",
+    "BET-Y1Q3-T1-01": "done",
+    "BET-Y1Q3-T1-02": "done",
+    "BET-Y1Q3-T1-03": "done",
+    "BET-Y1Q3-T1-04": "done",
+    "BET-Y1Q3-T1-05": "done",
+    "BET-Y1Q3-T1-06": "done",
+    "BET-Y1Q3-T1-07": "done",
+    "BET-Y1Q3-T2-01": "done",
+    "BET-Y1Q3-T2-03": "done",
+    "BET-Y1Q3-T3-01": "done",
+    "BET-Y1Q3-T3-02": "done",
+    "BET-Y1Q3-T3-03": "done",
+    "BET-Y1Q3-T3-04": "done",
+    "BET-Y1Q3-T5-04": "done",
+    "BET-Y1Q3-T6-01": "done",
+    "BET-Y1Q3-T6-02": "done",
+    "BET-Y1Q3-T6-03": "done",
+    "BET-Y1Q3-T6-04": "done",
+    "BET-Y1Q3-T6-05": "done",
+    "BET-Y1Q3-T6-06": "done",
+    "BET-Y1Q3-T6-07": "done",
+    "BET-Y1Q3-T6-08": "done",
+    "BET-Y1Q3-T6-09": "done",
+    "BET-Y1Q3-T6-10": "done",
+    "BET-Y1Q3-T6-12": "done",
+    "BET-Y1Q3-T7-01": "done",
+    "BET-Y1Q3-T8-02": "done",
+    "BET-Y1Q3-T9-01": "done",
+    "BET-Y1Q4-T1-01": "done",
+    "BET-Y1Q4-T3-01": "done",
+    "BET-Y1Q4-T4-01": "done",
+    "BET-Y1Q4-T5-01": "done",
+    "BET-Y1Q4-T6-01": "done",
+    "BET-Y1Q4-T7-01": "done",
+    "BET-Y2Q1-T3-01": "done",
+    "BET-Y2Q1-T3-02": "done",
+    "BET-Y2Q1-T3-03": "done",
+    "BET-Y2Q2-T7-01": "done",
+    "BET-Y2Q2-T7-02": "done",
+    "BET-Y2Q2-T8-01": "done",
+    "BET-Y2Q3-T3-01": "done",
+    "BET-Y2Q3-T3-02": "done",
+    "BET-Y2Q3-T6-01": "done",
+    "BET-Y2Q4-T1-01": "done",
+    "BET-Y2Q4-T2-01": "done",
+    "BET-Y2Q4-T3-01": "done",
+    "BET-Y3H1-T3-01": "done",
+    "BET-Y3H1-T5-01": "done",
+    "BET-Y3H1-T6-01": "done",
+    "BET-Y3H1-T7-01": "blocked",
+    "BET-Y3H2-T1-01": "done",
+    "BET-Y3H2-T1-02": "done",
+    "BET-Y3H2-T4-01": "done",
+    "BET-Y3H2-T7-01": "blocked",
+}
+SPEC_BINDING_KEYS = frozenset({"spec_ref", "spec_version", "content_digest", "decision_ref"})
+SPEC_REF_PREFIX = "repo://"
+SPEC_ROOT = PurePosixPath("docs/superpowers/specs")
+SEMVER_RE = re.compile(
+    r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
+    r"(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
+)
+SHA256_REF_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+STARTABLE_BET_STATUSES = frozenset({"candidate", "pending", "blocked"})
+
+
+class SpecBindingContractError(ValueError):
+    """Raised when a BET cannot be represented by the shared delivery contract."""
 
 
 # ── 载入 ──────────────────────────────────────────────────────
@@ -631,29 +773,322 @@ def cmd_gate(data: dict, args) -> int:
     return 0
 
 
-def _is_spec_binding_required(bet: dict) -> bool:
-    """判断 L2/L3 bet 是否需要 spec 绑定（2026-09-01 起强制）。"""
-    from datetime import datetime
+def _yaml_mapping(text: str) -> dict[str, Any]:
+    data: dict[str, Any] = {}
+    for document in yaml.safe_load_all(text):
+        if isinstance(document, dict):
+            data.update(document)
+    return data
 
-    started_at = bet.get("started_at")
-    if not started_at:
+
+def _is_historical_spec_grandfathered(
+    bet: dict,
+    *,
+    workspace: Path = WS,
+) -> bool:
+    """Return whether ID, status, and date match the frozen migration boundary."""
+    del workspace  # Kept as an injectable API boundary for callers and tests.
+    status = str(bet.get("status") or "")
+    if status not in SPEC_BINDING_GRANDFATHERED_STATUSES:
         return False
-    try:
-        start_date = datetime.fromisoformat(started_at).date()
-        cutoff = datetime(2026, 9, 1).date()
-        if start_date < cutoff:
-            return False
-    except (ValueError, TypeError):
+    bet_id = str(bet.get("id") or "")
+    if SPEC_BINDING_GRANDFATHER_ALLOWLIST.get(bet_id) != status:
         return False
-    risk_level = bet.get("risk_level", "L1")
-    status = bet.get("status", "")
-    # L2/L3 + in_progress/review/done → 必须有 spec 绑定
-    return risk_level in ("L2", "L3") and status in ("in_progress", "review", "done")
+    terminal_at = str(bet.get("done_at") or bet.get("completed_at") or "")
+    return not terminal_at or terminal_at <= SPEC_BINDING_GRANDFATHER_CUTOFF
+
+
+def _is_spec_binding_required(bet: dict, *, workspace: Path = WS) -> bool:
+    """Require a canonical binding unless immutable history grants compatibility."""
+    return not _is_historical_spec_grandfathered(bet, workspace=workspace)
 
 
 def _file_sha256(path: Path) -> str:
     """计算文件的 SHA256 哈希。"""
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def validate_accepted_specification(
+    bet: dict,
+    *,
+    workspace: Path = WS,
+) -> tuple[dict[str, str] | None, list[str]]:
+    """Validate the one canonical SpecificationBinding used by WorkPacket v2."""
+    errors: list[str] = []
+    bet_id = str(bet.get("id") or "")
+    specs = bet.get("accepted_specifications")
+    if not isinstance(specs, list) or len(specs) != 1:
+        return None, ["SPEC_BINDING_REQUIRED: accepted_specifications must contain exactly one binding"]
+    binding = specs[0]
+    if not isinstance(binding, dict):
+        return None, ["SPEC_BINDING_SHAPE: binding must be a mapping"]
+
+    keys = set(binding)
+    if keys != SPEC_BINDING_KEYS:
+        missing = sorted(SPEC_BINDING_KEYS - keys)
+        extra = sorted(keys - SPEC_BINDING_KEYS)
+        errors.append(f"SPEC_BINDING_SHAPE: exact keys required; missing={missing} extra={extra}")
+
+    spec_ref = binding.get("spec_ref")
+    spec_version = binding.get("spec_version")
+    content_digest = binding.get("content_digest")
+    decision_ref = binding.get("decision_ref")
+
+    relative_ref = ""
+    if not isinstance(spec_ref, str) or not spec_ref.startswith(SPEC_REF_PREFIX):
+        errors.append("SPEC_REF_INVALID: spec_ref must use repo://docs/superpowers/specs/<file>")
+    else:
+        relative_ref = spec_ref.removeprefix(SPEC_REF_PREFIX)
+        relative_path = PurePosixPath(relative_ref)
+        if (
+            not relative_ref
+            or relative_path.is_absolute()
+            or ".." in relative_path.parts
+            or relative_path == SPEC_ROOT
+            or not relative_path.is_relative_to(SPEC_ROOT)
+            or relative_path.as_posix() != relative_ref
+        ):
+            errors.append("SPEC_REF_INVALID: spec_ref must be a canonical repo:// path under docs/superpowers/specs/")
+
+    if not isinstance(spec_version, str) or SEMVER_RE.fullmatch(spec_version) is None:
+        errors.append("SPEC_VERSION_INVALID: spec_version must be semver")
+
+    if not isinstance(content_digest, str) or SHA256_REF_RE.fullmatch(content_digest) is None:
+        errors.append("SPEC_DIGEST_INVALID: content_digest must match sha256:<64 lowercase hex>")
+
+    expected_decision = f"decision://accepted/{bet_id}"
+    if decision_ref != expected_decision:
+        errors.append(f"SPEC_DECISION_NOT_ACCEPTED: decision_ref must equal {expected_decision}")
+
+    if relative_ref and not any(error.startswith("SPEC_REF_INVALID") for error in errors):
+        root = workspace.resolve()
+        candidate = (root / relative_ref).resolve()
+        if not candidate.is_relative_to(root):
+            errors.append("SPEC_REF_INVALID: resolved spec path escapes workspace")
+        elif not candidate.is_file():
+            errors.append(f"SPEC_FILE_MISSING: {relative_ref}")
+        elif isinstance(content_digest, str) and SHA256_REF_RE.fullmatch(content_digest):
+            actual_digest = f"sha256:{_file_sha256(candidate)}"
+            if actual_digest != content_digest:
+                errors.append(
+                    "SPEC_DIGEST_MISMATCH: "
+                    f"declared={content_digest[:23]}... actual={actual_digest[:23]}..."
+                )
+
+    if errors:
+        return None, errors
+    return {key: str(binding[key]) for key in sorted(SPEC_BINDING_KEYS)}, []
+
+
+def _ledger_for_workspace(workspace: Path) -> dict[str, Any]:
+    ledger = workspace / "docs/plans/3y-bet-ledger.yaml"
+    if not ledger.is_file():
+        raise SpecBindingContractError(f"BET_LEDGER_UNAVAILABLE: {ledger}")
+    data = _yaml_mapping(ledger.read_text(encoding="utf-8"))
+    if not isinstance(data.get("bets"), list):
+        raise SpecBindingContractError("BET_LEDGER_INVALID: bets must be a list")
+    return data
+
+
+def _bet_for_execution(workspace: Path, bet_id: str) -> dict[str, Any]:
+    for item in _ledger_for_workspace(workspace)["bets"]:
+        if isinstance(item, dict) and item.get("id") == bet_id:
+            return item
+    raise SpecBindingContractError(f"BET_NOT_FOUND: {bet_id}")
+
+
+def _work_packet_compiler(workspace: Path) -> tuple[Any, Any]:
+    ecos_src = workspace / "projects/ecos/src"
+    if str(ecos_src) not in sys.path:
+        sys.path.insert(0, str(ecos_src))
+    try:
+        from ecos.ssot.tools.work_packet_compiler import canonicalize, compute_packet_hash
+    except (ImportError, ModuleNotFoundError) as exc:
+        raise SpecBindingContractError("WORK_PACKET_COMPILER_UNAVAILABLE") from exc
+    return canonicalize, compute_packet_hash
+
+
+def _work_packet_from_bet(bet: dict[str, Any], binding: dict[str, str]) -> dict[str, Any]:
+    """Project one ledger BET into the existing ECOS WorkPacket v2 schema."""
+    bet_id = str(bet["id"])
+    risk = str(bet.get("risk_level") or "L1")
+    risk_level = f"R{risk[1:]}" if len(risk) == 2 and risk[0] == "L" and risk[1].isdigit() else "R1"
+    verify_commands: list[list[str]] = []
+    for item in bet.get("verify") or []:
+        command = item.get("cmd") if isinstance(item, dict) else item
+        if isinstance(command, str) and command.strip():
+            verify_commands.append([command.strip()])
+    write_surfaces = sorted(
+        {
+            str(item).strip().strip("/")
+            for item in bet.get("write_surfaces") or []
+            if str(item).strip()
+        }
+    )
+    spec_surface = binding["spec_ref"].removeprefix(SPEC_REF_PREFIX)
+    return {
+        "packet_id": f"WP-{bet_id}",
+        "schema_version": "work-packet/v2",
+        "blueprint_ref": "blueprint://multi-agent-execution-control/v1",
+        "wave": str(bet.get("window") or ""),
+        "bet_id": bet_id,
+        "strategic_outcome": str(bet.get("goal") or ""),
+        "objective": str(bet.get("goal") or bet.get("title") or ""),
+        "why_now": (
+            f"priority={bet.get('priority', 'unspecified')}; "
+            f"appetite={bet.get('appetite', 'unspecified')}"
+        ),
+        "status": "active",
+        "authority": {
+            "strategist": "3y-bet-ledger",
+            "human_gate": bool(bet.get("human_gate")),
+            "risk_level": risk_level,
+        },
+        "scope": {
+            "read_surfaces": ["docs/plans/3y-bet-ledger.yaml", spec_surface],
+            "write_surfaces": write_surfaces,
+            "non_goals": [str(item) for item in bet.get("non_goals") or []],
+        },
+        "dependencies": {
+            "required_packets": [f"WP-{item}" for item in bet.get("depends_on") or []],
+            "required_decisions": [binding["decision_ref"]],
+        },
+        "acceptance": {
+            "done_when": [
+                {
+                    "id": f"AC-{index:02d}",
+                    "assertion": str(assertion),
+                    "evidence_type": "structured_report",
+                }
+                for index, assertion in enumerate(bet.get("done_when") or [], start=1)
+            ],
+            "verify_commands": verify_commands,
+        },
+        "rollback": {
+            "strategy": str(bet.get("circuit_breaker") or "stop and escalate"),
+            "data_migration": False,
+        },
+        "circuit_breaker": {
+            "when": [str(bet.get("circuit_breaker") or "contract cannot be proven")],
+            "action": "stop_and_escalate",
+        },
+        "spec_binding": binding,
+    }
+
+
+def prepare_bet_execution(
+    bet_id: str,
+    *,
+    workspace: Path = WS,
+    require_startable: bool = True,
+) -> dict[str, Any]:
+    """Build the canonical identity used by every workflow start entrypoint."""
+    bet = _bet_for_execution(workspace, bet_id)
+    status = str(bet.get("status") or "")
+    if require_startable and status not in STARTABLE_BET_STATUSES:
+        raise SpecBindingContractError(
+            f"BET_STATUS_NOT_STARTABLE: {bet_id} status={status}; "
+            f"allowed={sorted(STARTABLE_BET_STATUSES)}"
+        )
+    binding, errors = validate_accepted_specification(bet, workspace=workspace)
+    if errors or binding is None:
+        raise SpecBindingContractError("; ".join(errors or ["SPEC_BINDING_INVALID"]))
+    canonicalize, compute_packet_hash = _work_packet_compiler(workspace)
+    packet = _work_packet_from_bet(bet, binding)
+    try:
+        packet_hash = compute_packet_hash(canonicalize(packet))
+    except ValueError as exc:
+        raise SpecBindingContractError(f"WORK_PACKET_INVALID: {exc}") from exc
+    return {
+        "spec_binding": binding,
+        "work_packet": packet,
+        "work_packet_hash": packet_hash,
+    }
+
+
+def _normalize_claim_path(raw_path: str, workspace: Path) -> str:
+    if not raw_path:
+        raise SpecBindingContractError("path cannot be empty")
+    path = Path(raw_path).expanduser()
+    if path.is_absolute():
+        try:
+            path = path.resolve().relative_to(workspace.resolve())
+        except ValueError as exc:
+            raise SpecBindingContractError(f"path is outside workspace: {raw_path}") from exc
+    normalized = path.as_posix().strip("/")
+    if normalized in {"", "."}:
+        return "."
+    if normalized == ".." or normalized.startswith("../") or "/../" in normalized:
+        raise SpecBindingContractError(f"path escapes workspace: {raw_path}")
+    return normalized
+
+
+def _surface_allows_path(surface: str, claimed_path: str) -> bool:
+    normalized_surface = surface.strip().strip("/")
+    if not normalized_surface:
+        return False
+    if any(token in normalized_surface for token in "*?["):
+        return fnmatch.fnmatchcase(claimed_path, normalized_surface)
+    if claimed_path == normalized_surface:
+        return True
+    surface_path = PurePosixPath(normalized_surface)
+    looks_like_directory = "/" in normalized_surface and not surface_path.suffix
+    return looks_like_directory and claimed_path.startswith(normalized_surface + "/")
+
+
+def validate_work_packet_run(
+    payload: dict[str, Any],
+    claimed_paths: list[str],
+    *,
+    claimed_surfaces: list[str] | None = None,
+    workspace: Path = WS,
+) -> None:
+    """Rebuild and validate a bound packet before any claim mutation occurs."""
+    packet = payload.get("work_packet")
+    packet_hash = payload.get("work_packet_hash")
+    bet_id = str(payload.get("bet_id") or "")
+    if packet is None and packet_hash is None:
+        if bet_id:
+            raise SpecBindingContractError(
+                f"WORK_PACKET_MISSING: bet-bound run {payload.get('run_id', '')}"
+            )
+        return  # Compatibility boundary for pre-spine and read-only runs.
+    if not isinstance(packet, dict) or not isinstance(packet_hash, str):
+        raise SpecBindingContractError("WORK_PACKET_INVALID: packet and packet hash are required")
+    canonicalize, compute_packet_hash = _work_packet_compiler(workspace)
+    try:
+        measured_hash = compute_packet_hash(canonicalize(packet))
+    except ValueError as exc:
+        raise SpecBindingContractError(f"WORK_PACKET_INVALID: {exc}") from exc
+    if measured_hash != packet_hash:
+        raise SpecBindingContractError(
+            f"WORK_PACKET_HASH_MISMATCH: declared={packet_hash} measured={measured_hash}"
+        )
+    if packet.get("bet_id") != bet_id:
+        raise SpecBindingContractError("WORK_PACKET_BET_MISMATCH: run and packet bet_id differ")
+    rebuilt = prepare_bet_execution(bet_id, workspace=workspace, require_startable=False)
+    if rebuilt["work_packet_hash"] != packet_hash:
+        raise SpecBindingContractError(
+            "WORK_PACKET_SOURCE_DRIFT: ledger/spec projection no longer matches the bound packet"
+        )
+
+    requested_surfaces = sorted(
+        {str(surface).strip() for surface in claimed_surfaces or [] if str(surface).strip()}
+    )
+    if requested_surfaces:
+        raise SpecBindingContractError(
+            "WORK_PACKET_SCOPE_MISMATCH: governance surfaces are not modeled by "
+            f"scope.write_surfaces: {requested_surfaces}"
+        )
+    allowed = packet.get("scope", {}).get("write_surfaces", [])
+    if not isinstance(allowed, list):
+        raise SpecBindingContractError("WORK_PACKET_INVALID: scope.write_surfaces must be a list")
+    for raw_path in claimed_paths:
+        claimed_path = _normalize_claim_path(raw_path, workspace)
+        if not any(_surface_allows_path(str(surface), claimed_path) for surface in allowed):
+            raise SpecBindingContractError(
+                f"WORK_PACKET_SCOPE_MISMATCH: {claimed_path} is outside {allowed}"
+            )
 
 
 def cmd_lint(data: dict, args) -> int:
@@ -698,32 +1133,11 @@ def cmd_lint(data: dict, args) -> int:
                         f"{b['id']}.{key}[{i}]: 应为字符串却是 {type(item).__name__} "
                         f'— 多半是未加引号的冒号，请写成 "...: ..."'
                     )
-        # PR-A: L2/L3 spec 绑定强制检查（2026-09-01 起强制）
-        spec_check_required = _is_spec_binding_required(b)
-        if spec_check_required:
-            specs = b.get("accepted_specifications") or []
-            if not specs:
-                errs.append(f"{b['id']}.accepted_specifications: L2/L3 bet 必须绑定 spec（2026-09-01 起强制）")
-            else:
-                for idx, spec in enumerate(specs):
-                    spec_ref = spec.get("spec_ref", "")
-                    content_digest = spec.get("content_digest", "")
-                    if not spec_ref:
-                        errs.append(f"{b['id']}.accepted_specifications[{idx}]: 缺少 spec_ref")
-                        continue
-                    if not content_digest:
-                        errs.append(f"{b['id']}.accepted_specifications[{idx}]: 缺少 content_digest")
-                        continue
-                    spec_path = WS / "docs" / "superpowers" / "specs" / spec_ref
-                    if not spec_path.exists():
-                        errs.append(f"{b['id']}.accepted_specifications[{idx}]: spec 文件不存在 {spec_ref}")
-                        continue
-                    actual_digest = _file_sha256(spec_path)
-                    if actual_digest != content_digest:
-                        errs.append(
-                            f"{b['id']}.accepted_specifications[{idx}]: digest 不匹配 "
-                            f"(声明: {content_digest[:16]}... 实际: {actual_digest[:16]}...)"
-                        )
+        # Canonical binding is mandatory unless the immutable pre-migration
+        # snapshot explicitly contains this terminal BET ID.
+        if _is_spec_binding_required(b, workspace=WS):
+            _binding, binding_errors = validate_accepted_specification(b)
+            errs.extend(f"{b['id']}.accepted_specifications: {error}" for error in binding_errors)
     if errs:
         for e in errs:
             print(f"ERROR {e}")
@@ -743,6 +1157,12 @@ def cmd_complete(data: dict, args) -> int:
     - 可选 --force 跳过 guard (人工确认)
     """
     b = bet_by_id(data, args.bet_id)
+    if _is_spec_binding_required(b, workspace=WS):
+        _binding, binding_errors = validate_accepted_specification(b)
+        if binding_errors:
+            for error in binding_errors:
+                print(f"[complete] ❌ {b['id']}.accepted_specifications: {error}")
+            return 1
     if b.get("status") == "done":
         print(f"[complete] {b['id']} 已是 done, 无需操作")
         return 0
