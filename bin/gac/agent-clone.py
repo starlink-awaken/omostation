@@ -9,6 +9,7 @@ independent-agent-clone topology.  Subcommands:
   manifest   --clone PATH --output PATH
   verify     --clone PATH --manifest PATH
   changeset  --clone PATH --baseline PATH --output PATH
+  verify-changeset --clone PATH --baseline PATH --changeset PATH --agent-id ID
   guard      --workspace PATH [--integration-root PATH]
 
 Exit contract: 0 = success, 1 = policy/verification failure,
@@ -34,6 +35,7 @@ import sys
 import tempfile
 import warnings
 from pathlib import Path
+from typing import Any
 
 SCHEMA_MANIFEST = "agent-clone-manifest/v1"
 SCHEMA_CHANGESET = "cross-repo-changeset/v1"
@@ -435,6 +437,40 @@ def atomic_publish_no_replace(source: str, destination: str) -> None:
     )
 
 
+def write_json_exclusive(output_path: str, payload: dict, failure_reason: str) -> None:
+    """Publish one generated JSON artifact without overwriting a racing writer."""
+    fd: int | None = None
+    created = False
+    try:
+        fd = os.open(output_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        created = True
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fd = None
+            json.dump(payload, fh, indent=2, sort_keys=True)
+            fh.write("\n")
+            fh.flush()
+            os.fsync(fh.fileno())
+    except FileExistsError as exc:
+        raise ToolError(
+            "output_collision",
+            f"output {output_path} already exists; refusing overwrite",
+            EXIT_POLICY,
+        ) from exc
+    except OSError as exc:
+        if fd is not None:
+            os.close(fd)
+        if created:
+            try:
+                os.unlink(output_path)
+            except OSError:
+                pass
+        raise ToolError(
+            failure_reason,
+            f"cannot write {output_path}: {exc}",
+            EXIT_USAGE,
+        ) from exc
+
+
 def cmd_create(args: argparse.Namespace) -> dict:
     agent_id = args.agent_id
     if not agent_id or not AGENT_ID_RE.match(agent_id):
@@ -565,9 +601,24 @@ def cmd_create(args: argparse.Namespace) -> dict:
                     EXIT_POLICY,
                 )
 
-        submodules_initialized = False
-        if not args.no_submodules:
-            # Initialize the superproject's complete gitlink set. Do not recurse
+        requested_submodules = sorted(set(getattr(args, "submodule", None) or []))
+        all_gitlinks = gitlinks(staging_clone)
+        unknown_submodules = sorted(set(requested_submodules) - set(all_gitlinks))
+        if unknown_submodules:
+            raise ToolError(
+                "submodule_unknown",
+                f"requested paths are not root gitlinks: {unknown_submodules}",
+                EXIT_POLICY,
+            )
+        if requested_submodules:
+            initialize_paths = requested_submodules
+        elif args.no_submodules:
+            initialize_paths = []
+        else:
+            initialize_paths = sorted(all_gitlinks)
+
+        if initialize_paths:
+            # Initialize only the selected root gitlinks. Do not recurse
             # into nested workspace mirrors: a submodule may itself contain the
             # entire project graph, causing scripts/scripts/... expansion.
             proc = git(
@@ -577,6 +628,8 @@ def cmd_create(args: argparse.Namespace) -> dict:
                 "submodule",
                 "update",
                 "--init",
+                "--",
+                *initialize_paths,
             )
             if proc.returncode != 0:
                 raise ToolError(
@@ -584,7 +637,8 @@ def cmd_create(args: argparse.Namespace) -> dict:
                     f"submodule init failed: {proc.stderr.strip()}",
                     EXIT_POLICY,
                 )
-            for path, pinned_sha in gitlinks(staging_clone).items():
+            for path in initialize_paths:
+                pinned_sha = all_gitlinks[path]
                 initialized, child_head, _origin, clean = submodule_state(staging_clone, path)
                 if not initialized or child_head != pinned_sha or not clean:
                     raise ToolError(
@@ -592,7 +646,15 @@ def cmd_create(args: argparse.Namespace) -> dict:
                         f"submodule {path} did not reach a clean pinned checkout",
                         EXIT_POLICY,
                     )
-            submodules_initialized = True
+        for path in sorted(set(all_gitlinks) - set(initialize_paths)):
+            initialized, _child_head, _origin, _clean = submodule_state(staging_clone, path)
+            if initialized:
+                raise ToolError(
+                    "submodule_init_unrequested",
+                    f"submodule {path} initialized outside the requested set",
+                    EXIT_POLICY,
+                )
+        submodules_initialized = len(initialize_paths) == len(all_gitlinks)
 
         # Clone-local hook activation must succeed before the clone is declared ready.
         if os.path.isfile(os.path.join(staging_clone, ".githooks", "pre-commit")):
@@ -672,6 +734,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
         "frozen_root_sha": frozen_sha,
         "working_branch": working_branch,
         "submodules_initialized": submodules_initialized,
+        "initialized_submodules": initialize_paths,
         "identity_file": identity_file,
         "reinstall_status": "ok" if reinstall_ok else "warning",
         "reinstall_message": reinstall_msg,
@@ -727,7 +790,8 @@ def build_manifest(repo_root: str) -> dict:
     # 独立仓库如 c2g/gbrain/kairon), 但 untracked 单文件 (?? file.txt) 仍视为
     # dirty — 那是意外残留, 不是合法拓扑 (BET-Y1Q3-T1-07).
     tracked_changes = [
-        line for line in root_status.stdout.splitlines()
+        line
+        for line in root_status.stdout.splitlines()
         if line.strip() and not (line.startswith("?? ") and line.rstrip().endswith("/"))
     ]
     if tracked_changes:
@@ -753,16 +817,7 @@ def build_manifest(repo_root: str) -> dict:
 
 def cmd_manifest(args: argparse.Namespace) -> dict:
     manifest = build_manifest(args.clone)
-    try:
-        with open(args.output, "w", encoding="utf-8") as fh:
-            json.dump(manifest, fh, indent=2, sort_keys=True)
-            fh.write("\n")
-    except OSError as exc:
-        raise ToolError(
-            "manifest_write_failed",
-            f"cannot write manifest {args.output}: {exc}",
-            EXIT_USAGE,
-        ) from exc
+    write_json_exclusive(args.output, manifest, "manifest_write_failed")
     return {
         "ok": True,
         "reason": "manifest_generated",
@@ -853,7 +908,8 @@ def cmd_verify(args: argparse.Namespace) -> dict:
         raise ToolError("root_dirty", "cannot check root cleanliness", EXIT_POLICY)
     # 忽略 untracked 孤儿仓库目录 (?? dir/), 文件型 untracked 仍拒绝 (BET-Y1Q3-T1-07).
     tracked_changes = [
-        line for line in root_status.stdout.splitlines()
+        line
+        for line in root_status.stdout.splitlines()
         if line.strip() and not (line.startswith("?? ") and line.rstrip().endswith("/"))
     ]
     if tracked_changes:
@@ -967,6 +1023,32 @@ def is_ancestor(repo_root: str, ancestor: str, descendant: str) -> bool:
     return proc.returncode == 0
 
 
+def root_changed_paths(repo_root: str, base: str, candidate: str) -> list[str]:
+    """Return ordinary root paths changed between two commits, rename-expanded."""
+    proc = git(
+        repo_root,
+        "diff",
+        "--name-only",
+        "-z",
+        "--no-renames",
+        base,
+        candidate,
+        "--",
+    )
+    if proc.returncode != 0:
+        raise ToolError(
+            "root_diff_failed",
+            f"cannot enumerate root changes: {proc.stderr.strip()}",
+            EXIT_POLICY,
+        )
+    return sorted(item for item in proc.stdout.split("\0") if item)
+
+
+def object_at_path(repo_root: str, revision: str, path: str) -> str | None:
+    proc = git(repo_root, "rev-parse", "--verify", f"{revision}:{path}")
+    return proc.stdout.strip() if proc.returncode == 0 else None
+
+
 def _verify_changeset_claims(clone_root: str, changes: list[dict[str, Any]]) -> dict[str, Any]:
     """D3 升级: 跨仓变更审计 — 校验子模块变更在 agent claim 范围内.
 
@@ -982,6 +1064,7 @@ def _verify_changeset_claims(clone_root: str, changes: list[dict[str, Any]]) -> 
     }
     try:
         from swarm_discipline import active_workflow_claimed_paths, path_covered_by_claim
+
         claimed = active_workflow_claimed_paths(Path(clone_root))
         result["claimed_paths"] = claimed
         for change in changes:
@@ -1004,7 +1087,8 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
         raise ToolError("candidate_not_a_repository", root_status.stderr.strip(), EXIT_POLICY)
     # 忽略 untracked 孤儿仓库目录 (?? dir/), 文件型 untracked 仍视为 dirty (BET-Y1Q3-T1-07).
     tracked_changes = [
-        line for line in root_status.stdout.splitlines()
+        line
+        for line in root_status.stdout.splitlines()
         if line.strip() and not (line.startswith("?? ") and line.rstrip().endswith("/"))
     ]
     if tracked_changes:
@@ -1025,7 +1109,18 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
         )
 
     baseline_entries = {e["path"]: e for e in baseline.get("repositories", [])}
-    changes = []
+    gitlink_paths = set(baseline_entries) | set(links)
+    changes = [
+        {
+            "kind": "root_file",
+            "path": path,
+            "base_sha": object_at_path(args.clone, root_base, path),
+            "candidate_sha": object_at_path(args.clone, root_candidate, path),
+            "ancestry_proven": True,
+        }
+        for path in root_changed_paths(args.clone, root_base, root_candidate)
+        if path not in gitlink_paths
+    ]
     for path in sorted(set(baseline_entries) | set(links)):
         base_sha = baseline_entries[path]["pinned_sha"] if path in baseline_entries else None
         cand_sha = links.get(path, None)
@@ -1060,6 +1155,7 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
             )
         changes.append(
             {
+                "kind": "gitlink",
                 "path": path,
                 "base_sha": base_sha,
                 "candidate_sha": cand_sha,
@@ -1082,6 +1178,7 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
     changeset = {
         "schema": SCHEMA_CHANGESET,
         "agent_id": identity["agent_id"] if identity else None,
+        "clone_root": canonical(args.clone),
         "baseline_manifest_digest": baseline["manifest_digest"],
         "root_base_sha": root_base,
         "root_candidate_sha": root_candidate,
@@ -1089,25 +1186,25 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
         "no_change": no_change,
         "claim_verification": claim_verification,
     }
-    changeset["change_id"] = canonical_digest(
-        {
-            "baseline_manifest_digest": changeset["baseline_manifest_digest"],
-            "root_base_sha": root_base,
-            "root_candidate_sha": root_candidate,
-            "changes": changes,
-        }
-    )
+    changeset["change_id"] = canonical_digest(changeset, exclude_field="change_id")
 
-    try:
-        with open(args.output, "w", encoding="utf-8") as fh:
-            json.dump(changeset, fh, indent=2, sort_keys=True)
-            fh.write("\n")
-    except OSError as exc:
-        raise ToolError(
-            "changeset_write_failed",
-            f"cannot write {args.output}: {exc}",
-            EXIT_USAGE,
-        ) from exc
+    write_json_exclusive(args.output, changeset, "changeset_write_failed")
+    if claim_verification is not None:
+        if not claim_verification.get("enabled", False):
+            raise ToolError(
+                "claim_verification_unavailable",
+                "claim verification could not run",
+                EXIT_POLICY,
+                {"output_path": args.output},
+            )
+        violations = claim_verification.get("violations", [])
+        if violations:
+            raise ToolError(
+                "claim_scope_violation",
+                f"changeset contains unclaimed paths: {violations}",
+                EXIT_POLICY,
+                {"output_path": args.output, "violations": violations},
+            )
     return {
         "ok": True,
         "reason": "changeset_generated",
@@ -1116,6 +1213,106 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
         "change_id": changeset["change_id"],
         "no_change": no_change,
         "changes_count": len(changes),
+    }
+
+
+def cmd_verify_changeset(args: argparse.Namespace) -> dict:
+    """Rebuild and compare a claim-verified changeset against current clone state."""
+    try:
+        with open(args.changeset, encoding="utf-8") as fh:
+            stored = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ToolError(
+            "changeset_unreadable",
+            f"cannot read changeset {args.changeset}: {exc}",
+            EXIT_POLICY,
+        ) from exc
+    if stored.get("schema") != SCHEMA_CHANGESET:
+        raise ToolError(
+            "changeset_schema_mismatch",
+            f"unexpected changeset schema {stored.get('schema')!r}",
+            EXIT_POLICY,
+        )
+    stored_digest = stored.get("change_id")
+    recomputed_digest = canonical_digest(stored, exclude_field="change_id")
+    if stored_digest != recomputed_digest:
+        raise ToolError(
+            "changeset_digest_mismatch",
+            "changeset digest validation failed",
+            EXIT_POLICY,
+        )
+    claims = stored.get("claim_verification")
+    if not isinstance(claims, dict) or claims.get("enabled") is not True:
+        raise ToolError(
+            "changeset_claims_unverified",
+            "changeset was not created with successful --verify-claims",
+            EXIT_POLICY,
+        )
+    if claims.get("all_covered") is not True or claims.get("violations"):
+        raise ToolError(
+            "changeset_claim_scope_violation",
+            "changeset contains unclaimed paths",
+            EXIT_POLICY,
+        )
+    clone_root = canonical(args.clone)
+    identity = read_identity(args.clone)
+    if (
+        identity.get("ready") is not True
+        or identity.get("canonical_root") != clone_root
+        or identity.get("agent_id") != args.agent_id
+    ):
+        raise ToolError(
+            "changeset_agent_mismatch",
+            "ready clone identity does not match requested clone and agent",
+            EXIT_POLICY,
+        )
+    baseline = load_baseline(args.baseline)
+    if baseline.get("agent_id") != args.agent_id or baseline.get("canonical_root") != clone_root:
+        raise ToolError(
+            "changeset_baseline_mismatch",
+            "baseline is not bound to this clone and agent",
+            EXIT_POLICY,
+        )
+    if stored.get("agent_id") != args.agent_id or stored.get("clone_root") != clone_root:
+        raise ToolError(
+            "changeset_clone_mismatch",
+            "changeset is not bound to this clone and agent",
+            EXIT_POLICY,
+        )
+
+    with tempfile.TemporaryDirectory(prefix="agent-clone-verify-") as tmp:
+        output = os.path.join(tmp, "current-changeset.json")
+        cmd_changeset(
+            argparse.Namespace(
+                clone=args.clone,
+                baseline=args.baseline,
+                output=output,
+                verify_claims=True,
+            )
+        )
+        with open(output, encoding="utf-8") as fh:
+            current = json.load(fh)
+    if stored != current:
+        raise ToolError(
+            "changeset_stale",
+            "changeset does not match current baseline, HEAD, paths, objects, or claims",
+            EXIT_POLICY,
+            {
+                "stored_head": stored.get("root_candidate_sha"),
+                "current_head": current.get("root_candidate_sha"),
+                "stored_change_id": stored_digest,
+                "current_change_id": current.get("change_id"),
+            },
+        )
+    return {
+        "ok": True,
+        "reason": "changeset_verified",
+        "clone_root": clone_root,
+        "baseline_manifest_digest": stored["baseline_manifest_digest"],
+        "root_head_sha": stored["root_candidate_sha"],
+        "changed_paths": [change["path"] for change in stored.get("changes", [])],
+        "change_id": stored_digest,
+        "no_change": stored.get("no_change", False),
     }
 
 
@@ -1216,7 +1413,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--source", required=True)
     p.add_argument("--destination", required=True)
     p.add_argument("--revision")
-    p.add_argument("--no-submodules", action="store_true")
+    group = p.add_mutually_exclusive_group()
+    group.add_argument("--no-submodules", action="store_true")
+    group.add_argument(
+        "--submodule",
+        action="append",
+        default=[],
+        help="initialize only this root gitlink; repeat for multiple paths",
+    )
     p.set_defaults(func=cmd_create)
 
     p = sub.add_parser("manifest")
@@ -1242,6 +1446,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="D3 跨仓变更审计: 校验变更路径在 agent claim 范围内",
     )
     p.set_defaults(func=cmd_changeset)
+
+    p = sub.add_parser("verify-changeset")
+    add_common(p)
+    p.add_argument("--clone", required=True)
+    p.add_argument("--baseline", required=True)
+    p.add_argument("--changeset", required=True)
+    p.add_argument("--agent-id", required=True)
+    p.set_defaults(func=cmd_verify_changeset)
 
     p = sub.add_parser("guard")
     add_common(p)
