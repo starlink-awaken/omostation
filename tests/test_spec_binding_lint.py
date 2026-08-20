@@ -1,239 +1,157 @@
-"""测试 spec 绑定 lint 规则。
-
-验证：
-- L3 + started_at 2026-09-01+ + 无绑定 → error
-- 有绑定 + digest 匹配 → ok
-- digest 不匹配 → error
-- 老 bet（无 started_at 或早于 2026-09-01）→ 不强制
-"""
+"""Canonical Specification Binding tests for the strategic BET ledger."""
 
 from __future__ import annotations
 
 import importlib.util
 import sys
-import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 _spec = importlib.util.spec_from_file_location("bet_ledger", ROOT / "bin/plan/bet-ledger.py")
+assert _spec is not None and _spec.loader is not None
 bl = importlib.util.module_from_spec(_spec)
 sys.modules["bet_ledger"] = bl
 _spec.loader.exec_module(bl)
 
-_is_spec_binding_required = bl._is_spec_binding_required
-_file_sha256 = bl._file_sha256
-cmd_lint = bl.cmd_lint
 
-
-def test_l3_bet_after_cutoff_requires_spec():
-    """L3 bet + started_at 2026-09-01 + status in_progress → 必须有 spec 绑定。"""
-    bet = {
+def _bet(*, status: str = "candidate", risk_level: str = "L1") -> dict:
+    return {
         "id": "BET-TEST",
-        "risk_level": "L3",
-        "status": "in_progress",
-        "started_at": "2026-09-01",
+        "risk_level": risk_level,
+        "status": status,
         "track": "T1",
         "window": "Y1Q1",
-        "title": "Test",
-        "appetite": "high",
-        "goal": "test",
-        "done_when": ["ok"],
-        "verify": ["echo ok"],
-        "workflow": "generic",
-        "write_surfaces": ["docs/"],
+        "title": "Canonical binding",
+        "appetite": "1 day",
+        "goal": "Prove one canonical binding",
+        "done_when": ["binding is verified"],
+        "verify": [{"cmd": "python3 -c pass", "expect": "exit 0"}],
+        "workflow": "bet-execution",
+        "write_surfaces": ["bin/agent-workflow.py", "tests/**"],
     }
-    assert _is_spec_binding_required(bet), "L3 bet after 2026-09-01 should require spec"
 
 
-def test_l2_bet_after_cutoff_requires_spec():
-    """L2 bet + started_at 2026-09-01 + status review → 必须有 spec 绑定。"""
-    bet = {
-        "id": "BET-TEST",
-        "risk_level": "L2",
-        "status": "review",
-        "started_at": "2026-09-01",
-        "track": "T1",
-        "window": "Y1Q1",
-        "title": "Test",
-        "appetite": "high",
-        "goal": "test",
-        "done_when": ["ok"],
-        "verify": ["echo ok"],
-        "workflow": "generic",
-        "write_surfaces": ["docs/"],
+def _write_spec(workspace: Path, content: str = "# Accepted specification\n") -> tuple[str, str]:
+    relative = "docs/superpowers/specs/accepted.md"
+    path = workspace / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+    return f"repo://{relative}", f"sha256:{bl._file_sha256(path)}"
+
+
+def _canonical_binding(workspace: Path, bet_id: str = "BET-TEST") -> dict[str, str]:
+    spec_ref, digest = _write_spec(workspace)
+    return {
+        "spec_ref": spec_ref,
+        "spec_version": "1.0.0",
+        "content_digest": digest,
+        "decision_ref": f"decision://accepted/{bet_id}",
     }
-    assert _is_spec_binding_required(bet), "L2 bet after 2026-09-01 should require spec"
 
 
-def test_old_bet_before_cutoff_not_required():
-    """早于 2026-09-01 的 bet → 不强制 spec 绑定（向后兼容）。"""
-    bet = {
-        "id": "BET-OLD",
-        "risk_level": "L3",
-        "status": "in_progress",
-        "started_at": "2026-08-31",
-        "track": "T1",
-        "window": "Y1Q1",
-        "title": "Old",
-        "appetite": "high",
-        "goal": "test",
-        "done_when": ["ok"],
-        "verify": ["echo ok"],
-        "workflow": "generic",
-        "write_surfaces": ["docs/"],
-    }
-    assert not _is_spec_binding_required(bet), "Old bet should not require spec"
-
-
-def test_bet_no_started_at_not_required():
-    """没有 started_at 的 bet → 不强制（无法判断）。"""
-    bet = {
-        "id": "BET-NODATE",
-        "risk_level": "L3",
-        "status": "in_progress",
-        "track": "T1",
-        "window": "Y1Q1",
-        "title": "No Date",
-        "appetite": "high",
-        "goal": "test",
-        "done_when": ["ok"],
-        "verify": ["echo ok"],
-        "workflow": "generic",
-        "write_surfaces": ["docs/"],
-    }
-    assert not _is_spec_binding_required(bet), "Bet without started_at should not require spec"
-
-
-def test_l1_bet_not_required():
-    """L1 bet → 不强制 spec 绑定。"""
-    bet = {
-        "id": "BET-L1",
-        "risk_level": "L1",
-        "status": "in_progress",
-        "started_at": "2026-09-01",
-        "track": "T1",
-        "window": "Y1Q1",
-        "title": "L1",
-        "appetite": "low",
-        "goal": "test",
-        "done_when": ["ok"],
-        "verify": ["echo ok"],
-        "workflow": "generic",
-        "write_surfaces": ["docs/"],
-    }
-    assert not _is_spec_binding_required(bet), "L1 bet should not require spec"
-
-
-def test_candidate_status_not_required():
-    """status=candidate → 不强制 spec 绑定。"""
-    bet = {
-        "id": "BET-CANDIDATE",
-        "risk_level": "L3",
-        "status": "candidate",
-        "started_at": "2026-09-01",
-        "track": "T1",
-        "window": "Y1Q1",
-        "title": "Candidate",
-        "appetite": "high",
-        "goal": "test",
-        "done_when": ["ok"],
-        "verify": ["echo ok"],
-        "workflow": "generic",
-        "write_surfaces": ["docs/"],
-    }
-    assert not _is_spec_binding_required(bet), "Candidate bet should not require spec"
-
-
-def test_file_sha256_returns_hash():
-    """_file_sha256 返回正确的 SHA256 哈希。"""
-    with tempfile.NamedTemporaryFile(delete=False) as f:
-        f.write(b"hello world")
-        f.flush()
-        path = Path(f.name)
-    try:
-        digest = _file_sha256(path)
-        assert len(digest) == 64, f"SHA256 should be 64 chars, got {len(digest)}"
-        # "hello world" 的已知 SHA256
-        expected = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
-        assert digest == expected, f"SHA256 mismatch: {digest}"
-    finally:
-        path.unlink()
-
-
-def test_cmd_lint_catches_missing_spec():
-    """cmd_lint 检测 L3 bet 缺少 spec 绑定。"""
-    data = {
+def _lint_data(bet: dict) -> dict:
+    return {
         "meta": {
-            "status_enum": ["candidate", "in_progress", "review", "done"],
+            "status_enum": ["candidate", "pending", "in_progress", "review", "done", "blocked", "failed"],
             "windows": ["Y1Q1"],
-            "tracks": ["T1"],
         },
         "tracks": ["T1"],
-        "bets": [
-            {
-                "id": "BET-L3-NO-SPEC",
-                "risk_level": "L3",
-                "status": "in_progress",
-                "started_at": "2026-09-01",
-                "track": "T1",
-                "window": "Y1Q1",
-                "title": "No Spec",
-                "appetite": "high",
-                "goal": "test",
-                "done_when": ["ok"],
-                "verify": ["echo ok"],
-                "workflow": "generic",
-                "write_surfaces": ["docs/"],
-            }
-        ],
+        "bets": [bet],
     }
-    rc = cmd_lint(data, type("Args", (), {})())
-    assert rc != 0, "cmd_lint should fail for missing spec"
 
 
-def test_cmd_lint_passes_with_valid_spec():
-    """cmd_lint 通过有有效 spec 绑定的 bet。"""
-    # 创建临时 spec 文件
-    spec_dir = ROOT / "docs" / "superpowers" / "specs"
-    spec_dir.mkdir(parents=True, exist_ok=True)
-    temp_spec = spec_dir / "_TEMP_TEST_SPEC.md"
-    temp_spec.write_text("# Test Spec\n\nContent here.")
-    spec_digest = _file_sha256(temp_spec)
+def test_candidate_requires_spec_without_date_or_risk_bypass() -> None:
+    assert bl._is_spec_binding_required(_bet(risk_level="L1")) is True
+    assert bl._is_spec_binding_required(_bet(risk_level="L3")) is True
 
-    try:
-        data = {
-            "meta": {
-                "status_enum": ["candidate", "in_progress", "review", "done"],
-                "windows": ["Y1Q1"],
-                "tracks": ["T1"],
-            },
-            "tracks": ["T1"],
-            "bets": [
-                {
-                    "id": "BET-L3-WITH-SPEC",
-                    "risk_level": "L3",
-                    "status": "in_progress",
-                    "started_at": "2026-09-01",
-                    "track": "T1",
-                    "window": "Y1Q1",
-                    "title": "With Spec",
-                    "appetite": "high",
-                    "goal": "test",
-                    "done_when": ["ok"],
-                    "verify": ["echo ok"],
-                    "workflow": "generic",
-                    "write_surfaces": ["docs/"],
-                    "accepted_specifications": [
-                        {
-                            "spec_ref": "_TEMP_TEST_SPEC.md",
-                            "content_digest": spec_digest,
-                        }
-                    ],
-                }
-            ],
+
+def test_historical_terminal_bet_is_explicitly_grandfathered() -> None:
+    historical = _bet(status="done", risk_level="L3")
+
+    assert bl._is_spec_binding_required(historical) is False
+    assert bl._is_historical_spec_grandfathered(historical) is True
+
+
+def test_canonical_binding_validates(tmp_path: Path) -> None:
+    bet = _bet()
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+
+    binding, errors = bl.validate_accepted_specification(bet, workspace=tmp_path)
+
+    assert errors == []
+    assert binding == bet["accepted_specifications"][0]
+
+
+def test_legacy_relative_ref_and_raw_digest_are_rejected(tmp_path: Path) -> None:
+    bet = _bet()
+    _spec_ref, digest = _write_spec(tmp_path)
+    bet["accepted_specifications"] = [
+        {
+            "spec_ref": "accepted.md",
+            "spec_version": "v1",
+            "content_digest": digest.removeprefix("sha256:"),
+            "decision_ref": "BET-TEST",
         }
-        rc = cmd_lint(data, type("Args", (), {})())
-        assert rc == 0, f"cmd_lint should pass with valid spec, got {rc}"
-    finally:
-        temp_spec.unlink(missing_ok=True)
+    ]
+
+    _binding, errors = bl.validate_accepted_specification(bet, workspace=tmp_path)
+
+    assert any("spec_ref" in error and "repo://" in error for error in errors)
+    assert any("spec_version" in error and "semver" in error for error in errors)
+    assert any("content_digest" in error and "sha256:" in error for error in errors)
+    assert any("decision_ref" in error and "decision://accepted/BET-TEST" in error for error in errors)
+
+
+def test_digest_drift_is_rejected(tmp_path: Path) -> None:
+    bet = _bet()
+    binding = _canonical_binding(tmp_path)
+    bet["accepted_specifications"] = [binding]
+    (tmp_path / binding["spec_ref"].removeprefix("repo://")).write_text("changed", encoding="utf-8")
+
+    _binding, errors = bl.validate_accepted_specification(bet, workspace=tmp_path)
+
+    assert any("SPEC_DIGEST_MISMATCH" in error for error in errors)
+
+
+def test_unaccepted_or_wrong_decision_status_is_rejected(tmp_path: Path) -> None:
+    bet = _bet()
+    binding = _canonical_binding(tmp_path)
+    binding["decision_ref"] = "decision://proposed/BET-TEST"
+    bet["accepted_specifications"] = [binding]
+
+    _binding, errors = bl.validate_accepted_specification(bet, workspace=tmp_path)
+
+    assert any("SPEC_DECISION_NOT_ACCEPTED" in error for error in errors)
+
+
+def test_multiple_bindings_are_rejected_for_one_work_packet(tmp_path: Path) -> None:
+    bet = _bet()
+    binding = _canonical_binding(tmp_path)
+    bet["accepted_specifications"] = [binding, dict(binding)]
+
+    _binding, errors = bl.validate_accepted_specification(bet, workspace=tmp_path)
+
+    assert any("exactly one" in error for error in errors)
+
+
+def test_lint_fails_for_active_bet_without_binding(capsys) -> None:
+    rc = bl.cmd_lint(_lint_data(_bet()), type("Args", (), {})())
+
+    assert rc == 1
+    assert "SPEC_BINDING_REQUIRED" in capsys.readouterr().out
+
+
+def test_lint_grandfathers_historical_done_bet_with_legacy_binding(capsys) -> None:
+    historical = _bet(status="done", risk_level="L3")
+    historical["accepted_specifications"] = [
+        {
+            "spec_ref": "legacy.md",
+            "content_digest": "legacy",
+        }
+    ]
+
+    rc = bl.cmd_lint(_lint_data(historical), type("Args", (), {})())
+
+    assert rc == 0
+    assert "OK" in capsys.readouterr().out
