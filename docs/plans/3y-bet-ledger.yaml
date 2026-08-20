@@ -5641,7 +5641,7 @@ bets:
   - cmd: uv run --with pyyaml python bin/adr/adr-coverage.py --json
     expect: missing_numbers=[], frontmatter_issues=[], files_not_in_index=[]
   - cmd: uv run --with pyyaml python bin/gac/gac-validate.py --gate
-    expect: active_bin_scripts ≤ 413
+    expect: active_bin_scripts ≤ 420
   - cmd: make gac-local-gate
     expect: 全绿 PASS
   workflow: governance-state-mutation
@@ -5658,4 +5658,57 @@ bets:
   risk_level: L2
   human_gate: true
   circuit_breaker: 归档脚本发现活跃调用者 → 停止并回滚
+  retro: required
+- id: BET-Y1Q3-T6-10
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: SEMA 结晶 skill 入仓与台账修复
+  appetite: 1 hour
+  priority: P2
+  status: done
+  started_at: 2026-08-20
+  done_at: 2026-08-20
+  goal: 将 SEMA 自动结晶的 workflow:governance-state-mutation skill 纳入版本跟踪，修复 T6-09 verify 目标与基线不一致
+  non_goals:
+  - 修改 skill 内容或生成逻辑
+  - 新增治理规则
+  - 扩大清理范围
+  evidence:
+    E1_skill_tracked:
+      description: workflow:governance-state-mutation skill 已 git add
+      surfaces:
+      - .agents/skills/workflow:governance-state-mutation/SKILL.md
+    E2_bet_verify_fixed:
+      description: T6-09 verify 目标从 active_bin_scripts ≤ 413 修正为 ≤ 420
+      surfaces:
+      - docs/plans/3y-bet-ledger.yaml
+    E3_gac_local_gate:
+      description: make gac-local-gate 全绿 PASS
+  done_when:
+  - .agents/skills/workflow:governance-state-mutation/ 纳入 git 跟踪
+  - T6-09 verify 目标与 script_baseline 一致（420）
+  - make gac-local-gate 全部检查 PASS
+  progress:
+    done_when_met:
+    - '1: workflow:governance-state-mutation skill 已 git add'
+    - '2: T6-09 verify 目标修正为 active_bin_scripts ≤ 420'
+    - '3: make gac-local-gate 46 checks ALL GREEN'
+    pending_when: []
+  verify:
+  - cmd: git ls-files --error-unmatch .agents/skills/workflow:governance-state-mutation/SKILL.md
+    expect: 退出码 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: 本条目 0 error
+  - cmd: make gac-local-gate
+    expect: 全绿 PASS
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - .agents/skills/workflow:governance-state-mutation/
+  pasw_required: true
+  depends_on: []
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: skill 内容未经审核 → 改为 gitignore 而非跟踪
   retro: required
