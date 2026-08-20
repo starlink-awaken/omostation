@@ -5956,6 +5956,7 @@ bets:
   - bin/gac/bdsk-shadow-sandbox.py
   - projects/cockpit/src/cockpit/commands/bdsk_engine.py
   - tests/**
+  - .githooks/pre-commit
   - .omo/_truth/registry/workers.yaml
   - projects/omo
   - projects/cockpit
