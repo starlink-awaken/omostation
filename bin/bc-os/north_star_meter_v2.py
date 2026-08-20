@@ -1,183 +1,436 @@
 #!/usr/bin/env python3
-"""north_star_meter_v2.py — BCOS 北极星测量器 v2 (排除 self-data).
+"""Read-only North Star projection over OMO's causal Event Ledger.
 
-修复:
-- 排除 shadow_runner 自我评估数据 (不计入真实消费)
-- 加入 consumption_event 真实消费追踪 (需外部触发)
-- 重新定义 consumed_journeys: 实际被人类使用的事件
+The meter is a projection, never a writer. Personal value is counted only
+from the existing ``Outcome.Human.v1`` broker path and the causal evidence
+validated by :class:`omo.personal_episode.PersonalEpisodeService`. Missing
+identity, missing evidence, an unavailable observer, or a broken hash chain
+is ``unprovable`` rather than guessed from PRs, BETs, tests, or a caller's
+``consumer=human`` label.
 
-数据源优先级:
-1. .omo/state/consumption-events.json (真实人类消费) — 唯一计入
-2. .omo/state/routed-signals.json (路由信号) — 仅作参考
-3. .omo/state/knowledge-shadow.json (shadow runner) — 排除
+Run with the OMO project environment::
 
-consumed 定义: 外部事件 [opened, edited, submitted, referenced, approved]
+    uv run --project projects/omo python bin/bc-os/north_star_meter_v2.py \
+      --principal-id <principal-id> --json
 """
+
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import math
+import os
+import re
+import subprocess
 import sys
-import time
+import tempfile
+from collections.abc import Mapping
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_LEDGER = ROOT / "runtime" / "omo" / "event-ledger.sqlite3"
+
+# Kept only so callers can prove the legacy state writer is retired. No
+# production path writes this file anymore.
 CONSUMPTION_EVENTS = ROOT / ".omo" / "state" / "consumption-events.json"
-SHADOW_STATE = ROOT / ".omo" / "state" / "knowledge-shadow.json"
-ROUTED_SIGNALS = ROOT / ".omo" / "state" / "routed-signals.json"
 
-CONSUMED_TARGET_W1 = 5
-CONSUMED_TARGET_W2 = 20
-COMPLETION_TARGET_W1 = 0.65
-COMPLETION_TARGET_W2 = 0.85
+SNAPSHOT_SCHEMA = "value-truth-snapshot/v1"
+_CANONICAL_REPO_SOURCE = "repo://runtime/omo/event-ledger.sqlite3"
+_LOCAL_SOURCE_RE = re.compile(r"^local-ledger:sha256:[0-9a-f]{64}$")
+_TIP_HASH_RE = re.compile(r"^[0-9a-f]{64}$")
+_WEEK_KEY_RE = re.compile(r"^[0-9]{4}-W(?:0[1-9]|[1-4][0-9]|5[0-3])$")
+_ONLY_QUALIFYING_RE = re.compile(r"^only [0-9]+ qualifying week\(s\), need 4 consecutive$")
+_NON_CONSECUTIVE_RE = re.compile(
+    r"^non-consecutive gap between [0-9]{4}-W(?:0[1-9]|[1-4][0-9]|5[0-3]) "
+    r"and [0-9]{4}-W(?:0[1-9]|[1-4][0-9]|5[0-3])$"
+)
+_BELOW_THRESHOLD_RE = re.compile(r"^[0-9]+ week\(s\) below threshold \(need >=3 qualifying episodes each\)$")
+_VERDICTS = ("accept", "edit", "reject", "defer", "ignore")
+_NO_QUALIFYING_GAP = (
+    "no qualifying weeks yet (need >=3 system-accept episodes with complete burden and review<saved per week)"
+)
 
-VALID_ACTIONS = {"opened", "edited", "submitted", "referenced", "approved", "downloaded"}
+
+def _canonical(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def record_consumption(scene_id: str, action: str, consumer: str = "human", metadata: dict | None = None, journey_id: str | None = None) -> dict:
-    """记录一次真实消费事件. 外部调用入口."""
-    if action not in VALID_ACTIONS:
-        return {"ok": False, "reason": f"invalid action: {action}"}
-    import uuid as _uuid
-    event = {
-        "id": _uuid.uuid4().hex[:12],
-        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "scene_id": scene_id,
-        "action": action,
-        "consumer": consumer,
-        "journey_id": journey_id or f"j-{int(time.time())}-{_uuid.uuid4().hex[:6]}",
-        "metadata": metadata or {},
+def _digest(value: Any) -> str:
+    return f"sha256:{hashlib.sha256(_canonical(value).encode('utf-8')).hexdigest()}"
+
+
+def _utc_now() -> str:
+    # timezone.utc keeps this root CLI compatible with the deployed Python 3.9.
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")  # noqa: UP017
+
+
+def _source_ref(path: Path) -> str:
+    resolved = path.resolve()
+    try:
+        relative = resolved.relative_to(ROOT.resolve())
+    except ValueError:
+        return f"local-ledger:{_digest(str(resolved))}"
+    return f"repo://{relative.as_posix()}"
+
+
+def _safe_source_ref(value: object) -> str:
+    candidate = value if isinstance(value, str) else ""
+    if candidate == _CANONICAL_REPO_SOURCE or _LOCAL_SOURCE_RE.fullmatch(candidate):
+        return candidate
+    return f"local-ledger:{_digest(candidate)}"
+
+
+def _safe_observed_at(value: object) -> str:
+    if not isinstance(value, str):
+        return "unavailable"
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return "unavailable"
+    if parsed.tzinfo is None:
+        return "unavailable"
+    return parsed.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")  # noqa: UP017
+
+
+def _nonnegative_int(value: object) -> int:
+    return value if type(value) is int and value >= 0 else 0
+
+
+def _optional_nonnegative_number(value: object) -> float | None:
+    if type(value) not in (int, float):
+        return None
+    number = float(value)
+    return number if math.isfinite(number) and number >= 0 else None
+
+
+def _safe_verdict_distribution(value: object) -> dict[str, int]:
+    if not isinstance(value, Mapping):
+        return {}
+    return {verdict: count for verdict in _VERDICTS if type(count := value.get(verdict)) is int and count >= 0}
+
+
+def _safe_integrity(value: object) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    projected: dict[str, Any] = {}
+    if type(value.get("ok")) is bool:
+        projected["ok"] = value["ok"]
+    if type(value.get("total")) is int and value["total"] >= 0:
+        projected["total"] = value["total"]
+    if type(value.get("first_bad_sequence")) is int and value["first_bad_sequence"] >= 0:
+        projected["first_bad_sequence"] = value["first_bad_sequence"]
+    return projected
+
+
+def _safe_week(value: object) -> dict[str, Any] | None:
+    if not isinstance(value, Mapping):
+        return None
+    week_key = value.get("week_key")
+    if not isinstance(week_key, str) or _WEEK_KEY_RE.fullmatch(week_key) is None:
+        return None
+    return {
+        "week_key": week_key,
+        "total_episodes": _nonnegative_int(value.get("total_episodes")),
+        "qualifying_episodes": _nonnegative_int(value.get("qualifying_episodes")),
+        "system_accept_episodes": _nonnegative_int(value.get("system_accept_episodes")),
+        "complete_burden_episodes": _nonnegative_int(value.get("complete_burden_episodes")),
+        "review_lt_saved_episodes": _nonnegative_int(value.get("review_lt_saved_episodes")),
+        "summed_review_seconds": _optional_nonnegative_number(value.get("summed_review_seconds")),
+        "summed_saved_seconds": _optional_nonnegative_number(value.get("summed_saved_seconds")),
+        "verdict_distribution": _safe_verdict_distribution(value.get("verdict_distribution")),
+        "system_evidence_count": _nonnegative_int(value.get("system_evidence_count")),
+        "user_evidence_count": _nonnegative_int(value.get("user_evidence_count")),
+        "unknown_evidence_count": _nonnegative_int(value.get("unknown_evidence_count")),
+        "gate_met": value.get("gate_met") is True,
     }
-    events = []
-    if CONSUMPTION_EVENTS.exists():
-        events = json.loads(CONSUMPTION_EVENTS.read_text())
-    events.append(event)
-    CONSUMPTION_EVENTS.parent.mkdir(parents=True, exist_ok=True)
-    CONSUMPTION_EVENTS.write_text(json.dumps(events, indent=2, ensure_ascii=False))
-    return {"ok": True, "event": event}
 
 
-def measure_consumed_journeys(hours: int = 168) -> dict:
-    """consumed_journeys_per_week (修正版: 仅统计真实消费事件).
+def _safe_gate_gaps(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    projected: list[str] = []
+    for item in value:
+        if item == "no episodes observed":
+            code = "no_episodes_observed"
+        elif item == "no weekly samples":
+            code = "no_weekly_samples"
+        elif item == _NO_QUALIFYING_GAP:
+            code = "no_qualifying_weeks"
+        elif isinstance(item, str) and _ONLY_QUALIFYING_RE.fullmatch(item):
+            code = "insufficient_qualifying_weeks"
+        elif isinstance(item, str) and _NON_CONSECUTIVE_RE.fullmatch(item):
+            code = "non_consecutive_qualifying_weeks"
+        elif isinstance(item, str) and _BELOW_THRESHOLD_RE.fullmatch(item):
+            code = "below_weekly_threshold"
+        else:
+            continue
+        if code not in projected:
+            projected.append(code)
+    return projected
 
-    Returns: {"total": N, "by_scene": {scene: N}, "by_action": {action: N}}
-    """
-    if not CONSUMPTION_EVENTS.exists():
-        return {"total": 0, "by_scene": {}, "by_action": {}}
-    events = json.loads(CONSUMPTION_EVENTS.read_text())
-    # 时间窗口过滤 (默认 168 小时 = 7 天)
-    import datetime as dt
-    now = dt.datetime.now(dt.timezone.utc)
-    cutoff = now - dt.timedelta(hours=hours)
-    cutoff_str = cutoff.strftime("%Y-%m-%dT%H:%M:%SZ")
-    recent = [e for e in events if e.get("timestamp", "") >= cutoff_str]
-    by_scene: dict[str, int] = {}
-    by_action: dict[str, int] = {}
-    for e in recent:
-        s = e.get("scene_id", "unknown")
-        a = e.get("action", "unknown")
-        by_scene[s] = by_scene.get(s, 0) + 1
-        by_action[a] = by_action.get(a, 0) + 1
-    return {"total": len(recent), "by_scene": by_scene, "by_action": by_action}
+
+def _unprovable(reason: str, *, observed_at: str | None = None) -> dict[str, Any]:
+    return {
+        "schema": SNAPSHOT_SCHEMA,
+        "status": "unprovable",
+        "reason": reason,
+        "observed_at": observed_at or _utc_now(),
+        "truth_axes": {
+            "engineering_delivery": "not_measured",
+            "operational_proof": "unprovable",
+            "personal_value": "unprovable",
+        },
+    }
+
+
+def record_consumption(
+    scene_id: str,
+    action: str,
+    consumer: str = "human",
+    metadata: dict | None = None,
+    journey_id: str | None = None,
+) -> dict[str, Any]:
+    """Reject the retired direct writer while preserving its call shape."""
+    del scene_id, action, consumer, metadata, journey_id
+    return {"ok": False, "reason": "direct_recording_retired_use_omo_broker"}
+
+
+def project_value_truth(
+    *,
+    principal_id: str,
+    observation: Mapping[str, Any],
+    source_facts: Mapping[str, Any],
+    source_ref: str,
+    observed_at: str,
+) -> dict[str, Any]:
+    """Create a privacy-safe, three-axis projection from verified facts."""
+    integrity = source_facts.get("integrity")
+    integrity_ok = isinstance(integrity, Mapping) and integrity.get("ok") is True
+    principal_ref = _digest({"principal_id": principal_id if isinstance(principal_id, str) else ""})
+    safe_source_ref = _safe_source_ref(source_ref)
+    safe_observed_at = _safe_observed_at(observed_at)
+    safe_integrity = _safe_integrity(integrity)
+    raw_tip_hash = source_facts.get("tip_hash")
+    safe_tip_hash = (
+        raw_tip_hash if isinstance(raw_tip_hash, str) and _TIP_HASH_RE.fullmatch(raw_tip_hash) is not None else ""
+    )
+
+    weekly_samples = observation.get("weekly_samples")
+    if not isinstance(weekly_samples, list):
+        weekly_samples = []
+    safe_weeks = [week for item in weekly_samples if (week := _safe_week(item)) is not None]
+    safe_weeks.sort(key=lambda item: str(item.get("week_key") or ""))
+    latest = safe_weeks[-1] if safe_weeks else {}
+
+    readiness = str(observation.get("readiness") or "not_ready")
+    if not integrity_ok:
+        status = "unprovable"
+        operational = "failed"
+        personal_value = "unprovable"
+    else:
+        operational = "proven"
+        personal_value = readiness if readiness in {"passed", "collecting", "not_ready"} else "unprovable"
+        status = "proven" if personal_value == "passed" else personal_value
+
+    metrics = {
+        "current_week": latest.get("week_key"),
+        "current_week_qualifying_outcomes": _nonnegative_int(latest.get("qualifying_episodes")),
+        "four_week_value_gate": personal_value,
+        "total_episodes": _nonnegative_int(observation.get("total_episodes")),
+        "verdict_distribution": _safe_verdict_distribution(observation.get("verdict_distribution")),
+        "system_evidence_count": _nonnegative_int(observation.get("system_evidence_count")),
+        "user_evidence_count": _nonnegative_int(observation.get("user_evidence_count")),
+        "unknown_evidence_count": _nonnegative_int(observation.get("unknown_evidence_count")),
+        "signal_to_verdict_latency_seconds": _optional_nonnegative_number(
+            observation.get("signal_to_verdict_latency_seconds")
+        ),
+        "weekly_samples": safe_weeks,
+        "gate_gaps": _safe_gate_gaps(observation.get("gate_gaps")),
+    }
+    digest_payload = {
+        "schema": SNAPSHOT_SCHEMA,
+        "principal_ref": principal_ref,
+        "source_ref": safe_source_ref,
+        "event_count": _nonnegative_int(source_facts.get("event_count")),
+        "tip_hash": safe_tip_hash,
+        "integrity": safe_integrity,
+        "metrics": metrics,
+    }
+    return {
+        "schema": SNAPSHOT_SCHEMA,
+        "status": status,
+        "observed_at": safe_observed_at,
+        "principal_ref": principal_ref,
+        "source": {
+            "kind": "omo_causal_event_ledger",
+            "ref": safe_source_ref,
+            "event_count": digest_payload["event_count"],
+            "tip_hash": digest_payload["tip_hash"],
+            "integrity": digest_payload["integrity"],
+            "query_digest": _digest(digest_payload),
+        },
+        "truth_axes": {
+            "engineering_delivery": "not_measured",
+            "operational_proof": operational,
+            "personal_value": personal_value,
+        },
+        "metrics": metrics,
+    }
+
+
+def _observe_personal_value(db_path: Path, principal_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Use OMO's existing broker and personal-value projector."""
+    omo_src = ROOT / "projects" / "omo" / "src"
+    ecos_src = ROOT / "projects" / "ecos" / "src"
+    for path in (str(ecos_src), str(omo_src)):
+        if path not in sys.path:
+            sys.path.insert(0, path)
+
+    from omo.event_ledger.broker import LedgerBroker
+    from omo.personal_episode import PersonalEpisodeService
+
+    source_paths = (db_path, Path(str(db_path) + "-wal"), Path(str(db_path) + "-shm"))
+    first_read = {path.name: path.read_bytes() for path in source_paths if path.is_file()}
+    if db_path.name not in first_read:
+        raise RuntimeError("event_ledger_missing")
+
+    with tempfile.TemporaryDirectory(prefix="north-star-ledger-") as temp_dir:
+        snapshot_path = Path(temp_dir) / db_path.name
+        snapshot_path.write_bytes(first_read[db_path.name])
+        wal_name = db_path.name + "-wal"
+        if wal_name in first_read:
+            Path(str(snapshot_path) + "-wal").write_bytes(first_read[wal_name])
+
+        second_read = {path.name: path.read_bytes() for path in source_paths if path.is_file()}
+        if second_read != first_read:
+            raise RuntimeError("ledger_changed_during_snapshot")
+
+        with LedgerBroker.connect(snapshot_path) as broker:
+            before = broker.read()
+            integrity = broker.verify_chain()
+            observation = PersonalEpisodeService(broker).observe_principal(principal_id).to_dict()
+            after = broker.read()
+    before_identity = [(row.get("sequence"), row.get("event_hash")) for row in before]
+    after_identity = [(row.get("sequence"), row.get("event_hash")) for row in after]
+    if before_identity != after_identity:
+        raise RuntimeError("ledger_changed_during_observation")
+    return observation, {
+        "event_count": len(after),
+        "tip_hash": str(after[-1].get("event_hash") or "") if after else "",
+        "integrity": integrity,
+    }
+
+
+def measure_value_truth(
+    *,
+    db_path: Path | str = DEFAULT_LEDGER,
+    principal_id: str,
+    observed_at: str | None = None,
+) -> dict[str, Any]:
+    """Read and project one principal's value truth without writing state."""
+    observed = observed_at or _utc_now()
+    principal = str(principal_id or "").strip()
+    if not principal:
+        return _unprovable("principal_id_required", observed_at=observed)
+    path = Path(db_path)
+    if not path.is_file():
+        return _unprovable("event_ledger_missing", observed_at=observed)
+    try:
+        observation, source_facts = _observe_personal_value(path, principal)
+    except ModuleNotFoundError:
+        return _unprovable("observer_unavailable", observed_at=observed)
+    except Exception as exc:  # Fail closed; do not expose paths or raw payloads.
+        reason = str(exc) if str(exc) == "ledger_changed_during_observation" else "ledger_observation_failed"
+        return _unprovable(reason, observed_at=observed)
+    return project_value_truth(
+        principal_id=principal,
+        observation=observation,
+        source_facts=source_facts,
+        source_ref=_source_ref(path),
+        observed_at=observed,
+    )
+
+
+def measure_consumed_journeys(hours: int = 168) -> dict[str, Any]:
+    """Compatibility projection; direct legacy state is no longer consumed."""
+    del hours
+    return {"total": 0, "by_scene": {}, "by_action": {}, "status": "unprovable"}
 
 
 def measure_completion_rate() -> float:
-    """journey_completion_rate (修正版: 用 journey_id 追踪).
-
-    公式: approved_journeys / (approved_journeys + rejected_journeys)
-    不计算 edited/opened (它们是中间状态).
-    """
-    if not CONSUMPTION_EVENTS.exists():
-        return 0.0
-    events = json.loads(CONSUMPTION_EVENTS.read_text())
-    if not events:
-        return 0.0
-    # 收集每个 journey_id 的最终状态
-    journey_state: dict[str, str] = {}
-    for e in events:
-        jid = e.get("journey_id", "")
-        action = e.get("action", "")
-        if not jid:
-            continue
-        # approved/rejected 是终止态, opened/edited 是中间态
-        if action == "approved":
-            journey_state[jid] = "approved"
-        elif action in {"rejected", "needs_revision"}:
-            # 已被 approved 的不会被 rejected 覆盖
-            if journey_state.get(jid) != "approved":
-                journey_state[jid] = "rejected"
-        elif action == "opened" and jid not in journey_state:
-            journey_state[jid] = "opened"
-    approved_n = sum(1 for s in journey_state.values() if s == "approved")
-    rejected_n = sum(1 for s in journey_state.values() if s == "rejected")
-    total_closed = approved_n + rejected_n
-    if total_closed == 0:
-        return 0.0
-    return round(approved_n / total_closed, 4)
+    """Compatibility projection; use ``measure_value_truth`` for the gate."""
+    return 0.0
 
 
-def weekly_report() -> dict:
-    """生成修正版双指标周报."""
-    consumed = measure_consumed_journeys()
-    completion = measure_completion_rate()
-    consumed_total = consumed["total"]
-    pass_w1 = consumed_total >= CONSUMED_TARGET_W1 and completion >= COMPLETION_TARGET_W1
-    pass_w2 = consumed_total >= CONSUMED_TARGET_W2 and completion >= COMPLETION_TARGET_W2
-    return {
-        "report_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "version": "v2 (修正版)",
-        "metrics": {
-            "consumed_journeys_per_week": {
-                "value": consumed_total,
-                "by_scene": consumed["by_scene"],
-                "by_action": consumed["by_action"],
-                "target_w1": CONSUMED_TARGET_W1,
-                "target_w2": CONSUMED_TARGET_W2,
-                "pass_w1": consumed_total >= CONSUMED_TARGET_W1,
-                "pass_w2": consumed_total >= CONSUMED_TARGET_W2,
-                "note": "仅统计真实消费事件, 排除 shadow_runner 自我评估",
-            },
-            "journey_completion_rate": {
-                "value": completion,
-                "target_w1": COMPLETION_TARGET_W1,
-                "target_w2": COMPLETION_TARGET_W2,
-                "pass_w1": completion >= COMPLETION_TARGET_W1,
-                "pass_w2": completion >= COMPLETION_TARGET_W2,
-            },
-        },
-        "overall_pass_w1": pass_w1,
-        "overall_pass_w2": pass_w2,
-    }
+def weekly_report(
+    *, db_path: Path | str = DEFAULT_LEDGER, principal_id: str = "", observed_at: str | None = None
+) -> dict[str, Any]:
+    return measure_value_truth(db_path=db_path, principal_id=principal_id, observed_at=observed_at)
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true")
-    parser.add_argument("--record", action="store_true", help="记录消费事件 (需 --scene --action)")
-    parser.add_argument("--scene", help="场景 ID")
-    parser.add_argument("--action", help="消费动作 (opened/edited/submitted/referenced/approved)")
+    parser.add_argument("--record", action="store_true", help="retired; always fails closed")
+    parser.add_argument("--scene")
+    parser.add_argument("--action")
     parser.add_argument("--consumer", default="human")
-    parser.add_argument("--journey-id", help="journey 唯一 ID (用于 completion 追踪)")
+    parser.add_argument("--journey-id")
+    parser.add_argument("--principal-id", default=os.environ.get("OMO_PRINCIPAL_ID", ""))
+    parser.add_argument("--db-path", type=Path, default=DEFAULT_LEDGER)
+    parser.add_argument("--observed-at")
     args = parser.parse_args()
+
     if args.record:
-        if not args.scene or not args.action:
-            print("--record requires --scene and --action")
-            return 1
-        result = record_consumption(args.scene, args.action, args.consumer)
-        print(json.dumps(result, indent=2, ensure_ascii=False))
-        return 0 if result.get("ok") else 1
-    report = weekly_report()
+        result = record_consumption(args.scene or "", args.action or "", args.consumer, journey_id=args.journey_id)
+        print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+        return 2
+
+    if (
+        sys.version_info < (3, 11)
+        and args.principal_id
+        and args.db_path.is_file()
+        and os.environ.get("NORTH_STAR_OMO_RUNTIME") != "1"
+    ):
+        command = [
+            "uv",
+            "run",
+            "--project",
+            str(ROOT / "projects" / "omo"),
+            "--frozen",
+            "python",
+            str(Path(__file__).resolve()),
+            *sys.argv[1:],
+        ]
+        env = {**os.environ, "NORTH_STAR_OMO_RUNTIME": "1", "PYTHONDONTWRITEBYTECODE": "1"}
+        try:
+            completed = subprocess.run(command, check=False, capture_output=True, text=True, env=env)
+        except (OSError, subprocess.SubprocessError):
+            completed = None
+        if completed is None:
+            report = _unprovable("observer_runtime_unavailable", observed_at=args.observed_at)
+            print(json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True))
+            return 2
+        sys.stdout.write(completed.stdout)
+        sys.stderr.write(completed.stderr)
+        return completed.returncode
+
+    report = weekly_report(db_path=args.db_path, principal_id=args.principal_id, observed_at=args.observed_at)
     if args.json:
-        print(json.dumps(report, indent=2, ensure_ascii=False))
+        print(json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True))
     else:
-        m = report["metrics"]
-        print(f"=== BCOS 北极星 (v2 修正版) ===")
-        print(f"consumed_journeys_per_week: {m['consumed_journeys_per_week']['value']} (W1≥{CONSUMED_TARGET_W1}, W2≥{CONSUMED_TARGET_W2})")
-        print(f"  按场景: {m['consumed_journeys_per_week']['by_scene']}")
-        print(f"  按动作: {m['consumed_journeys_per_week']['by_action']}")
-        print(f"journey_completion_rate: {m['journey_completion_rate']['value']:.2%} (W1≥{COMPLETION_TARGET_W1:.0%}, W2≥{COMPLETION_TARGET_W2:.0%})")
-        print(f"\n{W1_result}: {'✅' if report['overall_pass_w1'] else '❌'}  W2: {'✅' if report['overall_pass_w2'] else '⏳'}")
+        axes = report["truth_axes"]
+        print("=== Personal Value Truth ===")
+        print(f"status: {report['status']}")
+        print(f"operational_proof: {axes['operational_proof']}")
+        print(f"personal_value: {axes['personal_value']}")
+        if report.get("reason"):
+            print(f"reason: {report['reason']}")
+    return 2 if report["status"] == "unprovable" else 0
+
 
 if __name__ == "__main__":
-    W1_result = "W1 验收"
-    sys.exit(main())
+    raise SystemExit(main())
