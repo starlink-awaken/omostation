@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 119
+  total_bets: 120
   windows:
   - Y1Q1
   - Y1Q2
@@ -4187,7 +4187,7 @@ bets:
   title: 中试 / 政策申报升 assisted
   appetite: 4 weeks
   priority: P1
-  status: done
+  status: blocked
   blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 政策申报相关工作冻结'
   goal: 把最有业务价值但流程最长的场景推进到受审执行
   non_goals:
@@ -4212,12 +4212,14 @@ bets:
   human_gate: true
   circuit_breaker: 未达标 → 保持 shadow
   retro: required
-  completed_at: '2026-08-20'
+  blocked_at: '2026-08-20'
   note: 借调结束，国转中心政策申报与公文场景正式冻结并归档至历史参考案例库
   progress:
-    done_when_met:
-    - 场景冻结归档完成
-    pending_when: []
+    done_when_met: []
+    pending_when:
+    - calibration >= 0.6 未执行
+    - lifecycle=assisted 未执行
+    - 真实申报使用系统产出未发生
 - id: BET-Y3H1-T5-01
   track: T5-ORCH
   window: Y3H1
@@ -4287,7 +4289,7 @@ bets:
   title: 公文场景 routine (限格式类)
   appetite: 3 weeks
   priority: P0
-  status: done
+  status: blocked
   blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 公文场景相关工作冻结'
   goal: 三年内第一个进入全自动的动作类型 — 且只限格式类
   non_goals:
@@ -4313,12 +4315,14 @@ bets:
   human_gate: true
   circuit_breaker: 任一 override → 立即回 L2
   retro: required
-  completed_at: '2026-08-20'
+  blocked_at: '2026-08-20'
   note: 借调结束，国转中心政策申报与公文场景正式冻结并归档至历史参考案例库
   progress:
-    done_when_met:
-    - 场景冻结归档完成
-    pending_when: []
+    done_when_met: []
+    pending_when:
+    - calibration >= 0.85 且连续 100 次未执行
+    - lifecycle=routine 未执行
+    - 预算与白名单动作未形成真实运行证据
 - id: BET-Y3H2-T4-01
   track: T4-OUTCOME
   window: Y3H2
@@ -5801,3 +5805,119 @@ bets:
   circuit_breaker: 下游读取 runtime 投影失败或 gac 红 → 回滚并改为在 SSOT 中保留静态 schema、计数迁独立运行时文件
   retro: .omo/_knowledge/retros/BET-Y1Q3-T6-12.md
   completed_at: '2026-08-20'
+- id: BET-Y1Q3-T4-01
+  track: T4-OUTCOME
+  window: Y1Q3
+  title: 真实个人价值证据脊柱与战略事实重基线
+  appetite: 2 weeks
+  priority: P0
+  status: candidate
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-20-value-proof-truth-rebaseline-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:554cd762568f87a4f4d509f3427125e5297d5c707c5fcdec739ab1c2e47763d1
+    decision_ref: decision://accepted/BET-Y1Q3-T4-01
+  goal: >-
+    把现有大量工程能力收敛成一条可证伪的个人价值主链：真实低敏信号进入后，
+    只产生 never-send 候选，由本人裁决并记录修订差异；所有工程完成、运行完成和
+    价值完成分别取证，只有直接 Outcome 与 Human Adjudication 能推进价值状态。
+  non_goals:
+  - 不新增顶级项目、第二 BET 台账、第二工作流引擎或第二运行真相
+  - 不在本 BET 接 A2A、远程 ACP、多租户、家庭蜂群、新场景或新 Dashboard
+  - 不以 PR 数、测试数、Token、mtime、Agent 数、health 分或自报 completed 代替价值
+  - 不自动外发、不提高自治等级、不绕过人工审批或独立验证
+  - 不为兼容错误编码继续维护两套 Spec、Capability 或 Workflow 权威
+  evidence:
+    E1_engineering_green_value_zero:
+      description: 台账 119 个 BET 全部 done，但当前 NorthStar 直接读取为 0 条有效旅程、0% 完成率
+      classification: direct_runtime_counterexample
+    E2_outcome_truth_missing:
+      description: MOS 有大量 calibration 记录但 decision_outcomes 为 0，工程事件不能证明个人采纳
+      classification: direct_runtime_counterexample
+    E3_surface_growth:
+      description: tracked 口径 src 较 2026-08 基线增长约 8%，bin 脚本增长约 66%，继续横向扩容会加剧不可持有性
+      command: uv run --with pyyaml python bin/plan/bet-ledger.py surface
+    E4_contract_not_default:
+      description: WorkPacket/VerificationReceipt 已存在，但通用 workflow、跨仓 changeset、capability load 与 Codex transport 尚未共用同一默认身份链
+      classification: declaration_execution_gap
+    E5_control_plane_recovered:
+      description: 2026-08-20 已通过 broker close 5 个无活进程的 stale runs，prune 后 active_runs=0、lock_count=0、compliance=continue
+      classification: direct_control_plane_evidence
+  done_when:
+  - "AC-01: 工程完成、运行完成、价值完成三轴被显式建模；任何单轴为绿不得推导整体 done"
+  - "AC-02: Spec Binding 统一为 repo:// + semver + sha256: + accepted decision，并在 start 前 fail-closed；历史项只允许显式 grandfather"
+  - "AC-03: 通用 BET start/claim/dispatch 绑定同一 WorkPacket hash，claim scope 与 packet scope 不一致时拒绝"
+  - "AC-04: cross-repo changeset 覆盖根仓普通文件与子仓 gitlink；越权、不可达、未合并或不匹配均非零退出"
+  - "AC-05: capability 只有一个生成权威；find 返回精确 ID，load 经过 admission、原生适配器和脱敏 receipt，歧义不得 first-match 执行"
+  - "AC-06: Codex 自动 transport 的声明与真实默认一致；ACP 未经真实 canary 前保持 not_proven，Orca 仅人工 break-glass"
+  - "AC-07: NorthStar 只从带 principal/provenance 的 OutcomeFeedback 与 Human Adjudication 派生，拒绝 self-assert、代理量和负样本漏算"
+  - "AC-08: 至少一条真实低敏输入完成 SignalReceipt → never-send candidate → human verdict → RevisionReceipt/OutcomeFeedback；不得持久化正文、绝对路径或凭证"
+  - "AC-09: 硬编码价值/成本/复利报告被删除、归档或明确降级为非权威诊断，所有未知量显示 unknown/not_connected"
+  - "AC-10: 蓝图、三年规划、SYSTEM-INDEX 与交接文档使用 EXISTS/PARTIAL/NOT_PROVEN/DEFERRED 状态，并与当前调用链和运行证据一致"
+  - "AC-11: targeted tests、跨仓负例、agent-workflow verify、GAC、SSOT、reachability、独立 reviewer 与真实 canary receipt 全部通过"
+  - "AC-12: 运行投影标签可直接重放；过期 active claim 与 live claim 分区，BDSK 模型路由标签与实际 BOS/AetherForge 调用一致"
+  progress:
+    completed:
+    - 共享控制面 stale run/lock 已收口，compliance 恢复 continue
+    - 已创建并验证独立 clone blueprint-value-rebaseline，required integration health 全绿
+    - 已完成架构、Spec/协作、运行价值三路独立只读审计
+    pending:
+    - 规范接受与 WorkPacket 编译
+    - Phase 0 truth reset 实现
+    - Phase 1 首条真实价值样本与独立验证
+    - 文档同步、PR、CI、合并与安全清理
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: 0 error
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_spec_binding_lint.py tests/test_agent_workflow.py -q
+    expect: canonical binding 与 start/claim 负例全绿
+  - cmd: uv run --with pyyaml --with pytest python -m pytest bin/gac/test_agent_clone.py tests/gac/test_clone_lifecycle.py -q
+    expect: root changeset、scope、reachability 与 retire fail-closed 全绿
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/bc_os tests/unit/gac -q
+    expect: value truth 与 capability receipt 负例全绿
+  - cmd: cd projects/omo && uv run pytest tests/test_orchestration_contract.py tests/test_blueprint_control.py -q
+    expect: packet、candidate、independent verify 与 compensation 全绿
+  - cmd: uv run --with pyyaml python bin/agent-workflow.py compliance --json
+    expect: decision=continue, stale_locks=0, closed_ok_without_evidence=0
+  - cmd: make gac-local-gate
+    expect: 全绿 PASS
+  workflow: bet-execution
+  underlying_workflow: cognitive-governance-delivery
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-20-value-proof-truth-rebaseline-design.md
+  - docs/reports/2026-08-20-blueprint-strategy-retrospective.md
+  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+  - docs/architecture/blueprint-multi-agent-execution-control-v1.md
+  - docs/architecture/digital-twin-blueprint-v1.md
+  - docs/SYSTEM-INDEX.md
+  - bin/plan/bet-ledger.py
+  - bin/agent-workflow.py
+  - bin/gac/affected-graph.py
+  - bin/gac/agent-clone.py
+  - bin/gac/clone-lifecycle.py
+  - bin/capability-sync.py
+  - bin/cockpit/gen-capability-registry.py
+  - bin/bc-os/north_star_meter_v2.py
+  - bin/gac/compound-attribution-report.py
+  - bin/gac/bdsk-shadow-sandbox.py
+  - projects/cockpit/src/cockpit/commands/bdsk_engine.py
+  - tests/**
+  - .omo/_truth/registry/workers.yaml
+  - projects/omo
+  - projects/cockpit
+  - projects/ecos
+  pasw_required: false
+  depends_on: []
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: >-
+    需要新 DB/规划系统/协议权威、需要自动外发或 L2+ 自动批准、无法证明真实人类裁决、
+    任何迁移不能回放/补偿、或两周内仍只能用 fixture/代理量时，停止扩面；保留旧链只读，
+    将状态标为 blocked/not_proven，不得把 BET 置 done。
+  subtraction:
+  - 退役一个重复 Capability registry writer
+  - 退役或降级硬编码 compound attribution 权威报告
+  - 把平面 agent-workflows.yaml 收敛为生成兼容视图或退役
+  - ACP 切换成立后移除 Codex 自动 cli_prompt 默认；未成立则删除提前完成声明
+  retro: required
