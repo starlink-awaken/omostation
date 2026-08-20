@@ -2209,12 +2209,16 @@ source = { editable = "." }
 [package.dev-dependencies]
 dev = [
     { name = "mypy" },
+    { name = "pytest" },
 ]
 
 [package.metadata]
 
 [package.metadata.requires-dev]
-dev = [{ name = "mypy", specifier = ">=2.1.0" }]
+dev = [
+    { name = "mypy", specifier = ">=2.1.0" },
+    { name = "pytest", specifier = ">=8.0.0" },
+]
 
 [[package]]
 name = "kairon-observability"
