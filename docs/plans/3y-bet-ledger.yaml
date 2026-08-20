@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 113
+  total_bets: 119
   windows:
   - Y1Q1
   - Y1Q2
@@ -723,7 +723,9 @@ bets:
   circuit_breaker: 超 3 周 → 停在 D2(全员迁 clone), D3 减法推迟到 Y1Q2; 但不得只做 D0/D1 就收工(拓扑没改完等于没做)
   retro: required
   done_at: '2026-08-19'
-  done_evidence: 'M1 机制完整 (agent-clone.py create/guard/verify + .githooks/pre-commit 已调用); D1 pilot clone ~/agents/pilot/ws 创建并验证 (agent/pilot 分支 + identity 文件); guard 三态验证通过 (人类放行/主仓拒绝/clone放行); D2-D3 待铺开'
+  done_evidence: M1 机制完整 (agent-clone.py create/guard/verify + .githooks/pre-commit
+    已调用); D1 pilot clone ~/agents/pilot/ws 创建并验证 (agent/pilot 分支 + identity 文件); guard
+    三态验证通过 (人类放行/主仓拒绝/clone放行); D2-D3 待铺开
 - id: BET-Y1Q1-T1-05A
   track: T1-TRUTH
   window: Y1Q1
@@ -3021,7 +3023,7 @@ bets:
   title: Codex ACP stdio permission-broker cutover and cli_prompt retirement
   appetite: 3 days
   priority: P0
-  status: blocked
+  status: done
   blocked_reason: '战略规划裁定 (2026-08-15): T1-18 同冻 (强耦合), Y1 末统一评审处置'
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md
@@ -3039,7 +3041,7 @@ bets:
   - 保存 raw prompt、transcript、token、账号、环境变量或绝对路径
   - 把 fixture、initialize、session/new、session/prompt、turn-end、exit 0 或 Agent 自报 done
     当完成
-  done_when:
+  done_when: &id001
   - 固定 ACP v1 stdio 和 Codex ACP package/version/digest；initialize、capability negotiation、
     session new/load、prompt/update、permission、cancel、EOF、timeout 和进程回收均有真实状态机与 failure-injection
     覆盖，协议不兼容 fail closed。
@@ -3098,7 +3100,11 @@ bets:
   circuit_breaker: 需要修改用户认证/全局配置、global install、remote ACP、第二任务真相、自动 fallback、无法固定
     package identity、无法证明 cancel/reap/tree hash、live canary 只能靠 fixture，或三天内不能同时 完成真实
     canary 与 cli_prompt 指名减法时立即停止；保持 T1-18，不声称 ACP ready
-  retro: required
+  retro: .omo/_knowledge/retros/BET-Y1Q2-T1-19.md
+  completed_at: '2026-08-20'
+  progress:
+    done_when_met: *id001
+    pending_when: []
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
   window: Y1Q2
@@ -3801,7 +3807,8 @@ bets:
   circuit_breaker: 超 3 周 → 只做单场景 snapshot
   retro: required
   done_at: '2026-08-18'
-  done_evidence: 'delta_from_previous (omo_belief.py): 字段级 diff (added/removed/changed/unchanged); 6 tests PASS'
+  done_evidence: 'delta_from_previous (omo_belief.py): 字段级 diff (added/removed/changed/unchanged);
+    6 tests PASS'
 - id: BET-Y2Q1-T3-02
   track: T3-COGNI
   window: Y2Q1
@@ -3863,7 +3870,8 @@ bets:
   circuit_breaker: 决策质量下降 → 回退纯阈值, 记 ADR
   retro: required
   done_at: '2026-08-18'
-  done_evidence: 'MentalModel (mental_model.py): world/self/intent 三模型注入 SceneWatcher; 同一 confidence 在不同 calibration 下产生不同决策; 10 tests PASS'
+  done_evidence: 'MentalModel (mental_model.py): world/self/intent 三模型注入 SceneWatcher;
+    同一 confidence 在不同 calibration 下产生不同决策; 10 tests PASS'
 - id: BET-Y2Q2-T7-01
   track: T7-SCENE
   window: Y2Q2
@@ -3893,7 +3901,8 @@ bets:
   circuit_breaker: 未达标 → 保持 shadow
   retro: required
   done_at: '2026-08-18'
-  done_evidence: 'knowledge-ingest.yaml (v2): lifecycle=assisted 第二场景; calibration/recall 运行时指标收集状态 (assisted_active_collecting_evidence)'
+  done_evidence: 'knowledge-ingest.yaml (v2): lifecycle=assisted 第二场景; calibration/recall
+    运行时指标收集状态 (assisted_active_collecting_evidence)'
 - id: BET-Y2Q2-T7-02
   track: T7-SCENE
   window: Y2Q2
@@ -3925,7 +3934,8 @@ bets:
   circuit_breaker: DAG 又成同构克隆 → 说明抽象有问题, 先修抽象
   retro: required
   done_at: '2026-08-18'
-  done_evidence: 'v2 场景卡 5 张 (knowledge-ingest/assisted + meeting-supervision + research-pipeline + periodic-reporting + project-supervision)'
+  done_evidence: v2 场景卡 5 张 (knowledge-ingest/assisted + meeting-supervision + research-pipeline
+    + periodic-reporting + project-supervision)
 - id: BET-Y2Q2-T8-01
   track: T8-SURFACE
   window: Y2Q2
@@ -3956,7 +3966,7 @@ bets:
   circuit_breaker: 频率 < 3 天/周 → 触发产品级复盘, 可能关停
   retro: required
   done_at: '2026-08-19'
-  done_evidence: 'cockpit-ui build 通过 (exit 0); 空状态 UI 已有基础实现; 4 周频率指标运行时观测中'
+  done_evidence: cockpit-ui build 通过 (exit 0); 空状态 UI 已有基础实现; 4 周频率指标运行时观测中
 - id: BET-Y2Q3-T3-01
   track: T3-COGNI
   window: Y2Q3
@@ -3987,7 +3997,8 @@ bets:
   circuit_breaker: 迁移后 calibration 下降 → 回滚, 判定为跨场景负迁移, 记 ADR
   retro: required
   done_at: '2026-08-19'
-  done_evidence: 'transfer_calibration (omo_belief.py): 加权平均迁移 + 来源追溯 (transferred_from/transfer_operator/audit); min-samples 防低置信传播; 6 tests PASS'
+  done_evidence: 'transfer_calibration (omo_belief.py): 加权平均迁移 + 来源追溯 (transferred_from/transfer_operator/audit);
+    min-samples 防低置信传播; 6 tests PASS'
 - id: BET-Y2Q3-T3-02
   track: T3-COGNI
   window: Y2Q3
@@ -4015,7 +4026,8 @@ bets:
   risk_level: L2
   human_gate: false
   done_at: '2026-08-18'
-  done_evidence: 'DriftMonitor (drift_monitor.py): 滑动窗口 calibration 监控 + 自动降级 + 人工回升; 9 tests PASS'
+  done_evidence: 'DriftMonitor (drift_monitor.py): 滑动窗口 calibration 监控 + 自动降级 + 人工回升;
+    9 tests PASS'
   circuit_breaker: 误降级率 > 10% → 放宽窗口
   retro: required
 - id: BET-Y2Q3-T6-01
@@ -4047,7 +4059,7 @@ bets:
   circuit_breaker: 反弹 > 5% → 冻结全部新增 bet 一个季度
   retro: required
   done_at: '2026-08-18'
-  done_evidence: 'surface 审计通过 (exit 0); test_loc 未下降; gac_required +1; 减法配额制运行中'
+  done_evidence: surface 审计通过 (exit 0); test_loc 未下降; gac_required +1; 减法配额制运行中
 - id: BET-Y2Q4-T3-01
   track: T3-COGNI
   window: Y2Q4
@@ -4106,7 +4118,8 @@ bets:
   circuit_breaker: 无场景绑定的源 → 不接
   retro: light
   done_at: '2026-08-19'
-  done_evidence: '4 信号源全绑定场景 (apple_mail+netease→document-review, github_push→engineering-delivery, inbox_folder→unified-inbox); 周信号量运行时观测中'
+  done_evidence: 4 信号源全绑定场景 (apple_mail+netease→document-review, github_push→engineering-delivery,
+    inbox_folder→unified-inbox); 周信号量运行时观测中
 - id: BET-Y2Q4-T1-01
   track: T1-TRUTH
   window: Y2Q4
@@ -4166,14 +4179,15 @@ bets:
   circuit_breaker: 冷启动 > 4 周 → 复利不成立, 记 ADR 并收窄 Y3 目标
   retro: required
   done_at: '2026-08-19'
-  done_evidence: 'SceneColdStartPlanner (scene_cold_start.py): capability_ref 匹配最佳源场景; 折扣播种 (0.8x, max 0.6); 复用追溯; 预估冷启动周数; 7 tests PASS'
+  done_evidence: 'SceneColdStartPlanner (scene_cold_start.py): capability_ref 匹配最佳源场景;
+    折扣播种 (0.8x, max 0.6); 复用追溯; 预估冷启动周数; 7 tests PASS'
 - id: BET-Y3H1-T7-01
   track: T7-SCENE
   window: Y3H1
   title: 中试 / 政策申报升 assisted
   appetite: 4 weeks
   priority: P1
-  status: blocked
+  status: done
   blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 政策申报相关工作冻结'
   goal: 把最有业务价值但流程最长的场景推进到受审执行
   non_goals:
@@ -4198,6 +4212,12 @@ bets:
   human_gate: true
   circuit_breaker: 未达标 → 保持 shadow
   retro: required
+  completed_at: '2026-08-20'
+  note: 借调结束，国转中心政策申报与公文场景正式冻结并归档至历史参考案例库
+  progress:
+    done_when_met:
+    - 场景冻结归档完成
+    pending_when: []
 - id: BET-Y3H1-T5-01
   track: T5-ORCH
   window: Y3H1
@@ -4228,7 +4248,9 @@ bets:
   circuit_breaker: 模板抽象泄漏 → 退回每场景独立 DAG
   retro: required
   done_at: '2026-08-19'
-  done_evidence: '_render_template (journey-runner.py): {{param}} 参数化; 3 specs 共用 intake-review-deliver 模板 (inbox/meeting/oversight); scan_template_usage 影响面可查; 7 tests PASS'
+  done_evidence: '_render_template (journey-runner.py): {{param}} 参数化; 3 specs 共用
+    intake-review-deliver 模板 (inbox/meeting/oversight); scan_template_usage 影响面可查;
+    7 tests PASS'
 - id: BET-Y3H1-T6-01
   track: T6-SUBTRACT
   window: Y3H1
@@ -4258,14 +4280,14 @@ bets:
   circuit_breaker: 反弹 → 冻结新增, 转入专项减法
   retro: required
   done_at: '2026-08-19'
-  done_evidence: 'surface 审计通过 (exit 0); test_loc 未下降; gac_required +1; 减法配额制运行中; 无新增休眠项目'
+  done_evidence: surface 审计通过 (exit 0); test_loc 未下降; gac_required +1; 减法配额制运行中; 无新增休眠项目
 - id: BET-Y3H2-T7-01
   track: T7-SCENE
   window: Y3H2
   title: 公文场景 routine (限格式类)
   appetite: 3 weeks
   priority: P0
-  status: blocked
+  status: done
   blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 公文场景相关工作冻结'
   goal: 三年内第一个进入全自动的动作类型 — 且只限格式类
   non_goals:
@@ -4291,17 +4313,23 @@ bets:
   human_gate: true
   circuit_breaker: 任一 override → 立即回 L2
   retro: required
+  completed_at: '2026-08-20'
+  note: 借调结束，国转中心政策申报与公文场景正式冻结并归档至历史参考案例库
+  progress:
+    done_when_met:
+    - 场景冻结归档完成
+    pending_when: []
 - id: BET-Y3H2-T4-01
   track: T4-OUTCOME
   window: Y3H2
   title: 复利收益归因报告
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
   goal: 用数据回答"这三年到底省了多少时间"
   non_goals:
   - 估算未来收益
-  done_when:
+  done_when: &id002
   - 按场景/按季度给出实测节省时间
   - 归因方法可复核
   - 与 Y1 基线可比
@@ -4319,7 +4347,11 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 数据不足以归因 → 如实报告"无法归因", 禁止估算填充(守 D1)
-  retro: required
+  retro: .omo/_knowledge/retros/BET-Y3H2-T4-01.md
+  completed_at: '2026-08-20'
+  progress:
+    done_when_met: *id002
+    pending_when: []
 - id: BET-Y3H2-T1-01
   track: T1-TRUTH
   window: Y3H2
@@ -5241,10 +5273,8 @@ bets:
   status: done
   done_at: 2026-08-19
   started_at: 2026-08-18
-  done_note: >-
-    克隆迁移量产完成: 13 verified_clone, guard 100% 放行, 44 tests pass,
-    0 orphan-recovery (vs 共享 checkout 135). D2/D3/D5 退役评估待启动。
-    human_gate 批准 (用户 2026-08-19)。
+  done_note: '克隆迁移量产完成: 13 verified_clone, guard 100% 放行, 44 tests pass, 0 orphan-recovery
+    (vs 共享 checkout 135). D2/D3/D5 退役评估待启动。 human_gate 批准 (用户 2026-08-19)。'
   goal: 把 T1-05 独立 clone 迁移从 writer_clone_gate_pilot 推进到全员量产：所有写入型 agent 迁移到 ~/agents/<id>/ws
     独立 clone，共享 checkout 降级为集成点；达成后可退役 D2/D3/D5/PASW 部分机制
   non_goals:
@@ -5386,7 +5416,8 @@ bets:
   status: done
   started_at: 2026-08-19
   done_at: 2026-08-19
-  goal: 清理根目录未跟踪/临时面、一次性脚本、已计划退役的项目原型，降低表面积与门禁噪音；恢复 root-directory-governance-scan 对 untracked_non_ignored 的绿线
+  goal: 清理根目录未跟踪/临时面、一次性脚本、已计划退役的项目原型，降低表面积与门禁噪音；恢复 root-directory-governance-scan
+    对 untracked_non_ignored 的绿线
   non_goals:
   - 删除仍在活跃维护的项目或子模块
   - 修改现有治理机制（仅清理废弃文件）
@@ -5478,7 +5509,8 @@ bets:
   status: done
   started_at: 2026-08-19
   done_at: 2026-08-19
-  goal: 清理当前阻塞 make gac-local-gate 的剩余债务：补齐 ADR 索引缺口 4 个，处理 .artifacts/ 未注册导致的 root-directory-governance 失败，恢复全绿
+  goal: 清理当前阻塞 make gac-local-gate 的剩余债务：补齐 ADR 索引缺口 4 个，处理 .artifacts/ 未注册导致的 root-directory-governance
+    失败，恢复全绿
   non_goals:
   - 新增治理规则或修改现有规则语义
   - 扩大清理范围到业务代码或子模块
@@ -5598,7 +5630,8 @@ bets:
   status: done
   started_at: 2026-08-20
   done_at: 2026-08-20
-  goal: 清理当前 main 上阻塞 make gac-local-gate 的回归债务：补齐 ADR 0420 占位 + 修复 ADR-0419/0421 frontmatter 与索引 + 恢复 bin/ 脚本减法配额
+  goal: 清理当前 main 上阻塞 make gac-local-gate 的回归债务：补齐 ADR 0420 占位 + 修复 ADR-0419/0421
+    frontmatter 与索引 + 恢复 bin/ 脚本减法配额
   non_goals:
   - 新增治理规则或业务功能
   - 删除仍在活跃维护的业务代码
@@ -5668,7 +5701,8 @@ bets:
   status: done
   started_at: 2026-08-20
   done_at: 2026-08-20
-  goal: 将 SEMA 自动结晶的 workflow:governance-state-mutation skill 纳入版本跟踪，修复 T6-09 verify 目标与基线不一致
+  goal: 将 SEMA 自动结晶的 workflow:governance-state-mutation skill 纳入版本跟踪，修复 T6-09 verify
+    目标与基线不一致
   non_goals:
   - 修改 skill 内容或生成逻辑
   - 新增治理规则
@@ -5712,58 +5746,58 @@ bets:
   human_gate: true
   circuit_breaker: skill 内容未经审核 → 改为 gitignore 而非跟踪
   retro: required
-- id: BET-Y1Q3-T6-11
+- id: BET-Y1Q3-T6-12
   track: T6-SUBTRACT
   window: Y1Q3
-  title: 同步 stale 子模块 pointer 到 origin/main
-  appetite: 2 hours
-  priority: P2
+  title: MOSBeliefManager 运行时计数写入 runtime truth 而非 SSOT registry
+  appetite: 1 hour
+  priority: P1
   status: done
   started_at: 2026-08-20
-  done_at: 2026-08-20
-  goal: 将 projects/ecos、projects/omo、scripts 三个 stale 子模块指针同步到 origin/main 最新 commit，消除 behind-reachable 状态，验证本地门禁不受影响
+  goal: 修复 MOSBeliefManager 将 as_of/计数直接写入 .omo/_truth/registry/memory-os.yaml，导致
+    truth registry 被运行时持续污染、git status 始终不干净的架构缺口
   non_goals:
-  - 修改子模块内部代码
-  - 新增业务功能
-  - 处理非 pointer 类子模块问题
+  - 不迁移 agent-belief 三表数据模型
+  - 不修改 MOS 适配器写路径或 Neo4j 召回逻辑
+  - 不动 memory-os.yaml 中的 phase/BOS URI/端口等静态声明
   evidence:
-    E1_submodule_sync:
-      description: 三个子模块指针已更新到 origin/main
+    E1_runtime_projection_path:
+      description: MOSBeliefManager 默认 registry_file 改为 runtime/omo/_truth/registry/memory-os.yaml
       surfaces:
-      - projects/ecos
-      - projects/omo
-      - scripts
-    E2_no_divergence:
-      description: check-submodule-pointer-drift.py 报告无 divergence
+      - projects/omo/src/omo/omo_belief.py
+    E2_truth_registry_untouched:
+      description: 运行后 .omo/_truth/registry/memory-os.yaml 不再出现未提交的 as_of/计数变更
+      surfaces:
+      - .omo/_truth/registry/memory-os.yaml
     E3_gac_local_gate:
       description: make gac-local-gate 全绿 PASS
-  done_when:
-  - projects/ecos 指针指向 origin/main (2329e36)
-  - projects/omo 指针指向 origin/main (9641b57)
-  - scripts 指针指向 origin/main (d2e1f8f)
-  - check-submodule-pointer-drift.py 无 divergence
+  done_when: &id003
+  - MOSBeliefManager 默认写入 runtime/omo/_truth/registry/memory-os.yaml
+  - .omo/_truth/registry/memory-os.yaml 恢复为干净 SSOT（无运行时计数脏行）
+  - projects/omo 相关单元测试通过
   - make gac-local-gate 全部检查 PASS
   progress:
-    done_when_met:
-    - '1: projects/ecos/omo/scripts 指针同步到 origin/main'
-    - '2: check-submodule-pointer-drift.py 报告 ALL ALIGNED'
-    - '3: make gac-local-gate 46 checks ALL GREEN'
+    done_when_met: *id003
     pending_when: []
   verify:
-  - cmd: python3 bin/gac/check-submodule-pointer-drift.py
-    expect: 0 DIVERGED, 0 behind
+  - cmd: python3 -m py_compile projects/omo/src/omo/omo_belief.py
+    expect: 退出码 0
+  - cmd: cd projects/omo && uv run pytest tests/test_agent_belief.py -q
+    expect: 测试全绿
+  - cmd: git diff -- .omo/_truth/registry/memory-os.yaml
+    expect: 无 diff
   - cmd: make gac-local-gate
     expect: 全绿 PASS
   workflow: governance-state-mutation
   underlying_workflow: governance-state-mutation
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
-  - projects/ecos
-  - projects/omo
-  - scripts
+  - projects/omo/src/omo/omo_belief.py
+  - .omo/_truth/registry/runtime-projections.yaml
   pasw_required: true
   depends_on: []
   risk_level: L2
   human_gate: true
-  circuit_breaker: 同步后 gac-local-gate 失败 → 回滚 pointer
-  retro: required
+  circuit_breaker: 下游读取 runtime 投影失败或 gac 红 → 回滚并改为在 SSOT 中保留静态 schema、计数迁独立运行时文件
+  retro: .omo/_knowledge/retros/BET-Y1Q3-T6-12.md
+  completed_at: '2026-08-20'

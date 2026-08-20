@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **144** 个命令 (含子命令)。按场景分组如下。
+共 **147** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -117,6 +117,7 @@
 | `cockpit api` | 启动 API server |
 | `cockpit archive` | 归档已处理完毕的 Inbox 待办文件 |
 | `cockpit ask` | 向大脑提问（知识检索 + LLM 回答） |
+| `cockpit audit-ledger` | 密码学级 Merkle 审计账本 (ADR-0201) |
 | `cockpit backends` | 列出 BOS 后端 |
 | `cockpit bdsk` | 🧠 B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演) |
 | `cockpit bos-capability` | BOS capability / toolbox 外部能力 |
@@ -136,6 +137,7 @@
 | `cockpit export` | 导出契约封套 |
 | `cockpit export-research` | 将研究对象导出为 WorkspaceObject JSON |
 | `cockpit fabric` | 检查 omlxc 智能算力织网 (温控/分诊/显存/缓存) |
+| `cockpit fabric-mesh` | 局域网边缘算力漫游网格 (ADR-0202) |
 | `cockpit facts-audit` | 审计 Documents 文档域 facts 文件 |
 | `cockpit facts-validation` | 读取 Runtime Facts 审计回执 |
 | `cockpit forget` | 遗忘传播 |
@@ -156,6 +158,7 @@
 | `cockpit list` | 列债务项 (委派 omo debt) |
 | `cockpit logs` | 查看日志 |
 | `cockpit memory` | 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref) |
+| `cockpit memory-distill` | 记忆自蒸馏与冲突自愈 (ADR-0200) |
 | `cockpit metrics` | 查看 bus metrics 快照 |
 | `cockpit model-freshness` | 读取 Runtime 模型新鲜度回执 |
 | `cockpit mutate` | 通过 agora 统一 BOS URI 写协议修改资源 |
