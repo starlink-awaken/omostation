@@ -27,7 +27,12 @@ jobs:
           
       - name: 1. Perception (Sense Debt)
         run: |
-          omo-debt analyze .omo --output .omo/debt/dispatch/current.yaml
+          # ADR-0412: CI installs the omo-bundled omo-debt (uv tool install ./projects/omo),
+          # which does not expose the standalone 'analyze' subcommand. Use the bundled
+          # refresh (refresh debt output state) + dispatch (materialize current debt
+          # output packet) to sense the current debt posture.
+          omo-debt refresh --omo-dir .omo --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          omo-debt dispatch --omo-dir .omo --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           
       - name: 2. Metabolism (GC)
         run: |
