@@ -173,9 +173,10 @@ gac:
   subtraction_quota:
     rule_baseline: 136    # 规则数基线 (增 1 必须删 1, 超基线 gac-validate fail)
     adr_baseline: 361     # ADR 基线 (新增 ADR 须归档一份)
-    script_baseline: 413  # bin/ 活跃脚本基线 (2026-08-19 对齐真实数; 410→413: T1-07 clone 量产
-                          # 合法新增 agent-clone 集成测试 3 个; 先行归档真死者 3 个
-                          # check-hook-sync/pre-bump-check/worktree-safe-add → _archive/scripts-20260819)
+    script_baseline: 420  # bin/ 活跃脚本基线 (2026-08-20 对齐真实数; 413→420: BCOS W3-W4 业务系统落地
+                          # apple_mail_watcher/evolution_engine/l3_smart_router/lifecycle_changer/
+                          # signal_router/north_star_meter_v2/test_* + knowledge-shadow-runner.py
+                          # 同时归档 north_star_meter.py v1 重复版本)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
