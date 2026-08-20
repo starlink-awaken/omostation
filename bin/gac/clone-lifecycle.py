@@ -24,6 +24,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -37,6 +38,16 @@ EXIT_OK = 0
 EXIT_POLICY = 1
 EXIT_USAGE = 2
 RMTREE_AVOIDS_SYMLINK_ATTACKS = shutil.rmtree.avoids_symlink_attacks
+FD_BOUND_DELETE_SUPPORTED = (
+    RMTREE_AVOIDS_SYMLINK_ATTACKS
+    and hasattr(os, "O_DIRECTORY")
+    and hasattr(os, "O_NOFOLLOW")
+    and all(function in os.supports_dir_fd for function in (os.open, os.stat, os.unlink, os.rmdir))
+)
+
+
+class RetirementRaceError(OSError):
+    """The inode bound for retirement no longer matches its directory entry."""
 
 
 def run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
@@ -82,6 +93,61 @@ def workflow_activity(root: Path) -> tuple[list[str], list[str], list[str]]:
     return locks, active_runs, errors
 
 
+def remove_opened_tree_contents(directory_fd: int) -> None:
+    """Remove entries below an already-open directory without re-resolving its path."""
+    with os.scandir(directory_fd) as entries:
+        for entry in entries:
+            entry_stat = os.stat(entry.name, dir_fd=directory_fd, follow_symlinks=False)
+            if stat.S_ISDIR(entry_stat.st_mode):
+                child_fd = os.open(
+                    entry.name,
+                    os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                    dir_fd=directory_fd,
+                )
+                try:
+                    child_stat = os.fstat(child_fd)
+                    if not os.path.samestat(entry_stat, child_stat):
+                        raise RetirementRaceError(f"directory entry changed before open: {entry.name}")
+                    remove_opened_tree_contents(child_fd)
+                    current_stat = os.stat(entry.name, dir_fd=directory_fd, follow_symlinks=False)
+                    if not os.path.samestat(child_stat, current_stat):
+                        raise RetirementRaceError(f"directory entry changed before removal: {entry.name}")
+                    os.rmdir(entry.name, dir_fd=directory_fd)
+                finally:
+                    os.close(child_fd)
+            else:
+                current_stat = os.stat(entry.name, dir_fd=directory_fd, follow_symlinks=False)
+                if not os.path.samestat(entry_stat, current_stat):
+                    raise RetirementRaceError(f"file entry changed before removal: {entry.name}")
+                os.unlink(entry.name, dir_fd=directory_fd)
+
+
+def remove_payload_by_fd(payload: Path, expected_stat: os.stat_result) -> None:
+    """Delete only the payload inode opened and matched to ``expected_stat``."""
+    if not FD_BOUND_DELETE_SUPPORTED:
+        raise RetirementRaceError("platform lacks fd-bound symlink-safe recursive deletion")
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    parent_fd = os.open(payload.parent, flags)
+    payload_fd = -1
+    try:
+        path_stat = os.stat(payload.name, dir_fd=parent_fd, follow_symlinks=False)
+        if not os.path.samestat(expected_stat, path_stat):
+            raise RetirementRaceError("payload changed before fd binding")
+        payload_fd = os.open(payload.name, flags, dir_fd=parent_fd)
+        opened_stat = os.fstat(payload_fd)
+        if not os.path.samestat(expected_stat, opened_stat):
+            raise RetirementRaceError("opened payload does not match verified clone")
+        remove_opened_tree_contents(payload_fd)
+        final_stat = os.stat(payload.name, dir_fd=parent_fd, follow_symlinks=False)
+        if not os.path.samestat(opened_stat, final_stat):
+            raise RetirementRaceError("payload path changed during fd-bound deletion")
+        os.rmdir(payload.name, dir_fd=parent_fd)
+    finally:
+        if payload_fd >= 0:
+            os.close(payload_fd)
+        os.close(parent_fd)
+
+
 def quarantine_remove_verified(
     dest: Path,
     expected_stat: os.stat_result,
@@ -117,9 +183,9 @@ def quarantine_remove_verified(
         locks, active_runs, state_errors = workflow_activity(payload)
         if locks or active_runs or state_errors:
             return restore("workflow lease or lock appeared at quarantine boundary")
-        if not RMTREE_AVOIDS_SYMLINK_ATTACKS:
-            return restore("platform lacks symlink-safe recursive deletion")
-        shutil.rmtree(payload)
+        if not FD_BOUND_DELETE_SUPPORTED:
+            return restore("platform lacks fd-bound symlink-safe recursive deletion")
+        remove_payload_by_fd(payload, moved_stat)
         quarantine.rmdir()
         return True, str(quarantine)
     except OSError as exc:

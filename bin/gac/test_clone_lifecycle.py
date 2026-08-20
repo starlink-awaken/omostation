@@ -576,20 +576,23 @@ def test_retire_rechecks_clone_after_remote_and_pr_checks(tmp_path, monkeypatch)
     assert clone.exists()
 
 
-def test_retire_never_deletes_path_replacement_victim(tmp_path, monkeypatch):
+def test_retire_does_not_delegate_verified_payload_to_path_rmtree(tmp_path, monkeypatch):
     clone, _remote, head = make_retirable_clone(tmp_path)
-    original = clone.parent / "original-ws"
+    original = clone.parent / "original-payload"
     victim_source = clone.parent / "victim-source"
     victim_source.mkdir()
     sentinel = victim_source / "must-survive.txt"
     sentinel.write_text("keep\n")
     real_rmtree = lc.shutil.rmtree
+    injected = False
 
     def racing_rmtree(path, *args, **kwargs):
+        nonlocal injected
         target = Path(path)
-        if target == clone:
-            clone.rename(original)
-            victim_source.rename(clone)
+        if target.name == "payload" and ".ws.retire-quarantine-" in target.parent.name and not injected:
+            injected = True
+            target.rename(original)
+            victim_source.rename(target)
         return real_rmtree(path, *args, **kwargs)
 
     monkeypatch.setattr(lc, "run", merged_pr_runner(head))
@@ -597,9 +600,56 @@ def test_retire_never_deletes_path_replacement_victim(tmp_path, monkeypatch):
 
     rc = lc.cmd_retire(argparse.Namespace(destination=str(clone)))
 
+    assert injected is False
     assert rc == lc.EXIT_OK
     assert sentinel.read_text() == "keep\n"
     assert not original.exists()
+
+
+def test_retire_fd_binding_detects_payload_swap_after_open(tmp_path, monkeypatch):
+    clone, _remote, head = make_retirable_clone(tmp_path)
+    expected_stat = clone.lstat()
+    original = clone.parent / "opened-original-payload"
+    victim_source = clone.parent / "victim-source"
+    victim_source.mkdir()
+    sentinel = victim_source / "must-survive.txt"
+    sentinel.write_text("keep\n")
+    real_scandir = lc.os.scandir
+    injected = False
+    victim_location: Path | None = None
+
+    def racing_scandir(path):
+        nonlocal injected, victim_location
+        if isinstance(path, int) and os.path.samestat(expected_stat, os.fstat(path)) and not injected:
+            injected = True
+            payload = next(clone.parent.glob(".ws.retire-quarantine-*/payload"))
+            payload.rename(original)
+            victim_source.rename(payload)
+            victim_location = payload / sentinel.name
+        return real_scandir(path)
+
+    monkeypatch.setattr(lc, "run", merged_pr_runner(head))
+    monkeypatch.setattr(lc.os, "scandir", racing_scandir)
+
+    rc = lc.cmd_retire(argparse.Namespace(destination=str(clone)))
+
+    assert injected is True
+    assert rc == lc.EXIT_POLICY
+    assert victim_location is not None
+    assert victim_location.read_text() == "keep\n"
+    assert original.exists()
+
+
+def test_retire_fails_closed_without_fd_bound_delete_support(tmp_path, monkeypatch):
+    clone, _remote, head = make_retirable_clone(tmp_path)
+    monkeypatch.setattr(lc, "run", merged_pr_runner(head))
+    monkeypatch.setattr(lc, "FD_BOUND_DELETE_SUPPORTED", False)
+
+    rc = lc.cmd_retire(argparse.Namespace(destination=str(clone)))
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert not list(clone.parent.glob(".ws.retire-quarantine-*"))
 
 
 def test_retire_detects_identity_swap_at_quarantine_boundary(tmp_path, monkeypatch):
