@@ -106,8 +106,16 @@ def apply_lifecycle_change(proposal: dict, force: bool = False) -> dict:
             if k in ("triggered", "auto_score"):
                 card["data"][f"evolution_{k}"] = v
                 applied_changes.append(f"{k}={v}")
+    # template_optimize 提案: 写入优化标记 + 模板引用
+    elif ptype == "template_optimize":
+        template_ref = proposed_state.get("template_ref", "intake-review-deliver")
+        optimization = proposed_state.get("optimization", "default")
+        card["data"]["optimized_template"] = template_ref
+        card["data"]["template_optimization"] = optimization
+        card["data"]["template_optimized_at"] = __import__("time").strftime("%Y-%m-%dT%H:%M:%SZ", __import__("time").gmtime())
+        applied_changes.append(f"template: {template_ref} ({optimization})")
     else:
-        # template_optimize / new_scene 等: 写入 evolution_optimized 标记
+        # new_scene 等: 写入 evolution_optimized 标记
         card["data"]["evolution_optimized"] = True
         applied_changes.append("evolution_optimized=True")
     # 公共元数据
