@@ -299,6 +299,21 @@ def test_claim_scope_rejects_path_outside_packet(tmp_path: Path) -> None:
         module._validate_packet_run(payload, ["docs/unauthorized.md"], workspace=tmp_path)
 
 
+def test_claim_scope_rejects_unmodeled_governance_surface(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    payload = {"bet_id": bet_id, **prepared}
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_SCOPE_MISMATCH"):
+        module._validate_packet_run(
+            payload,
+            [],
+            claimed_surfaces=["governance-state"],
+            workspace=tmp_path,
+        )
+
+
 def test_claim_revalidates_spec_digest_after_start(tmp_path: Path) -> None:
     module = _load_root_workflow_wrapper()
     bet_id, spec_path = _write_bet_workspace(tmp_path)

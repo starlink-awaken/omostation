@@ -172,6 +172,7 @@ def _validate_packet_run(
     payload: dict[str, Any],
     claimed_paths: list[str],
     *,
+    claimed_surfaces: list[str] | None = None,
     workspace: Path = WORKSPACE,
 ) -> None:
     packet = payload.get("work_packet")
@@ -195,6 +196,13 @@ def _validate_packet_run(
     if rebuilt["work_packet_hash"] != packet_hash:
         raise WorkflowError(
             "WORK_PACKET_SOURCE_DRIFT: ledger/spec projection no longer matches the bound packet"
+        )
+
+    requested_surfaces = sorted({str(surface).strip() for surface in claimed_surfaces or [] if str(surface).strip()})
+    if requested_surfaces:
+        raise WorkflowError(
+            "WORK_PACKET_SCOPE_MISMATCH: governance surfaces are not modeled by "
+            f"scope.write_surfaces: {requested_surfaces}"
         )
 
     allowed = packet.get("scope", {}).get("write_surfaces", [])
@@ -318,7 +326,7 @@ def _claim_run_enforce_packet(
     affected_receipt=None,
 ):
     _run_path, payload = _wf_life.read_run(registry, run_id)
-    _validate_packet_run(payload, list(paths or []))
+    _validate_packet_run(payload, list(paths or []), claimed_surfaces=list(surfaces or []))
     return _ORIG_CLAIM(
         registry,
         run_id,
