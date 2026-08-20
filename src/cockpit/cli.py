@@ -544,15 +544,17 @@ def main() -> int:
         topic = getattr(a, "topic", "架构决策与技术选型")
         res = DynamicBDSKAdjudicator.adjudicate(topic)
 
-        source_tag = (
-            "⚡️ AetherForge + omlxc (Local LLM Active)"
-            if res.get("engine_source") == "aetherforge_local_llm"
-            else "ℹ️ [AetherForge] 网关未在线 ➔ 平滑降级至领域推理引擎"
-        )
+        if res.get("proof_state") != "proven":
+            print("=========================================================================")
+            print(" 🧠 B.D.S.K. 虚拟董事会 ➔ NOT_PROVEN")
+            print(" 🔗 bos://persona/bdsk/evaluate → bos://compute/aetherforge/infer")
+            print(f" ⚠️ 评估未成立: {res.get('error_code', 'unknown')}")
+            print("=========================================================================")
+            return 4
 
         print("=========================================================================")
-        print(f" 🧠 B.D.S.K. 虚拟董事会 (4 角动态对抗模式) ➔ {source_tag}")
-        print(f" 🔬 领域分类: {res['domain_label']} | 🎯 议题: {res['topic']}")
+        print(" 🧠 B.D.S.K. 虚拟董事会 ➔ BOS/AetherForge PROVEN")
+        print(f" 🔐 议题摘要: {res['topic_digest']}")
         print("=========================================================================")
         print("🧑‍💻 Builder (建造者/技术合伙人):")
         print(f"  • {res['builder']}")
@@ -563,7 +565,8 @@ def main() -> int:
         print("👁️ Keeper (守夜人/观察者):")
         print(f"  • {res['keeper']}")
         print("=========================================================================")
-        print(f"💡 4 角共识裁决结论: {res['conclusion']}")
+        print(f"💡 4 角共识建议: {res['conclusion']}")
+        print(f"📊 风险分: {res['risk_score']} | 状态: {res['verdict']}")
         print("=========================================================================")
         return 0
 
