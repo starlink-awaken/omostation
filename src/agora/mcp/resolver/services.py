@@ -559,7 +559,10 @@ _FALLBACK_SERVICES: list[BosService] = [
         transport="internal",
         module_path="agora.server.tools_bos",
         func_name="persona_bdsk_evaluate",
-        description="B.D.S.K. 虚拟董事会并发对抗与结构化方案评审网关",
+        description=(
+            "B.D.S.K. 虚拟董事会评审网关；唯一推理链为 "
+            "bos://compute/aetherforge/infer，失败返回 not_proven，禁止自动 ADR"
+        ),
     ),
     BosService(
         uri="bos://persona/core-models/schema",

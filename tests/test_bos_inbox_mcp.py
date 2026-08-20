@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from pathlib import Path
 import pytest
 import yaml
@@ -142,13 +143,33 @@ async def test_bos_inbox_mcp_endpoints(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_bos_persona_bdsk_endpoint():
+async def test_bos_persona_bdsk_endpoint(monkeypatch):
     """测试 B.D.S.K. 虚拟董事会评估网关能力。"""
+    async def fake_resolve(_uri, **_kwargs):
+        payload = {
+            "verdict": "REVIEW_REQUIRED",
+            "risk_score": 50,
+            "recommendation": "human review",
+            "board_reviews": {
+                role: {"opinion": f"{role} review"}
+                for role in ("builder", "devil", "sage", "keeper")
+            },
+        }
+        return {
+            "status": "ok",
+            "result": {
+                "choices": [{"message": {"content": json.dumps(payload)}}]
+            },
+        }
+
+    monkeypatch.setattr(
+        "agora.server.tools_bos.bdsk._invoke_compute", fake_resolve
+    )
     res_deep = await persona_bdsk_evaluate("系统升级到 V3", mode="deep")
     assert res_deep.get("status") == "ok"
-    assert res_deep.get("verdict") == "PROCEED_WITH_GUARDRAILS"
+    assert res_deep.get("verdict") == "REVIEW_REQUIRED"
     assert "builder" in res_deep.get("board_reviews", {})
 
     res_fast = await persona_bdsk_evaluate("紧急修复文档格式", mode="fast")
     assert res_fast.get("status") == "ok"
-    assert res_fast.get("verdict") == "PROCEED_FAST"
+    assert res_fast.get("verdict") == "REVIEW_REQUIRED"
