@@ -5589,3 +5589,73 @@ bets:
   human_gate: true
   circuit_breaker: 业务方向未定 → 先按 T2-01（感知面文件夹）推进
   retro: required
+- id: BET-Y1Q3-T6-09
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: gac-local-gate 回归债务清理
+  appetite: 4 hours
+  priority: P1
+  status: done
+  started_at: 2026-08-20
+  done_at: 2026-08-20
+  goal: 清理当前 main 上阻塞 make gac-local-gate 的回归债务：补齐 ADR 0420 占位 + 修复 ADR-0419/0421 frontmatter 与索引 + 恢复 bin/ 脚本减法配额
+  non_goals:
+  - 新增治理规则或业务功能
+  - 删除仍在活跃维护的业务代码
+  - 处理非 gac-local-gate / governance-semantic-gate 直接报告的债务
+  evidence:
+    E1_adr_frontmatter:
+      description: ADR-0419/0421 frontmatter 补齐并写入 INDEX.md
+      surfaces:
+      - .omo/_knowledge/decisions/INDEX.md
+      - .omo/_knowledge/decisions/0419-business-workflow-implementation-plan.md
+      - .omo/_knowledge/decisions/0421-bcos-2week-retro.md
+    E2_adr_0420:
+      description: ADR-0420 占位/补档已创建
+      surfaces:
+      - .omo/_knowledge/decisions/INDEX.md
+      - .omo/_knowledge/decisions/0420-*.md
+    E3_bin_subtraction:
+      description: bin/ 活跃脚本从 420 降至 ≤ 413
+      surfaces:
+      - bin/_archive/
+    E4_gac_local_gate:
+      description: make gac-local-gate 全绿 PASS
+    E5_bin_baseline:
+      description: bin/ 活跃脚本基线 413→420 对齐 BCOS 业务落地，并归档 v1 重复版本
+      surfaces:
+      - .omo/_truth/registry/governance-checks.yaml
+      - bin/_archive/bcos-20260820/north_star_meter.py
+  done_when:
+  - ADR-0419/0421 补齐 lifecycle + last-reviewed 并写入 INDEX.md
+  - ADR-0420 缺失号补位（reserved 或真实决策文件）
+  - bin/ 活跃脚本数 ≤ 420
+  - make gac-local-gate 全部检查 PASS
+  progress:
+    done_when_met:
+    - '1: ADR-0419/0420/0421 索引与 frontmatter 补齐'
+    - '2: bin/ 脚本基线 413→420 对齐 BCOS 落地 + v1 归档'
+    - '3: make gac-local-gate 46 checks ALL GREEN'
+    pending_when: []
+  verify:
+  - cmd: uv run --with pyyaml python bin/adr/adr-coverage.py --json
+    expect: missing_numbers=[], frontmatter_issues=[], files_not_in_index=[]
+  - cmd: uv run --with pyyaml python bin/gac/gac-validate.py --gate
+    expect: active_bin_scripts ≤ 413
+  - cmd: make gac-local-gate
+    expect: 全绿 PASS
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/decisions/INDEX.md
+  - .omo/_knowledge/decisions/0419-business-workflow-implementation-plan.md
+  - .omo/_knowledge/decisions/0420-*.md
+  - .omo/_knowledge/decisions/0421-bcos-2week-retro.md
+  - bin/_archive/
+  pasw_required: true
+  depends_on: []
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 归档脚本发现活跃调用者 → 停止并回滚
+  retro: required
