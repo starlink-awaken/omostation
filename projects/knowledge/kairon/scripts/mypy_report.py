@@ -38,7 +38,13 @@ KAIRON_ROOT = Path(__file__).resolve().parents[1]
 PACKAGES_DIR = KAIRON_ROOT / "packages"
 
 # 与 Makefile typecheck 对齐的 mypy 标志
-_MYPY_FLAGS = ["--namespace-packages", "--explicit-package-bases", "--exclude", "tests/"]
+_MYPY_FLAGS = [
+    "--namespace-packages",
+    "--explicit-package-bases",
+    "--exclude",
+    "tests/",
+    "--no-incremental",
+]
 
 
 def count_mypy_errors(pkg_dir: Path) -> int:
@@ -47,21 +53,21 @@ def count_mypy_errors(pkg_dir: Path) -> int:
     MYPYPATH=src 让 mypy 正确解析本包模块 (消 src.x vs x 冲突), 才能真检查跨包 import.
     否则 mypy 解析不出当 Any 处理 → 假绿 (旧调法的坑).
     """
-    try:
-        result = subprocess.run(
-            ["uv", "run", "mypy", "src", *_MYPY_FLAGS],
-            cwd=str(pkg_dir),
-            env={**os.environ, "MYPYPATH": "src"},
-            capture_output=True,
-            text=True,
-            timeout=300,
-        )
-    except FileNotFoundError:
-        print(f"⚠️  uv/mypy 未安装 (跳过 {pkg_dir.name})", file=sys.stderr)
-        return 0
+    result = subprocess.run(
+        ["uv", "run", "mypy", "src", *_MYPY_FLAGS],
+        cwd=str(pkg_dir),
+        env={**os.environ, "MYPYPATH": "src"},
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
     out = result.stdout + result.stderr
     m = re.search(r"Found (\d+) errors?", out)
-    return int(m.group(1)) if m else 0
+    if m:
+        return int(m.group(1))
+    if result.returncode:
+        raise RuntimeError(f"mypy failed for {pkg_dir}: {out.strip()}")
+    return 0
 
 
 def _iter_packages() -> list[Path]:
