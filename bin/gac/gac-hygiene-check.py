@@ -12,7 +12,7 @@ CR-HYG-02: 大小写 inode 一致 (防 APFS case-insensitive plan/Plans 混淆)
 
 退出码:
   0 = 通过 (0 卫生问题)
-  1 = 有卫生问题 (0 字节文件 / 大小写冲突)
+  1 = 有卫生问题 (0 字节文件 / 缺失 tracked 文件 / 大小写冲突)
 """
 
 from __future__ import annotations
@@ -27,6 +27,17 @@ WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 # CR-HYG-01 跳过后缀 (运行时锁/并发占位, 0 字节是设计而非污染)
 # 不混淆范畴: 检查器只抓"空源文件" bug, 运行时锁另算 git 卫生问题
 SKIP_SUFFIXES = {".lock", ".lockfile", ".pid"}
+
+# These names are conventional repository markers.  An empty regular source file
+# remains a finding; this is deliberately a name allowlist, not a suffix rule.
+LEGAL_EMPTY_MARKER_NAMES = {"__init__.py", "py.typed", ".gitkeep"}
+
+# GBrain's test runner deliberately truncates these two tracked result files.
+# Keep the exception path-specific so unrelated empty .log/.txt files still fail.
+EXACT_EMPTY_MARKER_PATHS = {
+    "projects/knowledge/gbrain/.context/test-failures.log",
+    "projects/knowledge/gbrain/.context/test-summary.txt",
+}
 
 # 排除目录 (降级全扫时的噪声过滤; git tracked 模式不需要)
 EXCLUDE_DIRS = {
@@ -62,21 +73,39 @@ def git_tracked_files() -> set[str] | None:
 
     try:
         result = subprocess.run(
-            ["git", "ls-files"],
+            ["git", "ls-files", "--stage", "-z"],
             cwd=WORKSPACE_ROOT,
             capture_output=True,
             text=True,
             timeout=30,
         )
         if result.returncode == 0:
-            return set(result.stdout.splitlines())
+            files: set[str] = set()
+            for record in result.stdout.split("\0"):
+                metadata, separator, path = record.partition("\t")
+                if not separator:
+                    continue
+                mode = metadata.split(maxsplit=1)[0]
+                if mode != "160000":  # gitlink: absent submodule is not a missing file
+                    files.add(path)
+            return files
     except (subprocess.SubprocessError, FileNotFoundError, OSError):
         pass
     return None
 
 
+def is_legal_empty_marker(path: Path) -> bool:
+    """Return whether an empty tracked path is an explicit marker contract."""
+    if path.name in LEGAL_EMPTY_MARKER_NAMES:
+        return True
+    try:
+        return path.relative_to(WORKSPACE_ROOT).as_posix() in EXACT_EMPTY_MARKER_PATHS
+    except ValueError:
+        return False
+
+
 def find_zero_byte_files(tracked: set[str] | None) -> list[Path]:
-    """CR-HYG-01: 找 0 字节文件 (空文件本身就是异常, KISS 全扫)."""
+    """CR-HYG-01: find empty files except explicit marker contracts."""
     findings: list[Path] = []
 
     def check(fp: Path):
@@ -84,6 +113,8 @@ def find_zero_byte_files(tracked: set[str] | None) -> list[Path]:
             return
         if fp.suffix in SKIP_SUFFIXES:
             return  # 运行时锁/占位 (0 字节是设计, 非污染)
+        if is_legal_empty_marker(fp):
+            return
         if tracked is None and is_excluded(fp):
             return
         try:
@@ -99,6 +130,13 @@ def find_zero_byte_files(tracked: set[str] | None) -> list[Path]:
         for fp in WORKSPACE_ROOT.rglob("*"):
             check(fp)
     return findings
+
+
+def find_missing_tracked_files(tracked: set[str] | None) -> list[Path]:
+    """Find absent tracked paths without rejecting valid tracked symlinks."""
+    if tracked is None:
+        return []
+    return [WORKSPACE_ROOT / relative for relative in tracked if not (WORKSPACE_ROOT / relative).exists()]
 
 
 def find_case_conflicts(tracked: set[str] | None) -> list[tuple[Path, Path]]:
@@ -142,16 +180,19 @@ def run_check(as_json: bool = False) -> int:
     """运行卫生检查. 返回 0 (通过) 或 1 (有问题)."""
     tracked = git_tracked_files()
     zero_byte = find_zero_byte_files(tracked)
+    missing_tracked = find_missing_tracked_files(tracked)
     case_conflicts = find_case_conflicts(tracked)
-    total_issues = len(zero_byte) + len(case_conflicts)
+    total_issues = len(zero_byte) + len(missing_tracked) + len(case_conflicts)
 
     if as_json:
         payload = {
             "ok": total_issues == 0,
             "issues": total_issues,
             "zero_byte_count": len(zero_byte),
+            "missing_tracked_count": len(missing_tracked),
             "case_conflict_count": len(case_conflicts),
             "zero_byte_files": [str(fp.relative_to(WORKSPACE_ROOT)) for fp in zero_byte],
+            "missing_tracked_files": [str(fp.relative_to(WORKSPACE_ROOT)) for fp in missing_tracked],
             "case_conflicts": [
                 {
                     "a": str(a.relative_to(WORKSPACE_ROOT)),
@@ -173,6 +214,14 @@ def run_check(as_json: bool = False) -> int:
             print(f"  ... 还有 {len(zero_byte) - 20} 个")
         print()
 
+    if missing_tracked:
+        print(f"❌ CR-HYG-01: 检测到 {len(missing_tracked)} 个缺失的 tracked 路径:\n")
+        for fp in missing_tracked[:20]:
+            print(f"  {fp.relative_to(WORKSPACE_ROOT)}")
+        if len(missing_tracked) > 20:
+            print(f"  ... 还有 {len(missing_tracked) - 20} 个")
+        print()
+
     if case_conflicts:
         print(f"❌ CR-HYG-02: 检测到 {len(case_conflicts)} 对大小写 inode 冲突 (APFS 风险):\n")
         for a, b in case_conflicts[:20]:
@@ -186,7 +235,7 @@ def run_check(as_json: bool = False) -> int:
         print(f"✅ 工作区卫生检查通过 ({mode}, 0 问题)")
         return 0
 
-    print("修复方式: 删除 0 字节文件 / 重命名大小写冲突文件")
+    print("修复方式: 删除非 marker 的 0 字节文件 / 恢复缺失 tracked 文件 / 重命名大小写冲突文件")
     return 1
 
 
