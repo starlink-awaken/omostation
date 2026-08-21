@@ -222,6 +222,34 @@ SEMVER_RE = re.compile(
 )
 SHA256_REF_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 STARTABLE_BET_STATUSES = frozenset({"candidate", "pending", "blocked"})
+SPECIFICATION_SCHEMA_VERSION = "specification/v1"
+SPEC_FRONTMATTER_GRANDFATHER_ALLOWLIST = {
+    "BET-Y1Q2-T1-19": {
+        "spec_ref": "repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md",
+        "spec_version": "1.0.0",
+        "content_digest": "sha256:c2ca365b1ea140da9be3b577617db0b329a059dd06fc43e3232fb5c570f6aba0",
+        "decision_ref": "decision://accepted/BET-Y1Q2-T1-19",
+    }
+}
+COMPLETION_EVIDENCE_SCHEMA_VERSION = "completion-evidence-matrix/v1"
+COMPLETION_AXIS_STATUSES = {
+    "engineering": frozenset({"NOT_STARTED", "IN_PROGRESS", "VERIFIED"}),
+    "operational": frozenset({"NOT_PROVEN", "DEGRADED", "PROVEN"}),
+    "value": frozenset({"NOT_PROVEN", "REJECTED", "ACCEPTED"}),
+}
+COMPLETION_DIRECT_EVIDENCE = {
+    "engineering": {
+        "VERIFIED": frozenset({"merged_reachable_commit", "tests", "diff", "rollback"}),
+    },
+    "operational": {
+        "PROVEN": frozenset({"live_canary", "fresh_receipt", "replay", "cleanup"}),
+    },
+    "value": {
+        "ACCEPTED": frozenset({"real_signal", "human_verdict", "revision", "time_burden"}),
+        "REJECTED": frozenset({"real_signal", "human_verdict"}),
+    },
+}
+COMPLETION_MATRIX_REQUIRED_STATUSES = frozenset({"in_progress", "review"})
 
 
 class SpecBindingContractError(ValueError):
@@ -817,6 +845,195 @@ def _file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _spec_frontmatter(path: Path) -> tuple[dict[str, Any] | None, str | None]:
+    """Read the canonical Markdown frontmatter without creating a second Spec store."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None, "SPEC_FRONTMATTER_INVALID: canonical Spec must start with YAML frontmatter"
+    try:
+        end = next(index for index, line in enumerate(lines[1:], start=1) if line.strip() == "---")
+    except StopIteration:
+        return None, "SPEC_FRONTMATTER_INVALID: canonical Spec frontmatter is not closed"
+    try:
+        frontmatter = yaml.safe_load("\n".join(lines[1:end]))
+    except yaml.YAMLError as exc:
+        return None, f"SPEC_FRONTMATTER_INVALID: {exc}"
+    if not isinstance(frontmatter, dict):
+        return None, "SPEC_FRONTMATTER_INVALID: canonical Spec frontmatter must be a mapping"
+    return frontmatter, None
+
+
+def _is_spec_frontmatter_grandfathered(bet: dict, binding: dict[str, Any]) -> bool:
+    """Permit only the frozen pre-v1 contract whose exact identity is already terminal."""
+    if bet.get("status") != "done":
+        return False
+    frozen = SPEC_FRONTMATTER_GRANDFATHER_ALLOWLIST.get(str(bet.get("id") or ""))
+    return frozen == {key: binding.get(key) for key in SPEC_BINDING_KEYS}
+
+
+def _is_completion_evidence_grandfathered(bet: dict, *, workspace: Path) -> bool:
+    if _is_historical_spec_grandfathered(bet, workspace=workspace):
+        return True
+    bindings = bet.get("accepted_specifications")
+    return (
+        isinstance(bindings, list)
+        and len(bindings) == 1
+        and isinstance(bindings[0], dict)
+        and _is_spec_frontmatter_grandfathered(bet, bindings[0])
+    )
+
+
+def _validate_evidence_reference(
+    *,
+    axis: str,
+    key: str,
+    value: Any,
+    workspace: Path,
+) -> list[str]:
+    """Resolve one evidence reference so a placeholder cannot make an axis green."""
+    prefix = f"{axis}.{key}"
+    if not isinstance(value, dict):
+        return [f"COMPLETION_EVIDENCE_REF_SHAPE: {prefix} must be a mapping"]
+    if set(value) not in ({"ref"}, {"ref", "sha256"}):
+        return [f"COMPLETION_EVIDENCE_REF_SHAPE: {prefix} accepts only ref and optional sha256"]
+    ref = value.get("ref")
+    if not isinstance(ref, str) or not ref.strip():
+        return [f"COMPLETION_EVIDENCE_REF_REQUIRED: {prefix}.ref must be non-empty"]
+
+    if key == "merged_reachable_commit":
+        match = re.fullmatch(r"git://origin/main@([0-9a-f]{40})", ref)
+        if match is None:
+            return [
+                f"COMPLETION_GIT_REF_INVALID: {prefix}.ref must be "
+                "git://origin/main@<40-lowercase-hex>"
+            ]
+        commit = match.group(1)
+        try:
+            exists = subprocess.run(
+                ["git", "-C", str(workspace), "cat-file", "-e", f"{commit}^{{commit}}"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            reachable = subprocess.run(
+                ["git", "-C", str(workspace), "merge-base", "--is-ancestor", commit, "origin/main"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+        except OSError as exc:
+            return [f"COMPLETION_GIT_REF_UNPROVABLE: {prefix}: {exc}"]
+        if exists.returncode != 0 or reachable.returncode != 0:
+            return [f"COMPLETION_GIT_REF_NOT_REACHABLE: {prefix}.ref is not reachable from origin/main"]
+        return []
+
+    relative: str | None = None
+    for scheme in ("repo://", "receipt://"):
+        if ref.startswith(scheme):
+            relative = ref.removeprefix(scheme).split("#", 1)[0]
+            break
+    if relative is None or not relative:
+        return [f"COMPLETION_FILE_REF_INVALID: {prefix}.ref must use repo:// or receipt://"]
+    candidate = (workspace / relative).resolve()
+    try:
+        candidate.relative_to(workspace.resolve())
+    except ValueError:
+        return [f"COMPLETION_FILE_REF_INVALID: {prefix}.ref escapes workspace"]
+    if not candidate.is_file():
+        return [f"COMPLETION_FILE_REF_MISSING: {prefix}.ref does not resolve to a file"]
+    digest = value.get("sha256")
+    if not isinstance(digest, str) or SHA256_REF_RE.fullmatch(digest) is None:
+        return [f"COMPLETION_FILE_DIGEST_REQUIRED: {prefix}.sha256 must be sha256:<64-lowercase-hex>"]
+    actual = f"sha256:{_file_sha256(candidate)}"
+    if digest != actual:
+        return [f"COMPLETION_FILE_DIGEST_MISMATCH: {prefix}.sha256 does not match resolved file"]
+    return []
+
+
+def validate_completion_evidence(
+    matrix: Any,
+    *,
+    workspace: Path = WS,
+) -> tuple[str, list[str]]:
+    """Validate the three independent completion axes and derive one fail-closed state."""
+    errors: list[str] = []
+    if not isinstance(matrix, dict):
+        return "blocked", ["COMPLETION_EVIDENCE_SHAPE: matrix must be a mapping"]
+    if matrix.get("schema_version") != COMPLETION_EVIDENCE_SCHEMA_VERSION:
+        errors.append(
+            "COMPLETION_EVIDENCE_SCHEMA: schema_version must equal "
+            f"{COMPLETION_EVIDENCE_SCHEMA_VERSION}"
+        )
+
+    axes = matrix.get("axes")
+    if not isinstance(axes, dict) or set(axes) != set(COMPLETION_AXIS_STATUSES):
+        return "blocked", [
+            *errors,
+            "COMPLETION_AXES_SHAPE: axes must contain exactly engineering, operational, value",
+        ]
+
+    statuses: dict[str, str] = {}
+    for axis, allowed_statuses in COMPLETION_AXIS_STATUSES.items():
+        axis_record = axes.get(axis)
+        if not isinstance(axis_record, dict):
+            errors.append(f"COMPLETION_AXIS_SHAPE: {axis} must be a mapping")
+            continue
+        status = axis_record.get("status")
+        if status not in allowed_statuses:
+            errors.append(
+                f"COMPLETION_AXIS_STATUS: {axis}.status must be one of {sorted(allowed_statuses)}"
+            )
+            continue
+        statuses[axis] = status
+        evidence = axis_record.get("evidence")
+        if not isinstance(evidence, dict):
+            errors.append(f"COMPLETION_AXIS_EVIDENCE: {axis}.evidence must be a mapping")
+            continue
+        required = COMPLETION_DIRECT_EVIDENCE.get(axis, {}).get(status, frozenset())
+        missing = sorted(key for key in required if key not in evidence)
+        if missing:
+            errors.append(
+                f"COMPLETION_DIRECT_EVIDENCE_REQUIRED: {axis}.{status} missing={missing}"
+            )
+        if axis == "value" and status == "ACCEPTED" and not missing:
+            errors.append(
+                "COMPLETION_HUMAN_AUTH_UNPROVABLE: no credential-bound human "
+                "attestation verifier is registered"
+            )
+        else:
+            for key in sorted(required - set(missing)):
+                errors.extend(
+                    _validate_evidence_reference(
+                        axis=axis,
+                        key=key,
+                        value=evidence[key],
+                        workspace=workspace,
+                    )
+                )
+
+    if set(statuses) != set(COMPLETION_AXIS_STATUSES):
+        derived = "blocked"
+    elif statuses["value"] == "REJECTED":
+        derived = "rejected"
+    elif (
+        statuses["engineering"] == "VERIFIED"
+        and statuses["operational"] == "PROVEN"
+        and statuses["value"] == "ACCEPTED"
+    ):
+        derived = "outcome_accepted"
+    elif statuses["engineering"] == "VERIFIED" or statuses["operational"] == "DEGRADED":
+        derived = "blocked"
+    else:
+        derived = "evaluating"
+
+    if errors:
+        derived = "blocked"
+    declared = matrix.get("overall_state")
+    if declared != derived:
+        errors.append(f"OVERALL_STATE_MISMATCH: declared={declared!r} derived={derived!r}")
+    return derived, errors
+
+
 def resolve_instruction_binding(*, workspace: Path = WS) -> dict[str, str]:
     """Measure the one canonical Instruction Pack without trusting a projection."""
     relative_ref = INSTRUCTION_PACK_REF.removeprefix(SPEC_REF_PREFIX)
@@ -893,10 +1110,32 @@ def validate_accepted_specification(
             errors.append("SPEC_REF_INVALID: resolved spec path escapes workspace")
         elif not candidate.is_file():
             errors.append(f"SPEC_FILE_MISSING: {relative_ref}")
-        elif isinstance(content_digest, str) and SHA256_REF_RE.fullmatch(content_digest):
-            actual_digest = f"sha256:{_file_sha256(candidate)}"
-            if actual_digest != content_digest:
-                errors.append(f"SPEC_DIGEST_MISMATCH: declared={content_digest[:23]}... actual={actual_digest[:23]}...")
+        else:
+            if not _is_spec_frontmatter_grandfathered(bet, binding):
+                frontmatter, frontmatter_error = _spec_frontmatter(candidate)
+                if frontmatter_error:
+                    errors.append(frontmatter_error)
+                elif frontmatter is not None:
+                    if frontmatter.get("schema_version") != SPECIFICATION_SCHEMA_VERSION:
+                        errors.append(
+                            "SPEC_FRONTMATTER_SCHEMA_INVALID: schema_version must equal "
+                            f"{SPECIFICATION_SCHEMA_VERSION}"
+                        )
+                    if frontmatter.get("status") != "accepted":
+                        errors.append("SPEC_STATUS_NOT_ACCEPTED: canonical Spec status must equal accepted")
+                    if frontmatter.get("spec_version") != spec_version:
+                        errors.append(
+                            "SPEC_FRONTMATTER_VERSION_MISMATCH: frontmatter spec_version must equal binding"
+                        )
+                    if frontmatter.get("bet_id") != bet_id:
+                        errors.append("SPEC_FRONTMATTER_BET_MISMATCH: frontmatter bet_id must equal BET id")
+            if isinstance(content_digest, str) and SHA256_REF_RE.fullmatch(content_digest):
+                actual_digest = f"sha256:{_file_sha256(candidate)}"
+                if actual_digest != content_digest:
+                    errors.append(
+                        f"SPEC_DIGEST_MISMATCH: declared={content_digest[:23]}... "
+                        f"actual={actual_digest[:23]}..."
+                    )
 
     if errors:
         return None, errors
@@ -1488,8 +1727,20 @@ def cmd_lint(data: dict, args) -> int:
         # Canonical binding is mandatory unless the immutable pre-migration
         # snapshot explicitly contains this terminal BET ID.
         if _is_spec_binding_required(b, workspace=WS):
-            _binding, binding_errors = validate_accepted_specification(b)
+            _binding, binding_errors = validate_accepted_specification(b, workspace=WS)
             errs.extend(f"{b['id']}.accepted_specifications: {error}" for error in binding_errors)
+        completion_matrix = b.get("completion_evidence")
+        matrix_required = b.get("status") in COMPLETION_MATRIX_REQUIRED_STATUSES or (
+            b.get("status") == "done" and not _is_completion_evidence_grandfathered(b, workspace=WS)
+        )
+        if matrix_required and completion_matrix is None:
+            errs.append(f"{b['id']}.completion_evidence: COMPLETION_EVIDENCE_REQUIRED")
+        elif completion_matrix is not None:
+            _state, completion_errors = validate_completion_evidence(
+                completion_matrix,
+                workspace=WS,
+            )
+            errs.extend(f"{b['id']}.completion_evidence: {error}" for error in completion_errors)
     if errs:
         for e in errs:
             print(f"ERROR {e}")
@@ -1510,7 +1761,7 @@ def cmd_complete(data: dict, args) -> int:
     """
     b = bet_by_id(data, args.bet_id)
     if _is_spec_binding_required(b, workspace=WS):
-        _binding, binding_errors = validate_accepted_specification(b)
+        _binding, binding_errors = validate_accepted_specification(b, workspace=WS)
         if binding_errors:
             for error in binding_errors:
                 print(f"[complete] ❌ {b['id']}.accepted_specifications: {error}")
@@ -1518,6 +1769,24 @@ def cmd_complete(data: dict, args) -> int:
     if b.get("status") == "done":
         print(f"[complete] {b['id']} 已是 done, 无需操作")
         return 0
+
+    completion_matrix = b.get("completion_evidence")
+    if completion_matrix is None:
+        print(f"[complete] ❌ {b['id']}.completion_evidence: COMPLETION_EVIDENCE_REQUIRED")
+        return 1
+    completion_state, completion_errors = validate_completion_evidence(
+        completion_matrix,
+        workspace=WS,
+    )
+    if completion_errors or completion_state != "outcome_accepted":
+        for error in completion_errors:
+            print(f"[complete] ❌ {b['id']}.completion_evidence: {error}")
+        if completion_state != "outcome_accepted":
+            print(
+                f"[complete] ❌ {b['id']}.completion_evidence: "
+                f"derived state is {completion_state}, not outcome_accepted"
+            )
+        return 1
 
     if not args.force:
         # D0 guard: write_surfaces 入库检查

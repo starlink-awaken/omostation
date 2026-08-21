@@ -5932,6 +5932,19 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:554cd762568f87a4f4d509f3427125e5297d5c707c5fcdec739ab1c2e47763d1
     decision_ref: decision://accepted/BET-Y1Q3-T4-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: DEGRADED
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: blocked
   goal: >-
     把现有大量工程能力收敛成一条可证伪的个人价值主链：真实低敏信号进入后，
     只产生 never-send 候选，由本人裁决并记录修订差异；所有工程完成、运行完成和
