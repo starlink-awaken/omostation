@@ -234,3 +234,12 @@ artifacts-*.html
 # ---------------------------------------------------------------------------
 .omo/_delivery/observability/
 .omo/state/observability-adapters/
+
+# ---------------------------------------------------------------------------
+# 13. 本地-only 独立子仓库 (未在 .gitmodules 注册, 仅部分成员本地 clone)
+#    这些是单独 git 仓库, 不在超项目追踪范围. CI 显式跳过 (见 kairon-ci.yml 注释).
+# ---------------------------------------------------------------------------
+projects/c2g/
+projects/gbrain/
+projects/kairon/
+projects/omo-debt/
