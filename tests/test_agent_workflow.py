@@ -49,6 +49,11 @@ def _write_bet_workspace(
     spec_path = workspace / relative_spec
     spec_path.parent.mkdir(parents=True, exist_ok=True)
     spec_path.write_text("# Frozen specification\n", encoding="utf-8")
+    # Instruction pack file is required by resolve_instruction_binding when
+    # compiling WorkPacket v2; mirror the repo layout so tmp workspaces work.
+    instruction_path = workspace / "docs/operations/blueprint-agent-instruction-pack-v1.md"
+    instruction_path.parent.mkdir(parents=True, exist_ok=True)
+    instruction_path.write_text("# Blueprint Agent Instruction Pack\n", encoding="utf-8")
     import hashlib
 
     digest = hashlib.sha256(spec_path.read_bytes()).hexdigest()
