@@ -360,6 +360,44 @@ escape_hatch_exemptions:
     assert ok
 
 
+def test_d4_expired_alias_names_replacement_class(tmp_path):
+    m = _load()
+    from datetime import UTC, datetime
+
+    _write_exemptions(
+        tmp_path,
+        """
+version: 1
+escape_hatch_exemptions:
+  - id: partial-worktree
+    allow: [ci_local_skip]
+    active: true
+    reason: parent
+  - id: local-preflight-preexisting
+    allow: [ci_local_skip]
+    active: true
+    reason: preexisting
+  - id: submodule-reachability-partial-worktree
+    alias_of: partial-worktree
+    allow: [ci_local_skip]
+    active: true
+    deprecated: true
+    alias_expires: "2026-08-01T00:00:00Z"
+""",
+    )
+    ok, reason = m.check_escape_hatch(
+        tmp_path,
+        flag="ci_local_skip",
+        escape_id="submodule-reachability-partial-worktree",
+        agent_id="",
+        now=datetime(2026, 8, 22, tzinfo=UTC),
+    )
+    assert not ok
+    assert "partial-worktree" in reason
+    assert "local-preflight-preexisting" in reason
+    assert "expired" in reason.lower() or "alias" in reason.lower()
+
+
 def test_d4_partial_worktree_cannot_skip_generic_gac_fingerprint(tmp_path):
     m = _load()
     _write_exemptions(

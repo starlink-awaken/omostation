@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Unified Weekly Governance & Hygiene Patrol Engine (ADR-0192).
 
-Orchestrates 6-pillar multi-domain automated inspections:
+Orchestrates 7-pillar multi-domain automated inspections:
 1. MOF SSOT Rule Compilation & Drift Gate
 2. Documents Dual-Plane Cleanliness (ADR-0191 / E-DOC-001 / E-DOC-002)
 3. Domain Truth Entity Schema & Freshness SLA (ADR-0192 / E-DOC-004)
 4. Multi-Client Documents MCP Configuration Alignment (E-DOC-005)
 5. Local Compute Fabric Health (omlxc doctor)
 6. Agent Skills & GAC Heuristic Compliance
+7. D4 escape-digest dry-run (ADR-0422; does not mutate allowlist)
 """
 
 from __future__ import annotations
@@ -117,6 +118,37 @@ def main() -> int:
         "detail": "All skills follow .agents/skills specification" if skills_ok else out_skills[:120],
     })
 
+    # 7. D4 escape digest (read-only clustering; never mutates allowlist)
+    digest_script = REPO_ROOT / "bin" / "gac" / "escape-digest.py"
+    escape_dir = REPO_ROOT / ".omo" / "_delivery" / "swarm-escape"
+    if digest_script.exists():
+        digest_cmd = [sys.executable, str(digest_script), "--dry-run"]
+        if escape_dir.is_dir():
+            digest_cmd.extend(["--dir", str(escape_dir)])
+        code_digest, out_digest = run_subcommand(digest_cmd)
+        mutated = False
+        if out_digest:
+            try:
+                payload = json.loads(out_digest)
+                mutated = bool(payload.get("mutated_allowlist"))
+            except json.JSONDecodeError:
+                mutated = False
+        digest_ok = code_digest == 0 and not mutated
+        digest_detail = (
+            "escape-digest dry-run ok, mutated_allowlist=false"
+            if digest_ok
+            else (out_digest[:120] or f"digest exit {code_digest}")
+        )
+    else:
+        digest_ok = True
+        digest_detail = "escape-digest.py not found (skipped)"
+    checks.append({
+        "name": "D4 Escape Digest Dry-Run (ADR-0422)",
+        "category": "Swarm Escape",
+        "passed": digest_ok,
+        "detail": digest_detail,
+    })
+
     all_passed = all(c["passed"] for c in checks)
     passed_count = sum(1 for c in checks if c["passed"])
 
@@ -126,7 +158,7 @@ def main() -> int:
         f"> **巡检时间**: {now_iso}  ",
         f"> **全域状态**: {'🟢 ALL PASS (全域健康)' if all_passed else '🟡 ADVISORY / VIOLATIONS (存在关注项)'} ({passed_count}/{len(checks)})  ",
         "",
-        "## 📊 巡检六大支柱状态矩阵",
+        "## 📊 巡检支柱状态矩阵",
         "",
         "| 支柱检查项 | 治理维度 | 状态 | 详情摘要 |",
         "| :--- | :--- | :---: | :--- |",

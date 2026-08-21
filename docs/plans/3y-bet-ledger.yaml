@@ -5088,12 +5088,30 @@ bets:
   title: D4 逃生口固化 — 权限类 vs fingerprint 债 + 观察再跳 + 人类口硬拒
   appetite: 1 day
   priority: P0
-  status: pending
+  status: done
+  done_at: '2026-08-21'
+  completed_at: '2026-08-21'
+  done_note: 'PR #1835 merged (015e0fb41). Follow-through 2026-08-22: expired-alias
+    deny names replacement class; escape-digest wired into hygiene-patrol; token/digest
+    commands in AGENTS.md + git-discipline. Skip policy remains shadow.'
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-21-escape-hatch-solidification-design.md
     spec_version: 1.0.0
-    content_digest: sha256:ce5b182f97335927e9cdd80d36fc45ad43234a944f10e306bb364b150603d024
+    content_digest: sha256:f93bcd3511ea86cc62dc80745780b2f3358f3d52978b77b6665a6f6b9ff929f7
     decision_ref: decision://accepted/BET-Y1Q3-T1-09
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
   goal: 把 D4 逃生口从「无限复用的万能票」收成「权限类 + fingerprint 债」，预存失败必须下沉，agent 不能再用 emergency-human-hotfix 跳新失败
   non_goals:
   - 不接线 GitHub CI / admin merge（schema 可预留 surface=github）
@@ -5134,6 +5152,8 @@ bets:
   - .omo/_knowledge/retros/BET-Y1Q3-T1-09.md
   - .agents/skills/git-discipline/SKILL.md
   - .agents/skills/ci-red-triage/SKILL.md
+  - bin/ssot/weekly-hygiene-patrol.py
+  - Makefile
   pasw_required: false
   depends_on:
   - BET-Y1Q1-T1-07
