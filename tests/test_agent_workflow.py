@@ -306,7 +306,14 @@ def test_prepare_bet_execution_builds_recomputable_ecos_packet_identity(tmp_path
     assert packet["schema_version"] == "work-packet/v2"
     assert packet["bet_id"] == bet_id
     assert packet["spec_binding"]["decision_ref"] == f"decision://accepted/{bet_id}"
+    assert packet["instruction_binding"] == prepared["instruction_binding"]
+    assert prepared["instruction_binding"]["instruction_ref"] == (
+        "repo://docs/operations/blueprint-agent-instruction-pack-v1.md"
+    )
+    assert prepared["instruction_binding"]["instruction_profile"] == "executor"
+    assert prepared["instruction_binding"]["content_digest"].startswith("sha256:")
     assert packet["scope"]["write_surfaces"] == ["bin/agent-workflow.py", "tests/**"]
+    assert "docs/operations/blueprint-agent-instruction-pack-v1.md" in packet["scope"]["read_surfaces"]
     assert prepared["work_packet_hash"].startswith("sha256:")
 
 
@@ -328,6 +335,15 @@ def test_prepare_bet_execution_rejects_unaccepted_decision(tmp_path: Path) -> No
     )
 
     with pytest.raises(module.WorkflowError, match="SPEC_DECISION_NOT_ACCEPTED"):
+        module._prepare_bet_execution(bet_id, workspace=tmp_path)
+
+
+def test_prepare_bet_execution_rejects_missing_instruction_pack(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    (tmp_path / "docs/operations/blueprint-agent-instruction-pack-v1.md").unlink()
+
+    with pytest.raises(module.WorkflowError, match="INSTRUCTION_PACK_MISSING"):
         module._prepare_bet_execution(bet_id, workspace=tmp_path)
 
 
@@ -381,6 +397,18 @@ def test_claim_revalidates_spec_digest_after_start(tmp_path: Path) -> None:
         module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
 
 
+def test_claim_revalidates_instruction_digest_after_start(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    payload = {"bet_id": bet_id, **prepared}
+    instruction_path = tmp_path / "docs/operations/blueprint-agent-instruction-pack-v1.md"
+    instruction_path.write_text("# Drifted after start\n", encoding="utf-8")
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_SOURCE_DRIFT"):
+        module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
+
+
 def test_claim_rejects_tampered_packet_hash(tmp_path: Path) -> None:
     module = _load_root_workflow_wrapper()
     bet_id, _spec_path = _write_bet_workspace(tmp_path)
@@ -418,6 +446,7 @@ def test_direct_omo_module_start_binds_recomputable_work_packet_v2() -> None:
     record = json.loads(result.stdout)
     assert record["bet_id"] == "BET-Y1Q3-T4-01"
     assert record["work_packet"]["schema_version"] == "work-packet/v2"
+    assert record["work_packet"]["instruction_binding"] == record["instruction_binding"]
     assert record["work_packet_hash"].startswith("sha256:")
     assert record["spec_binding"]["decision_ref"] == "decision://accepted/BET-Y1Q3-T4-01"
 
