@@ -7,9 +7,6 @@
 [submodule "projects/l4-kernel"]
 	path = projects/l4-kernel
 	url = https://github.com/starlink-awaken/omostation-l4-kernel.git
-[submodule "scripts"]
-	path = scripts
-	url = https://github.com/starlink-awaken/omostation-scripts.git
 [submodule "projects/ecos"]
 	path = projects/ecos
 	url = https://github.com/starlink-awaken/omostation-ecos.git
