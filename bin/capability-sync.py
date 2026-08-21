@@ -2,9 +2,10 @@
 """Compatibility CLI for the canonical capability registry.
 
 The sole registry writer is ``bin/cockpit/gen-capability-registry.py``.  This
-module delegates sync/check to that writer and provides read-only discovery.
-Discovery never invokes a capability: it emits a privacy-safe resolution
-receipt that requires a native adapter and an admission decision.
+module delegates sync/check to that writer, provides read-only discovery, and
+exposes the narrow public boundary for governed BOS loading/invocation.  Only
+exact canonical IDs may reach Agora's native gateway; caller supplied commands,
+argv, module paths, targets, and transport overrides are never accepted.
 """
 
 from __future__ import annotations
@@ -28,7 +29,9 @@ except ImportError:  # pragma: no cover - exercised by the CLI environment
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REGISTRY = ROOT / "docs" / "generated" / "capability-registry.yaml"
 CANONICAL_GENERATOR = ROOT / "bin" / "cockpit" / "gen-capability-registry.py"
+AGORA_SRC = ROOT / "projects" / "agora" / "src"
 SUPPORTED_SCHEMA_MAJOR = 1
+MAX_INPUT_JSON_BYTES = 1024 * 1024
 CANONICAL_REGISTRY_METADATA = {
     "schema": "capability-registry/v1",
     "owner": "workspace-capability-governance",
@@ -38,6 +41,10 @@ CANONICAL_REGISTRY_METADATA = {
 
 class RegistryError(ValueError):
     """The registry is missing, malformed, or uses an unsupported schema."""
+
+
+class GatewayError(ValueError):
+    """The capability cannot safely enter the governed native gateway."""
 
 
 @dataclass(frozen=True)
@@ -253,6 +260,151 @@ def build_resolution_receipt(
     return receipt
 
 
+def _bos_registry_rows(registry: Mapping[str, Any]) -> list[dict[str, Any]]:
+    bos = registry.get("bos_services") or {}
+    domains = bos.get("domains") if isinstance(bos, dict) else {}
+    rows: list[dict[str, Any]] = []
+    if not isinstance(domains, dict):
+        return rows
+    for services in domains.values():
+        if isinstance(services, list):
+            rows.extend(service for service in services if isinstance(service, dict))
+    return rows
+
+
+def build_native_bos_record(
+    registry: Mapping[str, Any], capability_id: str, service_catalog: Sequence[Any]
+) -> dict[str, Any]:
+    """Reconcile one generated BOS row with Agora's native runtime truth."""
+    if not capability_id.startswith("bos-service:bos://"):
+        raise GatewayError("unsupported_capability_kind")
+    resolution = resolve_capability(registry, capability_id=capability_id)
+    if resolution.status != "resolved" or resolution.capability is None:
+        raise GatewayError("capability_not_exactly_resolved")
+
+    uri = capability_id.removeprefix("bos-service:")
+    rows = [row for row in _bos_registry_rows(registry) if str(row.get("uri") or "") == uri]
+    if len(rows) != 1:
+        raise GatewayError("missing_or_duplicate_bos_truth")
+    row = rows[0]
+    if str(row.get("status") or "active") != "active":
+        raise GatewayError("bos_service_not_active")
+    if str(row.get("transport") or "") != "internal":
+        raise GatewayError("bos_transport_not_internal")
+
+    services = [service for service in service_catalog if str(getattr(service, "uri", "")) == uri]
+    if len(services) != 1:
+        raise GatewayError("missing_or_duplicate_runtime_service")
+    service = services[0]
+    if str(getattr(service, "transport", "")) != "internal":
+        raise GatewayError("runtime_transport_not_internal")
+    description = str(getattr(service, "description", ""))
+    if description != str(row.get("description") or ""):
+        raise GatewayError("registry_runtime_description_mismatch")
+    operation = str(getattr(service, "action", "") or "invoke")
+
+    return {
+        "id": capability_id,
+        "source": "agora.bos",
+        "status": "active",
+        "native_bos_uri": uri,
+        "kind": "bos_service",
+        "transport": "bos_native",
+        "operation": operation,
+        "adapter": {"kind": "bos_native", "target": uri},
+        "description": description,
+    }
+
+
+def _prepare_native_router(router: Any, exact_services: Sequence[Any]) -> Any:
+    """Require lifecycle catalogs before any exact route is seeded."""
+    router.enable_capability_gating()
+    if (
+        getattr(router, "_capability_catalog", None) is None
+        or getattr(router, "_admission_catalog", None) is None
+    ):
+        raise GatewayError("lifecycle_catalog_unavailable")
+    router.seed_from_poc(list(exact_services))
+    return router
+
+
+def _load_native_gateway(capability_id: str) -> tuple[Any, Sequence[Any]]:
+    """Load Agora's gateway and seed only the exact native route."""
+    if str(AGORA_SRC) not in sys.path:
+        sys.path.insert(0, str(AGORA_SRC))
+    try:
+        from agora.capability_gateway import CapabilityInvocationGateway
+        from agora.mcp.bos_router import bos_router
+        from agora.mcp.resolver.services import POC_SERVICES
+    except Exception as exc:  # noqa: BLE001 - public boundary fails closed
+        raise GatewayError("gateway_unavailable") from exc
+
+    uri = capability_id.removeprefix("bos-service:")
+    exact_services = [service for service in POC_SERVICES if getattr(service, "uri", "") == uri]
+    try:
+        gateway = CapabilityInvocationGateway(
+            router=_prepare_native_router(bos_router, exact_services)
+        )
+    except Exception as exc:  # noqa: BLE001 - public boundary fails closed
+        if isinstance(exc, GatewayError):
+            raise
+        raise GatewayError("gateway_unavailable") from exc
+    return gateway, POC_SERVICES
+
+
+def execute_gateway_operation(
+    registry: Mapping[str, Any],
+    operation: str,
+    capability_id: str,
+    *,
+    payload: Any = None,
+    gateway: Any = None,
+    service_catalog: Optional[Sequence[Any]] = None,  # noqa: UP045 -- Python 3.9 contract
+) -> dict[str, Any]:
+    """Load or invoke through Agora; never construct a provider process."""
+    if operation not in {"load", "invoke"}:
+        raise GatewayError("unsupported_gateway_operation")
+    if gateway is None or service_catalog is None:
+        gateway, service_catalog = _load_native_gateway(capability_id)
+    record = build_native_bos_record(registry, capability_id, service_catalog)
+    selector = {"capability_id": capability_id}
+    if operation == "load":
+        return dict(gateway.load(record, selector=selector))
+    return dict(gateway.invoke(record, payload, selector=selector))
+
+
+def _gateway_error_receipt(operation: str, selector: Mapping[str, Any], reason: str) -> dict[str, Any]:
+    error_code = (
+        "CAPABILITY_GATEWAY_UNAVAILABLE"
+        if reason == "gateway_unavailable"
+        else "CAPABILITY_NOT_LOADABLE"
+    )
+    return {
+        "schema": "capability-invocation-receipt/v1",
+        "operation": operation,
+        "status": "rejected",
+        "selector_digest": _digest(
+            json.dumps(selector, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ),
+        "error_code": error_code,
+        "error_detail_digest": _digest(reason.encode("utf-8")),
+        "invocation_attempted": False,
+    }
+
+
+def _read_json_payload(path: Path) -> Any:
+    try:
+        content = path.read_bytes()
+    except OSError as exc:
+        raise GatewayError("input_json_unreadable") from exc
+    if len(content) > MAX_INPUT_JSON_BYTES:
+        raise GatewayError("input_json_too_large")
+    try:
+        return json.loads(content)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise GatewayError("input_json_invalid") from exc
+
+
 def _delegate_to_writer(action: str, registry_path: Path) -> int:
     command = [sys.executable, str(CANONICAL_GENERATOR), "--quiet", "--output", str(registry_path)]
     if action == "check":
@@ -275,6 +427,15 @@ def _parser() -> argparse.ArgumentParser:
     selector.add_argument("--id", dest="capability_id", help="exact capability ID")
     selector.add_argument("--query", help="compatibility search; ambiguity is rejected")
     find_parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
+
+    load_parser = commands.add_parser("load", help="admit and probe one exact native BOS capability")
+    load_parser.add_argument("--id", dest="capability_id", required=True, help="exact BOS capability ID")
+    load_parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
+
+    invoke_parser = commands.add_parser("invoke", help="invoke one admitted native BOS capability")
+    invoke_parser.add_argument("--id", dest="capability_id", required=True, help="exact BOS capability ID")
+    invoke_parser.add_argument("--input-json", type=Path, required=True, help="bounded structured input file")
+    invoke_parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
     return parser
 
 
@@ -282,6 +443,23 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
     args = _parser().parse_args(argv)
     if args.command in {"sync", "check"}:
         return _delegate_to_writer(args.command, args.registry)
+
+    if args.command in {"load", "invoke"}:
+        selector = {"capability_id": args.capability_id}
+        try:
+            registry = load_registry(args.registry)
+            payload = _read_json_payload(args.input_json) if args.command == "invoke" else None
+            receipt = execute_gateway_operation(
+                registry,
+                args.command,
+                args.capability_id,
+                payload=payload,
+            )
+        except (GatewayError, OSError, RegistryError) as exc:
+            reason = str(exc) if isinstance(exc, GatewayError) else "invalid_registry"
+            receipt = _gateway_error_receipt(args.command, selector, reason)
+        print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+        return 0 if receipt.get("status") in {"ready", "succeeded"} else 5
 
     selector: dict[str, Any] = {}
     if args.capability_id:
