@@ -6092,6 +6092,7 @@ bets:
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
   - docs/architecture/blueprint-multi-agent-execution-control-v1.md
   - docs/architecture/digital-twin-blueprint-v1.md
+  - docs/scene-cards/engineering-delivery-dogfood.yaml
   - docs/operations/blueprint-agent-instruction-pack-v1.md
   - docs/SYSTEM-INDEX.md
   - bin/plan/bet-ledger.py
