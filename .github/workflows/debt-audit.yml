@@ -23,8 +23,6 @@ jobs:
           submodules: false
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
-      - name: Init scripts submodule
-        run: git submodule update --init scripts
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
