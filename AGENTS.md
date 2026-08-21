@@ -326,7 +326,7 @@ Stable architecture contracts live in [`ARCHITECTURE.md`](ARCHITECTURE.md). Proj
 | `projects/c2g/` | Strategy ingress: pitch/bet materialization into governed tasks. |
 | `projects/ecos/` | Protocol and MOF layer. |
 | `spaces/` | User/tenant-space manifests. Treat as governed configuration. |
-| `scripts/` | Ops scripts (independent submodule). See [`scripts/AGENTS.md`](scripts/AGENTS.md). |
+| `scripts/` | Retired 2026-08 (archived submodule). Tools live in [`bin/README.md`](bin/README.md). |
 | `runtime/` | Runtime execution logs, sandbox, server.log. Do not edit manually. |
 | `kos/` | Knowledge index (SQLite + snapshots). Runtime product, do not edit manually. |
 | `bin/` | Governance tools (gac-*, doc-ssot-*, ssot-guardian, agent-workflow). |

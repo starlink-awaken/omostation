@@ -1,5 +1,8 @@
 # 2026-08-15 bin 工具治理收敛 Round 2
 
+> **已退役** (2026-08-21): `scripts/bin/` 工具已迁移到 `bin/`，scripts 仓库已 archive。
+> 并行收敛治理不再需要。本记录保留作为历史参考。
+
 ## 一、目标
 在上一轮发现 `make bin-tool-registry-audit-strict` 失败（自循环 + 重复命名）之后，进行下一轮“高置信债务收敛”，并保持可复现验证与 Makefile 适配链路连续可用。
 

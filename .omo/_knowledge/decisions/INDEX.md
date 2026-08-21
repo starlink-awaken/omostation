@@ -457,7 +457,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0399: 治本 E — 子模块 stale 自动 pull + PASW 漂移检测增强 — **PROPOSED** | 2026-08-08 | Submodule stale auto-pull | 0399-submodule-stale-auto-pull.md
 - ADR-0391: 分层契约方向单源 — layer-contract.yaml 为权威, check-layer-call-direction.py 对齐 — **PROPOSED** | 2026-08-07 | Layer contract direction SSOT | 0391-layer-contract-direction-ssot.md
 - ADR-0405: Only 9 scene cards — 场景卡覆盖度评估 (draft, 重编号避撞) — **DRAFT** | 2026-08-08 | Scene card coverage | 0405-insufficient-cards.md
-- ADR-0394: scripts/ 子模块镜像债治理 — 删 dead capability + Makefile target — **ACCEPTED** | 2026-08-08 | Scripts submodule mirror debt | 0394-scripts-submodule-mirror-debt.md
+- ADR-0394: scripts/ 子模块镜像债治理 — 已退役并迁移到 root bin/ — **SUPERSEDED** | 2026-08-22 | Scripts submodule archived | 0394-scripts-submodule-mirror-debt.md
 - ADR-0393: god-module 大文件治理计划 — 3 个 >1500L 债的拆分路径 — **ACCEPTED** | 2026-08-08 | God-module debt plan | 0393-god-module-debt-plan.md
 - ADR-0392: CI 修复 + 主仓 dirty 提交 — drafts persistence_mode + runtime state 同步 — **ACCEPTED** | 2026-08-08 | CI fix + dirty commit | 0392-ci-fix-and-dirty-commit.md
 - ADR-0390: M5 数据黑障修复 — omo_daemon governance-history checks 丢失 — **ACCEPTED** | 2026-08-08 | Gate ROI data blackout fix | 0390-gate-roi-data-blackout-fix.md

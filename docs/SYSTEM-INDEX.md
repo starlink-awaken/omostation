@@ -49,7 +49,7 @@
 | BOS 服务 | `projects/agora/etc/bos-services.yaml` | 边界层 |
 | L0 约束 | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` | 协议层 |
 | MOF 能力 | `.omo/_truth/registry/mof-capabilities.yaml` | 事实层 |
-| 运维脚本入口 | `scripts/AGENTS.md` · `scripts/INDEX.md` | 运行时工具 |
+| 运维脚本入口 | [`bin/README.md`](../bin/README.md) | 运行时工具 |
 | 空间配置入口 | `spaces/AGENTS.md` · `spaces/registry.yaml` | 空间策略 |
 
 ---
@@ -60,7 +60,7 @@
 
 → [跨包 API 地图](overview/cross-package-api-map.md) — Kairon BOS 路由与跨包接口（生成物）
 
-→ [工具索引](INDEX-TOOLS.md) — bin/ + scripts/ + .agents/skills 统一目录
+→ [工具索引](INDEX-TOOLS.md) — bin/ + .agents/skills 统一目录
 
 → [知识索引](INDEX-KNOWLEDGE.md) — ADR + 审计 + 模式 + 总结交叉索引
 → [计划与决策台账](plans/) — 3Y-BET-LEDGER 等计划/台账文档
