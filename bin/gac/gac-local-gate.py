@@ -143,6 +143,7 @@ DEFAULT_POLICY = {
         {
             "id": "governance-semantic-gate",
             "command": ["bin/gac/governance-semantic-gate.py", "--json"],
+            "timeout": 60,
         },
         {"id": "adr-coverage", "command": ["bin/adr/adr-coverage.py", "--json"]},
         # ADR-0373 (C5): sweep history drift gate (CR-SWEEP-INDEX-AUTO)
