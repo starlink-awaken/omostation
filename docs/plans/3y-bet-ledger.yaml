@@ -5912,21 +5912,14 @@ bets:
   title: 真实个人价值证据脊柱与战略事实重基线
   appetite: 2 weeks
   priority: P0
-  status: done
+  status: in_progress
   started_at: 2026-08-21
   run_ref: 20260821T111433Z-bet-execution-967f03e6
-  done_at: 2026-08-21
-  done_evidence: >-
-    12/12 AC 落地: 三轴代码强制(compound-attribution/north_star_v2), spec binding(blueprint_control),
-    capability fail-closed, north_star causal 派生, never-send 信号链真实样本
-    (跨仓耦合观察: SignalReceipt→confirm→execute→human accept verdict→OutcomeFeedback,
-    qualifying_outcomes 0→1, four_week gate not_ready→collecting), Codex acp_stdio 默认(T1-19),
-    报告降级, NOT_PROVEN 状态, ledger lint + gac-local-gate 46 全绿. run 20260821T111433Z-bet-execution-967f03e6
   progress_note: >-
-    恢复为 candidate (2026-08-21): AC-06 依赖的 BET-Y1Q2-T1-19 已解封
-    (blocked→in_progress, live canary PASS + acp_stdio 已切默认 transport), AC-06
-    依赖实质解除。AC-01/02/03/04/05/07/08/09/10/12 已落地实现保留, 待认领完成
-    剩余 AC(06 最终验证 + 11 收尾)后 closeout。
+    2026-08-21 并发 closeout 纠偏：PR #1831 曾在缺少 credential-bound human
+    attestation 的情况下把 BET 标为 done；PR #1832 已落地三轴完成真相并证明
+    engineering=IN_PROGRESS、operational=DEGRADED、value=NOT_PROVEN、overall=blocked。
+    因此恢复为 in_progress；只有工程、运行和价值三轴全部满足强证据后才能再次 closeout。
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-20-value-proof-truth-rebaseline-design.md
     spec_version: 1.0.0
