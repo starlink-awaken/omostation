@@ -6100,6 +6100,8 @@ bets:
   - .omo/state/system.yaml
   - .omo/tasks/registry/INDEX.md
   - bin/ssot/dogfood-collector.py
+  - bin/ssot/current-state-coherence.py
+  - bin/ssot/ssot-guardian.py
   - docs/operations/blueprint-agent-instruction-pack-v1.md
   - docs/SYSTEM-INDEX.md
   - bin/plan/bet-ledger.py
