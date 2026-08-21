@@ -22,6 +22,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import base64
 import fnmatch
 import hashlib
 import json
@@ -29,6 +30,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -250,6 +252,26 @@ COMPLETION_DIRECT_EVIDENCE = {
     },
 }
 COMPLETION_MATRIX_REQUIRED_STATUSES = frozenset({"in_progress", "review"})
+HUMAN_ATTESTATION_SCHEMA_VERSION = "human-attestation/v1"
+# Namespace used when signing/verifying with `ssh-keygen -Y`; must match the
+# one used at signing time so a signature cannot be replayed across namespaces.
+HUMAN_ATTESTATION_SSH_NAMESPACE = "omostation-human-attestation"
+# Canonical message a human signs to bind their verdict to a value sample.
+# The message must be byte-identical at signing and verification time.
+HUMAN_ATTESTATION_MESSAGE_FIELDS = (
+    "schema_version",
+    "principal_id",
+    "verdict",
+    "episode_id",
+    "signal_event_id",
+    "observed_at",
+)
+# Trusted signer keys: "<identity> <pubkey>" lines accepted by ssh-keygen -Y.
+# Server-owned configuration; a caller path never redirects it.
+HUMAN_ATTESTATION_ALLOWED_SIGNERS = (
+    os.environ.get("HUMAN_ATTESTATION_ALLOWED_SIGNERS")
+    or str(Path(__file__).resolve().parents[2] / "runtime" / "omo" / "human-attestation-allowed-signers")
+)
 
 
 class SpecBindingContractError(ValueError):
@@ -950,6 +972,115 @@ def _validate_evidence_reference(
     return []
 
 
+def _attestation_message(receipt: dict[str, Any]) -> bytes:
+    """Canonical bytes a human signs to bind their verdict to a value sample.
+
+    Field order and separators are fixed so signing and verification are
+    byte-identical without trusting a projection.
+    """
+    lines: list[str] = []
+    for field in HUMAN_ATTESTATION_MESSAGE_FIELDS:
+        value = receipt.get(field)
+        if value is None:
+            raise ValueError(f"human_attestation_message_missing_field:{field}")
+        lines.append(f"{field}={value}")
+    return "\n".join(lines).encode("utf-8") + b"\n"
+
+
+def _attestation_signature_bytes(receipt: dict[str, Any]) -> bytes:
+    """Decode the base64 signature blob without trusting a caller path."""
+    encoded = receipt.get("signature_b64")
+    if not isinstance(encoded, str) or not encoded.strip():
+        raise ValueError("human_attestation_signature_missing")
+    try:
+        decoded = base64.b64decode(encoded, validate=True)
+    except (ValueError, TypeError) as exc:
+        raise ValueError(f"human_attestation_signature_invalid:{exc}") from exc
+    if not decoded:
+        raise ValueError("human_attestation_signature_empty")
+    return decoded
+
+
+def validate_human_attestation(
+    *,
+    receipt_path: Path,
+    workspace: Path = WS,
+) -> list[str]:
+    """Verify a credential-bound human attestation receipt via SSH signatures.
+
+    The receipt is a ``human-attestation/v1`` YAML mapping that a human signed
+    with ``ssh-keygen -Y sign``.  ``ssh-keygen -Y verify`` proves the signature
+    against a server-owned allowed-signers file, so an agent-issued HTTP verdict
+    or a forged receipt cannot satisfy the value axis.  Returns a list of
+    errors (empty when the attestation is valid).
+    """
+    if not receipt_path.is_file():
+        return ["COMPLETION_HUMAN_AUTH_RECEIPT_MISSING: attestation receipt does not resolve to a file"]
+    try:
+        raw = receipt_path.read_text(encoding="utf-8")
+        receipt = yaml.safe_load(raw)
+    except (OSError, ValueError) as exc:
+        return [f"COMPLETION_HUMAN_AUTH_RECEIPT_UNREADABLE: {exc}"]
+    if not isinstance(receipt, dict):
+        return ["COMPLETION_HUMAN_AUTH_RECEIPT_SHAPE: receipt must be a mapping"]
+    if receipt.get("schema_version") != HUMAN_ATTESTATION_SCHEMA_VERSION:
+        return [
+            "COMPLETION_HUMAN_AUTH_SCHEMA: schema_version must equal "
+            f"{HUMAN_ATTESTATION_SCHEMA_VERSION}"
+        ]
+
+    allowed_signers = Path(HUMAN_ATTESTATION_ALLOWED_SIGNERS).expanduser().resolve()
+    if not allowed_signers.is_file():
+        return [
+            "COMPLETION_HUMAN_AUTH_VERIFIER_UNCONFIGURED: allowed-signers file missing at "
+            f"{HUMAN_ATTESTATION_ALLOWED_SIGNERS}"
+        ]
+    identity = receipt.get("signer_identity")
+    if not isinstance(identity, str) or not identity.strip():
+        return ["COMPLETION_HUMAN_AUTH_IDENTITY_REQUIRED: signer_identity must be non-empty"]
+
+    try:
+        message = _attestation_message(receipt)
+        signature = _attestation_signature_bytes(receipt)
+    except ValueError as exc:
+        return [f"COMPLETION_HUMAN_AUTH_MESSAGE_INVALID: {exc}"]
+
+    with tempfile.TemporaryDirectory(prefix="human-attestation-verify-") as tmp_dir:
+        tmp = Path(tmp_dir)
+        message_path = tmp / "message.txt"
+        signature_path = tmp / "message.txt.sig"
+        try:
+            message_path.write_bytes(message)
+            signature_path.write_bytes(signature)
+        except OSError as exc:
+            return [f"COMPLETION_HUMAN_AUTH_IO: {exc}"]
+        try:
+            result = subprocess.run(
+                [
+                    "ssh-keygen",
+                    "-Y",
+                    "verify",
+                    "-f",
+                    str(allowed_signers),
+                    "-I",
+                    identity,
+                    "-n",
+                    HUMAN_ATTESTATION_SSH_NAMESPACE,
+                    "-s",
+                    str(signature_path),
+                ],
+                input=message_path.read_bytes(),
+                capture_output=True,
+                check=False,
+            )
+        except OSError as exc:
+            return [f"COMPLETION_HUMAN_AUTH_VERIFY_UNAVAILABLE: {exc}"]
+        if result.returncode != 0:
+            stderr = (result.stderr or result.stdout or b"").decode("utf-8", "replace").strip()
+            return [f"COMPLETION_HUMAN_AUTH_SIGNATURE_INVALID: {stderr[:200] or 'ssh-keygen rejected signature'}"]
+    return []
+
+
 def validate_completion_evidence(
     matrix: Any,
     *,
@@ -996,10 +1127,36 @@ def validate_completion_evidence(
                 f"COMPLETION_DIRECT_EVIDENCE_REQUIRED: {axis}.{status} missing={missing}"
             )
         if axis == "value" and status == "ACCEPTED" and not missing:
-            errors.append(
-                "COMPLETION_HUMAN_AUTH_UNPROVABLE: no credential-bound human "
-                "attestation verifier is registered"
-            )
+            # The four direct evidence keys are present; the value axis still
+            # needs a credential-bound human attestation (signed verdict), not
+            # just an HTTP-callable receipt. Fail closed until it verifies.
+            attestation = evidence.get("attestation")
+            if not isinstance(attestation, dict) or not isinstance(attestation.get("ref"), str):
+                errors.append(
+                    "COMPLETION_HUMAN_AUTH_REQUIRED: value.ACCEPTED needs evidence.attestation.ref "
+                    "pointing to a human-attestation/v1 receipt"
+                )
+            else:
+                att_errors = _validate_evidence_reference(
+                    axis="value",
+                    key="attestation",
+                    value=attestation,
+                    workspace=workspace,
+                )
+                if att_errors:
+                    errors.extend(att_errors)
+                else:
+                    receipt_path = (workspace / attestation["ref"].removeprefix("receipt://").split("#", 1)[0]).resolve()
+                    errors.extend(validate_human_attestation(receipt_path=receipt_path, workspace=workspace))
+            for key in sorted(required - set(missing)):
+                errors.extend(
+                    _validate_evidence_reference(
+                        axis=axis,
+                        key=key,
+                        value=evidence[key],
+                        workspace=workspace,
+                    )
+                )
         else:
             for key in sorted(required - set(missing)):
                 errors.extend(
