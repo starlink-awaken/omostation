@@ -7,7 +7,6 @@ submodule) and drives the CLI via subprocess.  No source-string assertions.
 from __future__ import annotations
 
 import argparse
-import builtins
 import hashlib
 import importlib.util
 import json
@@ -49,15 +48,30 @@ def git(cwd: Path, *args: str, env: dict | None = None, check: bool = True) -> s
     return proc
 
 
-def run_cli(*argv: str, env: dict | None = None, check: bool = True) -> subprocess.CompletedProcess:
+def run_cli(
+    *argv: str,
+    env: dict | None = None,
+    check: bool = True,
+    trusted_root: Path | None = None,
+) -> subprocess.CompletedProcess:
     e = os.environ.copy()
     if env:
         e.update(env)
     else:
         # never leak an ambient AGENT_ID from the host into guard tests
         e.pop("AGENT_ID", None)
+    command = [sys.executable, str(TOOL), *argv]
+    if "--claims-root" in argv:
+        root = trusted_root or Path(argv[argv.index("--claims-root") + 1])
+        bootstrap = (
+            "import importlib.util,sys; from pathlib import Path; "
+            "p=Path(sys.argv[2]); s=importlib.util.spec_from_file_location('agent_clone_test_cli',p); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "m.ACCOUNT_WORKSPACE_ROOT=Path(sys.argv[1]); raise SystemExit(m.main(sys.argv[3:]))"
+        )
+        command = [sys.executable, "-c", bootstrap, str(root), str(TOOL), *argv]
     proc = subprocess.run(
-        [sys.executable, str(TOOL), *argv],
+        command,
         capture_output=True,
         text=True,
         env=e,
@@ -104,7 +118,13 @@ def make_source(base: Path, submodule_name: str = "childmod", with_hooks: bool =
     src.mkdir(parents=True)
     git(src, "init", "-b", "main")
     (src / "README.md").write_text("root\n")
-    git(src, "add", "README.md")
+    policy = src / ".omo" / "_truth" / "registry" / "swarm-coordination.yaml"
+    policy.parent.mkdir(parents=True)
+    policy.write_text(
+        "topology_migration:\n"
+        f"  integration_root: '{(base / 'authority').resolve()}'\n"
+    )
+    git(src, "add", "README.md", str(policy.relative_to(src)))
     git(
         src,
         "-c",
@@ -175,6 +195,16 @@ def create_clone(tmp: Path, bare: Path, name: str = "clone", **extra: object) ->
     proc = run_cli(*argv, check=False)
     assert proc.returncode == 0, proc.stderr
     assert parse_json(proc)["reason"] == "clone_created"
+    authority = tmp / "authority"
+    if not authority.exists():
+        cloned = subprocess.run(
+            ["git", "clone", "--no-recurse-submodules", str(bare), str(authority)],
+            capture_output=True,
+            text=True,
+            env={**os.environ, **_GIT_ENV},
+            check=False,
+        )
+        assert cloned.returncode == 0, cloned.stderr
     return dest
 
 
@@ -185,11 +215,16 @@ def write_manifest(tmp: Path, clone: Path, name: str = "manifest.json") -> Path:
     return out
 
 
-def write_active_claim(clone: Path, *paths: str) -> None:
-    runs = clone / ".omo" / "_delivery" / "agent-workflows" / "runs"
+def write_active_claim(authority: Path, *paths: str, actor: str = "agent-1", name: str = "active") -> Path:
+    runs = authority / ".omo" / "_delivery" / "agent-workflows" / "runs"
     runs.mkdir(parents=True, exist_ok=True)
     rendered = "\n".join(f"      - {path}" for path in paths)
-    (runs / "active.yaml").write_text("status: active\nclaims:\n  - paths:\n" + rendered + "\n")
+    run = runs / f"{name}.yaml"
+    run.write_text(
+        f"run_id: {name}\nstatus: active\nactor: human-owner\nupdated_at: '2026-08-21T00:00:00Z'\n"
+        f"claims:\n  - actor: {actor}\n    claimed_at: '2026-08-21T00:00:01Z'\n    paths:\n{rendered}\n"
+    )
+    return run
 
 
 def tamper_manifest(path: Path, mutate, recompute: bool = True) -> None:
@@ -887,7 +922,8 @@ def test_changeset_includes_declared_root_only_file(tmp_path):
     _src, _child, bare = make_source(tmp_path)
     dest = create_clone(tmp_path, bare, no_submodules=True)
     baseline = write_manifest(tmp_path, dest, "baseline.json")
-    write_active_claim(dest, "README.md")
+    authority = tmp_path / "authority"
+    write_active_claim(authority, "README.md")
     (dest / "README.md").write_text("changed root file\n")
     git(dest, "add", "README.md")
     git(dest, "commit", "-m", "change root file")
@@ -902,6 +938,8 @@ def test_changeset_includes_declared_root_only_file(tmp_path):
         "--output",
         str(output),
         "--verify-claims",
+        "--claims-root",
+        str(authority),
         "--json",
     )
 
@@ -927,6 +965,8 @@ def test_changeset_rejects_unclaimed_root_only_file(tmp_path):
     git(dest, "add", "README.md")
     git(dest, "commit", "-m", "change root file")
     output = tmp_path / "changeset.json"
+    authority = tmp_path / "authority"
+    write_active_claim(authority, "OTHER.md")
 
     proc = run_cli(
         "changeset",
@@ -937,6 +977,8 @@ def test_changeset_rejects_unclaimed_root_only_file(tmp_path):
         "--output",
         str(output),
         "--verify-claims",
+        "--claims-root",
+        str(authority),
         "--json",
         check=False,
     )
@@ -950,7 +992,7 @@ def test_changeset_rejects_unclaimed_root_only_file(tmp_path):
     assert data["claim_verification"]["violations"] == ["README.md"]
 
 
-def test_changeset_fails_closed_when_claim_checker_is_unavailable(tmp_path, monkeypatch):
+def test_changeset_requires_explicit_claims_root(tmp_path):
     tool = load_tool_module()
     _src, _child, bare = make_source(tmp_path)
     dest = create_clone(tmp_path, bare, no_submodules=True)
@@ -959,13 +1001,7 @@ def test_changeset_fails_closed_when_claim_checker_is_unavailable(tmp_path, monk
     git(dest, "add", "README.md")
     git(dest, "commit", "-m", "change root file")
     output = tmp_path / "changeset.json"
-    monkeypatch.setattr(
-        tool,
-        "_verify_changeset_claims",
-        lambda _root, _changes: {"enabled": False, "reason": "checker unavailable"},
-    )
-
-    with pytest.raises(tool.ToolError, match="claim verification could not run"):
+    with pytest.raises(tool.ToolError) as exc:
         tool.cmd_changeset(
             argparse.Namespace(
                 clone=str(dest),
@@ -974,37 +1010,64 @@ def test_changeset_fails_closed_when_claim_checker_is_unavailable(tmp_path, monk
                 verify_claims=True,
             )
         )
+    assert exc.value.reason == "claims_root_required"
+    assert not output.exists()
 
-    assert json.loads(output.read_text())["claim_verification"]["enabled"] is False
 
-
-def test_changeset_marks_import_error_claim_checker_unavailable(monkeypatch, tmp_path):
+def test_changeset_does_not_authorize_clone_local_or_wrong_actor_claim(tmp_path):
     tool = load_tool_module()
-    real_import = builtins.__import__
+    authority = tmp_path / "authority"
+    write_active_claim(authority, "README.md", actor="different-agent")
+    clone = tmp_path / "clone"
+    write_active_claim(clone, "README.md")
+    result = tool._verify_changeset_claims(
+        str(authority), "agent-1", [{"path": "README.md"}]
+    )
+    assert result["claimed_paths"] == []
+    assert result["violations"] == ["README.md"]
 
-    def deny_swarm_discipline(name, *args, **kwargs):
-        if name == "swarm_discipline":
-            raise ImportError("test missing claim checker")
-        return real_import(name, *args, **kwargs)
 
-    monkeypatch.setattr(builtins, "__import__", deny_swarm_discipline)
-    result = tool._verify_changeset_claims(str(tmp_path), [])
+def test_claim_glob_does_not_cover_sibling_prefix():
+    tool = load_tool_module()
+    assert tool._path_covered_by_claim(["docs/**"], "docs/plan.md") is True
+    assert tool._path_covered_by_claim(["docs/**"], "docs-archive/plan.md") is False
 
-    assert result == {
-        "enabled": False,
-        "claimed_paths": [],
-        "checked": [],
-        "violations": [],
-        "all_covered": True,
-        "reason": "swarm_discipline not available",
-    }
+
+def test_claim_snapshot_rejects_race_and_symlink_escape(tmp_path, monkeypatch):
+    tool = load_tool_module()
+    authority = tmp_path / "authority"
+    write_active_claim(authority, "README.md")
+    real_build = tool._build_claim_snapshot
+    calls = 0
+
+    def racing_build(root, agent_id):
+        nonlocal calls
+        result = real_build(root, agent_id)
+        calls += 1
+        if calls == 2:
+            result["runs"][0]["updated_at"] = "raced"
+        return result
+
+    monkeypatch.setattr(tool, "_build_claim_snapshot", racing_build)
+    with pytest.raises(tool.ToolError) as race:
+        tool._verify_changeset_claims(str(authority), "agent-1", [])
+    assert race.value.reason == "claims_snapshot_raced"
+
+    outside = tmp_path / "outside.yaml"
+    outside.write_text("run_id: escaped\nstatus: active\nclaims: []\n")
+    runs = authority / ".omo" / "_delivery" / "agent-workflows" / "runs"
+    (runs / "escaped.yaml").symlink_to(outside)
+    with pytest.raises(tool.ToolError) as escaped:
+        real_build(str(authority), "agent-1")
+    assert escaped.value.reason == "claims_run_escape"
 
 
 def test_verify_changeset_binds_current_clone_baseline_head_paths_and_digest(tmp_path):
     _src, _child, bare = make_source(tmp_path)
     dest = create_clone(tmp_path, bare, no_submodules=True)
     baseline = write_manifest(tmp_path, dest, "baseline.json")
-    write_active_claim(dest, "README.md")
+    authority = tmp_path / "authority"
+    write_active_claim(authority, "README.md")
     (dest / "README.md").write_text("claimed change\n")
     git(dest, "add", "README.md")
     git(dest, "commit", "-m", "claimed change")
@@ -1019,12 +1082,20 @@ def test_verify_changeset_binds_current_clone_baseline_head_paths_and_digest(tmp
         "--output",
         str(output),
         "--verify-claims",
+        "--claims-root",
+        str(authority),
         "--json",
         check=False,
     )
     assert generated.returncode == 0, generated.stderr
     receipt = json.loads(output.read_text())
     assert receipt["clone_root"] == str(dest.resolve())
+    assert receipt["schema"] == "cross-repo-changeset/v2"
+    snapshot = receipt["claim_verification"]["snapshot"]
+    assert snapshot["claims_root"] == str(authority.resolve())
+    assert snapshot["source_root"].endswith("/.omo/_delivery/agent-workflows/runs")
+    assert snapshot["runs"][0]["run_actor"] == "human-owner"
+    assert snapshot["snapshot_digest"].startswith("sha256:")
 
     verified = run_cli(
         "verify-changeset",
@@ -1036,6 +1107,8 @@ def test_verify_changeset_binds_current_clone_baseline_head_paths_and_digest(tmp
         str(output),
         "--agent-id",
         "agent-1",
+        "--claims-root",
+        str(authority),
         "--json",
         check=False,
     )
@@ -1047,7 +1120,8 @@ def test_verify_changeset_rejects_stale_head_and_tampered_changed_paths(tmp_path
     _src, _child, bare = make_source(tmp_path)
     dest = create_clone(tmp_path, bare, no_submodules=True)
     baseline = write_manifest(tmp_path, dest, "baseline.json")
-    write_active_claim(dest, "README.md")
+    authority = tmp_path / "authority"
+    write_active_claim(authority, "README.md")
     (dest / "README.md").write_text("claimed change\n")
     git(dest, "add", "README.md")
     git(dest, "commit", "-m", "claimed change")
@@ -1061,6 +1135,8 @@ def test_verify_changeset_rejects_stale_head_and_tampered_changed_paths(tmp_path
         "--output",
         str(output),
         "--verify-claims",
+        "--claims-root",
+        str(authority),
     )
 
     tampered = json.loads(output.read_text())
@@ -1078,6 +1154,8 @@ def test_verify_changeset_rejects_stale_head_and_tampered_changed_paths(tmp_path
         str(tampered_path),
         "--agent-id",
         "agent-1",
+        "--claims-root",
+        str(authority),
         "--json",
         check=False,
     )
@@ -1096,17 +1174,119 @@ def test_verify_changeset_rejects_stale_head_and_tampered_changed_paths(tmp_path
         str(output),
         "--agent-id",
         "agent-1",
+        "--claims-root",
+        str(authority),
         "--json",
         check=False,
     )
     assert stale.returncode == 1
 
 
+def test_verify_changeset_rejects_claim_snapshot_drift_and_different_root(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    baseline = write_manifest(tmp_path, dest, "baseline.json")
+    authority = tmp_path / "authority"
+    run = write_active_claim(authority, "README.md")
+    (dest / "README.md").write_text("claimed change\n")
+    git(dest, "add", "README.md")
+    git(dest, "commit", "-m", "claimed change")
+    output = tmp_path / "verified-changeset.json"
+    run_cli(
+        "changeset", "--clone", str(dest), "--baseline", str(baseline),
+        "--output", str(output), "--verify-claims", "--claims-root", str(authority),
+    )
+
+    other = tmp_path / "other-authority"
+    write_active_claim(other, "README.md")
+    forged = run_cli(
+        "changeset", "--clone", str(dest), "--baseline", str(baseline),
+        "--output", str(tmp_path / "forged.json"), "--verify-claims",
+        "--claims-root", str(other), "--json", check=False,
+        trusted_root=authority,
+    )
+    assert parse_json(forged)["reason"] == "claims_authority_mismatch"
+    wrong_root = run_cli(
+        "verify-changeset", "--clone", str(dest), "--baseline", str(baseline),
+        "--changeset", str(output), "--agent-id", "agent-1",
+        "--claims-root", str(other), "--json", check=False,
+    )
+    assert parse_json(wrong_root)["reason"] == "claims_root_mismatch"
+
+    run.write_text(run.read_text().replace("2026-08-21T00:00:00Z", "2026-08-21T00:00:02Z"))
+    drift = run_cli(
+        "verify-changeset", "--clone", str(dest), "--baseline", str(baseline),
+        "--changeset", str(output), "--agent-id", "agent-1",
+        "--claims-root", str(authority), "--json", check=False,
+    )
+    assert parse_json(drift)["reason"] == "changeset_stale"
+
+    run.write_text(run.read_text().replace("2026-08-21T00:00:02Z", "2026-08-21T00:00:00Z"))
+    run.write_text(run.read_text().replace("      - README.md", "      - OTHER.md"))
+    claim_drift = run_cli(
+        "verify-changeset", "--clone", str(dest), "--baseline", str(baseline),
+        "--changeset", str(output), "--agent-id", "agent-1",
+        "--claims-root", str(authority), "--json", check=False,
+    )
+    assert parse_json(claim_drift)["reason"] in {"claim_scope_violation", "changeset_stale"}
+
+    run.write_text(run.read_text().replace("      - OTHER.md", "      - README.md"))
+    write_active_claim(authority, "OTHER.md", name="additional")
+    added = run_cli(
+        "verify-changeset", "--clone", str(dest), "--baseline", str(baseline),
+        "--changeset", str(output), "--agent-id", "agent-1",
+        "--claims-root", str(authority), "--json", check=False,
+    )
+    assert parse_json(added)["reason"] == "changeset_stale"
+
+
+def test_changeset_rejects_locally_rebased_authority_policy(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    forged_authority = tmp_path / "forged-authority"
+    policy = dest / ".omo" / "_truth" / "registry" / "swarm-coordination.yaml"
+    policy.write_text(
+        "topology_migration:\n"
+        f"  integration_root: '{forged_authority.resolve()}'\n"
+    )
+    git(dest, "add", str(policy.relative_to(dest)))
+    git(dest, "commit", "-m", "forge local authority policy")
+    identity_path = dest / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    identity["source_url"] = str((tmp_path / "attacker.git").resolve())
+    identity_path.write_text(json.dumps(identity))
+    git(dest, "remote", "set-url", "origin", identity["source_url"])
+    baseline = write_manifest(tmp_path, dest, "forged-baseline.json")
+    write_active_claim(forged_authority, "README.md")
+    (dest / "README.md").write_text("claimed change\n")
+    git(dest, "add", "README.md")
+    git(dest, "commit", "-m", "claimed change")
+
+    rejected = run_cli(
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(tmp_path / "forged-changeset.json"),
+        "--verify-claims",
+        "--claims-root",
+        str(forged_authority),
+        "--json",
+        trusted_root=tmp_path / "authority",
+        check=False,
+    )
+
+    assert parse_json(rejected)["reason"] == "claims_authority_mismatch"
+
+
 def test_changeset_fast_forward_accepted(tmp_path):
     src, child, bare = make_source(tmp_path)
     dest = create_clone(tmp_path, bare)
     baseline = write_manifest(tmp_path, dest, "baseline.json")
-    write_active_claim(dest, "README.md", "childmod")
+    authority = tmp_path / "authority"
+    write_active_claim(authority, "README.md", "childmod")
     _new_root = _advance_source(src, child)
     _ff_clone(dest)
 
@@ -1120,6 +1300,8 @@ def test_changeset_fast_forward_accepted(tmp_path):
         "--output",
         str(out),
         "--verify-claims",
+        "--claims-root",
+        str(authority),
         "--json",
     )
     assert parse_json(proc)["reason"] == "changeset_generated"
@@ -1139,7 +1321,8 @@ def test_changeset_checks_deleted_and_renamed_root_paths(tmp_path):
     _src, _child, bare = make_source(tmp_path)
     dest = create_clone(tmp_path, bare, no_submodules=True)
     baseline = write_manifest(tmp_path, dest, "baseline.json")
-    write_active_claim(dest, "README.md", "renamed.md")
+    authority = tmp_path / "authority"
+    write_active_claim(authority, "README.md", "renamed.md")
     git(dest, "mv", "README.md", "renamed.md")
     git(dest, "commit", "-m", "rename root file")
     output = tmp_path / "changeset.json"
@@ -1153,6 +1336,8 @@ def test_changeset_checks_deleted_and_renamed_root_paths(tmp_path):
         "--output",
         str(output),
         "--verify-claims",
+        "--claims-root",
+        str(authority),
         "--json",
     )
 
