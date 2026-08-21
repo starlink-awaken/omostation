@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 import sys
 from argparse import Namespace
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,11 +36,28 @@ def _bet(*, status: str = "candidate", risk_level: str = "L1") -> dict:
     }
 
 
-def _write_spec(workspace: Path, content: str = "# Accepted specification\n") -> tuple[str, str]:
+def _accepted_spec_content(
+    *,
+    status: str = "accepted",
+    spec_version: str = "1.0.0",
+    bet_id: str = "BET-TEST",
+) -> str:
+    return (
+        "---\n"
+        "schema_version: specification/v1\n"
+        f"spec_version: {spec_version}\n"
+        f"status: {status}\n"
+        f"bet_id: {bet_id}\n"
+        "---\n\n"
+        "# Canonical specification\n"
+    )
+
+
+def _write_spec(workspace: Path, content: str | None = None) -> tuple[str, str]:
     relative = "docs/superpowers/specs/accepted.md"
     path = workspace / relative
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
+    path.write_text(content or _accepted_spec_content(), encoding="utf-8")
     return f"repo://{relative}", f"sha256:{bl._file_sha256(path)}"
 
 
@@ -76,6 +96,26 @@ def test_historical_terminal_bet_is_explicitly_grandfathered() -> None:
 
     assert bl._is_spec_binding_required(historical) is False
     assert bl._is_historical_spec_grandfathered(historical, workspace=ROOT) is True
+
+
+def test_pre_v1_spec_frontmatter_is_grandfathered_only_by_exact_binding() -> None:
+    historical = next(bet for bet in bl.load()["bets"] if bet["id"] == "BET-Y1Q2-T1-19")
+    binding = historical["accepted_specifications"][0]
+
+    assert bl._is_spec_frontmatter_grandfathered(historical, binding) is True
+    assert bl._is_spec_frontmatter_grandfathered(
+        historical,
+        {**binding, "content_digest": "sha256:" + "0" * 64},
+    ) is False
+
+
+def test_pre_v1_t1_19_binding_passes_end_to_end_validator() -> None:
+    historical = next(bet for bet in bl.load()["bets"] if bet["id"] == "BET-Y1Q2-T1-19")
+
+    binding, errors = bl.validate_accepted_specification(historical, workspace=ROOT)
+
+    assert errors == []
+    assert binding == historical["accepted_specifications"][0]
 
 
 def test_new_terminal_bet_cannot_self_grandfather_with_cutoff_date() -> None:
@@ -126,6 +166,54 @@ def test_digest_drift_is_rejected(tmp_path: Path) -> None:
     assert any("SPEC_DIGEST_MISMATCH" in error for error in errors)
 
 
+@pytest.mark.parametrize("status", ["draft", "superseded"])
+def test_binding_rejects_spec_that_is_not_accepted(tmp_path: Path, status: str) -> None:
+    bet = _bet()
+    bet["accepted_specifications"] = [
+        _canonical_binding(tmp_path)
+    ]
+    spec_path = tmp_path / bet["accepted_specifications"][0]["spec_ref"].removeprefix("repo://")
+    spec_path.write_text(_accepted_spec_content(status=status), encoding="utf-8")
+    bet["accepted_specifications"][0]["content_digest"] = f"sha256:{bl._file_sha256(spec_path)}"
+
+    _binding, errors = bl.validate_accepted_specification(bet, workspace=tmp_path)
+
+    assert any("SPEC_STATUS_NOT_ACCEPTED" in error for error in errors)
+
+
+def test_binding_rejects_frontmatter_version_or_bet_mismatch(tmp_path: Path) -> None:
+    bet = _bet()
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    spec_path = tmp_path / bet["accepted_specifications"][0]["spec_ref"].removeprefix("repo://")
+    spec_path.write_text(
+        _accepted_spec_content(spec_version="2.0.0", bet_id="BET-OTHER"),
+        encoding="utf-8",
+    )
+    bet["accepted_specifications"][0]["content_digest"] = f"sha256:{bl._file_sha256(spec_path)}"
+
+    _binding, errors = bl.validate_accepted_specification(bet, workspace=tmp_path)
+
+    assert any("SPEC_FRONTMATTER_VERSION_MISMATCH" in error for error in errors)
+    assert any("SPEC_FRONTMATTER_BET_MISMATCH" in error for error in errors)
+
+
+def test_binding_rejects_missing_canonical_frontmatter(tmp_path: Path) -> None:
+    bet = _bet()
+    spec_ref, digest = _write_spec(tmp_path, "# No frontmatter\n")
+    bet["accepted_specifications"] = [
+        {
+            "spec_ref": spec_ref,
+            "spec_version": "1.0.0",
+            "content_digest": digest,
+            "decision_ref": "decision://accepted/BET-TEST",
+        }
+    ]
+
+    _binding, errors = bl.validate_accepted_specification(bet, workspace=tmp_path)
+
+    assert any("SPEC_FRONTMATTER_INVALID" in error for error in errors)
+
+
 def test_unaccepted_or_wrong_decision_status_is_rejected(tmp_path: Path) -> None:
     bet = _bet()
     binding = _canonical_binding(tmp_path)
@@ -172,3 +260,244 @@ def test_complete_rejects_unbound_nonterminal_bet_even_with_force(capsys) -> Non
 
     assert rc == 1
     assert "SPEC_BINDING_REQUIRED" in capsys.readouterr().out
+
+
+def _completion_matrix(
+    *,
+    engineering: str,
+    operational: str,
+    value: str,
+    overall_state: str,
+    evidence: dict[str, dict] | None = None,
+) -> dict:
+    evidence = evidence or {"engineering": {}, "operational": {}, "value": {}}
+    return {
+        "schema_version": "completion-evidence-matrix/v1",
+        "axes": {
+            "engineering": {
+                "status": engineering,
+                "evidence": evidence["engineering"],
+            },
+            "operational": {
+                "status": operational,
+                "evidence": evidence["operational"],
+            },
+            "value": {
+                "status": value,
+                "evidence": evidence["value"],
+            },
+        },
+        "overall_state": overall_state,
+    }
+
+
+def _direct_evidence(workspace: Path) -> dict[str, dict]:
+    subprocess.run(["git", "init", "-q", str(workspace)], check=True)
+    subprocess.run(["git", "-C", str(workspace), "config", "user.email", "tests@example.invalid"], check=True)
+    subprocess.run(["git", "-C", str(workspace), "config", "user.name", "Tests"], check=True)
+    seed = workspace / "seed.txt"
+    seed.write_text("seed\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(workspace), "add", "seed.txt"], check=True)
+    subprocess.run(["git", "-C", str(workspace), "commit", "-qm", "seed"], check=True)
+    commit = subprocess.run(
+        ["git", "-C", str(workspace), "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    subprocess.run(
+        ["git", "-C", str(workspace), "update-ref", "refs/remotes/origin/main", commit],
+        check=True,
+    )
+
+    result: dict[str, dict] = {
+        "engineering": {"merged_reachable_commit": {"ref": f"git://origin/main@{commit}"}},
+        "operational": {},
+        "value": {},
+    }
+    file_keys = {
+        "engineering": ("tests", "diff", "rollback"),
+        "operational": ("live_canary", "fresh_receipt", "replay", "cleanup"),
+    }
+    for axis, keys in file_keys.items():
+        for key in keys:
+            relative = f"evidence/{axis}-{key}.json"
+            path = workspace / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(f'{{"kind":"{key}"}}\n', encoding="utf-8")
+            result[axis][key] = {
+                "ref": f"receipt://{relative}",
+                "sha256": f"sha256:{bl._file_sha256(path)}",
+            }
+
+    result["value"] = {
+        key: {"untrusted": "self-asserted"}
+        for key in ("real_signal", "human_verdict", "revision", "time_burden")
+    }
+    return result
+
+
+def test_engineering_only_never_derives_outcome_accepted(tmp_path: Path) -> None:
+    evidence = _direct_evidence(tmp_path)
+    matrix = _completion_matrix(
+        engineering="VERIFIED",
+        operational="NOT_PROVEN",
+        value="NOT_PROVEN",
+        overall_state="blocked",
+        evidence=evidence,
+    )
+
+    state, errors = bl.validate_completion_evidence(matrix, workspace=tmp_path)
+
+    assert errors == []
+    assert state == "blocked"
+
+
+def test_self_asserted_value_evidence_cannot_make_outcome_accepted(tmp_path: Path) -> None:
+    evidence = _direct_evidence(tmp_path)
+    matrix = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+        evidence=evidence,
+    )
+
+    state, errors = bl.validate_completion_evidence(matrix, workspace=tmp_path)
+
+    assert state == "blocked"
+    assert any("COMPLETION_HUMAN_AUTH_UNPROVABLE" in error for error in errors)
+
+
+def test_value_acceptance_without_human_verdict_fails_closed(tmp_path: Path) -> None:
+    evidence = _direct_evidence(tmp_path)
+    matrix = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+        evidence=evidence,
+    )
+    del matrix["axes"]["value"]["evidence"]["human_verdict"]
+
+    state, errors = bl.validate_completion_evidence(matrix, workspace=tmp_path)
+
+    assert state == "blocked"
+    assert any("human_verdict" in error for error in errors)
+
+
+def test_declared_overall_state_cannot_override_measured_axes(tmp_path: Path) -> None:
+    evidence = _direct_evidence(tmp_path)
+    matrix = _completion_matrix(
+        engineering="VERIFIED",
+        operational="DEGRADED",
+        value="NOT_PROVEN",
+        overall_state="outcome_accepted",
+        evidence=evidence,
+    )
+
+    state, errors = bl.validate_completion_evidence(matrix, workspace=tmp_path)
+
+    assert state == "blocked"
+    assert any("OVERALL_STATE_MISMATCH" in error for error in errors)
+
+
+def test_lint_rejects_declared_completion_matrix_that_is_not_measured(capsys) -> None:
+    bet = _bet(status="done")
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="IN_PROGRESS",
+        operational="DEGRADED",
+        value="NOT_PROVEN",
+        overall_state="outcome_accepted",
+    )
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 1
+    assert "OVERALL_STATE_MISMATCH" in capsys.readouterr().out
+
+
+def test_lint_requires_matrix_for_in_progress_bet(capsys) -> None:
+    bet = _bet(status="in_progress")
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 1
+    assert "COMPLETION_EVIDENCE_REQUIRED" in capsys.readouterr().out
+
+
+def test_lint_requires_matrix_for_new_done_bet(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-21"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    monkeypatch.setattr(bl, "WS", tmp_path)
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 1
+    assert "COMPLETION_EVIDENCE_REQUIRED" in capsys.readouterr().out
+
+
+def test_arbitrary_string_cannot_prove_human_verdict(tmp_path: Path) -> None:
+    evidence = _direct_evidence(tmp_path)
+    evidence["value"]["human_verdict"] = "decision://human/placeholder"
+    matrix = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+        evidence=evidence,
+    )
+
+    state, errors = bl.validate_completion_evidence(matrix, workspace=tmp_path)
+
+    assert state == "blocked"
+    assert any("COMPLETION_HUMAN_AUTH_UNPROVABLE" in error for error in errors)
+
+
+def test_complete_rejects_engineering_only_matrix_even_with_force(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    evidence = _direct_evidence(tmp_path)
+    bet = _bet(status="candidate")
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="VERIFIED",
+        operational="NOT_PROVEN",
+        value="NOT_PROVEN",
+        overall_state="blocked",
+        evidence=evidence,
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+
+    rc = bl.cmd_complete(
+        _lint_data(bet),
+        Namespace(bet_id="BET-TEST", force=True),
+    )
+
+    assert rc == 1
+    assert "not outcome_accepted" in capsys.readouterr().out
+
+
+def test_complete_requires_matrix_even_with_force(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    bet = _bet(status="candidate")
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    monkeypatch.setattr(bl, "WS", tmp_path)
+
+    rc = bl.cmd_complete(
+        _lint_data(bet),
+        Namespace(bet_id="BET-TEST", force=True),
+    )
+
+    assert rc == 1
+    assert "COMPLETION_EVIDENCE_REQUIRED" in capsys.readouterr().out
