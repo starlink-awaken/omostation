@@ -1,0 +1,7 @@
+# Human attestation trusted signers.
+# Copy this file to human-attestation-allowed-signers (gitignored) and add
+# your trusted key:   <identity> <ssh-public-key>
+# Example:
+#   xiamingxing ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...
+# The verifier (bet-ledger lint / validate_completion_evidence) uses
+# ssh-keygen -Y verify against this file to prove value-axis attestations.
