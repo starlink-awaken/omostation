@@ -287,6 +287,7 @@ last-reviewed: 2026-06-30
 ---
 version: 1
 runner:
+  workspace_root: {tmp_path}
   run_state_dir: {runs}
   lock_state_dir: {locks}
   ledger_path: {ledger}
@@ -1939,6 +1940,14 @@ def test_closeout_verifies_observes_closes_and_compliance_passes(
     tmp_path: Path,
 ) -> None:
     registry = _write_control_plane_registry(tmp_path)
+    production_effect_paths = [
+        ROOT / ".agents/skills/workflow:mini/SKILL.md",
+        ROOT / ".omo/state/agent-beliefs/index.yaml",
+        ROOT / ".omo/_knowledge/workflow-mesh/events.jsonl",
+    ]
+    production_effects_before = {
+        path: path.read_bytes() if path.is_file() else None for path in production_effect_paths
+    }
     start = _run_workflow(
         "--registry",
         str(registry),
@@ -1952,6 +1961,15 @@ def test_closeout_verifies_observes_closes_and_compliance_passes(
     )
     assert start.returncode == 0, start.stderr
     run_id = json.loads(start.stdout)["run_id"]
+    isolated_state = tmp_path / ".omo/state/agent-beliefs/index.yaml"
+    isolated_state.parent.mkdir(parents=True, exist_ok=True)
+    isolated_state.write_text(
+        "beliefs:\n"
+        "  - id: belief-0001\n"
+        "    topic: workflow:mini\n"
+        "    belief: seed isolated closeout\n",
+        encoding="utf-8",
+    )
 
     closeout = _run_workflow(
         "--registry",
@@ -1980,6 +1998,12 @@ def test_closeout_verifies_observes_closes_and_compliance_passes(
     ledger = (tmp_path / "events.jsonl").read_text(encoding="utf-8")
     assert "agent_workflow_verify" in ledger
     assert "agent_workflow_closeout" in ledger
+    assert (tmp_path / ".agents/skills/workflow:mini/SKILL.md").is_file()
+    assert (tmp_path / ".omo/_knowledge/workflow-mesh/events.jsonl").is_file()
+    production_effects_after = {
+        path: path.read_bytes() if path.is_file() else None for path in production_effect_paths
+    }
+    assert production_effects_after == production_effects_before
 
 
 def test_compliance_accepts_legacy_close_event_after_verify(tmp_path: Path) -> None:
