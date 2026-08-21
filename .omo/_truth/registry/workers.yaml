@@ -42,7 +42,7 @@ defaults:
 workers:
   - id: codebuddy
     enabled: true
-    admission_state: admitted
+    admission_state: declared
     provider_ref: codebuddy
     role: worker
     class: external_agent_cli
@@ -86,7 +86,7 @@ workers:
 
   - id: reasonix
     enabled: true
-    admission_state: admitted
+    admission_state: declared
     provider_ref: reasonix
     role: worker
     class: external_agent_cli
