@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -97,6 +99,47 @@ def test_workflow_mesh_operations_api_is_read_only_projection(monkeypatch, tmp_p
     assert calls == [(tmp_path / ".omo", "engineering-delivery")]
 
 
+def test_workflow_mesh_operations_excludes_dedicated_review_scene_from_generic_feedback(monkeypatch, tmp_path):
+    projection = {
+        "schema_version": "workflow-mesh-operations/v1",
+        "status": "live",
+        "consumption": {
+            "eligible_outcomes": [
+                {
+                    "workflow_run_id": "run-engineering",
+                    "outcome_id": "outcome:run-engineering",
+                    "scene_binding": {"scene_id": "engineering-delivery"},
+                },
+                {
+                    "workflow_run_id": "run-generic",
+                    "outcome_id": "outcome:run-generic",
+                    "scene_binding": {"scene_id": "documentation"},
+                },
+            ]
+        },
+    }
+    monkeypatch.setattr(api_workflow_mesh_operations, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(
+        api_workflow_mesh_operations,
+        "build_operations_snapshot",
+        lambda *_args, **_kwargs: projection,
+    )
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
+
+    response = TestClient(app).get("/api/workflow-mesh/operations")
+
+    assert response.status_code == 200
+    assert response.json()["operations"]["consumption"]["eligible_outcomes"] == [
+        {
+            "workflow_run_id": "run-generic",
+            "outcome_id": "outcome:run-generic",
+            "scene_binding": {"scene_id": "documentation"},
+        }
+    ]
+    assert response.json()["operations"]["consumption"]["dedicated_review_scenes"] == ["engineering-delivery"]
+
+
 def test_workflow_mesh_operations_api_degrades_without_omo(monkeypatch):
     monkeypatch.setattr(api_workflow_mesh_operations, "build_operations_snapshot", None)
     monkeypatch.setattr(api_workflow_mesh_operations, "_OMO_IMPORT_ERROR", ImportError("missing omo"))
@@ -129,29 +172,35 @@ def test_engineering_delivery_review_queue_is_read_only_projection(monkeypatch, 
         "build_engineering_delivery_review_queue",
         fake_queue,
     )
+    monkeypatch.setattr(
+        api_workflow_mesh_operations,
+        "authenticate_api_principal",
+        lambda *_args, **_kwargs: SimpleNamespace(principal_ref="operator://cockpit-api/test"),
+    )
     app = FastAPI()
     app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
 
     response = TestClient(app).get("/api/workflow-mesh/engineering-delivery/review-queue?workflow_run_id=run-1")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "ok": True,
-        "status": "live",
-        "projection": projection,
-        "read_only": True,
-        "workflow_state_mutation": False,
-        "provider_invocation": False,
-        "automatic_promotion": False,
-    }
+    assert response.json()["ok"] is True
+    assert response.json()["projection"]["schema"] == "engineering-delivery-review-queue/v1"
+    assert response.json()["projection"]["rows"] == [
+        {
+            "delivery_id": "delivery-1",
+            "review_status": "pending",
+            "scene_binding": {},
+        }
+    ]
+    assert response.json()["projection"]["controls"]["value_indicator_policy"] is False
     assert calls == [(tmp_path / ".omo", "run-1")]
 
 
 def test_engineering_delivery_review_api_forwards_only_review_fields(monkeypatch, tmp_path):
     captured: list[tuple[object, dict, str, str]] = []
 
-    def fake_review(omo_dir, review, *, workflow_run_id, actor):
-        captured.append((omo_dir, review, workflow_run_id, actor))
+    def fake_review(omo_dir, review, *, workflow_run_id, principal_assertion):
+        captured.append((omo_dir, review, workflow_run_id, principal_assertion["principal_ref"]))
         return {
             "schema": "engineering-delivery-review/v1",
             "status": "recorded",
@@ -165,6 +214,23 @@ def test_engineering_delivery_review_api_forwards_only_review_fields(monkeypatch
         "record_engineering_delivery_review",
         fake_review,
     )
+    monkeypatch.setattr(
+        api_workflow_mesh_operations,
+        "authenticate_api_principal",
+        lambda *_args, **_kwargs: SimpleNamespace(principal_ref="operator://cockpit-api/verified"),
+    )
+    monkeypatch.setattr(
+        api_workflow_mesh_operations,
+        "issue_engineering_review_assertion",
+        lambda principal, _review: {
+            "schema": "cockpit-human-principal-assertion/v2",
+            "principal_ref": principal.principal_ref,
+            "source_class": "real_human",
+            "issued_at": "2026-08-03T10:00:00Z",
+            "binding_digest": "a" * 64,
+            "signature": "b" * 64,
+        },
+    )
     app = FastAPI()
     app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
 
@@ -172,10 +238,8 @@ def test_engineering_delivery_review_api_forwards_only_review_fields(monkeypatch
         "/api/workflow-mesh/engineering-delivery/review",
         json={
             "workflow_run_id": "run-1",
-            "actor_ref": "operator://reviewer-1",
             "delivery_id": "delivery-1",
             "decision": "adopted",
-            "reviewed_at": "2026-08-03T10:00:00Z",
             "evidence_refs": ["evidence://review/1"],
         },
     )
@@ -190,12 +254,72 @@ def test_engineering_delivery_review_api_forwards_only_review_fields(monkeypatch
             {
                 "delivery_id": "delivery-1",
                 "decision": "adopted",
-                "reviewed_at": "2026-08-03T10:00:00Z",
                 "evidence_refs": ["evidence://review/1"],
             },
             "run-1",
-            "operator://reviewer-1",
+            "operator://cockpit-api/verified",
         )
+    ]
+
+
+def test_engineering_delivery_review_signs_the_normalized_broker_payload(monkeypatch, tmp_path):
+    captured_bindings: list[dict] = []
+    captured_reviews: list[dict] = []
+
+    def fake_assertion(principal, binding):
+        captured_bindings.append(binding)
+        return {
+            "schema": "cockpit-human-principal-assertion/v2",
+            "principal_ref": principal.principal_ref,
+            "source_class": "real_human",
+            "issued_at": "2026-08-03T10:00:00Z",
+            "binding_digest": "a" * 64,
+            "signature": "b" * 64,
+        }
+
+    def fake_review(_omo_dir, review, *, workflow_run_id, principal_assertion):
+        captured_reviews.append(review)
+        return {
+            "schema": "engineering-delivery-review/v1",
+            "status": "recorded",
+            "delivery_id": review["delivery_id"],
+            "decision": review["decision"],
+        }
+
+    monkeypatch.setattr(api_workflow_mesh_operations, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_workflow_mesh_operations, "record_engineering_delivery_review", fake_review)
+    monkeypatch.setattr(
+        api_workflow_mesh_operations,
+        "authenticate_api_principal",
+        lambda *_args, **_kwargs: SimpleNamespace(principal_ref="operator://cockpit-api/verified"),
+    )
+    monkeypatch.setattr(api_workflow_mesh_operations, "issue_engineering_review_assertion", fake_assertion)
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
+
+    response = TestClient(app).post(
+        "/api/workflow-mesh/engineering-delivery/review",
+        json={
+            "workflow_run_id": " run-1 ",
+            "delivery_id": " delivery-1 ",
+            "decision": " ADOPTED ",
+            "evidence_refs": [" evidence://human-review/1842 "],
+        },
+    )
+
+    expected_review = {
+        "delivery_id": "delivery-1",
+        "decision": "adopted",
+        "evidence_refs": ["evidence://human-review/1842"],
+    }
+    assert response.status_code == 200
+    assert captured_reviews == [expected_review]
+    assert captured_bindings == [
+        {
+            "workflow_run_id": "run-1",
+            "candidate_receipt_id": "delivery-1",
+            "review": expected_review,
+        }
     ]
 
 
@@ -208,6 +332,11 @@ def test_engineering_delivery_review_api_rejects_raw_or_unknown_fields(monkeypat
         raise AssertionError("broker must not receive an invalid envelope")
 
     monkeypatch.setattr(api_workflow_mesh_operations, "record_engineering_delivery_review", fail_review)
+    monkeypatch.setattr(
+        api_workflow_mesh_operations,
+        "authenticate_api_principal",
+        lambda *_args, **_kwargs: SimpleNamespace(principal_ref="operator://cockpit-api/verified"),
+    )
     app = FastAPI()
     app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
 
@@ -216,9 +345,108 @@ def test_engineering_delivery_review_api_rejects_raw_or_unknown_fields(monkeypat
         json={"workflow_run_id": "run-1", "document_body": "must-not-cross-boundary"},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 422
     assert response.json()["ok"] is False
     assert response.json()["error"] == "engineering_delivery_review_invalid"
+    assert called is False
+
+
+def test_engineering_delivery_review_rejects_client_supplied_review_time(monkeypatch):
+    called = False
+
+    def fail_review(*_args, **_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("client review time must not reach OMO")
+
+    monkeypatch.setattr(api_workflow_mesh_operations, "record_engineering_delivery_review", fail_review)
+    monkeypatch.setattr(
+        api_workflow_mesh_operations,
+        "authenticate_api_principal",
+        lambda *_args, **_kwargs: SimpleNamespace(principal_ref="operator://cockpit-api/verified"),
+    )
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
+
+    response = TestClient(app).post(
+        "/api/workflow-mesh/engineering-delivery/review",
+        json={
+            "workflow_run_id": "run-1",
+            "delivery_id": "delivery-1",
+            "decision": "adopted",
+            "reviewed_at": "2026-08-03T10:00:00Z",
+            "evidence_refs": ["evidence://review/1"],
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"] == "engineering_delivery_review_invalid"
+    assert called is False
+
+
+def test_engineering_delivery_review_rejects_caller_supplied_actor(monkeypatch):
+    called = False
+
+    def fail_review(*_args, **_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("spoofed actor must not reach OMO")
+
+    monkeypatch.setattr(api_workflow_mesh_operations, "record_engineering_delivery_review", fail_review)
+    monkeypatch.setattr(
+        api_workflow_mesh_operations,
+        "authenticate_api_principal",
+        lambda *_args, **_kwargs: SimpleNamespace(principal_ref="operator://cockpit-api/verified"),
+    )
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
+
+    response = TestClient(app).post(
+        "/api/workflow-mesh/engineering-delivery/review",
+        json={
+            "workflow_run_id": "run-1",
+            "actor_ref": "operator://spoofed",
+            "delivery_id": "delivery-1",
+            "decision": "adopted",
+            "evidence_refs": ["evidence://review/1"],
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"] == "engineering_delivery_review_invalid"
+    assert called is False
+
+
+def test_engineering_delivery_review_requires_strict_auth_before_broker(monkeypatch):
+    called = False
+
+    def fail_review(*_args, **_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("unauthenticated request must not reach OMO")
+
+    def deny(_headers, *, any_scope, allow_admin):
+        assert any_scope == frozenset({"engineering-review"})
+        assert allow_admin is False
+        raise api_workflow_mesh_operations.ApiAuthenticationError("missing_api_key")
+
+    monkeypatch.setattr(api_workflow_mesh_operations, "record_engineering_delivery_review", fail_review)
+    monkeypatch.setattr(api_workflow_mesh_operations, "authenticate_api_principal", deny)
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
+
+    response = TestClient(app).post(
+        "/api/workflow-mesh/engineering-delivery/review",
+        json={
+            "workflow_run_id": "run-1",
+            "delivery_id": "delivery-1",
+            "decision": "adopted",
+            "evidence_refs": ["evidence://review/1"],
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.json()["error"] == "engineering_delivery_auth_required"
     assert called is False
 
 
@@ -246,7 +474,7 @@ def test_outcome_feedback_api_forwards_safe_payload_and_actor(monkeypatch, tmp_p
             "workflow_run_id": "run-1",
             "outcome_id": "outcome-1",
             "scene_binding": {
-                "scene_id": "engineering-delivery",
+                "scene_id": "knowledge-delivery",
                 "journey_id": "intent-to-evidence",
                 "outcome_metric": "verified_delivery_lead_time",
             },
@@ -262,6 +490,40 @@ def test_outcome_feedback_api_forwards_safe_payload_and_actor(monkeypatch, tmp_p
     assert captured[0][1]["outcome_id"] == "outcome-1"
     assert "actor_ref" not in captured[0][1]
     assert captured[0][2] == "operator://redacted/reviewer-1"
+
+
+def test_generic_feedback_api_rejects_engineering_delivery_human_state(monkeypatch, tmp_path):
+    called = False
+
+    def fake_record(*_args, **_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("dedicated scene must not reach generic feedback broker")
+
+    monkeypatch.setattr(api_workflow_mesh_operations, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(api_workflow_mesh_operations, "record_outcome_feedback", fake_record)
+    app = FastAPI()
+    app.include_router(api_workflow_mesh_operations.router)  # type: ignore[arg-type]
+
+    response = TestClient(app).post(
+        "/api/workflow-mesh/outcome-feedback",
+        json={
+            "workflow_run_id": "run-1",
+            "outcome_id": "outcome:engineering-delivery:delivery-1",
+            "scene_binding": {
+                "scene_id": "engineering-delivery",
+                "journey_id": "intent-to-evidence",
+                "outcome_metric": "verified_delivery_lead_time",
+            },
+            "consumption_state": "adopted",
+            "consumer_ref": "operator://spoofed-reviewer",
+            "actor_ref": "operator://spoofed-reviewer",
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"] == "engineering_delivery_feedback_requires_authenticated_review"
+    assert called is False
 
 
 def test_outcome_feedback_api_returns_explicit_invalid_status(monkeypatch, tmp_path):

@@ -15,24 +15,64 @@ Key 来源 (优先级高→低):
 
 from __future__ import annotations
 
+import hashlib
 import hmac
+import json
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 import yaml
 
 _AUTH_REQUIRED = os.environ.get("COCKPIT_AUTH_REQUIRED", "false").lower() in ("true", "1", "yes")
 _API_KEY_ENV = "COCKPIT_API_KEY"
 _KEYS_FILE_ENV = "COCKPIT_KEYS_FILE"
-_DEFAULT_KEYS_FILE = Path(__file__).resolve().parents[2] / "config" / "api_keys.yaml"
+_ENGINEERING_REVIEW_SIGNING_KEY_ENV = "COCKPIT_ENGINEERING_REVIEW_SIGNING_KEY"
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+_DEFAULT_KEYS_FILE = _PROJECT_ROOT / "config" / "api_keys.yaml"
 
 
 @dataclass(frozen=True)
 class ApiKeyInfo:
     name: str
     scopes: list[str] = field(default_factory=lambda: ["read"])
+
+
+@dataclass(frozen=True)
+class AuthenticatedPrincipal:
+    """A stable, credential-bound identity safe to persist in audit records."""
+
+    principal_ref: str
+    name: str
+    scopes: tuple[str, ...]
+
+
+class ApiAuthenticationError(ValueError):
+    """The request did not present a known API credential."""
+
+
+class ApiAuthorizationError(ValueError):
+    """The verified credential lacks a required scope."""
+
+
+def _is_example_api_key(value: str) -> bool:
+    """Reject repository placeholders if an example file is copied unchanged."""
+    return value.startswith("your-") and value.endswith("-here")
+
+
+def _resolve_keys_file(value: str | None) -> Path:
+    """Resolve key configuration independently of the process working directory."""
+    raw_value = (value or "").strip()
+    if not raw_value:
+        return _DEFAULT_KEYS_FILE
+    configured = Path(raw_value).expanduser()
+    if configured.is_absolute():
+        return configured
+    return _PROJECT_ROOT / configured
 
 
 def load_api_keys() -> dict[str, ApiKeyInfo]:
@@ -43,13 +83,13 @@ def load_api_keys() -> dict[str, ApiKeyInfo]:
     if env_key:
         keys[env_key] = ApiKeyInfo(name="admin", scopes=["admin"])
 
-    keys_file = Path(os.environ.get(_KEYS_FILE_ENV, str(_DEFAULT_KEYS_FILE)))
+    keys_file = _resolve_keys_file(os.environ.get(_KEYS_FILE_ENV))
     if keys_file.exists():
         try:
             data = yaml.safe_load(keys_file.read_text(encoding="utf-8"))
             for entry in (data or {}).get("keys", []):
                 k = entry.get("key", "")
-                if k and k != "your-secret-key-here":
+                if k and not _is_example_api_key(k):
                     keys[k] = ApiKeyInfo(
                         name=entry.get("name", "unnamed"),
                         scopes=entry.get("scopes", ["read"]),
@@ -105,6 +145,71 @@ def verify_api_key(headers: dict[str, str]) -> ApiKeyInfo | None:
             return info
 
     raise ValueError("Invalid API key")
+
+
+def authenticate_api_principal(
+    headers: dict[str, str],
+    *,
+    any_scope: frozenset[str],
+    allow_admin: bool = True,
+) -> AuthenticatedPrincipal:
+    """Strictly authenticate one effectful API request.
+
+    Unlike :func:`verify_api_key`, this function never inherits the dashboard's
+    optional-anonymous compatibility mode.  A qualifying human review must be
+    bound to a verified credential, and callers may not supply their own actor.
+    """
+
+    key = _extract_key_from_headers({str(k).lower(): str(v) for k, v in headers.items()})
+    if not key:
+        raise ApiAuthenticationError("missing_api_key")
+
+    info: ApiKeyInfo | None = None
+    for stored, candidate in _cached_keys().items():
+        if hmac.compare_digest(key, stored):
+            info = candidate
+            break
+    if info is None:
+        raise ApiAuthenticationError("invalid_api_key")
+
+    scopes = frozenset(str(scope).strip() for scope in info.scopes if str(scope).strip())
+    if not scopes.intersection(any_scope) and not (allow_admin and "admin" in scopes):
+        raise ApiAuthorizationError("insufficient_scope")
+
+    credential_digest = hashlib.sha256(key.encode("utf-8")).hexdigest()[:24]
+    return AuthenticatedPrincipal(
+        principal_ref=f"operator://cockpit-api/{credential_digest}",
+        name=info.name,
+        scopes=tuple(sorted(scopes)),
+    )
+
+
+def issue_engineering_review_assertion(
+    principal: AuthenticatedPrincipal,
+    binding: Mapping[str, Any],
+) -> dict[str, str]:
+    """Sign a short-lived run, receipt, and review binding for OMO's broker."""
+    if "engineering-review" not in principal.scopes:
+        raise ApiAuthorizationError("engineering_review_scope_required")
+    signing_key = os.environ.get(_ENGINEERING_REVIEW_SIGNING_KEY_ENV, "")
+    if len(signing_key) < 32:
+        raise RuntimeError("engineering review signing key is unavailable")
+    binding_digest = hashlib.sha256(
+        json.dumps(binding, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    body = {
+        "schema": "cockpit-human-principal-assertion/v2",
+        "principal_ref": principal.principal_ref,
+        "source_class": "real_human",
+        "issued_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "binding_digest": binding_digest,
+    }
+    signature = hmac.new(
+        signing_key.encode("utf-8"),
+        json.dumps(body, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return {**body, "signature": signature}
 
 
 def is_auth_required() -> bool:

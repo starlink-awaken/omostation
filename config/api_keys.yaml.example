@@ -10,3 +10,7 @@ keys:
   - name: readonly
     key: your-readonly-key-here
     scopes: [read]
+  # Only an explicitly assigned reviewer credential may mint a real-human assertion.
+  - name: engineering-reviewer
+    key: your-engineering-review-key-here
+    scopes: [engineering-review]

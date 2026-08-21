@@ -314,6 +314,119 @@ class TestUnifiedAuth:
         resp = test_client.get("/api/status", headers={"X-Api-Key": "wrong-key"})
         assert resp.status_code == 401
 
+    def test_example_key_file_is_safe_and_matches_default_location(self, test_client, monkeypatch, tmp_path):
+        import cockpit.web.auth as auth_mod
+
+        project_root = Path(__file__).resolve().parents[3]
+        example_file = project_root / "config" / "api_keys.yaml.example"
+        assert auth_mod._DEFAULT_KEYS_FILE == project_root / "config" / "api_keys.yaml"
+        assert auth_mod._resolve_keys_file(None) == auth_mod._DEFAULT_KEYS_FILE
+        assert auth_mod._resolve_keys_file("  ") == auth_mod._DEFAULT_KEYS_FILE
+        assert auth_mod._resolve_keys_file(str(example_file)) == example_file
+        assert auth_mod._resolve_keys_file("~/cockpit-keys.yaml") == Path.home() / "cockpit-keys.yaml"
+
+        with monkeypatch.context() as patch:
+            patch.delenv("COCKPIT_API_KEY", raising=False)
+            patch.chdir(tmp_path)
+            patch.setenv("COCKPIT_KEYS_FILE", "config/api_keys.yaml.example")
+            assert auth_mod._resolve_keys_file("config/api_keys.yaml.example") == example_file
+            assert auth_mod.reload_api_keys() == {}
+            response = test_client.post(
+                "/api/workflow-mesh/engineering-delivery/review",
+                headers={"X-Api-Key": "your-engineering-review-key-here"},
+                json={},
+            )
+            assert response.status_code == 401
+            assert response.json()["error"] == "engineering_delivery_auth_required"
+        auth_mod.reload_api_keys()
+
+    def test_effectful_auth_binds_opaque_principal_even_when_global_auth_is_optional(self, monkeypatch):
+        import cockpit.web.auth as auth_mod
+
+        monkeypatch.setattr(auth_mod, "_AUTH_REQUIRED", False)
+        monkeypatch.setattr(
+            auth_mod,
+            "_cached_keys",
+            lambda: {"review-secret": auth_mod.ApiKeyInfo(name="reviewer", scopes=["engineering-review"])},
+        )
+
+        principal = auth_mod.authenticate_api_principal(
+            {"X-Api-Key": "review-secret"},
+            any_scope=frozenset({"engineering-review"}),
+        )
+
+        assert principal.principal_ref.startswith("operator://cockpit-api/")
+        assert "review-secret" not in principal.principal_ref
+        assert principal.scopes == ("engineering-review",)
+
+    def test_effectful_auth_rejects_anonymous_and_insufficient_scope(self, monkeypatch):
+        import cockpit.web.auth as auth_mod
+
+        monkeypatch.setattr(
+            auth_mod,
+            "_cached_keys",
+            lambda: {"read-secret": auth_mod.ApiKeyInfo(name="reader", scopes=["read"])},
+        )
+        with pytest.raises(auth_mod.ApiAuthenticationError, match="missing_api_key"):
+            auth_mod.authenticate_api_principal({}, any_scope=frozenset({"engineering-review"}))
+        with pytest.raises(auth_mod.ApiAuthorizationError, match="insufficient_scope"):
+            auth_mod.authenticate_api_principal(
+                {"Authorization": "Bearer read-secret"},
+                any_scope=frozenset({"engineering-review"}),
+            )
+
+    def test_human_review_auth_rejects_generic_admin_without_explicit_scope(self, monkeypatch):
+        import cockpit.web.auth as auth_mod
+
+        monkeypatch.setattr(
+            auth_mod,
+            "_cached_keys",
+            lambda: {"admin-secret": auth_mod.ApiKeyInfo(name="admin", scopes=["admin"])},
+        )
+
+        with pytest.raises(auth_mod.ApiAuthorizationError, match="insufficient_scope"):
+            auth_mod.authenticate_api_principal(
+                {"X-Api-Key": "admin-secret"},
+                any_scope=frozenset({"engineering-review"}),
+                allow_admin=False,
+            )
+        with pytest.raises(auth_mod.ApiAuthorizationError, match="engineering_review_scope_required"):
+            auth_mod.issue_engineering_review_assertion(
+                auth_mod.AuthenticatedPrincipal(
+                    principal_ref="operator://cockpit-api/admin",
+                    name="admin",
+                    scopes=("admin",),
+                ),
+                {"workflow_run_id": "run-1", "candidate_receipt_id": "delivery-1", "review": {}},
+            )
+
+    def test_engineering_review_assertion_is_signed_and_payload_bound(self, monkeypatch):
+        import cockpit.web.auth as auth_mod
+
+        monkeypatch.setenv(
+            "COCKPIT_ENGINEERING_REVIEW_SIGNING_KEY",
+            "test-engineering-review-signing-key-0001",
+        )
+        principal = auth_mod.AuthenticatedPrincipal(
+            principal_ref="operator://cockpit-api/reviewer-1",
+            name="reviewer",
+            scopes=("engineering-review",),
+        )
+        first = auth_mod.issue_engineering_review_assertion(
+            principal,
+            {"delivery_id": "delivery-1", "decision": "adopted", "evidence_refs": ["evidence://review/1"]},
+        )
+        changed = auth_mod.issue_engineering_review_assertion(
+            principal,
+            {"delivery_id": "delivery-1", "decision": "rejected", "evidence_refs": ["evidence://review/1"]},
+        )
+
+        assert first["schema"] == "cockpit-human-principal-assertion/v2"
+        assert first["source_class"] == "real_human"
+        assert len(first["signature"]) == 64
+        assert first["binding_digest"] != changed["binding_digest"]
+        assert first["signature"] != changed["signature"]
+
     def test_healthz_always_public(self, test_client, monkeypatch):
         """AUTH_REQUIRED=true 时 /healthz 仍然 200 (白名单路由)."""
         import cockpit.web.auth as auth_mod
