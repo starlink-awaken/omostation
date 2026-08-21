@@ -7,6 +7,7 @@ import json
 import os
 import signal
 import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -19,6 +20,20 @@ SPEC = importlib.util.spec_from_file_location("codex_worker_adapter", SCRIPT)
 assert SPEC and SPEC.loader
 adapter = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(adapter)
+
+
+@pytest.fixture(autouse=True)
+def _admitted_binding(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(
+        adapter,
+        "_validate_execution_binding",
+        lambda **_kwargs: {
+            "run_id": "run-1",
+            "packet_id": "WP-1",
+            "packet_hash": "sha256:" + "a" * 64,
+            "instruction_digest": "sha256:" + "b" * 64,
+        },
+    )
 
 
 def clone_root(tmp_path: Path) -> Path:
@@ -142,6 +157,8 @@ def test_dry_run_is_default_and_returns_only_fixed_command(tmp_path: Path):
     result = adapter.run_worker(workspace_root=root, prompt="do work")
 
     assert result == {
+        "binding_required": True,
+        "binding_validation": "not_executed",
         "command": [
             "codex",
             "exec",
@@ -975,3 +992,168 @@ def test_real_initialized_submodule_gitlink_change_is_rejected(
 def test_shared_workspace_root_has_direct_rejection_regression() -> None:
     with pytest.raises(adapter.AdapterError, match="workspace_not_independent_clone"):
         adapter.validate_workspace(Path.home() / "Workspace")
+
+
+def test_execute_rejects_binding_before_provider_resolution(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def reject(**_kwargs):
+        raise adapter.AdapterError("instruction_binding_required")
+
+    def forbidden():
+        raise AssertionError("provider resolution must follow binding validation")
+
+    monkeypatch.setattr(adapter, "_validate_execution_binding", reject)
+    with pytest.raises(adapter.AdapterError, match="instruction_binding_required"):
+        adapter.run_worker(
+            workspace_root=tmp_path,
+            prompt="x",
+            execute=True,
+            codex_resolver=forbidden,
+        )
+
+
+def test_shared_validator_rehashes_packet_and_remeasures_instruction_bytes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ledger_path = SCRIPT.parents[1] / "plan" / "bet-ledger.py"
+    spec = importlib.util.spec_from_file_location("test_worker_binding_contract", ledger_path)
+    assert spec is not None and spec.loader is not None
+    contract = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = contract
+    spec.loader.exec_module(contract)
+
+    instruction = tmp_path / "docs/operations/blueprint-agent-instruction-pack-v1.md"
+    instruction.parent.mkdir(parents=True)
+    instruction.write_bytes(b"canonical instruction bytes\n")
+    instruction_binding = contract.resolve_instruction_binding(workspace=tmp_path)
+    packet = {"packet_id": "WP-1", "instruction_binding": instruction_binding}
+
+    def packet_hash(value: dict[str, object]) -> str:
+        encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+        return "sha256:" + __import__("hashlib").sha256(encoded).hexdigest()
+
+    declared_hash = packet_hash(packet)
+    run_dir = tmp_path / ".omo/_delivery/agent-workflows/runs"
+    run_dir.mkdir(parents=True)
+    (run_dir / "run-1.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "run_id": "run-1",
+                "instruction_binding": instruction_binding,
+                "work_packet": packet,
+                "work_packet_hash": declared_hash,
+            }
+        ),
+        encoding="utf-8",
+    )
+    validated: list[dict[str, object]] = []
+    monkeypatch.setattr(contract, "_work_packet_compiler", lambda _root: (lambda value: value, packet_hash))
+    monkeypatch.setattr(
+        contract,
+        "validate_work_packet_run",
+        lambda payload, _paths, **_kwargs: validated.append(payload),
+    )
+
+    receipt = contract.validate_worker_instruction_binding(
+        workspace=tmp_path,
+        run_id="run-1",
+        packet_id="WP-1",
+        packet_hash=declared_hash,
+        instruction_binding=instruction_binding,
+    )
+
+    assert receipt["instruction_digest"] == instruction_binding["content_digest"]
+    assert validated and validated[0]["run_id"] == "run-1"
+    instruction.write_bytes(b"drifted instruction bytes\n")
+    with pytest.raises(contract.SpecBindingContractError, match="INSTRUCTION_SOURCE_DRIFT"):
+        contract.validate_worker_instruction_binding(
+            workspace=tmp_path,
+            run_id="run-1",
+            packet_id="WP-1",
+            packet_hash=declared_hash,
+            instruction_binding=instruction_binding,
+        )
+
+
+def test_adapter_accepts_one_real_persisted_governed_run(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    spec_path = workspace / "docs/superpowers/specs/worker-binding.md"
+    instruction_path = workspace / "docs/operations/blueprint-agent-instruction-pack-v1.md"
+    spec_path.parent.mkdir(parents=True)
+    instruction_path.parent.mkdir(parents=True)
+    spec_path.write_text("# Accepted worker binding specification\n", encoding="utf-8")
+    instruction_path.write_text("# Canonical worker instructions\n", encoding="utf-8")
+    (workspace / "projects").mkdir()
+    (workspace / "projects/ecos").symlink_to(SCRIPT.parents[2] / "projects/ecos")
+
+    spec_digest = __import__("hashlib").sha256(spec_path.read_bytes()).hexdigest()
+    ledger_path = workspace / "docs/plans/3y-bet-ledger.yaml"
+    ledger_path.parent.mkdir(parents=True)
+    ledger_path.write_text(
+        f"""bets:
+  - id: BET-REAL-WORKER-BINDING
+    status: candidate
+    track: T1-TRUTH
+    window: Y1Q3
+    title: Real worker binding
+    appetite: 1 day
+    priority: P0
+    risk_level: L1
+    human_gate: false
+    goal: Prove the persisted delivery identity
+    non_goals: [No provider launch]
+    done_when: [Worker binding is accepted]
+    verify:
+      - cmd: python3 -c pass
+        expect: exit 0
+    workflow: bet-execution
+    write_surfaces: [README.md]
+    accepted_specifications:
+      - spec_ref: repo://docs/superpowers/specs/worker-binding.md
+        spec_version: 1.0.0
+        content_digest: sha256:{spec_digest}
+        decision_ref: decision://accepted/BET-REAL-WORKER-BINDING
+""",
+        encoding="utf-8",
+    )
+
+    ledger_path_module = SCRIPT.parents[1] / "plan" / "bet-ledger.py"
+    module_spec = importlib.util.spec_from_file_location("real_worker_binding_contract", ledger_path_module)
+    assert module_spec is not None and module_spec.loader is not None
+    contract = importlib.util.module_from_spec(module_spec)
+    sys.modules[module_spec.name] = contract
+    module_spec.loader.exec_module(contract)
+    prepared = contract.prepare_bet_execution("BET-REAL-WORKER-BINDING", workspace=workspace)
+    run_id = "run-real-binding"
+    run_path = workspace / ".omo/_delivery/agent-workflows/runs" / f"{run_id}.yaml"
+    run_path.parent.mkdir(parents=True)
+    run_path.write_text(
+        yaml.safe_dump(
+            {
+                "run_id": run_id,
+                "bet_id": "BET-REAL-WORKER-BINDING",
+                **prepared,
+            }
+        ),
+        encoding="utf-8",
+    )
+    packet = prepared["work_packet"]
+    adapter_spec = importlib.util.spec_from_file_location("real_codex_worker_adapter", SCRIPT)
+    assert adapter_spec is not None and adapter_spec.loader is not None
+    real_adapter = importlib.util.module_from_spec(adapter_spec)
+    adapter_spec.loader.exec_module(real_adapter)
+    receipt = real_adapter._validate_execution_binding(
+        workspace_root=workspace,
+        delivery_binding={
+            "run_id": run_id,
+            "packet_id": packet["packet_id"],
+            "packet_hash": prepared["work_packet_hash"],
+            "instruction_binding": prepared["instruction_binding"],
+        },
+    )
+
+    assert receipt == {
+        "run_id": run_id,
+        "packet_id": packet["packet_id"],
+        "packet_hash": prepared["work_packet_hash"],
+        "instruction_digest": prepared["instruction_binding"]["content_digest"],
+    }

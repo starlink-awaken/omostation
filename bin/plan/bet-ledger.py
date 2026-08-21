@@ -204,6 +204,9 @@ SPEC_BINDING_GRANDFATHER_ALLOWLIST = {
     "BET-Y3H2-T7-01": "blocked",
 }
 SPEC_BINDING_KEYS = frozenset({"spec_ref", "spec_version", "content_digest", "decision_ref"})
+INSTRUCTION_BINDING_KEYS = frozenset(
+    {"instruction_ref", "instruction_version", "content_digest", "instruction_profile"}
+)
 SPEC_REF_PREFIX = "repo://"
 SPEC_ROOT = PurePosixPath("docs/superpowers/specs")
 INSTRUCTION_PACK_REF = "repo://docs/operations/blueprint-agent-instruction-pack-v1.md"
@@ -1121,6 +1124,67 @@ def validate_work_packet_run(
             raise SpecBindingContractError(
                 f"WORK_PACKET_SCOPE_MISMATCH: {claimed_path} is outside {allowed}"
             )
+
+
+def validate_worker_instruction_binding(
+    *,
+    workspace: Path,
+    run_id: str,
+    packet_id: str,
+    packet_hash: str,
+    instruction_binding: dict[str, Any],
+) -> dict[str, str]:
+    """Validate one immutable run/packet/instruction identity for a worker.
+
+    This is intentionally a pure, read-only boundary.  It reloads the governed
+    run, recomputes the canonical WorkPacket hash, rebuilds it from the ledger
+    and accepted specification, and re-measures the canonical Instruction Pack
+    bytes before any provider or transport side effect is allowed.
+    """
+    root = workspace.expanduser().resolve(strict=True)
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:+-]{0,255}", run_id):
+        raise SpecBindingContractError("WORKER_BINDING_RUN_ID_INVALID")
+    if not packet_id or not SHA256_REF_RE.fullmatch(packet_hash):
+        raise SpecBindingContractError("WORKER_BINDING_PACKET_IDENTITY_INVALID")
+    if not isinstance(instruction_binding, dict) or set(instruction_binding) != INSTRUCTION_BINDING_KEYS:
+        raise SpecBindingContractError("WORKER_BINDING_INSTRUCTION_SHAPE_INVALID")
+
+    run_path = root / ".omo" / "_delivery" / "agent-workflows" / "runs" / f"{run_id}.yaml"
+    try:
+        payload = yaml.safe_load(run_path.read_text(encoding="utf-8")) or {}
+    except (OSError, UnicodeError, yaml.YAMLError) as exc:
+        raise SpecBindingContractError("WORKER_BINDING_RUN_UNAVAILABLE") from exc
+    if not isinstance(payload, dict) or payload.get("run_id") != run_id:
+        raise SpecBindingContractError("WORKER_BINDING_RUN_MISMATCH")
+
+    packet = payload.get("work_packet")
+    if not isinstance(packet, dict):
+        raise SpecBindingContractError("WORKER_BINDING_PACKET_MISSING")
+    if packet.get("packet_id") != packet_id or payload.get("work_packet_hash") != packet_hash:
+        raise SpecBindingContractError("WORKER_BINDING_PACKET_MISMATCH")
+    if payload.get("instruction_binding") != instruction_binding:
+        raise SpecBindingContractError("WORKER_BINDING_RUN_INSTRUCTION_MISMATCH")
+    if packet.get("instruction_binding") != instruction_binding:
+        raise SpecBindingContractError("WORKER_BINDING_PACKET_INSTRUCTION_MISMATCH")
+
+    canonicalize, compute_packet_hash = _work_packet_compiler(root)
+    try:
+        measured_packet_hash = compute_packet_hash(canonicalize(packet))
+    except ValueError as exc:
+        raise SpecBindingContractError(f"WORKER_BINDING_PACKET_INVALID: {exc}") from exc
+    if measured_packet_hash != packet_hash:
+        raise SpecBindingContractError("WORKER_BINDING_PACKET_HASH_MISMATCH")
+
+    measured_instruction = resolve_instruction_binding(workspace=root)
+    if measured_instruction != instruction_binding:
+        raise SpecBindingContractError("WORKER_BINDING_INSTRUCTION_SOURCE_DRIFT")
+    validate_work_packet_run(payload, [], workspace=root)
+    return {
+        "run_id": run_id,
+        "packet_id": packet_id,
+        "packet_hash": packet_hash,
+        "instruction_digest": instruction_binding["content_digest"],
+    }
 
 
 def cmd_lint(data: dict, args) -> int:

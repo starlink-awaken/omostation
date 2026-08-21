@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -47,6 +48,32 @@ class AdapterError(RuntimeError):
     def __init__(self, code: str) -> None:
         super().__init__(code)
         self.code = code
+
+
+def _validate_execution_binding(
+    *, workspace_root: Path | str | None, delivery_binding: dict[str, Any] | None
+) -> dict[str, str]:
+    required = {"run_id", "packet_id", "packet_hash", "instruction_binding"}
+    if workspace_root is None or not isinstance(delivery_binding, dict) or set(delivery_binding) != required:
+        raise AdapterError("instruction_binding_required")
+    contract_path = Path(__file__).resolve().parents[1] / "plan" / "bet-ledger.py"
+    spec = importlib.util.spec_from_file_location("_omp_worker_binding_contract", contract_path)
+    if spec is None or spec.loader is None:
+        raise AdapterError("instruction_binding_unavailable")
+    contract = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(contract)
+        return contract.validate_worker_instruction_binding(
+            workspace=Path(workspace_root),
+            run_id=delivery_binding["run_id"],
+            packet_id=delivery_binding["packet_id"],
+            packet_hash=delivery_binding["packet_hash"],
+            instruction_binding=delivery_binding["instruction_binding"],
+        )
+    except Exception as exc:  # noqa: BLE001 - mandatory gate fails closed.
+        if isinstance(exc, AdapterError):
+            raise
+        raise AdapterError("instruction_binding_rejected") from exc
 
 
 def digest_bytes(value: bytes) -> str:
@@ -516,16 +543,23 @@ def run_worker(
     group_terminator: Callable[[int, signal.Signals], None] = _default_group_terminator,
     version_reader: Callable[[], str] = _default_version_reader,
     api_key_resolver: Callable[[str], str] = _resolve_keychain_api_key,
+    workspace_root: Path | str | None = None,
+    delivery_binding: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Execute one bounded OMP call without persisting prompt or output text."""
     if not 1 <= timeout_seconds <= MAX_TIMEOUT_SECONDS:
         raise AdapterError("timeout_rejected")
     if not execute:
         return {
+            "binding_required": True,
+            "binding_validation": "not_executed",
             "command": fixed_argv(prompt, timeout_seconds=timeout_seconds),
             "mode": "dry-run",
             "tools_enabled": False,
         }
+    binding_receipt = _validate_execution_binding(
+        workspace_root=workspace_root, delivery_binding=delivery_binding
+    )
     home = (Path.home() if user_home is None else Path(user_home).expanduser()).resolve()
     receipt_file = validate_receipt_path(receipt_path, user_home=home) if receipt_path is not None else None
     config_root = validate_config_root(home)
@@ -549,6 +583,7 @@ def run_worker(
         "schema_version": 1,
         "started_at": started_at,
         "worker": "oh-my-pi",
+        "delivery_binding": binding_receipt,
     }
     process: Any | None = None
     trial_dir: Path | None = None
@@ -661,20 +696,42 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--receipt")
     run.add_argument("--timeout-seconds", type=int, default=120)
     run.add_argument("--expect-exact")
+    run.add_argument("--workspace-root")
+    run.add_argument("--run-id")
+    run.add_argument("--packet-id")
+    run.add_argument("--packet-hash")
+    run.add_argument("--instruction-binding-json")
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
+        instruction_binding = (
+            json.loads(args.instruction_binding_json) if args.instruction_binding_json else None
+        )
         result = run_worker(
             prompt=args.prompt,
             execute=args.execute,
             receipt_path=args.receipt,
             timeout_seconds=args.timeout_seconds,
             expect_exact=args.expect_exact,
+            workspace_root=args.workspace_root,
+            delivery_binding={
+                "run_id": args.run_id,
+                "packet_id": args.packet_id,
+                "packet_hash": args.packet_hash,
+                "instruction_binding": instruction_binding,
+            }
+            if any(
+                value is not None
+                for value in (args.run_id, args.packet_id, args.packet_hash, instruction_binding)
+            )
+            else None,
         )
-    except AdapterError as exc:
+    except (AdapterError, json.JSONDecodeError) as exc:
+        if isinstance(exc, json.JSONDecodeError):
+            exc = AdapterError("instruction_binding_rejected")
         print(
             json.dumps(
                 {"error_code": exc.code, "outcome": "failed"},

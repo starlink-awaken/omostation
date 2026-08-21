@@ -23,6 +23,20 @@ adapter = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(adapter)
 
 
+@pytest.fixture(autouse=True)
+def _admitted_binding(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(
+        adapter,
+        "_validate_execution_binding",
+        lambda **_kwargs: {
+            "run_id": "run-1",
+            "packet_id": "WP-1",
+            "packet_hash": "sha256:" + "a" * 64,
+            "instruction_digest": "sha256:" + "b" * 64,
+        },
+    )
+
+
 class FakeProcess:
     def __init__(
         self,
@@ -110,6 +124,7 @@ def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
     registry = next(document for document in documents if isinstance(document, dict) and "workers" in document)
     workers = {worker["id"]: worker for worker in registry["workers"]}
     pi = workers["pi"]
+    omp = workers["oh-my-pi"]
 
     assert pi["enabled"] is True
     assert pi["admission_state"] == "admitted"
@@ -122,6 +137,21 @@ def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
             "command": (
                 '/usr/bin/python3 "{workspace_root}/bin/gac/pi-worker-adapter.py" '
                 "run --execute "
+                '--workspace-root "{workspace_root}" --run-id "{run_id}" '
+                '--packet-id "{packet_id}" --packet-hash "{packet_hash}" '
+                '--instruction-binding-json "{instruction_binding_json}" '
+                '--timeout-seconds 120 --prompt "{prompt}"'
+            )
+        }
+    }
+    assert omp["transports"] == {
+        "cli_prompt": {
+            "command": (
+                '/usr/bin/python3 "{workspace_root}/bin/gac/omp-worker-adapter.py" '
+                "run --execute "
+                '--workspace-root "{workspace_root}" --run-id "{run_id}" '
+                '--packet-id "{packet_id}" --packet-hash "{packet_hash}" '
+                '--instruction-binding-json "{instruction_binding_json}" '
                 '--timeout-seconds 120 --prompt "{prompt}"'
             )
         }
@@ -132,7 +162,7 @@ def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
         for worker_id, worker in workers.items()
         if worker.get("enabled") is True and worker.get("admission_state") == "admitted"
     }
-    assert admitted_worker_ids == {"codebuddy", "reasonix", "pi", "oh-my-pi"}
+    assert admitted_worker_ids == {"codebuddy", "reasonix", "pi", "oh-my-pi", "codex"}
     candidates = {worker_id: worker for worker_id, worker in workers.items() if worker_id not in admitted_worker_ids}
     assert candidates
     for candidate in candidates.values():
@@ -719,3 +749,21 @@ def test_real_subprocess_marker_reaper_removes_detached_descendant():
     )
     assert adapter._reap(process, marker=marker, timeout_seconds=2) is True
     assert adapter._default_marker_probe(marker) == {}
+
+
+def test_execute_rejects_binding_before_health_or_process(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def reject(**_kwargs):
+        raise adapter.AdapterError("instruction_binding_required")
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("health/process must follow binding validation")
+
+    monkeypatch.setattr(adapter, "_validate_execution_binding", reject)
+    with pytest.raises(adapter.AdapterError, match="instruction_binding_required"):
+        adapter.run_worker(
+            prompt="x",
+            execute=True,
+            user_home=tmp_path,
+            health_probe=forbidden,
+            popen_factory=forbidden,
+        )

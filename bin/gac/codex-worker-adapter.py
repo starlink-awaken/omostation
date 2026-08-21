@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -71,6 +72,32 @@ class AdapterError(RuntimeError):
         super().__init__(code)
         self.code = code
         self.provider_review = provider_review
+
+
+def _validate_execution_binding(
+    *, workspace_root: Union[Path, str], delivery_binding: Optional[dict[str, Any]]
+) -> dict[str, str]:
+    required = {"run_id", "packet_id", "packet_hash", "instruction_binding"}
+    if not isinstance(delivery_binding, dict) or set(delivery_binding) != required:
+        raise AdapterError("instruction_binding_required")
+    contract_path = Path(__file__).resolve().parents[1] / "plan" / "bet-ledger.py"
+    spec = importlib.util.spec_from_file_location("_codex_worker_binding_contract", contract_path)
+    if spec is None or spec.loader is None:
+        raise AdapterError("instruction_binding_unavailable")
+    contract = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(contract)
+        return contract.validate_worker_instruction_binding(
+            workspace=Path(workspace_root),
+            run_id=delivery_binding["run_id"],
+            packet_id=delivery_binding["packet_id"],
+            packet_hash=delivery_binding["packet_hash"],
+            instruction_binding=delivery_binding["instruction_binding"],
+        )
+    except Exception as exc:  # noqa: BLE001 - mandatory gate fails closed.
+        if isinstance(exc, AdapterError):
+            raise
+        raise AdapterError("instruction_binding_rejected") from exc
 
 
 def _utc_now() -> str:
@@ -641,6 +668,7 @@ def run_worker(
     expect_exact: Optional[str] = None,
     receipt_path: Optional[Union[Path, str]] = None,
     timeout_seconds: int = 900,
+    delivery_binding: Optional[dict[str, Any]] = None,
     popen_factory: Callable[..., Any] = subprocess.Popen,
     codex_resolver: Callable[[], Optional[Path]] = _default_codex_resolver,
     version_reader: Callable[[Path], str] = _default_version_reader,
@@ -651,11 +679,16 @@ def run_worker(
     """Execute exactly one bounded Codex invocation."""
     if not execute:
         return {
+            "binding_required": True,
+            "binding_validation": "not_executed",
             "command": fixed_argv("codex", Path(workspace_root), prompt),
             "mode": "dry-run",
         }
     if not 1 <= timeout_seconds <= MAX_TIMEOUT_SECONDS:
         raise AdapterError("worker_timeout")
+    binding_receipt = _validate_execution_binding(
+        workspace_root=workspace_root, delivery_binding=delivery_binding
+    )
     root = validate_workspace(workspace_root)
     receipt_file = validate_receipt_path(receipt_path) if receipt_path is not None else None
     binary = codex_resolver()
@@ -721,6 +754,7 @@ def run_worker(
                 "ephemeral": True,
                 "sandbox": "workspace-write",
             },
+            "delivery_binding": binding_receipt,
             "changed_paths": changed_paths,
             "codex_version": version,
             "completed_at": _utc_now(),
@@ -795,12 +829,19 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--expect-exact")
     run.add_argument("--receipt")
     run.add_argument("--timeout-seconds", type=int, default=900)
+    run.add_argument("--run-id")
+    run.add_argument("--packet-id")
+    run.add_argument("--packet-hash")
+    run.add_argument("--instruction-binding-json")
     return parser
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = build_parser().parse_args(argv)
     try:
+        instruction_binding = (
+            json.loads(args.instruction_binding_json) if args.instruction_binding_json else None
+        )
         result = run_worker(
             workspace_root=args.workspace_root,
             prompt=args.prompt,
@@ -808,8 +849,21 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             expect_exact=args.expect_exact,
             receipt_path=args.receipt,
             timeout_seconds=args.timeout_seconds,
+            delivery_binding={
+                "run_id": args.run_id,
+                "packet_id": args.packet_id,
+                "packet_hash": args.packet_hash,
+                "instruction_binding": instruction_binding,
+            }
+            if any(
+                value is not None
+                for value in (args.run_id, args.packet_id, args.packet_hash, instruction_binding)
+            )
+            else None,
         )
-    except AdapterError as exc:
+    except (AdapterError, json.JSONDecodeError) as exc:
+        if isinstance(exc, json.JSONDecodeError):
+            exc = AdapterError("instruction_binding_rejected")
         print(
             _canonical_json(
                 {

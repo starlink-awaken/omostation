@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -28,6 +29,34 @@ SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 Command = tuple[str, ...]
 Runner = Callable[[Command, float], tuple[int, str, str]]
 GuardRunner = Callable[[Command, float, str], tuple[int, str, str]]
+
+
+def _validate_instruction_binding(
+    *,
+    workspace_root: str,
+    workflow_run_id: str,
+    packet_id: str,
+    packet_hash: str,
+    instruction_binding: dict[str, Any] | None,
+) -> dict[str, str]:
+    if instruction_binding is None:
+        raise ValueError("instruction_binding_required")
+    contract_path = Path(__file__).resolve().parents[1] / "plan" / "bet-ledger.py"
+    spec = importlib.util.spec_from_file_location("_orca_codex_binding_contract", contract_path)
+    if spec is None or spec.loader is None:
+        raise ValueError("instruction_binding_unavailable")
+    contract = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(contract)
+        return contract.validate_worker_instruction_binding(
+            workspace=Path(workspace_root),
+            run_id=workflow_run_id,
+            packet_id=packet_id,
+            packet_hash=packet_hash,
+            instruction_binding=instruction_binding,
+        )
+    except Exception as exc:  # noqa: BLE001 - mandatory gate fails closed.
+        raise ValueError("instruction_binding_rejected") from exc
 
 
 def _subprocess_runner(command: Command, timeout_seconds: float) -> tuple[int, str, str]:
@@ -519,6 +548,7 @@ def start_supervised_codex(
     idempotency_key: str | None = None,
     codex_executable: str | None = None,
     timeout_ms: int = 60_000,
+    instruction_binding: dict[str, Any] | None = None,
     runner: Runner = _subprocess_runner,
     guard_runner: GuardRunner | None = None,
 ) -> dict[str, Any]:
@@ -534,6 +564,17 @@ def start_supervised_codex(
     )
     if binding is None:
         return _failure(binding=None, stage="input", reason="identity_invalid")
+    try:
+        binding_receipt = _validate_instruction_binding(
+            workspace_root=workspace_root,
+            workflow_run_id=workflow_run_id,
+            packet_id=packet_id,
+            packet_hash=packet_hash,
+            instruction_binding=instruction_binding,
+        )
+    except ValueError as exc:
+        return _failure(binding=binding, stage="binding", reason=str(exc))
+    binding["instruction_digest"] = binding_receipt["instruction_digest"]
     if not _valid_identity(agent_id):
         return _failure(binding=binding, stage="input", reason="agent_id_invalid")
     if idempotency_key is not None and not _valid_identity(idempotency_key):
@@ -1002,6 +1043,7 @@ def collect_supervised_codex(
     terminal_handle: str,
     runner: Runner = _subprocess_runner,
     guard_runner: GuardRunner | None = None,
+    instruction_binding: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Collect a settled worker's provenance without retaining transcript content."""
     binding = _binding(
@@ -1021,6 +1063,17 @@ def collect_supervised_codex(
     )
     if binding is None or orca is None:
         return _failure(binding=binding, stage="input", reason="identity_invalid", orca=orca)
+    try:
+        binding_receipt = _validate_instruction_binding(
+            workspace_root=workspace_root,
+            workflow_run_id=workflow_run_id,
+            packet_id=packet_id,
+            packet_hash=packet_hash,
+            instruction_binding=instruction_binding,
+        )
+    except ValueError as exc:
+        return _failure(binding=binding, stage="binding", reason=str(exc), orca=orca)
+    binding["instruction_digest"] = binding_receipt["instruction_digest"]
     if (
         not _valid_identity(agent_id)
         or not SHA256_RE.fullmatch(canonical_root_digest)
@@ -1330,6 +1383,7 @@ def _parser() -> argparse.ArgumentParser:
         command.add_argument("--workspace-root", required=True)
         command.add_argument("--prompt-ref", required=True)
         command.add_argument("--prompt-digest", required=True)
+        command.add_argument("--instruction-binding-json", required=True)
     start = commands.choices["start"]
     start.add_argument("--agent-id", required=True)
     start.add_argument("--idempotency-key")
@@ -1348,6 +1402,11 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    try:
+        instruction_binding = json.loads(args.instruction_binding_json)
+    except json.JSONDecodeError:
+        print(_canonical_json(_failure(binding=None, stage="binding", reason="instruction_binding_rejected")))
+        return 1
     values = {
         "workflow_run_id": args.workflow_run_id,
         "omo_task_id": args.omo_task_id,
@@ -1357,6 +1416,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "workspace_root": args.workspace_root,
         "prompt_ref": args.prompt_ref,
         "prompt_digest": args.prompt_digest,
+        "instruction_binding": instruction_binding,
     }
     if args.command == "start":
         receipt = start_supervised_codex(
