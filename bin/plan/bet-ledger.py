@@ -25,6 +25,7 @@ import argparse
 import fnmatch
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -893,10 +894,7 @@ def validate_accepted_specification(
         elif isinstance(content_digest, str) and SHA256_REF_RE.fullmatch(content_digest):
             actual_digest = f"sha256:{_file_sha256(candidate)}"
             if actual_digest != content_digest:
-                errors.append(
-                    "SPEC_DIGEST_MISMATCH: "
-                    f"declared={content_digest[:23]}... actual={actual_digest[:23]}..."
-                )
+                errors.append(f"SPEC_DIGEST_MISMATCH: declared={content_digest[:23]}... actual={actual_digest[:23]}...")
 
     if errors:
         return None, errors
@@ -946,11 +944,7 @@ def _work_packet_from_bet(
         if isinstance(command, str) and command.strip():
             verify_commands.append([command.strip()])
     write_surfaces = sorted(
-        {
-            str(item).strip().strip("/")
-            for item in bet.get("write_surfaces") or []
-            if str(item).strip()
-        }
+        {str(item).strip().strip("/") for item in bet.get("write_surfaces") or [] if str(item).strip()}
     )
     spec_surface = binding["spec_ref"].removeprefix(SPEC_REF_PREFIX)
     instruction_surface = instruction_binding["instruction_ref"].removeprefix(SPEC_REF_PREFIX)
@@ -962,10 +956,7 @@ def _work_packet_from_bet(
         "bet_id": bet_id,
         "strategic_outcome": str(bet.get("goal") or ""),
         "objective": str(bet.get("goal") or bet.get("title") or ""),
-        "why_now": (
-            f"priority={bet.get('priority', 'unspecified')}; "
-            f"appetite={bet.get('appetite', 'unspecified')}"
-        ),
+        "why_now": (f"priority={bet.get('priority', 'unspecified')}; appetite={bet.get('appetite', 'unspecified')}"),
         "status": "active",
         "authority": {
             "strategist": "3y-bet-ledger",
@@ -1020,8 +1011,7 @@ def prepare_bet_execution(
     status = str(bet.get("status") or "")
     if require_startable and status not in STARTABLE_BET_STATUSES:
         raise SpecBindingContractError(
-            f"BET_STATUS_NOT_STARTABLE: {bet_id} status={status}; "
-            f"allowed={sorted(STARTABLE_BET_STATUSES)}"
+            f"BET_STATUS_NOT_STARTABLE: {bet_id} status={status}; allowed={sorted(STARTABLE_BET_STATUSES)}"
         )
     binding, errors = validate_accepted_specification(bet, workspace=workspace)
     if errors or binding is None:
@@ -1084,9 +1074,7 @@ def validate_work_packet_run(
     bet_id = str(payload.get("bet_id") or "")
     if packet is None and packet_hash is None:
         if bet_id:
-            raise SpecBindingContractError(
-                f"WORK_PACKET_MISSING: bet-bound run {payload.get('run_id', '')}"
-            )
+            raise SpecBindingContractError(f"WORK_PACKET_MISSING: bet-bound run {payload.get('run_id', '')}")
         return  # Compatibility boundary for pre-spine and read-only runs.
     if not isinstance(packet, dict) or not isinstance(packet_hash, str):
         raise SpecBindingContractError("WORK_PACKET_INVALID: packet and packet hash are required")
@@ -1096,9 +1084,7 @@ def validate_work_packet_run(
     except ValueError as exc:
         raise SpecBindingContractError(f"WORK_PACKET_INVALID: {exc}") from exc
     if measured_hash != packet_hash:
-        raise SpecBindingContractError(
-            f"WORK_PACKET_HASH_MISMATCH: declared={packet_hash} measured={measured_hash}"
-        )
+        raise SpecBindingContractError(f"WORK_PACKET_HASH_MISMATCH: declared={packet_hash} measured={measured_hash}")
     if packet.get("bet_id") != bet_id:
         raise SpecBindingContractError("WORK_PACKET_BET_MISMATCH: run and packet bet_id differ")
     rebuilt = prepare_bet_execution(bet_id, workspace=workspace, require_startable=False)
@@ -1107,9 +1093,7 @@ def validate_work_packet_run(
             "WORK_PACKET_SOURCE_DRIFT: ledger/spec projection no longer matches the bound packet"
         )
 
-    requested_surfaces = sorted(
-        {str(surface).strip() for surface in claimed_surfaces or [] if str(surface).strip()}
-    )
+    requested_surfaces = sorted({str(surface).strip() for surface in claimed_surfaces or [] if str(surface).strip()})
     if requested_surfaces:
         raise SpecBindingContractError(
             "WORK_PACKET_SCOPE_MISMATCH: governance surfaces are not modeled by "
@@ -1121,9 +1105,7 @@ def validate_work_packet_run(
     for raw_path in claimed_paths:
         claimed_path = _normalize_claim_path(raw_path, workspace)
         if not any(_surface_allows_path(str(surface), claimed_path) for surface in allowed):
-            raise SpecBindingContractError(
-                f"WORK_PACKET_SCOPE_MISMATCH: {claimed_path} is outside {allowed}"
-            )
+            raise SpecBindingContractError(f"WORK_PACKET_SCOPE_MISMATCH: {claimed_path} is outside {allowed}")
 
 
 def validate_worker_instruction_binding(
@@ -1150,22 +1132,57 @@ def validate_worker_instruction_binding(
         raise SpecBindingContractError("WORKER_BINDING_INSTRUCTION_SHAPE_INVALID")
 
     run_path = root / ".omo" / "_delivery" / "agent-workflows" / "runs" / f"{run_id}.yaml"
-    try:
-        payload = yaml.safe_load(run_path.read_text(encoding="utf-8")) or {}
-    except (OSError, UnicodeError, yaml.YAMLError) as exc:
-        raise SpecBindingContractError("WORKER_BINDING_RUN_UNAVAILABLE") from exc
-    if not isinstance(payload, dict) or payload.get("run_id") != run_id:
-        raise SpecBindingContractError("WORKER_BINDING_RUN_MISMATCH")
+    workflow_payload: dict[str, Any] | None = None
+    if run_path.is_file():
+        try:
+            loaded = yaml.safe_load(run_path.read_text(encoding="utf-8")) or {}
+        except (OSError, UnicodeError, yaml.YAMLError) as exc:
+            raise SpecBindingContractError("WORKER_BINDING_RUN_UNAVAILABLE") from exc
+        if not isinstance(loaded, dict) or loaded.get("run_id") != run_id:
+            raise SpecBindingContractError("WORKER_BINDING_RUN_MISMATCH")
+        workflow_payload = loaded
 
-    packet = payload.get("work_packet")
-    if not isinstance(packet, dict):
-        raise SpecBindingContractError("WORKER_BINDING_PACKET_MISSING")
-    if packet.get("packet_id") != packet_id or payload.get("work_packet_hash") != packet_hash:
-        raise SpecBindingContractError("WORKER_BINDING_PACKET_MISMATCH")
-    if payload.get("instruction_binding") != instruction_binding:
-        raise SpecBindingContractError("WORKER_BINDING_RUN_INSTRUCTION_MISMATCH")
-    if packet.get("instruction_binding") != instruction_binding:
-        raise SpecBindingContractError("WORKER_BINDING_PACKET_INSTRUCTION_MISMATCH")
+    mesh_snapshot = _load_durable_mesh_snapshot(root, run_id)
+    mesh_worker = mesh_snapshot.get("worker") if mesh_snapshot is not None else None
+    mesh_bound = isinstance(mesh_worker, dict)
+    if workflow_payload is not None and mesh_bound:
+        raise SpecBindingContractError("WORKER_BINDING_RUN_AMBIGUOUS")
+    if workflow_payload is None and not mesh_bound:
+        raise SpecBindingContractError("WORKER_BINDING_RUN_UNAVAILABLE")
+
+    if workflow_payload is not None:
+        payload = workflow_payload
+        packet = payload.get("work_packet")
+        if not isinstance(packet, dict):
+            raise SpecBindingContractError("WORKER_BINDING_PACKET_MISSING")
+        if packet.get("packet_id") != packet_id or payload.get("work_packet_hash") != packet_hash:
+            raise SpecBindingContractError("WORKER_BINDING_PACKET_MISMATCH")
+        if payload.get("instruction_binding") != instruction_binding:
+            raise SpecBindingContractError("WORKER_BINDING_RUN_INSTRUCTION_MISMATCH")
+        if packet.get("instruction_binding") != instruction_binding:
+            raise SpecBindingContractError("WORKER_BINDING_PACKET_INSTRUCTION_MISMATCH")
+    else:
+        assert isinstance(mesh_worker, dict)
+        if (
+            mesh_worker.get("packet_id") != packet_id
+            or mesh_worker.get("packet_hash") != packet_hash
+            or mesh_worker.get("instruction_binding") != instruction_binding
+        ):
+            raise SpecBindingContractError("WORKER_BINDING_MESH_SNAPSHOT_MISMATCH")
+        if not packet_id.startswith("WP-BET-"):
+            raise SpecBindingContractError("WORKER_BINDING_MESH_PACKET_ID_INVALID")
+        bet_id = packet_id.removeprefix("WP-")
+        rebuilt = prepare_bet_execution(bet_id, workspace=root, require_startable=False)
+        packet = rebuilt["work_packet"]
+        payload = {
+            "run_id": run_id,
+            "bet_id": bet_id,
+            **rebuilt,
+        }
+        if rebuilt["work_packet_hash"] != packet_hash:
+            raise SpecBindingContractError("WORKER_BINDING_MESH_PACKET_SOURCE_DRIFT")
+        if rebuilt["instruction_binding"] != instruction_binding:
+            raise SpecBindingContractError("WORKER_BINDING_MESH_INSTRUCTION_SOURCE_DRIFT")
 
     canonicalize, compute_packet_hash = _work_packet_compiler(root)
     try:
@@ -1178,12 +1195,161 @@ def validate_worker_instruction_binding(
     measured_instruction = resolve_instruction_binding(workspace=root)
     if measured_instruction != instruction_binding:
         raise SpecBindingContractError("WORKER_BINDING_INSTRUCTION_SOURCE_DRIFT")
-    validate_work_packet_run(payload, [], workspace=root)
+    if workflow_payload is not None:
+        validate_work_packet_run(payload, [], workspace=root)
     return {
         "run_id": run_id,
         "packet_id": packet_id,
         "packet_hash": packet_hash,
         "instruction_digest": instruction_binding["content_digest"],
+    }
+
+
+def _safe_omo_python_env(root: Path, *, origin_proof: str | None = None) -> dict[str, str]:
+    """Build the minimal environment used by the read/append OMO broker calls."""
+    omo_src = root / "projects" / "omo" / "src"
+    if not (omo_src / "omo" / "cli.py").is_file():
+        raise SpecBindingContractError("WORKER_BINDING_OMO_UNAVAILABLE")
+    env = {
+        "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+        "PYTHONPATH": str(omo_src),
+        "PYTHONDONTWRITEBYTECODE": "1",
+    }
+    if os.environ.get("UV_CACHE_DIR"):
+        env["UV_CACHE_DIR"] = os.environ["UV_CACHE_DIR"]
+    if origin_proof is not None:
+        env["OMO_WORKER_ACK_ORIGIN_PROOF"] = origin_proof
+    return env
+
+
+def _load_durable_mesh_snapshot(root: Path, run_id: str) -> dict[str, Any] | None:
+    """Project one exact durable Mesh run using the workspace's OMO implementation."""
+    log_path = root / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
+    if not log_path.is_file():
+        return None
+    script = (
+        "import json,sys; "
+        "from pathlib import Path; "
+        "from omo.workflow_mesh import WorkflowMeshStore; "
+        "print(json.dumps(WorkflowMeshStore(Path(sys.argv[1])).snapshot(sys.argv[2]),"
+        "sort_keys=True,separators=(',',':')))"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script, str(root / ".omo"), run_id],
+        cwd=root,
+        env=_safe_omo_python_env(root),
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise SpecBindingContractError("WORKER_BINDING_MESH_INVALID")
+    try:
+        snapshot = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise SpecBindingContractError("WORKER_BINDING_MESH_INVALID") from exc
+    if not isinstance(snapshot, dict) or snapshot.get("workflow_run_id") != run_id:
+        raise SpecBindingContractError("WORKER_BINDING_MESH_RUN_MISMATCH")
+    return snapshot
+
+
+def perform_authenticated_worker_ack(
+    *,
+    workspace: Path,
+    workflow_run_id: str,
+    trace_id: str,
+    dispatch_id: str,
+    worker_id: str,
+    step_run_id: str,
+    admission_id: str,
+    packet_id: str,
+    packet_hash: str,
+    instruction_binding: dict[str, Any],
+    ack_decision: str,
+    lease_seconds: int,
+    omo_dir: str,
+    origin_proof: str | None,
+) -> dict[str, str]:
+    """Validate the immutable delivery, then append ACK through the OMO CLI broker."""
+    root = workspace.expanduser().resolve(strict=True)
+    if origin_proof is None:
+        raise SpecBindingContractError("WORKER_ACK_ORIGIN_PROOF_REQUIRED")
+    if re.fullmatch(r"[A-Za-z0-9_-]{43}", origin_proof) is None:
+        raise SpecBindingContractError("WORKER_ACK_ORIGIN_PROOF_INVALID")
+    public_ids = (workflow_run_id, trace_id, dispatch_id, worker_id, step_run_id, admission_id)
+    if any(not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:+-]{0,255}", value) for value in public_ids):
+        raise SpecBindingContractError("WORKER_ACK_CONTEXT_INVALID")
+    if ack_decision != "proceed" or not isinstance(lease_seconds, int) or lease_seconds <= 0:
+        raise SpecBindingContractError("WORKER_ACK_DECISION_INVALID")
+    resolved_omo = (root / omo_dir).resolve() if not Path(omo_dir).is_absolute() else Path(omo_dir).resolve()
+    if resolved_omo != (root / ".omo").resolve():
+        raise SpecBindingContractError("WORKER_ACK_OMO_DIR_INVALID")
+
+    validate_worker_instruction_binding(
+        workspace=root,
+        run_id=workflow_run_id,
+        packet_id=packet_id,
+        packet_hash=packet_hash,
+        instruction_binding=instruction_binding,
+    )
+    instruction_json = json.dumps(
+        instruction_binding,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    argv = [
+        "uv",
+        "run",
+        "--project",
+        str((root / "projects" / "omo").resolve()),
+        "python",
+        "-m",
+        "omo.cli",
+        "worker",
+        "mesh-ack",
+        workflow_run_id,
+        "--trace-id",
+        trace_id,
+        "--dispatch-id",
+        dispatch_id,
+        "--worker",
+        worker_id,
+        "--step-run-id",
+        step_run_id,
+        "--admission-id",
+        admission_id,
+        "--packet-id",
+        packet_id,
+        "--packet-hash",
+        packet_hash,
+        "--instruction-binding-json",
+        instruction_json,
+        "--ack-decision",
+        ack_decision,
+        "--lease-seconds",
+        str(lease_seconds),
+        "--omo-dir",
+        str(resolved_omo),
+    ]
+    result = subprocess.run(
+        argv,
+        cwd=root,
+        env=_safe_omo_python_env(root, origin_proof=origin_proof),
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise SpecBindingContractError("WORKER_ACK_REJECTED")
+    return {
+        "run_id": workflow_run_id,
+        "packet_id": packet_id,
+        "packet_hash": packet_hash,
+        "instruction_digest": instruction_binding["content_digest"],
+        "outcome": "acknowledged",
     }
 
 

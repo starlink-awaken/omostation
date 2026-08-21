@@ -153,6 +153,69 @@ def healthy() -> dict[str, str]:
     return {"status": "ok", "service": "aetherforge-openai-proxy"}
 
 
+def test_ack_command_never_starts_omp_provider(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    proof = "o" * 43
+    captured: dict[str, object] = {}
+
+    class Contract:
+        @staticmethod
+        def perform_authenticated_worker_ack(**kwargs):
+            captured.update(kwargs)
+            return {"outcome": "acknowledged", "run_id": kwargs["workflow_run_id"]}
+
+    instruction = json.dumps(
+        {
+            "instruction_ref": "repo://docs/operations/blueprint-agent-instruction-pack-v1.md",
+            "instruction_version": "blueprint-agent-instruction-pack/v1",
+            "content_digest": "sha256:" + "b" * 64,
+            "instruction_profile": "executor",
+        }
+    )
+    argv = [
+        "ack",
+        "--workspace-root",
+        str(tmp_path),
+        "run-ack-1",
+        "--trace-id",
+        "trace-1",
+        "--dispatch-id",
+        "dispatch-1",
+        "--worker",
+        "oh-my-pi",
+        "--step-run-id",
+        "step-1",
+        "--admission-id",
+        "admission-1",
+        "--packet-id",
+        "WP-BET-1",
+        "--packet-hash",
+        "sha256:" + "a" * 64,
+        "--instruction-binding-json",
+        instruction,
+        "--ack-decision",
+        "proceed",
+        "--lease-seconds",
+        "1200",
+        "--omo-dir",
+        ".omo",
+    ]
+    monkeypatch.setattr(adapter, "_binding_contract", lambda: Contract)
+    monkeypatch.setattr(
+        adapter.subprocess,
+        "Popen",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("OMP provider must stay untouched")),
+    )
+    monkeypatch.setenv("OMO_WORKER_ACK_ORIGIN_PROOF", proof)
+
+    assert adapter.main(argv) == 0
+    output = capsys.readouterr().out
+    assert json.loads(output) == {"outcome": "acknowledged", "run_id": "run-ack-1"}
+    assert proof not in output
+    assert captured["origin_proof"] == proof
+
+
 def no_marker(_marker: str) -> dict[int, int]:
     return {}
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import shlex
 import shutil
 import signal
 import stat
@@ -118,6 +119,71 @@ def no_marker(_marker: str) -> dict[int, int]:
     return {}
 
 
+def ack_argv(tmp_path: Path) -> list[str]:
+    return [
+        "ack",
+        "--workspace-root",
+        str(tmp_path),
+        "run-ack-1",
+        "--trace-id",
+        "trace-1",
+        "--dispatch-id",
+        "dispatch-1",
+        "--worker",
+        "pi",
+        "--step-run-id",
+        "step-1",
+        "--admission-id",
+        "admission-1",
+        "--packet-id",
+        "WP-BET-1",
+        "--packet-hash",
+        "sha256:" + "a" * 64,
+        "--instruction-binding-json",
+        json.dumps(
+            {
+                "instruction_ref": "repo://docs/operations/blueprint-agent-instruction-pack-v1.md",
+                "instruction_version": "blueprint-agent-instruction-pack/v1",
+                "content_digest": "sha256:" + "b" * 64,
+                "instruction_profile": "executor",
+            }
+        ),
+        "--ack-decision",
+        "proceed",
+        "--lease-seconds",
+        "1200",
+        "--omo-dir",
+        ".omo",
+    ]
+
+
+def test_ack_command_never_starts_pi_provider(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    proof = "p" * 43
+    captured: dict[str, object] = {}
+
+    class Contract:
+        @staticmethod
+        def perform_authenticated_worker_ack(**kwargs):
+            captured.update(kwargs)
+            return {"outcome": "acknowledged", "run_id": kwargs["workflow_run_id"]}
+
+    monkeypatch.setattr(adapter, "_binding_contract", lambda: Contract)
+    monkeypatch.setattr(
+        adapter.subprocess,
+        "Popen",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("Pi provider must stay untouched")),
+    )
+    monkeypatch.setenv("OMO_WORKER_ACK_ORIGIN_PROOF", proof)
+
+    assert adapter.main(ack_argv(tmp_path)) == 0
+    output = capsys.readouterr().out
+    assert json.loads(output) == {"outcome": "acknowledged", "run_id": "run-ack-1"}
+    assert proof not in output
+    assert captured["origin_proof"] == proof
+
+
 def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
     registry_path = SCRIPT.parents[2] / ".omo" / "_truth" / "registry" / "workers.yaml"
     documents = list(yaml.safe_load_all(registry_path.read_text(encoding="utf-8")))
@@ -135,25 +201,33 @@ def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
     assert pi["transports"] == {
         "cli_prompt": {
             "command": (
-                '/usr/bin/python3 "{workspace_root}/bin/gac/pi-worker-adapter.py" '
+                'uv run --with pyyaml python "{workspace_root}/bin/gac/pi-worker-adapter.py" '
                 "run --execute "
                 '--workspace-root "{workspace_root}" --run-id "{run_id}" '
                 '--packet-id "{packet_id}" --packet-hash "{packet_hash}" '
                 '--instruction-binding-json "{instruction_binding_json}" '
                 '--timeout-seconds 120 --prompt "{prompt}"'
-            )
+            ),
+            "ack_command": (
+                'uv run --with pyyaml python "{workspace_root}/bin/gac/pi-worker-adapter.py" '
+                'ack --workspace-root "{workspace_root}"'
+            ),
         }
     }
     assert omp["transports"] == {
         "cli_prompt": {
             "command": (
-                '/usr/bin/python3 "{workspace_root}/bin/gac/omp-worker-adapter.py" '
+                'uv run --with pyyaml python "{workspace_root}/bin/gac/omp-worker-adapter.py" '
                 "run --execute "
                 '--workspace-root "{workspace_root}" --run-id "{run_id}" '
                 '--packet-id "{packet_id}" --packet-hash "{packet_hash}" '
                 '--instruction-binding-json "{instruction_binding_json}" '
                 '--timeout-seconds 120 --prompt "{prompt}"'
-            )
+            ),
+            "ack_command": (
+                'uv run --with pyyaml python "{workspace_root}/bin/gac/omp-worker-adapter.py" '
+                'ack --workspace-root "{workspace_root}"'
+            ),
         }
     }
 
@@ -168,6 +242,31 @@ def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
     for candidate in candidates.values():
         assert candidate["enabled"] is False
         assert candidate["admission_state"] == "declared"
+
+
+@pytest.mark.parametrize("worker_id", ["pi", "oh-my-pi", "codex"])
+def test_registry_ack_command_bootstraps_with_scrubbed_environment(tmp_path: Path, worker_id: str) -> None:
+    registry_path = SCRIPT.parents[2] / ".omo" / "_truth" / "registry" / "workers.yaml"
+    documents = list(yaml.safe_load_all(registry_path.read_text(encoding="utf-8")))
+    registry = next(document for document in documents if isinstance(document, dict) and "workers" in document)
+    worker = next(item for item in registry["workers"] if item["id"] == worker_id)
+    command = worker["transports"]["cli_prompt"]["ack_command"].format(workspace_root=SCRIPT.parents[2])
+    result = subprocess.run(
+        [*shlex.split(command), "--help"],
+        cwd=SCRIPT.parents[2],
+        env={
+            "PATH": os.environ["PATH"],
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "UV_CACHE_DIR": str(tmp_path / "uv-cache"),
+        },
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "--instruction-binding-json" in result.stdout
 
 
 def test_dry_run_never_probes_health_or_starts_process(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):

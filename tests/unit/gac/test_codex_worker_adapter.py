@@ -672,7 +672,13 @@ def test_codex_worker_registry_admits_only_the_interactive_orca_supervisor() -> 
         ],
     }
     assert codex["transports"] == {
-        "cli_prompt": {"command": ('/usr/bin/python3 "{workspace_root}/bin/gac/orca-codex-supervisor.py" start')}
+        "cli_prompt": {
+            "command": ('uv run --with pyyaml python "{workspace_root}/bin/gac/orca-codex-supervisor.py" start'),
+            "ack_command": (
+                'uv run --with pyyaml python "{workspace_root}/bin/gac/codex-worker-adapter.py" '
+                'ack --workspace-root "{workspace_root}"'
+            ),
+        }
     }
     assert codex["supervision"] == {
         "controller_approval": "required",
@@ -1011,6 +1017,69 @@ def test_execute_rejects_binding_before_provider_resolution(tmp_path: Path, monk
         )
 
 
+def test_ack_command_never_resolves_or_starts_codex(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    proof = "c" * 43
+    captured: dict[str, object] = {}
+
+    class Contract:
+        @staticmethod
+        def perform_authenticated_worker_ack(**kwargs):
+            captured.update(kwargs)
+            return {"outcome": "acknowledged", "run_id": kwargs["workflow_run_id"]}
+
+    instruction = json.dumps(
+        {
+            "instruction_ref": "repo://docs/operations/blueprint-agent-instruction-pack-v1.md",
+            "instruction_version": "blueprint-agent-instruction-pack/v1",
+            "content_digest": "sha256:" + "b" * 64,
+            "instruction_profile": "executor",
+        }
+    )
+    argv = [
+        "ack",
+        "--workspace-root",
+        str(tmp_path),
+        "run-ack-1",
+        "--trace-id",
+        "trace-1",
+        "--dispatch-id",
+        "dispatch-1",
+        "--worker",
+        "codex",
+        "--step-run-id",
+        "step-1",
+        "--admission-id",
+        "admission-1",
+        "--packet-id",
+        "WP-BET-1",
+        "--packet-hash",
+        "sha256:" + "a" * 64,
+        "--instruction-binding-json",
+        instruction,
+        "--ack-decision",
+        "proceed",
+        "--lease-seconds",
+        "1200",
+        "--omo-dir",
+        ".omo",
+    ]
+    monkeypatch.setattr(adapter, "_binding_contract", lambda: Contract)
+    monkeypatch.setattr(
+        adapter,
+        "run_worker",
+        lambda **_kwargs: (_ for _ in ()).throw(AssertionError("Codex provider must stay untouched")),
+    )
+    monkeypatch.setenv("OMO_WORKER_ACK_ORIGIN_PROOF", proof)
+
+    assert adapter.main(argv) == 0
+    output = capsys.readouterr().out
+    assert json.loads(output) == {"outcome": "acknowledged", "run_id": "run-ack-1"}
+    assert proof not in output
+    assert captured["origin_proof"] == proof
+
+
 def test_shared_validator_rehashes_packet_and_remeasures_instruction_bytes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1071,6 +1140,108 @@ def test_shared_validator_rehashes_packet_and_remeasures_instruction_bytes(
             packet_id="WP-1",
             packet_hash=declared_hash,
             instruction_binding=instruction_binding,
+        )
+
+
+def test_authenticated_ack_rejects_missing_malformed_or_mismatched_proof_before_broker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ledger_path = SCRIPT.parents[1] / "plan" / "bet-ledger.py"
+    spec = importlib.util.spec_from_file_location("test_worker_ack_contract", ledger_path)
+    assert spec is not None and spec.loader is not None
+    contract = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(contract)
+    instruction = {
+        "instruction_ref": "repo://docs/operations/blueprint-agent-instruction-pack-v1.md",
+        "instruction_version": "blueprint-agent-instruction-pack/v1",
+        "content_digest": "sha256:" + "b" * 64,
+        "instruction_profile": "executor",
+    }
+    kwargs = {
+        "workspace": tmp_path,
+        "workflow_run_id": "run-1",
+        "trace_id": "trace-1",
+        "dispatch_id": "dispatch-1",
+        "worker_id": "codex",
+        "step_run_id": "step-1",
+        "admission_id": "admission-1",
+        "packet_id": "WP-BET-1",
+        "packet_hash": "sha256:" + "a" * 64,
+        "instruction_binding": instruction,
+        "ack_decision": "proceed",
+        "lease_seconds": 1200,
+        "omo_dir": ".omo",
+    }
+    monkeypatch.setattr(
+        contract.subprocess,
+        "run",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("OMO broker must stay untouched")),
+    )
+
+    with pytest.raises(contract.SpecBindingContractError, match="ORIGIN_PROOF_REQUIRED"):
+        contract.perform_authenticated_worker_ack(**kwargs, origin_proof=None)
+    with pytest.raises(contract.SpecBindingContractError, match="ORIGIN_PROOF_INVALID"):
+        contract.perform_authenticated_worker_ack(
+            **kwargs,
+            origin_proof="controller-knows-only-public-fields",
+        )
+
+    monkeypatch.setattr(
+        contract,
+        "validate_worker_instruction_binding",
+        lambda **_kwargs: (_ for _ in ()).throw(
+            contract.SpecBindingContractError("WORKER_BINDING_MESH_SNAPSHOT_MISMATCH")
+        ),
+    )
+    with pytest.raises(contract.SpecBindingContractError, match="MESH_SNAPSHOT_MISMATCH"):
+        contract.perform_authenticated_worker_ack(**kwargs, origin_proof="p" * 43)
+
+
+def test_shared_validator_fails_closed_when_run_id_is_ambiguous_between_workflow_and_mesh(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ledger_path = SCRIPT.parents[1] / "plan" / "bet-ledger.py"
+    spec = importlib.util.spec_from_file_location("test_ambiguous_worker_binding_contract", ledger_path)
+    assert spec is not None and spec.loader is not None
+    contract = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(contract)
+    instruction_path = tmp_path / "docs/operations/blueprint-agent-instruction-pack-v1.md"
+    instruction_path.parent.mkdir(parents=True)
+    instruction_path.write_text("instruction\n", encoding="utf-8")
+    instruction = contract.resolve_instruction_binding(workspace=tmp_path)
+    run_path = tmp_path / ".omo/_delivery/agent-workflows/runs/run-ambiguous.yaml"
+    run_path.parent.mkdir(parents=True)
+    run_path.write_text(
+        yaml.safe_dump(
+            {
+                "run_id": "run-ambiguous",
+                "work_packet": {"packet_id": "WP-BET-1", "instruction_binding": instruction},
+                "work_packet_hash": "sha256:" + "a" * 64,
+                "instruction_binding": instruction,
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        contract,
+        "_load_durable_mesh_snapshot",
+        lambda _root, _run_id: {
+            "workflow_run_id": "run-ambiguous",
+            "worker": {
+                "packet_id": "WP-BET-1",
+                "packet_hash": "sha256:" + "a" * 64,
+                "instruction_binding": instruction,
+            },
+        },
+    )
+
+    with pytest.raises(contract.SpecBindingContractError, match="RUN_AMBIGUOUS"):
+        contract.validate_worker_instruction_binding(
+            workspace=tmp_path,
+            run_id="run-ambiguous",
+            packet_id="WP-BET-1",
+            packet_hash="sha256:" + "a" * 64,
+            instruction_binding=instruction,
         )
 
 
@@ -1157,3 +1328,132 @@ def test_adapter_accepts_one_real_persisted_governed_run(tmp_path: Path) -> None
         "packet_hash": prepared["work_packet_hash"],
         "instruction_digest": prepared["instruction_binding"]["content_digest"],
     }
+
+
+def test_adapter_appends_authenticated_ack_for_one_real_persisted_mesh_run(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    spec_path = workspace / "docs/superpowers/specs/worker-mesh-ack.md"
+    instruction_path = workspace / "docs/operations/blueprint-agent-instruction-pack-v1.md"
+    spec_path.parent.mkdir(parents=True)
+    instruction_path.parent.mkdir(parents=True)
+    spec_path.write_text("# Accepted worker Mesh ACK specification\n", encoding="utf-8")
+    instruction_path.write_text("# Canonical worker instructions\n", encoding="utf-8")
+    (workspace / "projects").mkdir()
+    (workspace / "projects/ecos").symlink_to(SCRIPT.parents[2] / "projects/ecos")
+    (workspace / "projects/omo").symlink_to(SCRIPT.parents[2] / "projects/omo")
+    spec_digest = __import__("hashlib").sha256(spec_path.read_bytes()).hexdigest()
+    ledger_path = workspace / "docs/plans/3y-bet-ledger.yaml"
+    ledger_path.parent.mkdir(parents=True)
+    ledger_path.write_text(
+        f"""bets:
+  - id: BET-REAL-MESH-ACK
+    status: candidate
+    track: T1-TRUTH
+    window: Y1Q3
+    title: Real Mesh ACK
+    appetite: 1 day
+    priority: P0
+    risk_level: L1
+    human_gate: false
+    goal: Prove authenticated ACK transport
+    non_goals: [No provider launch]
+    done_when: [Worker ACK is durable]
+    verify:
+      - cmd: python3 -c pass
+        expect: exit 0
+    workflow: bet-execution
+    write_surfaces: [README.md]
+    accepted_specifications:
+      - spec_ref: repo://docs/superpowers/specs/worker-mesh-ack.md
+        spec_version: 1.0.0
+        content_digest: sha256:{spec_digest}
+        decision_ref: decision://accepted/BET-REAL-MESH-ACK
+""",
+        encoding="utf-8",
+    )
+
+    ledger_module = SCRIPT.parents[1] / "plan" / "bet-ledger.py"
+    module_spec = importlib.util.spec_from_file_location("real_mesh_ack_contract", ledger_module)
+    assert module_spec is not None and module_spec.loader is not None
+    contract = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(contract)
+    prepared = contract.prepare_bet_execution("BET-REAL-MESH-ACK", workspace=workspace)
+    packet = prepared["work_packet"]
+
+    omo_src = str(SCRIPT.parents[2] / "projects/omo/src")
+    if omo_src not in sys.path:
+        sys.path.insert(0, omo_src)
+    from omo.worker_lifecycle import new_worker_ack_origin_proof, record_step_dispatch
+    from omo.workflow_mesh import WorkflowMeshStore, new_workflow_event
+
+    run_id = "run-real-mesh-ack"
+    trace_id = "trace-real-mesh-ack"
+    step_run_id = f"{run_id}:execute"
+    admission_id = "admission-real-mesh-ack"
+    now = __import__("datetime").datetime.now(__import__("datetime").UTC)
+    grant = {
+        "admission_id": admission_id,
+        "status": "admitted",
+        "workflow_run_id": run_id,
+        "trace_id": trace_id,
+        "backend": "test",
+        "step_run_ids": [step_run_id],
+        "capabilities": ["verification"],
+        "policy_digest": "policy-real-mesh-ack",
+        "issued_at": now.isoformat(),
+        "expires_at": (now + __import__("datetime").timedelta(hours=1)).isoformat(),
+    }
+    grant["proof"] = (
+        __import__("hashlib")
+        .sha256(json.dumps(grant, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode())
+        .hexdigest()
+    )
+    omo_dir = workspace / ".omo"
+    store = WorkflowMeshStore(omo_dir)
+    store.append(new_workflow_event("WorkflowRequested", run_id, trace_id=trace_id))
+    store.append(
+        new_workflow_event(
+            "WorkflowAdmitted",
+            run_id,
+            trace_id=trace_id,
+            payload={"admission": grant, **grant},
+        )
+    )
+    origin_proof = new_worker_ack_origin_proof()
+    record_step_dispatch(
+        omo_dir,
+        workflow_run_id=run_id,
+        trace_id=trace_id,
+        dispatch_id="dispatch-real-mesh-ack",
+        worker_id="codex",
+        step_run_id=step_run_id,
+        admission_id=admission_id,
+        packet_id=packet["packet_id"],
+        packet_hash=prepared["work_packet_hash"],
+        instruction_binding=prepared["instruction_binding"],
+        ack_origin_proof=origin_proof,
+    )
+
+    receipt = contract.perform_authenticated_worker_ack(
+        workspace=workspace,
+        workflow_run_id=run_id,
+        trace_id=trace_id,
+        dispatch_id="dispatch-real-mesh-ack",
+        worker_id="codex",
+        step_run_id=step_run_id,
+        admission_id=admission_id,
+        packet_id=packet["packet_id"],
+        packet_hash=prepared["work_packet_hash"],
+        instruction_binding=prepared["instruction_binding"],
+        ack_decision="proceed",
+        lease_seconds=1200,
+        omo_dir=".omo",
+        origin_proof=origin_proof,
+    )
+
+    assert receipt["outcome"] == "acknowledged"
+    worker = WorkflowMeshStore(omo_dir).worker_snapshot(run_id)
+    assert worker is not None
+    assert worker["ack_decision"] == "proceed"
+    assert worker["packet_hash"] == prepared["work_packet_hash"]
+    assert origin_proof not in (omo_dir / "_knowledge/workflow-mesh/events.jsonl").read_text(encoding="utf-8")
