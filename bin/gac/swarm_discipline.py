@@ -776,6 +776,38 @@ def known_debt_active(entries: list[dict[str, Any]], key: str, *, now: datetime)
     return False
 
 
+def expired_alias_reason(
+    root: Path,
+    escape_id: str,
+    *,
+    now: datetime | None = None,
+) -> str | None:
+    """If ``escape_id`` is a deprecated alias past ``alias_expires``, explain the replacement."""
+    now = now or _utc_now()
+    items = load_registry(root).get("escape_hatch_exemptions") or []
+    by_id = {str(x.get("id")): x for x in items if isinstance(x, dict) and x.get("id")}
+    item = by_id.get(escape_id)
+    if not item:
+        return None
+    alias_of = str(item.get("alias_of") or "").strip()
+    alias_expires = item.get("alias_expires")
+    if not alias_of or not alias_expires:
+        return None
+    exp = _parse_iso(str(alias_expires))
+    if exp is None or now < exp:
+        return None
+    replacements = [alias_of]
+    if alias_of != "local-preflight-preexisting":
+        replacements.append("local-preflight-preexisting")
+    if alias_of != "partial-worktree" and "partial-worktree" not in replacements:
+        replacements.insert(0, "partial-worktree")
+    named = " or ".join(replacements)
+    return (
+        f"deprecated alias {escape_id} expired {alias_expires}; "
+        f"use {named}"
+    )
+
+
 def resolve_escape_exemption(
     root: Path,
     escape_id: str,
@@ -1035,12 +1067,17 @@ def evaluate_escape(
         return result
     item = resolve_escape_exemption(root, escape_id, now=now)
     if item is None:
+        alias_reason = expired_alias_reason(root, escape_id, now=now)
         emit_conflict_event(
             root,
             "escape_hatch_abuse",
-            {"flag": flag, "escape_id": escape_id, "reason": "unknown_id"},
+            {
+                "flag": flag,
+                "escape_id": escape_id,
+                "reason": "expired_alias" if alias_reason else "unknown_id",
+            },
         )
-        result["reason"] = f"escape_id={escape_id} not in allowlist"
+        result["reason"] = alias_reason or f"escape_id={escape_id} not in allowlist"
         return result
     resolved_id = str(item.get("id") or escape_id)
     result["resolved_id"] = resolved_id

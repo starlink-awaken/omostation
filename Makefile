@@ -262,7 +262,10 @@ worktree-guard:  ## 检查 worktree 数量上限
 worktree-prune:  ## 清理已合并/冗余 worktree
 	bash bin/gac/gac-worktree-prune.sh --apply
 
-hygiene-patrol:  ## 执行全域六支柱周度治理自动化巡检 (ADR-0192)
+escape-digest:  ## D4 逃逸台账只读聚类 (不改白名单, ADR-0422)
+	python3 bin/gac/escape-digest.py --dry-run
+
+hygiene-patrol:  ## 执行全域周度治理自动化巡检 (ADR-0192, 含 escape-digest)
 	@echo "── 全域周度治理自动化巡检 ────────────────────────────"
 	python3 bin/ssot/weekly-hygiene-patrol.py
 

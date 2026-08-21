@@ -180,6 +180,8 @@ git show <sha>:<path> > <path>               # 从游离提交取回
 
 **逃生口只有一个入口**：`SWARM_ESCAPE_ID=<白名单id> bin/gac/swarm-git ...`。
 raw `git --no-verify` 会绕过白名单校验与 `.omo/_delivery/swarm-escape/` 台账。
+人类急救发卡：`python3 bin/gac/swarm-discipline-cli.py escape-token-issue`（一次性 token，agent 路径带 `SWARM_ESCAPE_TOKEN`）。
+逃逸聚类（只读、不改白名单）：`python3 bin/gac/escape-digest.py --dry-run`。
 T1-07 已落地 PATH shim（`bin/gac/git-shim` + `AGENT_ID` circuit_breaker）：agent 环境 `git` → `swarm-git` 强制收口，拦 `--no-verify` + 高危操作（`clean -fd` / `reset --hard` / `stash -u` / 共享分支 `rebase`）；人类终端（`AGENT_ID` 空）透传不受影响。
 
 **新门禁上线三段式**：`shadow`（只记录，1 周）→ `warning`（给清理期限）→ `fail`（存量清零后）。
