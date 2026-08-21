@@ -112,6 +112,35 @@ SWARM_ESCAPE_ID=<白名单里的id> bin/gac/swarm-git commit --no-verify ...
 - 所以：**非必要不碰子模块指针**；要碰先说一声
 - 提交时用 `git commit --only <paths>` 做路径限定提交，避免顺手带上别人的子模块指针
 
+### 4.1 删子模块远程分支前先查 gitlink 悬空（2026-08-21 实证）
+
+PR 合并后顺手删远程分支是惯例，但**子模块分支被删后，指向它的根仓 gitlink 立即悬空**——
+即使那个 SHA 已经进过别的 PR 也一样（如果它只在被删分支上）。悬空的 gitlink 会让：
+- 其他 PR 的 `gac-gate` / `test` 报 `unreachable: not contained in fetched origin branches`
+- CI 的 `submodule-reachability` 全线红
+
+**删除前必查**（在根仓执行）：
+```bash
+# ① 该 SHA 是否已在子模块 origin/main 上（merge-base 判定）
+git -C projects/<sub> merge-base --is-ancestor <SHA> origin/main && echo "安全: 已在 main" || echo "危险: 仅存在于待删分支"
+# ② 仍要删时，先确认根仓没有任何分支/PR 的 gitlink 指着它
+git ls-tree origin/main projects/<sub>   # main 的指针
+gh pr list --state open --json headRefName  # 逐个查 open PR 的树
+```
+
+SHA 不在子模块 main 上 → **别删分支**，先把该内容通过子模块自己的 PR 合进 main。
+本次事故链：删 `bet-t1-19-canary` → gitlink `9a40a5a` 悬空 → PR #1806 两个 gate 红 →
+被迫临时恢复分支（`bet-t1-19-canary-restore`）+ 开子模块 PR 补合。多花 40 分钟。
+
+### 4.2 跨仓强校验的时序竞态（2026-08-21 实证）
+
+当 A 仓（如 ecos）给共享 schema（如 work-packet/v2）加**必填**校验、而消费方（omo / 根仓
+bin/）的适配还在另一个分支上没合时，**main 会整体红**：所有触发该检查的 PR 全挂同一个错。
+
+规矩：**消费方先合、生产方后合**（或同 PR 双仓）。已经红了的急救姿势：
+1. 从滞留分支 cherry-pick 消费方修复进你的 PR（不要等原作者）
+2. 子模块指针 bump 到子模块 main 最新（釜底抽薪，别追过时的中间 SHA）
+
 ---
 
 ## 5. 卡住时的处置
