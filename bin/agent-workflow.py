@@ -4,7 +4,11 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import os
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -127,6 +131,7 @@ def _find_command(argv: list[str]) -> tuple[str, int]:
         "adapters",
         "trace",
         "lint",
+        "refresh-packet",
     }
     index = 0
     while index < len(argv):
@@ -152,6 +157,218 @@ def _positional_after(argv: list[str], cmd_index: int) -> str:
             continue
         return token
     return ""
+
+
+def _claimed_scope(payload: dict[str, Any]) -> tuple[list[str], list[str]]:
+    paths: list[str] = []
+    surfaces: list[str] = []
+    claims = payload.get("claims") or []
+    if not isinstance(claims, list):
+        raise WorkflowError("WORK_PACKET_REFRESH_CLAIMS_INVALID: claims must be a list")
+    for claim in claims:
+        if not isinstance(claim, dict):
+            raise WorkflowError("WORK_PACKET_REFRESH_CLAIMS_INVALID: claim must be an object")
+        for field, target in (("paths", paths), ("surfaces", surfaces)):
+            values = claim.get(field) or []
+            if not isinstance(values, list) or any(
+                not isinstance(item, str) or not item.strip() for item in values
+            ):
+                raise WorkflowError(
+                    f"WORK_PACKET_REFRESH_CLAIMS_INVALID: claim {field} must be a list of paths"
+                )
+            target.extend(values)
+    return sorted(set(paths)), sorted(set(surfaces))
+
+
+def _repo_ref_path(ref: str, *, label: str) -> str:
+    if not ref.startswith("repo://"):
+        raise WorkflowError(f"WORK_PACKET_REFRESH_SOURCE_INVALID: {label} must use repo://")
+    path = ref.removeprefix("repo://").split("#", 1)[0].strip("/")
+    if not path or path.startswith("../") or "/../" in path:
+        raise WorkflowError(f"WORK_PACKET_REFRESH_SOURCE_INVALID: unsafe {label} path")
+    return path
+
+
+def _assert_packet_sources_at_ref(
+    workspace: Path,
+    prepared: dict[str, Any],
+    *,
+    authoritative_ref: str,
+) -> None:
+    source_paths = {
+        "ledger": "docs/plans/3y-bet-ledger.yaml",
+        "spec": _repo_ref_path(prepared["spec_binding"]["spec_ref"], label="spec_ref"),
+        "instruction": _repo_ref_path(
+            prepared["instruction_binding"]["instruction_ref"],
+            label="instruction_ref",
+        ),
+    }
+    for label, relative in source_paths.items():
+        candidate = workspace / relative
+        try:
+            working_bytes = candidate.read_bytes()
+        except OSError as exc:
+            raise WorkflowError(f"WORK_PACKET_REFRESH_SOURCE_UNREADABLE: {label}: {exc}") from exc
+        try:
+            probe = subprocess.run(
+                ["git", "-C", str(workspace), "show", f"{authoritative_ref}:{relative}"],
+                capture_output=True,
+                check=False,
+            )
+        except OSError as exc:
+            raise WorkflowError(f"WORK_PACKET_REFRESH_SOURCE_UNPROVABLE: {label}: {exc}") from exc
+        if probe.returncode != 0:
+            raise WorkflowError(
+                f"WORK_PACKET_REFRESH_SOURCE_UNPROVABLE: {label} is unavailable at {authoritative_ref}"
+            )
+        if probe.stdout != working_bytes:
+            raise WorkflowError(
+                f"WORK_PACKET_REFRESH_SOURCE_UNMERGED: {label} differs from {authoritative_ref}"
+            )
+
+
+def _resolve_authoritative_revision(workspace: Path, ref: str) -> str:
+    try:
+        probe = subprocess.run(
+            ["git", "-C", str(workspace), "rev-parse", "--verify", f"{ref}^{{commit}}"],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+    except OSError as exc:
+        raise WorkflowError(f"WORK_PACKET_REFRESH_SOURCE_UNPROVABLE: ref {ref}: {exc}") from exc
+    revision = probe.stdout.strip()
+    if probe.returncode != 0 or len(revision) not in {40, 64} or any(
+        character not in "0123456789abcdefABCDEF" for character in revision
+    ):
+        raise WorkflowError(f"WORK_PACKET_REFRESH_SOURCE_UNPROVABLE: ref {ref}")
+    return revision.lower()
+
+
+def _restore_run_bytes(path: Path, original: bytes) -> None:
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            dir=path.parent,
+            prefix=f".{path.name}.refresh-rollback-",
+            delete=False,
+        ) as handle:
+            temporary_path = Path(handle.name)
+            handle.write(original)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary_path, path)
+        temporary_path = None
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
+
+
+def _refresh_packet_run(
+    registry: dict[str, Any],
+    run_id: str,
+    *,
+    workspace: Path = WORKSPACE,
+    authoritative_ref: str | None = "origin/main",
+) -> dict[str, Any]:
+    """Refresh only the WorkPacket projection of an active, identity-stable run."""
+    if not run_id:
+        raise WorkflowError("WORK_PACKET_REFRESH_RUN_REQUIRED: missing run_id")
+    authoritative_revision = (
+        _resolve_authoritative_revision(workspace, authoritative_ref)
+        if authoritative_ref is not None
+        else None
+    )
+    with _wf_life.run_update_lock(registry, run_id):
+        path, payload = _wf_life.read_run(registry, run_id)
+        original_bytes = path.read_bytes()
+        if payload.get("status") != "active":
+            raise WorkflowError(f"WORK_PACKET_REFRESH_INACTIVE: {run_id}")
+        bet_id = str(payload.get("bet_id") or "")
+        if not bet_id:
+            raise WorkflowError("WORK_PACKET_REFRESH_UNBOUND: run has no bet_id")
+
+        prepared = _prepare_bet_execution(
+            bet_id,
+            workspace=workspace,
+            require_startable=False,
+        )
+        if authoritative_revision is not None:
+            _assert_packet_sources_at_ref(
+                workspace,
+                prepared,
+                authoritative_ref=authoritative_revision,
+            )
+        if payload.get("spec_binding") != prepared["spec_binding"]:
+            raise WorkflowError("WORK_PACKET_REFRESH_SPEC_DRIFT: accepted Spec binding changed")
+        if payload.get("instruction_binding") != prepared["instruction_binding"]:
+            raise WorkflowError("WORK_PACKET_REFRESH_INSTRUCTION_DRIFT: instruction binding changed")
+
+        candidate = dict(payload)
+        candidate["work_packet"] = prepared["work_packet"]
+        candidate["work_packet_hash"] = prepared["work_packet_hash"]
+        claimed_paths, claimed_surfaces = _claimed_scope(payload)
+        _validate_packet_run(
+            candidate,
+            claimed_paths,
+            claimed_surfaces=claimed_surfaces,
+            workspace=workspace,
+        )
+
+        # Rebuild once more before mutation so a concurrent ledger/spec edit
+        # cannot silently bind a mixed-source packet.
+        confirmed = _prepare_bet_execution(
+            bet_id,
+            workspace=workspace,
+            require_startable=False,
+        )
+        if confirmed != prepared:
+            raise WorkflowError("WORK_PACKET_REFRESH_SOURCE_RACED: packet sources changed during refresh")
+        if authoritative_revision is not None:
+            _assert_packet_sources_at_ref(
+                workspace,
+                confirmed,
+                authoritative_ref=authoritative_revision,
+            )
+
+        old_hash = str(payload.get("work_packet_hash") or "")
+        payload["work_packet"] = prepared["work_packet"]
+        payload["work_packet_hash"] = prepared["work_packet_hash"]
+        _wf_life.write_run(path, payload)
+        try:
+            _wf_life.append_ledger_event(
+                registry,
+                {
+                    "event": "agent_workflow_packet_refreshed",
+                    "run_id": run_id,
+                    "bet_id": bet_id,
+                    "old_work_packet_hash": old_hash,
+                    "work_packet_hash": prepared["work_packet_hash"],
+                    "authoritative_revision": authoritative_revision,
+                },
+            )
+        except OSError as exc:
+            try:
+                _restore_run_bytes(path, original_bytes)
+            except OSError as rollback_exc:
+                raise WorkflowError(
+                    "WORK_PACKET_REFRESH_AUDIT_AND_ROLLBACK_FAILED: "
+                    f"audit={exc}; rollback={rollback_exc}"
+                ) from rollback_exc
+            raise WorkflowError(f"WORK_PACKET_REFRESH_AUDIT_FAILED: {exc}") from exc
+
+        return {
+            "ok": True,
+            "reason": "work_packet_refreshed",
+            "run_id": run_id,
+            "bet_id": bet_id,
+            "old_work_packet_hash": old_hash,
+            "work_packet_hash": prepared["work_packet_hash"],
+            "authoritative_revision": authoritative_revision,
+            "claimed_paths": claimed_paths,
+            "claimed_surfaces": claimed_surfaces,
+        }
 
 
 def _bootstrap_with_chain(registry, include_health, include_agcp_drift=True):
@@ -194,6 +411,30 @@ def wrapped_main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     _install_patches()
     command, cmd_at = _find_command(argv)
+    if command == "refresh-packet":
+        if "--help" in argv or "-h" in argv:
+            print("usage: agent-workflow.py refresh-packet RUN_ID [--registry PATH] [--json]")
+            return 0
+        run_id = _positional_after(argv, cmd_at)
+        registry_arg = _flag(argv, "--registry")
+        try:
+            registry = load_registry(Path(registry_arg)) if registry_arg else load_registry()
+            result = _refresh_packet_run(
+                registry,
+                run_id,
+                workspace=_wf_life.registry_workspace_root(registry),
+            )
+        except WorkflowError as exc:
+            print(f"agent-workflow: {exc}", file=sys.stderr)
+            return 1
+        if "--json" in argv:
+            print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+        else:
+            print(
+                f"refreshed {run_id}: {result['old_work_packet_hash']} -> "
+                f"{result['work_packet_hash']}"
+            )
+        return 0
     if command == "start":
         workflow_id = _positional_after(argv, cmd_at)
         bet_id = _flag(argv, "--bet")
