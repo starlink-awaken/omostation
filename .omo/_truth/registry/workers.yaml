@@ -132,7 +132,7 @@ workers:
     class: external_agent_cli
     transports:
       cli_prompt:
-        command: '/usr/bin/python3 "{workspace_root}/bin/gac/pi-worker-adapter.py" run --execute --timeout-seconds 120 --prompt "{prompt}"'
+        command: '/usr/bin/python3 "{workspace_root}/bin/gac/pi-worker-adapter.py" run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" --packet-id "{packet_id}" --packet-hash "{packet_hash}" --instruction-binding-json "{instruction_binding_json}" --timeout-seconds 120 --prompt "{prompt}"'
     capabilities: [reasoning, verification]
     require_explicit_capabilities: true
     allowed_operation_level: L0
@@ -152,7 +152,7 @@ workers:
     class: external_agent_cli
     transports:
       cli_prompt:
-        command: '/usr/bin/python3 "{workspace_root}/bin/gac/omp-worker-adapter.py" run --execute --timeout-seconds 120 --prompt "{prompt}"'
+        command: '/usr/bin/python3 "{workspace_root}/bin/gac/omp-worker-adapter.py" run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" --packet-id "{packet_id}" --packet-hash "{packet_hash}" --instruction-binding-json "{instruction_binding_json}" --timeout-seconds 120 --prompt "{prompt}"'
     capabilities: [reasoning, verification]
     require_explicit_capabilities: true
     allowed_operation_level: L0
