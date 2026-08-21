@@ -5912,7 +5912,9 @@ bets:
   title: 真实个人价值证据脊柱与战略事实重基线
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: in_progress
+  started_at: 2026-08-21
+  run_ref: 20260821T111433Z-bet-execution-967f03e6
   progress_note: >-
     恢复为 candidate (2026-08-21): AC-06 依赖的 BET-Y1Q2-T1-19 已解封
     (blocked→in_progress, live canary PASS + acp_stdio 已切默认 transport), AC-06
