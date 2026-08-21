@@ -111,7 +111,7 @@ uv run --with pyyaml python bin/plan/bet-ledger.py claim-check <BET-ID>
 
 1. **不在 `~/Workspace` 主仓直接工作** — 先 `bash bin/gac/gac-worktree.sh claim <session>`，在隔离树里做。主仓禁用 `checkout` / `reset --hard` / `clean -fd` / `stash -u` / `rebase`。
 2. **交付三段式 `add` → `commit` → `tag`** — commit 只是暂时安全，共享分支被 rebase 时提交会脱离历史；tag 的 ref 不会。
-3. **逃生口只有 `bin/gac/swarm-git`** — raw `git --no-verify` 会绕过白名单校验与 `.omo/_delivery/swarm-escape/` 审计台账。
+3. **逃生口只有 `bin/gac/swarm-git`** — raw `git --no-verify` 会绕过白名单校验与 `.omo/_delivery/swarm-escape/` 审计台账。`CI_LOCAL_SKIP` 仍会先跑预检并记录 fingerprint（ADR-0422）。预存门禁债登记 `gate-known-debt.yaml`，不要拿 `emergency-human-hotfix` 跳过 agent 自己引入的失败。
 4. **高频并发域（bin/scripts convergence、台账、SSOT 文件）agent 会把共享 checkout 的 staged 改动直接 `add -A && commit` 成混合 commit** — 2026-08-16 实证：我的 round9 登记被并发 agent 吸收进其 round11 commit 并合入 main（reflog 可查非主动 commit）。识别 + 处理见 memory `feedback_shared_checkout_concurrent_absorb_20260816.md`：不贸然 reset → 展示 diff 审查 → 验证已合入 main 后 `agent-workflow close --status blocked` → 勿 reset 被并发直接 push 的本地 main。
 
 ## 1.5 P74 Workflow Solidification Check (ADR-0130)

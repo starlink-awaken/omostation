@@ -92,8 +92,12 @@ git reflog                                # 找回被 reset 掉的 sha
 SWARM_ESCAPE_ID=<白名单里的id> bin/gac/swarm-git commit --no-verify ...
 ```
 
-白名单在 `.omo/_truth/registry/swarm-coordination.yaml::escape_hatch_exemptions`。
-`swarm-git` 会校验 id 并写审计台账 `.omo/_delivery/swarm-escape/<ts>-<id>.json`。
+白名单在 `.omo/_truth/registry/swarm-coordination.yaml::escape_hatch_exemptions`（**权限类**）。
+`swarm-git` / pre-push 会先跑预检，把失败写成 fingerprint `(surface, check_id, signature)` 再决定能否跳（ADR-0422）。
+台账 `.omo/_delivery/swarm-escape/<ts>-<id>.json` 必须带 fingerprint 字段，不只是白名单 reason。
+
+权限类：`partial-worktree` 只能跳 `uninitialized-submodule:*`；预存 GaC 走 `local-preflight-preexisting` + `gate-known-debt.yaml`。
+`emergency-human-hotfix` 在 `AGENT_ID` / shim 路径立即拒绝，除非一次性 `SWARM_ESCAPE_TOKEN`。
 
 **直接用 raw `git --no-verify` 会绕过整套机制**——能跑通，但白名单不校验、台账不落盘，
 审计链断，视为违规。
@@ -167,8 +171,8 @@ TTL 是 24h，不要干等。
 git diff --cached --name-only
 ```
 
-- **不是**（例如 18 个子模块 rewind，而你只改了 2 个 doc）→ 走 §3 的正规逃生口
-- **是** → 修，别绕
+- **不是**（例如 18 个子模块 rewind，而你只改了 2 个 doc）→ 走 §3 的正规逃生口，并确认 fingerprint 属于「与 diff 无关」或已在 known-debt
+- **是** → 修，别绕。预存债登记 known-debt（owner+过期），不要把 `--no-verify` 当标准答案
 
 ### lane 不匹配
 

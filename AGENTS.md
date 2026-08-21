@@ -460,11 +460,11 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR + release + �
 
 | 症状 | 根因 | 解法 |
 |------|------|------|
-| `submodule-reachability FAIL (N failures)` | worktree partial init | claim 默认已 init ecos+scripts+omo+cockpit+agora (ADR-0204); 仍缺则 `INIT_ALL_SUBMODULES=1` 或 push `--no-verify` (P72) |
+| `submodule-reachability FAIL (N failures)` | 未 init 子模块（reachability 本地已 PASS 未 init） | 不要 `--no-verify`。缺模块失败走 `partial-worktree`（只覆盖 `uninitialized-submodule:*`）。预存 GaC/ruff 走 `gate-known-debt.yaml` / `local-preflight-preexisting`（ADR-0422） |
 | `sync-submodules-push.sh: No such file` | pre-push 未 `make install-hooks` 或旧 hook 路径 | SSOT=`bin/ssot/…` + `bin/` wrapper; 重装 `make install-hooks` |
 | compliance `requirement_iteration_no_active_run` | staged 需求面文件但无 active run | `agent-workflow start` + `claim` 后再 stage（ADR-0203/0204） |
 | `change-lane-check FAIL mixed lanes` | bin/ governance_code + tests/ code 跨 lane 一 commit | P72 原则4 拆 commit (每 commit 单 lane) |
-| `ssot-guardian: direct_omo_io_violation` | direct-io-baseline `entries:` 空 + write_if_changed 是前人实现但未入 baseline | `--no-verify` (P72 原则3, baseline gap pre-existing, CI 兜底) |
+| `ssot-guardian: direct_omo_io_violation` | direct-io-baseline `entries:` 空 + write_if_changed 是前人实现但未入 baseline | 登记 skip-layer known-debt（owner+过期）或修 baseline；禁止把 `--no-verify` 当预存债的标准答案（ADR-0422） |
 | `gac-bootstrap: 非法 executor` (agcp_drift) | claim 未 init cockpit/agora 子模块 | `git submodule update --init projects/cockpit projects/agora` |
 | `gh pr create: No commits between main and work/X` | 改动文件大小写不符 (如 PULL_REQUEST_TEMPLATE.md) 或 commit fail | 核 git status + 大小写 + 用 `git add <正确大小写>` |
 

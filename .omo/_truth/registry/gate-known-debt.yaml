@@ -1,0 +1,6 @@
+# Skip-layer known-debt (ADR-0422). Not ruff / layer-call inner baselines.
+# Growth only via sink (fix / owned entry / SOFT). Shrink-only after shadow bootstrap.
+version: 1
+growth_policy: shrink_only
+shadow_end: "2026-08-28T00:00:00Z"
+entries: []

@@ -87,6 +87,30 @@ def test_suite_reports_green_only_when_every_blocking_check_passes(
     assert output.getvalue().count("✅ ci-local-fast: 全部 blocking checks 通过") == 1
 
 
+def test_classify_missing_submodule_as_uninitialized() -> None:
+    module = _load_module()
+    fp = module.classify_preflight_failure(
+        "gac",
+        "[submodule-guard] ❌ projects/agora 指针变更被拒绝: 子模块未初始化\n请先: git submodule update --init projects/agora\n",
+    )
+    assert fp["kind"] == "uninitialized-submodule"
+    assert fp["check_id"].startswith("uninitialized-submodule:")
+    assert fp["surface"] == "ci-local-fast"
+    assert fp["producer"] == "gac"
+
+
+def test_classify_generic_gac_hard_fail_is_not_uninitialized() -> None:
+    module = _load_module()
+    fp = module.classify_preflight_failure(
+        "gac",
+        "[FAIL] adr-coverage :: 4 ADR files missing from INDEX\n",
+    )
+    assert fp["kind"] != "uninitialized-submodule"
+    assert not str(fp["check_id"]).startswith("uninitialized-submodule")
+    assert fp["producer"] == "gac"
+    assert fp["kind"] == "preflight"
+
+
 def test_ruff_baseline_allows_known_debt_and_reports_resolved_entries(
     tmp_path: Path,
 ) -> None:

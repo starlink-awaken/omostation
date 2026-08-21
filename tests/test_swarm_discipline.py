@@ -286,10 +286,152 @@ escape_hatch_exemptions:
         tmp_path,
         flag="ci_local_skip",
         escape_id="submodule-reachability-partial-worktree",
+        agent_id="",
     )
     assert ok2
+    log_dir = tmp_path / ".omo/_delivery/swarm-escape"
+    written = list(log_dir.glob("*.json"))
+    assert written, "allowlisted skip must write an audit record"
+    rec = json.loads(written[0].read_text(encoding="utf-8"))
+    assert rec.get("surface")
+    assert rec.get("check_id")
+    assert rec.get("signature")
+    reason_only = {"ts", "flag", "escape_id", "reason"}
+    assert not set(rec.keys()) <= reason_only
+    assert rec["signature"] != rec.get("reason")
     ok3, _ = m.check_escape_hatch(tmp_path, flag="ci_local_skip", escape_id="not-a-real-id")
     assert not ok3
+
+
+def _write_exemptions(tmp_path, body: str) -> None:
+    (tmp_path / ".omo/_truth/registry").mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
+        body,
+        encoding="utf-8",
+    )
+
+
+def test_d4_human_hotfix_denied_when_agent_id_set(tmp_path):
+    m = _load()
+    _write_exemptions(
+        tmp_path,
+        """
+version: 1
+escape_solidification:
+  mode: shadow
+escape_hatch_exemptions:
+  - id: emergency-human-hotfix
+    allow: [ci_local_skip, no_verify_push, no_verify_commit]
+    active: true
+    requires_human: true
+    reason: human
+""",
+    )
+    ok, reason = m.check_escape_hatch(
+        tmp_path,
+        flag="ci_local_skip",
+        escape_id="emergency-human-hotfix",
+        agent_id="grok-agent",
+    )
+    assert not ok
+    assert "human" in reason.lower() or "agent" in reason.lower()
+
+
+def test_d4_human_hotfix_allowed_when_agent_id_empty(tmp_path):
+    m = _load()
+    _write_exemptions(
+        tmp_path,
+        """
+version: 1
+escape_hatch_exemptions:
+  - id: emergency-human-hotfix
+    allow: [ci_local_skip]
+    active: true
+    requires_human: true
+    reason: human
+""",
+    )
+    ok, _ = m.check_escape_hatch(
+        tmp_path,
+        flag="ci_local_skip",
+        escape_id="emergency-human-hotfix",
+        agent_id="",
+    )
+    assert ok
+
+
+def test_d4_partial_worktree_cannot_skip_generic_gac_fingerprint(tmp_path):
+    m = _load()
+    _write_exemptions(
+        tmp_path,
+        """
+version: 1
+escape_hatch_exemptions:
+  - id: partial-worktree
+    allow: [ci_local_skip]
+    surfaces: [ci-local-fast]
+    fingerprint_allow: ["uninitialized-submodule:*"]
+    active: true
+    reason: uninit only
+""",
+    )
+    fp = {
+        "surface": "ci-local-fast",
+        "check_id": "gac",
+        "signature": "deadbeef",
+        "kind": "preflight",
+        "producer": "gac",
+    }
+    ok, reason = m.check_escape_hatch(
+        tmp_path,
+        flag="ci_local_skip",
+        escape_id="partial-worktree",
+        fingerprints=[fp],
+        agent_id="",
+    )
+    assert not ok
+    assert "cannot skip" in reason or "fingerprint" in reason
+
+
+def test_d4_overheat_helper_requires_sink_after_threshold(tmp_path):
+    m = _load()
+    from datetime import UTC, datetime, timedelta
+
+    now = datetime(2026, 8, 29, tzinfo=UTC)
+    key = "ci-local-fast|gac|abcd"
+    records = [
+        {
+            "ts": (now - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "escape_id": "local-preflight-preexisting",
+            "fingerprint_key": key,
+            "surface": "ci-local-fast",
+            "check_id": "gac",
+            "signature": "abcd",
+        }
+        for _ in range(3)
+    ]
+    heat = m.overheat_signal(
+        records,
+        key,
+        now=now,
+        threshold=3,
+        window_days=7,
+        shadow_ended_flag=True,
+        escape_id="local-preflight-preexisting",
+    )
+    assert heat["overheat"] is True
+    assert heat["count"] == 3
+    assert heat["sink_required"] is True
+    heat_shadow = m.overheat_signal(
+        records,
+        key,
+        now=now,
+        threshold=3,
+        window_days=7,
+        shadow_ended_flag=False,
+    )
+    assert heat_shadow["overheat"] is True
+    assert heat_shadow["sink_required"] is False
 
 
 def test_d4_no_verify_argv_gate(tmp_path):
@@ -355,10 +497,14 @@ def test_wired_entrypoints_reference_gates():
     assert "swarm-claim-check" in pre
     # install-hooks path must include D3 (skeptic: not only pre-commit framework)
     githook_pre = (ROOT / ".githooks/pre-commit").read_text(encoding="utf-8")
-    assert "swarm-discipline-cli.py" in githook_pre
-    assert "claim-check" in githook_pre
+    # D3 shared-worktree claim retired 2026-08-19; clone-guard remains the writer gate.
+    assert "clone-guard" in githook_pre or "agent-clone.py" in githook_pre
     push = (ROOT / ".githooks/pre-push").read_text(encoding="utf-8")
-    assert "escape-check" in push or "swarm-d4" in push
+    assert "escape-check" in push
+    assert "--failures-file" in push or "--failures-json" in push
+    swarm_git = (ROOT / "bin/gac/swarm-git").read_text(encoding="utf-8")
+    assert "escape-check" in swarm_git
+    assert "emergency-human-hotfix" in swarm_git or "SWARM_ESCAPE_TOKEN" in swarm_git
     adr = (ROOT / "bin/adr/next-adr-id.py").read_text(encoding="utf-8")
     assert "acquire_adr_claim" in adr or "swarm_discipline" in adr
     assert (ROOT / "bin/gac/swarm-git").is_file()
