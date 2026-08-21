@@ -41,10 +41,10 @@ def _load_root_workflow_wrapper():
 def _write_bet_workspace(
     workspace: Path,
     *,
+    bet_id: str = "BET-TEST-SPINE",
     status: str = "candidate",
     write_surfaces: list[str] | None = None,
 ) -> tuple[str, Path]:
-    bet_id = "BET-TEST-SPINE"
     relative_spec = "docs/superpowers/specs/test-spine.md"
     spec_path = workspace / relative_spec
     spec_path.parent.mkdir(parents=True, exist_ok=True)
@@ -92,6 +92,27 @@ def _write_bet_workspace(
     return bet_id, spec_path
 
 
+@pytest.fixture(scope="session")
+def _bet_workflow_workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Provide a startable ledger without depending on live BET lifecycle state."""
+    workspace = tmp_path_factory.mktemp("bet-workflow-workspace")
+    shutil.copytree(ROOT / "projects/omo/src/omo", workspace / "projects/omo/src/omo")
+    ecos_package = workspace / "projects/ecos/src/ecos"
+    ecos_package.parent.mkdir(parents=True, exist_ok=True)
+    ecos_package.symlink_to(ROOT / "projects/ecos/src/ecos", target_is_directory=True)
+    plan_dir = workspace / "bin/plan"
+    plan_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(WORKFLOW_MODULE_PATH, workspace / "bin/agent-workflow.py")
+    shutil.copy2(ROOT / "bin/plan/bet-ledger.py", plan_dir / "bet-ledger.py")
+    shutil.copy2(ROOT / "bin/plan/chain_bind.py", plan_dir / "chain_bind.py")
+    shutil.copytree(
+        ROOT / ".omo/_truth/registry/agent-workflows",
+        workspace / ".omo/_truth/registry/agent-workflows",
+    )
+    _write_bet_workspace(workspace, bet_id="BET-Y1Q3-T4-01")
+    return workspace
+
+
 def _run_workflow(*args: str) -> subprocess.CompletedProcess[str]:
     # 清 VIRTUAL_ENV: CI 里 interface-check 先 cd projects/omo + uv sync 会
     # 残留 VIRTUAL_ENV=projects/omo/.venv, uv run 在根仓跑时告警 → 断言失败.
@@ -107,13 +128,16 @@ def _run_workflow(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _run_root_workflow_strict(*args: str) -> subprocess.CompletedProcess[str]:
+def _run_root_workflow_strict(
+    *args: str,
+    workspace: Path = ROOT,
+) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
     env["AGCP_REQUIREMENT_ITERATION_GATE"] = "1"
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     return subprocess.run(
-        ["uv", "run", "--with", "pyyaml", "python", str(WORKFLOW_MODULE_PATH), *args],
-        cwd=ROOT,
+        ["uv", "run", "--with", "pyyaml", "python", str(workspace / "bin/agent-workflow.py"), *args],
+        cwd=workspace,
         capture_output=True,
         text=True,
         check=False,
@@ -121,12 +145,15 @@ def _run_root_workflow_strict(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _run_direct_omo_workflow(*args: str) -> subprocess.CompletedProcess[str]:
+def _run_direct_omo_workflow(
+    *args: str,
+    workspace: Path = ROOT,
+) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     env["PYTHONPATH"] = os.pathsep.join(
         [
-            str(ROOT / "projects/omo/src"),
+            str(workspace / "projects/omo/src"),
             str(ROOT / "projects/ecos/src"),
             env.get("PYTHONPATH", ""),
         ]
@@ -142,7 +169,7 @@ def _run_direct_omo_workflow(*args: str) -> subprocess.CompletedProcess[str]:
             "omo.workflow.cli",
             *args,
         ],
-        cwd=ROOT,
+        cwd=workspace,
         capture_output=True,
         text=True,
         check=False,
@@ -306,7 +333,14 @@ def test_prepare_bet_execution_builds_recomputable_ecos_packet_identity(tmp_path
     assert packet["schema_version"] == "work-packet/v2"
     assert packet["bet_id"] == bet_id
     assert packet["spec_binding"]["decision_ref"] == f"decision://accepted/{bet_id}"
+    assert packet["instruction_binding"] == prepared["instruction_binding"]
+    assert prepared["instruction_binding"]["instruction_ref"] == (
+        "repo://docs/operations/blueprint-agent-instruction-pack-v1.md"
+    )
+    assert prepared["instruction_binding"]["instruction_profile"] == "executor"
+    assert prepared["instruction_binding"]["content_digest"].startswith("sha256:")
     assert packet["scope"]["write_surfaces"] == ["bin/agent-workflow.py", "tests/**"]
+    assert "docs/operations/blueprint-agent-instruction-pack-v1.md" in packet["scope"]["read_surfaces"]
     assert prepared["work_packet_hash"].startswith("sha256:")
 
 
@@ -328,6 +362,15 @@ def test_prepare_bet_execution_rejects_unaccepted_decision(tmp_path: Path) -> No
     )
 
     with pytest.raises(module.WorkflowError, match="SPEC_DECISION_NOT_ACCEPTED"):
+        module._prepare_bet_execution(bet_id, workspace=tmp_path)
+
+
+def test_prepare_bet_execution_rejects_missing_instruction_pack(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    (tmp_path / "docs/operations/blueprint-agent-instruction-pack-v1.md").unlink()
+
+    with pytest.raises(module.WorkflowError, match="INSTRUCTION_PACK_MISSING"):
         module._prepare_bet_execution(bet_id, workspace=tmp_path)
 
 
@@ -381,6 +424,18 @@ def test_claim_revalidates_spec_digest_after_start(tmp_path: Path) -> None:
         module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
 
 
+def test_claim_revalidates_instruction_digest_after_start(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+    payload = {"bet_id": bet_id, **prepared}
+    instruction_path = tmp_path / "docs/operations/blueprint-agent-instruction-pack-v1.md"
+    instruction_path.write_text("# Drifted after start\n", encoding="utf-8")
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_SOURCE_DRIFT"):
+        module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
+
+
 def test_claim_rejects_tampered_packet_hash(tmp_path: Path) -> None:
     module = _load_root_workflow_wrapper()
     bet_id, _spec_path = _write_bet_workspace(tmp_path)
@@ -402,7 +457,9 @@ def test_claim_rejects_malformed_packet_as_contract_error(tmp_path: Path) -> Non
         module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
 
 
-def test_direct_omo_module_start_binds_recomputable_work_packet_v2() -> None:
+def test_direct_omo_module_start_binds_recomputable_work_packet_v2(
+    _bet_workflow_workspace: Path,
+) -> None:
     result = _run_direct_omo_workflow(
         "start",
         "bet-execution",
@@ -412,17 +469,22 @@ def test_direct_omo_module_start_binds_recomputable_work_packet_v2() -> None:
         "BET-Y1Q3-T4-01",
         "--dry-run",
         "--json",
+        workspace=_bet_workflow_workspace,
     )
 
     assert result.returncode == 0, result.stderr
     record = json.loads(result.stdout)
     assert record["bet_id"] == "BET-Y1Q3-T4-01"
     assert record["work_packet"]["schema_version"] == "work-packet/v2"
+    assert record["work_packet"]["instruction_binding"] == record["instruction_binding"]
     assert record["work_packet_hash"].startswith("sha256:")
     assert record["spec_binding"]["decision_ref"] == "decision://accepted/BET-Y1Q3-T4-01"
 
 
-def test_direct_omo_module_claim_rejects_path_outside_bound_packet(tmp_path: Path) -> None:
+def test_direct_omo_module_claim_rejects_path_outside_bound_packet(
+    tmp_path: Path,
+    _bet_workflow_workspace: Path,
+) -> None:
     registry = _isolated_workflow_registry(tmp_path)
     started = _run_direct_omo_workflow(
         "--registry",
@@ -434,6 +496,7 @@ def test_direct_omo_module_claim_rejects_path_outside_bound_packet(tmp_path: Pat
         "--bet",
         "BET-Y1Q3-T4-01",
         "--json",
+        workspace=_bet_workflow_workspace,
     )
     assert started.returncode == 0, started.stderr
     run_id = json.loads(started.stdout)["run_id"]
@@ -447,6 +510,7 @@ def test_direct_omo_module_claim_rejects_path_outside_bound_packet(tmp_path: Pat
         "README.md",
         "--affected-hash",
         str(tmp_path / "not-used.json"),
+        workspace=_bet_workflow_workspace,
     )
 
     assert result.returncode == 2
@@ -455,6 +519,7 @@ def test_direct_omo_module_claim_rejects_path_outside_bound_packet(tmp_path: Pat
 
 def test_direct_omo_spawn_inherits_parent_packet_and_rejects_out_of_scope_before_mutation(
     tmp_path: Path,
+    _bet_workflow_workspace: Path,
 ) -> None:
     registry = _isolated_workflow_registry(tmp_path)
     started = _run_direct_omo_workflow(
@@ -467,6 +532,7 @@ def test_direct_omo_spawn_inherits_parent_packet_and_rejects_out_of_scope_before
         "--bet",
         "BET-Y1Q3-T4-01",
         "--json",
+        workspace=_bet_workflow_workspace,
     )
     assert started.returncode == 0, started.stderr
     parent = json.loads(started.stdout)
@@ -480,6 +546,7 @@ def test_direct_omo_spawn_inherits_parent_packet_and_rejects_out_of_scope_before
         "--profile",
         "observer-agent",
         "--json",
+        workspace=_bet_workflow_workspace,
     )
     assert spawned.returncode == 0, spawned.stderr
     child = json.loads(spawned.stdout)
@@ -502,6 +569,7 @@ def test_direct_omo_spawn_inherits_parent_packet_and_rejects_out_of_scope_before
         "README.md",
         "--affected-hash",
         str(tmp_path / "not-created.json"),
+        workspace=_bet_workflow_workspace,
     )
 
     assert claimed.returncode == 2
@@ -513,6 +581,7 @@ def test_direct_omo_spawn_inherits_parent_packet_and_rejects_out_of_scope_before
 
 def test_direct_omo_parent_start_inherits_exact_bound_packet_without_explicit_bet(
     tmp_path: Path,
+    _bet_workflow_workspace: Path,
 ) -> None:
     registry = _isolated_workflow_registry(tmp_path)
     started = _run_direct_omo_workflow(
@@ -525,6 +594,7 @@ def test_direct_omo_parent_start_inherits_exact_bound_packet_without_explicit_be
         "--bet",
         "BET-Y1Q3-T4-01",
         "--json",
+        workspace=_bet_workflow_workspace,
     )
     assert started.returncode == 0, started.stderr
     parent = json.loads(started.stdout)
@@ -540,6 +610,7 @@ def test_direct_omo_parent_start_inherits_exact_bound_packet_without_explicit_be
         parent["run_id"],
         "--dry-run",
         "--json",
+        workspace=_bet_workflow_workspace,
     )
 
     assert child_start.returncode == 0, child_start.stderr
@@ -550,6 +621,7 @@ def test_direct_omo_parent_start_inherits_exact_bound_packet_without_explicit_be
 
 def test_root_wrapper_parent_start_inherits_exact_bound_packet_without_explicit_bet(
     tmp_path: Path,
+    _bet_workflow_workspace: Path,
 ) -> None:
     registry = _isolated_workflow_registry(tmp_path)
     started = _run_root_workflow_strict(
@@ -562,6 +634,7 @@ def test_root_wrapper_parent_start_inherits_exact_bound_packet_without_explicit_
         "--bet",
         "BET-Y1Q3-T4-01",
         "--json",
+        workspace=_bet_workflow_workspace,
     )
     assert started.returncode == 0, started.stderr
     parent = json.loads(started.stdout)
@@ -577,6 +650,7 @@ def test_root_wrapper_parent_start_inherits_exact_bound_packet_without_explicit_
         parent["run_id"],
         "--dry-run",
         "--json",
+        workspace=_bet_workflow_workspace,
     )
 
     assert child_start.returncode == 0, child_start.stderr
@@ -587,6 +661,7 @@ def test_root_wrapper_parent_start_inherits_exact_bound_packet_without_explicit_
 
 def test_root_wrapper_parent_start_rejects_conflicting_bet_before_any_mutation(
     tmp_path: Path,
+    _bet_workflow_workspace: Path,
 ) -> None:
     registry = _isolated_workflow_registry(tmp_path)
     started = _run_root_workflow_strict(
@@ -599,6 +674,7 @@ def test_root_wrapper_parent_start_rejects_conflicting_bet_before_any_mutation(
         "--bet",
         "BET-Y1Q3-T4-01",
         "--json",
+        workspace=_bet_workflow_workspace,
     )
     assert started.returncode == 0, started.stderr
     parent = json.loads(started.stdout)
@@ -616,6 +692,7 @@ def test_root_wrapper_parent_start_rejects_conflicting_bet_before_any_mutation(
         "--bet",
         "BET-Y1Q2-T1-14",
         "--json",
+        workspace=_bet_workflow_workspace,
     )
 
     assert child_start.returncode != 0
@@ -659,6 +736,7 @@ def test_root_wrapper_parent_start_rejects_legacy_unbound_parent_before_any_muta
 
 def test_direct_omo_parent_start_rejects_conflicting_bet_before_any_mutation(
     tmp_path: Path,
+    _bet_workflow_workspace: Path,
 ) -> None:
     registry = _isolated_workflow_registry(tmp_path)
     started = _run_direct_omo_workflow(
@@ -671,6 +749,7 @@ def test_direct_omo_parent_start_rejects_conflicting_bet_before_any_mutation(
         "--bet",
         "BET-Y1Q3-T4-01",
         "--json",
+        workspace=_bet_workflow_workspace,
     )
     assert started.returncode == 0, started.stderr
     parent = json.loads(started.stdout)
@@ -688,6 +767,7 @@ def test_direct_omo_parent_start_rejects_conflicting_bet_before_any_mutation(
         "--bet",
         "BET-Y1Q2-T1-14",
         "--json",
+        workspace=_bet_workflow_workspace,
     )
 
     assert child_start.returncode == 2
