@@ -3,6 +3,9 @@
 # 由 launchd (com.omlxc.watchdog) 周期调度，也可手动运行做一次性检查。
 set -uo pipefail
 
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+OMLXC="$HOME/.local/bin/omlxc"
+
 LOG_DIR="$HOME/.config/omlxc"
 LOG="$LOG_DIR/watchdog.log"
 mkdir -p "$LOG_DIR"
@@ -20,7 +23,10 @@ if ! check_http "http://127.0.0.1:8000/v1/models"; then
   pkill -x oMLX 2>/dev/null
   sleep 2
   open -a oMLX 2>/dev/null
-  sleep 8
+  for i in 1 2 3 4 5 6; do
+    sleep 5
+    check_http "http://127.0.0.1:8000/v1/models" && break
+  done
   if check_http "http://127.0.0.1:8000/v1/models"; then
     log "[OK] oMLX App 已恢复"
   else
@@ -33,9 +39,9 @@ check_http "http://127.0.0.1:1234/v1/models" || log "[ERROR] LM Studio (MBP) 端
 check_http "http://127.0.0.1:11434/api/tags" || log "[ERROR] Ollama (MBP) 端口 11434 无响应"
 
 # --- omlxc daemon ---
-if ! omlxc daemon status --json 2>/dev/null | grep -q '"running"'; then
+if ! "$OMLXC" daemon status --json 2>/dev/null | grep -q '"running"'; then
   log "[WARN] omlxc daemon 未运行，尝试重启"
-  omlxc daemon restart --yes --confirm-impact >>"$LOG" 2>&1
+  "$OMLXC" daemon restart --yes --confirm-impact >>"$LOG" 2>&1
 fi
 
 # 日志裁剪，避免无限增长
