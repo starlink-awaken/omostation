@@ -1925,7 +1925,7 @@ cli_commands:
 - name: intent
   description: 🧠 自然语言意图解构与工程规格编译器 (ADR-0195)
 - name: invoke
-  description: 调用 capability 服务（执行 BOS YAML command）
+  description: 通过治理网关调用 exact native BOS capability
 - name: iterate
   description: ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行)
 - name: journey
