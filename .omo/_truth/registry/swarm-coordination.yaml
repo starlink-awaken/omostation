@@ -164,20 +164,52 @@ shared_worktree_allow_path_globs:
 
 # Escape hatch exemptions (D4). Using CI_LOCAL_SKIP or no-verify requires
 # SWARM_ESCAPE_ID matching one of these ids (or --escape-id for CLI).
+# Permission class (this list) ≠ fingerprint debt (gate-known-debt.yaml). ADR-0422.
+escape_solidification:
+  mode: shadow
+  shadow_end: "2026-08-28T00:00:00Z"
+  overheat_threshold: 3
+  overheat_window_days: 7
+  class_spray_quota: 8
+  known_debt: .omo/_truth/registry/gate-known-debt.yaml
+  digest: bin/gac/escape-digest.py
+
 escape_hatch_exemptions:
-  - id: submodule-reachability-partial-worktree
+  - id: partial-worktree
     allow: [no_verify_push, ci_local_skip]
-    reason: "P72: worktree partial submodule init; CI fresh clone is SSOT"
+    surfaces: [ci-local-fast, pointer-drift]
+    fingerprint_allow: ["uninitialized-submodule:*"]
+    reason: "partial submodule init; only uninitialized-submodule fingerprints"
+    active: true
+  - id: local-preflight-preexisting
+    allow: [no_verify_push, ci_local_skip]
+    surfaces: [ci-local-fast, pointer-drift]
+    reason: "unexpired known-debt or unrelated-to-diff local preflight failures"
+    active: true
+  - id: pointer-drift
+    allow: [no_verify_push, ci_local_skip]
+    surfaces: [pointer-drift]
+    reason: "submodule pointer drift skip"
     active: true
   - id: write-owner-repair-draft
     allow: [no_verify_commit]
+    surfaces: [pre-commit]
     reason: "G-CONV.5 L2 repair-draft local commit must not recurse pre-commit"
     active: true
   - id: emergency-human-hotfix
     allow: [no_verify_push, no_verify_commit, ci_local_skip]
+    surfaces: ["*"]
     reason: "Human-declared emergency; must log conflict risk"
     active: true
     requires_human: true
+  - id: submodule-reachability-partial-worktree
+    alias_of: partial-worktree
+    allow: [no_verify_push, ci_local_skip]
+    reason: "deprecated alias of partial-worktree (expires with shadow_end)"
+    active: true
+    deprecated: true
+    alias_expires: "2026-08-28T00:00:00Z"
+
 
 # 有意指向子模块 side branch 的 root 指针 (BET-Y1Q2-T1-05 drift 门禁豁免).
 # 登记后 check-submodule-pointer-drift DIVERGED 不阻断; 未登记的 side-branch 仍 fail.

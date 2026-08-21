@@ -511,3 +511,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0419: 从基建转向业务 — knowledge-ingest shadow 落地 + 信号源修复 — **ACCEPTED** | 2026-08-19 | business workflow | 0419-business-workflow-implementation-plan.md
 - ADR-0420: BCOS evolution engine 占位决策 — **ACCEPTED** | 2026-08-20 | bcos evolution | 0420-bcos-evolution-engine.md
 - ADR-0421: BCOS 2 周落地复盘 (W1 执行+知识, W2 治理+进化) — **ACCEPTED** | 2026-08-19 | bcos retrospective | 0421-bcos-2week-retro.md
+- ADR-0422: D4 逃生口固化 — 权限类 vs fingerprint 债 — **ACCEPTED** | 2026-08-21 | swarm D4 | 0422-escape-hatch-solidification.md
