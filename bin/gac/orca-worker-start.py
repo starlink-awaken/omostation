@@ -9,14 +9,74 @@ separate acknowledgement from the TUI input widget.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import subprocess
 import sys
 from collections.abc import Callable, Sequence
+from pathlib import Path
 from typing import Any
 
 Command = tuple[str, ...]
 Runner = Callable[[Command, float], tuple[int, str, str]]
+
+
+def _validate_instruction_binding(
+    *,
+    workspace_root: str | None,
+    run_id: str | None,
+    packet_id: str | None,
+    packet_hash: str | None,
+    instruction_binding: dict[str, Any] | None,
+) -> dict[str, str]:
+    if None in (workspace_root, run_id, packet_id, packet_hash) or instruction_binding is None:
+        raise ValueError("instruction_binding_required")
+    contract_path = Path(__file__).resolve().parents[1] / "plan" / "bet-ledger.py"
+    spec = importlib.util.spec_from_file_location("_orca_worker_binding_contract", contract_path)
+    if spec is None or spec.loader is None:
+        raise ValueError("instruction_binding_unavailable")
+    contract = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(contract)
+        return contract.validate_worker_instruction_binding(
+            workspace=Path(workspace_root),
+            run_id=run_id,
+            packet_id=packet_id,
+            packet_hash=packet_hash,
+            instruction_binding=instruction_binding,
+        )
+    except Exception as exc:  # noqa: BLE001 - mandatory gate fails closed.
+        raise ValueError("instruction_binding_rejected") from exc
+
+
+def _complete_worker_origin_ack(
+    *,
+    workspace_root: str,
+    run_id: str,
+    packet_id: str,
+    packet_hash: str,
+    instruction_binding: dict[str, Any],
+    binding_receipt: dict[str, str],
+) -> dict[str, str]:
+    contract_path = Path(__file__).resolve().parents[1] / "plan" / "bet-ledger.py"
+    spec = importlib.util.spec_from_file_location("_orca_worker_ack_contract", contract_path)
+    if spec is None or spec.loader is None:
+        raise ValueError("worker_ack_unavailable")
+    contract = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(contract)
+        return contract.complete_worker_origin_ack(
+            workspace=Path(workspace_root),
+            delivery_binding={
+                "run_id": run_id,
+                "packet_id": packet_id,
+                "packet_hash": packet_hash,
+                "instruction_binding": instruction_binding,
+            },
+            binding_receipt=binding_receipt,
+        )
+    except Exception as exc:  # noqa: BLE001 - worker-origin ACK fails closed.
+        raise ValueError("worker_ack_rejected") from exc
 
 
 def _subprocess_runner(command: Command, timeout_seconds: float) -> tuple[int, str, str]:
@@ -91,10 +151,36 @@ def start_crush_worker(
     worktree: str,
     coordinator_handle: str,
     run_id: str | None = None,
+    workspace_root: str | None = None,
+    packet_id: str | None = None,
+    packet_hash: str | None = None,
+    instruction_binding: dict[str, Any] | None = None,
     timeout_ms: int = 60_000,
     runner: Runner = _subprocess_runner,
 ) -> dict[str, Any]:
     """Start Crush, verify its ready TUI, then inject exactly one Orca dispatch."""
+    try:
+        binding_receipt = _validate_instruction_binding(
+            workspace_root=workspace_root,
+            run_id=run_id,
+            packet_id=packet_id,
+            packet_hash=packet_hash,
+            instruction_binding=instruction_binding,
+        )
+    except ValueError as exc:
+        return _failure(str(exc), "binding")
+    if binding_receipt.get("worker_ack_state") == "pending":
+        try:
+            binding_receipt = _complete_worker_origin_ack(
+                workspace_root=workspace_root or "",
+                run_id=run_id or "",
+                packet_id=packet_id or "",
+                packet_hash=packet_hash or "",
+                instruction_binding=instruction_binding or {},
+                binding_receipt=binding_receipt,
+            )
+        except ValueError as exc:
+            return _failure(str(exc), "worker_ack")
     help_rc, help_stdout, _help_stderr = runner(("crush", "--help"), 10.0)
     if help_rc != 0 or "--yolo" not in help_stdout:
         return _failure("crush_yolo_flag_unsupported", "agent_preflight")
@@ -223,6 +309,7 @@ def start_crush_worker(
         "dispatch_id": dispatch["id"],
         "task_id": task_id,
         "input_accepted": "unproven",
+        "binding": binding_receipt,
         "residual_resources": [handle],
     }
 
@@ -233,6 +320,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--worktree", required=True)
     parser.add_argument("--coordinator-handle", required=True)
     parser.add_argument("--run")
+    parser.add_argument("--workspace-root", required=True)
+    parser.add_argument("--packet-id", required=True)
+    parser.add_argument("--packet-hash", required=True)
+    parser.add_argument("--instruction-binding-json", required=True)
     parser.add_argument("--timeout-ms", type=int, default=60_000)
     parser.add_argument("--json", action="store_true")
     return parser
@@ -242,11 +333,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if args.timeout_ms <= 0:
         _parser().error("--timeout-ms must be positive")
+    try:
+        instruction_binding = json.loads(args.instruction_binding_json)
+    except json.JSONDecodeError:
+        instruction_binding = None
     receipt = start_crush_worker(
         task_id=args.task_id,
         worktree=args.worktree,
         coordinator_handle=args.coordinator_handle,
         run_id=args.run,
+        workspace_root=args.workspace_root,
+        packet_id=args.packet_id,
+        packet_hash=args.packet_hash,
+        instruction_binding=instruction_binding,
         timeout_ms=args.timeout_ms,
     )
     json.dump(receipt, sys.stdout, ensure_ascii=False, sort_keys=True)

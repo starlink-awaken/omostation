@@ -20,6 +20,12 @@ def _load_module():
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     module._subprocess_guard_runner = _guard_runner
+    module._validate_instruction_binding = lambda **_kwargs: {
+        "run_id": "run-1",
+        "packet_id": "WP-1",
+        "packet_hash": "sha256:" + "a" * 64,
+        "instruction_digest": "sha256:" + "b" * 64,
+    }
     return module
 
 
@@ -98,6 +104,7 @@ def _expected_binding(module, identity: dict[str, str]) -> dict[str, str]:
         "clone_agent_id": identity["agent_id"],
         "canonical_root_digest": module._path_digest(workspace),
         "guard_receipt_digest": module._digest_payload(guard),
+        "instruction_digest": "sha256:" + "b" * 64,
         "orca_worktree_id": _orca_worktree_id(Path(workspace)),
     }
 
@@ -1117,12 +1124,12 @@ def test_collect_uses_bounded_terminal_evidence_when_session_was_not_reported(
             "worker-read",
             "--dispatch",
             "orca-dispatch-001",
-            "--source",
-            "auto",
-            "--limit",
-            "200",
-            "--json",
-        ),
+                "--source",
+                "auto",
+                "--limit",
+                "800",
+                "--json",
+            ),
     ]
 
 
@@ -1494,4 +1501,19 @@ def test_start_rejects_nul_prompt_ref_before_orca_calls(tmp_path: Path) -> None:
     assert receipt["ok"] is False
     assert receipt["stage"] == "input"
     assert receipt["reason"] == "prompt_ref_unsafe"
+    assert runner.calls == []
+
+
+def test_start_rejects_binding_before_prompt_clone_or_orca(tmp_path: Path) -> None:
+    module = _load_module()
+    module._validate_instruction_binding = lambda **_kwargs: (_ for _ in ()).throw(
+        ValueError("instruction_binding_rejected")
+    )
+    runner = FakeRunner([])
+
+    receipt = module.start_supervised_codex(**_identity(tmp_path), runner=runner)
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "binding"
+    assert receipt["reason"] == "instruction_binding_rejected"
     assert runner.calls == []

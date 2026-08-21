@@ -20,6 +20,20 @@ adapter = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(adapter)
 
 
+@pytest.fixture(autouse=True)
+def _admitted_binding(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(
+        adapter,
+        "_validate_execution_binding",
+        lambda **_kwargs: {
+            "run_id": "run-1",
+            "packet_id": "WP-1",
+            "packet_hash": "sha256:" + "a" * 64,
+            "instruction_digest": "sha256:" + "b" * 64,
+        },
+    )
+
+
 class FakeProcess:
     def __init__(
         self,
@@ -139,6 +153,11 @@ def healthy() -> dict[str, str]:
     return {"status": "ok", "service": "aetherforge-openai-proxy"}
 
 
+def test_controller_facing_ack_subcommand_is_not_exposed() -> None:
+    with pytest.raises(SystemExit):
+        adapter.build_parser().parse_args(["ack"])
+
+
 def no_marker(_marker: str) -> dict[int, int]:
     return {}
 
@@ -160,6 +179,8 @@ def test_dry_run_is_fixed_no_tools_and_never_starts_process(tmp_path: Path, monk
     )
 
     assert result == {
+        "binding_required": True,
+        "binding_validation": "not_executed",
         "command": adapter.fixed_argv("hello", timeout_seconds=120),
         "mode": "dry-run",
         "tools_enabled": False,
@@ -986,3 +1007,21 @@ def test_cli_only_forwards_successful_model_text(
 
     assert adapter.main(["run", "--prompt", "x", "--execute"]) == 0
     assert capsys.readouterr().out == "model text\n"
+
+
+def test_execute_rejects_binding_before_health_or_process(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def reject(**_kwargs):
+        raise adapter.AdapterError("instruction_binding_required")
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("health/process must follow binding validation")
+
+    monkeypatch.setattr(adapter, "_validate_execution_binding", reject)
+    with pytest.raises(adapter.AdapterError, match="instruction_binding_required"):
+        adapter.run_worker(
+            prompt="x",
+            execute=True,
+            user_home=tmp_path,
+            health_probe=forbidden,
+            popen_factory=forbidden,
+        )

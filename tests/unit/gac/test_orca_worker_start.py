@@ -15,6 +15,12 @@ def _load_module():
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
+    module._validate_instruction_binding = lambda **_kwargs: {
+        "run_id": "run-1",
+        "packet_id": "WP-1",
+        "packet_hash": "sha256:" + "a" * 64,
+        "instruction_digest": "sha256:" + "b" * 64,
+    }
     return module
 
 
@@ -284,3 +290,26 @@ def test_malformed_orca_json_fails_closed() -> None:
     assert receipt["reason"] == "orca_response_invalid"
     assert receipt["stage"] == "runtime_preflight"
     assert receipt["residual_resources"] == []
+
+
+def test_binding_rejection_precedes_every_orca_or_crush_call() -> None:
+    module = _load_module()
+    module._validate_instruction_binding = lambda **_kwargs: (_ for _ in ()).throw(
+        ValueError("instruction_binding_rejected")
+    )
+    runner = FakeRunner([])
+
+    receipt = module.start_crush_worker(
+        task_id="task-1",
+        worktree="current",
+        coordinator_handle="term-coordinator",
+        runner=runner,
+    )
+
+    assert receipt == {
+        "ok": False,
+        "reason": "instruction_binding_rejected",
+        "residual_resources": [],
+        "stage": "binding",
+    }
+    assert runner.calls == []

@@ -469,3 +469,235 @@ Golden Slice：
 protocol truth 或自治升级；不以测试样本补价值基线；不自行修改 BET 完成状态。下一轮只有在用户
 明确下令后启动，并先从本报告、`BET-Y1Q3-T4-01` SSOT 与
 `.omo/_knowledge/retros/BET-Y1Q2-T1-19.md` 重新读取当前事实。
+
+## 17. 2026-08-21 全量交接与优化后的持续推进方案
+
+> 本节面向临时接手本工作的 Agent、维护者与 Human Principal。它把 2026-08-20 复盘之后的
+> 实际交付、纠偏、验证、未决边界和下一轮顺序固化为一个可执行交接面。这里记录的是证据快照，
+> 不替代会漂移的运行 SSOT，也不授权任何 Agent 代替人类做价值裁决。
+
+### 17.1 本轮最终判断
+
+系统的主要矛盾已经从“缺少控制构件”转为“构件是否默认串成一条不可伪造的责任链”。近期大量
+更新并没有推翻原愿景，反而证明以下判断应成为后续规划的中心：
+
+1. **愿景保持不变**：继续建设一个以本人真实结果为北极星、可授权但不可冒名裁决的个人业务
+   操作系统。
+2. **工程策略从扩面改为收敛**：不再按组件数量、PR、测试数或 Agent 数衡量推进；只修复 Golden
+   Slice 所需的默认身份链、完成语义和可重放证据。
+3. **WorkPacket 是唯一执行契约**：Spec、Instruction Pack、claim、dispatch、candidate、verify、
+   human outcome 必须共享同一不可变身份，任何转换都必须可校验。
+4. **Agent 只能提交候选与证据**：Agent 不得替本人生成 `human_verdict`，不得把工程授权解释为
+   内容接受，也不得自行把 BET 标为 done。
+5. **协议按价值顺序启用**：ACP 继续受监督验证，A2A 保持后置；只有一个人的闭环形成稳定 E4
+   证据后，才扩展第二场景、远程节点或自治等级。
+
+按三轴重新判断：
+
+| 轴 | 2026-08-21 状态 | 判断依据 | 升级条件 |
+|---|---|---|---|
+| Engineering | `PROVEN`（本轮作用域） | instruction binding、worker-origin ACK、四类 adapter、OMO dispatch、跨仓 PR/CI 与独立复核已形成直接证据 | 根仓 PR 合并且 `origin/main` gitlink/文件复核一致 |
+| Operational | `PARTIAL` | 实际子进程能在 provider 启动前 ACK；但跨 CLI 进程恢复故意 fail closed，且运行/备份 shadow 仍有窗口与 owner 问题 | 完整 shadow 窗、scheduler owner 修正、replay/restore 证据 |
+| Value | `NOT_PROVEN` | Golden Slice 候选存在，但尚无本人显式 `accept/edit/reject/defer/ignore`；T7-01 真实 outcome 证据仍未证明 | Human verdict 与 revision/outcome 可重复读取 |
+
+### 17.2 已落地交付与不可变证据
+
+| 交付面 | PR / 合并证据 | 当前裁决 |
+|---|---|---|
+| Phase A：授权 Instruction Pack 与五类执行入口接线 | 根仓 PR #1796，merge `e621dfa1c030b5fc828a70e16c8ccedee1dad148` | `PROVEN`；文档身份成为可解析输入 |
+| ECOS：WorkPacket instruction binding | ECOS PR #33，merge `fa986f0212db79d908667119fa2ae4ad448532a7` | `PROVEN`；ref/version/digest/profile 进入 canonical packet/hash |
+| OMO：初版 ACK gate | OMO PR #63，merge `d0071679cb209509107c83b394112cba43bc0359` | `SUPERSEDED`；保留历史，但初版由 controller 代 ACK，不满足职责分离 |
+| OMO：worker-origin ACK 修复 | OMO PR #66，merge `b479a7ab5254521f2b1c8f80f0e2d2aa4ad5f37c` | `PROVEN`；真实 worker 子进程消费一次性证明并写入 durable ACK |
+| 根仓：resolver、registry、四类 adapter 与 OMO gitlink | 根仓 PR #1805 | `PENDING_MERGE`；本报告更新时已吸收最新主线并保留 OMO 修复指针 |
+
+标签为 ECOS、OMO 与根仓各阶段提供 D0 恢复点；标签只证明工程产物可恢复，不证明价值完成。
+
+### 17.3 最关键的安全纠偏：ACK 必须来自实际 worker
+
+独立审查发现初版实现存在两个高风险问题：workflow YAML 与 Workflow Mesh 同时存在时被误判为
+歧义；controller 又在启动 worker 前自己生成 proof 并 ACK，破坏了职责分离。
+
+修复后的确定性状态机为：
+
+```text
+controller resolve workflow YAML + Mesh
+  -> 分别验证 schema / spec / instruction / packet identity
+  -> immutable identity 一致才 reconcile
+  -> Requested -> Admitted -> StepDispatched
+  -> 仅把 ACK context + one-time proof 注入实际 worker 子进程环境
+  -> worker adapter 在 provider 解析/启动前完成 exact-match ACK
+  -> OMO broker 持久化 WorkerAcknowledged
+  -> controller 重读 durable state
+  -> ACK=proceed 才允许继续，缺失/错配/重复/过期全部 fail closed
+```
+
+必须保留的边界：
+
+- proof 不写入 packet、事件、日志或 provider 环境；消费后从进程环境删除；
+- admission-only 只能写到 `StepDispatched`，不能伪造 `WorkerAcknowledged`；
+- fake worker 即使退出码为 0，只要没有 durable ACK，仍视为失败；
+- controller 内存中的 proof 不跨 CLI 进程持久化，跨进程 resume 因此会拒绝。这是当前安全选择；
+  未来若需要恢复，必须设计可吊销 capability handoff，不能把 proof 落盘；
+- CodeBuddy 与 Reasonix 尚未实现 `omo-worker-origin-ack/v1`，绑定 instruction 的任务对它们必须
+  fail closed，不能静默回退到无 ACK 执行。
+
+### 17.4 验证账本
+
+| 层 | 结果 | 解释 |
+|---|---|---|
+| ECOS focused | 97/97 passed | WorkPacket、schema、compiler、negative cases |
+| ECOS full | 1261 passed, 4 skipped | strict schema/state/compiler clean |
+| OMO focused | 89 passed；最终三条 worker-origin 关键用例 3 passed | fake worker 拒绝、真实 child ACK、supervised start |
+| OMO CI-equivalent | 1624 passed, 202 skipped, 1 deselected | 两个本机 sandbox 环境失败来自 `bus_foundation` DLQ SQLite；GitHub PR #66 CI 全绿 |
+| 根仓 workflow | 61 passed | 双投影 reconcile、packet/instruction identity、durable ACK |
+| 根仓 adapter | Codex 54；Pi 36；OMP 60；Orca start 8；Orca supervisor 55 passed | deselect 是既有 cwd/process-reaper 环境敏感用例 |
+| 根仓真实组合 | 3 passed | dual-plane identity、真实 OMO broker ACK、provider 启动前 ACK |
+| 静态质量 | changed Python Ruff check/format clean | 不代表全仓无历史债务 |
+| 独立复核 | 初审 `BLOCKED` 两项 HIGH；修复后 `CLEAR` | 报告位于 `.omo/evidence/root_final_binding_review-code-review.md` |
+
+不得把以下环境或机制缺口误报为本轮产品回归：
+
+- 本机 GAC 访问 `~/Library/LaunchAgents/com.l4.governance.watch.plist` 受 sandbox 限制，同时检测到
+  该 plist 的既有 service-config drift；
+- `projects/omo-debt` 在部分环境缺失；
+- Pi 组合测试受 process-group/reaper 与临时 cwd 用例影响收到 exit 143，本轮采用精确文件级结果；
+- `projects/agora/uv.lock` 是并发/既有脏项，本轮未修改、未暂存、未清理。
+
+### 17.5 优化后的目标树
+
+```text
+North Star: 本人持续接受、修订或明确拒绝的真实结果
+|
++-- G0 价值真相
+|   +-- 首条低敏 Golden Slice human verdict
+|   +-- revision / outcome / provenance / privacy receipt
+|   `-- 14d -> 45d -> 90d 可重复观察窗
+|
++-- G1 执行责任链
+|   +-- accepted Spec -> WorkPacket -> instruction identity
+|   +-- claim/admission -> worker-origin ACK -> candidate
+|   `-- independent verify -> Human Outcome
+|
++-- G2 运行可靠性
+|   +-- LaunchAgent/backup owner 收敛
+|   +-- replay/restore/anchor
+|   `-- stale claim、timeout、cancel、reap、compensation
+|
++-- G3 净减法
+|   +-- capability 单 writer/exact load
+|   +-- 假价值报告降级或退役
+|   +-- 平面/重复 workflow 权威退役
+|   `-- 未产生真实 Outcome 的资产进入 hold/retire
+|
+`-- G4 条件式扩展（G0-G3 未过不得启动）
+    +-- ACP default cutover
+    +-- A2A shadow/TCK
+    +-- 第二 Scene / 家庭与组织
+    `-- 更高自治与多节点
+```
+
+战略优先级调整为 `G0 > G1 > G2 > G3 > G4`。G1/G2 是保护 G0 的手段，不能因工程复杂度
+高就反客为主；G4 是期权，不是当前承诺。
+
+### 17.6 接手后的执行序列
+
+#### Wave A：完成本轮工程集成
+
+1. 确认根仓 PR #1805 的 required checks 全绿；
+2. squash merge，验证 `origin/main` 包含 resolver/adapters/registry 变更，且 `projects/omo` 指向
+   含 PR #66 的可达提交；
+3. 为 merged root SHA 建 D0 tag；
+4. 保持 `BET-Y1Q3-T4-01` 与当前 workflow run 为 active，**不要 close/complete**。
+
+#### Wave B：完成唯一的人类价值门
+
+1. 向 Human Principal 呈现 episode `episode_dfed37d14182f59457e1064d` 的 never-send 候选；
+2. 只接受五种显式 verdict：`accept`、`edit`、`reject`、`defer`、`ignore`；
+3. “全权委托工程决策”“继续”“按最优解”不等于候选内容 verdict；
+4. 记录 verdict、必要 revision diff 与 OutcomeFeedback，但不持久化敏感正文或无关绝对路径；
+5. 重放 NorthStar/MOS projector，确认只有 human-adjudicated outcome 计入价值轴。
+
+#### Wave C：补齐运行轴而不触碰 shadow 红线
+
+1. `T1-05A` 一周窗口到 `2026-08-22T00:06:13Z` 才结束；之后仅在 LaunchAgent、SQLite
+   integrity、6 agent heartbeat/monotonic last_seen、attestation、clone cleanliness、backup N=3
+   等直接证据齐全时报告 `human_gate ready`；
+2. backup cron 仍指向共享 Workspace 时只报告 `FAIL/BLOCKED` 与最小修复建议，不在 shadow 巡检
+   中直接改 plist/crontab/service；
+3. `T7-01` 只有真实、非测试、可绑定 `human_verdict` 的 `decision_outcome` 才计入 >=20 gate；
+   GitHub PR、issue comment、reviewDecision、旧 harvest 只能做供给侧诊断；
+4. `T1-18` 若仍 awaiting human approval，只提醒，不发送 Orca/Codex 输入、不代点审批；settled 后
+   才继续 collect/verify。
+
+#### Wave D：完成 P0/P1 的净减法
+
+1. capability 单一 writer + exact ID load；
+2. NorthStar 拒绝 self-assert、代理量和无法绑定 principal/provenance 的结果；
+3. hard-coded attribution 报告降为非权威诊断或退役；
+4. clone changeset/reachability/retire 全部 fail closed；
+5. replay/restore 与 evidence privacy 验收；
+6. 仅当 AC-01～12 均有直接证据、retro 完整、Human Gate 通过时，才由正式 broker 推进 BET
+   closeout；任何 Agent 不得自行改 done。
+
+### 17.7 接手 Agent 的启动清单
+
+接手者不要从聊天摘要推断当前状态，按以下顺序直接测量：
+
+```bash
+cd /Users/xiamingxing/Workspace
+git status --short
+git fetch origin main
+git rev-parse origin/main
+
+uv run --with pyyaml python bin/plan/bet-ledger.py show BET-Y1Q3-T4-01
+uv run --with pyyaml python bin/agent-workflow.py show-run \
+  20260821T020328Z-bet-execution-fa86eef6 --json
+uv run --with pyyaml python bin/agent-workflow.py compliance --json
+
+git show origin/main:docs/operations/blueprint-agent-instruction-pack-v1.md >/dev/null
+git ls-tree origin/main projects/ecos projects/omo
+gh pr view 1805 --json state,mergedAt,mergeCommit,statusCheckRollup
+```
+
+若继续写入：使用身份匹配的独立 clone；读取 `CLAUDE.md`、本报告、accepted Spec、Instruction
+Pack 和现有 run；复用当前 BET/run 并 claim 精确路径；子仓先 PR/merge/reachability，根仓再更新
+gitlink；每阶段 `add -> commit -> tag/push`；ACK 缺失、SHA 不可达或 identity 不一致时立即 fail
+closed；最终分别报告 Engineering / Operational / Value。
+
+### 17.8 可授权与不可代签的决策边界
+
+Human Principal 已授权本轮按最优解处理工程、治理、PR、合并、恢复和文档收敛。因此接手 Agent
+无需再次询问常规可逆工程步骤，应基于最小表面积、fail-closed、可回滚和直接证据自行选择。
+
+以下事项仍必须由本人显式给出：Golden Slice 候选 verdict；高风险外发、资金、法律承诺、不可逆
+删除或提高自治等级；将 shadow gate 判为 human-approved；将尚未满足全量 AC 的 BET 标记为 done。
+
+### 17.9 当前未决与最小修复建议
+
+| 未决 | 状态 | 最小下一步 |
+|---|---|---|
+| Golden Slice human verdict | `AWAITING_HUMAN` | 呈现候选，收集五选一显式 verdict |
+| 根仓 PR #1805 | `PENDING_MERGE` | CI 绿后 squash merge、验证 origin/main、打 merged tag |
+| CodeBuddy/Reasonix worker ACK | `NOT_IMPLEMENTED` | 实现同一 `omo-worker-origin-ack/v1`，此前保持 fail closed |
+| cross-process resume capability | `DEFERRED` | 设计可吊销、短时、不可重放 handoff；禁止持久化当前 proof |
+| T1-05A 完整周 | `WINDOW_OPEN` | 2026-08-22T00:06:13Z 后只读复核 |
+| backup cron owner | `FAIL/BLOCKED` | 在非 shadow 变更窗口切到受管 clone，并留 rollback |
+| T7-01 周产 gate | `NOT_PROVEN` | 只统计真实 human-adjudicated decision_outcome |
+| LaunchAgent GAC 本机检查 | `ENVIRONMENT_BLOCKED/PREEXISTING_DRIFT` | 有权限的受管运维窗口核对 plist |
+| OMO DLQ SQLite 两用例 | `ENVIRONMENT_BLOCKED` | 给 `bus_foundation` 可写测试 DB 或隔离 fixture 后复跑 |
+| Documents canonical 同步 | `BLOCKED_BY_GATEWAY` | Workspace 报告作工程 SSOT；gateway 可用后同步脱敏人类交接 |
+
+### 17.10 完成定义
+
+本计划真正完成，不是“所有 PR merged”，而是同时满足：
+
+1. Engineering：身份链在根仓与子仓默认入口均 fail closed，CI、独立 reviewer、reachability 与
+   rollback 证据可重复；
+2. Operational：真实 signal/dispatch/ACK/candidate/verify/replay 在受管运行面可重复，shadow 窗口
+   和 scheduler owner 没有未说明缺口；
+3. Value：至少一条低敏真实候选获得本人明确 verdict，revision/outcome/provenance 被权威记录；
+4. Governance：BET AC、retro、surface accounting 与文档事实一致，无 Agent 自报 done；
+5. Simplification：至少两项重复/假权威资产完成退役或降级，且保护测试不下降。
+
+在此之前，最准确的总体状态仍是：**工程脊柱已显著收敛，运行闭环部分成立，个人真实价值尚待本人
+裁决证明。**
