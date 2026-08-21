@@ -756,7 +756,7 @@ canonical capability registry
 | CodeBuddy/Reasonix truth correction | 根仓 PR #1809，merge `1a0ce173ccfa32816623c730221270807e944164` | `PROVEN`；从 admitted 降为 declared，绑定 instruction 时在 provider parsing 前 fail closed |
 | Agora native gateway | Agora PR #34，merge `cf137b1efade1da2d22d5639f38ec75cceb5373e` | `PROVEN`；exact reconcile、admission、route、probe、native invoke、privacy receipt |
 | Cockpit governed invocation | Cockpit PR #70，merge `bc3e31efd541beb9c3d1b307d7f8d70e21e889f2` | `PROVEN`；移除 substring/raw command/argv，固定治理 CLI 与 receipt allowlist |
-| 根仓公共 `load/invoke` 与 gitlink 集成 | 当前独立 clone 的 root integration candidate | `IN_REVIEW`；合并前不得写成 landed |
+| 根仓公共 `load/invoke` 与 gitlink 集成 | 根仓 PR #1816 | `IN_REVIEW`；合并前不得写成 landed |
 
 直接验证：
 
