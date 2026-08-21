@@ -5041,6 +5041,45 @@ bets:
   human_gate: false
   circuit_breaker: 29 项判定超 1 week → 先完成排序/废弃类，剩余排期类交下轮
   retro: required
+- id: BET-Y1Q3-T1-08
+  track: T1-TRUTH
+  window: Y1Q3
+  title: 退役 coordination-daemon 独立 clone 部署并迁移备份到 Workspace
+  appetite: 1 day
+  priority: P2
+  status: done
+  started_at: 2026-08-20
+  done_at: 2026-08-20
+  done_note: 'crontab 日备路径从 clone → Workspace, runbook 状态更新为 retired, gac-local-gate 全绿. human_gate 用户确认 2026-08-20.'
+  goal: 将协调层备份从 ~/agents/coordination-daemon/ws 迁回权威 Workspace，退役独立 clone 部署，消除旧代码版本污染运行时 truth 的风险
+  non_goals:
+  - 不删除历史 retro/ADR
+  - 不改写 signal-poller 运行时语义
+  - 不改动 coordination.sqlite3 schema 或位置
+  done_when:
+  - crontab 日备指向 Workspace bin/gac/coordination_store.py 而非 clone 路径
+  - docs/operations/coordination-recovery-runbook.md 更新为退役状态并给出 Workspace 路径
+  - make gac-local-gate 全绿
+  verify:
+  - cmd: crontab -l | grep -c 'Workspace/bin/gac/coordination_store.py'
+    expect: '1'
+  - cmd: crontab -l | grep -c 'coordination-daemon/ws'
+    expect: '0'
+  - cmd: test -f docs/operations/coordination-recovery-runbook.md
+    expect: 存在
+  - cmd: make gac-local-gate
+    expect: 全绿 PASS
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/operations/coordination-recovery-runbook.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: true
+  depends_on: []
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 备份切走后 24h 内若 coordination-backup.log 断流 → 回滚 crontab
+  retro: required
 - id: BET-Y1Q1-T6-07
   track: T6-SUBTRACT
   window: Y1Q3
