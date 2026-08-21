@@ -1,88 +1,75 @@
-#!/usr/bin/env python3
-"""dogfood-collector 测试 — BET-Y1Q2-T7-01 采集器语义固化."""
+"""Regression guards for the retired merge-event dogfood collector."""
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import sys
-from datetime import UTC
 from pathlib import Path
 
-import importlib.util  # noqa: E402
+import pytest
 
-import pytest  # noqa: E402
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "projects" / "omo" / "src"))
 
-
-def _pr(n: int) -> dict:
-    """Minimal merged-PR fixture."""
-    return {
-        "number": n,
-        "title": f"pr-{n}",
-        "mergedAt": "2026-08-16T00:00:00Z",
-        "additions": 1,
-        "deletions": 1,
-        "changedFiles": 1,
-    }
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "bin" / "ssot"))
-
-_spec = importlib.util.spec_from_file_location(
-    "dogfood_collector", Path(__file__).resolve().parents[2] / "bin" / "ssot" / "dogfood-collector.py"
-)
-assert _spec is not None and _spec.loader is not None
-dc = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(dc)
+from omo.engineering_delivery_consumer import build_engineering_delivery_shadow_observer  # noqa: E402
 
 
-def test_parse_since_units():
-    from datetime import datetime
-
-    now = datetime.now(UTC)
-    assert (now - dc._parse_since("7d")).days >= 6
-    assert (now - dc._parse_since("1w")).days >= 6
-    assert (now - dc._parse_since("24h")).total_seconds() >= 23 * 3600
-
-
-def test_collect_merged_prs_requires_gh(monkeypatch):
-    """gh 失败 (空输出) → 空列表不炸 (shadow 语义: 采集失败不反噬)."""
-    monkeypatch.setattr(dc, "_run", lambda cmd: "")
-    assert dc.collect_merged_prs("7d") == []
+def _load_bet_ledger():
+    path = ROOT / "bin" / "plan" / "bet-ledger.py"
+    spec = importlib.util.spec_from_file_location("_t7_truth_bet_ledger", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-def test_outcome_schema(tmp_path, monkeypatch):
-    """写入的每条 outcome 满足 decision_outcome/v1 契约关键字段."""
-    store = tmp_path / "store.jsonl"
-    monkeypatch.setattr(dc, "STORE", store)
-    monkeypatch.setattr(dc, "collect_merged_prs", lambda s: [_pr(1)])
-    dc.collect("7d", min_weekly=1)
-    line = json.loads(store.read_text().splitlines()[0])
-    assert line["schema"] == "decision_outcome/v1"
-    assert line["namespace"] == "agent_belief"
-    assert line["scene_id"] == "engineering-delivery-dogfood"
-    assert line["payload"]["human_verdict"] == "accepted"
-    assert line["payload"]["verdict_source"] == "merge_event"
-    assert "永不计入 X3" in line["notes"]  # non_goal 标注强制
+def test_t7_blocked_bet_is_not_claimable_by_an_agent() -> None:
+    ledger = _load_bet_ledger()
+    data = ledger.load()
+    bet = ledger.bet_by_id(data, "BET-Y1Q2-T7-01")
+
+    claimable, reasons = ledger._claimable(data, bet)
+
+    assert claimable is False
+    assert any("agent 不得认领" in reason for reason in reasons)
 
 
-def test_idempotent_by_pr_number(tmp_path, monkeypatch):
-    """同 PR 复采不重复写 (幂等)."""
-    store = tmp_path / "store.jsonl"
-    monkeypatch.setattr(dc, "STORE", store)
-    monkeypatch.setattr(dc, "collect_merged_prs", lambda s: [_pr(42)])
-    dc.collect("7d", min_weekly=1)
-    dc.collect("7d", min_weekly=1)  # 第二轮同 PR
-    n = len(store.read_text().splitlines())
-    assert n == 1, f"expected 1 line after idempotent re-collect, got {n}"
+def test_t7_blocked_bet_start_requires_audited_human_reentry() -> None:
+    ledger = _load_bet_ledger()
+
+    with pytest.raises(ledger.SpecBindingContractError, match="BET_BLOCKED_REENTRY_GATE"):
+        ledger.prepare_bet_execution("BET-Y1Q2-T7-01", workspace=ROOT)
 
 
-def test_weekly_gate_threshold(tmp_path, monkeypatch, capsys):
-    """gate 语义: 窗口 PR 数 < min → exit 1 (FAIL), >= min → exit 0 (PASS)."""
-    store = tmp_path / "store.jsonl"
-    monkeypatch.setattr(dc, "STORE", store)
-    monkeypatch.setattr(dc, "collect_merged_prs", lambda s: [_pr(i) for i in range(3)])
-    assert dc.collect("7d", min_weekly=20) == 1  # 3 < 20 FAIL
-    assert dc.collect("7d", min_weekly=2) == 0  # 3 >= 2 PASS
+def test_historical_merge_event_store_never_counts_as_qualified_outcome(tmp_path: Path) -> None:
+    legacy_store = tmp_path / ".omo" / "_delivery" / "outcomes" / "dogfood-decision-outcomes.jsonl"
+    legacy_store.parent.mkdir(parents=True)
+    legacy_store.write_text(
+        json.dumps(
+            {
+                "schema": "decision_outcome/v1",
+                "namespace": "agent_belief",
+                "scene_id": "engineering-delivery-dogfood",
+                "decision_id": "do-dogfood-1858",
+                "payload": {
+                    "human_verdict": "accepted",
+                    "verdict_source": "merge_event",
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
+    result = build_engineering_delivery_shadow_observer(
+        tmp_path / ".omo",
+        as_of="2026-08-19T12:16:45Z",
+        query_only=True,
+    )
 
-if __name__ == "__main__":
-    sys.exit(pytest.main([__file__, "-v"]))
+    assert result["qualifying_decision_outcomes"] == 0
+    assert result["verdict"] == "FAIL"
+    assert result["human_gate"] == "not_ready"
+    assert result["value_indicator_policy"] is False
