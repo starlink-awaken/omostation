@@ -27,7 +27,7 @@ gh run list --branch main --repo <repo>     # 预存判定 (main 同 FAIL = pre-
 
 Classify each fail (P73 truth-driven):
 - **真 bug (引入)**: 我改的文件相关 + main 绿 → 立即修
-- **预存 (主仓同红)**: main 同 FAIL → 修或 admin merge (§5)
+- **预存 (主仓同红)**: main 同 FAIL → **修或登记 skip-layer known-debt**（`.omo/_truth/registry/gate-known-debt.yaml`，owner+过期）。不要默认 `--no-verify` / admin merge。GitHub admin merge 仍受 §5 三条件约束，且本轮 D4 固化不接线 `surface=github`。
 - **环境 (CI 独有)**: 本地 PASS / CI FAIL (tracked 快照 / 子模块 / 本地工具) → 降级 (git fallback / local-only)
 
 ### 2. 6-layer triage (层序诊断, 修一层 push 暴露下层)
@@ -53,7 +53,7 @@ uv run --with pyyaml python bin/gac-local-gate.py --scope staged --json   # 本�
 ### 4. Commit + PR (per worktree-pr-landing-sop)
 
 - **change-lane 拆 commit**: governance_state / CI config / submodule_pointer 分开 (单 lane 放行)
-- `--no-verify` 仅限 submodule_pointer_drift bump 中间态 (非绕 gate)
+- `--no-verify` 仅限 submodule_pointer_drift bump 中间态 (非绕 gate)。预存失败走 known-debt / `local-preflight-preexisting`，agent 禁止 `emergency-human-hotfix`
 - push → CI → 递归 (回到 §1, 直到全绿)
 
 ### 5. Admin merge (CI 非全绿时, 三条件全部满足)
@@ -79,7 +79,7 @@ uv run --with pyyaml python bin/gac-local-gate.py --scope staged --json   # 本�
 ## Anti-patterns
 
 - ❌ 只修一层就 merge (下一层反弹)
-- ❌ 盲目 `--no-verify` (不诊断根因, 除非 §5 三条件)
+- ❌ 盲目 `--no-verify` 或把预存 CI 红当成可以忽略的背景（不诊断根因、不登记 fingerprint 债）
 - ❌ 修生成器输出而非生成器 (下次注入覆盖)
 - ❌ 本地绝对路径当 gap (CI 无本地工具不是代码鸿沟)
 - ❌ 忽略 uv.lock tracked (gitignored lock 致 CI 无法重现)
