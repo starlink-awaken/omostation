@@ -48,6 +48,22 @@ def load_placement_backend_model_ids() -> dict[str, str]:
     return mapping
 
 
+def load_chat_capable_model_ids() -> set[str]:
+    """config.toml 里 role != "chat" 的模型(embedding/rerank)不支持 /v1/chat/completions,
+    发请求测这些只会拿到 400，不代表模型坏了。"""
+    content = open(CONFIG_PATH).read()
+    blocks = re.split(r"\n(?=\[\[models\]\])", content)
+    ids = set()
+    for b in blocks:
+        if not b.strip().startswith("[[models]]"):
+            continue
+        mid = re.search(r'id = "([^"]+)"', b)
+        role = re.search(r'role = "([^"]+)"', b)
+        if mid and role and role.group(1) == "chat":
+            ids.add(mid.group(1))
+    return ids
+
+
 def is_garbage(text: str) -> bool:
     if not text.strip():
         return True
@@ -89,8 +105,11 @@ def bench(base: str, model_id: str, max_tokens: int = 120, timeout: float = 90) 
 def main():
     models = get_models()
     backend_model_ids = load_placement_backend_model_ids()
+    chat_capable = load_chat_capable_model_ids()
     rows = []
     for m in models:
+        if m["id"] not in chat_capable:
+            continue
         for p in m.get("placement_states", []):
             backend_id = p["backend_id"]
             base = BACKEND_BASE_URL.get(backend_id)
