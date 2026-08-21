@@ -26,7 +26,9 @@ omlxc 内建的 `models reconcile` 命令看起来正是为解决这个问题设
 
 `coding-fast-local` 和 `mythos-fast-local`（omlx-app 侧）指向的权重文件已被删除（正是之前判定为乱码/淘汰的模型），导致这两个 placement 常年不可用——看门狗接入模型可用性检查后第一时间就报了出来。`mythos-fast` 在 MBP 上甚至没有 LM Studio 侧的兜底 placement，只能指望 Tailscale 才能连到的远程节点，Tailscale 一断就全灭。
 
-处理：删除死 placement，给 `mythos-fast` 新增 `mythos-fast-lm_studio`，`resident_models` 里同步移除失效引用。
+处理：删除死 placement，`resident_models` 里同步移除失效引用。
+
+**曾尝试给 `mythos-fast` 新增 `mythos-fast-lm_studio`（指向 qwythos-9b），已回退。** 实测证明这个 placement 一旦接入 omlxc 的正常请求路径（无论是健康探测还是真实 chat 请求），LM Studio 都会重新 JIT 加载并回到 852736 的失控上下文——即便请求前手动 `lms load -c 8192` 显式限制过也没用，omlxc 的路由请求会绕开这个手动加载，触发 LM Studio 自己的默认加载路径。两次复现，第二次是在专门做验证时当场触发。详见第四节；根因不在 config.toml 能调的范围内，属于 LM Studio 适配层的问题，贸然留着这个 placement 比没有更危险，已撤回。当前 `mythos-fast` 只有两个依赖 Tailscale 的远程 placement，Tailscale 断线时会整体不可用——这是已知的、安全的降级状态，不是新问题。
 
 ### 3.2 Ollama 兜底链的死链
 
@@ -43,6 +45,8 @@ omlxc 内建的 `models reconcile` 命令看起来正是为解决这个问题设
 3. 探测自己超时断开连接，但 LM Studio 侧日志明确写着"客户端断了，但如果还在处理会先跑完"——**探测超时不会中止生成，孤儿生成持续烧 CPU**
 
 这是一个尚未修复的架构隐患：任何 JIT 加载路径都可能触发超预期的上下文/计算量，且探测层没有真正的取消机制。当晚仅做了止血（卸载该模型腾出内存），未改探测逻辑本身——需要专门评估修复方案，不适合仓促手动打补丁。
+
+**后续复现确认这不是探测独有的问题**：单独验证 `mythos-fast-lm_studio` 时，即使请求前手动 `lms load -c 8192` 显式控制过上下文，omlxc 的正常 chat 请求路径依然重新触发了 LM Studio 的 JIT 加载，把上下文打回 852736。也就是说问题出在 `qwythos-9b-claude-mythos-5-1m-mlx` 这个具体模型 + LM Studio adapter 的 JIT 加载组合上，不局限于探测场景——任何经 omlxc 路由到这个 backend_model_id 的请求都有触发风险。已将对应 placement 从 config.toml 撤回（见 3.1），在 adapter 层修复前不再暴露这个入口。
 
 ## 五、AetherForge 全链路验证
 
