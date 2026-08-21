@@ -114,7 +114,7 @@ gate-mof: mof-bootstrap
 mof-bootstrap:  ## MOF 5-check strict 校验
 	$(PY) bin/mof/mof-bootstrap.py all
 
-gac-local-gate:
+gac-local-gate: sync-submodule-pointers  ## 全量治理门禁 (自动同步子模块指针)
 	$(PY) bin/gac/gac-local-gate.py
 
 gac-healthcheck:  ## GaC 13-point 健康检查
@@ -224,6 +224,10 @@ ssot-sync:  ## SSOT 变更记录到审计日志
 sync-submodules:  ## 推送子模块未推送提交到远程
 	@echo "── 同步子模块 ────────────────────────────────────────"
 	bash bin/sync-submodules.sh
+
+sync-submodule-pointers:  ## 将子模块工作树同步到超项目索引指针
+	@echo "── 同步子模块指针 (git submodule update --init) ───────"
+	git submodule update --init
 
 submodule-pointer-transaction:
 	bash bin/ssot/submodule-pointer-transaction.sh --dry-run
