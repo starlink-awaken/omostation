@@ -6,11 +6,12 @@
 > 
 > **计数口径**: 与 `omo state sync-tasks` 保持一致，只统计 `tasks/{active,planned,done}/` 顶层 `*.yaml` 文件（不含子目录与草稿）。
 
-## Active Tasks
+## Active Tasks (1 个)
+| ID | Title | Status |
+|----|-------|--------|
+| kos-q-growth-rolling | KOS 季度扩量持续监测 (rolling goal 关联 task | active |
 
-当前无活跃任务。所有 in-progress 任务通过 `.omo/tasks/planned/` 排队等待认领。
-
-## Planned Tasks (68 个)
+## Planned Tasks (67 个)
 | ID | Title | Status |
 |----|-------|--------|
 | bet-y1q1-t1-00 | 并发写冲突止血 — 共享主树禁写 + PASW 全覆盖 | candidate |
@@ -43,7 +44,6 @@
 | bet-y1q2-t6-08 | 100% 责任归因代理链 — Subagent 全流程继承树审计 | candidate |
 | bet-y1q2-t6-09 | AetherForge 动态算力与模型自动配比 | candidate |
 | bet-y1q2-t6-10 | god-module 大文件 SRP 拆分 (3 个 >1500L 债 | candidate |
-| bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | candidate |
 | bet-y1q2-t8-01 | /outcomes 结果与校准面板 | candidate |
 | bet-y1q3-t2-01 | 感知面第二根管子 (文件夹 / 日历 | candidate |
 | bet-y1q3-t3-01 | MOS 双栈一致性观察 8 周 | candidate |
@@ -118,10 +118,11 @@
 
 > **注**: 子目录 `legacy-normalized/` 中包含 REMEDIATE-ARC-CONV-P2-CACHE 至 P6-CALIBRATE 等历史收敛任务，已在 BET-ARCH-CONVERGENCE 完成上下文下归档。
 
-## Blocked Tasks
-
-当前无阻塞任务。
+## Blocked Tasks (1 个)
+| ID | Title | Status |
+|----|-------|--------|
+| bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | blocked |
 
 ---
-*Updated: 2026-08-17 (依据 `omo state sync-tasks` 与真实目录重算: done=229, planned=68, active=0, archived=6 顶层)*
+*Updated: 2026-08-21 (依据 `omo state sync-tasks` 与真实目录重算: done=229, planned=67, active=1, blocked=1, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
