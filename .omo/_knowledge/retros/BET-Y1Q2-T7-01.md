@@ -2,7 +2,7 @@
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-22
 ---
 # BET-Y1Q2-T7-01 复盘 — 工程交付 dogfood 开 shadow
 
@@ -54,3 +54,24 @@ appetite: 1 week；实际: ~30min（scene card 已存在，本轮核实收口）
   ③永不计入 X3 ✅ (scene card notes + 每条 outcome.notes 双标注)。
 - 08-19 锚点转后续验证 check: 连续满产复核 (dogfood-collector --collect 每周跑),
   复核 FAIL 则重开 (circuit_breaker 语义保留)。
+
+## 2026-08-22 真相重基线 — 撤销上述完成声明
+
+2026-08-17 的结论无效。它把 merged PR / merge_event 当成天然
+`human_verdict=accepted`，但该事件没有 reviewer credential、显式 human
+adjudication、canonical review binding 或可验证 principal，因此只能作为供给侧诊断，
+不能生成 qualified decision_outcome，也不能进入 MOS、scene gate 或个人价值指标。
+
+完整权威窗口 `2026-08-12T12:16:45Z..2026-08-19T12:16:45Z` 已通过
+query-only observer 直接读回：`0/20`、`FAIL`、`human_gate=not_ready`。输入在读取前后
+hash 一致，直接回执见
+`docs/reports/2026-08-22-engineering-delivery-shadow-observer-receipt.json`。
+
+处置：
+
+1. BET 状态由错误的 `done` 回退为 `blocked`，不重置原窗口。
+2. 历史 `.omo/_delivery/outcomes/dogfood-decision-outcomes.jsonl` 永久隔离为非权威分区。
+3. 移除会继续制造伪 human verdict 的活跃 collector；PR、reviewDecision 与 comments
+   仅保留为供给侧诊断。
+4. 只有显式 reviewer authority → signed human adjudication → qualified outcome → MOS
+   projection 的权威链可重新评估门槛；human_gate 仍由人类决定。
