@@ -165,17 +165,56 @@ def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
         }
     }
 
-    admitted_worker_ids = {
-        worker_id
-        for worker_id, worker in workers.items()
-        if worker.get("enabled") is True and worker.get("admission_state") == "admitted"
-    }
-    assert admitted_worker_ids == {"codebuddy", "reasonix", "pi", "oh-my-pi", "codex"}
-    candidates = {worker_id: worker for worker_id, worker in workers.items() if worker_id not in admitted_worker_ids}
-    assert candidates
-    for candidate in candidates.values():
-        assert candidate["enabled"] is False
-        assert candidate["admission_state"] == "declared"
+    for worker_id in ("pi", "oh-my-pi", "codex"):
+        assert workers[worker_id]["enabled"] is True
+        assert workers[worker_id]["admission_state"] == "admitted"
+    for worker_id in ("codebuddy", "reasonix"):
+        worker = workers[worker_id]
+        assert worker["enabled"] is True
+        assert worker["admission_state"] == "declared"
+        assert all(
+            "worker_ack_protocol" not in transport
+            for transport in worker["transports"].values()
+        )
+
+
+@pytest.mark.parametrize("worker_id", ["codebuddy", "reasonix"])
+def test_declared_worker_is_rejected_before_command_construction(
+    worker_id: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    omo_src = str(SCRIPT.parents[2] / "projects" / "omo" / "src")
+    if omo_src not in sys.path:
+        sys.path.insert(0, omo_src)
+    from omo import omo_worker_core
+
+    registry_path = SCRIPT.parents[2] / ".omo" / "_truth" / "registry" / "workers.yaml"
+    registry_bytes = registry_path.read_bytes()
+    registry = list(yaml.safe_load_all(registry_bytes))[-1]
+    worker = next(item for item in registry["workers"] if item["id"] == worker_id)
+    assert all("worker_ack_protocol" not in transport for transport in worker["transports"].values())
+
+    command_parses: list[str] = []
+    monkeypatch.setattr(
+        omo_worker_core.shlex,
+        "split",
+        lambda value: command_parses.append(value) or [value],
+    )
+
+    with pytest.raises(ValueError, match="reason=not_admitted"):
+        omo_worker_core._build_launch_argv(
+            registry,
+            worker_id,
+            "cli_prompt",
+            "bounded prompt",
+            workspace_root=SCRIPT.parents[2],
+            run_id="run-declared-worker",
+            packet_id="WP-DECLARED-WORKER",
+            packet_hash="sha256:" + "a" * 64,
+            instruction_binding={"content_digest": "sha256:" + "b" * 64},
+        )
+
+    assert command_parses == []
+    assert registry_path.read_bytes() == registry_bytes
 
 
 @pytest.mark.parametrize("worker_id", ["pi", "oh-my-pi", "codex"])
