@@ -338,6 +338,9 @@ def cmd_changeset(args: argparse.Namespace) -> int:
     ]
     if args.verify_claims:
         cmd.append("--verify-claims")
+        claims_root = getattr(args, "claims_root", None)
+        if claims_root:
+            cmd.extend(["--claims-root", str(claims_root)])
     r = run(cmd)
     if r.returncode != 0:
         audit("changeset_failed", f"rc={r.returncode} stderr={r.stderr.strip()[:200]}")
@@ -402,11 +405,12 @@ def cmd_integrate(args: argparse.Namespace) -> int:
         return reject("integrate", "identity_mismatch", "clone identity does not match integration request")
     baseline = getattr(args, "baseline", None)
     changeset = getattr(args, "changeset", None)
-    if not baseline or not changeset:
+    claims_root = getattr(args, "claims_root", None)
+    if not baseline or not changeset or not claims_root:
         return reject(
             "integrate",
             "verified_changeset_required",
-            "--apply requires --baseline and a current --verify-claims changeset",
+            "--apply requires --baseline, --claims-root, and a current --verify-claims changeset",
         )
     branch_probe = run(["git", "-C", str(clone), "branch", "--show-current"])
     if branch_probe.returncode != 0 or branch_probe.stdout.strip() != branch:
@@ -418,22 +422,23 @@ def cmd_integrate(args: argparse.Namespace) -> int:
     status = run(["git", "-C", str(clone), "status", "--porcelain", "--ignore-submodules=none"])
     if status.returncode != 0 or status.stdout.strip():
         return reject("integrate", "clone_dirty", "clone must be clean before integration")
-    verified = run(
-        [
-            sys.executable,
-            str(AGENT_CLONE),
-            "verify-changeset",
-            "--clone",
-            str(clone),
-            "--baseline",
-            str(baseline),
-            "--changeset",
-            str(changeset),
-            "--agent-id",
-            agent_id,
-            "--json",
-        ]
-    )
+    verify_cmd = [
+        sys.executable,
+        str(AGENT_CLONE),
+        "verify-changeset",
+        "--clone",
+        str(clone),
+        "--baseline",
+        str(baseline),
+        "--changeset",
+        str(changeset),
+        "--agent-id",
+        agent_id,
+        "--claims-root",
+        str(claims_root),
+        "--json",
+    ]
+    verified = run(verify_cmd)
     if verified.returncode != 0:
         return reject(
             "integrate",
@@ -459,6 +464,15 @@ def cmd_integrate(args: argparse.Namespace) -> int:
     if repo_slug is None:
         return reject("integrate", "github_repository_unbound", "origin is not an exact GitHub repository URL")
     owner = repo_slug.split("/", 1)[0]
+    final_verification = run(verify_cmd)
+    if final_verification.returncode != 0:
+        return reject(
+            "integrate",
+            "claims_changed_before_push",
+            final_verification.stdout.strip()
+            or final_verification.stderr.strip()
+            or "claims changed before push",
+        )
     # 推送分支
     r = run(
         [
@@ -729,6 +743,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--baseline", required=True)
     sp.add_argument("--output", required=True)
     sp.add_argument("--verify-claims", action="store_true")
+    sp.add_argument("--claims-root", help="authoritative workspace containing workflow runs")
     sp.set_defaults(func=cmd_changeset)
     # integrate
     sp = sub.add_parser("integrate", help="推送 + PR")
@@ -737,6 +752,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--base", default="main")
     sp.add_argument("--baseline", help="baseline manifest bound to the verified changeset")
     sp.add_argument("--changeset", help="current changeset created with --verify-claims")
+    sp.add_argument("--claims-root", help="same authoritative claims root used by the changeset")
     integrate_mode = sp.add_mutually_exclusive_group()
     integrate_mode.add_argument("--dry-run", dest="dry_run", action="store_true")
     integrate_mode.add_argument("--apply", dest="dry_run", action="store_false")

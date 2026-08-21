@@ -28,19 +28,24 @@ import errno
 import hashlib
 import json
 import os
+import pwd
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import warnings
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 SCHEMA_MANIFEST = "agent-clone-manifest/v1"
 SCHEMA_CHANGESET = "cross-repo-changeset/v1"
+SCHEMA_CHANGESET_CLAIMS = "cross-repo-changeset/v2"
+SCHEMA_CLAIM_SNAPSHOT = "agent-workflow-claim-snapshot/v1"
 SCHEMA_IDENTITY = "agent-clone-identity/v1"
 IDENTITY_FILENAME = "agent-clone-identity.json"
+CLAIMS_AUTHORITY_POLICY = ".omo/_truth/registry/swarm-coordination.yaml"
+ACCOUNT_WORKSPACE_ROOT = Path(pwd.getpwuid(os.getuid()).pw_dir) / "Workspace"
 AGENT_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
 EXIT_OK = 0
@@ -1065,39 +1070,241 @@ def object_at_path(repo_root: str, revision: str, path: str) -> str | None:
     return proc.stdout.strip() if proc.returncode == 0 else None
 
 
-def _verify_changeset_claims(clone_root: str, changes: list[dict[str, Any]]) -> dict[str, Any]:
-    """D3 升级: 跨仓变更审计 — 校验子模块变更在 agent claim 范围内.
-
-    从 agent-workflow runs 加载活跃 claim, 验证每个变更路径被 claim 覆盖.
-    未被覆盖的路径标记为 scope_creep (范围蔓延).
-    """
-    result: dict[str, Any] = {
-        "enabled": True,
-        "claimed_paths": [],
-        "checked": [],
-        "violations": [],
-        "all_covered": True,
-    }
+def trusted_claims_authority(
+    repo_root: str,
+    baseline_revision: str,
+    claims_root: str,
+) -> dict[str, str]:
+    """Resolve authority from the OS-account integration workspace, never the writer clone."""
     try:
         import yaml
-        from swarm_discipline import active_workflow_claimed_paths, path_covered_by_claim
+    except ImportError as exc:
+        raise ToolError("claim_verification_unavailable", "PyYAML is required") from exc
+    expected = canonical(str(ACCOUNT_WORKSPACE_ROOT))
+    actual = canonical(claims_root)
+    if actual != expected:
+        raise ToolError(
+            "claims_authority_mismatch",
+            f"claims root {actual} is not the OS-account integration workspace {expected}",
+        )
+    source = git(actual, "remote", "get-url", "origin")
+    if source.returncode != 0 or not source.stdout.strip():
+        raise ToolError(
+            "claims_authority_remote_unreadable",
+            "cannot resolve origin from the OS-account integration workspace",
+        )
+    policy_ref = "refs/heads/main"
+    remote = git(actual, "ls-remote", "--exit-code", source.stdout.strip(), policy_ref)
+    rows = [line.split() for line in remote.stdout.splitlines() if line.strip()]
+    if (
+        remote.returncode != 0
+        or len(rows) != 1
+        or len(rows[0]) != 2
+        or rows[0][1] != policy_ref
+        or re.fullmatch(r"[0-9a-f]{40}", rows[0][0]) is None
+    ):
+        raise ToolError(
+            "claims_authority_revision_unavailable",
+            f"cannot resolve exact {policy_ref} from the integration workspace origin",
+        )
+    policy_revision = rows[0][0]
+    present = git(repo_root, "cat-file", "-e", f"{policy_revision}^{{commit}}")
+    if present.returncode != 0:
+        raise ToolError(
+            "claims_authority_revision_unavailable",
+            f"trusted main revision {policy_revision} is not present in the writer clone; fetch before retrying",
+        )
+    if not is_ancestor(repo_root, baseline_revision, policy_revision):
+        raise ToolError(
+            "claims_authority_baseline_untrusted",
+            "baseline revision is not an ancestor of the integration workspace origin/main",
+        )
+    policy = git(repo_root, "show", f"{policy_revision}:{CLAIMS_AUTHORITY_POLICY}")
+    if policy.returncode != 0:
+        raise ToolError(
+            "claims_authority_policy_unreadable",
+            f"cannot read {CLAIMS_AUTHORITY_POLICY} at baseline {policy_revision}",
+        )
+    try:
+        documents = list(yaml.safe_load_all(policy.stdout))
+    except yaml.YAMLError as exc:
+        raise ToolError("claims_authority_policy_invalid", f"invalid authority policy: {exc}") from exc
+    data = next((doc for doc in documents if isinstance(doc, dict)), None)
+    topology = data.get("topology_migration") if isinstance(data, dict) else None
+    configured = topology.get("integration_root") if isinstance(topology, dict) else None
+    if not isinstance(configured, str) or not configured:
+        raise ToolError(
+            "claims_authority_policy_invalid",
+            "topology_migration.integration_root is required",
+        )
+    account_home = pwd.getpwuid(os.getuid()).pw_dir
+    if configured == "~":
+        configured_path = account_home
+    elif configured.startswith("~/"):
+        configured_path = os.path.join(account_home, configured[2:])
+    elif os.path.isabs(configured):
+        configured_path = configured
+    else:
+        raise ToolError(
+            "claims_authority_policy_invalid",
+            "integration_root must be absolute or account-home-relative",
+        )
+    policy_root = canonical(configured_path)
+    if actual != policy_root:
+        raise ToolError(
+            "claims_authority_mismatch",
+            f"claims root {actual} is not the policy-bound integration workspace {policy_root}",
+        )
+    policy_blob = object_at_path(repo_root, policy_revision, CLAIMS_AUTHORITY_POLICY)
+    if not policy_blob:
+        raise ToolError("claims_authority_policy_unreadable", "cannot resolve authority policy blob")
+    return {
+        "policy_path": CLAIMS_AUTHORITY_POLICY,
+        "policy_ref": policy_ref,
+        "policy_source_url": source.stdout.strip(),
+        "policy_revision": policy_revision,
+        "policy_blob_sha": policy_blob,
+        "baseline_revision": baseline_revision,
+        "claims_root": actual,
+    }
 
-        # active_workflow_claimed_paths is YAML-backed.  Do not turn a missing
-        # parser into a synthetic empty claim set and a misleading verdict.
-        if not hasattr(yaml, "safe_load"):
-            raise ImportError("PyYAML safe_load is unavailable")
-        claimed = active_workflow_claimed_paths(Path(clone_root))
-        result["claimed_paths"] = claimed
-        for change in changes:
-            path = change.get("path", "")
-            result["checked"].append(path)
-            if not path_covered_by_claim(claimed, path):
-                result["violations"].append(path)
-        result["all_covered"] = len(result["violations"]) == 0
-    except ImportError:
-        result["enabled"] = False
-        result["reason"] = "swarm_discipline not available"
-    return result
+
+def _safe_claim_path(raw: Any) -> str:
+    if not isinstance(raw, str) or not raw.strip():
+        raise ToolError("claims_snapshot_invalid", "claim path must be a non-empty string")
+    normalized = raw.replace("\\", "/")
+    path = PurePosixPath(normalized)
+    if path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts):
+        raise ToolError("claims_snapshot_invalid", f"unsafe claim path: {raw!r}")
+    return path.as_posix()
+
+
+def _path_covered_by_claim(claimed: list[str], changed: str) -> bool:
+    changed = _safe_claim_path(changed)
+    for claim in claimed:
+        if claim.endswith("/**"):
+            if changed.startswith(claim[:-2]):
+                return True
+        elif changed == claim or changed.startswith(claim.rstrip("/") + "/"):
+            return True
+    return False
+
+
+def _build_claim_snapshot(claims_root: str, agent_id: str) -> dict[str, Any]:
+    """Read the complete authoritative active-run plane into a replayable receipt."""
+    try:
+        import yaml
+    except ImportError as exc:
+        raise ToolError("claim_verification_unavailable", "PyYAML is required") from exc
+
+    root = Path(canonical(claims_root))
+    if not root.is_dir():
+        raise ToolError("claims_root_unreadable", f"claims root is not a directory: {root}")
+    source = root / ".omo" / "_delivery" / "agent-workflows" / "runs"
+    if not source.is_dir():
+        raise ToolError("claims_source_unreadable", f"authoritative runs directory is absent: {source}")
+    source_real = source.resolve(strict=True)
+    try:
+        source_real.relative_to(root)
+    except ValueError as exc:
+        raise ToolError("claims_source_escape", "authoritative runs directory escapes claims root") from exc
+
+    participating_runs: list[dict[str, Any]] = []
+    all_claimed: list[str] = []
+    for run_path in sorted(source.glob("*.yaml"), key=lambda item: item.name):
+        try:
+            run_real = run_path.resolve(strict=True)
+            relative_path = run_real.relative_to(source_real).as_posix()
+        except (OSError, ValueError) as exc:
+            raise ToolError("claims_run_escape", f"run path escapes authority: {run_path}") from exc
+        if "/" in relative_path:
+            raise ToolError("claims_run_escape", f"unexpected nested run path: {run_path}")
+        try:
+            payload = run_real.read_bytes()
+            documents = list(yaml.safe_load_all(payload.decode("utf-8")))
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+            raise ToolError("claims_run_unreadable", f"cannot parse {run_path}: {exc}") from exc
+        data = next((doc for doc in documents if isinstance(doc, dict)), None)
+        if data is None:
+            raise ToolError("claims_run_invalid", f"run is not a mapping: {run_path}")
+        if data.get("status") != "active":
+            continue
+        run_id = data.get("run_id")
+        if not isinstance(run_id, str) or not run_id:
+            raise ToolError("claims_run_invalid", f"active run lacks run_id: {run_path}")
+        updated_at = data.get("updated_at")
+        if not isinstance(updated_at, str) or not updated_at:
+            raise ToolError("claims_run_invalid", f"active run lacks updated_at: {run_path}")
+        claims = data.get("claims", [])
+        if not isinstance(claims, list):
+            raise ToolError("claims_run_invalid", f"active run claims are not a list: {run_path}")
+        matching_claims: list[dict[str, Any]] = []
+        for claim in claims:
+            if not isinstance(claim, dict):
+                raise ToolError("claims_run_invalid", f"active run contains malformed claim: {run_path}")
+            if claim.get("actor") != agent_id:
+                continue
+            paths = claim.get("paths")
+            if not isinstance(paths, list):
+                raise ToolError("claims_run_invalid", f"agent claim paths are not a list: {run_path}")
+            claimed_at = claim.get("claimed_at")
+            if not isinstance(claimed_at, str) or not claimed_at:
+                raise ToolError("claims_run_invalid", f"agent claim lacks claimed_at: {run_path}")
+            normalized_paths = sorted({_safe_claim_path(path) for path in paths})
+            if not normalized_paths:
+                continue
+            matching_claims.append(
+                {
+                    "actor": agent_id,
+                    "claimed_at": claimed_at,
+                    "paths": normalized_paths,
+                }
+            )
+            all_claimed.extend(normalized_paths)
+        if matching_claims:
+            matching_claims.sort(key=lambda item: canonical_json(item))
+            participating_runs.append(
+                {
+                    "run_id": run_id,
+                    "relative_path": relative_path,
+                    "file_sha256": hashlib.sha256(payload).hexdigest(),
+                    "status": "active",
+                    "updated_at": updated_at,
+                    "run_actor": data.get("actor"),
+                    "matching_claims": matching_claims,
+                }
+            )
+    participating_runs.sort(key=lambda item: (item["run_id"], item["relative_path"]))
+    snapshot: dict[str, Any] = {
+        "schema": SCHEMA_CLAIM_SNAPSHOT,
+        "claims_root": str(root),
+        "source_root": str(source_real),
+        "agent_id": agent_id,
+        "runs": participating_runs,
+        "claimed_paths": sorted(set(all_claimed)),
+    }
+    snapshot["snapshot_digest"] = f"sha256:{canonical_digest(snapshot)}"
+    return snapshot
+
+
+def _verify_changeset_claims(
+    claims_root: str, agent_id: str, changes: list[dict[str, Any]]
+) -> dict[str, Any]:
+    first = _build_claim_snapshot(claims_root, agent_id)
+    second = _build_claim_snapshot(claims_root, agent_id)
+    if first != second:
+        raise ToolError("claims_snapshot_raced", "authoritative claims changed while snapshotting")
+    checked = [_safe_claim_path(change.get("path")) for change in changes]
+    claimed = first["claimed_paths"]
+    violations = [path for path in checked if not _path_covered_by_claim(claimed, path)]
+    return {
+        "enabled": True,
+        "claimed_paths": claimed,
+        "checked": checked,
+        "violations": violations,
+        "all_covered": not violations,
+        "snapshot": first,
+    }
 
 
 def cmd_changeset(args: argparse.Namespace) -> dict:
@@ -1193,11 +1400,26 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
     # D3 升级: 跨仓变更审计 — 校验变更路径在 agent claim 范围内
     claim_verification = None
     if getattr(args, "verify_claims", False):
-        claim_verification = _verify_changeset_claims(args.clone, changes)
+        claims_root = getattr(args, "claims_root", None)
+        if not claims_root:
+            raise ToolError("claims_root_required", "--verify-claims requires explicit --claims-root")
+        if not identity or identity.get("ready") is not True:
+            raise ToolError("clone_identity_required", "claim verification requires a ready clone identity")
+        authority_binding = trusted_claims_authority(
+            args.clone, root_base, claims_root
+        )
+        claim_verification = _verify_changeset_claims(
+            authority_binding["claims_root"], identity["agent_id"], changes
+        )
+        claim_verification["authority_binding"] = authority_binding
+        claim_verification["consistency"] = {
+            "mode": "best-effort-double-read",
+            "atomic_with_push": False,
+        }
 
     no_change = root_base == root_candidate and not changes
     changeset = {
-        "schema": SCHEMA_CHANGESET,
+        "schema": SCHEMA_CHANGESET_CLAIMS if claim_verification is not None else SCHEMA_CHANGESET,
         "agent_id": identity["agent_id"] if identity else None,
         "clone_root": canonical(args.clone),
         "baseline_manifest_digest": baseline["manifest_digest"],
@@ -1211,13 +1433,6 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
 
     write_json_exclusive(args.output, changeset, "changeset_write_failed")
     if claim_verification is not None:
-        if not claim_verification.get("enabled", False):
-            raise ToolError(
-                "claim_verification_unavailable",
-                "claim verification could not run",
-                EXIT_POLICY,
-                {"output_path": args.output},
-            )
         violations = claim_verification.get("violations", [])
         if violations:
             raise ToolError(
@@ -1255,7 +1470,7 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
             f"cannot read changeset {args.changeset}: {exc}",
             EXIT_POLICY,
         ) from exc
-    if stored.get("schema") != SCHEMA_CHANGESET:
+    if stored.get("schema") != SCHEMA_CHANGESET_CLAIMS:
         raise ToolError(
             "changeset_schema_mismatch",
             f"unexpected changeset schema {stored.get('schema')!r}",
@@ -1282,6 +1497,13 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
             "changeset contains unclaimed paths",
             EXIT_POLICY,
         )
+    claims_root = getattr(args, "claims_root", None)
+    if not claims_root:
+        raise ToolError("claims_root_required", "verify-changeset requires explicit --claims-root")
+    claims_root = canonical(claims_root)
+    snapshot = claims.get("snapshot")
+    if not isinstance(snapshot, dict) or snapshot.get("claims_root") != claims_root:
+        raise ToolError("claims_root_mismatch", "changeset was generated from a different claims root")
     clone_root = canonical(args.clone)
     identity = read_identity(args.clone)
     if (
@@ -1301,6 +1523,17 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
             "baseline is not bound to this clone and agent",
             EXIT_POLICY,
         )
+    authority_binding = trusted_claims_authority(
+        args.clone,
+        baseline["root_head_sha"],
+        claims_root,
+    )
+    if claims.get("authority_binding") != authority_binding:
+        raise ToolError(
+            "claims_authority_binding_mismatch",
+            "changeset authority binding does not match baseline topology policy",
+            EXIT_POLICY,
+        )
     if stored.get("agent_id") != args.agent_id or stored.get("clone_root") != clone_root:
         raise ToolError(
             "changeset_clone_mismatch",
@@ -1316,6 +1549,7 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
                 baseline=args.baseline,
                 output=output,
                 verify_claims=True,
+                claims_root=claims_root,
             )
         )
         with open(output, encoding="utf-8") as fh:
@@ -1473,6 +1707,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="D3 跨仓变更审计: 校验变更路径在 agent claim 范围内",
     )
+    p.add_argument("--claims-root", help="authoritative workspace containing workflow runs")
     p.set_defaults(func=cmd_changeset)
 
     p = sub.add_parser("verify-changeset")
@@ -1481,6 +1716,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--baseline", required=True)
     p.add_argument("--changeset", required=True)
     p.add_argument("--agent-id", required=True)
+    p.add_argument("--claims-root", help="same authoritative claims root used to generate changeset")
     p.set_defaults(func=cmd_verify_changeset)
 
     p = sub.add_parser("guard")

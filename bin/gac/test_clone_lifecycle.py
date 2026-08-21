@@ -12,11 +12,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 _BIN_GAC = Path(__file__).resolve().parent
 sys.path.insert(0, str(_BIN_GAC))
 sys.path.insert(0, str(_BIN_GAC.parents[1]))
 
 lc = importlib.import_module("clone-lifecycle")
+REAL_AGENT_CLONE = lc.AGENT_CLONE
 
 _GIT_ENV = {
     "GIT_CONFIG_NOSYSTEM": "1",
@@ -26,6 +29,11 @@ _GIT_ENV = {
     "GIT_COMMITTER_NAME": "test",
     "GIT_COMMITTER_EMAIL": "t@example.com",
 }
+
+
+@pytest.fixture(autouse=True)
+def _restore_agent_clone(monkeypatch):
+    monkeypatch.setattr(lc, "AGENT_CLONE", REAL_AGENT_CLONE)
 
 
 def git(cwd: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess:
@@ -52,11 +60,40 @@ def make_retirable_clone(tmp_path: Path) -> tuple[Path, Path, str]:
     git(clone, "init", "-b", "main")
     (clone / ".gitignore").write_text(".omo/_delivery/\n")
     (clone / "README.md").write_text("root\n")
-    git(clone, "add", ".gitignore", "README.md")
+    policy = clone / ".omo" / "_truth" / "registry" / "swarm-coordination.yaml"
+    policy.parent.mkdir(parents=True)
+    policy.write_text(
+        "topology_migration:\n"
+        f"  integration_root: '{(tmp_path / 'authority').resolve()}'\n"
+    )
+    git(clone, "add", ".gitignore", "README.md", str(policy.relative_to(clone)))
     git(clone, "commit", "-m", "initial")
     git(clone, "switch", "-c", "agent/agent-1")
     git(clone, "remote", "add", "origin", str(remote))
+    git(clone, "push", "origin", "HEAD:refs/heads/main")
     git(clone, "push", "-u", "origin", "agent/agent-1")
+    authority = tmp_path / "authority"
+    cloned = subprocess.run(
+        ["git", "clone", str(remote), str(authority)],
+        capture_output=True,
+        text=True,
+        env={**os.environ, **_GIT_ENV},
+        check=False,
+    )
+    assert cloned.returncode == 0, cloned.stderr
+    wrapper = tmp_path / "agent-clone-test-wrapper.py"
+    wrapper.write_text(
+        "import importlib.util, sys\n"
+        "from pathlib import Path\n"
+        f"tool = Path({str(REAL_AGENT_CLONE)!r})\n"
+        "spec = importlib.util.spec_from_file_location('agent_clone_test_cli', tool)\n"
+        "module = importlib.util.module_from_spec(spec)\n"
+        "assert spec and spec.loader\n"
+        "spec.loader.exec_module(module)\n"
+        f"module.ACCOUNT_WORKSPACE_ROOT = Path({str(authority)!r})\n"
+        "raise SystemExit(module.main(sys.argv[1:]))\n"
+    )
+    lc.AGENT_CLONE = wrapper
     head = git(clone, "rev-parse", "HEAD").stdout.strip()
     identity = {
         "schema": "agent-clone-identity/v1",
@@ -71,7 +108,7 @@ def make_retirable_clone(tmp_path: Path) -> tuple[Path, Path, str]:
     return clone, remote, head
 
 
-def make_verified_changeset(tmp_path: Path, clone: Path) -> tuple[Path, Path, str]:
+def make_verified_changeset(tmp_path: Path, clone: Path) -> tuple[Path, Path, Path, str]:
     baseline = tmp_path / "baseline.json"
     manifest = subprocess.run(
         [
@@ -88,9 +125,15 @@ def make_verified_changeset(tmp_path: Path, clone: Path) -> tuple[Path, Path, st
         check=False,
     )
     assert manifest.returncode == 0, manifest.stderr
-    runs = clone / ".omo" / "_delivery" / "agent-workflows" / "runs"
+    authority = tmp_path / "authority"
+    runs = authority / ".omo" / "_delivery" / "agent-workflows" / "runs"
     runs.mkdir(parents=True)
-    (runs / "active.yaml").write_text("status: active\nclaims:\n  - paths:\n      - README.md\n")
+    (runs / "active.yaml").write_text(
+        "run_id: active\nstatus: active\nactor: human-owner\n"
+        "updated_at: '2026-08-21T00:00:00Z'\nclaims:\n"
+        "  - actor: agent-1\n    claimed_at: '2026-08-21T00:00:01Z'\n"
+        "    paths:\n      - README.md\n"
+    )
     (clone / "README.md").write_text("integrate\n")
     git(clone, "add", "README.md")
     git(clone, "commit", "-m", "integrate")
@@ -108,13 +151,15 @@ def make_verified_changeset(tmp_path: Path, clone: Path) -> tuple[Path, Path, st
             "--output",
             str(changeset),
             "--verify-claims",
+            "--claims-root",
+            str(authority),
         ],
         capture_output=True,
         text=True,
         check=False,
     )
     assert generated.returncode == 0, generated.stderr
-    return baseline, changeset, head
+    return baseline, changeset, authority, head
 
 
 def merged_pr_runner(head: str, calls: list[list[str]] | None = None):
@@ -181,19 +226,22 @@ def test_snapshot_creates_valid_manifest(tmp_path):
     assert "repositories" in d
 
 
-def test_changeset_no_change(tmp_path):
+def test_changeset_no_change(tmp_path, monkeypatch):
     """无变更时 changeset 正确检测."""
     clone, _remote, _head = make_retirable_clone(tmp_path)
     baseline = tmp_path / "base.json"
     # Generate baseline first
     lc.cmd_snapshot(argparse.Namespace(clone=str(clone), output=str(baseline)))
     output = tmp_path / "cs.json"
+    authority = tmp_path / "authority"
+    (authority / ".omo" / "_delivery" / "agent-workflows" / "runs").mkdir(parents=True)
     rc = lc.cmd_changeset(
         argparse.Namespace(
             clone=str(clone),
             baseline=str(baseline),
             output=str(output),
             verify_claims=True,
+            claims_root=str(authority),
         )
     )
     assert rc == 0
@@ -202,18 +250,21 @@ def test_changeset_no_change(tmp_path):
     assert cs["claim_verification"]["all_covered"] is True
 
 
-def test_changeset_with_verify_claims(tmp_path):
+def test_changeset_with_verify_claims(tmp_path, monkeypatch):
     """claim 校验开启时输出包含 claim_verification."""
     clone, _remote, _head = make_retirable_clone(tmp_path)
     baseline = tmp_path / "base.json"
     lc.cmd_snapshot(argparse.Namespace(clone=str(clone), output=str(baseline)))
     output = tmp_path / "cs.json"
+    authority = tmp_path / "authority"
+    (authority / ".omo" / "_delivery" / "agent-workflows" / "runs").mkdir(parents=True)
     rc = lc.cmd_changeset(
         argparse.Namespace(
             clone=str(clone),
             baseline=str(baseline),
             output=str(output),
             verify_claims=True,
+            claims_root=str(authority),
         )
     )
     assert rc == 0
@@ -245,6 +296,7 @@ def test_changeset_claim_violation_is_nonzero_even_if_receipt_exists(tmp_path, m
             baseline=str(tmp_path / "baseline.json"),
             output=str(output),
             verify_claims=True,
+            claims_root=str(tmp_path / "authority"),
         )
     )
 
@@ -273,6 +325,7 @@ def test_changeset_missing_or_disabled_claim_verification_is_nonzero(tmp_path, m
                 baseline=str(tmp_path / "baseline.json"),
                 output=str(output),
                 verify_claims=True,
+                claims_root=str(tmp_path / "authority"),
             )
         )
 
@@ -306,6 +359,7 @@ def test_changeset_audit_reports_persisted_change_count(tmp_path, monkeypatch, c
             baseline=str(tmp_path / "baseline.json"),
             output=str(output),
             verify_claims=True,
+            claims_root=str(tmp_path / "authority"),
         )
     )
 
@@ -329,7 +383,7 @@ def test_integrate_dry_run(tmp_path, capsys):
 
 def test_integrate_apply_is_reachable_and_creates_pr(tmp_path, monkeypatch, capsys):
     clone, _remote, _initial_head = make_retirable_clone(tmp_path)
-    baseline, changeset, head = make_verified_changeset(tmp_path, clone)
+    baseline, changeset, authority, head = make_verified_changeset(tmp_path, clone)
     calls: list[list[str]] = []
 
     def fake_run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
@@ -356,6 +410,7 @@ def test_integrate_apply_is_reachable_and_creates_pr(tmp_path, monkeypatch, caps
             base="main",
             baseline=str(baseline),
             changeset=str(changeset),
+            claims_root=str(authority),
         )
     )
 
@@ -370,7 +425,7 @@ def test_integrate_apply_is_reachable_and_creates_pr(tmp_path, monkeypatch, caps
 
 def test_integrate_reuses_only_exact_owner_branch_and_head_pr(tmp_path, monkeypatch, capsys):
     clone, _remote, _initial_head = make_retirable_clone(tmp_path)
-    baseline, changeset, head = make_verified_changeset(tmp_path, clone)
+    baseline, changeset, authority, head = make_verified_changeset(tmp_path, clone)
     calls: list[list[str]] = []
 
     def fake_run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
@@ -400,6 +455,7 @@ def test_integrate_reuses_only_exact_owner_branch_and_head_pr(tmp_path, monkeypa
             base="main",
             baseline=str(baseline),
             changeset=str(changeset),
+            claims_root=str(authority),
         )
     )
 
@@ -409,8 +465,9 @@ def test_integrate_reuses_only_exact_owner_branch_and_head_pr(tmp_path, monkeypa
     assert pr_call[pr_call.index("--head") + 1] == "agent/agent-1"
 
 
-def test_integrate_apply_requires_current_verified_changeset_before_push(tmp_path, monkeypatch):
+def test_integrate_apply_requires_claims_root_before_push(tmp_path, monkeypatch):
     clone, _remote, _head = make_retirable_clone(tmp_path)
+    baseline, changeset, _authority, _verified_head = make_verified_changeset(tmp_path, clone)
     calls: list[list[str]] = []
 
     def fake_run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
@@ -428,8 +485,9 @@ def test_integrate_apply_requires_current_verified_changeset_before_push(tmp_pat
             agent_id="agent-1",
             dry_run=False,
             base="main",
-            baseline=None,
-            changeset=None,
+            baseline=str(baseline),
+            changeset=str(changeset),
+            claims_root=None,
         )
     )
 
@@ -440,7 +498,7 @@ def test_integrate_apply_requires_current_verified_changeset_before_push(tmp_pat
 
 def test_integrate_apply_rejects_stale_or_unclaimed_receipt_before_push(tmp_path, monkeypatch):
     clone, _remote, _head = make_retirable_clone(tmp_path)
-    baseline, changeset, _verified_head = make_verified_changeset(tmp_path, clone)
+    baseline, changeset, authority, _verified_head = make_verified_changeset(tmp_path, clone)
     (clone / "README.md").write_text("new head\n")
     git(clone, "add", "README.md")
     git(clone, "commit", "-m", "new head")
@@ -459,6 +517,7 @@ def test_integrate_apply_rejects_stale_or_unclaimed_receipt_before_push(tmp_path
             base="main",
             baseline=str(baseline),
             changeset=str(changeset),
+            claims_root=str(authority),
         )
     )
     assert stale_rc == lc.EXIT_POLICY
@@ -486,10 +545,52 @@ def test_integrate_apply_rejects_stale_or_unclaimed_receipt_before_push(tmp_path
             base="main",
             baseline=str(baseline),
             changeset=str(unclaimed),
+            claims_root=str(authority),
         )
     )
     assert unclaimed_rc == lc.EXIT_POLICY
     assert not any("push" in cmd for cmd in calls)
+
+
+def test_integrate_rechecks_claims_immediately_before_push(tmp_path, monkeypatch):
+    clone, _remote, _head = make_retirable_clone(tmp_path)
+    baseline, changeset, authority, _verified_head = make_verified_changeset(tmp_path, clone)
+    run_file = authority / ".omo" / "_delivery" / "agent-workflows" / "runs" / "active.yaml"
+    calls: list[list[str]] = []
+    verify_count = 0
+
+    def racing_run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        nonlocal verify_count
+        calls.append(cmd)
+        if "verify-changeset" in cmd:
+            verify_count += 1
+            if verify_count == 2:
+                run_file.write_text(
+                    run_file.read_text().replace(
+                        "2026-08-21T00:00:00Z", "2026-08-21T00:00:02Z"
+                    )
+                )
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:6] == ["remote", "get-url", "origin"]:
+            return subprocess.CompletedProcess(cmd, 0, "git@github.com:owner/repository.git\n", "")
+        return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
+
+    monkeypatch.setattr(lc, "run", racing_run)
+    rc = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            dry_run=False,
+            base="main",
+            baseline=str(baseline),
+            changeset=str(changeset),
+            claims_root=str(authority),
+        )
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert verify_count == 2
+    assert not any("push" in cmd for cmd in calls)
+    assert not any(cmd[:2] == ["gh", "pr"] for cmd in calls)
 
 
 def test_integrate_apply_rejects_repository_without_clone_identity(tmp_path, monkeypatch):
