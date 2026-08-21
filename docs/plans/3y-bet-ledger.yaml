@@ -6079,7 +6079,9 @@ bets:
   - bin/gac/affected-graph.py
   - bin/gac/gac-hygiene-check.py
   - bin/gac/agent-clone.py
+  - bin/gac/test_agent_clone.py
   - bin/gac/clone-lifecycle.py
+  - bin/gac/test_clone_lifecycle.py
   - bin/gac/codex-worker-adapter.py
   - bin/gac/omp-worker-adapter.py
   - bin/gac/pi-worker-adapter.py
