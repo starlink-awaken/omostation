@@ -6,14 +6,18 @@
       "bin": "bin/adr/adr-coverage.py",
       "scripts": "scripts/bin/adr/adr-coverage.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/adr/adr-coverage.py",
+          "bin/adr/adr-coverage.py"
+        ],
+        "retired_files": [
           "scripts/bin/adr/adr-coverage.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -126,14 +130,18 @@
       "bin": "bin/collab/adv-fail-report.py",
       "scripts": "scripts/bin/collab/adv-fail-report.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/collab/adv-fail-report.py",
+          "bin/collab/adv-fail-report.py"
+        ],
+        "retired_files": [
           "scripts/bin/collab/adv-fail-report.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -141,14 +149,18 @@
       "bin": "bin/delivery/agent_registry.py",
       "scripts": "scripts/bin/delivery/agent_registry.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/agent_registry.py",
+          "bin/delivery/agent_registry.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/agent_registry.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -156,14 +168,18 @@
       "bin": "bin/agent-workflow.py",
       "scripts": "scripts/bin/agent-workflow.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/agent-workflow.py",
+          "bin/agent-workflow.py"
+        ],
+        "retired_files": [
           "scripts/bin/agent-workflow.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -192,14 +208,18 @@
       "bin": "bin/ssot/arcnode-validate",
       "scripts": "scripts/bin/ssot/arcnode-validate",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/arcnode-validate",
+          "bin/ssot/arcnode-validate"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/arcnode-validate"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -228,14 +248,18 @@
       "bin": "bin/collab/bos-stdio-inventory.py",
       "scripts": "scripts/bin/collab/bos-stdio-inventory.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/collab/bos-stdio-inventory.py",
+          "bin/collab/bos-stdio-inventory.py"
+        ],
+        "retired_files": [
           "scripts/bin/collab/bos-stdio-inventory.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -243,14 +267,18 @@
       "bin": "bin/ssot/bos-tracking-gate.py",
       "scripts": "scripts/bin/ssot/bos-tracking-gate.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/bos-tracking-gate.py",
+          "bin/ssot/bos-tracking-gate.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/bos-tracking-gate.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -258,14 +286,18 @@
       "bin": "bin/ssot/bus-dlq",
       "scripts": "scripts/bin/ssot/bus-dlq",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/bus-dlq",
+          "bin/ssot/bus-dlq"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/bus-dlq"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -273,14 +305,18 @@
       "bin": "bin/ssot/bus-e2e-harness.py",
       "scripts": "scripts/bin/ssot/bus-e2e-harness.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/bus-e2e-harness.py",
+          "bin/ssot/bus-e2e-harness.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/bus-e2e-harness.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -309,14 +345,18 @@
       "bin": "bin/delivery/caliber.py",
       "scripts": "scripts/bin/delivery/caliber.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/caliber.py",
+          "bin/delivery/caliber.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/caliber.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -324,14 +364,18 @@
       "bin": "bin/change-lane-check.py",
       "scripts": "scripts/bin/change-lane-check.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/change-lane-check.py",
+          "bin/change-lane-check.py"
+        ],
+        "retired_files": [
           "scripts/bin/change-lane-check.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -339,14 +383,18 @@
       "bin": "bin/gac/check-adversarial-effectiveness.py",
       "scripts": "scripts/bin/gac/check-adversarial-effectiveness.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/check-adversarial-effectiveness.py",
+          "bin/gac/check-adversarial-effectiveness.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/check-adversarial-effectiveness.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -354,14 +402,18 @@
       "bin": "bin/ssot/check-boundary.py",
       "scripts": "scripts/bin/ssot/check-boundary.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-boundary.py",
+          "bin/ssot/check-boundary.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-boundary.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -369,14 +421,18 @@
       "bin": "bin/ssot/check-branch-redundant.py",
       "scripts": "scripts/bin/ssot/check-branch-redundant.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-branch-redundant.py",
+          "bin/ssot/check-branch-redundant.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-branch-redundant.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -384,14 +440,18 @@
       "bin": "bin/ssot/check-cockpit-ui-dist.py",
       "scripts": "scripts/bin/ssot/check-cockpit-ui-dist.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-cockpit-ui-dist.py",
+          "bin/ssot/check-cockpit-ui-dist.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-cockpit-ui-dist.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -399,14 +459,18 @@
       "bin": "bin/ssot/check-cross-refs.py",
       "scripts": "scripts/bin/ssot/check-cross-refs.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-cross-refs.py",
+          "bin/ssot/check-cross-refs.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-cross-refs.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -414,14 +478,18 @@
       "bin": "bin/ssot/check-cross-repo-consistency.py",
       "scripts": "scripts/bin/ssot/check-cross-repo-consistency.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-cross-repo-consistency.py",
+          "bin/ssot/check-cross-repo-consistency.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-cross-repo-consistency.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -429,14 +497,18 @@
       "bin": "bin/ssot/check-dashboard-registry-consistency.py",
       "scripts": "scripts/bin/ssot/check-dashboard-registry-consistency.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-dashboard-registry-consistency.py",
+          "bin/ssot/check-dashboard-registry-consistency.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-dashboard-registry-consistency.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -465,14 +537,18 @@
       "bin": "bin/ssot/check-domain-m1-alignment.py",
       "scripts": "scripts/bin/ssot/check-domain-m1-alignment.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-domain-m1-alignment.py",
+          "bin/ssot/check-domain-m1-alignment.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-domain-m1-alignment.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -480,14 +556,18 @@
       "bin": "bin/gac/check-dual-track-purity.py",
       "scripts": "scripts/bin/gac/check-dual-track-purity.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/check-dual-track-purity.py",
+          "bin/gac/check-dual-track-purity.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/check-dual-track-purity.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -495,14 +575,18 @@
       "bin": "bin/ssot/check-god-module.py",
       "scripts": "scripts/bin/ssot/check-god-module.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-god-module.py",
+          "bin/ssot/check-god-module.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-god-module.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -510,14 +594,18 @@
       "bin": "bin/gac/check-governance-ratio.py",
       "scripts": "scripts/bin/gac/check-governance-ratio.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/check-governance-ratio.py",
+          "bin/gac/check-governance-ratio.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/check-governance-ratio.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -525,14 +613,18 @@
       "bin": "bin/ssot/check-hardcoded-ports.py",
       "scripts": "scripts/bin/ssot/check-hardcoded-ports.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-hardcoded-ports.py",
+          "bin/ssot/check-hardcoded-ports.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-hardcoded-ports.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -540,14 +632,18 @@
       "bin": "bin/check_health_ssot.py",
       "scripts": "scripts/bin/check_health_ssot.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/check_health_ssot.py",
+          "bin/check_health_ssot.py"
+        ],
+        "retired_files": [
           "scripts/bin/check_health_ssot.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -555,14 +651,18 @@
       "bin": "bin/ssot/check-index-drift.py",
       "scripts": "scripts/bin/ssot/check-index-drift.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-index-drift.py",
+          "bin/ssot/check-index-drift.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-index-drift.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -570,14 +670,18 @@
       "bin": "bin/ssot/check-layer-call-direction.py",
       "scripts": "scripts/bin/ssot/check-layer-call-direction.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-layer-call-direction.py",
+          "bin/ssot/check-layer-call-direction.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-layer-call-direction.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -585,14 +689,18 @@
       "bin": "bin/ssot/check-mcptool-impl-drift.py",
       "scripts": "scripts/bin/ssot/check-mcptool-impl-drift.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-mcptool-impl-drift.py",
+          "bin/ssot/check-mcptool-impl-drift.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-mcptool-impl-drift.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -600,14 +708,18 @@
       "bin": "bin/mof/check-mof-capabilities-drift.py",
       "scripts": "scripts/bin/mof/check-mof-capabilities-drift.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/check-mof-capabilities-drift.py",
+          "bin/mof/check-mof-capabilities-drift.py"
+        ],
+        "retired_files": [
           "scripts/bin/mof/check-mof-capabilities-drift.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -615,14 +727,18 @@
       "bin": "bin/gac/check-redline-coverage.py",
       "scripts": "scripts/bin/gac/check-redline-coverage.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/check-redline-coverage.py",
+          "bin/gac/check-redline-coverage.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/check-redline-coverage.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -630,14 +746,18 @@
       "bin": "bin/gac/check-severity-registry.py",
       "scripts": "scripts/bin/gac/check-severity-registry.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/check-severity-registry.py",
+          "bin/gac/check-severity-registry.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/check-severity-registry.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -645,14 +765,18 @@
       "bin": "bin/gac/check-silent-loss.py",
       "scripts": "scripts/bin/gac/check-silent-loss.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/check-silent-loss.py",
+          "bin/gac/check-silent-loss.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/check-silent-loss.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -660,14 +784,18 @@
       "bin": "bin/ssot/check-toolbox-ssot.py",
       "scripts": "scripts/bin/ssot/check-toolbox-ssot.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/check-toolbox-ssot.py",
+          "bin/ssot/check-toolbox-ssot.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/check-toolbox-ssot.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -675,14 +803,18 @@
       "bin": "bin/gac/check-work-landed.py",
       "scripts": "scripts/bin/gac/check-work-landed.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/check-work-landed.py",
+          "bin/gac/check-work-landed.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/check-work-landed.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -690,14 +822,18 @@
       "bin": "bin/gac/check-workorder-schema.py",
       "scripts": "scripts/bin/gac/check-workorder-schema.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/check-workorder-schema.py",
+          "bin/gac/check-workorder-schema.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/check-workorder-schema.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -726,14 +862,18 @@
       "bin": "bin/commit-assist.py",
       "scripts": "scripts/bin/commit-assist.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/commit-assist.py",
+          "bin/commit-assist.py"
+        ],
+        "retired_files": [
           "scripts/bin/commit-assist.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -741,14 +881,18 @@
       "bin": "bin/compass_radar.py",
       "scripts": "scripts/bin/compass_radar.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/compass_radar.py",
+          "bin/compass_radar.py"
+        ],
+        "retired_files": [
           "scripts/bin/compass_radar.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -777,14 +921,18 @@
       "bin": "bin/ssot/current-state-coherence.py",
       "scripts": "scripts/bin/ssot/current-state-coherence.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/current-state-coherence.py",
+          "bin/ssot/current-state-coherence.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/current-state-coherence.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -792,14 +940,18 @@
       "bin": "bin/gac/debt-closed-per-feature.py",
       "scripts": "scripts/bin/gac/debt-closed-per-feature.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/debt-closed-per-feature.py",
+          "bin/gac/debt-closed-per-feature.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/debt-closed-per-feature.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -807,14 +959,18 @@
       "bin": "bin/gac/debt-integrity-check.py",
       "scripts": "scripts/bin/gac/debt-integrity-check.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/debt-integrity-check.py",
+          "bin/gac/debt-integrity-check.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/debt-integrity-check.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -843,14 +999,18 @@
       "bin": "bin/ssot/dir-hygiene-check.py",
       "scripts": "scripts/bin/ssot/dir-hygiene-check.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/dir-hygiene-check.py",
+          "bin/ssot/dir-hygiene-check.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/dir-hygiene-check.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -858,14 +1018,18 @@
       "bin": "bin/ssot/doc-governance-check.py",
       "scripts": "scripts/bin/ssot/doc-governance-check.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/doc-governance-check.py",
+          "bin/ssot/doc-governance-check.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/doc-governance-check.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -873,14 +1037,18 @@
       "bin": "bin/ssot/doc-link-check.py",
       "scripts": "scripts/bin/ssot/doc-link-check.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/doc-link-check.py",
+          "bin/ssot/doc-link-check.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/doc-link-check.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -888,14 +1056,18 @@
       "bin": "bin/ssot/doc-ssot-lint.py",
       "scripts": "scripts/bin/ssot/doc-ssot-lint.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/doc-ssot-lint.py",
+          "bin/ssot/doc-ssot-lint.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/doc-ssot-lint.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -924,14 +1096,18 @@
       "bin": "bin/mof/ecos-link",
       "scripts": "scripts/bin/mof/ecos-link",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/ecos-link",
+          "bin/mof/ecos-link"
+        ],
+        "retired_files": [
           "scripts/bin/mof/ecos-link"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -939,14 +1115,18 @@
       "bin": "bin/delivery/emergence.py",
       "scripts": "scripts/bin/delivery/emergence.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/emergence.py",
+          "bin/delivery/emergence.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/emergence.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -975,14 +1155,18 @@
       "bin": "bin/gac/evidence-smoke.py",
       "scripts": "scripts/bin/gac/evidence-smoke.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/evidence-smoke.py",
+          "bin/gac/evidence-smoke.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/evidence-smoke.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -990,14 +1174,18 @@
       "bin": "bin/collab/export-dualtrack.py",
       "scripts": "scripts/bin/collab/export-dualtrack.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/collab/export-dualtrack.py",
+          "bin/collab/export-dualtrack.py"
+        ],
+        "retired_files": [
           "scripts/bin/collab/export-dualtrack.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1005,14 +1193,18 @@
       "bin": "bin/ssot/external-activation-preflight.py",
       "scripts": "scripts/bin/ssot/external-activation-preflight.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/external-activation-preflight.py",
+          "bin/ssot/external-activation-preflight.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/external-activation-preflight.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1020,14 +1212,18 @@
       "bin": "bin/ssot/external-resource-catalog.py",
       "scripts": "scripts/bin/ssot/external-resource-catalog.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/external-resource-catalog.py",
+          "bin/ssot/external-resource-catalog.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/external-resource-catalog.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1035,14 +1231,18 @@
       "bin": "bin/ssot/external-resource-pack.py",
       "scripts": "scripts/bin/ssot/external-resource-pack.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/external-resource-pack.py",
+          "bin/ssot/external-resource-pack.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/external-resource-pack.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1050,14 +1250,18 @@
       "bin": "bin/ssot/external-scene-trial.py",
       "scripts": "scripts/bin/ssot/external-scene-trial.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/external-scene-trial.py",
+          "bin/ssot/external-scene-trial.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/external-scene-trial.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1086,14 +1290,18 @@
       "bin": "bin/gac/gac-branch-protection.sh",
       "scripts": "scripts/bin/gac/gac-branch-protection.sh",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-branch-protection.sh",
+          "bin/gac/gac-branch-protection.sh"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-branch-protection.sh"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1101,14 +1309,18 @@
       "bin": "bin/gac/gac-compute-onboard.py",
       "scripts": "scripts/bin/gac/gac-compute-onboard.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-compute-onboard.py",
+          "bin/gac/gac-compute-onboard.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-compute-onboard.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1116,14 +1328,18 @@
       "bin": "bin/gac/gac-consensus-inject.py",
       "scripts": "scripts/bin/gac/gac-consensus-inject.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-consensus-inject.py",
+          "bin/gac/gac-consensus-inject.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-consensus-inject.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1152,14 +1368,18 @@
       "bin": "bin/gac/gac-daemon.py",
       "scripts": "scripts/bin/gac/gac-daemon.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-daemon.py",
+          "bin/gac/gac-daemon.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-daemon.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1167,14 +1387,18 @@
       "bin": "bin/gac/gac-drift.py",
       "scripts": "scripts/bin/gac/gac-drift.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-drift.py",
+          "bin/gac/gac-drift.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-drift.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1182,14 +1406,18 @@
       "bin": "bin/gac/gac-executor.py",
       "scripts": "scripts/bin/gac/gac-executor.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-executor.py",
+          "bin/gac/gac-executor.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-executor.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1197,14 +1425,18 @@
       "bin": "bin/gac/gac-export-agents.py",
       "scripts": "scripts/bin/gac/gac-export-agents.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-export-agents.py",
+          "bin/gac/gac-export-agents.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-export-agents.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1233,14 +1465,18 @@
       "bin": "bin/gac/gac-healthcheck.py",
       "scripts": "scripts/bin/gac/gac-healthcheck.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-healthcheck.py",
+          "bin/gac/gac-healthcheck.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-healthcheck.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1248,14 +1484,18 @@
       "bin": "bin/gac/gac-hook-pre-edit.py",
       "scripts": "scripts/bin/gac/gac-hook-pre-edit.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-hook-pre-edit.py",
+          "bin/gac/gac-hook-pre-edit.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-hook-pre-edit.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1284,14 +1524,18 @@
       "bin": "bin/gac/gac-local-gate.py",
       "scripts": "scripts/bin/gac/gac-local-gate.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-local-gate.py",
+          "bin/gac/gac-local-gate.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-local-gate.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1299,14 +1543,18 @@
       "bin": "bin/gac/gac-m1-sync.py",
       "scripts": "scripts/bin/gac/gac-m1-sync.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-m1-sync.py",
+          "bin/gac/gac-m1-sync.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-m1-sync.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1314,14 +1562,18 @@
       "bin": "bin/gac/gac-mesh-router.py",
       "scripts": "scripts/bin/gac/gac-mesh-router.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-mesh-router.py",
+          "bin/gac/gac-mesh-router.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-mesh-router.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1350,14 +1602,18 @@
       "bin": "bin/gac/gac_severity.py",
       "scripts": "scripts/bin/gac/gac_severity.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac_severity.py",
+          "bin/gac/gac_severity.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac_severity.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1365,14 +1621,18 @@
       "bin": "bin/gac/gac-validate.py",
       "scripts": "scripts/bin/gac/gac-validate.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-validate.py",
+          "bin/gac/gac-validate.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-validate.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1380,14 +1640,18 @@
       "bin": "bin/gac/gac-worktree.sh",
       "scripts": "scripts/bin/gac/gac-worktree.sh",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-worktree.sh",
+          "bin/gac/gac-worktree.sh"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-worktree.sh"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1395,14 +1659,18 @@
       "bin": "bin/gac/gac-worktree-cleanup.sh",
       "scripts": "scripts/bin/gac/gac-worktree-cleanup.sh",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-worktree-cleanup.sh",
+          "bin/gac/gac-worktree-cleanup.sh"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-worktree-cleanup.sh"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1410,14 +1678,18 @@
       "bin": "bin/gac/gac-worktree-guard.sh",
       "scripts": "scripts/bin/gac/gac-worktree-guard.sh",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-worktree-guard.sh",
+          "bin/gac/gac-worktree-guard.sh"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-worktree-guard.sh"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1425,14 +1697,18 @@
       "bin": "bin/gac/gac-worktree-prune.sh",
       "scripts": "scripts/bin/gac/gac-worktree-prune.sh",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/gac-worktree-prune.sh",
+          "bin/gac/gac-worktree-prune.sh"
+        ],
+        "retired_files": [
           "scripts/bin/gac/gac-worktree-prune.sh"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1440,14 +1716,18 @@
       "bin": "bin/mof/gen-agent-redlines.py",
       "scripts": "scripts/bin/mof/gen-agent-redlines.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/gen-agent-redlines.py",
+          "bin/mof/gen-agent-redlines.py"
+        ],
+        "retired_files": [
           "scripts/bin/mof/gen-agent-redlines.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1455,14 +1735,18 @@
       "bin": "bin/ssot/gen-agents-index.py",
       "scripts": "scripts/bin/ssot/gen-agents-index.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/gen-agents-index.py",
+          "bin/ssot/gen-agents-index.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/gen-agents-index.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1470,14 +1754,18 @@
       "bin": "bin/cockpit/gen-capability-registry.py",
       "scripts": "scripts/bin/cockpit/gen-capability-registry.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/cockpit/gen-capability-registry.py",
+          "bin/cockpit/gen-capability-registry.py"
+        ],
+        "retired_files": [
           "scripts/bin/cockpit/gen-capability-registry.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1506,14 +1794,18 @@
       "bin": "bin/cockpit/gen-help-docs.py",
       "scripts": "scripts/bin/cockpit/gen-help-docs.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/cockpit/gen-help-docs.py",
+          "bin/cockpit/gen-help-docs.py"
+        ],
+        "retired_files": [
           "scripts/bin/cockpit/gen-help-docs.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1521,14 +1813,18 @@
       "bin": "bin/ssot/gen-knowledge-index.py",
       "scripts": "scripts/bin/ssot/gen-knowledge-index.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/gen-knowledge-index.py",
+          "bin/ssot/gen-knowledge-index.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/gen-knowledge-index.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1557,14 +1853,18 @@
       "bin": "bin/ssot/gen-projects-index.py",
       "scripts": "scripts/bin/ssot/gen-projects-index.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/gen-projects-index.py",
+          "bin/ssot/gen-projects-index.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/gen-projects-index.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1572,14 +1872,18 @@
       "bin": "bin/mof/gen-service-configs.py",
       "scripts": "scripts/bin/mof/gen-service-configs.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/gen-service-configs.py",
+          "bin/mof/gen-service-configs.py"
+        ],
+        "retired_files": [
           "scripts/bin/mof/gen-service-configs.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1587,14 +1891,18 @@
       "bin": "bin/ssot/gen-tools-index.py",
       "scripts": "scripts/bin/ssot/gen-tools-index.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/gen-tools-index.py",
+          "bin/ssot/gen-tools-index.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/gen-tools-index.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1602,14 +1910,18 @@
       "bin": "bin/mof/generate-brief.py",
       "scripts": "scripts/bin/mof/generate-brief.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/generate-brief.py",
+          "bin/mof/generate-brief.py"
+        ],
+        "retired_files": [
           "scripts/bin/mof/generate-brief.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1617,14 +1929,18 @@
       "bin": "bin/gac/git-divergence-check.py",
       "scripts": "scripts/bin/gac/git-divergence-check.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/git-divergence-check.py",
+          "bin/gac/git-divergence-check.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/git-divergence-check.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1653,14 +1969,18 @@
       "bin": "bin/ssot/git-safe",
       "scripts": "scripts/bin/ssot/git-safe",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/git-safe",
+          "bin/ssot/git-safe"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/git-safe"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1668,14 +1988,18 @@
       "bin": "bin/ssot/god-module-13-error-list.py",
       "scripts": "scripts/bin/ssot/god-module-13-error-list.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/god-module-13-error-list.py",
+          "bin/ssot/god-module-13-error-list.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/god-module-13-error-list.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1683,14 +2007,18 @@
       "bin": "bin/ssot/god-module-roadmap.py",
       "scripts": "scripts/bin/ssot/god-module-roadmap.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/god-module-roadmap.py",
+          "bin/ssot/god-module-roadmap.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/god-module-roadmap.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1719,14 +2047,18 @@
       "bin": "bin/gac/governance-convergence-lint.py",
       "scripts": "scripts/bin/gac/governance-convergence-lint.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/governance-convergence-lint.py",
+          "bin/gac/governance-convergence-lint.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/governance-convergence-lint.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1734,14 +2066,18 @@
       "bin": "bin/gac/governance-dashboard.py",
       "scripts": "scripts/bin/gac/governance-dashboard.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/governance-dashboard.py",
+          "bin/gac/governance-dashboard.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/governance-dashboard.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1749,14 +2085,18 @@
       "bin": "bin/gac/governance-evolution.py",
       "scripts": "scripts/bin/gac/governance-evolution.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/governance-evolution.py",
+          "bin/gac/governance-evolution.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/governance-evolution.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1785,14 +2125,18 @@
       "bin": "bin/gac/governance-history-stats.py",
       "scripts": "scripts/bin/gac/governance-history-stats.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/governance-history-stats.py",
+          "bin/gac/governance-history-stats.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/governance-history-stats.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1800,14 +2144,18 @@
       "bin": "bin/gac/governance-readiness.py",
       "scripts": "scripts/bin/gac/governance-readiness.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/governance-readiness.py",
+          "bin/gac/governance-readiness.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/governance-readiness.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1815,14 +2163,18 @@
       "bin": "bin/gac/governance-semantic-gate.py",
       "scripts": "scripts/bin/gac/governance-semantic-gate.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/governance-semantic-gate.py",
+          "bin/gac/governance-semantic-gate.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/governance-semantic-gate.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1830,14 +2182,18 @@
       "bin": "bin/gac/governance-trend-report.py",
       "scripts": "scripts/bin/gac/governance-trend-report.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/governance-trend-report.py",
+          "bin/gac/governance-trend-report.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/governance-trend-report.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1845,14 +2201,18 @@
       "bin": "bin/gac/install-watch-agent.py",
       "scripts": "scripts/bin/gac/install-watch-agent.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/install-watch-agent.py",
+          "bin/gac/install-watch-agent.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/install-watch-agent.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1860,14 +2220,18 @@
       "bin": "bin/gac/knowledge-foundry-cron.py",
       "scripts": "scripts/bin/gac/knowledge-foundry-cron.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/knowledge-foundry-cron.py",
+          "bin/gac/knowledge-foundry-cron.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/knowledge-foundry-cron.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1875,14 +2239,18 @@
       "bin": "bin/gac/kos",
       "scripts": "scripts/bin/gac/kos",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/kos",
+          "bin/gac/kos"
+        ],
+        "retired_files": [
           "scripts/bin/gac/kos"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1911,14 +2279,18 @@
       "bin": "bin/delivery/latency_stats.py",
       "scripts": "scripts/bin/delivery/latency_stats.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/latency_stats.py",
+          "bin/delivery/latency_stats.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/latency_stats.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1926,14 +2298,18 @@
       "bin": "bin/layer-dependency-check.py",
       "scripts": "scripts/bin/layer-dependency-check.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/layer-dependency-check.py",
+          "bin/layer-dependency-check.py"
+        ],
+        "retired_files": [
           "scripts/bin/layer-dependency-check.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1983,14 +2359,18 @@
       "bin": "bin/mof/m4-health-score.py",
       "scripts": "scripts/bin/mof/m4-health-score.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/m4-health-score.py",
+          "bin/mof/m4-health-score.py"
+        ],
+        "retired_files": [
           "scripts/bin/mof/m4-health-score.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -1998,14 +2378,18 @@
       "bin": "bin/ssot/management-cross-ref-check.py",
       "scripts": "scripts/bin/ssot/management-cross-ref-check.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/management-cross-ref-check.py",
+          "bin/ssot/management-cross-ref-check.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/management-cross-ref-check.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2013,14 +2397,18 @@
       "bin": "bin/ssot/matrix-consistency-lint.py",
       "scripts": "scripts/bin/ssot/matrix-consistency-lint.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/matrix-consistency-lint.py",
+          "bin/ssot/matrix-consistency-lint.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/matrix-consistency-lint.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2028,14 +2416,18 @@
       "bin": "bin/gac/mcp-server-kos.py",
       "scripts": "scripts/bin/gac/mcp-server-kos.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/mcp-server-kos.py",
+          "bin/gac/mcp-server-kos.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/mcp-server-kos.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2043,14 +2435,18 @@
       "bin": "bin/gac/mcp-tool-data-complete.py",
       "scripts": "scripts/bin/gac/mcp-tool-data-complete.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/mcp-tool-data-complete.py",
+          "bin/gac/mcp-tool-data-complete.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/mcp-tool-data-complete.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2058,14 +2454,18 @@
       "bin": "bin/delivery/measure_all.py",
       "scripts": "scripts/bin/delivery/measure_all.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/measure_all.py",
+          "bin/delivery/measure_all.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/measure_all.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2073,14 +2473,18 @@
       "bin": "bin/delivery/measure_physical.py",
       "scripts": "scripts/bin/delivery/measure_physical.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/measure_physical.py",
+          "bin/delivery/measure_physical.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/measure_physical.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2109,14 +2513,18 @@
       "bin": "bin/mof/mof-act",
       "scripts": "scripts/bin/mof/mof-act",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-act",
+          "bin/mof/mof-act"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-act"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2124,14 +2532,18 @@
       "bin": "bin/mof/mof-analyze",
       "scripts": "scripts/bin/mof/mof-analyze",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-analyze",
+          "bin/mof/mof-analyze"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-analyze"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2139,14 +2551,18 @@
       "bin": "bin/mof/mof-assign",
       "scripts": "scripts/bin/mof/mof-assign",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-assign",
+          "bin/mof/mof-assign"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-assign"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2154,14 +2570,18 @@
       "bin": "bin/mof/mof-autonomous",
       "scripts": "scripts/bin/mof/mof-autonomous",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-autonomous",
+          "bin/mof/mof-autonomous"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-autonomous"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2190,14 +2610,18 @@
       "bin": "bin/mof/mof-decide",
       "scripts": "scripts/bin/mof/mof-decide",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-decide",
+          "bin/mof/mof-decide"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-decide"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2205,14 +2629,18 @@
       "bin": "bin/mof/mof-drift",
       "scripts": "scripts/bin/mof/mof-drift",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-drift",
+          "bin/mof/mof-drift"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-drift"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2220,14 +2648,18 @@
       "bin": "bin/mof/mof-enforce",
       "scripts": "scripts/bin/mof/mof-enforce",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-enforce",
+          "bin/mof/mof-enforce"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-enforce"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2235,14 +2667,18 @@
       "bin": "bin/mof/mof-evolution",
       "scripts": "scripts/bin/mof/mof-evolution",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-evolution",
+          "bin/mof/mof-evolution"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-evolution"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2250,14 +2686,18 @@
       "bin": "bin/mof/mof-export",
       "scripts": "scripts/bin/mof/mof-export",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-export",
+          "bin/mof/mof-export"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-export"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2265,14 +2705,18 @@
       "bin": "bin/mof/mof-graph",
       "scripts": "scripts/bin/mof/mof-graph",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-graph",
+          "bin/mof/mof-graph"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-graph"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2280,14 +2724,18 @@
       "bin": "bin/mof/mof-io",
       "scripts": "scripts/bin/mof/mof-io",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-io",
+          "bin/mof/mof-io"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-io"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2316,14 +2764,18 @@
       "bin": "bin/mof/mof-manage",
       "scripts": "scripts/bin/mof/mof-manage",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-manage",
+          "bin/mof/mof-manage"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-manage"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2331,14 +2783,18 @@
       "bin": "bin/mof/mof-scan",
       "scripts": "scripts/bin/mof/mof-scan",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-scan",
+          "bin/mof/mof-scan"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-scan"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2346,14 +2802,18 @@
       "bin": "bin/mof/mof-version",
       "scripts": "scripts/bin/mof/mof-version",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/mof-version",
+          "bin/mof/mof-version"
+        ],
+        "retired_files": [
           "scripts/bin/mof/mof-version"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2361,14 +2821,18 @@
       "bin": "bin/ssot/mypy-baseline-gate",
       "scripts": "scripts/bin/ssot/mypy-baseline-gate",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/mypy-baseline-gate",
+          "bin/ssot/mypy-baseline-gate"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/mypy-baseline-gate"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2376,14 +2840,18 @@
       "bin": "bin/delivery/network_path.py",
       "scripts": "scripts/bin/delivery/network_path.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/network_path.py",
+          "bin/delivery/network_path.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/network_path.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2412,14 +2880,18 @@
       "bin": "bin/gac/omlxc-node-wakeup.py",
       "scripts": "scripts/bin/gac/omlxc-node-wakeup.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/omlxc-node-wakeup.py",
+          "bin/gac/omlxc-node-wakeup.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/omlxc-node-wakeup.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2448,14 +2920,18 @@
       "bin": "bin/gac/omo-manage",
       "scripts": "scripts/bin/gac/omo-manage",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/omo-manage",
+          "bin/gac/omo-manage"
+        ],
+        "retired_files": [
           "scripts/bin/gac/omo-manage"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2463,14 +2939,18 @@
       "bin": "bin/gac/omo-runtime-stamp-policy.py",
       "scripts": "scripts/bin/gac/omo-runtime-stamp-policy.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/omo-runtime-stamp-policy.py",
+          "bin/gac/omo-runtime-stamp-policy.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/omo-runtime-stamp-policy.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2478,14 +2958,18 @@
       "bin": "bin/gac/omo-state-projection-guard.py",
       "scripts": "scripts/bin/gac/omo-state-projection-guard.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/omo-state-projection-guard.py",
+          "bin/gac/omo-state-projection-guard.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/omo-state-projection-guard.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2514,14 +2998,18 @@
       "bin": "bin/gac/omo-validate",
       "scripts": "scripts/bin/gac/omo-validate",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/omo-validate",
+          "bin/gac/omo-validate"
+        ],
+        "retired_files": [
           "scripts/bin/gac/omo-validate"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2529,14 +3017,18 @@
       "bin": "bin/gac/omostation-bootloader.py",
       "scripts": "scripts/bin/gac/omostation-bootloader.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/omostation-bootloader.py",
+          "bin/gac/omostation-bootloader.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/omostation-bootloader.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2586,14 +3078,18 @@
       "bin": "bin/delivery/physical_client.py",
       "scripts": "scripts/bin/delivery/physical_client.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/physical_client.py",
+          "bin/delivery/physical_client.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/physical_client.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2601,14 +3097,18 @@
       "bin": "bin/delivery/physical_node.py",
       "scripts": "scripts/bin/delivery/physical_node.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/physical_node.py",
+          "bin/delivery/physical_node.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/physical_node.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2637,14 +3137,18 @@
       "bin": "bin/decks/port-governance-deck.py",
       "scripts": "scripts/bin/decks/port-governance-deck.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/decks/port-governance-deck.py",
+          "bin/decks/port-governance-deck.py"
+        ],
+        "retired_files": [
           "scripts/bin/decks/port-governance-deck.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2652,14 +3156,18 @@
       "bin": "bin/mof/project-layer-index.py",
       "scripts": "scripts/bin/mof/project-layer-index.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/mof/project-layer-index.py",
+          "bin/mof/project-layer-index.py"
+        ],
+        "retired_files": [
           "scripts/bin/mof/project-layer-index.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2667,14 +3175,18 @@
       "bin": "bin/collab/recommend_mode.py",
       "scripts": "scripts/bin/collab/recommend_mode.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/collab/recommend_mode.py",
+          "bin/collab/recommend_mode.py"
+        ],
+        "retired_files": [
           "scripts/bin/collab/recommend_mode.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2682,14 +3194,18 @@
       "bin": "bin/gac/resolve-root-remote.sh",
       "scripts": "scripts/bin/gac/resolve-root-remote.sh",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/resolve-root-remote.sh",
+          "bin/gac/resolve-root-remote.sh"
+        ],
+        "retired_files": [
           "scripts/bin/gac/resolve-root-remote.sh"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2697,14 +3213,18 @@
       "bin": "bin/delivery/role_collab.py",
       "scripts": "scripts/bin/delivery/role_collab.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/role_collab.py",
+          "bin/delivery/role_collab.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/role_collab.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2712,14 +3232,18 @@
       "bin": "bin/delivery/role_memory.py",
       "scripts": "scripts/bin/delivery/role_memory.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/role_memory.py",
+          "bin/delivery/role_memory.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/role_memory.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2748,14 +3272,18 @@
       "bin": "bin/collab/scenario_lib.py",
       "scripts": "scripts/bin/collab/scenario_lib.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/collab/scenario_lib.py",
+          "bin/collab/scenario_lib.py"
+        ],
+        "retired_files": [
           "scripts/bin/collab/scenario_lib.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2763,14 +3291,18 @@
       "bin": "bin/ssot/scene-card-candidates.py",
       "scripts": "scripts/bin/ssot/scene-card-candidates.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/scene-card-candidates.py",
+          "bin/ssot/scene-card-candidates.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/scene-card-candidates.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2778,14 +3310,18 @@
       "bin": "bin/ssot/scene-card-intake.py",
       "scripts": "scripts/bin/ssot/scene-card-intake.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/scene-card-intake.py",
+          "bin/ssot/scene-card-intake.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/scene-card-intake.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2793,14 +3329,18 @@
       "bin": "bin/ssot/scene-card-review.py",
       "scripts": "scripts/bin/ssot/scene-card-review.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/scene-card-review.py",
+          "bin/ssot/scene-card-review.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/scene-card-review.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2808,14 +3348,18 @@
       "bin": "bin/delivery/scheduler.py",
       "scripts": "scripts/bin/delivery/scheduler.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/scheduler.py",
+          "bin/delivery/scheduler.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/scheduler.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2823,14 +3367,18 @@
       "bin": "bin/delivery/shared-context-cli.py",
       "scripts": "scripts/bin/delivery/shared-context-cli.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/shared-context-cli.py",
+          "bin/delivery/shared-context-cli.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/shared-context-cli.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2838,14 +3386,18 @@
       "bin": "bin/delivery/shared_context_store.py",
       "scripts": "scripts/bin/delivery/shared_context_store.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/shared_context_store.py",
+          "bin/delivery/shared_context_store.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/shared_context_store.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2853,14 +3405,18 @@
       "bin": "bin/ssot/ssot-guardian.py",
       "scripts": "scripts/bin/ssot/ssot-guardian.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/ssot-guardian.py",
+          "bin/ssot/ssot-guardian.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/ssot-guardian.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2868,14 +3424,18 @@
       "bin": "bin/ssot-watcher.py",
       "scripts": "scripts/bin/ssot-watcher.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot-watcher.py",
+          "bin/ssot-watcher.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot-watcher.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2883,14 +3443,18 @@
       "bin": "bin/ssot/ssot-writeback.py",
       "scripts": "scripts/bin/ssot/ssot-writeback.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/ssot-writeback.py",
+          "bin/ssot/ssot-writeback.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/ssot-writeback.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2919,14 +3483,18 @@
       "bin": "bin/gac/state-stale-emit.py",
       "scripts": "scripts/bin/gac/state-stale-emit.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/state-stale-emit.py",
+          "bin/gac/state-stale-emit.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/state-stale-emit.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2934,14 +3502,18 @@
       "bin": "bin/delivery/state_sync.py",
       "scripts": "scripts/bin/delivery/state_sync.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/delivery/state_sync.py",
+          "bin/delivery/state_sync.py"
+        ],
+        "retired_files": [
           "scripts/bin/delivery/state_sync.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2949,14 +3521,18 @@
       "bin": "bin/ssot/submodule-autobump.sh",
       "scripts": "scripts/bin/ssot/submodule-autobump.sh",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/submodule-autobump.sh",
+          "bin/ssot/submodule-autobump.sh"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/submodule-autobump.sh"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -2964,14 +3540,18 @@
       "bin": "bin/ssot/submodule-bump-check.py",
       "scripts": "scripts/bin/ssot/submodule-bump-check.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/submodule-bump-check.py",
+          "bin/ssot/submodule-bump-check.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/submodule-bump-check.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3000,14 +3580,18 @@
       "bin": "bin/ssot/submodule-pointer-transaction.sh",
       "scripts": "scripts/bin/ssot/submodule-pointer-transaction.sh",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/submodule-pointer-transaction.sh",
+          "bin/ssot/submodule-pointer-transaction.sh"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/submodule-pointer-transaction.sh"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3015,16 +3599,20 @@
       "bin": "bin/ssot/submodule-reachability-gate.py",
       "scripts": "scripts/bin/ssot/submodule-reachability-gate.py",
       "status": "managed",
-      "action": "bin-ssot-master, root-wrapper, scripts-compat-shim",
+      "action": "bin-ssot-master, root-wrapper, scripts-retired",
       "owner": "governance",
       "note": "Root bin/submodule-reachability-gate.py is a compatibility wrapper; SSOT lives at bin/ssot/.",
       "evidence": {
         "active_files": [
           "bin/submodule-reachability-gate.py",
           "bin/ssot/submodule-reachability-gate.py",
-          "scripts/bin/submodule-reachability-gate.py",
+          "scripts/bin/submodule-reachability-gate.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/submodule-reachability-gate.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3032,14 +3620,18 @@
       "bin": "bin/gac/swarm_discipline.py",
       "scripts": "scripts/bin/gac/swarm_discipline.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/swarm_discipline.py",
+          "bin/gac/swarm_discipline.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/swarm_discipline.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3047,14 +3639,18 @@
       "bin": "bin/gac/swarm-discipline-cli.py",
       "scripts": "scripts/bin/gac/swarm-discipline-cli.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/swarm-discipline-cli.py",
+          "bin/gac/swarm-discipline-cli.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/swarm-discipline-cli.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3062,14 +3658,18 @@
       "bin": "bin/gac/swarm-git",
       "scripts": "scripts/bin/gac/swarm-git",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/swarm-git",
+          "bin/gac/swarm-git"
+        ],
+        "retired_files": [
           "scripts/bin/gac/swarm-git"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3077,14 +3677,18 @@
       "bin": "bin/ssot/sync-bos-registry.py",
       "scripts": "scripts/bin/ssot/sync-bos-registry.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/sync-bos-registry.py",
+          "bin/ssot/sync-bos-registry.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/sync-bos-registry.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3092,14 +3696,18 @@
       "bin": "bin/ssot/sync-submodule-pointers.sh",
       "scripts": "scripts/bin/ssot/sync-submodule-pointers.sh",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/sync-submodule-pointers.sh",
+          "bin/ssot/sync-submodule-pointers.sh"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/sync-submodule-pointers.sh"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3107,14 +3715,18 @@
       "bin": "bin/sync-submodules.sh",
       "scripts": "scripts/bin/sync-submodules.sh",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/sync-submodules.sh",
+          "bin/sync-submodules.sh"
+        ],
+        "retired_files": [
           "scripts/bin/sync-submodules.sh"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3122,16 +3734,20 @@
       "bin": "bin/ssot/sync-submodules-push.sh",
       "scripts": "scripts/bin/ssot/sync-submodules-push.sh",
       "status": "managed",
-      "action": "bin-ssot-master, root-wrapper, scripts-compat-shim",
+      "action": "bin-ssot-master, root-wrapper, scripts-retired",
       "owner": "governance",
       "note": "Root bin/sync-submodules-push.sh is a compatibility wrapper; SSOT lives at bin/ssot/.",
       "evidence": {
         "active_files": [
           "bin/sync-submodules-push.sh",
           "bin/ssot/sync-submodules-push.sh",
-          "scripts/bin/sync-submodules-push.sh",
+          "scripts/bin/sync-submodules-push.sh"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/sync-submodules-push.sh"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3139,14 +3755,18 @@
       "bin": "bin/tests/test_bus-e2e-harness.py",
       "scripts": "scripts/bin/tests/test_bus-e2e-harness.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/tests/test_bus-e2e-harness.py",
+          "bin/tests/test_bus-e2e-harness.py"
+        ],
+        "retired_files": [
           "scripts/bin/tests/test_bus-e2e-harness.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3154,14 +3774,18 @@
       "bin": "bin/gac/test-coverage-check.py",
       "scripts": "scripts/bin/gac/test-coverage-check.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/gac/test-coverage-check.py",
+          "bin/gac/test-coverage-check.py"
+        ],
+        "retired_files": [
           "scripts/bin/gac/test-coverage-check.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3169,14 +3793,18 @@
       "bin": "bin/ssot/test-gac-engine.py",
       "scripts": "scripts/bin/ssot/test-gac-engine.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/test-gac-engine.py",
+          "bin/ssot/test-gac-engine.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/test-gac-engine.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3184,14 +3812,18 @@
       "bin": "bin/ssot/test-mcp-kos.py",
       "scripts": "scripts/bin/ssot/test-mcp-kos.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/test-mcp-kos.py",
+          "bin/ssot/test-mcp-kos.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/test-mcp-kos.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3199,14 +3831,18 @@
       "bin": "bin/tests/test_zones_check.py",
       "scripts": "scripts/bin/tests/test_zones_check.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/tests/test_zones_check.py",
+          "bin/tests/test_zones_check.py"
+        ],
+        "retired_files": [
           "scripts/bin/tests/test_zones_check.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3214,14 +3850,18 @@
       "bin": "bin/ssot/ts-analyze.mjs",
       "scripts": "scripts/bin/ssot/ts-analyze.mjs",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/ts-analyze.mjs",
+          "bin/ssot/ts-analyze.mjs"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/ts-analyze.mjs"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3229,14 +3869,18 @@
       "bin": "bin/ssot/ts-file-analyze.py",
       "scripts": "scripts/bin/ssot/ts-file-analyze.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/ts-file-analyze.py",
+          "bin/ssot/ts-file-analyze.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/ts-file-analyze.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3244,14 +3888,18 @@
       "bin": "bin/ssot/venv-yaml-check.py",
       "scripts": "scripts/bin/ssot/venv-yaml-check.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/venv-yaml-check.py",
+          "bin/ssot/venv-yaml-check.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/venv-yaml-check.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3259,14 +3907,18 @@
       "bin": "bin/ssot/verify-omo.sh",
       "scripts": "scripts/bin/ssot/verify-omo.sh",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/verify-omo.sh",
+          "bin/ssot/verify-omo.sh"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/verify-omo.sh"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3274,14 +3926,18 @@
       "bin": "bin/workspace",
       "scripts": "scripts/bin/workspace",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/workspace",
+          "bin/workspace"
+        ],
+        "retired_files": [
           "scripts/bin/workspace"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3289,14 +3945,18 @@
       "bin": "bin/ssot/workspace-audit",
       "scripts": "scripts/bin/ssot/workspace-audit",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/workspace-audit",
+          "bin/ssot/workspace-audit"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/workspace-audit"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3304,14 +3964,18 @@
       "bin": "bin/ssot/write-owner-audit.py",
       "scripts": "scripts/bin/ssot/write-owner-audit.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/write-owner-audit.py",
+          "bin/ssot/write-owner-audit.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/write-owner-audit.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     },
     {
@@ -3382,20 +4046,24 @@
       "bin": "bin/ssot/yaml-validate.py",
       "scripts": "scripts/bin/ssot/yaml-validate.py",
       "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/ssot/yaml-validate.py",
+          "bin/ssot/yaml-validate.py"
+        ],
+        "retired_files": [
           "scripts/bin/ssot/yaml-validate.py"
-        ]
+        ],
+        "risk_score": 15,
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
     }
   ],
   "reconciliation": {
-    "deduplicated_entries": 20,
-    "retired_entries": 43,
-    "source": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md"
+    "source": "docs/operations/bin-scripts-close-duplicate-exec.md",
+    "scripts_retired_count": 167,
+    "source_mode": "archive-recon-no-exec"
   }
 }
