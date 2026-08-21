@@ -969,6 +969,12 @@ def _work_packet_from_bet(bet: dict[str, Any], binding: dict[str, str]) -> dict[
             "action": "stop_and_escalate",
         },
         "spec_binding": binding,
+        "instruction_binding": {
+            "instruction_ref": binding["spec_ref"],
+            "instruction_version": binding["spec_version"],
+            "content_digest": binding["content_digest"],
+            "instruction_profile": "executor",
+        },
     }
 
 
