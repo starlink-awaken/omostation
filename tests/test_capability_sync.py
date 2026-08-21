@@ -10,6 +10,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -70,7 +71,7 @@ def registry() -> dict:
                     {
                         "uri": "bos://governance/shared",
                         "description": "shared governance service",
-                        "transport": "in-process",
+                        "transport": "internal",
                         "status": "active",
                     }
                 ]
@@ -309,3 +310,227 @@ def test_find_cli_returns_receipt_and_distinct_fail_closed_codes(
 
     assert cap_sync.main(["find", "--query", "shared", "--registry", str(path)]) == 3
     assert json.loads(capsys.readouterr().out)["status"] == "ambiguous"
+
+
+class _FakeGateway:
+    def __init__(self) -> None:
+        self.calls: list[tuple] = []
+
+    def load(self, record: dict, *, selector: dict) -> dict:
+        self.calls.append(("load", record, selector))
+        return {
+            "schema": "capability-invocation-receipt/v1",
+            "operation": "load",
+            "status": "ready",
+            "capability_id": record["id"],
+            "invocation_attempted": False,
+        }
+
+    def invoke(self, record: dict, payload: object, *, selector: dict) -> dict:
+        self.calls.append(("invoke", record, payload, selector))
+        return {
+            "schema": "capability-invocation-receipt/v1",
+            "operation": "invoke",
+            "status": "succeeded",
+            "capability_id": record["id"],
+            "invocation_attempted": True,
+        }
+
+
+def _native_service() -> SimpleNamespace:
+    return SimpleNamespace(
+        uri="bos://governance/shared",
+        transport="internal",
+        action="audit",
+        description="shared governance service",
+    )
+
+
+def test_native_record_requires_exact_internal_bos_truth(cap_sync, registry: dict) -> None:
+    record = cap_sync.build_native_bos_record(
+        registry,
+        "bos-service:bos://governance/shared",
+        [_native_service()],
+    )
+
+    assert record == {
+        "id": "bos-service:bos://governance/shared",
+        "source": "agora.bos",
+        "status": "active",
+        "native_bos_uri": "bos://governance/shared",
+        "kind": "bos_service",
+        "transport": "bos_native",
+        "operation": "audit",
+        "adapter": {"kind": "bos_native", "target": "bos://governance/shared"},
+        "description": "shared governance service",
+    }
+
+
+@pytest.mark.parametrize(
+    ("capability_id", "transport", "service_transport", "reason"),
+    [
+        ("mcp-tool:omo:status", "internal", "internal", "unsupported_capability_kind"),
+        ("bos-service:bos://governance/shared", "stdio", "internal", "bos_transport_not_internal"),
+        ("bos-service:bos://governance/shared", "internal", "stdio", "runtime_transport_not_internal"),
+    ],
+)
+def test_native_record_rejects_legacy_or_noninternal_paths(
+    cap_sync,
+    registry: dict,
+    capability_id: str,
+    transport: str,
+    service_transport: str,
+    reason: str,
+) -> None:
+    registry["bos_services"]["domains"]["governance"][0]["transport"] = transport
+    service = _native_service()
+    service.transport = service_transport
+
+    with pytest.raises(cap_sync.GatewayError, match=reason):
+        cap_sync.build_native_bos_record(registry, capability_id, [service])
+
+
+def test_gateway_operations_are_explicit_and_do_not_spawn_provider_processes(
+    cap_sync, registry: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gateway = _FakeGateway()
+
+    def forbidden_subprocess(*args, **kwargs):
+        raise AssertionError("provider subprocess execution is forbidden")
+
+    monkeypatch.setattr(cap_sync.subprocess, "run", forbidden_subprocess)
+
+    load_receipt = cap_sync.execute_gateway_operation(
+        registry,
+        "load",
+        "bos-service:bos://governance/shared",
+        gateway=gateway,
+        service_catalog=[_native_service()],
+    )
+    invoke_receipt = cap_sync.execute_gateway_operation(
+        registry,
+        "invoke",
+        "bos-service:bos://governance/shared",
+        payload={"scope": "bounded"},
+        gateway=gateway,
+        service_catalog=[_native_service()],
+    )
+
+    assert load_receipt["status"] == "ready"
+    assert invoke_receipt["status"] == "succeeded"
+    assert [call[0] for call in gateway.calls] == ["load", "invoke"]
+    assert gateway.calls[1][2] == {"scope": "bounded"}
+
+
+def test_native_router_requires_lifecycle_catalogs_before_seed(cap_sync) -> None:
+    events = []
+
+    class Router:
+        _capability_catalog = None
+        _admission_catalog = None
+
+        def enable_capability_gating(self) -> None:
+            events.append("enable")
+
+        def seed_from_poc(self, services: list) -> None:
+            events.append("seed")
+
+    with pytest.raises(cap_sync.GatewayError, match="lifecycle_catalog_unavailable"):
+        cap_sync._prepare_native_router(Router(), [_native_service()])
+
+    assert events == ["enable"]
+
+
+def test_native_router_enables_lifecycle_before_exact_route_seed(cap_sync) -> None:
+    events = []
+
+    class Router:
+        _capability_catalog = None
+        _admission_catalog = None
+
+        def enable_capability_gating(self) -> None:
+            events.append("enable")
+            self._capability_catalog = object()
+            self._admission_catalog = object()
+
+        def seed_from_poc(self, services: list) -> None:
+            events.append(("seed", [service.uri for service in services]))
+
+    router = Router()
+    assert cap_sync._prepare_native_router(router, [_native_service()]) is router
+    assert events == ["enable", ("seed", ["bos://governance/shared"])]
+
+
+def test_load_and_invoke_cli_require_exact_id_and_structured_input(cap_sync) -> None:
+    parser = cap_sync._parser()
+
+    with pytest.raises(SystemExit):
+        parser.parse_args(["load", "--query", "shared"])
+    with pytest.raises(SystemExit):
+        parser.parse_args(["invoke", "--id", "bos-service:x", "--", "--unsafe"])
+    with pytest.raises(SystemExit):
+        parser.parse_args(["invoke", "--id", "bos-service:x"])
+
+
+def test_invoke_cli_delegates_only_to_gateway_and_emits_safe_receipt(
+    cap_sync,
+    registry: dict,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    registry_path = tmp_path / "registry.yaml"
+    registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+    payload_path = tmp_path / "payload.json"
+    payload_path.write_text('{"scope":"bounded"}', encoding="utf-8")
+    gateway = _FakeGateway()
+    monkeypatch.setattr(
+        cap_sync,
+        "_load_native_gateway",
+        lambda capability_id: (gateway, [_native_service()]),
+    )
+
+    assert (
+        cap_sync.main(
+            [
+                "invoke",
+                "--id",
+                "bos-service:bos://governance/shared",
+                "--input-json",
+                str(payload_path),
+                "--registry",
+                str(registry_path),
+            ]
+        )
+        == 0
+    )
+    receipt = json.loads(capsys.readouterr().out)
+    encoded = json.dumps(receipt, sort_keys=True)
+    assert receipt["schema"] == "capability-invocation-receipt/v1"
+    assert receipt["status"] == "succeeded"
+    assert "bounded" not in encoded
+    assert str(payload_path) not in encoded
+
+
+def test_gateway_unavailable_fails_closed_without_echoing_sensitive_selector(
+    cap_sync,
+    registry: dict,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    registry_path = tmp_path / "registry.yaml"
+    registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+
+    def unavailable(capability_id: str):
+        raise cap_sync.GatewayError("gateway_unavailable")
+
+    monkeypatch.setattr(cap_sync, "_load_native_gateway", unavailable)
+    secret_id = "bos-service:bos://secret/private"
+
+    assert cap_sync.main(["load", "--id", secret_id, "--registry", str(registry_path)]) == 5
+    receipt = json.loads(capsys.readouterr().out)
+    encoded = json.dumps(receipt, sort_keys=True)
+    assert receipt["status"] == "rejected"
+    assert receipt["error_code"] == "CAPABILITY_GATEWAY_UNAVAILABLE"
+    assert secret_id not in encoded

@@ -703,3 +703,89 @@ Human Principal 已授权本轮按最优解处理工程、治理、PR、合并�
 
 在此之前，最准确的总体状态仍是：**工程脊柱已显著收敛，运行闭环部分成立，个人真实价值尚待本人
 裁决证明。**
+
+## 18. 2026-08-21 AC-05 capability 收敛增量
+
+> 证据截止：2026-08-21T07:32:00Z。本节记录 D5/AC-05 的新工程事实，并纠正 §17 中已经漂移的
+> 台账状态；它不改变 Value 轴，也不授权绕过 Golden Slice 人类裁决。
+
+### 18.1 状态纠正
+
+并发治理变更已在 `origin/main` 将 `BET-Y1Q3-T4-01` 归档为 `blocked`，理由是 12 个 AC 中已有
+10 个落地，而 AC-06 依赖仍未证明的 T1-19。后续 Agent 必须以当前 ledger 为准：不得沿用 §17.6
+“BET 仍 active”的历史快照，不得重新打开第二个同目标 BET，也不得因为 AC-05 工程绿自行把原 BET
+改成 `done`。本轮 AC-05 作为既有目标的可恢复工程增量继续集成，Value 仍为 `NOT_PROVEN`。
+
+### 18.2 AC-05 的最小正确边界
+
+近期审计确认，`capability-sync find` 已能精确解析并拒绝歧义，但 Cockpit 仍存在三项高风险旧行为：
+
+1. 用短名/子串和 first-match 选择服务；
+2. 从 BOS YAML 读取 `command` 后直接 `subprocess.run`，并接受任意尾随 argv；
+3. 无 invocation-time admission、lifecycle route gate、bounded health probe 或隐私安全 receipt。
+
+本轮没有再建第二个 registry 或通用 executor，而是把调用面收敛为：
+
+```text
+canonical capability registry
+  -> exact `bos-service:<bos://...>`
+  -> generated registry row 与 Agora runtime service 双重一致性
+  -> internal-only native adapter
+  -> capability/admission lifecycle catalogs
+  -> invocation-time admission
+  -> exact route + bounded readiness probe
+  -> explicit load 或 structured JSON invoke
+  -> fixed allowlist privacy receipt
+```
+
+硬边界如下：
+
+- `load/invoke` 只接受 exact canonical ID；`find --query` 永远不能升级为执行授权；
+- 只有 generated registry 与 Agora runtime 同时声明 `active/internal` 的 BOS 服务可进入 gateway；
+- caller 不能提供 command、argv、module、function、URL、adapter 或 target；
+- Cockpit 只接受完整 BOS URI/canonical ID 与有界 JSON 文件，不再展示或执行 provider command；
+- lifecycle catalog 缺失、admission 非 `admitted`、route 不一致、health 非 healthy 或 receipt 非法时
+  全部 fail closed；
+- Cockpit 把子进程回执当作不可信输入，校验 schema/operation/capability identity 后再按固定字段
+  allowlist 投影，未知 payload/path/error 字段不输出。
+
+### 18.3 已合并证据与验证
+
+| 交付面 | 证据 | 判定 |
+|---|---|---|
+| CodeBuddy/Reasonix truth correction | 根仓 PR #1809，merge `1a0ce173ccfa32816623c730221270807e944164` | `PROVEN`；从 admitted 降为 declared，绑定 instruction 时在 provider parsing 前 fail closed |
+| Agora native gateway | Agora PR #34，merge `cf137b1efade1da2d22d5639f38ec75cceb5373e` | `PROVEN`；exact reconcile、admission、route、probe、native invoke、privacy receipt |
+| Cockpit governed invocation | Cockpit PR #70，merge `bc3e31efd541beb9c3d1b307d7f8d70e21e889f2` | `PROVEN`；移除 substring/raw command/argv，固定治理 CLI 与 receipt allowlist |
+| 根仓公共 `load/invoke` 与 gitlink 集成 | 根仓 PR #1816 | `IN_REVIEW`；合并前不得写成 landed |
+
+直接验证：
+
+- 根仓 capability 契约 32 项通过；另 1 项全量 registry generator 检查因本独立 clone 未初始化全部
+  项目而隔离，不是产品 RED，交由完整 GitHub checkout 复核；
+- Cockpit capability + CLI 路由回归 92 项通过；changed Python Ruff 全绿；
+- 完整 Agora Python 环境真实执行 `load` 时，当前 admission 返回 `ADMISSION_REQUIRED`，receipt 为
+  `status=rejected`、`invocation_attempted=false`，证明它没有因本地 observe/warning 状态降级直调；
+- 独立 reviewer 初审发现 plain router lifecycle 绕过与 child receipt 附加字段泄露两项 HIGH；修复后
+  复审 `PASS`，并补入缺 catalog、gate-before-seed 和恶意 schema-valid receipt 负例。
+
+本地 `make gac-local-gate` 的其余失败来自不完整独立 clone：缺 `cockpit-ui` 构建输入，以及未初始化
+`scripts` 子模块导致 compatibility shim 扫描大量假缺失。该结果必须标记为
+`ENVIRONMENT_BLOCKED`，不能当成 AC-05 产品失败，也不能删门禁或伪造绿色；完整 checkout CI 是根仓
+合并的硬门。
+
+### 18.4 优化后的后续顺序
+
+1. 先完成根仓公共 `load/invoke`、Agora/Cockpit 已合并 gitlink 的 PR、完整 CI 与 `origin/main`
+   reachability；失败则回滚根 gitlink，不回滚两个已独立验证的 child merge。
+2. AC-05 工程轴落地后停止继续扩 capability transport；HTTP/MCP/stdio 通用执行器、跨进程 proof
+   持久化与更多 adapter 全部后置。
+3. 下一主线仍是唯一 Golden Slice：只收集 Human Principal 对
+   `episode_dfed37d14182f59457e1064d` 的显式 `accept|edit|reject|defer|ignore`；广义工程授权不计 verdict。
+4. T1-05A 在 2026-08-22T00:06:13Z 后才可做完整周只读复核；backup cron owner 错误只报告并在
+   非 shadow 变更窗口修复。
+5. T7-01 继续只统计真实、非测试、可绑定 `human_verdict` 的 `decision_outcome`；PR、review、issue
+   comment 仍只是供给侧证据。
+6. T1-18 继续遵守 human approval 边界，不向既有 Orca/Codex canary 发送输入或代点审批。
+
+因此，AC-05 的正确结论是：**capability 工程调用面已经从可模糊直执行收敛为 exact、native、
+admitted、health-gated、receipt-safe 的窄入口；它提高了 G3 的完成度，但不增加任何个人价值计数。**
