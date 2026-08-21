@@ -3120,23 +3120,31 @@ bets:
   title: 工程交付 dogfood 开 shadow
   appetite: 1 week
   priority: P0
-  status: done
-  done_at: 2026-08-17
-  done_note: '窗口提前实施指令收口: dogfood-collector.py 管道建成 (#1625), 周产 100 条真实 decision_outcome
-    (merge_event verdict, 幂等), gate 100>=20 PASS; lifecycle=shadow 保持; 永不计入 X3 双标注
-    (scene card notes + outcome.notes). 08-19 锚点转后续验证 check (连续满产复核), 不再阻塞。08-16 纠偏记录见
-    correction_note。'
+  status: blocked
+  blocked_reentry_policy: human_approval_required
+  blocked_at: 2026-08-22
+  blocked_by:
+  - 权威 query-only observer 对完整窗口 2026-08-12T12:16:45Z..2026-08-19T12:16:45Z
+    的直接读回为 0/20、FAIL、human_gate=not_ready
+  - merged PR / merge_event 不具备 credential-bound human adjudication，不能生成 qualified
+    decision_outcome，也不能推进 MOS、scene gate 或个人价值指标
+  invalidated_completion:
+    done_at: 2026-08-17
+    reason: 以供给侧 merge_event 冒充真实 human verdict，100 条记录属于历史非权威分区
+    evidence_ref: docs/reports/2026-08-22-engineering-delivery-shadow-observer-receipt.json
   corrected_at: 2026-08-16
-  correction_note: '2026-08-16 纠偏 (交接手册 §8 直查证据): MOS total_decision_outcomes=0, 周产
-    gate 0/20 FAIL, 完整窗口至 2026-08-19 未满 — 08-15 补登依据 (PR merge) ≠ done_when 依据 (周产>=20),
-    属 T3-01 同型失误。回退 in_progress, 保留原窗口锚点 08-19 不重置。治理通报面 (已通报)。'
-  goal: 建立高频低风险的 decision_outcome 样本源, PR 评审意见即天然 human_verdict
+  correction_note: >-
+    2026-08-16 首次纠偏确认 MOS total_decision_outcomes=0、gate 0/20；2026-08-22
+    完整窗口 query-only 复核仍为 0/20，并撤销 2026-08-17 以 merge_event 冒充
+    human_verdict 的完成声明。窗口锚点不重置，历史错误记录保留在 retro 中但不得再作为当前真相。
+  goal: 建立高频低风险、可绑定显式 reviewer credential 与 human adjudication 的真实 decision_outcome 样本源
   non_goals:
   - 计入 X3 价值指标
   - 自动合并 PR
+  - 把 PR merge、reviewDecision、issue comment、测试或合成记录视为 human verdict
   done_when:
   - engineering-delivery 场景 lifecycle=shadow
-  - 每周产出 >= 20 条 decision_outcome
+  - 完整 7 日窗口内产出 >= 20 条可关联非测试 human adjudication 的 qualified decision_outcome
   - 明确标注"本场景产出永不计入价值指标"
   notes:
   - '2026-08-12: 恢复 shadow 配置. 周产20条 decision_outcome 尚未验证, 继续观察.'
@@ -3152,8 +3160,8 @@ bets:
   - BET-Y1Q1-T7-01
   - BET-Y1Q1-T3-02
   risk_level: L1
-  human_gate: false
-  circuit_breaker: 样本 < 10/周 → 扩大到 commit 级评审
+  human_gate: true
+  circuit_breaker: 样本不足或无法绑定 human principal → 保持 blocked，不扩大代理口径、不自动决定 human_gate
   retro: light
 - id: BET-Y1Q2-T4-01
   track: T4-OUTCOME
