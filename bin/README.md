@@ -157,20 +157,18 @@ last-reviewed: 2026-06-29
 > **已迁移** (2026-07-07): `omo-state-projection-guard.py` → `omo lint projection-guard`, `omo-runtime-stamp-policy.py` → `omo lint stamp-policy`
 > 原脚本保留作为 backward-compat wrapper, 新功能请使用 omo CLI.
 
-### 14. Bin Tool Registry (2, bin/scripts 收敛治理) — 盘点 + 依赖闭环 + 并行收敛
-bin/ 与 scripts/bin/ 同名镜像收敛治理 (bin-master, scripts-compat-shim), round 轮次闭环.
+### 14. Bin Tool Registry (2, 工具盘点 + 依赖闭环) — 盘点 + 依赖闭环
+
+> **已迁移** (2026-08-21): `scripts/bin/` 工具已迁移到 `bin/`，scripts 仓库已 archive。
+> 并行收敛治理不再需要（scripts/bin 已不存在）。
 
 | 入口 | 功能 |
 |:-----|:-----|
 | `make bin-tool-registry-audit` | 扫描 bin 工具调用图与命名债务 (缺省输出 stats) |
-| `make bin-tool-registry-audit-strict` | 严格门禁 (并行用清单托底, 脚本层) |
-| `make bin-tool-registry-audit-emit` | 导出 bin/ scripts/bin 盘点 JSON |
+| `make bin-tool-registry-audit-strict` | 严格门禁 (脚本层) |
 | `make bin-tool-registry-convergence` | 盘点收敛候选 (高出入度聚类) |
-| `make bin-tool-registry-parallel-gaps` | 输出并行命名缺口 (bin/scripts 现有重名未纳清单) |
-| `make bin-tool-registry-dependency-risks` | 输出依赖风险热点 (出入度 + 并行收敛缺口) |
-| `make bin-tool-registry-weekly-governance-report` | 输出并落盘 依赖风险/并行缺口周报 (owner/action/sink) |
-| `make bin-tool-registry-round9/10/11` | 并行风险 Top10 一键闭环 (strict + gaps + dependency + 周报) |
-| `python3 bin/ssot/bin-scripts-convergence-audit.py --check` | 校验 manifest、执行证据和实际 bin/scripts 文件三层一致性 |
+| `make bin-tool-registry-dependency-risks` | 输出依赖风险热点 |
+| `make bin-tool-registry-weekly-governance-report` | 输出并落盘依赖风险周报 (owner/action/sink) |
 | `python3 bin/ssot/root-directory-governance-scan.py --check` | 校验根目录 tracked/ignored/policy disposition，阻断未登记 shadow surface |
 
 裸命令:
