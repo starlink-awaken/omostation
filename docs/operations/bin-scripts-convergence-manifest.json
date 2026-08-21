@@ -188,27 +188,6 @@
       }
     },
     {
-      "name": "alert_mock_p0_notify",
-      "bin": "bin/gac/alert-mock-p0-notify.py",
-      "scripts": "scripts/bin/gac/alert-mock-p0-notify.py",
-      "status": "managed",
-      "action": "bin-master, scripts-retired",
-      "owner": "gac",
-      "note": "Execution report confirms retirement of the scripts duplicate; bin remains the single implementation.",
-      "evidence": {
-        "active_files": [
-          "bin/gac/alert-mock-p0-notify.py"
-        ],
-        "risk_score": 15,
-        "decision_round": "round9",
-        "due_date": "2026-09-15",
-        "retired_files": [
-          "scripts/bin/gac/alert-mock-p0-notify.py"
-        ],
-        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md"
-      }
-    },
-    {
       "name": "arcnode_validate",
       "bin": "bin/ssot/arcnode-validate",
       "scripts": "scripts/bin/ssot/arcnode-validate",
@@ -890,21 +869,6 @@
       }
     },
     {
-      "name": "doc_governance_migrate",
-      "bin": "bin/ssot/doc-governance-migrate.py",
-      "scripts": "scripts/bin/ssot/doc-governance-migrate.py",
-      "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
-      "owner": "governance",
-      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
-      "evidence": {
-        "active_files": [
-          "bin/ssot/doc-governance-migrate.py",
-          "scripts/bin/ssot/doc-governance-migrate.py"
-        ]
-      }
-    },
-    {
       "name": "doc_link_check",
       "bin": "bin/ssot/doc-link-check.py",
       "scripts": "scripts/bin/ssot/doc-link-check.py",
@@ -1313,21 +1277,6 @@
           "scripts/bin/gac/gac-hygiene-check.py"
         ],
         "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md"
-      }
-    },
-    {
-      "name": "gac_ingest_legacy",
-      "bin": "bin/gac/gac-ingest-legacy.py",
-      "scripts": "scripts/bin/gac/gac-ingest-legacy.py",
-      "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
-      "owner": "governance",
-      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
-      "evidence": {
-        "active_files": [
-          "bin/gac/gac-ingest-legacy.py",
-          "scripts/bin/gac/gac-ingest-legacy.py"
-        ]
       }
     },
     {
@@ -3362,21 +3311,6 @@
         "active_files": [
           "bin/ssot/write-owner-audit.py",
           "scripts/bin/ssot/write-owner-audit.py"
-        ]
-      }
-    },
-    {
-      "name": "write_owner_repair_draft",
-      "bin": "bin/ssot/write-owner-repair-draft.py",
-      "scripts": "scripts/bin/ssot/write-owner-repair-draft.py",
-      "status": "managed",
-      "action": "bin-master, scripts-compat-shim",
-      "owner": "governance",
-      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
-      "evidence": {
-        "active_files": [
-          "bin/ssot/write-owner-repair-draft.py",
-          "scripts/bin/ssot/write-owner-repair-draft.py"
         ]
       }
     },
