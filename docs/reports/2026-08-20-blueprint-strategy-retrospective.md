@@ -496,7 +496,7 @@ protocol truth 或自治升级；不以测试样本补价值基线；不自行�
 
 | 轴 | 2026-08-21 状态 | 判断依据 | 升级条件 |
 |---|---|---|---|
-| Engineering | `PROVEN`（本轮作用域） | instruction binding、worker-origin ACK、四类 adapter、OMO dispatch、跨仓 PR/CI 与独立复核已形成直接证据 | 根仓 PR 合并且 `origin/main` gitlink/文件复核一致 |
+| Engineering | `PROVEN`（本轮作用域） | instruction binding、worker-origin ACK、四类 adapter、OMO dispatch、跨仓 PR/CI、独立复核与 `origin/main` 落地复核均有直接证据 | 保持默认链 fail closed，并补齐尚未支持该协议的 worker |
 | Operational | `PARTIAL` | 实际子进程能在 provider 启动前 ACK；但跨 CLI 进程恢复故意 fail closed，且运行/备份 shadow 仍有窗口与 owner 问题 | 完整 shadow 窗、scheduler owner 修正、replay/restore 证据 |
 | Value | `NOT_PROVEN` | Golden Slice 候选存在，但尚无本人显式 `accept/edit/reject/defer/ignore`；T7-01 真实 outcome 证据仍未证明 | Human verdict 与 revision/outcome 可重复读取 |
 
@@ -508,7 +508,7 @@ protocol truth 或自治升级；不以测试样本补价值基线；不自行�
 | ECOS：WorkPacket instruction binding | ECOS PR #33，merge `fa986f0212db79d908667119fa2ae4ad448532a7` | `PROVEN`；ref/version/digest/profile 进入 canonical packet/hash |
 | OMO：初版 ACK gate | OMO PR #63，merge `d0071679cb209509107c83b394112cba43bc0359` | `SUPERSEDED`；保留历史，但初版由 controller 代 ACK，不满足职责分离 |
 | OMO：worker-origin ACK 修复 | OMO PR #66，merge `b479a7ab5254521f2b1c8f80f0e2d2aa4ad5f37c` | `PROVEN`；真实 worker 子进程消费一次性证明并写入 durable ACK |
-| 根仓：resolver、registry、四类 adapter 与 OMO gitlink | 根仓 PR #1805 | `PENDING_MERGE`；本报告更新时已吸收最新主线并保留 OMO 修复指针 |
+| 根仓：resolver、registry、四类 adapter、OMO gitlink 与本交接 | 根仓 PR #1805，merge `3b251217f11a2e9dc722fc63c39620f114e548e9` | `PROVEN`；全量 CI 绿，`origin/main` 保留 ECOS/OMO 已合并修复指针 |
 
 标签为 ECOS、OMO 与根仓各阶段提供 D0 恢复点；标签只证明工程产物可恢复，不证明价值完成。
 
@@ -601,13 +601,15 @@ North Star: 本人持续接受、修订或明确拒绝的真实结果
 
 ### 17.6 接手后的执行序列
 
-#### Wave A：完成本轮工程集成
+#### Wave A：本轮工程集成（已完成）
 
-1. 确认根仓 PR #1805 的 required checks 全绿；
-2. squash merge，验证 `origin/main` 包含 resolver/adapters/registry 变更，且 `projects/omo` 指向
-   含 PR #66 的可达提交；
-3. 为 merged root SHA 建 D0 tag；
-4. 保持 `BET-Y1Q3-T4-01` 与当前 workflow run 为 active，**不要 close/complete**。
+1. 根仓 PR #1805 的级联拓扑、集成、GAC、Governance、接口、证据、文档与其余 required checks
+   已全部通过；
+2. 已 squash merge 为 `3b251217f11a2e9dc722fc63c39620f114e548e9`；`origin/main` 中
+   `projects/ecos` 指向 `fa986f0`，`projects/omo` 指向含 PR #66 的 `b479a7a`；
+3. merged root SHA 已由
+   `bet/BET-Y1Q3-T4-01-root-worker-origin-ack-pr1805-merged-20260821` 固定；
+4. `BET-Y1Q3-T4-01` 与 workflow run 仍保持 active，**不要 close/complete**。
 
 #### Wave B：完成唯一的人类价值门
 
@@ -677,7 +679,7 @@ Human Principal 已授权本轮按最优解处理工程、治理、PR、合并�
 | 未决 | 状态 | 最小下一步 |
 |---|---|---|
 | Golden Slice human verdict | `AWAITING_HUMAN` | 呈现候选，收集五选一显式 verdict |
-| 根仓 PR #1805 | `PENDING_MERGE` | CI 绿后 squash merge、验证 origin/main、打 merged tag |
+| 根仓 PR #1805 | `MERGED/PROVEN` | 后续只做防回退验证，不重复实现或重开同类 PR |
 | CodeBuddy/Reasonix worker ACK | `NOT_IMPLEMENTED` | 实现同一 `omo-worker-origin-ack/v1`，此前保持 fail closed |
 | cross-process resume capability | `DEFERRED` | 设计可吊销、短时、不可重放 handoff；禁止持久化当前 proof |
 | T1-05A 完整周 | `WINDOW_OPEN` | 2026-08-22T00:06:13Z 后只读复核 |
