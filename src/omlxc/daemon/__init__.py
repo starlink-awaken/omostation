@@ -63,7 +63,7 @@ def command(
             )
         )
         return
-    composition = build_production_daemon(loaded)
+    composition = build_production_daemon(loaded, config_path=selected_config)
     server = DaemonServer(composition.app, socket_path=loaded.daemon.socket_path)
     try:
         asyncio.run(_serve(server))

@@ -11,6 +11,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import cast
 from urllib.parse import urlsplit
 from uuid import uuid4
@@ -43,6 +44,8 @@ from omlxc.config import (
     NodeConfig,
     PlacementConfig,
     config_identity,
+    default_config_path,
+    load_config,
 )
 from omlxc.dataplane import (
     AdapterBinding,
@@ -731,8 +734,10 @@ class ProductionControlService:
         model_aliases: Mapping[str, str] | None = None,
         loaded_config_identity: str,
         worker_timeout: float = 120.0,
+        config_path: Path | None = None,
     ) -> None:
         self._config = config
+        self._config_path = config_path
         self._storage = storage
         self._catalog = catalog
         self._probe = probe
@@ -965,11 +970,31 @@ class ProductionControlService:
         return record
 
     async def reload_daemon(self) -> Mapping[str, object]:
+        """Report whether the on-disk config matches what this process loaded.
+
+        Does not rebuild the live object graph (adapters/catalog/planner/etc. stay
+        as constructed at startup) — that requires `daemon restart`. This only
+        makes the response honest instead of always claiming success with stale
+        in-memory counts.
+        """
+        stale = False
+        try:
+            path = self._config_path or default_config_path()
+            on_disk_identity = config_identity(load_config(path, base_directory=path.parent))
+            stale = on_disk_identity != self._config_identity
+        except Exception:
+            stale = False
         return {
-            "status": "reloaded",
+            "status": "stale" if stale else "reloaded",
             "reloaded_at": self._now().isoformat(),
             "nodes_count": len(self._config.nodes),
             "models_count": len(self._config.models),
+            "note": (
+                "config.toml on disk differs from what this daemon loaded; "
+                "run `omlxc daemon restart` to apply it"
+                if stale
+                else "config on disk matches the running daemon; no restart needed"
+            ),
         }
 
     async def _create_operation(self, kind: str, model_id: str, key: str) -> Job:
@@ -1147,6 +1172,7 @@ def build_production_daemon(
     id_factory: Callable[[], str] | None = None,
     now: Callable[[], datetime] | None = None,
     metric_flush_interval_seconds: float = 0.25,
+    config_path: Path | None = None,
 ) -> ProductionComposition:
     """Build the real daemon graph without starting network or model operations."""
     clock = now or (lambda: datetime.now(UTC))
@@ -1193,6 +1219,7 @@ def build_production_daemon(
         now=clock,
         model_aliases=model_aliases,
         loaded_config_identity=config_identity(config),
+        config_path=config_path,
     )
     inference = ProductionInferenceService(
         DataPlaneOrchestrator(
