@@ -3023,8 +3023,9 @@ bets:
   title: Codex ACP stdio permission-broker cutover and cli_prompt retirement
   appetite: 3 days
   priority: P0
-  status: blocked
-  blocked_reason: 'NOT_PROVEN: T1-18 真实完成前置、ACP v1 真实生命周期、权限代理、取消回收、真实 canary、transport cutover 与 live receipt 均未形成完整直接证据。'
+  status: in_progress
+  started_at: 2026-08-21
+  progress_note: 'live canary PASS (2026-08-21, docs/reports/2026-08-21-t1-19-acp-live-canary.md, PR#1802): 真实 codex-acp@0.16.0 全生命周期打通 (initialize/session/真实模型 turn 22.4s/权限矩阵 5/5/cancel/reap), 4 个协议缺陷实证修复 (omo#64→6f6b1e5 + 9a40a5a). 剩余: 独立 clone R1 变更 (git delta+CompletionManifest)、独立 verifier accept、cutover 减法提交。'
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md
     spec_version: 1.0.0
