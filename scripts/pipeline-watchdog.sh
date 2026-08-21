@@ -44,6 +44,23 @@ if ! "$OMLXC" daemon status --json 2>/dev/null | grep -q '"running"'; then
   "$OMLXC" daemon restart --yes --confirm-impact >>"$LOG" 2>&1
 fi
 
+# --- 模型级可用性(读探测缓存，不发真实生成请求，代价很低) ---
+# 只能测出"探测都连不上"这一类(如 oMLX App 整体下线导致 placement 全灭)；
+# 输出乱码这类要真实生成才测得到的问题不在这一层，见 deep-registration-audit.sh。
+zero_avail=$("$OMLXC" models list --json 2>/dev/null | python3 -c "
+import json,sys
+try:
+    d=json.load(sys.stdin)
+    items=d['data']['items']
+    bad=[m['id'] for m in items if m.get('placement_states') and not any(p.get('available') for p in m['placement_states'])]
+    print(','.join(bad))
+except Exception:
+    pass
+" 2>/dev/null)
+if [ -n "$zero_avail" ]; then
+  log "[WARN] 以下模型所有 placement 均不可用: $zero_avail"
+fi
+
 # 日志裁剪，避免无限增长
 if [ -f "$LOG" ]; then
   tail -n 2000 "$LOG" > "$LOG.tmp" && mv "$LOG.tmp" "$LOG"
