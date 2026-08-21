@@ -48,6 +48,10 @@ omlxc 内建的 `models reconcile` 命令看起来正是为解决这个问题设
 
 **后续复现确认这不是探测独有的问题**：单独验证 `mythos-fast-lm_studio` 时，即使请求前手动 `lms load -c 8192` 显式控制过上下文，omlxc 的正常 chat 请求路径依然重新触发了 LM Studio 的 JIT 加载，把上下文打回 852736。也就是说问题出在 `qwythos-9b-claude-mythos-5-1m-mlx` 这个具体模型 + LM Studio adapter 的 JIT 加载组合上，不局限于探测场景——任何经 omlxc 路由到这个 backend_model_id 的请求都有触发风险。已将对应 placement 从 config.toml 撤回（见 3.1），在 adapter 层修复前不再暴露这个入口。
 
+**根因定位到底**：`~/.lmstudio/settings.json` 里 `.defaultContextLength = {"type": "max", "value": 8192}`。`type: "max"` 表示**所有** JIT 自动加载的模型都会用模型自身支持的最大上下文，而不是这个 `value` 字段——852736 正是 qwythos-9b 自己支持的最大值。这是全局设置，不分模型，今晚每一次"意外触发大上下文加载"最终都能归到这一项。`~/.lmstudio/.internal/historical-version-info.json` 里有条迁移记录 `v0_4_16_b2_defaultContextLength8192`，说明固定 8192 曾是 LM Studio 的出厂默认值，当前的 `"max"` 是后来被改掉的。
+
+未直接编辑此文件：反编译后的 LM Studio 主进程代码高度混淆，拿不到 `type` 字段的合法枚举值，盲改 JSON 有把这个设置写成 LM Studio 读不懂的值的风险。**需要人工在 LM Studio 设置界面里改**（大概率在 Developer 分区，和同一 JSON 节点下的 `jitModelTTL`/`unloadPreviousJITModelOnLoad` 相邻），把类型从"跟随模型最大值"改成固定数值。这一步做完后，本节和第三节 3.1 记录的问题会从根上解决，不需要再逐个 placement 打补丁。
+
 ## 五、AetherForge 全链路验证
 
 ### 5.1 客户端 socket 路径 bug
@@ -77,6 +81,7 @@ omlxc 内建的 `models reconcile` 命令看起来正是为解决这个问题设
 
 1. **`reload_daemon()` 是空壳** — 直接返回缓存的 `self._config` 计数伪装成功，从未真正重新解析 config.toml。真正的热重载需要重建 `build_production_daemon()` 组装的整张对象图（adapters/catalog/planner/storage/bus/probe/target_factory/coordinator）并原子替换，不打断在途 job。当前唯一可靠方式是 `omlxc daemon restart --yes --confirm-impact`（会短暂打断在途推理）。这是架构级改动，未在本轮仓促实现。
 2. **探测层缺乏真正的取消机制** — 见第四节，JIT 加载 + 探测超时孤儿生成是当晚系统卡死的直接原因。
+3. **LM Studio `defaultContextLength.type = "max"`** — 根因定位到底后发现的全局配置项，所有 JIT 加载模型共享这一个设置。需要人工在 LM Studio 设置界面改成固定值，omlxc/config.toml 层面无法代管这一项。改完后第三、四节记录的问题会整体消失，是目前性价比最高的一项修复，只是执行动作不在这个仓库能触达的范围内。
 3. **两个后端不感知彼此内存占用** — LM Studio 和 oMLX App 各自独立做内存守护，互相不知道对方占了多少，在 128GB 统一内存机器上同时加载大模型仍有击穿风险。
 
 ## 八、验证
