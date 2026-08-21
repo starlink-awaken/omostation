@@ -4,7 +4,6 @@
 Default output: .omo/_delivery/m1-adversarial/latest.json (under --root).
 Does not push to origin/main. Cleans probe claim files after each gate.
 """
-
 from __future__ import annotations
 
 import json
@@ -13,10 +12,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from datetime import UTC, datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
-UTC = UTC
+UTC = timezone.utc
 
 
 def utc_now() -> str:
@@ -93,7 +92,9 @@ def main() -> int:
             pass
     b1 = run([*cli, "branch-claim", "--session", "adv-d2-a", "--branch", branch], root)
     b2 = run([*cli, "branch-claim", "--session", "adv-d2-b", "--branch", branch], root)
-    b3 = run([*cli, "branch-check", "--branch", branch, "--session", "adv-d2-b"], root)
+    b3 = run(
+        [*cli, "branch-check", "--branch", branch, "--session", "adv-d2-b"], root
+    )
     d2_ok = b1["returncode"] == 0 and b2["returncode"] != 0 and b3["returncode"] != 0
     gates.append(
         {
@@ -143,7 +144,9 @@ def main() -> int:
         main = run(["git", "rev-parse", "origin/main"], repo)
         head_s = (head["stdout"] or "").strip()
         main_s = (main["stdout"] or "").strip()
-        d3_ok = c1["returncode"] != 0 and (c2["returncode"] != 0 or head_s == main_s)
+        d3_ok = c1["returncode"] != 0 and (
+            c2["returncode"] != 0 or head_s == main_s
+        )
         gates.append(
             {
                 "gate": "D3",
@@ -223,8 +226,12 @@ def main() -> int:
             "failed": [g["gate"] for g in gates if not g["blocked"]],
         },
     }
-    (run_dir / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    (out_dir / "latest.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (run_dir / "report.json").write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    (out_dir / "latest.json").write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if all_blocked else 1
 
