@@ -116,12 +116,83 @@ def cmd_claim_check(args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def cmd_escape_digest(args: argparse.Namespace) -> int:
+    root = root_from_cwd()
+    if args.dir:
+        from pathlib import Path as _P
+
+        records: list = []
+        d = _P(args.dir)
+        if d.is_dir():
+            for path in sorted(d.glob("*.json")):
+                if path.parent.name == "tokens":
+                    continue
+                try:
+                    rec = json.loads(path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError):
+                    continue
+                if isinstance(rec, dict):
+                    records.append(rec)
+        digest = sd.digest_escape_records(records)
+    else:
+        digest = sd.digest_escape_records(sd.load_escape_records(root))
+    print(json.dumps(digest, indent=2, ensure_ascii=False))
+    return 0
+
+
+def cmd_escape_token_issue(args: argparse.Namespace) -> int:
+    root = root_from_cwd()
+    rec = sd.issue_human_escape_token(
+        root, escape_id=args.escape_id, ttl_seconds=args.ttl_seconds
+    )
+    print(json.dumps(rec, indent=2))
+    return 0
+
+
 def cmd_escape_check(args: argparse.Namespace) -> int:
     root = root_from_cwd()
     escape_id = args.escape_id or __import__("os").environ.get("SWARM_ESCAPE_ID")
-    ok, reason = sd.check_escape_hatch(root, flag=args.flag, escape_id=escape_id)
-    print(json.dumps({"ok": ok, "reason": reason, "flag": args.flag}, indent=2))
-    return 0 if ok else 1
+    fingerprints = None
+    if getattr(args, "failures_file", None):
+        path = Path(args.failures_file)
+        if path.is_file():
+            raw = path.read_text(encoding="utf-8").strip()
+            if raw:
+                try:
+                    payload = json.loads(raw)
+                except json.JSONDecodeError:
+                    payload = {}
+                if isinstance(payload, dict):
+                    fingerprints = list(payload.get("failures") or [])
+                elif isinstance(payload, list):
+                    fingerprints = payload
+    changed = list(getattr(args, "changed_path", None) or [])
+    token = getattr(args, "token", None) or __import__("os").environ.get("SWARM_ESCAPE_TOKEN")
+    verdict = sd.evaluate_escape(
+        root,
+        flag=args.flag,
+        escape_id=escape_id,
+        fingerprints=fingerprints,
+        changed_paths=changed or None,
+        human_token=token,
+    )
+    print(
+        json.dumps(
+            {
+                "ok": verdict.get("ok"),
+                "reason": verdict.get("reason"),
+                "flag": args.flag,
+                "decision": verdict.get("decision"),
+                "surface": verdict.get("surface"),
+                "check_id": verdict.get("check_id"),
+                "signature": verdict.get("signature"),
+                "would_block": verdict.get("would_block"),
+                "sink_required": verdict.get("sink_required"),
+            },
+            indent=2,
+        )
+    )
+    return 0 if verdict.get("ok") else 1
 
 
 def cmd_git_argv_check(args: argparse.Namespace) -> int:
@@ -381,7 +452,20 @@ def main(argv: list[str] | None = None) -> int:
         choices=["ci_local_skip", "no_verify_push", "no_verify_commit"],
     )
     s.add_argument("--escape-id", default=None)
+    s.add_argument("--failures-file", default=None, help="JSON from ci-local-fast --failures-json")
+    s.add_argument("--changed-path", action="append", default=[], help="Paths in this push/commit")
+    s.add_argument("--token", default=None, help="single-use human escape token")
     s.set_defaults(func=cmd_escape_check)
+
+    s = sub.add_parser("escape-digest", help="Cluster swarm-escape records (dry-run)")
+    s.add_argument("--dir", default=None, help="Override swarm-escape directory")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(func=cmd_escape_digest)
+
+    s = sub.add_parser("escape-token-issue", help="Issue a single-use human escape token")
+    s.add_argument("--escape-id", default="emergency-human-hotfix")
+    s.add_argument("--ttl-seconds", type=int, default=3600)
+    s.set_defaults(func=cmd_escape_token_issue)
 
     s = sub.add_parser("git-argv-check", help="D4: check git argv for --no-verify")
     s.add_argument("--escape-id", default=None)

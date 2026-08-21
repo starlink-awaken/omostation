@@ -58,7 +58,7 @@ except Exception:
   ) >/dev/null 2>&1 &
 fi
 
-# D4: --no-verify fail-closed (ADR-0220)
+# D4: --no-verify fail-closed (ADR-0220 / ADR-0422 observe-then-skip)
 if printf '%s\0' "$@" | grep -qz -- '--no-verify'; then
   CLI="$ROOT/bin/gac/swarm-discipline-cli.py"
   if [ ! -f "$CLI" ]; then
@@ -67,14 +67,25 @@ if printf '%s\0' "$@" | grep -qz -- '--no-verify'; then
   fi
   FLAG="no_verify_push"
   for a in "$@"; do [ "$a" = "commit" ] && { FLAG="no_verify_commit"; break; }; done
-  OUT="$(python3 "$CLI" escape-check --flag "$FLAG" 2>&1)" || RC=$?
+  _FAIL_JSON=""
+  if [ "$FLAG" = "no_verify_push" ] && [ -f "$ROOT/bin/gac/ci-local-fast.py" ]; then
+    _FAIL_JSON="$(mktemp "${TMPDIR:-/tmp}/swarm-git-failures.XXXXXX.json")"
+    python3 "$ROOT/bin/gac/ci-local-fast.py" --failures-json "$_FAIL_JSON" >/dev/null 2>&1 || true
+  fi
+  _esc_cmd=(python3 "$CLI" escape-check --flag "$FLAG")
+  if [ -n "$_FAIL_JSON" ] && [ -f "$_FAIL_JSON" ]; then
+    _esc_cmd+=(--failures-file "$_FAIL_JSON")
+  fi
+  OUT="$("${_esc_cmd[@]}" 2>&1)" || RC=$?
   RC="${RC:-0}"
+  rm -f "$_FAIL_JSON"
   printf '%s\n' "$OUT" | sed 's/^/[swarm-git] /' >&2
   if [ "$RC" -ne 0 ]; then
     cat >&2 <<EOF
-[swarm-git] ❌ --no-verify blocked (G-CONV.7 D4 / ADR-0220)
-   Set SWARM_ESCAPE_ID to an allowlisted id in
+[swarm-git] ❌ --no-verify blocked (G-CONV.7 D4 / ADR-0220 / ADR-0422)
+   Set SWARM_ESCAPE_ID to a permission class in
    .omo/_truth/registry/swarm-coordination.yaml::escape_hatch_exemptions
+   Agent path cannot use emergency-human-hotfix without SWARM_ESCAPE_TOKEN
 EOF
     exit 1
   fi

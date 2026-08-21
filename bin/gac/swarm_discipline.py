@@ -15,6 +15,7 @@ Gates:
 from __future__ import annotations
 
 import fcntl
+import hashlib
 import json
 import os
 import re
@@ -671,7 +672,11 @@ def check_shared_worktree_writes(
     return True, []
 
 
-# ── D4 escape hatch ──────────────────────────────────────────────────
+# ── D4 escape hatch (permission class + fingerprint debt) ────────────
+
+KNOWN_DEBT_REL = ".omo/_truth/registry/gate-known-debt.yaml"
+INNER_BASELINE_PRODUCERS = frozenset({"ruff", "layer-call-direction-check"})
+UNINIT_PREFIX = "uninitialized-submodule"
 
 
 def list_escape_exemptions(root: Path) -> list[dict[str, Any]]:
@@ -680,48 +685,504 @@ def list_escape_exemptions(root: Path) -> list[dict[str, Any]]:
     return [x for x in items if isinstance(x, dict) and x.get("active", True)]
 
 
-def check_escape_hatch(
+def fingerprint_key(fp: dict[str, Any]) -> str:
+    return f"{fp.get('surface') or ''}|{fp.get('check_id') or ''}|{fp.get('signature') or ''}"
+
+
+def is_uninitialized_submodule(fp: dict[str, Any]) -> bool:
+    cid = str(fp.get("check_id") or "")
+    kind = str(fp.get("kind") or "")
+    return kind == UNINIT_PREFIX or cid.startswith(f"{UNINIT_PREFIX}:") or cid.startswith(UNINIT_PREFIX)
+
+
+def class_allows_fingerprint(item: dict[str, Any], fp: dict[str, Any]) -> bool:
+    if str(fp.get("kind") or "") == "inner-baseline":
+        return False
+    producer = str(fp.get("producer") or fp.get("check_id") or "")
+    if producer in INNER_BASELINE_PRODUCERS:
+        return False
+    patterns = [str(p) for p in (item.get("fingerprint_allow") or [])]
+    if not patterns or patterns == ["*"]:
+        return True
+    cid = str(fp.get("check_id") or "")
+    for pattern in patterns:
+        if pattern == "*":
+            return True
+        if pattern.endswith(":*") and cid.startswith(pattern[:-1]):
+            return True
+        if cid == pattern or cid.startswith(pattern.rstrip("*")):
+            return True
+    return False
+
+
+def fingerprint_touches_diff(fp: dict[str, Any], changed_paths: list[str] | None) -> bool:
+    """True when the failure names a path in this push/commit; global checks are a touch."""
+    if not changed_paths:
+        return True
+    blob = " ".join(
+        str(fp.get(k) or "") for k in ("check_id", "signature", "path", "producer", "output_excerpt")
+    )
+    for path in changed_paths:
+        rel = path.replace("\\", "/").lstrip("./")
+        if rel and rel in blob:
+            return True
+    return False
+
+
+def _parse_iso(value: str) -> datetime | None:
+    raw = (value or "").strip()
+    if not raw:
+        return None
+    try:
+        if raw.endswith("Z"):
+            raw = raw[:-1] + "+00:00"
+        if "T" not in raw and len(raw) == 10:
+            raw = raw + "T00:00:00+00:00"
+        dt = datetime.fromisoformat(raw)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=UTC)
+        return dt
+    except ValueError:
+        return None
+
+
+def load_known_debt(root: Path) -> list[dict[str, Any]]:
+    path = root / KNOWN_DEBT_REL
+    if not path.is_file():
+        return []
+    try:
+        import yaml
+
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return []
+    if not isinstance(data, dict):
+        return []
+    entries = data.get("entries") or []
+    return [e for e in entries if isinstance(e, dict)]
+
+
+def known_debt_active(entries: list[dict[str, Any]], key: str, *, now: datetime) -> bool:
+    for entry in entries:
+        if not entry.get("active", True):
+            continue
+        fp = entry.get("fingerprint") or fingerprint_key(entry)
+        if fp != key:
+            continue
+        expires = _parse_iso(str(entry.get("expires_at") or ""))
+        if expires is not None and now >= expires:
+            continue
+        return True
+    return False
+
+
+def resolve_escape_exemption(
+    root: Path,
+    escape_id: str,
+    *,
+    now: datetime | None = None,
+) -> dict[str, Any] | None:
+    now = now or _utc_now()
+    items = load_registry(root).get("escape_hatch_exemptions") or []
+    by_id = {str(x.get("id")): x for x in items if isinstance(x, dict) and x.get("id")}
+    item = by_id.get(escape_id)
+    if not item or not item.get("active", True):
+        return None
+    alias_expires = item.get("alias_expires")
+    if alias_expires:
+        exp = _parse_iso(str(alias_expires))
+        if exp is not None and now >= exp:
+            return None
+    requested = dict(item)
+    requested["requested_id"] = escape_id
+    alias_of = item.get("alias_of")
+    if alias_of:
+        parent = by_id.get(str(alias_of))
+        if not parent or not parent.get("active", True):
+            return None
+        merged = dict(parent)
+        merged["requested_id"] = escape_id
+        merged["deprecated_alias"] = True
+        merged["alias_of"] = alias_of
+        return merged
+    requested["deprecated_alias"] = False
+    return requested
+
+
+def skip_policy_config(root: Path) -> dict[str, Any]:
+    reg = load_registry(root)
+    cfg = reg.get("escape_solidification") or {}
+    return cfg if isinstance(cfg, dict) else {}
+
+
+def policy_mode(root: Path, *, now: datetime | None = None) -> str:
+    now = now or _utc_now()
+    cfg = skip_policy_config(root)
+    mode = str(cfg.get("mode") or "shadow").strip().lower()
+    if mode not in {"shadow", "warning", "fail"}:
+        mode = "shadow"
+    return mode
+
+
+def shadow_ended(root: Path, *, now: datetime | None = None) -> bool:
+    now = now or _utc_now()
+    cfg = skip_policy_config(root)
+    end = _parse_iso(str(cfg.get("shadow_end") or ""))
+    if end is None:
+        return False
+    return now >= end
+
+
+def overheat_signal(
+    records: list[dict[str, Any]],
+    key: str,
+    *,
+    now: datetime | None = None,
+    threshold: int = 3,
+    window_days: int = 7,
+    shadow_ended_flag: bool = False,
+    escape_id: str | None = None,
+    spray_quota: int = 8,
+) -> dict[str, Any]:
+    """Cluster skip records. sink_required only after shadow-end."""
+    now = now or _utc_now()
+    window_start = now - timedelta(days=window_days)
+    matched = 0
+    class_keys: set[str] = set()
+    for rec in records:
+        ts = _parse_iso(str(rec.get("ts") or ""))
+        if ts is None or ts < window_start:
+            continue
+        rec_key = rec.get("fingerprint_key") or fingerprint_key(
+            {
+                "surface": rec.get("surface"),
+                "check_id": rec.get("check_id"),
+                "signature": rec.get("signature"),
+            }
+        )
+        if rec_key == key:
+            matched += 1
+        if escape_id and rec.get("escape_id") == escape_id and rec_key:
+            class_keys.add(str(rec_key))
+    overheat = matched >= threshold
+    spray = bool(escape_id) and len(class_keys) >= spray_quota
+    sink_required = shadow_ended_flag and (overheat or spray)
+    return {
+        "count": matched,
+        "overheat": overheat,
+        "spray": spray,
+        "distinct_class_fingerprints": len(class_keys),
+        "sink_required": sink_required,
+        "threshold": threshold,
+        "window_days": window_days,
+    }
+
+
+def load_escape_records(root: Path) -> list[dict[str, Any]]:
+    log_dir = delivery_path(root, "escape_log_dir", ".omo/_delivery/swarm-escape")
+    if not log_dir.is_dir():
+        return []
+    out: list[dict[str, Any]] = []
+    for path in sorted(log_dir.glob("*.json")):
+        try:
+            rec = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(rec, dict):
+            rec["_path"] = str(path)
+            out.append(rec)
+    return out
+
+
+def digest_escape_records(records: list[dict[str, Any]]) -> dict[str, Any]:
+    by_id: dict[str, int] = {}
+    by_fp: dict[str, int] = {}
+    missing_fp = 0
+    for rec in records:
+        eid = str(rec.get("escape_id") or "unknown")
+        by_id[eid] = by_id.get(eid, 0) + 1
+        key = rec.get("fingerprint_key") or fingerprint_key(rec)
+        if not rec.get("check_id") and not rec.get("fingerprints") and key == "||":
+            missing_fp += 1
+            continue
+        if key and key != "||":
+            by_fp[key] = by_fp.get(key, 0) + 1
+    return {
+        "total": len(records),
+        "by_escape_id": dict(sorted(by_id.items(), key=lambda kv: (-kv[1], kv[0]))),
+        "by_fingerprint": dict(sorted(by_fp.items(), key=lambda kv: (-kv[1], kv[0]))),
+        "missing_fingerprint": missing_fp,
+        "mutated_allowlist": False,
+    }
+
+
+def consume_human_escape_token(
+    root: Path,
+    token: str | None,
+    escape_id: str,
+    *,
+    now: datetime | None = None,
+) -> tuple[bool, str]:
+    if not token:
+        return False, "missing_token"
+    now = now or _utc_now()
+    log_dir = delivery_path(root, "escape_log_dir", ".omo/_delivery/swarm-escape")
+    path = log_dir / "tokens" / f"{token}.json"
+    if not path.is_file():
+        return False, "unknown_token"
+    try:
+        rec = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False, "invalid_token"
+    if rec.get("used"):
+        return False, "token_consumed"
+    if rec.get("escape_id") not in {escape_id, "emergency-human-hotfix"}:
+        return False, "token_escape_mismatch"
+    exp = _parse_iso(str(rec.get("expires_at") or ""))
+    if exp is not None and now >= exp:
+        return False, "token_expired"
+    rec["used"] = True
+    rec["used_at"] = _utc_iso(now)
+    path.write_text(json.dumps(rec, indent=2) + "\n", encoding="utf-8")
+    return True, "token_ok"
+
+
+def issue_human_escape_token(
+    root: Path,
+    *,
+    escape_id: str = "emergency-human-hotfix",
+    ttl_seconds: int = 3600,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    now = now or _utc_now()
+    token = hashlib.sha256(f"{escape_id}:{_utc_iso(now)}:{os.urandom(8).hex()}".encode()).hexdigest()[:24]
+    log_dir = delivery_path(root, "escape_log_dir", ".omo/_delivery/swarm-escape")
+    token_dir = log_dir / "tokens"
+    token_dir.mkdir(parents=True, exist_ok=True)
+    rec = {
+        "token": token,
+        "escape_id": escape_id,
+        "issued_at": _utc_iso(now),
+        "expires_at": _utc_iso(now + timedelta(seconds=ttl_seconds)),
+        "used": False,
+    }
+    (token_dir / f"{token}.json").write_text(json.dumps(rec, indent=2) + "\n", encoding="utf-8")
+    return rec
+
+
+def _write_escape_record(root: Path, rec: dict[str, Any], escape_id: str, now: datetime) -> Path:
+    log_dir = delivery_path(root, "escape_log_dir", ".omo/_delivery/swarm-escape")
+    log_dir.mkdir(parents=True, exist_ok=True)
+    path = log_dir / f"{now.strftime('%Y%m%dT%H%M%SZ')}-{escape_id}.json"
+    path.write_text(json.dumps(rec, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def evaluate_escape(
     root: Path,
     *,
     flag: str,
     escape_id: str | None,
-) -> tuple[bool, str]:
-    """D4: flag in {ci_local_skip, no_verify_push, no_verify_commit} needs allowlist id."""
+    fingerprints: list[dict[str, Any]] | None = None,
+    changed_paths: list[str] | None = None,
+    agent_id: str | None = None,
+    human_token: str | None = None,
+    now: datetime | None = None,
+    write_record: bool = True,
+    extra_records: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Permission-class + fingerprint skip decision.
+
+    ``ok`` is what the hook should use: False only for fail-closed denies.
+    In ``mode=shadow``, a would-block still has ok=True (logged, not exiting 1),
+    except human-ID and class mismatch which deny immediately.
+    """
+    now = now or _utc_now()
     flag = flag.strip().lower().replace("-", "_")
+    agent_id = agent_id if agent_id is not None else (os.environ.get("AGENT_ID") or "")
+    fps = [fp for fp in (fingerprints or []) if isinstance(fp, dict)]
+    primary = fps[0] if fps else {
+        "surface": "unspecified",
+        "check_id": "unspecified",
+        "signature": "none",
+        "kind": "unspecified",
+    }
+    result: dict[str, Any] = {
+        "ok": False,
+        "decision": "deny",
+        "reason": "",
+        "flag": flag,
+        "escape_id": escape_id,
+        "resolved_id": escape_id,
+        "surface": primary.get("surface") or "unspecified",
+        "check_id": primary.get("check_id") or "unspecified",
+        "signature": primary.get("signature") or "none",
+        "fingerprints": fps,
+        "would_block": False,
+        "sink_required": False,
+        "mode": policy_mode(root, now=now),
+    }
     if flag not in {"ci_local_skip", "no_verify_push", "no_verify_commit"}:
-        return False, f"unknown escape flag: {flag}"
+        result["reason"] = f"unknown escape flag: {flag}"
+        return result
     if not escape_id:
         emit_conflict_event(
             root,
             "escape_hatch_abuse",
             {"flag": flag, "reason": "missing_escape_id"},
         )
-        return False, f"{flag} requires SWARM_ESCAPE_ID / --escape-id from allowlist"
-    for item in list_escape_exemptions(root):
-        if item.get("id") != escape_id:
-            continue
-        allow = [str(a).lower().replace("-", "_") for a in (item.get("allow") or [])]
-        if flag in allow:
-            # record legitimate use
-            log_dir = delivery_path(root, "escape_log_dir", ".omo/_delivery/swarm-escape")
-            log_dir.mkdir(parents=True, exist_ok=True)
-            rec = {
-                "ts": _utc_iso(),
-                "flag": flag,
-                "escape_id": escape_id,
-                "reason": item.get("reason"),
-            }
-            (log_dir / f"{_utc_now().strftime('%Y%m%dT%H%M%SZ')}-{escape_id}.json").write_text(
-                json.dumps(rec, indent=2) + "\n", encoding="utf-8"
+        result["reason"] = f"{flag} requires SWARM_ESCAPE_ID / --escape-id from allowlist"
+        return result
+    item = resolve_escape_exemption(root, escape_id, now=now)
+    if item is None:
+        emit_conflict_event(
+            root,
+            "escape_hatch_abuse",
+            {"flag": flag, "escape_id": escape_id, "reason": "unknown_id"},
+        )
+        result["reason"] = f"escape_id={escape_id} not in allowlist"
+        return result
+    resolved_id = str(item.get("id") or escape_id)
+    result["resolved_id"] = resolved_id
+    allow = [str(a).lower().replace("-", "_") for a in (item.get("allow") or [])]
+    if flag not in allow:
+        result["reason"] = f"escape_id={escape_id} does not allow {flag}"
+        return result
+    surfaces = [str(s) for s in (item.get("surfaces") or [])]
+    if surfaces and "*" not in surfaces and fps:
+        for fp in fps:
+            surf = str(fp.get("surface") or "")
+            if surf and surf not in surfaces and surf != "unspecified":
+                result["reason"] = f"class {resolved_id} does not allow surface={surf}"
+                return result
+
+    token_ok = False
+    if item.get("requires_human") and agent_id:
+        token_ok, token_reason = consume_human_escape_token(
+            root, human_token, escape_id, now=now
+        )
+        if not token_ok:
+            result["reason"] = (
+                f"emergency-human-hotfix denied on agent path (AGENT_ID={agent_id}): {token_reason}"
             )
-            return True, f"exempt:{escape_id}"
-        return False, f"escape_id={escape_id} does not allow {flag}"
-    emit_conflict_event(
+            emit_conflict_event(
+                root,
+                "escape_hatch_abuse",
+                {"flag": flag, "escape_id": escape_id, "reason": "requires_human"},
+            )
+            return result
+
+    mode = result["mode"]
+    ended = shadow_ended(root, now=now)
+    cfg = skip_policy_config(root)
+    threshold = int(cfg.get("overheat_threshold") or 3)
+    window_days = int(cfg.get("overheat_window_days") or 7)
+    spray_quota = int(cfg.get("class_spray_quota") or 8)
+    debt = load_known_debt(root)
+    records = list(extra_records or []) + load_escape_records(root)
+
+    block_reasons: list[str] = []
+    for fp in fps:
+        if not class_allows_fingerprint(item, fp):
+            result["reason"] = (
+                f"class {resolved_id} cannot skip fingerprint {fingerprint_key(fp)}"
+            )
+            return result
+        key = fingerprint_key(fp)
+        if known_debt_active(debt, key, now=now):
+            continue
+        if fingerprint_touches_diff(fp, changed_paths):
+            block_reasons.append(f"new_or_global:{key}")
+        heat = overheat_signal(
+            records,
+            key,
+            now=now,
+            threshold=threshold,
+            window_days=window_days,
+            shadow_ended_flag=ended,
+            escape_id=resolved_id,
+            spray_quota=spray_quota,
+        )
+        if heat["sink_required"]:
+            result["sink_required"] = True
+            block_reasons.append(f"overheat:{key}")
+
+    rec = {
+        "ts": _utc_iso(now),
+        "flag": flag,
+        "escape_id": escape_id,
+        "resolved_id": resolved_id,
+        "reason": item.get("reason"),
+        "surface": result["surface"],
+        "check_id": result["check_id"],
+        "signature": result["signature"],
+        "fingerprint_key": fingerprint_key(primary),
+        "fingerprints": fps,
+        "agent_id": agent_id or None,
+        "run_id": os.environ.get("AGENT_WORKFLOW_RUN_ID") or None,
+        "decision": "allow",
+        "mode": mode,
+        "would_block": False,
+        "deprecated_alias": bool(item.get("deprecated_alias")),
+        "token_used": token_ok,
+    }
+
+    if block_reasons:
+        rec["block_reasons"] = block_reasons
+        rec["would_block"] = True
+        rec["decision"] = "would_block"
+        result["would_block"] = True
+        result["reason"] = ";".join(block_reasons)
+        if mode == "fail" or (ended and mode != "shadow"):
+            rec["decision"] = "deny"
+            if write_record:
+                _write_escape_record(root, rec, escape_id, now)
+            result["decision"] = "deny"
+            result["ok"] = False
+            return result
+        # shadow (and warning): log would-block, hook proceeds
+        rec["decision"] = "would_block"
+        if write_record:
+            _write_escape_record(root, rec, escape_id, now)
+        result["decision"] = "would_block"
+        result["ok"] = True
+        result["reason"] = f"would_block:{';'.join(block_reasons)}"
+        return result
+
+    rec["decision"] = "allow"
+    if write_record:
+        _write_escape_record(root, rec, escape_id, now)
+    result["ok"] = True
+    result["decision"] = "allow"
+    result["reason"] = f"exempt:{resolved_id}"
+    return result
+
+
+def check_escape_hatch(
+    root: Path,
+    *,
+    flag: str,
+    escape_id: str | None,
+    fingerprints: list[dict[str, Any]] | None = None,
+    changed_paths: list[str] | None = None,
+    agent_id: str | None = None,
+    human_token: str | None = None,
+    now: datetime | None = None,
+    extra_records: list[dict[str, Any]] | None = None,
+) -> tuple[bool, str]:
+    """D4: flag in {ci_local_skip, no_verify_push, no_verify_commit} needs allowlist id."""
+    verdict = evaluate_escape(
         root,
-        "escape_hatch_abuse",
-        {"flag": flag, "escape_id": escape_id, "reason": "unknown_id"},
+        flag=flag,
+        escape_id=escape_id,
+        fingerprints=fingerprints,
+        changed_paths=changed_paths,
+        agent_id=agent_id,
+        human_token=human_token,
+        now=now,
+        extra_records=extra_records,
     )
-    return False, f"escape_id={escape_id} not in allowlist"
+    return bool(verdict["ok"]), str(verdict["reason"])
 
 
 def argv_has_no_verify(argv: list[str]) -> bool:

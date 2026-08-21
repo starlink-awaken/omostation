@@ -10,6 +10,8 @@ blocking diagnostics beyond the reviewed baseline.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import io
 import json
 import os
 import subprocess
@@ -91,18 +93,64 @@ def run_check(check: Check, *, cwd: Path, output: TextIO) -> int:
     return proc.wait()
 
 
-def run_suite(checks: tuple[Check, ...], *, cwd: Path, output: TextIO) -> int:
+UNINIT_MARKERS = (
+    "submodule not initialized",
+    "子模块未初始化",
+    "git submodule update --init",
+    "partial worktree",
+)
+INNER_BASELINE_KEYS = frozenset({"ruff"})
+
+
+def classify_preflight_failure(check_key: str, output: str) -> dict[str, Any]:
+    """Map a ci-local-fast producer failure to a skip-layer fingerprint."""
+    text = output or ""
+    lowered = text.lower()
+    producer = check_key
+    if producer in INNER_BASELINE_KEYS:
+        kind = "inner-baseline"
+        check_id = producer
+    elif any(marker.lower() in lowered for marker in UNINIT_MARKERS):
+        kind = "uninitialized-submodule"
+        check_id = f"uninitialized-submodule:{producer}"
+    else:
+        kind = "preflight"
+        check_id = producer
+    excerpt = " ".join(text.split())[:240]
+    signature = hashlib.sha256(f"{producer}\n{excerpt}".encode("utf-8")).hexdigest()[:16]
+    return {
+        "surface": "ci-local-fast",
+        "check_id": check_id,
+        "signature": signature,
+        "kind": kind,
+        "producer": producer,
+        "output_excerpt": excerpt,
+    }
+
+
+def run_suite(
+    checks: tuple[Check, ...],
+    *,
+    cwd: Path,
+    output: TextIO,
+    failure_sink: list[dict[str, Any]] | None = None,
+) -> int:
     """Run all checks so one failure cannot hide evidence from later checks."""
 
     failures: list[tuple[str, int]] = []
     for check in checks:
-        returncode = run_check(check, cwd=cwd, output=output)
+        buf = io.StringIO()
+        returncode = run_check(check, cwd=cwd, output=buf)
+        text = buf.getvalue()
+        output.write(text)
         output.write("\n")
         if returncode == 0:
             continue
         if check.blocking:
             failures.append((check.key, returncode))
             output.write(f"❌ {check.key}: exit {returncode}\n\n")
+            if failure_sink is not None:
+                failure_sink.append(classify_preflight_failure(check.key, text))
         else:
             output.write(f"⚠️ {check.key}: DEBT/ADVISORY exit {returncode}; 不计为通过，也不阻断本地提交\n\n")
 
@@ -313,6 +361,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--ruff-gate", action="store_true")
     parser.add_argument("--ruff-debt", action="store_true")
     parser.add_argument("--html-entities", action="store_true")
+    parser.add_argument(
+        "--failures-json",
+        default="",
+        help="Write skip-layer fingerprints for blocking failures to this path",
+    )
     args = parser.parse_args(argv)
     if args.ruff_gate:
         return run_ruff_gate()
@@ -324,7 +377,12 @@ def main(argv: list[str] | None = None) -> int:
     print("════════════════════════════════════════════════════")
     print("  ci-local-fast — 本地 CI 预检（真实退出码）")
     print("════════════════════════════════════════════════════")
-    return run_suite(build_checks(), cwd=WORKSPACE, output=sys.stdout)
+    failure_sink: list[dict[str, Any]] = []
+    rc = run_suite(build_checks(), cwd=WORKSPACE, output=sys.stdout, failure_sink=failure_sink)
+    if args.failures_json:
+        payload = {"ok": rc == 0, "failures": failure_sink}
+        Path(args.failures_json).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return rc
 
 
 if __name__ == "__main__":
