@@ -212,6 +212,9 @@ INSTRUCTION_BINDING_KEYS = frozenset(
 )
 SPEC_REF_PREFIX = "repo://"
 SPEC_ROOT = PurePosixPath("docs/superpowers/specs")
+INSTRUCTION_PACK_REF = "repo://docs/operations/blueprint-agent-instruction-pack-v1.md"
+INSTRUCTION_PACK_VERSION = "blueprint-agent-instruction-pack/v1"
+INSTRUCTION_PACK_PROFILE = "executor"
 SEMVER_RE = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
     r"(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
@@ -814,6 +817,23 @@ def _file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def resolve_instruction_binding(*, workspace: Path = WS) -> dict[str, str]:
+    """Measure the one canonical Instruction Pack without trusting a projection."""
+    relative_ref = INSTRUCTION_PACK_REF.removeprefix(SPEC_REF_PREFIX)
+    root = workspace.resolve()
+    candidate = (root / relative_ref).resolve()
+    if not candidate.is_relative_to(root):
+        raise SpecBindingContractError("INSTRUCTION_PACK_REF_INVALID: resolved path escapes workspace")
+    if not candidate.is_file():
+        raise SpecBindingContractError(f"INSTRUCTION_PACK_MISSING: {relative_ref}")
+    return {
+        "instruction_ref": INSTRUCTION_PACK_REF,
+        "instruction_version": INSTRUCTION_PACK_VERSION,
+        "content_digest": f"sha256:{_file_sha256(candidate)}",
+        "instruction_profile": INSTRUCTION_PACK_PROFILE,
+    }
+
+
 def validate_accepted_specification(
     bet: dict,
     *,
@@ -911,7 +931,11 @@ def _work_packet_compiler(workspace: Path) -> tuple[Any, Any]:
     return canonicalize, compute_packet_hash
 
 
-def _work_packet_from_bet(bet: dict[str, Any], binding: dict[str, str]) -> dict[str, Any]:
+def _work_packet_from_bet(
+    bet: dict[str, Any],
+    binding: dict[str, str],
+    instruction_binding: dict[str, str],
+) -> dict[str, Any]:
     """Project one ledger BET into the existing ECOS WorkPacket v2 schema."""
     bet_id = str(bet["id"])
     risk = str(bet.get("risk_level") or "L1")
@@ -925,6 +949,7 @@ def _work_packet_from_bet(bet: dict[str, Any], binding: dict[str, str]) -> dict[
         {str(item).strip().strip("/") for item in bet.get("write_surfaces") or [] if str(item).strip()}
     )
     spec_surface = binding["spec_ref"].removeprefix(SPEC_REF_PREFIX)
+    instruction_surface = instruction_binding["instruction_ref"].removeprefix(SPEC_REF_PREFIX)
     return {
         "packet_id": f"WP-{bet_id}",
         "schema_version": "work-packet/v2",
@@ -941,7 +966,11 @@ def _work_packet_from_bet(bet: dict[str, Any], binding: dict[str, str]) -> dict[
             "risk_level": risk_level,
         },
         "scope": {
-            "read_surfaces": ["docs/plans/3y-bet-ledger.yaml", spec_surface],
+            "read_surfaces": [
+                "docs/plans/3y-bet-ledger.yaml",
+                spec_surface,
+                instruction_surface,
+            ],
             "write_surfaces": write_surfaces,
             "non_goals": [str(item) for item in bet.get("non_goals") or []],
         },
@@ -969,6 +998,7 @@ def _work_packet_from_bet(bet: dict[str, Any], binding: dict[str, str]) -> dict[
             "action": "stop_and_escalate",
         },
         "spec_binding": binding,
+        "instruction_binding": instruction_binding,
     }
 
 
@@ -988,14 +1018,16 @@ def prepare_bet_execution(
     binding, errors = validate_accepted_specification(bet, workspace=workspace)
     if errors or binding is None:
         raise SpecBindingContractError("; ".join(errors or ["SPEC_BINDING_INVALID"]))
+    instruction_binding = resolve_instruction_binding(workspace=workspace)
     canonicalize, compute_packet_hash = _work_packet_compiler(workspace)
-    packet = _work_packet_from_bet(bet, binding)
+    packet = _work_packet_from_bet(bet, binding, instruction_binding)
     try:
         packet_hash = compute_packet_hash(canonicalize(packet))
     except ValueError as exc:
         raise SpecBindingContractError(f"WORK_PACKET_INVALID: {exc}") from exc
     return {
         "spec_binding": binding,
+        "instruction_binding": instruction_binding,
         "work_packet": packet,
         "work_packet_hash": packet_hash,
     }
