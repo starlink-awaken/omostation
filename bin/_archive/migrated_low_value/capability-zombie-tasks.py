@@ -31,7 +31,9 @@ def _load_capability_catalog(root: Path):
         return None
     # 把 agora src 加入 sys.path, 使 get() 内部 from agora.mcp import bos_metrics 可解析
     sys.path.insert(0, str(agora_src))
-    spec = importlib.util.spec_from_file_location("agora_capability_catalog_projection", catalog_path)
+    spec = importlib.util.spec_from_file_location(
+        "agora_capability_catalog_projection", catalog_path
+    )
     if spec is None or spec.loader is None:
         return None
     module = importlib.util.module_from_spec(spec)
@@ -79,27 +81,15 @@ def _create_omo_task(root: Path, zombie: dict, stale_days: float) -> tuple[str, 
     title = _task_title(zombie)
     body = _task_body(zombie, stale_days)
     cmd = [
-        sys.executable,
-        "-m",
-        "omo.cli",
-        "task",
-        "create",
-        "--title",
-        title,
-        "--desc",
-        body,
-        "--priority",
-        "medium",
-        "--task-type",
-        "remediation",
-        "--risk-level",
-        "L1",
-        "--source-doc",
-        "bin/ssot/capability-zombie-tasks.py",
-        "--test-plan",
-        f"验证 {zombie['uri']} 不再被路由 (deprecated 拦截)",
-        "--deliverable",
-        f"{zombie['uri']} 处置决策记录",
+        sys.executable, "-m", "omo.cli", "task", "create",
+        "--title", title,
+        "--desc", body,
+        "--priority", "medium",
+        "--task-type", "remediation",
+        "--risk-level", "L1",
+        "--source-doc", "bin/ssot/capability-zombie-tasks.py",
+        "--test-plan", f"验证 {zombie['uri']} 不再被路由 (deprecated 拦截)",
+        "--deliverable", f"{zombie['uri']} 处置决策记录",
     ]
     # omo 是子模块: 把 projects/omo/src 加入 PYTHONPATH 使 omo.cli 可 import
     env = os.environ.copy()
@@ -107,12 +97,7 @@ def _create_omo_task(root: Path, zombie: dict, stale_days: float) -> tuple[str, 
     existing = env.get("PYTHONPATH")
     env["PYTHONPATH"] = f"{omo_src}{os.pathsep}{existing}" if existing else omo_src
     result = subprocess.run(
-        cmd,
-        cwd=root,
-        capture_output=True,
-        text=True,
-        timeout=60,
-        check=False,
+        cmd, cwd=root, capture_output=True, text=True, timeout=60, check=False,
         env=env,
     )
     task_id = ""
