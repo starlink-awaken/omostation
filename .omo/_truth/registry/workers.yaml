@@ -132,7 +132,8 @@ workers:
     class: external_agent_cli
     transports:
       cli_prompt:
-        command: '/usr/bin/python3 "{workspace_root}/bin/gac/pi-worker-adapter.py" run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" --packet-id "{packet_id}" --packet-hash "{packet_hash}" --instruction-binding-json "{instruction_binding_json}" --timeout-seconds 120 --prompt "{prompt}"'
+        command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/pi-worker-adapter.py" run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" --packet-id "{packet_id}" --packet-hash "{packet_hash}" --instruction-binding-json "{instruction_binding_json}" --timeout-seconds 120 --prompt "{prompt}"'
+        ack_command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/pi-worker-adapter.py" ack --workspace-root "{workspace_root}"'
     capabilities: [reasoning, verification]
     require_explicit_capabilities: true
     allowed_operation_level: L0
@@ -152,7 +153,8 @@ workers:
     class: external_agent_cli
     transports:
       cli_prompt:
-        command: '/usr/bin/python3 "{workspace_root}/bin/gac/omp-worker-adapter.py" run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" --packet-id "{packet_id}" --packet-hash "{packet_hash}" --instruction-binding-json "{instruction_binding_json}" --timeout-seconds 120 --prompt "{prompt}"'
+        command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/omp-worker-adapter.py" run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" --packet-id "{packet_id}" --packet-hash "{packet_hash}" --instruction-binding-json "{instruction_binding_json}" --timeout-seconds 120 --prompt "{prompt}"'
+        ack_command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/omp-worker-adapter.py" ack --workspace-root "{workspace_root}"'
     capabilities: [reasoning, verification]
     require_explicit_capabilities: true
     allowed_operation_level: L0
@@ -174,7 +176,8 @@ workers:
       cli_prompt:
         # The Blueprint controller supplies the immutable identity arguments.
         # A legacy direct launch intentionally exits non-zero on missing args.
-        command: '/usr/bin/python3 "{workspace_root}/bin/gac/orca-codex-supervisor.py" start'
+        command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/orca-codex-supervisor.py" start'
+        ack_command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/codex-worker-adapter.py" ack --workspace-root "{workspace_root}"'
     capabilities: [code_change, test_execution, verification]
     require_explicit_capabilities: true
     allowed_operation_level: L1
