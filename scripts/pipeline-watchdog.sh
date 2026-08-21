@@ -34,9 +34,26 @@ if ! check_http "http://127.0.0.1:8000/v1/models"; then
   fi
 fi
 
-# --- LM Studio / Ollama：只监控记录，不自动重启(避免打断用户正在用的GUI窗口) ---
+# --- LM Studio：只监控记录，不自动重启 ---
+# LM Studio 有已知的 JIT 加载失控上下文问题(见 docs/operations/2026-08-22-*),
+# 自动重启解决不了根因，反而可能在同一个坑里循环重启，宁可如实报警。
 check_http "http://127.0.0.1:1234/v1/models" || log "[ERROR] LM Studio (MBP) 端口 1234 无响应"
-check_http "http://127.0.0.1:11434/api/tags" || log "[ERROR] Ollama (MBP) 端口 11434 无响应"
+
+# --- Ollama (自愈：2026-08-22 单次会话内观察到两次崩溃，均干净重启即恢复，
+#     无 LM Studio 那类失控加载风险) ---
+if ! check_http "http://127.0.0.1:11434/api/tags"; then
+  log "[WARN] Ollama 端口 11434 无响应，尝试重启"
+  open -a Ollama 2>/dev/null
+  for i in 1 2 3 4 5 6; do
+    sleep 5
+    check_http "http://127.0.0.1:11434/api/tags" && break
+  done
+  if check_http "http://127.0.0.1:11434/api/tags"; then
+    log "[OK] Ollama 已恢复"
+  else
+    log "[ERROR] Ollama 重启后仍无响应，需要人工检查"
+  fi
+fi
 
 # --- omlxc daemon ---
 if ! "$OMLXC" daemon status --json 2>/dev/null | grep -q '"running"'; then
