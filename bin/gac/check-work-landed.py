@@ -105,42 +105,31 @@ def _sha_landed(sha: str) -> bool:
     P78 fix: SHA may exist in a submodule (submodule-pointer-close runs)
     or in the root repo. Try root first, then walk all submodules.
     """
-    # 1. Verify it's a valid object somewhere
-    vp = subprocess.run(
-        ["git", "rev-parse", "--verify", "--quiet", f"{sha}^{{commit}}"],
-        cwd=str(WORKSPACE),
-        capture_output=True,
-        text=True,
-        timeout=20,
-    )
-    if vp.returncode != 0:
-        return False
-    # 2. Check if ancestor of root origin/main
-    cp = subprocess.run(
-        ["git", "merge-base", "--is-ancestor", sha, "origin/main"],
-        cwd=str(WORKSPACE),
-        capture_output=True,
-        text=True,
-        timeout=20,
-    )
-    if cp.returncode == 0:
-        return True
-    # 3. Check submodules
+    candidates: list[Path] = [WORKSPACE]
     # 遍历项目目录本体，而不是其父目录（修复子模块落地校验误判）
-    subdirs = [p for p in WORKSPACE.glob("projects/*") if p.is_dir()]
-    for sub in subdirs:
-        try:
-            cp2 = subprocess.run(
-                ["git", "merge-base", "--is-ancestor", sha, "origin/main"],
-                cwd=str(sub),
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            if cp2.returncode == 0:
-                return True
-        except Exception:
+    candidates.extend(p for p in WORKSPACE.glob("projects/*") if p.is_dir())
+
+    for cwd in candidates:
+        # 1. Verify it's a valid object in this repo
+        vp = subprocess.run(
+            ["git", "rev-parse", "--verify", "--quiet", f"{sha}^{{commit}}"],
+            cwd=str(cwd),
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+        if vp.returncode != 0:
             continue
+        # 2. Check if ancestor of origin/main in the same repo
+        cp = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", sha, "origin/main"],
+            cwd=str(cwd),
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+        if cp.returncode == 0:
+            return True
     return False
 
 
@@ -252,19 +241,19 @@ def main(argv: list[str] | None = None) -> int:
                 age = now - ts
                 kind = "blocking" if age >= BLOCK_AFTER else "warn" if age >= WARN_AFTER else "ok"
                 if kind != "ok":
+                    # M2 baseline: 存量 blocking 降级 warn (grace 清单)
+                    run_id = run.get("run_id") or path.stem
+                    if kind == "blocking" and run_id in baseline:
+                        kind = "warn"
                     findings.append(
                         {
-                            "id": run.get("run_id"),
+                            "id": run_id,
                             "kind": f"no_evidence_ref:{kind}",
                             "age_days": age.total_seconds() / 86400,
                             "claimed_paths": [],
                             "missing_paths": [],
                         }
                     )
-                    # M2 baseline: 存量 blocking 降级 warn (grace 清单)
-                    run_id = run.get("run_id") or path.stem
-                    if kind == "blocking" and run_id in baseline:
-                        kind = "warn"
                     if kind == "blocking":
                         summary["blocking"] += 1
                     else:
@@ -283,19 +272,19 @@ def main(argv: list[str] | None = None) -> int:
         kind = "blocking" if age >= BLOCK_AFTER else "warn" if age >= WARN_AFTER else "ok"
         if kind == "ok":
             continue
+        # M2 baseline: 存量 blocking 降级 warn (grace 清单)
+        run_id = run.get("run_id") or path.stem
+        if kind == "blocking" and run_id in baseline:
+            kind = "warn"
         findings.append(
             {
-                "id": run.get("run_id") or path.stem,
+                "id": run_id,
                 "kind": f"missing_landing:{kind}",
                 "age_days": age.total_seconds() / 86400,
                 "claimed_refs": sorted(refs),
                 "unlanded_refs": sorted(unlanded),
             }
         )
-        # M2 baseline: 存量 blocking 降级 warn (grace 清单)
-        run_id = run.get("run_id") or path.stem
-        if kind == "blocking" and run_id in baseline:
-            kind = "warn"
         if kind == "blocking":
             summary["blocking"] += 1
         else:
