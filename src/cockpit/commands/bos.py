@@ -1,5 +1,6 @@
 """Cockpit BOS Commands — L3 入口层 BOS URI 集成"""
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -16,6 +17,29 @@ for _src in (
 
 ECOS_TOOLS = Path(__file__).parent.parent.parent.parent / "ecos" / "src" / "ecos" / "ssot" / "tools"
 MOF_WORKFLOW = str(ECOS_TOOLS / "mof-workflow.py")
+_CAPABILITY_RECEIPT_FIELDS = frozenset(
+    {
+        "schema",
+        "operation",
+        "status",
+        "capability_id",
+        "registry_digest",
+        "record_digest",
+        "selector_digest",
+        "admission_status",
+        "admission_decision_digest",
+        "health_status",
+        "health_evidence_digest",
+        "adapter_kind",
+        "adapter_target_digest",
+        "invocation_attempted",
+        "input_digest",
+        "result_digest",
+        "exit_code",
+        "error_code",
+        "error_detail_digest",
+    }
+)
 
 
 def cmd_bos_status(args):
@@ -552,22 +576,30 @@ def _load_capability_services() -> list:
 
 
 def _match_capability_service(services: list, key: str):
-    """Match by full URI, package tail, or substring."""
+    """Match only a full BOS URI or its canonical capability ID."""
     key = (key or "").strip()
     if not key:
         return None
+    if key.startswith("bos-service:"):
+        key = key.removeprefix("bos-service:")
+    if not key.startswith("bos://"):
+        return None
     for s in services:
         uri = str(getattr(s, "uri", "") or "")
-        package = str(getattr(s, "package", "") or "")
-        if key == uri or key == package:
-            return s
-        if key in uri or key in package:
-            return s
-        # allow media-crawler for bos://capability/media-crawler/crawl
-        tail = uri.rstrip("/").split("/")[-2:] if uri else []
-        if key in tail:
+        if key == uri:
             return s
     return None
+
+
+def _sanitize_capability_receipt(receipt: object, canonical_id: str) -> dict:
+    """Project an untrusted child result into the fixed public receipt schema."""
+    if not isinstance(receipt, dict) or receipt.get("schema") != "capability-invocation-receipt/v1":
+        raise ValueError("invalid receipt schema")
+    if receipt.get("operation") not in {None, "invoke"}:
+        raise ValueError("invalid receipt operation")
+    if receipt.get("capability_id") not in {None, canonical_id}:
+        raise ValueError("receipt capability mismatch")
+    return {key: receipt[key] for key in _CAPABILITY_RECEIPT_FIELDS if key in receipt}
 
 
 def cmd_bos_capability(args) -> int:
@@ -580,13 +612,11 @@ def cmd_bos_capability(args) -> int:
             services = _load_capability_services()
             data = []
             for s in services:
-                cmd = list(getattr(s, "command", None) or [])
-                cmd_hint = " ".join(cmd[:3]) + (" …" if len(cmd) > 3 else "") if cmd else "(no command)"
                 data.append(
                     {
                         "uri": getattr(s, "uri", "?"),
                         "description": getattr(s, "description", "") or "",
-                        "command": cmd_hint,
+                        "transport": getattr(s, "transport", "") or "",
                     }
                 )
             from cockpit.commands.base import render_command_result
@@ -595,7 +625,7 @@ def cmd_bos_capability(args) -> int:
                 title="BOS Capability 服务注册表大盘",
                 data=data,
                 output_format=output_format,
-                columns=["uri", "description", "command"],
+                columns=["uri", "description", "transport"],
             )
             return 0
         except Exception as e:  # defensive fallback
@@ -605,7 +635,7 @@ def cmd_bos_capability(args) -> int:
     if subcmd == "invoke":
         svc_id = getattr(args, "capability_service", None)
         if not svc_id:
-            print("用法: cockpit bos capability invoke <uri|name>")
+            print("用法: cockpit bos capability invoke <bos-uri> --input-json <file>")
             return 1
         try:
             services = _load_capability_services()
@@ -614,33 +644,49 @@ def cmd_bos_capability(args) -> int:
             return 1
         svc = _match_capability_service(services, svc_id)
         if svc is None:
-            print(f"  未找到 capability 服务: {svc_id}")
-            print("  用 `cockpit bos capability list` 查看可用 URI")
+            print("  未找到精确 capability URI；短名和子串调用已禁用")
+            print("  用 `cockpit bos capability list` 查看完整 URI")
             return 1
-        uri = getattr(svc, "uri", svc_id)
-        command = list(getattr(svc, "command", None) or [])
-        if not command:
-            print(f"  {uri}: 无 command 字段，无法进程内 invoke")
-            print("  该服务可能是 skill_host / static 类型，请用 Agent Skill 或上游 CLI")
-            return 2
-        extra = list(getattr(args, "capability_args", None) or [])
-        # If last command is bash -lc '...', append extra as shell suffix is unsafe;
-        # only append when command is a plain argv list without shell.
-        argv = command + extra if not (len(command) >= 2 and command[0] in {"bash", "sh"}) else command
-        print(f"  ▶ invoke {uri}")
-        print(f"    $ {' '.join(argv[:6])}{' …' if len(argv) > 6 else ''}")
+        input_json = getattr(args, "capability_input_json", None)
+        if input_json is None:
+            print("  缺少 --input-json；仅接受结构化输入文件")
+            return 1
+        uri = str(getattr(svc, "uri", "") or "")
+        canonical_id = "bos-service:" + uri
+        command = [
+            sys.executable,
+            str(_WORKSPACE / "bin" / "capability-sync.py"),
+            "invoke",
+            "--id",
+            canonical_id,
+            "--input-json",
+            str(input_json),
+        ]
         try:
-            result = subprocess.run(argv, check=False)
-        except FileNotFoundError as e:
-            print(f"  ❌ 命令不可用: {e}")
-            return 127
-        except OSError as e:
-            print(f"  ❌ 执行失败: {e}")
-            return 1
-        if result.returncode == 0:
-            print(f"  ✅ exit 0 · {uri}")
-        else:
-            print(f"  ⚠ exit {result.returncode} · {uri}")
+            result = subprocess.run(command, check=False, capture_output=True, text=True)
+        except OSError:
+            print(
+                json.dumps(
+                    {
+                        "schema": "capability-invocation-receipt/v1",
+                        "status": "rejected",
+                        "error_code": "CAPABILITY_GATEWAY_UNAVAILABLE",
+                        "invocation_attempted": False,
+                    },
+                    sort_keys=True,
+                )
+            )
+            return 5
+        try:
+            receipt = _sanitize_capability_receipt(json.loads(result.stdout), canonical_id)
+        except (json.JSONDecodeError, ValueError):
+            receipt = {
+                "schema": "capability-invocation-receipt/v1",
+                "status": "rejected",
+                "error_code": "CAPABILITY_GATEWAY_INVALID_RECEIPT",
+                "invocation_attempted": False,
+            }
+        print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
         return int(result.returncode)
 
     print("用法: cockpit bos capability {list|invoke <service_id>}")

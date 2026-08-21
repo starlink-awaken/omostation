@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import os
+from pathlib import Path
 
 
 def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type[argparse.ArgumentParser]) -> None:
@@ -597,16 +598,18 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     bos_capability_sub = bos_capability_p.add_subparsers(dest="capability_command")
     bos_capability_sub.add_parser("list", help="列出 toolbox 中的 capability 服务")
     bos_capability_invoke_p = bos_capability_sub.add_parser(
-        "invoke", help="调用 capability 服务（执行 BOS YAML command）"
+        "invoke", help="通过治理网关调用 exact native BOS capability"
     )
     bos_capability_invoke_p.add_argument(
         "capability_service",
-        help="URI 或短名，如 media-crawler / last30days-skill",
+        help="完整 BOS URI 或 canonical ID；不接受短名或子串",
     )
     bos_capability_invoke_p.add_argument(
-        "capability_args",
-        nargs=argparse.REMAINDER,
-        help="透传给目标 command 的额外参数（非 shell 命令时）",
+        "--input-json",
+        dest="capability_input_json",
+        type=Path,
+        required=True,
+        help="结构化输入 JSON 文件（上限由治理网关执行）",
     )
 
     # ── scenario ──────────────────────────────────────────────
