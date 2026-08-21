@@ -1,0 +1,58 @@
+{
+  "as_of": "2026-08-19T12:16:45Z",
+  "code": {
+    "omo_revision": "0c20d43cc2100a668867052dfd4e335c4921e0e6",
+    "root_revision": "2802692f314e02787fb82674cc28c0d95734f0b0"
+  },
+  "command": "PYTHONDONTWRITEBYTECODE=1 WORKSPACE_ROOT=<live-workspace> PYTHONPATH=<main-aligned-omo>/src python -m omo.cli external-resources engineering-delivery-shadow-observer --as-of 2026-08-19T12:16:45Z --json",
+  "exit_code": 0,
+  "input_snapshot": {
+    ".omo/_knowledge/workflow-mesh/engineering-delivery-decision-outcomes.jsonl": {
+      "bytes": 0,
+      "present": false,
+      "sha256": null
+    },
+    ".omo/_knowledge/workflow-mesh/engineering-delivery-mos-projections.jsonl": {
+      "bytes": 0,
+      "present": false,
+      "sha256": null
+    },
+    ".omo/_knowledge/workflow-mesh/events.jsonl": {
+      "bytes": 1338819,
+      "present": true,
+      "sha256": "dcec2f5ffb8b4e080c2917954249c37412f7b8643bed10a7a54f497d5286ca1f"
+    },
+    ".omo/_knowledge/workflow-mesh/outcome-feedback.jsonl": {
+      "bytes": 0,
+      "present": false,
+      "sha256": null
+    },
+    ".omo/state/agent-beliefs/index.yaml": {
+      "bytes": 3051884,
+      "present": true,
+      "sha256": "17b4bb2be3b88e11cf5bafbcbd3b32e96c8b8ed336c0de7693521cd6c555fd62"
+    }
+  },
+  "input_snapshot_stable": true,
+  "observed_at": "2026-08-21T21:38:59Z",
+  "query_only": true,
+  "result": {
+    "human_gate": "not_ready",
+    "qualifying_decision_outcomes": 0,
+    "scene_id": "engineering-delivery",
+    "schema": "engineering-delivery-shadow-observer/v1",
+    "status": "collecting",
+    "threshold": 20,
+    "tier": "shadow",
+    "value_indicator_policy": false,
+    "verdict": "FAIL",
+    "window": {
+      "end_exclusive": "2026-08-19T12:16:45Z",
+      "start": "2026-08-12T12:16:45Z"
+    }
+  },
+  "schema": "engineering-delivery-shadow-observer-receipt/v1",
+  "warnings": [
+    "OMO CLI reports its internal-interface deprecation warning; the observer command exited 0."
+  ]
+}
