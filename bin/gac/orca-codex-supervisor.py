@@ -59,6 +59,36 @@ def _validate_instruction_binding(
         raise ValueError("instruction_binding_rejected") from exc
 
 
+def _complete_worker_origin_ack(
+    *,
+    workspace_root: str,
+    workflow_run_id: str,
+    packet_id: str,
+    packet_hash: str,
+    instruction_binding: dict[str, Any],
+    binding_receipt: dict[str, str],
+) -> dict[str, str]:
+    contract_path = Path(__file__).resolve().parents[1] / "plan" / "bet-ledger.py"
+    spec = importlib.util.spec_from_file_location("_orca_codex_ack_contract", contract_path)
+    if spec is None or spec.loader is None:
+        raise ValueError("worker_ack_unavailable")
+    contract = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(contract)
+        return contract.complete_worker_origin_ack(
+            workspace=Path(workspace_root),
+            delivery_binding={
+                "run_id": workflow_run_id,
+                "packet_id": packet_id,
+                "packet_hash": packet_hash,
+                "instruction_binding": instruction_binding,
+            },
+            binding_receipt=binding_receipt,
+        )
+    except Exception as exc:  # noqa: BLE001 - worker-origin ACK fails closed.
+        raise ValueError("worker_ack_rejected") from exc
+
+
 def _subprocess_runner(command: Command, timeout_seconds: float) -> tuple[int, str, str]:
     try:
         completed = subprocess.run(
@@ -574,6 +604,18 @@ def start_supervised_codex(
         )
     except ValueError as exc:
         return _failure(binding=binding, stage="binding", reason=str(exc))
+    if binding_receipt.get("worker_ack_state") == "pending":
+        try:
+            binding_receipt = _complete_worker_origin_ack(
+                workspace_root=workspace_root,
+                workflow_run_id=workflow_run_id,
+                packet_id=packet_id,
+                packet_hash=packet_hash,
+                instruction_binding=instruction_binding or {},
+                binding_receipt=binding_receipt,
+            )
+        except ValueError as exc:
+            return _failure(binding=binding, stage="worker_ack", reason=str(exc))
     binding["instruction_digest"] = binding_receipt["instruction_digest"]
     if not _valid_identity(agent_id):
         return _failure(binding=binding, stage="input", reason="agent_id_invalid")

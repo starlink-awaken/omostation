@@ -1145,8 +1145,6 @@ def validate_worker_instruction_binding(
     mesh_snapshot = _load_durable_mesh_snapshot(root, run_id)
     mesh_worker = mesh_snapshot.get("worker") if mesh_snapshot is not None else None
     mesh_bound = isinstance(mesh_worker, dict)
-    if workflow_payload is not None and mesh_bound:
-        raise SpecBindingContractError("WORKER_BINDING_RUN_AMBIGUOUS")
     if workflow_payload is None and not mesh_bound:
         raise SpecBindingContractError("WORKER_BINDING_RUN_UNAVAILABLE")
 
@@ -1161,7 +1159,7 @@ def validate_worker_instruction_binding(
             raise SpecBindingContractError("WORKER_BINDING_RUN_INSTRUCTION_MISMATCH")
         if packet.get("instruction_binding") != instruction_binding:
             raise SpecBindingContractError("WORKER_BINDING_PACKET_INSTRUCTION_MISMATCH")
-    else:
+    if mesh_bound:
         assert isinstance(mesh_worker, dict)
         if (
             mesh_worker.get("packet_id") != packet_id
@@ -1169,6 +1167,8 @@ def validate_worker_instruction_binding(
             or mesh_worker.get("instruction_binding") != instruction_binding
         ):
             raise SpecBindingContractError("WORKER_BINDING_MESH_SNAPSHOT_MISMATCH")
+    if workflow_payload is None:
+        assert isinstance(mesh_worker, dict)
         if not packet_id.startswith("WP-BET-"):
             raise SpecBindingContractError("WORKER_BINDING_MESH_PACKET_ID_INVALID")
         bet_id = packet_id.removeprefix("WP-")
@@ -1197,11 +1197,21 @@ def validate_worker_instruction_binding(
         raise SpecBindingContractError("WORKER_BINDING_INSTRUCTION_SOURCE_DRIFT")
     if workflow_payload is not None:
         validate_work_packet_run(payload, [], workspace=root)
+    ack_state = "not_dispatched"
+    if mesh_bound:
+        decision = mesh_worker.get("ack_decision")
+        if decision is None:
+            ack_state = "pending"
+        elif decision in {"proceed", "stop"}:
+            ack_state = str(decision)
+        else:
+            raise SpecBindingContractError("WORKER_BINDING_MESH_ACK_STATE_INVALID")
     return {
         "run_id": run_id,
         "packet_id": packet_id,
         "packet_hash": packet_hash,
         "instruction_digest": instruction_binding["content_digest"],
+        "worker_ack_state": ack_state,
     }
 
 
@@ -1351,6 +1361,84 @@ def perform_authenticated_worker_ack(
         "instruction_digest": instruction_binding["content_digest"],
         "outcome": "acknowledged",
     }
+
+
+def complete_worker_origin_ack(
+    *,
+    workspace: Path,
+    delivery_binding: dict[str, Any],
+    binding_receipt: dict[str, str],
+) -> dict[str, str]:
+    """Consume a pending dispatch capability from inside the worker adapter.
+
+    The controller may place the one-time capability in the child environment,
+    but it must never invoke the ACK broker itself.  The admitted adapter calls
+    this boundary after it has received and validated the immutable delivery
+    identity and before it resolves or launches any provider.
+    """
+    if binding_receipt.get("worker_ack_state") != "pending":
+        return binding_receipt
+    raw_context = os.environ.get("OMO_WORKER_ACK_CONTEXT_JSON")
+    origin_proof = os.environ.get("OMO_WORKER_ACK_ORIGIN_PROOF")
+    if not raw_context:
+        raise SpecBindingContractError("WORKER_ACK_CONTEXT_REQUIRED")
+    try:
+        context = json.loads(raw_context)
+    except json.JSONDecodeError as exc:
+        raise SpecBindingContractError("WORKER_ACK_CONTEXT_INVALID") from exc
+    context_keys = {
+        "workflow_run_id",
+        "trace_id",
+        "dispatch_id",
+        "worker_id",
+        "step_run_id",
+        "admission_id",
+        "packet_id",
+        "packet_hash",
+        "instruction_binding",
+        "lease_seconds",
+        "omo_dir",
+    }
+    if not isinstance(context, dict) or set(context) != context_keys:
+        raise SpecBindingContractError("WORKER_ACK_CONTEXT_INVALID")
+    expected_binding = {
+        "run_id": context["workflow_run_id"],
+        "packet_id": context["packet_id"],
+        "packet_hash": context["packet_hash"],
+        "instruction_binding": context["instruction_binding"],
+    }
+    if delivery_binding != expected_binding:
+        raise SpecBindingContractError("WORKER_ACK_DELIVERY_MISMATCH")
+    try:
+        result = perform_authenticated_worker_ack(
+            workspace=workspace,
+            workflow_run_id=context["workflow_run_id"],
+            trace_id=context["trace_id"],
+            dispatch_id=context["dispatch_id"],
+            worker_id=context["worker_id"],
+            step_run_id=context["step_run_id"],
+            admission_id=context["admission_id"],
+            packet_id=context["packet_id"],
+            packet_hash=context["packet_hash"],
+            instruction_binding=context["instruction_binding"],
+            ack_decision="proceed",
+            lease_seconds=context["lease_seconds"],
+            omo_dir=context["omo_dir"],
+            origin_proof=origin_proof,
+        )
+    finally:
+        os.environ.pop("OMO_WORKER_ACK_CONTEXT_JSON", None)
+        os.environ.pop("OMO_WORKER_ACK_ORIGIN_PROOF", None)
+    refreshed = validate_worker_instruction_binding(
+        workspace=workspace,
+        run_id=context["workflow_run_id"],
+        packet_id=context["packet_id"],
+        packet_hash=context["packet_hash"],
+        instruction_binding=context["instruction_binding"],
+    )
+    if refreshed.get("worker_ack_state") != "proceed":
+        raise SpecBindingContractError("WORKER_ACK_NOT_DURABLE")
+    return {**refreshed, "ack_outcome": result["outcome"]}
 
 
 def cmd_lint(data: dict, args) -> int:

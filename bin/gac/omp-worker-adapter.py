@@ -81,28 +81,19 @@ def _validate_execution_binding(
         raise AdapterError("instruction_binding_rejected") from exc
 
 
-def _perform_authenticated_ack(args: argparse.Namespace) -> dict[str, str]:
+def _complete_worker_origin_ack(
+    *,
+    workspace_root: Path | str,
+    delivery_binding: dict[str, Any],
+    binding_receipt: dict[str, str],
+) -> dict[str, str]:
     try:
-        instruction_binding = json.loads(args.instruction_binding_json)
-        if not isinstance(instruction_binding, dict):
-            raise ValueError("instruction binding must be an object")
-        return _binding_contract().perform_authenticated_worker_ack(
-            workspace=Path(args.workspace_root),
-            workflow_run_id=args.workflow_run_id,
-            trace_id=args.trace_id,
-            dispatch_id=args.dispatch_id,
-            worker_id=args.worker_id,
-            step_run_id=args.step_run_id,
-            admission_id=args.admission_id,
-            packet_id=args.packet_id,
-            packet_hash=args.packet_hash,
-            instruction_binding=instruction_binding,
-            ack_decision=args.ack_decision,
-            lease_seconds=args.lease_seconds,
-            omo_dir=args.omo_dir,
-            origin_proof=os.environ.get("OMO_WORKER_ACK_ORIGIN_PROOF"),
+        return _binding_contract().complete_worker_origin_ack(
+            workspace=Path(workspace_root),
+            delivery_binding=delivery_binding,
+            binding_receipt=binding_receipt,
         )
-    except Exception as exc:  # noqa: BLE001 - authenticated ACK must fail closed.
+    except Exception as exc:  # noqa: BLE001 - worker-origin ACK fails closed.
         if isinstance(exc, AdapterError):
             raise
         raise AdapterError("worker_ack_rejected") from exc
@@ -590,6 +581,14 @@ def run_worker(
             "tools_enabled": False,
         }
     binding_receipt = _validate_execution_binding(workspace_root=workspace_root, delivery_binding=delivery_binding)
+    if binding_receipt.get("worker_ack_state") == "pending":
+        if workspace_root is None or delivery_binding is None:
+            raise AdapterError("worker_ack_rejected")
+        binding_receipt = _complete_worker_origin_ack(
+            workspace_root=workspace_root,
+            delivery_binding=delivery_binding,
+            binding_receipt=binding_receipt,
+        )
     home = (Path.home() if user_home is None else Path(user_home).expanduser()).resolve()
     receipt_file = validate_receipt_path(receipt_path, user_home=home) if receipt_path is not None else None
     config_root = validate_config_root(home)
@@ -731,30 +730,12 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--packet-id")
     run.add_argument("--packet-hash")
     run.add_argument("--instruction-binding-json")
-    ack = commands.add_parser("ack", help="validate and append one authenticated Mesh ACK")
-    ack.add_argument("--workspace-root", required=True)
-    ack.add_argument("workflow_run_id")
-    ack.add_argument("--trace-id", required=True)
-    ack.add_argument("--dispatch-id", required=True)
-    ack.add_argument("--worker", required=True, dest="worker_id")
-    ack.add_argument("--step-run-id", required=True)
-    ack.add_argument("--admission-id", required=True)
-    ack.add_argument("--packet-id", required=True)
-    ack.add_argument("--packet-hash", required=True)
-    ack.add_argument("--instruction-binding-json", required=True)
-    ack.add_argument("--ack-decision", required=True, choices=("proceed",))
-    ack.add_argument("--lease-seconds", required=True, type=int)
-    ack.add_argument("--omo-dir", required=True)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        if args.command == "ack":
-            result = _perform_authenticated_ack(args)
-            print(json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
-            return 0
         instruction_binding = json.loads(args.instruction_binding_json) if args.instruction_binding_json else None
         result = run_worker(
             prompt=args.prompt,
