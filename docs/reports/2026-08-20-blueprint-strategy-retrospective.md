@@ -706,15 +706,17 @@ Human Principal 已授权本轮按最优解处理工程、治理、PR、合并�
 
 ## 18. 2026-08-21 AC-05 capability 收敛增量
 
-> 证据截止：2026-08-21T11:17:03Z。本节记录 D5/AC-05 的新工程事实，并纠正 §17 中已经漂移的
+> 证据截止：2026-08-21T11:53:20Z。本节记录 D5/AC-05 的新工程事实，并纠正 §17 中已经漂移的
 > 台账状态；它不改变 Value 轴，也不授权绕过 Golden Slice 人类裁决。
 
 ### 18.1 状态纠正
 
-`origin/main` 上的 `BET-Y1Q3-T4-01` 当前已从 `blocked` 恢复为 `candidate`：T1-19 live canary 与
-`acp_stdio` 默认 transport 切换解除 AC-06 的前置依赖，但 AC-06 仍需最终验证，AC-11 仍需收尾。
-后续 Agent 必须以实时 ledger 为准：不得沿用 §17.6 或本节早期快照，不得重新打开第二个同目标
-BET，也不得因为 AC-05/T1-19 工程绿自行把原 BET 改成 `done`。Value 仍为 `NOT_PROVEN`。
+`origin/main` 上的 `BET-Y1Q3-T4-01` 已从 `blocked` 经 `candidate` 推进为 `in_progress`；根仓 PR #1827
+合并为 `3caf67080c7da8cf09c72bd29f37c6eb5ab3b5a9`，权威 run_ref 为
+`20260821T111433Z-bet-execution-967f03e6`。T1-19 live canary 与 `acp_stdio` 默认 transport 切换已解除
+AC-06 的前置依赖，但 ledger 仍明确保留 AC-06 最终验证与 AC-11 收尾。后续 Agent 必须以实时 ledger
+为准：不得沿用 §17.6 或本节早期快照，不得重新打开第二个同目标 BET，也不得因为 AC-05/T1-19
+工程绿自行把原 BET 改成 `done`。Value 仍为 `NOT_PROVEN`。
 
 ### 18.2 AC-05 的最小正确边界
 
@@ -805,7 +807,7 @@ D0 标签 `delivery/codex-ac05-instruction-binding-20260821` 仍保留，可用�
 
 - `tests/test_agent_workflow.py`：61 passed；
 - 真实持久化 worker identity/rehash/reconcile 定向用例：3 passed；
-- `make gac-local-gate`：46 checks ALL GREEN；
+- `make gac-local-gate`：47 checks ALL GREEN；
 - run `20260821T095209Z-bet-execution-c17c20ff` 的 workflow verify：2/2 PASS；
 - Ruff、`git diff --check` 与独立只读 reviewer：PASS。
 
