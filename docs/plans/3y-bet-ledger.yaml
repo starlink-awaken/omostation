@@ -6096,6 +6096,7 @@ bets:
   - docs/reports/2026-08-22-engineering-delivery-shadow-observer-receipt.json
   - .omo/_knowledge/retros/BET-Y1Q2-T7-01.md
   - .omo/tasks/planned/bet-y1q2-t7-01.yaml
+  - .omo/tasks/blocked/bet-y1q2-t7-01.yaml
   - bin/ssot/dogfood-collector.py
   - docs/operations/blueprint-agent-instruction-pack-v1.md
   - docs/SYSTEM-INDEX.md
