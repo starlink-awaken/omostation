@@ -29,3 +29,9 @@ date: 2026-08-21
 ## 教训
 
 台账 66 条全部 `ci_local_skip` 且 reason 抄自白名单，所以无法下沉。传感器必须记录失败身份，否则二阶回路是空的。
+
+## Follow-through (2026-08-22)
+
+- 过期 alias 拒绝理由点名 `partial-worktree` / `local-preflight-preexisting`
+- `make escape-digest` + hygiene-patrol 第 7 柱跑 `escape-digest.py --dry-run`（不改白名单、不从无 fingerprint 的历史 66 条编造 known-debt）
+- `escape-token-issue` 与 `escape-digest.py --dry-run` 写入 AGENTS.md 与 git-discipline
