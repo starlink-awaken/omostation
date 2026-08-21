@@ -5082,6 +5082,65 @@ bets:
   human_gate: true
   circuit_breaker: 备份切走后 24h 内若 coordination-backup.log 断流 → 回滚 crontab
   retro: required
+- id: BET-Y1Q3-T1-09
+  track: T1-TRUTH
+  window: Y1Q3
+  title: D4 逃生口固化 — 权限类 vs fingerprint 债 + 观察再跳 + 人类口硬拒
+  appetite: 1 day
+  priority: P0
+  status: pending
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-21-escape-hatch-solidification-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:ce5b182f97335927e9cdd80d36fc45ad43234a944f10e306bb364b150603d024
+    decision_ref: decision://accepted/BET-Y1Q3-T1-09
+  goal: 把 D4 逃生口从「无限复用的万能票」收成「权限类 + fingerprint 债」，预存失败必须下沉，agent 不能再用 emergency-human-hotfix 跳新失败
+  non_goals:
+  - 不接线 GitHub CI / admin merge（schema 可预留 surface=github）
+  - 本轮不把 skip policy 从 shadow 翻到 fail
+  - 不扩大默认 submodule update --init
+  - 不封死人类在系统 git 上的 --no-verify
+  done_when:
+  - CI_LOCAL_SKIP 先跑本地预检再按 fingerprint 记录逃逸
+  - emergency-human-hotfix 在 AGENT_ID/shim 路径立即 fail-closed（一次性 token 例外）
+  - partial-worktree 只能跳 uninitialized-submodule:* fingerprint
+  - escape-digest --dry-run 能聚类历史台账且不改白名单
+  - 测试 tests/test_swarm_discipline.py 与 ci-local-fast fingerprint 分类通过
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_swarm_discipline.py -q --tb=short
+    expect: exit 0
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/gac/test_ci_local_fast.py -q --tb=short
+    expect: exit 0
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - bin/gac/swarm_discipline.py
+  - bin/gac/swarm-discipline-cli.py
+  - bin/gac/swarm-git
+  - bin/gac/ci-local-fast.py
+  - bin/gac/escape-digest.py
+  - bin/gac/git-shim
+  - .githooks/pre-push
+  - .omo/_truth/registry/swarm-coordination.yaml
+  - .omo/_truth/registry/gate-known-debt.yaml
+  - tests/test_swarm_discipline.py
+  - tests/unit/gac/test_ci_local_fast.py
+  - AGENTS.md
+  - CLAUDE.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-21-escape-hatch-solidification-design.md
+  - .omo/_knowledge/decisions/0422-escape-hatch-solidification.md
+  - .omo/_knowledge/decisions/INDEX.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T1-09.md
+  - .agents/skills/git-discipline/SKILL.md
+  - .agents/skills/ci-red-triage/SKILL.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q1-T1-07
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: shadow 误伤导致主干无法 push → 保持 mode=shadow 并延长 alias
+  retro: required
 - id: BET-Y1Q1-T6-07
   track: T6-SUBTRACT
   window: Y1Q3
