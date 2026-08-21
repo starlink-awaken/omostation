@@ -11,7 +11,7 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 592
+  mcp_tools: 595
   bos_services: 227
   bos_domains: 18
   cli_commands: 147
@@ -499,9 +499,12 @@ mcp_servers:
   layer: X
   file: projects/c2g/src/c2g/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - c2g_bet
+  - c2g_gc
+  - c2g_radar
+  tool_count: 3
 - id: family-hub
   name: Family Hub
   layer: X
