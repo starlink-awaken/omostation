@@ -17,6 +17,7 @@ def _write_fixture(
     phase: int = 49,
     goal_phase: int = 49,
     active_tasks: int = 0,
+    blocked_tasks: int = 0,
     execution_mode: str = "waiting-for-scenario/next-bet",
     stored_total: int = 1,
 ) -> None:
@@ -33,7 +34,7 @@ def _write_fixture(
     )
     (omo / "state/system.yaml").write_text(
         f"current_phase: {phase}\ncurrent_wave: W5\n"
-        f"active_tasks: {active_tasks}\nplanned_tasks: 0\n"
+        f"active_tasks: {active_tasks}\nplanned_tasks: 0\nblocked_tasks: {blocked_tasks}\n"
         f"completed_tasks: 0\ntotal_tasks: {stored_total}\n"
         "divergence_flags: []\n",
         encoding="utf-8",
@@ -83,6 +84,17 @@ def test_stored_task_count_drift_is_blocking(tmp_path: Path) -> None:
 
     assert report["ok"] is False
     assert "total_tasks_mismatch:expected=0:state=1" in report["errors"]
+
+
+def test_blocked_task_is_counted_in_stored_total(tmp_path: Path) -> None:
+    _write_fixture(tmp_path, blocked_tasks=1, stored_total=1)
+    (tmp_path / ".omo/tasks/blocked/task.yaml").write_text("id: task-blocked\n", encoding="utf-8")
+
+    report = MODULE.build_report(tmp_path)
+
+    assert report["ok"] is True
+    assert report["execution"]["counts"]["blocked"] == 1
+    assert report["execution"]["stored_counts"]["blocked_tasks"] == 1
 
 
 def test_active_task_cannot_use_waiting_mode(tmp_path: Path) -> None:
