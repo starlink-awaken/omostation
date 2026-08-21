@@ -706,15 +706,15 @@ Human Principal 已授权本轮按最优解处理工程、治理、PR、合并�
 
 ## 18. 2026-08-21 AC-05 capability 收敛增量
 
-> 证据截止：2026-08-21T07:32:00Z。本节记录 D5/AC-05 的新工程事实，并纠正 §17 中已经漂移的
+> 证据截止：2026-08-21T11:17:03Z。本节记录 D5/AC-05 的新工程事实，并纠正 §17 中已经漂移的
 > 台账状态；它不改变 Value 轴，也不授权绕过 Golden Slice 人类裁决。
 
 ### 18.1 状态纠正
 
-并发治理变更已在 `origin/main` 将 `BET-Y1Q3-T4-01` 归档为 `blocked`，理由是 12 个 AC 中已有
-10 个落地，而 AC-06 依赖仍未证明的 T1-19。后续 Agent 必须以当前 ledger 为准：不得沿用 §17.6
-“BET 仍 active”的历史快照，不得重新打开第二个同目标 BET，也不得因为 AC-05 工程绿自行把原 BET
-改成 `done`。本轮 AC-05 作为既有目标的可恢复工程增量继续集成，Value 仍为 `NOT_PROVEN`。
+`origin/main` 上的 `BET-Y1Q3-T4-01` 当前已从 `blocked` 恢复为 `candidate`：T1-19 live canary 与
+`acp_stdio` 默认 transport 切换解除 AC-06 的前置依赖，但 AC-06 仍需最终验证，AC-11 仍需收尾。
+后续 Agent 必须以实时 ledger 为准：不得沿用 §17.6 或本节早期快照，不得重新打开第二个同目标
+BET，也不得因为 AC-05/T1-19 工程绿自行把原 BET 改成 `done`。Value 仍为 `NOT_PROVEN`。
 
 ### 18.2 AC-05 的最小正确边界
 
@@ -756,7 +756,7 @@ canonical capability registry
 | CodeBuddy/Reasonix truth correction | 根仓 PR #1809，merge `1a0ce173ccfa32816623c730221270807e944164` | `PROVEN`；从 admitted 降为 declared，绑定 instruction 时在 provider parsing 前 fail closed |
 | Agora native gateway | Agora PR #34，merge `cf137b1efade1da2d22d5639f38ec75cceb5373e` | `PROVEN`；exact reconcile、admission、route、probe、native invoke、privacy receipt |
 | Cockpit governed invocation | Cockpit PR #70，merge `bc3e31efd541beb9c3d1b307d7f8d70e21e889f2` | `PROVEN`；移除 substring/raw command/argv，固定治理 CLI 与 receipt allowlist |
-| 根仓公共 `load/invoke` 与 gitlink 集成 | 根仓 PR #1816 | `IN_REVIEW`；合并前不得写成 landed |
+| 根仓公共 `load/invoke` 与 gitlink 集成 | 根仓 PR #1816，merge `c83ca926be1e6365403fa21854232e4c77c6d42e` | `PROVEN`；完整 CI 通过并落入 `origin/main` |
 
 直接验证：
 
@@ -768,15 +768,14 @@ canonical capability registry
 - 独立 reviewer 初审发现 plain router lifecycle 绕过与 child receipt 附加字段泄露两项 HIGH；修复后
   复审 `PASS`，并补入缺 catalog、gate-before-seed 和恶意 schema-valid receipt 负例。
 
-本地 `make gac-local-gate` 的其余失败来自不完整独立 clone：缺 `cockpit-ui` 构建输入，以及未初始化
-`scripts` 子模块导致 compatibility shim 扫描大量假缺失。该结果必须标记为
-`ENVIRONMENT_BLOCKED`，不能当成 AC-05 产品失败，也不能删门禁或伪造绿色；完整 checkout CI 是根仓
-合并的硬门。
+早期本地 `make gac-local-gate` 的失败来自不完整独立 clone：缺 `cockpit-ui` 构建输入，以及未初始化
+`scripts` 子模块导致 compatibility shim 扫描大量假缺失。补齐根仓锁定的本地子模块对象后，门禁
+已复跑为 46 checks ALL GREEN；这证明早期结果属于 `ENVIRONMENT_BLOCKED`，而非 AC-05 产品失败。
 
 ### 18.4 优化后的后续顺序
 
-1. 先完成根仓公共 `load/invoke`、Agora/Cockpit 已合并 gitlink 的 PR、完整 CI 与 `origin/main`
-   reachability；失败则回滚根 gitlink，不回滚两个已独立验证的 child merge。
+1. 根仓公共 `load/invoke`、Agora/Cockpit gitlink、完整 CI 与 `origin/main` reachability 已完成；
+   后续只保留回归保护，不再扩展第二调用入口。
 2. AC-05 工程轴落地后停止继续扩 capability transport；HTTP/MCP/stdio 通用执行器、跨进程 proof
    持久化与更多 adapter 全部后置。
 3. 下一主线仍是唯一 Golden Slice：只收集 Human Principal 对
@@ -789,3 +788,55 @@ canonical capability registry
 
 因此，AC-05 的正确结论是：**capability 工程调用面已经从可模糊直执行收敛为 exact、native、
 admitted、health-gated、receipt-safe 的窄入口；它提高了 G3 的完成度，但不增加任何个人价值计数。**
+
+### 18.5 WorkPacket v2 回归与最小恢复
+
+T1-19 residual cleanup 的根仓提交 `88dc6d651` 删除了 BET 编译侧的 instruction binding，但保留了
+worker ACK validator 与四类 adapter 对该绑定的强制校验，造成默认 BET start 在 WorkPacket v2
+编译阶段 fail closed。该问题不是新协议设计，而是 producer/consumer 原子性被拆开的回归。
+
+producer 恢复已由并发根仓 PR #1825 合并为 `2099fe5ea73b9f523524bf57c28f9a3a4ac1b1bb`：重新测量唯一
+instruction pack 的 ref/version/profile/content digest，并将其纳入 packet hash、read surfaces 与
+start 投影。根仓 PR #1823 经直接比对后不再重复提交 producer 代码，只保留 identity、missing pack、
+digest drift、direct OMO projection 等保护测试与本报告更新；状态为 `IN_REVIEW`。原始修复提交的
+D0 标签 `delivery/codex-ac05-instruction-binding-20260821` 仍保留，可用于证明并发吸收前的恢复内容。
+
+直接验证：
+
+- `tests/test_agent_workflow.py`：61 passed；
+- 真实持久化 worker identity/rehash/reconcile 定向用例：3 passed；
+- `make gac-local-gate`：46 checks ALL GREEN；
+- run `20260821T095209Z-bet-execution-c17c20ff` 的 workflow verify：2/2 PASS；
+- Ruff、`git diff --check` 与独立只读 reviewer：PASS。
+
+这次回归的机制教训是：WorkPacket producer、worker ACK validator、adapter consumer 与 instruction
+pack fixture 必须作为一个 compatibility set 变更；后续 cleanup 若只删除其中一端，契约门禁必须
+立即阻断。该修复只恢复 Engineering 身份链，不增加任何 Operational 或 Value 证明。
+
+### 18.6 深度复核后的缺口排序与路线优化
+
+最近迭代已经证明“能力入口收敛”和“身份 fail closed”可以落地，但也暴露出下一阶段不应继续按
+组件横向扩张。按对端依赖、失败半径和 Golden Slice 贡献度重排后，唯一推荐顺序如下：
+
+| 优先级 | 缺口 | 当前判断 | 下一验收物 |
+|---|---|---|---|
+| P0 | G-1 证据矩阵 | `PARTIAL`；工程证据丰富，但三轴与 AC 的直接映射仍不完整 | 每个 AC 固定 Engineering/Operational/Value 来源、命令、receipt、反证与 owner |
+| P0 | `SpecLifecycle/v1` | `PARTIAL`；accepted binding 已存在，draft/review/accept/supersede/rollback 生命周期未统一 | 单一状态机、accepted decision、不可变 digest、supersede/rollback 负例 |
+| P0 | 外部 Agent lifecycle adapter | `PARTIAL`；Codex/OMP/Pi/Orca 已接入，CodeBuddy/Reasonix 仅 declared 且必须 fail closed | 统一 attach/start/ack/heartbeat/result/cancel/timeout 适配契约，不允许伪 admitted |
+| P1 | `ContextEnvelope/v1` | `NOT_PROVEN`；packet、spec、instruction、principal/provenance 尚未形成单一上下文载体 | 脱敏 envelope、hash identity、预算/权限边界与 consumer rehash |
+| P1 | `CrossRepoDeliveryManifest/v1` | `PARTIAL`；changeset 与 claim coverage 已有，跨根仓文件/子仓 gitlink/PR/reachability 尚未单据化 | 一份可重放 manifest 覆盖 commit、gitlink、PR、CI、reachability、rollback |
+| P1 | `ComputePlan/v1` | `PARTIAL`；BDSK/AetherForge 路由约束存在，任务级资源预算与运行 receipt 尚未统一 | route、预算、thermal/VRAM、fallback、actual runtime receipt 对账 |
+| P0-H | 唯一 Golden Slice | `AWAITING_HUMAN`；候选已存在，human verdict 缺失 | 本人五选一 verdict 后生成 revision/outcome/provenance；任何 Agent 不得代裁决 |
+
+执行上采用“三段单链”，避免再制造平行权威：
+
+1. **先补证明面**：完成 G-1 矩阵与当前契约 compatibility set 门禁，让删除、替换和 cleanup 都能
+   在 producer/consumer 不一致时立即失败；
+2. **再补生命周期面**：优先 `SpecLifecycle/v1` 和 external-agent adapter contract，随后再把
+   ContextEnvelope、CrossRepoDeliveryManifest、ComputePlan 作为同一 WorkPacket 身份链的扩展；
+3. **最后只跑一个真实价值切片**：不新增 Dashboard、BET、registry 或 transport；只把现有低敏
+   candidate 交给本人裁决，并用可重复读取的 revision/outcome receipt 判断是否真正产生价值。
+
+继续推进的硬停止条件不变：没有显式 human verdict、完整 shadow 窗、真实 decision_outcome 或可重复
+运行证据时，必须报告 `NOT_PROVEN`/`UNPROVABLE`，不得用 merged PR、issue comment、reviewDecision、
+测试、mtime、Agent 自报或历史 harvest 替代。
