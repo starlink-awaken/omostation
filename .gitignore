@@ -243,3 +243,10 @@ projects/c2g/
 projects/gbrain/
 projects/kairon/
 projects/omo-debt/
+
+# ---------------------------------------------------------------------------
+# 14. 运行时派生产物 (evolution proposals + affected-graph receipts)
+#     evolution-agent 自动生成 900+ proposal JSON; receipts 由 affected-graph.py 生成.
+# ---------------------------------------------------------------------------
+.omo/_knowledge/evolution-proposals/
+.omo/reports/
