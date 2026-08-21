@@ -119,6 +119,12 @@ def main():
             if not backend_model_id:
                 continue
             r = bench(base, backend_model_id)
+            # 冷加载撞车重试：daemon 探测会对 LM Studio 模型发真实 probe 触发 JIT
+            # 加载，与本脚本的加载并发时会拿到 400 "Operation canceled"。
+            # 失败后等 20s 让在途加载完成，重试一次；重试通过视为可用(首次是假失败)。
+            if not r.get("ok"):
+                time.sleep(20)
+                r = bench(base, backend_model_id)
             if r.get("ok"):
                 status = "GARBAGE" if r.get("garbage") else "OK"
             else:
