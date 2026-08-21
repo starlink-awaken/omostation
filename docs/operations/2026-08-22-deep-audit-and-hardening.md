@@ -79,7 +79,7 @@ omlxc 内建的 `models reconcile` 命令看起来正是为解决这个问题设
 
 ## 七、已知但刻意未动的技术债
 
-1. **`reload_daemon()` 是空壳** — 直接返回缓存的 `self._config` 计数伪装成功，从未真正重新解析 config.toml。真正的热重载需要重建 `build_production_daemon()` 组装的整张对象图（adapters/catalog/planner/storage/bus/probe/target_factory/coordinator）并原子替换，不打断在途 job。当前唯一可靠方式是 `omlxc daemon restart --yes --confirm-impact`（会短暂打断在途推理）。这是架构级改动，未在本轮仓促实现。
+1. **~~`reload_daemon()` 是空壳~~ 诚实度已修复 (`88a5ba1`)**——现在会重新读取 config.toml 算 identity 哈希比对，状态不一致时如实报 `stale` 而不是撒谎说 `reloaded`。**但真正的热重载依然没做**：`reload_daemon()` 仍然不重建 `build_production_daemon()` 组装的整张对象图（adapters/catalog/planner/storage/bus/probe/target_factory/coordinator），只是让返回值可信。要让 config 改动真正生效，唯一可靠方式还是 `omlxc daemon restart --yes --confirm-impact`（会短暂打断在途推理）。真正的热重载需要原子替换整张对象图且不打断在途 job，这仍然是架构级改动，未在本轮实现。
 2. **探测层缺乏真正的取消机制** — 见第四节，JIT 加载 + 探测超时孤儿生成是当晚系统卡死的直接原因。
 3. **LM Studio `defaultContextLength.type = "max"`** — 根因定位到底后发现的全局配置项，所有 JIT 加载模型共享这一个设置。需要人工在 LM Studio 设置界面改成固定值，omlxc/config.toml 层面无法代管这一项。改完后第三、四节记录的问题会整体消失，是目前性价比最高的一项修复，只是执行动作不在这个仓库能触达的范围内。
 3. **两个后端不感知彼此内存占用** — LM Studio 和 oMLX App 各自独立做内存守护，互相不知道对方占了多少，在 128GB 统一内存机器上同时加载大模型仍有击穿风险。
