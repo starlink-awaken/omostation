@@ -5,7 +5,7 @@
 direct-omo-io 约束与真实状态漂移. 可手动跑、pre-commit 跑、cron 跑.
 
 检测项:
-  1. system.yaml task 计数 vs tasks/{active,planned,done} 顶层 yaml 文件数
+  1. system.yaml task 计数 vs tasks/{active,planned,blocked,done} 顶层 yaml 文件数
   2. system.yaml current_wave vs goals/current.yaml current_wave
   3. 子模块指针是否落后于子仓库 HEAD (git submodule status '+' 前缀)
   4. direct-omo-io 红线: 脚本是否直接写入 .omo/
@@ -96,14 +96,14 @@ def _load_system_value(key: str) -> object | None:
 
 def _count_tasks() -> dict[str, int]:
     counts = {}
-    for sub in ("active", "planned", "done"):
+    for sub in ("active", "planned", "blocked", "done"):
         d = TASKS_DIR / sub
         counts[sub] = len(list(d.glob("*.yaml"))) if d.exists() else 0
     # Include archived/done as completed tasks
     archived_done = TASKS_DIR / "archived" / "done"
     archived_count = len(list(archived_done.glob("*.yaml"))) if archived_done.exists() else 0
     counts["done"] += archived_count
-    counts["total"] = counts["active"] + counts["planned"] + counts["done"]
+    counts["total"] = counts["active"] + counts["planned"] + counts["blocked"] + counts["done"]
     return counts
 
 
@@ -400,12 +400,14 @@ def main(argv: list[str] | None = None) -> int:
     system_completed = _load_system_value("completed_tasks")
     system_planned = _load_system_value("planned_tasks")
     system_active = _load_system_value("active_tasks")
+    system_blocked = _load_system_value("blocked_tasks")
     system_total = _load_system_value("total_tasks")
 
     task_drift = (
         int(system_completed or 0) != real_counts["done"]
         or int(system_planned or 0) != real_counts["planned"]
         or int(system_active or 0) != real_counts["active"]
+        or int(system_blocked or 0) != real_counts["blocked"]
         or int(system_total or 0) != real_counts["total"]
     )
     if task_drift:
@@ -417,6 +419,7 @@ def main(argv: list[str] | None = None) -> int:
                     "completed": system_completed,
                     "planned": system_planned,
                     "active": system_active,
+                    "blocked": system_blocked,
                     "total": system_total,
                 },
                 "actual": real_counts,

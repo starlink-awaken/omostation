@@ -147,7 +147,7 @@ SPEC_BINDING_GRANDFATHER_ALLOWLIST = {
     "BET-Y1Q2-T6-08": "done",
     "BET-Y1Q2-T6-09": "done",
     "BET-Y1Q2-T6-10": "done",
-    "BET-Y1Q2-T7-01": "done",
+    "BET-Y1Q2-T7-01": "blocked",
     "BET-Y1Q2-T8-01": "done",
     "BET-Y1Q2-T9-01": "done",
     "BET-Y1Q2-T9-02": "done",
@@ -224,6 +224,15 @@ SEMVER_RE = re.compile(
 )
 SHA256_REF_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 STARTABLE_BET_STATUSES = frozenset({"candidate", "pending", "blocked"})
+HUMAN_APPROVAL_BLOCKED_REENTRY_POLICY = "human_approval_required"
+
+
+def _requires_human_approval_for_blocked_reentry(bet: dict[str, Any]) -> bool:
+    """Return whether a blocked BET is intentionally closed to agent re-entry."""
+    return (
+        bet.get("status") == "blocked"
+        and bet.get("blocked_reentry_policy") == HUMAN_APPROVAL_BLOCKED_REENTRY_POLICY
+    )
 SPECIFICATION_SCHEMA_VERSION = "specification/v1"
 SPEC_FRONTMATTER_GRANDFATHER_ALLOWLIST = {
     "BET-Y1Q2-T1-19": {
@@ -490,6 +499,9 @@ def _claimable(data: dict, b: dict) -> tuple[bool, list[str]]:
     if b.get("status") not in ("candidate", "pending", "blocked"):
         ok = False
         reasons.append(f"状态 {b.get('status')} 不可认领")
+    if _requires_human_approval_for_blocked_reentry(b):
+        ok = False
+        reasons.append("阻断态仅可通过审计化 human approval 解阻；agent 不得认领")
     index = {x["id"]: x for x in data["bets"]}
     for dep in b.get("depends_on") or []:
         d = index.get(dep)
@@ -1407,6 +1419,11 @@ def prepare_bet_execution(
     """Build the canonical identity used by every workflow start entrypoint."""
     bet = _bet_for_execution(workspace, bet_id)
     status = str(bet.get("status") or "")
+    if require_startable and _requires_human_approval_for_blocked_reentry(bet):
+        raise SpecBindingContractError(
+            "BET_BLOCKED_REENTRY_GATE: "
+            f"{bet_id} requires audited human approval and an explicit ledger status transition before claim/start"
+        )
     if require_startable and status not in STARTABLE_BET_STATUSES:
         raise SpecBindingContractError(
             f"BET_STATUS_NOT_STARTABLE: {bet_id} status={status}; allowed={sorted(STARTABLE_BET_STATUSES)}"

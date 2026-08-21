@@ -151,8 +151,9 @@ def _stored_count_mismatches(state: dict[str, Any], counts: dict[str, int]) -> l
     expected = {
         "active_tasks": counts["active"],
         "planned_tasks": counts["planned"],
+        "blocked_tasks": counts["blocked"],
         "completed_tasks": counts["done"],
-        "total_tasks": counts["active"] + counts["planned"] + counts["done"],
+        "total_tasks": counts["active"] + counts["planned"] + counts["blocked"] + counts["done"],
     }
     mismatches: list[str] = []
     for field, value in expected.items():
@@ -243,6 +244,7 @@ def build_report(root: Path) -> dict[str, Any]:
                 for field in (
                     "active_tasks",
                     "planned_tasks",
+                    "blocked_tasks",
                     "completed_tasks",
                     "total_tasks",
                 )
@@ -284,6 +286,7 @@ def main(argv: list[str] | None = None) -> int:
             f"wave={report['phase']['wave_state']} "
             f"active={report['execution']['counts']['active']} "
             f"planned={report['execution']['counts']['planned']} "
+            f"blocked={report['execution']['counts']['blocked']} "
             f"scene_activation={report['scene_activation']['status']}"
         )
         for message in report["errors"]:
