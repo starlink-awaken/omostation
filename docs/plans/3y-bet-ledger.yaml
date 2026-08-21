@@ -3023,9 +3023,10 @@ bets:
   title: Codex ACP stdio permission-broker cutover and cli_prompt retirement
   appetite: 3 days
   priority: P0
-  status: in_progress
+  status: done
   started_at: 2026-08-21
-  progress_note: 'live canary PASS (2026-08-21, docs/reports/2026-08-21-t1-19-acp-live-canary.md, PR#1802): 真实 codex-acp@0.16.0 全生命周期打通 (initialize/session/真实模型 turn 22.4s/权限矩阵 5/5/cancel/reap), 4 个协议缺陷实证修复 (omo#64→6f6b1e5 + 9a40a5a). 剩余: 独立 clone R1 变更 (git delta+CompletionManifest)、独立 verifier accept、cutover 减法提交。'
+  done_at: 2026-08-21
+  done_evidence: '全链闭环: (1) R1 协议 canary PASS (omo#64, 4缺陷修复); (2) 独立 clone 真实 R1 写变更 canary PASS (omo#67→695f69f, 5 协议缺陷修复, 真实模型 69.7s, perms=[allow_once,allow_once], git delta 真实落盘, r1-completion-manifest.json); (3) 独立 verifier ACCEPT_WITH_NOTES (6/6 证据项 PASS, 执行/验证分离); (4) cutover 减法: cli_prompt 隐式默认 6 处清零, acp_stdio 唯一自动 transport, 141/142 回归通过; retro: .omo/_knowledge/retros/2026-08-21-t1-19-acp-canary-retro.md'
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md
     spec_version: 1.0.0
