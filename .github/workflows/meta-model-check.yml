@@ -22,7 +22,7 @@ jobs:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
       - name: Init required submodules
-        run: git submodule update --init scripts projects/runtime
+        run: git submodule update --init projects/runtime
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

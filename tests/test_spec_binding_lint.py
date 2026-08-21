@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import importlib.util
 import subprocess
 import sys
@@ -9,6 +10,7 @@ from argparse import Namespace
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -366,7 +368,7 @@ def test_self_asserted_value_evidence_cannot_make_outcome_accepted(tmp_path: Pat
     state, errors = bl.validate_completion_evidence(matrix, workspace=tmp_path)
 
     assert state == "blocked"
-    assert any("COMPLETION_HUMAN_AUTH_UNPROVABLE" in error for error in errors)
+    assert any("COMPLETION_HUMAN_AUTH_REQUIRED" in error for error in errors)
 
 
 def test_value_acceptance_without_human_verdict_fails_closed(tmp_path: Path) -> None:
@@ -456,7 +458,7 @@ def test_arbitrary_string_cannot_prove_human_verdict(tmp_path: Path) -> None:
     state, errors = bl.validate_completion_evidence(matrix, workspace=tmp_path)
 
     assert state == "blocked"
-    assert any("COMPLETION_HUMAN_AUTH_UNPROVABLE" in error for error in errors)
+    assert any("COMPLETION_HUMAN_AUTH_REQUIRED" in error for error in errors)
 
 
 def test_complete_rejects_engineering_only_matrix_even_with_force(
@@ -501,3 +503,127 @@ def test_complete_requires_matrix_even_with_force(
 
     assert rc == 1
     assert "COMPLETION_EVIDENCE_REQUIRED" in capsys.readouterr().out
+
+
+def _sign_attestation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, tamper: bool = False) -> tuple[Path, Path]:
+    """Generate an ephemeral SSH keypair and sign a valid attestation receipt.
+
+    Returns (receipt_path, allowed_signers_path). When ``tamper`` is True the
+    signature bytes are corrupted so verification must fail.
+    """
+    key_dir = tmp_path / "ssh-keys"
+    key_dir.mkdir(parents=True, exist_ok=True)
+    key_path = key_dir / "id_ed25519"
+    subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(key_path)], check=True)
+
+    receipt: dict[str, Any] = {
+        "schema_version": "human-attestation/v1",
+        "principal_id": "principal:tester",
+        "verdict": "accept",
+        "episode_id": "episode:test-001",
+        "signal_event_id": "evt_test_signal",
+        "observed_at": "2026-08-21T12:00:00Z",
+        "signer_identity": "tester",
+    }
+    message = "\n".join(f"{k}={receipt[k]}" for k in bl.HUMAN_ATTESTATION_MESSAGE_FIELDS) + "\n"
+    message_path = tmp_path / "message.txt"
+    message_path.write_text(message, encoding="utf-8")
+    subprocess.run(
+        [
+            "ssh-keygen", "-Y", "sign", "-f", str(key_path),
+            "-n", "omostation-human-attestation", str(message_path),
+        ],
+        capture_output=True,
+        check=True,
+    )
+    # ssh-keygen -Y sign writes to <message_path>.sig; reconstruct blob from disk.
+    sig_path = Path(str(message_path) + ".sig")
+    sig_bytes = sig_path.read_bytes()
+    if tamper:
+        sig_bytes = sig_bytes[:-4] + b"\x00\x00\x00\x00"
+    receipt["signature_b64"] = base64.b64encode(sig_bytes).decode()
+
+    allowed_signers = tmp_path / "allowed-signers"
+    pub = (key_dir / "id_ed25519.pub").read_text(encoding="utf-8").strip()
+    allowed_signers.write_text(f"tester {pub}\n", encoding="utf-8")
+    monkeypatch.setattr(bl, "HUMAN_ATTESTATION_ALLOWED_SIGNERS", str(allowed_signers))
+
+    receipt_path = tmp_path / "attestation.yaml"
+    receipt_path.write_text(yaml.safe_dump(receipt), encoding="utf-8")
+    return receipt_path, allowed_signers
+
+
+def test_valid_human_attestation_makes_value_accepted(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    evidence = _direct_evidence(tmp_path)
+    receipt_path, _ = _sign_attestation(tmp_path, monkeypatch)
+    evidence["value"] = {
+        "real_signal": {"ref": "receipt://evidence/value-real_signal.json", "sha256": "sha256:0" * 8},
+        "human_verdict": {"ref": "receipt://evidence/value-human_verdict.json", "sha256": "sha256:0" * 8},
+        "revision": {"ref": "receipt://evidence/value-revision.json", "sha256": "sha256:0" * 8},
+        "time_burden": {"ref": "receipt://evidence/value-time_burden.json", "sha256": "sha256:0" * 8},
+        "attestation": {
+            "ref": f"receipt://{receipt_path.relative_to(tmp_path)}",
+            "sha256": f"sha256:{bl._file_sha256(receipt_path)}",
+        },
+    }
+    for key in ("real_signal", "human_verdict", "revision", "time_burden"):
+        p = tmp_path / "evidence" / f"value-{key}.json"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f'{{"kind":"{key}"}}\n', encoding="utf-8")
+        evidence["value"][key] = {"ref": f"receipt://evidence/value-{key}.json", "sha256": f"sha256:{bl._file_sha256(p)}"}
+
+    matrix = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+        evidence=evidence,
+    )
+    state, errors = bl.validate_completion_evidence(matrix, workspace=tmp_path)
+    assert errors == []
+    assert state == "outcome_accepted"
+
+
+def test_tampered_attestation_signature_fails_closed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    evidence = _direct_evidence(tmp_path)
+    receipt_path, _ = _sign_attestation(tmp_path, monkeypatch, tamper=True)
+    for key in ("real_signal", "human_verdict", "revision", "time_burden"):
+        p = tmp_path / "evidence" / f"value-{key}.json"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f'{{"kind":"{key}"}}\n', encoding="utf-8")
+        evidence["value"][key] = {"ref": f"receipt://evidence/value-{key}.json", "sha256": f"sha256:{bl._file_sha256(p)}"}
+    evidence["value"]["attestation"] = {
+        "ref": f"receipt://{receipt_path.relative_to(tmp_path)}",
+        "sha256": f"sha256:{bl._file_sha256(receipt_path)}",
+    }
+
+    matrix = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+        evidence=evidence,
+    )
+    state, errors = bl.validate_completion_evidence(matrix, workspace=tmp_path)
+    assert state == "blocked"
+    assert any("COMPLETION_HUMAN_AUTH_SIGNATURE_INVALID" in error for error in errors)
+
+
+def test_missing_attestation_fails_closed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    evidence = _direct_evidence(tmp_path)
+    for key in ("real_signal", "human_verdict", "revision", "time_burden"):
+        p = tmp_path / "evidence" / f"value-{key}.json"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f'{{"kind":"{key}"}}\n', encoding="utf-8")
+        evidence["value"][key] = {"ref": f"receipt://evidence/value-{key}.json", "sha256": f"sha256:{bl._file_sha256(p)}"}
+
+    matrix = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+        evidence=evidence,
+    )
+    state, errors = bl.validate_completion_evidence(matrix, workspace=tmp_path)
+    assert state == "blocked"
+    assert any("COMPLETION_HUMAN_AUTH_REQUIRED" in error for error in errors)

@@ -99,6 +99,11 @@ SWARM_ESCAPE_ID=<白名单里的id> bin/gac/swarm-git commit --no-verify ...
 权限类：`partial-worktree` 只能跳 `uninitialized-submodule:*`；预存 GaC 走 `local-preflight-preexisting` + `gate-known-debt.yaml`。
 `emergency-human-hotfix` 在 `AGENT_ID` / shim 路径立即拒绝，除非一次性 `SWARM_ESCAPE_TOKEN`。
 
+```bash
+python3 bin/gac/swarm-discipline-cli.py escape-token-issue
+python3 bin/gac/escape-digest.py --dry-run
+```
+
 **直接用 raw `git --no-verify` 会绕过整套机制**——能跑通，但白名单不校验、台账不落盘，
 审计链断，视为违规。
 

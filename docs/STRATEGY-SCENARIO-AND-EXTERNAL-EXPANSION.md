@@ -116,7 +116,7 @@ last-reviewed: 2026-08-18
 | C2G | 愿景、目标、赌注、战略入口和任务物化 | 低层执行和运行态管理 |
 | GBrain/KOS/Kairon | 知识对象、检索、理解、模型和知识生产 | admission、worker 和业务写入 |
 | Runtime | 受控执行、effect journal、运行回执 | 决策授权和场景定义 |
-| scripts/bin | 治理、诊断、生成、门禁和运维 | 长期业务状态和隐式写入 |
+| bin/ (ex scripts/bin) | 治理、诊断、生成、门禁和运维 | 长期业务状态和隐式写入 |
 
 ## 5. Workflow Mesh 目标状态
 
