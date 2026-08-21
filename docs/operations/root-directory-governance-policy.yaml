@@ -53,6 +53,11 @@ local_surfaces:
     class: client-metadata
     lifecycle: local
     reason: Qoder client metadata
+  .deepeval:
+    owner: workspace-tooling
+    class: client-metadata
+    lifecycle: local
+    reason: DeepEval client cache and local state
   ecos:
     owner: ecos-team
     class: compatibility-checkout
