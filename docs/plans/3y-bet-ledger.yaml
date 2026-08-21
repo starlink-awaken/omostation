@@ -6093,6 +6093,10 @@ bets:
   - docs/architecture/blueprint-multi-agent-execution-control-v1.md
   - docs/architecture/digital-twin-blueprint-v1.md
   - docs/scene-cards/engineering-delivery-dogfood.yaml
+  - docs/reports/2026-08-22-engineering-delivery-shadow-observer-receipt.json
+  - .omo/_knowledge/retros/BET-Y1Q2-T7-01.md
+  - .omo/tasks/planned/bet-y1q2-t7-01.yaml
+  - bin/ssot/dogfood-collector.py
   - docs/operations/blueprint-agent-instruction-pack-v1.md
   - docs/SYSTEM-INDEX.md
   - bin/plan/bet-ledger.py
