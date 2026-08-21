@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import importlib.util
 import json
 import os
@@ -465,6 +466,318 @@ def test_claim_rejects_malformed_packet_as_contract_error(tmp_path: Path) -> Non
 
     with pytest.raises(module.WorkflowError, match="WORK_PACKET_INVALID"):
         module._validate_packet_run(payload, ["bin/agent-workflow.py"], workspace=tmp_path)
+
+
+def _write_refreshable_run(
+    module,
+    workspace: Path,
+    *,
+    write_surfaces: list[str],
+    claimed_path: str = "bin/agent-workflow.py",
+) -> tuple[dict, str, dict]:
+    bet_id, _spec_path = _write_bet_workspace(workspace, write_surfaces=write_surfaces)
+    prepared = module._prepare_bet_execution(bet_id, workspace=workspace)
+    registry_path = _write_control_plane_registry(workspace)
+    registry = module.load_registry(registry_path)
+    run_id = "20260821T000000Z-bet-execution-refresh"
+    run_path = workspace / "runs" / f"{run_id}.yaml"
+    run_path.parent.mkdir(parents=True, exist_ok=True)
+    module._wf_life.write_run(
+        run_path,
+        {
+            "run_id": run_id,
+            "workflow_id": "bet-execution",
+            "status": "active",
+            "bet_id": bet_id,
+            **prepared,
+            "claims": [{"paths": [claimed_path], "surfaces": []}],
+        },
+    )
+    return registry, run_id, prepared
+
+
+def _pin_authoritative_main(workspace: Path, message: str) -> str:
+    if not (workspace / ".git").exists():
+        subprocess.run(["git", "init", "-q", str(workspace)], check=True)
+    subprocess.run(
+        ["git", "-C", str(workspace), "add", "docs/plans", "docs/operations", "docs/superpowers"],
+        check=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(workspace),
+            "-c",
+            "user.name=Workflow Test",
+            "-c",
+            "user.email=workflow-test@example.invalid",
+            "commit",
+            "-qm",
+            message,
+        ],
+        check=True,
+    )
+    revision = subprocess.run(
+        ["git", "-C", str(workspace), "rev-parse", "HEAD"],
+        capture_output=True,
+        check=True,
+        text=True,
+    ).stdout.strip()
+    subprocess.run(
+        ["git", "-C", str(workspace), "update-ref", "refs/remotes/origin/main", revision],
+        check=True,
+    )
+    return revision
+
+
+def test_refresh_packet_projects_expanded_scope_for_same_accepted_identity(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    registry, run_id, before = _write_refreshable_run(
+        module,
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "tests/**"],
+    )
+    _write_bet_workspace(
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "bin/gac/test_agent_clone.py", "tests/**"],
+    )
+
+    result = module._refresh_packet_run(
+        registry,
+        run_id,
+        workspace=tmp_path,
+        authoritative_ref=None,
+    )
+    _path, refreshed = module._wf_life.read_run(registry, run_id)
+
+    assert result["reason"] == "work_packet_refreshed"
+    assert result["old_work_packet_hash"] == before["work_packet_hash"]
+    assert result["work_packet_hash"] != before["work_packet_hash"]
+    assert "bin/gac/test_agent_clone.py" in refreshed["work_packet"]["scope"]["write_surfaces"]
+    module._validate_packet_run(refreshed, ["bin/gac/test_agent_clone.py"], workspace=tmp_path)
+
+
+def test_refresh_packet_rejects_scope_shrink_that_orphans_existing_claim(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    registry, run_id, before = _write_refreshable_run(
+        module,
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "tests/**"],
+    )
+    _write_bet_workspace(tmp_path, write_surfaces=["tests/**"])
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_SCOPE_MISMATCH"):
+        module._refresh_packet_run(
+            registry,
+            run_id,
+            workspace=tmp_path,
+            authoritative_ref=None,
+        )
+
+    _path, unchanged = module._wf_life.read_run(registry, run_id)
+    assert unchanged["work_packet_hash"] == before["work_packet_hash"]
+
+
+def test_refresh_packet_rejects_instruction_binding_drift(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    registry, run_id, before = _write_refreshable_run(
+        module,
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "tests/**"],
+    )
+    instruction = tmp_path / "docs/operations/blueprint-agent-instruction-pack-v1.md"
+    instruction.write_text("# Drifted instruction identity\n", encoding="utf-8")
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_REFRESH_INSTRUCTION_DRIFT"):
+        module._refresh_packet_run(
+            registry,
+            run_id,
+            workspace=tmp_path,
+            authoritative_ref=None,
+        )
+
+    _path, unchanged = module._wf_life.read_run(registry, run_id)
+    assert unchanged["work_packet_hash"] == before["work_packet_hash"]
+
+
+def test_refresh_packet_source_alignment_rejects_unmerged_ledger(tmp_path: Path, monkeypatch) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path)
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+
+    monkeypatch.setattr(
+        module.subprocess,
+        "run",
+        lambda *_args, **_kwargs: subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=b"different authoritative bytes",
+            stderr=b"",
+        ),
+    )
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_REFRESH_SOURCE_UNMERGED: ledger"):
+        module._assert_packet_sources_at_ref(
+            tmp_path,
+            prepared,
+            authoritative_ref="origin/main",
+        )
+
+
+def test_refresh_packet_rejects_malformed_claims_without_changing_packet(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    registry, run_id, before = _write_refreshable_run(
+        module,
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "tests/**"],
+    )
+    run_path, payload = module._wf_life.read_run(registry, run_id)
+    payload["claims"] = [{"paths": [42], "surfaces": []}]
+    module._wf_life.write_run(run_path, payload)
+
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_REFRESH_CLAIMS_INVALID"):
+        module._refresh_packet_run(
+            registry,
+            run_id,
+            workspace=tmp_path,
+            authoritative_ref=None,
+        )
+
+    _path, unchanged = module._wf_life.read_run(registry, run_id)
+    assert unchanged["work_packet_hash"] == before["work_packet_hash"]
+
+
+def test_refresh_packet_rolls_back_when_audit_append_fails(tmp_path: Path, monkeypatch) -> None:
+    module = _load_root_workflow_wrapper()
+    registry, run_id, before = _write_refreshable_run(
+        module,
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "tests/**"],
+    )
+    _write_bet_workspace(
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "bin/gac/test_agent_clone.py", "tests/**"],
+    )
+    run_path, _payload = module._wf_life.read_run(registry, run_id)
+    original_bytes = run_path.read_bytes()
+    ledger_path = tmp_path / "events.jsonl"
+    original_ledger = ledger_path.read_bytes() if ledger_path.exists() else None
+
+    def fail_append(_registry, _event):
+        raise OSError("ledger unavailable")
+
+    monkeypatch.setattr(module._wf_life, "append_ledger_event", fail_append)
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_REFRESH_AUDIT_FAILED"):
+        module._refresh_packet_run(
+            registry,
+            run_id,
+            workspace=tmp_path,
+            authoritative_ref=None,
+        )
+
+    _path, unchanged = module._wf_life.read_run(registry, run_id)
+    assert unchanged["work_packet_hash"] == before["work_packet_hash"]
+    assert run_path.read_bytes() == original_bytes
+    assert (ledger_path.read_bytes() if ledger_path.exists() else None) == original_ledger
+
+
+def test_refresh_packet_rejects_source_race_without_changing_packet(tmp_path: Path, monkeypatch) -> None:
+    module = _load_root_workflow_wrapper()
+    registry, run_id, before = _write_refreshable_run(
+        module,
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "tests/**"],
+    )
+    _write_bet_workspace(
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "bin/gac/test_agent_clone.py", "tests/**"],
+    )
+    prepare = module._prepare_bet_execution
+    calls = 0
+
+    def racing_prepare(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        result = prepare(*args, **kwargs)
+        if calls == 2:
+            result = copy.deepcopy(result)
+            result["work_packet_hash"] = "sha256:" + "0" * 64
+        return result
+
+    monkeypatch.setattr(module, "_prepare_bet_execution", racing_prepare)
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_REFRESH_SOURCE_RACED"):
+        module._refresh_packet_run(
+            registry,
+            run_id,
+            workspace=tmp_path,
+            authoritative_ref=None,
+        )
+
+    _path, unchanged = module._wf_life.read_run(registry, run_id)
+    assert unchanged["work_packet_hash"] == before["work_packet_hash"]
+
+
+def test_refresh_packet_final_alignment_rejects_real_source_change(tmp_path: Path, monkeypatch) -> None:
+    module = _load_root_workflow_wrapper()
+    registry, run_id, before = _write_refreshable_run(
+        module,
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "tests/**"],
+    )
+    _write_bet_workspace(
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "bin/gac/test_agent_clone.py", "tests/**"],
+    )
+    _pin_authoritative_main(tmp_path, "authoritative expanded packet")
+    prepare = module._prepare_bet_execution
+    calls = 0
+
+    def mutate_after_final_prepare(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        result = prepare(*args, **kwargs)
+        if calls == 2:
+            ledger = tmp_path / "docs/plans/3y-bet-ledger.yaml"
+            ledger.write_text(ledger.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+        return result
+
+    monkeypatch.setattr(module, "_prepare_bet_execution", mutate_after_final_prepare)
+    with pytest.raises(module.WorkflowError, match="WORK_PACKET_REFRESH_SOURCE_UNMERGED: ledger"):
+        module._refresh_packet_run(registry, run_id, workspace=tmp_path)
+
+    _path, unchanged = module._wf_life.read_run(registry, run_id)
+    assert unchanged["work_packet_hash"] == before["work_packet_hash"]
+
+
+def test_refresh_packet_cli_uses_custom_registry_workspace_root(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    registry, run_id, before = _write_refreshable_run(
+        module,
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "tests/**"],
+    )
+    _pin_authoritative_main(tmp_path, "initial packet sources")
+    _write_bet_workspace(
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "bin/gac/test_agent_clone.py", "tests/**"],
+    )
+    authoritative_revision = _pin_authoritative_main(tmp_path, "expand packet scope")
+
+    result = _run_root_workflow_strict(
+        "--registry",
+        str(tmp_path / "agent-workflows.yaml"),
+        "refresh-packet",
+        run_id,
+        "--json",
+    )
+
+    assert result.returncode == 0, result.stderr
+    output = json.loads(result.stdout)
+    assert output["old_work_packet_hash"] == before["work_packet_hash"]
+    assert output["authoritative_revision"] == authoritative_revision
+    _path, refreshed = module._wf_life.read_run(registry, run_id)
+    assert "bin/gac/test_agent_clone.py" in refreshed["work_packet"]["scope"]["write_surfaces"]
 
 
 def test_direct_omo_module_start_binds_recomputable_work_packet_v2(
