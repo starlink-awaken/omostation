@@ -222,7 +222,11 @@ for remote_ref in \
   # gbrain 历史上 rebase(要重放 4939 个 commit)。
   [ -d "$repo_path" ] || continue
   repo_real="$(cd "$repo_path" 2>/dev/null && pwd -P)" || continue
-  repo_top="$(git -C "$repo_path" rev-parse --show-toplevel 2>/dev/null || true)"
+  # Unset GIT_DIR/GIT_WORK_TREE for the toplevel probe too. A hook-only GIT_DIR
+  # makes `git -C <non-repo-dir> rev-parse --show-toplevel` return the -C path,
+  # so an inlined (non-gitlink) projects/knowledge/gbrain directory is treated
+  # as its own repo and the parent origin is compared to omostation-gbrain.
+  repo_top="$(env -u GIT_DIR -u GIT_WORK_TREE git -C "$repo_path" rev-parse --show-toplevel 2>/dev/null || true)"
   [ -n "$repo_top" ] || continue
   [ "$(cd "$repo_top" && pwd -P)" = "$repo_real" ] || continue   # 非自有仓 → 跳过
   actual="$(env -u GIT_DIR -u GIT_WORK_TREE git -C "$repo_path" remote get-url origin 2>/dev/null || true)"
