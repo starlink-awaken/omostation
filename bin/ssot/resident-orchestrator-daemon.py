@@ -66,10 +66,100 @@ def _log(msg: str) -> None:
         pass
 
 
+_ROUTES_FILE = Path(__file__).resolve().parent / "resident-routes.yaml"
+_ROUTES: dict[str, dict[str, Any]] = {}
+
+
+def _load_routes(path: Path = _ROUTES_FILE) -> dict[str, dict[str, Any]]:
+    """Load the rule-level subscription routes (fail-closed on invalid YAML)."""
+    import yaml  # noqa: PLC0415
+
+    global _ROUTES  # noqa: PLW0603
+    if not path.is_file():
+        _ROUTES = {}
+        return _ROUTES
+    try:
+        doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        _log(f"routes_load_failed invalid_yaml: {exc}")
+        raise
+    routes = doc.get("routes", []) if isinstance(doc, dict) else None
+    if not isinstance(routes, list):
+        _log("routes_load_failed missing_routes_list")
+        raise ValueError("resident-routes.yaml must contain a routes list")
+    result: dict[str, dict[str, Any]] = {}
+    for rule in routes:
+        if not isinstance(rule, dict) or not rule.get("event_type"):
+            _log("routes_load_failed invalid_rule")
+            raise ValueError("each route needs event_type")
+        result[str(rule["event_type"])] = rule
+    _ROUTES = result
+    return result
+
+
+def _condition_holds(condition: str, event: dict[str, Any]) -> bool:
+    """Evaluate a restricted condition expression against the event.
+
+    Supports simple ``payload.<field> <op> <literal>`` comparisons and the
+    ``in (<a>,<b>)`` membership check. Anything else is rejected (fail-closed).
+    """
+    import ast  # noqa: PLC0415
+
+    expr = condition.strip()
+    try:
+        tree = ast.parse(expr, mode="eval")
+    except SyntaxError:
+        return False
+    node = tree.body
+
+    # payload.field in (a, b)
+    if (
+        isinstance(node, ast.Compare)
+        and len(node.ops) == 1
+        and isinstance(node.ops[0], ast.In)
+        and isinstance(node.left, ast.Attribute)
+        and isinstance(node.left.value, ast.Name)
+        and node.left.value.id == "payload"
+        and isinstance(node.comparators[0], ast.Tuple)
+    ):
+        field = node.left.attr
+        actual = event.get("payload", {}).get(field) if isinstance(event.get("payload"), dict) else None
+        allowed = {c.value for c in node.comparators[0].elts if isinstance(c, ast.Constant)}
+        return actual in allowed
+
+    # payload.field == literal
+    if (
+        isinstance(node, ast.Compare)
+        and len(node.ops) == 1
+        and isinstance(node.ops[0], ast.Eq)
+        and isinstance(node.left, ast.Attribute)
+        and isinstance(node.left.value, ast.Name)
+        and node.left.value.id == "payload"
+        and isinstance(node.comparators[0], ast.Constant)
+    ):
+        field = node.left.attr
+        actual = event.get("payload", {}).get(field) if isinstance(event.get("payload"), dict) else None
+        return actual == node.comparators[0].value
+
+    return False  # unsupported expression → fail-closed
+
+
 def _route(event: dict[str, Any]) -> None:
     event_type = str(event.get("event_type") or "")
-    handler = _EVENT_HANDLERS.get(event_type, _handler_placeholder)
-    if _APPROVAL_REQUIRED and handler.__name__ not in _SAFE_HANDLERS:
+    rule = _ROUTES.get(event_type)
+    handler = None
+    if rule is not None:
+        condition = rule.get("condition")
+        if condition and not _condition_holds(str(condition), event):
+            return  # condition not met → skip
+        action = str(rule.get("action") or "")
+        handler = _EVENT_HANDLERS.get(action, _handler_placeholder)
+        # safe 由规则声明; 若未声明则按 handler 注册的 safe 集合判断
+        safe = bool(rule.get("safe", False)) or handler.__name__ in _SAFE_HANDLERS
+    else:
+        handler = _handler_placeholder
+        safe = True
+    if _APPROVAL_REQUIRED and not safe:
         _log(f"handler_blocked_awaiting_approval event_type={event_type} handler={handler.__name__}")
         return
     try:
@@ -205,6 +295,7 @@ def run_daemon(
 ) -> int:
     _inject_paths()
     _register_default_handlers()
+    _load_routes()  # WP-C: rule-level subscription table (fail-closed)
     broker = _connect_with_retry(ledger)
     PID_FILE.parent.mkdir(parents=True, exist_ok=True)
     PID_FILE.write_text(str(os.getpid()), encoding="utf-8")
