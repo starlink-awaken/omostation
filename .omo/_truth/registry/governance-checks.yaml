@@ -173,10 +173,7 @@ gac:
   subtraction_quota:
     rule_baseline: 136    # 规则数基线 (增 1 必须删 1, 超基线 gac-validate fail)
     adr_baseline: 361     # ADR 基线 (新增 ADR 须归档一份)
-    script_baseline: 420  # bin/ 活跃脚本基线 (2026-08-20 对齐真实数; 413→420: BCOS W3-W4 业务系统落地
-                          # apple_mail_watcher/evolution_engine/l3_smart_router/lifecycle_changer/
-                          # signal_router/north_star_meter_v2/test_* + knowledge-shadow-runner.py
-                          # 同时归档 north_star_meter.py v1 重复版本)
+    script_baseline: 421  # bin/ 活跃脚本基线 (2026-08-22 对齐真实数; 420→421: PR #1905 落地 4 个 fix-*.py / validate-human-gate.py — submodule-drift/orphan-locks/debt-fields/human-gate. BET-Y1Q2-T6-05 配额制继续.)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

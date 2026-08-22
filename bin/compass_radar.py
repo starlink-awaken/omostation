@@ -478,6 +478,13 @@ def run_radar(omo_dir: Path) -> dict:
     if c2g_src.is_dir() and str(c2g_src) not in sys.path:
         sys.path.insert(0, str(c2g_src))
 
+    # ADR-0412 收敛后 c2g vendor 进 omo (_vendored/c2g), 旧 submodule 布局移除时走此回退
+    c2g_vendored = (
+        Path(__file__).resolve().parent.parent / "projects" / "omo" / "src" / "omo" / "_vendored"
+    )
+    if not c2g_src.is_dir() and c2g_vendored.is_dir() and str(c2g_vendored) not in sys.path:
+        sys.path.insert(0, str(c2g_vendored))
+
     try:
         from c2g.strategy import (  # type: ignore[reportMissingImports]
             _check_anomalies,
