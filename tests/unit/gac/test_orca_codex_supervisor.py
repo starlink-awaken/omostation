@@ -33,9 +33,11 @@ class FakeRunner:
     def __init__(self, responses: list[tuple[int, object, str]]) -> None:
         self.responses = list(responses)
         self.calls: list[tuple[str, ...]] = []
+        self.timeouts: list[float] = []
 
     def __call__(self, command: tuple[str, ...], timeout_seconds: float):
         self.calls.append(command)
+        self.timeouts.append(timeout_seconds)
         returncode, payload, stderr = self.responses.pop(0)
         stdout = payload if isinstance(payload, str) else json.dumps(payload)
         return returncode, stdout, stderr
@@ -153,6 +155,7 @@ def _collect_prefix(workspace: Path) -> list[tuple[int, object, str]]:
                 {
                     "terminal": {
                         "handle": "terminal-001",
+                        "worktreeId": _orca_worktree_id(workspace),
                         "worktreePath": str(workspace),
                         "connected": True,
                         "writable": True,
@@ -291,6 +294,17 @@ def _start_responses(workspace: Path) -> list[tuple[int, object, str]]:
             0,
             _ok(
                 {
+                    "app": {"running": True, "desktopWindowStatus": "available"},
+                    "runtime": {"state": "ready", "reachable": True},
+                    "graph": {"state": "ready"},
+                }
+            ),
+            "",
+        ),
+        (
+            0,
+            _ok(
+                {
                     "worktree": {
                         "id": _orca_worktree_id(workspace),
                         "path": str(workspace),
@@ -299,7 +313,6 @@ def _start_responses(workspace: Path) -> list[tuple[int, object, str]]:
             ),
             "",
         ),
-        (0, _ok({"app": {"running": True}, "runtime": {"state": "ready"}}), ""),
         (
             0,
             _ok(
@@ -350,6 +363,7 @@ def _start_responses(workspace: Path) -> list[tuple[int, object, str]]:
                 {
                     "terminal": {
                         "handle": "terminal-001",
+                        "worktreeId": _orca_worktree_id(workspace),
                         "worktreePath": str(workspace),
                         "connected": True,
                         "writable": True,
@@ -369,6 +383,7 @@ def _start_responses(workspace: Path) -> list[tuple[int, object, str]]:
                 {
                     "terminal": {
                         "handle": "terminal-001",
+                        "worktreeId": _orca_worktree_id(workspace),
                         "worktreePath": str(workspace),
                         "connected": True,
                         "writable": True,
@@ -406,6 +421,41 @@ def _start_responses(workspace: Path) -> list[tuple[int, object, str]]:
             "",
         ),
     ]
+
+
+def _runtime_status(
+    *,
+    running: bool,
+    state: str,
+    desktop_window_status: str = "available",
+    reachable: bool = True,
+    graph_state: str = "ready",
+) -> tuple[int, object, str]:
+    return (
+        0,
+        _ok(
+            {
+                "app": {"running": running, "desktopWindowStatus": desktop_window_status},
+                "runtime": {"state": state, "reachable": reachable},
+                "graph": {"state": graph_state},
+            }
+        ),
+        "",
+    )
+
+
+def _runtime_opened() -> tuple[int, object, str]:
+    return (
+        0,
+        _ok(
+            {
+                "app": {"running": True, "desktopWindowStatus": "available"},
+                "runtime": {"state": "graph_not_ready", "reachable": True},
+                "graph": {"state": "unavailable"},
+            }
+        ),
+        "",
+    )
 
 
 def _run_residuals() -> list[str]:
@@ -452,6 +502,11 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
             "dispatch_id": "orca-dispatch-001",
             "terminal_handle": "terminal-001",
         },
+        "runtime_recovery": {
+            "attempted": False,
+            "recovered": False,
+            "final_state": "ready",
+        },
         "human_action_required": True,
         "approval": {
             "mode": "manual_click",
@@ -473,6 +528,7 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
         ),
     }
     assert runner.calls == [
+        ("orca", "status", "--json"),
         (
             "orca",
             "worktree",
@@ -481,7 +537,6 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
             f"path:{tmp_path}",
             "--json",
         ),
-        ("orca", "status", "--json"),
         (
             "orca",
             "terminal",
@@ -573,6 +628,241 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
             "--json",
         ),
     ]
+
+
+def test_start_recovers_runtime_before_worktree_or_terminal_mutations(tmp_path: Path) -> None:
+    module = _load_module()
+    normal = _start_responses(tmp_path)
+    runner = FakeRunner(
+        [
+            _runtime_status(running=False, state="not_running"),
+            _runtime_opened(),
+            _runtime_status(running=True, state="ready"),
+            normal[1],
+            *normal[2:],
+        ]
+    )
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    assert receipt["runtime_recovery"] == {
+        "attempted": True,
+        "recovered": True,
+        "final_state": "ready",
+    }
+    assert runner.calls[:4] == [
+        ("orca", "status", "--json"),
+        ("orca", "open", "--json"),
+        ("orca", "status", "--json"),
+        ("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json"),
+    ]
+
+
+def test_start_recovers_headless_ready_runtime_before_resources(tmp_path: Path) -> None:
+    module = _load_module()
+    normal = _start_responses(tmp_path)
+    runner = FakeRunner(
+        [
+            _runtime_status(
+                running=True,
+                state="ready",
+                desktop_window_status="unavailable",
+            ),
+            _runtime_opened(),
+            _runtime_status(running=True, state="ready"),
+            normal[1],
+            *normal[2:],
+        ]
+    )
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    assert receipt["runtime_recovery"]["recovered"] is True
+    assert runner.calls[:3] == [
+        ("orca", "status", "--json"),
+        ("orca", "open", "--json"),
+        ("orca", "status", "--json"),
+    ]
+
+
+def test_start_runtime_recovery_fails_closed_when_recheck_is_not_ready(tmp_path: Path) -> None:
+    module = _load_module()
+    runner = FakeRunner(
+        [
+            _runtime_status(running=False, state="not_running"),
+            _runtime_opened(),
+            _runtime_status(running=True, state="graph_not_ready"),
+        ]
+    )
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "status"
+    assert receipt["reason"] == "orca_runtime_not_ready"
+    assert runner.calls == [
+        ("orca", "status", "--json"),
+        ("orca", "open", "--json"),
+        ("orca", "status", "--json"),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("open_response", "reason"),
+    [
+        ((1, {"ok": False, "error": {"code": "open_failed"}}, ""), "orca_runtime_open_failed"),
+        ((0, "not-json", "detail that must not leak"), "orca_response_invalid"),
+    ],
+    ids=["open-failed", "open-malformed"],
+)
+def test_start_runtime_recovery_rejects_unproven_open_before_resources(
+    tmp_path: Path,
+    open_response: tuple[int, object, str],
+    reason: str,
+) -> None:
+    module = _load_module()
+    runner = FakeRunner(
+        [
+            _runtime_status(running=False, state="not_running"),
+            open_response,
+        ]
+    )
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "runtime_open"
+    assert receipt["reason"] == reason
+    assert runner.calls == [
+        ("orca", "status", "--json"),
+        ("orca", "open", "--json"),
+    ]
+
+
+def test_start_runtime_recovery_rejects_malformed_recheck_before_resources(tmp_path: Path) -> None:
+    module = _load_module()
+    runner = FakeRunner(
+        [
+            _runtime_status(running=False, state="not_running"),
+            _runtime_opened(),
+            (0, "not-json", "detail that must not leak"),
+        ]
+    )
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "status"
+    assert receipt["reason"] == "orca_response_invalid"
+    assert runner.calls == [
+        ("orca", "status", "--json"),
+        ("orca", "open", "--json"),
+        ("orca", "status", "--json"),
+    ]
+
+
+def test_start_can_disable_runtime_recovery_without_orca_mutations(tmp_path: Path) -> None:
+    module = _load_module()
+    runner = FakeRunner([_runtime_status(running=False, state="not_running")])
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runtime_recovery=False,
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "status"
+    assert receipt["reason"] == "orca_runtime_not_ready"
+    assert runner.calls == [("orca", "status", "--json")]
+
+
+def test_start_rejects_agent_terminal_created_for_another_worktree(tmp_path: Path) -> None:
+    module = _load_module()
+    responses = _start_responses(tmp_path)
+    responses[6][1]["result"]["terminal"]["worktreeId"] = "repo-other::/tmp/other"
+    runner = FakeRunner(responses)
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "terminal_create"
+    assert receipt["reason"] == "orca_response_invalid"
+    assert not any(call[:3] == ("orca", "terminal", "wait") for call in runner.calls)
+
+
+def test_start_rejects_agent_terminal_show_for_another_worktree(tmp_path: Path) -> None:
+    module = _load_module()
+    responses = _start_responses(tmp_path)
+    responses[8][1]["result"]["terminal"]["worktreeId"] = "repo-other::/tmp/other"
+    runner = FakeRunner(responses)
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "terminal_show"
+    assert receipt["reason"] == "codex_terminal_unverified"
+    assert not any(call[:3] == ("orca", "orchestration", "worker-start") for call in runner.calls)
+
+
+def test_start_gives_orca_wait_rpc_timeout_cushion(tmp_path: Path) -> None:
+    module = _load_module()
+    runner = FakeRunner(_start_responses(tmp_path))
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        timeout_ms=60_000,
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    wait_index = runner.calls.index(
+        (
+            "orca",
+            "terminal",
+            "wait",
+            "--terminal",
+            "terminal-001",
+            "--for",
+            "tui-idle",
+            "--timeout-ms",
+            "60000",
+            "--json",
+        )
+    )
+    assert runner.timeouts[wait_index] >= 65.0
 
 
 def test_start_uses_process_scoped_trust_override_after_verified_clone_guard(
@@ -800,45 +1090,28 @@ def test_start_fails_closed_on_unbound_worker_receipt_without_cleanup(
 
 def test_start_rejects_non_json_status_before_orca_mutations(tmp_path: Path) -> None:
     module = _load_module()
-    runner = FakeRunner(
-        [
-            (
-                0,
-                _ok(
-                    {
-                        "worktree": {
-                            "id": _orca_worktree_id(tmp_path),
-                            "path": str(tmp_path),
-                        }
-                    }
-                ),
-                "",
-            ),
-            (0, "not-json", "runtime detail that must not leak"),
-        ]
-    )
+    runner = FakeRunner([(0, "not-json", "runtime detail that must not leak")])
     identity = _identity(tmp_path)
 
     receipt = module.start_supervised_codex(**identity, runner=runner)
 
+    expected_binding = _expected_binding(module, identity)
+    expected_binding.pop("orca_worktree_id")
     assert receipt == {
         "schema": "orca-codex-supervisor/v1",
         "ok": False,
         "stage": "status",
         "reason": "orca_response_invalid",
-        "binding": _expected_binding(module, identity),
+        "binding": expected_binding,
         "residual_resources": [],
     }
-    assert runner.calls == [
-        ("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json"),
-        ("orca", "status", "--json"),
-    ]
+    assert runner.calls == [("orca", "status", "--json")]
 
 
 def test_start_rejects_worktree_id_with_nonmatching_suffix_path(tmp_path: Path) -> None:
     module = _load_module()
     responses = _start_responses(tmp_path)
-    responses[0][1]["result"]["worktree"]["id"] = f"repo-001::{tmp_path}/other"
+    responses[1][1]["result"]["worktree"]["id"] = f"repo-001::{tmp_path}/other"
     runner = FakeRunner(responses)
 
     receipt = module.start_supervised_codex(**_identity(tmp_path), runner=runner)
@@ -846,7 +1119,10 @@ def test_start_rejects_worktree_id_with_nonmatching_suffix_path(tmp_path: Path) 
     assert receipt["ok"] is False
     assert receipt["stage"] == "worktree_show"
     assert receipt["reason"] == "orca_worktree_unavailable"
-    assert runner.calls == [("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json")]
+    assert runner.calls == [
+        ("orca", "status", "--json"),
+        ("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json"),
+    ]
 
 
 def test_start_rejects_clone_guard_before_any_orca_call(tmp_path: Path) -> None:
