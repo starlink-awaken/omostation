@@ -36,7 +36,67 @@ for _d in "${_dirs[@]}"; do
 done
 REAL_GIT="${REAL_GIT:-/usr/bin/git}"
 
-ROOT="$("$REAL_GIT" rev-parse --show-toplevel 2>/dev/null || true)"
+# Normalize Git's global options before evaluating the repository and command.
+# Without this, `git -C repo merge ...` would bypass policy that only reads $1.
+_git_argv=("$@")
+_git_global_args=()
+GIT_COMMAND=""
+GIT_COMMAND_ARGS=()
+GIT_INLINE_ALIAS_CONFIG=0
+_git_index=0
+while [ "$_git_index" -lt "${#_git_argv[@]}" ]; do
+  _git_arg="${_git_argv[$_git_index]}"
+  case "$_git_arg" in
+    -C|--git-dir|--work-tree|--namespace)
+      _git_global_args+=("$_git_arg")
+      _git_index=$((_git_index + 1))
+      if [ "$_git_index" -lt "${#_git_argv[@]}" ]; then
+        _git_global_args+=("${_git_argv[$_git_index]}")
+      fi
+      ;;
+    -c|--config-env)
+      _git_global_args+=("$_git_arg")
+      _git_index=$((_git_index + 1))
+      if [ "$_git_index" -lt "${#_git_argv[@]}" ]; then
+        _git_config_value="${_git_argv[$_git_index]}"
+        _git_global_args+=("$_git_config_value")
+        case "$_git_config_value" in
+          [Aa][Ll][Ii][Aa][Ss].*) GIT_INLINE_ALIAS_CONFIG=1 ;;
+        esac
+      fi
+      ;;
+    --config-env=*)
+      _git_global_args+=("$_git_arg")
+      case "${_git_arg#--config-env=}" in
+        [Aa][Ll][Ii][Aa][Ss].*) GIT_INLINE_ALIAS_CONFIG=1 ;;
+      esac
+      ;;
+    --git-dir=*|--work-tree=*|--namespace=*|--exec-path=*|--bare|--no-pager|--paginate|--literal-pathspecs|--glob-pathspecs|--noglob-pathspecs|--icase-pathspecs|--no-optional-locks|--no-replace-objects)
+      _git_global_args+=("$_git_arg")
+      ;;
+    --)
+      ;;
+    -*)
+      _git_global_args+=("$_git_arg")
+      ;;
+    *)
+      GIT_COMMAND="$_git_arg"
+      GIT_COMMAND_ARGS=("${_git_argv[@]:$((_git_index + 1))}")
+      break
+      ;;
+  esac
+  _git_index=$((_git_index + 1))
+done
+
+_git_probe() {
+  if [ "${#_git_global_args[@]}" -gt 0 ]; then
+    "$REAL_GIT" "${_git_global_args[@]}" "$@"
+  else
+    "$REAL_GIT" "$@"
+  fi
+}
+
+ROOT="$(_git_probe rev-parse --show-toplevel 2>/dev/null || true)"
 if [ -z "${ROOT:-}" ]; then
   exec "$REAL_GIT" "$@"
 fi
@@ -111,9 +171,62 @@ EOF
   fi
 fi
 
-# T1-07: 共享分支 rebase 拦截 (rebase + 当前分支非 work/*|pr/*)
-if printf '%s\0' "$@" | grep -qzE '\brebase\b'; then
-  BRANCH="$("$REAL_GIT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+# B2d-1: agent/* is an immutable writer lineage.  A delivery attempt may add
+# commits, but it must never absorb upstream history or rewrite commits in
+# place.  A fresh attempt/clone is the only forward-migration path.
+BRANCH="$(_git_probe rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+IMMUTABLE_WRITER=0
+case "$BRANCH" in
+  agent/*) IMMUTABLE_WRITER=1 ;;
+esac
+
+if [ "$IMMUTABLE_WRITER" -eq 1 ]; then
+  if [ "$GIT_INLINE_ALIAS_CONFIG" -eq 1 ]; then
+    echo "[swarm-git] ❌ immutable writer branch '$BRANCH' cannot inject Git aliases" >&2
+    exit 1
+  fi
+  if [ -n "$GIT_COMMAND" ]; then
+    _git_alias="$(_git_probe config --get "alias.$GIT_COMMAND" 2>/dev/null || true)"
+    if [ -n "$_git_alias" ]; then
+      echo "[swarm-git] ❌ immutable writer branch '$BRANCH' cannot dispatch configured Git alias '$GIT_COMMAND'" >&2
+      exit 1
+    fi
+  fi
+  case "$GIT_COMMAND" in
+    rebase)
+      if [ "${#GIT_COMMAND_ARGS[@]}" -ne 1 ] || [ "${GIT_COMMAND_ARGS[0]:-}" != "--abort" ]; then
+        echo "[swarm-git] ❌ immutable writer branch '$BRANCH' cannot rebase; start a fresh delivery attempt" >&2
+        exit 1
+      fi
+      ;;
+    merge)
+      if [ "${#GIT_COMMAND_ARGS[@]}" -ne 1 ] || [ "${GIT_COMMAND_ARGS[0]:-}" != "--abort" ]; then
+        echo "[swarm-git] ❌ immutable writer branch '$BRANCH' cannot merge upstream; start a fresh delivery attempt" >&2
+        exit 1
+      fi
+      ;;
+    pull)
+      echo "[swarm-git] ❌ immutable writer branch '$BRANCH' cannot pull upstream; start a fresh delivery attempt" >&2
+      exit 1
+      ;;
+    push)
+      if [ "${#GIT_COMMAND_ARGS[@]}" -gt 0 ]; then
+        for _arg in "${GIT_COMMAND_ARGS[@]}"; do
+          case "$_arg" in
+            -f|--force|--force=*|--force-with-lease|--force-with-lease=*)
+              echo "[swarm-git] ❌ immutable writer branch '$BRANCH' cannot force-push history" >&2
+              exit 1
+              ;;
+          esac
+        done
+      fi
+      ;;
+  esac
+fi
+
+# T1-07 compatibility: legacy shared branches still block ordinary rebase.
+# Recovery is always allowed so an interrupted operation can be abandoned.
+if [ "$GIT_COMMAND" = "rebase" ] && { [ "${#GIT_COMMAND_ARGS[@]}" -ne 1 ] || [ "${GIT_COMMAND_ARGS[0]:-}" != "--abort" ]; }; then
   if [ -n "$BRANCH" ] && ! printf '%s' "$BRANCH" | grep -qE '^work/|^pr/'; then
     echo "[swarm-git] ❌ rebase on shared branch '$BRANCH' blocked (T1-07): 把工作挪到 work/* 分支" >&2
     exit 1
