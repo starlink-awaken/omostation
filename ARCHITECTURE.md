@@ -28,6 +28,7 @@
 | MOF M3 元元模型 | [`projects/ecos/src/ecos/ssot/mof/m3.yaml`](projects/ecos/src/ecos/ssot/mof/m3.yaml) |
 | MOF M1 governance 实例 | [`projects/ecos/src/ecos/ssot/mof/m1/governance/`](projects/ecos/src/ecos/ssot/mof/m1/governance/) |
 | MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
+| MOF tooling (compiler/bridge/predictive) | [`projects/ecos/src/ecos/ssot/tools/`](projects/ecos/src/ecos/ssot/tools/) · `mof-scan` · `mof-bridge-match` · `mof-predictive-loop` · `ecos-constraint-compiler` |
 | P74 workflow solidification (ADR-0130) | [`.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`](.omo/_knowledge/decisions/0130-p74-workflow-solidification.md) |
 | 知识网关 L3-I0 解耦 + 事件索引管道 (ADR-0294) | [`.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`](.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md) |
 | Memory OS 控制面 (ADR-0372) | [`.omo/_knowledge/decisions/0372-memory-os-control-plane.md`](.omo/_knowledge/decisions/0372-memory-os-control-plane.md) · [architecture](docs/architecture/memory-os.md) · [registry](.omo/_truth/registry/memory-os.yaml) |
