@@ -173,7 +173,7 @@ gac:
   subtraction_quota:
     rule_baseline: 136    # 规则数基线 (增 1 必须删 1, 超基线 gac-validate fail)
     adr_baseline: 361     # ADR 基线 (新增 ADR 须归档一份)
-    script_baseline: 427  # bin/ 活跃脚本基线 (2026-08-22 对齐真实数; 423→427: meta-doctor / 克隆 lifecycle 系列 (#1943~1953) + 实时 event-ingest/resident orchestrator. BET-Y1Q2-T6-05 配额制继续.)
+    script_baseline: 428  # bin/ 活跃脚本基线 (2026-08-22 对齐真实数; 427→428: bin/gac/check-silent-workflows.py 落地 — P74 silently-healthy workflow 检测变可执行 gate. BET-Y1Q2-T6-05 配额制继续.)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
