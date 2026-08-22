@@ -54,6 +54,7 @@ SCHEMA_SUBMODULE_PROFILE = "clone-submodule-profile/v1"
 SCHEMA_PROVENANCE = "clone-provenance/v1"
 SCHEMA_PROVENANCE_ATTEMPT = "clone-provenance/v2"
 SCHEMA_TRANSFER = "clone-transfer/v1"
+SCHEMA_GITLINK_TRANSFER_PROOF = "gitlink-transfer-proof/v1"
 IDENTITY_FILENAME = "agent-clone-identity.json"
 READINESS_FILENAME = "agent-clone-readiness.json"
 PROVENANCE_FILENAME = "agent-clone-provenance.json"
@@ -146,6 +147,9 @@ def git_isolated(cwd: str, *args: str) -> subprocess.CompletedProcess:
     env = os.environ.copy()
     for key in GIT_REPOSITORY_SCOPE_ENV:
         env.pop(key, None)
+    for key in list(env):
+        if re.fullmatch(r"GIT_CONFIG_(?:KEY|VALUE)_\d+", key):
+            env.pop(key, None)
     try:
         return subprocess.run(
             ["git", "-C", cwd, *args],
@@ -2250,6 +2254,184 @@ def _transfer_delta(side: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _tracked_gitlink_authorities(repo_root: str, revision: str) -> dict[str, str]:
+    """Read path/url pairs from the candidate's committed .gitmodules blob."""
+    proc = transfer_git(
+        repo_root,
+        "config",
+        "--blob",
+        f"{revision}:.gitmodules",
+        "--get-regexp",
+        r"^submodule\..*\.(path|url)$",
+    )
+    if proc.returncode != 0:
+        return {}
+    sections: dict[str, dict[str, str]] = {}
+    for line in proc.stdout.splitlines():
+        key, separator, value = line.partition(" ")
+        if not separator or not key.startswith("submodule."):
+            continue
+        section, field = key[len("submodule.") :].rsplit(".", 1)
+        if field in {"path", "url"}:
+            sections.setdefault(section, {})[field] = value
+    return {
+        fields["path"]: fields["url"]
+        for fields in sections.values()
+        if fields.get("path") and fields.get("url")
+    }
+
+
+def _gitlink_object_present(repo_root: str, sha: str) -> bool:
+    return transfer_git(repo_root, "cat-file", "-e", f"{sha}^{{commit}}").returncode == 0
+
+
+def _exact_remote_main(repo_root: str, authority: str) -> str | None:
+    """Resolve only the authority's current main tip; this never fetches or writes refs."""
+    proc = transfer_git(repo_root, "ls-remote", "--exit-code", authority, "refs/heads/main")
+    if proc.returncode != 0:
+        return None
+    matches = []
+    for line in proc.stdout.splitlines():
+        fields = line.split("\t", 1)
+        if len(fields) == 2 and fields[1] == "refs/heads/main" and re.fullmatch(r"[0-9a-f]{40,64}", fields[0]):
+            matches.append(fields[0])
+    return matches[0] if len(matches) == 1 else None
+
+
+def _authority_resolution_is_exact(repo_root: str, authority: str) -> bool:
+    """Reject URL rewrite rules before the authority is contacted for proof."""
+    proc = transfer_git(repo_root, "ls-remote", "--get-url", authority)
+    return proc.returncode == 0 and proc.stdout.strip() == authority
+
+
+def _strict_gitlink_failure(reason: str, paths: list[str], *, details: dict[str, Any] | None = None) -> dict[str, Any]:
+    return {
+        "gitlink_status": "unprovable",
+        "pending_strict_proof": True,
+        "proofs": [],
+        "reason": reason,
+        "paths": paths,
+        **(details or {}),
+    }
+
+
+def _strict_gitlink_proofs(
+    source: dict[str, Any],
+    target: dict[str, Any],
+    source_delta: dict[str, Any],
+    target_delta: dict[str, Any],
+) -> dict[str, Any]:
+    """Prove child history forwarding from already-present local objects only."""
+    source_base_links = gitlinks_at_revision(source["clone_root"], source["baseline_sha"])
+    source_head_links = gitlinks_at_revision(source["clone_root"], source["head_sha"])
+    target_base_links = gitlinks_at_revision(target["clone_root"], target["baseline_sha"])
+    target_head_links = gitlinks_at_revision(target["clone_root"], target["head_sha"])
+    source_all_paths = sorted(source_head_links)
+    target_all_paths = sorted(target_head_links)
+    if source_all_paths != target_all_paths:
+        return _strict_gitlink_failure(
+            "gitlink_repository_path_set_mismatch",
+            sorted(set(source_all_paths) | set(target_all_paths)),
+            details={"source_paths": source_all_paths, "target_paths": target_all_paths},
+        )
+    source_paths = {entry["path"] for entry in source_delta["gitlinks"]}
+    target_paths = {entry["path"] for entry in target_delta["gitlinks"]}
+    proof_paths = sorted(source_paths | target_paths)
+    proofs: list[dict[str, Any]] = []
+    for path in proof_paths:
+        if any(
+            path not in links
+            for links in (source_base_links, source_head_links, target_base_links, target_head_links)
+        ):
+            return _strict_gitlink_failure("gitlink_missing_or_added", [path])
+        source_entry = {"base_sha": source_base_links[path], "candidate_sha": source_head_links[path]}
+        target_entry = {"base_sha": target_base_links[path], "candidate_sha": target_head_links[path]}
+        source_authorities = _tracked_gitlink_authorities(source["clone_root"], source["head_sha"])
+        target_authorities = _tracked_gitlink_authorities(target["clone_root"], target["head_sha"])
+        source_authority = source_authorities.get(path)
+        target_authority = target_authorities.get(path)
+        if not source_authority or not target_authority or source_authority != target_authority:
+            return _strict_gitlink_failure("gitlink_authority_mismatch", [path])
+        source_child = os.path.join(source["clone_root"], path)
+        target_child = os.path.join(target["clone_root"], path)
+        source_initialized, source_head, source_origin, source_clean = submodule_state(source["clone_root"], path)
+        target_initialized, target_head, target_origin, target_clean = submodule_state(target["clone_root"], path)
+        if not source_initialized or not target_initialized:
+            return _strict_gitlink_failure("gitlink_child_uninitialized", [path])
+        if not source_clean or not target_clean:
+            return _strict_gitlink_failure("gitlink_child_dirty", [path])
+        if source_head != source_entry["candidate_sha"] or target_head != target_entry["candidate_sha"]:
+            return _strict_gitlink_failure("gitlink_child_head_mismatch", [path])
+        if source_origin != source_authority or target_origin != target_authority:
+            return _strict_gitlink_failure("gitlink_child_origin_mismatch", [path])
+        if not _authority_resolution_is_exact(source_child, source_authority):
+            return _strict_gitlink_failure("gitlink_authority_rewrite_detected", [path])
+        shas = {
+            source_entry.get("base_sha"),
+            source_entry.get("candidate_sha"),
+            target_entry.get("base_sha"),
+            target_entry.get("candidate_sha"),
+        }
+        if not all(isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{40,64}", sha) for sha in shas):
+            return _strict_gitlink_failure("gitlink_sha_missing", [path])
+        remote_main_first = _exact_remote_main(source_child, source_authority)
+        if remote_main_first is None:
+            return _strict_gitlink_failure("gitlink_remote_main_unresolved", [path])
+        if not _authority_resolution_is_exact(source_child, source_authority):
+            return _strict_gitlink_failure("gitlink_authority_rewrite_detected", [path])
+        shas.add(remote_main_first)
+        if not all(_gitlink_object_present(source_child, sha) for sha in shas) or not all(
+            _gitlink_object_present(target_child, sha) for sha in shas
+        ):
+            return _strict_gitlink_failure("gitlink_required_object_missing", [path])
+        predicates = {
+            "source_base_to_source_candidate": transfer_is_ancestor(
+                source_child, source_entry["base_sha"], source_entry["candidate_sha"]
+            ),
+            "source_base_to_target_base": transfer_is_ancestor(
+                source_child, source_entry["base_sha"], target_entry["base_sha"]
+            ),
+            "target_base_to_target_candidate": transfer_is_ancestor(
+                target_child, target_entry["base_sha"], target_entry["candidate_sha"]
+            ),
+            "source_candidate_to_target_candidate": transfer_is_ancestor(
+                source_child, source_entry["candidate_sha"], target_entry["candidate_sha"]
+            ),
+            "target_candidate_to_remote_main": transfer_is_ancestor(
+                target_child, target_entry["candidate_sha"], remote_main_first
+            ),
+        }
+        remote_main_second = _exact_remote_main(source_child, source_authority)
+        if not _authority_resolution_is_exact(source_child, source_authority):
+            return _strict_gitlink_failure("gitlink_authority_rewrite_detected", [path])
+        if remote_main_second != remote_main_first:
+            return _strict_gitlink_failure("gitlink_remote_main_race", [path])
+        if not all(predicates.values()):
+            return _strict_gitlink_failure("gitlink_history_unprovable", [path], details={"predicates": predicates})
+        authority_redacted = redact_remote(source_authority)
+        proof = {
+            "schema": SCHEMA_GITLINK_TRANSFER_PROOF,
+            "path": path,
+            "authority_digest": hashlib.sha256((authority_redacted or "").encode("utf-8")).hexdigest(),
+            "source_base_sha": source_entry["base_sha"],
+            "source_candidate_sha": source_entry["candidate_sha"],
+            "target_base_sha": target_entry["base_sha"],
+            "target_candidate_sha": target_entry["candidate_sha"],
+            "remote_main_sha": remote_main_first,
+            "resolution": {"ref": "refs/heads/main", "method": "ls-remote", "remote_race_free": True},
+            "predicates": predicates,
+        }
+        proof["proof_digest"] = canonical_digest(proof)
+        proofs.append(proof)
+    return {
+        "gitlink_status": "verified",
+        "pending_strict_proof": False,
+        "proofs": proofs,
+        "reason": "verified",
+        "paths": proof_paths,
+    }
+
+
 def cmd_transfer(args: argparse.Namespace) -> dict:
     """Prove a manually transferred root-only delta; this command never applies it."""
     source = _load_transfer_clone("source", args.source_clone, args.source_baseline)
@@ -2322,6 +2504,22 @@ def cmd_transfer(args: argparse.Namespace) -> dict:
         "target_head_sha": target["head_sha"],
     }
     pending_gitlinks = bool(source_delta["gitlinks"] or target_delta["gitlinks"])
+    root_content_status = "verified"
+    strict = (
+        _strict_gitlink_proofs(source, target, source_delta, target_delta)
+        if pending_gitlinks and getattr(args, "strict_gitlinks", False)
+        else {
+            "gitlink_status": "pending_strict_proof" if pending_gitlinks else "not_applicable",
+            "pending_strict_proof": pending_gitlinks,
+            "proofs": [],
+            "reason": "strict_gitlinks_not_requested" if pending_gitlinks else "no_gitlink_delta",
+            "paths": sorted({entry["path"] for entry in source_delta["gitlinks"] + target_delta["gitlinks"]}),
+        }
+    )
+    content_verified = root_content_status == "verified" and strict["gitlink_status"] in {
+        "verified",
+        "not_applicable",
+    }
     receipt = {
         "schema": SCHEMA_TRANSFER,
         "mode": args.mode,
@@ -2358,10 +2556,16 @@ def cmd_transfer(args: argparse.Namespace) -> dict:
             "source_claims": "not_inherited",
             "target_claims": "independent_authority_required",
         },
-        "status": "unprovable" if pending_gitlinks else "content_verified",
-        "verdict": "UNPROVABLE" if pending_gitlinks else "PASS",
-        "content_verified": not pending_gitlinks,
-        "pending_strict_proof": pending_gitlinks,
+        "status": "content_verified" if content_verified else "unprovable",
+        "verdict": "PASS" if content_verified else "UNPROVABLE",
+        "reason": strict["reason"],
+        "content_verified": content_verified,
+        "root_content_status": root_content_status,
+        "gitlink_status": strict["gitlink_status"],
+        "pending_strict_proof": strict["pending_strict_proof"],
+        "gitlink_paths": strict["paths"],
+        "gitlink_proofs": strict["proofs"],
+        "gitlink_evidence": {key: value for key, value in strict.items() if key not in {"proofs", "reason", "paths", "gitlink_status", "pending_strict_proof"}},
         "retire_eligible": False,
         "lifecycle_verified": False,
         "workspace_scope": "committed_tracked_content_only",
@@ -3251,6 +3455,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--output",
         help="optional canonical receipt path; exclusive-create only and never overwritten",
+    )
+    p.add_argument(
+        "--strict-gitlinks",
+        action="store_true",
+        help="read-only proof that changed root gitlinks already advance to remote refs/heads/main",
     )
     p.set_defaults(func=cmd_transfer)
 
