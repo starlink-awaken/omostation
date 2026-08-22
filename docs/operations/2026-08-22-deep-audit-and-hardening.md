@@ -59,7 +59,7 @@ omlxc 内建的 `models reconcile` 命令看起来正是为解决这个问题设
 1. **probe 预算 1→100 (`8f64b71`)** — reasoning 模型思维链吃光 1 token 预算致 content 恒空、后端被永判不可用。该修复 08-20 曾做过但未提交，被并发 checkout 重置抹掉并被后续 wheel 构建覆盖回 bug 版（比对已安装包与 git 历史坐实）。教训：**修复必须立即 commit**。
 2. **数据面加载注入受控上下文 (`6c91a8c`)** — 见上文根因定位。
 3. **繁忙模型阻塞探针（未修，自愈型，已定位）** — 探测从"已加载模型"中选探针目标；当唯一已加载模型正处于长生成时，probe 请求排在后面 10s 超时 → 整个后端被判不可用（实测 0/15）。生成结束后 60s 内自动恢复（实测 14/15）。修复需要探测设计层面的改动（probe 超时不判死后端/挑非忙碌探针），留作后续。
-4. **stale-loaded 竞态触发 HTTP JIT 失控加载（未修，已定位）** — 端到端验证时发现：探测缓存的 loaded=True 与 LM Studio 实际状态存在竞态窗口，数据面据此跳过 ensure_loaded 直接发 HTTP chat → 未加载的模型被 LM Studio JIT 按全局 `max` (262144) 加载。实测一次请求把 ornith/vision 双双 JIT 成 262144 并把系统内存打到 1.5GB。对照证据：同批请求中 qwopus 经 ensure_loaded 路径加载为 **16384**（受控加载修复 `6c91a8c` 的活体验证）。修复方向：LM Studio adapter.chat 发送前对未加载模型主动受控加载（内联 ensure_loaded），消灭竞态窗口。
+4. **~~stale-loaded 竞态触发 HTTP JIT 失控加载~~ 已修复 (`9c46ff7`)** — 端到端验证时定位：探测缓存的 loaded=True 与 LM Studio 实际状态存在竞态窗口，数据面据此跳过 ensure_loaded 直接发 HTTP chat → 未加载的模型被 LM Studio JIT 按全局 `max` (262144) 加载。实测一次请求把 ornith/vision 双双 JIT 成 262144 并把系统内存打到 1.5GB。修复：adapter 维护 discover 刷新的已加载缓存（`_loaded_cache_valid` 区分"未探测"(放行)与"探测过且未加载"(拦截)），chat/stream_chat 发送前对未加载模型先走幂等 SSH 受控 `lms load -c`。契约回归测试固化"chat 前恰好一次带 -c 的受控加载"。修复后端到端验证 200 + 真实中文生成贯通（vision → omlx-app 路径）。
 
 ## 五、AetherForge 全链路验证
 
