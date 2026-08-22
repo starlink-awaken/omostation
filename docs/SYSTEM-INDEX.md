@@ -49,6 +49,7 @@
 | BOS 服务 | `projects/agora/etc/bos-services.yaml` | 边界层 |
 | L0 约束 | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` | 协议层 |
 | MOF 能力 | `.omo/_truth/registry/mof-capabilities.yaml` | 事实层 |
+| 能力联合关系与状态边界 | [`architecture/capability-federation-contract-v1.md`](architecture/capability-federation-contract-v1.md) | 架构层 |
 | 运维脚本入口 | [`bin/README.md`](../bin/README.md) | 运行时工具 |
 | 空间配置入口 | `spaces/AGENTS.md` · `spaces/registry.yaml` | 空间策略 |
 
@@ -81,7 +82,7 @@
 
 → [操作 SOP](operations/) — 运维手册、清单、模板（详见 `docs/operations/`；含 [codebase-memory](operations/codebase-memory.md) 结构图用法；Memory OS： [memory-os-neo4j-local](operations/memory-os-neo4j-local.md) · [memory-os-epic-retro](operations/memory-os-epic-retro.md)）
 
-→ [架构设计](architecture/) — 方案设计文档（详见 `docs/architecture/`；含 [Memory OS](architecture/memory-os.md) 控制面导航）
+→ [架构设计](architecture/) — 方案设计文档（详见 `docs/architecture/`；含 [Memory OS](architecture/memory-os.md) 控制面导航与 [Capability Federation](architecture/capability-federation-contract-v1.md) 跨注册表合同）
 
 → [ISA 分析](isa/) — 接口/服务/架构图（详见 `docs/isa/`）
 
@@ -180,6 +181,7 @@
 | GaC 治理即代码 | gac-validate, gac-drift, gac-local-gate | bin/gac/ |
 | ADR 治理 | adr-coverage, adr-drift-check | bin/adr/ |
 | SSOT 守护 | doc-ssot-lint, ssot-guardian | bin/ssot/ |
+| 能力联合审计 | capability-sync federation-audit | bin/capability-sync.py |
 | MOF 工具 | mof-enforce, mof-reason | bin/mof/ |
 | Agent 工作流 | agent-workflow.py | bin/ |
 | 场景执行 | journey-runner, signal-poller, scene-reflection, scene-outcome-recorder, capability-token | bin/ssot/ |
