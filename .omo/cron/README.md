@@ -11,7 +11,7 @@
 | governance-agent-crontab | omo governance-agent 调度 | 6h | 独立 (agent 运行时) |
 | governance-dashboard-crontab | governance-dashboard + gov-trend 报告 | daily/weekly | 独立 (仪表盘生成) |
 | x2-freshness-crontab | x2_freshness_audit (cross-lint/debt-evidence/mof-bump) | daily/weekly/monthly | 部分重叠 (GaC indexed X2-FRESH-*) |
-| opc-closeout-crontab | OPC P5-P7 (radar/weekly-loop/drift-detector/self-evolve/release-cycle/audit-rollout/doc-lint) | daily/weekly | 独立 (OPC 生命周期) |
+| ~~opc-closeout-crontab~~ | OPC P5-P7 (已随生命周期完成退役 → `_archived-20260822-opc-closeout-crontab`) | - | 已归档 (2026-08-22, scripts/ 目录 ADR-0394 移除后调度断链, 见 docs/reports/2026-08-22-runtime-governance-deep-analysis.md) |
 | **operating-rhythm-crontab** | operating-rhythm daily/weekly (agent-workflow + governance-evolution + m4-health + **omo-doctor-cron** path-acl) | daily/weekly | 独立 (Meadows 9 / ADR-0119/0121/**0200**) |
 
 ## 安装 (按需)
