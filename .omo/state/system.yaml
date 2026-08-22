@@ -11,9 +11,9 @@ phase_status: active
 current_wave: W5
 next_milestone: Phase 49 W1 — 知识流动·用户价值兑现 (T1-T6 全面落地)
 health_score_ref: .omo/state/health.yaml
-health_score: 45
+health_score: 41
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-08-17T01:37:02Z'
+health_score_generated_at: '2026-08-22T11:56:56Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -262,11 +262,10 @@ runtime_health_summary:
   online_services: 0
   total_services: 4
   ratio: 0.0
-  health_score: 0
-  last_scan: '1787127179.418313'
-  service_count: 8
+  health_score: 41
+  last_scan: '2026-08-22T11:56:56Z'
+  source: compass_radar_isc3_daemon_ratio
   degraded: []
-  source: runtime_daemon_de_false_positive
 phase42_status: completed
 phase42_completed_at: '2026-07-14T20:59:00Z'
 phase43_status: completed
@@ -280,18 +279,17 @@ debt_adjusted_health_score: 61.6
 debt_items_total: 7
 debt_items_resolved: 7
 debt_adjusted_note: all 7 debt items resolved
-governance_anomaly_score: 0
+governance_anomaly_score: 70
 service_online_ratio: 0.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
 governance_feedback_last_run: '2026-08-19T16:12:59.658704+08:00'
-health_score_evidence: 80.0
+health_score_evidence: 94.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-17T01:37:03.954141+00:00'
+health_score_evidence_generated_at: '2026-08-22T11:57:04.393527+00:00'
 workflow_mesh_health:
-  status: healthy
-  event_count: 1661
-  events_last_hour: 185
-  last_event_age_seconds: 3.8
-  bridges_active:
-  - agent-workflow
+  status: degraded
+  event_count: 0
+  events_last_hour: 0
+  last_event_age_seconds: null
+  bridges_active: []
