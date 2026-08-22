@@ -129,3 +129,17 @@
 ## 七、给你的一句话结论
 
 三节点的"通不通"问题今天彻底解决了，且有详尽的实测证据背书。但"持久可用"目前是靠我今天的手动操作在硬撑——`remote_resident` 这个本该自动化的机制是空的，数据面加载不设 TTL 会导致内存静默累积。这两点不解决，明天你打开电脑，mac-mini 的常驻模型大概率已经消失，一切要重新手动来一遍。**这是接下来最值得投入的地方，优先级高于继续扩大测试覆盖面或者深挖 y7000p 的偶发网络问题。**
+
+## 九、AetherForge 对外可达性根治（全链路终于闭环）
+
+### 根因
+
+网关进程从今天早上 9:39 就一直在跑（早于 Tailscale 修复），启动参数 `--bind tailnet` 的解析逻辑（`packages/gateway/src/llm_gateway/openai_proxy.py::_tailnet_ip()`）调用 `shutil.which("tailscale")` 找不到就回退到 `/Applications/Tailscale.app/Contents/MacOS/Tailscale`（连的是官方僵尸 daemon 的标准 socket，永远拿不到结果），然后诚实地退回只绑 `127.0.0.1` 并记警告日志。代码本身设计良好（只认 `100.` 段，天然规避了误绑到猎豹 VPN 22.x 网段的风险），问题纯粹是 **launchd 环境的 `PATH` 不含 `/usr/local/bin`**（brew tailscale wrapper 所在位置），`com.aetherforge.gateway.plist` 的 `EnvironmentVariables` 里压根没有 `PATH` 键。
+
+### 修复
+
+给 plist 补上 `PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin`（备份原文件、`plutil -lint` 验证语法后落地），`launchctl unload`+`load` 重新加载。新进程确认同时监听 `localhost:4000` 和 `macbook-pro-brew.tail0483a1.ts.net:4000`（即 `100.68.80.44:4000`）。
+
+### 端到端验证（从真正的外部 tailnet 设备发起，不是本机 loopback）
+
+从 mac-mini SSH 发起真实请求打 `100.68.80.44:4000`：认证通过，路由到 `mac-mini-m4-24g-lm_studio`，真实生成 "贯通"，`finish_reason: stop`。**这是今天第一次真正验证"外部可用"这件事——此前所有测试都是本机 loopback，掩盖了这个缺口。**
