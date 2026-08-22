@@ -289,7 +289,7 @@ worktree-cleanup:  ## 回收 TTL 过期 worktree
 
 clone-onboard:  ## 为新 agent 创建 clone + 基线
 	$(PY_STDLIB) bin/gac/clone-lifecycle.py onboard --agent-id $(AGENT_ID) \
-	  --destination "$(HOME)/agents/$(AGENT_ID)/ws"
+	  --destination "$(HOME)/agents/$(AGENT_ID)/ws" --profile governance
 
 clone-snapshot:  ## 为当前 clone 生成基线 manifest
 	$(PY_STDLIB) bin/gac/clone-lifecycle.py snapshot --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
@@ -307,7 +307,7 @@ clone-integrate:  ## 推送分支 + PR (dry-run)
 clone-retire:  ## 清理 clone
 	$(PY_STDLIB) bin/gac/clone-lifecycle.py retire --destination "$(HOME)/agents/$(AGENT_ID)/ws"
 
-clone-onboard:  ## D2: 为活跃 agent 自动创建 clone (dry-run)
+clone-onboard-scan:  ## D2: 为活跃 agent 自动创建 clone (dry-run)
 	$(PY_STDLIB) bin/gac/agent-clone-onboard.py
 
 clone-onboard-apply:  ## D2: 真正创建 clone

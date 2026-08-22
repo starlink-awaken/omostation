@@ -81,7 +81,7 @@ def clone_exists(agent_id: str) -> bool:
     return identity_file.exists()
 
 
-def onboard_agent(agent_id: str, dry_run: bool = True) -> dict:
+def onboard_agent(agent_id: str, dry_run: bool = True, profile: str = "governance") -> dict:
     """为单个 agent 创建 clone."""
     dest = AGENTS_DIR / agent_id / "ws"
     result = {"agent_id": agent_id, "destination": str(dest), "dry_run": dry_run}
@@ -96,6 +96,7 @@ def onboard_agent(agent_id: str, dry_run: bool = True) -> dict:
         "--agent-id", agent_id,
         "--source", str(ROOT),
         "--destination", str(dest),
+        "--profile", profile,
     ]
     r = run(cmd)
     result["returncode"] = r.returncode
@@ -109,6 +110,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="真正创建 clone (默认 dry-run)")
     parser.add_argument("--agent-id", help="仅处理指定 agent")
+    parser.add_argument(
+        "--profile",
+        choices=("root-only", "governance", "full"),
+        default="governance",
+        help="clone submodule profile (default: governance)",
+    )
     parser.add_argument("--json", action="store_true", help="输出 JSON")
     args = parser.parse_args(argv)
     dry_run = not args.apply
@@ -128,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
             existing += 1
             results.append({"agent_id": agent_id, "status": "exists"})
             continue
-        r = onboard_agent(agent_id, dry_run=dry_run)
+        r = onboard_agent(agent_id, dry_run=dry_run, profile=args.profile)
         r.update(info)
         results.append(r)
     # 输出报告

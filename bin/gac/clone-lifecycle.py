@@ -209,12 +209,21 @@ def cmd_onboard(args: argparse.Namespace) -> int:
     agent_id = args.agent_id
     dest = Path(args.destination)
     manifest_path = Path(args.manifest) if args.manifest else dest.parent / f"{agent_id}-baseline.json"
+    readiness_path = (
+        Path(args.readiness) if getattr(args, "readiness", None) else dest.parent / f"{agent_id}-readiness.json"
+    )
     audit("onboard_start", f"agent={agent_id} dest={dest}")
     if os.path.lexists(manifest_path):
         return reject(
             "onboard",
             "manifest_collision",
             f"manifest output already exists: {manifest_path}",
+        )
+    if os.path.lexists(readiness_path):
+        return reject(
+            "onboard",
+            "readiness_collision",
+            f"readiness output already exists: {readiness_path}",
         )
     if os.path.lexists(dest):
         return reject("onboard", "destination_collision", f"destination already exists: {dest}")
@@ -235,18 +244,27 @@ def cmd_onboard(args: argparse.Namespace) -> int:
         str(dest),
     ]
     requested_submodules = list(getattr(args, "submodule", None) or [])
+    requested_profile = getattr(args, "profile", None)
+    effective_profile = requested_profile
     if getattr(args, "all_submodules", False):
-        pass
+        effective_profile = "full"
+        cmd.extend(["--profile", "full"])
     elif requested_submodules:
+        effective_profile = "custom"
         for submodule in requested_submodules:
             cmd.extend(["--submodule", submodule])
     else:
-        cmd.append("--no-submodules")
+        effective_profile = requested_profile or "governance"
+        cmd.extend(["--profile", effective_profile])
     r = run(cmd)
     if r.returncode != 0:
         audit("onboard_failed", f"clone_create rc={r.returncode} stderr={r.stderr.strip()[:200]}")
         print(r.stderr, file=sys.stderr)
         return EXIT_POLICY
+    try:
+        create_payload = json.loads(r.stdout)
+    except json.JSONDecodeError:
+        create_payload = {}
     # 2. 生成基线 manifest
     cmd = [
         sys.executable,
@@ -288,6 +306,28 @@ def cmd_onboard(args: argparse.Namespace) -> int:
     if r.returncode != 0:
         audit("onboard_failed", f"verify rc={r.returncode} recoverable_clone={dest}")
         return EXIT_POLICY
+    readiness_payload: dict = {}
+    if effective_profile is not None:
+        cmd = [
+            sys.executable,
+            str(AGENT_CLONE),
+            "readiness",
+            "--clone",
+            str(dest),
+            "--manifest",
+            str(manifest_path),
+            "--output",
+            str(readiness_path),
+        ]
+        r = run(cmd)
+        if r.returncode != 0:
+            audit("onboard_failed", f"readiness rc={r.returncode} recoverable_clone={dest}")
+            print(r.stderr, file=sys.stderr)
+            return EXIT_POLICY
+        try:
+            readiness_payload = json.loads(r.stdout)
+        except json.JSONDecodeError:
+            readiness_payload = {}
     audit("onboard_ok", f"agent={agent_id} clone={dest} manifest={manifest_path}")
     print(
         json.dumps(
@@ -298,7 +338,14 @@ def cmd_onboard(args: argparse.Namespace) -> int:
                 "manifest": str(manifest_path),
                 "verification": "verified",
                 "requested_revision": args.revision,
-                "initialized_submodules": requested_submodules if not getattr(args, "all_submodules", False) else "all",
+                "profile": effective_profile,
+                "readiness": str(readiness_path) if effective_profile is not None else None,
+                "readiness_status": readiness_payload.get("status"),
+                "readiness_digest": readiness_payload.get("receipt_digest"),
+                "initialized_submodules": create_payload.get(
+                    "initialized_submodules",
+                    requested_submodules if not getattr(args, "all_submodules", False) else "all",
+                ),
             },
             indent=2,
         )
@@ -319,6 +366,30 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         return EXIT_POLICY
     audit("snapshot_ok", f"clone={clone} output={output}")
     print(json.dumps({"ok": True, "manifest": str(output)}, indent=2))
+    return EXIT_OK
+
+
+def cmd_readiness(args: argparse.Namespace) -> int:
+    """Resume or regenerate an identical readiness binding after interruption."""
+    audit("readiness_start", f"clone={args.clone} manifest={args.manifest}")
+    cmd = [
+        sys.executable,
+        str(AGENT_CLONE),
+        "readiness",
+        "--clone",
+        str(args.clone),
+        "--manifest",
+        str(args.manifest),
+        "--output",
+        str(args.output),
+    ]
+    r = run(cmd)
+    if r.returncode != 0:
+        audit("readiness_failed", f"rc={r.returncode}")
+        print(r.stderr, file=sys.stderr)
+        return EXIT_POLICY
+    audit("readiness_ok", f"clone={args.clone} output={args.output}")
+    print(r.stdout, end="" if r.stdout.endswith("\n") else "\n")
     return EXIT_OK
 
 
@@ -727,7 +798,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sp.add_argument("--destination", required=True)
     sp.add_argument("--manifest")
+    sp.add_argument("--readiness", help="external clone-readiness/v1 receipt path")
     onboard_mode = sp.add_mutually_exclusive_group()
+    onboard_mode.add_argument(
+        "--profile",
+        choices=("root-only", "governance", "full"),
+        help="named root-gitlink profile (default: governance)",
+    )
     onboard_mode.add_argument(
         "--submodule",
         action="append",
@@ -745,6 +822,12 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--clone", required=True)
     sp.add_argument("--output", required=True)
     sp.set_defaults(func=cmd_snapshot)
+    # readiness recovery
+    sp = sub.add_parser("readiness", help="恢复或复核 clone readiness receipt")
+    sp.add_argument("--clone", required=True)
+    sp.add_argument("--manifest", required=True)
+    sp.add_argument("--output", required=True)
+    sp.set_defaults(func=cmd_readiness)
     # changeset
     sp = sub.add_parser("changeset", help="生成变更集 + claim 校验")
     sp.add_argument("--clone", required=True)

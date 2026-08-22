@@ -148,6 +148,67 @@ def make_source(base: Path, submodule_name: str = "childmod", with_hooks: bool =
     return src, child, bare
 
 
+def make_governance_profile_source(base: Path) -> tuple[Path, Path]:
+    """Build a root repo exposing the exact governance profile gitlinks."""
+    child = base / "governance-child"
+    child.mkdir(parents=True)
+    git(child, "init", "-b", "main")
+    (child / "payload.txt").write_text("governance\n")
+    git(child, "add", "payload.txt")
+    git(child, "commit", "-m", "child")
+
+    src = base / "governance-source"
+    src.mkdir()
+    git(src, "init", "-b", "main")
+    (src / "README.md").write_text("root\n")
+    policy = src / ".omo" / "_truth" / "registry" / "swarm-coordination.yaml"
+    policy.parent.mkdir(parents=True)
+    policy.write_text(
+        "topology_migration:\n"
+        f"  integration_root: '{(base / 'authority').resolve()}'\n"
+    )
+    hooks = src / ".githooks"
+    hooks.mkdir()
+    (hooks / "pre-commit").write_text("#!/bin/sh\nexit 0\n")
+    tool_dir = src / "bin" / "gac"
+    tool_dir.mkdir(parents=True)
+    shutil.copy2(MANAGED_PYTHON, tool_dir / "managed-python")
+    (tool_dir / "managed-python").chmod(0o755)
+    workflow = src / "bin" / "agent-workflow.py"
+    workflow.write_text(
+        "#!/usr/bin/env python3\n"
+        "import json, sys\n"
+        "if sys.argv[1:] == ['status', '--json']:\n"
+        "    print(json.dumps({'ok': True}))\n"
+        "    raise SystemExit(0)\n"
+        "raise SystemExit(2)\n"
+    )
+    workflow.chmod(0o755)
+    git(src, "add", "README.md", ".omo", ".githooks", "bin")
+    for path in (
+        "projects/omo",
+        "projects/ecos",
+        "projects/agora",
+        "projects/cockpit",
+        "projects/cockpit-ui",
+    ):
+        git(
+            src,
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "add",
+            str(child),
+            path,
+        )
+    git(src, "commit", "-m", "governance profile")
+    bare = base / "governance-source.git"
+    git(base, "init", "--bare", "-b", "main", bare.name)
+    git(src, "remote", "add", "origin", str(bare))
+    git(src, "push", "-u", "origin", "main")
+    return src, bare
+
+
 def make_nested_source(base: Path) -> tuple[Path, Path]:
     nested = base / "nested"
     nested.mkdir()
@@ -315,6 +376,332 @@ def test_create_initializes_only_requested_submodules(tmp_path):
     assert result["initialized_submodules"] == ["childmod"]
     assert (dest / "childmod" / ".git").exists()
     assert not (dest / "secondmod" / ".git").exists()
+
+
+def test_named_submodule_profiles_are_exact_and_root_only_is_read_only():
+    tool = load_tool_module()
+    gitlinks = {
+        "projects/omo": "1" * 40,
+        "projects/ecos": "2" * 40,
+        "projects/agora": "3" * 40,
+        "projects/cockpit": "4" * 40,
+        "projects/cockpit-ui": "5" * 40,
+        "projects/runtime": "6" * 40,
+    }
+
+    assert tool.resolve_submodule_profile("root-only", gitlinks) == []
+    assert tool.resolve_submodule_profile("governance", gitlinks) == [
+        "projects/agora",
+        "projects/cockpit",
+        "projects/cockpit-ui",
+        "projects/ecos",
+        "projects/omo",
+    ]
+    assert tool.resolve_submodule_profile("full", gitlinks) == sorted(gitlinks)
+
+
+def test_readiness_remote_projection_redacts_credentials_and_query_tokens():
+    tool = load_tool_module()
+    assert (
+        tool.redact_remote("https://user:secret@github.com/org/repo.git?token=hidden#fragment")
+        == "https://github.com/org/repo.git"
+    )
+    assert tool.redact_remote("git@github.com:org/repo.git") == "github.com:org/repo.git"
+
+
+def test_expected_submodule_origin_uses_git_resolved_relative_url(tmp_path):
+    tool = load_tool_module()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-b", "main")
+    (repo / ".gitmodules").write_text(
+        '[submodule "projects/omo"]\n'
+        "\tpath = projects/omo\n"
+        "\turl = ../omostation-omo.git\n"
+    )
+    git(
+        repo,
+        "config",
+        "submodule.projects/omo.url",
+        "https://github.com/starlink-awaken/omostation-omo.git",
+    )
+
+    assert tool.expected_submodule_origins(repo)["projects/omo"] == (
+        "https://github.com/starlink-awaken/omostation-omo.git"
+    )
+
+
+def test_governance_profile_emits_verified_readiness_receipt(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    dest = tmp_path / "governance-clone"
+    created = run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+        "--profile",
+        "governance",
+        "--json",
+    )
+    assert parse_json(created)["profile"] == "governance"
+    manifest = write_manifest(tmp_path, dest, "governance-manifest.json")
+    receipt_path = tmp_path / "governance-readiness.json"
+
+    ready = run_cli(
+        "readiness",
+        "--clone",
+        str(dest),
+        "--manifest",
+        str(manifest),
+        "--output",
+        str(receipt_path),
+        "--json",
+        env={"OMO_MANAGED_PYTHON": sys.executable},
+    )
+
+    result = parse_json(ready)
+    receipt = json.loads(receipt_path.read_text())
+    assert result["status"] == "ready"
+    assert receipt["schema"] == "clone-readiness/v1"
+    assert receipt["profile_schema"] == "clone-submodule-profile/v1"
+    assert receipt["profile"] == "governance"
+    assert [item["path"] for item in receipt["required_submodules"]] == [
+        "projects/agora",
+        "projects/cockpit",
+        "projects/cockpit-ui",
+        "projects/ecos",
+        "projects/omo",
+    ]
+    assert receipt["checks"]["managed_python_pyyaml"]["status"] == "pass"
+    assert receipt["checks"]["workflow_entrypoint"]["status"] == "pass"
+    assert receipt["receipt_digest"] == sha256_canonical(receipt, exclude="receipt_digest")
+    identity = json.loads((dest / ".git" / "agent-clone-identity.json").read_text())
+    assert identity["readiness_status"] == "ready"
+    assert identity["readiness_receipt_digest"] == receipt["receipt_digest"]
+    resumed = run_cli(
+        "readiness",
+        "--clone",
+        str(dest),
+        "--manifest",
+        str(manifest),
+        "--output",
+        str(receipt_path),
+        "--json",
+        env={"OMO_MANAGED_PYTHON": sys.executable},
+    )
+    assert parse_json(resumed)["receipt_digest"] == receipt["receipt_digest"]
+    admitted = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={"AGENT_ID": "agent-1"},
+    )
+    assert parse_json(admitted)["state"] == "verified_clone"
+
+    internal_receipt = dest / ".git" / "agent-clone-readiness.json"
+    tampered = json.loads(internal_receipt.read_text())
+    tampered["status"] = "degraded"
+    internal_receipt.write_text(json.dumps(tampered))
+    rejected = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={"AGENT_ID": "agent-1"},
+        check=False,
+    )
+    assert rejected.returncode == 1
+    assert parse_json(rejected)["reason"] == "clone_readiness_mismatch"
+
+def test_root_only_profile_receipt_is_degraded_and_not_writer_ready(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    dest = tmp_path / "root-only-clone"
+    created = run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+        "--profile",
+        "root-only",
+        "--json",
+    )
+    assert parse_json(created)["initialized_submodules"] == []
+    manifest = write_manifest(tmp_path, dest, "root-only-manifest.json")
+    receipt_path = tmp_path / "root-only-readiness.json"
+
+    degraded = run_cli(
+        "readiness",
+        "--clone",
+        str(dest),
+        "--manifest",
+        str(manifest),
+        "--output",
+        str(receipt_path),
+        "--json",
+        env={"OMO_MANAGED_PYTHON": sys.executable},
+    )
+
+    receipt = json.loads(receipt_path.read_text())
+    assert parse_json(degraded)["status"] == "degraded"
+    assert receipt["status"] == "degraded"
+    assert "writer_admission" in receipt["degraded_checks"]
+    identity = json.loads((dest / ".git" / "agent-clone-identity.json").read_text())
+    assert identity["ready"] is False
+    rejected = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={"AGENT_ID": "agent-1"},
+        check=False,
+    )
+    assert rejected.returncode == 1
+    assert parse_json(rejected)["reason"] == "clone_readiness_mismatch"
+
+    forged = json.loads((dest / ".git" / "agent-clone-readiness.json").read_text())
+    forged["status"] = "ready"
+    forged["degraded_checks"] = []
+    forged["checks"]["writer_admission"]["status"] = "pass"
+    forged["receipt_digest"] = sha256_canonical(forged, exclude="receipt_digest")
+    (dest / ".git" / "agent-clone-readiness.json").write_text(json.dumps(forged))
+    identity["ready"] = True
+    identity["readiness_status"] = "ready"
+    identity["readiness_receipt_digest"] = forged["receipt_digest"]
+    (dest / ".git" / "agent-clone-identity.json").write_text(json.dumps(identity))
+    still_rejected = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={"AGENT_ID": "agent-1"},
+        check=False,
+    )
+    assert still_rejected.returncode == 1
+    assert parse_json(still_rejected)["reason"] == "clone_readiness_mismatch"
+
+
+def test_governance_profile_rejects_missing_required_gitlinks(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    dest = tmp_path / "missing-governance"
+    proc = run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+        "--profile",
+        "governance",
+        "--json",
+        check=False,
+    )
+    assert proc.returncode == 1
+    assert parse_json(proc)["reason"] == "profile_gitlink_missing"
+    assert not dest.exists()
+
+
+def test_explicit_submodule_profile_is_custom_degraded_and_not_writer_ready(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    dest = tmp_path / "custom-clone"
+    created = run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+        "--submodule",
+        "childmod",
+        "--json",
+    )
+    assert parse_json(created)["profile"] == "custom"
+    manifest = write_manifest(tmp_path, dest, "custom-manifest.json")
+    receipt_path = tmp_path / "custom-readiness.json"
+
+    readiness = run_cli(
+        "readiness",
+        "--clone",
+        str(dest),
+        "--manifest",
+        str(manifest),
+        "--output",
+        str(receipt_path),
+        "--json",
+    )
+
+    assert parse_json(readiness)["status"] == "degraded"
+    receipt = json.loads(receipt_path.read_text())
+    assert receipt["profile"] == "custom"
+    assert "writer_admission" in receipt["degraded_checks"]
+    rejected = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={"AGENT_ID": "agent-1"},
+        check=False,
+    )
+    assert rejected.returncode == 1
+    assert parse_json(rejected)["reason"] == "clone_readiness_mismatch"
+
+
+def test_readiness_rejects_profile_origin_drift_even_when_manifest_matches(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    dest = tmp_path / "origin-drift-clone"
+    run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+        "--profile",
+        "governance",
+        "--json",
+    )
+    git(dest / "projects" / "ecos", "remote", "set-url", "origin", "https://example.test/wrong.git")
+    manifest = write_manifest(tmp_path, dest, "origin-drift-manifest.json")
+
+    proc = run_cli(
+        "readiness",
+        "--clone",
+        str(dest),
+        "--manifest",
+        str(manifest),
+        "--output",
+        str(tmp_path / "origin-drift-readiness.json"),
+        "--json",
+        env={"OMO_MANAGED_PYTHON": sys.executable},
+        check=False,
+    )
+
+    assert proc.returncode == 1
+    assert parse_json(proc)["reason"] == "profile_origin_mismatch"
 
 
 def test_create_refuses_existing_path(tmp_path):
