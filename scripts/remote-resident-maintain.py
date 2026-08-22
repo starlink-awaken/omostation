@@ -86,8 +86,18 @@ def maintain_lms_entry(entry: dict[str, object], target: str) -> None:
     if lms_generating(rows):
         return  # 该节点正忙于真实生成, 不抢占, 下一轮再看
 
-    args = entry.get("lms_arguments") or []
-    load_cmd = " ".join(["lms", "load", repr(model_id), *(str(a) for a in args), "-y"])
+    raw_args = entry.get("lms_arguments")
+    args: list[object] = raw_args if isinstance(raw_args, list) else []
+    # 不转义是刻意的: repr()/shlex.quote() 生成的引号语法只对 POSIX 远程
+    # shell 安全, y7000p 是 Windows(远程 shell 很可能是 cmd.exe, 不识别
+    # POSIX 单引号) —— shlex.quote("qwen/qwen3.5-9b") 会加引号导致
+    # "No model found that matches model key \"'qwen/...-9b'\""
+    # (2026-08-22 实测)。当前所有 remote_resident model_id 都不含空格,
+    # 裸传是唯一对 macOS/Windows 两种远程 shell 都安全的写法。
+    if any(c.isspace() for c in model_id):
+        log(f"[WARN] remote_resident: {node_id}/{model_id} 含空白字符, 跳过(裸传不安全)")
+        return
+    load_cmd = " ".join(["lms", "load", model_id, *(str(a) for a in args), "-y"])
     ssh_run(target, load_cmd, LOAD_TIMEOUT)
 
     # 今天的教训: 字符串匹配 stdout 判断加载成功不可靠(进度条 ANSI 可能
