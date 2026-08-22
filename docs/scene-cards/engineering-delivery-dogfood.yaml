@@ -125,3 +125,16 @@ collection_pipeline:
   qualified_outcome_log: ".omo/_knowledge/workflow-mesh/engineering-delivery-decision-outcomes.jsonl"
   signing_key_env: COCKPIT_ENGINEERING_REVIEW_SIGNING_KEY
   value_indicator_policy: "本场景产出永不计入价值指标 (BET-Y1Q2-T7-01 non_goals)"
+
+# T7-01 Phase B: 样本积累(2026-08-22 首轮 20 条达成)
+phase_b:
+  status: first_window_met
+  importer: "bin/ssot/engineering-delivery-candidate-importer.py --since <ts> --max-prs 20"
+  first_window:
+    window: 2026-08-15T07:54:12Z..2026-08-22T07:54:12Z
+    qualifying_decision_outcomes: 20
+    threshold: 20
+    verdict: PASS
+    status: ready_for_human_review
+  signing_key_file: ".omo/_knowledge/workflow-mesh/engineering-review-signing.key (gitignored)"
+  note: "20 条真实合并 PR 由用户批量裁决为 adopted(HMAC 凭证绑定), 永不计入价值指标"
