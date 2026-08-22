@@ -78,20 +78,29 @@ def _route(event: dict[str, Any]) -> None:
         _log(f"handler_error event_type={event_type} err={type(exc).__name__}: {exc}")
 
 
-def tick_once(broker: Any, events_jsonl: Path) -> dict[str, Any]:
-    """Read new events from the JSONL (after checkpoint), route each, advance watermark."""
-    cp = broker.checkpoint_get(PROJECTOR_ID)
+def tick_once(
+    broker: Any, events_jsonl: Path, *, projector: str = PROJECTOR_ID, topic_filter: set[str] | None = None
+) -> dict[str, Any]:
+    """Read new events from the JSONL (after checkpoint), route each, advance watermark.
+
+    ``projector`` is this daemon's independent checkpoint name (multi-agent
+    parallelism: each agent daemon consumes its own event slice). ``topic_filter``
+    restricts which event types this daemon handles (e.g. only WorkflowClosed).
+    """
+    cp = broker.checkpoint_get(projector)
     last_index = int((cp or {}).get("last_sequence", 0))
     events = _read_events(events_jsonl)
     new_events = events[last_index:]
+    if topic_filter:
+        new_events = [ev for ev in new_events if (ev.get("event_type") or "") in topic_filter]
     processed = 0
     for event in new_events:
         _route(event)
         processed += 1
     if new_events:
-        broker.checkpoint_set(PROJECTOR_ID, last_index + len(new_events))
+        broker.checkpoint_set(projector, last_index + len(new_events))
     else:
-        broker.checkpoint_set(PROJECTOR_ID, last_index)
+        broker.checkpoint_set(projector, last_index)
     return {"start_index": last_index, "processed": processed, "events_in_file": len(events)}
 
 
@@ -142,19 +151,38 @@ def _register_default_handlers() -> None:
         _log(f"default_handlers skipped: {type(exc).__name__}: {exc}")
 
 
+def _connect_with_retry(ledger: Path, *, attempts: int = 5) -> Any:
+    """Connect to the ledger with retry (SQLite cross-process init lock)."""
+    from omo.event_ledger.broker import LedgerBroker  # noqa: PLC0415
+    import sqlite3  # noqa: PLC0415
+
+    last_exc: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            return LedgerBroker.connect(str(ledger))
+        except sqlite3.OperationalError as exc:
+            last_exc = exc
+            time.sleep(0.2 * (attempt + 1))
+    raise RuntimeError(f"ledger connect failed after {attempts} attempts: {last_exc}")
+
+
 def run_daemon(
-    *, ledger: Path, events_jsonl: Path = DEFAULT_EVENTS_JSONL, interval: float = 30.0, once: bool = False
+    *,
+    ledger: Path,
+    events_jsonl: Path = DEFAULT_EVENTS_JSONL,
+    interval: float = 30.0,
+    once: bool = False,
+    projector: str = PROJECTOR_ID,
+    topic_filter: set[str] | None = None,
 ) -> int:
     _inject_paths()
     _register_default_handlers()
-    from omo.event_ledger.broker import LedgerBroker  # noqa: PLC0415
-
-    broker = LedgerBroker.connect(str(ledger))
+    broker = _connect_with_retry(ledger)
     PID_FILE.parent.mkdir(parents=True, exist_ok=True)
     PID_FILE.write_text(str(os.getpid()), encoding="utf-8")
 
     if once:
-        report = tick_once(broker, events_jsonl)
+        report = tick_once(broker, events_jsonl, projector=projector, topic_filter=topic_filter)
         broker.close()
         print(json.dumps(report, sort_keys=True))
         return 0
@@ -171,8 +199,10 @@ def run_daemon(
     _log(f"resident_orchestrator_started pid={os.getpid()} interval={interval}s")
     try:
         while not stop_event.is_set():
-            report = tick_once(broker, events_jsonl)
-            _log(f"tick_done processed={report['processed']} events_in_file={report['events_in_file']}")
+            report = tick_once(broker, events_jsonl, projector=projector, topic_filter=topic_filter)
+            _log(
+                f"tick_done projector={projector} processed={report['processed']} events_in_file={report['events_in_file']}"
+            )
             stop_event.wait(interval)
     finally:
         broker.close()
@@ -188,11 +218,25 @@ def main() -> int:
     parser.add_argument("--interval", type=float, default=30.0)
     parser.add_argument("--once", action="store_true", help="run a single tick and exit")
     parser.add_argument("--yes", action="store_true", help="bypass human-approval gate for non-safe handlers")
+    parser.add_argument(
+        "--projector", default=PROJECTOR_ID, help="independent checkpoint name (multi-agent parallelism)"
+    )
+    parser.add_argument(
+        "--topic-filter", default="", help="comma-separated event types this daemon handles (empty = all)"
+    )
     args = parser.parse_args()
     if args.yes:
         global _APPROVAL_REQUIRED  # noqa: PLW0603
         _APPROVAL_REQUIRED = False
-    return run_daemon(ledger=args.ledger, events_jsonl=args.events_jsonl, interval=args.interval, once=args.once)
+    topic_filter = {t.strip() for t in args.topic_filter.split(",") if t.strip()} or None
+    return run_daemon(
+        ledger=args.ledger,
+        events_jsonl=args.events_jsonl,
+        interval=args.interval,
+        once=args.once,
+        projector=args.projector,
+        topic_filter=topic_filter,
+    )
 
 
 if __name__ == "__main__":
