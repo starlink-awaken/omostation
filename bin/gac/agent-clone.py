@@ -55,6 +55,7 @@ SCHEMA_PROVENANCE = "clone-provenance/v1"
 SCHEMA_PROVENANCE_ATTEMPT = "clone-provenance/v2"
 SCHEMA_TRANSFER = "clone-transfer/v1"
 SCHEMA_GITLINK_TRANSFER_PROOF = "gitlink-transfer-proof/v1"
+SCHEMA_TRANSPORT = "clone-transport/v1"
 IDENTITY_FILENAME = "agent-clone-identity.json"
 READINESS_FILENAME = "agent-clone-readiness.json"
 PROVENANCE_FILENAME = "agent-clone-provenance.json"
@@ -659,6 +660,20 @@ def validate_clone_identity(data: dict) -> dict:
                 "attempt-qualified clone identity fields are missing or inconsistent",
                 EXIT_POLICY,
             )
+    transport = data.get("transport")
+    if transport is not None:
+        if (
+            not isinstance(transport, dict)
+            or transport.get("schema") != SCHEMA_TRANSPORT
+            or transport.get("non_authoritative") is not True
+            or transport.get("transport_digest")
+            != canonical_digest(transport, exclude_field="transport_digest")
+        ):
+            raise ToolError(
+                "identity_invalid",
+                "clone transport attribution is missing or its digest is invalid",
+                EXIT_POLICY,
+            )
     return data
 
 
@@ -809,6 +824,251 @@ def resolve_upstream_branch(source_url: str, branch: str) -> tuple[str, str]:
             EXIT_POLICY,
         )
     return matches[0], ref
+
+
+def git_authority(*args: str) -> subprocess.CompletedProcess:
+    """Probe an authority endpoint outside any repository while retaining credentials."""
+    env = os.environ.copy()
+    for key in GIT_REPOSITORY_SCOPE_ENV:
+        env.pop(key, None)
+    for key in list(env):
+        if re.fullmatch(r"GIT_CONFIG_(?:KEY|VALUE)_\d+", key):
+            env.pop(key, None)
+    try:
+        return subprocess.run(
+            ["git", *args], capture_output=True, text=True, check=False, env=env, cwd=os.path.sep
+        )
+    except OSError as exc:
+        raise ToolError("git_unavailable", f"cannot execute git: {exc}", EXIT_USAGE) from exc
+
+
+def _authority_endpoint(value: str) -> str:
+    """Stable endpoint comparator for local paths and GitHub URL spellings."""
+    expanded = os.path.expanduser(value)
+    if os.path.isdir(expanded):
+        return f"local:{canonical(expanded)}"
+    parsed = urlsplit(value)
+    if parsed.scheme == "file" and parsed.path:
+        return f"local:{canonical(parsed.path)}"
+    try:
+        return f"github:{canonical_remote_descriptor(value)['canonical_repository']}"
+    except ToolError:
+        return value.rstrip("/")
+
+
+def authority_equivalent(left: str, right: str) -> bool:
+    return _authority_endpoint(left) == _authority_endpoint(right)
+
+
+def reject_authority_rewrite(authority: str) -> None:
+    """Refuse global/environment URL rewrite before contacting an authority."""
+    if any(
+        key in os.environ
+        for key in ("GIT_CONFIG_COUNT", "GIT_CONFIG_PARAMETERS")
+    ) or any(re.fullmatch(r"GIT_CONFIG_(?:KEY|VALUE)_\d+", key) for key in os.environ):
+        raise ToolError(
+            "authority_rewrite_detected",
+            "environment Git config injection is not allowed for accelerated transport",
+            EXIT_POLICY,
+        )
+    # Git's own ``ls-remote --get-url`` is the authority for URL rewrite
+    # semantics.  It exercises global policy/credential configuration but
+    # performs no network operation; any changed endpoint is rejected.
+    proc = git_authority("ls-remote", "--get-url", authority)
+    if proc.returncode != 0:
+        raise ToolError("authority_rewrite_lookup_failed", proc.stderr.strip(), EXIT_POLICY)
+    effective = proc.stdout.strip()
+    if effective.rstrip("/") != authority.rstrip("/"):
+        raise ToolError(
+            "authority_rewrite_detected",
+            "Git url rewrite changes the declared authority endpoint",
+            EXIT_POLICY,
+        )
+
+
+def authority_ref(authority: str, ref: str) -> str:
+    """Resolve exactly one immutable authority ref without URL rewrite."""
+    reject_authority_rewrite(authority)
+    proc = git_authority("ls-remote", "--exit-code", authority, ref)
+    if proc.returncode != 0:
+        raise ToolError(
+            "authority_ref_lookup_failed",
+            f"cannot resolve authority ref {ref}: {proc.stderr.strip()}",
+            EXIT_POLICY,
+        )
+    matches = [
+        fields[0].lower()
+        for line in proc.stdout.splitlines()
+        if len(fields := line.split("\t", 1)) == 2
+        and fields[1] == ref
+        and re.fullmatch(r"[0-9a-fA-F]{40,64}", fields[0])
+    ]
+    if len(matches) != 1:
+        raise ToolError(
+            "authority_ref_lookup_failed",
+            f"authority returned {len(matches)} exact matches for {ref}",
+            EXIT_POLICY,
+        )
+    return matches[0]
+
+
+def resolve_transport_revision(authority: str, revision: str | None) -> tuple[str, str]:
+    """Choose an immutable root commit from the declared authority, never local HEAD."""
+    if revision is None:
+        return authority_ref(authority, "refs/heads/main"), "refs/heads/main"
+    branch = origin_branch_name(revision)
+    if branch is not None:
+        ref = f"refs/heads/{branch}"
+        return authority_ref(authority, ref), ref
+    if revision.startswith("refs/"):
+        return authority_ref(authority, revision), revision
+    # A raw SHA is admitted only when the authority advertises it from a ref.
+    reject_authority_rewrite(authority)
+    proc = git_authority("ls-remote", authority)
+    matches = [
+        line.split("\t", 1)[0].lower()
+        for line in proc.stdout.splitlines()
+        if "\t" in line and line.split("\t", 1)[0].lower() == revision.lower()
+    ]
+    if proc.returncode != 0 or not matches:
+        raise ToolError(
+            "authority_ref_lookup_failed",
+            f"revision {revision!r} is not advertised by the declared authority",
+            EXIT_POLICY,
+        )
+    return revision.lower(), revision
+
+
+def parse_submodule_sources(values: list[str]) -> dict[str, str]:
+    """Parse strict root-gitlink-to-local-source mappings."""
+    mappings: dict[str, str] = {}
+    for value in values:
+        path, sep, source = value.partition("=")
+        pure = PurePosixPath(path)
+        if (
+            not sep
+            or not path
+            or not source
+            or pure.is_absolute()
+            or ".." in pure.parts
+            or str(pure) != path
+            or path in mappings
+        ):
+            raise ToolError(
+                "submodule_source_invalid",
+                f"submodule source must be one unique root gitlink mapping path=local-repository: {value!r}",
+                EXIT_USAGE,
+            )
+        mappings[path] = source
+    return mappings
+
+
+def _repo_transport_health(repo_root: str, label: str) -> None:
+    rewrite = git_isolated(repo_root, "config", "--local", "--get-regexp", r"^url\..*\.insteadOf$")
+    if rewrite.returncode not in {0, 1}:
+        raise ToolError(
+            "transport_health_unprovable",
+            f"cannot inspect clone-local URL rewrites for {label}",
+            EXIT_POLICY,
+        )
+    if rewrite.returncode == 0 and rewrite.stdout.strip():
+        raise ToolError(
+            "transport_url_rewrite_present",
+            f"{label} has a clone-local Git URL rewrite",
+            EXIT_POLICY,
+        )
+    shallow = git_isolated(repo_root, "rev-parse", "--is-shallow-repository")
+    if shallow.returncode != 0 or shallow.stdout.strip().lower() != "false":
+        raise ToolError("transport_source_not_self_contained", f"{label} is shallow", EXIT_POLICY)
+    alternates = os.path.join(git_common_dir(repo_root), "objects", "info", "alternates")
+    if os.path.exists(alternates) and os.path.getsize(alternates) > 0:
+        raise ToolError("transport_source_not_self_contained", f"{label} has Git alternates", EXIT_POLICY)
+    for key in ("extensions.partialClone", "remote.origin.promisor", "remote.origin.partialclonefilter"):
+        if git_isolated(repo_root, "config", "--get", key).returncode == 0:
+            raise ToolError("transport_source_not_self_contained", f"{label} is partial/promisor", EXIT_POLICY)
+
+
+def verify_local_transport_source(
+    source: str,
+    authority: str,
+    pinned_sha: str,
+    remote_main_sha: str,
+    label: str,
+) -> str:
+    """Require a local source to prove it can independently serve the pin."""
+    if not os.path.isdir(source):
+        raise ToolError("transport_source_invalid", f"{label} is not a local repository", EXIT_POLICY)
+    root = canonical(source)
+    _repo_transport_health(root, label)
+    origin = git_isolated(root, "remote", "get-url", "origin")
+    if origin.returncode != 0 or not origin.stdout.strip():
+        raise ToolError("transport_source_upstream_missing", f"{label} has no origin", EXIT_POLICY)
+    if not authority_equivalent(canonical_upstream(root, origin.stdout.strip()), authority):
+        raise ToolError("transport_source_upstream_mismatch", f"{label} origin is not the declared authority", EXIT_POLICY)
+    pin = git_isolated(root, "cat-file", "-e", f"{pinned_sha}^{{commit}}")
+    local_main = git_isolated(root, "rev-parse", "refs/remotes/origin/main")
+    if pin.returncode != 0 or local_main.returncode != 0:
+        raise ToolError("transport_source_pin_missing", f"{label} lacks pin or origin/main", EXIT_POLICY)
+    if local_main.stdout.strip() != remote_main_sha:
+        raise ToolError("transport_source_main_mismatch", f"{label} origin/main differs from authority", EXIT_POLICY)
+    ancestor = git_isolated(root, "merge-base", "--is-ancestor", pinned_sha, remote_main_sha)
+    if ancestor.returncode != 0:
+        raise ToolError("transport_source_pin_unreachable", f"{label} pin is not an origin/main ancestor", EXIT_POLICY)
+    return root
+
+
+def build_transport_block(
+    authority: str,
+    root_source: str,
+    root_sha: str,
+    root_main_sha: str,
+    children: list[dict[str, str]],
+) -> dict:
+    """Create deterministic, non-authoritative local transport attribution."""
+    block = {
+        "schema": SCHEMA_TRANSPORT,
+        "non_authoritative": True,
+        "mode": "local_file",
+        "self_contained": True,
+        "root": {
+            "authority_digest": hashlib.sha256(_authority_endpoint(authority).encode()).hexdigest(),
+            "source_path_digest": hashlib.sha256(canonical(root_source).encode()).hexdigest(),
+            "pinned_sha": root_sha,
+            "remote_main_sha": root_main_sha,
+        },
+        "children": sorted(children, key=lambda item: item["path"]),
+    }
+    block["transport_digest"] = canonical_digest(block, exclude_field="transport_digest")
+    return block
+
+
+def verify_accelerated_clone(
+    repo_root: str,
+    authority: str,
+    frozen_sha: str,
+    child_authorities: dict[str, str],
+    gitlink_pins: dict[str, str],
+) -> None:
+    """Verify no local transport state survived into the published clone."""
+    _repo_transport_health(repo_root, "published root")
+    if root_head(repo_root) != frozen_sha or git_isolated(repo_root, "status", "--porcelain").stdout.strip():
+        raise ToolError("transport_final_validation_failed", "published root is not clean at the frozen SHA", EXIT_POLICY)
+    if remote_urls(repo_root, push=False)[0] != authority or remote_urls(repo_root, push=True)[0] != authority:
+        raise ToolError("transport_final_validation_failed", "root origin no longer equals declared authority", EXIT_POLICY)
+    fsck = git_isolated(repo_root, "fsck", "--connectivity-only", "--no-dangling")
+    if fsck.returncode != 0:
+        raise ToolError("transport_final_validation_failed", f"root connectivity check failed: {fsck.stderr.strip()}", EXIT_POLICY)
+    for path, child_authority in child_authorities.items():
+        initialized, head, origin, clean = submodule_state(repo_root, path)
+        if not initialized or head != gitlink_pins[path] or not clean or origin != child_authority:
+            raise ToolError("transport_final_validation_failed", f"child {path} lost pin/origin/clean state", EXIT_POLICY)
+        child_root = os.path.join(repo_root, path)
+        _repo_transport_health(child_root, f"published child {path}")
+        if remote_urls(child_root, push=False)[0] != child_authority or remote_urls(child_root, push=True)[0] != child_authority:
+            raise ToolError("transport_final_validation_failed", f"child {path} origin is not tracked authority", EXIT_POLICY)
+        fsck = git_isolated(child_root, "fsck", "--connectivity-only", "--no-dangling")
+        if fsck.returncode != 0:
+            raise ToolError("transport_final_validation_failed", f"child {path} connectivity check failed", EXIT_POLICY)
 
 
 def atomic_publish_no_replace(source: str, destination: str) -> None:
@@ -1124,11 +1384,40 @@ def cmd_create(args: argparse.Namespace) -> dict:
         )
 
     source = args.source
+    transport_source = getattr(args, "transport_source", None)
+    transport_mappings = parse_submodule_sources(
+        list(getattr(args, "submodule_source", None) or [])
+    )
+    accelerated = transport_source is not None or bool(transport_mappings)
+    if accelerated and not transport_source:
+        raise ToolError(
+            "transport_source_missing",
+            "--submodule-source requires --transport-source",
+            EXIT_USAGE,
+        )
+    if accelerated and os.path.isdir(source):
+        raise ToolError(
+            "transport_authority_local",
+            "accelerated transport requires --source to be a non-directory explicit authority endpoint",
+            EXIT_POLICY,
+        )
     source_url = normalize_source(source)
     revision = args.revision
     source_revision_ref = revision
     revision_fetch_url = source
-    if os.path.isdir(source):
+    transport_root_main_sha: str | None = None
+    if accelerated:
+        revision, source_revision_ref = resolve_transport_revision(source, revision)
+        transport_root_main_sha = authority_ref(source, "refs/heads/main")
+        transport_source = verify_local_transport_source(
+            transport_source,
+            source,
+            revision,
+            transport_root_main_sha,
+            "root transport source",
+        )
+        revision_fetch_url = source
+    elif os.path.isdir(source):
         upstream = git(source, "remote", "get-url", "origin")
         if upstream.returncode == 0 and upstream.stdout.strip():
             source_url = canonical_upstream(source, upstream.stdout.strip())
@@ -1151,14 +1440,20 @@ def cmd_create(args: argparse.Namespace) -> dict:
                     source_revision_ref = symbolic.stdout.strip()
 
     remote_ref = f"refs/heads/{working_branch}"
-    attempt_probe = git(
-        None,
-        "ls-remote",
-        "--exit-code",
-        "--heads",
-        source_url,
-        remote_ref,
-    )
+    if accelerated:
+        reject_authority_rewrite(source)
+        attempt_probe = git_authority(
+            "ls-remote", "--exit-code", "--heads", source, remote_ref
+        )
+    else:
+        attempt_probe = git(
+            None,
+            "ls-remote",
+            "--exit-code",
+            "--heads",
+            source_url,
+            remote_ref,
+        )
     if attempt_probe.returncode == 0:
         raise ToolError(
             "delivery_attempt_reused",
@@ -1184,11 +1479,12 @@ def cmd_create(args: argparse.Namespace) -> dict:
     published = False
 
     clone_args = ["clone"]
-    if os.path.isdir(source):
+    clone_source = transport_source if accelerated else source
+    if os.path.isdir(clone_source):
         # Force a full copy: no hardlinks, no alternates, no dependence on the
         # human Workspace as a persistent Git alternate.
         clone_args.append("--no-local")
-    clone_args += [source, staging_clone]
+    clone_args += [clone_source, staging_clone]
     failure = None
     cleanup_failure = None
     try:
@@ -1211,7 +1507,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
 
         if revision:
             object_probe = git(staging_clone, "cat-file", "-e", f"{revision}^{{commit}}")
-            if object_probe.returncode != 0 and os.path.isdir(source):
+            if object_probe.returncode != 0 and os.path.isdir(clone_source):
                 fetch = git(
                     staging_clone,
                     "fetch",
@@ -1241,7 +1537,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
                 EXIT_POLICY,
             )
 
-        if source_url != normalize_source(source):
+        if accelerated or source_url != normalize_source(source):
             proc = git(staging_clone, "remote", "set-url", "origin", source_url)
             if proc.returncode != 0:
                 raise ToolError(
@@ -1249,6 +1545,14 @@ def cmd_create(args: argparse.Namespace) -> dict:
                     f"cannot bind clone origin to source upstream: {proc.stderr.strip()}",
                     EXIT_POLICY,
                 )
+            if accelerated:
+                proc = git(staging_clone, "remote", "set-url", "--push", "origin", source_url)
+                if proc.returncode != 0:
+                    raise ToolError(
+                        "origin_rebind_failed",
+                        f"cannot bind clone push origin to authority: {proc.stderr.strip()}",
+                        EXIT_POLICY,
+                    )
 
         requested_submodules = sorted(set(getattr(args, "submodule", None) or []))
         requested_profile = getattr(args, "profile", None)
@@ -1270,30 +1574,99 @@ def cmd_create(args: argparse.Namespace) -> dict:
         else:
             initialize_paths = sorted(all_gitlinks)
 
+        transport_children: list[dict[str, str]] = []
+        child_authorities: dict[str, str] = {}
+        if accelerated:
+            if set(transport_mappings) != set(initialize_paths):
+                raise ToolError(
+                    "submodule_source_set_mismatch",
+                    "accelerated transport mappings must exactly match selected root gitlinks",
+                    EXIT_POLICY,
+                    {
+                        "expected": sorted(initialize_paths),
+                        "provided": sorted(transport_mappings),
+                    },
+                )
+            configured_origins = expected_submodule_origins(staging_clone)
+            for path in initialize_paths:
+                authority = configured_origins.get(path)
+                if authority is None:
+                    raise ToolError(
+                        "submodule_authority_missing",
+                        f"tracked .gitmodules lacks authority for {path}",
+                        EXIT_POLICY,
+                    )
+                reject_authority_rewrite(authority)
+                remote_main_sha = authority_ref(authority, "refs/heads/main")
+                local_source = verify_local_transport_source(
+                    transport_mappings[path],
+                    authority,
+                    all_gitlinks[path],
+                    remote_main_sha,
+                    f"submodule transport source {path}",
+                )
+                child_authorities[path] = authority
+                transport_children.append(
+                    {
+                        "path": path,
+                        "authority_digest": hashlib.sha256(_authority_endpoint(authority).encode()).hexdigest(),
+                        "source_path_digest": hashlib.sha256(local_source.encode()).hexdigest(),
+                        "pinned_sha": all_gitlinks[path],
+                        "remote_main_sha": remote_main_sha,
+                    }
+                )
+
         if initialize_paths:
             # Initialize only the selected root gitlinks. Do not recurse
             # into nested workspace mirrors: a submodule may itself contain the
             # entire project graph, causing scripts/scripts/... expansion.
-            proc = git(
-                staging_clone,
-                "-c",
-                "protocol.file.allow=always",
-                "submodule",
-                "update",
-                "--init",
-                "--",
-                *initialize_paths,
-            )
-            if proc.returncode != 0:
-                raise ToolError(
-                    "submodule_init_failed",
-                    f"submodule init failed: {proc.stderr.strip()}",
-                    EXIT_POLICY,
+            if accelerated:
+                for path in initialize_paths:
+                    local_uri = Path(transport_mappings[path]).resolve().as_uri()
+                    proc = git(
+                        staging_clone,
+                        "-c",
+                        "protocol.file.allow=always",
+                        "-c",
+                        f"url.{local_uri}.insteadOf={child_authorities[path]}",
+                        "submodule",
+                        "update",
+                        "--init",
+                        "--",
+                        path,
+                    )
+                    if proc.returncode != 0:
+                        raise ToolError(
+                            "submodule_init_failed",
+                            f"submodule init failed for mapped {path}: {proc.stderr.strip()}",
+                            EXIT_POLICY,
+                        )
+            else:
+                proc = git(
+                    staging_clone,
+                    "-c",
+                    "protocol.file.allow=always",
+                    "submodule",
+                    "update",
+                    "--init",
+                    "--",
+                    *initialize_paths,
                 )
+                if proc.returncode != 0:
+                    raise ToolError(
+                        "submodule_init_failed",
+                        f"submodule init failed: {proc.stderr.strip()}",
+                        EXIT_POLICY,
+                    )
             for path in initialize_paths:
                 pinned_sha = all_gitlinks[path]
-                initialized, child_head, _origin, clean = submodule_state(staging_clone, path)
-                if not initialized or child_head != pinned_sha or not clean:
+                initialized, child_head, child_origin, clean = submodule_state(staging_clone, path)
+                if (
+                    not initialized
+                    or child_head != pinned_sha
+                    or not clean
+                    or (accelerated and child_origin != child_authorities[path])
+                ):
                     raise ToolError(
                         "submodule_init_incomplete",
                         f"submodule {path} did not reach a clean pinned checkout",
@@ -1320,6 +1693,22 @@ def cmd_create(args: argparse.Namespace) -> dict:
                 )
 
         frozen_sha = root_head(staging_clone)
+        transport_block = None
+        if accelerated:
+            verify_accelerated_clone(
+                staging_clone,
+                source_url,
+                revision,
+                child_authorities,
+                all_gitlinks,
+            )
+            transport_block = build_transport_block(
+                source_url,
+                transport_source,
+                revision,
+                transport_root_main_sha,
+                transport_children,
+            )
         reinstall_ok, reinstall_msg = reinstall_path_dependencies(staging_clone)
         if not reinstall_ok:
             warnings.warn(f"uv sync --reinstall-package warning: {reinstall_msg}")
@@ -1345,6 +1734,8 @@ def cmd_create(args: argparse.Namespace) -> dict:
         if identity_profile in {"governance", "full"}:
             identity["provenance_required"] = True
             identity["provenance_status"] = "unbound"
+        if transport_block is not None:
+            identity["transport"] = transport_block
         write_identity(staging_clone, identity)
         atomic_publish_no_replace(staging_clone, dest)
         published = True
@@ -1403,6 +1794,8 @@ def cmd_create(args: argparse.Namespace) -> dict:
         "reinstall_status": "ok" if reinstall_ok else "warning",
         "reinstall_message": reinstall_msg,
     }
+    if transport_block is not None:
+        result["transport"] = transport_block
     if delivery_attempt_id is not None:
         result["actor_id"] = agent_id
         result["delivery_attempt_id"] = delivery_attempt_id
@@ -1627,6 +2020,8 @@ def cmd_readiness(args: argparse.Namespace) -> dict:
         "generated_at": identity["created_at"],
     }
     receipt.update(attempt_binding(identity))
+    if identity.get("transport") is not None:
+        receipt["transport"] = identity["transport"]
     receipt["receipt_digest"] = canonical_digest(receipt, exclude_field="receipt_digest")
     write_json_exclusive_or_match(args.output, receipt, "readiness_write_failed")
     write_json_replace(readiness_path(args.clone), receipt)
@@ -1635,7 +2030,7 @@ def cmd_readiness(args: argparse.Namespace) -> dict:
     identity["readiness_receipt_digest"] = receipt["receipt_digest"]
     identity["ready"] = status == "ready"
     write_identity(args.clone, identity)
-    return {
+    result = {
         "ok": True,
         "reason": "readiness_generated",
         "clone_root": canonical(args.clone),
@@ -1645,6 +2040,9 @@ def cmd_readiness(args: argparse.Namespace) -> dict:
         "readiness_path": args.output,
         "receipt_digest": receipt["receipt_digest"],
     }
+    if identity.get("transport") is not None:
+        result["transport"] = identity["transport"]
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -3401,6 +3799,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="single delivery-attempt identity; creates agent/<actor>--<attempt>",
     )
     p.add_argument("--source", required=True)
+    p.add_argument(
+        "--transport-source",
+        help="optional local root repository used only to accelerate a verified authority clone",
+    )
+    p.add_argument(
+        "--submodule-source",
+        action="append",
+        default=[],
+        help="repeatable root-gitlink=local-child-repository mapping for accelerated transport",
+    )
     p.add_argument("--destination", required=True)
     p.add_argument("--revision")
     group = p.add_mutually_exclusive_group()

@@ -60,11 +60,11 @@ def run_cli(
     auto_attempt: bool = True,
 ) -> subprocess.CompletedProcess:
     e = os.environ.copy()
+    # Test calls must not inherit the worker clone identity; callers that need
+    # one provide it explicitly through ``env`` below.
+    e.pop("AGENT_ID", None)
     if env:
         e.update(env)
-    else:
-        # never leak an ambient AGENT_ID from the host into guard tests
-        e.pop("AGENT_ID", None)
     effective_argv = list(argv)
     if (
         auto_attempt
@@ -100,6 +100,21 @@ def run_cli(
 
 def parse_json(proc: subprocess.CompletedProcess) -> dict:
     return json.loads(proc.stdout)
+
+
+def test_run_cli_strips_ambient_agent_id_unless_explicit(monkeypatch):
+    seen: list[dict] = []
+
+    def fake_run(_command, **kwargs):
+        seen.append(kwargs["env"])
+        return subprocess.CompletedProcess([], 0, "", "")
+
+    monkeypatch.setenv("AGENT_ID", "ambient-agent")
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    run_cli("--help", env={"OMO_MANAGED_PYTHON": sys.executable})
+    run_cli("--help", env={"AGENT_ID": "explicit-agent"})
+    assert seen[0].get("AGENT_ID") is None
+    assert seen[1]["AGENT_ID"] == "explicit-agent"
 
 
 def load_tool_module():
@@ -220,6 +235,82 @@ def make_governance_profile_source(base: Path) -> tuple[Path, Path]:
     git(src, "remote", "add", "origin", str(bare))
     git(src, "push", "-u", "origin", "main")
     return src, bare
+
+
+def make_transport_governance_source(base: Path) -> tuple[Path, Path, Path, Path]:
+    """Build authority/local transport repos for the five-path governance profile."""
+    child = base / "transport-child-work"
+    child.mkdir(parents=True)
+    git(child, "init", "-b", "main")
+    (child / "payload.txt").write_text("child\n")
+    git(child, "add", "payload.txt")
+    git(child, "commit", "-m", "child")
+    child_bare = base / "transport-child.git"
+    git(base, "init", "--bare", "-b", "main", child_bare.name)
+    git(child, "remote", "add", "origin", str(child_bare))
+    git(child, "push", "-u", "origin", "main")
+
+    root = base / "transport-root-work"
+    root.mkdir()
+    git(root, "init", "-b", "main")
+    (root / "README.md").write_text("root\n")
+    git(root, "add", "README.md")
+    for path in (
+        "projects/omo",
+        "projects/ecos",
+        "projects/agora",
+        "projects/cockpit",
+        "projects/cockpit-ui",
+    ):
+        git(root, "-c", "protocol.file.allow=always", "submodule", "add", str(child_bare), path)
+    git(root, "commit", "-m", "governance profile")
+    root_bare = base / "transport-root.git"
+    git(base, "init", "--bare", "-b", "main", root_bare.name)
+    git(root, "remote", "add", "origin", str(root_bare))
+    git(root, "push", "-u", "origin", "main")
+
+    local_root = base / "transport-root-local"
+    local_child = base / "transport-child-local"
+    git(base, "clone", "--no-recurse-submodules", str(root_bare), str(local_root))
+    git(base, "clone", str(child_bare), str(local_child))
+    return root_bare, child_bare, local_root, local_child
+
+
+def make_distinct_transport_source(base: Path) -> tuple[Path, Path, Path, Path, Path]:
+    """Build two distinct tracked child authorities for mapping-swap coverage."""
+    authorities: list[Path] = []
+    locals_: list[Path] = []
+    for name in ("a", "b"):
+        work = base / f"child-{name}-work"
+        work.mkdir(parents=True)
+        git(work, "init", "-b", "main")
+        (work / "payload.txt").write_text(f"{name}\n")
+        git(work, "add", "payload.txt")
+        git(work, "commit", "-m", name)
+        authority = base / f"child-{name}.git"
+        git(base, "init", "--bare", "-b", "main", authority.name)
+        git(work, "remote", "add", "origin", str(authority))
+        git(work, "push", "-u", "origin", "main")
+        local = base / f"child-{name}-local"
+        git(base, "clone", str(authority), str(local))
+        authorities.append(authority)
+        locals_.append(local)
+
+    root = base / "distinct-root-work"
+    root.mkdir()
+    git(root, "init", "-b", "main")
+    (root / "README.md").write_text("root\n")
+    git(root, "add", "README.md")
+    for path, authority in zip(("modules/a", "modules/b"), authorities, strict=True):
+        git(root, "-c", "protocol.file.allow=always", "submodule", "add", str(authority), path)
+    git(root, "commit", "-m", "distinct children")
+    root_authority = base / "distinct-root.git"
+    git(base, "init", "--bare", "-b", "main", root_authority.name)
+    git(root, "remote", "add", "origin", str(root_authority))
+    git(root, "push", "-u", "origin", "main")
+    local_root = base / "distinct-root-local"
+    git(base, "clone", "--no-recurse-submodules", str(root_authority), str(local_root))
+    return root_authority, local_root, locals_[0], locals_[1], authorities[0]
 
 
 def make_nested_source(base: Path) -> tuple[Path, Path]:
@@ -3640,6 +3731,217 @@ def test_hooks_activation_and_ready_identity(tmp_path):
     assert json.loads(m.read_text())["hooks_path"] == ".githooks"
     proc = run_cli("verify", "--clone", str(dest), "--manifest", str(m), "--json")
     assert parse_json(proc)["reason"] == "verified"
+
+
+def test_create_accelerates_governance_profile_without_persisting_rewrites(tmp_path):
+    authority, _child_authority, local_root, local_child = make_transport_governance_source(tmp_path)
+    dest = tmp_path / "accelerated"
+    mappings = [
+        f"{path}={local_child}"
+        for path in (
+            "projects/omo",
+            "projects/ecos",
+            "projects/agora",
+            "projects/cockpit",
+            "projects/cockpit-ui",
+        )
+    ]
+    proc = run_cli(
+        "create",
+        "--json",
+        "--agent-id",
+        "transport-agent",
+        "--delivery-attempt-id",
+        "transport-attempt",
+        "--source",
+        authority.as_uri(),
+        "--transport-source",
+        str(local_root),
+        "--destination",
+        str(dest),
+        "--profile",
+        "governance",
+        *sum((["--submodule-source", mapping] for mapping in mappings), []),
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    payload = parse_json(proc)
+    identity = json.loads((dest / ".git" / "agent-clone-identity.json").read_text())
+    assert payload["transport"]["schema"] == "clone-transport/v1"
+    assert identity["transport"]["transport_digest"] == payload["transport"]["transport_digest"]
+    assert git(dest, "remote", "get-url", "origin").stdout.strip() == authority.as_uri()
+    for path in identity["required_submodules"]:
+        assert git(dest / path, "remote", "get-url", "origin").stdout.strip() == str(_child_authority)
+        assert git(dest / path, "config", "--local", "--get-regexp", r"^url\\.", check=False).returncode != 0
+    assert not (dest / ".git" / "objects" / "info" / "alternates").exists()
+    assert git(dest, "config", "--local", "--get-regexp", r"^url\\.", check=False).returncode != 0
+
+
+def test_transport_rejects_inexact_governance_mapping_before_destination_publish(tmp_path):
+    authority, _child_authority, local_root, _local_child = make_transport_governance_source(tmp_path)
+    dest = tmp_path / "inexact"
+    proc = run_cli(
+        "create", "--json", "--agent-id", "transport-agent", "--delivery-attempt-id", "inexact-attempt",
+        "--source", authority.as_uri(), "--transport-source", str(local_root),
+        "--submodule-source", f"projects/omo={local_root}",
+        "--destination", str(dest), "--profile", "governance", check=False,
+    )
+    assert proc.returncode != 0
+    assert parse_json(proc)["reason"] == "submodule_source_set_mismatch"
+    assert not dest.exists()
+
+
+def test_transport_rejects_child_source_with_wrong_upstream_before_publish(tmp_path):
+    authority, _child_authority, local_root, local_child = make_transport_governance_source(tmp_path)
+    git(local_child, "remote", "set-url", "origin", str(authority))
+    dest = tmp_path / "wrong-upstream"
+    mappings = [
+        f"{path}={local_child}"
+        for path in ("projects/omo", "projects/ecos", "projects/agora", "projects/cockpit", "projects/cockpit-ui")
+    ]
+    proc = run_cli(
+        "create", "--json", "--agent-id", "transport-agent", "--delivery-attempt-id", "wrong-upstream",
+        "--source", authority.as_uri(), "--transport-source", str(local_root), "--destination", str(dest),
+        "--profile", "governance", *sum((["--submodule-source", item] for item in mappings), []), check=False,
+    )
+    assert proc.returncode != 0
+    assert parse_json(proc)["reason"] == "transport_source_upstream_mismatch"
+    assert not dest.exists()
+
+
+def test_transport_rejects_distinct_child_mapping_swap_before_publish(tmp_path):
+    authority, local_root, local_a, local_b, _child_a = make_distinct_transport_source(tmp_path)
+    dest = tmp_path / "swapped-mappings"
+    proc = run_cli(
+        "create", "--json", "--agent-id", "transport-agent", "--delivery-attempt-id", "swapped-mappings",
+        "--source", authority.as_uri(), "--transport-source", str(local_root), "--destination", str(dest),
+        "--profile", "full", "--submodule-source", f"modules/a={local_b}",
+        "--submodule-source", f"modules/b={local_a}", check=False,
+    )
+    assert proc.returncode != 0
+    assert parse_json(proc)["reason"] == "transport_source_upstream_mismatch"
+    assert not dest.exists()
+
+
+def test_transport_rejects_missing_local_root_pin_before_publish(tmp_path):
+    authority, _child_authority, local_root, _local_child = make_transport_governance_source(tmp_path)
+    git(local_root, "update-ref", "-d", "refs/remotes/origin/main")
+    dest = tmp_path / "missing-pin"
+    proc = run_cli(
+        "create", "--json", "--agent-id", "transport-agent", "--delivery-attempt-id", "missing-pin",
+        "--source", authority.as_uri(), "--transport-source", str(local_root), "--destination", str(dest),
+        "--profile", "root-only", check=False,
+    )
+    assert proc.returncode != 0
+    assert parse_json(proc)["reason"] == "transport_source_pin_missing"
+    assert not dest.exists()
+
+
+def test_transport_rejects_missing_local_child_pin_before_publish(tmp_path):
+    authority, _child_authority, local_root, local_child = make_transport_governance_source(tmp_path)
+    git(local_child, "update-ref", "-d", "refs/remotes/origin/main")
+    dest = tmp_path / "missing-child-pin"
+    mappings = [
+        f"{path}={local_child}"
+        for path in ("projects/omo", "projects/ecos", "projects/agora", "projects/cockpit", "projects/cockpit-ui")
+    ]
+    proc = run_cli(
+        "create", "--json", "--agent-id", "transport-agent", "--delivery-attempt-id", "missing-child-pin",
+        "--source", authority.as_uri(), "--transport-source", str(local_root), "--destination", str(dest),
+        "--profile", "governance", *sum((["--submodule-source", item] for item in mappings), []), check=False,
+    )
+    assert proc.returncode != 0
+    assert parse_json(proc)["reason"] == "transport_source_pin_missing"
+    assert not dest.exists()
+
+
+def test_transport_rejects_authority_rewrite_environment_before_publish(tmp_path):
+    authority, _child_authority, local_root, _local_child = make_transport_governance_source(tmp_path)
+    dest = tmp_path / "rewrite"
+    proc = run_cli(
+        "create", "--json", "--agent-id", "transport-agent", "--delivery-attempt-id", "rewrite-attempt",
+        "--source", authority.as_uri(), "--transport-source", str(local_root), "--destination", str(dest),
+        "--profile", "root-only", check=False,
+        env={
+            "GIT_CONFIG_COUNT": "1",
+            "GIT_CONFIG_KEY_0": "url.file:///not-authority.insteadOf",
+            "GIT_CONFIG_VALUE_0": str(authority),
+        },
+    )
+    assert proc.returncode != 0
+    assert parse_json(proc)["reason"] == "authority_rewrite_detected"
+    assert not dest.exists()
+
+
+def test_transport_rejects_local_source_as_authority_before_publish(tmp_path):
+    source, _child, _authority = make_source(tmp_path)
+    dest = tmp_path / "local-authority"
+    proc = run_cli(
+        "create", "--json", "--agent-id", "transport-agent", "--delivery-attempt-id", "local-authority",
+        "--source", str(source), "--transport-source", str(source), "--destination", str(dest),
+        "--profile", "root-only", check=False,
+    )
+    assert proc.returncode != 0
+    assert parse_json(proc)["reason"] == "transport_authority_local"
+    assert not dest.exists()
+
+
+def test_transport_rejects_local_source_url_rewrite_before_publish(tmp_path):
+    _src, _child, authority = make_source(tmp_path)
+    local_root = tmp_path / "local-root"
+    git(tmp_path, "clone", "--no-recurse-submodules", str(authority), str(local_root))
+    git(local_root, "config", "--local", "url.file:///tmp/rewritten.insteadOf", str(authority))
+    dest = tmp_path / "source-url-rewrite"
+    proc = run_cli(
+        "create", "--json", "--agent-id", "transport-agent", "--delivery-attempt-id", "source-url-rewrite",
+        "--source", authority.as_uri(), "--transport-source", str(local_root), "--destination", str(dest),
+        "--profile", "root-only", check=False,
+    )
+    assert proc.returncode != 0
+    assert parse_json(proc)["reason"] == "transport_url_rewrite_present"
+    assert not dest.exists()
+
+
+def test_transport_readiness_receipt_binds_identity_transport_digest_and_legacy_has_no_block(tmp_path):
+    _src, _child, authority = make_source(tmp_path)
+    local_root = tmp_path / "local-root"
+    git(tmp_path, "clone", "--no-recurse-submodules", str(authority), str(local_root))
+    accelerated = tmp_path / "accelerated-root-only"
+    created = run_cli(
+        "create", "--json", "--agent-id", "transport-agent", "--delivery-attempt-id", "receipt-attempt",
+        "--source", authority.as_uri(), "--transport-source", str(local_root), "--destination", str(accelerated),
+        "--profile", "root-only",
+    )
+    manifest = write_manifest(tmp_path, accelerated, "accelerated-manifest.json")
+    readiness_path = tmp_path / "accelerated-readiness.json"
+    readiness = run_cli("readiness", "--clone", str(accelerated), "--manifest", str(manifest), "--output", str(readiness_path), "--json")
+    identity = json.loads((accelerated / ".git" / "agent-clone-identity.json").read_text())
+    receipt = json.loads(readiness_path.read_text())
+    assert parse_json(readiness)["transport"]["transport_digest"] == identity["transport"]["transport_digest"]
+    assert receipt["transport"]["transport_digest"] == identity["transport"]["transport_digest"]
+
+    legacy = create_clone(tmp_path, authority, "legacy-root-only", no_submodules=True)
+    assert "transport" not in json.loads((legacy / ".git" / "agent-clone-identity.json").read_text())
+
+
+def test_transport_identity_digest_tamper_is_rejected_by_manifest(tmp_path):
+    _src, _child, authority = make_source(tmp_path)
+    local_root = tmp_path / "local-root"
+    git(tmp_path, "clone", "--no-recurse-submodules", str(authority), str(local_root))
+    dest = tmp_path / "tampered-transport"
+    run_cli(
+        "create", "--json", "--agent-id", "transport-agent", "--delivery-attempt-id", "tamper-attempt",
+        "--source", authority.as_uri(), "--transport-source", str(local_root), "--destination", str(dest),
+        "--profile", "root-only",
+    )
+    identity_path = dest / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    identity["transport"]["root"]["pinned_sha"] = "0" * 40
+    identity_path.write_text(json.dumps(identity))
+    rejected = run_cli("manifest", "--clone", str(dest), "--output", str(tmp_path / "tampered.json"), "--json", check=False)
+    assert rejected.returncode != 0
+    assert parse_json(rejected)["reason"] == "identity_invalid"
 
 
 def test_no_hooks_when_absent(tmp_path):
