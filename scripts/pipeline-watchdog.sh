@@ -66,6 +66,12 @@ if ! "$OMLXC" daemon status --json 2>/dev/null | grep -q '"running"'; then
   "$OMLXC" daemon restart --yes --confirm-impact >>"$LOG" 2>&1
 fi
 
+# --- remote_resident 常驻策略维护 (2026-08-22: 此前是纯声明性死配置,
+#     全代码库无任何执行逻辑读取, mac-mini/y7000p 的常驻全靠人工 SSH
+#     维持, TTL 到期不会自动恢复。本脚本让它真正生效) ---
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+python3 "$SCRIPT_DIR/remote-resident-maintain.py" >>"$LOG" 2>&1
+
 # --- 模型级可用性(读探测缓存，不发真实生成请求，代价很低) ---
 # 只能测出"探测都连不上"这一类(如 oMLX App 整体下线导致 placement 全灭)；
 # 输出乱码这类要真实生成才测得到的问题不在这一层，见 deep-registration-audit.sh。
