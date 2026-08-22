@@ -82,28 +82,35 @@ bash bin/gac/gac-worktree.sh claim <bet-id 小写>
 
 **不要在共享主工作树上直接改文件。** 如果 bet 的 `pasw_required: true`，子模块改动必须在 `.subtrees/<sub>/` 内完成（ADR-0371，涉及 gbrain / cockpit / agora）。
 
-#### T1-05 独立 clone 试点
+#### T1-05 delivery-attempt 独立 clone
 
-新接入的 agent 优先使用独立 clone；既有 agent 在迁移完成前继续使用上面的
-worktree + PASW 流程。不要手工复制目录，也不要用长期 `--reference` 借用
-`~/Workspace` 的对象库：源仓移动或 GC 会破坏借用仓。
+写入型 agent 的稳定身份是 `actor_id`；每一次交付另分配不可复用的
+`delivery_attempt_id`。一个 actor 可以并行拥有多个 attempt，但每个 attempt 必须有
+独立 clone、分支、manifest、provenance、readiness、changeset 和 PR head。不要手工
+复制目录，也不要用长期 `--reference` 借用 `~/Workspace` 的对象库：源仓移动或 GC
+会破坏借用仓。
 
 ```bash
 python3 bin/gac/agent-clone.py create --agent-id <agent-id> \
-  --source <origin-url-or-path> --destination "$HOME/agents/<agent-id>/ws" --json
+  --delivery-attempt-id <attempt-id> --source <origin-url-or-path> \
+  --destination "$HOME/agents/<agent-id>/attempts/<attempt-id>/ws" --json
 python3 bin/gac/agent-clone.py manifest \
-  --clone "$HOME/agents/<agent-id>/ws" \
-  --output "$HOME/agents/<agent-id>/manifest.json" --json
+  --clone "$HOME/agents/<agent-id>/attempts/<attempt-id>/ws" \
+  --output "$HOME/agents/<agent-id>/attempts/<attempt-id>/manifest.json" --json
 python3 bin/gac/agent-clone.py verify \
-  --clone "$HOME/agents/<agent-id>/ws" \
-  --manifest "$HOME/agents/<agent-id>/manifest.json" --json
+  --clone "$HOME/agents/<agent-id>/attempts/<attempt-id>/ws" \
+  --manifest "$HOME/agents/<agent-id>/attempts/<attempt-id>/manifest.json" --json
 ```
 
 `create` 只接受不存在的目标路径，初始化根仓声明的全部子模块（不递归穿越
-嵌套 Workspace 镜像），切换到 `agent/<agent-id>` 私有分支，并在成功后写入
-clone 私有 identity、启用 `.githooks`。冻结 manifest 是执行基线，不是第二份
-任务 SSOT。跨仓交付由 `changeset` 汇总 root 与子仓 SHA；它只生成候选收据，
-不会自行 push 或 merge。
+嵌套 Workspace 镜像），切换到 `agent/<actor>--<attempt>` 私有分支，并在成功后
+写入 clone 私有 identity、启用 `.githooks`。这里使用 `--` 而不是
+`agent/<actor>/<attempt>`：Git 不允许既有 `refs/heads/agent/<actor>` 与其子 ref
+并存。actor/attempt 以 identity 字段为准，禁止从分支字符串反向推断。
+
+冻结 manifest 是执行基线，不是第二份任务 SSOT。跨仓交付由 `changeset` 汇总
+root 与子仓 SHA；它只生成候选收据，不会自行 push 或 merge。v1 identity 仅保留
+读取、验证和退役兼容；所有新 writer attempt 必须使用 v2 attempt-qualified identity。
 
 写入型 agent 必须设置 `AGENT_ID=<agent-id>` 并使用独立 clone。tracked hook
 对所有 agent identity 自动启用严格门，拒绝没有独立 clone identity 的 linked
@@ -114,7 +121,8 @@ D2/D3/D5 仅在全员迁移和 72 小时零冲突证据成立后退役。
 ```bash
 AGENT_ID=<agent-id> \
   python3 bin/gac/agent-clone.py guard \
-  --workspace "$HOME/agents/<agent-id>/ws" --require-clone --json
+  --workspace "$HOME/agents/<agent-id>/attempts/<attempt-id>/ws" \
+  --require-clone --json
 ```
 
 ### 2.4 起 workflow（ADR-0203 红线：先 start 再改文件）

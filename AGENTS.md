@@ -100,7 +100,7 @@ M1 hard pre-gate（并发 main conflict = 0）：
 
 **逃生口唯一入口**：`SWARM_ESCAPE_ID=<id> bin/gac/swarm-git ...`。人类急救发卡：`python3 bin/gac/swarm-discipline-cli.py escape-token-issue`。T1-07 PATH shim（`bin/gac/git-shim` + `AGENT_ID`）强制 agent `git` → `swarm-git`，拦 `--no-verify` + 高危操作；人类终端（`AGENT_ID` 空）透传不受影响。
 
-**独立 clone 拓扑（T1-05，2026-08-19 完成）**：每 agent 独立 clone，主仓降级为集成点。写入型 agent 必须设 `AGENT_ID` 并使用独立 clone。
+**独立 clone 拓扑（T1-05，2026-08-19 完成）**：每个 delivery attempt 使用独立 clone，主仓降级为集成点。稳定身份为 `actor_id`，一次性交付身份为 `delivery_attempt_id`；新 writer 使用 `~/agents/<actor>/attempts/<attempt>/ws` 与 `agent/<actor>--<attempt>`。写入型 agent 必须设 `AGENT_ID` 并使用独立 clone；v1 clone 只保留读取、验证和退役兼容。
 ```bash
 python3 bin/gac/agent-clone-onboard.py            # dry-run 检测+创建缺失 clone
 python3 bin/gac/agent-clone-onboard.py --apply
