@@ -162,7 +162,7 @@ fi
 
 if [ "${CI_LOCAL_SKIP:-}" = "1" ]; then
   if [ -f "$ROOT/bin/gac/swarm-discipline-cli.py" ]; then
-    _esc_cmd=(run_py "$ROOT/bin/gac/swarm-discipline-cli.py" escape-check --flag ci_local_skip)
+    _esc_cmd=(run_py_with_yaml "$ROOT/bin/gac/swarm-discipline-cli.py" escape-check --flag ci_local_skip)
     if [ -f "$_FAILURES_JSON" ]; then
       _esc_cmd+=(--failures-file "$_FAILURES_JSON")
     fi

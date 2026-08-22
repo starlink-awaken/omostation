@@ -249,10 +249,10 @@ def test_tracked_hooks_execute_python_calls_through_the_managed_runtime(tmp_path
     assert pre_push.returncode == 0, pre_push.stderr
     calls = log.read_text(encoding="utf-8").splitlines()
     assert len(calls) == 6
-    assert sum("run --profile pyyaml --" in call for call in calls) == 1
-    assert sum("run --profile stdlib --" in call for call in calls) == 5
+    assert sum("run --profile pyyaml --" in call for call in calls) == 2
+    assert sum("run --profile stdlib --" in call for call in calls) == 4
     assert any("run --profile stdlib -- - " in call for call in calls)
-    assert any("swarm-discipline-cli.py" in call for call in calls)
+    assert any("run --profile pyyaml --" in call and "swarm-discipline-cli.py" in call for call in calls)
 
 
 def test_clone_make_target_executes_the_managed_stdlib_profile(tmp_path: Path) -> None:
