@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 TOOL = Path(__file__).resolve().parents[2] / "bin" / "gac" / "agent-clone.py"
+MANAGED_PYTHON = Path(__file__).resolve().parents[2] / "bin" / "gac" / "managed-python"
 PRE_COMMIT = Path(__file__).resolve().parents[2] / ".githooks" / "pre-commit"
 
 _GIT_ENV = {
@@ -1645,6 +1646,7 @@ def test_tracked_pre_commit_requires_clone_for_agent_identity(tmp_path):
     tool = legacy / "bin" / "gac" / "agent-clone.py"
     tool.parent.mkdir(parents=True)
     shutil.copy2(TOOL, tool)
+    shutil.copy2(MANAGED_PYTHON, tool.parent / "managed-python")
     hook = legacy / ".githooks" / "pre-commit"
     hook.parent.mkdir()
     shutil.copy2(PRE_COMMIT, hook)
@@ -1683,6 +1685,7 @@ def test_tracked_pre_commit_rejects_real_linked_worktree_with_alternate_home(tmp
     tool = common / "bin" / "gac" / "agent-clone.py"
     tool.parent.mkdir(parents=True)
     shutil.copy2(TOOL, tool)
+    shutil.copy2(MANAGED_PYTHON, tool.parent / "managed-python")
     hook = common / ".githooks" / "pre-commit"
     hook.parent.mkdir()
     shutil.copy2(PRE_COMMIT, hook)

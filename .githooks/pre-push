@@ -24,6 +24,11 @@
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
+PY_RUNTIME="$ROOT/bin/gac/managed-python"
+
+run_py() {
+  "$PY_RUNTIME" run --profile stdlib -- "$@"
+}
 
 # ── 读 pre-push stdin (push ref 列表), 供 advisory 守卫 ──────────
 # stdin 格式每行: <local-ref> <local-sha> <remote-ref> <remote-sha>
@@ -104,9 +109,9 @@ elif [ -z "$REACH_CHANGED_FROM" ] && git rev-parse --verify --quiet origin/main 
   REACH_CHANGED_FROM="origin/main"
 fi
 if [ -n "$REACH_CHANGED_FROM" ]; then
-  python3 $REACH_SCRIPT --source head --fetch $REACH_ARGS --changed-from "$REACH_CHANGED_FROM" 2>&1 | sed 's/^/[reachability] /' >&2
+  run_py $REACH_SCRIPT --source head --fetch $REACH_ARGS --changed-from "$REACH_CHANGED_FROM" 2>&1 | sed 's/^/[reachability] /' >&2
 else
-  python3 $REACH_SCRIPT --source head --fetch $REACH_ARGS 2>&1 | sed 's/^/[reachability] /' >&2
+  run_py $REACH_SCRIPT --source head --fetch $REACH_ARGS 2>&1 | sed 's/^/[reachability] /' >&2
 fi
 
 # ── Observe-then-skip (ADR-0422): always run preflight, then maybe skip ─
@@ -116,18 +121,18 @@ _CI_RC=0
 _DRIFT_RC=0
 if [ "$ALL_DELETIONS" != "true" ]; then
   if [ -f "$ROOT/bin/gac/ci-local-fast.py" ]; then
-    python3 "$ROOT/bin/gac/ci-local-fast.py" --failures-json "$_FAILURES_JSON" 2>&1 | sed 's/^/[ci-local] /' >&2 || _CI_RC=$?
+    run_py "$ROOT/bin/gac/ci-local-fast.py" --failures-json "$_FAILURES_JSON" 2>&1 | sed 's/^/[ci-local] /' >&2 || _CI_RC=$?
     _CI_RC="${_CI_RC:-0}"
   elif [ -f "$ROOT/Makefile" ]; then
     make -C "$ROOT" ci-local-fast 2>&1 | sed 's/^/[ci-local] /' >&2 || _CI_RC=$?
     _CI_RC="${_CI_RC:-0}"
   fi
   if [ -f "$ROOT/bin/gac/check-submodule-pointer-drift.py" ]; then
-    _drift_out="$(python3 "$ROOT/bin/gac/check-submodule-pointer-drift.py" 2>&1)" || _DRIFT_RC=$?
+    _drift_out="$(run_py "$ROOT/bin/gac/check-submodule-pointer-drift.py" 2>&1)" || _DRIFT_RC=$?
     _DRIFT_RC="${_DRIFT_RC:-0}"
     printf '%s\n' "$_drift_out" | sed 's/^/[pointer-drift] /' >&2
     if [ "$_DRIFT_RC" -ne 0 ]; then
-      python3 - "$_FAILURES_JSON" "$_drift_out" <<'PY'
+      run_py - "$_FAILURES_JSON" "$_drift_out" <<'PY'
 import json, sys, hashlib
 path, excerpt = sys.argv[1], sys.argv[2]
 try:
@@ -153,7 +158,7 @@ fi
 
 if [ "${CI_LOCAL_SKIP:-}" = "1" ]; then
   if [ -f "$ROOT/bin/gac/swarm-discipline-cli.py" ]; then
-    _esc_cmd=(python3 "$ROOT/bin/gac/swarm-discipline-cli.py" escape-check --flag ci_local_skip)
+    _esc_cmd=(run_py "$ROOT/bin/gac/swarm-discipline-cli.py" escape-check --flag ci_local_skip)
     if [ -f "$_FAILURES_JSON" ]; then
       _esc_cmd+=(--failures-file "$_FAILURES_JSON")
     fi
@@ -184,7 +189,7 @@ EOF
   if [ "$_DRIFT_RC" -ne 0 ]; then
     cat >&2 <<EOF
 [pointer-drift] ❌ 子模块指针 DIVERGED — 根仓指向 side branch, 代码不可见!
-   修复: python3 bin/gac/check-submodule-pointer-drift.py --fix --apply
+   修复: bin/gac/managed-python run --profile stdlib -- bin/gac/check-submodule-pointer-drift.py --fix --apply
 EOF
     rm -f "$_FAILURES_JSON"
     exit 1
@@ -196,7 +201,7 @@ rm -f "$_FAILURES_JSON"
 # --- mass-deletion gate: 拦住把 gitlink 指向被清空子模块的推送 ---
 GATE="$(git rev-parse --show-toplevel)/bin/gac/mass-deletion-gate.py"
 if [ -f "$GATE" ] && git rev-parse --verify --quiet origin/main >/dev/null 2>&1; then
-  python3 "$GATE" --range origin/main HEAD --submodules || exit 1
+  run_py "$GATE" --range origin/main HEAD --submodules || exit 1
 fi
 
 # --- remote-hygiene gate (2026-08-08) ---
@@ -239,4 +244,3 @@ for remote_ref in \
 done
 
 exit 0
-
