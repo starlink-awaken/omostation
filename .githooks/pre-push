@@ -30,6 +30,10 @@ run_py() {
   "$PY_RUNTIME" run --profile stdlib -- "$@"
 }
 
+run_py_with_yaml() {
+  "$PY_RUNTIME" run --profile pyyaml -- "$@"
+}
+
 # ── 读 pre-push stdin (push ref 列表), 供 advisory 守卫 ──────────
 # stdin 格式每行: <local-ref> <local-sha> <remote-ref> <remote-sha>
 PUSH_REFS=""
@@ -121,7 +125,7 @@ _CI_RC=0
 _DRIFT_RC=0
 if [ "$ALL_DELETIONS" != "true" ]; then
   if [ -f "$ROOT/bin/gac/ci-local-fast.py" ]; then
-    run_py "$ROOT/bin/gac/ci-local-fast.py" --failures-json "$_FAILURES_JSON" 2>&1 | sed 's/^/[ci-local] /' >&2 || _CI_RC=$?
+    run_py_with_yaml "$ROOT/bin/gac/ci-local-fast.py" --failures-json "$_FAILURES_JSON" 2>&1 | sed 's/^/[ci-local] /' >&2 || _CI_RC=$?
     _CI_RC="${_CI_RC:-0}"
   elif [ -f "$ROOT/Makefile" ]; then
     make -C "$ROOT" ci-local-fast 2>&1 | sed 's/^/[ci-local] /' >&2 || _CI_RC=$?
