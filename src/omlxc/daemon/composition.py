@@ -1264,6 +1264,11 @@ def build_configured_adapters(
     tailscale: TailscaleAdapter | None = None,
 ) -> dict[str, BackendAdapter]:
     adapters: dict[str, BackendAdapter] = {}
+    # idle_ttl_seconds=0 表示策略里显式声明"不设超时", 只有正数才是一个
+    # 合法的 lms --ttl 值 (LmsLoadOptions.ttl_seconds 要求 ge=1)。
+    default_ttl_seconds = (
+        config.policies.idle_ttl_seconds if config.policies.idle_ttl_seconds else None
+    )
     for backend in config.backends:
         # LM Studio 系后端: 数据面 ensure_loaded 触发的 lms load 必须显式带上
         # 上下文限制 (取该 backend 全部 placement 的最小 context_limit)。
@@ -1280,7 +1285,10 @@ def build_configured_adapters(
             default=None,
         )
         adapters[backend.id] = build_configured_adapter(
-            backend, tailscale=tailscale, load_context_length=context_length
+            backend,
+            tailscale=tailscale,
+            load_context_length=context_length,
+            default_ttl_seconds=default_ttl_seconds,
         )
     return adapters
 
@@ -1290,6 +1298,7 @@ def build_configured_adapter(
     *,
     tailscale: TailscaleAdapter | None = None,
     load_context_length: int | None = None,
+    default_ttl_seconds: int | None = None,
 ) -> BackendAdapter:
     if backend.kind is BackendKind.OMLX_APP:
         adapter: object = OmlxAppAdapter(backend_id=backend.id, base_url=backend.base_url)
@@ -1310,8 +1319,8 @@ def build_configured_adapter(
             platform=LmsPlatform(backend.lms_platform),
             control_authorizer=control_authorizer,
             load_options=(
-                LmsLoadOptions(context_length=load_context_length)
-                if load_context_length is not None
+                LmsLoadOptions(context_length=load_context_length, ttl_seconds=default_ttl_seconds)
+                if load_context_length is not None or default_ttl_seconds is not None
                 else None
             ),
         )

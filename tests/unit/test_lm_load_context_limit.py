@@ -16,6 +16,7 @@ from omlxc.config import (
     ModelConfig,
     NodeConfig,
     PlacementConfig,
+    PoliciesConfig,
     StorageConfig,
 )
 from omlxc.daemon.composition import build_configured_adapters
@@ -80,3 +81,38 @@ def test_non_lm_backend_ignores_context_length() -> None:
     adapters = build_configured_adapters(config)
     # omlx-app 后端没有 load_options 概念, 不应因传入 context_length 而报错
     assert "lms" in adapters
+
+
+def test_lm_studio_adapter_gets_idle_ttl_as_load_default() -> None:
+    """数据面 ensure_loaded 触发的加载必须带默认 TTL, 否则模型无限期驻留
+    直到手动卸载或机器重启 (2026-08-22 实测: mac-mini 上出现 TTL 为空的
+    孤儿 qwythos 残留, 根因是 composition.py 此前只注入 context_length,
+    从未注入 ttl_seconds)。"""
+    config = _config(16384).model_copy(
+        update={"policies": PoliciesConfig(idle_ttl_seconds=1800)}
+    )
+    adapters = build_configured_adapters(config)
+    adapter = adapters["lms"]
+    assert adapter._load_options.context_length == 16384  # type: ignore[attr-defined]
+    assert adapter._load_options.ttl_seconds == 1800  # type: ignore[attr-defined]
+
+
+def test_idle_ttl_zero_does_not_produce_invalid_ttl_seconds() -> None:
+    """idle_ttl_seconds=0 是策略里"显式声明不设超时"的合法值, 但
+    LmsLoadOptions.ttl_seconds 要求 ge=1 —— 0 必须被过滤掉, 不能直接
+    透传导致 schema 校验炸掉。"""
+    config = _config(16384).model_copy(update={"policies": PoliciesConfig(idle_ttl_seconds=0)})
+    adapters = build_configured_adapters(config)
+    adapter = adapters["lms"]
+    assert adapter._load_options.ttl_seconds is None  # type: ignore[attr-defined]
+    assert adapter._load_options.context_length == 16384  # type: ignore[attr-defined]
+
+
+def test_no_context_limit_but_idle_ttl_still_creates_load_options() -> None:
+    """没有 placement context_limit 时也不能因此丢掉 TTL 注入 —— 两个
+    维度是独立的, 缺一个不该拖累另一个。"""
+    config = _config().model_copy(update={"policies": PoliciesConfig(idle_ttl_seconds=900)})
+    adapters = build_configured_adapters(config)
+    adapter = adapters["lms"]
+    assert adapter._load_options.context_length is None  # type: ignore[attr-defined]
+    assert adapter._load_options.ttl_seconds == 900  # type: ignore[attr-defined]
