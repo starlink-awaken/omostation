@@ -42,9 +42,17 @@ except Exception as e:
 
 echo ""
 echo "--- 内存 ---"
-free_pages=$(vm_stat | awk '/Pages free/ {gsub(/\./,"",$3); print $3}')
-free_gb=$(( free_pages * 16384 / 1024 / 1024 / 1024 ))
-echo "  可用: ~${free_gb}GB"
+# 朴素 "Pages free" 会显著低估可用内存 (2026-08-22 实测: 读到 ~0GB 但真实
+# 可用 22.4GB) —— purgeable/inactive 页面本可回收却没被算入。口径统一自
+# safe_audit.py 已验证的公式。
+vm_stat | awk '
+/Pages free/ {gsub(/\./,"",$3); free=$3}
+/Pages purgeable/ {gsub(/\./,"",$3); purg=$3}
+/Pages inactive/ {gsub(/\./,"",$3); inact=$3}
+END {
+  gb = (free + purg + inact*0.7) * 16384 / 1024 / 1024 / 1024
+  printf "  真实可用: ~%.1fGB\n", gb
+}'
 lms ps 2>/dev/null | tail -n +2 | grep -v "^$" | while read -r line; do
   [ -n "$line" ] && echo "  LM Studio 驻留: $line"
 done
