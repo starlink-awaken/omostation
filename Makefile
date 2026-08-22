@@ -114,7 +114,7 @@ gate-mof: mof-bootstrap
 mof-bootstrap:  ## MOF 5-check strict 校验
 	$(PY) bin/mof/mof-bootstrap.py all
 
-gac-local-gate: sync-submodule-pointers  ## 全量治理门禁 (自动同步子模块指针)
+gac-local-gate:  ## 全量治理门禁 (纯验证，不初始化或写入子模块)
 	$(PY) bin/gac/gac-local-gate.py
 
 gac-healthcheck:  ## GaC 13-point 健康检查
