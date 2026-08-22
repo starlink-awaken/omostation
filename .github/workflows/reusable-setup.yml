@@ -1,0 +1,29 @@
+name: reusable-setup
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        required: false
+        type: string
+        default: "3.13"
+      submodules:
+        required: false
+        type: boolean
+        default: true
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: ${{ inputs.submodules && 'recursive' || 'false' }}
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ hashFiles('**/uv.lock') }}
+          restore-keys: uv-

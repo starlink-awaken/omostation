@@ -21,7 +21,7 @@ jobs:
   audit:
     runs-on: macos-latest  # omo 是 macOS 项目
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         python-version: ["3.13"]  # matrix 多 Python 版本 (P37-W0 可选)
     steps:
